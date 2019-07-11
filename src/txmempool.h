@@ -752,6 +752,107 @@ public:
     void removeUnchecked(txiter entry, MemPoolRemovalReason reason = MemPoolRemovalReason::UNKNOWN) EXCLUSIVE_LOCKS_REQUIRED(cs);
 };
 
+class TxPoolLayer
+{
+public:
+    mutable RecursiveMutex cs; //!< Dummy mutex
+    struct txiter_nested {
+        CTxMemPool::txiter _i;
+        explicit txiter_nested(CTxMemPool::txiter val) : _i(val) {}
+        txiter_nested() : _i() {}
+    };
+    /** An iterator that may be changed from pointing to an entry in m_tx_pool to pointing to an entry in the layer */
+    struct txiter {
+        boost::variant<txiter_nested, CTxMemPool::txiter> m_variant;
+    };
+
+    struct CompareIteratorByHash {
+        bool operator()(const txiter& a, const txiter& b) const
+        {
+            return GetEntry(a).GetTx().GetHash() < GetEntry(b).GetTx().GetHash();
+        }
+    };
+
+    using setEntries = std::set<TxPoolLayer::txiter, CompareIteratorByHash>;
+
+    /** Upgrade iterator set */
+    static setEntries VariantIteratorSet(const CTxMemPool::setEntries& set);
+
+    struct TxLinks {
+        TxPoolLayer::setEntries parents;
+        TxPoolLayer::setEntries children;
+    };
+    using txlinksMap = std::map<TxPoolLayer::txiter, TxPoolLayer::TxLinks, CompareIteratorByHash>;
+    /**
+         * Construct a Layer based on an existing tx pool.
+         * The caller must acquire the lock for the whole life-time of this layer.
+         */
+    explicit TxPoolLayer(const CTxMemPool& p) EXCLUSIVE_LOCKS_REQUIRED(p.cs)
+        : m_tx_pool(p) { AssertLockHeld(p.cs); }
+
+    /// Methods that have identical signatures in the underlying tx pool:
+    bool exists(const uint256& hash) const NO_THREAD_SAFETY_ANALYSIS;
+    boost::optional<txiter> GetIter(const uint256& txid) const NO_THREAD_SAFETY_ANALYSIS;
+    TxPoolLayer::setEntries GetIterSet(const std::set<uint256>& hashes) const NO_THREAD_SAFETY_ANALYSIS;
+    template <typename UpdateStruct>
+    void Modify(txiter& it, const UpdateStruct& update_object) NO_THREAD_SAFETY_ANALYSIS;
+    std::pair<txiter, bool> Insert(const CTxMemPoolEntry& entry) NO_THREAD_SAFETY_ANALYSIS
+    {
+        auto ins = m_cache_added.insert(entry);
+        return {txiter{txiter_nested{ins.first}}, ins.second};
+    }
+    void EraseTx(TxPoolLayer::txiter it) NO_THREAD_SAFETY_ANALYSIS;
+    void InsertLinks(txiter newit) NO_THREAD_SAFETY_ANALYSIS { m_cache_map_links.emplace(newit, TxLinks{}); }
+    void EraseLinks(txiter it) NO_THREAD_SAFETY_ANALYSIS { m_cache_map_links.erase(it); }
+    void InsertNextTx(std::pair<const COutPoint*, const CTransaction*> next_tx) NO_THREAD_SAFETY_ANALYSIS { m_map_next_tx_added.insert(next_tx); }
+    void EraseNextTx(const COutPoint& out) NO_THREAD_SAFETY_ANALYSIS
+    {
+        m_map_next_tx_added.erase(out);
+        m_map_next_tx_removed.emplace(out);
+    }
+    static const CTxMemPoolEntry& GetEntry(const TxPoolLayer::txiter& it);
+    const CTransaction* GetConflictTx(const COutPoint& prevout) const NO_THREAD_SAFETY_ANALYSIS;
+    CTransactionRef get(const uint256& hash) const;
+    void ApplyDelta(const uint256& hash, CAmount& fee_delta) const NO_THREAD_SAFETY_ANALYSIS;
+    CFeeRate GetMinFee(size_t sizelimit) const NO_THREAD_SAFETY_ANALYSIS;
+    bool CalculateMemPoolAncestors(txiter it, TxPoolLayer::setEntries& setAncestors, uint64_t limitAncestorCount, uint64_t limitAncestorSize, uint64_t limitDescendantCount, uint64_t limitDescendantSize, std::string& errString, const CTxMemPoolEntry* search_parents_for_entry = nullptr) NO_THREAD_SAFETY_ANALYSIS;
+    void CalculateDescendants(const TxPoolLayer::txiter& it, TxPoolLayer::setEntries& setDescendants) NO_THREAD_SAFETY_ANALYSIS;
+    void RemoveStaged(TxPoolLayer::setEntries& stage, bool updateDescendants, MemPoolRemovalReason reason = MemPoolRemovalReason::UNKNOWN) NO_THREAD_SAFETY_ANALYSIS;
+    bool HasNoInputsOf(const CTransaction& tx) const NO_THREAD_SAFETY_ANALYSIS;
+    TxPoolLayer::setEntries GetMemPoolParents(const TxPoolLayer::txiter& entry) const NO_THREAD_SAFETY_ANALYSIS;
+    int Expire(int64_t time) NO_THREAD_SAFETY_ANALYSIS;
+    void TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpendsRemaining = nullptr) NO_THREAD_SAFETY_ANALYSIS;
+
+    void addUnchecked(const CTxMemPoolEntry& entry, TxPoolLayer::setEntries& setAncestors, bool /* validFeeEstimate */ ignore) NO_THREAD_SAFETY_ANALYSIS;
+    void UpdateAncestorsOf(bool add, const TxPoolLayer::txiter& it, setEntries& setAncestors) NO_THREAD_SAFETY_ANALYSIS;
+    void UpdateParent(const TxPoolLayer::txiter& entry, const TxPoolLayer::txiter& parent, bool add) NO_THREAD_SAFETY_ANALYSIS;
+    void UpdateChild(const TxPoolLayer::txiter& entry, const TxPoolLayer::txiter& child, bool add) NO_THREAD_SAFETY_ANALYSIS;
+    void UpdateEntryForAncestors(TxPoolLayer::txiter& it, const setEntries& setAncestors) NO_THREAD_SAFETY_ANALYSIS;
+    void UpdateForRemoveFromMempool(setEntries& entriesToRemove, bool updateDescendants) NO_THREAD_SAFETY_ANALYSIS;
+    void UpdateChildrenForRemoval(txiter it) NO_THREAD_SAFETY_ANALYSIS;
+    setEntries GetMemPoolChildren(const txiter& entry) const NO_THREAD_SAFETY_ANALYSIS;
+    void removeUnchecked(txiter it, MemPoolRemovalReason reason) NO_THREAD_SAFETY_ANALYSIS;
+
+    void check() const;
+
+private:
+    /** The underlying tx pool */
+    const CTxMemPool& m_tx_pool;
+
+    /* The txs this layer is adding */
+    CTxMemPool::indexed_transaction_set m_cache_added;
+    /* The txs this layer is removing */
+    std::set<uint256> m_cache_removed;
+
+    /* Tx links for txs that got their links modified */
+    TxPoolLayer::txlinksMap m_cache_map_links;
+
+    /* Next txs that were added */
+    indirectmap<COutPoint, const CTransaction*> m_map_next_tx_added;
+    /* Next txs that were removed */
+    std::set<COutPoint> m_map_next_tx_removed;
+};
+
 /**
  * CCoinsView that brings transactions from a mempool into view.
  * It does not check for spendings by memory pool transactions.
