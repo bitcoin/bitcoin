@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_lock)
 	UniValue vinArray = find_value(r.get_obj(), "vin");
 	bool found = false;
 	for (unsigned int i = 0; i<vinArray.size(); i++) {
-		if (find_value(vinArray[i].get_obj(), "txid").get_str() == txid && find_value(vinArray[i].get_obj(), "vout").get_int() == vout) {
+		if (find_value(vinArray[i].get_obj(), "txid").get_str() == txid && find_value(vinArray[i].get_obj(), "vout").get_uint() == vout) {
 			found = true;
 			break;
 		}

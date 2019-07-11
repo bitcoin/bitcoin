@@ -532,7 +532,7 @@ void CAssetDB::WriteAssetIndex(const CTransaction& tx, const CAsset& dbAsset, co
         }
 	}
 }
-bool GetAsset(const int &nAsset,
+bool GetAsset(const uint32_t &nAsset,
         CAsset& txPos) {
     if (passetdb == nullptr || !passetdb->ReadAsset(nAsset, txPos))
         return false;
@@ -543,7 +543,7 @@ bool GetAsset(const int &nAsset,
 
 bool BuildAssetJson(const CAsset& asset, UniValue& oAsset)
 {
-    oAsset.__pushKV("asset_guid", (int)asset.nAsset);
+    oAsset.__pushKV("asset_guid", asset.nAsset);
     oAsset.__pushKV("symbol", asset.strSymbol);
     oAsset.__pushKV("txid", asset.txHash.GetHex());
 	oAsset.__pushKV("public_value", stringFromVch(asset.vchPubData));
@@ -553,7 +553,7 @@ bool BuildAssetJson(const CAsset& asset, UniValue& oAsset)
 	oAsset.__pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision));
 	oAsset.__pushKV("max_supply", ValueFromAssetAmount(asset.nMaxSupply, asset.nPrecision));
 	oAsset.__pushKV("update_flags", asset.nUpdateFlags);
-	oAsset.__pushKV("precision", (int)asset.nPrecision);
+	oAsset.__pushKV("precision", asset.nPrecision);
 	return true;
 }
 bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
@@ -577,7 +577,7 @@ bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
         	
 
 	entry.__pushKV("txtype", assetFromTx(tx.nVersion));
-	entry.__pushKV("asset_guid", (int)asset.nAsset);
+	entry.__pushKV("asset_guid", asset.nAsset);
     entry.__pushKV("symbol", asset.strSymbol);
     entry.__pushKV("txid", txHash.GetHex());
     entry.__pushKV("height", nHeight);
@@ -614,7 +614,7 @@ bool AssetTxToJSON(const CTransaction& tx, const int& nHeight, const uint256& bl
     if(asset.IsNull())
         return false;
     entry.__pushKV("txtype", assetFromTx(tx.nVersion));
-    entry.__pushKV("asset_guid", (int)asset.nAsset);
+    entry.__pushKV("asset_guid", asset.nAsset);
     entry.__pushKV("symbol", asset.strSymbol);
     entry.__pushKV("txid", tx.GetHash().GetHex());
     entry.__pushKV("height", nHeight);
@@ -714,7 +714,7 @@ bool CAssetDB::Flush(const AssetMap &mapAssets){
     LogPrint(BCLog::SYS, "Flushing %d assets (erased %d, written %d)\n", mapAssets.size(), erase, write);
     return WriteBatch(batch);
 }
-bool CAssetDB::ScanAssets(const int count, const int from, const UniValue& oOptions, UniValue& oRes) {
+bool CAssetDB::ScanAssets(const uint32_t count, const uint32_t from, const UniValue& oOptions, UniValue& oRes) {
 	string strTxid = "";
 	vector<CWitnessAddress > vecWitnessAddresses;
     uint32_t nAsset = 0;
@@ -725,7 +725,7 @@ bool CAssetDB::ScanAssets(const int count, const int from, const UniValue& oOpti
 		}
 		const UniValue &assetObj = find_value(oOptions, "asset_guid");
 		if (assetObj.isNum()) {
-			nAsset = (uint32_t)assetObj.get_int();
+			nAsset = assetObj.get_uint();
 		}
 
 		const UniValue &owners = find_value(oOptions, "addresses");
@@ -744,7 +744,7 @@ bool CAssetDB::ScanAssets(const int count, const int from, const UniValue& oOpti
 	pcursor->SeekToFirst();
 	CAsset txPos;
 	uint32_t key = 0;
-	int index = 0;
+	uint32_t index = 0;
 	while (pcursor->Valid()) {
 		boost::this_thread::interruption_point();
 		try {
@@ -796,7 +796,7 @@ bool CAssetIndexDB::ScanAssetIndex(int64_t page, const UniValue& oOptions, UniVa
         const UniValue &assetObj = find_value(oOptions, "asset_guid");
         if (assetObj.isNum()) {
 
-            nAsset = (uint32_t)assetObj.get_int();
+            nAsset = assetObj.get_uint();
         }
         else{
             LogPrint(BCLog::SYS, "ScanAssetIndex: failed, asset guid is not a number\n");

@@ -711,7 +711,7 @@ bool FindAssetGUIDFromAssetIndexResults(const UniValue& results, std::string gui
 	UniValue arrayVal = results.get_array();
 	for(unsigned i = 0;i<arrayVal.size();i++){
 		UniValue r = arrayVal[i];
-		if(itostr(find_value(r.get_obj(), "asset_guid").get_int()) == guid)
+		if(itostr(find_value(r.get_obj(), "asset_guid").get_uint()) == guid)
 			return true;
 	}
 	return false;
@@ -728,7 +728,7 @@ string AssetNew(const string& node, const string& address, string pubdata, strin
 		contract.clear();
 	if(pubdata == "''")
 		pubdata.clear();
-	string guid = itostr(find_value(r.get_obj(), "asset_guid").get_int());
+	string guid = itostr(find_value(r.get_obj(), "asset_guid").get_uint());
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str(), bRegtest));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
    
@@ -739,7 +739,7 @@ string AssetNew(const string& node, const string& address, string pubdata, strin
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + guid, bRegtest ));
 	int nprecision;
 	ParseInt32(precision, &nprecision);
-	BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
+	BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_uint()) == guid);
 	BOOST_CHECK(find_value(r.get_obj(), "address").get_str() == address);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "public_value").get_str() , pubdata);
 	UniValue balance = find_value(r.get_obj(), "balance");
@@ -752,7 +752,7 @@ string AssetNew(const string& node, const string& address, string pubdata, strin
 	BOOST_CHECK(AssetAmountFromValue(balance, nprecision) == AssetAmountFromValue(supplytmp, nprecision));
 	BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision) == AssetAmountFromValue(supplytmp, nprecision));
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupplyu, nprecision), AssetAmountFromValue(maxsupplytmp, nprecision));
-	int update_flags = find_value(r.get_obj(), "update_flags").get_int();
+	uint32_t update_flags = find_value(r.get_obj(), "update_flags").get_uint();
 	int paramUpdateFlags;
 	ParseInt32(updateflags, &paramUpdateFlags);
 
@@ -764,7 +764,7 @@ string AssetNew(const string& node, const string& address, string pubdata, strin
 	if (!otherNode1.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "assetinfo " + guid , bRegtest));
-		BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
+		BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_uint()) == guid);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "public_value").get_str() , pubdata);
 		UniValue balance = find_value(r.get_obj(), "balance");
 		UniValue totalsupply = find_value(r.get_obj(), "total_supply");
@@ -772,7 +772,7 @@ string AssetNew(const string& node, const string& address, string pubdata, strin
 		BOOST_CHECK(AssetAmountFromValue(balance, nprecision) == AssetAmountFromValue(supplytmp, nprecision));
 		BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision) == AssetAmountFromValue(supplytmp, nprecision));
 		BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupplyu, nprecision), AssetAmountFromValue(maxsupplytmp, nprecision));
-        int update_flags = find_value(r.get_obj(), "update_flags").get_int();
+        uint32_t update_flags = find_value(r.get_obj(), "update_flags").get_uint();
         int paramUpdateFlags;
 		ParseInt32(updateflags, &paramUpdateFlags);
         BOOST_CHECK(update_flags == paramUpdateFlags);
@@ -782,7 +782,7 @@ string AssetNew(const string& node, const string& address, string pubdata, strin
 	if (!otherNode2.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "assetinfo " + guid, bRegtest));
-		BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
+		BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_uint()) == guid);
 		BOOST_CHECK(find_value(r.get_obj(), "public_value").get_str() == pubdata);
 		UniValue balance = find_value(r.get_obj(), "balance");
 		UniValue totalsupply = find_value(r.get_obj(), "total_supply");
@@ -791,7 +791,7 @@ string AssetNew(const string& node, const string& address, string pubdata, strin
 		BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision) == AssetAmountFromValue(supplytmp, nprecision));
 		BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupplyu, nprecision), AssetAmountFromValue(maxsupplytmp, nprecision));
 
-        int update_flags = find_value(r.get_obj(), "update_flags").get_int();
+        uint32_t update_flags = find_value(r.get_obj(), "update_flags").get_uint();
         int paramUpdateFlags;
 		ParseInt32(updateflags, &paramUpdateFlags);
         BOOST_CHECK(update_flags == paramUpdateFlags);
@@ -810,9 +810,9 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 	string oldpubdata = find_value(r.get_obj(), "public_value").get_str();
 	string oldcontract = find_value(r.get_obj(), "contract").get_str();
     UniValue totalsupply = find_value(r.get_obj(), "total_supply");
-	int nprecision = find_value(r.get_obj(), "precision").get_int();
+	uint32_t nprecision = find_value(r.get_obj(), "precision").get_uint();
     CAmount oldsupplyamount = AssetAmountFromValue(totalsupply, nprecision);
-	int oldflags = find_value(r.get_obj(), "update_flags").get_int();
+	uint32_t oldflags = find_value(r.get_obj(), "update_flags").get_uint();
     
 	CAmount supplyamount = 0;
 	if (supply != "''") {
@@ -844,24 +844,24 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoindecoderawtransaction " + hex_str));
 	UniValue flagValue = find_value(r.get_obj(), "update_flags");
 	if (newflags != oldflags && newflags != 0) {
-		BOOST_CHECK_EQUAL(flagValue.get_int(), newflags);
+		BOOST_CHECK_EQUAL(flagValue.get_uint(), newflags);
 	}
 	else {
 		BOOST_CHECK(flagValue.isNull());
 	}
 	// ensure sender state not changed before generating blocks
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + guid));
-	BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
+	BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_uint()) == guid);
 	BOOST_CHECK(find_value(r.get_obj(), "address").get_str() == oldaddress);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "public_value").get_str(), oldpubdata);
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "update_flags").get_int(), oldflags);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "update_flags").get_uint(), oldflags);
 
 	totalsupply = find_value(r.get_obj(), "total_supply");
 	BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision) == oldsupplyamount);
 	GenerateBlocks(5, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + guid));
 
-	BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
+	BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_uint()) == guid);
 	BOOST_CHECK(find_value(r.get_obj(), "address").get_str() == oldaddress);
 	totalsupply = find_value(r.get_obj(), "total_supply");
 	BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision) == newamount);
@@ -872,10 +872,10 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 	if (!otherNode1.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "assetinfo " + guid ));
-		BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
+		BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_uint()) == guid);
 		BOOST_CHECK(find_value(r.get_obj(), "address").get_str() == oldaddress);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "public_value").get_str(), newpubdata);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "update_flags").get_int(), newflags);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "update_flags").get_uint(), newflags);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "contract").get_str(), newcontract);
 	
 		totalsupply = find_value(r.get_obj(), "total_supply");
@@ -886,12 +886,12 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 	if (!otherNode2.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "assetinfo " + guid));
-		BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
+		BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_uint()) == guid);
 		BOOST_CHECK(find_value(r.get_obj(), "address").get_str() == oldaddress);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "public_value").get_str(), newpubdata);
 		totalsupply = find_value(r.get_obj(), "total_supply");
 		BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision) == newamount);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "update_flags").get_int(), newflags);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "update_flags").get_uint(), newflags);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "contract").get_str(), newcontract);
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "listassetindexassets " + oldaddress ));
 		BOOST_CHECK(FindAssetGUIDFromAssetIndexResults(r, guid));
@@ -918,7 +918,7 @@ void AssetTransfer(const string& node, const string &tonode, const string& guid,
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + guid, bRegtest));
 
 
-	BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
+	BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_uint()) == guid);
 	if(bRegtest){
 		BOOST_CHECK_NO_THROW(r = CallRPC(tonode, "assetinfo " + guid, bRegtest));
 		BOOST_CHECK(find_value(r.get_obj(), "address").get_str() == toaddress);
@@ -935,7 +935,7 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
 
 	UniValue r;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + guid));
-	int nprecision = find_value(r.get_obj(), "precision").get_int();
+	int nprecision = find_value(r.get_obj(), "precision").get_uint();
 
 	CAssetAllocation theAssetAllocation;
 	UniValue valueTo;
@@ -1095,7 +1095,7 @@ string AssetSend(const string& node, const string& guid, const string& inputs, c
 {
 	UniValue r;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + guid, bRegtest));
-	int nprecision = find_value(r.get_obj(), "precision").get_int();
+	int nprecision = find_value(r.get_obj(), "precision").get_uint();
     string fromAddress = find_value(r.get_obj(), "address").get_str();
     
 	CAssetAllocation theAssetAllocation;

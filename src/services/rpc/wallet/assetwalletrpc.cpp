@@ -123,7 +123,6 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
         {
             {"hexstring", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The raw syscoin transaction output given from rpc"},
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address funding this transaction."},
-            {"output_index", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Output index from available UTXOs in address. Defaults to selecting all that are needed to fund the transaction."}
         },
         RPCResult{
             "{\n"
@@ -132,7 +131,7 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
         },
         RPCExamples{
             HelpExampleCli("syscointxfund", "<hexstring> \"sys1qtyf33aa2tl62xhrzhralpytka0krxvt0a4e8ee\"")
-            + HelpExampleRpc("syscointxfund", "<hexstring>, \"sys1qtyf33aa2tl62xhrzhralpytka0krxvt0a4e8ee\", 0")
+            + HelpExampleRpc("syscointxfund", "<hexstring>, \"sys1qtyf33aa2tl62xhrzhralpytka0krxvt0a4e8ee\"")
             + HelpRequiringPassphrase(pwallet)
         }
     }.Check(request);
@@ -144,10 +143,6 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5500 - " + _("Could not send raw transaction: Cannot decode transaction from hex string: ") + hexstring);
 
     UniValue addressArray(UniValue::VARR);  
-    int output_index = -1;
-    if (params.size() > 2) {
-        output_index = params[2].get_int();
-    }
  
     CScript scriptPubKeyFromOrig = GetScriptForDestination(DecodeDestination(strAddress));
     addressArray.push_back("addr(" + strAddress + ")"); 
@@ -246,7 +241,7 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
             const UniValue& utxoObj = utxoArray[i].get_obj();
             const string &strTxid = find_value(utxoObj, "txid").get_str();
             const uint256& txid = uint256S(strTxid);
-            const int& nOut = find_value(utxoObj, "vout").get_int();
+            const uint32_t& nOut = find_value(utxoObj, "vout").get_uint();
             const std::vector<unsigned char> &data(ParseHex(find_value(utxoObj, "scriptPubKey").get_str()));
             const CScript& scriptPubKey = CScript(data.begin(), data.end());
             const CAmount &nValue = AmountFromValue(find_value(utxoObj, "amount"));
@@ -334,7 +329,7 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
         }
     }.Check(request);
     std::string strAddressFrom = params[0].get_str();
-    const int &nAsset = params[1].get_int();          	
+    const uint32_t &nAsset = params[1].get_uint();          	
 	CAssetAllocation theAssetAllocation;
     const CWitnessAddress& witnessAddress = DescribeWitnessAddress(strAddressFrom);
     strAddressFrom = witnessAddress.ToString();
@@ -408,14 +403,14 @@ UniValue assetnew(const JSONRPCRequest& request) {
     if(!strContract.empty())
          boost::erase_all(strContract, "0x");  // strip 0x in hex str if exist
    
-    int precision = params[4].get_int();
+    uint32_t precision = params[4].get_uint();
     string vchWitness;
     UniValue param4 = params[5];
     UniValue param5 = params[6];
     
     CAmount nBalance = AssetAmountFromValue(param4, precision);
     CAmount nMaxSupply = AssetAmountFromValue(param5, precision);
-    int nUpdateFlags = params[7].get_int();
+    uint32_t nUpdateFlags = params[7].get_uint();
     vchWitness = params[8].get_str();
     const CWitnessAddress& witnessAddress = DescribeWitnessAddress(strAddress);
     strAddress = witnessAddress.ToString();
@@ -451,7 +446,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
     }
     vecSend.push_back(fee);
     UniValue res = syscointxfund_helper(pwallet, strAddress, SYSCOIN_TX_VERSION_ASSET_ACTIVATE, vchWitness, vecSend);
-    res.__pushKV("asset_guid", (int)newAsset.nAsset);
+    res.__pushKV("asset_guid", newAsset.nAsset);
     return res;
 }
 UniValue assetupdate(const JSONRPCRequest& request) {
@@ -478,7 +473,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
             + HelpExampleRpc("assetupdate", "\"assetguid\", \"publicvalue\", \"contractaddress\", \"supply\", \"update_flags\", \"\"")
         }
         }.Check(request);
-    const int &nAsset = params[0].get_int();
+    const uint32_t &nAsset = params[0].get_uint();
     string strData = "";
     string strCategory = "";
     string strPubData = params[1].get_str();
@@ -491,7 +486,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
         boost::erase_all(strContract, "0x");  // strip 0x if exist
     vector<unsigned char> vchContract = ParseHex(strContract);
 
-    int nUpdateFlags = params[4].get_int();
+    uint32_t nUpdateFlags = params[4].get_uint();
     string vchWitness;
     vchWitness = params[5].get_str();
     
@@ -560,7 +555,7 @@ UniValue assettransfer(const JSONRPCRequest& request) {
     }.Check(request);
 
     // gather & validate inputs
-    const int &nAsset = params[0].get_int();
+    const uint32_t &nAsset = params[0].get_uint();
     string strAddressTo = params[1].get_str();
     string vchWitness;
     vchWitness = params[2].get_str();
@@ -623,7 +618,7 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
     }
     }.Check(request);
     // gather & validate inputs
-    const int &nAsset = params[0].get_int();
+    const uint32_t &nAsset = params[0].get_uint();
     UniValue valueTo = params[1];
     string vchWitness = params[2].get_str();
     if (!valueTo.isArray())
@@ -694,7 +689,7 @@ UniValue assetsend(const JSONRPCRequest& request) {
         }
 
     }.Check(request);
-    const uint32_t &nAsset = params[0].get_int();
+    const uint32_t &nAsset = params[0].get_uint();
 	CAsset theAsset;
 	if (!GetAsset(nAsset, theAsset))
 		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("Could not find a asset with this key"));            
@@ -708,7 +703,7 @@ UniValue assetsend(const JSONRPCRequest& request) {
     outputObj.__pushKV("amount", ValueFromAssetAmount(nAmount, theAsset.nPrecision));
     output.push_back(outputObj);
     UniValue paramsFund(UniValue::VARR);
-    paramsFund.push_back((int)nAsset);
+    paramsFund.push_back(nAsset);
     paramsFund.push_back(output);
     paramsFund.push_back("");
     JSONRPCRequest requestMany;
@@ -753,7 +748,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
     }.Check(request);
 
 	// gather & validate inputs
-	const int &nAsset = params[0].get_int();
+	const uint32_t &nAsset = params[0].get_uint();
 	std::string strAddress = params[1].get_str();
 	UniValue valueTo = params[2];
 	vector<unsigned char> vchWitness;
@@ -846,12 +841,8 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
         }
     }.Check(request);
 
-    uint32_t nAsset;
-    if(params[0].isNum())
-        nAsset = (uint32_t)params[0].get_int();
-    else if(params[0].isStr())
-        ParseUInt32(params[0].get_str(), &nAsset);
-	string strAddress = params[1].get_str();
+    const uint32_t &nAsset = params[0].get_uint();
+	std::string strAddress = params[1].get_str();
     
 	const CWitnessAddress& witnessAddress = DescribeWitnessAddress(strAddress); 
     strAddress = witnessAddress.ToString();  	
@@ -942,20 +933,12 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
         }
     }.Check(request);
 
-    uint32_t nAsset;
-    if(params[0].isNum())
-        nAsset = (uint32_t)params[0].get_int();
-    else if(params[0].isStr())
-        ParseUInt32(params[0].get_str(), &nAsset);
+    const uint32_t &nAsset = params[0].get_uint();
 
-    string strAddress = params[1].get_str();
-    CAmount nAmount = AmountFromValue(params[2]);
+    std::string strAddress = params[1].get_str();
+    const CAmount &nAmount = AmountFromValue(params[2]);
     
-    uint32_t nBlockNumber;
-    if(params[3].isNum())
-        nBlockNumber = (uint32_t)params[3].get_int();
-    else if(params[3].isStr())
-        ParseUInt32(params[3].get_str(), &nBlockNumber);    
+    const uint32_t &nBlockNumber = params[3].get_uint(); 
     
     string vchTxValue = params[4].get_str();
     string vchTxRoot = params[5].get_str();
@@ -1054,7 +1037,7 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
             + HelpExampleRpc("assetallocationsend", "\"assetguid\", \"addressfrom\", \"address\", \"amount\"")
         }
     }.Check(request);
-    const uint32_t &nAsset = params[0].get_int();
+    const uint32_t &nAsset = params[0].get_uint();
 	CAsset theAsset;
 	if (!GetAsset(nAsset, theAsset))
 		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("Could not find a asset with this key"));            
@@ -1068,7 +1051,7 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
     outputObj.__pushKV("amount", ValueFromAssetAmount(nAmount, theAsset.nPrecision));
     output.push_back(outputObj);
     UniValue paramsFund(UniValue::VARR);
-    paramsFund.push_back((int)nAsset);
+    paramsFund.push_back(nAsset);
     paramsFund.push_back(params[1].get_str());
     paramsFund.push_back(output);
     paramsFund.push_back("");
@@ -1104,10 +1087,10 @@ UniValue assetallocationlock(const JSONRPCRequest& request) {
     }.Check(request);
             
 	// gather & validate inputs
-	const int &nAsset = params[0].get_int();
+	const uint32_t &nAsset = params[0].get_uint();
 	string strAddress = params[1].get_str();
 	uint256 txid = uint256S(params[2].get_str());
-	int outputIndex = params[3].get_int();
+	uint32_t outputIndex = params[3].get_uint();
 	vector<unsigned char> vchWitness;
 	string strWitness = params[4].get_str();
 

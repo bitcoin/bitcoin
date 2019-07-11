@@ -267,7 +267,7 @@ bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, const CAs
             nBalanceZDAG = mapIt->second;
     }
     oAssetAllocation.__pushKV("asset_allocation", allocationTupleStr);
-	oAssetAllocation.__pushKV("asset_guid", (int)assetallocation.assetAllocationTuple.nAsset);
+	oAssetAllocation.__pushKV("asset_guid", assetallocation.assetAllocationTuple.nAsset);
     oAssetAllocation.__pushKV("symbol", asset.strSymbol);
 	oAssetAllocation.__pushKV("address",  assetallocation.assetAllocationTuple.witnessAddress.ToString());
 	oAssetAllocation.__pushKV("balance", ValueFromAssetAmount(assetallocation.nBalance, asset.nPrecision));
@@ -310,7 +310,7 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry, CWallet* c
     bool isSenderMine = false;
     entry.__pushKV("txtype", assetAllocationFromTx(tx.nVersion));
     entry.__pushKV("asset_allocation", assetallocation.assetAllocationTuple.ToString());
-    entry.__pushKV("asset_guid", (int)assetallocation.assetAllocationTuple.nAsset);
+    entry.__pushKV("asset_guid", assetallocation.assetAllocationTuple.nAsset);
     entry.__pushKV("symbol", dbAsset.strSymbol);
     entry.__pushKV("txid", txHash.GetHex());
     entry.__pushKV("height", nHeight);
@@ -373,7 +373,7 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry)
     }
     entry.__pushKV("txtype", assetAllocationFromTx(tx.nVersion));
     entry.__pushKV("asset_allocation", assetallocation.assetAllocationTuple.ToString());
-    entry.__pushKV("asset_guid", (int)assetallocation.assetAllocationTuple.nAsset);
+    entry.__pushKV("asset_guid", assetallocation.assetAllocationTuple.nAsset);
     entry.__pushKV("symbol", dbAsset.strSymbol);
     entry.__pushKV("txid", txHash.GetHex());
     entry.__pushKV("height", nHeight);
@@ -416,7 +416,7 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, const CAsset& dbAsset, cons
         return false;
     entry.__pushKV("txtype", assetAllocationFromTx(tx.nVersion));
     entry.__pushKV("asset_allocation", assetallocation.assetAllocationTuple.ToString());
-    entry.__pushKV("asset_guid", (int)assetallocation.assetAllocationTuple.nAsset);
+    entry.__pushKV("asset_guid", assetallocation.assetAllocationTuple.nAsset);
     entry.__pushKV("symbol", dbAsset.strSymbol);
     entry.__pushKV("txid", tx.GetHash().GetHex());
     entry.__pushKV("height", nHeight);
@@ -462,7 +462,7 @@ bool AssetMintTxToJson(const CTransaction& tx, UniValue &entry){
         entry.__pushKV("asset_allocation", mintsyscoin.assetAllocationTuple.ToString());
         CAsset dbAsset;
         GetAsset(mintsyscoin.assetAllocationTuple.nAsset, dbAsset);
-        entry.__pushKV("asset_guid", (int)mintsyscoin.assetAllocationTuple.nAsset);
+        entry.__pushKV("asset_guid", mintsyscoin.assetAllocationTuple.nAsset);
         entry.__pushKV("symbol", dbAsset.strSymbol);
         entry.__pushKV("sender", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
         UniValue oAssetAllocationReceiversArray(UniValue::VARR);
@@ -484,7 +484,7 @@ bool AssetMintTxToJson(const CTransaction& tx, UniValue &entry){
         oSPVProofObj.__pushKV("receiptvalue", HexStr(mintsyscoin.vchReceiptValue));   
         oSPVProofObj.__pushKV("receiptparentnodes", HexStr(mintsyscoin.vchReceiptParentNodes)); 
         oSPVProofObj.__pushKV("receiptroot", HexStr(mintsyscoin.vchReceiptRoot)); 
-        oSPVProofObj.__pushKV("ethblocknumber", (int)mintsyscoin.nBlockNumber); 
+        oSPVProofObj.__pushKV("ethblocknumber", mintsyscoin.nBlockNumber); 
         entry.__pushKV("spv_proof", oSPVProofObj); 
         return true;
     } 
@@ -497,7 +497,7 @@ bool AssetMintTxToJson(const CTransaction& tx, const CMintSyscoin& mintsyscoin, 
        
         CAsset dbAsset;
         GetAsset(mintsyscoin.assetAllocationTuple.nAsset, dbAsset);
-        entry.__pushKV("asset_guid", (int)mintsyscoin.assetAllocationTuple.nAsset);
+        entry.__pushKV("asset_guid", mintsyscoin.assetAllocationTuple.nAsset);
         entry.__pushKV("symbol", dbAsset.strSymbol);
         entry.__pushKV("sender", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
         UniValue oAssetAllocationReceiversArray(UniValue::VARR);
@@ -519,14 +519,14 @@ bool AssetMintTxToJson(const CTransaction& tx, const CMintSyscoin& mintsyscoin, 
         oSPVProofObj.__pushKV("receiptvalue", HexStr(mintsyscoin.vchReceiptValue));   
         oSPVProofObj.__pushKV("receiptparentnodes", HexStr(mintsyscoin.vchReceiptParentNodes)); 
         oSPVProofObj.__pushKV("receiptroot", HexStr(mintsyscoin.vchReceiptRoot)); 
-        oSPVProofObj.__pushKV("ethblocknumber", (int)mintsyscoin.nBlockNumber); 
+        oSPVProofObj.__pushKV("ethblocknumber", mintsyscoin.nBlockNumber); 
         entry.__pushKV("spv_proof", oSPVProofObj); 
         return true;                                        
     } 
     return false;                   
 }
 
-bool CAssetAllocationMempoolDB::ScanAssetAllocationMempoolBalances(const int count, const int from, const UniValue& oOptions, UniValue& oRes) {
+bool CAssetAllocationMempoolDB::ScanAssetAllocationMempoolBalances(const uint32_t count, const uint32_t from, const UniValue& oOptions, UniValue& oRes) {
     string strTxid = "";
     vector<string> vecSenders;
     vector<string> vecReceivers;
@@ -545,7 +545,7 @@ bool CAssetAllocationMempoolDB::ScanAssetAllocationMempoolBalances(const int cou
             }
         }
     }
-    int index = 0;
+    uint32_t index = 0;
     {
         LOCK(cs_assetallocation);
         for (auto&indexObj : mempoolMapAssetBalances) {
@@ -634,14 +634,14 @@ bool CAssetAllocationDB::Flush(const AssetAllocationMap &mapAssetAllocations){
 	LogPrint(BCLog::SYS, "Flushing %d assets allocations (erased %d, written %d)\n", mapAssetAllocations.size(), erase, write);
     return WriteBatch(batch);
 }
-bool CAssetAllocationDB::ScanAssetAllocations(const int count, const int from, const UniValue& oOptions, UniValue& oRes) {
+bool CAssetAllocationDB::ScanAssetAllocations(const uint32_t count, const uint32_t from, const UniValue& oOptions, UniValue& oRes) {
 	string strTxid = "";
 	vector<CWitnessAddress> vecWitnessAddresses;
 	uint32_t nAsset = 0;
 	if (!oOptions.isNull()) {
 		const UniValue &assetObj = find_value(oOptions, "asset_guid");
 		if(assetObj.isNum()) {
-			nAsset = (uint32_t)assetObj.get_int();
+			nAsset = assetObj.get_uint();
 		}
 
 		const UniValue &owners = find_value(oOptions, "addresses");
@@ -662,7 +662,7 @@ bool CAssetAllocationDB::ScanAssetAllocations(const int count, const int from, c
 	CAssetAllocation txPos;
     CAssetAllocationTuple key;
 	CAsset theAsset;
-	int index = 0;
+	uint32_t index = 0;
 	while (pcursor->Valid()) {
 		boost::this_thread::interruption_point();
 		try {
