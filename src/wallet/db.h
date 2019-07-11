@@ -55,7 +55,8 @@ public:
     enum VerifyResult { VERIFY_OK,
                         RECOVER_OK,
                         RECOVER_FAIL };
-    VerifyResult Verify(const std::string& strFile, bool (*recoverFunc)(const std::string& strFile));
+    typedef bool (*recoverFunc_type)(const std::string& strFile, std::string& out_backup_filename);
+    VerifyResult Verify(const std::string& strFile, recoverFunc_type recoverFunc, std::string& out_backup_filename);
     /**
      * Salvage data from a file that Verify says is bad.
      * fAggressive sets the DB_AGGRESSIVE flag (see berkeley DB->verify() method documentation).
@@ -93,13 +94,13 @@ class CWalletDBWrapper
     friend class CDB;
 public:
     /** Create dummy DB handle */
-    CWalletDBWrapper(): env(nullptr)
+    CWalletDBWrapper() : nLastSeen(0), nLastFlushed(0), nLastWalletUpdate(0), env(nullptr)
     {
     }
 
     /** Create DB handle to real database */
-    CWalletDBWrapper(CDBEnv *env_in, const std::string &strFile_in):
-        env(env_in), strFile(strFile_in)
+    CWalletDBWrapper(CDBEnv *env_in, const std::string &strFile_in) :
+        nLastSeen(0), nLastFlushed(0), nLastWalletUpdate(0), env(env_in), strFile(strFile_in)
     {
     }
 
@@ -118,6 +119,13 @@ public:
     /** Make sure all changes are flushed to disk.
      */
     void Flush(bool shutdown);
+
+    void IncrementUpdateCounter();
+
+    std::atomic<unsigned int> nUpdateCounter;
+    unsigned int nLastSeen;
+    unsigned int nLastFlushed;
+    int64_t nLastWalletUpdate;
 
 private:
     /** BerkeleyDB specific */
@@ -149,7 +157,7 @@ public:
 
     void Flush();
     void Close();
-    static bool Recover(const std::string& filename, void *callbackDataIn, bool (*recoverKVcallback)(void* callbackData, CDataStream ssKey, CDataStream ssValue));
+    static bool Recover(const std::string& filename, void *callbackDataIn, bool (*recoverKVcallback)(void* callbackData, CDataStream ssKey, CDataStream ssValue), std::string& out_backup_filename);
 
     /* flush the wallet passively (TRY_LOCK)
        ideal to be called periodically */
@@ -157,7 +165,7 @@ public:
     /* verifies the database environment */
     static bool VerifyEnvironment(const std::string& walletFile, const fs::path& dataDir, std::string& errorStr);
     /* verifies the database file */
-    static bool VerifyDatabaseFile(const std::string& walletFile, const fs::path& dataDir, std::string& warningStr, std::string& errorStr, bool (*recoverFunc)(const std::string& strFile));
+    static bool VerifyDatabaseFile(const std::string& walletFile, const fs::path& dataDir, std::string& warningStr, std::string& errorStr, CDBEnv::recoverFunc_type recoverFunc);
 
 private:
     CDB(const CDB&);

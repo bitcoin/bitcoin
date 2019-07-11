@@ -246,8 +246,9 @@ void PrepareShutdown()
         privateSendClient.fPrivateSendRunning = false;
         privateSendClient.ResetPool();
     }
-    if (pwalletMain)
-        pwalletMain->Flush(false);
+    for (CWalletRef pwallet : vpwallets) {
+        pwallet->Flush(false);
+    }
 #endif
     MapPort(false);
     UnregisterValidationInterface(peerLogic.get());
@@ -306,8 +307,9 @@ void PrepareShutdown()
         evoDb = NULL;
     }
 #ifdef ENABLE_WALLET
-    if (pwalletMain)
-        pwalletMain->Flush(true);
+    for (CWalletRef pwallet : vpwallets) {
+        pwallet->Flush(true);
+    }
 #endif
 
 #if ENABLE_ZMQ
@@ -359,8 +361,10 @@ void Shutdown()
    // Shutdown part 2: Stop TOR thread and delete wallet instance
     StopTorControl();
 #ifdef ENABLE_WALLET
-    delete pwalletMain;
-    pwalletMain = NULL;
+    for (CWalletRef pwallet : vpwallets) {
+        delete pwallet;
+    }
+    vpwallets.clear();
 #endif
     globalVerifyHandle.reset();
     ECC_Stop();
@@ -834,8 +838,8 @@ void ThreadImport(std::vector<fs::path> vImportFiles)
 
 #ifdef ENABLE_WALLET
     // we can't do this before DIP3 is fully initialized
-    if (pwalletMain) {
-        pwalletMain->AutoLockMasternodeCollaterals();
+    for (CWalletRef pwallet : vpwallets) {
+        pwallet->AutoLockMasternodeCollaterals();
     }
 #endif
 
@@ -1998,11 +2002,11 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         nMaxRounds = std::numeric_limits<int>::max();
     }
 
-    if (pwalletMain == nullptr) {
+    if (vpwallets.empty()) {
         privateSendClient.fEnablePrivateSend = privateSendClient.fPrivateSendRunning = false;
     } else {
         privateSendClient.fEnablePrivateSend = gArgs.GetBoolArg("-enableprivatesend", !fLiteMode);
-        privateSendClient.fPrivateSendRunning = pwalletMain->IsLocked() ? false : gArgs.GetBoolArg("-privatesendautostart", DEFAULT_PRIVATESEND_AUTOSTART);
+        privateSendClient.fPrivateSendRunning = vpwallets[0]->IsLocked() ? false : gArgs.GetBoolArg("-privatesendautostart", DEFAULT_PRIVATESEND_AUTOSTART);
     }
     privateSendClient.fPrivateSendMultiSession = gArgs.GetBoolArg("-privatesendmultisession", DEFAULT_PRIVATESEND_MULTISESSION);
     privateSendClient.nPrivateSendSessions = std::min(std::max((int)gArgs.GetArg("-privatesendsessions", DEFAULT_PRIVATESEND_SESSIONS), MIN_PRIVATESEND_SESSIONS), MAX_PRIVATESEND_SESSIONS);
@@ -2151,8 +2155,9 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     uiInterface.InitMessage(_("Done loading"));
 
 #ifdef ENABLE_WALLET
-    if (pwalletMain)
-        pwalletMain->postInitProcess(scheduler);
+    for (CWalletRef pwallet : vpwallets) {
+        pwallet->postInitProcess(scheduler);
+    }
 #endif
 
     return true;

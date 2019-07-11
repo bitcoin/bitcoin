@@ -568,6 +568,7 @@ void ArgsManager::ForceSetArg(const std::string& strArg, const std::string& strV
 {
     LOCK(cs_args);
     mapArgs[strArg] = strValue;
+    mapMultiArgs[strArg].clear();
     mapMultiArgs[strArg].push_back(strValue);
 }
 
