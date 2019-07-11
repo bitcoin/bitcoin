@@ -367,6 +367,8 @@ crypto_libdash_crypto_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(PIC_FLAGS)
 crypto_libdash_crypto_a_SOURCES = \
   crypto/aes.cpp \
   crypto/aes.h \
+  crypto/chacha_poly_aead.h \
+  crypto/chacha_poly_aead.cpp \
   crypto/chacha20.h \
   crypto/chacha20.cpp \
   crypto/common.h \
@@ -588,7 +590,7 @@ dash_tx_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(CRYPTO_LIBS) $(BLS_LIBS)
 # dashconsensus library #
 if BUILD_BITCOIN_LIBS
 include_HEADERS = script/dashconsensus.h
-libdashconsensus_la_SOURCES = $(crypto_libdash_crypto_a_SOURCES) $(libdash_consensus_a_SOURCES)
+libdashconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libdash_crypto_a_SOURCES) $(libdash_consensus_a_SOURCES)
 
 if GLIBC_BACK_COMPAT
   libdashconsensus_la_SOURCES += compat/glibc_compat.cpp
