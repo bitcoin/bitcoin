@@ -94,6 +94,9 @@ class PSBTTest(BitcoinTestFramework):
         psbtx1 = self.nodes[0].walletcreatefundedpsbt([{"txid": utxo1['txid'], "vout": utxo1['vout']}], {self.nodes[2].getnewaddress():90}, 0, {"add_inputs": True})['psbt']
         assert_equal(len(self.nodes[0].decodepsbt(psbtx1)['tx']['vin']), 2)
 
+        # Inputs argument can be null
+        self.nodes[0].walletcreatefundedpsbt(None, {self.nodes[2].getnewaddress():10})
+
         # Node 1 should not be able to add anything to it but still return the psbtx same as before
         psbtx = self.nodes[1].walletprocesspsbt(psbtx1)['psbt']
         assert_equal(psbtx1, psbtx)
