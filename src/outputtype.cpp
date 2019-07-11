@@ -5,9 +5,10 @@
 
 #include <outputtype.h>
 
-#include <keystore.h>
 #include <pubkey.h>
 #include <script/script.h>
+#include <script/sign.h>
+#include <script/signingprovider.h>
 #include <script/standard.h>
 
 #include <assert.h>
@@ -73,7 +74,7 @@ std::vector<CTxDestination> GetAllDestinationsForKey(const CPubKey& key)
     }
 }
 
-CTxDestination AddAndGetDestinationForScript(CKeyStore& keystore, const CScript& script, OutputType type)
+CTxDestination AddAndGetDestinationForScript(FillableSigningProvider& keystore, const CScript& script, OutputType type)
 {
     // Add script to keystore
     keystore.AddCScript(script);
@@ -98,4 +99,3 @@ CTxDestination AddAndGetDestinationForScript(CKeyStore& keystore, const CScript&
     default: assert(false);
     }
 }
-

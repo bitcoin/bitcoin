@@ -6,10 +6,10 @@
 
 #include <core_io.h>
 #include <key.h>
-#include <keystore.h>
 #include <script/script.h>
 #include <script/script_error.h>
 #include <script/sign.h>
+#include <script/signingprovider.h>
 #include <util/system.h>
 #include <util/strencodings.h>
 #include <test/setup_common.h>
@@ -1199,7 +1199,7 @@ SignatureData CombineSignatures(const CTxOut& txout, const CMutableTransaction& 
 BOOST_AUTO_TEST_CASE(script_combineSigs)
 {
     // Test the ProduceSignature's ability to combine signatures function
-    CBasicKeyStore keystore;
+    FillableSigningProvider keystore;
     std::vector<CKey> keys;
     std::vector<CPubKey> pubkeys;
     for (int i = 0; i < 3; i++)

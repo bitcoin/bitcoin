@@ -6,9 +6,8 @@
 #define SYSCOIN_RPC_RAWTRANSACTION_UTIL_H
 
 #include <map>
-
-class CBasicKeyStore;
 class CTransaction;
+class FillableSigningProvider;
 class UniValue;
 class uint256;
 struct CMutableTransaction;
@@ -26,7 +25,7 @@ class COutPoint;
  * @param  hashType      The signature hash type
  * @returns JSON object with details of signed transaction
  */
-UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxs, CBasicKeyStore* keystore, std::map<COutPoint, Coin>& coins, bool tempKeystore, const UniValue& hashType);
+UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxs, FillableSigningProvider* keystore, std::map<COutPoint, Coin>& coins, bool tempKeystore, const UniValue& hashType);
 
 /** Create a transaction from univalue parameters */
 CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, const UniValue& rbf);

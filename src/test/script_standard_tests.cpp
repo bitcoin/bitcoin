@@ -3,8 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <key.h>
-#include <keystore.h>
 #include <script/script.h>
+#include <script/signingprovider.h>
 #include <script/standard.h>
 #include <test/setup_common.h>
 

@@ -1076,7 +1076,6 @@ UniValue listassetindexassets(const JSONRPCRequest& request) {
     return oRes;
 }
 UniValue syscoinstopgeth(const JSONRPCRequest& request) {
-    const UniValue &params = request.params;
     RPCHelpMan{"syscoinstopgeth",
     "\nStops Geth and the relayer from running.\n",
     {},
@@ -1099,7 +1098,6 @@ UniValue syscoinstopgeth(const JSONRPCRequest& request) {
     return ret;
 }
 UniValue syscoinstartgeth(const JSONRPCRequest& request) {
-    const UniValue &params = request.params;
     RPCHelpMan{"syscoinstartgeth",
     "\nStarts Geth and the relayer.\n",
     {},
