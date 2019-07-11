@@ -54,6 +54,7 @@ class NodeImpl : public Node
 {
 public:
     NodeImpl() { m_interfaces.chain = MakeChain(); }
+    void initError(const std::string& message) override { InitError(message); }
     bool parseParameters(int argc, const char* const argv[], std::string& error) override
     {
         return gArgs.ParseParameters(argc, argv, error);
