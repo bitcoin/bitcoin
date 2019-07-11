@@ -1192,6 +1192,9 @@ public:
 
     //! Sets the active ScriptPubKeyMan for the specified type and internal
     void SetActiveScriptPubKeyMan(uint256 id, OutputType type, bool internal, bool memonly = false);
+
+    //! Create new DescriptoScriptPubKeyMans and add them to the wallet
+    void SetupDescriptorScriptPubKeyMans();
 };
 
 /**
