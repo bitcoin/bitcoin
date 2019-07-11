@@ -92,7 +92,7 @@ CWitnessAddress DescribeWitnessAddress(const std::string& strAddress){
         if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
             throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
         witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
-        witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();  
+        witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_uint();  
     }
     return CWitnessAddress(witnessVersion, strAddress == "burn"? vchFromString("burn"): ParseHex(witnessProgramHex));
 }
@@ -123,7 +123,7 @@ unsigned int addressunspent(const string& strAddressFrom, COutPoint& outpoint)
         {
             const UniValue& utxoObj = utxoArray[i].get_obj();
             const uint256& txid = uint256S(find_value(utxoObj, "txid").get_str());
-            const int& nOut = find_value(utxoObj, "vout").get_int();
+            const uint32_t& nOut = find_value(utxoObj, "vout").get_uint();
 
             const COutPoint &outPointToCheck = COutPoint(txid, nOut);
             bool locked = false;
@@ -321,7 +321,7 @@ UniValue assetallocationbalance(const JSONRPCRequest& request) {
         }
     }.Check(request);
 
-    const int &nAsset = params[0].get_int();
+    const int &nAsset = params[0].get_uint();
     string strAddressFrom = params[1].get_str();
     UniValue oAssetAllocation(UniValue::VOBJ);
     const CAssetAllocationTuple assetAllocationTuple(nAsset, DescribeWitnessAddress(strAddressFrom));
@@ -362,7 +362,7 @@ UniValue assetallocationbalances(const JSONRPCRequest& request) {
         }
     }.Check(request);
 
-    const int &nAsset = params[0].get_int();
+    const int &nAsset = params[0].get_uint();
     const UniValue &headerArray = params[1].get_array();
 
     CAsset theAsset;
@@ -409,7 +409,7 @@ UniValue assetallocationinfo(const JSONRPCRequest& request) {
         }
     }.Check(request);
 
-    const int &nAsset = params[0].get_int();
+    const int &nAsset = params[0].get_uint();
     const std::string &strAddressFrom = params[1].get_str();
     UniValue oAssetAllocation(UniValue::VOBJ);
     const CAssetAllocationTuple assetAllocationTuple(nAsset, DescribeWitnessAddress(strAddressFrom));
@@ -511,7 +511,7 @@ UniValue assetallocationsenderstatus(const JSONRPCRequest& request) {
         }
     }.Check(request);
 
-	const int &nAsset = params[0].get_int();
+	const int &nAsset = params[0].get_uint();
 	string strAddressSender = params[1].get_str();
 	uint256 txid;
 	txid.SetNull();
@@ -581,10 +581,10 @@ UniValue listassetallocations(const JSONRPCRequest& request) {
             }
     }.Check(request);
 	UniValue options;
-	int count = 10;
-	int from = 0;
+	uint32_t count = 10;
+	uint32_t from = 0;
 	if (params.size() > 0) {
-		count = params[0].get_int();
+		count = params[0].get_uint();
 		if (count == 0) {
 			count = 10;
 		} else
@@ -593,7 +593,7 @@ UniValue listassetallocations(const JSONRPCRequest& request) {
 		}
 	}
 	if (params.size() > 1) {
-		from = params[1].get_int();
+		from = params[1].get_uint();
 		if (from < 0) {
 			throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("'from' must be 0 or greater"));
 		}
@@ -635,10 +635,10 @@ UniValue listassetallocationmempoolbalances(const JSONRPCRequest& request) {
         }
     }.Check(request);
     UniValue options;
-    int count = 10;
-    int from = 0;
+    uint32_t count = 10;
+    u_int32_t from = 0;
     if (params.size() > 0) {
-        count = params[0].get_int();
+        count = params[0].get_uint();
         if (count == 0) {
             count = 10;
         } else
@@ -647,7 +647,7 @@ UniValue listassetallocationmempoolbalances(const JSONRPCRequest& request) {
         }
     }
     if (params.size() > 1) {
-        from = params[1].get_int();
+        from = params[1].get_uint();
         if (from < 0) {
             throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("'from' must be 0 or greater"));
         }
@@ -767,7 +767,7 @@ UniValue assetinfo(const JSONRPCRequest& request) {
         }
     }.Check(request);
 
-    const int &nAsset = params[0].get_int();
+    const int &nAsset = params[0].get_uint();
     UniValue oAsset(UniValue::VOBJ);
 
     CAsset txPos;
@@ -826,10 +826,10 @@ UniValue listassets(const JSONRPCRequest& request) {
             }
     }.Check(request);
     UniValue options;
-    int count = 10;
-    int from = 0;
+    uint32_t count = 10;
+    uint32_t from = 0;
     if (params.size() > 0) {
-        count = params[0].get_int();
+        count = params[0].get_uint();
         if (count == 0) {
             count = 10;
         } else
@@ -838,7 +838,7 @@ UniValue listassets(const JSONRPCRequest& request) {
         }
     }
     if (params.size() > 1) {
-        from = params[1].get_int();
+        from = params[1].get_uint();
         if (from < 0) {
             throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("'from' must be 0 or greater"));
         }
@@ -961,7 +961,7 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request)
     catch(const runtime_error& e){
     }
     CAsset asset;
-    if (!GetAsset(assetVal.get_int(), asset))
+    if (!GetAsset(assetVal.get_uint(), asset))
             throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("Asset not found"));
     if(asset.vchContract.empty())
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("Asset contract is empty"));
@@ -1148,7 +1148,7 @@ UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
         }
         }.Check(request);
     string status = params[0].get_str();
-    int highestBlock = params[1].get_int();
+    uint32_t highestBlock = params[1].get_uint();
     const uint32_t nGethOldHeight = fGethCurrentHeight;
     UniValue ret(UniValue::VOBJ);
     UniValue retArray(UniValue::VARR);
@@ -1169,8 +1169,8 @@ UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
    
     for(const auto& range: vecMissingBlockRanges){
         UniValue retRange(UniValue::VOBJ);
-        retRange.__pushKV("from", (int)range.first);
-        retRange.__pushKV("to", (int)range.second);
+        retRange.__pushKV("from", range.first);
+        retRange.__pushKV("to", range.second);
         retArray.push_back(retRange);
     }
     LogPrint(BCLog::SYS, "syscoinsetethstatus old height %d new height %d\n", nGethOldHeight, fGethCurrentHeight);
@@ -1178,8 +1178,8 @@ UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
     if(fZMQEthStatus){
         UniValue oEthStatus(UniValue::VOBJ);
         oEthStatus.__pushKV("geth_sync_status",  fGethSyncStatus);
-        oEthStatus.__pushKV("geth_total_blocks",  (int)fGethSyncHeight);
-        oEthStatus.__pushKV("geth_current_block",  (int)fGethCurrentHeight);
+        oEthStatus.__pushKV("geth_total_blocks",  fGethSyncHeight);
+        oEthStatus.__pushKV("geth_current_block",  fGethCurrentHeight);
         oEthStatus.push_back(ret);
         GetMainSignals().NotifySyscoinUpdate(oEthStatus.write().c_str(), "ethstatus");
     }    
@@ -1224,7 +1224,7 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
         const UniValue &tupleArray = headerArray[i].get_array();
         if(tupleArray.size() != 5)
             throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Invalid size in a blocknumber/txroots input, should be size of 5"));
-        const uint32_t &nHeight = (uint32_t)tupleArray[0].get_int();
+        const uint32_t &nHeight = tupleArray[0].get_uint();
         string blockHash = tupleArray[1].get_str();
         boost::erase_all(blockHash, "0x");  // strip 0x
         txRoot.vchBlockHash = ParseHex(blockHash);
@@ -1264,7 +1264,7 @@ UniValue syscoingettxroots(const JSONRPCRequest& request)
     }
     }.Check(request);
     
-    int nHeight = request.params[0].get_int();
+    uint32_t nHeight = request.params[0].get_uint();
     std::pair<std::vector<unsigned char>,std::vector<unsigned char>> vchTxRoots;
     EthereumTxRoot txRootDB;
     if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(nHeight, txRootDB)){

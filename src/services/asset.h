@@ -209,7 +209,7 @@ public:
         return Exists(address);
     }   
 	void WriteAssetIndex(const CTransaction& tx, const CAsset& dbAsset, const int& nHeight, const uint256& blockhash);
-	bool ScanAssets(const int count, const int from, const UniValue& oOptions, UniValue& oRes);
+	bool ScanAssets(const uint32_t count, const uint32_t from, const UniValue& oOptions, UniValue& oRes);
     bool Flush(const AssetMap &mapAssets);
 };
 static std::string assetindexpage = std::string("assetindexpage");
@@ -324,7 +324,7 @@ public:
     bool FlushErase(const std::vector<uint256> &vecTXIDs);
 };
 static CAsset emptyAsset;
-bool GetAsset(const int &nAsset,CAsset& txPos);
+bool GetAsset(const uint32_t &nAsset,CAsset& txPos);
 bool BuildAssetJson(const CAsset& asset, UniValue& oName);
 #ifdef ENABLE_WALLET
 bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output, CWallet* const pwallet, const isminefilter* filter_ismine);

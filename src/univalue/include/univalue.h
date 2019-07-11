@@ -28,6 +28,10 @@ public:
     UniValue(uint64_t val_) {
         setInt(val_);
     }
+    // SYSCOIN
+    UniValue(uint32_t val_) {
+        setInt(val_);
+    }    
     UniValue(int64_t val_) {
         setInt(val_);
     }
@@ -56,6 +60,8 @@ public:
     bool setNumStr(const std::string& val);
     bool setInt(uint64_t val);
     bool setInt(int64_t val);
+    // SYSCOIN
+    bool setInt(uint32_t val_);
     bool setInt(int val_) { return setInt((int64_t)val_); }
     bool setFloat(double val);
     bool setStr(const std::string& val);
@@ -97,6 +103,11 @@ public:
         UniValue tmpVal(val_);
         return push_back(tmpVal);
     }
+    // SYSCOIN
+    bool push_back(uint32_t val_) {
+        UniValue tmpVal(val_);
+        return push_back(tmpVal);
+    }
     bool push_back(int64_t val_) {
         UniValue tmpVal(val_);
         return push_back(tmpVal);
@@ -129,6 +140,11 @@ public:
         UniValue tmpVal(val_);
         return pushKV(key, tmpVal);
     }
+    // SYSCOIN
+    bool pushKV(const std::string& key, uint32_t val_) {
+        UniValue tmpVal(val_);
+        return pushKV(key, tmpVal);
+    }   
     bool pushKV(const std::string& key, bool val_) {
         UniValue tmpVal((bool)val_);
         return pushKV(key, tmpVal);
@@ -170,6 +186,8 @@ public:
     bool get_bool() const;
     const std::string& get_str() const;
     int get_int() const;
+    // SYSCOIN
+    uint32_t get_uint() const;
     int64_t get_int64() const;
     double get_real() const;
     const UniValue& get_obj() const;

@@ -149,7 +149,7 @@ public:
     bool Flush(const AssetAllocationMap &mapAssetAllocations);
 	void WriteAssetAllocationIndex(const CTransaction &tx, const CAsset& dbAsset, const int &nHeight, const uint256& blockhash);
     void WriteMintIndex(const CTransaction& tx, const CMintSyscoin& mintSyscoin, const int &nHeight, const uint256& blockhash);
-	bool ScanAssetAllocations(const int count, const int from, const UniValue& oOptions, UniValue& oRes);
+	bool ScanAssetAllocations(const uint32_t count, const uint32_t from, const UniValue& oOptions, UniValue& oRes);
 };
 
 class CAssetAllocationMempoolDB : public CDBWrapper {
@@ -169,7 +169,7 @@ public:
     bool ReadAssetAllocationMempoolArrivalTimes(ArrivalTimesMapImpl &valueMap) {
         return Read(std::string("assetallocationtxarrival"), valueMap);
     }   
-    bool ScanAssetAllocationMempoolBalances(const int count, const int from, const UniValue& oOptions, UniValue& oRes);
+    bool ScanAssetAllocationMempoolBalances(const uint32_t count, const uint32_t from, const UniValue& oOptions, UniValue& oRes);
 };
 bool GetAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple,CAssetAllocation& txPos);
 bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, const CAsset& asset, UniValue& oName);

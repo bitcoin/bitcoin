@@ -45,12 +45,12 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "listassets"));
 	UniValue rArray = r.get_array();
 	BOOST_CHECK(rArray.size() > 0);
-	BOOST_CHECK_EQUAL(itostr(find_value(rArray[0].get_obj(), "asset_guid").get_int()), guid);
+	BOOST_CHECK_EQUAL(itostr(find_value(rArray[0].get_obj(), "asset_guid").get_uint()), guid);
 	string guid1 = AssetNew("node1", newaddress, gooddata);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid));
-	BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
+	BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_uint()) == guid);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid1));
-    BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_int()) == guid1);
+    BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_uint()) == guid1);
 }
 BOOST_AUTO_TEST_CASE(generate_asset_spt_sysx)
 {
@@ -234,32 +234,32 @@ BOOST_AUTO_TEST_CASE(generate_asset_audittxroot)
     tfm::format(std::cout,"syscoinsetethstatus elasped time %lld\n", end-start);
     UniValue blocksArray = find_value(r.get_obj(), "missing_blocks").get_array();
     // the - MAX_ETHEREUM_TX_ROOTS check to ensure you have at least that many roots stored from the tip
-    BOOST_CHECK(find_value(blocksArray[0].get_obj(), "from").get_int() == 669780);
-    BOOST_CHECK(find_value(blocksArray[0].get_obj(), "to").get_int() == 707769);
+    BOOST_CHECK(find_value(blocksArray[0].get_obj(), "from").get_uint() == 669780);
+    BOOST_CHECK(find_value(blocksArray[0].get_obj(), "to").get_uint() == 707769);
 
-    BOOST_CHECK(find_value(blocksArray[1].get_obj(), "from").get_int() == 707771);
-    BOOST_CHECK(find_value(blocksArray[1].get_obj(), "to").get_int() == 707771);
-    BOOST_CHECK(find_value(blocksArray[2].get_obj(), "from").get_int() == 707773);
-    BOOST_CHECK(find_value(blocksArray[2].get_obj(), "to").get_int() == 707773);
-    BOOST_CHECK(find_value(blocksArray[3].get_obj(), "from").get_int() == 707775);
-    BOOST_CHECK(find_value(blocksArray[3].get_obj(), "to").get_int() == 707775);
-    BOOST_CHECK(find_value(blocksArray[4].get_obj(), "from").get_int() == 707777);
-    BOOST_CHECK(find_value(blocksArray[4].get_obj(), "to").get_int() == 707777);
-    BOOST_CHECK(find_value(blocksArray[5].get_obj(), "from").get_int() == 707779);
-    BOOST_CHECK(find_value(blocksArray[5].get_obj(), "to").get_int() == 707779);
-    BOOST_CHECK(find_value(blocksArray[6].get_obj(), "from").get_int() == 707781);
-    BOOST_CHECK(find_value(blocksArray[6].get_obj(), "to").get_int() == 709779);
+    BOOST_CHECK(find_value(blocksArray[1].get_obj(), "from").get_uint() == 707771);
+    BOOST_CHECK(find_value(blocksArray[1].get_obj(), "to").get_uint() == 707771);
+    BOOST_CHECK(find_value(blocksArray[2].get_obj(), "from").get_uint() == 707773);
+    BOOST_CHECK(find_value(blocksArray[2].get_obj(), "to").get_uint() == 707773);
+    BOOST_CHECK(find_value(blocksArray[3].get_obj(), "from").get_uint() == 707775);
+    BOOST_CHECK(find_value(blocksArray[3].get_obj(), "to").get_uint() == 707775);
+    BOOST_CHECK(find_value(blocksArray[4].get_obj(), "from").get_uint() == 707777);
+    BOOST_CHECK(find_value(blocksArray[4].get_obj(), "to").get_uint() == 707777);
+    BOOST_CHECK(find_value(blocksArray[5].get_obj(), "from").get_uint() == 707779);
+    BOOST_CHECK(find_value(blocksArray[5].get_obj(), "to").get_uint() == 707779);
+    BOOST_CHECK(find_value(blocksArray[6].get_obj(), "from").get_uint() == 707781);
+    BOOST_CHECK(find_value(blocksArray[6].get_obj(), "to").get_uint() == 709779);
     BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsetethheaders \"[[707773,\\\"707773\\\",\\\"707772\\\",\\\"a\\\",\\\"a\\\"],[707775,\\\"707775\\\",\\\"707774\\\",\\\"a\\\",\\\"a\\\"],[707771,\\\"707771\\\",\\\"707770\\\",\\\"a\\\",\\\"a\\\"],[707777,\\\"707777\\\",\\\"707776\\\",\\\"a\\\",\\\"a\\\"],[707779,\\\"707779\\\",\\\"707778\\\",\\\"a\\\",\\\"a\\\"],[707781,\\\"707781\\\",\\\"707780\\\",\\\"a\\\",\\\"a\\\"]]\""));
     start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsetethstatus synced 709780"));
     end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     tfm::format(std::cout,"syscoinsetethstatus1 elasped time %lld\n", end-start);
     blocksArray = find_value(r.get_obj(), "missing_blocks").get_array();
-    BOOST_CHECK(find_value(blocksArray[0].get_obj(), "from").get_int() == 669780);
-    BOOST_CHECK(find_value(blocksArray[0].get_obj(), "to").get_int() == 707769);
+    BOOST_CHECK(find_value(blocksArray[0].get_obj(), "from").get_uint() == 669780);
+    BOOST_CHECK(find_value(blocksArray[0].get_obj(), "to").get_uint() == 707769);
 
-    BOOST_CHECK(find_value(blocksArray[1].get_obj(), "from").get_int() == 707782);
-    BOOST_CHECK(find_value(blocksArray[1].get_obj(), "to").get_int() == 709779);
+    BOOST_CHECK(find_value(blocksArray[1].get_obj(), "from").get_uint() == 707782);
+    BOOST_CHECK(find_value(blocksArray[1].get_obj(), "to").get_uint() == 709779);
 
     // now fork and check it revalidates chain
     // 707771 (should be 707772) -> 707773 and 707773 (should be 707774) -> 707775
@@ -272,19 +272,19 @@ BOOST_AUTO_TEST_CASE(generate_asset_audittxroot)
 
     BOOST_CHECK_EQUAL(blocksArray.size(), 4);
     // we should still have the missing ranges prior to the forks
-    BOOST_CHECK_EQUAL(find_value(blocksArray[0].get_obj(), "from").get_int(),669780);
-    BOOST_CHECK_EQUAL(find_value(blocksArray[0].get_obj(), "to").get_int() ,707769);
+    BOOST_CHECK_EQUAL(find_value(blocksArray[0].get_obj(), "from").get_uint(),669780);
+    BOOST_CHECK_EQUAL(find_value(blocksArray[0].get_obj(), "to").get_uint() ,707769);
     
     // 707773 is affected, -50 is 707723 and +50 is 707823
-    BOOST_CHECK_EQUAL(find_value(blocksArray[1].get_obj(), "from").get_int() , 707723);
-    BOOST_CHECK_EQUAL(find_value(blocksArray[1].get_obj(), "to").get_int() , 707823);
+    BOOST_CHECK_EQUAL(find_value(blocksArray[1].get_obj(), "from").get_uint() , 707723);
+    BOOST_CHECK_EQUAL(find_value(blocksArray[1].get_obj(), "to").get_uint() , 707823);
     
-    BOOST_CHECK_EQUAL(find_value(blocksArray[2].get_obj(), "from").get_int() , 707725);
-    BOOST_CHECK_EQUAL(find_value(blocksArray[2].get_obj(), "to").get_int() , 707825);
+    BOOST_CHECK_EQUAL(find_value(blocksArray[2].get_obj(), "from").get_uint() , 707725);
+    BOOST_CHECK_EQUAL(find_value(blocksArray[2].get_obj(), "to").get_uint() , 707825);
     
     // last missing range stays in the missing range list
-    BOOST_CHECK_EQUAL(find_value(blocksArray[3].get_obj(), "from").get_int() , 707782);
-    BOOST_CHECK_EQUAL(find_value(blocksArray[3].get_obj(), "to").get_int() , 709779);
+    BOOST_CHECK_EQUAL(find_value(blocksArray[3].get_obj(), "from").get_uint() , 707782);
+    BOOST_CHECK_EQUAL(find_value(blocksArray[3].get_obj(), "to").get_uint() , 709779);
 }
 BOOST_AUTO_TEST_CASE(generate_asset_audittxroot1)
 {
@@ -317,12 +317,12 @@ BOOST_AUTO_TEST_CASE(generate_asset_audittxroot1)
     int64_t end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     tfm::format(std::cout,"syscoinsetethstatus elasped time %lld\n", end-start);
     UniValue blocksArray = find_value(r.get_obj(), "missing_blocks").get_array();
-    BOOST_CHECK(find_value(blocksArray[0].get_obj(), "from").get_int() == 700059);
-    BOOST_CHECK(find_value(blocksArray[0].get_obj(), "to").get_int() == 700059);
-    BOOST_CHECK(find_value(blocksArray[1].get_obj(), "from").get_int() == 800022);
-    BOOST_CHECK(find_value(blocksArray[1].get_obj(), "to").get_int() == 800022);
-    BOOST_CHECK(find_value(blocksArray[2].get_obj(), "from").get_int() == 814011);
-    BOOST_CHECK(find_value(blocksArray[2].get_obj(), "to").get_int() == 814011);
+    BOOST_CHECK(find_value(blocksArray[0].get_obj(), "from").get_uint() == 700059);
+    BOOST_CHECK(find_value(blocksArray[0].get_obj(), "to").get_uint() == 700059);
+    BOOST_CHECK(find_value(blocksArray[1].get_obj(), "from").get_uint() == 800022);
+    BOOST_CHECK(find_value(blocksArray[1].get_obj(), "to").get_uint() == 800022);
+    BOOST_CHECK(find_value(blocksArray[2].get_obj(), "from").get_uint() == 814011);
+    BOOST_CHECK(find_value(blocksArray[2].get_obj(), "to").get_uint() == 814011);
     BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsetethheaders \"[[814011,\\\"814011\\\",\\\"814010\\\",\\\"a\\\",\\\"a\\\"],[700059,\\\"700059\\\",\\\"700058\\\",\\\"a\\\",\\\"a\\\"],[800022,\\\"800022\\\",\\\"800021\\\",\\\"a\\\",\\\"a\\\"]]\""));
     start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsetethstatus synced 820000"));
@@ -412,7 +412,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
     tfm::format(std::cout,"creating %d sender assets...\n", numAssets);
     for(int i =0;i<numAssets;i++){
         BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetnew " + vecFundedAddresses[i] + " tps '' '' 8 250 250 31 ''"));
-        string guid = itostr(find_value(r.get_obj(), "asset_guid").get_int());
+        string guid = itostr(find_value(r.get_obj(), "asset_guid").get_uint());
         BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
         string hex_str = find_value(r.get_obj(), "hex").get_str();
         BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hex_str, true, false));
@@ -425,7 +425,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
         BOOST_CHECK_NO_THROW(r = CallRPC("node1", "listassetindexassets " + vecFundedAddresses[i]));
         UniValue indexArray = r.get_array();
         BOOST_CHECK_EQUAL(indexArray.size(), 1);
-        uint32_t nAsset = find_value(indexArray[0].get_obj(), "asset_guid").get_int();
+        uint32_t nAsset = find_value(indexArray[0].get_obj(), "asset_guid").get_uint();
         uint32_t nAssetStored;
         ParseUInt32(vecAssets[i], &nAssetStored);
         BOOST_CHECK_EQUAL(nAsset, nAssetStored);
@@ -599,7 +599,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
         BOOST_CHECK_NO_THROW(r = CallRPC("node1", "listassetindexassets " + vecFundedAddresses[i]));
         UniValue indexArray = r.get_array();
         BOOST_CHECK_EQUAL(indexArray.size(), 1);
-        uint32_t nAsset = find_value(indexArray[0].get_obj(), "asset_guid").get_int();
+        uint32_t nAsset = find_value(indexArray[0].get_obj(), "asset_guid").get_uint();
         BOOST_CHECK_EQUAL(nAsset, nAssetStored);
     }
 }
