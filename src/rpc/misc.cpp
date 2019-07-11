@@ -115,7 +115,7 @@ static UniValue createmultisig(const JSONRPCRequest& request)
     }
 
     // Construct using pay-to-script-hash:
-    CBasicKeyStore keystore;
+    FillableSigningProvider keystore;
     CScript inner;
     const CTxDestination dest = AddAndGetMultisigDestination(required, pubkeys, output_type, keystore, inner);
 
