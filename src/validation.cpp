@@ -229,10 +229,11 @@ bool TestLockPointValidity(const LockPoints* lp)
     return true;
 }
 
-bool CheckSequenceLocks(const CTxMemPool& pool, const CTransaction& tx, int flags, LockPoints* lp, bool useExistingLockPoints)
+template <typename P>
+bool CheckSequenceLocks(const P& tx_pool, const CTransaction& tx, int flags, LockPoints* lp, bool useExistingLockPoints)
 {
     AssertLockHeld(cs_main);
-    AssertLockHeld(pool.cs);
+    AssertLockHeld(tx_pool.cs);
 
     CBlockIndex* tip = ::ChainActive().Tip();
     assert(tip != nullptr);
@@ -255,7 +256,7 @@ bool CheckSequenceLocks(const CTxMemPool& pool, const CTransaction& tx, int flag
     }
     else {
         // pcoinsTip contains the UTXO set for ::ChainActive().Tip()
-        CoinsViewMemPool<CTxMemPool> viewMemPool(pcoinsTip.get(), pool);
+        CoinsViewMemPool<P> viewMemPool(pcoinsTip.get(), tx_pool);
         std::vector<int> prevheights;
         prevheights.resize(tx.vin.size());
         for (size_t txinIndex = 0; txinIndex < tx.vin.size(); txinIndex++) {
@@ -304,7 +305,8 @@ bool CheckSequenceLocks(const CTxMemPool& pool, const CTransaction& tx, int flag
 // Returns the script flags which should be checked for a given block
 static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consensus::Params& chainparams);
 
-static void LimitMempoolSize(CTxMemPool& pool, size_t limit, unsigned long age) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
+template <typename P>
+static void LimitMempoolSize(P& pool, size_t limit, unsigned long age) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
 {
     int expired = pool.Expire(GetTime() - age);
     if (expired != 0) {
@@ -383,7 +385,8 @@ static void UpdateMempoolForReorg(DisconnectedBlockTransactions& disconnectpool,
 
 // Used to avoid mempool polluting consensus critical paths if CCoinsViewMempool
 // were somehow broken and returning the wrong scriptPubKeys
-static bool CheckInputsFromMempoolAndCache(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& view, const CTxMemPool& pool,
+template <typename P>
+static bool CheckInputsFromMempoolAndCache(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& view, const P& pool,
                  unsigned int flags, bool cacheSigStore, PrecomputedTransactionData& txdata) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
     AssertLockHeld(cs_main);
 
@@ -424,7 +427,8 @@ static bool CheckInputsFromMempoolAndCache(const CTransaction& tx, CValidationSt
  *                                remove the cache additions if the associated transaction ends
  *                                up being rejected by the mempool.
  */
-static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool& pool, CValidationState& state, const CTransactionRef& ptx,
+template<typename P>
+static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, P& pool, CValidationState& state, const CTransactionRef& ptx,
                               bool* pfMissingInputs, int64_t nAcceptTime, std::list<CTransactionRef>* plTxnReplaced,
                               bool bypass_limits, const CAmount& nAbsurdFee, std::vector<COutPoint>& coins_to_uncache, bool test_accept) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
@@ -508,7 +512,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         CCoinsViewCache view(&dummy);
 
         LockPoints lp;
-        CoinsViewMemPool<CTxMemPool> viewMemPool(pcoinsTip.get(), pool);
+        CoinsViewMemPool<P> viewMemPool(pcoinsTip.get(), pool);
         view.SetBackend(viewMemPool);
 
         // do all inputs exist?
@@ -604,7 +608,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                 strprintf("%d > %d", nFees, nAbsurdFee));
 
         // Calculate in-mempool ancestors, up to a limit.
-        CTxMemPool::setEntries setAncestors;
+        typename P::setEntries setAncestors;
         size_t nLimitAncestors = gArgs.GetArg("-limitancestorcount", DEFAULT_ANCESTOR_LIMIT);
         size_t nLimitAncestorSize = gArgs.GetArg("-limitancestorsize", DEFAULT_ANCESTOR_SIZE_LIMIT)*1000;
         size_t nLimitDescendants = gArgs.GetArg("-limitdescendantcount", DEFAULT_DESCENDANT_LIMIT);
@@ -634,7 +638,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         CAmount nConflictingFees = 0;
         size_t nConflictingSize = 0;
         uint64_t nConflictingCount = 0;
-        CTxMemPool::setEntries allConflicting;
+        typename P::setEntries allConflicting;
 
         // If we don't hold the lock allConflicting might be incomplete; the
         // subsequent RemoveStaged() and addUnchecked() calls don't guarantee
@@ -645,7 +649,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
             CFeeRate newFeeRate(nModifiedFees, nSize);
             std::set<uint256> setConflictsParents;
             const int maxDescendantsToVisit = 100;
-            const CTxMemPool::setEntries setIterConflicting = pool.GetIterSet(setConflicts);
+            const typename P::setEntries& setIterConflicting = pool.GetIterSet(setConflicts);
             for (const auto& mi : setIterConflicting) {
                 // Don't allow the replacement to reduce the feerate of the
                 // mempool.
@@ -822,7 +826,8 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
 }
 
 /** (try to) add transaction to memory pool with a specified acceptance time **/
-static bool AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPool& pool, CValidationState &state, const CTransactionRef &tx,
+template<typename P>
+static bool AcceptToMemoryPoolWithTime(const CChainParams& chainparams, P& pool, CValidationState &state, const CTransactionRef& tx,
                         bool* pfMissingInputs, int64_t nAcceptTime, std::list<CTransactionRef>* plTxnReplaced,
                         bool bypass_limits, const CAmount nAbsurdFee, bool test_accept) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
@@ -843,13 +848,16 @@ static bool AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPo
     return res;
 }
 
-bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransactionRef &tx,
+template<typename P>
+bool AcceptToMemoryPool(P& pool, CValidationState& state, const CTransactionRef& tx,
                         bool* pfMissingInputs, std::list<CTransactionRef>* plTxnReplaced,
                         bool bypass_limits, const CAmount nAbsurdFee, bool test_accept)
 {
     const CChainParams& chainparams = Params();
     return AcceptToMemoryPoolWithTime(chainparams, pool, state, tx, pfMissingInputs, GetTime(), plTxnReplaced, bypass_limits, nAbsurdFee, test_accept);
 }
+template bool AcceptToMemoryPool(CTxMemPool&, CValidationState&, const CTransactionRef&, bool*, std::list<CTransactionRef>*, bool, const CAmount, bool);
+template bool AcceptToMemoryPool(TxPoolLayer&, CValidationState&, const CTransactionRef&, bool*, std::list<CTransactionRef>*, bool, const CAmount, bool);
 
 /**
  * Return transaction in txOut, and if it was found inside a block, its hash is placed in hashBlock.
