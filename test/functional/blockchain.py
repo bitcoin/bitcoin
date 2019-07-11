@@ -18,6 +18,7 @@ Tests correspond to code in rpc/blockchain.cpp.
 """
 
 from decimal import Decimal
+import http.client
 import subprocess
 
 from test_framework.test_framework import BitcoinTestFramework
@@ -28,6 +29,7 @@ from test_framework.util import (
     assert_is_hex_string,
     assert_is_hash_string,
     bitcoind_processes,
+    BITCOIND_PROC_WAIT_TIMEOUT,
 )
 
 
@@ -139,9 +141,12 @@ class BlockchainTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getblockcount(), 206)
         self.log.debug('Node should not stop at this height')
         assert_raises(subprocess.TimeoutExpired, lambda: bitcoind_processes[0].wait(timeout=3))
-        self.nodes[0].generate(1)
+        try:
+            self.nodes[0].generate(1)
+        except (ConnectionError, http.client.BadStatusLine):
+            pass  # The node already shut down before response
         self.log.debug('Node should stop at this height...')
-        bitcoind_processes[0].wait(timeout=3)
+        bitcoind_processes[0].wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT)
         self.nodes[0] = self.start_node(0, self.options.tmpdir)
         assert_equal(self.nodes[0].getblockcount(), 207)
 
