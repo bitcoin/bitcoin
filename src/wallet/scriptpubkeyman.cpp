@@ -1851,7 +1851,9 @@ bool DescriptorScriptPubKeyMan::HavePrivateKeys() const
 
 int64_t DescriptorScriptPubKeyMan::GetOldestKeyPoolTime() const
 {
-    return GetTime();
+    // This is only used for getwalletinfo output and isn't relevant to descriptor wallets.
+    // The magic number 0 indicates that it shouldn't be displayed so that's what we return.
+    return 0;
 }
 
 size_t DescriptorScriptPubKeyMan::KeypoolCountExternalKeys() const
