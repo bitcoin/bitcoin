@@ -444,6 +444,8 @@ crypto_libsyscoin_crypto_base_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 crypto_libsyscoin_crypto_base_a_SOURCES = \
   crypto/aes.cpp \
   crypto/aes.h \
+  crypto/chacha_poly_aead.h \
+  crypto/chacha_poly_aead.cpp \
   crypto/chacha20.h \
   crypto/chacha20.cpp \
   crypto/common.h \
@@ -722,7 +724,7 @@ syscoinbench_LDADD = \
 # syscoinconsensus library #
 if BUILD_SYSCOIN_LIBS
 include_HEADERS = script/syscoinconsensus.h
-libsyscoinconsensus_la_SOURCES = $(crypto_libsyscoin_crypto_base_a_SOURCES) $(libsyscoin_consensus_a_SOURCES)
+libsyscoinconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libsyscoin_crypto_base_a_SOURCES) $(libsyscoin_consensus_a_SOURCES)
 
 if GLIBC_BACK_COMPAT
   libsyscoinconsensus_la_SOURCES += compat/glibc_compat.cpp
