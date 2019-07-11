@@ -11,12 +11,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
+#include <sys/resource.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
 #include <deque>
+#include <limits>
 #include <set>
 #include "leveldb/env.h"
 #include "leveldb/slice.h"
@@ -24,14 +26,69 @@
 #include "util/logging.h"
 #include "util/mutexlock.h"
 #include "util/posix_logger.h"
+#include "util/env_posix_test_helper.h"
 
 namespace leveldb {
 
 namespace {
 
+static int open_read_only_file_limit = -1;
+static int mmap_limit = -1;
+
 static Status IOError(const std::string& context, int err_number) {
   return Status::IOError(context, strerror(err_number));
 }
+
+// Helper class to limit resource usage to avoid exhaustion.
+// Currently used to limit read-only file descriptors and mmap file usage
+// so that we do not end up running out of file descriptors, virtual memory,
+// or running into kernel performance problems for very large databases.
+class Limiter {
+ public:
+  // Limit maximum number of resources to |n|.
+  Limiter(intptr_t n) {
+    SetAllowed(n);
+  }
+
+  // If another resource is available, acquire it and return true.
+  // Else return false.
+  bool Acquire() {
+    if (GetAllowed() <= 0) {
+      return false;
+    }
+    MutexLock l(&mu_);
+    intptr_t x = GetAllowed();
+    if (x <= 0) {
+      return false;
+    } else {
+      SetAllowed(x - 1);
+      return true;
+    }
+  }
+
+  // Release a resource acquired by a previous call to Acquire() that returned
+  // true.
+  void Release() {
+    MutexLock l(&mu_);
+    SetAllowed(GetAllowed() + 1);
+  }
+
+ private:
+  port::Mutex mu_;
+  port::AtomicPointer allowed_;
+
+  intptr_t GetAllowed() const {
+    return reinterpret_cast<intptr_t>(allowed_.Acquire_Load());
+  }
+
+  // REQUIRES: mu_ must be held
+  void SetAllowed(intptr_t v) {
+    allowed_.Release_Store(reinterpret_cast<void*>(v));
+  }
+
+  Limiter(const Limiter&);
+  void operator=(const Limiter&);
+};
 
 class PosixSequentialFile: public SequentialFile {
  private:
@@ -70,73 +127,51 @@ class PosixSequentialFile: public SequentialFile {
 class PosixRandomAccessFile: public RandomAccessFile {
  private:
   std::string filename_;
+  bool temporary_fd_;  // If true, fd_ is -1 and we open on every read.
   int fd_;
+  Limiter* limiter_;
 
  public:
-  PosixRandomAccessFile(const std::string& fname, int fd)
-      : filename_(fname), fd_(fd) { }
-  virtual ~PosixRandomAccessFile() { close(fd_); }
+  PosixRandomAccessFile(const std::string& fname, int fd, Limiter* limiter)
+      : filename_(fname), fd_(fd), limiter_(limiter) {
+    temporary_fd_ = !limiter->Acquire();
+    if (temporary_fd_) {
+      // Open file on every access.
+      close(fd_);
+      fd_ = -1;
+    }
+  }
+
+  virtual ~PosixRandomAccessFile() {
+    if (!temporary_fd_) {
+      close(fd_);
+      limiter_->Release();
+    }
+  }
 
   virtual Status Read(uint64_t offset, size_t n, Slice* result,
                       char* scratch) const {
+    int fd = fd_;
+    if (temporary_fd_) {
+      fd = open(filename_.c_str(), O_RDONLY);
+      if (fd < 0) {
+        return IOError(filename_, errno);
+      }
+    }
+
     Status s;
-    ssize_t r = pread(fd_, scratch, n, static_cast<off_t>(offset));
+    ssize_t r = pread(fd, scratch, n, static_cast<off_t>(offset));
     *result = Slice(scratch, (r < 0) ? 0 : r);
     if (r < 0) {
       // An error: return a non-ok status
       s = IOError(filename_, errno);
     }
+    if (temporary_fd_) {
+      // Close the temporary file descriptor opened earlier.
+      close(fd);
+    }
     return s;
   }
-};
-
-// Helper class to limit mmap file usage so that we do not end up
-// running out virtual memory or running into kernel performance
-// problems for very large databases.
-class MmapLimiter {
- public:
-  // Up to 1000 mmaps for 64-bit binaries; none for smaller pointer sizes.
-  MmapLimiter() {
-    SetAllowed(sizeof(void*) >= 8 ? 1000 : 0);
-  }
-
-  // If another mmap slot is available, acquire it and return true.
-  // Else return false.
-  bool Acquire() {
-    if (GetAllowed() <= 0) {
-      return false;
-    }
-    MutexLock l(&mu_);
-    intptr_t x = GetAllowed();
-    if (x <= 0) {
-      return false;
-    } else {
-      SetAllowed(x - 1);
-      return true;
-    }
-  }
-
-  // Release a slot acquired by a previous call to Acquire() that returned true.
-  void Release() {
-    MutexLock l(&mu_);
-    SetAllowed(GetAllowed() + 1);
-  }
-
- private:
-  port::Mutex mu_;
-  port::AtomicPointer allowed_;
-
-  intptr_t GetAllowed() const {
-    return reinterpret_cast<intptr_t>(allowed_.Acquire_Load());
-  }
-
-  // REQUIRES: mu_ must be held
-  void SetAllowed(intptr_t v) {
-    allowed_.Release_Store(reinterpret_cast<void*>(v));
-  }
-
-  MmapLimiter(const MmapLimiter&);
-  void operator=(const MmapLimiter&);
 };
 
 // mmap() based random-access
@@ -145,12 +180,12 @@ class PosixMmapReadableFile: public RandomAccessFile {
   std::string filename_;
   void* mmapped_region_;
   size_t length_;
-  MmapLimiter* limiter_;
+  Limiter* limiter_;
 
  public:
   // base[0,length-1] contains the mmapped contents of the file.
   PosixMmapReadableFile(const std::string& fname, void* base, size_t length,
-                        MmapLimiter* limiter)
+                        Limiter* limiter)
       : filename_(fname), mmapped_region_(base), length_(length),
         limiter_(limiter) {
   }
@@ -231,7 +266,7 @@ class PosixWritableFile : public WritableFile {
       if (fd < 0) {
         s = IOError(dir, errno);
       } else {
-        if (fsync(fd) < 0) {
+        if (fsync(fd) < 0 && errno != EINVAL) {
           s = IOError(dir, errno);
         }
         close(fd);
@@ -333,7 +368,7 @@ class PosixEnv : public Env {
         mmap_limit_.Release();
       }
     } else {
-      *result = new PosixRandomAccessFile(fname, fd);
+      *result = new PosixRandomAccessFile(fname, fd, &fd_limit_);
     }
     return s;
   }
@@ -533,10 +568,42 @@ class PosixEnv : public Env {
   BGQueue queue_;
 
   PosixLockTable locks_;
-  MmapLimiter mmap_limit_;
+  Limiter mmap_limit_;
+  Limiter fd_limit_;
 };
 
-PosixEnv::PosixEnv() : started_bgthread_(false) {
+// Return the maximum number of concurrent mmaps.
+static int MaxMmaps() {
+  if (mmap_limit >= 0) {
+    return mmap_limit;
+  }
+  // Up to 1000 mmaps for 64-bit binaries; none for smaller pointer sizes.
+  mmap_limit = sizeof(void*) >= 8 ? 1000 : 0;
+  return mmap_limit;
+}
+
+// Return the maximum number of read-only files to keep open.
+static intptr_t MaxOpenFiles() {
+  if (open_read_only_file_limit >= 0) {
+    return open_read_only_file_limit;
+  }
+  struct rlimit rlim;
+  if (getrlimit(RLIMIT_NOFILE, &rlim)) {
+    // getrlimit failed, fallback to hard-coded default.
+    open_read_only_file_limit = 50;
+  } else if (rlim.rlim_cur == RLIM_INFINITY) {
+    open_read_only_file_limit = std::numeric_limits<int>::max();
+  } else {
+    // Allow use of 20% of available file descriptors for read-only files.
+    open_read_only_file_limit = rlim.rlim_cur / 5;
+  }
+  return open_read_only_file_limit;
+}
+
+PosixEnv::PosixEnv()
+    : started_bgthread_(false),
+      mmap_limit_(MaxMmaps()),
+      fd_limit_(MaxOpenFiles()) {
   PthreadCall("mutex_init", pthread_mutex_init(&mu_, NULL));
   PthreadCall("cvar_init", pthread_cond_init(&bgsignal_, NULL));
 }
@@ -610,6 +677,16 @@ void PosixEnv::StartThread(void (*function)(void* arg), void* arg) {
 static pthread_once_t once = PTHREAD_ONCE_INIT;
 static Env* default_env;
 static void InitDefaultEnv() { default_env = new PosixEnv; }
+
+void EnvPosixTestHelper::SetReadOnlyFDLimit(int limit) {
+  assert(default_env == NULL);
+  open_read_only_file_limit = limit;
+}
+
+void EnvPosixTestHelper::SetReadOnlyMMapLimit(int limit) {
+  assert(default_env == NULL);
+  mmap_limit = limit;
+}
 
 Env* Env::Default() {
   pthread_once(&once, InitDefaultEnv);

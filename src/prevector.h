@@ -387,6 +387,12 @@ public:
     }
 
     iterator erase(iterator first, iterator last) {
+        // Erase is not allowed to the change the object's capacity. That means
+        // that when starting with an indirectly allocated prevector with
+        // size and capacity > N, the result may be a still indirectly allocated
+        // prevector with size <= N and capacity > N. A shrink_to_fit() call is
+        // necessary to switch to the (more efficient) directly allocated
+        // representation (with capacity N and size <= N).
         iterator p = first;
         char* endp = (char*)&(*end());
         if (!std::is_trivially_destructible<T>::value) {

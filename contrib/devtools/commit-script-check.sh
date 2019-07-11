@@ -20,20 +20,27 @@ RET=0
 PREV_BRANCH=`git name-rev --name-only HEAD`
 PREV_HEAD=`git rev-parse HEAD`
 for i in `git rev-list --reverse $1`; do
-    git rev-list -n 1 --pretty="%s" $i | grep -q "^scripted-diff:" || continue
-    git checkout --quiet $i^ || exit
-    SCRIPT="`git rev-list --format=%b -n1 $i | sed '/^-BEGIN VERIFY SCRIPT-$/,/^-END VERIFY SCRIPT-$/{//!b};d'`"
-    if test "x$SCRIPT" = "x"; then
-        echo "Error: missing script for: $i"
-        echo "Failed"
-        RET=1
-    else
-        echo "Running script for: $i"
-        echo "$SCRIPT"
-        eval "$SCRIPT"
-        git --no-pager diff --exit-code $i && echo "OK" || (echo "Failed"; false) || RET=1
+    if git rev-list -n 1 --pretty="%s" $i | grep -q "^scripted-diff:"; then
+        git checkout --quiet $i^ || exit
+        SCRIPT="`git rev-list --format=%b -n1 $i | sed '/^-BEGIN VERIFY SCRIPT-$/,/^-END VERIFY SCRIPT-$/{//!b};d'`"
+        if test "x$SCRIPT" = "x"; then
+            echo "Error: missing script for: $i"
+            echo "Failed"
+            RET=1
+        else
+            echo "Running script for: $i"
+            echo "$SCRIPT"
+            eval "$SCRIPT"
+            git --no-pager diff --exit-code $i && echo "OK" || (echo "Failed"; false) || RET=1
+        fi
+        git reset --quiet --hard HEAD
+     else
+        if git rev-list "--format=%b" -n1 $i | grep -q '^-\(BEGIN\|END\)[ a-zA-Z]*-$'; then
+            echo "Error: script block marker but no scripted-diff in title"
+            echo "Failed"
+            RET=1
+        fi
     fi
-    git reset --quiet --hard HEAD
 done
 git checkout --quiet $PREV_BRANCH 2>/dev/null || git checkout --quiet $PREV_HEAD
 exit $RET

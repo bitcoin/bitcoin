@@ -7,9 +7,6 @@
 
 class CBlock;
 class CBlockIndex;
-class CScript;
-class CTransaction;
-class uint256;
 class UniValue;
 
 /**

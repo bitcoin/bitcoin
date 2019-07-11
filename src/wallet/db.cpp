@@ -74,7 +74,7 @@ bool CDBEnv::Open(const fs::path& pathIn)
 
     strPath = pathIn.string();
     fs::path pathLogDir = pathIn / "database";
-    TryCreateDirectory(pathLogDir);
+    TryCreateDirectories(pathLogDir);
     fs::path pathErrorFile = pathIn / "db.log";
     LogPrintf("CDBEnv::Open: LogDir=%s ErrorFile=%s\n", pathLogDir.string(), pathErrorFile.string());
 
@@ -204,7 +204,7 @@ bool CDB::Recover(const std::string& filename, void *callbackDataIn, bool (*reco
     }
 
     DbTxn* ptxn = bitdb.TxnBegin();
-    BOOST_FOREACH(CDBEnv::KeyValPair& row, salvagedData)
+    for (CDBEnv::KeyValPair& row : salvagedData)
     {
         if (recoverKVcallback)
         {
