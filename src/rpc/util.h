@@ -20,7 +20,7 @@
 
 #include <boost/variant.hpp>
 
-class CKeyStore;
+class FillableSigningProvider;
 class CPubKey;
 class CScript;
 struct InitInterfaces;
@@ -73,8 +73,8 @@ extern std::string HelpExampleCli(const std::string& methodname, const std::stri
 extern std::string HelpExampleRpc(const std::string& methodname, const std::string& args);
 
 CPubKey HexToPubKey(const std::string& hex_in);
-CPubKey AddrToPubKey(CKeyStore* const keystore, const std::string& addr_in);
-CTxDestination AddAndGetMultisigDestination(const int required, const std::vector<CPubKey>& pubkeys, OutputType type, CKeyStore& keystore, CScript& script_out);
+CPubKey AddrToPubKey(FillableSigningProvider* const keystore, const std::string& addr_in);
+CTxDestination AddAndGetMultisigDestination(const int required, const std::vector<CPubKey>& pubkeys, OutputType type, FillableSigningProvider& keystore, CScript& script_out);
 
 UniValue DescribeAddress(const CTxDestination& dest);
 

@@ -52,6 +52,14 @@ static inline bool GetAvoidReuseFlag(CWallet * const pwallet, const UniValue& pa
     return avoid_reuse;
 }
 
+/** Checks if a CKey is in the given CWallet compressed or otherwise*/
+bool HaveKey(const CWallet& wallet, const CKey& key)
+{
+    CKey key2;
+    key2.Set(key.begin(), key.end(), !key.IsCompressed());
+    return wallet.HaveKey(key.GetPubKey().GetID()) || wallet.HaveKey(key2.GetPubKey().GetID());
+}
+
 bool GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request, std::string& wallet_name)
 {
     if (request.URI.substr(0, WALLET_ENDPOINT_BASE.size()) == WALLET_ENDPOINT_BASE) {
