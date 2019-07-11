@@ -1608,7 +1608,11 @@ bool DescriptorScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, Walle
 
 bool DescriptorScriptPubKeyMan::GetReservedDestination(const OutputType type, bool internal, CTxDestination& address, int64_t& index, CKeyPool& keypool)
 {
-    return false;
+    LOCK(cs_desc_man);
+    std::string error;
+    bool result = GetNewDestination(type, address, error);
+    index = m_wallet_descriptor.next_index - 1;
+    return result;
 }
 
 void DescriptorScriptPubKeyMan::ReturnDestination(int64_t index, bool internal, const CTxDestination& addr)
