@@ -1680,6 +1680,15 @@ bool DescriptorScriptPubKeyMan::TopUp(unsigned int size)
         for (const CScript& script : scripts_temp) {
             m_map_script_pub_keys[script] = i;
         }
+        for (const auto& pk_pair : out_keys.pubkeys) {
+            const CPubKey& pubkey = pk_pair.second;
+            if (m_map_pubkeys.count(pubkey) != 0) {
+                // We don't need to give an error here.
+                // It doesn't matter which of many valid indexes the pubkey has, we just need an index where we can derive it and it's private key
+                continue;
+            }
+            m_map_pubkeys[pubkey] = i;
+        }
         // Write the cache
         for (const auto& parent_xpub_pair : temp_cache.GetCachedParentExtPubKeys()) {
             CExtPubKey xpub;
@@ -1876,9 +1885,55 @@ int64_t DescriptorScriptPubKeyMan::GetTimeFirstKey() const
     return m_wallet_descriptor.creation_time;
 }
 
+std::unique_ptr<FlatSigningProvider> DescriptorScriptPubKeyMan::GetSigningProvider(const CScript& script, bool include_private) const
+{
+    LOCK(cs_desc_man);
+
+    // Find the index of the script
+    auto it = m_map_script_pub_keys.find(script);
+    if (it == m_map_script_pub_keys.end()) {
+        return nullptr;
+    }
+    int32_t index = it->second;
+
+    return GetSigningProvider(index, include_private);
+}
+
+std::unique_ptr<FlatSigningProvider> DescriptorScriptPubKeyMan::GetSigningProvider(const CPubKey& pubkey) const
+{
+    LOCK(cs_desc_man);
+
+    // Find index of the pubkey
+    auto it = m_map_pubkeys.find(pubkey);
+    if (it == m_map_pubkeys.end()) {
+        return nullptr;
+    }
+    int32_t index = it->second;
+
+    // Always try to get the signing provider with private keys. This function should only be called during signing anyways
+    return GetSigningProvider(index, true);
+}
+
+std::unique_ptr<FlatSigningProvider> DescriptorScriptPubKeyMan::GetSigningProvider(int32_t index, bool include_private) const
+{
+    AssertLockHeld(cs_desc_man);
+    // Get the scripts, keys, and key origins for this script
+    std::unique_ptr<FlatSigningProvider> out_keys = MakeUnique<FlatSigningProvider>();
+    std::vector<CScript> scripts_temp;
+    if (!m_wallet_descriptor.descriptor->ExpandFromCache(index, m_wallet_descriptor.cache, scripts_temp, *out_keys)) return nullptr;
+
+    if (HavePrivateKeys() && include_private) {
+        FlatSigningProvider master_provider;
+        master_provider.keys = GetKeys();
+        m_wallet_descriptor.descriptor->ExpandPrivate(index, master_provider, *out_keys);
+    }
+
+    return out_keys;
+}
+
 std::unique_ptr<SigningProvider> DescriptorScriptPubKeyMan::GetSolvingProvider(const CScript& script) const
 {
-    return nullptr;
+    return GetSigningProvider(script, false);
 }
 
 bool DescriptorScriptPubKeyMan::CanProvide(const CScript& script, SignatureData& sigdata)
@@ -1937,6 +1992,15 @@ void DescriptorScriptPubKeyMan::SetCache(const DescriptorCache& cache)
                 throw std::runtime_error(strprintf("Error: Already loaded script at index %d as being at index %d", i, m_map_script_pub_keys[script]));
             }
             m_map_script_pub_keys[script] = i;
+        }
+        for (const auto& pk_pair : out_keys.pubkeys) {
+            const CPubKey& pubkey = pk_pair.second;
+            if (m_map_pubkeys.count(pubkey) != 0) {
+                // We don't need to give an error here.
+                // It doesn't matter which of many valid indexes the pubkey has, we just need an index where we can derive it and it's private key
+                continue;
+            }
+            m_map_pubkeys[pubkey] = i;
         }
         m_max_cached_index++;
     }
