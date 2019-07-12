@@ -110,9 +110,9 @@ find output/ -type f -print0 | sort -z | xargs -r0 sha256sum
 
 * _**SOURCE_DATE_EPOCH**_
 
-  Override the reference timestamp used for bit-for-bit reproducibility, the
-  variable name conforms to [standard][r12e/source-date-epoch]. _(defaults to
-  the output of `$(git log --format=%at -1)`)_
+  Override the reference UNIX timestamp used for bit-for-bit reproducibility,
+  the variable name conforms to [standard][r12e/source-date-epoch]. _(defaults
+  to the output of `$(git log --format=%at -1)`)_
 
 * _**V**_
 
