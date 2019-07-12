@@ -491,8 +491,8 @@ static UniValue getnetworkinfo(const JSONRPCRequest& request)
     }
     // SYSCOIN
     obj.pushKV("geth_sync_status",  fGethSyncStatus);
-    obj.pushKV("geth_total_blocks",  (int)fGethSyncHeight);
-    obj.pushKV("geth_current_block",  (int)fGethCurrentHeight);
+    obj.pushKV("geth_total_blocks",  fGethSyncHeight);
+    obj.pushKV("geth_current_block",  fGethCurrentHeight);
     obj.pushKV("networks",      GetNetworksInfo());
     obj.pushKV("relayfee",      ValueFromAmount(::minRelayTxFee.GetFeePerK()));
     obj.pushKV("incrementalfee", ValueFromAmount(::incrementalRelayFee.GetFeePerK()));

@@ -1384,8 +1384,8 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
     }
     // SYSCOIN
     obj.pushKV("geth_sync_status",  fGethSyncStatus);
-    obj.pushKV("geth_total_blocks",  (int)fGethSyncHeight);
-    obj.pushKV("geth_current_block",  (int)fGethCurrentHeight);
+    obj.pushKV("geth_total_blocks",  fGethSyncHeight);
+    obj.pushKV("geth_current_block",  fGethCurrentHeight);
     const Consensus::Params& consensusParams = Params().GetConsensus();
     UniValue softforks(UniValue::VARR);
     UniValue bip9_softforks(UniValue::VOBJ);

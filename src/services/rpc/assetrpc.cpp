@@ -1130,7 +1130,7 @@ UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
     RPCHelpMan{"syscoinsetethstatus",
         "\nSets ethereum syncing and network status for indication status of network sync.\n",
         {
-            {"syncing_status", RPCArg::Type::STR, RPCArg::Optional::NO, "Sycning status ether 'syncing' or 'synced'"},
+            {"syncing_status", RPCArg::Type::STR, RPCArg::Optional::NO, "Syncing status ether 'syncing' or 'synced'"},
             {"highest_block", RPCArg::Type::NUM, RPCArg::Optional::NO, "What the highest block height on Ethereum is found to be.  Usually coupled with syncing_status of 'syncing'.  Set to 0 if sync_status is 'synced'"}
         },
         RPCResult{
