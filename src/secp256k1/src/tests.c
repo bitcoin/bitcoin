@@ -5030,7 +5030,7 @@ int main(int argc, char **argv) {
         const char* ch = argv[2];
         while (pos < 16 && ch[0] != 0 && ch[1] != 0) {
             unsigned short sh;
-            if (sscanf(ch, "%2hx", &sh)) {
+            if ((sscanf(ch, "%2hx", &sh) == 1)) {
                 seed16[pos] = sh;
             } else {
                 break;
