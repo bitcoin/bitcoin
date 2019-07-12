@@ -274,9 +274,11 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
                     return error(errorMessage.c_str());                  
                 } 
                 mapAssetSupplyStats->second = std::move(dbAssetSupplyStats);      
-            } 
-            mapAssetSupplyStats->second.nAmountMintedBridge += outputAmount;
-        } 
+            }
+            mapAssetSupplyStats->second.nBalanceBridge -= outputAmount;
+            if(nAsset == Params().GetConsensus().nSYSXAsset)
+                mapAssetSupplyStats->second.nBalanceSPT += outputAmount;
+        }
     }
     if (!AssetRange(mintSyscoin.nValueAsset))
     {
@@ -535,7 +537,10 @@ bool DisconnectMintAsset(const CTransaction &tx, AssetSupplyStatsMap &mapAssetSu
             } 
             mapAssetSupplyStats->second = std::move(dbAssetSupplyStats);      
         } 
-        mapAssetSupplyStats->second.nAmountMintedBridge -= mintSyscoin.nValueAsset;
+        mapAssetSupplyStats->second.nBalanceBridge += mintSyscoin.nValueAsset;
+        if(mintSyscoin.assetAllocationTuple.nAsset == Params().GetConsensus().nSYSXAsset)
+            mapAssetSupplyStats->second.nBalanceSPT -= mintSyscoin.nValueAsset;
+        
     } 
     return true; 
 }
@@ -643,14 +648,13 @@ bool DisconnectAssetAllocation(const CTransaction &tx, AssetSupplyStatsMap &mapA
             mapAssetSupplyStats->second = std::move(dbAssetSupplyStats);
         }
         if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
-            mapAssetSupplyStats->second.nAmountBurnedBridge -= nTotal;
+            mapAssetSupplyStats->second.nBalanceBridge -= nTotal;
         }
-        else if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN){
-            mapAssetSupplyStats->second.nAmountBurnedSPT -= nTotal;
-        }
-        else if(tx.nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION){
-            mapAssetSupplyStats->second.nAmountMintedSPT -= nTotal;
-        }               
+        if(theAssetAllocation.assetAllocationTuple.nAsset == Params().GetConsensus().nSYSXAsset)
+            mapAssetSupplyStats->second.nBalanceSPT -= nTotal;
+        
+    
+             
     }       
     return true; 
 }
@@ -877,7 +881,9 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
                     } 
                     mapAssetSupplyStats->second = std::move(dbAssetSupplyStats);      
                 }
-                mapAssetSupplyStats->second.nAmountMintedSPT += nBurnAmount;           
+                if(nBurnAsset == Params().GetConsensus().nSYSXAsset)
+                    mapAssetSupplyStats->second.nBalanceSPT += nBurnAmount;
+               
             }                          
         }else if (!bSanityCheck && !bMiner) {
             LOCK(cs_assetallocationarrival);
@@ -975,11 +981,10 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
                     mapAssetSupplyStats->second = std::move(dbAssetSupplyStats);      
                 }
                 if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
-                    mapAssetSupplyStats->second.nAmountBurnedBridge += nBurnAmount;
+                    mapAssetSupplyStats->second.nBalanceBridge += nBurnAmount;
                 }
-                else if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN){
-                    mapAssetSupplyStats->second.nAmountBurnedSPT += nBurnAmount;
-                }       
+                if(nBurnAsset == Params().GetConsensus().nSYSXAsset)
+                    mapAssetSupplyStats->second.nBalanceSPT -= nBurnAmount;
             }                                   
         }else if (!bSanityCheck && !bMiner) {
             LOCK(cs_assetallocationarrival);

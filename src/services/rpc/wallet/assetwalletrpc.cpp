@@ -9,7 +9,7 @@
 #include <wallet/rpcwallet.h>
 #include <services/assetconsensus.h>
 #include <services/rpc/assetrpc.h>
-#include <keystore.h>
+#include <script/signingprovider.h>
 #include <wallet/coincontrol.h>
 #include <iomanip>
 #include <rpc/server.h>

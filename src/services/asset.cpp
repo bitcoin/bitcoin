@@ -555,20 +555,12 @@ bool BuildAssetJson(const CAsset& asset,UniValue& oAsset)
 	oAsset.__pushKV("max_supply", ValueFromAssetAmount(asset.nMaxSupply, asset.nPrecision));
 	oAsset.__pushKV("update_flags", asset.nUpdateFlags);
 	oAsset.__pushKV("precision", asset.nPrecision);
-    CAmount nCirculatingSupply = 0;
     CAssetSupplyStats dbAssetSupplyStats;
     if (fAssetSupplyStatsIndex && passetsupplystatsdb->ExistStats(asset.nAsset) && passetsupplystatsdb->ReadStats(asset.nAsset, dbAssetSupplyStats)) {
-        CAssetAllocation burnAllocation;
-        GetAssetAllocation(CAssetAllocationTuple(asset.nAsset, CWitnessAddress(0, vchFromString("burn"))), burnAllocation);
-        nCirculatingSupply = asset.nTotalSupply - burnAllocation.nBalance;
-        // minting from bridge to sys doesn't change "burn" so we account for it here
-        nCirculatingSupply += dbAssetSupplyStats.nAmountMintedBridge;     
+        passetsupplystatsdb->ReadStats(asset.nAsset, dbAssetSupplyStats);    
     } 
-    oAsset.__pushKV("circulating_supply", ValueFromAssetAmount(nCirculatingSupply, asset.nPrecision));
-    oAsset.__pushKV("burned_bridge", ValueFromAssetAmount(dbAssetSupplyStats.nAmountBurnedBridge, asset.nPrecision));
-    oAsset.__pushKV("burned_spt", ValueFromAssetAmount(dbAssetSupplyStats.nAmountBurnedSPT, asset.nPrecision));
-    oAsset.__pushKV("minted_bridge", ValueFromAssetAmount(dbAssetSupplyStats.nAmountMintedBridge, asset.nPrecision));
-    oAsset.__pushKV("minted_spt", ValueFromAssetAmount(dbAssetSupplyStats.nAmountMintedSPT, asset.nPrecision));
+    oAsset.__pushKV("total_supply_bridge", ValueFromAssetAmount(dbAssetSupplyStats.nBalanceBridge, asset.nPrecision));
+    oAsset.__pushKV("total_supply_spt", ValueFromAssetAmount(dbAssetSupplyStats.nBalanceSPT, asset.nPrecision));
 	return true;
 }
 bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
