@@ -1748,6 +1748,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
     AssetMap mapAssets;
     AssetAllocationMap mapAssetAllocations;
     EthereumMintTxVec vecMintKeys;
+    AssetSupplyStatsMap mapAssetSupplyStats;
     std::vector<uint256> vecTXIDs;
 	std::vector<COutPoint> vecOutpoints;
     std::vector<uint256> vecBlocks;
@@ -1802,12 +1803,12 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
             // At this point, all of txundo.vprevout should have been moved out.
         }
         // SYSCOIN
-        if(passetdb != nullptr && !DisconnectSyscoinTransaction(tx, pindex, view, mapAssets, mapAssetAllocations, vecMintKeys))
+        if(passetdb != nullptr && !DisconnectSyscoinTransaction(tx, pindex, view, mapAssets, mapAssetSupplyStats, mapAssetAllocations, vecMintKeys))
             fClean = false;
     } 
     // SYSCOIN 
     if(passetdb != nullptr){
-        if(!passetallocationdb->Flush(mapAssetAllocations) || !passetdb->Flush(mapAssets) || !passetindexdb->FlushErase(vecTXIDs) || !pblockindexdb->FlushErase(vecTXIDs) || !plockedoutpointsdb->FlushErase(vecOutpoints) || !pethereumtxmintdb->FlushErase(vecMintKeys)){
+        if(!passetallocationdb->Flush(mapAssetAllocations) || !passetdb->Flush(mapAssets) || (fAssetSupplyStatsIndex && !passetsupplystatsdb->Flush(mapAssetSupplyStats)) || !passetindexdb->FlushErase(vecTXIDs) || !pblockindexdb->FlushErase(vecTXIDs) || !plockedoutpointsdb->FlushErase(vecOutpoints) || !pethereumtxmintdb->FlushErase(vecMintKeys)){
             error("DisconnectBlock(): Error flushing to asset dbs on disconnect");
             return DISCONNECT_FAILED;
         }
@@ -2062,6 +2063,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     const bool & ibd = IsInitialBlockDownload();
     AssetAllocationMap mapAssetAllocations;
     AssetMap mapAssets;
+    AssetSupplyStatsMap mapAssetSupplyStats;
     EthereumMintTxVec vecMintKeys;
     std::vector<COutPoint> vecLockedOutpoints;
     std::vector<std::pair<uint256, uint256> > blockIndex; 
@@ -2142,7 +2144,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
                 const uint256& txHash = tx.GetHash(); 
                 blockIndex.emplace_back(std::make_pair(txHash, blockHash));
             } 
-            if (!CheckSyscoinInputs(ibd, tx, state, view, fJustCheck, bOverflow, pindex->nHeight, pindex->nTime, blockHash, false, false, mapAssetAllocations, mapAssets, vecMintKeys, vecLockedOutpoints))
+            if (!CheckSyscoinInputs(ibd, tx, state, view, fJustCheck, bOverflow, pindex->nHeight, pindex->nTime, blockHash, false, false, mapAssetAllocations, mapAssets, mapAssetSupplyStats, vecMintKeys, vecLockedOutpoints))
                 return error("ConnectBlock(): CheckSyscoinInputs on block %s failed\n", block.GetHash().ToString());        
         }
 
@@ -2160,7 +2162,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
      
     // SYSCOIN : MODIFIED TO CHECK MASTERNODE PAYMENTS AND SUPERBLOCKS
     if(!fJustCheck && pblockindexdb){
-        if(!pblockindexdb->FlushWrite(blockIndex) || !passetallocationdb->Flush(mapAssetAllocations) || !passetdb->Flush(mapAssets) || !plockedoutpointsdb->FlushWrite(vecLockedOutpoints) || !pethereumtxmintdb->FlushWrite(vecMintKeys)){
+        if(!pblockindexdb->FlushWrite(blockIndex) || !passetallocationdb->Flush(mapAssetAllocations) || !passetdb->Flush(mapAssets) || (fAssetSupplyStatsIndex && !passetsupplystatsdb->Flush(mapAssetSupplyStats)) || !plockedoutpointsdb->FlushWrite(vecLockedOutpoints) || !pethereumtxmintdb->FlushWrite(vecMintKeys)){
             return error("Error flushing to asset dbs");
         } 
     }  

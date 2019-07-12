@@ -192,7 +192,7 @@ public:
     bool UnserializeFromTx(const CTransaction &tx);
     void Serialize(std::vector<unsigned char>& vchData);
 };
-typedef std::unordered_map<int, CAsset > AssetMap;
+typedef std::unordered_map<uint32_t, CAsset > AssetMap;
 class CAssetDB : public CDBWrapper {
 public:
     CAssetDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assets", nCacheSize, fMemory, fWipe) {}
@@ -323,7 +323,40 @@ public:
     bool ScanAssetIndex(int64_t page, const UniValue& oOptions, UniValue& oRes);
     bool FlushErase(const std::vector<uint256> &vecTXIDs);
 };
+class CAssetSupplyStats {
+public: 
+    CAmount nAmountMintedSPT;
+    CAmount nAmountBurnedSPT;
+    CAmount nAmountMintedBridge;
+    CAmount nAmountBurnedBridge;   
+    CAssetSupplyStats() {
+        SetNull();
+    }
+    ADD_SERIALIZE_METHODS;
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {      
+        READWRITE(nAmountMintedSPT);
+        READWRITE(nAmountBurnedSPT);
+        READWRITE(nAmountMintedBridge);   
+        READWRITE(nAmountBurnedBridge);
+    }
+    inline void SetNull() {  nAmountMintedSPT = nAmountBurnedSPT = nAmountMintedBridge = nAmountBurnedBridge = 0;  }
+    inline bool IsNull() const {  return (nAmountMintedSPT == 0 && nAmountBurnedSPT == 0 && nAmountMintedBridge == 0 && nAmountBurnedBridge == 0);  }
+};
+typedef std::unordered_map<uint32_t, CAssetSupplyStats > AssetSupplyStatsMap;
+class CAssetSupplyStatsDB : public CDBWrapper {
+public:
+    CAssetSupplyStatsDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetsupplystats", nCacheSize, fMemory, fWipe) {}
+    bool ReadStats(const uint32_t& nAsset, CAssetSupplyStats& assetstats) {
+        return Read(nAsset, assetstats);
+    } 
+    bool ExistStats(const uint32_t &nAsset){
+        return Exists(nAsset);
+    }   
+    bool Flush(const AssetSupplyStatsMap &mapAssetSupplyStats);
+};
 static CAsset emptyAsset;
+static CAssetSupplyStats emptyAssetSupplyStats;
 bool GetAsset(const uint32_t &nAsset,CAsset& txPos);
 bool BuildAssetJson(const CAsset& asset, UniValue& oName);
 #ifdef ENABLE_WALLET
@@ -332,6 +365,7 @@ bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output, CW
 bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output);
 void WriteAssetIndexTXID(const uint32_t& nAsset, const uint256& txid);
 extern std::unique_ptr<CAssetDB> passetdb;
+extern std::unique_ptr<CAssetSupplyStatsDB> passetsupplystatsdb;
 extern std::unique_ptr<CAssetAllocationDB> passetallocationdb;
 extern std::unique_ptr<CAssetAllocationMempoolDB> passetallocationmempooldb;
 extern std::unique_ptr<CAssetIndexDB> passetindexdb;
