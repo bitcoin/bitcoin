@@ -3662,7 +3662,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
 
                         newTxOut = CTxOut(nChange, scriptChange);
 
-                        //  Never create dust outputs; if we would, just
+                        // Never create dust outputs; if we would, just
                         // add the dust to the fee.
                         if (IsDust(newTxOut, ::dustRelayFee))
                         {
