@@ -39,7 +39,7 @@ don't have test cases for.
 - Set the `self.setup_clean_chain` variable in `__init__()` to control whether
   or not to use the cached data directories. The cached data directories
   contain a 200-block pre-mined blockchain and wallets for four nodes. Each node
-  has 25 mature blocks (25x50=1250 BTC) in its wallet.
+  has 25 mature blocks (25x500=12500 DASH) in its wallet.
 - When calling RPCs with lots of arguments, consider using named keyword
   arguments instead of positional arguments to make the intent of the call
   clear to readers.
@@ -60,10 +60,10 @@ over the network (`CBlock`, `CTransaction`, etc, along with the network-level
 wrappers for them, `msg_block`, `msg_tx`, etc).
 
 - P2P tests have two threads. One thread handles all network communication
-with the bitcoind(s) being tested (using python's asyncore package); the other
+with the dashd(s) being tested (using python's asyncore package); the other
 implements the test logic.
 
-- `NodeConn` is the class used to connect to a bitcoind.  If you implement
+- `NodeConn` is the class used to connect to a dashd.  If you implement
 a callback class that derives from `NodeConnCB` and pass that to the
 `NodeConn` object, your code will receive the appropriate callbacks when
 events of interest arrive.
@@ -78,14 +78,14 @@ Examples tests are `p2p-accept-block.py`, `p2p-compactblocks.py`.
 #### Comptool
 
 - Comptool is a Testing framework for writing tests that compare the block/tx acceptance
-behavior of a bitcoind against 1 or more other bitcoind instances. It should not be used
+behavior of a dashd against 1 or more other dashd instances. It should not be used
 to write static tests with known outcomes, since that type of test is easier to write and
 maintain using the standard BitcoinTestFramework.
 
 - Set the `num_nodes` variable (defined in `ComparisonTestFramework`) to start up
 1 or more nodes.  If using 1 node, then `--testbinary` can be used as a command line
-option to change the bitcoind binary used by the test.  If using 2 or more nodes,
-then `--refbinary` can be optionally used to change the bitcoind that will be used
+option to change the dashd binary used by the test.  If using 2 or more nodes,
+then `--refbinary` can be optionally used to change the dashd that will be used
 on nodes 2 and up.
 
 - Implement a (generator) function called `get_tests()` which yields `TestInstance`s.
@@ -94,13 +94,13 @@ Each `TestInstance` consists of:
     * `object` is a `CBlock`, `CTransaction`, or
     `CBlockHeader`.  `CBlock`'s and `CTransaction`'s are tested for
     acceptance.  `CBlockHeader`s can be used so that the test runner can deliver
-    complete headers-chains when requested from the bitcoind, to allow writing
+    complete headers-chains when requested from the dashd, to allow writing
     tests where blocks can be delivered out of order but still processed by
-    headers-first bitcoind's.
+    headers-first dashd's.
     * `outcome` is `True`, `False`, or `None`.  If `True`
     or `False`, the tip is compared with the expected tip -- either the
     block passed in, or the hash specified as the optional 3rd entry.  If
-    `None` is specified, then the test will compare all the bitcoind's
+    `None` is specified, then the test will compare all the dashd's
     being tested to see if they all agree on what the best tip is.
     * `hash` is the block hash of the tip to compare against. Optional to
     specify; if left out then the hash of the block passed in will be used as
@@ -114,7 +114,7 @@ Each `TestInstance` consists of:
     sequence and synced (this is slower when processing many blocks).
   - `sync_every_transaction`: `True/False`.  Analogous to
     `sync_every_block`, except if the outcome on the last tx is "None",
-    then the contents of the entire mempool are compared across all bitcoind
+    then the contents of the entire mempool are compared across all dashd
     connections.  If `True` or `False`, then only the last tx's
     acceptance is tested against the given outcome.
 
@@ -133,7 +133,7 @@ Base class for functional tests.
 Generally useful functions.
 
 #### [test_framework/mininode.py](test_framework/mininode.py)
-Basic code to support P2P connectivity to a bitcoind.
+Basic code to support P2P connectivity to a dashd.
 
 #### [test_framework/comptool.py](test_framework/comptool.py)
 Framework for comparison-tool style, P2P tests.
