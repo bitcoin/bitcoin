@@ -2686,12 +2686,14 @@ static UniValue createwallet(const JSONRPCRequest& request)
     std::string warning;
     std::shared_ptr<CWallet> wallet;
     WalletCreationStatus status = CreateWallet(*g_rpc_interfaces->chain, passphrase, flags, request.params[0].get_str(), error, warning, wallet);
-    if (status == WalletCreationStatus::CREATION_FAILED) {
-        throw JSONRPCError(RPC_WALLET_ERROR, error);
-    } else if (status == WalletCreationStatus::ENCRYPTION_FAILED) {
-        throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, error);
-    } else if (status != WalletCreationStatus::SUCCESS) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Wallet creation failed");
+    switch (status) {
+        case WalletCreationStatus::CREATION_FAILED:
+            throw JSONRPCError(RPC_WALLET_ERROR, error);
+        case WalletCreationStatus::ENCRYPTION_FAILED:
+            throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, error);
+        case WalletCreationStatus::SUCCESS:
+            break;
+        // no default case, so the compiler can warn about missing cases
     }
 
     UniValue obj(UniValue::VOBJ);
