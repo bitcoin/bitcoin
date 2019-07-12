@@ -325,6 +325,7 @@ void Shutdown(InitInterfaces& interfaces)
     arrivalTimesMap.clear();
     FlushSyscoinDBs();
     passetdb.reset();
+    passetsupplystatsdb.reset();
     passetallocationdb.reset();
     passetallocationmempooldb.reset();
     pethereumtxrootsdb.reset();
@@ -495,6 +496,7 @@ void SetupServerArgs()
     gArgs.AddArg("-assetindex=<n>", strprintf("Index Syscoin Assets for historical information (0-1, default: 0)"), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-assetindexpagesize=<n>", strprintf("Page size of results for Asset index, should match the paging mechanism of the consuming client. (10-1000, default: 25). Used in conjunction with -assetindex=1."), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-assetindexguids=<guid>", strprintf("Whitelist Assets to index, comma separated. Used in conjunction with -assetindex=1. Leave empty for all."), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-assetsupplystatsindex=<n>", strprintf("Index Syscoin Asset supply statistics related to bridge usage (0-1, default: 0)"), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-tpstest", strprintf("TPSTest for unittest. Leave false"), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-sporkkey=<key>", strprintf("Private key for use with sporks"), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-unittest", strprintf("Set by unit test suite. Leave false"), false, OptionsCategory::OPTIONS);
@@ -1636,6 +1638,7 @@ bool AppInitMain(InitInterfaces& interfaces)
                 // SYSCOIN
                 
                 passetdb.reset();
+                passetsupplystatsdb.reset();
                 passetallocationdb.reset();
                 passetallocationmempooldb.reset();
                 pethereumtxrootsdb.reset();
@@ -1646,6 +1649,9 @@ bool AppInitMain(InitInterfaces& interfaces)
 
 				plockedoutpointsdb.reset(new CLockedOutpointsDB(nCoinDBCache * 16, false, fReset));
                 passetdb.reset(new CAssetDB(nCoinDBCache*16, false, fReset || fReindexChainState));
+                fAssetSupplyStatsIndex = gArgs.GetBoolArg("-assetsupplystatsindex", false);
+                if(fAssetSupplyStatsIndex)
+                    passetsupplystatsdb.reset(new CAssetSupplyStatsDB(nCoinDBCache * 16, false, fReset));
                 passetallocationdb.reset(new CAssetAllocationDB(nCoinDBCache*32, false, fReset || fReindexChainState));
                 passetallocationmempooldb.reset(new CAssetAllocationMempoolDB(0, false, fReset || fReindexChainState));
                 {

@@ -23,6 +23,7 @@ extern ArrivalTimesMapImpl arrivalTimesMap;
 extern CCriticalSection cs_assetallocation;
 extern CCriticalSection cs_assetallocationarrival;
 std::unique_ptr<CAssetDB> passetdb;
+std::unique_ptr<CAssetSupplyStatsDB> passetsupplystatsdb;
 std::unique_ptr<CAssetAllocationDB> passetallocationdb;
 std::unique_ptr<CAssetAllocationMempoolDB> passetallocationmempooldb;
 std::unique_ptr<CAssetIndexDB> passetindexdb;
@@ -541,7 +542,7 @@ bool GetAsset(const uint32_t &nAsset,
 
 
 
-bool BuildAssetJson(const CAsset& asset, UniValue& oAsset)
+bool BuildAssetJson(const CAsset& asset,UniValue& oAsset)
 {
     oAsset.__pushKV("asset_guid", asset.nAsset);
     oAsset.__pushKV("symbol", asset.strSymbol);
@@ -554,6 +555,20 @@ bool BuildAssetJson(const CAsset& asset, UniValue& oAsset)
 	oAsset.__pushKV("max_supply", ValueFromAssetAmount(asset.nMaxSupply, asset.nPrecision));
 	oAsset.__pushKV("update_flags", asset.nUpdateFlags);
 	oAsset.__pushKV("precision", asset.nPrecision);
+    CAmount nCirculatingSupply = 0;
+    CAssetSupplyStats dbAssetSupplyStats;
+    if (fAssetSupplyStatsIndex && passetsupplystatsdb->ExistStats(asset.nAsset) && passetsupplystatsdb->ReadStats(asset.nAsset, dbAssetSupplyStats)) {
+        CAssetAllocation burnAllocation;
+        GetAssetAllocation(CAssetAllocationTuple(asset.nAsset, CWitnessAddress(0, vchFromString("burn"))), burnAllocation);
+        nCirculatingSupply = asset.nTotalSupply - burnAllocation.nBalance;
+        // minting from bridge to sys doesn't change "burn" so we account for it here
+        nCirculatingSupply += dbAssetSupplyStats.nAmountMintedBridge;     
+    } 
+    oAsset.__pushKV("circulating_supply", ValueFromAssetAmount(nCirculatingSupply, asset.nPrecision));
+    oAsset.__pushKV("burned_bridge", ValueFromAssetAmount(dbAssetSupplyStats.nAmountBurnedBridge, asset.nPrecision));
+    oAsset.__pushKV("burned_spt", ValueFromAssetAmount(dbAssetSupplyStats.nAmountBurnedSPT, asset.nPrecision));
+    oAsset.__pushKV("minted_bridge", ValueFromAssetAmount(dbAssetSupplyStats.nAmountMintedBridge, asset.nPrecision));
+    oAsset.__pushKV("minted_spt", ValueFromAssetAmount(dbAssetSupplyStats.nAmountMintedSPT, asset.nPrecision));
 	return true;
 }
 bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
@@ -788,7 +803,23 @@ bool CAssetDB::ScanAssets(const uint32_t count, const uint32_t from, const UniVa
 	}
 	return true;
 }
-
+bool CAssetSupplyStatsDB::Flush(const AssetSupplyStatsMap &mapAssetSupplyStats){
+    if(mapAssetSupplyStats.empty())
+        return true;
+    CDBBatch batch(*this);
+    std::map<std::string, std::vector<uint32_t> > mapGuids;
+    std::vector<uint32_t> emptyVec;
+    if(fAssetIndex){
+        for (const auto &key : mapAssetSupplyStats) {
+            if(key.second.IsNull())
+                batch.Erase(key.first);
+            else
+                batch.Write(key.first, key.second);
+        }
+    }
+    LogPrint(BCLog::SYS, "Flushing %d asset supply stats\n", mapAssetSupplyStats.size());
+    return WriteBatch(batch);
+}
 bool CAssetIndexDB::ScanAssetIndex(int64_t page, const UniValue& oOptions, UniValue& oRes) {
     CAssetAllocationTuple assetTuple;
     uint32_t nAsset = 0;

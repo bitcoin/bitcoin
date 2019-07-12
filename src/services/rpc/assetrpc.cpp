@@ -773,7 +773,7 @@ UniValue assetinfo(const JSONRPCRequest& request) {
     CAsset txPos;
     if (passetdb == nullptr || !passetdb->ReadAsset(nAsset, txPos))
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2511 - " + _("Failed to read from asset DB"));
-
+    
     if(!BuildAssetJson(txPos, oAsset))
         oAsset.clear();
     return oAsset;
@@ -846,7 +846,6 @@ UniValue listassets(const JSONRPCRequest& request) {
     if (params.size() > 2) {
         options = params[2];
     }
-
     UniValue oRes(UniValue::VARR);
     if (!passetdb->ScanAssets(count, from, options, oRes))
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Scan failed"));
@@ -1068,6 +1067,7 @@ UniValue listassetindexassets(const JSONRPCRequest& request) {
         CAsset theAsset;
         if (!GetAsset(guid, theAsset))
            continue;
+
         // equality: catch case where asset is transferred
         if(theAsset.witnessAddress == witnessAddress && BuildAssetJson(theAsset, oAsset)){
             oRes.push_back(oAsset);
