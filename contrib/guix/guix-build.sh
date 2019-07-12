@@ -19,8 +19,8 @@ for host in ${HOSTS=i686-linux-gnu x86_64-linux-gnu arm-linux-gnueabihf aarch64-
     # Display proper warning when the user interrupts the build
     trap 'echo "** INT received while building ${host}, you may want to clean up the relevant output and distsrc-* directories before rebuilding"' INT
 
-    # Run the build script 'contrib/guix/build.sh' in the build container
-    # specified by 'contrib/guix/manifest.scm'
+    # Run the build script 'contrib/guix/libexec/build.sh' in the build
+    # container specified by 'contrib/guix/manifest.scm'
     # shellcheck disable=SC2086
     guix environment --manifest="${PWD}/contrib/guix/manifest.scm" \
                      --container \
