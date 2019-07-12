@@ -22,10 +22,13 @@ Conservatively, a x86_64 machine with:
 
 ## Setup
 
-**If you're just testing this out, you can use the
+### Installing Guix
+
+If you're just testing this out, you can use the
 [Dockerfile][fanquake/guix-docker] for convenience. It automatically speeds up
 your builds by [using substitutes](#speeding-up-builds-with-substitute-servers).
-Should you choose to use the Dockerfile, you can skip this section.**
+If you don't want this behaviour, refer to the [next
+section](#choosing-your-security-model).
 
 Otherwise, follow the [Guix installation guide][guix/bin-install].
 
@@ -34,10 +37,32 @@ Otherwise, follow the [Guix installation guide][guix/bin-install].
 > manager/existing setup. It _only_ touches `/var/guix`, `/gnu`, and
 > `~/.config/guix`.
 
+### Choosing your security model
+
+Guix allows us to achieve better binary security by using our CPU time to build
+everything from scratch. However, it doesn't sacrifice user choice in pursuit of
+this: users can decide whether or not to bootstrap and to use substitutes.
+
 After installation, you may want to consider [adding substitute
 servers](#speeding-up-builds-with-substitute-servers) to speed up your build if
-that fits your security model. (skippable if you're using the
-[Dockerfile][fanquake/guix-docker])
+that fits your security model (say, if you're just testing that this works).
+This is skippable if you're using the [Dockerfile][fanquake/guix-docker].
+
+If you prefer not to use any substitutes, make sure to set
+`ADDITIONAL_GUIX_ENVIRONMENT_FLAGS` like the following snippet. The first build
+will take a while, but the resulting packages will be cached for future builds.
+
+```sh
+export ADDITIONAL_GUIX_ENVIRONMENT_FLAGS='--no-substitutes'
+```
+
+Likewise, to perform a bootstrapped build (takes even longer):
+
+```sh
+export ADDITIONAL_GUIX_ENVIRONMENT_FLAGS='--bootstrap --no-substitutes'
+```
+
+### Using the right Guix
 
 Once Guix is installed, deploy our patched version into your current Guix
 profile. The changes there are slowly being upstreamed.
@@ -55,7 +80,7 @@ at the end of the `guix pull`)
 export PATH="${HOME}/.config/guix/current/bin${PATH:+:}$PATH"
 ```
 
-> Note: There is ongoing work to eliminate this `guix pull` step using Guix
+> Note: There is ongoing work to eliminate this entire section using Guix
 > [inferiors][guix/inferiors] and [channels][guix/channels].
 
 ## Usage
@@ -123,7 +148,8 @@ find output/ -type f -print0 | sort -z | xargs -r0 sha256sum
 * _**ADDITIONAL_GUIX_ENVIRONMENT_FLAGS**_
 
   Additional flags to be passed to `guix environment`. For a fully-bootstrapped
-  build, set this to `--bootstrap --no-substitutes`. Note that a
+  build, set this to `--bootstrap --no-substitutes` (refer to the [security
+  model section](#choosing-your-security-model) for more details). Note that a
   fully-bootstrapped build will take quite a long time on the first run.
 
 ## Tips and Tricks
