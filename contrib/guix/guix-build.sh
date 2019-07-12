@@ -13,7 +13,7 @@ make -C "${PWD}/depends" -j"$MAX_JOBS" download ${V:+V=1} ${SOURCES_PATH:+SOURCE
 # Determine the reference time used for determinism (overridable by environment)
 SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git log --format=%at -1)}"
 
-# Deterministically build Bitcoin Core for HOSTs (overriable by environment)
+# Deterministically build Syscoin Core for HOSTs (overriable by environment)
 for host in ${HOSTS=i686-linux-gnu x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu riscv64-linux-gnu}; do
 
     # Display proper warning when the user interrupts the build
@@ -26,7 +26,7 @@ for host in ${HOSTS=i686-linux-gnu x86_64-linux-gnu arm-linux-gnueabihf aarch64-
                      --container \
                      --pure \
                      --no-cwd \
-                     --share="$PWD"=/bitcoin \
+                     --share="$PWD"=/syscoin \
                      ${SOURCES_PATH:+--share="$SOURCES_PATH"} \
                      ${ADDITIONAL_GUIX_ENVIRONMENT_FLAGS} \
                      -- env HOST="$host" \
@@ -34,6 +34,6 @@ for host in ${HOSTS=i686-linux-gnu x86_64-linux-gnu arm-linux-gnueabihf aarch64-
                             SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:?unable to determine value}" \
                             ${V:+V=1} \
                             ${SOURCES_PATH:+SOURCES_PATH="$SOURCES_PATH"} \
-                          bash -c "cd /bitcoin && bash contrib/guix/libexec/build.sh"
+                          bash -c "cd /syscoin && bash contrib/guix/libexec/build.sh"
 
 done

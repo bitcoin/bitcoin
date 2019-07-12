@@ -1,4 +1,4 @@
-(define-module (bitcoin)
+(define-module (syscoin)
   #:use-module (gnu)
   #:use-module (gnu packages)
   #:use-module (gnu packages autotools)
@@ -100,7 +100,7 @@ chain for " target " development."))
       (home-page (package-home-page xgcc))
       (license (package-license xgcc)))))
 
-(define* (make-bitcoin-cross-toolchain target
+(define* (make-syscoin-cross-toolchain target
                                   #:optional
                                   (base-gcc-for-libc gcc-5)
                                   (base-kernel-headers linux-libre-headers-4.19)
@@ -108,7 +108,7 @@ chain for " target " development."))
                                   (base-gcc (make-gcc-rpath-link
                                              (make-ssp-fixed-gcc gcc-9))))
   "Convienience wrapper around MAKE-CROSS-TOOLCHAIN with default values
-desirable for building Bitcoin Core release binaries."
+desirable for building Syscoin Core release binaries."
   (make-cross-toolchain target
                    base-gcc-for-libc
                    base-kernel-headers
@@ -148,8 +148,8 @@ desirable for building Bitcoin Core release binaries."
        python
        ;; Toolchains
        (make-gcc-toolchain gcc-9 glibc-2.27)
-       (make-bitcoin-cross-toolchain "riscv64-linux-gnu" gcc-8)
-       (make-bitcoin-cross-toolchain "x86_64-linux-gnu")
-       (make-bitcoin-cross-toolchain "i686-linux-gnu")
-       (make-bitcoin-cross-toolchain "aarch64-linux-gnu")
-       (make-bitcoin-cross-toolchain "arm-linux-gnueabihf" gcc-6)))
+       (make-syscoin-cross-toolchain "riscv64-linux-gnu" gcc-8)
+       (make-syscoin-cross-toolchain "x86_64-linux-gnu")
+       (make-syscoin-cross-toolchain "i686-linux-gnu")
+       (make-syscoin-cross-toolchain "aarch64-linux-gnu")
+       (make-syscoin-cross-toolchain "arm-linux-gnueabihf" gcc-6)))
