@@ -325,23 +325,19 @@ public:
 };
 class CAssetSupplyStats {
 public: 
-    CAmount nAmountMintedSPT;
-    CAmount nAmountBurnedSPT;
-    CAmount nAmountMintedBridge;
-    CAmount nAmountBurnedBridge;   
+    CAmount nBalanceSPT;
+    CAmount nBalanceBridge;
     CAssetSupplyStats() {
         SetNull();
     }
     ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {      
-        READWRITE(nAmountMintedSPT);
-        READWRITE(nAmountBurnedSPT);
-        READWRITE(nAmountMintedBridge);   
-        READWRITE(nAmountBurnedBridge);
+        READWRITE(nBalanceSPT);
+        READWRITE(nBalanceBridge);
     }
-    inline void SetNull() {  nAmountMintedSPT = nAmountBurnedSPT = nAmountMintedBridge = nAmountBurnedBridge = 0;  }
-    inline bool IsNull() const {  return (nAmountMintedSPT == 0 && nAmountBurnedSPT == 0 && nAmountMintedBridge == 0 && nAmountBurnedBridge == 0);  }
+    inline void SetNull() {  nBalanceSPT = nBalanceBridge = 0;  }
+    inline bool IsNull() const {  return (nBalanceSPT == 0 && nBalanceBridge == 0);  }
 };
 typedef std::unordered_map<uint32_t, CAssetSupplyStats > AssetSupplyStatsMap;
 class CAssetSupplyStatsDB : public CDBWrapper {
