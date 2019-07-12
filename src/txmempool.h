@@ -752,8 +752,12 @@ private:
  */
 class CCoinsViewMemPool : public CCoinsViewBacked
 {
+public:
+    void AddPotentialTransaction(const CTransactionRef& ptx) { package_tx.emplace(ptx->GetHash(), ptx); }
+
 protected:
     const CTxMemPool& mempool;
+    std::map<uint256, const CTransactionRef> package_tx;
 
 public:
     CCoinsViewMemPool(CCoinsView* baseIn, const CTxMemPool& mempoolIn);
