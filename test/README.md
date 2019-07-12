@@ -103,7 +103,7 @@ functional test is run and is stored in test/cache. This speeds up
 test startup times since new blockchains don't need to be generated for
 each test. However, the cache may get into a bad state, in which case
 tests will fail. If this happens, remove the cache directory (and make
-sure bitcoind processes are stopped as above):
+sure dashd processes are stopped as above):
 
 ```bash
 rm -rf cache
@@ -120,7 +120,7 @@ default:
 - when run directly, *all* logs are written to `test_framework.log` and INFO
   level and above are output to the console.
 - when run on Travis, no logs are output to the console. However, if a test
-  fails, the `test_framework.log` and bitcoind `debug.log`s will all be dumped
+  fails, the `test_framework.log` and dashd `debug.log`s will all be dumped
   to the console to help troubleshooting.
 
 To change the level of logs output to the console, use the `-l` command line
@@ -153,7 +153,7 @@ import pdb; pdb.set_trace()
 ```
 
 anywhere in the test. You will then be able to inspect variables, as well as
-call methods that interact with the bitcoind nodes-under-test.
+call methods that interact with the dashd nodes-under-test.
 
 ### Util tests
 
