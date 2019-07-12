@@ -1283,7 +1283,7 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
         if (!pwallet->ImportPubKeys(ordered_pubkeys, pubkey_map, import_data.key_origins, add_keypool, internal, timestamp)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Error adding address to wallet");
         }
-        if (!pwallet->ImportScriptPubKeys(label, script_pub_keys, have_solving_data, internal, timestamp)) {
+        if (!pwallet->ImportScriptPubKeys(label, script_pub_keys, have_solving_data, !internal, timestamp)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Error adding address to wallet");
         }
 

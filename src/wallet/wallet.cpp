@@ -1717,7 +1717,7 @@ bool CWallet::ImportPubKeys(const std::vector<CKeyID>& ordered_pubkeys, const st
     return true;
 }
 
-bool CWallet::ImportScriptPubKeys(const std::string& label, const std::set<CScript>& script_pub_keys, const bool have_solving_data, const bool internal, const int64_t timestamp)
+bool CWallet::ImportScriptPubKeys(const std::string& label, const std::set<CScript>& script_pub_keys, const bool have_solving_data, const bool apply_label, const int64_t timestamp)
 {
     WalletBatch batch(*database);
     for (const CScript& script : script_pub_keys) {
@@ -1728,7 +1728,7 @@ bool CWallet::ImportScriptPubKeys(const std::string& label, const std::set<CScri
         }
         CTxDestination dest;
         ExtractDestination(script, dest);
-        if (!internal && IsValidDestination(dest)) {
+        if (apply_label && IsValidDestination(dest)) {
             SetAddressBookWithDB(batch, dest, label, "receive");
         }
     }
