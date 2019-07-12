@@ -1008,19 +1008,20 @@ static UniValue getblockbyheight(const JSONRPCRequest& request)
     }
 
     // Check if block exists or is negative
-    if(::ChainActive().Height() < request.params[0].get_int() || request.params[0].get_int() <= -1)
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block " + std::to_string(request.params[0].get_int()) + " not found");
+    if(::ChainActive().Height() < request.params[0].get_int() || request.params[0].get_int() <= -1) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Block " + std::to_string(request.params[0].get_int()) + " not found");
+    }
 
     CBlock block;
-    CBlockIndex* pblockindex = ::ChainActive()[request.params[0].get_int()];
-    uint256 hash(pblockindex->GetBlockHash());
+    CBlockIndex* pblockindex;
     const CBlockIndex* tip;
-
-    if (!pblockindex)
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid key");
-
     {
         LOCK(cs_main);
+        // Get index and hash
+        pblockindex = ::ChainActive()[request.params[0].get_int()];
+        if(!pblockindex)
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid key");
+
         tip = ::ChainActive().Tip();
         block = GetBlockChecked(pblockindex);
     }
