@@ -647,7 +647,7 @@ fs::path static GetAutostartFilePath()
     std::string chain = gArgs.GetChainName();
     if (chain == CBaseChainParams::MAIN)
         return GetAutostartDir() / "syscoin.desktop";
-    return GetAutostartDir() / strprintf("syscoin-%s.lnk", chain);
+    return GetAutostartDir() / strprintf("syscoin-%s.desktop", chain);
 }
 
 bool GetStartOnSystemStartup()
