@@ -636,7 +636,7 @@ UniValue listassetallocationmempoolbalances(const JSONRPCRequest& request) {
     }.Check(request);
     UniValue options;
     uint32_t count = 10;
-    u_int32_t from = 0;
+    uint32_t from = 0;
     if (params.size() > 0) {
         count = params[0].get_uint();
         if (count == 0) {
