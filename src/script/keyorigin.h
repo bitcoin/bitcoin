@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_SCRIPT_KEYORIGIN_H
-#define BITCOIN_SCRIPT_KEYORIGIN_H
+#ifndef SYSCOIN_SCRIPT_KEYORIGIN_H
+#define SYSCOIN_SCRIPT_KEYORIGIN_H
 
 #include <serialize.h>
 #include <streams.h>
@@ -34,4 +34,4 @@ struct KeyOriginInfo
     }
 };
 
-#endif // BITCOIN_SCRIPT_KEYORIGIN_H
+#endif // SYSCOIN_SCRIPT_KEYORIGIN_H
