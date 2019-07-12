@@ -1,26 +1,25 @@
-(define-module (bitcoin)
-  #:use-module (gnu)
-  #:use-module (gnu packages)
-  #:use-module (gnu packages autotools)
-  #:use-module (gnu packages base)
-  #:use-module (gnu packages bash)
-  #:use-module (gnu packages check)
-  #:use-module (gnu packages commencement)
-  #:use-module (gnu packages compression)
-  #:use-module (gnu packages cross-base)
-  #:use-module (gnu packages file)
-  #:use-module (gnu packages gawk)
-  #:use-module (gnu packages gcc)
-  #:use-module (gnu packages linux)
-  #:use-module (gnu packages perl)
-  #:use-module (gnu packages pkg-config)
-  #:use-module (gnu packages python)
-  #:use-module (gnu packages shells)
-  #:use-module (guix build-system trivial)
-  #:use-module (guix gexp)
-  #:use-module (guix packages)
-  #:use-module (guix profiles)
-  #:use-module (guix utils))
+(use-modules (gnu)
+             (gnu packages)
+             (gnu packages autotools)
+             (gnu packages base)
+             (gnu packages bash)
+             (gnu packages check)
+             (gnu packages commencement)
+             (gnu packages compression)
+             (gnu packages cross-base)
+             (gnu packages file)
+             (gnu packages gawk)
+             (gnu packages gcc)
+             (gnu packages linux)
+             (gnu packages perl)
+             (gnu packages pkg-config)
+             (gnu packages python)
+             (gnu packages shells)
+             (guix build-system trivial)
+             (guix gexp)
+             (guix packages)
+             (guix profiles)
+             (guix utils))
 
 (define (make-ssp-fixed-gcc xgcc)
   "Given a XGCC package, return a modified package that uses the SSP function
@@ -101,7 +100,7 @@ chain for " target " development."))
       (license (package-license xgcc)))))
 
 (define* (make-bitcoin-cross-toolchain target
-                                  #:optional
+                                  #:key
                                   (base-gcc-for-libc gcc-5)
                                   (base-kernel-headers linux-libre-headers-4.19)
                                   (base-libc glibc-2.27)
@@ -117,8 +116,7 @@ desirable for building Bitcoin Core release binaries."
 
 (packages->manifest
  (list ;; The Basics
-       bash
-       tcsh
+       bash-minimal
        which
        coreutils
        util-linux
@@ -145,11 +143,16 @@ desirable for building Bitcoin Core release binaries."
        pkg-config
        ;; Scripting
        perl
-       python
-       ;; Toolchains
+       python-3.7
+       ;; Native gcc 9 toolchain targeting glibc 2.27
        (make-gcc-toolchain gcc-9 glibc-2.27)
-       (make-bitcoin-cross-toolchain "riscv64-linux-gnu" gcc-8)
-       (make-bitcoin-cross-toolchain "x86_64-linux-gnu")
+       ;; Cross gcc 9 toolchains targeting glibc 2.27
        (make-bitcoin-cross-toolchain "i686-linux-gnu")
+       (make-bitcoin-cross-toolchain "x86_64-linux-gnu")
        (make-bitcoin-cross-toolchain "aarch64-linux-gnu")
-       (make-bitcoin-cross-toolchain "arm-linux-gnueabihf" gcc-6)))
+       (make-bitcoin-cross-toolchain "arm-linux-gnueabihf")
+       ;; The glibc 2.27 for riscv64 needs gcc 7 to successfully build (see:
+       ;; https://www.gnu.org/software/gcc/gcc-7/changes.html#riscv). The final
+       ;; toolchain is still a gcc 9 toolchain targeting glibc 2.27.
+       (make-bitcoin-cross-toolchain "riscv64-linux-gnu"
+                                     #:base-gcc-for-libc gcc-7)))

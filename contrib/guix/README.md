@@ -15,7 +15,8 @@ Conservatively, a x86_64 machine with:
 
 - 2 or more logical cores
 - 4GB of free disk space on the partition that /gnu/store will reside in
-- 24GB of free disk space on the partition that the bitcoin repository resides in
+- 24GB of free disk space on the partition that the Bitcoin Core git repository
+  resides in
 
 > Note: these requirements are slightly less onerous than those of Gitian builds
 
@@ -43,7 +44,7 @@ profile. The changes there are slowly being upstreamed.
 
 ```sh
 guix pull --url=https://github.com/dongcarl/guix.git \
-          --branch=2019-05-bitcoin-staging \
+          --commit=82c77e52b8b46e0a3aad2cb12307c2e30547deec \
           --max-jobs=4 # change accordingly
 ```
 
