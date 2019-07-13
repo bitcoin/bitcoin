@@ -12,7 +12,6 @@
 
 #include <stdint.h>
 
-#include <boost/foreach.hpp>
 
 namespace Checkpoints {
 

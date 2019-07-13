@@ -15,7 +15,6 @@
 #include "utilstrencodings.h"
 #include "warnings.h"
 
-#include <boost/foreach.hpp>
 
 static CCriticalSection cs_nTimeOffset;
 static int64_t nTimeOffset = 0;

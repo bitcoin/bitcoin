@@ -11,7 +11,6 @@
 #include "clientversion.h"
 #include "streams.h"
 
-#include <boost/foreach.hpp>
 
 RecentRequestsTableModel::RecentRequestsTableModel(CWallet *wallet, WalletModel *parent) :
     QAbstractTableModel(parent), walletModel(parent)

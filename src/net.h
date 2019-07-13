@@ -37,7 +37,6 @@
 #include <arpa/inet.h>
 #endif
 
-#include <boost/foreach.hpp>
 #include <boost/signals2/signal.hpp>
 
 // "Optimistic send" was introduced in the beginning of the Bitcoin project. I assume this was done because it was

@@ -14,7 +14,6 @@
 #include "test/test_dash.h"
 
 
-#include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
 
 typedef std::vector<unsigned char> valtype;
