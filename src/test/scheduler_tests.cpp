@@ -27,14 +27,7 @@ static void microTask(CScheduler& s, boost::mutex& mutex, int& counter, int delt
 
 static void MicroSleep(uint64_t n)
 {
-#if defined(HAVE_WORKING_BOOST_SLEEP_FOR)
     boost::this_thread::sleep_for(boost::chrono::microseconds(n));
-#elif defined(HAVE_WORKING_BOOST_SLEEP)
-    boost::this_thread::sleep(boost::posix_time::microseconds(n));
-#else
-    //should never get here
-    #error missing boost sleep implementation
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(manythreads)
