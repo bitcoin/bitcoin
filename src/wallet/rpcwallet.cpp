@@ -52,6 +52,23 @@ static inline bool GetAvoidReuseFlag(CWallet * const pwallet, const UniValue& pa
     return avoid_reuse;
 }
 
+
+/** Used by RPC commands that have an include_watchonly parameter.
+ *  We default to true for watchonly wallets if include_watchonly isn't
+ *  explicitly set.
+ */
+static bool ParseIncludeWatchonly(const UniValue& include_watchonly, const CWallet& pwallet)
+{
+    if (include_watchonly.isNull()) {
+        // if include_watchonly isn't explicitly set, then check if we have a watchonly wallet
+        return pwallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
+    }
+
+    // otherwise return whatever include_watchonly was set to
+    return include_watchonly.get_bool();
+}
+
+
 /** Checks if a CKey is in the given CWallet compressed or otherwise*/
 bool HaveKey(const CWallet& wallet, const CKey& key)
 {
@@ -748,10 +765,7 @@ static UniValue getbalance(const JSONRPCRequest& request)
         min_depth = request.params[1].get_int();
     }
 
-    bool include_watchonly = false;
-    if (!request.params[2].isNull() && request.params[2].get_bool()) {
-        include_watchonly = true;
-    }
+    bool include_watchonly = ParseIncludeWatchonly(request.params[2], *pwallet);
 
     bool avoid_reuse = GetAvoidReuseFlag(pwallet, request.params[3]);
 
@@ -1033,9 +1047,10 @@ static UniValue ListReceived(interfaces::Chain::Lock& locked_chain, CWallet * co
         fIncludeEmpty = params[1].get_bool();
 
     isminefilter filter = ISMINE_SPENDABLE;
-    if(!params[2].isNull())
-        if(params[2].get_bool())
-            filter = filter | ISMINE_WATCH_ONLY;
+
+    if (ParseIncludeWatchonly(params[2], *pwallet)) {
+        filter |= ISMINE_WATCH_ONLY;
+    }
 
     bool has_filtered_address = false;
     CTxDestination filtered_address = CNoDestination();
@@ -1434,9 +1449,10 @@ UniValue listtransactions(const JSONRPCRequest& request)
     if (!request.params[2].isNull())
         nFrom = request.params[2].get_int();
     isminefilter filter = ISMINE_SPENDABLE;
-    if(!request.params[3].isNull())
-        if(request.params[3].get_bool())
-            filter = filter | ISMINE_WATCH_ONLY;
+
+    if (ParseIncludeWatchonly(request.params[3], *pwallet)) {
+        filter |= ISMINE_WATCH_ONLY;
+    }
 
     if (nCount < 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative count");
@@ -1579,8 +1595,8 @@ static UniValue listsinceblock(const JSONRPCRequest& request)
         }
     }
 
-    if (!request.params[2].isNull() && request.params[2].get_bool()) {
-        filter = filter | ISMINE_WATCH_ONLY;
+    if (ParseIncludeWatchonly(request.params[2], *pwallet)) {
+        filter |= ISMINE_WATCH_ONLY;
     }
 
     bool include_removed = (request.params[3].isNull() || request.params[3].get_bool());
@@ -1697,9 +1713,10 @@ static UniValue gettransaction(const JSONRPCRequest& request)
     uint256 hash(ParseHashV(request.params[0], "txid"));
 
     isminefilter filter = ISMINE_SPENDABLE;
-    if(!request.params[1].isNull())
-        if(request.params[1].get_bool())
-            filter = filter | ISMINE_WATCH_ONLY;
+
+    if (ParseIncludeWatchonly(request.params[1], *pwallet)) {
+        filter |= ISMINE_WATCH_ONLY;
+    }
 
     UniValue entry(UniValue::VOBJ);
     auto it = pwallet->mapWallet.find(hash);
@@ -3014,8 +3031,7 @@ void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& f
             }
         }
 
-        if (options.exists("includeWatching"))
-            coinControl.fAllowWatchOnly = options["includeWatching"].get_bool();
+        coinControl.fAllowWatchOnly = ParseIncludeWatchonly(options["includeWatching"], *pwallet);
 
         if (options.exists("lockUnspents"))
             lockUnspents = options["lockUnspents"].get_bool();
@@ -3047,6 +3063,9 @@ void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& f
             }
         }
       }
+    } else {
+        // if options is null and not a bool
+        coinControl.fAllowWatchOnly = ParseIncludeWatchonly(NullUniValue, *pwallet);
     }
 
     if (tx.vout.size() == 0)
