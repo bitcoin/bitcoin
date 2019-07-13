@@ -1833,6 +1833,31 @@ bool CEthereumTxRootsDB::PruneTxRoots(const uint32_t &fNewGethSyncHeight) {
 bool CEthereumTxRootsDB::Init(){
     return PruneTxRoots(0);
 }
+bool CEthereumTxRootsDB::Clear(){
+    vector<uint32_t> vecHeightKeys;
+    uint32_t nKey = 0;
+    boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
+    pcursor->SeekToFirst();
+    while (pcursor->Valid()) {
+        boost::this_thread::interruption_point();
+        try {
+            if(pcursor->GetKey(nKey)){
+                vecHeightKeys.emplace_back(nKey);
+            }
+            pcursor->Next();
+        }
+        catch (std::exception &e) {
+            return error("%s() : deserialize error", __PRETTY_FUNCTION__);
+        }
+    }
+
+    {
+        LOCK(cs_ethsyncheight);
+        fGethSyncHeight = 0;
+        fGethCurrentHeight = 0;
+    }      
+    return FlushErase(vecHeightKeys);
+}
 void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t> > &vecMissingBlockRanges){
     boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
     pcursor->SeekToFirst();

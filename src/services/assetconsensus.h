@@ -55,6 +55,7 @@ public:
     } 
     void AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t> > &vecMissingBlockRanges);
     bool Init();
+    bool Clear();
     bool PruneTxRoots(const uint32_t &fNewGethSyncHeight);
     bool FlushErase(const std::vector<uint32_t> &vecHeightKeys);
     bool FlushWrite(const EthereumTxRootMap &mapTxRoots);

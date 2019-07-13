@@ -1242,7 +1242,25 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
     ret.__pushKV("status", res? "success": "fail");
     return ret;
 }
- 
+UniValue syscoinclearethheaders(const JSONRPCRequest& request) {
+    RPCHelpMan{"syscoinclearethheaders",
+        "\nClears Ethereum headers in Syscoin.\n",
+        {},
+        RPCResult{
+        "{\n"
+        "    \"status\": xx     (string) Result\n"
+        "}\n"
+        },
+        RPCExamples{
+            HelpExampleCli("syscoinclearethheaders", "")
+            + HelpExampleRpc("syscoinclearethheaders", "")
+        }
+    }.Check(request);
+    bool res = pethereumtxrootsdb->Clear();
+    UniValue ret(UniValue::VOBJ);
+    ret.__pushKV("status", res? "success": "fail");
+    return ret;
+}
 UniValue syscoingettxroots(const JSONRPCRequest& request)
 {
     RPCHelpMan{"syscoingettxroot",
@@ -1304,6 +1322,7 @@ static const CRPCCommand commands[] =
     { "syscoin",            "tpstestsetenabled",                &tpstestsetenabled,             {"enabled"} },
     { "syscoin",            "syscoinsetethstatus",              &syscoinsetethstatus,           {"syncing_status","highestBlock"} },
     { "syscoin",            "syscoinsetethheaders",             &syscoinsetethheaders,          {"headers"} },
+    { "syscoin",            "syscoinclearethheaders",           &syscoinclearethheaders,        {} },
     { "syscoin",            "syscoinstopgeth",                  &syscoinstopgeth,               {} },
     { "syscoin",            "syscoinstartgeth",                 &syscoinstartgeth,              {} },
 };
