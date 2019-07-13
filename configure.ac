@@ -957,6 +957,29 @@ AC_SUBST(LEVELDB_CPPFLAGS)
 AC_SUBST(LIBLEVELDB)
 AC_SUBST(LIBMEMENV)
 
+dnl enable-fuzz should disable all other targets
+if test "x$enable_fuzz" = "xyes"; then
+  AC_MSG_WARN(enable-fuzz will disable all other targets)
+  build_syscoin_utils=no
+  build_syscoin_cli=no
+  build_syscoin_tx=no
+  build_syscoin_wallet=no
+  build_syscoind=no
+  build_syscoin_libs=no
+  syscoin_enable_qt=no
+  syscoin_enable_qt_test=no
+  syscoin_enable_qt_dbus=no
+  enable_wallet=no
+  use_bench=no
+  use_upnp=no
+  use_zmq=no
+else
+  SYSCOIN_QT_INIT
+
+  dnl sets $syscoin_enable_qt, $syscoin_enable_qt_test, $syscoin_enable_qt_dbus
+  SYSCOIN_QT_CONFIGURE([$use_pkgconfig])
+fi
+
 if test x$enable_wallet != xno; then
     dnl Check for libdb_cxx only if wallet enabled
     SYSCOIN_FIND_BDB48
