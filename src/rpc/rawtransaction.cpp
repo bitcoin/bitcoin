@@ -863,19 +863,21 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Array must contain exactly one raw transaction for now");
     }
 
-    CMutableTransaction mtx;
-    if (!DecodeHexTx(mtx, request.params[0].get_array()[0].get_str())) {
-        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
+    std::vector<CTransactionRef> txs;
+    for (const auto& tx : request.params[0].get_array().getValues()) {
+        CMutableTransaction mtx;
+        if (!DecodeHexTx(mtx, tx.get_str())) {
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
+        }
+        txs.push_back(MakeTransactionRef(std::move(mtx)));
     }
-    CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
-    const uint256& tx_hash = tx->GetHash();
 
     CAmount max_raw_tx_fee = DEFAULT_MAX_RAW_TX_FEE;
     // TODO: temporary migration code for old clients. Remove in v0.20
     if (request.params[1].isBool()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Second argument must be numeric (maxfeerate) and no longer supports a boolean. To allow a transaction with high fees, set maxfeerate to 0.");
     } else if (!request.params[1].isNull()) {
-        size_t weight = GetTransactionWeight(*tx);
+        size_t weight = /* TODO fix */ 4000; //GetTransactionWeight(*tx);
         CFeeRate fr(AmountFromValue(request.params[1]));
         // the +3/4 part rounds the value up, and is the same formula used when
         // calculating the fee for a transaction
@@ -884,29 +886,34 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
     }
 
     UniValue result(UniValue::VARR);
-    UniValue result_0(UniValue::VOBJ);
-    result_0.pushKV("txid", tx_hash.GetHex());
 
-    CValidationState state;
-    bool missing_inputs;
-    bool test_accept_res;
-    {
-        LOCK(cs_main);
-        test_accept_res = AcceptToMemoryPool(mempool, state, std::move(tx), &missing_inputs,
-            nullptr /* plTxnReplaced */, false /* bypass_limits */, max_raw_tx_fee, /* test_accept */ true);
-    }
-    result_0.pushKV("allowed", test_accept_res);
-    if (!test_accept_res) {
-        if (state.IsInvalid()) {
-            result_0.pushKV("reject-reason", strprintf("%i: %s", state.GetRejectCode(), state.GetRejectReason()));
-        } else if (missing_inputs) {
-            result_0.pushKV("reject-reason", "missing-inputs");
-        } else {
-            result_0.pushKV("reject-reason", state.GetRejectReason());
+    LOCK2(cs_main, ::mempool.cs);
+    TxPoolLayer pool_layer{::mempool};
+    for (const auto& tx : txs) {
+        UniValue result_i(UniValue::VOBJ);
+        result_i.pushKV("txid", tx->GetHash().GetHex());
+
+        CValidationState state;
+        bool missing_inputs;
+        bool test_accept_res;
+        {
+            test_accept_res = AcceptToMemoryPool(pool_layer, state, tx, &missing_inputs,
+                nullptr /* plTxnReplaced */, false /* bypass_limits */, max_raw_tx_fee, /* test_accept */ false);
         }
-    }
+        result_i.pushKV("allowed", test_accept_res);
+        if (!test_accept_res) {
+            if (state.IsInvalid()) {
+                result_i.pushKV("reject-reason", strprintf("%i: %s", state.GetRejectCode(), state.GetRejectReason()));
+            } else if (missing_inputs) {
+                result_i.pushKV("reject-reason", "missing-inputs");
+            } else {
+                result_i.pushKV("reject-reason", state.GetRejectReason());
+            }
+        }
 
-    result.push_back(std::move(result_0));
+        result.push_back(std::move(result_i));
+        pool_layer.check();
+    }
     return result;
 }
 
