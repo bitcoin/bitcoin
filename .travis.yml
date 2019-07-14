@@ -157,6 +157,6 @@ jobs:
         FILE_ENV="./ci/test/00_setup_env_amd64_nowallet.sh"
 
     - stage: test
-      name: 'macOS 10.10  [GOAL: deploy] [no functional tests]'
+      name: 'macOS 10.12  [GOAL: deploy] [no functional tests]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_mac.sh"
