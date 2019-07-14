@@ -825,7 +825,9 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
                 "\nSee sendrawtransaction call.\n",
                 {
                     {"rawtxs", RPCArg::Type::ARR, RPCArg::Optional::NO, "An array of hex strings of raw transactions.\n"
-            "                                        Length must be one for now.",
+                            "The list will be processed in order.\n"
+                            "An accepted transaction may be replaced by later transactions.\n"
+                            "A rejected transaction may be allowed if submitted earlier.",
                         {
                             {"rawtx", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, ""},
                         },
@@ -858,10 +860,6 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
         UniValue::VARR,
         UniValueType(), // NUM or BOOL, checked later
     });
-
-    if (request.params[0].get_array().size() != 1) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Array must contain exactly one raw transaction for now");
-    }
 
     std::vector<CTransactionRef> txs;
     for (const auto& tx : request.params[0].get_array().getValues()) {

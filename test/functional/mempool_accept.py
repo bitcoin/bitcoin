@@ -49,6 +49,208 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getmempoolinfo()['size'], self.mempool_size)  # Must not change mempool state
 
     def run_test(self):
+        self.test_single()
+        self.test_multiple()
+
+    def test_multiple(self):
+        node = self.nodes[0]
+        coins = node.listunspent(query_options={'minimumAmount': 50})
+
+        def create_sign(*, prevtxs=None, **kwargs):
+            signed = node.signrawtransactionwithwallet(
+                hexstring=node.createrawtransaction(
+                    **kwargs,
+                    replaceable=True,
+                ),
+                prevtxs=prevtxs,
+            )
+            assert signed['complete']
+            tx = CTransaction()
+            tx.deserialize(BytesIO(hex_str_to_bytes(signed['hex'])))
+            tx.rehash()
+            return tx
+
+        def send(tx):
+            return node.sendrawtransaction(
+                hexstring=tx.serialize().hex(),
+                maxfeerate=0,
+            )
+
+        self.log.info('Populate mempool with tx graph')
+        coin_a = coins.pop()
+        txid_a = send(
+            create_sign(
+                inputs=[{
+                    'txid': coin_a['txid'],
+                    'vout': coin_a['vout'],
+                }],
+                outputs={
+                    node.getnewaddress(): 20,
+                    node.getnewaddress(): 29,
+                },
+            ))
+        coin_b = coins.pop()
+        txid_b = send(
+            create_sign(
+                inputs=[{
+                    'txid': coin_b['txid'],
+                    'vout': coin_b['vout'],
+                }],
+                outputs={node.getnewaddress(): 49},
+            ))
+        tx_c = create_sign(
+            inputs=[{
+                'txid': txid_a,
+                'vout': 0
+            }, {
+                'txid': txid_b,
+                'vout': 0,
+            }],
+            outputs={node.getnewaddress(): 68},
+        )
+        txid_c = send(tx_c)
+
+        tx_d = create_sign(
+            inputs=[{
+                'txid': txid_a,
+                'vout': 1
+            }],
+            outputs={node.getnewaddress(): 19},
+        )
+        txid_d = send(tx_d)
+
+        self.log.info('Create replacement transactions')
+        tx_d_1 = create_sign(
+            inputs=[{
+                'txid': txid_a,
+                'vout': 1
+            }],
+            outputs={node.getnewaddress(): 18},
+        )
+        tx_d_2 = create_sign(
+            inputs=[{
+                'txid': txid_a,
+                'vout': 1
+            }],
+            outputs={node.getnewaddress(): 17},
+        )
+        tx_e = create_sign(
+            inputs=[{
+                'txid': txid_d,
+                'vout': 0
+            }, {
+                'txid': txid_c,
+                'vout': 0
+            }],
+            outputs={node.getnewaddress(): 76},
+        )
+        tx_e_2 = create_sign(
+            inputs=[{
+                'txid': tx_d_2.hash,
+                'vout': 0
+            }, {
+                'txid': txid_c,
+                'vout': 0
+            }],
+            outputs={node.getnewaddress(): 75},
+            prevtxs=[{
+                'txid': tx_d_2.hash,
+                'vout': 0,
+                'scriptPubKey': tx_d_2.vout[0].scriptPubKey.hex(),
+                'amount': tx_d_2.vout[0].nValue / COIN,
+            }],
+        )
+        tx_a_1 = create_sign(
+            inputs=[{
+                'txid': coin_a['txid'],
+                'vout': coin_a['vout'],
+            }],
+            outputs={
+                node.getnewaddress(): 1,
+            },
+        )
+        tx_c_1 = create_sign(
+            inputs=[{
+                'txid': tx_a_1.hash,
+                'vout': 0
+            }, {
+                'txid': txid_b,
+                'vout': 0,
+            }],
+            outputs={node.getnewaddress(): 1},
+            prevtxs=[{
+                'txid': tx_a_1.hash,
+                'vout': 0,
+                'scriptPubKey': tx_a_1.vout[0].scriptPubKey.hex(),
+                'amount': tx_a_1.vout[0].nValue / COIN,
+            }],
+        )
+
+        assert_equal(
+            node.testmempoolaccept(
+                rawtxs=[
+                    tx.serialize().hex() for tx in [
+                        tx_d_1,
+                        tx_d_2,
+                        tx_e,
+                        tx_e_2,
+                        tx_e_2,
+                        tx_d,
+                        tx_d_1,
+                        tx_a_1,
+                        tx_c,
+                        tx_c_1,
+                    ]
+                ],
+                maxfeerate=0), [
+                    {
+                        'txid': tx_d_1.hash,
+                        'allowed': True,
+                    },
+                    {
+                        'txid': tx_d_2.hash,
+                        'allowed': True,
+                    },
+                    {
+                        'txid': tx_e.hash,
+                        'allowed': False,
+                        'reject-reason': 'missing-inputs',
+                    },
+                    {
+                        'txid': tx_e_2.hash,
+                        'allowed': True,
+                    },
+                    {
+                        'txid': tx_e_2.hash,
+                        'allowed': False,
+                        'reject-reason': '18: txn-already-in-mempool',
+                    },
+                    {
+                        'txid': txid_d,
+                        'allowed': False,
+                        'reject-reason': '66: insufficient fee',
+                    },
+                    {
+                        'txid': tx_d_1.hash,
+                        'allowed': False,
+                        'reject-reason': '66: insufficient fee',
+                    },
+                    {
+                        'txid': tx_a_1.hash,
+                        'allowed': True,
+                    },
+                    {
+                        'txid': txid_c,
+                        'allowed': False,
+                        'reject-reason': 'missing-inputs',
+                    },
+                    {
+                        'txid': tx_c_1.hash,
+                        'allowed': True,
+                    },
+                ])
+
+    def test_single(self):
         node = self.nodes[0]
 
         self.log.info('Start with empty mempool, and 200 blocks')
@@ -58,8 +260,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         coins = node.listunspent()
 
         self.log.info('Should not accept garbage to testmempoolaccept')
-        assert_raises_rpc_error(-3, 'Expected type array, got string', lambda: node.testmempoolaccept(rawtxs='ff00baar'))
-        assert_raises_rpc_error(-8, 'Array must contain exactly one raw transaction for now', lambda: node.testmempoolaccept(rawtxs=['ff00baar', 'ff22']))
+        assert_raises_rpc_error(-3, 'Expected type array, got string', lambda: node.testmempoolaccept(rawtxs='ff00'))
         assert_raises_rpc_error(-22, 'TX decode failed', lambda: node.testmempoolaccept(rawtxs=['ff00baar']))
 
         self.log.info('A transaction already in the blockchain')
