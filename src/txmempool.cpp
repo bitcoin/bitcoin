@@ -219,7 +219,7 @@ bool TxPoolLayer::CalculateMemPoolAncestors(txiter it, setEntries& setAncestors,
 }
 
 template <typename P>
-static void UpdateAncestorsOf(P& pool, bool add, typename P::txiter it, const typename P::setEntries& setAncestors) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
+static void UpdateAncestorsOf(P& pool, bool add, const typename P::txiter& it, typename P::setEntries& setAncestors) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
 {
     auto parentIters = pool.GetMemPoolParents(it);
     // add or remove this tx as a child of each parent
@@ -234,7 +234,7 @@ static void UpdateAncestorsOf(P& pool, bool add, typename P::txiter it, const ty
     }
 }
 
-void CTxMemPool::UpdateAncestorsOf(bool add, txiter it, const setEntries& setAncestors)
+void CTxMemPool::UpdateAncestorsOf(bool add, txiter it, setEntries& setAncestors)
 {
     return ::UpdateAncestorsOf(*this, add, it, setAncestors);
 }
@@ -287,7 +287,7 @@ void TxPoolLayer::UpdateChildrenForRemoval(txiter it)
 }
 
 template <typename P>
-static void UpdateForRemoveFromMempool(P& pool, const typename P::setEntries& entriesToRemove, bool updateDescendants) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
+static void UpdateForRemoveFromMempool(P& pool, typename P::setEntries& entriesToRemove, bool updateDescendants) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
 {
     // For each entry, walk back all ancestors and decrement size associated with this
     // transaction
@@ -343,7 +343,7 @@ static void UpdateForRemoveFromMempool(P& pool, const typename P::setEntries& en
         pool.UpdateChildrenForRemoval(removeIt);
     }
 }
-void CTxMemPool::UpdateForRemoveFromMempool(const setEntries& entriesToRemove, bool updateDescendants)
+void CTxMemPool::UpdateForRemoveFromMempool(setEntries& entriesToRemove, bool updateDescendants)
 {
     return ::UpdateForRemoveFromMempool(*this, entriesToRemove, updateDescendants);
 }
@@ -400,7 +400,7 @@ void CTxMemPool::AddTransactionsUpdated(unsigned int n)
 }
 
 template <typename P>
-static typename P::txiter addUnchecked(P& pool, const CTxMemPoolEntry& entry, const typename P::setEntries& setAncestors) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
+static typename P::txiter addUnchecked(P& pool, const CTxMemPoolEntry& entry, typename P::setEntries& setAncestors) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
 {
     // Add to memory pool without checking anything.
     // Used by AcceptToMemoryPool(), which DOES do
@@ -442,7 +442,7 @@ static typename P::txiter addUnchecked(P& pool, const CTxMemPoolEntry& entry, co
     return newit;
 }
 
-void CTxMemPool::addUnchecked(const CTxMemPoolEntry& entry, const setEntries& setAncestors, bool validFeeEstimate)
+void CTxMemPool::addUnchecked(const CTxMemPoolEntry& entry, setEntries& setAncestors, bool validFeeEstimate)
 {
     NotifyEntryAdded(entry.GetSharedTx());
 
