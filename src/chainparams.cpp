@@ -49,6 +49,21 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
  *     CTxOut(nValue=50.00000000, scriptPubKey=0x5F1DF16B2B704C8A578D0B)
  *   vMerkleTree: 4a5e1e
  */
+
+#ifdef OLLE_BITCOIN_VER
+static CBlock CreateGenesisBlock_olle(uint32_t nTime //olle
+    , uint32_t nNonce
+    , uint32_t nBits
+    , int32_t nVersion
+    , const CAmount& genesisReward)
+{
+    //olle
+    const char* pszTimestamp = "olle = 1LXZp1j9U6VBUfKvqYtFrpDhE5r1LFijw1";
+    const CScript genesisOutputScript = CScript() << ParseHex("04c9a10450f6cc4dc587f18f0612c79e63499e69864765252ca4e191d12eef81ecc8385be50320de30d724369d1a02177a2d4277b304d9cbeeaed35368edd6f73c") << OP_CHECKSIG;
+    return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
+}
+#endif
+
 static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
     const char* pszTimestamp = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
@@ -70,8 +85,18 @@ public:
         consensus.BIP65Height = 388381; // 000000000000000004c2b624ed5d7756c508d90fd0da2c7c679febfa6c4735f0
         consensus.BIP66Height = 363725; // 00000000000000000379eaa19dce8c9b722d46ae6a57c2f1a988119488b50931
         consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+
+
+#ifdef OLLE_BITCOIN_VER
+        //mech12
+        consensus.nPowTargetTimespan = 60 * 60; // 1 hour
+        consensus.nPowTargetSpacing = 10 * 60;
+#else        
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 10 * 60;
+#endif
+
+
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 1916; // 95% of 2016
@@ -110,10 +135,54 @@ public:
         m_assumed_blockchain_size = 240;
         m_assumed_chain_state_size = 3;
 
+#ifdef OLLE_BITCOIN_VER
+        genesis = CreateGenesisBlock_olle(
+            1548720001, //= ('2019-01-29') original= 1231006505 (2009-01-03T18:15:05.000Z) ,//uint32_t nTime  블록의 생성일시. new Date(1231006505*1000);
+            2531516435,// uint32_t nNonce
+            0x1d00ffff, // uint32_t nBits,  => 486604799
+            1,//int32_t nVersion
+            50 * COIN// const CAmount& genesisReward
+           );
+        consensus.hashGenesisBlock = genesis.GetHash();
+
+        // genesis.nNonce = 0; 
+        // uint256 target = GetBlockProof_olle(genesis.nBits);
+        // std::cout << "target = " << target.GetHex() << std::endl;
+        // std::cout << "consensus.powLimit = " << consensus.powLimit.GetHex() << std::endl;
+        // std::cout << "genesis.GetHash() = " << genesis.GetHash().GetHex() << std::endl;
+
+        // //for(int i=0; genesis.GetHash() < consensus.powLimit;++i){ 
+        // for(int i=0; target < genesis.GetHash();++i){ 
+        //     // printf("%d genesis.nNonce = %d\n",i, genesis.nNonce);//nonce
+        //     // printf("    genesis.GetHash() = %s\n",  genesis.GetHash().ToString().c_str());//blockheader hash
+        //     // printf("    genesis.hashMerkleRoot = %s\n",  genesis.hashMerkleRoot.ToString().c_str());//merkleroot hash
+        //     genesis.nNonce++;
+        //     if(genesis.nNonce==0){
+        //         printf("genesis.nNonce==0");
+        //         ++genesis.nTime;
+        //     }
+
+        // };
+        // printf("find genesis.nTime = %d\n", genesis.nTime);//nonce
+        // printf("find genesis.nNonce = %d\n", genesis.nNonce);//nonce
+        // printf("find genesis.GetHash() = %s\n",  genesis.GetHash().ToString().c_str());//blockheader hash
+        // printf("find genesis.hashMerkleRoot = %s\n",  genesis.hashMerkleRoot.ToString().c_str());//merkleroot hash
+        // exit(1);
+
+        std::cout << "\n\nroy olle consensus.hashGenesisBlock : " << consensus.hashGenesisBlock.GetHex() << std::endl;
+        std::cout << "roy olle  genesis.hashMerkleRoot : "  << genesis.hashMerkleRoot.GetHex() << std::endl;
+        std::cout << "\n\n";
+        assert(consensus.hashGenesisBlock == uint256S("0000000081ad4a71e13f60d3e420b5420c994f8d89f9c6f91b7f3d7c77ad3e22"));//f856417948576cc9739d352971312c9724ceddc4bbb693ea16af8644cd251c06"));
+        assert(genesis.hashMerkleRoot == uint256S("188798287a2c35576e14f25a61b7bb918edc32e7c3215f0237b150409dd0d8a5"));
+
+#else
+
         genesis = CreateGenesisBlock(1231006505, 2083236893, 0x1d00ffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
+#endif
+
 
         // Note that of those which support the service bits prefix, most only support a subset of
         // possible options.

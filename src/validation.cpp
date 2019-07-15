@@ -1014,7 +1014,11 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 
     CAmount nSubsidy = 50 * COIN;
     // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
+    //mech12
+    OLLE_BITCOIN();
+#ifndef OLLE_BITCOIN_VER
     nSubsidy >>= halvings;
+#endif
     return nSubsidy;
 }
 
@@ -1683,7 +1687,10 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     if (block.GetHash() == chainparams.GetConsensus().hashGenesisBlock) {
         if (!fJustCheck)
             view.SetBestBlock(pindex->GetBlockHash());
+#ifndef OLLE_BITCOIN_VER // genesis tx
         return true;
+#endif
+        OLLE_BITCOIN();
     }
 
     nBlocksTotal++;
@@ -1788,7 +1795,13 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     // post BIP34 before approximately height 486,000,000 and presumably will
     // be reset before it reaches block 1,983,702 and starts doing unnecessary
     // BIP30 checking again.
+#ifdef OLLE_BITCOIN_VER //genesis tx
+    if (block.GetHash() != chainparams.GetConsensus().hashGenesisBlock) {
+        assert(pindex->pprev);
+    }
+#else
     assert(pindex->pprev);
+#endif
     CBlockIndex *pindexBIP34height = pindex->pprev->GetAncestor(chainparams.GetConsensus().BIP34Height);
     //Only continue to enforce if we're below BIP34 activation height or the block hash at that height doesn't correspond.
     fEnforceBIP30 = fEnforceBIP30 && (!pindexBIP34height || !(pindexBIP34height->GetBlockHash() == chainparams.GetConsensus().BIP34Hash));
@@ -1925,8 +1938,16 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     if (fJustCheck)
         return true;
 
+#ifdef OLLE_BITCOIN_VER //genesis tx
+    if (block.GetHash() != chainparams.GetConsensus().hashGenesisBlock)
+    {
+        if (!WriteUndoDataForBlock(blockundo, state, pindex, chainparams))
+            return false;
+    } 
+#else
     if (!WriteUndoDataForBlock(blockundo, state, pindex, chainparams))
         return false;
+#endif
 
     if (!pindex->IsValid(BLOCK_VALID_SCRIPTS)) {
         pindex->RaiseValidity(BLOCK_VALID_SCRIPTS);
