@@ -21,6 +21,7 @@ import time
 
 from . import coverage
 from .authproxy import AuthServiceProxy, JSONRPCException
+from io import BytesIO
 
 logger = logging.getLogger("TestFramework.utils")
 
@@ -607,14 +608,13 @@ def gen_return_txouts():
     for i in range(512):
         script_pubkey = script_pubkey + "01"
     # concatenate 128 txouts of above script_pubkey which we'll insert before the txout for change
-    txouts = "81"
+    txouts = []
+    from .messages import CTxOut
+    txout = CTxOut()
+    txout.nValue = 0
+    txout.scriptPubKey = hex_str_to_bytes(script_pubkey)
     for k in range(128):
-        # add txout value
-        txouts = txouts + "0000000000000000"
-        # add length of script_pubkey
-        txouts = txouts + "fd0402"
-        # add script_pubkey
-        txouts = txouts + script_pubkey
+        txouts.append(txout)
     return txouts
 
 # Create a spend of each passed-in utxo, splicing in "txouts" to each raw
@@ -622,6 +622,7 @@ def gen_return_txouts():
 def create_lots_of_big_transactions(node, txouts, utxos, num, fee):
     addr = node.getnewaddress()
     txids = []
+    from .messages import CTransaction
     for _ in range(num):
         t = utxos.pop()
         inputs = [{"txid": t["txid"], "vout": t["vout"]}]
@@ -629,9 +630,11 @@ def create_lots_of_big_transactions(node, txouts, utxos, num, fee):
         change = t['amount'] - fee
         outputs[addr] = satoshi_round(change)
         rawtx = node.createrawtransaction(inputs, outputs)
-        newtx = rawtx[0:92]
-        newtx = newtx + txouts
-        newtx = newtx + rawtx[94:]
+        tx = CTransaction()
+        tx.deserialize(BytesIO(hex_str_to_bytes(rawtx)))
+        for txout in txouts:
+            tx.vout.append(txout)
+        newtx = tx.serialize().hex()
         signresult = node.signrawtransactionwithwallet(newtx, None, "NONE")
         txid = node.sendrawtransaction(signresult["hex"], True)
         txids.append(txid)
