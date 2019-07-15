@@ -265,7 +265,7 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
             #else
             auto result  = mapAssetSupplyStats.emplace(std::piecewise_construct,  std::forward_as_tuple(nAsset),  std::forward_as_tuple(std::move(emptyAssetSupplyStats)));
             #endif  
-            auto mapAssetSupplyStats = result.first;
+            auto mapAssetSupplyStat = result.first;
             const bool &mapAssetSupplyStatsNotFound = result.second;
             if(mapAssetSupplyStatsNotFound && passetsupplystatsdb->ExistStats(nAsset)){
                 CAssetSupplyStats dbAssetSupplyStats;
@@ -273,11 +273,11 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
                     errorMessage = "SYSCOIN_CONSENSUS_ERROR: ERRCODE: 1010 - " + _("Could not read asset supply stats");
                     return error(errorMessage.c_str());                  
                 } 
-                mapAssetSupplyStats->second = std::move(dbAssetSupplyStats);      
+                mapAssetSupplyStat->second = std::move(dbAssetSupplyStats);      
             }
-            mapAssetSupplyStats->second.nBalanceBridge -= outputAmount;
+            mapAssetSupplyStat->second.nBalanceBridge -= outputAmount;
             if(nAsset == Params().GetConsensus().nSYSXAsset)
-                mapAssetSupplyStats->second.nBalanceSPT += outputAmount;
+                mapAssetSupplyStat->second.nBalanceSPT += outputAmount;
         }
     }
     if (!AssetRange(mintSyscoin.nValueAsset))
@@ -527,7 +527,7 @@ bool DisconnectMintAsset(const CTransaction &tx, AssetSupplyStatsMap &mapAssetSu
         #else
         auto result  = mapAssetSupplyStats.emplace(std::piecewise_construct,  std::forward_as_tuple(mintSyscoin.assetAllocationTuple.nAsset),  std::forward_as_tuple(std::move(emptyAssetSupplyStats)));
         #endif  
-        auto mapAssetSupplyStats = result.first;
+        auto mapAssetSupplyStat = result.first;
         const bool &mapAssetSupplyStatsNotFound = result.second;
         if(mapAssetSupplyStatsNotFound && passetsupplystatsdb->ExistStats(mintSyscoin.assetAllocationTuple.nAsset)){
             CAssetSupplyStats dbAssetSupplyStats;
@@ -535,11 +535,11 @@ bool DisconnectMintAsset(const CTransaction &tx, AssetSupplyStatsMap &mapAssetSu
                 LogPrint(BCLog::SYS,"DisconnectMintAsset: Could not get asset supply stats %d\n",mintSyscoin.assetAllocationTuple.nAsset);
                 return false;               
             } 
-            mapAssetSupplyStats->second = std::move(dbAssetSupplyStats);      
+            mapAssetSupplyStat->second = std::move(dbAssetSupplyStats);      
         } 
-        mapAssetSupplyStats->second.nBalanceBridge += mintSyscoin.nValueAsset;
+        mapAssetSupplyStat->second.nBalanceBridge += mintSyscoin.nValueAsset;
         if(mintSyscoin.assetAllocationTuple.nAsset == Params().GetConsensus().nSYSXAsset)
-            mapAssetSupplyStats->second.nBalanceSPT -= mintSyscoin.nValueAsset;
+            mapAssetSupplyStat->second.nBalanceSPT -= mintSyscoin.nValueAsset;
         
     } 
     return true; 
@@ -637,7 +637,7 @@ bool DisconnectAssetAllocation(const CTransaction &tx, AssetSupplyStatsMap &mapA
         #else
         auto result  = mapAssetSupplyStats.emplace(std::piecewise_construct,  std::forward_as_tuple(theAssetAllocation.assetAllocationTuple.nAsset),  std::forward_as_tuple(std::move(emptyAssetSupplyStats)));
         #endif  
-        auto mapAssetSupplyStats = result.first;
+        auto mapAssetSupplyStat = result.first;
         const bool &mapAssetSupplyStatsNotFound = result.second;
         if(mapAssetSupplyStatsNotFound && passetsupplystatsdb->ExistStats(theAssetAllocation.assetAllocationTuple.nAsset)){
             CAssetSupplyStats dbAssetSupplyStats;
@@ -645,13 +645,13 @@ bool DisconnectAssetAllocation(const CTransaction &tx, AssetSupplyStatsMap &mapA
                 LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Could not get asset supply stats %d\n",theAssetAllocation.assetAllocationTuple.nAsset);
                 return false;               
             } 
-            mapAssetSupplyStats->second = std::move(dbAssetSupplyStats);
+            mapAssetSupplyStat->second = std::move(dbAssetSupplyStats);
         }
         if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
-            mapAssetSupplyStats->second.nBalanceBridge -= nTotal;
+            mapAssetSupplyStat->second.nBalanceBridge -= nTotal;
         }
         if(theAssetAllocation.assetAllocationTuple.nAsset == Params().GetConsensus().nSYSXAsset)
-            mapAssetSupplyStats->second.nBalanceSPT -= nTotal;
+            mapAssetSupplyStat->second.nBalanceSPT -= nTotal;
         
     
              
@@ -871,7 +871,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
                 #else
                 auto result  = mapAssetSupplyStats.emplace(std::piecewise_construct,  std::forward_as_tuple(nBurnAsset),  std::forward_as_tuple(std::move(emptyAssetSupplyStats)));
                 #endif  
-                auto mapAssetSupplyStats = result.first;
+                auto mapAssetSupplyStat = result.first;
                 const bool &mapAssetSupplyStatsNotFound = result.second;
                 if(mapAssetSupplyStatsNotFound && passetsupplystatsdb->ExistStats(nBurnAsset)){
                     CAssetSupplyStats dbAssetSupplyStats;
@@ -879,10 +879,10 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
                         errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1010 - " + _("Could not read asset supply stats");
                         return error(errorMessage.c_str());            
                     } 
-                    mapAssetSupplyStats->second = std::move(dbAssetSupplyStats);      
+                    mapAssetSupplyStat->second = std::move(dbAssetSupplyStats);      
                 }
                 if(nBurnAsset == Params().GetConsensus().nSYSXAsset)
-                    mapAssetSupplyStats->second.nBalanceSPT += nBurnAmount;
+                    mapAssetSupplyStat->second.nBalanceSPT += nBurnAmount;
                
             }                          
         }else if (!bSanityCheck && !bMiner) {
@@ -970,7 +970,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
                 #else
                 auto result  = mapAssetSupplyStats.emplace(std::piecewise_construct,  std::forward_as_tuple(nBurnAsset),  std::forward_as_tuple(std::move(emptyAssetSupplyStats)));
                 #endif  
-                auto mapAssetSupplyStats = result.first;
+                auto mapAssetSupplyStat = result.first;
                 const bool &mapAssetSupplyStatsNotFound = result.second;
                 if(mapAssetSupplyStatsNotFound && passetsupplystatsdb->ExistStats(nBurnAsset)){
                     CAssetSupplyStats dbAssetSupplyStats;
@@ -978,13 +978,13 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
                         errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1010 - " + _("Could not read asset supply stats");
                         return error(errorMessage.c_str());                  
                     } 
-                    mapAssetSupplyStats->second = std::move(dbAssetSupplyStats);      
+                    mapAssetSupplyStat->second = std::move(dbAssetSupplyStats);      
                 }
                 if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
-                    mapAssetSupplyStats->second.nBalanceBridge += nBurnAmount;
+                    mapAssetSupplyStat->second.nBalanceBridge += nBurnAmount;
                 }
                 if(nBurnAsset == Params().GetConsensus().nSYSXAsset)
-                    mapAssetSupplyStats->second.nBalanceSPT -= nBurnAmount;
+                    mapAssetSupplyStat->second.nBalanceSPT -= nBurnAmount;
             }                                   
         }else if (!bSanityCheck && !bMiner) {
             LOCK(cs_assetallocationarrival);
@@ -1363,8 +1363,8 @@ bool DisconnectAssetActivate(const CTransaction &tx, AssetMap &mapAssets, AssetS
         #else
         auto result  = mapAssetSupplyStats.emplace(std::piecewise_construct,  std::forward_as_tuple(theAsset.nAsset),  std::forward_as_tuple(std::move(emptyAssetSupplyStats)));
         #endif  
-        auto mapAssetSupplyStats = result.first;
-        mapAssetSupplyStats->second.SetNull();
+        auto mapAssetSupplyStat = result.first;
+        mapAssetSupplyStat->second.SetNull();
     }      
     return true;  
 }
