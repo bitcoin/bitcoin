@@ -74,6 +74,6 @@ private:
 
 extern CDKGSessionManager* quorumDKGSessionManager;
 
-}
+} // namespace llmq
 
 #endif //DASH_QUORUMS_DKGSESSIONMGR_H

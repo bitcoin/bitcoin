@@ -116,6 +116,6 @@ private:
 
 extern CQuorumManager* quorumManager;
 
-}
+} // namespace llmq
 
 #endif //DASH_QUORUMS_H

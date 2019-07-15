@@ -134,6 +134,6 @@ public:
 
 bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
 
-}
+} // namespace llmq
 
 #endif //DASH_QUORUMS_COMMITMENT_H

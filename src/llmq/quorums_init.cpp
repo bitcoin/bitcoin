@@ -115,4 +115,4 @@ void InterruptLLMQSystem()
     }
 }
 
-}
+} // namespace llmq

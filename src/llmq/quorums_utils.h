@@ -67,6 +67,6 @@ public:
     }
 };
 
-}
+} // namespace llmq
 
 #endif//DASH_QUORUMS_UTILS_H

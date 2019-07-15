@@ -274,4 +274,4 @@ void CDKGSessionManager::CleanupCache()
     }
 }
 
-}
+} // namespace llmq

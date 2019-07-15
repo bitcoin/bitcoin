@@ -177,4 +177,4 @@ bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, 
     return true;
 }
 
-}
+} // namespace llmq

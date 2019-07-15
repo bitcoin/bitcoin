@@ -106,6 +106,6 @@ public:
 
 extern CDKGDebugManager* quorumDKGDebugManager;
 
-}
+} // namespace llmq
 
 #endif //DASH_QUORUMS_DEBUG_H

@@ -724,4 +724,4 @@ void CChainLocksHandler::Cleanup()
     lastCleanupTime = GetTimeMillis();
 }
 
-}
+} // namespace llmq

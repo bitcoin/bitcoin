@@ -419,4 +419,4 @@ CQuorumCPtr CQuorumManager::GetNewestQuorum(Consensus::LLMQType llmqType)
     return quorums.front();
 }
 
-}
+} // namespace llmq

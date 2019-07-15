@@ -179,6 +179,6 @@ public:
 
 extern CSigningManager* quorumSigningManager;
 
-}
+} // namespace llmq
 
 #endif //DASH_QUORUMS_SIGNING_H

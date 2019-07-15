@@ -1442,4 +1442,4 @@ void CSigSharesManager::HandleNewRecoveredSig(const llmq::CRecoveredSig& recover
     RemoveSigSharesForSession(CLLMQUtils::BuildSignHash(recoveredSig));
 }
 
-}
+} // namespace llmq

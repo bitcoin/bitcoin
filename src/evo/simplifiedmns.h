@@ -19,7 +19,7 @@ class CDeterministicMN;
 namespace llmq
 {
     class CFinalCommitment;
-}
+} // namespace llmq
 
 class CSimplifiedMNListEntry
 {

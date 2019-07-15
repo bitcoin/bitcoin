@@ -139,6 +139,6 @@ private:
     void PhaseHandlerThread();
 };
 
-}
+} // namespace llmq
 
 #endif //DASH_QUORUMS_DKGSESSIONHANDLER_H
