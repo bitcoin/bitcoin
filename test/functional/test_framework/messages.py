@@ -528,7 +528,7 @@ class CAuxPow(CTransaction):
     __slots__ = ("hashBlock", "vMerkleBranch", "nIndex",
                  "vChainMerkleBranch", "nChainIndex", "parentBlock")
 
-     def __init__(self):
+    def __init__(self):
         super(CAuxPow, self).__init__()
         self.hashBlock = 0
         self.vMerkleBranch = []
@@ -537,7 +537,7 @@ class CAuxPow(CTransaction):
         self.nChainIndex = 0
         self.parentBlock = CBlockHeader()
 
-     def deserialize(self, f):
+    def deserialize(self, f):
         super(CAuxPow, self).deserialize(f)
         self.hashBlock = deser_uint256(f)
         self.vMerkleBranch = deser_uint256_vector(f)
@@ -546,7 +546,7 @@ class CAuxPow(CTransaction):
         self.nChainIndex = struct.unpack("<I", f.read(4))[0]
         self.parentBlock.deserialize(f)
 
-     def serialize(self):
+    def serialize(self):
         r = b""
         r += super(CAuxPow, self).serialize()
         r += ser_uint256(self.hashBlock)
