@@ -140,7 +140,7 @@ public:
         consensus.nLegacyBlocksBefore = 1;
         consensus.nSYSXAsset = 101010;
         consensus.vchSYSXBurnMethodSignature = ParseHex("285c5bc6");
-        consensus.nBridgeStartBlock = 75000;
+        consensus.nBridgeStartBlock = 125000;
         /**
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
