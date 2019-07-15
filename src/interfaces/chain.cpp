@@ -55,15 +55,6 @@ bool FillBlock(const CBlockIndex* index, const FoundBlock& block, UniqueLock<Rec
 
 class LockImpl : public Chain::Lock, public UniqueLock<RecursiveMutex>
 {
-    Optional<int> getBlockHeight(const uint256& hash) override
-    {
-        LockAssertion lock(::cs_main);
-        CBlockIndex* block = LookupBlockIndex(hash);
-        if (block && ::ChainActive().Contains(block)) {
-            return block->nHeight;
-        }
-        return nullopt;
-    }
     uint256 getBlockHash(int height) override
     {
         LockAssertion lock(::cs_main);
@@ -231,6 +222,15 @@ public:
         int height = ::ChainActive().Height();
         if (height >= 0) {
             return height;
+        }
+        return nullopt;
+    }
+    Optional<int> getBlockHeight(const uint256& hash) override
+    {
+        LOCK(::cs_main);
+        CBlockIndex* block = LookupBlockIndex(hash);
+        if (block && ::ChainActive().Contains(block)) {
+            return block->nHeight;
         }
         return nullopt;
     }

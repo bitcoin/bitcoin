@@ -778,6 +778,9 @@ public:
     /** Interface to assert chain access and if successful lock it */
     std::unique_ptr<interfaces::Chain::Lock> LockChain() { return m_chain ? m_chain->lock() : nullptr; }
 
+    /** Interface to assert chain access */
+    bool HaveChain() const { return m_chain ? true : false; }
+
     std::map<uint256, CWalletTx> mapWallet GUARDED_BY(cs_wallet);
 
     typedef std::multimap<int64_t, CWalletTx*> TxItems;
