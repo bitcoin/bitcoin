@@ -41,7 +41,8 @@ enum class TxValidationResult {
      * Currently this is only used if the transaction already exists in the mempool or on chain.
      */
     TX_CONFLICT,
-    TX_MEMPOOL_POLICY,        //!< violated mempool's fee/size/descendant/RBF/etc limits
+    TX_MEMPOOL_POLICY,        //!< violated mempool's size/descendant/RBF/etc limits
+    TX_MEMPOOL_INSUFFICIENT_FEE, //!< violated mempool's feerate requirements
 };
 
 /** A "reason" why a block was invalid, suitable for determining whether the

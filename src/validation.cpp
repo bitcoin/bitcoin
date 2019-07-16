@@ -514,11 +514,11 @@ private:
     {
         CAmount mempoolRejectFee = m_pool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFee(package_size);
         if (mempoolRejectFee > 0 && package_fee < mempoolRejectFee) {
-            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "mempool min fee not met", strprintf("%d < %d", package_fee, mempoolRejectFee));
+            return state.Invalid(TxValidationResult::TX_MEMPOOL_INSUFFICIENT_FEE, "mempool min fee not met", strprintf("%d < %d", package_fee, mempoolRejectFee));
         }
 
         if (package_fee < ::minRelayTxFee.GetFee(package_size)) {
-            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "min relay fee not met", strprintf("%d < %d", package_fee, ::minRelayTxFee.GetFee(package_size)));
+            return state.Invalid(TxValidationResult::TX_MEMPOOL_INSUFFICIENT_FEE, "min relay fee not met", strprintf("%d < %d", package_fee, ::minRelayTxFee.GetFee(package_size)));
         }
         return true;
     }
@@ -1204,6 +1204,33 @@ static bool AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPo
     // After we've (potentially) uncached entries, ensure our coins cache is still within its size limits
     BlockValidationState state_dummy;
     ::ChainstateActive().FlushStateToDisk(chainparams, state_dummy, FlushStateMode::PERIODIC);
+    return res;
+}
+
+bool AcceptPackageToMemoryPool(CTxMemPool& pool, TxValidationState& state,
+        std::list<CTransactionRef>& tx_list,
+        std::list<CTransactionRef>* replaced_transactions,
+        const CAmount nAbsurdFee, bool test_accept)
+{
+    const CChainParams& chainparams = Params();
+    AssertLockHeld(cs_main);
+
+    std::vector<COutPoint> coins_to_uncache;
+    MemPoolAccept::ATMPArgs args { chainparams, state, GetTime(), replaced_transactions, /* m_bypass_limits */ false, nAbsurdFee, coins_to_uncache, test_accept };
+    bool res = MemPoolAccept(pool).AcceptMultipleTransactions(tx_list, args);
+
+    if (!res) {
+        // Remove coins that were not present in the coins cache beforehand;
+        // this is to prevent memory DoS in case we receive a large number of
+        // invalid transactions that attempt to overrun the in-memory coins cache
+        // (`CCoinsViewCache::cacheCoins`).
+        for (const COutPoint& hashTx : coins_to_uncache) {
+            ::ChainstateActive().CoinsTip().Uncache(hashTx);
+        }
+    }
+    // After we've (potentially) uncached entries, ensure our coins cache is still within its size limits
+    BlockValidationState stateDummy;
+    ::ChainstateActive().FlushStateToDisk(chainparams, stateDummy, FlushStateMode::PERIODIC);
     return res;
 }
 
