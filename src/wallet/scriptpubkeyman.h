@@ -222,6 +222,8 @@ public:
 
     virtual uint256 GetID() const { return uint256(); }
 
+    virtual void SetType(OutputType type, bool internal) {}
+
     /** Prepends the wallet name in logging output to ease debugging in multi-wallet use cases */
     template<typename... Params>
     void WalletLogPrintf(std::string fmt, Params... parameters) const {
@@ -365,6 +367,8 @@ public:
     TransactionError FillPSBT(PartiallySignedTransaction& psbt, int sighash_type = 1 /* SIGHASH_ALL */, bool sign = true, bool bip32derivs = false) const override;
 
     uint256 GetID() const override;
+
+    void SetType(OutputType type, bool internal) override;
 
     // Map from Key ID to key metadata.
     std::map<CKeyID, CKeyMetadata> mapKeyMetadata GUARDED_BY(cs_KeyStore);
