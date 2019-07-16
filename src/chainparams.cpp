@@ -200,8 +200,6 @@ public:
             /* nTxCount */ 0,
             /* dTxRate  */ 0
         };
-
-        m_fallback_fee_enabled = true;
     }
 };
 
@@ -311,9 +309,6 @@ public:
             /* nTxCount */ 0,
             /* dTxRate  */ 0
         };
-
-        /* enable fallback fee on testnet */
-        m_fallback_fee_enabled = true;
     }
 };
 
@@ -415,9 +410,6 @@ public:
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
 
         bech32_hrp = "sysrt";
-        
-        /* enable fallback fee on regtest */
-        m_fallback_fee_enabled = true;
     }
 
     /**
