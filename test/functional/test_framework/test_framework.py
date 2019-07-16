@@ -18,6 +18,7 @@ import tempfile
 import time
 
 from .authproxy import JSONRPCException
+from .descriptors import descsum_create
 from . import coverage
 from .test_node import TestNode
 from .mininode import NetworkThread
@@ -353,7 +354,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 assert_equal(chain_info["blocks"], 200)
                 assert_equal(chain_info["initialblockdownload"], False)
 
-    def import_deterministic_coinbase_privkeys(self):
+    def import_deterministic_coinbase_privkeys(self, descriptors=False):
         for n in self.nodes:
             try:
                 n.getwalletinfo()
@@ -361,7 +362,14 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 assert str(e).startswith('Method not found')
                 continue
 
-            n.importprivkey(privkey=n.get_deterministic_priv_key().key, label='coinbase')
+            if descriptors:
+                n.importdescriptors([{
+                    'desc': descsum_create('pkh(' + n.get_deterministic_priv_key().key + ')'),
+                    'label': 'coinbase',
+                    'timestamp': 'now'
+                }])
+            else:
+                n.importprivkey(privkey=n.get_deterministic_priv_key().key, label='coinbase')
 
     def run_test(self):
         """Tests must override this method to define test logic"""

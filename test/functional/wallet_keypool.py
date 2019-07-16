@@ -16,12 +16,23 @@ class KeyPoolTest(BitcoinTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
+    def add_options(self, parser):
+        parser.add_argument('--descriptors', action='store_true', dest="descriptors", help="Run test using a descriptor wallet", default=False)
+
     def run_test(self):
+        # Setup descriptor wallets
+        if self.options.descriptors:
+            for n in self.nodes:
+                n.createwallet(wallet_name='desc', descriptors=True)
+                n.get_wallet_rpc('').unloadwallet()
+            self.import_deterministic_coinbase_privkeys(True)
+
         nodes = self.nodes
         addr_before_encrypting = nodes[0].getnewaddress()
         addr_before_encrypting_data = nodes[0].getaddressinfo(addr_before_encrypting)
         wallet_info_old = nodes[0].getwalletinfo()
-        assert addr_before_encrypting_data['hdseedid'] == wallet_info_old['hdseedid']
+        if not self.options.descriptors:
+            assert addr_before_encrypting_data['hdseedid'] == wallet_info_old['hdseedid']
 
         # Encrypt wallet and wait to terminate
         nodes[0].encryptwallet('test')
@@ -29,8 +40,9 @@ class KeyPoolTest(BitcoinTestFramework):
         addr = nodes[0].getnewaddress()
         addr_data = nodes[0].getaddressinfo(addr)
         wallet_info = nodes[0].getwalletinfo()
-        assert addr_before_encrypting_data['hdseedid'] != wallet_info['hdseedid']
-        assert addr_data['hdseedid'] == wallet_info['hdseedid']
+        assert addr_before_encrypting_data['hdmasterfingerprint'] != addr_data['hdmasterfingerprint']
+        if not self.options.descriptors:
+            assert addr_data['hdseedid'] == wallet_info['hdseedid']
         assert_raises_rpc_error(-12, "Error: Keypool ran out, please call keypoolrefill first", nodes[0].getnewaddress)
 
         # put six (plus 2) new keys in the keypool (100% external-, +100% internal-keys, 1 in min)
@@ -38,8 +50,12 @@ class KeyPoolTest(BitcoinTestFramework):
         nodes[0].keypoolrefill(6)
         nodes[0].walletlock()
         wi = nodes[0].getwalletinfo()
-        assert_equal(wi['keypoolsize_hd_internal'], 6)
-        assert_equal(wi['keypoolsize'], 6)
+        if self.options.descriptors:
+            assert_equal(wi['keypoolsize_hd_internal'], 18)
+            assert_equal(wi['keypoolsize'], 18)
+        else:
+            assert_equal(wi['keypoolsize_hd_internal'], 6)
+            assert_equal(wi['keypoolsize'], 6)
 
         # drain the internal keys
         nodes[0].getrawchangeaddress()
@@ -79,8 +95,12 @@ class KeyPoolTest(BitcoinTestFramework):
         nodes[0].walletpassphrase('test', 100)
         nodes[0].keypoolrefill(100)
         wi = nodes[0].getwalletinfo()
-        assert_equal(wi['keypoolsize_hd_internal'], 100)
-        assert_equal(wi['keypoolsize'], 100)
+        if self.options.descriptors:
+            assert_equal(wi['keypoolsize_hd_internal'], 300)
+            assert_equal(wi['keypoolsize'], 300)
+        else:
+            assert_equal(wi['keypoolsize_hd_internal'], 100)
+            assert_equal(wi['keypoolsize'], 100)
 
 if __name__ == '__main__':
     KeyPoolTest().main()

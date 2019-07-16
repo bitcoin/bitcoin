@@ -24,7 +24,17 @@ class WalletLabelsTest(BitcoinTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
+    def add_options(self, parser):
+        parser.add_argument('--descriptors', action='store_true', dest="descriptors", help="Run test using a descriptor wallet", default=False)
+
     def run_test(self):
+        # Setup descriptor wallets
+        if self.options.descriptors:
+            for n in self.nodes:
+                n.createwallet(wallet_name='desc', descriptors=True)
+                n.get_wallet_rpc('').unloadwallet()
+            self.import_deterministic_coinbase_privkeys(True)
+
         # Check that there's no UTXO on the node
         node = self.nodes[0]
         assert_equal(len(node.listunspent()), 0)
@@ -115,15 +125,16 @@ class WalletLabelsTest(BitcoinTestFramework):
             assert_raises_rpc_error(-11, "No addresses with label", node.getaddressesbylabel, "")
 
         # Check that addmultisigaddress can assign labels.
-        for label in labels:
-            addresses = []
-            for x in range(10):
-                addresses.append(node.getnewaddress())
-            multisig_address = node.addmultisigaddress(5, addresses, label.name)['address']
-            label.add_address(multisig_address)
-            label.purpose[multisig_address] = "send"
-            label.verify(node)
-        node.generate(101)
+        if not self.options.descriptors:
+            for label in labels:
+                addresses = []
+                for x in range(10):
+                    addresses.append(node.getnewaddress())
+                multisig_address = node.addmultisigaddress(5, addresses, label.name)['address']
+                label.add_address(multisig_address)
+                label.purpose[multisig_address] = "send"
+                label.verify(node)
+            node.generate(101)
 
         # Check that setlabel can change the label of an address from a
         # different label.
