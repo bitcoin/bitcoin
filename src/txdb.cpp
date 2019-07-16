@@ -250,7 +250,7 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
 
     pcursor->Seek(std::make_pair(DB_BLOCK_INDEX, uint256()));
 
-    // Load mapBlockIndex
+    // Load m_block_index
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
         if (ShutdownRequested()) return false;
