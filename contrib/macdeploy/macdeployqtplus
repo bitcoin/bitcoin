@@ -19,6 +19,7 @@
 import subprocess, sys, re, os, shutil, stat, os.path, time
 from string import Template
 from argparse import ArgumentParser
+from typing import List, Optional
 
 # This is ported from the original macdeployqt with modifications
 
@@ -85,7 +86,7 @@ class FrameworkInfo(object):
     bundleBinaryDirectory = "Contents/MacOS"
     
     @classmethod
-    def fromOtoolLibraryLine(cls, line):
+    def fromOtoolLibraryLine(cls, line: str) -> Optional['FrameworkInfo']:
         # Note: line must be trimmed
         if line == "":
             return None
@@ -152,7 +153,7 @@ class FrameworkInfo(object):
         return info
 
 class ApplicationBundleInfo(object):
-    def __init__(self, path):
+    def __init__(self, path: str):
         self.path = path
         appName = "Bitcoin-Qt"
         self.binaryPath = os.path.join(path, "Contents", "MacOS", appName)
@@ -167,7 +168,7 @@ class DeploymentInfo(object):
         self.pluginPath = None
         self.deployedFrameworks = []
     
-    def detectQtPath(self, frameworkDirectory):
+    def detectQtPath(self, frameworkDirectory: str):
         parentDir = os.path.dirname(frameworkDirectory)
         if os.path.exists(os.path.join(parentDir, "translations")):
             # Classic layout, e.g. "/usr/local/Trolltech/Qt-4.x.x"
@@ -180,7 +181,7 @@ class DeploymentInfo(object):
             if os.path.exists(pluginPath):
                 self.pluginPath = pluginPath
     
-    def usesFramework(self, name):
+    def usesFramework(self, name: str) -> bool:
         nameDot = "%s." % name
         libNameDot = "lib%s." % name
         for framework in self.deployedFrameworks:
@@ -192,7 +193,7 @@ class DeploymentInfo(object):
                     return True
         return False
 
-def getFrameworks(binaryPath, verbose):
+def getFrameworks(binaryPath: str, verbose: int) -> List[FrameworkInfo]:
     if verbose >= 3:
         print("Inspecting with otool: " + binaryPath)
     otoolbin=os.getenv("OTOOL", "otool")
@@ -221,11 +222,11 @@ def getFrameworks(binaryPath, verbose):
     
     return libraries
 
-def runInstallNameTool(action, *args):
+def runInstallNameTool(action: str, *args):
     installnametoolbin=os.getenv("INSTALLNAMETOOL", "install_name_tool")
     subprocess.check_call([installnametoolbin, "-"+action] + list(args))
 
-def changeInstallName(oldName, newName, binaryPath, verbose):
+def changeInstallName(oldName: str, newName: str, binaryPath: str, verbose: int):
     if verbose >= 3:
         print("Using install_name_tool:")
         print(" in", binaryPath)
@@ -233,21 +234,21 @@ def changeInstallName(oldName, newName, binaryPath, verbose):
         print(" to", newName)
     runInstallNameTool("change", oldName, newName, binaryPath)
 
-def changeIdentification(id, binaryPath, verbose):
+def changeIdentification(id: str, binaryPath: str, verbose: int):
     if verbose >= 3:
         print("Using install_name_tool:")
         print(" change identification in", binaryPath)
         print(" to", id)
     runInstallNameTool("id", id, binaryPath)
 
-def runStrip(binaryPath, verbose):
+def runStrip(binaryPath: str, verbose: int):
     stripbin=os.getenv("STRIP", "strip")
     if verbose >= 3:
         print("Using strip:")
         print(" stripped", binaryPath)
     subprocess.check_call([stripbin, "-x", binaryPath])
 
-def copyFramework(framework, path, verbose):
+def copyFramework(framework: FrameworkInfo, path: str, verbose: int) -> Optional[str]:
     if framework.sourceFilePath.startswith("Qt"):
         #standard place for Nokia Qt installer's frameworks
         fromPath = "/Library/Frameworks/" + framework.sourceFilePath
@@ -309,7 +310,7 @@ def copyFramework(framework, path, verbose):
     
     return toPath
 
-def deployFrameworks(frameworks, bundlePath, binaryPath, strip, verbose, deploymentInfo=None):
+def deployFrameworks(frameworks: List[FrameworkInfo], bundlePath: str, binaryPath: str, strip: bool, verbose: int, deploymentInfo: Optional[DeploymentInfo] = None) -> DeploymentInfo:
     if deploymentInfo is None:
         deploymentInfo = DeploymentInfo()
     
@@ -355,7 +356,7 @@ def deployFrameworks(frameworks, bundlePath, binaryPath, strip, verbose, deploym
     
     return deploymentInfo
 
-def deployFrameworksForAppBundle(applicationBundle, strip, verbose):
+def deployFrameworksForAppBundle(applicationBundle: ApplicationBundleInfo, strip: bool, verbose: int) -> DeploymentInfo:
     frameworks = getFrameworks(applicationBundle.binaryPath, verbose)
     if len(frameworks) == 0 and verbose >= 1:
         print("Warning: Could not find any external frameworks to deploy in %s." % (applicationBundle.path))
@@ -363,7 +364,7 @@ def deployFrameworksForAppBundle(applicationBundle, strip, verbose):
     else:
         return deployFrameworks(frameworks, applicationBundle.path, applicationBundle.binaryPath, strip, verbose)
 
-def deployPlugins(appBundleInfo, deploymentInfo, strip, verbose):
+def deployPlugins(appBundleInfo: ApplicationBundleInfo, deploymentInfo: DeploymentInfo, strip: bool, verbose: int):
     # Lookup available plugins, exclude unneeded
     plugins = []
     if deploymentInfo.pluginPath is None:
@@ -707,7 +708,7 @@ elif config.sign:
 
 if config.dmg is not None:
 
-    def runHDIUtil(verb, image_basename, **kwargs):
+    def runHDIUtil(verb: str, image_basename: str, **kwargs) -> int:
         hdiutil_args = ["hdiutil", verb, image_basename + ".dmg"]
         if "capture_stdout" in kwargs:
             del kwargs["capture_stdout"]
