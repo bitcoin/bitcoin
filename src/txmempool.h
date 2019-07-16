@@ -764,6 +764,9 @@ public:
     /** An iterator that may be changed from pointing to an entry in m_tx_pool to pointing to an entry in the layer */
     struct txiter {
         boost::variant<txiter_nested, CTxMemPool::txiter> m_variant;
+        explicit txiter(CTxMemPool::txiter val) : m_variant{val} {}
+        explicit txiter(txiter_nested val) : m_variant{val} {}
+        txiter() : m_variant{CTxMemPool::txiter{}} {}
     };
 
     struct CompareIteratorByHash {
