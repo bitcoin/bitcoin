@@ -6,6 +6,7 @@
 #define BITCOIN_WALLET_WALLETUTIL_H
 
 #include <fs.h>
+#include <script/descriptor.h>
 
 #include <vector>
 
@@ -48,9 +49,45 @@ enum WalletFlags : uint64_t {
     //! bitcoin from opening the wallet, thinking it was newly created, and
     //! then improperly reinitializing it.
     WALLET_FLAG_BLANK_WALLET = (1ULL << 33),
+
+    //! Indicate that this wallet supports DescriptorScriptPubKeyMan
+    WALLET_FLAG_DESCRIPTORS = (1ULL << 34),
 };
 
 //! Get the path of the wallet directory.
 fs::path GetWalletDir();
+
+/** Descriptor with some wallet metadata */
+class WalletDescriptor
+{
+public:
+    std::shared_ptr<Descriptor> descriptor;
+    uint64_t creation_time;
+    int32_t range_start; // First item in range; start of range, inclusive, i.e. [range_start, range_end). This never changes.
+    int32_t range_end; // Item after the last; end of range, exclusive, i.e. [range_start, range_end). This will increment with each TopUp()
+    int32_t next_index; // Position of the next item to generate
+    DescriptorCache cache;
+
+    void DeserializeDescriptor(const std::string& str)
+    {
+        std::string error;
+        FlatSigningProvider keys;
+        descriptor = Parse(str, keys, error, true);
+        if (!descriptor) {
+            throw std::ios_base::failure("Invalid descriptor: " + error);
+         }
+    }
+
+    SERIALIZE_METHODS(WalletDescriptor, obj)
+    {
+        std::string descriptor_str;
+        SER_WRITE(obj, descriptor_str = obj.descriptor->ToString());
+        READWRITE(descriptor_str, obj.creation_time, obj.next_index, obj.range_start, obj.range_end);
+        SER_READ(obj, obj.DeserializeDescriptor(descriptor_str));
+     }
+
+    WalletDescriptor() {}
+    WalletDescriptor(std::shared_ptr<Descriptor> descriptor, uint64_t creation_time, int32_t range_start, int32_t range_end, int32_t next_index) : descriptor(descriptor), creation_time(creation_time), range_start(range_start), range_end(range_end), next_index(next_index) {}
+};
 
 #endif // BITCOIN_WALLET_WALLETUTIL_H

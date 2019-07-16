@@ -14,6 +14,7 @@ import random
 import unittest
 
 from test_framework.crypto import secp256k1
+from .address import byte_to_base58
 
 # Order of the secp256k1 curve
 ORDER = secp256k1.GE.ORDER
@@ -183,6 +184,17 @@ class ECKey:
         rb = r.to_bytes((r.bit_length() + 8) // 8, 'big')
         sb = s.to_bytes((s.bit_length() + 8) // 8, 'big')
         return b'\x30' + bytes([4 + len(rb) + len(sb), 2, len(rb)]) + rb + bytes([2, len(sb)]) + sb
+
+def bytes_to_wif(b, compressed=True):
+    if compressed:
+        b += b'\x01'
+    return byte_to_base58(b, 239)
+
+def generate_wif_key():
+    # Makes a WIF privkey for imports
+    k = ECKey()
+    k.generate()
+    return bytes_to_wif(k.get_bytes(), k.is_compressed)
 
 def compute_xonly_pubkey(key):
     """Compute an x-only (32 byte) public key from a (32 byte) private key.

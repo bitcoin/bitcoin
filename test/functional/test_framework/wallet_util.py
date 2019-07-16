@@ -9,6 +9,10 @@ from test_framework.address import (
     key_to_p2pkh,
     script_to_p2sh,
 )
+from test_framework.key import (
+    bytes_to_wif,
+    ECKey,
+)
 from test_framework.script import (
     CScript,
     OP_2,
@@ -42,6 +46,20 @@ def get_key(node):
     pubkey = node.getaddressinfo(addr)['pubkey']
     pkh = hash160(hex_str_to_bytes(pubkey))
     return Key(privkey=node.dumpprivkey(addr),
+               pubkey=pubkey,
+               p2pkh_script=CScript([OP_DUP, OP_HASH160, pkh, OP_EQUALVERIFY, OP_CHECKSIG]).hex(),
+               p2pkh_addr=key_to_p2pkh(pubkey))
+
+def get_generate_key():
+    """Generate a fresh key
+
+    Returns a named tuple of privkey, pubkey and all address and scripts."""
+    eckey = ECKey()
+    eckey.generate()
+    privkey = bytes_to_wif(eckey.get_bytes())
+    pubkey = eckey.get_pubkey().get_bytes().hex()
+    pkh = hash160(hex_str_to_bytes(pubkey))
+    return Key(privkey=privkey,
                pubkey=pubkey,
                p2pkh_script=CScript([OP_DUP, OP_HASH160, pkh, OP_EQUALVERIFY, OP_CHECKSIG]).hex(),
                p2pkh_addr=key_to_p2pkh(pubkey))

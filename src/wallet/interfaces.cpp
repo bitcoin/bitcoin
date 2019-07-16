@@ -516,6 +516,7 @@ public:
     {
         RemoveWallet(m_wallet, false /* load_on_start */);
     }
+    bool isLegacy() override { return m_wallet->IsLegacy(); }
     std::unique_ptr<Handler> handleUnload(UnloadFn fn) override
     {
         return MakeHandler(m_wallet->NotifyUnload.connect(fn));

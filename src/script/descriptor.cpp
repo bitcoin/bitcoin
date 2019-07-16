@@ -572,6 +572,7 @@ public:
             default: return std::nullopt;
         }
     }
+    bool IsSingleType() const final { return true; }
 };
 
 /** A parsed raw(H) descriptor. */
@@ -596,6 +597,7 @@ public:
             default: return std::nullopt;
         }
     }
+    bool IsSingleType() const final { return true; }
 };
 
 /** A parsed pk(P) descriptor. */
@@ -606,6 +608,7 @@ protected:
 public:
     PKDescriptor(std::unique_ptr<PubkeyProvider> prov) : DescriptorImpl(Vector(std::move(prov)), {}, "pk") {}
     std::optional<OutputType> GetOutputType() const override { return OutputType::LEGACY; }
+    bool IsSingleType() const final { return true; }
 };
 
 /** A parsed pkh(P) descriptor. */
@@ -621,6 +624,7 @@ protected:
 public:
     PKHDescriptor(std::unique_ptr<PubkeyProvider> prov) : DescriptorImpl(Vector(std::move(prov)), {}, "pkh") {}
     std::optional<OutputType> GetOutputType() const override { return OutputType::LEGACY; }
+    bool IsSingleType() const final { return true; }
 };
 
 /** A parsed multi(...) or sortedmulti(...) descriptor */
@@ -640,6 +644,7 @@ protected:
     }
 public:
     MultisigDescriptor(int threshold, std::vector<std::unique_ptr<PubkeyProvider>> providers, bool sorted = false) : DescriptorImpl(std::move(providers), {}, sorted ? "sortedmulti" : "multi"), m_threshold(threshold), m_sorted(sorted) {}
+    bool IsSingleType() const final { return true; }
 };
 
 /** A parsed sh(...) descriptor. */
@@ -655,6 +660,7 @@ public:
         assert(m_subdescriptor_arg);
         return OutputType::LEGACY;
     }
+    bool IsSingleType() const final { return true; }
 };
 
 /** A parsed combo(P) descriptor. */
@@ -679,6 +685,7 @@ protected:
 public:
     ComboDescriptor(std::unique_ptr<PubkeyProvider> prov) : DescriptorImpl(Vector(std::move(prov)), {}, "combo") {}
     std::optional<OutputType> GetOutputType() const override { return OutputType::LEGACY; }
+    bool IsSingleType() const final { return false; }
 };
 
 ////////////////////////////////////////////////////////////////////////////

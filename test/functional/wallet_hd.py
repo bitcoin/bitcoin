@@ -35,8 +35,8 @@ class WalletHDTest(BitcoinTestFramework):
         self.connect_nodes(0, 1)
 
         # Make sure we use hd, keep chainid
-        chainid = self.nodes[1].getwalletinfo()['hdchainid']
-        assert_equal(len(chainid), 64)
+        hd_fingerprint = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress())['hdmasterfingerprint']
+        assert_equal(len(hd_fingerprint), 8)
 
         # create an internal key
         change_addr = self.nodes[1].getrawchangeaddress()
@@ -44,8 +44,9 @@ class WalletHDTest(BitcoinTestFramework):
         assert_equal(change_addrV["hdkeypath"], "m/44'/1'/0'/1/0") #first internal child key
 
         # Import a non-HD private key in the HD wallet
-        non_hd_add = self.nodes[0].getnewaddress()
-        self.nodes[1].importprivkey(self.nodes[0].dumpprivkey(non_hd_add))
+        non_hd_add = 'yLU9vxiAWUdiKKxn6EazLDFq9WXrK2T7RP'
+        non_hd_key = 'cVCzrzfxMhUMxV34UhTmdmntAqHvosAuNo2KUZsiHZSKLm73g35o'
+        self.nodes[1].importprivkey(non_hd_key)
 
         # This should be enough to keep the master key and the non-HD key
         self.nodes[1].backupwallet(os.path.join(self.nodes[1].datadir, "hd.bak"))
@@ -56,11 +57,11 @@ class WalletHDTest(BitcoinTestFramework):
         self.nodes[0].generate(COINBASE_MATURITY + 1)
         hd_add = None
         NUM_HD_ADDS = 10
-        for i in range(NUM_HD_ADDS):
+        for i in range(1, NUM_HD_ADDS + 1):
             hd_add = self.nodes[1].getnewaddress()
             hd_info = self.nodes[1].getaddressinfo(hd_add)
-            assert_equal(hd_info["hdkeypath"], "m/44'/1'/0'/0/"+str(i))
-            assert_equal(hd_info["hdchainid"], chainid)
+            assert_equal(hd_info["hdkeypath"], "m/44'/1'/0'/0/" + str(i))
+            assert_equal(hd_info["hdmasterfingerprint"], hd_fingerprint)
             self.nodes[0].sendtoaddress(hd_add, 1)
             self.nodes[0].generate(1)
         self.nodes[0].sendtoaddress(non_hd_add, 1)
@@ -84,17 +85,17 @@ class WalletHDTest(BitcoinTestFramework):
         shutil.rmtree(os.path.join(self.nodes[1].datadir, self.chain, "llmq"))
         shutil.copyfile(
             os.path.join(self.nodes[1].datadir, "hd.bak"),
-            os.path.join(self.nodes[1].datadir, self.chain, 'wallets', self.default_wallet_name, self.wallet_data_filename),
+            os.path.join(self.nodes[1].datadir, self.chain, "wallets", self.default_wallet_name, self.wallet_data_filename),
         )
         self.start_node(1)
 
         # Assert that derivation is deterministic
         hd_add_2 = None
-        for i in range(NUM_HD_ADDS):
+        for i in range(1, NUM_HD_ADDS + 1):
             hd_add_2 = self.nodes[1].getnewaddress()
             hd_info_2 = self.nodes[1].getaddressinfo(hd_add_2)
             assert_equal(hd_info_2["hdkeypath"], "m/44'/1'/0'/0/"+str(i))
-            assert_equal(hd_info_2["hdchainid"], chainid)
+            assert_equal(hd_info_2["hdmasterfingerprint"], hd_fingerprint)
         assert_equal(hd_add, hd_add_2)
         self.connect_nodes(0, 1)
         self.sync_all()
