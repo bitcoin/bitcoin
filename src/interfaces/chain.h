@@ -86,36 +86,6 @@ public:
     {
     public:
         virtual ~Lock() {}
-
-        //! Check that the block is available on disk (i.e. has not been
-        //! pruned), and contains transactions.
-        virtual bool haveBlockOnDisk(int height) = 0;
-
-        //! Return height of the first block in the chain with timestamp equal
-        //! or greater than the given time and height equal or greater than the
-        //! given height, or nullopt if there is no block with a high enough
-        //! timestamp and height. Also return the block hash as an optional output parameter
-        //! (to avoid the cost of a second lookup in case this information is needed.)
-        virtual Optional<int> findFirstBlockWithTimeAndHeight(int64_t time, int height, uint256* hash) = 0;
-
-        //! Return height of the specified block if it is on the chain, otherwise
-        //! return the height of the highest block on chain that's an ancestor
-        //! of the specified block, or nullopt if there is no common ancestor.
-        //! Also return the height of the specified block as an optional output
-        //! parameter (to avoid the cost of a second hash lookup in case this
-        //! information is desired).
-        virtual Optional<int> findFork(const uint256& hash, Optional<int>* height) = 0;
-
-        //! Get locator for the current chain tip.
-        virtual CBlockLocator getTipLocator() = 0;
-
-        //! Return height of the highest block on chain in common with the locator,
-        //! which will either be the original block used to create the locator,
-        //! or one of its ancestors.
-        virtual Optional<int> findLocatorFork(const CBlockLocator& locator) = 0;
-
-        //! Check if transaction will be final given chain height current time.
-        virtual bool checkFinalTx(const CTransaction& tx) = 0;
     };
 
     //! Return Lock interface. Chain is locked when this is called, and
@@ -134,6 +104,28 @@ public:
 
     //! Get block hash. Height must be valid or this function will abort.
     virtual uint256 getBlockHash(int height) = 0;
+
+    //! Check that the block is available on disk (i.e. has not been
+    //! pruned), and contains transactions.
+    virtual bool haveBlockOnDisk(int height) = 0;
+
+    //! Return height of the first block in the chain with timestamp equal
+    //! or greater than the given time and height equal or greater than the
+    //! given height, or nullopt if there is no block with a high enough
+    //! timestamp and height. Also return the block hash as an optional output parameter
+    //! (to avoid the cost of a second lookup in case this information is needed.)
+    virtual Optional<int> findFirstBlockWithTimeAndHeight(int64_t time, int height, uint256* hash) = 0;
+
+    //! Get locator for the current chain tip.
+    virtual CBlockLocator getTipLocator() = 0;
+
+    //! Return height of the highest block on chain in common with the locator,
+    //! which will either be the original block used to create the locator,
+    //! or one of its ancestors.
+    virtual Optional<int> findLocatorFork(const CBlockLocator& locator) = 0;
+
+    //! Check if transaction will be final given chain height current time.
+    virtual bool checkFinalTx(const CTransaction& tx) = 0;
 
     //! Return whether node has the block and optionally return block metadata
     //! or contents.
