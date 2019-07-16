@@ -76,6 +76,7 @@ BASE_SCRIPTS = [
     # Scripts that are run by default.
     # Longest test should go first, to favor running tests in parallel
     'wallet_hd.py',
+    'wallet_hd.py --descriptors',
     'wallet_backup.py',
     # vv Tests less than 5m vv
     'mining_getblocktemplate_longpoll.py',
@@ -86,7 +87,9 @@ BASE_SCRIPTS = [
     'feature_segwit.py',
     # vv Tests less than 2m vv
     'wallet_basic.py',
+    'wallet_basic.py --descriptors',
     'wallet_labels.py',
+    'wallet_labels.py --descriptors',
     'p2p_segwit.py',
     'p2p_timeouts.py',
     'p2p_tx_download.py',
@@ -109,6 +112,7 @@ BASE_SCRIPTS = [
     'feature_abortnode.py',
     # vv Tests less than 30s vv
     'wallet_keypool_topup.py',
+    'wallet_keypool_topup.py --descriptors',
     'feature_fee_estimation.py',
     'interface_zmq.py',
     'interface_bitcoin_cli.py',
@@ -122,6 +126,7 @@ BASE_SCRIPTS = [
     'interface_rest.py',
     'mempool_spend_coinbase.py',
     'wallet_avoidreuse.py',
+    'wallet_avoidreuse.py --descriptors',
     'mempool_reorg.py',
     'mempool_persist.py',
     'wallet_multiwallet.py',
@@ -134,6 +139,7 @@ BASE_SCRIPTS = [
     'interface_http.py',
     'interface_rpc.py',
     'rpc_psbt.py',
+    'rpc_psbt.py --descriptors',
     'rpc_users.py',
     'rpc_whitelist.py',
     'feature_proxy.py',
@@ -147,6 +153,7 @@ BASE_SCRIPTS = [
     'p2p_addr_relay.py',
     'rpc_net.py',
     'wallet_keypool.py',
+    'wallet_keypool.py --descriptors',
     'wallet_descriptor.py',
     'p2p_mempool.py',
     'p2p_filter.py',
@@ -169,6 +176,7 @@ BASE_SCRIPTS = [
     'mempool_packages.py',
     'mempool_package_onemore.py',
     'rpc_createmultisig.py',
+    'rpc_createmultisig.py --descriptors',
     'feature_versionbits_warning.py',
     'rpc_preciousblock.py',
     'wallet_importprunedfunds.py',
@@ -192,6 +200,7 @@ BASE_SCRIPTS = [
     'wallet_listsinceblock.py',
     'p2p_leak.py',
     'wallet_encryption.py',
+    'wallet_encryption.py --descriptors',
     'feature_dersig.py',
     'feature_cltv.py',
     'rpc_uptime.py',
