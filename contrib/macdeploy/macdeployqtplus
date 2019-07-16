@@ -147,7 +147,6 @@ class FrameworkInfo(object):
             info.sourceContentsDirectory = os.path.join(info.frameworkPath, "Contents")
             info.sourceVersionContentsDirectory = os.path.join(info.frameworkPath, "Versions", info.version, "Contents")
             info.destinationResourcesDirectory = os.path.join(cls.bundleFrameworkDirectory, info.frameworkName, "Resources")
-            info.destinationContentsDirectory = os.path.join(cls.bundleFrameworkDirectory, info.frameworkName, "Contents")
             info.destinationVersionContentsDirectory = os.path.join(cls.bundleFrameworkDirectory, info.frameworkName, "Versions", info.version, "Contents")
         
         return info
@@ -722,7 +721,7 @@ if config.dmg is not None:
         
         for key, value in kwargs.items():
             hdiutil_args.append("-" + key)
-            if not value is True:
+            if value is not True:
                 hdiutil_args.append(str(value))
         
         return run(hdiutil_args, universal_newlines=True)
