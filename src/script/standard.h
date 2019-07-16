@@ -42,17 +42,6 @@ extern bool fAcceptDatacarrier;
 /** Maximum size of TX_NULL_DATA scripts that this node considers standard. */
 extern unsigned nMaxDatacarrierBytes;
 
-/**
- * Mandatory script verification flags that all new blocks must comply with for
- * them to be valid. (but old blocks may not comply with) Currently just P2SH,
- * but in the future other flags may be added, such as a soft-fork to enforce
- * strict DER encoding.
- *
- * Failing one of these tests may trigger a DoS ban - see CheckInputs() for
- * details.
- */
-static const unsigned int MANDATORY_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH;
-
 enum txnouttype
 {
     TX_NONSTANDARD,

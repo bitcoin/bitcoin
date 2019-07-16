@@ -53,7 +53,7 @@ static const unsigned int DUST_RELAY_TX_FEE = 3000;
  * with. However scripts violating these flags may still be present in valid
  * blocks and we must accept those blocks.
  */
-static constexpr unsigned int STANDARD_SCRIPT_VERIFY_FLAGS = MANDATORY_SCRIPT_VERIFY_FLAGS |
+static constexpr unsigned int STANDARD_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH |
                                                              SCRIPT_VERIFY_DERSIG |
                                                              SCRIPT_VERIFY_STRICTENC |
                                                              SCRIPT_VERIFY_MINIMALDATA |
