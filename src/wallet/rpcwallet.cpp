@@ -149,7 +149,7 @@ static void WalletTxToJSON(interfaces::Chain& chain, interfaces::Chain::Lock& lo
         CHECK_NONFATAL(chain.findBlock(wtx.m_confirm.hashBlock, FoundBlock().time(block_time)));
         entry.pushKV("blocktime", block_time);
     } else {
-        entry.pushKV("trusted", wtx.IsTrusted(locked_chain));
+        entry.pushKV("trusted", wtx.IsTrusted());
     }
     uint256 hash = wtx.GetHash();
     entry.pushKV("txid", hash.GetHex());
@@ -573,7 +573,7 @@ static UniValue signmessage(const JSONRPCRequest& request)
     return signature;
 }
 
-static CAmount GetReceived(interfaces::Chain::Lock& locked_chain, const CWallet& wallet, const UniValue& params, bool by_label) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool by_label) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     std::set<CTxDestination> address_set;
 
@@ -603,7 +603,7 @@ static CAmount GetReceived(interfaces::Chain::Lock& locked_chain, const CWallet&
     CAmount amount = 0;
     for (const std::pair<const uint256, CWalletTx>& wtx_pair : wallet.mapWallet) {
         const CWalletTx& wtx = wtx_pair.second;
-        if (wtx.IsCoinBase() || !locked_chain.checkFinalTx(*wtx.tx) || wtx.GetDepthInMainChain() < min_depth) {
+        if (wtx.IsCoinBase() || !wallet.chain().checkFinalTx(*wtx.tx) || wtx.GetDepthInMainChain() < min_depth) {
             continue;
         }
 
@@ -656,7 +656,7 @@ static UniValue getreceivedbyaddress(const JSONRPCRequest& request)
     auto locked_chain = pwallet->chain().lock();
     LOCK(pwallet->cs_wallet);
 
-    return ValueFromAmount(GetReceived(*locked_chain, *pwallet, request.params, /* by_label */ false));
+    return ValueFromAmount(GetReceived(*pwallet, request.params, /* by_label */ false));
 }
 
 
@@ -697,7 +697,7 @@ static UniValue getreceivedbylabel(const JSONRPCRequest& request)
     auto locked_chain = pwallet->chain().lock();
     LOCK(pwallet->cs_wallet);
 
-    return ValueFromAmount(GetReceived(*locked_chain, *pwallet, request.params, /* by_label */ true));
+    return ValueFromAmount(GetReceived(*pwallet, request.params, /* by_label */ true));
 }
 
 
@@ -1049,7 +1049,7 @@ static UniValue ListReceived(interfaces::Chain::Lock& locked_chain, const CWalle
     for (const std::pair<const uint256, CWalletTx>& pairWtx : pwallet->mapWallet) {
         const CWalletTx& wtx = pairWtx.second;
 
-        if (wtx.IsCoinBase() || !locked_chain.checkFinalTx(*wtx.tx)) {
+        if (wtx.IsCoinBase() || !pwallet->chain().checkFinalTx(*wtx.tx)) {
             continue;
         }
 
@@ -2987,7 +2987,8 @@ UniValue listunspent(const JSONRPCRequest& request)
         cctl.assetInfo = CAssetCoinInfo(nAsset, nMaximumAmountAsset);
         auto locked_chain = pwallet->chain().lock();
         LOCK(pwallet->cs_wallet);
-        pwallet->AvailableCoins(*locked_chain, vecOutputs, !include_unsafe, &cctl, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMinimumAmountAsset, nMaximumAmountAsset, nMinimumSumAmountAsset, nMaximumCount);
+        // SYSCOIN
+        pwallet->AvailableCoins(vecOutputs, !include_unsafe, &cctl, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMinimumAmountAsset, nMaximumAmountAsset, nMinimumSumAmountAsset, nMaximumCount);
     }
 
     LOCK(pwallet->cs_wallet);
