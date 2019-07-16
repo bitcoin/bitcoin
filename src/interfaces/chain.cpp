@@ -55,13 +55,6 @@ bool FillBlock(const CBlockIndex* index, const FoundBlock& block, UniqueLock<Rec
 
 class LockImpl : public Chain::Lock, public UniqueLock<RecursiveMutex>
 {
-    uint256 getBlockHash(int height) override
-    {
-        LockAssertion lock(::cs_main);
-        CBlockIndex* block = ::ChainActive()[height];
-        assert(block != nullptr);
-        return block->GetBlockHash();
-    }
     bool haveBlockOnDisk(int height) override
     {
         LockAssertion lock(::cs_main);
@@ -233,6 +226,13 @@ public:
             return block->nHeight;
         }
         return nullopt;
+    }
+    uint256 getBlockHash(int height) override
+    {
+        LOCK(::cs_main);
+        CBlockIndex* block = ::ChainActive()[height];
+        assert(block);
+        return block->GetBlockHash();
     }
     bool findBlock(const uint256& hash, const FoundBlock& block) override
     {
