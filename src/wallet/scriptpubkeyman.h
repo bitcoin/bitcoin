@@ -476,10 +476,17 @@ private:
     using ScriptPubKeyMap = std::map<CScript, int32_t>; // Map of scripts to descriptor range index
 
     ScriptPubKeyMap m_map_script_pub_keys GUARDED_BY(cs_desc_man);
+
+    OutputType address_type;
+    bool internal;
 public:
     DescriptorScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor)
         :   ScriptPubKeyMan(storage),
             descriptor(descriptor)
+        {}
+    DescriptorScriptPubKeyMan(WalletStorage& storage, OutputType address_type, bool internal)
+        :   ScriptPubKeyMan(storage),
+            address_type(address_type), internal(internal)
         {}
 
     mutable RecursiveMutex cs_desc_man;
