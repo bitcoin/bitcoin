@@ -19,6 +19,7 @@ DISABLED_OPCODE_ERROR = "non-mandatory-script-verify-flag (Attempted to use a di
 class DIP0020ActivationTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
+        self.extra_args = [["-acceptnonstdtxn=1"]]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -31,7 +32,7 @@ class DIP0020ActivationTest(BitcoinTestFramework):
         utxos = self.node.listunspent()
         assert len(utxos) > 0
 
-        # Send some coins to a P2SH address constructed using disabled opcodes
+        # Lock some coins using disabled opcodes
         utxo = utxos[len(utxos) - 1]
         value = int(satoshi_round(utxo["amount"] - self.relayfee) * COIN)
         tx = CTransaction()
