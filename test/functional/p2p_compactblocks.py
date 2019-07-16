@@ -96,6 +96,9 @@ class CompactBlocksTest(SyscoinTestFramework):
         self.setup_clean_chain = True
         self.extra_args = [["-addresstype=bech32"]]
         self.num_nodes = 1
+        self.extra_args = [[
+            "-acceptnonstdtxn=1",
+        ]]
         self.utxos = []
 
     def skip_test_if_missing_module(self):
