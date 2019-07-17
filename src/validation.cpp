@@ -964,9 +964,12 @@ bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::P
         return error("%s: Deserialize or I/O error - %s at %s", __func__, e.what(), pos.ToString());
     }
 
-    // Check the header
-    if (!CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
-        return error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
+    // We skip POW checks for genesis block
+    if (block.GetHash() != consensusParams.hashGenesisBlock) {
+        // Check the header
+        if (!CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
+            return error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
+    }
 
     return true;
 }
@@ -3031,9 +3034,12 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     if (block.fChecked)
         return true;
 
+    // We skip POW checks for genesis block; note that we make a new flag, as we want the
+    // fChecked to be set at the end, regardless
+    auto really_check_pow = fCheckPOW && block.GetHash() != consensusParams.hashGenesisBlock;
     // Check that the header is valid (particularly PoW).  This is mostly
     // redundant with the call in AcceptBlockHeader.
-    if (!CheckBlockHeader(block, state, consensusParams, fCheckPOW))
+    if (!CheckBlockHeader(block, state, consensusParams, really_check_pow))
         return false;
 
     // Check the merkle root.
