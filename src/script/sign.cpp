@@ -33,6 +33,15 @@ bool MutableTransactionSignatureCreator::CreateSig(const SigningProvider& provid
     return true;
 }
 
+bool SimpleSignatureCreator::CreateSig(const SigningProvider& provider, std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode, SigVersion sigversion) const
+{
+    CKey key;
+    if (!provider.GetKey(keyid, key)) return false;
+    if (!key.Sign(checker.GetHash(), vchSig)) return false;
+    vchSig.push_back((unsigned char)SIGHASH_ALL);
+    return true;
+}
+
 static bool GetCScript(const SigningProvider& provider, const SignatureData& sigdata, const CScriptID& scriptid, CScript& script)
 {
     if (provider.GetCScript(scriptid, script)) {
