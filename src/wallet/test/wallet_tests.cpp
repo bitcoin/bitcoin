@@ -361,17 +361,16 @@ public:
     CWalletTx& AddTx(CRecipient recipient)
     {
         CTransactionRef tx;
-        ReserveDestination reservedest(wallet.get());
         CAmount fee;
         int changePos = -1;
         std::string error;
         CCoinControl dummy;
         {
             auto locked_chain = m_chain->lock();
-            BOOST_CHECK(wallet->CreateTransaction(*locked_chain, {recipient}, tx, reservedest, fee, changePos, error, dummy));
+            BOOST_CHECK(wallet->CreateTransaction(*locked_chain, {recipient}, tx, fee, changePos, error, dummy));
         }
         CValidationState state;
-        BOOST_CHECK(wallet->CommitTransaction(tx, {}, {}, reservedest, state));
+        BOOST_CHECK(wallet->CommitTransaction(tx, {}, {}, state));
         CMutableTransaction blocktx;
         {
             LOCK(wallet->cs_wallet);
