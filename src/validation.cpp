@@ -309,13 +309,8 @@ bool CheckSequenceLocks(const CTxMemPool& pool, const CTransaction& tx, int flag
 // Returns the script flags which should be checked for a given block
 static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consensus::Params& chainparams);
 
-static void LimitMempoolSize(CTxMemPool& pool, size_t limit, unsigned long age) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
+static void LimitMempoolSize(CTxMemPool& pool, size_t limit) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
 {
-    int expired = pool.Expire(GetTime() - age);
-    if (expired != 0) {
-        LogPrint(BCLog::MEMPOOL, "Expired %i transactions from the memory pool\n", expired);
-    }
-
     std::vector<COutPoint> vNoSpendsRemaining;
     pool.TrimToSize(limit, &vNoSpendsRemaining);
     for (const COutPoint& removed : vNoSpendsRemaining)
@@ -383,7 +378,7 @@ static void UpdateMempoolForReorg(DisconnectedBlockTransactions& disconnectpool,
     // We also need to remove any now-immature transactions
     mempool.removeForReorg(pcoinsTip.get(), ::ChainActive().Tip()->nHeight + 1, STANDARD_LOCKTIME_VERIFY_FLAGS);
     // Re-limit mempool size, in case we added any transactions
-    LimitMempoolSize(mempool, gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000, gArgs.GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60);
+    LimitMempoolSize(mempool, gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
 }
 
 // Used to avoid mempool polluting consensus critical paths if CCoinsViewMempool
@@ -818,7 +813,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
 
         // trim mempool and check if tx was trimmed
         if (!bypass_limits) {
-            LimitMempoolSize(pool, gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000, gArgs.GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60);
+            LimitMempoolSize(pool, gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
             if (!pool.exists(hash))
                 return state.Invalid(ValidationInvalidReason::TX_MEMPOOL_POLICY, false, REJECT_INSUFFICIENTFEE, "mempool full");
         }
@@ -4631,7 +4626,6 @@ static const uint64_t MEMPOOL_DUMP_VERSION = 1;
 bool LoadMempool(CTxMemPool& pool)
 {
     const CChainParams& chainparams = Params();
-    int64_t nExpiryTimeout = gArgs.GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60;
     FILE* filestr = fsbridge::fopen(GetDataDir() / "mempool.dat", "rb");
     CAutoFile file(filestr, SER_DISK, CLIENT_VERSION);
     if (file.IsNull()) {
@@ -4640,10 +4634,8 @@ bool LoadMempool(CTxMemPool& pool)
     }
 
     int64_t count = 0;
-    int64_t expired = 0;
     int64_t failed = 0;
     int64_t already_there = 0;
-    int64_t nNow = GetTime();
 
     try {
         uint64_t version;
@@ -4666,7 +4658,7 @@ bool LoadMempool(CTxMemPool& pool)
                 pool.PrioritiseTransaction(tx->GetHash(), amountdelta);
             }
             CValidationState state;
-            if (nTime + nExpiryTimeout > nNow) {
+            {
                 LOCK(cs_main);
                 AcceptToMemoryPoolWithTime(chainparams, pool, state, tx, nullptr /* pfMissingInputs */, nTime,
                                            nullptr /* plTxnReplaced */, false /* bypass_limits */, 0 /* nAbsurdFee */,
@@ -4684,8 +4676,6 @@ bool LoadMempool(CTxMemPool& pool)
                         ++failed;
                     }
                 }
-            } else {
-                ++expired;
             }
             if (ShutdownRequested())
                 return false;
@@ -4701,7 +4691,7 @@ bool LoadMempool(CTxMemPool& pool)
         return false;
     }
 
-    LogPrintf("Imported mempool transactions from disk: %i succeeded, %i failed, %i expired, %i already there\n", count, failed, expired, already_there);
+    LogPrintf("Imported mempool transactions from disk: %i succeeded, %i failed, %i already there\n", count, failed, already_there);
     return true;
 }
 

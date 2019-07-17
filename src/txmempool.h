@@ -346,7 +346,6 @@ struct TxMempoolInfo
  */
 enum class MemPoolRemovalReason {
     UNKNOWN = 0, //!< Manually removed or unknown reason
-    EXPIRY,      //!< Expired from mempool
     SIZELIMIT,   //!< Removed in size limiting
     REORG,       //!< Removed for reorganization
     BLOCK,       //!< Removed for block
@@ -656,9 +655,6 @@ public:
       *  which are not in mempool which no longer have any spends in this mempool.
       */
     void TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpendsRemaining = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
-
-    /** Expire all transaction (and their dependencies) in the mempool older than time. Return the number of removed transactions. */
-    int Expire(int64_t time) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /**
      * Calculate the ancestor and descendant count for the given transaction.

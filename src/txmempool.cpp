@@ -917,22 +917,6 @@ void CTxMemPool::RemoveStaged(setEntries &stage, bool updateDescendants, MemPool
     }
 }
 
-int CTxMemPool::Expire(int64_t time) {
-    AssertLockHeld(cs);
-    indexed_transaction_set::index<entry_time>::type::iterator it = mapTx.get<entry_time>().begin();
-    setEntries toremove;
-    while (it != mapTx.get<entry_time>().end() && it->GetTime() < time) {
-        toremove.insert(mapTx.project<0>(it));
-        it++;
-    }
-    setEntries stage;
-    for (txiter removeit : toremove) {
-        CalculateDescendants(removeit, stage);
-    }
-    RemoveStaged(stage, false, MemPoolRemovalReason::EXPIRY);
-    return stage.size();
-}
-
 void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, bool validFeeEstimate)
 {
     setEntries setAncestors;
