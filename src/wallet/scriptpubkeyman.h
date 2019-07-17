@@ -176,4 +176,20 @@ public:
     uint256 GetID() const override;
 };
 
+/** Wraps a LegacyScriptPubKeyMan so that it can be returned in a new unique_ptr */
+class LegacySigningProvider : public SigningProvider
+{
+private:
+    const LegacyScriptPubKeyMan& spk_man;
+public:
+    LegacySigningProvider(const LegacyScriptPubKeyMan& spk_man) : spk_man(spk_man) {}
+
+    bool GetCScript(const CScriptID &scriptid, CScript& script) const override { return spk_man.GetCScript(scriptid, script); }
+    bool HaveCScript(const CScriptID &scriptid) const override { return spk_man.HaveCScript(scriptid); }
+    bool GetPubKey(const CKeyID &address, CPubKey& pubkey) const override { return spk_man.GetPubKey(address, pubkey); }
+    bool GetKey(const CKeyID &address, CKey& key) const override { return spk_man.GetKey(address, key); }
+    bool HaveKey(const CKeyID &address) const override { return spk_man.HaveKey(address); }
+    bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const override { return spk_man.GetKeyOrigin(keyid, info); }
+};
+
 #endif // BITCOIN_WALLET_SCRIPTPUBKEYMAN_H
