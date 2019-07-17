@@ -32,6 +32,17 @@ public:
     virtual bool CreateSig(const SigningProvider& provider, std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode, SigVersion sigversion) const =0;
 };
 
+/** A general purpose signature creator. Note that this lacks assumptions about the `sighash`, as the preimage is not known to the signer. */
+class SimpleSignatureCreator : public BaseSignatureCreator
+{
+    SimpleSignatureChecker checker;
+
+public:
+    explicit SimpleSignatureCreator(const uint256& hashIn) : BaseSignatureCreator(), checker(hashIn) {};
+    const BaseSignatureChecker& Checker() const override { return checker; }
+    bool CreateSig(const SigningProvider& provider, std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode, SigVersion sigversion) const override;
+};
+
 /** A signature creator for transactions. */
 class MutableTransactionSignatureCreator : public BaseSignatureCreator {
     const CMutableTransaction* txTo;
