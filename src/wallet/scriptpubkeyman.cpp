@@ -1486,11 +1486,6 @@ bool DescriptorScriptPubKeyMan::CanGetAddresses(bool internal)
     return false;
 }
 
-bool DescriptorScriptPubKeyMan::Upgrade(int prev_version, std::string& error)
-{
-    return false;
-}
-
 bool DescriptorScriptPubKeyMan::HavePrivateKeys() const
 {
     return false;
