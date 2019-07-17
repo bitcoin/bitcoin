@@ -19,7 +19,8 @@ static const struct {
 } network_styles[] = {
     {"main", QAPP_APP_NAME_DEFAULT, 0, 0},
     {"test", QAPP_APP_NAME_TESTNET, 70, 30},
-    {"regtest", QAPP_APP_NAME_REGTEST, 160, 30}
+    {"regtest", QAPP_APP_NAME_REGTEST, 160, 30},
+    {"signet", QAPP_APP_NAME_SIGNET, 35, 15},
 };
 static const unsigned network_styles_count = sizeof(network_styles)/sizeof(*network_styles);
 
