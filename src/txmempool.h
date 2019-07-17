@@ -7,6 +7,7 @@
 #define BITCOIN_TXMEMPOOL_H
 
 #include <atomic>
+#include <chrono>
 #include <map>
 #include <memory>
 #include <set>
@@ -32,6 +33,8 @@
 class CBlockIndex;
 extern CCriticalSection cs_main;
 
+/** Default for -mempooltxtimeout */
+constexpr std::chrono::hours DEFAULT_TX_TIMEOUT{336};
 /** Fake height value used in Coin to signify they are only in the memory pool (since 0.8) */
 static const uint32_t MEMPOOL_HEIGHT = 0x7FFFFFFF;
 
@@ -549,9 +552,8 @@ private:
 public:
     indirectmap<COutPoint, const CTransaction*> mapNextTx GUARDED_BY(cs);
     std::map<uint256, CAmount> mapDeltas;
+    std::chrono::hours m_tx_timeout{DEFAULT_TX_TIMEOUT}; //!< After what time txs are considered replaceable
 
-    /** Create a new CTxMemPool.
-     */
     explicit CTxMemPool(CBlockPolicyEstimator* estimator = nullptr);
 
     /**

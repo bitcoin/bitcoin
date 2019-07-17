@@ -495,6 +495,9 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                     }
                 }
                 if (fReplacementOptOut) {
+                    fReplacementOptOut = std::chrono::seconds{(*pool.GetIter(ptxConflicting->GetHash()))->GetTime()} + pool.m_tx_timeout > std::chrono::seconds{nAcceptTime};
+                }
+                if (fReplacementOptOut) {
                     return state.Invalid(ValidationInvalidReason::TX_MEMPOOL_POLICY, false, REJECT_DUPLICATE, "txn-mempool-conflict");
                 }
 
