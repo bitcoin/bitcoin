@@ -3371,22 +3371,9 @@ bool IsWitnessEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& pa
     return (height >= params.SegwitHeight);
 }
 
-int GetWitnessCommitmentIndex(const CBlock& block)
-{
-    int commitpos = -1;
-    if (!block.vtx.empty()) {
-        for (size_t o = 0; o < block.vtx[0]->vout.size(); o++) {
-            if (block.vtx[0]->vout[o].scriptPubKey.size() >= 38 && block.vtx[0]->vout[o].scriptPubKey[0] == OP_RETURN && block.vtx[0]->vout[o].scriptPubKey[1] == 0x24 && block.vtx[0]->vout[o].scriptPubKey[2] == 0xaa && block.vtx[0]->vout[o].scriptPubKey[3] == 0x21 && block.vtx[0]->vout[o].scriptPubKey[4] == 0xa9 && block.vtx[0]->vout[o].scriptPubKey[5] == 0xed) {
-                commitpos = o;
-            }
-        }
-    }
-    return commitpos;
-}
-
 void UpdateUncommittedBlockStructures(CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams)
 {
-    int commitpos = GetWitnessCommitmentIndex(block);
+    int commitpos = block.GetWitnessCommitmentIndex();
     static const std::vector<unsigned char> nonce(32, 0x00);
     if (commitpos != -1 && IsWitnessEnabled(pindexPrev, consensusParams) && !block.vtx[0]->HasWitness()) {
         CMutableTransaction tx(*block.vtx[0]);
@@ -3399,7 +3386,7 @@ void UpdateUncommittedBlockStructures(CBlock& block, const CBlockIndex* pindexPr
 std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams)
 {
     std::vector<unsigned char> commitment;
-    int commitpos = GetWitnessCommitmentIndex(block);
+    int commitpos = block.GetWitnessCommitmentIndex();
     std::vector<unsigned char> ret(32, 0x00);
     if (consensusParams.SegwitHeight != std::numeric_limits<int>::max()) {
         if (commitpos == -1) {
@@ -3539,7 +3526,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
     //   multiple, the last one is used.
     bool fHaveWitness = false;
     if (nHeight >= consensusParams.SegwitHeight) {
-        int commitpos = GetWitnessCommitmentIndex(block);
+        int commitpos = block.GetWitnessCommitmentIndex();
         if (commitpos != -1) {
             bool malleated = false;
             uint256 hashWitness = BlockWitnessMerkleRoot(block, &malleated);

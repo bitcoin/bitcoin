@@ -58,6 +58,6 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         (void)BlockWitnessMerkleRoot(block);
     }
     (void)GetBlockWeight(block);
-    (void)GetWitnessCommitmentIndex(block);
+    (void)block.GetWitnessCommitmentIndex();
     (void)RecursiveDynamicUsage(block);
 }

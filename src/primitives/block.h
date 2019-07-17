@@ -116,6 +116,50 @@ public:
         return block;
     }
 
+    /**
+     * Get the vout index of the segwit commitment in the coinbase transaction of this block.
+     *
+     * Returns -1 if no witness commitment was found.
+     */
+    inline int GetWitnessCommitmentIndex() const
+    {
+        return vtx.empty() ? -1 : GetWitnessCommitmentIndex(*vtx.at(0));
+    }
+
+    /**
+     * Get the vout index of the segwit commitment in the given coinbase transaction.
+     *
+     * Returns -1 if no witness commitment was found.
+     */
+    template<typename T> static inline int GetWitnessCommitmentIndex(const T& coinbase) {
+        for (int64_t o = coinbase.vout.size() - 1; o > -1; --o) {
+            auto vospk = coinbase.vout[o].scriptPubKey;
+            if (vospk.size() >= 38 && vospk[0] == OP_RETURN && vospk[1] == 0x24 && vospk[2] == 0xaa && vospk[3] == 0x21 && vospk[4] == 0xa9 && vospk[5] == 0xed) {
+                return o;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Attempt to get the data for the section with the given header in the witness commitment of this block.
+     *
+     * Returns false if header was not found. The data (excluding the 4 byte header) is written into result if found.
+     */
+    bool GetWitnessCommitmentSection(const uint8_t header[4], std::vector<uint8_t>& result) const;
+
+    /**
+     * Attempt to add or update the data for the section with the given header in the witness commitment of this block.
+     *
+     * This operation may fail and return false, if no witness commitment exists upon call time. Returns true on success.
+     */
+    bool SetWitnessCommitmentSection(const uint8_t header[4], const std::vector<uint8_t>& data);
+
+    /**
+     * The tx based equivalent of the above.
+     */
+    static bool SetWitnessCommitmentSection(CMutableTransaction& tx, const uint8_t header[4], const std::vector<uint8_t>& data);
+
     std::string ToString() const;
 };
 
