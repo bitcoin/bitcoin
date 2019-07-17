@@ -112,4 +112,4 @@ bool CLLMQUtils::IsQuorumActive(Consensus::LLMQType llmqType, const uint256& quo
 }
 
 
-}
+} // namespace llmq

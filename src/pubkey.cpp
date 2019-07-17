@@ -11,7 +11,7 @@ namespace
 {
 /* Global secp256k1_context object used for verification. */
 secp256k1_context* secp256k1_context_verify = NULL;
-}
+} // namespace
 
 /** This function is taken from the libsecp256k1 distribution and implements
  *  DER parsing for ECDSA signatures, while supporting an arbitrary subset of

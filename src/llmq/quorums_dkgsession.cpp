@@ -1285,4 +1285,4 @@ void CDKGSession::RelayInvToParticipants(const CInv& inv) const
     });
 }
 
-}
+} // namespace llmq

@@ -66,6 +66,6 @@ private:
 
 extern CQuorumBlockProcessor* quorumBlockProcessor;
 
-}
+} // namespace llmq
 
 #endif//DASH_QUORUMS_BLOCKPROCESSOR_H

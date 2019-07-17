@@ -46,7 +46,7 @@ class Class
         return true;
     }
 }
-}
+} // namespace foo
 ```
 
 Doxygen comments
@@ -267,7 +267,7 @@ General C++
 
 - Assertions should not have side-effects
 
-  - *Rationale*: Even though the source code is set to to refuse to compile
+  - *Rationale*: Even though the source code is set to refuse to compile
     with assertions disabled, having side-effects in assertions is unexpected and
     makes the code harder to understand
 
@@ -416,6 +416,21 @@ Source code organization
   fully specified types such as `std::string`.
 
   - *Rationale*: Avoids symbol conflicts
+
+- Terminate namespaces with a comment (`// namespace mynamespace`). The comment
+  should be placed on the same line as the brace closing the namespace, e.g.
+
+```c++
+namespace mynamespace {
+    ...
+} // namespace mynamespace
+
+namespace {
+    ...
+} // namespace
+```
+
+  - *Rationale*: Avoids confusion about the namespace context
 
 GUI
 -----

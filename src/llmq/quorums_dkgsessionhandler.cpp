@@ -560,4 +560,4 @@ void CDKGSessionHandler::PhaseHandlerThread()
     }
 }
 
-}
+} // namespace llmq

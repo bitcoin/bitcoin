@@ -342,6 +342,6 @@ public:
 
 void SetSimulatedDKGErrorRate(const std::string& type, double rate);
 
-}
+} // namespace llmq
 
 #endif //DASH_QUORUMS_DKGSESSION_H

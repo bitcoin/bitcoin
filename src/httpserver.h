@@ -86,7 +86,7 @@ public:
 
     /**
      * Get the request header specified by hdr, or an empty string.
-     * Return an pair (isPresent,string).
+     * Return a pair (isPresent,string).
      */
     std::pair<bool, std::string> GetHeader(const std::string& hdr);
 
@@ -125,7 +125,7 @@ public:
     virtual ~HTTPClosure() {}
 };
 
-/** Event class. This can be used either as an cross-thread trigger or as a timer.
+/** Event class. This can be used either as a cross-thread trigger or as a timer.
  */
 class HTTPEvent
 {

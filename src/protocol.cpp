@@ -72,7 +72,7 @@ const char *QSIGREC="qsigrec";
 const char *CLSIG="clsig";
 const char *ISLOCK="islock";
 const char *MNAUTH="mnauth";
-};
+}; // namespace NetMsgType
 
 /** All known message types. Keep this in the same order as the list of
  * messages above and in protocol.h.

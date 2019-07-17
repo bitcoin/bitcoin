@@ -27,7 +27,7 @@ class uint256;
 namespace llmq {
     class CChainLockSig;
     class CInstantSendLock;
-}
+} // namespace llmq
 
 // These functions dispatch to one or all registered wallets
 

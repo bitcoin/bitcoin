@@ -66,7 +66,7 @@ public:
  * signatureCache could be made local to VerifySignature.
 */
 static CSignatureCache signatureCache;
-}
+} // namespace
 
 // To be called once in AppInitMain/BasicTestingSetup to initialize the
 // signatureCache.

@@ -566,4 +566,4 @@ bool CQuorumBlockProcessor::GetMinableCommitmentTx(Consensus::LLMQType llmqType,
     return true;
 }
 
-}
+} // namespace llmq

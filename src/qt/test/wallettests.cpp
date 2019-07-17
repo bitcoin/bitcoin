@@ -65,7 +65,6 @@ QModelIndex FindTx(const QAbstractItemModel& model, const uint256& txid)
     }
     return {};
 }
-}
 
 //! Simple qt wallet tests.
 //
@@ -80,7 +79,7 @@ QModelIndex FindTx(const QAbstractItemModel& model, const uint256& txid)
 //     src/qt/test/test_bitcoin-qt -platform xcb      # Linux
 //     src/qt/test/test_bitcoin-qt -platform windows  # Windows
 //     src/qt/test/test_bitcoin-qt -platform cocoa    # macOS
-void WalletTests::walletTests()
+void TestSendCoins()
 {
     // Set up wallet and chain with 101 blocks (1 mature block for spending).
     TestChain100Setup test;
@@ -116,4 +115,11 @@ void WalletTests::walletTests()
 
     bitdb.Flush(true);
     bitdb.Reset();
+}
+
+}
+
+void WalletTests::walletTests()
+{
+    TestSendCoins();
 }

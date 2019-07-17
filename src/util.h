@@ -6,7 +6,7 @@
 
 /**
  * Server/client environment: argument handling, config file parsing,
- * logging, thread wrappers
+ * logging, thread wrappers, startup time
  */
 #ifndef BITCOIN_UTIL_H
 #define BITCOIN_UTIL_H
@@ -48,6 +48,9 @@
 extern bool fMasternodeMode;
 extern bool fLiteMode;
 extern int nWalletBackups;
+
+// Application startup time (used for uptime calculation)
+int64_t GetStartupTime();
 
 static const bool DEFAULT_LOGTIMEMICROS  = false;
 static const bool DEFAULT_LOGIPS         = false;
@@ -175,6 +178,17 @@ std::string SafeStringFormat(const std::string& fmt, const Args&... args)
 /** Get format string from VA_ARGS for error reporting */
 template<typename... Args> std::string FormatStringFromLogArgs(const char *fmt, const Args&... args) { return fmt; }
 
+static inline void MarkUsed() {}
+template<typename T, typename... Args> static inline void MarkUsed(const T& t, const Args&... args)
+{
+    (void)t;
+    MarkUsed(args...);
+}
+
+#ifdef USE_COVERAGE
+#define LogPrintf(...) do { MarkUsed(__VA_ARGS__); } while(0)
+#define LogPrint(category, ...) do { MarkUsed(__VA_ARGS__); } while(0)
+#else
 #define LogPrintf(...) do { \
     std::string _log_msg_; /* Unlikely name to avoid shadowing variables */ \
     try { \
@@ -191,6 +205,7 @@ template<typename... Args> std::string FormatStringFromLogArgs(const char *fmt, 
         LogPrintf(__VA_ARGS__); \
     } \
 } while(0)
+#endif
 
 template<typename... Args>
 bool error(const char* fmt, const Args&... args)

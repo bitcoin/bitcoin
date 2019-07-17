@@ -25,7 +25,7 @@ class CValidationState;
 namespace llmq
 {
     class CFinalCommitment;
-}
+} // namespace llmq
 
 class CDeterministicMNState
 {

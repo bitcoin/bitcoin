@@ -212,4 +212,4 @@ void CDKGDebugManager::UpdateLocalMemberStatus(Consensus::LLMQType llmqType, siz
     }
 }
 
-}
+} // namespace llmq
