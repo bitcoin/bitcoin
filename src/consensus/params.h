@@ -80,6 +80,12 @@ struct Params {
     int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
     uint256 nMinimumChainWork;
     uint256 defaultAssumeValid;
+
+    /**
+     * If true, witness commitments contain a payload equal to a Bitcoin Script solution
+     * to a signet challenge as defined in the chain params.
+     */
+    bool signet_blocks{false};
 };
 } // namespace Consensus
 
