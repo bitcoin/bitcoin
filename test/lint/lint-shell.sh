@@ -19,6 +19,7 @@ fi
 # Disabled warnings:
 disabled=(
     SC2046 # Quote this to prevent word splitting.
+    SC2016 # Expressions don't expand in single quotes
     SC2086 # Double quote to prevent globbing and word splitting.
     SC2162 # read without -r will mangle backslashes.
 )

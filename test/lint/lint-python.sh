@@ -30,7 +30,7 @@ enabled=(
     E304 # blank lines found after function decorator
     E306 # expected 1 blank line before a nested definition
     E401 # multiple imports on one line
-    E402 # module level import not at top of file
+    # E402 # module level import not at top of file (interferes with contrib/signet/addtxtoblock.py)
     E502 # the backslash is redundant between brackets
     E701 # multiple statements on one line (colon)
     E702 # multiple statements on one line (semicolon)
