@@ -3,7 +3,7 @@ packages:=boost openssl libevent
 qt_native_packages = native_protobuf
 qt_packages = qrencode protobuf zlib
 
-qt_linux_packages:=qt expat libxcb xcb_proto libXau xproto freetype fontconfig libX11 xextproto libXext xtrans
+qt_linux_packages:=qt expat libxcb xcb_proto libXau xproto freetype fontconfig libX11 libXext
 
 rapidcheck_packages = rapidcheck
 
