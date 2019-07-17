@@ -4,7 +4,9 @@
 **Install Xcode command line tool (for Mac)**
 
 ```bash
+
 $ xcode-select -install
+
 ```
 
 **Install Packages (for Mac)**
