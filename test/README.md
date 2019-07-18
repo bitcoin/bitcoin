@@ -54,6 +54,29 @@ You can run any combination (incl. duplicates) of tests by calling:
 test/functional/test_runner.py <testname1> <testname2> <testname3> ...
 ```
 
+Wildcard test names can be passed, if the paths are coherent and the test runner
+is called from a `bash` shell or similar that does the globbing. For example,
+to run all the wallet tests:
+
+```
+test/functional/test_runner.py test/functional/wallet*
+functional/test_runner.py functional/wallet* (called from the test/ directory)
+test_runner.py wallet* (called from the test/functional/ directory)
+```
+
+but not
+
+```
+test/functional/test_runner.py wallet*
+```
+
+Combinations of wildcards can be passed:
+
+```
+test/functional/test_runner.py ./test/functional/tool* test/functional/mempool*
+test_runner.py tool* mempool*
+```
+
 Run the regression test suite with:
 
 ```
