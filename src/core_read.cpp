@@ -158,10 +158,27 @@ bool DecodeHexBlockHeader(CBlockHeader& header, const std::string& hex_header)
     return true;
 }
 
+inline bool ReadFromDisk(const std::string& path, std::string& output)
+{
+    FILE* fp = fopen(path.c_str(), "rb");
+    if (!fp) return false;
+    char buf[1025];
+    size_t r;
+    buf[1024] = 0;
+    output = "";
+    while (0 < (r = fread(buf, 1, 1024, fp))) { buf[r] = 0; output += buf; }
+    while (output.size() > 0 && output[output.size() - 1] == '\n') output = output.substr(0, output.size() - 1);
+    fclose(fp);
+    return true;
+}
+
 bool DecodeHexBlk(CBlock& block, const std::string& strHexBlk)
 {
-    if (!IsHex(strHexBlk))
+    if (!IsHex(strHexBlk)) {
+        std::string actual;
+        if (ReadFromDisk(strHexBlk, actual)) return DecodeHexBlk(block, actual);
         return false;
+    }
 
     std::vector<unsigned char> blockData(ParseHex(strHexBlk));
     CDataStream ssBlock(blockData, SER_NETWORK, PROTOCOL_VERSION);
