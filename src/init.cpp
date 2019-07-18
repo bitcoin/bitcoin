@@ -1015,7 +1015,7 @@ bool AppInitParameterInteraction()
 
     // Display a warning if the number of total maximum connections was lowered
     if (nMaxConnections < nUserMaxConnections)
-        InitWarning(strprintf(_("Reducing -maxconnections from %d to %d, because of system limitations."), nUserMaxConnections, nMaxConnections));
+        InitWarning(strprintf(_("Reducing -maxconnections from %d to %d, because of file descriptor limitations."), nUserMaxConnections, nMaxConnections));
 
     // ********************************************************* Step 3: parameter-to-internal-flags
     if (gArgs.IsArgSet("-debug")) {
