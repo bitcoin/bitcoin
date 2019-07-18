@@ -23,6 +23,7 @@
 #include <script/script.h>
 #include <script/signingprovider.h>
 #include <shutdown.h>
+#include <signet.h>
 #include <txmempool.h>
 #include <univalue.h>
 #include <util/fees.h>
@@ -219,6 +220,10 @@ static UniValue generatetoaddress(const JSONRPCRequest& request)
     CTxDestination destination = DecodeDestination(request.params[1].get_str());
     if (!IsValidDestination(destination)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Error: Invalid address");
+    }
+
+    if (Params().GetConsensus().signet_blocks) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Generating signet blocks require that you use getnewblockhex");
     }
 
     const CTxMemPool& mempool = EnsureMemPool();
@@ -1021,6 +1026,54 @@ static UniValue estimaterawfee(const JSONRPCRequest& request)
     return result;
 }
 
+//
+// signet
+//
+
+UniValue getnewblockhex(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"getnewblockhex",
+        "\nGets hex representation of a proposed, unmined new signet block.\n",
+        {
+            {"coinbase_destination", RPCArg::Type::STR, RPCArg::Optional::NO, "Pay-out destination, as an address or a custom coinbase script"},
+        },
+        RPCResult{
+            RPCResult::Type::STR_HEX, "blockhex", "The block hex"
+        },
+        RPCExamples{
+            HelpExampleCli("getnewblockhex", "bc1qkallealmkdwwyuc2tmf5c6hzmlaujq6jl38hpe")
+        }
+    }.Check(request);
+
+    if (!Params().GetConsensus().signet_blocks) {
+        throw std::runtime_error("getnewblockhex can only be used with signet networks");
+    }
+
+    CScript coinbase_script;
+    auto str = request.params[0].get_str();
+    if (IsValidDestinationString(str)) {
+        auto dest = DecodeDestination(str);
+        coinbase_script = GetScriptForDestination(dest);
+    } else {
+        util::insert(coinbase_script, ParseHexV(str, "coinbase_script"));
+    }
+
+    const CTxMemPool& mempool = EnsureMemPool();
+
+    auto block = BlockAssembler(mempool, Params()).CreateNewBlock(coinbase_script)->block;
+    unsigned int extra_nonce = 0;
+    // we bump stuff to bop stuff, or merkle root will be 0, etc etc etc etc
+    {
+        LOCK(cs_main);
+        IncrementExtraNonce(&block, ::ChainActive().Tip(), extra_nonce);
+    }
+
+    CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION);
+    ssBlock << block;
+
+    return HexStr(ssBlock.begin(), ssBlock.end());
+}
+
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
@@ -1039,6 +1092,9 @@ static const CRPCCommand commands[] =
     { "util",               "estimatesmartfee",       &estimatesmartfee,       {"conf_target", "estimate_mode"} },
 
     { "hidden",             "estimaterawfee",         &estimaterawfee,         {"conf_target", "threshold"} },
+
+    /** Signet mining */
+    { "signet",             "getnewblockhex",         &getnewblockhex,         {"coinbase_destination"} },
 };
 // clang-format on
 
