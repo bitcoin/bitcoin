@@ -81,7 +81,6 @@ static const int ONE_MONTH_IN_BLOCKS = 43800;
 enum {
 	ZDAG_NOT_FOUND = -1,
 	ZDAG_STATUS_OK = 0,
-	ZDAG_WARNING_NO_OUTPUT_LINKING,
 	ZDAG_WARNING_NO_TIME_SEPERATION,
 	ZDAG_WARNING_MIN_LATENCY,
 	ZDAG_WARNING_POTENTIAL_BALANCE_OVERFLOW,
@@ -94,12 +93,14 @@ public:
 	RangeAmountTuples listSendingAllocationAmounts;
 	CAmount nBalance;
 	COutPoint lockedOutpoint;
+	uint32_t nonce;
 	template <typename Stream, typename Operation>
 	inline void SerializationOp(Stream& s, Operation ser_action) {
 		READWRITE(assetAllocationTuple);
 		READWRITE(listSendingAllocationAmounts);
 		READWRITE(nBalance);
 		READWRITE(lockedOutpoint);
+		READWRITE(nonce);
 	}
 	CAssetAllocation() {
 		SetNull();
@@ -127,12 +128,13 @@ public:
 	inline friend bool operator!=(const CAssetAllocation &a, const CAssetAllocation &b) {
 		return !(a == b);
 	}
-	inline void SetNull() { ClearAssetAllocation(); nBalance = 0;}
+	inline void SetNull() { ClearAssetAllocation(); nBalance = nonce =0;}
 	bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData);
 	void Serialize(std::vector<unsigned char>& vchData);
 };
 typedef std::unordered_map<std::string, CAssetAllocation > AssetAllocationMap;
+typedef std::unordered_map<std::string, COutPoint > AssetTXPrevOutPointMap;
 class CAssetAllocationDB : public CDBWrapper {
 public:
 	CAssetAllocationDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetallocations", nCacheSize, fMemory, fWipe) {}
@@ -171,6 +173,7 @@ public:
     }   
     bool ScanAssetAllocationMempoolBalances(const uint32_t count, const uint32_t from, const UniValue& oOptions, UniValue& oRes);
 };
+static COutPoint emptyOutPoint;
 bool GetAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple,CAssetAllocation& txPos);
 bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, const CAsset& asset, UniValue& oName);
 bool AssetAllocationTxToJSON(const CTransaction &tx, const CAsset& dbAsset, const int& nHeight, const uint256& blockhash, UniValue &entry, CAssetAllocation& assetallocation);

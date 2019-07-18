@@ -20,6 +20,7 @@ extern UniValue DescribeAddress(const CTxDestination& dest);
 extern std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags = 0);
 extern bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no_witness = false, bool try_witness = true);
 extern std::unordered_set<std::string> assetAllocationConflicts;
+extern CCriticalSection cs_assetallocationconflicts;
 // SYSCOIN service rpc functions
 extern UniValue sendrawtransaction(const JSONRPCRequest& request);
 using namespace std;
@@ -524,9 +525,13 @@ UniValue assetallocationsenderstatus(const JSONRPCRequest& request) {
     {
         LOCK2(cs_main, mempool.cs);
         ResetAssetAllocation(assetAllocationTupleSender.ToString(), txid, false, true);
-        
+        std::unordered_set<std::string>::iterator it;
+        {
+            LOCK(cs_assetallocationconflicts);
+            it = assetAllocationConflicts.find(assetAllocationTupleSender.ToString());
+        }
     	int nStatus = ZDAG_STATUS_OK;
-    	if (assetAllocationConflicts.find(assetAllocationTupleSender.ToString()) != assetAllocationConflicts.end())
+    	if (it != assetAllocationConflicts.end())
     		nStatus = ZDAG_MAJOR_CONFLICT;
     	else
     		nStatus = DetectPotentialAssetAllocationSenderConflicts(assetAllocationTupleSender, txid, nMinLatencyMilliSeconds);

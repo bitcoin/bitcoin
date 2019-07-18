@@ -20,7 +20,7 @@ extern CAmount AmountFromValue(const UniValue& value);
 extern UniValue convertaddress(const JSONRPCRequest& request);
 extern AssetBalanceMap mempoolMapAssetBalances;
 extern ArrivalTimesMapImpl arrivalTimesMap;
-extern CCriticalSection cs_assetallocation;
+extern CCriticalSection cs_assetallocationmempoolbalance;
 extern CCriticalSection cs_assetallocationarrival;
 std::unique_ptr<CAssetDB> passetdb;
 std::unique_ptr<CAssetSupplyStatsDB> passetsupplystatsdb;
@@ -270,7 +270,7 @@ bool FlushSyscoinDBs() {
         {
             ResyncAssetAllocationStates();
             {
-                LOCK(cs_assetallocation);
+                LOCK(cs_assetallocationmempoolbalance);
                 LogPrintf("Flushing Asset Allocation Mempool Balances...size %d\n", mempoolMapAssetBalances.size());
                 passetallocationmempooldb->WriteAssetAllocationMempoolBalances(mempoolMapAssetBalances);
                 mempoolMapAssetBalances.clear();
@@ -333,8 +333,9 @@ bool FindAssetOwnerInTx(const CCoinsViewCache &inputs, const CTransaction& tx, c
 	return false;
 }
 bool FindAssetOwnerInTx(const CCoinsViewCache &inputs, const CTransaction& tx, const CWitnessAddress &witnessAddressToMatch, const COutPoint& lockedOutpoint) {
-	if (lockedOutpoint.IsNull())
+	if (lockedOutpoint.IsNull()){
 		return FindAssetOwnerInTx(inputs, tx, witnessAddressToMatch);
+    }
 	CTxDestination dest;
     int witnessversion;
     std::vector<unsigned char> witnessprogram;

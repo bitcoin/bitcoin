@@ -26,7 +26,9 @@ extern CAmount GetMinimumFee(const CWallet& wallet, unsigned int nTxBytes, const
 extern bool IsDust(const CTxOut& txout, const CFeeRate& dustRelayFee);
 extern CAmount AssetAmountFromValue(UniValue& value, int precision);
 extern UniValue ValueFromAssetAmount(const CAmount& amount, int precision);
-std::map<std::string, COutPoint> mapSenderTXIDs;
+extern AssetTXPrevOutPointMap mempoolMapAssetTXPrevOutPoints;
+extern CCriticalSection cs_assetallocationprevout;
+std::map<std::string, COutPoint> mapSenderLockedOutPoints;
 using namespace std;
 std::vector<CTxIn> savedtxins;
 UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request);
@@ -152,9 +154,15 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
     CCoinsView viewDummy;
     CCoinsViewCache view(&viewDummy);
     COutPoint outPointLastSender;
-    auto itSender = mapSenderTXIDs.find(strAddress);
-    if(itSender != mapSenderTXIDs.end()){
+    auto itSender = mapSenderLockedOutPoints.find(strAddress);
+    if(itSender != mapSenderLockedOutPoints.end()){
         outPointLastSender = itSender->second;
+    }else {
+         LOCK(cs_assetallocationprevout);
+         auto itSenderPrevOut = mempoolMapAssetTXPrevOutPoints.find(strAddress);
+         if(itSenderPrevOut != mempoolMapAssetTXPrevOutPoints.end()){
+            outPointLastSender = itSenderPrevOut->second;
+        }
     }
     {
         LOCK(cs_main);
@@ -166,7 +174,8 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
         for (const CTxIn& txin : txIn.vin) {
             view.AccessCoin(txin.prevout); // Load entries from viewChain into view; can fail.
         }
-        view.AccessCoin(outPointLastSender); // try to get last sender txid
+        if(!outPointLastSender.IsNull())
+            view.AccessCoin(outPointLastSender); // try to get last sender txid
         view.SetBackend(viewDummy); // switch back to avoid locking mempool for too long
     }
     FeeCalculation fee_calc;
@@ -348,7 +357,6 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     theAssetAllocation.assetAllocationTuple.nAsset = std::move(nAsset);
     theAssetAllocation.assetAllocationTuple.witnessAddress = CWitnessAddress(0, vchFromString("burn"));   
     theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(witnessAddress.nVersion, witnessAddress.vchWitnessProgram), nAmount));
-    
     vector<unsigned char> data;
     theAssetAllocation.Serialize(data); 
 
@@ -770,7 +778,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1500 - " + _("Locked outpoint not mature"));
     if(!lockedOutpoint.IsNull()){
         // this will let syscointxfund try to select this outpoint as the input
-        mapSenderTXIDs[strAddress] = lockedOutpoint;
+        mapSenderLockedOutPoints[strAddress] = lockedOutpoint;
     }
 	theAssetAllocation.SetNull();
     theAssetAllocation.assetAllocationTuple.nAsset = std::move(assetAllocationTuple.nAsset);
@@ -869,7 +877,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
             throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1500 - " + _("Locked outpoint not mature"));
         if(!lockedOutpoint.IsNull()){
             // this will let syscointxfund try to select this outpoint as the input
-            mapSenderTXIDs[strAddress] = lockedOutpoint;
+            mapSenderLockedOutPoints[strAddress] = lockedOutpoint;
         }
         theAssetAllocation.SetNull();
         theAssetAllocation.assetAllocationTuple.nAsset = std::move(assetAllocationTuple.nAsset);
@@ -1117,7 +1125,7 @@ UniValue assetallocationlock(const JSONRPCRequest& request) {
     if(strAddress != strAddressDest)    
         throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1500 - " + _("Outpoint address must match allocation owner address"));
     // this will let syscointxfund try to select this outpoint as the input
-    mapSenderTXIDs[strAddress] = theAssetAllocation.lockedOutpoint;
+    mapSenderLockedOutPoints[strAddress] = theAssetAllocation.lockedOutpoint;
     vector<unsigned char> data;
     theAssetAllocation.Serialize(data);    
 	vector<CRecipient> vecSend;
