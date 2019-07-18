@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <iostream>
+#include <vector>
 
 #include <bench/bench.h>
 #include <crypto/poly1305.h>
