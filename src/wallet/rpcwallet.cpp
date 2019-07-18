@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <amount.h>
+#include <consensus/merkle.h> // for BlockMerkleRoot in signblock (signet)
 #include <core_io.h>
 #include <interfaces/chain.h>
 #include <key_io.h>
@@ -17,6 +18,7 @@
 #include <rpc/util.h>
 #include <script/descriptor.h>
 #include <script/sign.h>
+#include <signet.h>
 #include <util/bip32.h>
 #include <util/fees.h>
 #include <util/message.h> // For MessageSign()
@@ -4280,6 +4282,83 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
     return result;
 }
 
+void SignBlockWithWallet(CBlock& block, CWallet* const pwallet)
+{
+    SignatureData solution_in;
+
+    std::vector<uint8_t> signet_commitment;
+    if (block.GetWitnessCommitmentSection(SIGNET_HEADER, signet_commitment) && signet_commitment.size() > 8) {
+        solution_in = SignatureData(CScript(signet_commitment.begin() + 8, signet_commitment.end()));
+    }
+
+    auto signet_hash = GetSignetHash(block);
+
+    CScript blockscript(g_signet_blockscript.begin(), g_signet_blockscript.end());
+
+    SignatureData solution(solution_in);
+    auto provider = pwallet->GetSigningProvider(blockscript);
+    if (!provider) {
+        throw JSONRPCError(RPC_VERIFY_ERROR, "signing provider unavailable -- do you have the private key(s)?");
+    }
+    bool res = ProduceSignature(*provider, SimpleSignatureCreator(signet_hash), blockscript, solution);
+    if (!res) {
+        throw JSONRPCError(RPC_VERIFY_ERROR, "could not produce a signature -- do you have the private key(s)?");
+    }
+    signet_commitment.clear();
+    signet_commitment.insert(signet_commitment.begin(), solution.scriptSig.begin(), solution.scriptSig.end());
+    block.SetWitnessCommitmentSection(SIGNET_HEADER, signet_commitment);
+}
+
+UniValue signblock(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    RPCHelpMan{"signblock",
+        "\nSigns a block proposal, checking that it would be accepted first.\n"
+        "(Note: only useable with signet networks.)\n",
+        {
+            {"blockhex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hex-encoded block from getnewblockhex, or a filename"},
+        },
+        RPCResult{
+            RPCResult::Type::STR_HEX, "sig", "The signature"
+        },
+        RPCExamples{
+            HelpExampleCli("signblock", "0000002018c6f2f913f9902aeab...5ca501f77be96de63f609010000000000000000015100000000")
+        },
+    }.Check(request);
+
+    if (!Params().GetConsensus().signet_blocks) {
+        throw std::runtime_error("signblock can only be used with signet networks");
+    }
+
+    CBlock block;
+
+    if (!DecodeHexBlk(block, request.params[0].get_str())) {
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
+    }
+
+    auto locked_chain = pwallet->chain().lock();
+    LOCK(pwallet->cs_wallet);
+
+    uint256 hash = block.GetHash();
+    if (nullopt != locked_chain->getBlockHeight(hash)) {
+        throw JSONRPCError(RPC_VERIFY_ERROR, "already have block");
+    }
+
+    SignBlockWithWallet(block, pwallet);
+    block.hashMerkleRoot = BlockMerkleRoot(block);
+
+    CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION);
+    ssBlock << block;
+
+    return HexStr(ssBlock.begin(), ssBlock.end());
+}
+
 UniValue abortrescan(const JSONRPCRequest& request); // in rpcdump.cpp
 UniValue dumpprivkey(const JSONRPCRequest& request); // in rpcdump.cpp
 UniValue importprivkey(const JSONRPCRequest& request);
@@ -4351,6 +4430,9 @@ static const CRPCCommand commands[] =
     { "wallet",             "walletpassphrase",                 &walletpassphrase,              {"passphrase","timeout"} },
     { "wallet",             "walletpassphrasechange",           &walletpassphrasechange,        {"oldpassphrase","newpassphrase"} },
     { "wallet",             "walletprocesspsbt",                &walletprocesspsbt,             {"psbt","sign","sighashtype","bip32derivs"} },
+
+    /** Signet mining */
+    { "signet",             "signblock",                        &signblock,                     {"blockhex"} },
 };
 // clang-format on
 
