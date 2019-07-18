@@ -353,7 +353,8 @@ enum class MemPoolRemovalReason {
     CONFLICT,    //!< Removed for conflict with in-block transaction
     REPLACED,    //!< Removed for replacement
     // SYSCOIN
-    SYSCOIN,     //!< Removed for failure of asset consensus
+    SYSCOININPUT,     //!< Removed for failure of asset consensus
+    SYSCOINCONSENSUS,     //!< Removed for failure of asset consensus
 };
 
 class SaltedTxidHasher

@@ -31,6 +31,7 @@
 #include <masternodesync.h>
 #include <services/graph.h>
 #include <services/assetconsensus.h>
+extern std::vector<uint256> vecToRemoveFromMempool;
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {
     int64_t nOldTime = pblock->nTime;
@@ -205,32 +206,38 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     }
     view.SetBackend(viewDummy); // switch back to avoid locking mempool for too long
       
-    CValidationState stateInputs;
-    txsToRemove.clear();
-    bool bOverflowed = false;
+    CValidationState stateInputs, stateConflict;
+    txsToRemove = vecToRemoveFromMempool;
+    bool bSenderConflicted = false;
     AssetAllocationMap mapAssetAllocations;
+    AssetTXPrevOutPointMap mapAssetTXPrevOutPoints;
     AssetMap mapAssets;
     AssetSupplyStatsMap mapAssetSupplyStats;
     EthereumMintTxVec vecMintKeys;
     std::vector<COutPoint> vecLockedOutpoints;
+    bool bFoundError = false;
     for(const CTransactionRef& tx: pblock->vtx){
-        bool bOverflow = false;
-        if(!CheckSyscoinInputs(false, *tx, stateInputs, view, false, bOverflow, nHeight, 0, pblock->GetHash(), false, true, mapAssetAllocations, mapAssets, mapAssetSupplyStats, vecMintKeys, vecLockedOutpoints))
+        bool bSenderConflict = false;
+        if(!CheckSyscoinInputs(false, *tx, stateInputs, view, false, bSenderConflict, nHeight, 0, pblock->GetHash(), false, true, mapAssetAllocations, mapAssetTXPrevOutPoints, mapAssets, mapAssetSupplyStats, vecMintKeys, vecLockedOutpoints)){
             txsToRemove.push_back(tx->GetHash());
-        if(bOverflow)
-            bOverflowed = true;
+            stateConflict = stateInputs;
+            bFoundError = true;
+        }
+        if(bSenderConflict){
+            bSenderConflicted = true; 
+        }
     }
-    if(bOverflowed)
+    if(bSenderConflicted)
         ResyncAssetAllocationStates();
 
-    if(!txsToRemove.empty()){
-        LogPrint(BCLog::SYS, "CreateNewBlock: CheckSyscoinInputs failed removed %d transactions and trying again...\n", txsToRemove.size());
+    if(bFoundError){
+        LogPrint(BCLog::SYS, "CreateNewBlock: CheckSyscoinInputs failed: %s. vecToRemoveFromMempool size %d. Removed %d transactions and trying again...\n", FormatStateMessage(stateConflict), txsToRemove.size(), vecToRemoveFromMempool.size());
         return CreateNewBlock(scriptPubKeyIn, txsToRemove);
     }
     LogPrintf("CreateNewBlock(): block weight: %u txs: %u fees: %ld sigops %d\n", GetBlockWeight(*pblock), nBlockTx, nFees, nBlockSigOpsCost);
 
     // Fill in header
-    pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
+    pblock->hashPrevBlock  = pindexPrev->GetBlockHash();    
     UpdateTime(pblock, chainparams.GetConsensus(), pindexPrev);
     pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock, chainparams.GetConsensus());
     pblock->nNonce         = 0;

@@ -19,12 +19,14 @@ extern UniValue ValueFromAmount(const CAmount& amount);
 extern UniValue DescribeAddress(const CTxDestination& dest);
 extern void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex);
 extern UniValue convertaddress(const JSONRPCRequest& request);
-CCriticalSection cs_assetallocation;
+extern AssetTXPrevOutPointMap mempoolMapAssetTXPrevOutPoints;
+CCriticalSection cs_assetallocationmempoolbalance;
 CCriticalSection cs_assetallocationarrival;
+CCriticalSection cs_assetallocationconflicts;
 using namespace std;
-AssetBalanceMap mempoolMapAssetBalances GUARDED_BY(cs_assetallocation);
+AssetBalanceMap mempoolMapAssetBalances GUARDED_BY(cs_assetallocationmempoolbalance);
 ArrivalTimesMapImpl arrivalTimesMap GUARDED_BY(cs_assetallocationarrival);
-std::unordered_set<std::string> assetAllocationConflicts;
+std::unordered_set<std::string> assetAllocationConflicts GUARDED_BY(cs_assetallocationconflicts);
 string CWitnessAddress::ToString() const {
     if (vchWitnessProgram.size() <= 4 && stringFromVch(vchWitnessProgram) == "burn")
         return "burn";
@@ -261,7 +263,7 @@ bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, const CAs
     CAmount nBalanceZDAG = assetallocation.nBalance;
     const string &allocationTupleStr = assetallocation.assetAllocationTuple.ToString();
     {
-        LOCK(cs_assetallocation);
+        LOCK(cs_assetallocationmempoolbalance);
         AssetBalanceMap::iterator mapIt =  mempoolMapAssetBalances.find(allocationTupleStr);
         if(mapIt != mempoolMapAssetBalances.end())
             nBalanceZDAG = mapIt->second;
@@ -547,7 +549,7 @@ bool CAssetAllocationMempoolDB::ScanAssetAllocationMempoolBalances(const uint32_
     }
     uint32_t index = 0;
     {
-        LOCK(cs_assetallocation);
+        LOCK(cs_assetallocationmempoolbalance);
         for (auto&indexObj : mempoolMapAssetBalances) {
             
             if (!vecSenders.empty() && std::find(vecSenders.begin(), vecSenders.end(), indexObj.first) == vecSenders.end())
@@ -749,7 +751,6 @@ int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& a
 	int minLatency = nMinLatencyMilliSeconds;
 	if (fUnitTest)
 		minLatency = 1000;
-    const CTransaction *prevTx = NULL;
     int64_t nPrevTime = 0;
 	for (auto& arrivalTime : arrivalTimesSet)
 	{
@@ -758,23 +759,7 @@ int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& a
 		if (!txRef)
 			continue;
 		const CTransaction &tx = *txRef;
-        // ensure output linking for chain of sender transactions
-        if(prevTx && !prevTx->IsNull()){
-            bool foundLink = false;
-            const uint256& txHashPrev = prevTx->GetHash();
-            for(const auto& vin: tx.vin){
-                for(unsigned i = 0; i< prevTx->vout.size();i++){
-                    if(vin.prevout == COutPoint(txHashPrev, i)){
-                        foundLink = true;
-                    }
-                }
-            }
-            if(!foundLink){
-                return ZDAG_WARNING_NO_OUTPUT_LINKING;
-            }
-        }
         
-        prevTx = &tx;
         // ensure that transactions are ordered by some time difference
         if(nPrevTime >= arrivalTime.second){
             return ZDAG_WARNING_NO_TIME_SEPERATION;

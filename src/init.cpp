@@ -94,7 +94,7 @@
 std::string exePath = "";
 extern AssetBalanceMap mempoolMapAssetBalances;
 extern ArrivalTimesMapImpl arrivalTimesMap; 
-extern CCriticalSection cs_assetallocation;
+extern CCriticalSection cs_assetallocationmempoolbalance;
 extern CCriticalSection cs_assetallocationarrival;
 static CDSNotificationInterface* pdsNotificationInterface = NULL;
 
@@ -1655,7 +1655,7 @@ bool AppInitMain(InitInterfaces& interfaces)
                 passetallocationdb.reset(new CAssetAllocationDB(nCoinDBCache*32, false, fReset || fReindexChainState));
                 passetallocationmempooldb.reset(new CAssetAllocationMempoolDB(0, false, fReset || fReindexChainState));
                 {
-                    LOCK(cs_assetallocation);
+                    LOCK(cs_assetallocationmempoolbalance);
                     passetallocationmempooldb->ReadAssetAllocationMempoolBalances(mempoolMapAssetBalances);
                 }
                 {

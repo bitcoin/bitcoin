@@ -66,6 +66,12 @@ double nTPSTestingSendRawEndTime = 0;
 int64_t nTPSTestingSendRawStartTime = 0;
 bool fLogThreadpool = false;
 tp::ThreadPool *threadpool = NULL;
+extern AssetTXPrevOutPointMap mempoolMapAssetTXPrevOutPoints;
+extern CCriticalSection cs_assetallocationprevout;
+extern std::unordered_set<std::string> assetAllocationConflicts;
+extern CCriticalSection cs_assetallocationconflicts;
+extern std::vector<uint256> vecToRemoveFromMempool;
+extern CCriticalSection cs_assetallocationarrival;
 std::vector<CInv> vInvToSend;
 // track worker thread metrics
 static int totalWorkerCount = 0;
@@ -530,6 +536,8 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
             return state.Invalid(ValidationInvalidReason::TX_CONFLICT, false, REJECT_DUPLICATE, "txn-already-in-mempool");
         }
     }
+    // SYSCOIN
+    bool bDuplicate = false;
     // Check for conflicts with in-memory transactions
     std::set<uint256> setConflicts;
     if (vecTPSRawTransactions.empty()) {
@@ -552,8 +560,8 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                     // unconfirmed ancestors anyway; doing otherwise is hopelessly
                     // insecure.
                     bool fReplacementOptOut = true;
-                    // SYSCOIN asset allocation transactions should use CPFP not RBF
-                    if (!IsAssetAllocationTx(tx.nVersion) && !IsAssetAllocationTx(ptxConflicting->nVersion))
+                    // SYSCOIN transactions should use CPFP not RBF
+                    if (!IsSyscoinTx(tx.nVersion) && !IsSyscoinTx(ptxConflicting->nVersion))
                     {
                         for (const CTxIn &_txin : ptxConflicting->vin)
                         {
@@ -565,9 +573,37 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                         }
                     }
                     if (fReplacementOptOut) {
+                        // SYSCOIN flag sender if input conflict in syscoin asset allocation tx
+                        if(!test_accept && IsAssetAllocationTx(tx.nVersion)){
+                            CAssetAllocation theAssetAllocation(tx);
+                            if(!theAssetAllocation.assetAllocationTuple.IsNull()){
+                                LOCK(cs_assetallocationconflicts);
+                                const std::string & senderTupleStr = theAssetAllocation.assetAllocationTuple.ToString();
+                                // only do this the first time, relay the first double spend and fall back to normal policy to not relay and potentially ban on other double spends
+                                if(assetAllocationConflicts.find(senderTupleStr) == assetAllocationConflicts.end())
+                                {
+                                    // add conflicting sender
+                                    assetAllocationConflicts.insert(senderTupleStr);
+                                    bDuplicate = true;
+                                    {
+                                        LOCK(cs_assetallocationprevout);
+                                        auto mapAssetTXPrevOutPointIT = mempoolMapAssetTXPrevOutPoints.find(senderTupleStr);
+                                        // make sure the input has been legitimatized (by checking to see if its different) because it will have set the output of the prev tx (the one that has the offending outpoint checked here) at the send of checkassetallocationinputs so this makes sure input signature is checked
+                                        // so we can't have case where double spends are relayed as multithreaded mode even if they aren't signed and we are in singlethreaded mode on this node (doesn't prolong or add to an existing spam attack)
+                                        // regardless if we are in single threaded mode, we should relay this transaction because it affects zdag protocol consensus 
+                                        if(mapAssetTXPrevOutPointIT == mempoolMapAssetTXPrevOutPoints.end() || mapAssetTXPrevOutPointIT->second != txin.prevout){
+                                            // ensure relay before remove from mempool
+                                            bMultiThreaded = true;
+                                        }
+                                    }
+                                    break;
+                                } 
+                            }   
+                        }
                         return state.Invalid(ValidationInvalidReason::TX_MEMPOOL_POLICY, false, REJECT_DUPLICATE, "txn-mempool-conflict");
                     }
-                    setConflicts.insert(ptxConflicting->GetHash());
+                    if(!bDuplicate)
+                        setConflicts.insert(ptxConflicting->GetHash());
                 }
             }
         }
@@ -826,8 +862,13 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
             control.Add(vChecks);   
             if (!control.Wait())
                 return false;
-            if (!CheckSyscoinInputs(tx, state, view, true, ::ChainActive().Height(), bSanityCheck)) {
-                return error("mandatory-syscoin-inputs-check-failed (%s)", state.GetRejectReason());
+            bool bSenderConflict = false;
+            if (!CheckSyscoinInputs(tx, state, view, true, ::ChainActive().Height(), bSanityCheck, bSenderConflict)) {
+                // mark to remove from mempool, because if we remove right away then the transaction data cannot be relayed most of the time
+                if(bSenderConflict)
+                    vecToRemoveFromMempool.push_back(hash);
+                else 
+                    return error("mandatory-syscoin-inputs-check-failed (%s)", state.GetRejectReason());
             }
         } 
         if (test_accept) {
@@ -852,7 +893,8 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         // - it's not being re-added during a reorg which bypasses typical mempool fee limits
         // - the node is not behind
         // - the transaction is not dependent on any other transactions in the mempool
-        bool validForFeeEstimation = !fReplacementTransaction && !bypass_limits && IsCurrentForFeeEstimation() && pool.HasNoInputsOf(tx);
+        // - the transaction is not a duplicate input from an asset allocation transaction
+        bool validForFeeEstimation = !bDuplicate && !fReplacementTransaction && !bypass_limits && IsCurrentForFeeEstimation() && pool.HasNoInputsOf(tx);
 
         // Store transaction in memory
         pool.addUnchecked(entry, setAncestors, validForFeeEstimation);
@@ -895,8 +937,9 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                             LOCK2(cs_main, mempool.cs);
                             for (const COutPoint& hashTx : coins_to_uncache)
                                 pcoinsTip->Uncache(hashTx);
+                                
                             pool.removeConflicts(txIn);
-                            pool.removeRecursive(txIn, MemPoolRemovalReason::SYSCOIN);
+                            pool.removeRecursive(txIn, MemPoolRemovalReason::SYSCOININPUT);
                             pool.ClearPrioritisation(hash);
                             // After we've (potentially) uncached entries, ensure our coins cache is still within its size limits   
                             CValidationState stateDummy;
@@ -936,17 +979,30 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                         thisSyscoinCheckCount += 1;
                     }
                     {
-                        if (!CheckSyscoinInputs(txIn, validationState, view, true, ::ChainActive().Height()))
+                        bool bSenderConflict = false;
+                        if (!CheckSyscoinInputs(txIn, validationState, view, true, ::ChainActive().Height(), false, bSenderConflict))
                         {
-                            nLastMultithreadMempoolFailure = GetTime();
+                            // if duplicate input or sender is in conflict we legitimately want to relay
+                            // but at the same time remove from mempool after next time nLastMultithreadCheckSyscoinInputsFailure is cleared and likely it got relayed to enough peers
+                            if(!bSenderConflict)
+                                nLastMultithreadMempoolFailure = GetTime();
+                            nLastMultithreadCheckSyscoinInputsFailure =  GetTime();
                             LogPrint(BCLog::MEMPOOL, "%s: %s\n", "CheckSyscoinInputs Error", hash.ToString());
                             {
                                 LOCK2(cs_main, mempool.cs);
                                 for (const COutPoint& hashTx : coins_to_uncache)
                                     pcoinsTip->Uncache(hashTx);
-                                pool.removeConflicts(txIn);
-                                pool.removeRecursive(txIn, MemPoolRemovalReason::SYSCOIN);
-                                pool.ClearPrioritisation(hash);
+                                
+                                // mark to remove from mempool, because if we remove right away then the transaction data cannot be relayed most of the time
+                                // only do this if sender is conflicting otherwise its actually a bad transaction for other reasons and just remove from mempool right away
+                                if(bSenderConflict){
+                                    vecToRemoveFromMempool.push_back(hash);
+                                }
+                                else{
+                                    pool.removeConflicts(txIn);
+                                    pool.removeRecursive(txIn, MemPoolRemovalReason::SYSCOININPUT);
+                                    pool.ClearPrioritisation(hash);
+                                }
                                 // After we've (potentially) uncached entries, ensure our coins cache is still within its size limits   
                                 CValidationState stateDummy;
                                 ::ChainstateActive().FlushStateToDisk(chainparams, stateDummy, FlushStateMode::PERIODIC);
@@ -1029,14 +1085,14 @@ static bool AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPo
                         bool bypass_limits, const CAmount nAbsurdFee, bool test_accept, bool bMultiThreaded = false, bool bSanityCheck = true) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     // SYSCOIN if MT mempool verification failure then fallback to single threaded until it latches to 0 again on PoW
-    if (nLastMultithreadMempoolFailure > 0) {
-        LogPrint(BCLog::MEMPOOL, "AcceptToMemoryPoolWithTime: using single-threaded verification...\n");
-        bMultiThreaded = false;
+    if(bMultiThreaded){
+        if (nLastMultithreadMempoolFailure > 0) {
+            LogPrint(BCLog::MEMPOOL, "AcceptToMemoryPoolWithTime: using single-threaded verification...\n");
+            bMultiThreaded = false;
+        }
+        else if(!fConcurrentProcessing || test_accept || !IsAssetAllocationTx(tx->nVersion))
+            bMultiThreaded = false;
     }
-    else if(!fConcurrentProcessing || test_accept || tx->nVersion != SYSCOIN_TX_VERSION_ALLOCATION_SEND)
-        bMultiThreaded = false;
-    if(fTPSTest && !test_accept && tx->nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND)
-        bMultiThreaded = true;
     std::vector<COutPoint> coins_to_uncache;
     bool res = AcceptToMemoryPoolWorker(chainparams, pool, state, tx, pfMissingInputs, nAcceptTime, plTxnReplaced, bypass_limits, nAbsurdFee, coins_to_uncache, test_accept, bMultiThreaded, bSanityCheck);
     if (!res) {
@@ -2044,7 +2100,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
         }
     }
 
-    bool bOverflow = false;
+    bool bSenderConflict = false;
 
     int64_t nTime2 = GetTimeMicros(); nTimeForks += nTime2 - nTime1;
     LogPrint(BCLog::BENCH, "    - Fork checks: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime2 - nTime1), nTimeForks * MICRO, nTimeForks * MILLI / nBlocksTotal);
@@ -2060,8 +2116,14 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     blockundo.vtxundo.reserve(block.vtx.size() - 1);
     std::vector<PrecomputedTransactionData> txdata;
     // SYSCOIN
+    // on pow clear mempool prev outs
+    {
+        LOCK(cs_assetallocationprevout);
+        mempoolMapAssetTXPrevOutPoints.clear();
+    }
     const bool & ibd = IsInitialBlockDownload();
     AssetAllocationMap mapAssetAllocations;
+    AssetTXPrevOutPointMap mapAssetTXPrevOutPoints;
     AssetMap mapAssets;
     AssetSupplyStatsMap mapAssetSupplyStats;
     EthereumMintTxVec vecMintKeys;
@@ -2144,7 +2206,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
                 const uint256& txHash = tx.GetHash(); 
                 blockIndex.emplace_back(std::make_pair(txHash, blockHash));
             } 
-            if (!CheckSyscoinInputs(ibd, tx, state, view, fJustCheck, bOverflow, pindex->nHeight, pindex->nTime, blockHash, false, false, mapAssetAllocations, mapAssets, mapAssetSupplyStats, vecMintKeys, vecLockedOutpoints))
+            if (!CheckSyscoinInputs(ibd, tx, state, view, fJustCheck, bSenderConflict, pindex->nHeight, pindex->nTime, blockHash, false, false, mapAssetAllocations, mapAssetTXPrevOutPoints, mapAssets, mapAssetSupplyStats, vecMintKeys, vecLockedOutpoints))
                 return error("ConnectBlock(): CheckSyscoinInputs on block %s failed\n", block.GetHash().ToString());        
         }
 
