@@ -268,7 +268,7 @@ static IntrRecvError InterruptibleRecv(uint8_t* data, size_t len, int timeout, c
 #ifdef USE_POLL
                 struct pollfd pollfd = {};
                 pollfd.fd = hSocket;
-                pollfd.events = POLLIN | POLLOUT;
+                pollfd.events = POLLIN;
                 int nRet = poll(&pollfd, 1, timeout_ms);
 #else
                 struct timeval tval = MillisToTimeval(timeout_ms);
