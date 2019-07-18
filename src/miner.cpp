@@ -208,7 +208,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     view.SetBackend(viewDummy); // switch back to avoid locking mempool for too long
       
     CValidationState stateInputs, stateConflict;
-    txsToRemove = vecToRemoveFromMempool;
+    txsToRemove.clear();
     bool bSenderConflicted = false;
     AssetAllocationMap mapAssetAllocations;
     AssetTXPrevOutPointMap mapAssetTXPrevOutPoints;
