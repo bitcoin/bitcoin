@@ -70,13 +70,11 @@ class BIP65Test(BitcoinTestFramework):
 
     def test_cltv_info(self, *, is_active):
         assert_equal(
-            next(s for s in self.nodes[0].getblockchaininfo()['softforks'] if s['id'] == 'bip65'),
+            self.nodes[0].getforkinfo()['bip65'],
             {
-                "id": "bip65",
-                "version": 4,
-                "reject": {
-                    "status": is_active
-                }
+                'type': 'buried',
+                'active': is_active,
+                'height': 1351
             },
         )
 
@@ -106,7 +104,7 @@ class BIP65Test(BitcoinTestFramework):
 
         self.test_cltv_info(is_active=False)
         self.nodes[0].p2p.send_and_ping(msg_block(block))
-        self.test_cltv_info(is_active=False)  # Not active as of current tip, but next block must obey rules
+        self.test_cltv_info(is_active=True)  # Not active as of current tip, but next block must obey rules
         assert_equal(self.nodes[0].getbestblockhash(), block.hash)
 
         self.log.info("Test that blocks must now be at least version 4")
@@ -155,7 +153,7 @@ class BIP65Test(BitcoinTestFramework):
         block.hashMerkleRoot = block.calc_merkle_root()
         block.solve()
 
-        self.test_cltv_info(is_active=False)  # Not active as of current tip, but next block must obey rules
+        self.test_cltv_info(is_active=True)  # Not active as of current tip, but next block must obey rules
         self.nodes[0].p2p.send_and_ping(msg_block(block))
         self.test_cltv_info(is_active=True)  # Active as of current tip
         assert_equal(int(self.nodes[0].getbestblockhash(), 16), block.sha256)

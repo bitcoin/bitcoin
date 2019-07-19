@@ -106,6 +106,8 @@ Low-level changes
 RPC
 ---
 
+- The array `softforks` and object `bip9_softforks` in the `getblockchaininfo` RPC are combined and moved into a new
+  `getforkinfo` RPC. Refer to the RPC help for further details.
 
 Tests
 -----

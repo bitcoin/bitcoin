@@ -78,7 +78,6 @@ class BlockchainTest(BitcoinTestFramework):
 
         keys = [
             'bestblockhash',
-            'bip9_softforks',
             'blocks',
             'chain',
             'chainwork',
@@ -88,7 +87,6 @@ class BlockchainTest(BitcoinTestFramework):
             'mediantime',
             'pruned',
             'size_on_disk',
-            'softforks',
             'verificationprogress',
             'warnings',
         ]
