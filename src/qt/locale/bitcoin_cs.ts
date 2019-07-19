@@ -1087,7 +1087,7 @@
     </message>
     <message>
         <source>Disables some advanced features but all blocks will still be fully validated. Reverting this setting requires re-downloading the entire blockchain. Actual disk usage may be somewhat higher.</source>
-        <translation>Zakáže některé pokročilé funkce, ale všechny bloky budou stále plně otevřené. Obnovení tohoto nastavení vyžaduje opětovné převzetí celého blockchainu. Skutečné využít disku může být o něco vyšší.</translation>
+        <translation>Zakáže některé pokročilé funkce, ale všechny bloky budou stále plně ověřené. Obnovení tohoto nastavení vyžaduje opětovné stažení celého blockchainu. Skutečné využítí disku může být o něco vyšší.</translation>
     </message>
     <message>
         <source>Prune &amp;block storage to</source>
@@ -1099,7 +1099,7 @@
     </message>
     <message>
         <source>Reverting this setting requires re-downloading the entire blockchain.</source>
-        <translation>Obnovení tohoto nastavení vyžaduje opětovné převzetí celého blockchainu.</translation>
+        <translation>Obnovení tohoto nastavení vyžaduje opětovné stažení celého blockchainu.</translation>
     </message>
     <message>
         <source>MiB</source>

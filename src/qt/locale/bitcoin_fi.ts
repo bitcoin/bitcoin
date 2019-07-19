@@ -1827,6 +1827,10 @@
         <translation>Verkkoliikenne pysäytetty</translation>
     </message>
     <message>
+        <source>Executing command without any wallet</source>
+        <translation>Suoritetaan komento ilman lomakkoa</translation>
+    </message>
+    <message>
         <source>(node id: %1)</source>
         <translation>(solmukohdan id: %1)</translation>
     </message>
@@ -2221,6 +2225,10 @@
     <message>
         <source>You can increase the fee later (signals Replace-By-Fee, BIP-125).</source>
         <translation>Voit korottaa palkkiota myöhemmin (osoittaa Replace-By-Fee:tä, BIP-125).</translation>
+    </message>
+    <message>
+        <source>from wallet %1</source>
+        <translation>lompakosta %1</translation>
     </message>
     <message>
         <source>Please, review your transaction.</source>
@@ -3389,6 +3397,10 @@
     <message>
         <source>Specified -walletdir "%s" is a relative path</source>
         <translation>Määritelty lompakkohakemisto "%s" sijaitsee suhteellisessa polussa</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is not a directory</source>
+        <translation>Määritelty -walletdir "%s" ei ole hakemisto</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>

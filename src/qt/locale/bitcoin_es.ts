@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Haz clic derecho para editar la dirección o etiqueta</translation>
+        <translation>Clic derecho para editar la dirección o etiqueta</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -186,6 +186,10 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>Monedero cifrado</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>Monedero encriptado. Recuerda que encriptando tu monedero no garantiza mantener a salvo tus bitcoins en caso de tener viruses en el ordenador.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -508,6 +512,10 @@
     <message>
         <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
         <translation>Abriendo monedero &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+    <message>
+        <source>Open Wallet Failed</source>
+        <translation>Fallo al abrir monedero</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -974,7 +982,11 @@
         <source>Hide</source>
         <translation>Ocultar</translation>
     </message>
-    </context>
+    <message>
+        <source>Unknown. Syncing Headers (%1, %2%)...</source>
+        <translation>Desconocido. Sincronizando Cabeceras (%1, %2%)...</translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -1087,6 +1099,10 @@
     <message>
         <source>Reverting this setting requires re-downloading the entire blockchain.</source>
         <translation>Revertir estas configuraciones requiere re-descargar el blockchain entero.</translation>
+    </message>
+    <message>
+        <source>MiB</source>
+        <translation>MiB</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
@@ -1211,6 +1227,10 @@
     <message>
         <source>&amp;Third party transaction URLs</source>
         <translation>URLs de transacciones de terceros</translation>
+    </message>
+    <message>
+        <source>Options set in this dialog are overridden by the command line or in the configuration file:</source>
+        <translation>Las opciones establecidas en este diálogo serán invalidadas por la línea de comando o en el fichero de configuración:</translation>
     </message>
     <message>
         <source>&amp;OK</source>
@@ -1628,6 +1648,18 @@
     <message>
         <source>Datadir</source>
         <translation>Datadir</translation>
+    </message>
+    <message>
+        <source>To specify a non-default location of the data directory use the '%1' option.</source>
+        <translation>Para especificar una ubicación distinta a la ubicación por defecto del directorio de datos, use la opción '%1'.</translation>
+    </message>
+    <message>
+        <source>Blocksdir</source>
+        <translation>Blocksdir</translation>
+    </message>
+    <message>
+        <source>To specify a non-default location of the blocks directory use the '%1' option.</source>
+        <translation>Para especificar una ubicación distinta a la ubicación por defecto del directorio de bloques, use la opción '%1'.</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -2200,6 +2232,14 @@ Nota: Dado que la comisión se calcula por byte, una comisión de "100 satoshis 
     <message>
         <source>Dust:</source>
         <translation>Polvo:</translation>
+    </message>
+    <message>
+        <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
+        <translation>Cuando hay menos volumen de transacciónes que espacio en los bloques, los mineros y los nodos de retransmisión pueden imponer una comisión mínima. Pagar solo esta comisión mínima está bien, pero tenga en cuenta que esto puede resultar en una transacción nunca confirmada una vez que haya más demanda de transacciones de Bitcoin de la que la red puede procesar.</translation>
+    </message>
+    <message>
+        <source>A too low fee might result in a never confirming transaction (read the tooltip)</source>
+        <translation>Una comisión muy pequeña puede derivar en una transacción que nunca será confirmada</translation>
     </message>
     <message>
         <source>Confirmation time target:</source>
@@ -3081,7 +3121,11 @@ Nota: Dado que la comisión se calcula por byte, una comisión de "100 satoshis 
         <source>Are you sure you wish to close wallet &lt;i&gt;%1&lt;/i&gt;?</source>
         <translation>¿Está seguro que desea cerra el monedero &lt;i&gt;%1&lt;/i&gt;?</translation>
     </message>
-    </context>
+    <message>
+        <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
+        <translation>Cerrar la monedero durante demasiado tiempo puede causar resincronizado de toda la cadena si la poda es habilitado.</translation>
+    </message>
+</context>
 <context>
     <name>WalletFrame</name>
     <message>
@@ -3214,6 +3258,10 @@ Nota: Dado que la comisión se calcula por byte, una comisión de "100 satoshis 
         <translation>Los desarrolladores de %s</translation>
     </message>
     <message>
+        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
+        <translation>No se puede generar una clave de cambio-de-dirección. No hay claves en el cojunto de claves internas y no se pueden generar claves.</translation>
+    </message>
+    <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
         <translation>No se puede bloquear el directorio %s. %s ya se está ejecutando.</translation>
     </message>
@@ -3280,6 +3328,10 @@ Nota: Dado que la comisión se calcula por byte, una comisión de "100 satoshis 
     <message>
         <source>Change index out of range</source>
         <translation>Cambio de indice fuera de rango</translation>
+    </message>
+    <message>
+        <source>Config setting for %s only applied on %s network when in [%s] section.</source>
+        <translation>La configuración para %s solo se aplica en la red %s cuando son en la sección [%s].</translation>
     </message>
     <message>
         <source>Copyright (C) %i-%i</source>
@@ -3364,6 +3416,10 @@ Nota: Dado que la comisión se calcula por byte, una comisión de "100 satoshis 
     <message>
         <source>Specified blocks directory "%s" does not exist.</source>
         <translation>El directorio de bloques «%s» especificado no existe.</translation>
+    </message>
+    <message>
+        <source>Unable to create the PID file '%s': %s</source>
+        <translation>No es posible crear el fichero PID '%s': %s</translation>
     </message>
     <message>
         <source>Upgrading txindex database</source>
@@ -3504,6 +3560,12 @@ Nota: Dado que la comisión se calcula por byte, una comisión de "100 satoshis 
     <message>
         <source>Specified -walletdir "%s" is not a directory</source>
         <translation>El -walletdir "%s" indicado no es un directorio</translation>
+    </message>
+    <message>
+        <source>The specified config file %s does not exist
+</source>
+        <translation>El fichero de configuración %s especificado no existe
+</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
