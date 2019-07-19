@@ -895,6 +895,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         // - the node is not behind
         // - the transaction is not dependent on any other transactions in the mempool
         // - the transaction is not a duplicate input from an asset allocation transaction
+        // SYSCOIN
         bool validForFeeEstimation = !bDuplicate && !fReplacementTransaction && !bypass_limits && IsCurrentForFeeEstimation() && pool.HasNoInputsOf(tx);
 
         // Store transaction in memory
