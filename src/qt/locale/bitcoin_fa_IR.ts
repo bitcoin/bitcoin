@@ -796,6 +796,10 @@
         <translation>در حال محاسبه...</translation>
     </message>
     <message>
+        <source>Estimated time left until synced</source>
+        <translation>زمان تقریبی باقی‌مانده تا همگام شدن</translation>
+    </message>
+    <message>
         <source>Hide</source>
         <translation>پنهان کردن</translation>
     </message>
@@ -887,6 +891,10 @@
         <translation>پورت:</translation>
     </message>
     <message>
+        <source>Port of the proxy (e.g. 9050)</source>
+        <translation>پورت پراکسی (مثال ۹۰۵۰)</translation>
+    </message>
+    <message>
         <source>IPv4</source>
         <translation>IPv4</translation>
     </message>
@@ -917,6 +925,10 @@
     <message>
         <source>&amp;Unit to show amounts in:</source>
         <translation>واحد نمایشگر مقادیر:</translation>
+    </message>
+    <message>
+        <source>Whether to show coin control features or not.</source>
+        <translation>که امکانات کنترل کوین‌ها نشان داده شود یا نه.</translation>
     </message>
     <message>
         <source>&amp;Third party transaction URLs</source>
@@ -1068,7 +1080,11 @@
         <source>Network request error</source>
         <translation>درخواست از شبکه با خطا مواجه شد</translation>
     </message>
-    </context>
+    <message>
+        <source>Payment acknowledged</source>
+        <translation>پرداخت تایید شد</translation>
+    </message>
+</context>
 <context>
     <name>PeerTableModel</name>
     <message>
@@ -1230,6 +1246,10 @@
     <message>
         <source>Version</source>
         <translation>نسخه</translation>
+    </message>
+    <message>
+        <source>Synced Blocks</source>
+        <translation>بلاک‌های همگام‌سازی‌ شده</translation>
     </message>
     <message>
         <source>Decrease font size</source>
@@ -1770,7 +1790,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <source>Memo:</source>
         <translation>یادداشت:</translation>
     </message>
-    </context>
+    <message>
+        <source>Enter a label for this address to add it to your address book</source>
+        <translation>یک برچسب برای این آدرس بنویسید تا به دفترچه‌ آدرس‌های شما اضافه شود</translation>
+    </message>
+</context>
 <context>
     <name>SendConfirmationDialog</name>
     <message>
@@ -1820,6 +1844,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>امضا</translation>
     </message>
     <message>
+        <source>Sign the message to prove you own this Bitcoin address</source>
+        <translation>پیام را امضا کنید تا ثابت کنید این آدرس بیت‌کوین متعلق به شماست</translation>
+    </message>
+    <message>
         <source>Sign &amp;Message</source>
         <translation>ثبت &amp;پیام</translation>
     </message>
@@ -1832,6 +1860,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>تایید پیام</translation>
     </message>
     <message>
+        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
+        <translation>پیام را تایید کنید تا مطمئن شوید که توسط آدرس بیت‌کوین مشخص شده امضا شده است.</translation>
+    </message>
+    <message>
         <source>Verify &amp;Message</source>
         <translation>تایید پیام</translation>
     </message>
@@ -1842,6 +1874,15 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>The entered address is invalid.</source>
         <translation>آدرس وارد شده نامعتبر است.</translation>
+    </message>
+    <message>
+        <source>Please check the address and try again.</source>
+        <translation>لطفاً آدرس را بررسی کرده و دوباره تلاش کنید.
+</translation>
+    </message>
+    <message>
+        <source>Wallet unlock was cancelled.</source>
+        <translation>قفل‌گشابی کیف‌پول لغو شد.</translation>
     </message>
     <message>
         <source>Message signed.</source>
@@ -2198,7 +2239,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </context>
 <context>
     <name>WalletFrame</name>
-    </context>
+    <message>
+        <source>No wallet has been loaded.</source>
+        <translation>کیف‌پولی بارگذاری نشد.</translation>
+    </message>
+</context>
 <context>
     <name>WalletModel</name>
     <message>

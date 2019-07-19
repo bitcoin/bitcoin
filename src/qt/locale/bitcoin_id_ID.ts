@@ -1371,6 +1371,14 @@
         <source>Payment request expired.</source>
         <translation>Permintaan pembayaran telah kadaluarsa.</translation>
     </message>
+    <message>
+        <source>Payment request is not initialized.</source>
+        <translation>Permintaan pembayaran tidak terinisialisasi</translation>
+    </message>
+    <message>
+        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
+        <translation>Permintaan pembayaran %1 terlalu besar (%2 bita, diperbolehkan %3 bita)</translation>
+    </message>
     </context>
 <context>
     <name>PeerTableModel</name>
@@ -1382,7 +1390,11 @@
         <source>Sent</source>
         <translation>Terkirim</translation>
     </message>
-    </context>
+    <message>
+        <source>Received</source>
+        <translation>Diterima</translation>
+    </message>
+</context>
 <context>
     <name>QObject</name>
     <message>
@@ -1481,6 +1493,10 @@
     <message>
         <source>Current number of blocks</source>
         <translation>Jumlah blok terkini</translation>
+    </message>
+    <message>
+        <source>Received</source>
+        <translation>Diterima</translation>
     </message>
     <message>
         <source>Sent</source>

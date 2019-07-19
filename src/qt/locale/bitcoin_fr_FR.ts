@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Faîtes un clic droit afin de modifier l'adresse ou l'étiquette</translation>
+        <translation>Clic-droit pour modifier l'adresse ou l'étiquette</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -186,6 +186,10 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>Portefeuille chiffré</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>Le porte-monnaie a été chiffré. N'oubliez pas que le chiffrement de votre porte-monnaie ne peut pas entièrement protéger vos bitcoins contre le vol par un logiciel malveillant qui infecterait votre ordinateur.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -470,12 +474,44 @@
         <translation>À jour</translation>
     </message>
     <message>
+        <source>&amp;Sending addresses</source>
+        <translation>&amp;Adresses d'envoi</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses</source>
+        <translation>&amp;Adresses de réception</translation>
+    </message>
+    <message>
+        <source>Open Wallet</source>
+        <translation>Portefeuille ouvert</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation>Ouvrir un portefeuille</translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>Fermer portefeuille...</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>Fermer portefeuille</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>Afficher le %1 message d'aide pour récupérer une liste des options de ligne de commande Bitcoin</translation>
     </message>
     <message>
         <source>default wallet</source>
         <translation>portefeuille par défaut</translation>
+    </message>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Ouverture portefeuille &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+    <message>
+        <source>Open Wallet Failed</source>
+        <translation>Le déverrouillage du porte-monnaie a échoué</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -2182,6 +2218,10 @@
     </context>
 <context>
     <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation>Fermer portefeuille</translation>
+    </message>
     </context>
 <context>
     <name>WalletFrame</name>

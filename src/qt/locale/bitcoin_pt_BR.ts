@@ -63,7 +63,7 @@
     </message>
     <message>
         <source>Receiving addresses</source>
-        <translation>Endereço de &amp;recebimento</translation>
+        <translation>Endereço de recebimento</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
@@ -1648,7 +1648,7 @@
     </message>
     <message>
         <source>Datadir</source>
-        <translation>Datadir</translation>
+        <translation>Pasta de dados</translation>
     </message>
     <message>
         <source>To specify a non-default location of the data directory use the '%1' option.</source>
@@ -1744,7 +1744,7 @@
     </message>
     <message>
         <source>Starting Block</source>
-        <translation>Bloco inicial</translation>
+        <translation>Bloco Inicial</translation>
     </message>
     <message>
         <source>Synced Headers</source>
@@ -1896,7 +1896,7 @@
     </message>
     <message>
         <source>Network activity disabled</source>
-        <translation>Atividade da rede disativada</translation>
+        <translation>Atividade da rede desativada</translation>
     </message>
     <message>
         <source>Executing command without any wallet</source>
@@ -2801,7 +2801,7 @@ Nota:  Como a taxa é calculada por byte, uma taxa de "100 satoshis por kB" por 
     </message>
     <message>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>Moedas recém minerados precisam aguardar %1 blocos antes de serem gastos. Quando o bloco foi gerado, ele foi disseminado pela rede para ser adicionado à blockchain. Se ele falhar em ser inserido na cadeia, seu estado será modificado para "não aceito" e ele não poderá ser gasto. Isso pode acontecer eventualmente quando blocos são gerados quase que simultaneamente.</translation>
+        <translation>Moedas recém mineradas precisam aguardar %1 blocos antes de serem gastas. Quando você gerou este bloco, ele foi disseminado pela rede para ser adicionado à blockchain. Se ele falhar em ser inserido na blockchain, seu estado será modificado para "não aceito" e ele não poderá ser gasto. Isso pode acontecer eventualmente quando blocos são gerados quase que simultaneamente.</translation>
     </message>
     <message>
         <source>Debug information</source>
@@ -2966,7 +2966,7 @@ Nota:  Como a taxa é calculada por byte, uma taxa de "100 satoshis por kB" por 
     </message>
     <message>
         <source>Last month</source>
-        <translation>Último mês</translation>
+        <translation>Mês passado</translation>
     </message>
     <message>
         <source>This year</source>
@@ -3244,7 +3244,7 @@ Nota:  Como a taxa é calculada por byte, uma taxa de "100 satoshis por kB" por 
     </message>
     <message>
         <source>Pruning blockstore...</source>
-        <translation>Podando os blocos existentes...</translation>
+        <translation>Prunando os blocos existentes...</translation>
     </message>
     <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
@@ -3396,7 +3396,7 @@ Nota:  Como a taxa é calculada por byte, uma taxa de "100 satoshis por kB" por 
     </message>
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
-        <translation>Bloco gênese incorreto ou não encontrado. Datadir errado para a rede?</translation>
+        <translation>Bloco gênese incorreto ou não encontrado. Pasta de dados errada para a rede?</translation>
     </message>
     <message>
         <source>Initialization sanity check failed. %s is shutting down.</source>

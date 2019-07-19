@@ -132,8 +132,36 @@
         <translation>वॉलेट एन्क्रिप्ट करें</translation>
     </message>
     <message>
+        <source>Unlock wallet</source>
+        <translation>बटुए को अनलॉक करें</translation>
+    </message>
+    <message>
+        <source>Decrypt wallet</source>
+        <translation>वॉलेट को डिक्रिप्ट करें</translation>
+    </message>
+    <message>
         <source>Change passphrase</source>
         <translation>पासफ़्रेज़ बदलें</translation>
+    </message>
+    <message>
+        <source>Confirm wallet encryption</source>
+        <translation>वॉलेट एन्क्रिप्शन की पुष्टि करें</translation>
+    </message>
+    <message>
+        <source>Wallet encrypted</source>
+        <translation>वॉलेट को एन्क्रिप्ट किया गया है</translation>
+    </message>
+    <message>
+        <source>Wallet encryption failed</source>
+        <translation>वॉलेट एन्क्रिप्शन विफल रहा</translation>
+    </message>
+    <message>
+        <source>Wallet unlock failed</source>
+        <translation>वॉलेट अनलॉक विफल रहा</translation>
+    </message>
+    <message>
+        <source>Wallet decryption failed</source>
+        <translation>वॉलेट डिक्रिप्शन विफल रहा</translation>
     </message>
     </context>
 <context>

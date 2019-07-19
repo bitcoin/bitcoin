@@ -470,8 +470,36 @@
         <translation>&amp;عناوين الإستقبال</translation>
     </message>
     <message>
+        <source>Open Wallet</source>
+        <translation>افتح المحفظة</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation>افتح محفظة</translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>اغلق المحفظة</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>اغلق المحفظة</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>بين اشارة المساعدة %1 للحصول على قائمة من خيارات اوامر البت كوين المحتملة </translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>محفظة إفتراضية</translation>
+    </message>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>يتم فتح المحفظة&lt;b&gt;%1&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Open Wallet Failed</source>
+        <translation>فشل فتح المحفظة</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -552,6 +580,10 @@
     <message>
         <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
         <translation>توليد المفاتيح الهرمية الحتمية HD &lt;b&gt;معطل&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Private key &lt;b&gt;disabled&lt;/b&gt;</source>
+        <translation>المفتاح السري &lt;b&gt;معطل&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
@@ -703,6 +735,10 @@
     <message>
         <source>(no label)</source>
         <translation>(لا وصف)</translation>
+    </message>
+    <message>
+        <source>change from %1 (%2)</source>
+        <translation>تغير من %1 (%2)</translation>
     </message>
     <message>
         <source>(change)</source>
@@ -2814,6 +2850,10 @@
 </context>
 <context>
     <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation>اغلق المحفظة</translation>
+    </message>
     </context>
 <context>
     <name>WalletFrame</name>
@@ -2864,7 +2904,11 @@
         <source>Could not commit transaction</source>
         <translation>لا يمكن تنفيذ المعاملة</translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation>محفظة إفتراضية</translation>
+    </message>
+</context>
 <context>
     <name>WalletView</name>
     <message>

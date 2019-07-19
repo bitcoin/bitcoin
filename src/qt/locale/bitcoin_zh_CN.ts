@@ -669,11 +669,11 @@
     </message>
     <message>
         <source>Received with label</source>
-        <translation>按标签收款</translation>
+        <translation>收款标签</translation>
     </message>
     <message>
         <source>Received with address</source>
-        <translation>按地址收款</translation>
+        <translation>收款地址</translation>
     </message>
     <message>
         <source>Date</source>
@@ -1042,7 +1042,7 @@
     </message>
     <message>
         <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
-        <translation>通过Tor隐藏服务连接节点时使用不同的SOCKS&amp;5代理：</translation>
+        <translation>连接Tor隐藏服务节点时使用另一个SOCKS&amp;5代理：</translation>
     </message>
     <message>
         <source>Hide the icon from the system tray.</source>
@@ -1178,7 +1178,7 @@
     </message>
     <message>
         <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>在 Tor 匿名网络下通过不同的 SOCKS5 代理连接比特币网络</translation>
+        <translation>访问 Tor 隐藏服务上的比特币网络时使用另一个 SOCKS5 代理。</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1700,7 +1700,7 @@
     </message>
     <message>
         <source>&amp;Reset</source>
-        <translation>&amp;重启</translation>
+        <translation>&amp;重置</translation>
     </message>
     <message>
         <source>Received</source>

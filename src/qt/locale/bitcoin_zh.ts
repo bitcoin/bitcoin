@@ -18,6 +18,10 @@
         <translation>复制当前已选地址到系统剪切板</translation>
     </message>
     <message>
+        <source>&amp;Copy</source>
+        <translation>复制(&amp;C)</translation>
+    </message>
+    <message>
         <source>Delete the currently selected address from the list</source>
         <translation>从列表中删除当前已选地址</translation>
     </message>
@@ -390,6 +394,10 @@
         <translation>显示%1帮助消息以获得可能包含Bitcoin命令行选项的列表</translation>
     </message>
     <message>
+        <source>Open Wallet Failed</source>
+        <translation>打开钱包失败</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation>&amp;窗口</translation>
     </message>
@@ -529,6 +537,10 @@
 <context>
     <name>Intro</name>
     <message>
+        <source>Use the default data directory</source>
+        <translation>使用默认的数据目录</translation>
+    </message>
+    <message>
         <source>Bitcoin</source>
         <translation>比特币</translation>
     </message>
@@ -539,6 +551,14 @@
     </context>
 <context>
     <name>ModalOverlay</name>
+    <message>
+        <source>Unknown...</source>
+        <translation>未知...</translation>
+    </message>
+    <message>
+        <source>Estimated time left until synced</source>
+        <translation>估计的同步剩余时间</translation>
+    </message>
     </context>
 <context>
     <name>OpenURIDialog</name>

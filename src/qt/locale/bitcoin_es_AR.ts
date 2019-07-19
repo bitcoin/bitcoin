@@ -30,6 +30,14 @@
         <translation>Borrar de la lista la dirección seleccionada</translation>
     </message>
     <message>
+        <source>Enter address or label to search</source>
+        <translation>Introduzca la dirección o etiqueta para buscar
+                    
+                      
+                    
+                  </translation>
+    </message>
+    <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Exportar los datos de la pestaña actual a un archivo</translation>
     </message>
@@ -67,6 +75,10 @@
 </translation>
     </message>
     <message>
+        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>Estas son sus direcciones de Bitcoin para recibir pagos. Se recomienda utilizar una nueva dirección de recepción para cada transacción.</translation>
+    </message>
+    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;Copiar Dirección</translation>
     </message>
@@ -83,10 +95,18 @@
         <translation>Exportar lista de direcciones</translation>
     </message>
     <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Archivo separado por comas (*.csv)</translation>
+    </message>
+    <message>
         <source>Exporting Failed</source>
         <translation>Exportar archivo</translation>
     </message>
-    </context>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <translation>Se produjo un error al intentar guardar la lista de direcciones en %1. Inténtalo de nuevo.</translation>
+    </message>
+</context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -142,6 +162,10 @@
         <translation>Desbloquear la billetera</translation>
     </message>
     <message>
+        <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
+        <translation>Esta operación necesita su frase de contraseña de la Billetera para descifrar la Billetera.</translation>
+    </message>
+    <message>
         <source>Decrypt wallet</source>
         <translation>Desencriptar la billetera</translation>
     </message>
@@ -165,12 +189,116 @@
         <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>¿Está usted seguro que desea cifrar su billetera?</translation>
     </message>
-    </context>
+    <message>
+        <source>Wallet encrypted</source>
+        <translation>Billetera cifrada</translation>
+    </message>
+    <message>
+        <source>Wallet encryption failed</source>
+        <translation>El cifrado de la Billetera falló</translation>
+    </message>
+    <message>
+        <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
+        <translation>Falló la encriptación de la billetera por un error interno. Tu Billetera no está encriptada.</translation>
+    </message>
+    <message>
+        <source>The supplied passphrases do not match.</source>
+        <translation>Las frases de contraseña no son iguales.</translation>
+    </message>
+    <message>
+        <source>Wallet unlock failed</source>
+        <translation>Falló el desbloqueo de la billetera</translation>
+    </message>
+    <message>
+        <source>The passphrase entered for the wallet decryption was incorrect.</source>
+        <translation>La frase de contraseña que ingresaste para desencriptar la Billetera es incorrecta.</translation>
+    </message>
+    <message>
+        <source>Wallet decryption failed</source>
+        <translation>Falló la desencriptación de la billetera</translation>
+    </message>
+    <message>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation>La frase de contraseña fue cambiada con éxito</translation>
+    </message>
+    <message>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation>Atención: Tenés puestas las mayúsculas!</translation>
+    </message>
+</context>
 <context>
     <name>BanTableModel</name>
-    </context>
+    <message>
+        <source>IP/Netmask</source>
+        <translation>IP/Red</translation>
+    </message>
+    <message>
+        <source>Banned Until</source>
+        <translation>Bloqueado Hasta</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
+    <message>
+        <source>Sign &amp;message...</source>
+        <translation>Firmar &amp;mensaje...</translation>
+    </message>
+    <message>
+        <source>Synchronizing with network...</source>
+        <translation>Sincronizando con la red...</translation>
+    </message>
+    <message>
+        <source>&amp;Overview</source>
+        <translation>&amp;Vista general</translation>
+    </message>
+    <message>
+        <source>Show general overview of wallet</source>
+        <translation>Mostrar la vista general de la billetera</translation>
+    </message>
+    <message>
+        <source>&amp;Transactions</source>
+        <translation>&amp;Traducciones</translation>
+    </message>
+    <message>
+        <source>Browse transaction history</source>
+        <translation>Examinar historial de transacciones</translation>
+    </message>
+    <message>
+        <source>Quit application</source>
+        <translation>Salir de la aplicación</translation>
+    </message>
+    <message>
+        <source>&amp;About %1</source>
+        <translation>&amp;Acerca de %1</translation>
+    </message>
+    <message>
+        <source>Show information about %1</source>
+        <translation>Mostrar información de %1</translation>
+    </message>
+    <message>
+        <source>Modify configuration options for %1</source>
+        <translation>Modificar las opciones de configuración para %1</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>Billetera</translation>
+    </message>
+    <message>
+        <source>Click to disable network activity.</source>
+        <translation>Clic para desactivar la actividad de red</translation>
+    </message>
+    <message>
+        <source>Network activity disabled.</source>
+        <translation>Actividad de red desactivada</translation>
+    </message>
+    <message>
+        <source>Click to enable network activity again.</source>
+        <translation>Clic para activar nuevamente la actividad de red</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>billetera por defecto</translation>
+    </message>
     </context>
 <context>
     <name>CoinControlDialog</name>
@@ -292,6 +420,10 @@
 <context>
     <name>TransactionView</name>
     <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Archivo separado por comas (*.csv)</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation>Etiqueta</translation>
     </message>
@@ -316,7 +448,11 @@
     </context>
 <context>
     <name>WalletModel</name>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation>billetera por defecto</translation>
+    </message>
+</context>
 <context>
     <name>WalletView</name>
     </context>

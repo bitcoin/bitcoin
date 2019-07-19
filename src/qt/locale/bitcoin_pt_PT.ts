@@ -3100,7 +3100,11 @@ Nota: como a taxa é calculada por byte, uma taxa de "100 satoshis por kB" por u
         <source>Are you sure you wish to close wallet &lt;i&gt;%1&lt;/i&gt;?</source>
         <translation>Tem a certeza que quer fechar a carteira &lt;i&gt;%1&lt;/i&gt;?</translation>
     </message>
-    </context>
+    <message>
+        <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
+        <translation>Fechar a carteira durante demasiado tempo pode resultar em ter de resincronizar a cadeia inteira se pruning estiver ativado.</translation>
+    </message>
+</context>
 <context>
     <name>WalletFrame</name>
     <message>
@@ -3231,6 +3235,10 @@ Nota: como a taxa é calculada por byte, uma taxa de "100 satoshis por kB" por u
     <message>
         <source>The %s developers</source>
         <translation>Os programadores de %s</translation>
+    </message>
+    <message>
+        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
+        <translation>Não é possível gerar uma chave de alterar endereço. Não há chaves na keypool interna e não podem ser geradas nenhumas chaves.</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
