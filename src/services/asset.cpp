@@ -314,7 +314,8 @@ void CTxMemPool::removeExpiredMempoolBalances(setEntries& stage){
     int count = 0;
     for (const txiter& it : stage) {
         const CTransaction& tx = it->GetTx();
-        if(IsAssetAllocationTx(tx.nVersion) && tx.nVersion != SYSCOIN_TX_VERSION_ALLOCATION_LOCK){
+        // lock has no mempool balance related logic
+        if(IsAssetAllocationTx(tx.nVersion)){
             CAssetAllocation allocation(tx);
             if(allocation.assetAllocationTuple.IsNull())
                 continue;

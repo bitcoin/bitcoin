@@ -1175,6 +1175,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
     // write assetallocation  
     // asset sends are the only ones confirming without PoW
     if(!fJustCheck){
+        // lock tx does not do any mempool balance or sender conflict stuff
         if (!bSanityCheck) {
             ResetAssetAllocation(senderTupleStr, txHash, bMiner);
            
@@ -1200,12 +1201,13 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 		
         LOCK(cs_assetallocationarrival);
         ArrivalTimesMap &arrivalTimes = arrivalTimesMap[senderTupleStr];
-        arrivalTimes[txHash] = GetTimeMillis();
-        
+        arrivalTimes[txHash] = GetTimeMillis();       
 
-        // send a realtime notification on zdag, send another when pow happens (above)
-        if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND)
+        if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND){
+            // send a realtime notification on zdag, send another when pow happens (above)
             passetallocationdb->WriteAssetAllocationIndex(tx, dbAsset, nHeight, blockhash);
+        }
+        
         {
             LOCK(cs_assetallocationmempoolbalance);
             mapBalanceSender->second = std::move(mapBalanceSenderCopy);
