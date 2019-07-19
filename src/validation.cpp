@@ -70,7 +70,7 @@ extern AssetTXPrevOutPointMap mempoolMapAssetTXPrevOutPoints;
 extern CCriticalSection cs_assetallocationprevout;
 extern std::unordered_set<std::string> assetAllocationConflicts;
 extern CCriticalSection cs_assetallocationconflicts;
-extern std::vector<uint256> vecToRemoveFromMempool;
+extern std::vector<std::pair<uint256, int64_t> > vecToRemoveFromMempool;
 extern CCriticalSection cs_assetallocationarrival;
 std::vector<CInv> vInvToSend;
 // track worker thread metrics
@@ -867,7 +867,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
             if (!CheckSyscoinInputs(tx, state, view, true, ::ChainActive().Height(), test_accept || bSanityCheck, bSenderConflict)) {
                 // mark to remove from mempool, because if we remove right away then the transaction data cannot be relayed most of the time
                 if(!test_accept && !bSanityCheck && bSenderConflict)
-                    vecToRemoveFromMempool.push_back(hash);
+                    vecToRemoveFromMempool.push_back(std::make_pair(hash, GetTime()));
                 else
                     return error("mandatory-syscoin-inputs-check-failed (%s)", state.GetRejectReason());
             }
@@ -985,10 +985,9 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                         if (!CheckSyscoinInputs(txIn, validationState, view, true, ::ChainActive().Height(), false, bSenderConflict))
                         {
                             // if duplicate input or sender is in conflict we legitimately want to relay
-                            // but at the same time remove from mempool after next time nLastMultithreadCheckSyscoinInputsFailure is cleared and likely it got relayed to enough peers
-                            if(!bSenderConflict)
+                            // but at the same time remove from mempool after 30 seconds or next block atleast 30 seconds since we added entry
+                            if(!bSenderConflict || vecToRemoveFromMempool.size() >= 10000000)
                                 nLastMultithreadMempoolFailure = GetTime();
-                            nLastMultithreadCheckSyscoinInputsFailure =  GetTime();
                             LogPrint(BCLog::MEMPOOL, "%s: %s\n", "CheckSyscoinInputs Error", hash.ToString());
                             {
                                 LOCK2(cs_main, mempool.cs);
@@ -997,8 +996,8 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                                 
                                 // mark to remove from mempool, because if we remove right away then the transaction data cannot be relayed most of the time
                                 // only do this if sender is conflicting otherwise its actually a bad transaction for other reasons and just remove from mempool right away
-                                if(bSenderConflict){
-                                    vecToRemoveFromMempool.push_back(hash);
+                                if(bSenderConflict && nLastMultithreadMempoolFailure <= 0){
+                                    vecToRemoveFromMempool.push_back(std::make_pair(hash, GetTime()));
                                 }
                                 else{
                                     pool.removeConflicts(txIn);

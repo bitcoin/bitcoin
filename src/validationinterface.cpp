@@ -163,6 +163,13 @@ void CMainSignals::TransactionAddedToMempool(const CTransactionRef &ptx) {
     });
 }
 
+// SYSCOIN
+void CMainSignals::TransactionRemovedFromMempool(const CTransactionRef &ptx) {
+    m_internals->m_schedulerClient.AddToProcessQueue([ptx, this] {
+        m_internals->TransactionRemovedFromMempool(ptx);
+    });
+}
+
 void CMainSignals::BlockConnected(const std::shared_ptr<const CBlock> &pblock, const CBlockIndex *pindex, const std::shared_ptr<const std::vector<CTransactionRef>>& pvtxConflicted) {
     m_internals->m_schedulerClient.AddToProcessQueue([pblock, pindex, pvtxConflicted, this] {
         m_internals->BlockConnected(pblock, pindex, *pvtxConflicted);

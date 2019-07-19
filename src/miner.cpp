@@ -31,7 +31,7 @@
 #include <masternodesync.h>
 #include <services/graph.h>
 #include <services/assetconsensus.h>
-extern std::vector<uint256> vecToRemoveFromMempool;
+extern std::vector<std::pair<uint256, int64_t> > vecToRemoveFromMempool;
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {
     int64_t nOldTime = pblock->nTime;
@@ -95,7 +95,11 @@ Optional<int64_t> BlockAssembler::m_last_block_weight{nullopt};
 
 std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn, std::vector<uint256> &txsToRemove)
 {
-    txsToRemove.insert(txsToRemove.end(), vecToRemoveFromMempool.begin(), vecToRemoveFromMempool.end());
+    txsToRemove.reserve(txsToRemove.size() + vecToRemoveFromMempool.size());
+    for(auto it: vecToRemoveFromMempool){
+        txsToRemove.push_back(it.first);
+    }
+    
     int64_t nTimeStart = GetTimeMicros();
 
     resetBlock();
