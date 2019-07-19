@@ -76,7 +76,6 @@ extern std::unique_ptr<CLockedOutpointsDB> plockedoutpointsdb;
 extern std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
 extern std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
 extern int64_t nLastMultithreadMempoolFailure;
-extern int64_t nLastMultithreadCheckSyscoinInputsFailure;
 bool DisconnectSyscoinTransaction(const CTransaction& tx, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, AssetSupplyStatsMap &mapAssetSupplyStats, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys);
 bool DisconnectAssetActivate(const CTransaction &tx, AssetMap &mapAssets, AssetSupplyStatsMap &mapAssetSupplyStats);
 bool DisconnectAssetSend(const CTransaction &tx, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations);
