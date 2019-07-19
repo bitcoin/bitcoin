@@ -373,6 +373,7 @@ CAddrInfo CAddrMan::Select_(bool newOnly)
             if (insecure_rand.randbits(30) < fChanceFactor * info.GetChance() * (1 << 30))
                 return info;
             fChanceFactor *= 1.2;
+            MilliSleep(100);
         }
     } else {
         // use a new node
@@ -390,6 +391,7 @@ CAddrInfo CAddrMan::Select_(bool newOnly)
             if (insecure_rand.randbits(30) < fChanceFactor * info.GetChance() * (1 << 30))
                 return info;
             fChanceFactor *= 1.2;
+            MilliSleep(100);
         }
     }
 }
