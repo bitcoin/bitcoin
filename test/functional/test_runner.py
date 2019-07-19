@@ -158,6 +158,7 @@ BASE_SCRIPTS = [
     'rpc_invalidateblock.py',
     'feature_rbf.py',
     'mempool_packages.py',
+    'mempool_package_onemore.py',
     'rpc_createmultisig.py',
     # FIXME: Re-enable and possibly fix once the BIP9 mining is activated.
     #'feature_versionbits_warning.py',
