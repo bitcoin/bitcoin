@@ -1724,8 +1724,10 @@ void CWallet::ReacceptWalletTransactions()
         int nDepth = wtx.GetDepthInMainChain();
 
         if (nDepth == 0 && !wtx.isAbandoned()) {
-            if (wtx.IsCoinBase() || wtx.IsCoinStake())
+            if (wtx.IsCoinBase() || wtx.IsCoinStake()) {
+                LogPrintf("Abandoning wtx %s\n", wtx.GetHash().ToString());
                 AbandonTransaction(wtxid);
+                }
             else
                 mapSorted.insert(std::make_pair(wtx.nOrderPos, &wtx));
         }
