@@ -183,10 +183,6 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     FillBlockPayments(coinbaseTx, nHeight, blockReward, nFees, pblocktemplate->txoutMasternode, pblocktemplate->voutSuperblock);
 
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
-    if (!OrderBasedOnArrivalTime(pblock->vtx))
-    {
-        throw std::runtime_error("OrderBasedOnArrivalTime failed!");
-    }
     pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
     pblocktemplate->vTxFees[0] = -nFees;
     // SYSCOIN remove bad burn transactions prior to accepting block                      
