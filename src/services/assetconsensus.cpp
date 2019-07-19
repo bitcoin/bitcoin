@@ -26,7 +26,8 @@ std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
 CCriticalSection cs_assetallocationprevout;
 AssetTXPrevOutPointMap mempoolMapAssetTXPrevOutPoints GUARDED_BY(cs_assetallocationprevout);
 int64_t nLastMultithreadMempoolFailure = 0;
-std::vector<std::pair<uint256, int64_t> > vecToRemoveFromMempool;
+std::vector<std::pair<uint256, int64_t> >  vecToRemoveFromMempool;
+CCriticalSection cs_assetallocationmempoolremovetx;
 using namespace std;
 bool DisconnectSyscoinTransaction(const CTransaction& tx, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, AssetSupplyStatsMap &mapAssetSupplyStats, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys)
 {
@@ -323,6 +324,7 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
     // find entry less than 30 seconds old out of vector to remove from mempool as part of zdag dbl spend relay logic
     if(isBlock && vecToRemoveFromMempool.size() > 0 && nTime > 0){
         LOCK2(cs_main, mempool.cs);
+        LOCK(cs_assetallocationmempoolremovetx);
         for (auto rit = vecToRemoveFromMempool.begin(); rit != vecToRemoveFromMempool.end(); ++rit){
             if(nTime <= (rit->second+30) )
                 break;

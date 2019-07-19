@@ -74,7 +74,6 @@ typedef std::unordered_map<std::string, CAmount> AssetBalanceMap;
 typedef std::unordered_map<uint256, int64_t,SaltedTxidHasher> ArrivalTimesMap;
 typedef std::unordered_map<std::string, ArrivalTimesMap> ArrivalTimesMapImpl;
 typedef std::vector<std::pair<CWitnessAddress, CAmount > > RangeAmountTuples;
-static const int ZDAG_MINIMUM_LATENCY_SECONDS = 10;
 static const int ONE_YEAR_IN_BLOCKS = 525600;
 static const int ONE_HOUR_IN_BLOCKS = 60;
 static const int ONE_MONTH_IN_BLOCKS = 43800;
@@ -170,7 +169,13 @@ public:
     }
     bool ReadAssetAllocationMempoolArrivalTimes(ArrivalTimesMapImpl &valueMap) {
         return Read(std::string("assetallocationtxarrival"), valueMap);
-    }   
+    }
+	bool WriteAssetAllocationMempoolToRemoveVector(const std::vector<std::pair<uint256, int64_t> >  &valueMap) {
+        return Write(std::string("assetallocationtxmempool"), valueMap, true);
+    }
+    bool ReadAssetAllocationMempoolToRemoveVector(std::vector<std::pair<uint256, int64_t> >  &valueMap) {
+        return Read(std::string("assetallocationtxmempool"), valueMap);
+    } 	  
     bool ScanAssetAllocationMempoolBalances(const uint32_t count, const uint32_t from, const UniValue& oOptions, UniValue& oRes);
 };
 static COutPoint emptyOutPoint;

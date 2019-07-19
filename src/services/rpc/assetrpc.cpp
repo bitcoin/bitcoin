@@ -23,6 +23,7 @@ extern std::unordered_set<std::string> assetAllocationConflicts;
 extern CCriticalSection cs_assetallocationconflicts;
 // SYSCOIN service rpc functions
 extern UniValue sendrawtransaction(const JSONRPCRequest& request);
+extern std::vector<std::pair<uint256, int64_t> > vecTPSTestReceivedTimesMempool;
 using namespace std;
 UniValue convertaddress(const JSONRPCRequest& request)
 {

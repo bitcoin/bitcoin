@@ -96,6 +96,8 @@ extern AssetBalanceMap mempoolMapAssetBalances;
 extern ArrivalTimesMapImpl arrivalTimesMap; 
 extern CCriticalSection cs_assetallocationmempoolbalance;
 extern CCriticalSection cs_assetallocationarrival;
+extern std::vector<std::pair<uint256, int64_t> >  vecToRemoveFromMempool;
+extern CCriticalSection cs_assetallocationmempoolremovetx;
 static CDSNotificationInterface* pdsNotificationInterface = NULL;
 
 static bool fFeeEstimatesInitialized = false;
@@ -1661,7 +1663,11 @@ bool AppInitMain(InitInterfaces& interfaces)
                 {
                     LOCK(cs_assetallocationarrival);
                     passetallocationmempooldb->ReadAssetAllocationMempoolArrivalTimes(arrivalTimesMap);
-                }                
+                }
+                {
+                    LOCK(cs_assetallocationmempoolremovetx);
+                    passetallocationmempooldb->ReadAssetAllocationMempoolToRemoveVector(vecToRemoveFromMempool);
+                }           
                 // we don't need to ever reset the txroots db because it is an external chain not related to syscoin chain
                 pethereumtxrootsdb.reset(new CEthereumTxRootsDB(nCoinDBCache*16, false, false));
                 pethereumtxmintdb.reset(new CEthereumMintedTxDB(nCoinDBCache, false, fReset || fReindexChainState));
