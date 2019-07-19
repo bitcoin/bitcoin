@@ -574,7 +574,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                     }
                     if (fReplacementOptOut) {
                         // SYSCOIN flag sender if input conflict in syscoin asset allocation tx
-                        if(!test_accept && IsAssetAllocationTx(tx.nVersion)){
+                        if(!test_accept && !bSanityCheck && IsAssetAllocationTx(tx.nVersion)){
                             CAssetAllocation theAssetAllocation(tx);
                             if(!theAssetAllocation.assetAllocationTuple.IsNull()){
                                 LOCK(cs_assetallocationconflicts);
@@ -600,7 +600,8 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                                 } 
                             }   
                         }
-                        return state.Invalid(ValidationInvalidReason::TX_MEMPOOL_POLICY, false, REJECT_DUPLICATE, "txn-mempool-conflict");
+                        else
+                            return state.Invalid(ValidationInvalidReason::TX_MEMPOOL_POLICY, false, REJECT_DUPLICATE, "txn-mempool-conflict");
                     }
                     if(!bDuplicate)
                         setConflicts.insert(ptxConflicting->GetHash());
@@ -863,11 +864,11 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
             if (!control.Wait())
                 return false;
             bool bSenderConflict = false;
-            if (!CheckSyscoinInputs(tx, state, view, true, ::ChainActive().Height(), bSanityCheck, bSenderConflict)) {
+            if (!CheckSyscoinInputs(tx, state, view, true, ::ChainActive().Height(), test_accept || bSanityCheck, bSenderConflict)) {
                 // mark to remove from mempool, because if we remove right away then the transaction data cannot be relayed most of the time
-                if(bSenderConflict)
+                if(!test_accept && !bSanityCheck && bSenderConflict)
                     vecToRemoveFromMempool.push_back(hash);
-                else 
+                else
                     return error("mandatory-syscoin-inputs-check-failed (%s)", state.GetRejectReason());
             }
         } 
@@ -2246,7 +2247,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     }
 
     std::string strError = "";
-    if (!IsBlockValueValid(block, pindex->nHeight, nTotalRewardWithMasternodes, nFees, strError)) {
+    if (pindex->nHeight > 1 && !IsBlockValueValid(block, pindex->nHeight, nTotalRewardWithMasternodes, nFees, strError)) {
         return state.Invalid(ValidationInvalidReason::CONSENSUS,
                          error("ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)",
                                block.vtx[0]->GetValueOut(), blockReward),
