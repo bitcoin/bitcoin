@@ -76,7 +76,7 @@ from test_framework.util import (
     assert_equal,
     connect_nodes,
     disconnect_nodes,
-    get_bip9_status,
+    get_vb_status,
     hex_str_to_bytes,
     assert_raises_rpc_error,
 )
@@ -287,14 +287,14 @@ class SegWitTest(BitcoinTestFramework):
         def func_wrapper(self, *args, **kwargs):
             self.log.info("Subtest: {} (Segwit status = {})".format(func.__name__, self.segwit_status))
             # Assert segwit status is as expected
-            assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], self.segwit_status)
+            assert_equal(get_vb_status(self.nodes[0], 'segwit')['status'], self.segwit_status)
             assert_equal(self.get_segwit_info(0)['active'], self.segwit_status == 'active')
             func(self, *args, **kwargs)
             # Each subtest should leave some utxos for the next subtest
             assert self.utxo
             self.sync_blocks()
             # Assert segwit status is as expected at end of subtest
-            assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], self.segwit_status)
+            assert_equal(get_vb_status(self.nodes[0], 'segwit')['status'], self.segwit_status)
             assert_equal(self.get_segwit_info(0)['active'], self.segwit_status == 'active')
 
         return func_wrapper
@@ -548,7 +548,7 @@ class SegWitTest(BitcoinTestFramework):
         assert height < VB_PERIOD - 1
         # Advance to end of period, status should now be 'started'
         self.nodes[0].generate(VB_PERIOD - height - 1)
-        assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'started')
+        assert_equal(get_vb_status(self.nodes[0], 'segwit')['status'], 'started')
         self.segwit_status = 'started'
 
     @subtest
@@ -584,9 +584,9 @@ class SegWitTest(BitcoinTestFramework):
         self.nodes[0].generate(VB_PERIOD - 1)
         height = self.nodes[0].getblockcount()
         assert (height % VB_PERIOD) == VB_PERIOD - 2
-        assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'started')
+        assert_equal(get_vb_status(self.nodes[0], 'segwit')['status'], 'started')
         self.nodes[0].generate(1)
-        assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'locked_in')
+        assert_equal(get_vb_status(self.nodes[0], 'segwit')['status'], 'locked_in')
         self.segwit_status = 'locked_in'
 
     @subtest
@@ -714,10 +714,10 @@ class SegWitTest(BitcoinTestFramework):
         """Mine enough blocks to activate segwit."""
         height = self.nodes[0].getblockcount()
         self.nodes[0].generate(VB_PERIOD - (height % VB_PERIOD) - 2)
-        assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'locked_in')
+        assert_equal(get_vb_status(self.nodes[0], 'segwit')['status'], 'locked_in')
         assert_equal(self.get_segwit_info(0)['active'], False)
         self.nodes[0].generate(1)
-        assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'active')
+        assert_equal(get_vb_status(self.nodes[0], 'segwit')['status'], 'active')
         assert_equal(self.get_segwit_info(0)['active'], True)
         self.segwit_status = 'active'
 
@@ -1937,7 +1937,7 @@ class SegWitTest(BitcoinTestFramework):
         self.sync_blocks()
 
         # Make sure that this peer thinks segwit has activated.
-        assert get_bip9_status(self.nodes[2], 'segwit')['status'] == "active"
+        assert get_vb_status(self.nodes[2], 'segwit')['status'] == "active"
 
         # Make sure this peer's blocks match those of node0.
         height = self.nodes[2].getblockcount()

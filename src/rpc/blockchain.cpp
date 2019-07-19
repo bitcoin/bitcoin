@@ -1225,8 +1225,8 @@ static UniValue BIP9SoftForkDesc(const CBlockIndex* pindex, const Consensus::Par
     }
 
     UniValue rv(UniValue::VOBJ);
-    rv.pushKV("type", "bip9");
-    rv.pushKV("bip9", bip9);
+    rv.pushKV("type", "vb");
+    rv.pushKV("vb", bip9);
     if (ThresholdState::LOCKED_IN == thresholdState) {
         rv.pushKV("height", since_height + consensusParams.nMinerConfirmationWindow);
     } else if (ThresholdState::ACTIVE == thresholdState) {
@@ -1322,8 +1322,8 @@ UniValue getforkinfo(const JSONRPCRequest& request)
                 RPCResult{
             "{\n"
             "     \"xxxx\" : {                 (string) name of the softfork\n"
-            "      \"type\": \"xxxx\",           (string) one of \"buried\", \"bip9\"\n"
-            "      \"bip9\": {                 (object) status of bip9 softforks (only for \"bip9\" type)\n"
+            "      \"type\": \"xxxx\",           (string) one of \"buried\", \"vb\"\n"
+            "      \"vb\": {                 (object) status of versionbits softforks (only for \"vb\" type)\n"
             "        \"status\": \"xxxx\",       (string) one of \"defined\", \"started\", \"locked_in\", \"active\", \"failed\"\n"
             "        \"bit\": xx,              (numeric) the bit (0-28) in the block version field used to signal this softfork (only for \"started\" status)\n"
             "        \"startTime\": xx,        (numeric) the minimum median time past of a block at which the bit gains its meaning\n"
@@ -1337,7 +1337,7 @@ UniValue getforkinfo(const JSONRPCRequest& request)
             "           \"possible\": xx       (boolean) returns false if there are not enough blocks left in this period to pass activation threshold \n"
             "        }\n"
             "      },\n"
-            "      \"height\": \"xxxxxx\",       (numeric) height of the first block which the rules are enforced (only for \"buried\" type, or \"bip9\" type with \"locked_in\" or \"active\" status)\n"
+            "      \"height\": \"xxxxxx\",       (numeric) height of the first block which the rules are enforced (only for \"buried\" type, or \"vb\" type with \"locked_in\" or \"active\" status)\n"
             "      \"active\": xx,             (boolean) true if the rules are enforced after this block\n"
             "     }\n"
             "}\n"

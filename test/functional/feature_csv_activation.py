@@ -58,7 +58,7 @@ from test_framework.script import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    get_bip9_status,
+    get_vb_status,
     hex_str_to_bytes,
 )
 
@@ -188,12 +188,12 @@ class BIP68_112_113Test(BitcoinTestFramework):
         self.nodeaddress = self.nodes[0].getnewaddress()
 
         self.log.info("Test that the csv softfork is DEFINED")
-        assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], 'defined')
+        assert_equal(get_vb_status(self.nodes[0], 'csv')['status'], 'defined')
         test_blocks = self.generate_blocks(61, 4)
         self.send_blocks(test_blocks)
 
         self.log.info("Advance from DEFINED to STARTED, height = 143")
-        assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], 'started')
+        assert_equal(get_vb_status(self.nodes[0], 'csv')['status'], 'started')
 
         self.log.info("Fail to achieve LOCKED_IN")
         # 100 out of 144 signal bit 0. Use a variety of bits to simulate multiple parallel softforks
@@ -205,7 +205,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
         self.send_blocks(test_blocks)
 
         self.log.info("Failed to advance past STARTED, height = 287")
-        assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], 'started')
+        assert_equal(get_vb_status(self.nodes[0], 'csv')['status'], 'started')
 
         self.log.info("Generate blocks to achieve LOCK-IN")
         # 108 out of 144 signal bit 0 to achieve lock-in
@@ -217,7 +217,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
         self.send_blocks(test_blocks)
 
         self.log.info("Advanced from STARTED to LOCKED_IN, height = 431")
-        assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], 'locked_in')
+        assert_equal(get_vb_status(self.nodes[0], 'csv')['status'], 'locked_in')
 
         # Generate 140 more version 4 blocks
         test_blocks = self.generate_blocks(140, 4)
@@ -267,7 +267,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
         self.send_blocks(test_blocks)
 
         self.log.info("Not yet advanced to ACTIVE, height = 574 (will activate for block 576, not 575)")
-        assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], 'locked_in')
+        assert_equal(get_vb_status(self.nodes[0], 'csv')['status'], 'locked_in')
 
         # Test both version 1 and version 2 transactions for all tests
         # BIP113 test transaction will be modified before each use to put in appropriate block time
@@ -343,7 +343,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
         # 1 more version 4 block to get us to height 575 so the fork should now be active for the next block
         test_blocks = self.generate_blocks(1, 4)
         self.send_blocks(test_blocks)
-        assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], 'active')
+        assert_equal(get_vb_status(self.nodes[0], 'csv')['status'], 'active')
 
         self.log.info("Post-Soft Fork Tests.")
 

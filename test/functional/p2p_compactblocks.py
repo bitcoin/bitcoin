@@ -14,7 +14,7 @@ from test_framework.messages import BlockTransactions, BlockTransactionsRequest,
 from test_framework.mininode import mininode_lock, P2PInterface
 from test_framework.script import CScript, OP_TRUE, OP_DROP
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, get_bip9_status, wait_until
+from test_framework.util import assert_equal, get_vb_status, wait_until
 
 # TestP2PConn: A peer we use to send messages to bitcoind, and store responses.
 class TestP2PConn(P2PInterface):
@@ -803,7 +803,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         # We will need UTXOs to construct transactions in later tests.
         self.make_utxos()
 
-        assert_equal(get_bip9_status(self.nodes[0], "segwit")["status"], 'active')
+        assert_equal(get_vb_status(self.nodes[0], "segwit")["status"], 'active')
 
         self.log.info("Testing SENDCMPCT p2p message... ")
         self.test_sendcmpct(self.segwit_node, old_node=self.old_node)
