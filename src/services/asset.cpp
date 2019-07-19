@@ -22,6 +22,8 @@ extern AssetBalanceMap mempoolMapAssetBalances;
 extern ArrivalTimesMapImpl arrivalTimesMap;
 extern CCriticalSection cs_assetallocationmempoolbalance;
 extern CCriticalSection cs_assetallocationarrival;
+extern std::vector<std::pair<uint256, int64_t> >  vecToRemoveFromMempool;
+extern CCriticalSection cs_assetallocationmempoolremovetx;
 std::unique_ptr<CAssetDB> passetdb;
 std::unique_ptr<CAssetSupplyStatsDB> passetsupplystatsdb;
 std::unique_ptr<CAssetAllocationDB> passetallocationdb;
@@ -281,6 +283,12 @@ bool FlushSyscoinDBs() {
                 passetallocationmempooldb->WriteAssetAllocationMempoolArrivalTimes(arrivalTimesMap);
                 arrivalTimesMap.clear();
             }
+            {
+                LOCK(cs_assetallocationmempoolremovetx);
+                LogPrintf("Flushing Asset Allocation Mempool Removal Transactions...size %d\n", vecToRemoveFromMempool.size());
+                passetallocationmempooldb->WriteAssetAllocationMempoolToRemoveVector(vecToRemoveFromMempool);
+                vecToRemoveFromMempool.clear();
+            }           
             if (!passetallocationmempooldb->Flush()) {
                 LogPrintf("Failed to write to asset allocation mempool database!\n");
                 ret = false;

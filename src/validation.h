@@ -708,7 +708,6 @@ extern VersionBitsCache versionbitscache;
 int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params);
 // SYSCOIN
 extern tp::ThreadPool* threadpool;
-extern std::vector<std::pair<uint256, int64_t> > vecTPSTestReceivedTimesMempool;
 extern int64_t nTPSTestingStartTime;
 extern double nTPSTestingSendRawEndTime;
 extern int64_t nTPSTestingSendRawStartTime;
