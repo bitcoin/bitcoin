@@ -989,7 +989,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                         if (!CheckSyscoinInputs(txIn, validationState, view, true, ::ChainActive().Height(), false, bSenderConflict))
                         {
                             // if duplicate input or sender is in conflict we legitimately want to relay
-                            // but at the same time remove from mempool after 30 seconds or next block atleast 30 seconds since we added entry
+                            // but at the same time remove from mempool after 30 seconds or next block at least 30 seconds since we added entry
                             if(!bSenderConflict || vecToRemoveFromMempool.size() >= 10000000)
                                 nLastMultithreadMempoolFailure = GetTime();
                             LogPrint(BCLog::MEMPOOL, "%s: %s\n", "CheckSyscoinInputs Error", hash.ToString());
