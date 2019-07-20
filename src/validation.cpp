@@ -58,14 +58,11 @@
 #include <outputtype.h>
 #include <masternodeman.h>
 #include <masternodepayments.h>
-#include <thread_pool/thread_pool.hpp>
 #include <services/assetconsensus.h>
 std::vector<std::pair<uint256, int64_t> >  vecTPSTestReceivedTimesMempool;
 int64_t nTPSTestingStartTime = 0;
 double nTPSTestingSendRawEndTime = 0;
 int64_t nTPSTestingSendRawStartTime = 0;
-bool fLogThreadpool = false;
-tp::ThreadPool *threadpool = NULL;
 extern AssetTXPrevOutPointMap mempoolMapAssetTXPrevOutPoints;
 extern CCriticalSection cs_assetallocationprevout;
 extern std::unordered_set<std::string> assetAllocationConflicts;
@@ -73,24 +70,7 @@ extern CCriticalSection cs_assetallocationconflicts;
 extern std::vector<std::pair<uint256, int64_t> >  vecToRemoveFromMempool;
 extern CCriticalSection cs_assetallocationmempoolremovetx;
 extern CCriticalSection cs_assetallocationarrival;
-extern CCriticalSection cs_assetallocationmempoolremovetx;
 std::vector<CInv> vInvToSend;
-// track worker thread metrics
-static int totalWorkerCount = 0;
-static int totalExecutionCount = 0;
-
-static int totalCheckCount = 0;
-static int totalCheckMicros = 0;
-
-static int totalSyscoinCheckCount = 0;
-static int totalSyscoinCheckMicros = 0;
-
-static int concurrentExecutionCount = 0;
-static int maxConcurrentExecutionCount = 0;
-
-static int64_t totalExecutionMicros = 0;
-static int64_t minExecutionMicros = 1000000000;
-static int64_t maxExecutionMicros = 0;
 std::map<uint256, int64_t> mapRejectedBlocks GUARDED_BY(cs_main);
 #if defined(NDEBUG)
 # error "Syscoin cannot be compiled without assertions."
@@ -214,7 +194,7 @@ std::unique_ptr<CBlockTreeDB> pblocktree;
 // See definition for documentation
 static void FindFilesToPruneManual(std::set<int>& setFilesToPrune, int nManualPruneHeight);
 static void FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPruneAfterHeight);
-bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheSigStore, bool cacheFullScriptStore, PrecomputedTransactionData& txdata, std::vector<CScriptCheck> *pvChecks = nullptr, std::vector<CScriptCheckConcurrent> *pvChecksConcurrent = nullptr, uint256* hashCacheEntry = nullptr);
+bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheSigStore, bool cacheFullScriptStore, PrecomputedTransactionData& txdata, std::vector<CScriptCheck> *pvChecks = nullptr, uint256* hashCacheEntry = nullptr);
 static FILE* OpenUndoFile(const FlatFilePos &pos, bool fReadOnly = false);
 static FlatFileSeq BlockFileSeq();
 static FlatFileSeq UndoFileSeq();
@@ -443,7 +423,7 @@ static void UpdateMempoolForReorg(DisconnectedBlockTransactions& disconnectpool,
 // Used to avoid mempool polluting consensus critical paths if CCoinsViewMempool
 // were somehow broken and returning the wrong scriptPubKeys
 static bool CheckInputsFromMempoolAndCache(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& view, const CTxMemPool& pool,
-                 unsigned int flags, bool cacheSigStore, PrecomputedTransactionData& txdata, std::vector<CScriptCheck> *pvChecks, std::vector<CScriptCheckConcurrent> *pvChecksConcurrent, uint256* hashCacheEntry) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
+                 unsigned int flags, bool cacheSigStore, PrecomputedTransactionData& txdata, std::vector<CScriptCheck> *pvChecks, uint256* hashCacheEntry) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
     AssertLockHeld(cs_main);
 
     // pool.cs should be locked already, but go ahead and re-take the lock here
@@ -474,7 +454,7 @@ static bool CheckInputsFromMempoolAndCache(const CTransaction& tx, CValidationSt
     }
 
     // SYSCOIN
-    return CheckInputs(tx, state, view, true, flags, cacheSigStore, true, txdata, pvChecks, pvChecksConcurrent,hashCacheEntry);
+    return CheckInputs(tx, state, view, true, flags, cacheSigStore, true, txdata, pvChecks,hashCacheEntry);
 }
 static CuckooCache::cache<uint256, SignatureCacheHasher> scriptExecutionCache;
 static uint256 scriptExecutionCacheNonce(GetRandHash());
@@ -493,7 +473,7 @@ void ThreadScriptCheck(int worker_num) {
  */
 static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool& pool, CValidationState& state, const CTransactionRef& ptx,
                               bool* pfMissingInputs, int64_t nAcceptTime, std::list<CTransactionRef>* plTxnReplaced,
-                              bool bypass_limits, const CAmount& nAbsurdFee, std::vector<COutPoint>& coins_to_uncache, bool test_accept, bool bMultiThreaded, bool bSanityCheck) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+                              bool bypass_limits, const CAmount& nAbsurdFee, std::vector<COutPoint>& coins_to_uncache, bool test_accept, bool bSanityCheck) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     const CTransaction& tx = *ptx;
     const uint256 hash = tx.GetHash();
@@ -562,20 +542,17 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                     // unconfirmed ancestors anyway; doing otherwise is hopelessly
                     // insecure.
                     bool fReplacementOptOut = true;
-                    // SYSCOIN transactions should use CPFP not RBF
-                    if (!IsSyscoinTx(tx.nVersion) && !IsSyscoinTx(ptxConflicting->nVersion))
+                   
+                    for (const CTxIn &_txin : ptxConflicting->vin)
                     {
-                        for (const CTxIn &_txin : ptxConflicting->vin)
+                        if (_txin.nSequence <= MAX_BIP125_RBF_SEQUENCE)
                         {
-                            if (_txin.nSequence <= MAX_BIP125_RBF_SEQUENCE)
-                            {
-                                fReplacementOptOut = false;
-                                break;
-                            }
+                            fReplacementOptOut = false;
+                            break;
                         }
                     }
+                    
                     if (fReplacementOptOut) {
-                        // SYSCOIN flag sender if input conflict in syscoin asset allocation tx
                         if(!test_accept && !bSanityCheck && IsAssetAllocationTx(tx.nVersion)){
                             CAssetAllocation theAssetAllocation(tx);
                             if(!theAssetAllocation.assetAllocationTuple.IsNull()){
@@ -587,19 +564,10 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                                     // add conflicting sender
                                     assetAllocationConflicts.insert(senderTupleStr);
                                     bDuplicate = true;
-                                    {
-                                        LOCK(cs_assetallocationprevout);
-                                        auto mapAssetTXPrevOutPointIT = mempoolMapAssetTXPrevOutPoints.find(senderTupleStr);
-                                        // make sure the input has been legitimatized (by checking to see if its different) because it will have set the output of the prev tx (the one that has the offending outpoint checked here) at the send of checkassetallocationinputs so this makes sure input signature is checked
-                                        // so we can't have case where double spends are relayed as multithreaded mode even if they aren't signed and we are in singlethreaded mode on this node (doesn't prolong or add to an existing spam attack)
-                                        // regardless if we are in single threaded mode, we should relay this transaction because it affects zdag protocol consensus 
-                                        if(mapAssetTXPrevOutPointIT == mempoolMapAssetTXPrevOutPoints.end() || mapAssetTXPrevOutPointIT->second != txin.prevout){
-                                            // ensure relay before remove from mempool
-                                            bMultiThreaded = true;
-                                        }
-                                    }
                                     break;
-                                } 
+                                }
+                                else
+                                    return state.Invalid(ValidationInvalidReason::TX_MEMPOOL_POLICY, false, REJECT_DUPLICATE, "txn-mempool-conflict");
                             }   
                         }
                         else
@@ -684,7 +652,6 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
             const Coin &coin = view.AccessCoin(txin.prevout);
             if (coin.IsCoinBase()) {
                 fSpendsCoinbase = true;
-                bMultiThreaded = false;
                 break;
             }
         }
@@ -850,32 +817,30 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                               FormatMoney(::incrementalRelayFee.GetFee(nSize))));
             }
         }
-        std::vector<CScriptCheckConcurrent> vChecksConcurrent; 
         std::vector<CScriptCheck> vChecks;    
         PrecomputedTransactionData txdata(tx);      
         uint256 hashCacheEntry;
-        if(!CheckInputsFromMempoolAndCache(tx, state, view, pool, STANDARD_SCRIPT_VERIFY_FLAGS, true, txdata, bMultiThreaded? nullptr: &vChecks, bMultiThreaded? &vChecksConcurrent: nullptr, &hashCacheEntry)){
+        if(!CheckInputsFromMempoolAndCache(tx, state, view, pool, STANDARD_SCRIPT_VERIFY_FLAGS, true, txdata, &vChecks, &hashCacheEntry)){
             assert(IsTransactionReason(state.GetReason()));
             return false; // state filled in by CheckInputs
         }
                                     
         // SYSCOIN
-        if (!bMultiThreaded) {
-            CCheckQueueControl<CScriptCheck> control(&scriptcheckqueue);
-            control.Add(vChecks);   
-            if (!control.Wait())
-                return false;
-            bool bSenderConflict = false;
-            if (!CheckSyscoinInputs(tx, state, view, true, ::ChainActive().Height(), test_accept || bSanityCheck, bSenderConflict)) {
-                // mark to remove from mempool, because if we remove right away then the transaction data cannot be relayed most of the time
-                if(!test_accept && !bSanityCheck && bSenderConflict){
-                    LOCK(cs_assetallocationmempoolremovetx);
-                    vecToRemoveFromMempool.push_back(std::make_pair(hash, GetTime()));
-                }
-                else
-                    return error("mandatory-syscoin-inputs-check-failed (%s)", state.GetRejectReason());
+        CCheckQueueControl<CScriptCheck> control(&scriptcheckqueue);
+        control.Add(vChecks);   
+        if (!control.Wait())
+            return false;
+        bool bSenderConflict = false;
+        if (!CheckSyscoinInputs(tx, state, view, true, ::ChainActive().Height(), test_accept || bSanityCheck, bSenderConflict)) {
+            // mark to remove from mempool, because if we remove right away then the transaction data cannot be relayed most of the time
+            if(!test_accept && !bSanityCheck && bSenderConflict){
+                LOCK(cs_assetallocationmempoolremovetx);
+                vecToRemoveFromMempool.push_back(std::make_pair(hash, GetTime()));
             }
-        } 
+            else
+                return error("mandatory-syscoin-inputs-check-failed (%s)", state.GetRejectReason());
+        }
+        
         if (test_accept) {
             // Tx was accepted, but not added
             return true;
@@ -910,174 +875,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
             LimitMempoolSize(pool, gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000, gArgs.GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60);
             if (!pool.exists(hash))
                 return state.Invalid(ValidationInvalidReason::TX_MEMPOOL_POLICY, false, REJECT_INSUFFICIENTFEE, "mempool full");
-        }
-        
-        if (bMultiThreaded && threadpool != NULL)
-        {
-            const CTransaction &txIn = *ptx;
-            // define a task for the worker to process
-            std::packaged_task<void()> task([&pool, chainparams, txIn, hash, coins_to_uncache, hashCacheEntry, vChecksConcurrent]() {
-                // metrics
-                int64_t time;
-                if (fLogThreadpool) {
-                    time = GetTimeMicros();
-                    concurrentExecutionCount += 1;
-                }
-                int thisCheckCount = 0;
-                int thisSyscoinCheckCount = 0;
-                int thisCheckMicros = 0;
-                int thisSyscoinCheckMicros = 0;
-               
-               
-                bool isCheckPassing = true;
-                                 
-                if (fLogThreadpool) 
-                    thisCheckCount += 1;
-                for(const auto& check: vChecksConcurrent){
-                    isCheckPassing = check();
-                    if (!isCheckPassing)
-                    {
-                        nLastMultithreadMempoolFailure = GetTime();
-                        LogPrint(BCLog::MEMPOOL, "%s: %s\n", "CheckSyscoinInputs Sig Error", hash.ToString());
-                        {
-                            LOCK2(cs_main, mempool.cs);
-                            for (const COutPoint& hashTx : coins_to_uncache)
-                                pcoinsTip->Uncache(hashTx);
-                                
-                            pool.removeConflicts(txIn);
-                            pool.removeRecursive(txIn, MemPoolRemovalReason::SYSCOININPUT);
-                            pool.ClearPrioritisation(hash);
-                            // After we've (potentially) uncached entries, ensure our coins cache is still within its size limits   
-                            CValidationState stateDummy;
-                            ::ChainstateActive().FlushStateToDisk(chainparams, stateDummy, FlushStateMode::PERIODIC);
-                            break;
-                        }
-                        
-                    }
-                }
-                if (fLogThreadpool) {
-                    // how long did we run check()'s
-                    thisCheckMicros = GetTimeMicros() - time;
-                }
-
-                if (isCheckPassing)
-                {
-                    CCoinsView dummy;
-                    CCoinsViewCache view(&dummy);
-                    {
-                        LOCK2(cs_main, mempool.cs);
-                        CCoinsViewMemPool viewMemPool(pcoinsTip.get(), pool);
-                        view.SetBackend(viewMemPool);
-
-                        // do all inputs exist?
-                        for (const CTxIn &txin : txIn.vin) {
-                            view.AccessCoin(txin.prevout);
-                        }
-                    }
-                    // Bring the best block into scope
-                    view.GetBestBlock();
-                    // we have all inputs cached now, so switch back to dummy, so we don't need to keep lock on mempool
-                    view.SetBackend(dummy);
-                    CValidationState validationState;
-                    int64_t syscoinCheckTime;
-                    if (fLogThreadpool) {
-                        syscoinCheckTime = GetTimeMicros();
-                        thisSyscoinCheckCount += 1;
-                    }
-                    {
-                        bool bSenderConflict = false;
-                        if (!CheckSyscoinInputs(txIn, validationState, view, true, ::ChainActive().Height(), false, bSenderConflict))
-                        {
-                            // if duplicate input or sender is in conflict we legitimately want to relay
-                            // but at the same time remove from mempool after 30 seconds or next block at least 30 seconds since we added entry
-                            if(!bSenderConflict || vecToRemoveFromMempool.size() >= 10000000)
-                                nLastMultithreadMempoolFailure = GetTime();
-                            LogPrint(BCLog::MEMPOOL, "%s: %s\n", "CheckSyscoinInputs Error", hash.ToString());
-                            {
-                                LOCK2(cs_main, mempool.cs);
-                                for (const COutPoint& hashTx : coins_to_uncache)
-                                    pcoinsTip->Uncache(hashTx);
-                                
-                                // mark to remove from mempool, because if we remove right away then the transaction data cannot be relayed most of the time
-                                // only do this if sender is conflicting otherwise its actually a bad transaction for other reasons and just remove from mempool right away
-                                if(bSenderConflict && nLastMultithreadMempoolFailure <= 0){
-                                    LOCK(cs_assetallocationmempoolremovetx);
-                                    vecToRemoveFromMempool.push_back(std::make_pair(hash, GetTime()));
-                                }
-                                else{
-                                    pool.removeConflicts(txIn);
-                                    pool.removeRecursive(txIn, MemPoolRemovalReason::SYSCOININPUT);
-                                    pool.ClearPrioritisation(hash);
-                                }
-                                // After we've (potentially) uncached entries, ensure our coins cache is still within its size limits   
-                                CValidationState stateDummy;
-                                ::ChainstateActive().FlushStateToDisk(chainparams, stateDummy, FlushStateMode::PERIODIC);
-                            }
-                        }
-                    }
-                    scriptExecutionCache.insert(hashCacheEntry);
-                    if (fLogThreadpool) {
-                        // how long did we run CheckSyscoinInputs()'s
-                        thisSyscoinCheckMicros = GetTimeMicros() - syscoinCheckTime;
-                    }
-                }
-                if (fLogThreadpool) {
-                    // metrics
-                    const int64_t &thisExecutionMicros = GetTimeMicros() - time;
-                    if (thisExecutionMicros < minExecutionMicros) {
-                        minExecutionMicros = thisExecutionMicros;
-                    }
-                    if (thisExecutionMicros > maxExecutionMicros) {
-                        maxExecutionMicros = thisExecutionMicros;
-                    }
-                    if (concurrentExecutionCount > maxConcurrentExecutionCount) {
-                        maxConcurrentExecutionCount = concurrentExecutionCount;
-                    }
-                    totalCheckCount += thisCheckCount;
-                    totalCheckMicros += thisCheckMicros;
-                    totalSyscoinCheckCount += thisSyscoinCheckCount;
-                    totalSyscoinCheckMicros += thisSyscoinCheckMicros;
-
-                    totalExecutionMicros += thisExecutionMicros;
-
-
-                    // indicate that this thread is done
-                    concurrentExecutionCount -= 1;
-                }
-            });
-            if(fLogThreadpool)
-                totalExecutionCount ++;
-            // every 100th transaction or when not in unit test mode
-            if (fLogThreadpool && totalCheckCount > 0 && totalSyscoinCheckCount > 0 && totalExecutionCount > 0 && (!fUnitTest || (fUnitTest && totalExecutionCount % 100 == 0))) {
-                int avgCheckMicros = totalCheckMicros / totalCheckCount;
-                int avgSyscoinCheckMicros = totalSyscoinCheckMicros / totalSyscoinCheckCount;
-                int avgExecutionMicros = totalExecutionMicros / totalExecutionCount;
-                LogPrint(BCLog::THREADPOOL, "THREADPOOL::%s:Signature check executions - concurrent: %d, max concurrent: %d, total calls: %d\n", hash.ToString(), concurrentExecutionCount, maxConcurrentExecutionCount, totalExecutionCount);
-                LogPrint(BCLog::THREADPOOL, "THREADPOOL::%s:Signature check internals - check(%d): total %lld, avg %lld microseconds, syscoin(%d): total %lld, avg %lld microseconds\n", hash.ToString(), totalCheckCount, totalCheckMicros, avgCheckMicros, totalSyscoinCheckCount, totalSyscoinCheckMicros, avgSyscoinCheckMicros);
-                LogPrint(BCLog::THREADPOOL, "THREADPOOL::%s:Signature check timing - avg: %lld, min: %lld, max: %lld, total: %lld microseconds\n", hash.ToString(), avgExecutionMicros, minExecutionMicros, maxExecutionMicros, totalExecutionMicros);
-            }
-
-            // retry if the threadpool queue is full and return error if we can't post
-            bool isThreadPosted = false;
-            for (int numTries = 1; numTries <= 50; numTries++)
-            {
-                // send task to threadpool pointer from init.cpp
-                isThreadPosted = threadpool->tryPost(task);
-                if (isThreadPosted)
-                {
-                    totalWorkerCount += 1;
-                    if(!fUnitTest)
-                        LogPrint(BCLog::THREADPOOL, "THREADPOOL::%s:Signature check task #%d added in %d tries\n", hash.ToString(), totalWorkerCount, numTries);
-                    break;
-                }
-                LogPrintf("THREADPOOL::AcceptToMemoryPoolWorker: thread pool queue is full\n");
-                MilliSleep(10);
-            }
-            if (!isThreadPosted)
-            {
-                return state.Invalid(ValidationInvalidReason::TX_MEMPOOL_POLICY, false, REJECT_INVALID, "threadpool-full", "AcceptToMemoryPoolWorker: thread pool queue is full");
-            }
-        }
+        } 
     }
 
     GetMainSignals().TransactionAddedToMempool(ptx);
@@ -1088,19 +886,10 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
 /** (try to) add transaction to memory pool with a specified acceptance time **/
 static bool AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPool& pool, CValidationState &state, const CTransactionRef &tx,
                         bool* pfMissingInputs, int64_t nAcceptTime, std::list<CTransactionRef>* plTxnReplaced,
-                        bool bypass_limits, const CAmount nAbsurdFee, bool test_accept, bool bMultiThreaded = false, bool bSanityCheck = true) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+                        bool bypass_limits, const CAmount nAbsurdFee, bool test_accept, bool bSanityCheck = true) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    // SYSCOIN if MT mempool verification failure then fallback to single threaded until it latches to 0 again on PoW
-    if(bMultiThreaded){
-        if (nLastMultithreadMempoolFailure > 0) {
-            LogPrint(BCLog::MEMPOOL, "AcceptToMemoryPoolWithTime: using single-threaded verification...\n");
-            bMultiThreaded = false;
-        }
-        else if(!fConcurrentProcessing || test_accept || !IsAssetAllocationTx(tx->nVersion))
-            bMultiThreaded = false;
-    }
     std::vector<COutPoint> coins_to_uncache;
-    bool res = AcceptToMemoryPoolWorker(chainparams, pool, state, tx, pfMissingInputs, nAcceptTime, plTxnReplaced, bypass_limits, nAbsurdFee, coins_to_uncache, test_accept, bMultiThreaded, bSanityCheck);
+    bool res = AcceptToMemoryPoolWorker(chainparams, pool, state, tx, pfMissingInputs, nAcceptTime, plTxnReplaced, bypass_limits, nAbsurdFee, coins_to_uncache, test_accept, bSanityCheck);
     if (!res) {
         // Remove coins that were not present in the coins cache before calling ATMPW;
         // this is to prevent memory DoS in case we receive a large number of
@@ -1118,10 +907,10 @@ static bool AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPo
 
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransactionRef &tx,
                         bool* pfMissingInputs, std::list<CTransactionRef>* plTxnReplaced,
-                        bool bypass_limits, const CAmount nAbsurdFee, bool test_accept, bool bMultiThreaded, bool bSanityCheck) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+                        bool bypass_limits, const CAmount nAbsurdFee, bool test_accept, bool bSanityCheck) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     const CChainParams& chainparams = Params();
-    return AcceptToMemoryPoolWithTime(chainparams, pool, state, tx, pfMissingInputs, GetTime(), plTxnReplaced, bypass_limits, nAbsurdFee, test_accept, bMultiThreaded, bSanityCheck);
+    return AcceptToMemoryPoolWithTime(chainparams, pool, state, tx, pfMissingInputs, GetTime(), plTxnReplaced, bypass_limits, nAbsurdFee, test_accept, bSanityCheck);
 }
 
 /**
@@ -1559,11 +1348,6 @@ bool CScriptCheck::operator()() {
     return VerifyScript(scriptSig, m_tx_out.scriptPubKey, witness, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, m_tx_out.nValue, cacheStore, *txdata), &error);
 }
 // SYSCOIN
-bool CScriptCheckConcurrent::operator()() const {
-    const CScript &scriptSig = txTo.vin[nIn].scriptSig;
-    const CScriptWitness *witness = &txTo.vin[nIn].scriptWitness;      
-    return VerifyScript(scriptSig, m_tx_out.scriptPubKey, witness, nFlags, CachingTransactionSignatureChecker(&txTo, nIn, m_tx_out.nValue, cacheStore, txdata));
-}
 int GetSpendHeight(const CCoinsViewCache& inputs)
 {
     LOCK(cs_main);
@@ -1599,15 +1383,12 @@ void InitScriptExecutionCache() {
  * Non-static (and re-declared) in src/test/txvalidationcache_tests.cpp
  */
 // SYSCOIN
-bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheSigStore, bool cacheFullScriptStore, PrecomputedTransactionData& txdata, std::vector<CScriptCheck> *pvChecks, std::vector<CScriptCheckConcurrent> *pvChecksConcurrent, uint256* hashCacheEntryOut) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheSigStore, bool cacheFullScriptStore, PrecomputedTransactionData& txdata, std::vector<CScriptCheck> *pvChecks, uint256* hashCacheEntryOut) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     if (!tx.IsCoinBase())
     {
         if (pvChecks)
             pvChecks->reserve(tx.vin.size());
-        // SYSCOIN
-        if (pvChecksConcurrent)
-            pvChecksConcurrent->reserve(tx.vin.size());
         // The first loop above does all the inexpensive checks.
         // Only if ALL inputs pass do we perform expensive ECDSA signature checks.
         // Helps prevent CPU exhaustion attacks.
@@ -1641,46 +1422,40 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
                 const Coin& coin = inputs.AccessCoin(prevout);
                 assert(!coin.IsSpent());
 
-                if(pvChecksConcurrent){
-                    CScriptCheckConcurrent checkConcurrent(coin.out, tx, i, flags, cacheSigStore, std::move(txdata)); 
-                    pvChecksConcurrent->push_back(CScriptCheckConcurrent());
-                    checkConcurrent.swap(pvChecksConcurrent->back());
-                }
-                else {
-                    CScriptCheck check(coin.out, tx, i, flags, cacheSigStore, &txdata);
-                    if (pvChecks) {
-                        pvChecks->push_back(CScriptCheck());
-                        check.swap(pvChecks->back());
-                    } else if (!check()) {
-                        if (flags & STANDARD_NOT_MANDATORY_VERIFY_FLAGS) {
-                            // Check whether the failure was caused by a
-                            // non-mandatory script verification check, such as
-                            // non-standard DER encodings or non-null dummy
-                            // arguments; if so, ensure we return NOT_STANDARD
-                            // instead of CONSENSUS to avoid downstream users
-                            // splitting the network between upgraded and
-                            // non-upgraded nodes by banning CONSENSUS-failing
-                            // data providers.
-                            CScriptCheck check2(coin.out, tx, i,
-                                    flags & ~STANDARD_NOT_MANDATORY_VERIFY_FLAGS, cacheSigStore, &txdata);
-                            if (check2())
-                                return state.Invalid(ValidationInvalidReason::TX_NOT_STANDARD, false, REJECT_NONSTANDARD, strprintf("non-mandatory-script-verify-flag (%s)", ScriptErrorString(check.GetScriptError())));
-                        }
-                        // MANDATORY flag failures correspond to
-                        // ValidationInvalidReason::CONSENSUS. Because CONSENSUS
-                        // failures are the most serious case of validation
-                        // failures, we may need to consider using
-                        // RECENT_CONSENSUS_CHANGE for any script failure that
-                        // could be due to non-upgraded nodes which we may want to
-                        // support, to avoid splitting the network (but this
-                        // depends on the details of how net_processing handles
-                        // such errors).
-                       return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(check.GetScriptError())));
+                CScriptCheck check(coin.out, tx, i, flags, cacheSigStore, &txdata);
+                if (pvChecks) {
+                    pvChecks->push_back(CScriptCheck());
+                    check.swap(pvChecks->back());
+                } else if (!check()) {
+                    if (flags & STANDARD_NOT_MANDATORY_VERIFY_FLAGS) {
+                        // Check whether the failure was caused by a
+                        // non-mandatory script verification check, such as
+                        // non-standard DER encodings or non-null dummy
+                        // arguments; if so, ensure we return NOT_STANDARD
+                        // instead of CONSENSUS to avoid downstream users
+                        // splitting the network between upgraded and
+                        // non-upgraded nodes by banning CONSENSUS-failing
+                        // data providers.
+                        CScriptCheck check2(coin.out, tx, i,
+                                flags & ~STANDARD_NOT_MANDATORY_VERIFY_FLAGS, cacheSigStore, &txdata);
+                        if (check2())
+                            return state.Invalid(ValidationInvalidReason::TX_NOT_STANDARD, false, REJECT_NONSTANDARD, strprintf("non-mandatory-script-verify-flag (%s)", ScriptErrorString(check.GetScriptError())));
                     }
+                    // MANDATORY flag failures correspond to
+                    // ValidationInvalidReason::CONSENSUS. Because CONSENSUS
+                    // failures are the most serious case of validation
+                    // failures, we may need to consider using
+                    // RECENT_CONSENSUS_CHANGE for any script failure that
+                    // could be due to non-upgraded nodes which we may want to
+                    // support, to avoid splitting the network (but this
+                    // depends on the details of how net_processing handles
+                    // such errors).
+                    return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(check.GetScriptError())));
                 }
             }
+            
 
-            if (cacheFullScriptStore && !pvChecks && !pvChecksConcurrent) {
+            if (cacheFullScriptStore && !pvChecks) {
                 // We executed all of the provided scripts, and were told to
                 // cache the result. Do so now.
                 scriptExecutionCache.insert(hashCacheEntry);

@@ -2,15 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include <validation.h>
-#include <boost/thread.hpp>
 #include <boost/algorithm/string.hpp>
-#include <future>
 #include <rpc/util.h>
 #include <services/assetconsensus.h>
 #include <services/rpc/assetrpc.h>
 #include <chainparams.h>
 #include <rpc/server.h>
 #include <validationinterface.h>
+#include <thread>
 using namespace std;
 extern std::string exePath;
 extern std::string EncodeDestination(const CTxDestination& dest);
@@ -274,7 +273,7 @@ UniValue tpstestadd(const JSONRPCRequest& request) {
 		}
 		if (bFirstTime) {
 			// define a task for the worker to process
-			std::packaged_task<void()> task([]() {
+			std::thread t([]() {
 				while (nTPSTestingStartTime <= 0 || GetTimeMicros() < nTPSTestingStartTime) {
 					MilliSleep(0);
 				}
@@ -284,19 +283,7 @@ UniValue tpstestadd(const JSONRPCRequest& request) {
 					sendrawtransaction(txReq);
 				}
 			});
-			bool isThreadPosted = false;
-			for (int numTries = 1; numTries <= 50; numTries++)
-			{
-				// send task to threadpool pointer from init.cpp
-				isThreadPosted = threadpool->tryPost(task);
-				if (isThreadPosted)
-				{
-					break;
-				}
-				MilliSleep(10);
-			}
-			if (!isThreadPosted)
-				throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("thread pool queue is full"));
+            t.detach();
 		}
 	}
 	UniValue result(UniValue::VOBJ);
