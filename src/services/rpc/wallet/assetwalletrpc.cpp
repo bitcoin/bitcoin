@@ -181,6 +181,7 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
     FeeCalculation fee_calc;
     CCoinControl coin_control;
     tx = txIn;
+    const bool& isSyscoinTx = IsSyscoinTx(tx.nVersion);
     tx.vin.clear();
     if(!outPointLastSender.IsNull() && ::ChainActive().Tip()->nHeight >= Params().GetConsensus().nBridgeStartBlock){
         const Coin& coin = view.AccessCoin(outPointLastSender);
@@ -190,12 +191,12 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
     CAmount nFees =  GetMinimumFee(*pwallet, 10+34, coin_control,  &fee_calc);
     for (auto& vin : txIn.vin) {
         const Coin& coin = view.AccessCoin(vin.prevout);
-        if(coin.IsSpent())
+        if(coin.IsSpent()){
             continue;
+        }
         {
             LOCK(pwallet->cs_wallet);
             if (pwallet->IsLockedCoin(vin.prevout.hash, vin.prevout.n)){
-                LogPrintf("locked coin skipping...\n");
                 continue;
             }
         }
@@ -207,6 +208,9 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
                 continue;
             }
         }
+        // disable RBF for syscoin tx's, should use CPFP
+        if(isSyscoinTx)
+            vin.nSequence = CTxIn::SEQUENCE_FINAL - 1;
         tx.vin.push_back(vin);
         int numSigs = 0;
         CCountSigsVisitor(*pwallet, numSigs).Process(coin.out.scriptPubKey);
@@ -254,7 +258,7 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
             const std::vector<unsigned char> &data(ParseHex(find_value(utxoObj, "scriptPubKey").get_str()));
             const CScript& scriptPubKey = CScript(data.begin(), data.end());
             const CAmount &nValue = AmountFromValue(find_value(utxoObj, "amount"));
-            const CTxIn txIn(txid, nOut, scriptPubKey);
+            CTxIn txIn(txid, nOut, scriptPubKey);
             const COutPoint outPoint(txid, nOut);
             if (std::find(tx.vin.begin(), tx.vin.end(), txIn) != tx.vin.end())
                 continue;
@@ -288,6 +292,9 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
             CCountSigsVisitor(*pwallet, numSigs).Process(scriptPubKey);
             // add fees to account for every input added to this transaction
             nFees += GetMinimumFee(*pwallet, numSigs * 200, coin_control, &fee_calc);
+            // disable RBF for syscoin tx's, should use CPFP
+            if(isSyscoinTx)
+                txIn.nSequence = CTxIn::SEQUENCE_FINAL - 1;
             tx.vin.push_back(txIn);
             nCurrentAmount += nValue;
             if (nCurrentAmount >= (nDesiredAmount + nFees)) {

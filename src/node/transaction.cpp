@@ -33,7 +33,7 @@ TransactionError BroadcastTransaction(const CTransactionRef tx, uint256& hashTx,
         bool fMissingInputs;
         // SYSCOIN always bSanityCheck as false, which triggers bSanityCheck to false in checksyscoininputs which saves balances in mempool balance object (for senders)
         if (!AcceptToMemoryPool(mempool, state, std::move(tx), &fMissingInputs,
-                                nullptr /* plTxnReplaced */, false /* bypass_limits */, highfee, false, fTPSTestEnabled, false)) {
+                                nullptr /* plTxnReplaced */, false /* bypass_limits */, highfee, false, false)) {
             if (state.IsInvalid()) {
                 err_string = FormatStateMessage(state);
                 return TransactionError::MEMPOOL_REJECTED;

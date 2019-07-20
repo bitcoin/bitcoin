@@ -13,6 +13,8 @@
 #endif
 #include <services/rpc/assetrpc.h>
 #include <rpc/server.h>
+#include <policy/rbf.h>
+
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
 extern UniValue ValueFromAmount(const CAmount& amount);
@@ -711,20 +713,12 @@ bool CAssetAllocationDB::ScanAssetAllocations(const uint32_t count, const uint32
 }
 int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& assetAllocationTupleSender, const uint256& lookForTxHash, const uint32_t& nMinLatencyMilliSeconds) {
     LOCK(cs_assetallocationarrival);
-	CAssetAllocation dbAssetAllocation;
-	// get last POW asset allocation balance to ensure we use POW balance to check for potential conflicts in mempool (real-time balances).
-	// The idea is that real-time spending amounts can in some cases overrun the POW balance safely whereas in some cases some of the spends are 
-	// put in another block due to not using enough fees or for other reasons that miners don't mine them.
-	// We just want to flag them as level 1 so it warrants deeper investigation on receiver side if desired (if fund amounts being transferred are not negligible)
-	if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTupleSender, dbAssetAllocation))
-		return ZDAG_NOT_FOUND;
-        
-
 	// ensure that this transaction exists in the arrivalTimes DB (which is the running stored lists of all real-time asset allocation sends not in POW)
 	// the arrivalTimes DB is only added to for valid asset allocation sends that happen in real-time and it is removed once there is POW on that transaction
     const ArrivalTimesMap& arrivalTimes = arrivalTimesMap[assetAllocationTupleSender.ToString()];
 	if(arrivalTimes.empty())
 		return ZDAG_NOT_FOUND;
+
 	// sort the arrivalTimesMap ascending based on arrival time value
 
 	// Declaring the type of Predicate for comparing arrivalTimesMap
@@ -740,53 +734,45 @@ int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& a
 	// Declaring a set that will store the pairs using above comparison logic
 	std::set<std::pair<uint256, int64_t>, Comparator> arrivalTimesSet(
 		arrivalTimes.begin(), arrivalTimes.end(), compFunctor);
-
 	// go through arrival times and check that balances don't overrun the POW balance
 	const int64_t &nNow = GetTimeMillis();
-	unordered_map<string, CAmount> mapBalances;
-	// init sender balance, track balances by address
-	// this is important because asset allocations can be sent/received within blocks and will overrun balances prematurely if not tracked properly, for example pow balance 3, sender sends 3, gets 2 sends 2 (total send 3+2=5 > balance of 3 from last stored state, this is a valid scenario and shouldn't be flagged)
-	CAmount &senderBalance = mapBalances[assetAllocationTupleSender.witnessAddress.ToString()];
-	senderBalance = dbAssetAllocation.nBalance;
 	int minLatency = nMinLatencyMilliSeconds;
 	if (fUnitTest)
 		minLatency = 1000;
     int64_t nPrevTime = 0;
 	for (auto& arrivalTime : arrivalTimesSet)
 	{
-		// ensure mempool has this transaction and it is not yet mined, get the transaction in question
-		const CTransactionRef &txRef = mempool.get(arrivalTime.first);
-		if (!txRef)
-			continue;
-		const CTransaction &tx = *txRef;
-        
         // ensure that transactions are ordered by some time difference
         if(nPrevTime >= arrivalTime.second){
             return ZDAG_WARNING_NO_TIME_SEPERATION;
         }
+    
+        const CTransactionRef &txRef = mempool.get(arrivalTime.first);
+		if (!txRef)
+			continue;
+		const CTransaction &tx = *txRef;
+
+        RBFTransactionState rbfState = IsRBFOptIn(tx, mempool);
+        if (rbfState == RBFTransactionState::UNKNOWN) {
+            return ZDAG_WARNING_MEMPOOL_NOT_FOUND;
+        } else if (rbfState == RBFTransactionState::REPLACEABLE_BIP125) {
+            return ZDAG_WARNING_RBF;
+        }
+
+        // check that during output linking the prev tx cannot be RBF'd (check sequence is sequence-1 or more)
         nPrevTime = arrivalTime.second;
-		// if this tx arrived within the minimum latency period flag it as potentially conflicting
-		if (nNow - arrivalTime.second < minLatency) {
-			return ZDAG_WARNING_MIN_LATENCY;
-		}
-		const uint256& txHash = tx.GetHash();
-		CAssetAllocation assetallocation(tx);
-
-
-		if (!assetallocation.listSendingAllocationAmounts.empty()) {
-			for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
-				senderBalance -= amountTuple.second;
-				mapBalances[amountTuple.first.ToString()] += amountTuple.second;
-				// if running balance overruns the stored balance then we have a potential conflict
-				if (senderBalance < 0) {
-					return ZDAG_WARNING_POTENTIAL_BALANCE_OVERFLOW;
-				}
-			}
-		}
 		// even if the sender may be flagged, the order of events suggests that this receiver should get his money confirmed upon pow because real-time balance is sufficient for this receiver
-		if (txHash == lookForTxHash) {
+		if (arrivalTime.first == lookForTxHash) {
+            // if this tx arrived within the minimum latency period flag it
+            if (nNow - arrivalTime.second < minLatency) {
+                return ZDAG_WARNING_MIN_LATENCY;
+            }
 			return ZDAG_STATUS_OK;
 		}
 	}
+    // if last tx arrived within the minimum latency period flag it
+    if (nNow - nPrevTime < minLatency) {
+        return ZDAG_WARNING_MIN_LATENCY;
+    }
 	return lookForTxHash.IsNull()? ZDAG_STATUS_OK: ZDAG_NOT_FOUND;
 }

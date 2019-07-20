@@ -108,11 +108,6 @@ SYSCOIN_CORE_H = \
   services/assetconsensus.h \
   services/rpc/assetrpc.h \
   services/rpc/wallet/assetwalletrpc.h \
-  thread_pool/fixed_function.hpp \
-  thread_pool/mpmc_bounded_queue.hpp \
-  thread_pool/thread_pool.hpp \
-  thread_pool/thread_pool_options.hpp \
-  thread_pool/worker.hpp \
   activemasternode.h \
   spork.h \
   dsnotificationinterface.h \
@@ -708,17 +703,6 @@ syscoin_wallet_LDADD = \
 
 syscoin_wallet_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(ZMQ_LIBS)
 
-# syscoin bench #
-syscoinbench_SOURCES = syscoinbench.cpp
-syscoinbench_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(EVENT_CLFAGS) $(EVENT_PTHREADS_CFLAGS)
-syscoinbench_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-syscoinbench_LDFLAGS = $(BOOST_LIBS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
-
-syscoinbench_LDADD = \
-  $(LIBSYSCOIN_COMMON) \
-  $(LIBSYSCOIN_CONSENSUS) \
-  $(LIBSYSCOIN_CRYPTO) \
-  $(LIBSECP256K1)
 
 # syscoinconsensus library #
 if BUILD_SYSCOIN_LIBS

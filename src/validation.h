@@ -32,7 +32,6 @@
 #include <utility>
 #include <vector>
 // SYSCOIN
-#include <thread_pool/thread_pool.hpp>
 #include <script/interpreter.h>
 
 class CChainState;
@@ -52,8 +51,6 @@ struct ChainTxData;
 struct DisconnectedBlockTransactions;
 struct PrecomputedTransactionData;
 struct LockPoints;
-// SYSCOIN
-class CScriptCheckConcurrent;
 /** Default for -whitelistrelay. */
 static const bool DEFAULT_WHITELISTRELAY = true;
 /** Default for -whitelistforcerelay. */
@@ -179,8 +176,6 @@ extern size_t nCoinCacheUsage;
 extern CFeeRate minRelayTxFee;
 /** If the tip is older than this (in seconds), the node is considered to be in initial block download. */
 extern int64_t nMaxTipAge;
-// SYSCOIN
-extern bool fLogThreadpool;
 /** Block hash whose ancestors we will assume to have valid scripts without checking them. */
 extern uint256 hashAssumeValid;
 
@@ -306,7 +301,7 @@ void PruneBlockFilesManual(int nManualPruneHeight);
  * plTxnReplaced will be appended to with all transactions replaced from mempool **/
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransactionRef &tx,
                         bool* pfMissingInputs, std::list<CTransactionRef>* plTxnReplaced,
-                        bool bypass_limits, const CAmount nAbsurdFee, bool test_accept=false, bool bMultiThreaded=false, bool bSanityCheck=true);
+                        bool bypass_limits, const CAmount nAbsurdFee, bool test_accept=false, bool bSanityCheck=true);
 bool GetUTXOCoin(const COutPoint& outpoint, Coin& coin);
 int GetUTXOHeight(const COutPoint& outpoint);
 int GetUTXOConfirmations(const COutPoint& outpoint);
@@ -385,37 +380,6 @@ public:
     }
 
     ScriptError GetScriptError() const { return error; }
-};
-// SYSCOIN
-/**
- * Closure representing one script multithreaded verification (we want to copy all data instead of store pointers as it may go out of scope in threadpool and cause undefined behaviour in CScriptCheck)
- * Note that this stores references to the spending transaction
- */
-class CScriptCheckConcurrent
-{
-private:
-    CTxOut m_tx_out;
-    CTransaction txTo;
-    unsigned int nIn;
-    unsigned int nFlags;
-    bool cacheStore;
-    PrecomputedTransactionData txdata;  
-
-public:
-    CScriptCheckConcurrent(): nIn(0), nFlags(0), cacheStore(false) {}
-    CScriptCheckConcurrent(const CTxOut& outIn, const CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, bool cacheIn, const PrecomputedTransactionData &txdataIn) :
-        m_tx_out(outIn), txTo(txToIn), nIn(nInIn), nFlags(nFlagsIn), cacheStore(cacheIn), txdata(txdataIn) { }
-        
-    bool operator()() const;
-
-    void swap(CScriptCheckConcurrent &check) {
-        std::swap(txTo, check.txTo);
-        std::swap(m_tx_out, check.m_tx_out);
-        std::swap(nIn, check.nIn);
-        std::swap(nFlags, check.nFlags);
-        std::swap(cacheStore, check.cacheStore);
-        std::swap(txdata, check.txdata);
-    }
 };
 /** Initializes the script-execution cache */
 void InitScriptExecutionCache();
@@ -706,8 +670,6 @@ extern VersionBitsCache versionbitscache;
  * Determine what nVersion a new block should use.
  */
 int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params);
-// SYSCOIN
-extern tp::ThreadPool* threadpool;
 extern int64_t nTPSTestingStartTime;
 extern double nTPSTestingSendRawEndTime;
 extern int64_t nTPSTestingSendRawStartTime;

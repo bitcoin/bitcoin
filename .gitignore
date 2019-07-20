@@ -4,7 +4,6 @@
 *.pdb
 src/syscoin
 src/syscoind
-src/syscoinbench
 src/syscoin-cli
 src/syscoin-tx
 src/syscoin-wallet

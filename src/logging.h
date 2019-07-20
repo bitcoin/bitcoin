@@ -55,7 +55,6 @@ namespace BCLog {
         QT          = (1 << 19),
         LEVELDB     = (1 << 20),
         // SYSCOIN
-        THREADPOOL  = (1 << 21),
         MN  = (1 << 22),
         GOBJECT  = (1 << 23),
         MNPAYMENT  = (1 << 24),

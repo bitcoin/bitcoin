@@ -46,7 +46,6 @@ extern bool fZMQWalletStatus;
 extern bool fZMQEthStatus;
 extern bool fZMQNetworkStatus;
 extern bool fZMQWalletRawTx;
-extern bool fConcurrentProcessing;
 extern bool fLiteMode;
 extern uint32_t fGethSyncHeight;
 extern uint32_t fGethCurrentHeight;

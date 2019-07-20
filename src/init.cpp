@@ -84,7 +84,6 @@
 #include <messagesigner.h>
 #include <spork.h>
 #include <netfulfilledman.h>
-#include <thread_pool/thread_pool.hpp>
 #include <flatdatabase.h>
 #include <services/assetconsensus.h>
 #include <services/rpc/wallet/assetwalletrpc.h>
@@ -335,10 +334,6 @@ void Shutdown(InitInterfaces& interfaces)
     passetindexdb.reset();
     pblockindexdb.reset();
 	plockedoutpointsdb.reset();
-    if (threadpool)
-        delete threadpool;
-    threadpool = NULL;
-    LogPrint(BCLog::THREADPOOL, "THREADPOOL::Destroyed threadpool\n");
     {
         LOCK(cs_main);
         if (pcoinsTip != nullptr) {
@@ -443,7 +438,7 @@ void SetupServerArgs()
 
     // Hidden Options
     std::vector<std::string> hidden_args = {
-        "-masternode","-unittest","-tpstest","-concurrentprocessing", "-dbcrashratio", "-forcecompactdb",
+        "-masternode","-unittest","-tpstest", "-dbcrashratio", "-forcecompactdb",
         // GUI args. These will be overwritten by SetupUIArgs for the GUI
         "-allowselfsignedrootcertificates", "-choosedatadir", "-lang=<lang>", "-min", "-resetguisettings", "-rootcertificates=<file>", "-splash", "-uiplatform"};
 
@@ -499,11 +494,11 @@ void SetupServerArgs()
     gArgs.AddArg("-assetindexpagesize=<n>", strprintf("Page size of results for Asset index, should match the paging mechanism of the consuming client. (10-1000, default: 25). Used in conjunction with -assetindex=1."), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-assetindexguids=<guid>", strprintf("Whitelist Assets to index, comma separated. Used in conjunction with -assetindex=1. Leave empty for all."), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-assetsupplystatsindex=<n>", strprintf("Index Syscoin Asset supply statistics related to bridge usage (0-1, default: 0)"), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-sysxasset=<n>", strprintf("SYSX Asset Guid specified when running unit tests (default: %u)", defaultChainParams->GetConsensus().nSYSXAsset), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-tpstest", strprintf("TPSTest for unittest. Leave false"), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-sporkkey=<key>", strprintf("Private key for use with sporks"), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-unittest", strprintf("Set by unit test suite. Leave false"), false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-concurrentprocessing", strprintf("Enable patallel signature validation of ZDAG transactions. Default is true."), false, OptionsCategory::OPTIONS);
-    
+ 
     gArgs.AddArg("-blockfilterindex=<type>",
                  strprintf("Maintain an index of compact filters by block (default: %s, values: %s).", DEFAULT_BLOCKFILTERINDEX, ListBlockFilterTypes()) +
                  " If <type> is not supplied or if <type> = 1, indexes for all known types are enabled.",
@@ -1404,11 +1399,6 @@ bool AppInitMain(InitInterfaces& interfaces)
         for (int i=0; i<nScriptCheckThreads-1; i++)
             threadGroup.create_thread([i]() { return ThreadScriptCheck(i); });
     }
-    // SYSCOIN
-    if (!threadpool) {
-        threadpool = new tp::ThreadPool;
-        LogPrint(BCLog::THREADPOOL, "THREADPOOL::Created threadpool\n");
-    }
     
    
     if (!sporkManager.SetSporkAddress(gArgs.GetArg("-sporkaddr", Params().SporkAddress())))
@@ -1648,7 +1638,6 @@ bool AppInitMain(InitInterfaces& interfaces)
                 passetindexdb.reset();
                 pblockindexdb.reset();
 				plockedoutpointsdb.reset();
-
 				plockedoutpointsdb.reset(new CLockedOutpointsDB(nCoinDBCache * 16, false, fReset));
                 passetdb.reset(new CAssetDB(nCoinDBCache*16, false, fReset || fReindexChainState));
                 fAssetSupplyStatsIndex = gArgs.GetBoolArg("-assetsupplystatsindex", false);
@@ -1914,12 +1903,13 @@ bool AppInitMain(InitInterfaces& interfaces)
     }
 	// SYSCOIN
     fUnitTest = gArgs.GetBoolArg("-unittest", false);
+    if(fUnitTest){
+        SetSYSXAssetForUnitTests(gArgs.GetArg("-sysxasset", Params().GetConsensus().nSYSXAsset));
+    }
     // if unit test then make sure geth is shown as synced as well
     fGethSynced = fUnitTest;
     
     fTPSTest = gArgs.GetBoolArg("-tpstest", false);
-    fConcurrentProcessing = gArgs.GetBoolArg("-concurrentprocessing", true);
-    fLogThreadpool = LogAcceptCategory(BCLog::THREADPOOL);
     fZMQAssetAllocation = gArgs.IsArgSet("-zmqpubassetallocation");
     fZMQAsset = gArgs.IsArgSet("-zmqpubassetrecord");
     fZMQWalletStatus = gArgs.IsArgSet("-zmqpubwalletstatus");

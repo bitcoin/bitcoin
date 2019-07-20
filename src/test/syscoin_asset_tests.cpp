@@ -470,9 +470,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
     // push vector of signed transactions to tpstestadd on every sender node distributed evenly
     int txPerSender = rawSignedAssetAllocationSends.size() / senders.size();
     tfm::format(std::cout,"Dividing work (%d transactions) between %d senders (%d per sender)...\n", rawSignedAssetAllocationSends.size(), senders.size(), txPerSender);
-    // max 5 tx per call for max buffer size sent to rpc
-    if(txPerSender > 5)
-        txPerSender = 5;
+
     unsigned int j=0;
     unsigned int i=0;
     unsigned int senderIndex=0;
@@ -802,24 +800,28 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag1)
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
     string hexStr = find_value(r.get_obj(), "hex").get_str();
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hexStr, true, false));
-    
+    BOOST_CHECK(r.write().size() >= 32);
     MilliSleep(1000);
 
-    AssetAllocationTransfer(true, "node1", assetguid, useraddress1, "\"[{\\\"address\\\":\\\"" + useraddress3 + "\\\",\\\"amount\\\":0.2}]\"");
+    // sender is conflicted so you cannot create another tx for that sender as prev tx is classified as a double spend and thus you get input conflict on it since it was relayed
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsendmany " + assetguid + " " + useraddress1 + " " + "\"[{\\\"address\\\":\\\"" + useraddress3 + "\\\",\\\"amount\\\":0.2}]\"" + " ''"));
+
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
+    hexStr = find_value(r.get_obj(), "hex").get_str();
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hexStr, true, false));
+    BOOST_CHECK(r.write().size() < 32);
 
     GenerateBlocks(5, "node1");
     // should be balance 0 and thus deleted
-    BOOST_CHECK_THROW(r = CallRPC("node1", "assetallocationinfo " + assetguid + " " + useraddress1), runtime_error);
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + assetguid + " " + useraddress1));
 
     // didn't send anything to useraddress2 and thus doesn't exist
     BOOST_CHECK_THROW(r = CallRPC("node1", "assetallocationinfo " + assetguid + " " + useraddress2), runtime_error);;
 
-    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + assetguid + " " + useraddress3));
-    UniValue balance = find_value(r.get_obj(), "balance");
-    BOOST_CHECK_EQUAL(balance.getValStr(), "0.20000000");
+    BOOST_CHECK_THROW(r = CallRPC("node1", "assetallocationinfo " + assetguid + " " + useraddress3), runtime_error);
 
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + assetguid + " burn"));
-    balance = find_value(r.get_obj(), "balance");
+    UniValue balance = find_value(r.get_obj(), "balance");
     BOOST_CHECK_EQUAL(balance.getValStr(), "0.80000000");
 }
 // a = 1, b = 0.2, c = 0.1, a->b (0.2), b->a(0.2),  a->c(0.2), c->a(0.2), burn a(0.5), burn a(0.5), b->c(0.2), burn c(0.3) (a=0, b=0, c=0 and burn=1.3)
@@ -1045,6 +1047,119 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag_dbl_spend_same_input)
     BOOST_CHECK_NO_THROW(r = CallRPC("node3", "assetallocationsenderstatus " + assetguid + " " + useraddress1 + " ''"));
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
     GenerateBlocks(5);
+} 
+BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag_dbl_spend_long_chain)
+{
+    UniValue r;
+    tfm::format(std::cout,"Running generate_burn_syscoin_asset_zdag_dbl_spend_long_chain...\n");
+    GenerateBlocks(5);
+    GenerateBlocks(5, "node2");
+    GenerateBlocks(5, "node3");
+
+    string creatoraddress = GetNewFundedAddress("node1");
+
+    string useraddress1 = GetNewFundedAddress("node1");
+    string useraddress2 = GetNewFundedAddress("node1");
+    string useraddress3 = GetNewFundedAddress("node1");
+    GenerateBlocks(5, "node1");
+    string assetguid = AssetNew("node1", useraddress3, "pubdata", "0x931d387731bbbc988b312206c74f77d004d6b84b");
+
+    SyscoinBurn("node1", useraddress1, strSYSXAsset, "1");
+    SyscoinBurn("node1", useraddress2, strSYSXAsset, "1");
+    AssetAllocationTransfer(true, "node1", strSYSXAsset, useraddress1, "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.1}]\"");
+    string randomTxid1 = AssetAllocationTransfer(true, "node1", strSYSXAsset, useraddress1, "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.01}]\"");
+    AssetAllocationTransfer(true, "node1", strSYSXAsset, useraddress1, "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.001}]\"");
+    AssetAllocationTransfer(true, "node1", strSYSXAsset, useraddress1, "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.0001}]\"");
+    string randomTxid2 = AssetAllocationTransfer(true, "node1", strSYSXAsset, useraddress1, "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.00001}]\"");
+    string randomTxid3 = AssetAllocationTransfer(true, "node1", strSYSXAsset, useraddress1, "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.000001}]\"");
+    BurnAssetAllocation("node1", strSYSXAsset, useraddress1, "0.01", false, "''");
+    BurnAssetAllocation("node1", strSYSXAsset, useraddress2, "0.01", false, "''");
+    BurnAssetAllocation("node1", strSYSXAsset, useraddress1, "0.001", false, "''");
+    BurnAssetAllocation("node1", strSYSXAsset, useraddress2, "0.001", false, "''");
+    BurnAssetAllocation("node1", strSYSXAsset, useraddress2, "0.0001", false, "''");
+    BurnAssetAllocation("node1", strSYSXAsset, useraddress1, "0.0001", false, "''");
+    SyscoinBurn("node1", useraddress1, strSYSXAsset, "1", false);
+    AssetUpdate("node1", strSYSXAsset, "''", "''", "''", "''", "''", false);
+    SyscoinBurn("node1", useraddress2, strSYSXAsset, "1", false);
+    AssetUpdate("node1", strSYSXAsset, "''", "''", "''", "''", "''", false);
+    SyscoinBurn("node1", useraddress1, strSYSXAsset, "1", false);
+    AssetUpdate("node1", strSYSXAsset, "''", "''", "''", "''", "''", false);
+    AssetSend("node1", assetguid, "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.1}]\"", "''", true, true, false);
+    AssetUpdate("node1", strSYSXAsset, "''", "''", "''", "''", "''", false);
+    AssetSend("node1", assetguid, "\"[{\\\"address\\\":\\\"" + useraddress1 + "\\\",\\\"amount\\\":0.1}]\"", "''", true, true, false);
+    AssetUpdate("node1", strSYSXAsset, "''", "''", "''", "''", "''", false);
+    AssetSend("node1", assetguid, "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.1}]\"", "''", true, true, false);
+    AssetUpdate("node1", strSYSXAsset, "''", "''", "''", "", "''", false);
+    MilliSleep(1000);
+    
+
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + strSYSXAsset + " " + useraddress1 + " ''"));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_STATUS_OK);
+    // shouldn't affect downstream
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + strSYSXAsset + " " + useraddress2 + " ''"));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_STATUS_OK);
+  
+    BOOST_CHECK_NO_THROW(r = CallRPC("node2", "assetallocationsenderstatus " + strSYSXAsset + " " + useraddress1 + " ''"));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_STATUS_OK);
+    // shouldn't affect downstream
+    BOOST_CHECK_NO_THROW(r = CallRPC("node2", "assetallocationsenderstatus " + strSYSXAsset + " " + useraddress2 + " ''"));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_STATUS_OK);
+
+    BOOST_CHECK_NO_THROW(r = CallRPC("node3", "assetallocationsenderstatus " + strSYSXAsset + " " + useraddress1 + " ''"));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_STATUS_OK);
+    // shouldn't affect downstream
+    BOOST_CHECK_NO_THROW(r = CallRPC("node3", "assetallocationsenderstatus " + strSYSXAsset + " " + useraddress2 + " ''"));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_STATUS_OK);
+
+    // dbl spend attempt
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsendmany " + strSYSXAsset + " " + useraddress1 + " \"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":50.8}]\"" + " ''"));
+
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
+    string assetHex = find_value(r.get_obj(), "hex").get_str();
+
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + assetHex, true, false));
+    MilliSleep(500);
+    // check just sender, burn marks as major issue on zdag
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + strSYSXAsset + " " + useraddress1 + " ''"));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
+
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + strSYSXAsset + " " + useraddress1 + " " + randomTxid1));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);  
+    // check just sender, burn marks as major issue on zdag
+    BOOST_CHECK_NO_THROW(r = CallRPC("node2", "assetallocationsenderstatus " + strSYSXAsset + " " + useraddress1 + " ''"));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
+
+    BOOST_CHECK_NO_THROW(r = CallRPC("node2", "assetallocationsenderstatus " + strSYSXAsset + " " + useraddress1 + " " + randomTxid2));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);  
+
+    // check just sender, burn marks as major issue on zdag
+    BOOST_CHECK_NO_THROW(r = CallRPC("node3", "assetallocationsenderstatus " + strSYSXAsset + " " + useraddress1 + " ''"));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
+
+    BOOST_CHECK_NO_THROW(r = CallRPC("node3", "assetallocationsenderstatus " + strSYSXAsset + " " + useraddress1 + " " + randomTxid3));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);  
+    GenerateBlocks(5);
+    // after confirm we shouldn't have any txs to check
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + strSYSXAsset + " " + useraddress1 + " ''"));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
+    // shouldn't affect downstream
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + strSYSXAsset + " " + useraddress2 + " ''"));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
+    
+    // check just sender, burn marks as major issue on zdag
+    BOOST_CHECK_NO_THROW(r = CallRPC("node2", "assetallocationsenderstatus " + strSYSXAsset + " " + useraddress1 + " ''"));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
+    // shouldn't affect downstream
+    BOOST_CHECK_NO_THROW(r = CallRPC("node2", "assetallocationsenderstatus " + strSYSXAsset + " " + useraddress2 + " ''"));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
+
+    // check just sender, burn marks as major issue on zdag
+    BOOST_CHECK_NO_THROW(r = CallRPC("node3", "assetallocationsenderstatus " + strSYSXAsset + " " + useraddress1 + " ''"));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
+    // shouldn't affect downstream
+    BOOST_CHECK_NO_THROW(r = CallRPC("node3", "assetallocationsenderstatus " + strSYSXAsset + " " + useraddress2 + " ''"));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
+
 }
 // try a dbl spend with zdag
 BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag4)

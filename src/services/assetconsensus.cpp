@@ -25,7 +25,6 @@ std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
 std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
 CCriticalSection cs_assetallocationprevout;
 AssetTXPrevOutPointMap mempoolMapAssetTXPrevOutPoints GUARDED_BY(cs_assetallocationprevout);
-int64_t nLastMultithreadMempoolFailure = 0;
 std::vector<std::pair<uint256, int64_t> >  vecToRemoveFromMempool;
 CCriticalSection cs_assetallocationmempoolremovetx;
 using namespace std;
@@ -317,10 +316,6 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
     bSenderConflict=false;
     good = true;
     const bool& isBlock = !blockHash.IsNull();
-    // reset MT mempool failure time during connectblock, ensure at least 30 seconds or latch on next block
-    if(nLastMultithreadMempoolFailure > 0 && isBlock && (nTime > (nLastMultithreadMempoolFailure+30)) ){
-        nLastMultithreadMempoolFailure = 0;
-    }
     // find entry less than 30 seconds old out of vector to remove from mempool as part of zdag dbl spend relay logic
     if(isBlock && vecToRemoveFromMempool.size() > 0 && nTime > 0){
         LOCK2(cs_main, mempool.cs);
@@ -1201,7 +1196,12 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 		
         LOCK(cs_assetallocationarrival);
         ArrivalTimesMap &arrivalTimes = arrivalTimesMap[senderTupleStr];
-        arrivalTimes[txHash] = GetTimeMillis();       
+        #if __cplusplus > 201402 
+        arrivalTimes.try_emplace(txHash, std::move(GetTimeMillis()));
+        #else
+        arrivalTimes.emplace(std::piecewise_construct,  std::forward_as_tuple(txHash),  std::forward_as_tuple(std::move(GetTimeMillis()))); 
+        #endif  
+          
 
         if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND){
             // send a realtime notification on zdag, send another when pow happens (above)
