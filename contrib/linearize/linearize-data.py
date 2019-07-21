@@ -17,6 +17,7 @@ import datetime
 import time
 from collections import namedtuple
 from binascii import unhexlify
+import glob
 
 settings = {}
 
@@ -102,6 +103,13 @@ class BlockDataCopier:
         self.blkmap = blkmap
 
         self.inFn = 0
+        fnPattern = os.path.join(self.settings['input'], "blk[0-9][0-9][0-9][0-9][0-9].dat")
+        fnList = glob.glob(fnPattern)
+        fnList.sort()
+        if len(fnList) > 0:
+          firstFn = os.path.basename(fnList[0])
+          self.inFn = int(firstFn[3:8])
+
         self.inF = None
         self.outFn = 0
         self.outsz = 0
