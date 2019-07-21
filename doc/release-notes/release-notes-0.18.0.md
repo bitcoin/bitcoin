@@ -924,7 +924,7 @@ Changes for particular platforms
 - #14958 Remove race between connecting and shutdown on separate connections (promag)
 - #15166 Pin shellcheck version (practicalswift)
 - #15196 Update all `subprocess.check_output` functions to be Python 3.4 compatible (gkrizek)
-- #15043 Build fuzz targets into separate executables (MarcoFalke)
+- #15043 Build fuzz targets into seperate executables (MarcoFalke)
 - #15276 travis: Compile once on trusty (MarcoFalke)
 - #15246 Add tests for invalid message headers (MarcoFalke)
 - #15301 When testing with --usecli, unify RPC arg to cli arg conversion and handle dicts and lists (achow101)
