@@ -277,7 +277,7 @@ git merge commit are mentioned.
 - #8594 `ab295bb` Do not add random inbound peers to addrman (gmaxwell)
 - #8940 `5b4192b` Add x9 service bit support to dnsseed.bluematt.me, seed.bitcoinstats.com (TheBlueMatt, cdecker)
 - #8944 `685e4c7` Remove bogus assert on number of oubound connections. (TheBlueMatt)
-- #8949 `0dbc48a` Be more agressive in getting connections to peers with relevant services (gmaxwell)
+- #8949 `0dbc48a` Be more aggressive in getting connections to peers with relevant services (gmaxwell)
 
 ### Build system
 - #8293 `fa5b249` Allow building libbitcoinconsensus without any univalue (luke-jr)

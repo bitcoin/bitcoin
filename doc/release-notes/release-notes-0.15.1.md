@@ -165,7 +165,7 @@ Low-level RPC changes
 - #11252 `0fe2a9a` When clearing addrman clear mapInfo and mapAddr (instagibbs)
 - #11527 `a2bd86a` Remove my testnet DNS seed (schildbach)
 - #10756 `0a5477c` net processing: swap out signals for an interface class (theuni)
-- #11531 `55b7abf` Check that new headers are not a descendant of an invalid block (more effeciently) (TheBlueMatt)
+- #11531 `55b7abf` Check that new headers are not a descendant of an invalid block (more efficiently) (TheBlueMatt)
 - #11560 `49bf090` Connect to a new outbound peer if our tip is stale (sdaftuar)
 - #11568 `fc966bb` Disconnect outbound peers on invalid chains (sdaftuar)
 - #11578 `ec8dedf` Add missing lock in ProcessHeadersMessage(...) (practicalswift)

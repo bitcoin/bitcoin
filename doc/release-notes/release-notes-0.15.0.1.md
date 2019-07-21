@@ -65,7 +65,7 @@ GUI startup crash issue
 
 After upgrade to 0.15.0, some clients would crash at startup because a custom
 fee setting was configured that no longer exists in the GUI. This is a minimal
-patch to avoid this issue from occuring.
+patch to avoid this issue from occurring.
 
 0.15.0.1 Change log
 ====================
