@@ -178,7 +178,7 @@ extern uint64_t nPruneTarget;
  * @param[in]   fForceProcessing  Process this block even if unrequested; used for non-network block sources and whitelisted peers.
  * @returns      A future which completes with a boolean which is set to indicate if the block was first received via this call
  */
-std::future<bool> ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, BlockValidationState& state, bool fForceProcessing) LOCKS_EXCLUDED(cs_main);
+std::future<bool> ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, BlockValidationState& dos_state, bool fForceProcessing) LOCKS_EXCLUDED(cs_main);
 
 /**
  * Process incoming block headers.
@@ -556,6 +556,21 @@ private:
     //! Manages the UTXO set, which is a reflection of the contents of `m_chain`.
     std::unique_ptr<CoinsViews> m_coins_views;
 
+    /** Lock for m_block_validation_queue */
+    RecursiveMutex m_cs_block_validation_queue;
+    /** CV for m_block_validation_queue */
+    std::condition_variable_any m_cv_block_validation_queue;
+    /**
+     * Queue of blocks to validate
+     * tuple<block, force-processing, promise-to-complete>
+     */
+    std::list<std::tuple<std::shared_ptr<const CBlock>, bool, std::promise<bool>>> m_block_validation_queue;
+
+    /** CV for waiting on the validation queue process to park */
+    std::condition_variable_any m_cv_block_validation_parked;
+    /** Indicates the block validation thread is parked */
+    bool m_block_validation_parked;
+
 public:
     explicit CChainState(BlockManager& blockman, uint256 from_snapshot_blockhash = uint256());
 
@@ -691,6 +706,19 @@ public:
 
     /** Check whether we are doing an initial block download (synchronizing from disk or network) */
     bool IsInitialBlockDownload() const;
+
+    /** Drain the block validation queue in a loop. Should be run only in one thread. */
+    void ProcessBlockValidationQueue();
+
+    /**
+     * Wait for the block validation queue process loop to be parked with no more work to do.
+     * Obviously only really useful during shutdown once no more blocks will be pushed to
+     * ProcessNewBlock.
+     */
+    void AwaitBlockValidationParked();
+
+    /** Push a new block to the block validation queue */
+    std::future<bool> ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, BlockValidationState& dos_state, bool fForceProcessing);
 
     /**
      * Make various assertions about the state of the block index.

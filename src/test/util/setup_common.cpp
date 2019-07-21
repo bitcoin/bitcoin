@@ -159,6 +159,9 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
 
     m_node.mempool = &::mempool;
     m_node.mempool->setSanityCheck(1.0);
+
+    threadGroup.create_thread(std::function<void()>(std::bind(&CChainState::ProcessBlockValidationQueue, &ChainstateActive())));
+
     m_node.banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     m_node.connman = MakeUnique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
     m_node.peer_logic = MakeUnique<PeerLogicValidation>(m_node.connman.get(), m_node.banman.get(), *m_node.scheduler, *m_node.mempool);
@@ -171,6 +174,10 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
 
 TestingSetup::~TestingSetup()
 {
+    // If eg the block connection thread is waiting on the queue to drain,
+    // killing the scheduler thread now will hang us, so wait on the queue
+    // to drain first.
+    ChainstateActive().AwaitBlockValidationParked();
     if (m_node.scheduler) m_node.scheduler->stop();
     threadGroup.interrupt_all();
     threadGroup.join_all();
