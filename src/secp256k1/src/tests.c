@@ -2120,7 +2120,7 @@ void test_ge(void) {
     /* Test batch gej -> ge conversion with many infinities. */
     for (i = 0; i < 4 * runs + 1; i++) {
         random_group_element_test(&ge[i]);
-        /* randomly set half the points to infinity */
+        /* randomly set half the points to infinitiy */
         if(secp256k1_fe_is_odd(&ge[i].x)) {
             secp256k1_ge_set_infinity(&ge[i]);
         }
