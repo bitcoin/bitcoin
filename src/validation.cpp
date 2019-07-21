@@ -3507,7 +3507,54 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CVali
     return true;
 }
 
-std::future<bool> ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, CValidationState& state, bool fForceProcessing)
+void CChainState::AwaitBlockValidationParked()
+{
+    std::unique_lock<CCriticalSection> lock(m_cs_block_validation_queue);
+    m_cv_block_validation_parked.wait(lock, [this] { return m_block_validation_parked; });
+}
+
+void CChainState::ProcessBlockValidationQueue()
+{
+    while (true) {
+        std::shared_ptr<const CBlock> pblock;
+        bool fForceProcessing;
+        std::promise<bool> result_promise;
+        {
+            std::unique_lock<CCriticalSection> lock(m_cs_block_validation_queue);
+            if (m_block_validation_queue.empty()) {
+                m_block_validation_parked = true;
+                m_cv_block_validation_parked.notify_all();
+                m_cv_block_validation_queue.wait_for(lock, std::chrono::milliseconds(100));
+                m_block_validation_parked = false;
+            }
+            if (ShutdownRequested())
+                break;
+            boost::this_thread::interruption_point();
+            if (m_block_validation_queue.empty()) {
+                continue;
+            }
+
+            std::tuple<std::shared_ptr<const CBlock>, bool, std::promise<bool>>& tuple = m_block_validation_queue.front();
+            pblock = std::move(std::get<0>(tuple));
+            fForceProcessing = std::get<1>(tuple);
+            result_promise = std::move(std::get<2>(tuple));
+            m_block_validation_queue.pop_front();
+        }
+
+        CChainParams chainparams = Params();
+
+        NotifyHeaderTip();
+
+        CValidationState state; // Only used to report errors, not invalidity - ignore it
+        if (!::ChainstateActive().ActivateBestChain(state, chainparams, pblock))
+            error("%s: ActivateBestChain failed (%s)", __func__, FormatStateMessage(state));
+
+        result_promise.set_value(true);
+        LimitValidationInterfaceQueue();
+    }
+}
+
+std::future<bool> CChainState::ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, CValidationState& state, bool fForceProcessing)
 {
     AssertLockNotHeld(cs_main);
 
@@ -3529,22 +3576,26 @@ std::future<bool> ProcessNewBlock(const CChainParams& chainparams, const std::sh
             // Store to disk
             ret = ::ChainstateActive().AcceptBlock(pblock, state, chainparams, &pindex, fForceProcessing, nullptr, &fNewBlock);
         }
-        if (!ret) {
-            error("%s: AcceptBlock FAILED (%s)", __func__, FormatStateMessage(state));
+        if (!ret || !fNewBlock) {
+            if (!ret) {
+                error("%s: AcceptBlock FAILED (%s)", __func__, FormatStateMessage(state));
+            }
             result_promise.set_value(fNewBlock);
             return result;
         }
     }
 
-    result_promise.set_value(fNewBlock);
-
-    NotifyHeaderTip();
-
-    CValidationState dummy_state; // Only used to report errors, not invalidity - ignore it
-    if (!::ChainstateActive().ActivateBestChain(dummy_state, chainparams, pblock))
-        error("%s: ActivateBestChain failed (%s)", __func__, FormatStateMessage(state));
-
+    {
+        LOCK(m_cs_block_validation_queue);
+        m_block_validation_queue.emplace_back(std::move(pblock), fForceProcessing, std::move(result_promise));
+    }
+    m_cv_block_validation_queue.notify_one();
     return result;
+}
+
+std::future<bool> ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, CValidationState& state, bool fForceProcessing)
+{
+    return ::ChainstateActive().ProcessNewBlock(chainparams, pblock, state, fForceProcessing);
 }
 
 bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams, const CBlock& block, CBlockIndex* pindexPrev, bool fCheckPOW, bool fCheckMerkleRoot)

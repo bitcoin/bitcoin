@@ -1635,6 +1635,8 @@ bool AppInitMain(InitInterfaces& interfaces)
         return false;
     }
 
+    threadGroup.create_thread(std::bind(&TraceThread<std::function<void()>>, "blockconn", std::function<void()>(std::bind(&CChainState::ProcessBlockValidationQueue, &ChainstateActive()))));
+
     fs::path est_path = GetDataDir() / FEE_ESTIMATES_FILENAME;
     CAutoFile est_filein(fsbridge::fopen(est_path, "rb"), SER_DISK, CLIENT_VERSION);
     // Allowed to fail as this file IS missing on first startup.

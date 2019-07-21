@@ -104,12 +104,18 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
     for (int i = 0; i < nScriptCheckThreads - 1; i++)
         threadGroup.create_thread([i]() { return ThreadScriptCheck(i); });
 
+    threadGroup.create_thread(std::function<void()>(std::bind(&CChainState::ProcessBlockValidationQueue, &ChainstateActive())));
+
     g_banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     g_connman = MakeUnique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
 }
 
 TestingSetup::~TestingSetup()
 {
+    // If eg the block connection thread is waiting on the queue to drain,
+    // killing the scheduler thread now will hang us, so wait on the queue
+    // to drain first.
+    ChainstateActive().AwaitBlockValidationParked();
     threadGroup.interrupt_all();
     threadGroup.join_all();
     GetMainSignals().FlushBackgroundCallbacks();
