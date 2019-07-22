@@ -182,11 +182,21 @@ public:
                         {
                             for(int i = lowerIndex; i < upperIndex; i++)
                             {
+                                if(i>=cachedWallet.size())
+                                {
+                                    LogPrintf("updateWallet: cachedWallet is smaller than expected, access item %d not in size %d\n", i, cachedWallet.size());
+                                    break;
+                                }
                                 KernelRecord cachedRec = cachedWallet.at(i);
                                 if((rec.address == cachedRec.address)
                                    && (rec.nValue == cachedRec.nValue)
                                    && (rec.idx == cachedRec.idx))
                                 {
+                                    if(i>=cachedWallet.size())
+                                    {
+                                        LogPrintf("updateWallet: cachedWallet is smaller than expected, remove item %d not in size %d\n", i, cachedWallet.size());
+                                        break;
+                                    }
                                     parent->beginRemoveRows(QModelIndex(), i, i);
                                     cachedWallet.removeAt(i);
                                     parent->endRemoveRows();
