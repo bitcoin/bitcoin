@@ -1,6 +1,8 @@
 #pragma once
-void *Delete_1D_Array(void *ptr);
-void *Delete_2D_Array(void **ptr, int row);
+void *Delete_1D_Array(int *ptr);
+void *Delete_1D_Array(double *ptr);
+void *Delete_2D_Array(int **ptr, int row);
+void *Delete_2D_Array(double **ptr, int row);
 int** Allocate_2D_Array_Int(int row, int col, const char msg[]);
 int*  Allocate_1D_Array_Int(int len, const char msg[]);
 unsigned int** Allocate_2D_Array_UInt(int row, int col, const char msg[]);

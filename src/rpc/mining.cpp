@@ -27,6 +27,7 @@
 #include <validationinterface.h>
 #include <versionbitsinfo.h>
 #include <warnings.h>
+#include <ldpc/LDPC.h>
 
 #include <memory>
 #include <stdint.h>
@@ -122,7 +123,7 @@ UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGen
             IncrementExtraNonce(pblock, chainActive.Tip(), nExtraNonce);
         }
 #if 1
-        while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(pblock->GetHash(), pblock->hashPrevBlock, pblock->nBits)) {
+        while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(pblock->GetBlockHeader())) {
             ++pblock->nNonce;
             --nMaxTries;
         }

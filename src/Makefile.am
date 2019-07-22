@@ -225,7 +225,10 @@ BITCOIN_CORE_H = \
   zmq/zmqconfig.h\
   zmq/zmqnotificationinterface.h \
   zmq/zmqpublishnotifier.h \
-  zmq/zmqrpc.h
+  zmq/zmqrpc.h \
+  ldpc/sha256.h \
+  ldpc/Memory_Manage.h \
+  ldpc/LDPC.h
 
 
 obj/build.h: FORCE
@@ -409,11 +412,8 @@ libbitcoin_consensus_a_SOURCES = \
   uint256.h \
   util/strencodings.cpp \
   util/strencodings.h \
-  ldpc/Memory_Manage.h \
   ldpc/Memory_Manage.cpp \
-  ldpc/sha256.h \
   ldpc/sha256.cpp \
-  ldpc/LDPC.h \
   ldpc/LDPC.cpp \
   version.h
 
