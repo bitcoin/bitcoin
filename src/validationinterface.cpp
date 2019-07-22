@@ -8,6 +8,7 @@
 #include <primitives/block.h>
 #include <scheduler.h>
 #include <txmempool.h>
+#include <util/memory.h>
 
 #include <list>
 #include <atomic>
@@ -37,25 +38,27 @@ struct MainSignalsInstance {
     boost::signals2::signal<void (const CBlock&, const CValidationState&)> BlockChecked;
     boost::signals2::signal<void (const CBlockIndex *, const std::shared_ptr<const CBlock>&)> NewPoWValidBlock;
 
+    /** Connect NotifyEntryRemoved with MempoolEntryRemoved, which sets off TransactionRemovedFromMempool callbacks */
+    const std::unique_ptr<boost::signals2::scoped_connection> m_connNotifyEntryRemoved;
+
     // We are not allowed to assume the scheduler only runs in one thread,
     // but must ensure all callbacks happen in-order, so we end up creating
     // our own queue here :(
     SingleThreadedSchedulerClient m_schedulerClient;
     std::unordered_map<CValidationInterface*, ValidationInterfaceConnections> m_connMainSignals;
 
-    explicit MainSignalsInstance(CScheduler *pscheduler) : m_schedulerClient(pscheduler) {}
+    MainSignalsInstance(CScheduler* pscheduler, std::unique_ptr<boost::signals2::scoped_connection> connNotifyEntryRemoved)
+        : m_connNotifyEntryRemoved(std::move(connNotifyEntryRemoved)),
+          m_schedulerClient(pscheduler) {}
 };
 
 static CMainSignals g_signals;
 
-// This map has to a separate global instead of a member of MainSignalsInstance,
-// because RegisterWithMempoolSignals is currently called before RegisterBackgroundSignalScheduler,
-// so MainSignalsInstance hasn't been created yet.
-static std::unordered_map<CTxMemPool*, boost::signals2::scoped_connection> g_connNotifyEntryRemoved;
-
-void CMainSignals::RegisterBackgroundSignalScheduler(CScheduler& scheduler) {
+void CMainSignals::RegisterBackgroundSignalScheduler(CScheduler& scheduler, CTxMemPool& pool)
+{
     assert(!m_internals);
-    m_internals.reset(new MainSignalsInstance(&scheduler));
+    auto conn = MakeUnique<boost::signals2::scoped_connection>(pool.NotifyEntryRemoved.connect(std::bind(&CMainSignals::MempoolEntryRemoved, this, std::placeholders::_1, std::placeholders::_2)));
+    m_internals.reset(new MainSignalsInstance(&scheduler, std::move(conn)));
 }
 
 void CMainSignals::UnregisterBackgroundSignalScheduler() {
@@ -71,17 +74,6 @@ void CMainSignals::FlushBackgroundCallbacks() {
 size_t CMainSignals::CallbacksPending() {
     if (!m_internals) return 0;
     return m_internals->m_schedulerClient.CallbacksPending();
-}
-
-void CMainSignals::RegisterWithMempoolSignals(CTxMemPool& pool) {
-    g_connNotifyEntryRemoved.emplace(std::piecewise_construct,
-        std::forward_as_tuple(&pool),
-        std::forward_as_tuple(pool.NotifyEntryRemoved.connect(std::bind(&CMainSignals::MempoolEntryRemoved, this, std::placeholders::_1, std::placeholders::_2)))
-    );
-}
-
-void CMainSignals::UnregisterWithMempoolSignals(CTxMemPool& pool) {
-    g_connNotifyEntryRemoved.erase(&pool);
 }
 
 CMainSignals& GetMainSignals()
