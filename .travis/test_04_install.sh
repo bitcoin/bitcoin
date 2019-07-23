@@ -6,6 +6,9 @@
 
 export LC_ALL=C.UTF-8
 
+free -m -h
+echo "Number of CPUs (nproc): $(nproc)"
+
 travis_retry docker pull "$DOCKER_NAME_TAG"
 export TSAN_OPTIONS="suppressions=${TRAVIS_BUILD_DIR}/test/sanitizer_suppressions/tsan"
 export UBSAN_OPTIONS="suppressions=${TRAVIS_BUILD_DIR}/test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1"
