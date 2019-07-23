@@ -48,24 +48,31 @@ TransactionError BroadcastTransaction(const CTransactionRef tx, std::string& err
                 err_string = FormatStateMessage(state);
                 return TransactionError::MEMPOOL_ERROR;
             }
-        } else if (wait_callback) {
-            // If wallet is enabled, ensure that the wallet has been made aware
-            // of the new transaction prior to returning. This prevents a race
-            // where a user might call sendrawtransaction with a transaction
-            // to/from their wallet, immediately call some wallet RPC, and get
-            // a stale result because callbacks have not yet been processed.
+        }
+
+        // Transaction was accepted to the mempool.
+
+        if (wait_callback) {
+            // For transactions broadcast from outside the wallet, make sure
+            // that the wallet has been notified of the transaction before
+            // continuing.
+            //
+            // This prevents a race where a user might call sendrawtransaction
+            // with a transaction to/from their wallet, immediately call some
+            // wallet RPC, and get a stale result because callbacks have not
+            // yet been processed.
             CallFunctionInValidationInterfaceQueue([&promise] {
                 promise.set_value();
             });
             callback_set = true;
         }
-    } else if (fHaveChain) {
-        return TransactionError::ALREADY_IN_CHAIN;
     }
 
     } // cs_main
 
     if (callback_set) {
+        // Wait until Validation Interface clients have been notified of the
+        // transaction entering the mempool.
         promise.get_future().wait();
     }
 
