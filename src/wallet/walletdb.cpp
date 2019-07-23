@@ -7,15 +7,16 @@
 #include "wallet/walletdb.h"
 
 #include "base58.h"
+#include "consensus/tx_verify.h"
 #include "consensus/validation.h"
 #include "fs.h"
-#include "validation.h" // For CheckTransaction
 #include "protocol.h"
 #include "serialize.h"
 #include "sync.h"
 #include "util.h"
 #include "utiltime.h"
 #include "wallet/wallet.h"
+#include "validation.h"
 
 #include <atomic>
 

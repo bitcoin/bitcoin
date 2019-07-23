@@ -11,6 +11,7 @@
 #include "chainparams.h"
 #include "coins.h"
 #include "consensus/consensus.h"
+#include "consensus/tx_verify.h"
 #include "consensus/merkle.h"
 #include "consensus/validation.h"
 #include "hash.h"
