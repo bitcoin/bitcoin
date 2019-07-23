@@ -7,6 +7,7 @@
 #define BITCOIN_OUTPUTTYPE_H
 
 #include <attributes.h>
+#include <optional.h>
 #include <script/signingprovider.h>
 #include <script/standard.h>
 
@@ -48,5 +49,10 @@ std::vector<CTxDestination> GetAllDestinationsForKey(const CPubKey& key);
  * necessary scripts) to the keystore.
  */
 CTxDestination AddAndGetDestinationForScript(FillableSigningProvider& keystore, const CScript& script, OutputType);
+
+/**
+ * Determine the OutputType for a scriptPubKey given the SigningProvider used for signing inputs that spend outputs with this scriptPubKeys
+ */
+Optional<OutputType> DetermineOutputType(const CScript& script, const SigningProvider& provider);
 
 #endif // BITCOIN_OUTPUTTYPE_H

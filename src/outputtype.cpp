@@ -111,3 +111,36 @@ CTxDestination AddAndGetDestinationForScript(FillableSigningProvider& keystore, 
     default: assert(false);
     }
 }
+
+Optional<OutputType> DetermineOutputType(const CScript& script, const SigningProvider& provider)
+{
+    std::vector<std::vector<unsigned char>> solutions;
+    txnouttype script_type = Solver(script, solutions);
+
+    switch(script_type) {
+    case TX_PUBKEYHASH:
+        return OutputType::LEGACY;
+    case TX_WITNESS_V0_SCRIPTHASH:
+    case TX_WITNESS_V0_KEYHASH:
+    case TX_WITNESS_UNKNOWN:
+        return OutputType::BECH32;
+    case TX_SCRIPTHASH: {
+        CScriptID script_id = CScriptID(uint160(solutions[0]));
+        CScript redeem_script;
+        if (provider.GetCScript(script_id, redeem_script)) {
+            script_type = Solver(redeem_script, solutions);
+            switch(script_type) {
+            case TX_WITNESS_V0_SCRIPTHASH:
+            case TX_WITNESS_V0_KEYHASH:
+            case TX_WITNESS_UNKNOWN:
+                return OutputType::P2SH_SEGWIT;
+            default:
+                return OutputType::LEGACY;
+            }
+        }
+        return nullopt;
+    }
+    default:
+        return nullopt;
+    }
+}
