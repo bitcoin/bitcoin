@@ -22,7 +22,7 @@ class ConfArgsTest(BitcoinTestFramework):
             conf.write('includeconf={}\n'.format(inc_conf_file_path))
 
         self.nodes[0].assert_start_raises_init_error(
-            expected_msg='Error parsing command line arguments: Invalid parameter -dash_cli',
+            expected_msg='Error: Error parsing command line arguments: Invalid parameter -dash_cli',
             extra_args=['-dash_cli=1'],
         )
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
@@ -33,7 +33,7 @@ class ConfArgsTest(BitcoinTestFramework):
 
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
             conf.write('-dash=1\n')
-        self.nodes[0].assert_start_raises_init_error(expected_msg='Error reading configuration file: parse error on line 1: -dash=1, options in configuration file must be specified without leading -')
+        self.nodes[0].assert_start_raises_init_error(expected_msg='Error: Error reading configuration file: parse error on line 1: -dash=1, options in configuration file must be specified without leading -')
 
         with open(inc_conf_file_path, 'w', encoding='utf8') as conf:
             conf.write("wallet=foo\n")
@@ -46,19 +46,19 @@ class ConfArgsTest(BitcoinTestFramework):
 
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
             conf.write('nono\n')
-        self.nodes[0].assert_start_raises_init_error(expected_msg='Error reading configuration file: parse error on line 1: nono, if you intended to specify a negated option, use nono=1 instead')
+        self.nodes[0].assert_start_raises_init_error(expected_msg='Error: Error reading configuration file: parse error on line 1: nono, if you intended to specify a negated option, use nono=1 instead')
 
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
             conf.write('server=1\nrpcuser=someuser\nrpcpassword=some#pass')
-        self.nodes[0].assert_start_raises_init_error(expected_msg='Error reading configuration file: parse error on line 3, using # in rpcpassword can be ambiguous and should be avoided')
+        self.nodes[0].assert_start_raises_init_error(expected_msg='Error: Error reading configuration file: parse error on line 3, using # in rpcpassword can be ambiguous and should be avoided')
 
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
             conf.write('server=1\nrpcuser=someuser\nmain.rpcpassword=some#pass')
-        self.nodes[0].assert_start_raises_init_error(expected_msg='Error reading configuration file: parse error on line 3, using # in rpcpassword can be ambiguous and should be avoided')
+        self.nodes[0].assert_start_raises_init_error(expected_msg='Error: Error reading configuration file: parse error on line 3, using # in rpcpassword can be ambiguous and should be avoided')
 
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
             conf.write('server=1\nrpcuser=someuser\n[main]\nrpcpassword=some#pass')
-        self.nodes[0].assert_start_raises_init_error(expected_msg='Error reading configuration file: parse error on line 4, using # in rpcpassword can be ambiguous and should be avoided')
+        self.nodes[0].assert_start_raises_init_error(expected_msg='Error: Error reading configuration file: parse error on line 4, using # in rpcpassword can be ambiguous and should be avoided')
 
         inc_conf_file2_path = os.path.join(self.nodes[0].datadir, 'include2.conf')
         with open(os.path.join(self.nodes[0].datadir, 'bitcoin.conf'), 'a', encoding='utf-8') as conf:
