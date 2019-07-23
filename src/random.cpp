@@ -36,6 +36,10 @@
 
 #include <mutex>
 
+#if defined(__x86_64__) || defined(__amd64__) || defined(__i386__)
+#include <cpuid.h>
+#endif
+
 #include <openssl/err.h>
 #include <openssl/rand.h>
 
@@ -72,18 +76,9 @@ static bool rdrand_supported = false;
 static constexpr uint32_t CPUID_F1_ECX_RDRAND = 0x40000000;
 static void RDRandInit()
 {
-    uint32_t eax, ecx, edx;
-#if defined(__i386__) && ( defined(__PIC__) || defined(__PIE__))
-    // Avoid clobbering ebx, as that is used for PIC on x86.
-    uint32_t tmp;
-    __asm__ ("mov %%ebx, %1; cpuid; mov %1, %%ebx": "=a"(eax), "=g"(tmp), "=c"(ecx), "=d"(edx) : "a"(1));
-#else
-    uint32_t ebx;
-    __asm__ ("cpuid": "=a"(eax), "=b"(ebx), "=c"(ecx), "=d"(edx) : "a"(1));
-#endif
-    //! When calling cpuid function #1, ecx register will have this set if RDRAND is available.
-    if (ecx & CPUID_F1_ECX_RDRAND) {
-        LogPrintf("Using RdRand as entropy source\n");
+    uint32_t eax, ebx, ecx, edx;
+    if (__get_cpuid(1, &eax, &ebx, &ecx, &edx) && (ecx & CPUID_F1_ECX_RDRAND)) {
+        LogPrintf("Using RdRand as an additional entropy source\n");
         rdrand_supported = true;
     }
     hwrand_initialized.store(true);

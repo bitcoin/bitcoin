@@ -119,6 +119,7 @@ BASE_SCRIPTS= [
     'signmessages.py',
     'nulldummy.py',
     'import-rescan.py',
+    'mining.py',
     'rpcnamedargs.py',
     'listsinceblock.py',
     'p2p-leaktests.py',
@@ -152,7 +153,6 @@ EXTENDED_SCRIPTS = [
     'bipdersig-p2p.py', # NOTE: needs dash_hash to pass
     'bipdersig.py',
     'example_test.py',
-    'getblocktemplate_proposals.py',
     'txn_doublespend.py',
     'txn_clone.py --mineblock',
     'txindex.py',

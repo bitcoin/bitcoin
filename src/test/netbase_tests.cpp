@@ -5,6 +5,7 @@
 
 #include "netbase.h"
 #include "test/test_dash.h"
+#include "utilstrencodings.h"
 
 #include <string>
 

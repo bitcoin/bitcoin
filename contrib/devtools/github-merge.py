@@ -175,6 +175,7 @@ def main():
     if info is None:
         exit(1)
     title = info['title'].strip()
+    body = info['body'].strip()
     # precedence order for destination branch argument:
     #   - command line argument
     #   - githubmerge.branch setting
@@ -229,6 +230,7 @@ def main():
             firstline = 'Merge #%s' % (pull,)
         message = firstline + '\n\n'
         message += subprocess.check_output([GIT,'log','--no-merges','--topo-order','--pretty=format:%h %s (%an)',base_branch+'..'+head_branch]).decode('utf-8')
+        message += '\n\nPull request description:\n\n  ' + body.replace('\n', '\n  ') + '\n'
         try:
             subprocess.check_call([GIT,'merge','-q','--commit','--no-edit','--no-ff','-m',message.encode('utf-8'),head_branch])
         except subprocess.CalledProcessError as e:
