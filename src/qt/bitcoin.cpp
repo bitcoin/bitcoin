@@ -10,8 +10,8 @@
 #include <qt/bitcoingui.h>
 
 #include <chainparams.h>
-#include <qt/clientmodel.h>
 #include <fs.h>
+#include <qt/clientmodel.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
 #include <qt/intro.h>
@@ -30,15 +30,12 @@
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 #include <noui.h>
-#include <util/threadnames.h>
 #include <ui_interface.h>
 #include <uint256.h>
 #include <util/system.h>
+#include <util/threadnames.h>
 
 #include <memory>
-#include <stdint.h>
-
-#include <boost/thread.hpp>
 
 #include <QApplication>
 #include <QDebug>
@@ -462,8 +459,11 @@ int GuiMain(int argc, char* argv[])
     SetupUIArgs();
     std::string error;
     if (!node->parseParameters(argc, argv, error)) {
+        node->initError(strprintf("Error parsing command line arguments: %s\n", error));
+        // Create a message box, because the gui has neither been created nor has subscribed to core signals
         QMessageBox::critical(nullptr, PACKAGE_NAME,
-            QObject::tr("Error parsing command line arguments: %1.").arg(QString::fromStdString(error)));
+            // message can not be translated because translations have not been initialized
+            QString::fromStdString("Error parsing command line arguments: %1.").arg(QString::fromStdString(error)));
         return EXIT_FAILURE;
     }
 
@@ -499,11 +499,13 @@ int GuiMain(int argc, char* argv[])
     /// - Do not call GetDataDir(true) before this step finishes
     if (!fs::is_directory(GetDataDir(false)))
     {
+        node->initError(strprintf("Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "")));
         QMessageBox::critical(nullptr, PACKAGE_NAME,
             QObject::tr("Error: Specified data directory \"%1\" does not exist.").arg(QString::fromStdString(gArgs.GetArg("-datadir", ""))));
         return EXIT_FAILURE;
     }
     if (!node->readConfigFiles(error)) {
+        node->initError(strprintf("Error reading configuration file: %s\n", error));
         QMessageBox::critical(nullptr, PACKAGE_NAME,
             QObject::tr("Error: Cannot parse configuration file: %1.").arg(QString::fromStdString(error)));
         return EXIT_FAILURE;
@@ -519,6 +521,7 @@ int GuiMain(int argc, char* argv[])
     try {
         node->selectParams(gArgs.GetChainName());
     } catch(std::exception &e) {
+        node->initError(strprintf("%s\n", e.what()));
         QMessageBox::critical(nullptr, PACKAGE_NAME, QObject::tr("Error: %1").arg(e.what()));
         return EXIT_FAILURE;
     }
