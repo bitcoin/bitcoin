@@ -1,2 +1,2 @@
 #!/bin/bash
-g++ -o ecc_test *.cpp
+g++ -std=c++11 -I../ -o ecc_test *.cpp

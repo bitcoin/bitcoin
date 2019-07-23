@@ -159,16 +159,19 @@ bool LDPC::generate_H()
     col_order.clear();
     for (int j = 0; j < this->n; j++)
       col_order.push_back(j);
-    std::cout << "srand seed: " << seed << std::endl;
+
+#if 0
     std::srand(seed--);
     std::random_shuffle(col_order.begin(), col_order.end());
-    std::cout << "array: ";
-    for (int j = 0; j < this->n; j++) {
-      int index = (col_order.at(j) / this->wr + k * i);
-      H[index][j] = 1;
-      std::cout << index << " ";
+#else
+    int o = (seed % k) ? (seed % k):k;
+    for (int j = 1; j < static_cast<int>(col_order.size()); j++) {
+      if (j % o == 0) {
+        std::swap(col_order[j], col_order[j-1]);
+      }
     }
-    std::cout << std::endl;
+#endif
+
   }
   return true;
 }

@@ -139,7 +139,7 @@ public:
 #endif
 
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("298e8bbe93938a1a5ffe4c3ea3b285e5ccc4a4392f249c1b151a39dfbcfa536b"));
+        assert(consensus.hashGenesisBlock == uint256S("3ed33a90a761ef8486a4b7b41842fe3d6a35a31d5094373f271bcaec197ed100"));
         assert(genesis.hashMerkleRoot == uint256S("15d2f927fe3eafe88ce0b4ccf267727ed306295051339a16e0b95067e65bead8"));
 
         // Note that of those which support the service bits prefix, most only support a subset of
@@ -176,7 +176,7 @@ public:
 
         checkpointData = {
             {
-                { 0, uint256S("298e8bbe93938a1a5ffe4c3ea3b285e5ccc4a4392f249c1b151a39dfbcfa536b")},
+                { 0, uint256S("3ed33a90a761ef8486a4b7b41842fe3d6a35a31d5094373f271bcaec197ed100")},
             }
         };
 
@@ -265,7 +265,7 @@ public:
 #endif
 
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0eecfa8cc8d1150cac297308a5a96909925f5e181e5d6ed7b9843fedde7fdb10"));
+        assert(consensus.hashGenesisBlock == uint256S("440e45159e37a4008f5863c3acad820d1f34fbfb4704b131f59c5c3df99fe90f"));
         assert(genesis.hashMerkleRoot == uint256S("15d2f927fe3eafe88ce0b4ccf267727ed306295051339a16e0b95067e65bead8"));
 
         vFixedSeeds.clear();
@@ -297,7 +297,7 @@ public:
 
         checkpointData = {
             {
-                {0, uint256S("0eecfa8cc8d1150cac297308a5a96909925f5e181e5d6ed7b9843fedde7fdb10")},
+                {0, uint256S("440e45159e37a4008f5863c3acad820d1f34fbfb4704b131f59c5c3df99fe90f")},
             }
         };
 
@@ -383,7 +383,7 @@ public:
 #endif
 
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("5503f76c03fe45e14024d9ac0fcf401f14a1330a214f3ec38628fb74d254f510"));
+        assert(consensus.hashGenesisBlock == uint256S("0f633c2699b3ee9d26310a7c4f5b08cff30099940f00e8c27e3312d596e11f5e"));
         assert(genesis.hashMerkleRoot == uint256S("15d2f927fe3eafe88ce0b4ccf267727ed306295051339a16e0b95067e65bead8"));
 
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
@@ -395,7 +395,7 @@ public:
 
         checkpointData = {
             {
-                {0, uint256S("5503f76c03fe45e14024d9ac0fcf401f14a1330a214f3ec38628fb74d254f510")},
+                {0, uint256S("0f633c2699b3ee9d26310a7c4f5b08cff30099940f00e8c27e3312d596e11f5e")},
             }
         };
 
