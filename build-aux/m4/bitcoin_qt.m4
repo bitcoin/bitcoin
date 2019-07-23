@@ -268,7 +268,7 @@ AC_DEFUN([_BITCOIN_QT_CHECK_QT5],[
 
 dnl Internal. Check if the included version of Qt is greater than Qt58.
 dnl Requires: INCLUDES must be populated as necessary.
-dnl Output: bitcoin_cv_qt5=yes|no
+dnl Output: bitcoin_cv_qt58=yes|no
 AC_DEFUN([_BITCOIN_QT_CHECK_QT58],[
   AC_CACHE_CHECK(for > Qt 5.7, bitcoin_cv_qt58,[
   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
