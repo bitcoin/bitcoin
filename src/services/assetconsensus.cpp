@@ -334,7 +334,7 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
             }
         }
     } catch (...) {
-        LogPrint(BCLog::SYS,"Exception caught in CheckSyscoinInputs");
+        LogPrint(BCLog::SYS,"Exception caught in CheckSyscoinInputs\n");
         return false;
     }
     if (!good)
