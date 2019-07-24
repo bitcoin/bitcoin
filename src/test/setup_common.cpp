@@ -23,9 +23,12 @@
 #include <util/memory.h>
 #include <util/strencodings.h>
 #include <util/time.h>
+#include <util/translation.h>
 #include <util/validation.h>
 #include <validation.h>
 #include <validationinterface.h>
+
+#include <functional>
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 

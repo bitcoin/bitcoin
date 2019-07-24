@@ -18,11 +18,13 @@
 #include <script/sign.h>
 #include <script/signingprovider.h>
 #include <univalue.h>
-#include <util/rbf.h>
-#include <util/system.h>
 #include <util/moneystr.h>
+#include <util/rbf.h>
 #include <util/strencodings.h>
+#include <util/system.h>
+#include <util/translation.h>
 
+#include <functional>
 #include <memory>
 #include <stdio.h>
 
