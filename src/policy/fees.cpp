@@ -364,7 +364,7 @@ void TxConfirmStats::Read(CAutoFile& filein, int nFileVersion, size_t numBuckets
     size_t maxConfirms, maxPeriods;
 
     // The current version will store the decay with each individual TxConfirmStats and also keep a scale factor
-    if (nFileVersion >= 149900) {
+    if (nFileVersion >= 140100) {
         filein >> decay;
         if (decay <= 0 || decay >= 1) {
             throw std::runtime_error("Corrupt estimates file. Decay must be between 0 and 1 (non-inclusive)");
@@ -393,7 +393,7 @@ void TxConfirmStats::Read(CAutoFile& filein, int nFileVersion, size_t numBuckets
         }
     }
 
-    if (nFileVersion >= 149900) {
+    if (nFileVersion >= 140100) {
         filein >> failAvg;
         if (maxPeriods != failAvg.size()) {
             throw std::runtime_error("Corrupt estimates file. Mismatch in confirms tracked for failures");
@@ -862,7 +862,7 @@ bool CBlockPolicyEstimator::Read(CAutoFile& filein)
         // structures aren't corrupted if there is an exception.
         filein >> nFileBestSeenHeight;
 
-        if (nVersionThatWrote < 149900) {
+        if (nVersionThatWrote < 140100) {
             // Read the old fee estimates file for temporary use, but then discard.  Will start collecting data from scratch.
             // decay is stored before buckets in old versions, so pre-read decay and pass into TxConfirmStats constructor
             double tempDecay;
@@ -887,7 +887,7 @@ bool CBlockPolicyEstimator::Read(CAutoFile& filein)
                 tempMap[tempBuckets[i]] = i;
             }
         }
-        else { // nVersionThatWrote >= 149900
+        else { // nVersionThatWrote >= 140100
             filein >> nFileHistoricalFirst >> nFileHistoricalBest;
             if (nFileHistoricalFirst > nFileHistoricalBest || nFileHistoricalBest > nFileBestSeenHeight) {
                 throw std::runtime_error("Corrupt estimates file. Historical block range for estimates is invalid");
