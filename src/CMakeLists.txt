@@ -367,6 +367,7 @@ target_link_libraries(crown_wallet
   PUBLIC crown_util
   PUBLIC crown_common
   PUBLIC crown_server
+  PUBLIC crown_pos
   PUBLIC BDB::bdb
   PUBLIC OpenSSL::Crypto
   PUBLIC OpenSSL::SSL
@@ -398,6 +399,25 @@ add_library(crown_platform
 target_include_directories(crown_platform
   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} PRIVATE leveldb/include
 )
+
+# LIBCROWN-POS
+
+add_library(crown_pos
+        mn-pos/blockwitness.h
+        mn-pos/kernel.h
+        mn-pos/kernel.cpp
+        mn-pos/prooftracker.h
+        mn-pos/prooftracker.cpp
+        mn-pos/stakeminer.h
+        mn-pos/stakeminer.cpp
+        mn-pos/stakepointer.h
+        mn-pos/stakepointer.cpp
+        mn-pos/stakevalidation.h
+        mn-pos/stakevalidation.cpp
+        )
+
+target_include_directories(crown_pos PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} )
+
 
 add_executable(crownd
   crownd.cpp
