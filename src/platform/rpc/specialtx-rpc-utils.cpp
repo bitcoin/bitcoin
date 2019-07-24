@@ -16,20 +16,13 @@ namespace Platform
 {
 
     // Allows to specify Crown address or priv key. In case of Crown address, the priv key is taken from the wallet
-    CKey ParsePrivKeyOrAddress(const std::string & strKeyOrAddress, bool allowAddresses /* = true */)
+    CKey ParsePrivKeyOrAddress(const std::string & strKeyOrAddress, const std::string & paramName, bool allowAddresses /* = true */)
     {
-        CBitcoinAddress address;
-        if (allowAddresses && address.SetString(strKeyOrAddress) && address.IsValid())
+        if (allowAddresses)
         {
-    #ifdef ENABLE_WALLET
-            CKeyID keyId;
-            CKey key;
-            if (!address.GetKeyID(keyId) || !pwalletMain->GetKey(keyId, key))
-                throw std::runtime_error(strprintf("non-wallet or invalid address %s", strKeyOrAddress));
-            return key;
-    #else//ENABLE_WALLET
-            throw std::runtime_error("addresses not supported in no-wallet builds");
-    #endif//ENABLE_WALLET
+            CKey key = PullPrivKeyFromWallet(strKeyOrAddress, paramName);
+            if (key.IsValid())
+                return key;
         }
 
         CBitcoinSecret secret;
@@ -38,6 +31,22 @@ namespace Platform
         return secret.GetKey();
     }
 
+    CKey PullPrivKeyFromWallet(const std::string & strAddress, const std::string & paramName)
+    {
+        CBitcoinAddress address;
+        if (!address.SetString(strAddress) || !address.IsValid())
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be a valid P2PKH address, not %s", paramName, strAddress));
+
+#ifdef ENABLE_WALLET
+        CKeyID keyId;
+        CKey key;
+        if (!address.GetKeyID(keyId) || !pwalletMain->GetKey(keyId, key))
+            throw std::runtime_error(strprintf("non-wallet or invalid address %s", strAddress));
+        return key;
+#else//ENABLE_WALLET
+        throw std::runtime_error("addresses not supported in no-wallet builds");
+#endif//ENABLE_WALLET
+    }
 
     CKeyID ParsePubKeyIDFromAddress(const std::string & strAddress, const std::string & paramName)
     {

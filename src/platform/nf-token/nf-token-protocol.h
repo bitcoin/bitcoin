@@ -11,6 +11,13 @@
 
 namespace Platform
 {
+    enum class NftRegSign : uint8_t
+    {
+        SignAny,
+        SelfSign,
+        SignByCreator
+    };
+
     class NfTokenProtocol
     {
     public:
@@ -20,8 +27,7 @@ namespace Platform
         uint64_t tokenProtocolId;
 
         /// Full name for this NF token type/protocol
-        /// Minimum length 3 symbols, maximum length 24(TODO:?) symbols
-        /// Characters TODO:
+        /// Minimum length 3 symbols, maximum length 24 symbols
         std::string tokenProtocolName;
 
         /// URI to schema (json/xml/binary) describing metadata format
@@ -40,6 +46,9 @@ namespace Platform
         /// It's recommended to use embedded metadata only if it's shorter than URI
         bool isMetadataEmbedded;
 
+        /// Defines who must sign an NFT registration transaction
+        uint8_t nftRegSign;
+
         /// Owner of the NF token protocol
         CKeyID tokenProtocolOwnerId;
 
@@ -55,6 +64,7 @@ namespace Platform
             READWRITE(isTokenTransferable);
             READWRITE(isTokenImmutable);
             READWRITE(isMetadataEmbedded);
+            READWRITE(nftRegSign);
             READWRITE(tokenProtocolOwnerId);
         }
     };
@@ -67,6 +77,7 @@ namespace Platform
     isTokenImmutable = false;
     isTokenTransferable = false;
     isMetadataEmbedded = false;
+    nftRegSign = NftRegSign::SignAny;
 
     tokenProtocolId = cks;
     tokenProtocolName = ercS21.kitts;
@@ -75,6 +86,7 @@ namespace Platform
     isTokenImmutable = false;
     isTokenTransferable = false;
     isMetadataEmbedded = false;
+    nftRegSign = NftRegSign::SignByCreator;
 
     tokenProtocolId = crd;
     tokenProtocolName = crown.id;
@@ -83,6 +95,7 @@ namespace Platform
     isTokenImmutable = false;
     isTokenTransferable = false;
     isMetadataEmbedded = false;
+    nftRegSign = NftRegSign::SelfSign;
 
     tokenProtocolSymbol = doc;
     tokenProtocolName = docproof;
@@ -90,7 +103,8 @@ namespace Platform
     tokenMetadataMimeType = text/plain;
     isTokenImmutable = true;
     isTokenTransferable = true;
-    isMetadataEmbedded = true; */
+    isMetadataEmbedded = true;
+    nftRegSign = NftRegSign::SignAny; */
 }
 
 #endif // CROWN_PLATFORM_NF_TOKEN_PROTOCOL_H

@@ -30,7 +30,8 @@ namespace Platform
             return m_nfToken;
         }
 
-        bool Sign(CKey & privKey, CPubKey & pubKey);
+        // TODO: encapsulate signing
+        // bool Sign(CKey & privKey, CPubKey & pubKey);
 
         std::string ToString() const;
         void ToJson(json_spirit::Object & result) const;

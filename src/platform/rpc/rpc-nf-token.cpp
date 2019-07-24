@@ -2,6 +2,7 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <platform/nf-token/nf-token-protocol.h>
 #include "primitives/transaction.h"
 #include "platform/specialtx.h"
 #include "platform/platform-utils.h"
@@ -46,32 +47,57 @@ namespace Platform
                 "2. \"nfTokenId\"                 (string, required) The token id in hex.\n"
                 "                                 The token id must be unique in the token type space.\n"
 
-                "3. \"nfTokenOwnerAddr\"          (string, required) The token owner key, can be used in any operations with the token.\n"
-                "                                 The private key belonging to this address may be or may be not known in your wallet.\n"
+                "3. \"nfTokenOwnerAddr\"          (string, required) The token owner address, can be used in any operations with the token.\n"
+                "                                 The private key belonging to this address should be or should be not known in your wallet. Depending on the NFT protocol nftRegSign field.\n"
+                "                                 NftRegSign::SelfSign - the key should be known in your wallet.\n"
+                "                                 NftRegSign::SignAny - an additional registrar private key should be provided.\n"
+                "                                 NftRegSign::SignByCreator - NFT protocol key should be used to sing transactions.\n"
 
-                "4. \"nfTokenMetadataAdminAddr\"  (string, optional, default = \"0\") The metadata token administration key, can be used to modify token metadata.\n"
+                "4. \"nfTokenMetadataAdminAddr\"  (string, optional, default = \"0\") The metadata token administration address, can be used to modify token metadata.\n"
                 "                                 The private key does not have to be known by your wallet. Can be set to 0.\n"
 
                 "5. \"nfTokenMetadata\"           (string, optional) metadata describing the token.\n"
-                "                                 It may contain text or binary in hex/base64 //TODO .\n";//TODO: add examples
+                "                                 It may contain text or binary in hex/base64 //TODO .\n"
+                "6. \"nfTokenRegistrar\"          (string, optional) Registrar address or private key.\n"
+                "                                 It is used to sign the registration transaction if the specified protocol NFT can be signed by any key\n"
+                "                                 The private key belonging to this address should be known in your wallet.\n"
+                "Examples: "
+                + HelpExampleCli("nftoken", R"(register/issue doc a103d4bdfaa7d22591c4dacda81ba540e37f705bae41681c082b102e647aa8e8 CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc CRWS78YF1kbWAyfceS6RfiTVzP17csUnhUux "https://metadata-json.link")")
+                + HelpExampleCli("nftoken", R"(register/issue doc 482115824e913a4a3c94ea06efdf25ff89c5b59b6f7e40d91b6ea76eebab5193 CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc CRWS78YF1kbWAyfceS6RfiTVzP17csUnhUux "https://metadata-json.link" CRWs89Yd1kbWAyfceS6RfiTVzP17csrntvxy)")
+                + HelpExampleRpc("nftoken", R"(register/issue doc a103d4bdfaa7d22591c4dacda81ba540e37f705bae41681c082b102e647aa8e8 CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc CRWS78YF1kbWAyfceS6RfiTVzP17csUnhUux "https://metadata-json.link")");
+
 
         throw std::runtime_error(helpMessage);
     }
 
     json_spirit::Value RegisterNfToken(const json_spirit::Array& params, bool fHelp)
     {
-        if (fHelp || params.size() < 4 || params.size() > 6)
+        if (fHelp || params.size() < 4 || params.size() > 7)
             RegisterNfTokenHelp();
 
-        CKey ownerPrivKey;
+        // TODO: get nftRegSign field from the protocol reg tx
+        NftRegSign nftRegSign;
+
+        CKey ownerKey;
         NfTokenRegTxBuilder nfTokenRegTxBuilder;
-        nfTokenRegTxBuilder.SetTokenProtocol(params[1]).SetTokenId(params[2]).SetTokenOwnerKey(params[3], ownerPrivKey);
+        nfTokenRegTxBuilder.SetTokenProtocol(params[1]).SetTokenId(params[2]).SetTokenOwnerKey(params[3], nftRegSign, ownerKey);
 
         if (params.size() > 4)
             nfTokenRegTxBuilder.SetMetadataAdminKey(params[4]);
         if (params.size() > 5)
             nfTokenRegTxBuilder.SetMetadata(params[5]);
 
+        CKey keyToSign;
+        if (nftRegSign == NftRegSign::SelfSign && ownerKey.IsValid())
+            keyToSign = ownerKey;
+        else if (nftRegSign == NftRegSign::SignByCreator)
+            ; //TODO: get NFT protocol key; privKeyToSign =
+        else if (nftRegSign == NftRegSign::SignAny && params.size() > 6)
+            keyToSign = ParsePrivKeyOrAddress(params[6].get_str(), "nfTokenRegistrar");
+        else
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Registrar address is missing or invalid");
+
+        nfTokenRegTxBuilder.SetKeyToSign(keyToSign);
         NfTokenRegTx nfTokenRegTx = nfTokenRegTxBuilder.BuildTx();
 
         CMutableTransaction tx;
@@ -79,7 +105,7 @@ namespace Platform
         tx.nType = TRANSACTION_NF_TOKEN_REGISTER;
 
         FundSpecialTx(tx, nfTokenRegTx);
-        SignSpecialTxPayload(tx, nfTokenRegTx, ownerPrivKey);
+        SignSpecialTxPayload(tx, nfTokenRegTx, keyToSign);
         SetTxPayload(tx, nfTokenRegTx);
 
         std::string result = SignAndSendSpecialTx(tx);
