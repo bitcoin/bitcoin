@@ -4358,11 +4358,6 @@ static const uint64_t MEMPOOL_DUMP_VERSION = 1;
 
 bool LoadMempool(void)
 {
-    if (gArgs.GetBoolArg("-zapwallettxes", false)) {
-        LogPrintf("Skipping mempool.dat because of zapwallettxes\n");
-        return true;
-    }
-
     const CChainParams& chainparams = Params();
     int64_t nExpiryTimeout = gArgs.GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60;
     FILE* filestr = fsbridge::fopen(GetDataDir() / "mempool.dat", "rb");
