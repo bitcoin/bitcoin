@@ -497,7 +497,7 @@ public:
      *
      * 1. Locking both `cs_main` and `mempool.cs` will give a view of mempool
      *    that is consistent with current chain tip (`::ChainActive()` and
-     *    `pcoinsTip`) and is fully populated. Fully populated means that if the
+     *    `CoinsTip()`) and is fully populated. Fully populated means that if the
      *    current active chain is missing transactions that were present in a
      *    previously active chain, all the missing transactions will have been
      *    re-added to the mempool and should be present if they meet size and
