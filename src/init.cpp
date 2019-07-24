@@ -235,8 +235,11 @@ void Shutdown(InitInterfaces& interfaces)
     //
     // g_chainstate is referenced here directly (instead of ::ChainstateActive()) because it
     // may not have been initialized yet.
-    if (g_chainstate && g_chainstate->CanFlushToDisk()) {
-        g_chainstate->ForceFlushStateToDisk();
+    {
+        LOCK(cs_main);
+        if (g_chainstate && g_chainstate->CanFlushToDisk()) {
+            g_chainstate->ForceFlushStateToDisk();
+        }
     }
 
     // After there are no more peers/RPC left to give us new data which may generate
