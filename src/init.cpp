@@ -18,7 +18,6 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <checkpoints.h>
-#include <coins.h>
 #include <node/coinstats.h>
 #include <compat/sanity.h>
 #include <consensus/validation.h>
@@ -183,7 +182,6 @@ static fs::path GetPidFile()
 // shutdown thing.
 //
 
-static std::unique_ptr<CCoinsViewErrorCatcher> pcoinscatcher;
 static std::unique_ptr<ECCVerifyHandle> globalVerifyHandle;
 
 static boost::thread_group threadGroup;
@@ -296,8 +294,14 @@ void PrepareShutdown(InitInterfaces& interfaces)
     }
 
     // FlushStateToDisk generates a ChainStateFlushed callback, which we should avoid missing
-    if (pcoinsTip != nullptr) {
-        ::ChainstateActive().ForceFlushStateToDisk();
+    //
+    // g_chainstate is referenced here directly (instead of ::ChainstateActive()) because it
+    // may not have been initialized yet.
+    {
+        LOCK(cs_main);
+        if (g_chainstate && g_chainstate->CanFlushToDisk()) {
+            g_chainstate->ForceFlushStateToDisk();
+        }
     }
 
     // After there are no more peers/RPC left to give us new data which may generate
@@ -312,12 +316,10 @@ void PrepareShutdown(InitInterfaces& interfaces)
 
     {
         LOCK(cs_main);
-        if (pcoinsTip != nullptr) {
-            ::ChainstateActive().ForceFlushStateToDisk();
+        if (g_chainstate && g_chainstate->CanFlushToDisk()) {
+            g_chainstate->ForceFlushStateToDisk();
+            g_chainstate->ResetCoinsViews();
         }
-        pcoinsTip.reset();
-        pcoinscatcher.reset();
-        pcoinsdbview.reset();
         pblocktree.reset();
         llmq::DestroyLLMQSystem();
         deterministicMNManager.reset();
@@ -965,7 +967,7 @@ void PeriodicStats()
     assert(gArgs.GetBoolArg("-statsenabled", DEFAULT_STATSD_ENABLE));
     CCoinsStats stats;
     ::ChainstateActive().ForceFlushStateToDisk();
-    if (GetUTXOStats(pcoinsdbview.get(), stats)) {
+    if (GetUTXOStats(&::ChainstateActive().CoinsDB(), stats)) {
         statsClient.gauge("utxoset.tx", stats.nTransactions, 1.0f);
         statsClient.gauge("utxoset.txOutputs", stats.nTransactionOutputs, 1.0f);
         statsClient.gauge("utxoset.dbSizeBytes", stats.nDiskSize, 1.0f);
@@ -1003,7 +1005,7 @@ void PeriodicStats()
     // No need for cs_main, we never use null tip here
     statsClient.gaugeDouble("network.difficulty", (double)GetDifficulty(tip));
 
-    statsClient.gauge("transactions.txCacheSize", pcoinsTip->GetCacheSize(), 1.0f);
+    statsClient.gauge("transactions.txCacheSize", ::ChainstateActive().CoinsTip().GetCacheSize(), 1.0f);
     statsClient.gauge("transactions.totalTransactions", tip->nChainTx, 1.0f);
 
     statsClient.gauge("transactions.mempool.totalTransactions", mempool.size(), 1.0f);
@@ -1976,10 +1978,10 @@ bool AppInitMain(InitInterfaces& interfaces)
         do {
             const int64_t load_block_index_start_time = GetTimeMillis();
             try {
+                // This statement makes ::ChainstateActive() usable.
+                g_chainstate = MakeUnique<CChainState>();
                 UnloadBlockIndex();
-                pcoinsTip.reset();
-                pcoinsdbview.reset();
-                pcoinscatcher.reset();
+
                 // new CBlockTreeDB tries to delete the existing file, which
                 // fails if it's still open from the previous loop. Close it first:
                 pblocktree.reset();
@@ -2064,9 +2066,12 @@ bool AppInitMain(InitInterfaces& interfaces)
                 // At this point we're either in reindex or we've loaded a useful
                 // block tree into BlockIndex()!
 
-                pcoinsdbview.reset(new CCoinsViewDB(nCoinDBCache, false, fReset || fReindexChainState));
-                pcoinscatcher.reset(new CCoinsViewErrorCatcher(pcoinsdbview.get()));
-                pcoinscatcher->AddReadErrCallback([]() {
+                ::ChainstateActive().InitCoinsDB(
+                    /* cache_size_bytes */ nCoinDBCache,
+                    /* in_memory */ false,
+                    /* should_wipe */ fReset || fReindexChainState);
+
+                ::ChainstateActive().CoinsErrorCatcher().AddReadErrCallback([]() {
                     uiInterface.ThreadSafeMessageBox(
                         _("Error reading from database, shutting down."),
                         "", CClientUIInterface::MSG_ERROR);
@@ -2074,19 +2079,20 @@ bool AppInitMain(InitInterfaces& interfaces)
 
                 // If necessary, upgrade from older database format.
                 // This is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
-                if (!pcoinsdbview->Upgrade()) {
+                if (!::ChainstateActive().CoinsDB().Upgrade()) {
                     strLoadError = _("Error upgrading chainstate database");
                     break;
                 }
 
                 // ReplayBlocks is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
-                if (!ReplayBlocks(chainparams, pcoinsdbview.get())) {
+                if (!ReplayBlocks(chainparams, &::ChainstateActive().CoinsDB())) {
                     strLoadError = _("Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.");
                     break;
                 }
 
                 // The on-disk coinsdb is now in a good state, create the cache
-                pcoinsTip.reset(new CCoinsViewCache(pcoinscatcher.get()));
+                ::ChainstateActive().InitCoinsCache();
+                assert(::ChainstateActive().CanFlushToDisk());
 
                 // flush evodb
                 if (!evoDb->CommitRootTransaction()) {
@@ -2094,9 +2100,10 @@ bool AppInitMain(InitInterfaces& interfaces)
                     break;
                 }
 
-                bool is_coinsview_empty = fReset || fReindexChainState || pcoinsTip->GetBestBlock().IsNull();
+                bool is_coinsview_empty = fReset || fReindexChainState ||
+                    ::ChainstateActive().CoinsTip().GetBestBlock().IsNull();
                 if (!is_coinsview_empty) {
-                    // LoadChainTip sets ::ChainActive() based on pcoinsTip's best block
+                    // LoadChainTip sets ::ChainActive() based on CoinsTip()'s best block
                     if (!LoadChainTip(chainparams)) {
                         strLoadError = _("Error initializing block database");
                         break;
@@ -2131,7 +2138,7 @@ bool AppInitMain(InitInterfaces& interfaces)
                         break;
                     }
 
-                    if (!CVerifyDB().VerifyDB(chainparams, pcoinsdbview.get(), gArgs.GetArg("-checklevel", DEFAULT_CHECKLEVEL),
+                    if (!CVerifyDB().VerifyDB(chainparams, &::ChainstateActive().CoinsDB(), gArgs.GetArg("-checklevel", DEFAULT_CHECKLEVEL),
                                   gArgs.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS))) {
                         strLoadError = _("Corrupted block database detected");
                         break;

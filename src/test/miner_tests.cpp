@@ -421,7 +421,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     // while (::ChainActive().Tip()->nHeight > nHeight) {
     //     CBlockIndex* del = ::ChainActive().Tip();
     //     ::ChainActive().SetTip(del->pprev);
-    //     pcoinsTip->SetBestBlock(del->pprev->GetBlockHash());
+    //     ::ChainstateActive().CoinsTip().SetBestBlock(del->pprev->GetBlockHash());
     //     delete del->phashBlock;
     //     delete del;
     // }

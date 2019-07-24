@@ -98,11 +98,15 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
     g_banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     g_connman = MakeUnique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
     pblocktree.reset(new CBlockTreeDB(1 << 20, true));
-    pcoinsdbview.reset(new CCoinsViewDB(1 << 23, true));
+    g_chainstate = MakeUnique<CChainState>();
+    ::ChainstateActive().InitCoinsDB(
+        /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
+    assert(!::ChainstateActive().CanFlushToDisk());
     g_txindex = MakeUnique<TxIndex>(1 << 20, true);
     g_txindex->Start();
     llmq::InitLLMQSystem(*evoDb, true);
-    pcoinsTip.reset(new CCoinsViewCache(pcoinsdbview.get()));
+    ::ChainstateActive().InitCoinsCache();
+    assert(::ChainstateActive().CanFlushToDisk());
     if (!LoadGenesisBlock(chainparams)) {
         throw std::runtime_error("LoadGenesisBlock failed.");
     }
@@ -134,9 +138,8 @@ TestingSetup::~TestingSetup()
     g_connman.reset();
     g_banman.reset();
     UnloadBlockIndex();
-    pcoinsTip.reset();
+    g_chainstate.reset();
     llmq::DestroyLLMQSystem();
-    pcoinsdbview.reset();
     pblocktree.reset();
 }
 
@@ -211,7 +214,7 @@ CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns,
             BOOST_ASSERT(false);
         }
         CValidationState state;
-        if (!CalcCbTxMerkleRootMNList(block, ::ChainActive().Tip(), cbTx.merkleRootMNList, state, *pcoinsTip.get())) {
+        if (!CalcCbTxMerkleRootMNList(block, ::ChainActive().Tip(), cbTx.merkleRootMNList, state, ::ChainstateActive().CoinsTip())) {
             BOOST_ASSERT(false);
         }
         if (!CalcCbTxMerkleRootQuorums(block, ::ChainActive().Tip(), cbTx.merkleRootQuorums, state)) {

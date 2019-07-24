@@ -46,7 +46,7 @@ TransactionError BroadcastTransaction(const CTransactionRef tx, uint256& hashTx,
 
     { // cs_main scope
     LOCK(cs_main);
-    CCoinsViewCache &view = *pcoinsTip;
+    CCoinsViewCache &view = ::ChainstateActive().CoinsTip();
     bool fHaveChain = false;
     for (size_t o = 0; !fHaveChain && o < tx->vout.size(); o++) {
         const Coin& existingCoin = view.AccessCoin(COutPoint(hashTx, o));
