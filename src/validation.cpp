@@ -3389,12 +3389,12 @@ bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& headers, CValidatio
         for (const CBlockHeader& header : headers) {
             CBlockIndex *pindex = nullptr; // Use a temp pindex instead of ppindex to avoid a const_cast
             bool accepted = g_blockman.AcceptBlockHeader(header, state, chainparams, &pindex);
-            ::ChainstateActive().CheckBlockIndex(chainparams.GetConsensus());
 
             if (!accepted) {
                 if (first_invalid) *first_invalid = header;
                 return false;
             }
+            ::ChainstateActive().CheckBlockIndex(chainparams.GetConsensus());
             if (ppindex) {
                 *ppindex = pindex;
             }
@@ -3435,10 +3435,10 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CVali
     CBlockIndex *&pindex = ppindex ? *ppindex : pindexDummy;
 
     bool accepted_header = m_blockman.AcceptBlockHeader(block, state, chainparams, &pindex);
-    CheckBlockIndex(chainparams.GetConsensus());
 
     if (!accepted_header)
         return false;
+    CheckBlockIndex(chainparams.GetConsensus());
 
     // Try to process all requested blocks that we don't have, but only
     // process an unrequested block if it's new and has enough work to
