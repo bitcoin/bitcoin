@@ -155,7 +155,7 @@ import pdb; pdb.set_trace()
 anywhere in the test. You will then be able to inspect variables, as well as
 call methods that interact with the dashd nodes-under-test.
 
-If further introspection of the bitcoind instances themselves becomes
+If further introspection of the dashd instances themselves becomes
 necessary, this can be accomplished by first setting a pdb breakpoint
 at an appropriate location, running the test to that point, then using
 `gdb` to attach to the process and debug.
@@ -169,15 +169,15 @@ For instance, to attach to `self.node[1]` during a run:
 use the directory path to get the pid from the pid file:
 
 ```bash
-cat /tmp/user/1000/testo9vsdjo3/node1/regtest/bitcoind.pid
-gdb /home/example/bitcoind <pid>
+cat /tmp/user/1000/testo9vsdjo3/node1/regtest/dashd.pid
+gdb /home/example/dashd <pid>
 ```
 
 Note: gdb attach step may require `sudo`
 
 ### Util tests
 
-Util tests can be run locally by running `test/util/bitcoin-util-test.py`.
+Util tests can be run locally by running `test/util/dash-util-test.py`.
 Use the `-v` option for verbose output.
 
 # Writing functional tests
