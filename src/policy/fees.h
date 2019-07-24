@@ -114,11 +114,11 @@ private:
     /** Historical estimates that are older than this aren't valid */
     static const unsigned int OLDEST_ESTIMATE_HISTORY = 6 * 1008;
 
-    /** Decay of .962 is a half-life of 18 blocks or about 3 hours */
+    /** Decay of .962 is a half-life of 18 blocks or about 45 minutes */
     static constexpr double SHORT_DECAY = .962;
-    /** Decay of .998 is a half-life of 144 blocks or about 1 day */
+    /** Decay of .998 is a half-life of 144 blocks or about 6 hours */
     static constexpr double MED_DECAY = .9952;
-    /** Decay of .9995 is a half-life of 1008 blocks or about 1 week */
+    /** Decay of .9995 is a half-life of 1008 blocks or about 2 days */
     static constexpr double LONG_DECAY = .99931;
 
     /** Require greater than 60% of X feerate transactions to be confirmed within Y/2 blocks*/
