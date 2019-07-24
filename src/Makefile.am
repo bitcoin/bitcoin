@@ -386,7 +386,7 @@ crypto_libdash_crypto_a_SOURCES = \
   crypto/sha512.h
 
 if EXPERIMENTAL_ASM
-crypto_libbitcoin_crypto_a_SOURCES += crypto/sha256_sse4.cpp
+crypto_libdash_crypto_a_SOURCES += crypto/sha256_sse4.cpp
 endif
 
 # x11
