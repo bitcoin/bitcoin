@@ -16,6 +16,7 @@
 #include <interfaces/wallet.h>
 #include <ui_interface.h>
 #include <util/system.h>
+#include <util/translation.h>
 #include <version.h>
 
 #include <QApplication>
@@ -167,8 +168,8 @@ static void InitMessage(SplashScreen *splash, const std::string &message)
 static void ShowProgress(SplashScreen *splash, const std::string &title, int nProgress, bool resume_possible)
 {
     InitMessage(splash, title + std::string("\n") +
-            (resume_possible ? _("(press q to shutdown and continue later)")
-                                : _("press q to shutdown")) +
+            (resume_possible ? _("(press q to shutdown and continue later)").translated
+                                : _("press q to shutdown").translated) +
             strprintf("\n%d", nProgress) + "%");
 }
 #ifdef ENABLE_WALLET

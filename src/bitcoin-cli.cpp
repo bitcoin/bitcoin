@@ -13,9 +13,11 @@
 #include <rpc/client.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
-#include <util/system.h>
 #include <util/strencodings.h>
+#include <util/system.h>
+#include <util/translation.h>
 
+#include <functional>
 #include <memory>
 #include <stdio.h>
 #include <tuple>
