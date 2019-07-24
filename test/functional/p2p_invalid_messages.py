@@ -6,6 +6,7 @@
 import asyncio
 import os
 import struct
+import sys
 
 from test_framework import messages
 from test_framework.mininode import P2PDataStore, NetworkThread
@@ -92,18 +93,25 @@ class InvalidMessagesTest(BitcoinTestFramework):
         #
         # Send an oversized message, ensure we're disconnected.
         #
-        msg_over_size = msg_unrecognized(str_data="b" * (valid_data_limit + 1))
-        assert len(msg_over_size.serialize()) == (msg_limit + 1)
+        # Under macOS this test is skipped due to an unexpected error code
+        # returned from the closing socket which python/asyncio does not
+        # yet know how to handle.
+        #
+        if sys.platform != 'darwin':
+            msg_over_size = msg_unrecognized(str_data="b" * (valid_data_limit + 1))
+            assert len(msg_over_size.serialize()) == (msg_limit + 1)
 
-        with node.assert_debug_log(["Oversized message from peer=4, disconnecting"]):
-            # An unknown message type (or *any* message type) over
-            # MAX_PROTOCOL_MESSAGE_LENGTH should result in a disconnect.
-            node.p2p.send_message(msg_over_size)
-            node.p2p.wait_for_disconnect(timeout=4)
+            with node.assert_debug_log(["Oversized message from peer=4, disconnecting"]):
+                # An unknown message type (or *any* message type) over
+                # MAX_PROTOCOL_MESSAGE_LENGTH should result in a disconnect.
+                node.p2p.send_message(msg_over_size)
+                node.p2p.wait_for_disconnect(timeout=4)
 
-        node.disconnect_p2ps()
-        conn = node.add_p2p_connection(P2PDataStore())
-        conn.wait_for_verack()
+            node.disconnect_p2ps()
+            conn = node.add_p2p_connection(P2PDataStore())
+            conn.wait_for_verack()
+        else:
+            self.log.info("Skipping test p2p_invalid_messages/1 (oversized message) under macOS")
 
         #
         # 2.
