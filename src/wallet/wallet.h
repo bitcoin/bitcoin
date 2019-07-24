@@ -372,20 +372,16 @@ struct COutputEntry
 class CMerkleTx
 {
 public:
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
+    template<typename Stream>
+    void Unserialize(Stream& s)
+    {
         CTransactionRef tx;
         uint256 hashBlock;
+        std::vector<uint256> vMerkleBranch;
         int nIndex;
-        std::vector<uint256> vMerkleBranch; // For compatibility with older versions.
-        READWRITE(tx);
-        READWRITE(hashBlock);
-        READWRITE(vMerkleBranch);
-        READWRITE(nIndex);
-    }
 
+        s >> tx >> hashBlock >> vMerkleBranch >> nIndex;
+    }
 };
 
 //Get the marginal bytes of spending the specified output
@@ -495,7 +491,6 @@ public:
     template<typename Stream>
     void Serialize(Stream& s) const
     {
-        char fSpent = false;
         mapValue_t mapValueCopy = mapValue;
 
         mapValueCopy["fromaccount"] = "";
@@ -504,22 +499,21 @@ public:
             mapValueCopy["timesmart"] = strprintf("%u", nTimeSmart);
         }
 
-        std::vector<uint256> dummy_vector; //!< Used to be vMerkleBranch
-        s << tx << hashBlock << dummy_vector << nIndex;
-        std::vector<CMerkleTx> vUnused; //!< Used to be vtxPrev
-        s << vUnused << mapValueCopy << vOrderForm << fTimeReceivedIsTxTime << nTimeReceived << fFromMe << fSpent;
+        std::vector<char> dummy_vector1; //!< Used to be vMerkleBranch
+        std::vector<char> dummy_vector2; //!< Used to be vtxPrev
+        char dummy_char = false; //!< Used to be fSpent
+        s << tx << hashBlock << dummy_vector1 << nIndex << dummy_vector2 << mapValueCopy << vOrderForm << fTimeReceivedIsTxTime << nTimeReceived << fFromMe << dummy_char;
     }
 
     template<typename Stream>
     void Unserialize(Stream& s)
     {
         Init(nullptr);
-        char fSpent;
 
-        std::vector<uint256> dummy_vector; //!< Used to be vMerkleBranch
-        s >> tx >> hashBlock >> dummy_vector >> nIndex;
-        std::vector<CMerkleTx> vUnused; //!< Used to be vtxPrev
-        s >> vUnused >> mapValue >> vOrderForm >> fTimeReceivedIsTxTime >> nTimeReceived >> fFromMe >> fSpent;
+        std::vector<uint256> dummy_vector1; //!< Used to be vMerkleBranch
+        std::vector<CMerkleTx> dummy_vector2; //!< Used to be vtxPrev
+        char dummy_char; //! Used to be fSpent
+        s >> tx >> hashBlock >> dummy_vector1 >> nIndex >> dummy_vector2 >> mapValue >> vOrderForm >> fTimeReceivedIsTxTime >> nTimeReceived >> fFromMe >> dummy_char;
 
         ReadOrderPos(nOrderPos, mapValue);
         nTimeSmart = mapValue.count("timesmart") ? (unsigned int)atoi64(mapValue["timesmart"]) : 0;
