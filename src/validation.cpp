@@ -2650,7 +2650,7 @@ bool CChainState::DisconnectTip(BlockValidationState& state, const CChainParams&
     ResetAssetAllocations(actorSet);
     // Let wallets know transactions went from 1-confirmed to
     // 0-confirmed or conflicted:
-    GetMainSignals().BlockDisconnected(pblock);
+    GetMainSignals().BlockDisconnected(pblock, pindexDelete);
     return true;
 }
 
