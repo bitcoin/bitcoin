@@ -168,7 +168,6 @@ bool LDPC::generate_H()
 
   InitWELLRNG512a(&this->seeds[0]);
   col_order.clear();
-  std::cout << "Seed Size:" << this->seeds.size() << std::endl;
   for (int j = 0; j < this->n; j++)
     col_order.push_back(j);
 
@@ -178,15 +177,13 @@ bool LDPC::generate_H()
     auto k = WELLRNG512a() % (n + 1);
     if (k != n) {
       std::iter_swap(begin + k, begin + n);
-      std::cout << k << ":" << n << std::endl;
     }
   }
-  std::cout << std::endl;
 
-  std::cout << "[";
-  for (auto t = 0; t < col_order.size(); t++)
-    std::cout << col_order.at(t) << ' ';
-  std::cout << "]" << std::endl;
+  for (int j = 0; j < this->n; j++) {
+    int index = (col_order.at(j) / this->wr + k);
+    H[index][j] = 1;
+  }
 
   return true;
 }
