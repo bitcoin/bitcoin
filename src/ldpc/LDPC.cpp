@@ -1,12 +1,14 @@
 #include "LDPC.h"
 #include "Memory_Manage.h"
 #include "sha256.h"
+#include "WELL512a.h"
 #include <vector>
 #include <cstdlib>
 #include <algorithm>
 #include <iostream>
 #include <random>
 #include <uint256.h>
+
 
 LDPC::LDPC()
 {
@@ -99,7 +101,7 @@ void LDPC::decoding()
       this->output_word[i] = 0;
   }
 }
-int  LDPC::generate_seed(char phv_with_mtv[])
+int LDPC::generate_seed(char phv_with_mtv[])
 {
   /* We randomly generate a seed value using both the previous hash value and the current merkle tree value. */
   
@@ -109,7 +111,18 @@ int  LDPC::generate_seed(char phv_with_mtv[])
   }
   
   this->seed = sum;
+  this->generate_seeds(this->seed);
   return sum;
+}
+
+void LDPC::generate_seeds(uint64_t hash)
+{
+  uint64_t mask = 0xffff;
+  this->seeds.clear();
+  for (int i = 0; i < 16; i++) {
+    this->seeds.push_back(static_cast<uint32_t>((hash & mask) >> (i * 4)));
+    mask = mask << 4;
+  }
 }
 
 void LDPC::generate_hv(const unsigned char hash_value[])
@@ -143,7 +156,6 @@ void LDPC::generate_hv(const unsigned char hash_value[])
 }
 bool LDPC::generate_H()
 {
-  unsigned int seed = static_cast<unsigned int>(this->seed);
   std::vector<int> col_order;
   if (this->H == NULL)
     return false;
@@ -153,26 +165,29 @@ bool LDPC::generate_H()
   for (int i = 0; i < k; i++)
     for (int j = i * this->wr; j < (i + 1) * this->wr; j++)
       this->H[i][j] = 1;
-  
-  for (int i = 1; i < this->wc; i++) {
-    /*generate each permutation order using seed*/
-    col_order.clear();
-    for (int j = 0; j < this->n; j++)
-      col_order.push_back(j);
 
-#if 0
-    std::srand(seed--);
-    std::random_shuffle(col_order.begin(), col_order.end());
-#else
-    int o = (seed % k) ? (seed % k):k;
-    for (int j = 1; j < static_cast<int>(col_order.size()); j++) {
-      if (j % o == 0) {
-        std::swap(col_order[j], col_order[j-1]);
-      }
+  InitWELLRNG512a(&this->seeds[0]);
+  col_order.clear();
+  std::cout << "Seed Size:" << this->seeds.size() << std::endl;
+  for (int j = 0; j < this->n; j++)
+    col_order.push_back(j);
+
+  auto begin = col_order.begin();
+  auto end = col_order.end();
+  for (auto n = end - begin -1; n >= 1; --n) {
+    auto k = WELLRNG512a() % (n + 1);
+    if (k != n) {
+      std::iter_swap(begin + k, begin + n);
+      std::cout << k << ":" << n << std::endl;
     }
-#endif
-
   }
+  std::cout << std::endl;
+
+  std::cout << "[";
+  for (auto t = 0; t < col_order.size(); t++)
+    std::cout << col_order.at(t) << ' ';
+  std::cout << "]" << std::endl;
+
   return true;
 }
 bool LDPC::generate_Q()

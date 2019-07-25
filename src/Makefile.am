@@ -414,6 +414,7 @@ libbitcoin_consensus_a_SOURCES = \
   util/strencodings.h \
   ldpc/Memory_Manage.cpp \
   ldpc/sha256.cpp \
+  ldpc/WELL512a.cpp \
   ldpc/LDPC.cpp \
   version.h
 

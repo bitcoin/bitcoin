@@ -11,6 +11,7 @@
 #include <util/system.h>
 #include <util/strencodings.h>
 #include <versionbitsinfo.h>
+#include <arith_uint256.h>
 
 #include <assert.h>
 
@@ -120,8 +121,9 @@ public:
         LDPC *ldpc = new LDPC;
         ldpc->set_difficulty(1);
         ldpc->initialization();
-        std::cout << "SEED:" << (char*)((genesis.hashPrevBlock.ToString() + genesis.hashMerkleRoot.ToString()).c_str()) << std::endl;
-        ldpc->generate_seed((char*)((genesis.hashPrevBlock.ToString() + genesis.hashMerkleRoot.ToString()).c_str()));
+        std::cout << "SEED:" << (char*)(genesis.hashPrevBlock.ToString().c_str()) << std::endl;
+        //ldpc->generate_seeds(UintToArith256(genesis.hashPrevBlock).GetLow64());
+        ldpc->generate_seeds(10002342);
         ldpc->generate_H();
         ldpc->generate_Q();
         while(1)
@@ -136,6 +138,7 @@ public:
         delete ldpc;
 
         std::cout << "mainnet n: " << genesis.nNonce << " Hash: " << genesis.GetHash().ToString() << std::endl;
+        assert(false);
 #endif
 
         consensus.hashGenesisBlock = genesis.GetHash();

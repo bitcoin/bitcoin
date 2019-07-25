@@ -1,6 +1,7 @@
 #pragma once
 #include <cmath>
-#include <uint256.h>
+#include <stdint.h>
+#include <vector>
 
 class LDPC
 {
@@ -15,7 +16,7 @@ public:
   bool is_regular(int n, int wc, int wr);
 
   int  generate_seed(char phv[]);  //the date type of the previous hash value included in the bitcoin header is the char array of size 32
-  void generate_seed(unsigned long long hash);
+  void generate_seeds(uint64_t hash);
   bool generate_H();
   bool generate_Q();
   void generate_hv(const unsigned char Seralized_Block_Header_with_Nonce[]);
@@ -34,14 +35,13 @@ private:
   int  *hash_vector = NULL;
   int  *output_word = NULL;
 
-  unsigned char tmp_hash_vector[32];  //32bytes => 256bits
-
   int **H = NULL;
   int **row_in_col = NULL;
   int **col_in_row = NULL;
   
   int n, m, wc, wr;
-  unsigned long long seed;
+  uint64_t seed;
+  std::vector<uint32_t> seeds;
 
   // these parameters are only used for the decoding function.
   int    max_iter = 20;   // the maximum number of iteration in the decoding function. We fix it.

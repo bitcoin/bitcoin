@@ -104,7 +104,8 @@ bool CheckProofOfWork(CBlockHeader block)
     LDPC *ldpc = new LDPC;
     ldpc->set_difficulty(1);
     ldpc->initialization();
-    ldpc->generate_seed((char*)((block.hashPrevBlock.ToString() + block.hashMerkleRoot.ToString()).c_str()));
+    // ldpc->generate_seed((char*)((block.hashPrevBlock.ToString() + block.hashMerkleRoot.ToString()).c_str()));
+    ldpc->generate_seeds(UintToArith256(block.hashPrevBlock).GetLow64());
     ldpc->generate_H();
     ldpc->generate_Q();
     ldpc->generate_hv((unsigned char*)block.GetHash().ToString().c_str());

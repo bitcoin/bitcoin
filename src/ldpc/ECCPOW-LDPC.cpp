@@ -18,13 +18,13 @@ int main()
   ldpc->initialization();
   std::cout << "SEED:" << phv << std::endl;
 
-  ldpc->generate_seed(phv);
+  ldpc->generate_seeds(3423423423423424237);
   ldpc->generate_H();
   ldpc->generate_Q();
 
   // ptr->print_H("H2.txt");
-  ldpc->print_Q(NULL, 1);
-  ldpc->print_Q(NULL, 2);
+//  ldpc->print_Q(NULL, 1);
+//  ldpc->print_Q(NULL, 2);
 
   string current_block_header_with_nonce;
   while (1)
@@ -45,8 +45,8 @@ int main()
   }
 
 
-  ldpc->print_word(NULL, 1);
-  ldpc->print_word(NULL, 2);
+//  ldpc->print_word(NULL, 1);
+//  ldpc->print_word(NULL, 2);
   delete ldpc;
   return 0;
 }
