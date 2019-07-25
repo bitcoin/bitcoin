@@ -39,11 +39,13 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     {
         TransactionRecord sub(hash, nTime, TransactionRecord::StakeMint, "", -nDebit, wtx.tx->GetValueOut());
         CTxDestination address;
-        CTxOut txout = wtx.tx->vout[1];
+        const CTxOut& txout = wtx.tx->vout[1];
+        isminetype mine = wallet->IsMine(txout);
 
         if(ExtractDestination(txout.scriptPubKey, address) && IsMine(*wallet, address))
             sub.address = EncodeDestination(address);
 
+        sub.involvesWatchAddress = mine & ISMINE_WATCH_ONLY;
         parts.append(sub);
     }
     else if (nNet > 0 || wtx.IsCoinBase())
