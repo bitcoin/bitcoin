@@ -93,6 +93,24 @@ void UnserializeFromVector(Stream& s, X&... args)
     }
 }
 
+// Deserialize an individual HD keypath to a stream
+template<typename Stream>
+void DeserializeHDKeypath(Stream& s, KeyOriginInfo& hd_keypath)
+{
+    // Read in key path
+    uint64_t value_len = ReadCompactSize(s);
+    if (value_len % 4 || value_len == 0) {
+        throw std::ios_base::failure("Invalid length for HD key path");
+    }
+
+    s >> hd_keypath.fingerprint;
+    for (unsigned int i = 4; i < value_len; i += sizeof(uint32_t)) {
+        uint32_t index;
+        s >> index;
+        hd_keypath.path.push_back(index);
+    }
+}
+
 // Deserialize HD keypaths into a map
 template<typename Stream>
 void DeserializeHDKeypaths(Stream& s, const std::vector<unsigned char>& key, std::map<CPubKey, KeyOriginInfo>& hd_keypaths)
@@ -110,22 +128,22 @@ void DeserializeHDKeypaths(Stream& s, const std::vector<unsigned char>& key, std
         throw std::ios_base::failure("Duplicate Key, pubkey derivation path already provided");
     }
 
-    // Read in key path
-    uint64_t value_len = ReadCompactSize(s);
-    if (value_len % 4 || value_len == 0) {
-        throw std::ios_base::failure("Invalid length for HD key path");
-    }
-
     KeyOriginInfo keypath;
-    s >> keypath.fingerprint;
-    for (unsigned int i = 4; i < value_len; i += sizeof(uint32_t)) {
-        uint32_t index;
-        s >> index;
-        keypath.path.push_back(index);
-    }
+    DeserializeHDKeypath(s, keypath);
 
     // Add to map
     hd_keypaths.emplace(pubkey, std::move(keypath));
+}
+
+// Serialize an individual HD keypath to a stream
+template<typename Stream>
+void SerializeHDKeypath(Stream& s, KeyOriginInfo hd_keypath)
+{
+    WriteCompactSize(s, (hd_keypath.path.size() + 1) * sizeof(uint32_t));
+    s << hd_keypath.fingerprint;
+    for (const auto& path : hd_keypath.path) {
+        s << path;
+    }
 }
 
 // Serialize HD keypaths to a stream from a map
@@ -137,11 +155,7 @@ void SerializeHDKeypaths(Stream& s, const std::map<CPubKey, KeyOriginInfo>& hd_k
             throw std::ios_base::failure("Invalid CPubKey being serialized");
         }
         SerializeToVector(s, type, Span{keypath_pair.first});
-        WriteCompactSize(s, (keypath_pair.second.path.size() + 1) * sizeof(uint32_t));
-        s << keypath_pair.second.fingerprint;
-        for (const auto& path : keypath_pair.second.path) {
-            s << path;
-        }
+        SerializeHDKeypath(s, keypath_pair.second);
     }
 }
 
