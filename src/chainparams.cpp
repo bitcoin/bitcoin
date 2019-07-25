@@ -11,14 +11,16 @@
 #include <util/system.h>
 #include <util/strencodings.h>
 #include <versionbitsinfo.h>
-#include <arith_uint256.h>
 
 #include <assert.h>
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 
-#if 1
+#define GENESIS 0
+
+#if GENESIS
+#include <arith_uint256.h>
 #include <ldpc/LDPC.h>
 #endif
 
@@ -117,7 +119,7 @@ public:
 
         genesis = CreateGenesisBlock(1558627231, 99, 0x1d00ffff, 1, 50 * COIN);
 
-#if 0
+#if GENESIS
         LDPC *ldpc = new LDPC;
         ldpc->set_difficulty(1);
         ldpc->initialization();
@@ -241,13 +243,13 @@ public:
         m_assumed_blockchain_size = 30;
         m_assumed_chain_state_size = 2;
 
-        genesis = CreateGenesisBlock(1560518777, 348, 0x1d00ffff, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1560518777, 538, 0x1d00ffff, 1, 50 * COIN);
 
-#if 0
+#if GENESIS
         LDPC *ldpc = new LDPC;
         ldpc->set_difficulty(1);
         ldpc->initialization();
-        ldpc->generate_seed((char*)((genesis.hashPrevBlock.ToString() + genesis.hashMerkleRoot.ToString()).c_str()));
+        ldpc->generate_seeds(UintToArith256(genesis.hashPrevBlock).GetLow64());
         ldpc->generate_H();
         ldpc->generate_Q();
         while(1)
@@ -265,7 +267,7 @@ public:
 #endif
 
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("4f048763f114c118c3e15c6cd0a1c4e8ad683473cb943319bea269fcca004e08"));
+        assert(consensus.hashGenesisBlock == uint256S("211cfe5f0a0bbec995dc6820a149bce0618a3b34b011c6b1d43d2c3f9fbda502"));
         assert(genesis.hashMerkleRoot == uint256S("15d2f927fe3eafe88ce0b4ccf267727ed306295051339a16e0b95067e65bead8"));
 
         vFixedSeeds.clear();
@@ -297,7 +299,7 @@ public:
 
         checkpointData = {
             {
-                {0, uint256S("4f048763f114c118c3e15c6cd0a1c4e8ad683473cb943319bea269fcca004e08")},
+                {0, uint256S("211cfe5f0a0bbec995dc6820a149bce0618a3b34b011c6b1d43d2c3f9fbda502")},
             }
         };
 
@@ -360,13 +362,13 @@ public:
 
         UpdateVersionBitsParametersFromArgs(args);
 
-        genesis = CreateGenesisBlock(1560519259, 248, 0x207fffff, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1560519259, 348, 0x207fffff, 1, 50 * COIN);
 
-#if 0
+#if GENESIS
         LDPC *ldpc = new LDPC;
         ldpc->set_difficulty(1);
         ldpc->initialization();
-        ldpc->generate_seed((char*)((genesis.hashPrevBlock.ToString() + genesis.hashMerkleRoot.ToString()).c_str()));
+        ldpc->generate_seeds(UintToArith256(genesis.hashPrevBlock).GetLow64());
         ldpc->generate_H();
         ldpc->generate_Q();
         while(1)
@@ -383,7 +385,7 @@ public:
 #endif
 
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0b9cd7cce2a6436ceada5e04f2a527ca71bae5942cc7de85e5e0102d4f2cb62d"));
+        assert(consensus.hashGenesisBlock == uint256S("4b12c0904203b83cff5afb5b6f9946a9b134cc99756d1e96e9e997fa214252f5"));
         assert(genesis.hashMerkleRoot == uint256S("15d2f927fe3eafe88ce0b4ccf267727ed306295051339a16e0b95067e65bead8"));
 
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
@@ -395,7 +397,7 @@ public:
 
         checkpointData = {
             {
-                {0, uint256S("0b9cd7cce2a6436ceada5e04f2a527ca71bae5942cc7de85e5e0102d4f2cb62d")},
+                {0, uint256S("4b12c0904203b83cff5afb5b6f9946a9b134cc99756d1e96e9e997fa214252f5")},
             }
         };
 
