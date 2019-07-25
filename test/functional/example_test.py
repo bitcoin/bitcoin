@@ -188,6 +188,9 @@ class ExampleTest(BitcoinTestFramework):
         self.log.info("Connect node2 and node1")
         connect_nodes(self.nodes[1], 2)
 
+        self.log.info("Wait for node2 to receive all the blocks from node1")
+        self.sync_all()
+
         self.log.info("Add P2P connection to node2")
         # We can't add additional P2P connections once the network thread has started. Disconnect the connection
         # to node0, wait for the network thread to terminate, then connect to node2. This is specific to
@@ -199,7 +202,7 @@ class ExampleTest(BitcoinTestFramework):
         network_thread_start()
         self.nodes[2].p2p.wait_for_verack()
 
-        self.log.info("Wait for node2 reach current tip. Test that it has propagated all the blocks to us")
+        self.log.info("Test that node2 propagates all the blocks to us")
 
         getdata_request = msg_getdata()
         for block in blocks:
