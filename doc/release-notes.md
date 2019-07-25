@@ -19,8 +19,8 @@ Bitcoin Core version *version* is now available from:
 
   <https://bitcoincore.org/bin/bitcoin-core-*version*/>
 
-This is a new major version release, including new features, various bugfixes
-and performance improvements, as well as updated translations.
+This release includes new features, various bug fixes and performance
+improvements, as well as updated translations.
 
 Please report bugs using the issue tracker at GitHub:
 
@@ -42,30 +42,19 @@ Upgrading directly from a version of Bitcoin Core that has reached its EOL is
 possible, but might take some time if the datadir needs to be migrated.  Old
 wallet versions of Bitcoin Core are generally supported.
 
-Downgrading warning
--------------------
-
-The chainstate database for this release is not compatible with previous
-releases, so if you run 0.15 and then decide to switch back to any
-older version, you will need to run the old release with the `-reindex-chainstate`
-option to rebuild the chainstate data structures in the old format.
-
-If your node has pruning enabled, this will entail re-downloading and
-processing the entire blockchain.
-
 Compatibility
 ==============
 
 Bitcoin Core is supported and extensively tested on operating systems using
-the Linux kernel, macOS 10.10+, and Windows 7 and newer.  It is not recommended
+the Linux kernel, macOS 10.10+, and Windows 7 and newer. It is not recommended
 to use Bitcoin Core on unsupported systems.
 
 Bitcoin Core should also work on most other Unix-like systems but is not
-frequently tested on them.
+as frequently tested on them.
 
-From 0.17.0 onwards, macOS <10.10 is no longer supported.  0.17.0 is
+From 0.17.0 onwards, macOS <10.10 is no longer supported. 0.17.0 is
 built using Qt 5.9.x, which doesn't support versions of macOS older than
-10.10.  Additionally, Bitcoin Core does not yet change appearance when
+10.10. Additionally, Bitcoin Core does not yet change appearance when
 macOS "dark mode" is activated.
 
 In addition to previously-supported CPU platforms, this release's
