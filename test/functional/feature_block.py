@@ -486,6 +486,14 @@ class FullBlockTest(BitcoinTestFramework):
             tx_last = tx_new
             b39_outputs += 1
 
+        # The accounting in the loop above can be off, because it misses the
+        # compact size encoding of the number of transactions in the block.
+        # Make sure we didn't accidentally make too big a block. Note that the
+        # size of the block has non-determinism due to the ECDSA signature in
+        # the first transaction.
+        while (len(b39.serialize()) >= MAX_BLOCK_BASE_SIZE):
+            del b39.vtx[-1]
+
         b39 = self.update_block(39, [])
         self.send_blocks([b39], True)
         self.save_spendable_output()
