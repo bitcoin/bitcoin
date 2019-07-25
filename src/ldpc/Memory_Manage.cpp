@@ -168,7 +168,6 @@ double** Allocate_2D_Array_Double(int row, int col, const char msg[])
     memset(ptr[i], 0, sizeof(double)*col);
   }
   return ptr;
-  
 }
 
 double*  Allocate_1D_Array_Double(int len, const char msg[])
