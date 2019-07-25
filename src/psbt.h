@@ -19,6 +19,7 @@ static constexpr uint8_t PSBT_MAGIC_BYTES[5] = {'p', 's', 'b', 't', 0xff};
 
 // Global types
 static constexpr uint8_t PSBT_GLOBAL_UNSIGNED_TX = 0x00;
+static constexpr uint8_t PSBT_GLOBAL_XPUB = 0x01;
 
 // Input types
 static constexpr uint8_t PSBT_IN_NON_WITNESS_UTXO = 0x00;
@@ -478,6 +479,9 @@ struct PSBTOutput
 struct PartiallySignedTransaction
 {
     Optional<CMutableTransaction> tx;
+    // We use a vector of CExtPubKey in the event that there happens to be the same KeyOriginInfos for different CExtPubKeys
+    // Note that this map swaps the key and values from the serialization
+    std::map<KeyOriginInfo, std::set<CExtPubKey>> xpubs;
     std::vector<PSBTInput> inputs;
     std::vector<PSBTOutput> outputs;
     std::map<std::vector<unsigned char>, std::vector<unsigned char>> unknown;
@@ -513,6 +517,18 @@ struct PartiallySignedTransaction
         OverrideStream<Stream> os(&s, s.GetType(), s.GetVersion() | SERIALIZE_TRANSACTION_NO_WITNESS);
         SerializeToVector(os, *tx);
 
+        // Write xpubs
+        for (const auto& xpub_pair : xpubs) {
+            for (const auto& xpub : xpub_pair.second) {
+                unsigned char ser_xpub[BIP32_EXTKEY_WITH_VERSION_SIZE];
+                xpub.EncodeWithVersion(ser_xpub);
+                // Note that the serialization swaps the key and value
+                // The xpub is the key (for uniqueness) while the path is the value
+                SerializeToVector(s, PSBT_GLOBAL_XPUB, ser_xpub);
+                SerializeHDKeypath(s, xpub_pair.first);
+            }
+        }
+
         // Write the unknown things
         for (auto& entry : unknown) {
             s << entry.first;
@@ -544,6 +560,9 @@ struct PartiallySignedTransaction
 
         // Used for duplicate key detection
         std::set<std::vector<unsigned char>> key_lookup;
+
+        // Track the global xpubs we have already seen. Just for sanity checking
+        std::set<CExtPubKey> global_xpubs;
 
         // Read global data
         bool found_sep = false;
@@ -581,6 +600,36 @@ struct PartiallySignedTransaction
                         if (!txin.scriptSig.empty() || !txin.scriptWitness.IsNull()) {
                             throw std::ios_base::failure("Unsigned tx does not have empty scriptSigs and scriptWitnesses.");
                         }
+                    }
+                    break;
+                }
+                case PSBT_GLOBAL_XPUB:
+                {
+                    if (key.size() != BIP32_EXTKEY_WITH_VERSION_SIZE + 1) {
+                        throw std::ios_base::failure("Size of key was not the expected size for the type global xpub");
+                    }
+                    // Read in the xpub from key
+                    CExtPubKey xpub;
+                    xpub.DecodeWithVersion(&key.data()[1]);
+                    if (!xpub.pubkey.IsFullyValid()) {
+                       throw std::ios_base::failure("Invalid pubkey");
+                    }
+                    if (global_xpubs.count(xpub) > 0) {
+                       throw std::ios_base::failure("Duplicate key, global xpub already provided");
+                    }
+                    global_xpubs.insert(xpub);
+                    // Read in the keypath from stream
+                    KeyOriginInfo keypath;
+                    DeserializeHDKeypath(s, keypath);
+
+                    // Note that we store these swapped to make searches faster.
+                    // Serialization uses xpub -> keypath to enqure key uniqueness
+                    if (xpubs.count(keypath) == 0) {
+                        // Make a new set to put the xpub in
+                        xpubs[keypath] = {xpub};
+                    } else {
+                        // Insert xpub into existing set
+                        xpubs[keypath].insert(xpub);
                     }
                     break;
                 }
