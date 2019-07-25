@@ -20,6 +20,7 @@ happened previously.
 """
 
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.address import AddressType
 from test_framework.util import (
     connect_nodes,
     assert_equal,
@@ -37,12 +38,19 @@ Data = enum.Enum("Data", "address pub priv")
 Rescan = enum.Enum("Rescan", "no yes late_timestamp")
 
 
-class Variant(collections.namedtuple("Variant", "call data rescan prune")):
+class Variant(collections.namedtuple("Variant", "call data address_type rescan prune")):
     """Helper for importing one key and verifying scanned transactions."""
 
     def do_import(self, timestamp):
         """Call one key import RPC."""
         rescan = self.rescan == Rescan.yes
+
+        assert_equal(self.address["solvable"], True)
+        assert_equal(self.address["isscript"], self.address_type == AddressType.p2sh_segwit)
+        assert_equal(self.address["iswitness"], self.address_type == AddressType.bech32)
+        if self.address["isscript"]:
+            assert_equal(self.address["embedded"]["isscript"], False)
+            assert_equal(self.address["embedded"]["iswitness"], True)
 
         if self.call == Call.single:
             if self.data == Data.address:
@@ -54,7 +62,7 @@ class Variant(collections.namedtuple("Variant", "call data rescan prune")):
             assert_equal(response, None)
 
         elif self.call in (Call.multiaddress, Call.multiscript):
-            response = self.node.importmulti([{
+            request = {
                 "scriptPubKey": {
                     "address": self.address["address"]
                 } if self.call == Call.multiaddress else self.address["scriptPubKey"],
@@ -63,7 +71,14 @@ class Variant(collections.namedtuple("Variant", "call data rescan prune")):
                 "keys": [self.key] if self.data == Data.priv else [],
                 "label": self.label,
                 "watchonly": self.data != Data.priv
-            }], {"rescan": self.rescan in (Rescan.yes, Rescan.late_timestamp)})
+            }
+            if self.address_type == AddressType.p2sh_segwit and self.data != Data.address:
+                # We need solving data when providing a pubkey or privkey as data
+                request.update({"redeemscript": self.address['embedded']['scriptPubKey']})
+            response = self.node.importmulti(
+                requests=[request],
+                options={"rescan": self.rescan in (Rescan.yes, Rescan.late_timestamp)},
+            )
             assert_equal(response, [{"success": True}])
 
     def check(self, txid=None, amount=None, confirmation_height=None):
@@ -105,7 +120,7 @@ class Variant(collections.namedtuple("Variant", "call data rescan prune")):
 
 
 # List of Variants for each way a key or address could be imported.
-IMPORT_VARIANTS = [Variant(*variants) for variants in itertools.product(Call, Data, Rescan, (False, True))]
+IMPORT_VARIANTS = [Variant(*variants) for variants in itertools.product(Call, Data, AddressType, Rescan, (False, True))]
 
 # List of nodes to import keys to. Half the nodes will have pruning disabled,
 # half will have it enabled. Different nodes will be used for imports that are
@@ -135,12 +150,12 @@ class ImportRescanTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     def setup_network(self):
-        extra_args = [["-addresstype=legacy"] for _ in range(self.num_nodes)]
+        self.extra_args = [[]] * self.num_nodes
         for i, import_node in enumerate(IMPORT_NODES, 2):
             if import_node.prune:
-                extra_args[i] += ["-prune=1"]
+                self.extra_args[i] += ["-prune=1"]
 
-        self.add_nodes(self.num_nodes, extra_args=extra_args)
+        self.add_nodes(self.num_nodes, extra_args=self.extra_args)
 
         # Import keys with pruning disabled
         self.start_nodes(extra_args=[[]] * self.num_nodes)
@@ -157,7 +172,10 @@ class ImportRescanTest(BitcoinTestFramework):
         # each possible type of wallet import RPC.
         for i, variant in enumerate(IMPORT_VARIANTS):
             variant.label = "label {} {}".format(i, variant)
-            variant.address = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress(variant.label))
+            variant.address = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress(
+                label=variant.label,
+                address_type=variant.address_type.value,
+            ))
             variant.key = self.nodes[1].dumpprivkey(variant.address["address"])
             variant.initial_amount = get_rand_amount()
             variant.initial_txid = self.nodes[0].sendtoaddress(variant.address["address"], variant.initial_amount)
