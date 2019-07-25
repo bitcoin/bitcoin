@@ -101,6 +101,7 @@ BASE_SCRIPTS = [
     'feature_csv_activation.py',
     'rpc_rawtransaction.py',
     'feature_reindex.py',
+    'feature_abortnode.py',
     # vv Tests less than 30s vv
     'wallet_keypool_topup.py',
     'interface_zmq_dash.py',
