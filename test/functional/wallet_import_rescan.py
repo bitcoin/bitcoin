@@ -27,8 +27,10 @@ from test_framework.util import (
 )
 
 import collections
+from decimal import Decimal
 import enum
 import itertools
+import random
 
 Call = enum.Enum("Call", "single multiaddress multiscript")
 Data = enum.Enum("Data", "address pub priv")
@@ -117,6 +119,13 @@ IMPORT_NODES = [ImportNode(*fields) for fields in itertools.product((False, True
 # Rescans start at the earliest block up to 2 hours before the key timestamp.
 TIMESTAMP_WINDOW = 2 * 60 * 60
 
+AMOUNT_DUST = 0.00000546
+
+
+def get_rand_amount():
+    r = random.uniform(AMOUNT_DUST, 1)
+    return Decimal(str(round(r, 8)))
+
 
 class ImportRescanTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -150,7 +159,7 @@ class ImportRescanTest(BitcoinTestFramework):
             variant.label = "label {} {}".format(i, variant)
             variant.address = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress(variant.label))
             variant.key = self.nodes[1].dumpprivkey(variant.address["address"])
-            variant.initial_amount = 1 - (i + 1) / 64
+            variant.initial_amount = get_rand_amount()
             variant.initial_txid = self.nodes[0].sendtoaddress(variant.address["address"], variant.initial_amount)
             self.nodes[0].generate(1)  # Generate one block for each send
             variant.confirmation_height = self.nodes[0].getblockcount()
@@ -183,7 +192,7 @@ class ImportRescanTest(BitcoinTestFramework):
 
         # Create new transactions sending to each address.
         for i, variant in enumerate(IMPORT_VARIANTS):
-            variant.sent_amount = 1 - (2 * i + 1) / 128
+            variant.sent_amount = get_rand_amount()
             variant.sent_txid = self.nodes[0].sendtoaddress(variant.address["address"], variant.sent_amount)
             self.nodes[0].generate(1)  # Generate one block for each send
             variant.confirmation_height = self.nodes[0].getblockcount()
