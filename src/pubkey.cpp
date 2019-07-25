@@ -290,6 +290,18 @@ void CExtPubKey::Decode(const unsigned char code[BIP32_EXTKEY_SIZE]) {
     pubkey.Set(code+41, code+BIP32_EXTKEY_SIZE);
 }
 
+void CExtPubKey::EncodeWithVersion(unsigned char code[BIP32_EXTKEY_WITH_VERSION_SIZE]) const
+{
+    memcpy(code, version, 4);
+    Encode(&code[4]);
+}
+
+void CExtPubKey::DecodeWithVersion(const unsigned char code[BIP32_EXTKEY_WITH_VERSION_SIZE])
+{
+    memcpy(version, code, 4);
+    Decode(&code[4]);
+}
+
 bool CExtPubKey::Derive(CExtPubKey &out, unsigned int _nChild) const {
     out.nDepth = nDepth + 1;
     CKeyID id = pubkey.GetID();
