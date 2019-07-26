@@ -66,14 +66,14 @@ class MempoolPackagesTest(BitcoinTestFramework):
         assert_equal(len(self.nodes[0].getrawmempool(True)), MAX_ANCESTORS + 1)
 
         # Adding one more transaction on to the chain should fail.
-        assert_raises_rpc_error(-26, "too-long-mempool-chain", self.chain_transaction, self.nodes[0], [txid], [0], value, fee, 1)
+        assert_raises_rpc_error(-26, "too-long-mempool-chain, too many unconfirmed ancestors [limit: 25]", self.chain_transaction, self.nodes[0], [txid], [0], value, fee, 1)
         # ...even if it chains on from some point in the middle of the chain.
-        assert_raises_rpc_error(-26, "too-long-mempool-chain", self.chain_transaction, self.nodes[0], [chain[2][0]], [1], chain[2][1], fee, 1)
-        assert_raises_rpc_error(-26, "too-long-mempool-chain", self.chain_transaction, self.nodes[0], [chain[1][0]], [1], chain[1][1], fee, 1)
+        assert_raises_rpc_error(-26, "too-long-mempool-chain, too many descendants", self.chain_transaction, self.nodes[0], [chain[2][0]], [1], chain[2][1], fee, 1)
+        assert_raises_rpc_error(-26, "too-long-mempool-chain, too many descendants", self.chain_transaction, self.nodes[0], [chain[1][0]], [1], chain[1][1], fee, 1)
         # ...even if it chains on to two parent transactions with one in the chain.
-        assert_raises_rpc_error(-26, "too-long-mempool-chain", self.chain_transaction, self.nodes[0], [chain[0][0], second_chain], [1, 0], chain[0][1] + second_chain_value, fee, 1)
+        assert_raises_rpc_error(-26, "too-long-mempool-chain, too many descendants", self.chain_transaction, self.nodes[0], [chain[0][0], second_chain], [1, 0], chain[0][1] + second_chain_value, fee, 1)
         # ...especially if its > 40k weight
-        assert_raises_rpc_error(-26, "too-long-mempool-chain", self.chain_transaction, self.nodes[0], [chain[0][0]], [1], chain[0][1], fee, 350)
+        assert_raises_rpc_error(-26, "too-long-mempool-chain, too many descendants", self.chain_transaction, self.nodes[0], [chain[0][0]], [1], chain[0][1], fee, 350)
         # But not if it chains directly off the first transaction
         self.chain_transaction(self.nodes[0], [chain[0][0]], [1], chain[0][1], fee, 1)
         # and the second chain should work just fine
