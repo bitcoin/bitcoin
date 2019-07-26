@@ -91,8 +91,28 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&
     return true;
 }
 
-bool CheckProofOfWork(uint256 currHash, uint256 prevHash, unsigned int nBits)
+bool CheckProofOfWork(CBlockHeader block)
 {
-  LDPC *ldpc = new LDPC;
-  return ldpc->CheckProofOfWork(currHash, prevHash, nBits);
+    /*
+    printf("\nnonce : %d\n",block.nNonce);
+    std::cout  << block.GetHash().ToString() << std::endl;
+    std::cout  << block.hashPrevBlock.ToString() << std::endl;
+    std::cout  << block.hashMerkleRoot.ToString() << std::endl;
+    */
+
+    bool result = false;
+    LDPC *ldpc = new LDPC;
+    ldpc->set_difficulty(1);
+    ldpc->initialization();
+    // ldpc->generate_seed((char*)((block.hashPrevBlock.ToString() + block.hashMerkleRoot.ToString()).c_str()));
+    ldpc->generate_seeds(UintToArith256(block.hashPrevBlock).GetLow64());
+    ldpc->generate_H();
+    ldpc->generate_Q();
+    ldpc->generate_hv((unsigned char*)block.GetHash().ToString().c_str());
+    ldpc->decoding();
+    if (ldpc->decision())
+        result = true;
+
+    delete ldpc;
+    return result;
 }

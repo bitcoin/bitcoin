@@ -3,6 +3,8 @@
 
 #include "LDPC.h"
 #include <string>
+#include <iostream>
+
 using namespace std;
 
 int main()
@@ -11,33 +13,29 @@ int main()
   unsigned int nonce = 0;
   string current_block_header = "1fdf22ffc2233ff";
 
-  LDPC *ptr = new LDPC;
+  LDPC *ldpc = new LDPC;
+  ldpc->set_difficulty(1);
+  ldpc->initialization();
+  std::cout << "SEED:" << phv << std::endl;
 
-  ptr->set_difficulty(24,3,6);        //2 => n = 64, wc = 3, wr = 6,
-  if (!ptr->initialization())
-  {
-    printf("error for calling the initialization function");
-    return 0;
-  }
-
-  ptr->generate_seed(phv);
-  ptr->generate_H();
-  ptr->generate_Q();
+  ldpc->generate_seeds(3423423423423424237);
+  ldpc->generate_H();
+  ldpc->generate_Q();
 
   // ptr->print_H("H2.txt");
-  ptr->print_Q(NULL, 1);
-  ptr->print_Q(NULL, 2);
+//  ldpc->print_Q(NULL, 1);
+//  ldpc->print_Q(NULL, 2);
 
-
+  string current_block_header_with_nonce;
   while (1)
   {
-    string current_block_header_with_nonce;
+    // std::cout << nonce << std::endl;
     current_block_header_with_nonce.assign(current_block_header);
     current_block_header_with_nonce += to_string(nonce);
 
-    ptr->generate_hv((unsigned char*)current_block_header_with_nonce.c_str());
-    ptr->decoding();
-    if (ptr->decision())
+    ldpc->generate_hv((unsigned char*)current_block_header_with_nonce.c_str());
+    ldpc->decoding();
+    if (ldpc->decision())
     {
       printf("codeword is founded with nonce = %d\n", nonce);
       break;
@@ -47,9 +45,9 @@ int main()
   }
 
 
-  ptr->print_word(NULL, 1);
-  ptr->print_word(NULL, 2);
-  delete ptr;
+//  ldpc->print_word(NULL, 1);
+//  ldpc->print_word(NULL, 2);
+  delete ldpc;
   return 0;
 }
 

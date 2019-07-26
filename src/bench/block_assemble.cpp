@@ -42,7 +42,7 @@ static CTxIn MineBlock(const CScript& coinbase_scriptPubKey)
     auto block = PrepareBlock(coinbase_scriptPubKey);
 
 #if 1
-    while (!CheckProofOfWork(block->GetHash(), block->hashPrevBlock, block->nBits)) {
+    while (!CheckProofOfWork(block->GetBlockHeader())) {
         ++block->nNonce;
         assert(block->nNonce);
     }

@@ -7,7 +7,6 @@
 
 #include <chainparamsseeds.h>
 #include <consensus/merkle.h>
-#include <ldpc/LDPC.h>
 #include <tinyformat.h>
 #include <util/system.h>
 #include <util/strencodings.h>
@@ -17,6 +16,13 @@
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
+
+#define GENESIS 0
+
+#if GENESIS
+#include <arith_uint256.h>
+#include <ldpc/LDPC.h>
+#endif
 
 static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
@@ -111,16 +117,31 @@ public:
         m_assumed_blockchain_size = 240;
         m_assumed_chain_state_size = 3;
 
+        genesis = CreateGenesisBlock(1558627231, 99, 0x1d00ffff, 1, 50 * COIN);
+
+#if GENESIS
         LDPC *ldpc = new LDPC;
-        genesis = CreateGenesisBlock(1558627231, 1, 0x1d00ffff, 1, 50 * COIN);
-        while (!ldpc->CheckProofOfWork(genesis.GetHash(), genesis.hashPrevBlock, genesis.nBits)) {
-            ++genesis.nNonce;
+        ldpc->set_difficulty(1);
+        ldpc->initialization();
+        ldpc->generate_seeds(UintToArith256(genesis.hashPrevBlock).GetLow64());
+        ldpc->generate_H();
+        ldpc->generate_Q();
+        while(1)
+        {
+            ldpc->generate_hv((unsigned char*)genesis.GetHash().ToString().c_str());
+            ldpc->decoding();
+            if (ldpc->decision())
+                break;
+            genesis.nNonce++;
             assert(genesis.nNonce);
         }
+        delete ldpc;
 
-        // std::cout << "mainnet n: " << genesis.nNonce << " Hash: " << genesis.GetHash().ToString() << std::endl;
+        std::cout << "mainnet n: " << genesis.nNonce << " Hash: " << genesis.GetHash().ToString() << std::endl;
+#endif
+
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("fe1b954fadf6da0c8b622024b58482edff1a805792d118714ffdb40bd7f6497d"));
+        assert(consensus.hashGenesisBlock == uint256S("e74f84e7ba9f0b34e210c89cdf2c3415f474dfaa33fc53286eaf9b4915b1d1be"));
         assert(genesis.hashMerkleRoot == uint256S("15d2f927fe3eafe88ce0b4ccf267727ed306295051339a16e0b95067e65bead8"));
 
         // Note that of those which support the service bits prefix, most only support a subset of
@@ -157,7 +178,7 @@ public:
 
         checkpointData = {
             {
-                { 0, uint256S("fe1b954fadf6da0c8b622024b58482edff1a805792d118714ffdb40bd7f6497d")},
+                { 0, uint256S("3ed33a90a761ef8486a4b7b41842fe3d6a35a31d5094373f271bcaec197ed100")},
             }
         };
 
@@ -222,16 +243,31 @@ public:
         m_assumed_blockchain_size = 30;
         m_assumed_chain_state_size = 2;
 
+        genesis = CreateGenesisBlock(1560518777, 538, 0x1d00ffff, 1, 50 * COIN);
+
+#if GENESIS
         LDPC *ldpc = new LDPC;
-        genesis = CreateGenesisBlock(1560518777, 1, 0x1d00ffff, 1, 50 * COIN);
-        while (!ldpc->CheckProofOfWork(genesis.GetHash(), genesis.hashPrevBlock, genesis.nBits)) {
-            ++genesis.nNonce;
+        ldpc->set_difficulty(1);
+        ldpc->initialization();
+        ldpc->generate_seeds(UintToArith256(genesis.hashPrevBlock).GetLow64());
+        ldpc->generate_H();
+        ldpc->generate_Q();
+        while(1)
+        {
+            ldpc->generate_hv((unsigned char*)genesis.GetHash().ToString().c_str());
+            ldpc->decoding();
+            if (ldpc->decision())
+                break;
+            genesis.nNonce++;
             assert(genesis.nNonce);
         }
-        
-        // std::cout << "testnet n: " << genesis.nNonce << " Hash: " << genesis.GetHash().ToString() << std::endl;
+        delete ldpc;
+
+        std::cout << "testnet n: " << genesis.nNonce << " Hash: " << genesis.GetHash().ToString() << std::endl;
+#endif
+
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("43ca60a124681075949cf2296e7fab4fc30740892cf1409626a8a90629cbb988"));
+        assert(consensus.hashGenesisBlock == uint256S("211cfe5f0a0bbec995dc6820a149bce0618a3b34b011c6b1d43d2c3f9fbda502"));
         assert(genesis.hashMerkleRoot == uint256S("15d2f927fe3eafe88ce0b4ccf267727ed306295051339a16e0b95067e65bead8"));
 
         vFixedSeeds.clear();
@@ -263,7 +299,7 @@ public:
 
         checkpointData = {
             {
-                {0, uint256S("43ca60a124681075949cf2296e7fab4fc30740892cf1409626a8a90629cbb988")},
+                {0, uint256S("211cfe5f0a0bbec995dc6820a149bce0618a3b34b011c6b1d43d2c3f9fbda502")},
             }
         };
 
@@ -326,16 +362,30 @@ public:
 
         UpdateVersionBitsParametersFromArgs(args);
 
+        genesis = CreateGenesisBlock(1560519259, 636, 0x207fffff, 1, 50 * COIN);
+
+#if GENESIS
         LDPC *ldpc = new LDPC;
-        genesis = CreateGenesisBlock(1560519259, 0, 0x207fffff, 1, 50 * COIN);
-        while (!ldpc->CheckProofOfWork(genesis.GetHash(), genesis.hashPrevBlock, genesis.nBits)) {
-            ++genesis.nNonce;
+        ldpc->set_difficulty(1);
+        ldpc->initialization();
+        ldpc->generate_seeds(UintToArith256(genesis.hashPrevBlock).GetLow64());
+        ldpc->generate_H();
+        ldpc->generate_Q();
+        while(1)
+        {
+            ldpc->generate_hv((unsigned char*)genesis.GetHash().ToString().c_str());
+            ldpc->decoding();
+            if (ldpc->decision())
+                break;
+            genesis.nNonce++;
             assert(genesis.nNonce);
         }
+        delete ldpc;
+        std::cout << "regtest n: " << genesis.nNonce << " Hash: " << genesis.GetHash().ToString() << std::endl;
+#endif
 
-        // std::cout << "regtest n: " << genesis.nNonce << " Hash: " << genesis.GetHash().ToString() << std::endl;
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("07b8d2650524f9665b0a47909d2779da07d807df5b7f997859e6004956d6b3e0"));
+        assert(consensus.hashGenesisBlock == uint256S("c367fb00112deecb71ac1459e845b34bdee172c9fd5c4fc7aaf6a4546cdb522b"));
         assert(genesis.hashMerkleRoot == uint256S("15d2f927fe3eafe88ce0b4ccf267727ed306295051339a16e0b95067e65bead8"));
 
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
@@ -347,7 +397,7 @@ public:
 
         checkpointData = {
             {
-                {0, uint256S("07b8d2650524f9665b0a47909d2779da07d807df5b7f997859e6004956d6b3e0")},
+                {0, uint256S("c367fb00112deecb71ac1459e845b34bdee172c9fd5c4fc7aaf6a4546cdb522b")},
             }
         };
 
