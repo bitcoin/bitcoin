@@ -293,7 +293,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_audittxroot1)
     tfm::format(std::cout,"syscoinsetethstatus1 elasped time %lld\n", end-start);
     blocksArray = find_value(r.get_obj(), "missing_blocks").get_array();
     BOOST_CHECK(blocksArray.empty());
-}/* 
+}
 BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 {
 
@@ -563,7 +563,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
         uint32_t nAsset = find_value(indexArray[0].get_obj(), "asset_guid").get_uint();
         BOOST_CHECK_EQUAL(nAsset, nAssetStored);
     }
-}*/
+}
 BOOST_AUTO_TEST_CASE(generate_assetallocationmint)
 {
     UniValue r;
