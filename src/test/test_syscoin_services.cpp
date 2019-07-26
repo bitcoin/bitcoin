@@ -64,7 +64,13 @@ void SetupSYSXAsset(){
 	string receiverAddress = GetNewFundedAddress("node1");
 	strSYSXAsset = AssetNew("node1", strSYSXAddress, "", "''", "8", "888000000", "888000000", updateFlags);
 	AssetSend("node1", strSYSXAsset, "\"[{\\\"address\\\":\\\"" + receiverAddress + "\\\",\\\"amount\\\":888000000}]\"");
-	AssetAllocationTransfer(false, "node1", strSYSXAsset, receiverAddress, "\"[{\\\"address\\\":\\\"burn\\\",\\\"amount\\\":888000000}]\"");	
+	AssetAllocationTransfer(false, "node1", strSYSXAsset, receiverAddress, "\"[{\\\"address\\\":\\\"burn\\\",\\\"amount\\\":888000000}]\"");
+	StopNode("node1");
+	StartNode("node1");
+	StopNode("node2");
+	StartNode("node2");
+	StopNode("node3");
+	StartNode("node3");
 }
 // SYSCOIN testing setup
 void StartNodes()
@@ -459,6 +465,23 @@ void GenerateSpendableCoins() {
 	CallExtRPC("node1", "sendtoaddress", "\"" + newaddress + "\",\"100000\"", false);
 	GenerateBlocks(10, "node1");
 }
+bool AreTwoTransactionsLinked(const string &node, const string& inputTxid, const string &outputTxid, const int targetHits){
+	UniValue r;
+	int numHits = 0;
+	r = CallRPC(node, "getrawtransaction " + outputTxid + " true");
+	if(!r.isObject())
+		return false;
+	UniValue outputTxidVins = find_value(r.get_obj(), "vin").get_array();
+	for(unsigned int i = 0;i<outputTxidVins.size();i++){
+		const UniValue& vinObj = outputTxidVins[i].get_obj();
+		if(find_value(vinObj.get_obj(), "txid").get_str() == inputTxid){
+			numHits++;
+			if(numHits >= targetHits)
+				return true;
+		}
+	}
+	return false;
+}
 string GetNewFundedAddress(const string &node, bool bRegtest) {
 	UniValue r;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getnewaddress", bRegtest, false));
@@ -549,7 +572,7 @@ void SetSysMocktime(const int64_t& expiryTime) {
 	try
 	{
 		CallExtRPC("node1", "getblockchaininfo");
-		BOOST_CHECK_NO_THROW(CallExtRPC("node1", "setmocktime", "\"" + expiryStr + "\""));
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "setmocktime " + expiryStr, true, false));
 		GenerateBlocks(5, "node1");
 		GenerateBlocks(5, "node1");
 		GenerateBlocks(5, "node1");
@@ -563,7 +586,7 @@ void SetSysMocktime(const int64_t& expiryTime) {
 	try
 	{
 		CallExtRPC("node2", "getblockchaininfo");
-		BOOST_CHECK_NO_THROW(CallExtRPC("node2", "setmocktime", "\"" + expiryStr + "\""));
+		BOOST_CHECK_NO_THROW(CallRPC("node2", "setmocktime " + expiryStr, true, false));
 		GenerateBlocks(5, "node2");
 		GenerateBlocks(5, "node2");
 		GenerateBlocks(5, "node2");
@@ -577,7 +600,7 @@ void SetSysMocktime(const int64_t& expiryTime) {
 	try
 	{
 		CallExtRPC("node3", "getblockchaininfo");
-		BOOST_CHECK_NO_THROW(CallExtRPC("node3", "setmocktime", "\"" + expiryStr + "\""));
+		BOOST_CHECK_NO_THROW(CallRPC("node3", "setmocktime " + expiryStr, true, false));
 		GenerateBlocks(5, "node3");
 		GenerateBlocks(5, "node3");
 		GenerateBlocks(5, "node3");
@@ -648,9 +671,6 @@ string SyscoinBurn(const string& node, const string& address, const string& asse
 	}
   
     // "syscoinburntoassetallocation [funding_address] [asset_guid] [amount]\n"
-	// set the sysx variable in consensus params if not already set
-	BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "syscoinburntoassetallocation "  + address + " " + asset + " " + amount));
-	BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "syscoinburntoassetallocation "  + address + " " + asset + " " + amount));
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinburntoassetallocation "  + address + " " + asset + " " + amount));
 
     
@@ -674,7 +694,9 @@ string SyscoinBurn(const string& node, const string& address, const string& asse
 		// account for fee
 		BOOST_CHECK(abs(nAmountAddressBefore - nAmountAddressAfter) < 0.001*COIN);
 	}
-    return hex_str;
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + hex_str + " true"));
+	string txid = find_value(r.get_obj(), "txid").get_str();
+	return txid;
 }
 string AssetAllocationMint(const string& node, const string& asset, const string& address, const string& amount, int height, const string& tx_hex, const string& txroot_hex, const string& txmerkleproof_hex, const string& txmerkleproofpath_hex, const string& receipt_hex, const string& receiptroot_hex, const string& receiptmerkleproof_hex, const string& witness)
 {
@@ -818,7 +840,7 @@ string AssetNew(const string& node, const string& address, string pubdata, strin
 	}
 	return guid;
 }
-void AssetUpdate(const string& node, const string& guid, const string& pubdata, const string& supply, const string& updateflags, const string& contract, const string& witness, bool confirm)
+string AssetUpdate(const string& node, const string& guid, const string& pubdata, const string& supply, const string& updateflags, const string& contract, const string& witness, bool confirm)
 {
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
@@ -914,7 +936,9 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 			BOOST_CHECK(FindAssetGUIDFromAssetIndexResults(r, guid));
 		}
 	}
-
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + hex_str + " true"));
+	string txid = find_value(r.get_obj(), "txid").get_str();
+	return txid;
 }
 void AssetTransfer(const string& node, const string &tonode, const string& guid, const string& toaddress, const string& witness, bool bRegtest)
 {
@@ -1051,7 +1075,7 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
 
 	return txid;
 }
-void BurnAssetAllocation(const string& node, const string &guid, const string &address,const string &amount, bool confirm, string contract){
+string BurnAssetAllocation(const string& node, const string &guid, const string &address,const string &amount, bool confirm, string contract){
     UniValue r;
     try{
         r = CallRPC(node, "assetallocationinfo " + guid + " burn");
@@ -1092,6 +1116,9 @@ void BurnAssetAllocation(const string& node, const string &guid, const string &a
 			BOOST_CHECK(nAmountAddressAfter - nAmountAddressBefore >= (nAmount-0.001*COIN));
 		}		
     }
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + hexStr + " true"));
+	string txid = find_value(r.get_obj(), "txid").get_str();
+	return txid;
 }
 void LockAssetAllocation(const string& node, const string &guid, const string &address,const string &txid, const string &index, bool confirm){
     UniValue r;
@@ -1099,9 +1126,10 @@ void LockAssetAllocation(const string& node, const string &guid, const string &a
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationlock " + guid + " " + address + " " + txid + " " + index + " ''"));
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
     string hexStr = find_value(r.get_obj(), "hex").get_str();
-   
+    BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + hexStr));
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "sendrawtransaction " + hexStr, true, false));  
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoindecoderawtransaction " + hexStr));
+
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "txtype").get_str(), "assetallocationlock");
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "locked_outpoint").get_str() , outpointStr);  
 	if(confirm){
@@ -1215,7 +1243,9 @@ string AssetSend(const string& node, const string& guid, const string& inputs, c
 			BOOST_CHECK(FindAssetGUIDFromAssetIndexResults(r, guid));
 		}
 	}
-	return hex_str;
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + hex_str + " true"));
+	string txid = find_value(r.get_obj(), "txid").get_str();
+	return txid;
 
 }
 

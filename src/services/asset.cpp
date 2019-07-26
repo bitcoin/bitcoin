@@ -22,8 +22,9 @@ extern AssetBalanceMap mempoolMapAssetBalances;
 extern ArrivalTimesMapImpl arrivalTimesMap;
 extern CCriticalSection cs_assetallocationmempoolbalance;
 extern CCriticalSection cs_assetallocationarrival;
-extern std::vector<std::pair<uint256, int64_t> >  vecToRemoveFromMempool;
+extern std::vector<std::pair<uint256, uint32_t> >  vecToRemoveFromMempool;
 extern CCriticalSection cs_assetallocationmempoolremovetx;
+
 std::unique_ptr<CAssetDB> passetdb;
 std::unique_ptr<CAssetSupplyStatsDB> passetsupplystatsdb;
 std::unique_ptr<CAssetAllocationDB> passetallocationdb;
@@ -274,19 +275,28 @@ bool FlushSyscoinDBs() {
             {
                 LOCK(cs_assetallocationmempoolbalance);
                 LogPrintf("Flushing Asset Allocation Mempool Balances...size %d\n", mempoolMapAssetBalances.size());
-                passetallocationmempooldb->WriteAssetAllocationMempoolBalances(mempoolMapAssetBalances);
+                if(!passetallocationmempooldb->WriteAssetAllocationMempoolBalances(mempoolMapAssetBalances)){
+                    LogPrintf("Failed to write to asset allocation mempool balance database!\n");
+                    ret = false; 
+                }
                 mempoolMapAssetBalances.clear();
             }
             {
                 LOCK(cs_assetallocationarrival);
                 LogPrintf("Flushing Asset Allocation Arrival Times...size %d\n", arrivalTimesMap.size());
-                passetallocationmempooldb->WriteAssetAllocationMempoolArrivalTimes(arrivalTimesMap);
+                if(!passetallocationmempooldb->WriteAssetAllocationMempoolArrivalTimes(arrivalTimesMap)){
+                    LogPrintf("Failed to write to asset allocation mempool arrival time database!\n");
+                    ret = false; 
+                }
                 arrivalTimesMap.clear();
             }
             {
                 LOCK(cs_assetallocationmempoolremovetx);
                 LogPrintf("Flushing Asset Allocation Mempool Removal Transactions...size %d\n", vecToRemoveFromMempool.size());
-                passetallocationmempooldb->WriteAssetAllocationMempoolToRemoveVector(vecToRemoveFromMempool);
+                if(!passetallocationmempooldb->WriteAssetAllocationMempoolToRemoveVector(vecToRemoveFromMempool)){
+                    LogPrintf("Failed to write to asset allocation mempool to remove database!\n");
+                    ret = false; 
+                }
                 vecToRemoveFromMempool.clear();
             }           
             if (!passetallocationmempooldb->Flush()) {
@@ -310,19 +320,11 @@ bool FlushSyscoinDBs() {
 	return ret;
 }
 void CTxMemPool::removeExpiredMempoolBalances(setEntries& stage){ 
+    AssertLockHeld(cs);
     vector<vector<unsigned char> > vvch;
     int count = 0;
     for (const txiter& it : stage) {
-        const CTransaction& tx = it->GetTx();
-        // lock has no mempool balance related logic
-        if(IsAssetAllocationTx(tx.nVersion)){
-            CAssetAllocation allocation(tx);
-            if(allocation.assetAllocationTuple.IsNull())
-                continue;
-            if(ResetAssetAllocation(allocation.assetAllocationTuple.ToString(), tx.GetHash())){
-                count++;
-            }
-        }
+        count += ResetAssetAllocations(it->GetSharedTx());
     }
     if(count > 0)
          LogPrint(BCLog::SYS, "removeExpiredMempoolBalances removed %d expired asset allocation transactions from mempool balances\n", count);  
@@ -342,20 +344,27 @@ bool FindAssetOwnerInTx(const CCoinsViewCache &inputs, const CTransaction& tx, c
 	return false;
 }
 bool FindAssetOwnerInTx(const CCoinsViewCache &inputs, const CTransaction& tx, const CWitnessAddress &witnessAddressToMatch, const COutPoint& lockedOutpoint) {
-	if (lockedOutpoint.IsNull()){
+    if (lockedOutpoint.IsNull()){
 		return FindAssetOwnerInTx(inputs, tx, witnessAddressToMatch);
     }
 	CTxDestination dest;
     int witnessversion;
+    bool foundOutPoint = false;
+    bool foundOwner = false;
     std::vector<unsigned char> witnessprogram;
 	for (unsigned int i = 0; i < tx.vin.size(); i++) {
 		const Coin& prevCoins = inputs.AccessCoin(tx.vin[i].prevout);
 		if (prevCoins.IsSpent() || prevCoins.IsCoinBase()) {
 			continue;
 		}
-        if (lockedOutpoint == tx.vin[i].prevout && prevCoins.out.scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram) && witnessAddressToMatch.vchWitnessProgram == witnessprogram && witnessAddressToMatch.nVersion == (unsigned char)witnessversion){
-            return true;
+        if (lockedOutpoint == tx.vin[i].prevout){
+            foundOutPoint = true;
         }
+        if(prevCoins.out.scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram) && witnessAddressToMatch.vchWitnessProgram == witnessprogram && witnessAddressToMatch.nVersion == (unsigned char)witnessversion){
+            foundOwner = true;
+        }
+        if(foundOwner && foundOutPoint)
+            return true;
 	}
 	return false;
 }
@@ -378,9 +387,9 @@ bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output, CW
     vector<vector<unsigned char> > vvch;
     bool found = false;
     if(IsSyscoinMintTx(rawTx.nVersion)){
-        found = AssetMintTxToJson(rawTx, output);
+        found = AssetMintTxToJson(rawTx, rawTx.GetHash(), output);
     }
-    else if (IsAssetTx(rawTx.nVersion) || IsAssetAllocationTx(rawTx.nVersion) || rawTx.nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION){
+    else if (IsAssetTx(rawTx.nVersion) || IsAssetAllocationTx(rawTx.nVersion)){
         found = SysTxToJSON(rawTx, output, pwallet, filter_ismine);
     }
     
@@ -391,9 +400,9 @@ bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output){
     vector<vector<unsigned char> > vvch;
     bool found = false;
     if(IsSyscoinMintTx(rawTx.nVersion)){
-        found = AssetMintTxToJson(rawTx, output);
+        found = AssetMintTxToJson(rawTx, rawTx.GetHash(), output);
     }
-    else if (IsAssetTx(rawTx.nVersion) || IsAssetAllocationTx(rawTx.nVersion) || rawTx.nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION){
+    else if (IsAssetTx(rawTx.nVersion) || IsAssetAllocationTx(rawTx.nVersion)){
         found = SysTxToJSON(rawTx, output);
     }
     
@@ -406,8 +415,6 @@ bool SysTxToJSON(const CTransaction& tx, UniValue& output, CWallet* const pwalle
     bool found = false;
     if (IsAssetTx(tx.nVersion) && tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND)
         found = AssetTxToJSON(tx, output);
-    else if(tx.nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION)
-        found = SysBurnTxToJSON(tx, output);
     else if (IsAssetAllocationTx(tx.nVersion) || tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND)
         found = AssetAllocationTxToJSON(tx, output, pwallet, filter_ismine);
     return found;
@@ -418,53 +425,9 @@ bool SysTxToJSON(const CTransaction& tx, UniValue& output)
     bool found = false;
     if (IsAssetTx(tx.nVersion) && tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND)
         found = AssetTxToJSON(tx, output);
-    else if(tx.nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION)
-        found = SysBurnTxToJSON(tx, output);
     else if (IsAssetAllocationTx(tx.nVersion) || tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND)
         found = AssetAllocationTxToJSON(tx, output);
     return found;
-}
-bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry)
-    {
-    std::vector< unsigned char> vchEthAddress;
-    int nOut;
-    // we can expect a single data output and thus can expect getsyscoindata() to pass and give the ethereum address
-    if (!GetSyscoinData(tx, vchEthAddress, nOut) || vchEthAddress.size() != MAX_GUID_LENGTH) {
-        return false;
-    }
-    int nHeight = 0;
-    const uint256& txHash = tx.GetHash();
-    CBlockIndex* blockindex = nullptr;
-    uint256 blockhash;
-    if(pblockindexdb->ReadBlockHash(txHash, blockhash)){
-        LOCK(cs_main);
-        blockindex = LookupBlockIndex(blockhash);
-    }
-    if(blockindex)
-    {
-        nHeight = blockindex->nHeight;
-    }
-
-    entry.__pushKV("txtype", "syscoinburn");
-    entry.__pushKV("txid", txHash.GetHex());
-    entry.__pushKV("height", nHeight);
-    UniValue oOutputArray(UniValue::VARR);
-    for (const auto& txout : tx.vout){
-        CTxDestination address;
-        if (!ExtractDestination(txout.scriptPubKey, address))
-            continue;
-        UniValue oOutputObj(UniValue::VOBJ);
-        const string& strAddress = EncodeDestination(address);
-        oOutputObj.__pushKV("address", strAddress);
-        oOutputObj.__pushKV("amount", ValueFromAmount(txout.nValue));   
-        oOutputArray.push_back(oOutputObj);
-    }
-    
-    entry.__pushKV("outputs", oOutputArray);
-    entry.__pushKV("total", ValueFromAmount(tx.GetValueOut()));
-    entry.__pushKV("blockhash", blockhash.GetHex()); 
-    entry.__pushKV("ethereum_destination", "0x" + HexStr(vchEthAddress));
-    return true;
 }
 int GenerateSyscoinGuid()
 {
@@ -502,12 +465,14 @@ void CMintSyscoin::Serialize( vector<unsigned char> &vchData) {
     vchData = vector<unsigned char>(dsMint.begin(), dsMint.end());
 
 }
-void WriteAssetIndexTXID(const uint32_t& nAsset, const uint256& txid){
+bool WriteAssetIndexTXID(const uint32_t& nAsset, const uint256& txid){
     int64_t page;
     if(!passetindexdb->ReadAssetPage(page)){
         page = 0;
-        if(!passetindexdb->WriteAssetPage(page))
-           LogPrint(BCLog::SYS, "Failed to write asset page\n");                  
+        if(!passetindexdb->WriteAssetPage(page)){
+           LogPrint(BCLog::SYS, "Failed to write asset page\n");   
+           return false; 
+        }              
     }
     std::vector<uint256> TXIDS;
     passetindexdb->ReadIndexTXIDs(nAsset, page, TXIDS);
@@ -515,18 +480,23 @@ void WriteAssetIndexTXID(const uint32_t& nAsset, const uint256& txid){
     if(((int)TXIDS.size()) >= fAssetIndexPageSize){
         TXIDS.clear();
         page++;
-        if(!passetindexdb->WriteAssetPage(page))
+        if(!passetindexdb->WriteAssetPage(page)){
             LogPrint(BCLog::SYS, "Failed to write asset page\n");
+            return false;
+        }
     }
     TXIDS.push_back(txid);
-    if(!passetindexdb->WriteIndexTXIDs(nAsset, page, TXIDS))
+    if(!passetindexdb->WriteIndexTXIDs(nAsset, page, TXIDS)){
         LogPrint(BCLog::SYS, "Failed to write asset index txids\n");
+        return false;
+    }
+    return true;
 }
-void CAssetDB::WriteAssetIndex(const CTransaction& tx, const CAsset& dbAsset, const int& nHeight, const uint256& blockhash) {
+bool CAssetDB::WriteAssetIndex(const CTransaction& tx, const uint256& txid, const CAsset& dbAsset, const int& nHeight, const uint256& blockhash) {
 	if (fZMQAsset || fAssetIndex) {
         if(!fAssetIndexGuids.empty() && std::find(fAssetIndexGuids.begin(),fAssetIndexGuids.end(),dbAsset.nAsset) == fAssetIndexGuids.end()){
             LogPrint(BCLog::SYS, "Asset cannot be indexed because it is not set in -assetindexguids list\n");
-            return;
+            return true;
         }
 		UniValue oName(UniValue::VOBJ);
         // assetsends write allocation indexes
@@ -535,13 +505,15 @@ void CAssetDB::WriteAssetIndex(const CTransaction& tx, const CAsset& dbAsset, co
                 GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "assetrecord");
             if(fAssetIndex)
             {
-                const uint256& txid = tx.GetHash();
                 WriteAssetIndexTXID(dbAsset.nAsset, txid);
-                if(!passetindexdb->WritePayload(txid, oName))
+                if(!passetindexdb->WritePayload(txid, oName)){
                     LogPrint(BCLog::SYS, "Failed to write asset index payload\n");
+                    return false;
+                }
             }
         }
 	}
+    return true;
 }
 bool GetAsset(const uint32_t &nAsset,
         CAsset& txPos) {

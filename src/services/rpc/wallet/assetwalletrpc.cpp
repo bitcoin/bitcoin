@@ -7,6 +7,8 @@
 #include <boost/algorithm/string.hpp>
 #include <rpc/util.h>
 #include <wallet/rpcwallet.h>
+#include <wallet/fees.h>
+#include <policy/policy.h>
 #include <services/assetconsensus.h>
 #include <services/rpc/assetrpc.h>
 #include <script/signingprovider.h>
@@ -26,9 +28,10 @@ extern CAmount GetMinimumFee(const CWallet& wallet, unsigned int nTxBytes, const
 extern bool IsDust(const CTxOut& txout, const CFeeRate& dustRelayFee);
 extern CAmount AssetAmountFromValue(UniValue& value, int precision);
 extern UniValue ValueFromAssetAmount(const CAmount& amount, int precision);
-extern AssetTXPrevOutPointMap mempoolMapAssetTXPrevOutPoints;
-extern CCriticalSection cs_assetallocationprevout;
-std::map<std::string, COutPoint> mapSenderLockedOutPoints;
+extern AssetPrevTxMap mempoolMapAssetPrevTx;
+extern AssetPrevTxMap mapAssetPrevTxSender;
+extern CCriticalSection cs_assetallocationprevtx;
+extern AssetPrevTxMap mapSenderLockedOutPoints;
 using namespace std;
 std::vector<CTxIn> savedtxins;
 UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request);
@@ -63,8 +66,9 @@ UniValue syscointxfund_helper(CWallet* const pwallet, const string& strAddress, 
     {
         CTxOut txout(recipient.nAmount, recipient.scriptPubKey);
         txNew.vout.push_back(txout);
-    }   
-    
+    }
+    // reserve the change output if 
+    txNew.vout.push_back(CTxOut(0, CScript()));
     UniValue paramsFund(UniValue::VARR);
     paramsFund.push_back(EncodeHexTx(CTransaction(txNew)));
     paramsFund.push_back(strAddress);
@@ -143,7 +147,7 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
     // decode as non-witness
     if (!DecodeHexTx(txIn, hexstring, true, false))
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5500 - " + _("Could not send raw transaction: Cannot decode transaction from hex string: ") + hexstring);
-
+    CTransaction txIn_t(txIn);
     UniValue addressArray(UniValue::VARR);  
  
     CScript scriptPubKeyFromOrig = GetScriptForDestination(DecodeDestination(strAddress));
@@ -154,14 +158,27 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
     CCoinsView viewDummy;
     CCoinsViewCache view(&viewDummy);
     COutPoint outPointLastSender;
-    auto itSender = mapSenderLockedOutPoints.find(strAddress);
-    if(itSender != mapSenderLockedOutPoints.end()){
-        outPointLastSender = itSender->second;
+    COutPoint outPointLastSenderForwardedFee;
+    auto itSenderLocked = mapSenderLockedOutPoints.find(strAddress);
+    if(itSenderLocked != mapSenderLockedOutPoints.end()){
+        outPointLastSender = itSenderLocked->second;
     }else {
-         LOCK(cs_assetallocationprevout);
-         auto itSenderPrevOut = mempoolMapAssetTXPrevOutPoints.find(strAddress);
-         if(itSenderPrevOut != mempoolMapAssetTXPrevOutPoints.end()){
-            outPointLastSender = itSenderPrevOut->second;
+        CAssetAllocation theAssetAllocation(txIn_t);
+        if(!theAssetAllocation.assetAllocationTuple.IsNull()){
+            ActorSet actorSet;
+            GetActorsFromAssetAllocationTx(theAssetAllocation, txIn_t.nVersion, true, false, actorSet);
+            // if asset allocation then use forwarded fee if found to create graph of transactions enforced by consensus
+            if(actorSet.size() == 1){
+                LOCK(cs_assetallocationprevtx);
+                auto itSenderPrevOut = mempoolMapAssetPrevTx.find(*actorSet.begin());
+                if(itSenderPrevOut != mempoolMapAssetPrevTx.end()){
+                    outPointLastSenderForwardedFee = itSenderPrevOut->second;
+                }
+            }
+        }
+        auto itSender = mapAssetPrevTxSender.find(strAddress);
+        if(itSender != mapAssetPrevTxSender.end() && outPointLastSenderForwardedFee != itSender->second){
+            outPointLastSender = itSender->second;
         }
     }
     {
@@ -174,8 +191,11 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
         for (const CTxIn& txin : txIn.vin) {
             view.AccessCoin(txin.prevout); // Load entries from viewChain into view; can fail.
         }
-        if(!outPointLastSender.IsNull())
+        // ensure no other transaction spends these outpoints before adding them to the view
+        if(!outPointLastSender.IsNull() && !mempool.GetConflictTx(outPointLastSender))
             view.AccessCoin(outPointLastSender); // try to get last sender txid
+        if(!outPointLastSenderForwardedFee.IsNull() && !mempool.GetConflictTx(outPointLastSenderForwardedFee))
+            view.AccessCoin(outPointLastSenderForwardedFee); // try to get last sender txid for the fwded fee (for zdag graph enforcement)     
         view.SetBackend(viewDummy); // switch back to avoid locking mempool for too long
     }
     FeeCalculation fee_calc;
@@ -185,8 +205,16 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
     tx.vin.clear();
     if(!outPointLastSender.IsNull() && ::ChainActive().Tip()->nHeight >= Params().GetConsensus().nBridgeStartBlock){
         const Coin& coin = view.AccessCoin(outPointLastSender);
-        txIn.vin.push_back(CTxIn(outPointLastSender, coin.out.scriptPubKey));
+        if(!coin.IsSpent()){
+            txIn.vin.push_back(CTxIn(outPointLastSender, coin.out.scriptPubKey));
+        } 
     }
+    if(!outPointLastSenderForwardedFee.IsNull() && ::ChainActive().Tip()->nHeight >= Params().GetConsensus().nBridgeStartBlock){
+        const Coin& coin = view.AccessCoin(outPointLastSenderForwardedFee);
+        if(!coin.IsSpent()){
+            txIn.vin.push_back(CTxIn(outPointLastSenderForwardedFee, coin.out.scriptPubKey));
+        }
+    } 
     // # vin (with IX)*FEE + # vout*FEE + (10 + # vin)*FEE + 34*FEE (for change output)
     CAmount nFees =  GetMinimumFee(*pwallet, 10+34, coin_control,  &fee_calc);
     for (auto& vin : txIn.vin) {
@@ -196,7 +224,7 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
         }
         {
             LOCK(pwallet->cs_wallet);
-            if (pwallet->IsLockedCoin(vin.prevout.hash, vin.prevout.n)){
+            if (pwallet->IsLockedCoin(vin.prevout.hash, vin.prevout.n) && (itSenderLocked == mapSenderLockedOutPoints.end() || vin.prevout != outPointLastSender)){
                 continue;
             }
         }
@@ -214,10 +242,11 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
         tx.vin.push_back(vin);
         int numSigs = 0;
         CCountSigsVisitor(*pwallet, numSigs).Process(coin.out.scriptPubKey);
+        if(isSyscoinTx)
+            numSigs *= 2;
         nFees += GetMinimumFee(*pwallet, numSigs * 200, coin_control, &fee_calc);
     }
-    txIn = tx;
-    CTransaction txIn_t(txIn);
+    txIn_t = CTransaction(txIn);
     CAmount nCurrentAmount = view.GetValueIn(txIn_t);   
     // add total output amount of transaction to desired amount
     CAmount nDesiredAmount = txIn_t.GetValueOut();
@@ -225,10 +254,13 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
     if(txIn_t.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN) 
         nDesiredAmount = 0;
    
-    for (auto& vout : tx.vout) {
-        const unsigned int nBytes = ::GetSerializeSize(vout, PROTOCOL_VERSION);
+    for (auto& vout : txIn_t.vout) {
+        unsigned int nBytes = ::GetSerializeSize(vout, PROTOCOL_VERSION);
+        // double the fee for bandwidth costs of double spend relay
+        if(isSyscoinTx)
+            nBytes *= 2;
         nFees += GetMinimumFee(*pwallet, nBytes, coin_control, &fee_calc);
-    }
+    } 
     if (nCurrentAmount < (nDesiredAmount + nFees)) {
 
         UniValue paramsBalance(UniValue::VARR);
@@ -290,6 +322,8 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
             }
             int numSigs = 0;
             CCountSigsVisitor(*pwallet, numSigs).Process(scriptPubKey);
+            if(isSyscoinTx)
+                numSigs *= 2;
             // add fees to account for every input added to this transaction
             nFees += GetMinimumFee(*pwallet, numSigs * 200, coin_control, &fee_calc);
             // disable RBF for syscoin tx's, should use CPFP
@@ -303,7 +337,6 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
         }
     }
     
-    
   
     const CAmount &nChange = nCurrentAmount - nDesiredAmount - nFees;
     if (nChange < 0)
@@ -314,9 +347,9 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
     if (!IsValidDestination(dest))
         throw runtime_error("Change address is not valid");
     CTxOut changeOut(nChange, GetScriptForDestination(dest));
+    // set change to the last vout (reserved in fundhelper)
     if (!IsDust(changeOut, pwallet->chain().relayDustFee()))
-        tx.vout.push_back(changeOut);
-    
+        tx.vout[tx.vout.size()-1] = changeOut;
     
     // pass back new raw transaction
     UniValue res(UniValue::VOBJ);
@@ -349,9 +382,6 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
 	CAssetAllocation theAssetAllocation;
     const CWitnessAddress& witnessAddress = DescribeWitnessAddress(strAddressFrom);
     strAddressFrom = witnessAddress.ToString();
-    if(fUnitTest && Params().GetConsensus().nSYSXAsset == 0){
-        SetSYSXAssetForUnitTests(nAsset);
-    }
 	CAsset theAsset;
 	if (!GetAsset(nAsset, theAsset))
 		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("Could not find a asset with this key"));
@@ -361,7 +391,7 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
 
     theAssetAllocation.SetNull();
     // from burn to allocation
-    theAssetAllocation.assetAllocationTuple.nAsset = std::move(nAsset);
+    theAssetAllocation.assetAllocationTuple.nAsset = nAsset;
     theAssetAllocation.assetAllocationTuple.witnessAddress = CWitnessAddress(0, vchFromString("burn"));   
     theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(witnessAddress.nVersion, witnessAddress.vchWitnessProgram), nAmount));
     vector<unsigned char> data;
@@ -375,6 +405,10 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     CreateFeeRecipient(scriptData, burn);
     burn.nAmount = nAmount;
     vecSend.push_back(burn);
+    // create a dust output and send to the recipient for further relay
+    CRecipient recipient = {GetScriptForDestination(DecodeDestination(strAddressFrom)), 0, false};
+    recipient.nAmount = GetDustThreshold(CTxOut(0, recipient.scriptPubKey), GetDiscardRate(*pwallet));
+    vecSend.push_back(recipient); 
     UniValue res = syscointxfund_helper(pwallet, strAddressFrom, SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION, "", vecSend);
     return res;
 }
@@ -647,7 +681,6 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
 
     CAssetAllocation theAssetAllocation;
     theAssetAllocation.assetAllocationTuple = CAssetAllocationTuple(nAsset, theAsset.witnessAddress);
-
     UniValue receivers = valueTo.get_array();
     for (unsigned int idx = 0; idx < receivers.size(); idx++) {
         const UniValue& receiver = receivers[idx];
@@ -680,7 +713,6 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
     CRecipient fee;
     CreateFeeRecipient(scriptData, fee);
     vecSend.push_back(fee);
-
     return syscointxfund_helper(pwallet, theAsset.witnessAddress.ToString(), SYSCOIN_TX_VERSION_ASSET_SEND, vchWitness, vecSend);
 }
 
@@ -788,10 +820,9 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         mapSenderLockedOutPoints[strAddress] = lockedOutpoint;
     }
 	theAssetAllocation.SetNull();
-    theAssetAllocation.assetAllocationTuple.nAsset = std::move(assetAllocationTuple.nAsset);
-    theAssetAllocation.assetAllocationTuple.witnessAddress = std::move(assetAllocationTuple.witnessAddress); 
+    theAssetAllocation.assetAllocationTuple.nAsset = assetAllocationTuple.nAsset;
+    theAssetAllocation.assetAllocationTuple.witnessAddress = assetAllocationTuple.witnessAddress; 
 	UniValue receivers = valueTo.get_array();
-	
 	for (unsigned int idx = 0; idx < receivers.size(); idx++) {
 		const UniValue& receiver = receivers[idx];
 		if (!receiver.isObject())
@@ -824,6 +855,24 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, fee);
 	vecSend.push_back(fee);
+    // create a dust output for sender
+    CRecipient recipient = {GetScriptForDestination(DecodeDestination(strAddress)), 0, false};
+    recipient.nAmount = GetDustThreshold(CTxOut(0, recipient.scriptPubKey), GetDiscardRate(*pwallet));
+    vecSend.push_back(recipient); 
+    // create outputs for each receiver for zdag graph enforcement through CPFP
+    for (unsigned int idx = 0; idx < receivers.size(); idx++) {
+		const UniValue& receiver = receivers[idx];
+		if (!receiver.isObject())
+			throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected object with {\"address'\" or \"amount\"}");
+
+		const UniValue &receiverObj = receiver.get_obj();
+        const std::string &toStr = find_value(receiverObj, "address").get_str();
+        // create a dust output and send to the recipient for further relay
+        recipient = {GetScriptForDestination(DecodeDestination(toStr)), 0, false};
+        recipient.nAmount = GetDustThreshold(CTxOut(0, recipient.scriptPubKey), GetDiscardRate(*pwallet));
+        vecSend.push_back(recipient);     
+	}
+
 	return syscointxfund_helper(pwallet, strAddress, SYSCOIN_TX_VERSION_ALLOCATION_SEND, strWitness, vecSend);
 }
 template <typename T>
@@ -887,8 +936,8 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
             mapSenderLockedOutPoints[strAddress] = lockedOutpoint;
         }
         theAssetAllocation.SetNull();
-        theAssetAllocation.assetAllocationTuple.nAsset = std::move(assetAllocationTuple.nAsset);
-        theAssetAllocation.assetAllocationTuple.witnessAddress = std::move(assetAllocationTuple.witnessAddress); 
+        theAssetAllocation.assetAllocationTuple.nAsset = assetAllocationTuple.nAsset;
+        theAssetAllocation.assetAllocationTuple.witnessAddress = assetAllocationTuple.witnessAddress; 
 
         if (amount <= 0)
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount must be positive");
@@ -911,10 +960,21 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
         scriptData << OP_RETURN << ParseHex(assetHex) << ParseHex(amountHex) << ParseHex(ethAddress) << ParseHex(witnessVersionHex) << assetAllocationTuple.witnessAddress.vchWitnessProgram;
         nVersion = SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM;
     }
+    if(nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN){
+        // create a dust output and send to the recipient for further relay
+        CRecipient recipient = {GetScriptForDestination(DecodeDestination(strAddress)), 0, false};
+        recipient.nAmount = GetDustThreshold(CTxOut(0, recipient.scriptPubKey), GetDiscardRate(*pwallet));
+        vecSend.push_back(recipient);
+    }
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, fee);
-	vecSend.push_back(fee);
-
+	vecSend.push_back(fee); 
+    if(nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
+        // create a dust output and send to the recipient for further relay
+        CRecipient recipient = {GetScriptForDestination(DecodeDestination(strAddress)), 0, false};
+        recipient.nAmount = GetDustThreshold(CTxOut(0, recipient.scriptPubKey), GetDiscardRate(*pwallet));
+        vecSend.push_back(recipient);
+    }
 	return syscointxfund_helper(pwallet, strAddress, nVersion, "", vecSend);
 }
 UniValue assetallocationmint(const JSONRPCRequest& request) {
@@ -1028,7 +1088,10 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     CRecipient fee;
     CreateFeeRecipient(scriptData, fee);
     vecSend.push_back(fee);
-       
+    // create a dust output and send to the recipient for further relay
+    CRecipient recipient = {GetScriptForDestination(DecodeDestination(strAddress)), 0, false};
+    recipient.nAmount = GetDustThreshold(CTxOut(0, recipient.scriptPubKey), GetDiscardRate(*pwallet));
+    vecSend.push_back(recipient);  
     return syscointxfund_helper(pwallet, strAddress, SYSCOIN_TX_VERSION_ALLOCATION_MINT, strWitness, vecSend);
 }
 
@@ -1116,6 +1179,14 @@ UniValue assetallocationlock(const JSONRPCRequest& request) {
 	if (!GetAssetAllocation(assetAllocationTuple, theAssetAllocation))
 		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1500 - " + _("Could not find a asset allocation with this key"));
 
+	const COutPoint lockedOutpoint = theAssetAllocation.lockedOutpoint;
+    if(!lockedOutpoint.IsNull() && !IsOutpointMature(lockedOutpoint))
+        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1500 - " + _("Locked outpoint not mature"));
+    if(!lockedOutpoint.IsNull()){
+        // this will let syscointxfund try to select this outpoint as the input
+        mapSenderLockedOutPoints[strAddress] = lockedOutpoint;
+    }
+
 	theAssetAllocation.SetNull();
 	theAssetAllocation.assetAllocationTuple.nAsset = std::move(assetAllocationTuple.nAsset);
 	theAssetAllocation.assetAllocationTuple.witnessAddress = std::move(assetAllocationTuple.witnessAddress);
@@ -1131,8 +1202,6 @@ UniValue assetallocationlock(const JSONRPCRequest& request) {
     const string& strAddressDest = EncodeDestination(address);
     if(strAddress != strAddressDest)    
         throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1500 - " + _("Outpoint address must match allocation owner address"));
-    // this will let syscointxfund try to select this outpoint as the input
-    mapSenderLockedOutPoints[strAddress] = theAssetAllocation.lockedOutpoint;
     vector<unsigned char> data;
     theAssetAllocation.Serialize(data);    
 	vector<CRecipient> vecSend;
@@ -1142,7 +1211,10 @@ UniValue assetallocationlock(const JSONRPCRequest& request) {
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, fee);
 	vecSend.push_back(fee);
-
+    // create a dust output and send to the recipient for further relay
+    CRecipient recipient = {GetScriptForDestination(DecodeDestination(strAddress)), 0, false};
+    recipient.nAmount = GetDustThreshold(CTxOut(0, recipient.scriptPubKey), GetDiscardRate(*pwallet));
+    vecSend.push_back(recipient); 
 	return syscointxfund_helper(pwallet, strAddress, SYSCOIN_TX_VERSION_ALLOCATION_LOCK, strWitness, vecSend);
 }
 UniValue sendfrom(const JSONRPCRequest& request)

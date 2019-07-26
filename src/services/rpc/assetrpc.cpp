@@ -10,6 +10,7 @@
 #include <rpc/server.h>
 #include <validationinterface.h>
 #include <thread>
+#include <policy/rbf.h>
 using namespace std;
 extern std::string exePath;
 extern std::string EncodeDestination(const CTxDestination& dest);
@@ -20,6 +21,8 @@ extern std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags 
 extern bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no_witness = false, bool try_witness = true);
 extern std::unordered_set<std::string> assetAllocationConflicts;
 extern CCriticalSection cs_assetallocationconflicts;
+extern CCriticalSection cs_assetallocationarrival;
+extern ArrivalTimesMapImpl arrivalTimesMap;
 // SYSCOIN service rpc functions
 extern UniValue sendrawtransaction(const JSONRPCRequest& request);
 extern std::vector<std::pair<uint256, int64_t> > vecTPSTestReceivedTimesMempool;
@@ -473,6 +476,45 @@ UniValue listassetindexallocations(const JSONRPCRequest& request) {
     }
     return oRes;
 }
+int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& assetAllocationTupleSender, const uint256& lookForTxHash, const uint32_t& nMinLatencyMilliSeconds) EXCLUSIVE_LOCKS_REQUIRED(cs_main, mempool.cs) {
+    LOCK(cs_assetallocationarrival);
+	// ensure that this transaction exists in the arrivalTimes DB (which is the running stored lists of all real-time asset allocation sends not in POW)
+	// the arrivalTimes DB is only added to for valid asset allocation sends that happen in real-time and it is removed once there is POW on that transaction
+    const ArrivalTimesMap& arrivalTimes = arrivalTimesMap[assetAllocationTupleSender.ToString()];
+	if(arrivalTimes.empty())
+		return ZDAG_NOT_FOUND;
+
+	// go through arrival times and check that balances don't overrun the POW balance
+
+    int64_t nPrevTime = 0;
+	for (auto& arrivalTime : arrivalTimes)
+	{
+        // ensure that transactions are ordered by some time difference
+        if(nPrevTime > arrivalTime.second){
+            return ZDAG_WARNING_NO_TIME_SEPERATION;
+        }
+        
+        const CTransactionRef &txRef = mempool.get(arrivalTime.first);
+        if (!txRef)
+            continue;
+
+        RBFTransactionState rbfState = IsRBFOptIn(*txRef, mempool);
+        if (rbfState == RBFTransactionState::UNKNOWN) {
+            return ZDAG_WARNING_MEMPOOL_NOT_FOUND;
+        } else if (rbfState == RBFTransactionState::REPLACEABLE_BIP125) {
+            return ZDAG_WARNING_RBF;
+        }
+        
+
+        // check that during output linking the prev tx cannot be RBF'd (check sequence is sequence-1 or more)
+        nPrevTime = arrivalTime.second;
+		// even if the sender may be flagged, the order of events suggests that this receiver should get his money confirmed upon pow because real-time balance is sufficient for this receiver
+		if (arrivalTime.first == lookForTxHash) {
+			return ZDAG_STATUS_OK;
+		}
+	}
+	return lookForTxHash.IsNull()? ZDAG_STATUS_OK: ZDAG_NOT_FOUND;
+}
 
 UniValue assetallocationsenderstatus(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
@@ -512,7 +554,6 @@ UniValue assetallocationsenderstatus(const JSONRPCRequest& request) {
 	const CAssetAllocationTuple assetAllocationTupleSender(nAsset, DescribeWitnessAddress(strAddressSender));
     {
         LOCK2(cs_main, mempool.cs);
-        ResetAssetAllocation(assetAllocationTupleSender.ToString(), txid, false, true);
         std::unordered_set<std::string>::iterator it;
         {
             LOCK(cs_assetallocationconflicts);
