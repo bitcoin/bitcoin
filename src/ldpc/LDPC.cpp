@@ -157,22 +157,24 @@ bool LDPC::generate_H()
       this->H[i][j] = 1;
 
   InitWELLRNG512a(&this->seeds[0]);
-  col_order.clear();
-  for (int j = 0; j < this->n; j++)
-    col_order.push_back(j);
+  for (int i = 1; i < this->wc; i++) {
+    col_order.clear();
+    for (int j = 0; j < this->n; j++)
+      col_order.push_back(j);
 
-  auto begin = col_order.begin();
-  auto end = col_order.end();
-  for (auto n = end - begin -1; n >= 1; --n) {
-    auto k = WELLRNG512a() % (n + 1);
-    if (k != n) {
-      std::iter_swap(begin + k, begin + n);
+    auto begin = col_order.begin();
+    auto end = col_order.end();
+    for (auto n = end - begin -1; n >= 1; --n) {
+      auto k = WELLRNG512a() % (n + 1);
+      if (k != n) {
+        std::iter_swap(begin + k, begin + n);
+      }
     }
-  }
 
-  for (int j = 0; j < this->n; j++) {
-    int index = (col_order.at(j) / this->wr + k);
-    H[index][j] = 1;
+    for (int j = 0; j < this->n; j++) {
+      int index = (col_order.at(j) / this->wr + k * i);
+      H[index][j] = 1;
+    }
   }
 
   return true;

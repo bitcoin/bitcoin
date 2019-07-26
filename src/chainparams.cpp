@@ -362,7 +362,7 @@ public:
 
         UpdateVersionBitsParametersFromArgs(args);
 
-        genesis = CreateGenesisBlock(1560519259, 348, 0x207fffff, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1560519259, 636, 0x207fffff, 1, 50 * COIN);
 
 #if GENESIS
         LDPC *ldpc = new LDPC;
@@ -385,7 +385,7 @@ public:
 #endif
 
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("4b12c0904203b83cff5afb5b6f9946a9b134cc99756d1e96e9e997fa214252f5"));
+        assert(consensus.hashGenesisBlock == uint256S("c367fb00112deecb71ac1459e845b34bdee172c9fd5c4fc7aaf6a4546cdb522b"));
         assert(genesis.hashMerkleRoot == uint256S("15d2f927fe3eafe88ce0b4ccf267727ed306295051339a16e0b95067e65bead8"));
 
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
@@ -397,7 +397,7 @@ public:
 
         checkpointData = {
             {
-                {0, uint256S("4b12c0904203b83cff5afb5b6f9946a9b134cc99756d1e96e9e997fa214252f5")},
+                {0, uint256S("c367fb00112deecb71ac1459e845b34bdee172c9fd5c4fc7aaf6a4546cdb522b")},
             }
         };
 
