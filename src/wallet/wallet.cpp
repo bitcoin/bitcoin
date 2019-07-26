@@ -1777,14 +1777,27 @@ bool CWallet::DummySignTx(CMutableTransaction &txNew, const std::vector<CTxOut> 
     return true;
 }
 
-bool CWallet::ImportScripts(const std::set<CScript> scripts)
+bool CWallet::ImportScripts(const std::set<CScript> scripts, int64_t timestamp)
 {
     WalletBatch batch(*database);
     for (const auto& entry : scripts) {
-        if (!HaveCScript(CScriptID(entry)) && !AddCScriptWithDB(batch, entry)) {
+        CScriptID id(entry);
+        if (HaveCScript(id)) {
+            WalletLogPrintf("Already have script %s, skipping\n", HexStr(entry));
+            continue;
+        }
+        if (!AddCScriptWithDB(batch, entry)) {
             return false;
         }
+
+        if (timestamp > 0) {
+            m_script_metadata[CScriptID(entry)].nCreateTime = timestamp;
+        }
     }
+    if (timestamp > 0) {
+        UpdateTimeFirstKey(timestamp);
+    }
+
     return true;
 }
 
@@ -1796,9 +1809,14 @@ bool CWallet::ImportPrivKeys(const std::map<CKeyID, CKey>& privkey_map, const in
         CPubKey pubkey = key.GetPubKey();
         const CKeyID& id = entry.first;
         assert(key.VerifyPubKey(pubkey));
+        // Skip if we already have the key
+        if (HaveKey(id)) {
+            WalletLogPrintf("Already have key with pubkey %s, skipping\n", HexStr(pubkey));
+            continue;
+        }
         mapKeyMetadata[id].nCreateTime = timestamp;
         // If the private key is not present in the wallet, insert it.
-        if (!HaveKey(id) && !AddKeyPubKeyWithDB(batch, key, pubkey)) {
+        if (!AddKeyPubKeyWithDB(batch, key, pubkey)) {
             return false;
         }
         UpdateTimeFirstKey(timestamp);
@@ -1819,7 +1837,12 @@ bool CWallet::ImportPubKeys(const std::vector<CKeyID>& ordered_pubkeys, const st
         }
         const CPubKey& pubkey = entry->second;
         CPubKey temp;
-        if (!GetPubKey(id, temp) && !AddWatchOnlyWithDB(batch, GetScriptForRawPubKey(pubkey), timestamp)) {
+        if (GetPubKey(id, temp)) {
+            // Already have pubkey, skipping
+            WalletLogPrintf("Already have pubkey %s, skipping\n", HexStr(temp));
+            continue;
+        }
+        if (!AddWatchOnlyWithDB(batch, GetScriptForRawPubKey(pubkey), timestamp)) {
             return false;
         }
         mapKeyMetadata[id].nCreateTime = timestamp;
@@ -1833,7 +1856,7 @@ bool CWallet::ImportPubKeys(const std::vector<CKeyID>& ordered_pubkeys, const st
     return true;
 }
 
-bool CWallet::ImportScriptPubKeys(const std::string& label, const std::set<CScript>& script_pub_keys, const bool have_solving_data, const bool internal, const int64_t timestamp)
+bool CWallet::ImportScriptPubKeys(const std::string& label, const std::set<CScript>& script_pub_keys, const bool have_solving_data, const bool apply_label, const int64_t timestamp)
 {
     WalletBatch batch(*database);
     for (const CScript& script : script_pub_keys) {
@@ -1844,7 +1867,7 @@ bool CWallet::ImportScriptPubKeys(const std::string& label, const std::set<CScri
         }
         CTxDestination dest;
         ExtractDestination(script, dest);
-        if (!internal && IsValidDestination(dest)) {
+        if (apply_label && IsValidDestination(dest)) {
             SetAddressBookWithDB(batch, dest, label, "receive");
         }
     }
