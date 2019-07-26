@@ -95,7 +95,7 @@ extern AssetBalanceMap mempoolMapAssetBalances;
 extern ArrivalTimesMapImpl arrivalTimesMap; 
 extern CCriticalSection cs_assetallocationmempoolbalance;
 extern CCriticalSection cs_assetallocationarrival;
-extern std::vector<std::pair<uint256, int64_t> >  vecToRemoveFromMempool;
+extern std::vector<std::pair<uint256, uint32_t> >  vecToRemoveFromMempool;
 extern CCriticalSection cs_assetallocationmempoolremovetx;
 static CDSNotificationInterface* pdsNotificationInterface = NULL;
 
