@@ -103,6 +103,8 @@ class BlockDataCopier:
         self.blkmap = blkmap
 
         self.inFn = 0
+        # Setting self.inFn to the number of first available 'blkNNNNN.dat' file.
+        # On pruned node this file may be different than 'blk00000.dat'.
         fnPattern = os.path.join(self.settings['input'], "blk[0-9][0-9][0-9][0-9][0-9].dat")
         fnList = glob.glob(fnPattern)
         fnList.sort()
