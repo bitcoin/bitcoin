@@ -11,8 +11,10 @@
     color: #666666;
 }
 
-QMainWindow, QDialog {
-    background: #f9f9f9;
+QMainWindow {
+    background-image: url(:/images/logomask);
+    background-repeat: no-repeat;
+    background-position: bottom left;
 }
 
 /* Global Styles - Buttons */
@@ -254,20 +256,6 @@ QFrame QLabel#titleWallet {
 QFrame QLabel#titleTx {
     font-weight: bold;
     font-size: 20px;
-}
-
-/* Logo Mask */
-QStackedWidget#walletstack {
-    background-image: url(:/images/logomask);
-    background-repeat: no-repeat;
-    background-position: bottom left;
-}
-
-/* Send Page */
-QDialog {
-    background-image: url(:/images/logomask);
-    background-repeat: no-repeat;
-    background-position: bottom left;
 }
 
 QScrollArea {
