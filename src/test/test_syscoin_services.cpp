@@ -537,7 +537,7 @@ void SleepFor(const int& milliseconds, bool actualSleep) {
 	UniValue r;
 	try
 	{
-		r = CallExtRPC("node1", "getblockchaininfo");
+		r = CallRPC("node1", "getblockchaininfo");
 		int64_t currentTime = find_value(r.get_obj(), "mediantime").get_int64();
 		currentTime += seconds;
 		SetSysMocktime(currentTime);
@@ -547,7 +547,7 @@ void SleepFor(const int& milliseconds, bool actualSleep) {
 	}
 	try
 	{
-		r = CallExtRPC("node2", "getblockchaininfo");
+		r = CallRPC("node2", "getblockchaininfo");
 		int64_t currentTime = find_value(r.get_obj(), "mediantime").get_int64();
 		currentTime += seconds;
 		SetSysMocktime(currentTime);
@@ -557,7 +557,7 @@ void SleepFor(const int& milliseconds, bool actualSleep) {
 	}
 	try
 	{
-		r = CallExtRPC("node3", "getblockchaininfo");
+		r = CallRPC("node3", "getblockchaininfo");
 		int64_t currentTime = find_value(r.get_obj(), "mediantime").get_int64();
 		currentTime += seconds;
 		SetSysMocktime(currentTime);
@@ -571,13 +571,13 @@ void SetSysMocktime(const int64_t& expiryTime) {
 	string expiryStr = strprintf("%lld", expiryTime);
 	try
 	{
-		CallExtRPC("node1", "getblockchaininfo");
+		CallRPC("node1", "getblockchaininfo");
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "setmocktime " + expiryStr, true, false));
 		GenerateBlocks(5, "node1");
 		GenerateBlocks(5, "node1");
 		GenerateBlocks(5, "node1");
 		UniValue r;
-		BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "getblockchaininfo"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getblockchaininfo"));
 		BOOST_CHECK(expiryTime <= find_value(r.get_obj(), "mediantime").get_int64());
 	}
 	catch (const runtime_error &e)
@@ -585,13 +585,13 @@ void SetSysMocktime(const int64_t& expiryTime) {
 	}
 	try
 	{
-		CallExtRPC("node2", "getblockchaininfo");
+		CallRPC("node2", "getblockchaininfo");
 		BOOST_CHECK_NO_THROW(CallRPC("node2", "setmocktime " + expiryStr, true, false));
 		GenerateBlocks(5, "node2");
 		GenerateBlocks(5, "node2");
 		GenerateBlocks(5, "node2");
 		UniValue r;
-		BOOST_CHECK_NO_THROW(r = CallExtRPC("node2", "getblockchaininfo"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "getblockchaininfo"));
 		BOOST_CHECK(expiryTime <= find_value(r.get_obj(), "mediantime").get_int64());
 	}
 	catch (const runtime_error &e)
@@ -599,13 +599,13 @@ void SetSysMocktime(const int64_t& expiryTime) {
 	}
 	try
 	{
-		CallExtRPC("node3", "getblockchaininfo");
+		CallRPC("node3", "getblockchaininfo");
 		BOOST_CHECK_NO_THROW(CallRPC("node3", "setmocktime " + expiryStr, true, false));
 		GenerateBlocks(5, "node3");
 		GenerateBlocks(5, "node3");
 		GenerateBlocks(5, "node3");
 		UniValue r;
-		BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "getblockchaininfo"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "getblockchaininfo"));
 		BOOST_CHECK(expiryTime <= find_value(r.get_obj(), "mediantime").get_int64());
 	}
 	catch (const runtime_error &e)
