@@ -272,7 +272,7 @@ public:
     /**
      * Add argument
      */
-    void AddArg(const std::string& name, const std::string& help, unsigned int flags, const bool debug_only, const OptionsCategory& cat);
+    void AddArg(const std::string& name, const std::string& help, unsigned int flags, const OptionsCategory& cat);
 
     /**
      * Add many hidden arguments

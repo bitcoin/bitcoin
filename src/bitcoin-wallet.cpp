@@ -24,13 +24,13 @@ static void SetupWalletToolArgs()
     SetupHelpOptions(gArgs);
     SetupChainParamsBaseOptions();
 
-    gArgs.AddArg("-datadir=<dir>", "Specify data directory", ArgsManager::ALLOW_ANY, false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-wallet=<wallet-name>", "Specify wallet name", ArgsManager::ALLOW_ANY, false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-debug=<category>", "Output debugging information (default: 0).", ArgsManager::ALLOW_ANY, false, OptionsCategory::DEBUG_TEST);
-    gArgs.AddArg("-printtoconsole", "Send trace/debug info to console (default: 1 when no -debug is true, 0 otherwise.", ArgsManager::ALLOW_ANY, false, OptionsCategory::DEBUG_TEST);
+    gArgs.AddArg("-datadir=<dir>", "Specify data directory", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-wallet=<wallet-name>", "Specify wallet name", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-debug=<category>", "Output debugging information (default: 0).", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
+    gArgs.AddArg("-printtoconsole", "Send trace/debug info to console (default: 1 when no -debug is true, 0 otherwise.", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
 
-    gArgs.AddArg("info", "Get wallet info", ArgsManager::ALLOW_ANY, false, OptionsCategory::COMMANDS);
-    gArgs.AddArg("create", "Create new wallet file", ArgsManager::ALLOW_ANY, false, OptionsCategory::COMMANDS);
+    gArgs.AddArg("info", "Get wallet info", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
+    gArgs.AddArg("create", "Create new wallet file", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
 }
 
 static bool WalletAppInit(int argc, char* argv[])
