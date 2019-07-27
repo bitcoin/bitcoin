@@ -525,6 +525,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
     bool bDuplicate = false;
     // Check for conflicts with in-memory transactions
     std::set<uint256> setConflicts;
+    const bool& IsAssetAllocation = IsAssetAllocationTx(tx.nVersion);
     if (vecTPSRawTransactions.empty()) {
         for (const CTxIn &txin : tx.vin)
         {
@@ -556,7 +557,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                     }
                     
                     if (fReplacementOptOut) {
-                        if(!test_accept && IsAssetAllocationTx(tx.nVersion)){
+                        if(!test_accept && IsAssetAllocation){
                             CAssetAllocation theAssetAlloction(tx);
                             if(theAssetAlloction.assetAllocationTuple.IsNull()){
                                 return state.Invalid(ValidationInvalidReason::TX_MEMPOOL_POLICY, false, REJECT_DUPLICATE, "txn-mempool-conflict");
@@ -672,7 +673,8 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
             return state.Invalid(ValidationInvalidReason::TX_MEMPOOL_POLICY, false, REJECT_INSUFFICIENTFEE, "mempool min fee not met", strprintf("%d < %d", nModifiedFees, mempoolRejectFee));
         }
         // No transactions are allowed below minRelayTxFee except from disconnected blocks
-        if (!bypass_limits && nModifiedFees < ::minRelayTxFee.GetFee(nSize)) {
+        // SYSCOIN
+        if (!bypass_limits && nModifiedFees < ::minRelayTxFee.GetFee(IsAssetAllocation? nSize*2: nSize)) {
             return state.Invalid(ValidationInvalidReason::TX_MEMPOOL_POLICY, false, REJECT_INSUFFICIENTFEE, "min relay fee not met", strprintf("%d < %d", nModifiedFees, ::minRelayTxFee.GetFee(nSize)));
         }
 
