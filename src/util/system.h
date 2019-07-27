@@ -127,6 +127,23 @@ struct SectionInfo
 
 class ArgsManager
 {
+public:
+    enum Flags {
+        NONE = 0x00,
+        // Boolean options can accept negation syntax -noOPTION or -noOPTION=1
+        ALLOW_BOOL = 0x01,
+        ALLOW_INT = 0x02,
+        ALLOW_STRING = 0x04,
+        ALLOW_ANY = ALLOW_BOOL | ALLOW_INT | ALLOW_STRING,
+        DEBUG_ONLY = 0x100,
+        /* Some options would cause cross-contamination if values for
+         * mainnet were used while running on regtest/testnet (or vice-versa).
+         * Setting them as NETWORK_ONLY ensures that sharing a config file
+         * between mainnet and regtest/testnet won't cause problems due to these
+         * parameters by accident. */
+        NETWORK_ONLY = 0x200,
+    };
+
 protected:
     friend class ArgsManagerHelper;
 
@@ -134,9 +151,8 @@ protected:
     {
         std::string m_help_param;
         std::string m_help_text;
+        unsigned int m_flags;
         bool m_debug_only;
-
-        Arg(const std::string& help_param, const std::string& help_text, bool debug_only) : m_help_param(help_param), m_help_text(help_text), m_debug_only(debug_only) {};
     };
 
     mutable CCriticalSection cs_args;

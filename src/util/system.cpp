@@ -549,7 +549,7 @@ void ArgsManager::AddArg(const std::string& name, const std::string& help, const
 
     LOCK(cs_args);
     std::map<std::string, Arg>& arg_map = m_available_args[cat];
-    auto ret = arg_map.emplace(name.substr(0, eq_index), Arg(name.substr(eq_index, name.size() - eq_index), help, debug_only));
+    auto ret = arg_map.emplace(name.substr(0, eq_index), Arg{name.substr(eq_index, name.size() - eq_index), help, ArgsManager::NONE, debug_only});
     assert(ret.second); // Make sure an insertion actually happened
 }
 
