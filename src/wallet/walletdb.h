@@ -55,6 +55,31 @@ enum class DBErrors
     NEED_REWRITE
 };
 
+namespace DBKeys {
+extern const std::string ACENTRY;
+extern const std::string BESTBLOCK;
+extern const std::string BESTBLOCK_NOMERKLE;
+extern const std::string CRYPTED_KEY;
+extern const std::string CSCRIPT;
+extern const std::string DEFAULTKEY;
+extern const std::string DESTDATA;
+extern const std::string FLAGS;
+extern const std::string HDCHAIN;
+extern const std::string KEY;
+extern const std::string KEYMETA;
+extern const std::string MASTER_KEY;
+extern const std::string MINVERSION;
+extern const std::string NAME;
+extern const std::string OLD_KEY;
+extern const std::string ORDERPOSNEXT;
+extern const std::string POOL;
+extern const std::string PURPOSE;
+extern const std::string TX;
+extern const std::string VERSION;
+extern const std::string WATCHMETA;
+extern const std::string WATCHS;
+} // namespace DBKeys
+
 /* simple HD chain data model */
 class CHDChain
 {
