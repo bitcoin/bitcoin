@@ -834,7 +834,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
             // mark to remove from mempool, because if we remove right away then the transaction data cannot be relayed most of the time
             if(!test_accept && state.IsError()){
                 LOCK(cs_assetallocationmempoolremovetx);
-                vecToRemoveFromMempool.emplace_back(std::move(hash), ::ChainActive().Tip()->GetMedianTimePast());
+                vecToRemoveFromMempool.emplace_back(hash, ::ChainActive().Tip()->GetMedianTimePast());
             }
             else
                 return false;

@@ -249,10 +249,9 @@ bool CheckSyscoinInputs(const CTransaction& tx, const uint256& txHash, CValidati
     const bool &ret = CheckSyscoinInputs(false, tx, txHash, state, inputs, fJustCheck, nHeight, uint256(), bSanity, false, actorSet, mapAssetAllocations, mempoolMapAssetPrevTx, mapAssets, mapAssetSupplyStats, vecMintKeys, vecLockedOutpoints);
     if(fJustCheck){
         LOCK(cs_assetallocationarrival);
-        const uint256& txHash = tx.GetHash();
         for (const std::string& actor: actorSet){
             ArrivalTimesMap &arrivalTimes = arrivalTimesMap[std::move(actor)];
-            arrivalTimes.emplace_back(std::move(txHash), ::ChainActive().Tip()->GetMedianTimePast());
+            arrivalTimes.emplace_back(txHash, ::ChainActive().Tip()->GetMedianTimePast());
         }
     }
     return ret;
