@@ -16,7 +16,6 @@ extern std::string exePath;
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
 extern UniValue ValueFromAmount(const CAmount& amount);
-extern UniValue DescribeAddress(const CTxDestination& dest);
 extern std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags = 0);
 extern bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no_witness = false, bool try_witness = true);
 extern std::unordered_set<std::string> assetAllocationConflicts;
@@ -406,13 +405,15 @@ UniValue assetallocationinfo(const JSONRPCRequest& request) {
     UniValue oAssetAllocation(UniValue::VOBJ);
     const CAssetAllocationTuple assetAllocationTuple(nAsset, DescribeWitnessAddress(strAddressFrom));
     CAssetAllocation txPos;
-    if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos))
+    if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos)){
         throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1507 - " + _("Failed to read from assetallocation DB"));
+    }
 
 
 	CAsset theAsset;
-	if (!GetAsset(nAsset, theAsset))
+	if (!GetAsset(nAsset, theAsset)){
 		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1508 - " + _("Could not find a asset with this key"));
+    }
 
 
 	if(!BuildAssetAllocationJson(txPos, theAsset, oAssetAllocation))
