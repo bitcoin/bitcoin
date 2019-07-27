@@ -271,7 +271,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 wss.nKeys++;
                 ssValue >> pkey;
             } else {
-                CWalletKey wkey;
+                OldKey wkey;
                 ssValue >> wkey;
                 pkey = wkey.vchPrivKey;
             }
