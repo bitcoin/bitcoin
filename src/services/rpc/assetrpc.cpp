@@ -619,7 +619,7 @@ UniValue listassetallocations(const JSONRPCRequest& request) {
 		count = params[0].get_uint();
 		if (count == 0) {
 			count = 10;
-		} else
+		}
 	}
 	if (params.size() > 1) {
 		from = params[1].get_uint();
@@ -667,7 +667,7 @@ UniValue listassetallocationmempoolbalances(const JSONRPCRequest& request) {
         count = params[0].get_uint();
         if (count == 0) {
             count = 10;
-        } else
+        }
     }
     if (params.size() > 1) {
         from = params[1].get_uint();
