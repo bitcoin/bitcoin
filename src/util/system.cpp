@@ -268,22 +268,21 @@ public:
  * This method also tracks when the -no form was supplied, and if so,
  * checks whether there was a double-negative (-nofoo=0 -> -foo=1).
  *
- * If there was not a double negative, it removes the "no" from the key,
- * and returns true, indicating the caller should clear the args vector
- * to indicate a negated option.
+ * If there was not a double negative, it removes the "no" from the key
+ * and clears the args vector to indicate a negated option.
  *
  * If there was a double negative, it removes "no" from the key, sets the
- * value to "1" and returns false.
+ * value to "1" and pushes the key and the updated value to the args vector.
  *
- * If there was no "no", it leaves key and value untouched and returns
- * false.
+ * If there was no "no", it leaves key and value untouched and pushes them
+ * to the args vector.
  *
  * Where an option was negated can be later checked using the
  * IsArgNegated() method. One use case for this is to have a way to disable
  * options that are not normally boolean (e.g. using -nodebuglogfile to request
  * that debug log output is not sent to any file at all).
  */
-static bool InterpretNegatedOption(std::string& key, std::string& val)
+static void InterpretOption(std::string key, std::string val, std::map<std::string, std::vector<std::string>>& args)
 {
     assert(key[0] == '-');
 
@@ -294,17 +293,18 @@ static bool InterpretNegatedOption(std::string& key, std::string& val)
         ++option_index;
     }
     if (key.substr(option_index, 2) == "no") {
-        bool bool_val = InterpretBool(val);
+        const bool bool_val = InterpretBool(val);
         key.erase(option_index, 2);
         if (!bool_val ) {
             // Double negatives like -nofoo=0 are supported (but discouraged)
             LogPrintf("Warning: parsed potentially confusing double-negative %s=%s\n", key, val);
             val = "1";
         } else {
-            return true;
+            args[key].clear();
+            return;
         }
     }
-    return false;
+    args[key].push_back(val);
 }
 
 ArgsManager::ArgsManager() :
@@ -411,12 +411,7 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
             }
         }
 
-        // Check for -nofoo
-        if (InterpretNegatedOption(key, val)) {
-            m_override_args[key].clear();
-        } else {
-            m_override_args[key].push_back(val);
-        }
+        InterpretOption(key, val, m_override_args);
     }
 
     // we do not allow -includeconf from command line, so we clear it here
@@ -845,7 +840,7 @@ bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& file
         return false;
     }
     for (const std::pair<std::string, std::string>& option : options) {
-        std::string strKey = std::string("-") + option.first;
+        const std::string strKey = std::string("-") + option.first;
         // Check that the arg is known
         if (!IsArgKnown(strKey)) {
             if (!ignore_invalid_keys) {
@@ -857,12 +852,7 @@ bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& file
             }
         }
 
-        std::string strValue = option.second;
-        if (InterpretNegatedOption(strKey, strValue)) {
-            m_config_args[strKey].clear();
-        } else {
-            m_config_args[strKey].push_back(strValue);
-        }
+        InterpretOption(strKey, option.second, m_config_args);
     }
     return true;
 }
