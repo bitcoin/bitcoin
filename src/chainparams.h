@@ -70,7 +70,7 @@ public:
     bool RequireStandard() const { return fRequireStandard; }
     /** Require addresses specified with "-externalip" parameter to be routable */
     bool RequireRoutableExternalIP() const { return fRequireRoutableExternalIP; }
-    /** If this is a test chain */
+    /** If this chain is exclusively used for testing */
     bool IsTestChain() const { return m_is_test_chain; }
     uint64_t PruneAfterHeight() const { return nPruneAfterHeight; }
     /** Minimum free space (in GB) needed for data directory */
@@ -87,8 +87,6 @@ public:
     int LLMQConnectionRetryTimeout() const { return nLLMQConnectionRetryTimeout; }
     /** Return the BIP70 network string (main, test or regtest) */
     std::string NetworkIDString() const { return strNetworkID; }
-    /** Return true if the fallback fee is by default enabled for this network */
-    bool IsFallbackFeeEnabled() const { return m_fallback_fee_enabled; }
     /** Return the list of hostnames to look up for DNS seeds */
     const std::vector<std::string>& DNSSeeds() const { return vSeeds; }
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
@@ -138,7 +136,6 @@ protected:
     int nLLMQConnectionRetryTimeout;
     CCheckpointData checkpointData;
     ChainTxData chainTxData;
-    bool m_fallback_fee_enabled;
     int nPoolMinParticipants;
     int nPoolMaxParticipants;
     int nFulfilledRequestExpireTime;

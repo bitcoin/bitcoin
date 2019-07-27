@@ -12,7 +12,6 @@
 #include <interfaces/handler.h>
 #include <policy/feerate.h>
 #include <saltedhasher.h>
-#include <streams.h>
 #include <script/ismine.h>
 #include <tinyformat.h>
 #include <ui_interface.h>
