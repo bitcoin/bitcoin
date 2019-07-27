@@ -75,7 +75,7 @@ SplashScreen::SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle) 
     QRect rectIcon(QPoint(315,60), requiredSize);
     pixPaint.drawPixmap(rectIcon, icon);
 
-    QRect rectMantis(QPoint(15,25), QSize(1007/3.5,900/3.5));
+    QRect rectMantis(QPoint(5,25), QSize(1007/3.5,900/3.5));
 
     pixPaint.drawPixmap(rectMantis, QPixmap(":/images/mantis"));
 
