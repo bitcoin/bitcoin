@@ -244,10 +244,17 @@ disable-wallet mode with:
 
     ./configure --disable-wallet
 
-In this case there is no dependency on Berkeley DB 4.8.
+In this case there is no dependency on Berkeley DB.
 
 Mining is also possible in disable-wallet mode, but only using the `getblocktemplate` RPC
 call not `getwork`.
+
+Disable checkpoints
+-------------------
+It is possible to compile the node without the support for centrally issued checkpoints:
+
+    ./configure --disable-checkpoints
+
 
 Additional Configure Flags
 --------------------------
