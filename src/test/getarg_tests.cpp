@@ -36,7 +36,7 @@ static void SetupArgs(const std::vector<std::string>& args)
 {
     gArgs.ClearArgs();
     for (const std::string& arg : args) {
-        gArgs.AddArg(arg, "", false, OptionsCategory::OPTIONS);
+        gArgs.AddArg(arg, "", ArgsManager::ALLOW_ANY, false, OptionsCategory::OPTIONS);
     }
 }
 

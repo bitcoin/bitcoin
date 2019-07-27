@@ -157,7 +157,7 @@ struct TestArgsManager : public ArgsManager
     void SetupArgs(int argv, const char* args[])
     {
         for (int i = 0; i < argv; ++i) {
-            AddArg(args[i], "", false, OptionsCategory::OPTIONS);
+            AddArg(args[i], "", ArgsManager::ALLOW_ANY, false, OptionsCategory::OPTIONS);
         }
     }
     using ArgsManager::ReadConfigStream;
@@ -682,7 +682,7 @@ BOOST_FIXTURE_TEST_CASE(util_ArgsMerge, ArgsMergeTestingSetup)
 
         const std::string& name = net_specific ? "wallet" : "server";
         const std::string key = "-" + name;
-        parser.AddArg(key, name, false, OptionsCategory::OPTIONS);
+        parser.AddArg(key, name, ArgsManager::ALLOW_ANY, false, OptionsCategory::OPTIONS);
         if (net_specific) parser.SetNetworkOnlyArg(key);
 
         auto args = GetValues(arg_actions, section, name, "a");
@@ -809,8 +809,8 @@ BOOST_FIXTURE_TEST_CASE(util_ChainMerge, ChainMergeTestingSetup)
     ForEachMergeSetup([&](const ActionList& arg_actions, const ActionList& conf_actions) {
         TestArgsManager parser;
         LOCK(parser.cs_args);
-        parser.AddArg("-regtest", "regtest", false, OptionsCategory::OPTIONS);
-        parser.AddArg("-testnet", "testnet", false, OptionsCategory::OPTIONS);
+        parser.AddArg("-regtest", "regtest", ArgsManager::ALLOW_ANY, false, OptionsCategory::OPTIONS);
+        parser.AddArg("-testnet", "testnet", ArgsManager::ALLOW_ANY, false, OptionsCategory::OPTIONS);
 
         auto arg = [](Action action) { return action == ENABLE_TEST  ? "-testnet=1"   :
                                               action == DISABLE_TEST ? "-testnet=0"   :
