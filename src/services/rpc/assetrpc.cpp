@@ -476,7 +476,7 @@ UniValue listassetindexallocations(const JSONRPCRequest& request) {
     }
     return oRes;
 }
-int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& assetAllocationTupleSender, const uint256& lookForTxHash, const uint32_t& nMinLatencyMilliSeconds) EXCLUSIVE_LOCKS_REQUIRED(cs_main, mempool.cs) {
+int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& assetAllocationTupleSender, const uint256& lookForTxHash) EXCLUSIVE_LOCKS_REQUIRED(cs_main, mempool.cs) {
     LOCK(cs_assetallocationarrival);
 	// ensure that this transaction exists in the arrivalTimes DB (which is the running stored lists of all real-time asset allocation sends not in POW)
 	// the arrivalTimes DB is only added to for valid asset allocation sends that happen in real-time and it is removed once there is POW on that transaction
@@ -548,12 +548,10 @@ UniValue assetallocationsenderstatus(const JSONRPCRequest& request) {
 	txid.SetNull();
 	if(!params[2].get_str().empty())
 		txid.SetHex(params[2].get_str());
-    // 10 seconds by default
-    uint32_t nMinLatencyMilliSeconds = 10*1000;
 	UniValue oAssetAllocationStatus(UniValue::VOBJ);
 	const CAssetAllocationTuple assetAllocationTupleSender(nAsset, DescribeWitnessAddress(strAddressSender));
     {
-        LOCK2(cs_main, mempool.cs);
+        LOCK2(cs_main, ::mempool.cs);
         std::unordered_set<std::string>::iterator it;
         {
             LOCK(cs_assetallocationconflicts);
@@ -563,7 +561,7 @@ UniValue assetallocationsenderstatus(const JSONRPCRequest& request) {
     	if (it != assetAllocationConflicts.end())
     		nStatus = ZDAG_MAJOR_CONFLICT;
     	else
-    		nStatus = DetectPotentialAssetAllocationSenderConflicts(assetAllocationTupleSender, txid, nMinLatencyMilliSeconds);
+    		nStatus = DetectPotentialAssetAllocationSenderConflicts(assetAllocationTupleSender, txid);
     	
         oAssetAllocationStatus.__pushKV("status", nStatus);
     }
