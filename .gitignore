@@ -2,14 +2,14 @@
 
 *.exe
 *.pdb
-src/bitcoin
-src/bitcoind
-src/bitcoin-cli
-src/bitcoin-tx
-src/bitcoin-wallet
-src/test/test_bitcoin
-src/test/test_bitcoin_fuzzy
-src/qt/test/test_bitcoin-qt
+src/bitgreen
+src/bitgreend
+src/bitgreen-cli
+src/bitgreen-tx
+src/bitgreen-wallet
+src/test/test_bitgreen
+src/test/test_bitgreen_fuzzy
+src/qt/test/test_bitgreen-qt
 
 # autoreconf
 Makefile.in
@@ -32,8 +32,8 @@ config.log
 config.status
 configure
 libtool
-src/config/bitcoin-config.h
-src/config/bitcoin-config.h.in
+src/config/bitgreen-config.h
+src/config/bitgreen-config.h.in
 src/config/stamp-h1
 share/setup.nsi
 share/qt/Info.plist
@@ -46,11 +46,11 @@ src/qt/forms/ui_*.h
 
 src/qt/test/moc*.cpp
 
-src/qt/bitcoin-qt.config
-src/qt/bitcoin-qt.creator
-src/qt/bitcoin-qt.creator.user
-src/qt/bitcoin-qt.files
-src/qt/bitcoin-qt.includes
+src/qt/bitgreen-qt.config
+src/qt/bitgreen-qt.creator
+src/qt/bitgreen-qt.creator.user
+src/qt/bitgreen-qt.files
+src/qt/bitgreen-qt.includes
 
 .deps
 .dirstamp
@@ -86,13 +86,13 @@ src/qt/bitcoin-qt.includes
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
-bitcoin-qt
-Bitcoin-Qt.app
+bitgreen-qt
+BitGreen-Qt.app
 background.tiff*
 
 # Unit-tests
 Makefile.test
-bitcoin-qt_test
+bitgreen-qt_test
 
 # Resources cpp
 qrc_*.cpp
@@ -105,7 +105,7 @@ build
 *.gcno
 *.gcda
 /*.info
-test_bitcoin.coverage/
+test_bitgreen.coverage/
 total.coverage/
 coverage_percent.txt
 
@@ -120,7 +120,7 @@ test/cache/*
 
 /doc/doxygen/
 
-libbitcoinconsensus.pc
+libbitgreenconsensus.pc
 contrib/devtools/split-debug.sh
 
 # Output from running db4 installation
