@@ -63,6 +63,7 @@
     <qresource prefix="/images">
         <file alias="logo">res/images/logo.png</file>
         <file alias="logomask">res/images/logomask.png</file>
+        <file alias="mantis">res/images/mantis.png</file>
         <file alias="transparent">res/images/transparent-background.png</file>
     </qresource>
     <qresource prefix="/movies">

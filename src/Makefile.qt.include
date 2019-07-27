@@ -343,9 +343,6 @@ RES_ICONS = \
   qt/res/icons/tx_mined.png \
   qt/res/icons/warning.png \
   qt/res/icons/verify.png \
-  qt/res/images/logo.png \
-  qt/res/images/logomask.png \
-  qt/res/images/splash.png \
   qt/res/images/about.png \
   qt/res/images/controls/caret-down.png \
   qt/res/images/controls/caret-up.png \
@@ -353,6 +350,7 @@ RES_ICONS = \
   qt/res/images/controls/scroll-up.png \
   qt/res/images/logo.png \
   qt/res/images/logomask.png \
+  qt/res/images/mantis.png \
   qt/res/images/splash.png \
   qt/res/images/splash_testnet.png \
   qt/res/images/transparent-background.png \
