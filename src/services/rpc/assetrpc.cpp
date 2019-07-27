@@ -620,15 +620,9 @@ UniValue listassetallocations(const JSONRPCRequest& request) {
 		if (count == 0) {
 			count = 10;
 		} else
-		if (count < 0) {
-			throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("'count' must be 0 or greater"));
-		}
 	}
 	if (params.size() > 1) {
 		from = params[1].get_uint();
-		if (from < 0) {
-			throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("'from' must be 0 or greater"));
-		}
 	}
 	if (params.size() > 2) {
 		options = params[2];
@@ -674,15 +668,9 @@ UniValue listassetallocationmempoolbalances(const JSONRPCRequest& request) {
         if (count == 0) {
             count = 10;
         } else
-        if (count < 0) {
-            throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("'count' must be 0 or greater"));
-        }
     }
     if (params.size() > 1) {
         from = params[1].get_uint();
-        if (from < 0) {
-            throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("'from' must be 0 or greater"));
-        }
     }
     if (params.size() > 2) {
         options = params[2];
@@ -864,16 +852,10 @@ UniValue listassets(const JSONRPCRequest& request) {
         count = params[0].get_uint();
         if (count == 0) {
             count = 10;
-        } else
-        if (count < 0) {
-            throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("'count' must be 0 or greater"));
         }
     }
     if (params.size() > 1) {
         from = params[1].get_uint();
-        if (from < 0) {
-            throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("'from' must be 0 or greater"));
-        }
     }
     if (params.size() > 2) {
         options = params[2];
