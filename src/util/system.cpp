@@ -282,7 +282,10 @@ public:
  * options that are not normally boolean (e.g. using -nodebuglogfile to request
  * that debug log output is not sent to any file at all).
  */
-static void InterpretOption(std::string key, std::string val, std::map<std::string, std::vector<std::string>>& args)
+
+NODISCARD static bool InterpretOption(std::string key, std::string val, unsigned int flags,
+                                      std::map<std::string, std::vector<std::string>>& args,
+                                      std::string& error)
 {
     assert(key[0] == '-');
 
@@ -293,18 +296,22 @@ static void InterpretOption(std::string key, std::string val, std::map<std::stri
         ++option_index;
     }
     if (key.substr(option_index, 2) == "no") {
-        const bool bool_val = InterpretBool(val);
         key.erase(option_index, 2);
-        if (!bool_val ) {
+        if (flags & ArgsManager::ALLOW_BOOL) {
+            if (InterpretBool(val)) {
+                args[key].clear();
+                return true;
+            }
             // Double negatives like -nofoo=0 are supported (but discouraged)
             LogPrintf("Warning: parsed potentially confusing double-negative %s=%s\n", key, val);
             val = "1";
         } else {
-            args[key].clear();
-            return;
+            error = strprintf("Negating of %s is meaningless and therefore forbidden", key.c_str());
+            return false;
         }
     }
     args[key].push_back(val);
+    return true;
 }
 
 ArgsManager::ArgsManager()
@@ -395,7 +402,9 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
 
         const unsigned int flags = FlagsOfKnownArg(key);
         if (flags) {
-            InterpretOption(key, val, m_override_args);
+            if (!InterpretOption(key, val, flags, m_override_args, error)) {
+                return false;
+            }
         } else {
             error = strprintf("Invalid parameter %s", key.c_str());
             return false;
@@ -839,7 +848,9 @@ bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& file
         const std::string strKey = std::string("-") + option.first;
         const unsigned int flags = FlagsOfKnownArg(strKey);
         if (flags) {
-            InterpretOption(strKey, option.second, m_config_args);
+            if (!InterpretOption(strKey, option.second, flags, m_config_args, error)) {
+                return false;
+            }
         } else {
             if (ignore_invalid_keys) {
                 LogPrintf("Ignoring unknown configuration value %s\n", option.first);
