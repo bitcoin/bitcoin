@@ -293,9 +293,10 @@ public:
     std::string GetHelpMessage() const;
 
     /**
-     * Check whether we know of this arg
+     * Return Flags for known arg.
+     * Return ArgsManager::NONE for unknown arg.
      */
-    bool IsArgKnown(const std::string& key) const;
+    unsigned int FlagsOfKnownArg(const std::string& key) const;
 };
 
 extern ArgsManager gArgs;
