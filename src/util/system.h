@@ -152,7 +152,6 @@ protected:
         std::string m_help_param;
         std::string m_help_text;
         unsigned int m_flags;
-        bool m_debug_only;
     };
 
     mutable CCriticalSection cs_args;
