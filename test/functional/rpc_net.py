@@ -118,7 +118,7 @@ class NetTest(BitcoinTestFramework):
             addr.time = 100000000
             addr.nServices = NODE_NETWORK | NODE_WITNESS
             addr.ip = a
-            addr.port = 8333
+            addr.port = 9333
             msg.addrs.append(addr)
         self.nodes[0].p2p.send_and_ping(msg)
 
@@ -130,7 +130,7 @@ class NetTest(BitcoinTestFramework):
             assert_greater_than(a["time"], 1527811200) # 1st June 2018
             assert_equal(a["services"], NODE_NETWORK | NODE_WITNESS)
             assert a["address"] in imported_addrs
-            assert_equal(a["port"], 8333)
+            assert_equal(a["port"], 9333)
 
         assert_raises_rpc_error(-8, "Address count out of range", self.nodes[0].getnodeaddresses, -1)
 
