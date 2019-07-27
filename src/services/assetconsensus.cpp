@@ -310,28 +310,26 @@ void ResyncAssetAllocationStates(){
     int count = 0;
      {
         vector<string> vecToRemoveMempoolBalances;
-        LOCK2(cs_main, mempool.cs);
+        LOCK2(cs_main, ::mempool.cs);
         LOCK(cs_assetallocationmempoolbalance);
         LOCK(cs_assetallocationarrival);
+        ActorSet actorSet;
         for (auto&indexObj : mempoolMapAssetBalances) {
             vector<uint256> vecToRemoveArrivalTimes;
-            const string& strSenderTuple = indexObj.first;
-            count += ResetAssetAllocation(strSenderTuple);
-        }   
+            actorSet.insert(indexObj.first);
+        }
+        count = ResetAssetAllocations(actorSet);
+
     }   
     if(count > 0)
-        LogPrint(BCLog::SYS,"removeExpiredMempoolBalances removed %d expired asset allocation transactions from mempool balances\n", count);
+        LogPrint(BCLog::SYS,"ResyncAssetAllocationStates removed %d expired asset allocation transactions from mempool balances\n", count);
 
 }
-int ResetAssetAllocations(const CTransactionRef &txRef) {
+int ResetAssetAllocations(const ActorSet &actorSet) {
     int count = 0;
-    CAssetAllocation theAssetAllocation(*txRef);
-    if(!theAssetAllocation.assetAllocationTuple.IsNull()){
-        ActorSet actorSet;
-        GetActorsFromAssetAllocationTx(theAssetAllocation, txRef->nVersion, false, false, actorSet);
-        for(const auto& actor:actorSet)
-            count += ResetAssetAllocation(actor);
-        }
+    for(const auto& actor: actorSet){
+        count += ResetAssetAllocation(actor);
+    }
     return count;
 }
 int ResetAssetAllocation(const std::string &senderStr) {
@@ -347,8 +345,9 @@ int ResetAssetAllocation(const std::string &senderStr) {
             std::vector<uint256> vecToRemoveArrivalTimes;
             auto arrivalTimeIt = arrivalTimes->second.begin();
 	        while (arrivalTimeIt != arrivalTimes->second.end()){
+                const uint256& txHash = arrivalTimeIt->first;
                 // if mempool doesn't have tx or its been 30 mins we can remove it safely
-                const CTransactionRef &txRef = mempool.get(arrivalTimeIt->first);
+                const CTransactionRef &txRef = mempool.get(txHash);
                 if(txRef && ((::ChainActive().Tip()->GetMedianTimePast()) - arrivalTimeIt->second) <= 1800){
                     removeAllConflicts = false;
                     ++arrivalTimeIt;
@@ -358,14 +357,11 @@ int ResetAssetAllocation(const std::string &senderStr) {
                     arrivalTimes->second.erase(arrivalTimeIt);
                     // remove any matches from vecToRemoveFromMempool for this txid
                     if(txRef){
-                        auto vecToRemoveFromMempoolIt = vecToRemoveFromMempool.begin();
-                        while (vecToRemoveFromMempoolIt != vecToRemoveFromMempool.end()){
-                            if(vecToRemoveFromMempoolIt->first == arrivalTimeIt->first){
-                                RemoveDoubleSpendFromMempool(txRef);
-                                vecToRemoveFromMempool.erase(vecToRemoveFromMempoolIt);
-                            }
-                            else
-                                ++vecToRemoveFromMempoolIt;
+                        auto it = std::find_if( vecToRemoveFromMempool.begin(), vecToRemoveFromMempool.end(),
+                            [&txHash](const std::pair<uint256, uint32_t>& element){ return element.first == txHash;} );
+                        if(it != vecToRemoveFromMempool.end()){
+                            RemoveDoubleSpendFromMempool(txRef);
+                            vecToRemoveFromMempool.erase(it);
                         }
                     }
                 }

@@ -218,8 +218,9 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     ActorSet actorSet;
     bool bFoundError = false;
     for(const CTransactionRef& tx: pblock->vtx){
-        if(!CheckSyscoinInputs(false, *tx, tx->GetHash(), stateInputs, view, false, nHeight, pblock->GetHash(), false, true, actorSet, mapAssetAllocations, mapAssetPrevTxs, mapAssets, mapAssetSupplyStats, vecMintKeys, vecLockedOutpoints)){
-            txsToRemove.push_back(tx->GetHash());
+        const uint256& txHash = tx->GetHash();
+        if(!CheckSyscoinInputs(false, *tx, txHash, stateInputs, view, false, nHeight, pblock->GetHash(), false, true, actorSet, mapAssetAllocations, mapAssetPrevTxs, mapAssets, mapAssetSupplyStats, vecMintKeys, vecLockedOutpoints)){
+            txsToRemove.emplace_back(std::move(txHash));
             stateConflict = stateInputs;
             bFoundError = true;
         }

@@ -319,16 +319,6 @@ bool FlushSyscoinDBs() {
      }
 	return ret;
 }
-void CTxMemPool::removeExpiredMempoolBalances(setEntries& stage){ 
-    AssertLockHeld(cs);
-    vector<vector<unsigned char> > vvch;
-    int count = 0;
-    for (const txiter& it : stage) {
-        count += ResetAssetAllocations(it->GetSharedTx());
-    }
-    if(count > 0)
-         LogPrint(BCLog::SYS, "removeExpiredMempoolBalances removed %d expired asset allocation transactions from mempool balances\n", count);  
-}
 bool FindAssetOwnerInTx(const CCoinsViewCache &inputs, const CTransaction& tx, const CWitnessAddress &witnessAddressToMatch) {
 	CTxDestination dest;
 	int witnessversion;

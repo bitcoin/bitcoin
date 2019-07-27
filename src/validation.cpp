@@ -1666,9 +1666,16 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
             ++vecToRemoveFromMempoolIt;
     }
     for(const auto& txRef: vecTxRef){
-        RemoveDoubleSpendFromMempool(txRef);
-        ResetAssetAllocations(txRef);
-    }   
+        if(!txRef || !IsAssetAllocationTx(txRef->nVersion))
+            continue;
+        CAssetAllocation theAssetAllocation(*txRef);
+        if(!theAssetAllocation.assetAllocationTuple.IsNull()){
+            ActorSet actorSet;
+            GetActorsFromAssetAllocationTx(theAssetAllocation, txRef->nVersion, false, false, actorSet);
+            RemoveDoubleSpendFromMempool(txRef);
+            ResetAssetAllocations(actorSet);
+        }
+    } 
     // move best block pointer to prevout block
     view.SetBestBlock(pindex->pprev->GetBlockHash());
 
@@ -2325,11 +2332,7 @@ bool CChainState::DisconnectTip(CValidationState& state, const CChainParams& cha
 
     UpdateTip(pindexDelete->pprev, chainparams);
     // SYSCOIN
-    if(!actorSet.empty()){
-        for (const auto& actor: actorSet){
-            ResetAssetAllocation(actor);
-        } 
-    }
+    ResetAssetAllocations(actorSet);
     // Let wallets know transactions went from 1-confirmed to
     // 0-confirmed or conflicted:
     GetMainSignals().BlockDisconnected(pblock);
@@ -2464,11 +2467,7 @@ bool CChainState::ConnectTip(CValidationState& state, const CChainParams& chainp
     m_chain.SetTip(pindexNew);
     UpdateTip(pindexNew, chainparams);
     // SYSCOIN remove allocations from our internal zdag maps if inputs of the txs related to each sender of this block are not in mempool anymore which includes conflicting txs like double spends
-    if(!actorSet.empty()){
-        for (const auto &actor: actorSet){
-            ResetAssetAllocation(actor);
-        }
-    }
+    ResetAssetAllocations(actorSet);
     // find entry less than 300 seconds old out of vector to remove from mempool as part of zdag dbl spend relay logic
     if(vecToRemoveFromMempool.size() > 0){
         LOCK(cs_assetallocationmempoolremovetx);
@@ -2487,8 +2486,15 @@ bool CChainState::ConnectTip(CValidationState& state, const CChainParams& chainp
             }
         }
         for(const auto& txRef: vecTxRef){
-            RemoveDoubleSpendFromMempool(txRef);
-            ResetAssetAllocations(txRef);
+            if(!txRef || !IsAssetAllocationTx(txRef->nVersion))
+                continue;
+            CAssetAllocation theAssetAllocation(*txRef);
+            if(!theAssetAllocation.assetAllocationTuple.IsNull()){
+                ActorSet actorSet;
+                GetActorsFromAssetAllocationTx(theAssetAllocation, txRef->nVersion, false, false, actorSet);
+                RemoveDoubleSpendFromMempool(txRef);
+                ResetAssetAllocations(actorSet);
+            }
         }
     } 
     int64_t nTime6 = GetTimeMicros(); nTimePostConnect += nTime6 - nTime5; nTimeTotal += nTime6 - nTime1;
@@ -4282,11 +4288,7 @@ bool CChainState::ReplayBlocks(const CChainParams& params, CCoinsView* view)
     cache.SetBestBlock(pindexNew->GetBlockHash());
     cache.Flush();
      // SYSCOIN
-    if(!actorSet.empty()){
-        for (const auto& actor: actorSet){
-            ResetAssetAllocation(actor);
-        } 
-    }   
+    ResetAssetAllocations(actorSet);   
     uiInterface.ShowProgress("", 100, false);
     return true;
 }
