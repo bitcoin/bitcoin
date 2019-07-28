@@ -159,8 +159,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_address_spend)
     BOOST_CHECK_NO_THROW(r = CallRPC("node3", "addressbalance " + useraddress));
     nAmountBalanceAfter = AmountFromValue(find_value(r.get_obj(), "amount"));
     // would have completely spent funds from this address to pay the creatoraddress
-    // minus some small amount that was sent as dust for zdag through assetallocationsend (980 satoshi)
-    BOOST_CHECK_EQUAL(980, nAmountBalanceAfter);
+    BOOST_CHECK_EQUAL(0, nAmountBalanceAfter);
 
     // sendfrom should work on creatoraddress because we use create a manual raw tx sourced from creatoraddress which doesn't hit the auto-selection wallet algorithm
 

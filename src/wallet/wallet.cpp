@@ -4659,7 +4659,7 @@ void CWallet::handleNotifications()
 {
     m_chain_notifications_handler = m_chain->handleNotifications(*this);
 }
-bool CWallet::GetBudgetSystemCollateralTX(ReserveDestination &reservedestination, CTransactionRef& tx, uint256 hash, CAmount amount)
+bool CWallet::GetBudgetSystemCollateralTX(CTransactionRef& tx, uint256 hash, CAmount amount)
 {
     auto locked_chain = chain().lock();
     LOCK(cs_wallet);
@@ -4673,7 +4673,7 @@ bool CWallet::GetBudgetSystemCollateralTX(ReserveDestination &reservedestination
     vecSend.push_back((CRecipient){scriptChange, amount, false});
 
     CCoinControl coinControl;
-    bool success = CreateTransaction(*locked_chain, vecSend, tx, reservedestination, nFeeRet, nChangePosRet, strFail, coinControl, true);
+    bool success = CreateTransaction(*locked_chain, vecSend, tx, nFeeRet, nChangePosRet, strFail, coinControl, true);
     if(!success){
         LogPrintf("CWallet::GetBudgetSystemCollateralTX -- Error: %s\n", strFail);
         return false;
