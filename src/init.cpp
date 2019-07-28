@@ -529,11 +529,11 @@ void SetupServerArgs()
 
 #if ENABLE_ZMQ
     // SYSCOIN
-    gArgs.AddArg("-zmqpubwalletstatus=<address>", _("Enable publish wallet status (when wallet loads and is ready) in <address>"), false, OptionsCategory::ZMQ);
-    gArgs.AddArg("-zmqpubethstatus=<address>", _("Enable publish Ethereum status updates in <address>"), false, OptionsCategory::ZMQ);
-    gArgs.AddArg("-zmqpubnetworkstatus=<address>", _("Enable publish network updates when a peer is connected or disconnected in <address>"), false, OptionsCategory::ZMQ);
-    gArgs.AddArg("-zmqpubassetallocation=<address>", _("Enable publish raw asset allocation payload in <address>"), false, OptionsCategory::ZMQ);
-    gArgs.AddArg("-zmqpubassetrecord=<address>", _("Enable publish raw asset payload in <address>"), false, OptionsCategory::ZMQ);
+    gArgs.AddArg("-zmqpubwalletstatus=<address>", "Enable publish wallet status (when wallet loads and is ready) in <address>", false, OptionsCategory::ZMQ);
+    gArgs.AddArg("-zmqpubethstatus=<address>", "Enable publish Ethereum status updates in <address>", false, OptionsCategory::ZMQ);
+    gArgs.AddArg("-zmqpubnetworkstatus=<address>", "Enable publish network updates when a peer is connected or disconnected in <address>", false, OptionsCategory::ZMQ);
+    gArgs.AddArg("-zmqpubassetallocation=<address>", "Enable publish raw asset allocation payload in <address>", false, OptionsCategory::ZMQ);
+    gArgs.AddArg("-zmqpubassetrecord=<address>", "Enable publish raw asset payload in <address>", false, OptionsCategory::ZMQ);
     gArgs.AddArg("-zmqpubwalletrawtx=<address>", "Enable publish all wallet related transactions in <address>", false, OptionsCategory::ZMQ);
     gArgs.AddArg("-zmqpubhashblock=<address>", "Enable publish hash block in <address>", false, OptionsCategory::ZMQ);
     gArgs.AddArg("-zmqpubhashtx=<address>", "Enable publish hash transaction in <address>", false, OptionsCategory::ZMQ);
@@ -1378,12 +1378,12 @@ bool AppInitMain(InitInterfaces& interfaces)
     
    
     if (!sporkManager.SetSporkAddress(gArgs.GetArg("-sporkaddr", Params().SporkAddress())))
-        return InitError(_("Invalid spork address specified with -sporkaddr"));
+        return InitError(_("Invalid spork address specified with -sporkaddr").translated);
 
     if (gArgs.IsArgSet("-sporkkey")) // spork priv key
     {
         if (!sporkManager.SetPrivKey(gArgs.GetArg("-sporkkey", "")))
-            return InitError(_("Unable to sign spork message, wrong key?"));
+            return InitError(_("Unable to sign spork message, wrong key?").translated);
     }
     // Start the lightweight task scheduler thread
     CScheduler::Function serviceLoop = std::bind(&CScheduler::serviceQueue, &scheduler);
@@ -1901,14 +1901,14 @@ bool AppInitMain(InitInterfaces& interfaces)
 
     fAssetIndexPageSize = gArgs.GetArg("-assetindexpagesize", 25);
     if(fAssetIndexPageSize < 10 || fAssetIndexPageSize > 1000){
-        return InitError(_("Asset index page size is invalid, must be between 10 and 1000."));
+        return InitError(_("Asset index page size is invalid, must be between 10 and 1000.").translated);
     }
     if (gArgs.IsArgSet("-assetindexguids")) {
         const std::vector<std::string> &assetguidsStr = gArgs.GetArgs("-assetindexguids");
         for(const std::string& guidStr: assetguidsStr){
             uint32_t guid;
             if(!ParseUInt32(guidStr, &guid))
-                return InitError(_("Could not parse Asset GUID"));
+                return InitError(_("Could not parse Asset GUID").translated);
             fAssetIndexGuids.push_back(guid);
         }
     }
@@ -1916,12 +1916,12 @@ bool AppInitMain(InitInterfaces& interfaces)
     fLiteMode = gArgs.GetBoolArg("-litemode", false);
 
     if(fLiteMode) {
-        InitWarning(_("You are starting in lite mode, all masternode-specific functionality is disabled."));
+        InitWarning(_("You are starting in lite mode, all masternode-specific functionality is disabled.").translated);
     }
     
 
     if(fLiteMode && fMasternodeMode) {
-        return InitError(_("You can not start a masternode in lite mode."));
+        return InitError(_("You can not start a masternode in lite mode.").translated);
     }
     if(fMasternodeMode) {
         LogPrintf("MASTERNODE:\n");
@@ -1944,16 +1944,16 @@ bool AppInitMain(InitInterfaces& interfaces)
             return InitError("Could not parse result from pidof");
 
         if(resultInt != 1)   
-            return InitError(_("Ensure you are running this masternode in a Unix OS and that only on syscoind is running...")); 
+            return InitError(_("Ensure you are running this masternode in a Unix OS and that only on syscoind is running...").translated); 
                          
         std::string strMasterNodePrivKey = gArgs.GetArg("-masternodeprivkey", "");
         if(!strMasterNodePrivKey.empty()) {
             if(!CMessageSigner::GetKeysFromSecret(strMasterNodePrivKey, activeMasternode.keyMasternode, activeMasternode.pubKeyMasternode))
-                return InitError(_("Invalid masternodeprivkey. Please see documentation."));
+                return InitError(_("Invalid masternodeprivkey. Please see documentation.").translated);
 
             LogPrintf("  pubKeyMasternode: %s\n", EncodeDestination(PKHash(activeMasternode.pubKeyMasternode)));
         } else {
-            return InitError(_("You must specify a masternodeprivkey in the configuration. Please see documentation for help."));
+            return InitError(_("You must specify a masternodeprivkey in the configuration. Please see documentation for help.").translated);
         }
     }
 
@@ -1972,10 +1972,10 @@ bool AppInitMain(InitInterfaces& interfaces)
 
 
         strDBName = "netfulfilled.dat";
-        uiInterface.InitMessage(_("Loading fulfilled requests cache..."));
+        uiInterface.InitMessage(_("Loading fulfilled requests cache...").translated);
         CFlatDB<CNetFulfilledRequestManager> flatdb4(strDBName, "magicFulfilledCache");
         if(!flatdb4.Load(netfulfilledman)) {
-            return InitError(_("Failed to load fulfilled requests cache from") + "\n" + (pathDB / strDBName).string());
+            return InitError(_("Failed to load fulfilled requests cache from").translated + "\n" + (pathDB / strDBName).string());
         }
     }  
    if (ShutdownRequested()) {

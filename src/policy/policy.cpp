@@ -56,6 +56,7 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
     whichType = Solver(scriptPubKey, vSolutions);
 
     if (whichType == TX_NONSTANDARD) {
+        LogPrintf("IsStandard: non standard\n");
         return false;
     } else if (whichType == TX_MULTISIG) {
         unsigned char m = vSolutions.front()[0];
@@ -67,6 +68,7 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
             return false;
     } else if (whichType == TX_NULL_DATA &&
                (!fAcceptDatacarrier || scriptPubKey.size() > nMaxDatacarrierBytes * 200 )) {
+                   LogPrintf("IsStandard: too big\n");
           return false;
     }
 
@@ -113,7 +115,7 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
     txnouttype whichType;
     for (const CTxOut& txout : tx.vout) {
         if (!::IsStandard(txout.scriptPubKey, whichType)) {
-            reason = "scriptpubkey";
+            reason = "scriptpubkey1";
             return false;
         }
 
@@ -122,7 +124,7 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
             // we need this because if it is a sys tx then we allow 200x maxcarrier bytes.
             if (!IsSyscoinTx(tx.nVersion) && txout.scriptPubKey.size() > nMaxDatacarrierBytes)
             {
-                reason = "scriptpubkey";
+                reason = "scriptpubkey2";
                 return false;
             }
             nDataOut++;

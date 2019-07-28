@@ -1339,8 +1339,8 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 
     case MSG_MASTERNODE_PAYMENT_BLOCK:
         {
-            BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
-            return mi != mapBlockIndex.end() && mnpayments.mapMasternodeBlocks.find(mi->second->nHeight) != mnpayments.mapMasternodeBlocks.end();
+            const CBlockIndex* bi = LookupBlockIndex(inv.hash);
+            return bi != nullptr && mnpayments.mapMasternodeBlocks.find(bi->nHeight) != mnpayments.mapMasternodeBlocks.end();
         }
 
     case MSG_MASTERNODE_ANNOUNCE:
@@ -1617,10 +1617,10 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
             }
 
             if (!push && inv.type == MSG_MASTERNODE_PAYMENT_BLOCK) {
-                BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
+                const CBlockIndex* bi = LookupBlockIndex(inv.hash);
                 LOCK(cs_mapMasternodeBlocks);
-                if (mi != mapBlockIndex.end() && mnpayments.mapMasternodeBlocks.count(mi->second->nHeight)) {
-                    for(auto& payee: mnpayments.mapMasternodeBlocks[mi->second->nHeight].vecPayees) {
+                if (bi != nullptr && mnpayments.mapMasternodeBlocks.count(bi->nHeight)) {
+                    for(auto& payee: mnpayments.mapMasternodeBlocks[bi->nHeight].vecPayees) {
                         std::vector<uint256> vecVoteHashes = payee.GetVoteHashes();
                         for(auto& hash: vecVoteHashes) {
                             if(mnpayments.HasVerifiedPaymentVote(hash)) {

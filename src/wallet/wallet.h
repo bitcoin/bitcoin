@@ -1335,7 +1335,7 @@ public:
     void postInitProcess();
     // SYSCOIN
     void LockMasternodeOutputs();
-    bool GetBudgetSystemCollateralTX(ReserveDestination &reservedestination, CTransactionRef& tx, uint256 hash, CAmount amount);
+    bool GetBudgetSystemCollateralTX(CTransactionRef& tx, uint256 hash, CAmount amount);
     bool BackupWallet(const std::string& strDest);
 
     /* Set the HD chain model (chain child index counters) */

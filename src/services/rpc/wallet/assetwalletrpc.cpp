@@ -54,7 +54,7 @@ UniValue syscointxfund_helper(CWallet* const pwallet, const string& strAddress, 
         addressunspent(strWitnessAddress, witnessOutpoint);
         if (witnessOutpoint.IsNull() || !IsOutpointMature(witnessOutpoint))
         {
-            throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("This transaction requires a witness but no enough outputs found for witness address: ") + strWitnessAddress);
+            throw JSONRPCError(RPC_MISC_ERROR, "This transaction requires a witness but no enough outputs found for witness address: " + strWitnessAddress);
         }
         Coin pcoinW;
         if (GetUTXOCoin(witnessOutpoint, pcoinW))
@@ -146,7 +146,7 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
     CMutableTransaction txIn, tx;
     // decode as non-witness
     if (!DecodeHexTx(txIn, hexstring, true, false))
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5500 - " + _("Could not send raw transaction: Cannot decode transaction from hex string: ") + hexstring);
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Could not send raw transaction: Cannot decode transaction from hex string: " + hexstring);
     CTransaction txIn_t(txIn);
     UniValue addressArray(UniValue::VARR);  
  
@@ -274,11 +274,11 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
         if (resUTXOs.isObject()) {
             const UniValue& resUtxoUnspents = find_value(resUTXOs.get_obj(), "unspents");
             if (!resUtxoUnspents.isArray())
-                throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5501 - " + _("No unspent outputs found in addresses provided"));
+                throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "No unspent outputs found in addresses provided");
             utxoArray = resUtxoUnspents.get_array();
         }
         else
-            throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5501 - " + _("No funds found in addresses provided"));
+            throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "No funds found in addresses provided");
 
 
         for (unsigned int i = 0; i < utxoArray.size(); i++)
@@ -340,7 +340,7 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
   
     const CAmount &nChange = nCurrentAmount - nDesiredAmount - nFees;
     if (nChange < 0)
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5502 - " + _("Insufficient funds, short by: ") + ValueFromAmount(-1*nChange).write() + " SYS");
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds, short by: " + ValueFromAmount(-1*nChange).write() + " SYS");
         
     // change back to funding address
     const CTxDestination & dest = DecodeDestination(strAddress);
@@ -384,7 +384,7 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     strAddressFrom = witnessAddress.ToString();
 	CAsset theAsset;
 	if (!GetAsset(nAsset, theAsset))
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("Could not find a asset with this key"));
+		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
         
     UniValue amountObj = params[2];
 	CAmount nAmount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
@@ -405,10 +405,6 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     CreateFeeRecipient(scriptData, burn);
     burn.nAmount = nAmount;
     vecSend.push_back(burn);
-    // create a dust output and send to the recipient for further relay
-    CRecipient recipient = {GetScriptForDestination(DecodeDestination(strAddressFrom)), 0, false};
-    recipient.nAmount = GetDustThreshold(CTxOut(0, recipient.scriptPubKey), GetDiscardRate(*pwallet));
-    vecSend.push_back(recipient); 
     UniValue res = syscointxfund_helper(pwallet, strAddressFrom, SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION, "", vecSend);
     return res;
 }
@@ -542,7 +538,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     CAsset theAsset;
 
     if (!GetAsset( nAsset, theAsset))
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2501 - " + _("Could not find a asset with this key"));
+        throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
         
     const CWitnessAddress &copyWitness = theAsset.witnessAddress;
     theAsset.ClearAsset();
@@ -612,7 +608,7 @@ UniValue assettransfer(const JSONRPCRequest& request) {
     CScript scriptPubKeyOrig, scriptPubKeyFromOrig;
     CAsset theAsset;
     if (!GetAsset( nAsset, theAsset))
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2505 - " + _("Could not find a asset with this key"));
+        throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
     
 
     theAsset.ClearAsset();
@@ -675,7 +671,7 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
 
     CAsset theAsset;
     if (!GetAsset(nAsset, theAsset))
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2507 - " + _("Could not find a asset with this key"));
+        throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
 
 
 
@@ -739,7 +735,7 @@ UniValue assetsend(const JSONRPCRequest& request) {
     const uint32_t &nAsset = params[0].get_uint();
 	CAsset theAsset;
 	if (!GetAsset(nAsset, theAsset))
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("Could not find a asset with this key"));            
+		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");            
     UniValue amountValue = request.params[2];
     CAmount nAmount = AssetAmountFromValue(amountValue, theAsset.nPrecision);
     if (nAmount <= 0)
@@ -807,14 +803,14 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 	CAssetAllocation theAssetAllocation;
 	const CAssetAllocationTuple assetAllocationTuple(nAsset, DescribeWitnessAddress(strAddress));
 	if (!GetAssetAllocation(assetAllocationTuple, theAssetAllocation))
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1500 - " + _("Could not find a asset allocation with this key"));
+		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset allocation with this key");
 
 	CAsset theAsset;
 	if (!GetAsset(nAsset, theAsset))
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("Could not find a asset with this key"));
+		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
 	const COutPoint lockedOutpoint = theAssetAllocation.lockedOutpoint;
     if(!lockedOutpoint.IsNull() && !IsOutpointMature(lockedOutpoint))
-        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1500 - " + _("Locked outpoint not mature"));
+        throw JSONRPCError(RPC_MISC_ERROR, "Locked outpoint not mature");
     if(!lockedOutpoint.IsNull()){
         // this will let syscointxfund try to select this outpoint as the input
         mapSenderLockedOutPoints[strAddress] = lockedOutpoint;
@@ -855,10 +851,6 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, fee);
 	vecSend.push_back(fee);
-    // create a dust output for sender
-    CRecipient recipient = {GetScriptForDestination(DecodeDestination(strAddress)), 0, false};
-    recipient.nAmount = GetDustThreshold(CTxOut(0, recipient.scriptPubKey), GetDiscardRate(*pwallet));
-    vecSend.push_back(recipient); 
     // create outputs for each receiver for zdag graph enforcement through CPFP
     for (unsigned int idx = 0; idx < receivers.size(); idx++) {
 		const UniValue& receiver = receivers[idx];
@@ -867,10 +859,12 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 
 		const UniValue &receiverObj = receiver.get_obj();
         const std::string &toStr = find_value(receiverObj, "address").get_str();
-        // create a dust output and send to the recipient for further relay
-        recipient = {GetScriptForDestination(DecodeDestination(toStr)), 0, false};
-        recipient.nAmount = GetDustThreshold(CTxOut(0, recipient.scriptPubKey), GetDiscardRate(*pwallet));
-        vecSend.push_back(recipient);     
+        if(toStr != "burn"){
+            // create a dust output and send to the recipient for further relay
+            CRecipient recipient = {GetScriptForDestination(DecodeDestination(toStr)), 0, false};
+            recipient.nAmount = GetDustThreshold(CTxOut(0, recipient.scriptPubKey), GetDiscardRate(*pwallet));
+            vecSend.push_back(recipient);
+        }
 	}
 
 	return syscointxfund_helper(pwallet, strAddress, SYSCOIN_TX_VERSION_ALLOCATION_SEND, strWitness, vecSend);
@@ -913,11 +907,11 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
 	CAssetAllocation theAssetAllocation;
 	const CAssetAllocationTuple assetAllocationTuple(nAsset, witnessAddress);
 	if (!GetAssetAllocation(assetAllocationTuple, theAssetAllocation))
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1500 - " + _("Could not find a asset allocation with this key"));
+		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset allocation with this key");
 
 	CAsset theAsset;
 	if (!GetAsset(nAsset, theAsset))
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("Could not find a asset with this key"));
+		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
         
     UniValue amountObj = params[2];
 	CAmount amount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
@@ -930,7 +924,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
     if(ethAddress.empty() || ethAddress == "''"){
         const COutPoint lockedOutpoint = theAssetAllocation.lockedOutpoint;
         if(!lockedOutpoint.IsNull() && !IsOutpointMature(lockedOutpoint))
-            throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1500 - " + _("Locked outpoint not mature"));
+            throw JSONRPCError(RPC_MISC_ERROR, "Locked outpoint not mature");
         if(!lockedOutpoint.IsNull()){
             // this will let syscointxfund try to select this outpoint as the input
             mapSenderLockedOutPoints[strAddress] = lockedOutpoint;
@@ -960,21 +954,9 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
         scriptData << OP_RETURN << ParseHex(assetHex) << ParseHex(amountHex) << ParseHex(ethAddress) << ParseHex(witnessVersionHex) << assetAllocationTuple.witnessAddress.vchWitnessProgram;
         nVersion = SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM;
     }
-    if(nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN){
-        // create a dust output and send to the recipient for further relay
-        CRecipient recipient = {GetScriptForDestination(DecodeDestination(strAddress)), 0, false};
-        recipient.nAmount = GetDustThreshold(CTxOut(0, recipient.scriptPubKey), GetDiscardRate(*pwallet));
-        vecSend.push_back(recipient);
-    }
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, fee);
 	vecSend.push_back(fee); 
-    if(nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
-        // create a dust output and send to the recipient for further relay
-        CRecipient recipient = {GetScriptForDestination(DecodeDestination(strAddress)), 0, false};
-        recipient.nAmount = GetDustThreshold(CTxOut(0, recipient.scriptPubKey), GetDiscardRate(*pwallet));
-        vecSend.push_back(recipient);
-    }
 	return syscointxfund_helper(pwallet, strAddress, nVersion, "", vecSend);
 }
 UniValue assetallocationmint(const JSONRPCRequest& request) {
@@ -1027,13 +1009,13 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     
     string strWitness = params[11].get_str();
     if(!fGethSynced){
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5502 - " + _("Geth is not synced, please wait until it syncs up and try again"));
+        throw JSONRPCError(RPC_MISC_ERROR, "Geth is not synced, please wait until it syncs up and try again");
     }
 
     int nBlocksLeftToEnable = (Params().GetConsensus().nBridgeStartBlock+500) - ::ChainActive().Tip()->nHeight;
     if(!fUnitTest && nBlocksLeftToEnable > 0)
     {
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5502 - " + _("Bridge is not enabled yet. Blocks left to enable: ") + itostr(nBlocksLeftToEnable));
+        throw JSONRPCError(RPC_MISC_ERROR, "Bridge is not enabled yet. Blocks left to enable: " + itostr(nBlocksLeftToEnable));
     }
     const CWitnessAddress& witnessAddress = DescribeWitnessAddress(strAddress); 
     strAddress = witnessAddress.ToString();  	
@@ -1056,13 +1038,13 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     uint32_t cutoffHeight;
     const bool &ethTxRootShouldExist = !fLiteMode && fLoaded && fGethSynced;
     if(!ethTxRootShouldExist){
-        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2501 - " + _("Network is not ready to accept your mint transaction please wait..."));
+        throw JSONRPCError(RPC_MISC_ERROR, "Network is not ready to accept your mint transaction please wait...");
     }
     // validate that the block passed is committed to by the tx root he also passes in, then validate the spv proof to the tx root below  
     // the cutoff to keep txroots is 120k blocks and the cutoff to get approved is 40k blocks. If we are syncing after being offline for a while it should still validate up to 120k worth of txroots
     if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(mintSyscoin.nBlockNumber, txRootDB)){
         if(ethTxRootShouldExist){
-            throw runtime_error("SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Missing transaction root for SPV proof at Ethereum block: ") + itostr(mintSyscoin.nBlockNumber));
+            throw JSONRPCError(RPC_MISC_ERROR, "Missing transaction root for SPV proof at Ethereum block: " + itostr(mintSyscoin.nBlockNumber));
         }
     }  
     if(ethTxRootShouldExist){
@@ -1070,13 +1052,13 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
         // cutoff is ~1 week of blocks is about 40K blocks
         cutoffHeight = (fGethSyncHeight - MAX_ETHEREUM_TX_ROOTS) + 100;
         if(fGethSyncHeight >= MAX_ETHEREUM_TX_ROOTS && mintSyscoin.nBlockNumber <= (uint32_t)cutoffHeight) {
-            throw runtime_error("SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("The block height is too old, your SPV proof is invalid. SPV Proof must be done within 40000 blocks of the burn transaction on Ethereum blockchain"));
+            throw JSONRPCError(RPC_MISC_ERROR, "The block height is too old, your SPV proof is invalid. SPV Proof must be done within 40000 blocks of the burn transaction on Ethereum blockchain");
         } 
         
         // ensure that we wait at least ETHEREUM_CONFIRMS_REQUIRED blocks (~1 hour) before we are allowed process this mint transaction  
         // also ensure sanity test that the current height that our node thinks Eth is on isn't less than the requested block for spv proof
         if(fGethCurrentHeight <  mintSyscoin.nBlockNumber || fGethSyncHeight <= 0 || (fGethSyncHeight - mintSyscoin.nBlockNumber < (bGethTestnet? 20: ETHEREUM_CONFIRMS_REQUIRED*1.5))){
-            throw runtime_error("SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Not enough confirmations on Ethereum to process this mint transaction. Blocks required: ") + itostr((ETHEREUM_CONFIRMS_REQUIRED*1.5) - (fGethSyncHeight - mintSyscoin.nBlockNumber)));
+            throw JSONRPCError(RPC_MISC_ERROR, "Not enough confirmations on Ethereum to process this mint transaction. Blocks required: " + itostr((ETHEREUM_CONFIRMS_REQUIRED*1.5) - (fGethSyncHeight - mintSyscoin.nBlockNumber)));
         } 
     }
        
@@ -1088,10 +1070,6 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     CRecipient fee;
     CreateFeeRecipient(scriptData, fee);
     vecSend.push_back(fee);
-    // create a dust output and send to the recipient for further relay
-    CRecipient recipient = {GetScriptForDestination(DecodeDestination(strAddress)), 0, false};
-    recipient.nAmount = GetDustThreshold(CTxOut(0, recipient.scriptPubKey), GetDiscardRate(*pwallet));
-    vecSend.push_back(recipient);  
     return syscointxfund_helper(pwallet, strAddress, SYSCOIN_TX_VERSION_ALLOCATION_MINT, strWitness, vecSend);
 }
 
@@ -1118,7 +1096,7 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
     const uint32_t &nAsset = params[0].get_uint();
 	CAsset theAsset;
 	if (!GetAsset(nAsset, theAsset))
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("Could not find a asset with this key"));            
+		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");            
     UniValue amountValue = request.params[3];
     CAmount nAmount = AssetAmountFromValue(amountValue, theAsset.nPrecision);
     if (nAmount <= 0)
@@ -1177,11 +1155,11 @@ UniValue assetallocationlock(const JSONRPCRequest& request) {
 	CAssetAllocation theAssetAllocation;
 	const CAssetAllocationTuple assetAllocationTuple(nAsset, witnessAddress);
 	if (!GetAssetAllocation(assetAllocationTuple, theAssetAllocation))
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1500 - " + _("Could not find a asset allocation with this key"));
+		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset allocation with this key");
 
 	const COutPoint lockedOutpoint = theAssetAllocation.lockedOutpoint;
     if(!lockedOutpoint.IsNull() && !IsOutpointMature(lockedOutpoint))
-        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1500 - " + _("Locked outpoint not mature"));
+        throw JSONRPCError(RPC_MISC_ERROR, "Locked outpoint not mature");
     if(!lockedOutpoint.IsNull()){
         // this will let syscointxfund try to select this outpoint as the input
         mapSenderLockedOutPoints[strAddress] = lockedOutpoint;
@@ -1192,16 +1170,16 @@ UniValue assetallocationlock(const JSONRPCRequest& request) {
 	theAssetAllocation.assetAllocationTuple.witnessAddress = std::move(assetAllocationTuple.witnessAddress);
 	theAssetAllocation.lockedOutpoint = COutPoint(txid, outputIndex);
     if(!IsOutpointMature(theAssetAllocation.lockedOutpoint))
-        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1500 - " + _("Outpoint not mature"));
+        throw JSONRPCError(RPC_MISC_ERROR, "Outpoint not mature");
     Coin pcoin;
     GetUTXOCoin(theAssetAllocation.lockedOutpoint, pcoin);
     CTxDestination address;
     if (!ExtractDestination(pcoin.out.scriptPubKey, address))
-        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1500 - " + _("Could not extract destination from outpoint"));
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Could not extract destination from outpoint");
         
     const string& strAddressDest = EncodeDestination(address);
     if(strAddress != strAddressDest)    
-        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1500 - " + _("Outpoint address must match allocation owner address"));
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Outpoint address must match allocation owner address");
     vector<unsigned char> data;
     theAssetAllocation.Serialize(data);    
 	vector<CRecipient> vecSend;
@@ -1211,10 +1189,6 @@ UniValue assetallocationlock(const JSONRPCRequest& request) {
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, fee);
 	vecSend.push_back(fee);
-    // create a dust output and send to the recipient for further relay
-    CRecipient recipient = {GetScriptForDestination(DecodeDestination(strAddress)), 0, false};
-    recipient.nAmount = GetDustThreshold(CTxOut(0, recipient.scriptPubKey), GetDiscardRate(*pwallet));
-    vecSend.push_back(recipient); 
 	return syscointxfund_helper(pwallet, strAddress, SYSCOIN_TX_VERSION_ALLOCATION_LOCK, strWitness, vecSend);
 }
 UniValue sendfrom(const JSONRPCRequest& request)

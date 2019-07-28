@@ -843,15 +843,8 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
     GetActorsFromSyscoinTx(tx, true, true, actors);
     if(actors.size() == 1){
         const std::string &sender = *actors.begin();
-        // find the last output which sends funds to the sender address (there may be multiple)
-        for(unsigned int i = 0;i<tx.get()->vout.size();i++){	
-            CTxDestination dest;
-            if(ExtractDestination(tx.get()->vout[i].scriptPubKey, dest)){	
-                if(EncodeDestination(dest) == sender){	
-                    mapAssetPrevTxSender[sender] = COutPoint(txid, i);	
-                }	
-            }	
-        }	
+        // find the last output which sends funds to the sender address as change
+        mapAssetPrevTxSender[sender] = COutPoint(txid, tx.get()->vout.size()-1);
     }
     #endif
     return txid.GetHex();

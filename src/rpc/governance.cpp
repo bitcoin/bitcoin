@@ -208,15 +208,14 @@ UniValue gobject(const JSONRPCRequest& request)
         EnsureWalletIsUnlocked(pwallet);
         
         // -- make our change address
-        ReserveDestination reservedestination(pwallet);
         CTransactionRef tx;
-        if(!pwallet->GetBudgetSystemCollateralTX(reservedestination, tx, govobj.GetHash(), govobj.GetMinCollateralFee())) {
+        if(!pwallet->GetBudgetSystemCollateralTX(tx, govobj.GetHash(), govobj.GetMinCollateralFee())) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Error making collateral transaction for governance object. Please check your wallet balance and make sure your wallet is unlocked.");
         }
         // -- send the tx to the network
         CValidationState state;
         mapValue_t mapValue;
-        if (!pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */, reservedestination, state)) {
+        if (!pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */, state)) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "CommitTransaction failed! Reason given: " + state.GetRejectReason());
         }
 

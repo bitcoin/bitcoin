@@ -2555,13 +2555,11 @@ void ReprocessBlocks(int nBlocks)
     while(it != mapRejectedBlocks.end()){
         //use a window twice as large as is usual for the nBlocks we want to reset
         if((*it).second  > GetTime() - (nBlocks*60*5)) {
-            BlockMap::iterator mi = mapBlockIndex.find((*it).first);
-            if (mi != mapBlockIndex.end() && (*mi).second) {
-
-                CBlockIndex* pindex = (*mi).second;
+            CBlockIndex* bi = LookupBlockIndex((*it).first);
+            if (bi != nullptr) {
                 LogPrintf("ReprocessBlocks -- %s\n", (*it).first.ToString());
 
-                ResetBlockFailureFlags(pindex);
+                ResetBlockFailureFlags(bi);
             }
         }
         ++it;

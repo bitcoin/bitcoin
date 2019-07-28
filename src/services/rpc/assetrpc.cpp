@@ -94,7 +94,7 @@ CWitnessAddress DescribeWitnessAddress(const std::string& strAddress){
         const CTxDestination &dest = DecodeDestination(v4address);
         UniValue detail = DescribeAddress(dest);
         if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
-            throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Address must be a segwit based address");
         witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
         witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_uint();  
     }
@@ -114,11 +114,11 @@ unsigned int addressunspent(const string& strAddressFrom, COutPoint& outpoint)
     if (resUTXOs.isObject()) {
         const UniValue& resUtxoUnspents = find_value(resUTXOs.get_obj(), "unspents");
         if (!resUtxoUnspents.isArray())
-            throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5501 - " + _("No unspent outputs found in addresses provided"));
+            throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "No unspent outputs found in addresses provided");
         utxoArray = resUtxoUnspents.get_array();
     }   
     else
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5501 - " + _("No unspent outputs found in addresses provided"));
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "No unspent outputs found in addresses provided");
         
     unsigned int count = 0;
     {
@@ -201,7 +201,7 @@ UniValue tpstestinfo(const JSONRPCRequest& request) {
 		throw runtime_error("tpstestinfo\n"
 			"Gets TPS Test information for receivers of assetallocation transfers\n");
 	if(!fTPSTest)
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("This function requires tpstest configuration to be set upon startup. Please shutdown and enable it by adding it to your syscoin.conf file and then call 'tpstestsetenabled true'."));
+		throw JSONRPCError(RPC_MISC_ERROR, "This function requires tpstest configuration to be set upon startup. Please shutdown and enable it by adding it to your syscoin.conf file and then call 'tpstestsetenabled true'.");
 	
 	UniValue oTPSTestResults(UniValue::VOBJ);
 	UniValue oTPSTestReceivers(UniValue::VARR);
@@ -228,7 +228,7 @@ UniValue tpstestsetenabled(const JSONRPCRequest& request) {
 			"\nExample:\n"
 			+ HelpExampleCli("tpstestsetenabled", "true"));
 	if(!fTPSTest)
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("This function requires tpstest configuration to be set upon startup. Please shutdown and enable it by adding it to your syscoin.conf file and then try again."));
+		throw JSONRPCError(RPC_MISC_ERROR, "This function requires tpstest configuration to be set upon startup. Please shutdown and enable it by adding it to your syscoin.conf file and then try again.");
 	fTPSTestEnabled = params[0].get_bool();
 	if (!fTPSTestEnabled) {
 		vecTPSTestReceivedTimesMempool.clear();
@@ -264,7 +264,7 @@ UniValue tpstestadd(const JSONRPCRequest& request) {
 			"\nExample:\n"
 			+ HelpExampleCli("tpstestadd", "\"223233433839384\" \"[{\\\"tx\\\":\\\"first raw hex tx\\\"},{\\\"tx\\\":\\\"second raw hex tx\\\"}]\""));
 	if (!fTPSTest)
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("This function requires tpstest configuration to be set upon startup. Please shutdown and enable it by adding it to your syscoin.conf file and then call 'tpstestsetenabled true'."));
+		throw JSONRPCError(RPC_MISC_ERROR, "This function requires tpstest configuration to be set upon startup. Please shutdown and enable it by adding it to your syscoin.conf file and then call 'tpstestsetenabled true'.");
 
 	nTPSTestingStartTime = params[0].get_int64();
 	UniValue txs;
@@ -315,11 +315,11 @@ UniValue assetallocationbalance(const JSONRPCRequest& request) {
     const CAssetAllocationTuple assetAllocationTuple(nAsset, DescribeWitnessAddress(strAddressFrom));
     CAssetAllocation txPos;
     if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos))
-        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1507 - " + _("Failed to read from assetallocation DB"));
+        throw JSONRPCError(RPC_DATABASE_ERROR, "Failed to read from assetallocation DB");
 
     CAsset theAsset;
     if (!GetAsset(nAsset, theAsset))
-        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1508 - " + _("Could not find a asset with this key"));
+        throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
 
     UniValue oRes(UniValue::VOBJ);
     oRes.__pushKV("amount", ValueFromAssetAmount(txPos.nBalance, theAsset.nPrecision));
@@ -355,7 +355,7 @@ UniValue assetallocationbalances(const JSONRPCRequest& request) {
 
     CAsset theAsset;
     if (!GetAsset(nAsset, theAsset))
-        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1508 - " + _("Could not find a asset with this key"));
+        throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
 
     UniValue oRes(UniValue::VOBJ);
     for(size_t i =0;i<headerArray.size();i++){
@@ -403,13 +403,13 @@ UniValue assetallocationinfo(const JSONRPCRequest& request) {
     const CAssetAllocationTuple assetAllocationTuple(nAsset, DescribeWitnessAddress(strAddressFrom));
     CAssetAllocation txPos;
     if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos)){
-        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1507 - " + _("Failed to read from assetallocation DB"));
+        throw JSONRPCError(RPC_DATABASE_ERROR, "Failed to read from assetallocation DB");
     }
 
 
 	CAsset theAsset;
 	if (!GetAsset(nAsset, theAsset)){
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1508 - " + _("Could not find a asset with this key"));
+		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
     }
 
 
@@ -444,7 +444,7 @@ UniValue listassetindexallocations(const JSONRPCRequest& request) {
         }
     }.Check(request);
     if(!fAssetIndex){
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("You must reindex syscoin with -assetindex enabled"));
+        throw JSONRPCError(RPC_MISC_ERROR, "You must reindex syscoin with -assetindex enabled");
     }       
 
 
@@ -627,7 +627,7 @@ UniValue listassetallocations(const JSONRPCRequest& request) {
 	}
 	UniValue oRes(UniValue::VARR);
 	if (!passetallocationdb->ScanAssetAllocations(count, from, options, oRes))
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("Scan failed"));
+		throw JSONRPCError(RPC_MISC_ERROR, "Scan failed");
 	return oRes;
 }
 UniValue listassetallocationmempoolbalances(const JSONRPCRequest& request) {
@@ -675,7 +675,7 @@ UniValue listassetallocationmempoolbalances(const JSONRPCRequest& request) {
     }
     UniValue oRes(UniValue::VARR);
     if (!passetallocationmempooldb->ScanAssetAllocationMempoolBalances(count, from, options, oRes))
-        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("Scan failed"));
+        throw JSONRPCError(RPC_MISC_ERROR, "Scan failed");
     return oRes;
 }
 
@@ -717,11 +717,11 @@ UniValue syscoindecoderawtransaction(const JSONRPCRequest& request) {
         DecodeHexTx(tx, hexstring, true, true);
     CTransaction rawTx(tx);
     if (rawTx.IsNull())
-        throw runtime_error("SYSCOIN_RPC_ERROR: ERRCODE: 5512 - " + _("Could not decode transaction"));
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Could not decode transaction");
     
     UniValue output(UniValue::VOBJ);
     if(!DecodeSyscoinRawtransaction(rawTx, output))
-        throw runtime_error("SYSCOIN_RPC_ERROR: ERRCODE: 5512 - " + _("Not a Syscoin transaction"));
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Not a Syscoin transaction");
     return output;
 }
 CAmount getaddressbalance(const string& strAddress)
@@ -790,7 +790,7 @@ UniValue assetinfo(const JSONRPCRequest& request) {
 
     CAsset txPos;
     if (passetdb == nullptr || !passetdb->ReadAsset(nAsset, txPos))
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2511 - " + _("Failed to read from asset DB"));
+        throw JSONRPCError(RPC_DATABASE_ERROR, "Failed to read from asset DB");
     
     if(!BuildAssetJson(txPos, oAsset))
         oAsset.clear();
@@ -860,7 +860,7 @@ UniValue listassets(const JSONRPCRequest& request) {
     }
     UniValue oRes(UniValue::VARR);
     if (!passetdb->ScanAssets(count, from, options, oRes))
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Scan failed"));
+        throw JSONRPCError(RPC_MISC_ERROR, "Scan failed");
     return oRes;
 }
 UniValue getblockhashbytxid(const JSONRPCRequest& request)
@@ -973,9 +973,9 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request)
     }
     CAsset asset;
     if (!GetAsset(assetVal.get_uint(), asset))
-            throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("Asset not found"));
+            throw JSONRPCError(RPC_DATABASE_ERROR, "Asset not found");
     if(asset.vchContract.empty())
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("Asset contract is empty"));
+        throw JSONRPCError(RPC_MISC_ERROR, "Asset contract is empty");
     res.__pushKV("contract", HexStr(asset.vchContract));    
                 
     return res;
@@ -1019,20 +1019,20 @@ UniValue listassetindex(const JSONRPCRequest& request) {
     }
 }.Check(request);
     if(!fAssetIndex){
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("You must start syscoin with -assetindex enabled"));
+        throw JSONRPCError(RPC_MISC_ERROR, "You must start syscoin with -assetindex enabled");
     }
     UniValue options;
     int64_t page = params[0].get_int64();
    
     if (page < 0) {
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("'page' must be 0 or greater"));
+        throw JSONRPCError(RPC_INVALID_PARAMS, "'page' must be 0 or greater");
     }
 
     options = params[1];
     
     UniValue oRes(UniValue::VARR);
     if (!passetindexdb->ScanAssetIndex(page, options, oRes))
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("Scan failed"));
+        throw JSONRPCError(RPC_MISC_ERROR, "Scan failed");
     return oRes;
 }
 UniValue listassetindexassets(const JSONRPCRequest& request) {
@@ -1066,7 +1066,7 @@ UniValue listassetindexassets(const JSONRPCRequest& request) {
         }
     }.Check(request);
     if(!fAssetIndex){
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("You must reindex syscoin with -assetindex enabled"));
+        throw JSONRPCError(RPC_MISC_ERROR, "You must reindex syscoin with -assetindex enabled");
     }  
 
     UniValue oRes(UniValue::VARR);
@@ -1102,9 +1102,9 @@ UniValue syscoinstopgeth(const JSONRPCRequest& request) {
     }
     }.Check(request);
     if(!StopRelayerNode(relayerPID))
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Could not stop relayer"));
+        throw JSONRPCError(RPC_MISC_ERROR, "Could not stop relayer");
     if(!StopGethNode(gethPID))
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Could not stop Geth"));
+        throw JSONRPCError(RPC_MISC_ERROR, "Could not stop Geth");
     UniValue ret(UniValue::VOBJ);
     ret.__pushKV("status", "success");
     return ret;
@@ -1129,9 +1129,9 @@ UniValue syscoinstartgeth(const JSONRPCRequest& request) {
     int wsport = gArgs.GetArg("-gethwebsocketport", 8646);
     bool bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
     if(!StartGethNode(exePath, gethPID, bGethTestnet, wsport))
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Could not start Geth"));
+        throw JSONRPCError(RPC_MISC_ERROR, "Could not start Geth");
     if(!StartRelayerNode(exePath, relayerPID, bGethTestnet, wsport))
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Could not stop relayer"));
+        throw JSONRPCError(RPC_MISC_ERROR, "Could not stop relayer");
     
     UniValue ret(UniValue::VOBJ);
     ret.__pushKV("status", "success");
@@ -1233,7 +1233,7 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
         EthereumTxRoot txRoot;
         const UniValue &tupleArray = headerArray[i].get_array();
         if(tupleArray.size() != 5)
-            throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Invalid size in a blocknumber/txroots input, should be size of 5"));
+            throw JSONRPCError(RPC_INVALID_PARAMS, "Invalid size in a blocknumber/txroots input, should be size of 5");
         const uint32_t &nHeight = tupleArray[0].get_uint();
         string blockHash = tupleArray[1].get_str();
         boost::erase_all(blockHash, "0x");  // strip 0x

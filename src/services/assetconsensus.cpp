@@ -685,6 +685,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
 
     const CWitnessAddress &user1 = theAssetAllocation.assetAllocationTuple.witnessAddress;
     const std::string &senderTupleStr = theAssetAllocation.assetAllocationTuple.ToString();
+    const CWitnessAddress burnWitness(0, vchFromString("burn"));
     CAssetAllocation dbAssetAllocation;
     AssetAllocationMap::iterator mapAssetAllocation;
     CAsset dbAsset;
@@ -772,13 +773,13 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
             mapAssetPrevTxNotFound = result.second;
         }       
         // burn to allocation comes from burn as sender and burn sender cannot use lockpoint's so check the receiver has signed off if using output linking otherwise just check address of receiver
-        if (!FindAssetOwnerInTx(inputs, tx, theAssetAllocation.listSendingAllocationAmounts[0].first, mapAssetPrevTxNotFound? emptyOutPoint: mapAssetPrevTx->second))
+        if (!FindAssetOwnerInTx(inputs, tx, receiverAllocationTuple.witnessAddress, mapAssetPrevTxNotFound? emptyOutPoint: mapAssetPrevTx->second))
         {
             bool bNewConfict = false;
             if(!mapSenderMempoolBalanceNotFound && fJustCheck && !bSanityCheck && !bMiner){
                 LOCK(cs_assetallocationconflicts);
-                    // flag as a new conflict if not found
-                    // conflict signals dbl spend detection logic
+                // flag as a new conflict if not found
+                // conflict signals dbl spend detection logic
                 if(assetAllocationConflicts.find(receiverTupleStr) == assetAllocationConflicts.end()){
                     assetAllocationConflicts.insert(std::move(receiverTupleStr));
                     bNewConfict = true;
@@ -808,7 +809,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
         {
             return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-amount", bMiner);
         }  
-        if(user1 != CWitnessAddress(0, vchFromString("burn")))
+        if(user1 != burnWitness)
         {
             return FormatSyscoinErrorMessage(state, "assetallocation-missing-burn-address", bMiner);
         }
@@ -885,7 +886,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
             }         
         }
        
-        if(theAssetAllocation.listSendingAllocationAmounts[0].first != CWitnessAddress(0, vchFromString("burn")))
+        if(theAssetAllocation.listSendingAllocationAmounts[0].first != burnWitness)
         {
             return FormatSyscoinErrorMessage(state, "assetallocation-missing-burn-address", bMiner);
         } 
@@ -936,7 +937,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
             }
             return FormatSyscoinErrorMessage(state, "assetallocation-insufficient-balance", bMiner || bNewConfict);
         }
-        const CAssetAllocationTuple receiverAllocationTuple(nBurnAsset,  CWitnessAddress(0, vchFromString("burn")));
+        const CAssetAllocationTuple receiverAllocationTuple(nBurnAsset,  burnWitness);
         const string& receiverTupleStr = receiverAllocationTuple.ToString(); 
         if (!fJustCheck) {   
             #if __cplusplus > 201402 
@@ -1081,14 +1082,10 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
                     mapBalanceReceiver->second = receiverAllocation.nBalance;
                 }
                 mapBalanceReceiver->second += amountTuple.second;
+                if(receiverAllocationTuple.witnessAddress != burnWitness)
                 {
                     LOCK(cs_assetallocationprevtx);
-                    const int &receiverOutPointIndex = 2 + i;
-                    // set prev tx on receiver so subsequent tx from this receiver can link to it for receiver->sender graph connection + enforcement
-                    if(receiverOutPointIndex < 0){
-                        return FormatSyscoinErrorMessage(state, "assetallocation-missing-vouts", bMiner);
-                    }
-                    const COutPoint &receiverOutPoint = COutPoint(txHash, receiverOutPointIndex);
+                    const COutPoint &receiverOutPoint = COutPoint(txHash, i + 1);
                     mapAssetPrevTxs.emplace(std::move(receiverTupleStr), receiverOutPoint).first->second = receiverOutPoint;
                 } 
             }  
@@ -1147,10 +1144,11 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
             LOCK(cs_assetallocationmempoolbalance);
             mapBalanceSender->second = std::move(mapBalanceSenderCopy);
         }
+        if(user1 != burnWitness)
         {
             LOCK(cs_assetallocationprevtx);
             // set prev tx so subsequent tx from this sender can link to it to for zdag graph enforcement
-            mapAssetPrevTx->second = COutPoint(txHash, 1);
+            mapAssetPrevTx->second = COutPoint(txHash, tx.vout.size()-1);
         } 
     }    
     return true;
