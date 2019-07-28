@@ -76,6 +76,7 @@ public:
     std::vector<CTransactionRef> vtx;
 
     // memory only
+    // protected by a lock inside CheckBlock, do not access elsewhere!
     mutable bool fChecked;
 
     CBlock()

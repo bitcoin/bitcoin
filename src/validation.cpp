@@ -3024,10 +3024,12 @@ static bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state,
     return true;
 }
 
+static CCriticalSection cs_blockchecked;
 bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW, bool fCheckMerkleRoot)
 {
     // These are checks that are independent of context.
 
+    LOCK(cs_blockchecked);
     if (block.fChecked)
         return true;
 
@@ -3636,25 +3638,20 @@ std::future<bool> CChainState::ProcessNewBlock(const CChainParams& chainparams, 
     std::future<bool> result = result_promise.get_future();
     bool fNewBlock = false;
 
-    {
-        // CheckBlock() does not support multi-threaded block validation because CBlock::fChecked can cause data race.
-        // Therefore, the following critical section must include the CheckBlock() call as well.
+    // Ensure that CheckBlock() passes before calling AcceptBlock, as
+    // belt-and-suspenders.
+    bool ret = CheckBlock(*pblock, state, chainparams.GetConsensus());
+    if (ret) {
+        // Store to disk
         LOCK(cs_main);
-
-        // Ensure that CheckBlock() passes before calling AcceptBlock, as
-        // belt-and-suspenders.
-        bool ret = CheckBlock(*pblock, state, chainparams.GetConsensus());
-        if (ret) {
-            // Store to disk
-            ret = PreWriteCheckBlock(pblock, state, chainparams, nullptr, fForceProcessing, &fNewBlock);
+        ret = PreWriteCheckBlock(pblock, state, chainparams, nullptr, fForceProcessing, &fNewBlock);
+    }
+    if (!ret || !fNewBlock) {
+        if (!ret) {
+            error("%s: AcceptBlock FAILED (%s)", __func__, FormatStateMessage(state));
         }
-        if (!ret || !fNewBlock) {
-            if (!ret) {
-                error("%s: AcceptBlock FAILED (%s)", __func__, FormatStateMessage(state));
-            }
-            result_promise.set_value(fNewBlock);
-            return result;
-        }
+        result_promise.set_value(fNewBlock);
+        return result;
     }
 
     {

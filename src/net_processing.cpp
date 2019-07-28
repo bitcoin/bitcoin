@@ -2932,12 +2932,7 @@ bool static ProcessMessage(CNode* pfrom, CPeerState* peerstate, const std::strin
         }
 
         PartiallyDownloadedBlock& partialBlock = *it->second.second->partialBlock;
-        ReadStatus status;
-        {
-            // FillBlock calls CheckBlock, which requires cs_main
-            LOCK(cs_main);
-            status = partialBlock.FillBlock(*pblock, resp.txn);
-        }
+        ReadStatus status = partialBlock.FillBlock(*pblock, resp.txn);
         if (status == READ_STATUS_INVALID) {
             MarkBlockAsReceived(resp.blockhash); // Reset in-flight state in case of whitelist
             Misbehaving(pfrom->GetId(), 100, strprintf("Peer %d sent us invalid compact block/non-matching block transactions\n", pfrom->GetId()));
