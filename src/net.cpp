@@ -694,8 +694,6 @@ size_t CConnman::SocketSendData(CNode *pnode) const EXCLUSIVE_LOCKS_REQUIRED(pno
 {
     auto it = pnode->vSendMsg.begin();
     size_t nSentSize = 0;
-    // SYSCOIN
-    static int count = 0;
     while (it != pnode->vSendMsg.end()) {
         const auto &data = *it;
         assert(data.size() > pnode->nSendOffset);
