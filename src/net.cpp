@@ -716,15 +716,6 @@ size_t CConnman::SocketSendData(CNode *pnode) const EXCLUSIVE_LOCKS_REQUIRED(pno
                 pnode->nSendSize -= data.size();
                 pnode->fPauseSend = pnode->nSendSize > nSendBufferMaxSize;
                 it++;
-                // SYSCOIN
-                if (fTPSTest && nTPSTestingSendRawStartTime > 0) {
-                    count++;
-                    nTPSTestingSendRawEndTime += GetTimeMicros();
-                    if (count >= vecTPSRawTransactions.size()) {
-                        nTPSTestingSendRawEndTime /= count;
-                        nTPSTestingSendRawStartTime = 0;
-                    }
-                }
             } else {
                 // could not send full message; stop sending more
                 break;

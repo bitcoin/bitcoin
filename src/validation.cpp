@@ -62,8 +62,6 @@
 #include <algorithm> // std::unique
 std::vector<std::pair<uint256, int64_t> >  vecTPSTestReceivedTimesMempool;
 int64_t nTPSTestingStartTime = 0;
-double nTPSTestingSendRawEndTime = 0;
-int64_t nTPSTestingSendRawStartTime = 0;
 extern AssetPrevTxMap mempoolMapAssetPrevTx;
 extern CCriticalSection cs_assetallocationprevtx;
 extern std::unordered_set<std::string> assetAllocationConflicts;
@@ -485,108 +483,106 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
     if (pfMissingInputs) {
         *pfMissingInputs = false;
     }
-    if (vecTPSRawTransactions.empty()) {
-        if (nTPSTestingStartTime > 0)
-        {
-            const int64_t &currentTime = GetTimeMicros();
-            if(currentTime >= nTPSTestingStartTime)
-                vecTPSTestReceivedTimesMempool.emplace_back(hash, currentTime);
-        }
-        if (!CheckTransaction(tx, state))
-            return false; // state filled in by CheckTransaction
-
-        // Coinbase is only valid in a block, not as a loose transaction
-        if (tx.IsCoinBase())
-            return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "coinbase");
-
-        // Rather not work on nonstandard transactions (unless -testnet/-regtest)
-        std::string reason;
-        if (fRequireStandard && !IsStandardTx(tx, reason))
-            return state.Invalid(ValidationInvalidReason::TX_NOT_STANDARD, false, REJECT_NONSTANDARD, reason);
-
-        // Do not work on transactions that are too small.
-        // A transaction with 1 segwit input and 1 P2WPHK output has non-witness size of 82 bytes.
-        // Transactions smaller than this are not relayed to reduce unnecessary malloc overhead.
-        if (::GetSerializeSize(tx, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) < MIN_STANDARD_TX_NONWITNESS_SIZE)
-            return state.Invalid(ValidationInvalidReason::TX_NOT_STANDARD, false, REJECT_NONSTANDARD, "tx-size-small");
-
-        // Only accept nLockTime-using transactions that can be mined in the next
-        // block; we don't want our mempool filled up with transactions that can't
-        // be mined yet.
-        if (!CheckFinalTx(tx, STANDARD_LOCKTIME_VERIFY_FLAGS))
-            return state.Invalid(ValidationInvalidReason::TX_PREMATURE_SPEND, false, REJECT_NONSTANDARD, "non-final");
-
-        // is it already in the memory pool?
-        if (pool.exists(hash)) {
-            return state.Invalid(ValidationInvalidReason::TX_CONFLICT, false, REJECT_DUPLICATE, "txn-already-in-mempool");
-        }
+    if (nTPSTestingStartTime > 0)
+    {
+        const int64_t &currentTime = GetTimeMicros();
+        if(currentTime >= nTPSTestingStartTime)
+            vecTPSTestReceivedTimesMempool.emplace_back(hash, currentTime);
     }
+    if (!CheckTransaction(tx, state))
+        return false; // state filled in by CheckTransaction
+
+    // Coinbase is only valid in a block, not as a loose transaction
+    if (tx.IsCoinBase())
+        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "coinbase");
+
+    // Rather not work on nonstandard transactions (unless -testnet/-regtest)
+    std::string reason;
+    if (fRequireStandard && !IsStandardTx(tx, reason))
+        return state.Invalid(ValidationInvalidReason::TX_NOT_STANDARD, false, REJECT_NONSTANDARD, reason);
+
+    // Do not work on transactions that are too small.
+    // A transaction with 1 segwit input and 1 P2WPHK output has non-witness size of 82 bytes.
+    // Transactions smaller than this are not relayed to reduce unnecessary malloc overhead.
+    if (::GetSerializeSize(tx, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) < MIN_STANDARD_TX_NONWITNESS_SIZE)
+        return state.Invalid(ValidationInvalidReason::TX_NOT_STANDARD, false, REJECT_NONSTANDARD, "tx-size-small");
+
+    // Only accept nLockTime-using transactions that can be mined in the next
+    // block; we don't want our mempool filled up with transactions that can't
+    // be mined yet.
+    if (!CheckFinalTx(tx, STANDARD_LOCKTIME_VERIFY_FLAGS))
+        return state.Invalid(ValidationInvalidReason::TX_PREMATURE_SPEND, false, REJECT_NONSTANDARD, "non-final");
+
+    // is it already in the memory pool?
+    if (pool.exists(hash)) {
+        return state.Invalid(ValidationInvalidReason::TX_CONFLICT, false, REJECT_DUPLICATE, "txn-already-in-mempool");
+    }
+    
     // SYSCOIN
     bool bDuplicate = false;
     // Check for conflicts with in-memory transactions
     std::set<uint256> setConflicts;
     const bool& IsAssetAllocation = IsAssetAllocationTx(tx.nVersion);
-    if (vecTPSRawTransactions.empty()) {
-        for (const CTxIn &txin : tx.vin)
-        {
-            const CTransaction* ptxConflicting = pool.GetConflictTx(txin.prevout);
-            if (ptxConflicting) {
-                if (!setConflicts.count(ptxConflicting->GetHash()))
+    for (const CTxIn &txin : tx.vin)
+    {
+        const CTransaction* ptxConflicting = pool.GetConflictTx(txin.prevout);
+        if (ptxConflicting) {
+            if (!setConflicts.count(ptxConflicting->GetHash()))
+            {
+                // Allow opt-out of transaction replacement by setting
+                // nSequence > MAX_BIP125_RBF_SEQUENCE (SEQUENCE_FINAL-2) on all inputs.
+                //
+                // SEQUENCE_FINAL-1 is picked to still allow use of nLockTime by
+                // non-replaceable transactions. All inputs rather than just one
+                // is for the sake of multi-party protocols, where we don't
+                // want a single party to be able to disable replacement.
+                //
+                // The opt-out ignores descendants as anyone relying on
+                // first-seen mempool behavior should be checking all
+                // unconfirmed ancestors anyway; doing otherwise is hopelessly
+                // insecure.
+                bool fReplacementOptOut = true;
+                
+                for (const CTxIn &_txin : ptxConflicting->vin)
                 {
-                    // Allow opt-out of transaction replacement by setting
-                    // nSequence > MAX_BIP125_RBF_SEQUENCE (SEQUENCE_FINAL-2) on all inputs.
-                    //
-                    // SEQUENCE_FINAL-1 is picked to still allow use of nLockTime by
-                    // non-replaceable transactions. All inputs rather than just one
-                    // is for the sake of multi-party protocols, where we don't
-                    // want a single party to be able to disable replacement.
-                    //
-                    // The opt-out ignores descendants as anyone relying on
-                    // first-seen mempool behavior should be checking all
-                    // unconfirmed ancestors anyway; doing otherwise is hopelessly
-                    // insecure.
-                    bool fReplacementOptOut = true;
-                   
-                    for (const CTxIn &_txin : ptxConflicting->vin)
+                    if (_txin.nSequence <= MAX_BIP125_RBF_SEQUENCE)
                     {
-                        if (_txin.nSequence <= MAX_BIP125_RBF_SEQUENCE)
-                        {
-                            fReplacementOptOut = false;
-                            break;
-                        }
+                        fReplacementOptOut = false;
+                        break;
                     }
-                    
-                    if (fReplacementOptOut) {
-                        if(!test_accept && IsAssetAllocation){
-                            CAssetAllocation theAssetAlloction(tx);
-                            if(theAssetAlloction.assetAllocationTuple.IsNull()){
-                                return state.Invalid(ValidationInvalidReason::TX_MEMPOOL_POLICY, false, REJECT_DUPLICATE, "txn-mempool-conflict");
-                            }
-                            ActorSet actorSet;
-                            GetActorsFromAssetAllocationTx(theAssetAlloction, tx.nVersion, true, false, actorSet);
-                            if(actorSet.size() == 1)
-                            {
-                                LOCK(cs_assetallocationconflicts);
-                                // only do this the first time, relay the first double spend and fall back to normal policy to not relay and potentially ban on other double spends
-                                if(assetAllocationConflicts.find(*actorSet.begin()) == assetAllocationConflicts.end())
-                                {
-                                    // add conflicting sender
-                                    bDuplicate = true;
-                                    break;
-                                }
-                                else
-                                    return state.Invalid(ValidationInvalidReason::TX_MEMPOOL_POLICY, false, REJECT_DUPLICATE, "txn-mempool-conflict");
-                            }
-                        }
-                        else
-                            return state.Invalid(ValidationInvalidReason::TX_MEMPOOL_POLICY, false, REJECT_DUPLICATE, "txn-mempool-conflict");
-                    }
-                    if(!bDuplicate)
-                        setConflicts.insert(ptxConflicting->GetHash());
                 }
+                
+                if (fReplacementOptOut) {
+                    if(!test_accept && IsAssetAllocation){
+                        CAssetAllocation theAssetAlloction(tx);
+                        if(theAssetAlloction.assetAllocationTuple.IsNull()){
+                            return state.Invalid(ValidationInvalidReason::TX_MEMPOOL_POLICY, false, REJECT_DUPLICATE, "txn-mempool-conflict");
+                        }
+                        ActorSet actorSet;
+                        GetActorsFromAssetAllocationTx(theAssetAlloction, tx.nVersion, true, false, actorSet);
+                        if(actorSet.size() == 1)
+                        {
+                            LOCK(cs_assetallocationconflicts);
+                            // only do this the first time, relay the first double spend and fall back to normal policy to not relay and potentially ban on other double spends
+                            if(assetAllocationConflicts.find(*actorSet.begin()) == assetAllocationConflicts.end())
+                            {
+                                // add conflicting sender
+                                bDuplicate = true;
+                                break;
+                            }
+                            else
+                                return state.Invalid(ValidationInvalidReason::TX_MEMPOOL_POLICY, false, REJECT_DUPLICATE, "txn-mempool-conflict");
+                        }
+                    }
+                    else
+                        return state.Invalid(ValidationInvalidReason::TX_MEMPOOL_POLICY, false, REJECT_DUPLICATE, "txn-mempool-conflict");
+                }
+                if(!bDuplicate)
+                    setConflicts.insert(ptxConflicting->GetHash());
             }
         }
     }
+    
     {
         CCoinsView dummy;
         CCoinsViewCache view(&dummy);

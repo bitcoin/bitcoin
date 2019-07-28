@@ -385,13 +385,13 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
     tfm::format(std::cout,"sending assets with assetsend...\n");
     // PHASE 5:  SEND ASSETS TO NEW ALLOCATIONS
     for(int i =0;i<numAssets;i++){
-        BOOST_CHECK_NO_THROW(r = CallRPC("node1", "listassetindexassets " + vecFundedAddresses[i]));
+       /*  BOOST_CHECK_NO_THROW(r = CallRPC("node1", "listassetindexassets " + vecFundedAddresses[i]));
         UniValue indexArray = r.get_array();
         BOOST_CHECK_EQUAL(indexArray.size(), 1);
         uint32_t nAsset = find_value(indexArray[0].get_obj(), "asset_guid").get_uint();
         uint32_t nAssetStored;
         ParseUInt32(vecAssets[i], &nAssetStored);
-        BOOST_CHECK_EQUAL(nAsset, nAssetStored);
+        BOOST_CHECK_EQUAL(nAsset, nAssetStored);*/
         BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetsendmany " + vecAssets[i] + " \"[{\\\"address\\\":\\\"" + vecFundedAddresses[i] + "\\\",\\\"amount\\\":250}]\" ''"));
 
         BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
@@ -465,8 +465,8 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 
     // this will set a start time to every node which will send the vector of signed txs to the network
     int64_t tpstarttime = GetTimeMicros();
-    int microsInSecond = 1000 * 1000;
-    tpstarttime = tpstarttime + 1 * microsInSecond;
+    int microsInSecond =  1000 * 1000;
+    tpstarttime = tpstarttime + microsInSecond;
     tfm::format(std::cout,"Adding assetsend transactions to queue on sender nodes...\n");
     // ensure mnsync isn't doing its thing before the test starts
     for (auto &sender : senders){
@@ -503,7 +503,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
     int64_t avgteststarttime = 0;
     for (auto &sender : senders) {
         BOOST_CHECK_NO_THROW(r = CallExtRPC(sender, "tpstestinfo"));
-        avgteststarttime += find_value(r.get_obj(), "teststarttime").get_int64();
+        avgteststarttime += find_value(r.get_obj(), "testinitiatetime").get_int64();
     }
     avgteststarttime /= senders.size();
 
@@ -539,7 +539,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
     tfm::format(std::cout,"elapsed time in seconds: %lld\n", end-start);
     tfm::format(std::cout,"checking indexes...\n");
     unfoundedAccountIndex = 0;
-    for(int i =0;i<numAssets;i++){
+     (for(int i =0;i<numAssets;i++){
         uint32_t nAssetStored;
         ParseUInt32(vecAssets[i], &nAssetStored);
         // send asset to numberOfAssetSendsPerBlock addresses
