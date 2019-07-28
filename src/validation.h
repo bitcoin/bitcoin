@@ -673,8 +673,6 @@ extern VersionBitsCache versionbitscache;
  */
 int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params);
 extern int64_t nTPSTestingStartTime;
-extern double nTPSTestingSendRawEndTime;
-extern int64_t nTPSTestingSendRawStartTime;
 /**
  * Return true if hash can be found in chainActive at nBlockHeight height.
  * Fills hashRet with found hash, if no nBlockHeight is specified - ::ChainActive().Height() is used.

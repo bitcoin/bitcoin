@@ -11,6 +11,7 @@
 #include <validationinterface.h>
 #include <thread>
 #include <policy/rbf.h>
+#include <chrono>
 using namespace std;
 extern std::string exePath;
 extern std::string EncodeDestination(const CTxDestination& dest);
@@ -207,7 +208,6 @@ UniValue tpstestinfo(const JSONRPCRequest& request) {
 	UniValue oTPSTestReceiversMempool(UniValue::VARR);
 	oTPSTestResults.__pushKV("enabled", fTPSTestEnabled);
     oTPSTestResults.__pushKV("testinitiatetime", (int64_t)nTPSTestingStartTime);
-	oTPSTestResults.__pushKV("teststarttime", (int64_t)nTPSTestingSendRawEndTime);
    
 	for (auto &receivedTime : vecTPSTestReceivedTimesMempool) {
 		UniValue oTPSTestStatusObj(UniValue::VOBJ);
@@ -232,12 +232,20 @@ UniValue tpstestsetenabled(const JSONRPCRequest& request) {
 	fTPSTestEnabled = params[0].get_bool();
 	if (!fTPSTestEnabled) {
 		vecTPSTestReceivedTimesMempool.clear();
-		nTPSTestingSendRawEndTime = 0;
 		nTPSTestingStartTime = 0;
 	}
 	UniValue result(UniValue::VOBJ);
 	result.__pushKV("status", "success");
 	return result;
+}
+void RunTest(){
+    std::chrono::microseconds dur(nTPSTestingStartTime);
+    std::chrono::time_point<std::chrono::system_clock, std::chrono::microseconds> dt(dur);
+    std::this_thread::sleep_until(dt);
+    for (auto &txReq : vecTPSRawTransactions) {
+        sendrawtransaction(txReq);
+    }
+    nTPSTestingStartTime = GetTimeMicros();
 }
 UniValue tpstestadd(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
@@ -258,7 +266,6 @@ UniValue tpstestadd(const JSONRPCRequest& request) {
 	if (!fTPSTest)
 		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("This function requires tpstest configuration to be set upon startup. Please shutdown and enable it by adding it to your syscoin.conf file and then call 'tpstestsetenabled true'."));
 
-	bool bFirstTime = vecTPSRawTransactions.empty();
 	nTPSTestingStartTime = params[0].get_int64();
 	UniValue txs;
 	if(params.size() > 1)
@@ -273,18 +280,8 @@ UniValue tpstestadd(const JSONRPCRequest& request) {
 			request.params = paramsRawTx;
 			vecTPSRawTransactions.push_back(request);
 		}
-		if (bFirstTime) {
-			// define a task for the worker to process
-			std::thread t([]() {
-				while (nTPSTestingStartTime <= 0 || GetTimeMicros() < nTPSTestingStartTime) {
-					MilliSleep(0);
-				}
-				nTPSTestingSendRawStartTime = nTPSTestingStartTime;
-
-				for (auto &txReq : vecTPSRawTransactions) {
-					sendrawtransaction(txReq);
-				}
-			});
+		if (nTPSTestingStartTime > 0) {
+            std::thread t(RunTest);
             t.detach();
 		}
 	}
