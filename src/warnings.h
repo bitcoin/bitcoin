@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WARNINGS_H
-#define BITCOIN_WARNINGS_H
+#ifndef BITGREEN_WARNINGS_H
+#define BITGREEN_WARNINGS_H
 
 #include <stdlib.h>
 #include <string>
@@ -21,4 +21,4 @@ void SetfLargeWorkInvalidChainFound(bool flag);
  */
 std::string GetWarnings(const std::string& strFor);
 
-#endif //  BITCOIN_WARNINGS_H
+#endif //  BITGREEN_WARNINGS_H

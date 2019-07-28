@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_QRIMAGEWIDGET_H
-#define BITCOIN_QT_QRIMAGEWIDGET_H
+#ifndef BITGREEN_QT_QRIMAGEWIDGET_H
+#define BITGREEN_QT_QRIMAGEWIDGET_H
 
 #include <QImage>
 #include <QLabel>
@@ -42,4 +42,4 @@ private:
     QMenu *contextMenu;
 };
 
-#endif // BITCOIN_QT_QRIMAGEWIDGET_H
+#endif // BITGREEN_QT_QRIMAGEWIDGET_H

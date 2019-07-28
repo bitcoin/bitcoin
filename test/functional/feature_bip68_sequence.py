@@ -9,7 +9,7 @@ import time
 from test_framework.blocktools import create_block, create_coinbase, add_witness_commitment
 from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut, FromHex, ToHex
 from test_framework.script import CScript
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BitGreenTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
@@ -26,7 +26,7 @@ SEQUENCE_LOCKTIME_MASK = 0x0000ffff
 # RPC error for non-BIP68 final transactions
 NOT_FINAL_ERROR = "non-BIP68-final (code 64)"
 
-class BIP68Test(BitcoinTestFramework):
+class BIP68Test(BitGreenTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.extra_args = [

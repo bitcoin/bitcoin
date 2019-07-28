@@ -100,7 +100,7 @@ from test_framework.mininode import (
     msg_inv,
     msg_sendheaders,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BitGreenTestFramework
 from test_framework.util import (
     assert_equal,
     wait_until,
@@ -202,7 +202,7 @@ class BaseNode(P2PInterface):
             self.block_announced = False
             self.last_message.pop("inv", None)
 
-class SendHeadersTest(BitcoinTestFramework):
+class SendHeadersTest(BitGreenTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2

@@ -54,7 +54,7 @@
 #include <boost/thread.hpp>
 
 #if defined(NDEBUG)
-# error "Bitcoin cannot be compiled without assertions."
+# error "BitGreen cannot be compiled without assertions."
 #endif
 
 #define MICRO 0.000001

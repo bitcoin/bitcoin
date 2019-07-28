@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UTIL_TIME_H
-#define BITCOIN_UTIL_TIME_H
+#ifndef BITGREEN_UTIL_TIME_H
+#define BITGREEN_UTIL_TIME_H
 
 #include <stdint.h>
 #include <string>
@@ -41,4 +41,4 @@ T GetTime();
 std::string FormatISO8601DateTime(int64_t nTime);
 std::string FormatISO8601Date(int64_t nTime);
 
-#endif // BITCOIN_UTIL_TIME_H
+#endif // BITGREEN_UTIL_TIME_H

@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the getblockfilter RPC."""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BitGreenTestFramework
 from test_framework.util import (
     assert_equal, assert_is_hex_string, assert_raises_rpc_error,
     connect_nodes, disconnect_nodes, sync_blocks
@@ -12,7 +12,7 @@ from test_framework.util import (
 
 FILTER_TYPES = ["basic"]
 
-class GetBlockFilterTest(BitcoinTestFramework):
+class GetBlockFilterTest(BitGreenTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2

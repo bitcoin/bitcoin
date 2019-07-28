@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/bitgreen-config.h>
 #endif
 
 #if defined(ENABLE_WALLET) && defined(ENABLE_BIP70)
@@ -16,7 +16,7 @@
 
 void CompatTests::bswapTests()
 {
-	// Sibling in bitcoin/src/test/bswap_tests.cpp
+	// Sibling in bitgreen/src/test/bswap_tests.cpp
 	uint16_t u1 = 0x1234;
 	uint32_t u2 = 0x56789abc;
 	uint64_t u3 = 0xdef0123456789abc;

@@ -1,5 +1,5 @@
-#ifndef BITCOIN_QT_TEST_UTIL_H
-#define BITCOIN_QT_TEST_UTIL_H
+#ifndef BITGREEN_QT_TEST_UTIL_H
+#define BITGREEN_QT_TEST_UTIL_H
 
 #include <QString>
 
@@ -11,4 +11,4 @@
  */
 void ConfirmMessage(QString* text = nullptr, int msec = 0);
 
-#endif // BITCOIN_QT_TEST_UTIL_H
+#endif // BITGREEN_QT_TEST_UTIL_H

@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_BITCOINUNITS_H
-#define BITCOIN_QT_BITCOINUNITS_H
+#ifndef BITGREEN_QT_BITCOINUNITS_H
+#define BITGREEN_QT_BITCOINUNITS_H
 
 #include <amount.h>
 
@@ -41,7 +41,7 @@
 #define THIN_SP_UTF8 REAL_THIN_SP_UTF8
 #define THIN_SP_HTML HTML_HACK_SP
 
-/** Bitcoin unit definitions. Encapsulates parsing and formatting
+/** BitGreen unit definitions. Encapsulates parsing and formatting
    and serves as list model for drop-down selection boxes.
 */
 class BitcoinUnits: public QAbstractListModel
@@ -51,8 +51,7 @@ class BitcoinUnits: public QAbstractListModel
 public:
     explicit BitcoinUnits(QObject *parent);
 
-    /** Bitcoin units.
-      @note Source: https://en.bitcoin.it/wiki/Units . Please add only sensible ones
+    /** BitGreen units.
      */
     enum Unit
     {
@@ -126,6 +125,6 @@ public:
 private:
     QList<BitcoinUnits::Unit> unitlist;
 };
-typedef BitcoinUnits::Unit BitcoinUnit;
+typedef BitcoinUnits::Unit BitGreenUnit;
 
-#endif // BITCOIN_QT_BITCOINUNITS_H
+#endif // BITGREEN_QT_BITCOINUNITS_H

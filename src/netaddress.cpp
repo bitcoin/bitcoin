@@ -11,8 +11,8 @@
 static const unsigned char pchIPv4[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff };
 static const unsigned char pchOnionCat[] = {0xFD,0x87,0xD8,0x7E,0xEB,0x43};
 
-// 0xFD + sha256("bitcoin")[0:5]
-static const unsigned char g_internal_prefix[] = { 0xFD, 0x6B, 0x88, 0xC0, 0x87, 0x24 };
+// 0xFD + sha256("bitgreen")[0:5]
+static const unsigned char g_internal_prefix[] = { 0xFD, 0x2b, 0xd8, 0xff, 0x25,0x83 };
 
 /**
  * Construct an unspecified IPv6 network address (::/128).
@@ -47,7 +47,7 @@ void CNetAddr::SetRaw(Network network, const uint8_t *ip_in)
 
 /**
  * Try to make this a dummy address that maps the specified name into IPv6 like
- * so: (0xFD + %sha256("bitcoin")[0:5]) + %sha256(name)[0:10]. Such dummy
+ * so: (0xFD + %sha256("bitgreen")[0:5]) + %sha256(name)[0:10]. Such dummy
  * addresses have a prefix of fd6b:88c0:8724::/48 and are guaranteed to not be
  * publicly routable as it falls under RFC4193's fc00::/7 subnet allocated to
  * unique-local addresses.

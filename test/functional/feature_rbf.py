@@ -8,7 +8,7 @@ from decimal import Decimal
 
 from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut
 from test_framework.script import CScript, OP_DROP
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BitGreenTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error, satoshi_round
 
 MAX_REPLACEMENT_LIMIT = 100
@@ -62,7 +62,7 @@ def make_utxo(node, amount, confirmed=True, scriptPubKey=CScript([1])):
     return COutPoint(int(txid, 16), 0)
 
 
-class ReplaceByFeeTest(BitcoinTestFramework):
+class ReplaceByFeeTest(BitGreenTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [

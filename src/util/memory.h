@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UTIL_MEMORY_H
-#define BITCOIN_UTIL_MEMORY_H
+#ifndef BITGREEN_UTIL_MEMORY_H
+#define BITGREEN_UTIL_MEMORY_H
 
 #include <memory>
 #include <utility>

@@ -6,7 +6,7 @@
 
 from test_framework.messages import msg_getdata, CInv
 from test_framework.mininode import P2PDataStore
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BitGreenTestFramework
 from test_framework.util import (
     assert_equal,
 )
@@ -17,7 +17,7 @@ class P2PNode(P2PDataStore):
         pass
 
 
-class P2PLeakTxTest(BitcoinTestFramework):
+class P2PLeakTxTest(BitGreenTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 

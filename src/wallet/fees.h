@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_FEES_H
-#define BITCOIN_WALLET_FEES_H
+#ifndef BITGREEN_WALLET_FEES_H
+#define BITGREEN_WALLET_FEES_H
 
 #include <amount.h>
 
@@ -42,4 +42,4 @@ CFeeRate GetMinimumFeeRate(const CWallet& wallet, const CCoinControl& coin_contr
  */
 CFeeRate GetDiscardRate(const CWallet& wallet);
 
-#endif // BITCOIN_WALLET_FEES_H
+#endif // BITGREEN_WALLET_FEES_H

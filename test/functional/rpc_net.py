@@ -9,7 +9,7 @@ Tests correspond to code in rpc/net.cpp.
 
 from decimal import Decimal
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BitGreenTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than_or_equal,
@@ -22,7 +22,7 @@ from test_framework.util import (
 from test_framework.mininode import P2PInterface
 from test_framework.messages import CAddress, msg_addr, NODE_NETWORK, NODE_WITNESS
 
-class NetTest(BitcoinTestFramework):
+class NetTest(BitGreenTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2

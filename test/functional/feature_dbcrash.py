@@ -31,11 +31,11 @@ import random
 import time
 
 from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut, ToHex
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BitGreenTestFramework
 from test_framework.util import assert_equal, create_confirmed_utxos, hex_str_to_bytes
 
 
-class ChainstateWriteCrashTest(BitcoinTestFramework):
+class ChainstateWriteCrashTest(BitGreenTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
         self.setup_clean_chain = False
@@ -82,14 +82,14 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
                 return utxo_hash
             except:
                 # An exception here should mean the node is about to crash.
-                # If bitcoind exits, then try again.  wait_for_node_exit()
-                # should raise an exception if bitcoind doesn't exit.
+                # If bitgreend exits, then try again.  wait_for_node_exit()
+                # should raise an exception if bitgreend doesn't exit.
                 self.wait_for_node_exit(node_index, timeout=10)
             self.crashed_on_restart += 1
             time.sleep(1)
 
-        # If we got here, bitcoind isn't coming back up on restart.  Could be a
-        # bug in bitcoind, or we've gotten unlucky with our dbcrash ratio --
+        # If we got here, bitgreend isn't coming back up on restart.  Could be a
+        # bug in bitgreend, or we've gotten unlucky with our dbcrash ratio --
         # perhaps we generated a test case that blew up our cache?
         # TODO: If this happens a lot, we should try to restart without -dbcrashratio
         # and make sure that recovery happens.

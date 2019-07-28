@@ -15,10 +15,10 @@ import copy
 from test_framework.blocktools import create_block, create_coinbase, create_tx_with_script
 from test_framework.messages import COIN
 from test_framework.mininode import P2PDataStore
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BitGreenTestFramework
 from test_framework.util import assert_equal
 
-class InvalidBlockRequestTest(BitcoinTestFramework):
+class InvalidBlockRequestTest(BitGreenTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True

@@ -3,11 +3,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/bitgreen-config.h>
 #endif
 
 #include <interfaces/node.h>
-#include <qt/bitcoin.h>
+#include <qt/bitgreen.h>
 #include <qt/test/apptests.h>
 #include <qt/test/rpcnestedtests.h>
 #include <qt/test/uritests.h>
@@ -70,8 +70,8 @@ int main(int argc, char *argv[])
 
     // Don't remove this, it's needed to access
     // QApplication:: and QCoreApplication:: in the tests
-    BitcoinApplication app(*node, argc, argv);
-    app.setApplicationName("Bitcoin-Qt-test");
+    BitGreenApplication app(*node, argc, argv);
+    app.setApplicationName("BitGreen-Qt-test");
 
     SSL_library_init();
 

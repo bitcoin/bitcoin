@@ -18,7 +18,7 @@ import io
 
 from test_framework.blocktools import add_witness_commitment, create_block, create_coinbase, send_to_witness
 from test_framework.messages import BIP125_SEQUENCE_NUMBER, CTransaction
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BitGreenTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
@@ -30,7 +30,7 @@ from test_framework.util import (
 WALLET_PASSPHRASE = "test"
 WALLET_PASSPHRASE_TIMEOUT = 3600
 
-class BumpFeeTest(BitcoinTestFramework):
+class BumpFeeTest(BitGreenTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True

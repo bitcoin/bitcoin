@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/bitgreen-config.h>
 #endif
 
 #include <atomic>
@@ -57,6 +57,6 @@ static void SetInternalName(std::string name) { }
 
 void util::ThreadRename(std::string&& name)
 {
-    SetThreadName(("bitcoin-" + name).c_str());
+    SetThreadName(("bitgreen-" + name).c_str());
     SetInternalName(std::move(name));
 }

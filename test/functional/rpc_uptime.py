@@ -9,10 +9,10 @@ Test corresponds to code in rpc/server.cpp.
 
 import time
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BitGreenTestFramework
 
 
-class UptimeTest(BitcoinTestFramework):
+class UptimeTest(BitGreenTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True

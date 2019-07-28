@@ -33,13 +33,13 @@ before_build:
 - ps:  Start-Process clcache-server
 - ps:  fsutil behavior set disablelastaccess 0 # Enable Access time feature on Windows (for clcache)
 build_script:
-- cmd: msbuild /p:TrackFileAccess=false /p:CLToolExe=clcache.exe build_msvc\bitcoin.sln /m /v:q /nologo
+- cmd: msbuild /p:TrackFileAccess=false /p:CLToolExe=clcache.exe build_msvc\bitgreen.sln /m /v:q /nologo
 after_build:
 - ps:  fsutil behavior set disablelastaccess 1 # Disable Access time feature on Windows (better performance)
 - ps:  clcache -z
 test_script:
-- cmd: src\test_bitcoin.exe -k stdout -e stdout 2> NUL
-- cmd: src\bench_bitcoin.exe -evals=1 -scaling=0 > NUL
+- cmd: src\test_bitgreen.exe -k stdout -e stdout 2> NUL
+- cmd: src\bench_bitgreen.exe -evals=1 -scaling=0 > NUL
 - ps:  python test\util\bitcoin-util-test.py
 - cmd: python test\util\rpcauth-test.py
 - cmd: python test\functional\test_runner.py --ci --quiet --combinedlogslen=4000 --failfast

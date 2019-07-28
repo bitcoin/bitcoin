@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_SCRIPT_SCRIPT_H
-#define BITCOIN_SCRIPT_SCRIPT_H
+#ifndef BITGREEN_SCRIPT_SCRIPT_H
+#define BITGREEN_SCRIPT_SCRIPT_H
 
 #include <crypto/common.h>
 #include <prevector.h>
@@ -583,4 +583,4 @@ struct CScriptWitness
     std::string ToString() const;
 };
 
-#endif // BITCOIN_SCRIPT_SCRIPT_H
+#endif // BITGREEN_SCRIPT_SCRIPT_H

@@ -2,15 +2,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_CHAINPARAMSBASE_H
-#define BITCOIN_CHAINPARAMSBASE_H
+#ifndef BITGREEN_CHAINPARAMSBASE_H
+#define BITGREEN_CHAINPARAMSBASE_H
 
 #include <memory>
 #include <string>
 
 /**
- * CBaseChainParams defines the base parameters (shared between bitcoin-cli and bitcoind)
- * of a given instance of the Bitcoin system.
+ * CBaseChainParams defines the base parameters (shared between bitgreen-cli and bitgreend)
+ * of a given instance of the BitGreen system.
  */
 class CBaseChainParams
 {
@@ -52,4 +52,4 @@ const CBaseChainParams& BaseParams();
 /** Sets the params returned by Params() to those for the given network. */
 void SelectBaseParams(const std::string& chain);
 
-#endif // BITCOIN_CHAINPARAMSBASE_H
+#endif // BITGREEN_CHAINPARAMSBASE_H

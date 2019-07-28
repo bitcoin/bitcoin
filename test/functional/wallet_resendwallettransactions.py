@@ -9,7 +9,7 @@ import time
 from test_framework.blocktools import create_block, create_coinbase
 from test_framework.messages import ToHex
 from test_framework.mininode import P2PInterface, mininode_lock
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BitGreenTestFramework
 from test_framework.util import assert_equal, wait_until
 
 class P2PStoreTxInvs(P2PInterface):
@@ -24,7 +24,7 @@ class P2PStoreTxInvs(P2PInterface):
                 # save txid
                 self.tx_invs_received[i.hash] += 1
 
-class ResendWalletTransactionsTest(BitcoinTestFramework):
+class ResendWalletTransactionsTest(BitGreenTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 

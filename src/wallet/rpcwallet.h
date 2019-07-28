@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_RPCWALLET_H
-#define BITCOIN_WALLET_RPCWALLET_H
+#ifndef BITGREEN_WALLET_RPCWALLET_H
+#define BITGREEN_WALLET_RPCWALLET_H
 
 #include <memory>
 #include <string>
@@ -37,4 +37,4 @@ bool EnsureWalletIsAvailable(const CWallet*, bool avoidException);
 
 UniValue getaddressinfo(const JSONRPCRequest& request);
 UniValue signrawtransactionwithwallet(const JSONRPCRequest& request);
-#endif //BITCOIN_WALLET_RPCWALLET_H
+#endif //BITGREEN_WALLET_RPCWALLET_H

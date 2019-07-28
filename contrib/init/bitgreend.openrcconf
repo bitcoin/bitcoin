@@ -1,0 +1,33 @@
+# /etc/conf.d/bitgreend: config file for /etc/init.d/bitgreend
+
+# Config file location
+#BITGREEND_CONFIGFILE="/etc/bitgreen/bitgreen.conf"
+
+# What directory to write pidfile to?  (created and owned by $BITGREEND_USER)
+#BITGREEND_PIDDIR="/var/run/bitgreend"
+
+# What filename to give the pidfile
+#BITGREEND_PIDFILE="${BITGREEND_PIDDIR}/bitgreend.pid"
+
+# Where to write bitgreend data (be mindful that the blockchain is large)
+#BITGREEND_DATADIR="/var/lib/bitgreend"
+
+# User and group to own bitgreend process
+#BITGREEND_USER="bitgreen"
+#BITGREEND_GROUP="bitgreen"
+
+# Path to bitgreend executable
+#BITGREEND_BIN="/usr/bin/bitgreend"
+
+# Nice value to run bitgreend under
+#BITGREEND_NICE=0
+
+# Additional options (avoid -conf and -datadir, use flags above)
+#BITGREEND_OPTS=""
+
+# The timeout in seconds OpenRC will wait for bitgreend to terminate
+# after a SIGTERM has been raised.
+# Note that this will be mapped as argument to start-stop-daemon's
+# '--retry' option, which means you can specify a retry schedule
+# here. For more information see man 8 start-stop-daemon.
+BITGREEND_SIGTERM_TIMEOUT=60

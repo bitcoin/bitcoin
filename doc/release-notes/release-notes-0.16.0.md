@@ -535,7 +535,7 @@ Testing changes
 - #10781 `60dd9cc` Python cleanups (practicalswift)
 - #10701 `50fae68` Remove the virtual specifier for functions with the override specifier (practicalswift)
 - #11164 `38a54a5` Fix boost headers included as user instead of system headers (danra)
-- #11143 `3aa60b7` Fix include path for bitcoin-config.h (danra)
+- #11143 `3aa60b7` Fix include path for bitgreen-config.h (danra)
 - #8330 `59e1789` Structure Packing Optimizations in C{,Mutable}Transaction (JeremyRubin)
 - #10845 `39ae413` Remove unreachable code (practicalswift)
 - #11238 `6acdb1f` Add assertions before potential null deferences (MeshCollider)

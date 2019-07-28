@@ -6,7 +6,7 @@
 import struct
 
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BitGreenTestFramework
 from test_framework.messages import CTransaction
 from test_framework.util import (
     assert_equal,
@@ -35,13 +35,13 @@ class ZMQSubscriber:
         return body
 
 
-class ZMQTest (BitcoinTestFramework):
+class ZMQTest (BitGreenTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_py3_zmq()
-        self.skip_if_no_bitcoind_zmq()
+        self.skip_if_no_bitgreend_zmq()
 
     def setup_nodes(self):
         import zmq

@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UNDO_H
-#define BITCOIN_UNDO_H
+#ifndef BITGREEN_UNDO_H
+#define BITGREEN_UNDO_H
 
 #include <coins.h>
 #include <compressor.h>
@@ -111,4 +111,4 @@ public:
     }
 };
 
-#endif // BITCOIN_UNDO_H
+#endif // BITGREEN_UNDO_H

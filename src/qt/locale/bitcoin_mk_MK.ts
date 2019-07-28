@@ -138,7 +138,7 @@
         <translation>Повторно индексирање на блокови од дискот...</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
+        <source>Send coins to a BitGreen address</source>
         <translation>Испрати биткоини на Биткоин адреса</translation>
     </message>
     <message>
@@ -146,7 +146,7 @@
         <translation>&amp;Потврди порака...</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
+        <source>BitGreen</source>
         <translation>Биткоин</translation>
     </message>
     <message>
@@ -299,7 +299,7 @@
 <context>
     <name>Intro</name>
     <message>
-        <source>Bitcoin</source>
+        <source>BitGreen</source>
         <translation>Биткоин</translation>
     </message>
     <message>
@@ -588,9 +588,9 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>bitgreen-core</name>
     <message>
-        <source>Bitcoin Core</source>
+        <source>BitGreen Core</source>
         <translation>Биткоин Core</translation>
     </message>
     <message>

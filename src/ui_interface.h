@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UI_INTERFACE_H
-#define BITCOIN_UI_INTERFACE_H
+#ifndef BITGREEN_UI_INTERFACE_H
+#define BITGREEN_UI_INTERFACE_H
 
 #include <functional>
 #include <memory>
@@ -133,4 +133,4 @@ bool InitError(const std::string& str);
 
 extern CClientUIInterface uiInterface;
 
-#endif // BITCOIN_UI_INTERFACE_H
+#endif // BITGREEN_UI_INTERFACE_H

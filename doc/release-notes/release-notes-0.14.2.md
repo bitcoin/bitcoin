@@ -71,7 +71,7 @@ git merge commit are mentioned.
 
 ### Build system
 - #10414 `ffb0c4b` miniupnpc 2.0.20170509 (fanquake)
-- #10228 `ae479bc` Regenerate bitcoin-config.h as necessary (theuni)
+- #10228 `ae479bc` Regenerate bitgreen-config.h as necessary (theuni)
 
 ### Miscellaneous
 - #10245 `44a17f2` Minor fix in build documentation for FreeBSD 11 (shigeya)

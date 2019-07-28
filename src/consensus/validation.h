@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_CONSENSUS_VALIDATION_H
-#define BITCOIN_CONSENSUS_VALIDATION_H
+#ifndef BITGREEN_CONSENSUS_VALIDATION_H
+#define BITGREEN_CONSENSUS_VALIDATION_H
 
 #include <string>
 #include <version.h>
@@ -159,4 +159,4 @@ static inline int64_t GetTransactionInputWeight(const CTxIn& txin)
     return ::GetSerializeSize(txin, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * (WITNESS_SCALE_FACTOR - 1) + ::GetSerializeSize(txin, PROTOCOL_VERSION) + ::GetSerializeSize(txin.scriptWitness.stack, PROTOCOL_VERSION);
 }
 
-#endif // BITCOIN_CONSENSUS_VALIDATION_H
+#endif // BITGREEN_CONSENSUS_VALIDATION_H

@@ -11,7 +11,7 @@ from test_framework.blocktools import create_coinbase, create_block, create_tran
 from test_framework.messages import msg_block
 from test_framework.mininode import mininode_lock, P2PInterface
 from test_framework.script import CScript
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BitGreenTestFramework
 from test_framework.util import (
     assert_equal,
     wait_until,
@@ -41,7 +41,7 @@ def unDERify(tx):
 
 
 
-class BIP66Test(BitcoinTestFramework):
+class BIP66Test(BitGreenTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [['-whitelist=127.0.0.1', '-par=1', '-enablebip61']]  # Use only one script thread to get the exact reject reason for testing

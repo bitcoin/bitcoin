@@ -17,7 +17,7 @@ How to Upgrade
 ==============
 
 If you are running an older version, shut it down. Wait until it has completely
-shut down (which might take a few minutes for older versions), then run the 
+shut down (which might take a few minutes for older versions), then run the
 installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on Mac)
 or `bitcoind`/`bitcoin-qt` (on Linux).
 
@@ -450,7 +450,7 @@ Low-level RPC changes
 - #10136 `81da4c7` build: Disable Wshadow warning (laanwj)
 - #10166 `64962ae` Ignore Doxyfile generated from Doxyfile.in template (paveljanik)
 - #10239 `0416ea9` Make Boost use std::atomic internally (sipa)
-- #10228 `27faa6c` build: regenerate bitcoin-config.h as necessary (theuni)
+- #10228 `27faa6c` build: regenerate bitgreen-config.h as necessary (theuni)
 - #10273 `8979f45` [scripts] Minor improvements to `macdeployqtplus` script (chrisgavin)
 - #10325 `a26280b` 0.15.0 Depends Updates (fanquake)
 - #10328 `79aeff6` Update contrib/debian to latest Ubuntu PPA upload (TheBlueMatt)
@@ -634,7 +634,7 @@ Low-level RPC changes
 - #10415 `217b416` [tests] Speed up fuzzing by ~200x when using afl-fuzz (practicalswift)
 - #10445 `b4b057a` Add test for empty chain and reorg consistency for gettxoutsetinfo (gmaxwell)
 - #10423 `1aefc94` [tests] skipped tests should clean up after themselves (jnewbery)
-- #10359 `329fc1d` [tests] functional tests should call BitcoinTestFramework start/stop node methods (jnewbery)
+- #10359 `329fc1d` [tests] functional tests should call BitGreenTestFramework start/stop node methods (jnewbery)
 - #10514 `e103b3f` Bugfix: missing == 0 after randrange (sipa)
 - #10515 `c871f32` [test] Add test for getchaintxstats (jimmysong)
 - #10509 `bea5b00` Remove xvfb configuration from travis (ryanofsky)
@@ -653,7 +653,7 @@ Low-level RPC changes
 - #10612 `7c87a9c` The young person's guide to the test_framework (jnewbery)
 - #10659 `acb1153` [qa] blockchain: Pass on closed connection during generate call (MarcoFalke)
 - #10690 `416af3e` [qa] Bugfix: allow overriding extra_args in ComparisonTestFramework (sdaftuar)
-- #10556 `65cc7aa` Move stop/start functions from utils.py into BitcoinTestFramework (jnewbery)
+- #10556 `65cc7aa` Move stop/start functions from utils.py into BitGreenTestFramework (jnewbery)
 - #10704 `dd07f47` [tests] nits in dbcrash.py (jnewbery)
 - #10743 `be82498` [test] don't run dbcrash.py on Travis (jnewbery)
 - #10761 `d3b5870` [tests] fix replace_by_fee.py (jnewbery)
