@@ -6,7 +6,7 @@
 #include <config/bitgreen-config.h>
 #endif
 
-#include <qt/bitgreen.h>
+#include <qt/bitcoin.h>
 #include <qt/bitcoingui.h>
 
 #include <chainparams.h>

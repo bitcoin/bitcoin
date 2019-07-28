@@ -7,7 +7,7 @@
 #endif
 
 #include <interfaces/node.h>
-#include <qt/bitgreen.h>
+#include <qt/bitcoin.h>
 #include <qt/test/apptests.h>
 #include <qt/test/rpcnestedtests.h>
 #include <qt/test/uritests.h>
