@@ -737,8 +737,10 @@ UniValue submitblock(const JSONRPCRequest& request)
 
     // peercoin: check block before attempting to sign it
     CValidationState state;
-    if (!CheckBlock(block, state, Params().GetConsensus(), true,  true))
+    if (!CheckBlock(block, state, Params().GetConsensus(), true,  true, false)) {
+        LogPrintf("SubmitBlock: %s\n", FormatStateMessage(state));
         throw JSONRPCError(-100, "Block failed CheckBlock() function.");
+        }
 
     // peercoin: sign block
     // rfc6: sign proof of stake blocks only after 0.8 fork
