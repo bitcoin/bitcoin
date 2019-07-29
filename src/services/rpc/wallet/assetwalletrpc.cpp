@@ -322,13 +322,15 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
             }
             int numSigs = 0;
             CCountSigsVisitor(*pwallet, numSigs).Process(scriptPubKey);
-            if(isSyscoinTx)
+            if(isSyscoinTx){
+                 // double relay fee for zdag tx to account for dbl bandwidth on dbl spend relays
                 numSigs *= 2;
+                 // disable RBF for syscoin tx's, should use CPFP
+                txIn.nSequence = CTxIn::SEQUENCE_FINAL - 1;
+            }
             // add fees to account for every input added to this transaction
             nFees += GetMinimumFee(*pwallet, numSigs * 200, coin_control, &fee_calc);
-            // disable RBF for syscoin tx's, should use CPFP
-            if(isSyscoinTx)
-                txIn.nSequence = CTxIn::SEQUENCE_FINAL - 1;
+           
             tx.vin.emplace_back(txIn);
             nCurrentAmount += nValue;
             if (nCurrentAmount >= (nDesiredAmount + nFees)) {
