@@ -258,7 +258,12 @@ Result CreateRateBumpTransaction(CWallet* wallet, const uint256& txid, const CCo
         }
     }
 
-    new_coin_control.m_feerate = EstimateFeeRate(wallet, wtx, new_coin_control, old_fee); 
+    if (coin_control.m_feerate) {
+        // The user provided a feeRate argument.
+    } else {
+        // The user did not provide a feeRate argument
+        new_coin_control.m_feerate = EstimateFeeRate(wallet, wtx, new_coin_control, old_fee);
+    }
 
     // Fill in required inputs we are double-spending(all of them)
     // N.B.: bip125 doesn't require all the inputs in the replaced transaction to be
