@@ -57,6 +57,58 @@ static feebumper::Result PreconditionChecks(interfaces::Chain::Lock& locked_chai
     return feebumper::Result::OK;
 }
 
+//! Check if the user provided a valid feeRate
+static feebumper::Result CheckFeeRate(const CWallet* wallet, const CWalletTx& wtx, const CFeeRate& newFeerate, const int64_t maxTxSize, std::vector<std::string>& errors) {
+    // check that fee rate is higher than mempool's minimum fee
+    // (no point in bumping fee if we know that the new tx won't be accepted to the mempool)
+    // This may occur if the user set FeeRate, TotalFee or paytxfee too low, if fallbackfee is too low, or, perhaps,
+    // in a rare situation where the mempool minimum fee increased significantly since the fee estimation just a
+    // moment earlier. In this case, we report an error to the user, who may adjust the fee.
+    CFeeRate minMempoolFeeRate = wallet->chain().mempoolMinFee();
+
+    if (newFeerate.GetFeePerK() < minMempoolFeeRate.GetFeePerK()) {
+        errors.push_back(strprintf(
+            "New fee rate (%s) is lower than the minimum fee rate (%s) to get into the mempool -- ",
+            FormatMoney(newFeerate.GetFeePerK()),
+            FormatMoney(minMempoolFeeRate.GetFeePerK())));
+        return feebumper::Result::WALLET_ERROR;
+    }
+
+    CAmount new_total_fee = newFeerate.GetFee(maxTxSize);
+
+    CFeeRate incrementalRelayFee = std::max(wallet->chain().relayIncrementalFee(), CFeeRate(WALLET_INCREMENTAL_RELAY_FEE));
+
+    // Given old total fee and transaction size, calculate the old feeRate
+    CAmount old_fee = wtx.GetDebit(ISMINE_SPENDABLE) - wtx.tx->GetValueOut();
+    const int64_t txSize = GetVirtualTransactionSize(*(wtx.tx));
+    CFeeRate nOldFeeRate(old_fee, txSize);
+    // Min total fee is old fee + relay fee
+    CAmount minTotalFee = nOldFeeRate.GetFee(maxTxSize) + incrementalRelayFee.GetFee(maxTxSize);
+
+    if (new_total_fee < minTotalFee) {
+        errors.push_back(strprintf("Insufficient total fee %s, must be at least %s (oldFee %s + incrementalFee %s)",
+            FormatMoney(new_total_fee), FormatMoney(minTotalFee), FormatMoney(nOldFeeRate.GetFee(maxTxSize)), FormatMoney(incrementalRelayFee.GetFee(maxTxSize))));
+        return feebumper::Result::INVALID_PARAMETER;
+    }
+
+    CAmount requiredFee = GetRequiredFee(*wallet, maxTxSize);
+    if (new_total_fee < requiredFee) {
+        errors.push_back(strprintf("Insufficient total fee (cannot be less than required fee %s)",
+            FormatMoney(requiredFee)));
+        return feebumper::Result::INVALID_PARAMETER;
+    }
+
+    // Check that in all cases the new fee doesn't violate maxTxFee
+    const CAmount max_tx_fee = wallet->m_default_max_tx_fee;
+    if (new_total_fee > max_tx_fee) {
+        errors.push_back(strprintf("Specified or calculated fee %s is too high (cannot be higher than -maxtxfee %s)",
+                            FormatMoney(new_total_fee), FormatMoney(max_tx_fee)));
+        return feebumper::Result::WALLET_ERROR;
+    }
+
+    return feebumper::Result::OK;
+}
+
 static CFeeRate EstimateFeeRate(CWallet* wallet, const CWalletTx& wtx, CCoinControl& coin_control, CAmount& old_fee)
 {
     // Get the fee rate of the original transaction. This is calculated from
@@ -260,6 +312,12 @@ Result CreateRateBumpTransaction(CWallet* wallet, const uint256& txid, const CCo
 
     if (coin_control.m_feerate) {
         // The user provided a feeRate argument.
+        // We calculate this here to avoid compiler warning on the cs_wallet lock
+        const int64_t maxTxSize = CalculateMaximumSignedTxSize(*wtx.tx, wallet);
+        Result res = CheckFeeRate(wallet, wtx, *(new_coin_control.m_feerate), maxTxSize, errors);
+        if (res != Result::OK) {
+            return res;
+        }
     } else {
         // The user did not provide a feeRate argument
         new_coin_control.m_feerate = EstimateFeeRate(wallet, wtx, new_coin_control, old_fee);
