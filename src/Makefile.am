@@ -102,18 +102,12 @@ endif
 .PHONY: FORCE check-symbols check-security
 # syscoin core #
 SYSCOIN_CORE_H = \
-  services/graph.h \
   services/witnessaddress.h \
   services/asset.h \
   services/assetallocation.h \
   services/assetconsensus.h \
   services/rpc/assetrpc.h \
   services/rpc/wallet/assetwalletrpc.h \
-  thread_pool/fixed_function.hpp \
-  thread_pool/mpmc_bounded_queue.hpp \
-  thread_pool/thread_pool.hpp \
-  thread_pool/thread_pool_options.hpp \
-  thread_pool/worker.hpp \
   activemasternode.h \
   spork.h \
   dsnotificationinterface.h \
@@ -249,6 +243,7 @@ SYSCOIN_CORE_H = \
   util/rbf.h \
   util/threadnames.h \
   util/time.h \
+  util/translation.h \
   util/url.h \
   util/validation.h \
   util/executable_path/include/boost/executable_path.hpp \
@@ -318,7 +313,6 @@ endif
 libsyscoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
 libsyscoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_server_a_SOURCES = \
-  services/graph.cpp \
   services/asset.cpp \
   services/assetallocation.cpp \
   services/assetconsensus.cpp \
@@ -710,17 +704,6 @@ syscoin_wallet_LDADD = \
 
 syscoin_wallet_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(ZMQ_LIBS)
 
-# syscoin bench #
-syscoinbench_SOURCES = syscoinbench.cpp
-syscoinbench_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(EVENT_CLFAGS) $(EVENT_PTHREADS_CFLAGS)
-syscoinbench_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-syscoinbench_LDFLAGS = $(BOOST_LIBS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
-
-syscoinbench_LDADD = \
-  $(LIBSYSCOIN_COMMON) \
-  $(LIBSYSCOIN_CONSENSUS) \
-  $(LIBSYSCOIN_CRYPTO) \
-  $(LIBSECP256K1)
 
 # syscoinconsensus library #
 if BUILD_SYSCOIN_LIBS

@@ -4,7 +4,6 @@
 *.pdb
 src/syscoin
 src/syscoind
-src/syscoinbench
 src/syscoin-cli
 src/syscoin-tx
 src/syscoin-wallet
@@ -79,7 +78,7 @@ src/qt/syscoin-qt.includes
 
 # Only ignore unexpected patches
 *.patch
-!depends/patches/*.patch
+!depends/patches/**/*.patch
 
 #libtool object files
 *.lo
@@ -88,6 +87,7 @@ src/qt/syscoin-qt.includes
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
+!depends/Makefile
 syscoin-qt
 Syscoin-Qt.app
 background.tiff*

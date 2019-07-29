@@ -185,7 +185,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
     }
     // SYSCOIN
     if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN){
-        if(tx.vout.size() < 2 || tx.vout.size() > 3)
+        if(tx.vout.size() < 3 || tx.vout.size() > 4)
             return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-txns-mint-outputs-wrong");
     }
     const CAmount &value_out = tx.GetValueOut();

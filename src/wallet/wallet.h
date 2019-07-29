@@ -12,7 +12,6 @@
 #include <outputtype.h>
 #include <policy/feerate.h>
 #include <script/sign.h>
-#include <streams.h>
 #include <tinyformat.h>
 #include <ui_interface.h>
 #include <util/strencodings.h>
@@ -267,8 +266,8 @@ public:
 
 /** A wrapper to reserve an address from a wallet
  *
- * ReserveDestination is used to reserve an address. It is passed around
- * during the CreateTransaction/CommitTransaction procedure.
+ * ReserveDestination is used to reserve an address.
+ * It is currently only used inside of CreateTransaction.
  *
  * Instantiating a ReserveDestination does not reserve an address. To do so,
  * GetReservedDestination() needs to be called on the object. Once an address has been
@@ -1146,9 +1145,9 @@ public:
      * selected by SelectCoins(); Also create the change output, when needed
      * @note passing nChangePosInOut as -1 will result in setting a random position
      */
-    bool CreateTransaction(interfaces::Chain::Lock& locked_chain, const std::vector<CRecipient>& vecSend, CTransactionRef& tx, ReserveDestination& reservedest, CAmount& nFeeRet, int& nChangePosInOut,
+    bool CreateTransaction(interfaces::Chain::Lock& locked_chain, const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CAmount& nFeeRet, int& nChangePosInOut,
                            std::string& strFailReason, const CCoinControl& coin_control, bool sign = true);
-    bool CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::vector<std::pair<std::string, std::string>> orderForm, ReserveDestination& reservedest, CValidationState& state);
+    bool CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::vector<std::pair<std::string, std::string>> orderForm, CValidationState& state);
 
     bool DummySignTx(CMutableTransaction &txNew, const std::set<CTxOut> &txouts, bool use_max_sig = false) const
     {
@@ -1159,10 +1158,10 @@ public:
     bool DummySignTx(CMutableTransaction &txNew, const std::vector<CTxOut> &txouts, bool use_max_sig = false) const;
     bool DummySignInput(CTxIn &tx_in, const CTxOut &txout, bool use_max_sig = false) const;
 
-    bool ImportScripts(const std::set<CScript> scripts) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool ImportScripts(const std::set<CScript> scripts, int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool ImportPrivKeys(const std::map<CKeyID, CKey>& privkey_map, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool ImportPubKeys(const std::vector<CKeyID>& ordered_pubkeys, const std::map<CKeyID, CPubKey>& pubkey_map, const std::map<CKeyID, std::pair<CPubKey, KeyOriginInfo>>& key_origins, const bool add_keypool, const bool internal, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    bool ImportScriptPubKeys(const std::string& label, const std::set<CScript>& script_pub_keys, const bool have_solving_data, const bool internal, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool ImportScriptPubKeys(const std::string& label, const std::set<CScript>& script_pub_keys, const bool have_solving_data, const bool apply_label, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     CFeeRate m_pay_tx_fee{DEFAULT_PAY_TX_FEE};
     unsigned int m_confirm_target{DEFAULT_TX_CONFIRM_TARGET};
@@ -1336,7 +1335,7 @@ public:
     void postInitProcess();
     // SYSCOIN
     void LockMasternodeOutputs();
-    bool GetBudgetSystemCollateralTX(ReserveDestination &reservedestination, CTransactionRef& tx, uint256 hash, CAmount amount);
+    bool GetBudgetSystemCollateralTX(CTransactionRef& tx, uint256 hash, CAmount amount);
     bool BackupWallet(const std::string& strDest);
 
     /* Set the HD chain model (chain child index counters) */

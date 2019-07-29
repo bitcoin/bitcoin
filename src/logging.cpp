@@ -151,7 +151,6 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::QT, "qt"},
     {BCLog::LEVELDB, "leveldb"},
     // SYSCOIN
-    {BCLog::THREADPOOL, "threadpool"},
     {BCLog::MN, "masternode"},
     {BCLog::GOBJECT, "gobject"},
     {BCLog::MNPAYMENT, "mnpayments"},

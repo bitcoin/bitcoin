@@ -322,7 +322,6 @@ static CTransactionRef SendMoney(interfaces::Chain::Lock& locked_chain, CWallet 
     CScript scriptPubKey = GetScriptForDestination(address);
 
     // Create and send the transaction
-    ReserveDestination reservedest(pwallet);
     CAmount nFeeRequired;
     std::string strError;
     std::vector<CRecipient> vecSend;
@@ -330,13 +329,13 @@ static CTransactionRef SendMoney(interfaces::Chain::Lock& locked_chain, CWallet 
     CRecipient recipient = {scriptPubKey, nValue, fSubtractFeeFromAmount};
     vecSend.push_back(recipient);
     CTransactionRef tx;
-    if (!pwallet->CreateTransaction(locked_chain, vecSend, tx, reservedest, nFeeRequired, nChangePosRet, strError, coin_control)) {
+    if (!pwallet->CreateTransaction(locked_chain, vecSend, tx, nFeeRequired, nChangePosRet, strError, coin_control)) {
         if (!fSubtractFeeFromAmount && nValue + nFeeRequired > curBalance)
             strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
     }
     CValidationState state;
-    if (!pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */, reservedest, state)) {
+    if (!pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */, state)) {
         strError = strprintf("Error: The transaction was rejected! Reason given: %s", FormatStateMessage(state));
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
     }
@@ -921,16 +920,15 @@ static UniValue sendmany(const JSONRPCRequest& request)
     std::shuffle(vecSend.begin(), vecSend.end(), FastRandomContext());
 
     // Send
-    ReserveDestination changedest(pwallet);
     CAmount nFeeRequired = 0;
     int nChangePosRet = -1;
     std::string strFailReason;
     CTransactionRef tx;
-    bool fCreated = pwallet->CreateTransaction(*locked_chain, vecSend, tx, changedest, nFeeRequired, nChangePosRet, strFailReason, coin_control);
+    bool fCreated = pwallet->CreateTransaction(*locked_chain, vecSend, tx, nFeeRequired, nChangePosRet, strFailReason, coin_control);
     if (!fCreated)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strFailReason);
     CValidationState state;
-    if (!pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */, changedest, state)) {
+    if (!pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */, state)) {
         strFailReason = strprintf("Transaction commit failed:: %s", FormatStateMessage(state));
         throw JSONRPCError(RPC_WALLET_ERROR, strFailReason);
     }
@@ -1067,7 +1065,7 @@ static UniValue ListReceived(interfaces::Chain::Lock& locked_chain, CWallet * co
 
         // SYSCOIN if asset send check receivers instead of syscoin dust output
         std::vector<IsAssetMineSelection> IsAssetMineResults;
-        if(wtx.tx->nVersion == SYSCOIN_TX_VERSION_ASSET_SEND || wtx.tx->nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND){
+        if(wtx.tx->nVersion == SYSCOIN_TX_VERSION_ASSET_SEND || IsAssetAllocationTx(wtx.tx->nVersion)){
             if(pwallet->IsAssetMine(*wtx.tx.get(), filter, IsAssetMineResults)){
                 for(auto isMineResult: IsAssetMineResults){
                     if (has_filtered_address && !(filtered_address == isMineResult.destination)) {
@@ -3316,12 +3314,12 @@ static UniValue bumpfee(const JSONRPCRequest& request)
                 "\nBumps the fee of an opt-in-RBF transaction T, replacing it with a new transaction B.\n"
                 "An opt-in RBF transaction with the given txid must be in the wallet.\n"
                 "The command will pay the additional fee by reducing change outputs or adding inputs when necessary. It may add a new change output if one does not already exist.\n"
-                "If `totalFee` is given, adding inputs is not supported, so there must be a single change output that is big enough or it will fail.\n"
+                "If `totalFee` (DEPRECATED) is given, adding inputs is not supported, so there must be a single change output that is big enough or it will fail.\n"
                 "All inputs in the original transaction will be included in the replacement transaction.\n"
                 "The command will fail if the wallet or mempool contains a transaction that spends one of T's outputs.\n"
                 "By default, the new fee will be calculated automatically using estimatesmartfee.\n"
                 "The user can specify a confirmation target for estimatesmartfee.\n"
-                "Alternatively, the user can specify totalFee, or use RPC settxfee to set a higher fee rate.\n"
+                "Alternatively, the user can specify totalFee (DEPRECATED), or use RPC settxfee to set a higher fee rate.\n"
                 "At a minimum, the new fee rate must be high enough to pay an additional new relay fee (incrementalfee\n"
                 "returned by getnetworkinfo) to enter the node's mempool.\n",
                 {
@@ -3329,7 +3327,7 @@ static UniValue bumpfee(const JSONRPCRequest& request)
                     {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "",
                         {
                             {"confTarget", RPCArg::Type::NUM, /* default */ "fallback to wallet's default", "Confirmation target (in blocks)"},
-                            {"totalFee", RPCArg::Type::NUM, /* default */ "fallback to 'confTarget'", "Total fee (NOT feerate) to pay, in satoshis.\n"
+                            {"totalFee", RPCArg::Type::NUM, /* default */ "fallback to 'confTarget'", "Total fee (NOT feerate) to pay, in satoshis. (DEPRECATED)\n"
             "                         In rare cases, the actual fee paid might be slightly higher than the specified\n"
             "                         totalFee if the tx change output has to be removed because it is too close to\n"
             "                         the dust threshold."},
@@ -3384,6 +3382,9 @@ static UniValue bumpfee(const JSONRPCRequest& request)
         } else if (options.exists("confTarget")) { // TODO: alias this to conf_target
             coin_control.m_confirm_target = ParseConfirmTarget(options["confTarget"], pwallet->chain().estimateMaxBlocks());
         } else if (options.exists("totalFee")) {
+            if (!pwallet->chain().rpcEnableDeprecated("totalFee")) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "totalFee argument has been deprecated and will be removed in 0.20. Please use -deprecatedrpc=totalFee to continue using this argument until removal.");
+            }
             totalFee = options["totalFee"].get_int64();
             if (totalFee <= 0) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid totalFee %s (must be greater than 0)", FormatMoney(totalFee)));

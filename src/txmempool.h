@@ -353,7 +353,8 @@ enum class MemPoolRemovalReason {
     CONFLICT,    //!< Removed for conflict with in-block transaction
     REPLACED,    //!< Removed for replacement
     // SYSCOIN
-    SYSCOIN,     //!< Removed for failure of asset consensus
+    SYSCOININPUT,     //!< Removed for failure of asset consensus
+    SYSCOINCONSENSUS,     //!< Removed for failure of asset consensus
 };
 
 class SaltedTxidHasher
@@ -589,8 +590,6 @@ public:
     void removeForReorg(const CCoinsViewCache* pcoins, unsigned int nMemPoolHeight, int flags) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
     void removeConflicts(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight) EXCLUSIVE_LOCKS_REQUIRED(cs);
-    // SYSCOIN
-    void removeExpiredMempoolBalances(setEntries& stage);
     void clear();
     void _clear() EXCLUSIVE_LOCKS_REQUIRED(cs); //lock free
     bool CompareDepthAndScore(const uint256& hasha, const uint256& hashb);

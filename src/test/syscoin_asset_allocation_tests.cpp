@@ -99,7 +99,8 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_lock)
     res.erase(std::remove(res.begin(), res.end(), '\n'), res.end());
     BOOST_CHECK(res.empty());
     string txid0 = AssetAllocationTransfer(false, "node1", guid, newaddress, "\"[{\\\"address\\\":\\\"" + newaddress1 + "\\\",\\\"amount\\\":0.11}]\"");
-    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress1));
+    BOOST_CHECK(AreTwoTransactionsLinked("node1", txid, txid0));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress1));
 	balance = find_value(r.get_obj(), "balance");
     BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8), 0.11 * COIN);
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getrawtransaction " + txid0 + " true"));
@@ -148,60 +149,27 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_send_address)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress2));
 	balance = find_value(r.get_obj(), "balance_zdag");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8), 0.23 * COIN);
-
-	// non zdag cannot be found since it was already mined, but ends up briefly in conflict state because sender is conflicted
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + guid + " " + newaddress1 + " " + txid0));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_WARNING_MIN_LATENCY);
-
-	// first tx should have to wait 1 sec for good status
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + guid + " " + newaddress1 + " " + txid1));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_WARNING_MIN_LATENCY);
-
-	// check just sender
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + guid + " " + newaddress1 + " ''"));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_WARNING_MIN_LATENCY);
-
-	// wait for 1 second as required by unit test
-	MilliSleep(1000);
+	MilliSleep(500);
 	// second send
 	string txid2 = AssetAllocationTransfer(true, "node1", guid, newaddress1, "\"[{\\\"address\\\":\\\"" + newaddress2 + "\\\",\\\"amount\\\":0.13}]\"");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress2 ));
 	balance = find_value(r.get_obj(), "balance_zdag");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8), 0.36 * COIN);
 
-	// sender is conflicted so txid0 is conflicted by extension even if its not found
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + guid + " " + newaddress1 + " " + txid0));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_WARNING_MIN_LATENCY);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
 
 	// first ones now OK because it was found explicitly
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + guid + " " + newaddress1 + " " + txid1));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_STATUS_OK);
 
-	// second one hasn't waited enough time yet
+
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + guid + " " + newaddress1 + " " + txid2));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_WARNING_MIN_LATENCY);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_STATUS_OK);
 
 	// check just sender
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + guid + " " + newaddress1 + " ''"));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_WARNING_MIN_LATENCY);
-
-	// wait for 1.5 second to clear minor warning status
-	MilliSleep(1500);
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + guid + " " + newaddress1 + " " + txid0));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
-
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + guid + " " + newaddress1 + " " + txid1));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_STATUS_OK);
-
-
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + guid + " " + newaddress1 + " " + txid2));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_STATUS_OK);
-
-
-	// check just sender as well
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + guid + " " + newaddress1 + " ''"));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_STATUS_OK);
-
 
 	// after pow, should get not found on all of them
 	GenerateBlocks(1);
@@ -270,7 +238,26 @@ BOOST_AUTO_TEST_CASE(generate_asset_consistency_check)
 
 	BOOST_CHECK_NO_THROW(assetValidatedResults = CallRPC("node1", "listassets " + itostr(INT_MAX) + " 0"));
 	BOOST_CHECK_EQUAL(assetValidatedResults.write(), assetNowResults.write());
+	BOOST_CHECK_NO_THROW(assetValidatedResults = CallRPC("node2", "listassets " + itostr(INT_MAX) + " 0"));
+	BOOST_CHECK_EQUAL(assetValidatedResults.write(), assetNowResults.write());
+	BOOST_CHECK_NO_THROW(assetValidatedResults = CallRPC("node3", "listassets " + itostr(INT_MAX) + " 0"));
+	BOOST_CHECK_EQUAL(assetValidatedResults.write(), assetNowResults.write());
+
+	StopNode("node2");
+	StartNode("node2", true, "", true);
+	BOOST_CHECK_NO_THROW(assetValidatedResults = CallRPC("node2", "listassets " + itostr(INT_MAX) + " 0"));
+	BOOST_CHECK_EQUAL(assetValidatedResults.write(), assetNowResults.write());
+	
+	StopNode("node3");
+	StartNode("node3", true, "", true);
+	BOOST_CHECK_NO_THROW(assetValidatedResults = CallRPC("node3", "listassets " + itostr(INT_MAX) + " 0"));
+	BOOST_CHECK_EQUAL(assetValidatedResults.write(), assetNowResults.write());
+
 	BOOST_CHECK_NO_THROW(assetAllocationsValidatedResults = CallRPC("node1", "listassetallocations " + itostr(INT_MAX) + " 0"));
+	BOOST_CHECK_EQUAL(assetAllocationsValidatedResults.write(), assetAllocationsNowResults.write());
+	BOOST_CHECK_NO_THROW(assetAllocationsValidatedResults = CallRPC("node2", "listassetallocations " + itostr(INT_MAX) + " 0"));
+	BOOST_CHECK_EQUAL(assetAllocationsValidatedResults.write(), assetAllocationsNowResults.write());
+	BOOST_CHECK_NO_THROW(assetAllocationsValidatedResults = CallRPC("node3", "listassetallocations " + itostr(INT_MAX) + " 0"));
 	BOOST_CHECK_EQUAL(assetAllocationsValidatedResults.write(), assetAllocationsNowResults.write());	
 	ECC_Stop();
 }

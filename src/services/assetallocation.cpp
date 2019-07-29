@@ -13,18 +13,21 @@
 #endif
 #include <services/rpc/assetrpc.h>
 #include <rpc/server.h>
+
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
 extern UniValue ValueFromAmount(const CAmount& amount);
 extern UniValue DescribeAddress(const CTxDestination& dest);
 extern void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex);
 extern UniValue convertaddress(const JSONRPCRequest& request);
-CCriticalSection cs_assetallocation;
+extern AssetPrevTxMap mempoolMapAssetPrevTx;
+CCriticalSection cs_assetallocationmempoolbalance;
 CCriticalSection cs_assetallocationarrival;
+CCriticalSection cs_assetallocationconflicts;
 using namespace std;
-AssetBalanceMap mempoolMapAssetBalances GUARDED_BY(cs_assetallocation);
+AssetBalanceMap mempoolMapAssetBalances GUARDED_BY(cs_assetallocationmempoolbalance);
 ArrivalTimesMapImpl arrivalTimesMap GUARDED_BY(cs_assetallocationarrival);
-std::unordered_set<std::string> assetAllocationConflicts;
+std::unordered_set<std::string> assetAllocationConflicts GUARDED_BY(cs_assetallocationconflicts);
 string CWitnessAddress::ToString() const {
     if (vchWitnessProgram.size() <= 4 && stringFromVch(vchWitnessProgram) == "burn")
         return "burn";
@@ -156,26 +159,27 @@ void CAssetAllocation::Serialize( vector<unsigned char> &vchData) {
 	vchData = vector<unsigned char>(dsAsset.begin(), dsAsset.end());
 
 }
-void CAssetAllocationDB::WriteMintIndex(const CTransaction& tx, const CMintSyscoin& mintSyscoin, const int &nHeight, const uint256& blockhash){
+bool CAssetAllocationDB::WriteMintIndex(const CTransaction& tx, const uint256& txHash, const CMintSyscoin& mintSyscoin, const int &nHeight, const uint256& blockhash){
     if (fZMQAssetAllocation || fAssetIndex) {
         if(!fAssetIndexGuids.empty() && std::find(fAssetIndexGuids.begin(),fAssetIndexGuids.end(), mintSyscoin.assetAllocationTuple.nAsset) == fAssetIndexGuids.end()){
             LogPrint(BCLog::SYS, "Asset allocation cannot be indexed because it is not set in -assetindexguids list\n");
-            return;
+            return true;
         }
         UniValue output(UniValue::VOBJ);
-        if(AssetMintTxToJson(tx, mintSyscoin, nHeight, blockhash, output)){
+        if(AssetMintTxToJson(tx, txHash, mintSyscoin, nHeight, blockhash, output)){
             if(fZMQAssetAllocation)
                 GetMainSignals().NotifySyscoinUpdate(output.write().c_str(), "assetallocation");
             if(fAssetIndex)
-                WriteAssetIndexForAllocation(mintSyscoin, tx.GetHash(), output); 
+                return WriteAssetIndexForAllocation(mintSyscoin, txHash, output); 
         }
     }
+    return true;
 }
-void CAssetAllocationDB::WriteAssetAllocationIndex(const CTransaction &tx, const CAsset& dbAsset, const int &nHeight, const uint256& blockhash) {
+bool CAssetAllocationDB::WriteAssetAllocationIndex(const CTransaction &tx, const uint256& txHash, const CAsset& dbAsset, const int &nHeight, const uint256& blockhash) {
 	if (fZMQAssetAllocation || fAssetIndex) {
         if(!fAssetIndexGuids.empty() && std::find(fAssetIndexGuids.begin(),fAssetIndexGuids.end(),dbAsset.nAsset) == fAssetIndexGuids.end()){
             LogPrint(BCLog::SYS, "Asset allocation cannot be indexed because it is not set in -assetindexguids list\n");
-            return;
+            return true;
         }
 		UniValue oName(UniValue::VOBJ);
         CAssetAllocation allocation;
@@ -183,57 +187,83 @@ void CAssetAllocationDB::WriteAssetAllocationIndex(const CTransaction &tx, const
             if(fZMQAssetAllocation)
                 GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "assetallocation");
             if(fAssetIndex)
-                WriteAssetIndexForAllocation(allocation, tx.GetHash(), oName);          
+                return WriteAssetIndexForAllocation(allocation, txHash, oName);          
         }
 	}
-
+    return true;
 }
-void WriteAssetIndexForAllocation(const CAssetAllocation& assetallocation, const uint256& txid, const UniValue& oName){
+bool WriteAssetIndexForAllocation(const CAssetAllocation& assetallocation, const uint256& txid, const UniValue& oName){
     if(!fAssetIndexGuids.empty() && std::find(fAssetIndexGuids.begin(),fAssetIndexGuids.end(), assetallocation.assetAllocationTuple.nAsset) == fAssetIndexGuids.end()){
         LogPrint(BCLog::SYS, "Asset allocation cannot be indexed because asset is not set in -assetindexguids list\n");
-        return;
+        return true;
     }
+    bool ret = true;
     // sender
-    WriteAssetAllocationIndexTXID(assetallocation.assetAllocationTuple, txid);
-    
+    ret = WriteAssetAllocationIndexTXID(assetallocation.assetAllocationTuple, txid);
+    if(!ret){
+        LogPrint(BCLog::SYS, "Failed to write asset allocation index txid\n");   
+        return false;
+    }
     // receivers
     for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
-         WriteAssetAllocationIndexTXID(CAssetAllocationTuple(assetallocation.assetAllocationTuple.nAsset, amountTuple.first), txid);
+        ret = WriteAssetAllocationIndexTXID(CAssetAllocationTuple(assetallocation.assetAllocationTuple.nAsset, amountTuple.first), txid);
+        if(!ret){
+            LogPrint(BCLog::SYS, "Failed to write asset allocation receiver txid\n");   
+            return false;
+        }
     }
     // index into the asset as well     
-    WriteAssetIndexTXID(assetallocation.assetAllocationTuple.nAsset, txid);
-         
+    ret = WriteAssetIndexTXID(assetallocation.assetAllocationTuple.nAsset, txid);
+    if(!ret){
+        LogPrint(BCLog::SYS, "Failed to write asset index txid\n");   
+        return false; 
+    }      
     // write payload only once for txid
-    if(!passetindexdb->WritePayload(txid, oName))
-        LogPrint(BCLog::SYS, "Failed to write asset index payload\n");        
+    return passetindexdb->WritePayload(txid, oName);      
     
 }
-void WriteAssetIndexForAllocation(const CMintSyscoin& mintSyscoin, const uint256& txid, const UniValue& oName){
+bool WriteAssetIndexForAllocation(const CMintSyscoin& mintSyscoin, const uint256& txid, const UniValue& oName){
     const CAssetAllocationTuple senderAllocationTuple(mintSyscoin.assetAllocationTuple.nAsset, CWitnessAddress(0, vchFromString("burn")));
     if(!fAssetIndexGuids.empty() && std::find(fAssetIndexGuids.begin(),fAssetIndexGuids.end(), senderAllocationTuple.nAsset) == fAssetIndexGuids.end()){
         LogPrint(BCLog::SYS, "Mint Asset allocation cannot be indexed because asset is not set in -assetindexguids list\n");
-        return;
+        return true;
     }
+    bool ret = true;
      // sender
-    WriteAssetAllocationIndexTXID(senderAllocationTuple, txid);
-      
+    ret = WriteAssetAllocationIndexTXID(senderAllocationTuple, txid);
+    if(!ret){
+        LogPrint(BCLog::SYS, "Failed to write sender asset allocation index txid\n");   
+        return false; 
+    }
     // receiver
-    WriteAssetAllocationIndexTXID(mintSyscoin.assetAllocationTuple, txid);
-    
+    ret = WriteAssetAllocationIndexTXID(mintSyscoin.assetAllocationTuple, txid);
+    if(!ret){
+        LogPrint(BCLog::SYS, "Failed to write mint asset allocation index txid\n");   
+        return false; 
+    }    
     // index into the asset as well     
-    WriteAssetIndexTXID(mintSyscoin.assetAllocationTuple.nAsset, txid);
-    
-    if(!passetindexdb->WritePayload(txid, oName))
-        LogPrint(BCLog::SYS, "Failed to write asset index payload\n");        
+    ret = WriteAssetIndexTXID(mintSyscoin.assetAllocationTuple.nAsset, txid);
+    if(!ret){
+        LogPrint(BCLog::SYS, "Failed to write asset index txid\n");   
+        return false;   
+    }
+    ret = passetindexdb->WritePayload(txid, oName);    
+    if(!ret){
+        LogPrint(BCLog::SYS, "Failed to write asset allocation index payload\n");   
+        return false;        
+    }  
+    return true;
 
 }
-void WriteAssetAllocationIndexTXID(const CAssetAllocationTuple& allocationTuple, const uint256& txid){
+bool WriteAssetAllocationIndexTXID(const CAssetAllocationTuple& allocationTuple, const uint256& txid){
     // index the allocation
     int64_t page;
     if(!passetindexdb->ReadAssetAllocationPage(page)){
         page = 0;
-        if(!passetindexdb->WriteAssetAllocationPage(page))
-            LogPrint(BCLog::SYS, "Failed to write asset allocation page\n");           
+        if(!passetindexdb->WriteAssetAllocationPage(page)){
+            LogPrint(BCLog::SYS, "Failed to write asset allocation page\n");   
+            return false; 
+        }
     }
    
     std::vector<uint256> TXIDS;
@@ -242,13 +272,17 @@ void WriteAssetAllocationIndexTXID(const CAssetAllocationTuple& allocationTuple,
     if(((int)TXIDS.size()) >= fAssetIndexPageSize){
         TXIDS.clear();
         page++;
-        if(!passetindexdb->WriteAssetAllocationPage(page))
-            LogPrint(BCLog::SYS, "Failed to write asset allocation page\n");        
+        if(!passetindexdb->WriteAssetAllocationPage(page)){
+            LogPrint(BCLog::SYS, "Failed to write asset allocation new page\n");
+            return false;    
+        }    
     }
     TXIDS.push_back(txid);
-    if(!passetindexdb->WriteIndexTXIDs(allocationTuple, page, TXIDS))
-        LogPrint(BCLog::SYS, "Failed to write asset allocation index txids\n");
-        
+    if(!passetindexdb->WriteIndexTXIDs(allocationTuple, page, TXIDS)){
+        LogPrint(BCLog::SYS, "Failed to write index txids\n");  
+        return false;
+    }   
+    return true;
 }
 bool GetAssetAllocation(const CAssetAllocationTuple &assetAllocationTuple, CAssetAllocation& txPos) {
     if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos))
@@ -261,7 +295,7 @@ bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, const CAs
     CAmount nBalanceZDAG = assetallocation.nBalance;
     const string &allocationTupleStr = assetallocation.assetAllocationTuple.ToString();
     {
-        LOCK(cs_assetallocation);
+        LOCK(cs_assetallocationmempoolbalance);
         AssetBalanceMap::iterator mapIt =  mempoolMapAssetBalances.find(allocationTupleStr);
         if(mapIt != mempoolMapAssetBalances.end())
             nBalanceZDAG = mapIt->second;
@@ -439,14 +473,15 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, const CAsset& dbAsset, cons
     entry.__pushKV("blockhash", blockhash.GetHex()); 
     if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM)
          entry.__pushKV("ethereum_destination", "0x" + HexStr(vchEthAddress));
+    else if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_LOCK)
+        entry.__pushKV("locked_outpoint", assetallocation.lockedOutpoint.ToStringShort());         
     return true;
 }
 
-bool AssetMintTxToJson(const CTransaction& tx, UniValue &entry){
+bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, UniValue &entry){
     CMintSyscoin mintsyscoin(tx);
     if (!mintsyscoin.IsNull() && !mintsyscoin.assetAllocationTuple.IsNull()) {
         int nHeight = 0;
-        const uint256& txHash = tx.GetHash();
         CBlockIndex* blockindex = nullptr;
         uint256 blockhash;
         if(pblockindexdb->ReadBlockHash(txHash, blockhash)){ 
@@ -490,7 +525,7 @@ bool AssetMintTxToJson(const CTransaction& tx, UniValue &entry){
     } 
     return false;
 }
-bool AssetMintTxToJson(const CTransaction& tx, const CMintSyscoin& mintsyscoin, const int& nHeight, const uint256& blockhash, UniValue &entry){
+bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, const CMintSyscoin& mintsyscoin, const int& nHeight, const uint256& blockhash, UniValue &entry){
     if (!mintsyscoin.IsNull() && !mintsyscoin.assetAllocationTuple.IsNull()) {
         entry.__pushKV("txtype", tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_MINT? "assetallocationmint": "syscoinmint");
         entry.__pushKV("asset_allocation", mintsyscoin.assetAllocationTuple.ToString());
@@ -508,7 +543,7 @@ bool AssetMintTxToJson(const CTransaction& tx, const CMintSyscoin& mintsyscoin, 
     
         entry.__pushKV("allocations", oAssetAllocationReceiversArray); 
         entry.__pushKV("total", ValueFromAssetAmount(mintsyscoin.nValueAsset, dbAsset.nPrecision));
-        entry.__pushKV("txid", tx.GetHash().GetHex());
+        entry.__pushKV("txid", txHash.GetHex());
         entry.__pushKV("height", nHeight);
         entry.__pushKV("blockhash", blockhash.GetHex());
         UniValue oSPVProofObj(UniValue::VOBJ);
@@ -547,7 +582,7 @@ bool CAssetAllocationMempoolDB::ScanAssetAllocationMempoolBalances(const uint32_
     }
     uint32_t index = 0;
     {
-        LOCK(cs_assetallocation);
+        LOCK(cs_assetallocationmempoolbalance);
         for (auto&indexObj : mempoolMapAssetBalances) {
             
             if (!vecSenders.empty() && std::find(vecSenders.begin(), vecSenders.end(), indexObj.first) == vecSenders.end())
@@ -707,101 +742,104 @@ bool CAssetAllocationDB::ScanAssetAllocations(const uint32_t count, const uint32
 	}
 	return true;
 }
-int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& assetAllocationTupleSender, const uint256& lookForTxHash, const uint32_t& nMinLatencyMilliSeconds) {
-    LOCK(cs_assetallocationarrival);
-	CAssetAllocation dbAssetAllocation;
-	// get last POW asset allocation balance to ensure we use POW balance to check for potential conflicts in mempool (real-time balances).
-	// The idea is that real-time spending amounts can in some cases overrun the POW balance safely whereas in some cases some of the spends are 
-	// put in another block due to not using enough fees or for other reasons that miners don't mine them.
-	// We just want to flag them as level 1 so it warrants deeper investigation on receiver side if desired (if fund amounts being transferred are not negligible)
-	if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTupleSender, dbAssetAllocation))
-		return ZDAG_NOT_FOUND;
-        
-
-	// ensure that this transaction exists in the arrivalTimes DB (which is the running stored lists of all real-time asset allocation sends not in POW)
-	// the arrivalTimes DB is only added to for valid asset allocation sends that happen in real-time and it is removed once there is POW on that transaction
-    const ArrivalTimesMap& arrivalTimes = arrivalTimesMap[assetAllocationTupleSender.ToString()];
-	if(arrivalTimes.empty())
-		return ZDAG_NOT_FOUND;
-	// sort the arrivalTimesMap ascending based on arrival time value
-
-	// Declaring the type of Predicate for comparing arrivalTimesMap
-	typedef std::function<bool(std::pair<uint256, int64_t>, std::pair<uint256, int64_t>)> Comparator;
-
-	// Defining a lambda function to compare two pairs. It will compare two pairs using second field
-	Comparator compFunctor =
-		[](std::pair<uint256, int64_t> elem1, std::pair<uint256, int64_t> elem2)
-	{
-		return elem1.second < elem2.second;
-	};
-
-	// Declaring a set that will store the pairs using above comparison logic
-	std::set<std::pair<uint256, int64_t>, Comparator> arrivalTimesSet(
-		arrivalTimes.begin(), arrivalTimes.end(), compFunctor);
-
-	// go through arrival times and check that balances don't overrun the POW balance
-	const int64_t &nNow = GetTimeMillis();
-	unordered_map<string, CAmount> mapBalances;
-	// init sender balance, track balances by address
-	// this is important because asset allocations can be sent/received within blocks and will overrun balances prematurely if not tracked properly, for example pow balance 3, sender sends 3, gets 2 sends 2 (total send 3+2=5 > balance of 3 from last stored state, this is a valid scenario and shouldn't be flagged)
-	CAmount &senderBalance = mapBalances[assetAllocationTupleSender.witnessAddress.ToString()];
-	senderBalance = dbAssetAllocation.nBalance;
-	int minLatency = nMinLatencyMilliSeconds;
-	if (fUnitTest)
-		minLatency = 1000;
-    const CTransaction *prevTx = NULL;
-    int64_t nPrevTime = 0;
-	for (auto& arrivalTime : arrivalTimesSet)
-	{
-		// ensure mempool has this transaction and it is not yet mined, get the transaction in question
-		const CTransactionRef &txRef = mempool.get(arrivalTime.first);
-		if (!txRef)
-			continue;
-		const CTransaction &tx = *txRef;
-        // ensure output linking for chain of sender transactions
-        if(prevTx && !prevTx->IsNull()){
-            bool foundLink = false;
-            const uint256& txHashPrev = prevTx->GetHash();
-            for(const auto& vin: tx.vin){
-                for(unsigned i = 0; i< prevTx->vout.size();i++){
-                    if(vin.prevout == COutPoint(txHashPrev, i)){
-                        foundLink = true;
-                    }
+void GetActorsFromSyscoinTx(const CTransactionRef& txRef, bool bJustSender, bool bGetAddress, ActorSet& actorSet){
+    if(IsSyscoinMintTx(txRef->nVersion)){
+        CMintSyscoin theMintSyscoin(*txRef);
+        if(!theMintSyscoin.IsNull())
+            GetActorsFromMintTx(theMintSyscoin, bJustSender, bGetAddress, actorSet);
+    }
+    else if(IsAssetTx(txRef->nVersion)){
+        CAsset theAsset;
+        CAssetAllocation theAssetAllocation;
+        if(txRef->nVersion == SYSCOIN_TX_VERSION_ASSET_SEND){
+            theAssetAllocation = CAssetAllocation(*txRef);
+            if(!theAssetAllocation.assetAllocationTuple.IsNull())
+                GetActorsFromAssetTx(theAsset, theAssetAllocation, txRef->nVersion, bJustSender, bGetAddress, actorSet);
+                
+        }
+        else{
+            theAsset = CAsset(*txRef);
+            if(!theAsset.IsNull())
+                GetActorsFromAssetTx(theAsset, theAssetAllocation, txRef->nVersion, bJustSender, bGetAddress, actorSet);
+        }
+    }
+    else if(IsAssetAllocationTx(txRef->nVersion)){
+        CAssetAllocation theAssetAllocation(*txRef);
+        if(!theAssetAllocation.assetAllocationTuple.IsNull())
+            GetActorsFromAssetAllocationTx(theAssetAllocation, txRef->nVersion, bJustSender, bGetAddress, actorSet);
+    }
+}
+void GetActorsFromMintTx(const CMintSyscoin& theMintSyscoin, bool bJustSender, bool bGetAddress, ActorSet& actorSet) {
+    const std::string &receiverAddress = theMintSyscoin.assetAllocationTuple.witnessAddress.ToString();
+    if(receiverAddress != "burn" || (receiverAddress == "burn" && !bGetAddress))
+        actorSet.insert(std::move(receiverAddress));
+}
+void GetActorsFromAssetTx(const CAsset& theAsset, const CAssetAllocation& theAssetAllocation, int nVersion, bool bJustSender, bool bGetAddress, ActorSet& actorSet) {
+    CAssetAllocationTuple receiverAllocationTuple;
+    if(nVersion == SYSCOIN_TX_VERSION_ASSET_SEND){
+        actorSet.insert(theAssetAllocation.assetAllocationTuple.witnessAddress.ToString());           
+    }
+    else{
+        actorSet.insert(theAsset.witnessAddress.ToString());
+    }
+    if(bJustSender)
+        return;
+    switch (nVersion) {
+        case SYSCOIN_TX_VERSION_ASSET_SEND:
+            for (unsigned int i = 0;i<theAssetAllocation.listSendingAllocationAmounts.size();i++) {
+                receiverAllocationTuple = CAssetAllocationTuple(theAssetAllocation.assetAllocationTuple.nAsset, theAssetAllocation.listSendingAllocationAmounts[i].first);
+                const std::string &receiverAddress = receiverAllocationTuple.witnessAddress.ToString();
+                if(!bGetAddress && receiverAddress == "burn")
+                    continue;
+                actorSet.insert(std::move(receiverAddress));
+            }  
+            break; 
+        case SYSCOIN_TX_VERSION_ASSET_ACTIVATE:
+        case SYSCOIN_TX_VERSION_ASSET_UPDATE:
+            break;
+        case SYSCOIN_TX_VERSION_ASSET_TRANSFER:
+            const std::string &receiverTupleStr = theAsset.witnessAddressTransfer.ToString();
+            if(receiverTupleStr != "burn" || (receiverTupleStr == "burn" && !bGetAddress))
+                actorSet.insert(std::move(receiverTupleStr));
+            break;
+    }
+}
+void GetActorsFromAssetAllocationTx(const CAssetAllocation &theAssetAllocation, int nVersion, bool bJustSender, bool bGetAddress, ActorSet& actorSet) {
+    bool bAddSender = true;
+    CAssetAllocationTuple receiverAllocationTuple;
+    switch (nVersion) {
+        case SYSCOIN_TX_VERSION_ALLOCATION_SEND:
+            if(!bJustSender){
+                for (unsigned int i = 0;i<theAssetAllocation.listSendingAllocationAmounts.size();i++) {
+                    receiverAllocationTuple = CAssetAllocationTuple(theAssetAllocation.assetAllocationTuple.nAsset, theAssetAllocation.listSendingAllocationAmounts[i].first);
+                    const std::string &receiverAddress = receiverAllocationTuple.witnessAddress.ToString();
+                    if(!bGetAddress && receiverAddress == "burn")
+                        continue;
+                    actorSet.insert(bGetAddress? std::move(receiverAddress): receiverAllocationTuple.ToString());
                 }
+            }    
+            break; 
+        case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM:
+        case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN:
+            // if getting address, this is empty because "burn" is not an address
+            if(!bJustSender && !bGetAddress){
+                receiverAllocationTuple = CAssetAllocationTuple(theAssetAllocation.assetAllocationTuple.nAsset,  CWitnessAddress(0, vchFromString("burn")));
+                actorSet.insert(receiverAllocationTuple.ToString());
             }
-            if(!foundLink){
-                return ZDAG_WARNING_NO_OUTPUT_LINKING;
+            break;
+        case SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION:
+            // clear sender if getting address as sender is "burn" and invalid address
+            if(bGetAddress || bJustSender){
+                bAddSender = false;
             }
-        }
-        
-        prevTx = &tx;
-        // ensure that transactions are ordered by some time difference
-        if(nPrevTime >= arrivalTime.second){
-            return ZDAG_WARNING_NO_TIME_SEPERATION;
-        }
-        nPrevTime = arrivalTime.second;
-		// if this tx arrived within the minimum latency period flag it as potentially conflicting
-		if (nNow - arrivalTime.second < minLatency) {
-			return ZDAG_WARNING_MIN_LATENCY;
-		}
-		const uint256& txHash = tx.GetHash();
-		CAssetAllocation assetallocation(tx);
-
-
-		if (!assetallocation.listSendingAllocationAmounts.empty()) {
-			for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
-				senderBalance -= amountTuple.second;
-				mapBalances[amountTuple.first.ToString()] += amountTuple.second;
-				// if running balance overruns the stored balance then we have a potential conflict
-				if (senderBalance < 0) {
-					return ZDAG_WARNING_POTENTIAL_BALANCE_OVERFLOW;
-				}
-			}
-		}
-		// even if the sender may be flagged, the order of events suggests that this receiver should get his money confirmed upon pow because real-time balance is sufficient for this receiver
-		if (txHash == lookForTxHash) {
-			return ZDAG_STATUS_OK;
-		}
-	}
-	return lookForTxHash.IsNull()? ZDAG_STATUS_OK: ZDAG_NOT_FOUND;
+            receiverAllocationTuple = CAssetAllocationTuple(theAssetAllocation.assetAllocationTuple.nAsset, theAssetAllocation.listSendingAllocationAmounts[0].first);
+            actorSet.insert(bGetAddress? receiverAllocationTuple.witnessAddress.ToString(): receiverAllocationTuple.ToString());
+            break;            
+		case SYSCOIN_TX_VERSION_ALLOCATION_LOCK:
+			break;
+    }
+    if(bAddSender){
+        actorSet.insert(bGetAddress? theAssetAllocation.assetAllocationTuple.witnessAddress.ToString(): theAssetAllocation.assetAllocationTuple.ToString());
+    }
+    
 }

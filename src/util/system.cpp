@@ -7,6 +7,7 @@
 
 #include <chainparamsbase.h>
 #include <util/strencodings.h>
+#include <util/translation.h>
 
 #include <stdarg.h>
 
@@ -71,7 +72,6 @@ bool fMasternodeMode = false;
 bool fUnitTest = false;
 bool fTPSTest = false;
 bool fTPSTestEnabled = false;
-bool fConcurrentProcessing = true;
 bool fLiteMode = false;
 bool fZMQAssetAllocation = false;
 bool fZMQAsset = false;
@@ -1148,12 +1148,12 @@ bool CheckSpecs(std::string &errMsg, bool bMiner){
     meminfo_t memInfo = parse_meminfo();
     LogPrintf("Total Memory(MB) %d (Total Free %d) Swap Total(MB) %d (Total Free %d)\n", memInfo.MemTotalMiB, memInfo.MemAvailableMiB, memInfo.SwapTotalMiB, memInfo.SwapFreeMiB);
     if(memInfo.MemTotalMiB < (bMiner? 8000: 3800))
-        errMsg = _("Insufficient memory, you need at least 4GB RAM to run a masternode and be running in a Unix OS. Please see documentation.");
+        errMsg = _("Insufficient memory, you need at least 4GB RAM to run a masternode and be running in a Unix OS. Please see documentation.").translated;
     if(memInfo.MemTotalMiB < 7600 && memInfo.SwapTotalMiB < 3800)
-        errMsg = _("Insufficient swap memory, you need at least 4GB swap RAM to run a masternode and be running in a Unix OS. Please see documentation.");           
+        errMsg = _("Insufficient swap memory, you need at least 4GB swap RAM to run a masternode and be running in a Unix OS. Please see documentation.").translated;           
     LogPrintf("Total number of physical cores found %d\n", GetNumCores());
     if(GetNumCores() < (bMiner? 4: 2))
-        errMsg = _("Insufficient CPU cores, you need at least 2 cores to run a masternode. Please see documentation.");
+        errMsg = _("Insufficient CPU cores, you need at least 2 cores to run a masternode. Please see documentation.").translated;
    bb = !errMsg.empty();
    return errMsg.empty();         
 }
@@ -1861,7 +1861,7 @@ int GetNumCores()
 
 std::string CopyrightHolders(const std::string& strPrefix)
 {
-    const auto copyright_devs = strprintf(_(COPYRIGHT_HOLDERS), COPYRIGHT_HOLDERS_SUBSTITUTION);
+    const auto copyright_devs = strprintf(_(COPYRIGHT_HOLDERS).translated, COPYRIGHT_HOLDERS_SUBSTITUTION);
     std::string strCopyrightHolders = strPrefix + copyright_devs;
 
     // Make sure Syscoin Core copyright is not removed by accident

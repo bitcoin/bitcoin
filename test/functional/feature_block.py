@@ -78,7 +78,7 @@ class FullBlockTest(SyscoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
-        self.extra_args = [[]]
+        self.extra_args = [['-acceptnonstdtxn=1']]  # This is a consensus block test, we don't care about tx policy
 
     def run_test(self):
         node = self.nodes[0]  # convenience reference to the node
@@ -491,6 +491,14 @@ class FullBlockTest(SyscoinTestFramework):
             b39.vtx.append(tx_new)  # add tx to block
             tx_last = tx_new
             b39_outputs += 1
+
+        # The accounting in the loop above can be off, because it misses the
+        # compact size encoding of the number of transactions in the block.
+        # Make sure we didn't accidentally make too big a block. Note that the
+        # size of the block has non-determinism due to the ECDSA signature in
+        # the first transaction.
+        while (len(b39.serialize()) >= MAX_BLOCK_BASE_SIZE):
+            del b39.vtx[-1]
 
         b39 = self.update_block(39, [])
         self.send_blocks([b39], True)
