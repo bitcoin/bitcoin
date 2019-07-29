@@ -3279,7 +3279,7 @@ static UniValue bumpfee(const JSONRPCRequest& request)
                 "The command will fail if the wallet or mempool contains a transaction that spends one of T's outputs.\n"
                 "By default, the new fee will be calculated automatically using estimatesmartfee.\n"
                 "The user can specify a confirmation target for estimatesmartfee.\n"
-                "Alternatively, the user can specify totalFee (DEPRECATED), or use RPC settxfee to set a higher fee rate.\n"
+                "Alternatively, the user can specify totalFee (DEPRECATED), or feeRate (in satoshis per K) for the new transaction .\n"
                 "At a minimum, the new fee rate must be high enough to pay an additional new relay fee (incrementalfee\n"
                 "returned by getnetworkinfo) to enter the node's mempool.\n",
                 {
@@ -3291,6 +3291,9 @@ static UniValue bumpfee(const JSONRPCRequest& request)
             "                         In rare cases, the actual fee paid might be slightly higher than the specified\n"
             "                         totalFee if the tx change output has to be removed because it is too close to\n"
             "                         the dust threshold."},
+                            {"feeRate", RPCArg::Type::AMOUNT, /* default */ "fallback to 'confTarget'", "FeeRate (NOT total fee) to pay, per KB of transaction\n"
+            "                         The feeRate argument allows the users to use their own fee estimator. The resulting bump transaction will "
+            "                         calculate the total fee based on the feeRate amount. The feeRate passed in must be greater than 0.\n"},
                             {"replaceable", RPCArg::Type::BOOL, /* default */ "true", "Whether the new transaction should still be\n"
             "                         marked bip-125 replaceable. If true, the sequence numbers in the transaction will\n"
             "                         be left unchanged from the original. If false, any input sequence numbers in the\n"
@@ -3332,13 +3335,15 @@ static UniValue bumpfee(const JSONRPCRequest& request)
             {
                 {"confTarget", UniValueType(UniValue::VNUM)},
                 {"totalFee", UniValueType(UniValue::VNUM)},
+                {"feeRate", UniValueType(UniValue::VSTR)},
                 {"replaceable", UniValueType(UniValue::VBOOL)},
                 {"estimate_mode", UniValueType(UniValue::VSTR)},
             },
             true, true);
-
-        if (options.exists("confTarget") && options.exists("totalFee")) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "confTarget and totalFee options should not both be set. Please provide either a confirmation target for fee estimation or an explicit total fee for the transaction.");
+        if (options.exists("confTarget") && (options.exists("totalFee") || options.exists("feeRate"))) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "confTarget can't be set with totalFee or feeRate. Please provide either a conftarget for fee estimation, or an explicit total fee or fee rate for the transaction.");
+        } else if (options.exists("feeRate") && options.exists("totalFee")) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "feeRate can't be set along with totalFee. Please provide either a total fee or a fee rate (in satoshis per K) for the transaction.");
         } else if (options.exists("confTarget")) { // TODO: alias this to conf_target
             coin_control.m_confirm_target = ParseConfirmTarget(options["confTarget"], pwallet->chain().estimateMaxBlocks());
         } else if (options.exists("totalFee")) {
@@ -3349,6 +3354,13 @@ static UniValue bumpfee(const JSONRPCRequest& request)
             if (totalFee <= 0) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid totalFee %s (must be greater than 0)", FormatMoney(totalFee)));
             }
+        } else if (options.exists("feeRate")) {
+            CAmount amountRequested = AmountFromValue(options["feeRate"].get_str());
+            CFeeRate fee_rate(amountRequested, 1000);
+            if (fee_rate <= 0) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid feeRate %s (must be greater than 0)", fee_rate.ToString()));
+            }
+            coin_control.m_feerate = fee_rate;
         }
 
         if (options.exists("replaceable")) {
