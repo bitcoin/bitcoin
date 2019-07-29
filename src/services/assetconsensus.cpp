@@ -304,9 +304,8 @@ bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& 
                 good = CheckSyscoinMint(ibd, tx, txHash, state, bJustCheckInternal, bSanityInternal, bMiner, nHeight == 0? ::ChainActive().Height()+1: nHeight, blockHash, mapAssets, mapAssetSupplyStats, mapAssetAllocations, vecMintKeys);
             }
         }
-    }catch (...) {
-        LogPrint(BCLog::SYS,"Exception caught in CheckSyscoinInputs\n");
-        return false;
+    } catch (...) {
+        return FormatSyscoinErrorMessage(state, "checksyscoininputs-exception", bMiner);
     }
     return good;
 }
