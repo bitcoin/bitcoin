@@ -57,6 +57,34 @@ static feebumper::Result PreconditionChecks(interfaces::Chain::Lock& locked_chai
     return feebumper::Result::OK;
 }
 
+static CFeeRate EstimateFeeRate(CWallet* wallet, const CWalletTx& wtx, CCoinControl& coin_control, CAmount& old_fee)
+{
+    // Get the fee rate of the original transaction. This is calculated from
+    // the tx fee/vsize, so it may have been rounded down. Add 1 satoshi to the
+    // result.
+    old_fee = wtx.GetDebit(ISMINE_SPENDABLE) - wtx.tx->GetValueOut();
+    int64_t txSize = GetVirtualTransactionSize(*(wtx.tx));
+    CFeeRate feerate(old_fee, txSize);
+    feerate += CFeeRate(1);
+
+    // The node has a configurable incremental relay fee. Increment the fee by
+    // the minimum of that and the wallet's conservative
+    // WALLET_INCREMENTAL_RELAY_FEE value to future proof against changes to
+    // network wide policy for incremental relay fee that our node may not be
+    // aware of. This ensures we're over the over the required relay fee rate
+    // (BIP 125 rule 4).  The replacement tx will be at least as large as the
+    // original tx, so the total fee will be greater (BIP 125 rule 3)
+    CFeeRate node_incremental_relay_fee = wallet->chain().relayIncrementalFee();
+    CFeeRate wallet_incremental_relay_fee = CFeeRate(WALLET_INCREMENTAL_RELAY_FEE);
+    feerate += std::max(node_incremental_relay_fee, wallet_incremental_relay_fee);
+
+    // Fee rate must also be at least the wallet's GetMinimumFeeRate
+    CFeeRate min_feerate(GetMinimumFeeRate(*wallet, coin_control, /* feeCalc */ nullptr));
+
+    // Set the required fee rate for the replacement transaction in coin control.
+    return std::max(feerate, min_feerate);
+}
+
 namespace feebumper {
 
 bool TransactionCanBeBumped(const CWallet* wallet, const uint256& txid)
@@ -230,31 +258,7 @@ Result CreateRateBumpTransaction(CWallet* wallet, const uint256& txid, const CCo
         }
     }
 
-    // Get the fee rate of the original transaction. This is calculated from
-    // the tx fee/vsize, so it may have been rounded down. Add 1 satoshi to the
-    // result.
-    old_fee = wtx.GetDebit(ISMINE_SPENDABLE) - wtx.tx->GetValueOut();
-    int64_t txSize = GetVirtualTransactionSize(*(wtx.tx));
-    // Feerate of thing we are bumping
-    CFeeRate feerate(old_fee, txSize);
-    feerate += CFeeRate(1);
-
-    // The node has a configurable incremental relay fee. Increment the fee by
-    // the minimum of that and the wallet's conservative
-    // WALLET_INCREMENTAL_RELAY_FEE value to future proof against changes to
-    // network wide policy for incremental relay fee that our node may not be
-    // aware of. This ensures we're over the over the required relay fee rate
-    // (BIP 125 rule 4).  The replacement tx will be at least as large as the
-    // original tx, so the total fee will be greater (BIP 125 rule 3)
-    CFeeRate node_incremental_relay_fee = wallet->chain().relayIncrementalFee();
-    CFeeRate wallet_incremental_relay_fee = CFeeRate(WALLET_INCREMENTAL_RELAY_FEE);
-    feerate += std::max(node_incremental_relay_fee, wallet_incremental_relay_fee);
-
-    // Fee rate must also be at least the wallet's GetMinimumFeeRate
-    CFeeRate min_feerate(GetMinimumFeeRate(*wallet, new_coin_control, /* feeCalc */ nullptr));
-
-    // Set the required fee rate for the replacement transaction in coin control.
-    new_coin_control.m_feerate = std::max(feerate, min_feerate);
+    new_coin_control.m_feerate = EstimateFeeRate(wallet, wtx, new_coin_control, old_fee); 
 
     // Fill in required inputs we are double-spending(all of them)
     // N.B.: bip125 doesn't require all the inputs in the replaced transaction to be
