@@ -68,6 +68,7 @@ class BumpFeeTest(BitcoinTestFramework):
         self.log.info("Running tests")
         dest_address = peer_node.getnewaddress()
         test_simple_bumpfee_succeeds(self, rbf_node, peer_node, dest_address)
+        test_bumpfee_feerate(self, rbf_node, peer_node, dest_address)
         test_segwit_bumpfee_succeeds(rbf_node, dest_address)
         test_nonrbf_bumpfee_fails(peer_node, dest_address)
         test_notmine_bumpfee_fails(rbf_node, peer_node, dest_address)
@@ -86,7 +87,6 @@ class BumpFeeTest(BitcoinTestFramework):
         test_small_output_with_feerate_succeeds(rbf_node, dest_address)
         test_no_more_inputs_fails(rbf_node, dest_address)
         self.log.info("Success")
-
 
 def test_simple_bumpfee_succeeds(self, rbf_node, peer_node, dest_address):
     rbfid = spend_one_input(rbf_node, dest_address)
@@ -109,6 +109,18 @@ def test_simple_bumpfee_succeeds(self, rbf_node, peer_node, dest_address):
     assert_equal(oldwtx["replaced_by_txid"], bumped_tx["txid"])
     assert_equal(bumpedwtx["replaces_txid"], rbfid)
 
+def test_bumpfee_feerate(self, rbf_node, peer_node, dest_address):
+    rbfid = spend_one_input(rbf_node, dest_address)
+    self.sync_mempools((rbf_node, peer_node))
+    requested_feerate = Decimal("0.00015") # 15000 satoshis per KB (0.00015 BTC per KB)
+    bumped_tx = rbf_node.bumpfee(rbfid, {"feeRate": requested_feerate})
+    # check that bumped_tx propagates, original tx was evicted and has a wallet conflict
+    self.sync_mempools((rbf_node, peer_node))
+    assert bumped_tx["txid"] in rbf_node.getrawmempool() and bumped_tx["txid"] in peer_node.getrawmempool()
+    assert rbfid not in rbf_node.getrawmempool() and rbfid not in peer_node.getrawmempool()
+    actual_feerate = bumped_tx["fee"] * 1000 / rbf_node.getrawtransaction(bumped_tx["txid"], True)["vsize"]
+    # Make sure the difference between the actual feeRate and the requested feeRate is small.
+    assert_greater_than(Decimal("0.00001000"), abs(requested_feerate - actual_feerate))
 
 def test_segwit_bumpfee_succeeds(rbf_node, dest_address):
     # Create a transaction with segwit output, then create an RBF transaction
