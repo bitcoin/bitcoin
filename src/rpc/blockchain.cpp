@@ -370,6 +370,20 @@ static UniValue getdifficulty(const JSONRPCRequest& request)
     return GetDifficulty(::ChainActive().Tip());
 }
 
+static UniValue RBFTransactionStateToString(RBFTransactionState state)
+{
+    switch (state) {
+    case RBFTransactionState::UNKNOWN:
+        throw std::logic_error("unreachable code");
+    case RBFTransactionState::REPLACEABLE_BIP125:
+        return "bip125";
+    case RBFTransactionState::FINAL:
+        return NullUniValue; // not replaceable
+        // no default case, so the compiler can warn about missing cases
+    }
+    assert(false);
+}
+
 static std::string EntryDescriptionString()
 {
     return "    \"vsize\" : n,            (numeric) virtual transaction size as defined in BIP 141. This is different from actual serialized size for witness transactions as witness data is discounted.\n"
@@ -399,7 +413,13 @@ static std::string EntryDescriptionString()
            "    \"spentby\" : [           (array) unconfirmed transactions spending outputs from this transaction\n"
            "        \"transactionid\",    (string) child transaction id\n"
            "       ... ]\n"
-           "    \"bip125-replaceable\" : true|false,  (boolean) Whether this transaction could be replaced due to BIP125 (replace-by-fee)\n";
+           "    \"bip125-replaceable\" : true|false,  (boolean) Whether this transaction could be replaced due to BIP125 (replace-by-fee)\n"
+           "    \"replaceable\" :         (bool) Whether this transaction is replaceable.\n"
+           "    \"replaceable-reason\" :  (string) Why this transaction is replaceable.\n"
+           "                              If the transaction is not replaceable, this is Null.\n"
+           "                              If the transaction is replaceable, the field is a string. Possible reasons are:\n"
+           "                              '"+RBFTransactionStateToString(RBFTransactionState::REPLACEABLE_BIP125).get_str()+"'\n"
+           ;
 }
 
 static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPoolEntry& e) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
@@ -461,6 +481,8 @@ static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPool
         rbfStatus = true;
     }
 
+    info.pushKV("replaceable", rbfStatus);
+    info.pushKV("replaceable-reason", RBFTransactionStateToString(rbfState));
     info.pushKV("bip125-replaceable", rbfStatus);
 }
 

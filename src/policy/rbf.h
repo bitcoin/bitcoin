@@ -10,7 +10,7 @@
 enum class RBFTransactionState {
     UNKNOWN,
     REPLACEABLE_BIP125,
-    FINAL
+    FINAL,
 };
 
 // Determine whether an in-mempool transaction is signaling opt-in to RBF

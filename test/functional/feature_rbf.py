@@ -428,6 +428,8 @@ class ReplaceByFeeTest(BitcoinTestFramework):
 
         # This transaction isn't shown as replaceable
         assert_equal(self.nodes[0].getmempoolentry(tx1a_txid)['bip125-replaceable'], False)
+        assert_equal(self.nodes[0].getmempoolentry(tx1a_txid)['replaceable'], False)
+        assert_equal(self.nodes[0].getmempoolentry(tx1a_txid)['replaceable-reason'], None)
 
         # Shouldn't be able to double-spend
         tx1b = CTransaction()
@@ -473,6 +475,8 @@ class ReplaceByFeeTest(BitcoinTestFramework):
 
         # This transaction is shown as replaceable
         assert_equal(self.nodes[0].getmempoolentry(tx3a_txid)['bip125-replaceable'], True)
+        assert_equal(self.nodes[0].getmempoolentry(tx3a_txid)['replaceable'], True)
+        assert_equal(self.nodes[0].getmempoolentry(tx3a_txid)['replaceable-reason'], 'bip125')
 
         tx3b = CTransaction()
         tx3b.vin = [CTxIn(COutPoint(tx1a_txid, 0), nSequence=0)]
