@@ -1819,6 +1819,8 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     CBlockIndex *pindexBIP34height = pindex->pprev->GetAncestor(chainparams.GetConsensus().BIP34Height);
     //Only continue to enforce if we're below BIP34 activation height or the block hash at that height doesn't correspond.
     fEnforceBIP30 = fEnforceBIP30 && (!pindexBIP34height || !(pindexBIP34height->GetBlockHash() == chainparams.GetConsensus().BIP34Hash));
+    // And we're not assuming the block is valid.
+    fEnforceBIP30 = fEnforceBIP30 && !fAssumeValid;
 
     // TODO: Remove BIP30 checking from block height 1,983,702 on, once we have a
     // consensus change that ensures coinbases at those heights can not
