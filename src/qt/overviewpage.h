@@ -40,6 +40,7 @@ public:
 public Q_SLOTS:
     void setBalance(const CAmount& balance, const CAmount& stake, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
                     const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
+    void updateLockStatus(const int status);
 
 Q_SIGNALS:
     void transactionClicked(const QModelIndex &index);

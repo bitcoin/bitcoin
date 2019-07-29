@@ -531,6 +531,7 @@ void PoSMiner(CWallet *pwallet)
     std::string strMintSyncMessage = _("Info: Minting suspended while synchronizing wallet.");
     std::string strMintDisabledMessage = _("Info: Minting disabled by 'nominting' option.");
     std::string strMintBlockMessage = _("Info: Minting suspended due to block creation failure.");
+    std::string strMintEmpty = _("");
     if (gArgs.GetBoolArg("-nominting", false))
     {
         strMintWarning = strMintDisabledMessage;
@@ -562,6 +563,8 @@ void PoSMiner(CWallet *pwallet)
                 strMintWarning = strMintSyncMessage;
                 MilliSleep(10000);
             }
+
+            strMintWarning = strMintEmpty;
 
             //
             // Create new block
