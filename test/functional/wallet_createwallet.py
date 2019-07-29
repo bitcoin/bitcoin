@@ -119,5 +119,8 @@ class CreateWalletTest(BitcoinTestFramework):
         # Empty passphrase, error
         assert_raises_rpc_error(-16, 'Cannot encrypt a wallet with a blank password', self.nodes[0].createwallet, 'w7', False, False, '')
 
+        self.log.info('Using a passphrase with private keys disabled returns error')
+        assert_raises_rpc_error(-4, 'Passphrase provided but private keys are disabled. A passphrase is only used to encrypt private keys, so cannot be used for wallets with private keys disabled.', self.nodes[0].createwallet, wallet_name='w8', disable_private_keys=True, passphrase='thisisapassphrase')
+
 if __name__ == '__main__':
     CreateWalletTest().main()
