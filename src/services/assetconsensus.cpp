@@ -320,25 +320,23 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
     // fJustCheck inplace of bSanity to preserve global structures from being changed during test calls, fJustCheck is actually passed in as false because we want to check in PoW mode if blockhash isn't null
     const bool &bSanityInternal = blockHash.IsNull()? bSanity: fJustCheck;
     const bool &bJustCheckInternal = blockHash.IsNull()? fJustCheck: false;
-    if (IsAssetAllocationTx(tx.nVersion))
-    {
-        good = CheckAssetAllocationInputs(tx, inputs, bJustCheckInternal, nHeight, blockHash, mapAssetSupplyStats, mapAssetAllocations, vecLockedOutpoints, errorMessage, bOverflow, bSanityInternal, bMiner);
-
+    try {
+        if (IsAssetAllocationTx(tx.nVersion)) {
+            good = CheckAssetAllocationInputs(tx, inputs, bJustCheckInternal, nHeight, blockHash, mapAssetSupplyStats, mapAssetAllocations, vecLockedOutpoints, errorMessage, bOverflow, bSanityInternal, bMiner);
+        } else if (IsAssetTx(tx.nVersion)) {
+            good = CheckAssetInputs(tx, inputs, bJustCheckInternal, nHeight, blockHash, mapAssets, mapAssetAllocations, errorMessage, bSanityInternal, bMiner);
+        } else if(IsSyscoinMintTx(tx.nVersion)) {
+            if(nHeight <= Params().GetConsensus().nBridgeStartBlock) {
+                errorMessage = "Bridge is disabled";
+                good = false;
+            } else {
+                good = CheckSyscoinMint(ibd, tx, errorMessage, bJustCheckInternal, bSanityInternal, bMiner, nHeight, blockHash, mapAssets, mapAssetSupplyStats, mapAssetAllocations, vecMintKeys, bTxRootError);
+            }
+        }
+    } catch (...) {
+        LogPrint(BCLog::SYS,"Exception caught in CheckSyscoinInputs\n");
+        return false;
     }
-    else if (IsAssetTx(tx.nVersion))
-    {
-        good = CheckAssetInputs(tx, inputs, bJustCheckInternal, nHeight, blockHash, mapAssets, mapAssetAllocations, errorMessage, bSanityInternal, bMiner);
-    } 
-    else if(IsSyscoinMintTx(tx.nVersion))
-    {
-        if(nHeight <= Params().GetConsensus().nBridgeStartBlock){
-            errorMessage = "Bridge is disabled";
-            good = false;
-        }
-        else{
-            good = CheckSyscoinMint(ibd, tx, errorMessage, bJustCheckInternal, bSanityInternal, bMiner, nHeight, blockHash, mapAssets, mapAssetSupplyStats, mapAssetAllocations, vecMintKeys, bTxRootError);
-        }
-    }              
     if (!good)
     {
         if (!errorMessage.empty()) {
@@ -355,7 +353,7 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
         else
             return state.Invalid(bOverflow? ValidationInvalidReason::TX_CONFLICT: ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, errorMessage);
     }
-    
+
     return true;
 }
 
