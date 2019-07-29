@@ -161,7 +161,7 @@ std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const std::string&
     return LoadWallet(chain, WalletLocation(name), error, warning);
 }
 
-std::shared_ptr<CWallet> CreateWallet(interfaces::Chain& chain, const std::string& name, std::string& error, std::string& warning, WalletCreationStatus& status, const SecureString& passphrase, uint64_t wallet_creation_flags)
+WalletCreationStatus CreateWallet(interfaces::Chain& chain, const SecureString& passphrase, uint64_t wallet_creation_flags, const std::string& name, std::string& error, std::string& warning, std::shared_ptr<CWallet>& result)
 {
     // Indicate that the wallet is actually supposed to be blank and not just blank to make it encrypted
     bool create_blank = (wallet_creation_flags & WALLET_FLAG_BLANK_WALLET);
@@ -175,39 +175,40 @@ std::shared_ptr<CWallet> CreateWallet(interfaces::Chain& chain, const std::strin
     WalletLocation location(name);
     if (location.Exists()) {
         error = "Wallet " + location.GetName() + " already exists.";
-        status = WalletCreationStatus::CREATION_FAILED;
-        return nullptr;
+        return WalletCreationStatus::CREATION_FAILED;
     }
 
     // Wallet::Verify will check if we're trying to create a wallet with a duplicate name.
     std::string wallet_error;
     if (!CWallet::Verify(chain, location, false, wallet_error, warning)) {
         error = "Wallet file verification failed: " + wallet_error;
-        status = WalletCreationStatus::CREATION_FAILED;
-        return nullptr;
+        return WalletCreationStatus::CREATION_FAILED;
+    }
+
+    // Do not allow a passphrase when private keys are disabled
+    if (!passphrase.empty() && (wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        error = "Passphrase provided but private keys are disabled. A passphrase is only used to encrypt private keys, so cannot be used for wallets with private keys disabled.";
+        return WalletCreationStatus::CREATION_FAILED;
     }
 
     // Make the wallet
     std::shared_ptr<CWallet> wallet = CWallet::CreateWalletFromFile(chain, location, wallet_creation_flags);
     if (!wallet) {
         error = "Wallet creation failed";
-        status = WalletCreationStatus::CREATION_FAILED;
-        return nullptr;
+        return WalletCreationStatus::CREATION_FAILED;
     }
 
     // Encrypt the wallet
     if (!passphrase.empty() && !(wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
         if (!wallet->EncryptWallet(passphrase)) {
             error = "Error: Wallet created but failed to encrypt.";
-            status = WalletCreationStatus::ENCRYPTION_FAILED;
-            return nullptr;
+            return WalletCreationStatus::ENCRYPTION_FAILED;
         }
         if (!create_blank) {
             // Unlock the wallet
             if (!wallet->Unlock(passphrase)) {
                 error = "Error: Wallet was encrypted but could not be unlocked";
-                status = WalletCreationStatus::ENCRYPTION_FAILED;
-                return nullptr;
+                return WalletCreationStatus::ENCRYPTION_FAILED;
             }
 
             // Set a seed for the wallet
@@ -221,8 +222,8 @@ std::shared_ptr<CWallet> CreateWallet(interfaces::Chain& chain, const std::strin
     }
     AddWallet(wallet);
     wallet->postInitProcess();
-    status = WalletCreationStatus::SUCCESS;
-    return wallet;
+    result = wallet;
+    return WalletCreationStatus::SUCCESS;
 }
 
 const uint32_t BIP32_HARDENED_KEY_LIMIT = 0x80000000;
