@@ -272,36 +272,41 @@ bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& 
     // fJustCheck inplace of bSanity to preserve global structures from being changed during test calls, fJustCheck is actually passed in as false because we want to check in PoW mode if block isn't null
     const bool bSanityInternal = !isBlock? bSanity: fJustCheck; 
     const bool bJustCheckInternal = !isBlock? fJustCheck: false;
-    if (IsAssetAllocationTx(tx.nVersion))
-    {
-        // remove any txid's that are confirming from vecToRemoveFromMempool
-        if(isBlock && vecToRemoveFromMempool.size() > 0 && !fJustCheck){
-            auto it = std::find_if( vecToRemoveFromMempool.begin(), vecToRemoveFromMempool.end(),
-                [&txHash](const std::pair<uint256, uint32_t>& element){ return element.first == txHash;} );
-            if(it != vecToRemoveFromMempool.end()){
-                vecToRemoveFromMempool.erase(it);
+    try{
+        if (IsAssetAllocationTx(tx.nVersion))
+        {
+            // remove any txid's that are confirming from vecToRemoveFromMempool
+            if(isBlock && vecToRemoveFromMempool.size() > 0 && !fJustCheck){
+                auto it = std::find_if( vecToRemoveFromMempool.begin(), vecToRemoveFromMempool.end(),
+                    [&txHash](const std::pair<uint256, uint32_t>& element){ return element.first == txHash;} );
+                if(it != vecToRemoveFromMempool.end()){
+                    vecToRemoveFromMempool.erase(it);
+                }
+            }
+            CAssetAllocation theAssetAllocation(tx);
+            if(theAssetAllocation.assetAllocationTuple.IsNull()){
+                return FormatSyscoinErrorMessage(state, "assetallocation-unserialize", bMiner);
+            }
+            GetActorsFromAssetAllocationTx(theAssetAllocation, tx.nVersion, false, false, actorSet);
+            good = CheckAssetAllocationInputs(tx, txHash, theAssetAllocation, state, inputs, bJustCheckInternal, nHeight == 0? ::ChainActive().Height()+1: nHeight, blockHash, mapAssetSupplyStats, mapAssetAllocations, mapAssetPrevTxs, vecLockedOutpoints, bSanityInternal, bMiner);
+        }
+        else if (IsAssetTx(tx.nVersion))
+        {
+            good = CheckAssetInputs(tx, txHash, state, inputs, bJustCheckInternal, nHeight == 0? ::ChainActive().Height()+1: nHeight, blockHash, mapAssets, mapAssetAllocations, bSanityInternal, bMiner);
+        } 
+        else if(IsSyscoinMintTx(tx.nVersion))
+        {
+            if(nHeight <= Params().GetConsensus().nBridgeStartBlock){
+                FormatSyscoinErrorMessage(state, "mint-disabled", bMiner);
+                good = false;
+            }
+            else{
+                good = CheckSyscoinMint(ibd, tx, txHash, state, bJustCheckInternal, bSanityInternal, bMiner, nHeight == 0? ::ChainActive().Height()+1: nHeight, blockHash, mapAssets, mapAssetSupplyStats, mapAssetAllocations, vecMintKeys);
             }
         }
-        CAssetAllocation theAssetAllocation(tx);
-        if(theAssetAllocation.assetAllocationTuple.IsNull()){
-             return FormatSyscoinErrorMessage(state, "assetallocation-unserialize", bMiner);
-        }
-        GetActorsFromAssetAllocationTx(theAssetAllocation, tx.nVersion, false, false, actorSet);
-        good = CheckAssetAllocationInputs(tx, txHash, theAssetAllocation, state, inputs, bJustCheckInternal, nHeight == 0? ::ChainActive().Height()+1: nHeight, blockHash, mapAssetSupplyStats, mapAssetAllocations, mapAssetPrevTxs, vecLockedOutpoints, bSanityInternal, bMiner);
-    }
-    else if (IsAssetTx(tx.nVersion))
-    {
-        good = CheckAssetInputs(tx, txHash, state, inputs, bJustCheckInternal, nHeight == 0? ::ChainActive().Height()+1: nHeight, blockHash, mapAssets, mapAssetAllocations, bSanityInternal, bMiner);
-    } 
-    else if(IsSyscoinMintTx(tx.nVersion))
-    {
-        if(nHeight <= Params().GetConsensus().nBridgeStartBlock){
-            FormatSyscoinErrorMessage(state, "mint-disabled", bMiner);
-            good = false;
-        }
-        else{
-            good = CheckSyscoinMint(ibd, tx, txHash, state, bJustCheckInternal, bSanityInternal, bMiner, nHeight == 0? ::ChainActive().Height()+1: nHeight, blockHash, mapAssets, mapAssetSupplyStats, mapAssetAllocations, vecMintKeys);
-        }
+    }catch (...) {
+        LogPrint(BCLog::SYS,"Exception caught in CheckSyscoinInputs\n");
+        return false;
     }
     return good;
 }
