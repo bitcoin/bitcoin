@@ -465,9 +465,8 @@ void GenerateSpendableCoins() {
 	CallExtRPC("node1", "sendtoaddress", "\"" + newaddress + "\",\"100000\"", false);
 	GenerateBlocks(10, "node1");
 }
-bool AreTwoTransactionsLinked(const string &node, const string& inputTxid, const string &outputTxid, const int targetHits){
+bool AreTwoTransactionsLinked(const string &node, const string& inputTxid, const string &outputTxid){
 	UniValue r;
-	int numHits = 0;
 	r = CallRPC(node, "getrawtransaction " + outputTxid + " true");
 	if(!r.isObject())
 		return false;
@@ -475,9 +474,7 @@ bool AreTwoTransactionsLinked(const string &node, const string& inputTxid, const
 	for(unsigned int i = 0;i<outputTxidVins.size();i++){
 		const UniValue& vinObj = outputTxidVins[i].get_obj();
 		if(find_value(vinObj.get_obj(), "txid").get_str() == inputTxid){
-			numHits++;
-			if(numHits >= targetHits)
-				return true;
+			return true;
 		}
 	}
 	return false;
