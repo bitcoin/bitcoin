@@ -1134,7 +1134,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
     }
     else if(!bSanityCheck){
         if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND){
-            // send a realtime notification on zdag, send another when pow happens (above)
+            // send a real time notification on zdag, send another when pow happens (above)
             if(!passetallocationdb->WriteAssetAllocationIndex(tx, txHash, dbAsset, nHeight, blockhash)){
                 return FormatSyscoinErrorMessage(state, "assetallocation-index");
             }
