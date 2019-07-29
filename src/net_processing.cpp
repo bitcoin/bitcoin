@@ -1339,8 +1339,8 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 
     case MSG_MASTERNODE_PAYMENT_BLOCK:
         {
-            BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
-            return mi != mapBlockIndex.end() && mnpayments.mapMasternodeBlocks.find(mi->second->nHeight) != mnpayments.mapMasternodeBlocks.end();
+            const CBlockIndex* bi = LookupBlockIndex(inv.hash);
+            return bi != nullptr && mnpayments.mapMasternodeBlocks.find(bi->nHeight) != mnpayments.mapMasternodeBlocks.end();
         }
 
     case MSG_MASTERNODE_ANNOUNCE:
@@ -1617,10 +1617,10 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
             }
 
             if (!push && inv.type == MSG_MASTERNODE_PAYMENT_BLOCK) {
-                BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
+                const CBlockIndex* bi = LookupBlockIndex(inv.hash);
                 LOCK(cs_mapMasternodeBlocks);
-                if (mi != mapBlockIndex.end() && mnpayments.mapMasternodeBlocks.count(mi->second->nHeight)) {
-                    for(auto& payee: mnpayments.mapMasternodeBlocks[mi->second->nHeight].vecPayees) {
+                if (bi != nullptr && mnpayments.mapMasternodeBlocks.count(bi->nHeight)) {
+                    for(auto& payee: mnpayments.mapMasternodeBlocks[bi->nHeight].vecPayees) {
                         std::vector<uint256> vecVoteHashes = payee.GetVoteHashes();
                         for(auto& hash: vecVoteHashes) {
                             if(mnpayments.HasVerifiedPaymentVote(hash)) {
@@ -2682,9 +2682,8 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         std::list<CTransactionRef> lRemovedTxn;
 
         if (!AlreadyHave(inv) &&
-            AcceptToMemoryPool(mempool, state, ptx, &fMissingInputs, &lRemovedTxn, false /* bypass_limits */, 0 /* nAbsurdFee */, false /* fDryRun */, true /* bMultiThreaded */, false /* bSanityCheck */)) {
-            // SYSCOIN
-            //mempool.check(pcoinsTip.get());
+            AcceptToMemoryPool(mempool, state, ptx, &fMissingInputs, &lRemovedTxn, false /* bypass_limits */, 0 /* nAbsurdFee */, false /* fDryRun */)) {
+            mempool.check(pcoinsTip.get());
             RelayTransaction(tx, connman);
             for (unsigned int i = 0; i < tx.vout.size(); i++) {
                 auto it_by_prev = mapOrphanTransactionsByPrev.find(COutPoint(inv.hash, i));

@@ -32,6 +32,14 @@ def call_with_auth(node, user, password):
     return resp
 
 
+    conn = http.client.HTTPConnection(url.hostname, url.port)
+    conn.connect()
+    conn.request('POST', '/', '{"method": "getbestblockhash"}', headers)
+    resp = conn.getresponse()
+    conn.close()
+    return resp
+
+
 class HTTPBasicsTest(SyscoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2

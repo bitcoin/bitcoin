@@ -894,8 +894,8 @@ bool CMasternodePing::SimpleCheck(int& nDos)
 
     {
         AssertLockHeld(cs_main);
-        BlockMap::iterator mi = mapBlockIndex.find(blockHash);
-        if (mi == mapBlockIndex.end()) {
+        const CBlockIndex* bi = LookupBlockIndex(blockHash);
+        if (bi == nullptr) {
             LogPrint(BCLog::MN, "CMasternodePing::SimpleCheck -- Masternode ping is invalid, unknown block hash: masternode=%s blockHash=%s\n", masternodeOutpoint.ToStringShort(), blockHash.ToString());
             // maybe we stuck or forked so we shouldn't ban this node, just fail to accept this ping
             // TODO: or should we also request this block?
@@ -972,8 +972,8 @@ bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, i
 
     {
 		LOCK(cs_main);
-        BlockMap::iterator mi = mapBlockIndex.find(blockHash);
-        if ((*mi).second && (*mi).second->nHeight < ::ChainActive().Height() - 24) {
+        const CBlockIndex* bi = LookupBlockIndex(blockHash);
+        if (bi != nullptr && bi->nHeight < ::ChainActive().Height() - 24) {
             LogPrint(BCLog::MN, "CMasternodePing::CheckAndUpdate -- Masternode ping is invalid, block hash is too old: masternode=%s  blockHash=%s\n", masternodeOutpoint.ToStringShort(), blockHash.ToString());
             // nDos = 1;
             return false;

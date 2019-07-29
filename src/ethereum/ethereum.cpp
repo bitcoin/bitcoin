@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2017 The Dogecoin Core developers
+﻿// Copyright (c) 2019 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -97,7 +97,7 @@ bool VerifyProof(bytesConstRef path, const RLP& value, const RLP& parentNodes, c
  * @param vchInputExpectedMethodHash The expected method hash
  * @param vchInputData The input to parse
  * @param outputAmount The amount burned
- * @param nAsset The asset burned or 0 for SYS 
+ * @param nAsset The asset burned
  * @return true if everything is valid
  */
 bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedMethodHash, const std::vector<unsigned char>& vchInputData, CAmount& outputAmount, uint32_t& nAsset, CWitnessAddress& witnessAddress) {

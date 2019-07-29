@@ -7,11 +7,12 @@
 #include <interfaces/chain.h>
 #include <net.h>
 #include <outputtype.h>
-#include <util/system.h>
 #include <util/moneystr.h>
-#include <walletinitinterface.h>
+#include <util/system.h>
+#include <util/translation.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
+#include <walletinitinterface.h>
 
 class WalletInit : public WalletInitInterface {
 public:
@@ -121,7 +122,7 @@ bool WalletInit::ParameterInteraction() const
     if (gArgs.GetBoolArg("-sysperms", false))
         return InitError("-sysperms is not allowed in combination with enabled wallet functionality");
     if (gArgs.GetArg("-prune", 0) && gArgs.GetBoolArg("-rescan", false))
-        return InitError(_("Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again."));
+        return InitError(_("Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.").translated);
 
     return true;
 }

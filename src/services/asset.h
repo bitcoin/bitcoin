@@ -34,8 +34,6 @@ const int SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM = 0x7407;
 const int SYSCOIN_TX_VERSION_ALLOCATION_SEND = 0x7408;
 const int SYSCOIN_TX_VERSION_ALLOCATION_LOCK = 0x7409;
 
-
-    
 static const unsigned int MAX_GUID_LENGTH = 20;
 static const unsigned int MAX_VALUE_LENGTH = 512;
 static const uint64_t ONE_YEAR_IN_SECONDS = 31536000;
@@ -57,7 +55,6 @@ bool GetSyscoinBurnData(const CTransaction &tx, uint32_t& nAssetFromScript, CWit
 bool SysTxToJSON(const CTransaction &tx, UniValue &entry, CWallet* const pwallet, const isminefilter* filter_ismine);
 #endif
 bool SysTxToJSON(const CTransaction &tx, UniValue &entry);
-bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry);
 bool IsOutpointMature(const COutPoint& outpoint);
 bool FlushSyscoinDBs();
 bool FindAssetOwnerInTx(const CCoinsViewCache &inputs, const CTransaction& tx, const CWitnessAddress& witnessAddressToMatch);
@@ -208,7 +205,7 @@ public:
      bool ExistsAssetsByAddress(const CWitnessAddress &address){
         return Exists(address);
     }   
-	void WriteAssetIndex(const CTransaction& tx, const CAsset& dbAsset, const int& nHeight, const uint256& blockhash);
+	bool WriteAssetIndex(const CTransaction& tx, const uint256& txid, const CAsset& dbAsset, const int& nHeight, const uint256& blockhash);
 	bool ScanAssets(const uint32_t count, const uint32_t from, const UniValue& oOptions, UniValue& oRes);
     bool Flush(const AssetMap &mapAssets);
 };
@@ -236,13 +233,16 @@ public:
         if(!ReadAssetAllocationPage(page))
             return false;
         int64_t walkBackPage = page;
+        const std::string &allocationTupleStr = allocationTuple.ToString();
         while(walkBackPage >= 0){
             if(!ReadIndexTXIDs(allocationTuple, walkBackPage, TXIDS)){
                 walkBackPage--;
                 continue;
             }
             if(TXIDS.empty()){
-                Erase(std::make_pair(allocationTuple.ToString(), walkBackPage));
+                const std::pair<std::string, int64_t> &pagePair = std::make_pair(allocationTupleStr, walkBackPage);
+                if(Exists(pagePair) && !Erase(pagePair))
+                    return false;
                 walkBackPage--;
                 continue;
             }
@@ -255,15 +255,17 @@ public:
             break;
         }
         if(walkBackPage < 0)
-            return false;
+            return true;
         if(TXIDS.empty() && walkBackPage == page){
-            bool res = Erase(std::make_pair(allocationTuple.ToString(), page));
+            const std::pair<std::string, int64_t> &pagePair = std::make_pair(allocationTupleStr, page);
+            if(Exists(pagePair) && !Erase(pagePair))
+                return false;
             if(page <= 0)
-                return res;
+                return true;
             page--;
-            return res && WriteAssetAllocationPage(page);
+            return WriteAssetAllocationPage(page);
         }
-        return Write(std::make_pair(allocationTuple.ToString(), page), TXIDS);
+        return Write(std::make_pair(allocationTupleStr, page), TXIDS);
     }    
     bool EraseIndexTXID(const uint32_t &assetGuid, const uint256 &txid) {
         int64_t page=0;
@@ -277,7 +279,9 @@ public:
                 continue;
             }
             if(TXIDS.empty()){
-                Erase(std::make_pair(assetGuid, walkBackPage));
+                const std::pair<uint32_t, int64_t> &pagePair = std::make_pair(assetGuid, walkBackPage);
+                if(Exists(pagePair) && !Erase(pagePair))
+                    return false;
                 walkBackPage--;
                 continue;
             }            
@@ -290,13 +294,15 @@ public:
             break;
         }
         if(walkBackPage < 0)
-            return false;
+            return true;
         if(TXIDS.empty() && walkBackPage == page){
-            bool res = Erase(std::make_pair(assetGuid, page));
+            const std::pair<uint32_t, int64_t> &pagePair = std::make_pair(assetGuid, page);
+            if(Exists(pagePair) && !Erase(pagePair))
+                return false;
             if(page <= 0)
-                return res;
+                return true;
             page--;
-            return res && WriteAssetPage(page);
+            return WriteAssetPage(page);
         }
         return Write(std::make_pair(assetGuid, page), TXIDS);
     }    
@@ -359,7 +365,7 @@ bool BuildAssetJson(const CAsset& asset, UniValue& oName);
 bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output, CWallet* const pwallet, const isminefilter* filter_ismine);
 #endif
 bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output);
-void WriteAssetIndexTXID(const uint32_t& nAsset, const uint256& txid);
+bool WriteAssetIndexTXID(const uint32_t& nAsset, const uint256& txid);
 extern std::unique_ptr<CAssetDB> passetdb;
 extern std::unique_ptr<CAssetSupplyStatsDB> passetsupplystatsdb;
 extern std::unique_ptr<CAssetAllocationDB> passetallocationdb;

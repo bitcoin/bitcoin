@@ -6,6 +6,9 @@
 
 export LC_ALL=C.UTF-8
 
+free -m -h
+echo "Number of CPUs (nproc): $(nproc)"
+
 travis_retry docker pull "$DOCKER_NAME_TAG"
 
 export DIR_FUZZ_IN=${TRAVIS_BUILD_DIR}/qa-assets

@@ -39,7 +39,7 @@
 // SYSCOIN
 #include <services/assetconsensus.h>
 #ifdef ENABLE_WALLET
-extern std::map<std::string, COutPoint> mapSenderTXIDs;
+extern AssetPrevTxMap mapAssetPrevTxSender;
 #endif
 /** High fee for sendrawtransaction and testmempoolaccept.
  * By default, transaction with a fee higher than this will be rejected by the
@@ -838,21 +838,13 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
     if (TransactionError::OK != err) {
         throw JSONRPCTransactionError(err, err_string);
     }
-	#ifdef ENABLE_WALLET
-    UniValue jsonObj(UniValue::VOBJ);
-    if(DecodeSyscoinRawtransaction(*tx, jsonObj)){
-        const UniValue &senderObj = find_value(jsonObj, "sender");
-        if(senderObj.isStr()){
-            const std::string &sender = senderObj.get_str();
-            for(unsigned int i = 0;i<tx.get()->vout.size();i++){
-                CTxDestination dest ;
-                if(ExtractDestination(tx.get()->vout[i].scriptPubKey, dest)){
-                    if(EncodeDestination(dest) == sender){
-                        mapSenderTXIDs[sender] = COutPoint(txid, i);
-                    }
-                }
-            }
-        }
+    #ifdef ENABLE_WALLET
+    ActorSet actors;
+    GetActorsFromSyscoinTx(tx, true, true, actors);
+    if(actors.size() == 1){
+        const std::string &sender = *actors.begin();
+        // find the last output which sends funds to the sender address as change
+        mapAssetPrevTxSender[sender] = COutPoint(txid, tx.get()->vout.size()-1);
     }
     #endif
     return txid.GetHex();

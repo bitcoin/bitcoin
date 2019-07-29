@@ -29,8 +29,8 @@
 // SYSCOIN
 #include <masternodepayments.h>
 #include <masternodesync.h>
-#include <services/graph.h>
 #include <services/assetconsensus.h>
+extern std::vector<std::pair<uint256, uint32_t> > vecToRemoveFromMempool;
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {
     int64_t nOldTime = pblock->nTime;
@@ -94,6 +94,11 @@ Optional<int64_t> BlockAssembler::m_last_block_weight{nullopt};
 
 std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn, std::vector<uint256> &txsToRemove)
 {
+    txsToRemove.reserve(txsToRemove.size() + vecToRemoveFromMempool.size());
+    for(auto it: vecToRemoveFromMempool){
+        txsToRemove.push_back(it.first);
+    }
+    
     int64_t nTimeStart = GetTimeMicros();
 
     resetBlock();
@@ -174,9 +179,9 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         if(fLiteMode){
              throw std::runtime_error("You cannot mine in lite mode, set litemode=0 in your conf file!");
         }
-        /*if(fGethSyncStatus != "synced"){
+        if(fGethSyncStatus != "synced"){
             throw std::runtime_error("Please wait until Geth is synced to the tip before mining! Use getblockchaininfo to detect Geth sync status.");
-        }*/
+        }
     }
     // Update coinbase transaction with additional info about masternode and governance payments,
     // get some info back to pass to getblocktemplate
@@ -201,32 +206,39 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     }
     view.SetBackend(viewDummy); // switch back to avoid locking mempool for too long
       
-    CValidationState stateInputs;
+    CValidationState stateInputs, stateConflict;
     txsToRemove.clear();
-    bool bOverflowed = false;
+    bool bSenderConflicted = false;
     AssetAllocationMap mapAssetAllocations;
+    AssetPrevTxMap mapAssetPrevTxs;
     AssetMap mapAssets;
     AssetSupplyStatsMap mapAssetSupplyStats;
     EthereumMintTxVec vecMintKeys;
     std::vector<COutPoint> vecLockedOutpoints;
+    ActorSet actorSet;
+    bool bFoundError = false;
     for(const CTransactionRef& tx: pblock->vtx){
-        bool bOverflow = false;
-        if(!CheckSyscoinInputs(false, *tx, stateInputs, view, false, bOverflow, nHeight, 0, pblock->GetHash(), false, true, mapAssetAllocations, mapAssets, mapAssetSupplyStats, vecMintKeys, vecLockedOutpoints))
-            txsToRemove.push_back(tx->GetHash());
-        if(bOverflow)
-            bOverflowed = true;
+        const uint256& txHash = tx->GetHash();
+        if(!CheckSyscoinInputs(false, *tx, txHash, stateInputs, view, false, nHeight, pblock->GetHash(), false, true, actorSet, mapAssetAllocations, mapAssetPrevTxs, mapAssets, mapAssetSupplyStats, vecMintKeys, vecLockedOutpoints)){
+            txsToRemove.emplace_back(std::move(txHash));
+            stateConflict = stateInputs;
+            bFoundError = true;
+        }
+        if(stateInputs.IsError()){
+            bSenderConflicted = true; 
+        }
     }
-    if(bOverflowed)
+    if(bSenderConflicted)
         ResyncAssetAllocationStates();
 
-    if(!txsToRemove.empty()){
-        LogPrint(BCLog::SYS, "CreateNewBlock: CheckSyscoinInputs failed removed %d transactions and trying again...\n", txsToRemove.size());
+    if(bFoundError){
+        LogPrint(BCLog::SYS, "CreateNewBlock: CheckSyscoinInputs failed: %s. vecToRemoveFromMempool size %d. Removed %d transactions and trying again...\n", FormatStateMessage(stateConflict), vecToRemoveFromMempool.size(), txsToRemove.size());
         return CreateNewBlock(scriptPubKeyIn, txsToRemove);
     }
     LogPrintf("CreateNewBlock(): block weight: %u txs: %u fees: %ld sigops %d\n", GetBlockWeight(*pblock), nBlockTx, nFees, nBlockSigOpsCost);
 
     // Fill in header
-    pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
+    pblock->hashPrevBlock  = pindexPrev->GetBlockHash();    
     UpdateTime(pblock, chainparams.GetConsensus(), pindexPrev);
     pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock, chainparams.GetConsensus());
     pblock->nNonce         = 0;

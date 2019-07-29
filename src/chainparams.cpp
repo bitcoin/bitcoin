@@ -181,9 +181,10 @@ public:
 
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
-        fMineBlocksOnDemand = false;
         strSporkAddress = "SSZvS59ddqG87koeUPu1J8ivg5yJsQiWGN";    
         nFulfilledRequestExpireTime = 60*60; // fulfilled requests expire in 1 hour
+        m_is_test_chain = false;
+
         checkpointData = {
             {
                 { 250, uint256S("0x00000c9ec0f9d60ce297bf9f9cbe1f2eb39165a0d3f69c1c55fc3f6680fe45c8")},
@@ -198,8 +199,6 @@ public:
             /* nTxCount */ 0,
             /* dTxRate  */ 0
         };
-
-        m_fallback_fee_enabled = true;
     }
 };
 
@@ -291,8 +290,8 @@ public:
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_test, pnSeed6_test + ARRAYLEN(pnSeed6_test));
 
         fDefaultConsistencyChecks = false;
-        fRequireStandard = true;
-        fMineBlocksOnDemand = false;
+        fRequireStandard = false;
+        m_is_test_chain = true;
 
         // privKey: cU52TqHDWJg6HoL3keZHBvrJgsCLsduRvDFkPyZ5EmeMwoEHshiT
         strSporkAddress = "TCGpumHyMXC5BmfkaAQXwB7Bf4kbkhM9BX";
@@ -309,9 +308,6 @@ public:
             /* nTxCount */ 0,
             /* dTxRate  */ 0
         };
-
-        /* enable fallback fee on testnet */
-        m_fallback_fee_enabled = true;
     }
 };
 
@@ -383,13 +379,14 @@ public:
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
         vSeeds.clear();      //!< Regtest mode doesn't have any DNS seeds.
 
+        m_is_test_chain = true;
         fDefaultConsistencyChecks = false;
-        fRequireStandard = false;
-        fMineBlocksOnDemand = true;
+        fRequireStandard = true;
         // privKey: cPPpaK9LCXjGGXVJUqcrtEMVQw5tALMuN3WsVuPCWFf9tswYYDvY
         strSporkAddress = "TCSJVL68KFq9FdbfxB2KhTcWp6rHD7vePs";
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
-       /* checkpointData = {
+       /* 
+        checkpointData = {
             {
                 {0, uint256S("0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206")},
             }
@@ -408,9 +405,6 @@ public:
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
 
         bech32_hrp = "sysrt";
-        
-        /* enable fallback fee on regtest */
-        m_fallback_fee_enabled = true;
     }
 
     /**
