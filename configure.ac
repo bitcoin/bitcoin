@@ -967,6 +967,26 @@ if test x$use_upnp != xno; then
     [AC_CHECK_LIB([miniupnpc], [upnpDiscover], [MINIUPNPC_LIBS=-lminiupnpc], [have_miniupnpc=no])],
     [have_miniupnpc=no]
   )
+dnl The minimum supported miniUPnPc API version is set to 10. This keeps compatibility
+dnl with Ubuntu 16.04 LTS and Debian 8 libminiupnpc-dev packages.
+if test x$have_miniupnpc != xno; then
+  AC_MSG_CHECKING([whether miniUPnPc API version is supported])
+  AC_PREPROC_IFELSE([AC_LANG_PROGRAM([[
+      @%:@include <miniupnpc/miniupnpc.h>
+    ]], [[
+      #if MINIUPNPC_API_VERSION >= 10
+      // Everything is okay
+      #else
+      #  error miniUPnPc API version is too old
+      #endif
+    ]])],[
+      AC_MSG_RESULT(yes)
+    ],[
+    AC_MSG_RESULT(no)
+    AC_MSG_WARN([miniUPnPc API version < 10 is unsupported, disabling UPnP support.])
+    have_miniupnpc=no
+  ])
+fi
 fi
 
 BITCOIN_QT_INIT
@@ -1334,9 +1354,10 @@ dnl enable upnp support
 AC_MSG_CHECKING([whether to build with support for UPnP])
 if test x$have_miniupnpc = xno; then
   if test x$use_upnp = xyes; then
-     AC_MSG_ERROR("UPnP requested but cannot be built. use --without-miniupnpc")
+     AC_MSG_ERROR("UPnP requested but cannot be built. Use --without-miniupnpc.")
   fi
   AC_MSG_RESULT(no)
+  use_upnp=no
 else
   if test x$use_upnp != xno; then
     AC_MSG_RESULT(yes)
