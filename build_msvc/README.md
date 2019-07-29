@@ -44,7 +44,7 @@ The instructions below use `vcpkg` to install the dependencies.
 - Use Python to generate *.vcxproj from Makefile
 
 ```
-    PS >python msvc-autogen.py
+    PS >py -3 msvc-autogen.py
 ```
 
 - Build in Visual Studio.
