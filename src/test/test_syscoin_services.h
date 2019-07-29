@@ -40,7 +40,7 @@ string BurnAssetAllocation(const string& node, const string &guid, const string 
 void LockAssetAllocation(const string& node, const string &guid, const string &address,const string &txid,const string &index, bool confirm = true);
 string AssetSend(const string& node, const string& name, const string& inputs, const string& witness = "''", bool completetx=true, bool bRegtest = true, bool confirm = true);
 string AssetAllocationTransfer(const bool usezdag, const string& node, const string& name, const string& fromaddress, const string& inputs, const string& witness = "''");
-bool AreTwoTransactionsLinked(const string &node, const string& inputTxid, const string &outputTxid, const int targetHits=2);
+bool AreTwoTransactionsLinked(const string &node, const string& inputTxid, const string &outputTxid);
 // SYSCOIN testing setup
 struct SyscoinTestingSetup {
     SyscoinTestingSetup(); 

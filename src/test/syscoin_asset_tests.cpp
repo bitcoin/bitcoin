@@ -80,7 +80,6 @@ BOOST_AUTO_TEST_CASE(generate_asset_spt_sysx)
     // can update contract
     AssetUpdate("node1", strSYSXAsset, "''", "''", updateFlags, "0x931d387731bbbc988b312206c74f77d004d6b84b");   
 }
-
 BOOST_AUTO_TEST_CASE(generate_asset_address_spend)
 {
     UniValue r;
@@ -1167,7 +1166,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag_dbl_spend_long_chain)
     string tx7 = BurnAssetAllocation("node1", strSYSXAsset, useraddress1, "0.01", false, "''");
     BOOST_CHECK(AreTwoTransactionsLinked("node1", tx6, tx7));
     string tx8 = BurnAssetAllocation("node1", strSYSXAsset, useraddress2, "0.01", false, "''");
-    BOOST_CHECK(AreTwoTransactionsLinked("node1", tx6, tx8, 1));
+    BOOST_CHECK(AreTwoTransactionsLinked("node1", tx6, tx8));
     string tx9 = BurnAssetAllocation("node1", strSYSXAsset, useraddress1, "0.001", false, "''");
     BOOST_CHECK(AreTwoTransactionsLinked("node1", tx7, tx9));
     string tx10 = BurnAssetAllocation("node1", strSYSXAsset, useraddress2, "0.001", false, "''");
@@ -1182,22 +1181,22 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag_dbl_spend_long_chain)
     string tx15 = SyscoinBurn("node1", useraddress2, strSYSXAsset, "1", false);
     BOOST_CHECK(AreTwoTransactionsLinked("node1", tx11, tx15));
     string tx16 = AssetUpdate("node1", strSYSXAsset, "''", "''", "''", "''", "''", false);
-    BOOST_CHECK(AreTwoTransactionsLinked("node1", tx14, tx16, 1));
+    BOOST_CHECK(AreTwoTransactionsLinked("node1", tx14, tx16));
     string tx17 = SyscoinBurn("node1", useraddress1, strSYSXAsset, "1", false);
     BOOST_CHECK(AreTwoTransactionsLinked("node1", tx13, tx17));
     string tx18 = AssetUpdate("node1", strSYSXAsset, "''", "''", "''", "''", "''", false);
-    BOOST_CHECK(AreTwoTransactionsLinked("node1", tx16, tx18, 1));
+    BOOST_CHECK(AreTwoTransactionsLinked("node1", tx16, tx18));
     string tx19 = AssetSend("node1", assetguid, "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.1}]\"", "''", true, true, false);
     string tx20 = AssetUpdate("node1", strSYSXAsset, "''", "''", "''", "''", "''", false);
-    BOOST_CHECK(AreTwoTransactionsLinked("node1", tx18, tx20, 1));
+    BOOST_CHECK(AreTwoTransactionsLinked("node1", tx18, tx20));
     string tx21 = AssetSend("node1", assetguid, "\"[{\\\"address\\\":\\\"" + useraddress1 + "\\\",\\\"amount\\\":0.1}]\"", "''", true, true, false);
-    BOOST_CHECK(AreTwoTransactionsLinked("node1", tx19, tx21, 1));
+    BOOST_CHECK(AreTwoTransactionsLinked("node1", tx19, tx21));
     string tx22 = AssetUpdate("node1", strSYSXAsset, "''", "''", "''", "''", "''", false);
-    BOOST_CHECK(AreTwoTransactionsLinked("node1", tx20, tx22, 1));
+    BOOST_CHECK(AreTwoTransactionsLinked("node1", tx20, tx22));
     string tx23 = AssetSend("node1", assetguid, "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.1}]\"", "''", true, true, false);
-    BOOST_CHECK(AreTwoTransactionsLinked("node1", tx21, tx23, 1));
+    BOOST_CHECK(AreTwoTransactionsLinked("node1", tx21, tx23));
     string tx24 = AssetUpdate("node1", strSYSXAsset, "''", "''", "''", "", "''", false);
-    BOOST_CHECK(AreTwoTransactionsLinked("node1", tx22, tx24, 1));
+    BOOST_CHECK(AreTwoTransactionsLinked("node1", tx22, tx24));
     MilliSleep(500);
     
 
@@ -1251,7 +1250,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag_dbl_spend_long_chain)
     SleepFor(300 * 1000, 0);
     // after confirm we shouldn't have any txs to check
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + strSYSXAsset + " " + useraddress1 + " ''"));
-    // could be not forund or status ok , status ok if node1 wallet accepting to mempool again because it detected unconfirmed transactions
+    // could be not found or status ok , status ok if node1 wallet accepting to mempool again because it detected unconfirmed transactions
     BOOST_CHECK(find_value(r.get_obj(), "status").get_int() == ZDAG_NOT_FOUND || find_value(r.get_obj(), "status").get_int() == ZDAG_STATUS_OK);
     // shouldn't affect downstream
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + strSYSXAsset + " " + useraddress2 + " ''"));

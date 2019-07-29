@@ -58,17 +58,15 @@ UniValue syscointxfund_helper(CWallet* const pwallet, const string& strAddress, 
         }
         Coin pcoinW;
         if (GetUTXOCoin(witnessOutpoint, pcoinW))
-            txNew.vin.push_back(CTxIn(witnessOutpoint, pcoinW.out.scriptPubKey));
+            txNew.vin.emplace_back(CTxIn(witnessOutpoint, pcoinW.out.scriptPubKey));
     }
         
     // vouts to the payees
     for (const auto& recipient : vecSend)
     {
         CTxOut txout(recipient.nAmount, recipient.scriptPubKey);
-        txNew.vout.push_back(txout);
+        txNew.vout.emplace_back(txout);
     }
-    // reserve the change output if 
-    txNew.vout.push_back(CTxOut(0, CScript()));
     UniValue paramsFund(UniValue::VARR);
     paramsFund.push_back(EncodeHexTx(CTransaction(txNew)));
     paramsFund.push_back(strAddress);
@@ -206,13 +204,15 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
     if(!outPointLastSender.IsNull() && ::ChainActive().Tip()->nHeight >= Params().GetConsensus().nBridgeStartBlock){
         const Coin& coin = view.AccessCoin(outPointLastSender);
         if(!coin.IsSpent()){
-            txIn.vin.push_back(CTxIn(outPointLastSender, coin.out.scriptPubKey));
+            LogPrintf("outPointLastSender %s\n", outPointLastSender.ToString());
+            txIn.vin.emplace_back(CTxIn(outPointLastSender, coin.out.scriptPubKey));
         } 
     }
     if(!outPointLastSenderForwardedFee.IsNull() && ::ChainActive().Tip()->nHeight >= Params().GetConsensus().nBridgeStartBlock){
         const Coin& coin = view.AccessCoin(outPointLastSenderForwardedFee);
         if(!coin.IsSpent()){
-            txIn.vin.push_back(CTxIn(outPointLastSenderForwardedFee, coin.out.scriptPubKey));
+             LogPrintf("outPointLastSenderForwardedFee %s\n", outPointLastSenderForwardedFee.ToString());
+            txIn.vin.emplace_back(CTxIn(outPointLastSenderForwardedFee, coin.out.scriptPubKey));
         }
     } 
     // # vin (with IX)*FEE + # vout*FEE + (10 + # vin)*FEE + 34*FEE (for change output)
@@ -230,7 +230,7 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
         }
         if(fTPSTest && fTPSTestEnabled){
             if(std::find(savedtxins.begin(), savedtxins.end(), vin) == savedtxins.end())
-                savedtxins.push_back(vin);
+                savedtxins.emplace_back(vin);
             else{
                 LogPrint(BCLog::SYS, "Skipping saved output in syscointxfund...\n");
                 continue;
@@ -239,7 +239,7 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
         // disable RBF for syscoin tx's, should use CPFP
         if(isSyscoinTx)
             vin.nSequence = CTxIn::SEQUENCE_FINAL - 1;
-        tx.vin.push_back(vin);
+        tx.vin.emplace_back(vin);
         int numSigs = 0;
         CCountSigsVisitor(*pwallet, numSigs).Process(coin.out.scriptPubKey);
         if(isSyscoinTx)
@@ -314,7 +314,7 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
             // hack for double spend zdag4 test so we can spend multiple inputs of an address within a block and get different inputs every time we call this function
             if(fTPSTest && fTPSTestEnabled){
                 if(std::find(savedtxins.begin(), savedtxins.end(), txIn) == savedtxins.end())
-                    savedtxins.push_back(txIn);
+                    savedtxins.emplace_back(txIn);
                 else{
                     LogPrint(BCLog::SYS, "Skipping saved output in syscointxfund...\n");
                     continue;
@@ -329,7 +329,7 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
             // disable RBF for syscoin tx's, should use CPFP
             if(isSyscoinTx)
                 txIn.nSequence = CTxIn::SEQUENCE_FINAL - 1;
-            tx.vin.push_back(txIn);
+            tx.vin.emplace_back(txIn);
             nCurrentAmount += nValue;
             if (nCurrentAmount >= (nDesiredAmount + nFees)) {
                 break;
@@ -349,7 +349,7 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
     CTxOut changeOut(nChange, GetScriptForDestination(dest));
     // set change to the last vout (reserved in fundhelper)
     if (!IsDust(changeOut, pwallet->chain().relayDustFee()))
-        tx.vout[tx.vout.size()-1] = changeOut;
+        tx.vout.emplace_back(changeOut);
     
     // pass back new raw transaction
     UniValue res(UniValue::VOBJ);

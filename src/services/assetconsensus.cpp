@@ -1144,12 +1144,9 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
             LOCK(cs_assetallocationmempoolbalance);
             mapBalanceSender->second = std::move(mapBalanceSenderCopy);
         }
-        if(user1 != burnWitness)
-        {
-            LOCK(cs_assetallocationprevtx);
-            // set prev tx so subsequent tx from this sender can link to it to for zdag graph enforcement
-            mapAssetPrevTx->second = COutPoint(txHash, tx.vout.size()-1);
-        } 
+        LOCK(cs_assetallocationprevtx);
+        // set prev tx so subsequent tx from this sender can link to it to for zdag graph enforcement
+        mapAssetPrevTx->second = COutPoint(txHash, tx.vout.size()-1); 
     }    
     return true;
 }

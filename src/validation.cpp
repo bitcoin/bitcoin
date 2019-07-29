@@ -851,6 +851,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         if (!CheckSyscoinInputs(tx, hash, state, view, true, ::ChainActive().Height(), test_accept || bypass_limits)) {
             // mark to remove from mempool, because if we remove right away then the transaction data cannot be relayed most of the time
             if(!test_accept && state.IsError()){
+                LogPrint(BCLog::SYS, "Double spend detected on tx %s! %s\n", hash.GetHex(), FormatStateMessage(state));
                 LOCK(cs_assetallocationmempoolremovetx);
                 vecToRemoveFromMempool.emplace_back(hash, ::ChainActive().Tip()->GetMedianTimePast());
             }
