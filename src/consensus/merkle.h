@@ -24,6 +24,10 @@ uint256 BlockMerkleRoot(const CBlock& block, bool* mutated = nullptr);
  * Compute the Merkle root of the witness transactions in a block.
  * *mutated is set to true if a duplicated subtree was found.
  */
+#ifdef ENABLE_PROOF_OF_STAKE
+uint256 BlockWitnessMerkleRoot(const CBlock& block, bool* mutated = nullptr, bool* pfProofOfStake = nullptr);
+#else
 uint256 BlockWitnessMerkleRoot(const CBlock& block, bool* mutated = nullptr);
+#endif
 
 #endif // BITCOIN_CONSENSUS_MERKLE_H
