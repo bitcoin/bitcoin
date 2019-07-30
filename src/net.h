@@ -738,6 +738,8 @@ public:
     // and in the order requested.
     std::vector<uint256> vInventoryBlockToSend GUARDED_BY(cs_inventory);
     CCriticalSection cs_inventory;
+    std::set<uint256> setAskFor;
+    std::multimap<int64_t, CInv> mapAskFor;
     int64_t nNextInvSend{0};
     // Used for headers announcements - unfiltered blocks to relay
     std::vector<uint256> vBlockHashesToAnnounce GUARDED_BY(cs_inventory);
@@ -895,6 +897,8 @@ public:
         LOCK(cs_inventory);
         vBlockHashesToAnnounce.push_back(hash);
     }
+
+    void AskFor(const CInv& inv);
 
     void CloseSocketDisconnect();
 
