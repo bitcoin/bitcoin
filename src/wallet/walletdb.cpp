@@ -40,6 +40,7 @@ const std::string OLD_KEY{"wkey"};
 const std::string ORDERPOSNEXT{"orderposnext"};
 const std::string POOL{"pool"};
 const std::string PURPOSE{"purpose"};
+const std::string SETTINGS{"settings"};
 const std::string TX{"tx"};
 const std::string VERSION{"version"};
 const std::string WATCHMETA{"watchmeta"};
@@ -407,7 +408,8 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 return false;
             }
         } else if (strType != DBKeys::BESTBLOCK && strType != DBKeys::BESTBLOCK_NOMERKLE &&
-                   strType != DBKeys::MINVERSION && strType != DBKeys::ACENTRY && strType != DBKeys::VERSION) {
+                   strType != DBKeys::MINVERSION && strType != DBKeys::ACENTRY &&
+                   strType != DBKeys::VERSION && strType != DBKeys::SETTINGS) {
             wss.m_unknown_records++;
         }
     } catch (const std::exception& e) {
