@@ -1047,7 +1047,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
         mapBalanceSenderCopy -= nTotal;
         if (mapBalanceSenderCopy < 0) {
             bool bNewConfict = false;
-            // ensure this isn't the first tx for this sender in mempool and that if it is the second or more and its a new conflict then flag it with state error so it propogates across network
+            // ensure this isn't the first tx for this sender in mempool and that if it is the second or more and its a new conflict then flag it with state error so it propagates across network
             if(!mapSenderMempoolBalanceNotFound && fJustCheck && !bSanityCheck && !bMiner){
                 LOCK(cs_assetallocationconflicts);
                 // flag as a new conflict if not found

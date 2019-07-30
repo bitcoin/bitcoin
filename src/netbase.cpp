@@ -605,7 +605,7 @@ static void LogConnectFailure(bool manual_connection, const char* fmt, const Arg
  * @param nTimeout Wait this many milliseconds for the connection to be
  *                 established.
  * @param manual_connection Whether or not the connection was manually requested
- *                          (e.g. thru the addnode RPC)
+ *                          (e.g. through the addnode RPC)
  *
  * @returns Whether or not a connection was successfully made.
  */
@@ -709,7 +709,7 @@ bool GetProxy(enum Network net, proxyType &proxyInfoOut) {
 
 /**
  * Set the name proxy to use for all connections to nodes specified by a
- * hostname. After setting this proxy, connecting to a node sepcified by a
+ * hostname. After setting this proxy, connecting to a node specified by a
  * hostname won't result in a local lookup of said hostname, rather, connect to
  * the node by asking the name proxy for a proxy connection to the hostname,
  * effectively delegating the hostname lookup to the specified proxy.

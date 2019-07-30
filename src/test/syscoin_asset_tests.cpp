@@ -1082,7 +1082,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag4)
     BOOST_CHECK_NO_THROW(r = CallRPC("node3", "assetallocationverifyzdag " + assettxid));
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
 
-    printf("Setting time ahead 300 seconds...\n");
+    tfm::format(std::cout,"Setting time ahead 300 seconds...\n");
     SleepFor(300 * 1000, 0);
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + assetguid + " " + useraddress1));
     UniValue balance = find_value(r.get_obj(), "balance");
@@ -1287,7 +1287,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag_dbl_spend_long_chain)
 
     BOOST_CHECK_NO_THROW(r = CallRPC("node3", "assetallocationverifyzdag " + tx6));
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
-    printf("Setting time ahead 300 seconds...\n");
+    tfm::format(std::cout, "Setting time ahead 300 seconds...\n");
     SleepFor(300 * 1000, 0);
     // after confirm we shouldn't have any txs to check
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationverifyzdag " + dblspendtx));
