@@ -633,6 +633,23 @@ enum class ParseScriptContext {
     P2WSH,
 };
 
+/** Split a string on every instance of sep, returning a vector. */
+std::vector<Span<const char>> Split(const Span<const char>& sp, char sep)
+{
+    std::vector<Span<const char>> ret;
+    auto it = sp.begin();
+    auto start = it;
+    while (it != sp.end()) {
+        if (*it == sep) {
+            ret.emplace_back(start, it);
+            start = it + 1;
+        }
+        ++it;
+    }
+    ret.emplace_back(start, it);
+    return ret;
+}
+
 /** Parse a key path, being passed a split list of elements (the first element is ignored). */
 NODISCARD bool ParseKeyPath(const std::vector<Span<const char>>& split, KeyPath& out, std::string& error)
 {
