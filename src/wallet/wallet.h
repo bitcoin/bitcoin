@@ -676,28 +676,6 @@ public:
     }
 };
 
-/** Private key that was serialized by an old wallet (only used for deserialization) */
-struct OldKey {
-    CPrivKey vchPrivKey;
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        // no longer used by the wallet, thus dropped after deserialization:
-        int64_t nTimeCreated;
-        int64_t nTimeExpires;
-        std::string strComment;
-
-        int nVersion = s.GetVersion();
-        if (!(s.GetType() & SER_GETHASH))
-            READWRITE(nVersion);
-        READWRITE(vchPrivKey);
-        READWRITE(nTimeCreated);
-        READWRITE(nTimeExpires);
-        READWRITE(LIMITED_STRING(strComment, 65536));
-    }
-};
-
 struct CoinSelectionParams
 {
     bool use_bnb = true;
