@@ -2297,7 +2297,7 @@ UniValue walletpassphrase(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 3) {
         throw std::runtime_error(
-            "walletpassphrase \"passphrase\" timeout\n"
+            "walletpassphrase \"passphrase\" timeout mintonly\n"
             "\nStores the wallet decryption key in memory for 'timeout' seconds.\n"
             "This is needed prior to performing transactions related to private keys such as sending peercoins\n"
             "\nArguments:\n"
@@ -2309,11 +2309,11 @@ UniValue walletpassphrase(const JSONRPCRequest& request)
             "time that overrides the old one.\n"
             "\nExamples:\n"
             "\nUnlock the wallet for 60 seconds\n"
-            + HelpExampleCli("walletpassphrase", "\"my pass phrase\" 60") +
+            + HelpExampleCli("walletpassphrase", "\"my pass phrase\" 60 false") +
             "\nLock the wallet again (before 60 seconds)\n"
             + HelpExampleCli("walletlock", "") +
             "\nAs json rpc call\n"
-            + HelpExampleRpc("walletpassphrase", "\"my pass phrase\", 60")
+            + HelpExampleRpc("walletpassphrase", "\"my pass phrase\", 60 false")
         );
     }
 
@@ -2367,7 +2367,7 @@ UniValue walletpassphrase(const JSONRPCRequest& request)
         fWalletUnlockMintOnly = false;
 
     UniValue ret(UniValue::VOBJ);
-    ret.push_back(Pair("mint only", fWalletUnlockMintOnly));
+    ret.push_back(Pair("unlocked_minting_only", fWalletUnlockMintOnly));
 
     return ret;
 }
@@ -2728,6 +2728,7 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
             "  \"keypoolsize\": xxxx,             (numeric) how many new keys are pre-generated (only counts external keys)\n"
             "  \"keypoolsize_hd_internal\": xxxx, (numeric) how many new keys are pre-generated for internal use (used for change outputs, only appears if the wallet is using this feature, otherwise external keys are used)\n"
             "  \"unlocked_until\": ttt,           (numeric) the timestamp in seconds since epoch (midnight Jan 1 1970 GMT) that the wallet is unlocked for transfers, or 0 if the wallet is locked\n"
+            "  \"unlocked_minting_only\": xxx,    (bool) whether we have unlocked keys for minting only\n"
             "  \"paytxfee\": x.xxxx,              (numeric) the transaction fee configuration, set in " + CURRENCY_UNIT + "/kB\n"
             "  \"hdmasterkeyid\": \"<hash160>\"     (string, optional) the Hash160 of the HD master pubkey (only present when HD is enabled)\n"
             "}\n"
@@ -2761,6 +2762,7 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
     }
     if (pwallet->IsCrypted()) {
         obj.push_back(Pair("unlocked_until", pwallet->nRelockTime));
+        obj.push_back(Pair("unlocked_minting_only", fWalletUnlockMintOnly));
     }
     if (!masterKeyID.IsNull())
          obj.push_back(Pair("hdmasterkeyid", masterKeyID.GetHex()));
