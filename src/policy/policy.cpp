@@ -30,7 +30,11 @@ CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
     if (txout.scriptPubKey.IsUnspendable())
         return 0;
 
+#ifdef ENABLE_PROOF_OF_STAKE
+    size_t nSize = GetSerializeSize(txout, SER_DISK, 0);
+#else
     size_t nSize = GetSerializeSize(txout);
+#endif
     int witnessversion = 0;
     std::vector<unsigned char> witnessprogram;
 
@@ -53,7 +57,8 @@ bool IsDust(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
 bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
 {
     std::vector<std::vector<unsigned char> > vSolutions;
-    whichType = Solver(scriptPubKey, vSolutions);
+    if (!Solver(scriptPubKey, whichType, vSolutions))
+        return false;
 
     if (whichType == TX_NONSTANDARD) {
         return false;
@@ -163,7 +168,11 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         const CTxOut& prev = mapInputs.AccessCoin(tx.vin[i].prevout).out;
 
         std::vector<std::vector<unsigned char> > vSolutions;
-        txnouttype whichType = Solver(prev.scriptPubKey, vSolutions);
+        txnouttype whichType;
+
+        if (!Solver(prev.scriptPubKey, whichType, vSolutions))
+            return false;
+
         if (whichType == TX_NONSTANDARD) {
             return false;
         } else if (whichType == TX_SCRIPTHASH) {
