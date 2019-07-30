@@ -30,17 +30,27 @@ import http.client
 import random
 import time
 
-from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut, ToHex
+from test_framework.messages import (
+    COIN,
+    COutPoint,
+    CTransaction,
+    CTxIn,
+    CTxOut,
+    ToHex,
+)
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, create_confirmed_utxos, hex_str_to_bytes
+from test_framework.util import (
+    assert_equal,
+    create_confirmed_utxos,
+    hex_str_to_bytes,
+)
 
 
 class ChainstateWriteCrashTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
         self.setup_clean_chain = False
-        # Need a bit of extra time for the nodes to start up for this test
-        self.rpc_timeout = 90
+        self.rpc_timeout = 180
 
         # Set -maxmempool=0 to turn off mempool memory sharing with dbcache
         # Set -rpcservertimeout=900 to reduce socket disconnects in this
