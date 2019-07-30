@@ -1035,7 +1035,6 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     
     EthereumTxRoot txRootDB;
     bool bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
-    uint32_t cutoffHeight;
     const bool &ethTxRootShouldExist = !fLiteMode && fLoaded && fGethSynced;
     if(!ethTxRootShouldExist){
         throw JSONRPCError(RPC_MISC_ERROR, "Network is not ready to accept your mint transaction please wait...");
@@ -1048,17 +1047,20 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
         }
     }  
     if(ethTxRootShouldExist){
-        LOCK(cs_ethsyncheight);
-        // cutoff is ~1 week of blocks is about 40K blocks
-        cutoffHeight = (fGethSyncHeight - MAX_ETHEREUM_TX_ROOTS) + 100;
-        if(fGethSyncHeight >= MAX_ETHEREUM_TX_ROOTS && mintSyscoin.nBlockNumber <= (uint32_t)cutoffHeight) {
-            throw JSONRPCError(RPC_MISC_ERROR, "The block height is too old, your SPV proof is invalid. SPV Proof must be done within 40000 blocks of the burn transaction on Ethereum blockchain");
-        } 
-        
-        // ensure that we wait at least ETHEREUM_CONFIRMS_REQUIRED blocks (~1 hour) before we are allowed process this mint transaction  
-        // also ensure sanity test that the current height that our node thinks Eth is on isn't less than the requested block for spv proof
-        if(fGethCurrentHeight <  mintSyscoin.nBlockNumber || fGethSyncHeight <= 0 || (fGethSyncHeight - mintSyscoin.nBlockNumber < (bGethTestnet? 20: ETHEREUM_CONFIRMS_REQUIRED*1.5))){
-            throw JSONRPCError(RPC_MISC_ERROR, "Not enough confirmations on Ethereum to process this mint transaction. Blocks required: " + itostr((ETHEREUM_CONFIRMS_REQUIRED*1.5) - (fGethSyncHeight - mintSyscoin.nBlockNumber)));
+        const int64_t &nTime = ::ChainActive().Tip()->GetMedianTimePast();
+        // time must be between 1 week and 1 hour old to be accepted
+        if(fGethSyncHeight >= MAX_ETHEREUM_TX_ROOTS){
+            if(nTime < txRootDB.nTimestamp) {
+                throw JSONRPCError(RPC_MISC_ERROR, "Invalid Ethereum timestamp, it cannot be earlier than the Syscoin median block timestamp. Please wait a few minutes and try again...");
+            }
+            else if((nTime - txRootDB.nTimestamp) > 604800) {
+                throw JSONRPCError(RPC_MISC_ERROR, "The block height is too old, your SPV proof is invalid. SPV Proof must be done within 1 week of the burn transaction on Ethereum blockchain");
+            } 
+            
+            // ensure that we wait at least 1 hour before we are allowed process this mint transaction  
+            else if((nTime - txRootDB.nTimestamp) < bGethTestnet? 600: 3600) {
+                throw JSONRPCError(RPC_MISC_ERROR, "Not enough confirmations on Ethereum to process this mint transaction. Must wait one hour for the transaction to settle.");
+            }
         } 
     }
        

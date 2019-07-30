@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_audittxroot)
 {
     tfm::format(std::cout,"Running generate_asset_audittxroot...\n");
     UniValue r;
-    BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsetethheaders \"[[709780,\\\"709780\\\",\\\"709779\\\",\\\"a\\\",\\\"a\\\"],[707780,\\\"707780\\\",\\\"707779\\\",\\\"a\\\",\\\"a\\\"],[707772,\\\"707772\\\",\\\"707771\\\",\\\"a\\\",\\\"a\\\"],[707776,\\\"707776\\\",\\\"707775\\\",\\\"a\\\",\\\"a\\\"],[707770,\\\"707770\\\",\\\"707769\\\",\\\"a\\\",\\\"a\\\"],[707778,\\\"707778\\\",\\\"707777\\\",\\\"a\\\",\\\"a\\\"],[707774,\\\"707774\\\",\\\"707773\\\",\\\"a\\\",\\\"a\\\"]]\""));
+    BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsetethheaders \"[[709780,\\\"709780\\\",\\\"709779\\\",\\\"a\\\",\\\"a\\\",0],[707780,\\\"707780\\\",\\\"707779\\\",\\\"a\\\",\\\"a\\\",0],[707772,\\\"707772\\\",\\\"707771\\\",\\\"a\\\",\\\"a\\\",0],[707776,\\\"707776\\\",\\\"707775\\\",\\\"a\\\",\\\"a\\\",0],[707770,\\\"707770\\\",\\\"707769\\\",\\\"a\\\",\\\"a\\\",0],[707778,\\\"707778\\\",\\\"707777\\\",\\\"a\\\",\\\"a\\\",0],[707774,\\\"707774\\\",\\\"707773\\\",\\\"a\\\",\\\"a\\\",0]]\""));
     int64_t start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsetethstatus synced 709780"));
     int64_t end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_audittxroot)
     BOOST_CHECK(find_value(blocksArray[5].get_obj(), "to").get_uint() == 707779);
     BOOST_CHECK(find_value(blocksArray[6].get_obj(), "from").get_uint() == 707781);
     BOOST_CHECK(find_value(blocksArray[6].get_obj(), "to").get_uint() == 709779);
-    BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsetethheaders \"[[707773,\\\"707773\\\",\\\"707772\\\",\\\"a\\\",\\\"a\\\"],[707775,\\\"707775\\\",\\\"707774\\\",\\\"a\\\",\\\"a\\\"],[707771,\\\"707771\\\",\\\"707770\\\",\\\"a\\\",\\\"a\\\"],[707777,\\\"707777\\\",\\\"707776\\\",\\\"a\\\",\\\"a\\\"],[707779,\\\"707779\\\",\\\"707778\\\",\\\"a\\\",\\\"a\\\"],[707781,\\\"707781\\\",\\\"707780\\\",\\\"a\\\",\\\"a\\\"]]\""));
+    BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsetethheaders \"[[707773,\\\"707773\\\",\\\"707772\\\",\\\"a\\\",\\\"a\\\",0],[707775,\\\"707775\\\",\\\"707774\\\",\\\"a\\\",\\\"a\\\",0],[707771,\\\"707771\\\",\\\"707770\\\",\\\"a\\\",\\\"a\\\",0],[707777,\\\"707777\\\",\\\"707776\\\",\\\"a\\\",\\\"a\\\",0],[707779,\\\"707779\\\",\\\"707778\\\",\\\"a\\\",\\\"a\\\",0],[707781,\\\"707781\\\",\\\"707780\\\",\\\"a\\\",\\\"a\\\",0]]\""));
     start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsetethstatus synced 709780"));
     end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
@@ -224,7 +224,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_audittxroot)
 
     // now fork and check it revalidates chain
     // 707771 (should be 707772) -> 707773 and 707773 (should be 707774) -> 707775
-    BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsetethheaders \"[[707773,\\\"707773\\\",\\\"707771\\\",\\\"a\\\",\\\"a\\\"],[707775,\\\"707775\\\",\\\"707773\\\",\\\"a\\\",\\\"a\\\"]]\""));
+    BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsetethheaders \"[[707773,\\\"707773\\\",\\\"707771\\\",\\\"a\\\",\\\"a\\\",0],[707775,\\\"707775\\\",\\\"707773\\\",\\\"a\\\",\\\"a\\\",0]]\""));
     start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsetethstatus synced 709780"));
     end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_audittxroot1)
             continue;
         if(nCount > 0)
             roots += ",";
-        roots += strprintf("[%d,\\\"%d\\\",\\\"%d\\\",\\\"a\\\",\\\"a\\\"]", i, i, i-1);
+        roots += strprintf("[%d,\\\"%d\\\",\\\"%d\\\",\\\"a\\\",\\\"a\\\",0]", i, i, i-1);
         if(nCount > 0 && (nCount % 400) == 0){
             BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsetethheaders \"[" + roots + "]\""));
             roots = "";
@@ -284,7 +284,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_audittxroot1)
     BOOST_CHECK(find_value(blocksArray[1].get_obj(), "to").get_uint() == 800022);
     BOOST_CHECK(find_value(blocksArray[2].get_obj(), "from").get_uint() == 814011);
     BOOST_CHECK(find_value(blocksArray[2].get_obj(), "to").get_uint() == 814011);
-    BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsetethheaders \"[[814011,\\\"814011\\\",\\\"814010\\\",\\\"a\\\",\\\"a\\\"],[700059,\\\"700059\\\",\\\"700058\\\",\\\"a\\\",\\\"a\\\"],[800022,\\\"800022\\\",\\\"800021\\\",\\\"a\\\",\\\"a\\\"]]\""));
+    BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsetethheaders \"[[814011,\\\"814011\\\",\\\"814010\\\",\\\"a\\\",\\\"a\\\",0],[700059,\\\"700059\\\",\\\"700058\\\",\\\"a\\\",\\\"a\\\",0],[800022,\\\"800022\\\",\\\"800021\\\",\\\"a\\\",\\\"a\\\",0]]\""));
     start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsetethstatus synced 820000"));
     end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
@@ -589,6 +589,10 @@ BOOST_AUTO_TEST_CASE(generate_assetallocationmint)
     // should fail: already minted with that block+txindex tuple
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hex_str, true, false)); 
     BOOST_CHECK(r.write().size() < 32);
+
+    // increase time by 1 week and assetallocationmint should throw
+	SleepFor(604800 * 1000);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "assetallocationmint " + assetguid + " " + newaddress + " " + amount + " " + itostr(height) + " " + spv_tx_value + " a0" + spv_tx_root + " " + spv_tx_parent_nodes + " " + spv_tx_path + " " + spv_receipt_value + " a0" + spv_receipt_root + " " + spv_receipt_parent_nodes +  " ''"), runtime_error);
 }
 BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset)
 {

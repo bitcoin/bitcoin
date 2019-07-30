@@ -39,7 +39,7 @@ bool FormatSyscoinErrorMessage(CValidationState& state, const std::string errorM
             return state.Invalid(bConsensus? ValidationInvalidReason::CONSENSUS: ValidationInvalidReason::TX_CONFLICT, false, REJECT_INVALID, errorMessage);
         }  
 }
-bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& txHash, CValidationState& state, const bool &fJustCheck, const bool& bSanity, const bool& bMiner, const int& nHeight, const uint256& blockhash, AssetMap& mapAssets, AssetSupplyStatsMap &mapAssetSupplyStats, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys)
+bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& txHash, CValidationState& state, const bool &fJustCheck, const bool& bSanity, const bool& bMiner, const int& nHeight, const int64_t& nTime, const uint256& blockhash, AssetMap& mapAssets, AssetSupplyStatsMap &mapAssetSupplyStats, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys)
 {
     static bool bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
     // unserialize mint object from txn, check for valid
@@ -55,7 +55,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     } 
     if(!GetAsset(mintSyscoin.assetAllocationTuple.nAsset, dbAsset)) 
     {
-        return FormatSyscoinErrorMessage(state, "mint-non-existing-asset");
+        return FormatSyscoinErrorMessage(state, "mint-non-existing-asset", bMiner);
     }
     
    
@@ -64,28 +64,30 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     // if we are starting up and verifying the db also skip this check as fLoaded will be false until startup sequence is complete
     EthereumTxRoot txRootDB;
    
-    uint32_t cutoffHeight;
     const bool &ethTxRootShouldExist = !ibd && !fLiteMode && fLoaded && fGethSynced;
     // validate that the block passed is committed to by the tx root he also passes in, then validate the spv proof to the tx root below  
     // the cutoff to keep txroots is 120k blocks and the cutoff to get approved is 40k blocks. If we are syncing after being offline for a while it should still validate up to 120k worth of txroots
     if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(mintSyscoin.nBlockNumber, txRootDB)){
         if(ethTxRootShouldExist){
             // the next three don't pass in bMiner because we always want to pass state.Error() for txroot related errors meaning we don't want to flag the block as invalid, we want to retry as this is based on eventual consistency
-            return FormatSyscoinErrorMessage(state, "mint-txroot-missing");
+            return FormatSyscoinErrorMessage(state, "mint-txroot-missing", bMiner);
         }
     }  
     if(ethTxRootShouldExist){
-        LOCK(cs_ethsyncheight);
-        // cutoff is ~1 week of blocks is about 40K blocks
-        cutoffHeight = fGethSyncHeight - MAX_ETHEREUM_TX_ROOTS;
-        if(fGethSyncHeight >= MAX_ETHEREUM_TX_ROOTS && mintSyscoin.nBlockNumber <= (uint32_t)cutoffHeight) {
-            return FormatSyscoinErrorMessage(state, "mint-blockheight-too-old");
-        } 
-        
-        // ensure that we wait at least ETHEREUM_CONFIRMS_REQUIRED blocks (~1 hour) before we are allowed process this mint transaction  
-        // also ensure sanity test that the current height that our node thinks Eth is on isn't less than the requested block for spv proof
-        if(fGethCurrentHeight <  mintSyscoin.nBlockNumber || fGethSyncHeight <= 0 || (fGethSyncHeight - mintSyscoin.nBlockNumber < (bGethTestnet? 10: ETHEREUM_CONFIRMS_REQUIRED))){
-            return FormatSyscoinErrorMessage(state, "mint-insufficient-confirmations");
+        // time must be between 1 week and 1 hour old to be accepted
+        if(fGethSyncHeight >= MAX_ETHEREUM_TX_ROOTS){
+            if(nTime < txRootDB.nTimestamp) {
+                return FormatSyscoinErrorMessage(state, "invalid-timestamp", bMiner);
+            }
+            else if((nTime - txRootDB.nTimestamp) > 604800) {
+                return FormatSyscoinErrorMessage(state, "mint-blockheight-too-old", bMiner);
+            } 
+            
+            // ensure that we wait at least 1 hour before we are allowed process this mint transaction  
+            // also ensure sanity test that the current height that our node thinks Eth is on isn't less than the requested block for spv proof
+            else if((nTime - txRootDB.nTimestamp) < bGethTestnet? 600: 3600) {
+                return FormatSyscoinErrorMessage(state, "mint-insufficient-confirmations", bMiner);
+            }
         } 
     }
     
@@ -218,7 +220,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
             if(mapAssetSupplyStatsNotFound && passetsupplystatsdb->ExistStats(nAsset)){
                 CAssetSupplyStats dbAssetSupplyStats;
                 if (!passetsupplystatsdb->ReadStats(nAsset, dbAssetSupplyStats)) {
-                    return FormatSyscoinErrorMessage(state, "mint-read-supplystats");         
+                    return FormatSyscoinErrorMessage(state, "mint-read-supplystats", bMiner);         
                 } 
                 mapAssetSupplyStat->second = std::move(dbAssetSupplyStats);      
             }
@@ -238,7 +240,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
                                 
     return true;
 }
-bool CheckSyscoinInputs(const CTransaction& tx, const uint256& txHash, CValidationState& state, const CCoinsViewCache &inputs, const bool &fJustCheck, const int &nHeight, const bool &bSanity)
+bool CheckSyscoinInputs(const CTransaction& tx, const uint256& txHash, CValidationState& state, const CCoinsViewCache &inputs, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const bool &bSanity)
 {
     AssetAllocationMap mapAssetAllocations;
     AssetMap mapAssets;
@@ -246,7 +248,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, const uint256& txHash, CValidati
     EthereumMintTxVec vecMintKeys;
     std::vector<COutPoint> vecLockedOutpoints;
     ActorSet actorSet;
-    const bool &ret = CheckSyscoinInputs(false, tx, txHash, state, inputs, fJustCheck, nHeight, uint256(), bSanity, false, actorSet, mapAssetAllocations, mempoolMapAssetPrevTx, mapAssets, mapAssetSupplyStats, vecMintKeys, vecLockedOutpoints);
+    const bool &ret = CheckSyscoinInputs(false, tx, txHash, state, inputs, fJustCheck, nHeight, nTime, uint256(), bSanity, false, actorSet, mapAssetAllocations, mempoolMapAssetPrevTx, mapAssets, mapAssetSupplyStats, vecMintKeys, vecLockedOutpoints);
     if(fJustCheck){
         LOCK(cs_assetallocationarrival);
         for (const std::string& actor: actorSet){
@@ -265,7 +267,7 @@ void RemoveDoubleSpendFromMempool(const CTransactionRef & txRef) EXCLUSIVE_LOCKS
         GetMainSignals().TransactionRemovedFromMempool(txRef);
     }
 }
-bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& txHash, CValidationState& state, const CCoinsViewCache &inputs,  const bool &fJustCheck, const int &nHeight, const uint256 & blockHash, const bool &bSanity, const bool &bMiner, ActorSet &actorSet, AssetAllocationMap &mapAssetAllocations, AssetPrevTxMap &mapAssetPrevTxs, AssetMap &mapAssets, AssetSupplyStatsMap &mapAssetSupplyStats, EthereumMintTxVec &vecMintKeys, std::vector<COutPoint> &vecLockedOutpoints)
+bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& txHash, CValidationState& state, const CCoinsViewCache &inputs,  const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanity, const bool &bMiner, ActorSet &actorSet, AssetAllocationMap &mapAssetAllocations, AssetPrevTxMap &mapAssetPrevTxs, AssetMap &mapAssets, AssetSupplyStatsMap &mapAssetSupplyStats, EthereumMintTxVec &vecMintKeys, std::vector<COutPoint> &vecLockedOutpoints)
 {
     bool good = true;
     const bool &isBlock = !blockHash.IsNull();  
@@ -302,7 +304,7 @@ bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& 
                 good = false;
             }
             else{
-                good = CheckSyscoinMint(ibd, tx, txHash, state, bJustCheckInternal, bSanityInternal, bMiner, nHeight, blockHash, mapAssets, mapAssetSupplyStats, mapAssetAllocations, vecMintKeys);
+                good = CheckSyscoinMint(ibd, tx, txHash, state, bJustCheckInternal, bSanityInternal, bMiner, nHeight, nTime, blockHash, mapAssets, mapAssetSupplyStats, mapAssetAllocations, vecMintKeys);
             }
         }
     } catch (...) {
@@ -697,7 +699,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
     if(fJustCheck){
         if (!GetAssetAllocation(theAssetAllocation.assetAllocationTuple, dbAssetAllocation))
         {
-            return FormatSyscoinErrorMessage(state, "assetallocation-non-existing-allocation");
+            return FormatSyscoinErrorMessage(state, "assetallocation-non-existing-allocation", bMiner);
         }     
     }
     else{
@@ -713,7 +715,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
         if(mapAssetAllocationNotFound){
             if (!GetAssetAllocation(theAssetAllocation.assetAllocationTuple, dbAssetAllocation))
             {
-                return FormatSyscoinErrorMessage(state, "assetallocation-non-existing-allocation");
+                return FormatSyscoinErrorMessage(state, "assetallocation-non-existing-allocation", bMiner);
             }
             mapAssetAllocation->second = std::move(dbAssetAllocation);             
         }
@@ -722,7 +724,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
     
     if (!GetAsset(storedSenderAllocationRef.assetAllocationTuple.nAsset, dbAsset))
     {
-        return FormatSyscoinErrorMessage(state, "assetallocation-non-existing-asset");
+        return FormatSyscoinErrorMessage(state, "assetallocation-non-existing-asset", bMiner);
     }
         
     AssetBalanceMap::iterator mapBalanceSender;
@@ -871,7 +873,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
                 if(mapAssetSupplyStatsNotFound && passetsupplystatsdb->ExistStats(nBurnAsset)){
                     CAssetSupplyStats dbAssetSupplyStats;
                     if (!passetsupplystatsdb->ReadStats(nBurnAsset, dbAssetSupplyStats)) {
-                        return FormatSyscoinErrorMessage(state, "assetallocation-read-supplystats");          
+                        return FormatSyscoinErrorMessage(state, "assetallocation-read-supplystats", bMiner);          
                     } 
                     mapAssetSupplyStat->second = std::move(dbAssetSupplyStats);      
                 }
@@ -974,7 +976,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
                 if(mapAssetSupplyStatsNotFound && passetsupplystatsdb->ExistStats(nBurnAsset)){
                     CAssetSupplyStats dbAssetSupplyStats;
                     if (!passetsupplystatsdb->ReadStats(nBurnAsset, dbAssetSupplyStats)) {
-                        return FormatSyscoinErrorMessage(state, "assetallocation-read-supplystats");                   
+                        return FormatSyscoinErrorMessage(state, "assetallocation-read-supplystats", bMiner);                   
                     } 
                     mapAssetSupplyStat->second = std::move(dbAssetSupplyStats);      
                 }
@@ -1126,7 +1128,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
         if(!bMiner && nHeight > 0) {   
             // send notification on pow, for zdag transactions this is the second notification meaning the zdag tx has been confirmed
             if(!passetallocationdb->WriteAssetAllocationIndex(tx, txHash, dbAsset, nHeight, blockhash)){
-                return FormatSyscoinErrorMessage(state, "assetallocation-index");
+                return FormatSyscoinErrorMessage(state, "assetallocation-index", bMiner);
             } 
             LogPrint(BCLog::SYS,"CONNECTED ASSET ALLOCATION: op=%s assetallocation=%s hash=%s height=%d fJustCheck=%d\n",
                 assetAllocationFromTx(tx.nVersion).c_str(),
@@ -1141,7 +1143,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
         if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND){
             // send a real time notification on zdag, send another when pow happens (above)
             if(!passetallocationdb->WriteAssetAllocationIndex(tx, txHash, dbAsset, nHeight, blockhash)){
-                return FormatSyscoinErrorMessage(state, "assetallocation-index");
+                return FormatSyscoinErrorMessage(state, "assetallocation-index", bMiner);
             }
         }
         
@@ -1491,7 +1493,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, CValidation
     {
         if (!GetAsset(nAsset, dbAsset)){
             if (tx.nVersion != SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
-                return FormatSyscoinErrorMessage(state, "asset-non-existing-asset");
+                return FormatSyscoinErrorMessage(state, "asset-non-existing-asset", bMiner);
             }
             else
                 mapAsset->second = std::move(theAsset);      
@@ -1623,7 +1625,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, CValidation
         }
         if (!bSanityCheck && !fJustCheck && !bMiner){
             if(!passetallocationdb->WriteAssetAllocationIndex(tx, txHash, storedSenderAssetRef, nHeight, blockhash)){
-                return FormatSyscoinErrorMessage(state, "assetallocation-index");
+                return FormatSyscoinErrorMessage(state, "assetallocation-index", bMiner);
             } 
         } 
     }
@@ -1642,7 +1644,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, CValidation
     // write asset, if asset send, only write on pow since asset -> asset allocation is not 0-conf compatible
     if (!bSanityCheck && !fJustCheck && !bMiner && nHeight > 0) {
         if(!passetdb->WriteAssetIndex(tx, txHash, storedSenderAssetRef, nHeight, blockhash)){
-            return FormatSyscoinErrorMessage(state, "asset-index");
+            return FormatSyscoinErrorMessage(state, "asset-index", bMiner);
         }
         LogPrint(BCLog::SYS,"CONNECTED ASSET: tx=%s symbol=%d hash=%s height=%d fJustCheck=%d\n",
                 assetFromTx(tx.nVersion).c_str(),
@@ -1716,7 +1718,7 @@ bool CheckSyscoinLockedOutpoints(const CTransactionRef &tx, CValidationState& st
 			bool locked = false;
 			// spending as non allocation send while using a locked outpoint should be invalid
 			if (plockedoutpointsdb && plockedoutpointsdb->ReadOutpoint(myTx.vin[i].prevout, locked) && locked) {
-                return FormatSyscoinErrorMessage(state, "lock-non-allocation-input");
+                return FormatSyscoinErrorMessage(state, "lock-non-allocation-input", true, false);
 			}
 		}
 	}
@@ -1724,7 +1726,7 @@ bool CheckSyscoinLockedOutpoints(const CTransactionRef &tx, CValidationState& st
 	else if(assetAllocationVersion){
 		CAssetAllocation assetAllocationDB;
 		if (!GetAssetAllocation(theAssetAllocation.assetAllocationTuple, assetAllocationDB)) {
-            return FormatSyscoinErrorMessage(state, "lock-non-existing-allocation");
+            return FormatSyscoinErrorMessage(state, "lock-non-existing-allocation", true, false);
 		}
 		bool found = assetAllocationDB.lockedOutpoint.IsNull();
         
@@ -1779,11 +1781,8 @@ bool CEthereumTxRootsDB::PruneTxRoots(const uint32_t &fNewGethSyncHeight) {
         }
     }
 
-    {
-        LOCK(cs_ethsyncheight);
-        fGethSyncHeight = fNewGethSyncHeight;
-        fGethCurrentHeight = fNewGethCurrentHeight;
-    }      
+    fGethSyncHeight = fNewGethSyncHeight;
+    fGethCurrentHeight = fNewGethCurrentHeight;   
     return FlushErase(vecHeightKeys);
 }
 bool CEthereumTxRootsDB::Init(){
@@ -1807,13 +1806,11 @@ bool CEthereumTxRootsDB::Clear(){
         }
     }
 
-    {
-        LOCK(cs_ethsyncheight);
-        fGethSyncHeight = 0;
-        fGethCurrentHeight = 0;
-    }      
+    fGethSyncHeight = 0;
+    fGethCurrentHeight = 0;     
     return FlushErase(vecHeightKeys);
 }
+
 void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t> > &vecMissingBlockRanges){
     boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
     pcursor->SeekToFirst();
@@ -1821,11 +1818,8 @@ void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t>
     uint32_t nKey = 0;
     uint32_t nKeyIndex = 0;
     uint32_t nCurrentSyncHeight = 0;
-    {
-        LOCK(cs_ethsyncheight);
-        nCurrentSyncHeight = fGethSyncHeight;
-       
-    }
+    nCurrentSyncHeight = fGethSyncHeight;
+
     uint32_t nKeyCutoff = nCurrentSyncHeight - MAX_ETHEREUM_TX_ROOTS;
     if(nCurrentSyncHeight < MAX_ETHEREUM_TX_ROOTS)
         nKeyCutoff = 0;
@@ -1837,15 +1831,15 @@ void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t>
         boost::this_thread::interruption_point();
         try {
             if(!pcursor->GetKey(nKey)){
-                 pcursor->Next();
-                 continue;
+                pcursor->Next();
+                continue;
             }
             EthereumTxRoot txRoot;
             pcursor->GetValue(txRoot);
             #if __cplusplus > 201402 
             mapTxRoots.try_emplace(std::move(nKey), std::move(txRoot));
             #else
-            mapTxRoots.emplace(nKey, txRoot);
+            mapTxRoots.emplace(std::piecewise_construct,  std::forward_as_tuple(nKey), std::forward_as_tuple(txRoot));
             #endif            
             
             pcursor->Next();
@@ -1853,7 +1847,8 @@ void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t>
         catch (std::exception &e) {
             return;
         }
-    } 
+    }
+    
     while(mapTxRoots.size() < 2){
         vecMissingBlockRanges.emplace_back(make_pair(nKeyCutoff, nCurrentSyncHeight));
         return;
