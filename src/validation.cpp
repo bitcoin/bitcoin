@@ -3323,7 +3323,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
                             
                             // ensure that we wait at least 1 hour before we are allowed process this mint transaction  
                             // also ensure sanity test that the current height that our node thinks Eth is on isn't less than the requested block for spv proof
-                            else if((nTime - txRootDB.nTimestamp) < bGethTestnet? 600: 3600) {
+                            else if((nTime - txRootDB.nTimestamp) < ((bGethTestnet == true)? 600: 3600)) {
                                 return FormatSyscoinErrorMessage(state, "mint-insufficient-confirmations", false, true);
                             }
                         } 

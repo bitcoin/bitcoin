@@ -1057,7 +1057,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
             } 
             
             // ensure that we wait at least 1 hour before we are allowed process this mint transaction  
-            else if((nTime - txRootDB.nTimestamp) < bGethTestnet? 600: 3600) {
+            else if((nTime - txRootDB.nTimestamp) <  ((bGethTestnet == true)? 600: 3600)){
                 throw JSONRPCError(RPC_MISC_ERROR, "Not enough confirmations on Ethereum to process this mint transaction. Must wait one hour for the transaction to settle.");
             }
         } 
