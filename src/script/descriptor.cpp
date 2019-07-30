@@ -11,6 +11,7 @@
 
 #include <span.h>
 #include <util/bip32.h>
+#include <util/spanparsing.h>
 #include <util/system.h>
 #include <util/strencodings.h>
 
@@ -631,46 +632,6 @@ enum class ParseScriptContext {
     P2SH,
     P2WSH,
 };
-
-/** Parse a constant. If successful, sp is updated to skip the constant and return true. */
-bool Const(const std::string& str, Span<const char>& sp)
-{
-    if ((size_t)sp.size() >= str.size() && std::equal(str.begin(), str.end(), sp.begin())) {
-        sp = sp.subspan(str.size());
-        return true;
-    }
-    return false;
-}
-
-/** Parse a function call. If successful, sp is updated to be the function's argument(s). */
-bool Func(const std::string& str, Span<const char>& sp)
-{
-    if ((size_t)sp.size() >= str.size() + 2 && sp[str.size()] == '(' && sp[sp.size() - 1] == ')' && std::equal(str.begin(), str.end(), sp.begin())) {
-        sp = sp.subspan(str.size() + 1, sp.size() - str.size() - 2);
-        return true;
-    }
-    return false;
-}
-
-/** Return the expression that sp begins with, and update sp to skip it. */
-Span<const char> Expr(Span<const char>& sp)
-{
-    int level = 0;
-    auto it = sp.begin();
-    while (it != sp.end()) {
-        if (*it == '(') {
-            ++level;
-        } else if (level && *it == ')') {
-            --level;
-        } else if (level == 0 && (*it == ')' || *it == ',')) {
-            break;
-        }
-        ++it;
-    }
-    Span<const char> ret = sp.first(it - sp.begin());
-    sp = sp.subspan(it - sp.begin());
-    return ret;
-}
 
 /** Split a string on every instance of sep, returning a vector. */
 std::vector<Span<const char>> Split(const Span<const char>& sp, char sep)
