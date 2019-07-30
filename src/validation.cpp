@@ -1945,7 +1945,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     int64_t nSigOpsCost = 0;
     blockundo.vtxundo.reserve(block.vtx.size() - 1);
     std::vector<PrecomputedTransactionData> txdata;
-    const bool & ibd = IsInitialBlockDownload();
+    const bool ibd = ::ChainstateActive().IsInitialBlockDownload();
     AssetAllocationMap mapAssetAllocations;
     AssetPrevTxMap mapAssetPrevTxs;
     AssetMap mapAssets;

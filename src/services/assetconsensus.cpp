@@ -276,7 +276,7 @@ bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& 
         if (IsAssetAllocationTx(tx.nVersion))
         {
             // remove any txid's that are confirming from vecToRemoveFromMempool
-            if(isBlock && vecToRemoveFromMempool.size() > 0 && !fJustCheck){
+            if(nHeight > 0 && isBlock && vecToRemoveFromMempool.size() > 0 && !fJustCheck){
                 auto it = std::find_if( vecToRemoveFromMempool.begin(), vecToRemoveFromMempool.end(),
                     [&txHash](const std::pair<uint256, uint32_t>& element){ return element.first == txHash;} );
                 if(it != vecToRemoveFromMempool.end()){
@@ -287,12 +287,13 @@ bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& 
             if(theAssetAllocation.assetAllocationTuple.IsNull()){
                 return FormatSyscoinErrorMessage(state, "assetallocation-unserialize", bMiner);
             }
-            GetActorsFromAssetAllocationTx(theAssetAllocation, tx.nVersion, false, false, actorSet);
-            good = CheckAssetAllocationInputs(tx, txHash, theAssetAllocation, state, inputs, bJustCheckInternal, nHeight == 0? ::ChainActive().Height()+1: nHeight, blockHash, mapAssetSupplyStats, mapAssetAllocations, mapAssetPrevTxs, vecLockedOutpoints, bSanityInternal, bMiner);
+            if(nHeight > 0)
+                GetActorsFromAssetAllocationTx(theAssetAllocation, tx.nVersion, false, false, actorSet);
+            good = CheckAssetAllocationInputs(tx, txHash, theAssetAllocation, state, inputs, bJustCheckInternal, nHeight, blockHash, mapAssetSupplyStats, mapAssetAllocations, mapAssetPrevTxs, vecLockedOutpoints, bSanityInternal, bMiner);
         }
         else if (IsAssetTx(tx.nVersion))
         {
-            good = CheckAssetInputs(tx, txHash, state, inputs, bJustCheckInternal, nHeight == 0? ::ChainActive().Height()+1: nHeight, blockHash, mapAssets, mapAssetAllocations, bSanityInternal, bMiner);
+            good = CheckAssetInputs(tx, txHash, state, inputs, bJustCheckInternal, nHeight, blockHash, mapAssets, mapAssetAllocations, bSanityInternal, bMiner);
         } 
         else if(IsSyscoinMintTx(tx.nVersion))
         {
@@ -301,7 +302,7 @@ bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& 
                 good = false;
             }
             else{
-                good = CheckSyscoinMint(ibd, tx, txHash, state, bJustCheckInternal, bSanityInternal, bMiner, nHeight == 0? ::ChainActive().Height()+1: nHeight, blockHash, mapAssets, mapAssetSupplyStats, mapAssetAllocations, vecMintKeys);
+                good = CheckSyscoinMint(ibd, tx, txHash, state, bJustCheckInternal, bSanityInternal, bMiner, nHeight, blockHash, mapAssets, mapAssetSupplyStats, mapAssetAllocations, vecMintKeys);
             }
         }
     } catch (...) {
@@ -789,7 +790,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
                     bNewConfict = true;
                 }
                 else
-                    return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sender-conflicting", false, false);
+                    return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sender-conflicting", true, false);
             }
             return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sender", bMiner || bNewConfict);
         }
@@ -906,7 +907,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
                     bNewConfict = true;
                 } 
                 else
-                    return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sender-conflicting", false, false);
+                    return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sender-conflicting", true, false);
             }      
             return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sender", bMiner || bNewConfict);
         }       
@@ -1122,7 +1123,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
         if(storedSenderAllocationRef.nBalance == 0)
             storedSenderAllocationRef.SetNull();    
 
-        if(!bMiner) {   
+        if(!bMiner && nHeight > 0) {   
             // send notification on pow, for zdag transactions this is the second notification meaning the zdag tx has been confirmed
             if(!passetallocationdb->WriteAssetAllocationIndex(tx, txHash, dbAsset, nHeight, blockhash)){
                 return FormatSyscoinErrorMessage(state, "assetallocation-index");
@@ -1639,7 +1640,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, CValidation
     storedSenderAssetRef.nHeight = nHeight;
     storedSenderAssetRef.txHash = txHash;
     // write asset, if asset send, only write on pow since asset -> asset allocation is not 0-conf compatible
-    if (!bSanityCheck && !fJustCheck && !bMiner) {
+    if (!bSanityCheck && !fJustCheck && !bMiner && nHeight > 0) {
         if(!passetdb->WriteAssetIndex(tx, txHash, storedSenderAssetRef, nHeight, blockhash)){
             return FormatSyscoinErrorMessage(state, "asset-index");
         }

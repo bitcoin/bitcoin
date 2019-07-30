@@ -12,6 +12,8 @@
 #include <thread>
 #include <policy/rbf.h>
 #include <chrono>
+#include <consensus/validation.h>
+#include <util/validation.h>
 using namespace std;
 extern std::string exePath;
 extern std::string EncodeDestination(const CTxDestination& dest);
@@ -474,60 +476,79 @@ UniValue listassetindexallocations(const JSONRPCRequest& request) {
     }
     return oRes;
 }
-int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& assetAllocationTupleSender, const uint256& lookForTxHash) EXCLUSIVE_LOCKS_REQUIRED(cs_main, mempool.cs) {
-    LOCK(cs_assetallocationarrival);
-	// ensure that this transaction exists in the arrivalTimes DB (which is the running stored lists of all real-time asset allocation sends not in POW)
-	// the arrivalTimes DB is only added to for valid asset allocation sends that happen in real-time and it is removed once there is POW on that transaction
-    const ArrivalTimesMap& arrivalTimes = arrivalTimesMap[assetAllocationTupleSender.ToString()];
-	if(arrivalTimes.empty())
-		return ZDAG_NOT_FOUND;
+int VerifyTransactionGraph(const uint256& lookForTxHash) {
+    bool ibd = false;
+    AssetAllocationMap mapAssetAllocations;
+    AssetPrevTxMap mapAssetPrevTxs;
+    AssetMap mapAssets;
+    AssetSupplyStatsMap mapAssetSupplyStats;
+    EthereumMintTxVec vecMintKeys;
+    std::vector<COutPoint> vecLockedOutpoints;
+    ActorSet actorSet;
+    ActorSet actorSetSenders;
+    CValidationState state;
+    CTxMemPool::setEntries setAncestors;
+    CCoinsView viewDummy;
+    CCoinsViewCache view(&viewDummy);
+    CTransactionRef txRef;
+    {
+        LOCK(cs_main);
+        LOCK(mempool.cs);
+        txRef = mempool.get(lookForTxHash);
+        if (!txRef || !IsAssetAllocationTx(txRef->nVersion))
+            return ZDAG_NOT_FOUND;
+        CCoinsViewCache &viewChain = *pcoinsTip;
+        CCoinsViewMemPool viewMempool(&viewChain, mempool);
+        view.SetBackend(viewMempool); // temporarily switch cache backend to db+mempool view
 
-	// go through arrival times and check that balances don't overrun the POW balance
-
-    int64_t nPrevTime = 0;
-	for (auto& arrivalTime : arrivalTimes)
-	{
-        // ensure that transactions are ordered by some time difference
-        if(nPrevTime > arrivalTime.second){
-            return ZDAG_WARNING_NO_TIME_SEPERATION;
-        }
-        
-        const CTransactionRef &txRef = mempool.get(arrivalTime.first);
-        if (!txRef)
-            continue;
-
-        RBFTransactionState rbfState = IsRBFOptIn(*txRef, mempool);
+        // check this transaction isn't RBF enabled and fill view with inputs from mempool
+        RBFTransactionState rbfState = IsRBFOptIn(*txRef, mempool, view, setAncestors);
         if (rbfState == RBFTransactionState::UNKNOWN) {
-            return ZDAG_WARNING_MEMPOOL_NOT_FOUND;
+            return ZDAG_NOT_FOUND;
         } else if (rbfState == RBFTransactionState::REPLACEABLE_BIP125) {
             return ZDAG_WARNING_RBF;
         }
-        
 
-        // check that during output linking the prev tx cannot be RBF'd (check sequence is sequence-1 or more)
-        nPrevTime = arrivalTime.second;
-		// even if the sender may be flagged, the order of events suggests that this receiver should get his money confirmed upon pow because real-time balance is sufficient for this receiver
-		if (arrivalTime.first == lookForTxHash) {
-			return ZDAG_STATUS_OK;
-		}
-	}
-	return lookForTxHash.IsNull()? ZDAG_STATUS_OK: ZDAG_NOT_FOUND;
+        view.SetBackend(viewDummy); // switch back to avoid locking mempool for too long
+        ibd = ::ChainstateActive().IsInitialBlockDownload();
+        // get actors for this transaction, irrelevent to ancestors in case the double spend is happening on the same utxo
+        GetActorsFromSyscoinTx(txRef, true, false, actorSetSenders);
+        
+        for (CTxMemPool::txiter it : setAncestors) {
+            const CTransaction& tx = it->GetTx();
+            if (!CheckSyscoinInputs(ibd, tx, tx.GetHash(), state, view, false, 0, ::ChainActive().Tip()->GetBlockHash(), false, false, actorSet, mapAssetAllocations, mapAssetPrevTxs, mapAssets, mapAssetSupplyStats, vecMintKeys, vecLockedOutpoints)){
+                LogPrint(BCLog::SYS, "VerifyTransactionGraph: Graph Invalid %s\n", FormatStateMessage(state));
+                return ZDAG_MAJOR_CONFLICT;
+            }
+            GetActorsFromSyscoinTx(it->GetSharedTx(), true, false, actorSetSenders);
+        }        
+    }
+ 
+    {
+        LOCK(cs_assetallocationconflicts);
+        // check all involved senders to ensure they are not flagged
+        for(const auto& actor: actorSetSenders){
+            auto it = assetAllocationConflicts.find(actor);
+            if (it != assetAllocationConflicts.end()){
+                LogPrint(BCLog::SYS, "VerifyTransactionGraph: Actor Conflict %s\n", actor);
+                return ZDAG_MAJOR_CONFLICT;
+            }
+        }
+    }
+	return ZDAG_STATUS_OK;
 }
 
-UniValue assetallocationsenderstatus(const JSONRPCRequest& request) {
+UniValue assetallocationverifyzdag(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
-    RPCHelpMan{"assetallocationsenderstatus",
-        "\nShow status as it pertains to any current Z-DAG conflicts or warnings related to a sender or sender/txid combination of an asset allocation transfer. Leave txid empty if you are not checking for a specific transfer.\n"
+    RPCHelpMan{"assetallocationverifyzdag",
+        "\nShow status as it pertains to any current Z-DAG conflicts or warnings related to a ZDAG transaction.\n"
         "Return value is in the status field and can represent 3 levels(0, 1 or 2)\n"
         "Level -1 means not found, not a ZDAG transaction, perhaps it is already confirmed.\n"
         "Level 0 means OK.\n"
         "Level 1 means warning (checked that in the mempool there are more spending balances than current POW sender balance). An active stance should be taken and perhaps a deeper analysis as to potential conflicts related to the sender.\n"
         "Level 2 means an active double spend was found and any depending asset allocation sends are also flagged as dangerous and should wait for POW confirmation before proceeding.\n",
         {
-            {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The guid of the asset"},
-            {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address of the sender"},
-            {"txid", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The transaction id of the assetallocationsend. Default to empty. Skip to check all transactions for this sender, enter txid if checking for specific transaction."},
-            {"min_latency", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The minimum latency to ensure the sender has not sent a transaction within this time (in milliseconds). Defaults to 10000 for 10 seconds."}
+            {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id of the ZDAG transaction."}
         },
         RPCResult{
             "{\n"
@@ -535,34 +556,15 @@ UniValue assetallocationsenderstatus(const JSONRPCRequest& request) {
             "}\n"
         },
         RPCExamples{
-            HelpExampleCli("assetallocationsenderstatus", "\"asset_guid\" \"address\" \"txid\" \"min_latency\"")
-            + HelpExampleRpc("assetallocationsenderstatus", "\"asset_guid\", \"address\", \"txid\" \"min_latency\"")
+            HelpExampleCli("assetallocationverifyzdag", "\"txid\"")
+            + HelpExampleRpc("assetallocationverifyzdag", "\"txid\"")
         }
     }.Check(request);
 
-	const int &nAsset = params[0].get_uint();
-	string strAddressSender = params[1].get_str();
 	uint256 txid;
-	txid.SetNull();
-	if(!params[2].get_str().empty())
-		txid.SetHex(params[2].get_str());
+	txid.SetHex(params[0].get_str());
 	UniValue oAssetAllocationStatus(UniValue::VOBJ);
-	const CAssetAllocationTuple assetAllocationTupleSender(nAsset, DescribeWitnessAddress(strAddressSender));
-    {
-        LOCK2(cs_main, ::mempool.cs);
-        std::unordered_set<std::string>::iterator it;
-        {
-            LOCK(cs_assetallocationconflicts);
-            it = assetAllocationConflicts.find(assetAllocationTupleSender.ToString());
-        }
-    	int nStatus = ZDAG_STATUS_OK;
-    	if (it != assetAllocationConflicts.end())
-    		nStatus = ZDAG_MAJOR_CONFLICT;
-    	else
-    		nStatus = DetectPotentialAssetAllocationSenderConflicts(assetAllocationTupleSender, txid);
-    	
-        oAssetAllocationStatus.__pushKV("status", nStatus);
-    }
+    oAssetAllocationStatus.__pushKV("status", VerifyTransactionGraph(txid));
 	return oAssetAllocationStatus;
 }
 
@@ -1323,7 +1325,7 @@ static const CRPCCommand commands[] =
     { "syscoin",            "assetallocationinfo",              &assetallocationinfo,           {"asset_guid"}},
     { "syscoin",            "assetallocationbalance",           &assetallocationbalance,        {"asset_guid"}},
     { "syscoin",            "assetallocationbalances",          &assetallocationbalances,       {"asset_guid","addresses"} },
-    { "syscoin",            "assetallocationsenderstatus",      &assetallocationsenderstatus,   {"asset_guid","address","txid","min_latency"} },
+    { "syscoin",            "assetallocationverifyzdag",        &assetallocationverifyzdag,     {"asset_guid","txid"} },
     { "syscoin",            "listassetallocations",             &listassetallocations,          {"count","from","options"} },
     { "syscoin",            "listassetallocationmempoolbalances",             &listassetallocationmempoolbalances,          {"count","from","options"} },
     { "syscoin",            "listassetindex",                   &listassetindex,                {"page","options"} },
