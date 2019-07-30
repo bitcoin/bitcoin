@@ -1253,8 +1253,8 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag_dbl_spend_long_chain)
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + assetHex, true, false));
     BOOST_CHECK(r.write().size() >= 32);
     
-    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "decoderawtransaction " + assetHex + " true"));
-    string dblspendtx = find_value(r.get_obj(), "txid").get_str();
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "decoderawtransaction " + assetHex + " true"));
+    string dblspendtx = find_value(r.get_obj(), "txid").get_str();
     MilliSleep(500);
 
     // original transactions are now marked as conflicted because the actor's are flagged
