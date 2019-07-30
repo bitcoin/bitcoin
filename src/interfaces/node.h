@@ -150,6 +150,9 @@ public:
     //! Is initial block download.
     virtual bool isInitialBlockDownload() = 0;
 
+    //! Is -addresstype set.
+    virtual bool isAddressTypeSet() = 0;
+
     //! Get reindex.
     virtual bool getReindex() = 0;
 
