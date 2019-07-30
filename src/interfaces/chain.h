@@ -187,9 +187,6 @@ public:
     //! Check if any block has been pruned.
     virtual bool havePruned() = 0;
 
-    //! Check if p2p enabled.
-    virtual bool p2pEnabled() = 0;
-
     //! Check if the node is ready to broadcast transactions.
     virtual bool isReadyToBroadcast() = 0;
 
