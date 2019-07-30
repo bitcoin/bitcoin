@@ -3264,23 +3264,32 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
                 GetActorsFromAssetAllocationTx(theAssetAllocation, txRef->nVersion, true, false, actorSet);
                 // ensure pow transactions if spending from sender should have match arrival times with this txid
                 if(actorSet.size() == 1){
-                    LOCK(cs_assetallocationarrival); 
-                    const auto arrivalTimesIT = arrivalTimesMap.find(*actorSet.begin());
-                    // only check if sender already exists in arrival times
-                    // the idea is if this person saw a sender, he likely would know about the sender txid being validated in the block
-                    // and even if not we don't pass in bMiner to ensure that we don't invalidate the block so it can check again for eventual consistency
-                    if(arrivalTimesIT != arrivalTimesMap.end()){
-                        const ArrivalTimesMap& arrivalTimes = arrivalTimesIT->second;
-                        std::unordered_set<uint256, SaltedTxidHasher> futureArrivalTimes;
-                        // ensure that we check for arrival times that arrived in future of this block (to cover for reorgs and disconnecting)
-                        for(const auto &arrivalTime: arrivalTimes){
-                            if(block.GetBlockTime() > arrivalTime.second){
-                                futureArrivalTimes.insert(arrivalTime.first);        
+                    const std::string& actor = *actorSet.begin();
+                    // if no conflicts we ensure miner isn't creating zdag tx but mining another
+                    // if conflict exists, it will only relay first conflict double spend so potentially nodes may
+                    // have inconsistent arrival times and thus we only need to check if there is no chance
+                    // that the arrival times are different (as long as transaction is relayed)
+                    // This is called Eventual Consistency. That over time every node will see the same transactions
+                    // in mempool or through the block
+                    if(assetAllocationConflicts.find(actor) == assetAllocationConflicts.end()){
+                        LOCK(cs_assetallocationarrival); 
+                        const auto arrivalTimesIT = arrivalTimesMap.find(actor);
+                        // only check if sender already exists in arrival times
+                        // the idea is if this person saw a sender, he likely would know about the sender txid being validated in the block
+                        // and even if not we don't pass in bMiner to ensure that we don't invalidate the block so it can check again for eventual consistency
+                        if(arrivalTimesIT != arrivalTimesMap.end()){
+                            const ArrivalTimesMap& arrivalTimes = arrivalTimesIT->second;
+                            std::unordered_set<uint256, SaltedTxidHasher> futureArrivalTimes;
+                            // ensure that we check for arrival times that arrived in future of this block (to cover for reorgs and disconnecting)
+                            for(const auto &arrivalTime: arrivalTimes){
+                                if(block.GetBlockTime() > arrivalTime.second){
+                                    futureArrivalTimes.insert(arrivalTime.first);        
+                                }
                             }
-                        }
-                        if(futureArrivalTimes.size() > 0 && futureArrivalTimes.find(txRef->GetHash()) == futureArrivalTimes.end()){
-                            // we want to pass this back as an invalid transaction but not modify the block status to invalid
-                            return FormatSyscoinErrorMessage(state, "assetallocation-missing-arrival-txid", false, false);
+                            if(futureArrivalTimes.size() > 0 && futureArrivalTimes.find(txRef->GetHash()) == futureArrivalTimes.end()){
+                                // we want to pass this back as an invalid transaction but not modify the block status to invalid
+                                return FormatSyscoinErrorMessage(state, "assetallocation-missing-arrival-txid", false, false);
+                            }
                         }
                     } 
                 }
