@@ -41,7 +41,6 @@ bool FormatSyscoinErrorMessage(CValidationState& state, const std::string errorM
 }
 bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& txHash, CValidationState& state, const bool &fJustCheck, const bool& bSanity, const bool& bMiner, const int& nHeight, const int64_t& nTime, const uint256& blockhash, AssetMap& mapAssets, AssetSupplyStatsMap &mapAssetSupplyStats, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys)
 {
-    static bool bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
     // unserialize mint object from txn, check for valid
     CMintSyscoin mintSyscoin(tx);
     CAsset dbAsset;

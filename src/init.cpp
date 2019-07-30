@@ -2083,10 +2083,10 @@ bool AppInitMain(InitInterfaces& interfaces)
     SetRPCWarmupFinished();
     // SYSCOIN
     int wsport = gArgs.GetArg("-gethwebsocketport", 8646);
-    bool bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
-    StartGethNode(exePath, gethPID, bGethTestnet, wsport);
+    bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
+    StartGethNode(exePath, gethPID, wsport);
 	int rpcport = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
-	StartRelayerNode(exePath, relayerPID, rpcport, bGethTestnet, wsport);
+	StartRelayerNode(exePath, relayerPID, rpcport, wsport);
     
     uiInterface.InitMessage(_("Done loading").translated);
 

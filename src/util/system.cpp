@@ -70,6 +70,7 @@
 #include <rpc/server.h>
 bool fMasternodeMode = false;
 bool fUnitTest = false;
+bool bGethTestnet = false;
 bool fTPSTest = false;
 bool fTPSTestEnabled = false;
 bool fLiteMode = false;
@@ -1157,7 +1158,7 @@ bool CheckSpecs(std::string &errMsg, bool bMiner){
    bb = !errMsg.empty();
    return errMsg.empty();         
 }
-bool StartGethNode(const std::string &exePath, pid_t &pid, bool bGethTestnet, int websocketport)
+bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport)
 {
     if(fUnitTest || fTPSTest)
         return true;
@@ -1380,7 +1381,7 @@ bool StopRelayerNode(pid_t &pid)
     return true;
 }
 
-bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, bool bGethTestnet, int websocketport)
+bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, int websocketport)
 {
     if(fUnitTest || fTPSTest)
         return true;

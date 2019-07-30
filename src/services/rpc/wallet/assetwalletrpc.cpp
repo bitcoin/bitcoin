@@ -1034,7 +1034,6 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     mintSyscoin.vchReceiptParentNodes = ParseHex(vchReceiptParentNodes);
     
     EthereumTxRoot txRootDB;
-    bool bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
     const bool &ethTxRootShouldExist = !fLiteMode && fLoaded && fGethSynced;
     if(!ethTxRootShouldExist){
         throw JSONRPCError(RPC_MISC_ERROR, "Network is not ready to accept your mint transaction please wait...");
