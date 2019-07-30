@@ -50,10 +50,10 @@ BOOST_AUTO_TEST_CASE(GetFeeTest)
     // Truncates the result, if not integer
     BOOST_CHECK_EQUAL(feeRate.GetFee(0), CAmount(0));
     BOOST_CHECK_EQUAL(feeRate.GetFee(8), CAmount(1)); // Special case: returns 1 instead of 0
-    BOOST_CHECK_EQUAL(feeRate.GetFee(9), CAmount(1));
-    BOOST_CHECK_EQUAL(feeRate.GetFee(121), CAmount(14));
-    BOOST_CHECK_EQUAL(feeRate.GetFee(122), CAmount(15));
-    BOOST_CHECK_EQUAL(feeRate.GetFee(999), CAmount(122));
+    BOOST_CHECK_EQUAL(feeRate.GetFee(9), CAmount(2));
+    BOOST_CHECK_EQUAL(feeRate.GetFee(121), CAmount(15));
+    BOOST_CHECK_EQUAL(feeRate.GetFee(122), CAmount(16));
+    BOOST_CHECK_EQUAL(feeRate.GetFee(999), CAmount(123));
     BOOST_CHECK_EQUAL(feeRate.GetFee(1e3), CAmount(123));
     BOOST_CHECK_EQUAL(feeRate.GetFee(9e3), CAmount(1107));
 
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(GetFeeTest)
     // Truncates the result, if not integer
     BOOST_CHECK_EQUAL(feeRate.GetFee(0), CAmount(0));
     BOOST_CHECK_EQUAL(feeRate.GetFee(8), CAmount(-1)); // Special case: returns -1 instead of 0
-    BOOST_CHECK_EQUAL(feeRate.GetFee(9), CAmount(-1));
+    BOOST_CHECK_EQUAL(feeRate.GetFee(9), CAmount(-2));
 
     // check alternate constructor
     feeRate = CFeeRate(1000);
