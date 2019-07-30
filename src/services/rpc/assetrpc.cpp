@@ -241,8 +241,8 @@ UniValue tpstestsetenabled(const JSONRPCRequest& request) {
 	return result;
 }
 void RunTest(){
-    std::chrono::microseconds dur(nTPSTestingStartTime);
-    std::chrono::time_point<std::chrono::system_clock, std::chrono::microseconds> dt(dur);
+    std::chrono::microseconds duration(nTPSTestingStartTime);
+    std::chrono::time_point<std::chrono::system_clock, std::chrono::microseconds> dt(duration);
     std::this_thread::sleep_until(dt);
     for (auto &txReq : vecTPSRawTransactions) {
         sendrawtransaction(txReq);
@@ -511,7 +511,7 @@ int VerifyTransactionGraph(const uint256& lookForTxHash) {
 
         view.SetBackend(viewDummy); // switch back to avoid locking mempool for too long
         ibd = ::ChainstateActive().IsInitialBlockDownload();
-        // get actors for this transaction, irrelevent to ancestors in case the double spend is happening on the same utxo
+        // get actors for this transaction, irrelevant to ancestors in case the double spend is happening on the same utxo
         GetActorsFromSyscoinTx(txRef, true, false, actorSetSenders);
         const int64_t & mediantime = ::ChainActive().Tip()->GetMedianTimePast();
         for (CTxMemPool::txiter it : setAncestors) {
