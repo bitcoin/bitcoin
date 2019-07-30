@@ -204,14 +204,12 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
     if(!outPointLastSender.IsNull() && ::ChainActive().Tip()->nHeight >= Params().GetConsensus().nBridgeStartBlock){
         const Coin& coin = view.AccessCoin(outPointLastSender);
         if(!coin.IsSpent()){
-            LogPrintf("outPointLastSender %s\n", outPointLastSender.ToString());
             txIn.vin.emplace_back(CTxIn(outPointLastSender, coin.out.scriptPubKey));
         } 
     }
     if(!outPointLastSenderForwardedFee.IsNull() && ::ChainActive().Tip()->nHeight >= Params().GetConsensus().nBridgeStartBlock){
         const Coin& coin = view.AccessCoin(outPointLastSenderForwardedFee);
         if(!coin.IsSpent()){
-             LogPrintf("outPointLastSenderForwardedFee %s\n", outPointLastSenderForwardedFee.ToString());
             txIn.vin.emplace_back(CTxIn(outPointLastSenderForwardedFee, coin.out.scriptPubKey));
         }
     } 

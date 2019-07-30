@@ -18,5 +18,6 @@ enum class RBFTransactionState {
 // This involves checking sequence numbers of the transaction, as well
 // as the sequence numbers of all in-mempool ancestors.
 RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool) EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
-
+// SYSCOIN
+RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool, CCoinsViewCache &view,CTxMemPool::setEntries &setAncestors) EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
 #endif // SYSCOIN_POLICY_RBF_H

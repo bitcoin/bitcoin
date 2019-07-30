@@ -36,3 +36,37 @@ RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool)
     }
     return RBFTransactionState::FINAL;
 }
+// SYSCOIN
+RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool, CCoinsViewCache &view, CTxMemPool::setEntries &setAncestors)
+{
+    AssertLockHeld(pool.cs);
+
+    // First check the transaction itself.
+    if (SignalsOptInRBF(tx)) {
+        return RBFTransactionState::REPLACEABLE_BIP125;
+    }
+
+    // If this transaction is not in our mempool, then we can't be sure
+    // we will know about all its inputs.
+    if (!pool.exists(tx.GetHash())) {
+        return RBFTransactionState::UNKNOWN;
+    }
+
+    // If all the inputs have nSequence >= maxint-1, it still might be
+    // signaled for RBF if any unconfirmed parents have signaled.
+    uint64_t noLimit = std::numeric_limits<uint64_t>::max();
+    std::string dummy;
+    CTxMemPoolEntry entry = *pool.mapTx.find(tx.GetHash());
+    pool.CalculateMemPoolAncestors(entry, setAncestors, noLimit, noLimit, noLimit, noLimit, dummy, false);
+
+    for (CTxMemPool::txiter it : setAncestors) {
+        const CTransactionRef& txRef = it->GetSharedTx();
+        if (SignalsOptInRBF(*txRef)) {
+            return RBFTransactionState::REPLACEABLE_BIP125;
+        }
+        for(const auto& txin: txRef->vin){
+            view.AccessCoin(txin.prevout);
+        }
+    }
+    return RBFTransactionState::FINAL;
+}
