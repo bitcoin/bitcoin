@@ -5,8 +5,8 @@
 #ifndef TRADEHISTORYDIALOG_H
 #define TRADEHISTORYDIALOG_H
 
-#include "guiutil.h"
-#include "uint256.h"
+#include <qt/guiutil.h>
+#include <uint256.h>
 
 #include <QDialog>
 
@@ -71,6 +71,7 @@ public Q_SLOTS:
 private Q_SLOTS:
     int PopulateTradeHistoryMap();
     void UpdateData();
+    void UpdateTradeHistoryTableSignal();
     void UpdateTradeHistoryTable(bool forceUpdate = false);
     void RepopulateTradeHistoryTable(int hide);
     void ReinitTradeHistoryTable();

@@ -1,16 +1,16 @@
-#include "omnicore/rpcrequirements.h"
+#include <omnicore/rpcrequirements.h>
 
-#include "omnicore/dbspinfo.h"
-#include "omnicore/dex.h"
-#include "omnicore/omnicore.h"
-#include "omnicore/sp.h"
-#include "omnicore/utilsbitcoin.h"
+#include <omnicore/dbspinfo.h>
+#include <omnicore/dex.h>
+#include <omnicore/omnicore.h>
+#include <omnicore/sp.h>
+#include <omnicore/utilsbitcoin.h>
 
-#include "amount.h"
-#include "main.h"
-#include "rpc/protocol.h"
-#include "sync.h"
-#include "tinyformat.h"
+#include <amount.h>
+#include <validation.h>
+#include <rpc/protocol.h>
+#include <sync.h>
+#include <tinyformat.h>
 
 #include <stdint.h>
 #include <string>
@@ -134,7 +134,7 @@ void RequireSaneDExPaymentWindow(const std::string& address, uint32_t propertyId
 {
     LOCK(cs_tally);
     const CMPOffer* poffer = mastercore::DEx_getOffer(address, propertyId);
-    if (poffer == NULL) {
+    if (poffer == nullptr) {
         throw JSONRPCError(RPC_DATABASE_ERROR, "Unable to load sell offer from the distributed exchange");
     }
     if (poffer->getBlockTimeLimit() < 10) {
@@ -146,7 +146,7 @@ void RequireSaneDExFee(const std::string& address, uint32_t propertyId)
 {
     LOCK(cs_tally);
     const CMPOffer* poffer = mastercore::DEx_getOffer(address, propertyId);
-    if (poffer == NULL) {
+    if (poffer == nullptr) {
         throw JSONRPCError(RPC_DATABASE_ERROR, "Unable to load sell offer from the distributed exchange");
     }
     if (poffer->getMinFee() > 1000000) {

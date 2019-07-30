@@ -48,7 +48,7 @@
 #include <boost/thread.hpp>
 
 #if defined(NDEBUG)
-# error "Bitcoin cannot be compiled without assertions."
+# error "Omni Core cannot be compiled without assertions."
 #endif
 
 #define MICRO 0.000001
@@ -170,7 +170,7 @@ public:
     // Block (dis)connection on a given view:
     DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view);
     bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pindex,
-                      CCoinsViewCache& view, const CChainParams& chainparams, bool fJustCheck = false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+                      CCoinsViewCache& view, const CChainParams& chainparams, bool fJustCheck = false, std::shared_ptr<std::map<COutPoint, Coin>> removedCoins = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     // Block disconnection on our pcoinsTip:
     bool DisconnectTip(CValidationState& state, const CChainParams& chainparams, DisconnectedBlockTransactions* disconnectpool) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
@@ -283,6 +283,19 @@ namespace {
     /** Dirty block file entries. */
     std::set<int> setDirtyFileInfo;
 } // anon namespace
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Omni Core notification handlers
+//
+
+// TODO: replace handlers with signals
+int mastercore_handler_block_begin(int nBlockNow, CBlockIndex const * pBlockIndex);
+int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex, unsigned int);
+bool mastercore_handler_tx(const CTransaction &tx, int nBlock, unsigned int idx, CBlockIndex const * pBlockIndex, std::shared_ptr<std::map<COutPoint, Coin>> removedCoins);
+void mastercore_handler_disc_begin(const int nHeight);
+void TryToAddToMarkerCache(const CTransactionRef& tx);
+void RemoveFromMarkerCache(const uint256& txHash);
 
 CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& locator)
 {
@@ -972,6 +985,8 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
 
     GetMainSignals().TransactionAddedToMempool(ptx);
 
+    TryToAddToMarkerCache(ptx);
+
     return true;
 }
 
@@ -1190,7 +1205,7 @@ bool IsInitialBlockDownload()
 
 CBlockIndex *pindexBestForkTip = nullptr, *pindexBestForkBase = nullptr;
 
-static void AlertNotify(const std::string& strMessage)
+void AlertNotify(const std::string& strMessage)
 {
     uiInterface.NotifyAlertChanged();
     std::string strCmd = gArgs.GetArg("-alertnotify", "");
@@ -1308,12 +1323,14 @@ void CChainState::InvalidBlockFound(CBlockIndex *pindex, const CValidationState 
     }
 }
 
-void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txundo, int nHeight)
+void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txundo, int nHeight, std::shared_ptr<std::map<COutPoint, Coin>> removedCoins)
 {
     // mark inputs spent
     if (!tx.IsCoinBase()) {
         txundo.vprevout.reserve(tx.vin.size());
         for (const CTxIn &txin : tx.vin) {
+            if (removedCoins)
+                removedCoins->emplace(txin.prevout, inputs.AccessCoin(txin.prevout));
             txundo.vprevout.emplace_back();
             bool is_spent = inputs.SpendCoin(txin.prevout, &txundo.vprevout.back());
             assert(is_spent);
@@ -1326,7 +1343,7 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txund
 void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight)
 {
     CTxUndo txundo;
-    UpdateCoins(tx, inputs, txundo, nHeight);
+    UpdateCoins(tx, inputs, txundo, nHeight, nullptr);
 }
 
 bool CScriptCheck::operator()() {
@@ -1531,6 +1548,11 @@ static bool AbortNode(CValidationState& state, const std::string& strMessage, co
 }
 
 } // namespace
+
+void DoAbortNode(const std::string& strMessage, const std::string& userMessage)
+{
+    AbortNode(strMessage, userMessage);
+}
 
 /**
  * Restore the UTXO in a Coin at a given COutPoint
@@ -1793,7 +1815,7 @@ static int64_t nBlocksTotal = 0;
  *  Validity checks that depend on the UTXO set are also done; ConnectBlock()
  *  can fail if those validity checks fail (among other reasons). */
 bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pindex,
-                  CCoinsViewCache& view, const CChainParams& chainparams, bool fJustCheck)
+                  CCoinsViewCache& view, const CChainParams& chainparams, bool fJustCheck, std::shared_ptr<std::map<COutPoint, Coin>> removedCoins)
 {
     AssertLockHeld(cs_main);
     assert(pindex);
@@ -2035,7 +2057,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
         if (i > 0) {
             blockundo.vtxundo.push_back(CTxUndo());
         }
-        UpdateCoins(tx, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight);
+        UpdateCoins(tx, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight, removedCoins);
     }
     int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
     LogPrint(BCLog::BENCH, "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs (%.2fms/blk)]\n", (unsigned)block.vtx.size(), MILLI * (nTime3 - nTime2), MILLI * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : MILLI * (nTime3 - nTime2) / (nInputs-1), nTimeConnect * MICRO, nTimeConnect * MILLI / nBlocksTotal);
@@ -2206,7 +2228,7 @@ void PruneAndFlush() {
     }
 }
 
-static void DoWarning(const std::string& strWarning)
+void DoWarning(const std::string& strWarning)
 {
     static bool fWarned = false;
     SetMiscWarning(strWarning);
@@ -2323,9 +2345,22 @@ bool CChainState::DisconnectTip(CValidationState& state, const CChainParams& cha
     chainActive.SetTip(pindexDelete->pprev);
 
     UpdateTip(pindexDelete->pprev, chainparams);
+
+    //! Omni Core: begin block disconnect notification
+    LogPrint(BCLog::HANDLER, "Omni Core handler: block disconnect begin [height: %d, reindex: %d]\n", chainActive.Height(), (int)fReindex);
+    mastercore_handler_disc_begin(pindexDelete->nHeight);
+
     // Let wallets know transactions went from 1-confirmed to
     // 0-confirmed or conflicted:
     GetMainSignals().BlockDisconnected(pblock);
+
+    for (const CTransactionRef& ptx : pblock->vtx) {
+        TryToAddToMarkerCache(ptx);
+    }
+
+    //! Omni Core: end of block disconnect notification
+    LogPrint(BCLog::HANDLER, "Omni Core handler: block disconnect end [height: %d, reindex: %d]\n", chainActive.Height(), (int)fReindex);
+
     return true;
 }
 
@@ -2418,13 +2453,15 @@ bool CChainState::ConnectTip(CValidationState& state, const CChainParams& chainp
         pthisBlock = pblock;
     }
     const CBlock& blockConnecting = *pthisBlock;
+    // Map used by Omni to track removals from the UTXO DB for this block.
+    std::shared_ptr<std::map<COutPoint, Coin>> removedCoins = std::make_shared<std::map<COutPoint, Coin>>();
     // Apply the block atomically to the chain state.
     int64_t nTime2 = GetTimeMicros(); nTimeReadFromDisk += nTime2 - nTime1;
     int64_t nTime3;
     LogPrint(BCLog::BENCH, "  - Load block from disk: %.2fms [%.2fs]\n", (nTime2 - nTime1) * MILLI, nTimeReadFromDisk * MICRO);
     {
         CCoinsViewCache view(pcoinsTip.get());
-        bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams);
+        bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams, false, removedCoins);
         GetMainSignals().BlockChecked(blockConnecting, state);
         if (!rv) {
             if (state.IsInvalid())
@@ -2443,7 +2480,7 @@ bool CChainState::ConnectTip(CValidationState& state, const CChainParams& chainp
         return false;
     int64_t nTime5 = GetTimeMicros(); nTimeChainState += nTime5 - nTime4;
     LogPrint(BCLog::BENCH, "  - Writing chainstate: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime5 - nTime4) * MILLI, nTimeChainState * MICRO, nTimeChainState * MILLI / nBlocksTotal);
-    // Remove conflicting transactions from the mempool.;
+
     mempool.removeForBlock(blockConnecting.vtx, pindexNew->nHeight);
     disconnectpool.removeForBlock(blockConnecting.vtx);
     // Update chainActive & related variables.
@@ -2453,6 +2490,26 @@ bool CChainState::ConnectTip(CValidationState& state, const CChainParams& chainp
     int64_t nTime6 = GetTimeMicros(); nTimePostConnect += nTime6 - nTime5; nTimeTotal += nTime6 - nTime1;
     LogPrint(BCLog::BENCH, "  - Connect postprocess: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime6 - nTime5) * MILLI, nTimePostConnect * MICRO, nTimePostConnect * MILLI / nBlocksTotal);
     LogPrint(BCLog::BENCH, "- Connect block: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime6 - nTime1) * MILLI, nTimeTotal * MICRO, nTimeTotal * MILLI / nBlocksTotal);
+
+    //! Omni Core: transaction position within the block
+    unsigned int nTxIdx = 0;
+
+    //! Omni Core: number of meta transactions found
+    unsigned int nNumMetaTxs = 0;
+
+    //! Omni Core: begin block connect notification
+    LogPrint(BCLog::HANDLER, "Omni Core handler: block connect begin [height: %d]\n", pindexNew->nHeight);
+    mastercore_handler_block_begin(pindexNew->nHeight, pindexNew);
+
+    for (size_t i = 0; i < blockConnecting.vtx.size(); i++) {
+        //! Omni Core: new confirmed transaction notification
+        LogPrint(BCLog::HANDLER, "Omni Core handler: new confirmed transaction [height: %d, idx: %u]\n", pindexNew->nHeight, nTxIdx);
+        if (mastercore_handler_tx(*blockConnecting.vtx[i], pindexNew->nHeight, nTxIdx++, pindexNew, removedCoins)) ++nNumMetaTxs;
+    }
+
+    //! Omni Core: end of block connect notification
+    LogPrint(BCLog::HANDLER, "Omni Core handler: block connect end [new height: %d, found: %u txs]\n", pindexNew->nHeight, nNumMetaTxs);
+    mastercore_handler_block_end(pindexNew->nHeight, pindexNew, nNumMetaTxs);
 
     connectTrace.BlockConnected(pindexNew, std::move(pthisBlock));
     return true;
@@ -2713,6 +2770,12 @@ bool CChainState::ActivateBestChain(CValidationState &state, const CChainParams&
                 for (const PerBlockConnectTrace& trace : connectTrace.GetBlocksConnected()) {
                     assert(trace.pblock && trace.pindex);
                     GetMainSignals().BlockConnected(trace.pblock, trace.pindex, trace.conflictedTxs);
+                    for (const CTransactionRef& ptx : *trace.conflictedTxs) {
+                        RemoveFromMarkerCache(ptx->GetHash());
+                    }
+                    for (size_t i = 0; i < trace.pblock->vtx.size(); i++) {
+                        RemoveFromMarkerCache(trace.pblock->vtx[i]->GetHash());
+                    }
                 }
             } while (!chainActive.Tip() || (starting_tip && CBlockIndexWorkComparator()(chainActive.Tip(), starting_tip)));
             if (!blocks_connected) return true;

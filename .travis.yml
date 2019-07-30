@@ -7,6 +7,7 @@ cache:
     - depends/built
     - depends/sdk-sources
     - $HOME/.ccache
+    - $HOME/.gradle/caches
 stages:
   - lint
   - test
@@ -23,9 +24,11 @@ env:
     - CCACHE_COMPRESS=1
     - CCACHE_DIR=$HOME/.ccache
     - BASE_OUTDIR=$TRAVIS_BUILD_DIR/out
-    - SDK_URL=https://bitcoincore.org/depends-sources/sdks
+    - SDK_URL=https://s3.amazonaws.com/ci.omnicore.private/depends-sources/sdks
     - WINEDEBUG=fixme-all
     - DOCKER_PACKAGES="build-essential libtool autotools-dev automake pkg-config bsdmainutils curl git ca-certificates ccache"
+    - RUN_OMNIJ_TESTS=false
+    - OMNIJ_VERBOSE_LOG=false
 before_install:
   - set -o errexit; source .travis/test_03_before_install.sh
 install:
@@ -35,6 +38,7 @@ before_script:
 script:
   - if [ $SECONDS -gt 1200 ]; then set +o errexit; echo "Travis early exit to cache current state"; false; else set -o errexit; source .travis/test_06_script_a.sh; fi
   - if [ $SECONDS -gt 1800 ]; then set +o errexit; echo "Travis early exit to cache current state"; false; else set -o errexit; source .travis/test_06_script_b.sh; fi
+  - if [ "$RUN_OMNIJ_TESTS" = "true" ]; then test/pull-tester/omnicore-rpc-tests.sh "$OMNIJ_VERBOSE_LOG"; fi
 after_script:
   - echo $TRAVIS_COMMIT_RANGE
   - echo $TRAVIS_COMMIT_LOG
@@ -89,7 +93,10 @@ jobs:
       name: '32-bit + dash  [GOAL: install]  [GUI: no BIP70]'
       env: >-
         HOST=i686-pc-linux-gnu
-        PACKAGES="g++-multilib python3-zmq"
+        PPA="ppa:openjdk-r/ppa"
+        PACKAGES="g++-multilib python3-zmq openjdk-8-jdk"
+        RUN_RPC_TESTS=true
+        RUN_OMNIJ_TESTS=true
         GOAL="install"
         BITCOIN_CONFIG="--enable-zmq --with-gui=qt5 --disable-bip70 --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++"
         CONFIG_SHELL="/bin/dash"
@@ -98,8 +105,11 @@ jobs:
       name: 'x86_64 Linux  [GOAL: install]  [bionic]  [uses qt5 dev package instead of depends Qt to speed up build and avoid timeout]'
       env: >-
         HOST=x86_64-unknown-linux-gnu
-        PACKAGES="python3-zmq qtbase5-dev qttools5-dev-tools protobuf-compiler libdbus-1-dev libharfbuzz-dev libprotobuf-dev"
+        PPA="ppa:openjdk-r/ppa"
+        PACKAGES="python3-zmq qtbase5-dev qttools5-dev-tools protobuf-compiler libdbus-1-dev libharfbuzz-dev libprotobuf-dev openjdk-8-jdk"
         DEP_OPTS="NO_QT=1 NO_UPNP=1 DEBUG=1 ALLOW_HOST_PACKAGES=1"
+        RUN_RPC_TESTS=true
+        RUN_OMNIJ_TESTS=true
         GOAL="install"
         BITCOIN_CONFIG="--enable-zmq --with-gui=qt5 --enable-glibc-back-compat --enable-reduce-exports --enable-debug CXXFLAGS=\"-g0 -O2\""
 

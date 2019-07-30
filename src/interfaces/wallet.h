@@ -21,13 +21,16 @@
 #include <utility>
 #include <vector>
 
+class BaseSignatureCreator;
 class CCoinControl;
 class CFeeRate;
 class CKey;
+class COutput;
 class CWallet;
 enum class FeeReason;
 enum class OutputType;
 struct CRecipient;
+struct SignatureData;
 
 namespace interfaces {
 
@@ -80,10 +83,16 @@ public:
     virtual bool getKeyFromPool(bool internal, CPubKey& pub_key) = 0;
 
     //! Get public key.
-    virtual bool getPubKey(const CKeyID& address, CPubKey& pub_key) = 0;
+    virtual bool getPubKey(const CKeyID& address, CPubKey& pub_key) const = 0;
 
     //! Get private key.
     virtual bool getPrivKey(const CKeyID& address, CKey& key) = 0;
+
+    //! Get key for destination.
+    virtual CKeyID getKeyForDestination(const CTxDestination& dest) const = 0;
+
+    //! Return whether address is in the wallet.
+    virtual isminetype isMine(const CTxDestination& dest) = 0;
 
     //! Return whether wallet has private key.
     virtual bool isSpendable(const CTxDestination& dest) = 0;
@@ -148,6 +157,9 @@ public:
     //! Return whether transaction can be bumped.
     virtual bool transactionCanBeBumped(const uint256& txid) = 0;
 
+    /** Produce a script signature using a generic signature creator. */
+    virtual bool produceSignature(const BaseSignatureCreator& creator, const CScript& scriptPubKey, SignatureData& sigdata) = 0;
+
     //! Create bump transaction.
     virtual bool createBumpTransaction(const uint256& txid,
         const CCoinControl& coin_control,
@@ -175,6 +187,9 @@ public:
     //! Get list of all wallet transactions.
     virtual std::vector<WalletTx> getWalletTxs() = 0;
 
+    //! Get list of all wallet transactions and status.
+    virtual std::vector<WalletTx> getWalletTxsDetails(std::map<uint256, WalletTxStatus>& tx_status) = 0;
+
     //! Try to get updated status for a particular transaction, if possible without blocking.
     virtual bool tryGetTxStatus(const uint256& txid,
         WalletTxStatus& tx_status,
@@ -200,6 +215,9 @@ public:
     //! Get available balance.
     virtual CAmount getAvailableBalance(const CCoinControl& coin_control) = 0;
 
+    //! Return whether the output is spent.
+    virtual bool isSpent(const uint256& hash, unsigned int n) = 0;
+
     //! Return whether transaction input belongs to wallet.
     virtual isminetype txinIsMine(const CTxIn& txin) = 0;
 
@@ -216,6 +234,9 @@ public:
     //! (put change in one group with wallet address)
     using CoinsList = std::map<CTxDestination, std::vector<std::tuple<COutPoint, WalletTxOut>>>;
     virtual CoinsList listCoins() = 0;
+
+    //! Access CWallet AvailableCoins function
+    virtual void availableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const CCoinControl *coinControl, const CAmount& nMinimumAmount) = 0;
 
     //! Return wallet transaction output information.
     virtual std::vector<WalletTxOut> getCoins(const std::vector<COutPoint>& outputs) = 0;
@@ -346,9 +367,12 @@ struct WalletTx
     CAmount credit;
     CAmount debit;
     CAmount change;
+    CAmount available_credit;
     int64_t time;
     std::map<std::string, std::string> value_map;
     bool is_coinbase;
+    uint256 hash_block;
+    int64_t order_pos; // position in ordered transaction list
 };
 
 //! Updated transaction status.

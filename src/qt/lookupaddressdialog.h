@@ -5,6 +5,8 @@
 #ifndef LOOKUPADDRESSDIALOG_H
 #define LOOKUPADDRESSDIALOG_H
 
+class WalletModel;
+
 #include <QDialog>
 #include <QLabel>
 
@@ -53,6 +55,7 @@ public:
     explicit LookupAddressDialog(QWidget *parent = 0);
     ~LookupAddressDialog();
 
+    void setWalletModel(WalletModel *model);
     void searchAddress();
 
 public Q_SLOTS:
@@ -60,6 +63,7 @@ public Q_SLOTS:
 
 private:
     Ui::LookupAddressDialog *ui;
+    WalletModel *walletModel;
 
 Q_SIGNALS:
     // Fired when a message should be reported to the user

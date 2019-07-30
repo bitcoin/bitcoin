@@ -54,6 +54,24 @@
         <file alias="hd_disabled">res/icons/hd_disabled.png</file>
         <file alias="network_disabled">res/icons/network_disabled.png</file>
         <file alias="proxy">res/icons/proxy.png</file>
+        <file alias="tools">res/icons/tools.png</file>
+        <file alias="exchange">res/icons/exchange.png</file>
+        <file alias="balances">res/icons/balances.png</file>
+        <file alias="omni_in">res/icons/omni_in.png</file>
+        <file alias="omni_inout">res/icons/omni_inout.png</file>
+        <file alias="omni_invalid">res/icons/omni_invalid.png</file>
+        <file alias="omni_out">res/icons/omni_out.png</file>
+        <file alias="omni_meta_cancelled">res/icons/meta_cancelled.png</file>
+        <file alias="omni_meta_filled">res/icons/meta_filled.png</file>
+        <file alias="omni_meta_open">res/icons/meta_open.png</file>
+        <file alias="omni_meta_partcancelled">res/icons/meta_partcancelled.png</file>
+        <file alias="omni_meta_partfilled">res/icons/meta_partfilled.png</file>
+        <file alias="omni_meta_pending">res/icons/meta_pending.png</file>
+        <file alias="omni_hourglass">res/icons/omni_hourglass.png</file>
+    </qresource>
+    <qresource prefix="/images">
+        <file alias="splash">res/images/splash.png</file>
+        <file alias="splash_testnet">res/images/splash_testnet.png</file>
     </qresource>
     <qresource prefix="/movies">
         <file alias="spinner-000">res/movies/spinner-000.png</file>

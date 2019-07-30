@@ -18,7 +18,7 @@
 #include <boost/test/unit_test.hpp>
 
 int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out);
-void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txundo, int nHeight);
+void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txundo, int nHeight, std::shared_ptr<std::map<COutPoint, Coin>> removedCoins);
 
 namespace
 {
@@ -379,7 +379,7 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
 
             // Call UpdateCoins on the top cache
             CTxUndo undo;
-            UpdateCoins(CTransaction(tx), *(stack.back()), undo, height);
+            UpdateCoins(CTransaction(tx), *(stack.back()), undo, height, nullptr);
 
             // Update the utxo set for future spends
             utxoset.insert(outpoint);

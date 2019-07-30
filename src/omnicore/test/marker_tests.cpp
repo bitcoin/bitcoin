@@ -1,12 +1,12 @@
-#include "omnicore/test/utils_tx.h"
+#include <omnicore/test/utils_tx.h>
 
-#include "omnicore/omnicore.h"
-#include "omnicore/parsing.h"
-#include "omnicore/rules.h"
-#include "omnicore/script.h"
+#include <omnicore/omnicore.h>
+#include <omnicore/parsing.h>
+#include <omnicore/rules.h>
+#include <omnicore/script.h>
 
-#include "primitives/transaction.h"
-#include "test/test_bitcoin.h"
+#include <primitives/transaction.h>
+#include <test/test_bitcoin.h>
 
 #include <boost/test/unit_test.hpp>
 

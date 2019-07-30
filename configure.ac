@@ -8,16 +8,21 @@ define(_CLIENT_VERSION_RC, 0)
 define(_CLIENT_VERSION_IS_RELEASE, true)
 define(_COPYRIGHT_YEAR, 2019)
 define(_COPYRIGHT_HOLDERS,[The %s developers])
-define(_COPYRIGHT_HOLDERS_SUBSTITUTION,[[Bitcoin Core]])
-AC_INIT([Bitcoin Core],m4_join([.], _CLIENT_VERSION_MAJOR, _CLIENT_VERSION_MINOR, _CLIENT_VERSION_REVISION, m4_if(_CLIENT_VERSION_BUILD, [0], [], _CLIENT_VERSION_BUILD))m4_if(_CLIENT_VERSION_RC, [0], [], [rc]_CLIENT_VERSION_RC),[https://github.com/bitcoin/bitcoin/issues],[bitcoin],[https://bitcoincore.org/])
+define(_COPYRIGHT_HOLDERS_SUBSTITUTION,[[Bitcoin Core and Omni Core]])
+define(_OMNICORE_VERSION_MAJOR, 0)
+define(_OMNICORE_VERSION_MINOR, 5)
+define(_OMNICORE_VERSION_PATCH, 0)
+define(_OMNICORE_VERSION_BUILD, 0)
+define(_OMNICORE_VERSION_RC, 0)
+AC_INIT([Omni Core],m4_join([.], _OMNICORE_VERSION_MAJOR, _OMNICORE_VERSION_MINOR, _OMNICORE_VERSION_PATCH, m4_if(_OMNICORE_VERSION_BUILD, [0], [], _OMNICORE_VERSION_BUILD))m4_if(_OMNICORE_VERSION_RC, [0], [], [rc]_OMNICORE_VERSION_RC),[https://github.com/OmniLayer/omnicore/issues],[omnicore],[http://www.omnilayer.org/])
 AC_CONFIG_SRCDIR([src/validation.cpp])
 AC_CONFIG_HEADERS([src/config/bitcoin-config.h])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
 
-BITCOIN_DAEMON_NAME=bitcoind
-BITCOIN_GUI_NAME=bitcoin-qt
-BITCOIN_CLI_NAME=bitcoin-cli
+BITCOIN_DAEMON_NAME=omnicored
+BITCOIN_GUI_NAME=omnicore-qt
+BITCOIN_CLI_NAME=omnicore-cli
 BITCOIN_TX_NAME=bitcoin-tx
 BITCOIN_WALLET_TOOL_NAME=bitcoin-wallet
 
@@ -420,13 +425,13 @@ CPPFLAGS="$CPPFLAGS -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS"
 
 AC_ARG_WITH([utils],
   [AS_HELP_STRING([--with-utils],
-  [build bitcoin-cli bitcoin-tx bitcoin-wallet (default=yes)])],
+  [build omnicore-cli bitcoin-tx bitcoin-wallet (default=yes)])],
   [build_bitcoin_utils=$withval],
   [build_bitcoin_utils=yes])
 
 AC_ARG_ENABLE([util-cli],
   [AS_HELP_STRING([--enable-util-cli],
-  [build bitcoin-cli])],
+  [build omnicore-cli])],
   [build_bitcoin_cli=$enableval],
   [build_bitcoin_cli=$build_bitcoin_utils])
 
@@ -450,7 +455,7 @@ AC_ARG_WITH([libs],
 
 AC_ARG_WITH([daemon],
   [AS_HELP_STRING([--with-daemon],
-  [build bitcoind daemon (default=yes)])],
+  [build omnicored daemon (default=yes)])],
   [build_bitcoind=$withval],
   [build_bitcoind=yes])
 
@@ -1243,11 +1248,11 @@ if test x$have_protobuf != xno &&
   BITCOIN_QT_PATH_PROGS([PROTOC], [protoc],$protoc_bin_path)
 fi
 
-AC_MSG_CHECKING([whether to build bitcoind])
+AC_MSG_CHECKING([whether to build omnicored])
 AM_CONDITIONAL([BUILD_BITCOIND], [test x$build_bitcoind = xyes])
 AC_MSG_RESULT($build_bitcoind)
 
-AC_MSG_CHECKING([whether to build bitcoin-cli])
+AC_MSG_CHECKING([whether to build omnicore-cli])
 AM_CONDITIONAL([BUILD_BITCOIN_CLI], [test x$build_bitcoin_cli = xyes])
 AC_MSG_RESULT($build_bitcoin_cli)
 
@@ -1356,7 +1361,7 @@ if test x$bitcoin_enable_qt != xno; then
     AC_MSG_WARN("xgettext is required to update qt translations")
   fi
 
-  AC_MSG_CHECKING([whether to build test_bitcoin-qt])
+  AC_MSG_CHECKING([whether to build test_omnicore-qt])
   if test x$use_gui_tests$bitcoin_enable_qt_test = xyesyes; then
     AC_MSG_RESULT([yes])
     BUILD_TEST_QT="yes"
@@ -1384,7 +1389,7 @@ fi
 
 AM_CONDITIONAL([ENABLE_ZMQ], [test "x$use_zmq" = "xyes"])
 
-AC_MSG_CHECKING([whether to build test_bitcoin])
+AC_MSG_CHECKING([whether to build test_omnicore])
 if test x$use_tests = xyes; then
   AC_MSG_RESULT([yes])
   BUILD_TEST="yes"
@@ -1449,6 +1454,15 @@ AC_SUBST(BITCOIN_CLI_NAME)
 AC_SUBST(BITCOIN_TX_NAME)
 AC_SUBST(BITCOIN_WALLET_TOOL_NAME)
 
+AC_DEFINE(OMNICORE_VERSION_MAJOR, _OMNICORE_VERSION_MAJOR, [Omni Core major version])
+AC_DEFINE(OMNICORE_VERSION_MINOR, _OMNICORE_VERSION_MINOR, [Omni Core minor version])
+AC_DEFINE(OMNICORE_VERSION_PATCH, _OMNICORE_VERSION_PATCH, [Omni Core patch version])
+AC_DEFINE(OMNICORE_VERSION_BUILD, _OMNICORE_VERSION_BUILD, [Omni Core build number])
+AC_SUBST(OMNICORE_VERSION_MAJOR, _OMNICORE_VERSION_MAJOR)
+AC_SUBST(OMNICORE_VERSION_MINOR, _OMNICORE_VERSION_MINOR)
+AC_SUBST(OMNICORE_VERSION_PATCH, _OMNICORE_VERSION_PATCH)
+AC_SUBST(OMNICORE_VERSION_BUILD, _OMNICORE_VERSION_BUILD)
+
 AC_SUBST(RELDFLAGS)
 AC_SUBST(DEBUG_CPPFLAGS)
 AC_SUBST(WARN_CXXFLAGS)
@@ -1485,6 +1499,7 @@ AC_SUBST(ZMQ_LIBS)
 AC_SUBST(PROTOBUF_LIBS)
 AC_SUBST(QR_LIBS)
 AC_CONFIG_FILES([Makefile src/Makefile doc/man/Makefile share/setup.nsi share/qt/Info.plist test/config.ini])
+AC_CONFIG_FILES([src/omnicore/res/omnicore-setup-win.nsi])
 AC_CONFIG_FILES([contrib/devtools/split-debug.sh],[chmod +x contrib/devtools/split-debug.sh])
 AM_COND_IF([HAVE_DOXYGEN], [AC_CONFIG_FILES([doc/Doxyfile])])
 AC_CONFIG_LINKS([contrib/filter-lcov.py:contrib/filter-lcov.py])

@@ -1,10 +1,10 @@
-#include "omnicore/encoding.h"
+#include <omnicore/encoding.h>
 
-#include "omnicore/script.h"
+#include <omnicore/script.h>
 
-#include "script/script.h"
-#include "test/test_bitcoin.h"
-#include "utilstrencodings.h"
+#include <script/script.h>
+#include <test/test_bitcoin.h>
+#include <util/strencodings.h>
 
 #include <boost/test/unit_test.hpp>
 

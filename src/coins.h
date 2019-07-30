@@ -85,7 +85,7 @@ class SaltedOutpointHasher
 {
 private:
     /** Salt */
-    const uint64_t k0, k1;
+    uint64_t k0, k1;
 
 public:
     SaltedOutpointHasher();
@@ -213,11 +213,6 @@ protected:
 
 public:
     CCoinsViewCache(CCoinsView *baseIn);
-
-    /**
-     * By deleting the copy constructor, we prevent accidentally using it when one intends to create a cache on top of a base cache.
-     */
-    CCoinsViewCache(const CCoinsViewCache &) = delete;
 
     // Standard CCoinsView methods
     bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;

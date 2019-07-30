@@ -1,12 +1,12 @@
 #ifndef OMNICORE_DBSPINFO_H
 #define OMNICORE_DBSPINFO_H
 
-#include "omnicore/dbbase.h"
-#include "omnicore/log.h"
-#include "omnicore/omnicore.h"
+#include <omnicore/dbbase.h>
+#include <omnicore/log.h>
+#include <omnicore/omnicore.h>
 
-#include "serialize.h"
-#include "uint256.h"
+#include <serialize.h>
+#include <uint256.h>
 
 #include <boost/filesystem/path.hpp>
 
@@ -93,7 +93,7 @@ public:
         ADD_SERIALIZE_METHODS;
 
         template <typename Stream, typename Operation>
-        inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        inline void SerializationOp(Stream& s, Operation ser_action) {
             READWRITE(issuer);
             READWRITE(prop_type);
             READWRITE(prev_prop_id);

@@ -246,6 +246,18 @@ public:
     using NotifyHeaderTipFn =
         std::function<void(bool initial_download, int height, int64_t block_time, double verification_progress)>;
     virtual std::unique_ptr<Handler> handleNotifyHeaderTip(NotifyHeaderTipFn fn) = 0;
+
+    using OmniStateChangedFn = std::function<void()>;
+    virtual std::unique_ptr<Handler> handleOmniStateChanged(OmniStateChangedFn fn) = 0;
+
+    using OmniPendingChangedFn = std::function<void(bool pending)>;
+    virtual std::unique_ptr<Handler> handleOmniPendingChanged(OmniPendingChangedFn fn) = 0;
+
+    using OmniBalanceChangedFn = std::function<void()>;
+    virtual std::unique_ptr<Handler> handleOmniBalanceChanged(OmniBalanceChangedFn fn) = 0;
+
+    using OmniStateInvalidatedFn = std::function<void()>;
+    virtual std::unique_ptr<Handler> handleOmniStateInvalidated(OmniStateInvalidatedFn fn) = 0;
 };
 
 //! Return implementation of Node interface.

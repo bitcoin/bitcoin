@@ -1,12 +1,12 @@
-#include "omnicore/sto.h"
+#include <omnicore/sto.h>
 
-#include "omnicore/log.h"
-#include "omnicore/omnicore.h"
-#include "omnicore/tally.h"
-#include "omnicore/uint256_extensions.h"
+#include <omnicore/log.h>
+#include <omnicore/omnicore.h>
+#include <omnicore/tally.h>
+#include <omnicore/uint256_extensions.h>
 
-#include "arith_uint256.h"
-#include "sync.h"
+#include <arith_uint256.h>
+#include <sync.h>
 
 #include <assert.h>
 #include <stdint.h>

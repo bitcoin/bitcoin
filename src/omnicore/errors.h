@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include "omnicore/omnicore.h"
+#include <omnicore/omnicore.h>
 
 enum MPRPCErrorCode
 {
@@ -32,6 +32,7 @@ enum MPRPCErrorCode
     MP_CROWDSALE_WITHOUT_PROPERTY = -3334,  // Potential database corruption: "Crowdsale Purchase" without valid property identifier.
     MP_INVALID_TX_IN_DB_FOUND     = -3335,  // Potential database corruption: Invalid transaction found.
     MP_TX_IS_NOT_OMNI_PROTOCOL    = -3336,  // No Omni Layer Protocol transaction.
+    MP_TXINDEX_STILL_SYNCING      = -3337,  // No such mempool transaction. Blockchain transactions are still in the process of being indexed.
 };
 
 inline std::string error_str(int ec) {

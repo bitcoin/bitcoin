@@ -1,7 +1,7 @@
 #ifndef OMNICORE_DBBASE_H
 #define OMNICORE_DBBASE_H
 
-#include "leveldb/db.h"
+#include <leveldb/db.h>
 
 #include <boost/filesystem/path.hpp>
 

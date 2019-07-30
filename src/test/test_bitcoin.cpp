@@ -21,6 +21,8 @@
 #include <ui_interface.h>
 #include <validation.h>
 
+extern int mastercore_shutdown();
+
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
 FastRandomContext g_insecure_rand_ctx;
@@ -100,6 +102,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
 
 TestingSetup::~TestingSetup()
 {
+    mastercore_shutdown();
     threadGroup.interrupt_all();
     threadGroup.join_all();
     GetMainSignals().FlushBackgroundCallbacks();

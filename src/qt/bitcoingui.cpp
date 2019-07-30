@@ -45,6 +45,8 @@
 #include <QDateTime>
 #include <QDesktopWidget>
 #include <QDragEnterEvent>
+#include <QIcon>
+#include <QLabel>
 #include <QListWidget>
 #include <QMenu>
 #include <QMenuBar>
@@ -165,6 +167,22 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const PlatformStyle *_platformSty
     frameBlocksLayout->addWidget(labelBlocksIcon);
     frameBlocksLayout->addStretch();
 
+    // Notification for pending transactions
+    QFrame *framePending = new QFrame();
+    framePending->setContentsMargins(0,0,0,0);
+    framePending->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
+    QHBoxLayout *framePendingLayout = new QHBoxLayout(framePending);
+    framePendingLayout->setContentsMargins(3,0,3,0);
+    framePendingLayout->setSpacing(3);
+    framePendingLayout->addStretch();
+    labelOmniPendingIcon = new QLabel();
+    labelOmniPendingText = new QLabel("You have Omni transactions awaiting confirmation.");
+    framePendingLayout->addWidget(labelOmniPendingIcon);
+    framePendingLayout->addWidget(labelOmniPendingText);
+    framePendingLayout->addStretch();
+    labelOmniPendingIcon->hide();
+    labelOmniPendingText->hide();
+
     // Progress bar and label for blocks download
     progressBarLabel = new QLabel();
     progressBarLabel->setVisible(false);
@@ -181,6 +199,7 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const PlatformStyle *_platformSty
         progressBar->setStyleSheet("QProgressBar { background-color: #e8e8e8; border: 1px solid grey; border-radius: 7px; padding: 1px; text-align: center; } QProgressBar::chunk { background: QLinearGradient(x1: 0, y1: 0, x2: 1, y2: 0, stop: 0 #FF8000, stop: 1 orange); border-radius: 7px; margin: 0px; }");
     }
 
+    statusBar()->addWidget(framePending);
     statusBar()->addWidget(progressBarLabel);
     statusBar()->addWidget(progressBar);
     statusBar()->addPermanentWidget(frameBlocks);
@@ -244,11 +263,18 @@ void BitcoinGUI::createActions()
     overviewAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_1));
     tabGroup->addAction(overviewAction);
 
+    balancesAction = new QAction(platformStyle->SingleColorIcon(":/icons/balances"), tr("&Balances"), this);
+    balancesAction->setStatusTip(tr("Show Omni Layer balances"));
+    balancesAction->setToolTip(balancesAction->statusTip());
+    balancesAction->setCheckable(true);
+    balancesAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_2));
+    tabGroup->addAction(balancesAction);
+
     sendCoinsAction = new QAction(platformStyle->SingleColorIcon(":/icons/send"), tr("&Send"), this);
-    sendCoinsAction->setStatusTip(tr("Send coins to a Bitcoin address"));
+    sendCoinsAction->setStatusTip(tr("Send Omni Layer and Bitcoin transactions"));
     sendCoinsAction->setToolTip(sendCoinsAction->statusTip());
     sendCoinsAction->setCheckable(true);
-    sendCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_2));
+    sendCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_3));
     tabGroup->addAction(sendCoinsAction);
 
     sendCoinsMenuAction = new QAction(platformStyle->TextColorIcon(":/icons/send"), sendCoinsAction->text(), this);
@@ -259,25 +285,43 @@ void BitcoinGUI::createActions()
     receiveCoinsAction->setStatusTip(tr("Request payments (generates QR codes and bitcoin: URIs)"));
     receiveCoinsAction->setToolTip(receiveCoinsAction->statusTip());
     receiveCoinsAction->setCheckable(true);
-    receiveCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_3));
+    receiveCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_4));
     tabGroup->addAction(receiveCoinsAction);
 
     receiveCoinsMenuAction = new QAction(platformStyle->TextColorIcon(":/icons/receiving_addresses"), receiveCoinsAction->text(), this);
     receiveCoinsMenuAction->setStatusTip(receiveCoinsAction->statusTip());
     receiveCoinsMenuAction->setToolTip(receiveCoinsMenuAction->statusTip());
 
+    /** Exchange UI is disabled (incomplete) in this version
+    exchangeAction = new QAction(platformStyle->SingleColorIcon(":/icons/exchange"), tr("&Exchange"), this);
+    exchangeAction->setStatusTip(tr("Trade properties on the distributed exchange"));
+    exchangeAction->setToolTip(exchangeAction->statusTip());
+    exchangeAction->setCheckable(true);
+    exchangeAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
+    tabGroup->addAction(exchangeAction);
+    **/
+
     historyAction = new QAction(platformStyle->SingleColorIcon(":/icons/history"), tr("&Transactions"), this);
     historyAction->setStatusTip(tr("Browse transaction history"));
     historyAction->setToolTip(historyAction->statusTip());
     historyAction->setCheckable(true);
-    historyAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_4));
+    historyAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
     tabGroup->addAction(historyAction);
+
+    toolboxAction = new QAction(platformStyle->SingleColorIcon(":/icons/tools"), tr("&Toolbox"), this);
+    toolboxAction->setStatusTip(tr("Tools to obtain varions Omni Layer information and transaction information"));
+    toolboxAction->setToolTip(toolboxAction->statusTip());
+    toolboxAction->setCheckable(true);
+    toolboxAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_7));
+    tabGroup->addAction(toolboxAction);
 
 #ifdef ENABLE_WALLET
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
     // can be triggered from the tray menu, and need to show the GUI to be useful.
     connect(overviewAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
     connect(overviewAction, &QAction::triggered, this, &BitcoinGUI::gotoOverviewPage);
+    connect(balancesAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
+    connect(balancesAction, &QAction::triggered, [this]{ gotoBalancesPage(); });
     connect(sendCoinsAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
     connect(sendCoinsAction, &QAction::triggered, [this]{ gotoSendCoinsPage(); });
     connect(sendCoinsMenuAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
@@ -288,6 +332,12 @@ void BitcoinGUI::createActions()
     connect(receiveCoinsMenuAction, &QAction::triggered, this, &BitcoinGUI::gotoReceiveCoinsPage);
     connect(historyAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
     connect(historyAction, &QAction::triggered, this, &BitcoinGUI::gotoHistoryPage);
+    /** Trading UI is disabled in this version
+    connect(exchangeAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
+    connect(exchangeAction, &QAction::triggered, [this]{ gotoExchangePage(); });
+    **/
+    connect(toolboxAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
+    connect(toolboxAction, &QAction::triggered, [this]{ gotoToolboxPage(); });
 #endif // ENABLE_WALLET
 
     quitAction = new QAction(platformStyle->TextColorIcon(":/icons/quit"), tr("E&xit"), this);
@@ -343,7 +393,7 @@ void BitcoinGUI::createActions()
 
     showHelpMessageAction = new QAction(platformStyle->TextColorIcon(":/icons/info"), tr("&Command-line options"), this);
     showHelpMessageAction->setMenuRole(QAction::NoRole);
-    showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible Bitcoin command-line options").arg(tr(PACKAGE_NAME)));
+    showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible Omni Core command-line options").arg(tr(PACKAGE_NAME)));
 
     connect(quitAction, &QAction::triggered, qApp, QApplication::quit);
     connect(aboutAction, &QAction::triggered, this, &BitcoinGUI::aboutClicked);
@@ -519,9 +569,12 @@ void BitcoinGUI::createToolBars()
         toolbar->setMovable(false);
         toolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
         toolbar->addAction(overviewAction);
+        toolbar->addAction(balancesAction);
         toolbar->addAction(sendCoinsAction);
         toolbar->addAction(receiveCoinsAction);
+        // toolbar->addAction(exchangeAction);
         toolbar->addAction(historyAction);
+        toolbar->addAction(toolboxAction);
         overviewAction->setChecked(true);
 
 #ifdef ENABLE_WALLET
@@ -572,6 +625,9 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel)
         // Show progress dialog
         connect(_clientModel, &ClientModel::showProgress, this, &BitcoinGUI::showProgress);
 
+        // Update Omni pending status
+        connect(clientModel, &ClientModel::refreshOmniPending, this, &BitcoinGUI::setOmniPendingStatus);
+
         rpcConsole->setClientModel(_clientModel);
 
         updateProxyIcon();
@@ -603,10 +659,7 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel)
         // Propagate cleared model to child objects
         rpcConsole->setClientModel(nullptr);
 #ifdef ENABLE_WALLET
-        if (walletFrame)
-        {
-            walletFrame->setClientModel(nullptr);
-        }
+        walletFrame->setClientModel(nullptr);
 #endif // ENABLE_WALLET
         unitDisplayControl->setOptionsModel(nullptr);
     }
@@ -689,11 +742,14 @@ void BitcoinGUI::removeAllWallets()
 void BitcoinGUI::setWalletActionsEnabled(bool enabled)
 {
     overviewAction->setEnabled(enabled);
+    balancesAction->setEnabled(enabled);
     sendCoinsAction->setEnabled(enabled);
     sendCoinsMenuAction->setEnabled(enabled);
     receiveCoinsAction->setEnabled(enabled);
     receiveCoinsMenuAction->setEnabled(enabled);
+    // exchangeAction->setEnabled(enabled);
     historyAction->setEnabled(enabled);
+    toolboxAction->setEnabled(enabled);
     encryptWalletAction->setEnabled(enabled);
     backupWalletAction->setEnabled(enabled);
     changePassphraseAction->setEnabled(enabled);
@@ -820,16 +876,46 @@ void BitcoinGUI::gotoOverviewPage()
     if (walletFrame) walletFrame->gotoOverviewPage();
 }
 
+void BitcoinGUI::gotoBalancesPage()
+{
+    balancesAction->setChecked(true);
+    if (walletFrame) walletFrame->gotoBalancesPage();
+}
+
 void BitcoinGUI::gotoHistoryPage()
 {
     historyAction->setChecked(true);
     if (walletFrame) walletFrame->gotoHistoryPage();
 }
 
+void BitcoinGUI::gotoOmniHistoryTab()
+{
+    historyAction->setChecked(true);
+    if (walletFrame) walletFrame->gotoOmniHistoryTab();
+}
+
+void BitcoinGUI::gotoBitcoinHistoryTab()
+{
+    historyAction->setChecked(true);
+    if (walletFrame) walletFrame->gotoBitcoinHistoryTab();
+}
+
+void BitcoinGUI::gotoToolboxPage()
+{
+    toolboxAction->setChecked(true);
+    if (walletFrame) walletFrame->gotoToolboxPage();
+}
+
 void BitcoinGUI::gotoReceiveCoinsPage()
 {
     receiveCoinsAction->setChecked(true);
     if (walletFrame) walletFrame->gotoReceiveCoinsPage();
+}
+
+void BitcoinGUI::gotoExchangePage()
+{
+    exchangeAction->setChecked(true);
+    if (walletFrame) walletFrame->gotoExchangePage();
 }
 
 void BitcoinGUI::gotoSendCoinsPage(QString addr)
@@ -1024,7 +1110,7 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
 
 void BitcoinGUI::message(const QString &title, const QString &message, unsigned int style, bool *ret)
 {
-    QString strTitle = tr("Bitcoin"); // default title
+    QString strTitle = tr("Omni Core"); // default title
     // Default to information icon
     int nMBoxIcon = QMessageBox::Information;
     int nNotifyIcon = Notificator::Information;
@@ -1198,6 +1284,19 @@ bool BitcoinGUI::handlePaymentRequest(const SendCoinsRecipient& recipient)
         return true;
     }
     return false;
+}
+
+void BitcoinGUI::setOmniPendingStatus(bool pending)
+{
+    if (!pending) {
+        labelOmniPendingIcon->hide();
+        labelOmniPendingText->hide();
+    } else {
+        labelOmniPendingIcon->show();
+        labelOmniPendingText->show();
+        labelOmniPendingIcon->setPixmap(QIcon(":/icons/omni_hourglass").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
+        labelOmniPendingIcon->setToolTip(tr("You have Omni transactions awaiting confirmation."));
+    }
 }
 
 void BitcoinGUI::setHDStatus(bool privkeyDisabled, int hdEnabled)

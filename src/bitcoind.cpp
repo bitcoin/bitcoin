@@ -22,6 +22,8 @@
 #include <util/strencodings.h>
 #include <walletinitinterface.h>
 
+#include <omnicore/utilsui.h>
+
 #include <stdio.h>
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
@@ -85,7 +87,7 @@ static bool AppInit(int argc, char* argv[])
         }
         else
         {
-            strUsage += "\nUsage:  bitcoind [options]                     Start " PACKAGE_NAME " Daemon\n";
+            strUsage += "\nUsage:  omnicored [options]                     Start " PACKAGE_NAME " Daemon\n";
             strUsage += "\n" + gArgs.GetHelpMessage();
         }
 
@@ -115,7 +117,7 @@ static bool AppInit(int argc, char* argv[])
         // Error out when loose non-argument tokens are encountered on command line
         for (int i = 1; i < argc; i++) {
             if (!IsSwitchChar(argv[i][0])) {
-                fprintf(stderr, "Error: Command line contains unexpected token '%s', see bitcoind -h for a list of options.\n", argv[i]);
+                fprintf(stderr, "Error: Command line contains unexpected token '%s', see omnicored -h for a list of options.\n", argv[i]);
                 return false;
             }
         }
@@ -147,7 +149,7 @@ static bool AppInit(int argc, char* argv[])
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
-            fprintf(stdout, "Bitcoin server starting\n");
+            fprintf(stdout, "Omni Core server starting\n");
 
             // Daemonize
             if (daemon(1, 0)) { // don't chdir (1), do close FDs (0)
@@ -194,6 +196,9 @@ int main(int argc, char* argv[])
     std::tie(argc, argv) = winArgs.get();
 #endif
     SetupEnvironment();
+
+    // Indicate no-UI mode
+    fQtMode = false;
 
     // Connect bitcoind signal handlers
     noui_connect();

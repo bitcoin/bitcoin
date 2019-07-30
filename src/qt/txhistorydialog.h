@@ -5,8 +5,8 @@
 #ifndef TXHISTORYDIALOG_H
 #define TXHISTORYDIALOG_H
 
-#include "guiutil.h"
-#include "uint256.h"
+#include <qt/guiutil.h>
+#include <uint256.h>
 
 #include <map>
 

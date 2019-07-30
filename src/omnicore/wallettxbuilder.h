@@ -2,6 +2,11 @@
 #define OMNICORE_WALLETTXBUILDER_H
 
 class uint256;
+class CWallet;
+
+namespace interfaces {
+class Wallet;
+} // namespace interfaces
 
 #include <stdint.h>
 #include <string>
@@ -18,7 +23,8 @@ int WalletTxBuilder(
         const std::vector<unsigned char>& payload,
         uint256& retTxid,
         std::string& retRawTx,
-        bool commit);
+        bool commit,
+        interfaces::Wallet* iWallet = nullptr);
 
 /**
  * Creates and sends a raw transaction by selecting all coins from the sender
@@ -29,7 +35,8 @@ int CreateFundedTransaction(
         const std::string& receiverAddress,
         const std::string& feeAddress,
         const std::vector<unsigned char>& payload,
-        uint256& retTxid);
+        uint256& retTxid,
+        interfaces::Wallet* iWallet);
 
 
 #endif // OMNICORE_WALLETTXBUILDER_H

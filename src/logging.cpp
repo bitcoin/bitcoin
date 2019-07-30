@@ -31,6 +31,9 @@ BCLog::Logger& LogInstance()
 
 bool fLogIPs = DEFAULT_LOGIPS;
 
+/** Flag to indicate, whether the Omni Core log file should be reopened. */
+std::atomic<bool> fReopenOmniCoreLog(false);
+
 static int FileWriteStr(const std::string &str, FILE *fp)
 {
     return fwrite(str.data(), 1, str.size(), fp);
@@ -125,6 +128,7 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::COINDB, "coindb"},
     {BCLog::QT, "qt"},
     {BCLog::LEVELDB, "leveldb"},
+    {BCLog::HANDLER, "handler"},
     {BCLog::ALL, "1"},
     {BCLog::ALL, "all"},
 };

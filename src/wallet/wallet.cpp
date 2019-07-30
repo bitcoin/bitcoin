@@ -2071,7 +2071,13 @@ bool CWalletTx::InMempool() const
     return fInMempool;
 }
 
-bool CWalletTx::IsTrusted(interfaces::Chain::Lock& locked_chain) const
+bool CWalletTx::InMempoolDirect() const
+{
+    LOCK(mempool.cs);
+    return mempool.exists(GetHash());
+}
+
+bool CWalletTx::IsTrusted(interfaces::Chain::Lock& locked_chain, bool directMemCheck) const
 {
     LockAnnotation lock(::cs_main); // Temporary, for CheckFinalTx below. Removed in upcoming commit.
 
@@ -2087,7 +2093,9 @@ bool CWalletTx::IsTrusted(interfaces::Chain::Lock& locked_chain) const
         return false;
 
     // Don't trust unconfirmed transactions from us unless they are in the mempool.
-    if (!InMempool())
+    if (directMemCheck && !InMempoolDirect())
+        return false;
+    else if (!InMempool())
         return false;
 
     // Trusted if all inputs are from us and are in the mempool:

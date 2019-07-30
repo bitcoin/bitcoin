@@ -1,7 +1,7 @@
-#include "omnicore/omnicore.h"
-#include "omnicore/rules.h"
+#include <omnicore/omnicore.h>
+#include <omnicore/rules.h>
 
-#include "test/test_bitcoin.h"
+#include <test/test_bitcoin.h>
 
 #include <stdint.h>
 #include <limits>

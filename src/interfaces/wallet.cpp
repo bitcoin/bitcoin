@@ -90,14 +90,17 @@ WalletTx MakeWalletTx(interfaces::Chain::Lock& locked_chain, CWallet& wallet, co
     result.credit = wtx.GetCredit(locked_chain, ISMINE_ALL);
     result.debit = wtx.GetDebit(ISMINE_ALL);
     result.change = wtx.GetChange();
+    result.available_credit = wtx.GetAvailableCredit(locked_chain);
     result.time = wtx.GetTxTime();
     result.value_map = wtx.mapValue;
     result.is_coinbase = wtx.IsCoinBase();
+    result.hash_block = wtx.hashBlock;
+    result.order_pos = wtx.nOrderPos;
     return result;
 }
 
 //! Construct wallet tx status struct.
-WalletTxStatus MakeWalletTxStatus(interfaces::Chain::Lock& locked_chain, const CWalletTx& wtx)
+WalletTxStatus MakeWalletTxStatus(interfaces::Chain::Lock& locked_chain, const CWalletTx& wtx, bool directMemCheck = false)
 {
     LockAnnotation lock(::cs_main); // Temporary, for CheckFinalTx below. Removed in upcoming commit.
 
@@ -110,7 +113,7 @@ WalletTxStatus MakeWalletTxStatus(interfaces::Chain::Lock& locked_chain, const C
     result.time_received = wtx.nTimeReceived;
     result.lock_time = wtx.tx->nLockTime;
     result.is_final = CheckFinalTx(*wtx.tx);
-    result.is_trusted = wtx.IsTrusted(locked_chain);
+    result.is_trusted = wtx.IsTrusted(locked_chain, directMemCheck);
     result.is_abandoned = wtx.isAbandoned();
     result.is_coinbase = wtx.IsCoinBase();
     result.is_in_main_chain = wtx.IsInMainChain(locked_chain);
@@ -157,10 +160,12 @@ public:
     {
         return m_wallet->GetKeyFromPool(pub_key, internal);
     }
-    bool getPubKey(const CKeyID& address, CPubKey& pub_key) override { return m_wallet->GetPubKey(address, pub_key); }
+    bool getPubKey(const CKeyID& address, CPubKey& pub_key) const override { return m_wallet->GetPubKey(address, pub_key); }
     bool getPrivKey(const CKeyID& address, CKey& key) override { return m_wallet->GetKey(address, key); }
+    CKeyID getKeyForDestination(const CTxDestination& dest) const override { return GetKeyForDestination(*m_wallet.get(), dest); }
+    isminetype isMine(const CTxDestination& dest) override { return IsMine(*m_wallet, dest); }
     bool isSpendable(const CTxDestination& dest) override { return IsMine(*m_wallet, dest) & ISMINE_SPENDABLE; }
-    bool haveWatchOnly() override { return m_wallet->HaveWatchOnly(); };
+    bool haveWatchOnly() override { return m_wallet->HaveWatchOnly(); }
     bool setAddressBook(const CTxDestination& dest, const std::string& name, const std::string& purpose) override
     {
         return m_wallet->SetAddressBook(dest, name, purpose);
@@ -266,6 +271,10 @@ public:
     {
         return feebumper::TransactionCanBeBumped(m_wallet.get(), txid);
     }
+    bool produceSignature(const BaseSignatureCreator& creator, const CScript& scriptPubKey, SignatureData& sigdata) override
+    {
+        return ProduceSignature(*m_wallet.get(), creator, scriptPubKey, sigdata);
+    }
     bool createBumpTransaction(const uint256& txid,
         const CCoinControl& coin_control,
         CAmount total_fee,
@@ -313,6 +322,18 @@ public:
         std::vector<WalletTx> result;
         result.reserve(m_wallet->mapWallet.size());
         for (const auto& entry : m_wallet->mapWallet) {
+            result.emplace_back(MakeWalletTx(*locked_chain, *m_wallet, entry.second));
+        }
+        return result;
+    }
+    std::vector<WalletTx> getWalletTxsDetails(std::map<uint256, WalletTxStatus>& tx_status) override
+    {
+        auto locked_chain = m_wallet->chain().lock();
+        LOCK(m_wallet->cs_wallet);
+        std::vector<WalletTx> result;
+        result.reserve(m_wallet->mapWallet.size());
+        for (const auto& entry : m_wallet->mapWallet) {
+            tx_status.emplace(entry.first, MakeWalletTxStatus(*locked_chain, entry.second, true));
             result.emplace_back(MakeWalletTx(*locked_chain, *m_wallet, entry.second));
         }
         return result;
@@ -393,6 +414,12 @@ public:
     {
         return m_wallet->GetAvailableBalance(&coin_control);
     }
+    bool isSpent(const uint256& hash, unsigned int n) override
+    {
+        auto locked_chain = m_wallet->chain().lock();
+        LOCK(m_wallet->cs_wallet);
+        return m_wallet->IsSpent(*locked_chain, hash, n);
+    }
     isminetype txinIsMine(const CTxIn& txin) override
     {
         auto locked_chain = m_wallet->chain().lock();
@@ -430,6 +457,12 @@ public:
             }
         }
         return result;
+    }
+    void availableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const CCoinControl *coinControl, const CAmount& nMinimumAmount) override
+    {
+        auto locked_chain = m_wallet->chain().lock();
+        LOCK(m_wallet->cs_wallet);
+        m_wallet->AvailableCoins(*locked_chain, vCoins, fOnlySafe, coinControl, nMinimumAmount);
     }
     std::vector<WalletTxOut> getCoins(const std::vector<COutPoint>& outputs) override
     {

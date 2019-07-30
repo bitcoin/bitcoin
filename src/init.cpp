@@ -94,6 +94,11 @@ std::unique_ptr<BanMan> g_banman;
 
 static const char* FEE_ESTIMATES_FILENAME="fee_estimates.dat";
 
+// Omni Core initialization and shutdown handlers
+extern int mastercore_init();
+extern int mastercore_shutdown();
+extern int CheckWalletUpdate(bool forceUpdate = false);
+
 /**
  * The PID file facilities.
  */
@@ -280,6 +285,9 @@ void Shutdown(InitInterfaces& interfaces)
         client->stop();
     }
 
+    //! Omni Core shutdown
+    mastercore_shutdown();
+
 #if ENABLE_ZMQ
     if (g_zmq_notification_interface) {
         UnregisterValidationInterface(g_zmq_notification_interface);
@@ -318,6 +326,7 @@ static void HandleSIGTERM(int)
 static void HandleSIGHUP(int)
 {
     LogInstance().m_reopen_file = true;
+    fReopenOmniCoreLog = true;
 }
 #else
 static BOOL WINAPI consoleCtrlHandler(DWORD dwCtrlType)
@@ -535,10 +544,30 @@ void SetupServerArgs()
     gArgs.AddArg("-rpcport=<port>", strprintf("Listen for JSON-RPC connections on <port> (default: %u, testnet: %u, regtest: %u)", defaultBaseParams->RPCPort(), testnetBaseParams->RPCPort(), regtestBaseParams->RPCPort()), false, OptionsCategory::RPC);
     gArgs.AddArg("-rpcserialversion", strprintf("Sets the serialization of raw transaction or block hex returned in non-verbose mode, non-segwit(0) or segwit(1) (default: %d)", DEFAULT_RPC_SERIALIZE_VERSION), false, OptionsCategory::RPC);
     gArgs.AddArg("-rpcservertimeout=<n>", strprintf("Timeout during HTTP requests (default: %d)", DEFAULT_HTTP_SERVER_TIMEOUT), true, OptionsCategory::RPC);
+    gArgs.AddArg("-rpcforceutf8", strprintf("Replace invalid UTF-8 encoded characters with question marks in RPC response (default: %d)", 1), false, OptionsCategory::RPC);
     gArgs.AddArg("-rpcthreads=<n>", strprintf("Set the number of threads to service RPC calls (default: %d)", DEFAULT_HTTP_THREADS), false, OptionsCategory::RPC);
     gArgs.AddArg("-rpcuser=<user>", "Username for JSON-RPC connections", false, OptionsCategory::RPC);
     gArgs.AddArg("-rpcworkqueue=<n>", strprintf("Set the depth of the work queue to service RPC calls (default: %d)", DEFAULT_HTTP_WORKQUEUE), true, OptionsCategory::RPC);
     gArgs.AddArg("-server", "Accept command line and JSON-RPC commands", false, OptionsCategory::RPC);
+
+    // TODO: append help messages somewhere else
+    // TODO: translation
+    gArgs.AddArg("-startclean", "Clear all persistence files on startup; triggers reparsing of Omni transactions (default: 0)", false, OptionsCategory::BLOCK_CREATION);
+    gArgs.AddArg("-omnitxcache", "The maximum number of transactions in the input transaction cache (default: 500000)", false, OptionsCategory::BLOCK_CREATION);
+    gArgs.AddArg("-omniprogressfrequency", "Time in seconds after which the initial scanning progress is reported (default: 30)", false, OptionsCategory::BLOCK_CREATION);
+    gArgs.AddArg("-omniseedblockfilter", "Set skipping of blocks without Omni transactions during initial scan (default: 1)", false, OptionsCategory::BLOCK_CREATION);
+    gArgs.AddArg("-omnilogfile", "The path of the log file (default: omnicore.log)", false, OptionsCategory::BLOCK_CREATION);
+    gArgs.AddArg("-omnidebug=<category>", "Enable or disable log categories, can be \"all\" or \"none\"", false, OptionsCategory::BLOCK_CREATION);
+    gArgs.AddArg("-autocommit", "Enable or disable broadcasting of transactions, when creating transactions (default: 1)", false, OptionsCategory::BLOCK_CREATION);
+    gArgs.AddArg("-overrideforcedshutdown", "Overwrite shutdown, triggered by an alert (default: 0)", false, OptionsCategory::BLOCK_CREATION);
+    gArgs.AddArg("-omnialertallowsender", "Whitelist senders of alerts, can be \"any\")", false, OptionsCategory::BLOCK_CREATION);
+    gArgs.AddArg("-omnialertignoresender", "Ignore senders of alerts", false, OptionsCategory::BLOCK_CREATION);
+    gArgs.AddArg("-omniactivationignoresender", "Ignore senders of activations", false, OptionsCategory::BLOCK_CREATION);
+    gArgs.AddArg("-omniactivationallowsender", "Whitelist senders of activations", false, OptionsCategory::BLOCK_CREATION);
+    gArgs.AddArg("-disclaimer", "Explicitly show QT disclaimer on startup (default: 0)", false, OptionsCategory::BLOCK_CREATION);
+    gArgs.AddArg("-omniuiwalletscope", "Max. transactions to show in trade and transaction history (default: 65535)", false, OptionsCategory::BLOCK_CREATION);
+    gArgs.AddArg("-omnishowblockconsensushash", "Calculate and log the consensus hash for the specified block", false, OptionsCategory::BLOCK_CREATION);
+
 
 #if HAVE_DECL_DAEMON
     gArgs.AddArg("-daemon", "Run in the background as a daemon and accept commands", false, OptionsCategory::OPTIONS);
@@ -552,8 +581,8 @@ void SetupServerArgs()
 
 std::string LicenseInfo()
 {
-    const std::string URL_SOURCE_CODE = "<https://github.com/bitcoin/bitcoin>";
-    const std::string URL_WEBSITE = "<https://bitcoincore.org>";
+    const std::string URL_SOURCE_CODE = "<https://github.com/OmniLayer/omnicore>";
+    const std::string URL_WEBSITE = "<https://omnilayer.org>";
 
     return CopyrightHolders(strprintf(_("Copyright (C) %i-%i"), 2009, COPYRIGHT_YEAR) + " ") + "\n" +
            "\n" +
@@ -1645,12 +1674,56 @@ bool AppInitMain(InitInterfaces& interfaces)
         g_txindex->Start();
     }
 
+    // ********************************************************* Step 8.5: load omni core
+
+    if (!gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
+        // ask the user if they would like us to modify their config file for them
+        std::string msg = _("Disabled transaction index detected.\n\n"
+                            "Omni Core requires an enabled transaction index. To enable "
+                            "transaction indexing, please use the \"-txindex\" option as "
+                            "command line argument or add \"txindex=1\" to your client "
+                            "configuration file within your data directory.\n\n"
+                            "Configuration file"); // allow translation of main text body while still allowing differing config file string
+        msg += ": " + GetConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME)).string() + "\n\n";
+        msg += _("Would you like Omni Core to attempt to update your configuration file accordingly?");
+        bool fRet = uiInterface.ThreadSafeMessageBox(msg, "", CClientUIInterface::MSG_INFORMATION | CClientUIInterface::BTN_OK | CClientUIInterface::MODAL | CClientUIInterface::BTN_ABORT);
+        if (fRet) {
+            // add txindex=1 to config file in GetConfigFile()
+            boost::filesystem::path configPathInfo = GetConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME));
+            FILE *fp = fopen(configPathInfo.string().c_str(), "at");
+            if (!fp) {
+                std::string failMsg = _("Unable to update configuration file at");
+                failMsg += ":\n" + GetConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME)).string() + "\n\n";
+                failMsg += _("The file may be write protected or you may not have the required permissions to edit it.\n");
+                failMsg += _("Please add txindex=1 to your configuration file manually.\n\nOmni Core will now shutdown.");
+                return InitError(failMsg);
+            }
+            fprintf(fp, "\ntxindex=1\n");
+            fflush(fp);
+            fclose(fp);
+            std::string strUpdated = _(
+                    "Your configuration file has been updated.\n\n"
+                    "Omni Core will now shutdown - please restart the client for your new configuration to take effect.");
+            uiInterface.ThreadSafeMessageBox(strUpdated, "", CClientUIInterface::MSG_INFORMATION | CClientUIInterface::BTN_OK | CClientUIInterface::MODAL);
+            return false;
+        } else {
+            return InitError(_("Please add txindex=1 to your configuration file manually.\n\nOmni Core will now shutdown."));
+        }
+    }
+
+    uiInterface.InitMessage(_("Parsing Omni Layer transactions..."));
+
+    mastercore_init();
+
     // ********************************************************* Step 9: load wallet
     for (const auto& client : interfaces.chain_clients) {
         if (!client->load()) {
             return false;
         }
     }
+
+    // Omni Core code should be initialized and wallet should now be loaded, perform an initial populat$
+    CheckWalletUpdate();
 
     // ********************************************************* Step 10: data directory maintenance
 

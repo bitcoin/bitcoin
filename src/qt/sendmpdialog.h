@@ -5,7 +5,7 @@
 #ifndef SENDMPDIALOG_H
 #define SENDMPDIALOG_H
 
-#include "walletmodel.h"
+#include <qt/walletmodel.h>
 
 #include <QDialog>
 #include <QString>

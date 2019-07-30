@@ -1,10 +1,10 @@
 #ifndef OMNICORE_SP_H
 #define OMNICORE_SP_H
 
-#include "omnicore/dbbase.h"
-#include "omnicore/dbspinfo.h"
-#include "omnicore/log.h"
-#include "omnicore/omnicore.h"
+#include <omnicore/dbbase.h>
+#include <omnicore/dbspinfo.h>
+#include <omnicore/log.h>
+#include <omnicore/omnicore.h>
 
 class CBlockIndex;
 class uint256;

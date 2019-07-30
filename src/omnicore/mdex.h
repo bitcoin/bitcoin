@@ -1,9 +1,9 @@
 #ifndef OMNICORE_MDEX_H
 #define OMNICORE_MDEX_H
 
-#include "omnicore/tx.h"
+#include <omnicore/tx.h>
 
-#include "uint256.h"
+#include <uint256.h>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/multiprecision/cpp_dec_float.hpp>

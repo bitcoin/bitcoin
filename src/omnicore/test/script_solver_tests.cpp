@@ -1,8 +1,8 @@
-#include "omnicore/script.h"
+#include <omnicore/script.h>
 
-#include "script/script.h"
-#include "test/test_bitcoin.h"
-#include "util.h"
+#include <script/script.h>
+#include <test/test_bitcoin.h>
+#include <util/system.h>
 
 #include <boost/test/unit_test.hpp>
 

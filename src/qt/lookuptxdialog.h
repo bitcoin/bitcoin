@@ -5,6 +5,8 @@
 #ifndef LOOKUPTXDIALOG_H
 #define LOOKUPTXDIALOG_H
 
+class WalletModel;
+
 #include <QDialog>
 
 QT_BEGIN_NAMESPACE
@@ -25,6 +27,7 @@ public:
     explicit LookupTXDialog(QWidget *parent = 0);
     ~LookupTXDialog();
 
+    void setWalletModel(WalletModel *model);
     void searchTX();
 
 public Q_SLOTS:
@@ -32,6 +35,7 @@ public Q_SLOTS:
 
 private:
     Ui::LookupTXDialog *ui;
+    WalletModel *walletModel;
 
 Q_SIGNALS:
     // Fired when a message should be reported to the user

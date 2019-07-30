@@ -1,21 +1,21 @@
-#include "omnicore/mdex.h"
+#include <omnicore/mdex.h>
 
-#include "omnicore/dbfees.h"
-#include "omnicore/dbtradelist.h"
-#include "omnicore/dbtxlist.h"
-#include "omnicore/errors.h"
-#include "omnicore/log.h"
-#include "omnicore/omnicore.h"
-#include "omnicore/rules.h"
-#include "omnicore/sp.h"
-#include "omnicore/tx.h"
-#include "omnicore/uint256_extensions.h"
+#include <omnicore/dbfees.h>
+#include <omnicore/dbtradelist.h>
+#include <omnicore/dbtxlist.h>
+#include <omnicore/errors.h>
+#include <omnicore/log.h>
+#include <omnicore/omnicore.h>
+#include <omnicore/rules.h>
+#include <omnicore/sp.h>
+#include <omnicore/tx.h>
+#include <omnicore/uint256_extensions.h>
 
-#include "arith_uint256.h"
-#include "chain.h"
-#include "main.h"
-#include "tinyformat.h"
-#include "uint256.h"
+#include <arith_uint256.h>
+#include <chain.h>
+#include <validation.h>
+#include <tinyformat.h>
+#include <uint256.h>
 
 #include <univalue.h>
 
@@ -50,7 +50,7 @@ md_PricesMap* mastercore::get_Prices(uint32_t prop)
 
     if (it != metadex.end()) return &(it->second);
 
-    return (md_PricesMap*) NULL;
+    return static_cast<md_PricesMap*>(nullptr);
 }
 
 md_Set* mastercore::get_Indexes(md_PricesMap* p, rational_t price)
@@ -59,7 +59,7 @@ md_Set* mastercore::get_Indexes(md_PricesMap* p, rational_t price)
 
     if (it != p->end()) return &(it->second);
 
-    return (md_Set*) NULL;
+    return static_cast<md_Set*>(nullptr);
 }
 
 enum MatchReturnType
@@ -465,7 +465,7 @@ bool mastercore::MetaDEx_INSERT(const CMPMetaDEx& objMetaDEx)
 
     // Create an empty set of metadex objects (to use in case no set currently exists at this price)
     md_Set temp_indexes;
-    md_Set *p_indexes = NULL;
+    md_Set *p_indexes = nullptr;
 
     // Prepare for return code
     std::pair <md_Set::iterator, bool> ret;
@@ -532,7 +532,7 @@ int mastercore::MetaDEx_CANCEL_AT_PRICE(const uint256& txid, unsigned int block,
     int rc = METADEX_ERROR -20;
     CMPMetaDEx mdex(sender_addr, 0, prop, amount, property_desired, amount_desired, uint256(), 0, CMPTransaction::CANCEL_AT_PRICE);
     md_PricesMap* prices = get_Prices(prop);
-    const CMPMetaDEx* p_mdex = NULL;
+    const CMPMetaDEx* p_mdex = nullptr;
 
     if (msc_debug_metadex1) PrintToLog("%s():%s\n", __FUNCTION__, mdex.ToString());
 
@@ -585,7 +585,7 @@ int mastercore::MetaDEx_CANCEL_ALL_FOR_PAIR(const uint256& txid, unsigned int bl
 {
     int rc = METADEX_ERROR -30;
     md_PricesMap* prices = get_Prices(prop);
-    const CMPMetaDEx* p_mdex = NULL;
+    const CMPMetaDEx* p_mdex = nullptr;
 
     PrintToLog("%s(%d,%d)\n", __FUNCTION__, prop, property_desired);
 
@@ -848,5 +848,5 @@ const CMPMetaDEx* mastercore::MetaDEx_RetrieveTrade(const uint256& txid)
             }
         }
     }
-    return (CMPMetaDEx*) NULL;
+    return static_cast<CMPMetaDEx*>(nullptr);
 }

@@ -1,7 +1,7 @@
-#include "omnicore_init.h"
+#include <qt/omnicore_init.h>
 
-#include "chainparams.h"
-#include "util.h"
+#include <chainparams.h>
+#include <util/system.h>
 
 #include <string>
 
@@ -62,11 +62,11 @@ static bool getDisclaimerDialogResult()
 static bool showDisclaimer()
 {
     // Don't skip, if disclaimer was requested explicitly
-    if (GetBoolArg("-disclaimer", false))
+    if (gArgs.GetBoolArg("-disclaimer", false))
         return true;
 
     // Skip when starting minimized
-    if (GetBoolArg("-min", false))
+    if (gArgs.GetBoolArg("-min", false))
         return false;
 
     // Only mainnet users face the risk of monetary loss

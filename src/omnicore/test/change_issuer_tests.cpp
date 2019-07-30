@@ -1,6 +1,6 @@
-#include "omnicore/dbspinfo.h"
+#include <omnicore/dbspinfo.h>
 
-#include "test/test_bitcoin.h"
+#include <test/test_bitcoin.h>
 
 #include <boost/test/unit_test.hpp>
 

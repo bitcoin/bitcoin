@@ -9,6 +9,10 @@ src/bitcoin-wallet
 src/test/test_bitcoin
 src/test/test_bitcoin_fuzzy
 src/qt/test/test_bitcoin-qt
+src/omnicored
+src/omnicore-cli
+src/test/test_omnicore
+src/qt/test/test_omnicore-qt
 
 # autoreconf
 Makefile.in
@@ -36,6 +40,9 @@ src/config/bitcoin-config.h.in
 src/config/stamp-h1
 share/setup.nsi
 share/qt/Info.plist
+
+# Omni Core Windows installer script
+src/omnicore/res/omnicore-setup-win.nsi
 
 src/univalue/gen
 
@@ -84,14 +91,22 @@ src/qt/bitcoin-qt.includes
 Makefile
 bitcoin-qt
 Bitcoin-Qt.app
+omnicore-qt
+OmniCore-Qt.app
 background.tiff*
 
 # Unit-tests
 Makefile.test
 bitcoin-qt_test
+omnicore-qt_test
 
 # Resources cpp
 qrc_*.cpp
+# Qt creator
+*.pro.user
+
+# NetBeans
+nbproject/
 
 # Mac specific
 .DS_Store
@@ -111,6 +126,7 @@ linux-build
 win32-build
 test/config.ini
 test/cache/*
+test/tmp
 
 !src/leveldb*/Makefile
 

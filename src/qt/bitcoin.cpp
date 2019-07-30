@@ -38,6 +38,8 @@
 
 #include <walletinitinterface.h>
 
+#include <omnicore/utilsui.h>
+
 #include <memory>
 #include <stdint.h>
 
@@ -389,7 +391,7 @@ void BitcoinApplication::shutdownResult()
 
 void BitcoinApplication::handleRunawayException(const QString &message)
 {
-    QMessageBox::critical(nullptr, "Runaway exception", BitcoinGUI::tr("A fatal error occurred. Bitcoin can no longer continue safely and will quit.") + QString("\n\n") + message);
+    QMessageBox::critical(nullptr, "Runaway exception", BitcoinGUI::tr("A fatal error occurred. Omni Core can no longer continue safely and will quit.") + QString("\n\n") + message);
     ::exit(EXIT_FAILURE);
 }
 
@@ -423,6 +425,9 @@ int GuiMain(int argc, char* argv[])
     std::tie(argc, argv) = winArgs.get();
 #endif
     SetupEnvironment();
+
+    // Indicate UI mode
+    fQtMode = true;
 
     std::unique_ptr<interfaces::Node> node = interfaces::MakeNode();
 

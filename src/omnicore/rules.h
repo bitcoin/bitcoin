@@ -1,7 +1,7 @@
 #ifndef OMNICORE_RULES_H
 #define OMNICORE_RULES_H
 
-#include "uint256.h"
+#include <uint256.h>
 
 #include <stdint.h>
 #include <string>

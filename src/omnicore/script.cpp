@@ -1,12 +1,12 @@
-#include "omnicore/script.h"
+#include <omnicore/script.h>
 
-#include "amount.h"
-#include "script/script.h"
-#include "script/standard.h"
-#include "serialize.h"
-#include "utilstrencodings.h"
-
-#include <boost/foreach.hpp>
+#include <amount.h>
+#include <policy/feerate.h>
+#include <policy/policy.h>
+#include <script/script.h>
+#include <script/standard.h>
+#include <serialize.h>
+#include <util/strencodings.h>
 
 #include <string>
 #include <utility>
@@ -22,11 +22,11 @@ extern CFeeRate minRelayTxFee;
  * @param scriptPubKey[in]  The scriptPubKey
  * @return The dust threshold value
  */
-int64_t GetDustThreshold(const CScript& scriptPubKey)
+int64_t OmniGetDustThreshold(const CScript& scriptPubKey)
 {
     CTxOut txOut(0, scriptPubKey);
 
-    return txOut.GetDustThreshold(minRelayTxFee);
+    return GetDustThreshold(txOut, minRelayTxFee) * 3;
 }
 
 /**
@@ -149,7 +149,7 @@ bool SafeSolver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<st
 
     // Scan templates
     const CScript& script1 = scriptPubKey;
-    BOOST_FOREACH(const PAIRTYPE(txnouttype, CScript)& tplate, mTemplates)
+    for(const auto& tplate : mTemplates)
     {
         const CScript& script2 = tplate.second;
         vSolutionsRet.clear();

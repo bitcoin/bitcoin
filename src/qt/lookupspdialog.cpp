@@ -2,16 +2,17 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "lookupspdialog.h"
-#include "ui_lookupspdialog.h"
+#include <qt/lookupspdialog.h>
+#include <qt/forms/ui_lookupspdialog.h>
 
-#include "guiutil.h"
+#include <qt/guiutil.h>
 
-#include "omnicore/dbspinfo.h"
-#include "omnicore/omnicore.h"
-#include "omnicore/sp.h"
+#include <omnicore/dbspinfo.h>
+#include <omnicore/omnicore.h>
+#include <omnicore/sp.h>
 
-#include "base58.h"
+#include <base58.h>
+#include <key_io.h>
 
 #include <boost/lexical_cast.hpp>
 
@@ -25,14 +26,13 @@
 #include <QWidget>
 
 using std::ostringstream;
-using std::string;
 
 using namespace mastercore;
 
 LookupSPDialog::LookupSPDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::LookupSPDialog),
-    model(0)
+    model(nullptr)
 {
     ui->setupUi(this);
 
@@ -41,8 +41,8 @@ LookupSPDialog::LookupSPDialog(QWidget *parent) :
 #endif
 
     // connect actions
-    connect(ui->matchingComboBox, SIGNAL(activated(int)), this, SLOT(matchingComboBoxChanged(int)));
-    connect(ui->searchButton, SIGNAL(clicked()), this, SLOT(searchButtonClicked()));
+    connect(ui->matchingComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &LookupSPDialog::matchingComboBoxChanged);
+    connect(ui->searchButton, &QPushButton::clicked, this, &LookupSPDialog::searchButtonClicked);
 
     // hide crowd info
     ui->desired->setVisible(false);
@@ -72,7 +72,7 @@ void LookupSPDialog::searchSP()
     // search function to lookup properties, we want this search function to be as capable as possible to
     // help users find the property they're looking for via search terms they may want to use
     int searchParamType = 0;
-    string searchText = ui->searchLineEdit->text().toStdString();
+    std::string searchText = ui->searchLineEdit->text().toStdString();
     unsigned int searchPropertyId = 0;
 
     // first let's check if we have a searchText, if not do nothing
@@ -90,9 +90,8 @@ void LookupSPDialog::searchSP()
     // next if not positive numerical, lets see if the string is a valid bitcoin address for issuer search
     if (searchParamType == 0)
     {
-        CBitcoinAddress address;
-        address.SetString(searchText); // no null check on searchText required we've already checked it's not empty above
-        if (address.IsValid()) searchParamType = 2; // search by address;
+        CTxDestination address = DecodeDestination(searchText); // no null check on searchText required we've already checked it's not empty above
+        if (IsValidDestination(address)) searchParamType = 2; // search by address;
     }
 
     // next if we have a "*" only, we'll assume the user wants to request all properties
@@ -167,9 +166,9 @@ void LookupSPDialog::searchSP()
                if (false != pDbSpInfo->getSP(tmpPropertyId, sp))
                {
                    // make the search case insensitive
-                   string lowerName = sp.name;
+                   std::string lowerName = sp.name;
                    std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
-                   string lowerSearch = searchText;
+                   std::string lowerSearch = searchText;
                    std::transform(lowerSearch.begin(), lowerSearch.end(), lowerSearch.begin(), ::tolower);
                    size_t loc = lowerName.find(lowerSearch);
                    if (loc!=std::string::npos)
@@ -184,9 +183,9 @@ void LookupSPDialog::searchSP()
                if (false != pDbSpInfo->getSP(tmpPropertyId, sp))
                {
                    // make the search case insensitive
-                   string lowerName = sp.name;
+                   std::string lowerName = sp.name;
                    std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
-                   string lowerSearch = searchText;
+                   std::string lowerSearch = searchText;
                    std::transform(lowerSearch.begin(), lowerSearch.end(), lowerSearch.begin(), ::tolower);
                    size_t loc = lowerName.find(lowerSearch);
                    if (loc!=std::string::npos)
@@ -220,10 +219,10 @@ void LookupSPDialog::addSPToMatchingResults(unsigned int propertyId)
     bool spExists = pDbSpInfo->hasSP(propertyId);
     if (spExists)
     {
-        string spName;
+        std::string spName;
         spName = getPropertyName(propertyId).c_str();
         if(spName.size()>40) spName=spName.substr(0,40)+"...";
-        string spId = strprintf("%d", propertyId);
+        std::string spId = strprintf("%d", propertyId);
         spName += " (#" + spId + ")";
         ui->matchingComboBox->addItem(spName.c_str(),spId.c_str());
     }
@@ -283,15 +282,15 @@ void LookupSPDialog::updateDisplayedProperty()
         ui->urlLabel->setText(QString::fromStdString(sp.url));
     }
 
-    string strTotalTokens;
-    string strWalletTokens;
+    std::string strTotalTokens;
+    std::string strWalletTokens;
     int64_t totalTokens = getTotalTokens(propertyId);
     int64_t walletTokens = 0;
     {
         LOCK(cs_tally);
         walletTokens = global_balance_money[propertyId];
     }
-    string tokenLabel;
+    std::string tokenLabel;
     if (propertyId > 2)
     {
        tokenLabel = " SPT";
@@ -319,11 +318,11 @@ void LookupSPDialog::updateDisplayedProperty()
         int64_t propertyIdDesired = sp.property_desired;
         QDateTime qDeadline;
         qDeadline.setTime_t(deadline);
-        string desiredText = getPropertyName(propertyIdDesired).c_str();
+        std::string desiredText = getPropertyName(propertyIdDesired).c_str();
         if(desiredText.size()>22) desiredText=desiredText.substr(0,22)+"...";
-        string spId = strprintf("%d", propertyIdDesired);
+        std::string spId = strprintf("%d", propertyIdDesired);
         desiredText += " (#" + spId + ")";
-        string tokensPerUnitText;
+        std::string tokensPerUnitText;
         if (divisible) { tokensPerUnitText = FormatDivisibleMP(tokensPerUnit); } else { tokensPerUnitText = FormatIndivisibleMP(tokensPerUnit); }
         if (active) { ui->activeLabel->setText("Yes"); } else { ui->activeLabel->setText("No"); }
         // populate crowdinfo

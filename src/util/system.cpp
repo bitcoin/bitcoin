@@ -539,6 +539,12 @@ void ArgsManager::ForceSetArg(const std::string& strArg, const std::string& strV
     m_override_args[strArg] = {strValue};
 }
 
+void ArgsManager::ForceSetArgs(const std::string& strArg, const std::vector<std::string>& strVector)
+{
+    LOCK(cs_args);
+    m_override_args[strArg] = strVector;
+}
+
 void ArgsManager::AddArg(const std::string& name, const std::string& help, const bool debug_only, const OptionsCategory& cat)
 {
     // Split arg name from its help param
@@ -606,6 +612,9 @@ std::string ArgsManager::GetHelpMessage() const
                 break;
             case OptionsCategory::REGISTER_COMMANDS:
                 usage += HelpMessageGroup("Register Commands:");
+                break;
+            case OptionsCategory::OMNI:
+                usage += HelpMessageGroup("Omni options:");
                 break;
             default:
                 break;

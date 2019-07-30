@@ -1,9 +1,9 @@
-#include "omnicore/notifications.h"
-#include "omnicore/version.h"
+#include <omnicore/notifications.h>
+#include <omnicore/version.h>
 
-#include "util.h"
-#include "test/test_bitcoin.h"
-#include "tinyformat.h"
+#include <util/system.h>
+#include <test/test_bitcoin.h>
+#include <tinyformat.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -13,10 +13,6 @@
 #include <vector>
 
 using namespace mastercore;
-
-// Is only temporarily modified and restored after each test
-extern std::map<std::string, std::string> mapArgs;
-extern std::map<std::string, std::vector<std::string> > mapMultiArgs;
 
 BOOST_FIXTURE_TEST_SUITE(omnicore_alert_tests, BasicTestingSetup)
 
@@ -37,42 +33,35 @@ BOOST_AUTO_TEST_CASE(alert_unauthorized_source)
 
 BOOST_AUTO_TEST_CASE(alert_manual_sources)
 {
-    std::map<std::string, std::string> mapArgsOriginal = mapArgs;
-    std::map<std::string, std::vector<std::string> > mapMultiArgsOriginal = mapMultiArgs;
-
-    mapArgs["-omnialertallowsender"] = "";
-    mapArgs["-omnialertignoresender"] = "";
+    std::vector<std::string> omnialertallowsender = gArgs.GetArgs("-omnialertallowsender");
+    std::vector<std::string> omnialertignoresender = gArgs.GetArgs("-omnialertignoresender");
 
     // Add 1JwSSu as allowed source for alerts
-    mapMultiArgs["-omnialertallowsender"].push_back("1JwSSubhmg6iPtRjtyqhUYYH7bZg3Lfy1T");
+    gArgs.ForceSetArg("-omnialertallowsender", "1JwSSubhmg6iPtRjtyqhUYYH7bZg3Lfy1T");
+    BOOST_CHECK_EQUAL(gArgs.GetArgs("-omnialertallowsender").size(), 1);
     BOOST_CHECK(CheckAlertAuthorization("1JwSSubhmg6iPtRjtyqhUYYH7bZg3Lfy1T"));
 
     // Then ignore some sources explicitly
-    mapMultiArgs["-omnialertignoresender"].push_back("1JwSSubhmg6iPtRjtyqhUYYH7bZg3Lfy1T");
-    mapMultiArgs["-omnialertignoresender"].push_back("16oDZYCspsczfgKXVj3xyvsxH21NpEj94F");
+    gArgs.ForceSetArgs("-omnialertignoresender", {"1JwSSubhmg6iPtRjtyqhUYYH7bZg3Lfy1T", "16oDZYCspsczfgKXVj3xyvsxH21NpEj94F"});
     BOOST_CHECK(CheckAlertAuthorization("1HHv91gRxqBzQ3gydMob3LU8hqXcWoLfvd")); // should still be authorized
     BOOST_CHECK(!CheckAlertAuthorization("1JwSSubhmg6iPtRjtyqhUYYH7bZg3Lfy1T"));
     BOOST_CHECK(!CheckAlertAuthorization("16oDZYCspsczfgKXVj3xyvsxH21NpEj94F"));
 
-    mapMultiArgs = mapMultiArgsOriginal;
-    mapArgs = mapArgsOriginal;
+    gArgs.ForceSetArgs("-omnialertallowsender", omnialertallowsender);
+    gArgs.ForceSetArgs("-omnialertignoresender", omnialertignoresender);
 }
 
 BOOST_AUTO_TEST_CASE(alert_authorize_any_source)
 {
-    std::map<std::string, std::string> mapArgsOriginal = mapArgs;
-    std::map<std::string, std::vector<std::string> > mapMultiArgsOriginal = mapMultiArgs;
-
-    mapArgs["-omnialertallowsender"] = "";
+    std::vector<std::string> omnialertallowsender = gArgs.GetArgs("-omnialertallowsender");
 
     // Allow any source (e.g. for tests!)
-    mapMultiArgs["-omnialertallowsender"].push_back("any");
+    gArgs.ForceSetArg("-omnialertallowsender", "any");
     BOOST_CHECK(CheckAlertAuthorization("1JwSSubhmg6iPtRjtyqhUYYH7bZg3Lfy1T"));
     BOOST_CHECK(CheckAlertAuthorization("137uFtQ5EgMsreg4FVvL3xuhjkYGToVPqs"));
     BOOST_CHECK(CheckAlertAuthorization("16oDZYCspsczfgKXVj3xyvsxH21NpEj94F"));
 
-    mapMultiArgs = mapMultiArgsOriginal;
-    mapArgs = mapArgsOriginal;
+    gArgs.ForceSetArgs("-omnialertallowsender", omnialertallowsender);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

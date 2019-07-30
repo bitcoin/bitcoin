@@ -1,9 +1,9 @@
 #ifndef OMNICORE_DBTRADELIST_H
 #define OMNICORE_DBTRADELIST_H
 
-#include "omnicore/dbbase.h"
+#include <omnicore/dbbase.h>
 
-#include "uint256.h"
+#include <uint256.h>
 
 #include <univalue.h>
 

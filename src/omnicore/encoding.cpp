@@ -1,15 +1,15 @@
-#include "omnicore/encoding.h"
+#include <omnicore/encoding.h>
 
-#include "omnicore/omnicore.h"
-#include "omnicore/script.h"
-#include "omnicore/parsing.h"
+#include <omnicore/omnicore.h>
+#include <omnicore/script.h>
+#include <omnicore/parsing.h>
 
-#include "base58.h"
-#include "pubkey.h"
-#include "random.h"
-#include "script/script.h"
-#include "script/standard.h"
-#include "utilstrencodings.h"
+#include <base58.h>
+#include <pubkey.h>
+#include <random.h>
+#include <script/script.h>
+#include <script/standard.h>
+#include <util/strencodings.h>
 
 #include <stdint.h>
 #include <string>
@@ -65,12 +65,12 @@ bool OmniCore_Encode_ClassB(const std::string& senderAddress, const CPubKey& red
 
         // Push back a bare multisig output with obfuscated data
         CScript scriptMultisigOut = GetScriptForMultisig(1, vKeys);
-        vecOutputs.push_back(std::make_pair(scriptMultisigOut, GetDustThreshold(scriptMultisigOut)));
+        vecOutputs.push_back(std::make_pair(scriptMultisigOut, OmniGetDustThreshold(scriptMultisigOut)));
     }
 
     // Add the Exodus marker output
-    CScript scriptExodusOutput = GetScriptForDestination(ExodusAddress().Get());
-    vecOutputs.push_back(std::make_pair(scriptExodusOutput, GetDustThreshold(scriptExodusOutput)));
+    CScript scriptExodusOutput = GetScriptForDestination(ExodusAddress());
+    vecOutputs.push_back(std::make_pair(scriptExodusOutput, OmniGetDustThreshold(scriptExodusOutput)));
     return true;
 }
 

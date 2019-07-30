@@ -24,10 +24,7 @@ OMNICORE_H = \
   omnicore/persistence.h \
   omnicore/rpc.h \
   omnicore/rpcmbstring.h \
-  omnicore/rpcpayload.h \
-  omnicore/rpcrawtx.h \
   omnicore/rpcrequirements.h \
-  omnicore/rpctx.h \
   omnicore/rpctxobject.h \
   omnicore/rpcvalues.h \
   omnicore/rules.h \

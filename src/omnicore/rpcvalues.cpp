@@ -1,22 +1,23 @@
-#include "omnicore/rpcvalues.h"
+#include <omnicore/rpcvalues.h>
 
-#include "omnicore/createtx.h"
-#include "omnicore/parse_string.h"
-#include "omnicore/walletutils.h"
+#include <omnicore/createtx.h>
+#include <omnicore/parse_string.h>
+#include <omnicore/walletutils.h>
 
-#include "base58.h"
-#include "core_io.h"
-#include "primitives/transaction.h"
-#include "pubkey.h"
-#include "rpc/protocol.h"
-#include "rpc/server.h"
-#include "script/script.h"
-#include "uint256.h"
+#include <base58.h>
+#include <core_io.h>
+#include <interfaces/wallet.h>
+#include <key_io.h>
+#include <primitives/transaction.h>
+#include <pubkey.h>
+#include <rpc/protocol.h>
+#include <rpc/server.h>
+#include <script/script.h>
+#include <uint256.h>
 
 #include <univalue.h>
 
 #include <boost/assign/list_of.hpp>
-#include <boost/foreach.hpp>
 
 #include <string>
 #include <vector>
@@ -25,11 +26,11 @@ using mastercore::StrToInt64;
 
 std::string ParseAddress(const UniValue& value)
 {
-    CBitcoinAddress address(value.get_str());
-    if (!address.IsValid()) {
+    CTxDestination address = DecodeDestination(value.get_str());
+    if (!IsValidDestination(address)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
     }
-    return address.ToString();
+    return EncodeDestination(address);
 }
 
 std::string ParseAddressOrEmpty(const UniValue& value)
@@ -173,14 +174,14 @@ uint8_t ParseMetaDExAction(const UniValue& value)
 
 CTransaction ParseTransaction(const UniValue& value)
 {
-    CTransaction tx;
+    CMutableTransaction tx;
     if (value.isNull() || value.get_str().empty()) {
-        return tx;
+        return CTransaction(tx);
     }
     if (!DecodeHexTx(tx, value.get_str())) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Transaction deserialization failed");
     }
-    return tx;
+    return CTransaction(tx);
 }
 
 CMutableTransaction ParseMutableTransaction(const UniValue& value)
@@ -189,10 +190,10 @@ CMutableTransaction ParseMutableTransaction(const UniValue& value)
     return CMutableTransaction(tx);
 }
 
-CPubKey ParsePubKeyOrAddress(const UniValue& value)
+CPubKey ParsePubKeyOrAddress(const interfaces::Wallet* iWallet, const UniValue& value)
 {
     CPubKey pubKey;
-    if (!mastercore::AddressToPubKey(value.get_str(), pubKey)) {
+    if (!mastercore::AddressToPubKey(iWallet, value.get_str(), pubKey)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid redemption key or address");
     }
     return pubKey;

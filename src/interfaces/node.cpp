@@ -308,6 +308,22 @@ public:
                     GuessVerificationProgress(Params().TxData(), block));
             }));
     }
+    std::unique_ptr<Handler> handleOmniStateChanged(OmniStateChangedFn fn) override
+    {
+        return MakeHandler(::uiInterface.OmniStateChanged_connect(fn));
+    }
+    std::unique_ptr<Handler> handleOmniPendingChanged(OmniPendingChangedFn fn) override
+    {
+        return MakeHandler(::uiInterface.OmniPendingChanged_connect(fn));
+    }
+    std::unique_ptr<Handler> handleOmniBalanceChanged(OmniBalanceChangedFn fn) override
+    {
+        return MakeHandler(::uiInterface.OmniBalanceChanged_connect(fn));
+    }
+    std::unique_ptr<Handler> handleOmniStateInvalidated(OmniStateInvalidatedFn fn) override
+    {
+        return MakeHandler(::uiInterface.OmniStateInvalidated_connect(fn));
+    }
     InitInterfaces m_interfaces;
 };
 

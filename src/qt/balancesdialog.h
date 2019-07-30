@@ -5,7 +5,7 @@
 #ifndef BALANCESDIALOG_H
 #define BALANCESDIALOG_H
 
-#include "guiutil.h"
+#include <qt/guiutil.h>
 
 #include <QDialog>
 

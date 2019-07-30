@@ -1,17 +1,17 @@
 // Smart Properties & Crowd Sales
 
-#include "omnicore/sp.h"
+#include <omnicore/sp.h>
 
-#include "omnicore/dbspinfo.h"
-#include "omnicore/log.h"
-#include "omnicore/omnicore.h"
-#include "omnicore/uint256_extensions.h"
+#include <omnicore/dbspinfo.h>
+#include <omnicore/log.h>
+#include <omnicore/omnicore.h>
+#include <omnicore/uint256_extensions.h>
 
-#include "arith_uint256.h"
-#include "main.h"
-#include "tinyformat.h"
-#include "uint256.h"
-#include "utiltime.h"
+#include <arith_uint256.h>
+#include <validation.h>
+#include <tinyformat.h>
+#include <uint256.h>
+#include <util/time.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
@@ -98,7 +98,7 @@ CMPCrowd* mastercore::getCrowd(const std::string& address)
 
     if (my_it != my_crowds.end()) return &(my_it->second);
 
-    return (CMPCrowd *)NULL;
+    return static_cast<CMPCrowd*>(nullptr);
 }
 
 bool mastercore::IsPropertyIdValid(uint32_t propertyId)
@@ -341,7 +341,7 @@ void mastercore::eraseMaxedCrowdsale(const std::string& address, int64_t blockTi
             __func__, address, block, blockTime, crowdsale.getPropertyId(), strMPProperty(crowdsale.getPropertyId()));
 
         if (msc_debug_sp) {
-            PrintToLog("%s(): %s\n", __func__, DateTimeStrFormat("%Y-%m-%d %H:%M:%S", blockTime));
+            PrintToLog("%s(): %s\n", __func__, FormatISO8601DateTime(blockTime));
             PrintToLog("%s(): %s\n", __func__, crowdsale.toString(address));
         }
 
@@ -366,7 +366,7 @@ void mastercore::eraseMaxedCrowdsale(const std::string& address, int64_t blockTi
 
 unsigned int mastercore::eraseExpiredCrowdsale(const CBlockIndex* pBlockIndex)
 {
-    if (pBlockIndex == NULL) return 0;
+    if (pBlockIndex == nullptr) return 0;
 
     const int64_t blockTime = pBlockIndex->GetBlockTime();
     const int blockHeight = pBlockIndex->nHeight;
@@ -382,7 +382,7 @@ unsigned int mastercore::eraseExpiredCrowdsale(const CBlockIndex* pBlockIndex)
                 __func__, address, blockHeight, blockTime, crowdsale.getPropertyId(), strMPProperty(crowdsale.getPropertyId()));
 
             if (msc_debug_sp) {
-                PrintToLog("%s(): %s\n", __func__, DateTimeStrFormat("%Y-%m-%d %H:%M:%S", blockTime));
+                PrintToLog("%s(): %s\n", __func__, FormatISO8601DateTime(blockTime));
                 PrintToLog("%s(): %s\n", __func__, crowdsale.toString(address));
             }
 
