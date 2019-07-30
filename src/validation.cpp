@@ -699,6 +699,11 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
             scriptVerifyFlags = gArgs.GetArg("-promiscuousmempoolflags", scriptVerifyFlags);
         }
 
+        // peercoin: if transaction is after version 0.8 fork, verify SCRIPT_VERIFY_LOW_S
+        // ppcTODO move back to policy.h after 0.8 is active
+        if (IsBTC16BIPsEnabled(tx.nTime))
+            scriptVerifyFlags &= SCRIPT_VERIFY_LOW_S;
+
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
         PrecomputedTransactionData txdata(tx);
