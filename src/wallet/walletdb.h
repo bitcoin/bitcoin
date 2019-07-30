@@ -168,6 +168,23 @@ public:
     }
 };
 
+/** Private key that was serialized by an old wallet (only used for deserialization) */
+struct OldKey {
+    CPrivKey vchPrivKey;
+
+    template <typename Stream>
+    inline void Unserialize(Stream& s) {
+        // no longer used by the wallet, thus dropped after deserialization:
+        int64_t nTimeCreated;
+        int64_t nTimeExpires;
+        std::string strComment;
+
+        int nVersion = s.GetVersion();
+        if (!(s.GetType() & SER_GETHASH)) s >> nVersion;
+        s >> vchPrivKey >> nTimeCreated >> nTimeExpires >> LIMITED_STRING(strComment, 65536);
+    }
+};
+
 /** Access to the wallet database.
  * Opens the database and provides read and write access to it. Each read and write is its own transaction.
  * Multiple operation transactions can be started using TxnBegin() and committed using TxnCommit()

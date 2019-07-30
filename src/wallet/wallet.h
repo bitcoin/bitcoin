@@ -676,23 +676,6 @@ public:
     }
 };
 
-/** Private key that was serialized by an old wallet (only used for deserialization) */
-struct OldKey {
-    CPrivKey vchPrivKey;
-
-    template <typename Stream>
-    inline void Unserialize(Stream& s) {
-        // no longer used by the wallet, thus dropped after deserialization:
-        int64_t nTimeCreated;
-        int64_t nTimeExpires;
-        std::string strComment;
-
-        int nVersion = s.GetVersion();
-        if (!(s.GetType() & SER_GETHASH)) s >> nVersion;
-        s >> vchPrivKey >> nTimeCreated >> nTimeExpires >> LIMITED_STRING(strComment, 65536);
-    }
-};
-
 struct CoinSelectionParams
 {
     bool use_bnb = true;
