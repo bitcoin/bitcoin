@@ -68,6 +68,10 @@ static const bool DEFAULT_UPNP = USE_UPNP;
 static const bool DEFAULT_UPNP = false;
 #endif
 /** The maximum number of peer connections to maintain. */
+static const size_t MAPASKFOR_MAX_SZ = MAX_INV_SZ;
+/** The maximum number of entries in setAskFor (larger due to getdata latency)*/
+static const size_t SETASKFOR_MAX_SZ = 2 * MAX_INV_SZ;
+/** The maximum number of peer connections to maintain. */
 static const unsigned int DEFAULT_MAX_PEER_CONNECTIONS = 125;
 /** The default for -maxuploadtarget. 0 = Unlimited */
 static const uint64_t DEFAULT_MAX_UPLOAD_TARGET = 0;
@@ -521,7 +525,7 @@ extern bool fDiscover;
 extern bool fListen;
 extern bool g_relay_txes;
 
-//extern limitedmap<uint256, int64_t> mapAlreadyAskedFor;
+extern limitedmap<uint256, int64_t> mapAlreadyAskedFor;
 extern std::string strSubVersion;
 
 struct LocalServiceInfo {

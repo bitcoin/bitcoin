@@ -157,6 +157,8 @@ public:
     RecentRequestsTableModel *getRecentRequestsTableModel();
 
     EncryptionStatus getEncryptionStatus() const;
+    void getScriptForMining(std::shared_ptr<CReserveScript> &script);
+
 
     // Check address for validity
     bool validateAddress(const QString &address);

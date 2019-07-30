@@ -368,6 +368,11 @@ WalletModel::EncryptionStatus WalletModel::getEncryptionStatus() const
     }
 }
 
+void WalletModel::getScriptForMining(std::shared_ptr<CReserveScript> &script){
+	
+	m_wallet->getScriptForMining(script);
+}
+
 bool WalletModel::setWalletEncrypted(bool encrypted, const SecureString &passphrase)
 {
     if(encrypted)
