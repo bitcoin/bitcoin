@@ -64,7 +64,8 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
         self.node2_args = ["-dbcrashratio=24", "-dbcache=16"] + self.base_args
 
         # Node3 is a normal node with default args, except will mine full blocks
-        self.node3_args = ["-blockmaxweight=4000000"]
+        # and non-standard txs (e.g. txs with "dust" outputs)
+        self.node3_args = ["-blockmaxweight=4000000", "-acceptnonstdtxn"]
         self.extra_args = [self.node0_args, self.node1_args, self.node2_args, self.node3_args]
 
     def skip_test_if_missing_module(self):
