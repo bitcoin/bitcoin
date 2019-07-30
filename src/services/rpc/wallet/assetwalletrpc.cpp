@@ -19,15 +19,11 @@
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
 extern UniValue ValueFromAmount(const CAmount& amount);
-extern UniValue DescribeAddress(const CTxDestination& dest);
 extern std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags = 0);
 extern bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no_witness = false, bool try_witness = true);
 extern ArrivalTimesMapImpl arrivalTimesMap; 
 extern CCriticalSection cs_assetallocationarrival;
 extern CAmount GetMinimumFee(const CWallet& wallet, unsigned int nTxBytes, const CCoinControl& coin_control, FeeCalculation* feeCalc);
-extern bool IsDust(const CTxOut& txout, const CFeeRate& dustRelayFee);
-extern CAmount AssetAmountFromValue(UniValue& value, int precision);
-extern UniValue ValueFromAssetAmount(const CAmount& amount, int precision);
 extern AssetPrevTxMap mempoolMapAssetPrevTx;
 extern AssetPrevTxMap mapAssetPrevTxSender;
 extern CCriticalSection cs_assetallocationprevtx;
