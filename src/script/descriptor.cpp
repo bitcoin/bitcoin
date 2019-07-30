@@ -10,6 +10,7 @@
 #include <script/standard.h>
 
 #include <span.h>
+#include <util/spanparsing.h>
 #include <util/system.h>
 #include <util/memory.h>
 #include <util/strencodings.h>
@@ -582,63 +583,6 @@ enum class ParseScriptContext {
     P2SH
 };
 
-/** Parse a constant. If succesful, sp is updated to skip the constant and return true. */
-bool Const(const std::string& str, Span<const char>& sp)
-{
-    if ((size_t)sp.size() >= str.size() && std::equal(str.begin(), str.end(), sp.begin())) {
-        sp = sp.subspan(str.size());
-        return true;
-    }
-    return false;
-}
-
-/** Parse a function call. If succesful, sp is updated to be the function's argument(s). */
-bool Func(const std::string& str, Span<const char>& sp)
-{
-    if ((size_t)sp.size() >= str.size() + 2 && sp[str.size()] == '(' && sp[sp.size() - 1] == ')' && std::equal(str.begin(), str.end(), sp.begin())) {
-        sp = sp.subspan(str.size() + 1, sp.size() - str.size() - 2);
-        return true;
-    }
-    return false;
-}
-
-/** Return the expression that sp begins with, and update sp to skip it. */
-Span<const char> Expr(Span<const char>& sp)
-{
-    int level = 0;
-    auto it = sp.begin();
-    while (it != sp.end()) {
-        if (*it == '(') {
-            ++level;
-        } else if (level && *it == ')') {
-            --level;
-        } else if (level == 0 && (*it == ')' || *it == ',')) {
-            break;
-        }
-        ++it;
-    }
-    Span<const char> ret = sp.first(it - sp.begin());
-    sp = sp.subspan(it - sp.begin());
-    return ret;
-}
-
-/** Split a string on every instance of sep, returning a vector. */
-std::vector<Span<const char>> Split(const Span<const char>& sp, char sep)
-{
-    std::vector<Span<const char>> ret;
-    auto it = sp.begin();
-    auto start = it;
-    while (it != sp.end()) {
-        if (*it == sep) {
-            ret.emplace_back(start, it);
-            start = it + 1;
-        }
-        ++it;
-    }
-    ret.emplace_back(start, it);
-    return ret;
-}
-
 /** Parse a key path, being passed a split list of elements (the first element is ignored). */
 bool ParseKeyPath(const std::vector<Span<const char>>& split, KeyPath& out)
 {
@@ -659,6 +603,8 @@ bool ParseKeyPath(const std::vector<Span<const char>>& split, KeyPath& out)
 /** Parse a public key that excludes origin information. */
 std::unique_ptr<PubkeyProvider> ParsePubkeyInner(const Span<const char>& sp, bool permit_uncompressed, FlatSigningProvider& out)
 {
+    using namespace spanparsing;
+
     auto split = Split(sp, '/');
     std::string str(split[0].begin(), split[0].end());
     if (split.size() == 1) {
@@ -697,6 +643,8 @@ std::unique_ptr<PubkeyProvider> ParsePubkeyInner(const Span<const char>& sp, boo
 /** Parse a public key including origin information (if enabled). */
 std::unique_ptr<PubkeyProvider> ParsePubkey(const Span<const char>& sp, bool permit_uncompressed, FlatSigningProvider& out)
 {
+    using namespace spanparsing;
+
     auto origin_split = Split(sp, ']');
     if (origin_split.size() > 2) return nullptr;
     if (origin_split.size() == 1) return ParsePubkeyInner(origin_split[0], permit_uncompressed, out);
@@ -719,6 +667,8 @@ std::unique_ptr<PubkeyProvider> ParsePubkey(const Span<const char>& sp, bool per
 /** Parse a script in a particular context. */
 std::unique_ptr<DescriptorImpl> ParseScript(Span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out)
 {
+    using namespace spanparsing;
+
     auto expr = Expr(sp);
     if (Func("pk", expr)) {
         auto pubkey = ParsePubkey(expr, ctx != ParseScriptContext::P2SH, out);
@@ -840,6 +790,8 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
 /** Check a descriptor checksum, and update desc to be the checksum-less part. */
 bool CheckChecksum(Span<const char>& sp, bool require_checksum, std::string* out_checksum = nullptr)
 {
+    using namespace spanparsing;
+
     auto check_split = Split(sp, '#');
     if (check_split.size() > 2) return false; // Multiple '#' symbols
     if (check_split.size() == 1 && require_checksum) return false; // Missing checksum

@@ -278,6 +278,7 @@ BITCOIN_CORE_H = \
   util/bytevectorhash.h \
   util/error.h \
   util/fees.h \
+  util/spanparsing.h \
   util/system.h \
   util/asmap.h \
   util/getuniquepath.h \
@@ -646,6 +647,7 @@ libdash_util_a_SOURCES = \
   util/system.cpp \
   util/asmap.cpp \
   util/moneystr.cpp \
+  util/spanparsing.cpp \
   util/strencodings.cpp \
   util/time.cpp \
   util/serfloat.cpp \
