@@ -38,9 +38,6 @@ class Node
 public:
     virtual ~Node() {}
 
-    //! Send init error.
-    virtual void initError(const std::string& message) = 0;
-
     //! Set command line arguments.
     virtual bool parseParameters(int argc, const char* const argv[], std::string& error) = 0;
 
@@ -143,6 +140,12 @@ public:
 
     //! Get last block time.
     virtual int64_t getLastBlockTime() = 0;
+
+    //! Get block hash.
+    virtual uint256 getBlockHash(int blockNumber) = 0;
+
+    //! Get block time.
+    virtual int64_t getBlockTime(int blockNumber) = 0;
 
     //! Get verification progress.
     virtual double getVerificationProgress() = 0;

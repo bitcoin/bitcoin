@@ -9,15 +9,19 @@
 #include <qt/bitcoingui.h>
 #include <qt/clientmodel.h>
 #include <qt/guiutil.h>
+#include <qt/messagemodel.h>
+#include <qt/messagepage.h>
 #include <qt/optionsmodel.h>
 #include <qt/overviewpage.h>
 #include <qt/platformstyle.h>
 #include <qt/receivecoinsdialog.h>
 #include <qt/sendcoinsdialog.h>
+#include <qt/sendmessagesdialog.h>
 #include <qt/signverifymessagedialog.h>
 #include <qt/transactiontablemodel.h>
 #include <qt/transactionview.h>
 #include <qt/walletmodel.h>
+
 
 #include <interfaces/node.h>
 #include <ui_interface.h>
@@ -59,12 +63,18 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
 
     usedSendingAddressesPage = new AddressBookPage(platformStyle, AddressBookPage::ForEditing, AddressBookPage::SendingTab, this);
     usedReceivingAddressesPage = new AddressBookPage(platformStyle, AddressBookPage::ForEditing, AddressBookPage::ReceivingTab, this);
-
+#ifdef ENABLE_SECURE_MESSAGING
+    sendMessagesPage = new SendMessagesDialog(platformStyle);
+    messagePage = new MessagePage(platformStyle);
+#endif
     addWidget(overviewPage);
     addWidget(transactionsPage);
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
-
+#ifdef ENABLE_SECURE_MESSAGING
+	addWidget(sendMessagesPage);
+    addWidget(messagePage);
+#endif
     // Clicking on a transaction on the overview pre-selects the transaction on the transaction history page
     connect(overviewPage, &OverviewPage::transactionClicked, transactionView, static_cast<void (TransactionView::*)(const QModelIndex&)>(&TransactionView::focusTransaction));
 
@@ -107,6 +117,8 @@ void WalletView::setBitcoinGUI(BitcoinGUI *gui)
         // Pass through transaction notifications
         connect(this, &WalletView::incomingTransaction, gui, &BitcoinGUI::incomingTransaction);
 
+        connect(this, &WalletView::incomingMessage, gui, &BitcoinGUI::incomingMessage);
+
         // Connect HD enabled state signal
         connect(this, &WalletView::hdEnabledStatusChanged, gui, &BitcoinGUI::updateWalletStatus);
     }
@@ -129,6 +141,9 @@ void WalletView::setWalletModel(WalletModel *_walletModel)
     overviewPage->setWalletModel(_walletModel);
     receiveCoinsPage->setModel(_walletModel);
     sendCoinsPage->setModel(_walletModel);
+#ifdef ENABLE_SECURE_MESSAGING
+    sendMessagesPage->setWalletModel(_walletModel);
+#endif
     usedReceivingAddressesPage->setModel(_walletModel ? _walletModel->getAddressTableModel() : nullptr);
     usedSendingAddressesPage->setModel(_walletModel ? _walletModel->getAddressTableModel() : nullptr);
 
@@ -148,12 +163,36 @@ void WalletView::setWalletModel(WalletModel *_walletModel)
         connect(_walletModel->getTransactionTableModel(), &TransactionTableModel::rowsInserted, this, &WalletView::processNewTransaction);
 
         // Ask for passphrase if needed
-        connect(_walletModel, &WalletModel::requireUnlock, this, &WalletView::unlockWallet);
+
+        connect(_walletModel, SIGNAL(requireUnlock()), this, SLOT(unlockWallet(false)));
+
+        //connect(_walletModel, &WalletModel::requireUnlock, this, &WalletView::unlockWallet);
+
 
         // Show progress dialog
         connect(_walletModel, &WalletModel::showProgress, this, &WalletView::showProgress);
     }
 }
+
+#ifdef ENABLE_SECURE_MESSAGING
+void WalletView::setMessageModel(MessageModel *messageModel)
+{
+    this->messageModel = messageModel;
+    if(messageModel)
+    {
+        // Report errors from wallet thread
+        connect(messageModel, SIGNAL(error(QString,QString,bool)), this, SLOT(error(QString,QString,bool)));
+
+        messagePage->setModel(messageModel);
+        sendMessagesPage->setModel(messageModel);
+
+        // Balloon pop-up for new message
+        connect(messageModel, SIGNAL(rowsInserted(QModelIndex,int,int)),
+                this, SLOT(processNewMessage(QModelIndex,int,int)));
+
+    }
+}
+#endif
 
 void WalletView::processNewTransaction(const QModelIndex& parent, int start, int /*end*/)
 {
@@ -175,10 +214,40 @@ void WalletView::processNewTransaction(const QModelIndex& parent, int start, int
     Q_EMIT incomingTransaction(date, walletModel->getOptionsModel()->getDisplayUnit(), amount, type, address, label, walletModel->getWalletName());
 }
 
+#ifdef ENABLE_SECURE_MESSAGING
+void WalletView::processNewMessage(const QModelIndex& parent, int start, int /*end*/)
+{
+    // Prevent balloon-spam when initial block download is in progress
+    if(!messageModel)
+        return;
+
+    MessageModel *mm = messageModel;
+
+    QString sent_datetime = mm->index(start, MessageModel::ReceivedDateTime, parent).data().toString();
+    QString from_address  = mm->index(start, MessageModel::FromAddress,      parent).data().toString();
+    QString to_address    = mm->index(start, MessageModel::ToAddress,        parent).data().toString();
+    QString message       = mm->index(start, MessageModel::Message,          parent).data().toString();
+    int type 	          = mm->index(start, MessageModel::TypeInt,          parent).data().toInt();
+
+    Q_EMIT incomingMessage(sent_datetime, from_address, to_address, message, type);
+}
+#endif
+
 void WalletView::gotoOverviewPage()
 {
     setCurrentWidget(overviewPage);
 }
+#ifdef ENABLE_SECURE_MESSAGING
+void WalletView::gotoSendMessagesPage()
+{
+	setCurrentWidget(sendMessagesPage);
+}
+
+void WalletView::gotoMessagesPage()
+{
+    setCurrentWidget(messagePage);
+}
+#endif
 
 void WalletView::gotoHistoryPage()
 {
@@ -274,17 +343,31 @@ void WalletView::changePassphrase()
     dlg.exec();
 }
 
-void WalletView::unlockWallet()
+void WalletView::unlockWallet(bool fromMenu)
 {
     if(!walletModel)
         return;
     // Unlock wallet when requested by wallet model
+
     if (walletModel->getEncryptionStatus() == WalletModel::Locked)
     {
+#ifdef ENABLE_PROOF_OF_STAKE
+        AskPassphraseDialog::Mode mode = fromMenu ?  AskPassphraseDialog::UnlockStaking : AskPassphraseDialog::Unlock;
+        AskPassphraseDialog dlg(mode, this);
+#else
         AskPassphraseDialog dlg(AskPassphraseDialog::Unlock, this);
+#endif
         dlg.setModel(walletModel);
         dlg.exec();
     }
+}
+
+void WalletView::lockWallet()
+{
+    if(!walletModel)
+        return;
+
+    walletModel->setWalletLocked(true);
 }
 
 void WalletView::usedSendingAddresses()

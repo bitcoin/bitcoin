@@ -6,15 +6,12 @@
 
 #include <banman.h>
 #include <chainparams.h>
+#include <keystore.h>
 #include <net.h>
 #include <net_processing.h>
 #include <script/sign.h>
-#include <script/signingprovider.h>
-#include <script/standard.h>
 #include <serialize.h>
-#include <util/memory.h>
 #include <util/system.h>
-#include <util/time.h>
 #include <validation.h>
 
 #include <test/setup_common.h>
@@ -44,7 +41,7 @@ struct CConnmanTest : public CConnman {
 extern bool AddOrphanTx(const CTransactionRef& tx, NodeId peer);
 extern void EraseOrphansFor(NodeId peer);
 extern unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans);
-extern void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="");
+//extern void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="");
 
 struct COrphanTx {
     CTransactionRef tx;
@@ -370,7 +367,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
 {
     CKey key;
     key.MakeNewKey(true);
-    FillableSigningProvider keystore;
+    CBasicKeyStore keystore;
     BOOST_CHECK(keystore.AddKey(key));
 
     // 50 orphan transactions:

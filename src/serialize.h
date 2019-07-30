@@ -912,9 +912,16 @@ class CSizeComputer
 protected:
     size_t nSize;
 
+#ifdef ENABLE_PROOF_OF_STAKE
+    const int nType;
+#endif
     const int nVersion;
 public:
+#ifdef ENABLE_PROOF_OF_STAKE
+    CSizeComputer(int nTypeIn, int nVersionIn) : nSize(0), nType(nTypeIn), nVersion(nVersionIn) {}
+#else
     explicit CSizeComputer(int nVersionIn) : nSize(0), nVersion(nVersionIn) {}
+#endif
 
     void write(const char *psz, size_t _nSize)
     {
@@ -939,6 +946,9 @@ public:
     }
 
     int GetVersion() const { return nVersion; }
+#ifdef ENABLE_PROOF_OF_STAKE
+    int GetType() const { return nType; }
+#endif
 };
 
 template<typename Stream>
@@ -988,6 +998,27 @@ inline void WriteCompactSize(CSizeComputer &s, uint64_t nSize)
     s.seek(GetSizeOfCompactSize(nSize));
 }
 
+#ifdef ENABLE_PROOF_OF_STAKE
+template <typename T>
+size_t GetSerializeSize(const T& t, int nType, int nVersion = 0)
+{
+    return (CSizeComputer(nType, nVersion) << t).size();
+}
+
+template <typename S, typename T>
+size_t GetSerializeSize(const S& s, const T& t)
+{
+    return (CSizeComputer(s.GetType(), s.GetVersion()) << t).size();
+}
+
+template <typename S, typename... T>
+size_t GetSerializeSizeMany(const S& s, const T&... t)
+{
+    CSizeComputer sc(s.GetType(), s.GetVersion());
+    SerializeMany(sc, t...);
+    return sc.size();
+}
+#else
 template <typename T>
 size_t GetSerializeSize(const T& t, int nVersion = 0)
 {
@@ -1001,5 +1032,7 @@ size_t GetSerializeSizeMany(int nVersion, const T&... t)
     SerializeMany(sc, t...);
     return sc.size();
 }
+
+#endif
 
 #endif // BITCOIN_SERIALIZE_H

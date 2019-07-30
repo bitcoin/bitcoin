@@ -31,6 +31,29 @@
 #include <QSet>
 #include <QTimer>
 
+#ifdef ENABLE_PROOF_OF_STAKE
+WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, interfaces::Node& node, const PlatformStyle *platformStyle, OptionsModel *_optionsModel, QObject *parent) :
+    QObject(parent), m_wallet(std::move(wallet)), m_node(node), optionsModel(_optionsModel), addressTableModel(nullptr),
+    transactionTableModel(nullptr),
+    recentRequestsTableModel(nullptr),
+    cachedEncryptionStatus(Unencrypted),
+    cachedNumBlocks(0),
+    nWeight(0),
+    updateStakeWeight(true)
+{
+    fHaveWatchOnly = m_wallet->haveWatchOnly();
+    addressTableModel = new AddressTableModel(this);
+    transactionTableModel = new TransactionTableModel(platformStyle, this);
+    recentRequestsTableModel = new RecentRequestsTableModel(this);
+
+    // This timer will be fired repeatedly to update the balance
+    pollTimer = new QTimer(this);
+    connect(pollTimer, &QTimer::timeout, this, &WalletModel::pollBalanceChanged);
+    pollTimer->start(MODEL_UPDATE_DELAY);
+
+    subscribeToCoreSignals();
+}
+#else
 
 WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, interfaces::Node& node, const PlatformStyle *platformStyle, OptionsModel *_optionsModel, QObject *parent) :
     QObject(parent), m_wallet(std::move(wallet)), m_node(node), optionsModel(_optionsModel), addressTableModel(nullptr),
@@ -51,6 +74,7 @@ WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, interfaces:
 
     subscribeToCoreSignals();
 }
+#endif
 
 WalletModel::~WalletModel()
 {
@@ -88,6 +112,12 @@ void WalletModel::pollBalanceChanged()
         checkBalanceChanged(new_balances);
         if(transactionTableModel)
             transactionTableModel->updateConfirmations();
+
+#ifdef ENABLE_PROOF_OF_STAKE
+        // The stake weight is used for the staking icon status
+        // Get the stake weight only when not syncing because it is time consuming
+        updateStakeWeight = true;
+#endif        
     }
 }
 
@@ -221,12 +251,11 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             return TransactionCreationFailed;
         }
 
-        // Reject absurdly high fee. (This can never happen because the
-        // wallet never creates transactions with fee greater than
-        // m_default_max_tx_fee. This merely a belt-and-suspenders check).
-        if (nFeeRequired > m_wallet->getDefaultMaxTxFee()) {
+        // reject absurdly high fee. (This can never happen because the
+        // wallet caps the fee at m_default_max_tx_fee. This merely serves as a
+        // belt-and-suspenders check)
+        if (nFeeRequired > m_wallet->getDefaultMaxTxFee())
             return AbsurdFee;
-        }
     }
 
     return SendCoinsReturn(OK);
@@ -261,11 +290,11 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
 
         auto& newTx = transaction.getWtx();
         std::string rejectReason;
-        if (!wallet().commitTransaction(newTx, {} /* mapValue */, std::move(vOrderForm), rejectReason))
+        if (!newTx->commit({} /* mapValue */, std::move(vOrderForm), rejectReason))
             return SendCoinsReturn(TransactionCommitFailed, QString::fromStdString(rejectReason));
 
         CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-        ssTx << *newTx;
+        ssTx << newTx->get();
         transaction_array.append(&(ssTx[0]), ssTx.size());
     }
 
@@ -377,15 +406,13 @@ bool WalletModel::changePassphrase(const SecureString &oldPass, const SecureStri
 static void NotifyUnload(WalletModel* walletModel)
 {
     qDebug() << "NotifyUnload";
-    bool invoked = QMetaObject::invokeMethod(walletModel, "unload");
-    assert(invoked);
+    QMetaObject::invokeMethod(walletModel, "unload");
 }
 
 static void NotifyKeyStoreStatusChanged(WalletModel *walletmodel)
 {
     qDebug() << "NotifyKeyStoreStatusChanged";
-    bool invoked = QMetaObject::invokeMethod(walletmodel, "updateStatus", Qt::QueuedConnection);
-    assert(invoked);
+    QMetaObject::invokeMethod(walletmodel, "updateStatus", Qt::QueuedConnection);
 }
 
 static void NotifyAddressBookChanged(WalletModel *walletmodel,
@@ -397,43 +424,38 @@ static void NotifyAddressBookChanged(WalletModel *walletmodel,
     QString strPurpose = QString::fromStdString(purpose);
 
     qDebug() << "NotifyAddressBookChanged: " + strAddress + " " + strLabel + " isMine=" + QString::number(isMine) + " purpose=" + strPurpose + " status=" + QString::number(status);
-    bool invoked = QMetaObject::invokeMethod(walletmodel, "updateAddressBook", Qt::QueuedConnection,
+    QMetaObject::invokeMethod(walletmodel, "updateAddressBook", Qt::QueuedConnection,
                               Q_ARG(QString, strAddress),
                               Q_ARG(QString, strLabel),
                               Q_ARG(bool, isMine),
                               Q_ARG(QString, strPurpose),
                               Q_ARG(int, status));
-    assert(invoked);
 }
 
 static void NotifyTransactionChanged(WalletModel *walletmodel, const uint256 &hash, ChangeType status)
 {
     Q_UNUSED(hash);
     Q_UNUSED(status);
-    bool invoked = QMetaObject::invokeMethod(walletmodel, "updateTransaction", Qt::QueuedConnection);
-    assert(invoked);
+    QMetaObject::invokeMethod(walletmodel, "updateTransaction", Qt::QueuedConnection);
 }
 
 static void ShowProgress(WalletModel *walletmodel, const std::string &title, int nProgress)
 {
     // emits signal "showProgress"
-    bool invoked = QMetaObject::invokeMethod(walletmodel, "showProgress", Qt::QueuedConnection,
+    QMetaObject::invokeMethod(walletmodel, "showProgress", Qt::QueuedConnection,
                               Q_ARG(QString, QString::fromStdString(title)),
                               Q_ARG(int, nProgress));
-    assert(invoked);
 }
 
 static void NotifyWatchonlyChanged(WalletModel *walletmodel, bool fHaveWatchonly)
 {
-    bool invoked = QMetaObject::invokeMethod(walletmodel, "updateWatchOnlyFlag", Qt::QueuedConnection,
+    QMetaObject::invokeMethod(walletmodel, "updateWatchOnlyFlag", Qt::QueuedConnection,
                               Q_ARG(bool, fHaveWatchonly));
-    assert(invoked);
 }
 
 static void NotifyCanGetAddressesChanged(WalletModel* walletmodel)
 {
-    bool invoked = QMetaObject::invokeMethod(walletmodel, "canGetAddressesChanged");
-    assert(invoked);
+    QMetaObject::invokeMethod(walletmodel, "canGetAddressesChanged");
 }
 
 void WalletModel::subscribeToCoreSignals()
@@ -464,6 +486,13 @@ void WalletModel::unsubscribeFromCoreSignals()
 WalletModel::UnlockContext WalletModel::requestUnlock()
 {
     bool was_locked = getEncryptionStatus() == Locked;
+#ifdef ENABLE_PROOF_OF_STAKE
+    if ((!was_locked) && getWalletUnlockStakingOnly())
+    {
+       setWalletLocked(true);
+       was_locked = getEncryptionStatus() == Locked;
+    }
+#endif
     if(was_locked)
     {
         // Request UI to unlock wallet
@@ -472,14 +501,27 @@ WalletModel::UnlockContext WalletModel::requestUnlock()
     // If wallet is still locked, unlock was failed or cancelled, mark context as invalid
     bool valid = getEncryptionStatus() != Locked;
 
+#ifdef ENABLE_PROOF_OF_STAKE
+    return UnlockContext(this, valid, was_locked && !getWalletUnlockStakingOnly());
+#else
     return UnlockContext(this, valid, was_locked);
+#endif
 }
 
 WalletModel::UnlockContext::UnlockContext(WalletModel *_wallet, bool _valid, bool _relock):
         wallet(_wallet),
         valid(_valid),
-        relock(_relock)
+        relock(_relock),
+        stakingOnly(false)
 {
+    if(!relock)
+    {
+#ifdef ENABLE_PROOF_OF_STAKE
+
+        stakingOnly = wallet->getWalletUnlockStakingOnly();
+        wallet->setWalletUnlockStakingOnly(false);
+#endif
+    }
 }
 
 WalletModel::UnlockContext::~UnlockContext()
@@ -488,7 +530,16 @@ WalletModel::UnlockContext::~UnlockContext()
     {
         wallet->setWalletLocked(true);
     }
+
+    if(!relock)
+    {
+#ifdef ENABLE_PROOF_OF_STAKE
+        wallet->setWalletUnlockStakingOnly(stakingOnly);
+#endif
+        wallet->updateStatus();
+    }
 }
+
 
 void WalletModel::UnlockContext::CopyFrom(UnlockContext&& rhs)
 {
@@ -496,6 +547,12 @@ void WalletModel::UnlockContext::CopyFrom(UnlockContext&& rhs)
     *this = rhs;
     rhs.relock = false;
 }
+#ifdef ENABLE_SECURE_MESSAGING
+bool WalletModel::getPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const
+{
+    return m_wallet->getPubKey(address, vchPubKeyOut);
+}
+#endif
 
 void WalletModel::loadReceiveRequests(std::vector<std::string>& vReceiveRequests)
 {
@@ -606,3 +663,27 @@ bool WalletModel::isMultiwallet()
 {
     return m_node.getWallets().size() > 1;
 }
+#ifdef ENABLE_PROOF_OF_STAKE
+uint64_t WalletModel::getStakeWeight()
+{
+    return nWeight;
+}
+
+bool WalletModel::getWalletUnlockStakingOnly()
+{
+    return m_wallet->getWalletUnlockStakingOnly();
+}
+
+void WalletModel::setWalletUnlockStakingOnly(bool unlock)
+{
+    m_wallet->setWalletUnlockStakingOnly(unlock);
+}
+
+void WalletModel::checkStakeWeightChanged()
+{
+    if(updateStakeWeight && m_wallet->tryGetStakeWeight(nWeight))
+    {
+        updateStakeWeight = false;
+    }
+}
+#endif

@@ -8,7 +8,6 @@
 #include <key.h>
 #include <script/script.h>
 #include <script/sign.h>
-#include <script/signingprovider.h>
 #include <wallet/wallet.h>
 
 typedef std::vector<unsigned char> valtype;
@@ -60,7 +59,9 @@ IsMineResult IsMineInner(const CWallet& keystore, const CScript& scriptPubKey, I
     IsMineResult ret = IsMineResult::NO;
 
     std::vector<valtype> vSolutions;
-    txnouttype whichType = Solver(scriptPubKey, vSolutions);
+    txnouttype whichType;
+    if(!Solver(scriptPubKey, whichType, vSolutions))
+        return ret;
 
     CKeyID keyID;
     switch (whichType)

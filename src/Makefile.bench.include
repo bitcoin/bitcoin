@@ -18,19 +18,15 @@ bench_bench_bitcoin_SOURCES = \
   bench/block_assemble.cpp \
   bench/checkblock.cpp \
   bench/checkqueue.cpp \
-  bench/data.h \
-  bench/data.cpp \
   bench/duplicate_inputs.cpp \
   bench/examples.cpp \
   bench/rollingbloom.cpp \
   bench/chacha20.cpp \
-  bench/chacha_poly_aead.cpp \
   bench/crypto_hash.cpp \
   bench/ccoins_caching.cpp \
   bench/gcs_filter.cpp \
   bench/merkle_root.cpp \
   bench/mempool_eviction.cpp \
-  bench/rpc_blockchain.cpp \
   bench/rpc_mempool.cpp \
   bench/util_time.cpp \
   bench/verify_script.cpp \
@@ -80,7 +76,7 @@ CLEAN_BITCOIN_BENCH = bench/*.gcda bench/*.gcno $(GENERATED_BENCH_FILES)
 
 CLEANFILES += $(CLEAN_BITCOIN_BENCH)
 
-bench/data.cpp: bench/data/block413567.raw.h
+bench/checkblock.cpp: bench/data/block413567.raw.h
 
 bitcoin_bench: $(BENCH_BINARY)
 
@@ -93,7 +89,7 @@ bitcoin_bench_clean : FORCE
 %.raw.h: %.raw
 	@$(MKDIR_P) $(@D)
 	@{ \
-	 echo "static unsigned const char $(*F)_raw[] = {" && \
+	 echo "static unsigned const char $(*F)[] = {" && \
 	 $(HEXDUMP) -v -e '8/1 "0x%02x, "' -e '"\n"' $< | $(SED) -e 's/0x  ,//g' && \
 	 echo "};"; \
 	} > "$@.new" && mv -f "$@.new" "$@"

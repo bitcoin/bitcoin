@@ -184,6 +184,10 @@ public:
     // Passphrase only needed when unlocking
     bool setWalletLocked(bool locked, const SecureString &passPhrase=SecureString());
     bool changePassphrase(const SecureString &oldPass, const SecureString &newPass);
+#ifdef ENABLE_PROOF_OF_STAKE
+    bool getWalletUnlockStakingOnly();
+    void setWalletUnlockStakingOnly(bool unlock);
+#endif
 
     // RAI object for unlocking wallet, returned by requestUnlock()
     class UnlockContext
@@ -203,12 +207,16 @@ public:
         WalletModel *wallet;
         bool valid;
         mutable bool relock; // mutable, as it can be set to false by copying
+        bool stakingOnly;
 
         UnlockContext& operator=(const UnlockContext&) = default;
         void CopyFrom(UnlockContext&& rhs);
     };
 
     UnlockContext requestUnlock();
+#ifdef ENABLE_SECURE_MESSAGING
+    bool getPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
+#endif
 
     void loadReceiveRequests(std::vector<std::string>& vReceiveRequests);
     bool saveReceiveRequest(const std::string &sAddress, const int64_t nId, const std::string &sRequest);
@@ -226,6 +234,7 @@ public:
     QString getDisplayName() const;
 
     bool isMultiwallet();
+    uint64_t getStakeWeight();
 
     AddressTableModel* getAddressTableModel() const { return addressTableModel; }
 private:
@@ -256,6 +265,9 @@ private:
     int cachedNumBlocks;
 
     QTimer *pollTimer;
+
+    uint64_t nWeight;
+    std::atomic<bool> updateStakeWeight;
 
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
@@ -302,6 +314,11 @@ public Q_SLOTS:
     void updateWatchOnlyFlag(bool fHaveWatchonly);
     /* Current, immature or unconfirmed balance might have changed - emit 'balanceChanged' if so */
     void pollBalanceChanged();
+
+#ifdef ENABLE_PROOF_OF_STAKE
+    /* Update stake weight when changed*/
+    void checkStakeWeightChanged();
+#endif
 };
 
 #endif // BITCOIN_QT_WALLETMODEL_H

@@ -4,9 +4,7 @@
 
 #include <util/error.h>
 
-#include <tinyformat.h>
 #include <util/system.h>
-#include <util/translation.h>
 
 std::string TransactionErrorString(const TransactionError err)
 {
@@ -29,8 +27,6 @@ std::string TransactionErrorString(const TransactionError err)
             return "PSBTs not compatible (different transactions)";
         case TransactionError::SIGHASH_MISMATCH:
             return "Specified sighash value does not match existing value";
-        case TransactionError::MAX_FEE_EXCEEDED:
-            return "Fee exceeds maximum configured by -maxtxfee";
         // no default case, so the compiler can warn about missing cases
     }
     assert(false);
@@ -38,10 +34,10 @@ std::string TransactionErrorString(const TransactionError err)
 
 std::string AmountHighWarn(const std::string& optname)
 {
-    return strprintf(_("%s is set very high!").translated, optname);
+    return strprintf(_("%s is set very high!"), optname);
 }
 
 std::string AmountErrMsg(const char* const optname, const std::string& strValue)
 {
-    return strprintf(_("Invalid amount for -%s=<amount>: '%s'").translated, optname, strValue);
+    return strprintf(_("Invalid amount for -%s=<amount>: '%s'"), optname, strValue);
 }

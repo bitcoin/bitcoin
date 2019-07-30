@@ -16,6 +16,7 @@ extern CCriticalSection cs_main;
 class CBlock;
 class CBlockIndex;
 struct CBlockLocator;
+class CBlockIndex;
 class CConnman;
 class CValidationInterface;
 class CValidationState;

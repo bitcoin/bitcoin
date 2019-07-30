@@ -54,6 +54,12 @@ namespace BCLog {
         COINDB      = (1 << 18),
         QT          = (1 << 19),
         LEVELDB     = (1 << 20),
+#ifdef ENABLE_PROOF_OF_STAKE
+        COINSTAKE   = (1 << 21),
+#endif
+#ifdef ENABLE_SECURE_MESSAGING
+        SMSG   = (1 << 22),
+#endif
         ALL         = ~(uint32_t)0,
     };
 
@@ -100,8 +106,6 @@ namespace BCLog {
 
         /** Start logging (and flush all buffered messages) */
         bool StartLogging();
-        /** Only for testing */
-        void DisconnectTestLogger();
 
         void ShrinkDebugFile();
 

@@ -7,8 +7,52 @@ DIST_SUBDIRS = secp256k1 univalue
 AM_LDFLAGS = $(PTHREAD_CFLAGS) $(LIBTOOL_LDFLAGS) $(HARDENED_LDFLAGS) $(GPROF_LDFLAGS) $(SANITIZER_LDFLAGS)
 AM_CXXFLAGS = $(DEBUG_CXXFLAGS) $(HARDENED_CXXFLAGS) $(WARN_CXXFLAGS) $(NOWARN_CXXFLAGS) $(ERROR_CXXFLAGS) $(GPROF_CXXFLAGS) $(SANITIZER_CXXFLAGS)
 AM_CPPFLAGS = $(DEBUG_CPPFLAGS) $(HARDENED_CPPFLAGS)
+# -DBOOST_VARIANT_USE_RELAXED_GET_BY_DEFAULT -DENABLE_GENESIS_TX_SPEND
+# further adding of various algos, proof of burn, demmurrage ,
+# developer fee enabled by default
 AM_LIBTOOLFLAGS = --preserve-dup-deps
 EXTRA_LIBRARIES =
+
+if ENABLE_SECURE_MESSAGING
+AM_CXXFLAGS += -DENABLE_SECURE_MESSAGING
+AM_CPPFLAGS += -DENABLE_SECURE_MESSAGING
+endif
+
+if ENABLE_IBTP
+AM_CXXFLAGS += -DENABLE_IBTP
+AM_CPPFLAGS += -DENABLE_IBTP
+endif
+
+if ENABLE_PROOF_OF_STAKE
+AM_CXXFLAGS += -DENABLE_PROOF_OF_STAKE
+AM_CPPFLAGS += -DENABLE_PROOF_OF_STAKE
+endif
+
+if ENABLE_GENESIS_TX_SPEND
+AM_CXXFLAGS += -DENABLE_GENESIS_TX_SPEND
+AM_CPPFLAGS += -DENABLE_GENESIS_TX_SPEND
+endif
+
+if ENABLE_MOMENTUM_HASH_ALGO
+AM_CXXFLAGS += -DENABLE_MOMENTUM_HASH_ALGO
+AM_CPPFLAGS += -DENABLE_MOMENTUM_HASH_ALGO
+endif
+
+if ENABLE_SHA_HASH_ALGO
+AM_CXXFLAGS += -DENABLE_SHA_HASH_ALGO
+AM_CPPFLAGS += -DENABLE_SHA_HASH_ALGO
+endif
+
+if ENABLE_GROESTL_HASH_ALGO
+AM_CXXFLAGS += -DENABLE_GROESTL_HASH_ALGO
+AM_CPPFLAGS += -DENABLE_GROESTL_HASH_ALGO
+endif
+
+if ENABLE_MEM_HASH_ALGO
+AM_CXXFLAGS += -DENABLE_MEM_HASH_ALGO
+AM_CPPFLAGS += -DENABLE_MEM_HASH_ALGO
+endif
+
 
 if EMBEDDED_UNIVALUE
 LIBUNIVALUE = univalue/libunivalue.la
@@ -103,6 +147,7 @@ BITCOIN_CORE_H = \
   addrdb.h \
   addrman.h \
   attributes.h \
+  axiom.h \
   banman.h \
   base58.h \
   bech32.h \
@@ -113,6 +158,7 @@ BITCOIN_CORE_H = \
   chainparams.h \
   chainparamsbase.h \
   chainparamsseeds.h \
+  checkpoints.h \
   checkqueue.h \
   clientversion.h \
   coins.h \
@@ -127,9 +173,11 @@ BITCOIN_CORE_H = \
   consensus/tx_verify.h \
   core_io.h \
   core_memusage.h \
+  crosschain/interblockchain.h \
   cuckoocache.h \
   flatfile.h \
   fs.h \
+  groestl.h \
   httprpc.h \
   httpserver.h \
   index/base.h \
@@ -143,6 +191,8 @@ BITCOIN_CORE_H = \
   interfaces/wallet.h \
   key.h \
   key_io.h \
+  keystore.h \
+  momentum.h \
   dbwrapper.h \
   limitedmap.h \
   logging.h \
@@ -165,6 +215,7 @@ BITCOIN_CORE_H = \
   policy/policy.h \
   policy/rbf.h \
   policy/settings.h \
+  pos.h \
   pow.h \
   protocol.h \
   psbt.h \
@@ -173,20 +224,25 @@ BITCOIN_CORE_H = \
   reverselock.h \
   rpc/blockchain.h \
   rpc/client.h \
+  rpc/mining.h \
   rpc/protocol.h \
+  rpc/server.h \
   rpc/rawtransaction_util.h \
   rpc/register.h \
-  rpc/request.h \
-  rpc/server.h \
   rpc/util.h \
   scheduler.h \
   script/descriptor.h \
-  script/keyorigin.h \
   script/sigcache.h \
   script/sign.h \
-  script/signingprovider.h \
   script/standard.h \
+  semiOrderedMap.h \
   shutdown.h \
+  smessage/lz4.h \
+  smessage/smessage.h \
+  smessage/xxhash.h \
+  sphlib/sph_types.h \
+  sphlib/sph_groestl.h \
+  sphlib/sph_shabal.h \
   streams.h \
   support/allocators/secure.h \
   support/allocators/zeroafterfree.h \
@@ -212,7 +268,6 @@ BITCOIN_CORE_H = \
   util/rbf.h \
   util/threadnames.h \
   util/time.h \
-  util/translation.h \
   util/url.h \
   util/validation.h \
   validation.h \
@@ -261,6 +316,7 @@ libbitcoin_server_a_SOURCES = \
   blockencodings.cpp \
   blockfilter.cpp \
   chain.cpp \
+  checkpoints.cpp \
   consensus/tx_verify.cpp \
   flatfile.cpp \
   httprpc.cpp \
@@ -282,6 +338,7 @@ libbitcoin_server_a_SOURCES = \
   policy/fees.cpp \
   policy/rbf.cpp \
   policy/settings.cpp \
+  pos.cpp \
   pow.cpp \
   rest.cpp \
   rpc/blockchain.cpp \
@@ -290,8 +347,12 @@ libbitcoin_server_a_SOURCES = \
   rpc/net.cpp \
   rpc/rawtransaction.cpp \
   rpc/server.cpp \
+  rpc/smessage.cpp \
   script/sigcache.cpp \
   shutdown.cpp \
+  smessage/lz4.c \
+  smessage/smessage.cpp \
+  smessage/xxhash.c \
   timedata.cpp \
   torcontrol.cpp \
   txdb.cpp \
@@ -354,8 +415,6 @@ crypto_libbitcoin_crypto_base_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 crypto_libbitcoin_crypto_base_a_SOURCES = \
   crypto/aes.cpp \
   crypto/aes.h \
-  crypto/chacha_poly_aead.h \
-  crypto/chacha_poly_aead.cpp \
   crypto/chacha20.h \
   crypto/chacha20.cpp \
   crypto/common.h \
@@ -407,6 +466,7 @@ libbitcoin_consensus_a_SOURCES = \
   amount.h \
   arith_uint256.cpp \
   arith_uint256.h \
+  axiom.cpp \
   consensus/merkle.cpp \
   consensus/merkle.h \
   consensus/params.h \
@@ -414,6 +474,10 @@ libbitcoin_consensus_a_SOURCES = \
   consensus/validation.h \
   hash.cpp \
   hash.h \
+  sphlib/sph_shabal.cpp \
+  sphlib/groestl.cpp \
+  groestl-hash.cpp \
+  momentum.cpp \
   prevector.h \
   primitives/block.cpp \
   primitives/block.h \
@@ -451,7 +515,9 @@ libbitcoin_common_a_SOURCES = \
   core_write.cpp \
   key.cpp \
   key_io.cpp \
+  keystore.cpp \
   merkleblock.cpp \
+  crosschain/interblockchain.cpp \
   netaddress.cpp \
   netbase.cpp \
   outputtype.cpp \
@@ -464,7 +530,6 @@ libbitcoin_common_a_SOURCES = \
   scheduler.cpp \
   script/descriptor.cpp \
   script/sign.cpp \
-  script/signingprovider.cpp \
   script/standard.cpp \
   versionbitsinfo.cpp \
   warnings.cpp \
@@ -486,7 +551,7 @@ libbitcoin_util_a_SOURCES = \
   interfaces/handler.cpp \
   logging.cpp \
   random.cpp \
-  rpc/request.cpp \
+  rpc/protocol.cpp \
   support/cleanse.cpp \
   sync.cpp \
   threadinterrupt.cpp \
@@ -618,7 +683,7 @@ bitcoin_wallet_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(EVENT_PTHREAD
 # bitcoinconsensus library #
 if BUILD_BITCOIN_LIBS
 include_HEADERS = script/bitcoinconsensus.h
-libbitcoinconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libbitcoin_crypto_base_a_SOURCES) $(libbitcoin_consensus_a_SOURCES)
+libbitcoinconsensus_la_SOURCES = $(crypto_libbitcoin_crypto_base_a_SOURCES) $(libbitcoin_consensus_a_SOURCES)
 
 if GLIBC_BACK_COMPAT
   libbitcoinconsensus_la_SOURCES += compat/glibc_compat.cpp

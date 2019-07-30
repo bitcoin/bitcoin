@@ -3,10 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <attributes.h>
-#include <clientversion.h>
 #include <coins.h>
 #include <script/standard.h>
-#include <streams.h>
 #include <test/setup_common.h>
 #include <uint256.h>
 #include <undo.h>
@@ -376,8 +374,12 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
             // Update the expected result to know about the new output coins
             assert(tx.vout.size() == 1);
             const COutPoint outpoint(tx.GetHash(), 0);
+#ifdef ENABLE_PROOF_OF_STAKE
+            result[outpoint] = Coin(tx.vout[0], height, CTransaction(tx).IsCoinBase(), CTransaction(tx).IsCoinStake());
+#else
             result[outpoint] = Coin(tx.vout[0], height, CTransaction(tx).IsCoinBase());
 
+#endif
             // Call UpdateCoins on the top cache
             CTxUndo undo;
             UpdateCoins(CTransaction(tx), *(stack.back()), undo, height);
@@ -722,7 +724,11 @@ static void CheckAddCoinBase(CAmount base_value, CAmount cache_value, CAmount mo
     try {
         CTxOut output;
         output.nValue = modify_value;
+#ifdef ENABLE_PROOF_OF_STAKE
+        test.cache.AddCoin(OUTPOINT, Coin(std::move(output), 1, coinbase, false), coinbase);
+#else
         test.cache.AddCoin(OUTPOINT, Coin(std::move(output), 1, coinbase), coinbase);
+#endif
         test.cache.SelfTest();
         GetCoinsMapEntry(test.cache.map(), result_value, result_flags);
     } catch (std::logic_error&) {

@@ -127,7 +127,7 @@ enum BlockStatus: uint32_t {
     BLOCK_FAILED_VALID       =   32, //!< stage after last reached validness failed
     BLOCK_FAILED_CHILD       =   64, //!< descends from failed block
     BLOCK_FAILED_MASK        =   BLOCK_FAILED_VALID | BLOCK_FAILED_CHILD,
-
+    //BLOCK_PROOF_OF_STAKE   =   128, //! is proof-of-stake block
     BLOCK_OPT_WITNESS       =   128, //!< block data in blk*.data was received with a witness-enforcing client
 };
 
@@ -145,6 +145,10 @@ public:
     //! pointer to the index of the predecessor of this block
     CBlockIndex* pprev;
 
+#ifdef ENABLE_PROOF_OF_STAKE
+    //! pointer to the index of some further predecessor of this block
+    CBlockIndex* pnext;
+#endif
     //! pointer to the index of some further predecessor of this block
     CBlockIndex* pskip;
 
@@ -181,7 +185,20 @@ public:
     uint32_t nTime;
     uint32_t nBits;
     uint32_t nNonce;
+#ifdef ENABLE_MOMENTUM_HASH_ALGO
+    uint32_t nBirthdayA;
+    uint32_t nBirthdayB;
+#endif
 
+#ifdef ENABLE_PROOF_OF_STAKE
+    // block signature - proof-of-stake protect the block by signing the block using a stake holder private key
+    std::vector<unsigned char> vchBlockSig;
+    uint256 nStakeModifier;
+    // proof-of-stake specific fields
+    COutPoint prevoutStake;
+    uint256 hashProof; 
+    uint64_t nMoneySupply;
+#endif
     //! (memory only) Sequential id assigned to distinguish order in which blocks are received.
     int32_t nSequenceId;
 
@@ -192,6 +209,9 @@ public:
     {
         phashBlock = nullptr;
         pprev = nullptr;
+#ifdef ENABLE_PROOF_OF_STAKE
+        pnext = nullptr;
+#endif
         pskip = nullptr;
         nHeight = 0;
         nFile = 0;
@@ -209,6 +229,17 @@ public:
         nTime          = 0;
         nBits          = 0;
         nNonce         = 0;
+#ifdef ENABLE_MOMENTUM_HASH_ALGO
+        nBirthdayA	   = 0;
+        nBirthdayB	   = 0;
+#endif
+#ifdef ENABLE_PROOF_OF_STAKE
+        vchBlockSig.clear();
+        nStakeModifier = uint256();
+        hashProof = uint256();
+        prevoutStake.SetNull();
+        nMoneySupply = 0;
+#endif
     }
 
     CBlockIndex()
@@ -225,6 +256,17 @@ public:
         nTime          = block.nTime;
         nBits          = block.nBits;
         nNonce         = block.nNonce;
+#ifdef ENABLE_MOMENTUM_HASH_ALGO
+        nBirthdayA     = block.nBirthdayA;
+        nBirthdayB     = block.nBirthdayB;
+#endif
+#ifdef ENABLE_PROOF_OF_STAKE
+        nMoneySupply   = 0;
+        nStakeModifier = uint256();
+        hashProof = uint256(); 
+        prevoutStake   = block.prevoutStake; 
+        vchBlockSig    = block.vchBlockSig; 
+#endif
     }
 
     FlatFilePos GetBlockPos() const {
@@ -255,6 +297,14 @@ public:
         block.nTime          = nTime;
         block.nBits          = nBits;
         block.nNonce         = nNonce;
+#ifdef ENABLE_MOMENTUM_HASH_ALGO
+        block.nBirthdayA     = nBirthdayA;
+        block.nBirthdayB     = nBirthdayB;
+#endif
+#ifdef ENABLE_PROOF_OF_STAKE
+        block.vchBlockSig    = vchBlockSig;
+        block.prevoutStake   = prevoutStake;
+#endif
         return block;
     }
 
@@ -298,8 +348,26 @@ public:
         return pbegin[(pend - pbegin)/2];
     }
 
+#ifdef ENABLE_PROOF_OF_STAKE
+    bool IsProofOfWork() const
+    {
+        return !IsProofOfStake();
+    }
+
+    bool IsProofOfStake() const
+    {
+        return !prevoutStake.IsNull();
+    }
+
+#endif
     std::string ToString() const
     {
+#ifdef ENABLE_PROOF_OF_STAKE
+        return strprintf("CBlockIndex(pprev=%p, nHeight=%d, moneysupply=%d, type=%s, nStakeModifier=%x, merkle=%s, hashBlock=%s)",
+            pprev, nHeight, nMoneySupply, IsProofOfStake() ? "PoS" : "PoW", nStakeModifier.ToString(),
+            hashMerkleRoot.ToString(),
+            GetBlockHash().ToString());
+#endif
         return strprintf("CBlockIndex(pprev=%p, nHeight=%d, merkle=%s, hashBlock=%s)",
             pprev, nHeight,
             hashMerkleRoot.ToString(),
@@ -376,6 +444,9 @@ public:
         if (nStatus & BLOCK_HAVE_UNDO)
             READWRITE(VARINT(nUndoPos));
 
+#ifdef ENABLE_PROOF_OF_STAKE
+        READWRITE(VARINT(nMoneySupply));
+#endif
         // block header
         READWRITE(this->nVersion);
         READWRITE(hashPrev);
@@ -383,6 +454,16 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
+#ifdef ENABLE_MOMENTUM_HASH_ALGO
+        READWRITE(nBirthdayA);
+        READWRITE(nBirthdayB);
+#endif
+#ifdef ENABLE_PROOF_OF_STAKE
+        READWRITE(nStakeModifier);
+        READWRITE(prevoutStake);
+        READWRITE(hashProof);
+        READWRITE(vchBlockSig);
+#endif
     }
 
     uint256 GetBlockHash() const
@@ -394,6 +475,14 @@ public:
         block.nTime           = nTime;
         block.nBits           = nBits;
         block.nNonce          = nNonce;
+#ifdef ENABLE_MOMENTUM_HASH_ALGO
+        block.nBirthdayA     = nBirthdayA;
+        block.nBirthdayB     = nBirthdayB;
+#endif
+#ifdef ENABLE_PROOF_OF_STAKE
+        block.vchBlockSig     = vchBlockSig;
+        block.prevoutStake    = prevoutStake;
+#endif
         return block.GetHash();
     }
 

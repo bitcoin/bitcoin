@@ -6,7 +6,6 @@
 #include <streams.h>
 #include <hash.h>
 #include <test/setup_common.h>
-#include <util/strencodings.h>
 
 #include <stdint.h>
 

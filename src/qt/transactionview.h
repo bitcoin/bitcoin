@@ -110,6 +110,8 @@ Q_SIGNALS:
     /**  Fired when a message should be reported to the user */
     void message(const QString &title, const QString &message, unsigned int style);
 
+    /** Send computed sum back to wallet-view */
+    void trxAmount(QString amount);
     void bumpedFee(const uint256& txid);
 
 public Q_SLOTS:
@@ -121,6 +123,7 @@ public Q_SLOTS:
     void exportClicked();
     void focusTransaction(const QModelIndex&);
     void focusTransaction(const uint256& txid);
+    void computeSum();
 };
 
 #endif // BITCOIN_QT_TRANSACTIONVIEW_H

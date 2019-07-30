@@ -77,6 +77,7 @@ public:
     {
         Other,
         Generated,
+        Staked,
         SendToAddress,
         SendToOther,
         RecvWithAddress,

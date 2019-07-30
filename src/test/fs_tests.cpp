@@ -4,7 +4,6 @@
 //
 #include <fs.h>
 #include <test/setup_common.h>
-#include <util/system.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -12,7 +11,7 @@ BOOST_FIXTURE_TEST_SUITE(fs_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(fsbridge_fstream)
 {
-    fs::path tmpfolder = GetDataDir();
+    fs::path tmpfolder = SetDataDir("fsbridge_fstream");
     // tmpfile1 should be the same as tmpfile2
     fs::path tmpfile1 = tmpfolder / "fs_tests_₿_🏃";
     fs::path tmpfile2 = tmpfolder / L"fs_tests_₿_🏃";

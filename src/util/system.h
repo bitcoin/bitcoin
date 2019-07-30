@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,16 +20,18 @@
 #include <fs.h>
 #include <logging.h>
 #include <sync.h>
+#include <util/threadnames.h>
 #include <tinyformat.h>
 #include <util/memory.h>
-#include <util/threadnames.h>
 #include <util/time.h>
 
+#include <atomic>
 #include <exception>
 #include <map>
 #include <set>
 #include <stdint.h>
 #include <string>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -39,6 +41,18 @@
 int64_t GetStartupTime();
 
 extern const char * const BITCOIN_CONF_FILENAME;
+
+/** Translate a message to the native language of the user. */
+const extern std::function<std::string(const char*)> G_TRANSLATION_FUN;
+
+/**
+ * Translation function.
+ * If no translation function is set, simply return the input.
+ */
+inline std::string _(const char* psz)
+{
+    return G_TRANSLATION_FUN ? (G_TRANSLATION_FUN)(psz) : psz;
+}
 
 void SetupEnvironment();
 bool SetupNetworking();
@@ -71,15 +85,12 @@ fs::path GetDefaultDataDir();
 // The blocks directory is always net specific.
 const fs::path &GetBlocksDir();
 const fs::path &GetDataDir(bool fNetSpecific = true);
-/** Tests only */
 void ClearDatadirCache();
 fs::path GetConfigFile(const std::string& confPath);
 #ifdef WIN32
 fs::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
-#if HAVE_SYSTEM
 void runCommand(const std::string& strCommand);
-#endif
 
 /**
  * Most paths passed as configuration arguments are treated as relative to
@@ -343,7 +354,8 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
 }
 
 std::string CopyrightHolders(const std::string& strPrefix);
-
+void SetThreadPriority(int nPriority);
+void RenameThread(const char* name);
 /**
  * On platforms that support it, tell the kernel the calling thread is
  * CPU-intensive and non-interactive. See SCHED_BATCH in sched(7) for details.

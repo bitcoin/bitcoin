@@ -140,7 +140,10 @@ void ScriptToUniv(const CScript& script, UniValue& out, bool include_address)
     out.pushKV("hex", HexStr(script.begin(), script.end()));
 
     std::vector<std::vector<unsigned char>> solns;
-    txnouttype type = Solver(script, solns);
+    bool ok = false;
+    txnouttype type;
+    if(Solver(script, type, solns))
+        ok=true;
     out.pushKV("type", GetTxnOutputType(type));
 
     CTxDestination address;

@@ -8,7 +8,7 @@
 #include <qt/walletmodel.h>
 #include <sync.h>
 
-#include <map>
+#include <list>
 #include <memory>
 #include <vector>
 
@@ -40,12 +40,8 @@ public:
     WalletController(interfaces::Node& node, const PlatformStyle* platform_style, OptionsModel* options_model, QObject* parent);
     ~WalletController();
 
-    //! Returns wallet models currently open.
-    std::vector<WalletModel*> getOpenWallets() const;
-
-    //! Returns all wallet names in the wallet dir mapped to whether the wallet
-    //! is loaded.
-    std::map<std::string, bool> listWalletDir() const;
+    std::vector<WalletModel*> getWallets() const;
+    std::vector<std::string> getWalletsAvailableToOpen() const;
 
     OpenWalletActivity* openWallet(const std::string& name, QWidget* parent = nullptr);
     void closeWallet(WalletModel* wallet_model, QWidget* parent = nullptr);

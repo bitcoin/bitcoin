@@ -7,12 +7,13 @@
 
 #include <map>
 
-class FillableSigningProvider;
+class CBasicKeyStore;
 class UniValue;
 struct CMutableTransaction;
 class Coin;
 class COutPoint;
-
+class CTransaction;
+class uint256; 
 /**
  * Sign a transaction with the given keystore and previous transactions
  *
@@ -24,9 +25,11 @@ class COutPoint;
  * @param  hashType      The signature hash type
  * @returns JSON object with details of signed transaction
  */
-UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxs, FillableSigningProvider* keystore, std::map<COutPoint, Coin>& coins, bool tempKeystore, const UniValue& hashType);
+UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxs, CBasicKeyStore* keystore, std::map<COutPoint, Coin>& coins, bool tempKeystore, const UniValue& hashType);
 
 /** Create a transaction from univalue parameters */
 CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, const UniValue& rbf);
+
+extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry);
 
 #endif // BITCOIN_RPC_RAWTRANSACTION_UTIL_H

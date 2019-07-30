@@ -2,7 +2,6 @@
 
 #include <stdlib.h>
 
-#include <chain.h>
 #include <rpc/blockchain.h>
 #include <test/setup_common.h>
 

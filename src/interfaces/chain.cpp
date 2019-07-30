@@ -8,6 +8,7 @@
 #include <chainparams.h>
 #include <interfaces/handler.h>
 #include <interfaces/wallet.h>
+#include <miner.h>
 #include <net.h>
 #include <node/coin.h>
 #include <policy/fees.h>
@@ -20,16 +21,17 @@
 #include <rpc/protocol.h>
 #include <rpc/server.h>
 #include <shutdown.h>
+#include <smessage/smessage.h>
 #include <sync.h>
 #include <threadsafety.h>
 #include <timedata.h>
 #include <txmempool.h>
-#include <ui_interface.h>
 #include <uint256.h>
 #include <univalue.h>
 #include <util/system.h>
 #include <validation.h>
 #include <validationinterface.h>
+#include <txdb.h>
 
 #include <memory>
 #include <utility>
@@ -90,6 +92,48 @@ class LockImpl : public Chain::Lock, public UniqueLock<CCriticalSection>
         CBlockIndex* block = ::ChainActive()[height];
         return block && ((block->nStatus & BLOCK_HAVE_DATA) != 0) && block->nTx > 0;
     }
+#ifdef ENABLE_PROOF_OF_STAKE
+    bool IsProofOfStake(int height) override
+    {
+        LockAssertion lock(::cs_main);
+        CBlockIndex* block = ::ChainActive()[height];
+        return block && block->IsProofOfStake();
+    }
+    uint160 ReadStakeIndex(int height) override
+    {
+		uint160 stakeAddress;
+        LockAssertion lock(::cs_main);
+
+		if(!pblocktree->ReadStakeIndex(height, stakeAddress)){
+			return uint160();
+		}
+        return stakeAddress;
+    }
+    bool startStake(bool fStake, CWallet *pwallet, boost::thread_group*& stakeThread){
+		
+		::Stake(fStake, pwallet, stakeThread);
+		return true;
+		
+	}    
+    void cacheKernel(std::map<COutPoint, CStakeCache>& cache, const COutPoint& prevout) override {
+		CacheKernel(cache, prevout, *pcoinsTip);
+	}
+	bool checkKernel(unsigned int nBits, uint32_t nTimeBlock, const COutPoint& prevout, const std::map<COutPoint, CStakeCache>& cache) override {
+		return CheckKernel(nBits,nTimeBlock,prevout, *pcoinsTip,cache);		
+	}
+#endif
+#ifdef ENABLE_SECURE_MESSAGING
+    bool smsgStart(){
+        SecureMsgStart(true, true);
+        return true;
+    }
+    void secureMsgWalletUnlocked(){
+		SecureMsgWalletUnlocked();
+	}
+    void secureMsgWalletKeyChanged(std::string sAddress, std::string sLabel, ChangeType mode){
+		SecureMsgWalletKeyChanged(sAddress, sLabel, mode);
+	}
+#endif
     Optional<int> findFirstBlockWithTimeAndHeight(int64_t time, int height, uint256* hash) override
     {
         LockAssertion lock(::cs_main);
@@ -205,7 +249,7 @@ public:
 class RpcHandlerImpl : public Handler
 {
 public:
-    explicit RpcHandlerImpl(const CRPCCommand& command) : m_command(command), m_wrapped_command(&command)
+    RpcHandlerImpl(const CRPCCommand& command) : m_command(command), m_wrapped_command(&command)
     {
         m_command.actor = [this](const JSONRPCRequest& request, UniValue& result, bool last_handler) {
             if (!m_wrapped_command) return false;

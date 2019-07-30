@@ -21,10 +21,13 @@ class AskPassphraseDialog : public QDialog
 
 public:
     enum Mode {
-        Encrypt,    /**< Ask passphrase twice and encrypt */
-        Unlock,     /**< Ask passphrase and unlock */
-        ChangePass, /**< Ask old passphrase + new passphrase twice */
-        Decrypt     /**< Ask passphrase and decrypt wallet */
+        Encrypt,        /**< Ask passphrase twice and encrypt */
+#ifdef ENABLE_MOMENTUM_HASH_ALGO
+        UnlockStaking,  /**< Ask passphrase and unlock staking only */
+#endif
+        Unlock,         /**< Ask passphrase and unlock */
+        ChangePass,     /**< Ask old passphrase + new passphrase twice */
+        Decrypt         /**< Ask passphrase and decrypt wallet */
     };
 
     explicit AskPassphraseDialog(Mode mode, QWidget *parent);

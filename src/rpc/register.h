@@ -19,13 +19,17 @@ void RegisterMiscRPCCommands(CRPCTable &tableRPC);
 void RegisterMiningRPCCommands(CRPCTable &tableRPC);
 /** Register raw transaction RPC commands */
 void RegisterRawTransactionRPCCommands(CRPCTable &tableRPC);
-
+/** Register messaging RPC commands */
+void RegisterMessagingRPCCommands(CRPCTable &tableRPC);
 static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
 {
     RegisterBlockchainRPCCommands(t);
     RegisterNetRPCCommands(t);
     RegisterMiscRPCCommands(t);
     RegisterMiningRPCCommands(t);
+#ifdef ENABLE_SECURE_MESSAGING
+    RegisterMessagingRPCCommands(t);
+#endif
     RegisterRawTransactionRPCCommands(t);
 }
 

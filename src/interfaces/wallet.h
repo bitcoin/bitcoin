@@ -34,6 +34,7 @@ struct CRecipient;
 namespace interfaces {
 
 class Handler;
+class PendingWalletTx;
 struct WalletAddress;
 struct WalletBalances;
 struct WalletTx;
@@ -77,8 +78,8 @@ public:
     //! Get wallet name.
     virtual std::string getWalletName() = 0;
 
-    // Get a new address.
-    virtual bool getNewDestination(const OutputType type, const std::string label, CTxDestination& dest) = 0;
+    // Get key from pool.
+    virtual bool getKeyFromPool(bool internal, CPubKey& pub_key) = 0;
 
     //! Get public key.
     virtual bool getPubKey(const CKeyID& address, CPubKey& pub_key) = 0;
@@ -133,18 +134,12 @@ public:
     virtual void listLockedCoins(std::vector<COutPoint>& outputs) = 0;
 
     //! Create transaction.
-    virtual CTransactionRef createTransaction(const std::vector<CRecipient>& recipients,
+    virtual std::unique_ptr<PendingWalletTx> createTransaction(const std::vector<CRecipient>& recipients,
         const CCoinControl& coin_control,
         bool sign,
         int& change_pos,
         CAmount& fee,
         std::string& fail_reason) = 0;
-
-    //! Commit transaction.
-    virtual bool commitTransaction(CTransactionRef tx,
-        WalletValueMap value_map,
-        WalletOrderForm order_form,
-        std::string& reject_reason) = 0;
 
     //! Return whether transaction can be abandoned.
     virtual bool transactionCanBeAbandoned(const uint256& txid) = 0;
@@ -193,7 +188,8 @@ public:
         WalletTxStatus& tx_status,
         WalletOrderForm& order_form,
         bool& in_mempool,
-        int& num_blocks) = 0;
+        int& num_blocks,
+        int64_t& block_time) = 0;
 
     //! Get balances.
     virtual WalletBalances getBalances() = 0;
@@ -260,6 +256,20 @@ public:
     // Remove wallet.
     virtual void remove() = 0;
 
+
+    //! Try get the stake weight
+    virtual bool tryGetStakeWeight(uint64_t& nWeight) = 0;
+#ifdef ENABLE_PROOF_OF_STAKE
+    //! Get last coin stake search interval
+    virtual int64_t getLastCoinStakeSearchInterval() = 0;
+
+    //! Get wallet unlock for staking only
+    virtual bool getWalletUnlockStakingOnly() = 0;
+
+    //! Set wallet unlock for staking only
+    virtual void setWalletUnlockStakingOnly(bool unlock) = 0;
+#endif
+
     //! Register handler for unload message.
     using UnloadFn = std::function<void()>;
     virtual std::unique_ptr<Handler> handleUnload(UnloadFn fn) = 0;
@@ -291,6 +301,23 @@ public:
     //! Register handler for keypool changed messages.
     using CanGetAddressesChangedFn = std::function<void()>;
     virtual std::unique_ptr<Handler> handleCanGetAddressesChanged(CanGetAddressesChangedFn fn) = 0;
+    virtual void getScriptForMining(std::shared_ptr<CReserveScript> &script) =0;;
+
+};
+
+//! Tracking object returned by CreateTransaction and passed to CommitTransaction.
+class PendingWalletTx
+{
+public:
+    virtual ~PendingWalletTx() {}
+
+    //! Get transaction data.
+    virtual const CTransaction& get() = 0;
+
+    //! Send pending transaction and commit to wallet.
+    virtual bool commit(WalletValueMap value_map,
+        WalletOrderForm order_form,
+        std::string& reject_reason) = 0;
 };
 
 //! Information about one wallet address.
@@ -313,6 +340,9 @@ struct WalletBalances
     CAmount balance = 0;
     CAmount unconfirmed_balance = 0;
     CAmount immature_balance = 0;
+    CAmount stake = 0;
+    CAmount watch_only_stake = 0;
+
     bool have_watch_only = false;
     CAmount watch_only_balance = 0;
     CAmount unconfirmed_watch_only_balance = 0;
@@ -320,10 +350,17 @@ struct WalletBalances
 
     bool balanceChanged(const WalletBalances& prev) const
     {
+#ifdef ENABLE_PROOF_OF_STAKE
+        return balance != prev.balance || unconfirmed_balance != prev.unconfirmed_balance ||
+               immature_balance != prev.immature_balance || stake != prev.stake || watch_only_balance != prev.watch_only_balance ||
+               unconfirmed_watch_only_balance != prev.unconfirmed_watch_only_balance ||
+               immature_watch_only_balance != prev.immature_watch_only_balance || watch_only_stake != prev.watch_only_stake;
+#else
         return balance != prev.balance || unconfirmed_balance != prev.unconfirmed_balance ||
                immature_balance != prev.immature_balance || watch_only_balance != prev.watch_only_balance ||
                unconfirmed_watch_only_balance != prev.unconfirmed_watch_only_balance ||
                immature_watch_only_balance != prev.immature_watch_only_balance;
+#endif
     }
 };
 
@@ -341,6 +378,7 @@ struct WalletTx
     int64_t time;
     std::map<std::string, std::string> value_map;
     bool is_coinbase;
+    bool is_coinstake;
 };
 
 //! Updated transaction status.
@@ -355,6 +393,7 @@ struct WalletTxStatus
     bool is_trusted;
     bool is_abandoned;
     bool is_coinbase;
+    bool is_coinstake;
     bool is_in_main_chain;
 };
 

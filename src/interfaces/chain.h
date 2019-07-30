@@ -13,6 +13,12 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
+#include <validation.h>
+#include <pos.h>
+#include <ui_interface.h>
+
+#include <boost/thread.hpp>
+
 
 class CBlock;
 class CFeeRate;
@@ -97,6 +103,24 @@ public:
         //! Check that the block is available on disk (i.e. has not been
         //! pruned), and contains transactions.
         virtual bool haveBlockOnDisk(int height) = 0;
+#ifdef ENABLE_PROOF_OF_STAKE
+        //! Check that the block is is available on disk and is proof of stake.
+        virtual bool IsProofOfStake(int height) = 0;
+        
+        //! get the stake address
+        
+        virtual uint160 ReadStakeIndex(int height) = 0;
+        
+        virtual bool startStake(bool fStake, CWallet *pwallet, boost::thread_group*& stakeThread) = 0;
+        
+        virtual void cacheKernel(std::map<COutPoint, CStakeCache>& cache, const COutPoint& prevout) =0;
+        virtual	bool checkKernel(unsigned int nBits, uint32_t nTimeBlock, const COutPoint& prevout, const std::map<COutPoint, CStakeCache>& cache) =0;
+#endif
+#ifdef ENABLE_SECURE_MESSAGING
+        virtual bool smsgStart()=0;
+        virtual void secureMsgWalletUnlocked()=0;
+        virtual void secureMsgWalletKeyChanged(std::string sAddress, std::string sLabel, ChangeType mode) =0;
+#endif
 
         //! Return height of the first block in the chain with timestamp equal
         //! or greater than the given time and height equal or greater than the

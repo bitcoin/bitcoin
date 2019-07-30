@@ -533,6 +533,9 @@ BOOST_AUTO_TEST_CASE(addrman_selecttriedcollision)
 {
     CAddrManTest addrman;
 
+    // Set addrman addr placement to be deterministic.
+    addrman.MakeDeterministic();
+
     BOOST_CHECK(addrman.size() == 0);
 
     // Empty addrman should return blank addrman info.
@@ -564,6 +567,9 @@ BOOST_AUTO_TEST_CASE(addrman_selecttriedcollision)
 BOOST_AUTO_TEST_CASE(addrman_noevict)
 {
     CAddrManTest addrman;
+
+    // Set addrman addr placement to be deterministic.
+    addrman.MakeDeterministic();
 
     // Add twenty two addresses.
     CNetAddr source = ResolveIP("252.2.2.2");
@@ -620,6 +626,9 @@ BOOST_AUTO_TEST_CASE(addrman_noevict)
 BOOST_AUTO_TEST_CASE(addrman_evictionworks)
 {
     CAddrManTest addrman;
+
+    // Set addrman addr placement to be deterministic.
+    addrman.MakeDeterministic();
 
     BOOST_CHECK(addrman.size() == 0);
 

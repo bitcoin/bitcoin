@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>560</width>
+    <width>715</width>
     <height>440</height>
    </rect>
   </property>
@@ -20,7 +20,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tabMain">
       <attribute name="title">
@@ -51,20 +51,20 @@
         </spacer>
        </item>
        <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_Main_Prune">
-        <item>
-         <widget class="QCheckBox" name="prune">
-          <property name="toolTip">
-           <string>Disables some advanced features but all blocks will still be fully validated. Reverting this setting requires re-downloading the entire blockchain. Actual disk usage may be somewhat higher.</string>
-          </property>
-          <property name="text">
-           <string>Prune &amp;block storage to</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QSpinBox" name="pruneSize"/>
-        </item>
+        <layout class="QHBoxLayout" name="horizontalLayout_Main_Prune">
+         <item>
+          <widget class="QCheckBox" name="prune">
+           <property name="toolTip">
+            <string>Disables some advanced features but all blocks will still be fully validated. Reverting this setting requires re-downloading the entire blockchain. Actual disk usage may be somewhat higher.</string>
+           </property>
+           <property name="text">
+            <string>Prune &amp;block storage to</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSpinBox" name="pruneSize"/>
+         </item>
          <item>
           <widget class="QLabel" name="pruneSizeUnitLabel">
            <property name="text">
@@ -105,7 +105,7 @@
          <item>
           <widget class="QLabel" name="databaseCacheLabel">
            <property name="text">
-            <string>Size of &amp;database cache</string>
+            <string>Si&amp;ze of database cache</string>
            </property>
            <property name="textFormat">
             <enum>Qt::PlainText</enum>
@@ -148,7 +148,7 @@
          <item>
           <widget class="QLabel" name="threadsScriptVerifLabel">
            <property name="text">
-            <string>Number of script &amp;verification threads</string>
+            <string>Number of script verification &amp;threads</string>
            </property>
            <property name="textFormat">
             <enum>Qt::PlainText</enum>
@@ -199,13 +199,20 @@
       <attribute name="title">
        <string>W&amp;allet</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_Wallet">
+      <layout class="QVBoxLayout" name="verticalLayout_3">
        <item>
         <widget class="QGroupBox" name="groupBox">
          <property name="title">
           <string>Expert</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_2">
+          <item>
+           <widget class="QCheckBox" name="notUseChangeAddress">
+            <property name="text">
+             <string>Don't use change &amp;address</string>
+            </property>
+           </widget>
+          </item>
           <item>
            <widget class="QCheckBox" name="coinControlFeatures">
             <property name="toolTip">
@@ -226,18 +233,55 @@
             </property>
            </widget>
           </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_3_Main_3">
+            <item>
+             <widget class="QLabel" name="reserveBalanceLabel">
+              <property name="text">
+               <string>Reserve Balance : </string>
+              </property>
+              <property name="textFormat">
+               <enum>Qt::PlainText</enum>
+              </property>
+              <property name="buddy">
+               <cstring>threadsScriptVerif</cstring>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="BitcoinAmountField" name="reserveBalance">
+              <property name="toolTip">
+               <string>(0 = auto, &lt;0 = leave that many cores free)</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_3_Main_3">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
          </layout>
         </widget>
        </item>
        <item>
-        <spacer name="verticalSpacer_Wallet">
+        <spacer name="verticalSpacer_2">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
            <width>20</width>
-           <height>40</height>
+           <height>62</height>
           </size>
          </property>
         </spacer>
@@ -893,6 +937,11 @@
    <class>QValueComboBox</class>
    <extends>QComboBox</extends>
    <header>qt/qvaluecombobox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>BitcoinAmountField</class>
+   <extends>QSpinBox</extends>
+   <header>qt/bitcoinamountfield.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

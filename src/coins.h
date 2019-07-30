@@ -17,14 +17,14 @@
 #include <assert.h>
 #include <stdint.h>
 
-#include <functional>
 #include <unordered_map>
 
 /**
  * A UTXO entry.
  *
  * Serialized format:
- * - VARINT((coinbase ? 1 : 0) | (height << 1))
+ * - VARINT((coinbase ? 1 : 0) | (height << 2))
+ * - VARINT((coinstake ? 2 : 0) | (height << 2))
  * - the non-spent CTxOut (via CTxOutCompressor)
  */
 class Coin
@@ -35,31 +35,55 @@ public:
 
     //! whether containing transaction was a coinbase
     unsigned int fCoinBase : 1;
-
+#ifdef ENABLE_PROOF_OF_STAKE
+    unsigned int fCoinStake : 1;
+#endif
     //! at which height this containing transaction was included in the active block chain
-    uint32_t nHeight : 31;
+    uint32_t nHeight : 30;
 
+#ifdef ENABLE_PROOF_OF_STAKE
     //! construct a Coin from a CTxOut and height/coinbase information.
+    Coin(CTxOut&& outIn, int nHeightIn, bool fCoinBaseIn, bool fCoinStakeIn) : out(std::move(outIn)), fCoinBase(fCoinBaseIn), fCoinStake(fCoinStakeIn), nHeight(nHeightIn) {}
+    Coin(const CTxOut& outIn, int nHeightIn, bool fCoinBaseIn, bool fCoinStakeIn) : out(outIn), fCoinBase(fCoinBaseIn), fCoinStake(fCoinStakeIn), nHeight(nHeightIn) {}
+#else
     Coin(CTxOut&& outIn, int nHeightIn, bool fCoinBaseIn) : out(std::move(outIn)), fCoinBase(fCoinBaseIn), nHeight(nHeightIn) {}
     Coin(const CTxOut& outIn, int nHeightIn, bool fCoinBaseIn) : out(outIn), fCoinBase(fCoinBaseIn),nHeight(nHeightIn) {}
+
+#endif
 
     void Clear() {
         out.SetNull();
         fCoinBase = false;
+#ifdef ENABLE_PROOF_OF_STAKE
+        fCoinStake = false;
+#endif
         nHeight = 0;
     }
 
+#ifdef ENABLE_PROOF_OF_STAKE
     //! empty constructor
+    Coin() : fCoinBase(false), fCoinStake(false), nHeight(0) { }
+#else
     Coin() : fCoinBase(false), nHeight(0) { }
+#endif
 
     bool IsCoinBase() const {
         return fCoinBase;
     }
+#ifdef ENABLE_PROOF_OF_STAKE
+    bool IsCoinStake() const {
+        return fCoinStake;
+    }
+#endif
 
     template<typename Stream>
     void Serialize(Stream &s) const {
         assert(!IsSpent());
-        uint32_t code = nHeight * 2 + fCoinBase;
+#ifdef ENABLE_PROOF_OF_STAKE
+        uint32_t code = (nHeight << 2) + (fCoinBase ? 1 : 0) + (fCoinStake ? 2 : 0);
+#else
+        uint32_t code = nHeight << 2 + fCoinBase;
+#endif
         ::Serialize(s, VARINT(code));
         ::Serialize(s, CTxOutCompressor(REF(out)));
     }
@@ -68,8 +92,11 @@ public:
     void Unserialize(Stream &s) {
         uint32_t code = 0;
         ::Unserialize(s, VARINT(code));
-        nHeight = code >> 1;
+        nHeight = code >> 2;
         fCoinBase = code & 1;
+#ifdef ENABLE_PROOF_OF_STAKE
+        fCoinStake = (code >> 1) & 1;
+#endif
         ::Unserialize(s, CTxOutCompressor(out));
     }
 
@@ -315,29 +342,5 @@ void AddCoins(CCoinsViewCache& cache, const CTransaction& tx, int nHeight, bool 
 //! which is not found in the cache, it can cause up to MAX_OUTPUTS_PER_BLOCK
 //! lookups to database, so it should be used with care.
 const Coin& AccessByTxid(const CCoinsViewCache& cache, const uint256& txid);
-
-/**
- * This is a minimally invasive approach to shutdown on LevelDB read errors from the
- * chainstate, while keeping user interface out of the common library, which is shared
- * between bitcoind, and bitcoin-qt and non-server tools.
- *
- * Writes do not need similar protection, as failure to write is handled by the caller.
-*/
-class CCoinsViewErrorCatcher final : public CCoinsViewBacked
-{
-public:
-    explicit CCoinsViewErrorCatcher(CCoinsView* view) : CCoinsViewBacked(view) {}
-
-    void AddReadErrCallback(std::function<void()> f) {
-        m_err_callbacks.emplace_back(std::move(f));
-    }
-
-    bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
-
-private:
-    /** A list of callbacks to execute upon leveldb read error. */
-    std::vector<std::function<void()>> m_err_callbacks;
-
-};
 
 #endif // BITCOIN_COINS_H

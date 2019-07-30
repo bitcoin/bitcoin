@@ -54,6 +54,11 @@ public:
     }
 
     std::string ToString() const;
+#ifdef ENABLE_PROOF_OF_STAKE
+    std::string ToStringShort() const;
+
+    uint256 GetHash();
+#endif
 };
 
 /** An input of a transaction.  It contains the location of the previous
@@ -162,6 +167,19 @@ public:
         return (nValue == -1);
     }
 
+#ifdef ENABLE_PROOF_OF_STAKE
+    void SetEmpty()
+    {
+        nValue = 0;
+        scriptPubKey.clear();
+    }
+
+    bool IsEmpty() const
+    {
+        return (nValue == 0 && scriptPubKey.empty());
+    }
+#endif
+
     friend bool operator==(const CTxOut& a, const CTxOut& b)
     {
         return (a.nValue       == b.nValue &&
@@ -172,6 +190,10 @@ public:
     {
         return !(a == b);
     }
+
+#ifdef ENABLE_PROOF_OF_STAKE
+    uint256 GetHash() const;
+#endif
 
     std::string ToString() const;
 };
@@ -334,11 +356,31 @@ public:
      */
     unsigned int GetTotalSize() const;
 
+#ifdef ENABLE_PROOF_OF_STAKE
+    bool IsCoinBase() const
+    {
+        return (vin.size() == 1 && vin[0].prevout.IsNull() && vout.size() >= 1);
+    }
+
+    bool IsCoinStake() const
+    {
+        // the coin stake transaction is marked with the first output empty
+        return (vin.size() > 0 && (!vin[0].prevout.IsNull()) && vout.size() >= 2 && vout[0].IsEmpty());
+    }
+
+    bool IsNormalTx() const
+    {
+        // not coin base or coin stake transaction
+        return !IsCoinBase() && !IsCoinStake();
+    }
+#else
+
     bool IsCoinBase() const
     {
         return (vin.size() == 1 && vin[0].prevout.IsNull());
     }
 
+#endif
     friend bool operator==(const CTransaction& a, const CTransaction& b)
     {
         return a.hash == b.hash;

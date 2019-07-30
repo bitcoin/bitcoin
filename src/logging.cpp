@@ -75,14 +75,6 @@ bool BCLog::Logger::StartLogging()
     return true;
 }
 
-void BCLog::Logger::DisconnectTestLogger()
-{
-    std::lock_guard<std::mutex> scoped_lock(m_cs);
-    m_buffering = true;
-    if (m_fileout != nullptr) fclose(m_fileout);
-    m_fileout = nullptr;
-}
-
 void BCLog::Logger::EnableCategory(BCLog::LogFlags flag)
 {
     m_categories |= flag;
@@ -150,6 +142,12 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::COINDB, "coindb"},
     {BCLog::QT, "qt"},
     {BCLog::LEVELDB, "leveldb"},
+#ifdef ENABLE_PROOF_OF_STAKE
+    {BCLog::COINSTAKE, "stake"},
+#endif
+#ifdef ENABLE_SECURE_MESSAGING
+    {BCLog::SMSG, "smsg"},
+#endif
     {BCLog::ALL, "1"},
     {BCLog::ALL, "all"},
 };

@@ -11,14 +11,17 @@
 
 class BitcoinGUI;
 class ClientModel;
+class MessagePage;
 class OverviewPage;
 class PlatformStyle;
 class ReceiveCoinsDialog;
 class SendCoinsDialog;
 class SendCoinsRecipient;
+class SendMessagesDialog;
 class TransactionView;
 class WalletModel;
 class AddressBookPage;
+class MessageModel;
 
 QT_BEGIN_NAMESPACE
 class QModelIndex;
@@ -50,13 +53,18 @@ public:
         functionality.
     */
     void setWalletModel(WalletModel *walletModel);
-
+#ifdef ENABLE_SECURE_MESSAGING
+	void setMessageModel(MessageModel *messageModel);
+#endif
     bool handlePaymentRequest(const SendCoinsRecipient& recipient);
 
     void showOutOfSyncWarning(bool fShow);
 
 private:
     ClientModel *clientModel;
+#ifdef ENABLE_SECURE_MESSAGING
+    MessageModel *messageModel;
+#endif
     WalletModel *walletModel;
 
     OverviewPage *overviewPage;
@@ -67,7 +75,10 @@ private:
     AddressBookPage *usedReceivingAddressesPage;
 
     TransactionView *transactionView;
-
+#ifdef ENABLE_SECURE_MESSAGING
+    SendMessagesDialog *sendMessagesPage;
+    MessagePage *messagePage;
+#endif
     QProgressDialog *progressDialog;
     const PlatformStyle *platformStyle;
 
@@ -80,6 +91,11 @@ public Q_SLOTS:
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
+#ifdef ENABLE_SECURE_MESSAGING
+	void gotoSendMessagesPage();
+    /** Switch to view messages page */
+    void gotoMessagesPage();
+#endif
 
     /** Show Sign/Verify Message dialog and switch to sign message tab */
     void gotoSignMessageTab(QString addr = "");
@@ -91,6 +107,9 @@ public Q_SLOTS:
         The new items are those between start and end inclusive, under the given parent item.
     */
     void processNewTransaction(const QModelIndex& parent, int start, int /*end*/);
+#ifdef ENABLE_SECURE_MESSAGING
+    void processNewMessage(const QModelIndex& parent, int start, int /*end*/);
+#endif
     /** Encrypt the wallet */
     void encryptWallet(bool status);
     /** Backup the wallet */
@@ -98,7 +117,10 @@ public Q_SLOTS:
     /** Change encrypted wallet passphrase */
     void changePassphrase();
     /** Ask for passphrase to unlock wallet temporarily */
-    void unlockWallet();
+
+    void unlockWallet(bool fromMenu = false);
+    /** Lock the wallet */
+    void lockWallet();
 
     /** Show used sending addresses */
     void usedSendingAddresses();
@@ -125,6 +147,9 @@ Q_SIGNALS:
     void hdEnabledStatusChanged();
     /** Notify that a new transaction appeared */
     void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label, const QString& walletName);
+
+    void incomingMessage(const QString& sent_datetime, QString from_address, QString to_address, QString message, int type);
+
     /** Notify that the out of sync warning icon has been pressed */
     void outOfSyncWarningClicked();
 };

@@ -521,7 +521,7 @@ extern bool fDiscover;
 extern bool fListen;
 extern bool g_relay_txes;
 
-/** Subversion as sent to the P2P network in `version` messages */
+//extern limitedmap<uint256, int64_t> mapAlreadyAskedFor;
 extern std::string strSubVersion;
 
 struct LocalServiceInfo {
@@ -566,6 +566,10 @@ public:
     CAddress addr;
     // Bind address of our side of the connection
     CAddress addrBind;
+#ifdef ENABLE_IBTP
+    std::string sBlockchain;
+    bool fForeignNode;
+#endif 
 };
 
 
@@ -612,6 +616,31 @@ public:
 
     int readHeader(const char *pch, unsigned int nBytes);
     int readData(const char *pch, unsigned int nBytes);
+};
+
+
+class SecMsgNode
+{
+public:
+    SecMsgNode()
+    {
+        lastSeen        = 0;
+        lastMatched     = 0;
+        ignoreUntil     = 0;
+        nWakeCounter    = 0;
+        nPeerId         = 0;
+        fEnabled        = false;
+    };
+    
+    ~SecMsgNode() {};
+    
+    int64_t                     lastSeen;
+    int64_t                     lastMatched;
+    int64_t                     ignoreUntil;
+    uint32_t                    nWakeCounter;
+    uint32_t                    nPeerId;
+    bool                        fEnabled;
+    
 };
 
 
@@ -721,6 +750,10 @@ public:
     // Block and TXN accept times
     std::atomic<int64_t> nLastBlockTime{0};
     std::atomic<int64_t> nLastTXTime{0};
+#ifdef ENABLE_SECURE_MESSAGING
+
+    SecMsgNode smsgData;
+#endif
 
     // Ping time measurement:
     // The pong reply we're expecting, or 0 if no pong expected.
@@ -740,6 +773,12 @@ public:
     int64_t nextSendTimeFeeFilter{0};
 
     std::set<uint256> orphan_work_set;
+#ifdef ENABLE_IBTP
+    // Name of the node's blockchain/coin network
+    std::string sBlockchain;
+    // whether this is a foreign ibtp node
+    bool fForeignNode;
+#endif
 
     CNode(NodeId id, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn, SOCKET hSocketIn, const CAddress &addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const CAddress &addrBindIn, const std::string &addrNameIn = "", bool fInboundIn = false);
     ~CNode();
@@ -755,13 +794,13 @@ private:
     int nSendVersion{0};
     std::list<CNetMessage> vRecvMsg;  // Used only by SocketHandler thread
 
-    mutable CCriticalSection cs_addrName;
-    std::string addrName GUARDED_BY(cs_addrName);
-
     // Our address, as reported by the peer
     CService addrLocal GUARDED_BY(cs_addrLocal);
     mutable CCriticalSection cs_addrLocal;
 public:
+
+    mutable CCriticalSection cs_addrName;
+    std::string addrName GUARDED_BY(cs_addrName);
 
     NodeId GetId() const {
         return id;

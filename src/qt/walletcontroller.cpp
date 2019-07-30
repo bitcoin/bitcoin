@@ -40,22 +40,19 @@ WalletController::~WalletController()
     m_activity_thread.wait();
 }
 
-std::vector<WalletModel*> WalletController::getOpenWallets() const
+std::vector<WalletModel*> WalletController::getWallets() const
 {
     QMutexLocker locker(&m_mutex);
     return m_wallets;
 }
 
-std::map<std::string, bool> WalletController::listWalletDir() const
+std::vector<std::string> WalletController::getWalletsAvailableToOpen() const
 {
     QMutexLocker locker(&m_mutex);
-    std::map<std::string, bool> wallets;
-    for (const std::string& name : m_node.listWalletDir()) {
-        wallets[name] = false;
-    }
+    std::vector<std::string> wallets = m_node.listWalletDir();
     for (WalletModel* wallet_model : m_wallets) {
-        auto it = wallets.find(wallet_model->wallet().getWalletName());
-        if (it != wallets.end()) it->second = true;
+        auto it = std::remove(wallets.begin(), wallets.end(), wallet_model->wallet().getWalletName());
+        if (it != wallets.end()) wallets.erase(it);
     }
     return wallets;
 }
@@ -124,8 +121,7 @@ WalletModel* WalletController::getOrCreateWallet(std::unique_ptr<interfaces::Wal
     } else {
         // Handler callback runs in a different thread so fix wallet model thread affinity.
         wallet_model->moveToThread(thread());
-        bool invoked = QMetaObject::invokeMethod(this, "addWallet", Qt::QueuedConnection, Q_ARG(WalletModel*, wallet_model));
-        assert(invoked);
+        QMetaObject::invokeMethod(this, "addWallet", Qt::QueuedConnection, Q_ARG(WalletModel*, wallet_model));
     }
 
     return wallet_model;

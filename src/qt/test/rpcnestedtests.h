@@ -8,6 +8,9 @@
 #include <QObject>
 #include <QTest>
 
+#include <txdb.h>
+#include <txmempool.h>
+
 class RPCNestedTests : public QObject
 {
     Q_OBJECT
