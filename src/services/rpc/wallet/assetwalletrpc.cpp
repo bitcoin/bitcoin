@@ -23,7 +23,6 @@ extern std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags 
 extern bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no_witness = false, bool try_witness = true);
 extern ArrivalTimesMapImpl arrivalTimesMap; 
 extern CCriticalSection cs_assetallocationarrival;
-extern CAmount GetMinimumFee(const CWallet& wallet, unsigned int nTxBytes, const CCoinControl& coin_control, FeeCalculation* feeCalc);
 extern AssetPrevTxMap mempoolMapAssetPrevTx;
 extern AssetPrevTxMap mapAssetPrevTxSender;
 extern CCriticalSection cs_assetallocationprevtx;
