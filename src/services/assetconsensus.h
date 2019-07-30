@@ -34,6 +34,7 @@ class EthereumTxRoot {
     std::vector<unsigned char> vchPrevHash;
     std::vector<unsigned char> vchTxRoot;
     std::vector<unsigned char> vchReceiptRoot;
+    int64_t nTimestamp;
     
     ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
@@ -42,6 +43,7 @@ class EthereumTxRoot {
         READWRITE(vchPrevHash);
         READWRITE(vchTxRoot);
         READWRITE(vchReceiptRoot);
+        READWRITE(nTimestamp);
     }
 };
 typedef std::unordered_map<uint32_t, EthereumTxRoot> EthereumTxRootMap;
@@ -83,10 +85,10 @@ bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, AssetSup
 bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, AssetSupplyStatsMap &mapAssetSupplyStats, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys, ActorSet &actorSet);
 int ResetAssetAllocation(const std::string &senderStr);
 int ResetAssetAllocations(const ActorSet &actorSet);
-bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& txHash, CValidationState &state, const bool &fJustCheck, const bool& bSanity, const bool& bMiner, const int& nHeight, const uint256& blockhash, AssetMap& mapAssets, AssetSupplyStatsMap &mapAssetSupplyStats, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys);
+bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& txHash, CValidationState &state, const bool &fJustCheck, const bool& bSanity, const bool& bMiner, const int& nHeight, const int64_t& nTime, const uint256& blockhash, AssetMap& mapAssets, AssetSupplyStatsMap &mapAssetSupplyStats, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys);
 bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, CValidationState &state,const CCoinsViewCache &inputs, const bool &fJustCheck, const int &nHeight, const uint256& blockhash, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations, const bool &bSanityCheck=false, const bool &bMiner=false);
-bool CheckSyscoinInputs(const CTransaction& tx, const uint256& txHash, CValidationState& state, const CCoinsViewCache &inputs, const bool &fJustCheck, const int &nHeight, const bool &bSanity);
-bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& txHash, CValidationState &state, const CCoinsViewCache &inputs, const bool &fJustCheck, const int &nHeight, const uint256 & blockHash, const bool &bSanity, const bool &bMiner, ActorSet &actorSet, AssetAllocationMap &mapAssetAllocations, AssetPrevTxMap &mapAssetPrevTxs, AssetMap &mapAssets, AssetSupplyStatsMap &mapAssetSupplyStats, EthereumMintTxVec &vecMintKeys, std::vector<COutPoint> &vecLockedOutpoints);
+bool CheckSyscoinInputs(const CTransaction& tx, const uint256& txHash, CValidationState& state, const CCoinsViewCache &inputs, const bool &fJustCheck, const int &nHeight, const int64_t& nTime,const bool &bSanity);
+bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& txHash, CValidationState &state, const CCoinsViewCache &inputs, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanity, const bool &bMiner, ActorSet &actorSet, AssetAllocationMap &mapAssetAllocations, AssetPrevTxMap &mapAssetPrevTxs, AssetMap &mapAssets, AssetSupplyStatsMap &mapAssetSupplyStats, EthereumMintTxVec &vecMintKeys, std::vector<COutPoint> &vecLockedOutpoints);
 static CAssetAllocation emptyAllocation;
 void ResyncAssetAllocationStates();
 bool CheckSyscoinLockedOutpoints(const CTransactionRef &tx, CValidationState& state);

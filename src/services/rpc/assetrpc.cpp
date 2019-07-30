@@ -513,10 +513,10 @@ int VerifyTransactionGraph(const uint256& lookForTxHash) {
         ibd = ::ChainstateActive().IsInitialBlockDownload();
         // get actors for this transaction, irrelevent to ancestors in case the double spend is happening on the same utxo
         GetActorsFromSyscoinTx(txRef, true, false, actorSetSenders);
-        
+        const int64_t & mediantime = ::ChainActive().Tip()->GetMedianTimePast();
         for (CTxMemPool::txiter it : setAncestors) {
             const CTransaction& tx = it->GetTx();
-            if (!CheckSyscoinInputs(ibd, tx, tx.GetHash(), state, view, false, 0, ::ChainActive().Tip()->GetBlockHash(), false, false, actorSet, mapAssetAllocations, mapAssetPrevTxs, mapAssets, mapAssetSupplyStats, vecMintKeys, vecLockedOutpoints)){
+            if (!CheckSyscoinInputs(ibd, tx, tx.GetHash(), state, view, false, 0, mediantime, ::ChainActive().Tip()->GetBlockHash(), false, false, actorSet, mapAssetAllocations, mapAssetPrevTxs, mapAssets, mapAssetSupplyStats, vecMintKeys, vecLockedOutpoints)){
                 LogPrint(BCLog::SYS, "VerifyTransactionGraph: Graph Invalid %s\n", FormatStateMessage(state));
                 return ZDAG_MAJOR_CONFLICT;
             }
@@ -1210,11 +1210,12 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
                             {"block_hash", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Hash of the block"},
                             {"previous_hash", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Hash of the previous block"},
                             {"tx_root", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The Ethereum TX root of the block height"},
-                            {"receipt_root", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The Ethereum TX Receipt root of the block height"}
+                            {"receipt_root", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The Ethereum TX Receipt root of the block height"},
+                            {"timestamp", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The Ethereum block timestamp"},
                         }
                     }
                 },
-                "[blocknumber, blockhash, previoushash, txroot, txreceiptroot] ..."
+                "[blocknumber, blockhash, previoushash, txroot, txreceiptroot, timestamp] ..."
             }
         },
         RPCResult{
@@ -1234,8 +1235,8 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
     for(size_t i =0;i<headerArray.size();i++){
         EthereumTxRoot txRoot;
         const UniValue &tupleArray = headerArray[i].get_array();
-        if(tupleArray.size() != 5)
-            throw JSONRPCError(RPC_INVALID_PARAMS, "Invalid size in a blocknumber/txroots input, should be size of 5");
+        if(tupleArray.size() != 6)
+            throw JSONRPCError(RPC_INVALID_PARAMS, "Invalid size in a Ethereum header input, should be size of 6");
         const uint32_t &nHeight = tupleArray[0].get_uint();
         string blockHash = tupleArray[1].get_str();
         boost::erase_all(blockHash, "0x");  // strip 0x
@@ -1249,6 +1250,8 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
         string txReceiptRoot = tupleArray[4].get_str();
         boost::erase_all(txReceiptRoot, "0x");  // strip 0x
         txRoot.vchReceiptRoot = ParseHex(txReceiptRoot);
+        const int64_t &nTimestamp = tupleArray[5].get_int64();
+        txRoot.nTimestamp = nTimestamp;
         txRootMap.emplace(std::piecewise_construct,  std::forward_as_tuple(nHeight),  std::forward_as_tuple(txRoot));
     } 
     bool res = pethereumtxrootsdb->FlushWrite(txRootMap);
@@ -1302,10 +1305,11 @@ UniValue syscoingettxroots(const JSONRPCRequest& request)
     }
       
     UniValue ret(UniValue::VOBJ);  
-    ret.pushKV("blockhash", HexStr(txRootDB.vchBlockHash)); 
+    ret.pushKV("blockhash", HexStr(txRootDB.vchBlockHash));
     ret.pushKV("prevhash", HexStr(txRootDB.vchPrevHash)); 
     ret.pushKV("txroot", HexStr(txRootDB.vchTxRoot));
     ret.pushKV("receiptroot", HexStr(txRootDB.vchReceiptRoot));
+    ret.pushKV("timestamp", txRootDB.nTimestamp);
     
     return ret;
 } 

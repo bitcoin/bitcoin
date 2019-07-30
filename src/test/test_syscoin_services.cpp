@@ -710,26 +710,27 @@ string AssetAllocationMint(const string& node, const string& asset, const string
 	catch(...){
 
 	}
+	r = CallRPC("node1", "getblockchaininfo");
+	int64_t currentTime = find_value(r.get_obj(), "mediantime").get_int64();
 	
-    // ensure that block number you claim the burn is at least 1 hour old
-    int heightPlus240 = height+(ETHEREUM_CONFIRMS_REQUIRED*1.5);
-    string headerStr = "\"[[" + itostr(height) + ", \\\"" + itostr(height) + "\\\", \\\"" + itostr(height-1) + "\\\", \\\"" + txroot_hex + "\\\", \\\"" + receiptroot_hex + "\\\"]]\"";
- 
+    string headerStr = "\"[[" + itostr(height) + ", \\\"" + itostr(height) + "\\\", \\\"" + itostr(height-1) + "\\\", \\\"" + txroot_hex + "\\\", \\\"" + receiptroot_hex + "\\\", " + itostr(currentTime) + "]]\"";
     
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsetethheaders " + headerStr));
-    BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsetethstatus synced " + itostr(heightPlus240)));
+    BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsetethstatus synced " + itostr(height)));
     if (!otherNode1.empty())
     {
         
         BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "syscoinsetethheaders " + headerStr));
-        BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "syscoinsetethstatus synced " + itostr(heightPlus240)));
+        BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "syscoinsetethstatus synced " + itostr(height)));
     }
     if (!otherNode2.empty())
     {
         
         BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "syscoinsetethheaders " + headerStr));
-        BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "syscoinsetethstatus synced " + itostr(heightPlus240)));
+        BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "syscoinsetethstatus synced " + itostr(height)));
     }   
+	// increase time by 1 hour
+	SleepFor(3600 * 1000);
     // "assetallocationmint [asset] [address] [amount] [blocknumber] [tx_hex] [txroot_hex] [txmerkleproof_hex] [txmerkleroofpath_hex] [receipt_hex] [receiptroot_hex] [receiptmerkleproof_hex] [witness]\n"
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationmint " + asset + " " + address + " " + amount + " " + itostr(height) + " " + tx_hex + " a0" + txroot_hex + " " + txmerkleproof_hex + " " + txmerkleproofpath_hex + " " + receipt_hex + " a0" + receiptroot_hex + " " + receiptmerkleproof_hex +  " " + witness));
     
