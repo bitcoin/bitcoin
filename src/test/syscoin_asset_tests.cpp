@@ -1032,8 +1032,8 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag4)
     string assetHex = find_value(r.get_obj(), "hex").get_str();
     BOOST_CHECK_NO_THROW(r = CallRPC("node3", "decoderawtransaction " + assetHex));
     string assettxid = find_value(r.get_obj(), "txid").get_str();
-    BOOST_CHECK_NO_THROW(r = CallRPC("node2", "sendrawtransaction " + assetHex, true, false));
-    BOOST_CHECK_NO_THROW(r = CallRPC("node3", "sendrawtransaction " + burnHex, true, false));
+    BOOST_CHECK_NO_THROW(r = CallRPC("node2", "sendrawtransaction " + burnHex, true, false));
+    BOOST_CHECK_NO_THROW(r = CallRPC("node3", "sendrawtransaction " + assetHex, true, false));
     MilliSleep(500);
     string txid1 = AssetAllocationTransfer(true, "node1", assetguid, useraddress1, "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.1}]\"");
     string txid2 = AssetAllocationTransfer(true, "node1", assetguid, useraddress2, "\"[{\\\"address\\\":\\\"" + useraddress1 + "\\\",\\\"amount\\\":0.05}]\"");
@@ -1058,7 +1058,6 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag4)
 
     BOOST_CHECK_NO_THROW(r = CallRPC("node3", "assetallocationverifyzdag " + txid2));
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
-
     // the burn txid should be received on all nodes and it should be in conflict
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationverifyzdag " + burntxid));
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
