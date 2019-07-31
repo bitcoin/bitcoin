@@ -91,6 +91,14 @@ class ConfArgsTest(BitcoinTestFramework):
             expected_msg='Error: Error parsing command line arguments: Double-negative -noprune=0 is not allowed',
             extra_args=['-noprune=0'],
         )
+        self.nodes[0].assert_start_raises_init_error(
+            expected_msg='Error: Error parsing command line arguments: Negating of -datadir is meaningless and therefore forbidden',
+            extra_args=['-nodatadir'],
+        )
+        self.nodes[0].assert_start_raises_init_error(
+            expected_msg='Error: Error parsing command line arguments: Negating of -blocksdir is meaningless and therefore forbidden',
+            extra_args=['-noblocksdir=1'],
+        )
         self.stop_node(0)
 
     def run_test(self):
