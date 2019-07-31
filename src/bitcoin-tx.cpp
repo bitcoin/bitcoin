@@ -40,9 +40,9 @@ static void SetupBitcoinTxArgs()
 {
     SetupHelpOptions(gArgs);
 
-    gArgs.AddArg("-create", "Create new, empty TX.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-json", "Select JSON output", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-txid", "Output only the hex-encoded transaction id of the resultant transaction.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-create", "Create new, empty TX.", ArgsManager::ALLOW_BOOL, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-json", "Select JSON output", ArgsManager::ALLOW_BOOL, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-txid", "Output only the hex-encoded transaction id of the resultant transaction.", ArgsManager::ALLOW_BOOL, OptionsCategory::OPTIONS);
     SetupChainParamsBaseOptions();
 
     gArgs.AddArg("delin=N", "Delete input N from TX", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);

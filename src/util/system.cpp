@@ -641,7 +641,7 @@ bool HelpRequested(const ArgsManager& args)
 
 void SetupHelpOptions(ArgsManager& args)
 {
-    args.AddArg("-?", "Print this help message and exit", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    args.AddArg("-?", "Print this help message and exit", ArgsManager::ALLOW_BOOL, OptionsCategory::OPTIONS);
     args.AddHiddenArgs({"-h", "-help"});
 }
 
