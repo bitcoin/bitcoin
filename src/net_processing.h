@@ -92,4 +92,6 @@ bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 extern bool IsAnnouncementAllowed(const CNode* pfrom, const int requestedAnnouncements, const uint256& hash)  EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 extern void RequestInv(const CNode* pfrom, const CInv &inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 extern void EraseInvRequest(const CNode* pfrom, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+/** Relay transaction to every node */
+void RelayTransaction(const uint256&, const CConnman& connman);
 #endif // SYSCOIN_NET_PROCESSING_H
