@@ -30,6 +30,21 @@ Network specific options can be:
 - placed into sections with headers `[main]` (not `[mainnet]`), `[test]` (not `[testnet]`) or `[regtest]`;
 - prefixed with a chain name; e.g., `regtest.maxmempool=100`.
 
+Network specific options take precedence over non-network specific options.
+If multiple values for the same option are found with the same precedence, the
+first one is generally chosen.
+
+This means that given the following configuration, `regtest.rpcport` is set to `3000`:
+
+```
+regtest=1
+rpcport=2000
+regtest.rpcport=3000
+
+[regtest]
+rpcport=4000
+```
+
 ## Configuration File Path
 
 The configuration file is not automatically created; you can create it using your favorite text editor. By default, the configuration file name is `dash.conf` and it is located in the Dash data directory, but both the dash data directory and the configuration file path may be changed using the `-datadir` and `-conf` command-line options.
