@@ -470,6 +470,12 @@ RPCConsole::RPCConsole(interfaces::Node& node, const PlatformStyle *_platformSty
     ui->lineEdit->installEventFilter(this);
     ui->messagesWidget->installEventFilter(this);
 
+    // Use common EOF shortcut to close the console
+    auto eof_action = new QAction(this);
+    eof_action->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_D));
+    connect(eof_action, &QAction::triggered, this, &QWidget::close);
+    ui->tab_console->addAction(eof_action);
+
     connect(ui->clearButton, &QPushButton::clicked, this, &RPCConsole::clear);
     connect(ui->fontBiggerButton, &QPushButton::clicked, this, &RPCConsole::fontBigger);
     connect(ui->fontSmallerButton, &QPushButton::clicked, this, &RPCConsole::fontSmaller);
