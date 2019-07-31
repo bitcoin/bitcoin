@@ -91,7 +91,8 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&
     return true;
 }
 
-bool CheckProofOfWork(CBlockHeader block)
+#if LDPC_POW
+bool CheckProofOfWork(CBlockHeader block, const Consensus::Params& params)
 {
     /*
     printf("\nnonce : %d\n",block.nNonce);
@@ -100,11 +101,20 @@ bool CheckProofOfWork(CBlockHeader block)
     std::cout  << block.hashMerkleRoot.ToString() << std::endl;
     */
 
+    bool fNegative;
+    bool fOverflow;
+    arith_uint256 bnTarget;
     bool result = false;
+
+    bnTarget.SetCompact(block.nBits, &fNegative, &fOverflow);
+    
+    // Check range
+    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(params.powLimit))
+        return result;
+
     LDPC *ldpc = new LDPC;
     ldpc->set_difficulty(1);
     ldpc->initialization();
-    // ldpc->generate_seed((char*)((block.hashPrevBlock.ToString() + block.hashMerkleRoot.ToString()).c_str()));
     ldpc->generate_seeds(UintToArith256(block.hashPrevBlock).GetLow64());
     ldpc->generate_H();
     ldpc->generate_Q();
@@ -116,3 +126,4 @@ bool CheckProofOfWork(CBlockHeader block)
     delete ldpc;
     return result;
 }
+#endif

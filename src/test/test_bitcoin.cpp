@@ -147,7 +147,11 @@ TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransaction>&
         IncrementExtraNonce(&block, chainActive.Tip(), extraNonce);
     }
 
+#if LDPC_POW
+    while (!CheckProofOfWork(block.GetBlockHeader(), chainparams.GetConsensus())) ++block.nNonce;
+#else
     while (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus())) ++block.nNonce;
+#endif
 
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
     ProcessNewBlock(chainparams, shared_pblock, true, nullptr);

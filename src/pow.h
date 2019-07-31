@@ -10,6 +10,8 @@
 
 #include <stdint.h>
 
+#define LDPC_POW 1
+
 class CBlockHeader;
 class CBlockIndex;
 class uint256;
@@ -19,6 +21,9 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
 
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&);
-bool CheckProofOfWork(CBlockHeader block);
+
+#if LDPC_POW
+bool CheckProofOfWork(CBlockHeader block, const Consensus::Params&);
+#endif
 
 #endif // BITCOIN_POW_H
