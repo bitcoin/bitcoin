@@ -290,6 +290,7 @@ public:
     void StartScheduledTasks(CScheduler& scheduler) override;
     void CheckForStaleTipAndEvictPeers() override;
     bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const override;
+    int GetNumberOfPeersWithValidatedDownloads() EXCLUSIVE_LOCKS_REQUIRED(cs_main) override;
     bool IgnoresIncomingTxs() override { return m_ignore_incoming_txs; }
     void SendPings() override;
     void RelayTransaction(const uint256& txid, const uint256& wtxid) override;
@@ -1260,6 +1261,11 @@ bool PeerManagerImpl::GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) c
     stats.m_addr_rate_limited = peer->m_addr_rate_limited.load();
 
     return true;
+}
+
+int PeerManagerImpl::GetNumberOfPeersWithValidatedDownloads()
+{
+    return m_peers_downloading_from;
 }
 
 void PeerManagerImpl::AddToCompactExtraTransactions(const CTransactionRef& tx)

@@ -93,6 +93,9 @@
 static const bool DEFAULT_PROXYRANDOMIZE = true;
 static const bool DEFAULT_REST_ENABLE = false;
 
+//! Check if initial sync is done with no change in block height or queued downloads every 30s
+static constexpr std::chrono::seconds SYNC_CHECK_INTERVAL{30};
+
 #ifdef WIN32
 // Win32 LevelDB doesn't use filedescriptors, and the ones used for
 // accessing block files don't count towards the fd_set size limit
@@ -1021,6 +1024,39 @@ static bool LockDataDirectory(bool probeOnly)
     return true;
 }
 
+/**
+ * Once initial sync is finished and no change in block height or queued downloads,
+ * flush state to protect against data loss
+ */
+static void FlushAfterSync(NodeContext& node, CChainState& chainstate)
+{
+    if (chainstate.IsInitialBlockDownload()) {
+        node.scheduler->scheduleFromNow([&]{ FlushAfterSync(node, chainstate); }, SYNC_CHECK_INTERVAL);
+        return;
+    }
+
+    static std::map<CChainState*, int> last_chain_height_map;
+    LOCK(cs_main);
+    int current_height = chainstate.m_chain.Height();
+    auto last_chain_height = last_chain_height_map.find(&chainstate);
+    if (last_chain_height == last_chain_height_map.end() || last_chain_height->second != current_height) {
+        last_chain_height_map[&chainstate] = current_height;
+        node.scheduler->scheduleFromNow([&]{ FlushAfterSync(node, chainstate); }, SYNC_CHECK_INTERVAL);
+        return;
+    }
+
+    if (node.peerman->GetNumberOfPeersWithValidatedDownloads() > 0) {
+        node.scheduler->scheduleFromNow([&]{ FlushAfterSync(node, chainstate); }, SYNC_CHECK_INTERVAL);
+        return;
+    }
+
+    last_chain_height_map.erase(last_chain_height);
+    if (chainstate.CanFlushToDisk()) {
+        LogPrintf("%s: Flushing %s\n", __func__, chainstate.ToString());
+        chainstate.ForceFlushStateToDisk();
+    }
+}
+
 bool AppInitSanityChecks()
 {
     // ********************************************************* Step 4: sanity checks
@@ -1794,6 +1830,13 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     node.scheduler->scheduleEvery([banman]{
         banman->DumpBanlist();
     }, DUMP_BANS_INTERVAL);
+
+    {
+        LOCK(cs_main);
+        for (CChainState* chainstate : node.chainman->GetAll()) {
+            node.scheduler->scheduleFromNow([&node, chainstate]{ FlushAfterSync(node, *chainstate); }, SYNC_CHECK_INTERVAL);
+        }
+    }
 
     if (node.peerman) node.peerman->StartScheduledTasks(*node.scheduler);
 
