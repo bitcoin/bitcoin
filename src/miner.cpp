@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <miner.h>
-
+#include <rpc/util.h>
 #include <amount.h>
 #include <chain.h>
 #include <chainparams.h>
@@ -29,6 +29,7 @@
 #include <wallet/wallet.h>
 
 #include <boost/thread.hpp>
+#include <boost/algorithm/string.hpp>
 #include <algorithm>
 #include <queue>
 #include <utility>
@@ -143,7 +144,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     if (chainparams.MineBlocksOnDemand())
         pblock->nVersion = gArgs.GetArg("-blockversion", pblock->nVersion);
 
-    
+
     pblock->nTime = GetAdjustedTime();
 
     if(fProofOfStake){
@@ -203,6 +204,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         coinbaseTx.vout[1].scriptPubKey = dev_script;
         coinbaseTx.vout[1].nValue = devsubsidy;
     }
+
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
 
@@ -870,7 +872,7 @@ MilliSleep(60000);
                             }
                             if (pblockfilled->GetBlockTime() > FutureDrift(GetAdjustedTime())) {
                                 if (gArgs.IsArgSet("-aggressive-staking")) {
-                                    //if being agressive, then check more often to publish immediately when valid. This might allow you to find more blocks, 
+                                    //if being agressive, then check more often to publish immediately when valid. This might allow you to find more blocks,
                                     //but also increases the chance of broadcasting invalid blocks and getting DoS banned by nodes,
                                     //or receiving more stale/orphan blocks than normal. Use at your own risk.
                                     MilliSleep(100);
@@ -911,7 +913,7 @@ void Stake(bool fStake, CWallet *pwallet, boost::thread_group*& stakeThread)
         stakeThread = new boost::thread_group();
         stakeThread->create_thread(boost::bind(&ThreadStakeMiner, pwallet));
     }
-    
+
 }
 
 #endif
@@ -923,11 +925,11 @@ void Stake(bool fStake, CWallet *pwallet, boost::thread_group*& stakeThread)
 double dHashesPerMin = 0.0;
 int64_t nHPSTimerStart = 0;
 
-void static BitcoinMiner(const CChainParams& chainparams, std::shared_ptr<CReserveScript> coinbase_script)
+void static BitcointalkcoinMiner(const CChainParams& chainparams, std::shared_ptr<CReserveScript> coinbase_script)
 {
-    LogPrintf("BitcoinMiner started\n");
+    LogPrintf("BitcointalkcoinMiner started\n");
     //SetThreadPriority(THREAD_PRIORITY_LOWEST);
-    RenameThread("bitcoin-miner");
+    RenameThread("bitcointalkcoin-miner");
 
     unsigned int nExtraNonce = 0;
 
@@ -950,7 +952,7 @@ void static BitcoinMiner(const CChainParams& chainparams, std::shared_ptr<CReser
                         break;
                     MilliSleep(1000);
                 } while (true);*/
-            
+
 
             //
             // Create new block
@@ -968,7 +970,7 @@ void static BitcoinMiner(const CChainParams& chainparams, std::shared_ptr<CReser
                 IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
             }
 
-            //LogPrintf("Running BitcoinMiner with %u transactions in block \n", pblock->vtx.size());
+            //LogPrintf("Running BitcointalkcoinMiner with %u transactions in block \n", pblock->vtx.size());
 
             //
             // Search
@@ -1057,17 +1059,17 @@ void static BitcoinMiner(const CChainParams& chainparams, std::shared_ptr<CReser
     }
     catch (const boost::thread_interrupted&)
     {
-        LogPrintf("BitcoinMiner terminated\n");
+        LogPrintf("BitcointalkcoinMiner terminated\n");
         throw;
     }
     catch (const std::runtime_error &e)
     {
-        LogPrintf("BitcoinMiner runtime error: %s\n", e.what());
+        LogPrintf("BitcointalkcoinMiner runtime error: %s\n", e.what());
         return;
     }
 }
 
-void GenerateBitcoins(bool fGenerate, int nThreads, const CChainParams& chainparams, std::shared_ptr<CReserveScript> coinbase_script)
+void GenerateBitcointalkcoins(bool fGenerate, int nThreads, const CChainParams& chainparams, std::shared_ptr<CReserveScript> coinbase_script)
 {
     static boost::thread_group* minerThreads = NULL;
 
@@ -1086,5 +1088,5 @@ void GenerateBitcoins(bool fGenerate, int nThreads, const CChainParams& chainpar
 
     minerThreads = new boost::thread_group();
     for (int i = 0; i < nThreads; i++)
-        minerThreads->create_thread(boost::bind(&BitcoinMiner, boost::cref(chainparams), boost::cref(coinbase_script)));
+        minerThreads->create_thread(boost::bind(&BitcointalkcoinMiner, boost::cref(chainparams), boost::cref(coinbase_script)));
 }

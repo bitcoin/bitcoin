@@ -1,6 +1,6 @@
 #include <qt/guiutil.h>
 #include <qt/guiconstants.h>
-#include <qt/bitcoinunits.h>
+#include <qt/bitcointalkcoinunits.h>
 #include <qt/optionsmodel.h>
 #include <qt/walletmodel.h>
 #include <qt/messagemodel.h>
@@ -1227,9 +1227,9 @@ QVariant InvoiceItemTableModel::data(const QModelIndex &index, int role) const
                 //case Tax:
                 //    return rec->tax;
                 case Price:
-                    return BitcoinUnits::formatWithUnit(priv->parent->getOptionsModel()->getDisplayUnit(), rec->price);
+                    return BitcointalkcoinUnits::formatWithUnit(priv->parent->getOptionsModel()->getDisplayUnit(), rec->price);
                 case Amount:
-                    return BitcoinUnits::formatWithUnit(priv->parent->getOptionsModel()->getDisplayUnit(), (rec->quantity * rec->price));
+                    return BitcointalkcoinUnits::formatWithUnit(priv->parent->getOptionsModel()->getDisplayUnit(), (rec->quantity * rec->price));
                 case Type:
                     switch(rec->type)
                     {
@@ -1251,7 +1251,7 @@ QVariant InvoiceItemTableModel::data(const QModelIndex &index, int role) const
                 //case Tax:
                 //    return rec->tax;
                 case Price:
-                    return BitcoinUnits::format(priv->parent->getOptionsModel()->getDisplayUnit(), rec->price);
+                    return BitcointalkcoinUnits::format(priv->parent->getOptionsModel()->getDisplayUnit(), rec->price);
 
                 case Amount:
                     return (qint64)rec->quantity * rec->price;
@@ -1295,7 +1295,7 @@ bool InvoiceItemTableModel::setData(const QModelIndex & index, const QVariant & 
                 emitDataChanged(index.row());
                 break;
             case Price:
-                BitcoinUnits::parse(priv->parent->getOptionsModel()->getDisplayUnit(), value.toString(), &rec->price);
+                BitcointalkcoinUnits::parse(priv->parent->getOptionsModel()->getDisplayUnit(), value.toString(), &rec->price);
                 emitDataChanged(index.row());
                 break;
         }
@@ -1403,7 +1403,7 @@ QVariant ReceiptTableModel::data(const QModelIndex &index, int role) const
                 case SentDateTime:      return rec->sent_datetime;
                 case ReceivedDateTime:  return rec->received_datetime;
                 case InvoiceNumber:     return rec->invoice_number;
-                case Amount:            return BitcoinUnits::formatWithUnit(priv->parent->getOptionsModel()->getDisplayUnit(), rec->amount);
+                case Amount:            return BitcointalkcoinUnits::formatWithUnit(priv->parent->getOptionsModel()->getDisplayUnit(), rec->amount);
                 case Type:
                     switch(rec->type)
                     {

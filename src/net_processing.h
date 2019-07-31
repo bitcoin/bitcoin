@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_NET_PROCESSING_H
-#define BITCOIN_NET_PROCESSING_H
+#ifndef BITCOINTALKCOIN_NET_PROCESSING_H
+#define BITCOINTALKCOIN_NET_PROCESSING_H
 
 #include <net.h>
 #include <validationinterface.h>
@@ -107,4 +107,4 @@ bool ProcessNetBlock(const CChainParams& chainparams, const std::shared_ptr<cons
 
 /** Increase a node's misbehavior score. */
 void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="") EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-#endif // BITCOIN_NET_PROCESSING_H
+#endif // BITCOINTALKCOIN_NET_PROCESSING_H

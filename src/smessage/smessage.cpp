@@ -544,7 +544,7 @@ void ThreadSecureMsg(void* parg)
 {
     nThreadCount.fetch_add(1, boost::memory_order_relaxed);
     // -- bucket management thread
-    RenameThread("bitcoin-smsg"); // Make this thread recognisable
+    RenameThread("bitcointalkcoin-smsg"); // Make this thread recognisable
 const CNetMsgMaker msgMaker(PROTOCOL_VERSION);
 
 
@@ -885,7 +885,7 @@ int SecureMsgReadIni()
     if (LogInstance().WillLogCategory(BCLog::SMSG))
         LogPrintf("SecureMsgReadIni()\n");
 
-    fs::path fullpath = GetDataDir() / "bitcoin.conf";
+    fs::path fullpath = GetDataDir() / "bitcointalkcoin.conf";
 
     FILE *fp;
     errno = 0;

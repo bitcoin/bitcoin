@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -214,7 +214,7 @@ public:
         m_assumed_blockchain_size = 0;
         m_assumed_chain_state_size = 0;
 #ifdef ENABLE_MOMENTUM_HASH_ALGO
-        genesis = CreateGenesisBlock(1562734642, 13, 14973817, 15466299, 0x201fffff, 1, 5 * COIN);
+        genesis = CreateGenesisBlock(1564536165, 1, 7752872, 23894037, 0x201fffff, 1, 5 * COIN);
 #else
         genesis = CreateGenesisBlock(1562734642, 221227,0x1e0fffff, 1, 5 * COIN);
 #endif
@@ -226,7 +226,7 @@ public:
         //    minerThreads->create_thread(boost::bind(&MineNewGenesisBlock,consensus,genesis));
         //MilliSleep(20000000);
         //MineNewGenesisBlock(consensus,genesis);
-        assert(consensus.hashGenesisBlock == uint256S("0x01e3261a8c1267086ddcfbb36a969f0382b446998b99c5f6f52279702dd7a8d8"));
+        assert(consensus.hashGenesisBlock == uint256S("0x042715fc38fd772456cb34ecf601ef3f0bdc9a8656050be9a0082b7c97997170"));
         assert(genesis.hashMerkleRoot == uint256S("0x202b7ffe141c1d8b99e1b76845a24d1933be562c32e56663768cf4c161f772e4"));
 
         // Note that of those which support the service bits prefix, most only support a subset of
@@ -239,13 +239,13 @@ public:
         vSeeds.emplace_back("192.3.83.8"); // Luke Dashjr
         vSeeds.emplace_back("192.3.83.87"); // Christian Decker, supports x1 - xf
 
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,28);
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,65);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,5);
         base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,128);
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x88, 0xB2, 0x1E};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x88, 0xAD, 0xE4};
 
-        bech32_hrp = "ct";
+        bech32_hrp = "tc";
 
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
 
@@ -255,16 +255,16 @@ public:
 
         checkpointData = {
             {
-                { 1566, uint256S("0x00000009f9b706286e83d99ebabe9713655349a9dced77fb0f0fb9445b4cbb8d")},
-                { 16560, uint256S("0x000000019873a518e214850d6d3797b2dbdc11e6f8a7e8dba1b49b19cdebfa47")},
+                { 0, uint256S("0x042715fc38fd772456cb34ecf601ef3f0bdc9a8656050be9a0082b7c97997170")},
+                { 3, uint256S("0x00099fcd357523e2c3ed06ea71a34b1c847d78b660e4dddb96dd47a5a288d5ed")},
             }
         };
 
         chainTxData = ChainTxData{
             // Data from rpc: getchaintxstats 4096 0000000000000000000f1c54590ee18d15ec70e68c8cd4cfbadb1b4f11697eee
-            /* nTime    */ 1564119652,
-            /* nTxCount */ 16577,
-            /* dTxRate  */ 0.0133166090415161
+            /* nTime    */ 1564558863,
+            /* nTxCount */ 4,
+            /* dTxRate  */ 2
         };
 
         /* disable fallback fee on mainnet */
@@ -337,9 +337,9 @@ public:
         vFixedSeeds.clear();
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
-        vSeeds.emplace_back("testnet-seed.bitcoin.jonasschnelli.ch");
+        vSeeds.emplace_back("testnet-seed.bitcointalkcoin.jonasschnelli.ch");
         vSeeds.emplace_back("seed.tbtc.petertodd.org");
-        vSeeds.emplace_back("seed.testnet.bitcoin.sprovoost.nl");
+        vSeeds.emplace_back("seed.testnet.bitcointalkcoin.sprovoost.nl");
         vSeeds.emplace_back("testnet-seed.bluematt.me"); // Just a static list of stable node(s), only supports x9
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);

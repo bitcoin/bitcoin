@@ -1,0 +1,68 @@
+# It is not recommended to modify this file in-place, because it will
+# be overwritten during package upgrades. If you want to add further
+# options or overwrite existing ones then use
+# $ systemctl edit bitcointalkcoind.service
+# See "man systemd.service" for details.
+
+# Note that almost all daemon options could be specified in
+# /etc/bitcointalkcoin/bitcointalkcoin.conf, except for those explicitly specified as arguments
+# in ExecStart=
+
+[Unit]
+Description=Bitcointalkcoin daemon
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/bitcointalkcoind -daemon \
+                            -pid=/run/bitcointalkcoind/bitcointalkcoind.pid \
+                            -conf=/etc/bitcointalkcoin/bitcointalkcoin.conf \
+                            -datadir=/var/lib/bitcointalkcoind
+
+# Process management
+####################
+
+Type=forking
+PIDFile=/run/bitcointalkcoind/bitcointalkcoind.pid
+Restart=on-failure
+
+# Directory creation and permissions
+####################################
+
+# Run as bitcointalkcoin:bitcointalkcoin
+User=bitcointalkcoin
+Group=bitcointalkcoin
+
+# /run/bitcointalkcoind
+RuntimeDirectory=bitcointalkcoind
+RuntimeDirectoryMode=0710
+
+# /etc/bitcointalkcoin
+ConfigurationDirectory=bitcointalkcoin
+ConfigurationDirectoryMode=0710
+
+# /var/lib/bitcointalkcoind
+StateDirectory=bitcointalkcoind
+StateDirectoryMode=0710
+
+# Hardening measures
+####################
+
+# Provide a private /tmp and /var/tmp.
+PrivateTmp=true
+
+# Mount /usr, /boot/ and /etc read-only for the process.
+ProtectSystem=full
+
+# Disallow the process and all of its children to gain
+# new privileges through execve().
+NoNewPrivileges=true
+
+# Use a new /dev namespace only populated with API pseudo devices
+# such as /dev/null, /dev/zero and /dev/random.
+PrivateDevices=true
+
+# Deny the creation of writable and executable memory mappings.
+MemoryDenyWriteExecute=true
+
+[Install]
+WantedBy=multi-user.target

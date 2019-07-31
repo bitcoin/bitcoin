@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -369,7 +369,7 @@ bool CBlockTreeDB::ReadStakeIndex(unsigned int height, uint160& address){
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
         std::pair<char, CHeightTxIndexKey> key;
-        pcursor->GetKey(key); //note: it's apparently ok if this returns an error https://github.com/bitcoin/bitcoin/issues/7890
+        pcursor->GetKey(key); //note: it's apparently ok if this returns an error https://github.com/bitcointalkcoin/bitcointalkcoin/issues/7890
         if (key.first == DB_STAKEINDEX) {
             pcursor->GetValue(address);
             return true;
@@ -387,7 +387,7 @@ bool CBlockTreeDB::ReadStakeIndex(unsigned int high, unsigned int low, std::vect
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
         std::pair<char, CHeightTxIndexKey> key;
-        pcursor->GetKey(key); //note: it's apparently ok if this returns an error https://github.com/bitcoin/bitcoin/issues/7890
+        pcursor->GetKey(key); //note: it's apparently ok if this returns an error https://github.com/bitcointalkcoin/bitcointalkcoin/issues/7890
         if (key.first == DB_STAKEINDEX && key.second.height < high) {
             uint160 value;
             pcursor->GetValue(value);

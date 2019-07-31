@@ -1,9 +1,9 @@
-// Copyright (c) 2017-2018 The Bitcoin Core developers
+// Copyright (c) 2017-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_RPC_RAWTRANSACTION_UTIL_H
-#define BITCOIN_RPC_RAWTRANSACTION_UTIL_H
+#ifndef BITCOINTALKCOIN_RPC_RAWTRANSACTION_UTIL_H
+#define BITCOINTALKCOIN_RPC_RAWTRANSACTION_UTIL_H
 
 #include <map>
 
@@ -32,4 +32,4 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
 
 extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry);
 
-#endif // BITCOIN_RPC_RAWTRANSACTION_UTIL_H
+#endif // BITCOINTALKCOIN_RPC_RAWTRANSACTION_UTIL_H

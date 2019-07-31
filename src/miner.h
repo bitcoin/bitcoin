@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_MINER_H
-#define BITCOIN_MINER_H
+#ifndef BITCOINTALKCOIN_MINER_H
+#define BITCOINTALKCOIN_MINER_H
 
 #include <optional.h>
 #include <primitives/block.h>
@@ -49,7 +49,7 @@ struct CBlockTemplate
 };
 
 // Container for tracking updates to ancestor feerate as we include (parent)
-void GenerateBitcoins(bool fGenerate, int nThreads, const CChainParams& chainparams, std::shared_ptr<CReserveScript> coinbaseScript);
+void GenerateBitcointalkcoins(bool fGenerate, int nThreads, const CChainParams& chainparams, std::shared_ptr<CReserveScript> coinbaseScript);
 // transactions in a block
 struct CTxMemPoolModifiedEntry {
     explicit CTxMemPoolModifiedEntry(CTxMemPool::txiter entry)
@@ -231,4 +231,4 @@ std::string convertAddress(const char address[], char newVersionByte);
 extern double dHashesPerMin;
 extern int64_t nHPSTimerStart;
 
-#endif // BITCOIN_MINER_H
+#endif // BITCOINTALKCOIN_MINER_H

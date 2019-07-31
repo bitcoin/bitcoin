@@ -1,9 +1,9 @@
-// Copyright (c) 2017-2019 The Bitcoin Core developers
+// Copyright (c) 2017-2019 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_NODE_TRANSACTION_H
-#define BITCOIN_NODE_TRANSACTION_H
+#ifndef BITCOINTALKCOIN_NODE_TRANSACTION_H
+#define BITCOINTALKCOIN_NODE_TRANSACTION_H
 
 #include <attributes.h>
 #include <primitives/transaction.h>
@@ -21,4 +21,4 @@
  */
 NODISCARD TransactionError BroadcastTransaction(CTransactionRef tx, uint256& txid, std::string& err_string, const CAmount& highfee);
 
-#endif // BITCOIN_NODE_TRANSACTION_H
+#endif // BITCOINTALKCOIN_NODE_TRANSACTION_H

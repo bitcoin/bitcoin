@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018 The Bitcoin Core developers
+# Copyright (c) 2018 The Bitcointalkcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the avoid_reuse and setwalletflag features."""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BitcointalkcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
@@ -69,7 +69,7 @@ def assert_balances(node, mine):
     for k,v in mine.items():
         assert_approx(got[k], v, 0.001)
 
-class AvoidReuseTest(BitcoinTestFramework):
+class AvoidReuseTest(BitcointalkcoinTestFramework):
 
     def set_test_params(self):
         self.setup_clean_chain = False
@@ -132,8 +132,8 @@ class AvoidReuseTest(BitcoinTestFramework):
 
     def test_fund_send_fund_senddirty(self):
         '''
-        Test the same as test_fund_send_fund_send, except send the 10 BTC with
-        the avoid_reuse flag set to false. This means the 10 BTC send should succeed,
+        Test the same as test_fund_send_fund_send, except send the 10 TALK with
+        the avoid_reuse flag set to false. This means the 10 TALK send should succeed,
         where it fails in test_fund_send_fund_send.
         '''
 
@@ -183,11 +183,11 @@ class AvoidReuseTest(BitcoinTestFramework):
     def test_fund_send_fund_send(self):
         '''
         Test the simple case where [1] generates a new address A, then
-        [0] sends 10 BTC to A.
-        [1] spends 5 BTC from A. (leaving roughly 5 BTC useable)
-        [0] sends 10 BTC to A again.
-        [1] tries to spend 10 BTC (fails; dirty).
-        [1] tries to spend 4 BTC (succeeds; change address sufficient)
+        [0] sends 10 TALK to A.
+        [1] spends 5 TALK from A. (leaving roughly 5 TALK useable)
+        [0] sends 10 TALK to A again.
+        [1] tries to spend 10 TALK (fails; dirty).
+        [1] tries to spend 4 TALK (succeeds; change address sufficient)
         '''
 
         fundaddr = self.nodes[1].getnewaddress()

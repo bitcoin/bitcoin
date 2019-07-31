@@ -38,17 +38,17 @@ from the root of the repository.
 
 **Note**: You only need Berkeley DB if the wallet is enabled (see [*Disable-wallet mode*](/doc/build-osx.md#disable-wallet-mode)).
 
-Build Bitcoin Core
+Build Bitcointalkcoin Core
 ------------------------
 
-1. Clone the Bitcoin Core source code:
+1. Clone the Bitcointalkcoin Core source code:
 
-        git clone https://github.com/bitcoin/bitcoin
-        cd bitcoin
+        git clone https://github.com/bitcointalkcoin/bitcointalkcoin
+        cd bitcointalkcoin
 
-2.  Build Bitcoin Core:
+2.  Build Bitcointalkcoin Core:
 
-    Configure and build the headless Bitcoin Core binaries as well as the GUI (if Qt is found).
+    Configure and build the headless Bitcointalkcoin Core binaries as well as the GUI (if Qt is found).
 
     You can disable the GUI build by passing `--without-gui` to configure.
 
@@ -66,7 +66,7 @@ Build Bitcoin Core
 
 Disable-wallet mode
 --------------------
-When the intention is to run only a P2P node without a wallet, Bitcoin Core may be compiled in
+When the intention is to run only a P2P node without a wallet, Bitcointalkcoin Core may be compiled in
 disable-wallet mode with:
 
     ./configure --disable-wallet
@@ -78,35 +78,35 @@ Mining is also possible in disable-wallet mode using the `getblocktemplate` RPC 
 Running
 -------
 
-Bitcoin Core is now available at `./src/bitcoind`
+Bitcointalkcoin Core is now available at `./src/bitcointalkcoind`
 
 Before running, you may create an empty configuration file:
 
-    mkdir -p "/Users/${USER}/Library/Application Support/Bitcoin"
+    mkdir -p "/Users/${USER}/Library/Application Support/Bitcointalkcoin"
 
-    touch "/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf"
+    touch "/Users/${USER}/Library/Application Support/Bitcointalkcoin/bitcointalkcoin.conf"
 
-    chmod 600 "/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf"
+    chmod 600 "/Users/${USER}/Library/Application Support/Bitcointalkcoin/bitcointalkcoin.conf"
 
-The first time you run bitcoind, it will start downloading the blockchain. This process could take many hours, or even days on slower than average systems.
+The first time you run bitcointalkcoind, it will start downloading the blockchain. This process could take many hours, or even days on slower than average systems.
 
 You can monitor the download process by looking at the debug.log file:
 
-    tail -f $HOME/Library/Application\ Support/Bitcoin/debug.log
+    tail -f $HOME/Library/Application\ Support/Bitcointalkcoin/debug.log
 
 Other commands:
 -------
 
-    ./src/bitcoind -daemon # Starts the bitcoin daemon.
-    ./src/bitcoin-cli --help # Outputs a list of command-line options.
-    ./src/bitcoin-cli help # Outputs a list of RPC commands when the daemon is running.
+    ./src/bitcointalkcoind -daemon # Starts the bitcointalkcoin daemon.
+    ./src/bitcointalkcoin-cli --help # Outputs a list of command-line options.
+    ./src/bitcointalkcoin-cli help # Outputs a list of RPC commands when the daemon is running.
 
 Notes
 -----
 
 * Tested on OS X 10.10 Yosemite through macOS 10.13 High Sierra on 64-bit Intel processors only.
 
-* Building with downloaded Qt binaries is not officially supported. See the notes in [#7714](https://github.com/bitcoin/bitcoin/issues/7714)
+* Building with downloaded Qt binaries is not officially supported. See the notes in [#7714](https://github.com/bitcointalkcoin/bitcointalkcoin/issues/7714)
 
 Deterministic macOS DMG Notes
 -----------------------------
@@ -203,7 +203,7 @@ build process to remain somewhat deterministic. Here's how it works:
   that have been previously (deterministically) built in order to create a
   final dmg.
 - The Apple keyholder uses this unsigned app to create a detached signature,
-  using the script that is also included there. Detached signatures are available from this [repository](https://github.com/bitcoin-core/bitcoin-detached-sigs).
+  using the script that is also included there. Detached signatures are available from this [repository](https://github.com/bitcointalkcoin-core/bitcointalkcoin-detached-sigs).
 - Builders feed the unsigned app + detached signature back into Gitian. It
   uses the pre-built tools to recombine the pieces into a deterministic dmg.
 

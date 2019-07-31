@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,6 +7,7 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <consensus/consensus.h>
+#include <consensus/merkle.h>
 #include <consensus/params.h>
 #include <consensus/validation.h>
 #include <core_io.h>
@@ -129,7 +130,7 @@ UniValue generate(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2) {
         throw std::runtime_error(
-RPCHelpMan{ "generate",           
+RPCHelpMan{ "generate",
             "generate nblocks ( maxtries )\n"
             "\nMine up to nblocks blocks immediately (before the RPC call returns) to an address in the wallet.\n",
             {
@@ -211,7 +212,7 @@ UniValue setgenerate(const JSONRPCRequest& request)
     if (coinbase_script->reserveScript.empty()) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "No coinbase script available");
     }
-    GenerateBitcoins(fGenerate, nGenProcLimit, Params(),coinbase_script);
+    GenerateBitcointalkcoins(fGenerate, nGenProcLimit, Params(),coinbase_script);
 
     return fGenerate;
 }
@@ -227,10 +228,16 @@ UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGen
         nHeight = ::ChainActive().Height();
         nHeightEnd = nHeight+nGenerate;
     }
+    static unsigned int nTransactionsUpdatedLast;
+
     unsigned int nExtraNonce = 0;
     UniValue blockHashes(UniValue::VARR);
+    int64_t nStart = GetTime();
     while (nHeight < nHeightEnd && !ShutdownRequested())
     {
+        CBlockIndex* pindexPrev = ::ChainActive().Tip();;
+
+		nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
         std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(Params()).CreateNewBlock(coinbaseScript->reserveScript));
         if (!pblocktemplate.get())
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
@@ -246,9 +253,13 @@ UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGen
         if (nMaxTries == 0) {
             break;
         }
+		if (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 60)
+			break;
         if (pblock->nNonce == nInnerLoopCount) {
             continue;
         }
+		if (pindexPrev != ::ChainActive().Tip())
+			break;
         std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
         if (!ProcessNewBlock(Params(), shared_pblock, true, nullptr))
             throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
@@ -272,7 +283,7 @@ static UniValue generatetoaddress(const JSONRPCRequest& request)
                 "\nMine blocks immediately to a specified address (before the RPC call returns)\n",
                 {
                     {"nblocks", RPCArg::Type::NUM, RPCArg::Optional::NO, "How many blocks are generated immediately."},
-                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the newly generated bitcoin to."},
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the newly generated bitcointalkcoin to."},
                     {"maxtries", RPCArg::Type::NUM, /* default */ "1000000", "How many iterations to try."},
                 },
                 RPCResult{
@@ -281,7 +292,7 @@ static UniValue generatetoaddress(const JSONRPCRequest& request)
                 RPCExamples{
             "\nGenerate 11 blocks to myaddress\n"
             + HelpExampleCli("generatetoaddress", "11 \"myaddress\"")
-            + "If you are running the bitcoin core wallet, you can get a new address to send the newly generated bitcoin to with:\n"
+            + "If you are running the bitcointalkcoin core wallet, you can get a new address to send the newly generated bitcointalkcoin to with:\n"
             + HelpExampleCli("getnewaddress", "")
                 },
             }.ToString());
@@ -440,7 +451,7 @@ static UniValue getstakinginfo(const JSONRPCRequest& request)
     return obj;
 }
 #endif
-// NOTE: Unlike wallet RPC (which use BTC values), mining RPCs follow GBT (BIP 22) in using satoshi amounts
+// NOTE: Unlike wallet RPC (which use TALK values), mining RPCs follow GBT (BIP 22) in using satoshi amounts
 static UniValue prioritisetransaction(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 3)
@@ -478,6 +489,184 @@ static UniValue prioritisetransaction(const JSONRPCRequest& request)
     return true;
 }
 
+UniValue getwork(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+
+    if (request.fHelp || request.params.size() > 1)
+        throw std::runtime_error(
+            "getwork [data]\n"
+            "If [data] is not specified, returns formatted hash data to work on:\n"
+            "  \"midstate\" : precomputed hash state after hashing the first half of the data (DEPRECATED)\n" // deprecated
+            "  \"data\" : block data\n"
+            "  \"hash1\" : formatted hash buffer for second hash (DEPRECATED)\n" // deprecated
+            "  \"target\" : little endian hash target\n"
+            "If [data] is specified, tries to solve the block and returns true if it was successful.");
+
+    //if (::ChainstateActive().IsInitialBlockDownload())
+    //    throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Cryptotalkcoin is downloading blocks...");
+
+
+    typedef std::map<uint256, std::pair<CBlock*, CScript> > mapNewBlock_t;
+    static mapNewBlock_t mapNewBlock;    // FIXME: thread safety
+    //static std::vector<std::unique_ptr<CBlockTemplate> > vNewBlockTemplate;
+    static std::vector<CBlockTemplate*> vNewBlockTemplate;
+
+    if (request.params.size() == 0)
+    {
+        // Update block
+        static unsigned int nTransactionsUpdatedLast;
+        static CBlockIndex* pindexPrev;
+        static int64_t nStart;
+        static uint32_t prevNTime = 0;
+        static uint32_t prevNNonce = 0;
+
+        static std::unique_ptr<CBlockTemplate> pblocktemplate;
+        //static CBlockTemplate* pblocktemplate;
+
+        if (pindexPrev != ::ChainActive().Tip() || (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 60))
+        {
+            if (pindexPrev != ::ChainActive().Tip())
+            {
+                // Deallocate old blocks since they're obsolete now
+                mapNewBlock.clear();
+                //for(auto *pblocktemplat: vNewBlockTemplate)
+                //    delete pblocktemplat;
+                vNewBlockTemplate.clear();
+            }
+
+            // Clear pindexPrev so future getworks make a new block, despite any failures from here on
+            pindexPrev = nullptr;
+
+            // Store the pindexBest used before CreateNewBlock, to avoid races
+            nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
+            CBlockIndex* pindexPrevNew = ::ChainActive().Tip();
+            nStart = GetTime();
+
+            // Create new block
+            std::shared_ptr<CReserveScript> coinbase_script;
+            pwallet->GetScriptForMining(coinbase_script);
+
+            // If the keypool is exhausted, no script is returned at all.  Catch this.
+            if (!coinbase_script) {
+                throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+            }
+
+            //throw an error if no script was provided
+            if (coinbase_script->reserveScript.empty()) {
+                throw JSONRPCError(RPC_INTERNAL_ERROR, "No coinbase script available");
+            }
+
+            pblocktemplate = BlockAssembler(Params()).CreateNewBlock(coinbase_script->reserveScript);
+
+            if (!pblocktemplate)
+                return false;
+
+            if (!pblocktemplate.get())
+                throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
+
+            vNewBlockTemplate.push_back(&*pblocktemplate);
+
+            // Need to update only after we know CreateNewBlock succeeded
+            pindexPrev = pindexPrevNew;
+            static unsigned int nExtraNonce = 0;
+            CBlock* pblock_new = &pblocktemplate->block; // pointer for convenience
+            {
+                LOCK(cs_main);
+                IncrementExtraNonce(pblock_new, ::ChainActive().Tip(), nExtraNonce);
+            }
+        }
+
+        CBlock *pblock = &pblocktemplate->block;
+        UpdateTime(pblock, Params().GetConsensus(), pindexPrev);
+
+        if (pblock->nTime == prevNTime)
+        {
+            prevNNonce += 0x00100000;
+        }
+        else
+        {
+            prevNTime = pblock->nTime;
+            prevNNonce = 0;
+        }
+
+        pblock->nNonce = prevNNonce;
+
+        const CTransaction& coinbaseTx = *pblock->vtx[0];
+        mapNewBlock[pblock->hashMerkleRoot] = std::make_pair(pblock, coinbaseTx.vin[0].scriptSig);
+
+        char pdata[128];
+
+        pblock->nBirthdayA = 0;
+        pblock->nBirthdayB = 0;
+        arith_uint256 hashTarget = arith_uint256().SetCompact(pblock->nBits);
+
+        memcpy( pdata, (char*)pblock, 88);
+
+        UniValue result(UniValue::VOBJ);
+
+        //LogPrintf("Getwork Block Send %s\n", HexStr(BEGIN(pdata), END(pdata)));
+        //LogPrintf("Getwork Target Send %s\n", HexStr(BEGIN(hashTarget), END(hashTarget)));
+        //LogPrintf("Getwork Sending Block  %s\n", pblock->ToString());
+
+        result.pushKV("data",     HexStr(BEGIN(pdata), END(pdata)));
+        result.pushKV("target",   HexStr(BEGIN(hashTarget), END(hashTarget)));
+        return result;
+
+    }
+    else
+    {
+
+        // Parse parameters
+        std::vector<unsigned char> vchData = ParseHex(request.params[0].get_str());
+
+        //LogPrintf("Getwork Block   %d bytes\n", vchData.size());
+
+        if (vchData.size() != 88)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter");
+
+        CBlock* pdata = (CBlock*)vchData.data();//&vchData[0];
+
+        //LogPrintf("Getwork Block Recvd %s\n", HexStr(BEGIN(*pdata), 88+BEGIN(*pdata)));
+
+        // Get saved block
+        if (!mapNewBlock.count(pdata->hashMerkleRoot))
+            return false;
+
+        //LogPrintf("Getwork Block R %d bytes\n", vchData.size());
+
+        CBlock* pblock = mapNewBlock[pdata->hashMerkleRoot].first;
+
+        //LogPrintf("Getwork Block Mappd %s\n", HexStr(BEGIN(*pblock), 88+BEGIN(*pblock)));
+
+        pblock->nTime = pdata->nTime;
+        pblock->nNonce = pdata->nNonce;
+        pblock->nBirthdayA = pdata->nBirthdayA;
+        pblock->nBirthdayB = pdata->nBirthdayB;
+        pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
+
+        //LogPrintf("Getwork Block Rebld %s\n", HexStr(BEGIN(*pblock), 88+BEGIN(*pblock)));
+
+        //LogPrintf("Proposed block from Getwork  %s\n", pblock->ToString());
+
+        uint256 posthash = pblock->GetHash();
+
+        LogPrintf(" Getworkposthash   %s\n", posthash.ToString());
+
+        if(!CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()))
+            return false;
+
+        //return ProcessBlockFound(pblock, Params());
+        std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
+
+        if (!ProcessNewBlock(Params(), shared_pblock, true, nullptr))
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
+
+        return true;
+
+    }
+}
 
 // NOTE: Assumes a conclusive result; if result is inconclusive, it must be handled by caller
 static UniValue BIP22ValidationResult(const CValidationState& state)
@@ -509,16 +698,19 @@ static std::string gbt_vb_name(const Consensus::DeploymentPos pos) {
 
 static UniValue getblocktemplate(const JSONRPCRequest& request)
 {
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+
     if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
             RPCHelpMan{"getblocktemplate",
                 "\nIf the request parameters include a 'mode' key, that is used to explicitly select between the default 'template' request or a 'proposal'.\n"
                 "It returns data needed to construct a block to work on.\n"
                 "For full specification, see BIPs 22, 23, 9, and 145:\n"
-                "    https://github.com/bitcoin/bips/blob/master/bip-0022.mediawiki\n"
-                "    https://github.com/bitcoin/bips/blob/master/bip-0023.mediawiki\n"
-                "    https://github.com/bitcoin/bips/blob/master/bip-0009.mediawiki#getblocktemplate_changes\n"
-                "    https://github.com/bitcoin/bips/blob/master/bip-0145.mediawiki\n",
+                "    https://github.com/bitcointalkcoin/bips/blob/master/bip-0022.mediawiki\n"
+                "    https://github.com/bitcointalkcoin/bips/blob/master/bip-0023.mediawiki\n"
+                "    https://github.com/bitcointalkcoin/bips/blob/master/bip-0009.mediawiki#getblocktemplate_changes\n"
+                "    https://github.com/bitcointalkcoin/bips/blob/master/bip-0145.mediawiki\n",
                 {
                     {"template_request", RPCArg::Type::OBJ, RPCArg::Optional::NO, "A json object in the following spec",
                         {
@@ -733,8 +925,10 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
         nStart = GetTime();
 
         // Create new block
-        CScript scriptDummy = CScript() << OP_TRUE;
-        pblocktemplate = BlockAssembler(Params()).CreateNewBlock(scriptDummy);
+//        CScript scriptDummy = CScript() << OP_TRUE;
+        std::shared_ptr<CReserveScript> coinbase_script;
+        pwallet->GetScriptForMining(coinbase_script);
+        pblocktemplate = BlockAssembler(Params()).CreateNewBlock(coinbase_script->reserveScript);
         if (!pblocktemplate)
             throw JSONRPCError(RPC_OUT_OF_MEMORY, "Out of memory");
 
@@ -918,7 +1112,7 @@ static UniValue submitblock(const JSONRPCRequest& request)
         throw std::runtime_error(
             RPCHelpMan{"submitblock",
                 "\nAttempts to submit new block to network.\n"
-                "See https://en.bitcoin.it/wiki/BIP_0022 for full specification.\n",
+                "See https://en.bitcointalkcoin.it/wiki/BIP_0022 for full specification.\n",
                 {
                     {"hexdata", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the hex-encoded block data to submit"},
                     {"dummy", RPCArg::Type::STR, /* default */ "ignored", "dummy value, for compatibility with BIP22. This value is ignored."},
@@ -1199,6 +1393,7 @@ static const CRPCCommand commands[] =
     { "mining",             "submitblock",            &submitblock,            {"hexdata","dummy"} },
     { "mining",             "submitheader",           &submitheader,           {"hexdata"} },
     { "mining",             "getsubsidy",             &getsubsidy,             {"height"} },
+    { "mining",             "getwork",                &getwork,                {"data"} },
 
 #ifdef ENABLE_PROOF_OF_STAKE
     { "mining",             "getstakinginfo",         &getstakinginfo,         {} },

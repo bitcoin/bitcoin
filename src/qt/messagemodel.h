@@ -78,8 +78,8 @@ public:
         SentDateTime = 1, // Time Sent 
         ReceivedDateTime = 2, // Time Received 
         Label = 3,   // User specified label 
-        ToAddress = 4, // To Bitcoin address 
-        FromAddress = 5, // From Bitcoin address 
+        ToAddress = 4, // To Bitcointalkcoin address 
+        FromAddress = 5, // From Bitcointalkcoin address 
         Message = 6, // Plaintext 
         Read = 7, // Plaintext 
         TypeInt = 8, // Plaintext 
@@ -262,8 +262,8 @@ public:
         SentDateTime = 1, //< Time Sent 
         ReceivedDateTime = 2, //< Time Received 
         Label = 3,   //< User specified label 
-        ToAddress = 4, //< To Bitcoin address 
-        FromAddress = 5, /< From Bitcoin address 
+        ToAddress = 4, //< To Bitcointalkcoin address 
+        FromAddress = 5, /< From Bitcointalkcoin address 
         InvoiceNumber = 6, < Plaintext 
         DueDate = 7, < Plaintext 
         //SubTotal = 8,           < SubTotal 
@@ -414,8 +414,8 @@ public:
         SentDateTime = 1, < Time Sent 
         ReceivedDateTime = 2, < Time Received 
         Label = 3,   < User specified label 
-        ToAddress = 4, < To Bitcoin address 
-        FromAddress = 5, < From Bitcoin address 
+        ToAddress = 4, < To Bitcointalkcoin address 
+        FromAddress = 5, < From Bitcointalkcoin address 
         InvoiceNumber = 6, < Plaintext 
         Amount = 7, < qint64 
         Outstanding = 8, < qint64 

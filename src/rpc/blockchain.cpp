@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -477,7 +477,7 @@ static UniValue getdifficulty(const JSONRPCRequest& request)
 static std::string EntryDescriptionString()
 {
     return "    \"vsize\" : n,            (numeric) virtual transaction size as defined in BIP 141. This is different from actual serialized size for witness transactions as witness data is discounted.\n"
-           "    \"size\" : n,             (numeric) (DEPRECATED) same as vsize. Only returned if bitcoind is started with -deprecatedrpc=size\n"
+           "    \"size\" : n,             (numeric) (DEPRECATED) same as vsize. Only returned if bitcointalkcoind is started with -deprecatedrpc=size\n"
            "                              size will be completely removed in v0.20.\n"
            "    \"fee\" : n,              (numeric) transaction fee in " + CURRENCY_UNIT + " (DEPRECATED)\n"
            "    \"modifiedfee\" : n,      (numeric) transaction fee with fee deltas used for mining priority (DEPRECATED)\n"
@@ -994,8 +994,11 @@ static UniValue getblock(const JSONRPCRequest& request)
     if (request.fHelp || !help.IsValidNumArgs(request.params.size())) {
         throw std::runtime_error(help.ToString());
     }
-
-    uint256 hash(ParseHashV(request.params[0], "blockhash"));
+    std::string pre = request.params[0].get_str();
+    if (pre.length() < 64){
+		pre = std::string(64 - pre.length(), '0').append(pre);		
+	}
+    uint256 hash(ParseHashV(pre, "blockhash"));
 
     int verbosity = 1;
     if (!request.params[1].isNull()) {
@@ -1230,8 +1233,8 @@ UniValue gettxout(const JSONRPCRequest& request)
             "     \"hex\" : \"hex\",        (string) \n"
             "     \"reqSigs\" : n,          (numeric) Number of required signatures\n"
             "     \"type\" : \"pubkeyhash\", (string) The type, eg pubkeyhash\n"
-            "     \"addresses\" : [          (array of string) array of bitcoin addresses\n"
-            "        \"address\"     (string) bitcoin address\n"
+            "     \"addresses\" : [          (array of string) array of bitcointalkcoin addresses\n"
+            "        \"address\"     (string) bitcointalkcoin address\n"
             "        ,...\n"
             "     ]\n"
             "  },\n"

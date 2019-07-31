@@ -1,9 +1,9 @@
-// Copyright (c) 2012-2018 The Bitcoin Core developers
+// Copyright (c) 2012-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_DBWRAPPER_H
-#define BITCOIN_DBWRAPPER_H
+#ifndef BITCOINTALKCOIN_DBWRAPPER_H
+#define BITCOINTALKCOIN_DBWRAPPER_H
 
 #include <clientversion.h>
 #include <fs.h>
@@ -349,4 +349,4 @@ public:
 
 };
 
-#endif // BITCOIN_DBWRAPPER_H
+#endif // BITCOINTALKCOIN_DBWRAPPER_H
