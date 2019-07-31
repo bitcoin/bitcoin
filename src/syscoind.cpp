@@ -19,7 +19,6 @@
 #include <util/strencodings.h>
 #include <util/system.h>
 #include <util/threadnames.h>
-#include <util/strencodings.h>
 #include <util/translation.h>
 
 #include <functional>
