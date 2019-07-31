@@ -7,15 +7,12 @@
 #define BITCOIN_WALLET_WALLETDB_H
 
 #include <amount.h>
-#include <primitives/transaction.h>
 #include <script/sign.h>
 #include <wallet/db.h>
 #include <key.h>
 
-#include <list>
 #include <stdint.h>
 #include <string>
-#include <utility>
 #include <vector>
 
 /**
