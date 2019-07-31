@@ -5,6 +5,10 @@
         <source>Create a new address</source>
         <translation>Δημιουργία νέου λογαριασμού</translation>
     </message>
+    <message>
+        <source>&amp;Copy</source>
+        <translation>&amp;Αντιγραφή</translation>
+    </message>
     </context>
 <context>
     <name>AddressTableModel</name>
@@ -32,10 +36,6 @@
     <message>
         <source>Quit application</source>
         <translation>Κλείσιμο εφαρμογής</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Πορτοφόλι</translation>
     </message>
     <message>
         <source>Error</source>
@@ -82,6 +82,9 @@
     </message>
     </context>
 <context>
+    <name>ModalOverlay</name>
+    </context>
+<context>
     <name>OpenURIDialog</name>
     </context>
 <context>
@@ -89,6 +92,10 @@
     <message>
         <source>W&amp;allet</source>
         <translation>Πορτοφόλι</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Σφάλμα</translation>
     </message>
     </context>
 <context>
@@ -102,6 +109,9 @@
     </context>
 <context>
     <name>QObject</name>
+    </context>
+<context>
+    <name>QObject::QObject</name>
     </context>
 <context>
     <name>QRImageWidget</name>
@@ -122,6 +132,10 @@
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Wallet</source>
+        <translation>Πορτοφόλι</translation>
+    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
@@ -173,6 +187,9 @@
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
+    </context>
+<context>
+    <name>WalletController</name>
     </context>
 <context>
     <name>WalletFrame</name>

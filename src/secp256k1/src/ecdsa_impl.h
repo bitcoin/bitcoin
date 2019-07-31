@@ -5,8 +5,8 @@
  **********************************************************************/
 
 
-#ifndef _SECP256K1_ECDSA_IMPL_H_
-#define _SECP256K1_ECDSA_IMPL_H_
+#ifndef SECP256K1_ECDSA_IMPL_H
+#define SECP256K1_ECDSA_IMPL_H
 
 #include "scalar.h"
 #include "field.h"
@@ -81,8 +81,6 @@ static int secp256k1_der_read_len(const unsigned char **sigp, const unsigned cha
         return -1;
     }
     while (lenleft > 0) {
-        if ((ret >> ((sizeof(size_t) - 1) * 8)) != 0) {
-        }
         ret = (ret << 8) | **sigp;
         if (ret + lenleft > (size_t)(sigend - *sigp)) {
             /* Result exceeds the length of the passed array. */
@@ -225,14 +223,12 @@ static int secp256k1_ecdsa_sig_verify(const secp256k1_ecmult_context *ctx, const
 #if defined(EXHAUSTIVE_TEST_ORDER)
 {
     secp256k1_scalar computed_r;
-    int overflow = 0;
     secp256k1_ge pr_ge;
     secp256k1_ge_set_gej(&pr_ge, &pr);
     secp256k1_fe_normalize(&pr_ge.x);
 
     secp256k1_fe_get_b32(c, &pr_ge.x);
-    secp256k1_scalar_set_b32(&computed_r, c, &overflow);
-    /* we fully expect overflow */
+    secp256k1_scalar_set_b32(&computed_r, c, NULL);
     return secp256k1_scalar_eq(sigr, &computed_r);
 }
 #else
@@ -285,14 +281,10 @@ static int secp256k1_ecdsa_sig_sign(const secp256k1_ecmult_gen_context *ctx, sec
     secp256k1_fe_normalize(&r.y);
     secp256k1_fe_get_b32(b, &r.x);
     secp256k1_scalar_set_b32(sigr, b, &overflow);
-    if (secp256k1_scalar_is_zero(sigr)) {
-        /* P.x = order is on the curve, so technically sig->r could end up zero, which would be an invalid signature.
-         * This branch is cryptographically unreachable as hitting it requires finding the discrete log of P.x = N.
-         */
-        secp256k1_gej_clear(&rp);
-        secp256k1_ge_clear(&r);
-        return 0;
-    }
+    /* These two conditions should be checked before calling */
+    VERIFY_CHECK(!secp256k1_scalar_is_zero(sigr));
+    VERIFY_CHECK(overflow == 0);
+
     if (recid) {
         /* The overflow condition is cryptographically unreachable as hitting it requires finding the discrete log
          * of some P where P.x >= order, and only 1 in about 2^127 points meet this criteria.
@@ -318,4 +310,4 @@ static int secp256k1_ecdsa_sig_sign(const secp256k1_ecmult_gen_context *ctx, sec
     return 1;
 }
 
-#endif
+#endif /* SECP256K1_ECDSA_IMPL_H */

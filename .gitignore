@@ -5,12 +5,10 @@ src/bitcoin
 src/bitcoind
 src/bitcoin-cli
 src/bitcoin-tx
+src/bitcoin-wallet
 src/test/test_bitcoin
+src/test/test_bitcoin_fuzzy
 src/qt/test/test_bitcoin-qt
-src/omnicored
-src/omnicore-cli
-src/test/test_omnicore
-src/qt/test/test_omnicore-qt
 
 # autoreconf
 Makefile.in
@@ -39,9 +37,6 @@ src/config/stamp-h1
 share/setup.nsi
 share/qt/Info.plist
 
-# Omni Core Windows installer script
-src/omnicore/res/omnicore-setup-win.nsi
-
 src/univalue/gen
 
 src/qt/*.moc
@@ -49,6 +44,12 @@ src/qt/moc_*.cpp
 src/qt/forms/ui_*.h
 
 src/qt/test/moc*.cpp
+
+src/qt/bitcoin-qt.config
+src/qt/bitcoin-qt.creator
+src/qt/bitcoin-qt.creator.user
+src/qt/bitcoin-qt.files
+src/qt/bitcoin-qt.includes
 
 .deps
 .dirstamp
@@ -62,10 +63,10 @@ src/qt/test/moc*.cpp
 *.o
 *.o-*
 *.patch
-.bitcoin
 *.a
 *.pb.cc
 *.pb.h
+*.dat
 
 *.log
 *.trs
@@ -83,22 +84,14 @@ src/qt/test/moc*.cpp
 Makefile
 bitcoin-qt
 Bitcoin-Qt.app
-omnicore-qt
-OmniCore-Qt.app
+background.tiff*
 
 # Unit-tests
 Makefile.test
 bitcoin-qt_test
-omnicore-qt_test
-src/test/buildenv.py
 
 # Resources cpp
 qrc_*.cpp
-# Qt creator
-*.pro.user
-
-# NetBeans
-nbproject/
 
 # Mac specific
 .DS_Store
@@ -116,13 +109,8 @@ coverage_percent.txt
 linux-coverage-build
 linux-build
 win32-build
-qa/pull-tester/run-bitcoind-for-test.sh
-qa/pull-tester/tests_config.py
-qa/pull-tester/cache/*
-qa/pull-tester/test.*/*
-qa/tmp
-cache/
-share/BitcoindComparisonTool.jar
+test/config.ini
+test/cache/*
 
 !src/leveldb*/Makefile
 
@@ -130,3 +118,9 @@ share/BitcoindComparisonTool.jar
 
 libbitcoinconsensus.pc
 contrib/devtools/split-debug.sh
+
+# Output from running db4 installation
+db4/
+
+# clang-check
+*.plist

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2011-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -21,10 +21,10 @@
 //
 // When startup is finished and the main window is
 // shown, a signal is sent to slot uiReady(), which
-// emits a receivedURL() signal for any payment
+// emits a receivedURI() signal for any payment
 // requests that happened during startup.
 //
-// After startup, receivedURL() happens as usual.
+// After startup, receivedURI() happens as usual.
 //
 // This class has one more feature: a static
 // method that finds URIs passed in the command line
@@ -32,15 +32,19 @@
 // sends them to the server.
 //
 
-#include "paymentrequestplus.h"
-#include "walletmodel.h"
+#if defined(HAVE_CONFIG_H)
+#include <config/bitcoin-config.h>
+#endif
+
+#ifdef ENABLE_BIP70
+#include <qt/paymentrequestplus.h>
+#endif
+#include <qt/walletmodel.h>
 
 #include <QObject>
 #include <QString>
 
 class OptionsModel;
-
-class CWallet;
 
 QT_BEGIN_NAMESPACE
 class QApplication;
@@ -53,7 +57,7 @@ class QUrl;
 QT_END_NAMESPACE
 
 // BIP70 max payment request size in bytes (DoS protection)
-extern const qint64 BIP70_MAX_PAYMENTREQUEST_SIZE;
+static const qint64 BIP70_MAX_PAYMENTREQUEST_SIZE = 50000;
 
 class PaymentServer : public QObject
 {
@@ -62,7 +66,7 @@ class PaymentServer : public QObject
 public:
     // Parse URIs on command line
     // Returns false on error
-    static void ipcParseCommandLine(int argc, char *argv[]);
+    static void ipcParseCommandLine(interfaces::Node& node, int argc, char *argv[]);
 
     // Returns true if there were URIs on the command line
     // which were successfully sent to an already-running
@@ -72,57 +76,65 @@ public:
     static bool ipcSendCommandLine();
 
     // parent should be QApplication object
-    PaymentServer(QObject* parent, bool startLocalServer = true);
+    explicit PaymentServer(QObject* parent, bool startLocalServer = true);
     ~PaymentServer();
-
-    // Load root certificate authorities. Pass NULL (default)
-    // to read from the file specified in the -rootcertificates setting,
-    // or, if that's not set, to use the system default root certificates.
-    // If you pass in a store, you should not X509_STORE_free it: it will be
-    // freed either at exit or when another set of CAs are loaded.
-    static void LoadRootCAs(X509_STORE* store = NULL);
-
-    // Return certificate store
-    static X509_STORE* getCertStore();
 
     // OptionsModel is used for getting proxy settings and display unit
     void setOptionsModel(OptionsModel *optionsModel);
 
+#ifdef ENABLE_BIP70
+    // Load root certificate authorities. Pass nullptr (default)
+    // to read from the file specified in the -rootcertificates setting,
+    // or, if that's not set, to use the system default root certificates.
+    // If you pass in a store, you should not X509_STORE_free it: it will be
+    // freed either at exit or when another set of CAs are loaded.
+    static void LoadRootCAs(X509_STORE* store = nullptr);
+
+    // Return certificate store
+    static X509_STORE* getCertStore();
+
     // Verify that the payment request network matches the client network
-    static bool verifyNetwork(const payments::PaymentDetails& requestDetails);
+    static bool verifyNetwork(interfaces::Node& node, const payments::PaymentDetails& requestDetails);
     // Verify if the payment request is expired
     static bool verifyExpired(const payments::PaymentDetails& requestDetails);
     // Verify the payment request size is valid as per BIP70
     static bool verifySize(qint64 requestSize);
     // Verify the payment request amount is valid
     static bool verifyAmount(const CAmount& requestAmount);
+#endif
 
 Q_SIGNALS:
     // Fired when a valid payment request is received
     void receivedPaymentRequest(SendCoinsRecipient);
 
-    // Fired when a valid PaymentACK is received
-    void receivedPaymentACK(const QString &paymentACKMsg);
-
     // Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);
+
+#ifdef ENABLE_BIP70
+    // Fired when a valid PaymentACK is received
+    void receivedPaymentACK(const QString &paymentACKMsg);
+#endif
 
 public Q_SLOTS:
     // Signal this when the main window's UI is ready
     // to display payment requests to the user
     void uiReady();
 
-    // Submit Payment message to a merchant, get back PaymentACK:
-    void fetchPaymentACK(CWallet* wallet, SendCoinsRecipient recipient, QByteArray transaction);
-
     // Handle an incoming URI, URI with local file scheme or file
     void handleURIOrFile(const QString& s);
 
+#ifdef ENABLE_BIP70
+    // Submit Payment message to a merchant, get back PaymentACK:
+    void fetchPaymentACK(WalletModel* walletModel, const SendCoinsRecipient& recipient, QByteArray transaction);
+#endif
+
 private Q_SLOTS:
     void handleURIConnection();
+#ifdef ENABLE_BIP70
     void netRequestFinished(QNetworkReply*);
     void reportSslErrors(QNetworkReply*, const QList<QSslError> &);
     void handlePaymentACK(const QString& paymentACKMsg);
+#endif
 
 protected:
     // Constructor registers this on the parent QApplication to
@@ -130,19 +142,19 @@ protected:
     bool eventFilter(QObject *object, QEvent *event);
 
 private:
+    bool saveURIs;                      // true during startup
+    QLocalServer* uriServer;
+    OptionsModel *optionsModel;
+
+#ifdef ENABLE_BIP70
     static bool readPaymentRequestFromFile(const QString& filename, PaymentRequestPlus& request);
     bool processPaymentRequest(const PaymentRequestPlus& request, SendCoinsRecipient& recipient);
     void fetchRequest(const QUrl& url);
 
     // Setup networking
     void initNetManager();
-
-    bool saveURIs;                      // true during startup
-    QLocalServer* uriServer;
-
     QNetworkAccessManager* netManager;  // Used to fetch payment requests
-
-    OptionsModel *optionsModel;
+#endif
 };
 
 #endif // BITCOIN_QT_PAYMENTSERVER_H

@@ -4,8 +4,8 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
-#ifndef _SECP256K1_TESTRAND_IMPL_H_
-#define _SECP256K1_TESTRAND_IMPL_H_
+#ifndef SECP256K1_TESTRAND_IMPL_H
+#define SECP256K1_TESTRAND_IMPL_H
 
 #include <stdint.h>
 #include <string.h>
@@ -107,4 +107,4 @@ static void secp256k1_rand256_test(unsigned char *b32) {
     secp256k1_rand_bytes_test(b32, 32);
 }
 
-#endif
+#endif /* SECP256K1_TESTRAND_IMPL_H */

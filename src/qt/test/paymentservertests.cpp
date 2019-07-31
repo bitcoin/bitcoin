@@ -1,18 +1,20 @@
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "paymentservertests.h"
+#include <qt/test/paymentservertests.h>
 
-#include "optionsmodel.h"
-#include "paymentrequestdata.h"
+#include <qt/optionsmodel.h>
+#include <qt/test/paymentrequestdata.h>
 
-#include "amount.h"
-#include "random.h"
-#include "script/script.h"
-#include "script/standard.h"
-#include "util.h"
-#include "utilstrencodings.h"
+#include <amount.h>
+#include <chainparams.h>
+#include <interfaces/node.h>
+#include <random.h>
+#include <script/script.h>
+#include <script/standard.h>
+#include <util/system.h>
+#include <util/strencodings.h>
 
 #include <openssl/x509.h>
 #include <openssl/x509_vfy.h>
@@ -24,8 +26,8 @@ X509 *parse_b64der_cert(const char* cert_data)
 {
     std::vector<unsigned char> data = DecodeBase64(cert_data);
     assert(data.size() > 0);
-    const unsigned char* dptr = &data[0];
-    X509 *cert = d2i_X509(NULL, &dptr, data.size());
+    const unsigned char* dptr = data.data();
+    X509 *cert = d2i_X509(nullptr, &dptr, data.size());
     assert(cert);
     return cert;
 }
@@ -37,13 +39,13 @@ X509 *parse_b64der_cert(const char* cert_data)
 static SendCoinsRecipient handleRequest(PaymentServer* server, std::vector<unsigned char>& data)
 {
     RecipientCatcher sigCatcher;
-    QObject::connect(server, SIGNAL(receivedPaymentRequest(SendCoinsRecipient)),
-        &sigCatcher, SLOT(getRecipient(SendCoinsRecipient)));
+    QObject::connect(server, &PaymentServer::receivedPaymentRequest,
+        &sigCatcher, &RecipientCatcher::getRecipient);
 
     // Write data to a temp file:
     QTemporaryFile f;
     f.open();
-    f.write((const char*)&data[0], data.size());
+    f.write((const char*)data.data(), data.size());
     f.close();
 
     // Create a QObject, install event filter from PaymentServer
@@ -55,8 +57,8 @@ static SendCoinsRecipient handleRequest(PaymentServer* server, std::vector<unsig
     // which will lead to a test failure anyway.
     QCoreApplication::sendEvent(&object, &event);
 
-    QObject::disconnect(server, SIGNAL(receivedPaymentRequest(SendCoinsRecipient)),
-        &sigCatcher, SLOT(getRecipient(SendCoinsRecipient)));
+    QObject::disconnect(server, &PaymentServer::receivedPaymentRequest,
+        &sigCatcher, &RecipientCatcher::getRecipient);
 
     // Return results from sigCatcher
     return sigCatcher.recipient;
@@ -65,8 +67,9 @@ static SendCoinsRecipient handleRequest(PaymentServer* server, std::vector<unsig
 void PaymentServerTests::paymentServerTests()
 {
     SelectParams(CBaseChainParams::MAIN);
-    OptionsModel optionsModel;
-    PaymentServer* server = new PaymentServer(NULL, false);
+    auto node = interfaces::MakeNode();
+    OptionsModel optionsModel(*node);
+    PaymentServer* server = new PaymentServer(nullptr, false);
     X509_STORE* caStore = X509_STORE_new();
     X509_STORE_add_cert(caStore, parse_b64der_cert(caCert1_BASE64));
     PaymentServer::LoadRootCAs(caStore);
@@ -139,16 +142,16 @@ void PaymentServerTests::paymentServerTests()
 
     // Contains a testnet paytoaddress, so payment request network doesn't match client network:
     data = DecodeBase64(paymentrequest1_cert2_BASE64);
-    byteArray = QByteArray((const char*)&data[0], data.size());
+    byteArray = QByteArray((const char*)data.data(), data.size());
     r.paymentRequest.parse(byteArray);
     // Ensure the request is initialized, because network "main" is default, even for
-    // uninizialized payment requests and that will fail our test here.
+    // uninitialized payment requests and that will fail our test here.
     QVERIFY(r.paymentRequest.IsInitialized());
-    QCOMPARE(PaymentServer::verifyNetwork(r.paymentRequest.getDetails()), false);
+    QCOMPARE(PaymentServer::verifyNetwork(*node, r.paymentRequest.getDetails()), false);
 
     // Expired payment request (expires is set to 1 = 1970-01-01 00:00:01):
     data = DecodeBase64(paymentrequest2_cert2_BASE64);
-    byteArray = QByteArray((const char*)&data[0], data.size());
+    byteArray = QByteArray((const char*)data.data(), data.size());
     r.paymentRequest.parse(byteArray);
     // Ensure the request is initialized
     QVERIFY(r.paymentRequest.IsInitialized());
@@ -159,7 +162,7 @@ void PaymentServerTests::paymentServerTests()
     // 9223372036854775807 (uint64), 9223372036854775807 (int64_t) and -1 (int32_t)
     // -1 is 1969-12-31 23:59:59 (for a 32 bit time values)
     data = DecodeBase64(paymentrequest3_cert2_BASE64);
-    byteArray = QByteArray((const char*)&data[0], data.size());
+    byteArray = QByteArray((const char*)data.data(), data.size());
     r.paymentRequest.parse(byteArray);
     // Ensure the request is initialized
     QVERIFY(r.paymentRequest.IsInitialized());
@@ -170,7 +173,7 @@ void PaymentServerTests::paymentServerTests()
     // 9223372036854775808 (uint64), -9223372036854775808 (int64_t) and 0 (int32_t)
     // 0 is 1970-01-01 00:00:00 (for a 32 bit time values)
     data = DecodeBase64(paymentrequest4_cert2_BASE64);
-    byteArray = QByteArray((const char*)&data[0], data.size());
+    byteArray = QByteArray((const char*)data.data(), data.size());
     r.paymentRequest.parse(byteArray);
     // Ensure the request is initialized
     QVERIFY(r.paymentRequest.IsInitialized());
@@ -178,25 +181,25 @@ void PaymentServerTests::paymentServerTests()
     QCOMPARE(PaymentServer::verifyExpired(r.paymentRequest.getDetails()), true);
 
     // Test BIP70 DoS protection:
-    unsigned char randData[BIP70_MAX_PAYMENTREQUEST_SIZE + 1];
-    GetRandBytes(randData, sizeof(randData));
+    auto randdata = FastRandomContext().randbytes(BIP70_MAX_PAYMENTREQUEST_SIZE + 1);
+
     // Write data to a temp file:
     QTemporaryFile tempFile;
     tempFile.open();
-    tempFile.write((const char*)randData, sizeof(randData));
+    tempFile.write((const char*)randdata.data(), randdata.size());
     tempFile.close();
     // compares 50001 <= BIP70_MAX_PAYMENTREQUEST_SIZE == false
     QCOMPARE(PaymentServer::verifySize(tempFile.size()), false);
 
     // Payment request with amount overflow (amount is set to 21000001 BTC):
     data = DecodeBase64(paymentrequest5_cert2_BASE64);
-    byteArray = QByteArray((const char*)&data[0], data.size());
+    byteArray = QByteArray((const char*)data.data(), data.size());
     r.paymentRequest.parse(byteArray);
     // Ensure the request is initialized
     QVERIFY(r.paymentRequest.IsInitialized());
     // Extract address and amount from the request
     QList<std::pair<CScript, CAmount> > sendingTos = r.paymentRequest.getPayTo();
-    Q_FOREACH (const PAIRTYPE(CScript, CAmount)& sendingTo, sendingTos) {
+    for (const std::pair<CScript, CAmount>& sendingTo : sendingTos) {
         CTxDestination dest;
         if (ExtractDestination(sendingTo.first, dest))
             QCOMPARE(PaymentServer::verifyAmount(sendingTo.second), false);
@@ -205,7 +208,7 @@ void PaymentServerTests::paymentServerTests()
     delete server;
 }
 
-void RecipientCatcher::getRecipient(SendCoinsRecipient r)
+void RecipientCatcher::getRecipient(const SendCoinsRecipient& r)
 {
     recipient = r;
 }

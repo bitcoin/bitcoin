@@ -1,0 +1,58 @@
+version: '{branch}.{build}'
+skip_tags: true
+image: Visual Studio 2017
+configuration: Release
+platform: x64
+clone_depth: 5
+environment:
+  APPVEYOR_SAVE_CACHE_ON_ERROR: true
+  CLCACHE_SERVER: 1
+  PACKAGES: berkeleydb boost-filesystem boost-signals2 boost-test libevent openssl rapidcheck zeromq
+  PATH: 'C:\Python37-x64;C:\Python37-x64\Scripts;%PATH%'
+  PYTHONUTF8: 1
+cache:
+- C:\tools\vcpkg\installed -> .appveyor.yml
+- C:\Users\appveyor\clcache -> .appveyor.yml, build_msvc\**, **\Makefile.am, **\*.vcxproj.in
+install:
+- cmd: pip install --quiet git+https://github.com/frerich/clcache.git@v4.2.0
+# Disable zmq test for now since python zmq library on Windows would cause Access violation sometimes.
+# - cmd: pip install zmq
+- cmd: echo set(VCPKG_BUILD_TYPE release) >> C:\tools\vcpkg\triplets\%PLATFORM%-windows-static.cmake
+- cmd: vcpkg remove --outdated --recurse
+- cmd: vcpkg install --triplet %PLATFORM%-windows-static %PACKAGES% > NUL
+before_build:
+- ps:  clcache -M 536870912
+- cmd: python build_msvc\msvc-autogen.py
+- ps:  $files = (Get-ChildItem -Recurse | where {$_.extension -eq ".vcxproj"}).FullName
+- ps:  for (${i} = 0; ${i} -lt ${files}.length; ${i}++) {
+           ${content} = (Get-Content ${files}[${i}]);
+           ${content} = ${content}.Replace("</RuntimeLibrary>", "</RuntimeLibrary><DebugInformationFormat>None</DebugInformationFormat>");
+           ${content} = ${content}.Replace("<WholeProgramOptimization>true", "<WholeProgramOptimization>false");
+           Set-Content ${files}[${i}] ${content};
+       }
+- ps:  Start-Process clcache-server
+- ps:  fsutil behavior set disablelastaccess 0 # Enable Access time feature on Windows (for clcache)
+build_script:
+- cmd: msbuild /p:TrackFileAccess=false /p:CLToolExe=clcache.exe build_msvc\bitcoin.sln /m /v:q /nologo
+after_build:
+- ps:  fsutil behavior set disablelastaccess 1 # Disable Access time feature on Windows (better performance)
+- ps:  clcache -z
+before_test:
+- ps:  ${conf_ini} = (Get-Content([IO.Path]::Combine(${env:APPVEYOR_BUILD_FOLDER}, "test", "config.ini.in")))
+- ps:  ${conf_ini} = ${conf_ini}.Replace("@abs_top_srcdir@", ${env:APPVEYOR_BUILD_FOLDER})
+- ps:  ${conf_ini} = ${conf_ini}.Replace("@abs_top_builddir@", ${env:APPVEYOR_BUILD_FOLDER})
+- ps:  ${conf_ini} = ${conf_ini}.Replace("@EXEEXT@", ".exe")
+- ps:  ${conf_ini} = ${conf_ini}.Replace("@ENABLE_WALLET_TRUE@", "")
+- ps:  ${conf_ini} = ${conf_ini}.Replace("@BUILD_BITCOIN_CLI_TRUE@", "")
+- ps:  ${conf_ini} = ${conf_ini}.Replace("@BUILD_BITCOIND_TRUE@", "")
+- ps:  ${conf_ini} = ${conf_ini}.Replace("@ENABLE_ZMQ_TRUE@", "")
+- ps:  ${utf8} = New-Object System.Text.UTF8Encoding ${false}
+- ps:  '[IO.File]::WriteAllLines([IO.Path]::Combine(${env:APPVEYOR_BUILD_FOLDER}, "test", "config.ini"), ${conf_ini}, ${utf8})'
+- ps:  move "build_msvc\${env:PLATFORM}\${env:CONFIGURATION}\*.exe" src
+test_script:
+- cmd: src\test_bitcoin.exe -k stdout -e stdout 2> NUL
+- cmd: src\bench_bitcoin.exe -evals=1 -scaling=0 > NUL
+- ps:  python test\util\bitcoin-util-test.py
+- cmd: python test\util\rpcauth-test.py
+- cmd: python test\functional\test_runner.py --ci --quiet --combinedlogslen=4000 --failfast
+deploy: off

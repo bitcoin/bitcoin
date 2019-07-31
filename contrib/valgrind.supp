@@ -1,0 +1,43 @@
+# Valgrind suppressions file for Bitcoin.
+#
+# Includes known Valgrind warnings in our dependencies that cannot be fixed
+# in-tree.
+#
+# Example use:
+# $ valgrind --suppressions=contrib/valgrind.supp src/test/test_bitcoin
+# $ valgrind --suppressions=contrib/valgrind.supp --leak-check=full \
+#       --show-leak-kinds=all src/test/test_bitcoin --log_level=test_suite
+{
+   Suppress libstdc++ warning - https://gcc.gnu.org/bugzilla/show_bug.cgi?id=65434
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   obj:*/libstdc++.*
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   obj:*/ld-*.so
+}
+{
+   Suppress libdb warning - https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=662917
+   Memcheck:Cond
+   obj:*/libdb_cxx-*.so
+   fun:__log_put
+   obj:*/libdb_cxx-*.so
+   fun:__log_put_record
+}
+{
+   Suppress leveldb warning (leveldb::InitModule()) - https://github.com/google/leveldb/issues/113
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   fun:_ZN7leveldbL10InitModuleEv
+}
+{
+   Suppress leveldb warning (leveldb::Env::Default()) - https://github.com/google/leveldb/issues/113
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   ...
+   fun:_ZN7leveldbL14InitDefaultEnvEv
+}

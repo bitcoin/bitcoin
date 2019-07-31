@@ -1,38 +1,28 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2011-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_QT_WALLETVIEW_H
 #define BITCOIN_QT_WALLETVIEW_H
 
-#include "amount.h"
+#include <amount.h>
 
 #include <QStackedWidget>
 
-class BalancesDialog;
 class BitcoinGUI;
 class ClientModel;
 class OverviewPage;
 class PlatformStyle;
 class ReceiveCoinsDialog;
 class SendCoinsDialog;
-class SendMPDialog;
-class TradeHistoryDialog;
-class LookupSPDialog;
-class LookupTXDialog;
-class LookupAddressDialog;
-class MetaDExDialog;
-class MetaDExCancelDialog;
 class SendCoinsRecipient;
 class TransactionView;
-class TXHistoryDialog;
 class WalletModel;
 class AddressBookPage;
 
 QT_BEGIN_NAMESPACE
 class QModelIndex;
 class QProgressDialog;
-class QTabWidget;
 QT_END_NAMESPACE
 
 /*
@@ -54,6 +44,7 @@ public:
         The client model represents the part of the core that communicates with the P2P network, and is wallet-agnostic.
     */
     void setClientModel(ClientModel *clientModel);
+    WalletModel *getWalletModel() { return walletModel; }
     /** Set the wallet model.
         The wallet model represents a bitcoin wallet, and offers access to the list of transactions, address book and sending
         functionality.
@@ -69,52 +60,26 @@ private:
     WalletModel *walletModel;
 
     OverviewPage *overviewPage;
-    BalancesDialog *balancesPage;
     QWidget *transactionsPage;
-    QWidget *exchangePage;
-    QWidget *smartPropertyPage;
-    QWidget *toolboxPage;
     ReceiveCoinsDialog *receiveCoinsPage;
+    SendCoinsDialog *sendCoinsPage;
     AddressBookPage *usedSendingAddressesPage;
     AddressBookPage *usedReceivingAddressesPage;
-    QWidget *sendCoinsPage;
-    SendCoinsDialog *sendCoinsTab;
-    SendMPDialog *sendMPTab;
-    LookupSPDialog *spLookupTab;
-    LookupTXDialog *txLookupTab;
-    LookupAddressDialog *addressLookupTab;
-    TradeHistoryDialog *tradeHistoryTab;
-    MetaDExDialog *metaDExTab;
-    MetaDExCancelDialog *cancelTab;
+
     TransactionView *transactionView;
-    TXHistoryDialog *mpTXTab;
-    QWidget *bitcoinTXTab;
 
     QProgressDialog *progressDialog;
     const PlatformStyle *platformStyle;
 
-    QTabWidget *txTabHolder;
-    QTabWidget *sendTabHolder;
-
 public Q_SLOTS:
     /** Switch to overview (home) page */
     void gotoOverviewPage();
-    /** Switch to balances page */
-    void gotoBalancesPage();
-    /** Switch to exchange page */
-    void gotoExchangePage();
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
-    /** Switch specifically to omni tx history tab */
-    void gotoOmniHistoryTab();
-    /** Switch specifically to bitcoin tx history tab */
-    void gotoBitcoinHistoryTab();
-    /** Switch to utility page */
-    void gotoToolboxPage();
 
     /** Show Sign/Verify Message dialog and switch to sign message tab */
     void gotoSignMessageTab(QString addr = "");
@@ -146,15 +111,22 @@ public Q_SLOTS:
     /** Show progress dialog e.g. for rescan */
     void showProgress(const QString &title, int nProgress);
 
+    /** User has requested more information about the out of sync state */
+    void requestedSyncWarningInfo();
+
 Q_SIGNALS:
     /** Signal that we want to show the main window */
     void showNormalIfMinimized();
     /**  Fired when a message should be reported to the user */
     void message(const QString &title, const QString &message, unsigned int style);
     /** Encryption status of wallet changed */
-    void encryptionStatusChanged(int status);
+    void encryptionStatusChanged();
+    /** HD-Enabled status of wallet changed (only possible during startup) */
+    void hdEnabledStatusChanged();
     /** Notify that a new transaction appeared */
-    void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label);
+    void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label, const QString& walletName);
+    /** Notify that the out of sync warning icon has been pressed */
+    void outOfSyncWarningClicked();
 };
 
 #endif // BITCOIN_QT_WALLETVIEW_H

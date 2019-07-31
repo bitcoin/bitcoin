@@ -1,8 +1,7 @@
-#!/usr/bin/env python
-# Copyright (c) 2013-2015 The Bitcoin Core developers
+#!/usr/bin/env python3
+# Copyright (c) 2013-2018 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-from __future__ import division,print_function,unicode_literals
 import biplist
 from ds_store import DSStore
 from mac_alias import Alias
@@ -14,7 +13,7 @@ package_name_ns = sys.argv[2]
 ds = DSStore.open(output_file, 'w+')
 ds['.']['bwsp'] = {
     'ShowStatusBar': False,
-    'WindowBounds': b'{{300, 280}, {500, 343}}',
+    'WindowBounds': '{{300, 280}, {500, 343}}',
     'ContainerShowSidebar': False,
     'SidebarWidth': 0,
     'ShowTabView': False,
@@ -54,7 +53,7 @@ ds['.']['icvp'] = icvp
 ds['.']['vSrn'] = ('long', 1)
 
 ds['Applications']['Iloc'] = (370, 156)
-ds['OmniCore-Qt.app']['Iloc'] = (128, 156)
+ds['Bitcoin-Qt.app']['Iloc'] = (128, 156)
 
 ds.flush()
 ds.close()
