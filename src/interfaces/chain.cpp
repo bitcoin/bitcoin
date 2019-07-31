@@ -9,6 +9,7 @@
 #include <interfaces/handler.h>
 #include <interfaces/wallet.h>
 #include <net.h>
+#include <net_processing.h>
 #include <node/coin.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
@@ -292,8 +293,7 @@ public:
     }
     void relayTransaction(const uint256& txid) override
     {
-        CInv inv(MSG_TX, txid);
-        g_connman->ForEachNode([&inv](CNode* node) { node->PushInventory(inv); });
+        RelayTransaction(txid, *g_connman);
     }
     void getTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) override
     {
