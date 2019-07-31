@@ -286,7 +286,7 @@ public:
     // structure, including the hash.
     const std::vector<CTxIn> vin;
     const std::vector<CTxOut> vout;
-    const int32_t nVersion;
+    const uint32_t nVersion;
     const uint32_t nLockTime;
 
 private:
@@ -367,7 +367,7 @@ struct CMutableTransaction
 {
     std::vector<CTxIn> vin;
     std::vector<CTxOut> vout;
-    int32_t nVersion;
+    uint32_t nVersion;
     uint32_t nLockTime;
 
     CMutableTransaction();
