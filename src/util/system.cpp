@@ -289,6 +289,9 @@ NODISCARD static bool InterpretOption(std::string key, std::string val, unsigned
 {
     assert(key[0] == '-');
 
+    flags &= ~ArgsManager::DEBUG_ONLY;
+    flags &= ~ArgsManager::NETWORK_ONLY;
+
     size_t option_index = key.find('.');
     if (option_index == std::string::npos) {
         option_index = 1;
@@ -296,15 +299,21 @@ NODISCARD static bool InterpretOption(std::string key, std::string val, unsigned
         ++option_index;
     }
     if (key.substr(option_index, 2) == "no") {
+        const std::string negated_key = key;
         key.erase(option_index, 2);
         if (flags & ArgsManager::ALLOW_BOOL) {
             if (InterpretBool(val)) {
                 args[key].clear();
                 return true;
             }
-            // Double negatives like -nofoo=0 are supported (but discouraged)
-            LogPrintf("Warning: parsed potentially confusing double-negative %s=%s\n", key, val);
-            val = "1";
+            if (flags == ArgsManager::ALLOW_BOOL) {
+                // Double negatives like -nofoo=0 are supported (but discouraged)
+                LogPrintf("Warning: parsed potentially confusing double-negative %s=%s\n", negated_key, val);
+                val = "1";
+            } else {
+                error = strprintf("Double-negative %s=%s is not allowed", negated_key.c_str(), val.c_str());
+                return false;
+            }
         } else {
             error = strprintf("Negating of %s is meaningless and therefore forbidden", key.c_str());
             return false;
