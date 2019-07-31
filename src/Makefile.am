@@ -189,6 +189,7 @@ BITCOIN_CORE_H = \
   scheduler.h \
   script/descriptor.h \
   script/keyorigin.h \
+  script/proof.h \
   script/sigcache.h \
   script/sign.h \
   script/signingprovider.h \
@@ -507,6 +508,7 @@ libbitcoin_util_a_SOURCES = \
   random.cpp \
   randomenv.cpp \
   rpc/request.cpp \
+  script/proof.cpp \
   support/cleanse.cpp \
   sync.cpp \
   threadinterrupt.cpp \

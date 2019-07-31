@@ -11,7 +11,7 @@
 
 #include <string>
 
-extern const std::string MESSAGE_MAGIC;
+enum class OutputType;
 
 /** The result of a signed message verification.
  * Message verification takes as an input:

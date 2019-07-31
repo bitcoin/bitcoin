@@ -263,6 +263,11 @@ public:
     // Remove wallet.
     virtual void remove() = 0;
 
+    /**
+     * Attempt to sign a message with the given destination.
+     */
+    virtual void signMessage(const std::string& message, const CTxDestination& destination, std::vector<uint8_t>& signature_out) = 0;
+
     //! Register handler for unload message.
     using UnloadFn = std::function<void()>;
     virtual std::unique_ptr<Handler> handleUnload(UnloadFn fn) = 0;
