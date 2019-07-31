@@ -88,6 +88,12 @@ Low-level Changes section below.
   `-limitancestorcount`, `-limitdescendantcount` and `-walletrejectlongchains`
   command line arguments.
 
+Deprecated or removed RPCs
+--------------------------
+
+- The `totalFee` option of the `bumpfee` RPC has been deprecated and will be
+  removed in 0.20.  To continue using this option start with
+  `-deprecatedrpc=totalFee`.  See the `bumpfee` RPC help text for more details.
 
 Low-level changes
 =================
