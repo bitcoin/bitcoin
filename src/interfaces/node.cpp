@@ -5,7 +5,6 @@
 #include <interfaces/node.h>
 
 #include <addrdb.h>
-#include <amount.h>
 #include <banman.h>
 #include <chain.h>
 #include <chainparams.h>
@@ -19,7 +18,6 @@
 #include <netbase.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
-#include <policy/policy.h>
 #include <policy/settings.h>
 #include <primitives/block.h>
 #include <rpc/server.h>
@@ -36,7 +34,6 @@
 #include <config/bitcoin-config.h>
 #endif
 
-#include <atomic>
 #include <univalue.h>
 
 class CWallet;

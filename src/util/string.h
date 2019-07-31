@@ -5,7 +5,6 @@
 #ifndef BITCOIN_UTIL_STRING_H
 #define BITCOIN_UTIL_STRING_H
 
-#include <functional>
 #include <string>
 #include <vector>
 
