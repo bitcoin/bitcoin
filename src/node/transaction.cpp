@@ -5,6 +5,7 @@
 
 #include <consensus/validation.h>
 #include <net.h>
+#include <net_processing.h>
 #include <txmempool.h>
 #include <util/validation.h>
 #include <validation.h>
@@ -69,10 +70,7 @@ TransactionError BroadcastTransaction(const CTransactionRef tx, uint256& hashTx,
         return TransactionError::P2P_DISABLED;
     }
 
-    CInv inv(MSG_TX, hashTx);
-    g_connman->ForEachNode([&inv](CNode* pnode) {
-        pnode->PushInventory(inv);
-    });
+    RelayTransaction(hashTx, *g_connman);
 
     return TransactionError::OK;
 }
