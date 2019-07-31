@@ -156,6 +156,7 @@ BASE_SCRIPTS = [
     'feature_notifications.py',
     'rpc_getblockfilter.py',
     'rpc_invalidateblock.py',
+    'rpc_removemempoolentry.py',
     'feature_rbf.py',
     'mempool_packages.py',
     'mempool_package_onemore.py',

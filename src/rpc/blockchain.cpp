@@ -688,6 +688,37 @@ static UniValue getmempoolentry(const JSONRPCRequest& request)
     return info;
 }
 
+static UniValue removemempoolentry(const JSONRPCRequest& request)
+{
+            RPCHelpMan{"removemempoolentry",
+                "\nRemoves a given transaction and its descendants from the mempool\n",
+                {
+                    {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id (must be in mempool)"},
+                },
+                RPCResult{
+            "true              (boolean) Returns true\n"
+                },
+                RPCExamples{
+                    HelpExampleCli("removemempoolentry", "\"mytxid\"")
+            + HelpExampleRpc("removemempoolentry", "\"mytxid\"")
+                },
+            }.Check(request);
+
+    uint256 hash = ParseHashV(request.params[0], "parameter 1");
+
+    LOCK(mempool.cs);
+
+    CTxMemPool::txiter it = mempool.mapTx.find(hash);
+    if (it == mempool.mapTx.end()) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not in mempool");
+    }
+
+    const CTxMemPoolEntry &e = *it;
+    mempool.removeRecursive(e.GetTx(), MemPoolRemovalReason::MANUAL);
+
+    return true;
+}
+
 static UniValue getblockhash(const JSONRPCRequest& request)
 {
             RPCHelpMan{"getblockhash",
@@ -2346,6 +2377,7 @@ static const CRPCCommand commands[] =
     { "hidden",             "waitforblock",           &waitforblock,           {"blockhash","timeout"} },
     { "hidden",             "waitforblockheight",     &waitforblockheight,     {"height","timeout"} },
     { "hidden",             "syncwithvalidationinterfacequeue", &syncwithvalidationinterfacequeue, {} },
+    { "hidden",             "removemempoolentry",     &removemempoolentry,     {"txid"} },
 };
 // clang-format on
 

@@ -351,6 +351,7 @@ enum class MemPoolRemovalReason {
     BLOCK,       //!< Removed for block
     CONFLICT,    //!< Removed for conflict with in-block transaction
     REPLACED,    //!< Removed for replacement
+    MANUAL,      //!< Removed manually by user
 };
 
 class SaltedTxidHasher
