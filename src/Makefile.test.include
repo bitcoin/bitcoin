@@ -52,12 +52,12 @@ GENERATED_TEST_FILES = $(JSON_TEST_FILES:.json=.json.h) $(RAW_TEST_FILES:.raw=.r
 
 BITCOIN_TEST_SUITE = \
   test/main.cpp \
-  test/test_bitcoin.h \
-  test/test_bitcoin.cpp
+  test/setup_common.h \
+  test/setup_common.cpp
 
 FUZZ_SUITE = \
-  test/test_bitcoin.h \
-  test/test_bitcoin.cpp \
+  test/setup_common.h \
+  test/setup_common.cpp \
   test/fuzz/fuzz.cpp \
   test/fuzz/fuzz.h
 
@@ -92,10 +92,12 @@ BITCOIN_TESTS =\
   test/blockchain_tests.cpp \
   test/blockencodings_tests.cpp \
   test/blockfilter_tests.cpp \
+  test/blockfilter_index_tests.cpp \
   test/bloom_tests.cpp \
   test/bswap_tests.cpp \
   test/checkqueue_tests.cpp \
   test/coins_tests.cpp \
+  test/compilerbug_tests.cpp \
   test/compress_tests.cpp \
   test/crypto_tests.cpp \
   test/cuckoocache_tests.cpp \
@@ -137,6 +139,7 @@ BITCOIN_TESTS =\
   test/skiplist_tests.cpp \
   test/streams_tests.cpp \
   test/sync_tests.cpp \
+  test/util_threadnames_tests.cpp \
   test/timedata_tests.cpp \
   test/torcontrol_tests.cpp \
   test/transaction_tests.cpp \
@@ -164,7 +167,8 @@ BITCOIN_TESTS += \
   wallet/test/wallet_tests.cpp \
   wallet/test/wallet_crypto_tests.cpp \
   wallet/test/coinselector_tests.cpp \
-  wallet/test/init_tests.cpp
+  wallet/test/init_tests.cpp \
+  wallet/test/ismine_tests.cpp
 
 BITCOIN_TEST_SUITE += \
   wallet/test/wallet_test_fixture.cpp \

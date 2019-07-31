@@ -14,7 +14,10 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
-        self.extra_args = [["-printpriority=1"], ["-printpriority=1"]]
+        self.extra_args = [[
+            "-printpriority=1",
+            "-acceptnonstdtxn=1",
+        ]] * self.num_nodes
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -64,7 +67,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         for i in range(3):
             for j in txids[i]:
                 assert j in mempool
-                sizes[i] += mempool[j]['size']
+                sizes[i] += mempool[j]['vsize']
             assert sizes[i] > MAX_BLOCK_BASE_SIZE  # Fail => raise utxo_count
 
         # add a fee delta to something in the cheapest bucket and make sure it gets mined

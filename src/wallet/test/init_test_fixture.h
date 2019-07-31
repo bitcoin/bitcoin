@@ -1,4 +1,4 @@
-// Copyright (c) 2018 The Bitcoin Core developers
+// Copyright (c) 2018-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,7 +6,7 @@
 #define BITCOIN_WALLET_TEST_INIT_TEST_FIXTURE_H
 
 #include <interfaces/chain.h>
-#include <test/test_bitcoin.h>
+#include <test/setup_common.h>
 
 
 struct InitWalletDirTestingSetup: public BasicTestingSetup {

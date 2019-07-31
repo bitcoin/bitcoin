@@ -6,6 +6,7 @@
 
 #include <chainparamsbase.h>
 #include <compat.h>
+#include <util/threadnames.h>
 #include <util/system.h>
 #include <util/strencodings.h>
 #include <netbase.h>
@@ -17,7 +18,7 @@
 #include <memory>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <string>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -138,15 +139,15 @@ struct HTTPPathHandler
 //! libevent event loop
 static struct event_base* eventBase = nullptr;
 //! HTTP server
-struct evhttp* eventHTTP = nullptr;
+static struct evhttp* eventHTTP = nullptr;
 //! List of subnets to allow RPC connections from
 static std::vector<CSubNet> rpc_allow_subnets;
 //! Work queue for handling longer requests off the event loop thread
 static WorkQueue<HTTPClosure>* workQueue = nullptr;
 //! Handlers for (sub)paths
-std::vector<HTTPPathHandler> pathHandlers;
+static std::vector<HTTPPathHandler> pathHandlers;
 //! Bound listening sockets
-std::vector<evhttp_bound_socket *> boundSockets;
+static std::vector<evhttp_bound_socket *> boundSockets;
 
 /** Check if a network address is allowed to access the HTTP server */
 static bool ClientAllowed(const CNetAddr& netaddr)
@@ -284,7 +285,7 @@ static void http_reject_request_cb(struct evhttp_request* req, void*)
 /** Event dispatcher thread */
 static bool ThreadHTTP(struct event_base* base)
 {
-    RenameThread("bitcoin-http");
+    util::ThreadRename("http");
     LogPrint(BCLog::HTTP, "Entering http event loop\n");
     event_base_dispatch(base);
     // Event loop will be interrupted by InterruptHTTPServer()
@@ -335,9 +336,9 @@ static bool HTTPBindAddresses(struct evhttp* http)
 }
 
 /** Simple wrapper to set thread name and run work queue */
-static void HTTPWorkQueueRun(WorkQueue<HTTPClosure>* queue)
+static void HTTPWorkQueueRun(WorkQueue<HTTPClosure>* queue, int worker_num)
 {
-    RenameThread("bitcoin-httpworker");
+    util::ThreadRename(strprintf("httpworker.%i", worker_num));
     queue->Run();
 }
 
@@ -419,7 +420,7 @@ bool UpdateHTTPServerLogging(bool enable) {
 #endif
 }
 
-std::thread threadHTTP;
+static std::thread threadHTTP;
 static std::vector<std::thread> g_thread_http_workers;
 
 void StartHTTPServer()
@@ -430,7 +431,7 @@ void StartHTTPServer()
     threadHTTP = std::thread(ThreadHTTP, eventBase);
 
     for (int i = 0; i < rpcThreads; i++) {
-        g_thread_http_workers.emplace_back(HTTPWorkQueueRun, workQueue);
+        g_thread_http_workers.emplace_back(HTTPWorkQueueRun, workQueue, i);
     }
 }
 
@@ -654,16 +655,4 @@ void UnregisterHTTPHandler(const std::string &prefix, bool exactMatch)
         LogPrint(BCLog::HTTP, "Unregistering HTTP handler for %s (exactmatch %d)\n", prefix, exactMatch);
         pathHandlers.erase(i);
     }
-}
-
-std::string urlDecode(const std::string &urlEncoded) {
-    std::string res;
-    if (!urlEncoded.empty()) {
-        char *decoded = evhttp_uridecode(urlEncoded.c_str(), false, nullptr);
-        if (decoded) {
-            res = std::string(decoded);
-            free(decoded);
-        }
-    }
-    return res;
 }

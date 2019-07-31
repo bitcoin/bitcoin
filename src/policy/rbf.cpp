@@ -3,16 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <policy/rbf.h>
-
-bool SignalsOptInRBF(const CTransaction &tx)
-{
-    for (const CTxIn &txin : tx.vin) {
-        if (txin.nSequence <= MAX_BIP125_RBF_SEQUENCE) {
-            return true;
-        }
-    }
-    return false;
-}
+#include <util/rbf.h>
 
 RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool)
 {

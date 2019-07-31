@@ -1,15 +1,11 @@
-// Copyright (c) 2018 The Bitcoin Core developers
+// Copyright (c) 2018-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include <key.h>
 
-#include <base58.h>
-#include <script/script.h>
 #include <uint256.h>
 #include <util/system.h>
-#include <util/strencodings.h>
-#include <test/test_bitcoin.h>
-#include <string>
+#include <test/setup_common.h>
 #include <vector>
 
 #include <boost/test/unit_test.hpp>

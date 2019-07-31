@@ -5,6 +5,18 @@ The headless daemon `bitcoind` has the JSON-RPC API enabled by default, the GUI
 option. In the GUI it is possible to execute RPC methods in the Debug Console
 Dialog.
 
+## Versioning
+
+The RPC interface might change from one major version of Bitcoin Core to the
+next. This makes the RPC interface implicitly versioned on the major version.
+The version tuple can be retrieved by e.g. the `getnetworkinfo` RPC in
+`version`.
+
+Usually deprecated features can be re-enabled during the grace-period of one
+major version via the `-deprecatedrpc=` command line option. The release notes
+of a new major release come with detailed instructions on what RPC features
+were deprecated and how to re-enable them temporarily.
+
 ## Security
 
 The RPC interface allows other programs to control Bitcoin Core,

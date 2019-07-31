@@ -87,12 +87,12 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     /* Display elements init */
     QDir translations(":translations");
 
-    ui->bitcoinAtStartup->setToolTip(ui->bitcoinAtStartup->toolTip().arg(tr(PACKAGE_NAME)));
-    ui->bitcoinAtStartup->setText(ui->bitcoinAtStartup->text().arg(tr(PACKAGE_NAME)));
+    ui->bitcoinAtStartup->setToolTip(ui->bitcoinAtStartup->toolTip().arg(PACKAGE_NAME));
+    ui->bitcoinAtStartup->setText(ui->bitcoinAtStartup->text().arg(PACKAGE_NAME));
 
-    ui->openBitcoinConfButton->setToolTip(ui->openBitcoinConfButton->toolTip().arg(tr(PACKAGE_NAME)));
+    ui->openBitcoinConfButton->setToolTip(ui->openBitcoinConfButton->toolTip().arg(PACKAGE_NAME));
 
-    ui->lang->setToolTip(ui->lang->toolTip().arg(tr(PACKAGE_NAME)));
+    ui->lang->setToolTip(ui->lang->toolTip().arg(PACKAGE_NAME));
     ui->lang->addItem(QString("(") + tr("default") + QString(")"), QVariant(""));
     for (const QString &langStr : translations.entryList())
     {
@@ -154,6 +154,10 @@ void OptionsDialog::setModel(OptionsModel *_model)
         if (_model->isRestartRequired())
             showRestartWarning(true);
 
+        // Prune values are in GB to be consistent with intro.cpp
+        static constexpr uint64_t nMinDiskSpace = (MIN_DISK_SPACE_FOR_BLOCK_FILES / GB_BYTES) + (MIN_DISK_SPACE_FOR_BLOCK_FILES % GB_BYTES) ? 1 : 0;
+        ui->pruneSize->setRange(nMinDiskSpace, std::numeric_limits<int>::max());
+
         QString strLabel = _model->getOverriddenByCommandLine();
         if (strLabel.isEmpty())
             strLabel = tr("none");
@@ -164,10 +168,6 @@ void OptionsDialog::setModel(OptionsModel *_model)
         mapper->toFirst();
 
         updateDefaultProxyNets();
-
-        // Prune values are in GB to be consistent with intro.cpp
-        static constexpr uint64_t nMinDiskSpace = (MIN_DISK_SPACE_FOR_BLOCK_FILES / GB_BYTES) + (MIN_DISK_SPACE_FOR_BLOCK_FILES % GB_BYTES) ? 1 : 0;
-        ui->pruneSize->setRange(nMinDiskSpace, _model->node().getAssumedBlockchainSize());
     }
 
     /* warn when one of the following settings changes by user action (placed here so init via mapper doesn't trigger them) */

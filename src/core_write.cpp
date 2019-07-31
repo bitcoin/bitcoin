@@ -13,7 +13,6 @@
 #include <streams.h>
 #include <univalue.h>
 #include <util/system.h>
-#include <util/moneystr.h>
 #include <util/strencodings.h>
 
 UniValue ValueFromAmount(const CAmount& amount)

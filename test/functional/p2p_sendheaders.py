@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2018 The Bitcoin Core developers
+# Copyright (c) 2014-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test behavior of headers messages to announce blocks.
@@ -103,7 +103,6 @@ from test_framework.mininode import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    sync_blocks,
     wait_until,
 )
 
@@ -225,7 +224,7 @@ class SendHeadersTest(BitcoinTestFramework):
 
         # make sure all invalidated blocks are node0's
         self.nodes[0].generatetoaddress(length, self.nodes[0].get_deterministic_priv_key().address)
-        sync_blocks(self.nodes, wait=0.1)
+        self.sync_blocks(self.nodes, wait=0.1)
         for x in self.nodes[0].p2ps:
             x.wait_for_block_announcement(int(self.nodes[0].getbestblockhash(), 16))
             x.clear_block_announcements()
@@ -234,7 +233,7 @@ class SendHeadersTest(BitcoinTestFramework):
         hash_to_invalidate = self.nodes[1].getblockhash(tip_height - (length - 1))
         self.nodes[1].invalidateblock(hash_to_invalidate)
         all_hashes = self.nodes[1].generatetoaddress(length + 1, self.nodes[1].get_deterministic_priv_key().address)  # Must be longer than the orig chain
-        sync_blocks(self.nodes, wait=0.1)
+        self.sync_blocks(self.nodes, wait=0.1)
         return [int(x, 16) for x in all_hashes]
 
     def run_test(self):

@@ -1,4 +1,4 @@
-// Copyright (c) 2018 The Bitcoin Core developers
+// Copyright (c) 2018-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,7 +6,7 @@
 #include <string>
 #include <script/sign.h>
 #include <script/standard.h>
-#include <test/test_bitcoin.h>
+#include <test/setup_common.h>
 #include <boost/test/unit_test.hpp>
 #include <script/descriptor.h>
 #include <util/strencodings.h>
@@ -154,8 +154,8 @@ void Check(const std::string& prv, const std::string& pub, int flags, const std:
             // Test whether the observed key path is present in the 'paths' variable (which contains expected, unobserved paths),
             // and then remove it from that set.
             for (const auto& origin : script_provider.origins) {
-                BOOST_CHECK_MESSAGE(paths.count(origin.second.path), "Unexpected key path: " + prv);
-                left_paths.erase(origin.second.path);
+                BOOST_CHECK_MESSAGE(paths.count(origin.second.second.path), "Unexpected key path: " + prv);
+                left_paths.erase(origin.second.second.path);
             }
         }
     }

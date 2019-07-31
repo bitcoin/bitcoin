@@ -16,7 +16,7 @@ fi
 
 if [ "$RUN_FUNCTIONAL_TESTS" = "true" ]; then
   BEGIN_FOLD functional-tests
-  DOCKER_EXEC test/functional/test_runner.py --ci --combinedlogslen=4000 --coverage --quiet --failfast
+  DOCKER_EXEC test/functional/test_runner.py --ci --combinedlogslen=4000 ${TEST_RUNNER_EXTRA} --quiet --failfast
   END_FOLD
 fi
 
@@ -25,3 +25,5 @@ if [ "$RUN_FUZZ_TESTS" = "true" ]; then
   DOCKER_EXEC test/fuzz/test_runner.py -l DEBUG ${DIR_FUZZ_IN}
   END_FOLD
 fi
+
+cd ${TRAVIS_BUILD_DIR} || (echo "could not enter travis build dir $TRAVIS_BUILD_DIR"; exit 1)

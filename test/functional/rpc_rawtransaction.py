@@ -42,7 +42,11 @@ class RawTransactionsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
-        self.extra_args = [["-addresstype=legacy", "-txindex"], ["-addresstype=legacy", "-txindex"], ["-addresstype=legacy", "-txindex"]]
+        self.extra_args = [
+            ["-txindex"],
+            ["-txindex"],
+            ["-txindex"],
+        ]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -285,11 +289,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         txDetails = self.nodes[0].gettransaction(txId, True)
         rawTx = self.nodes[0].decoderawtransaction(txDetails['hex'])
-        vout = False
-        for outpoint in rawTx['vout']:
-            if outpoint['value'] == Decimal('2.20000000'):
-                vout = outpoint
-                break
+        vout = next(o for o in rawTx['vout'] if o['value'] == Decimal('2.20000000'))
 
         bal = self.nodes[0].getbalance()
         inputs = [{ "txid" : txId, "vout" : vout['n'], "scriptPubKey" : vout['scriptPubKey']['hex'], "amount" : vout['value']}]
@@ -330,11 +330,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         txDetails = self.nodes[0].gettransaction(txId, True)
         rawTx2 = self.nodes[0].decoderawtransaction(txDetails['hex'])
-        vout = False
-        for outpoint in rawTx2['vout']:
-            if outpoint['value'] == Decimal('2.20000000'):
-                vout = outpoint
-                break
+        vout = next(o for o in rawTx2['vout'] if o['value'] == Decimal('2.20000000'))
 
         bal = self.nodes[0].getbalance()
         inputs = [{ "txid" : txId, "vout" : vout['n'], "scriptPubKey" : vout['scriptPubKey']['hex'], "redeemScript" : mSigObjValid['hex'], "amount" : vout['value']}]
@@ -369,30 +365,30 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # getrawtransaction tests
         # 1. valid parameters - only supply txid
-        txHash = rawTx["hash"]
-        assert_equal(self.nodes[0].getrawtransaction(txHash), rawTxSigned['hex'])
+        txId = rawTx["txid"]
+        assert_equal(self.nodes[0].getrawtransaction(txId), rawTxSigned['hex'])
 
         # 2. valid parameters - supply txid and 0 for non-verbose
-        assert_equal(self.nodes[0].getrawtransaction(txHash, 0), rawTxSigned['hex'])
+        assert_equal(self.nodes[0].getrawtransaction(txId, 0), rawTxSigned['hex'])
 
         # 3. valid parameters - supply txid and False for non-verbose
-        assert_equal(self.nodes[0].getrawtransaction(txHash, False), rawTxSigned['hex'])
+        assert_equal(self.nodes[0].getrawtransaction(txId, False), rawTxSigned['hex'])
 
         # 4. valid parameters - supply txid and 1 for verbose.
         # We only check the "hex" field of the output so we don't need to update this test every time the output format changes.
-        assert_equal(self.nodes[0].getrawtransaction(txHash, 1)["hex"], rawTxSigned['hex'])
+        assert_equal(self.nodes[0].getrawtransaction(txId, 1)["hex"], rawTxSigned['hex'])
 
         # 5. valid parameters - supply txid and True for non-verbose
-        assert_equal(self.nodes[0].getrawtransaction(txHash, True)["hex"], rawTxSigned['hex'])
+        assert_equal(self.nodes[0].getrawtransaction(txId, True)["hex"], rawTxSigned['hex'])
 
         # 6. invalid parameters - supply txid and string "Flase"
-        assert_raises_rpc_error(-1, "not a boolean", self.nodes[0].getrawtransaction, txHash, "Flase")
+        assert_raises_rpc_error(-1, "not a boolean", self.nodes[0].getrawtransaction, txId, "Flase")
 
         # 7. invalid parameters - supply txid and empty array
-        assert_raises_rpc_error(-1, "not a boolean", self.nodes[0].getrawtransaction, txHash, [])
+        assert_raises_rpc_error(-1, "not a boolean", self.nodes[0].getrawtransaction, txId, [])
 
         # 8. invalid parameters - supply txid and empty dict
-        assert_raises_rpc_error(-1, "not a boolean", self.nodes[0].getrawtransaction, txHash, {})
+        assert_raises_rpc_error(-1, "not a boolean", self.nodes[0].getrawtransaction, txId, {})
 
         inputs  = [ {'txid' : "1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000", 'vout' : 1, 'sequence' : 1000}]
         outputs = { self.nodes[0].getnewaddress() : 1 }
@@ -433,6 +429,31 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawtx = ToHex(tx)
         decrawtx = self.nodes[0].decoderawtransaction(rawtx)
         assert_equal(decrawtx['version'], 0x7fffffff)
+
+        self.log.info('sendrawtransaction/testmempoolaccept with maxfeerate')
+
+        txId = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 1.0)
+        rawTx = self.nodes[0].getrawtransaction(txId, True)
+        vout = next(o for o in rawTx['vout'] if o['value'] == Decimal('1.00000000'))
+
+        self.sync_all()
+        inputs = [{ "txid" : txId, "vout" : vout['n'] }]
+        outputs = { self.nodes[0].getnewaddress() : Decimal("0.99999000") } # 1000 sat fee
+        rawTx = self.nodes[2].createrawtransaction(inputs, outputs)
+        rawTxSigned = self.nodes[2].signrawtransactionwithwallet(rawTx)
+        assert_equal(rawTxSigned['complete'], True)
+        # 1000 sat fee, ~100 b transaction, fee rate should land around 10 sat/b = 0.00010000 BTC/kB
+        # Thus, testmempoolaccept should reject
+        testres = self.nodes[2].testmempoolaccept([rawTxSigned['hex']], 0.00001000)[0]
+        assert_equal(testres['allowed'], False)
+        assert_equal(testres['reject-reason'], '256: absurdly-high-fee')
+        # and sendrawtransaction should throw
+        assert_raises_rpc_error(-26, "absurdly-high-fee", self.nodes[2].sendrawtransaction, rawTxSigned['hex'], 0.00001000)
+        # And below calls should both succeed
+        testres = self.nodes[2].testmempoolaccept(rawtxs=[rawTxSigned['hex']], maxfeerate='0.00070000')[0]
+        assert_equal(testres['allowed'], True)
+        self.nodes[2].sendrawtransaction(hexstring=rawTxSigned['hex'], maxfeerate='0.00070000')
+
 
 if __name__ == '__main__':
     RawTransactionsTest().main()

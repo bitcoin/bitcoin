@@ -2,8 +2,9 @@
 
 #include <stdlib.h>
 
+#include <chain.h>
 #include <rpc/blockchain.h>
-#include <test/test_bitcoin.h>
+#include <test/setup_common.h>
 
 /* Equality between doubles is imprecise. Comparison should be done
  * with a small threshold of tolerance, rather than exact equality.

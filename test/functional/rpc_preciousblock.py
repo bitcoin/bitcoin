@@ -8,7 +8,6 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     connect_nodes_bi,
-    sync_blocks,
 )
 
 def unidirectional_node_sync_via_rpc(node_src, node_dest):
@@ -72,7 +71,7 @@ class PreciousTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getbestblockhash(), hashC)
         self.log.info("Make Node1 prefer block C")
         self.nodes[1].preciousblock(hashC)
-        sync_blocks(self.nodes[0:2])  # wait because node 1 may not have downloaded hashC
+        self.sync_blocks(self.nodes[0:2])  # wait because node 1 may not have downloaded hashC
         assert_equal(self.nodes[1].getbestblockhash(), hashC)
         self.log.info("Make Node1 prefer block G again")
         self.nodes[1].preciousblock(hashG)
@@ -86,7 +85,7 @@ class PreciousTest(BitcoinTestFramework):
         self.log.info("Mine another block (E-F-G-)H on Node 0 and reorg Node 1")
         self.nodes[0].generatetoaddress(1, gen_address(0))
         assert_equal(self.nodes[0].getblockcount(), 6)
-        sync_blocks(self.nodes[0:2])
+        self.sync_blocks(self.nodes[0:2])
         hashH = self.nodes[0].getbestblockhash()
         assert_equal(self.nodes[1].getbestblockhash(), hashH)
         self.log.info("Node1 should not be able to prefer block C anymore")

@@ -18,7 +18,13 @@ from test_framework.blocktools import witness_script, send_to_witness
 from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut, FromHex, sha256, ToHex
 from test_framework.script import CScript, OP_HASH160, OP_CHECKSIG, OP_0, hash160, OP_EQUAL, OP_DUP, OP_EQUALVERIFY, OP_1, OP_2, OP_CHECKMULTISIG, OP_TRUE, OP_DROP
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, connect_nodes, hex_str_to_bytes, sync_blocks, try_rpc
+from test_framework.util import (
+    assert_equal,
+    assert_raises_rpc_error,
+    connect_nodes,
+    hex_str_to_bytes,
+    try_rpc,
+)
 
 NODE_0 = 0
 NODE_2 = 2
@@ -47,17 +53,20 @@ class SegWitTest(BitcoinTestFramework):
         # This test tests SegWit both pre and post-activation, so use the normal BIP9 activation.
         self.extra_args = [
             [
+                "-acceptnonstdtxn=1",
                 "-rpcserialversion=0",
                 "-vbparams=segwit:0:999999999999",
                 "-addresstype=legacy",
             ],
             [
+                "-acceptnonstdtxn=1",
                 "-blockversion=4",
                 "-rpcserialversion=1",
                 "-vbparams=segwit:0:999999999999",
                 "-addresstype=legacy",
             ],
             [
+                "-acceptnonstdtxn=1",
                 "-blockversion=536870915",
                 "-vbparams=segwit:0:999999999999",
                 "-addresstype=legacy",
@@ -76,13 +85,13 @@ class SegWitTest(BitcoinTestFramework):
         send_to_witness(1, node, getutxo(txid), self.pubkey[0], False, Decimal("49.998"), sign, redeem_script)
         block = node.generate(1)
         assert_equal(len(node.getblock(block[0])["tx"]), 2)
-        sync_blocks(self.nodes)
+        self.sync_blocks()
 
     def skip_mine(self, node, txid, sign, redeem_script=""):
         send_to_witness(1, node, getutxo(txid), self.pubkey[0], False, Decimal("49.998"), sign, redeem_script)
         block = node.generate(1)
         assert_equal(len(node.getblock(block[0])["tx"]), 1)
-        sync_blocks(self.nodes)
+        self.sync_blocks()
 
     def fail_accept(self, node, error_msg, txid, sign, redeem_script=""):
         assert_raises_rpc_error(-26, error_msg, send_to_witness, use_p2wsh=1, node=node, utxo=getutxo(txid), pubkey=self.pubkey[0], encode_p2sh=False, amount=Decimal("49.998"), sign=sign, insert_redeem_script=redeem_script)
@@ -131,7 +140,7 @@ class SegWitTest(BitcoinTestFramework):
                     p2sh_ids[n][v].append(send_to_witness(v, self.nodes[0], find_spendable_utxo(self.nodes[0], 50), self.pubkey[n], True, Decimal("49.999")))
 
         self.nodes[0].generate(1)  # block 163
-        sync_blocks(self.nodes)
+        self.sync_blocks()
 
         # Make sure all nodes recognize the transactions as theirs
         assert_equal(self.nodes[0].getbalance(), balance_presetup - 60 * 50 + 20 * Decimal("49.999") + 50)
@@ -139,7 +148,7 @@ class SegWitTest(BitcoinTestFramework):
         assert_equal(self.nodes[2].getbalance(), 20 * Decimal("49.999"))
 
         self.nodes[0].generate(260)  # block 423
-        sync_blocks(self.nodes)
+        self.sync_blocks()
 
         self.log.info("Verify witness txs are skipped for mining before the fork")
         self.skip_mine(self.nodes[2], wit_ids[NODE_2][WIT_V0][0], True)  # block 424
@@ -156,7 +165,7 @@ class SegWitTest(BitcoinTestFramework):
         self.log.info("Verify previous witness txs skipped for mining can now be mined")
         assert_equal(len(self.nodes[2].getrawmempool()), 4)
         blockhash = self.nodes[2].generate(1)[0]  # block 432 (first block with new rules; 432 = 144 * 3)
-        sync_blocks(self.nodes)
+        self.sync_blocks()
         assert_equal(len(self.nodes[2].getrawmempool()), 0)
         segwit_tx_list = self.nodes[2].getblock(blockhash)["tx"]
         assert_equal(len(segwit_tx_list), 5)
@@ -536,9 +545,9 @@ class SegWitTest(BitcoinTestFramework):
             tx.vout.append(CTxOut(10000000, i))
         tx.rehash()
         signresults = self.nodes[0].signrawtransactionwithwallet(tx.serialize_without_witness().hex())['hex']
-        txid = self.nodes[0].sendrawtransaction(signresults, True)
+        txid = self.nodes[0].sendrawtransaction(signresults, 0)
         txs_mined[txid] = self.nodes[0].generate(1)[0]
-        sync_blocks(self.nodes)
+        self.sync_blocks()
         watchcount = 0
         spendcount = 0
         for i in self.nodes[0].listunspent():
@@ -588,9 +597,9 @@ class SegWitTest(BitcoinTestFramework):
         tx.vout.append(CTxOut(0, CScript()))
         tx.rehash()
         signresults = self.nodes[0].signrawtransactionwithwallet(tx.serialize_without_witness().hex())['hex']
-        self.nodes[0].sendrawtransaction(signresults, True)
+        self.nodes[0].sendrawtransaction(signresults, 0)
         self.nodes[0].generate(1)
-        sync_blocks(self.nodes)
+        self.sync_blocks()
 
 
 if __name__ == '__main__':

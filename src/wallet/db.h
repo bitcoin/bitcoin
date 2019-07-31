@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -100,6 +100,9 @@ public:
 
 /** Return whether a wallet database is currently loaded. */
 bool IsWalletLoaded(const fs::path& wallet_path);
+
+/** Given a wallet directory path or legacy file path, return path to main data file in the wallet database. */
+fs::path WalletDataFilePath(const fs::path& wallet_path);
 
 /** Get BerkeleyEnvironment and database filename given a wallet path. */
 std::shared_ptr<BerkeleyEnvironment> GetWalletEnv(const fs::path& wallet_path, std::string& database_filename);
@@ -394,17 +397,6 @@ public:
         int ret = activeTxn->abort();
         activeTxn = nullptr;
         return (ret == 0);
-    }
-
-    bool ReadVersion(int& nVersion)
-    {
-        nVersion = 0;
-        return Read(std::string("version"), nVersion);
-    }
-
-    bool WriteVersion(int nVersion)
-    {
-        return Write(std::string("version"), nVersion);
     }
 
     bool static Rewrite(BerkeleyDatabase& database, const char* pszSkip = nullptr);

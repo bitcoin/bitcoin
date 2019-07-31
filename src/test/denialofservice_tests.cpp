@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,16 +6,18 @@
 
 #include <banman.h>
 #include <chainparams.h>
-#include <keystore.h>
 #include <net.h>
 #include <net_processing.h>
-#include <pow.h>
 #include <script/sign.h>
+#include <script/signingprovider.h>
+#include <script/standard.h>
 #include <serialize.h>
+#include <util/memory.h>
 #include <util/system.h>
+#include <util/time.h>
 #include <validation.h>
 
-#include <test/test_bitcoin.h>
+#include <test/setup_common.h>
 
 #include <stdint.h>
 
@@ -90,8 +92,8 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     // This test requires that we have a chain with non-zero work.
     {
         LOCK(cs_main);
-        BOOST_CHECK(chainActive.Tip() != nullptr);
-        BOOST_CHECK(chainActive.Tip()->nChainWork > 0);
+        BOOST_CHECK(::ChainActive().Tip() != nullptr);
+        BOOST_CHECK(::ChainActive().Tip()->nChainWork > 0);
     }
 
     // Test starts here
@@ -368,7 +370,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
 {
     CKey key;
     key.MakeNewKey(true);
-    CBasicKeyStore keystore;
+    FillableSigningProvider keystore;
     BOOST_CHECK(keystore.AddKey(key));
 
     // 50 orphan transactions:
@@ -381,7 +383,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vin[0].scriptSig << OP_1;
         tx.vout.resize(1);
         tx.vout[0].nValue = 1*CENT;
-        tx.vout[0].scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
+        tx.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
 
         AddOrphanTx(MakeTransactionRef(tx), i);
     }
@@ -397,7 +399,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vin[0].prevout.hash = txPrev->GetHash();
         tx.vout.resize(1);
         tx.vout[0].nValue = 1*CENT;
-        tx.vout[0].scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
+        tx.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
         BOOST_CHECK(SignSignature(keystore, *txPrev, tx, 0, SIGHASH_ALL));
 
         AddOrphanTx(MakeTransactionRef(tx), i);
@@ -411,7 +413,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         CMutableTransaction tx;
         tx.vout.resize(1);
         tx.vout[0].nValue = 1*CENT;
-        tx.vout[0].scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
+        tx.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
         tx.vin.resize(2777);
         for (unsigned int j = 0; j < tx.vin.size(); j++)
         {

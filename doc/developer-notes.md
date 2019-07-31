@@ -34,7 +34,6 @@ Developer Notes
     - [Source code organization](#source-code-organization)
     - [GUI](#gui)
     - [Subtrees](#subtrees)
-    - [Git and GitHub tips](#git-and-github-tips)
     - [Scripted diffs](#scripted-diffs)
     - [Release notes](#release-notes)
     - [RPC interface guidelines](#rpc-interface-guidelines)
@@ -280,7 +279,7 @@ thread](https://askubuntu.com/questions/50145/how-to-install-perf-monitoring-too
 for specific instructions.
 
 Certain kernel parameters may need to be set for perf to be able to inspect the
-running process' stack.
+running process's stack.
 
 ```sh
 $ sudo sysctl -w kernel.perf_event_paranoid=-1
@@ -376,7 +375,7 @@ reported in the debug.log file.
 
 Re-architecting the core code so there are better-defined interfaces
 between the various components is a goal, with any necessary locking
-done by the components (e.g. see the self-contained `CBasicKeyStore` class
+done by the components (e.g. see the self-contained `FillableSigningProvider` class
 and its `cs_KeyStore` lock for example).
 
 Threads
@@ -477,6 +476,14 @@ Wallet
 
 General C++
 -------------
+
+For general C++ guidelines, you may refer to the [C++ Core
+Guidelines](https://isocpp.github.io/CppCoreGuidelines/).
+
+Common misconceptions are clarified in those sections:
+
+- Passing (non-)fundamental types in the [C++ Core
+  Guideline](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rf-conventional)
 
 - Assertions should not have side-effects
 
@@ -620,8 +627,8 @@ class AddressBookPage
     Mode m_mode;
 }
 
-AddressBookPage::AddressBookPage(Mode _mode) :
-      m_mode(_mode)
+AddressBookPage::AddressBookPage(Mode _mode)
+    : m_mode(_mode)
 ...
 ```
 
@@ -952,8 +959,7 @@ A few guidelines for introducing and reviewing new RPC interfaces:
     from there.
 
 - A RPC method must either be a wallet method or a non-wallet method. Do not
-  introduce new methods such as `signrawtransaction` that differ in behavior
-  based on presence of a wallet.
+  introduce new methods that differ in behavior based on presence of a wallet.
 
   - *Rationale*: as well as complicating the implementation and interfering
     with the introduction of multi-wallet, wallet and non-wallet code should be

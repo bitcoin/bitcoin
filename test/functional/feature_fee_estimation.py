@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2018 The Bitcoin Core developers
+# Copyright (c) 2014-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test fee estimation code."""
@@ -15,8 +15,6 @@ from test_framework.util import (
     assert_greater_than_or_equal,
     connect_nodes,
     satoshi_round,
-    sync_blocks,
-    sync_mempools,
 )
 
 # Construct 2 trivial P2SH's and the ScriptSigs that spend them
@@ -65,7 +63,7 @@ def small_txpuzzle_randfee(from_node, conflist, unconflist, amount, min_fee, fee
     # the ScriptSig that will satisfy the ScriptPubKey.
     for inp in tx.vin:
         inp.scriptSig = SCRIPT_SIG[inp.prevout.n]
-    txid = from_node.sendrawtransaction(ToHex(tx), True)
+    txid = from_node.sendrawtransaction(hexstring=ToHex(tx), maxfeerate=0)
     unconflist.append({"txid": txid, "vout": 0, "amount": total_in - amount - fee})
     unconflist.append({"txid": txid, "vout": 1, "amount": amount})
 
@@ -95,7 +93,7 @@ def split_inputs(from_node, txins, txouts, initial_split=False):
     else:
         tx.vin[0].scriptSig = SCRIPT_SIG[prevtxout["vout"]]
         completetx = ToHex(tx)
-    txid = from_node.sendrawtransaction(completetx, True)
+    txid = from_node.sendrawtransaction(hexstring=completetx, maxfeerate=0)
     txouts.append({"txid": txid, "vout": 0, "amount": half_change})
     txouts.append({"txid": txid, "vout": 1, "amount": rem_change})
 
@@ -162,9 +160,9 @@ class EstimateFeeTest(BitcoinTestFramework):
                                                       self.memutxo, Decimal("0.005"), min_fee, min_fee)
                 tx_kbytes = (len(txhex) // 2) / 1000.0
                 self.fees_per_kb.append(float(fee) / tx_kbytes)
-            sync_mempools(self.nodes[0:3], wait=.1)
+            self.sync_mempools(self.nodes[0:3], wait=.1)
             mined = mining_node.getblock(mining_node.generate(1)[0], True)["tx"]
-            sync_blocks(self.nodes[0:3], wait=.1)
+            self.sync_blocks(self.nodes[0:3], wait=.1)
             # update which txouts are confirmed
             newmem = []
             for utx in self.memutxo:
@@ -237,7 +235,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         while len(self.nodes[1].getrawmempool()) > 0:
             self.nodes[1].generate(1)
 
-        sync_blocks(self.nodes[0:3], wait=.1)
+        self.sync_blocks(self.nodes[0:3], wait=.1)
         self.log.info("Final estimates after emptying mempools")
         check_estimates(self.nodes[1], self.fees_per_kb)
 

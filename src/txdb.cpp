@@ -5,14 +5,13 @@
 
 #include <txdb.h>
 
-#include <chainparams.h>
-#include <hash.h>
-#include <random.h>
 #include <pow.h>
+#include <random.h>
 #include <shutdown.h>
+#include <ui_interface.h>
 #include <uint256.h>
 #include <util/system.h>
-#include <ui_interface.h>
+#include <util/translation.h>
 
 #include <stdint.h>
 
@@ -252,9 +251,10 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
 
     pcursor->Seek(std::make_pair(DB_BLOCK_INDEX, uint256()));
 
-    // Load mapBlockIndex
+    // Load m_block_index
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
+        if (ShutdownRequested()) return false;
         std::pair<char, uint256> key;
         if (pcursor->GetKey(key) && key.first == DB_BLOCK_INDEX) {
             CDiskBlockIndex diskindex;
@@ -358,7 +358,7 @@ bool CCoinsViewDB::Upgrade() {
     int64_t count = 0;
     LogPrintf("Upgrading utxo-set database...\n");
     LogPrintf("[0%%]..."); /* Continued */
-    uiInterface.ShowProgress(_("Upgrading UTXO database"), 0, true);
+    uiInterface.ShowProgress(_("Upgrading UTXO database").translated, 0, true);
     size_t batch_size = 1 << 24;
     CDBBatch batch(db);
     int reportDone = 0;
@@ -373,7 +373,7 @@ bool CCoinsViewDB::Upgrade() {
             if (count++ % 256 == 0) {
                 uint32_t high = 0x100 * *key.second.begin() + *(key.second.begin() + 1);
                 int percentageDone = (int)(high * 100.0 / 65536.0 + 0.5);
-                uiInterface.ShowProgress(_("Upgrading UTXO database"), percentageDone, true);
+                uiInterface.ShowProgress(_("Upgrading UTXO database").translated, percentageDone, true);
                 if (reportDone < percentageDone/10) {
                     // report max. every 10% step
                     LogPrintf("[%d%%]...", percentageDone); /* Continued */

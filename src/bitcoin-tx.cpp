@@ -11,17 +11,20 @@
 #include <consensus/consensus.h>
 #include <core_io.h>
 #include <key_io.h>
-#include <keystore.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <script/sign.h>
+#include <script/signingprovider.h>
 #include <univalue.h>
-#include <util/system.h>
 #include <util/moneystr.h>
+#include <util/rbf.h>
 #include <util/strencodings.h>
+#include <util/system.h>
+#include <util/translation.h>
 
+#include <functional>
 #include <memory>
 #include <stdio.h>
 
@@ -81,7 +84,7 @@ static int AppInitRawTx(int argc, char* argv[])
     SetupBitcoinTxArgs();
     std::string error;
     if (!gArgs.ParseParameters(argc, argv, error)) {
-        fprintf(stderr, "Error parsing command line arguments: %s\n", error.c_str());
+        tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error.c_str());
         return EXIT_FAILURE;
     }
 
@@ -89,7 +92,7 @@ static int AppInitRawTx(int argc, char* argv[])
     try {
         SelectParams(gArgs.GetChainName());
     } catch (const std::exception& e) {
-        fprintf(stderr, "Error: %s\n", e.what());
+        tfm::format(std::cerr, "Error: %s\n", e.what());
         return EXIT_FAILURE;
     }
 
@@ -103,10 +106,10 @@ static int AppInitRawTx(int argc, char* argv[])
             "\n";
         strUsage += gArgs.GetHelpMessage();
 
-        fprintf(stdout, "%s", strUsage.c_str());
+        tfm::format(std::cout, "%s", strUsage.c_str());
 
         if (argc < 2) {
-            fprintf(stderr, "Error: too few parameters\n");
+            tfm::format(std::cerr, "Error: too few parameters\n");
             return EXIT_FAILURE;
         }
         return EXIT_SUCCESS;
@@ -322,7 +325,7 @@ static void MutateTxAddOutPubKey(CMutableTransaction& tx, const std::string& str
     }
     if (bScriptHash) {
         // Get the ID for the script, and then construct a P2SH destination for it.
-        scriptPubKey = GetScriptForDestination(CScriptID(scriptPubKey));
+        scriptPubKey = GetScriptForDestination(ScriptHash(scriptPubKey));
     }
 
     // construct TxOut, append to transaction output list
@@ -396,7 +399,7 @@ static void MutateTxAddOutMultiSig(CMutableTransaction& tx, const std::string& s
                         "redeemScript exceeds size limit: %d > %d", scriptPubKey.size(), MAX_SCRIPT_ELEMENT_SIZE));
         }
         // Get the ID for the script, and then construct a P2SH destination for it.
-        scriptPubKey = GetScriptForDestination(CScriptID(scriptPubKey));
+        scriptPubKey = GetScriptForDestination(ScriptHash(scriptPubKey));
     }
 
     // construct TxOut, append to transaction output list
@@ -468,7 +471,7 @@ static void MutateTxAddOutScript(CMutableTransaction& tx, const std::string& str
             throw std::runtime_error(strprintf(
                         "redeemScript exceeds size limit: %d > %d", scriptPubKey.size(), MAX_SCRIPT_ELEMENT_SIZE));
         }
-        scriptPubKey = GetScriptForDestination(CScriptID(scriptPubKey));
+        scriptPubKey = GetScriptForDestination(ScriptHash(scriptPubKey));
     }
 
     // construct TxOut, append to transaction output list
@@ -556,7 +559,7 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
 
     if (!registers.count("privatekeys"))
         throw std::runtime_error("privatekeys register variable must be set.");
-    CBasicKeyStore tempKeystore;
+    FillableSigningProvider tempKeystore;
     UniValue keysObj = registers["privatekeys"];
 
     for (unsigned int kidx = 0; kidx < keysObj.size(); kidx++) {
@@ -630,7 +633,7 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
         }
     }
 
-    const CKeyStore& keystore = tempKeystore;
+    const FillableSigningProvider& keystore = tempKeystore;
 
     bool fHashSingle = ((nHashType & ~SIGHASH_ANYONECANPAY) == SIGHASH_SINGLE);
 
@@ -722,21 +725,21 @@ static void OutputTxJSON(const CTransaction& tx)
     TxToUniv(tx, uint256(), entry);
 
     std::string jsonOutput = entry.write(4);
-    fprintf(stdout, "%s\n", jsonOutput.c_str());
+    tfm::format(std::cout, "%s\n", jsonOutput.c_str());
 }
 
 static void OutputTxHash(const CTransaction& tx)
 {
     std::string strHexHash = tx.GetHash().GetHex(); // the hex-encoded transaction hash (aka the transaction id)
 
-    fprintf(stdout, "%s\n", strHexHash.c_str());
+    tfm::format(std::cout, "%s\n", strHexHash.c_str());
 }
 
 static void OutputTxHex(const CTransaction& tx)
 {
     std::string strHex = EncodeHexTx(tx);
 
-    fprintf(stdout, "%s\n", strHex.c_str());
+    tfm::format(std::cout, "%s\n", strHex.c_str());
 }
 
 static void OutputTx(const CTransaction& tx)
@@ -827,7 +830,7 @@ static int CommandLineRawTx(int argc, char* argv[])
     }
 
     if (strPrint != "") {
-        fprintf((nRet == 0 ? stdout : stderr), "%s\n", strPrint.c_str());
+        tfm::format(nRet == 0 ? std::cout : std::cerr, "%s\n", strPrint.c_str());
     }
     return nRet;
 }

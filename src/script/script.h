@@ -437,7 +437,9 @@ public:
 
     explicit CScript(opcodetype b)     { operator<<(b); }
     explicit CScript(const CScriptNum& b) { operator<<(b); }
-    explicit CScript(const std::vector<unsigned char>& b) { operator<<(b); }
+    // delete non-existent constructor to defend against future introduction
+    // e.g. via prevector
+    explicit CScript(const std::vector<unsigned char>& b) = delete;
 
 
     CScript& operator<<(int64_t b) { return push_int64(b); }
@@ -579,15 +581,6 @@ struct CScriptWitness
     void SetNull() { stack.clear(); stack.shrink_to_fit(); }
 
     std::string ToString() const;
-};
-
-class CReserveScript
-{
-public:
-    CScript reserveScript;
-    virtual void KeepScript() {}
-    CReserveScript() {}
-    virtual ~CReserveScript() {}
 };
 
 #endif // BITCOIN_SCRIPT_SCRIPT_H

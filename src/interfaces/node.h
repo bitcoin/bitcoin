@@ -38,6 +38,9 @@ class Node
 public:
     virtual ~Node() {}
 
+    //! Send init error.
+    virtual void initError(const std::string& message) = 0;
+
     //! Set command line arguments.
     virtual bool parseParameters(int argc, const char* const argv[], std::string& error) = 0;
 
@@ -158,9 +161,6 @@ public:
 
     //! Get network active.
     virtual bool getNetworkActive() = 0;
-
-    //! Get max tx fee.
-    virtual CAmount getMaxTxFee() = 0;
 
     //! Estimate smart fee.
     virtual CFeeRate estimateSmartFee(int num_blocks, bool conservative, int* returned_target = nullptr) = 0;

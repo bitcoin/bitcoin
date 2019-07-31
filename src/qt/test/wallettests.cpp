@@ -1,10 +1,8 @@
 #include <qt/test/wallettests.h>
 #include <qt/test/util.h>
 
-#include <init.h>
 #include <interfaces/chain.h>
 #include <interfaces/node.h>
-#include <base58.h>
 #include <qt/bitcoinamountfield.h>
 #include <qt/optionsmodel.h>
 #include <qt/platformstyle.h>
@@ -15,7 +13,7 @@
 #include <qt/transactionview.h>
 #include <qt/walletmodel.h>
 #include <key_io.h>
-#include <test/test_bitcoin.h>
+#include <test/setup_common.h>
 #include <validation.h>
 #include <wallet/wallet.h>
 #include <qt/overviewpage.h>
@@ -70,7 +68,8 @@ uint256 SendCoins(CWallet& wallet, SendCoinsDialog& sendCoinsDialog, const CTxDe
         if (status == CT_NEW) txid = hash;
     }));
     ConfirmSend();
-    QMetaObject::invokeMethod(&sendCoinsDialog, "on_sendButton_clicked");
+    bool invoked = QMetaObject::invokeMethod(&sendCoinsDialog, "on_sendButton_clicked");
+    assert(invoked);
     return txid;
 }
 
@@ -135,7 +134,7 @@ void TestGUI()
         test.CreateAndProcessBlock({}, GetScriptForRawPubKey(test.coinbaseKey.GetPubKey()));
     }
     auto chain = interfaces::MakeChain();
-    std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(*chain, WalletLocation(), WalletDatabase::CreateMock());
+    std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(chain.get(), WalletLocation(), WalletDatabase::CreateMock());
     bool firstRun;
     wallet->LoadWallet(firstRun);
     {
@@ -145,11 +144,13 @@ void TestGUI()
     }
     {
         auto locked_chain = wallet->chain().lock();
+        LockAssertion lock(::cs_main);
+
         WalletRescanReserver reserver(wallet.get());
         reserver.reserve();
         CWallet::ScanResult result = wallet->ScanForWalletTransactions(locked_chain->getBlockHash(0), {} /* stop_block */, reserver, true /* fUpdate */);
         QCOMPARE(result.status, CWallet::ScanResult::SUCCESS);
-        QCOMPARE(result.last_scanned_block, chainActive.Tip()->GetBlockHash());
+        QCOMPARE(result.last_scanned_block, ::ChainActive().Tip()->GetBlockHash());
         QVERIFY(result.last_failed_block.IsNull());
     }
     wallet->SetBroadcastTransactions(true);
@@ -169,8 +170,8 @@ void TestGUI()
     // Send two transactions, and verify they are added to transaction list.
     TransactionTableModel* transactionTableModel = walletModel.getTransactionTableModel();
     QCOMPARE(transactionTableModel->rowCount({}), 105);
-    uint256 txid1 = SendCoins(*wallet.get(), sendCoinsDialog, CKeyID(), 5 * COIN, false /* rbf */);
-    uint256 txid2 = SendCoins(*wallet.get(), sendCoinsDialog, CKeyID(), 10 * COIN, true /* rbf */);
+    uint256 txid1 = SendCoins(*wallet.get(), sendCoinsDialog, PKHash(), 5 * COIN, false /* rbf */);
+    uint256 txid2 = SendCoins(*wallet.get(), sendCoinsDialog, PKHash(), 10 * COIN, true /* rbf */);
     QCOMPARE(transactionTableModel->rowCount({}), 107);
     QVERIFY(FindTx(*transactionTableModel, txid1).isValid());
     QVERIFY(FindTx(*transactionTableModel, txid2).isValid());

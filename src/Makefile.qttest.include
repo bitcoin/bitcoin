@@ -33,10 +33,10 @@ TEST_QT_H = \
   qt/test/wallettests.h
 
 TEST_BITCOIN_CPP = \
-  test/test_bitcoin.cpp
+  test/setup_common.cpp
 
 TEST_BITCOIN_H = \
-  test/test_bitcoin.h
+  test/setup_common.h
 
 qt_test_test_bitcoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BITCOIN_QT_INCLUDES) \
   $(QT_INCLUDES) $(QT_TEST_INCLUDES) $(PROTOBUF_CFLAGS)

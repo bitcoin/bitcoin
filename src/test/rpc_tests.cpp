@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 The Bitcoin Core developers
+// Copyright (c) 2012-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,10 +9,8 @@
 #include <core_io.h>
 #include <init.h>
 #include <interfaces/chain.h>
-#include <key_io.h>
-#include <netbase.h>
-
-#include <test/test_bitcoin.h>
+#include <test/setup_common.h>
+#include <util/time.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/test/unit_test.hpp>
@@ -31,10 +29,9 @@ UniValue CallRPC(std::string args)
     request.strMethod = strMethod;
     request.params = RPCConvertValues(strMethod, vArgs);
     request.fHelp = false;
-    BOOST_CHECK(tableRPC[strMethod]);
-    rpcfn_type method = tableRPC[strMethod]->actor;
+    if (RPCIsInWarmup(nullptr)) SetRPCWarmupFinished();
     try {
-        UniValue result = (*method)(request);
+        UniValue result = tableRPC.execute(request);
         return result;
     }
     catch (const UniValue& objError) {

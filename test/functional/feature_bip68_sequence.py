@@ -10,7 +10,13 @@ from test_framework.blocktools import create_block, create_coinbase, add_witness
 from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut, FromHex, ToHex
 from test_framework.script import CScript
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_greater_than, assert_raises_rpc_error, get_bip9_status, satoshi_round, sync_blocks
+from test_framework.util import (
+    assert_equal,
+    assert_greater_than,
+    assert_raises_rpc_error,
+    get_bip9_status,
+    satoshi_round,
+)
 
 SEQUENCE_LOCKTIME_DISABLE_FLAG = (1<<31)
 SEQUENCE_LOCKTIME_TYPE_FLAG = (1<<22) # this means use time (0 means height)
@@ -23,7 +29,10 @@ NOT_FINAL_ERROR = "non-BIP68-final (code 64)"
 class BIP68Test(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        self.extra_args = [[], ["-acceptnonstdtxn=0"]]
+        self.extra_args = [
+            ["-acceptnonstdtxn=1"],
+            ["-acceptnonstdtxn=0"],
+        ]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -372,7 +381,7 @@ class BIP68Test(BitcoinTestFramework):
         add_witness_commitment(block)
         block.solve()
 
-        self.nodes[0].submitblock(block.serialize(True).hex())
+        self.nodes[0].submitblock(block.serialize().hex())
         assert_equal(self.nodes[0].getbestblockhash(), block.hash)
 
     def activateCSV(self):
@@ -385,7 +394,7 @@ class BIP68Test(BitcoinTestFramework):
         assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], "locked_in")
         self.nodes[0].generate(1)
         assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], "active")
-        sync_blocks(self.nodes)
+        self.sync_blocks()
 
     # Use self.nodes[1] to test that version 2 transactions are standard.
     def test_version2_relay(self):

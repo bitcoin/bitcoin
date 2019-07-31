@@ -71,6 +71,11 @@ If you want to build the windows installer with `make deploy` you need [NSIS](ht
 
     sudo apt install nsis
 
+Acquire the source in the usual way:
+
+    git clone https://github.com/bitcoin/bitcoin.git
+    cd bitcoin
+
 ## Building for 64-bit Windows
 
 The first step is to install the mingw-w64 cross-compilation tool chain:
@@ -87,11 +92,7 @@ Note that for WSL the Bitcoin Core source path MUST be somewhere in the default 
 example /usr/src/bitcoin, AND not under /mnt/d/. If this is not the case the dependency autoconf scripts will fail.
 This means you cannot use a directory that is located directly on the host Windows file system to perform the build.
 
-Acquire the source in the usual way:
-
-    git clone https://github.com/bitcoin/bitcoin.git
-
-Once the source code is ready the build steps are below:
+Build using:
 
     PATH=$(echo "$PATH" | sed -e 's/:\/mnt.*//g') # strip out problematic Windows %PATH% imported var
     cd depends
@@ -99,34 +100,6 @@ Once the source code is ready the build steps are below:
     cd ..
     ./autogen.sh # not required when building from tarball
     CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure --prefix=/
-    make
-
-## Building for 32-bit Windows
-
-To build executables for Windows 32-bit, install the following dependencies:
-
-    sudo apt install g++-mingw-w64-i686 mingw-w64-i686-dev
-
-For Ubuntu Bionic 18.04 and Windows Subsystem for Linux <sup>[1](#footnote1)</sup>:
-
-    sudo update-alternatives --config i686-w64-mingw32-g++  # Set the default mingw32 g++ compiler option to posix.
-
-Note that for WSL the Bitcoin Core source path MUST be somewhere in the default mount file system, for
-example /usr/src/bitcoin, AND not under /mnt/d/. If this is not the case the dependency autoconf scripts will fail.
-This means you cannot use a directory that located directly on the host Windows file system to perform the build.
-
-Acquire the source in the usual way:
-
-    git clone https://github.com/bitcoin/bitcoin.git
-
-Then build using:
-
-    PATH=$(echo "$PATH" | sed -e 's/:\/mnt.*//g') # strip out problematic Windows %PATH% imported var
-    cd depends
-    make HOST=i686-w64-mingw32
-    cd ..
-    ./autogen.sh # not required when building from tarball
-    CONFIG_SITE=$PWD/depends/i686-w64-mingw32/share/config.site ./configure --prefix=/
     make
 
 ## Depends system

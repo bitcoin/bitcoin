@@ -20,9 +20,8 @@
 #include <script/script.h>
 #include <timedata.h>
 #include <util/system.h>
-#include <wallet/db.h>
-#include <wallet/wallet.h>
 #include <policy/policy.h>
+#include <wallet/ismine.h>
 
 #include <stdint.h>
 #include <string>

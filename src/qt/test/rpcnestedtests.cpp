@@ -4,15 +4,10 @@
 
 #include <qt/test/rpcnestedtests.h>
 
-#include <chainparams.h>
-#include <consensus/validation.h>
-#include <fs.h>
 #include <interfaces/node.h>
-#include <validation.h>
-#include <rpc/register.h>
 #include <rpc/server.h>
 #include <qt/rpcconsole.h>
-#include <test/test_bitcoin.h>
+#include <test/setup_common.h>
 #include <univalue.h>
 #include <util/system.h>
 

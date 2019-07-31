@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,10 +11,10 @@
 
 #include <base58.h>
 #include <chainparams.h>
-#include <primitives/transaction.h>
-#include <key_io.h>
 #include <interfaces/node.h>
+#include <key_io.h>
 #include <policy/policy.h>
+#include <primitives/transaction.h>
 #include <protocol.h>
 #include <script/script.h>
 #include <script/standard.h>
@@ -60,6 +60,7 @@
 
 #include <objc/objc-runtime.h>
 #include <CoreServices/CoreServices.h>
+#include <QProcess>
 #endif
 
 namespace GUIUtil {
@@ -175,7 +176,9 @@ bool parseBitcoinURI(QString uri, SendCoinsRecipient *out)
 
 QString formatBitcoinURI(const SendCoinsRecipient &info)
 {
-    QString ret = QString("bitcoin:%1").arg(info.address);
+    bool bech_32 = info.address.startsWith(QString::fromStdString(Params().Bech32HRP() + "1"));
+
+    QString ret = QString("bitcoin:%1").arg(bech_32 ? info.address.toUpper() : info.address);
     int paramCount = 0;
 
     if (info.amount)
@@ -242,6 +245,11 @@ QList<QModelIndex> getEntryData(QAbstractItemView *view, int column)
     if(!view || !view->selectionModel())
         return QList<QModelIndex>();
     return view->selectionModel()->selectedRows(column);
+}
+
+QString getDefaultDataDirectory()
+{
+    return boostPathToQString(GetDefaultDataDir());
 }
 
 QString getSaveFileName(QWidget *parent, const QString &caption, const QString &dir,
@@ -392,7 +400,15 @@ bool openBitcoinConf()
     configFile.close();
 
     /* Open bitcoin.conf with the associated application */
-    return QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathConfig)));
+    bool res = QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathConfig)));
+#ifdef Q_OS_MAC
+    // Workaround for macOS-specific behavior; see #15409.
+    if (!res) {
+        res = QProcess::startDetached("/usr/bin/open", QStringList{"-t", boostPathToQString(pathConfig)});
+    }
+#endif
+
+    return res;
 }
 
 ToolTipToRichTextFilter::ToolTipToRichTextFilter(int _size_threshold, QObject *parent) :
@@ -623,7 +639,7 @@ fs::path static GetAutostartFilePath()
     std::string chain = gArgs.GetChainName();
     if (chain == CBaseChainParams::MAIN)
         return GetAutostartDir() / "bitcoin.desktop";
-    return GetAutostartDir() / strprintf("bitcoin-%s.lnk", chain);
+    return GetAutostartDir() / strprintf("bitcoin-%s.desktop", chain);
 }
 
 bool GetStartOnSystemStartup()
@@ -824,9 +840,6 @@ QString formatServicesStr(quint64 mask)
                 break;
             case NODE_WITNESS:
                 strList.append("WITNESS");
-                break;
-            case NODE_XTHIN:
-                strList.append("XTHIN");
                 break;
             default:
                 strList.append(QString("%1[%2]").arg("UNKNOWN").arg(check));

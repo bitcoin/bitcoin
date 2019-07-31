@@ -67,6 +67,9 @@ hardware implementations will typically implement multiple roles simultaneously.
   input a PSBT, adds UTXO, key, and script data to inputs and outputs that miss
   it, and optionally signs inputs. Where possible it also finalizes the partial
   signatures.
+- **`utxoupdatepsbt` (Updater)** is a node RPC that takes a PSBT and updates it
+  to include information available from the UTXO set (works only for SegWit
+  inputs).
 - **`finalizepsbt` (Finalizer, Extractor)** is a utility RPC that finalizes any
   partial signatures, and if all inputs are finalized, converts the result to a
   fully signed transaction which can be broadcast with `sendrawtransaction`.
@@ -74,8 +77,16 @@ hardware implementations will typically implement multiple roles simultaneously.
   can be used at any point in the workflow to merge information added to
   different versions of the same PSBT. In particular it is useful to combine the
   output of multiple Updaters or Signers.
+- **`joinpsbts`** (Creator) is a utility RPC that joins multiple PSBTs together,
+  concatenating the inputs and outputs. This can be used to construct CoinJoin
+  transactions.
 - **`decodepsbt`** is a diagnostic utility RPC which will show all information in
   a PSBT in human-readable form, as well as compute its eventual fee if known.
+- **`analyzepsbt`** is a utility RPC that examines a PSBT and reports the
+  current status of its inputs, the next step in the workflow if known, and if
+  possible, computes the fee of the resulting transaction and estimates the
+  final weight and feerate.
+
 
 ### Workflows
 

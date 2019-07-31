@@ -6,6 +6,9 @@
 
 export LC_ALL=C.UTF-8
 
+free -m -h
+echo "Number of CPUs (nproc): $(nproc)"
+
 travis_retry docker pull "$DOCKER_NAME_TAG"
 
 export DIR_FUZZ_IN=${TRAVIS_BUILD_DIR}/qa-assets
@@ -28,10 +31,6 @@ DOCKER_ID=$(docker run $DOCKER_ADMIN -idt --mount type=bind,src=$TRAVIS_BUILD_DI
 DOCKER_EXEC () {
   docker exec $DOCKER_ID bash -c "cd $PWD && $*"
 }
-
-if [ -n "$DPKG_ADD_ARCH" ]; then
-  DOCKER_EXEC dpkg --add-architecture "$DPKG_ADD_ARCH"
-fi
 
 travis_retry DOCKER_EXEC apt-get update
 travis_retry DOCKER_EXEC apt-get install --no-install-recommends --no-upgrade -qq $PACKAGES $DOCKER_PACKAGES

@@ -12,9 +12,12 @@
 #include <fs.h>
 #include <rpc/client.h>
 #include <rpc/protocol.h>
-#include <util/system.h>
+#include <rpc/request.h>
 #include <util/strencodings.h>
+#include <util/system.h>
+#include <util/translation.h>
 
+#include <functional>
 #include <memory>
 #include <stdio.h>
 #include <tuple>
@@ -101,7 +104,7 @@ static int AppInitRPC(int argc, char* argv[])
     SetupCliArgs();
     std::string error;
     if (!gArgs.ParseParameters(argc, argv, error)) {
-        fprintf(stderr, "Error parsing command line arguments: %s\n", error.c_str());
+        tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error.c_str());
         return EXIT_FAILURE;
     }
     if (argc < 2 || HelpRequested(gArgs) || gArgs.IsArgSet("-version")) {
@@ -115,26 +118,26 @@ static int AppInitRPC(int argc, char* argv[])
             strUsage += "\n" + gArgs.GetHelpMessage();
         }
 
-        fprintf(stdout, "%s", strUsage.c_str());
+        tfm::format(std::cout, "%s", strUsage.c_str());
         if (argc < 2) {
-            fprintf(stderr, "Error: too few parameters\n");
+            tfm::format(std::cerr, "Error: too few parameters\n");
             return EXIT_FAILURE;
         }
         return EXIT_SUCCESS;
     }
     if (!fs::is_directory(GetDataDir(false))) {
-        fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "").c_str());
+        tfm::format(std::cerr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "").c_str());
         return EXIT_FAILURE;
     }
     if (!gArgs.ReadConfigFiles(error, true)) {
-        fprintf(stderr, "Error reading configuration file: %s\n", error.c_str());
+        tfm::format(std::cerr, "Error reading configuration file: %s\n", error.c_str());
         return EXIT_FAILURE;
     }
     // Check for -testnet or -regtest parameter (BaseParams() calls are only valid after this clause)
     try {
         SelectBaseParams(gArgs.GetChainName());
     } catch (const std::exception& e) {
-        fprintf(stderr, "Error: %s\n", e.what());
+        tfm::format(std::cerr, "Error: %s\n", e.what());
         return EXIT_FAILURE;
     }
     return CONTINUE_EXECUTION;
@@ -253,16 +256,12 @@ public:
         }
         result.pushKV("version", batch[ID_NETWORKINFO]["result"]["version"]);
         result.pushKV("protocolversion", batch[ID_NETWORKINFO]["result"]["protocolversion"]);
-        if (!batch[ID_WALLETINFO].isNull()) {
-            result.pushKV("walletversion", batch[ID_WALLETINFO]["result"]["walletversion"]);
-            result.pushKV("balance", batch[ID_WALLETINFO]["result"]["balance"]);
-        }
         result.pushKV("blocks", batch[ID_BLOCKCHAININFO]["result"]["blocks"]);
         result.pushKV("timeoffset", batch[ID_NETWORKINFO]["result"]["timeoffset"]);
         result.pushKV("connections", batch[ID_NETWORKINFO]["result"]["connections"]);
         result.pushKV("proxy", batch[ID_NETWORKINFO]["result"]["networks"][0]["proxy"]);
         result.pushKV("difficulty", batch[ID_BLOCKCHAININFO]["result"]["difficulty"]);
-        result.pushKV("testnet", UniValue(batch[ID_BLOCKCHAININFO]["result"]["chain"].get_str() == "test"));
+        result.pushKV("chain", UniValue(batch[ID_BLOCKCHAININFO]["result"]["chain"]));
         if (!batch[ID_WALLETINFO].isNull()) {
             result.pushKV("walletversion", batch[ID_WALLETINFO]["result"]["walletversion"]);
             result.pushKV("balance", batch[ID_WALLETINFO]["result"]["balance"]);
@@ -499,7 +498,7 @@ static int CommandLineRPC(int argc, char *argv[])
     }
 
     if (strPrint != "") {
-        fprintf((nRet == 0 ? stdout : stderr), "%s\n", strPrint.c_str());
+        tfm::format(nRet == 0 ? std::cout : std::cerr, "%s\n", strPrint.c_str());
     }
     return nRet;
 }
@@ -512,7 +511,7 @@ int main(int argc, char* argv[])
 #endif
     SetupEnvironment();
     if (!SetupNetworking()) {
-        fprintf(stderr, "Error: Initializing networking failed\n");
+        tfm::format(std::cerr, "Error: Initializing networking failed\n");
         return EXIT_FAILURE;
     }
     event_set_log_callback(&libevent_log_cb);
