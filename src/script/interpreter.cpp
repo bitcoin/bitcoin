@@ -186,16 +186,12 @@ bool IsLowDERSignature(const valtype &vchSig, ScriptError* serror, bool haveHash
     return true;
 }
 
-#ifdef ENABLE_PROOF_OF_STAKE
-
 bool IsDERSignature(const valtype &vchSig, ScriptError* serror, bool haveHashType) {
     if (!IsValidSignatureEncoding(vchSig, haveHashType)) {
         return set_error(serror, SCRIPT_ERR_SIG_DER);
     }
     return true;
 }
-
-#endif
 
 bool static IsDefinedHashtypeSignature(const valtype &vchSig) {
     if (vchSig.size() == 0) {

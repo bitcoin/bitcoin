@@ -5,11 +5,9 @@
 DIST_SUBDIRS = secp256k1 univalue
 
 AM_LDFLAGS = $(PTHREAD_CFLAGS) $(LIBTOOL_LDFLAGS) $(HARDENED_LDFLAGS) $(GPROF_LDFLAGS) $(SANITIZER_LDFLAGS)
-AM_CXXFLAGS = $(DEBUG_CXXFLAGS) $(HARDENED_CXXFLAGS) $(WARN_CXXFLAGS) $(NOWARN_CXXFLAGS) $(ERROR_CXXFLAGS) $(GPROF_CXXFLAGS) $(SANITIZER_CXXFLAGS)
+AM_CXXFLAGS = $(DEBUG_CXXFLAGS) $(HARDENED_CXXFLAGS) $(WARN_CXXFLAGS) $(NOWARN_CXXFLAGS) $(ERROR_CXXFLAGS) $(GPROF_CXXFLAGS) $(SANITIZER_CXXFLAGS) -fPIC
 AM_CPPFLAGS = $(DEBUG_CPPFLAGS) $(HARDENED_CPPFLAGS) -fPIC
-# -DBOOST_VARIANT_USE_RELAXED_GET_BY_DEFAULT -DENABLE_GENESIS_TX_SPEND
-# further adding of various algos, proof of burn, demmurrage ,
-# developer fee enabled by default
+AM_CFLAGS = -fPIC
 AM_LIBTOOLFLAGS = --preserve-dup-deps
 EXTRA_LIBRARIES =
 
@@ -192,7 +190,6 @@ BITCOINTALKCOIN_CORE_H = \
   key.h \
   key_io.h \
   keystore.h \
-  momentum.h \
   dbwrapper.h \
   limitedmap.h \
   logging.h \
@@ -435,7 +432,9 @@ crypto_libbitcointalkcoin_crypto_base_a_SOURCES = \
   crypto/sha512.cpp \
   crypto/sha512.h \
   crypto/siphash.cpp \
-  crypto/siphash.h
+  crypto/siphash.h \
+  momentum.cpp \
+  momentum.h  
 
 if USE_ASM
 crypto_libbitcointalkcoin_crypto_base_a_SOURCES += crypto/sha256_sse4.cpp
@@ -477,7 +476,6 @@ libbitcointalkcoin_consensus_a_SOURCES = \
   sphlib/sph_shabal.cpp \
   sphlib/groestl.cpp \
   groestl-hash.cpp \
-  momentum.cpp \
   prevector.h \
   primitives/block.cpp \
   primitives/block.h \

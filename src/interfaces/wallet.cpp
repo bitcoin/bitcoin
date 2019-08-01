@@ -354,6 +354,7 @@ public:
         auto mi = m_wallet->mapWallet.find(txid);
         if (mi != m_wallet->mapWallet.end()) {
             num_blocks = locked_chain->getHeight().get_value_or(-1);
+            in_mempool = mi->second.InMempool();
             block_time = locked_chain->getBlockTime(num_blocks);
             order_form = mi->second.vOrderForm;
             tx_status = MakeWalletTxStatus(*locked_chain, mi->second);

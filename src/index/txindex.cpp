@@ -246,11 +246,10 @@ bool TxIndex::Init()
 bool TxIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
 {
 
-#ifdef ENABLE_GENESIS_TX_SPEND
-
-#else
+#ifndef ENABLE_GENESIS_TX_SPEND
     // Exclude genesis block transaction because outputs are not spendable.
     if (pindex->nHeight == 0) return true;
+
 #endif
     CDiskTxPos pos(pindex->GetBlockPos(), GetSizeOfCompactSize(block.vtx.size()));
     std::vector<std::pair<uint256, CDiskTxPos>> vPos;

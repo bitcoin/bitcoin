@@ -195,9 +195,9 @@ size_t CountWitnessSigOps(const CScript& scriptSig, const CScript& scriptPubKey,
 int FindAndDelete(CScript& script, const CScript& b);
 
 bool IsLowDERSignature(const valtype &vchSig, ScriptError* serror = NULL, bool haveHashType = true);
-#ifdef ENABLE_PROOF_OF_STAKE
+
 bool IsDERSignature(const valtype &vchSig, ScriptError* serror = NULL, bool haveHashType = true);
-#endif
+
 bool IsCompressedOrUncompressedPubKey(const valtype &vchPubKey);
 
 #endif // BITCOINTALKCOIN_SCRIPT_INTERPRETER_H

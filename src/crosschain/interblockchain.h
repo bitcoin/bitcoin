@@ -42,7 +42,7 @@ public:
 class CIbtp
 {
 public:
-//    std::map<std::string, std::vector<unsigned char[4]> > mapBlockchainMessageStart;
+    //std::map<std::string, std::vector<unsigned char[4]> > mapBlockchainMessageStart;
     std::vector<SChain> vChains;
 
     CIbtp()

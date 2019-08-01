@@ -11,7 +11,7 @@
 void CIbtp::LoadMsgStart()
 {
     vChains.push_back(SChain("bitcointalkcoin", "TALK", 0xf7, 0xba, 0xd4, 0xa8, 8372));
-    vChains.push_back(SChain("cryptotalkcoin", "CRT", 0xf7, 0xba, 0xd4, 0xa9, 8373));
+    vChains.push_back(SChain("cryptotalkcoin", "CRT", 0xf7, 0xba, 0xd4, 0xa9, 8383));
     vChains.push_back(SChain("Codex", "CDX", 0xf7, 0xba, 0xd4, 0xaa, 8384));
 }
 

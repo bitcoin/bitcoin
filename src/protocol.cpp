@@ -4,7 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <protocol.h>
-#include <crosschain/interblockchain.h>
+
 #include <util/system.h>
 #include <util/strencodings.h>
 

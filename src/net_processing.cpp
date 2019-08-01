@@ -2831,7 +2831,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             // we have a chain with at least nMinimumChainWork), and we ignore
             // compact blocks with less work than our tip, it is safe to treat
             // reconstructed compact blocks as having been requested.
-            ProcessNewBlock(chainparams, pblock, /*fForceProcessing=*/true, &fNewBlock);
+            ProcessNetBlock(chainparams, pblock, /*fForceProcessing=*/true, &fNewBlock, pfrom, *connman);
             if (fNewBlock) {
                 pfrom->nLastBlockTime = GetTime();
             } else {
@@ -2847,7 +2847,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 MarkBlockAsReceived(pblock->GetHash());
             }
         }
-        return true;
+        //return true;
     }
 
     if (strCommand == NetMsgType::BLOCKTXN)
@@ -2920,7 +2920,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             // disk-space attacks), but this should be safe due to the
             // protections in the compact block handler -- see related comment
             // in compact block optimistic reconstruction handling.
-            ProcessNewBlock(chainparams, pblock, /*fForceProcessing=*/true, &fNewBlock);
+            ProcessNetBlock(chainparams, pblock, /*fForceProcessing=*/true, &fNewBlock, pfrom, *connman);
             if (fNewBlock) {
                 pfrom->nLastBlockTime = GetTime();
             } else {
@@ -2928,7 +2928,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 mapBlockSource.erase(pblock->GetHash());
             }
         }
-        return true;
+        //return true;
     }
 
     if (strCommand == NetMsgType::HEADERS)
@@ -2982,7 +2982,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             mapBlockSource.emplace(hash, std::make_pair(pfrom->GetId(), true));
         }
         bool fNewBlock = false;
-        ProcessNewBlock(chainparams, pblock, forceProcessing, &fNewBlock);
+        ProcessNetBlock(chainparams, pblock, forceProcessing, &fNewBlock, pfrom, *connman);
         if (fNewBlock) {
             pfrom->nLastBlockTime = GetTime();
         } else {
@@ -2992,7 +2992,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 #ifdef ENABLE_SECURE_MESSAGING
         SecureMsgScanBlock(*pblock);
 #endif
-        return true;
+        //return true;
     }
 
     if (strCommand == NetMsgType::GETADDR) {

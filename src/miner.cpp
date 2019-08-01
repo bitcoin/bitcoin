@@ -953,14 +953,14 @@ void static BitcointalkcoinMiner(const CChainParams& chainparams, std::shared_pt
                     MilliSleep(1000);
                 } while (true);*/
 
-
             //
             // Create new block
             //
             unsigned int nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
             CBlockIndex* pindexPrev = ::ChainActive().Tip();
+            static std::unique_ptr<CBlockTemplate> pblocktemplate;
 
-            std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(Params()).CreateNewBlock(coinbase_script->reserveScript));
+            pblocktemplate = BlockAssembler(Params()).CreateNewBlock(coinbase_script->reserveScript);
             if (!pblocktemplate.get())
                 throw std::runtime_error(strprintf("%s: Couldn't create new block", __func__));
 
@@ -970,7 +970,7 @@ void static BitcointalkcoinMiner(const CChainParams& chainparams, std::shared_pt
                 IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
             }
 
-            //LogPrintf("Running BitcointalkcoinMiner with %u transactions in block \n", pblock->vtx.size());
+            LogPrintf("Running BitcointalkcoinMiner with %u transactions in block \n", pblock->vtx.size());
 
             //
             // Search

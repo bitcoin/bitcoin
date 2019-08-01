@@ -75,9 +75,7 @@ static bool CreateSig(const BaseSignatureCreator& creator, SignatureData& sigdat
         return true;
     }
 
-#ifdef ENABLE_PROOF_OF_STAKE
-
-#else
+#ifndef ENABLE_PROOF_OF_STAKE
     KeyOriginInfo info;
     if (provider.GetKeyOrigin(keyid, info)) {
         sigdata.misc_pubkeys.emplace(keyid, std::make_pair(pubkey, std::move(info)));
@@ -395,7 +393,7 @@ bool SignSignature(const SigningProvider &provider, const CTransaction& txFrom, 
 
     return SignSignature(provider, txout.scriptPubKey, txTo, nIn, txout.nValue, nHashType);
 }
-#ifdef ENABLE_PROOF_OF_STAKE
+
 bool VerifySignature(const Coin& coin, const uint256 txFromHash, const CTransaction& txTo, unsigned int nIn, unsigned int flags)
 {
     TransactionSignatureChecker checker(&txTo, nIn, 0);
@@ -412,7 +410,7 @@ bool VerifySignature(const Coin& coin, const uint256 txFromHash, const CTransact
 		
     return VerifyScript(txin.scriptSig, txout.scriptPubKey, NULL, flags, checker);
 }
-#endif
+
 namespace {
 /** Dummy signature checker which accepts all signatures. */
 class DummySignatureChecker final : public BaseSignatureChecker

@@ -537,13 +537,9 @@ public:
     unsigned int GetSigOpCount(const CScript& scriptSig) const;
 
     bool IsPayToScriptHash() const;
-
-#ifdef ENABLE_PROOF_OF_STAKE
-
     bool IsPayToPubkey() const;
     bool IsPayToPubkeyHash() const;
     /////////////////////////////////////////////////
-#endif
 
     bool IsPayToWitnessScriptHash() const;
     bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;

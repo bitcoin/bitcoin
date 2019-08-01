@@ -232,7 +232,6 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet,
 bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<CTxDestination>& addressRet, int& nRequiredRet)
 {
     addressRet.clear();
-    typeRet = TX_NONSTANDARD;
     std::vector<valtype> vSolutions;
     if (!Solver(scriptPubKey, typeRet, vSolutions))
         return false;

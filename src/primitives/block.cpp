@@ -50,7 +50,7 @@ uint256 CBlockHeader::GetVerifiedHash() const
 uint256 CBlockHeader::CalculateBestBirthdayHash() {
  				
 	uint256 midHash = GetMidHash();		
-	std::vector< std::pair<uint32_t,uint32_t> > results = momentum_search( midHash );
+	std::vector< std::pair<uint32_t,uint32_t> > results =momentum_search( midHash );
 	uint32_t candidateBirthdayA=0;
 	uint32_t candidateBirthdayB=0;
 	uint256 smallestHashSoFar = uint256S("0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffdddd");
@@ -65,8 +65,8 @@ uint256 CBlockHeader::CalculateBestBirthdayHash() {
 		}
 		nBirthdayA = candidateBirthdayA;
 		nBirthdayB = candidateBirthdayB;
-		std::cout << "candidateBirthdayA = " << candidateBirthdayA<< "\n";
-		std::cout << "candidateBirthdayB = " << candidateBirthdayB<< "\n";
+		//std::cout << "candidateBirthdayA = " << candidateBirthdayA<< "\n";
+		//std::cout << "candidateBirthdayB = " << candidateBirthdayB<< "\n";
 	} 		
 	return GetHash();
 }
@@ -120,9 +120,9 @@ std::string CBlock::ToString() const
         nTime, nBits, nNonce);
 #ifdef ENABLE_MOMENTUM_HASH_ALGO
 
-        s << strprintf("(nBirthdayA=%u, nBirthdayB=%u)", nBirthdayA, nBirthdayB);
+        s << strprintf(" nBirthdayA=%u, nBirthdayB=%u ", nBirthdayA, nBirthdayB);
 #endif
-        s << strprintf("(vtx=%u, \n)", vtx.size());
+        s << strprintf(" vtx=%u, \n)", vtx.size());
 
 #ifdef ENABLE_PROOF_OF_STAKE
         std::string type = "Proof-of-work";

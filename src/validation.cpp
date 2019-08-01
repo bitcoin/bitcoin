@@ -601,10 +601,12 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         bool fSpendsCoinbase = false;
         for (const CTxIn &txin : tx.vin) {
             const Coin &coin = view.AccessCoin(txin.prevout);
+#ifdef ENABLE_PROOF_OF_STAKE
             if (coin.IsCoinStake()) {
                 fSpendsCoinbase = true;
                 break;
             }
+#endif
             if (coin.IsCoinBase()) {
                 fSpendsCoinbase = true;
                 break;
@@ -3680,7 +3682,9 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
 
     // Reject outdated version blocks when 95% (75% on testnet) of the network has upgraded:
     // check for version 2, 3 and 4 upgrades
-    if((block.nVersion < 4 && nHeight >= consensusParams.BIP65Height))
+    if((block.nVersion < 2 && nHeight >= consensusParams.BIP34Height) ||
+       (block.nVersion < 3 && nHeight >= consensusParams.BIP66Height) ||
+       (block.nVersion < 4 && nHeight >= consensusParams.BIP65Height))
             return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, false, REJECT_OBSOLETE, strprintf("bad-version(0x%08x)", block.nVersion),
                                  strprintf("rejected nVersion=0x%08x block", block.nVersion));
 
