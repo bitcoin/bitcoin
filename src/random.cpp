@@ -397,7 +397,7 @@ std::vector<unsigned char> FastRandomContext::randbytes(size_t len)
 {
     std::vector<unsigned char> ret(len);
     if (len > 0) {
-        rng.Output(&ret[0], len);
+        rng.Keystream(&ret[0], len);
     }
     return ret;
 }
