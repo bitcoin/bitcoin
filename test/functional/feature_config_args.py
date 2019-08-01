@@ -78,8 +78,17 @@ class ConfArgsTest(BitcoinTestFramework):
         with open(inc_conf_file2_path, 'w', encoding='utf-8') as conf:
             conf.write('')  # clear
 
+    def test_option_negating_policy(self):
+        self.nodes[0].assert_start_raises_init_error(
+            expected_msg='Error: Error parsing command line arguments: Double-negative -nolisten=0 is not allowed',
+            extra_args=['-nolisten=0'],
+        )
+        self.stop_node(0)
+
     def run_test(self):
         self.stop_node(0)
+
+        self.test_option_negating_policy()
 
         self.test_config_file_parser()
 
