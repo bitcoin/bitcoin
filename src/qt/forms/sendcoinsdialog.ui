@@ -771,7 +771,7 @@
             </font>
             </property>
             <property name="text">
-             <string>Warning: Fee estimation is currently not possible.</string>
+             <string>Note: Not enough data for fee estimation, using the fallback fee instead.</string>
             </property>
             <property name="wordWrap">
              <bool>false</bool>
