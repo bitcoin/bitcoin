@@ -66,8 +66,8 @@ public:
     bool DefaultConsistencyChecks() const { return fDefaultConsistencyChecks; }
     /** Policy: Filter transactions that do not match well-defined patterns */
     bool RequireStandard() const { return fRequireStandard; }
-    /** If this chain is exclusively used for testing */
-    bool IsTestChain() const { return m_is_test_chain; }
+    /** If it is allowed to set -acceptnonstdtxn=1 for this chain or not */
+    bool AllowAcceptNonstd() const { return m_allow_accept_nonstd; }
     /** If this chain allows time to be mocked */
     bool IsMockableChain() const { return m_is_mockable_chain; }
     uint64_t PruneAfterHeight() const { return nPruneAfterHeight; }
@@ -103,7 +103,7 @@ protected:
     std::vector<SeedSpec6> vFixedSeeds;
     bool fDefaultConsistencyChecks;
     bool fRequireStandard;
-    bool m_is_test_chain;
+    bool m_allow_accept_nonstd;
     bool m_is_mockable_chain;
     CCheckpointData checkpointData;
     ChainTxData chainTxData;
