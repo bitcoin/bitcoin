@@ -2676,11 +2676,12 @@ static UniValue createwallet(const JSONRPCRequest& request)
     }
     SecureString passphrase;
     passphrase.reserve(100);
+    std::string warning;
     if (!request.params[3].isNull()) {
         passphrase = request.params[3].get_str().c_str();
         if (passphrase.empty()) {
-            // Empty string is invalid
-            throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Cannot encrypt a wallet with a blank password");
+            // Empty string means unencrypted
+            warning = "Empty string given as passphrase, wallet will not be encrypted.";
         }
     }
 
@@ -2689,9 +2690,9 @@ static UniValue createwallet(const JSONRPCRequest& request)
     }
 
     std::string error;
-    std::string warning;
+    std::string create_warning;
     std::shared_ptr<CWallet> wallet;
-    WalletCreationStatus status = CreateWallet(*g_rpc_interfaces->chain, passphrase, flags, request.params[0].get_str(), error, warning, wallet);
+    WalletCreationStatus status = CreateWallet(*g_rpc_interfaces->chain, passphrase, flags, request.params[0].get_str(), error, create_warning, wallet);
     switch (status) {
         case WalletCreationStatus::CREATION_FAILED:
             throw JSONRPCError(RPC_WALLET_ERROR, error);
@@ -2700,6 +2701,12 @@ static UniValue createwallet(const JSONRPCRequest& request)
         case WalletCreationStatus::SUCCESS:
             break;
         // no default case, so the compiler can warn about missing cases
+    }
+
+    if (warning.empty()) {
+        warning = create_warning;
+    } else if (!warning.empty() && !create_warning.empty()){
+        warning += "; " + create_warning;
     }
 
     UniValue obj(UniValue::VOBJ);
