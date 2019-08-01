@@ -1745,6 +1745,15 @@ void DescriptorScriptPubKeyMan::MarkUnusedAddresses(const CScript& script)
     }
 }
 
+void DescriptorScriptPubKeyMan::AddDescriptorKey(const CKey& key, const CPubKey &pubkey)
+{
+    LOCK(cs_desc_man);
+    WalletBatch batch(m_storage.GetDatabase());
+    if (!AddDescriptorKeyWithDB(batch, key, pubkey)) {
+        throw std::runtime_error(std::string(__func__) + ": writing descriptor private key failed");
+    }
+}
+
 bool DescriptorScriptPubKeyMan::AddDescriptorKeyWithDB(WalletBatch& batch, const CKey& key, const CPubKey &pubkey)
 {
     AssertLockHeld(cs_desc_man);
@@ -2120,4 +2129,36 @@ bool DescriptorScriptPubKeyMan::AddCryptedKey(const CKeyID& key_id, const CPubKe
 
     m_map_crypted_keys[key_id] = make_pair(pubkey, crypted_key);
     return true;
+}
+
+bool DescriptorScriptPubKeyMan::HasWalletDescriptor(const WalletDescriptor& desc) const
+{
+    LOCK(cs_desc_man);
+    return m_wallet_descriptor.descriptor != nullptr && desc.descriptor != nullptr && m_wallet_descriptor.descriptor->ToString() == desc.descriptor->ToString();
+}
+
+void DescriptorScriptPubKeyMan::WriteDescriptor()
+{
+    LOCK(cs_desc_man);
+    WalletBatch batch(m_storage.GetDatabase());
+    if (!batch.WriteDescriptor(GetID(), m_wallet_descriptor)) {
+        throw std::runtime_error(std::string(__func__) + ": writing descriptor failed");
+    }
+}
+
+const WalletDescriptor DescriptorScriptPubKeyMan::GetWalletDescriptor() const
+{
+    return m_wallet_descriptor;
+}
+
+const std::vector<CScript> DescriptorScriptPubKeyMan::GetScriptPubKeys() const
+{
+    LOCK(cs_desc_man);
+    std::vector<CScript> script_pub_keys;
+    script_pub_keys.reserve(m_map_script_pub_keys.size());
+
+    for (auto const& script_pub_key: m_map_script_pub_keys) {
+        script_pub_keys.push_back(script_pub_key.first);
+    }
+    return script_pub_keys;
 }
