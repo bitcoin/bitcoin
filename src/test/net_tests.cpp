@@ -20,6 +20,7 @@
 
 class CAddrManSerializationMock : public CAddrMan
 {
+    using CAddrMan::CAddrMan;
 public:
     virtual void Serialize(CDataStream& s) const = 0;
 
@@ -33,6 +34,7 @@ public:
 
 class CAddrManUncorrupted : public CAddrManSerializationMock
 {
+    using CAddrManSerializationMock::CAddrManSerializationMock;
 public:
     void Serialize(CDataStream& s) const override
     {
@@ -73,7 +75,7 @@ static CDataStream AddrmanToStream(CAddrManSerializationMock& _addrman)
     ssPeersIn << _addrman;
     std::string str = ssPeersIn.str();
     std::vector<unsigned char> vchData(str.begin(), str.end());
-    return CDataStream(vchData, SER_DISK, CLIENT_VERSION);
+    return CDataStream(vchData, ssPeersIn.GetType(), ssPeersIn.GetVersion());
 }
 
 BOOST_FIXTURE_TEST_SUITE(net_tests, BasicTestingSetup)
@@ -132,6 +134,42 @@ BOOST_AUTO_TEST_CASE(caddrdb_read)
     BOOST_CHECK(addrman2.size() == 0);
     BOOST_CHECK(adb.Read(addrman2, ssPeers2));
     BOOST_CHECK(addrman2.size() == 3);
+}
+
+BOOST_AUTO_TEST_CASE(caddrdb_read_v1_ser)
+{
+    // Construct an AddrMan that serializes in v1 format
+    CAddrManUncorrupted addrmanUncorrupted(1);
+    addrmanUncorrupted.MakeDeterministic();
+
+    CService addr1, addr2, addr3;
+    BOOST_CHECK(Lookup("250.7.1.1", addr1, 8333, false));
+    BOOST_CHECK(Lookup("250.7.2.2", addr2, 9999, false));
+    BOOST_CHECK(Lookup("250.7.3.3", addr3, 9999, false));
+
+    // Add three addresses to new table.
+    CService source;
+    BOOST_CHECK(Lookup("252.5.1.1", source, 8333, false));
+    BOOST_CHECK(addrmanUncorrupted.Add(CAddress(addr1, NODE_NONE), source));
+    BOOST_CHECK(addrmanUncorrupted.Add(CAddress(addr2, NODE_NONE), source));
+    BOOST_CHECK(addrmanUncorrupted.Add(CAddress(addr3, NODE_NONE), source));
+
+    // Test that the de-serialization does not throw an exception.
+    CDataStream ssPeers1 = AddrmanToStream(addrmanUncorrupted);
+    bool exceptionThrown = false;
+    CAddrMan addrman1;
+
+    BOOST_CHECK(addrman1.size() == 0);
+    try {
+        unsigned char pchMsgTmp[4];
+        ssPeers1 >> pchMsgTmp;
+        ssPeers1 >> addrman1;
+    } catch (const std::exception&) {
+        exceptionThrown = true;
+    }
+
+    BOOST_CHECK(addrman1.size() == 3);
+    BOOST_CHECK(exceptionThrown == false);
 }
 
 

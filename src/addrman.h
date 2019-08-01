@@ -169,6 +169,8 @@ public:
 //! the maximum time we'll spend trying to resolve a tried table collision, in seconds
 static const int64_t ADDRMAN_TEST_WINDOW = 40*60; // 40 minutes
 
+#define ADDRMAN_HIGHEST_KNOWN_SERIALIZATION_VERSION 2
+
 /**
  * Stochastical (IP) address manager
  */
@@ -209,6 +211,7 @@ private:
     //! Holds addrs inserted into tried table that collide with existing entries. Test-before-evict discipline used to resolve these collisions.
     std::set<int> m_tried_collisions;
 
+    unsigned char m_serialization_version;
 protected:
     //! secret key to randomize bucket select with
     uint256 nKey;
@@ -302,7 +305,10 @@ public:
     {
         LOCK(cs);
 
-        unsigned char nVersion = 1;
+        unsigned char nVersion = ADDRMAN_HIGHEST_KNOWN_SERIALIZATION_VERSION;
+        if (nVersion == 2) {
+            s.SetVersion(s.GetVersion() | SERIALIZE_ADDR_AS_V2);
+        }
         s << nVersion;
         s << ((unsigned char)32);
         s << nKey;
@@ -356,6 +362,9 @@ public:
 
         unsigned char nVersion;
         s >> nVersion;
+        if (nVersion == 2) {
+            s.SetVersion(s.GetVersion() | SERIALIZE_ADDR_AS_V2);
+        }
         unsigned char nKeySize;
         s >> nKeySize;
         if (nKeySize != 32) throw std::ios_base::failure("Incorrect keysize in addrman deserialization");
@@ -383,7 +392,7 @@ public:
             mapAddr[info] = n;
             info.nRandomPos = vRandom.size();
             vRandom.push_back(n);
-            if (nVersion != 1 || nUBuckets != ADDRMAN_NEW_BUCKET_COUNT) {
+            if (nVersion == 0 || ADDRMAN_HIGHEST_KNOWN_SERIALIZATION_VERSION < nVersion || nUBuckets != ADDRMAN_NEW_BUCKET_COUNT) {
                 // In case the new table data cannot be used (nVersion unknown, or bucket count wrong),
                 // immediately try to give them a reference based on their primary source address.
                 int nUBucket = info.GetNewBucket(nKey);
@@ -427,7 +436,7 @@ public:
                 if (nIndex >= 0 && nIndex < nNew) {
                     CAddrInfo &info = mapInfo[nIndex];
                     int nUBucketPos = info.GetBucketPosition(nKey, true, bucket);
-                    if (nVersion == 1 && nUBuckets == ADDRMAN_NEW_BUCKET_COUNT && vvNew[bucket][nUBucketPos] == -1 && info.nRefCount < ADDRMAN_NEW_BUCKETS_PER_ADDRESS) {
+                    if ((0 < nVersion && nVersion <= ADDRMAN_HIGHEST_KNOWN_SERIALIZATION_VERSION) && nUBuckets == ADDRMAN_NEW_BUCKET_COUNT && vvNew[bucket][nUBucketPos] == -1 && info.nRefCount < ADDRMAN_NEW_BUCKETS_PER_ADDRESS) {
                         info.nRefCount++;
                         vvNew[bucket][nUBucketPos] = nIndex;
                     }
@@ -477,7 +486,8 @@ public:
         mapAddr.clear();
     }
 
-    CAddrMan()
+    CAddrMan(unsigned char serialization_version = ADDRMAN_HIGHEST_KNOWN_SERIALIZATION_VERSION)
+        : m_serialization_version(serialization_version)
     {
         Clear();
     }

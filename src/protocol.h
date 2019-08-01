@@ -341,10 +341,19 @@ public:
         if (s.GetType() & SER_DISK)
             READWRITE(nVersion);
         if ((s.GetType() & SER_DISK) ||
-            (nVersion >= CADDR_TIME_VERSION && !(s.GetType() & SER_GETHASH)))
-            READWRITE(nTime);
+            (nVersion >= CADDR_TIME_VERSION && !(s.GetType() & SER_GETHASH))) {
+            if (s.GetVersion() & SERIALIZE_ADDR_AS_V2) {
+                READWRITE(VARINT(nTime));
+            } else {
+                READWRITE(nTime);
+            }
+        }
         uint64_t nServicesInt = nServices;
-        READWRITE(nServicesInt);
+        if (s.GetVersion() & SERIALIZE_ADDR_AS_V2) {
+            READWRITE(VARINT(nServicesInt));
+        } else {
+            READWRITE(nServicesInt);
+        }
         nServices = static_cast<ServiceFlags>(nServicesInt);
         READWRITEAS(CService, *this);
     }
