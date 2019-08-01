@@ -250,21 +250,17 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArgEdgeCases)
     // Params test
     const auto foo = std::make_pair("-foo", ArgsManager::ALLOW_BOOL);
     const auto bar = std::make_pair("-bar", ArgsManager::ALLOW_BOOL);
-    const char *argv_test[] = {"ignored", "-nofoo", "-foo", "-nobar=0"};
+    const char *argv_test[] = {"ignored", "-nofoo", "-foo"};
     testArgs.SetupArgs({foo, bar});
     std::string error;
-    BOOST_CHECK(testArgs.ParseParameters(4, (char**)argv_test, error));
+    BOOST_CHECK(testArgs.ParseParameters(3, (char**)argv_test, error));
 
     // This was passed twice, second one overrides the negative setting.
     BOOST_CHECK(!testArgs.IsArgNegated("-foo"));
     BOOST_CHECK(testArgs.GetArg("-foo", "xxx") == "");
 
-    // A double negative is a positive, and not marked as negated.
-    BOOST_CHECK(!testArgs.IsArgNegated("-bar"));
-    BOOST_CHECK(testArgs.GetArg("-bar", "xxx") == "1");
-
     // Config test
-    const char *conf_test = "nofoo=1\nfoo=1\nnobar=0\n";
+    const char *conf_test = "nofoo=1\nfoo=1\n";
     BOOST_CHECK(testArgs.ParseParameters(1, (char**)argv_test, error));
     testArgs.ReadConfigString(conf_test);
 
@@ -272,10 +268,6 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArgEdgeCases)
     // and the value.
     BOOST_CHECK(!testArgs.IsArgNegated("-foo"));
     BOOST_CHECK(testArgs.GetArg("-foo", "xxx") == "1");
-
-    // A double negative is a positive, and does not count as negated.
-    BOOST_CHECK(!testArgs.IsArgNegated("-bar"));
-    BOOST_CHECK(testArgs.GetArg("-bar", "xxx") == "1");
 
     // Combined test
     const char *combo_test_args[] = {"ignored", "-nofoo", "-bar"};
@@ -304,7 +296,6 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
        "ccc=multiple\n"
        "d=e\n"
        "nofff=1\n"
-       "noggg=0\n"
        "h=1\n"
        "noh=1\n"
        "noi=1\n"
@@ -326,25 +317,23 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
     const auto d = std::make_pair("-d", ArgsManager::ALLOW_STRING);
     const auto e = std::make_pair("-e", ArgsManager::ALLOW_ANY);
     const auto fff = std::make_pair("-fff", ArgsManager::ALLOW_BOOL);
-    const auto ggg = std::make_pair("-ggg", ArgsManager::ALLOW_BOOL);
     const auto h = std::make_pair("-h", ArgsManager::ALLOW_BOOL);
     const auto i = std::make_pair("-i", ArgsManager::ALLOW_BOOL);
     const auto iii = std::make_pair("-iii", ArgsManager::ALLOW_INT);
-    test_args.SetupArgs({a, b, ccc, d, e, fff, ggg, h, i, iii});
+    test_args.SetupArgs({a, b, ccc, d, e, fff, h, i, iii});
 
     test_args.ReadConfigString(str_config);
-    // expectation: a, b, ccc, d, fff, ggg, h, i end up in map
+    // expectation: a, b, ccc, d, fff, h, i end up in map
     // so do sec1.ccc, sec1.d, sec1.h, sec2.ccc, sec2.iii
 
     BOOST_CHECK(test_args.GetOverrideArgs().empty());
-    BOOST_CHECK(test_args.GetConfigArgs().size() == 13);
+    BOOST_CHECK(test_args.GetConfigArgs().size() == 12);
 
     BOOST_CHECK(test_args.GetConfigArgs().count("-a")
                 && test_args.GetConfigArgs().count("-b")
                 && test_args.GetConfigArgs().count("-ccc")
                 && test_args.GetConfigArgs().count("-d")
                 && test_args.GetConfigArgs().count("-fff")
-                && test_args.GetConfigArgs().count("-ggg")
                 && test_args.GetConfigArgs().count("-h")
                 && test_args.GetConfigArgs().count("-i")
                );
@@ -359,7 +348,6 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
                 && test_args.IsArgSet("-ccc")
                 && test_args.IsArgSet("-d")
                 && test_args.IsArgSet("-fff")
-                && test_args.IsArgSet("-ggg")
                 && test_args.IsArgSet("-h")
                 && test_args.IsArgSet("-i")
                 && !test_args.IsArgSet("-zzz")
@@ -371,7 +359,6 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
                 && test_args.GetArg("-ccc", "xxx") == "argument"
                 && test_args.GetArg("-d", "xxx") == "e"
                 && test_args.GetArg("-fff", "xxx") == "0"
-                && test_args.GetArg("-ggg", "xxx") == "1"
                 && test_args.GetArg("-h", "xxx") == "0"
                 && test_args.GetArg("-i", "xxx") == "1"
                 && test_args.GetArg("-zzz", "xxx") == "xxx"
@@ -384,7 +371,6 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
                      && !test_args.GetBoolArg("-ccc", def)
                      && !test_args.GetBoolArg("-d", def)
                      && !test_args.GetBoolArg("-fff", def)
-                     && test_args.GetBoolArg("-ggg", def)
                      && !test_args.GetBoolArg("-h", def)
                      && test_args.GetBoolArg("-i", def)
                      && test_args.GetBoolArg("-zzz", def) == def
@@ -401,9 +387,6 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
                 && test_args.GetArgs("-ccc").back() == "multiple");
     BOOST_CHECK(test_args.GetArgs("-fff").size() == 0);
     BOOST_CHECK(test_args.GetArgs("-nofff").size() == 0);
-    BOOST_CHECK(test_args.GetArgs("-ggg").size() == 1
-                && test_args.GetArgs("-ggg").front() == "1");
-    BOOST_CHECK(test_args.GetArgs("-noggg").size() == 0);
     BOOST_CHECK(test_args.GetArgs("-h").size() == 0);
     BOOST_CHECK(test_args.GetArgs("-noh").size() == 0);
     BOOST_CHECK(test_args.GetArgs("-i").size() == 1
@@ -416,7 +399,6 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
     BOOST_CHECK(!test_args.IsArgNegated("-ccc"));
     BOOST_CHECK(!test_args.IsArgNegated("-d"));
     BOOST_CHECK(test_args.IsArgNegated("-fff"));
-    BOOST_CHECK(!test_args.IsArgNegated("-ggg"));
     BOOST_CHECK(test_args.IsArgNegated("-h")); // last setting takes precedence
     BOOST_CHECK(!test_args.IsArgNegated("-i")); // last setting takes precedence
     BOOST_CHECK(!test_args.IsArgNegated("-zzz"));
@@ -428,7 +410,6 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
     BOOST_CHECK(test_args.GetArg("-a", "xxx") == ""
                 && test_args.GetArg("-b", "xxx") == "1"
                 && test_args.GetArg("-fff", "xxx") == "0"
-                && test_args.GetArg("-ggg", "xxx") == "1"
                 && test_args.GetArg("-zzz", "xxx") == "xxx"
                 && test_args.GetArg("-iii", "xxx") == "xxx"
                );
@@ -450,7 +431,6 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
                 && test_args.GetArg("-b", "xxx") == "1"
                 && test_args.GetArg("-d", "xxx") == "e"
                 && test_args.GetArg("-fff", "xxx") == "0"
-                && test_args.GetArg("-ggg", "xxx") == "1"
                 && test_args.GetArg("-zzz", "xxx") == "xxx"
                 && test_args.GetArg("-h", "xxx") == "0"
                );

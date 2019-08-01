@@ -265,14 +265,10 @@ public:
 /**
  * Interpret -nofoo as if the user supplied -foo=0.
  *
- * This method also tracks when the -no form was supplied, and if so,
- * checks whether there was a double-negative (-nofoo=0 -> -foo=1).
+ * This method also tracks when the -no form was supplied, and if so, removes
+ * the "no" from the key and clears the args vector to indicate a negated option.
  *
- * If there was not a double negative, it removes the "no" from the key
- * and clears the args vector to indicate a negated option.
- *
- * If there was a double negative, it removes "no" from the key, sets the
- * value to "1" and pushes the key and the updated value to the args vector.
+ * Double negative is not allowed and raises an error.
  *
  * If there was no "no", it leaves key and value untouched and pushes them
  * to the args vector.
@@ -296,15 +292,15 @@ NODISCARD static bool InterpretOption(std::string key, std::string val, unsigned
         ++option_index;
     }
     if (key.substr(option_index, 2) == "no") {
+        const std::string negated_key = key;
         key.erase(option_index, 2);
         if (flags & ArgsManager::ALLOW_BOOL) {
             if (InterpretBool(val)) {
                 args[key].clear();
                 return true;
             }
-            // Double negatives like -nofoo=0 are supported (but discouraged)
-            LogPrintf("Warning: parsed potentially confusing double-negative %s=%s\n", key, val);
-            val = "1";
+            error = strprintf("Double-negative %s=%s is not allowed", negated_key.c_str(), val.c_str());
+            return false;
         } else {
             error = strprintf("Negating of %s is meaningless and therefore forbidden", key.c_str());
             return false;

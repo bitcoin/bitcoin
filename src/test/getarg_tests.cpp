@@ -80,10 +80,6 @@ BOOST_AUTO_TEST_CASE(boolarg)
     BOOST_CHECK(!gArgs.GetBoolArg("-foo", false));
     BOOST_CHECK(!gArgs.GetBoolArg("-foo", true));
 
-    ResetArgs("-foo=0 -nofoo=0");  // -nofoo=0 should win
-    BOOST_CHECK(gArgs.GetBoolArg("-foo", false));
-    BOOST_CHECK(gArgs.GetBoolArg("-foo", true));
-
     // New 0.6 feature: treat -- same as -:
     ResetArgs("--foo=1");
     BOOST_CHECK(gArgs.GetBoolArg("-foo", false));
@@ -169,10 +165,6 @@ BOOST_AUTO_TEST_CASE(boolargno)
     ResetArgs("-nofoo=1");
     BOOST_CHECK(!gArgs.GetBoolArg("-foo", true));
     BOOST_CHECK(!gArgs.GetBoolArg("-foo", false));
-
-    ResetArgs("-nofoo=0");
-    BOOST_CHECK(gArgs.GetBoolArg("-foo", true));
-    BOOST_CHECK(gArgs.GetBoolArg("-foo", false));
 
     ResetArgs("-foo --nofoo"); // --nofoo should win
     BOOST_CHECK(!gArgs.GetBoolArg("-foo", true));
