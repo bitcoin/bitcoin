@@ -27,7 +27,6 @@
 
 #include <univalue.h>
 
-#include <boost/foreach.hpp>
 
 std::string static EncodeDumpTime(int64_t nTime) {
     return DateTimeStrFormat("%Y-%m-%dT%H:%M:%SZ", nTime);

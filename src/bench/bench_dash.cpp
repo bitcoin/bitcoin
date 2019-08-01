@@ -4,6 +4,7 @@
 
 #include "bench.h"
 
+#include "crypto/sha256.h"
 #include "key.h"
 #include "stacktraces.h"
 #include "validation.h"
@@ -18,6 +19,8 @@ void CleanupBLSDkgTests();
 int
 main(int argc, char** argv)
 {
+    SHA256AutoDetect();
+
     RegisterPrettySignalHandlers();
     RegisterPrettyTerminateHander();
 

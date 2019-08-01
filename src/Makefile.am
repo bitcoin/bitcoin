@@ -194,6 +194,7 @@ BITCOIN_CORE_H = \
   pow.h \
   protocol.h \
   random.h \
+  reverse_iterator.h \
   reverselock.h \
   rpc/blockchain.h \
   rpc/client.h \
@@ -383,6 +384,10 @@ crypto_libdash_crypto_a_SOURCES = \
   crypto/sha256.h \
   crypto/sha512.cpp \
   crypto/sha512.h
+
+if EXPERIMENTAL_ASM
+crypto_libdash_crypto_a_SOURCES += crypto/sha256_sse4.cpp
+endif
 
 # x11
 crypto_libdash_crypto_a_SOURCES += \

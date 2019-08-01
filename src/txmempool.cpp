@@ -12,6 +12,7 @@
 #include "policy/policy.h"
 #include "policy/fees.h"
 #include "random.h"
+#include "reverse_iterator.h"
 #include "streams.h"
 #include "timedata.h"
 #include "util.h"
@@ -129,7 +130,7 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256> &vHashes
     // This maximizes the benefit of the descendant cache and guarantees that
     // setMemPoolChildren will be updated, an assumption made in
     // UpdateForDescendants.
-    BOOST_REVERSE_FOREACH(const uint256 &hash, vHashesToUpdate) {
+    for (const uint256 &hash : reverse_iterate(vHashesToUpdate)) {
         // we cache the in-mempool children to avoid duplicate updates
         setEntries setChildren;
         // calculate children from mapNextTx
@@ -692,7 +693,7 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
     mapLinks.erase(it);
     mapTx.erase(it);
     nTransactionsUpdated++;
-    if (minerPolicyEstimator) {minerPolicyEstimator->removeTx(hash);}
+    if (minerPolicyEstimator) {minerPolicyEstimator->removeTx(hash, false);}
     removeAddressIndex(hash);
     removeSpentIndex(hash);
 }

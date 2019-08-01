@@ -19,8 +19,7 @@
 #include "util.h"
 #include "utilstrencodings.h"
 #include "version.h"
-
-#include <boost/foreach.hpp>
+#include "warnings.h"
 
 #include <univalue.h>
 

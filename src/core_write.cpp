@@ -22,7 +22,6 @@
 #include "evo/specialtx.h"
 #include "llmq/quorums_commitment.h"
 
-#include <boost/foreach.hpp>
 
 std::string FormatScript(const CScript& script)
 {

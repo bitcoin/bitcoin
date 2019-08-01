@@ -15,7 +15,6 @@
 
 #include <stdint.h>
 
-#include <boost/foreach.hpp>
 
 /* Return positive answer if transaction should be shown in list.
  */
