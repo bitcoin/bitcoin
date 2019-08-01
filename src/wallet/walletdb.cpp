@@ -224,6 +224,11 @@ bool WalletBatch::WriteDescriptorCache(const uint256& desc_id, int32_t index, st
     return WriteIC(make_pair(make_pair(DBKeys::WALLETDESCRIPTORCACHE, desc_id), index), cache_item);
 }
 
+bool WalletBatch::EraseDescriptorCache(const uint256& desc_id, int32_t index)
+{
+    return EraseIC(make_pair(make_pair(DBKeys::WALLETDESCRIPTORCACHE, desc_id), index));
+}
+
 class CWalletScanState {
 public:
     unsigned int nKeys{0};

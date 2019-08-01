@@ -4276,6 +4276,7 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
 
 void CWallet::SetActiveScriptPubKeyMan(uint256 id, OutputType type, bool internal, bool memonly)
 {
+    WalletLogPrintf("Setting spkMan to active: id = %s, type = %d, internal = %d\n", id.ToString(), static_cast<int>(type), static_cast<int>(internal));
     auto& spk_mans = internal ? m_internal_spk_managers : m_external_spk_managers;
     auto spk_man = m_spk_managers.at(id).get();
     spk_man->SetType(type, internal);
@@ -4297,4 +4298,111 @@ bool CWallet::IsLegacy() const
     }
     auto spk_man = dynamic_cast<LegacyScriptPubKeyMan*>(m_internal_spk_managers.at(OutputType::LEGACY));
     return spk_man != nullptr;
+}
+
+DescriptorScriptPubKeyMan* CWallet::HasWalletDescriptor(const WalletDescriptor& desc) const
+{
+    if (!IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+        return nullptr;
+    }
+
+    for (auto& spk_man_pair : m_spk_managers) {
+        // Try to downcast to DescriptorScriptPubKeyMan then check if the descriptors match
+        DescriptorScriptPubKeyMan* spk_manager = dynamic_cast<DescriptorScriptPubKeyMan*>(spk_man_pair.second.get());
+        if (spk_manager != nullptr && spk_manager->HasWalletDescriptor(desc)) {
+            return spk_manager;
+        }
+    }
+
+    return nullptr;
+}
+
+bool CWallet::MaybeClearWalletDescriptorCache(const WalletDescriptor& desc)
+{
+    if (!IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+        WalletLogPrintf("Cannot update WalletDescriptor in a non-descriptor wallet\n");
+        return false;
+    }
+
+    auto spk_manager = HasWalletDescriptor(desc);
+    if (!spk_manager) {
+        WalletLogPrintf("Cannot find spkMan for descriptor\n");
+        return false;
+    }
+
+    WalletLogPrintf("Update existing descriptor: %s\n", desc.descriptor->ToString());
+    LOCK2(cs_wallet, spk_manager->cs_desc_man);
+
+    // Clear the cache if necessary
+    if (desc.range_start < spk_manager->GetWalletDescriptor().range_start) {
+        spk_manager->ClearDescriptorCache();
+    }
+
+    // Remove from maps of spkMans
+    for (bool internal : {false, true}) {
+        for (OutputType t : OUTPUT_TYPES) {
+            auto active_spk_man = GetScriptPubKeyMan(t, internal);
+            if (active_spk_man && active_spk_man->GetID() == spk_manager->GetID()) {
+                if (internal) {
+                    m_internal_spk_managers.erase(t);
+                } else {
+                    m_external_spk_managers.erase(t);
+                }
+                break;
+            }
+        }
+    }
+    m_spk_managers.erase(spk_manager->GetID());
+
+    return true;
+}
+
+ScriptPubKeyMan* CWallet::AddWalletDescriptor(WalletDescriptor& desc, const FlatSigningProvider& signing_provider, const std::string& label, Optional<OutputType>& parsed_output_type)
+{
+    if (!IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+        WalletLogPrintf("Cannot add WalletDescriptor to a non-descriptor wallet\n");
+        return nullptr;
+    }
+
+    LOCK(cs_wallet);
+    auto spk_manager = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, desc));
+
+    // Add the private keys to the descriptor
+    for (const auto& entry : signing_provider.keys) {
+        const CKey& key = entry.second;
+        spk_manager->AddDescriptorKey(key, key.GetPubKey());
+    }
+
+    // Top up key pool, the manager will generate new scriptPubKeys internally
+    spk_manager->TopUp();
+
+    // Determine the output type by peeking into the first scriptPubKey (that we just generated with TopUp())
+    auto script_pub_keys = spk_manager->GetScriptPubKeys();
+    if (script_pub_keys.empty()) {
+        WalletLogPrintf("Could not generate scriptPubKeys (cache is empty)\n");
+        return nullptr;
+    }
+    const CScript& script = script_pub_keys.at(0);
+    auto expanded_provider = spk_manager->GetSigningProvider(script);
+    if (expanded_provider) {
+        parsed_output_type = DetermineOutputType(script, *expanded_provider);
+    }
+
+    // Apply the label if necessary
+    // Note: we disable labels for ranged descriptors
+    if (!desc.descriptor->IsRange()) {
+        CTxDestination dest;
+        if (ExtractDestination(script, dest)) {
+            SetAddressBook(dest, label, "receive");
+        }
+    }
+
+    // Save the descriptor to memory
+    auto ret = spk_manager.get();
+    m_spk_managers[spk_manager->GetID()] = std::move(spk_manager);
+
+    // Save the descriptor to DB
+    ret->WriteDescriptor();
+
+    return ret;
 }

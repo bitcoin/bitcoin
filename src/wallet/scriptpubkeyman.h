@@ -546,6 +546,14 @@ public:
 
     bool AddKey(const CKeyID& key_id, const CKey& key);
     bool AddCryptedKey(const CKeyID& key_id, const CPubKey& pubkey, const std::vector<unsigned char>& crypted_key);
+
+    bool HasWalletDescriptor(const WalletDescriptor& desc) const;
+    bool ClearDescriptorCache();
+    void AddDescriptorKey(const CKey& key, const CPubKey &pubkey);
+    void WriteDescriptor();
+
+    const WalletDescriptor GetWalletDescriptor() const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
+    const std::vector<CScript> GetScriptPubKeys() const;
 };
 
 #endif // BITCOIN_WALLET_SCRIPTPUBKEYMAN_H
