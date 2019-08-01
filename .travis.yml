@@ -124,9 +124,10 @@ jobs:
       name: '32-bit + dash  [GOAL: install]  [GUI: no BIP70]'
       env: >-
         HOST=i686-pc-linux-gnu
-        PACKAGES="g++-multilib python3-zmq"
+        PACKAGES="g++-multilib python3-zmq xvfb"
         GOAL="install"
         BITCOIN_CONFIG="--enable-zmq --with-gui=qt5 --disable-bip70 --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++"
+        BITCOIND="bitcoin-qt" # Run the functional tests with the gui
         CONFIG_SHELL="/bin/dash"
 
     - stage: test

@@ -19,6 +19,11 @@ fi
 if [[ $HOST = *-mingw32 ]]; then
   DOCKER_EXEC update-alternatives --set $HOST-g++ \$\(which $HOST-g++-posix\)
 fi
+if [ "$BITCOIND" = "bitcoin-qt" ]; then
+  export DISPLAY=:99.0
+  # From https://docs.travis-ci.com/user/gui-and-headless-browsers/#using-xvfb-directly
+  DOCKER_EXEC /sbin/start-stop-daemon --start --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -ac -screen 0 1280x1024x24;
+fi
 if [ -z "$NO_DEPENDS" ]; then
   DOCKER_EXEC CONFIG_SHELL= make $MAKEJOBS -C depends HOST=$HOST $DEP_OPTS
 fi
