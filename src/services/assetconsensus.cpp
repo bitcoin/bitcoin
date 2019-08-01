@@ -68,7 +68,8 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     // the cutoff to keep txroots is 120k blocks and the cutoff to get approved is 40k blocks. If we are syncing after being offline for a while it should still validate up to 120k worth of txroots
     if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(mintSyscoin.nBlockNumber, txRootDB)){
         if(ethTxRootShouldExist){
-            // the next three don't pass in bMiner because we always want to pass state.Error() for txroot related errors meaning we don't want to flag the block as invalid, we want to retry as this is based on eventual consistency
+            // we always want to pass state.Invalid() for txroot missing errors here meaning we flag the block as invalid and dos ban the sender maybe
+            // the check in checkblock that does this prevents us from getting a block thats invalid flagged as error so it won't propogate the block, but if block does arrive we should dos ban peer and invalidate the block itself from connect block
             return FormatSyscoinErrorMessage(state, "mint-txroot-missing", bMiner);
         }
     }  
@@ -1753,7 +1754,7 @@ bool CEthereumTxRootsDB::PruneTxRoots(const uint32_t &fNewGethSyncHeight) {
     uint32_t cutoffHeight = 0;
     if(fNewGethSyncHeight > 0)
     {
-        const uint32_t &nCutoffHeight = MAX_ETHEREUM_TX_ROOTS*3;
+        const uint32_t &nCutoffHeight = MAX_ETHEREUM_TX_ROOTS;
         // cutoff to keep blocks is ~3 week of blocks is about 120k blocks
         cutoffHeight = fNewGethSyncHeight - nCutoffHeight;
         if(fNewGethSyncHeight < nCutoffHeight){

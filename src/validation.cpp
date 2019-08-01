@@ -850,7 +850,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         control.Add(vChecks);   
         if (!control.Wait())
             return false;
-        if (!CheckSyscoinInputs(tx, hash, state, view, true, ::ChainActive().Height(), ::ChainActive().Tip()->GetMedianTimePast(), test_accept || bypass_limits)) {
+        if (IsSyscoinTx(tx.nVersion) && !CheckSyscoinInputs(tx, hash, state, view, true, ::ChainActive().Height(), ::ChainActive().Tip()->GetMedianTimePast(), test_accept || bypass_limits)) {
             // mark to remove from mempool, because if we remove right away then the transaction data cannot be relayed most of the time
             if(!test_accept && state.IsError()){
                 LogPrint(BCLog::SYS, "Double spend detected on tx %s! %s\n", hash.GetHex(), FormatStateMessage(state));
@@ -2029,10 +2029,10 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
             control.Add(vChecks);
             // SYSCOIN
             const uint256& txHash = tx.GetHash(); 
-            
-
-            if (!CheckSyscoinInputs(ibd, tx, txHash, state, view, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, fJustCheck, false, actorSet, mapAssetAllocations, mapAssetPrevTxs, mapAssets, mapAssetSupplyStats, vecMintKeys, vecLockedOutpoints))
-                return error("ConnectBlock(): CheckSyscoinInputs on block %s failed\n", block.GetHash().ToString());        
+            if(IsSyscoinTx(tx.nVersion)){
+                if (!CheckSyscoinInputs(ibd, tx, txHash, state, view, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, fJustCheck, false, actorSet, mapAssetAllocations, mapAssetPrevTxs, mapAssets, mapAssetSupplyStats, vecMintKeys, vecLockedOutpoints))
+                    return error("ConnectBlock(): CheckSyscoinInputs on block %s failed\n", block.GetHash().ToString());        
+            }
             if(!fJustCheck){
                 blockIndex.emplace_back(std::move(txHash), std::move(blockHash));
             } 
@@ -3256,48 +3256,13 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     }
     if (nSigOps * WITNESS_SCALE_FACTOR > MAX_BLOCK_SIGOPS_COST)
         return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-blk-sigops", "out-of-bounds SigOpCount");
+
     // SYSCOIN
-    if(fCheckOnConnect){
+    if (fCheckPOW && fCheckMerkleRoot)
+    {
         for (const auto& txRef : block.vtx)
         {
-            if(IsAssetAllocationTx(txRef->nVersion)){
-                ActorSet actorSet;
-                CAssetAllocation theAssetAllocation(*txRef);
-                if(!theAssetAllocation.assetAllocationTuple.IsNull()){
-                    GetActorsFromAssetAllocationTx(theAssetAllocation, txRef->nVersion, true, false, actorSet);
-                    // ensure pow transactions if spending from sender should have match arrival times with this txid
-                    if(actorSet.size() == 1){
-                        const std::string& actor = *actorSet.begin();
-                        // if no conflicts we ensure miner isn't creating zdag tx but mining another
-                        // if conflict exists, it will only relay first conflict double spend so potentially nodes may
-                        // have inconsistent arrival times and thus we only need to check if there is no chance
-                        // that the arrival times are different (as long as transaction is relayed)
-                        // This is called Eventual Consistency. That over time every node will see the same transactions
-                        // in mempool or through the block
-                        if(assetAllocationConflicts.find(actor) == assetAllocationConflicts.end()){
-                            LOCK(cs_assetallocationarrival); 
-                            const auto arrivalTimesIT = arrivalTimesMap.find(actor);
-                            // only check if sender already exists in arrival times
-                            // the idea is if this person saw a sender, he likely would know about the sender txid being validated in the block
-                            // and even if not we don't pass in bMiner to ensure that we don't invalidate the block so it can check again for eventual consistency
-                            if(arrivalTimesIT != arrivalTimesMap.end()){
-                                const ArrivalTimesMap& arrivalTimes = arrivalTimesIT->second;
-                                std::unordered_set<uint256, SaltedTxidHasher> futureArrivalTimes;
-                                // ensure that we check for arrival times that arrived in future of this block (to cover for reorgs and disconnecting)
-                                for(const auto &arrivalTime: arrivalTimes){
-                                    if(block.GetBlockTime() > arrivalTime.second){
-                                        futureArrivalTimes.insert(arrivalTime.first);        
-                                    }
-                                }
-                                if(futureArrivalTimes.size() > 0 && futureArrivalTimes.find(txRef->GetHash()) == futureArrivalTimes.end()){
-                                    // we want to pass this back as an invalid transaction but not modify the block status to invalid
-                                    return FormatSyscoinErrorMessage(state, "assetallocation-missing-arrival-txid", false, false);
-                                }
-                            }
-                        } 
-                    }
-                }
-            } else if(IsSyscoinMintTx(txRef->nVersion)){
+            if(IsSyscoinMintTx(txRef->nVersion)){
                 // do this check only when not in IBD (initial block download) or litemode
                 // if we are starting up and verifying the db also skip this check as fLoaded will be false until startup sequence is complete
                 EthereumTxRoot txRootDB;
@@ -3308,8 +3273,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
                     // the cutoff to keep txroots is 120k blocks and the cutoff to get approved is 40k blocks. If we are syncing after being offline for a while it should still validate up to 120k worth of txroots
                     if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(mintSyscoin.nBlockNumber, txRootDB)){
                         if(ethTxRootShouldExist){
-                            // the next three don't pass in bMiner because we always want to pass state.Error() for txroot related errors meaning we don't want to flag the block as invalid, we want to retry as this is based on eventual consistency
-                            return FormatSyscoinErrorMessage(state, "mint-txroot-missing", false, true);
+                            // we always want to pass state.Error() for txroot missing errors here meaning we don't want to flag the block as invalid, we want to retry as this is based on eventual consistency
+                            return FormatSyscoinErrorMessage(state, "mint-txroot-missing", !fCheckOnConnect);
                         }
                     }  
                     if(ethTxRootShouldExist){
@@ -3321,8 +3286,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
                             }
                             else if((nTime - txRootDB.nTimestamp) > 604800) {
                                 return FormatSyscoinErrorMessage(state, "mint-blockheight-too-old", false, true);
-                            } 
-                            
+                            }
                             // ensure that we wait at least 1 hour before we are allowed process this mint transaction  
                             // also ensure sanity test that the current height that our node thinks Eth is on isn't less than the requested block for spv proof
                             else if((nTime - txRootDB.nTimestamp) < ((bGethTestnet == true)? 600: 3600)) {
@@ -3334,6 +3298,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
             }
         }
     }
+
     if (fCheckPOW && fCheckMerkleRoot)
         block.fChecked = true;
 

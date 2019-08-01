@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_audittxroot)
     tfm::format(std::cout,"syscoinsetethstatus elasped time %lld\n", end-start);
     UniValue blocksArray = find_value(r.get_obj(), "missing_blocks").get_array();
     // the - MAX_ETHEREUM_TX_ROOTS check to ensure you have at least that many roots stored from the tip
-    BOOST_CHECK(find_value(blocksArray[0].get_obj(), "from").get_uint() == 669780);
+    BOOST_CHECK_EQUAL(find_value(blocksArray[0].get_obj(), "from").get_uint() , 589780);
     BOOST_CHECK(find_value(blocksArray[0].get_obj(), "to").get_uint() == 707769);
 
     BOOST_CHECK(find_value(blocksArray[1].get_obj(), "from").get_uint() == 707771);
@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_audittxroot)
     end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     tfm::format(std::cout,"syscoinsetethstatus1 elasped time %lld\n", end-start);
     blocksArray = find_value(r.get_obj(), "missing_blocks").get_array();
-    BOOST_CHECK(find_value(blocksArray[0].get_obj(), "from").get_uint() == 669780);
+    BOOST_CHECK(find_value(blocksArray[0].get_obj(), "from").get_uint() == 589780);
     BOOST_CHECK(find_value(blocksArray[0].get_obj(), "to").get_uint() == 707769);
 
     BOOST_CHECK(find_value(blocksArray[1].get_obj(), "from").get_uint() == 707782);
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_audittxroot)
 
     BOOST_CHECK_EQUAL(blocksArray.size(), 4);
     // we should still have the missing ranges prior to the forks
-    BOOST_CHECK_EQUAL(find_value(blocksArray[0].get_obj(), "from").get_uint(),669780);
+    BOOST_CHECK_EQUAL(find_value(blocksArray[0].get_obj(), "from").get_uint(),589780);
     BOOST_CHECK_EQUAL(find_value(blocksArray[0].get_obj(), "to").get_uint() ,707769);
     
     // 707773 is affected, -50 is 707723 and +50 is 707823
@@ -674,7 +674,6 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_multiple)
 
     // this will stop the chain if both burns were allowed in the chain, the miner must throw away one of the burns to avoid his block from being flagged as invalid
     GenerateBlocks(5, "node1");
-
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + assetguid + " " + useraddress ));
     balance2 = find_value(r.get_obj(), "balance");
     BOOST_CHECK_EQUAL(balance2.getValStr(), "0.40000000");
