@@ -16,9 +16,10 @@ void noui_InitMessage(const std::string& message);
 
 /** Connect all syscoind signal handlers */
 void noui_connect();
-/** Suppress all syscoind signal handlers. Used to suppress output during test runs that produce expected errors */
-void noui_suppress();
 
-/** Reconnects the regular Non-GUI handlers after having used noui_suppress */
+/** Redirect all syscoind signal handlers to LogPrintf. Used to check or suppress output during test runs that produce expected errors */
+void noui_test_redirect();
+
+/** Reconnects the regular Non-GUI handlers after having used noui_test_redirect */
 void noui_reconnect();
 #endif // SYSCOIN_NOUI_H
