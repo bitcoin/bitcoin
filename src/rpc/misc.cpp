@@ -150,9 +150,10 @@ UniValue getdescriptorinfo(const JSONRPCRequest& request)
     RPCTypeCheck(request.params, {UniValue::VSTR});
 
     FlatSigningProvider provider;
-    auto desc = Parse(request.params[0].get_str(), provider);
+    std::string error;
+    auto desc = Parse(request.params[0].get_str(), provider, error);
     if (!desc) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Invalid descriptor"));
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Invalid descriptor, %s", error));
     }
 
     UniValue result(UniValue::VOBJ);
@@ -199,9 +200,10 @@ UniValue deriveaddresses(const JSONRPCRequest& request)
     }
 
     FlatSigningProvider key_provider;
-    auto desc = Parse(desc_str, key_provider, /* require_checksum = */ true);
+    std::string error;
+    auto desc = Parse(desc_str, key_provider, error, /* require_checksum = */ true);
     if (!desc) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Invalid descriptor"));
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Invalid descriptor, %s", error));
     }
 
     if (!desc->IsRange() && request.params.size() > 1) {

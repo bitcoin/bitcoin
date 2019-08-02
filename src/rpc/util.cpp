@@ -717,9 +717,10 @@ std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, Fl
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Scan object needs to be either a string or an object");
     }
 
-    auto desc = Parse(desc_str, provider);
+    std::string error;
+    auto desc = Parse(desc_str, provider, error);
     if (!desc) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Invalid descriptor '%s'", desc_str));
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Invalid descriptor '%s', %s", desc_str, error));
     }
     if (!desc->IsRange()) {
         range.first = 0;
