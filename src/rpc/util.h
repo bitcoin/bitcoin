@@ -25,6 +25,12 @@ class CPubKey;
 class CScript;
 struct InitInterfaces;
 
+/** High fee for sendrawtransaction and testmempoolaccept.
+ * By default, transaction with a fee higher than this will be rejected by the
+ * RPCs. This can be overridden with the maxfeerate argument.
+ */
+constexpr static CAmount DEFAULT_MAX_RAW_TX_FEE{COIN / 10};
+
 //! Pointers to interfaces that need to be accessible from RPC methods. Due to
 //! limitations of the RPC framework, there's currently no direct way to pass in
 //! state to RPC method implementations.
