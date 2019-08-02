@@ -30,6 +30,7 @@ AssetPrevTxMap mapSenderLockedOutPoints;
 AssetPrevTxMap mapAssetPrevTxSender;
 std::vector<std::pair<uint256, uint32_t> > vecToRemoveFromMempool;
 CCriticalSection cs_assetallocationmempoolremovetx;
+extern bool AbortNode(const std::string& strMessage, const std::string& userMessage = "", unsigned int prefix = 0);
 using namespace std;
 bool FormatSyscoinErrorMessage(CValidationState& state, const std::string errorMessage, bool bErrorNotInvalid, bool bConsensus){
         if(bErrorNotInvalid){
@@ -68,12 +69,16 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     // the cutoff to keep txroots is 120k blocks and the cutoff to get approved is 40k blocks. If we are syncing after being offline for a while it should still validate up to 120k worth of txroots
     if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(mintSyscoin.nBlockNumber, txRootDB)){
         if(ethTxRootShouldExist){
+            // we would have already verified this in checkbock so abort if its a problem here
+            if(!blockhash.IsNull())
+                return AbortNode("mint-txroot-missing");
             // we always want to pass state.Invalid() for txroot missing errors here meaning we flag the block as invalid and dos ban the sender maybe
             // the check in checkblock that does this prevents us from getting a block thats invalid flagged as error so it won't propogate the block, but if block does arrive we should dos ban peer and invalidate the block itself from connect block
             return FormatSyscoinErrorMessage(state, "mint-txroot-missing", bMiner);
         }
     }  
-    if(ethTxRootShouldExist){
+    // if we checking this on block we would have already verified this in checkblock
+    if(blockhash.IsNull() && ethTxRootShouldExist){
         // time must be between 1 week and 1 hour old to be accepted
         if(fGethSyncHeight >= MAX_ETHEREUM_TX_ROOTS){
             if(nTime < txRootDB.nTimestamp) {
