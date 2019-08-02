@@ -15,7 +15,7 @@ class WalletGroupTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
-        self.extra_args = [[], [], ['-avoidpartialspends']]
+        self.extra_args = [['-maxtxfee=0.1'], [], ['-avoidpartialspends']]
         self.rpc_timeout = 120
 
     def skip_test_if_missing_module(self):
