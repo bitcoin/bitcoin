@@ -128,10 +128,11 @@ class EstimateFeeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
         # mine non-standard txs (e.g. txs with "dust" outputs)
+        # Force fSendTrickle to true (via whitelist)
         self.extra_args = [
-            ["-acceptnonstdtxn", "-maxorphantx=1000", "-whitelist=127.0.0.1"],
-            ["-acceptnonstdtxn", "-blockmaxweight=68000", "-maxorphantx=1000"],
-            ["-acceptnonstdtxn", "-blockmaxweight=32000", "-maxorphantx=1000"],
+            ["-acceptnonstdtxn", "-whitelist=127.0.0.1"],
+            ["-acceptnonstdtxn", "-whitelist=127.0.0.1", "-blockmaxweight=68000"],
+            ["-acceptnonstdtxn", "-whitelist=127.0.0.1", "-blockmaxweight=32000"],
         ]
 
     def skip_test_if_missing_module(self):
@@ -168,9 +169,9 @@ class EstimateFeeTest(BitcoinTestFramework):
                                                       self.memutxo, Decimal("0.005"), min_fee, min_fee)
                 tx_kbytes = (len(txhex) // 2) / 1000.0
                 self.fees_per_kb.append(float(fee) / tx_kbytes)
-            self.sync_mempools(self.nodes[0:3], wait=.1)
+            self.sync_mempools(wait=.1)
             mined = mining_node.getblock(mining_node.generate(1)[0], True)["tx"]
-            self.sync_blocks(self.nodes[0:3], wait=.1)
+            self.sync_blocks(wait=.1)
             # update which txouts are confirmed
             newmem = []
             for utx in self.memutxo:
