@@ -58,6 +58,7 @@ static feebumper::Result PreconditionChecks(interfaces::Chain::Lock& locked_chai
     return feebumper::Result::OK;
 }
 
+// TODO: Call this in CreateTotalBumpTransaction to avoid code duplication
 //! Check if the user provided a valid feeRate
 static feebumper::Result CheckFeeRate(const CWallet* wallet, const CWalletTx& wtx, const CFeeRate& newFeerate, const int64_t maxTxSize, std::vector<std::string>& errors)
 {

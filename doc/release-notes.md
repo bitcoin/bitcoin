@@ -92,7 +92,9 @@ Deprecated or removed RPCs
 --------------------------
 
 - The `totalFee` option of the `bumpfee` RPC has been deprecated and will be
-  removed in 0.20.  To continue using this option start with
+  removed in 0.20. The `feeRate` option is now the preferred way to specify
+  the fee for the new transaction.
+  To continue using the `totalFee` option start with
   `-deprecatedrpc=totalFee`.  See the `bumpfee` RPC help text for more details.
 
 Low-level changes
