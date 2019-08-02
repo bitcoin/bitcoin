@@ -785,7 +785,7 @@ MilliSleep(60000);
 
     CReserveKey reservekey(pwallet);
 
-    //bool fTryToSync = true;
+    bool fTryToSync = true;
     //bool regtestMode = Params().GetConsensus().fPoSNoRetargeting;
 
     while (true)
@@ -796,10 +796,18 @@ MilliSleep(60000);
             MilliSleep(10000);
         }
         //don't disable PoS mining for no connections if in regtest mode
-
-		if(!g_connman || g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) < 3 || ::ChainstateActive().IsInitialBlockDownload()){
-    		MilliSleep(1000);
-		}			
+        while (g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) == 3 || ::ChainstateActive().IsInitialBlockDownload()) {
+            pwallet->m_last_coin_stake_search_interval = 0;
+            fTryToSync = true;
+            MilliSleep(1000);
+        }
+        if (fTryToSync) {
+            fTryToSync = false;
+            if (g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) < 3 || ::ChainActive().Tip()->GetBlockTime() < GetTime() - 10 * 60) {
+                MilliSleep(60000);
+                continue;
+            }
+        }
         
         //
         // Create new block
@@ -887,7 +895,7 @@ MilliSleep(60000);
                 }
             }
         }
-        MilliSleep(1000);
+        MilliSleep(10000);
     }
 }
 
