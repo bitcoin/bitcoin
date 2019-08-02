@@ -690,7 +690,7 @@ std::vector<Span<const char>> Split(const Span<const char>& sp, char sep)
 }
 
 /** Parse a key path, being passed a split list of elements (the first element is ignored). */
-NODISCARD bool ParseKeyPath(const std::vector<Span<const char>>& split, KeyPath& out)
+NODISCARD bool ParseKeyPath(const std::vector<Span<const char>>& split, KeyPath& out, std::string& error)
 {
     for (size_t i = 1; i < split.size(); ++i) {
         Span<const char> elem = split[i];
@@ -700,14 +700,17 @@ NODISCARD bool ParseKeyPath(const std::vector<Span<const char>>& split, KeyPath&
             hardened = true;
         }
         uint32_t p;
-        if (!ParseUInt32(std::string(elem.begin(), elem.end()), &p) || p > 0x7FFFFFFFUL) return false;
+        if (!ParseUInt32(std::string(elem.begin(), elem.end()), &p) || p > 0x7FFFFFFFUL) {
+            error = strprintf("Key path value %u is out of range", p);
+            return false;
+        }
         out.push_back(p | (((uint32_t)hardened) << 31));
     }
     return true;
 }
 
 /** Parse a public key that excludes origin information. */
-std::unique_ptr<PubkeyProvider> ParsePubkeyInner(const Span<const char>& sp, bool permit_uncompressed, FlatSigningProvider& out)
+std::unique_ptr<PubkeyProvider> ParsePubkeyInner(const Span<const char>& sp, bool permit_uncompressed, FlatSigningProvider& out, std::string& error)
 {
     auto split = Split(sp, '/');
     std::string str(split[0].begin(), split[0].end());
@@ -726,7 +729,10 @@ std::unique_ptr<PubkeyProvider> ParsePubkeyInner(const Span<const char>& sp, boo
     }
     CExtKey extkey = DecodeExtKey(str);
     CExtPubKey extpubkey = DecodeExtPubKey(str);
-    if (!extkey.key.IsValid() && !extpubkey.pubkey.IsValid()) return nullptr;
+    if (!extkey.key.IsValid() && !extpubkey.pubkey.IsValid()) {
+        error = strprintf("key '%s' is not valid", str);
+        return nullptr;
+    }
     KeyPath path;
     DeriveType type = DeriveType::NO;
     if (split.back() == MakeSpan("*").first(1)) {
@@ -736,7 +742,7 @@ std::unique_ptr<PubkeyProvider> ParsePubkeyInner(const Span<const char>& sp, boo
         split.pop_back();
         type = DeriveType::HARDENED;
     }
-    if (!ParseKeyPath(split, path)) return nullptr;
+    if (!ParseKeyPath(split, path, error)) return nullptr;
     if (extkey.key.IsValid()) {
         extpubkey = extkey.Neuter();
         out.keys.emplace(extpubkey.pubkey.GetID(), extkey.key);
@@ -745,43 +751,55 @@ std::unique_ptr<PubkeyProvider> ParsePubkeyInner(const Span<const char>& sp, boo
 }
 
 /** Parse a public key including origin information (if enabled). */
-std::unique_ptr<PubkeyProvider> ParsePubkey(const Span<const char>& sp, bool permit_uncompressed, FlatSigningProvider& out)
+std::unique_ptr<PubkeyProvider> ParsePubkey(const Span<const char>& sp, bool permit_uncompressed, FlatSigningProvider& out, std::string& error)
 {
     auto origin_split = Split(sp, ']');
-    if (origin_split.size() > 2) return nullptr;
-    if (origin_split.size() == 1) return ParsePubkeyInner(origin_split[0], permit_uncompressed, out);
-    if (origin_split[0].size() < 1 || origin_split[0][0] != '[') return nullptr;
+    if (origin_split.size() > 2) {
+        error = "Multiple ']' characters found for a single pubkey";
+        return nullptr;
+    }
+    if (origin_split.size() == 1) return ParsePubkeyInner(origin_split[0], permit_uncompressed, out, error);
+    if (origin_split[0].size() < 1 || origin_split[0][0] != '[') {
+        error = strprintf("Key origin expected but not found, got '%s' instead", std::string(origin_split[0].begin(), origin_split[0].end()));
+        return nullptr;
+    }
     auto slash_split = Split(origin_split[0].subspan(1), '/');
-    if (slash_split[0].size() != 8) return nullptr;
+    if (slash_split[0].size() != 8) {
+        error = strprintf("Fingerprint is not 4 bytes (%u characters instead of 8 characters)", slash_split[0].size());
+        return nullptr;
+    }
     std::string fpr_hex = std::string(slash_split[0].begin(), slash_split[0].end());
-    if (!IsHex(fpr_hex)) return nullptr;
+    if (!IsHex(fpr_hex)) {
+        error = strprintf("Fingerprint '%s' is not hex", fpr_hex);
+        return nullptr;
+    }
     auto fpr_bytes = ParseHex(fpr_hex);
     KeyOriginInfo info;
     static_assert(sizeof(info.fingerprint) == 4, "Fingerprint must be 4 bytes");
     assert(fpr_bytes.size() == 4);
     std::copy(fpr_bytes.begin(), fpr_bytes.end(), info.fingerprint);
-    if (!ParseKeyPath(slash_split, info.path)) return nullptr;
-    auto provider = ParsePubkeyInner(origin_split[1], permit_uncompressed, out);
+    if (!ParseKeyPath(slash_split, info.path, error)) return nullptr;
+    auto provider = ParsePubkeyInner(origin_split[1], permit_uncompressed, out, error);
     if (!provider) return nullptr;
     return MakeUnique<OriginPubkeyProvider>(std::move(info), std::move(provider));
 }
 
 /** Parse a script in a particular context. */
-std::unique_ptr<DescriptorImpl> ParseScript(Span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out)
+std::unique_ptr<DescriptorImpl> ParseScript(Span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out, std::string& error)
 {
     auto expr = Expr(sp);
     if (Func("pk", expr)) {
-        auto pubkey = ParsePubkey(expr, ctx != ParseScriptContext::P2WSH, out);
+        auto pubkey = ParsePubkey(expr, ctx != ParseScriptContext::P2WSH, out, error);
         if (!pubkey) return nullptr;
         return MakeUnique<PKDescriptor>(std::move(pubkey));
     }
     if (Func("pkh", expr)) {
-        auto pubkey = ParsePubkey(expr, ctx != ParseScriptContext::P2WSH, out);
+        auto pubkey = ParsePubkey(expr, ctx != ParseScriptContext::P2WSH, out, error);
         if (!pubkey) return nullptr;
         return MakeUnique<PKHDescriptor>(std::move(pubkey));
     }
     if (ctx == ParseScriptContext::TOP && Func("combo", expr)) {
-        auto pubkey = ParsePubkey(expr, true, out);
+        auto pubkey = ParsePubkey(expr, true, out, error);
         if (!pubkey) return nullptr;
         return MakeUnique<ComboDescriptor>(std::move(pubkey));
     }
@@ -789,51 +807,70 @@ std::unique_ptr<DescriptorImpl> ParseScript(Span<const char>& sp, ParseScriptCon
         auto threshold = Expr(expr);
         uint32_t thres;
         std::vector<std::unique_ptr<PubkeyProvider>> providers;
-        if (!ParseUInt32(std::string(threshold.begin(), threshold.end()), &thres)) return nullptr;
+        if (!ParseUInt32(std::string(threshold.begin(), threshold.end()), &thres)) {
+            error = strprintf("multi threshold %u out of range", thres);
+            return nullptr;
+        }
         size_t script_size = 0;
         while (expr.size()) {
-            if (!Const(",", expr)) return nullptr;
+            if (!Const(",", expr)) {
+                error = strprintf("multi: expected ',', got '%c'", expr[0]);
+                return nullptr;
+            }
             auto arg = Expr(expr);
-            auto pk = ParsePubkey(arg, ctx != ParseScriptContext::P2WSH, out);
+            auto pk = ParsePubkey(arg, ctx != ParseScriptContext::P2WSH, out, error);
             if (!pk) return nullptr;
             script_size += pk->GetSize() + 1;
             providers.emplace_back(std::move(pk));
         }
         if (providers.size() < 1 || providers.size() > 16 || thres < 1 || thres > providers.size()) return nullptr;
         if (ctx == ParseScriptContext::TOP) {
-            if (providers.size() > 3) return nullptr; // Not more than 3 pubkeys for raw multisig
+            if (providers.size() > 3) {
+                error = strprintf("Cannot %u pubkeys in bare multisig; only at most 3 pubkeys", providers.size());
+                return nullptr;
+            }
         }
         if (ctx == ParseScriptContext::P2SH) {
-            if (script_size + 3 > 520) return nullptr; // Enforce P2SH script size limit
+            if (script_size + 3 > 520) {
+                error = strprintf("P2SH script is too large, %d bytes is larger than 520 bytes", script_size + 3);
+                return nullptr;
+            }
         }
         return MakeUnique<MultisigDescriptor>(thres, std::move(providers));
     }
     if (ctx != ParseScriptContext::P2WSH && Func("wpkh", expr)) {
-        auto pubkey = ParsePubkey(expr, false, out);
+        auto pubkey = ParsePubkey(expr, false, out, error);
         if (!pubkey) return nullptr;
         return MakeUnique<WPKHDescriptor>(std::move(pubkey));
     }
     if (ctx == ParseScriptContext::TOP && Func("sh", expr)) {
-        auto desc = ParseScript(expr, ParseScriptContext::P2SH, out);
+        auto desc = ParseScript(expr, ParseScriptContext::P2SH, out, error);
         if (!desc || expr.size()) return nullptr;
         return MakeUnique<SHDescriptor>(std::move(desc));
     }
     if (ctx != ParseScriptContext::P2WSH && Func("wsh", expr)) {
-        auto desc = ParseScript(expr, ParseScriptContext::P2WSH, out);
+        auto desc = ParseScript(expr, ParseScriptContext::P2WSH, out, error);
         if (!desc || expr.size()) return nullptr;
         return MakeUnique<WSHDescriptor>(std::move(desc));
     }
     if (ctx == ParseScriptContext::TOP && Func("addr", expr)) {
         CTxDestination dest = DecodeDestination(std::string(expr.begin(), expr.end()));
-        if (!IsValidDestination(dest)) return nullptr;
+        if (!IsValidDestination(dest)) {
+            error = "Address is not valid";
+            return nullptr;
+        }
         return MakeUnique<AddressDescriptor>(std::move(dest));
     }
     if (ctx == ParseScriptContext::TOP && Func("raw", expr)) {
         std::string str(expr.begin(), expr.end());
-        if (!IsHex(str)) return nullptr;
+        if (!IsHex(str)) {
+            error = "Raw script is not hex";
+            return nullptr;
+        }
         auto bytes = ParseHex(str);
         return MakeUnique<RawDescriptor>(CScript(bytes.begin(), bytes.end()));
     }
+    error = strprintf("%s is not a valid descriptor function", std::string(expr.begin(), expr.end()));
     return nullptr;
 }
 
@@ -915,29 +952,44 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
 } // namespace
 
 /** Check a descriptor checksum, and update desc to be the checksum-less part. */
-bool CheckChecksum(Span<const char>& sp, bool require_checksum, std::string* out_checksum = nullptr)
+bool CheckChecksum(Span<const char>& sp, bool require_checksum, std::string& error, std::string* out_checksum = nullptr)
 {
     auto check_split = Split(sp, '#');
-    if (check_split.size() > 2) return false; // Multiple '#' symbols
-    if (check_split.size() == 1 && require_checksum) return false; // Missing checksum
+    if (check_split.size() > 2) {
+        error = "Multiple '#' symbols";
+        return false;
+    }
+    if (check_split.size() == 1 && require_checksum){
+        error = "Missing checksum";
+        return false;
+    }
     if (check_split.size() == 2) {
-        if (check_split[1].size() != 8) return false; // Unexpected length for checksum
+        if (check_split[1].size() != 8) {
+            error = strprintf("Expected 8 character checksum, not %u characters", check_split[1].size());
+            return false;
+        }
     }
     auto checksum = DescriptorChecksum(check_split[0]);
-    if (checksum.empty()) return false; // Invalid characters in payload
+    if (checksum.empty()) {
+        error = "Invalid characters in payload";
+        return false;
+    }
     if (check_split.size() == 2) {
-        if (!std::equal(checksum.begin(), checksum.end(), check_split[1].begin())) return false; // Checksum mismatch
+        if (!std::equal(checksum.begin(), checksum.end(), check_split[1].begin())) {
+            error = strprintf("Provided checksum '%s' does not match computed checksum '%s'", std::string(check_split[1].begin(), check_split[1].end()), checksum);
+            return false;
+        }
     }
     if (out_checksum) *out_checksum = std::move(checksum);
     sp = check_split[0];
     return true;
 }
 
-std::unique_ptr<Descriptor> Parse(const std::string& descriptor, FlatSigningProvider& out, bool require_checksum)
+std::unique_ptr<Descriptor> Parse(const std::string& descriptor, FlatSigningProvider& out, std::string& error, bool require_checksum)
 {
     Span<const char> sp(descriptor.data(), descriptor.size());
-    if (!CheckChecksum(sp, require_checksum)) return nullptr;
-    auto ret = ParseScript(sp, ParseScriptContext::TOP, out);
+    if (!CheckChecksum(sp, require_checksum, error)) return nullptr;
+    auto ret = ParseScript(sp, ParseScriptContext::TOP, out, error);
     if (sp.size() == 0 && ret) return std::unique_ptr<Descriptor>(std::move(ret));
     return nullptr;
 }
@@ -945,8 +997,9 @@ std::unique_ptr<Descriptor> Parse(const std::string& descriptor, FlatSigningProv
 std::string GetDescriptorChecksum(const std::string& descriptor)
 {
     std::string ret;
+    std::string error;
     Span<const char> sp(descriptor.data(), descriptor.size());
-    if (!CheckChecksum(sp, false, &ret)) return "";
+    if (!CheckChecksum(sp, false, error, &ret)) return "";
     return ret;
 }
 

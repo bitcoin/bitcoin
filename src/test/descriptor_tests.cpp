@@ -16,8 +16,9 @@ namespace {
 void CheckUnparsable(const std::string& prv, const std::string& pub)
 {
     FlatSigningProvider keys_priv, keys_pub;
-    auto parse_priv = Parse(prv, keys_priv);
-    auto parse_pub = Parse(pub, keys_pub);
+    std::string error;
+    auto parse_priv = Parse(prv, keys_priv, error);
+    auto parse_pub = Parse(pub, keys_pub, error);
     BOOST_CHECK_MESSAGE(!parse_priv, prv);
     BOOST_CHECK_MESSAGE(!parse_pub, pub);
 }
@@ -62,10 +63,11 @@ void Check(const std::string& prv, const std::string& pub, int flags, const std:
 {
     FlatSigningProvider keys_priv, keys_pub;
     std::set<std::vector<uint32_t>> left_paths = paths;
+    std::string error;
 
     // Check that parsing succeeds.
-    auto parse_priv = Parse(MaybeUseHInsteadOfApostrophy(prv), keys_priv);
-    auto parse_pub = Parse(MaybeUseHInsteadOfApostrophy(pub), keys_pub);
+    auto parse_priv = Parse(MaybeUseHInsteadOfApostrophy(prv), keys_priv, error);
+    auto parse_pub = Parse(MaybeUseHInsteadOfApostrophy(pub), keys_pub, error);
     BOOST_CHECK(parse_priv);
     BOOST_CHECK(parse_pub);
 
