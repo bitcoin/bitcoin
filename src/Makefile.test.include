@@ -58,6 +58,8 @@ GENERATED_TEST_FILES = $(JSON_TEST_FILES:.json=.json.h) $(RAW_TEST_FILES:.raw=.r
 BITCOIN_TEST_SUITE = \
   test/lib/blockfilter.cpp \
   test/lib/blockfilter.h \
+  test/lib/logging.cpp \
+  test/lib/logging.h \
   test/lib/transaction_utils.cpp \
   test/lib/transaction_utils.h \
   test/main.cpp \
