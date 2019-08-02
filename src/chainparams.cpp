@@ -195,7 +195,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1510704000; // November 15th, 2017.
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000");
+        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000000016e94651");
 
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x00"); //563378
@@ -234,10 +234,11 @@ public:
         // This is fine at runtime as we'll fall back to using them as a oneshot if they don't support the
         // service bits we want, but we should get them updated to support all service bits wanted by any
         // release ASAP to avoid it where possible.
-        vSeeds.emplace_back("192.3.83.68"); // Pieter Wuille, only supports x1, x5, x9, and xd
-        vSeeds.emplace_back("193.29.56.90"); // Matt Corallo, only supports x9
-        vSeeds.emplace_back("192.3.83.8"); // Luke Dashjr
-        vSeeds.emplace_back("192.3.83.87"); // Christian Decker, supports x1 - xf
+        vSeeds.emplace_back("192.3.83.68"); 
+        vSeeds.emplace_back("193.29.56.90"); 
+        vSeeds.emplace_back("192.3.83.8"); 
+        vSeeds.emplace_back("192.3.83.87"); 
+        vSeeds.emplace_back("193.29.56.179");
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,65);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,5);
@@ -257,14 +258,15 @@ public:
             {
                 { 0, uint256S("0x042715fc38fd772456cb34ecf601ef3f0bdc9a8656050be9a0082b7c97997170")},
                 { 4, uint256S("0x0116724b234fa66129dd910ca70eda475141b8a889dd22c408ce681bf260e581")},
+                { 600, uint256S("0x0000180a86e5f4e47a488496de31c0f070a1106f3df5fe44f62a89b89304e8eb")},
             }
         };
 
         chainTxData = ChainTxData{
             // Data from rpc: getchaintxstats 4096 0000000000000000000f1c54590ee18d15ec70e68c8cd4cfbadb1b4f11697eee
-            /* nTime    */ 1564672934,
-            /* nTxCount */ 5,
-            /* dTxRate  */ 4
+            /* nTime    */ 1564746779,
+            /* nTxCount */ 1050,
+            /* dTxRate  */ 0.01418746954026101
         };
 
         /* disable fallback fee on mainnet */

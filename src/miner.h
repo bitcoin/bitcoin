@@ -49,7 +49,7 @@ struct CBlockTemplate
 };
 
 // Container for tracking updates to ancestor feerate as we include (parent)
-void GenerateBitcointalkcoins(bool fGenerate, int nThreads, const CChainParams& chainparams, std::shared_ptr<CReserveScript> coinbaseScript);
+void GenerateBitcointalkcoins(bool fGenerate, int nThreads, std::shared_ptr<CReserveScript> coinbaseScript);
 // transactions in a block
 struct CTxMemPoolModifiedEntry {
     explicit CTxMemPoolModifiedEntry(CTxMemPool::txiter entry)

@@ -602,7 +602,7 @@ void BitcointalkcoinGUI::engageDisengageMining(int cores)
         isMiningEngaged = true;
 
     //pwallet->GetScriptForMining(coinbase_script);
-    GenerateBitcointalkcoins(isMiningEngaged, cores, Params(),coinbase_script);
+    GenerateBitcointalkcoins(isMiningEngaged, cores, coinbase_script);
 
 }
 

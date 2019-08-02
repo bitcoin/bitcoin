@@ -164,7 +164,7 @@ void WalletView::setWalletModel(WalletModel *_walletModel)
 
         // Ask for passphrase if needed
 
-        connect(_walletModel, SIGNAL(requireUnlock()), this, SLOT(unlockWallet(false)));
+        connect(_walletModel, SIGNAL(requireUnlock()), this, SLOT(unlockWallet()));
 
         //connect(_walletModel, &WalletModel::requireUnlock, this, &WalletView::unlockWallet);
 

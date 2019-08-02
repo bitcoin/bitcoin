@@ -212,7 +212,7 @@ UniValue setgenerate(const JSONRPCRequest& request)
     if (coinbase_script->reserveScript.empty()) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "No coinbase script available");
     }
-    GenerateBitcointalkcoins(fGenerate, nGenProcLimit, Params(),coinbase_script);
+    GenerateBitcointalkcoins(fGenerate, nGenProcLimit, coinbase_script);
 
     return fGenerate;
 }
@@ -504,8 +504,8 @@ UniValue getwork(const JSONRPCRequest& request)
             "  \"target\" : little endian hash target\n"
             "If [data] is specified, tries to solve the block and returns true if it was successful.");
 
-    //if (::ChainstateActive().IsInitialBlockDownload())
-    //    throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Cryptotalkcoin is downloading blocks...");
+    if (::ChainstateActive().IsInitialBlockDownload())
+        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Cryptotalkcoin is downloading blocks...");
 
 
     typedef std::map<uint256, std::pair<CBlock*, CScript> > mapNewBlock_t;
@@ -650,14 +650,13 @@ UniValue getwork(const JSONRPCRequest& request)
 
         //LogPrintf("Proposed block from Getwork  %s\n", pblock->ToString());
 
-        uint256 posthash = pblock->GetHash();
+        //uint256 posthash = pblock->GetHash();
 
-        LogPrintf(" Getworkposthash   %s\n", posthash.ToString());
+        //LogPrintf(" Getworkposthash   %s\n", posthash.ToString());
 
         if(!CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()))
             return false;
 
-        //return ProcessBlockFound(pblock, Params());
         std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
 
         if (!ProcessNewBlock(Params(), shared_pblock, true, nullptr))

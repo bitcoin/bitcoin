@@ -796,20 +796,11 @@ MilliSleep(60000);
             MilliSleep(10000);
         }
         //don't disable PoS mining for no connections if in regtest mode
-       /* if(!gArgs.GetBoolArg("-emergencystaking", false)) {
-            while (connman->GetNodeCount(CConnman::CONNECTIONS_ALL) == 0 || ::ChainstateActive().IsInitialBlockDownload()) {
-                pwallet->m_last_coin_stake_search_interval = 0;
-                fTryToSync = true;
-                MilliSleep(1000);
-            }
-            if (fTryToSync) {
-                fTryToSync = false;
-                if (connman->GetNodeCount(CConnman::CONNECTIONS_ALL) < 3 || ::ChainActive().Tip()->GetBlockTime() < GetTime() - 10 * 60) {
-                    MilliSleep(60000);
-                    continue;
-                }
-            }
-        }*/
+
+		if(!g_connman || g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) < 3 || ::ChainstateActive().IsInitialBlockDownload()){
+    		MilliSleep(1000);
+		}			
+        
         //
         // Create new block
         //
@@ -925,8 +916,9 @@ void Stake(bool fStake, CWallet *pwallet, boost::thread_group*& stakeThread)
 double dHashesPerMin = 0.0;
 int64_t nHPSTimerStart = 0;
 
-void static BitcointalkcoinMiner(const CChainParams& chainparams, std::shared_ptr<CReserveScript> coinbase_script)
+void static BitcointalkcoinMiner(std::shared_ptr<CReserveScript> coinbase_script)
 {
+    const CChainParams& chainparams = Params();
     LogPrintf("BitcointalkcoinMiner started\n");
     //SetThreadPriority(THREAD_PRIORITY_LOWEST);
     RenameThread("bitcointalkcoin-miner");
@@ -941,7 +933,7 @@ void static BitcointalkcoinMiner(const CChainParams& chainparams, std::shared_pt
         while (true) {
                 // Busy-wait for the network to come online so we don't waste time mining
                 // on an obsolete chain. In regtest mode we expect to fly solo.
-                /*do {
+                do {
                     if(!g_connman)
                         break;
 
@@ -951,7 +943,7 @@ void static BitcointalkcoinMiner(const CChainParams& chainparams, std::shared_pt
                     if (::ChainstateActive().IsInitialBlockDownload())
                         break;
                     MilliSleep(1000);
-                } while (true);*/
+                } while (true);
 
             //
             // Create new block
@@ -1069,7 +1061,7 @@ void static BitcointalkcoinMiner(const CChainParams& chainparams, std::shared_pt
     }
 }
 
-void GenerateBitcointalkcoins(bool fGenerate, int nThreads, const CChainParams& chainparams, std::shared_ptr<CReserveScript> coinbase_script)
+void GenerateBitcointalkcoins(bool fGenerate, int nThreads, std::shared_ptr<CReserveScript> coinbase_script)
 {
     static boost::thread_group* minerThreads = NULL;
 
@@ -1088,5 +1080,5 @@ void GenerateBitcointalkcoins(bool fGenerate, int nThreads, const CChainParams& 
 
     minerThreads = new boost::thread_group();
     for (int i = 0; i < nThreads; i++)
-        minerThreads->create_thread(boost::bind(&BitcointalkcoinMiner, boost::cref(chainparams), boost::cref(coinbase_script)));
+        minerThreads->create_thread(boost::bind(&BitcointalkcoinMiner, boost::cref(coinbase_script)));
 }

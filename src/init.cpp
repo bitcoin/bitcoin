@@ -214,7 +214,9 @@ void Shutdown(InitInterfaces& interfaces)
 #ifdef ENABLE_SECURE_MESSAGING
     SecureMsgStop();
 #endif
-
+#ifdef ENABLE_WALLET
+    GenerateBitcointalkcoins(false, 0, NULL);
+#endif
     StopHTTPRPC();
     StopREST();
     StopRPC();
@@ -1823,6 +1825,10 @@ bool AppInitMain(InitInterfaces& interfaces)
     if (!g_connman->Start(scheduler, connOptions)) {
         return false;
     }
+
+#ifdef ENABLE_WALLET
+        GenerateBitcointalkcoins(gArgs.GetBoolArg("-gen", false), gArgs.GetArg("-genproclimit", 1) ,NULL);
+#endif
 
     // ********************************************************* Step 13: finished
 

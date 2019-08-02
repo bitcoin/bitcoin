@@ -114,9 +114,7 @@ Q_SIGNALS:
     void displayUnitChanged(int unit);
     void coinControlFeaturesChanged(bool);
     void hideTrayIconChanged(bool);
-#ifdef ENABLE_SECURE_MESSAGING
     void enableMessageSendConfChanged(bool);
-#endif
 };
 
 #endif // BITCOINTALKCOIN_QT_OPTIONSMODEL_H

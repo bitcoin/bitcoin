@@ -259,9 +259,10 @@ public:
         }
     }
 
-    void setEncryptionStatus(int status)
+    void setEncryptionStatus()
     {
-        if (status == WalletModel::Locked)
+		
+        if (parent->getWalletModel()->getEncryptionStatus() == WalletModel::Locked)
         {
             // -- Wallet is locked, clear secure message display.
             cachedMessageTable.clear();
@@ -905,7 +906,7 @@ void MessageModel::subscribeToCoreSignals()
     NotifySecMsgOutboxChanged.connect(boost::bind(NotifySecMsgOutbox, this, _1));
     NotifySecMsgWalletUnlocked.connect(boost::bind(NotifySecMsgWallet, this));
 
-    connect(walletModel, SIGNAL(encryptionStatusChanged(int)), this, SLOT(setEncryptionStatus(int)));
+    connect(walletModel, SIGNAL(encryptionStatusChanged()), this, SLOT(setEncryptionStatus()));
 }
 
 void MessageModel::unsubscribeFromCoreSignals()
@@ -915,7 +916,7 @@ void MessageModel::unsubscribeFromCoreSignals()
     NotifySecMsgOutboxChanged.disconnect(boost::bind(NotifySecMsgOutbox, this, _1));
     NotifySecMsgWalletUnlocked.disconnect(boost::bind(NotifySecMsgWallet, this));
 
-    disconnect(walletModel, SIGNAL(encryptionStatusChanged(int)), this, SLOT(setEncryptionStatus(int)));
+    disconnect(walletModel, SIGNAL(encryptionStatusChanged()), this, SLOT(setEncryptionStatus()));
 }
 
 /*
