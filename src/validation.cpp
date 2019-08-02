@@ -1872,7 +1872,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     // is enforced in ContextualCheckBlockHeader(); we wouldn't want to
     // re-enforce that rule here (at least until we make it impossible for
     // GetAdjustedTime() to go backward).
-    if (!CheckBlock(block, state, chainparams.GetConsensus(), !fJustCheck, !fJustCheck, true)) {
+    if (!CheckBlock(block, state, chainparams.GetConsensus(), !fJustCheck, !fJustCheck)) {
         if (state.GetReason() == ValidationInvalidReason::BLOCK_MUTATED) {
             // We don't write down blocks to disk if they may have been
             // corrupted, so this should be impossible unless we're having hardware
@@ -3201,7 +3201,7 @@ static bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state,
     return true;
 }
 
-bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckOnConnect)
+bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW, bool fCheckMerkleRoot)
 {
     // These are checks that are independent of context.
 
@@ -3257,48 +3257,6 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     }
     if (nSigOps * WITNESS_SCALE_FACTOR > MAX_BLOCK_SIGOPS_COST)
         return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-blk-sigops", "out-of-bounds SigOpCount");
-
-    // SYSCOIN
-    if (fCheckPOW && fCheckMerkleRoot)
-    {
-        for (const auto& txRef : block.vtx)
-        {
-            if(IsSyscoinMintTx(txRef->nVersion)){
-                // do this check only when not in IBD (initial block download) or litemode
-                // if we are starting up and verifying the db also skip this check as fLoaded will be false until startup sequence is complete
-                EthereumTxRoot txRootDB;
-                CMintSyscoin mintSyscoin(*txRef);
-                if(!mintSyscoin.IsNull()){
-                    const bool &ethTxRootShouldExist = !::ChainstateActive().IsInitialBlockDownload() && !fLiteMode && fLoaded && fGethSynced;
-                    // validate that the block passed is committed to by the tx root he also passes in, then validate the spv proof to the tx root below  
-                    // the cutoff to keep txroots is 120k blocks and the cutoff to get approved is 40k blocks. If we are syncing after being offline for a while it should still validate up to 120k worth of txroots
-                    if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(mintSyscoin.nBlockNumber, txRootDB)){
-                        if(ethTxRootShouldExist){
-                            // we always want to pass state.Error() for txroot missing errors here meaning we don't want to flag the block as invalid, we want to retry as this is based on eventual consistency
-                            return FormatSyscoinErrorMessage(state, "mint-txroot-missing", !fCheckOnConnect);
-                        }
-                    }  
-                    if(ethTxRootShouldExist){
-                        const int64_t &nTime = ::ChainActive().Tip()->GetMedianTimePast();
-                        // time must be between 1 week and 1 hour old to be accepted
-                        if(fGethSyncHeight >= MAX_ETHEREUM_TX_ROOTS){
-                            if(nTime < txRootDB.nTimestamp) {
-                                return FormatSyscoinErrorMessage(state, "invalid-timestamp", false, true);
-                            }
-                            else if((nTime - txRootDB.nTimestamp) > 604800) {
-                                return FormatSyscoinErrorMessage(state, "mint-blockheight-too-old", false, true);
-                            }
-                            // ensure that we wait at least 1 hour before we are allowed process this mint transaction  
-                            // also ensure sanity test that the current height that our node thinks Eth is on isn't less than the requested block for spv proof
-                            else if((nTime - txRootDB.nTimestamp) < ((bGethTestnet == true)? 600: 3600)) {
-                                return FormatSyscoinErrorMessage(state, "mint-insufficient-confirmations", false, true);
-                            }
-                        } 
-                    }
-                }
-            }
-        }
-    }
 
     if (fCheckPOW && fCheckMerkleRoot)
         block.fChecked = true;
@@ -3522,7 +3480,44 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
     if (GetBlockWeight(block) > MAX_BLOCK_WEIGHT) {
         return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-blk-weight", strprintf("%s : weight limit failed", __func__));
     }
-
+    // SYSCOIN
+    for (const auto& txRef : block.vtx)
+    {
+        if(IsSyscoinMintTx(txRef->nVersion)){
+            // do this check only when not in IBD (initial block download) or litemode
+            // if we are starting up and verifying the db also skip this check as fLoaded will be false until startup sequence is complete
+            EthereumTxRoot txRootDB;
+            CMintSyscoin mintSyscoin(*txRef);
+            if(!mintSyscoin.IsNull()){
+                const bool &ethTxRootShouldExist = !::ChainstateActive().IsInitialBlockDownload() && !fLiteMode && fLoaded && fGethSynced;
+                // validate that the block passed is committed to by the tx root he also passes in, then validate the spv proof to the tx root below  
+                // the cutoff to keep txroots is 120k blocks and the cutoff to get approved is 40k blocks. If we are syncing after being offline for a while it should still validate up to 120k worth of txroots
+                if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(mintSyscoin.nBlockNumber, txRootDB)){
+                    if(ethTxRootShouldExist){
+                        // we always want to pass state.Error() for txroot missing errors here meaning we don't want to flag the block as invalid, we want to retry as this is based on eventual consistency
+                        return FormatSyscoinErrorMessage(state, "mint-txroot-missing");
+                    }
+                }  
+                if(ethTxRootShouldExist){
+                    const int64_t &nTime = pindexPrev->GetMedianTimePast();
+                    // time must be between 1 week and 1 hour old to be accepted
+                    if(fGethSyncHeight >= MAX_ETHEREUM_TX_ROOTS){
+                        if(nTime < txRootDB.nTimestamp) {
+                            return FormatSyscoinErrorMessage(state, "invalid-timestamp", false, true);
+                        }
+                        else if((nTime - txRootDB.nTimestamp) > 604800) {
+                            return FormatSyscoinErrorMessage(state, "mint-blockheight-too-old", false, true);
+                        }
+                        // ensure that we wait at least 1 hour before we are allowed process this mint transaction  
+                        // also ensure sanity test that the current height that our node thinks Eth is on isn't less than the requested block for spv proof
+                        else if((nTime - txRootDB.nTimestamp) < ((bGethTestnet == true)? 600: 3600)) {
+                            return FormatSyscoinErrorMessage(state, "mint-insufficient-confirmations", false, true);
+                        }
+                    } 
+                }
+            }
+        }
+    }
     return true;
 }
 
