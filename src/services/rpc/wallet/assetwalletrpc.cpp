@@ -27,6 +27,8 @@ extern AssetPrevTxMap mempoolMapAssetPrevTx;
 extern AssetPrevTxMap mapAssetPrevTxSender;
 extern CCriticalSection cs_assetallocationprevtx;
 extern AssetPrevTxMap mapSenderLockedOutPoints;
+extern AssetBalanceMap mempoolMapAssetBalances;
+extern CCriticalSection cs_assetallocationmempoolbalance;
 using namespace std;
 std::vector<CTxIn> savedtxins;
 UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request);
@@ -810,10 +812,12 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         // this will let syscointxfund try to select this outpoint as the input
         mapSenderLockedOutPoints[strAddress] = lockedOutpoint;
     }
+    const CAmount nBalance = theAssetAllocation.nBalance;
 	theAssetAllocation.SetNull();
     theAssetAllocation.assetAllocationTuple.nAsset = assetAllocationTuple.nAsset;
     theAssetAllocation.assetAllocationTuple.witnessAddress = assetAllocationTuple.witnessAddress; 
 	UniValue receivers = valueTo.get_array();
+    CAmount nTotalSending = 0;
 	for (unsigned int idx = 0; idx < receivers.size(); idx++) {
 		const UniValue& receiver = receivers[idx];
 		if (!receiver.isObject())
@@ -828,11 +832,24 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 			if (amount <= 0)
 				throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount must be positive");
 			theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(recpt.nVersion, recpt.vchWitnessProgram), amount));
-		}
+            nTotalSending += amount;
+        }
 		else
 			throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected amount as number in receiver array");
 
 	}
+    CAmount nBalanceZDAG = nBalance;
+    const string &allocationTupleStr = theAssetAllocation.assetAllocationTuple.ToString();
+    {
+        LOCK(cs_assetallocationmempoolbalance);
+        AssetBalanceMap::iterator mapIt =  mempoolMapAssetBalances.find(allocationTupleStr);
+        if(mapIt != mempoolMapAssetBalances.end())
+            nBalanceZDAG = mapIt->second;
+    }
+    if(!fUnitTest && nTotalSending > nBalanceZDAG){
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Balance is insufficient to send this asset transaction");
+    }
+
 
 	vector<unsigned char> data;
 	theAssetAllocation.Serialize(data);   
@@ -910,11 +927,24 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
         
     UniValue amountObj = params[2];
 	CAmount amount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
+    if (amount <= 0)
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount must be positive");
 	string ethAddress = params[3].get_str();
     boost::erase_all(ethAddress, "0x");  // strip 0x if exist
     vector<CRecipient> vecSend;
     CScript scriptData;
     int nVersion = 0;
+    CAmount nBalanceZDAG = theAssetAllocation.nBalance;
+    const string &allocationTupleStr = theAssetAllocation.assetAllocationTuple.ToString();
+    {
+        LOCK(cs_assetallocationmempoolbalance);
+        AssetBalanceMap::iterator mapIt =  mempoolMapAssetBalances.find(allocationTupleStr);
+        if(mapIt != mempoolMapAssetBalances.end())
+            nBalanceZDAG = mapIt->second;
+    }
+    if(!fUnitTest && amount > nBalanceZDAG){
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Balance is insufficient to send this asset transaction");
+    }  
     // if no eth address provided just send as a std asset allocation send but to burn address
     if(ethAddress.empty() || ethAddress == "''"){
         const COutPoint lockedOutpoint = theAssetAllocation.lockedOutpoint;
@@ -928,10 +958,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
         theAssetAllocation.assetAllocationTuple.nAsset = assetAllocationTuple.nAsset;
         theAssetAllocation.assetAllocationTuple.witnessAddress = assetAllocationTuple.witnessAddress; 
 
-        if (amount <= 0)
-            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount must be positive");
-        theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(0, vchFromString("burn")), amount));
-        
+        theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(0, vchFromString("burn")), amount));      
       
         vector<unsigned char> data;
         theAssetAllocation.Serialize(data);  
