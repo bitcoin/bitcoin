@@ -700,7 +700,10 @@ NODISCARD bool ParseKeyPath(const std::vector<Span<const char>>& split, KeyPath&
             hardened = true;
         }
         uint32_t p;
-        if (!ParseUInt32(std::string(elem.begin(), elem.end()), &p) || p > 0x7FFFFFFFUL) {
+        if (!ParseUInt32(std::string(elem.begin(), elem.end()), &p)) {
+            error = strprintf("Key path value '%s' is not a valid uint32", std::string(elem.begin(), elem.end()).c_str());
+            return false;
+        } else if (p > 0x7FFFFFFFUL) {
             error = strprintf("Key path value %u is out of range", p);
             return false;
         }
@@ -714,17 +717,35 @@ std::unique_ptr<PubkeyProvider> ParsePubkeyInner(const Span<const char>& sp, boo
 {
     auto split = Split(sp, '/');
     std::string str(split[0].begin(), split[0].end());
+    if (str.size() == 0) {
+        error = "No key provided";
+        return nullptr;
+    }
     if (split.size() == 1) {
         if (IsHex(str)) {
             std::vector<unsigned char> data = ParseHex(str);
             CPubKey pubkey(data);
-            if (pubkey.IsFullyValid() && (permit_uncompressed || pubkey.IsCompressed())) return MakeUnique<ConstPubkeyProvider>(pubkey);
+            if (pubkey.IsFullyValid()) {
+                if (permit_uncompressed || pubkey.IsCompressed()) {
+                    return MakeUnique<ConstPubkeyProvider>(pubkey);
+                } else {
+                    error = "Uncompressed keys are not allowed";
+                    return nullptr;
+                }
+            }
+            error = strprintf("Pubkey '%s' is invalid", str);
+            return nullptr;
         }
         CKey key = DecodeSecret(str);
-        if (key.IsValid() && (permit_uncompressed || key.IsCompressed())) {
-            CPubKey pubkey = key.GetPubKey();
-            out.keys.emplace(pubkey.GetID(), key);
-            return MakeUnique<ConstPubkeyProvider>(pubkey);
+        if (key.IsValid()) {
+            if (permit_uncompressed || key.IsCompressed()) {
+                CPubKey pubkey = key.GetPubKey();
+                out.keys.emplace(pubkey.GetID(), key);
+                return MakeUnique<ConstPubkeyProvider>(pubkey);
+            } else {
+                error = "Uncompressed keys are not allowed";
+                return nullptr;
+            }
         }
     }
     CExtKey extkey = DecodeExtKey(str);
@@ -760,7 +781,7 @@ std::unique_ptr<PubkeyProvider> ParsePubkey(const Span<const char>& sp, bool per
     }
     if (origin_split.size() == 1) return ParsePubkeyInner(origin_split[0], permit_uncompressed, out, error);
     if (origin_split[0].size() < 1 || origin_split[0][0] != '[') {
-        error = strprintf("Key origin expected but not found, got '%s' instead", std::string(origin_split[0].begin(), origin_split[0].end()));
+        error = strprintf("Key origin start '[ character expected but not found, got '%c' instead", origin_split[0][0]);
         return nullptr;
     }
     auto slash_split = Split(origin_split[0].subspan(1), '/');
@@ -802,19 +823,22 @@ std::unique_ptr<DescriptorImpl> ParseScript(Span<const char>& sp, ParseScriptCon
         auto pubkey = ParsePubkey(expr, true, out, error);
         if (!pubkey) return nullptr;
         return MakeUnique<ComboDescriptor>(std::move(pubkey));
+    } else if (ctx != ParseScriptContext::TOP && Func("combo", expr)) {
+        error = "Cannot have combo in non-top level";
+        return nullptr;
     }
     if (Func("multi", expr)) {
         auto threshold = Expr(expr);
         uint32_t thres;
         std::vector<std::unique_ptr<PubkeyProvider>> providers;
         if (!ParseUInt32(std::string(threshold.begin(), threshold.end()), &thres)) {
-            error = strprintf("multi threshold %u out of range", thres);
+            error = strprintf("Multi threshold '%s' is not valid", std::string(threshold.begin(), threshold.end()).c_str());
             return nullptr;
         }
         size_t script_size = 0;
         while (expr.size()) {
             if (!Const(",", expr)) {
-                error = strprintf("multi: expected ',', got '%c'", expr[0]);
+                error = strprintf("Multi: expected ',', got '%c'", expr[0]);
                 return nullptr;
             }
             auto arg = Expr(expr);
@@ -823,10 +847,19 @@ std::unique_ptr<DescriptorImpl> ParseScript(Span<const char>& sp, ParseScriptCon
             script_size += pk->GetSize() + 1;
             providers.emplace_back(std::move(pk));
         }
-        if (providers.size() < 1 || providers.size() > 16 || thres < 1 || thres > providers.size()) return nullptr;
+        if (providers.size() < 1 || providers.size() > 16) {
+            error = strprintf("Cannot have %u keys in multisig; must have between 1 and 16 keys, inclusive", providers.size());
+            return nullptr;
+        } else if (thres < 1) {
+            error = strprintf("Multisig threshold cannot be %d, must be at least 1", thres);
+            return nullptr;
+        } else if (thres > providers.size()) {
+            error = strprintf("Multisig threshold cannot be larger than the number of keys; threshold is %d but only %u keys specified", thres, providers.size());
+            return nullptr;
+        }
         if (ctx == ParseScriptContext::TOP) {
             if (providers.size() > 3) {
-                error = strprintf("Cannot %u pubkeys in bare multisig; only at most 3 pubkeys", providers.size());
+                error = strprintf("Cannot have %u pubkeys in bare multisig; only at most 3 pubkeys", providers.size());
                 return nullptr;
             }
         }
@@ -842,16 +875,25 @@ std::unique_ptr<DescriptorImpl> ParseScript(Span<const char>& sp, ParseScriptCon
         auto pubkey = ParsePubkey(expr, false, out, error);
         if (!pubkey) return nullptr;
         return MakeUnique<WPKHDescriptor>(std::move(pubkey));
+    } else if (ctx == ParseScriptContext::P2WSH && Func("wpkh", expr)) {
+        error = "Cannot have wpkh within wsh";
+        return nullptr;
     }
     if (ctx == ParseScriptContext::TOP && Func("sh", expr)) {
         auto desc = ParseScript(expr, ParseScriptContext::P2SH, out, error);
         if (!desc || expr.size()) return nullptr;
         return MakeUnique<SHDescriptor>(std::move(desc));
+    } else if (ctx != ParseScriptContext::TOP && Func("sh", expr)) {
+        error = "Cannot have sh in non-top level";
+        return nullptr;
     }
     if (ctx != ParseScriptContext::P2WSH && Func("wsh", expr)) {
         auto desc = ParseScript(expr, ParseScriptContext::P2WSH, out, error);
         if (!desc || expr.size()) return nullptr;
         return MakeUnique<WSHDescriptor>(std::move(desc));
+    } else if (ctx == ParseScriptContext::P2WSH && Func("wsh", expr)) {
+        error = "Cannot have wsh within wsh";
+        return nullptr;
     }
     if (ctx == ParseScriptContext::TOP && Func("addr", expr)) {
         CTxDestination dest = DecodeDestination(std::string(expr.begin(), expr.end()));
@@ -869,6 +911,13 @@ std::unique_ptr<DescriptorImpl> ParseScript(Span<const char>& sp, ParseScriptCon
         }
         auto bytes = ParseHex(str);
         return MakeUnique<RawDescriptor>(CScript(bytes.begin(), bytes.end()));
+    }
+    if (ctx == ParseScriptContext::P2SH) {
+        error = "A function is needed within P2SH";
+        return nullptr;
+    } else if (ctx == ParseScriptContext::P2WSH) {
+        error = "A function is needed within P2WSH";
+        return nullptr;
     }
     error = strprintf("%s is not a valid descriptor function", std::string(expr.begin(), expr.end()));
     return nullptr;

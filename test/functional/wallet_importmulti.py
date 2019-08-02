@@ -552,7 +552,7 @@ class ImportMultiTest(BitcoinTestFramework):
                                "keys": [key.privkey]},
                               success=False,
                               error_code=-5,
-                              error_message="Descriptor is invalid, Missing checksum")
+                              error_message="Missing checksum")
 
         # Test importing of a P2SH-P2WPKH address via descriptor + private key
         key = get_key(self.nodes[0])
