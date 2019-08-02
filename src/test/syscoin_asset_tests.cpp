@@ -292,7 +292,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_audittxroot1)
     blocksArray = find_value(r.get_obj(), "missing_blocks").get_array();
     BOOST_CHECK(blocksArray.empty());
 }
-BOOST_AUTO_TEST_CASE(generate_asset_throughput)
+/* BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 {
 
     int64_t start = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
@@ -561,7 +561,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
         uint32_t nAsset = find_value(indexArray[0].get_obj(), "asset_guid").get_uint();
         BOOST_CHECK_EQUAL(nAsset, nAssetStored);
     }
-}
+}*/
 BOOST_AUTO_TEST_CASE(generate_assetallocationmint)
 {
     UniValue r;
@@ -1032,6 +1032,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag4)
     BOOST_CHECK_NO_THROW(r = CallRPC("node3", "decoderawtransaction " + assetHex));
     string assettxid = find_value(r.get_obj(), "txid").get_str();
     BOOST_CHECK_NO_THROW(r = CallRPC("node2", "sendrawtransaction " + burnHex, true, false));
+    MilliSleep(500);
     BOOST_CHECK_NO_THROW(r = CallRPC("node3", "sendrawtransaction " + assetHex, true, false));
     MilliSleep(500);
     string txid1 = AssetAllocationTransfer(true, "node1", assetguid, useraddress1, "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.1}]\"");
@@ -1051,12 +1052,11 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag4)
     BOOST_CHECK_NO_THROW(r = CallRPC("node2", "assetallocationverifyzdag " + txid2));
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
 
-    // node3 had burn tx first and will get txid1/txid2 with invalid sender status and thus these two are not going to be found for this node
     BOOST_CHECK_NO_THROW(r = CallRPC("node3", "assetallocationverifyzdag " + txid1));
-    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
 
     BOOST_CHECK_NO_THROW(r = CallRPC("node3", "assetallocationverifyzdag " + txid2));
-    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
     // the burn txid should be received on all nodes and it should be in conflict
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationverifyzdag " + burntxid));
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
@@ -1079,7 +1079,27 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag4)
     // likewise with the asset txid
     BOOST_CHECK_NO_THROW(r = CallRPC("node3", "assetallocationverifyzdag " + assettxid));
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
+    GenerateBlocks(5);
+    // asset xfer on node3 ensure it doesn't link against previous tx
+    BOOST_CHECK_NO_THROW(r = CallRPC("node3", "assetallocationsendmany " + assetguid + " " + useraddress1 + " \"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.01}]\"" + " ''"));
 
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
+    assetHex = find_value(r.get_obj(), "hex").get_str();
+    BOOST_CHECK_NO_THROW(r = CallRPC("node3", "decoderawtransaction " + assetHex));
+    string assettxid2 = find_value(r.get_obj(), "txid").get_str();
+    // send on node2 where it would have had a conflicting output for this sender since it double spent
+    BOOST_CHECK_NO_THROW(r = CallRPC("node2", "sendrawtransaction " + assetHex, true, false));
+    MilliSleep(100);
+    // status should be conflicting because sender conflict status hasn't cleared even after a block should be invalid-sender during the graph check
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationverifyzdag " + assettxid2));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
+    
+    BOOST_CHECK_NO_THROW(r = CallRPC("node2", "assetallocationverifyzdag " + assettxid2));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
+
+    BOOST_CHECK_NO_THROW(r = CallRPC("node3", "assetallocationverifyzdag " + assettxid2));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
+  
     tfm::format(std::cout,"Setting time ahead 300 seconds...\n");
     SleepFor(300 * 1000, 0);
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + assetguid + " " + useraddress1));
@@ -1104,6 +1124,28 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag4)
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationverifyzdag " + txid2));
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
+
+    // asset xfer on node3 ensure it doesn't link against previous tx but this time should be ok
+    BOOST_CHECK_NO_THROW(r = CallRPC("node3", "assetallocationsendmany " + assetguid + " " + useraddress1 + " \"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.01}]\"" + " ''"));
+
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
+    assetHex = find_value(r.get_obj(), "hex").get_str();
+    BOOST_CHECK_NO_THROW(r = CallRPC("node3", "decoderawtransaction " + assetHex));
+    string assettxid3 = find_value(r.get_obj(), "txid").get_str();
+    // send on node2 where it would have had a conflicting output for this sender since it double spent
+    BOOST_CHECK_NO_THROW(r = CallRPC("node2", "sendrawtransaction " + assetHex, true, false));
+    MilliSleep(500);
+    // status should be ok since timeout should clear output linking
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationverifyzdag " + assettxid3));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_STATUS_OK);
+    
+    BOOST_CHECK_NO_THROW(r = CallRPC("node2", "assetallocationverifyzdag " + assettxid3));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_STATUS_OK);
+
+    BOOST_CHECK_NO_THROW(r = CallRPC("node3", "assetallocationverifyzdag " + assettxid3));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_STATUS_OK);
+
+
 }
 BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag_dbl_spend_same_input)
 {
