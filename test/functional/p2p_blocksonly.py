@@ -6,11 +6,11 @@
 
 from test_framework.messages import msg_tx, CTransaction, FromHex
 from test_framework.mininode import P2PInterface
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal
 
 
-class P2PBlocksOnly(BitcoinTestFramework):
+class P2PBlocksOnly(SyscoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = False
         self.num_nodes = 1

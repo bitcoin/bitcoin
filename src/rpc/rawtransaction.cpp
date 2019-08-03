@@ -851,7 +851,7 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
     if(actors.size() == 1){
         const std::string &sender = *actors.begin();
         // find the last output which sends funds to the sender address as change
-        mapAssetPrevTxSender[sender] = COutPoint(txid, tx.get()->vout.size()-1);
+        mapAssetPrevTxSender[sender] = COutPoint(tx->GetHash(), tx.get()->vout.size()-1);
     }
     #endif
 
