@@ -481,13 +481,15 @@ void StopHTTPServer()
             g_requests_cv.wait(lock);
         }
     }
+    if (eventHTTP) {
+        event_base_once(eventBase, -1, EV_TIMEOUT, [](evutil_socket_t, short, void*) {
+            evhttp_free(eventHTTP);
+            eventHTTP = nullptr;
+        }, nullptr, nullptr);
+    }
     if (eventBase) {
         LogPrint(BCLog::HTTP, "Waiting for HTTP event thread to exit\n");
         if (g_thread_http.joinable()) g_thread_http.join();
-    }
-    if (eventHTTP) {
-        evhttp_free(eventHTTP);
-        eventHTTP = nullptr;
     }
     if (eventBase) {
         event_base_free(eventBase);
