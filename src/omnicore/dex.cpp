@@ -206,7 +206,7 @@ int DEx_offerCreate(const std::string& addressSeller, uint32_t propertyId, int64
 }
 
 /**
- * Destorys a sell offer.
+ * Destroys a sell offer.
  *
  * The remaining amount reserved for the offer is returned to the available balance.
  *

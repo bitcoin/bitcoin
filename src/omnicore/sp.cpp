@@ -151,7 +151,7 @@ bool mastercore::isCrowdsaleActive(uint32_t propertyId)
  * Calculates missing bonus tokens, which are credited to the crowdsale issuer.
  *
  * Due to rounding effects, a crowdsale issuer may not receive the full
- * bonus immediatly. The missing amount is calculated based on the total
+ * bonus immediately. The missing amount is calculated based on the total
  * tokens created and already credited.
  *
  * @param sp        The crowdsale property
@@ -197,7 +197,6 @@ int64_t mastercore::GetMissedIssuerBonus(const CMPSPInfo::Entry& sp, const CMPCr
 }
 
 // calculateFundraiser does token calculations per transaction
-// calcluateFractional does calculations for missed tokens
 void mastercore::calculateFundraiser(bool inflateAmount, int64_t amtTransfer, uint8_t bonusPerc,
         int64_t fundraiserSecs, int64_t currentSecs, int64_t numProps, uint8_t issuerPerc, int64_t totalTokens,
         std::pair<int64_t, int64_t>& tokens, bool& close_crowdsale)
@@ -224,7 +223,7 @@ void mastercore::calculateFundraiser(bool inflateAmount, int64_t amtTransfer, ui
     // Calculate the earlybird percentage to be applied
     arith_uint256 ebPercentage_ = weeks_ * ConvertTo256(bonusPerc);
 
-    // Calcluate the bonus percentage to apply up to percentage_precision number of digits
+    // Calculate the bonus percentage to apply up to percentage_precision number of digits
     arith_uint256 bonusPercentage_ = (precision_ * percentage_precision);
     bonusPercentage_ += ebPercentage_;
     bonusPercentage_ /= percentage_precision;
@@ -263,7 +262,7 @@ void mastercore::calculateFundraiser(bool inflateAmount, int64_t amtTransfer, ui
         arith_uint256 maxCreatable = uint256_const::max_int64 - ConvertTo256(totalTokens);
         arith_uint256 created = createdTokens_int + issuerTokens_int;
 
-        // Calcluate the ratio of tokens for what we can create and apply it
+        // Calculate the ratio of tokens for what we can create and apply it
         arith_uint256 ratio = created * precision_;
         ratio *= satoshi_precision_;
         ratio /= maxCreatable;

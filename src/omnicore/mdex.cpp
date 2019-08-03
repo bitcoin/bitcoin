@@ -228,7 +228,7 @@ static MatchReturnType x_Trade(CMPMetaDEx* const pnew)
             // If the amount Alice would have to pay to buy Bob's tokens at his price
             // is fractional, always round UP the amount Alice has to pay
             // This will always be better for Bob. Rounding in the other direction
-            // will always be impossible, because ot would violate Bob's accepted price
+            // will always be impossible, because it would violate Bob's accepted price
             arith_uint256 iWouldPay = DivideAndRoundUp((ConvertTo256(nCouldBuy) * ConvertTo256(pold->getAmountDesired())), ConvertTo256(pold->getAmountForSale()));
             int64_t nWouldPay = ConvertTo64(iWouldPay);
 
@@ -496,7 +496,7 @@ int mastercore::MetaDEx_ADD(const std::string& sender_addr, uint32_t prop, int64
 {
     int rc = METADEX_ERROR -1;
 
-    // Create a MetaDEx object from paremeters
+    // Create a MetaDEx object from parameters
     CMPMetaDEx new_mdex(sender_addr, block, prop, amount, property_desired, amount_desired, txid, idx, CMPTransaction::ADD);
     if (msc_debug_metadex1) PrintToLog("%s(); buyer obj: %s\n", __FUNCTION__, new_mdex.ToString());
 

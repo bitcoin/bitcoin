@@ -83,7 +83,7 @@ std::vector<TransactionRestriction> CConsensusParams::GetRestrictions() const
 /**
  * Returns an empty vector of consensus checkpoints.
  *
- * This method should be overwriten by the child classes, if needed.
+ * This method should be overwritten by the child classes, if needed.
  */
 std::vector<ConsensusCheckpoint> CConsensusParams::GetCheckpoints() const
 {
@@ -93,7 +93,7 @@ std::vector<ConsensusCheckpoint> CConsensusParams::GetCheckpoints() const
 /**
  * Returns an empty vector of transaction checkpoints.
  *
- * This method should be overwriten by the child classes, if needed.
+ * This method should be overwritten by the child classes, if needed.
  */
 std::vector<TransactionCheckpoint> CConsensusParams::GetTransactions() const
 {
@@ -383,7 +383,7 @@ CConsensusParams& MutableConsensusParams()
 }
 
 /**
- * Resets consensus paramters.
+ * Resets consensus parameters.
  */
 void ResetConsensusParams()
 {

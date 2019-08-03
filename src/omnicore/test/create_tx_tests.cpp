@@ -18,7 +18,7 @@
 #include <utility>
 #include <vector>
 
-// Is resetted after the last test
+// Is reset after the last test
 extern CFeeRate minRelayTxFee;
 static CFeeRate minRelayTxFeeOriginal = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
 

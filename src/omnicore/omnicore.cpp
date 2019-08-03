@@ -1184,7 +1184,7 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
         }
         if (msc_debug_parser_data) PrintToLog("Ending reference identification\nFinal decision on reference identification is: %s\n", strReference);
 
-        // ### CLASS B SPECIFC PARSING ###
+        // ### CLASS B SPECIFIC PARSING ###
         if (omniClass == OMNI_CLASS_B) {
             std::vector<std::string> multisig_script_data;
 
@@ -1338,7 +1338,7 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
     if (msc_debug_verbose) PrintToLog("single_pkt: %s\n", HexStr(single_pkt, packet_size + single_pkt));
     mp_tx.Set(strSender, strReference, 0, wtx.GetHash(), nBlock, idx, (unsigned char *)&single_pkt, packet_size, omniClass, (inAll-outAll));
 
-    // TODO: the following is a bit aweful
+    // TODO: the following is a bit awful
     // Provide a hint for DEx payments
     if (omniClass == OMNI_CLASS_A && packet_size == 0) {
         return 1;
@@ -1879,7 +1879,7 @@ bool mastercore_handler_tx(const CTransaction& tx, int nBlock, unsigned int idx,
 
     // clear pending, if any
     // NOTE1: Every incoming TX is checked, not just MP-ones because:
-    // if for some reason the incoming TX doesn't pass our parser validation steps successfuly, I'd still want to clear pending amounts for that TX.
+    // if for some reason the incoming TX doesn't pass our parser validation steps successfully, I'd still want to clear pending amounts for that TX.
     // NOTE2: Plus I wanna clear the amount before that TX is parsed by our protocol, in case we ever consider pending amounts in internal calculations.
     PendingDelete(tx.GetHash());
 

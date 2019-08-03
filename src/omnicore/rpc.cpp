@@ -223,7 +223,7 @@ static UniValue omni_getfeedistribution(const JSONRPCRequest& request)
 }
 
 // Obtains all fee distributions for a property
-// TODO : Split off code to populate a fee distribution object into a seperate function
+// TODO : Split off code to populate a fee distribution object into a separate function
 static UniValue omni_getfeedistributions(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)

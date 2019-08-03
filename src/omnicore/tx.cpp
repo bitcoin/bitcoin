@@ -1067,7 +1067,7 @@ int CMPTransaction::logicMath_SimpleSend()
     assert(update_tally_map(sender, property, -nValue, BALANCE));
     assert(update_tally_map(receiver, property, nValue, BALANCE));
 
-    // Is there an active crowdsale running from this recepient?
+    // Is there an active crowdsale running from this recipient?
     logicHelper_CrowdsaleParticipation();
 
     return 0;
@@ -1965,7 +1965,7 @@ int CMPTransaction::logicMath_GrantTokens()
      * is not activated, "granting tokens" can trigger crowdsale participations.
      */
     if (!IsFeatureActivated(FEATURE_GRANTEFFECTS, block)) {
-        // Is there an active crowdsale running from this recepient?
+        // Is there an active crowdsale running from this recipient?
         logicHelper_CrowdsaleParticipation();
     }
 

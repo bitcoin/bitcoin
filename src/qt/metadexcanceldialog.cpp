@@ -378,7 +378,7 @@ void MetaDExCancelDialog::SendCancelTransaction()
         return;
     }
 
-    // TODO: restructure and seperate
+    // TODO: restructure and separate
     // create a payload for the transaction
     std::vector<unsigned char> payload;
     if (action == 2) { // CANCEL_AT_PRICE

@@ -10,7 +10,7 @@ Please report bugs using the issue tracker on GitHub:
 General
 -------
 
-On 4 July 2015, after the activation of [BIP 66](https://github.com/bitcoin/bips/blob/master/bip-0066.mediawiki), a handful of miners accidently started to create invalid blocks, which may not be detected by outdated clients. This can result in transaction confirmations that aren't valid on the main chain of the Bitcoin network.
+On 4 July 2015, after the activation of [BIP 66](https://github.com/bitcoin/bips/blob/master/bip-0066.mediawiki), a handful of miners accidentally started to create invalid blocks, which may not be detected by outdated clients. This can result in transaction confirmations that aren't valid on the main chain of the Bitcoin network.
 
 For further information about this incident, please see:
 

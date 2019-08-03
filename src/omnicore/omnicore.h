@@ -109,7 +109,7 @@ enum TransactionType {
 #define OMNI_PROPERTY_MSC   1
 #define OMNI_PROPERTY_TMSC  2
 
-/** Number formating related functions. */
+/** Number formatting related functions. */
 std::string FormatDivisibleMP(int64_t amount, bool fSign = false);
 std::string FormatDivisibleShortMP(int64_t amount);
 std::string FormatIndivisibleMP(int64_t amount);

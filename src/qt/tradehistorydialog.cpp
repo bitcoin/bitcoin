@@ -346,7 +346,7 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
                 tradeHistoryProxy.setFilterKeyColumn(0);
                 tradeHistoryProxy.setFilterFixedString(QString::fromStdString(hash.GetHex()));
                 QModelIndex rowIndex = tradeHistoryProxy.mapToSource(tradeHistoryProxy.index(0,0)); // map to the row in the actual table
-                if(rowIndex.isValid()) ui->tradeHistoryTable->removeRow(rowIndex.row()); // delete the pending tx row, it'll be readded as a proper confirmed transaction
+                if(rowIndex.isValid()) ui->tradeHistoryTable->removeRow(rowIndex.row()); // delete the pending tx row, it'll be added again as a proper confirmed transaction
                 ui->tradeHistoryTable->setSortingEnabled(true); // re-enable sorting
             }
         }

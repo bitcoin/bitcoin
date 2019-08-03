@@ -26,7 +26,7 @@
 #include <vector>
 
 /**
- * Checks, wether the system uses big or little endian.
+ * Checks whether the system uses big or little endian.
  */
 static bool isBigEndian()
 {
@@ -40,7 +40,7 @@ static bool isBigEndian()
 }
 
 /**
- * Swaps byte order of 16 bit wide numbers on little-endian sytems.
+ * Swaps byte order of 16 bit wide numbers on little-endian systems.
  */
 void SwapByteOrder16(uint16_t& us)
 {
@@ -51,7 +51,7 @@ void SwapByteOrder16(uint16_t& us)
 }
 
 /**
- * Swaps byte order of 32 bit wide numbers on little-endian sytems.
+ * Swaps byte order of 32 bit wide numbers on little-endian systems.
  */
 void SwapByteOrder32(uint32_t& ui)
 {
@@ -64,7 +64,7 @@ void SwapByteOrder32(uint32_t& ui)
 }
 
 /**
- * Swaps byte order of 64 bit wide numbers on little-endian sytems.
+ * Swaps byte order of 64 bit wide numbers on little-endian systems.
  */
 void SwapByteOrder64(uint64_t& ull)
 {

@@ -373,7 +373,7 @@ void MetaDExDialog::UpdateOffers()
                 }
                 std::string priceStr = StripTrailingZeros(obj.displayFullUnitPrice());
                 if (priceStr.length() > 10) {
-                    priceStr.resize(10); // keep price in UI managable
+                    priceStr.resize(10); // keep price in UI manageable,
                     priceStr += "...";
                 }
                 AddRow(includesMe, obj.getHash().GetHex(), obj.getAddr(), priceStr, strAvail, strDesired);

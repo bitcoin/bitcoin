@@ -13,7 +13,7 @@
 #include <utility>
 #include <vector>
 
-// Is resetted to a norm value in each test
+// Is reset to a norm value in each test
 extern unsigned nMaxDatacarrierBytes;
 
 BOOST_FIXTURE_TEST_SUITE(omnicore_encoding_c_tests, BasicTestingSetup)

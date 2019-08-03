@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 
-// Is resetted to a norm value in each test
+// Is reset to a norm value in each test
 extern CFeeRate minRelayTxFee;
 static CFeeRate minRelayTxFeeOriginal = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
 

@@ -17,7 +17,7 @@
 #include <vector>
 
 /**
- * Embedds a payload in obfuscated multisig outputs, and adds an Exodus marker output.
+ * Embeds a payload in obfuscated multisig outputs, and adds an Exodus marker output.
  *
  * @see The class B transaction encoding specification:
  * https://github.com/mastercoin-MSC/spec#class-b-transactions-also-known-as-the-multisig-method
@@ -53,7 +53,7 @@ bool OmniCore_Encode_ClassB(const std::string& senderAddress, const CPubKey& red
             vchFakeKey.resize(33);
             CPubKey pubKey;
             unsigned char chRandom = static_cast<unsigned char>(GetRand(256));
-            for (int j = 0; j < 256 ; j++) { // Fix ECDSA coodinate
+            for (int j = 0; j < 256 ; j++) { // Fix ECDSA coordinate
                 vchFakeKey[32] = chRandom;
                 pubKey = CPubKey(vchFakeKey);
                 if (pubKey.IsFullyValid()) break;
@@ -75,7 +75,7 @@ bool OmniCore_Encode_ClassB(const std::string& senderAddress, const CPubKey& red
 }
 
 /**
- * Embedds a payload in an OP_RETURN output, prefixed with a transaction marker.
+ * Embeds a payload in an OP_RETURN output, prefixed with a transaction marker.
  *
  * The request is rejected, if the size of the payload with marker is larger than
  * the allowed data carrier size ("-datacarriersize=n").

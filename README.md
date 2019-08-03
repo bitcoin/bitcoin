@@ -73,13 +73,13 @@ Once complete:
 ```
 cd src/
 ```
-And start Omni Core using `./omnicored` (or `./qt/omnicore-qt` if built with UI). The inital parse step for a first time run
+And start Omni Core using `./omnicored` (or `./qt/omnicore-qt` if built with UI). The initial parse step for a first time run
 will take up to 60 minutes or more, during this time your client will scan the blockchain for Omni Layer transactions. You can view the
 output of the parsing at any time by viewing the log located in your datadir, by default: `~/.bitcoin/omnicore.log`.
 
 Omni Core requires the transaction index to be enabled. Add an entry to your bitcoin.conf file for `txindex=1` to enable it or Omni Core will refuse to start.
 
-If a message is returned asking you to reindex, pass the `-reindex` flag as startup option. The reindexing process can take serveral hours.
+If a message is returned asking you to reindex, pass the `-reindex` flag as startup option. The reindexing process can take several hours.
 
 To issue RPC commands to Omni Core you may add the `-server=1` CLI flag or add an entry to the bitcoin.conf file (located in `~/.bitcoin/` by default).
 
@@ -108,9 +108,9 @@ Current feature set:
 
 * Listing historical transactions of addresses in the wallet [doc] (src/omnicore/doc/rpc-api.md#omni_listtransactions)
 
-* Retreiving detailed information about a smart property [doc] (src/omnicore/doc/rpc-api.md#omni_getproperty)
+* Retrieving detailed information about a smart property [doc] (src/omnicore/doc/rpc-api.md#omni_getproperty)
 
-* Retreiving active and expired crowdsale information [doc] (src/omnicore/doc/rpc-api.md#omni_getcrowdsale)
+* Retrieving active and expired crowdsale information [doc] (src/omnicore/doc/rpc-api.md#omni_getcrowdsale)
 
 * Sending a specific BTC amount to a receiver with referenceamount in `omni_send`
 

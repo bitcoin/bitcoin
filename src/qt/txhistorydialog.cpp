@@ -215,7 +215,7 @@ int TXHistoryDialog::PopulateHistoryMap()
                 if (pending_it != my_pending.end()) continue; // transaction is still pending, do nothing
             }
 
-            // pending transaction has confirmed, remove temp pending object from map and allow it to be readded as an Omni transaction
+            // pending transaction has confirmed, remove temp pending object from map and allow it to be added again as an Omni transaction
             txHistoryMap.erase(hIter);
             ui->txHistoryTable->setSortingEnabled(false); // disable sorting temporarily while we update the table (leaving enabled gives unexpected results)
             QAbstractItemModel* historyAbstractModel = ui->txHistoryTable->model(); // get a model to work with
@@ -224,7 +224,7 @@ int TXHistoryDialog::PopulateHistoryMap()
             historyProxy.setFilterKeyColumn(0);
             historyProxy.setFilterFixedString(QString::fromStdString(txHash.GetHex()));
             QModelIndex rowIndex = historyProxy.mapToSource(historyProxy.index(0,0)); // map to the row in the actual table
-            if(rowIndex.isValid()) ui->txHistoryTable->removeRow(rowIndex.row()); // delete the pending tx row, it'll be readded as a proper confirmed transaction
+            if(rowIndex.isValid()) ui->txHistoryTable->removeRow(rowIndex.row()); // delete the pending tx row, it'll be added again as a proper confirmed transaction
             ui->txHistoryTable->setSortingEnabled(true); // re-enable sorting
         }
 

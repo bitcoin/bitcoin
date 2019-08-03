@@ -37,7 +37,7 @@ private:
     int64_t u_created;
     int64_t i_created;
 
-    uint256 txid; // NOTE: not persisted as it doesnt seem used
+    uint256 txid; // NOTE: not persisted as it doesn't seem used
 
     // Schema:
     //   txid -> amount invested, crowdsale deadline, user issued tokens, issuer issued tokens

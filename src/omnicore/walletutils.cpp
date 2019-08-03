@@ -192,7 +192,7 @@ int64_t GetEconomicThreshold(interfaces::Wallet& iWallet, const CTxOut& txOut)
     // Minimum value needed to relay the transaction
     int64_t nThresholdDust = GetDustThreshold(txOut, minRelayTxFee);
 
-    // Use the estimated fee that is also used to contruct transactions.
+    // Use the estimated fee that is also used to construct transactions.
     // We use the absolute minimum, so we divide by 3, to get rid of the
     // safety margin used for the dust threshold used for relaying.
     CFeeRate estimatedFeeRate(GetEstimatedFeePerKb(iWallet));

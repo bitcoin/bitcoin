@@ -21,7 +21,7 @@ int64_t StrToInt64(const std::string& str, bool divisible)
 
     // convert the string into a usable int64
     if (divisible) {
-        // check for existance of decimal point
+        // check for existence of decimal point
         size_t pos = strAmount.find(".");
         if (pos == std::string::npos) {
             // no decimal point but divisible so pad 8 zeros on right
