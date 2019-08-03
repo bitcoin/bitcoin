@@ -10,8 +10,19 @@
 #include <script/script.h>
 #include <script/standard.h>
 #include <util/strencodings.h>
+#include <test/test_bitcoin.h>
+
+#include <boost/test/unit_test.hpp>
 
 #include <stdint.h>
+
+// Added to pacify test script that tries to run all test/ folder contents as tests
+BOOST_FIXTURE_TEST_SUITE(omnicore_transaction_utility, BasicTestingSetup)
+BOOST_AUTO_TEST_CASE(pacify_script)
+{
+    BOOST_CHECK_EQUAL(true, true);
+}
+BOOST_AUTO_TEST_SUITE_END()
 
 CTxOut PayToPubKeyHash_Exodus()
 {
