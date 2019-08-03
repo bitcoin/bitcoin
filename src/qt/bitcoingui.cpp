@@ -625,8 +625,10 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel)
         // Show progress dialog
         connect(_clientModel, &ClientModel::showProgress, this, &BitcoinGUI::showProgress);
 
+#ifdef ENABLE_WALLET
         // Update Omni pending status
         connect(clientModel, &ClientModel::refreshOmniPending, this, &BitcoinGUI::setOmniPendingStatus);
+#endif // ENABLE_WALLET
 
         rpcConsole->setClientModel(_clientModel);
 

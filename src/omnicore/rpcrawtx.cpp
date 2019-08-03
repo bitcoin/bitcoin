@@ -29,8 +29,12 @@ using mastercore::view;
 
 static UniValue omni_decodetransaction(const JSONRPCRequest& request)
 {
+#ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pWallet = interfaces::MakeWallet(wallet);
+#else
+    std::unique_ptr<interfaces::Wallet> pWallet = interfaces::MakeWallet(nullptr);
+#endif
 
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
         throw std::runtime_error(
@@ -145,8 +149,12 @@ static UniValue omni_createrawtx_opreturn(const JSONRPCRequest& request)
 
 static UniValue omni_createrawtx_multisig(const JSONRPCRequest& request)
 {
+#ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
+    std::unique_ptr<interfaces::Wallet> pWallet = interfaces::MakeWallet(wallet);
+#else
+    std::unique_ptr<interfaces::Wallet> pWallet = interfaces::MakeWallet(nullptr);
+#endif
 
     if (request.fHelp || request.params.size() != 4)
         throw std::runtime_error(
@@ -175,7 +183,7 @@ static UniValue omni_createrawtx_multisig(const JSONRPCRequest& request)
     CMutableTransaction tx = ParseMutableTransaction(request.params[0]);
     std::vector<unsigned char> payload = ParseHexV(request.params[1], "payload");
     std::string obfuscationSeed = ParseAddressOrEmpty(request.params[2]);
-    CPubKey redeemKey = ParsePubKeyOrAddress(pwallet.get(), request.params[3]);
+    CPubKey redeemKey = ParsePubKeyOrAddress(pWallet.get(), request.params[3]);
 
     // extend the transaction
     tx = OmniTxBuilder(tx)

@@ -10,7 +10,6 @@
 
 #include <amount.h>
 #include <base58.h>
-#include <wallet/coincontrol.h>
 #include <coins.h>
 #include <consensus/validation.h>
 #include <core_io.h>
@@ -28,6 +27,7 @@
 #include <txmempool.h>
 #include <uint256.h>
 #ifdef ENABLE_WALLET
+#include <wallet/coincontrol.h>
 #include <wallet/wallet.h>
 #endif
 

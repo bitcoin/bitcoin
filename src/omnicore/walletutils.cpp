@@ -8,7 +8,6 @@
 
 #include <amount.h>
 #include <base58.h>
-#include <wallet/coincontrol.h>
 #include <init.h>
 #include <interfaces/wallet.h>
 #include <key_io.h>
@@ -21,6 +20,7 @@
 #include <uint256.h>
 #include <util/strencodings.h>
 #ifdef ENABLE_WALLET
+#include <wallet/coincontrol.h>
 #include <script/ismine.h>
 #include <wallet/wallet.h>
 #endif
@@ -147,10 +147,10 @@ int IsMyAddress(const std::string& address, interfaces::Wallet* iWallet)
  */
 int IsMyAddressAllWallets(const std::string& address, const bool matchAny, const isminefilter& filter)
 {
+#ifdef ENABLE_WALLET
     if (!HasWallets())
         return 0;
 
-#ifdef ENABLE_WALLET
     for(const std::shared_ptr<CWallet> wallet : GetWallets()) {
         CTxDestination destination = DecodeDestination(address);
         isminetype ismine = IsMine(*wallet, destination);
@@ -171,9 +171,9 @@ int IsMyAddressAllWallets(const std::string& address, const bool matchAny, const
 CAmount GetEstimatedFeePerKb(interfaces::Wallet& iWallet)
 {
     CAmount nFee = 50000; // 0.0005 BTC;
-    CCoinControl coinControl;
 
 #ifdef ENABLE_WALLET
+    CCoinControl coinControl;
     nFee = iWallet.getMinimumFee(1000, coinControl, nullptr, nullptr);
 #endif
 
@@ -201,6 +201,7 @@ int64_t GetEconomicThreshold(interfaces::Wallet& iWallet, const CTxOut& txOut)
     return std::max(nThresholdDust, nThresholdFees);
 }
 
+#ifdef ENABLE_WALLET
 int64_t SelectCoins(interfaces::Wallet& iWallet, const std::string& fromAddress, CCoinControl& coinControl, int64_t additional)
 {
     // total output funds collected
@@ -331,5 +332,6 @@ int64_t SelectAllCoins(interfaces::Wallet& iWallet, const std::string& fromAddre
 
     return nTotal;
 }
+#endif
 
 } // namespace mastercore
