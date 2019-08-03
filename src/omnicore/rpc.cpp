@@ -2564,7 +2564,7 @@ static const CRPCCommand commands[] =
     { "omni layer (data retrieval)", "omni_listpendingtransactions",   &omni_listpendingtransactions,    {"address"} },
     { "omni layer (data retrieval)", "omni_getallbalancesforaddress",  &omni_getallbalancesforaddress,   {"address"} },
     { "omni layer (data retrieval)", "omni_gettradehistoryforaddress", &omni_gettradehistoryforaddress,  {"address", "count", "propertyid"} },
-    { "omni layer (data retrieval)", "omni_gettradehistoryforpair",    &omni_gettradehistoryforpair,     {"propertyid", "propertyid"} },
+    { "omni layer (data retrieval)", "omni_gettradehistoryforpair",    &omni_gettradehistoryforpair,     {"propertyid", "propertyid", "count"} },
     { "omni layer (data retrieval)", "omni_getcurrentconsensushash",   &omni_getcurrentconsensushash,    {} },
     { "omni layer (data retrieval)", "omni_getpayload",                &omni_getpayload,                 {"txid"} },
     { "omni layer (data retrieval)", "omni_getseedblocks",             &omni_getseedblocks,              {"startblock", "endblock"} },

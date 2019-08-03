@@ -257,7 +257,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "omni_createrawtx_change", 4, "position" },
 
     /* Omni Core - payload creation */
-    { "omni_createpayload_simplesend", 0, "rawtx" },
+    { "omni_createpayload_simplesend", 0, "propertyid" },
     { "omni_createpayload_sendall", 0, "ecosystem" },
     { "omni_createpayload_dexsell", 0, "propertyidforsale" },
     { "omni_createpayload_dexsell", 3, "paymentwindow" },
