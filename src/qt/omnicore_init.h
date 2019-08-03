@@ -1,5 +1,5 @@
-#ifndef OMNICORE_QT_INIT_H
-#define OMNICORE_QT_INIT_H
+#ifndef BITCOIN_QT_OMNICORE_INIT_H
+#define BITCOIN_QT_OMNICORE_INIT_H
 
 namespace OmniCore
 {
@@ -10,4 +10,4 @@ namespace OmniCore
     bool Initialize();
 }
 
-#endif // OMNICORE_QT_INIT_H
+#endif // BITCOIN_QT_OMNICORE_INIT_H

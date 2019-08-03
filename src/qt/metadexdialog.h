@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef METADEXDIALOG_H
-#define METADEXDIALOG_H
+#ifndef BITCOIN_QT_METADEXDIALOG_H
+#define BITCOIN_QT_METADEXDIALOG_H
 
 #include <stdint.h>
 #include <string>
@@ -65,4 +65,4 @@ Q_SIGNALS:
     void message(const QString &title, const QString &message, unsigned int style);
 };
 
-#endif // METADEXDIALOG_H
+#endif // BITCOIN_QT_METADEXDIALOG_H

@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SENDMPDIALOG_H
-#define SENDMPDIALOG_H
+#ifndef BITCOIN_QT_SENDMPDIALOG_H
+#define BITCOIN_QT_SENDMPDIALOG_H
 
 #include <qt/walletmodel.h>
 
@@ -56,4 +56,4 @@ Q_SIGNALS:
     void message(const QString &title, const QString &message, unsigned int style);
 };
 
-#endif // SENDMPDIALOG_H
+#endif // BITCOIN_QT_SENDMPDIALOG_H
