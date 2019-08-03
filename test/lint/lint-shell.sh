@@ -44,4 +44,4 @@ disabled=(
     SC2236 # Don't force -n instead of ! -z.
 )
 shellcheck -e "$(IFS=","; echo "${disabled[*]}")" \
-    $(git ls-files -- "*.sh" | grep -vE 'src/(secp256k1|univalue)/')
+    $(git ls-files -- "*.sh" | grep -vE 'src/(secp256k1|univalue|omnicore)/|test/pull-tester/')

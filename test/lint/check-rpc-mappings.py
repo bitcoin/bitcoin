@@ -11,6 +11,10 @@ import sys
 
 # Source files (relative to root) to scan for dispatch tables
 SOURCES = [
+    "src/omnicore/rpc.cpp",
+    "src/omnicore/rpcpayload.cpp",
+    "src/omnicore/rpcrawtx.cpp",
+    "src/omnicore/rpctx.cpp",
     "src/rpc/server.cpp",
     "src/rpc/blockchain.cpp",
     "src/rpc/mining.cpp",
