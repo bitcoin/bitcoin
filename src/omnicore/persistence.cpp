@@ -9,7 +9,6 @@
 #include <omnicore/dex.h>
 #include <omnicore/log.h>
 #include <omnicore/mdex.h>
-#include <omnicore/omnicore.h>
 #include <omnicore/rules.h>
 #include <omnicore/sp.h>
 #include <omnicore/tally.h>

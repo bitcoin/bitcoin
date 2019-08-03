@@ -14,7 +14,6 @@ class CTransaction;
 #include <stdint.h>
 #include <string.h>
 
-#include <string.h>
 #include <string>
 
 using mastercore::strTransactionType;

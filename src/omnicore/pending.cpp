@@ -1,7 +1,6 @@
 #include <omnicore/pending.h>
 
 #include <omnicore/log.h>
-#include <omnicore/omnicore.h>
 #include <omnicore/sp.h>
 #include <omnicore/walletcache.h>
 #include <omnicore/mdex.h>

@@ -2,7 +2,6 @@
 
 #include <omnicore/dbbase.h>
 #include <omnicore/log.h>
-#include <omnicore/omnicore.h>
 
 #include <base58.h>
 #include <clientversion.h>

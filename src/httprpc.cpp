@@ -18,7 +18,7 @@
 #include <crypto/hmac_sha256.h>
 #include <stdio.h>
 
-#include "omnicore/rpcmbstring.h" // SanitizeInvalidUTF8
+#include <omnicore/rpcmbstring.h> // SanitizeInvalidUTF8
 
 #include <memory>
 

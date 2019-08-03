@@ -1,8 +1,6 @@
 #include <omnicore/notifications.h>
 
 #include <omnicore/log.h>
-#include <omnicore/omnicore.h>
-#include <omnicore/rules.h>
 #include <omnicore/utilsbitcoin.h>
 #include <omnicore/version.h>
 

@@ -2,7 +2,6 @@
 
 #include <omnicore/log.h>
 #include <omnicore/sp.h>
-#include <omnicore/omnicore.h>
 #include <omnicore/walletutils.h>
 
 #include <interfaces/wallet.h>

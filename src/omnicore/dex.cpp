@@ -10,7 +10,6 @@
 #include <omnicore/dbtxlist.h>
 #include <omnicore/errors.h>
 #include <omnicore/log.h>
-#include <omnicore/omnicore.h>
 #include <omnicore/rules.h>
 #include <omnicore/uint256_extensions.h>
 

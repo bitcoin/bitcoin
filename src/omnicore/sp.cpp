@@ -4,7 +4,6 @@
 
 #include <omnicore/dbspinfo.h>
 #include <omnicore/log.h>
-#include <omnicore/omnicore.h>
 #include <omnicore/uint256_extensions.h>
 
 #include <arith_uint256.h>

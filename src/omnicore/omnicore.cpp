@@ -17,8 +17,6 @@
 #include <omnicore/dbtransaction.h>
 #include <omnicore/dbtxlist.h>
 #include <omnicore/dex.h>
-#include <omnicore/encoding.h>
-#include <omnicore/errors.h>
 #include <omnicore/log.h>
 #include <omnicore/mdex.h>
 #include <omnicore/notifications.h>
@@ -39,7 +37,6 @@
 
 #include <base58.h>
 #include <chainparams.h>
-#include <wallet/coincontrol.h>
 #include <coins.h>
 #include <core_io.h>
 #include <key_io.h>

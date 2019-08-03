@@ -9,7 +9,6 @@
 #include <omnicore/dex.h>
 #include <omnicore/mdex.h>
 #include <omnicore/log.h>
-#include <omnicore/omnicore.h>
 #include <omnicore/parse_string.h>
 #include <omnicore/sp.h>
 

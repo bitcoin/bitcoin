@@ -6,6 +6,7 @@
 #define BITCOIN_WALLET_RPCWALLET_H
 
 #include <string>
+#include <memory>
 
 class CRPCTable;
 class CWallet;

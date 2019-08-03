@@ -12,7 +12,6 @@
 #include <omnicore/log.h>
 #include <omnicore/mdex.h>
 #include <omnicore/notifications.h>
-#include <omnicore/omnicore.h>
 #include <omnicore/parsing.h>
 #include <omnicore/rules.h>
 #include <omnicore/sp.h>

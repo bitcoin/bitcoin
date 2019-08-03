@@ -7,7 +7,6 @@
 #include <omnicore/dbfees.h>
 
 #include <omnicore/log.h>
-#include <omnicore/omnicore.h>
 #include <omnicore/rules.h>
 #include <omnicore/sp.h>
 #include <omnicore/sto.h>

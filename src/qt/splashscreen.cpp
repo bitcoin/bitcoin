@@ -18,8 +18,8 @@
 #include <util/system.h>
 #include <version.h>
 
-#include "omnicore/version.h"
-#include "omnicore/utilsbitcoin.h"
+#include <omnicore/version.h>
+#include <omnicore/utilsbitcoin.h>
 
 #include <QApplication>
 #include <QCloseEvent>
