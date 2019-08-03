@@ -45,6 +45,7 @@
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <rpc/server.h>
+#include <rpc/util.h>
 #include <tinyformat.h>
 #include <txmempool.h>
 #include <uint256.h>
@@ -162,28 +163,31 @@ static UniValue omni_getfeedistribution(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw runtime_error(
-            "omni_getfeedistribution distributionid\n"
-            "\nGet the details for a fee distribution.\n"
-            "\nArguments:\n"
-            "1. distributionid           (number, required) the distribution to obtain details for\n"
-            "\nResult:\n"
-            "{\n"
-            "  \"distributionid\" : n,          (number) the distribution id\n"
-            "  \"propertyid\" : n,              (number) the property id of the distributed tokens\n"
-            "  \"block\" : n,                   (number) the block the distribution occurred\n"
-            "  \"amount\" : \"n.nnnnnnnn\",     (string) the amount that was distributed\n"
-            "  \"recipients\": [                (array of JSON objects) a list of recipients\n"
-            "    {\n"
-            "      \"address\" : \"address\",          (string) the address of the recipient\n"
-            "      \"amount\" : \"n.nnnnnnnn\"         (string) the amount of fees received by the recipient\n"
-            "    },\n"
-            "    ...\n"
-            "  ]\n"
-            "}\n"
-            "\nExamples:\n"
-            + HelpExampleCli("omni_getfeedistribution", "1")
-            + HelpExampleRpc("omni_getfeedistribution", "1")
-        );
+            RPCHelpMan{"omni_getfeedistribution",
+               "\nGet the details for a fee distribution.\n",
+               {
+                   {"distributionid", RPCArg::Type::NUM, RPCArg::Optional::NO, "(number, required) the distribution to obtain details for\n"},
+               },
+               RPCResult{
+                   "{\n"
+                   "  \"distributionid\" : n,          (number) the distribution id\n"
+                   "  \"propertyid\" : n,              (number) the property id of the distributed tokens\n"
+                   "  \"block\" : n,                   (number) the block the distribution occurred\n"
+                   "  \"amount\" : \"n.nnnnnnnn\",     (string) the amount that was distributed\n"
+                   "  \"recipients\": [                (array of JSON objects) a list of recipients\n"
+                   "    {\n"
+                   "      \"address\" : \"address\",          (string) the address of the recipient\n"
+                   "      \"amount\" : \"n.nnnnnnnn\"         (string) the amount of fees received by the recipient\n"
+                   "    },\n"
+                   "    ...\n"
+                   "  ]\n"
+                   "}\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_getfeedistribution", "1")
+                   + HelpExampleRpc("omni_getfeedistribution", "1")
+               }
+            }.ToString());
 
     int id = request.params[0].get_int();
 

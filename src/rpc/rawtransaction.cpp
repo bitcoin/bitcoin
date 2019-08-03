@@ -1034,61 +1034,66 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 4)
         throw std::runtime_error(
-            "signrawtransaction \"hexstring\" ( [{\"txid\":\"id\",\"vout\":n,\"scriptPubKey\":\"hex\",\"redeemScript\":\"hex\"},...] [\"privatekey1\",...] sighashtype )\n"
-            "\nDEPRECATED. Sign inputs for raw transaction (serialized, hex-encoded).\n"
-            "The second optional argument (may be null) is an array of previous transaction outputs that\n"
-            "this transaction depends on but may not yet be in the block chain.\n"
-            "The third optional argument (may be null) is an array of base58-encoded private\n"
-            "keys that, if given, will be the only keys used to sign the transaction.\n"
+            RPCHelpMan{"signrawtransaction",
+               "\nDEPRECATED. Sign inputs for raw transaction (serialized, hex-encoded).\n"
+               "The second optional argument (may be null) is an array of previous transaction outputs that\n"
+               "this transaction depends on but may not yet be in the block chain.\n"
+               "The third optional argument (may be null) is an array of base58-encoded private\n"
+               "keys that, if given, will be the only keys used to sign the transaction."
 #ifdef ENABLE_WALLET
-            + HelpRequiringPassphrase(pwallet) + "\n"
+               "\n" + HelpRequiringPassphrase(pwallet) +
 #endif
-            "\nArguments:\n"
-            "1. \"hexstring\"     (string, required) The transaction hex string\n"
-            "2. \"prevtxs\"       (string, optional) An json array of previous dependent transaction outputs\n"
-            "     [               (json array of json objects, or 'null' if none provided)\n"
-            "       {\n"
-            "         \"txid\":\"id\",             (string, required) The transaction id\n"
-            "         \"vout\":n,                  (numeric, required) The output number\n"
-            "         \"scriptPubKey\": \"hex\",   (string, required) script key\n"
-            "         \"redeemScript\": \"hex\",   (string, required for P2SH or P2WSH) redeem script\n"
-            "         \"amount\": value            (numeric, required) The amount spent\n"
-            "       }\n"
-            "       ,...\n"
-            "    ]\n"
-            "3. \"privkeys\"     (string, optional) A json array of base58-encoded private keys for signing\n"
-            "    [                  (json array of strings, or 'null' if none provided)\n"
-            "      \"privatekey\"   (string) private key in base58-encoding\n"
-            "      ,...\n"
-            "    ]\n"
-            "4. \"sighashtype\"     (string, optional, default=ALL) The signature hash type. Must be one of\n"
-            "       \"ALL\"\n"
-            "       \"NONE\"\n"
-            "       \"SINGLE\"\n"
-            "       \"ALL|ANYONECANPAY\"\n"
-            "       \"NONE|ANYONECANPAY\"\n"
-            "       \"SINGLE|ANYONECANPAY\"\n"
-
-            "\nResult:\n"
-            "{\n"
-            "  \"hex\" : \"value\",           (string) The hex-encoded raw transaction with signature(s)\n"
-            "  \"complete\" : true|false,   (boolean) If the transaction has a complete set of signatures\n"
-            "  \"errors\" : [                 (json array of objects) Script verification errors (if there are any)\n"
-            "    {\n"
-            "      \"txid\" : \"hash\",           (string) The hash of the referenced, previous transaction\n"
-            "      \"vout\" : n,                (numeric) The index of the output to spent and used as input\n"
-            "      \"scriptSig\" : \"hex\",       (string) The hex-encoded signature script\n"
-            "      \"sequence\" : n,            (numeric) Script sequence number\n"
-            "      \"error\" : \"text\"           (string) Verification or signing error related to the input\n"
-            "    }\n"
-            "    ,...\n"
-            "  ]\n"
-            "}\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("signrawtransaction", "\"myhex\"")
-            + HelpExampleRpc("signrawtransaction", "\"myhex\"")
-        );
+               "\n",
+               {
+                   {"hexstring", RPCArg::Type::STR, RPCArg::Optional::NO, "The transaction hex string"},
+                   {"prevtxs", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "A json array of previous dependent transaction outputs",
+                       {
+                           {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
+                               {
+                                   {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id"},
+                                   {"vout", RPCArg::Type::NUM, RPCArg::Optional::NO, "The output number"},
+                                   {"scriptPubKey", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "script key"},
+                                   {"redeemScript", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "(required for P2SH) redeem script"},
+                                   {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The amount spent"},
+                               },
+                               },
+                       },
+                   },
+                   {"privkeys", RPCArg::Type::ARR, RPCArg::Optional::NO, "A json array of base58-encoded private keys for signing",
+                       {
+                           {"privatekey", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "private key in base58-encoding"},
+                       },
+                   },
+                   {"sighashtype", RPCArg::Type::STR, /* default */ "ALL", "The signature hash type. Must be one of:\n"
+                   "       \"ALL\"\n"
+                   "       \"NONE\"\n"
+                   "       \"SINGLE\"\n"
+                   "       \"ALL|ANYONECANPAY\"\n"
+                   "       \"NONE|ANYONECANPAY\"\n"
+                   "       \"SINGLE|ANYONECANPAY\"\n"
+                   },
+               },
+               RPCResult{
+                           "{\n"
+                           "  \"hex\" : \"value\",           (string) The hex-encoded raw transaction with signature(s)\n"
+                           "  \"complete\" : true|false,   (boolean) If the transaction has a complete set of signatures\n"
+                           "  \"errors\" : [                 (json array of objects) Script verification errors (if there are any)\n"
+                           "    {\n"
+                           "      \"txid\" : \"hash\",           (string) The hash of the referenced, previous transaction\n"
+                           "      \"vout\" : n,                (numeric) The index of the output to spent and used as input\n"
+                           "      \"scriptSig\" : \"hex\",       (string) The hex-encoded signature script\n"
+                           "      \"sequence\" : n,            (numeric) Script sequence number\n"
+                           "      \"error\" : \"text\"           (string) Verification or signing error related to the input\n"
+                           "    }\n"
+                           "    ,...\n"
+                           "  ]\n"
+                           "}\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("signrawtransaction", "\"myhex\"")
+                   + HelpExampleRpc("signrawtransaction", "\"myhex\"")
+               },
+           }.ToString());
 
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VARR, UniValue::VARR, UniValue::VSTR}, true);
 
