@@ -341,7 +341,7 @@ int CreateFundedTransaction(
     std::string err_string;
     const TransactionError err = BroadcastTransaction(ctx, txid, err_string, true);
     if (TransactionError::OK != err) {
-        LogPrintf("%s: BroadcastTransaction failed error: %s", __func__, err_string);
+        LogPrintf("%s: BroadcastTransaction failed error: %s\n", __func__, err_string);
     }
 
     retTxid = txid;
