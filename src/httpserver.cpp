@@ -486,15 +486,18 @@ void StopHTTPServer()
             return g_requests.empty();
         });
     }
+    if (eventHTTP) {
+        // Schedule a callback to call evhttp_free in the event base thread, so
+        // that evhttp_free does not need to be called again after the handling
+        // of unfinished request connections that follows.
+        event_base_once(eventBase, -1, EV_TIMEOUT, [](evutil_socket_t, short, void*) {
+            evhttp_free(eventHTTP);
+            eventHTTP = nullptr;
+        }, nullptr, nullptr);
+    }
     if (eventBase) {
         LogPrint(BCLog::HTTP, "Waiting for HTTP event thread to exit\n");
         if (g_thread_http.joinable()) g_thread_http.join();
-    }
-    if (eventHTTP) {
-        evhttp_free(eventHTTP);
-        eventHTTP = nullptr;
-    }
-    if (eventBase) {
         event_base_free(eventBase);
         eventBase = nullptr;
     }
