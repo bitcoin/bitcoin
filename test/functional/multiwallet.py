@@ -23,7 +23,7 @@ class MultiWalletTest(BitcoinTestFramework):
 
         #check w1 wallet balance
         walletinfo = w1.getwalletinfo()
-        assert_equal(walletinfo['immature_balance'], 50)
+        assert_equal(walletinfo['immature_balance'], 500)
 
         #check w1 wallet balance
         w2 = self.nodes[0] / "wallet/w2"
@@ -33,7 +33,7 @@ class MultiWalletTest(BitcoinTestFramework):
         w3 = self.nodes[0] / "wallet/w3"
         
         w1.generate(101)
-        assert_equal(w1.getbalance(), 100)
+        assert_equal(w1.getbalance(), 1000)
         assert_equal(w2.getbalance(), 0)
         assert_equal(w3.getbalance(), 0)
 
