@@ -6,10 +6,10 @@
 from decimal import Decimal
 
 from test_framework.messages import BIP125_SEQUENCE_NUMBER
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_raises_rpc_error
 
-class BumpFeeWithTotalFeeArgumentDeprecationTest(BitcoinTestFramework):
+class BumpFeeWithTotalFeeArgumentDeprecationTest(SyscoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.extra_args = [[

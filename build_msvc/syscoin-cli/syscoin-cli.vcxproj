@@ -9,16 +9,16 @@
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\bitcoin-cli.cpp" />
+    <ClCompile Include="..\..\src\syscoin-cli.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\libbitcoin_cli\libbitcoin_cli.vcxproj">
+    <ProjectReference Include="..\libsyscoin_cli\libsyscoin_cli.vcxproj">
       <Project>{0667528c-d734-4009-adf9-c0d6c4a5a5a6}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\libbitcoin_crypto\libbitcoin_crypto.vcxproj">
+    <ProjectReference Include="..\libsyscoin_crypto\libsyscoin_crypto.vcxproj">
       <Project>{6190199c-6cf4-4dad-bfbd-93fa72a760c1}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\libbitcoin_util\libbitcoin_util.vcxproj">
+    <ProjectReference Include="..\libsyscoin_util\libsyscoin_util.vcxproj">
       <Project>{b53a5535-ee9d-4c6f-9a26-f79ee3bc3754}</Project>
     </ProjectReference>
     <ProjectReference Include="..\libunivalue\libunivalue.vcxproj">
