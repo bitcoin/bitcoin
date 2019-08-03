@@ -1,5 +1,6 @@
 #!/bin/bash
 
+export LC_ALL=C
 SRCDIR=./src/
 NUL=/dev/null
 PASS=0
