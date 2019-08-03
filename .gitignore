@@ -95,6 +95,9 @@ omnicore-qt
 OmniCore-Qt.app
 background.tiff*
 
+# QtCreator
+Makefile.am.user
+
 # Unit-tests
 Makefile.test
 bitcoin-qt_test
