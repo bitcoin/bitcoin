@@ -90,6 +90,9 @@ Dash-Qt.app
 background.tiff*
 !/depends/Makefile
 
+# Qt Creator
+Makefile.am.user
+
 # Unit-tests
 Makefile.test
 dash-qt_test
