@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparamsbase.h>
+#include <key_io.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <util/strencodings.h>
@@ -64,11 +65,52 @@ static UniValue enumeratesigners(const JSONRPCRequest& request)
     return result;
 }
 
+static UniValue signerdisplayaddress(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.empty() || request.params.size() > 1) {
+        throw std::runtime_error(
+            RPCHelpMan{"signerdisplayaddress",
+            "Display address on an external signer for verification.\n",
+                {
+                    {"address",     RPCArg::Type::STR, RPCArg::Optional::NO, /* default_val */ "", "bitcoin address to display"},
+                },
+                RPCResult{"null"},
+                RPCExamples{""}
+            }.ToString()
+        );
+    }
+
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    LOCK(pwallet->cs_wallet);
+
+    CTxDestination dest = DecodeDestination(request.params[0].get_str());
+
+    // Make sure the destination is valid
+    if (!IsValidDestination(dest)) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
+    }
+
+    if (!pwallet->DisplayAddress(dest)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Failed to display address");
+    }
+
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("address", request.params[0].get_str());
+    return result;
+}
+
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                                actor (function)                argNames
     //  --------------------- ------------------------          -----------------------         ----------
     { "signer",             "enumeratesigners",                 &enumeratesigners,              {} },
+    { "signer",             "signerdisplayaddress",             &signerdisplayaddress,          {"address", "fingerprint"} },
 };
 // clang-format on
 
