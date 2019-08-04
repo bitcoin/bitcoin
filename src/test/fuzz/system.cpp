@@ -68,6 +68,11 @@ FUZZ_TARGET(system, .init = initialize_system)
                 }
                 auto help = fuzzed_data_provider.ConsumeRandomLengthString(16);
                 auto flags = fuzzed_data_provider.ConsumeIntegral<unsigned int>() & ~ArgsManager::COMMAND;
+                // Avoid hitting "ALLOW_INT flag is incompatible with ALLOW_STRING", etc exceptions
+                if (flags & ArgsManager::ALLOW_ANY) flags &= ~(ArgsManager::ALLOW_BOOL | ArgsManager::ALLOW_INT | ArgsManager::ALLOW_STRING);
+                if (flags & ArgsManager::ALLOW_BOOL) flags &= ~ArgsManager::DISALLOW_ELISION;
+                if (flags & ArgsManager::ALLOW_STRING) flags &= ~ArgsManager::ALLOW_INT;
+                if (flags & ArgsManager::ALLOW_BOOL) flags &= ~(ArgsManager::ALLOW_INT | ArgsManager::ALLOW_STRING);
                 args_manager.AddArg(argument_name, help, flags, options_category);
             },
             [&] {
