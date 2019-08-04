@@ -1,12 +1,20 @@
 #!/bin/bash
 
-# Get BUILDDIR and REAL_BITCOIND
+export LC_ALL=C
+
+# Get BUILDDIR
 CURDIR=$(cd $(dirname "$0"); pwd)
 . "${CURDIR}/../config.ini"
 
+if [ -z "$BUILDDIR" ]; then
+  BUILDDIR="$CURDIR";
+  TESTDIR="$CURDIR/test/tmp/omnicore-rpc-tests";
+else
+  TESTDIR="$BUILDDIR/test/tmp/omnicore-rpc-tests"
+fi
+
 OMNICORED="$BUILDDIR/src/omnicored$EXEEXT"
 OMNICORECLI="$BUILDDIR/src/omnicore-cli$EXEEXT"
-TESTDIR="$BUILDDIR/test/tmp/omnicore-rpc-tests"
 DATADIR="$TESTDIR/.bitcoin"
 
 # Start clean

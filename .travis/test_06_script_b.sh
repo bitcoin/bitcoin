@@ -6,7 +6,7 @@
 
 export LC_ALL=C.UTF-8
 
-cd "build/bitcoin-$HOST" || (echo "could not enter distdir build/bitcoin-$HOST"; exit 1)
+cd "build/omnicore-$HOST" || (echo "could not enter distdir build/omnicore-$HOST"; exit 1)
 
 if [ "$RUN_UNIT_TESTS" = "true" ]; then
   BEGIN_FOLD unit-tests
@@ -23,5 +23,11 @@ fi
 if [ "$RUN_FUZZ_TESTS" = "true" ]; then
   BEGIN_FOLD fuzz-tests
   DOCKER_EXEC test/fuzz/test_runner.py -l DEBUG ${DIR_FUZZ_IN}
+  END_FOLD
+fi
+
+if [ "$RUN_OMNIJ_TESTS" = "true" ]; then
+  BEGIN_FOLD omnij-tests
+  DOCKER_EXEC source $TRAVIS_BUILD_DIR/test/pull-tester/omnicore-rpc-tests.sh
   END_FOLD
 fi
