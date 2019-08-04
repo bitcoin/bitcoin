@@ -25,6 +25,8 @@ class ExternalSignerScriptPubKeyMan : public DescriptorScriptPubKeyMan
   static ExternalSigner GetExternalSigner();
 
   bool DisplayAddress(const CScript scriptPubKey, const ExternalSigner &signer) const;
+
+  TransactionError FillPSBT(PartiallySignedTransaction& psbtx, int sighash_type, bool sign, bool bip32derivs) const override;
 };
 
 #endif // BITCOIN_WALLET_EXTERNAL_SIGNER_SCRIPTPUBKEYMAN_H

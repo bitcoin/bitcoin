@@ -31,6 +31,10 @@ bilingual_str TransactionErrorString(const TransactionError err)
             return Untranslated("Specified sighash value does not match existing value");
         case TransactionError::MAX_FEE_EXCEEDED:
             return Untranslated("Fee exceeds maximum configured by -maxtxfee");
+        case TransactionError::EXTERNAL_SIGNER_NOT_FOUND:
+            return Untranslated("External signer not found");
+        case TransactionError::EXTERNAL_SIGNER_FAILED:
+            return Untranslated("External signer failed to sign");
         // no default case, so the compiler can warn about missing cases
     }
     assert(false);

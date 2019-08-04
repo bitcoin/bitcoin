@@ -10,6 +10,7 @@
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/translation.h>
+#include <wallet/externalsigner.h>
 #include <wallet/scriptpubkeyman.h>
 
 //! Value for the first BIP 32 hardened derivation. Can be used as a bit mask and as a value. See BIP 32 for more details.
