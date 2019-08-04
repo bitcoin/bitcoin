@@ -170,7 +170,7 @@ UniValue stop(const JSONRPCRequest& jsonRequest)
             }.ToString());
     // Event loop will exit after current HTTP requests have been handled, so
     // this reply will get back to the client.
-    if(rpcallowstop)
+    if (rpcallowstop)
     {
         StartShutdown();
         if (jsonRequest.params[0].isNum()) {
@@ -182,15 +182,15 @@ UniValue stop(const JSONRPCRequest& jsonRequest)
     {
         // Check if IP is 127.0.0.1
         std::string ip;
-        for(int i = 0; i < jsonRequest.peerAddr.length(); i++)
+        for (int i = 0; i < jsonRequest.peerAddr.length(); i++)
         {
-            if(jsonRequest.peerAddr[i] == ':')
+            if (jsonRequest.peerAddr[i] == ':')
             {
                 break;
             }
             ip += jsonRequest.peerAddr[i];
         }
-        if(ip == "127.0.0.1")
+        if (ip == "127.0.0.1")
         {
             StartShutdown();
             if (jsonRequest.params[0].isNum()) {
