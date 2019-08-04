@@ -70,8 +70,15 @@ class SignerTest(BitcoinTestFramework):
         )
         self.clear_mock_result(self.nodes[1])
 
-        # Create new wallets with private keys disabled:
-        self.nodes[1].createwallet(wallet_name='hww', disable_private_keys=True, descriptors=True)
+        # Create new wallets for an external signer.
+        # disable_private_keys and descriptors must be true:
+        assert_raises_rpc_error(-4, "Private keys must be disabled when using an external signer", self.nodes[1].createwallet, wallet_name='not_hww', disable_private_keys=False, descriptors=True, external_signer=True)
+        if self.is_bdb_compiled():
+            assert_raises_rpc_error(-4, "Descriptor support must be enabled when using an external signer", self.nodes[1].createwallet, wallet_name='not_hww', disable_private_keys=True, descriptors=False, external_signer=True)
+        else:
+            assert_raises_rpc_error(-4, "Compiled without bdb support (required for legacy wallets)", self.nodes[1].createwallet, wallet_name='not_hww', disable_private_keys=True, descriptors=False, external_signer=True)
+
+        self.nodes[1].createwallet(wallet_name='hww', disable_private_keys=True, descriptors=True, external_signer=True)
         hww = self.nodes[1].get_wallet_rpc('hww')
 
         result = hww.enumeratesigners()
