@@ -259,6 +259,20 @@ std::shared_ptr<CWallet> CreateWallet(interfaces::Chain& chain, const std::strin
         wallet_creation_flags |= WALLET_FLAG_BLANK_WALLET;
     }
 
+    // Private keys must be disabled for an external signer wallet
+    if ((wallet_creation_flags & WALLET_FLAG_EXTERNAL_SIGNER) && !(wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        error = Untranslated("Private keys must be disabled when using an external signer");
+        status = DatabaseStatus::FAILED_CREATE;
+        return nullptr;
+    }
+
+    // Descriptor support must be enabled for an external signer wallet
+    if ((wallet_creation_flags & WALLET_FLAG_EXTERNAL_SIGNER) && !(wallet_creation_flags & WALLET_FLAG_DESCRIPTORS)) {
+        error = Untranslated("Descriptor support must be enabled when using an external signer");
+        status = DatabaseStatus::FAILED_CREATE;
+        return nullptr;
+    }
+
     // Wallet::Verify will check if we're trying to create a wallet with a duplicate name.
     std::unique_ptr<WalletDatabase> database = MakeWalletDatabase(name, options, status, error);
     if (!database) {
