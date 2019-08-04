@@ -18,7 +18,7 @@
         #define EXPORT_SYMBOL
       #endif
     #endif
-  #elif defined(HAVE_FUNC_ATTRIBUTE_VISIBILITY)
+  #elif HAVE_FUNC_ATTRIBUTE_VISIBILITY
     #define EXPORT_SYMBOL __attribute__ ((visibility ("default")))
   #endif
 #elif defined(MSC_VER) && !defined(STATIC_LIBBITCOINCONSENSUS)

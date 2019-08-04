@@ -620,13 +620,13 @@ std::string SHA256AutoDetect()
         TransformD64 = TransformD64Wrapper<sha256_sse4::Transform>;
         ret = "sse4(1way)";
 #endif
-#if defined(ENABLE_SSE41) && !defined(BUILD_BITCOIN_INTERNAL)
+#if ENABLE_SSE41 && !defined(BUILD_BITCOIN_INTERNAL)
         TransformD64_4way = sha256d64_sse41::Transform_4way;
         ret += ",sse41(4way)";
 #endif
     }
 
-#if defined(ENABLE_AVX2) && !defined(BUILD_BITCOIN_INTERNAL)
+#if ENABLE_AVX2 && !defined(BUILD_BITCOIN_INTERNAL)
     if (have_avx2 && have_avx && enabled_avx) {
         TransformD64_8way = sha256d64_avx2::Transform_8way;
         ret += ",avx2(8way)";

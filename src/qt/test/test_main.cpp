@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
     if (QTest::qExec(&test1) != 0) {
         fInvalid = true;
     }
-#if defined(ENABLE_WALLET) && defined(ENABLE_BIP70)
+#if ENABLE_WALLET && ENABLE_BIP70
     PaymentServerTests test2;
     if (QTest::qExec(&test2) != 0) {
         fInvalid = true;

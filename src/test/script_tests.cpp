@@ -16,7 +16,7 @@
 #include <rpc/util.h>
 #include <streams.h>
 
-#if defined(HAVE_CONSENSUS_LIB)
+#if HAVE_CONSENSUS_LIB
 #include <script/bitcoinconsensus.h>
 #endif
 
@@ -179,7 +179,7 @@ void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, const CScript
         BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, &scriptWitness, combined_flags, MutableTransactionSignatureChecker(&tx, 0, txCredit.vout[0].nValue), &err) == expect, message + strprintf(" (with flags %x)", combined_flags));
     }
 
-#if defined(HAVE_CONSENSUS_LIB)
+#if HAVE_CONSENSUS_LIB
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << tx2;
     int libconsensus_flags = flags & bitcoinconsensus_SCRIPT_FLAGS_VERIFY_ALL;
@@ -1521,7 +1521,7 @@ BOOST_AUTO_TEST_CASE(script_can_append_self)
 }
 
 
-#if defined(HAVE_CONSENSUS_LIB)
+#if HAVE_CONSENSUS_LIB
 
 /* Test simple (successful) usage of bitcoinconsensus_verify_script */
 BOOST_AUTO_TEST_CASE(bitcoinconsensus_verify_script_returns_true)
