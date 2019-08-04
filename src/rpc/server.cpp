@@ -29,6 +29,7 @@ static RPCTimerInterface* timerInterface = nullptr;
 /* Map of name to timer. */
 static std::map<std::string, std::unique_ptr<RPCTimerBase> > deadlineTimers;
 static bool ExecuteCommand(const CRPCCommand& command, const JSONRPCRequest& request, UniValue& result, bool last_handler);
+bool rpcallowstop = true;
 
 struct RPCCommandExecutionInfo
 {
@@ -169,11 +170,39 @@ UniValue stop(const JSONRPCRequest& jsonRequest)
             }.ToString());
     // Event loop will exit after current HTTP requests have been handled, so
     // this reply will get back to the client.
-    StartShutdown();
-    if (jsonRequest.params[0].isNum()) {
-        MilliSleep(jsonRequest.params[0].get_int());
+    if(rpcallowstop)
+    {
+        StartShutdown();
+        if (jsonRequest.params[0].isNum()) {
+            MilliSleep(jsonRequest.params[0].get_int());
+        }
+        return "Bitcoin server stopping";
     }
-    return "Bitcoin server stopping";
+    else
+    {
+        // Check if IP is 127.0.0.1
+        std::string ip;
+        for(int i = 0; i < jsonRequest.peerAddr.length(); i++)
+        {
+            if(jsonRequest.peerAddr[i] == ':')
+            {
+                break;
+            }
+            ip += jsonRequest.peerAddr[i];
+        }
+        if(ip == "127.0.0.1")
+        {
+            StartShutdown();
+            if (jsonRequest.params[0].isNum()) {
+                MilliSleep(jsonRequest.params[0].get_int());
+            }
+            return "Bitcoin server stopping";
+        }
+        else
+        {
+            throw JSONRPCError(RPC_FORBIDDEN_BY_SAFE_MODE, "You are not allowed to stop");
+        }
+    }
 }
 
 static UniValue uptime(const JSONRPCRequest& jsonRequest)
@@ -280,9 +309,10 @@ bool CRPCTable::removeCommand(const std::string& name, const CRPCCommand* pcmd)
     return false;
 }
 
-void StartRPC()
+void StartRPC(bool _rpcallowstop)
 {
     LogPrint(BCLog::RPC, "Starting RPC\n");
+    rpcallowstop = _rpcallowstop;
     g_rpc_running = true;
     g_rpcSignals.Started();
 }
