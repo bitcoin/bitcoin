@@ -4,6 +4,8 @@
 
 #include <wallet/psbtwallet.h>
 
+#include <wallet/wallet.h>
+
 TransactionError FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& psbtx, bool& complete, int sighash_type, bool sign, bool bip32derivs)
 {
     LOCK(pwallet->cs_wallet);

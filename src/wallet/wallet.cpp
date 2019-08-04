@@ -19,6 +19,8 @@
 #include <policy/policy.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
+#include <psbt.h>
+#include <wallet/psbtwallet.h>
 #include <script/descriptor.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
@@ -2901,22 +2903,52 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
 
         if (sign)
         {
-            int nIn = 0;
-            for (const auto& coin : selected_coins)
-            {
-                const CScript& scriptPubKey = coin.txout.scriptPubKey;
-                SignatureData sigdata;
+            if (IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER)) {
+#ifdef ENABLE_EXTERNAL_SIGNER
+                PartiallySignedTransaction psbtx(txNew);
+                bool complete;
+                // TODO: check complete is false
+                const TransactionError err = FillPSBT(this, psbtx, complete, 1, true, true);
+                assert(err == TransactionError::OK); // TODO: return TransactionError
 
-                std::unique_ptr<SigningProvider> provider = GetSigningProvider(scriptPubKey);
-                if (!provider || !ProduceSignature(*provider, MutableTransactionSignatureCreator(&txNew, nIn, coin.txout.nValue, SIGHASH_ALL), scriptPubKey, sigdata))
-                {
-                    strFailReason = _("Signing transaction failed").translated;
+                const std::string command = gArgs.GetArg("-signer", DEFAULT_EXTERNAL_SIGNER);
+                if (command == "") throw std::runtime_error(std::string(__func__) + ": restart bitcoind with -signer=<cmd>");
+
+                std::string chain = gArgs.GetChainName();
+                const bool mainnet = chain == CBaseChainParams::MAIN;
+                std::vector<ExternalSigner> signers;
+                ExternalSigner::Enumerate(command, signers, mainnet);
+                if (signers.empty()) throw std::runtime_error(std::string(__func__) + ": No external signers found");
+                // TODO: add fingerprint argument in case of multiple signers
+                ExternalSigner signer = signers[0];
+
+                if( !signer.signTransaction(psbtx, strFailReason)) return false;
+                complete = FinalizeAndExtractPSBT(psbtx, txNew);
+                if (!complete) {
+                    strFailReason = "PSBT incomplete";
                     return false;
-                } else {
-                    UpdateInput(txNew.vin.at(nIn), sigdata);
                 }
+#else
+                strFailReason = "Wallets with external signers require Boost::System library.";
+                return false;
+#endif
+            } else {
+                int nIn = 0;
+                for (const auto& coin : selected_coins)
+                {
+                    const CScript& scriptPubKey = coin.txout.scriptPubKey;
+                    SignatureData sigdata;
 
-                nIn++;
+                    std::unique_ptr<SigningProvider> provider = GetSigningProvider(scriptPubKey);
+                    if (!provider || !ProduceSignature(*provider, MutableTransactionSignatureCreator(&txNew, nIn, coin.txout.nValue, SIGHASH_ALL), scriptPubKey, sigdata))
+                    {
+                        strFailReason = _("Signing transaction failed").translated;
+                        return false;
+                    } else {
+                        UpdateInput(txNew.vin.at(nIn), sigdata);
+                    }
+                    nIn++;
+                }
             }
         }
 

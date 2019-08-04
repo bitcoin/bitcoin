@@ -6,7 +6,8 @@
 #define BITCOIN_WALLET_PSBTWALLET_H
 
 #include <psbt.h>
-#include <wallet/wallet.h>
+
+class CWallet;
 
 /**
  * Fills out a PSBT with information from the wallet. Fills in UTXOs if we have
