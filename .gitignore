@@ -92,6 +92,9 @@ syscoin-qt
 Syscoin-Qt.app
 background.tiff*
 
+# Qt Creator
+Makefile.am.user
+
 # Unit-tests
 Makefile.test
 syscoin-qt_test
