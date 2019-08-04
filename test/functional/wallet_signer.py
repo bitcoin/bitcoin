@@ -86,5 +86,10 @@ class SignerTest(BitcoinTestFramework):
         assert_equal(result['signers'][0]["fingerprint"], "00000001")
         assert_equal(result['signers'][0]["name"], "trezor_t")
 
+        # Flag can't be set afterwards (could be added later for non-blank descriptor based watch-only wallets)
+        self.nodes[1].createwallet(wallet_name='not_hww', disable_private_keys=True, descriptors=True, external_signer=False)
+        not_hww = self.nodes[1].get_wallet_rpc('not_hww')
+        assert_raises_rpc_error(-8, "Wallet flag is immutable: external_signer", not_hww.setwalletflag, "external_signer", True)
+
 if __name__ == '__main__':
     SignerTest().main()
