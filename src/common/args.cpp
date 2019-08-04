@@ -101,6 +101,38 @@ KeyInfo InterpretKey(std::string key)
  *
  * @return parsed settings value if it is valid, otherwise `nullopt` accompanied
  * by a descriptive error string
+ *
+ * @note By design, the \ref InterpretValue function does mostly lossless
+ * conversions of command line arguments and configuration file values to JSON
+ * `common::SettingsValue` values, so higher level application code and GetArg
+ * helper methods can unambiguously determine original configuration strings
+ * from the JSON values, and flexibly interpret settings and provide good error
+ * feedback. Specifically:
+ * \n
+ * - JSON `null` value is never returned and is reserved for settings that were
+ *   not configured at all.
+ *
+ * - JSON `false` value is returned for negated settings like `-nosetting` or
+ *   `-nosetting=1`. `false` is also returned for boolean-only settings that
+ *   have the ALLOW_BOOL flag and false values like `setting=0`.
+ *
+ * - JSON `true` value is returned for settings that have the ALLOW_BOOL flag
+ *   and are specified on the command line without a value like `-setting`.
+ *   `true` is also returned for boolean-only settings that have the ALLOW_BOOL
+ *   flag and true values like `setting=1`. `true` is also returned for untyped
+ *   legacy settings (see \ref IsTypedArg) that use double negation like
+ *   `-nosetting=0`.
+ *
+ * - JSON `""` empty string value is returned for settings like `-setting=`
+ *   that specify empty values. `""` is also returned for untyped legacy
+ *   settings (see \ref IsTypedArg) that are specified on the command line
+ *   without a value like `-setting`.
+ *
+ * - JSON strings like `"abc"` are returned for settings like `-setting=abc` if
+ *   the setting has the ALLOW_STRING flag or is an untyped legacy setting.
+ *
+ * - JSON numbers like `123` are returned for settings like `-setting=123` if
+ *   the setting enables integer parsing with the ALLOW_INT flag.
  */
 std::optional<common::SettingsValue> InterpretValue(const KeyInfo& key, const std::string* value,
                                                     unsigned int flags, std::string& error)
@@ -111,6 +143,16 @@ std::optional<common::SettingsValue> InterpretValue(const KeyInfo& key, const st
             error = strprintf("Negating of -%s is meaningless and therefore forbidden", key.name);
             return std::nullopt;
         }
+        if (IsTypedArg(flags)) {
+            // If argument is typed, only allow negation with no value or with
+            // literal "1" value. Avoid calling InterpretBool and accepting
+            // other values which could be ambiguous.
+            if (value && *value != "1") {
+                error = strprintf("Cannot negate -%s at the same time as setting a value ('%s').", key.name, *value);
+                return std::nullopt;
+            }
+            return false;
+        }
         // Double negatives like -nofoo=0 are supported (but discouraged)
         if (value && !InterpretBool(*value)) {
             LogWarning("Parsed potentially confusing double-negative -%s=%s", key.name, *value);
@@ -118,11 +160,29 @@ std::optional<common::SettingsValue> InterpretValue(const KeyInfo& key, const st
         }
         return false;
     }
-    if (!value && (flags & ArgsManager::DISALLOW_ELISION)) {
+    if (value) {
+        if ((flags & ArgsManager::ALLOW_STRING) || !IsTypedArg(flags) || value->empty()) return *value;
+        if (flags & ArgsManager::ALLOW_INT) {
+            if (auto parsed_int = ToIntegral<int64_t>(*value)) return *parsed_int;
+        }
+        if (flags & ArgsManager::ALLOW_BOOL) {
+            if (*value == "0") return false;
+            if (*value == "1") return true;
+        }
+        error = strprintf("Cannot set -%s value to '%s'.", key.name, *value);
+    } else {
+        if (flags & ArgsManager::ALLOW_BOOL) return true;
+        if (!(flags & ArgsManager::DISALLOW_ELISION) && !IsTypedArg(flags)) return "";
         error = strprintf("Cannot set -%s with no value. Please specify value with -%s=value.", key.name, key.name);
-        return std::nullopt;
     }
-    return value ? *value : "";
+    if (flags & ArgsManager::ALLOW_STRING) {
+        error = strprintf("%s %s", error, "It must be set to a string.");
+    } else if (flags & ArgsManager::ALLOW_INT) {
+        error = strprintf("%s %s", error, "It must be set to an integer.");
+    } else if (flags & ArgsManager::ALLOW_BOOL) {
+        error = strprintf("%s %s", error, "It must be set to 0 or 1.");
+    }
+    return std::nullopt;
 }
 
 // Define default constructor and destructor that are not inline, so code instantiating this class doesn't need to
@@ -541,10 +601,10 @@ bool ArgsManager::SoftSetArg(const std::string& strArg, const std::string& strVa
 
 bool ArgsManager::SoftSetBoolArg(const std::string& strArg, bool fValue)
 {
-    if (fValue)
-        return SoftSetArg(strArg, std::string("1"));
-    else
-        return SoftSetArg(strArg, std::string("0"));
+    LOCK(cs_args);
+    if (IsArgSet(strArg)) return false;
+    m_settings.forced_settings[SettingName(strArg)] = fValue;
+    return true;
 }
 
 void ArgsManager::ForceSetArg(const std::string& strArg, const std::string& strValue)
@@ -583,6 +643,24 @@ void ArgsManager::AddArg(const std::string& name, const std::string& help, unsig
 
     if (flags & ArgsManager::NETWORK_ONLY) {
         m_network_only_args.emplace(arg_name);
+    }
+
+    // Disallow flag combinations that would result in nonsensical behavior or a bad UX.
+    if ((flags & ALLOW_ANY) && (flags & (ALLOW_BOOL | ALLOW_INT | ALLOW_STRING))) {
+        throw std::logic_error(strprintf("Bug: bad %s flags. ALLOW_{BOOL|INT|STRING} flags are incompatible with "
+                                         "ALLOW_ANY (typed arguments need to be type checked)", arg_name));
+    }
+    if ((flags & ALLOW_BOOL) && (flags & DISALLOW_ELISION)) {
+        throw std::logic_error(strprintf("Bug: bad %s flags. ALLOW_BOOL flag is incompatible with DISALLOW_ELISION "
+                                         "(boolean arguments should not require argument values)", arg_name));
+    }
+    if ((flags & ALLOW_INT) && (flags & ALLOW_STRING)) {
+        throw std::logic_error(strprintf("Bug: bad %s flags. ALLOW_INT flag is incompatible with ALLOW_STRING "
+                                         "(any valid integer is also a valid string)", arg_name));
+    }
+    if ((flags & ALLOW_BOOL) && (flags & (ALLOW_INT | ALLOW_STRING))) {
+        throw std::logic_error(strprintf("Bug: bad %s flags. ALLOW_BOOL flag may not currently be specified with ALLOW_INT or ALLOW_STRING "
+                                         "(integer and string argument values cannot currently be omitted)", arg_name));
     }
 }
 

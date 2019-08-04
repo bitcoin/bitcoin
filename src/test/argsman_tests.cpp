@@ -127,7 +127,7 @@ public:
 
         if (expect.error) {
             BOOST_CHECK(!success);
-            BOOST_CHECK_NE(error.find(expect.error), std::string::npos);
+            BOOST_CHECK_EQUAL(error, expect.error);
         } else {
             BOOST_CHECK(success);
             BOOST_CHECK_EQUAL(error, "");
@@ -137,16 +137,12 @@ public:
             BOOST_CHECK_EQUAL(test.GetArg("-value", "zzzzz"), "zzzzz");
         } else if (expect.string_value) {
             BOOST_CHECK_EQUAL(test.GetArg("-value", "zzzzz"), expect.string_value);
-        } else {
-            BOOST_CHECK(!success);
         }
 
         if (expect.default_int) {
             BOOST_CHECK_EQUAL(test.GetIntArg("-value", 99999), 99999);
         } else if (expect.int_value) {
             BOOST_CHECK_EQUAL(test.GetIntArg("-value", 99999), *expect.int_value);
-        } else {
-            BOOST_CHECK(!success);
         }
 
         if (expect.default_bool) {
@@ -155,15 +151,11 @@ public:
         } else if (expect.bool_value) {
             BOOST_CHECK_EQUAL(test.GetBoolArg("-value", false), *expect.bool_value);
             BOOST_CHECK_EQUAL(test.GetBoolArg("-value", true), *expect.bool_value);
-        } else {
-            BOOST_CHECK(!success);
         }
 
         if (expect.list_value) {
             auto l = test.GetArgs("-value");
             BOOST_CHECK_EQUAL_COLLECTIONS(l.begin(), l.end(), expect.list_value->begin(), expect.list_value->end());
-        } else {
-            BOOST_CHECK(!success);
         }
     }
 };
@@ -185,6 +177,98 @@ BOOST_FIXTURE_TEST_CASE(util_CheckValue, CheckValueTest)
     CheckValue(M::ALLOW_ANY, "-value=1", Expect{"1"}.String("1").Int(1).Bool(true).List({"1"}));
     CheckValue(M::ALLOW_ANY, "-value=2", Expect{"2"}.String("2").Int(2).Bool(true).List({"2"}));
     CheckValue(M::ALLOW_ANY, "-value=abc", Expect{"abc"}.String("abc").Int(0).Bool(false).List({"abc"}));
+
+    CheckValue(M::ALLOW_BOOL, nullptr, Expect{{}});
+    CheckValue(M::ALLOW_BOOL, "-novalue", Expect{false});
+    CheckValue(M::ALLOW_BOOL, "-novalue=", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('')."));
+    CheckValue(M::ALLOW_BOOL, "-novalue=0", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('0')."));
+    CheckValue(M::ALLOW_BOOL, "-novalue=1", Expect{false});
+    CheckValue(M::ALLOW_BOOL, "-novalue=2", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('2')."));
+    CheckValue(M::ALLOW_BOOL, "-novalue=abc", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('abc')."));
+    CheckValue(M::ALLOW_BOOL, "-value", Expect{true});
+    CheckValue(M::ALLOW_BOOL, "-value=", Expect{""});
+    CheckValue(M::ALLOW_BOOL, "-value=0", Expect{false});
+    CheckValue(M::ALLOW_BOOL, "-value=1", Expect{true});
+    CheckValue(M::ALLOW_BOOL, "-value=2", Expect{{}}.Error("Cannot set -value value to '2'. It must be set to 0 or 1."));
+    CheckValue(M::ALLOW_BOOL, "-value=abc", Expect{{}}.Error("Cannot set -value value to 'abc'. It must be set to 0 or 1."));
+
+    CheckValue(M::ALLOW_INT, nullptr, Expect{{}});
+    CheckValue(M::ALLOW_INT, "-novalue", Expect{false});
+    CheckValue(M::ALLOW_INT, "-novalue=", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('')."));
+    CheckValue(M::ALLOW_INT, "-novalue=0", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('0')."));
+    CheckValue(M::ALLOW_INT, "-novalue=1", Expect{false});
+    CheckValue(M::ALLOW_INT, "-novalue=2", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('2')."));
+    CheckValue(M::ALLOW_INT, "-novalue=abc", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('abc')."));
+    CheckValue(M::ALLOW_INT, "-value", Expect{{}}.Error("Cannot set -value with no value. Please specify value with -value=value. It must be set to an integer."));
+    CheckValue(M::ALLOW_INT, "-value=", Expect{""});
+    CheckValue(M::ALLOW_INT, "-value=0", Expect{0});
+    CheckValue(M::ALLOW_INT, "-value=1", Expect{1});
+    CheckValue(M::ALLOW_INT, "-value=2", Expect{2});
+    CheckValue(M::ALLOW_INT, "-value=abc", Expect{{}}.Error("Cannot set -value value to 'abc'. It must be set to an integer."));
+
+    CheckValue(M::ALLOW_STRING, nullptr, Expect{{}});
+    CheckValue(M::ALLOW_STRING, "-novalue", Expect{false});
+    CheckValue(M::ALLOW_STRING, "-novalue=", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('')."));
+    CheckValue(M::ALLOW_STRING, "-novalue=0", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('0')."));
+    CheckValue(M::ALLOW_STRING, "-novalue=1", Expect{false});
+    CheckValue(M::ALLOW_STRING, "-novalue=2", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('2')."));
+    CheckValue(M::ALLOW_STRING, "-novalue=abc", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('abc')."));
+    CheckValue(M::ALLOW_STRING, "-value", Expect{{}}.Error("Cannot set -value with no value. Please specify value with -value=value. It must be set to a string."));
+    CheckValue(M::ALLOW_STRING, "-value=", Expect{""});
+    CheckValue(M::ALLOW_STRING, "-value=0", Expect{"0"});
+    CheckValue(M::ALLOW_STRING, "-value=1", Expect{"1"});
+    CheckValue(M::ALLOW_STRING, "-value=2", Expect{"2"});
+    CheckValue(M::ALLOW_STRING, "-value=abc", Expect{"abc"});
+
+    CheckValue(M::ALLOW_STRING | M::ALLOW_LIST, nullptr, Expect{{}});
+    CheckValue(M::ALLOW_STRING | M::ALLOW_LIST, "-novalue", Expect{false});
+    CheckValue(M::ALLOW_STRING | M::ALLOW_LIST, "-novalue=", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('')."));
+    CheckValue(M::ALLOW_STRING | M::ALLOW_LIST, "-novalue=0", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('0')."));
+    CheckValue(M::ALLOW_STRING | M::ALLOW_LIST, "-novalue=1", Expect{false});
+    CheckValue(M::ALLOW_STRING | M::ALLOW_LIST, "-novalue=2", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('2')."));
+    CheckValue(M::ALLOW_STRING | M::ALLOW_LIST, "-novalue=abc", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('abc')."));
+    CheckValue(M::ALLOW_STRING | M::ALLOW_LIST, "-value", Expect{{}}.Error("Cannot set -value with no value. Please specify value with -value=value. It must be set to a string."));
+    CheckValue(M::ALLOW_STRING | M::ALLOW_LIST, "-value=", Expect{""});
+    CheckValue(M::ALLOW_STRING | M::ALLOW_LIST, "-value=0", Expect{"0"});
+    CheckValue(M::ALLOW_STRING | M::ALLOW_LIST, "-value=1", Expect{"1"});
+    CheckValue(M::ALLOW_STRING | M::ALLOW_LIST, "-value=2", Expect{"2"});
+    CheckValue(M::ALLOW_STRING | M::ALLOW_LIST, "-value=abc", Expect{"abc"});
+}
+
+BOOST_FIXTURE_TEST_CASE(util_CheckBoolStringsNotSpecial, CheckValueTest)
+{
+    // Check that "true" and "false" strings are rejected for ALLOW_BOOL
+    // arguments. We might want to change this behavior in the future and
+    // interpret strings like "true" as true, and strings like "false" as false.
+    // But because it would be confusing to interpret "true" as true for
+    // ALLOW_BOOL arguments but false for ALLOW_ANY arguments (because
+    // atoi("true")==0), for now it is safer to just disallow strings like
+    // "true" and "false" for ALLOW_BOOL arguments as long as there are still
+    // other boolean arguments interpreted with ALLOW_ANY.
+    using M = ArgsManager;
+    CheckValue(M::ALLOW_BOOL, "-value=true", Expect{{}}.Error("Cannot set -value value to 'true'. It must be set to 0 or 1."));
+    CheckValue(M::ALLOW_BOOL, "-value=false", Expect{{}}.Error("Cannot set -value value to 'false'. It must be set to 0 or 1."));
+}
+
+BOOST_AUTO_TEST_CASE(util_CheckSingleValue)
+{
+    TestArgsManager test;
+    test.SetupArgs({{"-single", ArgsManager::ALLOW_INT}});
+    std::istringstream stream("single=1\nsingle=2\n");
+    std::string error;
+    BOOST_CHECK(!test.ReadConfigStream(stream, "file.conf", error));
+    BOOST_CHECK_EQUAL(error, "Multiple values specified for -single in same section of config file.");
+}
+
+BOOST_AUTO_TEST_CASE(util_CheckBadFlagCombinations)
+{
+    TestArgsManager test;
+    using M = ArgsManager;
+    BOOST_CHECK_THROW(test.AddArg("-arg1", "name", M::ALLOW_BOOL | M::ALLOW_ANY, OptionsCategory::OPTIONS), std::logic_error);
+    BOOST_CHECK_THROW(test.AddArg("-arg2", "name", M::ALLOW_BOOL | M::DISALLOW_ELISION, OptionsCategory::OPTIONS), std::logic_error);
+    BOOST_CHECK_THROW(test.AddArg("-arg3", "name", M::ALLOW_INT | M::ALLOW_STRING, OptionsCategory::OPTIONS), std::logic_error);
+    BOOST_CHECK_THROW(test.AddArg("-arg4", "name", M::ALLOW_INT | M::ALLOW_BOOL, OptionsCategory::OPTIONS), std::logic_error);
+    BOOST_CHECK_THROW(test.AddArg("-arg5", "name", M::ALLOW_STRING | M::ALLOW_BOOL, OptionsCategory::OPTIONS), std::logic_error);
 }
 
 struct NoIncludeConfTest {
