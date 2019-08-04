@@ -186,6 +186,18 @@ WalletCreationStatus CreateWallet(interfaces::Chain& chain, const SecureString& 
         return WalletCreationStatus::CREATION_FAILED;
     }
 
+    // Private keys must be disabled for an external signer wallet
+    if ((wallet_creation_flags & WALLET_FLAG_EXTERNAL_SIGNER) && !(wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        error = "Private keys must be disabled when using an external signer";
+        return WalletCreationStatus::CREATION_FAILED;
+    }
+
+    // Descriptor support must be enabled for an external signer wallet
+    if ((wallet_creation_flags & WALLET_FLAG_EXTERNAL_SIGNER) && !(wallet_creation_flags & WALLET_FLAG_DESCRIPTORS)) {
+        error = "Descriptor support must be enabled when using an external signer";
+        return WalletCreationStatus::CREATION_FAILED;
+    }
+
     // Wallet::Verify will check if we're trying to create a wallet with a duplicate name.
     if (!CWallet::Verify(chain, location, false, error, warnings)) {
         error = "Wallet file verification failed: " + error;
