@@ -583,6 +583,13 @@ private:
         const std::map<std::string, std::vector<common::SettingsValue>>& args) const EXCLUSIVE_LOCKS_REQUIRED(cs_args);
 };
 
+//! Whether the type of the argument has been specified and extra validation
+//! rules should apply.
+inline bool IsTypedArg(uint32_t flags)
+{
+    return flags & (ArgsManager::ALLOW_BOOL | ArgsManager::ALLOW_INT |  ArgsManager::ALLOW_STRING);
+}
+
 extern ArgsManager gArgs;
 
 /**
