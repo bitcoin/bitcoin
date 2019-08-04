@@ -25,7 +25,7 @@ class SignerTest(BitcoinTestFramework):
             return path
 
     def set_test_params(self):
-        self.num_nodes = 3
+        self.num_nodes = 4
 
         self.extra_args = [
             [],
@@ -54,7 +54,7 @@ class SignerTest(BitcoinTestFramework):
 
         # Handle script missing:
         assert_raises_rpc_error(-1, 'execve failed: No such file or directory',
-            self.nodes[2].enumeratesigners
+            self.nodes[3].enumeratesigners
         )
 
         # Handle error thrown by script
@@ -100,7 +100,7 @@ class SignerTest(BitcoinTestFramework):
         # )
         # self.clear_mock_result(self.nodes[1])
 
-        assert_equal(hww.getwalletinfo()["keypoolsize"], 3)
+        assert_equal(hww.getwalletinfo()["keypoolsize"], 30)
 
         address1 = hww.getnewaddress(address_type="bech32")
         assert_equal(address1, "bcrt1qm90ugl4d48jv8n6e5t9ln6t9zlpm5th68x4f8g")
@@ -133,6 +133,85 @@ class SignerTest(BitcoinTestFramework):
             hww.signerdisplayaddress, address1
         )
         self.clear_mock_result(self.nodes[1])
+
+        self.log.info('Prepare mock PSBT')
+        self.nodes[0].sendtoaddress(address1, 1)
+        self.nodes[0].generate(1)
+        self.sync_all()
+
+        # Load private key into wallet to generate a signed PSBT for the mock
+        self.nodes[1].createwallet(wallet_name="mock", disable_private_keys=False, blank=True, descriptors=True)
+        mock_wallet = self.nodes[1].get_wallet_rpc("mock")
+        assert mock_wallet.getwalletinfo()['private_keys_enabled']
+
+        result = mock_wallet.importdescriptors([{
+            "desc": "wpkh([00000001/84'/1'/0']tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/0/*)#rweraev0",
+            "timestamp": 0,
+            "range": [0,1],
+            "internal": False,
+            "active": True
+        },
+        {
+            "desc": "wpkh([00000001/84'/1'/0']tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/1/*)#j6uzqvuh",
+            "timestamp": 0,
+            "range": [0, 0],
+            "internal": True,
+            "active": True
+        }])
+        assert_equal(result[0], {'success': True})
+        assert_equal(result[1], {'success': True})
+        assert_equal(mock_wallet.getwalletinfo()["txcount"], 1)
+        dest = self.nodes[0].getnewaddress(address_type='bech32')
+        mock_psbt = mock_wallet.walletcreatefundedpsbt([], {dest:0.5}, 0, {}, True)['psbt']
+        mock_psbt_signed = mock_wallet.walletprocesspsbt(psbt=mock_psbt, sign=True, sighashtype="ALL", bip32derivs=True)
+        mock_psbt_final = mock_wallet.finalizepsbt(mock_psbt_signed["psbt"])
+        mock_tx = mock_psbt_final["hex"]
+        assert(mock_wallet.testmempoolaccept([mock_tx])[0]["allowed"])
+
+        # # Create a new wallet and populate with specific public keys, in order
+        # # to work with the mock signed PSBT.
+        # self.nodes[1].createwallet(wallet_name="hww4", disable_private_keys=True, descriptors=True, external_signer=True)
+        # hww4 = self.nodes[1].get_wallet_rpc("hww4")
+        #
+        # descriptors = [{
+        #     "desc": "wpkh([00000001/84'/1'/0']tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/0/*)#x30uthjs",
+        #     "timestamp": "now",
+        #     "range": [0, 1],
+        #     "internal": False,
+        #     "watchonly": True,
+        #     "active": True
+        # },
+        # {
+        #     "desc": "wpkh([00000001/84'/1'/0']tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/1/*)#h92akzzg",
+        #     "timestamp": "now",
+        #     "range": [0, 0],
+        #     "internal": True,
+        #     "watchonly": True,
+        #     "active": True
+        # }]
+
+        # result = hww4.importdescriptors(descriptors)
+        # assert_equal(result[0], {'success': True})
+        # assert_equal(result[1], {'success': True})
+        assert_equal(hww.getwalletinfo()["txcount"], 1)
+
+        assert(hww.testmempoolaccept([mock_tx])[0]["allowed"])
+
+        with open(os.path.join(self.nodes[1].cwd, "mock_psbt"), "w", encoding="utf8") as f:
+            f.write(mock_psbt_signed["psbt"])
+
+        self.log.info('Test send using hww1')
+
+        res = hww.send(outputs={dest:0.5},options={"add_to_wallet": False})
+        assert(res["complete"])
+        assert_equal(res["hex"], mock_tx)
+
+        # # Handle error thrown by script
+        # self.set_mock_result(self.nodes[4], "2")
+        # assert_raises_rpc_error(-1, 'Unable to parse JSON',
+        #     hww4.signerprocesspsbt, psbt_orig, "00000001"
+        # )
+        # self.clear_mock_result(self.nodes[4])
 
 if __name__ == '__main__':
     SignerTest().main()

@@ -26,6 +26,8 @@ class ExternalSignerScriptPubKeyMan : public DescriptorScriptPubKeyMan
   static ExternalSigner GetExternalSigner();
 
   bool DisplayAddress(const CScript scriptPubKey, const ExternalSigner &signer) const;
+
+  TransactionError FillPSBT(PartiallySignedTransaction& psbt, int sighash_type = 1 /* SIGHASH_ALL */, bool sign = true, bool bip32derivs = false, int* n_signed = nullptr) const override;
 };
 #endif
 

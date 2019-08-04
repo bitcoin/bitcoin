@@ -51,9 +51,25 @@ def displayaddress(args):
 
     return sys.stdout.write(json.dumps({"address": "bcrt1qm90ugl4d48jv8n6e5t9ln6t9zlpm5th68x4f8g"}))
 
+def signtx(args):
+    if args.fingerprint != "00000001":
+        return sys.stdout.write(json.dumps({"error": "Unexpected fingerprint", "fingerprint": args.fingerprint}))
+
+    with open(os.path.join(os.getcwd(), "mock_psbt"), "r", encoding="utf8") as f:
+        mock_psbt = f.read()
+
+    if args.fingerprint == "00000001" :
+        sys.stdout.write(json.dumps({
+            "psbt": mock_psbt,
+            "complete": True
+        }))
+    else:
+        sys.stdout.write(json.dumps({"psbt": args.psbt}))
+
 parser = argparse.ArgumentParser(prog='./signer.py', description='External signer mock')
 parser.add_argument('--fingerprint')
 parser.add_argument('--chain', default='main')
+parser.add_argument('--stdin', action='store_true')
 
 subparsers = parser.add_subparsers(description='Commands', dest='command')
 subparsers.required = True
@@ -68,6 +84,16 @@ parser_getdescriptors.add_argument('--account', metavar='account')
 parser_displayaddress = subparsers.add_parser('displayaddress', help='display address on signer')
 parser_displayaddress.add_argument('--desc', metavar='desc')
 parser_displayaddress.set_defaults(func=displayaddress)
+
+parser_signtx = subparsers.add_parser('signtx')
+parser_signtx.add_argument('psbt', metavar='psbt')
+
+parser_signtx.set_defaults(func=signtx)
+
+if not sys.stdin.isatty():
+    buffer = sys.stdin.read()
+    if buffer and buffer.rstrip() != "":
+       sys.argv.extend(buffer.rstrip().split(" "))
 
 args = parser.parse_args()
 

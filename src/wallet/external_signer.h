@@ -10,6 +10,8 @@
 #include <univalue.h>
 #include <util/system.h>
 
+struct PartiallySignedTransaction;
+
 class ExternalSignerException : public std::runtime_error {
 public:
     using std::runtime_error::runtime_error;
@@ -59,6 +61,11 @@ public:
     //! @param[in] account  which BIP32 account to use (e.g. `m/44'/0'/account'`)
     //! @param[out] UniValue see doc/external-signer.md
     UniValue GetDescriptors(int account);
+
+    //! Sign PartiallySignedTransaction on the device.
+    //! Calls `<command> signtransaction` and passes the PSBT via stdin.
+    //! @param[in,out] psbt  PartiallySignedTransaction to be signed
+    bool SignTransaction(PartiallySignedTransaction& psbt, std::string& error);
 
 #endif
 };
