@@ -750,8 +750,7 @@ static bool AppInitServers()
     RPCServer::OnStopped(&OnRPCStopped);
     if (!InitHTTPServer())
         return false;
-    if (gArgs.GetBoolArg("-rpcallowstop", true)) StartRPC();
-    else StartRPC(false);
+    StartRPC(gArgs.GetBoolArg("-rpcallowstop", true));
     if (!StartHTTPRPC())
         return false;
     if (gArgs.GetBoolArg("-rest", DEFAULT_REST_ENABLE)) StartREST();
