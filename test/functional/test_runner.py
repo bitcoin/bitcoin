@@ -91,6 +91,7 @@ BASE_SCRIPTS = [
     'wallet_labels.py',
     'p2p_segwit.py',
     'p2p_timeouts.py',
+    'p2p_tx_download.py',
     'wallet_dump.py',
     'wallet_listtransactions.py',
     # vv Tests less than 60s vv
