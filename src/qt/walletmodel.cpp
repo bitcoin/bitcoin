@@ -30,7 +30,7 @@
 #include <QMessageBox>
 #include <QSet>
 #include <QTimer>
-
+/*
 #ifdef ENABLE_PROOF_OF_STAKE
 WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, interfaces::Node& node, const PlatformStyle *platformStyle, OptionsModel *_optionsModel, QObject *parent) :
     QObject(parent), m_wallet(std::move(wallet)), m_node(node), optionsModel(_optionsModel), addressTableModel(nullptr),
@@ -54,13 +54,14 @@ WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, interfaces:
     subscribeToCoreSignals();
 }
 #else
-
+*/
 WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, interfaces::Node& node, const PlatformStyle *platformStyle, OptionsModel *_optionsModel, QObject *parent) :
     QObject(parent), m_wallet(std::move(wallet)), m_node(node), optionsModel(_optionsModel), addressTableModel(nullptr),
     transactionTableModel(nullptr),
     recentRequestsTableModel(nullptr),
     cachedEncryptionStatus(Unencrypted),
-    cachedNumBlocks(0)
+    cachedNumBlocks(0),
+    updateStakeWeight(true)
 {
     fHaveWatchOnly = m_wallet->haveWatchOnly();
     addressTableModel = new AddressTableModel(this);
@@ -74,7 +75,7 @@ WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, interfaces:
 
     subscribeToCoreSignals();
 }
-#endif
+//#endif
 
 WalletModel::~WalletModel()
 {
@@ -491,6 +492,7 @@ void WalletModel::unsubscribeFromCoreSignals()
 WalletModel::UnlockContext WalletModel::requestUnlock()
 {
     bool was_locked = getEncryptionStatus() == Locked;
+/*
 #ifdef ENABLE_PROOF_OF_STAKE
     if ((!was_locked) && getWalletUnlockStakingOnly())
     {
@@ -498,6 +500,7 @@ WalletModel::UnlockContext WalletModel::requestUnlock()
        was_locked = getEncryptionStatus() == Locked;
     }
 #endif
+*/
     if(was_locked)
     {
         // Request UI to unlock wallet
@@ -506,19 +509,20 @@ WalletModel::UnlockContext WalletModel::requestUnlock()
     // If wallet is still locked, unlock was failed or cancelled, mark context as invalid
     bool valid = getEncryptionStatus() != Locked;
 
-#ifdef ENABLE_PROOF_OF_STAKE
-    return UnlockContext(this, valid, was_locked && !getWalletUnlockStakingOnly());
-#else
+//#ifdef ENABLE_PROOF_OF_STAKE
+//    return UnlockContext(this, valid, was_locked && !getWalletUnlockStakingOnly());
+//#else
     return UnlockContext(this, valid, was_locked);
-#endif
+//#endif
 }
 
 WalletModel::UnlockContext::UnlockContext(WalletModel *_wallet, bool _valid, bool _relock):
         wallet(_wallet),
         valid(_valid),
-        relock(_relock),
-        stakingOnly(false)
+        relock(_relock)
+/*,stakingOnly(false)*/
 {
+/*
     if(!relock)
     {
 #ifdef ENABLE_PROOF_OF_STAKE
@@ -527,6 +531,7 @@ WalletModel::UnlockContext::UnlockContext(WalletModel *_wallet, bool _valid, boo
         wallet->setWalletUnlockStakingOnly(false);
 #endif
     }
+*/
 }
 
 WalletModel::UnlockContext::~UnlockContext()
@@ -535,7 +540,7 @@ WalletModel::UnlockContext::~UnlockContext()
     {
         wallet->setWalletLocked(true);
     }
-
+/*
     if(!relock)
     {
 #ifdef ENABLE_PROOF_OF_STAKE
@@ -543,8 +548,8 @@ WalletModel::UnlockContext::~UnlockContext()
 #endif
         wallet->updateStatus();
     }
+*/
 }
-
 
 void WalletModel::UnlockContext::CopyFrom(UnlockContext&& rhs)
 {

@@ -163,11 +163,8 @@ void WalletView::setWalletModel(WalletModel *_walletModel)
         connect(_walletModel->getTransactionTableModel(), &TransactionTableModel::rowsInserted, this, &WalletView::processNewTransaction);
 
         // Ask for passphrase if needed
-
-        connect(_walletModel, SIGNAL(requireUnlock()), this, SLOT(unlockWallet()));
-
-        //connect(_walletModel, &WalletModel::requireUnlock, this, &WalletView::unlockWallet);
-
+        //connect(_walletModel, SIGNAL(requireUnlock()), this, SLOT(unlockWallet()));
+        connect(_walletModel, &WalletModel::requireUnlock, this, &WalletView::unlockWallet);
 
         // Show progress dialog
         connect(_walletModel, &WalletModel::showProgress, this, &WalletView::showProgress);
@@ -343,20 +340,19 @@ void WalletView::changePassphrase()
     dlg.exec();
 }
 
-void WalletView::unlockWallet(bool fromMenu)
+void WalletView::unlockWallet(/*bool fromMenu*/)
 {
     if(!walletModel)
         return;
     // Unlock wallet when requested by wallet model
-
     if (walletModel->getEncryptionStatus() == WalletModel::Locked)
     {
-#ifdef ENABLE_PROOF_OF_STAKE
-        AskPassphraseDialog::Mode mode = fromMenu ?  AskPassphraseDialog::UnlockStaking : AskPassphraseDialog::Unlock;
-        AskPassphraseDialog dlg(mode, this);
-#else
+//#ifdef ENABLE_PROOF_OF_STAKE
+//        AskPassphraseDialog::Mode mode = fromMenu ?  AskPassphraseDialog::UnlockStaking : AskPassphraseDialog::Unlock;
+//        AskPassphraseDialog dlg(mode, this);
+//else
         AskPassphraseDialog dlg(AskPassphraseDialog::Unlock, this);
-#endif
+//#endif
         dlg.setModel(walletModel);
         dlg.exec();
     }
