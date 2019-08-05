@@ -2974,7 +2974,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                     CAmount additionalFeeNeeded = nFeeNeeded - nFeeRet;
                     std::vector<CTxOut>::iterator change_position = txNew.vout.begin()+nChangePosInOut;
                     // Only reduce change if remaining amount is still a large enough output.
-                    if (change_position->nValue >= MIN_FINAL_CHANGE + additionalFeeNeeded) {
+                    if (change_position->nValue >= MIN_CHANGE + additionalFeeNeeded) {
                         change_position->nValue -= additionalFeeNeeded;
                         nFeeRet += additionalFeeNeeded;
                         break; // Done, able to increase fee from change
