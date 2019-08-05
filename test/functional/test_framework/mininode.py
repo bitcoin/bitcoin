@@ -111,7 +111,7 @@ class P2PConnection(asyncio.Protocol):
     def is_connected(self):
         return self._transport is not None
 
-    def peer_connect(self, dstaddr, dstport, net="regtest"):
+    def peer_connect(self, dstaddr, dstport, *, net):
         assert not self.is_connected
         self.dstaddr = dstaddr
         self.dstport = dstport
