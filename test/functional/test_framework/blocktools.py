@@ -12,9 +12,8 @@ from .messages import (
     CTransaction,
     CTxIn,
     CTxOut,
-    ser_string,
 )
-from .script import CScript, OP_TRUE, OP_CHECKSIG
+from .script import CScript, CScriptNum, CScriptOp, OP_TRUE, OP_CHECKSIG
 from .util import assert_equal, hex_str_to_bytes
 from io import BytesIO
 
@@ -33,20 +32,13 @@ def create_block(hashprev, coinbase, ntime=None):
     block.calc_sha256()
     return block
 
-def serialize_script_num(value):
-    r = bytearray(0)
-    if value == 0:
-        return r
-    neg = value < 0
-    absvalue = -value if neg else value
-    while (absvalue):
-        r.append(int(absvalue & 0xff))
-        absvalue >>= 8
-    if r[-1] & 0x80:
-        r.append(0x80 if neg else 0)
-    elif neg:
-        r[-1] |= 0x80
-    return r
+def script_BIP34_coinbase_height(height):
+    if height <= 16:
+        res = CScriptOp.encode_op_n(height)
+        # Append dummy to increase scriptSig size above 2 (see bad-cb-length consensus rule)
+        return CScript([res, OP_TRUE])
+    return CScript([CScriptNum(height)])
+
 
 def create_coinbase(height, pubkey=None, dip4_activated=False):
     """Create a coinbase transaction, assuming no miner fees.
@@ -54,8 +46,7 @@ def create_coinbase(height, pubkey=None, dip4_activated=False):
     If pubkey is passed in, the coinbase output will be a P2PK output;
     otherwise an anyone-can-spend output."""
     coinbase = CTransaction()
-    coinbase.vin.append(CTxIn(COutPoint(0, 0xffffffff),
-                        ser_string(serialize_script_num(height)), 0xffffffff))
+    coinbase.vin.append(CTxIn(COutPoint(0, 0xffffffff), script_BIP34_coinbase_height(height), 0xffffffff))
     coinbaseoutput = CTxOut()
     coinbaseoutput.nValue = 500 * COIN
     halvings = int(height / 150)  # regtest
