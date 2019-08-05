@@ -14,7 +14,9 @@
 #include "net.h"
 #include "policy/feerate.h"
 #include "policy/fees.h"
+#if ENABLE_MINER
 #include "rpc/mining.h"
+#endif //ENABLE_MINER
 #include "rpc/server.h"
 #include "timedata.h"
 #include "util.h"
@@ -2948,6 +2950,7 @@ UniValue setbip69enabled(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
+#if ENABLE_MINER
 UniValue generate(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
@@ -2992,6 +2995,7 @@ UniValue generate(const JSONRPCRequest& request)
 
     return generateBlocks(coinbase_script, num_generate, max_tries, true);
 }
+#endif //ENABLE_MINING
 
 extern UniValue abortrescan(const JSONRPCRequest& request); // in rpcdump.cpp
 extern UniValue dumpprivkey(const JSONRPCRequest& request); // in rpcdump.cpp
@@ -3061,8 +3065,9 @@ static const CRPCCommand commands[] =
     { "wallet",             "walletpassphrase",         &walletpassphrase,         true,   {"passphrase","timeout","mixingonly"} },
     { "wallet",             "removeprunedfunds",        &removeprunedfunds,        true,   {"txid"} },
 
+#if ENABLE_MINER
     { "generating",         "generate",                 &generate,                 true,   {"nblocks","maxtries"} },
-
+#endif //ENABLE_MINER
     { "wallet",             "keepass",                  &keepass,                  true,   {} },
     { "hidden",             "instantsendtoaddress",     &instantsendtoaddress,     false,  {"address","amount","comment","comment_to","subtractfeefromamount"} },
     { "wallet",             "dumphdinfo",               &dumphdinfo,               true,   {} },
