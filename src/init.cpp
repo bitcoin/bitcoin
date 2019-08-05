@@ -1392,13 +1392,13 @@ bool AppInitMain(InitInterfaces& interfaces)
 
     // see Step 2: parameter interactions for more information about these
     fListen = gArgs.GetBoolArg("-listen", DEFAULT_LISTEN);
-    fDiscover = gArgs.GetBoolArg("-discover", true);
+    bool fDiscover = gArgs.GetBoolArg("-discover", true);
     g_relay_txes = !gArgs.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY);
 
     for (const std::string& strAddr : gArgs.GetArgs("-externalip")) {
         CService addrLocal;
         if (Lookup(strAddr.c_str(), addrLocal, GetListenPort(), fNameLookup) && addrLocal.IsValid())
-            AddLocal(addrLocal, LOCAL_MANUAL);
+            AddLocal(addrLocal, fDiscover, LOCAL_MANUAL);
         else
             return InitError(ResolveErrMsg("externalip", strAddr));
     }
@@ -1766,6 +1766,8 @@ bool AppInitMain(InitInterfaces& interfaces)
     connOptions.nMaxOutboundTimeframe = nMaxOutboundTimeframe;
     connOptions.nMaxOutboundLimit = nMaxOutboundLimit;
     connOptions.m_peer_connect_timeout = peer_connect_timeout;
+
+    connOptions.fDiscover = fDiscover;
 
     for (const std::string& strBind : gArgs.GetArgs("-bind")) {
         CService addrBind;

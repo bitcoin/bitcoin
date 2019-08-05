@@ -222,7 +222,8 @@ BOOST_AUTO_TEST_CASE(ipv4_peer_with_ipv6_addrMe_test)
     pnode->SetAddrLocal(addrLocal);
 
     // before patch, this causes undefined behavior detectable with clang's -fsanitize=memory
-    AdvertiseLocal(&*pnode);
+    bool fDiscover = true; // default value set in the application is: true
+    AdvertiseLocal(&*pnode, fDiscover);
 
     // suppress no-checks-run warning; if this test fails, it's by triggering a sanitizer
     BOOST_CHECK(1);
@@ -296,7 +297,9 @@ BOOST_AUTO_TEST_CASE(LocalAddress_BasicLifecycle)
     SetReachable(NET_IPV4, true);
 
     BOOST_CHECK_EQUAL(IsLocal(addr), false);
-    BOOST_CHECK_EQUAL(AddLocal(addr, 1000), true);
+
+    bool fDiscover = true; // default value set in the application is: true
+    BOOST_CHECK_EQUAL(AddLocal(addr, fDiscover, 1000), true);
     BOOST_CHECK_EQUAL(IsLocal(addr), true);
 
     RemoveLocal(addr);
