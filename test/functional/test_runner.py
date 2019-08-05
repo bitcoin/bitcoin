@@ -103,6 +103,7 @@ BASE_SCRIPTS = [
     'p2p_timeouts.py',
     'feature_bip68_sequence.py',
     'mempool_updatefromblock.py',
+    'p2p_tx_download.py',
     'wallet_dump.py',
     'wallet_listtransactions.py',
     'feature_multikeysporks.py',
