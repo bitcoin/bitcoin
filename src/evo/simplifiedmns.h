@@ -81,7 +81,7 @@ public:
     CSimplifiedMNList(const std::vector<CSimplifiedMNListEntry>& smlEntries);
     CSimplifiedMNList(const CDeterministicMNList& dmnList);
 
-    uint256 CalcMerkleRoot(bool* pmutated = NULL) const;
+    uint256 CalcMerkleRoot(bool* pmutated = nullptr) const;
 };
 
 /// P2P messages
