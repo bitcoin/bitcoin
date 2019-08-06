@@ -19,6 +19,10 @@ ExecStart=/usr/bin/bitcoind -daemon \
                             -conf=/etc/bitcoin/bitcoin.conf \
                             -datadir=/var/lib/bitcoind
 
+# Make sure the config directory is readable by the service user
+PermissionsStartOnly=true
+ExecStartPre=/bin/chgrp bitcoin /etc/bitcoin
+
 # Process management
 ####################
 
