@@ -26,8 +26,6 @@
 #include <QObject>
 #include <QTest>
 
-#include <openssl/ssl.h>
-
 #if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
 #if defined(QT_QPA_PLATFORM_MINIMAL)
@@ -72,8 +70,6 @@ int main(int argc, char *argv[])
     // QApplication:: and QCoreApplication:: in the tests
     BitcoinApplication app(*node, argc, argv);
     app.setApplicationName("Bitcoin-Qt-test");
-
-    SSL_library_init();
 
     AppTests app_tests(app);
     if (QTest::qExec(&app_tests) != 0) {
