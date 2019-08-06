@@ -33,10 +33,9 @@ public:
     uint32_t nBirthdayA;
     uint32_t nBirthdayB;
 #endif
-#ifdef ENABLE_PROOF_OF_STAKE
     COutPoint prevoutStake;
     std::vector<unsigned char> vchBlockSig;
-#endif
+
     CBlockHeader()
     {
         SetNull();
@@ -57,11 +56,10 @@ public:
         READWRITE(nBirthdayA);
         READWRITE(nBirthdayB);
 #endif
-#ifdef ENABLE_PROOF_OF_STAKE
         READWRITE(prevoutStake);
         if (!(s.GetType() & SER_WITHOUT_SIGNATURE))
             READWRITE(vchBlockSig);
-#endif
+
     }
 
     void SetNull()
@@ -76,10 +74,8 @@ public:
         nBirthdayA = 0;
 		nBirthdayB = 0;
 #endif
-#ifdef ENABLE_PROOF_OF_STAKE
         vchBlockSig.clear();
         prevoutStake.SetNull();
-#endif
     }
 
     bool IsNull() const
@@ -95,9 +91,7 @@ public:
     uint256 GetGroestlHash() const;
     uint256 GetHash() const;
 
-#ifdef ENABLE_PROOF_OF_STAKE
     uint256 GetHashWithoutSign() const;
-#endif
 
     int64_t GetBlockTime() const
     {
@@ -105,7 +99,6 @@ public:
     }
     std::string ToString() const;
 
-#ifdef ENABLE_PROOF_OF_STAKE    
     // ppcoin: two types of block: proof-of-work or proof-of-stake
     virtual bool IsProofOfStake() const 
     {
@@ -146,7 +139,7 @@ public:
         }
         return *this;
     }
-#endif
+
 };
 
 
@@ -185,12 +178,11 @@ public:
         fChecked = false;
     }
 
-#ifdef ENABLE_PROOF_OF_STAKE
     std::pair<COutPoint, unsigned int> GetProofOfStake() const 
     {
         return IsProofOfStake()? std::make_pair(prevoutStake, nTime) : std::make_pair(COutPoint(), (unsigned int)0);
     }
-#endif
+
 
     CBlockHeader GetBlockHeader() const
     {
@@ -205,10 +197,9 @@ public:
 		block.nBirthdayA     = nBirthdayA;
         block.nBirthdayB     = nBirthdayB;
 #endif
-#ifdef ENABLE_PROOF_OF_STAKE
         block.vchBlockSig    = vchBlockSig;
         block.prevoutStake   = prevoutStake;
-#endif
+
         return block;
     }
 

@@ -52,40 +52,42 @@ bool CheckStakeKernelHash(CBlockIndex* pindexPrev, unsigned int nBits, uint32_t 
         return error("CheckStakeKernelHash() : nTime violation");
 
     // Base target
-    arith_uint256 bnTarget;
-    bnTarget.SetCompact(nBits);
+    arith_uint256 bnTarget = arith_uint256().SetCompact(nBits);
 
     // Weighted target
-    int64_t nValueIn = prevoutValue;
-    arith_uint256 bnWeight = arith_uint256(nValueIn);
+    arith_uint256 bnWeight = arith_uint256(prevoutValue);
     bnTarget *= bnWeight;
 
-    targetProofOfStake = ArithToUint256(bnTarget);
-
-    uint256 nStakeModifier = pindexPrev->nStakeModifier;
+    targetProofOfStake = ArithToUint256(bnTarget);    
 
     // Calculate hash
-    CDataStream ss(SER_GETHASH, 0);
-    ss << nStakeModifier;
-    ss << blockFromTime << prevout.hash << prevout.n << nTimeBlock;
-    hashProofOfStake = Hash(ss.begin(), ss.end());
+    //CDataStream ss(SER_GETHASH, 0);
+    //ss << nStakeModifier;
+    //ss << blockFromTime << prevout.hash << prevout.n << nTimeBlock;
+    //hashProofOfStake = Hash(ss.begin(), ss.end());
+
+    CHashWriter ss(SER_GETHASH, 0);
+    ss << pindexPrev->nStakeModifier << blockFromTime << prevout.hash << prevout.n << nTimeBlock;
+    hashProofOfStake = ss.GetHash();
 
     if (fPrintProofOfStake)
     {
         LogPrintf("CheckStakeKernelHash() : check modifier=%s nTimeBlockFrom=%u nPrevout=%u nTimeBlock=%u hashProof=%s\n",
-            nStakeModifier.GetHex().c_str(),
+            pindexPrev->nStakeModifier.GetHex().c_str(),
             blockFromTime, prevout.n, nTimeBlock,
             hashProofOfStake.ToString());
     }
 
+LogPrintf(" error search 12 \n");
     // Now check if proof-of-stake hash meets target protocol
     if (UintToArith256(hashProofOfStake) > bnTarget)
-        return false;
-
+        return error(" %s: proof-of-stake hash %s fails to meet target %x \n", __func__, UintToArith256(hashProofOfStake).ToString().c_str(), bnTarget.GetCompact());
+        //return false;
+LogPrintf(" error search 13 \n");
     if (LogInstance().WillLogCategory(BCLog::COINSTAKE) && !fPrintProofOfStake)
     {
         LogPrintf("CheckStakeKernelHash() : check modifier=%s nTimeBlockFrom=%u nPrevout=%u nTimeBlock=%u hashProof=%s\n",
-            nStakeModifier.GetHex().c_str(),
+            pindexPrev->nStakeModifier.GetHex().c_str(),
             blockFromTime, prevout.n, nTimeBlock,
             hashProofOfStake.ToString());
     }
@@ -243,7 +245,6 @@ bool CheckKernel(unsigned int nBits, uint32_t nTimeBlock, const COutPoint& prevo
                 return error("CheckKernel(): Could not find coin and it was not at the tip");
             }
         }
-
         if(pindexPrev->nHeight + 1 - coinPrev.nHeight < COINBASE_MATURITY){
             return error("CheckKernel(): Coin not matured");
         }
@@ -254,7 +255,6 @@ bool CheckKernel(unsigned int nBits, uint32_t nTimeBlock, const COutPoint& prevo
         if(coinPrev.IsSpent()){
             return error("CheckKernel(): Coin is spent");
         }
-
         return CheckStakeKernelHash(pindexPrev, nBits, blockFrom->nTime, coinPrev.out.nValue, prevout,
                                     nTimeBlock, hashProofOfStake, targetProofOfStake);
     }else{

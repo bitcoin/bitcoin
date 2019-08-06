@@ -173,7 +173,7 @@ void OverviewPage::setBalance(const interfaces::WalletBalances& balances)
         ui->labelUnconfirmed->setText(BitcointalkcoinUnits::formatWithUnit(unit, balances.unconfirmed_balance, false, BitcointalkcoinUnits::separatorAlways));
         ui->labelImmature->setText(BitcointalkcoinUnits::formatWithUnit(unit, balances.immature_balance, false, BitcointalkcoinUnits::separatorAlways));
         ui->labelStake->setText(BitcointalkcoinUnits::formatWithUnit(unit, balances.stake, false, BitcointalkcoinUnits::separatorAlways));
-        ui->labelTotal->setText(BitcointalkcoinUnits::formatWithUnit(unit, balances.balance + balances.unconfirmed_balance + balances.immature_balance, false, BitcointalkcoinUnits::separatorAlways));
+        ui->labelTotal->setText(BitcointalkcoinUnits::formatWithUnit(unit, balances.balance + balances.unconfirmed_balance + balances.immature_balance + balances.stake, false, BitcointalkcoinUnits::separatorAlways));
         ui->labelWatchAvailable->setText(BitcointalkcoinUnits::formatWithUnit(unit, balances.watch_only_balance, false, BitcointalkcoinUnits::separatorAlways));
         ui->labelWatchPending->setText(BitcointalkcoinUnits::formatWithUnit(unit, balances.unconfirmed_watch_only_balance, false, BitcointalkcoinUnits::separatorAlways));
         ui->labelWatchImmature->setText(BitcointalkcoinUnits::formatWithUnit(unit, balances.immature_watch_only_balance, false, BitcointalkcoinUnits::separatorAlways));
