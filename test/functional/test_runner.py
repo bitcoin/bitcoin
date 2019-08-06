@@ -86,7 +86,6 @@ BASE_SCRIPTS = [
     # Longest test should go first, to favor running tests in parallel
     'feature_dip3_deterministicmns.py', # NOTE: needs dash_hash to pass
     'feature_llmq_data_recovery.py',
-    'feature_fee_estimation.py',
     'wallet_hd.py',
     'wallet_backup.py',
     # vv Tests less than 5m vv
@@ -135,6 +134,7 @@ BASE_SCRIPTS = [
     # vv Tests less than 30s vv
     'rpc_quorum.py',
     'wallet_keypool_topup.py',
+    'feature_fee_estimation.py',
     'interface_zmq_dash.py',
     'interface_zmq.py',
     'interface_bitcoin_cli.py',
