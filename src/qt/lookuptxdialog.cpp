@@ -2,16 +2,17 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "lookuptxdialog.h"
-#include "ui_lookuptxdialog.h"
+#include <qt/lookuptxdialog.h>
+#include <qt/forms/ui_lookuptxdialog.h>
 
-#include "omnicore/errors.h"
-#include "omnicore/rpc.h"
-#include "omnicore/rpctxobject.h"
+#include <omnicore/errors.h>
+#include <omnicore/rpc.h>
+#include <omnicore/rpctxobject.h>
 
-#include "omnicore_qtutils.h"
+#include <qt/walletmodel.h>
+#include <qt/omnicore_qtutils.h>
 
-#include "uint256.h"
+#include <uint256.h>
 
 #include <string>
 
@@ -23,7 +24,6 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
-using std::string;
 using namespace mastercore;
 
 LookupTXDialog::LookupTXDialog(QWidget *parent) :
@@ -37,7 +37,7 @@ LookupTXDialog::LookupTXDialog(QWidget *parent) :
 #endif
 
     // connect actions
-    connect(ui->searchButton, SIGNAL(clicked()), this, SLOT(searchButtonClicked()));
+    connect(ui->searchButton, &QPushButton::clicked, this, &LookupTXDialog::searchButtonClicked);
 }
 
 LookupTXDialog::~LookupTXDialog()
@@ -45,10 +45,15 @@ LookupTXDialog::~LookupTXDialog()
     delete ui;
 }
 
+void LookupTXDialog::setWalletModel(WalletModel *model)
+{
+    this->walletModel = model;
+}
+
 void LookupTXDialog::searchTX()
 {
     // search function to lookup address
-    string searchText = ui->searchLineEdit->text().toStdString();
+    std::string searchText = ui->searchLineEdit->text().toStdString();
 
     // first let's check if we have a searchText, if not do nothing
     if (searchText.empty()) return;
@@ -58,7 +63,7 @@ void LookupTXDialog::searchTX()
     UniValue txobj(UniValue::VOBJ);
     std::string strTXText;
     // make a request to new RPC populator function to populate a transaction object
-    int populateResult = populateRPCTransactionObject(hash, txobj, "", true);
+    int populateResult = populateRPCTransactionObject(hash, txobj, "", true, "", &walletModel->wallet());
     if (0<=populateResult) {
         strTXText = txobj.write(true);
         if (!strTXText.empty()) PopulateSimpleDialog(strTXText, "Transaction Information", "Transaction Information");

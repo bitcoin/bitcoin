@@ -6,10 +6,10 @@
 
 class CScript;
 
-#include "script/standard.h"
+#include <script/standard.h>
 
 /** Determines the minimum output amount to be spent by an output. */
-int64_t GetDustThreshold(const CScript& scriptPubKey);
+int64_t OmniGetDustThreshold(const CScript& scriptPubKey);
 
 /** Identifies standard output types based on a scriptPubKey. */
 bool GetOutputType(const CScript& scriptPubKey, txnouttype& whichTypeRet);

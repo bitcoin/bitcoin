@@ -1,8 +1,8 @@
 #ifndef OMNICORE_FEES_H
 #define OMNICORE_FEES_H
 
-#include "omnicore/dbbase.h"
-#include "omnicore/log.h"
+#include <omnicore/dbbase.h>
+#include <omnicore/log.h>
 
 #include <boost/filesystem.hpp>
 

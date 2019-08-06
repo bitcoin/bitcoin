@@ -2,40 +2,41 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "tradehistorydialog.h"
-#include "ui_tradehistorydialog.h"
+#include <qt/tradehistorydialog.h>
+#include <qt/forms/ui_tradehistorydialog.h>
 
-#include "omnicore_qtutils.h"
+#include <qt/omnicore_qtutils.h>
 
-#include "guiutil.h"
-#include "ui_interface.h"
-#include "walletmodel.h"
-#include "clientmodel.h"
-#include "platformstyle.h"
+#include <qt/guiutil.h>
+#include <ui_interface.h>
+#include <qt/walletmodel.h>
+#include <qt/clientmodel.h>
+#include <qt/platformstyle.h>
 
-#include "omnicore/dbtradelist.h"
-#include "omnicore/dbtxlist.h"
-#include "omnicore/mdex.h"
-#include "omnicore/omnicore.h"
-#include "omnicore/parsing.h"
-#include "omnicore/pending.h"
-#include "omnicore/rpc.h"
-#include "omnicore/rpctxobject.h"
-#include "omnicore/sp.h"
-#include "omnicore/tx.h"
-#include "omnicore/utilsbitcoin.h"
-#include "omnicore/walletcache.h"
-#include "omnicore/walletfetchtxs.h"
-#include "omnicore/walletutils.h"
+#include <omnicore/dbtradelist.h>
+#include <omnicore/dbtxlist.h>
+#include <omnicore/mdex.h>
+#include <omnicore/omnicore.h>
+#include <omnicore/parsing.h>
+#include <omnicore/pending.h>
+#include <omnicore/rpc.h>
+#include <omnicore/rpctxobject.h>
+#include <omnicore/sp.h>
+#include <omnicore/tx.h>
+#include <omnicore/utilsbitcoin.h>
+#include <omnicore/walletcache.h>
+#include <omnicore/walletfetchtxs.h>
+#include <omnicore/walletutils.h>
 
-#include "amount.h"
-#include "init.h"
-#include "main.h"
-#include "primitives/transaction.h"
-#include "sync.h"
-#include "txdb.h"
-#include "uint256.h"
-#include "wallet/wallet.h"
+#include <amount.h>
+#include <chainparams.h>
+#include <init.h>
+#include <validation.h>
+#include <primitives/transaction.h>
+#include <sync.h>
+#include <txdb.h>
+#include <uint256.h>
+#include <wallet/wallet.h>
 
 #include <boost/algorithm/string.hpp>
 
@@ -61,7 +62,6 @@
 #include <QWidget>
 
 using std::ostringstream;
-using std::string;
 
 using namespace mastercore;
 
@@ -70,8 +70,8 @@ bool hideInactiveTrades = false;
 TradeHistoryDialog::TradeHistoryDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::tradeHistoryDialog),
-    clientModel(0),
-    walletModel(0)
+    clientModel(nullptr),
+    walletModel(nullptr)
 {
     // Setup the UI
     ui->setupUi(this);
@@ -107,7 +107,10 @@ TradeHistoryDialog::TradeHistoryDialog(QWidget *parent) :
     ui->tradeHistoryTable->setContextMenuPolicy(Qt::CustomContextMenu);
     ui->tradeHistoryTable->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     ui->tradeHistoryTable->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
-    UpdateTradeHistoryTable(); // make sure we're populated before attempting to resize to contents
+    /**
+     * Cannot be run as no wallet is available until after setWalletModel
+     * UpdateTradeHistoryTable(); // make sure we're populated before attempting to resize to contents
+     */
     ui->tradeHistoryTable->setColumnHidden(0, true);
     ui->tradeHistoryTable->setColumnHidden(1, true);
     ui->tradeHistoryTable->setColumnWidth(2, 23);
@@ -123,11 +126,11 @@ TradeHistoryDialog::TradeHistoryDialog(QWidget *parent) :
     contextMenu = new QMenu();
     contextMenu->addAction(copyTxIDAction);
     contextMenu->addAction(showDetailsAction);
-    connect(ui->tradeHistoryTable, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
-    connect(ui->tradeHistoryTable, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(showDetails()));
-    connect(ui->hideInactiveTrades, SIGNAL(stateChanged(int)), this, SLOT(RepopulateTradeHistoryTable(int)));
-    connect(copyTxIDAction, SIGNAL(triggered()), this, SLOT(copyTxID()));
-    connect(showDetailsAction, SIGNAL(triggered()), this, SLOT(showDetails()));
+    connect(ui->tradeHistoryTable, &QTableView::customContextMenuRequested, this, &TradeHistoryDialog::contextualMenu);
+    connect(ui->tradeHistoryTable, &QTableView::doubleClicked, this, &TradeHistoryDialog::showDetails);
+    connect(ui->hideInactiveTrades, &QCheckBox::stateChanged, this, &TradeHistoryDialog::RepopulateTradeHistoryTable);
+    connect(copyTxIDAction, &QAction::triggered, this, &TradeHistoryDialog::copyTxID);
+    connect(showDetailsAction, &QAction::triggered, this, &TradeHistoryDialog::showDetails);
 }
 
 TradeHistoryDialog::~TradeHistoryDialog()
@@ -152,6 +155,10 @@ void TradeHistoryDialog::RepopulateTradeHistoryTable(int hide)
         hideInactiveTrades = false;
     }
     UpdateTradeHistoryTable(true);
+}
+
+void TradeHistoryDialog::UpdateTradeHistoryTableSignal() {
+    UpdateTradeHistoryTable(false);
 }
 
 // The main function to update the UI tradeHistoryTable
@@ -192,7 +199,7 @@ void TradeHistoryDialog::UpdateTradeHistoryTable(bool forceUpdate)
             if (objTH.blockHeight > 0) {
                 LOCK(cs_main);
                 CBlockIndex* pBlkIdx = chainActive[objTH.blockHeight];
-                if (NULL != pBlkIdx) txTime.setTime_t(pBlkIdx->GetBlockTime());
+                if (nullptr != pBlkIdx) txTime.setTime_t(pBlkIdx->GetBlockTime());
                 dateCell->setData(Qt::DisplayRole, txTime);
             } else {
                 dateCell->setData(Qt::DisplayRole, QString::fromStdString("Unconfirmed"));
@@ -252,11 +259,11 @@ void TradeHistoryDialog::UpdateTradeHistoryTable(bool forceUpdate)
 int TradeHistoryDialog::PopulateTradeHistoryMap()
 {
     // TODO: locks may not be needed here -- looks like wallet lock can be removed
-    if (NULL == pwalletMain) return -1;
+    //if (NULL == pwalletMain) return -1;
     TRY_LOCK(cs_main,lckMain);
     if (!lckMain) return -1;
-    TRY_LOCK(pwalletMain->cs_wallet, lckWallet);
-    if (!lckWallet) return -1;
+    //TRY_LOCK(pwalletMain->cs_wallet, lckWallet);
+    //if (!lckWallet) return -1;
 
     int64_t nProcessed = 0; // number of new entries, forms return code
 
@@ -303,7 +310,9 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
 
     // ### START WALLET TRANSACTIONS PROCESSING ###
     // obtain a sorted list of Omni layer wallet transactions (including STO receipts and pending) - default last 65535
-    std::map<std::string,uint256> walletTransactions = FetchWalletOmniTransactions(GetArg("-omniuiwalletscope", 65535L));
+    std::map<std::string,uint256> walletTransactions;
+    if (walletModel)
+        walletTransactions = FetchWalletOmniTransactions(walletModel->wallet(), gArgs.GetArg("-omniuiwalletscope", 65535L));
 
     // reverse iterate over (now ordered) transactions and populate history map for each one
     for (std::map<std::string,uint256>::reverse_iterator it = walletTransactions.rbegin(); it != walletTransactions.rend(); it++) {
@@ -337,18 +346,18 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
                 tradeHistoryProxy.setFilterKeyColumn(0);
                 tradeHistoryProxy.setFilterFixedString(QString::fromStdString(hash.GetHex()));
                 QModelIndex rowIndex = tradeHistoryProxy.mapToSource(tradeHistoryProxy.index(0,0)); // map to the row in the actual table
-                if(rowIndex.isValid()) ui->tradeHistoryTable->removeRow(rowIndex.row()); // delete the pending tx row, it'll be readded as a proper confirmed transaction
+                if(rowIndex.isValid()) ui->tradeHistoryTable->removeRow(rowIndex.row()); // delete the pending tx row, it'll be added again as a proper confirmed transaction
                 ui->tradeHistoryTable->setSortingEnabled(true); // re-enable sorting
             }
         }
 
         // tx not in historyMap, retrieve the transaction object
-        CTransaction wtx;
+        CTransactionRef wtx;
         uint256 blockHash;
-        if (!GetTransaction(hash, wtx, Params().GetConsensus(), blockHash, true)) continue;
-        if (blockHash.IsNull() || NULL == GetBlockIndex(blockHash)) continue;
+        if (!GetTransaction(hash, wtx, Params().GetConsensus(), blockHash)) continue;
+        if (blockHash.IsNull() || nullptr == GetBlockIndex(blockHash)) continue;
         CBlockIndex* pBlockIndex = GetBlockIndex(blockHash);
-        if (NULL == pBlockIndex) continue;
+        if (nullptr == pBlockIndex) continue;
         int blockHeight = pBlockIndex->nHeight;
 
         // setup some variables
@@ -367,7 +376,7 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
         bool valid = false;
 
         // parse the transaction
-        if (0 != ParseTransaction(wtx, blockHeight, 0, mp_obj)) continue;
+        if (0 != ParseTransaction(*wtx, blockHeight, 0, mp_obj)) continue;
         if (mp_obj.interpret_Transaction()) {
             valid = pDbTransactionList->getValidMPTX(hash);
             propertyIdForSale = mp_obj.getProperty();
@@ -531,15 +540,18 @@ void TradeHistoryDialog::UpdateData()
 void TradeHistoryDialog::setWalletModel(WalletModel *model)
 {
     this->walletModel = model;
-    if (model != NULL) { } // do nothing, signals from walletModel no longer needed
+    if (model != nullptr)
+    {
+        UpdateTradeHistoryTable();
+    }
 }
 
 void TradeHistoryDialog::setClientModel(ClientModel *model)
 {
     this->clientModel = model;
-    if (model != NULL) {
-        connect(model, SIGNAL(refreshOmniBalance()), this, SLOT(UpdateTradeHistoryTable()));
-        connect(model, SIGNAL(reinitOmniState()), this, SLOT(ReinitTradeHistoryTable()));
+    if (model != nullptr) {
+        connect(model, &ClientModel::refreshOmniBalance, this, &TradeHistoryDialog::UpdateTradeHistoryTableSignal);
+        connect(model, &ClientModel::reinitOmniState, this, &TradeHistoryDialog::ReinitTradeHistoryTable);
     }
 }
 
@@ -558,14 +570,14 @@ void TradeHistoryDialog::copyTxID()
  */
 void TradeHistoryDialog::showDetails()
 {
-    UniValue txobj(UniValue::VOBJ);;
+    UniValue txobj(UniValue::VOBJ);
     uint256 txid;
     txid.SetHex(ui->tradeHistoryTable->item(ui->tradeHistoryTable->currentRow(),0)->text().toStdString());
     std::string strTXText;
 
     if (!txid.IsNull()) {
         // grab extended trade details via the RPC populator
-        int rc = populateRPCTransactionObject(txid, txobj, "", true);
+        int rc = populateRPCTransactionObject(txid, txobj, "", true, "", &walletModel->wallet());
         if (rc >= 0) strTXText = txobj.write(true);
     }
 

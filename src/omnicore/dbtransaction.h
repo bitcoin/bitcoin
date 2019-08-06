@@ -1,9 +1,9 @@
 #ifndef OMNICORE_DBTRANSACTION_H
 #define OMNICORE_DBTRANSACTION_H
 
-#include "omnicore/dbbase.h"
+#include <omnicore/dbbase.h>
 
-#include "uint256.h"
+#include <uint256.h>
 
 #include <boost/filesystem/path.hpp>
 

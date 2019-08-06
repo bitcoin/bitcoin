@@ -1,13 +1,14 @@
-#include "omnicore/encoding.h"
+#include <omnicore/encoding.h>
 
-#include "omnicore/script.h"
+#include <omnicore/script.h>
 
-#include "base58.h"
-#include "pubkey.h"
-#include "script/script.h"
-#include "script/standard.h"
-#include "test/test_bitcoin.h"
-#include "utilstrencodings.h"
+#include <base58.h>
+#include <key_io.h>
+#include <pubkey.h>
+#include <script/script.h>
+#include <script/standard.h>
+#include <test/test_bitcoin.h>
+#include <util/strencodings.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -30,7 +31,7 @@ BOOST_AUTO_TEST_CASE(class_b_empty)
     const CScript& scriptPubKey = vTxOuts[0].first;
     CTxDestination dest;
     BOOST_CHECK(ExtractDestination(scriptPubKey, dest));
-    BOOST_CHECK_EQUAL(CBitcoinAddress(dest).ToString(), "1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P");
+    BOOST_CHECK_EQUAL(EncodeDestination(dest), "1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P");
 }
 
 BOOST_AUTO_TEST_CASE(class_b_maidsafe)

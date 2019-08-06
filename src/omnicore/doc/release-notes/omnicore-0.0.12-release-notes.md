@@ -19,7 +19,7 @@ Table of contents
   - [Compatibility with Bitcoin Core](#compatibility-with-bitcoin-core)
   - [Consensus affecting changes](#consensus-affecting-changes)
     - [Fee distribution system on the Distributed Exchange](#fee-distribution-system-on-the-distributed-exchange)
-    - [Send to Owners cross property suport](#send-to-owners-cross-property-support)
+    - [Send to Owners cross property support](#send-to-owners-cross-property-support)
 - [Notable changes](#notable-changes)
   - [Performance improvements during initial parsing](#performance-improvements-during-initial-parsing)
 - [Change log](#change-log)

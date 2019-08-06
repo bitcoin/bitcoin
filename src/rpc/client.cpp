@@ -1,271 +1,335 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "rpc/client.h"
-#include "rpc/protocol.h"
-#include "util.h"
+#include <rpc/client.h>
+#include <rpc/protocol.h>
+#include <util/system.h>
 
 #include <set>
 #include <stdint.h>
-
-#include <boost/algorithm/string/case_conv.hpp> // for to_lower()
-#include <univalue.h>
-
-using namespace std;
 
 class CRPCConvertParam
 {
 public:
     std::string methodName; //!< method whose params want conversion
     int paramIdx;           //!< 0-based idx of param to convert
+    std::string paramName;  //!< parameter name
 };
 
+// clang-format off
+/**
+ * Specify a (method, idx, name) here if the argument is a non-string RPC
+ * argument and needs to be converted from JSON.
+ *
+ * @note Parameter indexes start from 0.
+ */
 static const CRPCConvertParam vRPCConvertParams[] =
 {
-    { "stop", 0 },
-    { "setmocktime", 0 },
-    { "getaddednodeinfo", 0 },
-    { "generate", 0 },
-    { "generate", 1 },
-    { "generatetoaddress", 0 },
-    { "generatetoaddress", 2 },
-    { "setgenerate", 0 },
-    { "setgenerate", 1 },
-    { "getnetworkhashps", 0 },
-    { "getnetworkhashps", 1 },
-    { "sendtoaddress", 1 },
-    { "sendtoaddress", 4 },
-    { "settxfee", 0 },
-    { "getreceivedbyaddress", 1 },
-    { "getreceivedbyaccount", 1 },
-    { "listreceivedbyaddress", 0 },
-    { "listreceivedbyaddress", 1 },
-    { "listreceivedbyaddress", 2 },
-    { "listreceivedbyaccount", 0 },
-    { "listreceivedbyaccount", 1 },
-    { "listreceivedbyaccount", 2 },
-    { "getbalance", 1 },
-    { "getbalance", 2 },
-    { "getblockhash", 0 },
-    { "move", 2 },
-    { "move", 3 },
-    { "sendfrom", 2 },
-    { "sendfrom", 3 },
-    { "listtransactions", 1 },
-    { "listtransactions", 2 },
-    { "listtransactions", 3 },
-    { "listaccounts", 0 },
-    { "listaccounts", 1 },
-    { "walletpassphrase", 1 },
-    { "getblocktemplate", 0 },
-    { "listsinceblock", 1 },
-    { "listsinceblock", 2 },
-    { "sendmany", 1 },
-    { "sendmany", 2 },
-    { "sendmany", 4 },
-    { "addmultisigaddress", 0 },
-    { "addmultisigaddress", 1 },
-    { "createmultisig", 0 },
-    { "createmultisig", 1 },
-    { "listunspent", 0 },
-    { "listunspent", 1 },
-    { "listunspent", 2 },
-    { "getblock", 1 },
-    { "getblockheader", 1 },
-    { "gettransaction", 1 },
-    { "getrawtransaction", 1 },
-    { "createrawtransaction", 0 },
-    { "createrawtransaction", 1 },
-    { "createrawtransaction", 2 },
-    { "signrawtransaction", 1 },
-    { "signrawtransaction", 2 },
-    { "sendrawtransaction", 1 },
-    { "fundrawtransaction", 1 },
-    { "gettxout", 1 },
-    { "gettxout", 2 },
-    { "gettxoutproof", 0 },
-    { "lockunspent", 0 },
-    { "lockunspent", 1 },
-    { "importprivkey", 2 },
-    { "importaddress", 2 },
-    { "importaddress", 3 },
-    { "importpubkey", 2 },
-    { "verifychain", 0 },
-    { "verifychain", 1 },
-    { "keypoolrefill", 0 },
-    { "getrawmempool", 0 },
-    { "estimatefee", 0 },
-    { "estimatepriority", 0 },
-    { "estimatesmartfee", 0 },
-    { "estimatesmartpriority", 0 },
-    { "prioritisetransaction", 1 },
-    { "prioritisetransaction", 2 },
-    { "setban", 2 },
-    { "setban", 3 },
-    { "getmempoolancestors", 1 },
-    { "getmempooldescendants", 1 },
+    { "setmocktime", 0, "timestamp" },
+    { "generate", 0, "nblocks" },
+    { "generate", 1, "maxtries" },
+    { "generatetoaddress", 0, "nblocks" },
+    { "generatetoaddress", 2, "maxtries" },
+    { "getnetworkhashps", 0, "nblocks" },
+    { "getnetworkhashps", 1, "height" },
+    { "sendtoaddress", 1, "amount" },
+    { "sendtoaddress", 4, "subtractfeefromamount" },
+    { "sendtoaddress", 5 , "replaceable" },
+    { "sendtoaddress", 6 , "conf_target" },
+    { "settxfee", 0, "amount" },
+    { "sethdseed", 0, "newkeypool" },
+    { "getreceivedbyaddress", 1, "minconf" },
+    { "getreceivedbylabel", 1, "minconf" },
+    { "listreceivedbyaddress", 0, "minconf" },
+    { "listreceivedbyaddress", 1, "include_empty" },
+    { "listreceivedbyaddress", 2, "include_watchonly" },
+    { "listreceivedbylabel", 0, "minconf" },
+    { "listreceivedbylabel", 1, "include_empty" },
+    { "listreceivedbylabel", 2, "include_watchonly" },
+    { "getbalance", 1, "minconf" },
+    { "getbalance", 2, "include_watchonly" },
+    { "getblockhash", 0, "height" },
+    { "waitforblockheight", 0, "height" },
+    { "waitforblockheight", 1, "timeout" },
+    { "waitforblock", 1, "timeout" },
+    { "waitfornewblock", 0, "timeout" },
+    { "listtransactions", 1, "count" },
+    { "listtransactions", 2, "skip" },
+    { "listtransactions", 3, "include_watchonly" },
+    { "walletpassphrase", 1, "timeout" },
+    { "getblocktemplate", 0, "template_request" },
+    { "listsinceblock", 1, "target_confirmations" },
+    { "listsinceblock", 2, "include_watchonly" },
+    { "listsinceblock", 3, "include_removed" },
+    { "sendmany", 1, "amounts" },
+    { "sendmany", 2, "minconf" },
+    { "sendmany", 4, "subtractfeefrom" },
+    { "sendmany", 5 , "replaceable" },
+    { "sendmany", 6 , "conf_target" },
+    { "deriveaddresses", 1, "range" },
+    { "scantxoutset", 1, "scanobjects" },
+    { "addmultisigaddress", 0, "nrequired" },
+    { "addmultisigaddress", 1, "keys" },
+    { "createmultisig", 0, "nrequired" },
+    { "createmultisig", 1, "keys" },
+    { "listunspent", 0, "minconf" },
+    { "listunspent", 1, "maxconf" },
+    { "listunspent", 2, "addresses" },
+    { "listunspent", 3, "include_unsafe" },
+    { "listunspent", 4, "query_options" },
+    { "getblock", 1, "verbosity" },
+    { "getblock", 1, "verbose" },
+    { "getblockheader", 1, "verbose" },
+    { "getchaintxstats", 0, "nblocks" },
+    { "gettransaction", 1, "include_watchonly" },
+    { "getrawtransaction", 1, "verbose" },
+    { "createrawtransaction", 0, "inputs" },
+    { "createrawtransaction", 1, "outputs" },
+    { "createrawtransaction", 2, "locktime" },
+    { "createrawtransaction", 3, "replaceable" },
+    { "decoderawtransaction", 1, "iswitness" },
+    { "signrawtransactionwithkey", 1, "privkeys" },
+    { "signrawtransactionwithkey", 2, "prevtxs" },
+    { "signrawtransactionwithwallet", 1, "prevtxs" },
+    { "sendrawtransaction", 1, "allowhighfees" },
+    { "testmempoolaccept", 0, "rawtxs" },
+    { "testmempoolaccept", 1, "allowhighfees" },
+    { "combinerawtransaction", 0, "txs" },
+    { "fundrawtransaction", 1, "options" },
+    { "fundrawtransaction", 2, "iswitness" },
+    { "walletcreatefundedpsbt", 0, "inputs" },
+    { "walletcreatefundedpsbt", 1, "outputs" },
+    { "walletcreatefundedpsbt", 2, "locktime" },
+    { "walletcreatefundedpsbt", 3, "options" },
+    { "walletcreatefundedpsbt", 4, "bip32derivs" },
+    { "walletprocesspsbt", 1, "sign" },
+    { "walletprocesspsbt", 3, "bip32derivs" },
+    { "createpsbt", 0, "inputs" },
+    { "createpsbt", 1, "outputs" },
+    { "createpsbt", 2, "locktime" },
+    { "createpsbt", 3, "replaceable" },
+    { "combinepsbt", 0, "txs"},
+    { "joinpsbts", 0, "txs"},
+    { "finalizepsbt", 1, "extract"},
+    { "converttopsbt", 1, "permitsigdata"},
+    { "converttopsbt", 2, "iswitness"},
+    { "gettxout", 1, "n" },
+    { "gettxout", 2, "include_mempool" },
+    { "gettxoutproof", 0, "txids" },
+    { "lockunspent", 0, "unlock" },
+    { "lockunspent", 1, "transactions" },
+    { "importprivkey", 2, "rescan" },
+    { "importaddress", 2, "rescan" },
+    { "importaddress", 3, "p2sh" },
+    { "importpubkey", 2, "rescan" },
+    { "importmulti", 0, "requests" },
+    { "importmulti", 1, "options" },
+    { "verifychain", 0, "checklevel" },
+    { "verifychain", 1, "nblocks" },
+    { "getblockstats", 0, "hash_or_height" },
+    { "getblockstats", 1, "stats" },
+    { "pruneblockchain", 0, "height" },
+    { "keypoolrefill", 0, "newsize" },
+    { "getrawmempool", 0, "verbose" },
+    { "estimatesmartfee", 0, "conf_target" },
+    { "estimaterawfee", 0, "conf_target" },
+    { "estimaterawfee", 1, "threshold" },
+    { "prioritisetransaction", 1, "dummy" },
+    { "prioritisetransaction", 2, "fee_delta" },
+    { "setban", 2, "bantime" },
+    { "setban", 3, "absolute" },
+    { "setnetworkactive", 0, "state" },
+    { "getmempoolancestors", 1, "verbose" },
+    { "getmempooldescendants", 1, "verbose" },
+    { "bumpfee", 1, "options" },
+    { "logging", 0, "include" },
+    { "logging", 1, "exclude" },
+    { "disconnectnode", 1, "nodeid" },
+    // Echo with conversion (For testing only)
+    { "echojson", 0, "arg0" },
+    { "echojson", 1, "arg1" },
+    { "echojson", 2, "arg2" },
+    { "echojson", 3, "arg3" },
+    { "echojson", 4, "arg4" },
+    { "echojson", 5, "arg5" },
+    { "echojson", 6, "arg6" },
+    { "echojson", 7, "arg7" },
+    { "echojson", 8, "arg8" },
+    { "echojson", 9, "arg9" },
+    { "rescanblockchain", 0, "start_height"},
+    { "rescanblockchain", 1, "stop_height"},
+    { "createwallet", 1, "disable_private_keys"},
+    { "createwallet", 2, "blank"},
+    { "getnodeaddresses", 0, "count"},
+    { "stop", 0, "wait" },
+
 
     /* Omni Core - data retrieval calls */
-    { "omni_gettradehistoryforaddress", 1 },
-    { "omni_gettradehistoryforaddress", 2 },
-    { "omni_gettradehistoryforpair", 0 },
-    { "omni_gettradehistoryforpair", 1 },
-    { "omni_gettradehistoryforpair", 2 },
-    { "omni_setautocommit", 0 },
-    { "omni_getcrowdsale", 0 },
-    { "omni_getcrowdsale", 1 },
-    { "omni_getgrants", 0 },
-    { "omni_getbalance", 1 },
-    { "omni_getproperty", 0 },
-    { "omni_listtransactions", 1 },
-    { "omni_listtransactions", 2 },
-    { "omni_listtransactions", 3 },
-    { "omni_listtransactions", 4 },
-    { "omni_getallbalancesforid", 0 },
-    { "omni_listblocktransactions", 0 },
-    { "omni_listblockstransactions", 0 },
-    { "omni_listblockstransactions", 1 },
-    { "omni_getorderbook", 0 },
-    { "omni_getorderbook", 1 },
-    { "omni_getseedblocks", 0 },
-    { "omni_getseedblocks", 1 },
-    { "omni_getmetadexhash", 0 },
-    { "omni_getfeecache", 0 },
-    { "omni_getfeeshare", 1 },
-    { "omni_getfeetrigger", 0 },
-    { "omni_getfeedistribution", 0 },
-    { "omni_getfeedistributions", 0 },
-    { "omni_getbalanceshash", 0 },
-    { "omni_getwalletbalances", 0 },
-    { "omni_getwalletaddressbalances", 0 },
+    { "omni_gettradehistoryforaddress", 1 , "count"},
+    { "omni_gettradehistoryforaddress", 2, "propertyid" },
+    { "omni_gettradehistoryforpair", 0, "propertyid" },
+    { "omni_gettradehistoryforpair", 1, "propertyid" },
+    { "omni_gettradehistoryforpair", 2, "count" },
+    { "omni_setautocommit", 0, "flag" },
+    { "omni_getcrowdsale", 0, "propertyid" },
+    { "omni_getcrowdsale", 1, "verbose" },
+    { "omni_getgrants", 0, "propertyid" },
+    { "omni_getbalance", 1, "propertyid" },
+    { "omni_getproperty", 0, "propertyid" },
+    { "omni_listtransactions", 1, "count" },
+    { "omni_listtransactions", 2, "skip" },
+    { "omni_listtransactions", 3, "startblock" },
+    { "omni_listtransactions", 4, "endblock" },
+    { "omni_getallbalancesforid", 0, "propertyid" },
+    { "omni_listblocktransactions", 0, "index" },
+    { "omni_listblockstransactions", 0, "firstblock" },
+    { "omni_listblockstransactions", 1, "lastblock" },
+    { "omni_getorderbook", 0, "propertyid" },
+    { "omni_getorderbook", 1, "propertyid" },
+    { "omni_getseedblocks", 0, "startblock" },
+    { "omni_getseedblocks", 1, "endblock" },
+    { "omni_getmetadexhash", 0, "propertyid" },
+    { "omni_getfeecache", 0, "propertyid" },
+    { "omni_getfeeshare", 1, "ecosystem" },
+    { "omni_getfeetrigger", 0, "propertyid" },
+    { "omni_getfeedistribution", 0, "distributionid" },
+    { "omni_getfeedistributions", 0, "propertyid" },
+    { "omni_getbalanceshash", 0, "propertyid" },
+    { "omni_getwalletbalances", 0, "includewatchonly" },
+    { "omni_getwalletaddressbalances", 0, "includewatchonly" },
 
     /* Omni Core - transaction calls */
-    { "omni_send", 2 },
-    { "omni_sendsto", 1 },
-    { "omni_sendsto", 4 },
-    { "omni_sendall", 2 },
-    { "omni_sendtrade", 1 },
-    { "omni_sendtrade", 3 },
-    { "omni_sendcanceltradesbyprice", 1 },
-    { "omni_sendcanceltradesbyprice", 3 },
-    { "omni_sendcanceltradesbypair", 1 },
-    { "omni_sendcanceltradesbypair", 2 },
-    { "omni_sendcancelalltrades", 1 },
-    { "omni_sendissuancefixed", 1 },
-    { "omni_sendissuancefixed", 2 },
-    { "omni_sendissuancefixed", 3 },
-    { "omni_sendissuancemanaged", 1 },
-    { "omni_sendissuancemanaged", 2 },
-    { "omni_sendissuancemanaged", 3 },
-    { "omni_sendissuancecrowdsale", 1 },
-    { "omni_sendissuancecrowdsale", 2 },
-    { "omni_sendissuancecrowdsale", 3 },
-    { "omni_sendissuancecrowdsale", 9 },
-    { "omni_sendissuancecrowdsale", 11 },
-    { "omni_sendissuancecrowdsale", 12 },
-    { "omni_sendissuancecrowdsale", 13 },
-    { "omni_senddexsell", 1 },
-    { "omni_senddexsell", 4 },
-    { "omni_senddexsell", 6 },
-    { "omni_senddexaccept", 2 },
-    { "omni_senddexaccept", 4 },
-    { "omni_sendclosecrowdsale", 1 },
-    { "omni_sendgrant", 2 },
-    { "omni_sendrevoke", 1 },
-    { "omni_sendchangeissuer", 2 },
-    { "omni_sendenablefreezing", 1 },
-    { "omni_senddisablefreezing", 1 },
-    { "omni_sendfreeze", 2 },
-    { "omni_sendunfreeze", 2 },
-    { "omni_senddeactivation", 1 },
-    { "omni_sendactivation", 1 },
-    { "omni_sendactivation", 2 },
-    { "omni_sendactivation", 3 },
-    { "omni_sendalert", 1 },
-    { "omni_sendalert", 2 },
-    { "omni_funded_send", 2 },
-    { "omni_funded_sendall", 2 },
+    { "omni_send", 2, "propertyid" },
+    { "omni_sendsto", 1, "propertyid" },
+    { "omni_sendsto", 4, "distributionproperty" },
+    { "omni_sendall", 2, "ecosystem" },
+    { "omni_sendtrade", 1, "propertyidforsale" },
+    { "omni_sendtrade", 3, "propertiddesired" },
+    { "omni_sendcanceltradesbyprice", 1, "propertyidforsale" },
+    { "omni_sendcanceltradesbyprice", 3, "propertiddesired" },
+    { "omni_sendcanceltradesbypair", 1, "propertyidforsale" },
+    { "omni_sendcanceltradesbypair", 2, "propertiddesired" },
+    { "omni_sendcancelalltrades", 1, "ecosystem" },
+    { "omni_sendissuancefixed", 1, "ecosystem" },
+    { "omni_sendissuancefixed", 2, "type" },
+    { "omni_sendissuancefixed", 3, "previousid" },
+    { "omni_sendissuancemanaged", 1, "ecosystem" },
+    { "omni_sendissuancemanaged", 2, "type" },
+    { "omni_sendissuancemanaged", 3, "previousid" },
+    { "omni_sendissuancecrowdsale", 1, "ecosystem" },
+    { "omni_sendissuancecrowdsale", 2, "type" },
+    { "omni_sendissuancecrowdsale", 3, "previousid" },
+    { "omni_sendissuancecrowdsale", 9, "propertyiddesired" },
+    { "omni_sendissuancecrowdsale", 11, "deadline" },
+    { "omni_sendissuancecrowdsale", 12, "earlybonus" },
+    { "omni_sendissuancecrowdsale", 13, "issuerpercentage" },
+    { "omni_senddexsell", 1, "propertyidforsale" },
+    { "omni_senddexsell", 4, "paymentwindow" },
+    { "omni_senddexsell", 6, "action" },
+    { "omni_senddexaccept", 2, "propertyid" },
+    { "omni_senddexaccept", 4, "override" },
+    { "omni_sendclosecrowdsale", 1, "propertyid" },
+    { "omni_sendgrant", 2, "propertyid" },
+    { "omni_sendrevoke", 1, "propertyid" },
+    { "omni_sendchangeissuer", 2, "propertyid" },
+    { "omni_sendenablefreezing", 1, "propertyid" },
+    { "omni_senddisablefreezing", 1, "propertyid" },
+    { "omni_sendfreeze", 2, "propertyid" },
+    { "omni_sendunfreeze", 2, "propertyid" },
+    { "omni_senddeactivation", 1, "featureid" },
+    { "omni_sendactivation", 1, "featureid" },
+    { "omni_sendactivation", 2, "block" },
+    { "omni_sendactivation", 3, "minclientversion" },
+    { "omni_sendalert", 1, "alerttype" },
+    { "omni_sendalert", 2, "expiryvalue" },
+    { "omni_funded_send", 2, "propertyid" },
+    { "omni_funded_sendall", 2, "ecosystem" },
 
     /* Omni Core - raw transaction calls */
-    { "omni_decodetransaction", 1 },
-    { "omni_decodetransaction", 2 },
-    { "omni_createrawtx_reference", 2 },
-    { "omni_createrawtx_input", 2 },
-    { "omni_createrawtx_change", 1 },
-    { "omni_createrawtx_change", 3 },
-    { "omni_createrawtx_change", 4 },
+    { "omni_decodetransaction", 1, "prevtxs" },
+    { "omni_decodetransaction", 2, "height" },
+    { "omni_createrawtx_reference", 2, "amount" },
+    { "omni_createrawtx_input", 2, "n" },
+    { "omni_createrawtx_change", 1, "prevtxs" },
+    { "omni_createrawtx_change", 3, "fee" },
+    { "omni_createrawtx_change", 4, "position" },
 
     /* Omni Core - payload creation */
-    { "omni_createpayload_simplesend", 0 },
-    { "omni_createpayload_sendall", 0 },
-    { "omni_createpayload_dexsell", 0 },
-    { "omni_createpayload_dexsell", 3 },
-    { "omni_createpayload_dexsell", 5 },
-    { "omni_createpayload_dexaccept", 0 },
-    { "omni_createpayload_sto", 0 },
-    { "omni_createpayload_sto", 2 },
-    { "omni_createpayload_issuancefixed", 0 },
-    { "omni_createpayload_issuancefixed", 1 },
-    { "omni_createpayload_issuancefixed", 2 },
-    { "omni_createpayload_issuancemanaged", 0 },
-    { "omni_createpayload_issuancemanaged", 1 },
-    { "omni_createpayload_issuancemanaged", 2 },
-    { "omni_createpayload_issuancecrowdsale", 0 },
-    { "omni_createpayload_issuancecrowdsale", 1 },
-    { "omni_createpayload_issuancecrowdsale", 2 },
-    { "omni_createpayload_issuancecrowdsale", 8 },
-    { "omni_createpayload_issuancecrowdsale", 10 },
-    { "omni_createpayload_issuancecrowdsale", 11 },
-    { "omni_createpayload_issuancecrowdsale", 12 },
-    { "omni_createpayload_closecrowdsale", 0 },
-    { "omni_createpayload_grant", 0 },
-    { "omni_createpayload_revoke", 0 },
-    { "omni_createpayload_changeissuer", 0 },
-    { "omni_createpayload_trade", 0 },
-    { "omni_createpayload_trade", 2 },
-    { "omni_createpayload_canceltradesbyprice", 0 },
-    { "omni_createpayload_canceltradesbyprice", 2 },
-    { "omni_createpayload_canceltradesbypair", 0 },
-    { "omni_createpayload_canceltradesbypair", 1 },
-    { "omni_createpayload_cancelalltrades", 0 },
-    { "omni_createpayload_enablefreezing", 0 },
-    { "omni_createpayload_disablefreezing", 0 },
-    { "omni_createpayload_freeze", 1 },
-    { "omni_createpayload_unfreeze", 1 },
+    { "omni_createpayload_simplesend", 0, "propertyid" },
+    { "omni_createpayload_sendall", 0, "ecosystem" },
+    { "omni_createpayload_dexsell", 0, "propertyidforsale" },
+    { "omni_createpayload_dexsell", 3, "paymentwindow" },
+    { "omni_createpayload_dexsell", 5, "action" },
+    { "omni_createpayload_dexaccept", 0, "propertyid" },
+    { "omni_createpayload_sto", 0, "propertyid" },
+    { "omni_createpayload_sto", 2, "distributionproperty" },
+    { "omni_createpayload_issuancefixed", 0, "ecosystem" },
+    { "omni_createpayload_issuancefixed", 1, "type" },
+    { "omni_createpayload_issuancefixed", 2, "previousid" },
+    { "omni_createpayload_issuancemanaged", 0, "ecosystem" },
+    { "omni_createpayload_issuancemanaged", 1, "type" },
+    { "omni_createpayload_issuancemanaged", 2, "previousid" },
+    { "omni_createpayload_issuancecrowdsale", 0, "ecosystem" },
+    { "omni_createpayload_issuancecrowdsale", 1, "type" },
+    { "omni_createpayload_issuancecrowdsale", 2, "previousid" },
+    { "omni_createpayload_issuancecrowdsale", 8, "propertyiddesired" },
+    { "omni_createpayload_issuancecrowdsale", 10, "deadline" },
+    { "omni_createpayload_issuancecrowdsale", 11, "earlybonus" },
+    { "omni_createpayload_issuancecrowdsale", 12, "issuerpercentage" },
+    { "omni_createpayload_closecrowdsale", 0, "propertyid" },
+    { "omni_createpayload_grant", 0, "propertyid" },
+    { "omni_createpayload_revoke", 0, "propertyid" },
+    { "omni_createpayload_changeissuer", 0, "propertyid" },
+    { "omni_createpayload_trade", 0, "propertyidforsale" },
+    { "omni_createpayload_trade", 2, "propertiddesired" },
+    { "omni_createpayload_canceltradesbyprice", 0, "propertyidforsale" },
+    { "omni_createpayload_canceltradesbyprice", 2, "propertiddesired" },
+    { "omni_createpayload_canceltradesbypair", 0, "propertyidforsale" },
+    { "omni_createpayload_canceltradesbypair", 1, "propertiddesired" },
+    { "omni_createpayload_cancelalltrades", 0, "ecosystem" },
+    { "omni_createpayload_enablefreezing", 0, "propertyid" },
+    { "omni_createpayload_disablefreezing", 0, "propertyid" },
+    { "omni_createpayload_freeze", 1, "propertyid" },
+    { "omni_createpayload_unfreeze", 1, "propertyid" },
 
     /* Omni Core - backwards compatibility */
-    { "getcrowdsale_MP", 0 },
-    { "getcrowdsale_MP", 1 },
-    { "getgrants_MP", 0 },
-    { "send_MP", 2 },
-    { "getbalance_MP", 1 },
-    { "sendtoowners_MP", 1 },
-    { "getproperty_MP", 0 },
-    { "listtransactions_MP", 1 },
-    { "listtransactions_MP", 2 },
-    { "listtransactions_MP", 3 },
-    { "listtransactions_MP", 4 },
-    { "getallbalancesforid_MP", 0 },
-    { "listblocktransactions_MP", 0 },
-    { "getorderbook_MP", 0 },
-    { "getorderbook_MP", 1 },
-    { "trade_MP", 1 }, // depreciated
-    { "trade_MP", 3 }, // depreciated
-    { "trade_MP", 5 }, // depreciated
+    { "getcrowdsale_MP", 0, "propertyid" },
+    { "getcrowdsale_MP", 1, "verbose" },
+    { "getgrants_MP", 0, "propertyid" },
+    { "send_MP", 2, "propertyid" },
+    { "getbalance_MP", 1, "propertyid" },
+    { "sendtoowners_MP", 1, "propertyid" },
+    { "getproperty_MP", 0, "propertyid" },
+    { "listtransactions_MP", 1, "count" },
+    { "listtransactions_MP", 2, "skip" },
+    { "listtransactions_MP", 3, "startblock" },
+    { "listtransactions_MP", 4, "endblock" },
+    { "getallbalancesforid_MP", 0, "propertyid" },
+    { "listblocktransactions_MP", 0, "index" },
+    { "getorderbook_MP", 0, "propertyid" },
+    { "getorderbook_MP", 1, "propertyid" },
+    { "trade_MP", 1, "propertyidforsale" }, // deprecated
+    { "trade_MP", 3, "propertiddesired" }, // deprecated
+    { "trade_MP", 5, "action" }, // deprecated
 };
+// clang-format on
 
 class CRPCConvertTable
 {
 private:
-    std::set<std::pair<std::string, int> > members;
+    std::set<std::pair<std::string, int>> members;
+    std::set<std::pair<std::string, std::string>> membersByName;
 
 public:
     CRPCConvertTable();
 
     bool convert(const std::string& method, int idx) {
         return (members.count(std::make_pair(method, idx)) > 0);
+    }
+    bool convert(const std::string& method, const std::string& name) {
+        return (membersByName.count(std::make_pair(method, name)) > 0);
     }
 };
 
@@ -277,6 +341,8 @@ CRPCConvertTable::CRPCConvertTable()
     for (unsigned int i = 0; i < n_elem; i++) {
         members.insert(std::make_pair(vRPCConvertParams[i].methodName,
                                       vRPCConvertParams[i].paramIdx));
+        membersByName.insert(std::make_pair(vRPCConvertParams[i].methodName,
+                                            vRPCConvertParams[i].paramName));
     }
 }
 
@@ -290,11 +356,10 @@ UniValue ParseNonRFCJSONValue(const std::string& strVal)
     UniValue jVal;
     if (!jVal.read(std::string("[")+strVal+std::string("]")) ||
         !jVal.isArray() || jVal.size()!=1)
-        throw runtime_error(string("Error parsing JSON:")+strVal);
+        throw std::runtime_error(std::string("Error parsing JSON:")+strVal);
     return jVal[0];
 }
 
-/** Convert strings to command-specific RPC representation */
 UniValue RPCConvertValues(const std::string &strMethod, const std::vector<std::string> &strParams)
 {
     UniValue params(UniValue::VARR);
@@ -308,6 +373,31 @@ UniValue RPCConvertValues(const std::string &strMethod, const std::vector<std::s
         } else {
             // parse string as JSON, insert bool/number/object/etc. value
             params.push_back(ParseNonRFCJSONValue(strVal));
+        }
+    }
+
+    return params;
+}
+
+UniValue RPCConvertNamedValues(const std::string &strMethod, const std::vector<std::string> &strParams)
+{
+    UniValue params(UniValue::VOBJ);
+
+    for (const std::string &s: strParams) {
+        size_t pos = s.find('=');
+        if (pos == std::string::npos) {
+            throw(std::runtime_error("No '=' in named argument '"+s+"', this needs to be present for every argument (even if it is empty)"));
+        }
+
+        std::string name = s.substr(0, pos);
+        std::string value = s.substr(pos+1);
+
+        if (!rpcCvtTable.convert(strMethod, name)) {
+            // insert string value directly
+            params.pushKV(name, value);
+        } else {
+            // parse string as JSON, insert bool/number/object/etc. value
+            params.pushKV(name, ParseNonRFCJSONValue(value));
         }
     }
 

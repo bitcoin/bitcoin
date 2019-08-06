@@ -1,12 +1,12 @@
-#include "omnicore/version.h"
+#include <omnicore/version.h>
 
-#include "clientversion.h"
-#include "tinyformat.h"
+#include <clientversion.h>
+#include <tinyformat.h>
 
 #include <string>
 
 #ifdef HAVE_BUILD_INFO
-#    include "build.h"
+#include <obj/build.h>
 #endif
 
 #ifdef OMNICORE_VERSION_STATUS

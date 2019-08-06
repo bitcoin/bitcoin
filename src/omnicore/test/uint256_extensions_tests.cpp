@@ -1,7 +1,7 @@
-#include "omnicore/uint256_extensions.h"
+#include <omnicore/uint256_extensions.h>
 
-#include "arith_uint256.h"
-#include "test/test_bitcoin.h"
+#include <arith_uint256.h>
+#include <test/test_bitcoin.h>
 
 #include <boost/test/unit_test.hpp>
 

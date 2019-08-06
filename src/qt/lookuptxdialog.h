@@ -2,8 +2,10 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef LOOKUPTXDIALOG_H
-#define LOOKUPTXDIALOG_H
+#ifndef BITCOIN_QT_LOOKUPTXDIALOG_H
+#define BITCOIN_QT_LOOKUPTXDIALOG_H
+
+class WalletModel;
 
 #include <QDialog>
 
@@ -25,6 +27,7 @@ public:
     explicit LookupTXDialog(QWidget *parent = 0);
     ~LookupTXDialog();
 
+    void setWalletModel(WalletModel *model);
     void searchTX();
 
 public Q_SLOTS:
@@ -32,10 +35,11 @@ public Q_SLOTS:
 
 private:
     Ui::LookupTXDialog *ui;
+    WalletModel *walletModel;
 
 Q_SIGNALS:
     // Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);
 };
 
-#endif // LOOKUPTXDIALOG_H
+#endif // BITCOIN_QT_LOOKUPTXDIALOG_H

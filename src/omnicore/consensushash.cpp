@@ -4,17 +4,16 @@
  * This file contains the function to generate consensus hashes.
  */
 
-#include "omnicore/consensushash.h"
-#include "omnicore/dbspinfo.h"
-#include "omnicore/dex.h"
-#include "omnicore/mdex.h"
-#include "omnicore/log.h"
-#include "omnicore/omnicore.h"
-#include "omnicore/parse_string.h"
-#include "omnicore/sp.h"
+#include <omnicore/consensushash.h>
+#include <omnicore/dbspinfo.h>
+#include <omnicore/dex.h>
+#include <omnicore/mdex.h>
+#include <omnicore/log.h>
+#include <omnicore/parse_string.h>
+#include <omnicore/sp.h>
 
-#include "arith_uint256.h"
-#include "uint256.h"
+#include <arith_uint256.h>
+#include <uint256.h>
 
 #include <stdint.h>
 #include <algorithm>
@@ -30,11 +29,11 @@ bool ShouldConsensusHashBlock(int block) {
         return true;
     }
 
-    if (!mapArgs.count("-omnishowblockconsensushash")) {
+    if (!gArgs.IsArgSet("-omnishowblockconsensushash")) {
         return false;
     }
 
-    const std::vector<std::string>& vecBlocks = mapMultiArgs["-omnishowblockconsensushash"];
+    const std::vector<std::string>& vecBlocks = gArgs.GetArgs("-omnishowblockconsensushash");
     for (std::vector<std::string>::const_iterator it = vecBlocks.begin(); it != vecBlocks.end(); ++it) {
         int64_t paramBlock = StrToInt64(*it, false);
         if (paramBlock < 1) continue; // ignore non numeric values

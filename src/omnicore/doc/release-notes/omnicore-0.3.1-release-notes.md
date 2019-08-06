@@ -1,7 +1,7 @@
 Omni Core v0.3.1
 ================
 
-v0.3.1 is a minor release and not consensus critical in terms of the Omni Layer protocol rules. Besides other improvemens, this release provides two new RPCs to create funded transactions, two new RPCs to query token wallet balances, and signficant stability and performance gains of Omni Core.
+v0.3.1 is a minor release and not consensus critical in terms of the Omni Layer protocol rules. Besides other improvemens, this release provides two new RPCs to create funded transactions, two new RPCs to query token wallet balances, and significant stability and performance gains of Omni Core.
 
 An upgrade is highly recommended, but not required, if you are using Omni Core 0.3.0.
 
@@ -33,7 +33,7 @@ Table of contents
   - [Properly restore state, when rolling back blocks](#properly-restore-state-when-rolling-back-blocks)
   - [Avoid deadlock, when parsing transactions](#avoid-deadlock-when-parsing-transactions)
   - [Update checkpoints up to block 520000](#update-checkpoints-up-to-block-520000)
-  - [Internal preperations for native Segregated Witness support](#internal-preperations-for-native-segregated-witness-support)
+  - [Internal preparations for native Segregated Witness support](#internal-preparations-for-native-segregated-witness-support)
   - [Improved internal database structure](#improved-internal-database-structure)
 - [Change log](#change-log)
 - [Credits](#credits)
@@ -253,7 +253,7 @@ When no explicit recipient is given in transactions such as Simple Sends, the tr
 Always show frozen balance in balance RPCs
 ------------------------------------------
 
-When queriying balances, previously the field "frozen" was only shown, when there were actually frozen tokens. The field is now always returned, even if there are no frozen tokens, to make an integration easier and more forseeable.
+When queriying balances, previously the field "frozen" was only shown, when there were actually frozen tokens. The field is now always returned, even if there are no frozen tokens, to make an integration easier and more foreseeable.
 
 Add "name" field to "omni_getallbalancesforaddress"
 ---------------------------------------------------
@@ -283,7 +283,7 @@ Additionally state is no longer persisted before the first Omni Layer transactio
 Properly restore state, when rolling back blocks
 ------------------------------------------------
 
-There was an issue, which caused the client to reparse all Omni Layer transactions from the very first one, when blocks where rolled back, e.g. due to corrupted persistence files. This is a very time-consuming task and not necesary. In this release, the behavior was fixed and state is properly rolled back up to 50 blocks in the past, which significantly improves robustness of the client.
+There was an issue, which caused the client to reparse all Omni Layer transactions from the very first one, when blocks where rolled back, e.g. due to corrupted persistence files. This is a very time-consuming task and not necessary. In this release, the behavior was fixed and state is properly rolled back up to 50 blocks in the past, which significantly improves robustness of the client.
 
 Avoid deadlock, when parsing transactions
 -----------------------------------------
@@ -297,14 +297,14 @@ Update checkpoints up to block 520000
 
 Two new consensus state checkpoints were added to this release, to ensure the user has no faulty database.
 
-Internal preperations for native Segregated Witness support
+Internal preparations for native Segregated Witness support
 -----------------------------------------------------------
 
 Omni Core and the Omni Layer support Segregated Witness scripts wrapped as script hash since the beginning, which can provide a significant cost saving.
 
 However, there is no support for native Segregated Witness scripts, which are idenifiable by their bech32 encoding, yet.
 
-This release includes internal preperations for native Segregated Witness scripts to pave the way for full support.
+This release includes internal preparations for native Segregated Witness scripts to pave the way for full support.
 
 Improved internal database structure
 ------------------------------------

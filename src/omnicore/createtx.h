@@ -9,7 +9,7 @@ class CScript;
 class CTxOut;
 class uint256;
 
-#include "script/standard.h"
+#include <script/standard.h>
 
 #include <stdint.h>
 #include <string>

@@ -2,33 +2,34 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "metadexdialog.h"
-#include "ui_metadexdialog.h"
+#include <qt/metadexdialog.h>
+#include <qt/forms/ui_metadexdialog.h>
 
-#include "omnicore_qtutils.h"
+#include <qt/omnicore_qtutils.h>
 
-#include "clientmodel.h"
-#include "walletmodel.h"
+#include <qt/clientmodel.h>
+#include <qt/walletmodel.h>
 
-#include "omnicore/createpayload.h"
-#include "omnicore/dbtradelist.h"
-#include "omnicore/errors.h"
-#include "omnicore/mdex.h"
-#include "omnicore/omnicore.h"
-#include "omnicore/parse_string.h"
-#include "omnicore/pending.h"
-#include "omnicore/rpctxobject.h"
-#include "omnicore/rules.h"
-#include "omnicore/sp.h"
-#include "omnicore/tally.h"
-#include "omnicore/uint256_extensions.h"
-#include "omnicore/utilsbitcoin.h"
-#include "omnicore/wallettxbuilder.h"
-#include "omnicore/walletutils.h"
+#include <omnicore/createpayload.h>
+#include <omnicore/dbtradelist.h>
+#include <omnicore/errors.h>
+#include <omnicore/mdex.h>
+#include <omnicore/omnicore.h>
+#include <omnicore/parse_string.h>
+#include <omnicore/pending.h>
+#include <omnicore/rpctxobject.h>
+#include <omnicore/rules.h>
+#include <omnicore/sp.h>
+#include <omnicore/tally.h>
+#include <omnicore/uint256_extensions.h>
+#include <omnicore/utilsbitcoin.h>
+#include <omnicore/wallettxbuilder.h>
+#include <omnicore/walletutils.h>
 
-#include "amount.h"
-#include "sync.h"
-#include "uint256.h"
+#include <amount.h>
+#include <key_io.h>
+#include <sync.h>
+#include <uint256.h>
 // TODO #include "wallet_ismine.h"
 
 #include <boost/lexical_cast.hpp>
@@ -51,15 +52,14 @@
 #include <QWidget>
 
 using std::ostringstream;
-using std::string;
 
 using namespace mastercore;
 
 MetaDExDialog::MetaDExDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::MetaDExDialog),
-    clientModel(0),
-    walletModel(0),
+    clientModel(nullptr),
+    walletModel(nullptr),
     global_metadex_market(3)
 {
     ui->setupUi(this);
@@ -79,17 +79,17 @@ MetaDExDialog::MetaDExDialog(QWidget *parent) :
     ui->sellList->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui->sellList->setSelectionMode(QAbstractItemView::SingleSelection);
 
-    connect(ui->comboPairTokenA, SIGNAL(activated(int)), this, SLOT(SwitchMarket()));
-    connect(ui->comboPairTokenB, SIGNAL(activated(int)), this, SLOT(SwitchMarket()));
-    connect(ui->comboAddress, SIGNAL(activated(int)), this, SLOT(UpdateBalance()));
-    connect(ui->chkTestEco, SIGNAL(clicked(bool)), this, SLOT(FullRefresh()));
-    connect(ui->buttonInvertPair, SIGNAL(clicked(bool)), this, SLOT(InvertPair()));
-    connect(ui->buttonTradeHistory, SIGNAL(clicked(bool)), this, SLOT(ShowHistory()));
-    connect(ui->sellAmountSaleLE, SIGNAL(textEdited(const QString &)), this, SLOT(RecalcSellValues()));
-    connect(ui->sellAmountDesiredLE, SIGNAL(textEdited(const QString &)), this, SLOT(RecalcSellValues()));
-    connect(ui->sellUnitPriceLE, SIGNAL(textEdited(const QString &)), this, SLOT(RecalcSellValues()));
-    connect(ui->sellList, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(ShowDetails()));
-    connect(ui->sellButton, SIGNAL(clicked()), this, SLOT(sendTrade()));
+    connect(ui->comboPairTokenA, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &MetaDExDialog::SwitchMarket);
+    connect(ui->comboPairTokenB, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &MetaDExDialog::SwitchMarket);
+    connect(ui->comboAddress, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &MetaDExDialog::UpdateBalance);
+    connect(ui->chkTestEco, &QCheckBox::clicked, this, &MetaDExDialog::FullRefresh);
+    connect(ui->buttonInvertPair, &QPushButton::clicked, this, &MetaDExDialog::InvertPair);
+    connect(ui->buttonTradeHistory, &QPushButton::clicked, this, &MetaDExDialog::ShowHistory);
+    connect(ui->sellAmountSaleLE, &QLineEdit::textEdited, this, &MetaDExDialog::RecalcSellValues);
+    connect(ui->sellAmountDesiredLE, &QLineEdit::textEdited, this, &MetaDExDialog::RecalcSellValues);
+    connect(ui->sellUnitPriceLE, &QLineEdit::textEdited, this, &MetaDExDialog::RecalcSellValues);
+    connect(ui->sellList, &QTableView::doubleClicked, this, &MetaDExDialog::ShowDetails);
+    connect(ui->sellButton, &QPushButton::clicked, this, &MetaDExDialog::sendTrade);
 
     FullRefresh();
 }
@@ -116,10 +116,10 @@ uint32_t MetaDExDialog::GetPropDesired()
 void MetaDExDialog::setClientModel(ClientModel *model)
 {
     this->clientModel = model;
-    if (NULL != model) {
-        connect(model, SIGNAL(refreshOmniState()), this, SLOT(UpdateOffers()));
-        connect(model, SIGNAL(refreshOmniBalance()), this, SLOT(BalanceOrderRefresh()));
-        connect(model, SIGNAL(reinitOmniState()), this, SLOT(FullRefresh()));
+    if (nullptr != model) {
+        connect(model, &ClientModel::refreshOmniState, this, &MetaDExDialog::UpdateOffers);
+        connect(model, &ClientModel::refreshOmniBalance, this, &MetaDExDialog::BalanceOrderRefresh);
+        connect(model, &ClientModel::reinitOmniState, this, &MetaDExDialog::FullRefresh);
     }
 }
 
@@ -127,9 +127,6 @@ void MetaDExDialog::setWalletModel(WalletModel *model)
 {
     // use wallet model to get visibility into BTC balance changes for fees
     this->walletModel = model;
-    if (model != NULL) {
-       connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(UpdateBalances()));
-    }
 }
 
 void MetaDExDialog::PopulateAddresses()
@@ -140,14 +137,15 @@ void MetaDExDialog::PopulateAddresses()
         uint32_t propertyId = GetPropForSale();
         QString currentSetAddress = ui->comboAddress->currentText();
         ui->comboAddress->clear();
-        for (std::unordered_map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
-            string address = (my_it->first).c_str();
+        for (std::unordered_map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
+            std::string address = (my_it->first).c_str();
+            int isMyAddress = IsMyAddress(address, &walletModel->wallet());
             uint32_t id;
             (my_it->second).init();
             while (0 != (id = (my_it->second).next())) {
                 if (id == propertyId) {
                     if (!GetAvailableTokenBalance(address, propertyId)) continue; // ignore this address, has no available balance to spend
-                    if (IsMyAddress(address)) ui->comboAddress->addItem((my_it->first).c_str()); // only include wallet addresses
+                    if (isMyAddress) ui->comboAddress->addItem((my_it->first).c_str()); // only include wallet addresses
                 }
             }
         }
@@ -169,14 +167,14 @@ void MetaDExDialog::UpdateProperties()
     for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
         uint32_t propertyId = my_it->first;
         if ((testEco && !isTestEcosystemProperty(propertyId)) || (!testEco && isTestEcosystemProperty(propertyId))) continue;
-        string spName;
+        std::string spName;
         spName = getPropertyName(propertyId).c_str();
         uint32_t nameMax = 30;
         if (isTestEcosystemProperty(propertyId)) nameMax = 20;
         if (spName.size()>nameMax) {
             spName = spName.substr(0,nameMax)+"...";
         }
-        string spId = strprintf("%d", propertyId);
+        std::string spId = strprintf("%d", propertyId);
         spName += " (#" + spId + ")";
         ui->comboPairTokenA->addItem(spName.c_str(),spId.c_str());
         ui->comboPairTokenB->addItem(spName.c_str(),spId.c_str());
@@ -210,7 +208,7 @@ void MetaDExDialog::UpdateBalance()
     } else {
         uint32_t propertyId = GetPropForSale();
         int64_t balanceAvailable = GetAvailableTokenBalance(currentSetAddress.toStdString(), propertyId);
-        string sellBalStr;
+        std::string sellBalStr;
         if (isPropertyDivisible(propertyId)) {
             sellBalStr = FormatDivisibleMP(balanceAvailable);
         } else {
@@ -218,7 +216,7 @@ void MetaDExDialog::UpdateBalance()
         }
         ui->lblBalance->setText(QString::fromStdString("Your balance: " + sellBalStr + getTokenLabel(propertyId)));
         // warning label will be lit if insufficient fees for MetaDEx payload (28 bytes)
-        if (CheckFee(currentSetAddress.toStdString(), 28)) {
+        if (CheckFee(walletModel->wallet(), currentSetAddress.toStdString(), 28)) {
             ui->lblFeeWarning->setVisible(false);
         } else {
             ui->lblFeeWarning->setText("WARNING: The address is low on BTC for transaction fees.");
@@ -360,7 +358,7 @@ void MetaDExDialog::UpdateOffers()
             for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it) { // multiple sell offers can exist at the same price, sum them for the UI
                 const CMPMetaDEx& obj = *it;
                 if ((obj.getDesProperty() != GetPropDesired())) continue; // not the property we're interested in
-                if (IsMyAddress(obj.getAddr())) includesMe = true;
+                if (IsMyAddress(obj.getAddr(), &walletModel->wallet())) includesMe = true;
                 std::string strAvail;
                 if (divisSale) {
                     strAvail = FormatDivisibleShortMP(obj.getAmountRemaining());
@@ -375,7 +373,7 @@ void MetaDExDialog::UpdateOffers()
                 }
                 std::string priceStr = StripTrailingZeros(obj.displayFullUnitPrice());
                 if (priceStr.length() > 10) {
-                    priceStr.resize(10); // keep price in UI managable
+                    priceStr.resize(10); // keep price in UI manageable,
                     priceStr += "...";
                 }
                 AddRow(includesMe, obj.getHash().GetHex(), obj.getAddr(), priceStr, strAvail, strDesired);
@@ -385,7 +383,7 @@ void MetaDExDialog::UpdateOffers()
 }
 
 // This function adds a row to the buy or sell offer list
-void MetaDExDialog::AddRow(bool includesMe, const string& txid, const string& seller, const string& price, const string& available, const string& desired)
+void MetaDExDialog::AddRow(bool includesMe, const std::string& txid, const std::string& seller, const std::string& price, const std::string& available, const std::string& desired)
 {
     int workingRow;
     workingRow = ui->sellList->rowCount();
@@ -420,14 +418,14 @@ void MetaDExDialog::AddRow(bool includesMe, const string& txid, const string& se
 // Displays details of the selected trade and any associated matches
 void MetaDExDialog::ShowDetails()
 {
-    UniValue txobj(UniValue::VOBJ);;
+    UniValue txobj(UniValue::VOBJ);
     uint256 txid;
     txid.SetHex(ui->sellList->item(ui->sellList->currentRow(),0)->text().toStdString());
     std::string strTXText;
 
     if (!txid.IsNull()) {
         // grab extended trade details via the RPC populator
-        int rc = populateRPCTransactionObject(txid, txobj, "", true);
+        int rc = populateRPCTransactionObject(txid, txobj, "", true, "", &walletModel->wallet());
         if (rc >= 0) strTXText = txobj.write(true);
     }
 
@@ -459,7 +457,7 @@ void MetaDExDialog::sendTrade()
 {
 //    int blockHeight = GetHeight();
 
-    string strFromAddress = ui->comboAddress->currentText().toStdString();
+    std::string strFromAddress = ui->comboAddress->currentText().toStdString();
     int64_t amountForSale = 0;
     int64_t amountDesired = 0;
     amountForSale = StrToInt64(ui->sellAmountSaleLE->text().toStdString(),isPropertyDivisible(GetPropForSale()));
@@ -475,8 +473,8 @@ void MetaDExDialog::sendTrade()
     if (divisible) {
         size_t pos = strAmount.find(".");
         if (pos!=std::string::npos) {
-            string tmpStrAmount = strAmount.substr(0,pos);
-            string strMsgText = "The amount entered contains a decimal however the property being transacted is indivisible.\n\nThe amount entered will be truncated as follows:\n";
+            std::string tmpStrAmount = strAmount.substr(0,pos);
+            std::string strMsgText = "The amount entered contains a decimal however the property being transacted is indivisible.\n\nThe amount entered will be truncated as follows:\n";
             strMsgText += "Original amount entered: " + strAmount + "\nAmount that will be used: " + tmpStrAmount + "\n\n";
             strMsgText += "Do you still wish to proceed with the transaction?";
             QString msgText = QString::fromStdString(strMsgText);
@@ -545,11 +543,11 @@ void MetaDExDialog::sendTrade()
     // request the wallet build the transaction (and if needed commit it)
     uint256 txid;
     std::string rawHex;
-    int result = WalletTxBuilder(strFromAddress, "", "", 0, payload, txid, rawHex, autoCommit);
+    int result = WalletTxBuilder(strFromAddress, "", "", 0, payload, txid, rawHex, autoCommit, &walletModel->wallet());
 
     // check error and return the txid (or raw hex depending on autocommit)
     if (result != 0) {
-        string strError = error_str(result);
+        std::string strError = error_str(result);
         QMessageBox::critical( this, "MetaDEx transaction failed",
         "The MetaDEx transaction has failed.\n\nThe error code was: " + QString::number(result) + "\nThe error message was:\n" + QString::fromStdString(strError));
         return;

@@ -41,9 +41,61 @@
         <source>&amp;Delete</source>
         <translation>مٹا</translation>
     </message>
+    <message>
+        <source>Choose the address to send coins to</source>
+        <translation>کوئین وصول کرنے والے کا پتہ</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation>کوئین وصول کرنے والے کا پتہ</translation>
+    </message>
+    <message>
+        <source>C&amp;hoose</source>
+        <translation>چننا</translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>پتے ارسال کیے جارہے ہیں</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>پتے موصول ہورہے ہیں</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;پتا نقل کریں</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Label</source>
+        <translation>&amp;لیبل نقل کریں</translation>
+    </message>
+    <message>
+        <source>&amp;Edit</source>
+        <translation>&amp;تدوین</translation>
+    </message>
+    <message>
+        <source>Export Address List</source>
+        <translation>پتا فہرست ایکسپورٹ کریں</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>کاما سے جدا فائلیں (*.csv)</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>ایکسپورٹ ناکام ہوا</translation>
+    </message>
     </context>
 <context>
     <name>AddressTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>لیبل</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation> پتہ</translation>
+    </message>
     </context>
 <context>
     <name>AskPassphraseDialog</name>
@@ -110,10 +162,17 @@
     </message>
     </context>
 <context>
+    <name>ModalOverlay</name>
+    </context>
+<context>
     <name>OpenURIDialog</name>
     </context>
 <context>
     <name>OptionsDialog</name>
+    <message>
+        <source>Error</source>
+        <translation>نقص</translation>
+    </message>
     </context>
 <context>
     <name>OverviewPage</name>
@@ -132,6 +191,9 @@
     </message>
     </context>
 <context>
+    <name>QObject::QObject</name>
+    </context>
+<context>
     <name>QRImageWidget</name>
     </context>
 <context>
@@ -146,9 +208,21 @@
         <source>Copy &amp;Address</source>
         <translation>کاپی پتہ</translation>
     </message>
+    <message>
+        <source>Address</source>
+        <translation> پتہ</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>لیبل</translation>
+    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>لیبل</translation>
+    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -191,12 +265,35 @@
     </context>
 <context>
     <name>TransactionTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>لیبل</translation>
+    </message>
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>کاما سے جدا فائلیں (*.csv)</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>لیبل</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation> پتہ</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>ایکسپورٹ ناکام ہوا</translation>
+    </message>
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
+    </context>
+<context>
+    <name>WalletController</name>
     </context>
 <context>
     <name>WalletFrame</name>

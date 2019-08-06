@@ -1,18 +1,18 @@
-#include "omnicore/dbspinfo.h"
+#include <omnicore/dbspinfo.h>
 
-#include "omnicore/dbbase.h"
-#include "omnicore/log.h"
-#include "omnicore/omnicore.h"
+#include <omnicore/dbbase.h>
+#include <omnicore/log.h>
 
-#include "base58.h"
-#include "clientversion.h"
-#include "serialize.h"
-#include "streams.h"
-#include "tinyformat.h"
-#include "uint256.h"
+#include <base58.h>
+#include <clientversion.h>
+#include <key_io.h>
+#include <serialize.h>
+#include <streams.h>
+#include <tinyformat.h>
+#include <uint256.h>
 
-#include "leveldb/db.h"
-#include "leveldb/write_batch.h"
+#include <leveldb/db.h>
+#include <leveldb/write_batch.h>
 
 #include <boost/filesystem/path.hpp>
 
@@ -91,7 +91,7 @@ CMPSPInfo::CMPSPInfo(const boost::filesystem::path& path, bool fWipe)
     PrintToConsole("Loading smart property database: %s\n", status.ToString());
 
     // special cases for constant SPs OMN and TOMN
-    implied_omni.issuer = ExodusAddress().ToString();
+    implied_omni.issuer = EncodeDestination(ExodusAddress());
     implied_omni.updateIssuer(0, 0, implied_omni.issuer);
     implied_omni.prop_type = MSC_PROPERTY_TYPE_DIVISIBLE;
     implied_omni.num_tokens = 700000;
@@ -101,7 +101,7 @@ CMPSPInfo::CMPSPInfo(const boost::filesystem::path& path, bool fWipe)
     implied_omni.url = "http://www.omnilayer.org";
     implied_omni.data = "Omni tokens serve as the binding between Bitcoin, smart properties and contracts created on the Omni Layer.";
 
-    implied_tomni.issuer = ExodusAddress().ToString();
+    implied_tomni.issuer = EncodeDestination(ExodusAddress());
     implied_tomni.updateIssuer(0, 0, implied_tomni.issuer);
     implied_tomni.prop_type = MSC_PROPERTY_TYPE_DIVISIBLE;
     implied_tomni.num_tokens = 700000;
@@ -165,7 +165,7 @@ bool CMPSPInfo::updateSP(uint32_t propertyId, const Entry& info)
 
     // DB value for property entry
     CDataStream ssSpValue(SER_DISK, CLIENT_VERSION);
-    ssSpValue.reserve(ssSpValue.GetSerializeSize(info));
+    ssSpValue.reserve(::GetSerializeSize(info, CLIENT_VERSION));
     ssSpValue << info;
     leveldb::Slice slSpValue(&ssSpValue[0], ssSpValue.size());
 
@@ -217,7 +217,7 @@ uint32_t CMPSPInfo::putSP(uint8_t ecosystem, const Entry& info)
 
     // DB value for property entry
     CDataStream ssSpValue(SER_DISK, CLIENT_VERSION);
-    ssSpValue.reserve(ssSpValue.GetSerializeSize(info));
+    ssSpValue.reserve(::GetSerializeSize(info, CLIENT_VERSION));
     ssSpValue << info;
     leveldb::Slice slSpValue(&ssSpValue[0], ssSpValue.size());
 
@@ -228,7 +228,7 @@ uint32_t CMPSPInfo::putSP(uint8_t ecosystem, const Entry& info)
 
     // DB value for identifier
     CDataStream ssTxValue(SER_DISK, CLIENT_VERSION);
-    ssTxValue.reserve(ssSpValue.GetSerializeSize(propertyId));
+    ssTxValue.reserve(::GetSerializeSize(propertyId, CLIENT_VERSION));
     ssTxValue << propertyId;
     leveldb::Slice slTxValue(&ssTxValue[0], ssTxValue.size());
 
@@ -428,7 +428,7 @@ void CMPSPInfo::setWatermark(const uint256& watermark)
     leveldb::Slice slKey(&ssKey[0], ssKey.size());
 
     CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-    ssValue.reserve(ssValue.GetSerializeSize(watermark));
+    ssValue.reserve(::GetSerializeSize(watermark, CLIENT_VERSION));
     ssValue << watermark;
     leveldb::Slice slValue(&ssValue[0], ssValue.size());
 

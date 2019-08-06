@@ -313,7 +313,7 @@ This change is identified by `"featureid": 6` and labeled by the GUI as `"Send A
 Don't allow ecosystem crossovers for crowdsales
 -----------------------------------------------
 
-A design goal of different ecosystems was to seperate both systems cleanly. However, this was not enforced for crowdsales, and it was possible to create crowdsales, which issue test ecosystem tokens in exchange for main ecosystem tokens and vice versa.
+A design goal of different ecosystems was to separate both systems cleanly. However, this was not enforced for crowdsales, and it was possible to create crowdsales, which issue test ecosystem tokens in exchange for main ecosystem tokens and vice versa.
 
 After the feature activation, the tokens to issue via crowdsale must be in the same ecosystem as the tokens desired.
 
@@ -487,7 +487,7 @@ The following list includes relevant pull requests merged into this release:
 - #149 Update Omni Core API documentation
 - #156 Move simple send logic and friends to the other logic methods
 - #159 Implement and switch to Feature-Activation-By-Message
-- #161 Don't spam log about non-sequential seqence numbers
+- #161 Don't spam log about non-sequential sequence numbers
 - #163 Prepare deactivation of "grant tokens" side effects
 - #164 Add hidden RPC command to activate features
 - #158 Trigger UI updates after DEx payments and Exodus purchases

@@ -4,17 +4,18 @@
  * This file contains parsing and transaction decoding related functions.
  */
 
-#include "omnicore/parsing.h"
+#include <omnicore/parsing.h>
 
-#include "omnicore/log.h"
-#include "omnicore/script.h"
+#include <omnicore/log.h>
+#include <omnicore/script.h>
 
-#include "base58.h"
-#include "uint256.h"
-#include "utilstrencodings.h"
+#include <base58.h>
+#include <key_io.h>
+#include <uint256.h>
+#include <util/strencodings.h>
 
 // TODO: use crypto/sha256 instead of openssl
-#include "openssl/sha.h"
+#include <openssl/sha.h>
 
 #include <boost/algorithm/string.hpp>
 
@@ -25,7 +26,7 @@
 #include <vector>
 
 /**
- * Checks, wether the system uses big or little endian.
+ * Checks whether the system uses big or little endian.
  */
 static bool isBigEndian()
 {
@@ -39,7 +40,7 @@ static bool isBigEndian()
 }
 
 /**
- * Swaps byte order of 16 bit wide numbers on little-endian sytems.
+ * Swaps byte order of 16 bit wide numbers on little-endian systems.
  */
 void SwapByteOrder16(uint16_t& us)
 {
@@ -50,7 +51,7 @@ void SwapByteOrder16(uint16_t& us)
 }
 
 /**
- * Swaps byte order of 32 bit wide numbers on little-endian sytems.
+ * Swaps byte order of 32 bit wide numbers on little-endian systems.
  */
 void SwapByteOrder32(uint32_t& ui)
 {
@@ -63,7 +64,7 @@ void SwapByteOrder32(uint32_t& ui)
 }
 
 /**
- * Swaps byte order of 64 bit wide numbers on little-endian sytems.
+ * Swaps byte order of 64 bit wide numbers on little-endian systems.
  */
 void SwapByteOrder64(uint64_t& ull)
 {
@@ -84,15 +85,12 @@ void SwapByteOrder64(uint64_t& ull)
  */
 std::string HashToAddress(unsigned char version, const uint160& hash)
 {
-    CBitcoinAddress address;
     if (version == Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS)[0]) {
-        CKeyID keyId = hash;
-        address.Set(keyId);
-        return address.ToString();
+        CKeyID keyId(hash);
+        return EncodeDestination(keyId);
     } else if (version == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS)[0]) {
-        CScriptID scriptId = hash;
-        address.Set(scriptId);
-        return address.ToString();
+        CScriptID scriptId(hash);
+        return EncodeDestination(scriptId);
     }
 
     return "";

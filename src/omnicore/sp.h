@@ -1,10 +1,10 @@
 #ifndef OMNICORE_SP_H
 #define OMNICORE_SP_H
 
-#include "omnicore/dbbase.h"
-#include "omnicore/dbspinfo.h"
-#include "omnicore/log.h"
-#include "omnicore/omnicore.h"
+#include <omnicore/dbbase.h>
+#include <omnicore/dbspinfo.h>
+#include <omnicore/log.h>
+#include <omnicore/omnicore.h>
 
 class CBlockIndex;
 class uint256;
@@ -37,7 +37,7 @@ private:
     int64_t u_created;
     int64_t i_created;
 
-    uint256 txid; // NOTE: not persisted as it doesnt seem used
+    uint256 txid; // NOTE: not persisted as it doesn't seem used
 
     // Schema:
     //   txid -> amount invested, crowdsale deadline, user issued tokens, issuer issued tokens

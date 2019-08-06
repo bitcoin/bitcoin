@@ -2,7 +2,7 @@
 #define OMNICORE_VERSION_H
 
 #if defined(HAVE_CONFIG_H)
-#include "config/bitcoin-config.h"
+#include <config/bitcoin-config.h>
 #else
 
 //
@@ -21,7 +21,7 @@
 #define OMNICORE_VERSION_PATCH       0
 
 // Non-public build number/revision (usually zero)
-#define OMNICORE_VERSION_BUILD       99
+#define OMNICORE_VERSION_BUILD       0
 
 #endif // HAVE_CONFIG_H
 

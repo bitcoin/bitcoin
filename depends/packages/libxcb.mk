@@ -10,6 +10,7 @@ $(package)_config_opts=--disable-static
 endef
 
 define $(package)_preprocess_cmds
+  cp -f $(BASEDIR)/config.guess $(BASEDIR)/config.sub build-aux &&\
   sed "s/pthread-stubs//" -i configure
 endef
 

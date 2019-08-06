@@ -1,9 +1,9 @@
 #ifndef OMNICORE_DBSTOLIST_H
 #define OMNICORE_DBSTOLIST_H
 
-#include "omnicore/dbbase.h"
+#include <omnicore/dbbase.h>
 
-#include "uint256.h"
+#include <uint256.h>
 
 #include <univalue.h>
 
@@ -13,6 +13,10 @@
 
 #include <string>
 
+namespace interfaces {
+class Wallet;
+} // namespace interfaces
+
 /** LevelDB based storage for STO recipients.
  */
 class CMPSTOList : public CDBBase
@@ -21,8 +25,8 @@ public:
     CMPSTOList(const boost::filesystem::path& path, bool fWipe);
     virtual ~CMPSTOList();
 
-    void getRecipients(const uint256 txid, std::string filterAddress, UniValue* recipientArray, uint64_t* total, uint64_t* numRecipients);
-    std::string getMySTOReceipts(std::string filterAddress);
+    void getRecipients(const uint256 txid, std::string filterAddress, UniValue* recipientArray, uint64_t* total, uint64_t* numRecipients, interfaces::Wallet* iWallet = nullptr);
+    std::string getMySTOReceipts(std::string filterAddress, interfaces::Wallet& iWallet);
     
     /**
      * This function deletes records of STO receivers above/equal to a specific block from the STO database.

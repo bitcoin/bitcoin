@@ -22,7 +22,7 @@ Table of contents
 - [Consensus affecting changes](#consensus-affecting-changes)
   - [Trading of all pairs on the Distributed Exchange](#trading-of-all-pairs-on-the-distributed-exchange)
   - [Fee distribution system on the Distributed Exchange](#fee-distribution-system-on-the-distributed-exchange)
-  - [Send to Owners cross property suport](#send-to-owners-cross-property-support)
+  - [Send to Owners cross property support](#send-to-owners-cross-property-support)
 - [Other notable changes](#other-notable-changes)
   - [Raw payload creation API](#raw-payload-creation-api)
   - [Other API extensions](#other-api-extensions)

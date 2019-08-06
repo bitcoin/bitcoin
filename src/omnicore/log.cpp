@@ -1,8 +1,9 @@
-#include "omnicore/log.h"
+#include <omnicore/log.h>
 
-#include "chainparamsbase.h"
-#include "util.h"
-#include "utiltime.h"
+#include <chainparamsbase.h>
+#include <logging.h>
+#include <util/system.h>
+#include <util/time.h>
 
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
@@ -82,8 +83,8 @@ static boost::once_flag debugLogInitFlag = BOOST_ONCE_INIT;
  * We use boost::call_once() to make sure these are initialized
  * in a thread-safe manner the first time called:
  */
-static FILE* fileout = NULL;
-static boost::mutex* mutexDebugLog = NULL;
+static FILE* fileout = nullptr;
+static boost::mutex* mutexDebugLog = nullptr;
 /** Flag to indicate, whether the Omni Core log file should be reopened. */
 extern std::atomic<bool> fReopenOmniCoreLog;
 /**
@@ -95,11 +96,11 @@ extern std::atomic<bool> fReopenOmniCoreLog;
 static boost::filesystem::path GetLogPath()
 {
     boost::filesystem::path pathLogFile;
-    std::string strLogPath = GetArg("-omnilogfile", "");
+    std::string strLogPath = gArgs.GetArg("-omnilogfile", "");
 
     if (!strLogPath.empty()) {
         pathLogFile = boost::filesystem::path(strLogPath);
-        TryCreateDirectory(pathLogFile.parent_path());
+        TryCreateDirectories(pathLogFile.parent_path());
     } else {
         pathLogFile = GetDataDir() / LOG_FILENAME;
     }
@@ -112,14 +113,14 @@ static boost::filesystem::path GetLogPath()
  */
 static void DebugLogInit()
 {
-    assert(fileout == NULL);
-    assert(mutexDebugLog == NULL);
+    assert(fileout == nullptr);
+    assert(mutexDebugLog == nullptr);
 
     boost::filesystem::path pathDebug = GetLogPath();
     fileout = fopen(pathDebug.string().c_str(), "a");
 
     if (fileout) {
-        setbuf(fileout, NULL); // Unbuffered
+        setbuf(fileout, nullptr); // Unbuffered
     } else {
         PrintToConsole("Failed to open debug log file: %s\n", pathDebug.string());
     }
@@ -132,7 +133,7 @@ static void DebugLogInit()
  */
 static std::string GetTimestamp()
 {
-    return DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime());
+    return FormatISO8601DateTime(GetTime());
 }
 
 /**
@@ -150,15 +151,15 @@ static std::string GetTimestamp()
 int LogFilePrint(const std::string& str)
 {
     int ret = 0; // Number of characters written
-    if (fPrintToConsole) {
+    if (LogInstance().m_print_to_console) {
         // Print to console
         ret = ConsolePrint(str);
     }
-    else if (fPrintToDebugLog && AreBaseParamsConfigured()) {
+    else if (LogInstance().m_print_to_file) {
         static bool fStartedNewLine = true;
         boost::call_once(&DebugLogInit, debugLogInitFlag);
 
-        if (fileout == NULL) {
+        if (fileout == nullptr) {
             return ret;
         }
         boost::mutex::scoped_lock scoped_lock(*mutexDebugLog);
@@ -167,13 +168,13 @@ int LogFilePrint(const std::string& str)
         if (fReopenOmniCoreLog) {
             fReopenOmniCoreLog = false;
             boost::filesystem::path pathDebug = GetLogPath();
-            if (freopen(pathDebug.string().c_str(), "a", fileout) != NULL) {
-                setbuf(fileout, NULL); // Unbuffered
+            if (freopen(pathDebug.string().c_str(), "a", fileout) != nullptr) {
+                setbuf(fileout, nullptr); // Unbuffered
             }
         }
 
         // Printing log timestamps can be useful for profiling
-        if (fLogTimestamps && fStartedNewLine) {
+        if (LogInstance().m_log_timestamps && fStartedNewLine) {
             ret += fprintf(fileout, "%s ", GetTimestamp().c_str());
         }
         if (!str.empty() && str[str.size()-1] == '\n') {
@@ -201,7 +202,7 @@ int ConsolePrint(const std::string& str)
     int ret = 0; // Number of characters written
     static bool fStartedNewLine = true;
 
-    if (fLogTimestamps && fStartedNewLine) {
+    if (LogInstance().m_log_timestamps && fStartedNewLine) {
         ret = fprintf(stdout, "%s %s", GetTimestamp().c_str(), str.c_str());
     } else {
         ret = fwrite(str.data(), 1, str.size(), stdout);
@@ -226,11 +227,11 @@ int ConsolePrint(const std::string& str)
  */
 void InitDebugLogLevels()
 {
-    if (!mapArgs.count("-omnidebug")) {
+    if (!gArgs.IsArgSet("-omnidebug")) {
         return;
     }
 
-    const std::vector<std::string>& debugLevels = mapMultiArgs["-omnidebug"];
+    const std::vector<std::string>& debugLevels = gArgs.GetArgs("-omnidebug");
 
     for (std::vector<std::string>::const_iterator it = debugLevels.begin(); it != debugLevels.end(); ++it) {
         if (*it == "parser_data") msc_debug_parser_data = true;
@@ -317,23 +318,23 @@ void ShrinkDebugLog()
     if (file && boost::filesystem::file_size(pathLog) > LOG_SHRINKSIZE) {
         // Restart the file with some of the end
         char* pch = new char[LOG_BUFFERSIZE];
-        if (NULL != pch) {
+        if (nullptr != pch) {
             fseek(file, -LOG_BUFFERSIZE, SEEK_END);
             int nBytes = fread(pch, 1, LOG_BUFFERSIZE, file);
             fclose(file);
-            file = NULL;
+            file = nullptr;
 
             file = fopen(pathLog.string().c_str(), "w");
             if (file) {
                 fwrite(pch, 1, nBytes, file);
                 fclose(file);
-                file = NULL;
+                file = nullptr;
             }
             delete[] pch;
         }
-    } else if (NULL != file) {
+    } else if (nullptr != file) {
         fclose(file);
-        file = NULL;
+        file = nullptr;
     }
 }
 

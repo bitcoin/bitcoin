@@ -1,9 +1,9 @@
 #ifndef OMNICORE_DBTXLIST_H
 #define OMNICORE_DBTXLIST_H
 
-#include "omnicore/dbbase.h"
+#include <omnicore/dbbase.h>
 
-#include "uint256.h"
+#include <uint256.h>
 
 #include <boost/filesystem/path.hpp>
 
@@ -44,7 +44,7 @@ public:
 
     bool exists(const uint256& txid);
     bool getTX(const uint256& txid, std::string& value);
-    bool getValidMPTX(const uint256& txid, int* block = NULL, unsigned int* type = NULL, uint64_t* nAmended = NULL);
+    bool getValidMPTX(const uint256& txid, int* block = nullptr, unsigned int* type = nullptr, uint64_t* nAmended = nullptr);
 
     std::set<int> GetSeedBlocks(int startHeight, int endHeight);
     void LoadAlerts(int blockHeight);

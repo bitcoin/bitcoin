@@ -4,20 +4,19 @@
  * This file contains DEx logic.
  */
 
-#include "omnicore/dex.h"
+#include <omnicore/dex.h>
 
-#include "omnicore/convert.h"
-#include "omnicore/dbtxlist.h"
-#include "omnicore/errors.h"
-#include "omnicore/log.h"
-#include "omnicore/omnicore.h"
-#include "omnicore/rules.h"
-#include "omnicore/uint256_extensions.h"
+#include <omnicore/convert.h>
+#include <omnicore/dbtxlist.h>
+#include <omnicore/errors.h>
+#include <omnicore/log.h>
+#include <omnicore/rules.h>
+#include <omnicore/uint256_extensions.h>
 
-#include "arith_uint256.h"
-#include "main.h"
-#include "tinyformat.h"
-#include "uint256.h"
+#include <arith_uint256.h>
+#include <validation.h>
+#include <tinyformat.h>
+#include <uint256.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
@@ -59,7 +58,7 @@ CMPOffer* DEx_getOffer(const std::string& addressSeller, uint32_t propertyId)
 
     if (it != my_offers.end()) return &(it->second);
 
-    return NULL;
+    return nullptr;
 }
 
 /**
@@ -86,7 +85,7 @@ CMPAccept* DEx_getAccept(const std::string& addressSeller, uint32_t propertyId, 
 
     if (it != my_accepts.end()) return &(it->second);
 
-    return NULL;
+    return nullptr;
 }
 
 namespace legacy
@@ -206,7 +205,7 @@ int DEx_offerCreate(const std::string& addressSeller, uint32_t propertyId, int64
 }
 
 /**
- * Destorys a sell offer.
+ * Destroys a sell offer.
  *
  * The remaining amount reserved for the offer is returned to the available balance.
  *

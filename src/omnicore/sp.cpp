@@ -1,17 +1,16 @@
 // Smart Properties & Crowd Sales
 
-#include "omnicore/sp.h"
+#include <omnicore/sp.h>
 
-#include "omnicore/dbspinfo.h"
-#include "omnicore/log.h"
-#include "omnicore/omnicore.h"
-#include "omnicore/uint256_extensions.h"
+#include <omnicore/dbspinfo.h>
+#include <omnicore/log.h>
+#include <omnicore/uint256_extensions.h>
 
-#include "arith_uint256.h"
-#include "main.h"
-#include "tinyformat.h"
-#include "uint256.h"
-#include "utiltime.h"
+#include <arith_uint256.h>
+#include <validation.h>
+#include <tinyformat.h>
+#include <uint256.h>
+#include <util/time.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
@@ -98,7 +97,7 @@ CMPCrowd* mastercore::getCrowd(const std::string& address)
 
     if (my_it != my_crowds.end()) return &(my_it->second);
 
-    return (CMPCrowd *)NULL;
+    return static_cast<CMPCrowd*>(nullptr);
 }
 
 bool mastercore::IsPropertyIdValid(uint32_t propertyId)
@@ -151,7 +150,7 @@ bool mastercore::isCrowdsaleActive(uint32_t propertyId)
  * Calculates missing bonus tokens, which are credited to the crowdsale issuer.
  *
  * Due to rounding effects, a crowdsale issuer may not receive the full
- * bonus immediatly. The missing amount is calculated based on the total
+ * bonus immediately. The missing amount is calculated based on the total
  * tokens created and already credited.
  *
  * @param sp        The crowdsale property
@@ -197,7 +196,6 @@ int64_t mastercore::GetMissedIssuerBonus(const CMPSPInfo::Entry& sp, const CMPCr
 }
 
 // calculateFundraiser does token calculations per transaction
-// calcluateFractional does calculations for missed tokens
 void mastercore::calculateFundraiser(bool inflateAmount, int64_t amtTransfer, uint8_t bonusPerc,
         int64_t fundraiserSecs, int64_t currentSecs, int64_t numProps, uint8_t issuerPerc, int64_t totalTokens,
         std::pair<int64_t, int64_t>& tokens, bool& close_crowdsale)
@@ -224,7 +222,7 @@ void mastercore::calculateFundraiser(bool inflateAmount, int64_t amtTransfer, ui
     // Calculate the earlybird percentage to be applied
     arith_uint256 ebPercentage_ = weeks_ * ConvertTo256(bonusPerc);
 
-    // Calcluate the bonus percentage to apply up to percentage_precision number of digits
+    // Calculate the bonus percentage to apply up to percentage_precision number of digits
     arith_uint256 bonusPercentage_ = (precision_ * percentage_precision);
     bonusPercentage_ += ebPercentage_;
     bonusPercentage_ /= percentage_precision;
@@ -263,7 +261,7 @@ void mastercore::calculateFundraiser(bool inflateAmount, int64_t amtTransfer, ui
         arith_uint256 maxCreatable = uint256_const::max_int64 - ConvertTo256(totalTokens);
         arith_uint256 created = createdTokens_int + issuerTokens_int;
 
-        // Calcluate the ratio of tokens for what we can create and apply it
+        // Calculate the ratio of tokens for what we can create and apply it
         arith_uint256 ratio = created * precision_;
         ratio *= satoshi_precision_;
         ratio /= maxCreatable;
@@ -341,7 +339,7 @@ void mastercore::eraseMaxedCrowdsale(const std::string& address, int64_t blockTi
             __func__, address, block, blockTime, crowdsale.getPropertyId(), strMPProperty(crowdsale.getPropertyId()));
 
         if (msc_debug_sp) {
-            PrintToLog("%s(): %s\n", __func__, DateTimeStrFormat("%Y-%m-%d %H:%M:%S", blockTime));
+            PrintToLog("%s(): %s\n", __func__, FormatISO8601DateTime(blockTime));
             PrintToLog("%s(): %s\n", __func__, crowdsale.toString(address));
         }
 
@@ -366,7 +364,7 @@ void mastercore::eraseMaxedCrowdsale(const std::string& address, int64_t blockTi
 
 unsigned int mastercore::eraseExpiredCrowdsale(const CBlockIndex* pBlockIndex)
 {
-    if (pBlockIndex == NULL) return 0;
+    if (pBlockIndex == nullptr) return 0;
 
     const int64_t blockTime = pBlockIndex->GetBlockTime();
     const int blockHeight = pBlockIndex->nHeight;
@@ -382,7 +380,7 @@ unsigned int mastercore::eraseExpiredCrowdsale(const CBlockIndex* pBlockIndex)
                 __func__, address, blockHeight, blockTime, crowdsale.getPropertyId(), strMPProperty(crowdsale.getPropertyId()));
 
             if (msc_debug_sp) {
-                PrintToLog("%s(): %s\n", __func__, DateTimeStrFormat("%Y-%m-%d %H:%M:%S", blockTime));
+                PrintToLog("%s(): %s\n", __func__, FormatISO8601DateTime(blockTime));
                 PrintToLog("%s(): %s\n", __func__, crowdsale.toString(address));
             }
 

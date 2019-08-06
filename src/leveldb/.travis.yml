@@ -1,0 +1,13 @@
+language: cpp
+compiler:
+- clang
+- gcc
+os:
+- linux
+- osx
+sudo: false
+before_install:
+- echo $LANG
+- echo $LC_ALL
+script:
+- make -j 4 check

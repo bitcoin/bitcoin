@@ -4,10 +4,10 @@
  * This file contains certain helpers to access information about Bitcoin.
  */
 
-#include "chain.h"
-#include "chainparams.h"
-#include "main.h"
-#include "sync.h"
+#include <chain.h>
+#include <chainparams.h>
+#include <validation.h>
+#include <sync.h>
 
 #include <stdint.h>
 #include <string>
@@ -36,11 +36,11 @@ uint32_t GetLatestBlockTime()
 }
 
 /**
- * @return The CBlockIndex, or NULL, if the block isn't available.
+ * @return The CBlockIndex, or nullptr, if the block isn't available.
  */
 CBlockIndex* GetBlockIndex(const uint256& hash)
 {
-    CBlockIndex* pBlockIndex = NULL;
+    CBlockIndex* pBlockIndex = nullptr;
     LOCK(cs_main);
     BlockMap::const_iterator it = mapBlockIndex.find(hash);
     if (it != mapBlockIndex.end()) {

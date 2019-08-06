@@ -2,11 +2,11 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TRADEHISTORYDIALOG_H
-#define TRADEHISTORYDIALOG_H
+#ifndef BITCOIN_QT_TRADEHISTORYDIALOG_H
+#define BITCOIN_QT_TRADEHISTORYDIALOG_H
 
-#include "guiutil.h"
-#include "uint256.h"
+#include <qt/guiutil.h>
+#include <uint256.h>
 
 #include <QDialog>
 
@@ -71,6 +71,7 @@ public Q_SLOTS:
 private Q_SLOTS:
     int PopulateTradeHistoryMap();
     void UpdateData();
+    void UpdateTradeHistoryTableSignal();
     void UpdateTradeHistoryTable(bool forceUpdate = false);
     void RepopulateTradeHistoryTable(int hide);
     void ReinitTradeHistoryTable();
@@ -80,4 +81,4 @@ Q_SIGNALS:
     void message(const QString &title, const QString &message, unsigned int style);
 };
 
-#endif // TRADEHISTORYDIALOG_H
+#endif // BITCOIN_QT_TRADEHISTORYDIALOG_H

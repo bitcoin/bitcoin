@@ -1,5 +1,5 @@
-#ifndef OMNICORE_QTUTILS
-#define OMNICORE_QTUTILS
+#ifndef BITCOIN_QT_OMNICORE_QTUTILS_H
+#define BITCOIN_QT_OMNICORE_QTUTILS_H
 
 #include <string>
 
@@ -32,4 +32,4 @@ namespace mastercore
     std::string ReplaceStr(const std::string& findText, const std::string& replaceText, const std::string& inputStr);
 }
 
-#endif // OMNICORE_QTUTILS
+#endif // BITCOIN_QT_OMNICORE_QTUTILS_H

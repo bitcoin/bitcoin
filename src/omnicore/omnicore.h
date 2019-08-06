@@ -1,18 +1,19 @@
 #ifndef OMNICORE_OMNICORE_H
 #define OMNICORE_OMNICORE_H
 
-class CBitcoinAddress;
 class CBlockIndex;
 class CCoinsView;
 class CCoinsViewCache;
 class CTransaction;
+class Coin;
 
-#include "omnicore/log.h"
-#include "omnicore/tally.h"
+#include <omnicore/log.h>
+#include <omnicore/tally.h>
 
-#include "sync.h"
-#include "uint256.h"
-#include "util.h"
+#include <script/standard.h>
+#include <sync.h>
+#include <uint256.h>
+#include <util/system.h>
 
 #include <univalue.h>
 
@@ -108,7 +109,7 @@ enum TransactionType {
 #define OMNI_PROPERTY_MSC   1
 #define OMNI_PROPERTY_TMSC  2
 
-/** Number formating related functions. */
+/** Number formatting related functions. */
 std::string FormatDivisibleMP(int64_t amount, bool fSign = false);
 std::string FormatDivisibleShortMP(int64_t amount);
 std::string FormatIndivisibleMP(int64_t amount);
@@ -118,10 +119,10 @@ std::string FormatMP(uint32_t propertyId, int64_t amount, bool fSign = false);
 std::string FormatShortMP(uint32_t propertyId, int64_t amount);
 
 /** Returns the Exodus address. */
-const CBitcoinAddress ExodusAddress();
+const CTxDestination ExodusAddress();
 
 /** Returns the Exodus crowdsale address. */
-const CBitcoinAddress ExodusCrowdsaleAddress(int nBlock = 0);
+const CTxDestination ExodusCrowdsaleAddress(int nBlock = 0);
 
 /** Returns the marker for class C transactions. */
 const std::vector<unsigned char> GetOmMarker();
@@ -151,16 +152,15 @@ int mastercore_init();
 int mastercore_shutdown();
 
 /** Block and transaction handlers. */
-int mastercore_handler_disc_begin(int nBlockNow, CBlockIndex const * pBlockIndex);
-int mastercore_handler_disc_end(int nBlockNow, CBlockIndex const * pBlockIndex);
+void mastercore_handler_disc_begin(const int nHeight);
 int mastercore_handler_block_begin(int nBlockNow, CBlockIndex const * pBlockIndex);
 int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex, unsigned int);
-bool mastercore_handler_tx(const CTransaction& tx, int nBlock, unsigned int idx, const CBlockIndex* pBlockIndex);
+bool mastercore_handler_tx(const CTransaction& tx, int nBlock, unsigned int idx, const CBlockIndex* pBlockIndex, const std::shared_ptr<std::map<COutPoint, Coin>> removedCoins);
 
 /** Scans for marker and if one is found, add transaction to marker cache. */
-void TryToAddToMarkerCache(const CTransaction& tx);
+void TryToAddToMarkerCache(const CTransactionRef& tx);
 /** Removes transaction from marker cache. */
-void RemoveFromMarkerCache(const CTransaction& tx);
+void RemoveFromMarkerCache(const uint256& txHash);
 /** Checks, if transaction is in marker cache. */
 bool IsInMarkerCache(const uint256& txHash);
 
@@ -193,7 +193,7 @@ uint32_t GetNextPropertyId(bool maineco); // maybe move into sp
 
 CMPTally* getTally(const std::string& address);
 bool update_tally_map(const std::string& who, uint32_t propertyId, int64_t amount, TallyType ttype);
-int64_t getTotalTokens(uint32_t propertyId, int64_t* n_owners_total = NULL);
+int64_t getTotalTokens(uint32_t propertyId, int64_t* n_owners_total = nullptr);
 
 std::string strMPProperty(uint32_t propertyId);
 std::string strTransactionType(uint16_t txType);

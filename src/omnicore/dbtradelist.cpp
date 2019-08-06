@@ -1,19 +1,19 @@
-#include "omnicore/dbtradelist.h"
+#include <omnicore/dbtradelist.h>
 
-#include "omnicore/log.h"
-#include "omnicore/mdex.h"
-#include "omnicore/sp.h"
+#include <omnicore/log.h>
+#include <omnicore/mdex.h>
+#include <omnicore/sp.h>
 
-#include "amount.h"
-#include "uint256.h"
-#include "utilstrencodings.h"
-#include "tinyformat.h"
+#include <amount.h>
+#include <uint256.h>
+#include <util/strencodings.h>
+#include <tinyformat.h>
 
 #include <univalue.h>
 
-#include "leveldb/iterator.h"
-#include "leveldb/slice.h"
-#include "leveldb/status.h"
+#include <leveldb/iterator.h>
+#include <leveldb/slice.h>
+#include <leveldb/status.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem/path.hpp>
@@ -168,20 +168,20 @@ bool CMPTradeList::getMatchingTrades(const uint256& txid, uint32_t propertyId, U
 
         // populate trade object and add to the trade array, correcting for orientation of trade
         UniValue trade(UniValue::VOBJ);
-        trade.push_back(Pair("txid", matchTxid));
-        trade.push_back(Pair("block", blockNum));
+        trade.pushKV("txid", matchTxid);
+        trade.pushKV("block", blockNum);
         if (prop1 == propertyId) {
-            trade.push_back(Pair("address", address1));
-            trade.push_back(Pair("amountsold", strAmount1));
-            trade.push_back(Pair("amountreceived", strAmount2));
-            trade.push_back(Pair("tradingfee", strTradingFee));
+            trade.pushKV("address", address1);
+            trade.pushKV("amountsold", strAmount1);
+            trade.pushKV("amountreceived", strAmount2);
+            trade.pushKV("tradingfee", strTradingFee);
             totalReceived += amount2;
             totalSold += amount1;
         } else {
-            trade.push_back(Pair("address", address2));
-            trade.push_back(Pair("amountsold", strAmount2PlusFee));
-            trade.push_back(Pair("amountreceived", strAmount1));
-            trade.push_back(Pair("tradingfee", FormatMP(prop1, 0))); // not the liquidity taker so no fee for this participant - include attribute for standardness
+            trade.pushKV("address", address2);
+            trade.pushKV("amountsold", strAmount2PlusFee);
+            trade.pushKV("amountreceived", strAmount1);
+            trade.pushKV("tradingfee", FormatMP(prop1, 0)); // not the liquidity taker so no fee for this participant - include attribute for standardness
             totalReceived += amount1;
             totalSold += amount2;
         }
@@ -294,23 +294,23 @@ void CMPTradeList::getTradesForPair(uint32_t propertyIdSideA, uint32_t propertyI
         int64_t blockNum = boost::lexical_cast<int64_t>(vecValues[6]);
 
         UniValue trade(UniValue::VOBJ);
-        trade.push_back(Pair("block", blockNum));
-        trade.push_back(Pair("unitprice", unitPriceStr));
-        trade.push_back(Pair("inverseprice", inversePriceStr));
-        trade.push_back(Pair("sellertxid", sellerTxid.GetHex()));
-        trade.push_back(Pair("selleraddress", sellerAddress));
+        trade.pushKV("block", blockNum);
+        trade.pushKV("unitprice", unitPriceStr);
+        trade.pushKV("inverseprice", inversePriceStr);
+        trade.pushKV("sellertxid", sellerTxid.GetHex());
+        trade.pushKV("selleraddress", sellerAddress);
         if (propertyIdSideAIsDivisible) {
-            trade.push_back(Pair("amountsold", FormatDivisibleMP(amountSold)));
+            trade.pushKV("amountsold", FormatDivisibleMP(amountSold));
         } else {
-            trade.push_back(Pair("amountsold", FormatIndivisibleMP(amountSold)));
+            trade.pushKV("amountsold", FormatIndivisibleMP(amountSold));
         }
         if (propertyIdSideBIsDivisible) {
-            trade.push_back(Pair("amountreceived", FormatDivisibleMP(amountReceived)));
+            trade.pushKV("amountreceived", FormatDivisibleMP(amountReceived));
         } else {
-            trade.push_back(Pair("amountreceived", FormatIndivisibleMP(amountReceived)));
+            trade.pushKV("amountreceived", FormatIndivisibleMP(amountReceived));
         }
-        trade.push_back(Pair("matchingtxid", matchingTxid.GetHex()));
-        trade.push_back(Pair("matchingaddress", matchingAddress));
+        trade.pushKV("matchingtxid", matchingTxid.GetHex());
+        trade.pushKV("matchingaddress", matchingAddress);
         vecResponse.push_back(std::make_pair(blockNum, trade));
     }
 

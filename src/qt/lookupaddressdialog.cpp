@@ -2,16 +2,19 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "lookupaddressdialog.h"
-#include "ui_lookupaddressdialog.h"
+#include <qt/lookupaddressdialog.h>
+#include <qt/forms/ui_lookupaddressdialog.h>
 
-#include "guiutil.h"
+#include <qt/walletmodel.h>
+#include <qt/guiutil.h>
 
-#include "omnicore/omnicore.h"
-#include "omnicore/sp.h"
-#include "omnicore/walletutils.h"
+#include <omnicore/omnicore.h>
+#include <omnicore/sp.h>
+#include <omnicore/walletutils.h>
 
-#include "base58.h"
+#include <base58.h>
+#include <key_io.h>
+#include <script/ismine.h>
 
 #include <stdint.h>
 #include <sstream>
@@ -33,7 +36,7 @@
 #include <QWidget>
 
 #if defined(HAVE_CONFIG_H)
-#include "bitcoin-config.h" /* for USE_QRCODE */
+#include <bitcoin-config.h> /* for USE_QRCODE */
 #endif
 
 #ifdef USE_QRCODE
@@ -41,7 +44,6 @@
 #endif
 
 using std::ostringstream;
-using std::string;
 
 using namespace mastercore;
 
@@ -50,10 +52,10 @@ MPQRImageWidget::MPQRImageWidget(QWidget *parent):
 {
     contextMenu = new QMenu();
     QAction *saveImageAction = new QAction(tr("&Save Image..."), this);
-    connect(saveImageAction, SIGNAL(triggered()), this, SLOT(saveImage()));
+    connect(saveImageAction, &QAction::triggered, this, &MPQRImageWidget::saveImage);
     contextMenu->addAction(saveImageAction);
     QAction *copyImageAction = new QAction(tr("&Copy Image"), this);
-    connect(copyImageAction, SIGNAL(triggered()), this, SLOT(copyImage()));
+    connect(copyImageAction, &QAction::triggered, this, &MPQRImageWidget::copyImage);
     contextMenu->addAction(copyImageAction);
 }
 
@@ -84,7 +86,7 @@ void MPQRImageWidget::saveImage()
 {
     if(!pixmap())
         return;
-    QString fn = GUIUtil::getSaveFileName(this, tr("Save QR Code"), QString(), tr("PNG Image (*.png)"), NULL);
+    QString fn = GUIUtil::getSaveFileName(this, tr("Save QR Code"), QString(), tr("PNG Image (*.png)"), nullptr);
     if (!fn.isEmpty())
     {
         exportImage().save(fn);
@@ -116,7 +118,7 @@ LookupAddressDialog::LookupAddressDialog(QWidget *parent) :
 #endif
 
     // connect actions
-    connect(ui->searchButton, SIGNAL(clicked()), this, SLOT(searchButtonClicked()));
+    connect(ui->searchButton, &QPushButton::clicked, this, &LookupAddressDialog::searchButtonClicked);
 
     // hide balance labels
     QLabel* balances[] = { ui->propertyLabel1, ui->propertyLabel2, ui->propertyLabel3, ui->propertyLabel4, ui->propertyLabel5, ui->propertyLabel6, ui->propertyLabel7, ui->propertyLabel8, ui->propertyLabel9, ui->propertyLabel10 };
@@ -136,24 +138,28 @@ LookupAddressDialog::~LookupAddressDialog()
     delete ui;
 }
 
+void LookupAddressDialog::setWalletModel(WalletModel *model)
+{
+    this->walletModel = model;
+}
+
 void LookupAddressDialog::searchAddress()
 {
     // search function to lookup address
-    string searchText = ui->searchLineEdit->text().toStdString();
+    std::string searchText = ui->searchLineEdit->text().toStdString();
 
     // first let's check if we have a searchText, if not do nothing
     if (searchText.empty()) return;
 
     // lets see if the string is a valid bitcoin address
-    CBitcoinAddress address;
-    address.SetString(searchText); // no null check on searchText required we've already checked it's not empty above
-    if (address.IsValid()) //do what?
+    CTxDestination address = DecodeDestination(searchText); // no null check on searchText required we've already checked it's not empty above
+    if (IsValidDestination(address)) //do what?
     {
         // update top fields
         ui->addressLabel->setText(QString::fromStdString(searchText));
         if ((searchText.substr(0,1) == "1") || (searchText.substr(0,1) == "m") || (searchText.substr(0,1) == "n")) ui->addressTypeLabel->setText("Public Key Hash");
         if ((searchText.substr(0,1) == "2") || (searchText.substr(0,1) == "3")) ui->addressTypeLabel->setText("Pay to Script Hash");
-        if (IsMyAddress(searchText)) { ui->isMineLabel->setText("Yes"); } else { ui->isMineLabel->setText("No"); }
+        if (IsMyAddress(searchText, &walletModel->wallet())) { ui->isMineLabel->setText("Yes"); } else { ui->isMineLabel->setText("No"); }
         ui->balanceLabel->setText(QString::fromStdString(FormatDivisibleMP(GetAvailableTokenBalance(searchText, 1)) + " OMNI"));
         // QR
         #ifdef USE_QRCODE
@@ -186,7 +192,7 @@ void LookupAddressDialog::searchAddress()
         unsigned int propertyId;
         unsigned int lastFoundPropertyIdMainEco = 1;
         unsigned int lastFoundPropertyIdTestEco = 1;
-        string pName[12]; // TODO: enough slots?
+        std::string pName[12]; // TODO: enough slots?
         uint64_t pBal[12];
         bool pDivisible[12];
         bool pFound[12];
@@ -244,7 +250,7 @@ void LookupAddressDialog::searchAddress()
                 labels[pItem-1]->setVisible(true);
                 balances[pItem-1]->setVisible(true);
                 labels[pItem-1]->setText(pName[pItem].c_str());
-                string tokenLabel = " SPT";
+                std::string tokenLabel = " SPT";
                 if (pName[pItem]=="Test Omni (#2)") { tokenLabel = " TOMN"; }
                 if (pDivisible[pItem])
                 {
@@ -252,7 +258,7 @@ void LookupAddressDialog::searchAddress()
                 }
                 else
                 {
-                    string balText = strprintf("%d", pBal[pItem]);
+                    std::string balText = strprintf("%d", pBal[pItem]);
                     balText += tokenLabel;
                     balances[pItem-1]->setText(balText.c_str());
                 }
@@ -281,7 +287,7 @@ void LookupAddressDialog::searchAddress()
         ui->isMineLabel->setText("N/A");
         ui->frame->setVisible(false);
         // show error message
-        string strText = "The address entered was not valid.";
+        std::string strText = "The address entered was not valid.";
         QString strQText = QString::fromStdString(strText);
         QMessageBox errorDialog;
         errorDialog.setIcon(QMessageBox::Critical);

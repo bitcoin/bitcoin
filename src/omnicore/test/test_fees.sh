@@ -11,6 +11,7 @@
 ## must be removed and Omni Core recompiled to use on mainnet.                                ##
 ################################################################################################
 
+export LC_ALL=C
 SRCDIR=./src/
 NUL=/dev/null
 PASS=0

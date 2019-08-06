@@ -1,40 +1,36 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2011-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "overviewpage.h"
-#include "ui_overviewpage.h"
+#include <qt/overviewpage.h>
+#include <qt/forms/ui_overviewpage.h>
 
-#include "bitcoinunits.h"
-#include "clientmodel.h"
-#include "guiconstants.h"
-#include "guiutil.h"
-#include "optionsmodel.h"
-#include "platformstyle.h"
-#include "transactionfilterproxy.h"
-#include "transactiontablemodel.h"
-#include "walletmodel.h"
+#include <qt/bitcoinunits.h>
+#include <qt/clientmodel.h>
+#include <qt/guiconstants.h>
+#include <qt/guiutil.h>
+#include <qt/optionsmodel.h>
+#include <qt/platformstyle.h>
+#include <qt/transactionfilterproxy.h>
+#include <qt/transactiontablemodel.h>
+#include <uint256.h>
+#include <qt/walletmodel.h>
 
-#include "omnicore/activation.h"
-#include "omnicore/dbtxlist.h"
-#include "omnicore/notifications.h"
-#include "omnicore/omnicore.h"
-#include "omnicore/rules.h"
-#include "omnicore/sp.h"
-#include "omnicore/tx.h"
-#include "omnicore/parsing.h"
-#include "omnicore/pending.h"
-#include "omnicore/utilsbitcoin.h"
-#include "omnicore/walletutils.h"
+#include <omnicore/activation.h>
+#include <omnicore/dbtxlist.h>
+#include <omnicore/notifications.h>
+#include <omnicore/omnicore.h>
+#include <omnicore/rules.h>
+#include <omnicore/sp.h>
+#include <omnicore/tx.h>
+#include <omnicore/parsing.h>
+#include <omnicore/pending.h>
+#include <omnicore/utilsbitcoin.h>
+#include <omnicore/walletutils.h>
 
-#include "main.h"
-#include "sync.h"
-
-#include <sstream>
-#include <string>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/lexical_cast.hpp>
+#include <chainparams.h>
+#include <validation.h>
+#include <sync.h>
 
 #include <QAbstractItemDelegate>
 #include <QBrush>
@@ -52,15 +48,10 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
-//TODO - Add icons to buttons
-
-using std::ostringstream;
-using std::string;
-
 using namespace mastercore;
 
-#define DECORATION_SIZE 64
-#define NUM_ITEMS 6
+#define DECORATION_SIZE 54
+#define NUM_ITEMS 5
 
 struct OverviewCacheEntry
 {
@@ -79,16 +70,17 @@ struct OverviewCacheEntry
     bool outbound;
 };
 
-
 std::map<uint256, OverviewCacheEntry> recentCache;
+
+Q_DECLARE_METATYPE(interfaces::WalletBalances)
 
 class TxViewDelegate : public QAbstractItemDelegate
 {
     Q_OBJECT
 public:
-    TxViewDelegate(const PlatformStyle *platformStyle, QObject *parent=nullptr):
+    explicit TxViewDelegate(const PlatformStyle *_platformStyle, QObject *parent=nullptr):
         QAbstractItemDelegate(parent), unit(BitcoinUnits::BTC),
-        platformStyle(platformStyle)
+        platformStyle(_platformStyle)
     {
 
     }
@@ -117,7 +109,7 @@ public:
         // it's Omni and override the values if so.  This will not scale at all, but since we're only ever doing 6 txns via the occasional
         // repaint performance should be a non-issue and it'll provide the functionality short term while a better approach is devised.
         uint256 hash;
-        hash.SetHex(index.data(TransactionTableModel::TxIDRole).toString().toStdString());
+        hash.SetHex(index.data(TransactionTableModel::TxHashRole).toString().toStdString());
         bool omniOverride = false, omniSendToSelf = false, valid = false, omniOutbound = true;
         QString omniAmountStr;
 
@@ -159,15 +151,15 @@ public:
             if (pDbTransactionList->exists(hash)) {
                 omniOverride = true;
                 amount = 0;
-                CTransaction wtx;
+                CTransactionRef wtx;
                 uint256 blockHash;
-                if (GetTransaction(hash, wtx, Params().GetConsensus(), blockHash, true)) {
-                    if (!blockHash.IsNull() || NULL == GetBlockIndex(blockHash)) {
+                if (GetTransaction(hash, wtx, Params().GetConsensus(), blockHash)) {
+                    if (!blockHash.IsNull() || nullptr == GetBlockIndex(blockHash)) {
                         CBlockIndex* pBlockIndex = GetBlockIndex(blockHash);
-                        if (NULL != pBlockIndex) {
+                        if (nullptr != pBlockIndex) {
                             int blockHeight = pBlockIndex->nHeight;
                             CMPTransaction mp_obj;
-                            int parseRC = ParseTransaction(wtx, blockHeight, 0, mp_obj);
+                            int parseRC = ParseTransaction(*wtx, blockHeight, 0, mp_obj);
                             if (0 < parseRC) { //positive RC means DEx payment
                                 std::string tmpBuyer, tmpSeller;
                                 uint64_t total = 0, tmpVout = 0, tmpNValue = 0, tmpPropertyId = 0;
@@ -304,22 +296,18 @@ public:
     const PlatformStyle *platformStyle;
 
 };
-#include "overviewpage.moc"
+#include <qt/overviewpage.moc>
 
 OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::OverviewPage),
-    clientModel(0),
-    walletModel(0),
-    currentBalance(-1),
-    currentUnconfirmedBalance(-1),
-    currentImmatureBalance(-1),
-    currentWatchOnlyBalance(-1),
-    currentWatchUnconfBalance(-1),
-    currentWatchImmatureBalance(-1),
+    clientModel(nullptr),
+    walletModel(nullptr),
     txdelegate(new TxViewDelegate(platformStyle, this))
 {
     ui->setupUi(this);
+
+    m_balances.balance = -1;
 
     // use a SingleColorIcon for the "out of sync warning" icon
     QIcon icon = platformStyle->SingleColorIcon(":/icons/warning");
@@ -333,7 +321,7 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
     ui->listTransactions->setMinimumHeight(NUM_ITEMS * (DECORATION_SIZE + 2));
     ui->listTransactions->setAttribute(Qt::WA_MacShowFocusRect, false);
 
-    connect(ui->listTransactions, SIGNAL(clicked(QModelIndex)), this, SLOT(handleTransactionClicked(QModelIndex)));
+    connect(ui->listTransactions, &QListView::clicked, this, &OverviewPage::handleTransactionClicked);
 
     // init "out of sync" warning labels
     ui->labelWalletStatus->setText("(" + tr("out of sync") + ")");
@@ -346,13 +334,15 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
 
     // start with displaying the "out of sync" warnings
     showOutOfSyncWarning(true);
+    connect(ui->labelWalletStatus, &QPushButton::clicked, this, &OverviewPage::handleOutOfSyncWarningClicks);
+    connect(ui->labelTransactionsStatus, &QPushButton::clicked, this, &OverviewPage::handleOutOfSyncWarningClicks);
 }
 
 void OverviewPage::handleTransactionClicked(const QModelIndex &index)
 {
     // is this an Omni transaction that has been clicked?  Use pending & cache to find out quickly
     uint256 hash;
-    hash.SetHex(index.data(TransactionTableModel::TxIDRole).toString().toStdString());
+    hash.SetHex(index.data(TransactionTableModel::TxHashRole).toString().toStdString());
     bool omniTx = false;
     {
         LOCK(cs_pending);
@@ -369,6 +359,11 @@ void OverviewPage::handleTransactionClicked(const QModelIndex &index)
     } else {
         // TODO if (filter) emit transactionClicked(filter->mapToSource(index));
     }
+}
+
+void OverviewPage::handleOutOfSyncWarningClicks()
+{
+    Q_EMIT outOfSyncWarningClicked();
 }
 
 OverviewPage::~OverviewPage()
@@ -399,9 +394,14 @@ void OverviewPage::UpdatePropertyBalance(unsigned int propertyId, uint64_t avail
     QVBoxLayout *vlayout = new QVBoxLayout();
     QHBoxLayout *hlayout = new QHBoxLayout();
     bool divisible = false;
-    string tokenStr;
+    std::string tokenStr;
     // property label
-    string spName = getPropertyName(propertyId).c_str();
+    std::string spName;
+    if (propertyId == 0) {// Override for Overpageview init during GUI tests
+        spName = "Bitcoin";
+    } else {
+        spName = getPropertyName(propertyId).c_str();
+    }
     if(spName.size()>22) spName=spName.substr(0,22)+"...";
     spName += strprintf(" (#%d)", propertyId);
     QLabel *propLabel = new QLabel(QString::fromStdString(spName));
@@ -491,8 +491,8 @@ void OverviewPage::reinitOmni()
 {
     recentCache.clear();
     ui->overviewLW->clear();
-    if (walletModel != NULL) {
-        UpdatePropertyBalance(0, walletModel->getBalance(), walletModel->getUnconfirmedBalance());
+    if (walletModel != nullptr) {
+        UpdatePropertyBalance(0, walletModel->wallet().getBalance(), walletModel->wallet().getBalances().unconfirmed_balance);
     }
     UpdatePropertyBalance(1, 0, 0);
     updateOmni();
@@ -521,9 +521,9 @@ void OverviewPage::updateOmni()
     }
 }
 
-void OverviewPage::setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance, const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance)
+void OverviewPage::setBalance(const interfaces::WalletBalances& balances)
 {
-    UpdatePropertyBalance(0,balance,unconfirmedBalance);
+    UpdatePropertyBalance(0, balances.balance, balances.unconfirmed_balance);
 }
 
 // show/hide watch-only labels
@@ -538,17 +538,17 @@ void OverviewPage::setClientModel(ClientModel *model)
     if(model)
     {
         // Show warning if this is a prerelease version
-        connect(model, SIGNAL(alertsChanged(QString)), this, SLOT(updateAlerts(QString)));
+        connect(model, &ClientModel::alertsChanged, this, &OverviewPage::updateAlerts);
         updateAlerts(model->getStatusBarWarnings());
 
         // Refresh Omni info if there have been Omni layer transactions with balances affecting wallet
-        connect(model, SIGNAL(refreshOmniBalance()), this, SLOT(updateOmni()));
+        connect(model, &ClientModel::refreshOmniBalance, this, &OverviewPage::updateOmni);
 
         // Reinit Omni info if there has been a chain reorg
-        connect(model, SIGNAL(reinitOmniState()), this, SLOT(reinitOmni()));
+        connect(model, &ClientModel::reinitOmniState, this, &OverviewPage::reinitOmni);
 
         // Refresh alerts when there has been a change to the Omni State
-        connect(model, SIGNAL(refreshOmniState()), this, SLOT(updateAlerts()));
+        connect(model, &ClientModel::refreshOmniState, this, &OverviewPage::updateOmniAlerts);
     }
 }
 
@@ -570,14 +570,17 @@ void OverviewPage::setWalletModel(WalletModel *model)
         ui->listTransactions->setModelColumn(TransactionTableModel::ToAddress);
 
         // Keep up to date with wallet
-        setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance(),
-                   model->getWatchBalance(), model->getWatchUnconfirmedBalance(), model->getWatchImmatureBalance());
-        connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
+        interfaces::Wallet& wallet = model->wallet();
+        interfaces::WalletBalances balances = wallet.getBalances();
+        setBalance(balances);
+        connect(model, &WalletModel::balanceChanged, this, &OverviewPage::setBalance);
 
-        connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
+        connect(model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &OverviewPage::updateDisplayUnit);
 
-        updateWatchOnlyLabels(model->haveWatchOnly());
-        connect(model, SIGNAL(notifyWatchonlyChanged(bool)), this, SLOT(updateWatchOnlyLabels(bool)));
+        updateWatchOnlyLabels(wallet.haveWatchOnly() && !model->privateKeysDisabled());
+        connect(model, &WalletModel::notifyWatchonlyChanged, [this](bool showWatchOnly) {
+            updateWatchOnlyLabels(showWatchOnly && !walletModel->privateKeysDisabled());
+        });
     }
 
     // update the display unit, to not use the default ("BTC")
@@ -588,15 +591,20 @@ void OverviewPage::updateDisplayUnit()
 {
     if(walletModel && walletModel->getOptionsModel())
     {
-        if(currentBalance != -1)
-            setBalance(currentBalance, currentUnconfirmedBalance, currentImmatureBalance,
-                       currentWatchOnlyBalance, currentWatchUnconfBalance, currentWatchImmatureBalance);
+        if (m_balances.balance != -1) {
+            setBalance(m_balances);
+        }
 
         // Update txdelegate->unit with the current unit
         txdelegate->unit = walletModel->getOptionsModel()->getDisplayUnit();
 
         ui->listTransactions->update();
     }
+}
+
+void OverviewPage::updateOmniAlerts()
+{
+    updateAlerts(clientModel->getStatusBarWarnings());
 }
 
 void OverviewPage::updateAlerts(const QString &warnings)

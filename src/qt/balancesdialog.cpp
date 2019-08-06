@@ -1,21 +1,22 @@
 // Copyright (c) 2011-2013 The Bitcoin developers // Distributed under the MIT/X11 software license, see the accompanying // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "balancesdialog.h"
-#include "ui_balancesdialog.h"
+#include <qt/balancesdialog.h>
+#include <qt/forms/ui_balancesdialog.h>
 
-#include "clientmodel.h"
-#include "walletmodel.h"
-#include "guiutil.h"
+#include <qt/clientmodel.h>
+#include <qt/walletmodel.h>
+#include <qt/guiutil.h>
 
-#include "omnicore/omnicore.h"
-#include "omnicore/sp.h"
-#include "omnicore/tally.h"
-#include "omnicore/walletutils.h"
+#include <omnicore/omnicore.h>
+#include <omnicore/sp.h>
+#include <omnicore/tally.h>
+#include <omnicore/walletutils.h>
 
-#include "amount.h"
-#include "sync.h"
-#include "ui_interface.h"
-#include "wallet/wallet.h"
+#include <amount.h>
+#include <key_io.h>
+#include <sync.h>
+#include <ui_interface.h>
+#include <wallet/wallet.h>
 
 #include <stdint.h>
 #include <map>
@@ -35,11 +36,11 @@
 #include <QWidget>
 
 using std::ostringstream;
-using std::string;
+
 using namespace mastercore;
 
 BalancesDialog::BalancesDialog(QWidget *parent) :
-    QDialog(parent), ui(new Ui::balancesDialog), clientModel(0), walletModel(0)
+    QDialog(parent), ui(new Ui::balancesDialog), clientModel(nullptr), walletModel(nullptr)
 {
     // setup
     ui->setupUi(this);
@@ -101,14 +102,14 @@ BalancesDialog::BalancesDialog(QWidget *parent) :
     contextMenuSummary->addAction(balancesCopyAvailableAmountAction);
 
     // Connect actions
-    connect(ui->balancesTable, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
-    connect(ui->propSelectorWidget, SIGNAL(activated(int)), this, SLOT(propSelectorChanged()));
-    connect(balancesCopyIDAction, SIGNAL(triggered()), this, SLOT(balancesCopyCol0()));
-    connect(balancesCopyNameAction, SIGNAL(triggered()), this, SLOT(balancesCopyCol1()));
-    connect(balancesCopyLabelAction, SIGNAL(triggered()), this, SLOT(balancesCopyCol0()));
-    connect(balancesCopyAddressAction, SIGNAL(triggered()), this, SLOT(balancesCopyCol1()));
-    connect(balancesCopyReservedAmountAction, SIGNAL(triggered()), this, SLOT(balancesCopyCol2()));
-    connect(balancesCopyAvailableAmountAction, SIGNAL(triggered()), this, SLOT(balancesCopyCol3()));
+    connect(ui->balancesTable, &QWidget::customContextMenuRequested, this, &BalancesDialog::contextualMenu);
+    connect(ui->propSelectorWidget, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &BalancesDialog::propSelectorChanged);
+    connect(balancesCopyIDAction, &QAction::triggered, this, &BalancesDialog::balancesCopyCol0);
+    connect(balancesCopyNameAction, &QAction::triggered, this, &BalancesDialog::balancesCopyCol1);
+    connect(balancesCopyLabelAction, &QAction::triggered, this, &BalancesDialog::balancesCopyCol0);
+    connect(balancesCopyAddressAction, &QAction::triggered, this, &BalancesDialog::balancesCopyCol1);
+    connect(balancesCopyReservedAmountAction, &QAction::triggered, this, &BalancesDialog::balancesCopyCol2);
+    connect(balancesCopyAvailableAmountAction, &QAction::triggered, this, &BalancesDialog::balancesCopyCol3);
 }
 
 BalancesDialog::~BalancesDialog()
@@ -127,16 +128,16 @@ void BalancesDialog::reinitOmni()
 void BalancesDialog::setClientModel(ClientModel *model)
 {
     this->clientModel = model;
-    if (model != NULL) {
-        connect(model, SIGNAL(refreshOmniBalance()), this, SLOT(balancesUpdated()));
-        connect(model, SIGNAL(reinitOmniState()), this, SLOT(reinitOmni()));
+    if (model != nullptr) {
+        connect(model, &ClientModel::refreshOmniBalance, this, &BalancesDialog::balancesUpdated);
+        connect(model, &ClientModel::reinitOmniState, this, &BalancesDialog::reinitOmni);
     }
 }
 
 void BalancesDialog::setWalletModel(WalletModel *model)
 {
     this->walletModel = model;
-    if (model != NULL) { } // do nothing, signals from walletModel no longer needed
+    if (model != nullptr) { } // do nothing, signals from walletModel no longer needed
 }
 
 void BalancesDialog::UpdatePropSelector()
@@ -206,7 +207,7 @@ void BalancesDialog::PopulateBalances(unsigned int propertyId)
         bool propertyIsDivisible = isPropertyDivisible(propertyId); // only fetch the SP once, not for every address
 
         // iterate mp_tally_map looking for addresses that hold a balance in propertyId
-        for(std::unordered_map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
+        for(std::unordered_map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
             const std::string& address = my_it->first;
             CMPTally& tally = my_it->second;
             tally.init();
@@ -221,11 +222,6 @@ void BalancesDialog::PopulateBalances(unsigned int propertyId)
             }
             if (!includeAddress) continue; //ignore this address, has never transacted in this propertyId
 
-            // determine if this address is in the wallet
-            int addressIsMine = IsMyAddress(address);
-            if (!addressIsMine) continue; // ignore this address, not in wallet
-            if (addressIsMine != ISMINE_SPENDABLE) watchAddress = true;
-
             // obtain the balances for the address directly form tally
             int64_t available = tally.getMoney(propertyId, BALANCE);
             available += tally.getMoney(propertyId, PENDING);
@@ -234,7 +230,7 @@ void BalancesDialog::PopulateBalances(unsigned int propertyId)
             reserved += tally.getMoney(propertyId, METADEX_RESERVE);
 
             // format the balances
-            string reservedStr, availableStr;
+            std::string reservedStr, availableStr;
             if (propertyIsDivisible) {
                 reservedStr = FormatDivisibleMP(reserved);
                 availableStr = FormatDivisibleMP(available);
@@ -243,11 +239,17 @@ void BalancesDialog::PopulateBalances(unsigned int propertyId)
                 availableStr = FormatIndivisibleMP(available);
             }
 
+            CTxDestination destination = DecodeDestination(address);
+            std::string name;
+            isminetype ismine;
+            walletModel->wallet().getAddress(destination, &name, &ismine, nullptr);
+            if (ismine != ISMINE_SPENDABLE) watchAddress = true;
+
             // add the row
             if (!watchAddress) {
-                AddRow(GetAddressLabel(my_it->first), address, reservedStr, availableStr);
+                AddRow(name, address, reservedStr, availableStr);
             } else {
-                AddRow(GetAddressLabel(my_it->first), address + " (watch-only)", reservedStr, availableStr);
+                AddRow(name, address + " (watch-only)", reservedStr, availableStr);
             }
         }
     }

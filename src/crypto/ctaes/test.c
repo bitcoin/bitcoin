@@ -102,7 +102,7 @@ int main(void) {
         }
     }
     if (fail == 0) {
-        fprintf(stderr, "All tests succesful\n");
+        fprintf(stderr, "All tests successful\n");
     } else {
         fprintf(stderr, "%i tests failed\n", fail);
     }

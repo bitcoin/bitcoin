@@ -2,11 +2,11 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TXHISTORYDIALOG_H
-#define TXHISTORYDIALOG_H
+#ifndef BITCOIN_QT_TXHISTORYDIALOG_H
+#define BITCOIN_QT_TXHISTORYDIALOG_H
 
-#include "guiutil.h"
-#include "uint256.h"
+#include <qt/guiutil.h>
+#include <uint256.h>
 
 #include <map>
 
@@ -88,4 +88,4 @@ Q_SIGNALS:
     void message(const QString &title, const QString &message, unsigned int style);
 };
 
-#endif // TXHISTORYDIALOG_H
+#endif // BITCOIN_QT_TXHISTORYDIALOG_H

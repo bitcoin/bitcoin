@@ -1,49 +1,61 @@
-#include "omnicore/test/utils_tx.h"
+#include <omnicore/test/utils_tx.h>
 
-#include "omnicore/omnicore.h"
-#include "omnicore/script.h"
+#include <omnicore/omnicore.h>
+#include <omnicore/script.h>
 
-#include "base58.h"
-#include "primitives/transaction.h"
-#include "pubkey.h"
-#include "script/script.h"
-#include "script/standard.h"
-#include "utilstrencodings.h"
+#include <base58.h>
+#include <key_io.h>
+#include <primitives/transaction.h>
+#include <pubkey.h>
+#include <script/script.h>
+#include <script/standard.h>
+#include <util/strencodings.h>
+#include <test/test_bitcoin.h>
+
+#include <boost/test/unit_test.hpp>
 
 #include <stdint.h>
 
+// Added to pacify test script that tries to run all test/ folder contents as tests
+BOOST_FIXTURE_TEST_SUITE(omnicore_transaction_utility, BasicTestingSetup)
+BOOST_AUTO_TEST_CASE(pacify_script)
+{
+    BOOST_CHECK_EQUAL(true, true);
+}
+BOOST_AUTO_TEST_SUITE_END()
+
 CTxOut PayToPubKeyHash_Exodus()
 {
-    CBitcoinAddress address = ExodusAddress();
-    CScript scriptPubKey = GetScriptForDestination(address.Get());
-    int64_t amount = GetDustThreshold(scriptPubKey);
+    CTxDestination address = ExodusAddress();
+    CScript scriptPubKey = GetScriptForDestination(address);
+    int64_t amount = OmniGetDustThreshold(scriptPubKey);
 
     return CTxOut(amount, scriptPubKey);
 }
 
 CTxOut PayToPubKeyHash_ExodusCrowdsale(int nHeight)
 {
-    CBitcoinAddress address = ExodusCrowdsaleAddress(nHeight);
-    CScript scriptPubKey = GetScriptForDestination(address.Get());
-    int64_t amount = GetDustThreshold(scriptPubKey);
+    CTxDestination dest = ExodusCrowdsaleAddress(nHeight);
+    CScript scriptPubKey = GetScriptForDestination(dest);
+    int64_t amount = OmniGetDustThreshold(scriptPubKey);
 
     return CTxOut(amount, scriptPubKey);
 }
 
 CTxOut PayToPubKeyHash_Unrelated()
 {
-    CBitcoinAddress address("1f2dj45pxYb8BCW5sSbCgJ5YvXBfSapeX");
-    CScript scriptPubKey = GetScriptForDestination(address.Get());
-    int64_t amount = GetDustThreshold(scriptPubKey);
+    CTxDestination address = DecodeDestination("1f2dj45pxYb8BCW5sSbCgJ5YvXBfSapeX");
+    CScript scriptPubKey = GetScriptForDestination(address);
+    int64_t amount = OmniGetDustThreshold(scriptPubKey);
 
     return CTxOut(amount, scriptPubKey);
 }
 
 CTxOut PayToScriptHash_Unrelated()
 {
-    CBitcoinAddress address("3MbYQMMmSkC3AgWkj9FMo5LsPTW1zBTwXL");
-    CScript scriptPubKey = GetScriptForDestination(address.Get());
-    int64_t amount = GetDustThreshold(scriptPubKey);
+    CTxDestination address = DecodeDestination("3MbYQMMmSkC3AgWkj9FMo5LsPTW1zBTwXL");
+    CScript scriptPubKey = GetScriptForDestination(address);
+    int64_t amount = OmniGetDustThreshold(scriptPubKey);
 
     return CTxOut(amount, scriptPubKey);
 }
@@ -59,7 +71,7 @@ CTxOut PayToPubKey_Unrelated()
     CScript scriptPubKey;
     scriptPubKey << ToByteVector(pubKey) << OP_CHECKSIG;
 
-    int64_t amount = GetDustThreshold(scriptPubKey);
+    int64_t amount = OmniGetDustThreshold(scriptPubKey);
 
     return CTxOut(amount, scriptPubKey);
 }
@@ -83,7 +95,7 @@ CTxOut PayToBareMultisig_1of2()
     scriptPubKey << CScript::EncodeOP_N(2);
     scriptPubKey << OP_CHECKMULTISIG;
 
-    int64_t amount = GetDustThreshold(scriptPubKey);
+    int64_t amount = OmniGetDustThreshold(scriptPubKey);
 
     return CTxOut(amount, scriptPubKey);
 }
@@ -111,7 +123,7 @@ CTxOut PayToBareMultisig_1of3()
     scriptPubKey << CScript::EncodeOP_N(3);
     scriptPubKey << OP_CHECKMULTISIG;
 
-    int64_t amount = GetDustThreshold(scriptPubKey);
+    int64_t amount = OmniGetDustThreshold(scriptPubKey);
 
     return CTxOut(amount, scriptPubKey);
 }
@@ -144,7 +156,7 @@ CTxOut PayToBareMultisig_3of5()
     scriptPubKey << CScript::EncodeOP_N(5);
     scriptPubKey << OP_CHECKMULTISIG;
 
-    int64_t amount = GetDustThreshold(scriptPubKey);
+    int64_t amount = OmniGetDustThreshold(scriptPubKey);
 
     return CTxOut(amount, scriptPubKey);
 }
@@ -207,7 +219,7 @@ CTxOut NonStandardOutput()
 {
     CScript scriptPubKey;
     scriptPubKey << ParseHex("decafbad") << OP_DROP << OP_TRUE;
-    int64_t amount = GetDustThreshold(scriptPubKey);
+    int64_t amount = OmniGetDustThreshold(scriptPubKey);
 
     return CTxOut(amount, scriptPubKey);
 }

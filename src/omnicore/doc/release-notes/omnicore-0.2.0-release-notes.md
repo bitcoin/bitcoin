@@ -25,7 +25,7 @@ Table of contents
   - [New project branch structure](#new-project-branch-structure)
 - [Consensus affecting changes](#consensus-affecting-changes)
     - [Fee distribution system on the Distributed Exchange](#fee-distribution-system-on-the-distributed-exchange)
-    - [Send to Owners cross property suport](#send-to-owners-cross-property-support)
+    - [Send to Owners cross property support](#send-to-owners-cross-property-support)
 - [Notable changes](#notable-changes)
   - [Avoid selection of uneconomic UTXO during transaction creation](#avoid-selection-of-uneconomic-utxo-during-transaction-creation)
   - [Performance improvements during initial parsing](#performance-improvements-during-initial-parsing)
@@ -105,7 +105,7 @@ Starting with this version of Omni Core, the versioning scheme becomes more intu
 New project branch structure
 ----------------------------
 
-The latest stable version of Omni Core can be found in the [master](https://github.com/OmniLayer/omnicore/tree/master) branch on GitHub, while the version under development can be found in the [develop](https://github.com/OmniLayer/omnicore/tree/develop) branch. This provides a cleaner seperation of source code.
+The latest stable version of Omni Core can be found in the [master](https://github.com/OmniLayer/omnicore/tree/master) branch on GitHub, while the version under development can be found in the [develop](https://github.com/OmniLayer/omnicore/tree/develop) branch. This provides a cleaner separation of source code.
 
 
 Consensus affecting changes
@@ -173,14 +173,14 @@ Due to various improvements and optimizations, the initial parsing process, when
 New checkpoints and seed blocks up to block 460,000
 ---------------------------------------------------
 
-To further speed up the inital parsing process, blocks without Omni transactions are skipped up until block 460,000. To avoid relying on a hardcoded list of seed blocks, Omni Core can be started with `-omniseedblockfilter=0`.
+To further speed up the initial parsing process, blocks without Omni transactions are skipped up until block 460,000. To avoid relying on a hardcoded list of seed blocks, Omni Core can be started with `-omniseedblockfilter=0`.
 
 Easy access to specific consensus hashes when parsing
 -----------------------------------------------------
 
 Previously to confirm a consensus hash for a particular block it was required to enable `-omnidebug=consensus_hash_every_block` during parsing to log the hash for every block which caused a significant slow down due to the extra work involved.
 
-This leads to circumstances where to validate a single consensus hash it is neccessary to perform vastly more work than necessary.
+This leads to circumstances where to validate a single consensus hash it is necessary to perform vastly more work than necessary.
 
 This version adds a `-omnishowblockconsensushash` startup option which can be used to generate consensus hashes for specific blocks.
 

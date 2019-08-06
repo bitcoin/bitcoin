@@ -5,16 +5,15 @@ class CMPMetaDEx;
 class CMPOffer;
 class CTransaction;
 
-#include "omnicore/omnicore.h"
-#include "omnicore/parsing.h"
+#include <omnicore/omnicore.h>
+#include <omnicore/parsing.h>
 
-#include "uint256.h"
-#include "utilstrencodings.h"
+#include <uint256.h>
+#include <util/strencodings.h>
 
 #include <stdint.h>
 #include <string.h>
 
-#include <string.h>
 #include <string>
 
 using mastercore::strTransactionType;

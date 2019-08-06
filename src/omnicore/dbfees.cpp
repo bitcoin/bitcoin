@@ -4,17 +4,16 @@
  * This file contains code for handling Omni fees.
  */
 
-#include "omnicore/dbfees.h"
+#include <omnicore/dbfees.h>
 
-#include "omnicore/log.h"
-#include "omnicore/omnicore.h"
-#include "omnicore/rules.h"
-#include "omnicore/sp.h"
-#include "omnicore/sto.h"
+#include <omnicore/log.h>
+#include <omnicore/rules.h>
+#include <omnicore/sp.h>
+#include <omnicore/sto.h>
 
-#include "main.h"
+#include <validation.h>
 
-#include "leveldb/db.h"
+#include <leveldb/db.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
@@ -118,10 +117,10 @@ void COmniFeeCache::AddFee(const uint32_t &propertyId, int block, const int64_t 
         // overflow - there is no way the fee cache should exceed the maximum possible number of tokens, not safe to continue
         const std::string& msg = strprintf("Shutting down due to fee cache overflow (block %d property %d current %d amount %d)\n", block, propertyId, currentCachedAmount, amount);
         PrintToLog(msg);
-        if (!GetBoolArg("-overrideforcedshutdown", false)) {
+        if (!gArgs.GetBoolArg("-overrideforcedshutdown", false)) {
             boost::filesystem::path persistPath = GetDataDir() / "MP_persist";
             if (boost::filesystem::exists(persistPath)) boost::filesystem::remove_all(persistPath); // prevent the node being restarted without a reparse after forced shutdown
-            AbortNode(msg, msg);
+            DoAbortNode(msg, msg);
         }
     }
     int64_t newCachedAmount = currentCachedAmount + amount;

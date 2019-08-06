@@ -2,8 +2,10 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef LOOKUPADDRESSDIALOG_H
-#define LOOKUPADDRESSDIALOG_H
+#ifndef BITCOIN_QT_LOOKUPADDRESSDIALOG_H
+#define BITCOIN_QT_LOOKUPADDRESSDIALOG_H
+
+class WalletModel;
 
 #include <QDialog>
 #include <QLabel>
@@ -53,6 +55,7 @@ public:
     explicit LookupAddressDialog(QWidget *parent = 0);
     ~LookupAddressDialog();
 
+    void setWalletModel(WalletModel *model);
     void searchAddress();
 
 public Q_SLOTS:
@@ -60,10 +63,11 @@ public Q_SLOTS:
 
 private:
     Ui::LookupAddressDialog *ui;
+    WalletModel *walletModel;
 
 Q_SIGNALS:
     // Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);
 };
 
-#endif // LOOKUPADDRESSDIALOG_H
+#endif // BITCOIN_QT_LOOKUPADDRESSDIALOG_H

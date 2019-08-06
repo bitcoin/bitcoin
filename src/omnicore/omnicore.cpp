@@ -4,83 +4,73 @@
  * This file contains the core of Omni Core.
  */
 
-#include "omnicore/omnicore.h"
+#include <omnicore/omnicore.h>
 
-#include "omnicore/activation.h"
-#include "omnicore/consensushash.h"
-#include "omnicore/convert.h"
-#include "omnicore/dbbase.h"
-#include "omnicore/dbfees.h"
-#include "omnicore/dbspinfo.h"
-#include "omnicore/dbstolist.h"
-#include "omnicore/dbtradelist.h"
-#include "omnicore/dbtransaction.h"
-#include "omnicore/dbtxlist.h"
-#include "omnicore/dex.h"
-#include "omnicore/encoding.h"
-#include "omnicore/errors.h"
-#include "omnicore/log.h"
-#include "omnicore/mdex.h"
-#include "omnicore/notifications.h"
-#include "omnicore/parsing.h"
-#include "omnicore/pending.h"
-#include "omnicore/persistence.h"
-#include "omnicore/rules.h"
-#include "omnicore/script.h"
-#include "omnicore/seedblocks.h"
-#include "omnicore/sp.h"
-#include "omnicore/tally.h"
-#include "omnicore/tx.h"
-#include "omnicore/utilsbitcoin.h"
-#include "omnicore/utilsui.h"
-#include "omnicore/version.h"
-#include "omnicore/walletcache.h"
-#include "omnicore/walletutils.h"
+#include <omnicore/activation.h>
+#include <omnicore/consensushash.h>
+#include <omnicore/convert.h>
+#include <omnicore/dbbase.h>
+#include <omnicore/dbfees.h>
+#include <omnicore/dbspinfo.h>
+#include <omnicore/dbstolist.h>
+#include <omnicore/dbtradelist.h>
+#include <omnicore/dbtransaction.h>
+#include <omnicore/dbtxlist.h>
+#include <omnicore/dex.h>
+#include <omnicore/log.h>
+#include <omnicore/mdex.h>
+#include <omnicore/notifications.h>
+#include <omnicore/parsing.h>
+#include <omnicore/pending.h>
+#include <omnicore/persistence.h>
+#include <omnicore/rules.h>
+#include <omnicore/script.h>
+#include <omnicore/seedblocks.h>
+#include <omnicore/sp.h>
+#include <omnicore/tally.h>
+#include <omnicore/tx.h>
+#include <omnicore/utilsbitcoin.h>
+#include <omnicore/utilsui.h>
+#include <omnicore/version.h>
+#include <omnicore/walletcache.h>
+#include <omnicore/walletutils.h>
 
-#include "base58.h"
-#include "chainparams.h"
-#include "coincontrol.h"
-#include "coins.h"
-#include "core_io.h"
-#include "init.h"
-#include "main.h"
-#include "primitives/block.h"
-#include "primitives/transaction.h"
-#include "script/script.h"
-#include "script/standard.h"
-#include "sync.h"
-#include "tinyformat.h"
-#include "uint256.h"
-#include "ui_interface.h"
-#include "util.h"
-#include "utilstrencodings.h"
-#include "utiltime.h"
+#include <base58.h>
+#include <chainparams.h>
+#include <coins.h>
+#include <core_io.h>
+#include <key_io.h>
+#include <init.h>
+#include <validation.h>
+#include <primitives/block.h>
+#include <primitives/transaction.h>
+#include <script/script.h>
+#include <script/standard.h>
+#include <shutdown.h>
+#include <sync.h>
+#include <tinyformat.h>
+#include <uint256.h>
+#include <ui_interface.h>
+#include <util/system.h>
+#include <util/strencodings.h>
+#include <util/time.h>
 #ifdef ENABLE_WALLET
-#include "script/ismine.h"
-#include "wallet/wallet.h"
+#include <script/ismine.h>
+#include <wallet/wallet.h>
 #endif
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
 
-#include <map>
 #include <set>
 #include <string>
 #include <unordered_map>
 #include <vector>
-
-using std::endl;
-using std::make_pair;
-using std::map;
-using std::pair;
-using std::string;
-using std::vector;
 
 using namespace mastercore;
 
@@ -255,7 +245,7 @@ CMPTally* mastercore::getTally(const std::string& address)
 
     if (it != mp_tally_map.end()) return &(it->second);
 
-    return (CMPTally *) NULL;
+    return static_cast<CMPTally*>(nullptr);
 }
 
 // look at balance for an address
@@ -580,6 +570,9 @@ static int64_t calculate_and_update_devmsc(unsigned int nTime, int block)
 
 uint32_t mastercore::GetNextPropertyId(bool maineco)
 {
+    if (!pDbSpInfo)
+        return 0;
+
     if (maineco) {
         return pDbSpInfo->peekNextSPID(1);
     } else {
@@ -597,7 +590,7 @@ void NotifyTotalTokensChanged(uint32_t propertyId, int block)
 void CheckWalletUpdate(bool forceUpdate)
 {
 #ifdef ENABLE_WALLET
-    if (!pwalletMain) {
+    if (!HasWallets()) {
         return;
     }
 #endif
@@ -626,7 +619,7 @@ void CheckWalletUpdate(bool forceUpdate)
     for (std::unordered_map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
         // check if the address is a wallet address (including watched addresses)
         std::string address = my_it->first;
-        int addressIsMine = IsMyAddress(address);
+        int addressIsMine = IsMyAddressAllWallets(address, false, ISMINE_SPENDABLE);
         if (!addressIsMine) continue;
         // iterate only those properties in the TokenMap for this address
         my_it->second.init();
@@ -690,15 +683,15 @@ static CCriticalSection cs_marker_cache;
  *
  * MUST NOT BE USED FOR CONSENSUS CRITICAL STUFF!
  */
-static bool HasMarkerUnsafe(const CTransaction& tx)
+static bool HasMarkerUnsafe(const CTransactionRef& tx)
 {
     const std::string strClassC("6f6d6e69");
     const std::string strClassAB("76a914946cb2e08075bcbaf157e47bcb67eb2b2339d24288ac");
     const std::string strClassABTest("76a914643ce12b1590633077b8620316f43a9362ef18e588ac");
     const std::string strClassMoney("76a9145ab93563a289b74c355a9b9258b86f12bb84affb88ac");
 
-    for (unsigned int n = 0; n < tx.vout.size(); ++n) {
-        const CTxOut& out = tx.vout[n];
+    for (unsigned int n = 0; n < tx->vout.size(); ++n) {
+        const CTxOut& out = tx->vout[n];
         std::string str = HexStr(out.scriptPubKey.begin(), out.scriptPubKey.end());
 
         if (str.find(strClassC) != std::string::npos) {
@@ -723,19 +716,19 @@ static bool HasMarkerUnsafe(const CTransaction& tx)
 }
 
 /** Scans for marker and if one is found, add transaction to marker cache. */
-void TryToAddToMarkerCache(const CTransaction& tx)
+void TryToAddToMarkerCache(const CTransactionRef &tx)
 {
     if (HasMarkerUnsafe(tx)) {
         LOCK(cs_marker_cache);
-        setMarkerCache.insert(tx.GetHash());
+        setMarkerCache.insert(tx->GetHash());
     }
 }
 
 /** Removes transaction from marker cache. */
-void RemoveFromMarkerCache(const CTransaction& tx)
+void RemoveFromMarkerCache(const uint256& txHash)
 {
     LOCK(cs_marker_cache);
-    setMarkerCache.erase(tx.GetHash());
+    setMarkerCache.erase(txHash);
 }
 
 /** Checks, if transaction is in marker cache. */
@@ -806,11 +799,10 @@ int mastercore::GetEncodingClass(const CTransaction& tx, int nBlock)
         if (outType == TX_PUBKEYHASH) {
             CTxDestination dest;
             if (ExtractDestination(output.scriptPubKey, dest)) {
-                CBitcoinAddress address(dest);
-                if (address == ExodusAddress()) {
+                if (dest == ExodusAddress()) {
                     hasExodus = true;
                 }
-                if (address == ExodusCrowdsaleAddress(nBlock)) {
+                if (dest == ExodusCrowdsaleAddress(nBlock)) {
                     hasMoney = true;
                 }
             }
@@ -869,9 +861,9 @@ static unsigned int nCacheMiss = 0;
  * @param tx[in]  The transaction to fetch inputs for
  * @return True, if all inputs were successfully added to the cache
  */
-static bool FillTxInputCache(const CTransaction& tx)
+static bool FillTxInputCache(const CTransaction& tx, const std::shared_ptr<std::map<COutPoint, Coin>> removedCoins)
 {
-    static unsigned int nCacheSize = GetArg("-omnitxcache", 500000);
+    static unsigned int nCacheSize = gArgs.GetArg("-omnitxcache", 500000);
 
     if (view.GetCacheSize() > nCacheSize) {
         PrintToLog("%s(): clearing cache before insertion [size=%d, hit=%d, miss=%d]\n",
@@ -882,26 +874,35 @@ static bool FillTxInputCache(const CTransaction& tx)
     for (std::vector<CTxIn>::const_iterator it = tx.vin.begin(); it != tx.vin.end(); ++it) {
         const CTxIn& txIn = *it;
         unsigned int nOut = txIn.prevout.n;
-        CCoinsModifier coins = view.ModifyCoins(txIn.prevout.hash);
+        const Coin& coin = view.AccessCoin(txIn.prevout);
 
-        if (coins->IsAvailable(nOut)) {
+        if (!coin.IsSpent()) {
             ++nCacheHits;
             continue;
         } else {
             ++nCacheMiss;
         }
 
-        CTransaction txPrev;
+        CTransactionRef txPrev;
         uint256 hashBlock;
-        if (!GetTransaction(txIn.prevout.hash, txPrev, Params().GetConsensus(), hashBlock, true)) {
+        Coin newcoin;
+        if (GetTransaction(txIn.prevout.hash, txPrev, Params().GetConsensus(), hashBlock)) {
+            newcoin.out.scriptPubKey = txPrev->vout[nOut].scriptPubKey;
+            newcoin.out.nValue = txPrev->vout[nOut].nValue;
+            BlockMap::iterator bit = mapBlockIndex.find(hashBlock);
+            newcoin.nHeight = bit != mapBlockIndex.end() ? bit->second->nHeight : 1;
+        } else if (removedCoins) {
+            std::map<COutPoint, Coin>::const_iterator coinIt = removedCoins->find(txIn.prevout);
+            if (coinIt != removedCoins->end()) {
+                newcoin = coinIt->second;
+            } else {
+                return false;
+            }
+        } else {
             return false;
         }
 
-        if (nOut >= coins->vout.size()) {
-            coins->vout.resize(nOut+1);
-        }
-        coins->vout[nOut].scriptPubKey = txPrev.vout[nOut].scriptPubKey;
-        coins->vout[nOut].nValue = txPrev.vout[nOut].nValue;
+        view.AddCoin(txIn.prevout, std::move(newcoin), true);
     }
 
     return true;
@@ -913,7 +914,7 @@ static bool FillTxInputCache(const CTransaction& tx)
 // RETURNS: 0 if parsed a MP TX
 // RETURNS: < 0 if a non-MP-TX or invalid
 // RETURNS: >0 if 1 or more payments have been made
-static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, unsigned int idx, CMPTransaction& mp_tx, unsigned int nTime)
+static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, unsigned int idx, CMPTransaction& mp_tx, unsigned int nTime, const std::shared_ptr<std::map<COutPoint, Coin>> removedCoins = nullptr)
 {
     assert(bRPConly == mp_tx.isRpcOnly());
     mp_tx.Set(wtx.GetHash(), nBlock, idx, nTime);
@@ -927,7 +928,7 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
 
     if (!bRPConly || msc_debug_parser_readonly) {
         PrintToLog("____________________________________________________________________________________________________________________________________\n");
-        PrintToLog("%s(block=%d, %s idx= %d); txid: %s\n", __FUNCTION__, nBlock, DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nTime), idx, wtx.GetHash().GetHex());
+        PrintToLog("%s(block=%d, %s idx= %d); txid: %s\n", __FUNCTION__, nBlock, FormatISO8601DateTime(nTime), idx, wtx.GetHash().GetHex());
     }
 
     // ### SENDER IDENTIFICATION ###
@@ -938,7 +939,7 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
     LOCK2(cs_main, cs_tx_cache); // cs_main should be locked first to avoid deadlocks with cs_tx_cache at FillTxInputCache(...)->GetTransaction(...)->LOCK(cs_main)
 
     // Add previous transaction inputs to the cache
-    if (!FillTxInputCache(wtx)) {
+    if (!FillTxInputCache(wtx, removedCoins)) {
         PrintToLog("%s() ERROR: failed to get inputs for %s\n", __func__, wtx.GetHash().GetHex());
         return -101;
     }
@@ -954,7 +955,8 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
             if (msc_debug_vin) PrintToLog("vin=%d:%s\n", i, ScriptToAsmStr(wtx.vin[i].scriptSig));
 
             const CTxIn& txIn = wtx.vin[i];
-            const CTxOut& txOut = view.GetOutputFor(txIn);
+            const Coin& coin = view.AccessCoin(txIn.prevout);
+            const CTxOut& txOut = coin.out;
 
             assert(!txOut.IsNull());
 
@@ -967,8 +969,7 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
                 return -105;
             }
             if (ExtractDestination(txOut.scriptPubKey, source)) { // extract the destination of the previous transaction's vout[n] and check it's allowed type
-                CBitcoinAddress addressSource(source);
-                inputs_sum_of_values[addressSource.ToString()] += txOut.nValue;
+                inputs_sum_of_values[EncodeDestination(source)] += txOut.nValue;
             }
             else return -106;
         }
@@ -993,7 +994,8 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
             if (msc_debug_vin) PrintToLog("vin=%d:%s\n", vin_n, ScriptToAsmStr(wtx.vin[vin_n].scriptSig));
 
             const CTxIn& txIn = wtx.vin[vin_n];
-            const CTxOut& txOut = view.GetOutputFor(txIn);
+            const Coin& coin = view.AccessCoin(txIn.prevout);
+            const CTxOut& txOut = coin.out;
 
             assert(!txOut.IsNull());
 
@@ -1006,7 +1008,7 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
             }
             CTxDestination source;
             if (ExtractDestination(txOut.scriptPubKey, source)) {
-                strSender = CBitcoinAddress(source).ToString();
+                strSender = EncodeDestination(source);
             }
             else return -110;
         }
@@ -1044,13 +1046,12 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
         }
         CTxDestination dest;
         if (ExtractDestination(wtx.vout[n].scriptPubKey, dest)) {
-            CBitcoinAddress address(dest);
-            if (!(address == ExodusAddress())) {
+            if (!(dest == ExodusAddress())) {
                 // saving for Class A processing or reference
                 GetScriptPushes(wtx.vout[n].scriptPubKey, script_data);
-                address_data.push_back(address.ToString());
+                address_data.push_back(EncodeDestination(dest));
                 value_data.push_back(wtx.vout[n].nValue);
-                if (msc_debug_parser_data) PrintToLog("saving address_data #%d: %s:%s\n", n, address.ToString(), ScriptToAsmStr(wtx.vout[n].scriptPubKey));
+                if (msc_debug_parser_data) PrintToLog("saving address_data #%d: %s:%s\n", n, EncodeDestination(dest), ScriptToAsmStr(wtx.vout[n].scriptPubKey));
             }
         }
     }
@@ -1100,7 +1101,7 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
             for (unsigned int n = 0; n < wtx.vout.size(); ++n) {
                 CTxDestination dest;
                 if (ExtractDestination(wtx.vout[n].scriptPubKey, dest)) {
-                    if (CBitcoinAddress(dest) == ExodusAddress()) {
+                    if (dest == ExodusAddress()) {
                         ExodusValues.push_back(wtx.vout[n].nValue);
                     }
                 }
@@ -1180,7 +1181,7 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
         }
         if (msc_debug_parser_data) PrintToLog("Ending reference identification\nFinal decision on reference identification is: %s\n", strReference);
 
-        // ### CLASS B SPECIFC PARSING ###
+        // ### CLASS B SPECIFIC PARSING ###
         if (omniClass == OMNI_CLASS_B) {
             std::vector<std::string> multisig_script_data;
 
@@ -1196,8 +1197,8 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
                 if (whichType == TX_MULTISIG) {
                     if (msc_debug_script) {
                         PrintToLog(" >> multisig: ");
-                        BOOST_FOREACH(const CTxDestination& dest, vDest) {
-                            PrintToLog("%s ; ", CBitcoinAddress(dest).ToString());
+                        for(const CTxDestination& dest : vDest) {
+                            PrintToLog("%s ; ", EncodeDestination(dest));
                         }
                         PrintToLog("\n");
                     }
@@ -1242,7 +1243,7 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
                 if (msc_debug_parser_data) {
                     CPubKey key(ParseHex(multisig_script_data[k]));
                     CKeyID keyID = key.GetID();
-                    std::string strAddress = CBitcoinAddress(keyID).ToString();
+                    std::string strAddress = EncodeDestination(keyID);
                     PrintToLog("multisig_data[%d]:%s: %s\n", k, multisig_script_data[k], strAddress);
                 }
                 if (msc_debug_parser) {
@@ -1334,7 +1335,7 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
     if (msc_debug_verbose) PrintToLog("single_pkt: %s\n", HexStr(single_pkt, packet_size + single_pkt));
     mp_tx.Set(strSender, strReference, 0, wtx.GetHash(), nBlock, idx, (unsigned char *)&single_pkt, packet_size, omniClass, (inAll-outAll));
 
-    // TODO: the following is a bit aweful
+    // TODO: the following is a bit awful
     // Provide a hint for DEx payments
     if (omniClass == OMNI_CLASS_A && packet_size == 0) {
         return 1;
@@ -1366,11 +1367,10 @@ static bool HandleDExPayments(const CTransaction& tx, int nBlock, const std::str
     for (unsigned int n = 0; n < tx.vout.size(); ++n) {
         CTxDestination dest;
         if (ExtractDestination(tx.vout[n].scriptPubKey, dest)) {
-            CBitcoinAddress address(dest);
-            if (address == ExodusAddress()) {
+            if (dest == ExodusAddress()) {
                 continue;
             }
-            std::string strAddress = address.ToString();
+            std::string strAddress = EncodeDestination(dest);
             if (msc_debug_parser_dex) PrintToLog("payment #%d %s %s\n", count, strAddress, FormatIndivisibleMP(tx.vout[n].nValue));
 
             // check everything and pay BTC for the property we are buying here...
@@ -1396,7 +1396,7 @@ static bool HandleExodusPurchase(const CTransaction& tx, int nBlock, const std::
     for (unsigned int n = 0; n < tx.vout.size(); ++n) {
         CTxDestination dest;
         if (ExtractDestination(tx.vout[n].scriptPubKey, dest)) {
-            if (CBitcoinAddress(dest) == ExodusCrowdsaleAddress(nBlock)) {
+            if (dest == ExodusCrowdsaleAddress(nBlock)) {
                 amountInvested = tx.vout[n].nValue;
                 break; // TODO: maybe sum all values
             }
@@ -1506,7 +1506,7 @@ public:
  */
 static int msc_initial_scan(int nFirstBlock)
 {
-    int nTimeBetweenProgressReports = GetArg("-omniprogressfrequency", 30);  // seconds
+    int nTimeBetweenProgressReports = gArgs.GetArg("-omniprogressfrequency", 30);  // seconds
     int64_t nNow = GetTime();
     unsigned int nTxsTotal = 0;
     unsigned int nTxsFoundTotal = 0;
@@ -1521,7 +1521,7 @@ static int msc_initial_scan(int nFirstBlock)
     ProgressReporter progressReporter(chainActive[nFirstBlock], chainActive[nLastBlock]);
 
     // check if using seed block filter should be disabled
-    bool seedBlockFilterEnabled = GetBoolArg("-omniseedblockfilter", true);
+    bool seedBlockFilterEnabled = gArgs.GetBoolArg("-omniseedblockfilter", true);
 
     for (nBlock = nFirstBlock; nBlock <= nLastBlock; ++nBlock)
     {
@@ -1531,7 +1531,7 @@ static int msc_initial_scan(int nFirstBlock)
         }
 
         CBlockIndex* pblockindex = chainActive[nBlock];
-        if (NULL == pblockindex) break;
+        if (nullptr == pblockindex) break;
         std::string strBlockHash = pblockindex->GetBlockHash().GetHex();
 
         if (msc_debug_exo) PrintToLog("%s(%d; max=%d):%s, line %d, file: %s\n",
@@ -1550,8 +1550,8 @@ static int msc_initial_scan(int nFirstBlock)
             CBlock block;
             if (!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus())) break;
 
-            BOOST_FOREACH(const CTransaction&tx, block.vtx) {
-                if (mastercore_handler_tx(tx, nBlock, nTxNum, pblockindex)) ++nTxsFoundInBlock;
+            for(const auto tx : block.vtx) {
+                if (mastercore_handler_tx(*tx, nBlock, nTxNum, pblockindex, nullptr)) ++nTxsFoundInBlock;
                 ++nTxNum;
             }
         }
@@ -1658,7 +1658,7 @@ int mastercore_init()
     PrintToConsole("Initializing Omni Core v%s [%s]\n", OmniCoreVersion(), Params().NetworkIDString());
 
     PrintToLog("\nInitializing Omni Core v%s [%s]\n", OmniCoreVersion(), Params().NetworkIDString());
-    PrintToLog("Startup time: %s\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()));
+    PrintToLog("Startup time: %s\n", FormatISO8601DateTime(GetTime()));
 
     InitDebugLogLevels();
     ShrinkDebugLog();
@@ -1668,7 +1668,7 @@ int mastercore_init()
     }
 
     // check for --autocommit option and set transaction commit flag accordingly
-    if (!GetBoolArg("-autocommit", true)) {
+    if (!gArgs.GetBoolArg("-autocommit", true)) {
         PrintToLog("Process was started with --autocommit set to false. "
                 "Created Omni transactions will not be committed to wallet or broadcast.\n");
         autoCommit = false;
@@ -1676,7 +1676,7 @@ int mastercore_init()
 
     // check for --startclean option and delete MP_ folders if present
     bool startClean = false;
-    if (GetBoolArg("-startclean", false)) {
+    if (gArgs.GetBoolArg("-startclean", false)) {
         PrintToLog("Process was started with --startclean option, attempting to clear persistence files..\n");
         try {
             boost::filesystem::path persistPath = GetDataDir() / "MP_persist";
@@ -1712,7 +1712,7 @@ int mastercore_init()
     pDbFeeHistory = new COmniFeeHistory(GetDataDir() / "OMNI_feehistory", fReindex);
 
     pathStateFiles = GetDataDir() / "MP_persist";
-    TryCreateDirectory(pathStateFiles);
+    TryCreateDirectories(pathStateFiles);
 
     bool wrongDBVersion = (pDbTransactionList->getDBVersion() != DB_VERSION);
 
@@ -1762,7 +1762,7 @@ int mastercore_init()
         std::string strAlert("INCONSISTENT DB DETECTED! IF YOU ARE USING AN OVERLAY DB, YOU MAY NEED TO REPROCESS"
                 "ALL OMNI LAYER TRANSACTIONS TO AVOID INCONSISTENCIES!");
         AddAlert("omnicore", ALERT_CLIENT_VERSION_EXPIRY, std::numeric_limits<uint32_t>::max(), strAlert);
-        AlertNotify(strAlert);
+        DoWarning(strAlert);
     }
 
     // legacy code, setting to pre-genesis-block
@@ -1793,8 +1793,8 @@ int mastercore_init()
     if (!pDbTransactionList->LoadFreezeState(nWaterlineBlock)) {
         std::string strShutdownReason = "Failed to load freeze state from levelDB.  It is unsafe to continue.\n";
         PrintToLog(strShutdownReason);
-        if (!GetBoolArg("-overrideforcedshutdown", false)) {
-            AbortNode(strShutdownReason, strShutdownReason);
+        if (!gArgs.GetBoolArg("-overrideforcedshutdown", false)) {
+            DoAbortNode(strShutdownReason, strShutdownReason);
         }
     }
 
@@ -1824,37 +1824,37 @@ int mastercore_shutdown()
 
     if (pDbTransactionList) {
         delete pDbTransactionList;
-        pDbTransactionList = NULL;
+        pDbTransactionList = nullptr;
     }
     if (pDbTradeList) {
         delete pDbTradeList;
-        pDbTradeList = NULL;
+        pDbTradeList = nullptr;
     }
     if (pDbStoList) {
         delete pDbStoList;
-        pDbStoList = NULL;
+        pDbStoList = nullptr;
     }
     if (pDbSpInfo) {
         delete pDbSpInfo;
-        pDbSpInfo = NULL;
+        pDbSpInfo = nullptr;
     }
     if (pDbTransaction) {
         delete pDbTransaction;
-        pDbTransaction = NULL;
+        pDbTransaction = nullptr;
     }
     if (pDbFeeCache) {
         delete pDbFeeCache;
-        pDbFeeCache = NULL;
+        pDbFeeCache = nullptr;
     }
     if (pDbFeeHistory) {
         delete pDbFeeHistory;
-        pDbFeeHistory = NULL;
+        pDbFeeHistory = nullptr;
     }
 
     mastercoreInitialized = 0;
 
     PrintToLog("\nOmni Core shutdown completed\n");
-    PrintToLog("Shutdown time: %s\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()));
+    PrintToLog("Shutdown time: %s\n", FormatISO8601DateTime(GetTime()));
 
     PrintToConsole("Omni Core shutdown completed\n");
 
@@ -1866,7 +1866,7 @@ int mastercore_shutdown()
  *
  * @return True, if the transaction was an Exodus purchase, DEx payment or a valid Omni transaction
  */
-bool mastercore_handler_tx(const CTransaction& tx, int nBlock, unsigned int idx, const CBlockIndex* pBlockIndex)
+bool mastercore_handler_tx(const CTransaction& tx, int nBlock, unsigned int idx, const CBlockIndex* pBlockIndex, const std::shared_ptr<std::map<COutPoint, Coin> > removedCoins)
 {
     LOCK(cs_tally);
 
@@ -1876,7 +1876,7 @@ bool mastercore_handler_tx(const CTransaction& tx, int nBlock, unsigned int idx,
 
     // clear pending, if any
     // NOTE1: Every incoming TX is checked, not just MP-ones because:
-    // if for some reason the incoming TX doesn't pass our parser validation steps successfuly, I'd still want to clear pending amounts for that TX.
+    // if for some reason the incoming TX doesn't pass our parser validation steps successfully, I'd still want to clear pending amounts for that TX.
     // NOTE2: Plus I wanna clear the amount before that TX is parsed by our protocol, in case we ever consider pending amounts in internal calculations.
     PendingDelete(tx.GetHash());
 
@@ -1888,7 +1888,7 @@ bool mastercore_handler_tx(const CTransaction& tx, int nBlock, unsigned int idx,
     mp_obj.unlockLogic();
 
     bool fFoundTx = false;
-    int pop_ret = parseTransaction(false, tx, nBlock, idx, mp_obj, nBlockTime);
+    int pop_ret = parseTransaction(false, tx, nBlock, idx, mp_obj, nBlockTime, removedCoins);
 
     if (pop_ret >= 0) {
         assert(mp_obj.getEncodingClass() != NO_MARKER);
@@ -1939,7 +1939,7 @@ bool mastercore_handler_tx(const CTransaction& tx, int nBlock, unsigned int idx,
 bool mastercore::UseEncodingClassC(size_t nDataSize)
 {
     size_t nTotalSize = nDataSize + GetOmMarker().size(); // Marker "omni"
-    bool fDataEnabled = GetBoolArg("-datacarrier", true);
+    bool fDataEnabled = gArgs.GetBoolArg("-datacarrier", true);
     int nBlockNow = GetHeight();
     if (!IsAllowedOutputType(TX_NULL_DATA, nBlockNow)) {
         fDataEnabled = false;
@@ -2021,10 +2021,10 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
                 "Please restart with -startclean flag and if this doesn't work, please reach out to the support.\n",
                 nBlockNow, pBlockIndex->GetBlockHash().GetHex());
         PrintToLog(msg);
-        if (!GetBoolArg("-overrideforcedshutdown", false)) {
+        if (!gArgs.GetBoolArg("-overrideforcedshutdown", false)) {
             boost::filesystem::path persistPath = GetDataDir() / "MP_persist";
             if (boost::filesystem::exists(persistPath)) boost::filesystem::remove_all(persistPath); // prevent the node being restarted without a reparse after forced shutdown
-            AbortNode(msg, msg);
+            DoAbortNode(msg, msg);
         }
     } else {
         // save out the state after this block
@@ -2036,20 +2036,12 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
     return 0;
 }
 
-int mastercore_handler_disc_begin(int nBlockNow, CBlockIndex const * pBlockIndex)
+void mastercore_handler_disc_begin(const int nHeight)
 {
     LOCK(cs_tally);
 
     reorgRecoveryMode = 1;
-    reorgRecoveryMaxHeight = (pBlockIndex->nHeight > reorgRecoveryMaxHeight) ? pBlockIndex->nHeight: reorgRecoveryMaxHeight;
-    return 0;
-}
-
-int mastercore_handler_disc_end(int nBlockNow, CBlockIndex const * pBlockIndex)
-{
-    LOCK(cs_tally);
-
-    return 0;
+    reorgRecoveryMaxHeight = (nHeight > reorgRecoveryMaxHeight) ? nHeight: reorgRecoveryMaxHeight;
 }
 
 /**
@@ -2063,13 +2055,13 @@ int mastercore_handler_disc_end(int nBlockNow, CBlockIndex const * pBlockIndex)
  *
  * @return The Exodus address
  */
-const CBitcoinAddress ExodusAddress()
+const CTxDestination ExodusAddress()
 {
     if (isNonMainNet()) {
-        static CBitcoinAddress testAddress(exodus_testnet);
+        static CTxDestination testAddress = DecodeDestination(exodus_testnet);
         return testAddress;
     } else {
-        static CBitcoinAddress mainAddress(exodus_mainnet);
+        static CTxDestination mainAddress = DecodeDestination(exodus_mainnet);
         return mainAddress;
     }
 }
@@ -2086,14 +2078,14 @@ const CBitcoinAddress ExodusAddress()
  *
  * @return The Exodus fundraiser address
  */
-const CBitcoinAddress ExodusCrowdsaleAddress(int nBlock)
+const CTxDestination ExodusCrowdsaleAddress(int nBlock)
 {
     if (MONEYMAN_TESTNET_BLOCK <= nBlock && isNonMainNet()) {
-        static CBitcoinAddress moneyAddress(getmoney_testnet);
+        static CTxDestination moneyAddress = DecodeDestination(getmoney_testnet);
         return moneyAddress;
     }
     else if (MONEYMAN_REGTEST_BLOCK <= nBlock && RegTest()) {
-        static CBitcoinAddress moneyAddress(getmoney_testnet);
+        static CTxDestination moneyAddress = DecodeDestination(getmoney_testnet);
         return moneyAddress;
     }
 

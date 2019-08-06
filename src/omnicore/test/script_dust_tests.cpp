@@ -1,11 +1,12 @@
-#include "omnicore/script.h"
+#include <omnicore/script.h>
 
-#include "amount.h"
-#include "main.h"
-#include "script/script.h"
-#include "test/test_bitcoin.h"
-#include "utilstrencodings.h"
-#include "primitives/transaction.h"
+#include <amount.h>
+#include <policy/policy.h>
+#include <validation.h>
+#include <script/script.h>
+#include <test/test_bitcoin.h>
+#include <util/strencodings.h>
+#include <primitives/transaction.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -13,7 +14,7 @@
 #include <string>
 #include <vector>
 
-// Is resetted to a norm value in each test
+// Is reset to a norm value in each test
 extern CFeeRate minRelayTxFee;
 static CFeeRate minRelayTxFeeOriginal = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
 
@@ -22,7 +23,7 @@ BOOST_FIXTURE_TEST_SUITE(omnicore_script_dust_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(dust_threshold_pubkey_hash)
 {
     minRelayTxFee = CFeeRate(1000);
-    const int64_t nExpected = 546; // satoshi
+    const int64_t nExpected = 182; // satoshi
     const size_t nScriptSize = 25; // byte
 
     // Pay-to-pubkey-hash
@@ -31,12 +32,12 @@ BOOST_AUTO_TEST_CASE(dust_threshold_pubkey_hash)
 
     CScript script(vchScript.begin(), vchScript.end());
     BOOST_CHECK_EQUAL(script.size(), nScriptSize);
-    BOOST_CHECK_EQUAL(GetDustThreshold(script), nExpected);
+    BOOST_CHECK_EQUAL(OmniGetDustThreshold(script) / 3, nExpected);
 
     // Confirm an output with that value and script is no dust
-    BOOST_CHECK_EQUAL(CTxOut(nExpected, script).IsDust(minRelayTxFee), false);
+    BOOST_CHECK_EQUAL(IsDust(CTxOut(nExpected, script), minRelayTxFee), false);
     // ... but an output, spending one satoshi less, is indeed
-    BOOST_CHECK_EQUAL(CTxOut(nExpected - 1, script).IsDust(minRelayTxFee), true);
+    BOOST_CHECK_EQUAL(IsDust(CTxOut(nExpected - 1, script), minRelayTxFee), true);
 
     minRelayTxFee = minRelayTxFeeOriginal;
 }
@@ -44,7 +45,7 @@ BOOST_AUTO_TEST_CASE(dust_threshold_pubkey_hash)
 BOOST_AUTO_TEST_CASE(dust_threshold_script_hash)
 {
     minRelayTxFee = CFeeRate(1000);
-    const int64_t nExpected = 540; // satoshi
+    const int64_t nExpected = 180; // satoshi
     const size_t nScriptSize = 23; // byte
 
     // Pay-to-script-hash
@@ -53,9 +54,9 @@ BOOST_AUTO_TEST_CASE(dust_threshold_script_hash)
 
     CScript script(vchScript.begin(), vchScript.end());
     BOOST_CHECK_EQUAL(script.size(), nScriptSize);
-    BOOST_CHECK_EQUAL(GetDustThreshold(script), nExpected);
-    BOOST_CHECK_EQUAL(CTxOut(nExpected, script).IsDust(minRelayTxFee), false);
-    BOOST_CHECK_EQUAL(CTxOut(nExpected - 1, script).IsDust(minRelayTxFee), true);
+    BOOST_CHECK_EQUAL(OmniGetDustThreshold(script) / 3, nExpected);
+    BOOST_CHECK_EQUAL(IsDust(CTxOut(nExpected, script), minRelayTxFee), false);
+    BOOST_CHECK_EQUAL(IsDust(CTxOut(nExpected - 1, script), minRelayTxFee), true);
 
     minRelayTxFee = minRelayTxFeeOriginal;
 }
@@ -63,7 +64,7 @@ BOOST_AUTO_TEST_CASE(dust_threshold_script_hash)
 BOOST_AUTO_TEST_CASE(dust_threshold_multisig_compressed_compressed)
 {
     minRelayTxFee = CFeeRate(1000);
-    const int64_t nExpected = 684; // satoshi
+    const int64_t nExpected = 228; // satoshi
     const size_t nScriptSize = 71; // byte
 
     // Bare multisig, two compressed public keys
@@ -74,9 +75,9 @@ BOOST_AUTO_TEST_CASE(dust_threshold_multisig_compressed_compressed)
 
     CScript script(vchScript.begin(), vchScript.end());
     BOOST_CHECK_EQUAL(script.size(), nScriptSize);
-    BOOST_CHECK_EQUAL(GetDustThreshold(script), nExpected);
-    BOOST_CHECK_EQUAL(CTxOut(nExpected, script).IsDust(minRelayTxFee), false);
-    BOOST_CHECK_EQUAL(CTxOut(nExpected - 1, script).IsDust(minRelayTxFee), true);
+    BOOST_CHECK_EQUAL(OmniGetDustThreshold(script) / 3, nExpected);
+    BOOST_CHECK_EQUAL(IsDust(CTxOut(nExpected, script), minRelayTxFee), false);
+    BOOST_CHECK_EQUAL(IsDust(CTxOut(nExpected - 1, script), minRelayTxFee), true);
 
     minRelayTxFee = minRelayTxFeeOriginal;
 }
@@ -84,7 +85,7 @@ BOOST_AUTO_TEST_CASE(dust_threshold_multisig_compressed_compressed)
 BOOST_AUTO_TEST_CASE(dust_threshold_multisig_uncompressed_compressed)
 {
     minRelayTxFee = CFeeRate(1000);
-    const int64_t nExpected  = 780; // satoshi
+    const int64_t nExpected  = 260; // satoshi
     const size_t nScriptSize = 103; // byte
 
     // Bare multisig, one uncompressed, one compressed public key
@@ -95,9 +96,9 @@ BOOST_AUTO_TEST_CASE(dust_threshold_multisig_uncompressed_compressed)
 
     CScript script(vchScript.begin(), vchScript.end());
     BOOST_CHECK_EQUAL(script.size(), nScriptSize);
-    BOOST_CHECK_EQUAL(GetDustThreshold(script), nExpected);
-    BOOST_CHECK_EQUAL(CTxOut(nExpected, script).IsDust(minRelayTxFee), false);
-    BOOST_CHECK_EQUAL(CTxOut(nExpected - 1, script).IsDust(minRelayTxFee), true);
+    BOOST_CHECK_EQUAL(OmniGetDustThreshold(script) / 3, nExpected);
+    BOOST_CHECK_EQUAL(IsDust(CTxOut(nExpected, script), minRelayTxFee), false);
+    BOOST_CHECK_EQUAL(IsDust(CTxOut(nExpected - 1, script), minRelayTxFee), true);
 
     minRelayTxFee = minRelayTxFeeOriginal;
 }
@@ -105,7 +106,7 @@ BOOST_AUTO_TEST_CASE(dust_threshold_multisig_uncompressed_compressed)
 BOOST_AUTO_TEST_CASE(dust_threshold_multisig_compressed_compressed_compressed)
 {
     minRelayTxFee = CFeeRate(1000);
-    const int64_t nExpected  = 786; // satoshi
+    const int64_t nExpected  = 262; // satoshi
     const size_t nScriptSize = 105; // byte
 
     // Bare multisig, three uncompressed public keys
@@ -116,9 +117,9 @@ BOOST_AUTO_TEST_CASE(dust_threshold_multisig_compressed_compressed_compressed)
 
     CScript script(vchScript.begin(), vchScript.end());
     BOOST_CHECK_EQUAL(script.size(), nScriptSize);
-    BOOST_CHECK_EQUAL(GetDustThreshold(script), nExpected);
-    BOOST_CHECK_EQUAL(CTxOut(nExpected, script).IsDust(minRelayTxFee), false);
-    BOOST_CHECK_EQUAL(CTxOut(nExpected - 1, script).IsDust(minRelayTxFee), true);
+    BOOST_CHECK_EQUAL(OmniGetDustThreshold(script) / 3, nExpected);
+    BOOST_CHECK_EQUAL(IsDust(CTxOut(nExpected, script), minRelayTxFee), false);
+    BOOST_CHECK_EQUAL(IsDust(CTxOut(nExpected - 1, script), minRelayTxFee), true);
 
     minRelayTxFee = minRelayTxFeeOriginal;
 }
@@ -126,7 +127,7 @@ BOOST_AUTO_TEST_CASE(dust_threshold_multisig_compressed_compressed_compressed)
 BOOST_AUTO_TEST_CASE(dust_threshold_multisig_uncompressed_compressed_compressed)
 {
     minRelayTxFee = CFeeRate(1000);
-    const int64_t nExpected  = 882; // satoshi
+    const int64_t nExpected  = 294; // satoshi
     const size_t nScriptSize = 137; // byte
 
     // Bare multisig, one uncompressed, two compressed public keys
@@ -138,9 +139,9 @@ BOOST_AUTO_TEST_CASE(dust_threshold_multisig_uncompressed_compressed_compressed)
 
     CScript script(vchScript.begin(), vchScript.end());
     BOOST_CHECK_EQUAL(script.size(), nScriptSize);
-    BOOST_CHECK_EQUAL(GetDustThreshold(script), nExpected);
-    BOOST_CHECK_EQUAL(CTxOut(nExpected, script).IsDust(minRelayTxFee), false);
-    BOOST_CHECK_EQUAL(CTxOut(nExpected - 1, script).IsDust(minRelayTxFee), true);
+    BOOST_CHECK_EQUAL(OmniGetDustThreshold(script) / 3, nExpected);
+    BOOST_CHECK_EQUAL(IsDust(CTxOut(nExpected, script), minRelayTxFee), false);
+    BOOST_CHECK_EQUAL(IsDust(CTxOut(nExpected - 1, script), minRelayTxFee), true);
 
     minRelayTxFee = minRelayTxFeeOriginal;
 }

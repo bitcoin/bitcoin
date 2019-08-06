@@ -1,25 +1,28 @@
-#include "omnicore/walletutils.h"
+#include <omnicore/walletutils.h>
 
-#include "omnicore/log.h"
-#include "omnicore/omnicore.h"
-#include "omnicore/rules.h"
-#include "omnicore/script.h"
-#include "omnicore/utilsbitcoin.h"
+#include <omnicore/log.h>
+#include <omnicore/omnicore.h>
+#include <omnicore/rules.h>
+#include <omnicore/script.h>
+#include <omnicore/utilsbitcoin.h>
 
-#include "amount.h"
-#include "base58.h"
-#include "coincontrol.h"
-#include "init.h"
-#include "main.h"
-#include "pubkey.h"
-#include "script/standard.h"
-#include "sync.h"
-#include "txmempool.h"
-#include "uint256.h"
-#include "utilstrencodings.h"
+#include <amount.h>
+#include <base58.h>
+#include <init.h>
+#include <interfaces/wallet.h>
+#include <key_io.h>
+#include <validation.h>
+#include <policy/policy.h>
+#include <pubkey.h>
+#include <script/standard.h>
+#include <sync.h>
+#include <txmempool.h>
+#include <uint256.h>
+#include <util/strencodings.h>
 #ifdef ENABLE_WALLET
-#include "script/ismine.h"
-#include "wallet/wallet.h"
+#include <wallet/coincontrol.h>
+#include <script/ismine.h>
+#include <wallet/wallet.h>
 #endif
 
 #include <stdint.h>
@@ -32,21 +35,22 @@ namespace mastercore
 /**
  * Retrieves a public key from the wallet, or converts a hex-string to a public key.
  */
-bool AddressToPubKey(const std::string& key, CPubKey& pubKey)
+bool AddressToPubKey(const interfaces::Wallet* iWallet, const std::string& key, CPubKey& pubKey)
 {
 #ifdef ENABLE_WALLET
     // Case 1: Bitcoin address and the key is in the wallet
-    CBitcoinAddress address(key);
-    if (pwalletMain && address.IsValid()) {
-        CKeyID keyID;
-        if (!address.GetKeyID(keyID)) {
-            PrintToLog("%s() ERROR: redemption address %s does not refer to a public key\n", __func__, key);
-            return false;
-        }
-        if (!pwalletMain->GetPubKey(keyID, pubKey)) {
-            PrintToLog("%s() ERROR: no public key in wallet for redemption address %s\n", __func__, key);
-            return false;
-        }
+    CTxDestination dest = DecodeDestination(key);
+    if (!IsValidDestination(dest)) {
+        return false;
+    }
+    CKeyID keyID = iWallet->getKeyForDestination(dest);
+    if (keyID.IsNull()) {
+        PrintToLog("%s: ERROR: redemption address %s does not refer to a public key\n", __func__, key);
+        return false;
+    }
+    if (!iWallet->getPubKey(keyID, pubKey)) {
+        PrintToLog("%s: ERROR: no public key in wallet for redemption address %s\n", __func__, key);
+        return false;
     }
     // Case 2: Hex-encoded public key
     else
@@ -56,7 +60,7 @@ bool AddressToPubKey(const std::string& key, CPubKey& pubKey)
     }
 
     if (!pubKey.IsFullyValid()) {
-        PrintToLog("%s() ERROR: invalid redemption key %s\n", __func__, key);
+        PrintToLog("%s: ERROR: invalid redemption key %s\n", __func__, key);
         return false;
     }
 
@@ -66,7 +70,7 @@ bool AddressToPubKey(const std::string& key, CPubKey& pubKey)
 /**
  * Checks, whether enough spendable outputs are available to pay for transaction fees.
  */
-bool CheckFee(const std::string& fromAddress, size_t nDataSize)
+bool CheckFee(interfaces::Wallet& iWallet, const std::string& fromAddress, size_t nDataSize)
 {
     int64_t minFee = 0;
     int64_t feePerKB = 0;
@@ -75,10 +79,11 @@ bool CheckFee(const std::string& fromAddress, size_t nDataSize)
     bool fUseClassC = UseEncodingClassC(nDataSize);
 
     CCoinControl coinControl;
-    inputTotal = SelectCoins(fromAddress, coinControl, 0);
+    inputTotal = SelectCoins(iWallet, fromAddress, coinControl, 0);
 
     // calculate the estimated fee per KB based on the currently set confirm target
-    CFeeRate feeRate = mempool.estimateFee(nTxConfirmTarget);
+    FeeCalculation feeCalc;
+    CFeeRate feeRate = ::feeEstimator.estimateSmartFee(iWallet.getConfirmTarget(), &feeCalc, true /* FeeEstimateMode::CONSERVATIVE */);
 
     // if there is not enough data (and zero is estimated) then base minimum on a fairly high/safe 50,000 satoshi fee per KB
     if (feeRate == CFeeRate(0)) {
@@ -124,38 +129,35 @@ bool CheckInput(const CTxOut& txOut, int nHeight, CTxDestination& dest)
 }
 
 /**
- * Retrieves the label, used by the UI, for an address from the wallet.
+ * IsMine wrapper to determine whether the address is in the wallet.
  */
-std::string GetAddressLabel(const std::string& address)
+int IsMyAddress(const std::string& address, interfaces::Wallet* iWallet)
 {
-    std::string addressLabel;
 #ifdef ENABLE_WALLET
-    if (pwalletMain) {
-        LOCK(pwalletMain->cs_wallet);
-
-        CBitcoinAddress addressParsed(address);
-        std::map<CTxDestination, CAddressBookData>::const_iterator mi = pwalletMain->mapAddressBook.find(addressParsed.Get());
-        if (mi != pwalletMain->mapAddressBook.end()) {
-            addressLabel = mi->second.name;
-        }
+    if (iWallet) {
+        CTxDestination destination = DecodeDestination(address);
+        return static_cast<int>(iWallet->isMine(destination));
     }
 #endif
-    return addressLabel;
+    return 0;
 }
 
 /**
  * IsMine wrapper to determine whether the address is in the wallet.
  */
-int IsMyAddress(const std::string& address)
+int IsMyAddressAllWallets(const std::string& address, const bool matchAny, const isminefilter& filter)
 {
 #ifdef ENABLE_WALLET
-    if (pwalletMain) {
-        // TODO: resolve deadlock caused cs_tally, cs_wallet
-        // LOCK(pwalletMain->cs_wallet);
-        CBitcoinAddress parsedAddress(address);
-        isminetype isMine = IsMine(*pwalletMain, parsedAddress.Get());
+    if (!HasWallets())
+        return 0;
 
-        return static_cast<int>(isMine);
+    for(const std::shared_ptr<CWallet> wallet : GetWallets()) {
+        CTxDestination destination = DecodeDestination(address);
+        isminetype ismine = IsMine(*wallet, destination);
+        if (matchAny && ismine != ISMINE_NO)
+            return static_cast<int>(ismine);
+        else if (ismine & filter)
+            return static_cast<int>(ismine);
     }
 #endif
     return 0;
@@ -166,14 +168,13 @@ int IsMyAddress(const std::string& address)
  *
  * @return The estimated fee per 1000 byte, or 50000 satoshi as per default
  */
-static int64_t GetEstimatedFeePerKb()
+CAmount GetEstimatedFeePerKb(interfaces::Wallet& iWallet)
 {
-    int64_t nFee = 50000; // 0.0005 BTC;
+    CAmount nFee = 50000; // 0.0005 BTC;
 
 #ifdef ENABLE_WALLET
-    if (pwalletMain) {
-        nFee = pwalletMain->GetMinimumFee(1000, nTxConfirmTarget, mempool);
-    }
+    CCoinControl coinControl;
+    nFee = iWallet.getMinimumFee(1000, coinControl, nullptr, nullptr);
 #endif
 
     return nFee;
@@ -186,78 +187,74 @@ static int64_t GetEstimatedFeePerKb()
  * @param txOut[in]  The transaction output to check
  * @return The minimum value an output to spent should have
  */
-static int64_t GetEconomicThreshold(const CTxOut& txOut)
+int64_t GetEconomicThreshold(interfaces::Wallet& iWallet, const CTxOut& txOut)
 {
     // Minimum value needed to relay the transaction
-    int64_t nThresholdDust = txOut.GetDustThreshold(minRelayTxFee);
+    int64_t nThresholdDust = GetDustThreshold(txOut, minRelayTxFee);
 
-    // Use the estimated fee that is also used to contruct transactions.
+    // Use the estimated fee that is also used to construct transactions.
     // We use the absolute minimum, so we divide by 3, to get rid of the
     // safety margin used for the dust threshold used for relaying.
-    CFeeRate estimatedFeeRate(GetEstimatedFeePerKb());
-    int64_t nThresholdFees = txOut.GetDustThreshold(estimatedFeeRate) / 3;
+    CFeeRate estimatedFeeRate(GetEstimatedFeePerKb(iWallet));
+    int64_t nThresholdFees = GetDustThreshold(txOut, estimatedFeeRate) / 3;
 
     return std::max(nThresholdDust, nThresholdFees);
 }
 
-/**
- * Selects spendable outputs to create a transaction.
- */
-int64_t SelectCoins(const std::string& fromAddress, CCoinControl& coinControl, int64_t additional)
+#ifdef ENABLE_WALLET
+int64_t SelectCoins(interfaces::Wallet& iWallet, const std::string& fromAddress, CCoinControl& coinControl, int64_t additional)
 {
     // total output funds collected
     int64_t nTotal = 0;
-
-#ifdef ENABLE_WALLET
-    if (NULL == pwalletMain) {
-        return 0;
-    }
+    int nHeight = chainActive.Height();
 
     // select coins to cover up to 20 kB max. transaction size
-    int64_t nMax = 20 * GetEstimatedFeePerKb();
+    CAmount nMax = 20 * GetEstimatedFeePerKb(iWallet);
 
     // if referenceamount is set it is needed to be accounted for here too
     if (0 < additional) nMax += additional;
 
-    int nHeight = GetHeight();
-    LOCK2(cs_main, pwalletMain->cs_wallet);
+    std::map<uint256, interfaces::WalletTxStatus> tx_status;
+    const std::vector<interfaces::WalletTx>& transactions = iWallet.getWalletTxsDetails(tx_status);
 
     // iterate over the wallet
-    for (std::map<uint256, CWalletTx>::const_iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it) {
-        const uint256& txid = it->first;
-        const CWalletTx& wtx = it->second;
+    for (std::vector<interfaces::WalletTx>::const_iterator it = transactions.begin(); it != transactions.end(); ++it) {
+        const CTransactionRef tx = it->tx;
+        const uint256& txid = tx->GetHash();
 
-        if (!wtx.IsTrusted()) {
-            continue;
-        }
-        if (!wtx.GetAvailableCredit()) {
+        auto status = tx_status.find(txid);
+        if (status == tx_status.end() || !status->second.is_trusted) {
             continue;
         }
 
-        for (unsigned int n = 0; n < wtx.vout.size(); n++) {
-            const CTxOut& txOut = wtx.vout[n];
+        if (!it->available_credit) {
+            continue;
+        }
+
+        for (unsigned int n = 0; n < tx->vout.size(); n++) {
+            const CTxOut& txOut = tx->vout[n];
 
             CTxDestination dest;
             if (!CheckInput(txOut, nHeight, dest)) {
                 continue;
             }
-            if (!IsMine(*pwalletMain, dest)) {
+            if (!iWallet.isMine(dest)) {
                 continue;
             }
-            if (pwalletMain->IsSpent(txid, n)) {
+            if (iWallet.isSpent(txid, n)) {
                 continue;
             }
-            if (pwalletMain->IsLockedCoin(txid, n)) {
+            if (iWallet.isLockedCoin(COutPoint(txid, n))) {
                 continue;
             }
-            if (txOut.nValue < GetEconomicThreshold(txOut)) {
+            if (txOut.nValue < GetEconomicThreshold(iWallet, txOut)) {
                 if (msc_debug_tokens)
                     PrintToLog("%s: output value below economic threshold: %s:%d, value: %d\n",
                             __func__, txid.GetHex(), n, txOut.nValue);
                 continue;
             }
 
-            std::string sAddress = CBitcoinAddress(dest).ToString();
+            std::string sAddress = EncodeDestination(dest);
             if (msc_debug_tokens)
                 PrintToLog("%s: sender: %s, outpoint: %s:%d, value: %d\n", __func__, sAddress, txid.GetHex(), n, txOut.nValue);
 
@@ -274,57 +271,51 @@ int64_t SelectCoins(const std::string& fromAddress, CCoinControl& coinControl, i
 
         if (nMax <= nTotal) break;
     }
-#endif
 
     return nTotal;
 }
 
-/**
- * Selects all spendable outputs to create a transaction.
- */
-int64_t SelectAllCoins(const std::string& fromAddress, CCoinControl& coinControl)
+int64_t SelectAllCoins(interfaces::Wallet& iWallet, const std::string& fromAddress, CCoinControl& coinControl)
 {
     // total output funds collected
     int64_t nTotal = 0;
+    int nHeight = chainActive.Height();
 
-#ifdef ENABLE_WALLET
-    if (NULL == pwalletMain) {
-        return 0;
-    }
-
-    int nHeight = GetHeight();
-    LOCK2(cs_main, pwalletMain->cs_wallet);
+    std::map<uint256, interfaces::WalletTxStatus> tx_status;
+    const std::vector<interfaces::WalletTx>& transactions = iWallet.getWalletTxsDetails(tx_status);
 
     // iterate over the wallet
-    for (std::map<uint256, CWalletTx>::const_iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it) {
-        const uint256& txid = it->first;
-        const CWalletTx& wtx = it->second;
+    for (std::vector<interfaces::WalletTx>::const_iterator it = transactions.begin(); it != transactions.end(); ++it) {
+        const CTransactionRef tx = it->tx;
+        const uint256& txid = tx->GetHash();
 
-        if (!wtx.IsTrusted()) {
-            continue;
-        }
-        if (!wtx.GetAvailableCredit()) {
+        auto status = tx_status.find(txid);
+        if (status == tx_status.end() || !status->second.is_trusted) {
             continue;
         }
 
-        for (unsigned int n = 0; n < wtx.vout.size(); n++) {
-            const CTxOut& txOut = wtx.vout[n];
+        if (!it->available_credit) {
+            continue;
+        }
+
+        for (unsigned int n = 0; n < tx->vout.size(); n++) {
+            const CTxOut& txOut = tx->vout[n];
 
             CTxDestination dest;
             if (!CheckInput(txOut, nHeight, dest)) {
                 continue;
             }
-            if (!IsMine(*pwalletMain, dest)) {
+            if (!iWallet.isSpendable(dest)) {
                 continue;
             }
-            if (pwalletMain->IsSpent(txid, n)) {
+            if (iWallet.isSpent(txid, n)) {
                 continue;
             }
-            if (pwalletMain->IsLockedCoin(txid, n)) {
+            if (iWallet.isLockedCoin(COutPoint(txid, n))) {
                 continue;
             }
 
-            std::string sAddress = CBitcoinAddress(dest).ToString();
+            std::string sAddress = EncodeDestination(dest);
             if (msc_debug_tokens) {
                 PrintToLog("%s: sender: %s, outpoint: %s:%d, value: %d\n", __func__, sAddress, txid.GetHex(), n, txOut.nValue);
             }
@@ -338,10 +329,9 @@ int64_t SelectAllCoins(const std::string& fromAddress, CCoinControl& coinControl
             }
         }
     }
-#endif
 
     return nTotal;
 }
-
+#endif
 
 } // namespace mastercore

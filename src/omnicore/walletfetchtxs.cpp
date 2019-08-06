@@ -5,22 +5,23 @@
  * position in block and position in wallet including STO receipts.
  */
 
-#include "omnicore/walletfetchtxs.h"
+#include <omnicore/walletfetchtxs.h>
 
-#include "omnicore/dbstolist.h"
-#include "omnicore/dbtxlist.h"
-#include "omnicore/log.h"
-#include "omnicore/omnicore.h"
-#include "omnicore/pending.h"
-#include "omnicore/utilsbitcoin.h"
+#include <omnicore/dbstolist.h>
+#include <omnicore/dbtxlist.h>
+#include <omnicore/log.h>
+#include <omnicore/omnicore.h>
+#include <omnicore/pending.h>
+#include <omnicore/utilsbitcoin.h>
 
-#include "init.h"
-#include "main.h"
-#include "sync.h"
-#include "tinyformat.h"
-#include "txdb.h"
+#include <init.h>
+#include <interfaces/wallet.h>
+#include <validation.h>
+#include <sync.h>
+#include <tinyformat.h>
+#include <index/txindex.h>
 #ifdef ENABLE_WALLET
-#include "wallet/wallet.h"
+#include <wallet/wallet.h>
 #endif
 
 #include <boost/algorithm/string.hpp>
@@ -42,9 +43,8 @@ static unsigned int GetTransactionByteOffset(const uint256& txid)
 {
     LOCK(cs_main);
 
-    CDiskTxPos position;
-    if (pblocktree->ReadTxIndex(txid, position)) {
-        return position.nTxOffset;
+    if (g_txindex) {
+        return g_txindex->ReadTxPos(txid);
     }
 
     return 0;
@@ -55,33 +55,31 @@ static unsigned int GetTransactionByteOffset(const uint256& txid)
  *
  * Ignores order in the wallet (which can be skewed by watch addresses) and utilizes block height and position within block.
  */
-std::map<std::string, uint256> FetchWalletOmniTransactions(unsigned int count, int startBlock, int endBlock)
+std::map<std::string, uint256> FetchWalletOmniTransactions(interfaces::Wallet& iWallet, unsigned int count, int startBlock, int endBlock)
 {
     std::map<std::string, uint256> mapResponse;
 #ifdef ENABLE_WALLET
-    if (pwalletMain == NULL) {
+    if (!HasWallets()) {
         return mapResponse;
     }
     std::set<uint256> seenHashes;
-    std::list<CAccountingEntry> acentries;
-    CWallet::TxItems txOrdered;
-    {
-        LOCK(pwalletMain->cs_wallet);
-        txOrdered = pwalletMain->wtxOrdered;
-    }
+    std::multimap<int64_t, const interfaces::WalletTx*> txOrdered;
+    const std::vector<interfaces::WalletTx>& transactions = iWallet.getWalletTxs();
+    for (const auto& transaction : transactions)
+        txOrdered.insert(std::make_pair(transaction.order_pos, &transaction));
+
     // Iterate backwards through wallet transactions until we have count items to return:
-    for (CWallet::TxItems::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it) {
-        const CWalletTx* pwtx = it->second.first;
-        if (pwtx == NULL) continue;
-        const uint256& txHash = pwtx->GetHash();
+    for (std::multimap<int64_t, const interfaces::WalletTx*>::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it) {
+        const interfaces::WalletTx* pwtx = it->second;
+        const uint256& txHash = pwtx->tx->GetHash();
         {
             LOCK(cs_tally);
             if (!pDbTransactionList->exists(txHash)) continue;
         }
-        const uint256& blockHash = pwtx->hashBlock;
-        if (blockHash.IsNull() || (NULL == GetBlockIndex(blockHash))) continue;
+        const uint256& blockHash = pwtx->hash_block;
+        if (blockHash.IsNull()) continue;
         const CBlockIndex* pBlockIndex = GetBlockIndex(blockHash);
-        if (NULL == pBlockIndex) continue;
+        if (pBlockIndex == nullptr) continue;
         int blockHeight = pBlockIndex->nHeight;
         if (blockHeight < startBlock || blockHeight > endBlock) continue;
         int blockPosition = GetTransactionByteOffset(txHash);
@@ -95,7 +93,7 @@ std::map<std::string, uint256> FetchWalletOmniTransactions(unsigned int count, i
     std::string mySTOReceipts;
     {
         LOCK(cs_tally);
-        mySTOReceipts = pDbStoList->getMySTOReceipts("");
+        mySTOReceipts = pDbStoList->getMySTOReceipts("", iWallet);
     }
     std::vector<std::string> vecReceipts;
     if (!mySTOReceipts.empty()) {
@@ -126,12 +124,9 @@ std::map<std::string, uint256> FetchWalletOmniTransactions(unsigned int count, i
         if (blockHeight < startBlock || blockHeight > endBlock) continue;
         int blockPosition = 0;
         {
-            LOCK(pwalletMain->cs_wallet);
-            std::map<uint256, CWalletTx>::const_iterator walletIt = pwalletMain->mapWallet.find(txHash);
-            if (walletIt != pwalletMain->mapWallet.end()) {
-                const CWalletTx& wtx = walletIt->second;
-                blockPosition = wtx.nOrderPos;
-            }
+            for (const auto& transaction : transactions)
+                if (transaction.tx->GetHash() == txHash)
+                    blockPosition = transaction.order_pos;
         }
         std::string sortKey = strprintf("%06d%010d", blockHeight, blockPosition);
         mapResponse.insert(std::make_pair(sortKey, txHash));

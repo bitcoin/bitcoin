@@ -4,22 +4,22 @@
  * This file contains consensus rules and restrictions.
  */
 
-#include "omnicore/rules.h"
+#include <omnicore/rules.h>
 
-#include "omnicore/activation.h"
-#include "omnicore/consensushash.h"
-#include "omnicore/dbtxlist.h"
-#include "omnicore/log.h"
-#include "omnicore/omnicore.h"
-#include "omnicore/notifications.h"
-#include "omnicore/utilsbitcoin.h"
-#include "omnicore/version.h"
+#include <omnicore/activation.h>
+#include <omnicore/consensushash.h>
+#include <omnicore/dbtxlist.h>
+#include <omnicore/log.h>
+#include <omnicore/omnicore.h>
+#include <omnicore/notifications.h>
+#include <omnicore/utilsbitcoin.h>
+#include <omnicore/version.h>
 
-#include "chainparams.h"
-#include "main.h"
-#include "script/standard.h"
-#include "uint256.h"
-#include "ui_interface.h"
+#include <chainparams.h>
+#include <validation.h>
+#include <script/standard.h>
+#include <uint256.h>
+#include <ui_interface.h>
 
 #include <openssl/sha.h>
 
@@ -83,7 +83,7 @@ std::vector<TransactionRestriction> CConsensusParams::GetRestrictions() const
 /**
  * Returns an empty vector of consensus checkpoints.
  *
- * This method should be overwriten by the child classes, if needed.
+ * This method should be overwritten by the child classes, if needed.
  */
 std::vector<ConsensusCheckpoint> CConsensusParams::GetCheckpoints() const
 {
@@ -93,7 +93,7 @@ std::vector<ConsensusCheckpoint> CConsensusParams::GetCheckpoints() const
 /**
  * Returns an empty vector of transaction checkpoints.
  *
- * This method should be overwriten by the child classes, if needed.
+ * This method should be overwritten by the child classes, if needed.
  */
 std::vector<TransactionCheckpoint> CConsensusParams::GetTransactions() const
 {
@@ -383,7 +383,7 @@ CConsensusParams& MutableConsensusParams()
 }
 
 /**
- * Resets consensus paramters.
+ * Resets consensus parameters.
  */
 void ResetConsensusParams()
 {
@@ -513,7 +513,7 @@ bool ActivateFeature(uint16_t featureId, int activationBlock, uint32_t minClient
         std::string alertText = strprintf("Your client must be updated and will shutdown at block %d (unsupported feature %d ('%s') activated)\n",
                                           activationBlock, featureId, featureName);
         AddAlert("omnicore", ALERT_BLOCK_EXPIRY, activationBlock, alertText);
-        AlertNotify(alertText);
+        DoWarning(alertText);
     }
 
     return true;
@@ -580,7 +580,7 @@ bool DeactivateFeature(uint16_t featureId, int transactionBlock)
 
     std::string alertText = strprintf("An emergency deactivation of feature ID %d (%s) has occurred.", featureId, featureName);
     AddAlert("omnicore", ALERT_BLOCK_EXPIRY, transactionBlock + 1024, alertText);
-    AlertNotify(alertText);
+    DoWarning(alertText);
 
     return true;
 }

@@ -1,7 +1,7 @@
 #ifndef OMNICORE_RULES_H
 #define OMNICORE_RULES_H
 
-#include "uint256.h"
+#include <uint256.h>
 
 #include <stdint.h>
 #include <string>
@@ -204,7 +204,7 @@ CConsensusParams& ConsensusParams(const std::string& network);
 const CConsensusParams& ConsensusParams();
 /** Returns currently active mutable consensus parameter. */
 CConsensusParams& MutableConsensusParams();
-/** Resets consensus paramters. */
+/** Resets consensus parameters. */
 void ResetConsensusParams();
 
 

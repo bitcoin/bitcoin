@@ -3,8 +3,13 @@
 
 class CPubKey;
 class CTransaction;
+class CWallet;
 struct CMutableTransaction;
 struct PrevTxsEntry;
+
+namespace interfaces {
+class Wallet;
+} // namespace interfaces
 
 #include <univalue.h>
 
@@ -31,7 +36,7 @@ uint8_t ParseIssuerBonus(const UniValue& value);
 uint8_t ParseMetaDExAction(const UniValue& value);
 CTransaction ParseTransaction(const UniValue& value);
 CMutableTransaction ParseMutableTransaction(const UniValue& value);
-CPubKey ParsePubKeyOrAddress(const UniValue& value);
+CPubKey ParsePubKeyOrAddress(const interfaces::Wallet* iWallet, const UniValue& value);
 uint32_t ParseOutputIndex(const UniValue& value);
 /** Parses previous transaction outputs. */
 std::vector<PrevTxsEntry> ParsePrevTxs(const UniValue& value);

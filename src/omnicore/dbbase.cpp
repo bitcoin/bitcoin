@@ -1,11 +1,11 @@
-#include "omnicore/dbbase.h"
+#include <omnicore/dbbase.h>
 
-#include "omnicore/log.h"
+#include <omnicore/log.h>
 
-#include "util.h"
+#include <util/system.h>
 
-#include "leveldb/db.h"
-#include "leveldb/write_batch.h"
+#include <leveldb/db.h>
+#include <leveldb/write_batch.h>
 
 #include <boost/filesystem/path.hpp>
 
@@ -20,7 +20,7 @@ leveldb::Status CDBBase::Open(const boost::filesystem::path& path, bool fWipe)
         if (msc_debug_persistence) PrintToLog("Wiping LevelDB in %s\n", path.string());
         leveldb::DestroyDB(path.string(), options);
     }
-    TryCreateDirectory(path);
+    TryCreateDirectories(path);
     if (msc_debug_persistence) PrintToLog("Opening LevelDB in %s\n", path.string());
 
     return leveldb::DB::Open(options, path.string(), &pdb);

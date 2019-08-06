@@ -2,23 +2,24 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "metadexcanceldialog.h"
-#include "ui_metadexcanceldialog.h"
+#include <qt/metadexcanceldialog.h>
+#include <qt/forms/ui_metadexcanceldialog.h>
 
-#include "omnicore_qtutils.h"
+#include <qt/omnicore_qtutils.h>
 
-#include "clientmodel.h"
-#include "ui_interface.h"
-#include "walletmodel.h"
+#include <qt/clientmodel.h>
+#include <key_io.h>
+#include <ui_interface.h>
+#include <qt/walletmodel.h>
 
-#include "omnicore/createpayload.h"
-#include "omnicore/errors.h"
-#include "omnicore/mdex.h"
-#include "omnicore/omnicore.h"
-#include "omnicore/sp.h"
-#include "omnicore/pending.h"
-#include "omnicore/utilsbitcoin.h"
-#include "omnicore/walletutils.h"
+#include <omnicore/createpayload.h>
+#include <omnicore/errors.h>
+#include <omnicore/mdex.h>
+#include <omnicore/omnicore.h>
+#include <omnicore/sp.h>
+#include <omnicore/pending.h>
+#include <omnicore/utilsbitcoin.h>
+#include <omnicore/walletutils.h>
 
 #include <stdint.h>
 #include <map>
@@ -33,22 +34,22 @@
 #include <QWidget>
 
 using std::ostringstream;
-using std::string;
+
 using namespace mastercore;
 
 MetaDExCancelDialog::MetaDExCancelDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::MetaDExCancelDialog),
-    clientModel(0),
-    walletModel(0)
+    clientModel(nullptr),
+    walletModel(nullptr)
 {
     ui->setupUi(this);
 
-    connect(ui->radioCancelPair, SIGNAL(clicked()),this, SLOT(UpdateCancelCombo()));
-    connect(ui->radioCancelPrice, SIGNAL(clicked()),this, SLOT(UpdateCancelCombo()));
-    connect(ui->radioCancelEverything, SIGNAL(clicked()),this, SLOT(UpdateCancelCombo()));
-    connect(ui->cancelButton, SIGNAL(clicked()),this, SLOT(SendCancelTransaction()));
-    connect(ui->fromCombo, SIGNAL(activated(int)), this, SLOT(fromAddressComboBoxChanged(int)));
+    connect(ui->radioCancelPair, &QRadioButton::clicked,this, &MetaDExCancelDialog::UpdateCancelCombo);
+    connect(ui->radioCancelPrice, &QRadioButton::clicked,this, &MetaDExCancelDialog::UpdateCancelCombo);
+    connect(ui->radioCancelEverything, &QRadioButton::clicked,this, &MetaDExCancelDialog::UpdateCancelCombo);
+    connect(ui->cancelButton, &QPushButton::clicked,this, &MetaDExCancelDialog::SendCancelTransaction);
+    connect(ui->fromCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &MetaDExCancelDialog::fromAddressComboBoxChanged);
 
     // perform initial from address population
     UpdateAddressSelector();
@@ -65,9 +66,9 @@ MetaDExCancelDialog::~MetaDExCancelDialog()
 void MetaDExCancelDialog::setClientModel(ClientModel *model)
 {
     this->clientModel = model;
-    if (model != NULL) {
-        connect(model, SIGNAL(refreshOmniBalance()), this, SLOT(RefreshUI()));
-        connect(model, SIGNAL(reinitOmniState()), this, SLOT(ReinitUI()));
+    if (model != nullptr) {
+        connect(model, &ClientModel::refreshOmniBalance, this, &MetaDExCancelDialog::RefreshUI);
+        connect(model, &ClientModel::reinitOmniState, this, &MetaDExCancelDialog::ReinitUI);
     }
 }
 
@@ -104,7 +105,7 @@ void MetaDExCancelDialog::UpdateAddressSelector()
             md_Set & indexes = (it->second);
             for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it) {
                 CMPMetaDEx obj = *it;
-                if(IsMyAddress(obj.getAddr())) { // this address is ours and has an active MetaDEx trade
+                if(IsMyAddress(obj.getAddr(), &walletModel->wallet())) { // this address is ours and has an active MetaDEx trade
                     int idx = ui->fromCombo->findText(QString::fromStdString(obj.getAddr())); // avoid adding duplicates
                     if (idx == -1) ui->fromCombo->addItem(QString::fromStdString(obj.getAddr()));
                 }
@@ -133,7 +134,7 @@ void MetaDExCancelDialog::fromAddressComboBoxChanged(int)
  */
 void MetaDExCancelDialog::UpdateCancelCombo()
 {
-    string senderAddress = ui->fromCombo->currentText().toStdString();
+    std::string senderAddress = ui->fromCombo->currentText().toStdString();
     QString existingSelection = ui->cancelCombo->currentText();
 
     if (senderAddress.empty()) {
@@ -164,17 +165,17 @@ void MetaDExCancelDialog::UpdateCancelCombo()
 
                     bool isBuy = false; // sell or buy? (from UI perspective)
                     if ((obj.getProperty() == OMNI_PROPERTY_MSC) || (obj.getProperty() == OMNI_PROPERTY_TMSC)) isBuy = true;
-                    string sellToken = getPropertyName(obj.getProperty()).c_str();
-                    string desiredToken = getPropertyName(obj.getDesProperty()).c_str();
-                    string sellId = strprintf("%d", obj.getProperty());
-                    string desiredId = strprintf("%d", obj.getDesProperty());
+                    std::string sellToken = getPropertyName(obj.getProperty()).c_str();
+                    std::string desiredToken = getPropertyName(obj.getDesProperty()).c_str();
+                    std::string sellId = strprintf("%d", obj.getProperty());
+                    std::string desiredId = strprintf("%d", obj.getDesProperty());
                     if(sellToken.size()>30) sellToken=sellToken.substr(0,30)+"...";
                     sellToken += " (#" + sellId + ")";
                     if(desiredToken.size()>30) desiredToken=desiredToken.substr(0,30)+"...";
                     desiredToken += " (#" + desiredId + ")";
-                    string comboStr = "Cancel all orders ";
+                    std::string comboStr = "Cancel all orders ";
                     if (isBuy) { comboStr += "buying " + desiredToken; } else { comboStr += "selling " + sellToken; }
-                    string dataStr = sellId + "/" + desiredId;
+                    std::string dataStr = sellId + "/" + desiredId;
                     if (ui->radioCancelPrice->isChecked()) { // append price if needed
                         comboStr += " priced at " + StripTrailingZeros(obj.displayUnitPrice());
                         if ((obj.getProperty() == OMNI_PROPERTY_MSC) || (obj.getDesProperty() == OMNI_PROPERTY_MSC)) { comboStr += " OMN/SPT"; } else { comboStr += " TOMN/SPT"; }
@@ -322,7 +323,7 @@ void MetaDExCancelDialog::SendCancelTransaction()
     }
 
     // confirmation dialog
-    string strMsgText = "You are about to send the following MetaDEx trade cancellation transaction, please check the details thoroughly:\n\n";
+    std::string strMsgText = "You are about to send the following MetaDEx trade cancellation transaction, please check the details thoroughly:\n\n";
     strMsgText += "Type: Cancel Trade Request\nFrom: " + fromAddress + "\nAction: ";
     switch (action) {
         case 2: strMsgText += "2 (Cancel by price)\n"; break;
@@ -332,10 +333,10 @@ void MetaDExCancelDialog::SendCancelTransaction()
 
     std::string messageStr = "Cancel all orders ";
     if (action != 4) {
-        string sellToken = getPropertyName(propertyIdForSale).c_str();
-        string desiredToken = getPropertyName(propertyIdDesired).c_str();
-        string sellId = strprintf("%d", propertyIdForSale);
-        string desiredId = strprintf("%d", propertyIdDesired);
+        std::string sellToken = getPropertyName(propertyIdForSale).c_str();
+        std::string desiredToken = getPropertyName(propertyIdDesired).c_str();
+        std::string sellId = strprintf("%d", propertyIdForSale);
+        std::string desiredId = strprintf("%d", propertyIdDesired);
         if(sellToken.size()>30) sellToken=sellToken.substr(0,30)+"...";
         sellToken += " (#" + sellId + ")";
         if(desiredToken.size()>30) desiredToken=desiredToken.substr(0,30)+"...";
@@ -377,7 +378,7 @@ void MetaDExCancelDialog::SendCancelTransaction()
         return;
     }
 
-    // TODO: restructure and seperate
+    // TODO: restructure and separate
     // create a payload for the transaction
     std::vector<unsigned char> payload;
     if (action == 2) { // CANCEL_AT_PRICE
@@ -393,11 +394,11 @@ void MetaDExCancelDialog::SendCancelTransaction()
     // request the wallet build the transaction (and if needed commit it)
     uint256 txid = 0;
     std::string rawHex;
-    int result = WalletTxBuilder(fromAddress, "", "", 0, payload, txid, rawHex, autoCommit);
+    int result = WalletTxBuilder(fromAddress, "", "", 0, payload, txid, rawHex, autoCommit, &walletModel->wallet());
 
     // check error and return the txid (or raw hex depending on autocommit)
     if (result != 0) {
-        string strError = error_str(result);
+        std::string strError = error_str(result);
         QMessageBox::critical( this, "MetaDEx cancel transaction failed",
         "The MetaDEx cancel transaction has failed.\n\nThe error code was: " + QString::number(result) + "\nThe error message was:\n" + QString::fromStdString(strError));
         return;

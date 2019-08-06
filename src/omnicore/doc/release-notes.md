@@ -77,7 +77,7 @@ This speeds up the RPC "omni_listpendingtransactions" significantly, which can b
 Rename OMNI and TOMNI to OMN and TOMN
 -------------------------------------
 
-To be more algined with other symbols and tickers the following changes in wording are made:
+To be more aligned with other symbols and tickers the following changes in wording are made:
 
 - "Omni", referring to the native tokens of the Omni Layer protocol, becomes "Omni tokens"
 - "Test Omni", referring to the native test tokens of the Omni Layer protocol, becomes "Test Omni tokens"

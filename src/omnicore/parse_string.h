@@ -6,7 +6,7 @@
 
 namespace mastercore
 {
-// Converts strings to 64 bit wide interger.
+// Converts strings to 64 bit wide integer.
 // Divisible and indivisible amounts are accepted.
 // 1 indivisible unit equals 0.00000001 divisible units.
 // If input string is not a accepted number, 0 is returned.

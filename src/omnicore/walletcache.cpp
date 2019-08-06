@@ -5,18 +5,18 @@
  * Omni state changes affected anything in the wallet.
  */
 
-#include "omnicore/walletcache.h"
+#include <omnicore/walletcache.h>
 
-#include "omnicore/log.h"
-#include "omnicore/omnicore.h"
-#include "omnicore/tally.h"
-#include "omnicore/walletutils.h"
+#include <omnicore/log.h>
+#include <omnicore/omnicore.h>
+#include <omnicore/tally.h>
+#include <omnicore/walletutils.h>
 
-#include "init.h"
-#include "sync.h"
-#include "uint256.h"
+#include <init.h>
+#include <sync.h>
+#include <uint256.h>
 #ifdef ENABLE_WALLET
-#include "wallet/wallet.h"
+#include <wallet/wallet.h>
 #endif
 
 #include <stdint.h>
@@ -50,7 +50,7 @@ int WalletCacheUpdate()
         const std::string& address = my_it->first;
 
         // determine if this address is in the wallet
-        int addressIsMine = IsMyAddress(address);
+        int addressIsMine = IsMyAddressAllWallets(address, true);
         if (!addressIsMine) {
             if (msc_debug_walletcache) PrintToLog("WALLETCACHE: Ignoring non-wallet address %s\n", address);
             continue; // ignore this address, not in wallet

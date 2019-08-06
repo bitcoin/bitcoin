@@ -1,6 +1,6 @@
-#include "omnicore/tally.h"
+#include <omnicore/tally.h>
 
-#include "test/test_bitcoin.h"
+#include <test/test_bitcoin.h>
 
 #include <stdint.h>
 

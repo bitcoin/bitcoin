@@ -4,22 +4,21 @@
  * This file contains file based persistence related functions.
  */
 
-#include "omnicore/persistence.h"
+#include <omnicore/persistence.h>
 
-#include "omnicore/dex.h"
-#include "omnicore/log.h"
-#include "omnicore/mdex.h"
-#include "omnicore/omnicore.h"
-#include "omnicore/rules.h"
-#include "omnicore/sp.h"
-#include "omnicore/tally.h"
-#include "omnicore/utilsbitcoin.h"
+#include <omnicore/dex.h>
+#include <omnicore/log.h>
+#include <omnicore/mdex.h>
+#include <omnicore/rules.h>
+#include <omnicore/sp.h>
+#include <omnicore/tally.h>
+#include <omnicore/utilsbitcoin.h>
 
-#include "chain.h"
-#include "main.h"
-#include "tinyformat.h"
-#include "uint256.h"
-#include "util.h"
+#include <chain.h>
+#include <validation.h>
+#include <tinyformat.h>
+#include <uint256.h>
+#include <util/system.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
@@ -486,7 +485,7 @@ static void prune_state_files(const CBlockIndex* topIndex)
         CBlockIndex const *curIndex = GetBlockIndex(*iter);
 
         // if we have nothing int the index, or this block is too old..
-        if (NULL == curIndex || (((topIndex->nHeight - curIndex->nHeight) > MAX_STATE_HISTORY)
+        if (nullptr == curIndex || (((topIndex->nHeight - curIndex->nHeight) > MAX_STATE_HISTORY)
                 && (curIndex->nHeight % STORE_EVERY_N_BLOCK != 0))) {
             if (msc_debug_persistence) {
                 if (curIndex) {
@@ -546,7 +545,7 @@ int PersistInMemoryState(const CBlockIndex* pBlockIndex)
 int RestoreInMemoryState(const std::string& filename, int what, bool verifyHash)
 {
     int lines = 0;
-    int (*inputLineFunc)(const std::string&) = NULL;
+    int (*inputLineFunc)(const std::string&) = nullptr;
 
     SHA256_CTX shaCtx;
     SHA256_Init(&shaCtx);
@@ -671,13 +670,13 @@ int LoadMostRelevantInMemoryState()
     }
 
     CBlockIndex const *spBlockIndex = GetBlockIndex(spWatermark);
-    if (NULL == spBlockIndex) {
+    if (nullptr == spBlockIndex) {
         // trigger a full reparse, if the watermark isn't a real block
         PrintToLog("Failed to load historical state: watermark isn't a real block\n");
         return -1;
     }
 
-    while (NULL != spBlockIndex && false == chainActive.Contains(spBlockIndex)) {
+    while (nullptr != spBlockIndex && false == chainActive.Contains(spBlockIndex)) {
         int remainingSPs = pDbSpInfo->popBlock(spBlockIndex->GetBlockHash());
         if (remainingSPs < 0) {
             // trigger a full reparse, if the levelDB cannot roll back
@@ -687,7 +686,7 @@ int LoadMostRelevantInMemoryState()
       // potential optimization here?
     }*/
         spBlockIndex = spBlockIndex->pprev;
-        if (spBlockIndex != NULL) {
+        if (spBlockIndex != nullptr) {
             pDbSpInfo->setWatermark(spBlockIndex->GetBlockHash());
         }
     }
@@ -711,7 +710,7 @@ int LoadMostRelevantInMemoryState()
             uint256 blockHash;
             blockHash.SetHex(vstr[1]);
             CBlockIndex *pBlockIndex = GetBlockIndex(blockHash);
-            if (pBlockIndex == NULL || false == chainActive.Contains(pBlockIndex)) {
+            if (pBlockIndex == nullptr || false == chainActive.Contains(pBlockIndex)) {
                 continue;
             }
 
@@ -725,10 +724,10 @@ int LoadMostRelevantInMemoryState()
     // for each block we discard, roll back the SP database
     CBlockIndex const *curTip = spBlockIndex;
     int abortRollBackBlock = 9999999;
-    if (curTip != NULL) {
+    if (curTip != nullptr) {
         abortRollBackBlock = ConsensusParams().GENESIS_BLOCK - 1;
     }
-    while (NULL != curTip && persistedBlocks.size() > 0 && curTip->nHeight > abortRollBackBlock ) {
+    while (nullptr != curTip && persistedBlocks.size() > 0 && curTip->nHeight > abortRollBackBlock ) {
         if (persistedBlocks.find(curTip->GetBlockHash()) != persistedBlocks.end()) {
             int success = -1;
             for (int i = 0; i < NUM_FILETYPES; ++i) {
@@ -760,7 +759,7 @@ int LoadMostRelevantInMemoryState()
         }
         curTip = curTip->pprev;
         spBlockIndex = curTip;
-        if (curTip != NULL) {
+        if (curTip != nullptr) {
             pDbSpInfo->setWatermark(curTip->GetBlockHash());
         }
     }

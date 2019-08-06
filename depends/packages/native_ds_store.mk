@@ -1,9 +1,8 @@
 package=native_ds_store
-$(package)_version=c80c23706eae
-$(package)_download_path=https://bitbucket.org/al45tair/ds_store/get
-$(package)_download_file=$($(package)_version).tar.bz2
-$(package)_file_name=$(package)-$($(package)_version).tar.bz2
-$(package)_sha256_hash=ce1aa412211610c63d567bbe3e06213006a2d5ba5d76d89399c151b5472cb0da
+$(package)_version=1.1.2
+$(package)_download_path=https://github.com/al45tair/ds_store/archive/
+$(package)_file_name=v$($(package)_version).tar.gz
+$(package)_sha256_hash=3b3ecb7bf0a5157f5b6010bc3af7c141fb0ad3527084e63336220d22744bc20c
 $(package)_install_libdir=$(build_prefix)/lib/python/dist-packages
 $(package)_dependencies=native_biplist
 

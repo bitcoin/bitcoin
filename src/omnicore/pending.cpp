@@ -1,17 +1,16 @@
-#include "omnicore/pending.h"
+#include <omnicore/pending.h>
 
-#include "omnicore/log.h"
-#include "omnicore/omnicore.h"
-#include "omnicore/sp.h"
-#include "omnicore/walletcache.h"
-#include "omnicore/mdex.h"
+#include <omnicore/log.h>
+#include <omnicore/sp.h>
+#include <omnicore/walletcache.h>
+#include <omnicore/mdex.h>
 
-#include "amount.h"
-#include "main.h"
-#include "sync.h"
-#include "txmempool.h"
-#include "uint256.h"
-#include "ui_interface.h"
+#include <amount.h>
+#include <validation.h>
+#include <sync.h>
+#include <txmempool.h>
+#include <uint256.h>
+#include <ui_interface.h>
 
 #include <string>
 
@@ -86,15 +85,19 @@ void PendingCheck()
     LOCK(cs_pending);
 
     std::vector<uint256> vecMemPoolTxids;
+    std::vector<uint256> txidsForDeletion;
     mempool.queryHashes(vecMemPoolTxids);
 
     for (PendingMap::iterator it = my_pending.begin(); it != my_pending.end(); ++it) {
         const uint256& txid = it->first;
         if (std::find(vecMemPoolTxids.begin(), vecMemPoolTxids.end(), txid) == vecMemPoolTxids.end()) {
             PrintToLog("WARNING: Pending transaction %s is no longer in this nodes mempool and will be discarded\n", txid.GetHex());
-            PendingDelete(txid);
+            txidsForDeletion.push_back(txid);
         }
     }
+
+    for (auto& txid : txidsForDeletion)
+        PendingDelete(txid);
 }
 
 } // namespace mastercore

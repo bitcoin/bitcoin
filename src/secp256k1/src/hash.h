@@ -4,8 +4,8 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
-#ifndef _SECP256K1_HASH_
-#define _SECP256K1_HASH_
+#ifndef SECP256K1_HASH_H
+#define SECP256K1_HASH_H
 
 #include <stdlib.h>
 #include <stdint.h>
@@ -38,4 +38,4 @@ static void secp256k1_rfc6979_hmac_sha256_initialize(secp256k1_rfc6979_hmac_sha2
 static void secp256k1_rfc6979_hmac_sha256_generate(secp256k1_rfc6979_hmac_sha256_t *rng, unsigned char *out, size_t outlen);
 static void secp256k1_rfc6979_hmac_sha256_finalize(secp256k1_rfc6979_hmac_sha256_t *rng);
 
-#endif
+#endif /* SECP256K1_HASH_H */

@@ -1,19 +1,19 @@
-#include "omnicore/dbstolist.h"
+#include <omnicore/dbstolist.h>
 
-#include "omnicore/log.h"
-#include "omnicore/sp.h"
-#include "omnicore/omnicore.h"
-#include "omnicore/walletutils.h"
+#include <omnicore/log.h>
+#include <omnicore/sp.h>
+#include <omnicore/walletutils.h>
 
-#include "uint256.h"
-#include "utilstrencodings.h"
-#include "tinyformat.h"
+#include <interfaces/wallet.h>
+#include <uint256.h>
+#include <util/strencodings.h>
+#include <tinyformat.h>
 
 #include <univalue.h>
 
-#include "leveldb/iterator.h"
-#include "leveldb/slice.h"
-#include "leveldb/status.h"
+#include <leveldb/iterator.h>
+#include <leveldb/slice.h>
+#include <leveldb/status.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem/path.hpp>
@@ -39,7 +39,7 @@ CMPSTOList::~CMPSTOList()
     if (msc_debug_persistence) PrintToLog("CMPSTOList closed\n");
 }
 
-void CMPSTOList::getRecipients(const uint256 txid, std::string filterAddress, UniValue* recipientArray, uint64_t* total, uint64_t* numRecipients)
+void CMPSTOList::getRecipients(const uint256 txid, std::string filterAddress, UniValue* recipientArray, uint64_t* total, uint64_t* numRecipients, interfaces::Wallet* iWallet)
 {
     if (!pdb) return;
 
@@ -72,7 +72,7 @@ void CMPSTOList::getRecipients(const uint256 txid, std::string filterAddress, Un
             ++*numRecipients;
             // the txid exists inside the data, this address was a recipient of this STO, check filter and add the details
             if (filter) {
-                if (((filterByAddress) && (filterAddress == recipientAddress)) || ((filterByWallet) && (IsMyAddress(recipientAddress)))) {
+                if (((filterByAddress) && (filterAddress == recipientAddress)) || ((filterByWallet) && (IsMyAddress(recipientAddress, iWallet)))) {
                 } else {
                     continue;
                 } // move on if no filter match (but counter still increased for fee)
@@ -96,11 +96,11 @@ void CMPSTOList::getRecipients(const uint256 txid, std::string filterAddress, Un
                             return; //(something went wrong)
                         }
                         UniValue recipient(UniValue::VOBJ);
-                        recipient.push_back(Pair("address", recipientAddress));
+                        recipient.pushKV("address", recipientAddress);
                         if (isPropertyDivisible(propertyId)) {
-                            recipient.push_back(Pair("amount", FormatDivisibleMP(amount)));
+                            recipient.pushKV("amount", FormatDivisibleMP(amount));
                         } else {
-                            recipient.push_back(Pair("amount", FormatIndivisibleMP(amount)));
+                            recipient.pushKV("amount", FormatIndivisibleMP(amount));
                         }
                         *total += amount;
                         recipientArray->push_back(recipient);
@@ -115,7 +115,7 @@ void CMPSTOList::getRecipients(const uint256 txid, std::string filterAddress, Un
     return;
 }
 
-std::string CMPSTOList::getMySTOReceipts(std::string filterAddress)
+std::string CMPSTOList::getMySTOReceipts(std::string filterAddress, interfaces::Wallet &iWallet)
 {
     if (!pdb) return "";
     std::string mySTOReceipts = "";
@@ -124,7 +124,7 @@ std::string CMPSTOList::getMySTOReceipts(std::string filterAddress)
     for (it->SeekToFirst(); it->Valid(); it->Next()) {
         skey = it->key();
         std::string recipientAddress = skey.ToString();
-        if (!IsMyAddress(recipientAddress)) continue; // not ours, not interested
+        if (!IsMyAddress(recipientAddress, &iWallet)) continue; // not ours, not interested
         if ((!filterAddress.empty()) && (filterAddress != recipientAddress)) continue; // not the filtered address
         // ours, get info
         svalue = it->value();

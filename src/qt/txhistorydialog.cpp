@@ -2,38 +2,39 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "txhistorydialog.h"
-#include "ui_txhistorydialog.h"
+#include <qt/txhistorydialog.h>
+#include <qt/forms/ui_txhistorydialog.h>
 
-#include "omnicore_qtutils.h"
+#include <qt/omnicore_qtutils.h>
 
-#include "clientmodel.h"
-#include "guiutil.h"
-#include "walletmodel.h"
-#include "platformstyle.h"
+#include <qt/clientmodel.h>
+#include <qt/guiutil.h>
+#include <qt/walletmodel.h>
+#include <qt/platformstyle.h>
 
-#include "omnicore/dbspinfo.h"
-#include "omnicore/dbstolist.h"
-#include "omnicore/dbtxlist.h"
-#include "omnicore/omnicore.h"
-#include "omnicore/parsing.h"
-#include "omnicore/pending.h"
-#include "omnicore/rpc.h"
-#include "omnicore/rpctxobject.h"
-#include "omnicore/sp.h"
-#include "omnicore/tx.h"
-#include "omnicore/utilsbitcoin.h"
-#include "omnicore/walletcache.h"
-#include "omnicore/walletfetchtxs.h"
-#include "omnicore/walletutils.h"
+#include <omnicore/dbspinfo.h>
+#include <omnicore/dbstolist.h>
+#include <omnicore/dbtxlist.h>
+#include <omnicore/omnicore.h>
+#include <omnicore/parsing.h>
+#include <omnicore/pending.h>
+#include <omnicore/rpc.h>
+#include <omnicore/rpctxobject.h>
+#include <omnicore/sp.h>
+#include <omnicore/tx.h>
+#include <omnicore/utilsbitcoin.h>
+#include <omnicore/walletcache.h>
+#include <omnicore/walletfetchtxs.h>
+#include <omnicore/walletutils.h>
 
-#include "init.h"
-#include "main.h"
-#include "primitives/transaction.h"
-#include "sync.h"
-#include "txdb.h"
-#include "uint256.h"
-#include "wallet/wallet.h"
+#include <init.h>
+#include <key_io.h>
+#include <validation.h>
+#include <primitives/transaction.h>
+#include <sync.h>
+#include <txdb.h>
+#include <uint256.h>
+#include <wallet/wallet.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
@@ -59,14 +60,13 @@
 #include <QTableWidgetItem>
 #include <QWidget>
 
-using std::string;
 using namespace mastercore;
 
 TXHistoryDialog::TXHistoryDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::txHistoryDialog),
-    clientModel(0),
-    walletModel(0)
+    clientModel(nullptr),
+    walletModel(nullptr)
 {
     ui->setupUi(this);
     // setup
@@ -113,16 +113,18 @@ TXHistoryDialog::TXHistoryDialog(QWidget *parent) :
     contextMenu->addAction(copyTxIDAction);
     contextMenu->addAction(showDetailsAction);
     // Connect actions
-    connect(ui->txHistoryTable, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
-    connect(ui->txHistoryTable, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(showDetails()));
-    connect(ui->txHistoryTable->horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(checkSort(int)));
-    connect(copyAddressAction, SIGNAL(triggered()), this, SLOT(copyAddress()));
-    connect(copyAmountAction, SIGNAL(triggered()), this, SLOT(copyAmount()));
-    connect(copyTxIDAction, SIGNAL(triggered()), this, SLOT(copyTxID()));
-    connect(showDetailsAction, SIGNAL(triggered()), this, SLOT(showDetails()));
+    connect(ui->txHistoryTable, &QTableView::customContextMenuRequested, this, &TXHistoryDialog::contextualMenu);
+    connect(ui->txHistoryTable, &QTableView::doubleClicked, this, &TXHistoryDialog::showDetails);
+    connect(ui->txHistoryTable->horizontalHeader(), &QHeaderView::sectionClicked, this, &TXHistoryDialog::checkSort);
+    connect(copyAddressAction, &QAction::triggered, this, &TXHistoryDialog::copyAddress);
+    connect(copyAmountAction, &QAction::triggered, this, &TXHistoryDialog::copyAmount);
+    connect(copyTxIDAction, &QAction::triggered, this, &TXHistoryDialog::copyTxID);
+    connect(showDetailsAction, &QAction::triggered, this, &TXHistoryDialog::showDetails);
     // Perform initial population and update of history table
-
-    UpdateHistory();
+    /**
+    * Cannot be run as no wallet is available until after setWalletModel
+    * UpdateHistory();
+    */
     // since there is no model we can't do this before we add some data, so now let's do the resizing
     // *after* we've populated the initial content for the table
     ui->txHistoryTable->setColumnWidth(2, 23);
@@ -166,33 +168,38 @@ void TXHistoryDialog::focusTransaction(const uint256& txid)
 void TXHistoryDialog::setClientModel(ClientModel *model)
 {
     this->clientModel = model;
-    if (model != NULL) {
-        connect(model, SIGNAL(refreshOmniBalance()), this, SLOT(UpdateHistory()));
-        connect(model, SIGNAL(numBlocksChanged(int)), this, SLOT(UpdateConfirmations()));
-        connect(model, SIGNAL(reinitOmniState()), this, SLOT(ReinitTXHistoryTable()));
+    if (model != nullptr) {
+        connect(model, &ClientModel::refreshOmniBalance, this, &TXHistoryDialog::UpdateHistory);
+        connect(model, &ClientModel::numBlocksChanged, this, &TXHistoryDialog::UpdateConfirmations);
+        connect(model, &ClientModel::reinitOmniState, this, &TXHistoryDialog::ReinitTXHistoryTable);
     }
 }
 
 void TXHistoryDialog::setWalletModel(WalletModel *model)
 {
     this->walletModel = model;
-    if (model != NULL) { } // do nothing, signals from walletModel no longer needed
+    if (model != nullptr)
+    {
+        UpdateHistory();
+    }
 }
 
 int TXHistoryDialog::PopulateHistoryMap()
 {
     // TODO: locks may not be needed here -- looks like wallet lock can be removed
-    if (NULL == pwalletMain) return 0;
+    //if (NULL == pwalletMain) return 0;
     // try and fix intermittent freeze on startup and while running by only updating if we can get required locks
     TRY_LOCK(cs_main,lckMain);
     if (!lckMain) return 0;
-    TRY_LOCK(pwalletMain->cs_wallet, lckWallet);
-    if (!lckWallet) return 0;
+    //TRY_LOCK(pwalletMain->cs_wallet, lckWallet);
+    //if (!lckWallet) return 0;
 
     int64_t nProcessed = 0; // counter for how many transactions we've added to history this time
 
     // obtain a sorted list of Omni layer wallet transactions (including STO receipts and pending) - default last 65535
-    std::map<std::string,uint256> walletTransactions = FetchWalletOmniTransactions(GetArg("-omniuiwalletscope", 65535L));
+    std::map<std::string,uint256> walletTransactions;
+    if (walletModel)
+        walletTransactions = FetchWalletOmniTransactions(walletModel->wallet(), gArgs.GetArg("-omniuiwalletscope", 65535L));
 
     // reverse iterate over (now ordered) transactions and populate history map for each one
     for (std::map<std::string,uint256>::reverse_iterator it = walletTransactions.rbegin(); it != walletTransactions.rend(); it++) {
@@ -208,7 +215,7 @@ int TXHistoryDialog::PopulateHistoryMap()
                 if (pending_it != my_pending.end()) continue; // transaction is still pending, do nothing
             }
 
-            // pending transaction has confirmed, remove temp pending object from map and allow it to be readded as an Omni transaction
+            // pending transaction has confirmed, remove temp pending object from map and allow it to be added again as an Omni transaction
             txHistoryMap.erase(hIter);
             ui->txHistoryTable->setSortingEnabled(false); // disable sorting temporarily while we update the table (leaving enabled gives unexpected results)
             QAbstractItemModel* historyAbstractModel = ui->txHistoryTable->model(); // get a model to work with
@@ -217,14 +224,14 @@ int TXHistoryDialog::PopulateHistoryMap()
             historyProxy.setFilterKeyColumn(0);
             historyProxy.setFilterFixedString(QString::fromStdString(txHash.GetHex()));
             QModelIndex rowIndex = historyProxy.mapToSource(historyProxy.index(0,0)); // map to the row in the actual table
-            if(rowIndex.isValid()) ui->txHistoryTable->removeRow(rowIndex.row()); // delete the pending tx row, it'll be readded as a proper confirmed transaction
+            if(rowIndex.isValid()) ui->txHistoryTable->removeRow(rowIndex.row()); // delete the pending tx row, it'll be added again as a proper confirmed transaction
             ui->txHistoryTable->setSortingEnabled(true); // re-enable sorting
         }
 
-        CTransaction wtx;
+        CTransactionRef wtx;
         uint256 blockHash;
-        if (!GetTransaction(txHash, wtx, Params().GetConsensus(), blockHash, true)) continue;
-        if (blockHash.IsNull() || NULL == GetBlockIndex(blockHash)) {
+        if (!GetTransaction(txHash, wtx, Params().GetConsensus(), blockHash)) continue;
+        if (blockHash.IsNull() || nullptr == GetBlockIndex(blockHash)) {
             // this transaction is unconfirmed, should be one of our pending transactions
             LOCK(cs_pending);
             PendingMap::iterator pending_it = my_pending.find(txHash);
@@ -249,10 +256,10 @@ int TXHistoryDialog::PopulateHistoryMap()
 
         // parse the transaction and setup the new history object
         CBlockIndex* pBlockIndex = GetBlockIndex(blockHash);
-        if (NULL == pBlockIndex) continue;
+        if (nullptr == pBlockIndex) continue;
         int blockHeight = pBlockIndex->nHeight;
         CMPTransaction mp_obj;
-        int parseRC = ParseTransaction(wtx, blockHeight, 0, mp_obj);
+        int parseRC = ParseTransaction(*wtx, blockHeight, 0, mp_obj);
         HistoryTXObject htxo;
         if (it->first.length() == 16) {
             htxo.blockHeight = atoi(it->first.substr(0,6));
@@ -261,8 +268,8 @@ int TXHistoryDialog::PopulateHistoryMap()
 
         // positive RC means payment, potential DEx purchase
         if (0 < parseRC) {
-            string tmpBuyer;
-            string tmpSeller;
+            std::string tmpBuyer;
+            std::string tmpSeller;
             uint64_t total = 0;
             uint64_t tmpVout = 0;
             uint64_t tmpNValue = 0;
@@ -273,7 +280,7 @@ int TXHistoryDialog::PopulateHistoryMap()
                 LOCK(cs_tally);
                 pDbTransactionList->getPurchaseDetails(txHash, 1, &tmpBuyer, &tmpSeller, &tmpVout, &tmpPropertyId, &tmpNValue);
             }
-            bIsBuy = IsMyAddress(tmpBuyer);
+            bIsBuy = IsMyAddress(tmpBuyer, &walletModel->wallet());
             numberOfPurchases = pDbTransactionList->getNumberOfSubRecords(txHash);
             if (0 >= numberOfPurchases) continue;
             for (int purchaseNumber = 1; purchaseNumber <= numberOfPurchases; purchaseNumber++) {
@@ -309,10 +316,11 @@ int TXHistoryDialog::PopulateHistoryMap()
         htxo.fundsMoved = true;
         htxo.txType = shrinkTxType(mp_obj.getType(), &htxo.fundsMoved);
         if (!htxo.valid) htxo.fundsMoved = false; // funds never move in invalid txs
-        if (htxo.txType == "Send" && !IsMyAddress(mp_obj.getSender())) htxo.txType = "Receive"; // still a send transaction, but avoid confusion for end users
         htxo.address = mp_obj.getSender();
-        if (!IsMyAddress(mp_obj.getSender())) htxo.address = mp_obj.getReceiver();
-        if (htxo.fundsMoved && IsMyAddress(mp_obj.getSender())) displayAmount = "-" + displayAmount;
+        int isMyAddress = IsMyAddress(htxo.address, &walletModel->wallet());
+        if (htxo.txType == "Send" && !isMyAddress) htxo.txType = "Receive"; // still a send transaction, but avoid confusion for end users
+        if (!isMyAddress) htxo.address = mp_obj.getReceiver();
+        if (htxo.fundsMoved && isMyAddress) displayAmount = "-" + displayAmount;
         // override - special case for property creation (getProperty cannot get ID as createdID not stored in obj)
         if (type == MSC_TYPE_CREATE_PROPERTY_FIXED || type == MSC_TYPE_CREATE_PROPERTY_VARIABLE || type == MSC_TYPE_CREATE_PROPERTY_MANUAL) {
             displayAmount = "N/A";
@@ -327,11 +335,11 @@ int TXHistoryDialog::PopulateHistoryMap()
             displayAmount = "N/A";
         }
         // override - display amount received not STO amount in packet (the total amount) for STOs I didn't send
-        if (type == MSC_TYPE_SEND_TO_OWNERS && !IsMyAddress(mp_obj.getSender())) {
+        if (type == MSC_TYPE_SEND_TO_OWNERS && !isMyAddress) {
             UniValue receiveArray(UniValue::VARR);
             uint64_t tmpAmount = 0, stoFee = 0;
             LOCK(cs_tally);
-            pDbStoList->getRecipients(txHash, "", &receiveArray, &tmpAmount, &stoFee);
+            pDbStoList->getRecipients(txHash, "", &receiveArray, &tmpAmount, &stoFee, &walletModel->wallet());
             displayAmount = FormatShortMP(mp_obj.getProperty(), tmpAmount) + getTokenLabel(mp_obj.getProperty());
         }
         htxo.amount = displayAmount;
@@ -407,7 +415,7 @@ void TXHistoryDialog::UpdateHistory()
                 if (htxo.blockHeight>0) {
                     LOCK(cs_main);
                     CBlockIndex* pBlkIdx = chainActive[htxo.blockHeight];
-                    if (NULL != pBlkIdx) txTime.setTime_t(pBlkIdx->GetBlockTime());
+                    if (nullptr != pBlkIdx) txTime.setTime_t(pBlkIdx->GetBlockTime());
                     dateCell->setData(Qt::DisplayRole, txTime);
                 } else {
                     dateCell->setData(Qt::DisplayRole, QString::fromStdString("Unconfirmed"));
@@ -485,7 +493,7 @@ void TXHistoryDialog::showDetails()
 
     if (!txid.IsNull()) {
         // grab extended transaction details via the RPC populator
-        int rc = populateRPCTransactionObject(txid, txobj, "", true);
+        int rc = populateRPCTransactionObject(txid, txobj, "", true, "", &walletModel->wallet());
         if (rc >= 0) strTXText = txobj.write(true);
     }
 
@@ -502,7 +510,7 @@ void TXHistoryDialog::resizeEvent(QResizeEvent* event)
 
 std::string TXHistoryDialog::shrinkTxType(int txType, bool *fundsMoved)
 {
-    string displayType = "Unknown";
+    std::string displayType = "Unknown";
     switch (txType) {
         case MSC_TYPE_SIMPLE_SEND: displayType = "Send"; break;
         case MSC_TYPE_RESTRICTED_SEND: displayType = "Rest. Send"; break;

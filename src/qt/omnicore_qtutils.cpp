@@ -1,6 +1,6 @@
-#include "omnicore_qtutils.h"
+#include <qt/omnicore_qtutils.h>
 
-#include "guiutil.h"
+#include <qt/guiutil.h>
 
 #include <string>
 
@@ -53,7 +53,7 @@ void PopulateSimpleDialog(const std::string& content, const std::string& title, 
     QDialogButtonBox *buttonBox = new QDialogButtonBox;
     buttonBox->addButton(closeButton, QDialogButtonBox::AcceptRole);
     dlgLayout->addWidget(buttonBox);
-    QObject::connect(buttonBox, SIGNAL(accepted()), simpleDlg, SLOT(accept()));
+    QObject::connect(buttonBox, &QDialogButtonBox::accepted, simpleDlg, &QDialog::accept);
     simpleDlg->setAttribute(Qt::WA_DeleteOnClose);
     simpleDlg->setWindowTitle(QString::fromStdString(title));
     simpleDlg->setLayout(dlgLayout);

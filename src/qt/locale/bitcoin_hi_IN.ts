@@ -2,23 +2,115 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+        <source>Right-click to edit address or label</source>
+        <translation>पते या लेबल को संपादित करने के लिए दाहिना-क्लिक करें</translation>
+    </message>
+    <message>
         <source>Create a new address</source>
-        <translation>नया पता लिखिए !</translation>
+        <translation>एक नया पता बनाएं</translation>
+    </message>
+    <message>
+        <source>&amp;New</source>
+        <translation>नया</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
         <translation>चुनिन्दा पते को सिस्टम क्लिपबोर्ड पर कापी करे !</translation>
     </message>
     <message>
+        <source>&amp;Copy</source>
+        <translation>&amp;कॉपी </translation>
+    </message>
+    <message>
+        <source>C&amp;lose</source>
+        <translation>सी&amp;लूज़ </translation>
+    </message>
+    <message>
+        <source>Delete the currently selected address from the list</source>
+        <translation>सूची से वर्तमान में चयनित पता हटाएं</translation>
+    </message>
+    <message>
+        <source>Enter address or label to search</source>
+        <translation>ढूँदने के लिए कृपा करके पता या लेबल टाइप करे !</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>डेटा को मौजूदा टैब से एक फ़ाइल में निर्यात करें</translation>
+    </message>
+    <message>
+        <source>&amp;Export</source>
+        <translation>&amp;निर्यात</translation>
+    </message>
+    <message>
         <source>&amp;Delete</source>
         <translation>&amp;मिटाए !!</translation>
+    </message>
+    <message>
+        <source>Choose the address to send coins to</source>
+        <translation>सिक्कों को भेजने के लिए पता चुनें</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation>सिक्कों को प्राप्त करने के लिए पता चुनें</translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>सभी पते भेज रहा है</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>पतों को प्राप्त कर रहा है</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>ये भुगतान भेजने के लिए ये आपके बिटकॉइन पते हैं। हमेशा सिक्के भेजने से पहले राशि और प्राप्तकर्ता पते की जांच करें।</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>भुगतान प्राप्त करने के लिए ये आपके बीटकोइन पते हैं प्रत्येक लेनदेन के लिए एक नया प्राप्त पता उपयोग करने की सिफारिश की जाती है।</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;पता कॉपी करें </translation>
+    </message>
+    <message>
+        <source>&amp;Edit</source>
+        <translation>&amp;संशोधित करें </translation>
+    </message>
+    <message>
+        <source>Export Address List</source>
+        <translation>निर्यात पता सूची</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>कोमा द्वारा अलग की गई फ़ाइल (* .csv)</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>निर्यात विफल रहा</translation>
     </message>
     </context>
 <context>
     <name>AddressTableModel</name>
-    </context>
+    <message>
+        <source>Label</source>
+        <translation>परचा</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>पता </translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(कोई परचा नहीं )</translation>
+    </message>
+</context>
 <context>
     <name>AskPassphraseDialog</name>
+    <message>
+        <source>Passphrase Dialog</source>
+        <translation>पासफ़्रेज़ डायलॉग</translation>
+    </message>
     <message>
         <source>Enter passphrase</source>
         <translation>पहचान शब्द/अक्षर डालिए !</translation>
@@ -30,6 +122,18 @@
     <message>
         <source>Repeat new passphrase</source>
         <translation>दोबारा नया पहचान शब्द/अक्षर डालिए !</translation>
+    </message>
+    <message>
+        <source>Show password</source>
+        <translation>पासवर्ड दिखाए</translation>
+    </message>
+    <message>
+        <source>Encrypt wallet</source>
+        <translation>वॉलेट एन्क्रिप्ट करें</translation>
+    </message>
+    <message>
+        <source>Change passphrase</source>
+        <translation>पासफ़्रेज़ बदलें</translation>
     </message>
     </context>
 <context>
@@ -83,10 +187,6 @@
         <translation>बीटकोइन</translation>
     </message>
     <message>
-        <source>Wallet</source>
-        <translation>वॉलेट</translation>
-    </message>
-    <message>
         <source>&amp;File</source>
         <translation>&amp;फाइल</translation>
     </message>
@@ -138,7 +238,7 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>वॉलेट एन्क्रिप्टेड है तथा अभी लॉक्ड है</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -156,6 +256,10 @@
     <message>
         <source>Confirmed</source>
         <translation>पक्का</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(कोई परचा नहीं )</translation>
     </message>
     </context>
 <context>
@@ -182,16 +286,23 @@
         <source>version</source>
         <translation>संस्करण</translation>
     </message>
-    <message>
-        <source>Usage:</source>
-        <translation>खपत :</translation>
-    </message>
     </context>
 <context>
     <name>Intro</name>
     <message>
+        <source>Bitcoin</source>
+        <translation>बीटकोइन</translation>
+    </message>
+    <message>
         <source>Error</source>
         <translation>भूल</translation>
+    </message>
+    </context>
+<context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation>फार्म</translation>
     </message>
     </context>
 <context>
@@ -214,6 +325,10 @@
     <message>
         <source>&amp;Cancel</source>
         <translation>&amp;कैन्सल</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>भूल</translation>
     </message>
     </context>
 <context>
@@ -240,6 +355,13 @@
         <translation>लागू नही
 </translation>
     </message>
+    <message>
+        <source>unknown</source>
+        <translation>अज्ञात</translation>
+    </message>
+</context>
+<context>
+    <name>QObject::QObject</name>
     </context>
 <context>
     <name>QRImageWidget</name>
@@ -273,9 +395,29 @@
         <source>Copy &amp;Address</source>
         <translation>&amp;पता कॉपी करे</translation>
     </message>
+    <message>
+        <source>Address</source>
+        <translation>पता </translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>परचा</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>वॉलेट</translation>
+    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>परचा</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(कोई परचा नहीं )</translation>
+    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -299,7 +441,11 @@
         <source>Confirm the send action</source>
         <translation>भेजने की पुष्टि करें</translation>
     </message>
-    </context>
+    <message>
+        <source>(no label)</source>
+        <translation>(कोई परचा नहीं )</translation>
+    </message>
+</context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
@@ -378,12 +524,39 @@
     </context>
 <context>
     <name>TransactionTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>परचा</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(कोई परचा नहीं )</translation>
+    </message>
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>कोमा द्वारा अलग की गई फ़ाइल (* .csv)</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>परचा</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>पता </translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>निर्यात विफल रहा</translation>
+    </message>
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
+    </context>
+<context>
+    <name>WalletController</name>
     </context>
 <context>
     <name>WalletFrame</name>
@@ -393,28 +566,20 @@
     </context>
 <context>
     <name>WalletView</name>
+    <message>
+        <source>&amp;Export</source>
+        <translation>&amp;निर्यात</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>डेटा को मौजूदा टैब से एक फ़ाइल में निर्यात करें</translation>
+    </message>
     </context>
 <context>
     <name>bitcoin-core</name>
     <message>
-        <source>Options:</source>
-        <translation>विकल्प:</translation>
-    </message>
-    <message>
-        <source>Specify data directory</source>
-        <translation>डेटा डायरेक्टरी बताएं </translation>
-    </message>
-    <message>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>बैकग्राउंड में डेमॉन बन कर रन करे तथा कमांड्स स्वीकार करें </translation>
-    </message>
-    <message>
         <source>Verifying blocks...</source>
         <translation>ब्लॉक्स जाँचे जा रहा है...</translation>
-    </message>
-    <message>
-        <source>Verifying wallet...</source>
-        <translation>वॉलेट जाँचा जा रहा है...</translation>
     </message>
     <message>
         <source>Information</source>
@@ -423,10 +588,6 @@
     <message>
         <source>Warning</source>
         <translation>चेतावनी</translation>
-    </message>
-    <message>
-        <source>Loading addresses...</source>
-        <translation>पता पुस्तक आ रही है...</translation>
     </message>
     <message>
         <source>Loading block index...</source>

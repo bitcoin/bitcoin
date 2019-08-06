@@ -134,7 +134,7 @@ static void SubBytes(AES_state *s, int inv) {
         D = U7;
     }
 
-    /* Non-linear transformation (identical to the code in SubBytes) */
+    /* Non-linear transformation (shared between the forward and backward case) */
     M1 = T13 & T6;
     M6 = T3 & T16;
     M11 = T1 & T15;
@@ -469,9 +469,9 @@ static void AES_encrypt(const AES_state* rounds, int nrounds, unsigned char* cip
 
 static void AES_decrypt(const AES_state* rounds, int nrounds, unsigned char* plain16, const unsigned char* cipher16) {
     /* Most AES decryption implementations use the alternate scheme
-     * (the Equivalent Inverse Cipher), which looks more like encryption, but
-     * needs different round constants. We can't reuse any code here anyway, so
-     * don't bother. */
+     * (the Equivalent Inverse Cipher), which allows for more code reuse between
+     * the encryption and decryption code, but requires separate setup for both.
+     */
     AES_state s = {{0}};
     int round;
 

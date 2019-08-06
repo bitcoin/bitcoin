@@ -1,8 +1,8 @@
 #ifndef OMNICORE_LOG_H
 #define OMNICORE_LOG_H
 
-#include "util.h"
-#include "tinyformat.h"
+#include <util/system.h>
+#include <tinyformat.h>
 
 #include <string>
 

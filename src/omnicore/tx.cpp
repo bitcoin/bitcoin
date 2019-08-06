@@ -1,30 +1,30 @@
 // Master Protocol transaction code
 
-#include "omnicore/tx.h"
+#include <omnicore/tx.h>
 
-#include "omnicore/activation.h"
-#include "omnicore/dbfees.h"
-#include "omnicore/dbspinfo.h"
-#include "omnicore/dbstolist.h"
-#include "omnicore/dbtradelist.h"
-#include "omnicore/dbtxlist.h"
-#include "omnicore/dex.h"
-#include "omnicore/log.h"
-#include "omnicore/mdex.h"
-#include "omnicore/notifications.h"
-#include "omnicore/omnicore.h"
-#include "omnicore/parsing.h"
-#include "omnicore/rules.h"
-#include "omnicore/sp.h"
-#include "omnicore/sto.h"
-#include "omnicore/utilsbitcoin.h"
-#include "omnicore/version.h"
+#include <omnicore/activation.h>
+#include <omnicore/dbfees.h>
+#include <omnicore/dbspinfo.h>
+#include <omnicore/dbstolist.h>
+#include <omnicore/dbtradelist.h>
+#include <omnicore/dbtxlist.h>
+#include <omnicore/dex.h>
+#include <omnicore/log.h>
+#include <omnicore/mdex.h>
+#include <omnicore/notifications.h>
+#include <omnicore/parsing.h>
+#include <omnicore/rules.h>
+#include <omnicore/sp.h>
+#include <omnicore/sto.h>
+#include <omnicore/utilsbitcoin.h>
+#include <omnicore/version.h>
 
-#include "amount.h"
-#include "base58.h"
-#include "main.h"
-#include "sync.h"
-#include "utiltime.h"
+#include <amount.h>
+#include <base58.h>
+#include <key_io.h>
+#include <validation.h>
+#include <sync.h>
+#include <util/time.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
@@ -726,8 +726,8 @@ bool CMPTransaction::interpret_FreezeTokens()
     if (receiver.empty()) {
         return false;
     }
-    CBitcoinAddress recAddress(receiver);
-    if (!recAddress.IsValid()) {
+    CTxDestination recAddress = DecodeDestination(receiver);
+    if (!IsValidDestination(recAddress)) {
         return false;
     }
 
@@ -765,8 +765,8 @@ bool CMPTransaction::interpret_UnfreezeTokens()
     if (receiver.empty()) {
         return false;
     }
-    CBitcoinAddress recAddress(receiver);
-    if (!recAddress.IsValid()) {
+    CTxDestination recAddress = DecodeDestination(receiver);
+    if (!IsValidDestination(recAddress)) {
         return false;
     }
 
@@ -953,7 +953,7 @@ int CMPTransaction::logicHelper_CrowdsaleParticipation()
     CMPCrowd* pcrowdsale = getCrowd(receiver);
 
     // No active crowdsale
-    if (pcrowdsale == NULL) {
+    if (pcrowdsale == nullptr) {
         return (PKT_ERROR_CROWD -1);
     }
     // Active crowdsale, but not for this property
@@ -1066,7 +1066,7 @@ int CMPTransaction::logicMath_SimpleSend()
     assert(update_tally_map(sender, property, -nValue, BALANCE));
     assert(update_tally_map(receiver, property, nValue, BALANCE));
 
-    // Is there an active crowdsale running from this recepient?
+    // Is there an active crowdsale running from this recipient?
     logicHelper_CrowdsaleParticipation();
 
     return 0;
@@ -1215,7 +1215,7 @@ int CMPTransaction::logicMath_SendAll()
     // ------------------------------------------
 
     CMPTally* ptally = getTally(sender);
-    if (ptally == NULL) {
+    if (ptally == nullptr) {
         PrintToLog("%s(): rejected: sender %s has no tokens to send\n", __func__, sender);
         return (PKT_ERROR_SEND_ALL -54);
     }
@@ -1588,7 +1588,7 @@ int CMPTransaction::logicMath_CreatePropertyFixed()
         LOCK(cs_main);
 
         CBlockIndex* pindex = chainActive[block];
-        if (pindex == NULL) {
+        if (pindex == nullptr) {
             PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
             return (PKT_ERROR_SP -20);
         }
@@ -1659,7 +1659,7 @@ int CMPTransaction::logicMath_CreatePropertyVariable()
         LOCK(cs_main);
 
         CBlockIndex* pindex = chainActive[block];
-        if (pindex == NULL) {
+        if (pindex == nullptr) {
             PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
             return (PKT_ERROR_SP -20);
         }
@@ -1719,7 +1719,7 @@ int CMPTransaction::logicMath_CreatePropertyVariable()
         return (PKT_ERROR_SP -38);
     }
 
-    if (NULL != getCrowd(sender)) {
+    if (nullptr != getCrowd(sender)) {
         PrintToLog("%s(): rejected: sender %s has an active crowdsale\n", __func__, sender);
         return (PKT_ERROR_SP -39);
     }
@@ -1762,7 +1762,7 @@ int CMPTransaction::logicMath_CloseCrowdsale()
         LOCK(cs_main);
 
         CBlockIndex* pindex = chainActive[block];
-        if (pindex == NULL) {
+        if (pindex == nullptr) {
             PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
             return (PKT_ERROR_SP -20);
         }
@@ -1829,7 +1829,7 @@ int CMPTransaction::logicMath_CreatePropertyManaged()
         LOCK(cs_main);
 
         CBlockIndex* pindex = chainActive[block];
-        if (pindex == NULL) {
+        if (pindex == nullptr) {
             PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
             return (PKT_ERROR_SP -20);
         }
@@ -1894,7 +1894,7 @@ int CMPTransaction::logicMath_GrantTokens()
         LOCK(cs_main);
 
         CBlockIndex* pindex = chainActive[block];
-        if (pindex == NULL) {
+        if (pindex == nullptr) {
             PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
             return (PKT_ERROR_SP -20);
         }
@@ -1964,7 +1964,7 @@ int CMPTransaction::logicMath_GrantTokens()
      * is not activated, "granting tokens" can trigger crowdsale participations.
      */
     if (!IsFeatureActivated(FEATURE_GRANTEFFECTS, block)) {
-        // Is there an active crowdsale running from this recepient?
+        // Is there an active crowdsale running from this recipient?
         logicHelper_CrowdsaleParticipation();
     }
 
@@ -1981,7 +1981,7 @@ int CMPTransaction::logicMath_RevokeTokens()
         LOCK(cs_main);
 
         CBlockIndex* pindex = chainActive[block];
-        if (pindex == NULL) {
+        if (pindex == nullptr) {
             PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
             return (PKT_ERROR_TOKENS -20);
         }
@@ -2051,7 +2051,7 @@ int CMPTransaction::logicMath_ChangeIssuer()
         LOCK(cs_main);
 
         CBlockIndex* pindex = chainActive[block];
-        if (pindex == NULL) {
+        if (pindex == nullptr) {
             PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
             return (PKT_ERROR_TOKENS -20);
         }
@@ -2081,7 +2081,7 @@ int CMPTransaction::logicMath_ChangeIssuer()
         return (PKT_ERROR_TOKENS -43);
     }
 
-    if (NULL != getCrowd(sender)) {
+    if (nullptr != getCrowd(sender)) {
         PrintToLog("%s(): rejected: sender %s has an active crowdsale\n", __func__, sender);
         return (PKT_ERROR_TOKENS -39);
     }
@@ -2091,7 +2091,7 @@ int CMPTransaction::logicMath_ChangeIssuer()
         return (PKT_ERROR_TOKENS -45);
     }
 
-    if (NULL != getCrowd(receiver)) {
+    if (nullptr != getCrowd(receiver)) {
         PrintToLog("%s(): rejected: receiver %s has an active crowdsale\n", __func__, receiver);
         return (PKT_ERROR_TOKENS -46);
     }
@@ -2116,7 +2116,7 @@ int CMPTransaction::logicMath_EnableFreezing()
         LOCK(cs_main);
 
         CBlockIndex* pindex = chainActive[block];
-        if (pindex == NULL) {
+        if (pindex == nullptr) {
             PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
             return (PKT_ERROR_TOKENS -20);
         }
@@ -2177,7 +2177,7 @@ int CMPTransaction::logicMath_DisableFreezing()
         LOCK(cs_main);
 
         CBlockIndex* pindex = chainActive[block];
-        if (pindex == NULL) {
+        if (pindex == nullptr) {
             PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
             return (PKT_ERROR_TOKENS -20);
         }
@@ -2230,7 +2230,7 @@ int CMPTransaction::logicMath_FreezeTokens()
         LOCK(cs_main);
 
         CBlockIndex* pindex = chainActive[block];
-        if (pindex == NULL) {
+        if (pindex == nullptr) {
             PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
             return (PKT_ERROR_TOKENS -20);
         }
@@ -2288,7 +2288,7 @@ int CMPTransaction::logicMath_UnfreezeTokens()
         LOCK(cs_main);
 
         CBlockIndex* pindex = chainActive[block];
-        if (pindex == NULL) {
+        if (pindex == nullptr) {
             PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
             return (PKT_ERROR_TOKENS -20);
         }
@@ -2446,10 +2446,10 @@ int CMPTransaction::logicMath_Alert()
             std::string msgText = "Client upgrade is required!  Shutting down due to unsupported consensus state!";
             PrintToLog(msgText);
             PrintToConsole(msgText);
-            if (!GetBoolArg("-overrideforcedshutdown", false)) {
+            if (!gArgs.GetBoolArg("-overrideforcedshutdown", false)) {
                 boost::filesystem::path persistPath = GetDataDir() / "MP_persist";
                 if (boost::filesystem::exists(persistPath)) boost::filesystem::remove_all(persistPath); // prevent the node being restarted without a reparse after forced shutdown
-                AbortNode(msgText, msgText);
+                DoAbortNode(msgText, msgText);
             }
         }
     }
@@ -2461,7 +2461,7 @@ int CMPTransaction::logicMath_Alert()
     }
 
     // we have a new alert, fire a notify event if needed
-    AlertNotify(alert_text);
+    DoWarning(alert_text);
 
     return 0;
 }

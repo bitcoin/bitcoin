@@ -1,10 +1,10 @@
-#include "omnicore/encoding.h"
+#include <omnicore/encoding.h>
 
-#include "omnicore/script.h"
+#include <omnicore/script.h>
 
-#include "script/script.h"
-#include "test/test_bitcoin.h"
-#include "utilstrencodings.h"
+#include <script/script.h>
+#include <test/test_bitcoin.h>
+#include <util/strencodings.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -13,7 +13,7 @@
 #include <utility>
 #include <vector>
 
-// Is resetted to a norm value in each test
+// Is reset to a norm value in each test
 extern unsigned nMaxDatacarrierBytes;
 
 BOOST_FIXTURE_TEST_SUITE(omnicore_encoding_c_tests, BasicTestingSetup)

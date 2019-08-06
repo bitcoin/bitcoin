@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # Copyright (c) 2014 Wladimir J. van der Laan
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -15,7 +15,6 @@ It will do the following automatically:
 TODO:
 - auto-add new translations to the build system according to the translation process
 '''
-from __future__ import division, print_function
 import subprocess
 import re
 import sys
@@ -31,17 +30,19 @@ SOURCE_LANG = 'bitcoin_en.ts'
 LOCALE_DIR = 'src/qt/locale'
 # Minimum number of messages for translation to be considered at all
 MIN_NUM_MESSAGES = 10
+# Regexp to check for Bitcoin addresses
+ADDRESS_REGEXP = re.compile('([13]|bc1)[a-zA-Z0-9]{30,}')
 
 def check_at_repository_root():
     if not os.path.exists('.git'):
         print('No .git directory found')
         print('Execute this script at the root of the repository', file=sys.stderr)
-        exit(1)
+        sys.exit(1)
 
 def fetch_all_translations():
     if subprocess.call([TX, 'pull', '-f', '-a']):
         print('Error while fetching translations', file=sys.stderr)
-        exit(1)
+        sys.exit(1)
 
 def find_format_specifiers(s):
     '''Find all format specifiers in a string.'''
@@ -64,6 +65,14 @@ def split_format_specifiers(specifiers):
             numeric.append(s)
         else:
             other.append(s)
+
+    # If both numeric format specifiers and "others" are used, assume we're dealing
+    # with a Qt-formatted message. In the case of Qt formatting (see https://doc.qt.io/qt-5/qstring.html#arg)
+    # only numeric formats are replaced at all. This means "(percentage: %1%)" is valid, without needing
+    # any kind of escaping that would be necessary for strprintf. Without this, this function
+    # would wrongly detect '%)' as a printf format specifier.
+    if numeric:
+        other = []
 
     # numeric (Qt) can be present in any order, others (strprintf) must be in specified order
     return set(numeric),other
@@ -115,6 +124,12 @@ def escape_cdata(text):
     text = text.replace('"', '&quot;')
     return text
 
+def contains_bitcoin_addr(text, errors):
+    if text is not None and ADDRESS_REGEXP.search(text) is not None:
+        errors.append('Translation "%s" contains a bitcoin address. This will be removed.' % (text))
+        return True
+    return False
+
 def postprocess_translations(reduce_diff_hacks=False):
     print('Checking and postprocessing...')
 
@@ -153,7 +168,7 @@ def postprocess_translations(reduce_diff_hacks=False):
                     if translation is None:
                         continue
                     errors = []
-                    valid = check_format_specifiers(source, translation, errors, numerus)
+                    valid = check_format_specifiers(source, translation, errors, numerus) and not contains_bitcoin_addr(translation, errors)
 
                     for error in errors:
                         print('%s: %s' % (filename, error))

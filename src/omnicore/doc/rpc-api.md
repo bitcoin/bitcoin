@@ -783,7 +783,7 @@ Result:
     {
       "alerttype" : n                       // (number) alert type as integer
       "alerttype" : "xxx"                   // (string) alert type (can be "alertexpiringbyblock", "alertexpiringbyblocktime", "alertexpiringbyclientversion" or "error")
-      "alertexpiry" : "nnnnnnnnnn"          // (string) expiration criteria (can refer to block height, timestamp or client verion)
+      "alertexpiry" : "nnnnnnnnnn"          // (string) expiration criteria (can refer to block height, timestamp or client version)
       "alertmessage" : "xxx"                // (string) information about the alert
     },
     ...
@@ -1092,7 +1092,7 @@ Note: the list of transactions is unordered and can contain invalid transactions
 **Example:**
 
 ```bash
-$ omnicore-cli "omni_listblockstransactions" 279007 300000
+$ omnicore-cli "omni_omni_listblocktransactions" 279007 300000
 ```
 
 ---
@@ -2596,7 +2596,7 @@ If an ecosystem is supplied the results will reflect the fee share for that ecos
 ```js
 [                                  // (array of JSON objects)
   {
-    "address" : "address"          // (string) the adress that would receive a share of fees
+    "address" : "address"          // (string) the address that would receive a share of fees
     "feeshare" : "n.nnnn%",        // (string) the percentage of fees this address will receive based on the current state
   },
 ...
