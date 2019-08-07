@@ -11,7 +11,8 @@
 
 #include <string>
 
-extern const std::string CURRENCY_UNIT;
+const std::string CURRENCY_UNIT = "BTC"; // One formatted unit
+const std::string CURRENCY_ATOM = "sat"; // One indivisible minimum value unit
 
 /**
  * Fee rate in satoshis per kilobyte: CAmount / kB
