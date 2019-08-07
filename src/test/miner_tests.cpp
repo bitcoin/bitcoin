@@ -17,12 +17,15 @@
 #include <uint256.h>
 #include <util/system.h>
 #include <util/strencodings.h>
+#include <pow.h>
 
 #include <test/test_bitcoin.h>
 
 #include <memory>
 
 #include <boost/test/unit_test.hpp>
+
+#define DEBUG_NONCE 0
 
 BOOST_FIXTURE_TEST_SUITE(miner_tests, TestingSetup)
 
@@ -52,34 +55,34 @@ struct {
     unsigned char extranonce;
     unsigned int nonce;
 } blockinfo[] = {
-    {4, 0x1460}, {2, 0x4b3}, {1, 0x25e3}, {1, 0x2253},
-    {2, 0x1e9b}, {2, 0x58e}, {1, 0x157c}, {2, 0x5a4},
-    {2, 0xb3e}, {1, 0xb40}, {1, 0xd6a}, {2, 0xd87},
-    {2, 0x1c5c}, {1, 0x1c8c}, {2, 0x178}, {2, 0xb65},
-    {1, 0x2ca}, {2, 0x2783}, {1, 0xd5d}, {1, 0xb5d},
-    {3, 0x1ce1}, {2, 0x466}, {2, 0xe42}, {1, 0x28e3},
-    {2, 0x51b}, {1, 0x9a3}, {2, 0x105f}, {2, 0x17},
-    {2, 0x6b1}, {2, 0x18e5}, {2, 0x170}, {2, 0x7e9},
-    {1, 0x869}, {2, 0x1bc}, {2, 0x15c6}, {1, 0x29ba},
-    {2, 0x12f1}, {1, 0x395}, {2, 0xeae}, {1, 0x20f9},
-    {1, 0xd22}, {3, 0xd86}, {2, 0x10e3}, {5, 0x1212},
-    {1, 0x460}, {5, 0x2d49}, {1, 0x249c}, {1, 0x894},
-    {1, 0x705}, {2, 0x2f3}, {1, 0x624}, {1, 0xea3},
-    {1, 0x293}, {1, 0x37fa}, {5, 0x1ff0}, {5, 0x1c48},
-    {1, 0xa59}, {1, 0x16f0}, {6, 0x1703}, {2, 0x3b57},
-    {2, 0xff9}, {1, 0x28e5}, {1, 0x201}, {1, 0x4cf},
-    {2, 0x2181}, {2, 0x106e}, {1, 0x2d08}, {1, 0x745},
-    {1, 0x2cf5}, {5, 0xb38}, {5, 0x17f5}, {1, 0xa9c},
-    {1, 0x477}, {2, 0x3cf1}, {2, 0x13a9}, {1, 0xc64},
-    {2, 0x34af}, {1, 0x14c0}, {2, 0x579}, {2, 0x5c7},
-    {1, 0x305}, {1, 0x911}, {1, 0xcb6}, {5, 0x488},
-    {1, 0x1a9}, {1, 0x255}, {1, 0x3e6}, {1, 0x3df},
-    {1, 0x90a}, {1, 0x186e}, {1, 0x3458}, {2, 0x2b27},
-    {0, 0x8b2}, {1, 0xf26}, {2, 0x275}, {2, 0x56f},
-    {2, 0x9e0}, {1, 0x5ff}, {1, 0x525}, {1, 0x1c},
-    {1, 0x655}, {1, 0x30c}, {1, 0x1643}, {5, 0x3cb},
-    {2, 0x645}, {1, 0xb89}, {1, 0x79}, {1, 0x4c},
-    {2, 0x230}, {2, 0x185c},
+    {4, 0x318}, {2, 0x8c}, {1, 0x7fc}, {1, 0x40b},
+    {2, 0xe6}, {2, 0x373}, {1, 0x1b}, {2, 0x437},
+    {2, 0x63}, {1, 0x3b}, {1, 0x2c5}, {2, 0x79a},
+    {2, 0x93}, {1, 0x20}, {2, 0x11b}, {2, 0xd6},
+    {1, 0x511}, {2, 0x7}, {1, 0x1bd}, {1, 0x7a},
+    {3, 0x66}, {2, 0x78}, {2, 0x124}, {1, 0x1f},
+    {2, 0x17}, {1, 0xa}, {2, 0x4df}, {2, 0xfc},
+    {2, 0x191}, {2, 0x25e}, {2, 0x1}, {2, 0x2a6},
+    {1, 0x21}, {2, 0x3}, {2, 0x17b}, {1, 0x44},
+    {2, 0xa2}, {1, 0xd1}, {2, 0x1f}, {1, 0x1e5},
+    {1, 0x28}, {3, 0xf0}, {2, 0x58}, {5, 0x1},
+    {1, 0x2e}, {5, 0x9d}, {1, 0x1b}, {1, 0xb9},
+    {1, 0xbf}, {2, 0x882}, {1, 0x54}, {1, 0x19b},
+    {1, 0x3}, {1, 0x203}, {5, 0xe5}, {5, 0x2b},
+    {1, 0x4e}, {1, 0x33}, {6, 0x760}, {2, 0x4c},
+    {2, 0xd0}, {1, 0x12}, {1, 0x1c6}, {1, 0x8e},
+    {2, 0x1e8}, {2, 0x91}, {1, 0x19d}, {1, 0x52},
+    {1, 0x125}, {5, 0x26b}, {5, 0x1}, {1, 0x132},
+    {1, 0x183}, {2, 0x87}, {2, 0xfe}, {1, 0x2d},
+    {2, 0x25}, {1, 0x76}, {2, 0x166}, {2, 0x95},
+    {1, 0x10f}, {1, 0x51}, {1, 0x3a}, {5, 0x79},
+    {1, 0x388}, {1, 0x8bc}, {1, 0x1b}, {1, 0x72},
+    {1, 0x4b}, {1, 0x98}, {1, 0x435}, {2, 0xb5},
+    {0, 0x1a7}, {1, 0x16}, {2, 0x5b}, {2, 0xc3},
+    {2, 0x15c}, {1, 0x136}, {1, 0x476}, {1, 0x43},
+    {1, 0x106}, {1, 0x144}, {1, 0x34}, {5, 0x15d},
+    {2, 0xbf}, {1, 0x3}, {1, 0x82}, {1, 0x1f},
+    {2, 0x51}, {2, 0xa4},
 };
 
 static CBlockIndex CreateBlockIndex(int nHeight)
@@ -237,7 +240,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
             txCoinbase.vin[0].scriptSig = CScript();
             txCoinbase.vin[0].scriptSig.push_back(blockinfo[i].extranonce);
             txCoinbase.vin[0].scriptSig.push_back(chainActive.Height());
-            txCoinbase.vout.resize(1); // Ignore the (optional) segwit commitment added by CreateNewBlock (as the hardcoded nonces don't account for this)
+//            txCoinbase.vout.resize(1); // Ignore the (optional) segwit commitment added by CreateNewBlock (as the hardcoded nonces don't account for this)
             txCoinbase.vout[0].scriptPubKey = CScript();
             pblock->vtx[0] = MakeTransactionRef(std::move(txCoinbase));
             if (txFirst.size() == 0)
@@ -248,9 +251,25 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
             pblock->nNonce = blockinfo[i].nonce;
         }
         std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
+
+#if DEBUG_NONCE
+        pblock->nNonce = 1;
+        while (!CheckProofOfWork(pblock->GetBlockHeader(), Params().GetConsensus())) {
+            ++pblock->nNonce;
+        }
+        std::cout << "{" << static_cast<unsigned>(blockinfo[i].extranonce);
+        std::cout << ", 0x" << std::hex << pblock->nNonce << "}, ";
+        if (!((i + 1) % 4)) std::cout << std::endl;
+        shared_pblock = std::make_shared<const CBlock>(*pblock);
+#endif
         BOOST_CHECK(ProcessNewBlock(chainparams, shared_pblock, true, nullptr));
         pblock->hashPrevBlock = pblock->GetHash();
     }
+
+#if DEBUG_NONCE
+    std::cout << std::endl;
+    BOOST_CHECK(0);
+#endif
 
     LOCK(cs_main);
     LOCK(::mempool.cs);
