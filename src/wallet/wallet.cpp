@@ -3659,18 +3659,17 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 if (pick_new_inputs) {
                     nValueIn = 0;
                     setCoins.clear();
-                    if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, coinControl, nCoinType))
-                {
-                    if (nCoinType == ONLY_NONDENOMINATED) {
-                        strFailReason = _("Unable to locate enough PrivateSend non-denominated funds for this transaction.");
-                    } else if (nCoinType == ONLY_DENOMINATED) {
-                        strFailReason = _("Unable to locate enough PrivateSend denominated funds for this transaction.");
-                        strFailReason += " " + _("PrivateSend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.");
-                    } else if (nValueIn < nValueToSelect) {
-                        strFailReason = _("Insufficient funds.");
+                    if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, coinControl, nCoinType)) {
+                        if (nCoinType == ONLY_NONDENOMINATED) {
+                            strFailReason = _("Unable to locate enough PrivateSend non-denominated funds for this transaction.");
+                        } else if (nCoinType == ONLY_DENOMINATED) {
+                            strFailReason = _("Unable to locate enough PrivateSend denominated funds for this transaction.");
+                            strFailReason += " " + _("PrivateSend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.");
+                        } else if (nValueIn < nValueToSelect) {
+                            strFailReason = _("Insufficient funds.");
+                        }
+                        return false;
                     }
-
-                    return false;}
                 }
 
                 const CAmount nChange = nValueIn - nValueToSelect;
