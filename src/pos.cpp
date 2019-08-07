@@ -78,12 +78,11 @@ bool CheckStakeKernelHash(CBlockIndex* pindexPrev, unsigned int nBits, uint32_t 
             hashProofOfStake.ToString());
     }
 
-LogPrintf(" error search 12 \n");
     // Now check if proof-of-stake hash meets target protocol
     if (UintToArith256(hashProofOfStake) > bnTarget)
         return error(" %s: proof-of-stake hash %s fails to meet target %x \n", __func__, UintToArith256(hashProofOfStake).ToString().c_str(), bnTarget.GetCompact());
         //return false;
-LogPrintf(" error search 13 \n");
+
     if (LogInstance().WillLogCategory(BCLog::COINSTAKE) && !fPrintProofOfStake)
     {
         LogPrintf("CheckStakeKernelHash() : check modifier=%s nTimeBlockFrom=%u nPrevout=%u nTimeBlock=%u hashProof=%s\n",
