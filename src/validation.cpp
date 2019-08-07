@@ -1612,6 +1612,7 @@ static DisconnectResult DisconnectBlock(const CBlock& block, CValidationState& s
     if (fDIP0003Active && !fHasBestBlock) {
         // Nodes that upgraded after DIP3 activation will have to reindex to ensure evodb consistency
         AbortNode("Found EvoDB inconsistency, you must reindex to continue");
+        return DISCONNECT_FAILED;
     }
 
     bool fClean = true;
@@ -1911,7 +1912,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 
         if (fDIP0003Active && !fHasBestBlock) {
             // Nodes that upgraded after DIP3 activation will have to reindex to ensure evodb consistency
-            AbortNode("Found EvoDB inconsistency, you must reindex to continue");
+            return AbortNode(state, "Found EvoDB inconsistency, you must reindex to continue");
         }
     }
 
