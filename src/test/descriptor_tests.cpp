@@ -42,33 +42,47 @@ bool EqualDescriptor(std::string a, std::string b)
     return a == b;
 }
 
-std::string MaybeUseHInsteadOfApostrophy(std::string ret)
+std::string UseHInsteadOfApostrophe(const std::string& desc)
 {
-    if (InsecureRandBool()) {
-        while (true) {
-            auto it = ret.find("'");
-            if (it != std::string::npos) {
-                ret[it] = 'h';
-                if (ret.size() > 9 && ret[ret.size() - 9] == '#') ret = ret.substr(0, ret.size() - 9); // Changing apostrophe to h breaks the checksum
-            } else {
-                break;
-            }
-        }
+    std::string ret = desc;
+    while (true) {
+        auto it = ret.find('\'');
+        if (it == std::string::npos) break;
+        ret[it] = 'h';
+    }
+
+    // GetDescriptorChecksum returns "" if the checksum exists but is bad.
+    // Switching apostrophes with 'h' breaks the checksum if it exists - recalculate it and replace the broken one.
+    if (GetDescriptorChecksum(ret) == "") {
+        ret = ret.substr(0, desc.size() - 9);
+        ret += std::string("#") + GetDescriptorChecksum(ret);
     }
     return ret;
 }
 
 const std::set<std::vector<uint32_t>> ONLY_EMPTY{{}};
 
-void Check(const std::string& prv, const std::string& pub, int flags, const std::vector<std::vector<std::string>>& scripts, const std::set<std::vector<uint32_t>>& paths = ONLY_EMPTY)
+void DoCheck(const std::string& prv, const std::string& pub, int flags, const std::vector<std::vector<std::string>>& scripts, const std::set<std::vector<uint32_t>>& paths = ONLY_EMPTY,
+    bool replace_apostrophe_with_h_in_prv=false, bool replace_apostrophe_with_h_in_pub=false)
 {
     FlatSigningProvider keys_priv, keys_pub;
     std::set<std::vector<uint32_t>> left_paths = paths;
     std::string error;
 
+    std::unique_ptr<Descriptor> parse_priv;
+    std::unique_ptr<Descriptor> parse_pub;
     // Check that parsing succeeds.
-    auto parse_priv = Parse(MaybeUseHInsteadOfApostrophy(prv), keys_priv, error);
-    auto parse_pub = Parse(MaybeUseHInsteadOfApostrophy(pub), keys_pub, error);
+    if (replace_apostrophe_with_h_in_prv) {
+        parse_priv = Parse(UseHInsteadOfApostrophe(prv), keys_priv, error);
+    } else {
+        parse_priv = Parse(prv, keys_priv, error);
+    }
+    if (replace_apostrophe_with_h_in_pub) {
+        parse_pub = Parse(UseHInsteadOfApostrophe(pub), keys_pub, error);
+    } else {
+        parse_pub = Parse(pub, keys_pub, error);
+    }
+
     BOOST_CHECK(parse_priv);
     BOOST_CHECK(parse_pub);
 
@@ -165,6 +179,32 @@ void Check(const std::string& prv, const std::string& pub, int flags, const std:
 
     // Verify no expected paths remain that were not observed.
     BOOST_CHECK_MESSAGE(left_paths.empty(), "Not all expected key paths found: " + prv);
+}
+
+void Check(const std::string& prv, const std::string& pub, int flags, const std::vector<std::vector<std::string>>& scripts, const std::set<std::vector<uint32_t>>& paths = ONLY_EMPTY)
+{
+    bool found_apostrophes_in_prv = false;
+    bool found_apostrophes_in_pub = false;
+
+    // Do not replace apostrophes with 'h' in prv and pub
+    DoCheck(prv, pub, flags, scripts, paths);
+
+    // Replace apostrophes with 'h' in prv but not in pub, if apostrophes are found in prv
+    if (prv.find('\'') != std::string::npos) {
+        found_apostrophes_in_prv = true;
+        DoCheck(prv, pub, flags, scripts, paths, /* replace_apostrophe_with_h_in_prv = */true, /*replace_apostrophe_with_h_in_pub = */false);
+    }
+
+    // Replace apostrophes with 'h' in pub but not in prv, if apostrophes are found in pub
+    if (pub.find('\'') != std::string::npos) {
+        found_apostrophes_in_pub = true;
+        DoCheck(prv, pub, flags, scripts, paths, /* replace_apostrophe_with_h_in_prv = */false, /*replace_apostrophe_with_h_in_pub = */true);
+    }
+
+    // Replace apostrophes with 'h' both in prv and in pub, if apostrophes are found in both
+    if (found_apostrophes_in_prv && found_apostrophes_in_pub) {
+        DoCheck(prv, pub, flags, scripts, paths, /* replace_apostrophe_with_h_in_prv = */true, /*replace_apostrophe_with_h_in_pub = */true);
+    }
 }
 
 }
