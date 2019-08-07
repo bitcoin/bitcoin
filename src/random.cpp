@@ -27,8 +27,11 @@
 #include <sys/syscall.h>
 #include <linux/random.h>
 #endif
-#ifdef HAVE_GETENTROPY
+#if defined(HAVE_GETENTROPY) || (defined(HAVE_GETENTROPY_RAND) && defined(MAC_OSX))
 #include <unistd.h>
+#endif
+#if defined(HAVE_GETENTROPY_RAND) && defined(MAC_OSX)
+#include <sys/random.h>
 #endif
 #ifdef HAVE_SYSCTL_ARND
 #include <sys/sysctl.h>
@@ -236,6 +239,15 @@ void GetOSRand(unsigned char *ent32)
      */
     if (getentropy(ent32, NUM_OS_RANDOM_BYTES) != 0) {
         RandFailure();
+    }
+#elif defined(HAVE_GETENTROPY_RAND) && defined(MAC_OSX)
+    // We need a fallback for OSX < 10.12
+    if (&getentropy != NULL) {
+        if (getentropy(ent32, NUM_OS_RANDOM_BYTES) != 0) {
+            RandFailure();
+        }
+    } else {
+        GetDevURandom(ent32);
     }
 #elif defined(HAVE_SYSCTL_ARND)
     /* FreeBSD and similar. It is possible for the call to return less

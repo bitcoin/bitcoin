@@ -64,6 +64,7 @@ BASE_SCRIPTS= [
     # vv Tests less than 2m vv
     'p2p-instantsend.py',
     'wallet.py',
+    'multiwallet.py',
     'wallet-accounts.py',
     'wallet-dump.py',
     'listtransactions.py',
@@ -128,6 +129,7 @@ BASE_SCRIPTS= [
     'p2p-fingerprint.py',
     'wallet-encryption.py',
     'uptime.py',
+    'resendwallettransactions.py',
 ]
 
 EXTENDED_SCRIPTS = [
@@ -139,6 +141,7 @@ EXTENDED_SCRIPTS = [
     # vv Tests less than 5m vv
     'maxuploadtarget.py',
     'mempool_packages.py',
+    'dbcrash.py',
     # vv Tests less than 2m vv
     'bip68-sequence.py',
     'getblocktemplate_longpoll.py',  # FIXME: "socket.error: [Errno 54] Connection reset by peer" on my Mac, same as  https://github.com/bitcoin/bitcoin/issues/6651
