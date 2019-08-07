@@ -30,8 +30,7 @@
 #include <QMessageBox>
 #include <QSet>
 #include <QTimer>
-/*
-#ifdef ENABLE_PROOF_OF_STAKE
+
 WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, interfaces::Node& node, const PlatformStyle *platformStyle, OptionsModel *_optionsModel, QObject *parent) :
     QObject(parent), m_wallet(std::move(wallet)), m_node(node), optionsModel(_optionsModel), addressTableModel(nullptr),
     transactionTableModel(nullptr),
@@ -53,29 +52,7 @@ WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, interfaces:
 
     subscribeToCoreSignals();
 }
-#else
-*/
-WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, interfaces::Node& node, const PlatformStyle *platformStyle, OptionsModel *_optionsModel, QObject *parent) :
-    QObject(parent), m_wallet(std::move(wallet)), m_node(node), optionsModel(_optionsModel), addressTableModel(nullptr),
-    transactionTableModel(nullptr),
-    recentRequestsTableModel(nullptr),
-    cachedEncryptionStatus(Unencrypted),
-    cachedNumBlocks(0),
-    updateStakeWeight(true)
-{
-    fHaveWatchOnly = m_wallet->haveWatchOnly();
-    addressTableModel = new AddressTableModel(this);
-    transactionTableModel = new TransactionTableModel(platformStyle, this);
-    recentRequestsTableModel = new RecentRequestsTableModel(this);
 
-    // This timer will be fired repeatedly to update the balance
-    pollTimer = new QTimer(this);
-    connect(pollTimer, &QTimer::timeout, this, &WalletModel::pollBalanceChanged);
-    pollTimer->start(MODEL_UPDATE_DELAY);
-
-    subscribeToCoreSignals();
-}
-//#endif
 
 WalletModel::~WalletModel()
 {
@@ -114,11 +91,9 @@ void WalletModel::pollBalanceChanged()
         if(transactionTableModel)
             transactionTableModel->updateConfirmations();
 
-#ifdef ENABLE_PROOF_OF_STAKE
         // The stake weight is used for the staking icon status
         // Get the stake weight only when not syncing because it is time consuming
         updateStakeWeight = true;
-#endif        
     }
 }
 

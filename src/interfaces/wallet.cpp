@@ -84,9 +84,7 @@ WalletTx MakeWalletTx(interfaces::Chain::Lock& locked_chain, CWallet& wallet, co
     result.time = wtx.GetTxTime();
     result.value_map = wtx.mapValue;
     result.is_coinbase = wtx.IsCoinBase();
-#ifdef ENABLE_PROOF_OF_STAKE
     result.is_coinstake = wtx.IsCoinStake();
-#endif
     return result;
 }
 
@@ -103,9 +101,7 @@ WalletTxStatus MakeWalletTxStatus(interfaces::Chain::Lock& locked_chain, const C
     result.is_trusted = wtx.IsTrusted(locked_chain);
     result.is_abandoned = wtx.isAbandoned();
     result.is_coinbase = wtx.IsCoinBase();
-#ifdef ENABLE_PROOF_OF_STAKE
     result.is_coinstake = wtx.IsCoinStake();
-#endif
     result.is_in_main_chain = wtx.IsInMainChain(locked_chain);
     return result;
 }
@@ -369,17 +365,14 @@ public:
         result.balance = bal.m_mine_trusted;
         result.unconfirmed_balance = bal.m_mine_untrusted_pending;
         result.immature_balance = bal.m_mine_immature;
-#ifdef ENABLE_PROOF_OF_STAKE
         result.stake = bal.m_mine_stake;
-#endif
         result.have_watch_only = m_wallet->HaveWatchOnly();
         if (result.have_watch_only) {
             result.watch_only_balance = bal.m_watchonly_trusted;
             result.unconfirmed_watch_only_balance = bal.m_watchonly_untrusted_pending;
             result.immature_watch_only_balance = bal.m_watchonly_immature;
-#ifdef ENABLE_PROOF_OF_STAKE
             result.watch_only_stake = m_wallet->GetWatchOnlyStake();
-#endif
+
         }
         return result;
     }
@@ -491,9 +484,7 @@ public:
         if (!locked_wallet) {
             return false;
         }
-#ifdef ENABLE_PROOF_OF_STAKE
         nWeight = m_wallet->GetStakeWeight();
-#endif
         return true;
     }
     int64_t getLastCoinStakeSearchInterval() override 
@@ -505,13 +496,11 @@ public:
         return m_wallet->m_wallet_unlock_staking_only;
     }
 
-#ifdef ENABLE_PROOF_OF_STAKE
-
     void setWalletUnlockStakingOnly(bool unlock) override
     {
         m_wallet->m_wallet_unlock_staking_only = unlock;
     }
-#endif
+
     std::unique_ptr<Handler> handleUnload(UnloadFn fn) override
     {
         return MakeHandler(m_wallet->NotifyUnload.connect(fn));
