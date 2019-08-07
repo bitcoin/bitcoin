@@ -26,7 +26,7 @@ def content_hash(filename):
 
 pngcrush = 'pngcrush'
 git = 'git'
-folders = ["src/qt/res/movies", "src/qt/res/icons", "share/pixmaps"]
+folders = ["src/qt/res/movies", "src/qt/res/icons", "share/pixmaps", "doc"]
 basePath = subprocess.check_output([git, 'rev-parse', '--show-toplevel'], universal_newlines=True, encoding='utf8').rstrip('\n')
 totalSaveBytes = 0
 noHashChange = True
