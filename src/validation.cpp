@@ -2078,9 +2078,9 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
 		    if(txout.scriptPubKey == dev_script && txout.nValue == devsubsidy)
 			    paidToDev=true;		
 
-        if(::ChainActive().Height() > 1 && block.vtx[0]->GetValueOut() > GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus()))
-            return state.Invalid(ValidationInvalidReason::CONSENSUS, error("ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)",
-                               block.vtx[0]->GetValueOut(), GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus())), REJECT_INVALID, "bad-cb-amount");
+        if(pindex->nHeight > 1 && block.vtx[0]->GetValueOut() > GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus()))
+            return state.Invalid(ValidationInvalidReason::CONSENSUS, error("ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d , at height =%d)",
+                               block.vtx[0]->GetValueOut(), GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus()), pindex->nHeight), REJECT_INVALID, "bad-cb-amount");
                                
 	}
 
