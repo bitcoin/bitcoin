@@ -796,16 +796,19 @@ MilliSleep(60000);
             MilliSleep(10000);
         }
         //don't disable PoS mining for no connections if in regtest mode
-        while (g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) == 3 || ::ChainstateActive().IsInitialBlockDownload()) {
-            pwallet->m_last_coin_stake_search_interval = 0;
-            fTryToSync = true;
-            MilliSleep(1000);
-        }
-        if (fTryToSync) {
-            fTryToSync = false;
-            if (g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) < 3 || ::ChainActive().Tip()->GetBlockTime() < GetTime() - 10 * 60) {
-                MilliSleep(60000);
-                continue;
+        if(!gArgs.GetBoolArg("-emergencystaking", false)) {
+			LogPrintf("Emergeny Staking Disabled");
+            while (g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) == 0 || ::ChainstateActive().IsInitialBlockDownload()) {
+                pwallet->m_last_coin_stake_search_interval = 0;
+                fTryToSync = true;
+                MilliSleep(1000);
+            }
+            if (fTryToSync) {
+                fTryToSync = false;
+                if (g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) < 3 || ::ChainActive().Tip()->GetBlockTime() < GetTime() - 10 * 60) {
+                    MilliSleep(60000);
+                    continue;
+                }
             }
         }
         
@@ -895,7 +898,7 @@ MilliSleep(60000);
                 }
             }
         }
-        MilliSleep(10000);
+        MilliSleep(60000);
     }
 }
 

@@ -80,8 +80,8 @@ bool CheckStakeKernelHash(CBlockIndex* pindexPrev, unsigned int nBits, uint32_t 
 
     // Now check if proof-of-stake hash meets target protocol
     if (UintToArith256(hashProofOfStake) > bnTarget)
-        return error(" %s: proof-of-stake hash %s fails to meet target %x \n", __func__, UintToArith256(hashProofOfStake).ToString().c_str(), bnTarget.GetCompact());
-        //return false;
+        //return error(" %s: proof-of-stake hash %s fails to meet target %x \n", __func__, UintToArith256(hashProofOfStake).ToString().c_str(), bnTarget.GetCompact());
+        return false;
 
     if (LogInstance().WillLogCategory(BCLog::COINSTAKE) && !fPrintProofOfStake)
     {
