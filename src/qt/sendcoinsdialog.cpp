@@ -223,8 +223,6 @@ void SendCoinsDialog::setModel(WalletModel *_model)
         connect(ui->checkBoxMinimumFee, SIGNAL(stateChanged(int)), this, SLOT(updateFeeSectionControls()));
         connect(ui->checkBoxMinimumFee, SIGNAL(stateChanged(int)), this, SLOT(updateGlobalFeeVariables()));
         connect(ui->checkBoxMinimumFee, SIGNAL(stateChanged(int)), this, SLOT(coinControlUpdateLabels()));
-        connect(ui->optInRBF, SIGNAL(stateChanged(int)), this, SLOT(updateSmartFeeLabel()));
-        connect(ui->optInRBF, SIGNAL(stateChanged(int)), this, SLOT(coinControlUpdateLabels()));
         ui->customFee->setSingleStep(CWallet::GetRequiredFee(1000));
         updateFeeSectionControls();
         updateMinFeeLabel();
@@ -766,7 +764,7 @@ void SendCoinsDialog::updateSmartFeeLabel()
 
     int nBlocksToConfirm = getConfTargetForIndex(ui->confTargetSelector->currentIndex());
     FeeCalculation feeCalc;
-    bool conservative_estimate = CalculateEstimateType(FeeEstimateMode::UNSET, ui->optInRBF->isChecked());
+    bool conservative_estimate = CalculateEstimateType(FeeEstimateMode::UNSET);
     CFeeRate feeRate = ::feeEstimator.estimateSmartFee(nBlocksToConfirm, &feeCalc, ::mempool, conservative_estimate);
     if (feeRate <= CFeeRate(0)) // not enough data => minfee
     {
@@ -939,7 +937,6 @@ void SendCoinsDialog::coinControlUpdateLabels()
     } else {
         CoinControlDialog::coinControl->nConfirmTarget = model->getDefaultConfirmTarget();
     }
-    CoinControlDialog::coinControl->signalRbf = ui->optInRBF->isChecked();
 
     for(int i = 0; i < ui->entries->count(); ++i)
     {

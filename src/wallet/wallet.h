@@ -1309,6 +1309,6 @@ public:
     }
 };
 
-bool CalculateEstimateType(FeeEstimateMode mode, bool opt_in_rbf);
+bool CalculateEstimateType(FeeEstimateMode mode);
 
 #endif // BITCOIN_WALLET_WALLET_H

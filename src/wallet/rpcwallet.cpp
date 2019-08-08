@@ -476,9 +476,6 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
     }
 
     CCoinControl coin_control;
-    if (request.params.size() > 5 && !request.params[5].isNull()) {
-        coin_control.signalRbf = request.params[5].get_bool();
-    }
 
     if (request.params.size() > 6 && !request.params[6].isNull()) {
         coin_control.nConfirmTarget = request.params[6].get_int();
@@ -1050,9 +1047,6 @@ UniValue sendmany(const JSONRPCRequest& request)
         subtractFeeFrom = request.params[5].get_array();
 
     CCoinControl coin_control;
-    if (request.params.size() > 5 && !request.params[5].isNull()) {
-        coin_control.signalRbf = request.params[5].get_bool();
-    }
 
     if (request.params.size() > 6 && !request.params[6].isNull()) {
         coin_control.nConfirmTarget = request.params[6].get_int();
@@ -3193,7 +3187,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "lockunspent",              &lockunspent,              true,   {"unlock","transactions"} },
     { "wallet",             "move",                     &movecmd,                  false,  {"fromaccount","toaccount","amount","minconf","comment"} },
     { "wallet",             "sendfrom",                 &sendfrom,                 false,  {"fromaccount","toaddress","amount","minconf","addlocked","comment","comment_to"} },
-    { "wallet",             "sendmany",                 &sendmany,                 false,  {"fromaccount","amounts","minconf","addlocked","comment","subtractfeefrom","replaceable","conf_target","estimate_mode"} },
+    { "wallet",             "sendmany",                 &sendmany,                 false,  {"fromaccount","amounts","minconf","addlocked","comment","subtractfeefrom","conf_target","estimate_mode"} },
     { "wallet",             "sendtoaddress",            &sendtoaddress,            false,  {"address","amount","comment","comment_to","subtractfeefromamount","conf_target","estimate_mode"} },
     { "wallet",             "setaccount",               &setaccount,               true,   {"address","account"} },
     { "wallet",             "settxfee",                 &settxfee,                 true,   {"amount"} },
