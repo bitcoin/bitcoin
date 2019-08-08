@@ -421,7 +421,7 @@ class BitcoinTestFramework(object):
                     args.extend(extra_args)
                 self.bitcoind_processes[i] = subprocess.Popen(args, stderr=stderr)
                 self.log.debug("initialize_chain: dashd started, waiting for RPC to come up")
-                self.wait_for_bitcoind_start(bitcoind_processes[i], datadir, i)
+                self._wait_for_bitcoind_start(self.bitcoind_processes[i], datadir, i)
                 self.log.debug("initialize_chain: RPC successfully started")
 
             self.nodes = []

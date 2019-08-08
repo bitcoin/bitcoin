@@ -34,8 +34,8 @@ class DIP3Test(BitcoinTestFramework):
 
     def start_controller_node(self, extra_args=None):
         self.log.info("starting controller node")
-        if self.nodes is None:
-            self.nodes = [None]
+        if len(self.nodes) == 0:
+            self.nodes.append(None)
         args = self.extra_args
         if extra_args is not None:
             args += extra_args
