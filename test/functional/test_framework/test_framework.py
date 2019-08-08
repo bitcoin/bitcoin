@@ -226,18 +226,18 @@ class BitcoinTestFramework(object):
     # Public helper methods. These can be accessed by the subclass test scripts.
 
     def start_node(self, i, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
-        """Start a bitcoind and return RPC connection to it"""
+        """Start a dashd and return RPC connection to it"""
 
         datadir = os.path.join(dirname, "node" + str(i))
         if binary is None:
-            binary = os.getenv("BITCOIND", "bitcoind")
+            binary = os.getenv("BITCOIND", "dashd")
         args = [binary, "-datadir=" + datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-logtimemicros", "-debug", "-debugexclude=libevent", "-debugexclude=leveldb", "-mocktime=" + str(self.mocktime), "-uacomment=testnode%d" % i]
         # Don't try auto backups (they fail a lot when running tests)
         args += [ "-createwalletbackups=0" ]
         if extra_args is not None:
             args.extend(extra_args)
         self.bitcoind_processes[i] = subprocess.Popen(args, stderr=stderr)
-        self.log.debug("initialize_chain: bitcoind started, waiting for RPC to come up")
+        self.log.debug("initialize_chain: dashd started, waiting for RPC to come up")
         self._wait_for_bitcoind_start(self.bitcoind_processes[i], datadir, i, rpchost)
         self.log.debug("initialize_chain: RPC successfully started")
         proxy = get_rpc_proxy(rpc_url(datadir, i, rpchost), i, timeout=timewait)
@@ -271,7 +271,7 @@ class BitcoinTestFramework(object):
         return rpcs
 
     def _stop_node(self, node, i, wait=True):
-        """Stop a bitcoind test node"""
+        """Stop a dashd test node"""
 
         self.log.debug("Stopping node %d" % i)
         try:
@@ -285,7 +285,7 @@ class BitcoinTestFramework(object):
         self._stop_node(self.nodes[num_node], num_node)
 
     def stop_nodes(self, fast=True):
-        """Stop multiple bitcoind test nodes"""
+        """Stop multiple dashd test nodes"""
 
         for i, node in enumerate(self.nodes):
             self._stop_node(node, i, not fast)
@@ -300,7 +300,7 @@ class BitcoinTestFramework(object):
                 self.start_node(i, dirname, extra_args, stderr=log_stderr)
                 self.stop_node(i)
             except Exception as e:
-                assert 'bitcoind exited' in str(e)  # node must have shutdown
+                assert 'dashd exited' in str(e)  # node must have shutdown
                 if expected_msg is not None:
                     log_stderr.seek(0)
                     stderr = log_stderr.read().decode('utf-8')
@@ -308,9 +308,9 @@ class BitcoinTestFramework(object):
                         raise AssertionError("Expected error \"" + expected_msg + "\" not found in:\n" + stderr)
             else:
                 if expected_msg is None:
-                    assert_msg = "bitcoind should have exited with an error"
+                    assert_msg = "dashd should have exited with an error"
                 else:
-                    assert_msg = "bitcoind should have exited with expected error " + expected_msg
+                    assert_msg = "dashd should have exited with expected error " + expected_msg
                 raise AssertionError(assert_msg)
 
     def wait_node(self, i):
@@ -373,7 +373,7 @@ class BitcoinTestFramework(object):
         # User can provide log level as a number or string (eg DEBUG). loglevel was caught as a string, so try to convert it to an int
         ll = int(self.options.loglevel) if self.options.loglevel.isdigit() else self.options.loglevel.upper()
         ch.setLevel(ll)
-        # Format logs the same as bitcoind's debug.log with microprecision (so log files can be concatenated and sorted)
+        # Format logs the same as dashd's debug.log with microprecision (so log files can be concatenated and sorted)
         formatter = logging.Formatter(fmt='%(asctime)s.%(msecs)03d000 %(name)s (%(levelname)s): %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
         formatter.converter = time.gmtime
         fh.setFormatter(formatter)
@@ -874,7 +874,7 @@ class DashTestFramework(BitcoinTestFramework):
 class ComparisonTestFramework(BitcoinTestFramework):
     """Test framework for doing p2p comparison testing
 
-    Sets up some bitcoind binaries:
+    Sets up some dashd binaries:
     - 1 binary: test binary
     - 2 binaries: 1 test binary, 1 ref binary
     - n>2 binaries: 1 test binary, n-1 ref binaries"""
