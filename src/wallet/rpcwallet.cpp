@@ -402,7 +402,7 @@ static void SendMoney(CWallet * const pwallet, const CTxDestination &address, CA
     CRecipient recipient = {scriptPubKey, nValue, fSubtractFeeFromAmount};
     vecSend.push_back(recipient);
     if (!pwallet->CreateTransaction(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet,
-                                         strError, nullptr, true, fUsePrivateSend ? ONLY_DENOMINATED : ALL_COINS, coin_control)) {
+                                         strError, coin_control, true, fUsePrivateSend ? ONLY_DENOMINATED : ALL_COINS)) {
         if (!fSubtractFeeFromAmount && nValue + nFeeRequired > curBalance)
             strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
@@ -477,20 +477,20 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
 
     CCoinControl coin_control;
 
+    bool fUsePrivateSend = false;
     if (request.params.size() > 6 && !request.params[6].isNull()) {
-        coin_control.nConfirmTarget = request.params[6].get_int();
+        fUsePrivateSend = request.params[6].get_bool();
     }
 
     if (request.params.size() > 7 && !request.params[7].isNull()) {
-        if (!FeeModeFromString(request.params[7].get_str(), coin_control.m_fee_mode)) {
+        coin_control.nConfirmTarget = request.params[7].get_int();
+    }
+
+    if (request.params.size() > 8 && !request.params[8].isNull()) {
+        if (!FeeModeFromString(request.params[8].get_str(), coin_control.m_fee_mode)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
         }
     }
-
-
-    bool fUsePrivateSend = false;
-    if (request.params.size() > 6)
-        fUsePrivateSend = request.params[6].get_bool();
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -984,7 +984,7 @@ UniValue sendmany(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 8)
         throw std::runtime_error(
-            "sendmany \"fromaccount\" {\"address\":amount,...} ( minconf \"comment\" [\"address\",...] conf_target \"estimate_mode\")\n"
+            "sendmany \"fromaccount\" {\"address\":amount,...} ( minconf addlocked \"comment\" [\"address\",...] subtractfeefrom use_is use_ps conf_target \"estimate_mode\")\n"
             "\nSend multiple times. Amounts are double-precision floating point numbers."
             + HelpRequiringPassphrase(pwallet) + "\n"
             "\nArguments:\n"
@@ -1048,12 +1048,17 @@ UniValue sendmany(const JSONRPCRequest& request)
 
     CCoinControl coin_control;
 
-    if (request.params.size() > 6 && !request.params[6].isNull()) {
-        coin_control.nConfirmTarget = request.params[6].get_int();
+    bool fUsePrivateSend = false;
+    if (request.params.size() > 7 && !request.params[7].isNull()) {
+        fUsePrivateSend = request.params[7].get_bool();
     }
 
-    if (request.params.size() > 7 && !request.params[7].isNull()) {
-        if (!FeeModeFromString(request.params[7].get_str(), coin_control.m_fee_mode)) {
+    if (request.params.size() > 8 && !request.params[8].isNull()) {
+        coin_control.nConfirmTarget = request.params[8].get_int();
+    }
+
+    if (request.params.size() > 9 && !request.params[9].isNull()) {
+        if (!FeeModeFromString(request.params[9].get_str(), coin_control.m_fee_mode)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
         }
     }
@@ -1102,12 +1107,9 @@ UniValue sendmany(const JSONRPCRequest& request)
     CAmount nFeeRequired = 0;
     int nChangePosRet = -1;
     std::string strFailReason;
-    bool fUsePrivateSend = false;
-    if (request.params.size() > 7)
-        fUsePrivateSend = request.params[7].get_bool();
 
     bool fCreated = pwallet->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, nChangePosRet, strFailReason,
-                                               nullptr, true, fUsePrivateSend ? ONLY_DENOMINATED : ALL_COINS, &coin_control);
+                                               &coin_control, true, fUsePrivateSend ? ONLY_DENOMINATED : ALL_COINS);
     if (!fCreated)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strFailReason);
     CValidationState state;
@@ -3187,8 +3189,8 @@ static const CRPCCommand commands[] =
     { "wallet",             "lockunspent",              &lockunspent,              true,   {"unlock","transactions"} },
     { "wallet",             "move",                     &movecmd,                  false,  {"fromaccount","toaccount","amount","minconf","comment"} },
     { "wallet",             "sendfrom",                 &sendfrom,                 false,  {"fromaccount","toaddress","amount","minconf","addlocked","comment","comment_to"} },
-    { "wallet",             "sendmany",                 &sendmany,                 false,  {"fromaccount","amounts","minconf","addlocked","comment","subtractfeefrom","conf_target","estimate_mode"} },
-    { "wallet",             "sendtoaddress",            &sendtoaddress,            false,  {"address","amount","comment","comment_to","subtractfeefromamount","conf_target","estimate_mode"} },
+    { "wallet",             "sendmany",                 &sendmany,                 false,  {"fromaccount","amounts","minconf","addlocked","comment","subtractfeefrom","use_ps","conf_target","estimate_mode"} },
+    { "wallet",             "sendtoaddress",            &sendtoaddress,            false,  {"address","amount","comment","comment_to","subtractfeefromamount","use_ps","conf_target","estimate_mode"} },
     { "wallet",             "setaccount",               &setaccount,               true,   {"address","account"} },
     { "wallet",             "settxfee",                 &settxfee,                 true,   {"amount"} },
     { "wallet",             "setprivatesendrounds",     &setprivatesendrounds,     true,   {"rounds"} },
