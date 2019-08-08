@@ -186,8 +186,7 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
                 auto it = ptxSpentInfo->mSpentInfo.find(spentKey);
                 if (it != ptxSpentInfo->mSpentInfo.end()) {
                     auto spentInfo = it->second;
-                    UniValue outValue(UniValue::VNUM, FormatMoney(spentInfo.satoshis));
-                    in.push_back(Pair("value", outValue));
+                    in.push_back(Pair("value", ValueFromAmount(spentInfo.satoshis)));
                     in.push_back(Pair("valueSat", spentInfo.satoshis));
                     if (spentInfo.addressType == 1) {
                         in.push_back(Pair("address", CBitcoinAddress(CKeyID(spentInfo.addressHash)).ToString()));
