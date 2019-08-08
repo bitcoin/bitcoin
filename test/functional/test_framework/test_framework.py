@@ -461,6 +461,29 @@ class BitcoinTestFramework(object):
         for i in range(num_nodes):
             initialize_datadir(test_dir, i)
 
+    def _wait_for_bitcoind_start(self, process, datadir, i, rpchost=None):
+        """Wait for dashd to start.
+
+        This means that RPC is accessible and fully initialized.
+        Raise an exception if dashd exits during initialization."""
+        while True:
+            if process.poll() is not None:
+                raise Exception('dashd exited with status %i during initialization' % process.returncode)
+            try:
+                # Check if .cookie file to be created
+                rpc = get_rpc_proxy(rpc_url(datadir, i, rpchost), i, coveragedir=self.options.coveragedir)
+                rpc.getblockcount()
+                break  # break out of loop on success
+            except IOError as e:
+                if e.errno != errno.ECONNREFUSED:  # Port not yet open?
+                    raise  # unknown IO error
+            except JSONRPCException as e:  # Initialization phase
+                if e.error['code'] != -28:  # RPC in warmup?
+                    raise  # unknown JSON RPC exception
+            except ValueError as e:  # cookie file not found and no rpcuser or rpcassword. dashd still starting
+                if "No RPC credentials" not in str(e):
+                    raise
+            time.sleep(0.25)
 
 MASTERNODE_COLLATERAL = 1000
 
@@ -835,30 +858,6 @@ class DashTestFramework(BitcoinTestFramework):
         sync_blocks(self.nodes)
 
         return new_quorum
-
-    def _wait_for_bitcoind_start(self, process, datadir, i, rpchost=None):
-        """Wait for bitcoind to start.
-
-        This means that RPC is accessible and fully initialized.
-        Raise an exception if bitcoind exits during initialization."""
-        while True:
-            if process.poll() is not None:
-                raise Exception('bitcoind exited with status %i during initialization' % process.returncode)
-            try:
-                # Check if .cookie file to be created
-                rpc = get_rpc_proxy(rpc_url(datadir, i, rpchost), i, coveragedir=self.options.coveragedir)
-                rpc.getblockcount()
-                break  # break out of loop on success
-            except IOError as e:
-                if e.errno != errno.ECONNREFUSED:  # Port not yet open?
-                    raise  # unknown IO error
-            except JSONRPCException as e:  # Initialization phase
-                if e.error['code'] != -28:  # RPC in warmup?
-                    raise  # unknown JSON RPC exception
-            except ValueError as e:  # cookie file not found and no rpcuser or rpcassword. bitcoind still starting
-                if "No RPC credentials" not in str(e):
-                    raise
-            time.sleep(0.25)
 
 class ComparisonTestFramework(BitcoinTestFramework):
     """Test framework for doing p2p comparison testing
