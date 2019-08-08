@@ -162,22 +162,23 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     }                       
     const dev::Address &address160 = rlpTxValue[3].toHash<dev::Address>(dev::RLP::VeryStrict);
 
-    if(dbAsset.vchContract != address160.asBytes()){
-        return FormatSyscoinErrorMessage(state, "mint-invalid-contract", bMiner);
+    // ensure ERC20Manager is in the "to" field for the contract, meaning the function was called on this contract for freezing supply
+    if(Params().GetConsensus().vchSYSXERC20Manager != address160.asBytes()){
+        return FormatSyscoinErrorMessage(state, "mint-invalid-contract-manager", bMiner);
     }
     
     CAmount outputAmount;
     uint32_t nAsset = 0;
     const std::vector<unsigned char> &rlpBytes = rlpTxValue[5].toBytes(dev::RLP::VeryStrict);
     CWitnessAddress witnessAddress;
-    if(!parseEthMethodInputData(Params().GetConsensus().vchSYSXBurnMethodSignature, rlpBytes, outputAmount, nAsset, witnessAddress)){
+    std::vector<unsigned char> vchERC20ContractAddress;
+    if(!parseEthMethodInputData(Params().GetConsensus().vchSYSXBurnMethodSignature, rlpBytes, dbAsset.vchContract, outputAmount, nAsset, witnessAddress)){
         return FormatSyscoinErrorMessage(state, "mint-invalid-tx-data", bMiner);
     }
     if(!fUnitTest){
         if(witnessAddress != mintSyscoin.assetAllocationTuple.witnessAddress){
             return FormatSyscoinErrorMessage(state, "mint-mismatch-witness-address", bMiner);
-        }
-        
+        }   
         if(nAsset != dbAsset.nAsset){
             return FormatSyscoinErrorMessage(state, "mint-mismatch-asset", bMiner);
         }

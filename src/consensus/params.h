@@ -49,6 +49,7 @@ struct Params {
     // SYSCOIN
     uint32_t nSYSXAsset;
     std::vector<unsigned char> vchSYSXBurnMethodSignature;
+    std::vector<unsigned char> vchSYSXERC20Manager;
     unsigned int nSeniorityHeight1;
     double nSeniorityLevel1;
     unsigned int nSeniorityHeight2;
