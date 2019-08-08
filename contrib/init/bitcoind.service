@@ -24,6 +24,7 @@ ExecStart=/usr/bin/bitcoind -daemon \
 Type=forking
 PIDFile=/run/bitcoind/bitcoind.pid
 Restart=on-failure
+TimeoutStopSec=600
 
 # Directory creation and permissions
 ####################################
