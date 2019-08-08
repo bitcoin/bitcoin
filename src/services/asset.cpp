@@ -85,14 +85,14 @@ bool GetSyscoinData(const CScript &scriptPubKey, vector<unsigned char> &vchData)
 		return false;
 	return true;
 }
-bool GetSyscoinBurnData(const CTransaction &tx, CAssetAllocation* theAssetAllocation, std::vector<unsigned char> &vchEthAddress)
+bool GetSyscoinBurnData(const CTransaction &tx, CAssetAllocation* theAssetAllocation, std::vector<unsigned char> &vchEthAddress, std::vector<unsigned char> &vchEthContract)
 {   
     if(!theAssetAllocation) 
         return false;  
     uint32_t nAssetFromScript;
     CAmount nAmountFromScript;
     CWitnessAddress burnWitnessAddress;
-    if(!GetSyscoinBurnData(tx, nAssetFromScript, burnWitnessAddress, nAmountFromScript, vchEthAddress)){
+    if(!GetSyscoinBurnData(tx, nAssetFromScript, burnWitnessAddress, nAmountFromScript, vchEthAddress, vchEthContract)){
         return false;
     }
     theAssetAllocation->SetNull();
@@ -102,7 +102,7 @@ bool GetSyscoinBurnData(const CTransaction &tx, CAssetAllocation* theAssetAlloca
     return true;
 
 } 
-bool GetSyscoinBurnData(const CTransaction &tx, uint32_t& nAssetFromScript, CWitnessAddress& burnWitnessAddress, CAmount &nAmountFromScript, std::vector<unsigned char> &vchEthAddress)
+bool GetSyscoinBurnData(const CTransaction &tx, uint32_t& nAssetFromScript, CWitnessAddress& burnWitnessAddress, CAmount &nAmountFromScript, std::vector<unsigned char> &vchEthAddress, std::vector<unsigned char> &vchEthContract)
 {
     if(tx.nVersion != SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
         LogPrint(BCLog::SYS, "GetSyscoinBurnData: Invalid transaction version\n");
@@ -121,7 +121,7 @@ bool GetSyscoinBurnData(const CTransaction &tx, uint32_t& nAssetFromScript, CWit
         return false;
     }
         
-    if(vvchArgs.size() != 5){
+    if(vvchArgs.size() != 6){
         LogPrint(BCLog::SYS, "GetSyscoinBurnData: Wrong argument size %d\n", vvchArgs.size());
         return false;
     }
@@ -166,8 +166,13 @@ bool GetSyscoinBurnData(const CTransaction &tx, uint32_t& nAssetFromScript, CWit
         return false;
     }     
     
-
     burnWitnessAddress = CWitnessAddress(nWitnessVersion, vvchArgs[4]);   
+
+    if(vvchArgs[5].empty()){
+        LogPrint(BCLog::SYS, "GetSyscoinBurnData: Ethereum contract empty\n");
+        return false; 
+    }
+    vchEthContract = vvchArgs[5]; 
     return true; 
 }
 bool GetSyscoinBurnData(const CScript &scriptPubKey, std::vector<std::vector<unsigned char> > &vchData)
@@ -198,7 +203,11 @@ bool GetSyscoinBurnData(const CScript &scriptPubKey, std::vector<std::vector<uns
     if (!scriptPubKey.GetOp(pc, opcode, vchArg))
         return false;
     vchData.push_back(vchArg);
-    vchArg.clear();              
+    vchArg.clear(); 
+    if (!scriptPubKey.GetOp(pc, opcode, vchArg))
+        return false;
+    vchData.push_back(vchArg);
+    vchArg.clear();                
     return true;
 }
 

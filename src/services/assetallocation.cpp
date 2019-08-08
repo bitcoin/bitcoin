@@ -133,7 +133,8 @@ bool CAssetAllocation::UnserializeFromTx(const CTransaction &tx) {
 	}
     if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
         std::vector<unsigned char> vchEthAddress;
-        if(!GetSyscoinBurnData(tx, this, vchEthAddress))
+        std::vector<unsigned char> vchEthContract;
+        if(!GetSyscoinBurnData(tx, this, vchEthAddress, vchEthContract))
         {
             SetNull();
             return false;
@@ -315,8 +316,9 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry, CWallet* c
 {
     CAssetAllocation assetallocation;
     std::vector<unsigned char> vchEthAddress;
+    std::vector<unsigned char> vchEthContract;
     if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
-        if(!GetSyscoinBurnData(tx, &assetallocation, vchEthAddress))
+        if(!GetSyscoinBurnData(tx, &assetallocation, vchEthAddress, vchEthContract))
         {
             return false;
         }
@@ -368,8 +370,10 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry, CWallet* c
     entry.__pushKV("allocations", oAssetAllocationReceiversArray);
     entry.__pushKV("total", ValueFromAssetAmount(nTotal, dbAsset.nPrecision));
     entry.__pushKV("blockhash", blockhash.GetHex()); 
-    if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM)
+    if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
          entry.__pushKV("ethereum_destination", "0x" + HexStr(vchEthAddress));
+         entry.__pushKV("ethereum_contract", "0x" + HexStr(vchEthContract));
+    }
 	else if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_LOCK)
 		entry.__pushKV("locked_outpoint", assetallocation.lockedOutpoint.ToStringShort());
     return true;
@@ -379,8 +383,9 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry)
 {
     CAssetAllocation assetallocation;
     std::vector<unsigned char> vchEthAddress;
+    std::vector<unsigned char> vchEthContract;
     if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
-        if(!GetSyscoinBurnData(tx, &assetallocation, vchEthAddress))
+        if(!GetSyscoinBurnData(tx, &assetallocation, vchEthAddress, vchEthContract))
         {
             return false;
         }
@@ -427,8 +432,10 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry)
     entry.__pushKV("allocations", oAssetAllocationReceiversArray);
     entry.__pushKV("total", ValueFromAssetAmount(nTotal, dbAsset.nPrecision));
     entry.__pushKV("blockhash", blockhash.GetHex()); 
-    if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM)
+    if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
          entry.__pushKV("ethereum_destination", "0x" + HexStr(vchEthAddress));
+         entry.__pushKV("ethereum_contract", "0x" + HexStr(vchEthContract));
+    }
     else if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_LOCK)
         entry.__pushKV("locked_outpoint", assetallocation.lockedOutpoint.ToStringShort());
     return true;
@@ -436,8 +443,9 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry)
 bool AssetAllocationTxToJSON(const CTransaction &tx, const CAsset& dbAsset, const int& nHeight, const uint256& blockhash, UniValue &entry, CAssetAllocation& assetallocation)
 {
     std::vector<unsigned char> vchEthAddress;
+    std::vector<unsigned char> vchEthContract;
     if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
-        if(!GetSyscoinBurnData(tx, &assetallocation, vchEthAddress))
+        if(!GetSyscoinBurnData(tx, &assetallocation, vchEthAddress, vchEthContract))
         {
             return false;
         }
@@ -470,8 +478,10 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, const CAsset& dbAsset, cons
     entry.__pushKV("allocations", oAssetAllocationReceiversArray);
     entry.__pushKV("total", ValueFromAssetAmount(nTotal, dbAsset.nPrecision));
     entry.__pushKV("blockhash", blockhash.GetHex()); 
-    if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM)
+    if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
          entry.__pushKV("ethereum_destination", "0x" + HexStr(vchEthAddress));
+         entry.__pushKV("ethereum_contract", "0x" + HexStr(vchEthContract));
+    }
     else if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_LOCK)
         entry.__pushKV("locked_outpoint", assetallocation.lockedOutpoint.ToStringShort());         
     return true;
