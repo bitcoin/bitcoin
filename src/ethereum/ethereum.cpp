@@ -5,6 +5,8 @@
 #include <ethereum/ethereum.h>
 #include <ethereum/sha3.h>
 #include <services/witnessaddress.h>
+#include <logging.h>
+#include <util/strencodings.h>
 using namespace dev;
 
 
@@ -100,17 +102,22 @@ bool VerifyProof(bytesConstRef path, const RLP& value, const RLP& parentNodes, c
  * @param nAsset The asset burned
  * @return true if everything is valid
  */
-bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedMethodHash, const std::vector<unsigned char>& vchInputData, CAmount& outputAmount, uint32_t& nAsset, CWitnessAddress& witnessAddress) {
-    // 132 for the varint position + 1 for varint + 1 for version + 3 minimum for witness program bytes
-    if(vchInputData.size() < 137) 
-        return false;  
+bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedMethodHash, const std::vector<unsigned char>& vchInputData, const std::vector<unsigned char>& vchAssetContract, CAmount& outputAmount, uint32_t& nAsset, CWitnessAddress& witnessAddress) {
+    if(vchAssetContract.empty()){
+      return false;
+    }
+    // 132 for the varint position + 1 for varint + 1 for version + 3 minimum for witness program bytes + 21 bytes for contract address
+    if(vchInputData.size() < 158) {
+      return false;  
+    }
     // method hash is 4 bytes
     std::vector<unsigned char>::const_iterator first = vchInputData.begin();
     std::vector<unsigned char>::const_iterator last = first + 4;
     const std::vector<unsigned char> vchMethodHash(first,last);
     // if the method hash doesn't match the expected method hash then return false
-    if(vchMethodHash != vchInputExpectedMethodHash) 
-        return false;
+    if(vchMethodHash != vchInputExpectedMethodHash) {
+      return false;
+    }
 
     // get the first parameter and convert to CAmount and assign to output var
     // convert the vch into a int64_t (CAmount)
@@ -134,15 +141,32 @@ bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedM
     
     // skip data position field (68 + 32) + 31 (offset to the varint _byte)
     int dataPos = 131;
-    const unsigned char &dataLength = vchInputData[dataPos++];
-    // witness programs can extend to 40 bytes, plus 1 for version, min length is 2 for min witness program + 1 for version
-    if(dataLength > 41 || dataLength < 3)
-        return false;
+    const unsigned char &dataLength = vchInputData[dataPos++] - 1; // // - 1 to account for the version byte
+    // witness programs can extend to 40 bytes, min length is 2 for min witness program
+    if(dataLength > 40 || dataLength < 2){
+      return false;
+    }
     // witness address information starting at position dataPos till the end
     // get version proceeded by witness program bytes
     const unsigned char& nVersion = vchInputData[dataPos++];
     std::vector<unsigned char>::const_iterator firstWitness = vchInputData.begin()+dataPos;
-    std::vector<unsigned char>::const_iterator lastWitness = firstWitness + (dataLength-1);
+    std::vector<unsigned char>::const_iterator lastWitness = firstWitness + dataLength; 
     witnessAddress = CWitnessAddress(nVersion, std::vector<unsigned char>(firstWitness,lastWitness));
-    return witnessAddress.IsValid();
+    if(!witnessAddress.IsValid()){
+      return false;
+    }
+    if(dataLength <= 32)
+      dataPos += 31; // -1 because witness version byte is part of the 32 bytes of data for witness address
+    // eth abi data is always on 32 byte boundaries, so since data can be up to 40 bytes we may need to shift up to 64 byte to get to the next data marker 
+    else
+      dataPos += 63; // -1 because witness version byte is part of the 64 bytes of data for witness address
+    const unsigned char& nSizeContractAddress = vchInputData[dataPos++];
+    // ethereum address should always be 20 bytes
+    if(nSizeContractAddress != 20)
+      return false;
+    std::vector<unsigned char>::const_iterator firstContractAddress = vchInputData.begin()+dataPos;
+    std::vector<unsigned char>::const_iterator lastContractAddress = firstContractAddress + nSizeContractAddress;
+    const std::vector<unsigned char> vchERC20ContractAddress(firstContractAddress,lastContractAddress);
+    return vchERC20ContractAddress == vchAssetContract;
+
 }
