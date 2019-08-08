@@ -6,6 +6,7 @@
 #include <omnicore/tx.h>
 
 #include <rpc/server.h>
+#include <rpc/util.h>
 #include <util/strencodings.h>
 
 #include <univalue.h>
@@ -17,23 +18,20 @@ static UniValue omni_createpayload_simplesend(const JSONRPCRequest& request)
 {
    if (request.fHelp || request.params.size() != 2)
         throw runtime_error(
-            "omni_createpayload_simplesend propertyid \"amount\"\n"
-
-            "\nCreate the payload for a simple send transaction.\n"
-
-            "\nNote: if the server is not synchronized, amounts are considered as divisible, even if the token may have indivisible units!\n"
-
-            "\nArguments:\n"
-            "1. propertyid           (number, required) the identifier of the tokens to send\n"
-            "2. amount               (string, required) the amount to send\n"
-
-            "\nResult:\n"
-            "\"payload\"             (string) the hex-encoded payload\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_createpayload_simplesend", "1 \"100.0\"")
-            + HelpExampleRpc("omni_createpayload_simplesend", "1, \"100.0\"")
-        );
+           RPCHelpMan{"omni_createpayload_simplesend",
+              "\nCreate the payload for a simple send transaction.\n",
+              {
+                  {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens to send\n"},
+                  {"amount", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount to send\n"},
+              },
+              RPCResult{
+                  "\"payload\"             (string) the hex-encoded payload\n"
+              },
+              RPCExamples{
+                  HelpExampleCli("omni_createpayload_simplesend", "1 \"100.0\"")
+                  + HelpExampleRpc("omni_createpayload_simplesend", "1, \"100.0\"")
+              }
+           }.ToString());
 
     uint32_t propertyId = ParsePropertyId(request.params[0]);
     int64_t amount = ParseAmount(request.params[1], isPropertyDivisible(propertyId));
@@ -47,20 +45,19 @@ static UniValue omni_createpayload_sendall(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw runtime_error(
-            "omni_createpayload_sendall ecosystem\n"
-
-            "\nCreate the payload for a send all transaction.\n"
-
-            "\nArguments:\n"
-            "1. ecosystem              (number, required) the ecosystem of the tokens to send (1 for main ecosystem, 2 for test ecosystem)\n"
-
-            "\nResult:\n"
-            "\"payload\"               (string) the hex-encoded payload\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_createpayload_sendall", "2")
-            + HelpExampleRpc("omni_createpayload_sendall", "2")
-        );
+            RPCHelpMan{"omni_createpayload_sendall",
+               "\nCreate the payload for a send all transaction.\n",
+               {
+                   {"ecosystem", RPCArg::Type::NUM, RPCArg::Optional::NO, "the ecosystem of the tokens to send (1 for main ecosystem, 2 for test ecosystem)\n"},
+               },
+               RPCResult{
+                   "\"payload\"               (string) the hex-encoded payload\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_createpayload_sendall", "2")
+                   + HelpExampleRpc("omni_createpayload_sendall", "2")
+               }
+            }.ToString());
 
     uint8_t ecosystem = ParseEcosystem(request.params[0]);
 
@@ -73,26 +70,24 @@ static UniValue omni_createpayload_dexsell(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 6)
         throw runtime_error(
-            "omni_createpayload_dexsell propertyidforsale \"amountforsale\" \"amountdesired\" paymentwindow minacceptfee action\n"
-
-            "\nCreate a payload to place, update or cancel a sell offer on the traditional distributed OMNI/BTC exchange.\n"
-
-            "\nArguments:\n"
-
-            "1. propertyidforsale    (number, required) the identifier of the tokens to list for sale (must be 1 for OMN or 2 for TOMN)\n"
-            "2. amountforsale        (string, required) the amount of tokens to list for sale\n"
-            "3. amountdesired        (string, required) the amount of bitcoins desired\n"
-            "4. paymentwindow        (number, required) a time limit in blocks a buyer has to pay following a successful accepting order\n"
-            "5. minacceptfee         (string, required) a minimum mining fee a buyer has to pay to accept the offer\n"
-            "6. action               (number, required) the action to take (1 for new offers, 2 to update\", 3 to cancel)\n"
-
-            "\nResult:\n"
-            "\"payload\"             (string) the hex-encoded payload\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_createpayload_dexsell", "1 \"1.5\" \"0.75\" 25 \"0.0005\" 1")
-            + HelpExampleRpc("omni_createpayload_dexsell", "1, \"1.5\", \"0.75\", 25, \"0.0005\", 1")
-        );
+            RPCHelpMan{"omni_createpayload_dexsell",
+               "\nCreate a payload to place, update or cancel a sell offer on the traditional distributed OMNI/BTC exchange.\n",
+               {
+                   {"propertyidforsale", RPCArg::Type::NUM, RPCArg::Optional::NO, " the identifier of the tokens to list for sale (must be 1 for OMN or 2 for TOMN)\n"},
+                   {"amountforsale", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount of tokens to list for sale\n"},
+                   {"amountdesired", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount of bitcoins desired\n"},
+                   {"paymentwindow", RPCArg::Type::NUM, RPCArg::Optional::NO, "a time limit in blocks a buyer has to pay following a successful accepting order\n"},
+                   {"minacceptfee", RPCArg::Type::STR, RPCArg::Optional::NO, "a minimum mining fee a buyer has to pay to accept the offer\n"},
+                   {"action", RPCArg::Type::NUM, RPCArg::Optional::NO, "the action to take (1 for new offers, 2 to update\", 3 to cancel)\n"},
+               },
+               RPCResult{
+                   "\"payload\"             (string) the hex-encoded payload\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_createpayload_dexsell", "1 \"1.5\" \"0.75\" 25 \"0.0005\" 1")
+                   + HelpExampleRpc("omni_createpayload_dexsell", "1, \"1.5\", \"0.75\", 25, \"0.0005\", 1")
+               }
+            }.ToString());
 
     uint32_t propertyIdForSale = ParsePropertyId(request.params[0]);
     uint8_t action = ParseDExAction(request.params[5]);
@@ -118,23 +113,21 @@ static UniValue omni_createpayload_dexaccept(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 2)
         throw runtime_error(
-            "omni_createpayload_dexaccept propertyid \"amount\"\n"
-
-            "\nCreate the payload for an accept offer for the specified token and amount.\n"
-
-            "\nNote: if the server is not synchronized, amounts are considered as divisible, even if the token may have indivisible units!\n"
-
-            "\nArguments:\n"
-            "1. propertyid           (number, required) the identifier of the token to purchase\n"
-            "2. amount               (string, required) the amount to accept\n"
-
-            "\nResult:\n"
-            "\"payload\"             (string) the hex-encoded payload\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_createpayload_dexaccept", "1 \"15.0\"")
-            + HelpExampleRpc("omni_createpayload_dexaccept", "1, \"15.0\"")
-        );
+            RPCHelpMan{"omni_createpayload_dexaccept",
+               "\nCreate the payload for an accept offer for the specified token and amount.\n"
+                "\nNote: if the server is not synchronized, amounts are considered as divisible, even if the token may have indivisible units!\n",
+               {
+                   {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the token to purchase\n"},
+                   {"amount", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount to accept\n"},
+               },
+               RPCResult{
+                   "\"payload\"             (string) the hex-encoded payload\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_createpayload_dexaccept", "1 \"15.0\"")
+                   + HelpExampleRpc("omni_createpayload_dexaccept", "1, \"15.0\"")
+               }
+            }.ToString());
 
     uint32_t propertyId = ParsePropertyId(request.params[0]);
     int64_t amount = ParseAmount(request.params[1], isPropertyDivisible(propertyId));
@@ -148,23 +141,22 @@ static UniValue omni_createpayload_sto(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 3)
         throw runtime_error(
-            "omni_createpayload_sto propertyid \"amount\" ( distributionproperty )\n"
-
-            "\nCreates the payload for a send-to-owners transaction.\n"
-
-            "\nNote: if the server is not synchronized, amounts are considered as divisible, even if the token may have indivisible units!\n"
-
-            "\nArguments:\n"
-            "1. propertyid             (number, required) the identifier of the tokens to distribute\n"
-            "2. amount                 (string, required) the amount to distribute\n"
-            "3. distributionproperty   (number, optional) the identifier of the property holders to distribute to\n"
-            "\nResult:\n"
-            "\"payload\"             (string) the hex-encoded payload\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_createpayload_sto", "3 \"5000\"")
-            + HelpExampleRpc("omni_createpayload_sto", "3, \"5000\"")
-        );
+            RPCHelpMan{"omni_createpayload_sto",
+               "\nCreates the payload for a send-to-owners transaction.\n"
+               "\nNote: if the server is not synchronized, amounts are considered as divisible, even if the token may have indivisible units!\n",
+               {
+                   {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens to distribute\n"},
+                   {"amount", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount to distribute\n"},
+                   {"distributionproperty", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "the identifier of the property holders to distribute to\n"},
+               },
+               RPCResult{
+                   "\"payload\"             (string) the hex-encoded payload\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_createpayload_sto", "3 \"5000\"")
+                   + HelpExampleRpc("omni_createpayload_sto", "3, \"5000\"")
+               }
+            }.ToString());
 
     uint32_t propertyId = ParsePropertyId(request.params[0]);
     int64_t amount = ParseAmount(request.params[1], isPropertyDivisible(propertyId));
@@ -179,28 +171,27 @@ static UniValue omni_createpayload_issuancefixed(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 9)
         throw runtime_error(
-            "omni_createpayload_issuancefixed ecosystem type previousid \"category\" \"subcategory\" \"name\" \"url\" \"data\" \"amount\"\n"
-
-            "\nCreates the payload for a new tokens issuance with fixed supply.\n"
-
-            "\nArguments:\n"
-            "1. ecosystem            (string, required) the ecosystem to create the tokens in (1 for main ecosystem, 2 for test ecosystem)\n"
-            "2. type                 (number, required) the type of the tokens to create: (1 for indivisible tokens, 2 for divisible tokens)\n"
-            "3. previousid           (number, required) an identifier of a predecessor token (use 0 for new tokens)\n"
-            "4. category             (string, required) a category for the new tokens (can be \"\")\n"
-            "5. subcategory          (string, required) a subcategory for the new tokens  (can be \"\")\n"
-            "6. name                 (string, required) the name of the new tokens to create\n"
-            "7. url                  (string, required) an URL for further information about the new tokens (can be \"\")\n"
-            "8. data                 (string, required) a description for the new tokens (can be \"\")\n"
-            "9. amount               (string, required) the number of tokens to create\n"
-
-            "\nResult:\n"
-            "\"payload\"             (string) the hex-encoded payload\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_createpayload_issuancefixed", "2 1 0 \"Companies\" \"Bitcoin Mining\" \"Quantum Miner\" \"\" \"\" \"1000000\"")
-            + HelpExampleRpc("omni_createpayload_issuancefixed", "2, 1, 0, \"Companies\", \"Bitcoin Mining\", \"Quantum Miner\", \"\", \"\", \"1000000\"")
-        );
+            RPCHelpMan{"omni_createpayload_issuancefixed",
+               "\nCreates the payload for a new tokens issuance with fixed supply.\n",
+               {
+                   {"ecosystem", RPCArg::Type::STR, RPCArg::Optional::NO, "the ecosystem to create the tokens in (1 for main ecosystem, 2 for test ecosystem)\n"},
+                   {"type", RPCArg::Type::NUM, RPCArg::Optional::NO, "the type of the tokens to create: (1 for indivisible tokens, 2 for divisible tokens)\n"},
+                   {"previousid", RPCArg::Type::NUM, RPCArg::Optional::NO, "an identifier of a predecessor token (use 0 for new tokens)\n"},
+                   {"category", RPCArg::Type::STR, RPCArg::Optional::NO, "a category for the new tokens (can be \"\")\n"},
+                   {"subcategory", RPCArg::Type::STR, RPCArg::Optional::NO, "a subcategory for the new tokens  (can be \"\")\n"},
+                   {"name", RPCArg::Type::STR, RPCArg::Optional::NO, "the name of the new tokens to create\n"},
+                   {"url", RPCArg::Type::STR, RPCArg::Optional::NO, "a URL for further information about the new tokens (can be \"\")\n"},
+                   {"data", RPCArg::Type::STR, RPCArg::Optional::NO, "a description for the new tokens (can be \"\")\n"},
+                   {"amount", RPCArg::Type::STR, RPCArg::Optional::NO, "the number of tokens to create\n"},
+               },
+               RPCResult{
+                   "\"payload\"             (string) the hex-encoded payload\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_createpayload_issuancefixed", "2 1 0 \"Companies\" \"Bitcoin Mining\" \"Quantum Miner\" \"\" \"\" \"1000000\"")
+                   + HelpExampleRpc("omni_createpayload_issuancefixed", "2, 1, 0, \"Companies\", \"Bitcoin Mining\", \"Quantum Miner\", \"\", \"\", \"1000000\"")
+               }
+            }.ToString());
 
     uint8_t ecosystem = ParseEcosystem(request.params[0]);
     uint16_t type = ParsePropertyType(request.params[1]);
@@ -223,32 +214,31 @@ static UniValue omni_createpayload_issuancecrowdsale(const JSONRPCRequest& reque
 {
     if (request.fHelp || request.params.size() != 13)
         throw runtime_error(
-            "omni_createpayload_issuancecrowdsale ecosystem type previousid \"category\" \"subcategory\" \"name\" \"url\" \"data\" propertyiddesired tokensperunit deadline earlybonus issuerpercentage\n"
-
-            "\nCreates the payload for a new tokens issuance with crowdsale.\n"
-
-            "\nArguments:\n"
-            "1. ecosystem            (string, required) the ecosystem to create the tokens in (1 for main ecosystem, 2 for test ecosystem)\n"
-            "2. type                 (number, required) the type of the tokens to create: (1 for indivisible tokens, 2 for divisible tokens)\n"
-            "3. previousid           (number, required) an identifier of a predecessor token (0 for new crowdsales)\n"
-            "4. category             (string, required) a category for the new tokens (can be \"\")\n"
-            "5. subcategory          (string, required) a subcategory for the new tokens  (can be \"\")\n"
-            "6. name                 (string, required) the name of the new tokens to create\n"
-            "7. url                  (string, required) an URL for further information about the new tokens (can be \"\")\n"
-            "8. data                 (string, required) a description for the new tokens (can be \"\")\n"
-            "9. propertyiddesired    (number, required) the identifier of a token eligible to participate in the crowdsale\n"
-            "10. tokensperunit       (string, required) the amount of tokens granted per unit invested in the crowdsale\n"
-            "11. deadline            (number, required) the deadline of the crowdsale as Unix timestamp\n"
-            "12. earlybonus          (number, required) an early bird bonus for participants in percent per week\n"
-            "13. issuerpercentage    (number, required) a percentage of tokens that will be granted to the issuer\n"
-
-            "\nResult:\n"
-            "\"payload\"             (string) the hex-encoded payload\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_createpayload_issuancecrowdsale", "2 1 0 \"Companies\" \"Bitcoin Mining\" \"Quantum Miner\" \"\" \"\" 2 \"100\" 1483228800 30 2")
-            + HelpExampleRpc("omni_createpayload_issuancecrowdsale", "2, 1, 0, \"Companies\", \"Bitcoin Mining\", \"Quantum Miner\", \"\", \"\", 2, \"100\", 1483228800, 30, 2")
-        );
+            RPCHelpMan{"omni_createpayload_issuancecrowdsale",
+               "\nCreates the payload for a new tokens issuance with crowdsale.\n",
+               {
+                   {"ecosystem", RPCArg::Type::STR, RPCArg::Optional::NO, "the ecosystem to create the tokens in (1 for main ecosystem, 2 for test ecosystem)\n"},
+                   {"type", RPCArg::Type::NUM, RPCArg::Optional::NO, "the type of the tokens to create: (1 for indivisible tokens, 2 for divisible tokens)\n"},
+                   {"previousid", RPCArg::Type::NUM, RPCArg::Optional::NO, "an identifier of a predecessor token (0 for new crowdsales)\n"},
+                   {"category", RPCArg::Type::STR, RPCArg::Optional::NO, "a category for the new tokens (can be \"\")\n"},
+                   {"subcategory", RPCArg::Type::STR, RPCArg::Optional::NO, "a subcategory for the new tokens  (can be \"\")\n"},
+                   {"name", RPCArg::Type::STR, RPCArg::Optional::NO, "the name of the new tokens to create\n"},
+                   {"url", RPCArg::Type::STR, RPCArg::Optional::NO, "a URL for further information about the new tokens (can be \"\")\n"},
+                   {"data", RPCArg::Type::STR, RPCArg::Optional::NO, "a description for the new tokens (can be \"\")\n"},
+                   {"propertyiddesired", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of a token eligible to participate in the crowdsale\n"},
+                   {"tokensperunit", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount of tokens granted per unit invested in the crowdsale\n"},
+                   {"deadline", RPCArg::Type::NUM, RPCArg::Optional::NO, "the deadline of the crowdsale as Unix timestamp\n"},
+                   {"earlybonus", RPCArg::Type::NUM, RPCArg::Optional::NO, "an early bird bonus for participants in percent per week\n"},
+                   {"issuerpercentage", RPCArg::Type::NUM, RPCArg::Optional::NO, "a percentage of tokens that will be granted to the issuer\n"},
+               },
+               RPCResult{
+                   "\"payload\"             (string) the hex-encoded payload\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_createpayload_issuancecrowdsale", "2 1 0 \"Companies\" \"Bitcoin Mining\" \"Quantum Miner\" \"\" \"\" 2 \"100\" 1483228800 30 2")
+                   + HelpExampleRpc("omni_createpayload_issuancecrowdsale", "2, 1, 0, \"Companies\", \"Bitcoin Mining\", \"Quantum Miner\", \"\", \"\", 2, \"100\", 1483228800, 30, 2")
+               }
+            }.ToString());
 
     uint8_t ecosystem = ParseEcosystem(request.params[0]);
     uint16_t type = ParsePropertyType(request.params[1]);
@@ -276,27 +266,26 @@ static UniValue omni_createpayload_issuancemanaged(const JSONRPCRequest& request
 {
     if (request.fHelp || request.params.size() != 8)
         throw runtime_error(
-            "omni_createpayload_issuancemanaged ecosystem type previousid \"category\" \"subcategory\" \"name\" \"url\" \"data\"\n"
-
-            "\nCreates the payload for a new tokens issuance with manageable supply.\n"
-
-            "\nArguments:\n"
-            "1. ecosystem            (string, required) the ecosystem to create the tokens in (1 for main ecosystem, 2 for test ecosystem)\n"
-            "2. type                 (number, required) the type of the tokens to create: (1 for indivisible tokens, 2 for divisible tokens)\n"
-            "3. previousid           (number, required) an identifier of a predecessor token (use 0 for new tokens)\n"
-            "4. category             (string, required) a category for the new tokens (can be \"\")\n"
-            "5. subcategory          (string, required) a subcategory for the new tokens  (can be \"\")\n"
-            "6. name                 (string, required) the name of the new tokens to create\n"
-            "7. url                  (string, required) an URL for further information about the new tokens (can be \"\")\n"
-            "8. data                 (string, required) a description for the new tokens (can be \"\")\n"
-
-            "\nResult:\n"
-            "\"payload\"             (string) the hex-encoded payload\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_createpayload_issuancemanaged", "2 1 0 \"Companies\" \"Bitcoin Mining\" \"Quantum Miner\" \"\" \"\"")
-            + HelpExampleRpc("omni_createpayload_issuancemanaged", "2, 1, 0, \"Companies\", \"Bitcoin Mining\", \"Quantum Miner\", \"\", \"\"")
-        );
+            RPCHelpMan{"omni_createpayload_issuancemanaged",
+               "\nCreates the payload for a new tokens issuance with manageable supply.\n",
+               {
+                   {"ecosystem", RPCArg::Type::STR, RPCArg::Optional::NO, "the ecosystem to create the tokens in (1 for main ecosystem, 2 for test ecosystem)\n"},
+                   {"type", RPCArg::Type::NUM, RPCArg::Optional::NO, "the type of the tokens to create: (1 for indivisible tokens, 2 for divisible tokens)\n"},
+                   {"previousid", RPCArg::Type::NUM, RPCArg::Optional::NO, "an identifier of a predecessor token (use 0 for new tokens)\n"},
+                   {"category", RPCArg::Type::STR, RPCArg::Optional::NO, "a category for the new tokens (can be \"\")\n"},
+                   {"subcategory", RPCArg::Type::STR, RPCArg::Optional::NO, "a subcategory for the new tokens  (can be \"\")\n"},
+                   {"name", RPCArg::Type::STR, RPCArg::Optional::NO, "the name of the new tokens to create\n"},
+                   {"url", RPCArg::Type::STR, RPCArg::Optional::NO, "a URL for further information about the new tokens (can be \"\")\n"},
+                   {"data", RPCArg::Type::STR, RPCArg::Optional::NO, "a description for the new tokens (can be \"\")\n"},
+               },
+               RPCResult{
+                   "\"payload\"             (string) the hex-encoded payload\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_createpayload_issuancemanaged", "2 1 0 \"Companies\" \"Bitcoin Mining\" \"Quantum Miner\" \"\" \"\"")
+                   + HelpExampleRpc("omni_createpayload_issuancemanaged", "2, 1, 0, \"Companies\", \"Bitcoin Mining\", \"Quantum Miner\", \"\", \"\"")
+               }
+            }.ToString());
 
     uint8_t ecosystem = ParseEcosystem(request.params[0]);
     uint16_t type = ParsePropertyType(request.params[1]);
@@ -318,20 +307,19 @@ static UniValue omni_createpayload_closecrowdsale(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw runtime_error(
-            "omni_createpayload_closecrowdsale propertyid\n"
-
-            "\nCreates the payload to manually close a crowdsale.\n"
-
-            "\nArguments:\n"
-            "1. propertyid             (number, required) the identifier of the crowdsale to close\n"
-
-            "\nResult:\n"
-            "\"payload\"             (string) the hex-encoded payload\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_createpayload_closecrowdsale", "70")
-            + HelpExampleRpc("omni_createpayload_closecrowdsale", "70")
-        );
+            RPCHelpMan{"omni_createpayload_closecrowdsale",
+               "\nCreates the payload to manually close a crowdsale.\n",
+               {
+                   {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the crowdsale to close\n"},
+               },
+               RPCResult{
+                   "\"payload\"             (string) the hex-encoded payload\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_createpayload_closecrowdsale", "70")
+                   + HelpExampleRpc("omni_createpayload_closecrowdsale", "70")
+               }
+            }.ToString());
 
     uint32_t propertyId = ParsePropertyId(request.params[0]);
 
@@ -344,24 +332,24 @@ static UniValue omni_createpayload_grant(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 3)
         throw runtime_error(
-            "omni_createpayload_grant propertyid \"amount\" ( \"memo\" )\n"
-
-            "\nCreates the payload to issue or grant new units of managed tokens.\n"
-
-            "\nNote: if the server is not synchronized, amounts are considered as divisible, even if the token may have indivisible units!\n"
-
-            "\nArguments:\n"
-            "1. propertyid           (number, required) the identifier of the tokens to grant\n"
-            "2. amount               (string, required) the amount of tokens to create\n"
-            "3. memo                 (string, optional) a text note attached to this transaction (none by default)\n"
-
-            "\nResult:\n"
-            "\"payload\"             (string) the hex-encoded payload\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_createpayload_grant", "51 \"7000\"")
-            + HelpExampleRpc("omni_createpayload_grant", "51, \"7000\"")
-        );
+            RPCHelpMan{"omni_createpayload_grant",
+               "\nCreates the payload to issue or grant new units of managed tokens.\n"
+               "\nNote: if the server is not synchronized, amounts are considered as divisible, even if the token may have indivisible units!\n",
+               {
+                   {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens to grant\n"},
+                   {"amount", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount of tokens to create\n"},
+                   {"memo", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "a text note attached to this transaction\n"},
+               },
+               RPCResult{
+                   "1. propertyid           (number, required) "
+                   "2. amount               (string, required) "
+                   "3. memo                 (string, optional) "
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_createpayload_grant", "51 \"7000\"")
+                   + HelpExampleRpc("omni_createpayload_grant", "51, \"7000\"")
+               }
+            }.ToString());
 
     uint32_t propertyId = ParsePropertyId(request.params[0]);
     int64_t amount = ParseAmount(request.params[1], isPropertyDivisible(propertyId));
@@ -376,24 +364,22 @@ static UniValue omni_createpayload_revoke(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 3)
         throw runtime_error(
-            "omni_createpayload_revoke propertyid \"amount\" ( \"memo\" )\n"
-
-            "\nCreates the payload to revoke units of managed tokens.\n"
-
-            "\nNote: if the server is not synchronized, amounts are considered as divisible, even if the token may have indivisible units!\n"
-
-            "\nArguments:\n"
-            "1. propertyid           (number, required) the identifier of the tokens to revoke\n"
-            "2. amount               (string, required) the amount of tokens to revoke\n"
-            "3. memo                 (string, optional) a text note attached to this transaction (none by default)\n"
-
-            "\nResult:\n"
-            "\"payload\"             (string) the hex-encoded payload\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_createpayload_revoke", "51 \"100\"")
-            + HelpExampleRpc("omni_createpayload_revoke", "51, \"100\"")
-        );
+            RPCHelpMan{"omni_createpayload_revoke",
+               "\nCreates the payload to revoke units of managed tokens.\n"
+               "\nNote: if the server is not synchronized, amounts are considered as divisible, even if the token may have indivisible units!\n",
+               {
+                   {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens to revoke\n"},
+                   {"amount", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount of tokens to revoke\n"},
+                   {"memo", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "a text note attached to this transaction\n"},
+               },
+               RPCResult{
+                   "\"payload\"             (string) the hex-encoded payload\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_createpayload_revoke", "51 \"100\"")
+                   + HelpExampleRpc("omni_createpayload_revoke", "51, \"100\"")
+               }
+            }.ToString());
 
     uint32_t propertyId = ParsePropertyId(request.params[0]);
     int64_t amount = ParseAmount(request.params[1], isPropertyDivisible(propertyId));
@@ -408,20 +394,19 @@ static UniValue omni_createpayload_changeissuer(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw runtime_error(
-            "omni_createpayload_changeissuer propertyid\n"
-
-            "\nCreats the payload to change the issuer on record of the given tokens.\n"
-
-            "\nArguments:\n"
-            "1. propertyid           (number, required) the identifier of the tokens\n"
-
-            "\nResult:\n"
-            "\"payload\"             (string) the hex-encoded payload\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_createpayload_changeissuer", "3")
-            + HelpExampleRpc("omni_createpayload_changeissuer", "3")
-        );
+            RPCHelpMan{"omni_createpayload_changeissuer",
+               "\nCreats the payload to change the issuer on record of the given tokens.\n",
+               {
+                   {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens\n"},
+               },
+               RPCResult{
+                   "\"payload\"             (string) the hex-encoded payload\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_createpayload_changeissuer", "3")
+                   + HelpExampleRpc("omni_createpayload_changeissuer", "3")
+               }
+            }.ToString());
 
     uint32_t propertyId = ParsePropertyId(request.params[0]);
 
@@ -434,25 +419,23 @@ static UniValue omni_createpayload_trade(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 4)
         throw runtime_error(
-            "omni_createpayload_trade propertyidforsale \"amountforsale\" propertiddesired \"amountdesired\"\n"
-
-            "\nCreates the payload to place a trade offer on the distributed token exchange.\n"
-
-            "\nNote: if the server is not synchronized, amounts are considered as divisible, even if the token may have indivisible units!\n"
-
-            "\nArguments:\n"
-            "1. propertyidforsale    (number, required) the identifier of the tokens to list for sale\n"
-            "2. amountforsale        (string, required) the amount of tokens to list for sale\n"
-            "3. propertiddesired     (number, required) the identifier of the tokens desired in exchange\n"
-            "4. amountdesired        (string, required) the amount of tokens desired in exchange\n"
-
-            "\nResult:\n"
-            "\"payload\"             (string) the hex-encoded payload\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_createpayload_trade", "31 \"250.0\" 1 \"10.0\"")
-            + HelpExampleRpc("omni_createpayload_trade", "31, \"250.0\", 1, \"10.0\"")
-        );
+            RPCHelpMan{"omni_createpayload_trade",
+               "\nCreates the payload to place a trade offer on the distributed token exchange.\n"
+               "\nNote: if the server is not synchronized, amounts are considered as divisible, even if the token may have indivisible units!\n",
+               {
+                   {"propertyidforsale", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens to list for sale\n"},
+                   {"amountforsale", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount of tokens to list for sale\n"},
+                   {"propertiddesired", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens desired in exchange\n"},
+                   {"amountdesired", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount of tokens desired in exchange\n"},
+               },
+               RPCResult{
+                   "\"payload\"             (string) the hex-encoded payload\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_createpayload_trade", "31 \"250.0\" 1 \"10.0\"")
+                   + HelpExampleRpc("omni_createpayload_trade", "31, \"250.0\", 1, \"10.0\"")
+               }
+            }.ToString());
 
     uint32_t propertyIdForSale = ParsePropertyId(request.params[0]);
     int64_t amountForSale = ParseAmount(request.params[1], isPropertyDivisible(propertyIdForSale));
@@ -471,25 +454,23 @@ static UniValue omni_createpayload_canceltradesbyprice(const JSONRPCRequest& req
 {
     if (request.fHelp || request.params.size() != 4)
         throw runtime_error(
-            "omni_createpayload_canceltradesbyprice propertyidforsale \"amountforsale\" propertiddesired \"amountdesired\"\n"
-
-            "\nCreates the payload to cancel offers on the distributed token exchange with the specified price.\n"
-
-            "\nNote: if the server is not synchronized, amounts are considered as divisible, even if the token may have indivisible units!\n"
-
-            "\nArguments:\n"
-            "1. propertyidforsale    (number, required) the identifier of the tokens listed for sale\n"
-            "2. amountforsale        (string, required) the amount of tokens to listed for sale\n"
-            "3. propertiddesired     (number, required) the identifier of the tokens desired in exchange\n"
-            "4. amountdesired        (string, required) the amount of tokens desired in exchange\n"
-
-            "\nResult:\n"
-            "\"payload\"             (string) the hex-encoded payload\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_createpayload_canceltradesbyprice", "31 \"100.0\" 1 \"5.0\"")
-            + HelpExampleRpc("omni_createpayload_canceltradesbyprice", "31, \"100.0\", 1, \"5.0\"")
-        );
+            RPCHelpMan{"omni_createpayload_canceltradesbyprice",
+               "\nCreates the payload to cancel offers on the distributed token exchange with the specified price.\n"
+               "\nNote: if the server is not synchronized, amounts are considered as divisible, even if the token may have indivisible units!\n",
+               {
+                   {"propertyidforsale", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens listed for sale\n"},
+                   {"amountforsale", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount of tokens to listed for sale\n"},
+                   {"propertiddesired", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens desired in exchange\n"},
+                   {"amountdesired", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount of tokens desired in exchange\n"},
+               },
+               RPCResult{
+                   "\"payload\"             (string) the hex-encoded payload\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_createpayload_canceltradesbyprice", "31 \"100.0\" 1 \"5.0\"")
+                   + HelpExampleRpc("omni_createpayload_canceltradesbyprice", "31, \"100.0\", 1, \"5.0\"")
+               }
+            }.ToString());
 
     uint32_t propertyIdForSale = ParsePropertyId(request.params[0]);
     int64_t amountForSale = ParseAmount(request.params[1], isPropertyDivisible(propertyIdForSale));
@@ -507,21 +488,20 @@ static UniValue omni_createpayload_canceltradesbypair(const JSONRPCRequest& requ
 {
     if (request.fHelp || request.params.size() != 2)
         throw runtime_error(
-            "omni_createpayload_canceltradesbypair propertyidforsale propertiddesired\n"
-
-            "\nCreates the payload to cancel all offers on the distributed token exchange with the given currency pair.\n"
-
-            "\nArguments:\n"
-            "1. propertyidforsale    (number, required) the identifier of the tokens listed for sale\n"
-            "2. propertiddesired     (number, required) the identifier of the tokens desired in exchange\n"
-
-            "\nResult:\n"
-            "\"payload\"             (string) the hex-encoded payload\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_createpayload_canceltradesbypair", "1 31")
-            + HelpExampleRpc("omni_createpayload_canceltradesbypair", "1, 31")
-        );
+            RPCHelpMan{"omni_createpayload_canceltradesbypair",
+               "\nCreates the payload to cancel all offers on the distributed token exchange with the given currency pair.\n",
+               {
+                   {"propertyidforsale", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens listed for sale\n"},
+                   {"propertiddesired", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens desired in exchange\n"},
+               },
+               RPCResult{
+                   "\"payload\"             (string) the hex-encoded payload\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_createpayload_canceltradesbypair", "1 31")
+                   + HelpExampleRpc("omni_createpayload_canceltradesbypair", "1, 31")
+               }
+            }.ToString());
 
     uint32_t propertyIdForSale = ParsePropertyId(request.params[0]);
     uint32_t propertyIdDesired = ParsePropertyId(request.params[1]);
@@ -537,20 +517,19 @@ static UniValue omni_createpayload_cancelalltrades(const JSONRPCRequest& request
 {
     if (request.fHelp || request.params.size() != 1)
         throw runtime_error(
-            "omni_createpayload_cancelalltrades ecosystem\n"
-
-            "\nCreates the payload to cancel all offers on the distributed token exchange.\n"
-
-            "\nArguments:\n"
-            "1. ecosystem            (number, required) the ecosystem of the offers to cancel (1 for main ecosystem, 2 for test ecosystem)\n"
-
-            "\nResult:\n"
-            "\"payload\"             (string) the hex-encoded payload\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_createpayload_cancelalltrades", "1")
-            + HelpExampleRpc("omni_createpayload_cancelalltrades", "1")
-        );
+            RPCHelpMan{"omni_createpayload_cancelalltrades",
+               "\nCreates the payload to cancel all offers on the distributed token exchange.\n",
+               {
+                   {"ecosystem", RPCArg::Type::NUM, RPCArg::Optional::NO, "the ecosystem of the offers to cancel (1 for main ecosystem, 2 for test ecosystem)\n"},
+               },
+               RPCResult{
+                   "\"payload\"             (string) the hex-encoded payload\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_createpayload_cancelalltrades", "1")
+                   + HelpExampleRpc("omni_createpayload_cancelalltrades", "1")
+               }
+            }.ToString());
 
     uint8_t ecosystem = ParseEcosystem(request.params[0]);
 
@@ -563,20 +542,19 @@ static UniValue omni_createpayload_enablefreezing(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw runtime_error(
-            "omni_createpayload_enablefreezing propertyid\n"
-
-            "\nCreates the payload to enable address freezing for a centrally managed property.\n"
-
-            "\nArguments:\n"
-            "1. propertyid           (number, required) the identifier of the tokens\n"
-
-            "\nResult:\n"
-            "\"payload\"             (string) the hex-encoded payload\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_createpayload_enablefreezing", "3")
-            + HelpExampleRpc("omni_createpayload_enablefreezing", "3")
-        );
+            RPCHelpMan{"omni_createpayload_enablefreezing",
+               "\nCreates the payload to enable address freezing for a centrally managed property.\n",
+               {
+                   {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens\n"},
+               },
+               RPCResult{
+                   "\"payload\"             (string) the hex-encoded payload\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_createpayload_enablefreezing", "3")
+                   + HelpExampleRpc("omni_createpayload_enablefreezing", "3")
+               }
+            }.ToString());
 
     uint32_t propertyId = ParsePropertyId(request.params[0]);
 
@@ -589,21 +567,20 @@ static UniValue omni_createpayload_disablefreezing(const JSONRPCRequest& request
 {
     if (request.fHelp || request.params.size() != 1)
         throw runtime_error(
-            "omni_createpayload_disablefreezing propertyid\n"
-
-            "\nCreates the payload to disable address freezing for a centrally managed property.\n"
-            "\nIMPORTANT NOTE:  Disabling freezing for a property will UNFREEZE all frozen addresses for that property!"
-
-            "\nArguments:\n"
-            "1. propertyid           (number, required) the identifier of the tokens\n"
-
-            "\nResult:\n"
-            "\"payload\"             (string) the hex-encoded payload\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_createpayload_disablefreezing", "3")
-            + HelpExampleRpc("omni_createpayload_disablefreezing", "3")
-        );
+            RPCHelpMan{"omni_createpayload_disablefreezing",
+               "\nCreates the payload to disable address freezing for a centrally managed property.\n"
+               "\nIMPORTANT NOTE:  Disabling freezing for a property will UNFREEZE all frozen addresses for that property!",
+               {
+                   {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens\n"},
+               },
+               RPCResult{
+                   "\"payload\"             (string) the hex-encoded payload\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_createpayload_disablefreezing", "3")
+                   + HelpExampleRpc("omni_createpayload_disablefreezing", "3")
+               }
+            }.ToString());
 
     uint32_t propertyId = ParsePropertyId(request.params[0]);
 
@@ -616,24 +593,22 @@ static UniValue omni_createpayload_freeze(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 3)
         throw runtime_error(
-            "omni_createpayload_freeze \"toaddress\" propertyid amount \n"
-
-            "\nCreates the payload to freeze an address for a centrally managed token.\n"
-
-            "\nNote: if the server is not synchronized, amounts are considered as divisible, even if the token may have indivisible units!\n"
-
-            "\nArguments:\n"
-            "1. toaddress            (string, required) the address to freeze tokens for\n"
-            "2. propertyid           (number, required) the property to freeze tokens for (must be managed type and have freezing option enabled)\n"
-            "3. amount               (string, required) the amount of tokens to freeze (note: this is unused - once frozen an address cannot send any transactions)\n"
-
-            "\nResult:\n"
-            "\"payload\"             (string) the hex-encoded payload\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_createpayload_freeze", "\"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\" 1 \"100\"")
-            + HelpExampleRpc("omni_createpayload_freeze", "\"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\", 1, \"100\"")
-        );
+            RPCHelpMan{"omni_createpayload_freeze",
+               "\nCreates the payload to freeze an address for a centrally managed token.\n"
+               "\nNote: if the server is not synchronized, amounts are considered as divisible, even if the token may have indivisible units!\n",
+               {
+                   {"toaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to freeze tokens for\n"},
+                   {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the property to freeze tokens for (must be managed type and have freezing option enabled)\n"},
+                   {"amount", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount of tokens to freeze (note: this is unused - once frozen an address cannot send any transactions)\n"},
+               },
+               RPCResult{
+                   "\"payload\"             (string) the hex-encoded payload\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_createpayload_freeze", "\"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\" 1 \"100\"")
+                   + HelpExampleRpc("omni_createpayload_freeze", "\"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\", 1, \"100\"")
+               }
+            }.ToString());
 
     std::string refAddress = ParseAddress(request.params[0]);
     uint32_t propertyId = ParsePropertyId(request.params[1]);
@@ -648,24 +623,22 @@ static UniValue omni_createpayload_unfreeze(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 3)
         throw runtime_error(
-            "omni_createpayload_unfreeze \"toaddress\" propertyid amount \n"
-
-            "\nCreates the payload to unfreeze an address for a centrally managed token.\n"
-
-            "\nNote: if the server is not synchronized, amounts are considered as divisible, even if the token may have indivisible units!\n"
-
-            "\nArguments:\n"
-            "1. toaddress            (string, required) the address to unfreeze tokens for\n"
-            "2. propertyid           (number, required) the property to unfreeze tokens for (must be managed type and have freezing option enabled)\n"
-            "3. amount               (string, required) the amount of tokens to unfreeze (note: this is unused)\n"
-
-            "\nResult:\n"
-            "\"payload\"             (string) the hex-encoded payload\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_createpayload_unfreeze", "\"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\" 1 \"100\"")
-            + HelpExampleRpc("omni_createpayload_unfreeze", "\"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\", 1, \"100\"")
-        );
+            RPCHelpMan{"omni_createpayload_unfreeze",
+               "\nCreates the payload to unfreeze an address for a centrally managed token.\n"
+               "\nNote: if the server is not synchronized, amounts are considered as divisible, even if the token may have indivisible units!\n",
+               {
+                   {"toaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to unfreeze tokens for\n"},
+                   {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the property to unfreeze tokens for (must be managed type and have freezing option enabled)\n"},
+                   {"amount", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount of tokens to unfreeze (note: this is unused)\n"},
+               },
+               RPCResult{
+                   "\"payload\"             (string) the hex-encoded payload\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_createpayload_unfreeze", "\"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\" 1 \"100\"")
+                   + HelpExampleRpc("omni_createpayload_unfreeze", "\"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\", 1, \"100\"")
+               }
+            }.ToString());
 
     std::string refAddress = ParseAddress(request.params[0]);
     uint32_t propertyId = ParsePropertyId(request.params[1]);

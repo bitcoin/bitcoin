@@ -20,6 +20,7 @@
 #include <validation.h>
 #include <wallet/rpcwallet.h>
 #include <rpc/server.h>
+#include <rpc/util.h>
 #include <sync.h>
 #ifdef ENABLE_WALLET
 #include <wallet/wallet.h>
@@ -46,26 +47,24 @@ static UniValue omni_funded_send(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() != 5)
         throw runtime_error(
-            "omni_funded_send \"fromaddress\" \"toaddress\" propertyid \"amount\" \"feeaddress\"\n"
-
-            "\nCreates and sends a funded simple send transaction.\n"
-
-            "\nAll bitcoins from the sender are consumed and if there are bitcoins missing, they are taken from the specified fee source. Change is sent to the fee source!\n"
-
-            "\nArguments:\n"
-            "1. fromaddress          (string, required) the address to send the tokens from\n"
-            "2. toaddress            (string, required) the address of the receiver\n"
-            "3. propertyid           (number, required) the identifier of the tokens to send\n"
-            "4. amount               (string, required) the amount to send\n"
-            "5. feeaddress           (string, required) the address that is used for change and to pay for fees, if needed\n"
-
-            "\nResult:\n"
-            "\"hash\"                  (string) the hex-encoded transaction hash\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_funded_send", "\"1DFa5bT6KMEr6ta29QJouainsjaNBsJQhH\" \"15cWrfuvMxyxGst2FisrQcvcpF48x6sXoH\" 1 \"100.0\" \"15Jhzz4omEXEyFKbdcccJwuVPea5LqsKM1\"")
-            + HelpExampleRpc("omni_funded_send", "\"1DFa5bT6KMEr6ta29QJouainsjaNBsJQhH\", \"15cWrfuvMxyxGst2FisrQcvcpF48x6sXoH\", 1, \"100.0\", \"15Jhzz4omEXEyFKbdcccJwuVPea5LqsKM1\"")
-        );
+            RPCHelpMan{"omni_funded_send",
+               "\nCreates and sends a funded simple send transaction.\n"
+               "\nAll bitcoins from the sender are consumed and if there are bitcoins missing, they are taken from the specified fee source. Change is sent to the fee source!\n",
+               {
+                   {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to send the tokens from\n"},
+                   {"toaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address of the receiver\n"},
+                   {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens to send\n"},
+                   {"amount", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount to send\n"},
+                   {"feeaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address that is used for change and to pay for fees, if needed\n"},
+               },
+               RPCResult{
+                   "\"hash\"                  (string) the hex-encoded transaction hash\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_funded_send", "\"1DFa5bT6KMEr6ta29QJouainsjaNBsJQhH\" \"15cWrfuvMxyxGst2FisrQcvcpF48x6sXoH\" 1 \"100.0\" \"15Jhzz4omEXEyFKbdcccJwuVPea5LqsKM1\"")
+                   + HelpExampleRpc("omni_funded_send", "\"1DFa5bT6KMEr6ta29QJouainsjaNBsJQhH\", \"15cWrfuvMxyxGst2FisrQcvcpF48x6sXoH\", 1, \"100.0\", \"15Jhzz4omEXEyFKbdcccJwuVPea5LqsKM1\"")
+               }
+            }.ToString());
 
     // obtain parameters & info
     std::string fromAddress = ParseAddress(request.params[0]);
@@ -102,25 +101,23 @@ static UniValue omni_funded_sendall(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() != 4)
         throw runtime_error(
-            "omni_funded_sendall \"fromaddress\" \"toaddress\" ecosystem \"feeaddress\"\n"
-
-            "\nCreates and sends a transaction that transfers all available tokens in the given ecosystem to the recipient.\n"
-
-            "\nAll bitcoins from the sender are consumed and if there are bitcoins missing, they are taken from the specified fee source. Change is sent to the fee source!\n"
-
-            "\nArguments:\n"
-            "1. fromaddress          (string, required) the address to the tokens send from\n"
-            "2. toaddress            (string, required) the address of the receiver\n"
-            "3. ecosystem            (number, required) the ecosystem of the tokens to send (1 for main ecosystem, 2 for test ecosystem)\n"
-            "4. feeaddress           (string, required) the address that is used for change and to pay for fees, if needed\n"
-
-            "\nResult:\n"
-            "\"hash\"                  (string) the hex-encoded transaction hash\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_funded_sendall", "\"1DFa5bT6KMEr6ta29QJouainsjaNBsJQhH\" \"15cWrfuvMxyxGst2FisrQcvcpF48x6sXoH\" 1 \"15Jhzz4omEXEyFKbdcccJwuVPea5LqsKM1\"")
-            + HelpExampleRpc("omni_funded_sendall", "\"1DFa5bT6KMEr6ta29QJouainsjaNBsJQhH\", \"15cWrfuvMxyxGst2FisrQcvcpF48x6sXoH\", 1, \"15Jhzz4omEXEyFKbdcccJwuVPea5LqsKM1\"")
-        );
+            RPCHelpMan{"omni_funded_sendall",
+               "\nCreates and sends a transaction that transfers all available tokens in the given ecosystem to the recipient.\n"
+               "\nAll bitcoins from the sender are consumed and if there are bitcoins missing, they are taken from the specified fee source. Change is sent to the fee source!\n",
+               {
+                   {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to the tokens send from\n"},
+                   {"toaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address of the receiver\n"},
+                   {"ecosystem", RPCArg::Type::NUM, RPCArg::Optional::NO, "the ecosystem of the tokens to send (1 for main ecosystem, 2 for test ecosystem)\n"},
+                   {"feeaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address that is used for change and to pay for fees, if needed\n"},
+               },
+               RPCResult{
+                   "\"hash\"                  (string) the hex-encoded transaction hash\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_funded_sendall", "\"1DFa5bT6KMEr6ta29QJouainsjaNBsJQhH\" \"15cWrfuvMxyxGst2FisrQcvcpF48x6sXoH\" 1 \"15Jhzz4omEXEyFKbdcccJwuVPea5LqsKM1\"")
+                   + HelpExampleRpc("omni_funded_sendall", "\"1DFa5bT6KMEr6ta29QJouainsjaNBsJQhH\", \"15cWrfuvMxyxGst2FisrQcvcpF48x6sXoH\", 1, \"15Jhzz4omEXEyFKbdcccJwuVPea5LqsKM1\"")
+               }
+            }.ToString());
 
     // obtain parameters & info
     std::string fromAddress = ParseAddress(request.params[0]);
@@ -152,20 +149,23 @@ static UniValue omni_sendrawtx(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 5)
         throw runtime_error(
-            "omni_sendrawtx \"fromaddress\" \"rawtransaction\" ( \"referenceaddress\" \"redeemaddress\" \"referenceamount\" )\n"
-            "\nBroadcasts a raw Omni Layer transaction.\n"
-            "\nArguments:\n"
-            "1. fromaddress          (string, required) the address to send from\n"
-            "2. rawtransaction       (string, required) the hex-encoded raw transaction\n"
-            "3. referenceaddress     (string, optional) a reference address (none by default)\n"
-            "4. redeemaddress        (string, optional) an address that can spent the transaction dust (sender by default)\n"
-            "5. referenceamount      (string, optional) a bitcoin amount that is sent to the receiver (minimal by default)\n"
-            "\nResult:\n"
-            "\"hash\"                  (string) the hex-encoded transaction hash\n"
-            "\nExamples:\n"
-            + HelpExampleCli("omni_sendrawtx", "\"1MCHESTptvd2LnNp7wmr2sGTpRomteAkq8\" \"000000000000000100000000017d7840\" \"1EqTta1Rt8ixAA32DuC29oukbsSWU62qAV\"")
-            + HelpExampleRpc("omni_sendrawtx", "\"1MCHESTptvd2LnNp7wmr2sGTpRomteAkq8\", \"000000000000000100000000017d7840\", \"1EqTta1Rt8ixAA32DuC29oukbsSWU62qAV\"")
-        );
+            RPCHelpMan{"omni_sendrawtx",
+               "\nBroadcasts a raw Omni Layer transaction.\n",
+               {
+                   {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to send from\n"},
+                   {"rawtransaction", RPCArg::Type::STR, RPCArg::Optional::NO, "the hex-encoded raw transaction"},
+                   {"referenceaddress", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "a reference address (none by default)\n"},
+                   {"redeemaddress", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "an address that can spent the transaction dust (sender by default)\n"},
+                   {"referenceamount", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "a bitcoin amount that is sent to the receiver (minimal by default)\n"},
+               },
+               RPCResult{
+                   "\"hash\"                  (string) the hex-encoded transaction hash\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_sendrawtx", "\"1MCHESTptvd2LnNp7wmr2sGTpRomteAkq8\" \"000000000000000100000000017d7840\" \"1EqTta1Rt8ixAA32DuC29oukbsSWU62qAV\"")
+                   + HelpExampleRpc("omni_sendrawtx", "\"1MCHESTptvd2LnNp7wmr2sGTpRomteAkq8\", \"000000000000000100000000017d7840\", \"1EqTta1Rt8ixAA32DuC29oukbsSWU62qAV\"")
+               }
+            }.ToString());
 
     std::string fromAddress = ParseAddress(request.params[0]);
     std::vector<unsigned char> data = ParseHexV(request.params[1], "raw transaction");
@@ -201,25 +201,24 @@ static UniValue omni_send(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 4 || request.params.size() > 6)
         throw runtime_error(
-            "omni_send \"fromaddress\" \"toaddress\" propertyid \"amount\" ( \"redeemaddress\" \"referenceamount\" )\n"
-
-            "\nCreate and broadcast a simple send transaction.\n"
-
-            "\nArguments:\n"
-            "1. fromaddress          (string, required) the address to send from\n"
-            "2. toaddress            (string, required) the address of the receiver\n"
-            "3. propertyid           (number, required) the identifier of the tokens to send\n"
-            "4. amount               (string, required) the amount to send\n"
-            "5. redeemaddress        (string, optional) an address that can spend the transaction dust (sender by default)\n"
-            "6. referenceamount      (string, optional) a bitcoin amount that is sent to the receiver (minimal by default)\n"
-
-            "\nResult:\n"
-            "\"hash\"                  (string) the hex-encoded transaction hash\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_send", "\"3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY\" \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 1 \"100.0\"")
-            + HelpExampleRpc("omni_send", "\"3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY\", \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\", 1, \"100.0\"")
-        );
+            RPCHelpMan{"omni_send",
+               "\nCreate and broadcast a simple send transaction.\n",
+               {
+                   {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to send from\n"},
+                   {"toaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address of the receiver\n"},
+                   {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens to send\n"},
+                   {"amount", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount to send\n"},
+                   {"redeemaddress", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "an address that can spend the transaction dust (sender by default)\n"},
+                   {"referenceamount", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "a bitcoin amount that is sent to the receiver (minimal by default)\n"},
+               },
+               RPCResult{
+                   "\"hash\"                  (string) the hex-encoded transaction hash\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_send", "\"3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY\" \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 1 \"100.0\"")
+                   + HelpExampleRpc("omni_send", "\"3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY\", \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\", 1, \"100.0\"")
+               }
+            }.ToString());
 
     // obtain parameters & info
     std::string fromAddress = ParseAddress(request.params[0]);
@@ -266,24 +265,23 @@ static UniValue omni_sendall(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 3 || request.params.size() > 5)
         throw runtime_error(
-            "omni_sendall \"fromaddress\" \"toaddress\" ecosystem ( \"redeemaddress\" \"referenceamount\" )\n"
-
-            "\nTransfers all available tokens in the given ecosystem to the recipient.\n"
-
-            "\nArguments:\n"
-            "1. fromaddress          (string, required) the address to send from\n"
-            "2. toaddress            (string, required) the address of the receiver\n"
-            "3. ecosystem            (number, required) the ecosystem of the tokens to send (1 for main ecosystem, 2 for test ecosystem)\n"
-            "4. redeemaddress        (string, optional) an address that can spend the transaction dust (sender by default)\n"
-            "5. referenceamount      (string, optional) a bitcoin amount that is sent to the receiver (minimal by default)\n"
-
-            "\nResult:\n"
-            "\"hash\"                  (string) the hex-encoded transaction hash\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_sendall", "\"3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY\" \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 2")
-            + HelpExampleRpc("omni_sendall", "\"3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY\", \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 2")
-        );
+            RPCHelpMan{"omni_sendall",
+               "\nTransfers all available tokens in the given ecosystem to the recipient.\n",
+               {
+                   {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to send from\n"},
+                   {"toaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address of the receiver\n"},
+                   {"ecosystem", RPCArg::Type::NUM, RPCArg::Optional::NO, "the ecosystem of the tokens to send (1 for main ecosystem, 2 for test ecosystem)\n"},
+                   {"redeemaddress", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "an address that can spend the transaction dust (sender by default)\n"},
+                   {"referenceamount", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "a bitcoin amount that is sent to the receiver (minimal by default)\n"},
+               },
+               RPCResult{
+                   "\"hash\"                  (string) the hex-encoded transaction hash\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_sendall", "\"3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY\" \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 2")
+                   + HelpExampleRpc("omni_sendall", "\"3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY\", \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 2")
+               }
+            }.ToString());
 
     // obtain parameters & info
     std::string fromAddress = ParseAddress(request.params[0]);
@@ -327,27 +325,25 @@ static UniValue omni_senddexsell(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() != 7)
         throw runtime_error(
-            "omni_senddexsell \"fromaddress\" propertyidforsale \"amountforsale\" \"amountdesired\" paymentwindow minacceptfee action\n"
-
-            "\nPlace, update or cancel a sell offer on the traditional distributed OMNI/BTC exchange.\n"
-
-            "\nArguments:\n"
-
-            "1. fromaddress          (string, required) the address to send from\n"
-            "2. propertyidforsale    (number, required) the identifier of the tokens to list for sale (must be 1 for OMN or 2 for TOMN)\n"
-            "3. amountforsale        (string, required) the amount of tokens to list for sale\n"
-            "4. amountdesired        (string, required) the amount of bitcoins desired\n"
-            "5. paymentwindow        (number, required) a time limit in blocks a buyer has to pay following a successful accepting order\n"
-            "6. minacceptfee         (string, required) a minimum mining fee a buyer has to pay to accept the offer\n"
-            "7. action               (number, required) the action to take (1 for new offers, 2 to update\", 3 to cancel)\n"
-
-            "\nResult:\n"
-            "\"hash\"                  (string) the hex-encoded transaction hash\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_senddexsell", "\"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 1 \"1.5\" \"0.75\" 25 \"0.0005\" 1")
-            + HelpExampleRpc("omni_senddexsell", "\"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\", 1, \"1.5\", \"0.75\", 25, \"0.0005\", 1")
-        );
+            RPCHelpMan{"omni_senddexsell",
+               "\nPlace, update or cancel a sell offer on the traditional distributed OMNI/BTC exchange.\n",
+               {
+                   {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to send from\n"},
+                   {"propertyidforsale", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens to list for sale (must be 1 for OMN or 2 for TOMN)\n"},
+                   {"amountforsale", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount of tokens to list for sale\n"},
+                   {"amountdesired", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount of bitcoins desired\n"},
+                   {"paymentwindow", RPCArg::Type::NUM, RPCArg::Optional::NO, "a time limit in blocks a buyer has to pay following a successful accepting order\n"},
+                   {"minacceptfee", RPCArg::Type::STR, RPCArg::Optional::NO, "a minimum mining fee a buyer has to pay to accept the offer\n"},
+                   {"action", RPCArg::Type::NUM, RPCArg::Optional::NO, "the action to take (1 for new offers, 2 to update\", 3 to cancel)\n"},
+               },
+               RPCResult{
+                   "\"hash\"                  (string) the hex-encoded transaction hash\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_senddexsell", "\"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 1 \"1.5\" \"0.75\" 25 \"0.0005\" 1")
+                   + HelpExampleRpc("omni_senddexsell", "\"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\", 1, \"1.5\", \"0.75\", 25, \"0.0005\", 1")
+               }
+            }.ToString());
 
     // obtain parameters & info
     std::string fromAddress = ParseAddress(request.params[0]);
@@ -423,24 +419,23 @@ static UniValue omni_senddexaccept(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 4 || request.params.size() > 5)
         throw runtime_error(
-            "omni_senddexaccept \"fromaddress\" \"toaddress\" propertyid \"amount\" ( override )\n"
-
-            "\nCreate and broadcast an accept offer for the specified token and amount.\n"
-
-            "\nArguments:\n"
-            "1. fromaddress          (string, required) the address to send from\n"
-            "2. toaddress            (string, required) the address of the seller\n"
-            "3. propertyid           (number, required) the identifier of the token to purchase\n"
-            "4. amount               (string, required) the amount to accept\n"
-            "5. override             (boolean, optional) override minimum accept fee and payment window checks (use with caution!)\n"
-
-            "\nResult:\n"
-            "\"hash\"                  (string) the hex-encoded transaction hash\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_senddexaccept", "\"35URq1NN3xL6GeRKUP6vzaQVcxoJiiJKd8\" \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 1 \"15.0\"")
-            + HelpExampleRpc("omni_senddexaccept", "\"35URq1NN3xL6GeRKUP6vzaQVcxoJiiJKd8\", \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\", 1, \"15.0\"")
-        );
+            RPCHelpMan{"omni_senddexaccept",
+               "\nCreate and broadcast an accept offer for the specified token and amount.\n",
+               {
+                   {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to send from\n"},
+                   {"toaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address of the seller\n"},
+                   {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the token to purchase\n"},
+                   {"amount", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount to accept\n"},
+                   {"override", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "override minimum accept fee and payment window checks (use with caution!)\n"},
+               },
+               RPCResult{
+                   "\"hash\"                  (string) the hex-encoded transaction hash\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_senddexaccept", "\"35URq1NN3xL6GeRKUP6vzaQVcxoJiiJKd8\" \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 1 \"15.0\"")
+                   + HelpExampleRpc("omni_senddexaccept", "\"35URq1NN3xL6GeRKUP6vzaQVcxoJiiJKd8\", \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\", 1, \"15.0\"")
+               }
+            }.ToString());
 
     // obtain parameters & info
     std::string fromAddress = ParseAddress(request.params[0]);
@@ -510,33 +505,32 @@ static UniValue omni_sendissuancecrowdsale(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() != 14)
         throw runtime_error(
-            "omni_sendissuancecrowdsale \"fromaddress\" ecosystem type previousid \"category\" \"subcategory\" \"name\" \"url\" \"data\" propertyiddesired tokensperunit deadline ( earlybonus issuerpercentage )\n"
-
-            "Create new tokens as crowdsale."
-
-            "\nArguments:\n"
-            "1. fromaddress          (string, required) the address to send from\n"
-            "2. ecosystem            (string, required) the ecosystem to create the tokens in (1 for main ecosystem, 2 for test ecosystem)\n"
-            "3. type                 (number, required) the type of the tokens to create: (1 for indivisible tokens, 2 for divisible tokens)\n"
-            "4. previousid           (number, required) an identifier of a predecessor token (0 for new crowdsales)\n"
-            "5. category             (string, required) a category for the new tokens (can be \"\")\n"
-            "6. subcategory          (string, required) a subcategory for the new tokens  (can be \"\")\n"
-            "7. name                 (string, required) the name of the new tokens to create\n"
-            "8. url                  (string, required) an URL for further information about the new tokens (can be \"\")\n"
-            "9. data                 (string, required) a description for the new tokens (can be \"\")\n"
-            "10. propertyiddesired   (number, required) the identifier of a token eligible to participate in the crowdsale\n"
-            "11. tokensperunit       (string, required) the amount of tokens granted per unit invested in the crowdsale\n"
-            "12. deadline            (number, required) the deadline of the crowdsale as Unix timestamp\n"
-            "13. earlybonus          (number, required) an early bird bonus for participants in percent per week\n"
-            "14. issuerpercentage    (number, required) a percentage of tokens that will be granted to the issuer\n"
-
-            "\nResult:\n"
-            "\"hash\"                  (string) the hex-encoded transaction hash\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_sendissuancecrowdsale", "\"3JYd75REX3HXn1vAU83YuGfmiPXW7BpYXo\" 2 1 0 \"Companies\" \"Bitcoin Mining\" \"Quantum Miner\" \"\" \"\" 2 \"100\" 1483228800 30 2")
-            + HelpExampleRpc("omni_sendissuancecrowdsale", "\"3JYd75REX3HXn1vAU83YuGfmiPXW7BpYXo\", 2, 1, 0, \"Companies\", \"Bitcoin Mining\", \"Quantum Miner\", \"\", \"\", 2, \"100\", 1483228800, 30, 2")
-        );
+            RPCHelpMan{"omni_sendissuancecrowdsale",
+               "Create new tokens as crowdsale.",
+               {
+                   {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to send from\n"},
+                   {"ecosystem", RPCArg::Type::STR, RPCArg::Optional::NO, "the ecosystem to create the tokens in (1 for main ecosystem, 2 for test ecosystem)\n"},
+                   {"type", RPCArg::Type::NUM, RPCArg::Optional::NO, "the type of the tokens to create: (1 for indivisible tokens, 2 for divisible tokens)\n"},
+                   {"previousid", RPCArg::Type::NUM, RPCArg::Optional::NO, "an identifier of a predecessor token (0 for new crowdsales)\n"},
+                   {"category", RPCArg::Type::STR, RPCArg::Optional::NO, "a category for the new tokens (can be \"\")\n"},
+                   {"subcategory", RPCArg::Type::STR, RPCArg::Optional::NO, "a subcategory for the new tokens  (can be \"\")\n"},
+                   {"name", RPCArg::Type::STR, RPCArg::Optional::NO, "the name of the new tokens to create\n"},
+                   {"url", RPCArg::Type::STR, RPCArg::Optional::NO, "a URL for further information about the new tokens (can be \"\")\n"},
+                   {"data", RPCArg::Type::STR, RPCArg::Optional::NO, "a description for the new tokens (can be \"\")\n"},
+                   {"propertyiddesired", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of a token eligible to participate in the crowdsale\n"},
+                   {"tokensperunit", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount of tokens granted per unit invested in the crowdsale\n"},
+                   {"deadline", RPCArg::Type::NUM, RPCArg::Optional::NO, "the deadline of the crowdsale as Unix timestamp\n"},
+                   {"earlybonus", RPCArg::Type::NUM, RPCArg::Optional::NO, "an early bird bonus for participants in percent per week\n"},
+                   {"issuerpercentage", RPCArg::Type::NUM, RPCArg::Optional::NO, "a percentage of tokens that will be granted to the issuer\n"},
+               },
+               RPCResult{
+                   "\"hash\"                  (string) the hex-encoded transaction hash\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_sendissuancecrowdsale", "\"3JYd75REX3HXn1vAU83YuGfmiPXW7BpYXo\" 2 1 0 \"Companies\" \"Bitcoin Mining\" \"Quantum Miner\" \"\" \"\" 2 \"100\" 1483228800 30 2")
+                   + HelpExampleRpc("omni_sendissuancecrowdsale", "\"3JYd75REX3HXn1vAU83YuGfmiPXW7BpYXo\", 2, 1, 0, \"Companies\", \"Bitcoin Mining\", \"Quantum Miner\", \"\", \"\", 2, \"100\", 1483228800, 30, 2")
+               }
+            }.ToString());
 
     // obtain parameters & info
     std::string fromAddress = ParseAddress(request.params[0]);
@@ -590,29 +584,28 @@ static UniValue omni_sendissuancefixed(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() != 10)
         throw runtime_error(
-            "omni_sendissuancefixed \"fromaddress\" ecosystem type previousid \"category\" \"subcategory\" \"name\" \"url\" \"data\" \"amount\"\n"
-
-            "\nCreate new tokens with fixed supply.\n"
-
-            "\nArguments:\n"
-            "1. fromaddress          (string, required) the address to send from\n"
-            "2. ecosystem            (string, required) the ecosystem to create the tokens in (1 for main ecosystem, 2 for test ecosystem)\n"
-            "3. type                 (number, required) the type of the tokens to create: (1 for indivisible tokens, 2 for divisible tokens)\n"
-            "4. previousid           (number, required) an identifier of a predecessor token (use 0 for new tokens)\n"
-            "5. category             (string, required) a category for the new tokens (can be \"\")\n"
-            "6. subcategory          (string, required) a subcategory for the new tokens  (can be \"\")\n"
-            "7. name                 (string, required) the name of the new tokens to create\n"
-            "8. url                  (string, required) an URL for further information about the new tokens (can be \"\")\n"
-            "9. data                 (string, required) a description for the new tokens (can be \"\")\n"
-            "10. amount              (string, required) the number of tokens to create\n"
-
-            "\nResult:\n"
-            "\"hash\"                  (string) the hex-encoded transaction hash\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_sendissuancefixed", "\"3Ck2kEGLJtZw9ENj2tameMCtS3HB7uRar3\" 2 1 0 \"Companies\" \"Bitcoin Mining\" \"Quantum Miner\" \"\" \"\" \"1000000\"")
-            + HelpExampleRpc("omni_sendissuancefixed", "\"3Ck2kEGLJtZw9ENj2tameMCtS3HB7uRar3\", 2, 1, 0, \"Companies\", \"Bitcoin Mining\", \"Quantum Miner\", \"\", \"\", \"1000000\"")
-        );
+            RPCHelpMan{"omni_sendissuancefixed",
+               "\nCreate new tokens with fixed supply.\n",
+               {
+                   {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to send from\n"},
+                   {"ecosystem", RPCArg::Type::STR, RPCArg::Optional::NO, "the ecosystem to create the tokens in (1 for main ecosystem, 2 for test ecosystem)\n"},
+                   {"type", RPCArg::Type::NUM, RPCArg::Optional::NO, "the type of the tokens to create: (1 for indivisible tokens, 2 for divisible tokens)\n"},
+                   {"previousid", RPCArg::Type::NUM, RPCArg::Optional::NO, "an identifier of a predecessor token (use 0 for new tokens)\n"},
+                   {"category", RPCArg::Type::STR, RPCArg::Optional::NO, "a category for the new tokens (can be \"\")\n"},
+                   {"subcategory", RPCArg::Type::STR, RPCArg::Optional::NO, "a subcategory for the new tokens  (can be \"\")\n"},
+                   {"name", RPCArg::Type::STR, RPCArg::Optional::NO, "the name of the new tokens to create\n"},
+                   {"url", RPCArg::Type::STR, RPCArg::Optional::NO, "a URL for further information about the new tokens (can be \"\")\n"},
+                   {"data", RPCArg::Type::STR, RPCArg::Optional::NO, "a description for the new tokens (can be \"\")\n"},
+                   {"amount", RPCArg::Type::STR, RPCArg::Optional::NO, "the number of tokens to create\n"},
+               },
+               RPCResult{
+                   "\"hash\"                  (string) the hex-encoded transaction hash\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_sendissuancefixed", "\"3Ck2kEGLJtZw9ENj2tameMCtS3HB7uRar3\" 2 1 0 \"Companies\" \"Bitcoin Mining\" \"Quantum Miner\" \"\" \"\" \"1000000\"")
+                   + HelpExampleRpc("omni_sendissuancefixed", "\"3Ck2kEGLJtZw9ENj2tameMCtS3HB7uRar3\", 2, 1, 0, \"Companies\", \"Bitcoin Mining\", \"Quantum Miner\", \"\", \"\", \"1000000\"")
+               }
+            }.ToString());
 
     // obtain parameters & info
     std::string fromAddress = ParseAddress(request.params[0]);
@@ -660,28 +653,27 @@ static UniValue omni_sendissuancemanaged(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() != 9)
         throw runtime_error(
-            "omni_sendissuancemanaged \"fromaddress\" ecosystem type previousid \"category\" \"subcategory\" \"name\" \"url\" \"data\"\n"
-
-            "\nCreate new tokens with manageable supply.\n"
-
-            "\nArguments:\n"
-            "1. fromaddress          (string, required) the address to send from\n"
-            "2. ecosystem            (string, required) the ecosystem to create the tokens in (1 for main ecosystem, 2 for test ecosystem)\n"
-            "3. type                 (number, required) the type of the tokens to create: (1 for indivisible tokens, 2 for divisible tokens)\n"
-            "4. previousid           (number, required) an identifier of a predecessor token (use 0 for new tokens)\n"
-            "5. category             (string, required) a category for the new tokens (can be \"\")\n"
-            "6. subcategory          (string, required) a subcategory for the new tokens  (can be \"\")\n"
-            "7. name                 (string, required) the name of the new tokens to create\n"
-            "8. url                  (string, required) an URL for further information about the new tokens (can be \"\")\n"
-            "9. data                 (string, required) a description for the new tokens (can be \"\")\n"
-
-            "\nResult:\n"
-            "\"hash\"                  (string) the hex-encoded transaction hash\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_sendissuancemanaged", "\"3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH\" 2 1 0 \"Companies\" \"Bitcoin Mining\" \"Quantum Miner\" \"\" \"\"")
-            + HelpExampleRpc("omni_sendissuancemanaged", "\"3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH\", 2, 1, 0, \"Companies\", \"Bitcoin Mining\", \"Quantum Miner\", \"\", \"\"")
-        );
+            RPCHelpMan{"omni_sendissuancemanaged",
+               "\nCreate new tokens with manageable supply.\n",
+               {
+                   {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to send from\n"},
+                   {"ecosystem", RPCArg::Type::STR, RPCArg::Optional::NO, "the ecosystem to create the tokens in (1 for main ecosystem, 2 for test ecosystem)\n"},
+                   {"type", RPCArg::Type::NUM, RPCArg::Optional::NO, "the type of the tokens to create: (1 for indivisible tokens, 2 for divisible tokens)\n"},
+                   {"previousid", RPCArg::Type::NUM, RPCArg::Optional::NO, "an identifier of a predecessor token (use 0 for new tokens)\n"},
+                   {"category", RPCArg::Type::STR, RPCArg::Optional::NO, "a category for the new tokens (can be \"\")\n"},
+                   {"subcategory", RPCArg::Type::STR, RPCArg::Optional::NO, "a subcategory for the new tokens  (can be \"\")\n"},
+                   {"name", RPCArg::Type::STR, RPCArg::Optional::NO, "the name of the new tokens to create\n"},
+                   {"url", RPCArg::Type::STR, RPCArg::Optional::NO, "a URL for further information about the new tokens (can be \"\")\n"},
+                   {"data", RPCArg::Type::STR, RPCArg::Optional::NO, "a description for the new tokens (can be \"\")\n"},
+               },
+               RPCResult{
+                   "\"hash\"                  (string) the hex-encoded transaction hash\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_sendissuancemanaged", "\"3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH\" 2 1 0 \"Companies\" \"Bitcoin Mining\" \"Quantum Miner\" \"\" \"\"")
+                   + HelpExampleRpc("omni_sendissuancemanaged", "\"3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH\", 2, 1, 0, \"Companies\", \"Bitcoin Mining\", \"Quantum Miner\", \"\", \"\"")
+               }
+            }.ToString());
 
     // obtain parameters & info
     std::string fromAddress = ParseAddress(request.params[0]);
@@ -728,24 +720,23 @@ static UniValue omni_sendsto(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 3 || request.params.size() > 5)
         throw runtime_error(
-            "omni_sendsto \"fromaddress\" propertyid \"amount\" ( \"redeemaddress\" distributionproperty )\n"
-
-            "\nCreate and broadcast a send-to-owners transaction.\n"
-
-            "\nArguments:\n"
-            "1. fromaddress            (string, required) the address to send from\n"
-            "2. propertyid             (number, required) the identifier of the tokens to distribute\n"
-            "3. amount                 (string, required) the amount to distribute\n"
-            "4. redeemaddress          (string, optional) an address that can spend the transaction dust (sender by default)\n"
-            "5. distributionproperty   (number, optional) the identifier of the property holders to distribute to\n"
-
-            "\nResult:\n"
-            "\"hash\"                  (string) the hex-encoded transaction hash\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_sendsto", "\"32Z3tJccZuqQZ4PhJR2hxHC3tjgjA8cbqz\" \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 3 \"5000\"")
-            + HelpExampleRpc("omni_sendsto", "\"32Z3tJccZuqQZ4PhJR2hxHC3tjgjA8cbqz\", \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\", 3, \"5000\"")
-        );
+            RPCHelpMan{"omni_sendsto",
+               "\nCreate and broadcast a send-to-owners transaction.\n",
+               {
+                   {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to send from\n"},
+                   {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens to distribute\n"},
+                   {"amount", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount to distribute\n"},
+                   {"redeemaddress", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "an address that can spend the transaction dust (sender by default)\n"},
+                   {"distributionproperty", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "the identifier of the property holders to distribute to\n"},
+               },
+               RPCResult{
+                   "\"hash\"                  (string) the hex-encoded transaction hash\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_sendsto", "\"32Z3tJccZuqQZ4PhJR2hxHC3tjgjA8cbqz\" \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 3 \"5000\"")
+                   + HelpExampleRpc("omni_sendsto", "\"32Z3tJccZuqQZ4PhJR2hxHC3tjgjA8cbqz\", \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\", 3, \"5000\"")
+               }
+            }.ToString());
 
     // obtain parameters & info
     std::string fromAddress = ParseAddress(request.params[0]);
@@ -789,24 +780,23 @@ static UniValue omni_sendgrant(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 4 || request.params.size() > 5)
         throw runtime_error(
-            "omni_sendgrant \"fromaddress\" \"toaddress\" propertyid \"amount\" ( \"memo\" )\n"
-
-            "\nIssue or grant new units of managed tokens.\n"
-
-            "\nArguments:\n"
-            "1. fromaddress          (string, required) the address to send from\n"
-            "2. toaddress            (string, required) the receiver of the tokens (sender by default, can be \"\")\n"
-            "3. propertyid           (number, required) the identifier of the tokens to grant\n"
-            "4. amount               (string, required) the amount of tokens to create\n"
-            "5. memo                 (string, optional) a text note attached to this transaction (none by default)\n"
-
-            "\nResult:\n"
-            "\"hash\"                  (string) the hex-encoded transaction hash\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_sendgrant", "\"3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH\" \"\" 51 \"7000\"")
-            + HelpExampleRpc("omni_sendgrant", "\"3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH\", \"\", 51, \"7000\"")
-        );
+            RPCHelpMan{"omni_sendgrant",
+               "\nIssue or grant new units of managed tokens.\n",
+               {
+                   {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to send from\n"},
+                   {"toaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the receiver of the tokens (sender by default, can be \"\")\n"},
+                   {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens to grant\n"},
+                   {"amount", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount of tokens to create\n"},
+                   {"memo", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "a text note attached to this transaction (none by default)\n"},
+               },
+               RPCResult{
+                   "\"hash\"                  (string) the hex-encoded transaction hash\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_sendgrant", "\"3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH\" \"\" 51 \"7000\"")
+                   + HelpExampleRpc("omni_sendgrant", "\"3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH\", \"\", 51, \"7000\"")
+               }
+            }.ToString());
 
     // obtain parameters & info
     std::string fromAddress = ParseAddress(request.params[0]);
@@ -851,23 +841,22 @@ static UniValue omni_sendrevoke(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 3 || request.params.size() > 4)
         throw runtime_error(
-            "omni_sendrevoke \"fromaddress\" propertyid \"amount\" ( \"memo\" )\n"
-
-            "\nRevoke units of managed tokens.\n"
-
-            "\nArguments:\n"
-            "1. fromaddress          (string, required) the address to revoke the tokens from\n"
-            "2. propertyid           (number, required) the identifier of the tokens to revoke\n"
-            "3. amount               (string, required) the amount of tokens to revoke\n"
-            "4. memo                 (string, optional) a text note attached to this transaction (none by default)\n"
-
-            "\nResult:\n"
-            "\"hash\"                  (string) the hex-encoded transaction hash\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_sendrevoke", "\"3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH\" \"\" 51 \"100\"")
-            + HelpExampleRpc("omni_sendrevoke", "\"3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH\", \"\", 51, \"100\"")
-        );
+            RPCHelpMan{"omni_sendrevoke",
+               "\nRevoke units of managed tokens.\n",
+               {
+                   {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to revoke the tokens from\n"},
+                   {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens to revoke\n"},
+                   {"amount", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount of tokens to revoke\n"},
+                   {"memo", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "a text note attached to this transaction (none by default)\n"},
+               },
+               RPCResult{
+                   "\"hash\"                  (string) the hex-encoded transaction hash\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_sendrevoke", "\"3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH\" \"\" 51 \"100\"")
+                   + HelpExampleRpc("omni_sendrevoke", "\"3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH\", \"\", 51, \"100\"")
+               }
+            }.ToString());
 
     // obtain parameters & info
     std::string fromAddress = ParseAddress(request.params[0]);
@@ -912,21 +901,20 @@ static UniValue omni_sendclosecrowdsale(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() != 2)
         throw runtime_error(
-            "omni_sendclosecrowdsale \"fromaddress\" propertyid\n"
-
-            "\nManually close a crowdsale.\n"
-
-            "\nArguments:\n"
-            "1. fromaddress          (string, required) the address associated with the crowdsale to close\n"
-            "2. propertyid           (number, required) the identifier of the crowdsale to close\n"
-
-            "\nResult:\n"
-            "\"hash\"                  (string) the hex-encoded transaction hash\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_sendclosecrowdsale", "\"3JYd75REX3HXn1vAU83YuGfmiPXW7BpYXo\" 70")
-            + HelpExampleRpc("omni_sendclosecrowdsale", "\"3JYd75REX3HXn1vAU83YuGfmiPXW7BpYXo\", 70")
-        );
+            RPCHelpMan{"omni_sendclosecrowdsale",
+               "\nManually close a crowdsale.\n",
+               {
+                   {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address associated with the crowdsale to close\n"},
+                   {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the crowdsale to close\n"},
+               },
+               RPCResult{
+                   "\"hash\"                  (string) the hex-encoded transaction hash\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_sendclosecrowdsale", "\"3JYd75REX3HXn1vAU83YuGfmiPXW7BpYXo\" 70")
+                   + HelpExampleRpc("omni_sendclosecrowdsale", "\"3JYd75REX3HXn1vAU83YuGfmiPXW7BpYXo\", 70")
+               }
+            }.ToString());
 
     // obtain parameters & info
     std::string fromAddress = ParseAddress(request.params[0]);
@@ -969,24 +957,23 @@ static UniValue omni_sendtrade(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() != 5)
         throw runtime_error(
-            "omni_sendtrade \"fromaddress\" propertyidforsale \"amountforsale\" propertiddesired \"amountdesired\"\n"
-
-            "\nPlace a trade offer on the distributed token exchange.\n"
-
-            "\nArguments:\n"
-            "1. fromaddress          (string, required) the address to trade with\n"
-            "2. propertyidforsale    (number, required) the identifier of the tokens to list for sale\n"
-            "3. amountforsale        (string, required) the amount of tokens to list for sale\n"
-            "4. propertiddesired     (number, required) the identifier of the tokens desired in exchange\n"
-            "5. amountdesired        (string, required) the amount of tokens desired in exchange\n"
-
-            "\nResult:\n"
-            "\"hash\"                  (string) the hex-encoded transaction hash\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_sendtrade", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\" 31 \"250.0\" 1 \"10.0\"")
-            + HelpExampleRpc("omni_sendtrade", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\", 31, \"250.0\", 1, \"10.0\"")
-        );
+            RPCHelpMan{"omni_sendtrade",
+               "\nPlace a trade offer on the distributed token exchange.\n",
+               {
+                   {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to trade with\n"},
+                   {"propertyidforsale", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens to list for sale\n"},
+                   {"amountforsale", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount of tokens to list for sale\n"},
+                   {"propertiddesired", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens desired in exchange\n"},
+                   {"amountdesired", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount of tokens desired in exchange\n"},
+               },
+               RPCResult{
+                   "\"hash\"                  (string) the hex-encoded transaction hash\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_sendtrade", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\" 31 \"250.0\" 1 \"10.0\"")
+                   + HelpExampleRpc("omni_sendtrade", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\", 31, \"250.0\", 1, \"10.0\"")
+               }
+            }.ToString());
 
     // obtain parameters & info
     std::string fromAddress = ParseAddress(request.params[0]);
@@ -1034,24 +1021,23 @@ static UniValue omni_sendcanceltradesbyprice(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() != 5)
         throw runtime_error(
-            "omni_sendcanceltradesbyprice \"fromaddress\" propertyidforsale \"amountforsale\" propertiddesired \"amountdesired\"\n"
-
-            "\nCancel offers on the distributed token exchange with the specified price.\n"
-
-            "\nArguments:\n"
-            "1. fromaddress          (string, required) the address to trade with\n"
-            "2. propertyidforsale    (number, required) the identifier of the tokens listed for sale\n"
-            "3. amountforsale        (string, required) the amount of tokens to listed for sale\n"
-            "4. propertiddesired     (number, required) the identifier of the tokens desired in exchange\n"
-            "5. amountdesired        (string, required) the amount of tokens desired in exchange\n"
-
-            "\nResult:\n"
-            "\"hash\"                  (string) the hex-encoded transaction hash\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_sendcanceltradesbyprice", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\" 31 \"100.0\" 1 \"5.0\"")
-            + HelpExampleRpc("omni_sendcanceltradesbyprice", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\", 31, \"100.0\", 1, \"5.0\"")
-        );
+            RPCHelpMan{"omni_sendcanceltradesbyprice",
+               "\nCancel offers on the distributed token exchange with the specified price.\n",
+               {
+                   {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to trade with\n"},
+                   {"propertyidforsale", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens listed for sale\n"},
+                   {"amountforsale", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount of tokens to listed for sale\n"},
+                   {"propertiddesired", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens desired in exchange\n"},
+                   {"amountdesired", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount of tokens desired in exchange\n"},
+               },
+               RPCResult{
+                   "\"hash\"                  (string) the hex-encoded transaction hash\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_sendcanceltradesbyprice", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\" 31 \"100.0\" 1 \"5.0\"")
+                   + HelpExampleRpc("omni_sendcanceltradesbyprice", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\", 31, \"100.0\", 1, \"5.0\"")
+               }
+            }.ToString());
 
     // obtain parameters & info
     std::string fromAddress = ParseAddress(request.params[0]);
@@ -1099,22 +1085,21 @@ static UniValue omni_sendcanceltradesbypair(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() != 3)
         throw runtime_error(
-            "omni_sendcanceltradesbypair \"fromaddress\" propertyidforsale propertiddesired\n"
-
-            "\nCancel all offers on the distributed token exchange with the given currency pair.\n"
-
-            "\nArguments:\n"
-            "1. fromaddress          (string, required) the address to trade with\n"
-            "2. propertyidforsale    (number, required) the identifier of the tokens listed for sale\n"
-            "3. propertiddesired     (number, required) the identifier of the tokens desired in exchange\n"
-
-            "\nResult:\n"
-            "\"hash\"                  (string) the hex-encoded transaction hash\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_sendcanceltradesbypair", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\" 1 31")
-            + HelpExampleRpc("omni_sendcanceltradesbypair", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\", 1, 31")
-        );
+            RPCHelpMan{"omni_sendcanceltradesbypair",
+               "\nCancel all offers on the distributed token exchange with the given currency pair.\n",
+               {
+                   {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to trade with\n"},
+                   {"propertyidforsale", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens listed for sale\n"},
+                   {"propertiddesired", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens desired in exchange\n"},
+               },
+               RPCResult{
+                   "\"hash\"                  (string) the hex-encoded transaction hash\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_sendcanceltradesbypair", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\" 1 31")
+                   + HelpExampleRpc("omni_sendcanceltradesbypair", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\", 1, 31")
+               }
+            }.ToString());
 
     // obtain parameters & info
     std::string fromAddress = ParseAddress(request.params[0]);
@@ -1160,21 +1145,20 @@ static UniValue omni_sendcancelalltrades(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() != 2)
         throw runtime_error(
-            "omni_sendcancelalltrades \"fromaddress\" ecosystem\n"
-
-            "\nCancel all offers on the distributed token exchange.\n"
-
-            "\nArguments:\n"
-            "1. fromaddress          (string, required) the address to trade with\n"
-            "2. ecosystem            (number, required) the ecosystem of the offers to cancel (1 for main ecosystem, 2 for test ecosystem)\n"
-
-            "\nResult:\n"
-            "\"hash\"                  (string) the hex-encoded transaction hash\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_sendcancelalltrades", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\" 1")
-            + HelpExampleRpc("omni_sendcancelalltrades", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\", 1")
-        );
+            RPCHelpMan{"omni_sendcancelalltrades",
+               "\nCancel all offers on the distributed token exchange.\n",
+               {
+                   {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to trade with\n"},
+                   {"ecosystem", RPCArg::Type::NUM, RPCArg::Optional::NO, "the ecosystem of the offers to cancel (1 for main ecosystem, 2 for test ecosystem)\n"},
+               },
+               RPCResult{
+                   "\"hash\"                  (string) the hex-encoded transaction hash\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_sendcancelalltrades", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\" 1")
+                   + HelpExampleRpc("omni_sendcancelalltrades", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\", 1")
+               }
+            }.ToString());
 
     // obtain parameters & info
     std::string fromAddress = ParseAddress(request.params[0]);
@@ -1215,22 +1199,21 @@ static UniValue omni_sendchangeissuer(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() != 3)
         throw runtime_error(
-            "omni_sendchangeissuer \"fromaddress\" \"toaddress\" propertyid\n"
-
-            "\nChange the issuer on record of the given tokens.\n"
-
-            "\nArguments:\n"
-            "1. fromaddress          (string, required) the address associated with the tokens\n"
-            "2. toaddress            (string, required) the address to transfer administrative control to\n"
-            "3. propertyid           (number, required) the identifier of the tokens\n"
-
-            "\nResult:\n"
-            "\"hash\"                  (string) the hex-encoded transaction hash\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_sendchangeissuer", "\"1ARjWDkZ7kT9fwjPrjcQyvbXDkEySzKHwu\" \"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\" 3")
-            + HelpExampleRpc("omni_sendchangeissuer", "\"1ARjWDkZ7kT9fwjPrjcQyvbXDkEySzKHwu\", \"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\", 3")
-        );
+            RPCHelpMan{"omni_sendchangeissuer",
+               "\nChange the issuer on record of the given tokens.\n",
+               {
+                   {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address associated with the tokens\n"},
+                   {"toaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to transfer administrative control to\n"},
+                   {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens\n"},
+               },
+               RPCResult{
+                   "\"hash\"                  (string) the hex-encoded transaction hash\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_sendchangeissuer", "\"1ARjWDkZ7kT9fwjPrjcQyvbXDkEySzKHwu\" \"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\" 3")
+                   + HelpExampleRpc("omni_sendchangeissuer", "\"1ARjWDkZ7kT9fwjPrjcQyvbXDkEySzKHwu\", \"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\", 3")
+               }
+            }.ToString());
 
     // obtain parameters & info
     std::string fromAddress = ParseAddress(request.params[0]);
@@ -1272,21 +1255,20 @@ static UniValue omni_sendenablefreezing(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() != 2)
         throw runtime_error(
-            "omni_sendenablefreezing \"fromaddress\" propertyid\n"
-
-            "\nEnables address freezing for a centrally managed property.\n"
-
-            "\nArguments:\n"
-            "1. fromaddress          (string,  required) the issuer of the tokens\n"
-            "2. propertyid           (number,  required) the identifier of the tokens\n"
-
-            "\nResult:\n"
-            "\"hash\"                  (string) the hex-encoded transaction hash\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_sendenablefreezing", "\"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\" 3")
-            + HelpExampleRpc("omni_sendenablefreezing", "\"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\", 3")
-        );
+            RPCHelpMan{"omni_sendenablefreezing",
+               "\nEnables address freezing for a centrally managed property.\n",
+               {
+                   {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the issuer of the tokens\n"},
+                   {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens\n"},
+               },
+               RPCResult{
+                   "\"hash\"                  (string) the hex-encoded transaction hash\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_sendenablefreezing", "\"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\" 3")
+                   + HelpExampleRpc("omni_sendenablefreezing", "\"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\", 3")
+               }
+            }.ToString());
 
     // obtain parameters & info
     std::string fromAddress = ParseAddress(request.params[0]);
@@ -1328,22 +1310,21 @@ static UniValue omni_senddisablefreezing(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() != 2)
         throw runtime_error(
-            "omni_senddisablefreezing \"fromaddress\" propertyid\n"
-
-            "\nDisables address freezing for a centrally managed property.\n"
-            "\nIMPORTANT NOTE:  Disabling freezing for a property will UNFREEZE all frozen addresses for that property!"
-
-            "\nArguments:\n"
-            "1. fromaddress          (string,  required) the issuer of the tokens\n"
-            "2. propertyid           (number,  required) the identifier of the tokens\n"
-
-            "\nResult:\n"
-            "\"hash\"                  (string) the hex-encoded transaction hash\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("omni_senddisablefreezing", "\"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\" 3")
-            + HelpExampleRpc("omni_senddisablefreezing", "\"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\", 3")
-        );
+            RPCHelpMan{"omni_senddisablefreezing",
+               "\nDisables address freezing for a centrally managed property.\n"
+               "\nIMPORTANT NOTE:  Disabling freezing for a property will UNFREEZE all frozen addresses for that property!",
+               {
+                   {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the issuer of the tokens\n"},
+                   {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens\n"},
+               },
+               RPCResult{
+                   "\"hash\"                  (string) the hex-encoded transaction hash\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_senddisablefreezing", "\"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\" 3")
+                   + HelpExampleRpc("omni_senddisablefreezing", "\"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\", 3")
+               }
+            }.ToString());
 
     // obtain parameters & info
     std::string fromAddress = ParseAddress(request.params[0]);
@@ -1385,20 +1366,23 @@ static UniValue omni_sendfreeze(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() != 4)
         throw runtime_error(
-            "omni_sendfreeze \"fromaddress\" \"toaddress\" propertyid amount \n"
-            "\nFreeze an address for a centrally managed token.\n"
-            "\nNote: Only the issuer may freeze tokens, and only if the token is of the managed type with the freezing option enabled.\n"
-            "\nArguments:\n"
-            "1. fromaddress          (string, required) the address to send from (must be the issuer of the property)\n"
-            "2. toaddress            (string, required) the address to freeze tokens for\n"
-            "3. propertyid           (number, required) the property to freeze tokens for (must be managed type and have freezing option enabled)\n"
-            "4. amount               (number, required) the amount of tokens to freeze (note: this is unused - once frozen an address cannot send any transactions for the property)\n"
-            "\nResult:\n"
-            "\"hash\"                  (string) the hex-encoded transaction hash\n"
-            "\nExamples:\n"
-            + HelpExampleCli("omni_sendfreeze", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\" \"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\" 1 0")
-            + HelpExampleRpc("omni_sendfreeze", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\", \"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\", 1, 0")
-        );
+            RPCHelpMan{"omni_sendfreeze",
+               "\nFreeze an address for a centrally managed token.\n"
+               "\nNote: Only the issuer may freeze tokens, and only if the token is of the managed type with the freezing option enabled.\n",
+               {
+                   {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to send from (must be the issuer of the property)\n"},
+                   {"toaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to freeze tokens for\n"},
+                   {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the property to freeze tokens for (must be managed type and have freezing option enabled)\n"},
+                   {"amount", RPCArg::Type::NUM, RPCArg::Optional::NO, "the amount of tokens to freeze (note: this is unused - once frozen an address cannot send any transactions for the property)\n"},
+               },
+               RPCResult{
+                   "\"hash\"                  (string) the hex-encoded transaction hash\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_sendfreeze", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\" \"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\" 1 0")
+                   + HelpExampleRpc("omni_sendfreeze", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\", \"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\", 1, 0")
+               }
+            }.ToString());
 
     // obtain parameters & info
     std::string fromAddress = ParseAddress(request.params[0]);
@@ -1443,20 +1427,23 @@ static UniValue omni_sendunfreeze(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() != 4)
         throw runtime_error(
-            "omni_sendunfreeze \"fromaddress\" \"toaddress\" propertyid amount \n"
-            "\nUnfreezes an address for a centrally managed token.\n"
-            "\nNote: Only the issuer may unfreeze tokens.\n"
-            "\nArguments:\n"
-            "1. fromaddress          (string, required) the address to send from (must be the issuer of the property)\n"
-            "2. toaddress            (string, required) the address to unfreeze tokens for\n"
-            "3. propertyid           (number, required) the property to unfreeze tokens for (must be managed type and have freezing option enabled)\n"
-            "4. amount               (number, required) the amount of tokens to unfreeze (note: this is unused - once frozen an address cannot send any transactions for the property)\n"
-            "\nResult:\n"
-            "\"hash\"                  (string) the hex-encoded transaction hash\n"
-            "\nExamples:\n"
-            + HelpExampleCli("omni_sendunfreeze", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\" \"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\" 1 0")
-            + HelpExampleRpc("omni_sendunfreeze", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\", \"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\", 1, 0")
-        );
+            RPCHelpMan{"omni_sendunfreeze",
+               "\nUnfreezes an address for a centrally managed token.\n"
+               "\nNote: Only the issuer may unfreeze tokens.\n",
+               {
+                   {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to send from (must be the issuer of the property)\n"},
+                   {"toaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to unfreeze tokens for\n"},
+                   {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the property to unfreeze tokens for (must be managed type and have freezing option enabled)\n"},
+                   {"amount", RPCArg::Type::NUM, RPCArg::Optional::NO, "the amount of tokens to unfreeze (note: this is unused - once frozen an address cannot send any transactions for the property)\n"},
+               },
+               RPCResult{
+                   "\"hash\"                  (string) the hex-encoded transaction hash\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_sendunfreeze", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\" \"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\" 1 0")
+                   + HelpExampleRpc("omni_sendunfreeze", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\", \"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\", 1, 0")
+               }
+            }.ToString());
 
     // obtain parameters & info
     std::string fromAddress = ParseAddress(request.params[0]);
@@ -1501,20 +1488,23 @@ static UniValue omni_sendactivation(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() != 4)
         throw runtime_error(
-            "omni_sendactivation \"fromaddress\" featureid block minclientversion\n"
-            "\nActivate a protocol feature.\n"
-            "\nNote: Omni Core ignores activations from unauthorized sources.\n"
-            "\nArguments:\n"
-            "1. fromaddress          (string, required) the address to send from\n"
-            "2. featureid            (number, required) the identifier of the feature to activate\n"
-            "3. block                (number, required) the activation block\n"
-            "4. minclientversion     (number, required) the minimum supported client version\n"
-            "\nResult:\n"
-            "\"hash\"                  (string) the hex-encoded transaction hash\n"
-            "\nExamples:\n"
-            + HelpExampleCli("omni_sendactivation", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\" 1 370000 999")
-            + HelpExampleRpc("omni_sendactivation", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\", 1, 370000, 999")
-        );
+            RPCHelpMan{"omni_sendactivation",
+               "\nActivate a protocol feature.\n"
+               "\nNote: Omni Core ignores activations from unauthorized sources.\n",
+               {
+                   {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to send from\n"},
+                   {"featureid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the feature to activate\n"},
+                   {"block", RPCArg::Type::NUM, RPCArg::Optional::NO, "the activation block\n"},
+                   {"minclientversion", RPCArg::Type::NUM, RPCArg::Optional::NO, "the minimum supported client version\n"},
+               },
+               RPCResult{
+                   "\"hash\"                  (string) the hex-encoded transaction hash\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_sendactivation", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\" 1 370000 999")
+                   + HelpExampleRpc("omni_sendactivation", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\", 1, 370000, 999")
+               }
+            }.ToString());
 
     // obtain parameters & info
     std::string fromAddress = ParseAddress(request.params[0]);
@@ -1553,18 +1543,21 @@ static UniValue omni_senddeactivation(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() != 2)
         throw runtime_error(
-            "omni_senddeactivation \"fromaddress\" featureid\n"
-            "\nDeactivate a protocol feature.  For Emergency Use Only.\n"
-            "\nNote: Omni Core ignores deactivations from unauthorized sources.\n"
-            "\nArguments:\n"
-            "1. fromaddress          (string, required) the address to send from\n"
-            "2. featureid            (number, required) the identifier of the feature to activate\n"
-            "\nResult:\n"
-            "\"hash\"                  (string) the hex-encoded transaction hash\n"
-            "\nExamples:\n"
-            + HelpExampleCli("omni_senddeactivation", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\" 1")
-            + HelpExampleRpc("omni_senddeactivation", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\", 1")
-        );
+            RPCHelpMan{"omni_senddeactivation",
+               "\nDeactivate a protocol feature.  For Emergency Use Only.\n"
+               "\nNote: Omni Core ignores deactivations from unauthorized sources.\n",
+               {
+                   {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to send from\n"},
+                   {"featureid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the feature to activate\n"},
+               },
+               RPCResult{
+                   "\"hash\"                  (string) the hex-encoded transaction hash\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_senddeactivation", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\" 1")
+                   + HelpExampleRpc("omni_senddeactivation", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\", 1")
+               }
+            }.ToString());
 
     // obtain parameters & info
     std::string fromAddress = ParseAddress(request.params[0]);
@@ -1601,20 +1594,23 @@ static UniValue omni_sendalert(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() != 4)
         throw runtime_error(
-            "omni_sendalert \"fromaddress\" alerttype expiryvalue typecheck versioncheck \"message\"\n"
-            "\nCreates and broadcasts an Omni Core alert.\n"
-            "\nNote: Omni Core ignores alerts from unauthorized sources.\n"
-            "\nArguments:\n"
-            "1. fromaddress          (string, required) the address to send from\n"
-            "2. alerttype            (number, required) the alert type\n"
-            "3. expiryvalue          (number, required) the value when the alert expires (depends on alert type)\n"
-            "4. message              (string, required) the user-faced alert message\n"
-            "\nResult:\n"
-            "\"hash\"                  (string) the hex-encoded transaction hash\n"
-            "\nExamples:\n"
-            + HelpExampleCli("omni_sendalert", "")
-            + HelpExampleRpc("omni_sendalert", "")
-        );
+            RPCHelpMan{"omni_sendalert",
+               "\nCreates and broadcasts an Omni Core alert.\n"
+               "\nNote: Omni Core ignores alerts from unauthorized sources.\n",
+               {
+                   {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to send from\n"},
+                   {"alerttype", RPCArg::Type::NUM, RPCArg::Optional::NO, "the alert type\n"},
+                   {"expiryvalue", RPCArg::Type::NUM, RPCArg::Optional::NO, "the value when the alert expires (depends on alert type)\n"},
+                   {"message", RPCArg::Type::STR, RPCArg::Optional::NO, "the user-faced alert message\n"},
+               },
+               RPCResult{
+                   "\"hash\"                  (string) the hex-encoded transaction hash\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_sendalert", "")
+                   + HelpExampleRpc("omni_sendalert", "")
+               }
+            }.ToString());
 
     // obtain parameters & info
     std::string fromAddress = ParseAddress(request.params[0]);
@@ -1655,13 +1651,26 @@ static UniValue trade_MP(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 6)
         throw runtime_error(
-            "trade_MP \"fromaddress\" propertyidforsale \"amountforsale\" propertiddesired \"amountdesired\" action\n"
-            "\nNote: this command is depreciated, and was replaced by:\n"
-            " - sendtrade_OMNI\n"
-            " - sendcanceltradebyprice_OMNI\n"
-            " - sendcanceltradebypair_OMNI\n"
-            " - sendcanceltradebypair_OMNI\n"
-        );
+            RPCHelpMan{"trade_MP",
+               "\nNote: this command is depreciated, and was replaced by:\n",
+               {
+                   {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to send from\n"},
+                   {"propertyidforsale", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens to list for sale\n"},
+                   {"amountforsale", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount of tokens to listed for sale\n"},
+                   {"propertyiddesired", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens desired in exchange\n"},
+                   {"amountdesired", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount of tokens desired in exchange\n"},
+                   {"action", RPCArg::Type::NUM, RPCArg::Optional::NO, "trade action to take\n"},
+               },
+               RPCResult{
+                   "\"hash\"                  (string) the hex-encoded transaction hash\n"
+               },
+               RPCExamples{
+                   " - sendtrade_OMNI\n"
+                   " - sendcanceltradebyprice_OMNI\n"
+                   " - sendcanceltradebypair_OMNI\n"
+                   " - sendcanceltradebypair_OMNI\n"
+               }
+            }.ToString());
 
     UniValue values(UniValue::VARR);
     uint8_t action = ParseMetaDExAction(request.params[5]);
