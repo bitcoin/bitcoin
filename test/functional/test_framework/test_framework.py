@@ -232,6 +232,8 @@ class BitcoinTestFramework(object):
         if binary is None:
             binary = os.getenv("BITCOIND", "bitcoind")
         args = [binary, "-datadir=" + datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-logtimemicros", "-debug", "-debugexclude=libevent", "-debugexclude=leveldb", "-mocktime=" + str(self.mocktime), "-uacomment=testnode%d" % i]
+        # Don't try auto backups (they fail a lot when running tests)
+        args += [ "-createwalletbackups=0" ]
         if extra_args is not None:
             args.extend(extra_args)
         self.bitcoind_processes[i] = subprocess.Popen(args, stderr=stderr)
@@ -245,8 +247,8 @@ class BitcoinTestFramework(object):
 
         return proxy
 
-    def start_nodes(self, num_nodes, dirname, extra_args=None, rpchost=None, timewait=None, binary=None):
-        """Start multiple bitcoinds, return RPC connections to them"""
+    def start_nodes(self, num_nodes, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
+        """Start multiple dashds, return RPC connections to them"""
 
         if extra_args is None:
             extra_args = [None] * num_nodes
@@ -257,7 +259,7 @@ class BitcoinTestFramework(object):
         rpcs = []
         try:
             for i in range(num_nodes):
-                rpcs.append(self.start_node(i, dirname, extra_args[i], rpchost, timewait=timewait, binary=binary[i]))
+                rpcs.append(self.start_node(i, dirname, extra_args[i], rpchost, timewait=timewait, binary=binary[i], stderr=stderr))
         except:
             # If one node failed to start, stop the others
             # TODO: abusing self.nodes in this way is a little hacky.
@@ -268,7 +270,7 @@ class BitcoinTestFramework(object):
             raise
         return rpcs
 
-    def stop_node(self, i):
+    def _stop_node(self, node, i, wait=True):
         """Stop a bitcoind test node"""
 
         self.log.debug("Stopping node %d" % i)
@@ -276,15 +278,20 @@ class BitcoinTestFramework(object):
             self.nodes[i].stop()
         except http.client.CannotSendRequest as e:
             self.log.exception("Unable to stop node")
-        return_code = self.bitcoind_processes[i].wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT)
-        del self.bitcoind_processes[i]
-        assert_equal(return_code, 0)
+        if wait:
+            self.wait_node(i)
 
-    def stop_nodes(self):
+    def stop_node(self, num_node):
+        self._stop_node(self.nodes[num_node], num_node)
+
+    def stop_nodes(self, fast=True):
         """Stop multiple bitcoind test nodes"""
 
-        for i in range(len(self.nodes)):
-            self.stop_node(i)
+        for i, node in enumerate(self.nodes):
+            self._stop_node(node, i, not fast)
+        if fast:
+            for i, node in enumerate(self.nodes):
+                self.wait_node(i)
         assert not self.bitcoind_processes.values()  # All connections must be gone now
 
     def assert_start_raises_init_error(self, i, dirname, extra_args=None, expected_msg=None):
@@ -305,6 +312,11 @@ class BitcoinTestFramework(object):
                 else:
                     assert_msg = "bitcoind should have exited with expected error " + expected_msg
                 raise AssertionError(assert_msg)
+
+    def wait_node(self, i):
+        return_code = self.bitcoind_processes[i].wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT)
+        assert_equal(return_code, 0)
+        del self.bitcoind_processes[i]
 
     def wait_for_node_exit(self, i, timeout):
         self.bitcoind_processes[i].wait(timeout)

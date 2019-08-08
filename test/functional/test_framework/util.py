@@ -269,13 +269,21 @@ def get_auth_cookie(datadir, n):
         raise ValueError("No RPC credentials")
     return user, password
 
+def copy_datadir(from_node, to_node, dirname):
+    from_datadir = os.path.join(dirname, "node"+str(from_node), "regtest")
+    to_datadir = os.path.join(dirname, "node"+str(to_node), "regtest")
+
+    dirs = ["blocks", "chainstate", "evodb", "llmq"]
+    for d in dirs:
+        try:
+            src = os.path.join(from_datadir, d)
+            dst = os.path.join(to_datadir, d)
+            shutil.copytree(src, dst)
+        except:
+            pass
+
 def log_filename(dirname, n_node, logname):
     return os.path.join(dirname, "node" + str(n_node), "regtest", logname)
-
-def wait_node(i):
-    return_code = bitcoind_processes[i].wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT)
-    assert_equal(return_code, 0)
-    del bitcoind_processes[i]
 
 def get_bip9_status(node, key):
     info = node.getblockchaininfo()
@@ -374,6 +382,10 @@ def sync_mempools(rpc_connections, *, wait=1, timeout=60):
         time.sleep(wait)
         timeout -= wait
     raise AssertionError("Mempool sync failed")
+
+def sync_masternodes(rpc_connections, fast_mnsync=False):
+    for node in rpc_connections:
+        wait_to_sync(node, fast_mnsync)
 
 # Transaction/Block functions
 #############################
