@@ -71,7 +71,7 @@ public:
 	}
 };
 typedef std::unordered_map<std::string, CAmount> AssetBalanceMap;
-typedef std::vector<std::pair<uint256, uint32_t> > ArrivalTimesMap;
+typedef std::vector<std::pair<uint256, std::pair<uint32_t, int64_t> > > ArrivalTimesMap;
 typedef std::unordered_map<std::string, ArrivalTimesMap> ArrivalTimesMapImpl;
 typedef std::vector<std::pair<CWitnessAddress, CAmount > > RangeAmountTuples;
 typedef std::unordered_set<std::string> ActorSet;

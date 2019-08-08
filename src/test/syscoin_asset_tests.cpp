@@ -799,39 +799,48 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag1)
     GenerateBlocks(5, "node1");
     GenerateBlocks(5, "node2");
 
-    string assetguid = AssetNew("node1", creatoraddress, "pubdata", "0xc47bD54a3Df2273426829a7928C3526BF8F7Acaa");
+    string assetguid = AssetNew("node1", creatoraddress, "pubdata", "0xc47bD54a3Df2273426829a7928C3526BF8F7Acaa", "8", "5");
 
-    AssetSend("node1", assetguid, "\"[{\\\"address\\\":\\\"" + useraddress1 + "\\\",\\\"amount\\\":1.0}]\"");
+    AssetSend("node1", assetguid, "\"[{\\\"address\\\":\\\"" + useraddress1 + "\\\",\\\"amount\\\":1.0},{\\\"address\\\":\\\"" + useraddress3 + "\\\",\\\"amount\\\":0.2}]\"");
 
-    BurnAssetAllocation("node1", assetguid, useraddress1, "0.8", false);
+    string burntxid = BurnAssetAllocation("node1", assetguid, useraddress1, "0.8", false);
     // try xfer more than we own, prev output link in mempool ensures we classify this as sender conflict and potential dbl spend
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsendmany " + assetguid + " " + useraddress1 + " " + "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.4}]\"" + " ''"));
 
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
     string hexStr = find_value(r.get_obj(), "hex").get_str();
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hexStr, true, false));
+    BOOST_CHECK_NO_THROW(r = CallRPC("node2", "decoderawtransaction " + hexStr));
+    string txid1 = find_value(r.get_obj(), "txid").get_str();
     BOOST_CHECK(r.write().size() >= 32);
+    
 
-    // sender is conflicted so you cannot create another tx for that sender as prev tx is classified as a double spend and thus you get input conflict on it since it was relayed
-    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsendmany " + assetguid + " " + useraddress1 + " " + "\"[{\\\"address\\\":\\\"" + useraddress3 + "\\\",\\\"amount\\\":0.2}]\"" + " ''"));
-
-    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
-    hexStr = find_value(r.get_obj(), "hex").get_str();
-    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hexStr, true, false));
-    BOOST_CHECK(r.write().size() < 32);
-
+    string txid2 = AssetAllocationTransfer(true, "node1", assetguid, useraddress1, "\"[{\\\"address\\\":\\\"" + useraddress3 + "\\\",\\\"amount\\\":0.2}]\"");
+    string txid3 = AssetAllocationTransfer(true, "node1", assetguid, useraddress3, "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.2}]\"");
     GenerateBlocks(5, "node1");
     // should be balance 0 and thus deleted
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + assetguid + " " + useraddress1));
 
-    // didn't send anything to useraddress2 and thus doesn't exist
-    BOOST_CHECK_THROW(r = CallRPC("node1", "assetallocationinfo " + assetguid + " " + useraddress2), runtime_error);;
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + assetguid + " " + useraddress2));
+    UniValue balance = find_value(r.get_obj(), "balance_zdag");
+    BOOST_CHECK_EQUAL(balance.getValStr(), "0.20000000");
 
     BOOST_CHECK_THROW(r = CallRPC("node1", "assetallocationinfo " + assetguid + " " + useraddress3), runtime_error);
 
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + assetguid + " burn"));
-    UniValue balance = find_value(r.get_obj(), "balance");
+    balance = find_value(r.get_obj(), "balance_zdag");
     BOOST_CHECK_EQUAL(balance.getValStr(), "0.80000000");
+
+
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationverifyzdag " + burntxid));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
+    // txid1 and txid2 should still be in mempool but will be conflicting
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationverifyzdag " + txid1));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationverifyzdag " + txid2));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationverifyzdag " + txid3));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
 }
 // a = 1, b = 0.2, c = 0.1, a->b (0.2), b->a(0.2),  a->c(0.2), c->a(0.2), burn a(0.5), burn a(0.5), b->c(0.2), burn c(0.3) (a=0, b=0, c=0 and burn=1.3)
 BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag2)
@@ -1236,7 +1245,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag_dbl_spend_long_chain)
     string tx7 = BurnAssetAllocation("node1", strSYSXAsset, useraddress1, "0.01", false, "''");
     BOOST_CHECK(AreTwoTransactionsLinked("node1", tx6, tx7));
     string tx8 = BurnAssetAllocation("node1", strSYSXAsset, useraddress2, "0.01", false, "''");
-    BOOST_CHECK(AreTwoTransactionsLinked("node1", tx6, tx8));
+    BOOST_CHECK(!AreTwoTransactionsLinked("node1", tx6, tx8));
     string tx9 = BurnAssetAllocation("node1", strSYSXAsset, useraddress1, "0.001", false, "''");
     BOOST_CHECK(AreTwoTransactionsLinked("node1", tx7, tx9));
     string tx10 = BurnAssetAllocation("node1", strSYSXAsset, useraddress2, "0.001", false, "''");
@@ -1269,9 +1278,9 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag_dbl_spend_long_chain)
     BOOST_CHECK(AreTwoTransactionsLinked("node1", tx22, tx24));
     MilliSleep(500);
     
-    // not a zdag transaction
+    // not a zdag transaction but still gives status ok
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationverifyzdag " + tx24));
-    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_STATUS_OK);
 
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationverifyzdag " + tx15));
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_STATUS_OK);

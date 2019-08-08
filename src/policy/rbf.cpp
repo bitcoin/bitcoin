@@ -37,9 +37,10 @@ RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool)
     return RBFTransactionState::FINAL;
 }
 // SYSCOIN
-RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool, CCoinsViewCache &view, CTxMemPool::setEntries &setAncestors)
+RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool, CTxMemPool::setEntries &setAncestors)
 {
     AssertLockHeld(pool.cs);
+
 
     // First check the transaction itself.
     if (SignalsOptInRBF(tx)) {
@@ -60,12 +61,8 @@ RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool, C
     pool.CalculateMemPoolAncestors(entry, setAncestors, noLimit, noLimit, noLimit, noLimit, dummy, false);
 
     for (CTxMemPool::txiter it : setAncestors) {
-        const CTransactionRef& txRef = it->GetSharedTx();
-        if (SignalsOptInRBF(*txRef)) {
+        if (SignalsOptInRBF(it->GetTx())) {
             return RBFTransactionState::REPLACEABLE_BIP125;
-        }
-        for(const auto& txin: txRef->vin){
-            view.AccessCoin(txin.prevout);
         }
     }
     return RBFTransactionState::FINAL;

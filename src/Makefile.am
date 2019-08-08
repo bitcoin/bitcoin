@@ -102,6 +102,7 @@ endif
 .PHONY: FORCE check-symbols check-security
 # syscoin core #
 SYSCOIN_CORE_H = \
+  services/graph.h \
   services/witnessaddress.h \
   services/asset.h \
   services/assetallocation.h \
@@ -313,6 +314,7 @@ endif
 libsyscoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
 libsyscoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_server_a_SOURCES = \
+  services/graph.cpp \
   services/asset.cpp \
   services/assetallocation.cpp \
   services/assetconsensus.cpp \

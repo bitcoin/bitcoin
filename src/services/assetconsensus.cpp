@@ -24,8 +24,6 @@ std::unique_ptr<CBlockIndexDB> pblockindexdb;
 std::unique_ptr<CLockedOutpointsDB> plockedoutpointsdb;
 std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
 std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
-CCriticalSection cs_assetallocationprevtx;
-AssetPrevTxMap mempoolMapAssetPrevTx GUARDED_BY(cs_assetallocationprevtx);
 AssetPrevTxMap mapSenderLockedOutPoints;
 AssetPrevTxMap mapAssetPrevTxSender;
 std::vector<std::pair<uint256, uint32_t> > vecToRemoveFromMempool;
@@ -250,12 +248,12 @@ bool CheckSyscoinInputs(const CTransaction& tx, const uint256& txHash, CValidati
     EthereumMintTxVec vecMintKeys;
     std::vector<COutPoint> vecLockedOutpoints;
     ActorSet actorSet;
-    const bool &ret = CheckSyscoinInputs(false, tx, txHash, state, inputs, fJustCheck, nHeight, nTime, uint256(), bSanity, false, actorSet, mapAssetAllocations, mempoolMapAssetPrevTx, mapAssets, mapAssetSupplyStats, vecMintKeys, vecLockedOutpoints);
+    const bool &ret = CheckSyscoinInputs(false, tx, txHash, state, inputs, fJustCheck, nHeight, nTime, uint256(), bSanity, false, actorSet, mapAssetAllocations, mapAssets, mapAssetSupplyStats, vecMintKeys, vecLockedOutpoints);
     if(fJustCheck){
         LOCK(cs_assetallocationarrival);
         for (const std::string& actor: actorSet){
             ArrivalTimesMap &arrivalTimes = arrivalTimesMap[std::move(actor)];
-            arrivalTimes.emplace_back(txHash, ::ChainActive().Tip()->GetMedianTimePast());
+            arrivalTimes.emplace_back(txHash, std::make_pair(::ChainActive().Tip()->GetMedianTimePast(), GetTimeMicros()));
         }
     }
     return ret;
@@ -269,7 +267,7 @@ void RemoveDoubleSpendFromMempool(const CTransactionRef & txRef) EXCLUSIVE_LOCKS
         GetMainSignals().TransactionRemovedFromMempool(txRef);
     }
 }
-bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& txHash, CValidationState& state, const CCoinsViewCache &inputs,  const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanity, const bool &bMiner, ActorSet &actorSet, AssetAllocationMap &mapAssetAllocations, AssetPrevTxMap &mapAssetPrevTxs, AssetMap &mapAssets, AssetSupplyStatsMap &mapAssetSupplyStats, EthereumMintTxVec &vecMintKeys, std::vector<COutPoint> &vecLockedOutpoints)
+bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& txHash, CValidationState& state, const CCoinsViewCache &inputs,  const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanity, const bool &bMiner, ActorSet &actorSet, AssetAllocationMap &mapAssetAllocations, AssetMap &mapAssets, AssetSupplyStatsMap &mapAssetSupplyStats, EthereumMintTxVec &vecMintKeys, std::vector<COutPoint> &vecLockedOutpoints)
 {
     bool good = true;
     const bool &isBlock = !blockHash.IsNull();  
@@ -293,7 +291,7 @@ bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& 
             }
             if(nHeight > 0)
                 GetActorsFromAssetAllocationTx(theAssetAllocation, tx.nVersion, false, false, actorSet);
-            good = CheckAssetAllocationInputs(tx, txHash, theAssetAllocation, state, inputs, bJustCheckInternal, nHeight, blockHash, mapAssetSupplyStats, mapAssetAllocations, mapAssetPrevTxs, vecLockedOutpoints, bSanityInternal, bMiner);
+            good = CheckAssetAllocationInputs(tx, txHash, theAssetAllocation, state, inputs, bJustCheckInternal, nHeight, blockHash, mapAssetSupplyStats, mapAssetAllocations, vecLockedOutpoints, bSanityInternal, bMiner);
         }
         else if (IsAssetTx(tx.nVersion))
         {
@@ -357,7 +355,7 @@ int ResetAssetAllocation(const std::string &senderStr) {
                 const uint256& txHash = arrivalTimeIt->first;
                 // if mempool doesn't have tx or its been 30 mins we can remove it safely
                 const CTransactionRef &txRef = mempool.get(txHash);
-                if(txRef && ((::ChainActive().Tip()->GetMedianTimePast()) - arrivalTimeIt->second) <= 1800){
+                if(txRef && ((::ChainActive().Tip()->GetMedianTimePast()) - arrivalTimeIt->second.first) <= 1800){
                     removeAllConflicts = false;
                     ++arrivalTimeIt;
                 }
@@ -384,10 +382,6 @@ int ResetAssetAllocation(const std::string &senderStr) {
         {
              LOCK(cs_assetallocationarrival);
              arrivalTimesMap.erase(senderStr);
-        }
-        {
-            LOCK(cs_assetallocationprevtx);
-            mempoolMapAssetPrevTx.erase(senderStr);
         }
         LOCK(cs_assetallocationmempoolbalance);
         mempoolMapAssetBalances.erase(senderStr);
@@ -642,7 +636,7 @@ CAmount FindBurnAmountFromTx(const CTransaction& tx){
     return 0;
 }
 bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, const CAssetAllocation &theAssetAllocation, CValidationState &state, const CCoinsViewCache &inputs,
-        const bool &fJustCheck, const int &nHeight, const uint256& blockhash, AssetSupplyStatsMap &mapAssetSupplyStats, AssetAllocationMap &mapAssetAllocations, AssetPrevTxMap &mapAssetPrevTxs, std::vector<COutPoint> &vecLockedOutpoints, const bool &bSanityCheck, const bool &bMiner) {
+        const bool &fJustCheck, const int &nHeight, const uint256& blockhash, AssetSupplyStatsMap &mapAssetSupplyStats, AssetAllocationMap &mapAssetAllocations, std::vector<COutPoint> &vecLockedOutpoints, const bool &bSanityCheck, const bool &bMiner) {
     if (passetallocationdb == nullptr)
         return false;
     if (!bSanityCheck)
@@ -746,22 +740,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
     }
     else
         mapBalanceSenderCopy = storedSenderAllocationRef.nBalance;
-
-    // ensure output linking
-    AssetPrevTxMap::iterator mapAssetPrevTx;
-    bool mapAssetPrevTxNotFound = true;
-    if(fJustCheck && !bSanityCheck && tx.nVersion != SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION)
-    {
-        // ensure output linking
-        LOCK(cs_assetallocationprevtx); 
-        #if __cplusplus > 201402 
-        auto result = mapAssetPrevTxs.try_emplace(senderTupleStr, emptyOutPoint);
-        #else
-        auto result  = mapAssetPrevTxs.emplace(std::piecewise_construct,  std::forward_as_tuple(senderTupleStr),  std::forward_as_tuple(emptyOutPoint));
-        #endif
-        mapAssetPrevTx = result.first;
-        mapAssetPrevTxNotFound = storedSenderAllocationRef.lockedOutpoint.IsNull()? result.second: false;
-    }              
+            
     if(tx.nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION){
         const uint32_t &nBurnAsset = theAssetAllocation.assetAllocationTuple.nAsset;
         if(!fUnitTest && nBurnAsset != Params().GetConsensus().nSYSXAsset)
@@ -769,34 +748,10 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
             return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sysx-asset", bMiner);
         }
         const CAssetAllocationTuple receiverAllocationTuple(nBurnAsset, theAssetAllocation.listSendingAllocationAmounts[0].first);
-        const string& receiverTupleStr = receiverAllocationTuple.ToString(); 
-        if(fJustCheck && !bSanityCheck){
-            // ensure output linking
-            LOCK(cs_assetallocationprevtx); 
-            #if __cplusplus > 201402 
-            auto result = mapAssetPrevTxs.try_emplace(receiverTupleStr, emptyOutPoint);
-            #else
-            auto result  = mapAssetPrevTxs.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(emptyOutPoint));
-            #endif  
-            mapAssetPrevTx = result.first;
-            mapAssetPrevTxNotFound = result.second;
-        }       
-        // burn to allocation comes from burn as sender and burn sender cannot use lockpoint's so check the receiver has signed off if using output linking otherwise just check address of receiver
-        if (!FindAssetOwnerInTx(inputs, tx, receiverAllocationTuple.witnessAddress, mapAssetPrevTxNotFound? emptyOutPoint: mapAssetPrevTx->second))
+        const string& receiverTupleStr = receiverAllocationTuple.ToString();     
+        if (!FindAssetOwnerInTx(inputs, tx, receiverAllocationTuple.witnessAddress))
         {
-            bool bNewConfict = false;
-            if(!mapSenderMempoolBalanceNotFound && fJustCheck && !bSanityCheck && !bMiner){
-                LOCK(cs_assetallocationconflicts);
-                // flag as a new conflict if not found
-                // conflict signals dbl spend detection logic
-                if(assetAllocationConflicts.find(receiverTupleStr) == assetAllocationConflicts.end()){
-                    assetAllocationConflicts.insert(std::move(receiverTupleStr));
-                    bNewConfict = true;
-                }
-                else
-                    return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sender-conflicting", true, false);
-            }
-            return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sender", bMiner || bNewConfict);
+            return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sender", bMiner);
         }
         // ensure lockedOutpoint is cleared on PoW, it is useful only once typical for atomic scripts like CLTV based atomic swaps or hashlock type of usecases
 		if (!bSanityCheck && !fJustCheck && !storedSenderAllocationRef.lockedOutpoint.IsNull()) {
@@ -899,21 +854,9 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
         {
             return FormatSyscoinErrorMessage(state, "assetallocation-missing-burn-address", bMiner);
         } 
-        if (storedSenderAllocationRef.assetAllocationTuple != theAssetAllocation.assetAllocationTuple || !FindAssetOwnerInTx(inputs, tx, user1, mapAssetPrevTxNotFound? storedSenderAllocationRef.lockedOutpoint: mapAssetPrevTx->second))
-        {
-            bool bNewConfict = false;
-            if(!mapSenderMempoolBalanceNotFound && fJustCheck && !bSanityCheck && !bMiner){
-                LOCK(cs_assetallocationconflicts);
-                // flag as a new conflict if not found
-                // conflict signals dbl spend detection logic
-                if(assetAllocationConflicts.find(senderTupleStr) == assetAllocationConflicts.end()){
-                    assetAllocationConflicts.insert(std::move(senderTupleStr));
-                    bNewConfict = true;
-                } 
-                else
-                    return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sender-conflicting", true, false);
-            }      
-            return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sender", bMiner || bNewConfict);
+        if (storedSenderAllocationRef.assetAllocationTuple != theAssetAllocation.assetAllocationTuple || !FindAssetOwnerInTx(inputs, tx, user1, storedSenderAllocationRef.lockedOutpoint))
+        {     
+            return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sender", bMiner);
         }       
         if (nBurnAmount <= 0 || nBurnAmount > dbAsset.nTotalSupply)
         {
@@ -992,21 +935,9 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
     }
 	else if (tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_LOCK)
 	{
-		if (storedSenderAllocationRef.assetAllocationTuple != theAssetAllocation.assetAllocationTuple || !FindAssetOwnerInTx(inputs, tx, user1, mapAssetPrevTxNotFound? storedSenderAllocationRef.lockedOutpoint: mapAssetPrevTx->second))
-		{  
-            bool bNewConfict = false;
-            if(!mapSenderMempoolBalanceNotFound && fJustCheck && !bSanityCheck && !bMiner){
-                LOCK(cs_assetallocationconflicts);
-                // flag as a new conflict if not found
-                // conflict signals dbl spend detection logic
-                if(assetAllocationConflicts.find(senderTupleStr) == assetAllocationConflicts.end()){
-                    assetAllocationConflicts.insert(std::move(senderTupleStr));
-                    bNewConfict = true;
-                }
-                else
-                    return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sender-conflicting", false, false);
-            }            
-			return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sender", bMiner || bNewConfict);
+		if (storedSenderAllocationRef.assetAllocationTuple != theAssetAllocation.assetAllocationTuple || !FindAssetOwnerInTx(inputs, tx, user1, storedSenderAllocationRef.lockedOutpoint))
+		{             
+			return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sender", bMiner);
 		}
         if (!bSanityCheck && !fJustCheck){
     		storedSenderAllocationRef.lockedOutpoint = theAssetAllocation.lockedOutpoint;
@@ -1016,21 +947,9 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
 	}
     else if (tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND)
 	{
-        if (storedSenderAllocationRef.assetAllocationTuple != theAssetAllocation.assetAllocationTuple || !FindAssetOwnerInTx(inputs, tx, user1, mapAssetPrevTxNotFound? storedSenderAllocationRef.lockedOutpoint: mapAssetPrevTx->second))
+        if (storedSenderAllocationRef.assetAllocationTuple != theAssetAllocation.assetAllocationTuple || !FindAssetOwnerInTx(inputs, tx, user1, storedSenderAllocationRef.lockedOutpoint))
         {     
-            bool bNewConfict = false;
-            if(!mapSenderMempoolBalanceNotFound && fJustCheck && !bSanityCheck && !bMiner){
-                LOCK(cs_assetallocationconflicts);
-                // flag as a new conflict if not found
-                // conflict signals dbl spend detection logic
-                if(assetAllocationConflicts.find(senderTupleStr) == assetAllocationConflicts.end()){
-                    assetAllocationConflicts.insert(std::move(senderTupleStr));
-                    bNewConfict = true;
-                }
-                else
-                    return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sender-conflicting", false, false);
-            }
-            return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sender", bMiner || bNewConfict);
+            return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sender", bMiner);
         }
 		// ensure lockedOutpoint is cleared on PoW if it was set once a send happens, it is useful only once typical for atomic scripts like CLTV based atomic swaps or hashlock type of usecases
 		if (!bSanityCheck && !fJustCheck && !storedSenderAllocationRef.lockedOutpoint.IsNull()) {
@@ -1091,12 +1010,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
                     mapBalanceReceiver->second = receiverAllocation.nBalance;
                 }
                 mapBalanceReceiver->second += amountTuple.second;
-                if(receiverAllocationTuple.witnessAddress != burnWitness)
-                {
-                    LOCK(cs_assetallocationprevtx);
-                    const COutPoint &receiverOutPoint = COutPoint(txHash, i + 1);
-                    mapAssetPrevTxs.emplace(std::move(receiverTupleStr), receiverOutPoint).first->second = receiverOutPoint;
-                } 
             }  
             else{     
                 #if __cplusplus > 201402 
@@ -1153,9 +1066,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
             LOCK(cs_assetallocationmempoolbalance);
             mapBalanceSender->second = std::move(mapBalanceSenderCopy);
         }
-        LOCK(cs_assetallocationprevtx);
-        // set prev tx so subsequent tx from this sender can link to it to for zdag graph enforcement
-        mapAssetPrevTx->second = COutPoint(txHash, tx.vout.size()-1); 
     }    
     return true;
 }
