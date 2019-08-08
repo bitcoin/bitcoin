@@ -1490,7 +1490,7 @@ List active offers on the distributed token exchange.
 | Name                | Type    | Presence | Description                                                                                  |
 |---------------------|---------|----------|----------------------------------------------------------------------------------------------|
 | `propertyid`        | number  | required | filter orders by `propertyid` for sale                                                       |
-| `propertyid`        | number  | optional | filter orders by `propertyid` desired                                                        |
+| `propertyiddesired` | number  | optional | filter orders by `propertyiddesired`                                                        |
 
 **Result:**
 ```js
@@ -1532,7 +1532,7 @@ Retrieves the history of trades on the distributed token exchange for the specif
 | Name                | Type    | Presence | Description                                                                                  |
 |---------------------|---------|----------|----------------------------------------------------------------------------------------------|
 | `propertyid`        | number  | required | the first side of the traded pair                                                            |
-| `propertyid`        | number  | required | the second side of the traded pair                                                           |
+| `propertyidsecond`  | number  | required | the second side of the traded pair                                                           |
 | `count`             | number  | optional | number of trades to retrieve (default: `10`)                                                 |
 
 **Result:**

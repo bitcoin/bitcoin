@@ -170,7 +170,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "omni_gettradehistoryforaddress", 1 , "count"},
     { "omni_gettradehistoryforaddress", 2, "propertyid" },
     { "omni_gettradehistoryforpair", 0, "propertyid" },
-    { "omni_gettradehistoryforpair", 1, "propertyid" },
+    { "omni_gettradehistoryforpair", 1, "propertyidsecond" },
     { "omni_gettradehistoryforpair", 2, "count" },
     { "omni_setautocommit", 0, "flag" },
     { "omni_getcrowdsale", 0, "propertyid" },
@@ -309,7 +309,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getallbalancesforid_MP", 0, "propertyid" },
     { "listblocktransactions_MP", 0, "index" },
     { "getorderbook_MP", 0, "propertyid" },
-    { "getorderbook_MP", 1, "propertyid" },
+    { "getorderbook_MP", 1, "propertyiddesired" },
     { "trade_MP", 1, "propertyidforsale" }, // deprecated
     { "trade_MP", 3, "propertiddesired" }, // deprecated
     { "trade_MP", 5, "action" }, // deprecated
