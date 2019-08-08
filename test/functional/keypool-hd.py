@@ -7,6 +7,8 @@
 
 # Add python-bitcoinrpc to module search path:
 
+import sys
+
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 

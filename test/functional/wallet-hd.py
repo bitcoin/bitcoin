@@ -4,6 +4,9 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test Hierarchical Deterministic wallet function."""
 
+import sys
+import shutil
+
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
