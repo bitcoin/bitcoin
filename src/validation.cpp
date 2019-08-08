@@ -63,8 +63,6 @@
 #include <algorithm> // std::unique
 std::vector<std::pair<uint256, int64_t> >  vecTPSTestReceivedTimesMempool;
 int64_t nTPSTestingStartTime = 0;
-extern AssetPrevTxMap mempoolMapAssetPrevTx;
-extern CCriticalSection cs_assetallocationprevtx;
 extern std::unordered_set<std::string> assetAllocationConflicts;
 extern CCriticalSection cs_assetallocationconflicts;
 extern std::vector<std::pair<uint256, uint32_t> > vecToRemoveFromMempool;
@@ -1950,7 +1948,6 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     std::vector<PrecomputedTransactionData> txdata;
     const bool ibd = ::ChainstateActive().IsInitialBlockDownload();
     AssetAllocationMap mapAssetAllocations;
-    AssetPrevTxMap mapAssetPrevTxs;
     AssetMap mapAssets;
     AssetSupplyStatsMap mapAssetSupplyStats;
     EthereumMintTxVec vecMintKeys;
@@ -2031,7 +2028,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
             // SYSCOIN
             const uint256& txHash = tx.GetHash(); 
             if(IsSyscoinTx(tx.nVersion)){
-                if (!CheckSyscoinInputs(ibd, tx, txHash, state, view, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, fJustCheck, false, actorSet, mapAssetAllocations, mapAssetPrevTxs, mapAssets, mapAssetSupplyStats, vecMintKeys, vecLockedOutpoints))
+                if (!CheckSyscoinInputs(ibd, tx, txHash, state, view, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, fJustCheck, false, actorSet, mapAssetAllocations, mapAssets, mapAssetSupplyStats, vecMintKeys, vecLockedOutpoints))
                     return error("ConnectBlock(): CheckSyscoinInputs on block %s failed\n", block.GetHash().ToString());        
             }
             if(!fJustCheck){

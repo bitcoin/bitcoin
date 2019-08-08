@@ -476,58 +476,67 @@ UniValue listassetindexallocations(const JSONRPCRequest& request) {
     }
     return oRes;
 }
-int VerifyTransactionGraph(const uint256& lookForTxHash) {
-    bool ibd = false;
-    AssetAllocationMap mapAssetAllocations;
-    AssetPrevTxMap mapAssetPrevTxs;
-    AssetMap mapAssets;
-    AssetSupplyStatsMap mapAssetSupplyStats;
-    EthereumMintTxVec vecMintKeys;
-    std::vector<COutPoint> vecLockedOutpoints;
-    ActorSet actorSet;
-    ActorSet actorSetSenders;
-    CValidationState state;
-    CTxMemPool::setEntries setAncestors;
-    CCoinsView viewDummy;
-    CCoinsViewCache view(&viewDummy);
-    CTransactionRef txRef;
+// recursive procedure to loop through all arrival times and related arrival times to find all senders
+int CheckActorsInTransactionGraph(const uint256& lookForTxHash, ActorSet& actorSet, std::set<uint256> &setTXIDs){
+    if(setTXIDs.find(lookForTxHash) != setTXIDs.end())
+        return ZDAG_STATUS_OK;
+    setTXIDs.emplace(lookForTxHash);
+    ActorSet actorSetSender;
     {
         LOCK(cs_main);
         LOCK(mempool.cs);
-        txRef = mempool.get(lookForTxHash);
-        if (!txRef || !IsAssetAllocationTx(txRef->nVersion))
+        CTxMemPool::setEntries setAncestors;
+        const CTransactionRef &txRef = mempool.get(lookForTxHash);
+        if (!txRef)
             return ZDAG_NOT_FOUND;
-        CCoinsViewCache &viewChain = *pcoinsTip;
-        CCoinsViewMemPool viewMempool(&viewChain, mempool);
-        view.SetBackend(viewMempool); // temporarily switch cache backend to db+mempool view
-
-        // check this transaction isn't RBF enabled and fill view with inputs from mempool
-        RBFTransactionState rbfState = IsRBFOptIn(*txRef, mempool, view, setAncestors);
+        if(!IsAssetAllocationTx(txRef->nVersion))
+            return ZDAG_STATUS_OK;
+        
+        // get actors for this transaction, irrelevant to ancestors in case the double spend is happening on the same utxo
+        GetActorsFromSyscoinTx(txRef, true, false, actorSetSender);
+        // check this transaction isn't RBF enabled
+        RBFTransactionState rbfState = IsRBFOptIn(*txRef, mempool, setAncestors);
         if (rbfState == RBFTransactionState::UNKNOWN) {
             return ZDAG_NOT_FOUND;
         } else if (rbfState == RBFTransactionState::REPLACEABLE_BIP125) {
             return ZDAG_WARNING_RBF;
         }
-
-        view.SetBackend(viewDummy); // switch back to avoid locking mempool for too long
-        ibd = ::ChainstateActive().IsInitialBlockDownload();
-        // get actors for this transaction, irrelevant to ancestors in case the double spend is happening on the same utxo
-        GetActorsFromSyscoinTx(txRef, true, false, actorSetSenders);
-        const int64_t & mediantime = ::ChainActive().Tip()->GetMedianTimePast();
         for (CTxMemPool::txiter it : setAncestors) {
-            const CTransaction& tx = it->GetTx();
-            if (!CheckSyscoinInputs(ibd, tx, tx.GetHash(), state, view, false, 0, mediantime, ::ChainActive().Tip()->GetBlockHash(), false, false, actorSet, mapAssetAllocations, mapAssetPrevTxs, mapAssets, mapAssetSupplyStats, vecMintKeys, vecLockedOutpoints)){
-                LogPrint(BCLog::SYS, "VerifyTransactionGraph: Graph Invalid %s\n", FormatStateMessage(state));
-                return ZDAG_MAJOR_CONFLICT;
+            const CTransactionRef& ancestorTxRef = it->GetSharedTx();
+            const uint256& ancestorTxHash = it->GetSharedTx()->GetHash();
+            if(IsAssetAllocationTx(ancestorTxRef->nVersion)){
+                if(setTXIDs.find(ancestorTxHash) == setTXIDs.end()){
+                    setTXIDs.emplace(ancestorTxHash);  
+                    GetActorsFromSyscoinTx(ancestorTxRef, true, false, actorSet);
+                }
             }
-            GetActorsFromSyscoinTx(it->GetSharedTx(), true, false, actorSetSenders);
-        }        
+        }  
+    }  
+    std::string actorToCheck = *actorSetSender.begin();
+    
+    const ArrivalTimesMap& arrivalTimes = arrivalTimesMap[actorToCheck];
+	if(arrivalTimes.empty())
+		return ZDAG_STATUS_OK;
+    for(const auto &arrivalTime: arrivalTimes){
+        int status = CheckActorsInTransactionGraph(arrivalTime.first, actorSet, setTXIDs);
+        if(status != ZDAG_STATUS_OK){
+            return status;
+        }
     }
- 
+    actorSet.emplace(actorToCheck);
+    return ZDAG_STATUS_OK;
+}
+int VerifyTransactionGraph(const uint256& lookForTxHash) {
+    ActorSet actorSet;
+    std::set<uint256> setTXID;
+    int status = CheckActorsInTransactionGraph(lookForTxHash, actorSet, setTXID);
+    if(status != ZDAG_STATUS_OK){
+        return status;
+    }
     {
         LOCK(cs_assetallocationconflicts);
         // check all involved senders to ensure they are not flagged
-        for(const auto& actor: actorSetSenders){
+        for(const auto& actor: actorSet){
             auto it = assetAllocationConflicts.find(actor);
             if (it != assetAllocationConflicts.end()){
                 LogPrint(BCLog::SYS, "VerifyTransactionGraph: Actor Conflict %s\n", actor);

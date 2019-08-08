@@ -20,7 +20,6 @@ extern UniValue ValueFromAmount(const CAmount& amount);
 extern UniValue DescribeAddress(const CTxDestination& dest);
 extern void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex);
 extern UniValue convertaddress(const JSONRPCRequest& request);
-extern AssetPrevTxMap mempoolMapAssetPrevTx;
 CCriticalSection cs_assetallocationmempoolbalance;
 CCriticalSection cs_assetallocationarrival;
 CCriticalSection cs_assetallocationconflicts;

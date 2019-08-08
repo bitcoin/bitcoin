@@ -23,9 +23,7 @@ extern std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags 
 extern bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no_witness = false, bool try_witness = true);
 extern ArrivalTimesMapImpl arrivalTimesMap; 
 extern CCriticalSection cs_assetallocationarrival;
-extern AssetPrevTxMap mempoolMapAssetPrevTx;
 extern AssetPrevTxMap mapAssetPrevTxSender;
-extern CCriticalSection cs_assetallocationprevtx;
 extern AssetPrevTxMap mapSenderLockedOutPoints;
 extern AssetBalanceMap mempoolMapAssetBalances;
 extern CCriticalSection cs_assetallocationmempoolbalance;
@@ -153,26 +151,12 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
     CCoinsView viewDummy;
     CCoinsViewCache view(&viewDummy);
     COutPoint outPointLastSender;
-    COutPoint outPointLastSenderForwardedFee;
     auto itSenderLocked = mapSenderLockedOutPoints.find(strAddress);
     if(itSenderLocked != mapSenderLockedOutPoints.end()){
         outPointLastSender = itSenderLocked->second;
     }else {
-        CAssetAllocation theAssetAllocation(txIn_t);
-        if(!theAssetAllocation.assetAllocationTuple.IsNull()){
-            ActorSet actorSet;
-            GetActorsFromAssetAllocationTx(theAssetAllocation, txIn_t.nVersion, true, false, actorSet);
-            // if asset allocation then use forwarded fee if found to create graph of transactions enforced by consensus
-            if(actorSet.size() == 1){
-                LOCK(cs_assetallocationprevtx);
-                auto itSenderPrevOut = mempoolMapAssetPrevTx.find(*actorSet.begin());
-                if(itSenderPrevOut != mempoolMapAssetPrevTx.end()){
-                    outPointLastSenderForwardedFee = itSenderPrevOut->second;
-                }
-            }
-        }
         auto itSender = mapAssetPrevTxSender.find(strAddress);
-        if(itSender != mapAssetPrevTxSender.end() && outPointLastSenderForwardedFee != itSender->second){
+        if(itSender != mapAssetPrevTxSender.end()){
             outPointLastSender = itSender->second;
         }
     }
@@ -188,9 +172,7 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
         }
         // ensure no other transaction spends these outpoints before adding them to the view
         if(!outPointLastSender.IsNull() && !mempool.GetConflictTx(outPointLastSender))
-            view.AccessCoin(outPointLastSender); // try to get last sender txid
-        if(!outPointLastSenderForwardedFee.IsNull() && !mempool.GetConflictTx(outPointLastSenderForwardedFee))
-            view.AccessCoin(outPointLastSenderForwardedFee); // try to get last sender txid for the fwded fee (for zdag graph enforcement)     
+            view.AccessCoin(outPointLastSender); // try to get last sender txid   
         view.SetBackend(viewDummy); // switch back to avoid locking mempool for too long
     }
     FeeCalculation fee_calc;
@@ -204,12 +186,6 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
             txIn.vin.emplace_back(CTxIn(outPointLastSender, coin.out.scriptPubKey));
         } 
     }
-    if(!outPointLastSenderForwardedFee.IsNull() && ::ChainActive().Tip()->nHeight >= Params().GetConsensus().nBridgeStartBlock){
-        const Coin& coin = view.AccessCoin(outPointLastSenderForwardedFee);
-        if(!coin.IsSpent()){
-            txIn.vin.emplace_back(CTxIn(outPointLastSenderForwardedFee, coin.out.scriptPubKey));
-        }
-    } 
     // # vin (with IX)*FEE + # vout*FEE + (10 + # vin)*FEE + 34*FEE (for change output)
     CAmount nFees =  GetMinimumFee(*pwallet, 10+34, coin_control,  &fee_calc);
     for (auto& vin : txIn.vin) {

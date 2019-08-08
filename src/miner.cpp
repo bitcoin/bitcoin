@@ -29,6 +29,7 @@
 // SYSCOIN
 #include <masternodepayments.h>
 #include <masternodesync.h>
+#include <services/graph.h>
 #include <services/assetconsensus.h>
 extern std::vector<std::pair<uint256, uint32_t> > vecToRemoveFromMempool;
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
@@ -188,6 +189,10 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     FillBlockPayments(coinbaseTx, nHeight, blockReward, nFees, pblocktemplate->txoutMasternode, pblocktemplate->voutSuperblock);
 
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
+    if (!OrderBasedOnArrivals(pblock->vtx))
+    {
+        throw std::runtime_error("OrderBasedOnArrivalTime failed!");
+    }
     pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
     pblocktemplate->vTxFees[0] = -nFees;
     // SYSCOIN remove bad burn transactions prior to accepting block                      
@@ -210,7 +215,6 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     txsToRemove.clear();
     bool bSenderConflicted = false;
     AssetAllocationMap mapAssetAllocations;
-    AssetPrevTxMap mapAssetPrevTxs;
     AssetMap mapAssets;
     AssetSupplyStatsMap mapAssetSupplyStats;
     EthereumMintTxVec vecMintKeys;
@@ -219,13 +223,13 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     bool bFoundError = false;
     for(const CTransactionRef& tx: pblock->vtx){
         const uint256& txHash = tx->GetHash();
-        if(!CheckSyscoinInputs(false, *tx, txHash, stateInputs, view, false, nHeight, ::ChainActive().Tip()->GetMedianTimePast(), pblock->GetHash(), false, true, actorSet, mapAssetAllocations, mapAssetPrevTxs, mapAssets, mapAssetSupplyStats, vecMintKeys, vecLockedOutpoints)){
+        if(!CheckSyscoinInputs(false, *tx, txHash, stateInputs, view, false, nHeight, ::ChainActive().Tip()->GetMedianTimePast(), pblock->GetHash(), false, true, actorSet, mapAssetAllocations, mapAssets, mapAssetSupplyStats, vecMintKeys, vecLockedOutpoints)){
             txsToRemove.emplace_back(std::move(txHash));
             stateConflict = stateInputs;
             bFoundError = true;
         }
         if(stateInputs.IsError()){
-            bSenderConflicted = true; 
+            bSenderConflicted = true;
         }
     }
     if(bSenderConflicted)
