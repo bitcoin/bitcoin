@@ -847,7 +847,21 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
             if(!fUnitTest && nBurnAsset != Params().GetConsensus().nSYSXAsset)
             {
                 return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sysx-asset", bMiner);
-            }         
+            } 
+                    
+        } else if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
+            std::vector<unsigned char> vchEthAddress;
+            std::vector<unsigned char> vchEthContract;
+            uint32_t nAssetFromScript;
+            CAmount nAmountFromScript;
+            CWitnessAddress burnWitnessAddress;
+            if(!GetSyscoinBurnData(tx, nAssetFromScript, burnWitnessAddress, nAmountFromScript, vchEthAddress, vchEthContract)){
+                return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-transaction", bMiner);
+            }
+            if(dbAsset.vchContract.empty() || dbAsset.vchContract != vchEthContract)
+            {
+                return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-contract", bMiner);
+            }        
         }
        
         if(theAssetAllocation.listSendingAllocationAmounts[0].first != burnWitness)
