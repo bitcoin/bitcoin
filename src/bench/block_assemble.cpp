@@ -41,8 +41,8 @@ static CTxIn MineBlock(const CScript& coinbase_scriptPubKey)
 {
     auto block = PrepareBlock(coinbase_scriptPubKey);
 
-#if 1
-    while (!CheckProofOfWork(block->GetBlockHeader())) {
+#if LDPC_POW
+    while (!CheckProofOfWork(block->GetBlockHeader(), Params().GetConsensus())) {
         ++block->nNonce;
         assert(block->nNonce);
     }

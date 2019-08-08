@@ -20,7 +20,6 @@ public:
   bool generate_H();
   bool generate_Q();
   void generate_hv(const unsigned char Seralized_Block_Header_with_Nonce[]);
-  //  bool CheckProofOfWork(uint256 currHash, uint256 prevHash, unsigned int nBits);
 
   void decoding();
   bool decision();

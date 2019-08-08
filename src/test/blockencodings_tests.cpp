@@ -48,7 +48,11 @@ static CBlock BuildBlockTestCase() {
     bool mutated;
     block.hashMerkleRoot = BlockMerkleRoot(block, &mutated);
     assert(!mutated);
+#if LDPC_POW
+    while (!CheckProofOfWork(block.GetBlockHeader(), Params().GetConsensus())) ++block.nNonce;
+#else
     while (!CheckProofOfWork(block.GetHash(), block.nBits, Params().GetConsensus())) ++block.nNonce;
+#endif
     return block;
 }
 
@@ -296,7 +300,11 @@ BOOST_AUTO_TEST_CASE(EmptyBlockRoundTripTest)
     bool mutated;
     block.hashMerkleRoot = BlockMerkleRoot(block, &mutated);
     assert(!mutated);
+#if LDPC_POW
+    while (!CheckProofOfWork(block.GetBlockHeader(), Params().GetConsensus())) ++block.nNonce;
+#else
     while (!CheckProofOfWork(block.GetHash(), block.nBits, Params().GetConsensus())) ++block.nNonce;
+#endif
 
     // Test simple header round-trip with only coinbase
     {
