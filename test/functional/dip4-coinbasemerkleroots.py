@@ -269,8 +269,8 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         else:
             assert_equal(merkleRootQuorums, 0)
 
-        set_mocktime(get_mocktime() + 1)
-        set_node_times(self.nodes, get_mocktime())
+        self.bump_mocktime(1)
+        set_node_times(self.nodes, self.mocktime)
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
 

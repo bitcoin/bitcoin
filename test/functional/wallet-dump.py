@@ -65,7 +65,7 @@ class WalletDumpTest(BitcoinTestFramework):
         # TODO remove this when usehd=1 becomes the default
         # use our own cache and -usehd=1 as extra arg as the default cache is run with -usehd=0
         self._initialize_chain(os.path.join(self.options.tmpdir, "hd"), self.num_nodes, os.path.join(self.options.cachedir, "hd"), extra_args=self.extra_args[0], stderr=sys.stdout)
-        set_cache_mocktime()
+        self.set_cache_mocktime()
         # Use 1 minute timeout because the initial getnewaddress RPC can take
         # longer than the default 30 seconds due to an expensive
         # CWallet::TopUpKeyPool call, and the encryptwallet RPC made later in

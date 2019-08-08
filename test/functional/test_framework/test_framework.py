@@ -25,7 +25,6 @@ from .authproxy import JSONRPCException
 from . import coverage
 from .util import (
     PortSeed,
-    GENESISTIME,
     MAX_NODES,
     assert_equal,
     check_json_precision,
@@ -33,16 +32,12 @@ from .util import (
     connect_nodes,
     copy_datadir,
     disconnect_nodes,
-    get_mocktime,
     get_rpc_proxy,
     initialize_datadir,
     get_datadir_path,
     log_filename,
     p2p_port,
     rpc_url,
-    set_cache_mocktime,
-    set_genesis_mocktime,
-    set_mocktime,
     set_node_times,
     satoshi_round,
     sync_blocks,
@@ -61,6 +56,8 @@ TEST_EXIT_FAILED = 1
 TEST_EXIT_SKIPPED = 77
 
 BITCOIND_PROC_WAIT_TIMEOUT = 60
+
+GENESISTIME = 1417713337
 
 class BitcoinTestFramework(object):
     """Base class for a bitcoin test script.
@@ -92,10 +89,10 @@ class BitcoinTestFramework(object):
         self.log.info("Initializing test directory " + self.options.tmpdir)
         if self.setup_clean_chain:
             self._initialize_chain_clean(self.options.tmpdir, self.num_nodes)
-            set_genesis_mocktime()
+            self.set_genesis_mocktime()
         else:
             self._initialize_chain(self.options.tmpdir, self.num_nodes, self.options.cachedir)
-            set_cache_mocktime()
+            self.set_cache_mocktime()
 
     def setup_network(self):
         self.setup_nodes()
@@ -335,20 +332,20 @@ class BitcoinTestFramework(object):
             sync_blocks(group)
             sync_mempools(group)
 
-    def enable_mocktime(self):
-        """Enable mocktime for the script.
-
-        mocktime may be needed for scripts that use the cached version of the
-        blockchain.  If the cached version of the blockchain is used without
-        mocktime then the mempools will not sync due to IBD.
-
-        For backwared compatibility of the python scripts with previous
-        versions of the cache, this helper function sets mocktime to Jan 1,
-        2014 + (201 * 10 * 60)"""
-        self.mocktime = 1388534400 + (201 * 10 * 60)
-
     def disable_mocktime(self):
         self.mocktime = 0
+
+    def bump_mocktime(self, t):
+        self.mocktime += t
+
+    def set_cache_mocktime(self):
+        # For backwared compatibility of the python scripts
+        # with previous versions of the cache, set MOCKTIME
+        # to regtest genesis time + (201 * 156)
+        self.mocktime = GENESISTIME + (201 * 156)
+
+    def set_genesis_mocktime(self):
+        self.mocktime = GENESISTIME
 
     # Private helper methods. These should not be accessed by the subclass test scripts.
 
@@ -402,7 +399,7 @@ class BitcoinTestFramework(object):
                     shutil.rmtree(os.path.join(cachedir, "node" + str(i)))
 
             # Create cache directories, run dashds:
-            set_genesis_mocktime()
+            self.set_genesis_mocktime()
             for i in range(MAX_NODES):
                 datadir = initialize_datadir(cachedir, i)
                 args = [os.getenv("DASHD", "dashd"), "-server", "-keypool=1", "-datadir=" + datadir, "-discover=0", "-mocktime="+str(GENESISTIME)]
@@ -610,8 +607,8 @@ class DashTestFramework(BitcoinTestFramework):
         self.nodes.append(self.start_node(0, self.options.tmpdir, self.extra_args))
         required_balance = MASTERNODE_COLLATERAL * self.mn_count + 1
         while self.nodes[0].getbalance() < required_balance:
-            set_mocktime(get_mocktime() + 1)
-            set_node_times(self.nodes, get_mocktime())
+            self.bump_mocktime(1)
+            set_node_times(self.nodes, self.mocktime)
             self.nodes[0].generate(1)
         # create connected simple nodes
         for i in range(0, self.num_nodes - self.mn_count - 1):
@@ -629,13 +626,13 @@ class DashTestFramework(BitcoinTestFramework):
         self.prepare_datadirs()
         self.start_masternodes()
 
-        set_mocktime(get_mocktime() + 1)
-        set_node_times(self.nodes, get_mocktime())
+        self.bump_mocktime(1)
+        set_node_times(self.nodes, self.mocktime)
         self.nodes[0].generate(1)
         # sync nodes
         self.sync_all()
-        set_mocktime(get_mocktime() + 1)
-        set_node_times(self.nodes, get_mocktime())
+        self.bump_mocktime(1)
+        set_node_times(self.nodes, self.mocktime)
 
         mn_info = self.nodes[0].masternodelist("status")
         assert (len(mn_info) == self.mn_count)
@@ -772,8 +769,8 @@ class DashTestFramework(BitcoinTestFramework):
         # move forward to next DKG
         skip_count = 24 - (self.nodes[0].getblockcount() % 24)
         if skip_count != 0:
-            set_mocktime(get_mocktime() + 1)
-            set_node_times(self.nodes, get_mocktime())
+            self.bump_mocktime(1)
+            set_node_times(self.nodes, self.mocktime)
             self.nodes[0].generate(skip_count)
         sync_blocks(self.nodes)
 
@@ -781,36 +778,36 @@ class DashTestFramework(BitcoinTestFramework):
         self.wait_for_quorum_phase(1, None, 0)
         # Give nodes some time to connect to neighbors
         time.sleep(2)
-        set_mocktime(get_mocktime() + 1)
-        set_node_times(self.nodes, get_mocktime())
+        self.bump_mocktime(1)
+        set_node_times(self.nodes, self.mocktime)
         self.nodes[0].generate(2)
         sync_blocks(self.nodes)
 
         # Make sure all reached phase 2 (contribute) and received all contributions
         self.wait_for_quorum_phase(2, "receivedContributions", expected_contributions)
-        set_mocktime(get_mocktime() + 1)
-        set_node_times(self.nodes, get_mocktime())
+        self.bump_mocktime(1)
+        set_node_times(self.nodes, self.mocktime)
         self.nodes[0].generate(2)
         sync_blocks(self.nodes)
 
         # Make sure all reached phase 3 (complain) and received all complaints
         self.wait_for_quorum_phase(3, "receivedComplaints", expected_complaints)
-        set_mocktime(get_mocktime() + 1)
-        set_node_times(self.nodes, get_mocktime())
+        self.bump_mocktime(1)
+        set_node_times(self.nodes, self.mocktime)
         self.nodes[0].generate(2)
         sync_blocks(self.nodes)
 
         # Make sure all reached phase 4 (justify)
         self.wait_for_quorum_phase(4, "receivedJustifications", expected_justifications)
-        set_mocktime(get_mocktime() + 1)
-        set_node_times(self.nodes, get_mocktime())
+        self.bump_mocktime(1)
+        set_node_times(self.nodes, self.mocktime)
         self.nodes[0].generate(2)
         sync_blocks(self.nodes)
 
         # Make sure all reached phase 5 (commit)
         self.wait_for_quorum_phase(5, "receivedPrematureCommitments", expected_commitments)
-        set_mocktime(get_mocktime() + 1)
-        set_node_times(self.nodes, get_mocktime())
+        self.bump_mocktime(1)
+        set_node_times(self.nodes, self.mocktime)
         self.nodes[0].generate(2)
         sync_blocks(self.nodes)
 
@@ -821,13 +818,13 @@ class DashTestFramework(BitcoinTestFramework):
         self.wait_for_quorum_commitment()
 
         # mine the final commitment
-        set_mocktime(get_mocktime() + 1)
-        set_node_times(self.nodes, get_mocktime())
+        self.bump_mocktime(1)
+        set_node_times(self.nodes, self.mocktime)
         self.nodes[0].generate(1)
         while quorums == self.nodes[0].quorum("list"):
             time.sleep(2)
-            set_mocktime(get_mocktime() + 1)
-            set_node_times(self.nodes, get_mocktime())
+            self.bump_mocktime(1)
+            set_node_times(self.nodes, self.mocktime)
             self.nodes[0].generate(1)
             sync_blocks(self.nodes)
         new_quorum = self.nodes[0].quorum("list", 1)["llmq_5_60"][0]

@@ -28,7 +28,7 @@ class DIP3Test(BitcoinTestFramework):
 
 
     def setup_network(self):
-        disable_mocktime()
+        self.disable_mocktime()
         self.start_controller_node()
 
     def start_controller_node(self, extra_args=None):

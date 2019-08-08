@@ -55,7 +55,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
         self.lastblockhash = self.nodes[0].getbestblockhash()
         self.tip = int("0x" + self.lastblockhash, 0)
         self.lastblockheight = 429
-        self.lastblocktime = get_mocktime() + 429
+        self.lastblocktime = self.mocktime + 429
 
         self.log.info("Test 1: NULLDUMMY compliant base transactions should be accepted to mempool and mined before activation [430]")
         test1txs = [self.create_transaction(self.nodes[0], coinbase_txid[0], self.ms_address, 49)]

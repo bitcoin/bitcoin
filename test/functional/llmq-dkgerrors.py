@@ -93,8 +93,8 @@ class LLMQDKGErrors(DashTestFramework):
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 4070908800)
         self.wait_for_sporks_same()
         for i in range(blockCount):
-            set_mocktime(get_mocktime() + 1)
-            set_node_times(self.nodes, get_mocktime())
+            self.bump_mocktime(1)
+            set_node_times(self.nodes, self.mocktime)
             self.nodes[0].generate(1)
         self.sync_all()
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)

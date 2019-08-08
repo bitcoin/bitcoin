@@ -76,13 +76,13 @@ class LLMQSigningTest(DashTestFramework):
         assert_sigs_nochange(True, False, True, 3)
 
         # fast forward 6.5 days, recovered sig should still be valid
-        set_mocktime(get_mocktime() + int(60 * 60 * 24 * 6.5))
-        set_node_times(self.nodes, get_mocktime())
+        self.bump_mocktime(int(60 * 60 * 24 * 6.5))
+        set_node_times(self.nodes, self.mocktime)
         # Cleanup starts every 5 seconds
         wait_for_sigs(True, False, True, 15)
         # fast forward 1 day, recovered sig should not be valid anymore
-        set_mocktime(get_mocktime() + int(60 * 60 * 24 * 1))
-        set_node_times(self.nodes, get_mocktime())
+        self.bump_mocktime(int(60 * 60 * 24 * 1))
+        set_node_times(self.nodes, self.mocktime)
         # Cleanup starts every 5 seconds
         wait_for_sigs(False, False, False, 15)
 

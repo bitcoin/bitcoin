@@ -10,8 +10,6 @@ In this test we connect to one node over p2p, and test tx requests.
 from test_framework.test_framework import ComparisonTestFramework
 from test_framework.comptool import TestManager, TestInstance, RejectResult
 from test_framework.blocktools import *
-from test_framework.util import get_mocktime
-
 
 
 # Use the ComparisonTestFramework with 1 node: only use --testbinary.
@@ -34,7 +32,7 @@ class InvalidTxRequestTest(ComparisonTestFramework):
     def get_tests(self):
         if self.tip is None:
             self.tip = int("0x" + self.nodes[0].getbestblockhash(), 0)
-        self.block_time = get_mocktime() + 1
+        self.block_time = self.mocktime + 1
 
         '''
         Create a new block with an anyone-can-spend coinbase

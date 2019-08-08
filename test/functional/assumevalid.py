@@ -183,8 +183,8 @@ class AssumeValidTest(BitcoinTestFramework):
         node2.wait_for_verack()
 
         # Make sure nodes actually accept the many headers
-        set_mocktime(self.block_time)
-        set_node_times(self.nodes, get_mocktime())
+        self.set_mocktime(self.block_time)
+        set_node_times(self.nodes, self.mocktime)
 
         # send header lists to all three nodes.
         # node0 does not need to receive all headers
