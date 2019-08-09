@@ -269,7 +269,7 @@ class BitcoinTestFramework(object):
             raise
         return rpcs
 
-    def _stop_node(self, node, i, wait=True):
+    def stop_node(self, i, wait=True):
         """Stop a dashd test node"""
 
         self.log.debug("Stopping node %d" % i)
@@ -280,16 +280,13 @@ class BitcoinTestFramework(object):
         if wait:
             self.wait_node(i)
 
-    def stop_node(self, num_node):
-        self._stop_node(self.nodes[num_node], num_node)
-
     def stop_nodes(self, fast=True):
         """Stop multiple dashd test nodes"""
 
-        for i, node in enumerate(self.nodes):
-            self._stop_node(node, i, not fast)
+        for i in range(len(self.nodes)):
+            self.stop_node(i, not fast)
         if fast:
-            for i, node in enumerate(self.nodes):
+            for i in range(len(self.nodes)):
                 self.wait_node(i)
         assert not self.bitcoind_processes.values()  # All connections must be gone now
 
