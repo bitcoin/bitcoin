@@ -12,6 +12,7 @@
 
 static constexpr int CHACHA20_POLY1305_AEAD_KEY_LEN = 32;
 static constexpr int CHACHA20_POLY1305_AEAD_AAD_LEN = 3; /* 3 bytes length */
+static constexpr int CHACHA20_POLY1305_AEAD_TAG_LEN = 16; /* 16 bytes poly1305 tag */
 static constexpr int CHACHA20_ROUND_OUTPUT = 64;         /* 64 bytes per round */
 static constexpr int AAD_PACKAGES_PER_ROUND = 21;        /* 64 / 3 round down*/
 
