@@ -16,6 +16,9 @@
 
 TransactionError BroadcastTransaction(const CTransactionRef tx, std::string& err_string, const CAmount& max_tx_fee, bool relay, bool wait_callback)
 {
+    // BroadcastTransaction can be called by either sendrawtransaction RPC or wallet RPCs.
+    // g_connman is assigned both before chain clients and before RPC server is accepting calls,
+    // and reset after chain clients and RPC sever are stopped. g_connman should never be null here.
     assert(g_connman);
     std::promise<void> promise;
     uint256 hashTx = tx->GetHash();
