@@ -173,8 +173,11 @@ void BitcoinCore::shutdown()
     }
 }
 
-BitcoinApplication::BitcoinApplication(interfaces::Node& node, int &argc, char **argv):
-    QApplication(argc, argv),
+static int qt_argc = 1;
+static const char* qt_argv = "bitcoin-qt";
+
+BitcoinApplication::BitcoinApplication(interfaces::Node& node):
+    QApplication(qt_argc, const_cast<char **>(&qt_argv)),
     coreThread(nullptr),
     m_node(node),
     optionsModel(nullptr),
@@ -446,7 +449,7 @@ int GuiMain(int argc, char* argv[])
     QApplication::setAttribute(Qt::AA_DontShowIconsInMenus);
 #endif
 
-    BitcoinApplication app(*node, argc, argv);
+    BitcoinApplication app(*node);
 
     // Register meta types used for QMetaObject::invokeMethod
     qRegisterMetaType< bool* >();
