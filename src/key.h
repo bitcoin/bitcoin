@@ -131,6 +131,9 @@ public:
     //! Derive BIP32 child key.
     bool Derive(CKey& keyChild, ChainCode &ccChild, unsigned int nChild, const ChainCode& cc) const;
 
+    // computes an EC Diffie-Hellman 256bit secret
+    bool ComputeECDHSecret(const CPubKey& pubkey, CPrivKey& secret_out) const;
+
     /**
      * Verify thoroughly whether a private key and a public key match.
      * This is done using a different mechanism than just regenerating it.
