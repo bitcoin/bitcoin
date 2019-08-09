@@ -333,7 +333,6 @@ public:
         LOCK(cs_main);
         return ::fHavePruned;
     }
-    bool p2pEnabled() override { return m_node.connman != nullptr; }
     bool isReadyToBroadcast() override { return !::fImporting && !::fReindex && !::ChainstateActive().IsInitialBlockDownload(); }
     bool isInitialBlockDownload() override { return ::ChainstateActive().IsInitialBlockDownload(); }
     bool shutdownRequested() override { return ShutdownRequested(); }
