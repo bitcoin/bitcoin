@@ -47,47 +47,47 @@ const char *WTXIDRELAY="wtxidrelay";
 const char *SENDTXRCNCL="sendtxrcncl";
 } // namespace NetMsgType
 
-/** All known message types. Keep this in the same order as the list of
- * messages above and in protocol.h.
+/** All known message types including the short-ID (as initially defined in BIP324).
+ *  Keep this in the same order as the list of messages above and in protocol.h.
  */
-const static std::string allNetMessageTypes[] = {
-    NetMsgType::VERSION,
-    NetMsgType::VERACK,
-    NetMsgType::ADDR,
-    NetMsgType::ADDRV2,
-    NetMsgType::SENDADDRV2,
-    NetMsgType::INV,
-    NetMsgType::GETDATA,
-    NetMsgType::MERKLEBLOCK,
-    NetMsgType::GETBLOCKS,
-    NetMsgType::GETHEADERS,
-    NetMsgType::TX,
-    NetMsgType::HEADERS,
-    NetMsgType::BLOCK,
-    NetMsgType::GETADDR,
-    NetMsgType::MEMPOOL,
-    NetMsgType::PING,
-    NetMsgType::PONG,
-    NetMsgType::NOTFOUND,
-    NetMsgType::FILTERLOAD,
-    NetMsgType::FILTERADD,
-    NetMsgType::FILTERCLEAR,
-    NetMsgType::SENDHEADERS,
-    NetMsgType::FEEFILTER,
-    NetMsgType::SENDCMPCT,
-    NetMsgType::CMPCTBLOCK,
-    NetMsgType::GETBLOCKTXN,
-    NetMsgType::BLOCKTXN,
-    NetMsgType::GETCFILTERS,
-    NetMsgType::CFILTER,
-    NetMsgType::GETCFHEADERS,
-    NetMsgType::CFHEADERS,
-    NetMsgType::GETCFCHECKPT,
-    NetMsgType::CFCHECKPT,
-    NetMsgType::WTXIDRELAY,
-    NetMsgType::SENDTXRCNCL,
-};
-const static std::vector<std::string> allNetMessageTypesVec(std::begin(allNetMessageTypes), std::end(allNetMessageTypes));
+const static std::map<std::string, uint8_t> allNetMessageTypes = {
+    {NetMsgType::VERSION, NO_BIP324_SHORT_ID},
+    {NetMsgType::VERACK, NO_BIP324_SHORT_ID},
+    {NetMsgType::ADDR, 1},
+    {NetMsgType::ADDRV2, 28},
+    {NetMsgType::SENDADDRV2, NO_BIP324_SHORT_ID},
+    {NetMsgType::INV, 14},
+    {NetMsgType::GETDATA, 11},
+    {NetMsgType::MERKLEBLOCK, 16},
+    {NetMsgType::GETBLOCKS, 9},
+    {NetMsgType::GETHEADERS, 12},
+    {NetMsgType::TX, 21},
+    {NetMsgType::HEADERS, 13},
+    {NetMsgType::BLOCK, 2},
+    {NetMsgType::GETADDR, NO_BIP324_SHORT_ID},
+    {NetMsgType::MEMPOOL, 15},
+    {NetMsgType::PING, 18},
+    {NetMsgType::PONG, 19},
+    {NetMsgType::NOTFOUND, 17},
+    {NetMsgType::FILTERLOAD, 8},
+    {NetMsgType::FILTERADD, 6},
+    {NetMsgType::FILTERCLEAR, 7},
+    {NetMsgType::SENDHEADERS, NO_BIP324_SHORT_ID},
+    {NetMsgType::FEEFILTER, 5},
+    {NetMsgType::SENDCMPCT, 20},
+    {NetMsgType::CMPCTBLOCK, 4},
+    {NetMsgType::GETBLOCKTXN, 10},
+    {NetMsgType::BLOCKTXN, 3},
+    {NetMsgType::GETCFILTERS, 22},
+    {NetMsgType::CFILTER, 23},
+    {NetMsgType::GETCFHEADERS, 24},
+    {NetMsgType::CFHEADERS, 25},
+    {NetMsgType::GETCFCHECKPT, 26},
+    {NetMsgType::CFCHECKPT, 27},
+    {NetMsgType::WTXIDRELAY, NO_BIP324_SHORT_ID},
+    {NetMsgType::SENDTXRCNCL, NO_BIP324_SHORT_ID}};
+
+static std::map<uint8_t, std::string> shortIDMsgTypes;
 
 CMessageHeader::CMessageHeader(const MessageStartChars& pchMessageStartIn, const char* pszCommand, unsigned int nMessageSizeIn)
 {
@@ -178,9 +178,9 @@ std::string CInv::ToString() const
     }
 }
 
-const std::vector<std::string> &getAllNetMessageTypes()
+const std::map<std::string, uint8_t>& getAllNetMessageTypes()
 {
-    return allNetMessageTypesVec;
+    return allNetMessageTypes;
 }
 
 /**
@@ -221,4 +221,30 @@ GenTxid ToGenTxid(const CInv& inv)
 {
     assert(inv.IsGenTxMsg());
     return inv.IsMsgWtx() ? GenTxid::Wtxid(inv.hash) : GenTxid::Txid(inv.hash);
+}
+
+uint8_t GetShortIDFromMessageType(const std::string& message_type)
+{
+    auto it = allNetMessageTypes.find(message_type);
+    if (it != allNetMessageTypes.end()) {
+        return it->second;
+    }
+    return NO_BIP324_SHORT_ID;
+}
+
+std::optional<std::string> GetMessageTypeFromShortID(const uint8_t shortID)
+{
+    if (shortIDMsgTypes.empty()) {
+        for (const std::pair<std::string, uint8_t> entry : allNetMessageTypes) {
+            if (entry.second != NO_BIP324_SHORT_ID) {
+                shortIDMsgTypes[entry.second] = entry.first;
+            }
+        }
+    }
+
+    auto it = shortIDMsgTypes.find(shortID);
+    if (it != shortIDMsgTypes.end()) {
+        return it->second;
+    }
+    return {};
 }
