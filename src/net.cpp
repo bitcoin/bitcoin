@@ -2836,8 +2836,9 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, SOCKET hSocketIn, const
         m_addr_known = MakeUnique<CRollingBloomFilter>(5000, 0.001);
     }
 
-    for (const std::string &msg : getAllNetMessageTypes())
-        mapRecvBytesPerMsgCmd[msg] = 0;
+    for (const auto &msg : getAllNetMessageTypes()) {
+        mapRecvBytesPerMsgCmd[msg.second] = 0;
+    }
     mapRecvBytesPerMsgCmd[NET_MESSAGE_COMMAND_OTHER] = 0;
 
     if (fLogIPs) {
