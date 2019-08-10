@@ -33,7 +33,6 @@ Files: src/qt/res/icons/add.png
        src/qt/res/icons/editpaste.png
        src/qt/res/icons/export.png
        src/qt/res/icons/eye.png
-       src/qt/res/icons/filesave.png
        src/qt/res/icons/history.png
        src/qt/res/icons/info.png
        src/qt/res/icons/key.png
@@ -60,7 +59,7 @@ Files: src/qt/res/icons/connect*.png
 Copyright: Marco Falke
            Luke Dashjr
 License: Expat
-Comment: Inspired by Stephan Hutchings Typicons
+Comment: Inspired by Stephen Hutchings' Typicons
 
 Files: src/qt/res/icons/tx_mined.png
        src/qt/res/src/mine.svg
@@ -72,7 +71,6 @@ Files: src/qt/res/icons/tx_mined.png
        src/qt/res/src/hd_enabled.svg
 Copyright: Jonas Schnelli
 License: Expat
-Comment:
 
 Files: src/qt/res/icons/clock*.png
        src/qt/res/icons/eye_*.png
@@ -81,9 +79,9 @@ Files: src/qt/res/icons/clock*.png
        src/qt/res/src/clock_*.svg
        src/qt/res/src/tx_*.svg
        src/qt/res/src/verify.svg
-Copyright: Stephan Hutching, Jonas Schnelli
+Copyright: Stephen Hutchings, Jonas Schnelli
 License: Expat
-Comment: Modifications of Stephan Hutchings Typicons
+Comment: Modifications of Stephen Hutchings' Typicons
 
 Files: src/qt/res/icons/about.png
        src/qt/res/icons/bitcoin.*
@@ -98,6 +96,10 @@ Files: src/qt/res/icons/proxy.png
 Copyright: Cristian Mircea Messel
 License: public-domain
 
+File: src/qt/res/icons/filesave.png
+Copyright: Dave Gandy
+License: Creative Commons BY 3.0
+Comment: Site: https://www.flaticon.com/packs/font-awesome
 
 License: Expat
  Permission is hereby granted, free of charge, to any person obtaining a
@@ -153,5 +155,12 @@ Comment:
  You should have received a copy of the GNU General Public License along
  with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+License: Creative Commons BY 3.0
+ Licensees may copy, distribute, display and perform the work and make
+ derivative works and remixes based on it only if they give the author
+ or licensor the credits (attribution).
+ For more info, see <https://creativecommons.org/licenses/by/3.0/legalcode>.
+
 License: public-domain
- This work is in the public domain.
+ This work is in the public domain. Files may be used by anyone for any purpose
+ and without any restrictions.
