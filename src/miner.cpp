@@ -198,7 +198,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     // SYSCOIN remove bad burn transactions prior to accepting block                      
     CCoinsView viewDummy;
     CCoinsViewCache view(&viewDummy);
-    CCoinsViewCache &viewChain = *pcoinsTip;
+    CCoinsViewCache &viewChain = ::ChainstateActive().CoinsTip();
     CCoinsViewMemPool viewMempool(&viewChain, mempool);
     view.SetBackend(viewMempool); // temporarily switch cache backend to db+mempool view
     // bring all inputs of syscoin txs into view

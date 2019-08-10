@@ -4,7 +4,7 @@ GETOPT_BIN=$IN_GETOPT_BIN
 GETOPT_BIN=${GETOPT_BIN:-getopt}
 
 __sleep_amount() {
-  if [ -n "$constant_sleep" ]; then 
+  if [ -n "$constant_sleep" ]; then
     sleep_time=$constant_sleep
   else
     #TODO: check for awk
@@ -159,5 +159,5 @@ EOF
   done
 
   retry "$max_tries" "$min_sleep" "$max_sleep" "$constant_sleep" "$fail_script" "$@"
-  
+
 fi
