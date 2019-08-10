@@ -56,19 +56,19 @@ env:
     - DOCKER_PACKAGES="build-essential libtool autotools-dev automake pkg-config bsdmainutils curl git ca-certificates ccache"
     - CACHE_ERR_MSG="Error! Initial build successful, but not enough time remains to run later build stages and tests. Please manually re-run this job by using the travis restart button or asking a bitcoin maintainer to restart. The next run should not time out because the build cache has been saved."
 before_install:
-  - set -o errexit; source .travis/test_03_before_install.sh
+  - set -o errexit; source ./ci/test/03_before_install.sh
 install:
-  - set -o errexit; source .travis/test_04_install.sh
+  - set -o errexit; source ./ci/test/04_install.sh
 before_script:
-  - set -o errexit; source .travis/test_05_before_script.sh
+  - set -o errexit; source ./ci/test/05_before_script.sh
 script:
   - export CONTINUE=1
   - if [ $SECONDS -gt 1200 ]; then export CONTINUE=0; fi  # Likely the depends build took very long
   - if [ $TRAVIS_REPO_SLUG = "bitcoin/bitcoin" ]; then export CONTINUE=1; fi  # Whitelisted repo (90 minutes build time)
-  - if [ $CONTINUE = "1" ]; then set -o errexit; source .travis/test_06_script_a.sh; else set +o errexit; echo "$CACHE_ERR_MSG"; false; fi
+  - if [ $CONTINUE = "1" ]; then set -o errexit; source ./ci/test/06_script_a.sh; else set +o errexit; echo "$CACHE_ERR_MSG"; false; fi
   - if [ $SECONDS -gt 2000 ]; then export CONTINUE=0; fi  # Likely the build took very long; The tests take about 1000s, so we should abort if we have less than 50*60-1000=2000s left
   - if [ $TRAVIS_REPO_SLUG = "bitcoin/bitcoin" ]; then export CONTINUE=1; fi  # Whitelisted repo (90 minutes build time)
-  - if [ $CONTINUE = "1" ]; then set -o errexit; source .travis/test_06_script_b.sh; else set +o errexit; echo "$CACHE_ERR_MSG"; false; fi
+  - if [ $CONTINUE = "1" ]; then set -o errexit; source ./ci/test/06_script_b.sh; else set +o errexit; echo "$CACHE_ERR_MSG"; false; fi
 after_script:
   - echo $TRAVIS_COMMIT_RANGE
   - echo $TRAVIS_COMMIT_LOG
@@ -82,11 +82,11 @@ jobs:
       language: python
       python: '3.5' # Oldest supported version according to doc/dependencies.md
       install:
-        - set -o errexit; source .travis/lint_04_install.sh
+        - set -o errexit; source ./ci/lint/04_install.sh
       before_script:
-        - set -o errexit; source .travis/lint_05_before_script.sh
+        - set -o errexit; source ./ci/lint/05_before_script.sh
       script:
-        - set -o errexit; source .travis/lint_06_script.sh
+        - set -o errexit; source ./ci/lint/06_script.sh
 
     - stage: extended-lint
       name: 'extended lint [runtime >= 60 seconds]'
@@ -95,11 +95,11 @@ jobs:
       language: python
       python: '3.5'
       install:
-        - set -o errexit; source .travis/extended_lint_04_install.sh
+        - set -o errexit; source ./ci/extended_lint/04_install.sh
       before_script:
-        - set -o errexit; source .travis/lint_05_before_script.sh
+        - set -o errexit; source ./ci/lint/05_before_script.sh
       script:
-        - set -o errexit; source .travis/extended_lint_06_script.sh
+        - set -o errexit; source ./ci/extended_lint/06_script.sh
 
     - stage: test
       name: 'ARM  [GOAL: install]  [no unit or functional tests]'
