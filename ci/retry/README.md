@@ -35,7 +35,7 @@ Help:
         -m, --min=secs                   Exponenetial Backoff: minimum sleep amount (seconds): Default 0.3
         -x, --max=secs                   Exponenetial Backoff: maximum sleep amount (seconds): Default 60
         -f, --fail="script +cmds"        Fail Script: run in case of final failure
-    
+
 ### Examples
 
 No problem:
