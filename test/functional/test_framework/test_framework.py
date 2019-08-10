@@ -311,8 +311,8 @@ class BitcoinTestFramework(object):
 
     def wait_node(self, i):
         return_code = self.bitcoind_processes[i].wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT)
-        assert_equal(return_code, 0)
         del self.bitcoind_processes[i]
+        assert_equal(return_code, 0)
 
     def wait_for_node_exit(self, i, timeout):
         self.bitcoind_processes[i].wait(timeout)
