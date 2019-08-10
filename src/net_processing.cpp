@@ -767,7 +767,7 @@ bool IsAnnouncementAllowed(const CNode* pfrom, const int requestedAnnouncements,
 }
 void RequestInv(const CNode* pfrom, const CInv &inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    RequestTx(State(pfrom->GetId()), inv, GetTimeMicros());
+    RequestTx(State(pfrom->GetId()), inv, GetTime<std::chrono::microseconds>());
 } 
 // This function is used for testing the stale tip eviction logic, see
 // denialofservice_tests.cpp
