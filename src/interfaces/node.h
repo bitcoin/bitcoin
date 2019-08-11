@@ -38,6 +38,9 @@ class Node
 public:
     virtual ~Node() {}
 
+    //! Send init error.
+    virtual void initError(const std::string& message) = 0;
+
     //! Set command line arguments.
     virtual bool parseParameters(int argc, const char* const argv[], std::string& error) = 0;
 
@@ -146,6 +149,9 @@ public:
 
     //! Is initial block download.
     virtual bool isInitialBlockDownload() = 0;
+
+    //! Is -addresstype set.
+    virtual bool isAddressTypeSet() = 0;
 
     //! Get reindex.
     virtual bool getReindex() = 0;

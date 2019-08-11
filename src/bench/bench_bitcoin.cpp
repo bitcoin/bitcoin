@@ -4,8 +4,6 @@
 
 #include <bench/bench.h>
 
-#include <crypto/sha256.h>
-#include <key.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 
@@ -23,14 +21,14 @@ static void SetupBenchArgs()
 {
     SetupHelpOptions(gArgs);
 
-    gArgs.AddArg("-list", "List benchmarks without executing them. Can be combined with -scaling and -filter", false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-evals=<n>", strprintf("Number of measurement evaluations to perform. (default: %u)", DEFAULT_BENCH_EVALUATIONS), false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-filter=<regex>", strprintf("Regular expression filter to select benchmark by name (default: %s)", DEFAULT_BENCH_FILTER), false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-scaling=<n>", strprintf("Scaling factor for benchmark's runtime (default: %u)", DEFAULT_BENCH_SCALING), false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-printer=(console|plot)", strprintf("Choose printer format. console: print data to console. plot: Print results as HTML graph (default: %s)", DEFAULT_BENCH_PRINTER), false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-plot-plotlyurl=<uri>", strprintf("URL to use for plotly.js (default: %s)", DEFAULT_PLOT_PLOTLYURL), false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-plot-width=<x>", strprintf("Plot width in pixel (default: %u)", DEFAULT_PLOT_WIDTH), false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-plot-height=<x>", strprintf("Plot height in pixel (default: %u)", DEFAULT_PLOT_HEIGHT), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-list", "List benchmarks without executing them. Can be combined with -scaling and -filter", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-evals=<n>", strprintf("Number of measurement evaluations to perform. (default: %u)", DEFAULT_BENCH_EVALUATIONS), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-filter=<regex>", strprintf("Regular expression filter to select benchmark by name (default: %s)", DEFAULT_BENCH_FILTER), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-scaling=<n>", strprintf("Scaling factor for benchmark's runtime (default: %u)", DEFAULT_BENCH_SCALING), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-printer=(console|plot)", strprintf("Choose printer format. console: print data to console. plot: Print results as HTML graph (default: %s)", DEFAULT_BENCH_PRINTER), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-plot-plotlyurl=<uri>", strprintf("URL to use for plotly.js (default: %s)", DEFAULT_PLOT_PLOTLYURL), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-plot-width=<x>", strprintf("Plot width in pixel (default: %u)", DEFAULT_PLOT_WIDTH), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-plot-height=<x>", strprintf("Plot height in pixel (default: %u)", DEFAULT_PLOT_HEIGHT), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 }
 
 int main(int argc, char** argv)
@@ -38,7 +36,7 @@ int main(int argc, char** argv)
     SetupBenchArgs();
     std::string error;
     if (!gArgs.ParseParameters(argc, argv, error)) {
-        fprintf(stderr, "Error parsing command line arguments: %s\n", error.c_str());
+        tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error.c_str());
         return EXIT_FAILURE;
     }
 
@@ -55,7 +53,7 @@ int main(int argc, char** argv)
 
     double scaling_factor;
     if (!ParseDouble(scaling_str, &scaling_factor)) {
-        fprintf(stderr, "Error parsing scaling factor as double: %s\n", scaling_str.c_str());
+        tfm::format(std::cerr, "Error parsing scaling factor as double: %s\n", scaling_str.c_str());
         return EXIT_FAILURE;
     }
 

@@ -399,17 +399,6 @@ public:
         return (ret == 0);
     }
 
-    bool ReadVersion(int& nVersion)
-    {
-        nVersion = 0;
-        return Read(std::string("version"), nVersion);
-    }
-
-    bool WriteVersion(int nVersion)
-    {
-        return Write(std::string("version"), nVersion);
-    }
-
     bool static Rewrite(BerkeleyDatabase& database, const char* pszSkip = nullptr);
 };
 

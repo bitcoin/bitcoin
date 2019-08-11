@@ -5,3 +5,10 @@ mut
 objext
 unselect
 useable
+wit
+unparseable
+copyable
+cachable
+errorstring
+keyserver
+homogenous

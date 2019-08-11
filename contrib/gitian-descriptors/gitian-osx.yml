@@ -44,8 +44,6 @@ script: |
 
   export QT_RCC_TEST=1
   export QT_RCC_SOURCE_DATE_OVERRIDE=1
-  export GZIP="-9n"
-  export TAR_OPTIONS="--mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
   export TZ="UTC"
   export BUILD_DIR=`pwd`
   mkdir -p ${WRAP_DIR}
@@ -114,8 +112,8 @@ script: |
   # Correct tar file order
   mkdir -p temp
   pushd temp
-  tar xf ../$SOURCEDIST
-  find bitcoin-* | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ../$SOURCEDIST
+  tar -xf ../$SOURCEDIST
+  find bitcoin-* | sort | tar --mtime="$REFERENCE_DATETIME" --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ../$SOURCEDIST
   popd
 
   # Workaround for tarball not building with the bare tag version (prep)
@@ -152,7 +150,7 @@ script: |
     cp ${BASEPREFIX}/${i}/native/bin/${i}-pagestuff unsigned-app-${i}/pagestuff
     mv dist unsigned-app-${i}
     pushd unsigned-app-${i}
-    find . | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-osx-unsigned.tar.gz
+    find . | sort | tar --mtime="$REFERENCE_DATETIME" --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-osx-unsigned.tar.gz
     popd
 
     make deploy
@@ -162,7 +160,7 @@ script: |
     find . -name "lib*.la" -delete
     find . -name "lib*.a" -delete
     rm -rf ${DISTNAME}/lib/pkgconfig
-    find ${DISTNAME} | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-${i}.tar.gz
+    find ${DISTNAME} | sort | tar --mtime="$REFERENCE_DATETIME" --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-${i}.tar.gz
     cd ../../
   done
   mkdir -p $OUTDIR/src

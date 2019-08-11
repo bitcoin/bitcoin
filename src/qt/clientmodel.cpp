@@ -9,18 +9,12 @@
 #include <qt/guiutil.h>
 #include <qt/peertablemodel.h>
 
-#include <chain.h>
-#include <chainparams.h>
 #include <clientversion.h>
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
-#include <validation.h>
 #include <net.h>
 #include <netbase.h>
-#include <txmempool.h>
-#include <ui_interface.h>
 #include <util/system.h>
-#include <warnings.h>
 
 #include <stdint.h>
 
@@ -190,34 +184,39 @@ void ClientModel::updateBanlist()
 static void ShowProgress(ClientModel *clientmodel, const std::string &title, int nProgress)
 {
     // emits signal "showProgress"
-    QMetaObject::invokeMethod(clientmodel, "showProgress", Qt::QueuedConnection,
+    bool invoked = QMetaObject::invokeMethod(clientmodel, "showProgress", Qt::QueuedConnection,
                               Q_ARG(QString, QString::fromStdString(title)),
                               Q_ARG(int, nProgress));
+    assert(invoked);
 }
 
 static void NotifyNumConnectionsChanged(ClientModel *clientmodel, int newNumConnections)
 {
     // Too noisy: qDebug() << "NotifyNumConnectionsChanged: " + QString::number(newNumConnections);
-    QMetaObject::invokeMethod(clientmodel, "updateNumConnections", Qt::QueuedConnection,
+    bool invoked = QMetaObject::invokeMethod(clientmodel, "updateNumConnections", Qt::QueuedConnection,
                               Q_ARG(int, newNumConnections));
+    assert(invoked);
 }
 
 static void NotifyNetworkActiveChanged(ClientModel *clientmodel, bool networkActive)
 {
-    QMetaObject::invokeMethod(clientmodel, "updateNetworkActive", Qt::QueuedConnection,
+    bool invoked = QMetaObject::invokeMethod(clientmodel, "updateNetworkActive", Qt::QueuedConnection,
                               Q_ARG(bool, networkActive));
+    assert(invoked);
 }
 
 static void NotifyAlertChanged(ClientModel *clientmodel)
 {
     qDebug() << "NotifyAlertChanged";
-    QMetaObject::invokeMethod(clientmodel, "updateAlert", Qt::QueuedConnection);
+    bool invoked = QMetaObject::invokeMethod(clientmodel, "updateAlert", Qt::QueuedConnection);
+    assert(invoked);
 }
 
 static void BannedListChanged(ClientModel *clientmodel)
 {
     qDebug() << QString("%1: Requesting update for peer banlist").arg(__func__);
-    QMetaObject::invokeMethod(clientmodel, "updateBanlist", Qt::QueuedConnection);
+    bool invoked = QMetaObject::invokeMethod(clientmodel, "updateBanlist", Qt::QueuedConnection);
+    assert(invoked);
 }
 
 static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, int height, int64_t blockTime, double verificationProgress, bool fHeader)
@@ -239,11 +238,12 @@ static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, int heig
     // if we are in-sync or if we notify a header update, update the UI regardless of last update time
     if (fHeader || !initialSync || now - nLastUpdateNotification > MODEL_UPDATE_DELAY) {
         //pass an async signal to the UI thread
-        QMetaObject::invokeMethod(clientmodel, "numBlocksChanged", Qt::QueuedConnection,
+        bool invoked = QMetaObject::invokeMethod(clientmodel, "numBlocksChanged", Qt::QueuedConnection,
                                   Q_ARG(int, height),
                                   Q_ARG(QDateTime, QDateTime::fromTime_t(blockTime)),
                                   Q_ARG(double, verificationProgress),
                                   Q_ARG(bool, fHeader));
+        assert(invoked);
         nLastUpdateNotification = now;
     }
 }

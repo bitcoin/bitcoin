@@ -7,11 +7,9 @@
 
 #include <fs.h>
 #include <key_io.h>
-#include <random.h>
 #include <rpc/util.h>
 #include <shutdown.h>
 #include <sync.h>
-#include <ui_interface.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 
@@ -180,8 +178,6 @@ UniValue stop(const JSONRPCRequest& jsonRequest)
 
 static UniValue uptime(const JSONRPCRequest& jsonRequest)
 {
-    if (jsonRequest.fHelp || jsonRequest.params.size() > 0)
-        throw std::runtime_error(
             RPCHelpMan{"uptime",
                 "\nReturns the total uptime of the server.\n",
                             {},
@@ -192,15 +188,13 @@ static UniValue uptime(const JSONRPCRequest& jsonRequest)
                     HelpExampleCli("uptime", "")
                 + HelpExampleRpc("uptime", "")
                 },
-            }.ToString());
+            }.Check(jsonRequest);
 
     return GetTime() - GetStartupTime();
 }
 
 static UniValue getrpcinfo(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() > 0) {
-        throw std::runtime_error(
             RPCHelpMan{"getrpcinfo",
                 "\nReturns details of the RPC server.\n",
                 {},
@@ -212,15 +206,14 @@ static UniValue getrpcinfo(const JSONRPCRequest& request)
             "    \"method\"       (string)  The name of the RPC command \n"
             "    \"duration\"     (numeric)  The running time in microseconds\n"
             "   },...\n"
-            "  ]\n"
+            "  ],\n"
+            " \"logpath\": \"xxx\" (string) The complete file path to the debug log\n"
             "}\n"
                 },
                 RPCExamples{
                     HelpExampleCli("getrpcinfo", "")
                 + HelpExampleRpc("getrpcinfo", "")},
-            }.ToString()
-        );
-    }
+            }.Check(request);
 
     LOCK(g_rpc_server_info.mutex);
     UniValue active_commands(UniValue::VARR);
@@ -233,6 +226,10 @@ static UniValue getrpcinfo(const JSONRPCRequest& request)
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("active_commands", active_commands);
+
+    const std::string path = LogInstance().m_file_path.string();
+    UniValue log_path(UniValue::VSTR, path);
+    result.pushKV("logpath", log_path);
 
     return result;
 }
@@ -329,39 +326,6 @@ bool RPCIsInWarmup(std::string *outStatus)
     if (outStatus)
         *outStatus = rpcWarmupStatus;
     return fRPCInWarmup;
-}
-
-void JSONRPCRequest::parse(const UniValue& valRequest)
-{
-    // Parse request
-    if (!valRequest.isObject())
-        throw JSONRPCError(RPC_INVALID_REQUEST, "Invalid Request object");
-    const UniValue& request = valRequest.get_obj();
-
-    // Parse id now so errors from here on will have the id
-    id = find_value(request, "id");
-
-    // Parse method
-    UniValue valMethod = find_value(request, "method");
-    if (valMethod.isNull())
-        throw JSONRPCError(RPC_INVALID_REQUEST, "Missing method");
-    if (!valMethod.isStr())
-        throw JSONRPCError(RPC_INVALID_REQUEST, "Method must be a string");
-    strMethod = valMethod.get_str();
-    if (fLogIPs)
-        LogPrint(BCLog::RPC, "ThreadRPCServer method=%s user=%s peeraddr=%s\n", SanitizeString(strMethod),
-            this->authUser, this->peerAddr);
-    else
-        LogPrint(BCLog::RPC, "ThreadRPCServer method=%s user=%s\n", SanitizeString(strMethod), this->authUser);
-
-    // Parse params
-    UniValue valParams = find_value(request, "params");
-    if (valParams.isArray() || valParams.isObject())
-        params = valParams;
-    else if (valParams.isNull())
-        params = UniValue(UniValue::VARR);
-    else
-        throw JSONRPCError(RPC_INVALID_REQUEST, "Params must be an array or object");
 }
 
 bool IsDeprecatedRPCEnabled(const std::string& method)

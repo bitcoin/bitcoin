@@ -7,13 +7,9 @@
 #include <coins.h>
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
-#include <miner.h>
-#include <policy/policy.h>
 #include <pow.h>
-#include <test/util.h>
 #include <txmempool.h>
 #include <validation.h>
-#include <validationinterface.h>
 
 #include <list>
 #include <vector>

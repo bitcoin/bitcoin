@@ -29,7 +29,6 @@ from .util import (
     disconnect_nodes,
     get_datadir_path,
     initialize_datadir,
-    p2p_port,
     sync_blocks,
     sync_mempools,
 )
@@ -92,6 +91,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
     def __init__(self):
         """Sets test framework defaults. Do not override this method. Instead, override the set_test_params() method"""
+        self.chain = 'regtest'
         self.setup_clean_chain = False
         self.nodes = []
         self.network_thread = None
@@ -193,18 +193,18 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             self.setup_network()
             self.run_test()
             success = TestStatus.PASSED
-        except JSONRPCException as e:
+        except JSONRPCException:
             self.log.exception("JSONRPC error")
         except SkipTest as e:
             self.log.warning("Test Skipped: %s" % e.message)
             success = TestStatus.SKIPPED
-        except AssertionError as e:
+        except AssertionError:
             self.log.exception("Assertion failed")
-        except KeyError as e:
+        except KeyError:
             self.log.exception("Key error")
-        except Exception as e:
+        except Exception:
             self.log.exception("Unexpected exception caught during testing")
-        except KeyboardInterrupt as e:
+        except KeyboardInterrupt:
             self.log.warning("Exiting after keyboard interrupt")
 
         if success == TestStatus.FAILED and self.options.pdbonfailure:
@@ -343,6 +343,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             self.nodes.append(TestNode(
                 i,
                 get_datadir_path(self.options.tmpdir, i),
+                chain=self.chain,
                 rpchost=rpchost,
                 timewait=self.rpc_timeout,
                 bitcoind=binary[i],
@@ -468,35 +469,24 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def _initialize_chain(self):
         """Initialize a pre-mined blockchain for use by the test.
 
-        Create a cache of a 199-block-long chain (with wallet) for MAX_NODES
+        Create a cache of a 199-block-long chain
         Afterward, create num_nodes copies from the cache."""
 
+        CACHE_NODE_ID = 0  # Use node 0 to create the cache for all other nodes
+        cache_node_dir = get_datadir_path(self.options.cachedir, CACHE_NODE_ID)
         assert self.num_nodes <= MAX_NODES
-        create_cache = False
-        for i in range(MAX_NODES):
-            if not os.path.isdir(get_datadir_path(self.options.cachedir, i)):
-                create_cache = True
-                break
 
-        if create_cache:
-            self.log.debug("Creating data directories from cached datadir")
+        if not os.path.isdir(cache_node_dir):
+            self.log.debug("Creating cache directory {}".format(cache_node_dir))
 
-            # find and delete old cache directories if any exist
-            for i in range(MAX_NODES):
-                if os.path.isdir(get_datadir_path(self.options.cachedir, i)):
-                    shutil.rmtree(get_datadir_path(self.options.cachedir, i))
-
-            # Create cache directories, run bitcoinds:
-            for i in range(MAX_NODES):
-                datadir = initialize_datadir(self.options.cachedir, i)
-                args = [self.options.bitcoind, "-datadir=" + datadir, '-disablewallet']
-                if i > 0:
-                    args.append("-connect=127.0.0.1:" + str(p2p_port(0)))
-                self.nodes.append(TestNode(
-                    i,
-                    get_datadir_path(self.options.cachedir, i),
+            initialize_datadir(self.options.cachedir, CACHE_NODE_ID, self.chain)
+            self.nodes.append(
+                TestNode(
+                    CACHE_NODE_ID,
+                    cache_node_dir,
+                    chain=self.chain,
                     extra_conf=["bind=127.0.0.1"],
-                    extra_args=[],
+                    extra_args=['-disablewallet'],
                     rpchost=None,
                     timewait=self.rpc_timeout,
                     bitcoind=self.options.bitcoind,
@@ -504,12 +494,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                     coverage_dir=None,
                     cwd=self.options.tmpdir,
                 ))
-                self.nodes[i].args = args
-                self.start_node(i)
+            self.start_node(CACHE_NODE_ID)
 
             # Wait for RPC connections to be ready
-            for node in self.nodes:
-                node.wait_for_rpc_connection()
+            self.nodes[CACHE_NODE_ID].wait_for_rpc_connection()
 
             # Create a 199-block-long chain; each of the 4 first nodes
             # gets 25 mature blocks and 25 immature.
@@ -518,30 +506,30 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             # This is needed so that we are out of IBD when the test starts,
             # see the tip age check in IsInitialBlockDownload().
             for i in range(8):
-                self.nodes[0].generatetoaddress(25 if i != 7 else 24, self.nodes[i % 4].get_deterministic_priv_key().address)
-            self.sync_blocks()
+                self.nodes[CACHE_NODE_ID].generatetoaddress(
+                    nblocks=25 if i != 7 else 24,
+                    address=TestNode.PRIV_KEYS[i % 4].address,
+                )
 
-            for n in self.nodes:
-                assert_equal(n.getblockchaininfo()["blocks"], 199)
+            assert_equal(self.nodes[CACHE_NODE_ID].getblockchaininfo()["blocks"], 199)
 
-            # Shut them down, and clean up cache directories:
+            # Shut it down, and clean up cache directories:
             self.stop_nodes()
             self.nodes = []
 
-            def cache_path(n, *paths):
-                return os.path.join(get_datadir_path(self.options.cachedir, n), "regtest", *paths)
+            def cache_path(*paths):
+                return os.path.join(cache_node_dir, self.chain, *paths)
 
-            for i in range(MAX_NODES):
-                os.rmdir(cache_path(i, 'wallets'))  # Remove empty wallets dir
-                for entry in os.listdir(cache_path(i)):
-                    if entry not in ['chainstate', 'blocks']:
-                        os.remove(cache_path(i, entry))
+            os.rmdir(cache_path('wallets'))  # Remove empty wallets dir
+            for entry in os.listdir(cache_path()):
+                if entry not in ['chainstate', 'blocks']:  # Only keep chainstate and blocks folder
+                    os.remove(cache_path(entry))
 
         for i in range(self.num_nodes):
-            from_dir = get_datadir_path(self.options.cachedir, i)
+            self.log.debug("Copy cache directory {} to node {}".format(cache_node_dir, i))
             to_dir = get_datadir_path(self.options.tmpdir, i)
-            shutil.copytree(from_dir, to_dir)
-            initialize_datadir(self.options.tmpdir, i)  # Overwrite port/rpcport in bitcoin.conf
+            shutil.copytree(cache_node_dir, to_dir)
+            initialize_datadir(self.options.tmpdir, i, self.chain)  # Overwrite port/rpcport in bitcoin.conf
 
     def _initialize_chain_clean(self):
         """Initialize empty blockchain for use by the test.
@@ -549,7 +537,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         Create an empty blockchain and num_nodes wallets.
         Useful if a test case wants complete control over initialization."""
         for i in range(self.num_nodes):
-            initialize_datadir(self.options.tmpdir, i)
+            initialize_datadir(self.options.tmpdir, i, self.chain)
 
     def skip_if_no_py3_zmq(self):
         """Attempt to import the zmq package and skip the test if the import fails."""

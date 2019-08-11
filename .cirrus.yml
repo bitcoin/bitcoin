@@ -2,15 +2,18 @@ task:
   name: "FreeBsd 12.0 amd64  [GOAL: install]  [no depends, only system libs]"
   freebsd_instance:
     image: freebsd-12-0-release-amd64
-  ccache_cache:
-    folder: "/tmp/ccache_dir"
+    cpu: 8
+    memory: 8G
+  timeout_in: 60m
   env:
-    MAKEJOBS: "-j3"
+    MAKEJOBS: "-j9"
     CONFIGURE_OPTS: "--disable-dependency-tracking"
     GOAL: "install"
     CCACHE_SIZE: "200M"
     CCACHE_COMPRESS: 1
     CCACHE_DIR: "/tmp/ccache_dir"
+  ccache_cache:
+    folder: "/tmp/ccache_dir"
   install_script:
     - pkg install -y autoconf automake boost-libs git gmake libevent libtool openssl pkgconf python3 ccache
     - ./contrib/install_db4.sh $(pwd)
@@ -23,4 +26,4 @@ task:
   check_script:
     - gmake check ${MAKEJOBS} VERBOSE=1
   functional_test_script:
-    - ./test/functional/test_runner.py --ci --combinedlogslen=1000 --quiet --failfast
+    - ./test/functional/test_runner.py --jobs 9 --ci --extended --exclude feature_dbcrash --combinedlogslen=1000 --quiet --failfast

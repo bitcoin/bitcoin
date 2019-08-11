@@ -10,7 +10,6 @@
 #include <qt/forms/ui_addressbookpage.h>
 
 #include <qt/addresstablemodel.h>
-#include <qt/bitcoingui.h>
 #include <qt/csvmodelwriter.h>
 #include <qt/editaddressdialog.h>
 #include <qt/guiutil.h>

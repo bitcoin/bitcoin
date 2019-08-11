@@ -29,7 +29,7 @@ class TestBitcoinCli(BitcoinTestFramework):
         rpc_response = self.nodes[0].getblockchaininfo()
         assert_equal(cli_response, rpc_response)
 
-        user, password = get_auth_cookie(self.nodes[0].datadir)
+        user, password = get_auth_cookie(self.nodes[0].datadir, self.chain)
 
         self.log.info("Test -stdinrpcpass option")
         assert_equal(0, self.nodes[0].cli('-rpcuser=%s' % user, '-stdinrpcpass', input=password).getblockcount())

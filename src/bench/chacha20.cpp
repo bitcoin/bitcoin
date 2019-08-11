@@ -5,7 +5,6 @@
 #include <iostream>
 
 #include <bench/bench.h>
-#include <hash.h>
 #include <crypto/chacha20.h>
 
 /* Number of bytes to process per iteration */

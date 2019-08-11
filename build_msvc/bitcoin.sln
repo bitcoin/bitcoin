@@ -1,10 +1,10 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27130.2027
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.452
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbitcoin_consensus", "libbitcoinconsensus\libbitcoinconsensus.vcxproj", "{2B384FA8-9EE1-4544-93CB-0D733C25E8CE}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbitcoinconsensus", "libbitcoinconsensus\libbitcoinconsensus.vcxproj", "{2B384FA8-9EE1-4544-93CB-0D733C25E8CE}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_libbitcoinconsensus", "testconsensus\testconsensus.vcxproj", "{E78473E9-B850-456C-9120-276301E04C06}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testconsensus", "testconsensus\testconsensus.vcxproj", "{E78473E9-B850-456C-9120-276301E04C06}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bitcoind", "bitcoind\bitcoind.vcxproj", "{D4513DDF-6013-44DC-ADCC-12EAF6D1F038}"
 EndProject
@@ -205,9 +205,6 @@ Global
         HideSolutionNode = FALSE
     EndGlobalSection
     GlobalSection(ExtensibilityGlobals) = postSolution
-                SolutionGuid = {4ABD1207-9A90-4EC9-A8EB-203638A2605D}
-                        SolutionGuid = {2FB733C9-24CB-4BA5-A26B-F43DAD7996B7}
-                                SolutionGuid = {D0CAE2D0-8DB1-4A0B-80EE-800AA6C64323}
         SolutionGuid = {DA7D16A6-E5F0-45B3-B194-C3FE64F1BFCD}
     EndGlobalSection
 EndGlobal

@@ -6,21 +6,16 @@
 
 #include <chainparams.h>
 #include <consensus/merkle.h>
-#include <consensus/validation.h>
 #include <key_io.h>
 #include <miner.h>
 #include <outputtype.h>
 #include <pow.h>
-#include <scheduler.h>
 #include <script/standard.h>
-#include <txdb.h>
 #include <validation.h>
 #include <validationinterface.h>
 #ifdef ENABLE_WALLET
 #include <wallet/wallet.h>
 #endif
-
-#include <boost/thread.hpp>
 
 const std::string ADDRESS_BCRT1_UNSPENDABLE = "bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj";
 
@@ -28,14 +23,9 @@ const std::string ADDRESS_BCRT1_UNSPENDABLE = "bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqq
 std::string getnewaddress(CWallet& w)
 {
     constexpr auto output_type = OutputType::BECH32;
-
-    CPubKey new_key;
-    if (!w.GetKeyFromPool(new_key)) assert(false);
-
-    w.LearnRelatedScripts(new_key, output_type);
-    const auto dest = GetDestinationForKey(new_key, output_type);
-
-    w.SetAddressBook(dest, /* label */ "", "receive");
+    CTxDestination dest;
+    std::string error;
+    if (!w.GetNewDestination(output_type, "", dest, error)) assert(false);
 
     return EncodeDestination(dest);
 }

@@ -457,7 +457,7 @@ RPCConsole::RPCConsole(interfaces::Node& node, const PlatformStyle *_platformSty
     QChar nonbreaking_hyphen(8209);
     ui->dataDir->setToolTip(ui->dataDir->toolTip().arg(QString(nonbreaking_hyphen) + "datadir"));
     ui->blocksDir->setToolTip(ui->blocksDir->toolTip().arg(QString(nonbreaking_hyphen) + "blocksdir"));
-    ui->openDebugLogfileButton->setToolTip(ui->openDebugLogfileButton->toolTip().arg(tr(PACKAGE_NAME)));
+    ui->openDebugLogfileButton->setToolTip(ui->openDebugLogfileButton->toolTip().arg(PACKAGE_NAME));
 
     if (platformStyle->getImagesOnButtons()) {
         ui->openDebugLogfileButton->setIcon(platformStyle->SingleColorIcon(":/icons/export"));
@@ -677,6 +677,9 @@ void RPCConsole::setClientModel(ClientModel *model)
         wordList.sort();
         autoCompleter = new QCompleter(wordList, this);
         autoCompleter->setModelSorting(QCompleter::CaseSensitivelySortedModel);
+        // ui->lineEdit is initially disabled because running commands is only
+        // possible from now on.
+        ui->lineEdit->setEnabled(true);
         ui->lineEdit->setCompleter(autoCompleter);
         autoCompleter->popup()->installEventFilter(this);
         // Start thread to execute RPC commands.
@@ -801,7 +804,7 @@ void RPCConsole::clear(bool clearHistory)
     QString clsKey = "Ctrl-L";
 #endif
 
-    message(CMD_REPLY, (tr("Welcome to the %1 RPC console.").arg(tr(PACKAGE_NAME)) + "<br>" +
+    message(CMD_REPLY, (tr("Welcome to the %1 RPC console.").arg(PACKAGE_NAME) + "<br>" +
                         tr("Use up and down arrows to navigate history, and %1 to clear screen.").arg("<b>"+clsKey+"</b>") + "<br>" +
                         tr("Type %1 for an overview of available commands.").arg("<b>help</b>") + "<br>" +
                         tr("For more information on using this console type %1.").arg("<b>help-console</b>") +
@@ -1260,11 +1263,6 @@ void RPCConsole::showOrHideBanTableIfRequired()
     bool visible = clientModel->getBanTableModel()->shouldShow();
     ui->banlistWidget->setVisible(visible);
     ui->banHeading->setVisible(visible);
-}
-
-RPCConsole::TabTypes RPCConsole::tabFocus() const
-{
-    return (TabTypes) ui->tabWidget->currentIndex();
 }
 
 void RPCConsole::setTabFocus(enum TabTypes tabType)

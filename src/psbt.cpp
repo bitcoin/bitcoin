@@ -2,9 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <coins.h>
-#include <consensus/tx_verify.h>
-#include <policy/policy.h>
 #include <psbt.h>
 #include <util/strencodings.h>
 
@@ -213,6 +210,25 @@ void PSBTOutput::Merge(const PSBTOutput& output)
 bool PSBTInputSigned(const PSBTInput& input)
 {
     return !input.final_script_sig.empty() || !input.final_script_witness.IsNull();
+}
+
+void UpdatePSBTOutput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index)
+{
+    const CTxOut& out = psbt.tx->vout.at(index);
+    PSBTOutput& psbt_out = psbt.outputs.at(index);
+
+    // Fill a SignatureData with output info
+    SignatureData sigdata;
+    psbt_out.FillSignatureData(sigdata);
+
+    // Construct a would-be spend of this output, to update sigdata with.
+    // Note that ProduceSignature is used to fill in metadata (not actual signatures),
+    // so provider does not need to provide any private keys (it can be a HidingSigningProvider).
+    MutableTransactionSignatureCreator creator(psbt.tx.get_ptr(), /* index */ 0, out.nValue, SIGHASH_ALL);
+    ProduceSignature(provider, creator, out.scriptPubKey, sigdata);
+
+    // Put redeem_script, witness_script, key paths, into PSBTOutput.
+    psbt_out.FromSignatureData(sigdata);
 }
 
 bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, int sighash, SignatureData* out_sigdata, bool use_dummy)

@@ -1,6 +1,7 @@
 *.tar.gz
 
 *.exe
+*.pdb
 src/bitcoin
 src/bitcoind
 src/bitcoin-cli
@@ -76,7 +77,7 @@ src/qt/bitcoin-qt.includes
 
 # Only ignore unexpected patches
 *.patch
-!depends/patches/*.patch
+!depends/patches/**/*.patch
 
 #libtool object files
 *.lo
@@ -85,9 +86,13 @@ src/qt/bitcoin-qt.includes
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
+!depends/Makefile
 bitcoin-qt
 Bitcoin-Qt.app
 background.tiff*
+
+# Qt Creator
+Makefile.am.user
 
 # Unit-tests
 Makefile.test

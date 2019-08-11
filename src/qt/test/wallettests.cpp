@@ -1,10 +1,8 @@
 #include <qt/test/wallettests.h>
 #include <qt/test/util.h>
 
-#include <init.h>
 #include <interfaces/chain.h>
 #include <interfaces/node.h>
-#include <base58.h>
 #include <qt/bitcoinamountfield.h>
 #include <qt/optionsmodel.h>
 #include <qt/platformstyle.h>
@@ -70,7 +68,8 @@ uint256 SendCoins(CWallet& wallet, SendCoinsDialog& sendCoinsDialog, const CTxDe
         if (status == CT_NEW) txid = hash;
     }));
     ConfirmSend();
-    QMetaObject::invokeMethod(&sendCoinsDialog, "on_sendButton_clicked");
+    bool invoked = QMetaObject::invokeMethod(&sendCoinsDialog, "on_sendButton_clicked");
+    assert(invoked);
     return txid;
 }
 
@@ -145,7 +144,7 @@ void TestGUI()
     }
     {
         auto locked_chain = wallet->chain().lock();
-        LockAnnotation lock(::cs_main);
+        LockAssertion lock(::cs_main);
 
         WalletRescanReserver reserver(wallet.get());
         reserver.reserve();

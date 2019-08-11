@@ -29,7 +29,10 @@ NOT_FINAL_ERROR = "non-BIP68-final (code 64)"
 class BIP68Test(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        self.extra_args = [[], ["-acceptnonstdtxn=0"]]
+        self.extra_args = [
+            ["-acceptnonstdtxn=1"],
+            ["-acceptnonstdtxn=0"],
+        ]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -378,7 +381,7 @@ class BIP68Test(BitcoinTestFramework):
         add_witness_commitment(block)
         block.solve()
 
-        self.nodes[0].submitblock(block.serialize(True).hex())
+        self.nodes[0].submitblock(block.serialize().hex())
         assert_equal(self.nodes[0].getbestblockhash(), block.hash)
 
     def activateCSV(self):

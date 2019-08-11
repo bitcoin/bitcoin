@@ -3,14 +3,14 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <attributes.h>
+#include <clientversion.h>
 #include <coins.h>
-#include <consensus/validation.h>
 #include <script/standard.h>
+#include <streams.h>
 #include <test/setup_common.h>
 #include <uint256.h>
 #include <undo.h>
 #include <util/strencodings.h>
-#include <validation.h>
 
 #include <map>
 #include <vector>
@@ -280,6 +280,7 @@ UtxoData::iterator FindRandomFrom(const std::set<COutPoint> &utxoSet) {
 BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
 {
     SeedInsecureRand(/* deterministic */ true);
+    g_mock_deterministic_tests = true;
 
     bool spent_a_duplicate_coinbase = false;
     // A simple map to track what we expect the cache stack to represent.
@@ -474,6 +475,8 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
 
     // Verify coverage.
     BOOST_CHECK(spent_a_duplicate_coinbase);
+
+    g_mock_deterministic_tests = false;
 }
 
 BOOST_AUTO_TEST_CASE(ccoins_serialization)

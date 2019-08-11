@@ -48,7 +48,6 @@ if test x"$has_libcrypto" = x"yes" && test x"$has_openssl_ec" = x; then
     EC_KEY_free(eckey);
     ECDSA_SIG *sig_openssl;
     sig_openssl = ECDSA_SIG_new();
-    (void)sig_openssl->r;
     ECDSA_SIG_free(sig_openssl);
   ]])],[has_openssl_ec=yes],[has_openssl_ec=no])
   AC_MSG_RESULT([$has_openssl_ec])

@@ -4,8 +4,6 @@
 
 #include <interfaces/chain.h>
 #include <interfaces/node.h>
-#include <qt/addressbookpage.h>
-#include <qt/addresstablemodel.h>
 #include <qt/editaddressdialog.h>
 #include <qt/optionsmodel.h>
 #include <qt/platformstyle.h>
@@ -14,7 +12,6 @@
 
 #include <key.h>
 #include <key_io.h>
-#include <pubkey.h>
 #include <wallet/wallet.h>
 
 #include <QApplication>

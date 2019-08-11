@@ -18,12 +18,12 @@ if test "x$1" = "x"; then
 fi
 
 RET=0
-PREV_BRANCH=`git name-rev --name-only HEAD`
-PREV_HEAD=`git rev-parse HEAD`
-for commit in `git rev-list --reverse $1`; do
+PREV_BRANCH=$(git name-rev --name-only HEAD)
+PREV_HEAD=$(git rev-parse HEAD)
+for commit in $(git rev-list --reverse $1); do
     if git rev-list -n 1 --pretty="%s" $commit | grep -q "^scripted-diff:"; then
         git checkout --quiet $commit^ || exit
-        SCRIPT="`git rev-list --format=%b -n1 $commit | sed '/^-BEGIN VERIFY SCRIPT-$/,/^-END VERIFY SCRIPT-$/{//!b};d'`"
+        SCRIPT="$(git rev-list --format=%b -n1 $commit | sed '/^-BEGIN VERIFY SCRIPT-$/,/^-END VERIFY SCRIPT-$/{//!b};d')"
         if test "x$SCRIPT" = "x"; then
             echo "Error: missing script for: $commit"
             echo "Failed"

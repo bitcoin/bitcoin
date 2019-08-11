@@ -72,7 +72,7 @@ class AssumeValidTest(BitcoinTestFramework):
                 break
             try:
                 p2p_conn.send_message(msg_block(self.blocks[i]))
-            except IOError as e:
+            except IOError:
                 assert not p2p_conn.is_connected
                 break
 

@@ -4,8 +4,6 @@
 
 #include <qt/bitcoinunits.h>
 
-#include <primitives/transaction.h>
-
 #include <QStringList>
 
 BitcoinUnits::BitcoinUnits(QObject *parent):

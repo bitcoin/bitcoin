@@ -5,9 +5,7 @@
 #include <wallet/wallet.h>
 
 #include <memory>
-#include <set>
 #include <stdint.h>
-#include <utility>
 #include <vector>
 
 #include <consensus/validation.h>
@@ -44,7 +42,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
 
     auto chain = interfaces::MakeChain();
     auto locked_chain = chain->lock();
-    LockAnnotation lock(::cs_main);
+    LockAssertion lock(::cs_main);
 
     // Verify ScanForWalletTransactions accommodates a null start block.
     {
@@ -123,7 +121,7 @@ BOOST_FIXTURE_TEST_CASE(importmulti_rescan, TestChain100Setup)
 
     auto chain = interfaces::MakeChain();
     auto locked_chain = chain->lock();
-    LockAnnotation lock(::cs_main);
+    LockAssertion lock(::cs_main);
 
     // Prune the older block file.
     PruneOneBlockFile(oldTip->GetBlockPos().nFile);
@@ -190,9 +188,9 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
 
     auto chain = interfaces::MakeChain();
     auto locked_chain = chain->lock();
-    LockAnnotation lock(::cs_main);
+    LockAssertion lock(::cs_main);
 
-    std::string backup_file = (SetDataDir("importwallet_rescan") / "wallet.backup").string();
+    std::string backup_file = (GetDataDir() / "wallet.backup").string();
 
     // Import key into wallet and call dumpwallet to create backup file.
     {
@@ -248,7 +246,7 @@ BOOST_FIXTURE_TEST_CASE(coin_mark_dirty_immature_credit, TestChain100Setup)
     CWalletTx wtx(&wallet, m_coinbase_txns.back());
 
     auto locked_chain = chain->lock();
-    LockAnnotation lock(::cs_main);
+    LockAssertion lock(::cs_main);
     LOCK(wallet.cs_wallet);
 
     wtx.hashBlock = ::ChainActive().Tip()->GetBlockHash();
@@ -272,9 +270,9 @@ static int64_t AddTx(CWallet& wallet, uint32_t lockTime, int64_t mockTime, int64
     SetMockTime(mockTime);
     CBlockIndex* block = nullptr;
     if (blockTime > 0) {
-        LockAnnotation lock(::cs_main);
         auto locked_chain = wallet.chain().lock();
-        auto inserted = mapBlockIndex.emplace(GetRandHash(), new CBlockIndex);
+        LockAssertion lock(::cs_main);
+        auto inserted = ::BlockIndex().emplace(GetRandHash(), new CBlockIndex);
         assert(inserted.second);
         const uint256& hash = inserted.first->first;
         block = inserted.first->second;
@@ -363,17 +361,16 @@ public:
     CWalletTx& AddTx(CRecipient recipient)
     {
         CTransactionRef tx;
-        CReserveKey reservekey(wallet.get());
         CAmount fee;
         int changePos = -1;
         std::string error;
         CCoinControl dummy;
         {
             auto locked_chain = m_chain->lock();
-            BOOST_CHECK(wallet->CreateTransaction(*locked_chain, {recipient}, tx, reservekey, fee, changePos, error, dummy));
+            BOOST_CHECK(wallet->CreateTransaction(*locked_chain, {recipient}, tx, fee, changePos, error, dummy));
         }
         CValidationState state;
-        BOOST_CHECK(wallet->CommitTransaction(tx, {}, {}, reservekey, state));
+        BOOST_CHECK(wallet->CommitTransaction(tx, {}, {}, state));
         CMutableTransaction blocktx;
         {
             LOCK(wallet->cs_wallet);
@@ -466,8 +463,9 @@ BOOST_FIXTURE_TEST_CASE(wallet_disableprivkeys, TestChain100Setup)
     wallet->SetMinVersion(FEATURE_LATEST);
     wallet->SetWalletFlag(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
     BOOST_CHECK(!wallet->TopUpKeyPool(1000));
-    CPubKey pubkey;
-    BOOST_CHECK(!wallet->GetKeyFromPool(pubkey, false));
+    CTxDestination dest;
+    std::string error;
+    BOOST_CHECK(!wallet->GetNewDestination(OutputType::BECH32, "", dest, error));
 }
 
 // Explicit calculation which is used to test the wallet constant
@@ -490,7 +488,7 @@ static size_t CalculateNestedKeyhashInputSize(bool use_max_sig)
     CScript script_pubkey = CScript() << OP_HASH160 << std::vector<unsigned char>(script_id.begin(), script_id.end()) << OP_EQUAL;
 
     // Add inner-script to key store and key to watchonly
-    CBasicKeyStore keystore;
+    FillableSigningProvider keystore;
     keystore.AddCScript(inner_script);
     keystore.AddKeyPubKey(key, pubkey);
 

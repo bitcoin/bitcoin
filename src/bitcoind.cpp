@@ -11,19 +11,17 @@
 #include <clientversion.h>
 #include <compat.h>
 #include <fs.h>
-#include <interfaces/chain.h>
-#include <rpc/server.h>
 #include <init.h>
+#include <interfaces/chain.h>
 #include <noui.h>
 #include <shutdown.h>
-#include <util/system.h>
-#include <httpserver.h>
-#include <httprpc.h>
-#include <util/threadnames.h>
+#include <ui_interface.h>
 #include <util/strencodings.h>
-#include <walletinitinterface.h>
+#include <util/system.h>
+#include <util/threadnames.h>
+#include <util/translation.h>
 
-#include <stdio.h>
+#include <functional>
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
@@ -74,8 +72,7 @@ static bool AppInit(int argc, char* argv[])
     SetupServerArgs();
     std::string error;
     if (!gArgs.ParseParameters(argc, argv, error)) {
-        fprintf(stderr, "Error parsing command line arguments: %s\n", error.c_str());
-        return false;
+        return InitError(strprintf("Error parsing command line arguments: %s\n", error));
     }
 
     // Process help and version before taking care about datadir
@@ -92,7 +89,7 @@ static bool AppInit(int argc, char* argv[])
             strUsage += "\n" + gArgs.GetHelpMessage();
         }
 
-        fprintf(stdout, "%s", strUsage.c_str());
+        tfm::format(std::cout, "%s", strUsage.c_str());
         return true;
     }
 
@@ -100,26 +97,22 @@ static bool AppInit(int argc, char* argv[])
     {
         if (!fs::is_directory(GetDataDir(false)))
         {
-            fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "").c_str());
-            return false;
+            return InitError(strprintf("Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "")));
         }
         if (!gArgs.ReadConfigFiles(error, true)) {
-            fprintf(stderr, "Error reading configuration file: %s\n", error.c_str());
-            return false;
+            return InitError(strprintf("Error reading configuration file: %s\n", error));
         }
         // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
         try {
             SelectParams(gArgs.GetChainName());
         } catch (const std::exception& e) {
-            fprintf(stderr, "Error: %s\n", e.what());
-            return false;
+            return InitError(strprintf("%s\n", e.what()));
         }
 
         // Error out when loose non-argument tokens are encountered on command line
         for (int i = 1; i < argc; i++) {
             if (!IsSwitchChar(argv[i][0])) {
-                fprintf(stderr, "Error: Command line contains unexpected token '%s', see bitcoind -h for a list of options.\n", argv[i]);
-                return false;
+                return InitError(strprintf("Command line contains unexpected token '%s', see bitcoind -h for a list of options.\n", argv[i]));
             }
         }
 
@@ -150,19 +143,17 @@ static bool AppInit(int argc, char* argv[])
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
-            fprintf(stdout, "Bitcoin server starting\n");
+            tfm::format(std::cout, PACKAGE_NAME " daemon starting\n");
 
             // Daemonize
             if (daemon(1, 0)) { // don't chdir (1), do close FDs (0)
-                fprintf(stderr, "Error: daemon() failed: %s\n", strerror(errno));
-                return false;
+                return InitError(strprintf("daemon() failed: %s\n", strerror(errno)));
             }
 #if defined(MAC_OSX)
 #pragma GCC diagnostic pop
 #endif
 #else
-            fprintf(stderr, "Error: -daemon is not supported on this operating system\n");
-            return false;
+            return InitError("-daemon is not supported on this operating system\n");
 #endif // HAVE_DECL_DAEMON
         }
         // Lock data directory after daemonization

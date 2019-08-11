@@ -9,3 +9,4 @@ packages/*
 */x64
 *.vcxproj.user
 *.vcxproj
+*/Win32

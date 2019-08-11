@@ -127,7 +127,7 @@ minimum relay feerate. The initial minimum relay feerate is set to
 Bitcoin Core 0.12 also introduces new default policy limits on the length and
 size of unconfirmed transaction chains that are allowed in the mempool
 (generally limiting the length of unconfirmed chains to 25 transactions, with a
-total size of 101 KB).  These limits can be overriden using command line
+total size of 101 KB).  These limits can be overridden using command line
 arguments; see the extended help (`--help -help-debug`) for more information.
 
 Opt-in Replace-by-fee transactions

@@ -28,12 +28,17 @@ def create_transactions(node, address, amt, fees):
     for utxo in utxos:
         inputs.append({"txid": utxo["txid"], "vout": utxo["vout"]})
         ins_total += utxo['amount']
-        if ins_total + max(fees) > amt:
+        if ins_total >= amt + max(fees):
             break
+    # make sure there was enough utxos
+    assert ins_total >= amt + max(fees)
 
     txs = []
     for fee in fees:
-        outputs = {address: amt, node.getrawchangeaddress(): ins_total - amt - fee}
+        outputs = {address: amt}
+        # prevent 0 change output
+        if ins_total > amt + fee:
+            outputs[node.getrawchangeaddress()] = ins_total - amt - fee
         raw_tx = node.createrawtransaction(inputs, outputs, 0, True)
         raw_tx = node.signrawtransactionwithwallet(raw_tx)
         assert_equal(raw_tx['complete'], True)
@@ -198,6 +203,8 @@ class WalletTest(BitcoinTestFramework):
         self.log.info('Put txs back into mempool of node 1 (not node 0)')
         self.nodes[0].invalidateblock(block_reorg)
         self.nodes[1].invalidateblock(block_reorg)
+        self.sync_blocks()
+        self.nodes[0].syncwithvalidationinterfacequeue()
         assert_equal(self.nodes[0].getbalance(minconf=0), 0)  # wallet txs not in the mempool are untrusted
         self.nodes[0].generatetoaddress(1, ADDRESS_WATCHONLY)
         assert_equal(self.nodes[0].getbalance(minconf=0), 0)  # wallet txs not in the mempool are untrusted

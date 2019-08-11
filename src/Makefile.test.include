@@ -97,6 +97,7 @@ BITCOIN_TESTS =\
   test/bswap_tests.cpp \
   test/checkqueue_tests.cpp \
   test/coins_tests.cpp \
+  test/compilerbug_tests.cpp \
   test/compress_tests.cpp \
   test/crypto_tests.cpp \
   test/cuckoocache_tests.cpp \
@@ -166,7 +167,8 @@ BITCOIN_TESTS += \
   wallet/test/wallet_tests.cpp \
   wallet/test/wallet_crypto_tests.cpp \
   wallet/test/coinselector_tests.cpp \
-  wallet/test/init_tests.cpp
+  wallet/test/init_tests.cpp \
+  wallet/test/ismine_tests.cpp
 
 BITCOIN_TEST_SUITE += \
   wallet/test/wallet_test_fixture.cpp \

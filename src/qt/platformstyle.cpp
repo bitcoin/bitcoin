@@ -4,8 +4,6 @@
 
 #include <qt/platformstyle.h>
 
-#include <qt/guiconstants.h>
-
 #include <QApplication>
 #include <QColor>
 #include <QImage>

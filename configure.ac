@@ -148,7 +148,8 @@ AC_ARG_ENABLE([extended-functional-tests],
     [use_extended_functional_tests=no])
 
 AC_ARG_ENABLE([fuzz],
-    AS_HELP_STRING([--enable-fuzz],[enable building of fuzz targets (default no)]),
+    AS_HELP_STRING([--enable-fuzz],
+    [enable building of fuzz targets (default no). enabling this will disable all other targets]),
     [enable_fuzz=$enableval],
     [enable_fuzz=no])
 
@@ -193,6 +194,12 @@ AC_ARG_ENABLE([glibc-back-compat],
   [enable backwards compatibility with glibc])],
   [use_glibc_compat=$enableval],
   [use_glibc_compat=no])
+
+AC_ARG_ENABLE([threadlocal],
+  [AS_HELP_STRING([--enable-threadlocal],
+  [enable features that depend on the c++ thread_local keyword (currently just thread names in debug logs). (default is to enabled if there is platform support and glibc-back-compat is not enabled)])],
+  [use_thread_local=$enableval],
+  [use_thread_local=auto])
 
 AC_ARG_ENABLE([asm],
   [AS_HELP_STRING([--disable-asm],
@@ -316,6 +323,7 @@ if test "x$enable_werror" = "xyes"; then
     AC_MSG_ERROR("enable-werror set but -Werror is not usable")
   fi
   AX_CHECK_COMPILE_FLAG([-Werror=vla],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=vla"],,[[$CXXFLAG_WERROR]])
+  AX_CHECK_COMPILE_FLAG([-Werror=switch],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=switch"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Werror=thread-safety-analysis],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=thread-safety-analysis"],,[[$CXXFLAG_WERROR]])
 fi
 
@@ -324,6 +332,7 @@ if test "x$CXXFLAGS_overridden" = "xno"; then
   AX_CHECK_COMPILE_FLAG([-Wextra],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wextra"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Wformat],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wformat"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Wvla],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wvla"],,[[$CXXFLAG_WERROR]])
+  AX_CHECK_COMPILE_FLAG([-Wswitch],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wswitch"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Wformat-security],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wformat-security"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Wthread-safety-analysis],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wthread-safety-analysis"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Wrange-loop-analysis],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wrange-loop-analysis"],,[[$CXXFLAG_WERROR]])
@@ -827,42 +836,49 @@ AC_LINK_IFELSE([AC_LANG_SOURCE([
   ]
 )
 
-TEMP_LDFLAGS="$LDFLAGS"
-LDFLAGS="$TEMP_LDFLAGS $PTHREAD_CFLAGS"
-AC_MSG_CHECKING([for thread_local support])
-AC_LINK_IFELSE([AC_LANG_SOURCE([
-  #include <thread>
-  static thread_local int foo = 0;
-  static void run_thread() { foo++;}
-  int main(){
-  for(int i = 0; i < 10; i++) { std::thread(run_thread).detach();}
-  return foo;
-  }
-  ])],
-  [
-   case $host in
-     *mingw*)
-        # mingw32's implementation of thread_local has also been shown to behave
-        # erroneously under concurrent usage; see:
-        # https://gist.github.com/jamesob/fe9a872051a88b2025b1aa37bfa98605
-        AC_MSG_RESULT(no)
-        ;;
-      *darwin*)
-        # TODO enable thread_local on later versions of Darwin where it is
-        # supported (per https://stackoverflow.com/a/29929949)
-        AC_MSG_RESULT(no)
-        ;;
-      *)
-        AC_DEFINE(HAVE_THREAD_LOCAL,1,[Define if thread_local is supported.])
-        AC_MSG_RESULT(yes)
-        ;;
-    esac
-  ],
-  [
-    AC_MSG_RESULT(no)
-  ]
-)
-LDFLAGS="$TEMP_LDFLAGS"
+if test "x$use_thread_local" = xyes || { test "x$use_thread_local" = xauto && test "x$use_glibc_compat" = xno; }; then
+  TEMP_LDFLAGS="$LDFLAGS"
+  LDFLAGS="$TEMP_LDFLAGS $PTHREAD_CFLAGS"
+  AC_MSG_CHECKING([for thread_local support])
+  AC_LINK_IFELSE([AC_LANG_SOURCE([
+    #include <thread>
+    static thread_local int foo = 0;
+    static void run_thread() { foo++;}
+    int main(){
+    for(int i = 0; i < 10; i++) { std::thread(run_thread).detach();}
+    return foo;
+    }
+    ])],
+    [
+     case $host in
+       *mingw*)
+          # mingw32's implementation of thread_local has also been shown to behave
+          # erroneously under concurrent usage; see:
+          # https://gist.github.com/jamesob/fe9a872051a88b2025b1aa37bfa98605
+          AC_MSG_RESULT(no)
+          ;;
+        *darwin*)
+          # TODO enable thread_local on later versions of Darwin where it is
+          # supported (per https://stackoverflow.com/a/29929949)
+          AC_MSG_RESULT(no)
+          ;;
+        *freebsd*)
+          # FreeBSD's implementation of thread_local is also buggy (per
+          # https://groups.google.com/d/msg/bsdmailinglist/22ncTZAbDp4/Dii_pII5AwAJ)
+          AC_MSG_RESULT(no)
+          ;;
+        *)
+          AC_DEFINE(HAVE_THREAD_LOCAL,1,[Define if thread_local is supported.])
+          AC_MSG_RESULT(yes)
+          ;;
+      esac
+    ],
+    [
+      AC_MSG_RESULT(no)
+    ]
+  )
+  LDFLAGS="$TEMP_LDFLAGS"
+fi
 
 # Check for different ways of gathering OS randomness
 AC_MSG_CHECKING(for Linux getrandom syscall)
@@ -912,6 +928,29 @@ if test x$use_reduce_exports = xyes; then
   [AC_MSG_ERROR([Cannot set default symbol visibility. Use --disable-reduce-exports.])])
 fi
 
+AC_MSG_CHECKING([for std::system])
+AC_LINK_IFELSE(
+    [ AC_LANG_PROGRAM(
+        [[ #include <cstdlib> ]],
+        [[ int nErr = std::system(""); ]]
+    )],
+    [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_STD__SYSTEM, 1, Define to 1 if you have the `std::system' function.)],
+    [ AC_MSG_RESULT(no) ]
+)
+
+AC_MSG_CHECKING([for ::_wsystem])
+AC_LINK_IFELSE(
+    [ AC_LANG_PROGRAM(
+        [[ ]],
+        [[ int nErr = ::_wsystem(""); ]]
+    )],
+    [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_WSYSTEM, 1, Define to 1 if you have the `::wsystem' function.)],
+    [ AC_MSG_RESULT(no) ]
+)
+
+# Define to 1 if std::system or ::wsystem (Windows) is available
+AC_DEFINE([HAVE_SYSTEM], [HAVE_STD__SYSTEM || HAVE_WSYSTEM], [std::system or ::wsystem])
+
 LEVELDB_CPPFLAGS=
 LIBLEVELDB=
 LIBMEMENV=
@@ -919,6 +958,29 @@ AM_CONDITIONAL([EMBEDDED_LEVELDB],[true])
 AC_SUBST(LEVELDB_CPPFLAGS)
 AC_SUBST(LIBLEVELDB)
 AC_SUBST(LIBMEMENV)
+
+dnl enable-fuzz should disable all other targets
+if test "x$enable_fuzz" = "xyes"; then
+  AC_MSG_WARN(enable-fuzz will disable all other targets)
+  build_bitcoin_utils=no
+  build_bitcoin_cli=no
+  build_bitcoin_tx=no
+  build_bitcoin_wallet=no
+  build_bitcoind=no
+  build_bitcoin_libs=no
+  bitcoin_enable_qt=no
+  bitcoin_enable_qt_test=no
+  bitcoin_enable_qt_dbus=no
+  enable_wallet=no
+  use_bench=no
+  use_upnp=no
+  use_zmq=no
+else
+  BITCOIN_QT_INIT
+
+  dnl sets $bitcoin_enable_qt, $bitcoin_enable_qt_test, $bitcoin_enable_qt_dbus
+  BITCOIN_QT_CONFIGURE([$use_pkgconfig])
+fi
 
 if test x$enable_wallet != xno; then
     dnl Check for libdb_cxx only if wallet enabled
@@ -932,12 +994,27 @@ if test x$use_upnp != xno; then
     [AC_CHECK_LIB([miniupnpc], [upnpDiscover], [MINIUPNPC_LIBS=-lminiupnpc], [have_miniupnpc=no])],
     [have_miniupnpc=no]
   )
+dnl The minimum supported miniUPnPc API version is set to 10. This keeps compatibility
+dnl with Ubuntu 16.04 LTS and Debian 8 libminiupnpc-dev packages.
+if test x$have_miniupnpc != xno; then
+  AC_MSG_CHECKING([whether miniUPnPc API version is supported])
+  AC_PREPROC_IFELSE([AC_LANG_PROGRAM([[
+      @%:@include <miniupnpc/miniupnpc.h>
+    ]], [[
+      #if MINIUPNPC_API_VERSION >= 10
+      // Everything is okay
+      #else
+      #  error miniUPnPc API version is too old
+      #endif
+    ]])],[
+      AC_MSG_RESULT(yes)
+    ],[
+    AC_MSG_RESULT(no)
+    AC_MSG_WARN([miniUPnPc API version < 10 is unsupported, disabling UPnP support.])
+    have_miniupnpc=no
+  ])
 fi
-
-BITCOIN_QT_INIT
-
-dnl sets $bitcoin_enable_qt, $bitcoin_enable_qt_test, $bitcoin_enable_qt_dbus
-BITCOIN_QT_CONFIGURE([$use_pkgconfig])
+fi
 
 if test x$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench = xnonononononono; then
     use_boost=no
@@ -1330,9 +1407,10 @@ dnl enable upnp support
 AC_MSG_CHECKING([whether to build with support for UPnP])
 if test x$have_miniupnpc = xno; then
   if test x$use_upnp = xyes; then
-     AC_MSG_ERROR("UPnP requested but cannot be built. use --without-miniupnpc")
+     AC_MSG_ERROR("UPnP requested but cannot be built. Use --without-miniupnpc.")
   fi
   AC_MSG_RESULT(no)
+  use_upnp=no
 else
   if test x$use_upnp != xno; then
     AC_MSG_RESULT(yes)
@@ -1547,7 +1625,7 @@ if test x$need_bundled_univalue = xyes; then
   AC_CONFIG_SUBDIRS([src/univalue])
 fi
 
-ac_configure_args="${ac_configure_args} --disable-shared --with-pic --with-bignum=no --enable-module-recovery --disable-jni"
+ac_configure_args="${ac_configure_args} --disable-shared --with-pic --enable-benchmark=no --with-bignum=no --enable-module-recovery --disable-jni"
 AC_CONFIG_SUBDIRS([src/secp256k1])
 
 AC_OUTPUT

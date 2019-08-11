@@ -12,7 +12,7 @@
 #include <sync.h>
 #include <ui_interface.h>
 #include <util/system.h>
-#include <util/strencodings.h>
+#include <util/translation.h>
 #include <warnings.h>
 
 
@@ -101,7 +101,7 @@ void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
                 if (!fMatch)
                 {
                     fDone = true;
-                    std::string strMessage = strprintf(_("Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly."), _(PACKAGE_NAME));
+                    std::string strMessage = strprintf(_("Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.").translated, PACKAGE_NAME);
                     SetMiscWarning(strMessage);
                     uiInterface.ThreadSafeMessageBox(strMessage, "", CClientUIInterface::MSG_WARNING);
                 }

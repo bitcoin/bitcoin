@@ -67,16 +67,15 @@ TEST_EXIT_PASSED = 0
 TEST_EXIT_SKIPPED = 77
 
 EXTENDED_SCRIPTS = [
-    # These tests are not run by the travis build process.
+    # These tests are not run by default.
     # Longest test should go first, to favor running tests in parallel
     'feature_pruning.py',
     'feature_dbcrash.py',
 ]
 
 BASE_SCRIPTS = [
-    # Scripts that are run by the travis build process.
+    # Scripts that are run by default.
     # Longest test should go first, to favor running tests in parallel
-    'feature_fee_estimation.py',
     'wallet_hd.py',
     'wallet_backup.py',
     # vv Tests less than 5m vv
@@ -91,6 +90,7 @@ BASE_SCRIPTS = [
     'wallet_labels.py',
     'p2p_segwit.py',
     'p2p_timeouts.py',
+    'p2p_tx_download.py',
     'wallet_dump.py',
     'wallet_listtransactions.py',
     # vv Tests less than 60s vv
@@ -107,8 +107,10 @@ BASE_SCRIPTS = [
     'feature_bip68_sequence.py',
     'p2p_feefilter.py',
     'feature_reindex.py',
+    'feature_abortnode.py',
     # vv Tests less than 30s vv
     'wallet_keypool_topup.py',
+    'feature_fee_estimation.py',
     'interface_zmq.py',
     'interface_bitcoin_cli.py',
     'mempool_resurrect.py',
@@ -120,6 +122,7 @@ BASE_SCRIPTS = [
     'rpc_misc.py',
     'interface_rest.py',
     'mempool_spend_coinbase.py',
+    'wallet_avoidreuse.py',
     'mempool_reorg.py',
     'mempool_persist.py',
     'wallet_multiwallet.py',
@@ -156,6 +159,7 @@ BASE_SCRIPTS = [
     'rpc_invalidateblock.py',
     'feature_rbf.py',
     'mempool_packages.py',
+    'mempool_package_onemore.py',
     'rpc_createmultisig.py',
     'feature_versionbits_warning.py',
     'rpc_preciousblock.py',
@@ -172,6 +176,7 @@ BASE_SCRIPTS = [
     'rpc_bind.py --nonloopback',
     'mining_basic.py',
     'wallet_bumpfee.py',
+    'wallet_bumpfee_totalfee_deprecation.py',
     'rpc_named_arguments.py',
     'wallet_listsinceblock.py',
     'p2p_leak.py',
@@ -233,6 +238,7 @@ def main():
     parser.add_argument('--quiet', '-q', action='store_true', help='only print dots, results summary and failure logs')
     parser.add_argument('--tmpdirprefix', '-t', default=tempfile.gettempdir(), help="Root directory for datadirs")
     parser.add_argument('--failfast', action='store_true', help='stop execution after the first test failure')
+    parser.add_argument('--filter', help='filter scripts to run by regular expression')
     args, unknown_args = parser.parse_known_args()
 
     # args to be passed on always start with two dashes; tests are the remaining unknown args
@@ -268,11 +274,22 @@ def main():
     test_list = []
     if tests:
         # Individual tests have been specified. Run specified tests that exist
-        # in the ALL_SCRIPTS list. Accept the name with or without .py extension.
-        tests = [test + ".py" if ".py" not in test else test for test in tests]
+        # in the ALL_SCRIPTS list. Accept names with or without a .py extension.
+        # Specified tests can contain wildcards, but in that case the supplied
+        # paths should be coherent, e.g. the same path as that provided to call
+        # test_runner.py. Examples:
+        #   `test/functional/test_runner.py test/functional/wallet*`
+        #   `test/functional/test_runner.py ./test/functional/wallet*`
+        #   `test_runner.py wallet*`
+        #   but not:
+        #   `test/functional/test_runner.py wallet*`
+        # Multiple wildcards can be passed:
+        #   `test_runner.py tool* mempool*`
         for test in tests:
-            if test in ALL_SCRIPTS:
-                test_list.append(test)
+            script = test.split("/")[-1]
+            script = script + ".py" if ".py" not in script else script
+            if script in ALL_SCRIPTS:
+                test_list.append(script)
             else:
                 print("{}WARNING!{} Test '{}' not found in full test list.".format(BOLD[1], BOLD[0], test))
     elif args.extended:
@@ -292,6 +309,9 @@ def main():
                 test_list.remove(exclude_item)
             if not exclude_list:
                 print("{}WARNING!{} Test '{}' not found in current test list.".format(BOLD[1], BOLD[0], exclude_test))
+
+    if args.filter:
+        test_list = list(filter(re.compile(args.filter).search, test_list))
 
     if not test_list:
         print("No valid test scripts specified. Check that your test is in one "
@@ -494,7 +514,8 @@ class TestHandler:
             for job in self.jobs:
                 (name, start_time, proc, testdir, log_out, log_err) = job
                 if int(time.time() - start_time) > self.timeout_duration:
-                    # In travis, timeout individual tests (to stop tests hanging and not providing useful output).
+                    # Timeout individual tests if timeout is specified (to stop
+                    # tests hanging and not providing useful output).
                     proc.send_signal(signal.SIGINT)
                 if proc.poll() is not None:
                     log_out.seek(0), log_err.seek(0)
@@ -582,7 +603,7 @@ def check_script_list(*, src_dir, fail_on_warn):
     if len(missed_tests) != 0:
         print("%sWARNING!%s The following scripts are not being run: %s. Check the test lists in test_runner.py." % (BOLD[1], BOLD[0], str(missed_tests)))
         if fail_on_warn:
-            # On travis this warning is an error to prevent merging incomplete commits into master
+            # On CI this warning is an error to prevent merging incomplete commits into master
             sys.exit(1)
 
 
