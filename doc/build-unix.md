@@ -78,7 +78,7 @@ Now, you can either build from self-compiled [depends](/depends/README.md) or in
 
 BerkeleyDB is required for the wallet.
 
-Ubuntu and Debian have their own libdb-dev and libdb++-dev packages, but these will install
+Ubuntu and Debian have their own `libdb-dev` and `libdb++-dev` packages, but these will install
 BerkeleyDB 5.1 or later. This will break binary wallet compatibility with the distributed executables, which
 are based on BerkeleyDB 4.8. If you do not care about wallet compatibility,
 pass `--with-incompatible-bdb` to configure.
