@@ -849,7 +849,7 @@ bool CSigningManager::GetVoteForId(Consensus::LLMQType llmqType, const uint256& 
     return db.GetVoteForId(llmqType, id, msgHashRet);
 }
 
-CQuorumCPtr CSigningManager::SelectQuorumForSigning(Consensus::LLMQType llmqType, int signHeight, const uint256& selectionHash)
+std::vector<CQuorumCPtr> CSigningManager::GetActiveQuorumSet(Consensus::LLMQType llmqType, int signHeight)
 {
     auto& llmqParams = Params().GetConsensus().llmqs.at(llmqType);
     size_t poolSize = (size_t)llmqParams.signingActiveQuorumCount;
@@ -859,12 +859,17 @@ CQuorumCPtr CSigningManager::SelectQuorumForSigning(Consensus::LLMQType llmqType
         LOCK(cs_main);
         int startBlockHeight = signHeight - SIGN_HEIGHT_OFFSET;
         if (startBlockHeight > chainActive.Height()) {
-            return nullptr;
+            return {};
         }
         pindexStart = chainActive[startBlockHeight];
     }
 
-    auto quorums = quorumManager->ScanQuorums(llmqType, pindexStart, poolSize);
+    return quorumManager->ScanQuorums(llmqType, pindexStart, poolSize);
+}
+
+CQuorumCPtr CSigningManager::SelectQuorumForSigning(Consensus::LLMQType llmqType, int signHeight, const uint256& selectionHash)
+{
+    auto quorums = GetActiveQuorumSet(llmqType, signHeight);
     if (quorums.empty()) {
         return nullptr;
     }

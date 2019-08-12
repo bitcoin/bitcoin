@@ -727,8 +727,6 @@ bool CInstantSendManager::PreVerifyInstantSendLock(NodeId nodeId, const llmq::CI
 
 bool CInstantSendManager::ProcessPendingInstantSendLocks()
 {
-    auto llmqType = Params().GetConsensus().llmqForInstantSend;
-
     decltype(pendingInstantSendLocks) pend;
 
     {
@@ -749,6 +747,44 @@ bool CInstantSendManager::ProcessPendingInstantSendLocks()
         LOCK(cs_main);
         tipHeight = chainActive.Height();
     }
+
+    auto llmqType = Params().GetConsensus().llmqForInstantSend;
+
+    // Every time a new quorum enters the active set, an older one is removed. This means that between two blocks, the
+    // active set can be different, leading to different selection of the signing quorum. When we detect such rotation
+    // of the active set, we must re-check invalid sigs against the previous active set and only ban nodes when this also
+    // fails.
+    auto quorums1 = quorumSigningManager->GetActiveQuorumSet(llmqType, tipHeight);
+    auto quorums2 = quorumSigningManager->GetActiveQuorumSet(llmqType, tipHeight - 1);
+    bool quorumsRotated = quorums1 != quorums2;
+
+    if (quorumsRotated) {
+        // first check against the current active set and don't ban
+        auto badISLocks = ProcessPendingInstantSendLocks(tipHeight, pend, false);
+        if (!badISLocks.empty()) {
+            LogPrintf("CInstantSendManager::%s -- detected LLMQ active set rotation, redoing verification on old active set\n", __func__);
+
+            // filter out valid IS locks from "pend"
+            for (auto it = pend.begin(); it != pend.end(); ) {
+                if (!badISLocks.count(it->first)) {
+                    it = pend.erase(it);
+                } else {
+                    ++it;
+                }
+            }
+            // now check against the previous active set and perform banning if this fails
+            ProcessPendingInstantSendLocks(tipHeight - 1, pend, true);
+        }
+    } else {
+        ProcessPendingInstantSendLocks(tipHeight, pend, true);
+    }
+
+    return true;
+}
+
+std::unordered_set<uint256> CInstantSendManager::ProcessPendingInstantSendLocks(int signHeight, const std::unordered_map<uint256, std::pair<NodeId, CInstantSendLock>>& pend, bool ban)
+{
+    auto llmqType = Params().GetConsensus().llmqForInstantSend;
 
     CBLSBatchVerifier<NodeId, uint256> batchVerifier(false, true, 8);
     std::unordered_map<uint256, std::pair<CQuorumCPtr, CRecoveredSig>> recSigs;
@@ -774,10 +810,10 @@ bool CInstantSendManager::ProcessPendingInstantSendLocks()
             continue;
         }
 
-        auto quorum = quorumSigningManager->SelectQuorumForSigning(llmqType, tipHeight, id);
+        auto quorum = quorumSigningManager->SelectQuorumForSigning(llmqType, signHeight, id);
         if (!quorum) {
             // should not happen, but if one fails to select, all others will also fail to select
-            return false;
+            return {};
         }
         uint256 signHash = CLLMQUtils::BuildSignHash(llmqType, quorum->qc.quorumHash, id, islock.txid);
         batchVerifier.PushMessage(nodeId, hash, signHash, islock.sig.Get(), quorum->qc.quorumPublicKey);
@@ -800,7 +836,9 @@ bool CInstantSendManager::ProcessPendingInstantSendLocks()
 
     batchVerifier.Verify();
 
-    if (!batchVerifier.badSources.empty()) {
+    std::unordered_set<uint256> badISLocks;
+
+    if (ban && !batchVerifier.badSources.empty()) {
         LOCK(cs_main);
         for (auto& nodeId : batchVerifier.badSources) {
             // Let's not be too harsh, as the peer might simply be unlucky and might have sent us an old lock which
@@ -816,6 +854,7 @@ bool CInstantSendManager::ProcessPendingInstantSendLocks()
         if (batchVerifier.badMessages.count(hash)) {
             LogPrintf("CInstantSendManager::%s -- txid=%s, islock=%s: invalid sig in islock, peer=%d\n", __func__,
                      islock.txid.ToString(), hash.ToString(), nodeId);
+            badISLocks.emplace(hash);
             continue;
         }
 
@@ -836,7 +875,7 @@ bool CInstantSendManager::ProcessPendingInstantSendLocks()
         }
     }
 
-    return true;
+    return badISLocks;
 }
 
 void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& hash, const CInstantSendLock& islock)
