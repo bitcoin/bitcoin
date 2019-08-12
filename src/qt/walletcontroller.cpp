@@ -98,6 +98,9 @@ WalletModel* WalletController::getOrCreateWallet(std::unique_ptr<interfaces::Wal
 
     // Instantiate model and register it.
     WalletModel* wallet_model = new WalletModel(std::move(wallet), m_node, m_options_model, nullptr);
+    // Handler callback runs in a different thread so fix wallet model thread affinity.
+    wallet_model->moveToThread(thread());
+    wallet_model->setParent(this);
     m_wallets.push_back(wallet_model);
 
     // WalletModel::startPollBalance needs to be called in a thread managed by
@@ -124,23 +127,9 @@ WalletModel* WalletController::getOrCreateWallet(std::unique_ptr<interfaces::Wal
     connect(wallet_model, &WalletModel::coinsSent, this, &WalletController::coinsSent);
 
     // Notify walletAdded signal on the GUI thread.
-    if (QThread::currentThread() == thread()) {
-        addWallet(wallet_model);
-    } else {
-        // Handler callback runs in a different thread so fix wallet model thread affinity.
-        wallet_model->moveToThread(thread());
-        bool invoked = QMetaObject::invokeMethod(this, "addWallet", Qt::QueuedConnection, Q_ARG(WalletModel*, wallet_model));
-        assert(invoked);
-    }
+    Q_EMIT walletAdded(wallet_model);
 
     return wallet_model;
-}
-
-void WalletController::addWallet(WalletModel* wallet_model)
-{
-    // Take ownership of the wallet model and register it.
-    wallet_model->setParent(this);
-    Q_EMIT walletAdded(wallet_model);
 }
 
 void WalletController::removeAndDeleteWallet(WalletModel* wallet_model)
