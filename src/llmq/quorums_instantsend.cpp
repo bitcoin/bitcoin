@@ -61,13 +61,6 @@ void CInstantSendDb::WriteNewInstantSendLock(const uint256& hash, const CInstant
     }
 }
 
-void CInstantSendDb::RemoveInstantSendLock(const uint256& hash, CInstantSendLockPtr islock)
-{
-    CDBBatch batch(db);
-    RemoveInstantSendLock(batch, hash, islock);
-    db.WriteBatch(batch);
-}
-
 void CInstantSendDb::RemoveInstantSendLock(CDBBatch& batch, const uint256& hash, CInstantSendLockPtr islock)
 {
     if (!islock) {
@@ -1106,6 +1099,8 @@ void CInstantSendManager::UpdatedBlockTip(const CBlockIndex* pindexNew)
 
 void CInstantSendManager::HandleFullyConfirmedBlock(const CBlockIndex* pindex)
 {
+    auto& consensusParams = Params().GetConsensus();
+
     std::unordered_map<uint256, CInstantSendLockPtr> removeISLocks;
     {
         LOCK(cs);
@@ -1123,7 +1118,14 @@ void CInstantSendManager::HandleFullyConfirmedBlock(const CBlockIndex* pindex)
             for (auto& in : islock->inputs) {
                 auto inputRequestId = ::SerializeHash(std::make_pair(INPUTLOCK_REQUESTID_PREFIX, in));
                 inputRequestIds.erase(inputRequestId);
+
+                // no need to keep recovered sigs for fully confirmed IS locks, as there is no chance for conflicts
+                // from now on. All inputs are spent now and can't be spend in any other TX.
+                quorumSigningManager->RemoveRecoveredSig(consensusParams.llmqForInstantSend, inputRequestId);
             }
+
+            // same as in the loop
+            quorumSigningManager->RemoveRecoveredSig(consensusParams.llmqForInstantSend, islock->GetRequestId());
         }
 
         // Find all previously unlocked TXs that got locked by this fully confirmed (ChainLock) block and remove them
