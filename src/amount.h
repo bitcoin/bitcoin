@@ -24,9 +24,9 @@ static const CAmount COIN = 100000000;
  * */
 //mech12
 #ifdef OLLE_BITCOIN_VER
-static const CAmount MAX_MONEY = 9223372036854775000;
+	static const CAmount MAX_MONEY = 9223372036854775000;
 #else
-static const CAmount MAX_MONEY = 21000000 * COIN;
+	static const CAmount MAX_MONEY = 21000000 * COIN;
 #endif
 inline bool MoneyRange(const CAmount& nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
 

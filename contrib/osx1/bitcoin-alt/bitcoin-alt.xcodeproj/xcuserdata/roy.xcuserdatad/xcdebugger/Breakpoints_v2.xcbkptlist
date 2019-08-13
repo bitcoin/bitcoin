@@ -26,7 +26,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../../../src/bitcoind.cpp"
-            timestampString = "587366578.845022"
+            timestampString = "587367966.243207"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "120"
@@ -42,7 +42,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../../../src/bitcoind.cpp"
-            timestampString = "587366578.845076"
+            timestampString = "587367966.243264"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "186"
@@ -58,7 +58,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../../../src/bitcoind.cpp"
-            timestampString = "587366578.845116"
+            timestampString = "587367966.243306"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "181"
@@ -186,7 +186,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../../../src/bitcoind.cpp"
-            timestampString = "587366578.845296"
+            timestampString = "587367966.243446"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "66"
@@ -298,7 +298,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../../../../bitcoin-alt/src/validation.cpp"
-            timestampString = "587366578.845458"
+            timestampString = "587367966.243569"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "1862"
@@ -314,12 +314,155 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../../../../bitcoin-alt/src/validation.cpp"
-            timestampString = "587366578.846036"
+            timestampString = "587367966.2441109"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "1784"
             endingLineNumber = "1784"
             landmarkName = "CChainState::ConnectBlock(const CBlock&amp; block, CValidationState&amp; state, CBlockIndex* pindex, CCoinsViewCache&amp; view, const CChainParams&amp; chainparams, bool fJustCheck)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../../../src/bitcoind.cpp"
+            timestampString = "587367966.244503"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "195"
+            endingLineNumber = "195"
+            landmarkName = "main(int argc, char* argv[])"
+            landmarkType = "9">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../../../src/bitcoind.cpp"
+            timestampString = "587367966.2445461"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "64"
+            endingLineNumber = "64"
+            landmarkName = "AppInit(int argc, char* argv[])"
+            landmarkType = "9">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../../../src/bitcoind.cpp"
+            timestampString = "587367966.244586"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "59"
+            endingLineNumber = "59"
+            landmarkName = "AppInit(int argc, char* argv[])"
+            landmarkType = "9">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../../../../bitcoin-alt/src/validation.cpp"
+            timestampString = "587367966.244625"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "2351"
+            endingLineNumber = "2351"
+            landmarkName = "CChainState::ConnectTip(CValidationState&amp; state, const CChainParams&amp; chainparams, CBlockIndex* pindexNew, const std::shared_ptr&lt;const CBlock&gt;&amp; pblock, ConnectTrace&amp; connectTrace, DisconnectedBlockTransactions &amp;disconnectpool)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../../../../bitcoin-alt/src/validation.cpp"
+            timestampString = "587367966.245002"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "2669"
+            endingLineNumber = "2669"
+            landmarkName = "ActivateBestChain(CValidationState &amp;state, const CChainParams&amp; chainparams, std::shared_ptr&lt;const CBlock&gt; pblock)"
+            landmarkType = "9">
+            <Locations>
+               <Location
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "ActivateBestChain(CValidationState&amp;, CChainParams const&amp;, std::__1::shared_ptr&lt;CBlock const&gt;)"
+                  moduleName = "bitcoind"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/roy/12ships/bitcoin-alt/src/validation.cpp"
+                  timestampString = "587367966.5492001"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "2669"
+                  endingLineNumber = "2669"
+                  offsetFromSymbolStart = "55">
+               </Location>
+               <Location
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "LoadChainTip(CChainParams const&amp;)"
+                  moduleName = "bitcoind"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/roy/12ships/bitcoin-alt/src/validation.cpp"
+                  timestampString = "587367966.550899"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "2669"
+                  endingLineNumber = "2669"
+                  offsetFromSymbolStart = "446">
+               </Location>
+               <Location
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "LoadExternalBlockFile(CChainParams const&amp;, __sFILE*, CDiskBlockPos*)"
+                  moduleName = "bitcoind"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/roy/12ships/bitcoin-alt/src/validation.cpp"
+                  timestampString = "587367966.552622"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "2669"
+                  endingLineNumber = "2669"
+                  offsetFromSymbolStart = "2223">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../../../../bitcoin-alt/src/validation.cpp"
+            timestampString = "587367966.245392"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "2590"
+            endingLineNumber = "2590"
+            landmarkName = "CChainState::ActivateBestChain(CValidationState &amp;state, const CChainParams&amp; chainparams, std::shared_ptr&lt;const CBlock&gt; pblock)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

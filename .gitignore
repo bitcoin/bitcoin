@@ -128,3 +128,5 @@ db4/
 
 # clang-check
 *.plist
+
+*.tmp
