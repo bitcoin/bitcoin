@@ -92,7 +92,7 @@ public:
 #ifdef OLLE_BITCOIN_VER
         //mech12
         consensus.nPowTargetTimespan = 60;//60 * 60; // 1 hour
-        consensus.nPowTargetSpacing = 1;//10 * 60; //10분
+        consensus.nPowTargetSpacing = 3;//10 * 60; //10분
 #else        
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 10 * 60;
