@@ -16,7 +16,8 @@
 #include <tinyformat.h>
 
 static std::atomic<int64_t> nMockTime(0); //!< For unit testing
-
+// SYSCOIN
+extern bool fUnitTest;
 int64_t GetTime()
 {
     int64_t mocktime = nMockTime.load(std::memory_order_relaxed);
@@ -31,9 +32,9 @@ template <typename T>
 T GetTime()
 {
     const std::chrono::seconds mocktime{nMockTime.load(std::memory_order_relaxed)};
-
+    // SYSCOIN
     return std::chrono::duration_cast<T>(
-        mocktime.count() ?
+        !fUnitTest && mocktime.count() ?
             mocktime :
             std::chrono::microseconds{GetTimeMicros()});
 }
