@@ -57,6 +57,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
         const auto& params = Params().GetConsensus().llmqs.at(type);
 
         // Verify that quorumHash is part of the active chain and that it's the first block in the DKG interval
+        const CBlockIndex* pquorumIndex;
         {
             LOCK(cs_main);
             if (!mapBlockIndex.count(qc.quorumHash)) {
@@ -66,7 +67,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
                 // fully synced
                 return;
             }
-            auto pquorumIndex = mapBlockIndex[qc.quorumHash];
+            pquorumIndex = mapBlockIndex[qc.quorumHash];
             if (chainActive.Tip()->GetAncestor(pquorumIndex->nHeight) != pquorumIndex) {
                 LogPrintf("CQuorumBlockProcessor::%s -- block %s not in active chain, peer=%d\n", __func__,
                           qc.quorumHash.ToString(), pfrom->id);
@@ -98,7 +99,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
             }
         }
 
-        auto members = CLLMQUtils::GetAllQuorumMembers(type, qc.quorumHash);
+        auto members = CLLMQUtils::GetAllQuorumMembers(type, pquorumIndex);
 
         if (!qc.Verify(members, true)) {
             LOCK(cs_main);
@@ -203,14 +204,14 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
         return state.DoS(100, false, REJECT_INVALID, "bad-qc-height");
     }
 
-    auto members = CLLMQUtils::GetAllQuorumMembers(params.type, quorumHash);
+    auto quorumIndex = mapBlockIndex.at(qc.quorumHash);
+    auto members = CLLMQUtils::GetAllQuorumMembers(params.type, quorumIndex);
 
     if (!qc.Verify(members, true)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-qc-invalid");
     }
 
     // Store commitment in DB
-    auto quorumIndex = mapBlockIndex.at(qc.quorumHash);
     evoDb.Write(std::make_pair(DB_MINED_COMMITMENT, std::make_pair((uint8_t)params.type, quorumHash)), std::make_pair(qc, blockHash));
     evoDb.Write(BuildInversedHeightKey(params.type, nHeight), quorumIndex->nHeight);
 

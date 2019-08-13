@@ -8,8 +8,8 @@
 
     Dash should be started with the command line arguments:
         dashd-testnet -daemon \
-                -zmqpubhashblock=tcp://127.0.0.1:28332 \
                 -zmqpubrawtx=tcp://127.0.0.1:28332 \
+                -zmqpubrawblock=tcp://127.0.0.1:28332 \
                 -zmqpubhashtx=tcp://127.0.0.1:28332 \
                 -zmqpubhashblock=tcp://127.0.0.1:28332
 
@@ -38,7 +38,7 @@ port = 28332
 
 class ZMQHandler():
     def __init__(self):
-        self.loop = zmq.asyncio.install()
+        self.loop = asyncio.get_event_loop()
         self.zmqContext = zmq.asyncio.Context()
 
         self.zmqSubSocket = self.zmqContext.socket(zmq.SUB)

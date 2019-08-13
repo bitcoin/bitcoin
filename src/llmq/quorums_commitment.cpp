@@ -193,7 +193,7 @@ bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, 
         return true;
     }
 
-    auto members = CLLMQUtils::GetAllQuorumMembers(params.type, qcTx.commitment.quorumHash);
+    auto members = CLLMQUtils::GetAllQuorumMembers(params.type, pindexQuorum);
     if (!qcTx.commitment.Verify(members, false)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-qc-invalid");
     }

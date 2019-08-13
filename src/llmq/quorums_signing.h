@@ -84,6 +84,7 @@ public:
     bool GetRecoveredSigByHash(const uint256& hash, CRecoveredSig& ret);
     bool GetRecoveredSigById(Consensus::LLMQType llmqType, const uint256& id, CRecoveredSig& ret);
     void WriteRecoveredSig(const CRecoveredSig& recSig);
+    void RemoveRecoveredSig(Consensus::LLMQType llmqType, const uint256& id);
 
     void CleanupOldRecoveredSigs(int64_t maxAge);
 
@@ -96,6 +97,7 @@ public:
 
 private:
     bool ReadRecoveredSig(Consensus::LLMQType llmqType, const uint256& id, CRecoveredSig& ret);
+    void RemoveRecoveredSig(CDBBatch& batch, Consensus::LLMQType llmqType, const uint256& id, bool deleteTimeKey);
 };
 
 class CRecoveredSigsListener
@@ -144,6 +146,10 @@ public:
     // This is the case for example when a signature appears as part of InstantSend or ChainLocks
     void PushReconstructedRecoveredSig(const CRecoveredSig& recoveredSig, const CQuorumCPtr& quorum);
 
+    // This is called when a recovered signature can be safely removed from the DB. This is only safe when some other
+    // mechanism prevents possible conflicts. As an example, ChainLocks prevent conflicts in confirmed TXs InstantSend votes
+    void RemoveRecoveredSig(Consensus::LLMQType llmqType, const uint256& id);
+
 private:
     void ProcessMessageRecoveredSig(CNode* pfrom, const CRecoveredSig& recoveredSig, CConnman& connman);
     bool PreVerifyRecoveredSig(NodeId nodeId, const CRecoveredSig& recoveredSig, bool& retBan);
@@ -171,6 +177,7 @@ public:
     bool HasVotedOnId(Consensus::LLMQType llmqType, const uint256& id);
     bool GetVoteForId(Consensus::LLMQType llmqType, const uint256& id, uint256& msgHashRet);
 
+    std::vector<CQuorumCPtr> GetActiveQuorumSet(Consensus::LLMQType llmqType, int signHeight);
     CQuorumCPtr SelectQuorumForSigning(Consensus::LLMQType llmqType, int signHeight, const uint256& selectionHash);
 
     // Verifies a recovered sig that was signed while the chain tip was at signedAtTip

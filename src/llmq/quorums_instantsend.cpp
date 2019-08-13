@@ -61,13 +61,6 @@ void CInstantSendDb::WriteNewInstantSendLock(const uint256& hash, const CInstant
     }
 }
 
-void CInstantSendDb::RemoveInstantSendLock(const uint256& hash, CInstantSendLockPtr islock)
-{
-    CDBBatch batch(db);
-    RemoveInstantSendLock(batch, hash, islock);
-    db.WriteBatch(batch);
-}
-
 void CInstantSendDb::RemoveInstantSendLock(CDBBatch& batch, const uint256& hash, CInstantSendLockPtr islock)
 {
     if (!islock) {
@@ -183,6 +176,28 @@ void CInstantSendDb::RemoveArchivedInstantSendLocks(int nUntilHeight)
 bool CInstantSendDb::HasArchivedInstantSendLock(const uint256& islockHash)
 {
     return db.Exists(std::make_tuple(std::string("is_a2"), islockHash));
+}
+
+size_t CInstantSendDb::GetInstantSendLockCount()
+{
+    auto it = std::unique_ptr<CDBIterator>(db.NewIterator());
+    auto firstKey = std::make_tuple(std::string("is_i"), uint256());
+
+    it->Seek(firstKey);
+
+    size_t cnt = 0;
+    while (it->Valid()) {
+        decltype(firstKey) curKey;
+        if (!it->GetKey(curKey) || std::get<0>(curKey) != "is_i") {
+            break;
+        }
+
+        cnt++;
+
+        it->Next();
+    }
+
+    return cnt;
 }
 
 CInstantSendLockPtr CInstantSendDb::GetInstantSendLockByHash(const uint256& hash)
@@ -712,8 +727,6 @@ bool CInstantSendManager::PreVerifyInstantSendLock(NodeId nodeId, const llmq::CI
 
 bool CInstantSendManager::ProcessPendingInstantSendLocks()
 {
-    auto llmqType = Params().GetConsensus().llmqForInstantSend;
-
     decltype(pendingInstantSendLocks) pend;
 
     {
@@ -734,6 +747,44 @@ bool CInstantSendManager::ProcessPendingInstantSendLocks()
         LOCK(cs_main);
         tipHeight = chainActive.Height();
     }
+
+    auto llmqType = Params().GetConsensus().llmqForInstantSend;
+
+    // Every time a new quorum enters the active set, an older one is removed. This means that between two blocks, the
+    // active set can be different, leading to different selection of the signing quorum. When we detect such rotation
+    // of the active set, we must re-check invalid sigs against the previous active set and only ban nodes when this also
+    // fails.
+    auto quorums1 = quorumSigningManager->GetActiveQuorumSet(llmqType, tipHeight);
+    auto quorums2 = quorumSigningManager->GetActiveQuorumSet(llmqType, tipHeight - 1);
+    bool quorumsRotated = quorums1 != quorums2;
+
+    if (quorumsRotated) {
+        // first check against the current active set and don't ban
+        auto badISLocks = ProcessPendingInstantSendLocks(tipHeight, pend, false);
+        if (!badISLocks.empty()) {
+            LogPrintf("CInstantSendManager::%s -- detected LLMQ active set rotation, redoing verification on old active set\n", __func__);
+
+            // filter out valid IS locks from "pend"
+            for (auto it = pend.begin(); it != pend.end(); ) {
+                if (!badISLocks.count(it->first)) {
+                    it = pend.erase(it);
+                } else {
+                    ++it;
+                }
+            }
+            // now check against the previous active set and perform banning if this fails
+            ProcessPendingInstantSendLocks(tipHeight - 1, pend, true);
+        }
+    } else {
+        ProcessPendingInstantSendLocks(tipHeight, pend, true);
+    }
+
+    return true;
+}
+
+std::unordered_set<uint256> CInstantSendManager::ProcessPendingInstantSendLocks(int signHeight, const std::unordered_map<uint256, std::pair<NodeId, CInstantSendLock>>& pend, bool ban)
+{
+    auto llmqType = Params().GetConsensus().llmqForInstantSend;
 
     CBLSBatchVerifier<NodeId, uint256> batchVerifier(false, true, 8);
     std::unordered_map<uint256, std::pair<CQuorumCPtr, CRecoveredSig>> recSigs;
@@ -759,10 +810,10 @@ bool CInstantSendManager::ProcessPendingInstantSendLocks()
             continue;
         }
 
-        auto quorum = quorumSigningManager->SelectQuorumForSigning(llmqType, tipHeight, id);
+        auto quorum = quorumSigningManager->SelectQuorumForSigning(llmqType, signHeight, id);
         if (!quorum) {
             // should not happen, but if one fails to select, all others will also fail to select
-            return false;
+            return {};
         }
         uint256 signHash = CLLMQUtils::BuildSignHash(llmqType, quorum->qc.quorumHash, id, islock.txid);
         batchVerifier.PushMessage(nodeId, hash, signHash, islock.sig.Get(), quorum->qc.quorumPublicKey);
@@ -785,7 +836,9 @@ bool CInstantSendManager::ProcessPendingInstantSendLocks()
 
     batchVerifier.Verify();
 
-    if (!batchVerifier.badSources.empty()) {
+    std::unordered_set<uint256> badISLocks;
+
+    if (ban && !batchVerifier.badSources.empty()) {
         LOCK(cs_main);
         for (auto& nodeId : batchVerifier.badSources) {
             // Let's not be too harsh, as the peer might simply be unlucky and might have sent us an old lock which
@@ -801,6 +854,7 @@ bool CInstantSendManager::ProcessPendingInstantSendLocks()
         if (batchVerifier.badMessages.count(hash)) {
             LogPrintf("CInstantSendManager::%s -- txid=%s, islock=%s: invalid sig in islock, peer=%d\n", __func__,
                      islock.txid.ToString(), hash.ToString(), nodeId);
+            badISLocks.emplace(hash);
             continue;
         }
 
@@ -821,7 +875,7 @@ bool CInstantSendManager::ProcessPendingInstantSendLocks()
         }
     }
 
-    return true;
+    return badISLocks;
 }
 
 void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& hash, const CInstantSendLock& islock)
@@ -1084,6 +1138,8 @@ void CInstantSendManager::UpdatedBlockTip(const CBlockIndex* pindexNew)
 
 void CInstantSendManager::HandleFullyConfirmedBlock(const CBlockIndex* pindex)
 {
+    auto& consensusParams = Params().GetConsensus();
+
     std::unordered_map<uint256, CInstantSendLockPtr> removeISLocks;
     {
         LOCK(cs);
@@ -1101,7 +1157,14 @@ void CInstantSendManager::HandleFullyConfirmedBlock(const CBlockIndex* pindex)
             for (auto& in : islock->inputs) {
                 auto inputRequestId = ::SerializeHash(std::make_pair(INPUTLOCK_REQUESTID_PREFIX, in));
                 inputRequestIds.erase(inputRequestId);
+
+                // no need to keep recovered sigs for fully confirmed IS locks, as there is no chance for conflicts
+                // from now on. All inputs are spent now and can't be spend in any other TX.
+                quorumSigningManager->RemoveRecoveredSig(consensusParams.llmqForInstantSend, inputRequestId);
             }
+
+            // same as in the loop
+            quorumSigningManager->RemoveRecoveredSig(consensusParams.llmqForInstantSend, islock->GetRequestId());
         }
 
         // Find all previously unlocked TXs that got locked by this fully confirmed (ChainLock) block and remove them
@@ -1410,6 +1473,11 @@ CInstantSendLockPtr CInstantSendManager::GetConflictingLock(const CTransaction& 
         }
     }
     return nullptr;
+}
+
+size_t CInstantSendManager::GetInstantSendLockCount()
+{
+    return db.GetInstantSendLockCount();
 }
 
 void CInstantSendManager::WorkThreadMain()

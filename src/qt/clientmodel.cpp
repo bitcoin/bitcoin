@@ -23,6 +23,8 @@
 #include "masternode-sync.h"
 #include "privatesend.h"
 
+#include "llmq/quorums_instantsend.h"
+
 #include <stdint.h>
 
 #include <QDebug>
@@ -161,6 +163,14 @@ size_t ClientModel::getMempoolDynamicUsage() const
     return mempool.DynamicMemoryUsage();
 }
 
+size_t ClientModel::getInstantSentLockCount() const
+{
+    if (!llmq::quorumInstantSendManager) {
+        return 0;
+    }
+    return llmq::quorumInstantSendManager->GetInstantSendLockCount();
+}
+
 double ClientModel::getVerificationProgress(const CBlockIndex *tipIn) const
 {
     CBlockIndex *tip = const_cast<CBlockIndex *>(tipIn);
@@ -177,6 +187,7 @@ void ClientModel::updateTimer()
     // no locking required at this point
     // the following calls will acquire the required lock
     Q_EMIT mempoolSizeChanged(getMempoolSize(), getMempoolDynamicUsage());
+    Q_EMIT islockCountChanged(getInstantSentLockCount());
     Q_EMIT bytesChanged(getTotalBytesRecv(), getTotalBytesSent());
 }
 

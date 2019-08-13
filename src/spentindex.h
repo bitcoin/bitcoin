@@ -210,7 +210,7 @@ struct CAddressUnspentValue {
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(satoshis);
-        READWRITE(*(CScriptBase*)(&script));
+        READWRITE(script);
         READWRITE(blockHeight);
     }
 

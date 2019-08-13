@@ -883,8 +883,8 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 
         // This transaction should only count for fee estimation if the
         // node is not behind, and the transaction is not dependent on any other
-        // transactions in the mempool.
-        bool validForFeeEstimation = IsCurrentForFeeEstimation() && pool.HasNoInputsOf(tx);
+        // transactions in the mempool. Also ignore 0-fee txes.
+        bool validForFeeEstimation = (nFees != 0) && IsCurrentForFeeEstimation() && pool.HasNoInputsOf(tx);
 
         // Store transaction in memory
         pool.addUnchecked(hash, entry, setAncestors, validForFeeEstimation);
@@ -1612,6 +1612,7 @@ static DisconnectResult DisconnectBlock(const CBlock& block, CValidationState& s
     if (fDIP0003Active && !fHasBestBlock) {
         // Nodes that upgraded after DIP3 activation will have to reindex to ensure evodb consistency
         AbortNode("Found EvoDB inconsistency, you must reindex to continue");
+        return DISCONNECT_FAILED;
     }
 
     bool fClean = true;
@@ -1911,7 +1912,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 
         if (fDIP0003Active && !fHasBestBlock) {
             // Nodes that upgraded after DIP3 activation will have to reindex to ensure evodb consistency
-            AbortNode("Found EvoDB inconsistency, you must reindex to continue");
+            return AbortNode(state, "Found EvoDB inconsistency, you must reindex to continue");
         }
     }
 

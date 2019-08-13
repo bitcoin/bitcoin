@@ -53,7 +53,6 @@ public:
     CInstantSendDb(CDBWrapper& _db) : db(_db) {}
 
     void WriteNewInstantSendLock(const uint256& hash, const CInstantSendLock& islock);
-    void RemoveInstantSendLock(const uint256& hash, CInstantSendLockPtr islock);
     void RemoveInstantSendLock(CDBBatch& batch, const uint256& hash, CInstantSendLockPtr islock);
 
     void WriteInstantSendLockMined(const uint256& hash, int nHeight);
@@ -62,6 +61,7 @@ public:
     std::unordered_map<uint256, CInstantSendLockPtr> RemoveConfirmedInstantSendLocks(int nUntilHeight);
     void RemoveArchivedInstantSendLocks(int nUntilHeight);
     bool HasArchivedInstantSendLock(const uint256& islockHash);
+    size_t GetInstantSendLockCount();
 
     CInstantSendLockPtr GetInstantSendLockByHash(const uint256& hash);
     uint256 GetInstantSendLockHashByTxid(const uint256& txid);
@@ -137,6 +137,7 @@ public:
     void ProcessMessageInstantSendLock(CNode* pfrom, const CInstantSendLock& islock, CConnman& connman);
     bool PreVerifyInstantSendLock(NodeId nodeId, const CInstantSendLock& islock, bool& retBan);
     bool ProcessPendingInstantSendLocks();
+    std::unordered_set<uint256> ProcessPendingInstantSendLocks(int signHeight, const std::unordered_map<uint256, std::pair<NodeId, CInstantSendLock>>& pend, bool ban);
     void ProcessInstantSendLock(NodeId from, const uint256& hash, const CInstantSendLock& islock);
     void UpdateWalletTransaction(const uint256& txid, const CTransactionRef& tx);
 
@@ -158,6 +159,8 @@ public:
 
     bool AlreadyHave(const CInv& inv);
     bool GetInstantSendLockByHash(const uint256& hash, CInstantSendLock& ret);
+
+    size_t GetInstantSendLockCount();
 
     void WorkThreadMain();
 };

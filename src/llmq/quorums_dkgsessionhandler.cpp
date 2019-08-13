@@ -139,7 +139,7 @@ void CDKGSessionHandler::ProcessMessage(CNode* pfrom, const std::string& strComm
     }
 }
 
-bool CDKGSessionHandler::InitNewQuorum(int newQuorumHeight, const uint256& newQuorumHash)
+bool CDKGSessionHandler::InitNewQuorum(const CBlockIndex* pindexQuorum)
 {
     //AssertLockHeld(cs_main);
 
@@ -147,13 +147,13 @@ bool CDKGSessionHandler::InitNewQuorum(int newQuorumHeight, const uint256& newQu
 
     curSession = std::make_shared<CDKGSession>(params, blsWorker, dkgManager);
 
-    if (!deterministicMNManager->IsDIP3Enforced(newQuorumHeight)) {
+    if (!deterministicMNManager->IsDIP3Enforced(pindexQuorum->nHeight)) {
         return false;
     }
 
-    auto mns = CLLMQUtils::GetAllQuorumMembers(params.type, newQuorumHash);
+    auto mns = CLLMQUtils::GetAllQuorumMembers(params.type, pindexQuorum);
 
-    if (!curSession->Init(newQuorumHeight, newQuorumHash, mns, activeMasternodeInfo.proTxHash)) {
+    if (!curSession->Init(pindexQuorum, mns, activeMasternodeInfo.proTxHash)) {
         LogPrintf("CDKGSessionManager::%s -- quorum initialiation failed\n", __func__);
         return false;
     }
@@ -455,7 +455,13 @@ void CDKGSessionHandler::HandleDKGRound()
         curQuorumHeight = quorumHeight;
     }
 
-    if (!InitNewQuorum(curQuorumHeight, curQuorumHash)) {
+    const CBlockIndex* pindexQuorum;
+    {
+        LOCK(cs_main);
+        pindexQuorum = mapBlockIndex.at(curQuorumHash);
+    }
+
+    if (!InitNewQuorum(pindexQuorum)) {
         // should actually never happen
         WaitForNewQuorum(curQuorumHash);
         throw AbortPhaseException();
@@ -470,16 +476,16 @@ void CDKGSessionHandler::HandleDKGRound()
     if (curSession->AreWeMember() || GetBoolArg("-watchquorums", DEFAULT_WATCH_QUORUMS)) {
         std::set<uint256> connections;
         if (curSession->AreWeMember()) {
-            connections = CLLMQUtils::GetQuorumConnections(params.type, curQuorumHash, curSession->myProTxHash);
+            connections = CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, curSession->myProTxHash);
         } else {
-            auto cindexes = CLLMQUtils::CalcDeterministicWatchConnections(params.type, curQuorumHash, curSession->members.size(), 1);
+            auto cindexes = CLLMQUtils::CalcDeterministicWatchConnections(params.type, pindexQuorum, curSession->members.size(), 1);
             for (auto idx : cindexes) {
                 connections.emplace(curSession->members[idx]->dmn->proTxHash);
             }
         }
         if (!connections.empty()) {
             if (LogAcceptCategory("llmq-dkg")) {
-                std::string debugMsg = strprintf("CDKGSessionManager::%s -- adding masternodes quorum connections for quorum %s:\n", __func__, curSession->quorumHash.ToString());
+                std::string debugMsg = strprintf("CDKGSessionManager::%s -- adding masternodes quorum connections for quorum %s:\n", __func__, curSession->pindexQuorum->GetBlockHash().ToString());
                 auto mnList = deterministicMNManager->GetListAtChainTip();
                 for (const auto& c : connections) {
                     auto dmn = mnList.GetValidMN(c);
