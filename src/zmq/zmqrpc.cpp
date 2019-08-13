@@ -15,8 +15,6 @@ namespace {
 
 UniValue getzmqnotifications(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 0) {
-        throw std::runtime_error(
             RPCHelpMan{"getzmqnotifications",
                 "\nReturns information about the active ZeroMQ notifications.\n",
                 {},
@@ -34,8 +32,7 @@ UniValue getzmqnotifications(const JSONRPCRequest& request)
                     HelpExampleCli("getzmqnotifications", "")
             + HelpExampleRpc("getzmqnotifications", "")
                 },
-            }.ToString());
-    }
+            }.Check(request);
 
     UniValue result(UniValue::VARR);
     if (g_zmq_notification_interface != nullptr) {

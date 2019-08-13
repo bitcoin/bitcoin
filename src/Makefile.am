@@ -143,7 +143,6 @@ BITCOIN_CORE_H = \
   interfaces/wallet.h \
   key.h \
   key_io.h \
-  keystore.h \
   dbwrapper.h \
   limitedmap.h \
   logging.h \
@@ -175,14 +174,17 @@ BITCOIN_CORE_H = \
   rpc/blockchain.h \
   rpc/client.h \
   rpc/protocol.h \
-  rpc/server.h \
   rpc/rawtransaction_util.h \
   rpc/register.h \
+  rpc/request.h \
+  rpc/server.h \
   rpc/util.h \
   scheduler.h \
   script/descriptor.h \
+  script/keyorigin.h \
   script/sigcache.h \
   script/sign.h \
+  script/signingprovider.h \
   script/standard.h \
   shutdown.h \
   streams.h \
@@ -210,6 +212,7 @@ BITCOIN_CORE_H = \
   util/rbf.h \
   util/threadnames.h \
   util/time.h \
+  util/translation.h \
   util/url.h \
   util/validation.h \
   validation.h \
@@ -307,7 +310,7 @@ libbitcoin_server_a_SOURCES += dummywallet.cpp
 endif
 
 if ENABLE_ZMQ
-libbitcoin_zmq_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(ZMQ_CFLAGS)
+libbitcoin_zmq_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(ZMQ_CFLAGS)
 libbitcoin_zmq_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_zmq_a_SOURCES = \
   zmq/zmqabstractnotifier.cpp \
@@ -351,6 +354,8 @@ crypto_libbitcoin_crypto_base_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 crypto_libbitcoin_crypto_base_a_SOURCES = \
   crypto/aes.cpp \
   crypto/aes.h \
+  crypto/chacha_poly_aead.h \
+  crypto/chacha_poly_aead.cpp \
   crypto/chacha20.h \
   crypto/chacha20.cpp \
   crypto/common.h \
@@ -446,7 +451,6 @@ libbitcoin_common_a_SOURCES = \
   core_write.cpp \
   key.cpp \
   key_io.cpp \
-  keystore.cpp \
   merkleblock.cpp \
   netaddress.cpp \
   netbase.cpp \
@@ -460,6 +464,7 @@ libbitcoin_common_a_SOURCES = \
   scheduler.cpp \
   script/descriptor.cpp \
   script/sign.cpp \
+  script/signingprovider.cpp \
   script/standard.cpp \
   versionbitsinfo.cpp \
   warnings.cpp \
@@ -481,7 +486,7 @@ libbitcoin_util_a_SOURCES = \
   interfaces/handler.cpp \
   logging.cpp \
   random.cpp \
-  rpc/protocol.cpp \
+  rpc/request.cpp \
   support/cleanse.cpp \
   sync.cpp \
   threadinterrupt.cpp \
@@ -613,7 +618,7 @@ bitcoin_wallet_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(EVENT_PTHREAD
 # bitcoinconsensus library #
 if BUILD_BITCOIN_LIBS
 include_HEADERS = script/bitcoinconsensus.h
-libbitcoinconsensus_la_SOURCES = $(crypto_libbitcoin_crypto_base_a_SOURCES) $(libbitcoin_consensus_a_SOURCES)
+libbitcoinconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libbitcoin_crypto_base_a_SOURCES) $(libbitcoin_consensus_a_SOURCES)
 
 if GLIBC_BACK_COMPAT
   libbitcoinconsensus_la_SOURCES += compat/glibc_compat.cpp

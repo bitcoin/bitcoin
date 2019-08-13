@@ -64,4 +64,5 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Import Label="hexdumpTarget" Project="..\msbuild\tasks\hexdump.targets" />
+  <Import Project="..\common.vcxproj" />
 </Project>

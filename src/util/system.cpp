@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,6 +7,7 @@
 
 #include <chainparamsbase.h>
 #include <util/strencodings.h>
+#include <util/translation.h>
 
 #include <stdarg.h>
 
@@ -267,22 +268,24 @@ public:
  * This method also tracks when the -no form was supplied, and if so,
  * checks whether there was a double-negative (-nofoo=0 -> -foo=1).
  *
- * If there was not a double negative, it removes the "no" from the key,
- * and returns true, indicating the caller should clear the args vector
- * to indicate a negated option.
+ * If there was not a double negative, it removes the "no" from the key
+ * and clears the args vector to indicate a negated option.
  *
  * If there was a double negative, it removes "no" from the key, sets the
- * value to "1" and returns false.
+ * value to "1" and pushes the key and the updated value to the args vector.
  *
- * If there was no "no", it leaves key and value untouched and returns
- * false.
+ * If there was no "no", it leaves key and value untouched and pushes them
+ * to the args vector.
  *
  * Where an option was negated can be later checked using the
  * IsArgNegated() method. One use case for this is to have a way to disable
  * options that are not normally boolean (e.g. using -nodebuglogfile to request
  * that debug log output is not sent to any file at all).
  */
-static bool InterpretNegatedOption(std::string& key, std::string& val)
+
+NODISCARD static bool InterpretOption(std::string key, std::string val, unsigned int flags,
+                                      std::map<std::string, std::vector<std::string>>& args,
+                                      std::string& error)
 {
     assert(key[0] == '-');
 
@@ -293,31 +296,25 @@ static bool InterpretNegatedOption(std::string& key, std::string& val)
         ++option_index;
     }
     if (key.substr(option_index, 2) == "no") {
-        bool bool_val = InterpretBool(val);
         key.erase(option_index, 2);
-        if (!bool_val ) {
+        if (flags & ArgsManager::ALLOW_BOOL) {
+            if (InterpretBool(val)) {
+                args[key].clear();
+                return true;
+            }
             // Double negatives like -nofoo=0 are supported (but discouraged)
             LogPrintf("Warning: parsed potentially confusing double-negative %s=%s\n", key, val);
             val = "1";
         } else {
-            return true;
+            error = strprintf("Negating of %s is meaningless and therefore forbidden", key.c_str());
+            return false;
         }
     }
-    return false;
+    args[key].push_back(val);
+    return true;
 }
 
-ArgsManager::ArgsManager() :
-    /* These options would cause cross-contamination if values for
-     * mainnet were used while running on regtest/testnet (or vice-versa).
-     * Setting them as section_only_args ensures that sharing a config file
-     * between mainnet and regtest/testnet won't cause problems due to these
-     * parameters by accident. */
-    m_network_only_args{
-      "-addnode", "-connect",
-      "-port", "-bind",
-      "-rpcport", "-rpcbind",
-      "-wallet",
-    }
+ArgsManager::ArgsManager()
 {
     // nothing to do
 }
@@ -383,6 +380,7 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
 
     for (int i = 1; i < argc; i++) {
         std::string key(argv[i]);
+        if (key == "-") break; //bitcoin-tx using stdin
         std::string val;
         size_t is_index = key.find('=');
         if (is_index != std::string::npos) {
@@ -402,19 +400,14 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
         if (key.length() > 1 && key[1] == '-')
             key.erase(0, 1);
 
-        // Check for -nofoo
-        if (InterpretNegatedOption(key, val)) {
-            m_override_args[key].clear();
-        } else {
-            m_override_args[key].push_back(val);
-        }
-
-        // Check that the arg is known
-        if (!(IsSwitchChar(key[0]) && key.size() == 1)) {
-            if (!IsArgKnown(key)) {
-                error = strprintf("Invalid parameter %s", key.c_str());
+        const unsigned int flags = FlagsOfKnownArg(key);
+        if (flags) {
+            if (!InterpretOption(key, val, flags, m_override_args, error)) {
                 return false;
             }
+        } else {
+            error = strprintf("Invalid parameter %s", key.c_str());
+            return false;
         }
     }
 
@@ -431,21 +424,30 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
     return true;
 }
 
-bool ArgsManager::IsArgKnown(const std::string& key) const
+unsigned int ArgsManager::FlagsOfKnownArg(const std::string& key) const
 {
+    assert(key[0] == '-');
+
     size_t option_index = key.find('.');
-    std::string arg_no_net;
     if (option_index == std::string::npos) {
-        arg_no_net = key;
+        option_index = 1;
     } else {
-        arg_no_net = std::string("-") + key.substr(option_index + 1, std::string::npos);
+        ++option_index;
     }
+    if (key.substr(option_index, 2) == "no") {
+        option_index += 2;
+    }
+
+    const std::string base_arg_name = '-' + key.substr(option_index);
 
     LOCK(cs_args);
     for (const auto& arg_map : m_available_args) {
-        if (arg_map.second.count(arg_no_net)) return true;
+        const auto search = arg_map.second.find(base_arg_name);
+        if (search != arg_map.second.end()) {
+            return search->second.m_flags;
+        }
     }
-    return false;
+    return ArgsManager::NONE;
 }
 
 std::vector<std::string> ArgsManager::GetArgs(const std::string& strArg) const
@@ -537,24 +539,29 @@ void ArgsManager::ForceSetArg(const std::string& strArg, const std::string& strV
     m_override_args[strArg] = {strValue};
 }
 
-void ArgsManager::AddArg(const std::string& name, const std::string& help, const bool debug_only, const OptionsCategory& cat)
+void ArgsManager::AddArg(const std::string& name, const std::string& help, unsigned int flags, const OptionsCategory& cat)
 {
     // Split arg name from its help param
     size_t eq_index = name.find('=');
     if (eq_index == std::string::npos) {
         eq_index = name.size();
     }
+    std::string arg_name = name.substr(0, eq_index);
 
     LOCK(cs_args);
     std::map<std::string, Arg>& arg_map = m_available_args[cat];
-    auto ret = arg_map.emplace(name.substr(0, eq_index), Arg(name.substr(eq_index, name.size() - eq_index), help, debug_only));
+    auto ret = arg_map.emplace(arg_name, Arg{name.substr(eq_index, name.size() - eq_index), help, flags});
     assert(ret.second); // Make sure an insertion actually happened
+
+    if (flags & ArgsManager::NETWORK_ONLY) {
+        m_network_only_args.emplace(arg_name);
+    }
 }
 
 void ArgsManager::AddHiddenArgs(const std::vector<std::string>& names)
 {
     for (const std::string& name : names) {
-        AddArg(name, "", false, OptionsCategory::HIDDEN);
+        AddArg(name, "", ArgsManager::ALLOW_ANY, OptionsCategory::HIDDEN);
     }
 }
 
@@ -613,7 +620,7 @@ std::string ArgsManager::GetHelpMessage() const
         if (arg_map.first == OptionsCategory::HIDDEN) break;
 
         for (const auto& arg : arg_map.second) {
-            if (show_debug || !arg.second.m_debug_only) {
+            if (show_debug || !(arg.second.m_flags & ArgsManager::DEBUG_ONLY)) {
                 std::string name;
                 if (arg.second.m_help_param.empty()) {
                     name = arg.first;
@@ -634,7 +641,7 @@ bool HelpRequested(const ArgsManager& args)
 
 void SetupHelpOptions(ArgsManager& args)
 {
-    args.AddArg("-?", "Print this help message and exit", false, OptionsCategory::OPTIONS);
+    args.AddArg("-?", "Print this help message and exit", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     args.AddHiddenArgs({"-h", "-help"});
 }
 
@@ -705,19 +712,16 @@ fs::path GetDefaultDataDir()
 static fs::path g_blocks_path_cache_net_specific;
 static fs::path pathCached;
 static fs::path pathCachedNetSpecific;
-static CCriticalSection csPathCached;
+static RecursiveMutex csPathCached;
 
 const fs::path &GetBlocksDir()
 {
-
     LOCK(csPathCached);
-
     fs::path &path = g_blocks_path_cache_net_specific;
 
-    // This can be called during exceptions by LogPrintf(), so we cache the
-    // value so we don't have to do memory allocations after that.
-    if (!path.empty())
-        return path;
+    // Cache the path to avoid calling fs::create_directories on every call of
+    // this function
+    if (!path.empty()) return path;
 
     if (gArgs.IsArgSet("-blocksdir")) {
         path = fs::system_complete(gArgs.GetArg("-blocksdir", ""));
@@ -737,15 +741,12 @@ const fs::path &GetBlocksDir()
 
 const fs::path &GetDataDir(bool fNetSpecific)
 {
-
     LOCK(csPathCached);
-
     fs::path &path = fNetSpecific ? pathCachedNetSpecific : pathCached;
 
-    // This can be called during exceptions by LogPrintf(), so we cache the
-    // value so we don't have to do memory allocations after that.
-    if (!path.empty())
-        return path;
+    // Cache the path to avoid calling fs::create_directories on every call of
+    // this function
+    if (!path.empty()) return path;
 
     if (gArgs.IsArgSet("-datadir")) {
         path = fs::system_complete(gArgs.GetArg("-datadir", ""));
@@ -844,22 +845,18 @@ bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& file
         return false;
     }
     for (const std::pair<std::string, std::string>& option : options) {
-        std::string strKey = std::string("-") + option.first;
-        std::string strValue = option.second;
-
-        if (InterpretNegatedOption(strKey, strValue)) {
-            m_config_args[strKey].clear();
+        const std::string strKey = std::string("-") + option.first;
+        const unsigned int flags = FlagsOfKnownArg(strKey);
+        if (flags) {
+            if (!InterpretOption(strKey, option.second, flags, m_config_args, error)) {
+                return false;
+            }
         } else {
-            m_config_args[strKey].push_back(strValue);
-        }
-
-        // Check that the arg is known
-        if (!IsArgKnown(strKey)) {
-            if (!ignore_invalid_keys) {
+            if (ignore_invalid_keys) {
+                LogPrintf("Ignoring unknown configuration value %s\n", option.first);
+            } else {
                 error = strprintf("Invalid configuration value %s", option.first.c_str());
                 return false;
-            } else {
-                LogPrintf("Ignoring unknown configuration value %s\n", option.first);
             }
         }
     }
@@ -1120,6 +1117,7 @@ fs::path GetSpecialFolderPath(int nFolder, bool fCreate)
 }
 #endif
 
+#if HAVE_SYSTEM
 void runCommand(const std::string& strCommand)
 {
     if (strCommand.empty()) return;
@@ -1131,6 +1129,7 @@ void runCommand(const std::string& strCommand)
     if (nErr)
         LogPrintf("runCommand error: system(%s) returned %d\n", strCommand, nErr);
 }
+#endif
 
 void SetupEnvironment()
 {
@@ -1188,10 +1187,11 @@ int GetNumCores()
 
 std::string CopyrightHolders(const std::string& strPrefix)
 {
-    std::string strCopyrightHolders = strPrefix + strprintf(_(COPYRIGHT_HOLDERS), _(COPYRIGHT_HOLDERS_SUBSTITUTION));
+    const auto copyright_devs = strprintf(_(COPYRIGHT_HOLDERS).translated, COPYRIGHT_HOLDERS_SUBSTITUTION);
+    std::string strCopyrightHolders = strPrefix + copyright_devs;
 
-    // Check for untranslated substitution to make sure Bitcoin Core copyright is not removed by accident
-    if (strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION).find("Bitcoin Core") == std::string::npos) {
+    // Make sure Bitcoin Core copyright is not removed by accident
+    if (copyright_devs.find("Bitcoin Core") == std::string::npos) {
         strCopyrightHolders += "\n" + strPrefix + "The Bitcoin Core developers";
     }
     return strCopyrightHolders;

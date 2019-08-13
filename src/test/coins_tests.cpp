@@ -3,8 +3,10 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <attributes.h>
+#include <clientversion.h>
 #include <coins.h>
 #include <script/standard.h>
+#include <streams.h>
 #include <test/setup_common.h>
 #include <uint256.h>
 #include <undo.h>

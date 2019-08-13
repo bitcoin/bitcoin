@@ -20,9 +20,11 @@
     <ClCompile Include="..\..\src\bench\checkqueue.cpp" />
     <ClCompile Include="..\..\src\bench\coin_selection.cpp" />
     <ClCompile Include="..\..\src\bench\crypto_hash.cpp" />
+    <ClCompile Include="..\..\src\bench\data.cpp" />
     <ClCompile Include="..\..\src\bench\examples.cpp" />
     <ClCompile Include="..\..\src\bench\lockedpool.cpp" />
     <ClCompile Include="..\..\src\bench\mempool_eviction.cpp" />
+    <ClCompile Include="..\..\src\bench\rpc_blockchain.cpp" />
     <ClCompile Include="..\..\src\bench\rpc_mempool.cpp" />
     <ClCompile Include="..\..\src\bench\merkle_root.cpp" />
     <ClCompile Include="..\..\src\bench\rollingbloom.cpp" />
@@ -68,9 +70,10 @@
     <ItemGroup>
       <RawBenchFile Include="..\..\src\bench\data\*.raw" />
     </ItemGroup>
-    <HeaderFromHexdump RawFilePath="%(RawBenchFile.FullPath)" HeaderFilePath="%(RawBenchFile.FullPath).h" SourceHeader="static unsigned const char %(RawBenchFile.Filename)[] = {" SourceFooter="};" />
+    <HeaderFromHexdump RawFilePath="%(RawBenchFile.FullPath)" HeaderFilePath="%(RawBenchFile.FullPath).h" SourceHeader="static unsigned const char %(RawBenchFile.Filename)_raw[] = {" SourceFooter="};" />
   </Target>
   <Import Label="hexdumpTarget" Project="..\msbuild\tasks\hexdump.targets" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Import Project="..\common.vcxproj" />
 </Project>

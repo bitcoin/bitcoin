@@ -21,14 +21,14 @@ QList<SendCoinsRecipient> WalletModelTransaction::getRecipients() const
     return recipients;
 }
 
-std::unique_ptr<interfaces::PendingWalletTx>& WalletModelTransaction::getWtx()
+CTransactionRef& WalletModelTransaction::getWtx()
 {
     return wtx;
 }
 
 unsigned int WalletModelTransaction::getTransactionSize()
 {
-    return wtx ? GetVirtualTransactionSize(wtx->get()) : 0;
+    return wtx ? GetVirtualTransactionSize(*wtx) : 0;
 }
 
 CAmount WalletModelTransaction::getTransactionFee() const
@@ -43,7 +43,7 @@ void WalletModelTransaction::setTransactionFee(const CAmount& newFee)
 
 void WalletModelTransaction::reassignAmounts(int nChangePosRet)
 {
-    const CTransaction* walletTransaction = &wtx->get();
+    const CTransaction* walletTransaction = wtx.get();
     int i = 0;
     for (QList<SendCoinsRecipient>::iterator it = recipients.begin(); it != recipients.end(); ++it)
     {

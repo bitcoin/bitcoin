@@ -37,6 +37,7 @@ cache:
 stages:
   - lint
   - test
+  - extended-lint
 env:
   global:
     - MAKEJOBS=-j3
@@ -85,6 +86,19 @@ jobs:
       script:
         - set -o errexit; source .travis/lint_06_script.sh
 
+    - stage: extended-lint
+      name: 'extended lint [runtime >= 60 seconds]'
+      env:
+      cache: false
+      language: python
+      python: '3.5'
+      install:
+        - set -o errexit; source .travis/extended_lint_04_install.sh
+      before_script:
+        - set -o errexit; source .travis/lint_05_before_script.sh
+      script:
+        - set -o errexit; source .travis/extended_lint_06_script.sh
+
     - stage: test
       name: 'ARM  [GOAL: install]  [no unit or functional tests]'
       env: >-
@@ -116,21 +130,21 @@ jobs:
         CONFIG_SHELL="/bin/dash"
 
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [uses qt5 dev package instead of depends Qt to speed up build and avoid timeout]'
+      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [uses qt5 dev package instead of depends Qt to speed up build and avoid timeout] [unsigned char]'
       env: >-
         HOST=x86_64-unknown-linux-gnu
         PACKAGES="python3-zmq qtbase5-dev qttools5-dev-tools protobuf-compiler libdbus-1-dev libharfbuzz-dev libprotobuf-dev"
         DEP_OPTS="NO_QT=1 NO_UPNP=1 DEBUG=1 ALLOW_HOST_PACKAGES=1"
         TEST_RUNNER_EXTRA="--coverage --extended --exclude feature_dbcrash"  # Run extended tests so that coverage does not fail, but exclude the very slow dbcrash
         GOAL="install"
-        BITCOIN_CONFIG="--enable-zmq --with-gui=qt5 --enable-glibc-back-compat --enable-reduce-exports --enable-debug CXXFLAGS=\"-g0 -O2\""
+        BITCOIN_CONFIG="--enable-zmq --with-gui=qt5 --enable-glibc-back-compat --enable-reduce-exports --enable-debug CFLAGS=\"-g0 -O2 -funsigned-char\" CXXFLAGS=\"-g0 -O2 -funsigned-char\""
 
     - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [trusty]  [no functional tests, no depends, only system libs]'
       env: >-
         HOST=x86_64-unknown-linux-gnu
         DOCKER_NAME_TAG=ubuntu:14.04
-        PACKAGES="python3-zmq qtbase5-dev qttools5-dev-tools libicu-dev libpng-dev libssl-dev libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev libdb5.1++-dev libminiupnpc-dev libzmq3-dev libprotobuf-dev protobuf-compiler libqrencode-dev"
+        PACKAGES="python3-zmq qtbase5-dev qttools5-dev-tools libicu-dev libpng-dev libssl-dev libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev libdb5.1++-dev libzmq3-dev libprotobuf-dev protobuf-compiler libqrencode-dev"
         NO_DEPENDS=1
         RUN_FUNCTIONAL_TESTS=false
         GOAL="install"
@@ -165,7 +179,7 @@ jobs:
         RUN_FUNCTIONAL_TESTS=false
         RUN_FUZZ_TESTS=true
         GOAL="install"
-        BITCOIN_CONFIG="--disable-wallet --disable-bench --with-utils=no --with-daemon=no --with-libs=no --with-gui=no --enable-fuzz --with-sanitizers=fuzzer,address CC=clang CXX=clang++"
+        BITCOIN_CONFIG="--enable-fuzz --with-sanitizers=fuzzer,address CC=clang CXX=clang++"
 
     - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no wallet]'

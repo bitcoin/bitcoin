@@ -12,7 +12,6 @@
 
 #include <key.h>
 #include <key_io.h>
-#include <pubkey.h>
 #include <wallet/wallet.h>
 
 #include <QApplication>

@@ -75,6 +75,14 @@ bool BCLog::Logger::StartLogging()
     return true;
 }
 
+void BCLog::Logger::DisconnectTestLogger()
+{
+    std::lock_guard<std::mutex> scoped_lock(m_cs);
+    m_buffering = true;
+    if (m_fileout != nullptr) fclose(m_fileout);
+    m_fileout = nullptr;
+}
+
 void BCLog::Logger::EnableCategory(BCLog::LogFlags flag)
 {
     m_categories |= flag;

@@ -67,8 +67,8 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         self.num_nodes = 1
         self.extra_args = [
             [
+                "-acceptnonstdtxn=1",
                 "-maxorphantx=1000",
-                "-whitelist=127.0.0.1",
                 "-limitancestorcount=50",
                 "-limitancestorsize=101",
                 "-limitdescendantcount=200",

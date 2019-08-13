@@ -3,9 +3,10 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <key_io.h>
-#include <keystore.h>
 #include <outputtype.h>
+#include <script/signingprovider.h>
 #include <rpc/util.h>
+#include <script/descriptor.h>
 #include <tinyformat.h>
 #include <util/strencodings.h>
 
@@ -130,8 +131,8 @@ CPubKey HexToPubKey(const std::string& hex_in)
     return vchPubKey;
 }
 
-// Retrieves a public key for an address from the given CKeyStore
-CPubKey AddrToPubKey(CKeyStore* const keystore, const std::string& addr_in)
+// Retrieves a public key for an address from the given FillableSigningProvider
+CPubKey AddrToPubKey(FillableSigningProvider* const keystore, const std::string& addr_in)
 {
     CTxDestination dest = DecodeDestination(addr_in);
     if (!IsValidDestination(dest)) {
@@ -152,7 +153,7 @@ CPubKey AddrToPubKey(CKeyStore* const keystore, const std::string& addr_in)
 }
 
 // Creates a multisig address from a given list of public keys, number of signatures required, and the address type
-CTxDestination AddAndGetMultisigDestination(const int required, const std::vector<CPubKey>& pubkeys, OutputType type, CKeyStore& keystore, CScript& script_out)
+CTxDestination AddAndGetMultisigDestination(const int required, const std::vector<CPubKey>& pubkeys, OutputType type, FillableSigningProvider& keystore, CScript& script_out)
 {
     // Gather public keys
     if (required < 1) {
@@ -696,4 +697,41 @@ std::pair<int64_t, int64_t> ParseDescriptorRange(const UniValue& value)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Range is too large");
     }
     return {low, high};
+}
+
+std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, FlatSigningProvider& provider)
+{
+    std::string desc_str;
+    std::pair<int64_t, int64_t> range = {0, 1000};
+    if (scanobject.isStr()) {
+        desc_str = scanobject.get_str();
+    } else if (scanobject.isObject()) {
+        UniValue desc_uni = find_value(scanobject, "desc");
+        if (desc_uni.isNull()) throw JSONRPCError(RPC_INVALID_PARAMETER, "Descriptor needs to be provided in scan object");
+        desc_str = desc_uni.get_str();
+        UniValue range_uni = find_value(scanobject, "range");
+        if (!range_uni.isNull()) {
+            range = ParseDescriptorRange(range_uni);
+        }
+    } else {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Scan object needs to be either a string or an object");
+    }
+
+    auto desc = Parse(desc_str, provider);
+    if (!desc) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Invalid descriptor '%s'", desc_str));
+    }
+    if (!desc->IsRange()) {
+        range.first = 0;
+        range.second = 0;
+    }
+    std::vector<CScript> ret;
+    for (int i = range.first; i <= range.second; ++i) {
+        std::vector<CScript> scripts;
+        if (!desc->Expand(i, provider, scripts, provider)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Cannot derive script without private keys: '%s'", desc_str));
+        }
+        std::move(scripts.begin(), scripts.end(), std::back_inserter(ret));
+    }
+    return ret;
 }

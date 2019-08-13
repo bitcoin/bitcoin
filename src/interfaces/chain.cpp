@@ -9,7 +9,9 @@
 #include <interfaces/handler.h>
 #include <interfaces/wallet.h>
 #include <net.h>
+#include <net_processing.h>
 #include <node/coin.h>
+#include <node/transaction.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
@@ -149,12 +151,6 @@ class LockImpl : public Chain::Lock, public UniqueLock<CCriticalSection>
         LockAssertion lock(::cs_main);
         return CheckFinalTx(tx);
     }
-    bool submitToMemoryPool(const CTransactionRef& tx, CAmount absurd_fee, CValidationState& state) override
-    {
-        LockAssertion lock(::cs_main);
-        return AcceptToMemoryPool(::mempool, state, tx, nullptr /* missing inputs */, nullptr /* txn replaced */,
-            false /* bypass limits */, absurd_fee);
-    }
 
     using UniqueLock::UniqueLock;
 };
@@ -205,7 +201,7 @@ public:
 class RpcHandlerImpl : public Handler
 {
 public:
-    RpcHandlerImpl(const CRPCCommand& command) : m_command(command), m_wrapped_command(&command)
+    explicit RpcHandlerImpl(const CRPCCommand& command) : m_command(command), m_wrapped_command(&command)
     {
         m_command.actor = [this](const JSONRPCRequest& request, UniValue& result, bool last_handler) {
             if (!m_wrapped_command) return false;
@@ -290,10 +286,13 @@ public:
         auto it = ::mempool.GetIter(txid);
         return it && (*it)->GetCountWithDescendants() > 1;
     }
-    void relayTransaction(const uint256& txid) override
+    bool broadcastTransaction(const CTransactionRef& tx, std::string& err_string, const CAmount& max_tx_fee, bool relay) override
     {
-        CInv inv(MSG_TX, txid);
-        g_connman->ForEachNode([&inv](CNode* node) { node->PushInventory(inv); });
+        const TransactionError err = BroadcastTransaction(tx, err_string, max_tx_fee, relay, /*wait_callback*/ false);
+        // Chain clients only care about failures to accept the tx to the mempool. Disregard non-mempool related failures.
+        // Note: this will need to be updated if BroadcastTransactions() is updated to return other non-mempool failures
+        // that Chain clients do not need to know about.
+        return TransactionError::OK == err;
     }
     void getTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) override
     {
@@ -333,7 +332,6 @@ public:
         LOCK(cs_main);
         return ::fHavePruned;
     }
-    bool p2pEnabled() override { return g_connman != nullptr; }
     bool isReadyToBroadcast() override { return !::fImporting && !::fReindex && !isInitialBlockDownload(); }
     bool isInitialBlockDownload() override { return ::ChainstateActive().IsInitialBlockDownload(); }
     bool shutdownRequested() override { return ShutdownRequested(); }
