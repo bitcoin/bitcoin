@@ -1512,6 +1512,11 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
     std::deque<CInv>::iterator it = pfrom->vRecvGetData.begin();
     std::vector<CInv> vNotFound;
     const CNetMsgMaker msgMaker(pfrom->GetSendVersion());
+
+    // Note that if we receive a getdata for a MSG_TX or MSG_WITNESS_TX from a
+    // block-relay-only outbound peer, we will stop processing further getdata
+    // messages from this peer (likely resulting in our peer eventually
+    // disconnecting us).
     if (pfrom->m_tx_relay != nullptr) {
         LOCK(cs_main);
 
