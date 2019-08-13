@@ -5,7 +5,7 @@ Release is now available from:
 
   <https://www.dash.org/downloads/#wallets>
 
-This is a new minor version release, bringing various bugfixes.
+This is a new minor version release, bringing various bugfixes and improvements.
 
 Please report bugs using the issue tracker at github:
 
@@ -26,56 +26,72 @@ using version < 0.13 you will have to reindex (start with -reindex-chainstate
 or -reindex) to make sure your wallet has all the new data synced. Upgrading from
 version 0.13 should not require any additional actions.
 
+Due to the changes in the "evodb" database format introduced in this release, the
+first startup of Dash Core will run a migration process which can take a few minutes
+to finish. After the migration, a downgrade to an older version is only possible with
+a reindex (or reindex-chainstate).
+
 Downgrade warning
 -----------------
 
-### Downgrade to a version < 0.14.0.0
+### Downgrade to a version < 0.14.0.3
 
-Downgrading to a version smaller than 0.14 is not supported anymore as DIP8 has
-activated on mainnet and testnet.
-
-### Downgrade to versions 0.14.0.0 - 0.14.0.1
-
-Downgrading to older 0.14 releases is fully supported but is not
-recommended unless you have some serious issues with version 0.14.0.2.
+Downgrading to a version smaller than 0.14.0.3 is not supported anymore due to changes
+in the "evodb" database format. If you need to use an older version, you have to perform
+a reindex or re-sync the whole chain.
 
 Notable changes
 ===============
 
-Performance improvements
-------------------------
-Slow startup times were observed in older versions. This was due to sub-optimal handling of old
-deterministic masternode lists which caused the loading of too many lists into memory. This should be
-fixed now.
+Database space usage improvements
+--------------------------------
+Version 0.13.0.0 introduced a new database (evodb) which is found in the datadir of Dash Core. It turned
+out that this database grows quite fast when a lot of changes inside the deterministic masternode list happen,
+which is for example the case when a lot PoSe punishing/banning is happening. Such a situation happened
+immediately after the activation LLMQ DKGs, causing the database to grow a lot. This release introduces
+a new format in which information in "evodb" is stored, which causes it grow substantially slower.  
 
-Fixed excessive memory use
---------------------------
-Multiple issues were found which caused excessive use of memory in some situations, especially when
-a full reindex was performed, causing the node to crash even when enough RAM was available. This should
-be fixed now.
+Version 0.14.0.0 also introduced a new database (llmq) which is also found in the datadir of Dash Core.
+This database stores all LLMQ signatures for 7 days. After 7 days, a cleanup task removes old signatures.
+The idea was that the "llmq" database would grow in the beginning and then stay at an approximately constant
+size. The recent stress test on mainnet has however shown that the database grows too much and causes a risk
+of out-of-space situations. This release will from now also remove signatures when the corresponding InstantSend
+lock is fully confirmed on-chain (superseded by a ChainLock). This should remove >95% of all signatures from
+the database. After the upgrade, no space saving will be observed however as this logic is only applied to new
+signatures, which means that it will take 7 days until the whole "llmq" database gets to its minimum size.
 
-Fixed out-of-sync masternode list UI
-------------------------------------
-The masternode tab, which shows the masternode list, was not always up-to-date as it missed some internal
-updates. This should be fixed now.
+DKG and LLMQ signing failures fixed
+-----------------------------------
+Recent stress tests have shown that masternodes start to ban each other under high load and specific situations.
+This release fixes this and thus makes it a highly recommended upgrade for masternodes.
 
-0.14.0.2 Change log
+MacOS: macOS: disable AppNap during sync and mixing
+---------------------------------------------------
+AppNap is disabled now when Dash Core is syncing/reindexing or mixing.
+
+Signed binaries for Windows
+---------------------------
+This release is the first one to include signed binaries for Windows.
+
+New RPC command: quorum memberof <proTxHash>
+--------------------------------------------
+This RPC allows you to verify which quorums a masternode is supposed to be a member of. It will also show
+if the masternode succesfully participated in the DKG process.
+
+More information about number of InstantSend locks
+--------------------------------------------------
+The debug console will now show how many InstantSend locks Dash Core knows about. Please note that this number
+does not necessarily equal the number of mempool transactions.
+
+The "getmempoolinfo" RPC also has a new field now which shows the same information.
+
+0.14.0.3 Change log
 ===================
 
-See detailed [set of changes](https://github.com/dashpay/dash/compare/v0.14.0.1...dashpay:v0.14.0.2).
+TODO
 
-- [`d2ff63e8d`](https://github.com/dashpay/dash/commit/d2ff63e8d) Use std::unique_ptr for mnList in CSimplifiedMNList (#3014)
-- [`321bbf5af`](https://github.com/dashpay/dash/commit/321bbf5af) Fix excessive memory use when flushing chainstate and EvoDB (#3008)
-- [`0410259dd`](https://github.com/dashpay/dash/commit/0410259dd) Fix 2 common Travis failures which happen when Travis has network issues (#3003)
-- [`8d763c144`](https://github.com/dashpay/dash/commit/8d763c144) Only load signingActiveQuorumCount + 1 quorums into cache (#3002)
-- [`2dc1b06ec`](https://github.com/dashpay/dash/commit/2dc1b06ec) Remove skipped denom from the list on tx commit (#2997)
-- [`dff2c851d`](https://github.com/dashpay/dash/commit/dff2c851d) Update manpages for 0.14.0.2 (#2999)
-- [`46c4f5844`](https://github.com/dashpay/dash/commit/46c4f5844) Use Travis stages instead of custom timeouts (#2948)
-- [`49c37b82a`](https://github.com/dashpay/dash/commit/49c37b82a) Back off for 1m when connecting to quorum masternodes (#2975)
-- [`c1f756fd9`](https://github.com/dashpay/dash/commit/c1f756fd9) Multiple speed optimizations for deterministic MN list handling (#2972)
-- [`11699f540`](https://github.com/dashpay/dash/commit/11699f540) Process/keep messages/connections from PoSe-banned MNs (#2967)
-- [`c5415e746`](https://github.com/dashpay/dash/commit/c5415e746) Fix UI masternode list (#2966)
-- [`fb6f0e04d`](https://github.com/dashpay/dash/commit/fb6f0e04d) Bump version to 0.14.0.2 and copy release notes (#2991)
+See detailed [set of changes](https://github.com/dashpay/dash/compare/v0.14.0.2...dashpay:v0.14.0.3).
+
 
 Credits
 =======
@@ -83,6 +99,9 @@ Credits
 Thanks to everyone who directly contributed to this release:
 
 - Alexander Block (codablock)
+- Nathan Marley (nmarley)
+- PastaPastaPasta
+- strophy
 - UdjinM6
 
 As well as everyone that submitted issues and reviewed pull requests.
@@ -110,6 +129,7 @@ Dash Core tree 0.12.1.x was a fork of Bitcoin Core tree 0.12.
 
 These release are considered obsolete. Old release notes can be found here:
 
+- [v0.14.0.2](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.14.0.2.md) released July/4/2019
 - [v0.14.0.1](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.14.0.1.md) released May/31/2019
 - [v0.14.0](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.14.0.md) released May/22/2019
 - [v0.13.3](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.13.3.md) released Apr/04/2019
