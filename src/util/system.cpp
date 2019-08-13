@@ -388,7 +388,7 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
             key.erase(is_index);
         }
 #ifdef WIN32
-        std::transform(key.begin(), key.end(), key.begin(), ToLower);
+        key = ToLower(key);
         if (key[0] == '/')
             key[0] = '-';
 #endif
