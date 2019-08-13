@@ -68,7 +68,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(mintSyscoin.nBlockNumber, txRootDB)){
         if(ethTxRootShouldExist){
             // we always want to pass state.Invalid() for txroot missing errors here meaning we flag the block as invalid and dos ban the sender maybe
-            // the check in contextualcheckblock that does this prevents us from getting a block thats invalid flagged as error so it won't propogate the block, but if block does arrive we should dos ban peer and invalidate the block itself from connect block
+            // the check in contextualcheckblock that does this prevents us from getting a block that's invalid flagged as error so it won't propagate the block, but if block does arrive we should dos ban peer and invalidate the block itself from connect block
             return FormatSyscoinErrorMessage(state, "mint-txroot-missing", bMiner);
         }
     }  

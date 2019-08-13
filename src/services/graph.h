@@ -1,4 +1,5 @@
-﻿#ifndef SYSCOIN_SERVICES_GRAPH_H
+﻿
+#ifndef SYSCOIN_SERVICES_GRAPH_H
 #define SYSCOIN_SERVICES_GRAPH_H
 #include <vector>
 #include <primitives/transaction.h>

@@ -1337,7 +1337,7 @@ static const CRPCCommand commands[] =
     { "syscoin",            "assetallocationinfo",              &assetallocationinfo,           {"asset_guid"}},
     { "syscoin",            "assetallocationbalance",           &assetallocationbalance,        {"asset_guid"}},
     { "syscoin",            "assetallocationbalances",          &assetallocationbalances,       {"asset_guid","addresses"} },
-    { "syscoin",            "assetallocationverifyzdag",        &assetallocationverifyzdag,     {"asset_guid","txid"} },
+    { "syscoin",            "assetallocationverifyzdag",        &assetallocationverifyzdag,     {"txid"} },
     { "syscoin",            "listassetallocations",             &listassetallocations,          {"count","from","options"} },
     { "syscoin",            "listassetallocationmempoolbalances",             &listassetallocationmempoolbalances,          {"count","from","options"} },
     { "syscoin",            "listassetindex",                   &listassetindex,                {"page","options"} },

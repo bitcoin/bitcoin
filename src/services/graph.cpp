@@ -31,7 +31,7 @@ bool OrderBasedOnArrivals(std::vector<CTransactionRef>& blockVtx) {
             GetActorsFromAssetAllocationTx(theAssetAllocation, txRef->nVersion, true, false, actorSet);
             
             ArrivalTimesMap &arrivalTimes = arrivalTimesMap[*actorSet.begin()];
-            //  if we have arrival time for this transaction we want to add it ordered by the time it was recieved
+            //  if we have arrival time for this transaction we want to add it ordered by the time it was received
             auto it = std::find_if( arrivalTimes.begin(), arrivalTimes.end(),
                 [&txHash](const std::pair<uint256, std::pair<uint32_t, int64_t> >& element){ return element.first == txHash;} );
 			if (it != arrivalTimes.end()){
@@ -71,7 +71,7 @@ bool OrderBasedOnArrivals(std::vector<CTransactionRef>& blockVtx) {
     for (unsigned int n = 0; n < blockVtx.size(); n++) {
 		const CTransactionRef &txRef = blockVtx[n];
         const uint256& txHash = txRef->GetHash();
-        // ensure that dependent tranactions added via setAncestors is not added again
+        // ensure that dependent transactions added via setAncestors is not added again
         if(setOrderedAssets.find(txHash) == setOrderedAssets.end())
             orderedVtx.emplace_back(blockVtx[n]);
     }
