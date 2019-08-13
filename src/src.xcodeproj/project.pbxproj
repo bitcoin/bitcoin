@@ -1,0 +1,648 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXFileReference section */
+		B05E512423027B42004502D8 /* bitcoin_tx-bitcoin-tx.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "bitcoin_tx-bitcoin-tx.o"; sourceTree = "<group>"; };
+		B05E512523027B42004502D8 /* amount.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = amount.h; sourceTree = "<group>"; };
+		B05E512623027B42004502D8 /* chain.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = chain.h; sourceTree = "<group>"; };
+		B05E512723027B42004502D8 /* psbt.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = psbt.cpp; sourceTree = "<group>"; };
+		B05E512823027B42004502D8 /* libbitcoin_util_a-clientversion.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_util_a-clientversion.o"; sourceTree = "<group>"; };
+		B05E512923027B42004502D8 /* reverse_iterator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = reverse_iterator.h; sourceTree = "<group>"; };
+		B05E512A23027B42004502D8 /* libbitcoin_server_a-addrdb.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_server_a-addrdb.o"; sourceTree = "<group>"; };
+		B05E512B23027B42004502D8 /* flatfile.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = flatfile.cpp; sourceTree = "<group>"; };
+		B05E512C23027B42004502D8 /* protocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = protocol.h; sourceTree = "<group>"; };
+		B05E512D23027B42004502D8 /* libbitcoin_wallet.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libbitcoin_wallet.a; sourceTree = "<group>"; };
+		B05E512E23027B42004502D8 /* libbitcoin_server_a-httpserver.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_server_a-httpserver.o"; sourceTree = "<group>"; };
+		B05E512F23027B42004502D8 /* tinyformat.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = tinyformat.h; sourceTree = "<group>"; };
+		B05E513023027B42004502D8 /* timedata.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = timedata.cpp; sourceTree = "<group>"; };
+		B05E513123027B42004502D8 /* Makefile.test.include */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile.test.include; sourceTree = "<group>"; };
+		B05E513223027B42004502D8 /* bitcoin-wallet.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "bitcoin-wallet.cpp"; sourceTree = "<group>"; };
+		B05E513323027B42004502D8 /* bitcoind.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = bitcoind.cpp; sourceTree = "<group>"; };
+		B05E513423027B42004502D8 /* rest.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = rest.cpp; sourceTree = "<group>"; };
+		B05E513523027B42004502D8 /* obj */ = {isa = PBXFileReference; lastKnownFileType = folder; path = obj; sourceTree = "<group>"; };
+		B05E513623027B42004502D8 /* consensus */ = {isa = PBXFileReference; lastKnownFileType = folder; path = consensus; sourceTree = "<group>"; };
+		B05E513723027B42004502D8 /* leveldb */ = {isa = PBXFileReference; lastKnownFileType = folder; path = leveldb; sourceTree = "<group>"; };
+		B05E513823027B42004502D8 /* flatfile.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = flatfile.h; sourceTree = "<group>"; };
+		B05E513923027B42004502D8 /* bench */ = {isa = PBXFileReference; lastKnownFileType = folder; path = bench; sourceTree = "<group>"; };
+		B05E513A23027B42004502D8 /* crypto */ = {isa = PBXFileReference; lastKnownFileType = folder; path = crypto; sourceTree = "<group>"; };
+		B05E513B23027B42004502D8 /* libbitcoin_common_a-chainparams.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_common_a-chainparams.o"; sourceTree = "<group>"; };
+		B05E513C23027B42004502D8 /* libbitcoin_common_a-compressor.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_common_a-compressor.o"; sourceTree = "<group>"; };
+		B05E513D23027B42004502D8 /* bitcoind */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = bitcoind; sourceTree = "<group>"; };
+		B05E513E23027B42004502D8 /* validation.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = validation.cpp; sourceTree = "<group>"; };
+		B05E513F23027B42004502D8 /* libbitcoin_util_a-random.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_util_a-random.o"; sourceTree = "<group>"; };
+		B05E514023027B42004502D8 /* blockfilter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = blockfilter.h; sourceTree = "<group>"; };
+		B05E514123027B42004502D8 /* warnings.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = warnings.cpp; sourceTree = "<group>"; };
+		B05E514223027B42004502D8 /* compat */ = {isa = PBXFileReference; lastKnownFileType = folder; path = compat; sourceTree = "<group>"; };
+		B05E514323027B42004502D8 /* libbitcoinconsensus_la-arith_uint256.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoinconsensus_la-arith_uint256.o"; sourceTree = "<group>"; };
+		B05E514423027B42004502D8 /* version.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = version.h; sourceTree = "<group>"; };
+		B05E514523027B42004502D8 /* httprpc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = httprpc.h; sourceTree = "<group>"; };
+		B05E514623027B42004502D8 /* warnings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = warnings.h; sourceTree = "<group>"; };
+		B05E514723027B42004502D8 /* libbitcoin_common_a-core_read.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_common_a-core_read.o"; sourceTree = "<group>"; };
+		B05E514823027B42004502D8 /* netmessagemaker.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = netmessagemaker.h; sourceTree = "<group>"; };
+		B05E514923027B42004502D8 /* coins.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = coins.cpp; sourceTree = "<group>"; };
+		B05E514A23027B42004502D8 /* bitcoin-wallet */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = "bitcoin-wallet"; sourceTree = "<group>"; };
+		B05E514B23027B42004502D8 /* addrman.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = addrman.h; sourceTree = "<group>"; };
+		B05E514C23027B42004502D8 /* threadinterrupt.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = threadinterrupt.cpp; sourceTree = "<group>"; };
+		B05E514D23027B42004502D8 /* net.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = net.h; sourceTree = "<group>"; };
+		B05E514E23027B42004502D8 /* libbitcoin_common_a-merkleblock.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_common_a-merkleblock.o"; sourceTree = "<group>"; };
+		B05E514F23027B42004502D8 /* libbitcoin_server_a-torcontrol.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_server_a-torcontrol.o"; sourceTree = "<group>"; };
+		B05E515023027B42004502D8 /* key_io.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = key_io.cpp; sourceTree = "<group>"; };
+		B05E515123027B42004502D8 /* bitcoind-bitcoind.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "bitcoind-bitcoind.o"; sourceTree = "<group>"; };
+		B05E515223027B42004502D8 /* pubkey.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = pubkey.cpp; sourceTree = "<group>"; };
+		B05E515323027B42004502D8 /* streams.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = streams.h; sourceTree = "<group>"; };
+		B05E515423027B42004502D8 /* logging.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = logging.cpp; sourceTree = "<group>"; };
+		B05E515523027B42004502D8 /* test */ = {isa = PBXFileReference; lastKnownFileType = folder; path = test; sourceTree = "<group>"; };
+		B05E515623027B42004502D8 /* sync.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sync.h; sourceTree = "<group>"; };
+		B05E515723027B42004502D8 /* outputtype.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = outputtype.h; sourceTree = "<group>"; };
+		B05E515823027B42004502D8 /* noui.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = noui.cpp; sourceTree = "<group>"; };
+		B05E515923027B42004502D8 /* libbitcoin_common.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libbitcoin_common.a; sourceTree = "<group>"; };
+		B05E515A23027B42004502D8 /* util */ = {isa = PBXFileReference; lastKnownFileType = folder; path = util; sourceTree = "<group>"; };
+		B05E515B23027B42004502D8 /* base58.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = base58.cpp; sourceTree = "<group>"; };
+		B05E515C23027B42004502D8 /* httprpc.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = httprpc.cpp; sourceTree = "<group>"; };
+		B05E515D23027B42004502D8 /* dbwrapper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dbwrapper.h; sourceTree = "<group>"; };
+		B05E515E23027B42004502D8 /* shutdown.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = shutdown.h; sourceTree = "<group>"; };
+		B05E515F23027B42004502D8 /* config */ = {isa = PBXFileReference; lastKnownFileType = folder; path = config; sourceTree = "<group>"; };
+		B05E516023027B42004502D8 /* blockencodings.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = blockencodings.cpp; sourceTree = "<group>"; };
+		B05E516123027B42004502D8 /* libbitcoinconsensus_la-hash.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoinconsensus_la-hash.o"; sourceTree = "<group>"; };
+		B05E516223027B42004502D8 /* libbitcoin_server.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libbitcoin_server.a; sourceTree = "<group>"; };
+		B05E516323027B42004502D8 /* pow.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = pow.cpp; sourceTree = "<group>"; };
+		B05E516423027B42004502D8 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		B05E516523027B42004502D8 /* base58.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = base58.h; sourceTree = "<group>"; };
+		B05E516623027B42004502D8 /* key.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = key.h; sourceTree = "<group>"; };
+		B05E516723027B42004502D8 /* random.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = random.cpp; sourceTree = "<group>"; };
+		B05E516823027B42004502D8 /* banman.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = banman.h; sourceTree = "<group>"; };
+		B05E516923027B42004502D8 /* libbitcoin_common_a-bech32.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_common_a-bech32.o"; sourceTree = "<group>"; };
+		B05E516A23027B42004502D8 /* scheduler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = scheduler.h; sourceTree = "<group>"; };
+		B05E516B23027B42004502D8 /* libbitcoin_server_a-pow.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_server_a-pow.o"; sourceTree = "<group>"; };
+		B05E516C23027B42004502D8 /* libbitcoin_server_a-blockencodings.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_server_a-blockencodings.o"; sourceTree = "<group>"; };
+		B05E516D23027B42004502D8 /* libbitcoin_common_a-bloom.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_common_a-bloom.o"; sourceTree = "<group>"; };
+		B05E516E23027B42004502D8 /* bitcoin-cli.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "bitcoin-cli.cpp"; sourceTree = "<group>"; };
+		B05E516F23027B42004502D8 /* torcontrol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = torcontrol.h; sourceTree = "<group>"; };
+		B05E517023027B42004502D8 /* shutdown.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = shutdown.cpp; sourceTree = "<group>"; };
+		B05E517123027B42004502D8 /* noui.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = noui.h; sourceTree = "<group>"; };
+		B05E517223027B42004502D8 /* Makefile.qt.include */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile.qt.include; sourceTree = "<group>"; };
+		B05E517323027B42004502D8 /* libbitcoin_common_a-coins.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_common_a-coins.o"; sourceTree = "<group>"; };
+		B05E517423027B42004502D8 /* netbase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = netbase.h; sourceTree = "<group>"; };
+		B05E517523027B42004502D8 /* threadinterrupt.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = threadinterrupt.h; sourceTree = "<group>"; };
+		B05E517623027B42004502D8 /* qt */ = {isa = PBXFileReference; lastKnownFileType = folder; path = qt; sourceTree = "<group>"; };
+		B05E517723027B42004502D8 /* indirectmap.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = indirectmap.h; sourceTree = "<group>"; };
+		B05E517823027B42004502D8 /* bloom.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = bloom.cpp; sourceTree = "<group>"; };
+		B05E517923027B42004502D8 /* libbitcoinconsensus_la-uint256.lo */ = {isa = PBXFileReference; lastKnownFileType = text; path = "libbitcoinconsensus_la-uint256.lo"; sourceTree = "<group>"; };
+		B05E517A23027B42004502D8 /* sync.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = sync.cpp; sourceTree = "<group>"; };
+		B05E517B23027B42004502D8 /* libbitcoinconsensus_la-pubkey.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoinconsensus_la-pubkey.o"; sourceTree = "<group>"; };
+		B05E517C23027B42004502D8 /* core_write.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = core_write.cpp; sourceTree = "<group>"; };
+		B05E517D23027B42004502D8 /* libbitcoin_cli.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libbitcoin_cli.a; sourceTree = "<group>"; };
+		B05E517E23027B42004502D8 /* chainparams.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = chainparams.cpp; sourceTree = "<group>"; };
+		B05E517F23027B42004502D8 /* chainparamsseeds.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = chainparamsseeds.h; sourceTree = "<group>"; };
+		B05E518023027B42004502D8 /* psbt.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = psbt.h; sourceTree = "<group>"; };
+		B05E518123027B42004502D8 /* prevector.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = prevector.h; sourceTree = "<group>"; };
+		B05E518223027B42004502D8 /* bitcoin-tx */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = "bitcoin-tx"; sourceTree = "<group>"; };
+		B05E518323027B42004502D8 /* libbitcoin_server_a-validationinterface.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_server_a-validationinterface.o"; sourceTree = "<group>"; };
+		B05E518423027B42004502D8 /* attributes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = attributes.h; sourceTree = "<group>"; };
+		B05E518523027B42004502D8 /* timedata.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = timedata.h; sourceTree = "<group>"; };
+		B05E518623027B42004502D8 /* libbitcoin_common_a-netaddress.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_common_a-netaddress.o"; sourceTree = "<group>"; };
+		B05E518723027B42004502D8 /* libbitcoin_server_a-versionbits.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_server_a-versionbits.o"; sourceTree = "<group>"; };
+		B05E518823027B42004502D8 /* libbitcoin_server_a-chain.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_server_a-chain.o"; sourceTree = "<group>"; };
+		B05E518923027B42004502D8 /* httpserver.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = httpserver.cpp; sourceTree = "<group>"; };
+		B05E518A23027B42004502D8 /* logging.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = logging.h; sourceTree = "<group>"; };
+		B05E518B23027B42004502D8 /* merkleblock.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = merkleblock.cpp; sourceTree = "<group>"; };
+		B05E518C23027B42004502D8 /* libbitcoin_server_a-txmempool.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_server_a-txmempool.o"; sourceTree = "<group>"; };
+		B05E518D23027B42004502D8 /* libbitcoin_server_a-txdb.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_server_a-txdb.o"; sourceTree = "<group>"; };
+		B05E518E23027B42004502D8 /* chainparamsbase.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = chainparamsbase.cpp; sourceTree = "<group>"; };
+		B05E518F23027B42004502D8 /* optional.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = optional.h; sourceTree = "<group>"; };
+		B05E519023027B42004502D8 /* net_processing.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = net_processing.h; sourceTree = "<group>"; };
+		B05E519123027B42004502D8 /* httpserver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = httpserver.h; sourceTree = "<group>"; };
+		B05E519223027B42004502D8 /* libbitcoin_common_a-versionbitsinfo.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_common_a-versionbitsinfo.o"; sourceTree = "<group>"; };
+		B05E519323027B42004502D8 /* versionbitsinfo.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = versionbitsinfo.cpp; sourceTree = "<group>"; };
+		B05E519423027B42004502D8 /* txmempool.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = txmempool.cpp; sourceTree = "<group>"; };
+		B05E519523027B42004502D8 /* net.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = net.cpp; sourceTree = "<group>"; };
+		B05E519623027B42004502D8 /* scheduler.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = scheduler.cpp; sourceTree = "<group>"; };
+		B05E519723027B42004502D8 /* validationinterface.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = validationinterface.h; sourceTree = "<group>"; };
+		B05E519823027B42004502D8 /* libbitcoin_common_a-key.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_common_a-key.o"; sourceTree = "<group>"; };
+		B05E519923027B42004502D8 /* compressor.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = compressor.cpp; sourceTree = "<group>"; };
+		B05E519A23027B42004502D8 /* libbitcoin_server_a-init.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_server_a-init.o"; sourceTree = "<group>"; };
+		B05E519B23027B42004502D8 /* script */ = {isa = PBXFileReference; lastKnownFileType = folder; path = script; sourceTree = "<group>"; };
+		B05E519C23027B42004502D8 /* arith_uint256.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = arith_uint256.cpp; sourceTree = "<group>"; };
+		B05E519D23027B42004502D8 /* libbitcoin_util_a-logging.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_util_a-logging.o"; sourceTree = "<group>"; };
+		B05E519E23027B42004502D8 /* key_io.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = key_io.h; sourceTree = "<group>"; };
+		B05E519F23027B42004502D8 /* libbitcoin_util.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libbitcoin_util.a; sourceTree = "<group>"; };
+		B05E51A023027B42004502D8 /* chainparamsbase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = chainparamsbase.h; sourceTree = "<group>"; };
+		B05E51A123027B42004502D8 /* pubkey.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pubkey.h; sourceTree = "<group>"; };
+		B05E51A223027B42004502D8 /* bitcoin-tx.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "bitcoin-tx.cpp"; sourceTree = "<group>"; };
+		B05E51A323027B42004502D8 /* libbitcoin_consensus_a-arith_uint256.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_consensus_a-arith_uint256.o"; sourceTree = "<group>"; };
+		B05E51A423027B42004502D8 /* libbitcoin_server_a-net_processing.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_server_a-net_processing.o"; sourceTree = "<group>"; };
+		B05E51A523027B42004502D8 /* libbitcoin_server_a-net.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_server_a-net.o"; sourceTree = "<group>"; };
+		B05E51A623027B42004502D8 /* Makefile.am */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile.am; sourceTree = "<group>"; };
+		B05E51A723027B42004502D8 /* Makefile.bench.include */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile.bench.include; sourceTree = "<group>"; };
+		B05E51A823027B42004502D8 /* libbitcoinconsensus_la-hash.lo */ = {isa = PBXFileReference; lastKnownFileType = text; path = "libbitcoinconsensus_la-hash.lo"; sourceTree = "<group>"; };
+		B05E51A923027B42004502D8 /* primitives */ = {isa = PBXFileReference; lastKnownFileType = folder; path = primitives; sourceTree = "<group>"; };
+		B05E51AA23027B42004502D8 /* libbitcoin_common_a-psbt.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_common_a-psbt.o"; sourceTree = "<group>"; };
+		B05E51AB23027B42004502D8 /* core_memusage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = core_memusage.h; sourceTree = "<group>"; };
+		B05E51AC23027B42004502D8 /* libbitcoin_common_a-core_write.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_common_a-core_write.o"; sourceTree = "<group>"; };
+		B05E51AD23027B42004502D8 /* net_processing.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = net_processing.cpp; sourceTree = "<group>"; };
+		B05E51AE23027B42004502D8 /* miner.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = miner.h; sourceTree = "<group>"; };
+		B05E51AF23027B42004502D8 /* libbitcoin_server_a-shutdown.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_server_a-shutdown.o"; sourceTree = "<group>"; };
+		B05E51B023027B42004502D8 /* libbitcoin_server_a-httprpc.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_server_a-httprpc.o"; sourceTree = "<group>"; };
+		B05E51B123027B42004502D8 /* secp256k1 */ = {isa = PBXFileReference; lastKnownFileType = folder; path = secp256k1; sourceTree = "<group>"; };
+		B05E51B223027B42004502D8 /* versionbitsinfo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = versionbitsinfo.h; sourceTree = "<group>"; };
+		B05E51B323027B42004502D8 /* libbitcoin_consensus.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libbitcoin_consensus.a; sourceTree = "<group>"; };
+		B05E51B423027B42004502D8 /* libbitcoin_server_a-addrman.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_server_a-addrman.o"; sourceTree = "<group>"; };
+		B05E51B523027B42004502D8 /* libbitcoin_common_a-scheduler.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_common_a-scheduler.o"; sourceTree = "<group>"; };
+		B05E51B623027B42004502D8 /* libbitcoinconsensus_la-pubkey.lo */ = {isa = PBXFileReference; lastKnownFileType = text; path = "libbitcoinconsensus_la-pubkey.lo"; sourceTree = "<group>"; };
+		B05E51B723027B42004502D8 /* libbitcoin_zmq.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libbitcoin_zmq.a; sourceTree = "<group>"; };
+		B05E51B823027B42004502D8 /* addrdb.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = addrdb.cpp; sourceTree = "<group>"; };
+		B05E51B923027B42004502D8 /* libbitcoinconsensus_la-uint256.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoinconsensus_la-uint256.o"; sourceTree = "<group>"; };
+		B05E51BA23027B42004502D8 /* outputtype.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = outputtype.cpp; sourceTree = "<group>"; };
+		B05E51BB23027B42004502D8 /* netaddress.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = netaddress.h; sourceTree = "<group>"; };
+		B05E51BC23027B42004502D8 /* uint256.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = uint256.h; sourceTree = "<group>"; };
+		B05E51BD23027B42004502D8 /* libbitcoin_consensus_a-hash.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_consensus_a-hash.o"; sourceTree = "<group>"; };
+		B05E51BE23027B42004502D8 /* chain.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = chain.cpp; sourceTree = "<group>"; };
+		B05E51BF23027B42004502D8 /* support */ = {isa = PBXFileReference; lastKnownFileType = folder; path = support; sourceTree = "<group>"; };
+		B05E51C023027B42004502D8 /* netaddress.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = netaddress.cpp; sourceTree = "<group>"; };
+		B05E51C123027B42004502D8 /* coins.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = coins.h; sourceTree = "<group>"; };
+		B05E51C223027B42004502D8 /* dummywallet.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = dummywallet.cpp; sourceTree = "<group>"; };
+		B05E51C323027B42004502D8 /* libbitcoinconsensus_la-arith_uint256.lo */ = {isa = PBXFileReference; lastKnownFileType = text; path = "libbitcoinconsensus_la-arith_uint256.lo"; sourceTree = "<group>"; };
+		B05E51C423027B42004502D8 /* blockencodings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = blockencodings.h; sourceTree = "<group>"; };
+		B05E51C523027B42004502D8 /* libbitcoin_server_a-flatfile.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_server_a-flatfile.o"; sourceTree = "<group>"; };
+		B05E51C623027B42004502D8 /* blockfilter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = blockfilter.cpp; sourceTree = "<group>"; };
+		B05E51C723027B42004502D8 /* libbitcoin_server_a-dbwrapper.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_server_a-dbwrapper.o"; sourceTree = "<group>"; };
+		B05E51C823027B42004502D8 /* reverselock.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = reverselock.h; sourceTree = "<group>"; };
+		B05E51C923027B42004502D8 /* netbase.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = netbase.cpp; sourceTree = "<group>"; };
+		B05E51CA23027B42004502D8 /* libbitcoin_util_a-threadinterrupt.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_util_a-threadinterrupt.o"; sourceTree = "<group>"; };
+		B05E51CB23027B42004502D8 /* fs.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = fs.cpp; sourceTree = "<group>"; };
+		B05E51CC23027B42004502D8 /* libbitcoin_server_a-rest.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_server_a-rest.o"; sourceTree = "<group>"; };
+		B05E51CD23027B42004502D8 /* bloom.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bloom.h; sourceTree = "<group>"; };
+		B05E51CE23027B42004502D8 /* cuckoocache.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cuckoocache.h; sourceTree = "<group>"; };
+		B05E51CF23027B42004502D8 /* .clang-format */ = {isa = PBXFileReference; lastKnownFileType = text; path = ".clang-format"; sourceTree = "<group>"; };
+		B05E51D023027B42004502D8 /* undo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = undo.h; sourceTree = "<group>"; };
+		B05E51D123027B42004502D8 /* bech32.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = bech32.cpp; sourceTree = "<group>"; };
+		B05E51D223027B42004502D8 /* addrdb.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = addrdb.h; sourceTree = "<group>"; };
+		B05E51D323027B42004502D8 /* compat.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = compat.h; sourceTree = "<group>"; };
+		B05E51D423027B42004502D8 /* libbitcoin_util_a-chainparamsbase.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_util_a-chainparamsbase.o"; sourceTree = "<group>"; };
+		B05E51D523027B42004502D8 /* libbitcoin_server_a-ui_interface.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_server_a-ui_interface.o"; sourceTree = "<group>"; };
+		B05E51D623027B42004502D8 /* libbitcoin_server_a-blockfilter.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_server_a-blockfilter.o"; sourceTree = "<group>"; };
+		B05E51D723027B42004502D8 /* wallet */ = {isa = PBXFileReference; lastKnownFileType = folder; path = wallet; sourceTree = "<group>"; };
+		B05E51D823027B42004502D8 /* validation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = validation.h; sourceTree = "<group>"; };
+		B05E51D923027B42004502D8 /* arith_uint256.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = arith_uint256.h; sourceTree = "<group>"; };
+		B05E51DA23027B42004502D8 /* Makefile.qttest.include */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile.qttest.include; sourceTree = "<group>"; };
+		B05E51DB23027B42004502D8 /* libbitcoinconsensus.la */ = {isa = PBXFileReference; lastKnownFileType = text; path = libbitcoinconsensus.la; sourceTree = "<group>"; };
+		B05E51DC23027B42004502D8 /* core_read.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = core_read.cpp; sourceTree = "<group>"; };
+		B05E51DD23027B42004502D8 /* index */ = {isa = PBXFileReference; lastKnownFileType = folder; path = index; sourceTree = "<group>"; };
+		B05E51DE23027B42004502D8 /* txdb.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = txdb.cpp; sourceTree = "<group>"; };
+		B05E51DF23027B42004502D8 /* ui_interface.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ui_interface.cpp; sourceTree = "<group>"; };
+		B05E51E023027B42004502D8 /* versionbits.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = versionbits.h; sourceTree = "<group>"; };
+		B05E51E123027B42004502D8 /* clientversion.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = clientversion.cpp; sourceTree = "<group>"; };
+		B05E51E223027B42004502D8 /* uint256.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = uint256.cpp; sourceTree = "<group>"; };
+		B05E51E323027B42004502D8 /* chainparams.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = chainparams.h; sourceTree = "<group>"; };
+		B05E51E423027B42004502D8 /* libbitcoin_consensus_a-pubkey.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_consensus_a-pubkey.o"; sourceTree = "<group>"; };
+		B05E51E523027B42004502D8 /* span.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = span.h; sourceTree = "<group>"; };
+		B05E51E623027B42004502D8 /* protocol.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = protocol.cpp; sourceTree = "<group>"; };
+		B05E51E723027B42004502D8 /* threadsafety.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = threadsafety.h; sourceTree = "<group>"; };
+		B05E51E823027B42004502D8 /* libbitcoin_common_a-outputtype.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_common_a-outputtype.o"; sourceTree = "<group>"; };
+		B05E51E923027B42004502D8 /* walletinitinterface.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = walletinitinterface.h; sourceTree = "<group>"; };
+		B05E51EA23027B42004502D8 /* bitcoin_cli-bitcoin-cli.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "bitcoin_cli-bitcoin-cli.o"; sourceTree = "<group>"; };
+		B05E51EB23027B42004502D8 /* libbitcoin_server_a-validation.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_server_a-validation.o"; sourceTree = "<group>"; };
+		B05E51EC23027B42004502D8 /* libbitcoin_common_a-warnings.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_common_a-warnings.o"; sourceTree = "<group>"; };
+		B05E51ED23027B42004502D8 /* obj-test */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "obj-test"; sourceTree = "<group>"; };
+		B05E51EE23027B42004502D8 /* clientversion.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = clientversion.h; sourceTree = "<group>"; };
+		B05E51EF23027B42004502D8 /* init.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = init.cpp; sourceTree = "<group>"; };
+		B05E51F023027B42004502D8 /* bitcoind-res.rc */ = {isa = PBXFileReference; lastKnownFileType = text; path = "bitcoind-res.rc"; sourceTree = "<group>"; };
+		B05E51F123027B42004502D8 /* core_io.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = core_io.h; sourceTree = "<group>"; };
+		B05E51F223027B42004502D8 /* torcontrol.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = torcontrol.cpp; sourceTree = "<group>"; };
+		B05E51F323027B42004502D8 /* hash.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = hash.cpp; sourceTree = "<group>"; };
+		B05E51F423027B42004502D8 /* txdb.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = txdb.h; sourceTree = "<group>"; };
+		B05E51F523027B42004502D8 /* node */ = {isa = PBXFileReference; lastKnownFileType = folder; path = node; sourceTree = "<group>"; };
+		B05E51F623027B42004502D8 /* checkqueue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = checkqueue.h; sourceTree = "<group>"; };
+		B05E51F723027B42004502D8 /* bitcoin-wallet-res.rc */ = {isa = PBXFileReference; lastKnownFileType = text; path = "bitcoin-wallet-res.rc"; sourceTree = "<group>"; };
+		B05E51F823027B42004502D8 /* rpc */ = {isa = PBXFileReference; lastKnownFileType = folder; path = rpc; sourceTree = "<group>"; };
+		B05E51F923027B42004502D8 /* serialize.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = serialize.h; sourceTree = "<group>"; };
+		B05E51FA23027B42004502D8 /* bitcoin-tx-res.rc */ = {isa = PBXFileReference; lastKnownFileType = text; path = "bitcoin-tx-res.rc"; sourceTree = "<group>"; };
+		B05E51FB23027B42004502D8 /* libbitcoin_server_a-timedata.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_server_a-timedata.o"; sourceTree = "<group>"; };
+		B05E51FC23027B42004502D8 /* .deps */ = {isa = PBXFileReference; lastKnownFileType = folder; path = .deps; sourceTree = "<group>"; };
+		B05E51FD23027B42004502D8 /* libbitcoin_common_a-key_io.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_common_a-key_io.o"; sourceTree = "<group>"; };
+		B05E51FE23027B42004502D8 /* init.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = init.h; sourceTree = "<group>"; };
+		B05E51FF23027B42004502D8 /* univalue */ = {isa = PBXFileReference; lastKnownFileType = folder; path = univalue; sourceTree = "<group>"; };
+		B05E520023027B42004502D8 /* libbitcoin_server_a-miner.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_server_a-miner.o"; sourceTree = "<group>"; };
+		B05E520123027B42004502D8 /* validationinterface.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = validationinterface.cpp; sourceTree = "<group>"; };
+		B05E520223027B42004502D8 /* libbitcoin_util_a-sync.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_util_a-sync.o"; sourceTree = "<group>"; };
+		B05E520323027B42004502D8 /* .libs */ = {isa = PBXFileReference; lastKnownFileType = folder; path = .libs; sourceTree = "<group>"; };
+		B05E520423027B42004502D8 /* versionbits.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = versionbits.cpp; sourceTree = "<group>"; };
+		B05E520523027B42004502D8 /* compressor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = compressor.h; sourceTree = "<group>"; };
+		B05E520623027B42004502D8 /* libbitcoin_common_a-base58.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_common_a-base58.o"; sourceTree = "<group>"; };
+		B05E520723027B42004502D8 /* Makefile.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile.in; sourceTree = "<group>"; };
+		B05E520823027B42004502D8 /* pow.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pow.h; sourceTree = "<group>"; };
+		B05E520923027B42004502D8 /* libbitcoin_util_a-fs.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_util_a-fs.o"; sourceTree = "<group>"; };
+		B05E520A23027B42004502D8 /* key.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = key.cpp; sourceTree = "<group>"; };
+		B05E520B23027B42004502D8 /* bech32.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bech32.h; sourceTree = "<group>"; };
+		B05E520C23027B42004502D8 /* banman.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = banman.cpp; sourceTree = "<group>"; };
+		B05E520D23027B42004502D8 /* addrman.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = addrman.cpp; sourceTree = "<group>"; };
+		B05E520E23027B42004502D8 /* txmempool.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = txmempool.h; sourceTree = "<group>"; };
+		B05E520F23027B42004502D8 /* zmq */ = {isa = PBXFileReference; lastKnownFileType = folder; path = zmq; sourceTree = "<group>"; };
+		B05E521023027B42004502D8 /* hash.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = hash.h; sourceTree = "<group>"; };
+		B05E521123027B42004502D8 /* libbitcoin_wallet_tool.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libbitcoin_wallet_tool.a; sourceTree = "<group>"; };
+		B05E521223027B42004502D8 /* ui_interface.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ui_interface.h; sourceTree = "<group>"; };
+		B05E521323027B42004502D8 /* libbitcoin_common_a-protocol.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_common_a-protocol.o"; sourceTree = "<group>"; };
+		B05E521423027B42004502D8 /* dbwrapper.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = dbwrapper.cpp; sourceTree = "<group>"; };
+		B05E521523027B42004502D8 /* libbitcoin_consensus_a-uint256.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_consensus_a-uint256.o"; sourceTree = "<group>"; };
+		B05E521623027B42004502D8 /* libbitcoin_common_a-netbase.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_common_a-netbase.o"; sourceTree = "<group>"; };
+		B05E521723027B42004502D8 /* random.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = random.h; sourceTree = "<group>"; };
+		B05E521823027B42004502D8 /* fs.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = fs.h; sourceTree = "<group>"; };
+		B05E521923027B42004502D8 /* policy */ = {isa = PBXFileReference; lastKnownFileType = folder; path = policy; sourceTree = "<group>"; };
+		B05E521A23027B42004502D8 /* libbitcoin_server_a-noui.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_server_a-noui.o"; sourceTree = "<group>"; };
+		B05E521B23027B42004502D8 /* miner.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = miner.cpp; sourceTree = "<group>"; };
+		B05E521C23027B42004502D8 /* Makefile.leveldb.include */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile.leveldb.include; sourceTree = "<group>"; };
+		B05E521D23027B42004502D8 /* memusage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = memusage.h; sourceTree = "<group>"; };
+		B05E521E23027B42004502D8 /* bitcoin-cli */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = "bitcoin-cli"; sourceTree = "<group>"; };
+		B05E521F23027B42004502D8 /* limitedmap.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = limitedmap.h; sourceTree = "<group>"; };
+		B05E522023027B42004502D8 /* interfaces */ = {isa = PBXFileReference; lastKnownFileType = folder; path = interfaces; sourceTree = "<group>"; };
+		B05E522123027B42004502D8 /* libbitcoin_server_a-banman.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "libbitcoin_server_a-banman.o"; sourceTree = "<group>"; };
+		B05E522223027B42004502D8 /* bitcoin-cli-res.rc */ = {isa = PBXFileReference; lastKnownFileType = text; path = "bitcoin-cli-res.rc"; sourceTree = "<group>"; };
+		B05E522323027B42004502D8 /* bitcoin_wallet-bitcoin-wallet.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = "bitcoin_wallet-bitcoin-wallet.o"; sourceTree = "<group>"; };
+		B05E522423027B42004502D8 /* merkleblock.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = merkleblock.h; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		B05E511E23027B42004502D8 = {
+			isa = PBXGroup;
+			children = (
+				B05E512423027B42004502D8 /* bitcoin_tx-bitcoin-tx.o */,
+				B05E512523027B42004502D8 /* amount.h */,
+				B05E512623027B42004502D8 /* chain.h */,
+				B05E512723027B42004502D8 /* psbt.cpp */,
+				B05E512823027B42004502D8 /* libbitcoin_util_a-clientversion.o */,
+				B05E512923027B42004502D8 /* reverse_iterator.h */,
+				B05E512A23027B42004502D8 /* libbitcoin_server_a-addrdb.o */,
+				B05E512B23027B42004502D8 /* flatfile.cpp */,
+				B05E512C23027B42004502D8 /* protocol.h */,
+				B05E512D23027B42004502D8 /* libbitcoin_wallet.a */,
+				B05E512E23027B42004502D8 /* libbitcoin_server_a-httpserver.o */,
+				B05E512F23027B42004502D8 /* tinyformat.h */,
+				B05E513023027B42004502D8 /* timedata.cpp */,
+				B05E513123027B42004502D8 /* Makefile.test.include */,
+				B05E513223027B42004502D8 /* bitcoin-wallet.cpp */,
+				B05E513323027B42004502D8 /* bitcoind.cpp */,
+				B05E513423027B42004502D8 /* rest.cpp */,
+				B05E513523027B42004502D8 /* obj */,
+				B05E513623027B42004502D8 /* consensus */,
+				B05E513723027B42004502D8 /* leveldb */,
+				B05E513823027B42004502D8 /* flatfile.h */,
+				B05E513923027B42004502D8 /* bench */,
+				B05E513A23027B42004502D8 /* crypto */,
+				B05E513B23027B42004502D8 /* libbitcoin_common_a-chainparams.o */,
+				B05E513C23027B42004502D8 /* libbitcoin_common_a-compressor.o */,
+				B05E513D23027B42004502D8 /* bitcoind */,
+				B05E513E23027B42004502D8 /* validation.cpp */,
+				B05E513F23027B42004502D8 /* libbitcoin_util_a-random.o */,
+				B05E514023027B42004502D8 /* blockfilter.h */,
+				B05E514123027B42004502D8 /* warnings.cpp */,
+				B05E514223027B42004502D8 /* compat */,
+				B05E514323027B42004502D8 /* libbitcoinconsensus_la-arith_uint256.o */,
+				B05E514423027B42004502D8 /* version.h */,
+				B05E514523027B42004502D8 /* httprpc.h */,
+				B05E514623027B42004502D8 /* warnings.h */,
+				B05E514723027B42004502D8 /* libbitcoin_common_a-core_read.o */,
+				B05E514823027B42004502D8 /* netmessagemaker.h */,
+				B05E514923027B42004502D8 /* coins.cpp */,
+				B05E514A23027B42004502D8 /* bitcoin-wallet */,
+				B05E514B23027B42004502D8 /* addrman.h */,
+				B05E514C23027B42004502D8 /* threadinterrupt.cpp */,
+				B05E514D23027B42004502D8 /* net.h */,
+				B05E514E23027B42004502D8 /* libbitcoin_common_a-merkleblock.o */,
+				B05E514F23027B42004502D8 /* libbitcoin_server_a-torcontrol.o */,
+				B05E515023027B42004502D8 /* key_io.cpp */,
+				B05E515123027B42004502D8 /* bitcoind-bitcoind.o */,
+				B05E515223027B42004502D8 /* pubkey.cpp */,
+				B05E515323027B42004502D8 /* streams.h */,
+				B05E515423027B42004502D8 /* logging.cpp */,
+				B05E515523027B42004502D8 /* test */,
+				B05E515623027B42004502D8 /* sync.h */,
+				B05E515723027B42004502D8 /* outputtype.h */,
+				B05E515823027B42004502D8 /* noui.cpp */,
+				B05E515923027B42004502D8 /* libbitcoin_common.a */,
+				B05E515A23027B42004502D8 /* util */,
+				B05E515B23027B42004502D8 /* base58.cpp */,
+				B05E515C23027B42004502D8 /* httprpc.cpp */,
+				B05E515D23027B42004502D8 /* dbwrapper.h */,
+				B05E515E23027B42004502D8 /* shutdown.h */,
+				B05E515F23027B42004502D8 /* config */,
+				B05E516023027B42004502D8 /* blockencodings.cpp */,
+				B05E516123027B42004502D8 /* libbitcoinconsensus_la-hash.o */,
+				B05E516223027B42004502D8 /* libbitcoin_server.a */,
+				B05E516323027B42004502D8 /* pow.cpp */,
+				B05E516423027B42004502D8 /* Makefile */,
+				B05E516523027B42004502D8 /* base58.h */,
+				B05E516623027B42004502D8 /* key.h */,
+				B05E516723027B42004502D8 /* random.cpp */,
+				B05E516823027B42004502D8 /* banman.h */,
+				B05E516923027B42004502D8 /* libbitcoin_common_a-bech32.o */,
+				B05E516A23027B42004502D8 /* scheduler.h */,
+				B05E516B23027B42004502D8 /* libbitcoin_server_a-pow.o */,
+				B05E516C23027B42004502D8 /* libbitcoin_server_a-blockencodings.o */,
+				B05E516D23027B42004502D8 /* libbitcoin_common_a-bloom.o */,
+				B05E516E23027B42004502D8 /* bitcoin-cli.cpp */,
+				B05E516F23027B42004502D8 /* torcontrol.h */,
+				B05E517023027B42004502D8 /* shutdown.cpp */,
+				B05E517123027B42004502D8 /* noui.h */,
+				B05E517223027B42004502D8 /* Makefile.qt.include */,
+				B05E517323027B42004502D8 /* libbitcoin_common_a-coins.o */,
+				B05E517423027B42004502D8 /* netbase.h */,
+				B05E517523027B42004502D8 /* threadinterrupt.h */,
+				B05E517623027B42004502D8 /* qt */,
+				B05E517723027B42004502D8 /* indirectmap.h */,
+				B05E517823027B42004502D8 /* bloom.cpp */,
+				B05E517923027B42004502D8 /* libbitcoinconsensus_la-uint256.lo */,
+				B05E517A23027B42004502D8 /* sync.cpp */,
+				B05E517B23027B42004502D8 /* libbitcoinconsensus_la-pubkey.o */,
+				B05E517C23027B42004502D8 /* core_write.cpp */,
+				B05E517D23027B42004502D8 /* libbitcoin_cli.a */,
+				B05E517E23027B42004502D8 /* chainparams.cpp */,
+				B05E517F23027B42004502D8 /* chainparamsseeds.h */,
+				B05E518023027B42004502D8 /* psbt.h */,
+				B05E518123027B42004502D8 /* prevector.h */,
+				B05E518223027B42004502D8 /* bitcoin-tx */,
+				B05E518323027B42004502D8 /* libbitcoin_server_a-validationinterface.o */,
+				B05E518423027B42004502D8 /* attributes.h */,
+				B05E518523027B42004502D8 /* timedata.h */,
+				B05E518623027B42004502D8 /* libbitcoin_common_a-netaddress.o */,
+				B05E518723027B42004502D8 /* libbitcoin_server_a-versionbits.o */,
+				B05E518823027B42004502D8 /* libbitcoin_server_a-chain.o */,
+				B05E518923027B42004502D8 /* httpserver.cpp */,
+				B05E518A23027B42004502D8 /* logging.h */,
+				B05E518B23027B42004502D8 /* merkleblock.cpp */,
+				B05E518C23027B42004502D8 /* libbitcoin_server_a-txmempool.o */,
+				B05E518D23027B42004502D8 /* libbitcoin_server_a-txdb.o */,
+				B05E518E23027B42004502D8 /* chainparamsbase.cpp */,
+				B05E518F23027B42004502D8 /* optional.h */,
+				B05E519023027B42004502D8 /* net_processing.h */,
+				B05E519123027B42004502D8 /* httpserver.h */,
+				B05E519223027B42004502D8 /* libbitcoin_common_a-versionbitsinfo.o */,
+				B05E519323027B42004502D8 /* versionbitsinfo.cpp */,
+				B05E519423027B42004502D8 /* txmempool.cpp */,
+				B05E519523027B42004502D8 /* net.cpp */,
+				B05E519623027B42004502D8 /* scheduler.cpp */,
+				B05E519723027B42004502D8 /* validationinterface.h */,
+				B05E519823027B42004502D8 /* libbitcoin_common_a-key.o */,
+				B05E519923027B42004502D8 /* compressor.cpp */,
+				B05E519A23027B42004502D8 /* libbitcoin_server_a-init.o */,
+				B05E519B23027B42004502D8 /* script */,
+				B05E519C23027B42004502D8 /* arith_uint256.cpp */,
+				B05E519D23027B42004502D8 /* libbitcoin_util_a-logging.o */,
+				B05E519E23027B42004502D8 /* key_io.h */,
+				B05E519F23027B42004502D8 /* libbitcoin_util.a */,
+				B05E51A023027B42004502D8 /* chainparamsbase.h */,
+				B05E51A123027B42004502D8 /* pubkey.h */,
+				B05E51A223027B42004502D8 /* bitcoin-tx.cpp */,
+				B05E51A323027B42004502D8 /* libbitcoin_consensus_a-arith_uint256.o */,
+				B05E51A423027B42004502D8 /* libbitcoin_server_a-net_processing.o */,
+				B05E51A523027B42004502D8 /* libbitcoin_server_a-net.o */,
+				B05E51A623027B42004502D8 /* Makefile.am */,
+				B05E51A723027B42004502D8 /* Makefile.bench.include */,
+				B05E51A823027B42004502D8 /* libbitcoinconsensus_la-hash.lo */,
+				B05E51A923027B42004502D8 /* primitives */,
+				B05E51AA23027B42004502D8 /* libbitcoin_common_a-psbt.o */,
+				B05E51AB23027B42004502D8 /* core_memusage.h */,
+				B05E51AC23027B42004502D8 /* libbitcoin_common_a-core_write.o */,
+				B05E51AD23027B42004502D8 /* net_processing.cpp */,
+				B05E51AE23027B42004502D8 /* miner.h */,
+				B05E51AF23027B42004502D8 /* libbitcoin_server_a-shutdown.o */,
+				B05E51B023027B42004502D8 /* libbitcoin_server_a-httprpc.o */,
+				B05E51B123027B42004502D8 /* secp256k1 */,
+				B05E51B223027B42004502D8 /* versionbitsinfo.h */,
+				B05E51B323027B42004502D8 /* libbitcoin_consensus.a */,
+				B05E51B423027B42004502D8 /* libbitcoin_server_a-addrman.o */,
+				B05E51B523027B42004502D8 /* libbitcoin_common_a-scheduler.o */,
+				B05E51B623027B42004502D8 /* libbitcoinconsensus_la-pubkey.lo */,
+				B05E51B723027B42004502D8 /* libbitcoin_zmq.a */,
+				B05E51B823027B42004502D8 /* addrdb.cpp */,
+				B05E51B923027B42004502D8 /* libbitcoinconsensus_la-uint256.o */,
+				B05E51BA23027B42004502D8 /* outputtype.cpp */,
+				B05E51BB23027B42004502D8 /* netaddress.h */,
+				B05E51BC23027B42004502D8 /* uint256.h */,
+				B05E51BD23027B42004502D8 /* libbitcoin_consensus_a-hash.o */,
+				B05E51BE23027B42004502D8 /* chain.cpp */,
+				B05E51BF23027B42004502D8 /* support */,
+				B05E51C023027B42004502D8 /* netaddress.cpp */,
+				B05E51C123027B42004502D8 /* coins.h */,
+				B05E51C223027B42004502D8 /* dummywallet.cpp */,
+				B05E51C323027B42004502D8 /* libbitcoinconsensus_la-arith_uint256.lo */,
+				B05E51C423027B42004502D8 /* blockencodings.h */,
+				B05E51C523027B42004502D8 /* libbitcoin_server_a-flatfile.o */,
+				B05E51C623027B42004502D8 /* blockfilter.cpp */,
+				B05E51C723027B42004502D8 /* libbitcoin_server_a-dbwrapper.o */,
+				B05E51C823027B42004502D8 /* reverselock.h */,
+				B05E51C923027B42004502D8 /* netbase.cpp */,
+				B05E51CA23027B42004502D8 /* libbitcoin_util_a-threadinterrupt.o */,
+				B05E51CB23027B42004502D8 /* fs.cpp */,
+				B05E51CC23027B42004502D8 /* libbitcoin_server_a-rest.o */,
+				B05E51CD23027B42004502D8 /* bloom.h */,
+				B05E51CE23027B42004502D8 /* cuckoocache.h */,
+				B05E51CF23027B42004502D8 /* .clang-format */,
+				B05E51D023027B42004502D8 /* undo.h */,
+				B05E51D123027B42004502D8 /* bech32.cpp */,
+				B05E51D223027B42004502D8 /* addrdb.h */,
+				B05E51D323027B42004502D8 /* compat.h */,
+				B05E51D423027B42004502D8 /* libbitcoin_util_a-chainparamsbase.o */,
+				B05E51D523027B42004502D8 /* libbitcoin_server_a-ui_interface.o */,
+				B05E51D623027B42004502D8 /* libbitcoin_server_a-blockfilter.o */,
+				B05E51D723027B42004502D8 /* wallet */,
+				B05E51D823027B42004502D8 /* validation.h */,
+				B05E51D923027B42004502D8 /* arith_uint256.h */,
+				B05E51DA23027B42004502D8 /* Makefile.qttest.include */,
+				B05E51DB23027B42004502D8 /* libbitcoinconsensus.la */,
+				B05E51DC23027B42004502D8 /* core_read.cpp */,
+				B05E51DD23027B42004502D8 /* index */,
+				B05E51DE23027B42004502D8 /* txdb.cpp */,
+				B05E51DF23027B42004502D8 /* ui_interface.cpp */,
+				B05E51E023027B42004502D8 /* versionbits.h */,
+				B05E51E123027B42004502D8 /* clientversion.cpp */,
+				B05E51E223027B42004502D8 /* uint256.cpp */,
+				B05E51E323027B42004502D8 /* chainparams.h */,
+				B05E51E423027B42004502D8 /* libbitcoin_consensus_a-pubkey.o */,
+				B05E51E523027B42004502D8 /* span.h */,
+				B05E51E623027B42004502D8 /* protocol.cpp */,
+				B05E51E723027B42004502D8 /* threadsafety.h */,
+				B05E51E823027B42004502D8 /* libbitcoin_common_a-outputtype.o */,
+				B05E51E923027B42004502D8 /* walletinitinterface.h */,
+				B05E51EA23027B42004502D8 /* bitcoin_cli-bitcoin-cli.o */,
+				B05E51EB23027B42004502D8 /* libbitcoin_server_a-validation.o */,
+				B05E51EC23027B42004502D8 /* libbitcoin_common_a-warnings.o */,
+				B05E51ED23027B42004502D8 /* obj-test */,
+				B05E51EE23027B42004502D8 /* clientversion.h */,
+				B05E51EF23027B42004502D8 /* init.cpp */,
+				B05E51F023027B42004502D8 /* bitcoind-res.rc */,
+				B05E51F123027B42004502D8 /* core_io.h */,
+				B05E51F223027B42004502D8 /* torcontrol.cpp */,
+				B05E51F323027B42004502D8 /* hash.cpp */,
+				B05E51F423027B42004502D8 /* txdb.h */,
+				B05E51F523027B42004502D8 /* node */,
+				B05E51F623027B42004502D8 /* checkqueue.h */,
+				B05E51F723027B42004502D8 /* bitcoin-wallet-res.rc */,
+				B05E51F823027B42004502D8 /* rpc */,
+				B05E51F923027B42004502D8 /* serialize.h */,
+				B05E51FA23027B42004502D8 /* bitcoin-tx-res.rc */,
+				B05E51FB23027B42004502D8 /* libbitcoin_server_a-timedata.o */,
+				B05E51FC23027B42004502D8 /* .deps */,
+				B05E51FD23027B42004502D8 /* libbitcoin_common_a-key_io.o */,
+				B05E51FE23027B42004502D8 /* init.h */,
+				B05E51FF23027B42004502D8 /* univalue */,
+				B05E520023027B42004502D8 /* libbitcoin_server_a-miner.o */,
+				B05E520123027B42004502D8 /* validationinterface.cpp */,
+				B05E520223027B42004502D8 /* libbitcoin_util_a-sync.o */,
+				B05E520323027B42004502D8 /* .libs */,
+				B05E520423027B42004502D8 /* versionbits.cpp */,
+				B05E520523027B42004502D8 /* compressor.h */,
+				B05E520623027B42004502D8 /* libbitcoin_common_a-base58.o */,
+				B05E520723027B42004502D8 /* Makefile.in */,
+				B05E520823027B42004502D8 /* pow.h */,
+				B05E520923027B42004502D8 /* libbitcoin_util_a-fs.o */,
+				B05E520A23027B42004502D8 /* key.cpp */,
+				B05E520B23027B42004502D8 /* bech32.h */,
+				B05E520C23027B42004502D8 /* banman.cpp */,
+				B05E520D23027B42004502D8 /* addrman.cpp */,
+				B05E520E23027B42004502D8 /* txmempool.h */,
+				B05E520F23027B42004502D8 /* zmq */,
+				B05E521023027B42004502D8 /* hash.h */,
+				B05E521123027B42004502D8 /* libbitcoin_wallet_tool.a */,
+				B05E521223027B42004502D8 /* ui_interface.h */,
+				B05E521323027B42004502D8 /* libbitcoin_common_a-protocol.o */,
+				B05E521423027B42004502D8 /* dbwrapper.cpp */,
+				B05E521523027B42004502D8 /* libbitcoin_consensus_a-uint256.o */,
+				B05E521623027B42004502D8 /* libbitcoin_common_a-netbase.o */,
+				B05E521723027B42004502D8 /* random.h */,
+				B05E521823027B42004502D8 /* fs.h */,
+				B05E521923027B42004502D8 /* policy */,
+				B05E521A23027B42004502D8 /* libbitcoin_server_a-noui.o */,
+				B05E521B23027B42004502D8 /* miner.cpp */,
+				B05E521C23027B42004502D8 /* Makefile.leveldb.include */,
+				B05E521D23027B42004502D8 /* memusage.h */,
+				B05E521E23027B42004502D8 /* bitcoin-cli */,
+				B05E521F23027B42004502D8 /* limitedmap.h */,
+				B05E522023027B42004502D8 /* interfaces */,
+				B05E522123027B42004502D8 /* libbitcoin_server_a-banman.o */,
+				B05E522223027B42004502D8 /* bitcoin-cli-res.rc */,
+				B05E522323027B42004502D8 /* bitcoin_wallet-bitcoin-wallet.o */,
+				B05E522423027B42004502D8 /* merkleblock.h */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXLegacyTarget section */
+		B05E512323027B42004502D8 /* src */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION)";
+			buildConfigurationList = B05E522523027B42004502D8 /* Build configuration list for PBXLegacyTarget "src" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = "/Users/roy/12ships/OlleChain-core2/src";
+			dependencies = (
+			);
+			name = src;
+			passBuildSettingsInEnvironment = 1;
+			productName = src;
+		};
+/* End PBXLegacyTarget section */
+
+/* Begin PBXProject section */
+		B05E511F23027B42004502D8 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+			};
+			buildConfigurationList = B05E512223027B42004502D8 /* Build configuration list for PBXProject "src" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = B05E511E23027B42004502D8;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				B05E512323027B42004502D8 /* src */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin XCBuildConfiguration section */
+		B05E512023027B42004502D8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				COPY_PHASE_STRIP = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx10.6;
+			};
+			name = Debug;
+		};
+		B05E512123027B42004502D8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				COPY_PHASE_STRIP = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				SDKROOT = macosx10.6;
+			};
+			name = Release;
+		};
+		B05E522623027B42004502D8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				DEBUGGING_SYMBOLS = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = src;
+			};
+			name = Debug;
+		};
+		B05E522723027B42004502D8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = src;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		B05E512223027B42004502D8 /* Build configuration list for PBXProject "src" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B05E512023027B42004502D8 /* Debug */,
+				B05E512123027B42004502D8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B05E522523027B42004502D8 /* Build configuration list for PBXLegacyTarget "src" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B05E522623027B42004502D8 /* Debug */,
+				B05E522723027B42004502D8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = B05E511F23027B42004502D8 /* Project object */;
+}
