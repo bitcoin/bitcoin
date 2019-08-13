@@ -44,7 +44,6 @@ from .util import (
     sync_mempools,
     sync_masternodes,
     wait_to_sync)
-from .authproxy import JSONRPCException
 
 class TestStatus(Enum):
     PASSED = 1
