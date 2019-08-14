@@ -5,21 +5,18 @@
 """Test the ZMQ notification interface."""
 import struct
 
-from codecs import encode
-
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.messages import dashhash
-from test_framework.util import (
-    assert_equal,
-    hash256,
-    )
+from test_framework.messages import dashhash, hash256
+from test_framework.util import assert_equal
 
 ADDRESS = "tcp://127.0.0.1:28332"
 
-def dashhash_helper(b):
-    return encode(dashhash(b)[::-1], 'hex_codec').decode('ascii')
+def hash256_reversed(byte_str):
+    return hash256(byte_str)[::-1]
 
+def dashhash_reversed(byte_str):
+    return dashhash(byte_str)[::-1]
 
 class ZMQSubscriber:
     def __init__(self, socket, topic):
@@ -95,7 +92,7 @@ class ZMQTest (BitcoinTestFramework):
 
             # Should receive the coinbase raw transaction.
             hex = self.rawtx.receive()
-            assert_equal(hash256(hex), txid)
+            assert_equal(hash256_reversed(hex), txid)
 
             # Should receive the generated block hash.
             hash = self.hashblock.receive().hex()
@@ -105,7 +102,7 @@ class ZMQTest (BitcoinTestFramework):
 
             # Should receive the generated raw block.
             block = self.rawblock.receive()
-            assert_equal(genhashes[x], dashhash_helper(block[:80]))
+            assert_equal(genhashes[x], dashhash_reversed(block[:80]).hex())
 
         if self.is_wallet_compiled():
             self.log.info("Wait for tx from second node")
@@ -118,7 +115,7 @@ class ZMQTest (BitcoinTestFramework):
 
             # Should receive the broadcasted raw transaction.
             hex = self.rawtx.receive()
-            assert_equal(payment_txid, hash256(hex).hex())
+            assert_equal(payment_txid, hash256_reversed(hex).hex())
 
 
         self.log.info("Test the getzmqnotifications RPC")
