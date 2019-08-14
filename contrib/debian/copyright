@@ -60,7 +60,7 @@ Files: src/qt/res/icons/connect*.png
 Copyright: Marco Falke
            Luke Dashjr
 License: Expat
-Comment: Inspired by Stephan Hutchings Typicons
+Comment: Inspired by Stephen Hutchings' Typicons
 
 Files: src/qt/res/icons/tx_mined.png
        src/qt/res/src/mine.svg
@@ -72,7 +72,6 @@ Files: src/qt/res/icons/tx_mined.png
        src/qt/res/src/hd_enabled.svg
 Copyright: Jonas Schnelli
 License: Expat
-Comment:
 
 Files: src/qt/res/icons/clock*.png
        src/qt/res/icons/eye_*.png
@@ -81,9 +80,9 @@ Files: src/qt/res/icons/clock*.png
        src/qt/res/src/clock_*.svg
        src/qt/res/src/tx_*.svg
        src/qt/res/src/verify.svg
-Copyright: Stephan Hutching, Jonas Schnelli
+Copyright: Stephen Hutchings, Jonas Schnelli
 License: Expat
-Comment: Modifications of Stephan Hutchings Typicons
+Comment: Modifications of Stephen Hutchings' Typicons
 
 Files: src/qt/res/icons/about.png
        src/qt/res/icons/bitcoin.*
