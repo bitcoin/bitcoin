@@ -213,6 +213,7 @@ BITCOIN_CORE_H = \
   messagesigner.h \
   miner.h \
   net.h \
+  net_permissions.h \
   net_processing.h \
   netaddress.h \
   netbase.h \
@@ -570,6 +571,7 @@ libdash_common_a_SOURCES = \
   keystore.cpp \
   netaddress.cpp \
   netbase.cpp \
+  net_permissions.cpp \
   policy/feerate.cpp \
   protocol.cpp \
   saltedhasher.cpp \
