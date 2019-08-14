@@ -13,9 +13,9 @@ namespace Platform
 {
     enum class NftRegSign : uint8_t
     {
-        SignAny,
-        SelfSign,
-        SignByCreator
+        SelfSign = 1,
+        SignByCreator = 2,
+        SignAny = 3
     };
 
     class NfTokenProtocol
@@ -51,6 +51,7 @@ namespace Platform
 
         /// Owner of the NF token protocol
         CKeyID tokenProtocolOwnerId;
+        //TODO: add admin key to the protocol structure. add option to use setup admin key rights including tranfering ownership
 
     public:
         ADD_SERIALIZE_METHODS
