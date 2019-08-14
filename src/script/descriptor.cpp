@@ -492,9 +492,9 @@ public:
             if (!p->GetPrivKey(pos, provider, key)) continue;
             out.keys.emplace(key.GetPubKey().GetID(), key);
         }
-        if (m_script_arg) {
+        if (m_subdescriptor_arg) {
             FlatSigningProvider subprovider;
-            m_script_arg->ExpandPrivate(pos, provider, subprovider);
+            m_subdescriptor_arg->ExpandPrivate(pos, provider, subprovider);
             out = Merge(out, subprovider);
         }
     }
