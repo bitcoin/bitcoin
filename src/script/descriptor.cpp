@@ -335,10 +335,12 @@ public:
 /** Base class for all Descriptor implementations. */
 class DescriptorImpl : public Descriptor
 {
-    //! Public key arguments for this descriptor (size 1 for PK, PKH, WPKH; any size of Multisig).
+    //! Public key arguments for this descriptor (size 1 for PK, PKH, WPKH; any size for Multisig).
     const std::vector<std::unique_ptr<PubkeyProvider>> m_pubkey_args;
     //! The sub-descriptor argument (nullptr for everything but SH and WSH).
-    const std::unique_ptr<DescriptorImpl> m_script_arg;
+    //! In doc/descriptors.m this is referred to as SCRIPT expressions sh(SCRIPT)
+    //! and wsh(SCRIPT), and distinct from KEY expressions and ADDR expressions.
+    const std::unique_ptr<DescriptorImpl> m_subdescriptor_arg;
     //! The string name of the descriptor function.
     const std::string m_name;
 
@@ -349,10 +351,10 @@ protected:
     /** A helper function to construct the scripts for this descriptor.
      *
      *  This function is invoked once for every CScript produced by evaluating
-     *  m_script_arg, or just once in case m_script_arg is nullptr.
+     *  m_subdescriptor_arg, or just once in case m_subdescriptor_arg is nullptr.
 
      *  @param pubkeys The evaluations of the m_pubkey_args field.
-     *  @param script The evaluation of m_script_arg (or nullptr when m_script_arg is nullptr).
+     *  @param script The evaluation of m_subdescriptor_arg (or nullptr when m_subdescriptor_arg is nullptr).
      *  @param out A FlatSigningProvider to put scripts or public keys in that are necessary to the solver.
      *             The script arguments to this function are automatically added, as is the origin info of the provided pubkeys.
      *  @return A vector with scriptPubKeys for this descriptor.
@@ -360,12 +362,12 @@ protected:
     virtual std::vector<CScript> MakeScripts(const std::vector<CPubKey>& pubkeys, const CScript* script, FlatSigningProvider& out) const = 0;
 
 public:
-    DescriptorImpl(std::vector<std::unique_ptr<PubkeyProvider>> pubkeys, std::unique_ptr<DescriptorImpl> script, const std::string& name) : m_pubkey_args(std::move(pubkeys)), m_script_arg(std::move(script)), m_name(name) {}
+    DescriptorImpl(std::vector<std::unique_ptr<PubkeyProvider>> pubkeys, std::unique_ptr<DescriptorImpl> script, const std::string& name) : m_pubkey_args(std::move(pubkeys)), m_subdescriptor_arg(std::move(script)), m_name(name) {}
 
     bool IsSolvable() const override
     {
-        if (m_script_arg) {
-            if (!m_script_arg->IsSolvable()) return false;
+        if (m_subdescriptor_arg) {
+            if (!m_subdescriptor_arg->IsSolvable()) return false;
         }
         return true;
     }
@@ -375,8 +377,8 @@ public:
         for (const auto& pubkey : m_pubkey_args) {
             if (pubkey->IsRange()) return true;
         }
-        if (m_script_arg) {
-            if (m_script_arg->IsRange()) return true;
+        if (m_subdescriptor_arg) {
+            if (m_subdescriptor_arg->IsRange()) return true;
         }
         return false;
     }
@@ -396,10 +398,10 @@ public:
             }
             ret += std::move(tmp);
         }
-        if (m_script_arg) {
+        if (m_subdescriptor_arg) {
             if (pos++) ret += ",";
             std::string tmp;
-            if (!m_script_arg->ToStringHelper(arg, tmp, priv)) return false;
+            if (!m_subdescriptor_arg->ToStringHelper(arg, tmp, priv)) return false;
             ret += std::move(tmp);
         }
         out = std::move(ret) + ")";
@@ -428,6 +430,8 @@ public:
         // Construct temporary data in `entries` and `subscripts`, to avoid producing output in case of failure.
         for (const auto& p : m_pubkey_args) {
             entries.emplace_back();
+            // If we have a cache, we don't need GetPubKey to compute the public key.
+            // Pass in nullptr to signify only origin info is desired.
             if (!p->GetPubKey(pos, arg, cache_read ? nullptr : &entries.back().first, entries.back().second)) return false;
             if (cache_read) {
                 // Cached expanded public key exists, use it.
@@ -444,9 +448,9 @@ public:
             }
         }
         std::vector<CScript> subscripts;
-        if (m_script_arg) {
+        if (m_subdescriptor_arg) {
             FlatSigningProvider subprovider;
-            if (!m_script_arg->ExpandHelper(pos, arg, cache_read, subscripts, subprovider, cache_write)) return false;
+            if (!m_subdescriptor_arg->ExpandHelper(pos, arg, cache_read, subscripts, subprovider, cache_write)) return false;
             out = Merge(out, subprovider);
         }
 
@@ -456,7 +460,7 @@ public:
             pubkeys.push_back(entry.first);
             out.origins.emplace(entry.first.GetID(), std::make_pair<CPubKey, KeyOriginInfo>(CPubKey(entry.first), std::move(entry.second)));
         }
-        if (m_script_arg) {
+        if (m_subdescriptor_arg) {
             for (const auto& subscript : subscripts) {
                 out.scripts.emplace(CScriptID(subscript), subscript);
                 std::vector<CScript> addscripts = MakeScripts(pubkeys, &subscript, out);
