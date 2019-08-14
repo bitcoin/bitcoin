@@ -1,6 +1,6 @@
-Bitcoin Core version 0.18.1 is now available from:
+Bitcoin Core version 0.18.x is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-0.18.1/>
+  <https://bitcoincore.org/bin/bitcoin-core-0.18.x/>
 
 This is a new minor version release, including new features, various bug
 fixes and performance improvements, as well as updated translations.
@@ -59,77 +59,18 @@ input selection dialog can erroneously retain wrong-wallet state when
 switching wallets using the dropdown menu. For now, it is recommended
 not to use coin control features with multiple wallets loaded.
 
-0.18.1 change log
+Notable changes
+===============
+
+
+0.18.x change log
 =================
 
-### P2P protocol and network code
-- #15990 Add tests and documentation for blocksonly (MarcoFalke)
-- #16021 Avoid logging transaction decode errors to stderr (MarcoFalke)
-- #16405 fix: tor: Call `event_base_loopbreak` from the event's callback (promag)
-- #16412 Make poll in InterruptibleRecv only filter for POLLIN events (tecnovert)
-
-### Wallet
-- #15913 Add -ignorepartialspends to list of ignored wallet options (luke-jr)
-
-### RPC and other APIs
-- #15991 Bugfix: fix pruneblockchain returned prune height (jonasschnelli)
-- #15899 Document iswitness flag and fix bug in converttopsbt (MarcoFalke)
-- #16026 Ensure that uncompressed public keys in a multisig always returns a legacy address (achow101)
-- #14039 Disallow extended encoding for non-witness transactions (sipa)
-- #16210 add 2nd arg to signrawtransactionwithkey examples (dooglus)
-- #16250 signrawtransactionwithkey: report error when missing redeemScript/witnessScript (ajtowns)
-
-### GUI
-- #16044 fix the bug of OPEN CONFIGURATION FILE on Mac (shannon1916)
-- #15957 Show "No wallets available" in open menu instead of nothing (meshcollider)
-- #16118 Enable open wallet menu on setWalletController (promag)
-- #16135 Set progressDialog to nullptr (promag)
-- #16231 Fix open wallet menu initialization order (promag) 
-- #16254 Set `AA_EnableHighDpiScaling` attribute early (hebasto) 
-- #16122 Enable console line edit on setClientModel (promag) 
-- #16348 Assert QMetaObject::invokeMethod result (promag)
-
-### Build system
-- #15985 Add test for GCC bug 90348 (sipa)
-- #15947 Install bitcoin-wallet manpage (domob1812)
-- #15983 build with -fstack-reuse=none (MarcoFalke)
-
-### Tests and QA
-- #15826 Pure python EC (sipa)
-- #15893 Add test for superfluous witness record in deserialization (instagibbs)
-- #14818 Bugfix: test/functional/rpc_psbt: Remove check for specific error message that depends on uncertain assumptions (luke-jr)
-- #15831 Add test that addmultisigaddress fails for watchonly addresses (MarcoFalke)
-
-### Documentation
-- #15890 Remove text about txes always relayed from -whitelist (harding)
-
-### Miscellaneous
-- #16095 Catch by reference not value in wallettool (kristapsk)
-- #16205 Replace fprintf with tfm::format (MarcoFalke)
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
-- Andrew Chow
-- Anthony Towns
-- Chris Moore
-- Daniel Kraft
-- David A. Harding
-- fanquake
-- Gregory Sanders
-- Hennadii Stepanov
-- John Newbery
-- Jonas Schnelli
-- João Barbosa
-- Kristaps Kaupe
-- Luke Dashjr
-- MarcoFalke
-- MeshCollider
-- Pieter Wuille
-- shannon1916
-- tecnovert
-- Wladimir J. van der Laan
 
 As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
