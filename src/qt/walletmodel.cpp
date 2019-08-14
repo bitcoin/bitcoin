@@ -563,6 +563,11 @@ bool WalletModel::privateKeysDisabled() const
     return m_wallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
 }
 
+bool WalletModel::isLegacy() const
+{
+    return m_wallet->isLegacy();
+}
+
 bool WalletModel::canGetAddresses() const
 {
     return m_wallet->canGetAddresses();

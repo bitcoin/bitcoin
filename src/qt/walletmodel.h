@@ -142,6 +142,7 @@ public:
     static bool isWalletEnabled();
     bool privateKeysDisabled() const;
     bool canGetAddresses() const;
+    bool isLegacy() const;
 
     interfaces::Node& node() const { return m_node; }
     interfaces::Wallet& wallet() const { return *m_wallet; }
