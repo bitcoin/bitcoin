@@ -4114,7 +4114,13 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
 
     CAmount fee;
     int change_position;
-    CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], request.params[3]["replaceable"]);
+    bool rbf = pwallet->m_signal_rbf;
+    const UniValue &replaceable_arg = request.params[3]["replaceable"];
+    if (!replaceable_arg.isNull()) {
+        RPCTypeCheckArgument(replaceable_arg, UniValue::VBOOL);
+        rbf = replaceable_arg.isTrue();
+    }
+    CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], rbf);
     FundTransaction(pwallet, rawTx, fee, change_position, request.params[3]);
 
     // Make a blank psbt
