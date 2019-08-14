@@ -96,7 +96,7 @@ void EraseOrphansFor(NodeId peer);
 /** Note that this must be locked BEFORE cs_main! */
 CCriticalSection cs_peerstate ACQUIRED_BEFORE(cs_main);
 /** Increase a node's misbehavior score. */
-void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="") EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="") EXCLUSIVE_LOCKS_REQUIRED(cs_peerstate);
 
 /** Average delay between local address broadcasts in seconds. */
 static constexpr unsigned int AVG_LOCAL_ADDRESS_BROADCAST_INTERVAL = 24 * 60 * 60;
@@ -217,6 +217,20 @@ struct CBlockReject {
  * move most (non-validation-specific) state here.
  */
 struct CPeerState {
+    //! String name of this peer (debugging/logging purposes).
+    const std::string name;
+
+    //! Whether this peer should be disconnected and banned (unless whitelisted).
+    bool fShouldBan;
+    //! Accumulated misbehaviour score for this peer.
+    int nMisbehavior;
+
+    //! Whether this peer is an inbound connection
+    bool m_is_inbound;
+
+    //! Whether this peer is a manual connection
+    bool m_is_manual_connection;
+
     //! If this peer generated some headers for us to add, we store the resulting
     //! future here and wait for it to complete before we process more data from this
     //! peer.
@@ -228,7 +242,13 @@ struct CPeerState {
     //! in order, though this may grow to include more such events in the future).
     bool pending_event_wait;
 
-    CPeerState() {
+    CPeerState(std::string addrNameIn, bool is_inbound, bool is_manual) :
+        name(std::move(addrNameIn)),
+        m_is_inbound(is_inbound),
+        m_is_manual_connection (is_manual)
+    {
+        fShouldBan = false;
+        nMisbehavior = 0;
         pending_event_wait = false;
     }
 };
@@ -245,12 +265,6 @@ struct CNodeState {
     const CService address;
     //! Whether we have a fully established connection.
     bool fCurrentlyConnected;
-    //! Accumulated misbehaviour score for this peer.
-    int nMisbehavior;
-    //! Whether this peer should be disconnected and banned (unless whitelisted).
-    bool fShouldBan;
-    //! String name of this peer (debugging/logging purposes).
-    const std::string name;
     //! List of asynchronously-determined block rejections to notify this peer about.
     std::vector<CBlockReject> rejects;
     //! The best known block we know this peer has announced.
@@ -395,13 +409,11 @@ struct CNodeState {
     //! Whether this peer is a manual connection
     bool m_is_manual_connection;
 
-    CNodeState(CAddress addrIn, std::string addrNameIn, bool is_inbound, bool is_manual) :
-        address(addrIn), name(std::move(addrNameIn)), m_is_inbound(is_inbound),
+    CNodeState(CAddress addrIn, bool is_inbound, bool is_manual) :
+        address(addrIn), m_is_inbound(is_inbound),
         m_is_manual_connection (is_manual)
     {
         fCurrentlyConnected = false;
-        nMisbehavior = 0;
-        fShouldBan = false;
         pindexBestKnownBlock = nullptr;
         hashLastUnknownBlock.SetNull();
         pindexLastCommonBlock = nullptr;
@@ -431,7 +443,7 @@ limitedmap<uint256, std::chrono::microseconds> g_already_asked_for GUARDED_BY(cs
 /** Map maintaining per-node state. */
 static std::map<NodeId, CPeerState> mapPeerState GUARDED_BY(cs_peerstate);
 
-static CPeerState *PeerState(NodeId pnode) EXCLUSIVE_LOCKS_REQUIRED(cs_peerstate) LOCKS_EXCLUDED(cs_main) {
+static CPeerState *PeerState(NodeId pnode) EXCLUSIVE_LOCKS_REQUIRED(cs_peerstate) {
     std::map<NodeId, CPeerState>::iterator it = mapPeerState.find(pnode);
     if (it == mapPeerState.end())
         return nullptr;
@@ -814,11 +826,11 @@ void PeerLogicValidation::InitializeNode(CNode *pnode) {
     NodeId nodeid = pnode->GetId();
     {
         LOCK(cs_main);
-        mapNodeState.emplace_hint(mapNodeState.end(), std::piecewise_construct, std::forward_as_tuple(nodeid), std::forward_as_tuple(addr, std::move(addrName), pnode->fInbound, pnode->m_manual_connection));
+        mapNodeState.emplace_hint(mapNodeState.end(), std::piecewise_construct, std::forward_as_tuple(nodeid), std::forward_as_tuple(addr, pnode->fInbound, pnode->m_manual_connection));
     }
     {
         LOCK(cs_peerstate);
-        mapPeerState.emplace_hint(mapPeerState.end(), nodeid, CPeerState{});
+        mapPeerState.emplace_hint(mapPeerState.end(), std::piecewise_construct, std::forward_as_tuple(nodeid), std::forward_as_tuple(std::move(addrName), pnode->fInbound, pnode->m_manual_connection));
     }
 
     if(!pnode->fInbound)
@@ -839,7 +851,7 @@ void PeerLogicValidation::FinalizeNode(NodeId nodeid, bool& fUpdateConnectionTim
     if (state->fSyncStarted)
         nSyncStarted--;
 
-    if (state->nMisbehavior == 0 && state->fCurrentlyConnected) {
+    if (peerstate->nMisbehavior == 0 && state->fCurrentlyConnected) {
         fUpdateConnectionTime = true;
     }
 
@@ -868,11 +880,14 @@ void PeerLogicValidation::FinalizeNode(NodeId nodeid, bool& fUpdateConnectionTim
 }
 
 bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats) {
+    LOCK(cs_peerstate);
+    CPeerState* peerstate = PeerState(nodeid);
     LOCK(cs_main);
     CNodeState *state = State(nodeid);
-    if (state == nullptr)
+    if (state == nullptr || peerstate == nullptr)
         return false;
-    stats.nMisbehavior = state->nMisbehavior;
+
+    stats.nMisbehavior = peerstate->nMisbehavior;
     stats.nSyncHeight = state->pindexBestKnownBlock ? state->pindexBestKnownBlock->nHeight : -1;
     stats.nCommonHeight = state->pindexLastCommonBlock ? state->pindexLastCommonBlock->nHeight : -1;
     for (const QueuedBlock& queue : state->vBlocksInFlight) {
@@ -1015,27 +1030,28 @@ unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans)
     return nEvicted;
 }
 
+
 /**
  * Mark a misbehaving peer to be banned depending upon the value of `-banscore`.
  */
-void Misbehaving(NodeId pnode, int howmuch, const std::string& message) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+void Misbehaving(NodeId pnode, int howmuch, const std::string& message) EXCLUSIVE_LOCKS_REQUIRED(cs_peerstate)
 {
     if (howmuch == 0)
         return;
 
-    CNodeState *state = State(pnode);
-    if (state == nullptr)
+    CPeerState *peerstate = PeerState(pnode);
+    if (peerstate == nullptr)
         return;
 
-    state->nMisbehavior += howmuch;
+    peerstate->nMisbehavior += howmuch;
     int banscore = gArgs.GetArg("-banscore", DEFAULT_BANSCORE_THRESHOLD);
     std::string message_prefixed = message.empty() ? "" : (": " + message);
-    if (state->nMisbehavior >= banscore && state->nMisbehavior - howmuch < banscore)
+    if (peerstate->nMisbehavior >= banscore && peerstate->nMisbehavior - howmuch < banscore)
     {
-        LogPrint(BCLog::NET, "%s: %s peer=%d (%d -> %d) BAN THRESHOLD EXCEEDED%s\n", __func__, state->name, pnode, state->nMisbehavior-howmuch, state->nMisbehavior, message_prefixed);
-        state->fShouldBan = true;
+        LogPrint(BCLog::NET, "%s: %s peer=%d (%d -> %d) BAN THRESHOLD EXCEEDED%s\n", __func__, peerstate->name, pnode, peerstate->nMisbehavior-howmuch, peerstate->nMisbehavior, message_prefixed);
+        peerstate->fShouldBan = true;
     } else
-        LogPrint(BCLog::NET, "%s: %s peer=%d (%d -> %d)%s\n", __func__, state->name, pnode, state->nMisbehavior-howmuch, state->nMisbehavior, message_prefixed);
+        LogPrint(BCLog::NET, "%s: %s peer=%d (%d -> %d)%s\n", __func__, peerstate->name, pnode, peerstate->nMisbehavior-howmuch, peerstate->nMisbehavior, message_prefixed);
 }
 
 /**
@@ -1061,7 +1077,7 @@ static bool TxRelayMayResultInDisconnect(const CValidationState& state)
  *
  * Changes here may need to be reflected in TxRelayMayResultInDisconnect().
  */
-static bool MaybePunishNode(NodeId nodeid, const CValidationState& state, bool via_compact_block, const std::string& message = "") {
+static bool MaybePunishNode(NodeId nodeid, const CValidationState& state, bool via_compact_block, const std::string& message = "") EXCLUSIVE_LOCKS_REQUIRED(cs_peerstate) {
     switch (state.GetReason()) {
     case ValidationInvalidReason::NONE:
         break;
@@ -1069,22 +1085,20 @@ static bool MaybePunishNode(NodeId nodeid, const CValidationState& state, bool v
     case ValidationInvalidReason::CONSENSUS:
     case ValidationInvalidReason::BLOCK_MUTATED:
         if (!via_compact_block) {
-            LOCK(cs_main);
             Misbehaving(nodeid, 100, message);
             return true;
         }
         break;
     case ValidationInvalidReason::CACHED_INVALID:
         {
-            LOCK(cs_main);
-            CNodeState *node_state = State(nodeid);
-            if (node_state == nullptr) {
+            CPeerState *peer_state = PeerState(nodeid);
+            if (peer_state == nullptr) {
                 break;
             }
 
             // Ban outbound (but not inbound) peers if on an invalid chain.
             // Exempt HB compact block peers and manual connections.
-            if (!via_compact_block && !node_state->m_is_inbound && !node_state->m_is_manual_connection) {
+            if (!via_compact_block && !peer_state->m_is_inbound && !peer_state->m_is_manual_connection) {
                 Misbehaving(nodeid, 100, message);
                 return true;
             }
@@ -1094,7 +1108,6 @@ static bool MaybePunishNode(NodeId nodeid, const CValidationState& state, bool v
     case ValidationInvalidReason::BLOCK_CHECKPOINT:
     case ValidationInvalidReason::BLOCK_INVALID_PREV:
         {
-            LOCK(cs_main);
             Misbehaving(nodeid, 100, message);
         }
         return true;
@@ -1102,7 +1115,6 @@ static bool MaybePunishNode(NodeId nodeid, const CValidationState& state, bool v
     case ValidationInvalidReason::BLOCK_MISSING_PREV:
         {
             // TODO: Handle this much more gracefully (10 DoS points is super arbitrary)
-            LOCK(cs_main);
             Misbehaving(nodeid, 10, message);
         }
         return true;
@@ -1660,11 +1672,10 @@ static uint32_t GetFetchFlags(CNode* pfrom) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
     return nFetchFlags;
 }
 
-inline void static SendBlockTransactions(const CBlock& block, const BlockTransactionsRequest& req, CNode* pfrom, CConnman* connman) {
+inline void static SendBlockTransactions(const CBlock& block, const BlockTransactionsRequest& req, CNode* pfrom, CConnman* connman) EXCLUSIVE_LOCKS_REQUIRED(cs_peerstate) {
     BlockTransactions resp(req);
     for (size_t i = 0; i < req.indexes.size(); i++) {
         if (req.indexes[i] >= block.vtx.size()) {
-            LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 100, strprintf("Peer %d sent us a getblocktxn with out-of-bounds tx indices", pfrom->GetId()));
             return;
         }
@@ -1858,9 +1869,10 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
     return true;
 }
 
-void static ProcessOrphanTx(CConnman* connman, std::set<uint256>& orphan_work_set, std::list<CTransactionRef>& removed_txn) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_cs_orphans)
+void static ProcessOrphanTx(CConnman* connman, std::set<uint256>& orphan_work_set, std::list<CTransactionRef>& removed_txn) EXCLUSIVE_LOCKS_REQUIRED(cs_peerstate, cs_main, g_cs_orphans)
 {
     AssertLockHeld(cs_main);
+    AssertLockHeld(cs_peerstate);
     AssertLockHeld(g_cs_orphans);
     std::set<NodeId> setMisbehaving;
     bool done = false;
@@ -1935,7 +1947,6 @@ bool static ProcessMessage(CNode* pfrom, CPeerState* peerstate, const std::strin
                strCommand == NetMsgType::FILTERADD))
     {
         if (pfrom->nVersion >= NO_BLOOM_VERSION) {
-            LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 100);
             return false;
         } else {
@@ -1976,7 +1987,6 @@ bool static ProcessMessage(CNode* pfrom, CPeerState* peerstate, const std::strin
             if (enable_bip61) {
                 connman->PushMessage(pfrom, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::REJECT, strCommand, REJECT_DUPLICATE, std::string("Duplicate version message")));
             }
-            LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 1);
             return false;
         }
@@ -2144,7 +2154,6 @@ bool static ProcessMessage(CNode* pfrom, CPeerState* peerstate, const std::strin
 
     if (pfrom->nVersion == 0) {
         // Must have a version message before anything else
-        LOCK(cs_main);
         Misbehaving(pfrom->GetId(), 1);
         return false;
     }
@@ -2191,7 +2200,6 @@ bool static ProcessMessage(CNode* pfrom, CPeerState* peerstate, const std::strin
 
     if (!pfrom->fSuccessfullyConnected) {
         // Must have a verack message before anything else
-        LOCK(cs_main);
         Misbehaving(pfrom->GetId(), 1);
         return false;
     }
@@ -2205,7 +2213,6 @@ bool static ProcessMessage(CNode* pfrom, CPeerState* peerstate, const std::strin
             return true;
         if (vAddr.size() > 1000)
         {
-            LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 20, strprintf("message addr size() = %u", vAddr.size()));
             return false;
         }
@@ -2281,7 +2288,6 @@ bool static ProcessMessage(CNode* pfrom, CPeerState* peerstate, const std::strin
         vRecv >> vInv;
         if (vInv.size() > MAX_INV_SZ)
         {
-            LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 20, strprintf("message inv size() = %u", vInv.size()));
             return false;
         }
@@ -2339,7 +2345,6 @@ bool static ProcessMessage(CNode* pfrom, CPeerState* peerstate, const std::strin
         vRecv >> vInv;
         if (vInv.size() > MAX_INV_SZ)
         {
-            LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 20, strprintf("message getdata size() = %u", vInv.size()));
             return false;
         }
@@ -2999,7 +3004,6 @@ bool static ProcessMessage(CNode* pfrom, CPeerState* peerstate, const std::strin
         // Bypass the normal CBlock deserialization, as we don't want to risk deserializing 2000 full blocks.
         unsigned int nCount = ReadCompactSize(vRecv);
         if (nCount > MAX_HEADERS_RESULTS) {
-            LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 20, strprintf("headers message size = %u", nCount));
             return false;
         }
@@ -3194,7 +3198,6 @@ bool static ProcessMessage(CNode* pfrom, CPeerState* peerstate, const std::strin
         if (!filter.IsWithinSizeConstraints())
         {
             // There is no excuse for sending a too-large filter
-            LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 100);
         }
         else
@@ -3225,7 +3228,6 @@ bool static ProcessMessage(CNode* pfrom, CPeerState* peerstate, const std::strin
             }
         }
         if (bad) {
-            LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 100);
         }
         return true;
@@ -3283,10 +3285,12 @@ bool static ProcessMessage(CNode* pfrom, CPeerState* peerstate, const std::strin
     return true;
 }
 
-bool PeerLogicValidation::SendRejectsAndCheckIfBanned(CNode* pnode, bool enable_bip61) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool PeerLogicValidation::SendRejectsAndCheckIfBanned(CNode* pnode, bool enable_bip61) EXCLUSIVE_LOCKS_REQUIRED(cs_main, cs_peerstate)
 {
     AssertLockHeld(cs_main);
+    AssertLockHeld(cs_peerstate);
     CNodeState &state = *State(pnode->GetId());
+    CPeerState &peerstate = *PeerState(pnode->GetId());
 
     if (enable_bip61) {
         for (const CBlockReject& reject : state.rejects) {
@@ -3295,8 +3299,8 @@ bool PeerLogicValidation::SendRejectsAndCheckIfBanned(CNode* pnode, bool enable_
     }
     state.rejects.clear();
 
-    if (state.fShouldBan) {
-        state.fShouldBan = false;
+    if (peerstate.fShouldBan) {
+        peerstate.fShouldBan = false;
         if (pnode->HasPermission(PF_NOBAN))
             LogPrintf("Warning: not punishing whitelisted peer %s!\n", pnode->addr.ToString());
         else if (pnode->m_manual_connection)
