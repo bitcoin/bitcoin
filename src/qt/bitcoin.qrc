@@ -2,7 +2,6 @@
     <qresource prefix="/icons">
         <file alias="bitcoin">res/icons/bitcoin.png</file>
         <file alias="address-book">res/icons/address-book.png</file>
-        <file alias="quit">res/icons/quit.png</file>
         <file alias="send">res/icons/send.png</file>
         <file alias="connect_0">res/icons/connect0.png</file>
         <file alias="connect_1">res/icons/connect1.png</file>
@@ -20,7 +19,6 @@
         <file alias="eye">res/icons/eye.png</file>
         <file alias="eye_minus">res/icons/eye_minus.png</file>
         <file alias="eye_plus">res/icons/eye_plus.png</file>
-        <file alias="options">res/icons/configure.png</file>
         <file alias="receiving_addresses">res/icons/receive.png</file>
         <file alias="editpaste">res/icons/editpaste.png</file>
         <file alias="editcopy">res/icons/editcopy.png</file>
@@ -37,14 +35,6 @@
         <file alias="tx_inout">res/icons/tx_inout.png</file>
         <file alias="lock_closed">res/icons/lock_closed.png</file>
         <file alias="lock_open">res/icons/lock_open.png</file>
-        <file alias="key">res/icons/key.png</file>
-        <file alias="filesave">res/icons/filesave.png</file>
-        <file alias="debugwindow">res/icons/debugwindow.png</file>
-        <file alias="open">res/icons/open.png</file>
-        <file alias="info">res/icons/info.png</file>
-        <file alias="about">res/icons/about.png</file>
-        <file alias="about_qt">res/icons/about_qt.png</file>
-        <file alias="verify">res/icons/verify.png</file>
         <file alias="warning">res/icons/warning.png</file>
         <file alias="fontbigger">res/icons/fontbigger.png</file>
         <file alias="fontsmaller">res/icons/fontsmaller.png</file>
