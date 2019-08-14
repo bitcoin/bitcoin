@@ -88,10 +88,26 @@ The "getmempoolinfo" RPC also has a new field now which shows the same informati
 0.14.0.3 Change log
 ===================
 
-TODO
-
 See detailed [set of changes](https://github.com/dashpay/dash/compare/v0.14.0.2...dashpay:v0.14.0.3).
 
+- [`f2443709b`](https://github.com/dashpay/dash/commit/f2443709b) Update release-notes.md for 0.14.0.3 (#3054)
+- [`17ba23871`](https://github.com/dashpay/dash/commit/17ba23871) Re-verify invalid IS sigs when the active quorum set rotated (#3052)
+- [`8c49d9b54`](https://github.com/dashpay/dash/commit/8c49d9b54) Remove recovered sigs from the LLMQ db when corresponding IS locks get confirmed (#3048)
+- [`2e0cf8a30`](https://github.com/dashpay/dash/commit/2e0cf8a30) Add "instantsendlocks" to getmempoolinfo RPC (#3047)
+- [`a8fb8252e`](https://github.com/dashpay/dash/commit/a8fb8252e) Use fEnablePrivateSend instead of fPrivateSendRunning
+- [`a198a04e0`](https://github.com/dashpay/dash/commit/a198a04e0) Show number of InstantSend locks in Debug Console (#2919)
+- [`013169d63`](https://github.com/dashpay/dash/commit/013169d63) Optimize on-disk deterministic masternode storage to reduce size of evodb (#3017)
+- [`9ac7a998b`](https://github.com/dashpay/dash/commit/9ac7a998b) Add "isValidMember" and "memberIndex" to "quorum memberof" and allow to specify quorum scan count (#3009)
+- [`99824a879`](https://github.com/dashpay/dash/commit/99824a879) Implement "quorum memberof" (#3004)
+- [`7ea319fd2`](https://github.com/dashpay/dash/commit/7ea319fd2) Bail out properly on Evo DB consistency check failures in ConnectBlock/DisconnectBlock (#3044)
+- [`b1ffedb2d`](https://github.com/dashpay/dash/commit/b1ffedb2d) Do not count 0-fee txes for fee estimation (#3037)
+- [`974055a9b`](https://github.com/dashpay/dash/commit/974055a9b) Fix broken link in PrivateSend info dialog (#3031)
+- [`781b16579`](https://github.com/dashpay/dash/commit/781b16579) Merge pull request #3028 from PastaPastaPasta/backport-12588
+- [`5af6ce91d`](https://github.com/dashpay/dash/commit/5af6ce91d) Add Dash Core Group codesign certificate (#3027)
+- [`873ab896c`](https://github.com/dashpay/dash/commit/873ab896c) Fix osslsigncode compile issue in gitian-build (#3026)
+- [`ea8569e97`](https://github.com/dashpay/dash/commit/ea8569e97) Backport #12783: macOS: disable AppNap during sync (and mixing) (#3024)
+- [`4286dde49`](https://github.com/dashpay/dash/commit/4286dde49) Remove support for InstantSend locked gobject collaterals (#3019)
+- [`788d42dbc`](https://github.com/dashpay/dash/commit/788d42dbc) Bump version to 0.14.0.3 and copy release notes (#3053)
 
 Credits
 =======
