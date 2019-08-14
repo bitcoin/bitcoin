@@ -126,8 +126,9 @@ Thanks to everyone who directly contributed to this release:
 - Kristaps Kaupe
 - Luke Dashjr
 - MarcoFalke
-- MeshCollider
+- Michele Federici
 - Pieter Wuille
+- Samuel Dobson
 - shannon1916
 - tecnovert
 - Wladimir J. van der Laan
