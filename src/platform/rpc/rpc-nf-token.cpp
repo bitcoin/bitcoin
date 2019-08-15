@@ -38,7 +38,7 @@ namespace Platform
     void RegisterNfTokenHelp()
     {
         static std::string helpMessage =
-                "nftoken register/issue \"nfTokenProtocol\" \"tokenId\" \"tokenOwnerAddr\" \"tokenMetadataAdminAddr\" \"metadata\"\n"
+                "nftoken register/issue \"nfTokenProtocol\" \"tokenId\" \"tokenOwnerAddr\" \"tokenMetadataAdminAddr\" \"metadata\" \"nfTokenRegistrar\"\n"
                 "Creates and sends a new non-fungible token transaction.\n"
                 "\nArguments:\n"
                 "1. \"nfTokenProtocol\"           (string, required) A non-fungible token protocol symbol to use in the token creation.\n"
@@ -51,7 +51,7 @@ namespace Platform
                 "                                 The private key belonging to this address should be or should be not known in your wallet. Depending on the NFT protocol nftRegSign field.\n"
                 "                                 NftRegSign::SelfSign - the key should be known in your wallet.\n"
                 "                                 NftRegSign::SignAny - an additional registrar private key should be provided.\n"
-                "                                 NftRegSign::SignByCreator - NFT protocol key should be used to sing transactions.\n"
+                "                                 NftRegSign::SignByCreator - NFT protocol key should be used to sign transactions.\n"
 
                 "4. \"nfTokenMetadataAdminAddr\"  (string, optional, default = \"0\") The metadata token administration address, can be used to modify token metadata.\n"
                 "                                 The private key does not have to be known by your wallet. Can be set to 0.\n"
