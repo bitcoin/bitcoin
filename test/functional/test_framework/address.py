@@ -20,6 +20,13 @@ class AddressType(enum.Enum):
     legacy = 'legacy'  # P2PKH
 
 
+
+class AddressType(enum.Enum):
+    bech32 = 'bech32'
+    p2sh_segwit = 'p2sh-segwit'
+    legacy = 'legacy'  # P2PKH
+
+
 chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 
 
