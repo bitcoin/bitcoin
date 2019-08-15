@@ -36,12 +36,17 @@ std::string TransactionErrorString(const TransactionError err)
     assert(false);
 }
 
+std::string ResolveErrMsg(const std::string& optname, const std::string& strBind)
+{
+    return strprintf(_("Cannot resolve -%s address: '%s'").translated, optname, strBind);
+}
+
 std::string AmountHighWarn(const std::string& optname)
 {
     return strprintf(_("%s is set very high!").translated, optname);
 }
 
-std::string AmountErrMsg(const char* const optname, const std::string& strValue)
+std::string AmountErrMsg(const std::string& optname, const std::string& strValue)
 {
     return strprintf(_("Invalid amount for -%s=<amount>: '%s'").translated, optname, strValue);
 }
