@@ -76,7 +76,7 @@ from test_framework.util import (
     assert_equal,
     connect_nodes,
     disconnect_nodes,
-    get_bip9_status,
+    softfork_active,
     hex_str_to_bytes,
     assert_raises_rpc_error,
 )
@@ -87,6 +87,8 @@ VB_PERIOD = 144
 VB_TOP_BITS = 0x20000000
 
 MAX_SIGOP_COST = 80000
+
+SEGWIT_HEIGHT = 120
 
 class UTXO():
     """Used to keep track of anyone-can-spend outputs that we can use in the tests."""
@@ -185,9 +187,9 @@ class SegWitTest(BitcoinTestFramework):
         self.num_nodes = 3
         # This test tests SegWit both pre and post-activation, so use the normal BIP9 activation.
         self.extra_args = [
-            ["-whitelist=127.0.0.1", "-acceptnonstdtxn=1", "-vbparams=segwit:0:999999999999"],
-            ["-whitelist=127.0.0.1", "-acceptnonstdtxn=0", "-vbparams=segwit:0:999999999999"],
-            ["-whitelist=127.0.0.1", "-acceptnonstdtxn=1", "-vbparams=segwit:0:0"],
+            ["-whitelist=127.0.0.1", "-acceptnonstdtxn=1", "-segwitheight={}".format(SEGWIT_HEIGHT)],
+            ["-whitelist=127.0.0.1", "-acceptnonstdtxn=0", "-segwitheight={}".format(SEGWIT_HEIGHT)],
+            ["-whitelist=127.0.0.1", "-acceptnonstdtxn=1", "-segwitheight=-1"]
         ]
 
     def skip_test_if_missing_module(self):
@@ -231,26 +233,18 @@ class SegWitTest(BitcoinTestFramework):
         # Keep a place to store utxo's that can be used in later tests
         self.utxo = []
 
-        # Segwit status 'defined'
-        self.segwit_status = 'defined'
+        self.log.info("Starting tests before segwit activation")
+        self.segwit_active = False
 
         self.test_non_witness_transaction()
-        self.test_unnecessary_witness_before_segwit_activation()
         self.test_v0_outputs_arent_spendable()
         self.test_block_relay()
-        self.advance_to_segwit_started()
-
-        # Segwit status 'started'
-
         self.test_getblocktemplate_before_lockin()
-        self.advance_to_segwit_lockin()
-
-        # Segwit status 'locked_in'
-
         self.test_unnecessary_witness_before_segwit_activation()
         self.test_witness_tx_relay_before_segwit_activation()
-        self.test_block_relay()
         self.test_standardness_v0()
+
+        self.log.info("Advancing to segwit activation")
         self.advance_to_segwit_active()
 
         # Segwit status 'active'
@@ -282,15 +276,15 @@ class SegWitTest(BitcoinTestFramework):
     def subtest(func):  # noqa: N805
         """Wraps the subtests for logging and state assertions."""
         def func_wrapper(self, *args, **kwargs):
-            self.log.info("Subtest: {} (Segwit status = {})".format(func.__name__, self.segwit_status))
+            self.log.info("Subtest: {} (Segwit active = {})".format(func.__name__, self.segwit_active))
             # Assert segwit status is as expected
-            assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], self.segwit_status)
+            assert_equal(softfork_active(self.nodes[0], 'segwit'), self.segwit_active)
             func(self, *args, **kwargs)
             # Each subtest should leave some utxos for the next subtest
             assert self.utxo
             self.sync_blocks()
             # Assert segwit status is as expected at end of subtest
-            assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], self.segwit_status)
+            assert_equal(softfork_active(self.nodes[0], 'segwit'), self.segwit_active)
 
         return func_wrapper
 
@@ -392,7 +386,7 @@ class SegWitTest(BitcoinTestFramework):
 
         # Check that we can getdata for witness blocks or regular blocks,
         # and the right thing happens.
-        if self.segwit_status != 'active':
+        if not self.segwit_active:
             # Before activation, we should be able to request old blocks with
             # or without witness, and they should be the same.
             chain_height = self.nodes[0].getblockcount()
@@ -536,32 +530,18 @@ class SegWitTest(BitcoinTestFramework):
         self.utxo.append(UTXO(txid, 2, value))
 
     @subtest
-    def advance_to_segwit_started(self):
-        """Mine enough blocks for segwit's vb state to be 'started'."""
-        height = self.nodes[0].getblockcount()
-        # Will need to rewrite the tests here if we are past the first period
-        assert height < VB_PERIOD - 1
-        # Advance to end of period, status should now be 'started'
-        self.nodes[0].generate(VB_PERIOD - height - 1)
-        assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'started')
-        self.segwit_status = 'started'
-
-    @subtest
     def test_getblocktemplate_before_lockin(self):
         txid = int(self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1), 16)
 
         for node in [self.nodes[0], self.nodes[2]]:
             gbt_results = node.getblocktemplate({"rules": ["segwit"]})
-            block_version = gbt_results['version']
             if node == self.nodes[2]:
                 # If this is a non-segwit node, we should not get a witness
-                # commitment, nor a version bit signalling segwit.
-                assert_equal(block_version & (1 << VB_WITNESS_BIT), 0)
+                # commitment.
                 assert 'default_witness_commitment' not in gbt_results
             else:
-                # For segwit-aware nodes, check the version bit and the witness
-                # commitment are correct.
-                assert block_version & (1 << VB_WITNESS_BIT) != 0
+                # For segwit-aware nodes, check the witness
+                # commitment is correct.
                 assert 'default_witness_commitment' in gbt_results
                 witness_commitment = gbt_results['default_witness_commitment']
 
@@ -571,18 +551,9 @@ class SegWitTest(BitcoinTestFramework):
                 script = get_witness_script(witness_root, 0)
                 assert_equal(witness_commitment, script.hex())
 
-    @subtest
-    def advance_to_segwit_lockin(self):
-        """Mine enough blocks to lock in segwit, but don't activate."""
-        height = self.nodes[0].getblockcount()
-        # Advance to end of period, and verify lock-in happens at the end
-        self.nodes[0].generate(VB_PERIOD - 1)
-        height = self.nodes[0].getblockcount()
-        assert (height % VB_PERIOD) == VB_PERIOD - 2
-        assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'started')
+        # Clear out the mempool
         self.nodes[0].generate(1)
-        assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'locked_in')
-        self.segwit_status = 'locked_in'
+        self.sync_blocks()
 
     @subtest
     def test_witness_tx_relay_before_segwit_activation(self):
@@ -686,7 +657,7 @@ class SegWitTest(BitcoinTestFramework):
         tx3.wit.vtxinwit.append(CTxInWitness())
         tx3.wit.vtxinwit[0].scriptWitness.stack = [witness_program]
         tx3.rehash()
-        if self.segwit_status != 'active':
+        if not self.segwit_active:
             # Just check mempool acceptance, but don't add the transaction to the mempool, since witness is disallowed
             # in blocks and the tx is impossible to mine right now.
             assert_equal(self.nodes[0].testmempoolaccept([tx3.serialize_with_witness().hex()]), [{'txid': tx3.hash, 'allowed': True}])
@@ -707,12 +678,13 @@ class SegWitTest(BitcoinTestFramework):
     @subtest
     def advance_to_segwit_active(self):
         """Mine enough blocks to activate segwit."""
+        assert not softfork_active(self.nodes[0], 'segwit')
         height = self.nodes[0].getblockcount()
-        self.nodes[0].generate(VB_PERIOD - (height % VB_PERIOD) - 2)
-        assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'locked_in')
+        self.nodes[0].generate(SEGWIT_HEIGHT - height - 2)
+        assert not softfork_active(self.nodes[0], 'segwit')
         self.nodes[0].generate(1)
-        assert_equal(get_bip9_status(self.nodes[0], 'segwit')['status'], 'active')
-        self.segwit_status = 'active'
+        assert softfork_active(self.nodes[0], 'segwit')
+        self.segwit_active = True
 
     @subtest
     def test_p2sh_witness(self):
@@ -1924,13 +1896,13 @@ class SegWitTest(BitcoinTestFramework):
 
         # Restart with the new binary
         self.stop_node(2)
-        self.start_node(2, extra_args=["-vbparams=segwit:0:999999999999"])
+        self.start_node(2, extra_args=["-segwitheight={}".format(SEGWIT_HEIGHT)])
         connect_nodes(self.nodes[0], 2)
 
         self.sync_blocks()
 
         # Make sure that this peer thinks segwit has activated.
-        assert get_bip9_status(self.nodes[2], 'segwit')['status'] == "active"
+        assert softfork_active(self.nodes[2], 'segwit')
 
         # Make sure this peer's blocks match those of node0.
         height = self.nodes[2].getblockcount()
