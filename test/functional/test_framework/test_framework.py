@@ -50,6 +50,7 @@ from .util import (
     set_node_times,
     set_timeout_scale,
     satoshi_round,
+    softfork_active,
     wait_until,
     get_chain_folder, rpc_port,
 )
@@ -1046,9 +1047,9 @@ class DashTestFramework(BitcoinTestFramework):
             self.bump_mocktime(blocks_left)
             self.nodes[0].generate(blocks_left)
             self.sync_blocks()
-            assert self.nodes[0].getblockchaininfo()['bip9_softforks'][name]['status'] != 'active'
+            assert not softfork_active(self.nodes[0], name)
 
-        while self.nodes[0].getblockchaininfo()['bip9_softforks'][name]['status'] != 'active':
+        while not softfork_active(self.nodes[0], name):
             self.bump_mocktime(batch_size)
             self.nodes[0].generate(batch_size)
             self.sync_blocks()

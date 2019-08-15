@@ -83,7 +83,6 @@ class BlockchainTest(BitcoinTestFramework):
 
         keys = [
             'bestblockhash',
-            'bip9_softforks',
             'blocks',
             'chain',
             'chainwork',
@@ -128,6 +127,160 @@ class BlockchainTest(BitcoinTestFramework):
         assert res['automatic_pruning']
         assert_equal(res['prune_target_size'], 576716800)
         assert_greater_than(res['size_on_disk'], 0)
+        {
+           'testdummy': {
+              'type': 'bip9',
+              'bip9': {
+                 'status': 'started',
+                 'bit': 28,
+                 'start_time': 0,
+                 'timeout': 999999999999,
+                 'since': 144,
+                 'statistics': {
+                    'period': 144,
+                    'threshold': 108,
+                    'elapsed': 57,
+                    'count': 57,
+                    'possible': True
+                 }
+              },
+              'active': False}
+        }
+        assert_equal(res['softforks'], {
+            'bip34': {'type': 'buried', 'active': False, 'height': 500},
+            'bip66': {'type': 'buried', 'active': False, 'height': 1251},
+            'bip65': {'type': 'buried', 'active': False, 'height': 1351},
+            'csv': {'type': 'buried', 'active': False, 'height': 432},
+            'dip0001': {
+               'type': 'bip9',
+               'bip9': {
+                   'status': 'started',
+                   'bit': 1,
+                   'start_time': 0,
+                   'timeout': 999999999999,
+                   'since': 144,
+                   'statistics': {
+                       'period': 144,
+                       'threshold': 108,
+                       'elapsed': 57,
+                       'count': 57,
+                       'possible': True
+                   },
+                },
+               'active': False},
+            'bip147': {
+               'type': 'bip9',
+               'bip9': {
+                   'status': 'started',
+                   'bit': 2,
+                   'start_time': 0,
+                   'timeout': 999999999999,
+                   'since': 144,
+                   'statistics': {
+                       'period': 144,
+                       'threshold': 108,
+                       'elapsed': 57,
+                       'count': 57,
+                       'possible': True
+                   },
+                },
+               'active': False},
+            'dip0003': {
+               'type': 'bip9',
+               'bip9': {
+                   'status': 'started',
+                   'bit': 3,
+                   'start_time': 0,
+                   'timeout': 999999999999,
+                   'since': 144,
+                   'statistics': {
+                       'period': 144,
+                       'threshold': 108,
+                       'elapsed': 57,
+                       'count': 57,
+                       'possible': True
+                   },
+                },
+               'active': False},
+            'dip0008': {
+               'type': 'bip9',
+               'bip9': {
+                   'status': 'started',
+                   'bit': 4,
+                   'start_time': 0,
+                   'timeout': 999999999999,
+                   'since': 144,
+                   'statistics': {
+                       'period': 144,
+                       'threshold': 108,
+                       'elapsed': 57,
+                       'count': 57,
+                       'possible': True
+                   },
+                },
+               'active': False},
+            'realloc': {
+                'type': 'bip9',
+                'bip9': {
+                    'status': 'defined',
+                    'start_time': 0,
+                    'timeout': 999999999999,
+                    'since': 0
+                },
+                'active': False},
+            'dip0020': {
+                'type': 'bip9',
+                'bip9': {
+                    'status': 'locked_in',
+                    'start_time': 0,
+                    'timeout': 999999999999,
+                    'since': 200
+                },
+                'active': False},
+            'dip0024': {
+                'type': 'bip9',
+                'bip9': {
+                    'status': 'defined',
+                    'start_time': 0,
+                    'timeout': 999999999999,
+                    'since': 0
+                },
+                'active': False},
+            'v19': {
+                'type': 'bip9',
+                'bip9': {
+                    'status': 'defined',
+                    'start_time': 0,
+                    'timeout': 999999999999,
+                    'since': 0
+                },
+                'active': False},
+            'v20': {
+                'type': 'bip9',
+                'bip9': {
+                    'status': 'defined',
+                    'start_time': 0,
+                    'timeout': 999999999999,
+                    'since': 0
+                }, 'active': False},
+            'testdummy': {
+                'type': 'bip9',
+                'bip9': {
+                    'status': 'started',
+                    'bit': 28,
+                    'start_time': 0,
+                    'timeout': 999999999999,  # testdummy does not have a timeout so is set to the max int64 value
+                    'since': 144,
+                    'statistics': {
+                        'period': 144,
+                        'threshold': 108,
+                        'elapsed': 57,
+                        'count': 57,
+                        'possible': True,
+                    },
+                },
+                'active': False},
+        })
 
     def _test_getchaintxstats(self):
         self.log.info("Test getchaintxstats")

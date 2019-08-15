@@ -12,7 +12,7 @@ from decimal import Decimal
 from test_framework.blocktools import create_block, create_coinbase, get_masternode_payment
 from test_framework.messages import CCbTx, COIN, CTransaction, FromHex, ToHex, uint256_to_string
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, force_finish_mnsync, get_bip9_status, p2p_port
+from test_framework.util import assert_equal, force_finish_mnsync, p2p_port
 
 class Masternode(object):
     pass
@@ -390,10 +390,10 @@ class DIP3Test(BitcoinTestFramework):
         coinbasevalue += new_fees
 
         if mn_amount is None:
-            realloc_info = get_bip9_status(self.nodes[0], 'realloc')
+            realloc_info = node.getblockchaininfo()['softforks']['realloc']
             realloc_height = 99999999
-            if realloc_info['status'] == 'active':
-                realloc_height = realloc_info['since']
+            if realloc_info['active']:
+                realloc_height = realloc_info['height']
             mn_amount = get_masternode_payment(height, coinbasevalue, realloc_height)
         miner_amount = coinbasevalue - mn_amount
 
