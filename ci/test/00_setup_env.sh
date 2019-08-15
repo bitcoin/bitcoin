@@ -31,3 +31,10 @@ export GOAL=${GOAL:-install}
 export DIR_QA_ASSETS=${DIR_QA_ASSETS:-${BASE_BUILD_DIR}/qa-assets}
 export PATH=${BASE_ROOT_DIR}/ci/retry:$PATH
 export CI_RETRY_EXE=${CI_RETRY_EXE:retry}
+
+echo "Setting specific values in env"
+if [ -n "${FILE_ENV}" ]; then
+  set -o errexit;
+  # shellcheck disable=SC1090
+  source "${FILE_ENV}"
+fi
