@@ -15,10 +15,16 @@ requires `docker` to be installed. To install all requirements on Ubuntu, run
 sudo apt install docker.io ccache bash git
 ```
 
-To run the test stage,
+To run the default test stage,
 
 ```
 ./ci/test_run_all.sh
+```
+
+To run the test stage with a specific configuration,
+
+```
+FILE_ENV="./ci/test/00_setup_env_arm.sh" ./ci/test_run_all.sh
 ```
 
 Be aware that the tests will be build and run in-place, so please run at your own risk.

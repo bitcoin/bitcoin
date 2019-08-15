@@ -6,7 +6,8 @@
 
 export LC_ALL=C.UTF-8
 
-set -o errexit; source ./ci/test/00_setup_env.sh
-set -o errexit; source ./ci/test/03_before_install.sh
-set -o errexit; source ./ci/test/04_install.sh
-set -o errexit; source ./ci/test/05_before_script.sh
+export HOST=x86_64-unknown-linux-gnu
+export PACKAGES="python3-zmq"
+export DEP_OPTS="NO_WALLET=1"
+export GOAL="install"
+export BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
