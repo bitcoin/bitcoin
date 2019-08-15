@@ -22,3 +22,4 @@ To run the test stage,
 ```
 
 Be aware that the tests will be build and run in-place, so please run at your own risk.
+If the repository is not a fresh git clone, you might have to clean files from previous builds or test runs first.
