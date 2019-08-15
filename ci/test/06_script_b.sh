@@ -10,7 +10,7 @@ cd "build/bitcoin-$HOST" || (echo "could not enter distdir build/bitcoin-$HOST";
 
 if [ "$RUN_UNIT_TESTS" = "true" ]; then
   BEGIN_FOLD unit-tests
-  DOCKER_EXEC LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/depends/$HOST/lib make $MAKEJOBS check VERBOSE=1
+  DOCKER_EXEC LD_LIBRARY_PATH=$BASE_BUILD_DIR/depends/$HOST/lib make $MAKEJOBS check VERBOSE=1
   END_FOLD
 fi
 
@@ -26,4 +26,4 @@ if [ "$RUN_FUZZ_TESTS" = "true" ]; then
   END_FOLD
 fi
 
-cd ${TRAVIS_BUILD_DIR} || (echo "could not enter travis build dir $TRAVIS_BUILD_DIR"; exit 1)
+cd ${BASE_BUILD_DIR} || (echo "could not enter travis build dir $BASE_BUILD_DIR"; exit 1)
