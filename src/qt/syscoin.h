@@ -56,7 +56,7 @@ class SyscoinApplication: public QApplication
 {
     Q_OBJECT
 public:
-    explicit SyscoinApplication(interfaces::Node& node, int &argc, char **argv);
+    explicit SyscoinApplication(interfaces::Node& node);
     ~SyscoinApplication();
 
 #ifdef ENABLE_WALLET

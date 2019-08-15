@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
 
     // Don't remove this, it's needed to access
     // QApplication:: and QCoreApplication:: in the tests
-    SyscoinApplication app(*node, argc, argv);
+    SyscoinApplication app(*node);
     app.setApplicationName("Syscoin-Qt-test");
 
     AppTests app_tests(app);
