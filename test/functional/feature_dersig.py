@@ -52,14 +52,11 @@ class BIP66Test(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     def test_dersig_info(self, *, is_active):
-        assert_equal(
-            next(s for s in self.nodes[0].getblockchaininfo()['softforks'] if s['id'] == 'bip66'),
+        assert_equal(self.nodes[0].getblockchaininfo()['softforks']['bip66'],
             {
-                "id": "bip66",
-                "version": 3,
-                "reject": {
-                    "status": is_active
-                }
+                "active": is_active,
+                "height": DERSIG_HEIGHT,
+                "type": "buried",
             },
         )
 
@@ -88,9 +85,9 @@ class BIP66Test(BitcoinTestFramework):
         block.rehash()
         block.solve()
 
-        self.test_dersig_info(is_active=False)
+        self.test_dersig_info(is_active=False)  # Not active as of current tip and next block does not need to obey rules
         self.nodes[0].p2p.send_and_ping(msg_block(block))
-        self.test_dersig_info(is_active=False)  # Not active as of current tip, but next block must obey rules
+        self.test_dersig_info(is_active=True)  # Not active as of current tip, but next block must obey rules
         assert_equal(self.nodes[0].getbestblockhash(), block.hash)
 
         self.log.info("Test that blocks must now be at least version 3")
@@ -144,7 +141,7 @@ class BIP66Test(BitcoinTestFramework):
         block.rehash()
         block.solve()
 
-        self.test_dersig_info(is_active=False)  # Not active as of current tip, but next block must obey rules
+        self.test_dersig_info(is_active=True)  # Not active as of current tip, but next block must obey rules
         self.nodes[0].p2p.send_and_ping(msg_block(block))
         self.test_dersig_info(is_active=True)  # Active as of current tip
         assert_equal(int(self.nodes[0].getbestblockhash(), 16), block.sha256)
