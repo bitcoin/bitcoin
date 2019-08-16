@@ -139,7 +139,7 @@ public:
         consensus.fStrictChainId = true;
         consensus.nLegacyBlocksBefore = 1;
         consensus.nSYSXAsset = 101010;
-        consensus.vchSYSXBurnMethodSignature = ParseHex("285c5bc6");
+        consensus.vchSYSXBurnMethodSignature = ParseHex("5c460a3f");
         consensus.vchSYSXERC20Manager = ParseHex("4322ec9eb713f37cf8d701d819c165549d53d14e");
         consensus.nBridgeStartBlock = 125000;
         /**
@@ -241,17 +241,17 @@ public:
         // BIP147) are deployed together with P2SH.
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000000016d0016d");
+        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000000016800168");
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x0000047674e00888c7bf9a6f58dd519330eafb45be8b9da76fe291d653d9e7f8");
+        consensus.defaultAssumeValid = uint256S("0x000002afdda9c43ddeb2bc1bf31dba6d039307df65e2fd0111bdf5c201ec1d6f");
         consensus.nAuxpowStartHeight = 1;
         consensus.nAuxpowChainId = 0x1000;
         consensus.fStrictChainId = false;
         consensus.nLegacyBlocksBefore = 1;
-        consensus.nSYSXAsset = 719610612;
-        consensus.vchSYSXBurnMethodSignature = ParseHex("285c5bc6");
-        consensus.vchSYSXERC20Manager = ParseHex("4322ec9eb713f37cf8d701d819c165549d53d14e");
+        consensus.nSYSXAsset = 505115838;
+        consensus.vchSYSXBurnMethodSignature = ParseHex("5c460a3f");
+        consensus.vchSYSXERC20Manager = ParseHex("890345340A36C7C4e24a5a6ea0a7AE87E223DD38");
         consensus.nBridgeStartBlock = 100;
         pchMessageStart[0] = 0xce;
         pchMessageStart[1] = 0xe2;
@@ -356,7 +356,7 @@ public:
         consensus.fStrictChainId = true;
         consensus.nLegacyBlocksBefore = 0;
         consensus.nSYSXAsset = 0;
-        consensus.vchSYSXBurnMethodSignature = ParseHex("285c5bc6");
+        consensus.vchSYSXBurnMethodSignature = ParseHex("5c460a3f");
         consensus.vchSYSXERC20Manager = ParseHex("4322ec9eb713f37cf8d701d819c165549d53d14e");
         consensus.nBridgeStartBlock = 100;
         pchMessageStart[0] = 0xfa;
