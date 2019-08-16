@@ -841,7 +841,7 @@ UniValue getmerkleblocks(const JSONRPCRequest& request)
             "1. \"filter\"        (string, required) The hex encoded bloom filter\n"
             "2. \"hash\"          (string, required) The block hash\n"
             "3. count           (numeric, optional, default/max=" + strprintf("%s", MAX_HEADERS_RESULTS) +")\n"
-            "\nResult (for verbose=false):\n"
+            "\nResult:\n"
             "[\n"
             "  \"data\",                        (string)  A string that is serialized, hex-encoded data for a merkleblock.\n"
             "  ...\n"
