@@ -136,7 +136,7 @@ UniValue debug(const JSONRPCRequest& request)
             "Change debug category on the fly. Specify single category or use '+' to specify many.\n"
             "\nArguments:\n"
             "1. \"category\"          (string, required) The name of the debug category to turn on. Can be one of the following:\n"
-            "                       addrman, alert, bench, cmpctblock, coindb, db, http, leveldb, libevent, lock, mempool,\n"
+            "                       addrman, bench, cmpctblock, coindb, db, http, leveldb, libevent, lock, mempool,\n"
             "                       mempoolrej, net, proxy, prune, qt, rand, reindex, rpc, selectcoins, tor, zmq, dash\n"
             "                       (or specifically: chainlocks, gobject, instantsend, keepass, llmq, llmq-dkg, llmq-sigs,\n"
             "                       mnpayments, mnsync, privatesend, spork).\n"

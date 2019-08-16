@@ -136,7 +136,6 @@ namespace BCLog {
         MNSYNC      = ((uint64_t)1 << 40),
         PRIVATESEND = ((uint64_t)1 << 41),
         SPORK       = ((uint64_t)1 << 42),
-        ALERT       = ((uint64_t)1 << 43),
         //End Dash
 
         ALL         = ~(uint64_t)0,
