@@ -970,25 +970,7 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request)
         siblings.push_back(txHashFromBlock.GetHex());
     }
     res.__pushKV("siblings", siblings);
-    res.__pushKV("index", nIndex);
-    UniValue assetVal;
-    try{
-        UniValue paramsDecode(UniValue::VARR);
-        paramsDecode.push_back(rawTx);   
-        JSONRPCRequest requestDecodeRPC;
-        requestDecodeRPC.params = paramsDecode;
-        UniValue resDecode = syscoindecoderawtransaction(requestDecodeRPC);
-        assetVal = find_value(resDecode.get_obj(), "asset_guid"); 
-    }
-    catch(const runtime_error& e){
-    }
-    CAsset asset;
-    if (!GetAsset(assetVal.get_uint(), asset))
-            throw JSONRPCError(RPC_DATABASE_ERROR, "Asset not found");
-    if(asset.vchContract.empty())
-        throw JSONRPCError(RPC_MISC_ERROR, "Asset contract is empty");
-    res.__pushKV("contract", HexStr(asset.vchContract));    
-                
+    res.__pushKV("index", nIndex);    
     return res;
 }
 UniValue listassetindex(const JSONRPCRequest& request) {

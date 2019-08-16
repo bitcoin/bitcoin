@@ -2029,7 +2029,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
             const uint256& txHash = tx.GetHash(); 
             if(IsSyscoinTx(tx.nVersion)){
                 if (!CheckSyscoinInputs(ibd, tx, txHash, state, view, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, fJustCheck, false, actorSet, mapAssetAllocations, mapAssets, mapAssetSupplyStats, vecMintKeys, vecLockedOutpoints))
-                    return error("ConnectBlock(): CheckSyscoinInputs on block %s failed\n", block.GetHash().ToString());        
+                    return error("ConnectBlock(): CheckSyscoinInputs on block %s failed: %s\n", block.GetHash().ToString(), FormatStateMessage(state));        
             }
             if(!fJustCheck){
                 blockIndex.emplace_back(std::move(txHash), std::move(blockHash));
