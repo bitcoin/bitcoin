@@ -17,7 +17,7 @@
 # Bitcoin Core GitHub member via the Travis web interface [0].
 #
 # Travis CI uploads the cache after the script phase of the build [1].
-# However, the build is terminated without saving the chache if it takes over
+# However, the build is terminated without saving the cache if it takes over
 # 50 minutes [2]. Thus, if we spent too much time in early build stages, fail
 # with an error and save the cache.
 #
