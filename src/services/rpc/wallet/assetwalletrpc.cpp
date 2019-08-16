@@ -514,17 +514,19 @@ UniValue assetupdate(const JSONRPCRequest& request) {
         throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
         
     const CWitnessAddress &copyWitness = theAsset.witnessAddress;
+    const std::string& oldData = stringFromVch(theAsset.vchPubData);
+    const std::vector<unsigned char> oldContract(theAsset.vchContract);
     theAsset.ClearAsset();
     theAsset.witnessAddress = copyWitness;
     UniValue params3 = params[3];
     CAmount nBalance = 0;
     if((params3.isStr() && params3.get_str() != "0") || (params3.isNum() && params3.get_real() != 0))
         nBalance = AssetAmountFromValue(params3, theAsset.nPrecision);
-    if(strPubData != stringFromVch(theAsset.vchPubData))
+    if(strPubData != oldData)
         theAsset.vchPubData = vchFromString(strPubData);
     else
         theAsset.vchPubData.clear();
-    if(vchContract != theAsset.vchContract)
+    if(vchContract != oldContract)
         theAsset.vchContract = vchContract;
     else
         theAsset.vchContract.clear();

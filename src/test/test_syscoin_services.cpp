@@ -59,7 +59,7 @@ void SetupSYSXAsset(){
     ASSET_UPDATE_ALL=31
 	};
  	*/
-	string updateFlags = itostr(ASSET_UPDATE_CONTRACT | ASSET_UPDATE_FLAGS);
+	string updateFlags = itostr(ASSET_UPDATE_CONTRACT | ASSET_UPDATE_DATA);
 	strSYSXAddress = GetNewFundedAddress("node1");
 	string receiverAddress = GetNewFundedAddress("node1");
 	strSYSXAsset = AssetNew("node1", strSYSXAddress, "", "''", "8", "888000000", "888000000", updateFlags);
