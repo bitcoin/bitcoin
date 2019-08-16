@@ -824,11 +824,6 @@ void InitParameterInteraction()
     }
 }
 
-static std::string ResolveErrMsg(const char * const optname, const std::string& strBind)
-{
-    return strprintf(_("Cannot resolve -%s address: '%s'").translated, optname, strBind);
-}
-
 /**
  * Initialize global loggers.
  *

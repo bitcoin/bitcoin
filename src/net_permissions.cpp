@@ -3,9 +3,10 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <net_permissions.h>
+#include <netbase.h>
+#include <util/error.h>
 #include <util/system.h>
 #include <util/translation.h>
-#include <netbase.h>
 
 // The parse the following format "perm1,perm2@xxxxxx"
 bool TryParsePermissionFlags(const std::string str, NetPermissionFlags& output, size_t& readen, std::string& error)
@@ -71,7 +72,7 @@ bool NetWhitebindPermissions::TryParse(const std::string str, NetWhitebindPermis
     const std::string strBind = str.substr(offset);
     CService addrBind;
     if (!Lookup(strBind.c_str(), addrBind, 0, false)) {
-        error = strprintf(_("Cannot resolve -%s address: '%s'").translated, "whitebind", strBind);
+        error = ResolveErrMsg("whitebind", strBind);
         return false;
     }
     if (addrBind.GetPort() == 0) {
