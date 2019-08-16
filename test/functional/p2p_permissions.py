@@ -22,10 +22,17 @@ class P2PPermissionsTests(BitcoinTestFramework):
         self.extra_args = [[],[]]
 
     def run_test(self):
+
         self.checkpermission(
-        # relay permission added
-        ["-whitelist=127.0.0.1", "-whitelistrelay"],
+        # default permissions (no specific permissions)
+        ["-whitelist=127.0.0.1"],
         ["relay", "noban", "mempool"],
+        True)
+
+        self.checkpermission(
+        # relay permission removed (no specific permissions)
+        ["-whitelist=127.0.0.1", "-whitelistrelay=0"],
+        ["noban", "mempool"],
         True)
 
         self.checkpermission(
