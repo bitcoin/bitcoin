@@ -56,8 +56,8 @@ class InstantSendTest(DashTestFramework):
         # send doublespend transaction to isolated node
         isolated.sendrawtransaction(dblspnd_tx['hex'])
         # generate block on isolated node with doublespend transaction
-        set_mocktime(get_mocktime() + 1)
-        set_node_times(self.nodes, get_mocktime())
+        self.bump_mocktime(1)
+        set_node_times(self.nodes, self.mocktime)
         isolated.generate(1)
         wrong_block = isolated.getbestblockhash()
         # connect isolated block to network
@@ -73,8 +73,8 @@ class InstantSendTest(DashTestFramework):
             timeout = 1
         # mine more blocks
         # TODO: mine these blocks on an isolated node
-        set_mocktime(get_mocktime() + 1)
-        set_node_times(self.nodes, get_mocktime())
+        self.bump_mocktime(1)
+        set_node_times(self.nodes, self.mocktime)
         self.nodes[0].generate(2)
         self.sync_all()
 

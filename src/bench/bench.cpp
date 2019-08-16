@@ -17,7 +17,7 @@ benchmark::BenchRunner::BenchmarkMap &benchmark::BenchRunner::benchmarks() {
 
 static double gettimedouble(void) {
     struct timeval tv;
-    gettimeofday(&tv, NULL);
+    gettimeofday(&tv, nullptr);
     return tv.tv_usec * 0.000001 + tv.tv_sec;
 }
 
@@ -100,6 +100,7 @@ bool benchmark::State::KeepRunning()
     int64_t averageCycles = (nowCycles-beginCycles)/count;
     std::cout << std::fixed << std::setprecision(15) << name << "," << count << "," << minTime << "," << maxTime << "," << average << ","
               << minCycles << "," << maxCycles << "," << averageCycles << "\n";
+    std::cout.copyfmt(std::ios(nullptr));
 
     return false;
 }

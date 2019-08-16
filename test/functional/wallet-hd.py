@@ -4,6 +4,9 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test Hierarchical Deterministic wallet function."""
 
+import sys
+import shutil
+
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
@@ -23,7 +26,7 @@ class WalletHDTest(BitcoinTestFramework):
 
         # Make sure can't switch off usehd after wallet creation
         self.stop_node(1)
-        assert_start_raises_init_error(1, self.options.tmpdir, ['-usehd=0'], 'already existing HD wallet')
+        self.assert_start_raises_init_error(1, self.options.tmpdir, ['-usehd=0'], 'already existing HD wallet')
         self.nodes[1] = self.start_node(1, self.options.tmpdir, self.extra_args[1], stderr=sys.stdout)
         connect_nodes_bi(self.nodes, 0, 1)
 

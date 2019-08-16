@@ -74,7 +74,7 @@ static ssize_t GetExeFileNameImpl(char* buf, size_t bufSize)
 {
 #if WIN32
     std::vector<TCHAR> tmp(bufSize);
-    DWORD len = GetModuleFileName(NULL, tmp.data(), bufSize);
+    DWORD len = GetModuleFileName(nullptr, tmp.data(), bufSize);
     if (len >= bufSize) {
         return len;
     }
@@ -132,7 +132,7 @@ static backtrace_state* GetLibBacktraceState()
 #else
     static const char* exeFileNamePtr = g_exeFileName.empty() ? nullptr : g_exeFileName.c_str();
 #endif
-    static backtrace_state* st = backtrace_create_state(exeFileNamePtr, 1, my_backtrace_error_callback, NULL);
+    static backtrace_state* st = backtrace_create_state(exeFileNamePtr, 1, my_backtrace_error_callback, nullptr);
     return st;
 }
 
@@ -161,7 +161,7 @@ static uint64_t ConvertAddress(uint64_t addr)
 static __attribute__((noinline)) std::vector<uint64_t> GetStackFrames(size_t skip, size_t max_frames, const CONTEXT* pContext = nullptr)
 {
     // We can't use libbacktrace for stack unwinding on Windows as it returns invalid addresses (like 0x1 or 0xffffffff)
-    static BOOL symInitialized = SymInitialize(GetCurrentProcess(), NULL, TRUE);
+    static BOOL symInitialized = SymInitialize(GetCurrentProcess(), nullptr, TRUE);
 
     // dbghelp is not thread safe
     static std::mutex m;
@@ -212,8 +212,8 @@ static __attribute__((noinline)) std::vector<uint64_t> GetStackFrames(size_t ski
     while (ret.size() < max_frames) {
         BOOL result = StackWalk64(
                 image, process, thread,
-                &stackframe, &context, NULL,
-                SymFunctionTableAccess64, SymGetModuleBase64, NULL);
+                &stackframe, &context, nullptr,
+                SymFunctionTableAccess64, SymGetModuleBase64, nullptr);
 
         if (!result) {
             break;
@@ -259,7 +259,7 @@ static uint64_t GetBaseAddress()
 static int dl_iterate_callback(struct dl_phdr_info* info, size_t s, void* data)
 {
     uint64_t* p = (uint64_t*)data;
-    if (info->dlpi_name == NULL || info->dlpi_name[0] == '\0') {
+    if (info->dlpi_name == nullptr || info->dlpi_name[0] == '\0') {
         *p = info->dlpi_addr;
     }
 }
@@ -864,7 +864,7 @@ void RegisterPrettySignalHandlers()
         sa_segv.sa_handler = HandlePosixSignal;
         sigemptyset(&sa_segv.sa_mask);
         sa_segv.sa_flags = 0;
-        sigaction(s, &sa_segv, NULL);
+        sigaction(s, &sa_segv, nullptr);
     }
 #endif
 }

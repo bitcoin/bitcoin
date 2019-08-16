@@ -7,6 +7,7 @@
 #include "base58.h"
 #include "chain.h"
 #include "clientversion.h"
+#include "core_io.h"
 #include "init.h"
 #include "httpserver.h"
 #include "net.h"
@@ -85,7 +86,7 @@ UniValue getinfo(const JSONRPCRequest& request)
 #ifdef ENABLE_WALLET
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
 
-    LOCK2(cs_main, pwallet ? &pwallet->cs_wallet : NULL);
+    LOCK2(cs_main, pwallet ? &pwallet->cs_wallet : nullptr);
 #else
     LOCK(cs_main);
 #endif
@@ -362,7 +363,7 @@ UniValue validateaddress(const JSONRPCRequest& request)
 #ifdef ENABLE_WALLET
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
 
-    LOCK2(cs_main, pwallet ? &pwallet->cs_wallet : NULL);
+    LOCK2(cs_main, pwallet ? &pwallet->cs_wallet : nullptr);
 #else
     LOCK(cs_main);
 #endif
@@ -484,7 +485,7 @@ UniValue createmultisig(const JSONRPCRequest& request)
 #ifdef ENABLE_WALLET
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
 #else
-    CWallet * const pwallet = NULL;
+    CWallet * const pwallet = nullptr;
 #endif
 
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 2)

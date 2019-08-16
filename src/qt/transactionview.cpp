@@ -396,7 +396,7 @@ void TransactionView::exportClicked()
     // CSV is currently the only supported format
     QString filename = GUIUtil::getSaveFileName(this,
         tr("Export Transaction History"), QString(),
-        tr("Comma separated file (*.csv)"), NULL);
+        tr("Comma separated file (*.csv)"), nullptr);
 
     if (filename.isNull())
         return;
@@ -561,7 +561,7 @@ void TransactionView::showAddressQRCode()
 
     QString strAddress = entries.at(0).data(TransactionTableModel::AddressRole).toString();
     QRDialog* dialog = new QRDialog(this);
-    OptionsModel *model = new OptionsModel(NULL, false);
+    OptionsModel *model = new OptionsModel(nullptr, false);
 
     dialog->setModel(model);
     dialog->setAttribute(Qt::WA_DeleteOnClose);

@@ -228,7 +228,7 @@ void AddressBookPage::on_showAddressQRCode_clicked()
 
     QString strAddress = entries.at(0).data(Qt::EditRole).toString();
     QRDialog* dialog = new QRDialog(this);
-    OptionsModel *model = new OptionsModel(NULL, false);
+    OptionsModel *model = new OptionsModel(nullptr, false);
 
     dialog->setModel(model);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
@@ -299,7 +299,7 @@ void AddressBookPage::on_exportButton_clicked()
     // CSV is currently the only supported format
     QString filename = GUIUtil::getSaveFileName(this,
         tr("Export Address List"), QString(),
-        tr("Comma separated file (*.csv)"), NULL);
+        tr("Comma separated file (*.csv)"), nullptr);
 
     if (filename.isNull())
         return;

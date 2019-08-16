@@ -7,6 +7,7 @@
 
 #include "chainparams.h"
 #include "clientversion.h"
+#include "core_io.h"
 #include "validation.h"
 #include "net.h"
 #include "net_processing.h"
@@ -217,7 +218,7 @@ UniValue addnode(const JSONRPCRequest& request)
     if (strCommand == "onetry")
     {
         CAddress addr;
-        g_connman->OpenNetworkConnection(addr, false, NULL, strNode.c_str());
+        g_connman->OpenNetworkConnection(addr, false, nullptr, strNode.c_str());
         return NullUniValue;
     }
 
@@ -312,7 +313,7 @@ UniValue getaddednodeinfo(const JSONRPCRequest& request)
 
     std::vector<AddedNodeInfo> vInfo = g_connman->GetAddedNodeInfo();
 
-    if (request.params.size() == 1) {
+    if (request.params.size() == 1 && !request.params[0].isNull()) {
         bool found = false;
         for (const AddedNodeInfo& info : vInfo) {
             if (info.strAddedNode == request.params[0].get_str()) {

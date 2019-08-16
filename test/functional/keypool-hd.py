@@ -7,6 +7,8 @@
 
 # Add python-bitcoinrpc to module search path:
 
+import sys
+
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
@@ -26,7 +28,7 @@ class KeyPoolTest(BitcoinTestFramework):
 
         # Encrypt wallet and wait to terminate
         nodes[0].encryptwallet('test')
-        bitcoind_processes[0].wait()
+        self.bitcoind_processes[0].wait()
         # Restart node 0
         nodes[0] = self.start_node(0, self.options.tmpdir, ['-usehd=1'], stderr=sys.stdout)
         # Keep creating keys

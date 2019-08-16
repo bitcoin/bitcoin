@@ -45,7 +45,7 @@ from test_framework.mininode import (CBlockHeader,
                                      msg_headers)
 from test_framework.script import (CScript, OP_TRUE)
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (p2p_port, assert_equal, get_mocktime, set_mocktime, set_node_times)
+from test_framework.util import (p2p_port, assert_equal, set_node_times)
 
 class BaseNode(NodeConnCB):
     def send_header_for_blocks(self, new_blocks):
@@ -183,8 +183,8 @@ class AssumeValidTest(BitcoinTestFramework):
         node2.wait_for_verack()
 
         # Make sure nodes actually accept the many headers
-        set_mocktime(self.block_time)
-        set_node_times(self.nodes, get_mocktime())
+        self.mocktime = self.block_time
+        set_node_times(self.nodes, self.mocktime)
 
         # send header lists to all three nodes.
         # node0 does not need to receive all headers

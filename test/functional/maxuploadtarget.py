@@ -42,9 +42,9 @@ class MaxUploadTest(BitcoinTestFramework):
 
     def run_test(self):
         # Advance all nodes 2 weeks in the future
-        old_mocktime = get_mocktime()
+        old_mocktime = self.mocktime
         current_mocktime = old_mocktime + 2*60*60*24*7
-        set_mocktime(current_mocktime)
+        self.mocktime = current_mocktime
         set_node_times(self.nodes, current_mocktime)
 
         # Before we connect anything, we first set the time on the node

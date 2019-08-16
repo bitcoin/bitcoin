@@ -15,6 +15,10 @@ mine a further 143 blocks (LOCKED_IN)
 test that enforcement has not triggered (which triggers ACTIVE)
 test that enforcement has triggered
 """
+from io import BytesIO
+import shutil
+import time
+import itertools
 
 from test_framework.test_framework import ComparisonTestFramework
 from test_framework.util import *
@@ -22,9 +26,6 @@ from test_framework.mininode import CTransaction, NetworkThread
 from test_framework.blocktools import create_coinbase, create_block
 from test_framework.comptool import TestInstance, TestManager
 from test_framework.script import CScript, OP_1NEGATE, OP_CHECKSEQUENCEVERIFY, OP_DROP
-from io import BytesIO
-import time
-import itertools
 
 class BIP9SoftForksTest(ComparisonTestFramework):
 
@@ -81,7 +82,7 @@ class BIP9SoftForksTest(ComparisonTestFramework):
         self.height = 3  # height of the next block to build
         self.tip = int("0x" + self.nodes[0].getbestblockhash(), 0)
         self.nodeaddress = self.nodes[0].getnewaddress()
-        self.last_block_time = get_mocktime() + 1
+        self.last_block_time = self.mocktime + 1
 
         assert_equal(self.get_bip9_status(bipName)['status'], 'defined')
         assert_equal(self.get_bip9_status(bipName)['since'], 0)

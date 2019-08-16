@@ -203,8 +203,8 @@ class AddressIndexTest(BitcoinTestFramework):
         self.nodes[2].invalidateblock(best_hash)
         self.nodes[3].invalidateblock(best_hash)
         # Allow some time for the reorg to start
-        set_mocktime(get_mocktime() + 2)
-        set_node_times(self.nodes, get_mocktime())
+        self.bump_mocktime(2)
+        set_node_times(self.nodes, self.mocktime)
         self.sync_all()
 
         balance4 = self.nodes[1].getaddressbalance(address2)
@@ -247,8 +247,8 @@ class AddressIndexTest(BitcoinTestFramework):
         tx.rehash()
         signed_tx = self.nodes[2].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
         memtxid1 = self.nodes[2].sendrawtransaction(signed_tx["hex"], True)
-        set_mocktime(get_mocktime() + 2)
-        set_node_times(self.nodes, get_mocktime())
+        self.bump_mocktime(2)
+        set_node_times(self.nodes, self.mocktime)
 
         tx2 = CTransaction()
         tx2.vin = [CTxIn(COutPoint(int(unspent[1]["txid"], 16), unspent[1]["vout"]))]
@@ -262,8 +262,8 @@ class AddressIndexTest(BitcoinTestFramework):
         tx2.rehash()
         signed_tx2 = self.nodes[2].signrawtransaction(binascii.hexlify(tx2.serialize()).decode("utf-8"))
         memtxid2 = self.nodes[2].sendrawtransaction(signed_tx2["hex"], True)
-        set_mocktime(get_mocktime() + 2)
-        set_node_times(self.nodes, get_mocktime())
+        self.bump_mocktime(2)
+        set_node_times(self.nodes, self.mocktime)
 
         mempool = self.nodes[2].getaddressmempool({"addresses": [address3]})
         assert_equal(len(mempool), 3)
@@ -290,8 +290,8 @@ class AddressIndexTest(BitcoinTestFramework):
         self.nodes[2].importprivkey(privKey3)
         signed_tx3 = self.nodes[2].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
         memtxid3 = self.nodes[2].sendrawtransaction(signed_tx3["hex"], True)
-        set_mocktime(get_mocktime() + 2)
-        set_node_times(self.nodes, get_mocktime())
+        self.bump_mocktime(2)
+        set_node_times(self.nodes, self.mocktime)
 
         mempool3 = self.nodes[2].getaddressmempool({"addresses": [address3]})
         assert_equal(len(mempool3), 2)

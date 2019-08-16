@@ -253,7 +253,7 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVa
             }
         }
 
-        // we can only check the signature if pindexPrev != NULL and the MN is known
+        // we can only check the signature if pindexPrev != nullptr and the MN is known
         if (!CheckInputsHash(tx, ptx, state)) {
             return false;
         }

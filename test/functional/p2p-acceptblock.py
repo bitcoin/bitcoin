@@ -96,7 +96,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         # 2. Send one block that builds on each tip.
         # This should be accepted.
         blocks_h2 = []  # the height 2 blocks on each node's chain
-        block_time = get_mocktime() + 1
+        block_time = self.mocktime + 1
         for i in range(2):
             blocks_h2.append(create_block(tips[i], create_coinbase(2), block_time + 1))
             blocks_h2[i].solve()
@@ -168,8 +168,8 @@ class AcceptBlockTest(BitcoinTestFramework):
                     headers_message.headers.append(CBlockHeader(next_block))
                 tips[j] = next_block
 
-        set_mocktime(get_mocktime() + 2)
-        set_node_times(self.nodes, get_mocktime())
+        self.bump_mocktime(2)
+        set_node_times(self.nodes, self.mocktime)
         # Blocks 1-287 should be accepted, block 288 should be ignored because it's too far ahead
         for x in all_blocks[:-1]:
             self.nodes[0].getblock(x.hash)

@@ -4,6 +4,7 @@
 
 #include "masternode/activemasternode.h"
 #include "consensus/validation.h"
+#include "core_io.h"
 #include "governance/governance.h"
 #include "governance/governance-vote.h"
 #include "governance/governance-classes.h"
@@ -1077,10 +1078,7 @@ UniValue getsuperblockbudget(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range");
     }
 
-    CAmount nBudget = CSuperblock::GetPaymentsLimit(nBlockHeight);
-    std::string strBudget = FormatMoney(nBudget);
-
-    return strBudget;
+    return ValueFromAmount(CSuperblock::GetPaymentsLimit(nBlockHeight));
 }
 
 static const CRPCCommand commands[] =

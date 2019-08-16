@@ -3,6 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the dumpwallet RPC."""
+import sys
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
@@ -65,7 +66,7 @@ class WalletDumpTest(BitcoinTestFramework):
         # TODO remove this when usehd=1 becomes the default
         # use our own cache and -usehd=1 as extra arg as the default cache is run with -usehd=0
         self._initialize_chain(os.path.join(self.options.tmpdir, "hd"), self.num_nodes, os.path.join(self.options.cachedir, "hd"), extra_args=self.extra_args[0], stderr=sys.stdout)
-        set_cache_mocktime()
+        self.set_cache_mocktime()
         # Use 1 minute timeout because the initial getnewaddress RPC can take
         # longer than the default 30 seconds due to an expensive
         # CWallet::TopUpKeyPool call, and the encryptwallet RPC made later in
@@ -96,7 +97,7 @@ class WalletDumpTest(BitcoinTestFramework):
 
         #encrypt wallet, restart, unlock and dump
         self.nodes[0].encryptwallet('test')
-        bitcoind_processes[0].wait()
+        self.bitcoind_processes[0].wait()
         self.nodes[0] = self.start_node(0, tmpdir, self.extra_args[0])
         self.nodes[0].walletpassphrase('test', 10)
         # Should be a no-op:

@@ -183,8 +183,8 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     mpool.TrimToSize(1);
     BOOST_CHECK(mpool.GetMinFee(1).GetFeePerK() > feeV[5]);
     for (int i = 1; i < 10; i++) {
-        BOOST_CHECK(feeEst.estimateSmartFee(i, NULL, mpool).GetFeePerK() >= feeEst.estimateRawFee(i, 0.85, FeeEstimateHorizon::MED_HALFLIFE).GetFeePerK());
-        BOOST_CHECK(feeEst.estimateSmartFee(i, NULL, mpool).GetFeePerK() >= mpool.GetMinFee(1).GetFeePerK());
+        BOOST_CHECK(feeEst.estimateSmartFee(i, nullptr, mpool, true).GetFeePerK() >= feeEst.estimateRawFee(i, 0.85, FeeEstimateHorizon::MED_HALFLIFE).GetFeePerK());
+        BOOST_CHECK(feeEst.estimateSmartFee(i, nullptr, mpool, true).GetFeePerK() >= mpool.GetMinFee(1).GetFeePerK());
     }
 }
 

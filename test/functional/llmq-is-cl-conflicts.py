@@ -168,8 +168,8 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         self.nodes[0].sendrawtransaction(rawtx1)
 
         # fast forward 11 minutes, so that the TX is considered safe and included in the next block
-        set_mocktime(get_mocktime() + int(60 * 11))
-        set_node_times(self.nodes, get_mocktime())
+        self.bump_mocktime(int(60 * 11))
+        set_node_times(self.nodes, self.mocktime)
 
         # Mine the conflicting TX into a block
         good_tip = self.nodes[0].getbestblockhash()

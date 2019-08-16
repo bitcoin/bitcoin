@@ -143,7 +143,7 @@ void CGovernanceTriggerManager::CleanAndRemove()
         CGovernanceObject* pObj = nullptr;
         CSuperblock_sptr& pSuperblock = it->second;
         if (!pSuperblock) {
-            LogPrint(BCLog::GOBJECT, "CGovernanceTriggerManager::CleanAndRemove -- NULL superblock marked for removal\n");
+            LogPrint(BCLog::GOBJECT, "CGovernanceTriggerManager::CleanAndRemove -- nullptr superblock marked for removal\n");
             remove = true;
         } else {
             pObj = governance.FindGovernanceObject(it->first);
@@ -170,7 +170,7 @@ void CGovernanceTriggerManager::CleanAndRemove()
         LogPrint(BCLog::GOBJECT, "CGovernanceTriggerManager::CleanAndRemove -- %smarked for removal\n", remove ? "" : "NOT ");
 
         if (remove) {
-            std::string strDataAsPlainString = "NULL";
+            std::string strDataAsPlainString = "nullptr";
             if (pObj) {
                 strDataAsPlainString = pObj->GetDataAsPlainString();
             }

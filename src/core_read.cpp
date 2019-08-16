@@ -27,7 +27,7 @@ CScript ParseScript(const std::string& s)
 
     if (mapOpNames.empty())
     {
-        for (unsigned int op = 0; op <= OP_NOP10; op++)
+        for (unsigned int op = 0; op <= MAX_OPCODE; op++)
         {
             // Allow OP_RESERVED to get into mapOpNames
             if (op < OP_NOP && op != OP_RESERVED)

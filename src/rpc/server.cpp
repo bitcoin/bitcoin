@@ -32,7 +32,7 @@ static bool fRPCInWarmup = true;
 static std::string rpcWarmupStatus("RPC server started");
 static CCriticalSection cs_rpcWarmup;
 /* Timer-creating functions */
-static RPCTimerInterface* timerInterface = NULL;
+static RPCTimerInterface* timerInterface = nullptr;
 /* Map of name to timer. */
 static std::map<std::string, std::unique_ptr<RPCTimerBase> > deadlineTimers;
 
@@ -123,16 +123,6 @@ CAmount AmountFromValue(const UniValue& value)
     if (!MoneyRange(amount))
         throw JSONRPCError(RPC_TYPE_ERROR, "Amount out of range");
     return amount;
-}
-
-UniValue ValueFromAmount(const CAmount& amount)
-{
-    bool sign = amount < 0;
-    int64_t n_abs = (sign ? -amount : amount);
-    int64_t quotient = n_abs / COIN;
-    int64_t remainder = n_abs % COIN;
-    return UniValue(UniValue::VNUM,
-            strprintf("%s%d.%08d", sign ? "-" : "", quotient, remainder));
 }
 
 uint256 ParseHashV(const UniValue& v, std::string strName)
@@ -357,7 +347,7 @@ const CRPCCommand *CRPCTable::operator[](const std::string &name) const
 {
     std::map<std::string, const CRPCCommand*>::const_iterator it = mapCommands.find(name);
     if (it == mapCommands.end())
-        return NULL;
+        return nullptr;
     return (*it).second;
 }
 
@@ -606,7 +596,7 @@ void RPCSetTimerInterface(RPCTimerInterface *iface)
 void RPCUnsetTimerInterface(RPCTimerInterface *iface)
 {
     if (timerInterface == iface)
-        timerInterface = NULL;
+        timerInterface = nullptr;
 }
 
 void RPCRunLater(const std::string& name, std::function<void(void)> func, int64_t nSeconds)

@@ -183,15 +183,15 @@ public:
     CCheckQueueControl& operator=(const CCheckQueueControl&) = delete;
     explicit CCheckQueueControl(CCheckQueue<T> * const pqueueIn) : pqueue(pqueueIn), fDone(false)
     {
-        // passed queue is supposed to be unused, or NULL
-        if (pqueue != NULL) {
+        // passed queue is supposed to be unused, or nullptr
+        if (pqueue != nullptr) {
             ENTER_CRITICAL_SECTION(pqueue->ControlMutex);
         }
     }
 
     bool Wait()
     {
-        if (pqueue == NULL)
+        if (pqueue == nullptr)
             return true;
         bool fRet = pqueue->Wait();
         fDone = true;
@@ -200,7 +200,7 @@ public:
 
     void Add(std::vector<T>& vChecks)
     {
-        if (pqueue != NULL)
+        if (pqueue != nullptr)
             pqueue->Add(vChecks);
     }
 
@@ -208,7 +208,7 @@ public:
     {
         if (!fDone)
             Wait();
-        if (pqueue != NULL) {
+        if (pqueue != nullptr) {
             LEAVE_CRITICAL_SECTION(pqueue->ControlMutex);
         }
     }

@@ -170,13 +170,13 @@ judge the general consensus of contributors.
 
 In general, all pull requests must:
 
-  - have a clear use case, fix a demonstrable bug or serve the greater good of
+  - Have a clear use case, fix a demonstrable bug or serve the greater good of
     the project (for example refactoring for modularisation);
-  - be well peer reviewed;
-  - have unit tests and functional tests where appropriate;
-  - follow [code style guidelines](/doc/developer-notes.md);
-  - not break the existing test suite;
-  - where bugs are fixed, where possible, there should be unit tests
+  - Be well peer reviewed;
+  - Have unit tests and functional tests where appropriate;
+  - Follow [code style guidelines](/doc/developer-notes.md);
+  - Not break the existing test suite;
+  - Where bugs are fixed, where possible, there should be unit tests
     demonstrating the bug and also proving the fix. This helps prevent regression.
 
 Patches that change Dash consensus rules are considerably more involved than

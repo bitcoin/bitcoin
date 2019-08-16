@@ -46,7 +46,7 @@ struct secure_allocator : public std::allocator<T> {
 
     void deallocate(T* p, std::size_t n)
     {
-        if (p != NULL) {
+        if (p != nullptr) {
             memory_cleanse(p, sizeof(T) * n);
         }
         LockedPoolManager::Instance().free(p);

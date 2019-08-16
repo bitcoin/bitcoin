@@ -81,13 +81,13 @@ bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsign
 #else
     aiHint.ai_flags = fAllowLookup ? AI_ADDRCONFIG : AI_NUMERICHOST;
 #endif
-    struct addrinfo *aiRes = NULL;
-    int nErr = getaddrinfo(pszName, NULL, &aiHint, &aiRes);
+    struct addrinfo *aiRes = nullptr;
+    int nErr = getaddrinfo(pszName, nullptr, &aiHint, &aiRes);
     if (nErr)
         return false;
 
     struct addrinfo *aiTrav = aiRes;
-    while (aiTrav != NULL && (nMaxSolutions == 0 || vIP.size() < nMaxSolutions))
+    while (aiTrav != nullptr && (nMaxSolutions == 0 || vIP.size() < nMaxSolutions))
     {
         CNetAddr resolved;
         if (aiTrav->ai_family == AF_INET)
@@ -203,7 +203,7 @@ enum class IntrRecvError {
  *
  * @note This function requires that hSocket is in non-blocking mode.
  */
-static IntrRecvError InterruptibleRecv(char* data, size_t len, int timeout, SOCKET& hSocket)
+static IntrRecvError InterruptibleRecv(char* data, size_t len, int timeout, const SOCKET& hSocket)
 {
     int64_t curTime = GetTimeMillis();
     int64_t endTime = curTime + timeout;
@@ -227,7 +227,7 @@ static IntrRecvError InterruptibleRecv(char* data, size_t len, int timeout, SOCK
                 fd_set fdset;
                 FD_ZERO(&fdset);
                 FD_SET(hSocket, &fdset);
-                int nRet = select(hSocket + 1, &fdset, NULL, NULL, &tval);
+                int nRet = select(hSocket + 1, &fdset, nullptr, nullptr, &tval);
                 if (nRet == SOCKET_ERROR) {
                     return IntrRecvError::NetworkError;
                 }
@@ -424,8 +424,10 @@ bool static ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRe
     SetSocketNoDelay(hSocket);
 
     // Set to non-blocking
-    if (!SetSocketNonBlocking(hSocket, true))
+    if (!SetSocketNonBlocking(hSocket, true)) {
+        CloseSocket(hSocket);
         return error("ConnectSocketDirectly: Setting socket to non-blocking failed, error %s\n", NetworkErrorString(WSAGetLastError()));
+    }
 
     if (connect(hSocket, (struct sockaddr*)&sockaddr, len) == SOCKET_ERROR)
     {
@@ -437,7 +439,7 @@ bool static ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRe
             fd_set fdset;
             FD_ZERO(&fdset);
             FD_SET(hSocket, &fdset);
-            int nRet = select(hSocket + 1, NULL, &fdset, NULL, &timeout);
+            int nRet = select(hSocket + 1, nullptr, &fdset, nullptr, &timeout);
             if (nRet == 0)
             {
                 LogPrint(BCLog::NET, "connection to %s timeout\n", addrConnect.ToString());
@@ -640,8 +642,8 @@ std::string NetworkErrorString(int err)
     char buf[256];
     buf[0] = 0;
     if(FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK,
-            NULL, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-            buf, sizeof(buf), NULL))
+            nullptr, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+            buf, sizeof(buf), nullptr))
     {
         return strprintf("%s (%d)", buf, err);
     }
@@ -682,7 +684,7 @@ bool CloseSocket(SOCKET& hSocket)
     return ret != SOCKET_ERROR;
 }
 
-bool SetSocketNonBlocking(SOCKET& hSocket, bool fNonBlocking)
+bool SetSocketNonBlocking(const SOCKET& hSocket, bool fNonBlocking)
 {
     if (fNonBlocking) {
 #ifdef WIN32
@@ -692,7 +694,6 @@ bool SetSocketNonBlocking(SOCKET& hSocket, bool fNonBlocking)
         int fFlags = fcntl(hSocket, F_GETFL, 0);
         if (fcntl(hSocket, F_SETFL, fFlags | O_NONBLOCK) == SOCKET_ERROR) {
 #endif
-            CloseSocket(hSocket);
             return false;
         }
     } else {
@@ -703,7 +704,6 @@ bool SetSocketNonBlocking(SOCKET& hSocket, bool fNonBlocking)
         int fFlags = fcntl(hSocket, F_GETFL, 0);
         if (fcntl(hSocket, F_SETFL, fFlags & ~O_NONBLOCK) == SOCKET_ERROR) {
 #endif
-            CloseSocket(hSocket);
             return false;
         }
     }
@@ -711,7 +711,7 @@ bool SetSocketNonBlocking(SOCKET& hSocket, bool fNonBlocking)
     return true;
 }
 
-bool SetSocketNoDelay(SOCKET& hSocket)
+bool SetSocketNoDelay(const SOCKET& hSocket)
 {
     int set = 1;
     int rc = setsockopt(hSocket, IPPROTO_TCP, TCP_NODELAY, (const char*)&set, sizeof(int));

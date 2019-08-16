@@ -58,6 +58,10 @@ class BaseNode(NodeConnCB):
         message.block.calc_sha256()
         self.block_receive_map[message.block.sha256] += 1
 
+    def on_inv(self, conn, message):
+        """Override the standard on_inv callback"""
+        pass
+
 def custom_function():
     """Do some custom behaviour
 
@@ -198,10 +202,10 @@ class ExampleTest(BitcoinTestFramework):
 
         self.log.info("Wait for node2 reach current tip. Test that it has propogated all the blocks to us")
 
+        getdata_request = msg_getdata()
         for block in blocks:
-            getdata_request = msg_getdata()
             getdata_request.inv.append(CInv(2, block))
-            node2.send_message(getdata_request)
+        node2.send_message(getdata_request)
 
         # wait_until() will loop until a predicate condition is met. Use it to test properties of the
         # NodeConnCB objects.

@@ -191,6 +191,9 @@ enum opcodetype
     OP_INVALIDOPCODE = 0xff,
 };
 
+// Maximum value that an opcode can be
+static const unsigned int MAX_OPCODE = OP_NOP10;
+
 const char* GetOpName(opcodetype opcode);
 
 class scriptnum_error : public std::runtime_error
@@ -495,7 +498,7 @@ public:
     bool GetOp(iterator& pc, opcodetype& opcodeRet)
     {
          const_iterator pc2 = pc;
-         bool fRet = GetOp2(pc2, opcodeRet, NULL);
+         bool fRet = GetOp2(pc2, opcodeRet, nullptr);
          pc = begin() + (pc2 - begin());
          return fRet;
     }
@@ -507,7 +510,7 @@ public:
 
     bool GetOp(const_iterator& pc, opcodetype& opcodeRet) const
     {
-        return GetOp2(pc, opcodeRet, NULL);
+        return GetOp2(pc, opcodeRet, nullptr);
     }
 
     bool GetOp2(const_iterator& pc, opcodetype& opcodeRet, std::vector<unsigned char>* pvchRet) const

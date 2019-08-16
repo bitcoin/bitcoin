@@ -170,14 +170,31 @@ public:
         std::vector<CSubNet> vWhitelistedRange;
         std::vector<CService> vBinds, vWhiteBinds;
     };
+
+    void Init(const Options& connOptions) {
+        nLocalServices = connOptions.nLocalServices;
+        nRelevantServices = connOptions.nRelevantServices;
+        nMaxConnections = connOptions.nMaxConnections;
+        nMaxOutbound = std::min(connOptions.nMaxOutbound, connOptions.nMaxConnections);
+        nMaxAddnode = connOptions.nMaxAddnode;
+        nMaxFeeler = connOptions.nMaxFeeler;
+        nBestHeight = connOptions.nBestHeight;
+        clientInterface = connOptions.uiInterface;
+        nSendBufferMaxSize = connOptions.nSendBufferMaxSize;
+        nReceiveFloodSize = connOptions.nReceiveFloodSize;
+        nMaxOutboundTimeframe = connOptions.nMaxOutboundTimeframe;
+        nMaxOutboundLimit = connOptions.nMaxOutboundLimit;
+        vWhitelistedRange = connOptions.vWhitelistedRange;
+    }
+
     CConnman(uint64_t seed0, uint64_t seed1);
     ~CConnman();
-    bool Start(CScheduler& scheduler, Options options);
+    bool Start(CScheduler& scheduler, const Options& options);
     void Stop();
     void Interrupt();
     bool GetNetworkActive() const { return fNetworkActive; };
     void SetNetworkActive(bool active);
-    bool OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = NULL, const char *strDest = NULL, bool fOneShot = false, bool fFeeler = false, bool fAddnode = false, bool fConnectToMasternode = false);
+    bool OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = nullptr, const char *strDest = nullptr, bool fOneShot = false, bool fFeeler = false, bool fAddnode = false, bool fConnectToMasternode = false);
     bool OpenMasternodeConnection(const CAddress& addrConnect);
     bool CheckIncomingNonce(uint64_t nonce);
 
@@ -449,7 +466,7 @@ private:
     CNode* FindNode(const CService& addr);
 
     bool AttemptToEvictConnection();
-    CNode* ConnectNode(CAddress addrConnect, const char *pszDest = NULL, bool fCountFailure = false);
+    CNode* ConnectNode(CAddress addrConnect, const char *pszDest = nullptr, bool fCountFailure = false);
     bool IsWhitelistedRange(const CNetAddr &addr);
 
     void DeleteNode(CNode* pnode);
@@ -608,7 +625,7 @@ bool AddLocal(const CNetAddr& addr, int nScore = LOCAL_NONE);
 bool RemoveLocal(const CService& addr);
 bool SeenLocal(const CService& addr);
 bool IsLocal(const CService& addr);
-bool GetLocal(CService &addr, const CNetAddr *paddrPeer = NULL);
+bool GetLocal(CService &addr, const CNetAddr *paddrPeer = nullptr);
 bool IsReachable(enum Network net);
 bool IsReachable(const CNetAddr &addr);
 CAddress GetLocalAddress(const CNetAddr *paddrPeer, ServiceFlags nLocalServices);

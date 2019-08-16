@@ -179,7 +179,7 @@ UniValue getrawtransaction(const JSONRPCRequest& request)
 
     // Accept either a bool (true) or a num (>=1) to indicate verbose output.
     bool fVerbose = false;
-    if (request.params.size() > 1) {
+    if (!request.params[1].isNull()) {
         if (request.params[1].isNum()) {
             if (request.params[1].get_int() != 0) {
                 fVerbose = true;
@@ -255,10 +255,10 @@ UniValue gettxoutproof(const JSONRPCRequest& request)
 
     LOCK(cs_main);
 
-    CBlockIndex* pblockindex = NULL;
+    CBlockIndex* pblockindex = nullptr;
 
     uint256 hashBlock;
-    if (request.params.size() > 1)
+    if (!request.params[1].isNull())
     {
         hashBlock = uint256S(request.params[1].get_str());
         if (!mapBlockIndex.count(hashBlock))
@@ -275,7 +275,7 @@ UniValue gettxoutproof(const JSONRPCRequest& request)
         }
     }
 
-    if (pblockindex == NULL)
+    if (pblockindex == nullptr)
     {
         CTransactionRef tx;
         if (!GetTransaction(oneTxid, tx, Params().GetConsensus(), hashBlock, false) || hashBlock.IsNull())
@@ -650,7 +650,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
         );
 
 #ifdef ENABLE_WALLET
-    LOCK2(cs_main, pwallet ? &pwallet->cs_wallet : NULL);
+    LOCK2(cs_main, pwallet ? &pwallet->cs_wallet : nullptr);
 #else
     LOCK(cs_main);
 #endif
