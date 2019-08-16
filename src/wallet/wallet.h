@@ -748,7 +748,7 @@ private:
     void SyncTransaction(const CTransactionRef& tx, const CBlockIndex *pindex = nullptr, int posInBlock = 0);
 
     /* HD derive new child key (on internal or external chain) */
-    void DeriveNewChildKey(const CKeyMetadata& metadata, CKey& secretRet, uint32_t nAccountIndex, bool fInternal /*= false*/);
+    void DeriveNewChildKey(CWalletDB &walletdb, const CKeyMetadata& metadata, CKey& secretRet, uint32_t nAccountIndex, bool fInternal /*= false*/);
 
     std::set<int64_t> setInternalKeyPool;
     std::set<int64_t> setExternalKeyPool;
@@ -952,7 +952,7 @@ public:
      * keystore implementation
      * Generate a new key
      */
-    CPubKey GenerateNewKey(uint32_t nAccountIndex, bool fInternal /*= false*/);
+    CPubKey GenerateNewKey(CWalletDB& walletdb, uint32_t nAccountIndex, bool fInternal /*= false*/);
     //! HaveKey implementation that also checks the mapHdPubKeys
     bool HaveKey(const CKeyID &address) const override;
     //! GetPubKey implementation that also checks the mapHdPubKeys
@@ -960,11 +960,12 @@ public:
     //! GetKey implementation that can derive a HD private key on the fly
     bool GetKey(const CKeyID &address, CKey& keyOut) const override;
     //! Adds a HDPubKey into the wallet(database)
-    bool AddHDPubKey(const CExtPubKey &extPubKey, bool fInternal);
+    bool AddHDPubKey(CWalletDB &walletdb, const CExtPubKey &extPubKey, bool fInternal);
     //! loads a HDPubKey into the wallets memory
     bool LoadHDPubKey(const CHDPubKey &hdPubKey);
     //! Adds a key to the store, and saves it to disk.
     bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey) override;
+    bool AddKeyPubKeyWithDB(CWalletDB &walletdb, const CKey& key, const CPubKey &pubkey);
     //! Adds a key to the store, without saving it to disk (used by LoadWallet)
     bool LoadKey(const CKey& key, const CPubKey &pubkey) { return CCryptoKeyStore::AddKeyPubKey(key, pubkey); }
     //! Load metadata (used by LoadWallet)
@@ -1239,8 +1240,15 @@ public:
     /* Generates a new HD chain */
     void GenerateNewHDChain();
     /* Set the HD chain model (chain child index counters) */
-    bool SetHDChain(const CHDChain& chain, bool memonly);
-    bool SetCryptedHDChain(const CHDChain& chain, bool memonly);
+    bool SetHDChain(CWalletDB &walletdb, const CHDChain& chain, bool memonly);
+    bool SetCryptedHDChain(CWalletDB &walletdb, const CHDChain& chain, bool memonly);
+    /**
+     * Set the HD chain model (chain child index counters) using temporary wallet db object
+     * which causes db flush every time these methods are used
+     */
+    bool SetHDChainSingle(const CHDChain& chain, bool memonly);
+    bool SetCryptedHDChainSingle(const CHDChain& chain, bool memonly);
+
     bool GetDecryptedHDChain(CHDChain& hdChainRet);
 
     void NotifyTransactionLock(const CTransaction &tx, const llmq::CInstantSendLock& islock) override;
