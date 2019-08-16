@@ -89,8 +89,6 @@ example:
 BUILDDIR=$PWD/build contrib/devtools/gen-manpages.sh
 ```
 
-github-merge.py
-===============
 
 A small script to automate merging pull-requests securely and sign them with GPG.
 
@@ -149,6 +147,7 @@ client via `pip3 install opentimestamps-client`. Then, download the gpg wrapper
 [the ots git integration documentation](https://github.com/opentimestamps/opentimestamps-client/blob/master/doc/git-integration.md#usage)
 for further details.
 
+=======
 optimize-pngs.py
 ================
 
