@@ -7,6 +7,7 @@
 #include <coins.h>
 #include <consensus/validation.h>
 #include <core_io.h>
+#include <index/addrindex.h>
 #include <index/txindex.h>
 #include <key_io.h>
 #include <merkleblock.h>
@@ -219,6 +220,149 @@ static RPCHelpMan getrawtransaction()
     return result;
 },
     };
+}
+
+static RPCHelpMan searchrawtransactions()
+{
+    return RPCHelpMan{"searchrawtransactions",
+        "\nReturns raw transactions that contain outputs with the given script/address, and outpoint information for those outputs.\n"
+        "\nRequires -addrindex to be enabled.\n",
+         {
+                {"address", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, /* default_val */ "", "address or scriptPubKey"},
+                {"verbose", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, /* default_val */ "false", "If false, return hex-encoded tx, otherwise return a json object"},
+                {"count", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, /* default_val */ "", "the maximum number of results to return, defaults to 100"},
+                {"skip", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, /* default_val */ "", "the number of initial values to skip, defaults to 0."},
+         },
+         RPCResult{
+              RPCResult::Type::OBJ, "","",
+              {
+                  {RPCResult::Type::ARR, "", "",
+                  {
+                    {RPCResult::Type::ARR, "", "outpoint/tx pairs for spent outputs with this scriptPubKey",
+                    {
+                      {RPCResult::Type::OBJ, "spent_outpoint", "",
+                      {
+                        {RPCResult::Type::STR, "txid", "The transaction id"},
+                        {RPCResult::Type::STR_HEX, "hex", "The serialized, hex-encoded data for 'txid'"},
+                      }}
+                    }},
+                    {RPCResult::Type::ARR, "", "outpoint/tx pairs for outputs created with this scriptPubKey",
+                    {
+                      {RPCResult::Type::OBJ, "created_outpoint", "",
+                      {
+                        {RPCResult::Type::STR, "txid", "The transaction id"},
+                        {RPCResult::Type::STR_HEX, "hex", "The serialized, hex-encoded data for 'txid'"},
+                      }}
+                    }}
+                   }}
+              },
+        },
+        RPCExamples{
+                HelpExampleCli("searchrawtransactions", "\"address\"")
+    + HelpExampleCli("searchrawtransactions", "\"address\" true")
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    CScript scriptPubKey;
+    const CTxDestination dest = DecodeDestination(request.params[0].get_str());
+    if(IsValidDestination(dest)) {
+        scriptPubKey = GetScriptForDestination(dest);
+    } else if(IsHex(request.params[0].get_str())) {
+        std::vector<unsigned char> data(ParseHex(request.params[0].get_str()));
+        scriptPubKey = CScript(data.begin(), data.end());
+    } else {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address or script");
+    }
+
+    // Accept either a bool (true) or a num (>=1) to indicate verbose output.
+    bool verbose = false;
+    if (!request.params[1].isNull()) {
+        verbose = request.params[1].isNum() ? (request.params[1].get_int() != 0) : request.params[1].get_bool();
+    }
+
+    int count = 100;
+    if (request.params.size() > 2) {
+        if (!request.params[2].isNum()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, argument 3 must be an integer");
+        }
+        count = request.params[2].get_int();
+    }
+
+    int skip = 0;
+    if (request.params.size() > 3) {
+        if (!request.params[3].isNum()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, argument 4 must be an integer");
+        }
+        skip = request.params[3].get_int();
+    }
+
+
+
+    if (!g_addr_index) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "This RPC requires -addrindex to be enabled.");
+    }
+
+    bool addrindex_ready = g_addr_index->BlockUntilSyncedToCurrentChain();
+
+    UniValue ret(UniValue::VOBJ);
+
+    std::vector<std::pair<COutPoint, std::pair<CTransactionRef, uint256>>> spends_result;
+    std::vector<std::pair<COutPoint, std::pair<CTransactionRef, uint256>>> creations_result;
+    if (!g_addr_index->FindTxsByScript(count, skip, scriptPubKey, spends_result, creations_result)) {
+        if (!addrindex_ready) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,"Transactions with given address not found. Blockchain transactions are still in the process of being indexed");
+        }
+        return ret;
+    }
+
+    UniValue spends(UniValue::VARR);
+    UniValue creations(UniValue::VARR);
+
+    auto spends_it = spends_result.begin();
+    while (spends_it != spends_result.end()) {
+        const auto& spend = *spends_it;
+        UniValue tx_val(UniValue::VOBJ);
+
+        UniValue outpoint_val(UniValue::VOBJ);
+        outpoint_val.pushKV("txid", spend.second.first->GetHash().GetHex());
+        outpoint_val.pushKV("n", static_cast<int>(spend.first.n));
+
+        tx_val.pushKV("spent_outpoint", outpoint_val);
+        if (verbose) {
+            TxToJSON(*(spend.second.first), spend.second.second, tx_val);
+        } else {
+            std::string hex_tx = EncodeHexTx(*(spend.second.first), RPCSerializationFlags());
+            tx_val.pushKV("hex", hex_tx);
+        }
+        spends.push_back(tx_val);
+        ++spends_it;
+    }
+
+    auto creations_it = creations_result.begin();
+    while (creations_it != creations_result.end()) {
+        const auto& creation = *creations_it;
+        UniValue tx_val(UniValue::VOBJ);
+
+        UniValue outpoint_val(UniValue::VOBJ);
+        outpoint_val.pushKV("txid", creation.first.hash.GetHex());
+        outpoint_val.pushKV("n", static_cast<int>(creation.first.n));
+
+        tx_val.pushKV("created_outpoint", outpoint_val);
+        if (verbose) {
+            TxToJSON(*(creation.second.first), creation.second.second, tx_val);
+        } else {
+            std::string hex_tx = EncodeHexTx(*(creation.second.first), RPCSerializationFlags());
+            tx_val.pushKV("hex", hex_tx);
+        }
+        creations.push_back(tx_val);
+        ++creations_it;
+    }
+
+    ret.pushKV("spends", spends);
+    ret.pushKV("creations", creations);
+    return ret;
+},
+  };
 }
 
 static RPCHelpMan gettxoutproof()
@@ -1854,6 +1998,7 @@ static const CRPCCommand commands[] =
 { //  category              name                            actor (function)            argNames
   //  --------------------- ------------------------        -----------------------     ----------
     { "rawtransactions",    "getrawtransaction",            &getrawtransaction,         {"txid","verbose","blockhash"} },
+    { "rawtransactions",    "searchrawtransactions",        &searchrawtransactions,     {"address", "verbose", "count", "skip"} },
     { "rawtransactions",    "createrawtransaction",         &createrawtransaction,      {"inputs","outputs","locktime","replaceable"} },
     { "rawtransactions",    "decoderawtransaction",         &decoderawtransaction,      {"hexstring","iswitness"} },
     { "rawtransactions",    "decodescript",                 &decodescript,              {"hexstring"} },

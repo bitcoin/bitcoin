@@ -10,6 +10,7 @@ Test the following RPCs:
    - sendrawtransaction
    - decoderawtransaction
    - getrawtransaction
+   - searchrawtransactions
 """
 
 from collections import OrderedDict
@@ -49,7 +50,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 3
         self.extra_args = [
-            ["-txindex"],
+            ["-txindex", "-addrindex"],
             ["-txindex"],
             ["-txindex"],
         ]
@@ -488,6 +489,75 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_equal(testres['allowed'], True)
         self.nodes[2].sendrawtransaction(hexstring=rawTxSigned['hex'], maxfeerate='0.20000000')
 
+        self._test_searchrawtransactions()
+
+    def _test_searchrawtransactions(self):
+        self.log.info('searchrawtransactions test')
+
+        # Create 3 new outputs with the same address.
+        expected_txids = []
+        addr1 = self.nodes[1].getnewaddress()
+        expected_txids.append(self.nodes[0].sendtoaddress(addr1, 0.1))
+        expected_txids.append(self.nodes[0].sendtoaddress(addr1, 0.1))
+        expected_txids.append(self.nodes[0].sendtoaddress(addr1, 0.1))
+
+        self.nodes[0].generate(1)
+        self.sync_all()
+
+        res = self.nodes[0].searchrawtransactions(addr1, True)
+        spends_results, creations_results = res["spends"], res["creations"]
+
+        assert_equal(len(spends_results), 0)
+        assert_equal(len(creations_results), 3)
+
+        for c in creations_results:
+            # Since this output was created in the tx, its outpoint should have the same txid.
+            outpoint_txid = c['created_outpoint']['txid']
+            txid = c['txid']
+            assert_equal(outpoint_txid, txid)
+            assert(txid in expected_txids)
+
+        # Check that equivalent result is produced without verbose option set.
+        res = self.nodes[0].searchrawtransactions(addr1)
+        spends_results, creations_results = res["spends"], res["creations"]
+
+        assert_equal(len(spends_results), 0)
+        assert_equal(len(creations_results), 3)
+        for c in creations_results:
+            # Since this output was created in the tx, its outpoint should have the same txid.
+            outpoint_txid = c['created_outpoint']['txid']
+            assert(outpoint_txid in expected_txids)
+
+        # Set the count to 1 and check that only 1 result is returned.
+        res = self.nodes[0].searchrawtransactions(addr1, False, 1)
+        spends_results, creations_results = res["spends"], res["creations"]
+        assert_equal(len(spends_results), 0)
+        assert_equal(len(creations_results), 1)
+
+        # Set the skip to 2 and check that only 1 result is returned.
+        res = self.nodes[0].searchrawtransactions(addr1, False, 100, 2)
+        spends_results, creations_results = res["spends"], res["creations"]
+        assert_equal(len(spends_results), 0)
+        assert_equal(len(creations_results), 1)
+
+        # Send the most of balance to addr2 and then to addr3.
+        addr2 = self.nodes[1].getnewaddress()
+        balance = self.nodes[1].getbalance()
+        self.nodes[1].sendtoaddress(address=addr2, amount=balance, subtractfeefromamount=True)
+
+        addr3 = self.nodes[1].getnewaddress()
+        balance = self.nodes[1].getbalance()
+        expected_send_txid = self.nodes[1].sendtoaddress(address=addr3, amount=balance, subtractfeefromamount=True)
+
+        self.nodes[1].generate(1)
+        self.sync_all()
+
+        # Check that the spent output was found by the address index.
+        res = self.nodes[0].searchrawtransactions(addr2, True)
+        spends_results, creations_results = res["spends"], res["creations"]
+        assert_equal(len(spends_results), 1)
+        assert_equal(len(creations_results), 1)
+        assert_equal(expected_send_txid, spends_results[0]['spent_outpoint']['txid'])
 
 if __name__ == '__main__':
     RawTransactionsTest().main()
