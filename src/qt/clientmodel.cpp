@@ -26,8 +26,6 @@
 
 #include "llmq/quorums_instantsend.h"
 
-#include "llmq/quorums_instantsend.h"
-
 #include <stdint.h>
 
 #include <QDebug>

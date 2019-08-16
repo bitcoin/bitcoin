@@ -657,15 +657,6 @@ public:
         CScriptBase::clear();
         shrink_to_fit();
     }
-
-    template<typename Stream>
-    void Serialize(Stream& s) const {
-        s << *(CScriptBase*)this;
-    }
-    template<typename Stream>
-    void Unserialize(Stream& s) {
-        s >> *(CScriptBase*)this;
-    }
 };
 
 class CReserveScript

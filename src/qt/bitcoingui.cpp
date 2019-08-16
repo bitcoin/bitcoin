@@ -25,7 +25,6 @@
 
 #ifdef ENABLE_WALLET
 #include "privatesend/privatesend-client.h"
-#include "privatesend-client.h"
 #include "walletframe.h"
 #include "walletmodel.h"
 #endif // ENABLE_WALLET
