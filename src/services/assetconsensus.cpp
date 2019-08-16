@@ -298,7 +298,7 @@ bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& 
         } 
         else if(IsSyscoinMintTx(tx.nVersion))
         {
-            if(nHeight <= Params().GetConsensus().nBridgeStartBlock){
+            if(nHeight < Params().GetConsensus().nBridgeStartBlock){
                 FormatSyscoinErrorMessage(state, "mint-disabled", bMiner);
                 good = false;
             }
@@ -1398,7 +1398,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, CValidation
         case SYSCOIN_TX_VERSION_ASSET_TRANSFER:
             if(theAsset.witnessAddressTransfer.IsNull())   {
                 return FormatSyscoinErrorMessage(state, "asset-missing-transfer-address", bMiner);
-            } 
+            }
             break;
         default:
             return FormatSyscoinErrorMessage(state, "asset-invalid-op", bMiner);
@@ -1493,8 +1493,12 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, CValidation
 			}
 			storedSenderAssetRef.vchContract = theAsset.vchContract;
 		}
- 
-        if (theAsset.nUpdateFlags != storedSenderAssetRef.nUpdateFlags) {
+        if(nHeight < Params().GetConsensus().nBridgeStartBlock){
+            if(theAsset.nUpdateFlags > 0){
+                storedSenderAssetRef.nUpdateFlags = theAsset.nUpdateFlags; 
+            }   
+        }
+        else if (theAsset.nUpdateFlags != storedSenderAssetRef.nUpdateFlags) {
 			if (theAsset.nUpdateFlags > 0 && !(storedSenderAssetRef.nUpdateFlags & (ASSET_UPDATE_FLAGS | ASSET_UPDATE_ADMIN))) {
 				return FormatSyscoinErrorMessage(state, "asset-insufficient-privileges", bMiner);
 			}
@@ -1744,8 +1748,8 @@ void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t>
     uint32_t nCurrentSyncHeight = 0;
     nCurrentSyncHeight = fGethSyncHeight;
 
-    uint32_t nKeyCutoff = nCurrentSyncHeight - MAX_ETHEREUM_TX_ROOTS;
-    if(nCurrentSyncHeight < MAX_ETHEREUM_TX_ROOTS)
+    uint32_t nKeyCutoff = nCurrentSyncHeight - DOWNLOAD_ETHEREUM_TX_ROOTS;
+    if(nCurrentSyncHeight < DOWNLOAD_ETHEREUM_TX_ROOTS)
         nKeyCutoff = 0;
     std::vector<unsigned char> txPos;
     std::map<uint32_t, EthereumTxRoot> mapTxRoots;
@@ -1780,8 +1784,8 @@ void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t>
     auto setIt = mapTxRoots.begin();
     nKeyIndex = setIt->first;
     setIt++;
-    // we should have at least MAX_ETHEREUM_TX_ROOTS roots available from the tip for consensus checks
-    if(nCurrentSyncHeight >= MAX_ETHEREUM_TX_ROOTS && nKeyIndex > nKeyCutoff){
+    // we should have at least DOWNLOAD_ETHEREUM_TX_ROOTS roots available from the tip for consensus checks
+    if(nCurrentSyncHeight >= DOWNLOAD_ETHEREUM_TX_ROOTS && nKeyIndex > nKeyCutoff){
         vecMissingBlockRanges.emplace_back(make_pair(nKeyCutoff, nKeyIndex-1));
     }
     std::vector<unsigned char> vchPrevHash;
@@ -1800,7 +1804,7 @@ void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t>
                 const EthereumTxRoot &txRootPrev = prevRootPair->second;
                 if(txRoot.vchPrevHash != txRootPrev.vchBlockHash){
                     // get a range of -50 to +50 around effected tx root to minimize chance that you will be requesting 1 root at a time in a long range fork
-                    // this is fine because relayer fetches 100 headers at a time anyway
+                    // this is fine because relayer fetches hundreds headers at a time anyway
                     vecMissingBlockRanges.emplace_back(make_pair(std::max(0,(int32_t)key-50), std::min((int32_t)key+50, (int32_t)nCurrentSyncHeight)));
                     vecRemoveKeys.push_back(key);
                 }

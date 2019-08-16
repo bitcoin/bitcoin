@@ -252,7 +252,7 @@ public:
         consensus.nSYSXAsset = 505115838;
         consensus.vchSYSXBurnMethodSignature = ParseHex("5c460a3f");
         consensus.vchSYSXERC20Manager = ParseHex("890345340A36C7C4e24a5a6ea0a7AE87E223DD38");
-        consensus.nBridgeStartBlock = 100;
+        consensus.nBridgeStartBlock = 1000;
         pchMessageStart[0] = 0xce;
         pchMessageStart[1] = 0xe2;
         pchMessageStart[2] = 0xca;
