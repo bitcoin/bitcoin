@@ -75,20 +75,18 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     // if we checking this on block we would have already verified this in checkblock
     if(ethTxRootShouldExist){
         // time must be between 1 week and 1 hour old to be accepted
-        if(fGethSyncHeight >= MAX_ETHEREUM_TX_ROOTS){
-            if(nTime < txRootDB.nTimestamp) {
-                return FormatSyscoinErrorMessage(state, "invalid-timestamp", bMiner);
-            }
-            else if((nTime - txRootDB.nTimestamp) > 604800) {
-                return FormatSyscoinErrorMessage(state, "mint-blockheight-too-old", bMiner);
-            } 
-            
-            // ensure that we wait at least 1 hour before we are allowed process this mint transaction  
-            // also ensure sanity test that the current height that our node thinks Eth is on isn't less than the requested block for spv proof
-            else if((nTime - txRootDB.nTimestamp) < ((bGethTestnet == true)? 600: 3600)) {
-                return FormatSyscoinErrorMessage(state, "mint-insufficient-confirmations", bMiner);
-            }
+        if(nTime < txRootDB.nTimestamp) {
+            return FormatSyscoinErrorMessage(state, "invalid-timestamp", bMiner);
+        }
+        else if((nTime - txRootDB.nTimestamp) > 604800) {
+            return FormatSyscoinErrorMessage(state, "mint-blockheight-too-old", bMiner);
         } 
+        
+        // ensure that we wait at least 1 hour before we are allowed process this mint transaction  
+        // also ensure sanity test that the current height that our node thinks Eth is on isn't less than the requested block for spv proof
+        else if((nTime - txRootDB.nTimestamp) < ((bGethTestnet == true)? 600: 3600)) {
+            return FormatSyscoinErrorMessage(state, "mint-insufficient-confirmations", bMiner);
+        }
     }
     
      // check transaction receipt validity
@@ -1496,8 +1494,8 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, CValidation
 			storedSenderAssetRef.vchContract = theAsset.vchContract;
 		}
  
-        if (theAsset.nUpdateFlags > 0) {
-			if (!(storedSenderAssetRef.nUpdateFlags & (ASSET_UPDATE_FLAGS | ASSET_UPDATE_ADMIN))) {
+        if (theAsset.nUpdateFlags != storedSenderAssetRef.nUpdateFlags) {
+			if (theAsset.nUpdateFlags > 0 && !(storedSenderAssetRef.nUpdateFlags & (ASSET_UPDATE_FLAGS | ASSET_UPDATE_ADMIN))) {
 				return FormatSyscoinErrorMessage(state, "asset-insufficient-privileges", bMiner);
 			}
 			storedSenderAssetRef.nUpdateFlags = theAsset.nUpdateFlags;
@@ -1681,10 +1679,9 @@ bool CEthereumTxRootsDB::PruneTxRoots(const uint32_t &fNewGethSyncHeight) {
     uint32_t cutoffHeight = 0;
     if(fNewGethSyncHeight > 0)
     {
-        const uint32_t &nCutoffHeight = MAX_ETHEREUM_TX_ROOTS;
         // cutoff to keep blocks is ~3 week of blocks is about 120k blocks
-        cutoffHeight = fNewGethSyncHeight - nCutoffHeight;
-        if(fNewGethSyncHeight < nCutoffHeight){
+        cutoffHeight = fNewGethSyncHeight - MAX_ETHEREUM_TX_ROOTS;
+        if(fNewGethSyncHeight < MAX_ETHEREUM_TX_ROOTS){
             LogPrint(BCLog::SYS, "Nothing to prune fGethSyncHeight = %d\n", fNewGethSyncHeight);
             return true;
         }

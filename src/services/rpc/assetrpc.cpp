@@ -1120,9 +1120,10 @@ UniValue syscoinstartgeth(const JSONRPCRequest& request) {
     StopRelayerNode(relayerPID);
     StopGethNode(gethPID);
     int wsport = gArgs.GetArg("-gethwebsocketport", 8646);
+    int ethrpcport = gArgs.GetArg("-gethrpcport", 8645);
     if(!StartGethNode(exePath, gethPID, wsport))
         throw JSONRPCError(RPC_MISC_ERROR, "Could not start Geth");
-    if(!StartRelayerNode(exePath, relayerPID, wsport))
+    if(!StartRelayerNode(exePath, relayerPID, wsport, ethrpcport))
         throw JSONRPCError(RPC_MISC_ERROR, "Could not stop relayer");
     
     UniValue ret(UniValue::VOBJ);
@@ -1168,12 +1169,13 @@ UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
     if(!fGethSynced && fGethSyncStatus == "synced" && vecMissingBlockRanges.empty())  {     
         fGethSynced = true;
     }
-   
-    for(const auto& range: vecMissingBlockRanges){
-        UniValue retRange(UniValue::VOBJ);
-        retRange.__pushKV("from", range.first);
-        retRange.__pushKV("to", range.second);
-        retArray.push_back(retRange);
+    if(fGethSyncStatus == "synced"){
+        for(const auto& range: vecMissingBlockRanges){
+            UniValue retRange(UniValue::VOBJ);
+            retRange.__pushKV("from", range.first);
+            retRange.__pushKV("to", range.second);
+            retArray.push_back(retRange);
+        }
     }
     LogPrint(BCLog::SYS, "syscoinsetethstatus old height %d new height %d\n", nGethOldHeight, fGethCurrentHeight);
     ret.__pushKV("missing_blocks", retArray);

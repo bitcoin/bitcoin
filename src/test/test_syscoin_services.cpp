@@ -879,12 +879,7 @@ string AssetUpdate(const string& node, const string& guid, const string& pubdata
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "sendrawtransaction " + hex_str, true, false)); 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoindecoderawtransaction " + hex_str));
 	UniValue flagValue = find_value(r.get_obj(), "update_flags");
-	if (newflags != oldflags && newflags != 0) {
-		BOOST_CHECK_EQUAL(flagValue.get_uint(), newflags);
-	}
-	else {
-		BOOST_CHECK(flagValue.isNull());
-	}
+	BOOST_CHECK_EQUAL(flagValue.get_uint(), newflags);
 	// ensure sender state not changed before generating blocks
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + guid));
 	BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_uint()) == guid);
