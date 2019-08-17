@@ -8,14 +8,14 @@ Test that permissions are correctly calculated and applied
 """
 
 from test_framework.test_node import ErrorMatch
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import (
     assert_equal,
     connect_nodes,
     p2p_port,
 )
 
-class P2PPermissionsTests(BitcoinTestFramework):
+class P2PPermissionsTests(SyscoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
@@ -88,9 +88,9 @@ class P2PPermissionsTests(BitcoinTestFramework):
                 raise AssertionError("Expected permissions %r is not granted." % p)
 
     def replaceinconfig(self, nodeid, old, new):
-        with open(self.nodes[nodeid].bitcoinconf, encoding="utf8") as f:
+        with open(self.nodes[nodeid].syscoinconf, encoding="utf8") as f:
             newText=f.read().replace(old, new)
-        with open(self.nodes[nodeid].bitcoinconf, 'w', encoding="utf8") as f:
+        with open(self.nodes[nodeid].syscoinconf, 'w', encoding="utf8") as f:
             f.write(newText)
 
 if __name__ == '__main__':
