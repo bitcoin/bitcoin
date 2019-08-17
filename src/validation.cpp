@@ -2578,7 +2578,7 @@ bool DisconnectBlocks(int blocks)
     LogPrintf("DisconnectBlocks -- Got command to replay %d blocks\n", blocks);
     for(int i = 0; i < blocks; i++) {
         DisconnectedBlockTransactions disconnectpool;
-        if(!g_chainstate.DisconnectTip(state, chainparams,&disconnectpool) || !state.IsValid()) {
+        if(!g_chainstate->DisconnectTip(state, chainparams,&disconnectpool) || !state.IsValid()) {
             // This is likely a fatal error, but keep the mempool consistent,
             // just in case. Only remove from the mempool in this case.
             UpdateMempoolForReorg(disconnectpool, false);
