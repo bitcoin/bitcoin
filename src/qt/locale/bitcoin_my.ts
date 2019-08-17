@@ -1,17 +1,41 @@
-<TS language="fr_CA" version="2.1">
+<TS language="my" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
+        <source>Right-click to edit address or label</source>
+        <translation>လိပ်စာ သို့မဟုတ် ခေါင်းစဉ်တပ်ရန် Right-click နှိပ်ပါ။</translation>
+    </message>
+    <message>
         <source>Create a new address</source>
-        <translation>Créer une nouvelle adresse</translation>
+        <translation>လိပ်စာအသစ်ယူမယ်။</translation>
+    </message>
+    <message>
+        <source>&amp;New</source>
+        <translation>&amp;အသစ်</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Copier l'adresse surligné a votre presse-papier</translation>
+        <translation>လက်ရှိရွေးထားတဲ့ လိပ်စာကို clipboard ပေါ်တင်မယ်။</translation>
+    </message>
+    <message>
+        <source>&amp;Copy</source>
+        <translation>&amp;ကူးမယ်</translation>
+    </message>
+    <message>
+        <source>Delete the currently selected address from the list</source>
+        <translation>လက်ရှိရွေးထားတဲ့ လိပ်စာကို ဖျက်မယ်။</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>လက်ရှိ tab မှာရှိတဲ့ဒေတာတွေကို ဖိုင်လ်မှာသိမ်းမယ်။</translation>
+    </message>
+    <message>
+        <source>&amp;Export</source>
+        <translation>&amp;ထုတ်ယူသိမ်းဆည်း</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp;Supprimer</translation>
+        <translation>&amp;ဖျက်</translation>
     </message>
     </context>
 <context>
@@ -19,18 +43,6 @@
     </context>
 <context>
     <name>AskPassphraseDialog</name>
-    <message>
-        <source>Enter passphrase</source>
-        <translation>Entrer Mot de Passe</translation>
-    </message>
-    <message>
-        <source>New passphrase</source>
-        <translation>Nouveau Mot de passe</translation>
-    </message>
-    <message>
-        <source>Repeat new passphrase</source>
-        <translation>Répéter Mot de Passe</translation>
-    </message>
     </context>
 <context>
     <name>BanTableModel</name>
@@ -40,21 +52,9 @@
     </context>
 <context>
     <name>CoinControlDialog</name>
-    <message>
-        <source>(un)select all</source>
-        <translation>Toute sélectionner </translation>
-    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>
-    <message>
-        <source>&amp;Label</source>
-        <translation>Record</translation>
-    </message>
-    <message>
-        <source>&amp;Address</source>
-        <translation>Addresse</translation>
-    </message>
     </context>
 <context>
     <name>FreespaceChecker</name>
@@ -64,10 +64,6 @@
     </context>
 <context>
     <name>Intro</name>
-    <message>
-        <source>Welcome</source>
-        <translation>Bienvenue </translation>
-    </message>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -137,33 +133,9 @@
     </context>
 <context>
     <name>TransactionTableModel</name>
-    <message>
-        <source>Label</source>
-        <translation>Record</translation>
-    </message>
-    <message>
-        <source>(no label)</source>
-        <translation>(pas de record)</translation>
-    </message>
     </context>
 <context>
     <name>TransactionView</name>
-    <message>
-        <source>Copy address</source>
-        <translation>copier l'adresse </translation>
-    </message>
-    <message>
-        <source>Comma separated file (*.csv)</source>
-        <translation>Fichier séparé par une virgule (*.csv)</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Record</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Addresse</translation>
-    </message>
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
@@ -176,6 +148,14 @@
     </context>
 <context>
     <name>WalletView</name>
+    <message>
+        <source>&amp;Export</source>
+        <translation>&amp;ထုတ်ယူသိမ်းဆည်း</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>လက်ရှိ tab မှာရှိတဲ့ဒေတာတွေကို ဖိုင်လ်မှာသိမ်းမယ်။</translation>
+    </message>
     </context>
 <context>
     <name>bitcoin-core</name>

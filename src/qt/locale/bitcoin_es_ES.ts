@@ -136,6 +136,10 @@
         <translation>Repita la nueva contraseña</translation>
     </message>
     <message>
+        <source>Show password</source>
+        <translation>Mostrar contraseña</translation>
+    </message>
+    <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
         <translation>Introduzca la nueva frase clave del monedero. &lt;br/&gt;Por favor utilice una frase clave de &lt;b&gt;diez o más carácteres aleatorios&lt;/b&gt;, o &lt;b&gt;ocho o más palabras&lt;/b&gt;.</translation>
     </message>
@@ -320,6 +324,10 @@
     <message>
         <source>Open &amp;URI...</source>
         <translation>Abrir &amp;URI...</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>Monedero</translation>
     </message>
     <message>
         <source>Click to disable network activity.</source>
@@ -507,6 +515,12 @@
         <source>Amount: %1
 </source>
         <translation>Amount: %1
+</translation>
+    </message>
+    <message>
+        <source>Wallet: %1
+</source>
+        <translation>Monedero %1
 </translation>
     </message>
     <message>
@@ -744,6 +758,14 @@
     <message>
         <source>The entered address "%1" is not a valid Bitcoin address.</source>
         <translation>La dirección introducida "%1" no es una dirección Bitcoin válida.</translation>
+    </message>
+    <message>
+        <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
+        <translation>La dirección "%1" ya existe como dirección receptora con la etiqueta "%2" y no puede añadirse como dirección emisora.</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book with label "%2".</source>
+        <translation>La dirección introducida "%1" ya existe en el libro de direcciones con la etiqueta "%2".</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>

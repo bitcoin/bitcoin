@@ -1,13 +1,13 @@
-<TS language="el" version="2.1">
+<TS language="ta_IN" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
         <source>Create a new address</source>
-        <translation>Δημιουργία νέου λογαριασμού</translation>
+        <translation>புதிய முகவரியை உருவாக்கவும்</translation>
     </message>
     <message>
-        <source>&amp;Copy</source>
-        <translation>&amp;Αντιγραφή</translation>
+        <source>Delete the currently selected address from the list</source>
+        <translation>பட்டியலிலிருந்து தற்போது தேர்ந்தெடுக்கப்பட்ட முகவரி நீக்கவும்</translation>
     </message>
     </context>
 <context>
@@ -16,16 +16,28 @@
 <context>
     <name>AskPassphraseDialog</name>
     <message>
-        <source>Enter passphrase</source>
-        <translation>Εισάγετε συνθηματικό</translation>
+        <source>Passphrase Dialog</source>
+        <translation>கடவுச்சொல் உரையாடல் </translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation>Νέο συνθηματικό</translation>
+        <translation>புதிய கடவுச்சொல்</translation>
     </message>
     <message>
-        <source>Repeat new passphrase</source>
-        <translation>Επαναλάβετε νέο συνθηματικό</translation>
+        <source>Encrypt wallet</source>
+        <translation>குறியாக்க பணப்பையை</translation>
+    </message>
+    <message>
+        <source>Unlock wallet</source>
+        <translation>பணப்பை திறக்க</translation>
+    </message>
+    <message>
+        <source>Decrypt wallet</source>
+        <translation>பணப்பை குறியாக்க</translation>
+    </message>
+    <message>
+        <source>Change passphrase</source>
+        <translation>கடுவு சொற்றொடரை மாற்று</translation>
     </message>
     </context>
 <context>
@@ -34,55 +46,27 @@
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <source>Quit application</source>
-        <translation>Κλείσιμο εφαρμογής</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Πορτοφόλι</translation>
-    </message>
-    <message>
         <source>Error</source>
-        <translation>Σφάλμα</translation>
+        <translation>பிழை</translation>
     </message>
     </context>
 <context>
     <name>CoinControlDialog</name>
-    <message>
-        <source>Date</source>
-        <translation>Ημερομηνία</translation>
-    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>
-    <message>
-        <source>&amp;Label</source>
-        <translation>Ετικέτα</translation>
-    </message>
-    <message>
-        <source>&amp;Address</source>
-        <translation>Διεύθυνση</translation>
-    </message>
     </context>
 <context>
     <name>FreespaceChecker</name>
     </context>
 <context>
     <name>HelpMessageDialog</name>
-    <message>
-        <source>version</source>
-        <translation>έκδοση</translation>
-    </message>
     </context>
 <context>
     <name>Intro</name>
     <message>
-        <source>Welcome</source>
-        <translation>Καλώς Ήλθατε</translation>
-    </message>
-    <message>
         <source>Error</source>
-        <translation>Σφάλμα</translation>
+        <translation>பிழை</translation>
     </message>
     </context>
 <context>
@@ -94,12 +78,8 @@
 <context>
     <name>OptionsDialog</name>
     <message>
-        <source>W&amp;allet</source>
-        <translation>Πορτοφόλι</translation>
-    </message>
-    <message>
         <source>Error</source>
-        <translation>Σφάλμα</translation>
+        <translation>பிழை</translation>
     </message>
     </context>
 <context>
@@ -107,13 +87,21 @@
     </context>
 <context>
     <name>PaymentServer</name>
-    </context>
+    <message>
+        <source>Payment acknowledged</source>
+        <translation>கட்டணம் ஒப்புக் கொண்டது</translation>
+    </message>
+</context>
 <context>
     <name>PeerTableModel</name>
     </context>
 <context>
     <name>QObject</name>
-    </context>
+    <message>
+        <source>unknown</source>
+        <translation>தெரியாத</translation>
+    </message>
+</context>
 <context>
     <name>QObject::QObject</name>
     </context>
@@ -122,23 +110,19 @@
     </context>
 <context>
     <name>RPCConsole</name>
-    <message>
-        <source>Services</source>
-        <translation>Υπηρεσίες</translation>
-    </message>
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
-        <source>Remove</source>
-        <translation>Αφαίρεση</translation>
+        <source>Requested payments history</source>
+        <translation>பணம் செலுத்திய வரலாறு கோரப்பட்டது</translation>
     </message>
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>Wallet</source>
-        <translation>Πορτοφόλι</translation>
+        <source>Payment information</source>
+        <translation>கொடுப்பனவு தகவல்</translation>
     </message>
     </context>
 <context>
@@ -147,20 +131,12 @@
 <context>
     <name>SendCoinsDialog</name>
     <message>
-        <source>Insufficient funds!</source>
-        <translation>Κεφάλαια μη επαρκή</translation>
-    </message>
-    <message>
-        <source>Recommended:</source>
-        <translation>Συνίσταται:</translation>
+        <source>Balance:</source>
+        <translation>இருப்பு:</translation>
     </message>
     </context>
 <context>
     <name>SendCoinsEntry</name>
-    <message>
-        <source>Message:</source>
-        <translation>Μήνυμα:</translation>
-    </message>
     </context>
 <context>
     <name>SendConfirmationDialog</name>
@@ -179,6 +155,10 @@
     </context>
 <context>
     <name>TransactionDesc</name>
+    <message>
+        <source>unknown</source>
+        <translation>தெரியாத</translation>
+    </message>
     </context>
 <context>
     <name>TransactionDescDialog</name>
@@ -188,6 +168,10 @@
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>Today</source>
+        <translation>இன்று</translation>
+    </message>
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
@@ -205,23 +189,11 @@
     <name>bitcoin-core</name>
     <message>
         <source>Insufficient funds</source>
-        <translation>Κεφάλαια μη επαρκή</translation>
-    </message>
-    <message>
-        <source>Loading wallet...</source>
-        <translation>Φόρτωση πορτοφολιού...</translation>
-    </message>
-    <message>
-        <source>Rescanning...</source>
-        <translation>Επανάληψη σάρωσης</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation>Η φόρτωση ολοκληρώθηκε</translation>
+        <translation>போதுமான பணம் இல்லை</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation>Σφάλμα</translation>
+        <translation>பிழை</translation>
     </message>
 </context>
 </TS>

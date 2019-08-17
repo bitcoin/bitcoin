@@ -945,7 +945,7 @@
     </message>
     <message>
         <source>Unknown. Syncing Headers (%1)...</source>
-        <translation>알수없음. 헤더 동기화중 (%1)...</translation>
+        <translation>알 수 없음. 헤더 동기화중 (%1)...</translation>
     </message>
 </context>
 <context>
@@ -3108,7 +3108,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Could not commit transaction</source>
-        <translation>트랜잭션을 커밋 할 수 없습니다.</translation>
+        <translation>거래를 커밋 할 수 없습니다.</translation>
     </message>
 </context>
 <context>
@@ -3201,6 +3201,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>%s 불러오기 오류: 주소 키는 모두 정확하게 로드되었으나 거래 데이터와 주소록 필드에서 누락이나 오류가 존재할 수 있습니다.</translation>
     </message>
     <message>
+        <source>Group outputs by address, selecting all or none, instead of selecting on a per-output basis. Privacy is improved as an address is only used once (unless someone sends to it after spending from it), but may result in slightly higher fees as suboptimal coin selection may result due to the added limitation (default: %u)</source>
+        <translation>각각의 아웃풋마다 주소를 정하지 말고 아웃풋들을 묶어 모든 주소를 정하거나 아예 정하지 마십시오. 각각의 주소를 한번만 사용하면 프라이버시가 더 지켜집니다 (주소를 한번 사용하고 나서 다시 이 주소에 보내지 않는 이상). 하지만 이 제한사항은 차선의 코인 선택으로 나아갈 수 있고 이 때문에 조금 더 높은 수수료가 발생할수도 있습니다 (태만: %u).</translation>
+    </message>
+    <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
         <translation>컴퓨터의 날짜와 시간이 올바른지 확인하십시오! 시간이 잘못되면 %s은 제대로 동작하지 않습니다.</translation>
     </message>
@@ -3269,6 +3273,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>블록 데이터베이스를 다시 생성하시겠습니까?</translation>
     </message>
     <message>
+        <source>Error creating %s: You can't create non-HD wallets with this version.</source>
+        <translation>%s 생성 오류: 이 버전의 클라이언트로 non-HD 지갑 생성이 불가합니다.</translation>
+    </message>
+    <message>
         <source>Error initializing block database</source>
         <translation>블록 데이터베이스를 초기화하는데 오류</translation>
     </message>
@@ -3335,6 +3343,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
         <translation>유효하지 않은 금액 -fallbackfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Specified blocks directory "%s" does not exist.</source>
+        <translation>디렉토리 "%s"에 지정한 블록들이 존재하지 않습니다.</translation>
     </message>
     <message>
         <source>Upgrading txindex database</source>
@@ -3507,6 +3519,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Transaction too large</source>
         <translation>너무 큰 거래</translation>
+    </message>
+    <message>
+        <source>Unable to bind to %s on this computer (bind returned error %s)</source>
+        <translation>이 컴퓨터의 %s 에 바인딩할 수 없습니다 (바인딩 과정에 %s 오류 발생)</translation>
     </message>
     <message>
         <source>Unable to generate initial keys</source>

@@ -334,6 +334,10 @@
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Amount</source>
+        <translation>रकम</translation>
+    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
@@ -397,6 +401,10 @@
     </context>
 <context>
     <name>TransactionDesc</name>
+    <message>
+        <source>Amount</source>
+        <translation>रकम</translation>
+    </message>
     </context>
 <context>
     <name>TransactionDescDialog</name>
@@ -486,6 +494,10 @@
     <message>
         <source>Unsupported argument -tor found, use -onion.</source>
         <translation>असमर्थित तर्क -टोर फेला पर्यो, -ओनियन प्रयोग गर्नुहोस् । </translation>
+    </message>
+    <message>
+        <source>User Agent comment (%s) contains unsafe characters.</source>
+        <translation>प्रयोगकर्ता एजेन्टको टिप्पणी (%s) मा असुरक्षित अक्षरहरू छन् ।</translation>
     </message>
     <message>
         <source>Verifying blocks...</source>

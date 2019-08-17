@@ -326,6 +326,14 @@
         <translation>Buka &amp;URI</translation>
     </message>
     <message>
+        <source>Wallet:</source>
+        <translation>Wallet:</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>wallet default</translation>
+    </message>
+    <message>
         <source>Click to disable network activity.</source>
         <translation>Klik untuk menonaktifkan aktivitas jaringan.</translation>
     </message>
@@ -344,6 +352,10 @@
     <message>
         <source>Reindexing blocks on disk...</source>
         <translation>Mengindex ulang blok di dalam disk...</translation>
+    </message>
+    <message>
+        <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
+        <translation>Proxy di &lt;b&gt;aktifkan&lt;/b&gt;: %1</translation>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
@@ -511,6 +523,12 @@
         <source>Amount: %1
 </source>
         <translation>Jumlah: %1
+</translation>
+    </message>
+    <message>
+        <source>Wallet: %1
+</source>
+        <translation>Wallet: %1
 </translation>
     </message>
     <message>
@@ -691,6 +709,10 @@
         <translation>Tidak</translation>
     </message>
     <message>
+        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
+        <translation>Label ini akan menjadi merah apabila penerima menerima jumlah yang lebih kecil daripada ambang habuk semasa.</translation>
+    </message>
+    <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
         <translation>Dapat bervariasi +/- %1 satoshi per input.</translation>
     </message>
@@ -698,7 +720,15 @@
         <source>(no label)</source>
         <translation>(tidak ada label)</translation>
     </message>
-    </context>
+    <message>
+        <source>change from %1 (%2)</source>
+        <translation>kembalian dari %1 (%2)</translation>
+    </message>
+    <message>
+        <source>(change)</source>
+        <translation>(kembalian)</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -736,6 +766,14 @@
     <message>
         <source>The entered address "%1" is not a valid Bitcoin address.</source>
         <translation>Alamat yang dimasukkan "%1" bukanlah alamat Bitcoin yang valid.</translation>
+    </message>
+    <message>
+        <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
+        <translation>Alamat "%1" sudah ada sebagai alamat penerimaan dengan label "%2" sehingga tidak bisa ditambah sebagai alamat pengiriman.</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book with label "%2".</source>
+        <translation>Alamat "%1" yang dimasukkan sudah ada di dalam buku alamat dengan label "%2".</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -870,6 +908,10 @@
         <translation>Transaksi-transaksi terkini mungkin belum terlihat dan oleh karenanya, saldo dompet Anda mungkin tidak tepat. Informasi ini akan akurat ketika dompet Anda tersinkronisasi dengan jaringan Bitcoin, seperti rincian berikut.</translation>
     </message>
     <message>
+        <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <translation>Usaha untuk menggunakan bitcoin yang dipengaruhi oleh transaksi yang belum terlihat tidak akan diterima oleh jaringan.</translation>
+    </message>
+    <message>
         <source>Number of blocks left</source>
         <translation>Jumlah blok tersisa</translation>
     </message>
@@ -880,6 +922,14 @@
     <message>
         <source>Last block time</source>
         <translation>Waktu blok terakhir</translation>
+    </message>
+    <message>
+        <source>Progress</source>
+        <translation>Perkembangan</translation>
+    </message>
+    <message>
+        <source>Progress increase per hour</source>
+        <translation>Peningkatan perkembangan per jam</translation>
     </message>
     <message>
         <source>calculating...</source>
@@ -916,7 +966,11 @@
         <source>Select payment request file</source>
         <translation>Pilih data permintaan pembayaran</translation>
     </message>
-    </context>
+    <message>
+        <source>Select payment request file to open</source>
+        <translation>Pilih data permintaan pembayaran yang akan dibuka</translation>
+    </message>
+</context>
 <context>
     <name>OptionsDialog</name>
     <message>
@@ -952,8 +1006,20 @@
         <translation>Alamat IP proxy (cth. IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
+        <source>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
+        <translation>Perlihatkan apabila proxy SOCKS5 default digunakan untuk berhungan dengan orang lain lewat tipe jaringan ini.</translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
+        <translation>Menggunakan proxy SOCKS5 tersendiri untuk berhubungan dengan orang lain melalui layanan Tor:</translation>
+    </message>
+    <message>
         <source>Hide the icon from the system tray.</source>
         <translation>Sembunyikan ikon dari system tray.</translation>
+    </message>
+    <message>
+        <source>&amp;Hide tray icon</source>
+        <translation>&amp;Sembunyikan ikon tray</translation>
     </message>
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
@@ -966,6 +1032,10 @@
     <message>
         <source>Active command-line options that override above options:</source>
         <translation>Pilihan command-line yang aktif menimpa diatas opsi: </translation>
+    </message>
+    <message>
+        <source>Open the %1 configuration file from the working directory.</source>
+        <translation>Buka file konfigurasi %1 dari direktori kerja.</translation>
     </message>
     <message>
         <source>Open Configuration File</source>
@@ -982,6 +1052,22 @@
     <message>
         <source>&amp;Network</source>
         <translation>&amp;Jaringan</translation>
+    </message>
+    <message>
+        <source>Disables some advanced features but all blocks will still be fully validated. Reverting this setting requires re-downloading the entire blockchain. Actual disk usage may be somewhat higher.</source>
+        <translation>Menonaktifkan beberapa fitur canggih akan tetapi semua block akan tetap divalidasi seutuhnya. Mengembalikan pengaturan ini memerlukan untuk mengunduh seluruh blockchain. Penggunaan disk mungkin akan lebih tinggi.</translation>
+    </message>
+    <message>
+        <source>Prune &amp;block storage to</source>
+        <translation>Prune &amp;ruang penyimpan block ke</translation>
+    </message>
+    <message>
+        <source>GB</source>
+        <translation>GB</translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain.</source>
+        <translation>Mengembalikan pengaturan ini membutuhkan pengunduhan seluruh blockchain lagi. </translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
@@ -1028,6 +1114,10 @@
         <translation>Hubungkan ke jaringan Bitcoin melalui SOCKS5 proxy.</translation>
     </message>
     <message>
+        <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
+        <translation>&amp;Hubungkan melalui proxy SOCKS5 (proxy default):</translation>
+    </message>
+    <message>
         <source>Proxy &amp;IP:</source>
         <translation>IP Proxy:</translation>
     </message>
@@ -1040,6 +1130,10 @@
         <translation>Port proxy (cth. 9050)</translation>
     </message>
     <message>
+        <source>Used for reaching peers via:</source>
+        <translation>Digunakan untuk berhubungan dengan peers melalui:</translation>
+    </message>
+    <message>
         <source>IPv4</source>
         <translation>IPv4</translation>
     </message>
@@ -1050,6 +1144,10 @@
     <message>
         <source>Tor</source>
         <translation>Tor</translation>
+    </message>
+    <message>
+        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <translation>Koneksi ke jaringan bitcoin melalui proxy SOCKS5 yang berbeda untuk layanan Tor tersembunyi.</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1092,6 +1190,10 @@
         <translation>Ingin menunjukkan cara pengaturan koin atau tidak.</translation>
     </message>
     <message>
+        <source>&amp;Third party transaction URLs</source>
+        <translation>&amp;URL transaksi pihak ketiga</translation>
+    </message>
+    <message>
         <source>&amp;OK</source>
         <translation>&amp;YA</translation>
     </message>
@@ -1120,6 +1222,14 @@
         <translation>Klien akan dimatikan, apakah anda hendak melanjutkan?</translation>
     </message>
     <message>
+        <source>Configuration options</source>
+        <translation>Konfigurasi pengaturan</translation>
+    </message>
+    <message>
+        <source>The configuration file is used to specify advanced user options which override GUI settings. Additionally, any command-line options will override this configuration file.</source>
+        <translation>File konfigurasi digunakan untuk menspesifikkan pilihan khusus pengguna yang akan menimpa pengaturan GUI. Sebagai tambahan, pengaturan command-line apapun akan menimpa file konfigurasi itu.</translation>
+    </message>
+    <message>
         <source>Error</source>
         <translation>Terjadi sebuah kesalahan</translation>
     </message>
@@ -1145,6 +1255,10 @@
     <message>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
         <translation>Informasi terlampir mungkin sudah kedaluwarsa. Dompet Anda secara otomatis mensinkronisasi dengan jaringan Bitcoin ketika sebuah hubungan terbentuk, namun proses ini belum selesai.</translation>
+    </message>
+    <message>
+        <source>Watch-only:</source>
+        <translation>Hanya lihat:</translation>
     </message>
     <message>
         <source>Available:</source>
@@ -1183,15 +1297,87 @@
         <translation>Jumlah saldo Anda sekarang</translation>
     </message>
     <message>
+        <source>Your current balance in watch-only addresses</source>
+        <translation>Saldomu di alamat hanya lihat</translation>
+    </message>
+    <message>
+        <source>Spendable:</source>
+        <translation>Bisa digunakan:</translation>
+    </message>
+    <message>
         <source>Recent transactions</source>
         <translation>Transaksi-transaksi terkini</translation>
     </message>
-    </context>
+    <message>
+        <source>Unconfirmed transactions to watch-only addresses</source>
+        <translation>Transaksi yang belum terkonfirmasi ke alamat hanya lihat</translation>
+    </message>
+    <message>
+        <source>Mined balance in watch-only addresses that has not yet matured</source>
+        <translation>Saldo hasil mining di alamat hanya lihat yang belum bisa digunakan</translation>
+    </message>
+    <message>
+        <source>Current total balance in watch-only addresses</source>
+        <translation>Jumlah saldo di alamat hanya lihat</translation>
+    </message>
+</context>
 <context>
     <name>PaymentServer</name>
     <message>
         <source>Payment request error</source>
         <translation>Terjadi kesalahan pada permintaan pembayaran</translation>
+    </message>
+    <message>
+        <source>Cannot start bitcoin: click-to-pay handler</source>
+        <translation>Tidak bisa memulai bitcoin: handler click-to-pay</translation>
+    </message>
+    <message>
+        <source>URI handling</source>
+        <translation>Pengelolaan URI</translation>
+    </message>
+    <message>
+        <source>'bitcoin://' is not a valid URI. Use 'bitcoin:' instead.</source>
+        <translation>'bitcoin://' bukanlah alamat URI yang valid. Silakan gunakan 'bitcoin:'.</translation>
+    </message>
+    <message>
+        <source>Payment request fetch URL is invalid: %1</source>
+        <translation>URL permintaan pembayaran tidak valid: %1</translation>
+    </message>
+    <message>
+        <source>Invalid payment address %1</source>
+        <translation>Alamat pembayaran tidak valid %1</translation>
+    </message>
+    <message>
+        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
+        <translation>URI tidak bisa dimengerti! Hal ini bisa disebabkan karena alamat Bitcoin yang tidak sah atau parameter URI yang tidak tepat.</translation>
+    </message>
+    <message>
+        <source>Payment request file handling</source>
+        <translation>Pengelolaan file permintaan pembayaran</translation>
+    </message>
+    <message>
+        <source>Payment request file cannot be read! This can be caused by an invalid payment request file.</source>
+        <translation>File permintaan pembayaran tidak bisa dibaca! Hal ini bisa disebabkan karena file permintaan pembayaran tidak valid.</translation>
+    </message>
+    <message>
+        <source>Payment request rejected</source>
+        <translation>Permintaan pembayaran ditolak</translation>
+    </message>
+    <message>
+        <source>Payment request network doesn't match client network.</source>
+        <translation>Jaringan permintaan pembayaran tidak sesuai dengan jaringan klien.</translation>
+    </message>
+    <message>
+        <source>Payment request expired.</source>
+        <translation>Permintaan pembayaran telah kadaluarsa.</translation>
+    </message>
+    <message>
+        <source>Payment request is not initialized.</source>
+        <translation>Permintaan pembayaran tidak terinisialisasi</translation>
+    </message>
+    <message>
+        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
+        <translation>Permintaan pembayaran %1 terlalu besar (%2 bita, diperbolehkan %3 bita)</translation>
     </message>
     </context>
 <context>
@@ -1204,7 +1390,11 @@
         <source>Sent</source>
         <translation>Terkirim</translation>
     </message>
-    </context>
+    <message>
+        <source>Received</source>
+        <translation>Diterima</translation>
+    </message>
+</context>
 <context>
     <name>QObject</name>
     <message>
@@ -1257,6 +1447,10 @@
     </context>
 <context>
     <name>QRImageWidget</name>
+    <message>
+        <source>&amp;Save Image...</source>
+        <translation>&amp;Simpan Gambaran...</translation>
+    </message>
     </context>
 <context>
     <name>RPCConsole</name>
@@ -1303,6 +1497,10 @@
     <message>
         <source>Current number of blocks</source>
         <translation>Jumlah blok terkini</translation>
+    </message>
+    <message>
+        <source>Received</source>
+        <translation>Diterima</translation>
     </message>
     <message>
         <source>Sent</source>
@@ -1373,6 +1571,10 @@
     <message>
         <source>1 &amp;year</source>
         <translation>1 &amp;tahun</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>wallet default</translation>
     </message>
     <message>
         <source>Yes</source>
@@ -1491,6 +1693,10 @@
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation>Tanggal</translation>
+    </message>
     <message>
         <source>Label</source>
         <translation>Label</translation>
@@ -1631,6 +1837,10 @@
         <translation>Biaya Transaksi</translation>
     </message>
     <message>
+        <source>Payment request expired.</source>
+        <translation>Permintaan pembayaran telah kadaluarsa.</translation>
+    </message>
+    <message>
         <source>(no label)</source>
         <translation>(tidak ada label)</translation>
     </message>
@@ -1692,7 +1902,11 @@
     </context>
 <context>
     <name>SendConfirmationDialog</name>
-    </context>
+    <message>
+        <source>Yes</source>
+        <translation>Ya</translation>
+    </message>
+</context>
 <context>
     <name>ShutdownWindow</name>
     <message>
@@ -1784,6 +1998,18 @@
 <context>
     <name>TransactionDesc</name>
     <message>
+        <source>Date</source>
+        <translation>Tanggal</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>tidak diketahui</translation>
+    </message>
+    <message>
+        <source>Transaction fee</source>
+        <translation>Biaya Transaksi</translation>
+    </message>
+    <message>
         <source>Amount</source>
         <translation>Jumlah</translation>
     </message>
@@ -1797,6 +2023,10 @@
     </context>
 <context>
     <name>TransactionTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation>Tanggal</translation>
+    </message>
     <message>
         <source>Label</source>
         <translation>Label</translation>
@@ -1829,6 +2059,14 @@
         <translation>Berkas yang berformat(*.csv)</translation>
     </message>
     <message>
+        <source>Confirmed</source>
+        <translation>Terkonfirmasi</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation>Tanggal</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation>Label</translation>
     </message>
@@ -1849,9 +2087,21 @@
     </context>
 <context>
     <name>WalletModel</name>
+    <message>
+        <source>Send Coins</source>
+        <translation>Kirim Koin</translation>
+    </message>
     </context>
 <context>
     <name>WalletView</name>
+    <message>
+        <source>&amp;Export</source>
+        <translation>&amp;Ekspor</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Ekspor data dalam tab sekarang ke sebuah berkas</translation>
+    </message>
     </context>
 <context>
     <name>bitcoin-core</name>

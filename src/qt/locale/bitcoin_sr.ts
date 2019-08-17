@@ -1030,6 +1030,10 @@
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
+        <source>Date</source>
+        <translation>datum</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation>Налепница</translation>
     </message>
@@ -1095,6 +1099,10 @@
     <message>
         <source>Copy fee</source>
         <translation>Копирај провизију</translation>
+    </message>
+    <message>
+        <source>Copy after fee</source>
+        <translation>Копирај након провизије</translation>
     </message>
     <message>
         <source>Copy bytes</source>
@@ -1170,6 +1178,14 @@
 <context>
     <name>TransactionDesc</name>
     <message>
+        <source>Date</source>
+        <translation>datum</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>nepoznato</translation>
+    </message>
+    <message>
         <source>Amount</source>
         <translation>Износ</translation>
     </message>
@@ -1183,6 +1199,10 @@
     </context>
 <context>
     <name>TransactionTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation>datum</translation>
+    </message>
     <message>
         <source>Label</source>
         <translation>Налепница</translation>
@@ -1216,6 +1236,14 @@
         <translation>Фајл раздојен тачком (*.csv)</translation>
     </message>
     <message>
+        <source>Confirmed</source>
+        <translation>Potvrdjen</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation>datum</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation>Налепница</translation>
     </message>
@@ -1236,6 +1264,10 @@
     </context>
 <context>
     <name>WalletModel</name>
+    <message>
+        <source>Send Coins</source>
+        <translation>Слање новца</translation>
+    </message>
     </context>
 <context>
     <name>WalletView</name>

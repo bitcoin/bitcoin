@@ -326,6 +326,14 @@
         <translation>افتح &amp;URI...</translation>
     </message>
     <message>
+        <source>Wallet:</source>
+        <translation>محفظة:</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>محفظة إفتراضية</translation>
+    </message>
+    <message>
         <source>Click to disable network activity.</source>
         <translation>اضغط لإلغاء تفعيل الشبكه</translation>
     </message>
@@ -508,6 +516,11 @@
 </translation>
     </message>
     <message>
+        <source>Wallet: %1
+</source>
+        <translation>المحفظة:  %1</translation>
+    </message>
+    <message>
         <source>Type: %1
 </source>
         <translation>نوع %1
@@ -673,6 +686,10 @@
         <translation>نسخ التعديل</translation>
     </message>
     <message>
+        <source>(%1 locked)</source>
+        <translation>(%1 تم قفله)</translation>
+    </message>
+    <message>
         <source>yes</source>
         <translation>نعم</translation>
     </message>
@@ -691,6 +708,10 @@
     <message>
         <source>(no label)</source>
         <translation>(لا وصف)</translation>
+    </message>
+    <message>
+        <source>change from %1 (%2)</source>
+        <translation>تغير من %1 (%2)</translation>
     </message>
     <message>
         <source>(change)</source>
@@ -1671,6 +1692,10 @@
         <translation>رفع الحظر</translation>
     </message>
     <message>
+        <source>default wallet</source>
+        <translation>محفظة إفتراضية</translation>
+    </message>
+    <message>
         <source>Welcome to the %1 RPC console.</source>
         <translation>مرحبًا بك في وحدة التحكم %1 RPC.</translation>
     </message>
@@ -2594,6 +2619,10 @@
         <translation>قيد التأكيد (%1 من %2 تأكيد موصى به)</translation>
     </message>
     <message>
+        <source>Confirmed (%1 confirmations)</source>
+        <translation>مؤكد (%1 تأكيدات)</translation>
+    </message>
+    <message>
         <source>Conflicted</source>
         <translation>يتعارض</translation>
     </message>
@@ -2924,6 +2953,10 @@
         <translation>جوهر بيتكوين</translation>
     </message>
     <message>
+        <source>The %s developers</source>
+        <translation>%s المبرمجون</translation>
+    </message>
+    <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
         <translation>لا يمكن الحصول على قفل على دليل البيانات %s. من المحتمل أن %s يعمل بالفعل.</translation>
     </message>
@@ -2934,6 +2967,15 @@
     <message>
         <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
         <translation>يرجى المساهمة إذا وجدت %s مفيداً. تفضل بزيارة %s لمزيد من المعلومات حول البرنامج.</translation>
+    </message>
+    <message>
+        <source>%s corrupt, salvage failed</source>
+        <translation>
+%s تالف, فشل الانقاذ.</translation>
+    </message>
+    <message>
+        <source>-maxmempool must be at least %d MB</source>
+        <translation>-الحد الأقصى للذاكرة على الأقل %d ميغابايت</translation>
     </message>
     <message>
         <source>Change index out of range</source>
@@ -2960,6 +3002,18 @@
         <translation>خطأ في تحميل %s</translation>
     </message>
     <message>
+        <source>Error loading %s: Private keys can only be disabled during creation</source>
+        <translation>خطأ في تحميل %s:  لا يمكن تعطيل المفاتيح الخاصة إلا أثناء الإنشاء.</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Wallet corrupted</source>
+        <translation>خطأ في التحميل %s: المحفظة تالفة.</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Wallet requires newer version of %s</source>
+        <translation>خطا تحميل %s: المحفظة تتطلب النسخة الجديدة من %s.</translation>
+    </message>
+    <message>
         <source>Error loading block database</source>
         <translation>خطأ في تحميل قاعدة بيانات الكتل</translation>
     </message>
@@ -2974,6 +3028,10 @@
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>فشل في الاستماع على أي منفذ. استخدام الاستماع = 0 إذا كنت تريد هذا.</translation>
+    </message>
+    <message>
+        <source>Failed to rescan the wallet during initialization</source>
+        <translation>فشل في اعادة مسح المحفظة خلال عملية التهيئة.</translation>
     </message>
     <message>
         <source>Importing...</source>
@@ -3018,6 +3076,10 @@
     <message>
         <source>The source code is available from %s.</source>
         <translation>شفرة المصدر متاحة من %s.</translation>
+    </message>
+    <message>
+        <source>Unable to generate keys</source>
+        <translation> غير قادر على توليد مفاتيح.</translation>
     </message>
     <message>
         <source>Unsupported argument -tor found, use -onion.</source>
@@ -3128,12 +3190,20 @@
         <translation>يجب ألا تكون قيمة المعاملة سلبية</translation>
     </message>
     <message>
+        <source>Transaction has too long of a mempool chain</source>
+        <translation>المعاملات طويلة جداً على حجم سلسلة الذاكرة </translation>
+    </message>
+    <message>
         <source>Transaction must have at least one recipient</source>
         <translation>يجب أن تحتوي المعاملة على مستلم واحد على الأقل</translation>
     </message>
     <message>
         <source>Insufficient funds</source>
         <translation>اموال غير كافية</translation>
+    </message>
+    <message>
+        <source>Cannot write to data directory '%s'; check permissions.</source>
+        <translation>لايمكن الكتابة على دليل البيانات '%s'؛ تحقق من السماحيات.</translation>
     </message>
     <message>
         <source>Loading block index...</source>
