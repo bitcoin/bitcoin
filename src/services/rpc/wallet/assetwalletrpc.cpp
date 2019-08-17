@@ -532,10 +532,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
         theAsset.vchContract.clear();
 
     theAsset.nBalance = nBalance;
-    if (theAsset.nUpdateFlags != nUpdateFlags)
-        theAsset.nUpdateFlags = nUpdateFlags;
-    else
-        theAsset.nUpdateFlags = 0;
+    theAsset.nUpdateFlags = nUpdateFlags;
 
     vector<unsigned char> data;
     theAsset.Serialize(data);
@@ -1048,19 +1045,18 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     if(ethTxRootShouldExist){
         const int64_t &nTime = ::ChainActive().Tip()->GetMedianTimePast();
         // time must be between 1 week and 1 hour old to be accepted
-        if(fGethSyncHeight >= MAX_ETHEREUM_TX_ROOTS){
-            if(nTime < txRootDB.nTimestamp) {
-                throw JSONRPCError(RPC_MISC_ERROR, "Invalid Ethereum timestamp, it cannot be earlier than the Syscoin median block timestamp. Please wait a few minutes and try again...");
-            }
-            else if((nTime - txRootDB.nTimestamp) > 604800) {
-                throw JSONRPCError(RPC_MISC_ERROR, "The block height is too old, your SPV proof is invalid. SPV Proof must be done within 1 week of the burn transaction on Ethereum blockchain");
-            } 
-            
-            // ensure that we wait at least 1 hour before we are allowed process this mint transaction  
-            else if((nTime - txRootDB.nTimestamp) <  ((bGethTestnet == true)? 600: 3600)){
-                throw JSONRPCError(RPC_MISC_ERROR, "Not enough confirmations on Ethereum to process this mint transaction. Must wait one hour for the transaction to settle.");
-            }
+        if(nTime < txRootDB.nTimestamp) {
+            throw JSONRPCError(RPC_MISC_ERROR, "Invalid Ethereum timestamp, it cannot be earlier than the Syscoin median block timestamp. Please wait a few minutes and try again...");
+        }
+        else if((nTime - txRootDB.nTimestamp) > 604800) {
+            throw JSONRPCError(RPC_MISC_ERROR, "The block height is too old, your SPV proof is invalid. SPV Proof must be done within 1 week of the burn transaction on Ethereum blockchain");
         } 
+        
+        // ensure that we wait at least 1 hour before we are allowed process this mint transaction  
+        else if((nTime - txRootDB.nTimestamp) <  ((bGethTestnet == true)? 600: 3600)){
+            throw JSONRPCError(RPC_MISC_ERROR, "Not enough confirmations on Ethereum to process this mint transaction. Must wait one hour for the transaction to settle.");
+        }
+        
     }
        
     vector<unsigned char> data;

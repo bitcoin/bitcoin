@@ -3498,20 +3498,18 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
                 if(ethTxRootShouldExist){
                     const int64_t &nTime = pindexPrev->GetMedianTimePast();
                     // time must be between 1 week and 1 hour old to be accepted
-                    if(fGethSyncHeight >= MAX_ETHEREUM_TX_ROOTS){
-                        if(nTime < txRootDB.nTimestamp) {
-                            return FormatSyscoinErrorMessage(state, "invalid-timestamp", false, true);
-                        }
-                        else if((nTime - txRootDB.nTimestamp) > 604800) {
-                            return FormatSyscoinErrorMessage(state, "mint-blockheight-too-old", false, true);
-                        }
-                        // ensure that we wait at least 1 hour before we are allowed process this mint transaction  
-                        // also ensure sanity test that the current height that our node thinks Eth is on isn't less than the requested block for spv proof
-                        else if((nTime - txRootDB.nTimestamp) < ((bGethTestnet == true)? 600: 3600)) {
-                            return FormatSyscoinErrorMessage(state, "mint-insufficient-confirmations", false, true);
-                        }
-                    } 
-                }
+                    if(nTime < txRootDB.nTimestamp) {
+                        return FormatSyscoinErrorMessage(state, "invalid-timestamp", false, true);
+                    }
+                    else if((nTime - txRootDB.nTimestamp) > 604800) {
+                        return FormatSyscoinErrorMessage(state, "mint-blockheight-too-old", false, true);
+                    }
+                    // ensure that we wait at least 1 hour before we are allowed process this mint transaction  
+                    // also ensure sanity test that the current height that our node thinks Eth is on isn't less than the requested block for spv proof
+                    else if((nTime - txRootDB.nTimestamp) < ((bGethTestnet == true)? 600: 3600)) {
+                        return FormatSyscoinErrorMessage(state, "mint-insufficient-confirmations", false, true);
+                    }
+                } 
             }
         }
     }

@@ -460,6 +460,7 @@ void SetupServerArgs()
     gArgs.AddArg("-txindex", strprintf("Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)", DEFAULT_TXINDEX), false, OptionsCategory::OPTIONS);
     // SYSCOIN
     gArgs.AddArg("-gethwebsocketport=<port>", strprintf("Listen for GETH Web Socket connections on <port> for the relayer (default: %u)", 8646), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
+    gArgs.AddArg("-gethrpcport=<port>", strprintf("Listen for GETH RPC connections on <port> for the relayer (default: %u)", 8645), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     gArgs.AddArg("-gethtestnet", strprintf("Connect to Ethereum Rinkeby testnet network (default: %d)", false), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     gArgs.AddArg("-stopatblock", strprintf("For Airdrops it is useful to stop your blockchain from processing at a certain block. Set this block as required by your airdrop schedule. 0 means it is disabled (default: 0)"), 0, OptionsCategory::OPTIONS);
     gArgs.AddArg("-litemode=<n>", strprintf("Disable all Syscoin specific functionality (Masternodes, Governance) (0-1, default: 0)"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -2083,10 +2084,11 @@ bool AppInitMain(InitInterfaces& interfaces)
     SetRPCWarmupFinished();
     // SYSCOIN
     int wsport = gArgs.GetArg("-gethwebsocketport", 8646);
+    int ethrpcport = gArgs.GetArg("-gethrpcport", 8645);
     bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
     StartGethNode(exePath, gethPID, wsport);
 	int rpcport = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
-	StartRelayerNode(exePath, relayerPID, rpcport, wsport);
+	StartRelayerNode(exePath, relayerPID, rpcport, wsport, ethrpcport);
     
     uiInterface.InitMessage(_("Done loading").translated);
 
