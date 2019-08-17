@@ -1,6 +1,6 @@
-Bitcoin Core version 0.17.x is now available from:
+Bitcoin Core version 0.17.2 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-0.17.x/>
+  <https://bitcoincore.org/bin/bitcoin-core-0.17.2/>
 
 This is a new minor version release, including new features, various bugfixes
 and performance improvements, as well as updated translations.
@@ -71,16 +71,65 @@ Documentation
   implementations, and many other cases where two or more programs need
   to interact to generate a complete transaction.
 
-0.17.x change log
+0.17.2 change log
 =================
 
-(todo)
+### Build system
+- #15188 Update zmq to 4.3.1 (rex4539)
+- #15983 build with -fstack-reuse=none (MarcoFalke)
+
+### Documentation
+- #13941 Add PSBT documentation (sipa)
+- #14319 Fix PSBT howto and example parameters (priscoan)
+- #14944 Update NetBSD build instructions for 8.0 (fanquake)
+- #14966 fix testmempoolaccept CLI syntax (1Il1)
+- #15012 Fix minor error in doc/psbt.md (bitcoinhodler)
+- #15213 Remove errant paste from walletcreatefundedpsbt for nLocktime replaceable (instagibbs)
+
+### GUI
+- #14123 Add GUIUtil::bringToFront (promag)
+- #14133 Favor macOS show / hide action in dock menu (promag)
+- #14383 Clean system tray icon menu for '-disablewallet' mode (hebasto)
+- #14597 Cleanup MacDockIconHandler class (hebasto)
+- #15085 Fix incorrect application name when passing -regtest (benthecarman)
+
+### RPC and other APIs
+- #14941 Make unloadwallet wait for complete wallet unload (promag)
+- #14890 Avoid creating non-standard raw transactions (MarcoFalke)
+
+### Test
+- #15985 Add test for GCC bug 90348 (sipa)
+
+### Wallet
+- #11911 Free BerkeleyEnvironment instances when not in use (ryanofsky)
+- #12493 Reopen CDBEnv after encryption instead of shutting down (achow101)
+- #14320 Fix duplicate fileid detection (ken2812221)
+- #14350 Add WalletLocation class (promag)
+- #14552 detecting duplicate wallet by comparing the db filename (ken2812221)
+- #15297 Releases dangling files on BerkeleyEnvironment::Close (promag)
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
-(todo)
+- 1Il1
+- Andrew Chow
+- Ben Carman
+- bitcoinhodler
+- Chun Kuan Lee
+- David A. Harding
+- Dimitris Apostolou
+- fanquake
+- Gregory Sanders
+- Hennadii Stepanov
+- João Barbosa
+- MarcoFalke
+- MeshCollider
+- Pierre Rochard
+- Pieter Wuille
+- priscoan
+- Russell Yanofsky
+- Wladimir J. van der Laan
 
 As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
