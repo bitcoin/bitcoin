@@ -6,11 +6,11 @@
 Run this script from the root of the repository to update all translations from
 transifex.
 It will do the following automatically:
-
-- fetch all translations using the tx tool
+- fetch all translations using the tx tool (https://github.com/transifex/transifex-client)
 - post-process them into valid and committable format
   - remove invalid control characters
   - remove location tags (makes diffs less noisy)
+  - attempt to fix some translations
 
 TODO:
 - auto-add new translations to the build system according to the translation process
@@ -81,7 +81,11 @@ def sanitize_string(s):
     '''Sanitize string for printing'''
     return s.replace('\n',' ')
 
+def fix_string(s):
+    return s.replace('% 1','%1').replace('1%','%1').replace('&1','%1').replace('2%','%2').replace('% s','%s').replace('&s','%s').replace('s%','%s').replace('n%','%n').replace('n%','%n').replace('&n','%n').replace('% n','%n').replace('% d','%d').replace('%S','%s').replace('$1','%1')
+
 def check_format_specifiers(source, translation, errors, numerus):
+    global source_f
     source_f = split_format_specifiers(find_format_specifiers(source))
     # assert that no source messages contain both Qt and strprintf format specifiers
     # if this fails, go change the source as this is hacky and confusing!
@@ -131,6 +135,10 @@ def contains_bitcoin_addr(text, errors):
     return False
 
 def postprocess_translations(reduce_diff_hacks=False):
+    global source_f
+    global tf #translations fixed
+    global lr #languages removed
+    tf = lr = 0
     print('Checking and postprocessing...')
 
     if reduce_diff_hacks:
@@ -172,19 +180,68 @@ def postprocess_translations(reduce_diff_hacks=False):
 
                     for error in errors:
                         print('%s: %s' % (filename, error))
-
-                    if not valid: # set type to unfinished and clear string if invalid
-                        translation_node.clear()
-                        translation_node.set('type', 'unfinished')
-                        have_errors = True
+						
+                    # check if translation can be fixed
+                    if not valid:
+                       if translation_node.text != None: # only attempt to fix if translation is not a NoneType object
+                           translation_node.text = fix_string(translation_node.text) #fix most common mistakes by replacing symbols
+                           translation_f = split_format_specifiers(find_format_specifiers(translation_node.text))
+                           if source_f == translation_f: # check if translation is acceptable after fixing it. if not, try to fix more.
+                               # if the translation seems okay, add spaces before % if needed - only if certain strings are not found, and if '%' is not the first symbol in a string.
+                               if translation_node.text[0] != "%" and translation_node.text.find(' %') == -1 and translation_node.text.find('(%') == -1 and translation_node.text.find('\'%') == -1 and translation_node.text.find('\"%') == -1:
+                                   translation_node.text = translation_node.text.replace('%',' %')
+                               tf = tf + 1	
+                               print('Translation #', tf, 'fixed:', translation_node.text)
+                               print('')
+                           # check if translation contains '%' and if source contains '&'
+                           # check if translation contains '%1' and if source contains '%n'
+                           # If so, replace accordingly.
+                           elif translation_node.text.find('%') >= 0 and source.find('&') >= 0:
+                               translation_node.text = translation_node.text.replace('%', '&')
+                               translation_f = split_format_specifiers(find_format_specifiers(translation_node.text))
+                               if source_f == translation_f:
+                                   tf = tf + 1
+                                   print('Translation #', tf, 'fixed:', translation_node.text)
+                                   print('')
+                               else:
+                                   print('Translation could not be fixed')
+                                   print('')
+                                   translation_node.clear()
+                                   translation_node.set('type', 'unfinished')
+                                   have_errors = True	
+                           elif translation_node.text.find('%1') >= 0 and source.find('%n') >= 0:
+                               translation_node.text = translation_node.text.replace('%1', '%n')
+                               translation_f = split_format_specifiers(find_format_specifiers(translation_node.text))
+                               if source_f == translation_f:
+                                   tf = tf + 1
+                                   print('Translation #', tf, 'fixed:', translation_node.text)
+                                   print('')
+                               else:
+                                   print('Translation could not be fixed')
+                                   print('')
+                                   translation_node.clear()
+                                   translation_node.set('type', 'unfinished')
+                                   have_errors = True
+                           else:
+                               print('Translation could not be fixed')
+                               print('')
+                               translation_node.clear()
+                               translation_node.set('type', 'unfinished')
+                               have_errors = True	
+                       else:
+                           print('TypeNone object, cannot try to fix this string.')
+                           print('')
+                           translation_node.clear()
+                           translation_node.set('type', 'unfinished')
+                           have_errors = True	
+						   
+                # Remove entire message if it is an unfinished translation
+                if translation_node.get('type') == 'unfinished':
+                    context.remove(message)
 
                 # Remove location tags
                 for location in message.findall('location'):
                     message.remove(location)
-
-                # Remove entire message if it is an unfinished translation
-                if translation_node.get('type') == 'unfinished':
-                    context.remove(message)
 
         # check if document is (virtually) empty, and remove it if so
         num_messages = 0
@@ -192,7 +249,8 @@ def postprocess_translations(reduce_diff_hacks=False):
             for message in context.findall('message'):
                 num_messages += 1
         if num_messages < MIN_NUM_MESSAGES:
-            print('Removing %s, as it contains only %i messages' % (filepath, num_messages))
+            print('#', lr, ': Removing %s, as it contains only %i messages' % (filepath, num_messages))
+            lr=lr+1
             continue
 
         # write fixed-up tree
@@ -212,4 +270,6 @@ if __name__ == '__main__':
     check_at_repository_root()
     fetch_all_translations()
     postprocess_translations()
-
+    print('')
+    print('Total translations fixed:', tf)
+    print('Total languages removed:', lr)
