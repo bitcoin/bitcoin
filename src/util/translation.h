@@ -18,6 +18,20 @@ struct bilingual_str {
     std::string translated;
 };
 
+inline bilingual_str operator+(const bilingual_str& lhs, const bilingual_str& rhs)
+{
+    return bilingual_str{
+        lhs.original + rhs.original,
+        lhs.translated + rhs.translated};
+}
+
+/** Mark a bilingual_str as untranslated */
+inline static bilingual_str Untranslated(std::string original) { return {original, original}; }
+/** Unary operator to return the original */
+inline static std::string OpOriginal(const bilingual_str& b) { return b.original; }
+/** Unary operator to return the translation */
+inline static std::string OpTranslated(const bilingual_str& b) { return b.translated; }
+
 namespace tinyformat {
 template <typename... Args>
 bilingual_str format(const bilingual_str& fmt, const Args&... args)

@@ -14,6 +14,7 @@
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 #include <util/string.h>
+#include <util/translation.h>
 #include <wallet/wallet.h>
 
 #include <algorithm>
@@ -244,10 +245,10 @@ void CreateWalletActivity::finish()
 {
     destroyProgressDialog();
 
-    if (!m_error_message.empty()) {
-        QMessageBox::critical(m_parent_widget, tr("Create wallet failed"), QString::fromStdString(m_error_message));
+    if (!m_error_message.original.empty()) {
+        QMessageBox::critical(m_parent_widget, tr("Create wallet failed"), QString::fromStdString(m_error_message.translated));
     } else if (!m_warning_message.empty()) {
-        QMessageBox::warning(m_parent_widget, tr("Create wallet warning"), QString::fromStdString(Join(m_warning_message, "\n")));
+        QMessageBox::warning(m_parent_widget, tr("Create wallet warning"), QString::fromStdString(Join(m_warning_message, "\n", OpTranslated)));
     }
 
     if (m_wallet_model) Q_EMIT created(m_wallet_model);
@@ -285,10 +286,10 @@ void OpenWalletActivity::finish()
 {
     destroyProgressDialog();
 
-    if (!m_error_message.empty()) {
-        QMessageBox::critical(m_parent_widget, tr("Open wallet failed"), QString::fromStdString(m_error_message));
+    if (!m_error_message.original.empty()) {
+        QMessageBox::critical(m_parent_widget, tr("Open wallet failed"), QString::fromStdString(m_error_message.translated));
     } else if (!m_warning_message.empty()) {
-        QMessageBox::warning(m_parent_widget, tr("Open wallet warning"), QString::fromStdString(Join(m_warning_message, "\n")));
+        QMessageBox::warning(m_parent_widget, tr("Open wallet warning"), QString::fromStdString(Join(m_warning_message, "\n", OpTranslated)));
     }
 
     if (m_wallet_model) Q_EMIT opened(m_wallet_model);

@@ -15,6 +15,7 @@
 #include <rpc/server.h>
 #include <test/util/logging.h>
 #include <test/util/setup_common.h>
+#include <util/translation.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/test/wallet_test_fixture.h>
@@ -30,8 +31,8 @@ BOOST_FIXTURE_TEST_SUITE(wallet_tests, WalletTestingSetup)
 
 static std::shared_ptr<CWallet> TestLoadWallet(interfaces::Chain& chain)
 {
-    std::string error;
-    std::vector<std::string> warnings;
+    bilingual_str error;
+    std::vector<bilingual_str> warnings;
     auto wallet = CWallet::CreateWalletFromFile(chain, WalletLocation(""), error, warnings);
     wallet->postInitProcess();
     return wallet;
