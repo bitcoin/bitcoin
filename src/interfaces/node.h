@@ -27,6 +27,7 @@ class RPCTimerInterface;
 class UniValue;
 class proxyType;
 struct CNodeStateStats;
+struct bilingual_str;
 
 namespace interfaces {
 class Handler;
@@ -198,7 +199,7 @@ public:
     //! Attempts to load a wallet from file or directory.
     //! The loaded wallet is also notified to handlers previously registered
     //! with handleLoadWallet.
-    virtual std::unique_ptr<Wallet> loadWallet(const std::string& name, std::string& error, std::string& warning) = 0;
+    virtual std::unique_ptr<Wallet> loadWallet(const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings) = 0;
 
     //! Register handler for init messages.
     using InitMessageFn = std::function<void(const std::string& message)>;

@@ -19,6 +19,20 @@ struct bilingual_str {
     std::string translated;
 };
 
+inline std::vector<std::string> Original(const std::vector<bilingual_str>& list)
+{
+    std::vector<std::string> ret;
+    for (const auto& s : list) ret.push_back(s.original);
+    return ret;
+}
+
+inline std::vector<std::string> Translated(const std::vector<bilingual_str>& list)
+{
+    std::vector<std::string> ret;
+    for (const auto& s : list) ret.push_back(s.translated);
+    return ret;
+}
+
 namespace tinyformat {
 template <typename... Args>
 bilingual_str format(const bilingual_str& fmt, const Args&... args)

@@ -6,6 +6,8 @@
 
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
+#include <util/string.h>
+#include <util/translation.h>
 
 #include <algorithm>
 
@@ -148,15 +150,16 @@ OpenWalletActivity::OpenWalletActivity(WalletController* wallet_controller, cons
 
 void OpenWalletActivity::open()
 {
-    std::string error, warning;
+    bilingual_str error;
+    std::vector<bilingual_str> warning;
     std::unique_ptr<interfaces::Wallet> wallet = m_wallet_controller->m_node.loadWallet(m_name, error, warning);
     if (!warning.empty()) {
-        Q_EMIT message(QMessageBox::Warning, QString::fromStdString(warning));
+        Q_EMIT message(QMessageBox::Warning, QString::fromStdString(Join(Translated(warning), "\n")));
     }
     if (wallet) {
         Q_EMIT opened(m_wallet_controller->getOrCreateWallet(std::move(wallet)));
     } else {
-        Q_EMIT message(QMessageBox::Critical, QString::fromStdString(error));
+        Q_EMIT message(QMessageBox::Critical, QString::fromStdString(error.translated));
     }
     Q_EMIT finished();
 }

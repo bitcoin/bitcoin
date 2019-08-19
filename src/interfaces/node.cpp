@@ -42,7 +42,7 @@ class CWallet;
 fs::path GetWalletDir();
 std::vector<fs::path> ListWalletDir();
 std::vector<std::shared_ptr<CWallet>> GetWallets();
-std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const std::string& name, std::string& error, std::string& warning);
+std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings);
 
 namespace interfaces {
 
@@ -254,9 +254,9 @@ public:
         }
         return wallets;
     }
-    std::unique_ptr<Wallet> loadWallet(const std::string& name, std::string& error, std::string& warning) override
+    std::unique_ptr<Wallet> loadWallet(const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings) override
     {
-        return MakeWallet(LoadWallet(*m_interfaces.chain, name, error, warning));
+        return MakeWallet(LoadWallet(*m_interfaces.chain, name, error, warnings));
     }
     std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) override
     {

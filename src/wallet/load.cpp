@@ -66,8 +66,14 @@ bool VerifyWallets(interfaces::Chain& chain, const std::vector<std::string>& wal
 bool LoadWallets(interfaces::Chain& chain, const std::vector<std::string>& wallet_files)
 {
     for (const std::string& walletFile : wallet_files) {
-        std::shared_ptr<CWallet> pwallet = CWallet::CreateWalletFromFile(chain, WalletLocation(walletFile));
+        bilingual_str error;
+        std::vector<bilingual_str> warnings;
+        std::shared_ptr<CWallet> pwallet = CWallet::CreateWalletFromFile(chain, WalletLocation(walletFile), error, warnings);
+        for (const auto& w : warnings) {
+            chain.initWarning(w.translated);
+        }
         if (!pwallet) {
+            chain.initError(error.translated);
             return false;
         }
         AddWallet(pwallet);

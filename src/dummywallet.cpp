@@ -7,6 +7,7 @@
 #include <walletinitinterface.h>
 
 class CWallet;
+struct bilingual_str;
 
 namespace interfaces {
 class Chain;
@@ -69,7 +70,7 @@ std::vector<std::shared_ptr<CWallet>> GetWallets()
     throw std::logic_error("Wallet function called in non-wallet build.");
 }
 
-std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const std::string& name, std::string& error, std::string& warning)
+std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     throw std::logic_error("Wallet function called in non-wallet build.");
 }

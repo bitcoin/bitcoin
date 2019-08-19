@@ -22,7 +22,9 @@
 #include <util/bip32.h>
 #include <util/fees.h>
 #include <util/moneystr.h>
+#include <util/string.h>
 #include <util/system.h>
+#include <util/translation.h>
 #include <util/url.h>
 #include <util/validation.h>
 #include <wallet/coincontrol.h>
@@ -2584,13 +2586,14 @@ static UniValue loadwallet(const JSONRPCRequest& request)
         }
     }
 
-    std::string error, warning;
-    std::shared_ptr<CWallet> const wallet = LoadWallet(*g_rpc_interfaces->chain, location, error, warning);
-    if (!wallet) throw JSONRPCError(RPC_WALLET_ERROR, error);
+    bilingual_str error;
+    std::vector<bilingual_str> warnings;
+    std::shared_ptr<CWallet> const wallet = LoadWallet(*g_rpc_interfaces->chain, location, error, warnings);
+    if (!wallet) throw JSONRPCError(RPC_WALLET_ERROR, error.original);
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("name", wallet->GetName());
-    obj.pushKV("warning", warning);
+    obj.pushKV("warning", Join(Original(warnings), "\n"));
 
     return obj;
 }
