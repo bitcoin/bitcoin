@@ -47,7 +47,7 @@ extern unsigned nMaxDatacarrierBytes;
  * but in the future other flags may be added, such as a soft-fork to enforce
  * strict DER encoding.
  *
- * Failing one of these tests may trigger a DoS ban - see CheckInputs() for
+ * Failing one of these tests may trigger a DoS ban - see CheckInputScripts() for
  * details.
  */
 static const unsigned int MANDATORY_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH;
