@@ -124,6 +124,9 @@ fs::path GetRelayerPidFile();
 std::string GeteRelayerFilename();
 bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, int websocketport=8646, int ethrpcport=8645);
 bool StopRelayerNode(pid_t &pid);
+// Return true if -datadir option points to a valid directory or is not specified.
+bool CheckDataDirOption();
+/** Tests only */
 void ClearDatadirCache();
 fs::path GetConfigFile(const std::string& confPath);
 #ifdef WIN32
