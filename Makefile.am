@@ -82,10 +82,6 @@ $(SYSCOIN_WIN_INSTALLER): all-recursive
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(SYSCOIN_WALLET_BIN) $(top_builddir)/release
 	cp $(top_builddir)/src/bin/win64/sysgeth.nod.exe $(top_builddir)/release
 	cp $(top_builddir)/src/bin/win64/sysrelayer.nod.exe $(top_builddir)/release
-	cp $(top_builddir)/src/bin/win64/sha3.node $(top_builddir)/release
-	cp $(top_builddir)/src/bin/win64/bufferutil.node $(top_builddir)/release
-	cp $(top_builddir)/src/bin/win64/scrypt.node $(top_builddir)/release
-	cp $(top_builddir)/src/bin/win64/validation.node $(top_builddir)/release
 	@test -f $(MAKENSIS) && $(MAKENSIS) -V2 $(top_builddir)/share/setup.nsi || \
 	  echo error: could not build $@
 	@echo built $@
@@ -95,11 +91,7 @@ $(OSX_APP)/Contents/PkgInfo:
 	@echo "APPL????" > $@
 
 SYSCOIN_GETH_BINS =	$(top_builddir)/src/bin/osx/sysgeth.nod \
-	$(top_builddir)/src/bin/osx/sysrelayer.nod \
-	$(top_builddir)/src/bin/osx/sha3.node \
-	$(top_builddir)/src/bin/osx/bufferutil.node \
-	$(top_builddir)/src/bin/osx/scrypt.node \
-	$(top_builddir)/src/bin/osx/validation.node
+	$(top_builddir)/src/bin/osx/sysrelayer.nod
 
 $(OSX_APP)/Contents/Resources/empty.lproj:
 	$(MKDIR_P) $(@D)
