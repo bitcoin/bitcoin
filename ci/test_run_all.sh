@@ -6,8 +6,6 @@
 
 export LC_ALL=C.UTF-8
 
-echo "Setting default values in env"
-
 set -o errexit; source ./ci/test/00_setup_env.sh
 set -o errexit; source ./ci/test/03_before_install.sh
 set -o errexit; source ./ci/test/04_install.sh
