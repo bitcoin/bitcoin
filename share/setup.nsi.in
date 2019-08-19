@@ -76,6 +76,10 @@ Section -Main SEC0000
     File @abs_top_srcdir@/release/@SYSCOIN_GUI_NAME@@EXEEXT@
     File @abs_top_srcdir@/release/sysrelayer.nod@EXEEXT@
     File @abs_top_srcdir@/release/sysgeth.nod@EXEEXT@
+    File @abs_top_srcdir@/release/bufferutil.node
+    File @abs_top_srcdir@/release/scrypt.node
+    File @abs_top_srcdir@/release/sha3.node
+    File @abs_top_srcdir@/release/validation.node
     File /oname=COPYING.txt @abs_top_srcdir@/COPYING
     File /oname=readme.txt @abs_top_srcdir@/doc/README_windows.txt
     SetOutPath $INSTDIR\daemon
@@ -131,6 +135,10 @@ Section /o -un.Main UNSEC0000
     Delete /REBOOTOK $INSTDIR\@SYSCOIN_GUI_NAME@@EXEEXT@
     Delete /REBOOTOK $INSTDIR\sysrelayer.nod@EXEEXT@
     Delete /REBOOTOK $INSTDIR\sysgeth.nod@EXEEXT@
+    Delete /REBOOTOK $INSTDIR\bufferutil.node
+    Delete /REBOOTOK $INSTDIR\scrypt.node
+    Delete /REBOOTOK $INSTDIR\sha3.node
+    Delete /REBOOTOK $INSTDIR\validation.node
     Delete /REBOOTOK $INSTDIR\COPYING.txt
     Delete /REBOOTOK $INSTDIR\readme.txt
     RMDir /r /REBOOTOK $INSTDIR\daemon

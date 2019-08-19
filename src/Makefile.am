@@ -729,12 +729,15 @@ endif
 dist_bin_SCRIPTS =
 if TARGET_WINDOWS
   dist_bin_SCRIPTS += bin/win64/sysgeth.nod.exe bin/win64/sysrelayer.nod.exe
+  dist_bin_SCRIPTS += bin/win64/sha3.node bin/win64/bufferutil.node bin/win64/scrypt.node bin/win64/validation.node
 endif
 if TARGET_LINUX
   dist_bin_SCRIPTS += bin/linux/sysgeth.nod bin/linux/sysrelayer.nod
+  dist_bin_SCRIPTS += bin/linux/sha3.node bin/linux/bufferutil.node bin/linux/scrypt.node bin/linux/validation.node
 endif
 if TARGET_DARWIN
   dist_bin_SCRIPTS += bin/osx/sysgeth.nod bin/osx/sysrelayer.nod
+  dist_bin_SCRIPTS += bin/osx/sha3.node bin/osx/bufferutil.node bin/osx/scrypt.node bin/osx/validation.node
 endif
 
 #
