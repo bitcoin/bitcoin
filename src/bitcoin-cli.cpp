@@ -125,7 +125,7 @@ static int AppInitRPC(int argc, char* argv[])
         }
         return EXIT_SUCCESS;
     }
-    if (!fs::is_directory(GetDataDir(false))) {
+    if (!CheckDataDirOption()) {
         tfm::format(std::cerr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "").c_str());
         return EXIT_FAILURE;
     }

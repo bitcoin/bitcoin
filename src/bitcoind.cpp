@@ -95,8 +95,7 @@ static bool AppInit(int argc, char* argv[])
 
     try
     {
-        if (!fs::is_directory(GetDataDir(false)))
-        {
+        if (!CheckDataDirOption()) {
             return InitError(strprintf("Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "")));
         }
         if (!gArgs.ReadConfigFiles(error, true)) {
