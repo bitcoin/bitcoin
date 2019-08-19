@@ -128,3 +128,6 @@ db4/
 
 # clang-check
 *.plist
+
+# editor(s)
+.vscode
