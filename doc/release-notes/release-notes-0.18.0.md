@@ -19,7 +19,7 @@ How to Upgrade
 If you are running an older version, shut it down. Wait until it has
 completely shut down (which might take a few minutes for older
 versions), then run the installer (on Windows) or just copy over
-`/Applications/Bitcoin-Qt` (on Mac) or `bitcoind`/`bitcoin-qt` (on
+`/Applications/Bitcoin-Qt` (on Mac) or `syscoind`/`bitcoin-qt` (on
 Linux).
 
 The first time you run version 0.15.0 or newer, your chainstate database
@@ -52,11 +52,11 @@ pre-compiled distribution also provides binaries for the RISC-V
 platform.
 
 If you are using the `systemd` unit configuration file located at
-`contrib/init/bitcoind.service`, it has been changed to use
-`/var/lib/bitcoind` as the data directory instead of
+`contrib/init/syscoind.service`, it has been changed to use
+`/var/lib/syscoind` as the data directory instead of
 `~bitcoin/.bitcoin`. When switching over to the new configuration file,
-please make sure that the filesystem on which `/var/lib/bitcoind` will
-exist has enough space (check using `df -h /var/lib/bitcoind`), and
+please make sure that the filesystem on which `/var/lib/syscoind` will
+exist has enough space (check using `df -h /var/lib/syscoind`), and
 optionally copy over your existing data directory. See the [systemd init
 file section](#systemd-init-file) for more details.
 
@@ -126,8 +126,8 @@ Configuration option changes
 systemd init file
 -----------------
 
-The systemd init file (`contrib/init/bitcoind.service`) has been changed
-to use `/var/lib/bitcoind` as the data directory instead of
+The systemd init file (`contrib/init/syscoind.service`) has been changed
+to use `/var/lib/syscoind` as the data directory instead of
 `~bitcoin/.bitcoin`. This change makes Bitcoin Core more consistent with
 other services, and makes the systemd init config more consistent with
 existing Upstart and OpenRC configs.
@@ -359,7 +359,7 @@ Deprecated or removed RPCs
   require or use the wallet component. Calling `generatetoaddress` with
   an address returned by the `getnewaddress` RPC gives the same
   functionality as the old `generate` RPC.  To continue using `generate`
-  in this version, restart bitcoind with the `-deprecatedrpc=generate`
+  in this version, restart syscoind with the `-deprecatedrpc=generate`
   configuration option.
 
 - Be reminded that parts of the `validateaddress` command have been
@@ -709,7 +709,7 @@ Changes for particular platforms
 - #13248 Make proxy icon from statusbar clickable (mess110)
 - #12818 TransactionView: highlight replacement tx after fee bump (Sjors)
 - #13529 Use new Qt5 connect syntax (promag)
-- #14162 Also log and print messages or questions like bitcoind (MarcoFalke)
+- #14162 Also log and print messages or questions like syscoind (MarcoFalke)
 - #14385 Avoid system harfbuzz and bz2 (theuni)
 - #14450 Fix QCompleter popup regression (hebasto)
 - #14177 Set C locale for amountWidget (hebasto)
