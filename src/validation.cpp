@@ -2203,7 +2203,7 @@ void static UpdateTip(const CBlockIndex* pindexNew, const CChainParams& chainPar
             AppendWarning(warningMessages, strprintf(_("%d of last 100 blocks have unexpected version").translated, nUpgraded));
     }
     
-    LogPrintf("%s: new best=%s height=%d version=0x%08x log2_work=%.8g tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)", __func__,
+    LogPrintf("%s: new best=%s height=%d version=0x%08x log2_work=%.8g tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)", __func__,  /* Continued */
         pindexNew->GetBlockHash().ToString(),
         pindexNew->nHeight, pindexNew->nVersion,
         log(pindexNew->nChainWork.getdouble())/log(2.0),
