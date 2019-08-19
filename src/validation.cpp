@@ -2202,8 +2202,7 @@ void static UpdateTip(const CBlockIndex* pindexNew, const CChainParams& chainPar
         if (nUpgraded > 0)
             AppendWarning(warningMessages, strprintf(_("%d of last 100 blocks have unexpected version").translated, nUpgraded));
     }
-    
-    LogPrintf("%s: new best=%s height=%d version=0x%08x log2_work=%.8g tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)", __func__,  /* Continued */
+    LogPrintf("%s: new best=%s height=%d version=0x%08x log2_work=%.8g tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)", __func__, /* Continued */
         pindexNew->GetBlockHash().ToString(),
         pindexNew->nHeight, pindexNew->nVersion,
         log(pindexNew->nChainWork.getdouble())/log(2.0),
@@ -2211,9 +2210,7 @@ void static UpdateTip(const CBlockIndex* pindexNew, const CChainParams& chainPar
         FormatISO8601DateTime(pindexNew->GetBlockTime()),
         GuessVerificationProgress(chainParams.TxData(), pindexNew),
         ::ChainstateActive().CoinsTip().DynamicMemoryUsage() * (1.0 / (1<<20)),
-        ::ChainstateActive().CoinsTip().GetCacheSize()
-    );
-    
+        ::ChainstateActive().CoinsTip().GetCacheSize());
     if (!warningMessages.empty())
         LogPrintf(" warning='%s'", warningMessages); /* Continued */
     LogPrintf("\n");
