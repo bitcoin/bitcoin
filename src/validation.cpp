@@ -406,12 +406,12 @@ static bool CheckInputsFromMempoolAndCache(const CTransaction& tx, TxValidationS
     for (const CTxIn& txin : tx.vin) {
         const Coin& coin = view.AccessCoin(txin.prevout);
 
-        // At this point we haven't actually checked if the coins are all
-        // available (or shouldn't assume we have, since CheckInputScripts does).
-        // So we just return failure if the inputs are not available here,
-        // and then only have to check equivalence for available inputs.
+        // AcceptToMemoryPoolWorker has already checked that the coins are
+        // available, so this shouldn't fail. If the inputs are not available
+        // here then return false.
         if (coin.IsSpent()) return false;
 
+        // Check equivalence for available inputs.
         const CTransactionRef& txFrom = pool.get(txin.prevout.hash);
         if (txFrom) {
             assert(txFrom->GetHash() == txin.prevout.hash);
@@ -909,7 +909,7 @@ bool MemPoolAccept::PolicyScriptChecks(ATMPArgs& args, Workspace& ws, Precompute
 
     constexpr unsigned int scriptVerifyFlags = STANDARD_SCRIPT_VERIFY_FLAGS;
 
-    // Check against previous transactions
+    // Check input scripts and signatures.
     // This is done last to help prevent CPU exhaustion denial-of-service attacks.
     if (!CheckInputScripts(tx, state, m_view, scriptVerifyFlags, true, false, txdata)) {
         // SCRIPT_VERIFY_CLEANSTACK requires SCRIPT_VERIFY_WITNESS, so we
@@ -1469,8 +1469,10 @@ void InitScriptExecutionCache() {
 }
 
 /**
- * Check whether all inputs of this transaction are valid (no double spends, scripts & sigs, amounts)
- * This does not modify the UTXO set.
+ * Check whether all of this transaction's input scripts succeed.
+ *
+ * This involves ECDSA signature checks so can be computationally intensive. This function should
+ * only be called after the cheap sanity checks in CheckTxInputs passed.
  *
  * If pvChecks is not nullptr, script checks are pushed onto it instead of being performed inline. Any
  * script checks which are not necessary (eg due to script execution cache hits) are, obviously,
