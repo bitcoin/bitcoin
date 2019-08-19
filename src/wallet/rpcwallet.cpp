@@ -633,10 +633,13 @@ static UniValue getreceivedbyaddress(const JSONRPCRequest& request)
             continue;
         }
 
-        for (const CTxOut& txout : wtx.tx->vout)
-            if (txout.scriptPubKey == scriptPubKey)
-                if (wtx.GetDepthInMainChain(*locked_chain) >= nMinDepth)
+        for (const CTxOut& txout : wtx.tx->vout) {
+            CTxDestination address;
+            if (ExtractDestination(txout.scriptPubKey, address) &&
+                GetScriptForDestination(address) == scriptPubKey &&
+                wtx.GetDepthInMainChain(*locked_chain) >= nMinDepth)
                     nAmount += txout.nValue;
+        }
     }
 
     return  ValueFromAmount(nAmount);
