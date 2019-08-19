@@ -1023,8 +1023,8 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     bool legacyWhitelisted = false;
     if (NetPermissions::HasFlag(permissionFlags, NetPermissionFlags::PF_ISIMPLICIT)) {
         NetPermissions::ClearFlag(permissionFlags, PF_ISIMPLICIT);
-        if (gArgs.GetBoolArg("-whitelistforcerelay", false)) NetPermissions::AddFlag(permissionFlags, PF_FORCERELAY);
-        if (gArgs.GetBoolArg("-whitelistrelay", false)) NetPermissions::AddFlag(permissionFlags, PF_RELAY);
+        if (gArgs.GetBoolArg("-whitelistforcerelay", DEFAULT_WHITELISTFORCERELAY)) NetPermissions::AddFlag(permissionFlags, PF_FORCERELAY);
+        if (gArgs.GetBoolArg("-whitelistrelay", DEFAULT_WHITELISTRELAY)) NetPermissions::AddFlag(permissionFlags, PF_RELAY);
         NetPermissions::AddFlag(permissionFlags, PF_MEMPOOL);
         NetPermissions::AddFlag(permissionFlags, PF_NOBAN);
         legacyWhitelisted = true;

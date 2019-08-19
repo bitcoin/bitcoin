@@ -23,18 +23,24 @@ class P2PPermissionsTests(BitcoinTestFramework):
 
     def run_test(self):
         self.checkpermission(
-        # relay permission added
-        ["-whitelist=127.0.0.1", "-whitelistrelay"],
-        ["relay", "noban", "mempool"],
-        True)
+            # default permissions (no specific permissions)
+            ["-whitelist=127.0.0.1"],
+            ["relay", "noban", "mempool"],
+            True)
 
         self.checkpermission(
-        # forcerelay and relay permission added
-        # Legacy parameter interaction which set whitelistrelay to true
-        # if whitelistforcerelay is true
-        ["-whitelist=127.0.0.1", "-whitelistforcerelay"],
-        ["forcerelay", "relay", "noban", "mempool"],
-        True)
+            # relay permission removed (no specific permissions)
+            ["-whitelist=127.0.0.1", "-whitelistrelay=0"],
+            ["noban", "mempool"],
+            True)
+
+        self.checkpermission(
+            # forcerelay and relay permission added
+            # Legacy parameter interaction which set whitelistrelay to true
+            # if whitelistforcerelay is true
+            ["-whitelist=127.0.0.1", "-whitelistforcerelay"],
+            ["forcerelay", "relay", "noban", "mempool"],
+            True)
 
         # Let's make sure permissions are merged correctly
         # For this, we need to use whitebind instead of bind
@@ -42,35 +48,35 @@ class P2PPermissionsTests(BitcoinTestFramework):
         ip_port = "127.0.0.1:{}".format(p2p_port(1))
         self.replaceinconfig(1, "bind=127.0.0.1", "whitebind=bloomfilter,forcerelay@" + ip_port)
         self.checkpermission(
-        ["-whitelist=noban@127.0.0.1" ],
-        # Check parameter interaction forcerelay should activate relay
-        ["noban", "bloomfilter", "forcerelay", "relay" ],
-        False)
+            ["-whitelist=noban@127.0.0.1" ],
+            # Check parameter interaction forcerelay should activate relay
+            ["noban", "bloomfilter", "forcerelay", "relay" ],
+            False)
         self.replaceinconfig(1, "whitebind=bloomfilter,forcerelay@" + ip_port, "bind=127.0.0.1")
 
         self.checkpermission(
-        # legacy whitelistrelay should be ignored
-        ["-whitelist=noban,mempool@127.0.0.1", "-whitelistrelay"],
-        ["noban", "mempool"],
-        False)
+            # legacy whitelistrelay should be ignored
+            ["-whitelist=noban,mempool@127.0.0.1", "-whitelistrelay"],
+            ["noban", "mempool"],
+            False)
 
         self.checkpermission(
-        # legacy whitelistforcerelay should be ignored
-        ["-whitelist=noban,mempool@127.0.0.1", "-whitelistforcerelay"],
-        ["noban", "mempool"],
-        False)
+            # legacy whitelistforcerelay should be ignored
+            ["-whitelist=noban,mempool@127.0.0.1", "-whitelistforcerelay"],
+            ["noban", "mempool"],
+            False)
 
         self.checkpermission(
-        # missing mempool permission to be considered legacy whitelisted
-        ["-whitelist=noban@127.0.0.1"],
-        ["noban"],
-        False)
+            # missing mempool permission to be considered legacy whitelisted
+            ["-whitelist=noban@127.0.0.1"],
+            ["noban"],
+            False)
 
         self.checkpermission(
-        # all permission added
-        ["-whitelist=all@127.0.0.1"],
-        ["forcerelay", "noban", "mempool", "bloomfilter", "relay"],
-        False)
+            # all permission added
+            ["-whitelist=all@127.0.0.1"],
+            ["forcerelay", "noban", "mempool", "bloomfilter", "relay"],
+            False)
 
         self.stop_node(1)
         self.nodes[1].assert_start_raises_init_error(["-whitelist=oopsie@127.0.0.1"], "Invalid P2P permission", match=ErrorMatch.PARTIAL_REGEX)
