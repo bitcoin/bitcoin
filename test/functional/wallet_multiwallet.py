@@ -17,6 +17,8 @@ from test_framework.util import (
     assert_raises_rpc_error,
 )
 
+FEATURE_LATEST = 169900
+
 
 class MultiWalletTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -26,6 +28,13 @@ class MultiWalletTest(BitcoinTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
+
+    def add_options(self, parser):
+        parser.add_argument(
+            '--data_wallets_dir',
+            default=os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data/wallets/'),
+            help='Test data with wallet directories (default: %(default)s)',
+        )
 
     def run_test(self):
         node = self.nodes[0]
@@ -322,6 +331,22 @@ class MultiWalletTest(BitcoinTestFramework):
         assert_raises_rpc_error(-4, "Error initializing wallet database environment", self.nodes[1].loadwallet, wallet)
         self.nodes[0].unloadwallet(wallet)
         self.nodes[1].loadwallet(wallet)
+
+        # Fail to load if wallet is downgraded
+        shutil.copytree(os.path.join(self.options.data_wallets_dir, 'high_minversion'), wallet_dir('high_minversion'))
+        self.restart_node(0, extra_args=['-upgradewallet={}'.format(FEATURE_LATEST)])
+        assert {'name': 'high_minversion'} in self.nodes[0].listwalletdir()['wallets']
+        self.log.info("Fail -upgradewallet that results in downgrade")
+        assert_raises_rpc_error(
+            -4,
+            "Wallet loading failed.",
+            lambda: self.nodes[0].loadwallet(filename='high_minversion'),
+        )
+        self.stop_node(
+            i=0,
+            expected_stderr='Error: Error loading {}: Wallet requires newer version of Bitcoin Core'.format(
+                wallet_dir('high_minversion', 'wallet.dat')),
+        )
 
 
 if __name__ == '__main__':
