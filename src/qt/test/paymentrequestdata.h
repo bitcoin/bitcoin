@@ -438,7 +438,7 @@ d2hj739GDLz0b5KuJ2SG6VknMRQM976w/m2qlq0ccVGaaZ2zMIGfpzL3p6adwx/5\
 ";
 
 //
-// Payment request with amount overflow (amount is set to 21000001 BTC)
+// Payment request with amount overflow (amount is set to 21000001 BITG)
 //
 const char* paymentrequest5_cert2_BASE64 =
 "\

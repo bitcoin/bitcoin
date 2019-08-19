@@ -191,7 +191,7 @@ void PaymentServerTests::paymentServerTests()
     // compares 50001 <= BIP70_MAX_PAYMENTREQUEST_SIZE == false
     QCOMPARE(PaymentServer::verifySize(tempFile.size()), false);
 
-    // Payment request with amount overflow (amount is set to 21000001 BTC):
+    // Payment request with amount overflow (amount is set to 21000001 BITG):
     data = DecodeBase64(paymentrequest5_cert2_BASE64);
     byteArray = QByteArray((const char*)data.data(), data.size());
     r.paymentRequest.parse(byteArray);
