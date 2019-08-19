@@ -1461,43 +1461,44 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, int w
             // 4. $path/bin/[os]/syscoin_relayer
             // 5. /usr/local/bin/syscoin_relayer
             std::string portStr = std::to_string(websocketport);
-            std::string rpcPortStr = std::to_string(ethrpcport);
+            std::string rpcEthPortStr = std::to_string(ethrpcport);
+            std::string rpcSysPortStr = std::to_string(rpcport);
             char * argvAttempt1[] = {(char*)attempt1.string().c_str(), 
 					(char*)"--ethwsport", (char*)portStr.c_str(),
-                    (char*)"--ethrpcport", (char*)rpcPortStr.c_str(),
+                    (char*)"--ethrpcport", (char*)rpcEthPortStr.c_str(),
                     (char*)"--datadir", (char*)dataDir.string().c_str(),
 					(char*)"--sysrpcusercolonpass", (char*)strRPCUserColonPass.c_str(),
-					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(),  NULL };
+					(char*)"--sysrpcport", (char*)rpcSysPortStr.c_str(),  NULL };
             char * argvAttempt2[] = {(char*)attempt2.string().c_str(), 
 					(char*)"--ethwsport", (char*)portStr.c_str(),
-                    (char*)"--ethrpcport", (char*)rpcPortStr.c_str(),
+                    (char*)"--ethrpcport", (char*)rpcEthPortStr.c_str(),
                     (char*)"--datadir", (char*)dataDir.string().c_str(),
 					(char*)"--sysrpcusercolonpass", (char*)strRPCUserColonPass.c_str(),
-					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(), NULL };
+					(char*)"--sysrpcport", (char*)rpcSysPortStr.c_str(), NULL };
             char * argvAttempt3[] = {(char*)attempt3.string().c_str(), 
 					(char*)"--ethwsport", (char*)portStr.c_str(),
-                    (char*)"--ethrpcport", (char*)rpcPortStr.c_str(),
+                    (char*)"--ethrpcport", (char*)rpcEthPortStr.c_str(),
                     (char*)"--datadir", (char*)dataDir.string().c_str(),
 					(char*)"--sysrpcusercolonpass", (char*)strRPCUserColonPass.c_str(),
-					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(), NULL };
+					(char*)"--sysrpcport", (char*)rpcSysPortStr.c_str(), NULL };
             char * argvAttempt4[] = {(char*)attempt4.string().c_str(), 
 					(char*)"--ethwsport", (char*)portStr.c_str(),
-                    (char*)"--ethrpcport", (char*)rpcPortStr.c_str(),
+                    (char*)"--ethrpcport", (char*)rpcEthPortStr.c_str(),
                     (char*)"--datadir", (char*)dataDir.string().c_str(),
 					(char*)"--sysrpcusercolonpass", (char*)strRPCUserColonPass.c_str(),
-					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(),  NULL };
+					(char*)"--sysrpcport", (char*)rpcSysPortStr.c_str(),  NULL };
             char * argvAttempt5[] = {(char*)attempt5.string().c_str(), 
 					(char*)"--ethwsport", (char*)portStr.c_str(),
-                    (char*)"--ethrpcport", (char*)rpcPortStr.c_str(),
+                    (char*)"--ethrpcport", (char*)rpcEthPortStr.c_str(),
                     (char*)"--datadir", (char*)dataDir.string().c_str(),
 					(char*)"--sysrpcusercolonpass", (char*)strRPCUserColonPass.c_str(),
-					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(), NULL };
+					(char*)"--sysrpcport", (char*)rpcSysPortStr.c_str(), NULL };
             char * argvAttempt6[] = {(char*)attempt6.string().c_str(), 
 					(char*)"--ethwsport", (char*)portStr.c_str(),
-                    (char*)"--ethrpcport", (char*)rpcPortStr.c_str(),
+                    (char*)"--ethrpcport", (char*)rpcEthPortStr.c_str(),
                     (char*)"--datadir", (char*)dataDir.string().c_str(),
 					(char*)"--sysrpcusercolonpass", (char*)strRPCUserColonPass.c_str(),
-					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(), NULL };
+					(char*)"--sysrpcport", (char*)rpcSysPortStr.c_str(), NULL };
             execv(argvAttempt1[0], &argvAttempt1[0]); // current directory
 	        if (errno != 0) {
 		        LogPrintf("Relayer not found at %s, trying in current direction bin folder\n", argvAttempt1[0]);
@@ -1528,13 +1529,14 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, int w
         }
     #else
 		std::string portStr = std::to_string(websocketport);
-        std::string rpcPortStr = std::to_string(rpcport);
+        std::string rpcEthPortStr = std::to_string(ethrpcport);
+        std::string rpcSysPortStr = std::to_string(rpcport);
         std::string args =
 				std::string("--ethwsport ") + portStr +
-                std::string(" --ethrpcport ") + rpcPortStr +
+                std::string(" --ethrpcport ") + rpcEthPortStr +
                 std::string(" --datadir ") + dataDir.string() +
 				std::string(" --sysrpcusercolonpass ") + strRPCUserColonPass +
-				std::string(" --sysrpcport ") + rpcPortStr; 
+				std::string(" --sysrpcport ") + rpcSysPortStr; 
         pid = fork(attempt1.string(), args);
         if( pid <= 0 ) {
             LogPrintf("Relayer not found at %s, trying in current direction bin folder\n", attempt1.string());
