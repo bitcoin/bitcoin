@@ -1534,7 +1534,7 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, int w
                 std::string(" --ethrpcport ") + rpcPortStr +
                 std::string(" --datadir ") + dataDir.string() +
 				std::string(" --sysrpcusercolonpass ") + strRPCUserColonPass +
-				std::string(" --sysrpcport ") + rpcPortStr); 
+				std::string(" --sysrpcport ") + rpcPortStr; 
         pid = fork(attempt1.string(), args);
         if( pid <= 0 ) {
             LogPrintf("Relayer not found at %s, trying in current direction bin folder\n", attempt1.string());
