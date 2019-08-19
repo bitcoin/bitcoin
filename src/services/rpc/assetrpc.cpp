@@ -1121,7 +1121,7 @@ UniValue syscoinstartgeth(const JSONRPCRequest& request) {
     StopGethNode(gethPID);
     int wsport = gArgs.GetArg("-gethwebsocketport", 8646);
     int ethrpcport = gArgs.GetArg("-gethrpcport", 8645);
-    if(!StartGethNode(exePath, gethPID, wsport))
+    if(!StartGethNode(exePath, gethPID, wsport, ethrpcport))
         throw JSONRPCError(RPC_MISC_ERROR, "Could not start Geth");
     if(!StartRelayerNode(exePath, relayerPID, wsport, ethrpcport))
         throw JSONRPCError(RPC_MISC_ERROR, "Could not stop relayer");
