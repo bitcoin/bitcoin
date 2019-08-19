@@ -2083,7 +2083,7 @@ bool AppInitMain(InitInterfaces& interfaces)
     int wsport = gArgs.GetArg("-gethwebsocketport", 8646);
     int ethrpcport = gArgs.GetArg("-gethrpcport", 8645);
     bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
-    StartGethNode(exePath, gethPID, wsport);
+    StartGethNode(exePath, gethPID, wsport, ethrpcport);
 	int rpcport = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
 	StartRelayerNode(exePath, relayerPID, rpcport, wsport, ethrpcport);
     
