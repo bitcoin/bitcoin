@@ -90,18 +90,17 @@ Low-level Changes section below.
   `-limitancestorcount`, `-limitdescendantcount` and `-walletrejectlongchains`
   command line arguments.
 
-The `utxoupdatepsbt` RPC method has been updated to take a `descriptors`
-argument. When provided, input and output scripts and keys will be filled in
-when known, and P2SH-witness inputs will be filled in from the UTXO set when a
-descriptor is provided that shows they're spending segwit outputs.
+- The `utxoupdatepsbt` RPC method has been updated to take a `descriptors` argument. When provided, input and output
+  scripts and keys will be filled in when known, and P2SH-witness inputs will be filled in from the UTXO set when a
+  descriptor is provided that shows they're spending segwit outputs.
 
-See the RPC help text for full details.
+  See the RPC help text for full details.
 
 - `createwallet` can now create encrypted wallets if a non-empty passphrase is specified.
 
-The `getblockstats` RPC is faster for fee calculation by using BlockUndo data. Also, `-txindex` is no longer required and `getblockstats` works for all non-pruned blocks.
+- The `getblockstats` RPC is faster for fee calculation by using BlockUndo data. Also, `-txindex` is no longer required and `getblockstats` works for all non-pruned blocks.
 
-* The -maxtxfee setting no longer has any effect on non-wallet RPCs.
+- The -maxtxfee setting no longer has any effect on non-wallet RPCs.
 
   The `sendrawtransaction` and `testmempoolaccept` RPC methods previously
   accepted an `allowhighfees` parameter to fail the mempool acceptance in case
@@ -112,22 +111,22 @@ The `getblockstats` RPC is faster for fee calculation by using BlockUndo data. A
   `allowhighfees` boolean option has been removed and replaced by the
   `maxfeerate` numeric option.
 
-In getmempoolancestors, getmempooldescendants, getmempoolentry and getrawmempool RPCs, to be consistent with the returned value and other RPCs such as getrawtransaction, vsize has been added and size is now deprecated. size will only be returned if bitcoind is started with `-deprecatedrpc=size`.
+- In getmempoolancestors, getmempooldescendants, getmempoolentry and getrawmempool RPCs, to be consistent with the
+  returned value and other RPCs such as getrawtransaction, vsize has been added and size is now deprecated. size will
+  only be returned if bitcoind is started with `-deprecatedrpc=size`.
 
-The RPC `getwalletinfo` response now includes the `scanning` key with an object
-if there is a scanning in progress or `false` otherwise. Currently the object
-has the scanning duration and progress.
+- The RPC `getwalletinfo` response now includes the `scanning` key with an object if there is a scanning in progress or
+  `false` otherwise. Currently the object has the scanning duration and progress.
 
-RPCs which have an `include_watchonly` argument or `includeWatching`
-option now default to `true` for watch-only wallets. Affected RPCs
-are: `getbalance`, `listreceivedbyaddress`, `listreceivedbylabel`,
-`listtransactions`, `listsinceblock`, `gettransaction`,
-`walletcreatefundedpsbt`, and `fundrawtransaction`.
+- RPCs which have an `include_watchonly` argument or `includeWatching` option now default to `true` for watch-only
+  wallets. Affected RPCs are: `getbalance`, `listreceivedbyaddress`, `listreceivedbylabel`, `listtransactions`,
+  `listsinceblock`, `gettransaction`, `walletcreatefundedpsbt`, and `fundrawtransaction`.
 
-`createwallet` now returns a warning if an empty string is used as an encryption password, and does not encrypt the wallet, instead of raising an error.
-This makes it easier to disable encryption but also specify other options when using the `bitcoin-cli` tool.
+- `createwallet` now returns a warning if an empty string is used as an encryption password, and does not encrypt the
+  wallet, instead of raising an error.  This makes it easier to disable encryption but also specify other options when
+  using the `bitcoin-cli` tool.
 
-`getmempoolentry` now provides a `weight` field containing the transaction weight as defined in BIP 141.
+- `getmempoolentry` now provides a `weight` field containing the transaction weight as defined in BIP 141.
 
 Deprecated or removed RPCs
 --------------------------
@@ -209,11 +208,11 @@ Tests
 Utility tools and logging
 --------
 
-- The `testnet` field in `bitcoin-cli -getinfo` has been renamed to `chain` and now returns the current network name as defined in BIP70 (main, test, regtest).
+- The `testnet` field in `bitcoin-cli -getinfo` has been renamed to `chain` and now returns the current network name as
+  defined in BIP70 (main, test, regtest).
 
-On platforms supporting `thread_local`, log lines can be prefixed with the name
-of the thread that caused the log. To enable this behavior, use
-`-logthreadnames=1`.
+- On platforms supporting `thread_local`, log lines can be prefixed with the name of the thread that caused the log. To
+  enable this behavior, use `-logthreadnames=1`.
 
 Configuration
 ------------
@@ -246,9 +245,13 @@ Wallet
 
 Build system changes
 --------------------
-Python >=3.5 is now required by all aspects of the project. This includes the build systems, test framework and linters. The previously supported minimum (3.4), was EOL in March 2019. See #14954 for more details.
+Python >=3.5 is now required by all aspects of the project. This includes the build systems, test framework and linters.
+The previously supported minimum (3.4), was EOL in March 2019. See #14954 for more details.
 
-The minimum supported miniUPnPc API version is set to 10. This keeps compatibility with Ubuntu 16.04 LTS and Debian 8 `libminiupnpc-dev` packages. Please note, on Debian this package is still vulnerable to [CVE-2017-8798](https://security-tracker.debian.org/tracker/CVE-2017-8798) (in jessie only) and [CVE-2017-1000494](https://security-tracker.debian.org/tracker/CVE-2017-1000494) (both in jessie and in stretch).
+The minimum supported miniUPnPc API version is set to 10. This keeps compatibility with Ubuntu 16.04 LTS and Debian 8
+`libminiupnpc-dev` packages. Please note, on Debian this package is still vulnerable to
+[CVE-2017-8798](https://security-tracker.debian.org/tracker/CVE-2017-8798) (in jessie only) and
+[CVE-2017-1000494](https://security-tracker.debian.org/tracker/CVE-2017-1000494) (both in jessie and in stretch).
 
 Credits
 =======
