@@ -139,7 +139,7 @@ public:
         consensus.fStrictChainId = true;
         consensus.nLegacyBlocksBefore = 1;
         consensus.nSYSXAsset = 101010;
-        consensus.vchSYSXBurnMethodSignature = ParseHex("5c460a3f");
+        consensus.vchSYSXBurnMethodSignature = ParseHex("54eb6cdb");
         consensus.vchSYSXERC20Manager = ParseHex("4322ec9eb713f37cf8d701d819c165549d53d14e");
         consensus.nBridgeStartBlock = 125000;
         /**
@@ -250,7 +250,7 @@ public:
         consensus.fStrictChainId = false;
         consensus.nLegacyBlocksBefore = 1;
         consensus.nSYSXAsset = 505115838;
-        consensus.vchSYSXBurnMethodSignature = ParseHex("5c460a3f");
+        consensus.vchSYSXBurnMethodSignature = ParseHex("54eb6cdb");
         consensus.vchSYSXERC20Manager = ParseHex("9bb686812314D01d711dFAA41fAdA81D19188A83");
         consensus.nBridgeStartBlock = 1000;
         pchMessageStart[0] = 0xce;
@@ -356,7 +356,7 @@ public:
         consensus.fStrictChainId = true;
         consensus.nLegacyBlocksBefore = 0;
         consensus.nSYSXAsset = 0;
-        consensus.vchSYSXBurnMethodSignature = ParseHex("5c460a3f");
+        consensus.vchSYSXBurnMethodSignature = ParseHex("54eb6cdb");
         consensus.vchSYSXERC20Manager = ParseHex("4322ec9eb713f37cf8d701d819c165549d53d14e");
         consensus.nBridgeStartBlock = 100;
         pchMessageStart[0] = 0xfa;

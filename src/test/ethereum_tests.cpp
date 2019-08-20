@@ -22,14 +22,14 @@ BOOST_AUTO_TEST_CASE(ethereum_parseabidata)
     tfm::format(std::cout,"Running ethereum_parseabidata...\n");
     CAmount outputAmount = 0;
     uint32_t nAsset = 0;
-    const std::vector<unsigned char> &expectedMethodHash = ParseHex("5c460a3f");
-    const std::vector<unsigned char> &expectedVchContract = ParseHex("4322ec9eb713f37cf8d701d819c165549d53d14e");
-    const std::vector<unsigned char> &rlpBytes = ParseHex("5c460a3f00000000000000000000000000000000000000000000000000000000773594000000000000000000000000000000000000000000000000000000000065736d4700000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000015004322ec9eb713f37cf8d701d819c165549d53d14e0000000000000000000000144322ec9eb713f37cf8d701d819c165549d53d14e000000000000000000000000");
-    CWitnessAddress expectedAddress(0, ParseHex("4322ec9eb713f37cf8d701d819c165549d53d14e"));
+    const std::vector<unsigned char> &expectedMethodHash = ParseHex("54eb6cdb");
+    const std::vector<unsigned char> &expectedVchContract = ParseHex("1cba6d106d57051e00c89e2e11811aac0413c3f7");
+    const std::vector<unsigned char> &rlpBytes = ParseHex("54eb6cdb00000000000000000000000000000000000000000000000000000001bf08eb0000000000000000000000000000000000000000000000000000000000770f895d0000000000000000000000001cba6d106d57051e00c89e2e11811aac0413c3f70000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000001500ff3f5987aae19331bf0b9b956280d6ac4a958d910000000000000000000000");
+    CWitnessAddress expectedAddress(0, ParseHex("4c3c03441707d3506a280ba433c713da033270a9"));
     CWitnessAddress address;
     BOOST_CHECK(parseEthMethodInputData(expectedMethodHash, rlpBytes, expectedVchContract, outputAmount, nAsset, address));
-    BOOST_CHECK_EQUAL(outputAmount, 20*COIN);
-    BOOST_CHECK_EQUAL(nAsset, 1702063431);
+    BOOST_CHECK_EQUAL(outputAmount, 75*COIN);
+    BOOST_CHECK_EQUAL(nAsset, 1997506909);
     BOOST_CHECK(address == expectedAddress);
 }
 

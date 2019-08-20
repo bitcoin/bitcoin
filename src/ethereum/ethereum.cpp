@@ -98,16 +98,18 @@ bool VerifyProof(bytesConstRef path, const RLP& value, const RLP& parentNodes, c
  *
  * @param vchInputExpectedMethodHash The expected method hash
  * @param vchInputData The input to parse
+ * @param vchAssetContract The ERC20 contract address of the token involved in moving over
  * @param outputAmount The amount burned
  * @param nAsset The asset burned
+ * @param witnessAddress The destination witness address for the minting
  * @return true if everything is valid
  */
 bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedMethodHash, const std::vector<unsigned char>& vchInputData, const std::vector<unsigned char>& vchAssetContract, CAmount& outputAmount, uint32_t& nAsset, CWitnessAddress& witnessAddress) {
     if(vchAssetContract.empty()){
       return false;
     }
-    // 132 for the varint position + 1 for varint + 1 for version + 3 minimum for witness program bytes + 21 bytes for contract address
-    if(vchInputData.size() < 158) {
+    // total 6 or 7 fields are expected @ 32 bytes each field, 7 fields if witness > 32 bytes
+    if(vchInputData.size() < 196 || vchInputData.size() > 228) {
       return false;  
     }
     // method hash is 4 bytes
@@ -138,9 +140,16 @@ bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedM
     nAsset |= static_cast<uint32_t>(vchInputData[66]) << 8;
     nAsset |= static_cast<uint32_t>(vchInputData[65]) << 16;
     nAsset |= static_cast<uint32_t>(vchInputData[64]) << 24;
-    
-    // skip data position field (68 + 32) + 31 (offset to the varint _byte)
-    int dataPos = 131;
+    // start from 100 offset (96 for 3rd field + 4 bytes for function signature) and subtract 20 
+    std::vector<unsigned char>::const_iterator firstContractAddress = vchInputData.begin() + 80;
+    std::vector<unsigned char>::const_iterator lastContractAddress = firstContractAddress + 20;
+    const std::vector<unsigned char> vchERC20ContractAddress(firstContractAddress,lastContractAddress);
+    if(vchERC20ContractAddress != vchAssetContract)
+    {
+      return false;
+    }
+    // skip data position field of 32 bytes + 100 offset + 31 (offset to the varint _byte)
+    int dataPos = 163;
     const unsigned char &dataLength = vchInputData[dataPos++] - 1; // // - 1 to account for the version byte
     // witness programs can extend to 40 bytes, min length is 2 for min witness program
     if(dataLength > 40 || dataLength < 2){
@@ -152,21 +161,5 @@ bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedM
     std::vector<unsigned char>::const_iterator firstWitness = vchInputData.begin()+dataPos;
     std::vector<unsigned char>::const_iterator lastWitness = firstWitness + dataLength; 
     witnessAddress = CWitnessAddress(nVersion, std::vector<unsigned char>(firstWitness,lastWitness));
-    if(!witnessAddress.IsValid()){
-      return false;
-    }
-    if(dataLength <= 32)
-      dataPos += 31; // -1 because witness version byte is part of the 32 bytes of data for witness address
-    // eth abi data is always on 32 byte boundaries, so since data can be up to 40 bytes we may need to shift up to 64 byte to get to the next data marker 
-    else
-      dataPos += 63; // -1 because witness version byte is part of the 64 bytes of data for witness address
-    const unsigned char& nSizeContractAddress = vchInputData[dataPos++];
-    // ethereum address should always be 20 bytes
-    if(nSizeContractAddress != 20)
-      return false;
-    std::vector<unsigned char>::const_iterator firstContractAddress = vchInputData.begin()+dataPos;
-    std::vector<unsigned char>::const_iterator lastContractAddress = firstContractAddress + nSizeContractAddress;
-    const std::vector<unsigned char> vchERC20ContractAddress(firstContractAddress,lastContractAddress);
-    return vchERC20ContractAddress == vchAssetContract;
-
+    return witnessAddress.IsValid();
 }
