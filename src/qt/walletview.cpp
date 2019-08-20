@@ -20,6 +20,7 @@
 #include <qt/walletmodel.h>
 
 #include <interfaces/node.h>
+#include <wallet/wallet.h>
 #include <ui_interface.h>
 
 #include <QAction>
@@ -330,4 +331,36 @@ void WalletView::showProgress(const QString &title, int nProgress)
 void WalletView::requestedSyncWarningInfo()
 {
     Q_EMIT outOfSyncWarningClicked();
+}
+
+void WalletView::decryptForStaking(bool status)
+{
+    if (!walletModel)
+        return;
+
+    if (status)
+    {
+        if (walletModel->getEncryptionStatus() != WalletModel::Locked)
+            return;
+
+        AskPassphraseDialog dlg(AskPassphraseDialog::Unlock, this);
+        dlg.setModel(walletModel);
+        dlg.exec();
+
+        if(walletModel->getEncryptionStatus() != WalletModel::Unlocked)
+            return;
+
+        fWalletUnlockStakingOnly = true;
+    }
+    else
+    {
+        if(walletModel->getEncryptionStatus() != WalletModel::Unlocked)
+            return;
+
+        if (!fWalletUnlockStakingOnly)
+            return;
+
+        walletModel->setWalletLocked(true);
+        fWalletUnlockStakingOnly = false;
+    }
 }

@@ -14,6 +14,16 @@ uint256 CBlockHeader::GetHash() const
     return SerializeHash(*this);
 }
 
+bool CBlock::IsProofOfStake() const
+{
+    return (vtx.size() > 1 && vtx[1]->IsCoinStake());
+}
+
+bool CBlock::IsProofOfWork() const
+{
+    return !IsProofOfStake();
+}
+
 std::string CBlock::ToString() const
 {
     std::stringstream s;

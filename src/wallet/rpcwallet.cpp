@@ -107,6 +107,9 @@ void EnsureWalletIsUnlocked(const CWallet* pwallet)
     if (pwallet->IsLocked()) {
         throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
     }
+
+    if (fWalletUnlockStakingOnly)
+        throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Wallet unlocked for staking only.");
 }
 
 static void WalletTxToJSON(interfaces::Chain& chain, interfaces::Chain::Lock& locked_chain, const CWalletTx& wtx, UniValue& entry)
@@ -312,6 +315,9 @@ static CTransactionRef SendMoney(interfaces::Chain::Lock& locked_chain, CWallet 
     if (pwallet->GetBroadcastTransactions() && !pwallet->chain().p2pEnabled()) {
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
     }
+
+    if (fWalletUnlockStakingOnly)
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error: Wallet unlocked for staking only, unable to create transaction.");
 
     // Parse BitGreen address
     CScript scriptPubKey = GetScriptForDestination(address);
@@ -620,13 +626,16 @@ static UniValue getreceivedbyaddress(const JSONRPCRequest& request)
             continue;
         }
 
-        for (const CTxOut& txout : wtx.tx->vout)
-            if (txout.scriptPubKey == scriptPubKey)
-                if (wtx.GetDepthInMainChain(*locked_chain) >= nMinDepth)
+        for (const CTxOut& txout : wtx.tx->vout) {
+            CTxDestination address;
+            if (ExtractDestination(txout.scriptPubKey, address) &&
+                GetScriptForDestination(address) == scriptPubKey &&
+                wtx.GetDepthInMainChain(*locked_chain) >= nMinDepth)
                     nAmount += txout.nValue;
+        }
     }
 
-    return  ValueFromAmount(nAmount);
+    return ValueFromAmount(nAmount);
 }
 
 
@@ -1875,6 +1884,7 @@ static UniValue walletpassphrase(const JSONRPCRequest& request)
                 {
                     {"passphrase", RPCArg::Type::STR, RPCArg::Optional::NO, "The wallet passphrase"},
                     {"timeout", RPCArg::Type::NUM, RPCArg::Optional::NO, "The time to keep the decryption key in seconds; capped at 100000000 (~3 years)."},
+                    {"stakingonly", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED_NAMED_ARG, "allow only for staking"}
                 },
                 RPCResults{},
                 RPCExamples{
@@ -1937,7 +1947,16 @@ static UniValue walletpassphrase(const JSONRPCRequest& request)
         }
     }, nSleepTime);
 
-    return NullUniValue;
+    // peercoin: if user OS account compromised prevent trivial sendmoney commands
+    if (request.params.size() > 2)
+        fWalletUnlockStakingOnly = request.params[2].get_bool();
+    else
+        fWalletUnlockStakingOnly = false;
+
+    UniValue ret(UniValue::VOBJ);
+    ret.pushKV("unlocked_staking", fWalletUnlockStakingOnly);
+
+    return ret;
 }
 
 
@@ -2405,6 +2424,7 @@ static UniValue getwalletinfo(const JSONRPCRequest& request)
             "  \"keypoolsize\": xxxx,               (numeric) how many new keys are pre-generated (only counts external keys)\n"
             "  \"keypoolsize_hd_internal\": xxxx,   (numeric) how many new keys are pre-generated for internal use (used for change outputs, only appears if the wallet is using this feature, otherwise external keys are used)\n"
             "  \"unlocked_until\": ttt,             (numeric) the timestamp in seconds since epoch (midnight Jan 1 1970 GMT) that the wallet is unlocked for transfers, or 0 if the wallet is locked\n"
+            "  \"unlocked_staking\": true|false     (boolean) whether the wallet is unlocked for staking only\n"
             "  \"paytxfee\": x.xxxx,                (numeric) the transaction fee configuration, set in " + CURRENCY_UNIT + "/kB\n"
             "  \"hdseedid\": \"<hash160>\"            (string, optional) the Hash160 of the HD seed (only present when HD is enabled)\n"
             "  \"private_keys_enabled\": true|false (boolean) false if privatekeys are disabled for this wallet (enforced watch-only wallet)\n"
@@ -2447,6 +2467,7 @@ static UniValue getwalletinfo(const JSONRPCRequest& request)
     }
     if (pwallet->IsCrypted()) {
         obj.pushKV("unlocked_until", pwallet->nRelockTime);
+        obj.pushKV("unlocked_staking", fWalletUnlockStakingOnly);
     }
     obj.pushKV("paytxfee", ValueFromAmount(pwallet->m_pay_tx_fee.GetFeePerK()));
     if (!seed_id.IsNull()) {

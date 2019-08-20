@@ -146,9 +146,10 @@ public:
 
     enum EncryptionStatus
     {
-        Unencrypted,  // !wallet->IsCrypted()
-        Locked,       // wallet->IsCrypted() && wallet->IsLocked()
-        Unlocked      // wallet->IsCrypted() && !wallet->IsLocked()
+        Unencrypted,           // !wallet->IsCrypted()
+        Locked,                // wallet->IsCrypted() && wallet->IsLocked()
+        Unlocked,              // wallet->IsCrypted() && !wallet->IsLocked()
+        UnlockedForStakingOnly // wallet->IsCrypted() && !wallet->IsLocked() && wallet->fWalletUnlockStakingOnly
     };
 
     OptionsModel *getOptionsModel();

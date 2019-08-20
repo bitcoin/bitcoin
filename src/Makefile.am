@@ -166,6 +166,8 @@ BITGREEN_CORE_H = \
   policy/rbf.h \
   policy/settings.h \
   pow.h \
+  pos/kernel.h \
+  pos/sign.h \
   protocol.h \
   psbt.h \
   random.h \
@@ -283,6 +285,8 @@ libbitgreen_server_a_SOURCES = \
   policy/rbf.cpp \
   policy/settings.cpp \
   pow.cpp \
+  pos/kernel.cpp \
+  pos/sign.cpp \
   rest.cpp \
   rpc/blockchain.cpp \
   rpc/mining.cpp \
@@ -325,6 +329,53 @@ endif
 libbitgreen_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITGREEN_INCLUDES)
 libbitgreen_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitgreen_wallet_a_SOURCES = \
+  addrdb.cpp \
+  addrman.cpp \
+  banman.cpp \
+  blockencodings.cpp \
+  blockfilter.cpp \
+  chain.cpp \
+  consensus/tx_verify.cpp \
+  flatfile.cpp \
+  httprpc.cpp \
+  httpserver.cpp \
+  index/base.cpp \
+  index/blockfilterindex.cpp \
+  index/txindex.cpp \
+  interfaces/chain.cpp \
+  interfaces/node.cpp \
+  init.cpp \
+  dbwrapper.cpp \
+  miner.cpp \
+  net.cpp \
+  net_processing.cpp \
+  node/coin.cpp \
+  node/psbt.cpp \
+  node/transaction.cpp \
+  noui.cpp \
+  policy/fees.cpp \
+  policy/rbf.cpp \
+  policy/settings.cpp \
+  pow.cpp \
+  pos/kernel.cpp \
+  pos/sign.cpp \
+  rest.cpp \
+  rpc/blockchain.cpp \
+  rpc/mining.cpp \
+  rpc/misc.cpp \
+  rpc/net.cpp \
+  rpc/rawtransaction.cpp \
+  rpc/server.cpp \
+  script/sigcache.cpp \
+  shutdown.cpp \
+  timedata.cpp \
+  torcontrol.cpp \
+  txdb.cpp \
+  txmempool.cpp \
+  ui_interface.cpp \
+  validation.cpp \
+  validationinterface.cpp \
+  versionbits.cpp \
   interfaces/wallet.cpp \
   wallet/coincontrol.cpp \
   wallet/crypter.cpp \
@@ -533,9 +584,8 @@ endif
 # https://eli.thegreenplace.net/2013/07/09/library-order-in-static-linking#circular-dependency)
 bitgreend_LDADD = \
   $(LIBBITGREEN_SERVER) \
-  $(LIBBITGREEN_WALLET) \
-  $(LIBBITGREEN_SERVER) \
   $(LIBBITGREEN_COMMON) \
+  $(LIBBITGREEN_WALLET) \
   $(LIBUNIVALUE) \
   $(LIBBITGREEN_UTIL) \
   $(LIBBITGREEN_ZMQ) \

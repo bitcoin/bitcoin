@@ -28,6 +28,9 @@ public:
     uint32_t nBits;
     uint32_t nNonce;
 
+    // proof-of-stake: A copy from CBlockIndex.nFlags from other clients. We need this information because we are using headers-first syncronization.
+    int32_t nFlags;
+
     CBlockHeader()
     {
         SetNull();
@@ -43,6 +46,13 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
+
+        // proof-of-stake: do not serialize nFlags when computing hash
+        // TODO: Type has been removed from 0.18, check if this is used
+        // only for header sync.
+        // **DONT** compute the hash using nFlags or PoS wont work!
+        // if (!(s.GetType() & SER_GETHASH))
+            // READWRITE(nFlags);
     }
 
     void SetNull()
@@ -53,6 +63,7 @@ public:
         nTime = 0;
         nBits = 0;
         nNonce = 0;
+        nFlags = 0;
     }
 
     bool IsNull() const
@@ -75,6 +86,9 @@ public:
     // network and disk
     std::vector<CTransactionRef> vtx;
 
+    // peercoin: block signature - signed by coin base txout[0]'s owner
+    std::vector<unsigned char> vchBlockSig;
+
     // memory only
     mutable bool fChecked;
 
@@ -95,6 +109,8 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITEAS(CBlockHeader, *this);
         READWRITE(vtx);
+        if (vtx.size() > 1 && vtx[1]->IsCoinStake())
+            READWRITE(vchBlockSig);
     }
 
     void SetNull()
@@ -102,6 +118,7 @@ public:
         CBlockHeader::SetNull();
         vtx.clear();
         fChecked = false;
+        vchBlockSig.clear();
     }
 
     CBlockHeader GetBlockHeader() const
@@ -113,8 +130,13 @@ public:
         block.nTime          = nTime;
         block.nBits          = nBits;
         block.nNonce         = nNonce;
+        block.nFlags         = nFlags;
         return block;
     }
+
+    // peercoin: two types of block: proof-of-work or proof-of-stake
+    bool IsProofOfStake() const;
+    bool IsProofOfWork() const;
 
     std::string ToString() const;
 };

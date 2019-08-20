@@ -54,6 +54,8 @@
         <file alias="hd_disabled">res/icons/hd_disabled.png</file>
         <file alias="network_disabled">res/icons/network_disabled.png</file>
         <file alias="proxy">res/icons/proxy.png</file>
+        <file alias="staking_active">res/icons/staking_active.png</file>
+        <file alias="staking_inactive">res/icons/staking_inactive.png</file>
     </qresource>
     <qresource prefix="/movies">
         <file alias="spinner-000">res/movies/spinner-000.png</file>

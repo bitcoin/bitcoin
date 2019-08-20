@@ -160,6 +160,16 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
         result.pushKV("previousblockhash", blockindex->pprev->GetBlockHash().GetHex());
     if (pnext)
         result.pushKV("nextblockhash", pnext->GetBlockHash().GetHex());
+
+    result.pushKV("mint", ValueFromAmount(blockindex->nMint));
+    result.pushKV("moneysupply",ValueFromAmount(blockindex->nMoneySupply));
+    result.pushKV("flags", strprintf("%s%s", blockindex->IsProofOfStake() ? "proof-of-stake" : "proof-of-work", blockindex->GeneratedStakeModifier() ? " stake-modifier": ""));
+    result.pushKV("proofhash", blockindex->IsProofOfStake() ? blockindex->hashProofOfStake.GetHex() : blockindex->GetBlockHash().GetHex());
+    result.pushKV("entropybit", (int)blockindex->GetStakeEntropyBit());
+    result.pushKV("modifier", strprintf("%016llx", blockindex->nStakeModifier));
+    result.pushKV("modifierchecksum", strprintf("%08x", blockindex->nStakeModifierChecksum));
+    result.pushKV("blocksignature", HexStr(block.vchBlockSig));
+
     return result;
 }
 

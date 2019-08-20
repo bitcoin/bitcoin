@@ -20,10 +20,12 @@
 class CBlockIndex;
 class CChainParams;
 class CScript;
+class CWallet;
 
 namespace Consensus { struct Params; };
 
 static const bool DEFAULT_PRINTPRIORITY = false;
+extern int64_t nLastCoinStakeSearchInterval;
 
 struct CBlockTemplate
 {
@@ -148,6 +150,9 @@ private:
     int64_t nLockTimeCutoff;
     const CChainParams& chainparams;
 
+    // Stake info
+    int64_t nLastCoinStakeSearchTime = 0;
+
 public:
     struct Options {
         Options();
@@ -159,7 +164,7 @@ public:
     BlockAssembler(const CChainParams& params, const Options& options);
 
     /** Construct a new block template with coinbase to scriptPubKeyIn */
-    std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn);
+    std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn, std::shared_ptr<CWallet> pwallet=nullptr, bool fProofOfStake=false, bool* pfPoSCancel=nullptr);
 
     static Optional<int64_t> m_last_block_num_txs;
     static Optional<int64_t> m_last_block_weight;
@@ -201,5 +206,9 @@ private:
 /** Modify the extranonce in a block */
 void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce);
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev);
+
+/** proof-of-stake: miner threads */
+// void ThreadStakeMinter(CWallet *pwallet);
+void PoSMiner(std::shared_ptr<CWallet> pwallet);
 
 #endif // BITGREEN_MINER_H

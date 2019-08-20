@@ -84,6 +84,8 @@ public:
     const std::vector<SeedSpec6>& FixedSeeds() const { return vFixedSeeds; }
     const CCheckpointData& Checkpoints() const { return checkpointData; }
     const ChainTxData& TxData() const { return chainTxData; }
+    /** Make miner wait to have peers to avoid wasting work */
+    bool MiningRequiresPeers() const { return fMiningRequiresPeers; }
 protected:
     CChainParams() {}
 
@@ -102,6 +104,7 @@ protected:
     bool fDefaultConsistencyChecks;
     bool fRequireStandard;
     bool m_is_test_chain;
+    bool fMiningRequiresPeers;
     CCheckpointData checkpointData;
     ChainTxData chainTxData;
 };

@@ -6,6 +6,7 @@
 
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
+#include <wallet/wallet.h>
 
 #include <algorithm>
 
@@ -76,6 +77,8 @@ void WalletController::closeWallet(WalletModel* wallet_model, QWidget* parent)
     box.setStandardButtons(QMessageBox::Yes|QMessageBox::Cancel);
     box.setDefaultButton(QMessageBox::Yes);
     if (box.exec() != QMessageBox::Yes) return;
+
+    wallet_model->setWalletLocked(true);
 
     // First remove wallet from node.
     wallet_model->wallet().remove();

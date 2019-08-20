@@ -10,7 +10,47 @@
 #include <primitives/block.h>
 #include <uint256.h>
 
+
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
+{
+    // check if we already passed the PoW phase.
+    if (pindexLast->nHeight + 1 >= params.nLastPoWBlock)
+        return GetNextRequiredPoS(pindexLast, params);
+
+    return GetNextRequiredPoW(pindexLast, pblock, params);
+}
+
+// proof-of-stake
+unsigned int GetNextRequiredPoS(const CBlockIndex* pindexLast, const Consensus::Params& params)
+{
+    if (pindexLast == nullptr)
+        return UintToArith256(params.powLimit).GetCompact(); // genesis block
+
+    int64_t nActualSpacing = 0;
+    if (pindexLast->nHeight != 0)
+        nActualSpacing = pindexLast->GetBlockTime() - pindexLast->pprev->GetBlockTime();
+
+    if (nActualSpacing < 0)
+        nActualSpacing = 1;
+
+    // target change every block
+    // retarget with exponential moving toward target spacing
+    const arith_uint256 bnTargetLimit = UintToArith256(params.powLimit);
+    arith_uint256 bnNew;
+    bnNew.SetCompact(pindexLast->nBits);
+
+    int64_t nTargetSpacing = params.nPosTargetSpacing;
+    int64_t nInterval = params.nPosTargetTimespan / nTargetSpacing;
+    bnNew *= ((nInterval - 1) * nTargetSpacing + nActualSpacing + nActualSpacing);
+    bnNew /= ((nInterval + 1) * nTargetSpacing);
+
+    if (bnNew <= 0 || bnNew > bnTargetLimit)
+        bnNew = bnTargetLimit;
+
+    return bnNew.GetCompact();
+}
+
+unsigned int GetNextRequiredPoW(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
     assert(pindexLast != nullptr);
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();

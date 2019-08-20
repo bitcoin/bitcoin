@@ -49,4 +49,7 @@ static const int TOOLTIP_WRAP_THRESHOLD = 80;
 /* One gigabyte (GB) in bytes */
 static constexpr uint64_t GB_BYTES{1000000000};
 
+/* Staking label update frequency (in seconds) */
+static const int STAKING_LABEL_REFRESH = 10;
+
 #endif // BITGREEN_QT_GUICONSTANTS_H

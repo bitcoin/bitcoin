@@ -54,6 +54,7 @@
 #include <validation.h>
 #include <validationinterface.h>
 #include <walletinitinterface.h>
+#include <wallet/wallet.h>
 
 #include <stdint.h>
 #include <stdio.h>
@@ -74,6 +75,10 @@
 #include <zmq/zmqabstractnotifier.h>
 #include <zmq/zmqnotificationinterface.h>
 #include <zmq/zmqrpc.h>
+#endif
+
+#ifdef USE_SSE2
+#include <crypto/scrypt.h>
 #endif
 
 static bool fFeeEstimatesInitialized = false;
@@ -534,6 +539,8 @@ void SetupServerArgs()
 #else
     hidden_args.emplace_back("-daemon");
 #endif
+
+    gArgs.AddArg("-staking", "Enable staking while working with wallet, default is 1", false, OptionsCategory::OPTIONS);
 
     // Add the hidden options
     gArgs.AddHiddenArgs(hidden_args);
@@ -1819,6 +1826,11 @@ bool AppInitMain(InitInterfaces& interfaces)
     scheduler.scheduleEvery([]{
         g_banman->DumpBanlist();
     }, DUMP_BANS_INTERVAL * 1000);
+
+#ifdef ENABLE_WALLET
+    if (GetWallets().front() && gArgs.GetBoolArg("-staking", true))
+        threadGroup.create_thread(std::bind(&PoSMiner, GetWallets().front()));
+#endif
 
     return true;
 }

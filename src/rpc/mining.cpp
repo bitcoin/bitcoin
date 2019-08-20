@@ -29,6 +29,7 @@
 #include <validation.h>
 #include <validationinterface.h>
 #include <versionbitsinfo.h>
+#include <wallet/wallet.h>
 #include <warnings.h>
 
 #include <memory>
@@ -949,6 +950,44 @@ static UniValue estimaterawfee(const JSONRPCRequest& request)
     return result;
 }
 
+static UniValue getstakingstatus(const JSONRPCRequest& request)
+{
+            RPCHelpMan{"getstakingstatus",
+                "\nnReturns an object containing various staking information.\n",
+                {},
+                RPCResult{
+                    "{\n"
+                    "  \"validtime\": true|false,          (boolean) chain tip is within staking phases\n"
+                    "  \"haveconnections\": true|false,    (boolean) network connections are present\n"
+                    "  \"walletunlocked\": true|false,     (boolean) wallet is unlocked\n"
+                    "  \"mintablecoins\": true|false,      (boolean) the wallet has mintable coins\n"
+                    "  \"staking status\": true|false,     (boolean) wallet is staking\n"
+                    "}\n"
+                },
+                RPCExamples{
+                    HelpExampleCli("getstakingstatus", "")
+            + HelpExampleRpc("getstakingstatus", "")
+                },
+            }.Check(request);
+
+
+    std::shared_ptr<CWallet> wallet = GetWallets().front();
+
+    // LOCK2(cs_main, wallet ? wallet.cs_wallet : nullptr);
+
+    LOCK(cs_main);
+
+    UniValue obj(UniValue::VOBJ);
+    obj.pushKV("validtime",          ChainActive().Tip()->nTime > Params().GenesisBlock().nTime);
+    obj.pushKV("haveconnections",    g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) > 0);
+    if (wallet) {
+        obj.pushKV("walletunlocked", !wallet->IsLocked());
+        obj.pushKV("mintablecoins",  wallet->MintableCoins());
+    }
+    obj.pushKV("staking status",     wallet && nLastCoinStakeSearchInterval > 0);
+    return obj;
+}
+
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
@@ -959,6 +998,7 @@ static const CRPCCommand commands[] =
     { "mining",             "getblocktemplate",       &getblocktemplate,       {"template_request"} },
     { "mining",             "submitblock",            &submitblock,            {"hexdata","dummy"} },
     { "mining",             "submitheader",           &submitheader,           {"hexdata"} },
+    { "util",               "getstakingstatus",       &getstakingstatus,       {} },
 
 
     { "generating",         "generatetoaddress",      &generatetoaddress,      {"nblocks","address","maxtries"} },

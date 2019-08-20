@@ -12,6 +12,7 @@
 #include <primitives/block.h>
 #include <tinyformat.h>
 #include <uint256.h>
+#include <util/moneystr.h>
 
 #include <vector>
 
@@ -19,7 +20,7 @@
  * Maximum amount of time that a block timestamp is allowed to exceed the
  * current network-adjusted time before the block will be accepted.
  */
-static constexpr int64_t MAX_FUTURE_BLOCK_TIME = 2 * 60 * 60;
+static constexpr int64_t MAX_FUTURE_BLOCK_TIME = 3 * 60;
 
 /**
  * Timestamp window used as a grace period by code that compares external
@@ -188,6 +189,66 @@ public:
     //! (memory only) Maximum nTime in the chain up to and including this block.
     unsigned int nTimeMax;
 
+// proof-of-stake
+    // money supply related block index fields
+    int64_t nMint;
+    int64_t nMoneySupply;
+
+    // proof-of-stake related block index fields
+    unsigned int nFlags;  // block index flags
+    enum
+    {
+        BLOCK_PROOF_OF_STAKE = (1 << 0), // is proof-of-stake block
+        BLOCK_STAKE_ENTROPY  = (1 << 1), // entropy bit for stake modifier
+        BLOCK_STAKE_MODIFIER = (1 << 2), // regenerated stake modifier
+    };
+    uint64_t nStakeModifier; // hash modifier for proof-of-stake
+    unsigned int nStakeModifierChecksum; // checksum of index; in-memory only
+    COutPoint prevoutStake;
+    unsigned int nStakeTime;
+    uint256 hashProofOfStake;
+
+    bool IsProofOfWork() const
+    {
+        return !(nFlags & BLOCK_PROOF_OF_STAKE);
+    }
+
+    bool IsProofOfStake() const
+    {
+        return (nFlags & BLOCK_PROOF_OF_STAKE);
+    }
+
+    void SetProofOfStake()
+    {
+        nFlags |= BLOCK_PROOF_OF_STAKE;
+    }
+
+    unsigned int GetStakeEntropyBit() const
+    {
+        return ((nFlags & BLOCK_STAKE_ENTROPY) >> 1);
+    }
+
+    bool SetStakeEntropyBit(unsigned int nEntropyBit)
+    {
+        if (nEntropyBit > 1)
+            return false;
+        nFlags |= (nEntropyBit? BLOCK_STAKE_ENTROPY : 0);
+        return true;
+    }
+
+    bool GeneratedStakeModifier() const
+    {
+        return (nFlags & BLOCK_STAKE_MODIFIER);
+    }
+
+    void SetStakeModifier(uint64_t nModifier, bool fGeneratedStakeModifier)
+    {
+        nStakeModifier = nModifier;
+        if (fGeneratedStakeModifier)
+            nFlags |= BLOCK_STAKE_MODIFIER;
+    }
+// proof-of-stake end
+
     void SetNull()
     {
         phashBlock = nullptr;
@@ -209,6 +270,16 @@ public:
         nTime          = 0;
         nBits          = 0;
         nNonce         = 0;
+
+        // proof-of-stake
+        nMint = 0;
+        nMoneySupply = 0;
+        nFlags = 0;
+        nStakeModifier = 0;
+        nStakeModifierChecksum = 0;
+        hashProofOfStake = uint256();
+        prevoutStake.SetNull();
+        nStakeTime = 0;
     }
 
     CBlockIndex()
@@ -255,6 +326,7 @@ public:
         block.nTime          = nTime;
         block.nBits          = nBits;
         block.nNonce         = nNonce;
+        block.nFlags         = nFlags;
         return block;
     }
 
@@ -300,8 +372,16 @@ public:
 
     std::string ToString() const
     {
-        return strprintf("CBlockIndex(pprev=%p, nHeight=%d, merkle=%s, hashBlock=%s)",
+        return strprintf("CBlockIndex(pprev=%p, nHeight=%d, nMint=%s nMoneySupply=%s nFlags=(%s)(%d)(%s) nStakeModifier=%016llx, nStakeModifierChecksum=%08x, hashProofOfStake=%s, prevoutStake=(%s), nStakeTime=%d merkle=%s, hashBlock=%s)",
             pprev, nHeight,
+            FormatMoney(nMint),
+            FormatMoney(nMoneySupply),
+            GeneratedStakeModifier() ? "MOD" : "-", GetStakeEntropyBit(), IsProofOfStake()? "PoS" : "PoW", // nFlags
+            nStakeModifier,
+            nStakeModifierChecksum,
+            hashProofOfStake.ToString(),
+            prevoutStake.ToString(),
+            nStakeTime,
             hashMerkleRoot.ToString(),
             GetBlockHash().ToString());
     }
@@ -348,13 +428,16 @@ const CBlockIndex* LastCommonAncestor(const CBlockIndex* pa, const CBlockIndex* 
 class CDiskBlockIndex : public CBlockIndex
 {
 public:
+    uint256 hash;
     uint256 hashPrev;
 
     CDiskBlockIndex() {
+        hash = uint256();
         hashPrev = uint256();
     }
 
     explicit CDiskBlockIndex(const CBlockIndex* pindex) : CBlockIndex(*pindex) {
+        hash = (hash == uint256() ? pindex->GetBlockHash() : hash);
         hashPrev = (pprev ? pprev->GetBlockHash() : uint256());
     }
 
@@ -375,6 +458,25 @@ public:
             READWRITE(VARINT(nDataPos));
         if (nStatus & BLOCK_HAVE_UNDO)
             READWRITE(VARINT(nUndoPos));
+
+        // proof-of-stake
+        READWRITE(nMint);
+        READWRITE(nMoneySupply);
+        READWRITE(nFlags);
+        READWRITE(nStakeModifier);
+        if (IsProofOfStake())
+        {
+            READWRITE(prevoutStake);
+            READWRITE(nStakeTime);
+            READWRITE(hashProofOfStake);
+        }
+        else
+        {
+            const_cast<CDiskBlockIndex*>(this)->prevoutStake.SetNull();
+            const_cast<CDiskBlockIndex*>(this)->nStakeTime = 0;
+            const_cast<CDiskBlockIndex*>(this)->hashProofOfStake = uint256();
+        }
+        // proof-of-stake
 
         // block header
         READWRITE(this->nVersion);

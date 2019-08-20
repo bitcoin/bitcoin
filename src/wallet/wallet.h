@@ -7,10 +7,12 @@
 #define BITGREEN_WALLET_WALLET_H
 
 #include <amount.h>
+#include <index/txindex.h>
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
+#include <pos/kernel.h>
 #include <script/sign.h>
 #include <tinyformat.h>
 #include <ui_interface.h>
@@ -92,6 +94,8 @@ constexpr CAmount HIGH_MAX_TX_FEE{100 * HIGH_TX_FEE_PER_KB};
 //! Pre-calculated constants for input size estimation in *virtual size*
 static constexpr size_t DUMMY_NESTED_P2WPKH_INPUT_SIZE = 91;
 
+extern bool fWalletUnlockStakingOnly;
+
 class CCoinControl;
 class COutput;
 class CScript;
@@ -120,7 +124,7 @@ enum WalletFeature
 };
 
 //! Default for -addresstype
-constexpr OutputType DEFAULT_ADDRESS_TYPE{OutputType::P2SH_SEGWIT};
+constexpr OutputType DEFAULT_ADDRESS_TYPE{OutputType::LEGACY};
 
 //! Default for -changetype
 constexpr OutputType DEFAULT_CHANGE_TYPE{OutputType::CHANGE_AUTO};
@@ -440,6 +444,8 @@ public:
     const uint256& GetHash() const { return tx->GetHash(); }
     bool IsCoinBase() const { return tx->IsCoinBase(); }
     bool IsImmatureCoinBase(interfaces::Chain::Lock& locked_chain) const;
+    // proof-of-stake:
+    bool IsCoinStake() const { return tx->IsCoinStake(); }
 };
 
 //Get the marginal bytes of spending the specified output
@@ -1399,6 +1405,16 @@ public:
 
     /** Implement lookup of key origin information through wallet key metadata. */
     bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const override;
+
+    /** proof-of-stake */
+    bool fWalletUnlockStakingOnly = false;
+    int nStakeSetUpdateTime = 300; // 5 minutes
+    uint64_t nStakeSplitThreshold = 2000;
+    using StakeCoinsSet = std::set<std::pair<const CWalletTx*, unsigned int>>;
+    bool MintableCoins();
+    bool SelectStakeCoins(StakeCoinsSet& setCoins, CAmount nTargetAmount) const;
+    bool CreateCoinStake(unsigned int nBits, int64_t nSearchInterval, CMutableTransaction& txNew, uint32_t& nTxNewTime, CAmount nFees);
+    void GetScriptForMining(CScript& script);
 };
 
 /**
