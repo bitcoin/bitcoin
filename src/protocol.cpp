@@ -18,6 +18,8 @@ namespace NetMsgType {
 const char *VERSION="version";
 const char *VERACK="verack";
 const char *ADDR="addr";
+const char *ADDRv2="addrv2";
+const char *SENDADDRv2="sendaddrv2";
 const char *INV="inv";
 const char *GETDATA="getdata";
 const char *MERKLEBLOCK="merkleblock";
@@ -50,6 +52,8 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::VERSION,
     NetMsgType::VERACK,
     NetMsgType::ADDR,
+    NetMsgType::ADDRv2,
+    NetMsgType::SENDADDRv2,
     NetMsgType::INV,
     NetMsgType::GETDATA,
     NetMsgType::MERKLEBLOCK,

@@ -85,6 +85,17 @@ extern const char *VERACK;
  */
 extern const char *ADDR;
 /**
+ * The addrv2 (IP address) message relays connection information for peers on
+ * the network just like the addr message, but is extended to allow gossipping
+ * of longer node addresses.
+ */
+extern const char *ADDRv2;
+/**
+ * Indicates that a node prefers to receive connection information for peers via
+ * an "addrv2" message rather than an "addr" message.
+ */
+extern const char *SENDADDRv2;
+/**
  * The inv message (inventory message) transmits one or more inventories of
  * objects known to the transmitting peer.
  * @see https://bitcoin.org/en/developer-reference#inv
