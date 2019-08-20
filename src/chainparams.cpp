@@ -140,7 +140,7 @@ public:
         consensus.nLegacyBlocksBefore = 1;
         consensus.nSYSXAsset = 101010;
         consensus.vchSYSXBurnMethodSignature = ParseHex("54eb6cdb");
-        consensus.vchSYSXERC20Manager = ParseHex("4322ec9eb713f37cf8d701d819c165549d53d14e");
+        consensus.vchSYSXERC20Manager = ParseHex("9bb686812314D01d711dFAA41fAdA81D19188A83");
         consensus.nBridgeStartBlock = 125000;
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -357,7 +357,7 @@ public:
         consensus.nLegacyBlocksBefore = 0;
         consensus.nSYSXAsset = 0;
         consensus.vchSYSXBurnMethodSignature = ParseHex("54eb6cdb");
-        consensus.vchSYSXERC20Manager = ParseHex("4322ec9eb713f37cf8d701d819c165549d53d14e");
+        consensus.vchSYSXERC20Manager = ParseHex("9bb686812314D01d711dFAA41fAdA81D19188A83");
         consensus.nBridgeStartBlock = 100;
         pchMessageStart[0] = 0xfa;
         pchMessageStart[1] = 0xbf;
