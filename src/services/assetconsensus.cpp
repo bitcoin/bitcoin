@@ -167,10 +167,11 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     
     CAmount outputAmount;
     uint32_t nAsset = 0;
+    uint8_t nPrecision;
     const std::vector<unsigned char> &rlpBytes = rlpTxValue[5].toBytes(dev::RLP::VeryStrict);
     CWitnessAddress witnessAddress;
     std::vector<unsigned char> vchERC20ContractAddress;
-    if(!parseEthMethodInputData(Params().GetConsensus().vchSYSXBurnMethodSignature, rlpBytes, dbAsset.vchContract, outputAmount, nAsset, witnessAddress)){
+    if(!parseEthMethodInputData(Params().GetConsensus().vchSYSXBurnMethodSignature, rlpBytes, dbAsset.vchContract, outputAmount, nAsset, dbAsset.nPrecision, witnessAddress)){
         return FormatSyscoinErrorMessage(state, "mint-invalid-tx-data", bMiner);
     }
     if(!fUnitTest){
@@ -854,8 +855,13 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
             uint32_t nAssetFromScript;
             CAmount nAmountFromScript;
             CWitnessAddress burnWitnessAddress;
-            if(!GetSyscoinBurnData(tx, nAssetFromScript, burnWitnessAddress, nAmountFromScript, vchEthAddress, vchEthContract)){
+            uint8_t nPrecision;
+            if(!GetSyscoinBurnData(tx, nAssetFromScript, burnWitnessAddress, nAmountFromScript, vchEthAddress, nPrecision, vchEthContract)){
                 return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-transaction", bMiner);
+            }
+            if(dbAsset.nPrecision != nPrecision)
+            {
+                return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-precision", bMiner);
             }
             if(dbAsset.vchContract.empty() || dbAsset.vchContract != vchEthContract)
             {
