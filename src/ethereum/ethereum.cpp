@@ -152,13 +152,14 @@ bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedM
     // get precision
     dataPos += 31;
     const int8_t &nPrecision = static_cast<uint8_t>(vchInputData[dataPos++]);
-    // ensure we truncate decimals to fit within int64 if erc20's precision is more than our asset precision
+
     // local precision can range between 0 and 8 decimal places, so it should fit within a CAmount
+    // we pad zero's if erc20's precision is less than ours so we can accurately get the whole value of the amount transferred
     if(nLocalPrecision > nPrecision){
-      outputAmountArith /= pow(10, nLocalPrecision-nPrecision);
-    // or we pad zero's if erc20's precision is less than ours so we can accurately get the whole value of the amount transferred
+      outputAmountArith *= pow(10, nLocalPrecision-nPrecision);
+    // ensure we truncate decimals to fit within int64 if erc20's precision is more than our asset precision
     } else if(nLocalPrecision < nPrecision){
-      outputAmountArith *= pow(10, nPrecision-nLocalPrecision);
+      outputAmountArith /= pow(10, nPrecision-nLocalPrecision);
     }
     // once we have truncated it is safe to get low 64 bits of the uint256 which should encapsulate the entire value
     outputAmount = outputAmountArith.GetLow64();
