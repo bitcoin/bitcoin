@@ -110,7 +110,7 @@ bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedM
       return false;
     }
     // total 7 or 8 fields are expected @ 32 bytes each field, 8 fields if witness > 32 bytes
-    if(vchInputData.size() < 196 || vchInputData.size() > 260) {
+    if(vchInputData.size() < 228 || vchInputData.size() > 260) {
       return false;  
     }
     // method hash is 4 bytes
