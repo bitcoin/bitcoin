@@ -20,17 +20,19 @@ BOOST_AUTO_TEST_SUITE(ethereum_tests)
 BOOST_AUTO_TEST_CASE(ethereum_parseabidata)
 {
     tfm::format(std::cout,"Running ethereum_parseabidata...\n");
-    CAmount outputAmount = 0;
+    CAmount outputAmount;
     uint32_t nAsset = 0;
     const std::vector<unsigned char> &expectedMethodHash = ParseHex("54eb6cdb");
     const std::vector<unsigned char> &expectedVchContract = ParseHex("1cba6d106d57051e00c89e2e11811aac0413c3f7");
     const std::vector<unsigned char> &rlpBytes = ParseHex("54eb6cdb00000000000000000000000000000000000000000000000000000001bf08eb0000000000000000000000000000000000000000000000000000000000770f895d0000000000000000000000001cba6d106d57051e00c89e2e11811aac0413c3f70000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000001500ff3f5987aae19331bf0b9b956280d6ac4a958d910000000000000000000000");
     CWitnessAddress expectedAddress(0, ParseHex("ff3f5987aae19331bf0b9b956280d6ac4a958d91"));
     CWitnessAddress address;
-    BOOST_CHECK(parseEthMethodInputData(expectedMethodHash, rlpBytes, expectedVchContract, outputAmount, nAsset, address));
+    uint8_t nPrecision = 8;
+    BOOST_CHECK(parseEthMethodInputData(expectedMethodHash, rlpBytes, expectedVchContract, outputAmount, nAsset, nPrecision, address));
     BOOST_CHECK_EQUAL(outputAmount, 75*COIN);
     BOOST_CHECK_EQUAL(nAsset, 1997506909);
     BOOST_CHECK(address == expectedAddress);
+
 }
 
 BOOST_AUTO_TEST_CASE(ethspv_valid)
