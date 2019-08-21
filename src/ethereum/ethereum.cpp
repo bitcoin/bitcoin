@@ -142,17 +142,9 @@ bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedM
     {
       return false;
     }
-    // skip data position field of 32 bytes + 100 offset + 31 (offset to the varint _byte)
-    int dataPos = 163;
-    const unsigned char &dataLength = vchInputData[dataPos++] - 1; // // - 1 to account for the version byte
-    // witness programs can extend to 40 bytes, min length is 2 for min witness program
-    if(dataLength > 40 || dataLength < 2){
-      return false;
-    }
     // get precision
-    dataPos += 31;
+    int dataPos = 131;
     const int8_t &nPrecision = static_cast<uint8_t>(vchInputData[dataPos++]);
-
     // local precision can range between 0 and 8 decimal places, so it should fit within a CAmount
     // we pad zero's if erc20's precision is less than ours so we can accurately get the whole value of the amount transferred
     if(nLocalPrecision > nPrecision){
@@ -163,6 +155,14 @@ bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedM
     }
     // once we have truncated it is safe to get low 64 bits of the uint256 which should encapsulate the entire value
     outputAmount = outputAmountArith.GetLow64();
+
+    // skip data field market (32 bytes) + 31 bytes offset to the varint _byte
+    dataPos += 63;
+    const unsigned char &dataLength = vchInputData[dataPos++] - 1; // // - 1 to account for the version byte
+    // witness programs can extend to 40 bytes, min length is 2 for min witness program
+    if(dataLength > 40 || dataLength < 2){
+      return false;
+    }
 
     // witness address information starting at position dataPos till the end
     // get version proceeded by witness program bytes
