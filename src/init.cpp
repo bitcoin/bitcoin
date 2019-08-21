@@ -47,6 +47,7 @@
 #include <txmempool.h>
 #include <ui_interface.h>
 #include <util/moneystr.h>
+#include <util/splitstring.h>
 #include <util/system.h>
 #include <util/threadnames.h>
 #include <util/translation.h>
@@ -67,7 +68,6 @@
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/algorithm/string/split.hpp>
 #include <boost/thread.hpp>
 
 #if ENABLE_ZMQ

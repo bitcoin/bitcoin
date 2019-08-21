@@ -17,11 +17,10 @@
 #include <streams.h>
 #include <sync.h>
 #include <txmempool.h>
+#include <util/splitstring.h>
 #include <util/strencodings.h>
 #include <validation.h>
 #include <version.h>
-
-#include <boost/algorithm/string.hpp>
 
 #include <univalue.h>
 
@@ -123,7 +122,7 @@ static bool rest_headers(HTTPRequest* req,
     std::string param;
     const RetFormat rf = ParseDataFormat(param, strURIPart);
     std::vector<std::string> path;
-    boost::split(path, param, boost::is_any_of("/"));
+    Split(path, param, IsAnyOf("/"));
 
     if (path.size() != 2)
         return RESTERR(req, HTTP_BAD_REQUEST, "No header count specified. Use /rest/headers/<count>/<hash>.<ext>.");
@@ -403,7 +402,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
     if (param.length() > 1)
     {
         std::string strUriParams = param.substr(1);
-        boost::split(uriParts, strUriParams, boost::is_any_of("/"));
+        Split(uriParts, strUriParams, IsAnyOf("/"));
     }
 
     // throw exception in case of an empty request

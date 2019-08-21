@@ -212,6 +212,7 @@ BITCOIN_CORE_H = \
   util/moneystr.h \
   util/rbf.h \
   util/threadnames.h \
+  util/splitstring.h \
   util/time.h \
   util/translation.h \
   util/url.h \
@@ -298,6 +299,7 @@ libbitcoin_server_a_SOURCES = \
   txdb.cpp \
   txmempool.cpp \
   ui_interface.cpp \
+  util/splitstring.cpp \
   validation.cpp \
   validationinterface.cpp \
   versionbits.cpp \
@@ -468,6 +470,7 @@ libbitcoin_common_a_SOURCES = \
   script/sign.cpp \
   script/signingprovider.cpp \
   script/standard.cpp \
+  util/splitstring.cpp \
   versionbitsinfo.cpp \
   warnings.cpp \
   $(BITCOIN_CORE_H)
@@ -500,6 +503,7 @@ libbitcoin_util_a_SOURCES = \
   util/moneystr.cpp \
   util/rbf.cpp \
   util/threadnames.cpp \
+  util/splitstring.cpp \
   util/strencodings.cpp \
   util/time.cpp \
   util/url.cpp \

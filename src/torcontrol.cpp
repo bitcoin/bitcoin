@@ -5,6 +5,7 @@
 
 #include <chainparams.h>
 #include <torcontrol.h>
+#include <util/splitstring.h>
 #include <util/strencodings.h>
 #include <netbase.h>
 #include <net.h>
@@ -17,7 +18,6 @@
 #include <stdlib.h>
 
 #include <boost/signals2/signal.hpp>
-#include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/replace.hpp>
 
@@ -621,7 +621,7 @@ void TorController::protocolinfo_cb(TorControlConnection& _conn, const TorContro
                 std::map<std::string,std::string> m = ParseTorReplyMapping(l.second);
                 std::map<std::string,std::string>::iterator i;
                 if ((i = m.find("METHODS")) != m.end())
-                    boost::split(methods, i->second, boost::is_any_of(","));
+                    Split(methods, i->second, IsAnyOf(","));
                 if ((i = m.find("COOKIEFILE")) != m.end())
                     cookiefile = i->second;
             } else if (l.first == "VERSION") {

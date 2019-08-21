@@ -20,6 +20,7 @@
 #include <univalue.h>
 #include <util/moneystr.h>
 #include <util/rbf.h>
+#include <util/splitstring.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 #include <util/translation.h>
@@ -27,8 +28,6 @@
 #include <functional>
 #include <memory>
 #include <stdio.h>
-
-#include <boost/algorithm/string.hpp>
 
 static bool fCreateBlank;
 static std::map<std::string,UniValue> registers;
@@ -233,7 +232,7 @@ static void MutateTxRBFOptIn(CMutableTransaction& tx, const std::string& strInId
 static void MutateTxAddInput(CMutableTransaction& tx, const std::string& strInput)
 {
     std::vector<std::string> vStrInputParts;
-    boost::split(vStrInputParts, strInput, boost::is_any_of(":"));
+    Split(vStrInputParts, strInput, IsAnyOf(":"));
 
     // separate TXID:VOUT in string
     if (vStrInputParts.size()<2)
@@ -268,7 +267,7 @@ static void MutateTxAddOutAddr(CMutableTransaction& tx, const std::string& strIn
 {
     // Separate into VALUE:ADDRESS
     std::vector<std::string> vStrInputParts;
-    boost::split(vStrInputParts, strInput, boost::is_any_of(":"));
+    Split(vStrInputParts, strInput, IsAnyOf(":"));
 
     if (vStrInputParts.size() != 2)
         throw std::runtime_error("TX output missing or too many separators");
@@ -293,7 +292,7 @@ static void MutateTxAddOutPubKey(CMutableTransaction& tx, const std::string& str
 {
     // Separate into VALUE:PUBKEY[:FLAGS]
     std::vector<std::string> vStrInputParts;
-    boost::split(vStrInputParts, strInput, boost::is_any_of(":"));
+    Split(vStrInputParts, strInput, IsAnyOf(":"));
 
     if (vStrInputParts.size() < 2 || vStrInputParts.size() > 3)
         throw std::runtime_error("TX output missing or too many separators");
@@ -337,7 +336,7 @@ static void MutateTxAddOutMultiSig(CMutableTransaction& tx, const std::string& s
 {
     // Separate into VALUE:REQUIRED:NUMKEYS:PUBKEY1:PUBKEY2:....[:FLAGS]
     std::vector<std::string> vStrInputParts;
-    boost::split(vStrInputParts, strInput, boost::is_any_of(":"));
+    Split(vStrInputParts, strInput, IsAnyOf(":"));
 
     // Check that there are enough parameters
     if (vStrInputParts.size()<3)
@@ -438,7 +437,7 @@ static void MutateTxAddOutScript(CMutableTransaction& tx, const std::string& str
 {
     // separate VALUE:SCRIPT[:FLAGS]
     std::vector<std::string> vStrInputParts;
-    boost::split(vStrInputParts, strInput, boost::is_any_of(":"));
+    Split(vStrInputParts, strInput, IsAnyOf(":"));
     if (vStrInputParts.size() < 2)
         throw std::runtime_error("TX output missing separator");
 
@@ -767,7 +766,7 @@ static std::string readStdin()
     if (ferror(stdin))
         throw std::runtime_error("error reading stdin");
 
-    boost::algorithm::trim_right(ret);
+    ret.erase(ret.find_last_not_of(" \t\n\v\f\r") + 1);
 
     return ret;
 }

@@ -14,6 +14,7 @@
 #include <script/standard.h>
 #include <sync.h>
 #include <util/bip32.h>
+#include <util/splitstring.h>
 #include <util/system.h>
 #include <util/time.h>
 #include <util/translation.h>
@@ -23,7 +24,6 @@
 #include <stdint.h>
 #include <tuple>
 
-#include <boost/algorithm/string.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <univalue.h>
@@ -595,7 +595,7 @@ UniValue importwallet(const JSONRPCRequest& request)
                 continue;
 
             std::vector<std::string> vstr;
-            boost::split(vstr, line, boost::is_any_of(" "));
+            Split(vstr, line, IsAnyOf(" "));
             if (vstr.size() < 2)
                 continue;
             CKey key = DecodeSecret(vstr[0]);

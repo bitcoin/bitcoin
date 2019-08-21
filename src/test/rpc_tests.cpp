@@ -10,9 +10,9 @@
 #include <init.h>
 #include <interfaces/chain.h>
 #include <test/setup_common.h>
+#include <util/splitstring.h>
 #include <util/time.h>
 
-#include <boost/algorithm/string.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <univalue.h>
@@ -22,7 +22,7 @@
 UniValue CallRPC(std::string args)
 {
     std::vector<std::string> vArgs;
-    boost::split(vArgs, args, boost::is_any_of(" \t"));
+    Split(vArgs, args, IsAnyOf(" \t"));
     std::string strMethod = vArgs[0];
     vArgs.erase(vArgs.begin());
     JSONRPCRequest request;

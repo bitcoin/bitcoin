@@ -11,12 +11,12 @@
 #include <serialize.h>
 #include <streams.h>
 #include <univalue.h>
+#include <util/splitstring.h>
 #include <util/strencodings.h>
 #include <version.h>
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/algorithm/string/split.hpp>
 
 #include <algorithm>
 
@@ -46,13 +46,13 @@ CScript ParseScript(const std::string& s)
     }
 
     std::vector<std::string> words;
-    boost::algorithm::split(words, s, boost::algorithm::is_any_of(" \t\n"), boost::algorithm::token_compress_on);
+    Split(words, s, IsAnyOf(" \t\n"), true);
 
     for (std::vector<std::string>::const_iterator w = words.begin(); w != words.end(); ++w)
     {
         if (w->empty())
         {
-            // Empty string, ignore. (boost::split given '' will return one word)
+            // Empty string, ignore. (Split given '' will return one word)
         }
         else if (std::all_of(w->begin(), w->end(), ::IsDigit) ||
             (w->front() == '-' && w->size() > 1 && std::all_of(w->begin()+1, w->end(), ::IsDigit)))

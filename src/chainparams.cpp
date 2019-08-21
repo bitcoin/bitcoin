@@ -9,13 +9,11 @@
 #include <consensus/merkle.h>
 #include <tinyformat.h>
 #include <util/system.h>
+#include <util/splitstring.h>
 #include <util/strencodings.h>
 #include <versionbitsinfo.h>
 
 #include <assert.h>
-
-#include <boost/algorithm/string/classification.hpp>
-#include <boost/algorithm/string/split.hpp>
 
 static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
@@ -350,7 +348,7 @@ void CRegTestParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
 
     for (const std::string& strDeployment : args.GetArgs("-vbparams")) {
         std::vector<std::string> vDeploymentParams;
-        boost::split(vDeploymentParams, strDeployment, boost::is_any_of(":"));
+        Split(vDeploymentParams, strDeployment, IsAnyOf(":"));
         if (vDeploymentParams.size() != 3) {
             throw std::runtime_error("Version bits parameters malformed, expecting deployment:start:end");
         }

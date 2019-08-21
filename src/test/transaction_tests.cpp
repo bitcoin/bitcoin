@@ -21,13 +21,13 @@
 #include <script/script_error.h>
 #include <script/standard.h>
 #include <streams.h>
+#include <util/splitstring.h>
 #include <util/strencodings.h>
 
 #include <map>
 #include <string>
 
 #include <boost/algorithm/string/classification.hpp>
-#include <boost/algorithm/string/split.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <univalue.h>
@@ -65,7 +65,7 @@ unsigned int ParseScriptFlags(std::string strFlags)
     }
     unsigned int flags = 0;
     std::vector<std::string> words;
-    boost::algorithm::split(words, strFlags, boost::algorithm::is_any_of(","));
+    Split(words, strFlags, IsAnyOf(","));
 
     for (const std::string& word : words)
     {
