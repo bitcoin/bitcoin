@@ -211,6 +211,7 @@ BITCOIN_CORE_H = \
   util/memory.h \
   util/moneystr.h \
   util/rbf.h \
+  util/string.h \
   util/threadnames.h \
   util/time.h \
   util/translation.h \
@@ -501,6 +502,7 @@ libbitcoin_util_a_SOURCES = \
   util/rbf.cpp \
   util/threadnames.cpp \
   util/strencodings.cpp \
+  util/string.cpp \
   util/time.cpp \
   util/url.cpp \
   util/validation.cpp \
