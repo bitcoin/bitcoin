@@ -1,0 +1,8 @@
+include_HEADERS += include/secp256k1_schnorrsig.h
+noinst_HEADERS += src/modules/schnorrsig/main_impl.h
+noinst_HEADERS += src/modules/schnorrsig/tests_impl.h
+if USE_BENCHMARK
+noinst_PROGRAMS += bench_schnorrsig
+bench_schnorrsig_SOURCES = src/bench_schnorrsig.c
+bench_schnorrsig_LDADD = libsecp256k1.la $(SECP_LIBS) $(COMMON_LIB)
+endif

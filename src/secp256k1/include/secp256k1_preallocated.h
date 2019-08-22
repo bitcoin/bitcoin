@@ -14,12 +14,12 @@ extern "C" {
  *
  * Context objects created by functions in this module can be used like contexts
  * objects created by functions in secp256k1.h, i.e., they can be passed to any
- * API function that expects a context object (see secp256k1.h for details). The
+ * API function that excepts a context object (see secp256k1.h for details). The
  * only exception is that context objects created by functions in this module
  * must be destroyed using secp256k1_context_preallocated_destroy (in this
  * module) instead of secp256k1_context_destroy (in secp256k1.h).
  *
- * It is guaranteed that functions in this module will not call malloc or its
+ * It is guaranteed that functions in by this module will not call malloc or its
  * friends realloc, calloc, and free.
  */
 
