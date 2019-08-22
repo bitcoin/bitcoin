@@ -8,6 +8,8 @@
 
 #include <compressor.h>
 #include <core_memusage.h>
+#include <crypto/siphash.h>
+#include <robin_hood.h>
 #include <memusage.h>
 #include <primitives/transaction.h>
 #include <serialize.h>
@@ -131,7 +133,7 @@ struct CCoinsCacheEntry
     CCoinsCacheEntry(Coin&& coin_, unsigned char flag) : coin(std::move(coin_)), flags(flag) {}
 };
 
-typedef std::unordered_map<COutPoint, CCoinsCacheEntry, SaltedOutpointHasher> CCoinsMap;
+typedef robin_hood::unordered_node_map<COutPoint, CCoinsCacheEntry, SaltedOutpointHasher> CCoinsMap;
 
 /** Cursor for iterating over CoinsView state */
 class CCoinsViewCursor

@@ -115,8 +115,7 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
             changed++;
         }
         count++;
-        CCoinsMap::iterator itOld = it++;
-        mapCoins.erase(itOld);
+        it = mapCoins.erase(it);
         if (batch.SizeEstimate() > batch_size) {
             LogPrint(BCLog::COINDB, "Writing partial batch of %.2f MiB\n", batch.SizeEstimate() * (1.0 / 1048576.0));
             m_db->WriteBatch(batch);
