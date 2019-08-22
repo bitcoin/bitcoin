@@ -6,11 +6,12 @@
 
 #include <clientversion.h>
 #include <sync.h>
-#include <test/util.h>
-#include <util/strencodings.h>
-#include <util/moneystr.h>
-#include <util/time.h>
 #include <test/setup_common.h>
+#include <test/util.h>
+#include <util/moneystr.h>
+#include <util/strencodings.h>
+#include <util/string.h>
+#include <util/time.h>
 
 #include <stdint.h>
 #include <thread>
@@ -123,6 +124,19 @@ BOOST_AUTO_TEST_CASE(util_HexStr)
     );
 }
 
+BOOST_AUTO_TEST_CASE(util_Join)
+{
+    // Normal version
+    BOOST_CHECK_EQUAL(Join({}, ", "), "");
+    BOOST_CHECK_EQUAL(Join({"foo"}, ", "), "foo");
+    BOOST_CHECK_EQUAL(Join({"foo", "bar"}, ", "), "foo, bar");
+
+    // Version with unary operator
+    const auto op_upper = [](const std::string& s) { return ToUpper(s); };
+    BOOST_CHECK_EQUAL(Join<std::string>({}, ", ", op_upper), "");
+    BOOST_CHECK_EQUAL(Join<std::string>({"foo"}, ", ", op_upper), "FOO");
+    BOOST_CHECK_EQUAL(Join<std::string>({"foo", "bar"}, ", ", op_upper), "FOO, BAR");
+}
 
 BOOST_AUTO_TEST_CASE(util_FormatISO8601DateTime)
 {
