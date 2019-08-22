@@ -1172,8 +1172,19 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
     return true;
 }
 
-void CWallet::LoadToWallet(const CWalletTx& wtxIn)
+void CWallet::LoadToWallet(CWalletTx& wtxIn)
 {
+    // If wallet doesn't have a chain (e.g wallet-tool), lock can't be taken.
+    auto locked_chain = LockChain();
+    // If tx hasn't been reorged out of chain while wallet being shutdown
+    // change tx status to UNCONFIRMED and reset hashBlock/nIndex.
+    if (!wtxIn.m_confirm.hashBlock.IsNull()) {
+        if (locked_chain && !locked_chain->getBlockHeight(wtxIn.m_confirm.hashBlock)) {
+            wtxIn.setUnconfirmed();
+            wtxIn.m_confirm.hashBlock = uint256();
+            wtxIn.m_confirm.nIndex = 0;
+        }
+    }
     uint256 hash = wtxIn.GetHash();
     const auto& ins = mapWallet.emplace(hash, wtxIn);
     CWalletTx& wtx = ins.first->second;
@@ -3330,6 +3341,11 @@ bool CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
 
 DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
 {
+    // Even if we don't use this lock in this function, we want to preserve
+    // lock order in LoadToWallet if query of chain state is needed to know
+    // tx status. If lock can't be taken (e.g wallet-tool), tx confirmation
+    // status may be not reliable.
+    auto locked_chain = LockChain();
     LOCK(cs_wallet);
 
     fFirstRunRet = false;
@@ -4231,6 +4247,11 @@ bool CWallet::Verify(interfaces::Chain& chain, const WalletLocation& location, b
         // Recover readable keypairs:
         CWallet dummyWallet(&chain, WalletLocation(), WalletDatabase::CreateDummy());
         std::string backup_filename;
+        // Even if we don't use this lock in this function, we want to preserve
+        // lock order in LoadToWallet if query of chain state is needed to know
+        // tx status. If lock can't be taken, tx confirmation status may be not
+        // reliable.
+        auto locked_chain = dummyWallet.LockChain();
         if (!WalletBatch::Recover(wallet_path, (void *)&dummyWallet, WalletBatch::RecoverKeysOnlyFilter, backup_filename)) {
             return false;
         }
