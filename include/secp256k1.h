@@ -258,7 +258,7 @@ SECP256K1_API void secp256k1_context_destroy(
  *   - void secp256k1_default_error_callback_fn(const char* message, void* data);
  *  The library can call these default handlers even before a proper callback data
  *  pointer could have been set using secp256k1_context_set_illegal_callback or
- *  secp256k1_context_set_error_callback, e.g., when the creation of a context
+ *  secp256k1_context_set_illegal_callback, e.g., when the creation of a context
  *  fails. In this case, the corresponding default handler will be called with
  *  the data pointer argument set to NULL.
  *
@@ -523,6 +523,12 @@ SECP256K1_API int secp256k1_ecdsa_signature_normalize(
  */
 SECP256K1_API extern const secp256k1_nonce_function secp256k1_nonce_function_rfc6979;
 
+/** An implementation of the nonce generation function as defined in BIP-schnorr.
+ * If a data pointer is passed, it is assumed to be a pointer to 32 bytes of
+ * extra entropy.
+ */
+SECP256K1_API extern const secp256k1_nonce_function secp256k1_nonce_function_bipschnorr;
+
 /** A default safe nonce generation function (currently equal to secp256k1_nonce_function_rfc6979). */
 SECP256K1_API extern const secp256k1_nonce_function secp256k1_nonce_function_default;
 
@@ -646,7 +652,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_tweak_mul(
  *          uniformly random 32-byte arrays, or equal to zero. 1 otherwise.
  * Args:    ctx:    pointer to a context object initialized for validation
  *                 (cannot be NULL).
- * In/Out:  pubkey: pointer to a public key object.
+ * In/Out:  pubkey: pointer to a public key obkect.
  * In:      tweak:  pointer to a 32-byte tweak.
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_tweak_mul(

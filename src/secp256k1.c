@@ -413,6 +413,29 @@ static SECP256K1_INLINE void buffer_append(unsigned char *buf, unsigned int *off
     *offset += len;
 }
 
+/* This nonce function is described in BIP-schnorr
+ * (https://github.com/sipa/bips/blob/bip-schnorr/bip-schnorr.mediawiki) */
+static int nonce_function_bipschnorr(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, void *data, unsigned int counter) {
+    secp256k1_sha256 sha;
+    (void) counter;
+    VERIFY_CHECK(counter == 0);
+
+    /* Hash x||msg as per the spec */
+    secp256k1_sha256_initialize(&sha);
+    secp256k1_sha256_write(&sha, key32, 32);
+    secp256k1_sha256_write(&sha, msg32, 32);
+    /* Hash in algorithm, which is not in the spec, but may be critical to
+     * users depending on it to avoid nonce reuse across algorithms. */
+    if (algo16 != NULL) {
+        secp256k1_sha256_write(&sha, algo16, 16);
+    }
+    if (data != NULL) {
+        secp256k1_sha256_write(&sha, data, 32);
+    }
+    secp256k1_sha256_finalize(&sha, nonce32);
+    return 1;
+}
+
 static int nonce_function_rfc6979(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, void *data, unsigned int counter) {
    unsigned char keydata[112];
    unsigned int offset = 0;
@@ -443,6 +466,7 @@ static int nonce_function_rfc6979(unsigned char *nonce32, const unsigned char *m
    return 1;
 }
 
+const secp256k1_nonce_function secp256k1_nonce_function_bipschnorr = nonce_function_bipschnorr;
 const secp256k1_nonce_function secp256k1_nonce_function_rfc6979 = nonce_function_rfc6979;
 const secp256k1_nonce_function secp256k1_nonce_function_default = nonce_function_rfc6979;
 
@@ -683,6 +707,10 @@ int secp256k1_ec_pubkey_combine(const secp256k1_context* ctx, secp256k1_pubkey *
 
 #ifdef ENABLE_MODULE_ECDH
 # include "modules/ecdh/main_impl.h"
+#endif
+
+#ifdef ENABLE_MODULE_SCHNORRSIG
+# include "modules/schnorrsig/main_impl.h"
 #endif
 
 #ifdef ENABLE_MODULE_RECOVERY

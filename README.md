@@ -59,5 +59,5 @@ libsecp256k1 is built using autotools:
     $ ./autogen.sh
     $ ./configure
     $ make
-    $ make check
+    $ ./tests
     $ sudo make install  # optional
