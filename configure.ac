@@ -85,42 +85,42 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([[char foo;]])],
     ])
 
 AC_ARG_ENABLE(benchmark,
-    AS_HELP_STRING([--enable-benchmark],[compile benchmark (default is yes)]),
+    AS_HELP_STRING([--enable-benchmark],[compile benchmark [default=yes]]),
     [use_benchmark=$enableval],
     [use_benchmark=yes])
 
 AC_ARG_ENABLE(coverage,
-    AS_HELP_STRING([--enable-coverage],[enable compiler flags to support kcov coverage analysis]),
+    AS_HELP_STRING([--enable-coverage],[enable compiler flags to support kcov coverage analysis [default=no]]),
     [enable_coverage=$enableval],
     [enable_coverage=no])
 
 AC_ARG_ENABLE(tests,
-    AS_HELP_STRING([--enable-tests],[compile tests (default is yes)]),
+    AS_HELP_STRING([--enable-tests],[compile tests [default=yes]]),
     [use_tests=$enableval],
     [use_tests=yes])
 
 AC_ARG_ENABLE(openssl_tests,
-    AS_HELP_STRING([--enable-openssl-tests],[enable OpenSSL tests, if OpenSSL is available (default is auto)]),
+    AS_HELP_STRING([--enable-openssl-tests],[enable OpenSSL tests [default=auto]]),
     [enable_openssl_tests=$enableval],
     [enable_openssl_tests=auto])
 
 AC_ARG_ENABLE(experimental,
-    AS_HELP_STRING([--enable-experimental],[allow experimental configure options (default is no)]),
+    AS_HELP_STRING([--enable-experimental],[allow experimental configure options [default=no]]),
     [use_experimental=$enableval],
     [use_experimental=no])
 
 AC_ARG_ENABLE(exhaustive_tests,
-    AS_HELP_STRING([--enable-exhaustive-tests],[compile exhaustive tests (default is yes)]),
+    AS_HELP_STRING([--enable-exhaustive-tests],[compile exhaustive tests [default=yes]]),
     [use_exhaustive_tests=$enableval],
     [use_exhaustive_tests=yes])
 
 AC_ARG_ENABLE(endomorphism,
-    AS_HELP_STRING([--enable-endomorphism],[enable endomorphism (default is no)]),
+    AS_HELP_STRING([--enable-endomorphism],[enable endomorphism [default=no]]),
     [use_endomorphism=$enableval],
     [use_endomorphism=no])
 
 AC_ARG_ENABLE(ecmult_static_precomputation,
-    AS_HELP_STRING([--enable-ecmult-static-precomputation],[enable precomputed ecmult table for signing (default is yes)]),
+    AS_HELP_STRING([--enable-ecmult-static-precomputation],[enable precomputed ecmult table for signing [default=auto]]),
     [use_ecmult_static_precomputation=$enableval],
     [use_ecmult_static_precomputation=auto])
 
@@ -130,33 +130,47 @@ AC_ARG_ENABLE(module_ecdh,
     [enable_module_ecdh=no])
 
 AC_ARG_ENABLE(module_recovery,
-    AS_HELP_STRING([--enable-module-recovery],[enable ECDSA pubkey recovery module (default is no)]),
+    AS_HELP_STRING([--enable-module-recovery],[enable ECDSA pubkey recovery module [default=no]]),
     [enable_module_recovery=$enableval],
     [enable_module_recovery=no])
 
+AC_ARG_ENABLE(external_default_callbacks,
+    AS_HELP_STRING([--enable-external-default-callbacks],[enable external default callback functions (default is no)]),
+    [use_external_default_callbacks=$enableval],
+    [use_external_default_callbacks=no])
+
 AC_ARG_ENABLE(jni,
-    AS_HELP_STRING([--enable-jni],[enable libsecp256k1_jni (default is no)]),
+    AS_HELP_STRING([--enable-jni],[enable libsecp256k1_jni [default=no]]),
     [use_jni=$enableval],
     [use_jni=no])
 
 AC_ARG_WITH([field], [AS_HELP_STRING([--with-field=64bit|32bit|auto],
-[Specify Field Implementation. Default is auto])],[req_field=$withval], [req_field=auto])
+[finite field implementation to use [default=auto]])],[req_field=$withval], [req_field=auto])
 
 AC_ARG_WITH([bignum], [AS_HELP_STRING([--with-bignum=gmp|no|auto],
-[Specify Bignum Implementation. Default is auto])],[req_bignum=$withval], [req_bignum=auto])
+[bignum implementation to use [default=auto]])],[req_bignum=$withval], [req_bignum=auto])
 
 AC_ARG_WITH([scalar], [AS_HELP_STRING([--with-scalar=64bit|32bit|auto],
-[Specify scalar implementation. Default is auto])],[req_scalar=$withval], [req_scalar=auto])
+[scalar implementation to use [default=auto]])],[req_scalar=$withval], [req_scalar=auto])
 
-AC_ARG_WITH([asm], [AS_HELP_STRING([--with-asm=x86_64|arm|no|auto]
-[Specify assembly optimizations to use. Default is auto (experimental: arm)])],[req_asm=$withval], [req_asm=auto])
+AC_ARG_WITH([asm], [AS_HELP_STRING([--with-asm=x86_64|arm|no|auto],
+[assembly optimizations to use (experimental: arm) [default=auto]])],[req_asm=$withval], [req_asm=auto])
+
+AC_ARG_WITH([ecmult-window], [AS_HELP_STRING([--with-ecmult-window=SIZE|auto],
+[window size for ecmult precomputation for verification, specified as integer in range [2..24].]
+[Larger values result in possibly better performance at the cost of an exponentially larger precomputed table.]
+[The table will store 2^(SIZE-2) * 64 bytes of data but can be larger in memory due to platform-specific padding and alignment.]
+[If the endomorphism optimization is enabled, two tables of this size are used instead of only one.]
+["auto" is a reasonable setting for desktop machines (currently 15). [default=auto]]
+)],
+[req_ecmult_window=$withval], [req_ecmult_window=auto])
 
 AC_CHECK_TYPES([__int128])
 
 if test x"$enable_coverage" = x"yes"; then
     AC_DEFINE(COVERAGE, 1, [Define this symbol to compile out all VERIFY code])
     CFLAGS="$CFLAGS -O0 --coverage"
-    LDFLAGS="--coverage"
+    LDFLAGS="$LDFLAGS --coverage"
 else
     CFLAGS="$CFLAGS -O3"
 fi
@@ -387,6 +401,28 @@ case $set_scalar in
   ;;
 esac
 
+#set ecmult window size
+if test x"$req_ecmult_window" = x"auto"; then
+  set_ecmult_window=15
+else
+  set_ecmult_window=$req_ecmult_window
+fi
+
+error_window_size=['window size for ecmult precomputation not an integer in range [2..24] or "auto"']
+case $set_ecmult_window in
+''|*[[!0-9]]*)
+  # no valid integer
+  AC_MSG_ERROR($error_window_size)
+  ;;
+*)
+  if test "$set_ecmult_window" -lt 2 -o "$set_ecmult_window" -gt 24 ; then
+    # not in range
+    AC_MSG_ERROR($error_window_size)
+  fi
+  AC_DEFINE_UNQUOTED(ECMULT_WINDOW_SIZE, $set_ecmult_window, [Set window size for ecmult precomputation])
+  ;;
+esac
+
 if test x"$use_tests" = x"yes"; then
   SECP_OPENSSL_CHECK
   if test x"$has_openssl_ec" = x"yes"; then
@@ -462,6 +498,10 @@ if test x"$use_external_asm" = x"yes"; then
   AC_DEFINE(USE_EXTERNAL_ASM, 1, [Define this symbol if an external (non-inline) assembly implementation is used])
 fi
 
+if test x"$use_external_default_callbacks" = x"yes"; then
+  AC_DEFINE(USE_EXTERNAL_DEFAULT_CALLBACKS, 1, [Define this symbol if an external implementation of the default callbacks is used])
+fi
+
 if test x"$enable_experimental" = x"yes"; then
   AC_MSG_NOTICE([******])
   AC_MSG_NOTICE([WARNING: experimental build])
@@ -504,21 +544,23 @@ AC_OUTPUT
 
 echo
 echo "Build Options:"
-echo "  with endomorphism   = $use_endomorphism"
-echo "  with ecmult precomp = $set_precomp"
-echo "  with jni            = $use_jni"
-echo "  with benchmarks     = $use_benchmark"
-echo "  with coverage       = $enable_coverage"
-echo "  module ecdh         = $enable_module_ecdh"
-echo "  module recovery     = $enable_module_recovery"
+echo "  with endomorphism       = $use_endomorphism"
+echo "  with ecmult precomp     = $set_precomp"
+echo "  with external callbacks = $use_external_default_callbacks"
+echo "  with jni                = $use_jni"
+echo "  with benchmarks         = $use_benchmark"
+echo "  with coverage           = $enable_coverage"
+echo "  module ecdh             = $enable_module_ecdh"
+echo "  module recovery         = $enable_module_recovery"
 echo
-echo "  asm                 = $set_asm"
-echo "  bignum              = $set_bignum"
-echo "  field               = $set_field"
-echo "  scalar              = $set_scalar"
+echo "  asm                     = $set_asm"
+echo "  bignum                  = $set_bignum"
+echo "  field                   = $set_field"
+echo "  scalar                  = $set_scalar"
+echo "  ecmult window size      = $set_ecmult_window"
 echo
-echo "  CC                  = $CC"
-echo "  CFLAGS              = $CFLAGS"
-echo "  CPPFLAGS            = $CPPFLAGS"
-echo "  LDFLAGS             = $LDFLAGS"
+echo "  CC                      = $CC"
+echo "  CFLAGS                  = $CFLAGS"
+echo "  CPPFLAGS                = $CPPFLAGS"
+echo "  LDFLAGS                 = $LDFLAGS"
 echo

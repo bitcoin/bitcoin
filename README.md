@@ -45,8 +45,10 @@ Implementation details
   * Optionally (off by default) use secp256k1's efficiently-computable endomorphism to split the P multiplicand into 2 half-sized ones.
 * Point multiplication for signing
   * Use a precomputed table of multiples of powers of 16 multiplied with the generator, so general multiplication becomes a series of additions.
-  * Access the table with branch-free conditional moves so memory access is uniform.
-  * No data-dependent branches
+  * Intended to be completely free of timing sidechannels for secret-key operations (on reasonable hardware/toolchains)
+    * Access the table with branch-free conditional moves so memory access is uniform.
+    * No data-dependent branches
+  * Optional runtime blinding which attempts to frustrate differential power analysis.
   * The precomputed tables add and eventually subtract points for which no known scalar (private key) is known, preventing even an attacker with control over the private key used to control the data internally.
 
 Build steps
@@ -57,5 +59,5 @@ libsecp256k1 is built using autotools:
     $ ./autogen.sh
     $ ./configure
     $ make
-    $ ./tests
+    $ make check
     $ sudo make install  # optional
