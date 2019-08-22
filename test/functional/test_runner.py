@@ -188,6 +188,7 @@ BASE_SCRIPTS = [
     'rpc_preciousblock.py',
     'wallet_importprunedfunds.py',
     'p2p_leak_tx.py',
+    'p2p_eviction.py',
     'rpc_signmessage.py',
     'rpc_generateblock.py',
     'wallet_balance.py',
