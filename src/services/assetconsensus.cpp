@@ -1042,7 +1042,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
                     mapBalanceReceiver->second = receiverAllocation.nBalance;
                 }
                 mapBalanceReceiver->second += amountTuple.second;
-                if (!AssetRange(mapBalanceReceiverBlock->second.nBalance))
+                if (!AssetRange(mapBalanceReceiver->second))
                 {
                     return FormatSyscoinErrorMessage(state, "new-balance-out-of-range", bMiner);
                 }
