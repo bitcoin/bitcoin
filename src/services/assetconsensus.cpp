@@ -167,7 +167,6 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     
     CAmount outputAmount;
     uint32_t nAsset = 0;
-    uint8_t nPrecision;
     const std::vector<unsigned char> &rlpBytes = rlpTxValue[5].toBytes(dev::RLP::VeryStrict);
     CWitnessAddress witnessAddress;
     std::vector<unsigned char> vchERC20ContractAddress;
