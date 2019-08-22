@@ -95,6 +95,8 @@ public:
 
     base_uint& operator^=(const base_uint& b)
     {
+        static_assert(WIDTH == b.WIDTH, "Template parameter WIDTH must be equal.");
+        
         for (int i = 0; i < WIDTH; i++)
             pn[i] ^= b.pn[i];
         return *this;
@@ -102,6 +104,8 @@ public:
 
     base_uint& operator&=(const base_uint& b)
     {
+        static_assert(WIDTH == b.WIDTH, "Template parameter WIDTH must be equal.");
+        
         for (int i = 0; i < WIDTH; i++)
             pn[i] &= b.pn[i];
         return *this;
@@ -109,6 +113,8 @@ public:
 
     base_uint& operator|=(const base_uint& b)
     {
+        static_assert(WIDTH == b.WIDTH, "Template parameter WIDTH must be equal.");
+        
         for (int i = 0; i < WIDTH; i++)
             pn[i] |= b.pn[i];
         return *this;
@@ -133,6 +139,8 @@ public:
 
     base_uint& operator+=(const base_uint& b)
     {
+        static_assert(WIDTH == b.WIDTH, "Template parameter WIDTH must be equal.");
+        
         uint64_t carry = 0;
         for (int i = 0; i < WIDTH; i++)
         {
