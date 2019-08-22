@@ -1163,8 +1163,8 @@ UniValue getmemoryinfo(const JSONRPCRequest& request)
         throw std::runtime_error(
             "getmemoryinfo (\"mode\")\n"
             "Returns an object containing information about memory usage.\n"
-            "Arguments:\n"
-            "1. \"mode\" determines what kind of information is returned. This argument is optional, the default mode is \"stats\".\n"
+            "\nArguments:\n"
+            "1. \"mode\"     (string, optional, default: \"stats\") Determines what kind of information is returned.\n"
             "  - \"stats\" returns general statistics about memory usage in the daemon.\n"
             "  - \"mallocinfo\" returns an XML string describing low-level heap state (only available if compiled with glibc 2.10+).\n"
             "\nResult (mode \"stats\"):\n"
