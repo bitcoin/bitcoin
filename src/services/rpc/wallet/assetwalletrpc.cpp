@@ -949,7 +949,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
         const std::string witnessVersionHex = int_to_hex(assetAllocationTuple.witnessAddress.nVersion);
         const std::string assetHex = int_to_hex(nAsset);
         const std::string precisionHex = int_to_hex(theAsset.nPrecision);
-        scriptData << OP_RETURN << ParseHex(assetHex) << ParseHex(amountHex) << ParseHex(ethAddress) << ParseHex(witnessVersionHex) << assetAllocationTuple.witnessAddress.vchWitnessProgram << ParseHex(precisionHex) << theAsset.vchContract;
+        scriptData << OP_RETURN << ParseHex(assetHex) << ParseHex(amountHex) << ParseHex(ethAddress) << ParseHex(precisionHex) << theAsset.vchContract << ParseHex(witnessVersionHex) << assetAllocationTuple.witnessAddress.vchWitnessProgram;
         nVersion = SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM;
     }
 	CRecipient fee;

@@ -157,26 +157,27 @@ bool GetSyscoinBurnData(const CTransaction &tx, uint32_t& nAssetFromScript, CWit
         return false; 
     }
     vchEthAddress = vvchArgs[2]; 
-    if(vvchArgs[3].size() != 1){
+
+    nPrecision = static_cast<uint8_t>(vvchArgs[3][0]);
+
+    if(vvchArgs[4].empty()){
+        LogPrint(BCLog::SYS, "GetSyscoinBurnData: Ethereum contract empty\n");
+        return false; 
+    }
+    vchEthContract = vvchArgs[4]; 
+
+    if(vvchArgs[5].size() != 1){
         LogPrint(BCLog::SYS, "GetSyscoinBurnData: Witness address version - Wrong argument size %d\n", vvchArgs[3].size());
         return false;
     }
-    const unsigned char &nWitnessVersion = static_cast<unsigned char>(vvchArgs[3][0]);
+    const unsigned char &nWitnessVersion = static_cast<unsigned char>(vvchArgs[5][0]);
     
-    if(vvchArgs[4].empty()){
+    if(vvchArgs[6].empty()){
         LogPrint(BCLog::SYS, "GetSyscoinBurnData: Witness address empty\n");
         return false;
     }     
     
-    burnWitnessAddress = CWitnessAddress(nWitnessVersion, vvchArgs[4]);   
-
-    nPrecision = static_cast<uint8_t>(vvchArgs[5][0]);
-
-    if(vvchArgs[6].empty()){
-        LogPrint(BCLog::SYS, "GetSyscoinBurnData: Ethereum contract empty\n");
-        return false; 
-    }
-    vchEthContract = vvchArgs[6]; 
+    burnWitnessAddress = CWitnessAddress(nWitnessVersion, vvchArgs[6]);   
     return true; 
 }
 bool GetSyscoinBurnData(const CScript &scriptPubKey, std::vector<std::vector<unsigned char> > &vchData)
