@@ -64,7 +64,7 @@ public:
                     map_.erase(it->first);
                 }
             }
-            mapCoins.erase(it++);
+            it = mapCoins.erase(it);
         }
         if (!hashBlock.IsNull())
             hashBestBlock_ = hashBlock;
