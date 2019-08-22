@@ -64,6 +64,13 @@ platform.
 Notable changes
 ===============
 
+New user documentation
+----------------------
+
+- [Reduce memory](https://github.com/bitcoin/bitcoin/blob/master/doc/reduce-memory.md)
+  suggests configuration tweaks for running Bitcoin Core on systems with
+  limited memory. (#16339)
+
 New RPCs
 --------
 
@@ -78,6 +85,30 @@ New RPCs
   features specific to that existing wallet, such as the new
   `avoid_reuse` feature documented elsewhere in these release notes.
   (#13756)
+
+- `getblockfilter` gets the BIP158 filter for the specified block.  This
+  RPC is only enabled if block filters have been created using the
+  `-blockfilterindex` configuration option. (#14121)
+
+New settings
+------------
+
+- `-blockfilterindex` enables the creation of BIP158 block filters for
+  the entire blockchain.  Filters will be created in the background and
+  currently use about 4 GiB of space.  Note: this version of Bitcoin
+  Core does not serve block filters over the P2P network, although the
+  local user may obtain block filters using the `getblockfilter` RPC.
+  (#14121)
+
+Updated settings
+----------------
+
+- `whitebind` and `whitelist` now accept a list of permissions to
+  provide peers connecting using the indicated interfaces or IP
+  addresses.  If no permissions are specified with an address or CIDR
+  network, the implicit default permissions are the same as previous
+  releases.  See the `bitcoind -help` output for these two options for
+  details about the available permissions. (#16248)
 
 Updated RPCs
 ------------
@@ -141,12 +172,40 @@ Low-level Changes section below.
 - `getmempoolentry` now provides a `weight` field containing the
   transaction weight as defined in BIP141. (#16647)
 
+- `getdescriptorinfo` now returns an additional `checksum` field
+  containing the checksum for the unmodified descriptor provided by the
+  user (that is, before the descriptor is normalized for the
+  `descriptor` field). (#15986)
+
+- `walletcreatefundedpsbt` now signals BIP125 Replace-by-Fee if the
+  `-walletrbf` configuration option is set to true. (#15911)
+
+GUI changes
+-----------
+
+- Provides bech32 addresses by default.  The user may change the address
+  during invoice generation using a GUI toggle, or the default address
+  type may be changed by the `-addresstype` configuration option.
+  (#15711, #16497)
+
+Deprecated or removed configuration options
+-------------------------------------------
+
+- `-mempoolreplacement` is removed, although default node behavior
+  remains the same.  This option previously allowed the user to prevent
+  the node from accepting or relaying BIP125 transaction replacements.
+  This is different from the remaining configuration option
+  `-walletrbf`. (#16171)
+
 Deprecated or removed RPCs
 --------------------------
 
 - `bumpfee` no longer accepts a `totalFee` option unless the
   configuration parameter `deprecatedrpc=totalFee` is specified.  This
   parameter will be fully removed in a subsequent release. (#15996)
+
+- `generate` is now removed after being deprecated in Bitcoin Core 0.18.
+  Use the `generatetoaddress` RPC instead. (#15492)
 
 P2P changes
 -----------
@@ -196,6 +255,9 @@ RPC
   and `segwit` (the BIP9 deployments that are currently in active
   state). (#16060)
 
+- `getrpcinfo` now returns a `logpath` field with the path to
+  `debug.log`. (#15483)
+
 Tests
 -----
 
@@ -231,6 +293,38 @@ Network
   download requests to outbound peers over inbound peers. This fixes an issue
   where inbound peers could prevent a node from getting a transaction.
   (#14897, #15834)
+
+- If a Tor hidden service is being used, Bitcoin Core will be bound to
+  the standard port 8333 even if a different port is configured for
+  clearnet connections.  This prevents leaking node identity through use
+  of identical non-default port numbers. (#15651)
+
+Mempool and transaction relay
+-----------------------------
+
+- Allows one extra single-ancestor transaction per package.  Previously,
+  if a transaction in the mempool had 25 descendants, or it and all of
+  its descendants were over 101,000 vbytes, any newly-received
+  transaction that was also a descendant would be ignored.  Now, one
+  extra descendant will be allowed provided it is an immediate
+  descendant (child) and the child's size is 10,000 vbytes or less.
+  This makes it possible for two-party contract protocols such as
+  Lightning Network to give each participant an output they can spend
+  immediately for Child-Pays-For-Parent (CPFP) fee bumping without
+  allowing one malicious participant to fill the entire package and thus
+  prevent the other participant from spending their output. (#15681)
+
+- Transactions with outputs paying v1 to v16 witness versions (future
+  segwit versions) are now accepted into the mempool, relayed, and
+  mined.  Attempting to spend those outputs remains forbidden by policy
+  ("non-standard").  When this change has been widely deployed, wallets
+  and services can accept any valid bech32 Bitcoin address without
+  concern that transactions paying future segwit versions will become
+  stuck in an unconfirmed state. (#15846)
+
+- Legacy transactions (transactions with no segwit inputs) must now be
+  sent using the legacy encoding format, enforcing the rule specified in
+  BIP144.  (#14039)
 
 Wallet
 ------
