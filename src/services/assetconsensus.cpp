@@ -207,8 +207,12 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
             }
             mapAssetAllocation->second = std::move(receiverAllocation);             
         }
-        mapAssetAllocation->second.nBalance += mintSyscoin.nValueAsset; 
-        // update supply stats if index enabled
+        mapAssetAllocation->second.nBalance += mintSyscoin.nValueAsset;
+        if (!AssetRange(mapAssetAllocation->second.nBalance))
+        {
+            return FormatSyscoinErrorMessage(state, "new-balance-out-of-range", bMiner);
+        }
+            // update supply stats if index enabled
         if(fAssetSupplyStatsIndex){
             #if __cplusplus > 201402 
             auto result = mapAssetSupplyStats.try_emplace(nAsset,  std::move(emptyAssetSupplyStats));
@@ -233,7 +237,6 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     {
         return FormatSyscoinErrorMessage(state, "mint-amount-out-of-range", bMiner);
     }
-
 
     if(!fJustCheck && !bSanity && !bMiner)     
         return passetallocationdb->WriteMintIndex(tx, txHash, mintSyscoin, nHeight, blockhash);         
@@ -817,7 +820,10 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
                 mapAssetAllocationReceiver->second = std::move(dbAssetAllocationReceiver);               
             } 
             mapAssetAllocationReceiver->second.nBalance += nBurnAmount; 
-
+            if (!AssetRange(mapAssetAllocationReceiver->second.nBalance))
+            {
+                return FormatSyscoinErrorMessage(state, "new-balance-out-of-range", bMiner);
+            }
             // update supply stats if index enabled
             if(fAssetSupplyStatsIndex){
                 #if __cplusplus > 201402 
@@ -928,6 +934,10 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
                 mapAssetAllocationReceiver->second = std::move(dbAssetAllocationReceiver);                  
             } 
             mapAssetAllocationReceiver->second.nBalance += nBurnAmount;
+            if (!AssetRange(mapAssetAllocationReceiver->second.nBalance))
+            {
+                return FormatSyscoinErrorMessage(state, "new-balance-out-of-range", bMiner);
+            }
             // update supply stats if index enabled
             if(fAssetSupplyStatsIndex){
                 #if __cplusplus > 201402 
@@ -985,6 +995,10 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
                 return FormatSyscoinErrorMessage(state, "assetallocation-negative-amount", bMiner);
             }           
         }
+        if (!AssetRange(nTotal))
+        {
+            return FormatSyscoinErrorMessage(state, "amount-out-of-range", bMiner);
+        }
         mapBalanceSenderCopy -= nTotal;
         if (mapBalanceSenderCopy < 0) {
             bool bNewConfict = false;
@@ -1029,6 +1043,10 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
                     mapBalanceReceiver->second = receiverAllocation.nBalance;
                 }
                 mapBalanceReceiver->second += amountTuple.second;
+                if (!AssetRange(mapBalanceReceiverBlock->second.nBalance))
+                {
+                    return FormatSyscoinErrorMessage(state, "new-balance-out-of-range", bMiner);
+                }
             }  
             else{     
                 #if __cplusplus > 201402 
@@ -1048,6 +1066,10 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
                     mapBalanceReceiverBlock->second = std::move(receiverAllocation);  
                 }
                 mapBalanceReceiverBlock->second.nBalance += amountTuple.second;
+                if (!AssetRange(mapBalanceReceiverBlock->second.nBalance))
+                {
+                    return FormatSyscoinErrorMessage(state, "new-balance-out-of-range", bMiner);
+                }
             }
         }   
     }
@@ -1475,7 +1497,10 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, CValidation
         // increase total supply
         storedSenderAssetRef.nTotalSupply += theAsset.nBalance;
         storedSenderAssetRef.nBalance += theAsset.nBalance;
-
+        if (!AssetRange(theAsset.nBalance, storedSenderAssetRef.nPrecision))
+        {
+            return FormatSyscoinErrorMessage(state, "amount-out-of-range", bMiner);
+        }
         if (!AssetRange(storedSenderAssetRef.nTotalSupply, storedSenderAssetRef.nPrecision))
         {
             return FormatSyscoinErrorMessage(state, "asset-amount-out-of-range", bMiner);
@@ -1526,6 +1551,10 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, CValidation
                 return FormatSyscoinErrorMessage(state, "asset-invalid-amount", bMiner);
             }
         }
+        if (!AssetRange(nTotal))
+        {
+            return FormatSyscoinErrorMessage(state, "amount-out-of-range", bMiner);
+        }
         if (storedSenderAssetRef.nBalance < nTotal) {
             return FormatSyscoinErrorMessage(state, "asset-insufficient-balance", bMiner);
         }
@@ -1553,7 +1582,10 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, CValidation
                 }
 				// adjust receiver balance
                 mapAssetAllocation->second.nBalance += amountTuple.second;
-                                        
+                if (!AssetRange(mapAssetAllocation->second.nBalance))
+                {
+                    return FormatSyscoinErrorMessage(state, "new-balance-out-of-range", bMiner);
+                }                                       
                 // adjust sender balance
                 storedSenderAssetRef.nBalance -= amountTuple.second;                              
             }
