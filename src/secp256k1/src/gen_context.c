@@ -8,6 +8,7 @@
 
 #include "basic-config.h"
 #include "include/secp256k1.h"
+#include "util.h"
 #include "field_impl.h"
 #include "scalar_impl.h"
 #include "group_impl.h"
@@ -26,6 +27,7 @@ static const secp256k1_callback default_error_callback = {
 
 int main(int argc, char **argv) {
     secp256k1_ecmult_gen_context ctx;
+    void *prealloc, *base;
     int inner;
     int outer;
     FILE* fp;
@@ -38,15 +40,17 @@ int main(int argc, char **argv) {
         fprintf(stderr, "Could not open src/ecmult_static_context.h for writing!\n");
         return -1;
     }
-    
+
     fprintf(fp, "#ifndef _SECP256K1_ECMULT_STATIC_CONTEXT_\n");
     fprintf(fp, "#define _SECP256K1_ECMULT_STATIC_CONTEXT_\n");
     fprintf(fp, "#include \"src/group.h\"\n");
     fprintf(fp, "#define SC SECP256K1_GE_STORAGE_CONST\n");
     fprintf(fp, "static const secp256k1_ge_storage secp256k1_ecmult_static_context[64][16] = {\n");
 
+    base = checked_malloc(&default_error_callback, SECP256K1_ECMULT_GEN_CONTEXT_PREALLOCATED_SIZE);
+    prealloc = base;
     secp256k1_ecmult_gen_context_init(&ctx);
-    secp256k1_ecmult_gen_context_build(&ctx, &default_error_callback);
+    secp256k1_ecmult_gen_context_build(&ctx, &prealloc);
     for(outer = 0; outer != 64; outer++) {
         fprintf(fp,"{\n");
         for(inner = 0; inner != 16; inner++) {
@@ -65,10 +69,11 @@ int main(int argc, char **argv) {
     }
     fprintf(fp,"};\n");
     secp256k1_ecmult_gen_context_clear(&ctx);
-    
+    free(base);
+
     fprintf(fp, "#undef SC\n");
     fprintf(fp, "#endif\n");
     fclose(fp);
-    
+
     return 0;
 }
