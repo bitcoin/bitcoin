@@ -11,6 +11,7 @@
 #include "base58.h"
 #include "netbase.h"
 #include "messagesigner.h"
+#include "policy/policy.h"
 #include "keystore.h"
 #include "spork.h"
 
@@ -65,8 +66,6 @@ static std::vector<COutPoint> SelectUTXOs(SimpleUTXOMap& utoxs, CAmount amount, 
 
 static void FundTransaction(CMutableTransaction& tx, SimpleUTXOMap& utoxs, const CScript& scriptPayout, CAmount amount, const CKey& coinbaseKey)
 {
-    CScript scriptPubKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
-
     CAmount change;
     auto inputs = SelectUTXOs(utoxs, amount, change);
     for (size_t i = 0; i < inputs.size(); i++) {
@@ -183,6 +182,22 @@ static CMutableTransaction CreateProUpRevTx(SimpleUTXOMap& utxos, const uint256&
     return tx;
 }
 
+template<typename ProTx>
+static CMutableTransaction MalleateProTxPayout(const CMutableTransaction& tx)
+{
+    ProTx proTx;
+    GetTxPayload(tx, proTx);
+
+    CKey key;
+    key.MakeNewKey(false);
+    proTx.scriptPayout = GetScriptForDestination(key.GetPubKey().GetID());
+
+    CMutableTransaction tx2 = tx;
+    SetTxPayload(tx2, proTx);
+
+    return tx2;
+}
+
 static CScript GenerateRandomAddress()
 {
     CKey key;
@@ -206,6 +221,21 @@ static CDeterministicMNCPtr FindPayoutDmn(const CBlock& block)
         }
     }
     return nullptr;
+}
+
+static bool CheckTransactionSignature(const CMutableTransaction& tx)
+{
+    for (unsigned int i = 0; i < tx.vin.size(); i++) {
+        const auto& txin = tx.vin[i];
+        CTransactionRef txFrom;
+        uint256 hashBlock;
+        BOOST_ASSERT(GetTransaction(txin.prevout.hash, txFrom, Params().GetConsensus(), hashBlock));
+
+        if (!VerifyScript(txin.scriptSig, txFrom->vout[txin.prevout.n].scriptPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&tx, i))) {
+            return false;
+        }
+    }
+    return true;
 }
 
 BOOST_AUTO_TEST_SUITE(evo_dip3_activation_tests)
@@ -268,6 +298,20 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
         dmnHashes.emplace_back(tx.GetHash());
         ownerKeys.emplace(tx.GetHash(), ownerKey);
         operatorKeys.emplace(tx.GetHash(), operatorKey);
+
+        // also verify that payloads are not malleable after they have been signed
+        // the form of ProRegTx we use here is one with a collateral included, so there is no signature inside the
+        // payload itself. This means, we need to rely on script verification, which takes the hash of the extra payload
+        // into account
+        auto tx2 = MalleateProTxPayout<CProRegTx>(tx);
+        CValidationState dummyState;
+        // Technically, the payload is still valid...
+        BOOST_ASSERT(CheckProRegTx(tx, chainActive.Tip(), dummyState));
+        BOOST_ASSERT(CheckProRegTx(tx2, chainActive.Tip(), dummyState));
+        // But the signature should not verify anymore
+        BOOST_ASSERT(CheckTransactionSignature(tx));
+        BOOST_ASSERT(!CheckTransactionSignature(tx2));
+
         CreateAndProcessBlock({tx}, coinbaseKey);
         deterministicMNManager->UpdatedBlockTip(chainActive.Tip());
 
@@ -362,6 +406,14 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     newOperatorKey.MakeNewKey();
     dmn = deterministicMNManager->GetListAtChainTip().GetMN(dmnHashes[0]);
     tx = CreateProUpRegTx(utxos, dmnHashes[0], ownerKeys[dmnHashes[0]], newOperatorKey.GetPublicKey(), ownerKeys[dmnHashes[0]].GetPubKey().GetID(), dmn->pdmnState->scriptPayout, coinbaseKey);
+    // check malleability protection again, but this time by also relying on the signature inside the ProUpRegTx
+    auto tx2 = MalleateProTxPayout<CProUpRegTx>(tx);
+    CValidationState dummyState;
+    BOOST_ASSERT(CheckProUpRegTx(tx, chainActive.Tip(), dummyState));
+    BOOST_ASSERT(!CheckProUpRegTx(tx2, chainActive.Tip(), dummyState));
+    BOOST_ASSERT(CheckTransactionSignature(tx));
+    BOOST_ASSERT(!CheckTransactionSignature(tx2));
+    // now process the block
     CreateAndProcessBlock({tx}, coinbaseKey);
     deterministicMNManager->UpdatedBlockTip(chainActive.Tip());
     BOOST_ASSERT(chainActive.Height() == nHeight + 1);
