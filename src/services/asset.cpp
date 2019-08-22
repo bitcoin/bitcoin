@@ -12,6 +12,7 @@
 #endif
 #include <services/rpc/assetrpc.h>
 #include <rpc/server.h>
+#include <chainparams.h>
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
 extern UniValue ValueFromAmount(const CAmount& amount);
@@ -548,7 +549,8 @@ bool BuildAssetJson(const CAsset& asset,UniValue& oAsset)
         passetsupplystatsdb->ReadStats(asset.nAsset, dbAssetSupplyStats);    
     } 
     oAsset.__pushKV("total_supply_bridge", ValueFromAssetAmount(dbAssetSupplyStats.nBalanceBridge, asset.nPrecision));
-    oAsset.__pushKV("total_supply_spt", ValueFromAssetAmount(dbAssetSupplyStats.nBalanceSPT, asset.nPrecision));
+    if(asset.nAsset == Params().GetConsensus().nSYSXAsset)
+        oAsset.__pushKV("total_supply_spt", ValueFromAssetAmount(dbAssetSupplyStats.nBalanceSPT, asset.nPrecision));
 	return true;
 }
 bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
