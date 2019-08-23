@@ -36,6 +36,9 @@ extern CCriticalSection cs_main;
 /** Fake height value used in Coin to signify they are only in the memory pool (since 0.8) */
 static const uint32_t MEMPOOL_HEIGHT = 0x7FFFFFFF;
 
+// Default minimum age for a txn to be rebroadcast in seconds - 30 min
+static const std::chrono::seconds REBROADCAST_MIN_TX_AGE = std::chrono::seconds{30 * 60};
+
 // we rebroadcast 3/4 of max block weight to reduce noise due to circumstances
 // such as miners mining priority txns
 static const unsigned int MAX_REBROADCAST_WEIGHT = 0.75 * MAX_BLOCK_WEIGHT;
