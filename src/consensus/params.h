@@ -20,6 +20,13 @@ enum DeploymentPos
     MAX_VERSION_BITS_DEPLOYMENTS
 };
 
+enum BuriedDeployments
+{
+    BURIED_CSV,
+    BURIED_SEGWIT,
+    NUM_BURIED_DEPLOYMENTS
+};
+
 /**
  * Struct for each individual consensus rule change using BIP9.
  */
@@ -41,6 +48,11 @@ struct BIP9Deployment {
     static constexpr int64_t ALWAYS_ACTIVE = -1;
 };
 
+struct BuriedBIP9 {
+    int bit;
+    int height;
+};
+
 /**
  * Parameters that influence chain consensus.
  */
@@ -56,12 +68,6 @@ struct Params {
     int BIP65Height;
     /** Block height at which BIP66 becomes active */
     int BIP66Height;
-    /** Block height at which CSV (BIP68, BIP112 and BIP113) becomes active */
-    int CSVHeight;
-    /** Block height at which Segwit (BIP141, BIP143 and BIP147) becomes active.
-     * Note that segwit v0 script rules are enforced on all blocks except the
-     * BIP 16 exception blocks. */
-    int SegwitHeight;
     /**
      * Minimum blocks including miner confirmation of the total of 2016 blocks in a retargeting period,
      * (nPowTargetTimespan / nPowTargetSpacing) which is also used for BIP9 deployments.
@@ -70,6 +76,7 @@ struct Params {
     uint32_t nRuleChangeActivationThreshold;
     uint32_t nMinerConfirmationWindow;
     BIP9Deployment vDeployments[MAX_VERSION_BITS_DEPLOYMENTS];
+    BuriedBIP9 buried_deployments[NUM_BURIED_DEPLOYMENTS];
     /** Proof of work parameters */
     uint256 powLimit;
     bool fPowAllowMinDifficultyBlocks;
