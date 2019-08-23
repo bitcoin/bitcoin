@@ -1500,7 +1500,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, CValidation
         {
             return FormatSyscoinErrorMessage(state, "amount-out-of-range", bMiner);
         }
-        if (!AssetRange(storedSenderAssetRef.nTotalSupply, storedSenderAssetRef.nPrecision))
+        if (storedSenderAssetRef.nTotalSupply > 0 && !AssetRange(storedSenderAssetRef.nTotalSupply, storedSenderAssetRef.nPrecision))
         {
             return FormatSyscoinErrorMessage(state, "asset-amount-out-of-range", bMiner);
         }
