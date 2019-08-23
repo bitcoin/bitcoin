@@ -140,7 +140,7 @@ public:
         consensus.nLegacyBlocksBefore = 1;
         consensus.nSYSXAsset = 101010;
         consensus.vchSYSXBurnMethodSignature = ParseHex("5f959b69");
-        consensus.vchSYSXERC20Manager = ParseHex("948f19eb4Bd8F09A0C7C342223c9Ac0A4c2f7C3a");
+        consensus.vchSYSXERC20Manager = ParseHex("9afFaffFF00b3285E1a3337122Bd2dF2c4c9D62d");
         consensus.nBridgeStartBlock = 125000;
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -249,9 +249,9 @@ public:
         consensus.nAuxpowChainId = 0x1000;
         consensus.fStrictChainId = false;
         consensus.nLegacyBlocksBefore = 1;
-        consensus.nSYSXAsset = 505115838;
+        consensus.nSYSXAsset = 1032484279;
         consensus.vchSYSXBurnMethodSignature = ParseHex("5f959b69");
-        consensus.vchSYSXERC20Manager = ParseHex("948f19eb4Bd8F09A0C7C342223c9Ac0A4c2f7C3a");
+        consensus.vchSYSXERC20Manager = ParseHex("9afFaffFF00b3285E1a3337122Bd2dF2c4c9D62d");
         consensus.nBridgeStartBlock = 1000;
         pchMessageStart[0] = 0xce;
         pchMessageStart[1] = 0xe2;
@@ -262,13 +262,13 @@ public:
         m_assumed_blockchain_size = 30;
         m_assumed_chain_state_size = 2;
 
-        genesis = CreateGenesisBlock(1565988172, 127709, 0x1e0fffff, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1566533452, 102994, 0x1e0fffff, 1, 50 * COIN);
         
-        /* uint256 hash;
+        /*uint256 hash;
         CBlockHeader genesisHeader = genesis.GetBlockHeader();
         GenerateGenesisBlock(genesisHeader, hash); */
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x000003de2b96e05b31f4f9e885a30ba68c7858e5e973fa6f7a0d602c9fd800e5"));
+        assert(consensus.hashGenesisBlock == uint256S("0x00000bc2aa4429e2ac21bb35e7158e73af6947e06ad6c2380d3881c1f3879e08"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
 
         vFixedSeeds.clear();
@@ -357,7 +357,7 @@ public:
         consensus.nLegacyBlocksBefore = 0;
         consensus.nSYSXAsset = 0;
         consensus.vchSYSXBurnMethodSignature = ParseHex("5f959b69");
-        consensus.vchSYSXERC20Manager = ParseHex("948f19eb4Bd8F09A0C7C342223c9Ac0A4c2f7C3a");
+        consensus.vchSYSXERC20Manager = ParseHex("9afFaffFF00b3285E1a3337122Bd2dF2c4c9D62d");
         consensus.nBridgeStartBlock = 100;
         pchMessageStart[0] = 0xfa;
         pchMessageStart[1] = 0xbf;

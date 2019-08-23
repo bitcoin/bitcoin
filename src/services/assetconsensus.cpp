@@ -1369,11 +1369,11 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, CValidation
             {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-symbol", bMiner);
             }
-            if (!AssetRange(theAsset.nMaxSupply, theAsset.nPrecision))
+            if (theAsset.nMaxSupply < 0 || (theAsset.nMaxSupply > 0 && !AssetRange(theAsset.nMaxSupply, theAsset.nPrecision)))
             {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-maxsupply", bMiner);
             }
-            if (theAsset.nBalance > theAsset.nMaxSupply)
+            if (theAsset.nBalance < 0 || theAsset.nBalance > theAsset.nMaxSupply)
             {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-totalsupply", bMiner);
             }
