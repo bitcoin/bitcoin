@@ -79,6 +79,9 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
     }
 
     if (relay) {
+        // the mempool explicitly keeps track of locally submitted txns to ensure successful initial broadcast
+        mempool.m_unbroadcast_txids.insert(hashTx);
+
         RelayTransaction(hashTx, *node.connman);
     }
 

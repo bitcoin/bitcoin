@@ -1564,6 +1564,11 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
             if (mi != mapRelay.end()) {
                 connman->PushMessage(pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *mi->second));
                 push = true;
+                // Once the first peer requests GETDATA for a txn, we deem initial broadcast a success
+                auto num = mempool.m_unbroadcast_txids.erase(inv.hash);
+                if (num) {
+                    LogPrint(BCLog::NET, "Removed %i from m_unbroadcast_txids \n", inv.hash.GetHex());
+                }
             } else {
                 auto txinfo = mempool.info(inv.hash);
                 // To protect privacy, do not answer getdata using the mempool when
@@ -3810,6 +3815,10 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                         // add rebroadcast txns
                         pto->m_tx_relay->setInventoryTxToSend.insert(rebroadcastTxs.begin(), rebroadcastTxs.end());
 
+                        // also include wallet txns that haven't been successfully broadcast yet
+                        LogPrint(BCLog::NET, "Force initial broadcast of %lu transactions \n", mempool.m_unbroadcast_txids.size());
+                        // since set elements are unique, this will be a no-op if the txns are already in setInventoryTxToSend
+                        pto->m_tx_relay->setInventoryTxToSend.insert(mempool.m_unbroadcast_txids.begin(), mempool.m_unbroadcast_txids.end());
                     }
                 }
 

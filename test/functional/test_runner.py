@@ -138,6 +138,7 @@ BASE_SCRIPTS = [
     'rpc_psbt.py',
     'rpc_users.py',
     'rpc_whitelist.py',
+    'mempool_local_transactions.py',
     'feature_proxy.py',
     'rpc_signrawtransaction.py',
     'wallet_groups.py',
