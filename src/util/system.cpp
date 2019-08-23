@@ -1189,10 +1189,12 @@ std::string CopyrightHolders(const std::string& strPrefix)
     const auto copyright_devs = strprintf(_(COPYRIGHT_HOLDERS).translated, COPYRIGHT_HOLDERS_SUBSTITUTION);
     std::string strCopyrightHolders = strPrefix + copyright_devs;
 
-    // Make sure BitGreen Core copyright is not removed by accident
-    if (copyright_devs.find("BitGreen Core") == std::string::npos) {
-        strCopyrightHolders += "\n" + strPrefix + "The BitGreen Core developers";
-    }
+    // Add Dash copyright
+    strCopyrightHolders += "\n" + strPrefix + "The Dash Core developers";
+
+    // Add Bitcoin Core copyright
+    strCopyrightHolders += "\n" + strPrefix + "The Bitcoin Core developers";
+
     return strCopyrightHolders;
 }
 
