@@ -15,6 +15,7 @@
 
 #include <amount.h>
 #include <coins.h>
+#include <consensus/consensus.h>
 #include <crypto/siphash.h>
 #include <indirectmap.h>
 #include <optional.h>
@@ -34,6 +35,10 @@ extern CCriticalSection cs_main;
 
 /** Fake height value used in Coin to signify they are only in the memory pool (since 0.8) */
 static const uint32_t MEMPOOL_HEIGHT = 0x7FFFFFFF;
+
+// we rebroadcast 3/4 of max block weight to reduce noise due to circumstances
+// such as miners mining priority txns
+static const unsigned int MAX_REBROADCAST_WEIGHT = 0.75 * MAX_BLOCK_WEIGHT;
 
 struct LockPoints
 {
@@ -614,6 +619,11 @@ public:
      *  that any in-mempool descendants have their ancestor state updated.
      */
     void RemoveStaged(setEntries& stage, bool updateDescendants, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    /** Use CreateNewBlock with specific rebroadcast parameters to identify a set
+     * of transaction candidates & populate them in rebroadcastTxs.
+     */
+    void GetRebroadcastTransactions(std::vector<uint256>& rebroadcastTxs);
 
     /** When adding transactions from a disconnected block back to the mempool,
      *  new mempool entries may have children in the mempool (which is generally

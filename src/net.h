@@ -823,6 +823,9 @@ public:
     // Used for headers announcements - unfiltered blocks to relay
     std::vector<uint256> vBlockHashesToAnnounce GUARDED_BY(cs_inventory);
 
+    // Used for scheduling rebroadcasts
+    std::chrono::microseconds m_next_rebroadcast{0};
+
     // Block and TXN accept times
     std::atomic<int64_t> nLastBlockTime{0};
     std::atomic<int64_t> nLastTXTime{0};
