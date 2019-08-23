@@ -108,6 +108,7 @@ BASE_SCRIPTS = [
     'p2p_feefilter.py',
     'feature_reindex.py',
     'feature_abortnode.py',
+    'mempool_rebroadcast.py',
     # vv Tests less than 30s vv
     'wallet_keypool_topup.py',
     'feature_fee_estimation.py',

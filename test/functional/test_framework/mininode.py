@@ -606,3 +606,19 @@ class P2PDataStore(P2PInterface):
                 # Check that none of the txs are now in the mempool
                 for tx in txs:
                     assert tx.hash not in raw_mempool, "{} tx found in mempool".format(tx.hash)
+
+class P2PTxInvStore(P2PInterface):
+    def __init__(self):
+        super().__init__()
+        self.tx_invs_received = defaultdict(int)
+
+    def on_inv(self, message):
+        # Store how many times invs have been received for each tx.
+        for i in message.inv:
+            if i.type == 1:
+                # save txid
+                self.tx_invs_received[i.hash] += 1
+
+    def get_invs(self):
+        with mininode_lock:
+            return list(self.tx_invs_received.keys())
