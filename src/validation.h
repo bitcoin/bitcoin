@@ -733,6 +733,33 @@ private:
     void EraseBlockData(CBlockIndex* index) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 };
 
+/**
+ * Information about a peer's available blocks, for the purpose of figuring out
+ * what block(s) we may want to download from them.
+ */
+struct BlockProviderState {
+private:
+    //! The last full block we both have.
+    const CBlockIndex *m_last_common_block;
+public:
+    //! The best known block we know this peer has announced.
+    const CBlockIndex *m_best_known_block;
+
+    BlockProviderState() : m_last_common_block(nullptr), m_best_known_block(nullptr) {}
+
+    int GetLastCommonHeight() const {
+        return m_last_common_block ? m_last_common_block->nHeight : -1;
+    }
+
+    /** Update last common height/block and add not-in-flight missing successors to vBlocks, until it has
+     *  at most count entries.
+     *  Before being added to vBlocks, is_block_in_flight is called, and if it returns true, the block is
+     *  not added. Note that it is guaranteed to be called in the same order as the blocks appear in the
+     *  chain, ie the first call is the next block which is expected to be connected.
+     */
+    void FindNextBlocksToDownload(bool provider_has_witness, unsigned int count, std::vector<const CBlockIndex*>& vBlocks, const Consensus::Params& consensusParams, const std::function<bool (const uint256& block_hash)>& is_block_in_flight) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+};
+
 /** Mark a block as precious and reorganize.
  *
  * May not be called in a
