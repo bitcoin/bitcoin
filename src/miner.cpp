@@ -57,7 +57,8 @@ BlockAssembler::Options::Options() {
 }
 
 BlockAssembler::BlockAssembler(CChainState& chainstate, const CTxMemPool& mempool, const CChainParams& params, const Options& options)
-    : chainparams(params),
+    : m_skip_inclusion_until(options.m_skip_inclusion_until),
+      chainparams(params),
       m_mempool(mempool),
       m_chainstate(chainstate)
 {
@@ -280,9 +281,13 @@ int BlockAssembler::UpdatePackagesForAdded(const CTxMemPool::setEntries& already
 // guaranteed to fail again, but as a belt-and-suspenders check we put it in
 // failedTx and avoid re-evaluation, since the re-evaluation would be using
 // cached size/sigops/fee values that are not actually correct.
+// Finally, we have a check for transaction recency. The default case will not
+// skip any transactions for being too recent. This filter is used for
+// identifying transactions to rebroadcast.
 bool BlockAssembler::SkipMapTxEntry(CTxMemPool::txiter it, indexed_modified_transaction_set &mapModifiedTx, CTxMemPool::setEntries &failedTx)
 {
     assert(it != m_mempool.mapTx.end());
+    if (it->GetTime() > m_skip_inclusion_until) return true; // transaction is too recent
     return mapModifiedTx.count(it) || inBlock.count(it) || failedTx.count(it);
 }
 

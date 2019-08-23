@@ -8,10 +8,14 @@
 #include <node/blockstorage.h>
 #include <script/script.h>
 #include <txrebroadcast.h>
+#include <util/time.h>
 
 /** We rebroadcast upto 3/4 of max block weight to reduce noise due to
  * circumstances such as miners mining priority transactions. */
 static constexpr float REBROADCAST_WEIGHT_RATIO{0.75};
+
+/** Default minimum age for a transaction to be rebroadcast */
+static constexpr std::chrono::minutes REBROADCAST_MIN_TX_AGE{30min};
 
 std::vector<TxIds> TxRebroadcastHandler::GetRebroadcastTransactions(const std::shared_ptr<const CBlock>& recent_block, const CBlockIndex& recent_block_index)
 {
@@ -34,6 +38,7 @@ std::vector<TxIds> TxRebroadcastHandler::GetRebroadcastTransactions(const std::s
 
     BlockAssembler::Options options;
     options.nBlockMaxWeight = rebroadcast_block_weight;
+    options.m_skip_inclusion_until = GetTime<std::chrono::microseconds>() - REBROADCAST_MIN_TX_AGE;
 
     // Use CreateNewBlock to identify rebroadcast candidates
     std::vector<TxIds> rebroadcast_txs;
