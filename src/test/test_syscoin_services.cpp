@@ -40,13 +40,21 @@ void InitNodeURLMap() {
 	mapNodes["node1"] = "http://127.0.0.1:28379";
 	mapNodes["node2"] = "http://127.0.0.1:38379";
 	mapNodes["node3"] = "http://127.0.0.1:48379";
-
+	mapNodes["./test/node1"] = "http://127.0.0.1:28379";
+	mapNodes["./test/node2"] = "http://127.0.0.1:38379";
+	mapNodes["./test/node3"] = "http://127.0.0.1:48379";
 }
 // lookup the URL based on node passed in
 string LookupURL(const string& node) {
 	if (mapNodes.find(node) != mapNodes.end())
 		return mapNodes[node];
 	return "";
+}
+string LookupURLLocal(const string& node) {
+	if(node.find("./test/") == string::npos)
+		return "./test/" + node;
+	else 
+		return node;
 }
 void SetupSYSXAsset(){
 	/*
@@ -78,12 +86,12 @@ void StartNodes()
 	tfm::format(std::cout,"Stopping any test nodes that are running...\n");
 	InitNodeURLMap();
 	StopNodes();
-    if (boost::filesystem::exists(boost::filesystem::system_complete("node1/regtest")))
-        boost::filesystem::remove_all(boost::filesystem::system_complete("node1/regtest")); 
-    if (boost::filesystem::exists(boost::filesystem::system_complete("node2/regtest")))
-        boost::filesystem::remove_all(boost::filesystem::system_complete("node2/regtest"));  
-    if (boost::filesystem::exists(boost::filesystem::system_complete("node3/regtest")))
-        boost::filesystem::remove_all(boost::filesystem::system_complete("node3/regtest"));                     
+    if (boost::filesystem::exists(boost::filesystem::system_complete("test/node1/regtest")))
+        boost::filesystem::remove_all(boost::filesystem::system_complete("test/node1/regtest")); 
+    if (boost::filesystem::exists(boost::filesystem::system_complete("test/node2/regtest")))
+        boost::filesystem::remove_all(boost::filesystem::system_complete("test/node2/regtest"));  
+    if (boost::filesystem::exists(boost::filesystem::system_complete("test/node3/regtest")))
+        boost::filesystem::remove_all(boost::filesystem::system_complete("test/node3/regtest"));                     
 	node1LastBlock = 0;
 	node2LastBlock = 0;
 	node3LastBlock = 0;
@@ -116,9 +124,10 @@ void StopNodes()
 	StopNode("node3");
 	tfm::format(std::cout,"Done!\n");
 }
-void StartNode(const string &dataDir, bool regTest, const string& extraArgs, bool reindex)
+void StartNode(const string &dataDirIn, bool regTest, const string& extraArgs, bool reindex)
 {
-	boost::filesystem::path fpath = boost::filesystem::system_complete("../syscoind");
+	string dataDir = LookupURLLocal(dataDirIn); 
+	boost::filesystem::path fpath = boost::filesystem::system_complete("./syscoind");
 	string nodePath = fpath.string() + string(" -unittest -tpstest -assetindex -assetsupplystatsindex -daemon -server -debug=0 -datadir=") + dataDir;
 	if (regTest)
 		nodePath += string(" -regtest");
@@ -138,7 +147,7 @@ void StartNode(const string &dataDir, bool regTest, const string& extraArgs, boo
 		try {
 			tfm::format(std::cout,"Calling getblockchaininfo!\n");
 			r = CallRPC(dataDir, "getblockchaininfo", regTest);
-			if (dataDir == "node1")
+			if (dataDir == "./test/node1")
 			{
 				if (node1LastBlock > find_value(r.get_obj(), "blocks").get_int())
 				{
@@ -149,7 +158,7 @@ void StartNode(const string &dataDir, bool regTest, const string& extraArgs, boo
 				node1Online = true;
 				node1LastBlock = 0;
 			}
-			else if (dataDir == "node2")
+			else if (dataDir == "./test/node2")
 			{
 				if (node2LastBlock > find_value(r.get_obj(), "blocks").get_int())
 				{
@@ -160,7 +169,7 @@ void StartNode(const string &dataDir, bool regTest, const string& extraArgs, boo
 				node2Online = true;
 				node2LastBlock = 0;
 			}
-			else if (dataDir == "node3")
+			else if (dataDir == "./test/node3")
 			{
 				if (node3LastBlock > find_value(r.get_obj(), "blocks").get_int())
 				{
@@ -184,18 +193,19 @@ void StartNode(const string &dataDir, bool regTest, const string& extraArgs, boo
 	tfm::format(std::cout,"Done!\n");
 }
 
-void StopNode(const string &dataDir, bool regtest) {
+void StopNode(const string &dataDirIn, bool regtest) {
+	string dataDir = LookupURLLocal(dataDirIn); 
 	tfm::format(std::cout,"Stopping %s..\n", dataDir.c_str());
 	UniValue r;
 	try {
 		r = CallRPC(dataDir, "getblockchaininfo", regtest);
 		if (r.isObject())
 		{
-			if (dataDir == "node1")
+			if (dataDir == "./test/node1")
 				node1LastBlock = find_value(r.get_obj(), "blocks").get_int();
-			else if (dataDir == "node2")
+			else if (dataDir == "./test/node2")
 				node2LastBlock = find_value(r.get_obj(), "blocks").get_int();
-			else if (dataDir == "node3")
+			else if (dataDir == "./test/node3")
 				node3LastBlock = find_value(r.get_obj(), "blocks").get_int();
 		}
 	}
@@ -220,11 +230,11 @@ void StopNode(const string &dataDir, bool regtest) {
 		}
 	}
 	try {
-		if (dataDir == "node1")
+		if (dataDir == "./test/node1")
 			node1Online = false;
-		else if (dataDir == "node2")
+		else if (dataDir == "./test/node2")
 			node2Online = false;
-		else if (dataDir == "node3")
+		else if (dataDir == "./test/node3")
 			node3Online = false;
 	}
 	catch (const runtime_error& error)
@@ -255,10 +265,11 @@ UniValue CallExtRPC(const string &node, const string& command, const string& arg
 	}
 	return find_value(val.get_obj(), "result");
 }
-UniValue CallRPC(const string &dataDir, const string& commandWithArgs, bool regTest, bool readJson)
+UniValue CallRPC(const string &dataDirIn, const string& commandWithArgs, bool regTest, bool readJson)
 {
+	string dataDir = LookupURLLocal(dataDirIn);
 	UniValue val;
-	boost::filesystem::path fpath = boost::filesystem::system_complete("../syscoin-cli");
+	boost::filesystem::path fpath = boost::filesystem::system_complete("./syscoin-cli");
 	string path = fpath.string() + string(" -datadir=") + dataDir;
 	if (regTest)
 		path += string(" -regtest ");
@@ -479,20 +490,21 @@ bool AreTwoTransactionsLinked(const string &node, const string& inputTxid, const
 	}
 	return false;
 }
-string GetNewFundedAddress(const string &node, bool bRegtest) {
+string GetNewFundedAddress(const string &nodeIn, bool bRegtest) {
 	UniValue r;
+	string node = LookupURLLocal(nodeIn); 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getnewaddress", bRegtest, false));
 	string newaddress = r.get_str();
 	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
 	string sendnode = "";
-	if (node == "node1")
-		sendnode = "node2";
-	else if (node == "node2")
-		sendnode = "node3";
-	else if (node == "node3")
-		sendnode = "node2";
-	else if(node == "mainnet1")
-		sendnode = "mainnet1";
+	if (node == "./test/node1")
+		sendnode = "./test/node2";
+	else if (node == "./test/node2")
+		sendnode = "./test/node3";
+	else if (node == "./test/node3")
+		sendnode = "./test/node2";
+	else if(node == "./test/mainnet1")
+		sendnode = "./test/mainnet1";
     CallRPC(bRegtest? sendnode: node, "sendtoaddress " + newaddress + " 10", bRegtest, false);
 	if(bRegtest)
 		GenerateBlocks(1, sendnode, bRegtest);
@@ -502,17 +514,18 @@ string GetNewFundedAddress(const string &node, bool bRegtest) {
     BOOST_CHECK_EQUAL(nAmount, 10*COIN);
 	return newaddress;
 }
-string GetNewFundedAddress(const string &node, string& txid) {
+string GetNewFundedAddress(const string &nodeIn, string& txid) {
     UniValue r;
+	string node = LookupURLLocal(nodeIn); 
     BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "getnewaddress"));
     string newaddress = r.get_str();
     string sendnode = "";
-    if (node == "node1")
-        sendnode = "node2";
-    else if (node == "node2")
-        sendnode = "node3";
-    else if (node == "node3")
-        sendnode = "node2";
+    if (node == "./test/node1")
+        sendnode = "./test/node2";
+    else if (node == "./test/node2")
+        sendnode = "./test/node3";
+    else if (node == "./test/node3")
+        sendnode = "./test/node2";
     r = CallExtRPC(sendnode, "sendtoaddress", "\"" + newaddress + "\",\"5\"");
     r = CallExtRPC(sendnode, "sendtoaddress", "\"" + newaddress + "\",\"5\"");
     r = CallExtRPC(sendnode, "sendtoaddress", "\"" + newaddress + "\",\"5\"");
@@ -609,30 +622,31 @@ void SetSysMocktime(const int64_t& expiryTime) {
 	{
 	}
 }
-void GetOtherNodes(const string& node, string& otherNode1, string& otherNode2)
+void GetOtherNodes(const string& nodeIn, string& otherNode1, string& otherNode2)
 {
+	string node = LookupURLLocal(nodeIn); 
 	otherNode1 = "";
 	otherNode2 = "";
-	if (node == "node1")
+	if (node == "./test/node1")
 	{
 		if (node2Online)
-			otherNode1 = "node2";
+			otherNode1 = "./test/node2";
 		if (node3Online)
-			otherNode2 = "node3";
+			otherNode2 = "./test/node3";
 	}
-	else if (node == "node2")
+	else if (node == "./test/node2")
 	{
 		if (node1Online)
-			otherNode1 = "node1";
+			otherNode1 = "./test/node1";
 		if (node3Online)
-			otherNode2 = "node3";
+			otherNode2 = "./test/node3";
 	}
-	else if (node == "node3")
+	else if (node == "./test/node3")
 	{
 		if (node1Online)
-			otherNode1 = "node1";
+			otherNode1 = "./test/node1";
 		if (node2Online)
-			otherNode2 = "node2";
+			otherNode2 = "./test/node2";
 	}
 }
 
@@ -1246,12 +1260,6 @@ BasicSyscoinTestingSetup::BasicSyscoinTestingSetup()
 {
 }
 BasicSyscoinTestingSetup::~BasicSyscoinTestingSetup()
-{
-}
-SyscoinTestingSetup::SyscoinTestingSetup()
-{
-}
-SyscoinTestingSetup::~SyscoinTestingSetup()
 {
 }
 SyscoinMainNetSetup::SyscoinMainNetSetup()
