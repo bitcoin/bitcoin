@@ -2677,6 +2677,8 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
         std::sort(vCoins.begin(), vCoins.end(), less_then_denom);
     }
 
+    int nMaxChainLength = std::min(gArgs.GetArg("-limitancestorcount", DEFAULT_ANCESTOR_LIMIT), gArgs.GetArg("-limitdescendantcount", DEFAULT_DESCENDANT_LIMIT));
+
     // try to find nondenom first to prevent unneeded spending of mixed coins
     for (unsigned int tryDenom = tryDenomStart; tryDenom < 2; tryDenom++)
     {
@@ -2690,11 +2692,13 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
 
             const CWalletTx *pcoin = output.tx;
 
+            bool fLockedByIS = pcoin->IsLockedByInstantSend();
+
 //            if (fDebug) LogPrint("selectcoins", "value %s confirms %d\n", FormatMoney(pcoin->vout[output.i].nValue), output.nDepth);
-            if (output.nDepth < (pcoin->IsFromMe(ISMINE_ALL) ? nConfMine : nConfTheirs))
+            if (output.nDepth < (pcoin->IsFromMe(ISMINE_ALL) ? nConfMine : nConfTheirs) && !fLockedByIS)
                 continue;
 
-            if (!mempool.TransactionWithinChainLimit(pcoin->GetHash(), nMaxAncestors))
+            if (!mempool.TransactionWithinChainLimit(pcoin->GetHash(), fLockedByIS ? nMaxChainLength : nMaxAncestors))
                 continue;
 
             int i = output.i;
