@@ -97,7 +97,7 @@ FUZZ_TARGET(system)
     const int64_t i64 = fuzzed_data_provider.ConsumeIntegral<int64_t>();
     const bool b = fuzzed_data_provider.ConsumeBool();
 
-    (void)args_manager.GetArg(s1, i64);
+    (void)args_manager.GetIntArg(s1, i64);
     (void)args_manager.GetArg(s1, s2);
     (void)args_manager.GetArgFlags(s1);
     (void)args_manager.GetArgs(s1);
