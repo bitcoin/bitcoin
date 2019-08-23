@@ -1538,6 +1538,13 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
             if (mi != mapRelay.end()) {
                 connman->PushMessage(pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *mi->second));
                 push = true;
+            } else if (!g_relay_txes && !pfrom->HasPermission(PF_RELAY)) {
+                // If a blocks-only peer requests a tx and it isn't in our mapRelay, then disconnect them.
+                // We allow blocks-only peers to request txs in our mapRelay so we can relay txs submitted
+                // locally when in blocks-only mode.
+                LogPrintf("Blocks-only peer %d sent us tx GETDATA in violation of protocol\n", pfrom->GetId());
+                pfrom->fDisconnect = true;
+                return;
             } else {
                 auto txinfo = mempool.info(inv.hash);
                 // To protect privacy, do not answer getdata using the mempool when
