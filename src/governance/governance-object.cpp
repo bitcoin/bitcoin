@@ -227,6 +227,7 @@ void CGovernanceObject::ClearMasternodeVotes()
         if (!mnList.HasMNByCollateral(it->first)) {
             fileVotes.RemoveVotesFromMasternode(it->first);
             mapCurrentMNVotes.erase(it++);
+            fDirtyCache = true;
         } else {
             ++it;
         }
