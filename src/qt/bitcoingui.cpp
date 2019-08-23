@@ -460,6 +460,10 @@ void BitcoinGUI::createMenuBar()
         file->addAction(signMessageAction);
         file->addAction(verifyMessageAction);
         file->addSeparator();
+        file->addAction(usedSendingAddressesAction);
+        file->addAction(usedReceivingAddressesAction);
+        file->addSeparator();
+
     }
     file->addAction(quitAction);
 
@@ -515,15 +519,12 @@ void BitcoinGUI::createMenuBar()
         connect(main_window_action, &QAction::triggered, [this] {
             GUIUtil::bringToFront(this);
         });
-
-        window_menu->addSeparator();
-        window_menu->addAction(usedSendingAddressesAction);
-        window_menu->addAction(usedReceivingAddressesAction);
     }
 
-    window_menu->addSeparator();
+
+    QMenu* tools = appMenuBar->addMenu(tr("&Tools"));
     for (RPCConsole::TabTypes tab_type : rpcConsole->tabs()) {
-        QAction* tab_action = window_menu->addAction(rpcConsole->tabTitle(tab_type));
+        QAction* tab_action = tools->addAction(rpcConsole->tabTitle(tab_type));
         connect(tab_action, &QAction::triggered, [this, tab_type] {
             rpcConsole->setTabFocus(tab_type);
             showDebugWindow();
