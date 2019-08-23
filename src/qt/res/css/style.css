@@ -854,8 +854,10 @@ QWidget .QFrame#frame>.QLabel {
 QWidget .QFrame#frame .QLabel#label_5 {
     /* Wallet Label */
     min-width: 160px;
-    margin-right: 5px;
-    padding-right: 5px;
+    color: #0f7f12;
+    font-weight: bold;
+    font-size: 15px;
+    min-height: 24px;
 }
 
 QWidget .QFrame#frame .QLabel#labelWalletStatus {
@@ -996,9 +998,6 @@ QWidget .QFrame#frame_2 .QLabel#label_4 {
     /* Recent Transactions Label */
     min-width: 180px;
     color: #0f7f12;
-    margin-left: 67px;
-    margin-top: 83px;
-    margin-right: 5px;
     padding-right: 5px;
     font-weight: bold;
     font-size: 15px;
