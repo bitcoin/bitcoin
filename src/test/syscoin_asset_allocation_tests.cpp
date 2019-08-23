@@ -15,7 +15,6 @@
 #include <core_io.h>
 #include <services/rpc/assetrpc.h>
 using namespace std;
-BOOST_GLOBAL_FIXTURE( SyscoinTestingSetup );
 BOOST_FIXTURE_TEST_SUITE(syscoin_asset_allocation_tests, BasicSyscoinTestingSetup)
 
 BOOST_AUTO_TEST_CASE(generate_asset_allocation_address_sync)
@@ -251,6 +250,5 @@ BOOST_AUTO_TEST_CASE(generate_asset_consistency_check)
 	BOOST_CHECK_EQUAL(assetAllocationsValidatedResults.write(), assetAllocationsNowResults.write());
 	BOOST_CHECK_NO_THROW(assetAllocationsValidatedResults = CallRPC("node3", "listassetallocations " + itostr(INT_MAX) + " 0"));
 	BOOST_CHECK_EQUAL(assetAllocationsValidatedResults.write(), assetAllocationsNowResults.write());	
-	ECC_Stop();
 }
 BOOST_AUTO_TEST_SUITE_END ()

@@ -16,7 +16,7 @@
 using namespace std;
 int currentTx = 0;
 extern UniValue read_json(const std::string& jsondata);
-BOOST_FIXTURE_TEST_SUITE (syscoin_snapshot_tests, SyscoinMainNetSetup)
+BOOST_FIXTURE_TEST_SUITE(syscoin_snapshot_tests, SyscoinMainNetSetup)
 struct PaymentAmount
 {
 	std::string address;
