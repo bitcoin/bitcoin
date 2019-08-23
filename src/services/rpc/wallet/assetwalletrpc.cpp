@@ -426,8 +426,20 @@ UniValue assetnew(const JSONRPCRequest& request) {
     UniValue param4 = params[5];
     UniValue param5 = params[6];
     
-    CAmount nBalance = AssetAmountFromValue(param4, precision);
-    CAmount nMaxSupply = AssetAmountFromValue(param5, precision);
+    CAmount nBalance;
+    try{
+        nBalance = AssetAmountFromValue(param4, precision);
+    }
+    catch(...){
+        nBalance = 0;
+    }
+    CAmount nMaxSupply;
+    try{
+        nMaxSupply = AssetAmountFromValue(param5, precision);
+    }
+    catch(...){
+        nMaxSupply = 0;
+    }
     uint32_t nUpdateFlags = params[7].get_uint();
     vchWitness = params[8].get_str();
     const CWitnessAddress& witnessAddress = DescribeWitnessAddress(strAddress);
@@ -903,7 +915,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
     UniValue amountObj = params[2];
 	CAmount amount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
     if (amount <= 0)
-            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount must be positive");
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount must be positive");
 	string ethAddress = params[3].get_str();
     boost::erase_all(ethAddress, "0x");  // strip 0x if exist
     vector<CRecipient> vecSend;

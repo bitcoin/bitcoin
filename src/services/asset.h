@@ -139,8 +139,8 @@ public:
     inline friend bool operator!=(const CAsset &a, const CAsset &b) {
         return !(a == b);
     }
-    inline void SetNull() { ClearAsset(); nPrecision = 8; nMaxSupply = 0; nTotalSupply = 0; nBalance = 0; }
-    inline bool IsNull() const { return (nBalance == 0 && nTotalSupply == 0 && nMaxSupply == 0); }
+    inline void SetNull() { ClearAsset(); nPrecision = 8; nMaxSupply = -1; nTotalSupply = -1; nBalance = -1; }
+    inline bool IsNull() const { return (nBalance == -1 && nTotalSupply == -1 && nMaxSupply == -1); }
     bool UnserializeFromTx(const CTransaction &tx);
     bool UnserializeFromData(const std::vector<unsigned char> &vchData);
     void Serialize(std::vector<unsigned char>& vchData);
