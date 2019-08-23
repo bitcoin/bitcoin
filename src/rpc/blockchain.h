@@ -7,6 +7,7 @@
 
 #include <amount.h>
 #include <sync.h>
+#include <uint256.h>
 
 #include <stdint.h>
 #include <vector>
@@ -17,8 +18,22 @@ class CBlock;
 class CBlockIndex;
 class CTxMemPool;
 class UniValue;
+class CCoinsView;
 
 static constexpr int NUM_GETBLOCKSTATS_PERCENTILES = 5;
+
+struct CCoinsStats {
+    int nHeight{0};
+    uint256 hashBlock;
+    uint64_t nTransactions{0};
+    uint64_t nTransactionOutputs{0};
+    uint64_t nBogoSize{0};
+    uint256 hashSerialized;
+    uint64_t nDiskSize{0};
+    CAmount nTotalAmount{0};
+};
+
+bool GetUTXOStats(const CCoinsView* const view, CCoinsStats& stats);
 
 /**
  * Get the difficulty of the net wrt to the given block index.
