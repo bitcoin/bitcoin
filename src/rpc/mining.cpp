@@ -453,7 +453,9 @@ static RPCHelpMan getmininginfo()
 static RPCHelpMan prioritisetransaction()
 {
     return RPCHelpMan{"prioritisetransaction",
-                "Accepts the transaction into mined blocks at a higher (or lower) priority\n",
+                "Accepts the transaction into mined blocks at a higher (or lower) priority.\n"
+                "\nNote that prioritizing a transaction could leak privacy, through both\n"
+                "block mining and likelihood of rebroadcast.",
                 {
                     {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id."},
                     {"dummy", RPCArg::Type::NUM, RPCArg::Optional::OMITTED_NAMED_ARG, "API-Compatibility for previous API. Must be zero or null.\n"
