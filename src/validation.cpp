@@ -1616,6 +1616,19 @@ int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Para
     return nVersion;
 }
 
+int32_t ComputeBuriedBlockVersion(const CBlockIndex* pindex_prev, const Consensus::Params& params)
+{
+    LOCK(cs_main);
+    int32_t version = ComputeBlockVersion(pindex_prev, params);
+
+    for (int i = 0; i < Consensus::NUM_BURIED_DEPLOYMENTS; ++i) {
+        if (pindex_prev->nHeight < params.buried_deployments[i].height) {
+            version |= ((uint32_t)1) << params.buried_deployments[i].bit;
+        }
+    }
+    return version;
+}
+
 /**
  * Threshold condition checker that triggers when unknown versionbits are seen on the network.
  */
@@ -1636,7 +1649,7 @@ public:
     {
         return ((pindex->nVersion & VERSIONBITS_TOP_MASK) == VERSIONBITS_TOP_BITS) &&
                ((pindex->nVersion >> bit) & 1) != 0 &&
-               ((ComputeBlockVersion(pindex->pprev, params) >> bit) & 1) == 0;
+               ((ComputeBuriedBlockVersion(pindex->pprev, params) >> bit) & 1) == 0;
     }
 };
 
