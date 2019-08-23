@@ -1266,6 +1266,9 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
     }
 
     const Consensus::Params& consensusParams = Params().GetConsensus();
+    if (consensusParams.signet_blocks) {
+        obj.pushKV("signet-blockscript", HexStr(g_signet_blockscript));
+    }
     UniValue softforks(UniValue::VOBJ);
     BuriedForkDescPushBack(softforks, "bip34", consensusParams.BIP34Height);
     BuriedForkDescPushBack(softforks, "bip66", consensusParams.BIP66Height);
