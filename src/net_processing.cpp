@@ -212,7 +212,13 @@ public:
         return m_last_common_block ? m_last_common_block->nHeight : -1;
     }
 
-    void FindNextBlocksToDownload(bool provider_has_witness, unsigned int count, std::vector<const CBlockIndex*>& vBlocks, NodeId& nodeStaller, const Consensus::Params& consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    /** Update last common height/block and add not-in-flight missing successors to vBlocks, until it has
+     *  at most count entries.
+	 *  Before being added to vBlocks, is_block_in_flight is called, and if it returns true, the block is
+	 *  not added. Note that it is guaranteed to be called in the same order as the blocks appear in the
+	 *  chain, ie the first call is the next block which is expected to be connected.
+	 */
+    void FindNextBlocksToDownload(bool provider_has_witness, unsigned int count, std::vector<const CBlockIndex*>& vBlocks, const Consensus::Params& consensusParams, const std::function<bool (const uint256& block_hash)>& is_block_in_flight) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 };
 
 /**
@@ -608,9 +614,7 @@ static bool PeerHasHeader(CNodeState *state, const CBlockIndex *pindex) EXCLUSIV
     return false;
 }
 
-/** Update pindexLastCommonBlock and add not-in-flight missing successors to vBlocks, until it has
- *  at most count entries. */
-void BlockProviderState::FindNextBlocksToDownload(bool provider_has_witness, unsigned int count, std::vector<const CBlockIndex*>& vBlocks, NodeId& nodeStaller, const Consensus::Params& consensusParams)
+void BlockProviderState::FindNextBlocksToDownload(bool provider_has_witness, unsigned int count, std::vector<const CBlockIndex*>& vBlocks, const Consensus::Params& consensusParams, const std::function<bool (const uint256& block_hash)>& is_block_in_flight)
 {
     if (count == 0)
         return;
@@ -641,7 +645,6 @@ void BlockProviderState::FindNextBlocksToDownload(bool provider_has_witness, uns
     // download that next block if the window were 1 larger.
     int nWindowEnd = m_last_common_block->nHeight + BLOCK_DOWNLOAD_WINDOW;
     int nMaxHeight = std::min<int>(m_best_known_block->nHeight, nWindowEnd + 1);
-    NodeId waitingfor = -1;
     while (pindexWalk->nHeight < nMaxHeight) {
         // Read up to 128 (or more, if more blocks than that are needed) successors of pindexWalk (towards
         // pindexBestKnownBlock) into vToFetch. We fetch 128, because CBlockIndex::GetAncestor may be as expensive
@@ -670,23 +673,16 @@ void BlockProviderState::FindNextBlocksToDownload(bool provider_has_witness, uns
             if (pindex->nStatus & BLOCK_HAVE_DATA || ::ChainActive().Contains(pindex)) {
                 if (pindex->HaveTxsDownloaded())
                     m_last_common_block = pindex;
-            } else if (mapBlocksInFlight.count(pindex->GetBlockHash()) == 0) {
+            } else if (!is_block_in_flight(pindex->GetBlockHash())) {
                 // The block is not already downloaded, and not yet in flight.
                 if (pindex->nHeight > nWindowEnd) {
                     // We reached the end of the window.
-                    if (vBlocks.size() == 0) {
-                        // We aren't able to fetch anything, but we would be if the download window was one larger.
-                        nodeStaller = waitingfor;
-                    }
                     return;
                 }
                 vBlocks.push_back(pindex);
                 if (vBlocks.size() == count) {
                     return;
                 }
-            } else if (waitingfor == -1) {
-                // This is the first already-in-flight block.
-                waitingfor = mapBlocksInFlight[pindex->GetBlockHash()].first;
             }
         }
     }
@@ -4005,7 +4001,14 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
 
             std::vector<const CBlockIndex*> vToDownload;
             NodeId staller = -1;
-            state.m_blocks_avail.FindNextBlocksToDownload(state.fHaveWitness, MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.nBlocksInFlight, vToDownload, staller, consensusParams);
+            state.m_blocks_avail.FindNextBlocksToDownload(state.fHaveWitness, MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.nBlocksInFlight, vToDownload, consensusParams,
+                [&staller] (const uint256& block_hash) NO_THREAD_SAFETY_ANALYSIS { // We're holding cs_main outside, so this is fine
+                    auto in_flight_it = mapBlocksInFlight.find(block_hash);
+                    if (in_flight_it != mapBlocksInFlight.end()) {
+                        staller = in_flight_it->second.first;
+                    }
+                    return in_flight_it != mapBlocksInFlight.end();
+                });
             for (const CBlockIndex *pindex : vToDownload) {
                 uint32_t nFetchFlags = GetFetchFlags(pto);
                 vGetData.push_back(CInv(MSG_BLOCK | nFetchFlags, pindex->GetBlockHash()));
@@ -4013,7 +4016,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                 LogPrint(BCLog::NET, "Requesting block %s (%d) peer=%d\n", pindex->GetBlockHash().ToString(),
                     pindex->nHeight, pto->GetId());
             }
-            if (state.nBlocksInFlight == 0 && staller != -1 && staller != pto->GetId()) {
+            if (state.nBlocksInFlight == 0 && staller != -1 && staller != pto->GetId() && vToDownload.empty()) {
                 if (State(staller)->nStallingSince == 0) {
                     State(staller)->nStallingSince = nNow;
                     LogPrint(BCLog::NET, "Stall started peer=%d\n", staller);
