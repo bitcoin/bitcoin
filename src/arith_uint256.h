@@ -48,6 +48,8 @@ public:
 
     base_uint& operator=(const base_uint& b)
     {
+        static_assert(WIDTH == b.WIDTH, "Template parameter WIDTH must be equal.");
+
         for (int i = 0; i < WIDTH; i++)
             pn[i] = b.pn[i];
         return *this;
@@ -86,6 +88,8 @@ public:
 
     base_uint& operator=(uint64_t b)
     {
+        static_assert(BITS/32 > 0 && BITS%32 == 0, "Template parameter BITS must be a positive multiple of 32.");
+
         pn[0] = (unsigned int)b;
         pn[1] = (unsigned int)(b >> 32);
         for (int i = 2; i < WIDTH; i++)
