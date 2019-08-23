@@ -822,6 +822,30 @@ QDialog#RPCConsole .QGroupBox #line_2 {
     background: #ff0000;
 }
 
+/* HELP MENU */
+
+QDialog#HelpMessageDialog {
+	background-color:#fff;
+}
+
+/* Command Line Options Dialog */
+QDialog#HelpMessageDialog QScrollArea * {
+	background-color:#fff;
+}
+
+QDialog#HelpMessageDialog QScrollBar:vertical, QDialog#HelpMessageDialog QScrollBar:horizontal {
+	border:0;
+}
+
+/* About BitGreen Dialog */
+QDialog#AboutDialog QLabel#label, QDialog#AboutDialog QLabel#copyrightLabel, QDialog#AboutDialog QLabel#label_2 { /* About BitGreen Contents */
+	margin-left:10px;
+}
+
+QDialog#AboutDialog QLabel#label_2 { /* Margin for About BitGreen text */
+	margin-right:10px;
+}
+
 
 
 /* Edit Address Dialog */

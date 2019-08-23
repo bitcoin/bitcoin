@@ -65,6 +65,7 @@
         <file alias="upArrow_small_white">res/images/upArrow_small.png</file>
         <file alias="leftArrow_small">res/images/leftArrow_small_dark.png</file>
         <file alias="rightArrow_small">res/images/rightArrow_small_dark.png</file>
+        <file alias="about">res/images/about.png</file>
     </qresource>
     <qresource prefix="/movies">
         <file alias="spinner-000">res/movies/spinner-000.png</file>
