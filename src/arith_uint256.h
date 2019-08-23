@@ -126,6 +126,8 @@ public:
 
     base_uint& operator^=(uint64_t b)
     {
+        static_assert(WIDTH >= 2, "Assertion WIDTH >= 2 failed (WIDTH = BITS / 32). BITS is a template parameter.");
+
         pn[0] ^= (unsigned int)b;
         pn[1] ^= (unsigned int)(b >> 32);
         return *this;
@@ -133,6 +135,8 @@ public:
 
     base_uint& operator|=(uint64_t b)
     {
+        static_assert(WIDTH >= 2, "Assertion WIDTH >= 2 failed (WIDTH = BITS / 32). BITS is a template parameter.");
+
         pn[0] |= (unsigned int)b;
         pn[1] |= (unsigned int)(b >> 32);
         return *this;
