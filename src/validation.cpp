@@ -1110,6 +1110,80 @@ bool GetTransaction(const uint256& hash, CTransactionRef& txOut, const Consensus
 // CBlock and CBlockIndex
 //
 
+void BlockProviderState::FindNextBlocksToDownload(bool provider_has_witness, unsigned int count, std::vector<const CBlockIndex*>& vBlocks, const Consensus::Params& consensusParams, const std::function<bool (const uint256& block_hash)>& is_block_in_flight)
+{
+    if (count == 0)
+        return;
+
+    vBlocks.reserve(vBlocks.size() + count);
+
+    if (m_best_known_block == nullptr || m_best_known_block->nChainWork < ::ChainActive().Tip()->nChainWork || m_best_known_block->nChainWork < nMinimumChainWork) {
+        // This peer has nothing interesting.
+        return;
+    }
+
+    if (m_last_common_block == nullptr) {
+        // Bootstrap quickly by guessing a parent of our best tip is the forking point.
+        // Guessing wrong in either direction is not a problem.
+        m_last_common_block = ::ChainActive()[std::min(m_best_known_block->nHeight, ::ChainActive().Height())];
+    }
+
+    // If the peer reorganized, our previous pindexLastCommonBlock may not be an ancestor
+    // of its current tip anymore. Go back enough to fix that.
+    m_last_common_block = LastCommonAncestor(m_last_common_block, m_best_known_block);
+    if (m_last_common_block == m_best_known_block)
+        return;
+
+    std::vector<const CBlockIndex*> vToFetch;
+    const CBlockIndex *pindexWalk = m_last_common_block;
+    // Never fetch further than the best block we know the peer has, or more than BLOCK_DOWNLOAD_WINDOW + 1 beyond the last
+    // linked block we have in common with this peer. The +1 is so we can detect stalling, namely if we would be able to
+    // download that next block if the window were 1 larger.
+    int nWindowEnd = m_last_common_block->nHeight + BLOCK_DOWNLOAD_WINDOW;
+    int nMaxHeight = std::min<int>(m_best_known_block->nHeight, nWindowEnd + 1);
+    while (pindexWalk->nHeight < nMaxHeight) {
+        // Read up to 128 (or more, if more blocks than that are needed) successors of pindexWalk (towards
+        // pindexBestKnownBlock) into vToFetch. We fetch 128, because CBlockIndex::GetAncestor may be as expensive
+        // as iterating over ~100 CBlockIndex* entries anyway.
+        int nToFetch = std::min(nMaxHeight - pindexWalk->nHeight, std::max<int>(count - vBlocks.size(), 128));
+        vToFetch.resize(nToFetch);
+        pindexWalk = m_best_known_block->GetAncestor(pindexWalk->nHeight + nToFetch);
+        vToFetch[nToFetch - 1] = pindexWalk;
+        for (unsigned int i = nToFetch - 1; i > 0; i--) {
+            vToFetch[i - 1] = vToFetch[i]->pprev;
+        }
+
+        // Iterate over those blocks in vToFetch (in forward direction), adding the ones that
+        // are not yet downloaded and not in flight to vBlocks. In the meantime, update
+        // pindexLastCommonBlock as long as all ancestors are already downloaded, or if it's
+        // already part of our chain (and therefore don't need it even if pruned).
+        for (const CBlockIndex* pindex : vToFetch) {
+            if (!pindex->IsValid(BLOCK_VALID_TREE)) {
+                // We consider the chain that this peer is on invalid.
+                return;
+            }
+            if (!provider_has_witness && IsWitnessEnabled(pindex->pprev, consensusParams)) {
+                // We wouldn't download this block or its descendants from this peer.
+                return;
+            }
+            if (pindex->nStatus & BLOCK_HAVE_DATA || ::ChainActive().Contains(pindex)) {
+                if (pindex->HaveTxsDownloaded())
+                    m_last_common_block = pindex;
+            } else if (!is_block_in_flight(pindex->GetBlockHash())) {
+                // The block is not already downloaded, and not yet in flight.
+                if (pindex->nHeight > nWindowEnd) {
+                    // We reached the end of the window.
+                    return;
+                }
+                vBlocks.push_back(pindex);
+                if (vBlocks.size() == count) {
+                    return;
+                }
+            }
+        }
+    }
+}
+
 static bool WriteBlockToDisk(const CBlock& block, FlatFilePos& pos, const CMessageHeader::MessageStartChars& messageStart)
 {
     // Open history file to append
