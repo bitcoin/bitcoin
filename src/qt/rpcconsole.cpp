@@ -28,11 +28,11 @@
 #include <wallet/wallet.h>
 #endif
 
-#include <QDesktopWidget>
 #include <QKeyEvent>
 #include <QMenu>
 #include <QMessageBox>
 #include <QScrollBar>
+#include <QScreen>
 #include <QSettings>
 #include <QSignalMapper>
 #include <QTime>
@@ -451,7 +451,7 @@ RPCConsole::RPCConsole(interfaces::Node& node, const PlatformStyle *_platformSty
     QSettings settings;
     if (!restoreGeometry(settings.value("RPCConsoleWindowGeometry").toByteArray())) {
         // Restore failed (perhaps missing setting), center the window
-        move(QApplication::desktop()->availableGeometry().center() - frameGeometry().center());
+        move(QGuiApplication::primaryScreen()->availableGeometry().center() - frameGeometry().center());
     }
 
     QChar nonbreaking_hyphen(8209);
