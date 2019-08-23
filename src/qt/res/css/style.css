@@ -1243,7 +1243,7 @@ QStackedWidget#SendCoinsEntry .QValidatedLineEdit#payTo {
 
 QStackedWidget#SendCoinsEntry .QToolButton {
     /* General Settings for Pay To Icons */
-    background-color: transparent;
+    background-color: #0f7f12;
     padding-left: 5px;
     padding-right: 5px;
     border: 0;
@@ -1255,15 +1255,6 @@ QStackedWidget#SendCoinsEntry .QToolButton#addressBookButton {
     padding-left: 10px;
 }
 
-QStackedWidget#SendCoinsEntry .QToolButton#addressBookButton {}
-
-QStackedWidget#SendCoinsEntry .QToolButton#pasteButton {}
-
-QStackedWidget#SendCoinsEntry .QToolButton#deleteButton {}
-
-QStackedWidget#SendCoinsEntry .QLineEdit#addAsLabel {
-    /* Pay To Input Field */
-}
 
 
 /* COIN CONTROL POPUP */
