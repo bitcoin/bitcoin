@@ -71,6 +71,9 @@ class InstantSendTest(DashTestFramework):
             assert (res['hash'] != wrong_block)
             # wait for long time only for first node
             timeout = 1
+        # send coins back to the controller node without waiting for confirmations
+        receiver.sendtoaddress(self.nodes[0].getnewaddress(), 0.9, "", "", True)
+        assert_equal(receiver.getwalletinfo()["balance"], 0)
         # mine more blocks
         # TODO: mine these blocks on an isolated node
         self.bump_mocktime(1)
@@ -109,6 +112,9 @@ class InstantSendTest(DashTestFramework):
         for node in self.nodes:
             self.wait_for_instantlock(is_id, node)
         assert_raises_jsonrpc(-5, "No such mempool or blockchain transaction", isolated.getrawtransaction, dblspnd_txid)
+        # send coins back to the controller node without waiting for confirmations
+        receiver.sendtoaddress(self.nodes[0].getnewaddress(), 0.9, "", "", True)
+        assert_equal(receiver.getwalletinfo()["balance"], 0)
 
 if __name__ == '__main__':
     InstantSendTest().main()
