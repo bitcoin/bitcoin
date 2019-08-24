@@ -13,7 +13,7 @@ export BASE_ROOT_DIR
 
 export MAKEJOBS=${MAKEJOBS:--j3}
 export HOST=${HOST:-x86_64-unknown-linux-gnu}
-export RUN_UNIT_TESTS=${RUN_UNIT_TESTS:-true}
+export RUN_UNIT_TESTS=${RUN_UNIT_TESTS:-false}
 export RUN_FUNCTIONAL_TESTS=${RUN_FUNCTIONAL_TESTS:-false}
 export RUN_FUZZ_TESTS=${RUN_FUZZ_TESTS:-false}
 export DOCKER_NAME_TAG=${DOCKER_NAME_TAG:-ubuntu:18.04}
