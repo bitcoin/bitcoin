@@ -86,12 +86,16 @@ void StartNodes()
 	tfm::format(std::cout,"Stopping any test nodes that are running...\n");
 	InitNodeURLMap();
 	StopNodes();
-    if (boost::filesystem::exists(boost::filesystem::system_complete("test/node1/regtest")))
-        boost::filesystem::remove_all(boost::filesystem::system_complete("test/node1/regtest")); 
-    if (boost::filesystem::exists(boost::filesystem::system_complete("test/node2/regtest")))
-        boost::filesystem::remove_all(boost::filesystem::system_complete("test/node2/regtest"));  
-    if (boost::filesystem::exists(boost::filesystem::system_complete("test/node3/regtest")))
-        boost::filesystem::remove_all(boost::filesystem::system_complete("test/node3/regtest"));                     
+    if (boost::filesystem::exists(boost::filesystem::system_complete("./test/node1")))
+        boost::filesystem::remove_all(boost::filesystem::system_complete("./test/node1")); 
+    if (boost::filesystem::exists(boost::filesystem::system_complete("./test/node2")))
+        boost::filesystem::remove_all(boost::filesystem::system_complete("./test/node2"));  
+    if (boost::filesystem::exists(boost::filesystem::system_complete("./test/node3")))
+        boost::filesystem::remove_all(boost::filesystem::system_complete("./test/node3"));
+	boost::filesystem::create_directory("./test");
+	boost::filesystem::create_directory("./test/node1"); 
+	boost::filesystem::create_directory("./test/node2"); 
+	boost::filesystem::create_directory("./test/node3");                 
 	node1LastBlock = 0;
 	node2LastBlock = 0;
 	node3LastBlock = 0;
@@ -128,7 +132,8 @@ void StartNode(const string &dataDirIn, bool regTest, const string& extraArgs, b
 {
 	string dataDir = LookupURLLocal(dataDirIn); 
 	boost::filesystem::path fpath = boost::filesystem::system_complete("./syscoind");
-	string nodePath = fpath.string() + string(" -unittest -tpstest -assetindex -assetsupplystatsindex -daemon -server -debug=0 -datadir=") + dataDir;
+	string nodePath = fpath.string() + string(" -server -rpcuser=u -rpcpassword=p -unittest -tpstest -assetindex -assetsupplystatsindex -daemon -server -debug=0");
+	nodePath += string(" -datadir=") + dataDir;
 	if (regTest)
 		nodePath += string(" -regtest");
 	if (reindex)
@@ -137,7 +142,15 @@ void StartNode(const string &dataDirIn, bool regTest, const string& extraArgs, b
 		nodePath += string(" -sysxasset=") + strSYSXAsset;				
 	if (!extraArgs.empty())
 		nodePath += string(" ") + extraArgs;
-
+	if (dataDir == "./test/node1"){
+		nodePath += string(" -rpcport=28379 -port=18369 -addnode=127.0.0.1:18379 -addnode=127.0.0.1:18389");
+	}
+	else if (dataDir == "./test/node2"){
+		nodePath += string(" -rpcport=38379 -port=18379 -addnode=127.0.0.1:18369 -addnode=127.0.0.1:18389");
+	}
+	else if (dataDir == "./test/node3"){
+		nodePath += string(" -rpcport=48379 -port=18389 -addnode=127.0.0.1:18369 -addnode=127.0.0.1:18379");
+	}	
 	boost::thread t(runCommand, nodePath);
 	tfm::format(std::cout,"Launching %s, waiting 1 second before trying to ping...\n", nodePath.c_str());
 	MilliSleep(1000);
@@ -270,11 +283,19 @@ UniValue CallRPC(const string &dataDirIn, const string& commandWithArgs, bool re
 	string dataDir = LookupURLLocal(dataDirIn);
 	UniValue val;
 	boost::filesystem::path fpath = boost::filesystem::system_complete("./syscoin-cli");
-	string path = fpath.string() + string(" -datadir=") + dataDir;
+	string path = fpath.string() + string(" -rpcuser=u -rpcpassword=p -datadir=") + dataDir;
 	if (regTest)
-		path += string(" -regtest ");
-	else
-		path += " ";
+		path += string(" -regtest");
+
+	if (dataDir == "./test/node1"){
+		path += string(" -rpcport=28379 ");
+	}
+	else if (dataDir == "./test/node2"){
+		path += string(" -rpcport=38379 ");
+	}
+	else if (dataDir == "./test/node3"){
+		path += string(" -rpcport=48379 ");
+	}
 	path += commandWithArgs;
 	string rawJson = CallExternal(path);
 	if (readJson)
