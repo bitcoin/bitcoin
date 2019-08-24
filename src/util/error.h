@@ -10,7 +10,7 @@
  * string functions. Types and functions defined here should not require any
  * outside dependencies.
  *
- * Error types defined here can be used in different parts of the bitcoin
+ * Error types defined here can be used in different parts of the
  * codebase, to avoid the need to write boilerplate code catching and
  * translating errors passed across wallet/node/rpc/gui code boundaries.
  */
@@ -27,12 +27,15 @@ enum class TransactionError {
     INVALID_PSBT,
     PSBT_MISMATCH,
     SIGHASH_MISMATCH,
+    MAX_FEE_EXCEEDED,
 };
 
 std::string TransactionErrorString(const TransactionError error);
 
+std::string ResolveErrMsg(const std::string& optname, const std::string& strBind);
+
 std::string AmountHighWarn(const std::string& optname);
 
-std::string AmountErrMsg(const char* const optname, const std::string& strValue);
+std::string AmountErrMsg(const std::string& optname, const std::string& strValue);
 
 #endif // BITCOIN_UTIL_ERROR_H

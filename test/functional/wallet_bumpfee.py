@@ -37,6 +37,7 @@ class BumpFeeTest(BitcoinTestFramework):
         self.extra_args = [[
             "-walletrbf={}".format(i),
             "-mintxfee=0.00002",
+            "-deprecatedrpc=totalFee",
         ] for i in range(self.num_nodes)]
 
     def skip_test_if_missing_module(self):
@@ -80,6 +81,7 @@ class BumpFeeTest(BitcoinTestFramework):
         test_bumpfee_metadata(rbf_node, dest_address)
         test_locked_wallet_fails(rbf_node, dest_address)
         test_change_script_match(rbf_node, dest_address)
+        test_maxtxfee_fails(self, rbf_node, dest_address)
         # These tests wipe out a number of utxos that are expected in other tests
         test_small_output_with_feerate_succeeds(rbf_node, dest_address)
         test_no_more_inputs_fails(rbf_node, dest_address)
@@ -248,6 +250,15 @@ def test_settxfee(rbf_node, dest_address):
     rbf_node.settxfee(Decimal("0.00000000"))  # unset paytxfee
 
 
+def test_maxtxfee_fails(test, rbf_node, dest_address):
+    test.restart_node(1, ['-maxtxfee=0.00003'] + test.extra_args[1])
+    rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
+    rbfid = spend_one_input(rbf_node, dest_address)
+    assert_raises_rpc_error(-4, "Unable to create transaction: Fee exceeds maximum configured by -maxtxfee", rbf_node.bumpfee, rbfid)
+    test.restart_node(1, test.extra_args[1])
+    rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
+
+
 def test_rebumping(rbf_node, dest_address):
     # check that re-bumping the original tx fails, but bumping the bumper succeeds
     rbfid = spend_one_input(rbf_node, dest_address)
@@ -304,7 +315,9 @@ def test_unconfirmed_not_spendable(rbf_node, rbf_node_address):
 
 
 def test_bumpfee_metadata(rbf_node, dest_address):
-    rbfid = rbf_node.sendtoaddress(dest_address, Decimal("0.00100000"), "comment value", "to value")
+    assert(rbf_node.getbalance() < 49)
+    rbf_node.generatetoaddress(101, rbf_node.getnewaddress())
+    rbfid = rbf_node.sendtoaddress(dest_address, 49, "comment value", "to value")
     bumped_tx = rbf_node.bumpfee(rbfid)
     bumped_wtx = rbf_node.gettransaction(bumped_tx["txid"])
     assert_equal(bumped_wtx["comment"], "comment value")

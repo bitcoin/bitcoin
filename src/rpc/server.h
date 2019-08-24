@@ -7,13 +7,14 @@
 #define BITCOIN_RPC_SERVER_H
 
 #include <amount.h>
-#include <rpc/protocol.h>
+#include <rpc/request.h>
 #include <uint256.h>
 
 #include <list>
 #include <map>
 #include <stdint.h>
 #include <string>
+#include <functional>
 
 #include <univalue.h>
 
@@ -26,21 +27,6 @@ namespace RPCServer
     void OnStarted(std::function<void ()> slot);
     void OnStopped(std::function<void ()> slot);
 }
-
-class JSONRPCRequest
-{
-public:
-    UniValue id;
-    std::string strMethod;
-    UniValue params;
-    bool fHelp;
-    std::string URI;
-    std::string authUser;
-    std::string peerAddr;
-
-    JSONRPCRequest() : id(NullUniValue), params(NullUniValue), fHelp(false) {}
-    void parse(const UniValue& valRequest);
-};
 
 /** Query whether RPC is running */
 bool IsRPCRunning();

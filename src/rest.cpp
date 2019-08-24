@@ -12,6 +12,7 @@
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <rpc/blockchain.h>
+#include <rpc/protocol.h>
 #include <rpc/server.h>
 #include <streams.h>
 #include <sync.h>
@@ -502,12 +503,12 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
         if (fCheckMemPool) {
             // use db+mempool as cache backend in case user likes to query mempool
             LOCK2(cs_main, mempool.cs);
-            CCoinsViewCache& viewChain = *pcoinsTip;
+            CCoinsViewCache& viewChain = ::ChainstateActive().CoinsTip();
             CCoinsViewMemPool viewMempool(&viewChain, mempool);
             process_utxos(viewMempool, mempool);
         } else {
             LOCK(cs_main);  // no need to lock mempool!
-            process_utxos(*pcoinsTip, CTxMemPool());
+            process_utxos(::ChainstateActive().CoinsTip(), CTxMemPool());
         }
 
         for (size_t i = 0; i < hits.size(); ++i) {

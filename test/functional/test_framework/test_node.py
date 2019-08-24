@@ -59,7 +59,7 @@ class TestNode():
     To make things easier for the test writer, any unrecognised messages will
     be dispatched to the RPC connection."""
 
-    def __init__(self, i, datadir, *, rpchost, timewait, bitcoind, bitcoin_cli, coverage_dir, cwd, extra_conf=None, extra_args=None, use_cli=False, start_perf=False):
+    def __init__(self, i, datadir, *, chain, rpchost, timewait, bitcoind, bitcoin_cli, coverage_dir, cwd, extra_conf=None, extra_args=None, use_cli=False, start_perf=False):
         """
         Kwargs:
             start_perf (bool): If True, begin profiling the node with `perf` as soon as
@@ -68,8 +68,10 @@ class TestNode():
 
         self.index = i
         self.datadir = datadir
+        self.bitcoinconf = os.path.join(self.datadir, "bitcoin.conf")
         self.stdout_dir = os.path.join(self.datadir, "stdout")
         self.stderr_dir = os.path.join(self.datadir, "stderr")
+        self.chain = chain
         self.rpchost = rpchost
         self.rpc_timeout = timewait
         self.binary = bitcoind
@@ -197,7 +199,7 @@ class TestNode():
         # Delete any existing cookie file -- if such a file exists (eg due to
         # unclean shutdown), it will get overwritten anyway by bitcoind, and
         # potentially interfere with our attempt to authenticate
-        delete_cookie_file(self.datadir)
+        delete_cookie_file(self.datadir, self.chain)
 
         # add environment variable LIBC_FATAL_STDERR_=1 so that libc errors are written to stderr and not the terminal
         subp_env = dict(os.environ, LIBC_FATAL_STDERR_="1")
@@ -219,7 +221,7 @@ class TestNode():
                 raise FailedToStartError(self._node_msg(
                     'bitcoind exited with status {} during initialization'.format(self.process.returncode)))
             try:
-                rpc = get_rpc_proxy(rpc_url(self.datadir, self.index, self.rpchost), self.index, timeout=self.rpc_timeout, coveragedir=self.coverage_dir)
+                rpc = get_rpc_proxy(rpc_url(self.datadir, self.index, self.chain, self.rpchost), self.index, timeout=self.rpc_timeout, coveragedir=self.coverage_dir)
                 rpc.getblockcount()
                 # If the call to getblockcount() succeeds then the RPC connection is up
                 self.log.debug("RPC successfully started")
@@ -305,21 +307,30 @@ class TestNode():
         wait_until(self.is_node_stopped, timeout=timeout)
 
     @contextlib.contextmanager
-    def assert_debug_log(self, expected_msgs):
-        debug_log = os.path.join(self.datadir, 'regtest', 'debug.log')
+    def assert_debug_log(self, expected_msgs, timeout=2):
+        time_end = time.time() + timeout
+        debug_log = os.path.join(self.datadir, self.chain, 'debug.log')
         with open(debug_log, encoding='utf-8') as dl:
             dl.seek(0, 2)
             prev_size = dl.tell()
         try:
             yield
         finally:
-            with open(debug_log, encoding='utf-8') as dl:
-                dl.seek(prev_size)
-                log = dl.read()
-            print_log = " - " + "\n - ".join(log.splitlines())
-            for expected_msg in expected_msgs:
-                if re.search(re.escape(expected_msg), log, flags=re.MULTILINE) is None:
-                    self._raise_assertion_error('Expected message "{}" does not partially match log:\n\n{}\n\n'.format(expected_msg, print_log))
+            while True:
+                found = True
+                with open(debug_log, encoding='utf-8') as dl:
+                    dl.seek(prev_size)
+                    log = dl.read()
+                print_log = " - " + "\n - ".join(log.splitlines())
+                for expected_msg in expected_msgs:
+                    if re.search(re.escape(expected_msg), log, flags=re.MULTILINE) is None:
+                        found = False
+                if found:
+                    return
+                if time.time() >= time_end:
+                    break
+                time.sleep(0.05)
+            self._raise_assertion_error('Expected messages "{}" does not partially match log:\n\n{}\n\n'.format(str(expected_msgs), print_log))
 
     @contextlib.contextmanager
     def assert_memory_usage_stable(self, *, increase_allowed=0.03):

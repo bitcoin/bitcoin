@@ -12,15 +12,23 @@
 #include <crypto/sha256.h>
 #include <init.h>
 #include <miner.h>
-#include <net_processing.h>
+#include <net.h>
 #include <noui.h>
 #include <pow.h>
 #include <rpc/register.h>
 #include <rpc/server.h>
 #include <script/sigcache.h>
 #include <streams.h>
+#include <txdb.h>
+#include <util/memory.h>
+#include <util/strencodings.h>
+#include <util/time.h>
+#include <util/translation.h>
 #include <util/validation.h>
 #include <validation.h>
+#include <validationinterface.h>
+
+#include <functional>
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
@@ -68,7 +76,6 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
     const CChainParams& chainparams = Params();
     // Ideally we'd move all the RPC tests to the functional testing framework
     // instead of unit tests, but for now we need these here.
-
     RegisterAllCoreRPCCommands(tableRPC);
 
     // We have to run a scheduler thread to prevent ActivateBestChain
@@ -78,8 +85,12 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
 
     mempool.setSanityCheck(1.0);
     pblocktree.reset(new CBlockTreeDB(1 << 20, true));
-    pcoinsdbview.reset(new CCoinsViewDB(1 << 23, true));
-    pcoinsTip.reset(new CCoinsViewCache(pcoinsdbview.get()));
+    g_chainstate = MakeUnique<CChainState>();
+    ::ChainstateActive().InitCoinsDB(
+        /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
+    assert(!::ChainstateActive().CanFlushToDisk());
+    ::ChainstateActive().InitCoinsCache();
+    assert(::ChainstateActive().CanFlushToDisk());
     if (!LoadGenesisBlock(chainparams)) {
         throw std::runtime_error("LoadGenesisBlock failed.");
     }
@@ -106,8 +117,7 @@ TestingSetup::~TestingSetup()
     g_connman.reset();
     g_banman.reset();
     UnloadBlockIndex();
-    pcoinsTip.reset();
-    pcoinsdbview.reset();
+    g_chainstate.reset();
     pblocktree.reset();
 }
 
@@ -115,7 +125,7 @@ TestChain100Setup::TestChain100Setup() : TestingSetup(CBaseChainParams::REGTEST)
 {
     // CreateAndProcessBlock() does not support building SegWit blocks, so don't activate in these tests.
     // TODO: fix the code to support SegWit blocks.
-    gArgs.ForceSetArg("-vbparams", strprintf("segwit:0:%d", (int64_t)Consensus::BIP9Deployment::NO_TIMEOUT));
+    gArgs.ForceSetArg("-segwitheight", "432");
     SelectParams(CBaseChainParams::REGTEST);
 
     // Generate a 100-block chain:

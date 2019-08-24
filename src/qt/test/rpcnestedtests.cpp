@@ -4,7 +4,6 @@
 
 #include <qt/test/rpcnestedtests.h>
 
-#include <fs.h>
 #include <interfaces/node.h>
 #include <rpc/server.h>
 #include <qt/rpcconsole.h>
@@ -35,7 +34,6 @@ void RPCNestedTests::rpcNestedTests()
     tableRPC.appendCommand("rpcNestedTest", &vRPCCommands[0]);
     //mempool.setSanityCheck(1.0);
 
-    LogInstance().DisconnectTestLogger(); // Already started by the common test setup, so stop it to avoid interference
     TestingSetup test;
 
     if (RPCIsInWarmup(nullptr)) SetRPCWarmupFinished();

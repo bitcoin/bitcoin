@@ -6,7 +6,6 @@
 #include <config/bitcoin-config.h>
 #endif
 
-#include <chainparams.h>
 #include <interfaces/node.h>
 #include <qt/bitcoin.h>
 #include <qt/test/apptests.h>
@@ -27,8 +26,6 @@
 #include <QObject>
 #include <QTest>
 
-#include <openssl/ssl.h>
-
 #if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
 #if defined(QT_QPA_PLATFORM_MINIMAL)
@@ -43,12 +40,18 @@ Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
 #endif
 #endif
 
-extern void noui_connect();
-
 // This is all you need to run all the tests
 int main(int argc, char *argv[])
 {
-    BasicTestingSetup test{CBaseChainParams::REGTEST};
+    // Initialize persistent globals with the testing setup state for sanity.
+    // E.g. -datadir in gArgs is set to a temp directory dummy value (instead
+    // of defaulting to the default datadir), or globalChainParams is set to
+    // regtest params.
+    //
+    // All tests must use their own testing setup (if needed).
+    {
+        BasicTestingSetup dummy{CBaseChainParams::REGTEST};
+    }
 
     auto node = interfaces::MakeNode();
 
@@ -65,10 +68,8 @@ int main(int argc, char *argv[])
 
     // Don't remove this, it's needed to access
     // QApplication:: and QCoreApplication:: in the tests
-    BitcoinApplication app(*node, argc, argv);
+    BitcoinApplication app(*node);
     app.setApplicationName("Bitcoin-Qt-test");
-
-    SSL_library_init();
 
     AppTests app_tests(app);
     if (QTest::qExec(&app_tests) != 0) {

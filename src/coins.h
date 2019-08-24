@@ -17,6 +17,7 @@
 #include <assert.h>
 #include <stdint.h>
 
+#include <functional>
 #include <unordered_map>
 
 /**
@@ -314,5 +315,29 @@ void AddCoins(CCoinsViewCache& cache, const CTransaction& tx, int nHeight, bool 
 //! which is not found in the cache, it can cause up to MAX_OUTPUTS_PER_BLOCK
 //! lookups to database, so it should be used with care.
 const Coin& AccessByTxid(const CCoinsViewCache& cache, const uint256& txid);
+
+/**
+ * This is a minimally invasive approach to shutdown on LevelDB read errors from the
+ * chainstate, while keeping user interface out of the common library, which is shared
+ * between bitcoind, and bitcoin-qt and non-server tools.
+ *
+ * Writes do not need similar protection, as failure to write is handled by the caller.
+*/
+class CCoinsViewErrorCatcher final : public CCoinsViewBacked
+{
+public:
+    explicit CCoinsViewErrorCatcher(CCoinsView* view) : CCoinsViewBacked(view) {}
+
+    void AddReadErrCallback(std::function<void()> f) {
+        m_err_callbacks.emplace_back(std::move(f));
+    }
+
+    bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
+
+private:
+    /** A list of callbacks to execute upon leveldb read error. */
+    std::vector<std::function<void()>> m_err_callbacks;
+
+};
 
 #endif // BITCOIN_COINS_H

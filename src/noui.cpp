@@ -13,6 +13,12 @@
 #include <string>
 
 #include <boost/signals2/connection.hpp>
+#include <boost/signals2/signal.hpp>
+
+/** Store connections so we can disconnect them when suppressing output */
+boost::signals2::connection noui_ThreadSafeMessageBoxConn;
+boost::signals2::connection noui_ThreadSafeQuestionConn;
+boost::signals2::connection noui_InitMessageConn;
 
 bool noui_ThreadSafeMessageBox(const std::string& message, const std::string& caption, unsigned int style)
 {
@@ -57,7 +63,39 @@ void noui_InitMessage(const std::string& message)
 
 void noui_connect()
 {
-    uiInterface.ThreadSafeMessageBox_connect(noui_ThreadSafeMessageBox);
-    uiInterface.ThreadSafeQuestion_connect(noui_ThreadSafeQuestion);
-    uiInterface.InitMessage_connect(noui_InitMessage);
+    noui_ThreadSafeMessageBoxConn = uiInterface.ThreadSafeMessageBox_connect(noui_ThreadSafeMessageBox);
+    noui_ThreadSafeQuestionConn = uiInterface.ThreadSafeQuestion_connect(noui_ThreadSafeQuestion);
+    noui_InitMessageConn = uiInterface.InitMessage_connect(noui_InitMessage);
+}
+
+bool noui_ThreadSafeMessageBoxSuppressed(const std::string& message, const std::string& caption, unsigned int style)
+{
+    return false;
+}
+
+bool noui_ThreadSafeQuestionSuppressed(const std::string& /* ignored interactive message */, const std::string& message, const std::string& caption, unsigned int style)
+{
+    return false;
+}
+
+void noui_InitMessageSuppressed(const std::string& message)
+{
+}
+
+void noui_suppress()
+{
+    noui_ThreadSafeMessageBoxConn.disconnect();
+    noui_ThreadSafeQuestionConn.disconnect();
+    noui_InitMessageConn.disconnect();
+    noui_ThreadSafeMessageBoxConn = uiInterface.ThreadSafeMessageBox_connect(noui_ThreadSafeMessageBoxSuppressed);
+    noui_ThreadSafeQuestionConn = uiInterface.ThreadSafeQuestion_connect(noui_ThreadSafeQuestionSuppressed);
+    noui_InitMessageConn = uiInterface.InitMessage_connect(noui_InitMessageSuppressed);
+}
+
+void noui_reconnect()
+{
+    noui_ThreadSafeMessageBoxConn.disconnect();
+    noui_ThreadSafeQuestionConn.disconnect();
+    noui_InitMessageConn.disconnect();
+    noui_connect();
 }

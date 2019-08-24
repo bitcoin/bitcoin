@@ -7,7 +7,6 @@
 from base64 import b64encode
 from binascii import unhexlify
 from decimal import Decimal, ROUND_DOWN
-import hashlib
 import inspect
 import json
 import logging
@@ -19,6 +18,7 @@ import time
 
 from . import coverage
 from .authproxy import AuthServiceProxy, JSONRPCException
+from io import BytesIO
 
 logger = logging.getLogger("TestFramework.utils")
 
@@ -182,12 +182,6 @@ def check_json_precision():
 def count_bytes(hex_string):
     return len(bytearray.fromhex(hex_string))
 
-def hash256(byte_str):
-    sha256 = hashlib.sha256()
-    sha256.update(byte_str)
-    sha256d = hashlib.sha256()
-    sha256d.update(sha256.digest())
-    return sha256d.digest()[::-1]
 
 def hex_str_to_bytes(hex_str):
     return unhexlify(hex_str.encode('ascii'))
@@ -270,8 +264,8 @@ def p2p_port(n):
 def rpc_port(n):
     return PORT_MIN + PORT_RANGE + n + (MAX_NODES * PortSeed.n) % (PORT_RANGE - 1 - MAX_NODES)
 
-def rpc_url(datadir, i, rpchost=None):
-    rpc_u, rpc_p = get_auth_cookie(datadir)
+def rpc_url(datadir, i, chain, rpchost):
+    rpc_u, rpc_p = get_auth_cookie(datadir, chain)
     host = '127.0.0.1'
     port = rpc_port(i)
     if rpchost:
@@ -285,13 +279,13 @@ def rpc_url(datadir, i, rpchost=None):
 # Node functions
 ################
 
-def initialize_datadir(dirname, n):
+def initialize_datadir(dirname, n, chain):
     datadir = get_datadir_path(dirname, n)
     if not os.path.isdir(datadir):
         os.makedirs(datadir)
     with open(os.path.join(datadir, "bitcoin.conf"), 'w', encoding='utf8') as f:
-        f.write("regtest=1\n")
-        f.write("[regtest]\n")
+        f.write("{}=1\n".format(chain))
+        f.write("[{}]\n".format(chain))
         f.write("port=" + str(p2p_port(n)) + "\n")
         f.write("rpcport=" + str(rpc_port(n)) + "\n")
         f.write("server=1\n")
@@ -299,6 +293,7 @@ def initialize_datadir(dirname, n):
         f.write("discover=0\n")
         f.write("listenonion=0\n")
         f.write("printtoconsole=0\n")
+        f.write("upnp=0\n")
         os.makedirs(os.path.join(datadir, 'stderr'), exist_ok=True)
         os.makedirs(os.path.join(datadir, 'stdout'), exist_ok=True)
     return datadir
@@ -311,7 +306,7 @@ def append_config(datadir, options):
         for option in options:
             f.write(option + "\n")
 
-def get_auth_cookie(datadir):
+def get_auth_cookie(datadir, chain):
     user = None
     password = None
     if os.path.isfile(os.path.join(datadir, "bitcoin.conf")):
@@ -324,7 +319,7 @@ def get_auth_cookie(datadir):
                     assert password is None  # Ensure that there is only one rpcpassword line
                     password = line.split("=")[1].strip("\n")
     try:
-        with open(os.path.join(datadir, "regtest", ".cookie"), 'r', encoding="ascii") as f:
+        with open(os.path.join(datadir, chain, ".cookie"), 'r', encoding="ascii") as f:
             userpass = f.read()
             split_userpass = userpass.split(':')
             user = split_userpass[0]
@@ -336,14 +331,14 @@ def get_auth_cookie(datadir):
     return user, password
 
 # If a cookie file exists in the given datadir, delete it.
-def delete_cookie_file(datadir):
-    if os.path.isfile(os.path.join(datadir, "regtest", ".cookie")):
+def delete_cookie_file(datadir, chain):
+    if os.path.isfile(os.path.join(datadir, chain, ".cookie")):
         logger.debug("Deleting leftover cookie file")
-        os.remove(os.path.join(datadir, "regtest", ".cookie"))
+        os.remove(os.path.join(datadir, chain, ".cookie"))
 
-def get_bip9_status(node, key):
-    info = node.getblockchaininfo()
-    return info['bip9_softforks'][key]
+def softfork_active(node, key):
+    """Return whether a softfork is active."""
+    return node.getblockchaininfo()['softforks'][key]['active']
 
 def set_node_times(nodes, t):
     for node in nodes:
@@ -515,14 +510,13 @@ def gen_return_txouts():
     for i in range(512):
         script_pubkey = script_pubkey + "01"
     # concatenate 128 txouts of above script_pubkey which we'll insert before the txout for change
-    txouts = "81"
+    txouts = []
+    from .messages import CTxOut
+    txout = CTxOut()
+    txout.nValue = 0
+    txout.scriptPubKey = hex_str_to_bytes(script_pubkey)
     for k in range(128):
-        # add txout value
-        txouts = txouts + "0000000000000000"
-        # add length of script_pubkey
-        txouts = txouts + "fd0402"
-        # add script_pubkey
-        txouts = txouts + script_pubkey
+        txouts.append(txout)
     return txouts
 
 # Create a spend of each passed-in utxo, splicing in "txouts" to each raw
@@ -530,6 +524,7 @@ def gen_return_txouts():
 def create_lots_of_big_transactions(node, txouts, utxos, num, fee):
     addr = node.getnewaddress()
     txids = []
+    from .messages import CTransaction
     for _ in range(num):
         t = utxos.pop()
         inputs = [{"txid": t["txid"], "vout": t["vout"]}]
@@ -537,9 +532,11 @@ def create_lots_of_big_transactions(node, txouts, utxos, num, fee):
         change = t['amount'] - fee
         outputs[addr] = satoshi_round(change)
         rawtx = node.createrawtransaction(inputs, outputs)
-        newtx = rawtx[0:92]
-        newtx = newtx + txouts
-        newtx = newtx + rawtx[94:]
+        tx = CTransaction()
+        tx.deserialize(BytesIO(hex_str_to_bytes(rawtx)))
+        for txout in txouts:
+            tx.vout.append(txout)
+        newtx = tx.serialize().hex()
         signresult = node.signrawtransactionwithwallet(newtx, None, "NONE")
         txid = node.sendrawtransaction(signresult["hex"], 0)
         txids.append(txid)

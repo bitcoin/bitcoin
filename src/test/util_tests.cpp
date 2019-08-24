@@ -5,14 +5,17 @@
 #include <util/system.h>
 
 #include <clientversion.h>
-#include <primitives/transaction.h>
 #include <sync.h>
-#include <test/util.h>
-#include <util/strencodings.h>
-#include <util/moneystr.h>
 #include <test/setup_common.h>
+#include <test/util.h>
+#include <util/moneystr.h>
+#include <util/strencodings.h>
+#include <util/string.h>
+#include <util/time.h>
 
 #include <stdint.h>
+#include <thread>
+#include <utility>
 #include <vector>
 #ifndef WIN32
 #include <signal.h>
@@ -121,6 +124,19 @@ BOOST_AUTO_TEST_CASE(util_HexStr)
     );
 }
 
+BOOST_AUTO_TEST_CASE(util_Join)
+{
+    // Normal version
+    BOOST_CHECK_EQUAL(Join({}, ", "), "");
+    BOOST_CHECK_EQUAL(Join({"foo"}, ", "), "foo");
+    BOOST_CHECK_EQUAL(Join({"foo", "bar"}, ", "), "foo, bar");
+
+    // Version with unary operator
+    const auto op_upper = [](const std::string& s) { return ToUpper(s); };
+    BOOST_CHECK_EQUAL(Join<std::string>({}, ", ", op_upper), "");
+    BOOST_CHECK_EQUAL(Join<std::string>({"foo"}, ", ", op_upper), "FOO");
+    BOOST_CHECK_EQUAL(Join<std::string>({"foo", "bar"}, ", ", op_upper), "FOO, BAR");
+}
 
 BOOST_AUTO_TEST_CASE(util_FormatISO8601DateTime)
 {
@@ -153,10 +169,10 @@ struct TestArgsManager : public ArgsManager
         LOCK(cs_args);
         m_network_only_args.insert(arg);
     }
-    void SetupArgs(int argv, const char* args[])
+    void SetupArgs(const std::vector<std::pair<std::string, unsigned int>>& args)
     {
-        for (int i = 0; i < argv; ++i) {
-            AddArg(args[i], "", false, OptionsCategory::OPTIONS);
+        for (const auto& arg : args) {
+            AddArg(arg.first, "", arg.second, OptionsCategory::OPTIONS);
         }
     }
     using ArgsManager::ReadConfigStream;
@@ -167,11 +183,15 @@ struct TestArgsManager : public ArgsManager
 BOOST_AUTO_TEST_CASE(util_ParseParameters)
 {
     TestArgsManager testArgs;
-    const char* avail_args[] = {"-a", "-b", "-ccc", "-d"};
+    const auto a = std::make_pair("-a", ArgsManager::ALLOW_ANY);
+    const auto b = std::make_pair("-b", ArgsManager::ALLOW_ANY);
+    const auto ccc = std::make_pair("-ccc", ArgsManager::ALLOW_ANY);
+    const auto d = std::make_pair("-d", ArgsManager::ALLOW_ANY);
+
     const char *argv_test[] = {"-ignored", "-a", "-b", "-ccc=argument", "-ccc=multiple", "f", "-d=e"};
 
     std::string error;
-    testArgs.SetupArgs(4, avail_args);
+    testArgs.SetupArgs({a, b, ccc, d});
     BOOST_CHECK(testArgs.ParseParameters(0, (char**)argv_test, error));
     BOOST_CHECK(testArgs.GetOverrideArgs().empty() && testArgs.GetConfigArgs().empty());
 
@@ -199,11 +219,17 @@ BOOST_AUTO_TEST_CASE(util_ParseParameters)
 BOOST_AUTO_TEST_CASE(util_GetBoolArg)
 {
     TestArgsManager testArgs;
-    const char* avail_args[] = {"-a", "-b", "-c", "-d", "-e", "-f"};
+    const auto a = std::make_pair("-a", ArgsManager::ALLOW_BOOL);
+    const auto b = std::make_pair("-b", ArgsManager::ALLOW_BOOL);
+    const auto c = std::make_pair("-c", ArgsManager::ALLOW_BOOL);
+    const auto d = std::make_pair("-d", ArgsManager::ALLOW_BOOL);
+    const auto e = std::make_pair("-e", ArgsManager::ALLOW_BOOL);
+    const auto f = std::make_pair("-f", ArgsManager::ALLOW_BOOL);
+
     const char *argv_test[] = {
         "ignored", "-a", "-nob", "-c=0", "-d=1", "-e=false", "-f=true"};
     std::string error;
-    testArgs.SetupArgs(6, avail_args);
+    testArgs.SetupArgs({a, b, c, d, e, f});
     BOOST_CHECK(testArgs.ParseParameters(7, (char**)argv_test, error));
 
     // Each letter should be set.
@@ -236,9 +262,10 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArgEdgeCases)
     TestArgsManager testArgs;
 
     // Params test
-    const char* avail_args[] = {"-foo", "-bar"};
+    const auto foo = std::make_pair("-foo", ArgsManager::ALLOW_BOOL);
+    const auto bar = std::make_pair("-bar", ArgsManager::ALLOW_BOOL);
     const char *argv_test[] = {"ignored", "-nofoo", "-foo", "-nobar=0"};
-    testArgs.SetupArgs(2, avail_args);
+    testArgs.SetupArgs({foo, bar});
     std::string error;
     BOOST_CHECK(testArgs.ParseParameters(4, (char**)argv_test, error));
 
@@ -307,8 +334,17 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
        "iii=2\n";
 
     TestArgsManager test_args;
-    const char* avail_args[] = {"-a", "-b", "-ccc", "-d", "-e", "-fff", "-ggg", "-h", "-i", "-iii"};
-    test_args.SetupArgs(10, avail_args);
+    const auto a = std::make_pair("-a", ArgsManager::ALLOW_BOOL);
+    const auto b = std::make_pair("-b", ArgsManager::ALLOW_BOOL);
+    const auto ccc = std::make_pair("-ccc", ArgsManager::ALLOW_STRING);
+    const auto d = std::make_pair("-d", ArgsManager::ALLOW_STRING);
+    const auto e = std::make_pair("-e", ArgsManager::ALLOW_ANY);
+    const auto fff = std::make_pair("-fff", ArgsManager::ALLOW_BOOL);
+    const auto ggg = std::make_pair("-ggg", ArgsManager::ALLOW_BOOL);
+    const auto h = std::make_pair("-h", ArgsManager::ALLOW_BOOL);
+    const auto i = std::make_pair("-i", ArgsManager::ALLOW_BOOL);
+    const auto iii = std::make_pair("-iii", ArgsManager::ALLOW_INT);
+    test_args.SetupArgs({a, b, ccc, d, e, fff, ggg, h, i, iii});
 
     test_args.ReadConfigString(str_config);
     // expectation: a, b, ccc, d, fff, ggg, h, i end up in map
@@ -506,8 +542,9 @@ BOOST_AUTO_TEST_CASE(util_GetArg)
 BOOST_AUTO_TEST_CASE(util_GetChainName)
 {
     TestArgsManager test_args;
-    const char* avail_args[] = {"-testnet", "-regtest"};
-    test_args.SetupArgs(2, avail_args);
+    const auto testnet = std::make_pair("-testnet", ArgsManager::ALLOW_BOOL);
+    const auto regtest = std::make_pair("-regtest", ArgsManager::ALLOW_BOOL);
+    test_args.SetupArgs({testnet, regtest});
 
     const char* argv_testnet[] = {"cmd", "-testnet"};
     const char* argv_regtest[] = {"cmd", "-regtest"};
@@ -681,7 +718,7 @@ BOOST_FIXTURE_TEST_CASE(util_ArgsMerge, ArgsMergeTestingSetup)
 
         const std::string& name = net_specific ? "wallet" : "server";
         const std::string key = "-" + name;
-        parser.AddArg(key, name, false, OptionsCategory::OPTIONS);
+        parser.AddArg(key, name, ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
         if (net_specific) parser.SetNetworkOnlyArg(key);
 
         auto args = GetValues(arg_actions, section, name, "a");
@@ -808,8 +845,8 @@ BOOST_FIXTURE_TEST_CASE(util_ChainMerge, ChainMergeTestingSetup)
     ForEachMergeSetup([&](const ActionList& arg_actions, const ActionList& conf_actions) {
         TestArgsManager parser;
         LOCK(parser.cs_args);
-        parser.AddArg("-regtest", "regtest", false, OptionsCategory::OPTIONS);
-        parser.AddArg("-testnet", "testnet", false, OptionsCategory::OPTIONS);
+        parser.AddArg("-regtest", "regtest", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+        parser.AddArg("-testnet", "testnet", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 
         auto arg = [](Action action) { return action == ENABLE_TEST  ? "-testnet=1"   :
                                               action == DISABLE_TEST ? "-testnet=0"   :
@@ -1509,17 +1546,9 @@ BOOST_AUTO_TEST_CASE(test_ToLower)
     BOOST_CHECK_EQUAL(ToLower(0), 0);
     BOOST_CHECK_EQUAL(ToLower('\xff'), '\xff');
 
-    std::string testVector;
-    Downcase(testVector);
-    BOOST_CHECK_EQUAL(testVector, "");
-
-    testVector = "#HODL";
-    Downcase(testVector);
-    BOOST_CHECK_EQUAL(testVector, "#hodl");
-
-    testVector = "\x00\xfe\xff";
-    Downcase(testVector);
-    BOOST_CHECK_EQUAL(testVector, "\x00\xfe\xff");
+    BOOST_CHECK_EQUAL(ToLower(""), "");
+    BOOST_CHECK_EQUAL(ToLower("#HODL"), "#hodl");
+    BOOST_CHECK_EQUAL(ToLower("\x00\xfe\xff"), "\x00\xfe\xff");
 }
 
 BOOST_AUTO_TEST_CASE(test_ToUpper)
@@ -1530,6 +1559,10 @@ BOOST_AUTO_TEST_CASE(test_ToUpper)
     BOOST_CHECK_EQUAL(ToUpper('{'), '{');
     BOOST_CHECK_EQUAL(ToUpper(0), 0);
     BOOST_CHECK_EQUAL(ToUpper('\xff'), '\xff');
+
+    BOOST_CHECK_EQUAL(ToUpper(""), "");
+    BOOST_CHECK_EQUAL(ToUpper("#hodl"), "#HODL");
+    BOOST_CHECK_EQUAL(ToUpper("\x00\xfe\xff"), "\x00\xfe\xff");
 }
 
 BOOST_AUTO_TEST_CASE(test_Capitalize)

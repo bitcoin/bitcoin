@@ -9,8 +9,8 @@
 #include <core_io.h>
 #include <init.h>
 #include <interfaces/chain.h>
-
 #include <test/setup_common.h>
+#include <util/time.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/test/unit_test.hpp>

@@ -3,13 +3,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include <key.h>
 
-#include <base58.h>
-#include <script/script.h>
 #include <uint256.h>
 #include <util/system.h>
-#include <util/strencodings.h>
 #include <test/setup_common.h>
-#include <string>
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
