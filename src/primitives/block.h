@@ -28,8 +28,6 @@ public:
     uint32_t nBits;
     uint32_t nNonce;
 
-    virtual ~CBlockHeader() = default;
-
     CBlockHeader()
     {
         SetNull();
