@@ -282,6 +282,10 @@ void BitcoinApplication::parameterSetup()
     m_node.initParameterInteraction();
 }
 
+void BitcoinApplication::SetPrune(bool prune, bool force) {
+     optionsModel->SetPrune(prune, force);
+}
+
 void BitcoinApplication::requestInitialize()
 {
     qDebug() << __func__ << ": Requesting initialize";
