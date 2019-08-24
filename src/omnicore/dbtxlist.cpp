@@ -11,6 +11,7 @@
 
 #include <chain.h>
 #include <chainparams.h>
+#include <fs.h>
 #include <validation.h>
 #include <sync.h>
 #include <tinyformat.h>
@@ -23,8 +24,6 @@
 #include <leveldb/status.h>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/exception/to_string.hpp>
-#include <boost/filesystem/path.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <stddef.h>
@@ -44,7 +43,7 @@ using mastercore::GetBlockIndex;
 using mastercore::isNonMainNet;
 using mastercore::pDbTransaction;
 
-CMPTxList::CMPTxList(const boost::filesystem::path& path, bool fWipe)
+CMPTxList::CMPTxList(const fs::path& path, bool fWipe)
 {
     leveldb::Status status = Open(path, fWipe);
     PrintToConsole("Loading tx meta-info database: %s\n", status.ToString());
@@ -261,7 +260,7 @@ bool CMPTxList::getPurchaseDetails(const uint256 txid, int purchaseNumber, std::
     if (!pdb) return 0;
     std::vector<std::string> vstr;
     std::string strValue;
-    leveldb::Status status = pdb->Get(readoptions, txid.ToString() + "-" + boost::to_string(purchaseNumber), &strValue);
+    leveldb::Status status = pdb->Get(readoptions, txid.ToString() + "-" + std::to_string(purchaseNumber), &strValue);
     if (status.ok()) {
         // parse the string returned
         boost::split(vstr, strValue, boost::is_any_of(":"), boost::token_compress_on);

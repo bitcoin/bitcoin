@@ -3,7 +3,6 @@
 #include <test/test_bitcoin.h>
 #include <util/time.h>
 
-#include <boost/bind.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/thread.hpp>
 
@@ -37,7 +36,7 @@ BOOST_AUTO_TEST_CASE(multithread_locking)
 
     boost::thread_group threadGroup;
     for (int i = 0; i < nThreadsNum; ++i) {
-        threadGroup.create_thread(boost::bind(&plusOneThread, nIterations));
+        threadGroup.create_thread(std::bind(&plusOneThread, nIterations));
     }
 
     threadGroup.join_all();

@@ -19,7 +19,6 @@
 #include <uint256.h>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/format.hpp>
 
 #include <openssl/sha.h>
 

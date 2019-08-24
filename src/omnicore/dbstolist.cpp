@@ -4,6 +4,7 @@
 #include <omnicore/sp.h>
 #include <omnicore/walletutils.h>
 
+#include <fs.h>
 #include <interfaces/wallet.h>
 #include <uint256.h>
 #include <util/strencodings.h>
@@ -16,7 +17,6 @@
 #include <leveldb/status.h>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem/path.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <stddef.h>
@@ -28,7 +28,7 @@
 using mastercore::IsMyAddress;
 using mastercore::isPropertyDivisible;
 
-CMPSTOList::CMPSTOList(const boost::filesystem::path& path, bool fWipe)
+CMPSTOList::CMPSTOList(const fs::path& path, bool fWipe)
 {
     leveldb::Status status = Open(path, fWipe);
     PrintToConsole("Loading send-to-owners database: %s\n", status.ToString());

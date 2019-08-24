@@ -15,6 +15,7 @@
 #include <omnicore/utilsbitcoin.h>
 
 #include <chain.h>
+#include <fs.h>
 #include <validation.h>
 #include <tinyformat.h>
 #include <uint256.h>
@@ -41,7 +42,7 @@ using namespace mastercore;
 extern int64_t exodus_prev;
 
 //! Path for file based persistence
-extern boost::filesystem::path pathStateFiles;
+extern fs::path pathStateFiles;
 
 enum FILETYPES {
   FILETYPE_BALANCES = 0,
@@ -401,7 +402,7 @@ static int input_mp_mdexorder_string(const std::string& s)
 
 static int write_state_file(const CBlockIndex* pBlockIndex, int what)
 {
-    boost::filesystem::path path = pathStateFiles / strprintf("%s-%s.dat", statePrefix[what], pBlockIndex->GetBlockHash().ToString());
+    fs::path path = pathStateFiles / strprintf("%s-%s.dat", statePrefix[what], pBlockIndex->GetBlockHash().ToString());
     const std::string strFile = path.string();
 
     std::ofstream file;
@@ -455,11 +456,11 @@ static void prune_state_files(const CBlockIndex* topIndex)
     // build a set of blockHashes for which we have any state files
     std::set<uint256> statefulBlockHashes;
 
-    boost::filesystem::directory_iterator dIter(pathStateFiles);
-    boost::filesystem::directory_iterator endIter;
+    fs::directory_iterator dIter(pathStateFiles);
+    fs::directory_iterator endIter;
     for (; dIter != endIter; ++dIter) {
         std::string fName = dIter->path().empty() ? "<invalid>" : (*--dIter->path().end()).string();
-        if (false == boost::filesystem::is_regular_file(dIter->status())) {
+        if (false == fs::is_regular_file(dIter->status())) {
             // skip funny business
             PrintToLog("Non-regular file found in persistence directory : %s\n", fName);
             continue;
@@ -498,8 +499,8 @@ static void prune_state_files(const CBlockIndex* topIndex)
             // destroy the associated files!
             std::string strBlockHash = iter->ToString();
             for (int i = 0; i < NUM_FILETYPES; ++i) {
-                boost::filesystem::path path = pathStateFiles / strprintf("%s-%s.dat", statePrefix[i], strBlockHash);
-                boost::filesystem::remove(path);
+                fs::path path = pathStateFiles / strprintf("%s-%s.dat", statePrefix[i], strBlockHash);
+                fs::remove(path);
             }
         }
     }
@@ -694,10 +695,10 @@ int LoadMostRelevantInMemoryState()
     // prepare a set of available files by block hash pruning any that are
     // not in the active chain
     std::set<uint256> persistedBlocks;
-    boost::filesystem::directory_iterator dIter(pathStateFiles);
-    boost::filesystem::directory_iterator endIter;
+    fs::directory_iterator dIter(pathStateFiles);
+    fs::directory_iterator endIter;
     for (; dIter != endIter; ++dIter) {
-        if (false == boost::filesystem::is_regular_file(dIter->status()) || dIter->path().empty()) {
+        if (false == fs::is_regular_file(dIter->status()) || dIter->path().empty()) {
             // skip funny business
             continue;
         }
@@ -731,7 +732,7 @@ int LoadMostRelevantInMemoryState()
         if (persistedBlocks.find(curTip->GetBlockHash()) != persistedBlocks.end()) {
             int success = -1;
             for (int i = 0; i < NUM_FILETYPES; ++i) {
-                boost::filesystem::path path = pathStateFiles / strprintf("%s-%s.dat", statePrefix[i], curTip->GetBlockHash().ToString());
+                fs::path path = pathStateFiles / strprintf("%s-%s.dat", statePrefix[i], curTip->GetBlockHash().ToString());
                 const std::string strFile = path.string();
                 success = RestoreInMemoryState(strFile, i, true);
                 if (success < 0) {

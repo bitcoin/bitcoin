@@ -50,16 +50,10 @@ EXPECTED_BOOST_INCLUDES=(
     boost/algorithm/string/classification.hpp
     boost/algorithm/string/replace.hpp
     boost/algorithm/string/split.hpp
-    boost/assign/list_of.hpp
-    boost/bind.hpp
     boost/chrono/chrono.hpp
     boost/date_time/posix_time/posix_time.hpp
-    boost/exception/to_string.hpp
     boost/filesystem.hpp
     boost/filesystem/fstream.hpp
-    boost/filesystem/operations.hpp
-    boost/filesystem/path.hpp
-    boost/format.hpp
     boost/lexical_cast.hpp
     boost/multi_index/hashed_index.hpp
     boost/multi_index/ordered_index.hpp
@@ -78,7 +72,6 @@ EXPECTED_BOOST_INCLUDES=(
     boost/thread.hpp
     boost/thread/condition_variable.hpp
     boost/thread/mutex.hpp
-    boost/thread/once.hpp
     boost/thread/thread.hpp
     boost/variant.hpp
     boost/variant/apply_visitor.hpp

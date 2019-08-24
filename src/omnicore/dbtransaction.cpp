@@ -3,13 +3,13 @@
 #include <omnicore/errors.h>
 #include <omnicore/log.h>
 
+#include <fs.h>
 #include <uint256.h>
 #include <tinyformat.h>
 
 #include <leveldb/status.h>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem/path.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <stddef.h>
@@ -18,7 +18,7 @@
 #include <string>
 #include <vector>
 
-COmniTransactionDB::COmniTransactionDB(const boost::filesystem::path& path, bool fWipe)
+COmniTransactionDB::COmniTransactionDB(const fs::path& path, bool fWipe)
 {
     leveldb::Status status = Open(path, fWipe);
     PrintToConsole("Loading master transactions database: %s\n", status.ToString());

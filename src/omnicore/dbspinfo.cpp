@@ -5,6 +5,7 @@
 
 #include <base58.h>
 #include <clientversion.h>
+#include <fs.h>
 #include <key_io.h>
 #include <serialize.h>
 #include <streams.h>
@@ -13,8 +14,6 @@
 
 #include <leveldb/db.h>
 #include <leveldb/write_batch.h>
-
-#include <boost/filesystem/path.hpp>
 
 #include <stdint.h>
 
@@ -85,7 +84,7 @@ std::string CMPSPInfo::Entry::getIssuer(int block) const
     return _issuer;
 }
 
-CMPSPInfo::CMPSPInfo(const boost::filesystem::path& path, bool fWipe)
+CMPSPInfo::CMPSPInfo(const fs::path& path, bool fWipe)
 {
     leveldb::Status status = Open(path, fWipe);
     PrintToConsole("Loading smart property database: %s\n", status.ToString());

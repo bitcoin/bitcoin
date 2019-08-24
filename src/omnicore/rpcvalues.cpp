@@ -17,8 +17,6 @@
 
 #include <univalue.h>
 
-#include <boost/assign/list_of.hpp>
-
 #include <string>
 #include <vector>
 

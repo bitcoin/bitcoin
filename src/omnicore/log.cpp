@@ -1,18 +1,15 @@
 #include <omnicore/log.h>
 
 #include <chainparamsbase.h>
+#include <fs.h>
 #include <logging.h>
 #include <util/system.h>
 #include <util/time.h>
 
-#include <boost/filesystem/operations.hpp>
-#include <boost/filesystem/path.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/once.hpp>
-
 #include <assert.h>
 #include <stdio.h>
 #include <atomic>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -78,13 +75,13 @@ bool msc_debug_fees               = 1;
  * maybe indirectly, and you get a core dump at shutdown trying to lock
  * the mutex).
  */
-static boost::once_flag debugLogInitFlag = BOOST_ONCE_INIT;
+static std::once_flag debugLogInitFlag;
 /**
- * We use boost::call_once() to make sure these are initialized
+ * We use std::call_once() to make sure these are initialized
  * in a thread-safe manner the first time called:
  */
 static FILE* fileout = nullptr;
-static boost::mutex* mutexDebugLog = nullptr;
+static std::mutex* mutexDebugLog = nullptr;
 /** Flag to indicate, whether the Omni Core log file should be reopened. */
 extern std::atomic<bool> fReopenOmniCoreLog;
 /**
@@ -93,13 +90,13 @@ extern std::atomic<bool> fReopenOmniCoreLog;
  * The log file can be specified via startup option "--omnilogfile=/path/to/omnicore.log",
  * and if none is provided, then the client's datadir is used as default location.
  */
-static boost::filesystem::path GetLogPath()
+static fs::path GetLogPath()
 {
-    boost::filesystem::path pathLogFile;
+    fs::path pathLogFile;
     std::string strLogPath = gArgs.GetArg("-omnilogfile", "");
 
     if (!strLogPath.empty()) {
-        pathLogFile = boost::filesystem::path(strLogPath);
+        pathLogFile = fs::path(strLogPath);
         TryCreateDirectories(pathLogFile.parent_path());
     } else {
         pathLogFile = GetDataDir() / LOG_FILENAME;
@@ -116,7 +113,7 @@ static void DebugLogInit()
     assert(fileout == nullptr);
     assert(mutexDebugLog == nullptr);
 
-    boost::filesystem::path pathDebug = GetLogPath();
+    fs::path pathDebug = GetLogPath();
     fileout = fopen(pathDebug.string().c_str(), "a");
 
     if (fileout) {
@@ -125,7 +122,7 @@ static void DebugLogInit()
         PrintToConsole("Failed to open debug log file: %s\n", pathDebug.string());
     }
 
-    mutexDebugLog = new boost::mutex();
+    mutexDebugLog = new std::mutex();
 }
 
 /**
@@ -157,17 +154,17 @@ int LogFilePrint(const std::string& str)
     }
     else if (LogInstance().m_print_to_file) {
         static bool fStartedNewLine = true;
-        boost::call_once(&DebugLogInit, debugLogInitFlag);
+        std::call_once(debugLogInitFlag, &DebugLogInit);
 
         if (fileout == nullptr) {
             return ret;
         }
-        boost::mutex::scoped_lock scoped_lock(*mutexDebugLog);
+        std::lock_guard<std::mutex> lock(*mutexDebugLog);
 
         // Reopen the log file, if requested
         if (fReopenOmniCoreLog) {
             fReopenOmniCoreLog = false;
-            boost::filesystem::path pathDebug = GetLogPath();
+            fs::path pathDebug = GetLogPath();
             if (freopen(pathDebug.string().c_str(), "a", fileout) != nullptr) {
                 setbuf(fileout, nullptr); // Unbuffered
             }
@@ -312,10 +309,10 @@ void InitDebugLogLevels()
  */
 void ShrinkDebugLog()
 {
-    boost::filesystem::path pathLog = GetLogPath();
+    fs::path pathLog = GetLogPath();
     FILE* file = fopen(pathLog.string().c_str(), "r");
 
-    if (file && boost::filesystem::file_size(pathLog) > LOG_SHRINKSIZE) {
+    if (file && fs::file_size(pathLog) > LOG_SHRINKSIZE) {
         // Restart the file with some of the end
         char* pch = new char[LOG_BUFFERSIZE];
         if (nullptr != pch) {

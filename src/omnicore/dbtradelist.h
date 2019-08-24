@@ -3,11 +3,10 @@
 
 #include <omnicore/dbbase.h>
 
+#include <fs.h>
 #include <uint256.h>
 
 #include <univalue.h>
-
-#include <boost/filesystem/path.hpp>
 
 #include <stdint.h>
 
@@ -19,7 +18,7 @@
 class CMPTradeList : public CDBBase
 {
 public:
-    CMPTradeList(const boost::filesystem::path& path, bool fWipe);
+    CMPTradeList(const fs::path& path, bool fWipe);
     virtual ~CMPTradeList();
 
     void recordMatchedTrade(const uint256& txid1, const uint256& txid2, const std::string& address1, const std::string& address2, uint32_t prop1, uint32_t prop2, int64_t amount1, int64_t amount2, int blockNum, int64_t fee);
