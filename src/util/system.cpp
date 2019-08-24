@@ -1231,7 +1231,7 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
         // 6. ../Resources
         std::string portStr = std::to_string(websocketport);
         std::string rpcportStr = std::to_string(ethrpcport);
-        char * argvAttempt1[19] = {(char*)attempt1.string().c_str(), 
+        char * argvAttempt1[22] = {(char*)attempt1.string().c_str(), 
                 (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), 
                 (char*)"--rpc", (char*)"--rpcapi", (char*)"eth", (char*)"--rpcport", (char*)rpcportStr.c_str(),
                 (char*)"--wsorigins", (char*)"*",
@@ -1239,9 +1239,10 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
                 (char*)"--datadir", (char*)dataDir.c_str(),
                 (char*)"--allow-insecure-unlock",
                 bGethTestnet?(char*)"--rinkeby": NULL,
-                bGethTestnet?(char*)"--bootnodes=enode://a24ac7c5484ef4ed0c5eb2d36620ba4e4aa13b8c84684e1b4aab0cebea2ae45cb4d375b77eab56516d34bfbd3c1a833fc51296ff084b770b94fb9028c4d25ccf@52.169.42.101:30303": NULL,
+                (char*)"--rpccorsdomain",(char*)"*",
+                (char*)"--maxpeers",(char*)"0",
                 NULL };
-        char * argvAttempt2[19] = {(char*)attempt2.string().c_str(), 
+        char * argvAttempt2[22] = {(char*)attempt2.string().c_str(), 
                 (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(),
                 (char*)"--rpc", (char*)"--rpcapi", (char*)"eth", (char*)"--rpcport", (char*)rpcportStr.c_str(),
                 (char*)"--wsorigins", (char*)"*",
@@ -1249,9 +1250,10 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
                 (char*)"--datadir", (char*)dataDir.c_str(),
                 (char*)"--allow-insecure-unlock",
                 bGethTestnet?(char*)"--rinkeby": NULL,
-                bGethTestnet?(char*)"--bootnodes=enode://a24ac7c5484ef4ed0c5eb2d36620ba4e4aa13b8c84684e1b4aab0cebea2ae45cb4d375b77eab56516d34bfbd3c1a833fc51296ff084b770b94fb9028c4d25ccf@52.169.42.101:30303": NULL,
+                (char*)"--rpccorsdomain",(char*)"*",
+                (char*)"--maxpeers",(char*)"0",
                 NULL };
-        char * argvAttempt3[19] = {(char*)attempt3.string().c_str(), 
+        char * argvAttempt3[22] = {(char*)attempt3.string().c_str(), 
                 (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), 
                 (char*)"--rpc", (char*)"--rpcapi", (char*)"eth", (char*)"--rpcport", (char*)rpcportStr.c_str(),
                 (char*)"--wsorigins", (char*)"*",
@@ -1259,9 +1261,10 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
                 (char*)"--datadir", (char*)dataDir.c_str(),
                 (char*)"--allow-insecure-unlock",
                 bGethTestnet?(char*)"--rinkeby": NULL,
-                bGethTestnet?(char*)"--bootnodes=enode://a24ac7c5484ef4ed0c5eb2d36620ba4e4aa13b8c84684e1b4aab0cebea2ae45cb4d375b77eab56516d34bfbd3c1a833fc51296ff084b770b94fb9028c4d25ccf@52.169.42.101:30303": NULL,
+                (char*)"--rpccorsdomain",(char*)"*",
+                (char*)"--maxpeers",(char*)"0",
                 NULL };
-        char * argvAttempt4[19] = {(char*)attempt4.string().c_str(), 
+        char * argvAttempt4[22] = {(char*)attempt4.string().c_str(), 
                 (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), 
                 (char*)"--rpc", (char*)"--rpcapi", (char*)"eth", (char*)"--rpcport", (char*)rpcportStr.c_str(),
                 (char*)"--wsorigins", (char*)"*",
@@ -1269,9 +1272,10 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
                 (char*)"--datadir", (char*)dataDir.c_str(),
                 (char*)"--allow-insecure-unlock",
                 bGethTestnet?(char*)"--rinkeby": NULL,
-                bGethTestnet?(char*)"--bootnodes=enode://a24ac7c5484ef4ed0c5eb2d36620ba4e4aa13b8c84684e1b4aab0cebea2ae45cb4d375b77eab56516d34bfbd3c1a833fc51296ff084b770b94fb9028c4d25ccf@52.169.42.101:30303": NULL,
+                (char*)"--rpccorsdomain",(char*)"*",
+                (char*)"--maxpeers",(char*)"0",
                 NULL };
-        char * argvAttempt5[19] = {(char*)attempt5.string().c_str(), 
+        char * argvAttempt5[22] = {(char*)attempt5.string().c_str(), 
                 (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(),
                 (char*)"--rpc", (char*)"--rpcapi", (char*)"eth", (char*)"--rpcport", (char*)rpcportStr.c_str(),
                 (char*)"--wsorigins", (char*)"*",
@@ -1279,9 +1283,10 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
                 (char*)"--datadir", (char*)dataDir.c_str(),
                 (char*)"--allow-insecure-unlock",
                 bGethTestnet?(char*)"--rinkeby": NULL,
-                bGethTestnet?(char*)"--bootnodes=enode://a24ac7c5484ef4ed0c5eb2d36620ba4e4aa13b8c84684e1b4aab0cebea2ae45cb4d375b77eab56516d34bfbd3c1a833fc51296ff084b770b94fb9028c4d25ccf@52.169.42.101:30303": NULL,
+                (char*)"--rpccorsdomain",(char*)"*",
+                (char*)"--maxpeers",(char*)"0",
                 NULL };   
-        char * argvAttempt6[19] = {(char*)attempt6.string().c_str(), 
+        char * argvAttempt6[22] = {(char*)attempt6.string().c_str(), 
                 (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), 
                 (char*)"--rpc", (char*)"--rpcapi", (char*)"eth", (char*)"--rpcport", (char*)rpcportStr.c_str(),
                 (char*)"--wsorigins", (char*)"*",
@@ -1289,7 +1294,8 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
                 (char*)"--datadir", (char*)dataDir.c_str(),
                 (char*)"--allow-insecure-unlock",
                 bGethTestnet?(char*)"--rinkeby": NULL,
-                bGethTestnet?(char*)"--bootnodes=enode://a24ac7c5484ef4ed0c5eb2d36620ba4e4aa13b8c84684e1b4aab0cebea2ae45cb4d375b77eab56516d34bfbd3c1a833fc51296ff084b770b94fb9028c4d25ccf@52.169.42.101:30303": NULL,
+                (char*)"--rpccorsdomain",(char*)"*",
+                (char*)"--maxpeers",(char*)"0",
                 NULL };                                                                   
         execv(argvAttempt1[0], &argvAttempt1[0]); // current directory
         if (errno != 0) {
@@ -1322,10 +1328,7 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
     #else
         std::string portStr = std::to_string(websocketport);
         std::string rpcportStr = std::to_string(ethrpcport);
-        std::string args =  std::string("--rpc --rpcapi eth --rpcport ") + rpcportStr + std::string(" --ws --wsport ") + portStr + std::string(" --wsorigins * --syncmode light --datadir ") +  dataDir.string();
-        if(bGethTestnet) {
-            args += std::string(" --rinkeby --bootnodes=enode://a24ac7c5484ef4ed0c5eb2d36620ba4e4aa13b8c84684e1b4aab0cebea2ae45cb4d375b77eab56516d34bfbd3c1a833fc51296ff084b770b94fb9028c4d25ccf@52.169.42.101:30303");
-        }
+        std::string args =  std::string("--rpc --rpcapi eth --rpccorsdomain * --rpcport ") + rpcportStr + std::string(" --ws --wsport ") + portStr + std::string(" --wsorigins * --syncmode light --maxpeers 0 --datadir ") +  dataDir.string();
         pid = fork(attempt1.string(), args);
         if( pid <= 0 ) {
             LogPrintf("Geth not found at %s, trying in current direction bin folder\n", attempt1.string());
