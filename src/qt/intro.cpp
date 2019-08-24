@@ -131,6 +131,11 @@ Intro::Intro(QWidget *parent, uint64_t blockchain_size, uint64_t chain_state_siz
     ui->lblExplanation2->setText(ui->lblExplanation2->text().arg(PACKAGE_NAME));
 
     uint64_t pruneTarget = std::max<int64_t>(0, gArgs.GetArg("-prune", 0));
+    if (pruneTarget > 1) { // -prune=1 means enabled, above that it's a size in MB
+        ui->prune->setChecked(true);
+        ui->prune->setEnabled(false);
+    }
+    ui->prune->setText(tr("Discard blocks after verification, except most recent %1 GB (prune)").arg(pruneTarget ? pruneTarget / 1000 : 2));
     requiredSpace = m_blockchain_size;
     QString storageRequiresMsg = tr("At least %1 GB of data will be stored in this directory, and it will grow over time.");
     if (pruneTarget) {
@@ -180,7 +185,7 @@ void Intro::setDataDirectory(const QString &dataDir)
     }
 }
 
-bool Intro::showIfNeeded(interfaces::Node& node, bool& did_show_intro)
+bool Intro::showIfNeeded(interfaces::Node& node, bool& did_show_intro, bool& prune)
 {
     did_show_intro = false;
 
@@ -229,6 +234,9 @@ bool Intro::showIfNeeded(interfaces::Node& node, bool& did_show_intro)
                 /* fall through, back to choosing screen */
             }
         }
+
+        // Additional preferences:
+        prune = intro.ui->prune->isChecked();
 
         settings.setValue("strDataDir", dataDir);
         settings.setValue("fReset", false);
