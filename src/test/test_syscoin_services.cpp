@@ -205,7 +205,6 @@ void StartNode(const string &dataDirIn, bool regTest, const string& extraArgs, b
 	}
 	tfm::format(std::cout,"Done!\n");
 }
-
 void StopNode(const string &dataDirIn, bool regtest) {
 	string dataDir = LookupURLLocal(dataDirIn); 
 	tfm::format(std::cout,"Stopping %s..\n", dataDir.c_str());
