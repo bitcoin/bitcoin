@@ -127,13 +127,13 @@ test_test_dash_LDADD += $(ZMQ_LIBS)
 endif
 #
 
-# test_bitcoin_fuzzy binary #
-test_test_bitcoin_fuzzy_SOURCES = test/test_bitcoin_fuzzy.cpp
-test_test_bitcoin_fuzzy_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-test_test_bitcoin_fuzzy_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-test_test_bitcoin_fuzzy_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+# test_dash_fuzzy binary #
+test_test_dash_fuzzy_SOURCES = test/test_dash_fuzzy.cpp
+test_test_dash_fuzzy_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_test_dash_fuzzy_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_test_dash_fuzzy_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
-test_test_bitcoin_fuzzy_LDADD = \
+test_test_dash_fuzzy_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_COMMON) \
@@ -142,7 +142,7 @@ test_test_bitcoin_fuzzy_LDADD = \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBSECP256K1)
 
-test_test_bitcoin_fuzzy_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
+test_test_dash_fuzzy_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 #
 
 nodist_test_test_dash_SOURCES = $(GENERATED_TEST_FILES)
