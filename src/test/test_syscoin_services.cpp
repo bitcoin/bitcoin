@@ -30,6 +30,7 @@ static int node3LastBlock = 0;
 static bool node1Online = false;
 static bool node2Online = false;
 static bool node3Online = false;
+static bool started = false;
 std::map<string, string> mapNodes;
 string strSYSXAsset = "";
 string strSYSXAddress = "";
@@ -1278,6 +1279,13 @@ string AssetSend(const string& node, const string& guid, const string& inputs, c
 
 BasicSyscoinTestingSetup::BasicSyscoinTestingSetup()
 {
+	if(!started){
+		StartNodes();
+		SelectParams(CBaseChainParams::REGTEST);
+		GenerateSpendableCoins();
+		SetupSYSXAsset();
+	}
+	started = true;
 }
 BasicSyscoinTestingSetup::~BasicSyscoinTestingSetup()
 {

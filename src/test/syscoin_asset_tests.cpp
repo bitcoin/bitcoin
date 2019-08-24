@@ -26,9 +26,6 @@ BOOST_FIXTURE_TEST_SUITE(syscoin_asset_tests, BasicSyscoinTestingSetup)
 
 BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 {
-	StartNodes();
-    SelectParams(CBaseChainParams::REGTEST);
-	GenerateSpendableCoins();
 	tfm::format(std::cout,"Running generate_big_assetdata...\n");
 	GenerateBlocks(5);
 	string newaddress = GetNewFundedAddress("node1");
@@ -55,7 +52,6 @@ BOOST_AUTO_TEST_CASE(generate_asset_spt_sysx)
     GenerateBlocks(5);
     GenerateBlocks(5, "node2");
     GenerateBlocks(5, "node3");
-    SetupSYSXAsset();
     string updateFlags = itostr(ASSET_UPDATE_CONTRACT | ASSET_UPDATE_DATA);
     // cannot edit supply
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetupdate " + strSYSXAsset + " " + strSYSXAddress + " '' 1 " + updateFlags + " ''"));
