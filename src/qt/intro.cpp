@@ -274,6 +274,11 @@ void Intro::setStatus(int status, const QString &message, quint64 bytesAvailable
         {
             freeString += " " + tr("(of %n GB needed)", "", requiredSpace);
             ui->freeSpace->setStyleSheet("QLabel { color: #800000 }");
+            ui->prune->setChecked(true);
+        } else if (bytesAvailable / GB_BYTES - requiredSpace < 10) {
+            freeString += " " + tr("(%n GB needed for full chain)", "", requiredSpace);
+            ui->freeSpace->setStyleSheet("QLabel { color: #999900 }");
+            ui->prune->setChecked(true);
         } else {
             ui->freeSpace->setStyleSheet("");
         }
