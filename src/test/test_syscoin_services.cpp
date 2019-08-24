@@ -1276,7 +1276,6 @@ string AssetSend(const string& node, const string& guid, const string& inputs, c
 	return txid;
 
 }
-
 BasicSyscoinTestingSetup::BasicSyscoinTestingSetup()
 {
 	if(!started){
