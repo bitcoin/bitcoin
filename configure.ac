@@ -270,8 +270,15 @@ AC_ARG_ENABLE([werror],
     [enable_werror=$enableval],
     [enable_werror=no])
 
+AC_ARG_ENABLE([wleveldb],
+    [AS_HELP_STRING([--enable-wleveldb],
+                    [enable warnings for leveldb subtree (default is no)])],
+    [enable_wleveldb=$enableval],
+    [enable_wleveldb=no])
+
 AC_LANG_PUSH([C++])
 AX_CHECK_COMPILE_FLAG([-Werror],[CXXFLAG_WERROR="-Werror"],[CXXFLAG_WERROR=""])
+AX_CHECK_COMPILE_FLAG([-w],[CXXFLAG_w="-w"],[CXXFLAG_w=""])
 
 if test "x$enable_debug" = xyes; then
   # Clear default -g -O2 flags
@@ -994,10 +1001,16 @@ AC_LINK_IFELSE(
 AC_DEFINE([HAVE_SYSTEM], [HAVE_STD__SYSTEM || HAVE_WSYSTEM], [std::system or ::wsystem])
 
 LEVELDB_CPPFLAGS=
+LEVELDB_CXXFLAGS=
+if test "x$enable_wleveldb" != "xyes"; then
+  enable_wleveldb=no
+  LEVELDB_CXXFLAGS="$CXXFLAG_w"
+fi
 LIBLEVELDB=
 LIBMEMENV=
 AM_CONDITIONAL([EMBEDDED_LEVELDB],[true])
 AC_SUBST(LEVELDB_CPPFLAGS)
+AC_SUBST(LEVELDB_CXXFLAGS)
 AC_SUBST(LIBLEVELDB)
 AC_SUBST(LIBMEMENV)
 
@@ -1657,6 +1670,9 @@ echo "  sanitizers    = $use_sanitizers"
 echo "  debug enabled = $enable_debug"
 echo "  gprof enabled = $enable_gprof"
 echo "  werror        = $enable_werror"
+if test x$enable_wleveldb != xno; then
+    echo "  wleveldb      = $enable_wleveldb"
+fi
 echo
 echo "  target os     = $TARGET_OS"
 echo "  build os      = $BUILD_OS"
