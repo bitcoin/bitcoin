@@ -93,13 +93,14 @@ std::shared_ptr<CWallet> GetWallet(const std::string& name)
 
 static Mutex g_wallet_release_mutex;
 static std::condition_variable g_wallet_release_cv;
-static std::set<CWallet*> g_unloading_wallet_set;
+static std::set<std::string> g_unloading_wallet_set;
 
 // Custom deleter for shared_ptr<CWallet>.
 static void ReleaseWallet(CWallet* wallet)
 {
     // Unregister and delete the wallet right after BlockUntilSyncedToCurrentChain
     // so that it's in sync with the current chainstate.
+    const std::string name = wallet->GetName();
     wallet->WalletLogPrintf("Releasing wallet\n");
     wallet->BlockUntilSyncedToCurrentChain();
     wallet->Flush();
@@ -108,7 +109,7 @@ static void ReleaseWallet(CWallet* wallet)
     // Wallet is now released, notify UnloadWallet, if any.
     {
         LOCK(g_wallet_release_mutex);
-        if (g_unloading_wallet_set.erase(wallet) == 0) {
+        if (g_unloading_wallet_set.erase(name) == 0) {
             // UnloadWallet was not called for this wallet, all done.
             return;
         }
@@ -119,21 +120,21 @@ static void ReleaseWallet(CWallet* wallet)
 void UnloadWallet(std::shared_ptr<CWallet>&& wallet)
 {
     // Mark wallet for unloading.
-    CWallet* pwallet = wallet.get();
+    const std::string name = wallet->GetName();
     {
         LOCK(g_wallet_release_mutex);
-        auto it = g_unloading_wallet_set.insert(pwallet);
+        auto it = g_unloading_wallet_set.insert(name);
         assert(it.second);
     }
     // The wallet can be in use so it's not possible to explicitly unload here.
     // Notify the unload intent so that all remaining shared pointers are
     // released.
-    pwallet->NotifyUnload();
+    wallet->NotifyUnload();
     // Time to ditch our shared_ptr and wait for ReleaseWallet call.
     wallet.reset();
     {
         WAIT_LOCK(g_wallet_release_mutex, lock);
-        while (g_unloading_wallet_set.count(pwallet) == 1) {
+        while (g_unloading_wallet_set.count(name) == 1) {
             g_wallet_release_cv.wait(lock);
         }
     }
