@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "config/bitcoin-config.h"
+#include "config/dash-config.h"
 #endif
 
 #include "consensus/merkle.h"
@@ -168,7 +168,7 @@ int do_fuzz()
         {
             try
             {
-                CCoins block;
+                Coin block;
                 ds >> block;
             } catch (const std::ios_base::failure& e) {return 0;}
             break;
