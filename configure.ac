@@ -133,7 +133,7 @@ AC_ARG_ENABLE(gui-tests,
 
 AC_ARG_WITH([rapidcheck],
   [AS_HELP_STRING([--with-rapidcheck],
-  [enable RapidCheck property based tests (default is yes if librapidcheck is found)])],
+  [enable RapidCheck property-based tests (default is yes if librapidcheck is found)])],
   [use_rapidcheck=$withval],
   [use_rapidcheck=auto])
 
@@ -239,7 +239,7 @@ AM_CONDITIONAL(ENABLE_MAN, test "$enable_man" != no)
 # Enable debug
 AC_ARG_ENABLE([debug],
     [AS_HELP_STRING([--enable-debug],
-                    [use debug compiler flags and macros (default is no)])],
+                    [use compiler flags and macros suited for debugging (default is no)])],
     [enable_debug=$enableval],
     [enable_debug=no])
 
@@ -271,12 +271,9 @@ if test "x$enable_debug" = xyes; then
   if test "x$CXXFLAGS_overridden" = xno; then
 	CXXFLAGS=""
   fi
-  # Prefer -Og, fall back to -O0 if that is unavailable.
-  AX_CHECK_COMPILE_FLAG(
-    [-Og],
-    [[DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -Og"]],
-    [AX_CHECK_COMPILE_FLAG([-O0],[[DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -O0"]],,[[$CXXFLAG_WERROR]])],
-    [[$CXXFLAG_WERROR]])
+
+  # Disable all optimizations
+  AX_CHECK_COMPILE_FLAG([-O0], [[DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -O0"]],,[[$CXXFLAG_WERROR]])
 
   # Prefer -g3, fall back to -g if that is unavailable.
   AX_CHECK_COMPILE_FLAG(
@@ -1278,7 +1275,7 @@ AC_CHECK_DECLS([EVP_MD_CTX_new],,,[AC_INCLUDES_DEFAULT
 ])
 CXXFLAGS="${save_CXXFLAGS}"
 
-dnl RapidCheck Property Based Testing
+dnl RapidCheck property-based testing
 
 enable_property_tests=no
 if test "x$use_rapidcheck" = xauto; then
@@ -1660,6 +1657,7 @@ fi
 echo "  with zmq      = $use_zmq"
 echo "  with test     = $use_tests"
 if test x$use_tests != xno; then
+    echo "    with prop   = $enable_property_tests"
     echo "    with fuzz   = $enable_fuzz"
 fi
 echo "  with bench    = $use_bench"

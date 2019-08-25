@@ -47,9 +47,9 @@ struct Descriptor {
      *
      * pos: the position at which to expand the descriptor. If IsRange() is false, this is ignored.
      * provider: the provider to query for private keys in case of hardened derivation.
-     * output_script: the expanded scriptPubKeys will be put here.
+     * output_scripts: the expanded scriptPubKeys will be put here.
      * out: scripts and public keys necessary for solving the expanded scriptPubKeys will be put here (may be equal to provider).
-     * cache: vector which will be overwritten with cache data necessary to-evaluate the descriptor at this point without access to private keys.
+     * cache: vector which will be overwritten with cache data necessary to evaluate the descriptor at this point without access to private keys.
      */
     virtual bool Expand(int pos, const SigningProvider& provider, std::vector<CScript>& output_scripts, FlatSigningProvider& out, std::vector<unsigned char>* cache = nullptr) const = 0;
 
@@ -57,7 +57,7 @@ struct Descriptor {
      *
      * pos: the position at which to expand the descriptor. If IsRange() is false, this is ignored.
      * cache: vector from which cached expansion data will be read.
-     * output_script: the expanded scriptPubKeys will be put here.
+     * output_scripts: the expanded scriptPubKeys will be put here.
      * out: scripts and public keys necessary for solving the expanded scriptPubKeys will be put here (may be equal to provider).
      */
     virtual bool ExpandFromCache(int pos, const std::vector<unsigned char>& cache, std::vector<CScript>& output_scripts, FlatSigningProvider& out) const = 0;
@@ -79,7 +79,15 @@ struct Descriptor {
  * If a parse error occurs, or the checksum is missing/invalid, or anything
  * else is wrong, nullptr is returned.
  */
-std::unique_ptr<Descriptor> Parse(const std::string& descriptor, FlatSigningProvider& out, bool require_checksum = false);
+std::unique_ptr<Descriptor> Parse(const std::string& descriptor, FlatSigningProvider& out, std::string& error, bool require_checksum = false);
+
+/** Get the checksum for a descriptor.
+ *
+ * If it already has one, and it is correct, return the checksum in the input.
+ * If it already has one that is wrong, return "".
+ * If it does not already have one, return the checksum that would need to be added.
+ */
+std::string GetDescriptorChecksum(const std::string& descriptor);
 
 /** Find a descriptor for the specified script, using information from provider where possible.
  *

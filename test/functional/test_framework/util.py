@@ -7,7 +7,6 @@
 from base64 import b64encode
 from binascii import unhexlify
 from decimal import Decimal, ROUND_DOWN
-import hashlib
 import inspect
 import json
 import logging
@@ -183,12 +182,6 @@ def check_json_precision():
 def count_bytes(hex_string):
     return len(bytearray.fromhex(hex_string))
 
-def hash256(byte_str):
-    sha256 = hashlib.sha256()
-    sha256.update(byte_str)
-    sha256d = hashlib.sha256()
-    sha256d.update(sha256.digest())
-    return sha256d.digest()[::-1]
 
 def hex_str_to_bytes(hex_str):
     return unhexlify(hex_str.encode('ascii'))
@@ -300,6 +293,7 @@ def initialize_datadir(dirname, n, chain):
         f.write("discover=0\n")
         f.write("listenonion=0\n")
         f.write("printtoconsole=0\n")
+        f.write("upnp=0\n")
         os.makedirs(os.path.join(datadir, 'stderr'), exist_ok=True)
         os.makedirs(os.path.join(datadir, 'stdout'), exist_ok=True)
     return datadir
@@ -342,9 +336,9 @@ def delete_cookie_file(datadir, chain):
         logger.debug("Deleting leftover cookie file")
         os.remove(os.path.join(datadir, chain, ".cookie"))
 
-def get_bip9_status(node, key):
-    info = node.getblockchaininfo()
-    return info['bip9_softforks'][key]
+def softfork_active(node, key):
+    """Return whether a softfork is active."""
+    return node.getblockchaininfo()['softforks'][key]['active']
 
 def set_node_times(nodes, t):
     for node in nodes:
