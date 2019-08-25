@@ -120,18 +120,6 @@ If there are 'unsupported' symbols, the return value will be 1 a list like this 
     .../64/test_bitcoin: symbol std::out_of_range::~out_of_range() from unsupported version GLIBCXX_3.4.15
     .../64/test_bitcoin: symbol _ZNSt8__detail15_List_nod from unsupported version GLIBCXX_3.4.15
 
-update-translations.py
-======================
-
-Run this script from the root of the repository to update all translations from transifex.
-It will do the following automatically:
-
-- fetch all translations
-- post-process them into valid and committable format
-- add missing translations to the build system (TODO)
-
-See doc/translation-process.md for more information.
-
 circular-dependencies.py
 ========================
 
