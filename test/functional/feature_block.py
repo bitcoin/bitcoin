@@ -763,7 +763,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.send_blocks([b56p2], success=False, reject_reason='bad-txns-duplicate', reconnect=True)
 
         self.move_tip("57p2")
-        self.send_blocks([b57p2], True)
+        self.send_blocks([b57p2], True, timeout=180)
 
         self.move_tip(57)
         self.send_blocks([b57], False)  # The tip is not updated because 57p2 seen first
