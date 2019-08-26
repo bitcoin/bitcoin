@@ -1689,7 +1689,7 @@ bool AppInitMain(InitInterfaces& interfaces)
         bool fRet = uiInterface.ThreadSafeMessageBox(msg, "", CClientUIInterface::MSG_INFORMATION | CClientUIInterface::BTN_OK | CClientUIInterface::MODAL | CClientUIInterface::BTN_ABORT);
         if (fRet) {
             // add txindex=1 to config file in GetConfigFile()
-            boost::filesystem::path configPathInfo = GetConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME));
+            fs::path configPathInfo = GetConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME));
             FILE *fp = fopen(configPathInfo.string().c_str(), "at");
             if (!fp) {
                 std::string failMsg = _("Unable to update configuration file at");

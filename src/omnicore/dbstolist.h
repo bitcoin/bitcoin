@@ -3,11 +3,10 @@
 
 #include <omnicore/dbbase.h>
 
+#include <fs.h>
 #include <uint256.h>
 
 #include <univalue.h>
-
-#include <boost/filesystem/path.hpp>
 
 #include <stdint.h>
 
@@ -22,7 +21,7 @@ class Wallet;
 class CMPSTOList : public CDBBase
 {
 public:
-    CMPSTOList(const boost::filesystem::path& path, bool fWipe);
+    CMPSTOList(const fs::path& path, bool fWipe);
     virtual ~CMPSTOList();
 
     void getRecipients(const uint256 txid, std::string filterAddress, UniValue* recipientArray, uint64_t* total, uint64_t* numRecipients, interfaces::Wallet* iWallet = nullptr);

@@ -39,6 +39,7 @@
 #include <chainparams.h>
 #include <coins.h>
 #include <core_io.h>
+#include <fs.h>
 #include <key_io.h>
 #include <init.h>
 #include <validation.h>
@@ -60,7 +61,6 @@
 #endif
 
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <assert.h>
@@ -100,7 +100,7 @@ bool autoCommit = true;
 int64_t exodus_prev = 0;
 
 //! Path for file based persistence
-boost::filesystem::path pathStateFiles;
+fs::path pathStateFiles;
 
 //! Flag to indicate whether Omni Core was initialized
 static int mastercoreInitialized = 0;
@@ -1679,25 +1679,25 @@ int mastercore_init()
     if (gArgs.GetBoolArg("-startclean", false)) {
         PrintToLog("Process was started with --startclean option, attempting to clear persistence files..\n");
         try {
-            boost::filesystem::path persistPath = GetDataDir() / "MP_persist";
-            boost::filesystem::path txlistPath = GetDataDir() / "MP_txlist";
-            boost::filesystem::path tradePath = GetDataDir() / "MP_tradelist";
-            boost::filesystem::path spPath = GetDataDir() / "MP_spinfo";
-            boost::filesystem::path stoPath = GetDataDir() / "MP_stolist";
-            boost::filesystem::path omniTXDBPath = GetDataDir() / "Omni_TXDB";
-            boost::filesystem::path feesPath = GetDataDir() / "OMNI_feecache";
-            boost::filesystem::path feeHistoryPath = GetDataDir() / "OMNI_feehistory";
-            if (boost::filesystem::exists(persistPath)) boost::filesystem::remove_all(persistPath);
-            if (boost::filesystem::exists(txlistPath)) boost::filesystem::remove_all(txlistPath);
-            if (boost::filesystem::exists(tradePath)) boost::filesystem::remove_all(tradePath);
-            if (boost::filesystem::exists(spPath)) boost::filesystem::remove_all(spPath);
-            if (boost::filesystem::exists(stoPath)) boost::filesystem::remove_all(stoPath);
-            if (boost::filesystem::exists(omniTXDBPath)) boost::filesystem::remove_all(omniTXDBPath);
-            if (boost::filesystem::exists(feesPath)) boost::filesystem::remove_all(feesPath);
-            if (boost::filesystem::exists(feeHistoryPath)) boost::filesystem::remove_all(feeHistoryPath);
+            fs::path persistPath = GetDataDir() / "MP_persist";
+            fs::path txlistPath = GetDataDir() / "MP_txlist";
+            fs::path tradePath = GetDataDir() / "MP_tradelist";
+            fs::path spPath = GetDataDir() / "MP_spinfo";
+            fs::path stoPath = GetDataDir() / "MP_stolist";
+            fs::path omniTXDBPath = GetDataDir() / "Omni_TXDB";
+            fs::path feesPath = GetDataDir() / "OMNI_feecache";
+            fs::path feeHistoryPath = GetDataDir() / "OMNI_feehistory";
+            if (fs::exists(persistPath)) fs::remove_all(persistPath);
+            if (fs::exists(txlistPath)) fs::remove_all(txlistPath);
+            if (fs::exists(tradePath)) fs::remove_all(tradePath);
+            if (fs::exists(spPath)) fs::remove_all(spPath);
+            if (fs::exists(stoPath)) fs::remove_all(stoPath);
+            if (fs::exists(omniTXDBPath)) fs::remove_all(omniTXDBPath);
+            if (fs::exists(feesPath)) fs::remove_all(feesPath);
+            if (fs::exists(feeHistoryPath)) fs::remove_all(feeHistoryPath);
             PrintToLog("Success clearing persistence files in datadir %s\n", GetDataDir().string());
             startClean = true;
-        } catch (const boost::filesystem::filesystem_error& e) {
+        } catch (const fs::filesystem_error& e) {
             PrintToLog("Failed to delete persistence folders: %s\n", e.what());
             PrintToConsole("Failed to delete persistence folders: %s\n", e.what());
         }
@@ -2022,8 +2022,8 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
                 nBlockNow, pBlockIndex->GetBlockHash().GetHex());
         PrintToLog(msg);
         if (!gArgs.GetBoolArg("-overrideforcedshutdown", false)) {
-            boost::filesystem::path persistPath = GetDataDir() / "MP_persist";
-            if (boost::filesystem::exists(persistPath)) boost::filesystem::remove_all(persistPath); // prevent the node being restarted without a reparse after forced shutdown
+            fs::path persistPath = GetDataDir() / "MP_persist";
+            if (fs::exists(persistPath)) fs::remove_all(persistPath); // prevent the node being restarted without a reparse after forced shutdown
             DoAbortNode(msg, msg);
         }
     } else {

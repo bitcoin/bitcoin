@@ -3,9 +3,8 @@
 
 #include <omnicore/dbbase.h>
 
+#include <fs.h>
 #include <uint256.h>
-
-#include <boost/filesystem/path.hpp>
 
 #include <stdint.h>
 
@@ -17,7 +16,7 @@
 class COmniTransactionDB : public CDBBase
 {
 public:
-    COmniTransactionDB(const boost::filesystem::path& path, bool fWipe);
+    COmniTransactionDB(const fs::path& path, bool fWipe);
     virtual ~COmniTransactionDB();
 
     /** Stores position in block and validation result for a transaction. */

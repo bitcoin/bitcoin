@@ -16,7 +16,6 @@
 #include <leveldb/db.h>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <stdint.h>
@@ -30,7 +29,7 @@ using namespace mastercore;
 
 std::map<uint32_t, int64_t> distributionThresholds;
 
-COmniFeeCache::COmniFeeCache(const boost::filesystem::path& path, bool fWipe)
+COmniFeeCache::COmniFeeCache(const fs::path& path, bool fWipe)
 {
     leveldb::Status status = Open(path, fWipe);
     PrintToConsole("Loading fee cache database: %s\n", status.ToString());
@@ -118,8 +117,8 @@ void COmniFeeCache::AddFee(const uint32_t &propertyId, int block, const int64_t 
         const std::string& msg = strprintf("Shutting down due to fee cache overflow (block %d property %d current %d amount %d)\n", block, propertyId, currentCachedAmount, amount);
         PrintToLog(msg);
         if (!gArgs.GetBoolArg("-overrideforcedshutdown", false)) {
-            boost::filesystem::path persistPath = GetDataDir() / "MP_persist";
-            if (boost::filesystem::exists(persistPath)) boost::filesystem::remove_all(persistPath); // prevent the node being restarted without a reparse after forced shutdown
+            fs::path persistPath = GetDataDir() / "MP_persist";
+            if (fs::exists(persistPath)) fs::remove_all(persistPath); // prevent the node being restarted without a reparse after forced shutdown
             DoAbortNode(msg, msg);
         }
     }
@@ -333,7 +332,7 @@ std::set<feeCacheItem> COmniFeeCache::GetCacheHistory(const uint32_t &propertyId
     return sCacheHistoryItems;
 }
 
-COmniFeeHistory::COmniFeeHistory(const boost::filesystem::path& path, bool fWipe)
+COmniFeeHistory::COmniFeeHistory(const fs::path& path, bool fWipe)
 {
     leveldb::Status status = Open(path, fWipe);
     PrintToConsole("Loading fee history database: %s\n", status.ToString());

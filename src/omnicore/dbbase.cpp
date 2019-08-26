@@ -2,19 +2,18 @@
 
 #include <omnicore/log.h>
 
+#include <fs.h>
 #include <util/system.h>
 
 #include <leveldb/db.h>
 #include <leveldb/write_batch.h>
-
-#include <boost/filesystem/path.hpp>
 
 #include <stdint.h>
 
 /**
  * Opens or creates a LevelDB based database.
  */
-leveldb::Status CDBBase::Open(const boost::filesystem::path& path, bool fWipe)
+leveldb::Status CDBBase::Open(const fs::path& path, bool fWipe)
 {
     if (fWipe) {
         if (msc_debug_persistence) PrintToLog("Wiping LevelDB in %s\n", path.string());

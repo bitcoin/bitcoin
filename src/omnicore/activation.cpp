@@ -11,10 +11,9 @@
 #include <omnicore/log.h>
 #include <omnicore/version.h>
 
+#include <fs.h>
 #include <validation.h>
 #include <ui_interface.h>
-
-#include <boost/filesystem.hpp>
 
 #include <stdint.h>
 #include <string>
@@ -91,8 +90,8 @@ void CheckLiveActivations(int blockHeight)
             PrintToLog(msgText);
             PrintToConsole(msgText);
             if (!gArgs.GetBoolArg("-overrideforcedshutdown", false)) {
-                boost::filesystem::path persistPath = GetDataDir() / "MP_persist";
-                if (boost::filesystem::exists(persistPath)) boost::filesystem::remove_all(persistPath); // prevent the node being restarted without a reparse after forced shutdown
+                fs::path persistPath = GetDataDir() / "MP_persist";
+                if (fs::exists(persistPath)) fs::remove_all(persistPath); // prevent the node being restarted without a reparse after forced shutdown
                 DoAbortNode(msgText, msgText);
             }
         }

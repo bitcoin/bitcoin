@@ -5,10 +5,9 @@
 #include <omnicore/log.h>
 #include <omnicore/omnicore.h>
 
+#include <fs.h>
 #include <serialize.h>
 #include <uint256.h>
-
-#include <boost/filesystem/path.hpp>
 
 #include <stdint.h>
 
@@ -140,7 +139,7 @@ private:
     uint32_t next_test_spid;
 
 public:
-    CMPSPInfo(const boost::filesystem::path& path, bool fWipe);
+    CMPSPInfo(const fs::path& path, bool fWipe);
     virtual ~CMPSPInfo();
 
     /** Extends clearing of CDBBase. */

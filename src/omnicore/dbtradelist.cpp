@@ -5,6 +5,7 @@
 #include <omnicore/sp.h>
 
 #include <amount.h>
+#include <fs.h>
 #include <uint256.h>
 #include <util/strencodings.h>
 #include <tinyformat.h>
@@ -16,7 +17,6 @@
 #include <leveldb/status.h>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem/path.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <stddef.h>
@@ -29,7 +29,7 @@
 
 using mastercore::isPropertyDivisible;
 
-CMPTradeList::CMPTradeList(const boost::filesystem::path& path, bool fWipe)
+CMPTradeList::CMPTradeList(const fs::path& path, bool fWipe)
 {
     leveldb::Status status = Open(path, fWipe);
     PrintToConsole("Loading trades database: %s\n", status.ToString());

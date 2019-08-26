@@ -3,9 +3,8 @@
 
 #include <omnicore/dbbase.h>
 
+#include <fs.h>
 #include <uint256.h>
-
-#include <boost/filesystem/path.hpp>
 
 #include <stdint.h>
 
@@ -17,7 +16,7 @@
 class CMPTxList : public CDBBase
 {
 public:
-    CMPTxList(const boost::filesystem::path& path, bool fWipe);
+    CMPTxList(const fs::path& path, bool fWipe);
     virtual ~CMPTxList();
 
     void recordTX(const uint256& txid, bool fValid, int nBlock, unsigned int type, uint64_t nValue);
