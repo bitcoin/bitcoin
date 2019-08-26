@@ -360,10 +360,6 @@ std::string HelpMessage(HelpMessageMode mode)
 #ifndef WIN32
     strUsage += HelpMessageOpt("-pid=<file>", strprintf(_("Specify pid file (default: %s)"), BITCOIN_PID_FILENAME));
 #endif
-// disabled until correctly implemented
-//    strUsage += HelpMessageOpt("-prune=<n>", strprintf(_("Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex and -rescan. "
-//            "Warning: Reverting this setting requires re-downloading the entire blockchain. "
-//            "(default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, >=%u = automatically prune block files to stay under the specified target size in MiB)"), MIN_DISK_SPACE_FOR_BLOCK_FILES / 1024 / 1024));
     strUsage += HelpMessageOpt("-reindex-chainstate", _("Rebuild chain state from the currently indexed blocks"));
     strUsage += HelpMessageOpt("-reindex", _("Rebuild chain state and block index from the blk*.dat files on disk"));
 #ifndef WIN32
@@ -564,48 +560,6 @@ struct CImportingNow
         fImporting = false;
     }
 };
-
-
-// If we're using -prune with -reindex, then delete block files that will be ignored by the
-// reindex.  Since reindexing works by starting at block file 0 and looping until a blockfile
-// is missing, do the same here to delete any later block files after a gap.  Also delete all
-// rev files since they'll be rewritten by the reindex anyway.  This ensures that vinfoBlockFile
-// is in sync with what's actually on disk by the time we start downloading, so that pruning
-// works correctly.
-void CleanupBlockRevFiles()
-{
-    std::map<std::string, fs::path> mapBlockFiles;
-
-    // Glob all blk?????.dat and rev?????.dat files from the blocks directory.
-    // Remove the rev files immediately and insert the blk file paths into an
-    // ordered map keyed by block file index.
-    LogPrintf("Removing unusable blk?????.dat and rev?????.dat files for -reindex with -prune\n");
-    fs::path blocksdir = GetDataDir() / "blocks";
-    for (fs::directory_iterator it(blocksdir); it != fs::directory_iterator(); it++) {
-        if (fs::is_regular_file(*it) &&
-            it->path().filename().string().length() == 12 &&
-            it->path().filename().string().substr(8,4) == ".dat")
-        {
-            if (it->path().filename().string().substr(0,3) == "blk")
-                mapBlockFiles[it->path().filename().string().substr(3,5)] = it->path();
-            else if (it->path().filename().string().substr(0,3) == "rev")
-                remove(it->path());
-        }
-    }
-
-    // Remove all block files that aren't part of a contiguous set starting at
-    // zero by walking the ordered map (keys are block file indices) by
-    // keeping a separate counter.  Once we hit a gap (or if 0 doesn't exist)
-    // start removing block files.
-    int nContigCounter = 0;
-    for (const std::pair<std::string, fs::path>& item : mapBlockFiles) {
-        if (atoi(item.first) == nContigCounter) {
-            nContigCounter++;
-            continue;
-        }
-        remove(item.second);
-    }
-}
 
 void ThreadImport(std::vector<fs::path> vImportFiles)
 {
@@ -885,12 +839,6 @@ bool AppInitParameterInteraction()
 
     // also see: InitParameterInteraction()
 
-    // if using block pruning, then disallow txindex
-    if (gArgs.GetArg("-prune", 0)) {
-        if (gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX))
-            return InitError(_("Prune mode is incompatible with -txindex."));
-    }
-
     // -bind and -whitebind can't be set when not listening
     size_t nUserBind = gArgs.GetArgs("-bind").size() + gArgs.GetArgs("-whitebind").size();
     if (nUserBind != 0 && !gArgs.GetBoolArg("-listen", DEFAULT_LISTEN)) {
@@ -1002,25 +950,6 @@ bool AppInitParameterInteraction()
     else if (nScriptCheckThreads > MAX_SCRIPTCHECK_THREADS)
         nScriptCheckThreads = MAX_SCRIPTCHECK_THREADS;
 
-    // block pruning; get the amount of disk space (in MiB) to allot for block & undo files
-/*
-    int64_t nPruneArg = gArgs.GetArg("-prune", 0);
-    if (nPruneArg < 0) {
-        return InitError(_("Prune cannot be configured with a negative value."));
-    }
-    nPruneTarget = (uint64_t) nPruneArg * 1024 * 1024;
-    if (nPruneArg == 1) {  // manual pruning: -prune=1
-        LogPrintf("Block pruning enabled.  Use RPC call pruneblockchain(height) to manually prune block and undo files.\n");
-        nPruneTarget = std::numeric_limits<uint64_t>::max();
-        fPruneMode = true;
-    } else if (nPruneTarget) {
-        if (nPruneTarget < MIN_DISK_SPACE_FOR_BLOCK_FILES) {
-            return InitError(strprintf(_("Prune configured below the minimum of %d MiB.  Please use a higher number."), MIN_DISK_SPACE_FOR_BLOCK_FILES / 1024 / 1024));
-        }
-        LogPrintf("Prune configured to target %uMiB on disk for block and undo files.\n", nPruneTarget / 1024 / 1024);
-        fPruneMode = true;
-    }
-*/
     nConnectTimeout = gArgs.GetArg("-timeout", DEFAULT_CONNECT_TIMEOUT);
     if (nConnectTimeout <= 0)
         nConnectTimeout = DEFAULT_CONNECT_TIMEOUT;
@@ -1353,18 +1282,13 @@ bool AppInitMain()
                 pblocktree.reset();
                 pblocktree.reset(new CBlockTreeDB(nBlockTreeDBCache, false, fReset));
 
-                if (fReset) {
+                if (fReset)
                     pblocktree->WriteReindexing(true);
-                    //If we're reindexing in prune mode, wipe away unusable block files and all undo data files
-                    if (fPruneMode)
-                        CleanupBlockRevFiles();
-                }
 
                 if (fRequestShutdown) break;
 
                 // LoadBlockIndex will load fTxIndex from the db, or set it if
-                // we're reindexing. It will also load fHavePruned if we've
-                // ever removed a block file from disk.
+                // we're reindexing.
                 // Note that it also sets fReindex based on the disk flag!
                 // From here on out fReindex and fReset mean something different!
                 if (!LoadBlockIndex(chainparams)) {
@@ -1380,13 +1304,6 @@ bool AppInitMain()
                 // Check for changed -txindex state
                 if (fTxIndex != gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
                     strLoadError = _("You need to rebuild the database using -reindex to change -txindex");
-                    break;
-                }
-
-                // Check for changed -prune state.  What we are concerned about is a user who has pruned blocks
-                // in the past, but is now trying to run unpruned.
-                if (fHavePruned && !fPruneMode) {
-                    strLoadError = _("You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain");
                     break;
                 }
 
@@ -1454,10 +1371,6 @@ bool AppInitMain()
 
                 if (!is_coinsview_empty) {
                     uiInterface.InitMessage(_("Verifying blocks..."));
-                    if (fHavePruned && gArgs.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS) > MIN_BLOCKS_TO_KEEP) {
-                        LogPrintf("Prune: pruned datadir may not have more than %d blocks; only checking available blocks",
-                            MIN_BLOCKS_TO_KEEP);
-                    }
 
                     {
                         LOCK(cs_main);
@@ -1527,17 +1440,6 @@ bool AppInitMain()
 #endif
 
     // ********************************************************* Step 9: data directory maintenance
-
-    // if pruning, unset the service bit and perform the initial blockstore prune
-    // after any wallet rescanning has taken place.
-    if (fPruneMode) {
-        LogPrintf("Unsetting NODE_NETWORK on prune mode\n");
-        nLocalServices = ServiceFlags(nLocalServices & ~NODE_NETWORK);
-        if (!fReindex) {
-            uiInterface.InitMessage(_("Pruning blockstore..."));
-            PruneAndFlush();
-        }
-    }
 
     // Note that setting NODE_WITNESS is never required: the only downside from not
     // doing so is that after activation, no upgraded nodes will fetch from you.
