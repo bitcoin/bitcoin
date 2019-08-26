@@ -299,6 +299,7 @@ void BitcoinGUI::createActions()
     aboutQtAction->setStatusTip(tr("Show information about Qt"));
     aboutQtAction->setMenuRole(QAction::AboutQtRole);
     optionsAction = new QAction(platformStyle->TextColorIcon(":/icons/options"), tr("&Options..."), this);
+    optionsAction = new QAction(platformStyle->TextColorIcon(":/icons/configure"), tr("&Options..."), this);
     optionsAction->setStatusTip(tr("Modify configuration options for %1").arg(PACKAGE_NAME));
     optionsAction->setMenuRole(QAction::PreferencesRole);
     optionsAction->setEnabled(false);
@@ -329,14 +330,20 @@ void BitcoinGUI::createActions()
     usedReceivingAddressesAction->setStatusTip(tr("Show the list of used receiving addresses and labels"));
 
     openAction = new QAction(platformStyle->TextColorIcon(":/icons/open"), tr("Open &URI..."), this);
+    usedSendingAddressesAction = new QAction(platformStyle->TextColorIcon(":/icons/address-book-send"), tr("&Sending addresses"), this);
+    usedSendingAddressesAction->setStatusTip(tr("Show the list of used sending addresses and labels"));
+    usedReceivingAddressesAction = new QAction(platformStyle->TextColorIcon(":/icons/address-book-receive"), tr("&Receiving addresses"), this);
+    usedReceivingAddressesAction->setStatusTip(tr("Show the list of used receiving addresses and labels"));
+
+    openAction = new QAction(platformStyle->TextColorIcon(":/icons/uri"), tr("Open &URI..."), this);
     openAction->setStatusTip(tr("Open a bitcoin: URI or payment request"));
 
-    m_open_wallet_action = new QAction(tr("Open Wallet"), this);
+    m_open_wallet_action = new QAction(platformStyle->TextColorIcon(":/icons/open"),tr("Open Wallet"), this);
     m_open_wallet_action->setEnabled(false);
     m_open_wallet_action->setStatusTip(tr("Open a wallet"));
     m_open_wallet_menu = new QMenu(this);
 
-    m_close_wallet_action = new QAction(tr("Close Wallet..."), this);
+    m_close_wallet_action = new QAction(platformStyle->TextColorIcon(":/icons/close"),tr("Close Wallet"), this);
     m_close_wallet_action->setStatusTip(tr("Close wallet"));
 
     showHelpMessageAction = new QAction(platformStyle->TextColorIcon(":/icons/info"), tr("&Command-line options"), this);
@@ -457,7 +464,7 @@ void BitcoinGUI::createMenuBar()
 
     QMenu* window_menu = appMenuBar->addMenu(tr("&Window"));
 
-    QAction* minimize_action = window_menu->addAction(tr("Minimize"));
+    QAction* minimize_action = window_menu->addAction(platformStyle->TextColorIcon(":/icons/minimize"), tr("Minimize"));
     minimize_action->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_M));
     connect(minimize_action, &QAction::triggered, [] {
         qApp->focusWindow()->showMinimized();
@@ -505,7 +512,7 @@ void BitcoinGUI::createMenuBar()
 
     window_menu->addSeparator();
     for (RPCConsole::TabTypes tab_type : rpcConsole->tabs()) {
-        QAction* tab_action = window_menu->addAction(rpcConsole->tabTitle(tab_type));
+        QAction* tab_action = window_menu->addAction(platformStyle->TextColorIcon(":/icons" + rpcConsole->tabTitle(tab_type).replace(0,1,"/")), rpcConsole->tabTitle(tab_type));
         connect(tab_action, &QAction::triggered, [this, tab_type] {
             rpcConsole->setTabFocus(tab_type);
             showDebugWindow();
