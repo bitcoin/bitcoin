@@ -89,7 +89,11 @@
         <source>Exporting Failed</source>
         <translation>निर्यात विफल रहा</translation>
     </message>
-    </context>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <translation>पता सूची को %1 में सहेजने का प्रयास करने में त्रुटि हुई। कृपया पुन: प्रयास करें।</translation>
+    </message>
+</context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -132,8 +136,36 @@
         <translation>वॉलेट एन्क्रिप्ट करें</translation>
     </message>
     <message>
+        <source>Unlock wallet</source>
+        <translation>बटुए को अनलॉक करें</translation>
+    </message>
+    <message>
+        <source>Decrypt wallet</source>
+        <translation>वॉलेट को डिक्रिप्ट करें</translation>
+    </message>
+    <message>
         <source>Change passphrase</source>
         <translation>पासफ़्रेज़ बदलें</translation>
+    </message>
+    <message>
+        <source>Confirm wallet encryption</source>
+        <translation>वॉलेट एन्क्रिप्शन की पुष्टि करें</translation>
+    </message>
+    <message>
+        <source>Wallet encrypted</source>
+        <translation>वॉलेट को एन्क्रिप्ट किया गया है</translation>
+    </message>
+    <message>
+        <source>Wallet encryption failed</source>
+        <translation>वॉलेट एन्क्रिप्शन विफल रहा</translation>
+    </message>
+    <message>
+        <source>Wallet unlock failed</source>
+        <translation>वॉलेट अनलॉक विफल रहा</translation>
+    </message>
+    <message>
+        <source>Wallet decryption failed</source>
+        <translation>वॉलेट डिक्रिप्शन विफल रहा</translation>
     </message>
     </context>
 <context>
@@ -185,10 +217,6 @@
     <message>
         <source>Bitcoin</source>
         <translation>बीटकोइन</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>वॉलेट</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -558,6 +586,9 @@
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
+    </context>
+<context>
+    <name>WalletController</name>
     </context>
 <context>
     <name>WalletFrame</name>

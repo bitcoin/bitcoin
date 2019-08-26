@@ -74,10 +74,6 @@
         <translation>Сүлжээтэй тааруулж байна...</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation>Нод</translation>
-    </message>
-    <message>
         <source>&amp;Transactions</source>
         <translation>Гүйлгээнүүд</translation>
     </message>
@@ -118,10 +114,6 @@
         <translation>&amp;Нууц Үгийг Солих...</translation>
     </message>
     <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>Хүлээн авах хаяг</translation>
-    </message>
-    <message>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Түрүйвчийг цоожлох нууц үгийг солих</translation>
     </message>
@@ -132,10 +124,6 @@
     <message>
         <source>Bitcoin</source>
         <translation>Биткойн</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Түрүйвч</translation>
     </message>
     <message>
         <source>&amp;Show / Hide</source>
@@ -256,10 +244,6 @@
     <message>
         <source>Options</source>
         <translation>Сонголтууд</translation>
-    </message>
-    <message>
-        <source>MB</source>
-        <translation>МБ</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
@@ -551,6 +535,9 @@
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
+    </context>
+<context>
+    <name>WalletController</name>
     </context>
 <context>
     <name>WalletFrame</name>

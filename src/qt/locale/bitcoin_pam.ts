@@ -122,10 +122,6 @@
         <translation>&amp;Alilan ing Passphrase...</translation>
     </message>
     <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>Address king pamag-Tanggap</translation>
-    </message>
-    <message>
         <source>Send coins to a Bitcoin address</source>
         <translation>Magpadalang barya king Bitcoin address</translation>
     </message>
@@ -152,10 +148,6 @@
     <message>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Wallet</translation>
     </message>
     <message>
         <source>&amp;Show / Hide</source>
@@ -208,6 +200,10 @@
     <message>
         <source>Up to date</source>
         <translation>Makatuki ya king aldo</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>&amp;Awang</translation>
     </message>
     <message>
         <source>Catching up...</source>
@@ -723,6 +719,9 @@
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
+    </context>
+<context>
+    <name>WalletController</name>
     </context>
 <context>
     <name>WalletFrame</name>

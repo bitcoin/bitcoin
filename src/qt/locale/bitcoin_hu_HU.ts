@@ -1,9 +1,9 @@
-<TS language="hu" version="2.1">
+<TS language="hu_HU" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>A cím vagy címke szerkeszteséhez kattintson a jobb gombbal</translation>
+        <translation>A cím vagy a címke jobb gombbal szerkeszthető</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>A kiválasztott cím másolása a vágólapra</translation>
+        <translation>A jelenleg kiválasztott cím másolása a rendszer vágólapjára</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -27,7 +27,7 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>Kiválasztott cím törlése a listából</translation>
+        <translation>A jelenleg kiválasztott cím eltávolítása a listából</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
@@ -35,11 +35,11 @@
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Jelenlegi nézet exportálása fájlba</translation>
+        <translation>A jelenlegi fülön található adat exportálása fájlba</translation>
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Exportálás</translation>
+        <translation>&amp;Export</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
@@ -47,31 +47,31 @@
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation>Válassza ki a címet utaláshoz</translation>
+        <translation>Válasszon címet a küldéshez</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation>Válassza ki a címet jóváíráshoz</translation>
+        <translation>Válasszon címet a fogadáshoz</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
-        <translation>K&amp;iválaszt</translation>
+        <translation>&amp;Kiválasztás</translation>
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation>Küldési cím</translation>
+        <translation>Küldő címek</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
-        <translation>Fogadási cím</translation>
+        <translation>Fogadó címek</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Ezek a Bitcoin címeid kifizetések küldéséhez. Mindíg ellenőrizd az összeget és a fogadó címet mielőtt coinokat küldenél.</translation>
+        <translation>Ezek az Ön kifizetéseinek küldésekor használandó Bitcoin-címek. Fizetés indítása előtt mindig ellenőrizze az összeget és a fogadó címet!</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Ezek a Bitcoin címeid kifizetések fogadásához. Ajánlott új címet használni minden új fogadáshoz.</translation>
+        <translation>Ezek az Ön fizetéseinek fogadásakor használandó Bitcoin-címek. Célszerű minden tranzakcióhoz új fogadó címet használni.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -79,11 +79,11 @@
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation>Másolás és Címkézés</translation>
+        <translation>Címke &amp;másolása</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
-        <translation>Szerkesztés</translation>
+        <translation>&amp;Szerkesztés</translation>
     </message>
     <message>
         <source>Export Address List</source>
@@ -91,13 +91,17 @@
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation>Vesszővel elválasztott adatokat tartalmazó fájl (*.csv)</translation>
+        <translation>Vesszővel elválasztott adatok (*.csv)</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation>Hiba az exportálás során</translation>
+        <translation>Sikertelen export</translation>
     </message>
-    </context>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <translation>Hiba történt a címlista %1-re történő mentése során. Kérjük, próbálja újra!</translation>
+    </message>
+</context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -117,19 +121,19 @@
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
-        <translation>Jelszó párbeszédablak</translation>
+        <translation>Jelszóhalmaz Párbeszédablak</translation>
     </message>
     <message>
         <source>Enter passphrase</source>
-        <translation>Add meg a jelszót</translation>
+        <translation>Adja meg jelmondatát</translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation>Új jelszó</translation>
+        <translation>Új jelmondat</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>Új jelszó újra</translation>
+        <translation>Ismételje meg jelmondatát</translation>
     </message>
     <message>
         <source>Show password</source>
@@ -137,24 +141,23 @@
     </message>
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Gépelje be az új kulcsmondatot a pénztárcához.&lt;br/&gt;
-Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű karaktert &lt;/b&gt;, vagy &lt;b&gt; nyolc vagy több szót &lt;/b&gt;.</translation>
+        <translation>Adja meg az új jelszóhalmazt a pénztárcájához. &lt;br/&gt;Kérem a jelszóhalmaz álljon&lt;b&gt;tíz vagy több véletlenszerű karakterből&lt;/b&gt;, vagy &lt;b&gt;nyolc vagy több szóból&lt;/b&gt;.</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
-        <translation>Tárca titkosítása</translation>
+        <translation>Tárca kódolása</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>Ehhez a művelethez szükség van a tárcához tartozó kulcsmondathoz, hogy kinyithassa azt.</translation>
+        <translation>Ehhez a művelethez szükség lesz a pénztárcájához tartozó jelszóhalmazra, hogy hozzáférjen a  pénztárcához.</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
-        <translation>Tárca kinyitása</translation>
+        <translation>Tárca feloldása</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Ehhez a művelethez szükség van a tárcához tartozó kulcsmondathoz, hogy a titkosítás megszűnjön.</translation>
+        <translation>Ehhez a művelethez szükség lesz a pénztárcájához tartozó jelszóhalmazra, hogy feloldja a pénztárca titkosítását.</translation>
     </message>
     <message>
         <source>Decrypt wallet</source>
@@ -162,85 +165,81 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Change passphrase</source>
-        <translation>Kulcsmondat megváltoztatása</translation>
+        <translation>Jelmondat megváltoztatása</translation>
     </message>
     <message>
         <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Gépelje be a tárcához tartozó régi, és új kulcsmondatot</translation>
+        <translation>Adja meg a régi jelszóhalmazt és az új jelszóhalmazt a pénztárcájához.</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
-        <translation>Tárca titkosításának megerősítése</translation>
+        <translation>Tárca titkosításának jóváhagyása</translation>
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>Figyelem: Ha titkosítja a tárcáját és elveszíti a jelszavát, akkor &lt;b&gt;AZ ÖSSZES BITCOINJA ELVESZIK&lt;/b&gt;!</translation>
+        <translation>Figyelem: Ha titkosítja a pénztárcáját, és elveszíti a jelszóhalmazt, akkor &lt;b&gt;NEM TUD TÖBBET HOZZÁFÉRNI A BITCOINJAIHOZ&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation>Biztosan titkosítani akarja a tárcát?</translation>
+        <translation>Biztosan titkosítani kívánja a tárcáját?</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
         <translation>Tárca titkosítva</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>A %1 most bezár, hogy befejezze a titkosítást. Ne feledje, hogy a tárca titkosítása nem nyújt teljes védelmet azzal szemben, hogy kártékony programok megfertőzzék a számítógépét és ellopják a bitcoinjait.</translation>
-    </message>
-    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>FONTOS: A tárca-fájl minden korábbi biztonsági mentését cserélje le ezzel az újonnan generált, titkosított tárca-fájllal. Biztonsági okokból a tárca-fájl korábbi, titkosítás nélküli mentései használhatatlanná válnak, amint elkezdi használni az új, titkosított tárcát.</translation>
+        <translation>FONTOS: A régebbi biztonsági mentéseket frissítse az új, titkosított pénztárca fájllal. Biztonsági okokból, a korábbi titkosítatlan pénztárca fájlok nem használhatóak az új titkosított pénztárcával.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
-        <translation>A tárca titkosítása sikertelen.</translation>
+        <translation>Tárca titkosítása sikertelen</translation>
     </message>
     <message>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation>Tárca titkosítása belső hiba miatt sikertelen. A tárcád nem lett titkosítva.</translation>
+        <translation>A pénztárca titkosítása programhiba miatt meghiúsult .  A pénztárca nem titkosított.</translation>
     </message>
     <message>
         <source>The supplied passphrases do not match.</source>
-        <translation>A megadott jelszavak nem egyeznek.</translation>
+        <translation>A megadott jelszóhalmazok nem egyeznek.</translation>
     </message>
     <message>
         <source>Wallet unlock failed</source>
-        <translation>Tárca megnyitása sikertelen</translation>
+        <translation>Tárca feloldása sikertelen</translation>
     </message>
     <message>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation>A tárca titkosításának feloldásához megadott jelszó helytelen.</translation>
+        <translation>A jelszóhalmaz, amelyet megadott a pénztárca titkosításának a feloldásához, helytelen.</translation>
     </message>
     <message>
         <source>Wallet decryption failed</source>
-        <translation>Tárca titkosításának feloldása sikertelen</translation>
+        <translation>Tárca dekódolása sikertelen</translation>
     </message>
     <message>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation>Tárca jelszava sikeresen megváltoztatva.</translation>
+        <translation>A tárca jelmondata sikeresen megváltozott.</translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation>Vigyázat: a Caps Lock be van kapcsolva!</translation>
+        <translation>Figyelmeztetés: A Caps Lock billentyű benyomva!</translation>
     </message>
 </context>
 <context>
     <name>BanTableModel</name>
     <message>
         <source>IP/Netmask</source>
-        <translation>IP-cím/maszk</translation>
+        <translation>IP/Netmask</translation>
     </message>
     <message>
         <source>Banned Until</source>
-        <translation>Kitiltás vége</translation>
+        <translation>Kitiltva a megadott időpontig</translation>
     </message>
 </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
         <source>Sign &amp;message...</source>
-        <translation>Üzenet aláírása...</translation>
+        <translation>Üzenet &amp;aláírása</translation>
     </message>
     <message>
         <source>Synchronizing with network...</source>
@@ -248,15 +247,11 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>&amp;Overview</source>
-        <translation>&amp;Áttekintés</translation>
-    </message>
-    <message>
-        <source>Node</source>
-        <translation>Csomópont</translation>
+        <translation>Á&amp;ttekintés</translation>
     </message>
     <message>
         <source>Show general overview of wallet</source>
-        <translation>Tárca általános áttekintése</translation>
+        <translation>A pénztárca általános áttekintése</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
@@ -264,67 +259,59 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Browse transaction history</source>
-        <translation>Tranzakciós előzmények megtekintése</translation>
+        <translation>Tranzakció-történet böngészése</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
-        <translation>&amp;Kilépés</translation>
+        <translation>Ki&amp;lépés</translation>
     </message>
     <message>
         <source>Quit application</source>
-        <translation>Kilépés az alkalmazásból</translation>
+        <translation>Alkalmazás bezárása</translation>
     </message>
     <message>
         <source>&amp;About %1</source>
-        <translation>&amp;A %1-ról</translation>
+        <translation>&amp;Kapcsolat %1</translation>
     </message>
     <message>
         <source>Show information about %1</source>
-        <translation>%1 információ megjelenítése</translation>
+        <translation>További információ %1</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
-        <translation>A &amp;Qt-ról</translation>
+        <translation>Kapcsolat &amp;Qt</translation>
     </message>
     <message>
         <source>Show information about Qt</source>
-        <translation>Információk a Qt-ról</translation>
+        <translation>További információ Qt</translation>
     </message>
     <message>
         <source>&amp;Options...</source>
-        <translation>&amp;Opciók...</translation>
+        <translation>&amp;Beállítások...</translation>
     </message>
     <message>
         <source>Modify configuration options for %1</source>
-        <translation>%1 beállítások módosítása</translation>
+        <translation>A %1 konfigurációs beállításainak módosítása</translation>
     </message>
     <message>
         <source>&amp;Encrypt Wallet...</source>
-        <translation>Tárca &amp;titkosítása...</translation>
+        <translation>&amp;Tárca titkosítása</translation>
     </message>
     <message>
         <source>&amp;Backup Wallet...</source>
-        <translation>&amp;Bisztonsági másolat készítése a Tárcáról</translation>
+        <translation>Tárca &amp;biztonsági másolása</translation>
     </message>
     <message>
         <source>&amp;Change Passphrase...</source>
-        <translation>Jelszó &amp;megváltoztatása...</translation>
-    </message>
-    <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;Küldési címek...</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>&amp;Fogadó címek...</translation>
+        <translation>&amp;Jelszóhalmaz megváltoztatása</translation>
     </message>
     <message>
         <source>Open &amp;URI...</source>
-        <translation>&amp;URI azonosító megnyitása...</translation>
+        <translation>&amp;URI... Megnyitása</translation>
     </message>
     <message>
         <source>Click to disable network activity.</source>
-        <translation>Kattintson a hálózati tevékenység letiltásához.</translation>
+        <translation>Kattintson a hálózati tevékenység felfüggesztéséhez.</translation>
     </message>
     <message>
         <source>Network activity disabled.</source>
@@ -332,31 +319,31 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Click to enable network activity again.</source>
-        <translation>Kattintson a hálózati tevékenység újbóli engedélyezéséhez.</translation>
+        <translation>Kattintson a hálózati tevékenység ismételt engedélyezéséhez.</translation>
     </message>
     <message>
         <source>Syncing Headers (%1%)...</source>
-        <translation>Fejlécek Szinkronizálása (%1%)...</translation>
+        <translation>Fejlécek szinkronizálása (%1%)...</translation>
     </message>
     <message>
         <source>Reindexing blocks on disk...</source>
-        <translation>Lemezen lévő blokkok újraindexelése...</translation>
+        <translation>A blokkok újraindexelése folyik a merevlemezen...</translation>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
-        <translation>Bitcoin küldése megadott címre</translation>
+        <translation>Érmék küldése egy Bitcoin címre</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
-        <translation>Biztonsági másolat készítése a tárcáról egy másik helyre</translation>
+        <translation>Tárca biztonsági mentése más helyre</translation>
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation>Tárca-titkosító jelszó megváltoztatása</translation>
+        <translation>A tárca titkosításához használt jelszóhalmaz megváltoztatása</translation>
     </message>
     <message>
         <source>&amp;Debug window</source>
-        <translation>&amp;Debug ablak</translation>
+        <translation>&amp;Hibakereső ablak</translation>
     </message>
     <message>
         <source>Open debugging and diagnostic console</source>
@@ -364,19 +351,15 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>&amp;Verify message...</source>
-        <translation>Üzenet &amp;valódiságának ellenőrzése</translation>
+        <translation>Üzenet &amp;ellenőrzése</translation>
     </message>
     <message>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <source>Wallet</source>
-        <translation>Tárca</translation>
-    </message>
-    <message>
         <source>&amp;Send</source>
-        <translation>&amp;Küldés</translation>
+        <translation>Küldé&amp;s</translation>
     </message>
     <message>
         <source>&amp;Receive</source>
@@ -384,23 +367,23 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>&amp;Show / Hide</source>
-        <translation>&amp;Mutat / Elrejt</translation>
+        <translation>&amp;Mutat/Elrejt</translation>
     </message>
     <message>
         <source>Show or hide the main Window</source>
-        <translation>Főablakot mutat/elrejt</translation>
+        <translation>Fő ablak megjelenítése vagy elrejtése</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>A tárcádhoz tartozó privát kulcsok titkosítása</translation>
+        <translation>Tárcájához tartozó privát kulcsok titkosítása</translation>
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Üzenetek aláírása a Bitcoin-címmeiddel, amivel bizonyítod, hogy a cím a sajátod</translation>
+        <translation>Írja alá az üzeneteit a Bitcoin címével, hogy bizonyítsa Öntől származnak</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>Üzenetek ellenőrzése, hogy valóban a megjelölt Bitcoin-címekkel vannak-e aláírva</translation>
+        <translation>Ellenőrizze az üzeneteket, hogy a megadott Bitcoin címekkel lettek-e aláírva</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -412,59 +395,59 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>&amp;Help</source>
-        <translation>&amp;Súgó</translation>
+        <translation>Sú&amp;gó</translation>
     </message>
     <message>
         <source>Tabs toolbar</source>
-        <translation>Fül eszköztár</translation>
+        <translation>Ablak fülek eszköztára</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Fizetési kérelem (QR-kódot és "bitcoin:" URI azonosítót hoz létre)</translation>
+        <translation>Kérjen fizetéseket (QR kódokat generál és bitcoin: URLeket)</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
-        <translation>A használt küldési címek és címkék megtekintése</translation>
+        <translation>Mutassa a használt küldő címek és cimkék listáját</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
-        <translation>A használt fogadó címek és címkék megtekintése</translation>
+        <translation>Mutassa a használt fogadó címek és cimkék listáját</translation>
     </message>
     <message>
         <source>Open a bitcoin: URI or payment request</source>
-        <translation>"bitcoin:" URI azonosító vagy fizetési kérelem megnyitása</translation>
+        <translation>Nyisson meg egy bitcoin: URI-t vagy fizetési kérelmet</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
-        <translation>Paran&amp;cssor kapcsolók</translation>
+        <translation>&amp;Parancssor beállításai</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n aktív kapcsolat a Bitcoin hálózathoz</numerusform><numerusform>%n aktív kapcsolat a Bitcoin hálózathoz</numerusform></translation>
+        <translation><numerusform>%n aktív kapcsolat a Bitcoin-hálózaton</numerusform><numerusform>%n aktív kapcsolat a Bitcoin-hálózaton</numerusform></translation>
     </message>
     <message>
         <source>Indexing blocks on disk...</source>
-        <translation>Lemezen lévő blokkok indexelése...</translation>
+        <translation>A blokkok indexelése folyik a merevlemezen...</translation>
     </message>
     <message>
         <source>Processing blocks on disk...</source>
-        <translation>Lemezen lévő blokkok feldolgozása...</translation>
+        <translation>A blokkok feldolgozása a merevlemezen...</translation>
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
-        <translation><numerusform>%n blokk feldolgozva a tranzakció előzményből.</numerusform><numerusform>%n blokk feldolgozva a tranzakció előzményből.</numerusform></translation>
+        <translation><numerusform>A tranzakció-történetből %n blokk feldolgozva.</numerusform><numerusform>A tranzakció-történetből %n blokk feldolgozva.</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
-        <translation>%1 lemaradás</translation>
+        <translation>%1 mögött</translation>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
-        <translation>Az utolsóként kapott blokk kora: %1.</translation>
+        <translation>Az utolsó kapott blokk %1 ideje keletkezett.</translation>
     </message>
     <message>
         <source>Transactions after this will not yet be visible.</source>
-        <translation>Ez utáni tranzakciók még nem lesznek láthatóak. </translation>
+        <translation>Az ez utáni tranzakciók még nem fognak látszani.</translation>
     </message>
     <message>
         <source>Error</source>
@@ -472,7 +455,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Warning</source>
-        <translation>Figyelem</translation>
+        <translation>Figyelmeztetés</translation>
     </message>
     <message>
         <source>Information</source>
@@ -484,7 +467,11 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation>A %1 súgó megjelenítése a Bitcoin lehetséges parancssori kapcsolóinak listájával</translation>
+        <translation>Mutassa a %1 súgó üzenetet a lehetséges Bitcoin parancssori beállítások listájáért</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>&amp;Ablak</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -492,16 +479,16 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Connecting to peers...</source>
-        <translation>Csatlakozás párokhoz...</translation>
+        <translation>Kapcsolatok kialakítása...</translation>
     </message>
     <message>
         <source>Catching up...</source>
-        <translation>Frissítés...</translation>
+        <translation>Felzárkózás...</translation>
     </message>
     <message>
         <source>Date: %1
 </source>
-        <translation>Dátum:  %1
+        <translation>Dátum: %1
 </translation>
     </message>
     <message>
@@ -530,15 +517,15 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Sent transaction</source>
-        <translation>Tranzakció elküldve.</translation>
+        <translation>Elküldött tranzakció</translation>
     </message>
     <message>
         <source>Incoming transaction</source>
-        <translation>Beérkező tranzakció</translation>
+        <translation>Bejövő tranzakció</translation>
     </message>
     <message>
         <source>HD key generation is &lt;b&gt;enabled&lt;/b&gt;</source>
-        <translation>HD kulcs generálás &lt;b&gt;engedélyezett&lt;/b&gt;</translation>
+        <translation>HD kulcs generálás &lt;b&gt;engedélyezve&lt;/b&gt;</translation>
     </message>
     <message>
         <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
@@ -546,22 +533,22 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>A tárca &lt;b&gt;titkosítva&lt;/b&gt; és jelenleg &lt;b&gt;nyitva&lt;/b&gt;.</translation>
+        <translation>Tárca &lt;b&gt;titkosítva&lt;/b&gt; és jelenleg &lt;b&gt;nyitva&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>Tárca &lt;b&gt;kódolva&lt;/b&gt; és jelenleg &lt;b&gt;zárva&lt;/b&gt;.</translation>
+        <translation>Tárca &lt;b&gt;titkosítva&lt;/b&gt; és jelenleg &lt;b&gt;zárolva&lt;/b&gt;</translation>
     </message>
     <message>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>Végzetes hiba történt. A Bitcoin működése nem biztonságos és hamarosan leáll.</translation>
+        <translation>Fatális hiba történt. A Bitcoin program nem tud tovább biztonságosan működni és be fog záródni.</translation>
     </message>
 </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
         <source>Coin Selection</source>
-        <translation>Érme Választás</translation>
+        <translation>Érme választó</translation>
     </message>
     <message>
         <source>Quantity:</source>
@@ -573,7 +560,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Amount:</source>
-        <translation>Összeg:</translation>
+        <translation>Öszeg:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -581,27 +568,27 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Dust:</source>
-        <translation>Por-határ:</translation>
+        <translation>Porszem:</translation>
     </message>
     <message>
         <source>After Fee:</source>
-        <translation>Utólagos díj:</translation>
+        <translation>Eljárási díj után:</translation>
     </message>
     <message>
         <source>Change:</source>
-        <translation>Visszajáró:</translation>
+        <translation>Változás:</translation>
     </message>
     <message>
         <source>(un)select all</source>
-        <translation>mindent kiválaszt/elvet</translation>
+        <translation>minden kiválasztása(kiválasztás megszüntetése)</translation>
     </message>
     <message>
         <source>Tree mode</source>
-        <translation>Fa nézet</translation>
+        <translation>Fa mód</translation>
     </message>
     <message>
         <source>List mode</source>
-        <translation>Lista nézet</translation>
+        <translation>Lista mód</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -609,11 +596,11 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Received with label</source>
-        <translation>Címkével érkezett</translation>
+        <translation>Címkével fogadott</translation>
     </message>
     <message>
         <source>Received with address</source>
-        <translation>Címmel érkezett</translation>
+        <translation>Címmel fogadott</translation>
     </message>
     <message>
         <source>Date</source>
@@ -621,11 +608,11 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Confirmations</source>
-        <translation>Megerősítések</translation>
+        <translation>Jóváhagyások</translation>
     </message>
     <message>
         <source>Confirmed</source>
-        <translation>Megerősítve</translation>
+        <translation>Jóváhagyva</translation>
     </message>
     <message>
         <source>Copy address</source>
@@ -641,15 +628,15 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Copy transaction ID</source>
-        <translation>Tranzakció azonosító másolása</translation>
+        <translation>Tranzakció ID másolása</translation>
     </message>
     <message>
         <source>Lock unspent</source>
-        <translation>Elköltetlen összeg zárolása</translation>
+        <translation>El nem költött zárolása</translation>
     </message>
     <message>
         <source>Unlock unspent</source>
-        <translation>Elköltetlen összeg zárolásának a feloldása</translation>
+        <translation>El nem költött nyitása</translation>
     </message>
     <message>
         <source>Copy quantity</source>
@@ -661,19 +648,19 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Copy after fee</source>
-        <translation>Utólagos díj másolása</translation>
+        <translation>Eljárási díj utáni másolás</translation>
     </message>
     <message>
         <source>Copy bytes</source>
-        <translation>Byte-ok másolása </translation>
+        <translation>Bájtok másolása</translation>
     </message>
     <message>
         <source>Copy dust</source>
-        <translation>Porszemek másolása</translation>
+        <translation>Por másolása</translation>
     </message>
     <message>
         <source>Copy change</source>
-        <translation>Visszajáró másolása</translation>
+        <translation>Változás másolása</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
@@ -689,11 +676,11 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation>Ez a címke pirosra változik, ha bármely fogadóhoz, a porszem határértéknél kevesebb összeg érkezik.</translation>
+        <translation>Ez a címke pirosra változik, ha valamelyik fogadó fél kisebb összeget kap, mint a jelenlegi porszem határérték.</translation>
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
-        <translation>Megadott értékenként  +/- %1 satoshi-val változhat.</translation>
+        <translation>Változó +/- %1 satoshi(k) megadott értékenként.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -701,11 +688,11 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>change from %1 (%2)</source>
-        <translation>visszajáró %1-ből (%2)</translation>
+        <translation>változtatás %1 -ről (%2)</translation>
     </message>
     <message>
         <source>(change)</source>
-        <translation>(visszajáró)</translation>
+        <translation>(módosítás)</translation>
     </message>
 </context>
 <context>
@@ -716,15 +703,15 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>&amp;Label</source>
-        <translation>Cím&amp;ke</translation>
+        <translation>&amp;Címke</translation>
     </message>
     <message>
         <source>The label associated with this address list entry</source>
-        <translation>Ehhez a listaelemhez rendelt címke </translation>
+        <translation>Ezzel a cím bejegyzéssel társított címke</translation>
     </message>
     <message>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation>Ehhez a címlistaelemhez rendelt cím. Csak a küldő címek módosíthatók.</translation>
+        <translation>Ezzel a cím bejegyzéssel társított cím. Ezt csak a küldő címek esetén lehet megváltoztatni.</translation>
     </message>
     <message>
         <source>&amp;Address</source>
@@ -732,46 +719,50 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>New sending address</source>
-        <translation>Új küldő cím</translation>
+        <translation>Új küldési cím</translation>
     </message>
     <message>
         <source>Edit receiving address</source>
-        <translation>Fogadó cím szerkesztése</translation>
+        <translation>Fogadási cím szerkesztése</translation>
     </message>
     <message>
         <source>Edit sending address</source>
-        <translation>Küldő cím szerkesztése</translation>
+        <translation>Küldési cím szerkesztése</translation>
     </message>
     <message>
         <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation>A megadott "%1" cím nem egy érvényes Bitcoin-cím.</translation>
+        <translation>A megadott cím"%1" nem egy érvényes Bitcoin cím.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
-        <translation>Tárca feloldása sikertelen</translation>
+        <translation>A tárca feloldása nem lehetséges</translation>
     </message>
     <message>
         <source>New key generation failed.</source>
-        <translation>Új kulcs generálása sikertelen.</translation>
+        <translation>Új kulcs létrehozása sikertelen</translation>
     </message>
 </context>
 <context>
     <name>FreespaceChecker</name>
     <message>
         <source>A new data directory will be created.</source>
-        <translation>Új adatkönyvtár lesz létrehozva.</translation>
+        <translation>Új mappa lesz létrehozva.</translation>
     </message>
     <message>
         <source>name</source>
-        <translation>Név</translation>
+        <translation>név</translation>
+    </message>
+    <message>
+        <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
+        <translation>A könyvtár már létezik. %1 hozzáadása, ha új könyvtárat kíván létrehozni.</translation>
     </message>
     <message>
         <source>Path already exists, and is not a directory.</source>
-        <translation>Az elérési út létezik, de nem egy könyvtáré.</translation>
+        <translation>Az elérési út létezik, de nem egy mappa.</translation>
     </message>
     <message>
         <source>Cannot create data directory here.</source>
-        <translation>Adatkönyvtár nem hozható itt létre.</translation>
+        <translation>Itt nem hozható létre mappa.</translation>
     </message>
 </context>
 <context>
@@ -786,26 +777,26 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>About %1</source>
-        <translation>A %1 -ról</translation>
+        <translation>Kapcsolat %1</translation>
     </message>
     <message>
         <source>Command-line options</source>
-        <translation>Parancssoros opciók</translation>
+        <translation>Parancssor beállításai</translation>
     </message>
 </context>
 <context>
     <name>Intro</name>
     <message>
         <source>Welcome</source>
-        <translation>Üdvözlünk</translation>
+        <translation>Üdvözöljük</translation>
     </message>
     <message>
         <source>Welcome to %1.</source>
-        <translation>Üdvözlünk a %1 -ban.</translation>
+        <translation>Üdvözöljük itt: %1.</translation>
     </message>
     <message>
         <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
-        <translation>Mivel ez a program első indulása, megváltoztathatja, hogy a %1 hova mentse az adatokat.</translation>
+        <translation>Mivel ez a program első indulása, megváltoztathatja %1 hova mentse az adatokat.</translation>
     </message>
     <message>
         <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
@@ -817,15 +808,15 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
-        <translation>Ha a tárolt blokk lánc méretének korlátozását (megnyesését) választotta, akkor is le kell tölteni és feldolgozni az eddig keletkezett összes adatot, de utána ezek törlésre kerülnek, hogy ne foglaljunk sok helyet a merevlemezén.</translation>
+        <translation>Ha a tárolt blokk lánc méretének korlátozását (megnyesését) választotta, akkor is le kell tölteni és feldolgozni az eddig keletkezett összes adatot, de utána ezek törlésre kerülnek, hogy ne foglaljunk sok helyet a merevlemezen.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
-        <translation>Az alapértelmezett adat könyvtár használata</translation>
+        <translation>Alapértelmezett adatmappa használata</translation>
     </message>
     <message>
         <source>Use a custom data directory:</source>
-        <translation>Saját adatkönyvtár használata:</translation>
+        <translation>Egyéni adatmappa használata:</translation>
     </message>
     <message>
         <source>Bitcoin</source>
@@ -833,7 +824,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
-        <translation>Legalább %1 GB adatot fogunk ebben a könyvtárban tárolni és idővel ez egyre több lesz.</translation>
+        <translation>Legalább  %1 GB adatot fogunk ebben a könyvtárban tárolni és idővel ez egyre több lesz.</translation>
     </message>
     <message>
         <source>Approximately %1 GB of data will be stored in this directory.</source>
@@ -849,7 +840,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
-        <translation>Hiba: A megadott "%1" adatkönyvtár nem hozható létre. </translation>
+        <translation>Hiba: A megadott könyvtárat "%1" nem sikerült létrehozni.</translation>
     </message>
     <message>
         <source>Error</source>
@@ -857,7 +848,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message numerus="yes">
         <source>%n GB of free space available</source>
-        <translation><numerusform>%n GB elérhető szabad hely</numerusform><numerusform>%n GB elérhető szabad hely</numerusform></translation>
+        <translation><numerusform>%n GB szabad hely áll rendelkezésre</numerusform><numerusform>%n GB szabad hely áll rendelkezésre</numerusform></translation>
     </message>
     </context>
 <context>
@@ -896,7 +887,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>calculating...</source>
-        <translation>számítás folyamatban...</translation>
+        <translation>számolás...</translation>
     </message>
     <message>
         <source>Estimated time left until synced</source>
@@ -906,11 +897,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <source>Hide</source>
         <translation>Elrejtés</translation>
     </message>
-    <message>
-        <source>Unknown. Syncing Headers (%1)...</source>
-        <translation>Ismeretlen. Fejlécek szinkronizálása (%1)...</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -919,7 +906,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Open payment request from URI or file</source>
-        <translation>Fizetési kérelem megnyitása URI azonosítóból vagy fájlból</translation>
+        <translation>Fizetési kérelem megnyitása URI-ból vagy fájlból</translation>
     </message>
     <message>
         <source>URI:</source>
@@ -927,7 +914,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Select payment request file</source>
-        <translation>Fizetési kérelmi fájl kiválasztása</translation>
+        <translation>A fizetési kérelem fájl kiválasztása</translation>
     </message>
     <message>
         <source>Select payment request file to open</source>
@@ -946,7 +933,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Automatically start %1 after logging in to the system.</source>
-        <translation>%1 automatikus indítása  a rendszerbe való belépés után.</translation>
+        <translation>%1 automatikus indítása a rendszerbe való belépés után.</translation>
     </message>
     <message>
         <source>&amp;Start %1 on system login</source>
@@ -954,11 +941,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Size of &amp;database cache</source>
-        <translation>A&amp;datbázis gyorsítótár mérete</translation>
-    </message>
-    <message>
-        <source>MB</source>
-        <translation>MB</translation>
+        <translation>Az &amp;adatbázis cache mérete</translation>
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
@@ -966,7 +949,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
-        <translation>A proxy IP címe (pl.: IPv4: 127.0.0.1 / IPv6: ::1)</translation>
+        <translation>Proxy IP címe (pl.: IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
         <source>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
@@ -974,19 +957,19 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Hide the icon from the system tray.</source>
-        <translation>Ikon elrejtése a tálcáról.</translation>
+        <translation>Rejtse el az ikont a rendszer tálcáról.</translation>
+    </message>
+    <message>
+        <source>&amp;Hide tray icon</source>
+        <translation>&amp;Tálcaikon elrejtése</translation>
     </message>
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
-        <translation>Az alkalmazásból való kilépés helyett az eszköztárba kicsinyíti az alkalmazást az ablak bezárásakor. Ez esetben az alkalmazás csak a Kilépés menüponttal zárható be.</translation>
+        <translation>Kilépés helyett a program elrejtése az ablak bezárása után. Ha engedélyezte ezt a beállítást, akkor csak úgy tud kilépni a programból, ha a menüből a Kilépés opciót választja.</translation>
     </message>
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation>Harmadik féltől származó URL-ek (pl. egy blokk felfedező) amelyek a tranzakciós fülön jelennek meg mint a környezetérzékeny menü tételei. %s az URL-ben helyettesítve a tranzakciós hash-el. Több URL esetén, függőleges vonal választja el őket.</translation>
-    </message>
-    <message>
-        <source>Active command-line options that override above options:</source>
-        <translation>Aktív parancssori beállítások, melyek felülírják a fenti beállításokat:</translation>
+        <translation>Harmadik féltől származó URL-ek (pl. egy blokk felfedező) amelyek a tranzakciós fülön jelennek meg mint a környezetérzékeny menü tételei. %s az URL-ben helyettesítve a tranzakciós hash-el. Több URL esetén, függőleges vonal választja el őket.</translation>
     </message>
     <message>
         <source>Open the %1 configuration file from the working directory.</source>
@@ -998,11 +981,11 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Reset all client options to default.</source>
-        <translation>Minden kliensbeállítás alapértelmezettre állítása.</translation>
+        <translation>Minden kliens beállítás visszaállítása alaphelyzetbe.</translation>
     </message>
     <message>
         <source>&amp;Reset Options</source>
-        <translation>Beállítások tö&amp;rlése</translation>
+        <translation>&amp;Visszaállítja a Beállításokat</translation>
     </message>
     <message>
         <source>&amp;Network</source>
@@ -1018,7 +1001,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Expert</source>
-        <translation>Szakértő</translation>
+        <translation>Haladó</translation>
     </message>
     <message>
         <source>Enable coin &amp;control features</source>
@@ -1034,23 +1017,23 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>A Bitcoin-kliens portjának automatikus megnyitása a routeren. Ez csak akkor működik, ha a routered támogatja az UPnP-t és az engedélyezve is van rajta.</translation>
+        <translation>Automatikusan nyissa meg a Bitcoin kliens által használt portot a routeren. Ez csak akkor működik, ha a router támogatja a UPnP-t, és engedélyezett ez a beállítás.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
-        <translation>&amp;UPnP port-feltérképezés</translation>
+        <translation>Port feltérképezése &amp;UPnP használatával</translation>
     </message>
     <message>
         <source>Accept connections from outside.</source>
-        <translation>Külső csatlakozások elfogadása.</translation>
+        <translation>Kívülről érkező kapcsolatok fogadása.</translation>
     </message>
     <message>
         <source>Allow incomin&amp;g connections</source>
-        <translation>Bejövő kapcsolatok engedélyezése.</translation>
+        <translation>&amp;Bejövő kapcsolatok engedélyezése</translation>
     </message>
     <message>
         <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
-        <translation>Csatlakozás a Bitcoin hálózatához SOCKS5 proxyn keresztül</translation>
+        <translation>Csatlakozás a Bitcoin hálózathoz SOCKS5 proxy használatával.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1094,23 +1077,23 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>
-        <translation>Kicsinyítés után csak eszköztár-ikont mutass</translation>
+        <translation>Csak az ablak elrejtése után mutassa a tálca ikont.</translation>
     </message>
     <message>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
-        <translation>&amp;Kicsinyítés a tálcára az eszköztár helyett</translation>
+        <translation>&amp;Elrejtés a tálcára ikon formában, a tálcán látható futó program helyett</translation>
     </message>
     <message>
         <source>M&amp;inimize on close</source>
-        <translation>K&amp;icsinyítés záráskor</translation>
+        <translation>&amp;Elrejtés bezáráskor</translation>
     </message>
     <message>
         <source>&amp;Display</source>
-        <translation>&amp;Megjelenítés</translation>
+        <translation>&amp;Mutatás</translation>
     </message>
     <message>
         <source>User Interface &amp;language:</source>
-        <translation>Felhasználófelület nye&amp;lve:</translation>
+        <translation>Felhasználói felület &amp;nyelve:</translation>
     </message>
     <message>
         <source>The user interface language can be set here. This setting will take effect after restarting %1.</source>
@@ -1118,11 +1101,11 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
-        <translation>&amp;Mértékegység:</translation>
+        <translation>&amp;Mértékegység amelyben mutassa az összegeket:</translation>
     </message>
     <message>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation>Válaszd ki az interfészen és érmék küldésekor megjelenítendő alapértelmezett alegységet.</translation>
+        <translation>Válassza ki az alapértelmezett részmértékegységet, amely megjelenik a felhasználói felületen és pénzküldéskor.</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
@@ -1130,7 +1113,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>&amp;Third party transaction URLs</source>
-        <translation>&amp;Harmadik féltől származó tranzakció URL-ek</translation>
+        <translation>&amp;Harmadik féltől származó tranzakciós URL-ek</translation>
     </message>
     <message>
         <source>&amp;OK</source>
@@ -1138,11 +1121,11 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>&amp;Cancel</source>
-        <translation>Megszakítás</translation>
+        <translation>&amp;Mégse</translation>
     </message>
     <message>
         <source>default</source>
-        <translation>alapértelmezett</translation>
+        <translation>alapméretezett</translation>
     </message>
     <message>
         <source>none</source>
@@ -1150,11 +1133,11 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Confirm options reset</source>
-        <translation>Beállítások törlésének jóváhagyása.</translation>
+        <translation>Opciók visszaállításának megerősítése</translation>
     </message>
     <message>
         <source>Client restart required to activate changes.</source>
-        <translation>A változtatások aktiválásahoz újra kell indítani a klienst.</translation>
+        <translation>Újra kell indítani a programot a beállítások alkalmazásához.</translation>
     </message>
     <message>
         <source>Client will be shut down. Do you want to proceed?</source>
@@ -1182,7 +1165,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>The supplied proxy address is invalid.</source>
-        <translation>A megadott proxy cím nem érvényes.</translation>
+        <translation>A megadott proxy cím érvénytelen.</translation>
     </message>
 </context>
 <context>
@@ -1193,11 +1176,11 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>A kijelzett információ lehet, hogy elavult. A pénztárcája automatikusan szinkronizálja magát a Bitcoin hálózattal miután a kapcsolat létrejön, de ez e folyamat még nem fejeződött be.</translation>
+        <translation>Lehet, hogy a megjelenített információ elavult. A tárcája automatikusan szinkronizál a hálózattal kapcsolódás után, de a folyamat még nem ért véget.</translation>
     </message>
     <message>
         <source>Watch-only:</source>
-        <translation>Csak megfigyelés</translation>
+        <translation>Megfigyelés:</translation>
     </message>
     <message>
         <source>Available:</source>
@@ -1205,15 +1188,15 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Your current spendable balance</source>
-        <translation>Jelenlegi egyenleg</translation>
+        <translation>Felhasználható egyenlege</translation>
     </message>
     <message>
         <source>Pending:</source>
-        <translation>Küldés:</translation>
+        <translation>Függőben:</translation>
     </message>
     <message>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
-        <translation>Még megerősítésre váró, a jelenlegi egyenlegbe be nem számított tranzakciók</translation>
+        <translation>A tranzakciók száma, amelyeket még hitelesíteni kell, és amelyek még nem tartoznak az elkölthető egyenlegbe.</translation>
     </message>
     <message>
         <source>Immature:</source>
@@ -1221,7 +1204,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Mined balance that has not yet matured</source>
-        <translation>Bányászott egyenleg amely még nem érett be.</translation>
+        <translation>Bányászott egyenleg, mely jelenleg még éretlen</translation>
     </message>
     <message>
         <source>Balances</source>
@@ -1233,7 +1216,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Your current total balance</source>
-        <translation>Aktuális egyenleged</translation>
+        <translation>Jelenlegi teljes egyenlege</translation>
     </message>
     <message>
         <source>Your current balance in watch-only addresses</source>
@@ -1245,7 +1228,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Recent transactions</source>
-        <translation>A legutóbbi tranzakciók</translation>
+        <translation>Legutóbbi tranzakciók</translation>
     </message>
     <message>
         <source>Unconfirmed transactions to watch-only addresses</source>
@@ -1272,7 +1255,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>URI handling</source>
-        <translation>URI kezelés</translation>
+        <translation>URI kezelése</translation>
     </message>
     <message>
         <source>Invalid payment address %1</source>
@@ -1280,31 +1263,31 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation>Nem sikerült az URI elemzése! Ezt okozhatja érvénytelen Bitcoin cím, vagy rossz URI paraméterezés.</translation>
+        <translation>Az URI nem dolgozható fel! Ennek oka lehet egy érvénytelen Bitcoin-cím, vagy hibás URI-paraméterek.</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
-        <translation>Fizetés kérelmi fájl kezelése</translation>
+        <translation>Fizetésikérelem-fájl kezelése</translation>
     </message>
     <message>
         <source>Payment request file cannot be read! This can be caused by an invalid payment request file.</source>
-        <translation>Nem sikerült beolvasni a fizetési kérelmi fájlt! Ezt érvénytelen fizetési kérelmi fájl okozhatja.</translation>
+        <translation>A fizetésikérelem-fájl nem olvasható! Lehet, hogy hibás a fájl.</translation>
     </message>
     <message>
         <source>Payment request rejected</source>
-        <translation>A fizetési kérelem visszautasítva</translation>
+        <translation>Fizetési kérelem elutasítva</translation>
     </message>
     <message>
         <source>Payment request network doesn't match client network.</source>
-        <translation>A fizetési kérelmi hálózat nem egyezik a kliens hálózatával.</translation>
+        <translation>A fizetési kérelem hálózat nem egyezik a kliens hálózatával.</translation>
     </message>
     <message>
         <source>Payment request expired.</source>
-        <translation>A fizetési kérelem lejárt.</translation>
+        <translation>Fizetési kérelem lejárt</translation>
     </message>
     <message>
         <source>Payment request is not initialized.</source>
-        <translation>A fizetési kérelem nem inicializálódott</translation>
+        <translation>Fizetési kérelem nincs inicializálva.</translation>
     </message>
     <message>
         <source>Invalid payment request.</source>
@@ -1316,31 +1299,31 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Refund from %1</source>
-        <translation>Visszatérítés a %1 -tól</translation>
+        <translation>Visszatérítés innen: %1</translation>
     </message>
     <message>
         <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
-        <translation>A fizetési kérelem %1 túl nagy (%2 byte, csak %3 byte engedélyezett).</translation>
+        <translation>A %1 fizetési kérelem túl nagy (%2 bájt, megengedett: %3 bájt).</translation>
     </message>
     <message>
         <source>Error communicating with %1: %2</source>
-        <translation>Hiba a kommuniáció során %1 -el: %2</translation>
+        <translation>Hiba a kommunikáció során %1 -el: %2</translation>
     </message>
     <message>
         <source>Payment request cannot be parsed!</source>
-        <translation>Nem sikerült elemezni a fizetési kérelmet!</translation>
+        <translation>A fizetési kérelem nem dolgozható fel!</translation>
     </message>
     <message>
         <source>Bad response from server %1</source>
-        <translation>Rossz válasz a kiszolgálótól %1</translation>
+        <translation>Rossz válasz a szervertől %1</translation>
     </message>
     <message>
         <source>Network request error</source>
-        <translation>Hálózati kérelem hiba</translation>
+        <translation>Hálózati hiba történt</translation>
     </message>
     <message>
         <source>Payment acknowledged</source>
-        <translation>Fizetés elfogadva</translation>
+        <translation>Fizetés nyugtázva</translation>
     </message>
 </context>
 <context>
@@ -1355,7 +1338,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>NodeId</source>
-        <translation>Csomópont Azonosító</translation>
+        <translation>Csomópont azonosító</translation>
     </message>
     <message>
         <source>Ping</source>
@@ -1363,11 +1346,11 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Sent</source>
-        <translation>Küldött</translation>
+        <translation>Elküldve</translation>
     </message>
     <message>
         <source>Received</source>
-        <translation>Fogadott</translation>
+        <translation>Fogadva</translation>
     </message>
 </context>
 <context>
@@ -1378,7 +1361,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation>Ad meg egy Bitcoin címet (pl: %1)</translation>
+        <translation>Adjon meg egy Bitcoin-címet (pl. %1)</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -1398,11 +1381,11 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>None</source>
-        <translation>Semmi</translation>
+        <translation>Nincs</translation>
     </message>
     <message>
         <source>N/A</source>
-        <translation>Nem elérhető</translation>
+        <translation>N/A</translation>
     </message>
     <message>
         <source>%1 ms</source>
@@ -1465,7 +1448,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     <name>QObject::QObject</name>
     <message>
         <source>Error: Specified data directory "%1" does not exist.</source>
-        <translation>Hiba: A megadott "%1" adatkönyvtár nem létezik. </translation>
+        <translation>Hiba: A megadott "%1" adatkönyvtár nem létezik.</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -1476,15 +1459,15 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     <name>QRImageWidget</name>
     <message>
         <source>&amp;Save Image...</source>
-        <translation>&amp;Kép Mentése</translation>
+        <translation>Kép &amp;mentése</translation>
     </message>
     <message>
         <source>&amp;Copy Image</source>
-        <translation>&amp;Kép Másolása</translation>
+        <translation>Kép má&amp;solása</translation>
     </message>
     <message>
         <source>Save QR Code</source>
-        <translation>QR Kód Mentése</translation>
+        <translation>QR-kód mentése</translation>
     </message>
     <message>
         <source>PNG Image (*.png)</source>
@@ -1495,7 +1478,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     <name>RPCConsole</name>
     <message>
         <source>N/A</source>
-        <translation>Nem elérhető</translation>
+        <translation>N/A</translation>
     </message>
     <message>
         <source>Client version</source>
@@ -1507,7 +1490,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Debug window</source>
-        <translation>Debug ablak</translation>
+        <translation>Hibakereső ablak</translation>
     </message>
     <message>
         <source>General</source>
@@ -1515,15 +1498,15 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Using BerkeleyDB version</source>
-        <translation>Használt BerkeleyDB verzió</translation>
+        <translation>BerkeleyDB verzió</translation>
     </message>
     <message>
         <source>Datadir</source>
-        <translation>Adatkönyvtár</translation>
+        <translation>Adat elérési útja</translation>
     </message>
     <message>
         <source>Startup time</source>
-        <translation>Bekapcsolás ideje</translation>
+        <translation>Indítás időpontja</translation>
     </message>
     <message>
         <source>Network</source>
@@ -1543,7 +1526,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Current number of blocks</source>
-        <translation>Aktuális blokkok száma</translation>
+        <translation>Blokkok aktuális száma</translation>
     </message>
     <message>
         <source>Memory Pool</source>
@@ -1551,7 +1534,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Current number of transactions</source>
-        <translation>Jelenlegi tranzakciók száma</translation>
+        <translation>Tranzakciók pillanatnyi száma</translation>
     </message>
     <message>
         <source>Memory usage</source>
@@ -1559,23 +1542,23 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>&amp;Reset</source>
-        <translation>&amp;Visszaállítás</translation>
+        <translation>&amp;Alaphelyzet</translation>
     </message>
     <message>
         <source>Received</source>
-        <translation>Fogadott</translation>
+        <translation>Fogadva</translation>
     </message>
     <message>
         <source>Sent</source>
-        <translation>Küldött</translation>
+        <translation>Elküldve</translation>
     </message>
     <message>
         <source>&amp;Peers</source>
-        <translation>&amp;Peerek</translation>
+        <translation>&amp;Peer-ek</translation>
     </message>
     <message>
         <source>Banned peers</source>
-        <translation>Kitiltott felek</translation>
+        <translation>Letiltott peer-ek</translation>
     </message>
     <message>
         <source>Select a peer to view detailed information.</source>
@@ -1595,15 +1578,15 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Starting Block</source>
-        <translation>Kezdő Blokk</translation>
+        <translation>Kezdeti blokk</translation>
     </message>
     <message>
         <source>Synced Headers</source>
-        <translation>Szinkronizált Fejlécek</translation>
+        <translation>Szikronizált fejlécek</translation>
     </message>
     <message>
         <source>Synced Blocks</source>
-        <translation>Szinkronizált Blokkok</translation>
+        <translation>Szinkronizált blokkok</translation>
     </message>
     <message>
         <source>User Agent</source>
@@ -1611,11 +1594,11 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>A %1 debug log fájl megnyitása a jelenlegi könyvtárból. Ez néhány másodpercig eltarthat nagyobb log fájlok esetén.</translation>
+        <translation>A %1 hibakeresési naplófájl megnyitása a jelenlegi könyvtárból. Ez néhány másodpercig eltarthat nagyobb naplófájlok esetén.</translation>
     </message>
     <message>
         <source>Decrease font size</source>
-        <translation>Betűméret kicsinyítése</translation>
+        <translation>Betűméret csökkentése</translation>
     </message>
     <message>
         <source>Increase font size</source>
@@ -1627,15 +1610,15 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Connection Time</source>
-        <translation>Csatlakozás ideje</translation>
+        <translation>Csatlakozási idő</translation>
     </message>
     <message>
         <source>Last Send</source>
-        <translation>Legutóbbi küldés</translation>
+        <translation>Utolsó küldés</translation>
     </message>
     <message>
         <source>Last Receive</source>
-        <translation>Legutóbbi fogadás</translation>
+        <translation>Utolsó fogadás</translation>
     </message>
     <message>
         <source>Ping Time</source>
@@ -1647,7 +1630,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Ping Wait</source>
-        <translation>Ping Várakozás</translation>
+        <translation>Várakozás ping-re</translation>
     </message>
     <message>
         <source>Min Ping</source>
@@ -1675,7 +1658,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Totals</source>
-        <translation>Összesen:</translation>
+        <translation>Összesen</translation>
     </message>
     <message>
         <source>In:</source>
@@ -1687,11 +1670,11 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Debug log file</source>
-        <translation>Debug naplófájl</translation>
+        <translation>Hibakeresési napló fájl</translation>
     </message>
     <message>
         <source>Clear console</source>
-        <translation>Konzol törlése</translation>
+        <translation>Konzol ürítése</translation>
     </message>
     <message>
         <source>1 &amp;hour</source>
@@ -1715,19 +1698,23 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Ban for</source>
-        <translation>Kitiltás oka</translation>
+        <translation>Tiltás oka</translation>
     </message>
     <message>
         <source>&amp;Unban</source>
-        <translation>&amp;Feloldja a kitiltást</translation>
+        <translation>&amp;Tiltás feloldása</translation>
     </message>
     <message>
         <source>Welcome to the %1 RPC console.</source>
-        <translation>Üdv a %1 RPC konzoljában.</translation>
+        <translation>Üdv az %1 RPC konzoljában.</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and %1 to clear screen.</source>
-        <translation>Használja a fel és le nyilakat az előzményekben való navigáláshoz, és %1 -et a képernyő törlésére.</translation>
+        <translation>Az előzmények közötti navigálásához használd a fel és le nyilakat, és %1-t a képernyő törléséhez.</translation>
+    </message>
+    <message>
+        <source>Type %1 for an overview of available commands.</source>
+        <translation>Írja be a %1 parancsot az elérhető utasítások áttekintéséhez.</translation>
     </message>
     <message>
         <source>For more information on using this console type %1.</source>
@@ -1739,7 +1726,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Network activity disabled</source>
-        <translation>Hálózati tevékenység letiltva.</translation>
+        <translation>Hálózat aktivitása letiltva</translation>
     </message>
     <message>
         <source>(node id: %1)</source>
@@ -1747,7 +1734,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>via %1</source>
-        <translation>%1 által</translation>
+        <translation>%1-n keresztül</translation>
     </message>
     <message>
         <source>never</source>
@@ -1782,7 +1769,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>&amp;Label:</source>
-        <translation>Címke:</translation>
+        <translation>&amp;Címke:</translation>
     </message>
     <message>
         <source>&amp;Message:</source>
@@ -1790,15 +1777,15 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
-        <translation>Egy opcionális üzenet csatolása a fizetési kérelemhez, amely megjelenik a kérelem megnyitásakor. Megjegyzés: Az üzenet nem lesz elküldve a fizetséggel a Bitcoin hálózaton keresztül.</translation>
+        <translation>Opciónális üzenet csatolása a fizetési kérelemhez, ami a kérelem megnyitásakor megjelenik. Megjegyzés: Az üzenet nem lesz elküldve a fizetéssel a Bitcoin hálózaton.</translation>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
-        <translation>Egy opcionális címke, amit hozzá lehet rendelni az új fogadó címhez.</translation>
+        <translation>Opcionális címke hozzáadása az új fogadó címhez.</translation>
     </message>
     <message>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
-        <translation>Használja ezt az űrlapot fizetési kérelmekhez. Minden mező &lt;b&gt;opcionális&lt;/b&gt; </translation>
+        <translation>Használja ezt az űrlapot fizetések kérésére. Minden mező &lt;b&gt;opcionális&lt;/b&gt;.</translation>
     </message>
     <message>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
@@ -1806,7 +1793,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Clear all fields of the form.</source>
-        <translation>Minden mező törlése</translation>
+        <translation>Az űrlap összes mezőjének törlése</translation>
     </message>
     <message>
         <source>Clear</source>
@@ -1822,11 +1809,11 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Requested payments history</source>
-        <translation>A kért kifizetések története</translation>
+        <translation>A kért kifizetések előzménye</translation>
     </message>
     <message>
         <source>&amp;Request payment</source>
-        <translation>&amp;Fizetés kérése</translation>
+        <translation>&amp;Fizetési kérelem</translation>
     </message>
     <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
@@ -1834,7 +1821,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Show</source>
-        <translation>Mutat</translation>
+        <translation>Megmutatás</translation>
     </message>
     <message>
         <source>Remove the selected entries from the list</source>
@@ -1865,7 +1852,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     <name>ReceiveRequestDialog</name>
     <message>
         <source>QR Code</source>
-        <translation>QR kód</translation>
+        <translation>QR-kód</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
@@ -1877,11 +1864,11 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>&amp;Save Image...</source>
-        <translation>&amp;Kép mentése</translation>
+        <translation>Kép &amp;mentése</translation>
     </message>
     <message>
         <source>Request payment to %1</source>
-        <translation>Fizetés kérése a %1 -hez</translation>
+        <translation>Fizetési kérelem tőle: %1</translation>
     </message>
     <message>
         <source>Payment information</source>
@@ -1983,15 +1970,15 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Amount:</source>
-        <translation>Összeg:</translation>
+        <translation>Öszeg:</translation>
     </message>
     <message>
         <source>Fee:</source>
-        <translation>Díjak:</translation>
+        <translation>Díj:</translation>
     </message>
     <message>
         <source>After Fee:</source>
-        <translation>Utólagos díj:</translation>
+        <translation>Eljárási díj után:</translation>
     </message>
     <message>
         <source>Change:</source>
@@ -2007,11 +1994,11 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Transaction Fee:</source>
-        <translation>Tranzakciós díj</translation>
+        <translation>Tranzakciós díj:</translation>
     </message>
     <message>
         <source>Choose...</source>
-        <translation>Válassz...</translation>
+        <translation>Választás...</translation>
     </message>
     <message>
         <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</source>
@@ -2034,24 +2021,16 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <translation>Elrejtés</translation>
     </message>
     <message>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
-        <translation>Alacsony díj is megfelelő, ha nincs több tranzakció mint amennyi hely a blokkokban. Figyelem! Ha a hálózat túlterhelt, lehetséges, hogy a tranzakció nem lesz megerősítve.</translation>
-    </message>
-    <message>
-        <source>(read the tooltip)</source>
-        <translation>(olvasd el a gyorstippet)</translation>
-    </message>
-    <message>
         <source>Recommended:</source>
         <translation>Ajánlott:</translation>
     </message>
     <message>
         <source>Custom:</source>
-        <translation>Egyéni:</translation>
+        <translation>Egyedi:</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
-        <translation>Küldés több címzettnek egyszerre</translation>
+        <translation>Küldés egyszerre több címzettnek</translation>
     </message>
     <message>
         <source>Add &amp;Recipient</source>
@@ -2059,15 +2038,15 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Clear all fields of the form.</source>
-        <translation>Minden mező törlése</translation>
+        <translation>Az űrlap összes mezőjének törlése</translation>
     </message>
     <message>
         <source>Dust:</source>
-        <translation>Por-határ:</translation>
+        <translation>Porszem:</translation>
     </message>
     <message>
         <source>Confirmation time target:</source>
-        <translation>Várható megerősítési idő:</translation>
+        <translation>Megerősítési idő cél:</translation>
     </message>
     <message>
         <source>Enable Replace-By-Fee</source>
@@ -2075,7 +2054,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Clear &amp;All</source>
-        <translation>Mindent &amp;töröl</translation>
+        <translation>&amp;Mindent töröl</translation>
     </message>
     <message>
         <source>Balance:</source>
@@ -2103,23 +2082,23 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Copy after fee</source>
-        <translation>Utólagos díj másolása</translation>
+        <translation>Eljárási díj utáni másolás</translation>
     </message>
     <message>
         <source>Copy bytes</source>
-        <translation>Byte-ok másolása </translation>
+        <translation>Bájtok másolása</translation>
     </message>
     <message>
         <source>Copy dust</source>
-        <translation>Porszemek másolása</translation>
+        <translation>Por másolása</translation>
     </message>
     <message>
         <source>Copy change</source>
-        <translation>Visszajáró másolása</translation>
+        <translation>Változás másolása</translation>
     </message>
     <message>
         <source>Are you sure you want to send?</source>
-        <translation>Biztosan el akarja küldeni?</translation>
+        <translation>Biztosan elküldi?</translation>
     </message>
     <message>
         <source>or</source>
@@ -2143,11 +2122,11 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>The amount to pay must be larger than 0.</source>
-        <translation>A fizetendő összegnek nagyobbnak kell lennie 0-nál.</translation>
+        <translation>Az összegnek nagyobbnak kell lennie, mint 0.</translation>
     </message>
     <message>
         <source>The amount exceeds your balance.</source>
-        <translation>Az összeg meghaladja az egyenlegét.</translation>
+        <translation>Az összeg túlhaladja az egyenleged.</translation>
     </message>
     <message>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
@@ -2159,7 +2138,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Transaction creation failed!</source>
-        <translation>Tranzakció létrehozása sikertelen!</translation>
+        <translation>Tranzakció készítése sikertelen!</translation>
     </message>
     <message>
         <source>The transaction was rejected with the following reason: %1</source>
@@ -2171,15 +2150,11 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Payment request expired.</source>
-        <translation>A fizetési kérelem lejárt.</translation>
-    </message>
-    <message>
-        <source>Pay only the required fee of %1</source>
-        <translation>Csak a szükséges %1 díj fizetése</translation>
+        <translation>Fizetési kérelem lejárt</translation>
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
-        <translation>Figyelmeztetés: Érvénytelen Bitcoin cím</translation>
+        <translation>Figyelem: érvénytelen Bitcoin cím</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -2187,7 +2162,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Confirm custom change address</source>
-        <translation>Egyedi visszajáró cím jóváhagyása</translation>
+        <translation>Egyedi visszajáró cím megerősítése</translation>
     </message>
     <message>
         <source>The address you selected for change is not part of this wallet. Any or all funds in your wallet may be sent to this address. Are you sure?</source>
@@ -2202,7 +2177,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     <name>SendCoinsEntry</name>
     <message>
         <source>A&amp;mount:</source>
-        <translation>Összeg:</translation>
+        <translation>&amp;Összeg:</translation>
     </message>
     <message>
         <source>Pay &amp;To:</source>
@@ -2210,15 +2185,15 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>&amp;Label:</source>
-        <translation>Címke:</translation>
+        <translation>&amp;Címke:</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
-        <translation>Válassz egy korábban már használt címet</translation>
+        <translation>Válasszon a korábban használt címek közül</translation>
     </message>
     <message>
         <source>This is a normal payment.</source>
-        <translation>Ez normál fizetés.</translation>
+        <translation>Ez egy normális fizetés.</translation>
     </message>
     <message>
         <source>The Bitcoin address to send the payment to</source>
@@ -2230,7 +2205,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Paste address from clipboard</source>
-        <translation>Cím beillesztése a vágólapról</translation>
+        <translation>Cím beillesztése vágólapról</translation>
     </message>
     <message>
         <source>Alt+P</source>
@@ -2238,7 +2213,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Remove this entry</source>
-        <translation>Ez a bejegyzés eltávolítása</translation>
+        <translation>Bejegyzés eltávolítása</translation>
     </message>
     <message>
         <source>S&amp;ubtract fee from amount</source>
@@ -2288,18 +2263,18 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     <name>ShutdownWindow</name>
     <message>
         <source>%1 is shutting down...</source>
-        <translation>A %1 leáll...</translation>
+        <translation>%1 leáll...</translation>
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
-        <translation>Ne állítsd le a számítógépet amíg ez az ablak el nem tűnik.</translation>
+        <translation>Ne kapcsold ki a számítógépet, amíg ez az üzenet el nem tűnik.</translation>
     </message>
 </context>
 <context>
     <name>SignVerifyMessageDialog</name>
     <message>
         <source>Signatures - Sign / Verify a Message</source>
-        <translation>Aláírások - üzenet aláírása/ellenőrzése</translation>
+        <translation>Aláírások - Aláír / Megerősít egy Üzenetet</translation>
     </message>
     <message>
         <source>&amp;Sign Message</source>
@@ -2311,7 +2286,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Choose previously used address</source>
-        <translation>Válassz egy korábban már használt címet</translation>
+        <translation>Válasszon a korábban használt címek közül</translation>
     </message>
     <message>
         <source>Alt+A</source>
@@ -2319,7 +2294,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Paste address from clipboard</source>
-        <translation>Cím beillesztése a vágólapról</translation>
+        <translation>Cím beillesztése vágólapról</translation>
     </message>
     <message>
         <source>Alt+P</source>
@@ -2335,7 +2310,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Copy the current signature to the system clipboard</source>
-        <translation>A jelenleg kiválasztott aláírás másolása a rendszer-vágólapra</translation>
+        <translation>A pillanatnyi aláírás másolása a rendszer vágólapjára</translation>
     </message>
     <message>
         <source>Sign the message to prove you own this Bitcoin address</source>
@@ -2347,11 +2322,11 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Clear &amp;All</source>
-        <translation>Mindent &amp;töröl</translation>
+        <translation>&amp;Mindent töröl</translation>
     </message>
     <message>
         <source>&amp;Verify Message</source>
-        <translation>Üzenet ellenőrzése</translation>
+        <translation>&amp;Üzenet megerősítése</translation>
     </message>
     <message>
         <source>The Bitcoin address the message was signed with</source>
@@ -2371,15 +2346,15 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>The entered address is invalid.</source>
-        <translation>A megadott cím nem érvényes.</translation>
+        <translation>A beírt cím érvénytelen.</translation>
     </message>
     <message>
         <source>Please check the address and try again.</source>
-        <translation>Kérem ellenőrizze a címet és próbálja meg újra.</translation>
+        <translation>Ellenőrizze a címet majd próbálja újból.</translation>
     </message>
     <message>
         <source>Wallet unlock was cancelled.</source>
-        <translation>Tárca megnyitása megszakítva</translation>
+        <translation>A tárca feloldása elutasítva</translation>
     </message>
     <message>
         <source>Private key for the entered address is not available.</source>
@@ -2387,11 +2362,11 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Message signing failed.</source>
-        <translation>Üzenet aláírása sikertelen.</translation>
+        <translation>Üzenet aláírása sikertelen</translation>
     </message>
     <message>
         <source>Message signed.</source>
-        <translation>Üzenet aláírva.</translation>
+        <translation>Üzenet aláírva</translation>
     </message>
     <message>
         <source>The signature could not be decoded.</source>
@@ -2399,7 +2374,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Please check the signature and try again.</source>
-        <translation>Kérem ellenőrizze az aláírást és próbálja újra.</translation>
+        <translation>Ellenőrizze az aláírást majd próbálja újból</translation>
     </message>
     <message>
         <source>Message verification failed.</source>
@@ -2407,14 +2382,14 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Message verified.</source>
-        <translation>Üzenet ellenőrizve.</translation>
+        <translation>Üzenet megerősítve.</translation>
     </message>
 </context>
 <context>
     <name>SplashScreen</name>
     <message>
         <source>[testnet]</source>
-        <translation>[teszthálózat]</translation>
+        <translation>[testnet]</translation>
     </message>
 </context>
 <context>
@@ -2468,11 +2443,11 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Generated</source>
-        <translation>Generálva</translation>
+        <translation>Létrehozott</translation>
     </message>
     <message>
         <source>From</source>
-        <translation>Küldő: </translation>
+        <translation>Innen:</translation>
     </message>
     <message>
         <source>unknown</source>
@@ -2480,15 +2455,15 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>To</source>
-        <translation>Címzett</translation>
+        <translation>Ide:</translation>
     </message>
     <message>
         <source>own address</source>
-        <translation>saját cím</translation>
+        <translation>saját címek</translation>
     </message>
     <message>
         <source>watch-only</source>
-        <translation>csak megfigyelés</translation>
+        <translation>megfigyelés</translation>
     </message>
     <message>
         <source>label</source>
@@ -2500,7 +2475,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>not accepted</source>
-        <translation>elutasítva</translation>
+        <translation>nem elfogadott</translation>
     </message>
     <message>
         <source>Debit</source>
@@ -2528,7 +2503,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Transaction ID</source>
-        <translation>Tranzakció Azonosító</translation>
+        <translation>Tranzakció azonosító</translation>
     </message>
     <message>
         <source>Transaction total size</source>
@@ -2540,7 +2515,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Debug information</source>
-        <translation>Debug információ</translation>
+        <translation>Hibakeresési információk</translation>
     </message>
     <message>
         <source>Transaction</source>
@@ -2569,7 +2544,11 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Ez a mező a tranzakció részleteit mutatja</translation>
     </message>
-    </context>
+    <message>
+        <source>Details for %1</source>
+        <translation>%1 részletei</translation>
+    </message>
+</context>
 <context>
     <name>TransactionTableModel</name>
     <message>
@@ -2590,7 +2569,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Unconfirmed</source>
-        <translation>Megerősítetlen</translation>
+        <translation>Nem megerősített</translation>
     </message>
     <message>
         <source>Abandoned</source>
@@ -2614,7 +2593,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Generated but not accepted</source>
-        <translation>Generálva, de nincs elfogadva</translation>
+        <translation>Generált de nem elfogadott</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -2626,7 +2605,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Sent to</source>
-        <translation>Elküldve ide</translation>
+        <translation>Küldés neki</translation>
     </message>
     <message>
         <source>Payment to yourself</source>
@@ -2634,11 +2613,11 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Mined</source>
-        <translation>Kibányászva</translation>
+        <translation>Bányászott</translation>
     </message>
     <message>
         <source>watch-only</source>
-        <translation>csak megfigyelés</translation>
+        <translation>megfigyelés</translation>
     </message>
     <message>
         <source>(n/a)</source>
@@ -2669,7 +2648,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     <name>TransactionView</name>
     <message>
         <source>All</source>
-        <translation>Mind</translation>
+        <translation>Összes</translation>
     </message>
     <message>
         <source>Today</source>
@@ -2677,19 +2656,19 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>This week</source>
-        <translation>Ezen a héten</translation>
+        <translation>E héten</translation>
     </message>
     <message>
         <source>This month</source>
-        <translation>Ebben a hónapban</translation>
+        <translation>E hónapban</translation>
     </message>
     <message>
         <source>Last month</source>
-        <translation>Múlt hónapban</translation>
+        <translation>Előző hónapban</translation>
     </message>
     <message>
         <source>This year</source>
-        <translation>Ebben az évben</translation>
+        <translation>Ez évben</translation>
     </message>
     <message>
         <source>Range...</source>
@@ -2701,7 +2680,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Sent to</source>
-        <translation>Elküldve ide</translation>
+        <translation>Küldés neki</translation>
     </message>
     <message>
         <source>To yourself</source>
@@ -2709,15 +2688,15 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Mined</source>
-        <translation>Kibányászva</translation>
+        <translation>Bányászott</translation>
     </message>
     <message>
         <source>Other</source>
-        <translation>Más</translation>
+        <translation>Egyéb</translation>
     </message>
     <message>
         <source>Min amount</source>
-        <translation>Minimális összeg</translation>
+        <translation>Minimum összeg</translation>
     </message>
     <message>
         <source>Abandon transaction</source>
@@ -2741,7 +2720,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Copy transaction ID</source>
-        <translation>Tranzakció azonosító másolása</translation>
+        <translation>Tranzakció ID másolása</translation>
     </message>
     <message>
         <source>Copy raw transaction</source>
@@ -2757,7 +2736,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Show transaction details</source>
-        <translation>Tranzakció részletesen</translation>
+        <translation>Tranzakció részletei</translation>
     </message>
     <message>
         <source>Export Transaction History</source>
@@ -2765,15 +2744,15 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation>Vesszővel elválasztott adatokat tartalmazó fájl</translation>
+        <translation>Vesszővel elválasztott adatok (*.csv)</translation>
     </message>
     <message>
         <source>Confirmed</source>
-        <translation>Megerősítve</translation>
+        <translation>Jóváhagyva</translation>
     </message>
     <message>
         <source>Watch-only</source>
-        <translation>Csak megfigyelés</translation>
+        <translation>Csak megtekintés</translation>
     </message>
     <message>
         <source>Date</source>
@@ -2793,11 +2772,11 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>ID</source>
-        <translation>Azonosító</translation>
+        <translation>ID</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation>Hiba az exportálás során</translation>
+        <translation>Sikertelen export</translation>
     </message>
     <message>
         <source>There was an error trying to save the transaction history to %1.</source>
@@ -2805,7 +2784,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Exporting Successful</source>
-        <translation>Sikeres Exportálás</translation>
+        <translation>Sikeres exportálás</translation>
     </message>
     <message>
         <source>Range:</source>
@@ -2814,6 +2793,9 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
+    </context>
+<context>
+    <name>WalletController</name>
     </context>
 <context>
     <name>WalletFrame</name>
@@ -2826,7 +2808,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     <name>WalletModel</name>
     <message>
         <source>Send Coins</source>
-        <translation>Érmék Küldése</translation>
+        <translation>Érmék küldése</translation>
     </message>
     <message>
         <source>Increasing transaction fee failed</source>
@@ -2842,7 +2824,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Increase:</source>
-        <translation>Növekedés:</translation>
+        <translation>Növelés:</translation>
     </message>
     <message>
         <source>New fee:</source>
@@ -2856,32 +2838,36 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
         <source>Could not commit transaction</source>
         <translation>A tranzakciót nem lehet elküldeni</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Exportálás</translation>
+        <translation>&amp;Export</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Jelenlegi nézet adatainak exportálása fájlba</translation>
+        <translation>A jelenlegi fülön található adat exportálása fájlba</translation>
     </message>
     <message>
         <source>Backup Wallet</source>
-        <translation>Biztonsági másolat készítése a Tárcáról</translation>
+        <translation>Tárca biztonsági mentése</translation>
     </message>
     <message>
         <source>Wallet Data (*.dat)</source>
-        <translation>Tárca Fájl (*.dat)</translation>
+        <translation>Tárca adat (*.dat)</translation>
     </message>
     <message>
         <source>Backup Failed</source>
-        <translation>Biztonsági másolat készítése sikertelen</translation>
+        <translation>Biztonsági mentés sikertelen</translation>
+    </message>
+    <message>
+        <source>There was an error trying to save the wallet data to %1.</source>
+        <translation>Hiba történt a pénztárca adatainak %1 mentésekor.</translation>
     </message>
     <message>
         <source>Backup Successful</source>
-        <translation>Sikeres biztonsági mentés</translation>
+        <translation>Biztonsági mentés sikeres</translation>
     </message>
     <message>
         <source>The wallet data was successfully saved to %1.</source>
@@ -2904,11 +2890,15 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
+        <translation>Bitcoin Mag</translation>
     </message>
     <message>
         <source>The %s developers</source>
         <translation>A %s fejlesztők</translation>
+    </message>
+    <message>
+        <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
+        <translation>Az %s adatkönyvtár nem zárható.  A %s valószínűleg fut már.</translation>
     </message>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
@@ -2932,11 +2922,11 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Do you want to rebuild the block database now?</source>
-        <translation>Újra akarod építeni a blokk adatbázist most?</translation>
+        <translation>Szeretnéd újra építeni a blokk adatbázist most?</translation>
     </message>
     <message>
         <source>Error initializing block database</source>
-        <translation>A blokkadatbázis inicializálása nem sikerült</translation>
+        <translation>Hiba a blokk adatbázis inicializálásakor</translation>
     </message>
     <message>
         <source>Error initializing wallet database environment %s!</source>
@@ -2956,15 +2946,15 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Error loading block database</source>
-        <translation>Hiba a blokk adatbázis betöltése közben.</translation>
+        <translation>Hiba a blokk adatbázis betöltésekor</translation>
     </message>
     <message>
         <source>Error opening block database</source>
-        <translation>Hiba a blokk adatbázis megnyitása közben.</translation>
+        <translation>Hiba a blokk adatbázis megnyitásakor</translation>
     </message>
     <message>
         <source>Error: Disk space is low!</source>
-        <translation>Hiba: kevés a hely a lemezen!</translation>
+        <translation>Hiba: Kicsi a lemezterület!</translation>
     </message>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
@@ -2976,7 +2966,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Importing...</source>
-        <translation>Importálás</translation>
+        <translation>Importálás...</translation>
     </message>
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
@@ -3016,7 +3006,7 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Verifying blocks...</source>
-        <translation>Blokkok ellenőrzése...</translation>
+        <translation>Blokkok megerősítése...</translation>
     </message>
     <message>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
@@ -3040,31 +3030,27 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>This is experimental software.</source>
-        <translation>Ez egy kísérleti szoftver.</translation>
+        <translation>Ez egy fejlesztés alatt álló szoftver.</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
-        <translation>Tranzakció összege túl alacsony</translation>
+        <translation>A tranzakció összege túl kicsi</translation>
     </message>
     <message>
         <source>Transaction too large</source>
-        <translation>Túl nagy tranzakció</translation>
+        <translation>A tranzakció túl nagy</translation>
     </message>
     <message>
         <source>Verifying wallet(s)...</source>
-        <translation>Tárcák ellenőrzése...</translation>
+        <translation>Tárca/Tárcák megerősítése</translation>
     </message>
     <message>
         <source>Warning</source>
-        <translation>Figyelem</translation>
-    </message>
-    <message>
-        <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
-        <translation>Figyelem: Ismeretlen blokkokat bányásznak! Lehetséges, hogy ismeretlen szabályok érvényesek.</translation>
+        <translation>Figyelmeztetés</translation>
     </message>
     <message>
         <source>%s is set very high!</source>
-        <translation>%s étéke nagyon magas!</translation>
+        <translation>%s túl magasra van állítva!</translation>
     </message>
     <message>
         <source>Starting network threads...</source>
@@ -3080,11 +3066,11 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Transaction amounts must not be negative</source>
-        <translation>Tranzakció összege nem lehet negatív</translation>
+        <translation>A tranzakciók összege nem lehet negatív</translation>
     </message>
     <message>
         <source>Transaction must have at least one recipient</source>
-        <translation>Legalább egy címzett kell a tranzakcióhoz</translation>
+        <translation>Legalább egy címzettnek kell lennie a tranzakcióban </translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>
@@ -3092,11 +3078,11 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Insufficient funds</source>
-        <translation>Nincs elég bitcoinod.</translation>
+        <translation>Fedezethiány</translation>
     </message>
     <message>
         <source>Loading block index...</source>
-        <translation>Blokkindex betöltése...</translation>
+        <translation>A blokkindex betöltése ...</translation>
     </message>
     <message>
         <source>Loading wallet...</source>
@@ -3104,15 +3090,15 @@ Kérem a kulcsmondatban használjon &lt;b&gt; tíz vagy több véletlenszerű ka
     </message>
     <message>
         <source>Cannot downgrade wallet</source>
-        <translation>Nem sikerült a Tárca visszaállítása a korábbi verzióra</translation>
+        <translation>Nem lehet lemásolni a pénztárcát</translation>
     </message>
     <message>
         <source>Rescanning...</source>
-        <translation>Újraszkennelés...</translation>
+        <translation>Újraszkennelés</translation>
     </message>
     <message>
         <source>Done loading</source>
-        <translation>Betöltés befejezve.</translation>
+        <translation>Betöltés kész</translation>
     </message>
     <message>
         <source>Error</source>

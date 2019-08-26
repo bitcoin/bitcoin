@@ -78,10 +78,6 @@
         <translation>&amp;Преглед</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation>Јазол</translation>
-    </message>
-    <message>
         <source>&amp;Transactions</source>
         <translation>&amp;Трансакции</translation>
     </message>
@@ -122,14 +118,6 @@
         <translation>&amp;Измени Тајна Фраза...</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;Адреси за Испраќање...</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>&amp;Адреси за Примање...</translation>
-    </message>
-    <message>
         <source>Open &amp;URI...</source>
         <translation>Отвори &amp;URI...</translation>
     </message>
@@ -148,10 +136,6 @@
     <message>
         <source>Bitcoin</source>
         <translation>Биткоин</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Паричник</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -196,6 +180,10 @@
     <message>
         <source>Up to date</source>
         <translation>Во тек</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>&amp;Прозорец</translation>
     </message>
     <message>
         <source>Date: %1
@@ -326,10 +314,6 @@
     <message>
         <source>Options</source>
         <translation>Опции</translation>
-    </message>
-    <message>
-        <source>MB</source>
-        <translation>МБ</translation>
     </message>
     <message>
         <source>&amp;Network</source>
@@ -577,6 +561,9 @@
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
+    </context>
+<context>
+    <name>WalletController</name>
     </context>
 <context>
     <name>WalletFrame</name>

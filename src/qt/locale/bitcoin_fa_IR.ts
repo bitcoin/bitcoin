@@ -188,10 +188,6 @@
         <translation>کیف پول رمزگذاری شده است</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 برای اتمام فرایند رمزگذاری بسته خواهد شد. به خاطر داشته باشید که رمزگذاری WALLET شما،  کامپیوتر شما را از آلودگی به بدافزارها مصون نمی دارد.</translation>
-    </message>
-    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>مهم: هر بک‌آپ قبلی که از کیف‌پول خود گرفته‌اید، با نسخه‌ی جدید رمزنگاری‌شده جایگزین خواهد شد. به دلایل امنیتی، پس از رمزنگاری کیف‌پول، بک‌آپ‌های قدیمی شما بلااستفاده خواهد شد.</translation>
     </message>
@@ -254,10 +250,6 @@
         <translation>بازبینی</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation>گره</translation>
-    </message>
-    <message>
         <source>Show general overview of wallet</source>
         <translation>نمای کلی از wallet را نشان بده</translation>
     </message>
@@ -314,24 +306,12 @@
         <translation>تغییر رمز/پَس فرِیز</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>درحال ارسال آدرس‌ها…</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>دریافت آدرس ها</translation>
-    </message>
-    <message>
         <source>Open &amp;URI...</source>
         <translation>بازکردن آدرس...</translation>
     </message>
     <message>
         <source>Wallet:</source>
         <translation>کیف پول:</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation>کیف پول پیش‌فرض</translation>
     </message>
     <message>
         <source>Click to disable network activity.</source>
@@ -352,6 +332,10 @@
     <message>
         <source>Reindexing blocks on disk...</source>
         <translation>فهرست‌بندی نمایه بلاک‌ها…</translation>
+    </message>
+    <message>
+        <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
+        <translation>پراکسی &lt;br&gt;فعال شده است: %1&lt;/br&gt;</translation>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
@@ -380,10 +364,6 @@
     <message>
         <source>Bitcoin</source>
         <translation>بیت کوین</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>کیف پول</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -470,6 +450,10 @@
         <translation>%1 قبل</translation>
     </message>
     <message>
+        <source>Last received block was generated %1 ago.</source>
+        <translation>آخرین بلاک دریافت شده تولید شده در %1 قبل.</translation>
+    </message>
+    <message>
         <source>Transactions after this will not yet be visible.</source>
         <translation>تراکنش‌های بعد از این تراکنش هنوز در دسترس نیستند.</translation>
     </message>
@@ -490,6 +474,46 @@
         <translation>به روز</translation>
     </message>
     <message>
+        <source>&amp;Sending addresses</source>
+        <translation>ادرس ارسال</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses</source>
+        <translation>ادرس درسافت</translation>
+    </message>
+    <message>
+        <source>Open Wallet</source>
+        <translation>باز کردن حساب</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation>باز کردن یک حساب</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>کیف پول پیش‌فرض</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>پنجره</translation>
+    </message>
+    <message>
+        <source>Zoom</source>
+        <translation>بزرگنمایی</translation>
+    </message>
+    <message>
+        <source>Restore</source>
+        <translation>بازگرداندن</translation>
+    </message>
+    <message>
+        <source>Main Window</source>
+        <translation>پنجره اصلی</translation>
+    </message>
+    <message>
+        <source>%1 client</source>
+        <translation>کلاینت: %1</translation>
+    </message>
+    <message>
         <source>Connecting to peers...</source>
         <translation>در حال اتصال به همتاهای شبکه...</translation>
     </message>
@@ -498,9 +522,33 @@
         <translation>در حال روزآمد سازی..</translation>
     </message>
     <message>
+        <source>Date: %1
+</source>
+        <translation>تاریخ: %1
+</translation>
+    </message>
+    <message>
         <source>Amount: %1
 </source>
         <translation>مبلغ: %1
+</translation>
+    </message>
+    <message>
+        <source>Wallet: %1
+</source>
+        <translation>کیف پول: %1
+</translation>
+    </message>
+    <message>
+        <source>Type: %1
+</source>
+        <translation>نوع: %1
+</translation>
+    </message>
+    <message>
+        <source>Label: %1
+</source>
+        <translation>برچسب: %1
 </translation>
     </message>
     <message>
@@ -641,6 +689,10 @@
         <translation>کپی کردن تغییر</translation>
     </message>
     <message>
+        <source>(%1 locked)</source>
+        <translation>(قفل شده است %1)</translation>
+    </message>
+    <message>
         <source>yes</source>
         <translation>بله</translation>
     </message>
@@ -651,6 +703,10 @@
     <message>
         <source>(no label)</source>
         <translation>(برچسب ندارد)</translation>
+    </message>
+    <message>
+        <source>change from %1 (%2)</source>
+        <translation>تغییر از %1 (%2)</translation>
     </message>
     <message>
         <source>(change)</source>
@@ -688,6 +744,10 @@
         <translation>آدرس وارد شده "%1" آدرس معتبر بیت کوین نیست.</translation>
     </message>
     <message>
+        <source>The entered address "%1" is already in the address book with label "%2".</source>
+        <translation>آدرس وارد شده "%1" در حال حاظر در دفترچه آدرس ها موجود است با برچسب "%2" .</translation>
+    </message>
+    <message>
         <source>Could not unlock wallet.</source>
         <translation>نمیتوان کیف پول را باز کرد.</translation>
     </message>
@@ -718,6 +778,10 @@
         <translation>نسخه</translation>
     </message>
     <message>
+        <source>About %1</source>
+        <translation>حدود %1</translation>
+    </message>
+    <message>
         <source>Command-line options</source>
         <translation>گزینه های خط-فرمان </translation>
     </message>
@@ -733,6 +797,10 @@
         <translation>به %1 خوش آمدید.</translation>
     </message>
     <message>
+        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
+        <translation>از آنجا که اولین مرتبه این برنامه اجرا می‌شود، شما می‌توانید محل ذخیره داده‌های %1 را انتخاب نمایید.</translation>
+    </message>
+    <message>
         <source>Use the default data directory</source>
         <translation>استفاده کردن از پوشه داده پیشفرض</translation>
     </message>
@@ -745,6 +813,14 @@
         <translation>بیت کوین</translation>
     </message>
     <message>
+        <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
+        <translation>حداقل %1 گیگابایت اطلاعات در این شاخه ذخیره خواهد شد، که به مرور زمان افزایش خواهد یافت.</translation>
+    </message>
+    <message>
+        <source>Approximately %1 GB of data will be stored in this directory.</source>
+        <translation>تقریبا %1 گیگابایت داده در این شاخه ذخیره خواهد شد.</translation>
+    </message>
+    <message>
         <source>The wallet will also be stored in this directory.</source>
         <translation>کیف پول هم در همین دایرکتوری ذخیره می‌شود.</translation>
     </message>
@@ -752,7 +828,15 @@
         <source>Error</source>
         <translation>خطا</translation>
     </message>
-    </context>
+    <message numerus="yes">
+        <source>%n GB of free space available</source>
+        <translation><numerusform>%n گیگابایت از فضای موچود است</numerusform><numerusform>%n گیگابایت از فضای موچود است</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation><numerusform>(از %n گیگابایت مورد نیاز)</numerusform><numerusform>(از %n گیگابایت مورد نیاز)</numerusform></translation>
+    </message>
+</context>
 <context>
     <name>ModalOverlay</name>
     <message>
@@ -782,6 +866,10 @@
     <message>
         <source>calculating...</source>
         <translation>در حال محاسبه...</translation>
+    </message>
+    <message>
+        <source>Estimated time left until synced</source>
+        <translation>زمان تقریبی باقی‌مانده تا همگام شدن</translation>
     </message>
     <message>
         <source>Hide</source>
@@ -826,8 +914,9 @@
         <translation>اندازه کش پایگاه داده.</translation>
     </message>
     <message>
-        <source>MB</source>
-        <translation>مگابایت</translation>
+        <source>&amp;Hide tray icon</source>
+        <translation> مخفی کردن ایکون
+</translation>
     </message>
     <message>
         <source>Open Configuration File</source>
@@ -874,6 +963,10 @@
         <translation>پورت:</translation>
     </message>
     <message>
+        <source>Port of the proxy (e.g. 9050)</source>
+        <translation>پورت پراکسی (مثال ۹۰۵۰)</translation>
+    </message>
+    <message>
         <source>IPv4</source>
         <translation>IPv4</translation>
     </message>
@@ -904,6 +997,10 @@
     <message>
         <source>&amp;Unit to show amounts in:</source>
         <translation>واحد نمایشگر مقادیر:</translation>
+    </message>
+    <message>
+        <source>Whether to show coin control features or not.</source>
+        <translation>که امکانات کنترل کوین‌ها نشان داده شود یا نه.</translation>
     </message>
     <message>
         <source>&amp;Third party transaction URLs</source>
@@ -1032,6 +1129,14 @@
         <translation>درخواست پرداخت با خطا مواجه شد</translation>
     </message>
     <message>
+        <source>Invalid payment address %1</source>
+        <translation>آدرس پرداخت نامعتبر %1</translation>
+    </message>
+    <message>
+        <source>Payment request file handling</source>
+        <translation>درحال پردازش درخواست پرداخت</translation>
+    </message>
+    <message>
         <source>Payment request rejected</source>
         <translation>درخواست پرداخت رد شد</translation>
     </message>
@@ -1051,7 +1156,11 @@
         <source>Network request error</source>
         <translation>درخواست از شبکه با خطا مواجه شد</translation>
     </message>
-    </context>
+    <message>
+        <source>Payment acknowledged</source>
+        <translation>پرداخت تایید شد</translation>
+    </message>
+</context>
 <context>
     <name>PeerTableModel</name>
     <message>
@@ -1082,6 +1191,26 @@
         <translation>میزان</translation>
     </message>
     <message>
+        <source>Enter a Bitcoin address (e.g. %1)</source>
+        <translation>آدرس بیت کوین را وارد کنید (به طور مثال %1)</translation>
+    </message>
+    <message>
+        <source>%1 d</source>
+        <translation>%1 روز قبل</translation>
+    </message>
+    <message>
+        <source>%1 h</source>
+        <translation>%1 ساعت قبل</translation>
+    </message>
+    <message>
+        <source>%1 m</source>
+        <translation>%1 دقیقه قبل</translation>
+    </message>
+    <message>
+        <source>%1 s</source>
+        <translation>%1 ثانیه قبل</translation>
+    </message>
+    <message>
         <source>None</source>
         <translation>هیچ کدام</translation>
     </message>
@@ -1090,13 +1219,65 @@
         <translation>موجود نیست</translation>
     </message>
     <message>
+        <source>%1 ms</source>
+        <translation>%1 میلی ثانیه</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n second(s)</source>
+        <translation><numerusform>%n ثانیه</numerusform><numerusform>%n ثانیه</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n minute(s)</source>
+        <translation><numerusform>%n دقیقه</numerusform><numerusform>%n دقیقه</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n hour(s)</source>
+        <translation><numerusform>%n ساعت</numerusform><numerusform>%n ساعت</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n day(s)</source>
+        <translation><numerusform>%n روز</numerusform><numerusform>%n روز</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n week(s)</source>
+        <translation><numerusform>%n هفته</numerusform><numerusform>%n هفته</numerusform></translation>
+    </message>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 و %2</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation><numerusform>%n سال</numerusform><numerusform>%n سال</numerusform></translation>
+    </message>
+    <message>
+        <source>%1 B</source>
+        <translation>%1 بایت</translation>
+    </message>
+    <message>
+        <source>%1 KB</source>
+        <translation>%1 کیلوبایت</translation>
+    </message>
+    <message>
+        <source>%1 MB</source>
+        <translation>%1 مگابایت</translation>
+    </message>
+    <message>
+        <source>%1 GB</source>
+        <translation>%1 گیگابایت</translation>
+    </message>
+    <message>
         <source>unknown</source>
         <translation>ناشناس</translation>
     </message>
 </context>
 <context>
     <name>QObject::QObject</name>
-    </context>
+    <message>
+        <source>Error: %1</source>
+        <translation>خطا: %1</translation>
+    </message>
+</context>
 <context>
     <name>QRImageWidget</name>
     <message>
@@ -1215,6 +1396,10 @@
         <translation>نسخه</translation>
     </message>
     <message>
+        <source>Synced Blocks</source>
+        <translation>بلاک‌های همگام‌سازی‌ شده</translation>
+    </message>
+    <message>
         <source>Decrease font size</source>
         <translation>کاهش دادن اندازه فونت</translation>
     </message>
@@ -1257,6 +1442,10 @@
     <message>
         <source>&amp;Open</source>
         <translation>&amp;بازکردن</translation>
+    </message>
+    <message>
+        <source>&amp;Console</source>
+        <translation>&amp;کنسول</translation>
     </message>
     <message>
         <source>&amp;Network Traffic</source>
@@ -1307,12 +1496,16 @@
         <translation>&amp;خارج کردن از بن</translation>
     </message>
     <message>
-        <source>default wallet</source>
-        <translation>کیف پول پیش‌فرض</translation>
-    </message>
-    <message>
         <source>Network activity disabled</source>
         <translation>فعالیت شبکه غیر فعال شد</translation>
+    </message>
+    <message>
+        <source>(node id: %1)</source>
+        <translation>(شناسه گره: %1)</translation>
+    </message>
+    <message>
+        <source>via %1</source>
+        <translation>با %1</translation>
     </message>
     <message>
         <source>never</source>
@@ -1407,6 +1600,10 @@
     <message>
         <source>&amp;Save Image...</source>
         <translation>&amp;ذخیره کردن تصویر...</translation>
+    </message>
+    <message>
+        <source>Request payment to %1</source>
+        <translation>درخواست پرداخت به %1</translation>
     </message>
     <message>
         <source>Payment information</source>
@@ -1627,6 +1824,14 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>کپی کردن تغییر</translation>
     </message>
     <message>
+        <source>%1 (%2 blocks)</source>
+        <translation>%1(%2 بلاک ها)</translation>
+    </message>
+    <message>
+        <source>%1 to %2</source>
+        <translation>%1 به %2</translation>
+    </message>
+    <message>
         <source>Are you sure you want to send?</source>
         <translation>آیا برای ارسال کردن یا فرستادن مطمئن هستید؟</translation>
     </message>
@@ -1637,6 +1842,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>You can increase the fee later (signals Replace-By-Fee, BIP-125).</source>
         <translation>تو میتوانی بعدا هزینه کارمزد را افزایش بدی(signals Replace-By-Fee, BIP-125)</translation>
+    </message>
+    <message>
+        <source>from wallet %1</source>
+        <translation>از کیف پول %1</translation>
     </message>
     <message>
         <source>Please, review your transaction.</source>
@@ -1667,6 +1876,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>این میزان پول بیشتر از موجودی شما است.</translation>
     </message>
     <message>
+        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
+        <translation>این میزان بیشتر از موجودی شما است وقتی که کارمزد تراکنش %1 باشد.</translation>
+    </message>
+    <message>
         <source>Duplicate address found: addresses should only be used once each.</source>
         <translation>آدرس تکراری یافت شد:آدرس ها باید فقط یک بار استفاده شوند.</translation>
     </message>
@@ -1675,8 +1888,20 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>ایجاد تراکنش با خطا مواجه شد!</translation>
     </message>
     <message>
+        <source>The transaction was rejected with the following reason: %1</source>
+        <translation>به خاطر دلیل روبرو تراکنش رد شد: %1</translation>
+    </message>
+    <message>
+        <source>A fee higher than %1 is considered an absurdly high fee.</source>
+        <translation>کارمزد بیشتر از %1 است,این یعنی کارمزد خیلی زیادی در نظر گرفته شده است.</translation>
+    </message>
+    <message>
         <source>Payment request expired.</source>
         <translation>درخواست پرداخت منقضی شد یا تاریخ آن گذشت.</translation>
+    </message>
+    <message numerus="yes">
+        <source>Estimated to begin confirmation within %n block(s).</source>
+        <translation><numerusform>تایید شدن تخمین زده شده تراکنش برابر است با: %n بلاک.</numerusform><numerusform>تایید شدن تخمین زده شده تراکنش برابر است با: %n بلاک.</numerusform></translation>
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
@@ -1757,7 +1982,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <source>Memo:</source>
         <translation>یادداشت:</translation>
     </message>
-    </context>
+    <message>
+        <source>Enter a label for this address to add it to your address book</source>
+        <translation>یک برچسب برای این آدرس بنویسید تا به دفترچه‌ آدرس‌های شما اضافه شود</translation>
+    </message>
+</context>
 <context>
     <name>SendConfirmationDialog</name>
     <message>
@@ -1767,6 +1996,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
 </context>
 <context>
     <name>ShutdownWindow</name>
+    <message>
+        <source>%1 is shutting down...</source>
+        <translation>در حال خاموش شدن %1...</translation>
+    </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
         <translation>تا پیش از بسته شدن این پنجره کامپیوتر خود را خاموش نکنید.</translation>
@@ -1807,6 +2040,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>امضا</translation>
     </message>
     <message>
+        <source>Sign the message to prove you own this Bitcoin address</source>
+        <translation>پیام را امضا کنید تا ثابت کنید این آدرس بیت‌کوین متعلق به شماست</translation>
+    </message>
+    <message>
         <source>Sign &amp;Message</source>
         <translation>ثبت &amp;پیام</translation>
     </message>
@@ -1819,6 +2056,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>تایید پیام</translation>
     </message>
     <message>
+        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
+        <translation>پیام را تایید کنید تا مطمئن شوید که توسط آدرس بیت‌کوین مشخص شده امضا شده است.</translation>
+    </message>
+    <message>
         <source>Verify &amp;Message</source>
         <translation>تایید پیام</translation>
     </message>
@@ -1829,6 +2070,15 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>The entered address is invalid.</source>
         <translation>آدرس وارد شده نامعتبر است.</translation>
+    </message>
+    <message>
+        <source>Please check the address and try again.</source>
+        <translation>لطفاً آدرس را بررسی کرده و دوباره تلاش کنید.
+</translation>
+    </message>
+    <message>
+        <source>Wallet unlock was cancelled.</source>
+        <translation>قفل‌گشابی کیف‌پول لغو شد.</translation>
     </message>
     <message>
         <source>Message signed.</source>
@@ -1970,7 +2220,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <source>This pane shows a detailed description of the transaction</source>
         <translation>این بخش جزئیات تراکنش را نشان می دهد</translation>
     </message>
-    </context>
+    <message>
+        <source>Details for %1</source>
+        <translation>جزییات %1</translation>
+    </message>
+</context>
 <context>
     <name>TransactionTableModel</name>
     <message>
@@ -2181,8 +2435,15 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <name>UnitDisplayStatusBarControl</name>
     </context>
 <context>
-    <name>WalletFrame</name>
+    <name>WalletController</name>
     </context>
+<context>
+    <name>WalletFrame</name>
+    <message>
+        <source>No wallet has been loaded.</source>
+        <translation>کیف‌پولی بارگذاری نشد.</translation>
+    </message>
+</context>
 <context>
     <name>WalletModel</name>
     <message>
@@ -2213,12 +2474,20 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <source>Can't sign transaction.</source>
         <translation>نمیتوان تراکنش را ثبت کرد</translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation>کیف پول پیش‌فرض</translation>
+    </message>
+</context>
 <context>
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
         <translation>&amp;صدور</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>صدور داده نوار جاری به یک فایل</translation>
     </message>
     <message>
         <source>Backup Wallet</source>
@@ -2244,6 +2513,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>هسته بیت کوین</translation>
     </message>
     <message>
+        <source>The %s developers</source>
+        <translation>%s توسعه دهندگان</translation>
+    </message>
+    <message>
         <source>Change index out of range</source>
         <translation>تغییر دادن اندیس خارج از دامنه</translation>
     </message>
@@ -2254,6 +2527,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Do you want to rebuild the block database now?</source>
         <translation>آیا میخواهید الان پایگاه داده بلاک را بازسازی کنید؟</translation>
+    </message>
+    <message>
+        <source>Error loading %s</source>
+        <translation>خطا بازگذاری %s</translation>
     </message>
     <message>
         <source>Error loading block database</source>
@@ -2288,6 +2565,14 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>در حال بارگذاری لیست بن...</translation>
     </message>
     <message>
+        <source>Not enough file descriptors available.</source>
+        <translation>توصیفگرهای فایل به اندازه کافی در دسترس نیست</translation>
+    </message>
+    <message>
+        <source>The source code is available from %s.</source>
+        <translation>سورس کد موجود است از %s.</translation>
+    </message>
+    <message>
         <source>Unable to generate keys</source>
         <translation>نمیتوان کلید ها را تولید کرد</translation>
     </message>
@@ -2310,6 +2595,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Information</source>
         <translation>اطلاعات</translation>
+    </message>
+    <message>
+        <source>Invalid -proxy address or hostname: '%s'</source>
+        <translation>آدرس پراکسی یا هاست نامعتبر: ' %s'</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
@@ -2348,12 +2637,17 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>هشدار</translation>
     </message>
     <message>
+        <source>Zapping all transactions from wallet...</source>
+        <translation>تراکنش بیش از حد طولانی از یک زنجیر مهر و موم شده است
+</translation>
+    </message>
+    <message>
         <source>This is the transaction fee you may pay when fee estimates are not available.</source>
         <translation>این هزینه تراکنشی است که در صورت عدم وجود هزینه تخمینی، پرداخت می کنید.</translation>
     </message>
     <message>
-        <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
-        <translation>هشدار:یک بلاک از یک نسخه ناشناس در حال ماین شدن است.در این اتفاق ممکن است قوانین ناشناسی اثرات نامعلوم بگذارند.</translation>
+        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit %s and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
+        <translation>این محصول شامل نرم افزار توسعه یافته با پروژه OpenSSL است، پروژه ای برای استفاده از جعبه ابزار OpenSSL %s و نرم افزار رمزنگاری که توسط اریک یانگ نوشته شده و همچنین نرم افزار UPnP که توسط توماس برنارد نوشته شده است.</translation>
     </message>
     <message>
         <source>%s is set very high!</source>
@@ -2376,6 +2670,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>مقدار تراکنش نمی‌تواند منفی باشد.</translation>
     </message>
     <message>
+        <source>Transaction has too long of a mempool chain</source>
+        <translation>تراکنش بیش از حد طولانی از یک زنجیر مهر و موم شده است
+</translation>
+    </message>
+    <message>
         <source>Transaction must have at least one recipient</source>
         <translation>تراکنش باید حداقل یک دریافت کننده داشته باشد</translation>
     </message>
@@ -2384,8 +2683,12 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>وجوه ناکافی</translation>
     </message>
     <message>
-        <source>Can't generate a change-address key. Private keys are disabled for this wallet.</source>
-        <translation>نمیتوان تغییر-آدرس کلید را تولید کرد.کلید های خصوصی در این کیف پول غیر فعال شده اند.</translation>
+        <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
+        <translation>هشدار: کلید های خصوصی در کیف پول شما شناسایی شده است { %s} به همراه کلید های خصوصی غیر فعال</translation>
+    </message>
+    <message>
+        <source>Cannot write to data directory '%s'; check permissions.</source>
+        <translation>نمیتواند پوشه داده ها را بنویسد ' %s';دسترسی ها را بررسی کنید.</translation>
     </message>
     <message>
         <source>Loading block index...</source>
