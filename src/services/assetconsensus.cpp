@@ -882,7 +882,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
         {     
             return FormatSyscoinErrorMessage(state, "assetallocation-invalid-sender", bMiner);
         }       
-        if (nBurnAmount <= 0 || nBurnAmount > dbAsset.nTotalSupply)
+        if (nBurnAmount <= 0 || (dbAsset.nTotalSupply > 0 && nBurnAmount > dbAsset.nTotalSupply))
         {
             return FormatSyscoinErrorMessage(state, "assetallocation-invalid-burn-amount", bMiner);
         }        
