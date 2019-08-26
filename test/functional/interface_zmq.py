@@ -11,8 +11,6 @@ from test_framework.messages import dashhash, hash256
 from test_framework.util import assert_equal
 from time import sleep
 
-ADDRESS = "tcp://127.0.0.1:28332"
-
 def hash256_reversed(byte_str):
     return hash256(byte_str)[::-1]
 
@@ -48,66 +46,64 @@ class ZMQTest (BitcoinTestFramework):
         # TODO: drop this check after migration to MiniWallet, see bitcoin/bitcoin#24653
         self.skip_if_no_bdb()
 
-    def setup_nodes(self):
-        import zmq
-
-        # Initialize ZMQ context and socket.
-        # All messages are received in the same socket which means
-        # that this test fails if the publishing order changes.
-        # Note that the publishing order is not defined in the documentation and
-        # is subject to change.
-        self.zmq_context = zmq.Context()
-        socket = self.zmq_context.socket(zmq.SUB)
-        socket.set(zmq.RCVTIMEO, 60000)
-
-        # Subscribe to all available topics.
-        self.hashblock = ZMQSubscriber(socket, b"hashblock")
-        self.hashtx = ZMQSubscriber(socket, b"hashtx")
-        self.rawblock = ZMQSubscriber(socket, b"rawblock")
-        self.rawtx = ZMQSubscriber(socket, b"rawtx")
-
-        self.extra_args = [
-            ["-zmqpub%s=%s" % (sub.topic.decode(), ADDRESS) for sub in [self.hashblock, self.hashtx, self.rawblock, self.rawtx]],
-            []
-        ]
-        self.add_nodes(self.num_nodes, self.extra_args)
-        self.start_nodes()
-        socket.connect(ADDRESS)
-        # Relax so that the subscriber is ready before publishing zmq messages
-        sleep(0.2)
-        self.import_deterministic_coinbase_privkeys()
-
     def run_test(self):
+        import zmq
+        self.ctx = zmq.Context()
         try:
-            self._zmq_test()
+            self.test_basic()
+            self.test_reorg()
             self.test_multiple_interfaces()
         finally:
             # Destroy the ZMQ context.
             self.log.debug("Destroying ZMQ context")
-            self.zmq_context.destroy(linger=None)
+            self.ctx.destroy(linger=None)
 
-    def _zmq_test(self):
+    def test_basic(self):
+        # All messages are received in the same socket which means
+        # that this test fails if the publishing order changes.
+        # Note that the publishing order is not defined in the documentation and
+        # is subject to change.
+        import zmq
+        address = 'tcp://127.0.0.1:28332'
+        socket = self.ctx.socket(zmq.SUB)
+        socket.set(zmq.RCVTIMEO, 60000)
+
+        # Subscribe to all available topics.
+        hashblock = ZMQSubscriber(socket, b"hashblock")
+        hashtx = ZMQSubscriber(socket, b"hashtx")
+        rawblock = ZMQSubscriber(socket, b"rawblock")
+        rawtx = ZMQSubscriber(socket, b"rawtx")
+
+        self.restart_node(0, ["-zmqpub%s=%s" % (sub.topic.decode(), address) for sub in [hashblock, hashtx, rawblock, rawtx]])
+        self.connect_nodes(0, 1)
+        socket.connect(address)
+        # Relax so that the subscriber is ready before publishing zmq messages
+        sleep(0.2)
+        self.import_deterministic_coinbase_privkeys()
+
+
         num_blocks = 5
         self.log.info("Generate %(n)d blocks (and %(n)d coinbase txes)" % {"n": num_blocks})
         genhashes = self.nodes[0].generatetoaddress(num_blocks, ADDRESS_BCRT1_UNSPENDABLE)
+
         self.sync_all()
 
         for x in range(num_blocks):
             # Should receive the coinbase txid.
-            txid = self.hashtx.receive()
+            txid = hashtx.receive()
 
             # Should receive the coinbase raw transaction.
-            hex = self.rawtx.receive()
+            hex = rawtx.receive()
             assert_equal(hash256_reversed(hex), txid)
 
             # Should receive the generated block hash.
-            hash = self.hashblock.receive().hex()
+            hash = hashblock.receive().hex()
             assert_equal(genhashes[x], hash)
             # The block should only have the coinbase txid.
             assert_equal([txid.hex()], self.nodes[1].getblock(hash)["tx"])
 
             # Should receive the generated raw block.
-            block = self.rawblock.receive()
+            block = rawblock.receive()
             assert_equal(genhashes[x], dashhash_reversed(block[:80]).hex())
 
         if self.is_wallet_compiled():
@@ -116,23 +112,50 @@ class ZMQTest (BitcoinTestFramework):
             self.sync_all()
 
             # Should receive the broadcasted txid.
-            txid = self.hashtx.receive()
+            txid = hashtx.receive()
             assert_equal(payment_txid, txid.hex())
 
             # Should receive the broadcasted raw transaction.
-            hex = self.rawtx.receive()
+            hex = rawtx.receive()
             assert_equal(payment_txid, hash256_reversed(hex).hex())
 
 
         self.log.info("Test the getzmqnotifications RPC")
         assert_equal(self.nodes[0].getzmqnotifications(), [
-            {"type": "pubhashblock", "address": ADDRESS, "hwm": 1000},
-            {"type": "pubhashtx", "address": ADDRESS, "hwm": 1000},
-            {"type": "pubrawblock", "address": ADDRESS, "hwm": 1000},
-            {"type": "pubrawtx", "address": ADDRESS, "hwm": 1000},
+            {"type": "pubhashblock", "address": address, "hwm": 1000},
+            {"type": "pubhashtx", "address": address, "hwm": 1000},
+            {"type": "pubrawblock", "address": address, "hwm": 1000},
+            {"type": "pubrawtx", "address": address, "hwm": 1000},
         ])
 
         assert_equal(self.nodes[1].getzmqnotifications(), [])
+
+
+    def test_reorg(self):
+        import zmq
+        address = 'tcp://127.0.0.1:28333'
+        socket = self.ctx.socket(zmq.SUB)
+        socket.set(zmq.RCVTIMEO, 60000)
+        hashblock = ZMQSubscriber(socket, b'hashblock')
+
+        # Should only notify the tip if a reorg occurs
+        self.restart_node(0, ['-zmqpub%s=%s' % (hashblock.topic.decode(), address)])
+        socket.connect(address)
+        # Relax so that the subscriber is ready before publishing zmq messages
+        sleep(0.2)
+
+        # Generate 1 block in nodes[0] and receive all notifications
+        self.nodes[0].generatetoaddress(1, ADDRESS_BCRT1_UNSPENDABLE)
+        assert_equal(self.nodes[0].getbestblockhash(), hashblock.receive().hex())
+
+        # Generate 2 blocks in nodes[1]
+        self.nodes[1].generatetoaddress(2, ADDRESS_BCRT1_UNSPENDABLE)
+
+        # nodes[0] will reorg chain after connecting back nodes[1]
+        self.connect_nodes(0, 1)
+
+        # Should receive nodes[1] tip
+        assert_equal(self.nodes[1].getbestblockhash(), hashblock.receive().hex())
 
     def test_multiple_interfaces(self):
         import zmq
@@ -140,7 +163,7 @@ class ZMQTest (BitcoinTestFramework):
         subscribers = []
         for i in range(2):
             address = 'tcp://127.0.0.1:%d' % (28334 + i)
-            socket = self.zmq_context.socket(zmq.SUB)
+            socket = self.ctx.socket(zmq.SUB)
             socket.set(zmq.RCVTIMEO, 60000)
             hashblock = ZMQSubscriber(socket, b"hashblock")
             socket.connect(address)
@@ -157,6 +180,7 @@ class ZMQTest (BitcoinTestFramework):
         # Should receive the same block hash on both subscribers
         assert_equal(self.nodes[0].getbestblockhash(), subscribers[0]['hashblock'].receive().hex())
         assert_equal(self.nodes[0].getbestblockhash(), subscribers[1]['hashblock'].receive().hex())
+
 
 if __name__ == '__main__':
     ZMQTest().main()
