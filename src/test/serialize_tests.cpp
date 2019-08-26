@@ -257,6 +257,14 @@ static bool isCanonicalException(const std::ios_base::failure& ex)
     return strcmp(expectedException.what(), ex.what()) == 0;
 }
 
+BOOST_AUTO_TEST_CASE(vector_bool)
+{
+    std::vector<uint8_t> vec1{1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 1};
+    std::vector<bool> vec2{1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 1};
+
+    BOOST_CHECK(vec1 == std::vector<uint8_t>(vec2.begin(), vec2.end()));
+    BOOST_CHECK(SerializeHash(vec1) == SerializeHash(vec2));
+}
 
 BOOST_AUTO_TEST_CASE(noncanonical)
 {
