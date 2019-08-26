@@ -310,6 +310,10 @@
         <translation>Åpne &amp;URI...</translation>
     </message>
     <message>
+        <source>Wallet:</source>
+        <translation>Lommebok:</translation>
+    </message>
+    <message>
         <source>Click to disable network activity.</source>
         <translation>Klikk for å deaktivere nettverksaktivitet.</translation>
     </message>
@@ -466,8 +470,44 @@
         <translation>Oppdatert</translation>
     </message>
     <message>
+        <source>&amp;Sending addresses</source>
+        <translation>&amp;Utsendingsadresser</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses</source>
+        <translation>&amp;Mottaksadresser</translation>
+    </message>
+    <message>
+        <source>Open Wallet</source>
+        <translation>Åpne Lommebok</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation>Åpne en lommebok</translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>Lukk Lommebok...</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>Lukk lommebok</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>Vis %1 hjelpemeldingen for å få en liste med mulige Bitcoin kommandolinjevalg.</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>standard lommebok</translation>
+    </message>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Åpner Lommebok &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+    <message>
+        <source>Open Wallet Failed</source>
+        <translation>Åpning av Lommebok Feilet</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -476,6 +516,18 @@
     <message>
         <source>Minimize</source>
         <translation>Minimer</translation>
+    </message>
+    <message>
+        <source>Zoom</source>
+        <translation>Zoom</translation>
+    </message>
+    <message>
+        <source>Restore</source>
+        <translation>Gjenopprett</translation>
+    </message>
+    <message>
+        <source>Main Window</source>
+        <translation>Hovedvindu</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -499,6 +551,12 @@
         <source>Amount: %1
 </source>
         <translation>Beløp: %1:
+</translation>
+    </message>
+    <message>
+        <source>Wallet: %1
+</source>
+        <translation>Lommebok: %1
 </translation>
     </message>
     <message>
@@ -534,6 +592,10 @@
     <message>
         <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
         <translation>HD nøkkelgenerering er&lt;b&gt;deaktivert&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Private key &lt;b&gt;disabled&lt;/b&gt;</source>
+        <translation>Privat nøkkel &lt;b&gt;deaktivert&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
@@ -1002,6 +1064,14 @@
     <message>
         <source>&amp;Network</source>
         <translation>&amp;Nettverk</translation>
+    </message>
+    <message>
+        <source>GB</source>
+        <translation>GB</translation>
+    </message>
+    <message>
+        <source>MiB</source>
+        <translation>MiB</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
@@ -1559,6 +1629,14 @@
     <message>
         <source>Memory usage</source>
         <translation>Minnebruk</translation>
+    </message>
+    <message>
+        <source>Wallet: </source>
+        <translation>Lommebok:</translation>
+    </message>
+    <message>
+        <source>(none)</source>
+        <translation>(ingen)</translation>
     </message>
     <message>
         <source>&amp;Reset</source>
@@ -2141,12 +2219,24 @@
         <translation>Du kan øke gebyret senere (signaliserer Replace-By-Fee, BIP-125).</translation>
     </message>
     <message>
+        <source>from wallet %1</source>
+        <translation>fra lommebok %1</translation>
+    </message>
+    <message>
+        <source>Please, review your transaction.</source>
+        <translation>Vennligst se over transaksjonen din.</translation>
+    </message>
+    <message>
         <source>Transaction fee</source>
         <translation>Transaksjonsgebyr</translation>
     </message>
     <message>
         <source>Not signalling Replace-By-Fee, BIP-125.</source>
         <translation>Signaliserer ikke Replace-By-Fee, BIP-125</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation>Totalbeløp</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -2598,6 +2688,10 @@
         <translation>Total transaksjonsstørrelse</translation>
     </message>
     <message>
+        <source>Transaction virtual size</source>
+        <translation>Virtuell transaksjonsstørrelse</translation>
+    </message>
+    <message>
         <source>Output index</source>
         <translation>Utdatainndeks</translation>
     </message>
@@ -2920,6 +3014,10 @@
 </context>
 <context>
     <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation>Lukk lommebok</translation>
+    </message>
     </context>
 <context>
     <name>WalletFrame</name>
@@ -2970,7 +3068,11 @@
         <source>Could not commit transaction</source>
         <translation>Kunne ikke sende inn transaksjon</translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation>standard lommebok</translation>
+    </message>
+</context>
 <context>
     <name>WalletView</name>
     <message>
@@ -3005,7 +3107,11 @@
         <source>The wallet data was successfully saved to %1.</source>
         <translation>Lommebokdata lagret til %1.</translation>
     </message>
-    </context>
+    <message>
+        <source>Cancel</source>
+        <translation>Avbryt</translation>
+    </message>
+</context>
 <context>
     <name>bitcoin-core</name>
     <message>
@@ -3189,6 +3295,10 @@
         <translation>Ugyldig beløp for -fallbackfee=&lt;amount&gt;: "%s"</translation>
     </message>
     <message>
+        <source>Upgrading txindex database</source>
+        <translation>Oppgraderer txindex databasen</translation>
+    </message>
+    <message>
         <source>Loading P2P addresses...</source>
         <translation>Laster maskin-til-maskin -adresser…</translation>
     </message>
@@ -3227,6 +3337,10 @@
     <message>
         <source>Unable to bind to %s on this computer. %s is probably already running.</source>
         <translation>Kan ikke binde til %s på denne datamaskinen. Sannsynligvis kjører %s allerede.</translation>
+    </message>
+    <message>
+        <source>Unable to generate keys</source>
+        <translation>Klarte ikke å lage nøkkel</translation>
     </message>
     <message>
         <source>Unsupported logging category %s=%s.</source>
@@ -3273,6 +3387,10 @@
         <translation>Feil ved oppgradering av kjedetilstandsdatabase</translation>
     </message>
     <message>
+        <source>Error: Disk space is low for %s</source>
+        <translation>Feil: Ikke nok ledig diskplass for %s</translation>
+    </message>
+    <message>
         <source>Information</source>
         <translation>Informasjon</translation>
     </message>
@@ -3315,6 +3433,12 @@
     <message>
         <source>Specified -walletdir "%s" is not a directory</source>
         <translation>Oppgitt -walletdir "%s" er ikke en katalog</translation>
+    </message>
+    <message>
+        <source>The specified config file %s does not exist
+</source>
+        <translation>Konfigurasjonsfilen %s eksisterer ikke
+</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
