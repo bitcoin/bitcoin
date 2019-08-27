@@ -115,7 +115,7 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
     txnouttype whichType;
     for (const CTxOut& txout : tx.vout) {
         if (!::IsStandard(txout.scriptPubKey, whichType)) {
-            reason = "scriptpubkey1";
+            reason = "scriptpubkey";
             return false;
         }
 
@@ -124,7 +124,7 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
             // we need this because if it is a sys tx then we allow 200x maxcarrier bytes.
             if (!IsSyscoinTx(tx.nVersion) && txout.scriptPubKey.size() > nMaxDatacarrierBytes)
             {
-                reason = "scriptpubkey2";
+                reason = "scriptpubkey";
                 return false;
             }
             nDataOut++;
