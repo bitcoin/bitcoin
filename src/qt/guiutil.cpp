@@ -54,9 +54,6 @@
 #include <QUrlQuery>
 
 #if defined(Q_OS_MAC)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-
 #include <CoreServices/CoreServices.h>
 #include <QProcess>
 
@@ -771,7 +768,6 @@ bool SetStartOnSystemStartup(bool fAutoStart)
     CFRelease(listSnapshot);
     return true;
 }
-#pragma GCC diagnostic pop
 #else
 
 bool GetStartOnSystemStartup() { return false; }
