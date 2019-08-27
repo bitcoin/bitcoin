@@ -499,7 +499,7 @@ void GenerateSpendableCoins() {
 }
 bool AreTwoTransactionsLinked(const string &node, const string& inputTxid, const string &outputTxid){
 	UniValue r;
-	r = CallExtRPC(node, "getrawtransaction", "\"" + outputTxid + "\",\"true\"");
+	r = CallExtRPC(node, "getrawtransaction", "\"" + outputTxid + "\",true");
 	if(!r.isObject())
 		return false;
 	UniValue outputTxidVins = find_value(r.get_obj(), "vin").get_array();
@@ -678,7 +678,7 @@ string SyscoinBurn(const string& node, const string& address, const string& asse
     UniValue r;
 	CAmount nAmountBefore = 0;
 	try{
-    	r = CallRPC(node, "assetallocationinfo " + asset + " " + address);
+    	r = CallExtRPC(node, "assetallocationinfo",asset + ",\"" + address + "\"");
 		if(r.isObject() && !find_value(r.get_obj(), "balance_zdag").isNull()){
     		nAmountBefore = AmountFromValue(find_value(r.get_obj(), "balance_zdag"));
 		}
@@ -688,7 +688,7 @@ string SyscoinBurn(const string& node, const string& address, const string& asse
 	}
 	CAmount nAmountBurnBefore = 0;
 	try{
-    	r = CallRPC(node, "assetallocationinfo " + asset + " burn");
+    	r = CallExtRPC(node, "assetallocationinfo",asset + ",\"burn\"");
 		if(r.isObject() && !find_value(r.get_obj(), "balance_zdag").isNull()){
     		nAmountBurnBefore = AmountFromValue(find_value(r.get_obj(), "balance_zdag"));
 		}
@@ -697,36 +697,36 @@ string SyscoinBurn(const string& node, const string& address, const string& asse
 
 	}	
 	CAmount nAmountAddressBefore = 0;
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "addressbalance " + address));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "addressbalance", "\"" + address + "\""));
 	if(r.isObject() && !find_value(r.get_obj(), "amount").isNull()){
 		nAmountAddressBefore = AmountFromValue(find_value(r.get_obj(), "amount"));
 	}
   
     // "syscoinburntoassetallocation [funding_address] [asset_guid] [amount]\n"
-    BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinburntoassetallocation "  + address + " " + asset + " " + amount));
+    BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "syscoinburntoassetallocation", "\"" + address + "\"," + asset + "," + amount));
 
     
-    BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
+    BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "signrawtransactionwithwallet", "\"" + find_value(r.get_obj(), "hex").get_str() + "\""));
     string hex_str = find_value(r.get_obj(), "hex").get_str();
    
-    BOOST_CHECK_NO_THROW(r = CallRPC(node, "sendrawtransaction " + hex_str, true, false));  
+    BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "sendrawtransaction", "\"" + hex_str + "\"", false));  
     if(confirm){
 		GenerateBlocks(5, node);
-		BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationinfo " + asset + " " + address));
+		BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "assetallocationinfo",asset + ",\"" + address + "\""));
 		CAmount nAmountAfter = AmountFromValue(find_value(r.get_obj(), "balance_zdag"));
 		BOOST_CHECK_EQUAL(nAmountBefore+AmountFromValue(amount) , nAmountAfter);
 
-		BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationinfo " + asset + " burn"));
+		BOOST_CHECK_NO_THROW(r = CallExtRPC(node,  "assetallocationinfo",asset + ",\"burn\""));
 		CAmount nAmountBurnAfter = AmountFromValue(find_value(r.get_obj(), "balance_zdag"));
 		BOOST_CHECK_EQUAL(nAmountBurnBefore-AmountFromValue(amount) , nAmountBurnAfter);
 		
-		BOOST_CHECK_NO_THROW(r = CallRPC(node, "addressbalance " + address));
+		BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "addressbalance", "\"" + address + "\""));
 		CAmount nAmountAddressAfter = AmountFromValue(find_value(r.get_obj(), "amount"));
 		nAmountAddressBefore -= AmountFromValue(amount);
 		// account for fee
 		BOOST_CHECK(abs(nAmountAddressBefore - nAmountAddressAfter) < 0.001*COIN);
 	}
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + hex_str + " true"));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "decoderawtransaction", "\"" +  hex_str + "\",true"));
 	string txid = find_value(r.get_obj(), "txid").get_str();
 	return txid;
 }
