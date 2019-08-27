@@ -33,7 +33,7 @@ cache:
   directories:
     - $TRAVIS_BUILD_DIR/depends/built
     - $TRAVIS_BUILD_DIR/depends/sdk-sources
-    - $HOME/.ccache
+    - $TRAVIS_BUILD_DIR/ci/scratch/.ccache
 stages:
   - lint
   - test
