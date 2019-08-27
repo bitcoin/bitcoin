@@ -10,7 +10,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     wait_until,
-    connect_nodes_bi,
+    connect_nodes,
 )
 
 
@@ -62,7 +62,7 @@ class NotificationsTest(BitcoinTestFramework):
             self.log.info("test -walletnotify after rescan")
             # restart node to rescan to force wallet notifications
             self.start_node(1)
-            connect_nodes_bi(self.nodes, 0, 1)
+            connect_nodes(self.nodes[0], 1)
 
             wait_until(lambda: len(os.listdir(self.walletnotify_dir)) == block_count, timeout=10)
 
