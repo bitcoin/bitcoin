@@ -349,7 +349,7 @@ void GenerateMainNetBlocks(int nBlocks, const string& node)
 {
 	int height, targetHeight, newHeight, timeoutCounter;
 	UniValue r;
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getblockchaininfo", false));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "getblockchaininfo"));
 	targetHeight = find_value(r.get_obj(), "blocks").get_int() + nBlocks;
 	newHeight = 0;
 	const string &sBlocks = strprintf("%d", nBlocks);
@@ -357,10 +357,10 @@ void GenerateMainNetBlocks(int nBlocks, const string& node)
 	GetOtherNodes(node, otherNode1, otherNode2);
 	while (newHeight < targetHeight)
 	{
-		BOOST_CHECK_NO_THROW(r = CallRPC(node, "generate " + sBlocks, false));
-		BOOST_CHECK_NO_THROW(r = CallRPC(node, "getblockchaininfo", false));
+		BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "generate", sBlocks, false));
+		BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "getblockchaininfo"));
 		newHeight = find_value(r.get_obj(), "blocks").get_int();
-		BOOST_CHECK_NO_THROW(r = CallRPC(node, "getwalletinfo", false));
+		BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "getwalletinfo"));
 		CAmount balance = AmountFromValue(find_value(r.get_obj(), "balance"));
 		tfm::format(std::cout,"Current block height %d, Target block height %d, balance %f\n", newHeight, targetHeight, ValueFromAmount(balance).get_real());
 	}
@@ -372,7 +372,7 @@ void GenerateMainNetBlocks(int nBlocks, const string& node)
 	{
 		try
 		{
-			r = CallRPC(otherNode1, "getblockchaininfo", false);
+			r = CallExtRPC(otherNode1, "getblockchaininfo");
 		}
 		catch (const runtime_error &e)
 		{
@@ -408,7 +408,7 @@ void GenerateBlocks(int nBlocks, const string& node, bool bRegtest)
 	GetOtherNodes(node, otherNode1, otherNode2);
 	try
 	{
-		r = CallRPC(node, "getblockchaininfo", bRegtest);
+		r = CallExtRPC(node, "getblockchaininfo");
 	}
 	catch (const runtime_error &e)
 	{
@@ -416,8 +416,8 @@ void GenerateBlocks(int nBlocks, const string& node, bool bRegtest)
 	}
 	newHeight = find_value(r.get_obj(), "blocks").get_int() + nBlocks;
 	const string &sBlocks = strprintf("%d", nBlocks);
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "generate " + sBlocks, bRegtest));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getblockchaininfo", bRegtest));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC(node,  "generate", sBlocks, false));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "getblockchaininfo"));
 	height = find_value(r.get_obj(), "blocks").get_int();
 	BOOST_CHECK(height >= newHeight);
 	height = 0;
@@ -427,7 +427,7 @@ void GenerateBlocks(int nBlocks, const string& node, bool bRegtest)
 	{
 		try
 		{
-			r = CallRPC(otherNode1, "getblockchaininfo", bRegtest);
+			r = CallExtRPC(otherNode1, "getblockchaininfo");
 		}
 		catch (const runtime_error &e)
 		{
@@ -454,7 +454,7 @@ void GenerateBlocks(int nBlocks, const string& node, bool bRegtest)
 	{
 		try
 		{
-			r = CallRPC(otherNode2, "getblockchaininfo", bRegtest);
+			r = CallExtRPC(otherNode2, "getblockchaininfo");
 		}
 		catch (const runtime_error &e)
 		{
@@ -482,7 +482,7 @@ void GenerateSpendableCoins() {
 	UniValue r;
 
 	const string &sBlocks = strprintf("%d", 101);
-	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "generate", sBlocks));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "generate", sBlocks, false));
 	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "getnewaddress"));
 
 	string newaddress = r.get_str();
@@ -499,7 +499,7 @@ void GenerateSpendableCoins() {
 }
 bool AreTwoTransactionsLinked(const string &node, const string& inputTxid, const string &outputTxid){
 	UniValue r;
-	r = CallRPC(node, "getrawtransaction " + outputTxid + " true");
+	r = CallExtRPC(node, "getrawtransaction", "\"" + outputTxid + "\",\"true\"");
 	if(!r.isObject())
 		return false;
 	UniValue outputTxidVins = find_value(r.get_obj(), "vin").get_array();
@@ -514,7 +514,7 @@ bool AreTwoTransactionsLinked(const string &node, const string& inputTxid, const
 string GetNewFundedAddress(const string &nodeIn, bool bRegtest) {
 	UniValue r;
 	string node = LookupURLLocal(nodeIn); 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getnewaddress", bRegtest, false));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "getnewaddress", ""));
 	string newaddress = r.get_str();
 	newaddress.erase(std::remove(newaddress.begin(), newaddress.end(), '\n'), newaddress.end());
 	string sendnode = "";
@@ -526,11 +526,11 @@ string GetNewFundedAddress(const string &nodeIn, bool bRegtest) {
 		sendnode = "./test/node2";
 	else if(node == "./test/mainnet1")
 		sendnode = "./test/mainnet1";
-    CallRPC(bRegtest? sendnode: node, "sendtoaddress " + newaddress + " 10", bRegtest, false);
+    CallExtRPC(bRegtest? sendnode: node, "sendtoaddress", "\"" + newaddress + "\",\"10\"", false);
 	if(bRegtest)
 		GenerateBlocks(1, sendnode, bRegtest);
 	GenerateBlocks(1, node, bRegtest);
-    BOOST_CHECK_NO_THROW(r = CallRPC(node, "addressbalance " + newaddress, bRegtest));
+    BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "addressbalance", "\"" + newaddress + "\""));
     CAmount nAmount = AmountFromValue(find_value(r.get_obj(), "amount"));
     BOOST_CHECK_EQUAL(nAmount, 10*COIN);
 	return newaddress;
@@ -555,7 +555,7 @@ string GetNewFundedAddress(const string &nodeIn, string& txid) {
     txid = r.get_str();
     GenerateBlocks(10, sendnode);
     GenerateBlocks(10, node);
-    BOOST_CHECK_NO_THROW(r = CallRPC(node, "addressbalance " + newaddress));
+    BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "addressbalance","\"" + newaddress + "\""));
     CAmount nAmount = AmountFromValue(find_value(r.get_obj(), "amount"));
     BOOST_CHECK_EQUAL(nAmount, 25*COIN);
     return newaddress;
@@ -568,7 +568,7 @@ void SleepFor(const int& milliseconds, bool actualSleep) {
 	UniValue r;
 	try
 	{
-		r = CallRPC("node1", "getblockchaininfo");
+		r = CallExtRPC("node1", "getblockchaininfo");
 		int64_t currentTime = find_value(r.get_obj(), "mediantime").get_int64();
 		currentTime += seconds;
 		SetSysMocktime(currentTime);
@@ -578,7 +578,7 @@ void SleepFor(const int& milliseconds, bool actualSleep) {
 	}
 	try
 	{
-		r = CallRPC("node2", "getblockchaininfo");
+		r = CallExtRPC("node2", "getblockchaininfo");
 		int64_t currentTime = find_value(r.get_obj(), "mediantime").get_int64();
 		currentTime += seconds;
 		SetSysMocktime(currentTime);
@@ -588,7 +588,7 @@ void SleepFor(const int& milliseconds, bool actualSleep) {
 	}
 	try
 	{
-		r = CallRPC("node3", "getblockchaininfo");
+		r = CallExtRPC("node3", "getblockchaininfo");
 		int64_t currentTime = find_value(r.get_obj(), "mediantime").get_int64();
 		currentTime += seconds;
 		SetSysMocktime(currentTime);
@@ -602,13 +602,13 @@ void SetSysMocktime(const int64_t& expiryTime) {
 	string expiryStr = strprintf("%lld", expiryTime);
 	try
 	{
-		CallRPC("node1", "getblockchaininfo");
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "setmocktime " + expiryStr, true, false));
+		CallExtRPC("node1", "getblockchaininfo");
+		BOOST_CHECK_NO_THROW(CallExtRPC("node1", "setmocktime", expiryStr, false));
 		GenerateBlocks(5, "node1");
 		GenerateBlocks(5, "node1");
 		GenerateBlocks(5, "node1");
 		UniValue r;
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getblockchaininfo"));
+		BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "getblockchaininfo"));
 		BOOST_CHECK(expiryTime <= find_value(r.get_obj(), "mediantime").get_int64());
 	}
 	catch (const runtime_error &e)
@@ -616,13 +616,13 @@ void SetSysMocktime(const int64_t& expiryTime) {
 	}
 	try
 	{
-		CallRPC("node2", "getblockchaininfo");
-		BOOST_CHECK_NO_THROW(CallRPC("node2", "setmocktime " + expiryStr, true, false));
+		CallExtRPC("node2", "getblockchaininfo");
+		BOOST_CHECK_NO_THROW(CallExtRPC("node2", "setmocktime", expiryStr, false));
 		GenerateBlocks(5, "node2");
 		GenerateBlocks(5, "node2");
 		GenerateBlocks(5, "node2");
 		UniValue r;
-		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "getblockchaininfo"));
+		BOOST_CHECK_NO_THROW(r = CallExtRPC("node2", "getblockchaininfo"));
 		BOOST_CHECK(expiryTime <= find_value(r.get_obj(), "mediantime").get_int64());
 	}
 	catch (const runtime_error &e)
@@ -630,13 +630,13 @@ void SetSysMocktime(const int64_t& expiryTime) {
 	}
 	try
 	{
-		CallRPC("node3", "getblockchaininfo");
-		BOOST_CHECK_NO_THROW(CallRPC("node3", "setmocktime " + expiryStr, true, false));
+		CallExtRPC("node3", "getblockchaininfo");
+		BOOST_CHECK_NO_THROW(CallExtRPC("node3",  "setmocktime", expiryStr, false));
 		GenerateBlocks(5, "node3");
 		GenerateBlocks(5, "node3");
 		GenerateBlocks(5, "node3");
 		UniValue r;
-		BOOST_CHECK_NO_THROW(r = CallRPC("node3", "getblockchaininfo"));
+		BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "getblockchaininfo"));
 		BOOST_CHECK(expiryTime <= find_value(r.get_obj(), "mediantime").get_int64());
 	}
 	catch (const runtime_error &e)
