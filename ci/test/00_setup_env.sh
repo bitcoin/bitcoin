@@ -11,7 +11,10 @@ echo "Setting default values in env"
 BASE_ROOT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )"/../../ >/dev/null 2>&1 && pwd )
 export BASE_ROOT_DIR
 
-export MAKEJOBS=${MAKEJOBS:--j3}
+# The number of parallel jobs to pass down to make and test_runner.py
+export MAKEJOBS=${MAKEJOBS:--j4}
+# A folder for the ci system to put temporary files (ccache, datadirs for tests, ...)
+export BASE_SCRATCH_DIR=${BASE_SCRATCH_DIR:-$BASE_ROOT_DIR/ci/scratch/}
 export HOST=${HOST:-x86_64-unknown-linux-gnu}
 export RUN_UNIT_TESTS=${RUN_UNIT_TESTS:-true}
 export RUN_FUNCTIONAL_TESTS=${RUN_FUNCTIONAL_TESTS:-true}
