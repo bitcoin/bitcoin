@@ -71,7 +71,7 @@ To assist in updating translations, a helper script is available in the [maintai
 2. `git add` new translations from `src/qt/locale/`
 3. Update `src/qt/bitcoin_locale.qrc` manually or via
 ```bash
-git ls-files src/qt/locale/*ts|xargs -n1 basename|sed 's/\(bitcoin_\(.*\)\).ts/<file alias="\2">locale\/\1.qm<\/file>/'
+git ls-files src/qt/locale/*ts|xargs -n1 basename|sed 's/\(bitcoin_\(.*\)\).ts/        <file alias="\2">locale\/\1.qm<\/file>/'
 ```
 4. Update `src/Makefile.qt.include` manually or via
 ```bash
