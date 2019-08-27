@@ -121,8 +121,8 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_send_address)
 	GenerateBlocks(5);
     GenerateBlocks(5, "node2");
 	string newaddress1 = GetNewFundedAddress("node1");
-    CallRPC("node2", "sendtoaddress " + newaddress1 + " 1", true, false);
-    CallRPC("node2", "sendtoaddress " + newaddress1 + " 1", true, false);
+    CallExtRPC("node2", "sendtoaddress" , "\"" + newaddress1 + "\",1", false);
+    CallExtRPC("node2", "sendtoaddress" , "\"" + newaddress1 + "\",1", false);
 	GenerateBlocks(5);
 	GenerateBlocks(5, "node2");
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "getnewaddress"));
