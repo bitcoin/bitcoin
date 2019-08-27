@@ -83,8 +83,8 @@ BOOST_AUTO_TEST_CASE(generate_asset_address_spend)
     std::string strAmountHalf = ValueFromAmount(nAmountHalf).write();
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "getnewaddress"));
 	std::string newaddress = r.get_str();
-    CallRPC("node3", "sendtoaddress " + creatoraddress + " " + strAmountHalf, true, false);
-    CallRPC("node3", "sendtoaddress " + useraddress + " " + strAmountHalf, true, false);
+    CallExtRPC("node3", "sendtoaddress" , "\"" + creatoraddress + "\"," + strAmountHalf, false);
+    CallExtRPC("node3","sendtoaddress" , "\"" + useraddress + "\"," + strAmountHalf, false);
     GenerateBlocks(5, "node3");
     BOOST_CHECK_NO_THROW(r = CallRPC("node3", "addressbalance " + creatoraddress));
     CAmount nAmountBalance = AmountFromValue(find_value(r.get_obj(), "amount"));
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_address_spend)
 	newaddress = r.get_str();
 
 
-    CallRPC("node3", "sendtoaddress " + useraddress + " " + strAmountHalf, true, false);
+    CallExtRPC("node3", "sendtoaddress" , "\"" + useraddress + "\"," + strAmountHalf, false);
     GenerateBlocks(5, "node3");
 
     BOOST_CHECK_NO_THROW(r = CallRPC("node3", "addressbalance " + creatoraddress));
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_address_spend)
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "getnewaddress"));
 	newaddress = r.get_str();
 
-    CallRPC("node3", "sendtoaddress " + creatoraddress + " " + strAmountHalf, true, false);
+    CallExtRPC("node3", "sendtoaddress" , "\"" + creatoraddress + "\"," + strAmountHalf, false);
     GenerateBlocks(5, "node3");
 
     BOOST_CHECK_NO_THROW(r = CallRPC("node3", "addressbalance " + useraddress));
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_address_spend)
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "getnewaddress"));
 	newaddress = r.get_str();
 
-    CallRPC("node3", "sendtoaddress " + creatoraddress + " " + strAmountHalf, true, false);
+    CallExtRPC("node3", "sendtoaddress" , "\"" + creatoraddress + "\"," + strAmountHalf, false);
     GenerateBlocks(5, "node3");
 
     BOOST_CHECK_NO_THROW(r = CallRPC("node3", "addressbalance " + useraddress));
