@@ -84,6 +84,17 @@ bool GetSyscoinData(const CScript &scriptPubKey, vector<unsigned char> &vchData)
 		return false;
 	if (!scriptPubKey.GetOp(pc, opcode, vchData))
 		return false;
+    const int & nSize = scriptPubKey.size();
+    // allow up to 80 bytes of data after our stack on standard asset transactions
+    int nDifferenceAllowed = 83;
+    // if data is more than 1 byte we used 2 bytes to store the varint (good enough for 64kb which is within limit of opreturn data on sys tx's)
+    if(nSize >= 0xff){
+        nDifferenceAllowed++;
+    }
+    if(nSize > (vchData.size() + nDifferenceAllowed)){
+        LogPrint(BCLog::SYS, "GetSyscoinData too big scriptPubKey size %d vchData %d\n", scriptPubKey.size(), vchData.size()); 
+        return false;
+    }
 	return true;
 }
 bool GetSyscoinBurnData(const CTransaction &tx, CAssetAllocation* theAssetAllocation, std::vector<unsigned char> &vchEthAddress, std::vector<unsigned char> &vchEthContract)
@@ -182,6 +193,7 @@ bool GetSyscoinBurnData(const CTransaction &tx, uint32_t& nAssetFromScript, CWit
 }
 bool GetSyscoinBurnData(const CScript &scriptPubKey, std::vector<std::vector<unsigned char> > &vchData)
 {
+    int nTotalSize = 0;
     CScript::const_iterator pc = scriptPubKey.begin();
     opcodetype opcode;
     if (!scriptPubKey.GetOp(pc, opcode))
@@ -191,32 +203,43 @@ bool GetSyscoinBurnData(const CScript &scriptPubKey, std::vector<std::vector<uns
     vector<unsigned char> vchArg;
     if (!scriptPubKey.GetOp(pc, opcode, vchArg))
         return false;
+    nTotalSize += vchArg.size();
     vchData.push_back(vchArg);
     vchArg.clear();
     if (!scriptPubKey.GetOp(pc, opcode, vchArg))
         return false;
+    nTotalSize += vchArg.size();
     vchData.push_back(vchArg);
     vchArg.clear();       
     if (!scriptPubKey.GetOp(pc, opcode, vchArg))
         return false;
+    nTotalSize += vchArg.size();
     vchData.push_back(vchArg);
     vchArg.clear();        
     if (!scriptPubKey.GetOp(pc, opcode, vchArg))
         return false;
+    nTotalSize += vchArg.size();
     vchData.push_back(vchArg);
     vchArg.clear();   
     if (!scriptPubKey.GetOp(pc, opcode, vchArg))
         return false;
+    nTotalSize += vchArg.size();
     vchData.push_back(vchArg);
     vchArg.clear(); 
     if (!scriptPubKey.GetOp(pc, opcode, vchArg))
         return false;
+    nTotalSize += vchArg.size();    
     vchData.push_back(vchArg);
     vchArg.clear();
     if (!scriptPubKey.GetOp(pc, opcode, vchArg))
         return false;
+    nTotalSize += vchArg.size();    
     vchData.push_back(vchArg);
-    vchArg.clear();                
+    vchArg.clear();
+    if(pc != scriptPubKey.end()){
+        LogPrint(BCLog::SYS, "GetSyscoinBurnData invalid data proceeding push data for burn elements...\n"); 
+        return false;
+    }             
     return true;
 }
 
