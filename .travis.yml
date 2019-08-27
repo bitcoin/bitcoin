@@ -13,7 +13,7 @@ services:
 cache:
   ccache: true
   directories:
-    - $HOME/cache
+    - $TRAVIS_BUILD_DIR/ci/scratch/.ccache
 env:
   global:
     # DOCKER_HUB_USER
