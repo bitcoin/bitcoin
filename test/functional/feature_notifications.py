@@ -7,7 +7,11 @@ import os
 
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, wait_until, connect_nodes_bi
+from test_framework.util import (
+    assert_equal,
+    wait_until,
+    connect_nodes_bi,
+)
 
 
 class NotificationsTest(BitcoinTestFramework):
