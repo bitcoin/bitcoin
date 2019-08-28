@@ -129,6 +129,7 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
     result.push_back(Pair("version", block.nVersion));
     result.push_back(Pair("versionHex", strprintf("%08x", block.nVersion)));
     result.push_back(Pair("merkleroot", block.hashMerkleRoot.GetHex()));
+    bool chainLock = llmq::chainLocksHandler->HasChainLock(blockindex->nHeight, blockindex->GetBlockHash());
     UniValue txs(UniValue::VARR);
     for(const auto& tx : block.vtx)
     {
@@ -136,6 +137,9 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
         {
             UniValue objTx(UniValue::VOBJ);
             TxToUniv(*tx, uint256(), objTx);
+            bool fLocked = llmq::quorumInstantSendManager->IsLocked(tx->GetHash());
+            objTx.push_back(Pair("instantlock", fLocked || chainLock));
+            objTx.push_back(Pair("instantlock_internal", fLocked));
             txs.push_back(objTx);
         }
         else
@@ -163,7 +167,7 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
     if (pnext)
         result.push_back(Pair("nextblockhash", pnext->GetBlockHash().GetHex()));
 
-    result.push_back(Pair("chainlock", llmq::chainLocksHandler->HasChainLock(blockindex->nHeight, blockindex->GetBlockHash())));
+    result.push_back(Pair("chainlock", chainLock));
 
     return result;
 }
