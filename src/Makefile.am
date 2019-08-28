@@ -210,6 +210,7 @@ BITCOIN_CORE_H = \
   scheduler.h \
   script/descriptor.h \
   script/keyorigin.h \
+  script/miniscript.h \
   script/sigcache.h \
   script/sign.h \
   script/signingprovider.h \
@@ -562,6 +563,7 @@ libbitcoin_common_a_SOURCES = \
   rpc/util.cpp \
   scheduler.cpp \
   script/descriptor.cpp \
+  script/miniscript.cpp \
   script/sign.cpp \
   script/signingprovider.cpp \
   script/standard.cpp \
