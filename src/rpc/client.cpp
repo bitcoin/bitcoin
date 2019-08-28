@@ -148,7 +148,6 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "prioritisetransaction", 1, "fee_delta" },
     { "setban", 2, "bantime" },
     { "setban", 3, "absolute" },
-    { "setbip69enabled", 0, "enabled" },
     { "setnetworkactive", 0, "state" },
     { "setprivatesendrounds", 0, "rounds" },
     { "setprivatesendamount", 0, "amount" },

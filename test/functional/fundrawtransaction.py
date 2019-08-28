@@ -667,9 +667,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         # Make sure there is exactly one input so coin selection can't skew the result
         assert_equal(len(self.nodes[3].listunspent(1)), 1)
 
-        # Disable BIP69 sorting of inputs and outputs
-        self.nodes[3].setbip69enabled(False)
-
         inputs = []
         outputs = {self.nodes[2].getnewaddress(): 1}
         rawtx = self.nodes[3].createrawtransaction(inputs, outputs)
@@ -731,9 +728,6 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # the total subtracted from the outputs is equal to the fee
         assert_equal(share[0] + share[2] + share[3], result[0]['fee'])
-
-        # Reenable BIP69 sorting of inputs and outputs
-        self.nodes[3].setbip69enabled(True)
 
 if __name__ == '__main__':
     RawTransactionsTest().main()
