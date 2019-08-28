@@ -14,16 +14,6 @@ static const unsigned char pchOnionCat[] = {0xFD,0x87,0xD8,0x7E,0xEB,0x43};
 // 0xFD + sha256("bitcoin")[0:5]
 static const unsigned char g_internal_prefix[] = { 0xFD, 0x6B, 0x88, 0xC0, 0x87, 0x24 };
 
-/**
- * Construct an unspecified IPv6 network address (::/128).
- *
- * @note This address is considered invalid by CNetAddr::IsValid()
- */
-CNetAddr::CNetAddr()
-{
-    memset(ip, 0, sizeof(ip));
-}
-
 void CNetAddr::SetIP(const CNetAddr& ipIn)
 {
     memcpy(ip, ipIn.ip, sizeof(ip));
@@ -100,10 +90,9 @@ CNetAddr::CNetAddr(const struct in_addr& ipv4Addr)
     SetRaw(NET_IPV4, (const uint8_t*)&ipv4Addr);
 }
 
-CNetAddr::CNetAddr(const struct in6_addr& ipv6Addr, const uint32_t scope)
+CNetAddr::CNetAddr(const struct in6_addr& ipv6Addr, const uint32_t scope) : scopeId(scope)
 {
     SetRaw(NET_IPV6, (const uint8_t*)&ipv6Addr);
-    scopeId = scope;
 }
 
 unsigned int CNetAddr::GetByte(int n) const

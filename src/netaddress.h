@@ -32,11 +32,16 @@ enum Network
 class CNetAddr
 {
     protected:
-        unsigned char ip[16]; // in network byte order
+        unsigned char ip[16]{}; // in network byte order
         uint32_t scopeId{0}; // for scoped/link-local ipv6 addresses
 
     public:
-        CNetAddr();
+        /**
+         * Construct an unspecified IPv6 network address (::/128).
+         *
+         * @note This address is considered invalid by CNetAddr::IsValid()
+         */
+        CNetAddr() = default;
         explicit CNetAddr(const struct in_addr& ipv4Addr);
         void SetIP(const CNetAddr& ip);
 
