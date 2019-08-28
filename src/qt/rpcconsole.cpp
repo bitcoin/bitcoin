@@ -558,6 +558,17 @@ bool RPCConsole::eventFilter(QObject* obj, QEvent *event)
 void RPCConsole::setClientModel(ClientModel *model)
 {
     clientModel = model;
+
+    bool wallet_enabled{false};
+#ifdef ENABLE_WALLET
+    wallet_enabled = WalletModel::isWalletEnabled();
+#endif // ENABLE_WALLET
+    if (model && !wallet_enabled) {
+        // Show warning, for example if this is a prerelease version
+        connect(model, &ClientModel::alertsChanged, this, &RPCConsole::updateAlerts);
+        updateAlerts(model->getStatusBarWarnings());
+    }
+
     ui->trafficGraph->setClientModel(model);
     if (model && clientModel->getPeerTableModel() && clientModel->getBanTableModel()) {
         // Keep up to date with client
@@ -1273,4 +1284,10 @@ void RPCConsole::setTabFocus(enum TabTypes tabType)
 QString RPCConsole::tabTitle(TabTypes tab_type) const
 {
     return ui->tabWidget->tabText(tab_type);
+}
+
+void RPCConsole::updateAlerts(const QString& warnings)
+{
+    this->ui->label_alerts->setVisible(!warnings.isEmpty());
+    this->ui->label_alerts->setText(warnings);
 }
