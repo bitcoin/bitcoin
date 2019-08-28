@@ -34,6 +34,9 @@ enum class NetworkID : uint8_t
     IPV4 = 1,
     IPV6,
     TORV2,
+    TORV3,
+    I2P,
+    CJDNS,
 };
 
 /** IP address (IPv6, or IPv4 using mapped IPv6 range (::FFFF:0:0/96)) */

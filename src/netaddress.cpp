@@ -81,6 +81,17 @@ bool CNetAddr::SetSpecial(const std::string &strName)
             m_network_id = NetworkID::TORV2;
             ip.assign(vchAddr.begin(), vchAddr.end());
             return true;
+        } else if (vchAddr.size() == 35) {
+            m_network_id = NetworkID::TORV3;
+            ip.assign(vchAddr.begin(), vchAddr.begin()+32);
+            return true;
+        }
+    } else if (strName.size()>8 && strName.substr(strName.size() - 8, 8) == ".b32.i2p") {
+        std::vector<unsigned char> vchAddr = DecodeBase32(strName.substr(0, strName.size() - 8).c_str());
+        if (vchAddr.size() == 32) {
+            m_network_id = NetworkID::I2P;
+            ip.assign(vchAddr.begin(), vchAddr.end());
+            return true;
         }
     }
     return false;
@@ -93,7 +104,13 @@ CNetAddr::CNetAddr(const struct in_addr& ipv4Addr)
 
 CNetAddr::CNetAddr(const struct in6_addr& ipv6Addr, const uint32_t scope) : scopeId(scope)
 {
-    FromV1Serialization((unsigned char *)&ipv6Addr);
+    unsigned char *address = (unsigned char *)&ipv6Addr;
+    if (*address == 0xfc) {
+        m_network_id = NetworkID::CJDNS;
+        ip.assign(address, address+16);
+    } else {
+        FromV1Serialization(address);
+    }
 }
 
 unsigned int CNetAddr::GetByte(int n) const
@@ -180,7 +197,7 @@ bool CNetAddr::IsRFC4862() const
 
 bool CNetAddr::IsRFC4193() const
 {
-    return (IsIPv6() && ((GetByte(15) & 0xFE) == 0xFC));
+    return m_network_id == NetworkID::CJDNS || (IsIPv6() && ((GetByte(15) & 0xFE) == 0xFC));
 }
 
 bool CNetAddr::IsRFC6145() const
