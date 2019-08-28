@@ -213,35 +213,37 @@ BOOST_AUTO_TEST_CASE(generate_asset_consistency_check)
 	BOOST_CHECK_EQUAL(strRevalidatedBlockCount, strBeforeBlockCount);
 
 	BOOST_CHECK_NO_THROW(assetValidatedResults = CallExtRPC("node1", "listassets" , itostr(INT_MAX) + ",0"));
-	BOOST_CHECK_EQUAL(assetValidatedResults.write(), assetNowResults.write());
+	string validatedResStr = assetValidatedResults.write();
+	string nowResStr = assetNowResults.write();
+	BOOST_CHECK(validatedResStr == nowResStr);
 	BOOST_CHECK_NO_THROW(assetAllocationsValidatedResults = CallExtRPC("node1", "listassetallocations" , itostr(INT_MAX) + ",0"));
-	BOOST_CHECK_EQUAL(assetAllocationsValidatedResults.write(), assetAllocationsNowResults.write());	
+	BOOST_CHECK(assetAllocationsValidatedResults.write() == assetAllocationsNowResults.write());	
 	// try to check after reindex
 	StopNode("node1");
 	StartNode("node1", true, "", true);
 
 	BOOST_CHECK_NO_THROW(assetValidatedResults = CallExtRPC("node1", "listassets" , itostr(INT_MAX) + ",0"));
-	BOOST_CHECK_EQUAL(assetValidatedResults.write(), assetNowResults.write());
+	BOOST_CHECK(assetValidatedResults.write() == assetNowResults.write());
 	BOOST_CHECK_NO_THROW(assetValidatedResults = CallExtRPC("node2", "listassets" , itostr(INT_MAX) + ",0"));
-	BOOST_CHECK_EQUAL(assetValidatedResults.write(), assetNowResults.write());
+	BOOST_CHECK(assetValidatedResults.write() == assetNowResults.write());
 	BOOST_CHECK_NO_THROW(assetValidatedResults = CallExtRPC("node3", "listassets" , itostr(INT_MAX) + ",0"));
-	BOOST_CHECK_EQUAL(assetValidatedResults.write(), assetNowResults.write());
+	BOOST_CHECK(assetValidatedResults.write() == assetNowResults.write());
 
 	StopNode("node2");
 	StartNode("node2", true, "", true);
 	BOOST_CHECK_NO_THROW(assetValidatedResults = CallExtRPC("node2", "listassets" , itostr(INT_MAX) + ",0"));
-	BOOST_CHECK_EQUAL(assetValidatedResults.write(), assetNowResults.write());
+	BOOST_CHECK(assetValidatedResults.write() == assetNowResults.write());
 	
 	StopNode("node3");
 	StartNode("node3", true, "", true);
 	BOOST_CHECK_NO_THROW(assetValidatedResults = CallExtRPC("node3", "listassets" , itostr(INT_MAX) + ",0"));
-	BOOST_CHECK_EQUAL(assetValidatedResults.write(), assetNowResults.write());
+	BOOST_CHECK(assetValidatedResults.write() == assetNowResults.write());
 
 	BOOST_CHECK_NO_THROW(assetAllocationsValidatedResults = CallExtRPC("node1", "listassetallocations" , itostr(INT_MAX) + ",0"));
-	BOOST_CHECK_EQUAL(assetAllocationsValidatedResults.write(), assetAllocationsNowResults.write());
+	BOOST_CHECK(assetAllocationsValidatedResults.write() == assetAllocationsNowResults.write());
 	BOOST_CHECK_NO_THROW(assetAllocationsValidatedResults = CallExtRPC("node2", "listassetallocations" , itostr(INT_MAX) + ",0"));
-	BOOST_CHECK_EQUAL(assetAllocationsValidatedResults.write(), assetAllocationsNowResults.write());
+	BOOST_CHECK(assetAllocationsValidatedResults.write() == assetAllocationsNowResults.write());
 	BOOST_CHECK_NO_THROW(assetAllocationsValidatedResults = CallExtRPC("node3", "listassetallocations" , itostr(INT_MAX) + ",0"));
-	BOOST_CHECK_EQUAL(assetAllocationsValidatedResults.write(), assetAllocationsNowResults.write());	
+	BOOST_CHECK(assetAllocationsValidatedResults.write() == assetAllocationsNowResults.write());	
 }
 BOOST_AUTO_TEST_SUITE_END ()
