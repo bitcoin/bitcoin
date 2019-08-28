@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_address_sync)
     string newaddressreceiver = r.get_str();
 	string guid = AssetNew("node1", newaddress, "data", "''", "8", "10000", "1000000");
 
-	AssetSend("node1", guid, "\"[{\\\"address\\\":\\\"" + newaddressreceiver + "\\\",\\\"amount\\\":5000}]\"");
+	AssetSend("node1", guid, "[{\"address\":\"" + newaddressreceiver + "\",\"amount\":5000}]");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddressreceiver ));
 	UniValue balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "assetallocationinfo " + guid + " " + newaddressreceiver ));
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_lock)
 
 	string guid = AssetNew("node1", newaddress, "data", "''", "8", "1", "100000");
 
-	AssetSend("node1", guid, "\"[{\\\"address\\\":\\\"" + newaddress + "\\\",\\\"amount\\\":1}]\"");
+	AssetSend("node1", guid, "[{\"address\":\"" + newaddress + "\",\"amount\":1}]");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress));
 	UniValue balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8), 1 * COIN);
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_send_address)
         
 	string guid = AssetNew("node1", newaddress1, "data","''", "8", "1", "100000");
 
-	AssetSend("node1", guid, "\"[{\\\"address\\\":\\\"" + newaddress1 + "\\\",\\\"amount\\\":1}]\"");
+	AssetSend("node1", guid, "[{\"address\":\"" + newaddress1 + "\",\"amount\":1}]");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress1 ));
 	UniValue balance = find_value(r.get_obj(), "balance");
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8), 1 * COIN);

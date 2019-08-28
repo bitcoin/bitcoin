@@ -103,7 +103,7 @@ void SendSnapShotAssetAllocation(const std::string &guid, const std::string &str
 {
 	currentTx++;
 	// string AssetSend(const string& node, const string& name, const string& inputs, const string& witness = "''", bool completetx=true, bool bRegtest = true);
-	AssetSend("mainnet1", guid, "\"[" + strSend + "]\"", "''", true, false);
+	AssetSend("mainnet1", guid, "[" + strSend + "]", "''", true, false);
 }
 void GenerateAssetAllocationSnapshots(const std::string &guid, const UniValue &assetAllocations, int precision)
 {
