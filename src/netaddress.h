@@ -170,7 +170,7 @@ class CService : public CNetAddr
 
         template <typename Stream, typename Operation>
         inline void SerializationOp(Stream& s, Operation ser_action) {
-            READWRITE(ip);
+            READWRITEAS(CNetAddr, *this);
             READWRITE(WrapBigEndian(port));
         }
 };
