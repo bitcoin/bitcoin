@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_address_spend)
     BOOST_CHECK_EQUAL(nAmountBalance, nAmountBalanceAfter);
 
     // clear the allocation so we can send the sys again from useraddress
-    AssetAllocationTransfer(false, "node3", assetguid, useraddress, "\"[{\\\"address\\\":\\\"" + creatoraddress + "\\\",\\\"amount\\\":0.5}]\"");
+    AssetAllocationTransfer(false, "node3", assetguid, useraddress, "[{\"address\":\"" + creatoraddress + "\",\"amount\":0.5}]");
 
     // try again and this time should pass
     BOOST_CHECK_NO_THROW(r = CallRPC("node3", "addressbalance " + useraddress));
@@ -686,13 +686,13 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag_within_block)
     string assetguid = AssetNew("node1", creatoraddress, "pubdata", "0xc47bD54a3Df2273426829a7928C3526BF8F7Acaa", "8", "10", "100");
     AssetSend("node1", assetguid, "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":2.0}]\"");
     // From W2 send 1 SPT to W1 - Wait for Confirm
-    AssetAllocationTransfer(false, "node2", assetguid, useraddress2, "\"[{\\\"address\\\":\\\"" + useraddress1 + "\\\",\\\"amount\\\":1.0}]\"");
+    AssetAllocationTransfer(false, "node2", assetguid, useraddress2, "[{\"address\":\"" + useraddress1 + "\",\"amount\":1.0}]");
 
     // From W2 send 1 SPT to W1 - DO NOT WAIT FOR CONFIRM
-    AssetAllocationTransfer(true, "node2", assetguid, useraddress2, "\"[{\\\"address\\\":\\\"" + useraddress1 + "\\\",\\\"amount\\\":1.0}]\"");
+    AssetAllocationTransfer(true, "node2", assetguid, useraddress2, "[{\"address\":\"" + useraddress1 + "\",\"amount\":1.0}]");
     MilliSleep(500);
     // From W1 send 2 SPT to W2 within same Block
-    AssetAllocationTransfer(true, "node1", assetguid, useraddress1, "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":2.0}]\"");
+    AssetAllocationTransfer(true, "node1", assetguid, useraddress1, "[{\"address\":\"" + useraddress2 + "\",\"amount\":2.0}]");
 
     GenerateBlocks(5, "node1");
     // useraddress1 should be empty
@@ -744,8 +744,8 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag)
 
     AssetSend("node1", assetguid, "\"[{\\\"address\\\":\\\"" + useraddress1 + "\\\",\\\"amount\\\":1.0}]\"");
 
-    AssetAllocationTransfer(true, "node1", assetguid, useraddress1, "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.4}]\"");
-    AssetAllocationTransfer(true, "node1", assetguid, useraddress1, "\"[{\\\"address\\\":\\\"" + useraddress3 + "\\\",\\\"amount\\\":0.2}]\"");
+    AssetAllocationTransfer(true, "node1", assetguid, useraddress1, "[{\"address\":\"" + useraddress2 + "\",\"amount\":0.4}]");
+    AssetAllocationTransfer(true, "node1", assetguid, useraddress1, "[{\"address\":\"" + useraddress3 + "\",\"amount\":0.2}]");
     BurnAssetAllocation("node1", assetguid, useraddress1, "0.4", false);
 
     GenerateBlocks(5, "node1");
@@ -801,8 +801,8 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag1)
     BOOST_CHECK(r.write().size() >= 32);
     
 
-    string txid2 = AssetAllocationTransfer(true, "node1", assetguid, useraddress1, "\"[{\\\"address\\\":\\\"" + useraddress3 + "\\\",\\\"amount\\\":0.2}]\"");
-    string txid3 = AssetAllocationTransfer(true, "node1", assetguid, useraddress3, "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.2}]\"");
+    string txid2 = AssetAllocationTransfer(true, "node1", assetguid, useraddress1, "[{\"address\":\"" + useraddress3 + "\",\"amount\":0.2}]");
+    string txid3 = AssetAllocationTransfer(true, "node1", assetguid, useraddress3, "[{\"address\":\"" + useraddress2 + "\",\"amount\":0.2}]");
     GenerateBlocks(5, "node1");
     // should be balance 0 and thus deleted
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + assetguid + " " + useraddress1));
@@ -856,14 +856,14 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag2)
 
     AssetSend("node1", assetguid, "\"[{\\\"address\\\":\\\"" + useraddress1 + "\\\",\\\"amount\\\":1.0},{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.2},{\\\"address\\\":\\\"" + useraddress3 + "\\\",\\\"amount\\\":0.1}]\"");
    
-    AssetAllocationTransfer(true, "node1", assetguid, useraddress1, "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.2}]\"");
+    AssetAllocationTransfer(true, "node1", assetguid, useraddress1, "[{\"address\":\"" + useraddress2 + "\",\"amount\":0.2}]");
 
 
-    AssetAllocationTransfer(true, "node1", assetguid, useraddress2, "\"[{\\\"address\\\":\\\"" + useraddress1 + "\\\",\\\"amount\\\":0.2}]\"");
+    AssetAllocationTransfer(true, "node1", assetguid, useraddress2, "[{\"address\":\"" + useraddress1 + "\",\"amount\":0.2}]");
   
-    AssetAllocationTransfer(true, "node1", assetguid, useraddress1, "\"[{\\\"address\\\":\\\"" + useraddress3 + "\\\",\\\"amount\\\":0.2}]\"");
+    AssetAllocationTransfer(true, "node1", assetguid, useraddress1, "[{\"address\":\"" + useraddress3 + "\",\"amount\":0.2}]");
 
-    AssetAllocationTransfer(true, "node1", assetguid, useraddress3, "\"[{\\\"address\\\":\\\"" + useraddress1 + "\\\",\\\"amount\\\":0.2}]\"");
+    AssetAllocationTransfer(true, "node1", assetguid, useraddress3, "[{\"address\":\"" + useraddress1 + "\",\"amount\":0.2}]");
    
     BurnAssetAllocation("node1", assetguid, useraddress1, "0.5", false);
     BurnAssetAllocation("node1", assetguid, useraddress1, "0.5", false);
@@ -877,7 +877,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag2)
     // this is a double spend attempt between the two burns so it will relay it and first one that gets to miner wins
     BOOST_CHECK(r.write().size() >= 32);
     
-    AssetAllocationTransfer(true, "node1", assetguid, useraddress2, "\"[{\\\"address\\\":\\\"" + useraddress3 + "\\\",\\\"amount\\\":0.2}]\"");
+    AssetAllocationTransfer(true, "node1", assetguid, useraddress2, "[{\"address\":\"" + useraddress3 + "\",\"amount\":0.2}]");
     BurnAssetAllocation("node1", assetguid, useraddress3, "0.3", false);
 
     GenerateBlocks(5, "node1");
@@ -914,7 +914,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag3)
     string assetguid = AssetNew("node1", creatoraddress, "pubdata", "0xc47bD54a3Df2273426829a7928C3526BF8F7Acaa");
     
     AssetSend("node1", assetguid, "\"[{\\\"address\\\":\\\"" + useraddress1 + "\\\",\\\"amount\\\":1.0}]\"");
-    AssetAllocationTransfer(false, "node1", assetguid, useraddress1, "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.1}]\"");
+    AssetAllocationTransfer(false, "node1", assetguid, useraddress1, "[{\"address\":\"" + useraddress2 + "\",\"amount\":0.1}]");
     
     // try to burn more than you own
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationburn " + assetguid + " " + useraddress2 + " 0.4 0x931d387731bbbc988b312206c74f77d004d6b84b"));
@@ -924,8 +924,8 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag3)
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hexStr, true, false));
     BOOST_CHECK(r.write().size() < 32);
 
-    string txid1 = AssetAllocationTransfer(true, "node1", assetguid, useraddress1, "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.1}]\"");
-    string txid2 = AssetAllocationTransfer(true, "node1", assetguid, useraddress2, "\"[{\\\"address\\\":\\\"" + useraddress3 + "\\\",\\\"amount\\\":0.1}]\"");
+    string txid1 = AssetAllocationTransfer(true, "node1", assetguid, useraddress1, "[{\"address\":\"" + useraddress2 + "\",\"amount\":0.1}]");
+    string txid2 = AssetAllocationTransfer(true, "node1", assetguid, useraddress2, "[{\"address\":\"" + useraddress3 + "\",\"amount\":0.1}]");
     
 
     GenerateBlocks(5, "node1");
@@ -948,14 +948,14 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag3)
     balance = find_value(r.get_obj(), "balance");
     BOOST_CHECK_EQUAL(balance.getValStr(), "0.10000000");
     
-    AssetAllocationTransfer(true, "node1", assetguid, useraddress2, "\"[{\\\"address\\\":\\\"" + useraddress1 + "\\\",\\\"amount\\\":0.1}]\"");
+    AssetAllocationTransfer(true, "node1", assetguid, useraddress2, "[{\"address\":\"" + useraddress1 + "\",\"amount\":0.1}]");
     
     BOOST_CHECK_THROW(r = CallRPC("node1", "assetallocationinfo " + assetguid + " burn"), runtime_error);
    
 
     // now do more zdag and check status are ok this time
-    txid1 = AssetAllocationTransfer(true, "node1", assetguid, useraddress3, "\"[{\\\"address\\\":\\\"" + useraddress1 + "\\\",\\\"amount\\\":0.1}]\"");
-    txid2 = AssetAllocationTransfer(true, "node1", assetguid, useraddress1, "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.05}]\"");
+    txid1 = AssetAllocationTransfer(true, "node1", assetguid, useraddress3, "[{\"address\":\"" + useraddress1 + "\",\"amount\":0.1}]");
+    txid2 = AssetAllocationTransfer(true, "node1", assetguid, useraddress1, "[{\"address\":\"" + useraddress2 + "\",\"amount\":0.05}]");
 
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationverifyzdag " + txid1));
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_STATUS_OK);
@@ -1009,7 +1009,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag4)
     string assetguid = AssetNew("node1", creatoraddress, "pubdata", "0xc47bD54a3Df2273426829a7928C3526BF8F7Acaa");
     
     AssetSend("node1", assetguid, "\"[{\\\"address\\\":\\\"" + useraddress1 + "\\\",\\\"amount\\\":1.0}]\"");
-    AssetAllocationTransfer(false, "node1", assetguid, useraddress1, "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.1}]\"");
+    AssetAllocationTransfer(false, "node1", assetguid, useraddress1, "[{\"address\":\"" + useraddress2 + "\",\"amount\":0.1}]");
     // burn and transfer at same time for dbl spend attempt
     // burn
  
@@ -1030,8 +1030,8 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag4)
     MilliSleep(500);
     BOOST_CHECK_NO_THROW(r = CallRPC("node3", "sendrawtransaction " + assetHex, true, false));
     MilliSleep(500);
-    string txid1 = AssetAllocationTransfer(true, "node1", assetguid, useraddress1, "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.1}]\"");
-    string txid2 = AssetAllocationTransfer(true, "node1", assetguid, useraddress2, "\"[{\\\"address\\\":\\\"" + useraddress1 + "\\\",\\\"amount\\\":0.05}]\"");
+    string txid1 = AssetAllocationTransfer(true, "node1", assetguid, useraddress1, "[{\"address\":\"" + useraddress2 + "\",\"amount\":0.1}]");
+    string txid2 = AssetAllocationTransfer(true, "node1", assetguid, useraddress2, "[{\"address\":\"" + useraddress1 + "\",\"amount\":0.05}]");
     MilliSleep(500);
     // txid1 depends on double spend so it is conflicted
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationverifyzdag " + txid1));
@@ -1163,7 +1163,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag_dbl_spend_same_input)
     string assetguid = AssetNew("node1", creatoraddress, "pubdata", "0xc47bD54a3Df2273426829a7928C3526BF8F7Acaa");
     
     AssetSend("node1", assetguid, "\"[{\\\"address\\\":\\\"" + useraddress1 + "\\\",\\\"amount\\\":1.0}]\"");
-    AssetAllocationTransfer(false, "node1", assetguid, useraddress1, "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.1}]\"");
+    AssetAllocationTransfer(false, "node1", assetguid, useraddress1, "[{\"address\":\"" + useraddress2 + "\",\"amount\":0.1}]");
     // burn and transfer at same time for dbl spend attempt
     // burn
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationburn " + assetguid + " " + useraddress1 + " 0.8 0x931d387731bbbc988b312206c74f77d004d6b84b"));
@@ -1217,16 +1217,16 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag_dbl_spend_long_chain)
 
     SyscoinBurn("node1", useraddress1, strSYSXAsset, "1");
     SyscoinBurn("node1", useraddress2, strSYSXAsset, "1");
-    string tx1 = AssetAllocationTransfer(true, "node1", strSYSXAsset, useraddress1, "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.1}]\"");
-    string tx2 = AssetAllocationTransfer(true, "node1", strSYSXAsset, useraddress1, "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.01}]\"");
+    string tx1 = AssetAllocationTransfer(true, "node1", strSYSXAsset, useraddress1, "[{\"address\":\"" + useraddress2 + "\",\"amount\":0.1}]");
+    string tx2 = AssetAllocationTransfer(true, "node1", strSYSXAsset, useraddress1, "[{\"address\":\"" + useraddress2 + "\",\"amount\":0.01}]");
     BOOST_CHECK(AreTwoTransactionsLinked("node1", tx1, tx2));
-    string tx3 = AssetAllocationTransfer(true, "node1", strSYSXAsset, useraddress1, "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.001}]\"");
+    string tx3 = AssetAllocationTransfer(true, "node1", strSYSXAsset, useraddress1, "[{\"address\":\"" + useraddress2 + "\",\"amount\":0.001}]");
     BOOST_CHECK(AreTwoTransactionsLinked("node1", tx2, tx3));
-    string tx4 = AssetAllocationTransfer(true, "node1", strSYSXAsset, useraddress1, "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.0001}]\"");
+    string tx4 = AssetAllocationTransfer(true, "node1", strSYSXAsset, useraddress1, "[{\"address\":\"" + useraddress2 + "\",\"amount\":0.0001}]");
     BOOST_CHECK(AreTwoTransactionsLinked("node1", tx3, tx4));
-    string tx5 = AssetAllocationTransfer(true, "node1", strSYSXAsset, useraddress1, "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.00001}]\"");
+    string tx5 = AssetAllocationTransfer(true, "node1", strSYSXAsset, useraddress1, "[{\"address\":\"" + useraddress2 + "\",\"amount\":0.00001}]");
     BOOST_CHECK(AreTwoTransactionsLinked("node1", tx4, tx5));
-    string tx6 = AssetAllocationTransfer(true, "node1", strSYSXAsset, useraddress1, "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.000001}]\"");
+    string tx6 = AssetAllocationTransfer(true, "node1", strSYSXAsset, useraddress1, "[{\"address\":\"" + useraddress2 + "\",\"amount\":0.000001}]");
     BOOST_CHECK(AreTwoTransactionsLinked("node1", tx5, tx6));
     string tx7 = BurnAssetAllocation("node1", strSYSXAsset, useraddress1, "0.01", false, "''");
     BOOST_CHECK(AreTwoTransactionsLinked("node1", tx6, tx7));

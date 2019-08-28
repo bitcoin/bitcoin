@@ -73,7 +73,7 @@ void SetupSYSXAsset(){
 	string receiverAddress = GetNewFundedAddress("node1");
 	strSYSXAsset = AssetNew("node1", strSYSXAddress, "", "''", "8", "888000000", "888000000", updateFlags);
 	AssetSend("node1", strSYSXAsset, "\"[{\\\"address\\\":\\\"" + receiverAddress + "\\\",\\\"amount\\\":888000000}]\"");
-	AssetAllocationTransfer(false, "node1", strSYSXAsset, receiverAddress, "\"[{\\\"address\\\":\\\"burn\\\",\\\"amount\\\":888000000}]\"");
+	AssetAllocationTransfer(false, "node1", strSYSXAsset, receiverAddress, "[{\"address\":\"burn\",\"amount\":888000000}]");
 	StopNode("node1");
 	StartNode("node1");
 	StopNode("node2");
@@ -972,31 +972,31 @@ void AssetTransfer(const string& node, const string &tonode, const string& guid,
 {
 	UniValue r;
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + guid , bRegtest));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "assetinfo" , guid ));
 	string oldaddress = find_value(r.get_obj(), "address").get_str();
 
 
 	// "assettransfer [asset] [address] [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assettransfer " + guid + " " + toaddress + " " + witness, bRegtest));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str(), bRegtest));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "assettransfer" , guid + ",\"" + toaddress + "\",\"" + witness + "\""));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "signrawtransactionwithwallet" , "\"" + find_value(r.get_obj(), "hex").get_str() + "\""));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
     
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "sendrawtransaction " + hex_str, bRegtest, false));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + hex_str + " true", bRegtest));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "sendrawtransaction" , "\"" + hex_str + "\"", false));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "decoderawtransaction" , "\"" + hex_str + "\",true"));
 
 	GenerateBlocks(1, node, bRegtest);
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + guid, bRegtest));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "assetinfo" , guid));
 
 
 	BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_uint()) == guid);
 	if(bRegtest){
-		BOOST_CHECK_NO_THROW(r = CallRPC(tonode, "assetinfo " + guid, bRegtest));
+		BOOST_CHECK_NO_THROW(r = CallExtRPC(tonode, "assetinfo" , guid));
 		BOOST_CHECK(find_value(r.get_obj(), "address").get_str() == toaddress);
 	}
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "listassetindexassets " + toaddress , bRegtest));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "listassetindexassets" , "\"" + toaddress + "\"", bRegtest));
 	BOOST_CHECK(FindAssetGUIDFromAssetIndexResults(r, guid));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "listassetindexassets " + oldaddress , bRegtest));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "listassetindexassets" , "\"" + oldaddress + "\"" , bRegtest));
 	BOOST_CHECK(!FindAssetGUIDFromAssetIndexResults(r, guid));
 
 
@@ -1004,13 +1004,12 @@ void AssetTransfer(const string& node, const string &tonode, const string& guid,
 string AssetAllocationTransfer(const bool usezdag, const string& node, const string& guid, const string& fromaddress, const string& inputs, const string& witness) {
 
 	UniValue r;
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + guid));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "assetinfo" , guid));
 	int nprecision = find_value(r.get_obj(), "precision").get_uint();
 
 	CAssetAllocation theAssetAllocation;
 	UniValue valueTo;
 	string inputsTmp = inputs;
-	boost::replace_all(inputsTmp, "\\\"", "\"");
 	boost::replace_all(inputsTmp, "\"[", "[");
 	boost::replace_all(inputsTmp, "]\"", "]");
 	BOOST_CHECK(valueTo.read(inputsTmp));
@@ -1038,7 +1037,7 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationinfo " + guid + " " + fromaddress));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "assetallocationinfo" , guid + ",\"" + fromaddress + "\""));
 	UniValue balance;
     if(usezdag)
         balance = find_value(r.get_obj(), "balance_zdag");
@@ -1052,18 +1051,18 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
         newfromamount = 0;
     }
 	// "assetallocationsendmany [asset] [addressfrom] ( [{\"address\":\"address\",\"amount\":amount},...] [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationsendmany " + guid + " " + fromaddress + " " + inputs + " " + witness));
-    BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "assetallocationsendmany" , guid + ",\"" + fromaddress + "\"," + inputs + ",\"" + witness + "\""));
+    BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "signrawtransactionwithwallet", "\"" + find_value(r.get_obj(), "hex").get_str() + "\""));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
 
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "sendrawtransaction " + hex_str, true, false));
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoindecoderawtransaction " + hex_str));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "sendrawtransaction", "\"" + hex_str + "\"", false));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "syscoindecoderawtransaction", "\"" + hex_str + "\""));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "txtype").get_str(), "assetallocationsend");
 	if (!theAssetAllocation.listSendingAllocationAmounts.empty())
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "allocations").get_array().size(), theAssetAllocation.listSendingAllocationAmounts.size());
 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + hex_str + " true"));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "decoderawtransaction", "\"" + hex_str + "\",true"));
 	string txid = find_value(r.get_obj(), "txid").get_str();
 	if (usezdag) {
 		MilliSleep(100);
@@ -1072,7 +1071,7 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
         GenerateBlocks(1, node);
     if (newfromamount > 0 || usezdag)
     {
-    	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationinfo " + guid + " " + fromaddress));
+    	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "assetallocationinfo" , guid + ",\"" + fromaddress + "\""));
         if(usezdag)
     	    balance = find_value(r.get_obj(), "balance_zdag");
         else
@@ -1083,7 +1082,7 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
 		    BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, nprecision), newfromamount);
     }
     else if(!usezdag){
-        BOOST_CHECK_THROW(r = CallRPC(node, "assetallocationinfo " + guid + " " + fromaddress), runtime_error);
+        BOOST_CHECK_THROW(r = CallExtRPC(node, "assetallocationinfo" , guid + ",\"" + fromaddress + "\""), runtime_error);
 	
 		for (unsigned int idx = 0; idx < receivers.size(); idx++) {
 			const UniValue& receiver = receivers[idx];
@@ -1092,11 +1091,11 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
 			UniValue receiverObj = receiver.get_obj();
 			string strAddress = find_value(receiverObj, "address").get_str();
 			
-			BOOST_CHECK_NO_THROW(r = CallRPC(node, "listassetindexallocations " + strAddress ));
+			BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "listassetindexallocations" , "\"" + strAddress + "\"" ));
 			BOOST_CHECK(FindAssetGUIDFromAssetIndexResults(r, guid));
 		}
 		if(newfromamount > 0){
-			BOOST_CHECK_NO_THROW(r = CallRPC(node, "listassetindexallocations " + fromaddress ));
+			BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "listassetindexallocations", "\"" +fromaddress + "\""  ));
 			BOOST_CHECK(FindAssetGUIDFromAssetIndexResults(r, guid));
 		}	
 	}
@@ -1106,7 +1105,7 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
 string BurnAssetAllocation(const string& node, const string &guid, const string &address,const string &amount, bool confirm, string contract){
     UniValue r;
     try{
-        r = CallRPC(node, "assetallocationinfo " + guid + " burn");
+        r = CallExtRPC(node, "assetallocationinfo" , guid + ",\"burn\"");
     }
     catch(runtime_error&err){
     }
@@ -1118,7 +1117,7 @@ string BurnAssetAllocation(const string& node, const string &guid, const string 
 
 	CAmount nAmountAddressBefore = 0;
 	if(contract == "''"){
-		BOOST_CHECK_NO_THROW(r = CallRPC(node, "addressbalance " + address));
+		BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "addressbalance", "\"" + address + "\""));
 		if(r.isObject() && !find_value(r.get_obj(), "amount").isNull()){
 			nAmountAddressBefore = AmountFromValue(find_value(r.get_obj(), "amount"));
 		}
@@ -1126,25 +1125,25 @@ string BurnAssetAllocation(const string& node, const string &guid, const string 
   
 
 	CAmount nAmount =  AmountFromValue(amount);
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationburn " + guid + " " + address + " " + amount + " " + contract));
-    BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "assetallocationburn" , guid + ",\"" + address + "\"," + amount + ",\"" + contract + "\""));
+    BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "signrawtransactionwithwallet" , "\"" +  find_value(r.get_obj(), "hex").get_str() + "\""));
 	string hexStr = find_value(r.get_obj(), "hex").get_str();
  
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "sendrawtransaction " + hexStr, true, false));  
+	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "sendrawtransaction" , "\"" + hexStr + "\"", false));  
     if(confirm){
     	GenerateBlocks(5, "node1");
-    	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationinfo " + guid + " burn"));
+    	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "assetallocationinfo" , guid + ",\"burn\""));
     	UniValue balance = find_value(r.get_obj(), "balance");
     	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8), beforeBalance+nAmount);
 
 		if(contract == "''"){
-			BOOST_CHECK_NO_THROW(r = CallRPC(node, "addressbalance " + address));
+			BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "addressbalance" , address));
 			CAmount nAmountAddressAfter = AmountFromValue(find_value(r.get_obj(), "amount"));
 			// account for fee
 			BOOST_CHECK(nAmountAddressAfter - nAmountAddressBefore >= (nAmount-0.001*COIN));
 		}		
     }
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + hexStr + " true"));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "decoderawtransaction" , "\"" + hexStr + "\",true"));
 	string txid = find_value(r.get_obj(), "txid").get_str();
 	return txid;
 }
