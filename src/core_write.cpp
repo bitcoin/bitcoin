@@ -164,6 +164,7 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
     uint256 txid = tx.GetHash();
     entry.pushKV("txid", txid.GetHex());
     entry.pushKV("version", tx.nVersion);
+    entry.pushKV("type", tx.nType);
     entry.pushKV("size", (int)::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION));
     entry.pushKV("locktime", (int64_t)tx.nLockTime);
 

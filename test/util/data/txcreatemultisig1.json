@@ -1,6 +1,7 @@
 {
     "txid": "0d1d4edfc217d9db3ab6a9298f26a52eae3c52f55a6cb8ccbc14f7c727572894",
     "version": 1,
+    "type": 0,
     "size": 124,
     "locktime": 0,
     "vin": [
