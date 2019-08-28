@@ -28,11 +28,20 @@ enum Network
     NET_MAX,
 };
 
+enum class NetworkID : uint8_t
+{
+    NAME = 0,
+    IPV4 = 1,
+    IPV6,
+    TORV2,
+};
+
 /** IP address (IPv6, or IPv4 using mapped IPv6 range (::FFFF:0:0/96)) */
 class CNetAddr
 {
     protected:
-        unsigned char ip[16]{}; // in network byte order
+        NetworkID m_network_id{NetworkID::IPV6};
+        std::vector<unsigned char> ip = std::vector<unsigned char>(16,0); // in network byte order
         uint32_t scopeId{0}; // for scoped/link-local ipv6 addresses
 
     public:
@@ -86,7 +95,8 @@ class CNetAddr
         bool GetInAddr(struct in_addr* pipv4Addr) const;
         std::vector<unsigned char> GetGroup() const;
         int GetReachabilityFrom(const CNetAddr *paddrPartner = nullptr) const;
-
+        bool GetV1Serialization(unsigned char *buff) const;
+        void FromV1Serialization(unsigned char *buff);
         explicit CNetAddr(const struct in6_addr& pipv6Addr, const uint32_t scope = 0);
         bool GetIn6Addr(struct in6_addr* pipv6Addr) const;
 
@@ -94,11 +104,20 @@ class CNetAddr
         friend bool operator!=(const CNetAddr& a, const CNetAddr& b) { return !(a == b); }
         friend bool operator<(const CNetAddr& a, const CNetAddr& b);
 
-        ADD_SERIALIZE_METHODS;
+        template<typename Stream>
+        void Serialize(Stream &s) const
+        {
+            unsigned char ip_temp[16];
+            GetV1Serialization(ip_temp);
+            s << ip_temp;
+        }
 
-        template <typename Stream, typename Operation>
-        inline void SerializationOp(Stream& s, Operation ser_action) {
-            READWRITE(ip);
+        template<typename Stream>
+        void Unserialize(Stream& s)
+        {
+            unsigned char ip_temp[16];
+            s >> ip_temp;
+            FromV1Serialization(ip_temp);
         }
 
         friend class CSubNet;
