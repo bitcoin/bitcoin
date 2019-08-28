@@ -126,6 +126,7 @@ BASE_SCRIPTS= [
     'p2p-leaktests.py',
     'p2p-compactblocks.py',
     'sporks.py',
+    'rpc_getblockstats.py',
     'p2p-fingerprint.py',
     'wallet-encryption.py',
     'uptime.py',
