@@ -384,12 +384,9 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 
     // PHASE 6:  SEND ALLOCATIONS TO NEW ALLOCATIONS (UNFUNDED ADDRESSES) USING ZDAG
     tfm::format(std::cout,"Creating assetallocationsend transactions...\n");
-    int count = 0;
     int unfoundedAccountIndex = 0;
-    int assetAllocationSendIndex = 0;
     // create vector of signed transactions
     string assetAllocationSendMany = "";
-    int txCount = 0;
     for(int i =0;i<numAssets;i++){
         // send asset to numberOfAssetSendsPerBlock addresses
         string assetAllocationSendMany = "";
