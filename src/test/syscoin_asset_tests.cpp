@@ -412,7 +412,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 
     // PHASE 7:  DISTRIBUTE LOAD AMONG SENDERS
     // push vector of signed transactions to tpstestadd on every sender node distributed evenly
-    int txPerSender = rawSignedAssetAllocationSends.size() / senders.size();
+    int txPerSender = 1;
     tfm::format(std::cout,"Dividing work (%d transactions) between %d senders (%d per sender)...\n", rawSignedAssetAllocationSends.size(), senders.size(), txPerSender);
 
     unsigned int j=0;
@@ -523,19 +523,12 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
     for(int i =0;i<numAssets;i++){
         uint32_t nAssetStored;
         ParseUInt32(vecAssets[i], &nAssetStored);
-        // send asset to numberOfAssetSendsPerBlock addresses
-        string assetAllocationSendMany = "";
-        // +1 to account for change output
         for (int j = 0; j < numberOfAssetSendsPerBlock; j++) {
-            if(assetAllocationSendMany != "")
-                assetAllocationSendMany += ",";
-            assetAllocationSendMany += "{\"address\":\"" + unfundedAccounts[unfoundedAccountIndex++] + "\",\"amount\":1}";
-            BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "listassetindexallocations" , "\"" + unfundedAccounts[unfoundedAccountIndex-1] + "\""));
+            BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "listassetindexallocations" , "\"" + unfundedAccounts[unfoundedAccountIndex++] + "\""));
             UniValue indexArray = r.get_array();
             BOOST_CHECK_EQUAL(indexArray.size(), numAssets);       
             if(unfoundedAccountIndex >= unfundedAccounts.size())
                 unfoundedAccountIndex = 0;
-
         }
 
         BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "listassetindexassets" , "\"" + vecFundedAddresses[i] + "\""));
