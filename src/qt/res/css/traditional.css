@@ -251,6 +251,17 @@ QWidget .QFrame#frame_2 QListView { /* Transaction List */
 }
 
 /******************************************************
+RPCConsole
+******************************************************/
+
+QWidget#RPCConsole QLabel#label_alerts {
+    background-color: #c79304;
+    color: #222222;
+    border-radius: 5px;
+    padding: 5px;
+}
+
+/******************************************************
 SendCoinsDialog
 ******************************************************/
 
