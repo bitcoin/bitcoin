@@ -9,6 +9,16 @@
 #include <type_traits>
 #include <vector>
 
+/** Emplace back multiple elements to a container. */
+template<typename V>
+inline void EmplaceBackMany(V& vec) {}
+template<typename V, typename Arg, typename... Args>
+inline void EmplaceBackMany(V& vec, Arg&& arg, Args&&... args)
+{
+    vec.emplace_back(std::forward<Arg>(arg));
+    EmplaceBackMany(vec, std::forward<Args>(args)...);
+}
+
 /** Construct a vector with the specified elements.
  *
  * This is preferable over the list initializing constructor of std::vector:
@@ -21,8 +31,7 @@ inline std::vector<typename std::common_type<Args...>::type> Vector(Args&&... ar
 {
     std::vector<typename std::common_type<Args...>::type> ret;
     ret.reserve(sizeof...(args));
-    // The line below uses the trick from https://www.experts-exchange.com/articles/32502/None-recursive-variadic-templates-with-std-initializer-list.html
-    (void)std::initializer_list<int>{(ret.emplace_back(std::forward<Args>(args)), 0)...};
+    EmplaceBackMany(ret, std::forward<Args>(args)...);
     return ret;
 }
 
