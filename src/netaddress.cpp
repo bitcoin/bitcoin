@@ -113,6 +113,17 @@ CNetAddr::CNetAddr(const struct in6_addr& ipv6Addr, const uint32_t scope) : scop
     }
 }
 
+bool CNetAddr::IsStandardV2Deserialization() const
+{
+    if (IsIPv6()) {
+        return (memcmp(ip.data(), pchOnionCat, sizeof(pchOnionCat)) != 0) &&
+            (memcmp(ip.data(), pchIPv4, sizeof(pchIPv4)) != 0) &&
+            ip.at(0) != 0xfc;
+    } else {
+        return true;
+    }
+}
+
 unsigned int CNetAddr::GetByte(int n) const
 {
     return ip.at(ip.size()-1-n);
@@ -253,6 +264,10 @@ bool CNetAddr::IsLocal() const
  */
 bool CNetAddr::IsValid() const
 {
+    if (m_network_id == NetworkID::INVALID) {
+        return false;
+    }
+
     // Cleanup 3-byte shifted addresses caused by garbage in size field
     // of addr messages from versions before 0.2.9 checksum.
     // Two consecutive addr messages look like this:

@@ -17,6 +17,8 @@
 #include <string>
 #include <vector>
 
+static const int SERIALIZE_ADDR_AS_V2 = 0x40000000;
+
 enum Network
 {
     NET_UNROUTABLE = 0,
@@ -37,7 +39,22 @@ enum class NetworkID : uint8_t
     TORV3,
     I2P,
     CJDNS,
+    INVALID = 255,
 };
+
+constexpr size_t NetworkIDByteLength(NetworkID id) {
+    return id == NetworkID::IPV4 ? 4 :
+        id == NetworkID::IPV6 ? 16 :
+        id == NetworkID::TORV2 ? 10 :
+        id == NetworkID::TORV3 ? 32 :
+        id == NetworkID::I2P ? 32 :
+        id == NetworkID::CJDNS ? 16 :
+        id == NetworkID::NAME ? 10 : 0;
+}
+
+constexpr bool IsKnownNetworkID(uint8_t id) {
+    return static_cast<uint8_t>(NetworkID::NAME) <= id && id <= static_cast<uint8_t>(NetworkID::CJDNS);
+}
 
 /** IP address (IPv6, or IPv4 using mapped IPv6 range (::FFFF:0:0/96)) */
 class CNetAddr
@@ -90,6 +107,7 @@ class CNetAddr
         bool IsRoutable() const;
         bool IsInternal() const;
         bool IsValid() const;
+        bool IsStandardV2Deserialization() const;
         enum Network GetNetwork() const;
         std::string ToString() const;
         std::string ToStringIP() const;
@@ -110,17 +128,49 @@ class CNetAddr
         template<typename Stream>
         void Serialize(Stream &s) const
         {
-            unsigned char ip_temp[16];
-            GetV1Serialization(ip_temp);
-            s << ip_temp;
+            if (s.GetVersion() & SERIALIZE_ADDR_AS_V2) {
+                s << static_cast<uint8_t>(m_network_id);
+                s << ip;
+            } else {
+                unsigned char ip_temp[16];
+                GetV1Serialization(ip_temp);
+                s << ip_temp;
+            }
         }
 
         template<typename Stream>
         void Unserialize(Stream& s)
         {
-            unsigned char ip_temp[16];
-            s >> ip_temp;
-            FromV1Serialization(ip_temp);
+            if (s.GetVersion() & SERIALIZE_ADDR_AS_V2) {
+                uint8_t network_id_temp;
+                s >> network_id_temp;
+                unsigned int addr_size;
+                s >> VARINT(addr_size);
+
+                if (addr_size <= 512) {
+                    if (IsKnownNetworkID(network_id_temp)) {
+                        m_network_id = static_cast<NetworkID>(network_id_temp);
+                        if (addr_size == NetworkIDByteLength(m_network_id)) {
+                            // sanity checks out (happy path)
+                            ip.resize(addr_size);
+                            s >> MakeSpan(ip);
+                            return;
+                        }
+                    }
+                } else {
+                    // Ignore this and all addresses that came in this batch
+                    // (e.g. entire addrv2 message) (ragequit path)
+                    throw std::runtime_error("Absurdly large address.\n");
+                }
+
+                // Ignore this single entry (unhappy path)
+                m_network_id = NetworkID::INVALID;
+                ip.clear();
+            } else {
+                unsigned char ip_temp[16];
+                s >> ip_temp;
+                FromV1Serialization(ip_temp);
+            }
         }
 
         friend class CSubNet;
