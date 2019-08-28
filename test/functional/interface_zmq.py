@@ -10,6 +10,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import CTransaction, hash256
 from test_framework.util import assert_equal, connect_nodes
 from io import BytesIO
+from time import sleep
 
 def hash256_reversed(byte_str):
     return hash256(byte_str)[::-1]
@@ -61,7 +62,6 @@ class ZMQTest (BitcoinTestFramework):
         address = 'tcp://127.0.0.1:28332'
         socket = self.ctx.socket(zmq.SUB)
         socket.set(zmq.RCVTIMEO, 60000)
-        socket.connect(address)
 
         # Subscribe to all available topics.
         hashblock = ZMQSubscriber(socket, b"hashblock")
@@ -71,6 +71,9 @@ class ZMQTest (BitcoinTestFramework):
 
         self.restart_node(0, ["-zmqpub%s=%s" % (sub.topic.decode(), address) for sub in [hashblock, hashtx, rawblock, rawtx]])
         connect_nodes(self.nodes[0], 1)
+        socket.connect(address)
+        # Relax so that the subscriber is ready before publishing zmq messages
+        sleep(0.2)
 
         num_blocks = 5
         self.log.info("Generate %(n)d blocks (and %(n)d coinbase txes)" % {"n": num_blocks})
@@ -128,11 +131,13 @@ class ZMQTest (BitcoinTestFramework):
         address = 'tcp://127.0.0.1:28333'
         socket = self.ctx.socket(zmq.SUB)
         socket.set(zmq.RCVTIMEO, 60000)
-        socket.connect(address)
         hashblock = ZMQSubscriber(socket, b'hashblock')
 
         # Should only notify the tip if a reorg occurs
         self.restart_node(0, ['-zmqpub%s=%s' % (hashblock.topic.decode(), address)])
+        socket.connect(address)
+        # Relax so that the subscriber is ready before publishing zmq messages
+        sleep(0.2)
 
         # Generate 1 block in nodes[0] and receive all notifications
         self.nodes[0].generatetoaddress(1, ADDRESS_BCRT1_UNSPENDABLE)
