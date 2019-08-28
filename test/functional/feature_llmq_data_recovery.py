@@ -28,9 +28,11 @@ class QuorumDataRecoveryTest(DashTestFramework):
         self.set_dash_test_params(9, 7, fast_dip3_enforcement=True, extra_args=extra_args)
         self.set_dash_llmq_test_params(4, 3)
 
-    def restart_mn(self, mn, reindex=False, qvvec_sync=[], qdata_recovery_enabled=True):
+    def restart_mn(self, mn, reindex=False, qvvec_sync=None, qdata_recovery_enabled=True):
         args = self.extra_args[mn.node.index] + ['-masternodeblsprivkey=%s' % mn.keyOperator,
                                               '-llmq-data-recovery=%d' % qdata_recovery_enabled]
+        if qvvec_sync is None:
+            qvvec_sync = []
         for llmq_sync in qvvec_sync:
             args.append('-llmq-qvvec-sync=%s:%d' % (llmq_type_strings[llmq_sync[0]], llmq_sync[1]))
         if reindex:
@@ -50,14 +52,22 @@ class QuorumDataRecoveryTest(DashTestFramework):
             time.sleep(1)
         self.sync_blocks()
 
-    def restart_mns(self, mns=None, exclude=[], reindex=False, qvvec_sync=[], qdata_recovery_enabled=True):
+    def restart_mns(self, mns=None, exclude=None, reindex=False, qvvec_sync=None, qdata_recovery_enabled=True):
+        if exclude is None:
+            exclude = []
+        if qvvec_sync is None:
+            qvvec_sync = []
         for mn in self.mninfo if mns is None else mns:
             if mn not in exclude:
                 self.restart_mn(mn, reindex, qvvec_sync, qdata_recovery_enabled)
         self.wait_for_sporks_same()
 
-    def test_mns(self, quorum_type_in, quorum_hash_in, valid_mns=[], all_mns=[], test_secret=True, expect_secret=True,
+    def test_mns(self, quorum_type_in, quorum_hash_in, valid_mns=None, all_mns=None, test_secret=True, expect_secret=True,
                  recover=False, timeout=120):
+        if valid_mns is None:
+            valid_mns = []
+        if all_mns is None:
+            all_mns = []
         for mn in all_mns:
             if mn not in valid_mns:
                 assert not self.test_mn_quorum_data(mn, quorum_type_in, quorum_hash_in, test_secret, False)
@@ -118,8 +128,8 @@ class QuorumDataRecoveryTest(DashTestFramework):
                     members_only_in_1 = self.get_subset_only_in_left(member_mns_1, member_mns_2)
                     members_only_in_2 = self.get_subset_only_in_left(member_mns_2, member_mns_1)
                 # So far the nodes of quorum_1 shouldn't have the quorum verification vector of quorum_2 and vice versa
-                self.test_mns(llmq_type, quorum_hash_2, valid_mns=[], all_mns=members_only_in_1, expect_secret=False)
-                self.test_mns(llmq_type, quorum_hash_1, valid_mns=[], all_mns=members_only_in_2, expect_secret=False)
+                self.test_mns(llmq_type, quorum_hash_2, all_mns=members_only_in_1, expect_secret=False)
+                self.test_mns(llmq_type, quorum_hash_1, all_mns=members_only_in_2, expect_secret=False)
                 # Now restart with recovery enabled
                 self.restart_mns(qvvec_sync=llmq_sync_entries)
                 # Members which are only in quorum 2 should request the qvvec from quorum 1 from the members of quorum 1

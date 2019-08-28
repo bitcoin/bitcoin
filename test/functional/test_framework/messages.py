@@ -922,7 +922,9 @@ class HeaderAndShortIDs:
         key1 = struct.unpack("<Q", hash_header_nonce_as_str[8:16])[0]
         return [ key0, key1 ]
 
-    def initialize_from_block(self, block, nonce=0, prefill_list = [0]):
+    def initialize_from_block(self, block, nonce=0, prefill_list=None):
+        if prefill_list is None:
+            prefill_list = [0]
         self.header = CBlockHeader(block)
         self.nonce = nonce
         self.prefilled_txn = [ PrefilledTransaction(i, block.vtx[i]) for i in prefill_list ]
@@ -2030,8 +2032,8 @@ class msg_islock:
     __slots__ = ("inputs", "txid", "sig",)
     command = b"islock"
 
-    def __init__(self, inputs=[], txid=0, sig=b'\x00' * 96):
-        self.inputs = inputs
+    def __init__(self, inputs=None, txid=0, sig=b'\x00' * 96):
+        self.inputs = inputs if inputs is not None else []
         self.txid = txid
         self.sig = sig
 
@@ -2055,9 +2057,9 @@ class msg_isdlock:
     __slots__ = ("nVersion", "inputs", "txid", "cycleHash", "sig")
     command = b"isdlock"
 
-    def __init__(self, nVersion=1, inputs=[], txid=0, cycleHash=0, sig=b'\x00' * 96):
+    def __init__(self, nVersion=1, inputs=None, txid=0, cycleHash=0, sig=b'\x00' * 96):
         self.nVersion = nVersion
-        self.inputs = inputs
+        self.inputs = inputs if inputs is not None else []
         self.txid = txid
         self.cycleHash = cycleHash
         self.sig = sig
@@ -2087,8 +2089,8 @@ class msg_qsigshare:
     __slots__ = ("sig_shares",)
     command = b"qsigshare"
 
-    def __init__(self, sig_shares=[]):
-        self.sig_shares = sig_shares
+    def __init__(self, sig_shares=None):
+        self.sig_shares = sig_shares if sig_shares is not None else []
 
     def deserialize(self, f):
         self.sig_shares = deser_vector(f, CSigShare)
