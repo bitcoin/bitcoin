@@ -199,7 +199,7 @@ static Consensus::LLMQParams llmq400_85 = {
         .dkgMiningWindowEnd = 48, // give it a larger mining window to make sure it is mined
         .dkgBadVotesThreshold = 300,
 
-        .signingActiveQuorumCount = 4, // two days worth of LLMQs
+        .signingActiveQuorumCount = 4, // four days worth of LLMQs
 
         .keepOldConnections = 5,
 };
