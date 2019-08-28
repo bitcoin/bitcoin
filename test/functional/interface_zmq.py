@@ -9,6 +9,7 @@ from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import dashhash, hash256
 from test_framework.util import assert_equal
+from time import sleep
 
 ADDRESS = "tcp://127.0.0.1:28332"
 
@@ -56,7 +57,6 @@ class ZMQTest (BitcoinTestFramework):
         self.zmq_context = zmq.Context()
         socket = self.zmq_context.socket(zmq.SUB)
         socket.set(zmq.RCVTIMEO, 60000)
-        socket.connect(ADDRESS)
 
         # Subscribe to all available topics.
         self.hashblock = ZMQSubscriber(socket, b"hashblock")
@@ -70,6 +70,9 @@ class ZMQTest (BitcoinTestFramework):
         ]
         self.add_nodes(self.num_nodes, self.extra_args)
         self.start_nodes()
+        socket.connect(ADDRESS)
+        # Relax so that the subscriber is ready before publishing zmq messages
+        sleep(0.2)
         self.import_deterministic_coinbase_privkeys()
 
     def run_test(self):
