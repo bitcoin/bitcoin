@@ -3,9 +3,10 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+import time
+
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import *
-from time import *
 
 '''
 llmq-simplepose.py
@@ -36,8 +37,8 @@ class LLMQSimplePoSeTest(DashTestFramework):
             self.stop_node(mn.nodeIdx)
             self.nodes.remove(mn.node)
 
-            t = time()
-            while (not self.check_punished(mn) or not self.check_banned(mn)) and (time() - t) < 120:
+            t = time.time()
+            while (not self.check_punished(mn) or not self.check_banned(mn)) and (time.time() - t) < 120:
                 self.mine_quorum(expected_contributions=i-1, expected_complaints=i-1, expected_commitments=i-1)
 
             assert(self.check_punished(mn) and self.check_banned(mn))

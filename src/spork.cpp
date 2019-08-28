@@ -197,23 +197,27 @@ bool CSporkManager::UpdateSpork(SporkId nSporkID, int64_t nValue, CConnman& conn
 {
     CSporkMessage spork = CSporkMessage(nSporkID, nValue, GetAdjustedTime());
 
+    LOCK(cs);
+
     bool fSpork6IsActive = IsSporkActive(SPORK_6_NEW_SIGS);
-    if(spork.Sign(sporkPrivKey, fSpork6IsActive)) {
-        CKeyID keyIDSigner;
-        if (!spork.GetSignerKeyID(keyIDSigner, fSpork6IsActive) || !setSporkPubKeyIDs.count(keyIDSigner)) {
-            LogPrintf("CSporkManager::UpdateSpork: failed to find keyid for private key\n");
-            return false;
-        }
-        {
-            LOCK(cs);
-            mapSporksByHash[spork.GetHash()] = spork;
-            mapSporksActive[nSporkID][keyIDSigner] = spork;
-        }
-        spork.Relay(connman);
-        return true;
+    if (!spork.Sign(sporkPrivKey, fSpork6IsActive)) {
+        LogPrintf("CSporkManager::%s -- ERROR: signing failed for spork %d\n", __func__, nSporkID);
+        return false;
     }
 
-    return false;
+    CKeyID keyIDSigner;
+    if (!spork.GetSignerKeyID(keyIDSigner, fSpork6IsActive) || !setSporkPubKeyIDs.count(keyIDSigner)) {
+        LogPrintf("CSporkManager::UpdateSpork: failed to find keyid for private key\n");
+        return false;
+    }
+
+    LogPrintf("CSporkManager::%s -- signed %d %s\n", __func__, nSporkID, spork.GetHash().ToString());
+
+    mapSporksByHash[spork.GetHash()] = spork;
+    mapSporksActive[nSporkID][keyIDSigner] = spork;
+
+    spork.Relay(connman);
+    return true;
 }
 
 bool CSporkManager::IsSporkActive(SporkId nSporkID)
@@ -312,17 +316,16 @@ bool CSporkManager::SetPrivKey(const std::string& strPrivKey)
     }
 
     CSporkMessage spork;
-    if (spork.Sign(key, IsSporkActive(SPORK_6_NEW_SIGS))) {
-	    LOCK(cs);
-        // Test signing successful, proceed
-        LogPrintf("CSporkManager::SetPrivKey -- Successfully initialized as spork signer\n");
-
-        sporkPrivKey = key;
-        return true;
-    } else {
+    if (!spork.Sign(key, IsSporkActive(SPORK_6_NEW_SIGS))) {
         LogPrintf("CSporkManager::SetPrivKey -- Test signing failed\n");
         return false;
     }
+
+    // Test signing successful, proceed
+    LOCK(cs);
+    LogPrintf("CSporkManager::SetPrivKey -- Successfully initialized as spork signer\n");
+    sporkPrivKey = key;
+    return true;
 }
 
 std::string CSporkManager::ToString() const

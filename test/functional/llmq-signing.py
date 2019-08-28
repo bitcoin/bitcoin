@@ -3,10 +3,11 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+import time
+
 from test_framework.mininode import *
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import *
-from time import *
 
 '''
 llmq-signing.py
@@ -41,18 +42,18 @@ class LLMQSigningTest(DashTestFramework):
             return True
 
         def wait_for_sigs(hasrecsigs, isconflicting1, isconflicting2, timeout):
-            t = time()
-            while time() - t < timeout:
+            t = time.time()
+            while time.time() - t < timeout:
                 if check_sigs(hasrecsigs, isconflicting1, isconflicting2):
                     return
-                sleep(0.1)
+                time.sleep(0.1)
             raise AssertionError("wait_for_sigs timed out")
 
         def assert_sigs_nochange(hasrecsigs, isconflicting1, isconflicting2, timeout):
-            t = time()
-            while time() - t < timeout:
+            t = time.time()
+            while time.time() - t < timeout:
                 assert(check_sigs(hasrecsigs, isconflicting1, isconflicting2))
-                sleep(0.1)
+                time.sleep(0.1)
 
         # Initial state
         wait_for_sigs(False, False, False, 1)

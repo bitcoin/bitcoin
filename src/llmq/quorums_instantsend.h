@@ -145,7 +145,8 @@ public:
     void TransactionAddedToMempool(const CTransactionRef& tx);
     void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex, const std::vector<CTransactionRef>& vtxConflicted);
     void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected);
-    void AddNonLockedTx(const CTransactionRef& tx);
+
+    void AddNonLockedTx(const CTransactionRef& tx, const CBlockIndex* pindexMined);
     void RemoveNonLockedTx(const uint256& txid, bool retryChildren);
     void RemoveConflictedTx(const CTransaction& tx);
 

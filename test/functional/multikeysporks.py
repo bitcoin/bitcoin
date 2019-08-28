@@ -2,11 +2,11 @@
 # Copyright (c) 2018 The Dash Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+import time
 
 from test_framework.mininode import *
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-from time import *
 
 '''
 multikeysporks.py
@@ -105,15 +105,15 @@ class MultiKeySporkTest(BitcoinTestFramework):
         node.spork('SPORK_2_INSTANTSEND_ENABLED', value)
 
     def wait_for_test_spork_state(self, node, value):
-        start = time()
+        start = time.time()
         got_state = False
         while True:
             if self.get_test_spork_state(node) == value:
                 got_state = True
                 break
-            if time() > start + 10:
+            if time.time() > start + 10:
                 break
-            sleep(0.1)
+            time.sleep(0.1)
         return got_state
 
     def run_test(self):

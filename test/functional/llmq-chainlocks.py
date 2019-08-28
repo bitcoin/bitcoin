@@ -3,10 +3,11 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+import time
+
 from test_framework.mininode import *
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import *
-from time import *
 
 '''
 llmq-chainlocks.py
@@ -77,10 +78,10 @@ class LLMQChainLocksTest(DashTestFramework):
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
         # Now try to reorg the chain
         self.nodes[0].generate(2)
-        sleep(6)
+        time.sleep(6)
         assert(self.nodes[1].getbestblockhash() == good_tip)
         self.nodes[0].generate(2)
-        sleep(6)
+        time.sleep(6)
         assert(self.nodes[1].getbestblockhash() == good_tip)
 
         # Now let the node which is on the wrong chain reorg back to the locked chain
@@ -106,7 +107,7 @@ class LLMQChainLocksTest(DashTestFramework):
         for txid in txs:
             tx = self.nodes[0].getrawtransaction(txid, 1)
             assert("confirmations" not in tx)
-        sleep(1)
+        time.sleep(1)
         assert(not self.nodes[0].getblock(self.nodes[0].getbestblockhash())["chainlock"])
         # Disable LLMQ based InstantSend for a very short time (this never gets propagated to other nodes)
         self.nodes[0].spork("SPORK_2_INSTANTSEND_ENABLED", 4070908800)
@@ -132,8 +133,8 @@ class LLMQChainLocksTest(DashTestFramework):
         self.wait_for_chainlock(node, tip)
 
     def wait_for_chainlock(self, node, block_hash):
-        t = time()
-        while time() - t < 15:
+        t = time.time()
+        while time.time() - t < 15:
             try:
                 block = node.getblock(block_hash)
                 if block["confirmations"] > 0 and block["chainlock"]:
@@ -141,7 +142,7 @@ class LLMQChainLocksTest(DashTestFramework):
             except:
                 # block might not be on the node yet
                 pass
-            sleep(0.1)
+            time.sleep(0.1)
         raise AssertionError("wait_for_chainlock timed out")
 
     def create_chained_txs(self, node, amount):

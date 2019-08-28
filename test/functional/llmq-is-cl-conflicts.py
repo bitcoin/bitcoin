@@ -2,11 +2,12 @@
 # Copyright (c) 2015-2018 The Dash Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+import time
+
 from test_framework.blocktools import get_masternode_payment, create_coinbase, create_block
 from test_framework.mininode import *
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import *
-from time import *
 
 '''
 llmq-is-cl-conflicts.py
@@ -113,7 +114,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
 
         # Give the CLSIG some time to propagate. We unfortunately can't check propagation here as "getblock/getblockheader"
         # is required to check for CLSIGs, but this requires the block header to be propagated already
-        sleep(1)
+        time.sleep(1)
 
         # The block should get accepted now, and at the same time prune the conflicting ISLOCKs
         submit_result = self.nodes[1].submitblock(ToHex(block))
@@ -183,7 +184,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         # Send the ISLOCK, which should result in the last 2 blocks to be invalidated, even though the nodes don't know
         # the locked transaction yet
         self.test_node.send_islock(islock)
-        sleep(5)
+        time.sleep(5)
 
         assert(self.nodes[0].getbestblockhash() == good_tip)
         assert(self.nodes[1].getbestblockhash() == good_tip)
@@ -210,8 +211,8 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         self.wait_for_chainlock(node, tip)
 
     def wait_for_chainlock(self, node, block_hash):
-        t = time()
-        while time() - t < 15:
+        t = time.time()
+        while time.time() - t < 15:
             try:
                 block = node.getblockheader(block_hash)
                 if block["confirmations"] > 0 and block["chainlock"]:
@@ -219,7 +220,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
             except:
                 # block might not be on the node yet
                 pass
-            sleep(0.1)
+            time.sleep(0.1)
         raise AssertionError("wait_for_chainlock timed out")
 
     def create_block(self, node, vtx=[]):
@@ -293,13 +294,13 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
 
         recSig = None
 
-        t = time()
-        while time() - t < 10:
+        t = time.time()
+        while time.time() - t < 10:
             try:
                 recSig = self.nodes[0].quorum('getrecsig', 100, request_id, message_hash)
                 break
             except:
-                sleep(0.1)
+                time.sleep(0.1)
         assert(recSig is not None)
 
         clsig = msg_clsig(height, blockHash, hex_str_to_bytes(recSig['sig']))
@@ -322,13 +323,13 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
 
         recSig = None
 
-        t = time()
-        while time() - t < 10:
+        t = time.time()
+        while time.time() - t < 10:
             try:
                 recSig = self.nodes[0].quorum('getrecsig', 100, request_id, message_hash)
                 break
             except:
-                sleep(0.1)
+                time.sleep(0.1)
         assert(recSig is not None)
 
         islock = msg_islock(inputs, tx.sha256, hex_str_to_bytes(recSig['sig']))
