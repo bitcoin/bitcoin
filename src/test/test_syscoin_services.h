@@ -13,7 +13,6 @@ using namespace std;
  */
 extern string strSYSXAsset;
 extern string strSYSXAddress;
-UniValue CallRPC(const string &dataDir, const string& commandWithArgs, bool regTest = true, bool readJson = true);
 UniValue CallExtRPC(const string &node, const string& command, const string& args="", bool readJson = true);
 void SetupSYSXAsset();
 void StartNode(const string &dataDir, bool regTest = true, const string& extraArgs="", bool reindex = false);

@@ -21,9 +21,9 @@ struct PaymentAmount
 void SendSnapShotPayment(const std::string &strSend, const std::string &asset, const std::string &alias, const std::string &memo)
 {
 	currentTx++;
-	std::string strSendMany = "assetsendmany " + asset + " " + strSend + "}]\" " + memo + " ''";
+	std::string strSendMany = asset + "," + strSend + "}],\"" + memo + "\",\"''\"";
 	UniValue r;
-	BOOST_CHECK_THROW(r = CallRPC("mainnet1", strSendMany, false), runtime_error);
+	BOOST_CHECK_THROW(r = CallExtRPC("mainnet1", "assetsendmany" , strSendMany, false), runtime_error);
 }
 void GenerateAirDrop(const std::vector<PaymentAmount> &paymentAmounts, const CAmount& nTotal)
 {
@@ -33,7 +33,7 @@ void GenerateAirDrop(const std::vector<PaymentAmount> &paymentAmounts, const CAm
 	string assetName = "asset";
 	string aliasName = "alias";
 	string memo = assetName+"-AIRDROP";
-	BOOST_CHECK_NO_THROW(r = CallRPC("mainnet1", "assetinfo " + assetName, false));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("mainnet1", "assetinfo" , "\"" + assetName + "\"", false));
 
 	if (!find_value(r.get_obj(), "inputs").get_array().empty())
 	{
@@ -64,7 +64,7 @@ void GenerateAirDrop(const std::vector<PaymentAmount> &paymentAmounts, const CAm
 		if(sendManyString != "") 
 			sendManyString += ",";
 		//"\"[{\\\"aliasto\\\":\\\"jagassetallocationsend2\\\",\\\"amount\\\":0.1}]\""
-		sendManyString += "\"[{\\\"aliasto\\\":\\\"" + paymentAmounts[i].alias + "\\\",\\\"amount\\\":" + ValueFromAmount(nAmountToAirDrop).write();
+		sendManyString += "[{\"aliasto\":\"" + paymentAmounts[i].alias + "\",\"amount\":" + ValueFromAmount(nAmountToAirDrop).write();
 		nTotalSent += paymentAmounts[i].amount;
 		totalTx++;
 		if(i != 0 && (i%numberOfTxPerBlock) == 0)
@@ -106,7 +106,7 @@ void GetUTXOs(std::vector<PaymentAmount> &paymentAmounts, CAmount& nTotal)
 			continue;
 		}
 		nTotal += amountInSys1;
-		BOOST_CHECK_NO_THROW(r = CallRPC("mainnet1", "validateaddress " + test[0].get_str(), false));
+		BOOST_CHECK_NO_THROW(r = CallExtRPC("mainnet1", "validateaddress" , "\"" + test[0].get_str() + "\"", false));
 		BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() != "");
 		countTx++;
 		payment.alias = find_value(r.get_obj(), "alias").get_str();
@@ -119,7 +119,7 @@ bool IsMainNetAlreadyCreated()
 {
 	int height;
 	UniValue r;
-	BOOST_CHECK_NO_THROW(r = CallRPC("mainnet1", "getinfo", false));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("mainnet1", "getinfo", false));
 	height = find_value(r.get_obj(), "blocks").get_int();
 	return height > 1;
 }
