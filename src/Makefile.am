@@ -254,6 +254,7 @@ SYSCOIN_CORE_H = \
   util/validation.h \
   util/executable_path/include/boost/executable_path.hpp \
   util/executable_path/include/boost/detail/executable_path_internals.hpp \
+  util/vector.h \
   validation.h \
   validationinterface.h \
   versionbits.h \
