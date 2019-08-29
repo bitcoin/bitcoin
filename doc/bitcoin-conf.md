@@ -53,10 +53,10 @@ The `includeconf=<file>` option in the `bitcoin.conf` file can be used to includ
 
 ### Default configuration file locations
 
-Operating System | Data Directory | Example Path
--- | -- | --
-Windows | `%APPDATA%\Bitcoin\` | `C:\Users\username\AppData\Roaming\Bitcoin\bitcoin.conf`
-Linux | `$HOME/.bitcoin/` | `/home/username/.bitcoin/bitcoin.conf`
-macOS | `$HOME/Library/Application Support/Bitcoin/` | `/Users/username/Library/Application Support/Bitcoin/bitcoin.conf`
+Operating System | Data Directory                              | Example Path
+--               | --                                          | --
+Windows          | `%APPDATA%\Bitcoin\`                        |`C:\Users\username\AppData\Roaming\Bitcoin\bitcoin.conf`
+Linux            |`$HOME/.bitcoin/`                            |`/home/username/.bitcoin/bitcoin.conf`
+macOS            |`$HOME/Library/Application Support/Bitcoin/` |`/Users/username/Library/Application Support/Bitcoin/bitcoin.conf`
 
 You can find an example bitcoin.conf file in [share/examples/bitcoin.conf](../share/examples/bitcoin.conf).
