@@ -79,7 +79,6 @@ QT_TS = \
   qt/locale/bitcoin_pt_PT.ts \
   qt/locale/bitcoin_ro_RO.ts \
   qt/locale/bitcoin_ru_RU.ts \
-  qt/locale/bitcoin_si.ts \
   qt/locale/bitcoin_sk.ts \
   qt/locale/bitcoin_sl_SI.ts \
   qt/locale/bitcoin_sn.ts \
