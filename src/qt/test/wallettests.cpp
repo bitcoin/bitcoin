@@ -67,6 +67,21 @@ void ConfirmSend(QString* text = nullptr, QMessageBox::StandardButton confirm_ty
                 SendConfirmationDialog* dialog = qobject_cast<SendConfirmationDialog*>(widget);
                 if (text) *text = dialog->text();
                 QAbstractButton* button = dialog->button(confirm_type);
+                if (!button) {
+                    const QMessageBox::ButtonRole confirm_role = [confirm_type](){
+                        switch (confirm_type) {
+                            case QMessageBox::Yes: return QMessageBox::YesRole;
+                            case QMessageBox::Cancel: return QMessageBox::NoRole;
+                            default: assert(0);
+                        }
+                    }();
+                    for (QAbstractButton* maybe_button : dialog->buttons()) {
+                        if (dialog->buttonRole(maybe_button) == confirm_role) {
+                            button = maybe_button;
+                            break;
+                        }
+                    }
+                }
                 button->setEnabled(true);
                 button->click();
             }

@@ -486,7 +486,7 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
     const bool enable_send{!model->wallet().privateKeysDisabled() || model->wallet().hasExternalSigner()};
     const bool always_show_unsigned{model->getOptionsModel()->getEnablePSBTControls()};
     auto confirmationDialog = new SendConfirmationDialog(confirmation, question_string, informative_text, detailed_text, SEND_CONFIRM_DELAY, enable_send, always_show_unsigned, this);
-    confirmationDialog->setAttribute(Qt::WA_DeleteOnClose);
+    confirmationDialog->m_delete_on_close = true;
     // TODO: Replace QDialog::exec() with safer QDialog::show().
     const auto retval = static_cast<QMessageBox::StandardButton>(confirmationDialog->exec());
 
@@ -1066,10 +1066,26 @@ SendConfirmationDialog::SendConfirmationDialog(const QString& title, const QStri
 
 int SendConfirmationDialog::exec()
 {
-    setStandardButtons(QMessageBox::Yes | QMessageBox::Cancel);
+    setStandardButtons(m_yes_button | m_cancel_button);
+
+    yesButton = button(m_yes_button);
+    QAbstractButton * const cancel_button_obj = button(m_cancel_button);
+
+    if (m_yes_button != QMessageBox::Yes || m_cancel_button != QMessageBox::Cancel) {
+        // We need to ensure the buttons have Yes/No roles, or they'll get ordered weird
+        // But only do it for customised yes/cancel buttons, so simple code can check results simply too
+        removeButton(cancel_button_obj);
+        addButton(cancel_button_obj, QMessageBox::NoRole);
+        setEscapeButton(cancel_button_obj);
+
+        removeButton(yesButton);
+        addButton(yesButton, QMessageBox::YesRole);
+    }
+
     if (m_enable_save) addButton(QMessageBox::Save);
-    setDefaultButton(QMessageBox::Cancel);
-    yesButton = button(QMessageBox::Yes);
+
+    setDefaultButton(m_cancel_button);
+
     if (confirmButtonText.isEmpty()) {
         confirmButtonText = yesButton->text();
     }
@@ -1079,7 +1095,21 @@ int SendConfirmationDialog::exec()
     connect(&countDownTimer, &QTimer::timeout, this, &SendConfirmationDialog::countDown);
     countDownTimer.start(1s);
 
-    return QMessageBox::exec();
+    QMessageBox::exec();
+
+    int rv;
+    const auto clicked_button = clickedButton();
+    if (clicked_button == m_psbt_button) {
+        rv = QMessageBox::Save;
+    } else if (clicked_button == yesButton) {
+        rv = QMessageBox::Yes;
+    } else {
+        rv = QMessageBox::Cancel;
+    }
+
+    if (m_delete_on_close) delete this;
+
+    return rv;
 }
 
 void SendConfirmationDialog::countDown()

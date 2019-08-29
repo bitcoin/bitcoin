@@ -129,6 +129,10 @@ class SendConfirmationDialog : public QMessageBox
     Q_OBJECT
 
 public:
+    bool m_delete_on_close{false};
+    QMessageBox::StandardButton m_yes_button{QMessageBox::Yes};
+    QMessageBox::StandardButton m_cancel_button{QMessageBox::Cancel};
+
     SendConfirmationDialog(const QString& title, const QString& text, const QString& informative_text = "", const QString& detailed_text = "", int secDelay = SEND_CONFIRM_DELAY, bool enable_send = true, bool always_show_unsigned = true, QWidget* parent = nullptr);
     /* Returns QMessageBox::Cancel, QMessageBox::Yes when "Send" is
        clicked and QMessageBox::Save when "Create Unsigned" is clicked. */
