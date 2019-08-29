@@ -18,6 +18,14 @@
         <translation>चुनिन्दा पते को सिस्टम क्लिपबोर्ड पर कापी करे !</translation>
     </message>
     <message>
+        <source>&amp;Copy</source>
+        <translation>&amp;कॉपी </translation>
+    </message>
+    <message>
+        <source>C&amp;lose</source>
+        <translation>सी&amp;लूज़ </translation>
+    </message>
+    <message>
         <source>Delete the currently selected address from the list</source>
         <translation>सूची से वर्तमान में चयनित पता हटाएं</translation>
     </message>
@@ -61,12 +69,52 @@
         <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
         <translation>भुगतान प्राप्त करने के लिए ये आपके बीटकोइन पते हैं प्रत्येक लेनदेन के लिए एक नया प्राप्त पता उपयोग करने की सिफारिश की जाती है।</translation>
     </message>
-    </context>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;पता कॉपी करें </translation>
+    </message>
+    <message>
+        <source>&amp;Edit</source>
+        <translation>&amp;संशोधित करें </translation>
+    </message>
+    <message>
+        <source>Export Address List</source>
+        <translation>निर्यात पता सूची</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>कोमा द्वारा अलग की गई फ़ाइल (* .csv)</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>निर्यात विफल रहा</translation>
+    </message>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <translation>पता सूची को %1 में सहेजने का प्रयास करने में त्रुटि हुई। कृपया पुन: प्रयास करें।</translation>
+    </message>
+</context>
 <context>
     <name>AddressTableModel</name>
-    </context>
+    <message>
+        <source>Label</source>
+        <translation>परचा</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>पता </translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(कोई परचा नहीं )</translation>
+    </message>
+</context>
 <context>
     <name>AskPassphraseDialog</name>
+    <message>
+        <source>Passphrase Dialog</source>
+        <translation>पासफ़्रेज़ डायलॉग</translation>
+    </message>
     <message>
         <source>Enter passphrase</source>
         <translation>पहचान शब्द/अक्षर डालिए !</translation>
@@ -78,6 +126,46 @@
     <message>
         <source>Repeat new passphrase</source>
         <translation>दोबारा नया पहचान शब्द/अक्षर डालिए !</translation>
+    </message>
+    <message>
+        <source>Show password</source>
+        <translation>पासवर्ड दिखाए</translation>
+    </message>
+    <message>
+        <source>Encrypt wallet</source>
+        <translation>वॉलेट एन्क्रिप्ट करें</translation>
+    </message>
+    <message>
+        <source>Unlock wallet</source>
+        <translation>बटुए को अनलॉक करें</translation>
+    </message>
+    <message>
+        <source>Decrypt wallet</source>
+        <translation>वॉलेट को डिक्रिप्ट करें</translation>
+    </message>
+    <message>
+        <source>Change passphrase</source>
+        <translation>पासफ़्रेज़ बदलें</translation>
+    </message>
+    <message>
+        <source>Confirm wallet encryption</source>
+        <translation>वॉलेट एन्क्रिप्शन की पुष्टि करें</translation>
+    </message>
+    <message>
+        <source>Wallet encrypted</source>
+        <translation>वॉलेट को एन्क्रिप्ट किया गया है</translation>
+    </message>
+    <message>
+        <source>Wallet encryption failed</source>
+        <translation>वॉलेट एन्क्रिप्शन विफल रहा</translation>
+    </message>
+    <message>
+        <source>Wallet unlock failed</source>
+        <translation>वॉलेट अनलॉक विफल रहा</translation>
+    </message>
+    <message>
+        <source>Wallet decryption failed</source>
+        <translation>वॉलेट डिक्रिप्शन विफल</translation>
     </message>
     </context>
 <context>
@@ -204,6 +292,10 @@
     <message>
         <source>Confirmed</source>
         <translation>पक्का</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(कोई परचा नहीं )</translation>
     </message>
     </context>
 <context>
@@ -340,12 +432,28 @@
         <translation>&amp;पता कॉपी करे</translation>
     </message>
     <message>
+        <source>Address</source>
+        <translation>पता </translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>परचा</translation>
+    </message>
+    <message>
         <source>Wallet</source>
         <translation>वॉलेट</translation>
     </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>परचा</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(कोई परचा नहीं )</translation>
+    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -369,7 +477,11 @@
         <source>Confirm the send action</source>
         <translation>भेजने की पुष्टि करें</translation>
     </message>
-    </context>
+    <message>
+        <source>(no label)</source>
+        <translation>(कोई परचा नहीं )</translation>
+    </message>
+</context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
@@ -448,9 +560,33 @@
     </context>
 <context>
     <name>TransactionTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>परचा</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(कोई परचा नहीं )</translation>
+    </message>
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>कोमा द्वारा अलग की गई फ़ाइल (* .csv)</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>परचा</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation>पता </translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>निर्यात विफल रहा</translation>
+    </message>
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>

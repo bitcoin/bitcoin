@@ -200,6 +200,14 @@
         <translation>საფულის დაშიფვრა წარუმატებით დამთვრდა</translation>
     </message>
     <message>
+        <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
+        <translation>საფულის დაშიფრვა ვერ მოხდა შიდა შეცდომის გამო. თქვენი საფულე არ არის დაშიფრული.</translation>
+    </message>
+    <message>
+        <source>The supplied passphrases do not match.</source>
+        <translation>მოწოდებული ფრაზა-პაროლები არ ემთხვევა ერთმანეთს.</translation>
+    </message>
+    <message>
         <source>Wallet unlock failed</source>
         <translation>საფულის გახსნა წარუმატებლად შესრულდა</translation>
     </message>

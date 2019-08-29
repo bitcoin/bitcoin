@@ -444,6 +444,22 @@ Alihkan fail data ke dalam tab semasa</translation>
         <translation>Tunjukkan senarai alamat dan label yang digunakan
 </translation>
     </message>
+    <message>
+        <source>Error</source>
+        <translation>Ralat</translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation>Amaran</translation>
+    </message>
+    <message>
+        <source>Information</source>
+        <translation>Notis</translation>
+    </message>
+    <message>
+        <source>Up to date</source>
+        <translation>Terkini</translation>
+    </message>
     </context>
 <context>
     <name>CoinControlDialog</name>
@@ -475,6 +491,10 @@ Alihkan fail data ke dalam tab semasa</translation>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
+    <message>
+        <source>Error</source>
+        <translation>Ralat</translation>
+    </message>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -484,6 +504,10 @@ Alihkan fail data ke dalam tab semasa</translation>
     </context>
 <context>
     <name>OptionsDialog</name>
+    <message>
+        <source>Error</source>
+        <translation>Ralat</translation>
+    </message>
     </context>
 <context>
     <name>OverviewPage</name>
@@ -628,5 +652,25 @@ Alihkan fail data ke dalam tab semasa</translation>
     </context>
 <context>
     <name>bitcoin-core</name>
-    </context>
+    <message>
+        <source>Information</source>
+        <translation>Notis</translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation>Amaran</translation>
+    </message>
+    <message>
+        <source>Loading wallet...</source>
+        <translation>Sedang baca wallet...</translation>
+    </message>
+    <message>
+        <source>Done loading</source>
+        <translation>Baca Selesai</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Ralat</translation>
+    </message>
+</context>
 </TS>

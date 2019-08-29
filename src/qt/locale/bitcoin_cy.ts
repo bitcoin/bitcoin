@@ -314,6 +314,10 @@
         <translation>Agor &amp;URI...</translation>
     </message>
     <message>
+        <source>Wallet:</source>
+        <translation>Waled:</translation>
+    </message>
+    <message>
         <source>Click to disable network activity.</source>
         <translation>Cliciwch i anablu gweithgaredd y rhwydwaith.</translation>
     </message>

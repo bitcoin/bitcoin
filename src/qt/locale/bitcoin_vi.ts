@@ -3,15 +3,15 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Phải chuột để edit address hoặc label</translation>
+        <translation>Phải chuột để sửa địa chỉ hoặc nhãn</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Create một address mới</translation>
+        <translation>Tạo một địa chỉ mới</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation>&amp;Tạo mới</translation>
+        <translation>&amp;Mới</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -130,6 +130,10 @@
     <message>
         <source>Repeat new passphrase</source>
         <translation>Lặp lại cụm mật khẩu mới</translation>
+    </message>
+    <message>
+        <source>Show password</source>
+        <translation>Hiện mật khẩu</translation>
     </message>
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
@@ -318,6 +322,14 @@
         <translation>Mở &amp;URI...</translation>
     </message>
     <message>
+        <source>Wallet:</source>
+        <translation>Ví tiền</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>ví mặc định</translation>
+    </message>
+    <message>
         <source>Click to disable network activity.</source>
         <translation>Click để vô hiệu hoạt động mạng.</translation>
     </message>
@@ -336,6 +348,10 @@
     <message>
         <source>Reindexing blocks on disk...</source>
         <translation>Khôi phục các khối trên ổ đĩa...</translation>
+    </message>
+    <message>
+        <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
+        <translation>Proxy là &lt;b&gt; cho phép &lt;/b&gt;: %1</translation>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
@@ -1719,6 +1735,10 @@
     <message>
         <source>&amp;Unban</source>
         <translation>&amp;Unban</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>ví mặc định</translation>
     </message>
     <message>
         <source>Welcome to the %1 RPC console.</source>

@@ -475,7 +475,7 @@
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
-        <translation>Viimeisin vastaanotettu lohko tuotettu %1.</translation>
+        <translation>Viimeisin vastaanotettu lohko tuotettu %1 sitten.</translation>
     </message>
     <message>
         <source>Transactions after this will not yet be visible.</source>
@@ -523,6 +523,12 @@
         <source>Amount: %1
 </source>
         <translation>Määrä: %1
+</translation>
+    </message>
+    <message>
+        <source>Wallet: %1
+</source>
+        <translation>Lompakko: %1
 </translation>
     </message>
     <message>
@@ -762,6 +768,14 @@
         <translation>Antamasi osoite "%1" ei ole kelvollinen Bitcoin-osoite.</translation>
     </message>
     <message>
+        <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
+        <translation>Osoite "%1" on jo vastaanotto-osoitteena nimellä "%2", joten sitä ei voi lisätä lähetysosoitteeksi.</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book with label "%2".</source>
+        <translation>Syötetty osoite "%1" on jo osoitekirjassa nimellä "%2".</translation>
+    </message>
+    <message>
         <source>Could not unlock wallet.</source>
         <translation>Lompakkoa ei voitu avata.</translation>
     </message>
@@ -874,7 +888,15 @@
         <source>Error</source>
         <translation>Virhe</translation>
     </message>
-    </context>
+    <message numerus="yes">
+        <source>%n GB of free space available</source>
+        <translation><numerusform>%n GB tilaa vapaana</numerusform><numerusform>%n GB tilaa vapaana</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation><numerusform>(tarvitaan %n GB)</numerusform><numerusform>(tarvitaan %n GB)</numerusform></translation>
+    </message>
+</context>
 <context>
     <name>ModalOverlay</name>
     <message>
@@ -977,7 +999,7 @@
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
-        <translation>Script &amp;varmistuksen threadien määrä</translation>
+        <translation>Säikeiden määrä skriptien &amp;varmistuksessa</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
@@ -986,6 +1008,10 @@
     <message>
         <source>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
         <translation>Ilmoittaa, mikäli oletetettua SOCKS5-välityspalvelinta käytetään vertaisten tavoittamiseen tämän verkkotyypin kautta.</translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
+        <translation>Käytä SOCKS&amp;5-välityspalvelinta tavoittamaan Tor-verkon piilotetut palvelut:</translation>
     </message>
     <message>
         <source>Hide the icon from the system tray.</source>
@@ -1026,6 +1052,22 @@
     <message>
         <source>&amp;Network</source>
         <translation>&amp;Verkko</translation>
+    </message>
+    <message>
+        <source>Disables some advanced features but all blocks will still be fully validated. Reverting this setting requires re-downloading the entire blockchain. Actual disk usage may be somewhat higher.</source>
+        <translation>Jättää pois joitain edistyneitä ominaisuuksia, mutta silti varmistaa kaikki lohkot kokonaan. Tämän asetuksen muutto vaatii koko lohkoketjun uudelleen lataamisen. Levyn käyttöaste saattaa olla hiukan suurempaa.</translation>
+    </message>
+    <message>
+        <source>Prune &amp;block storage to</source>
+        <translation>Karsi lohkovaraston kooksi</translation>
+    </message>
+    <message>
+        <source>GB</source>
+        <translation>GT</translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain.</source>
+        <translation>Tämän asetuksen muuttaminen vaatii koko lohkoketjun uudelleenlataamista.</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
@@ -1294,6 +1336,10 @@
         <translation>URI käsittely</translation>
     </message>
     <message>
+        <source>'bitcoin://' is not a valid URI. Use 'bitcoin:' instead.</source>
+        <translation>'bitcoin://' ei ole kelvollinen URI. Käytä 'bitcoin:' sen sijaan.</translation>
+    </message>
+    <message>
         <source>Payment request fetch URL is invalid: %1</source>
         <translation>Maksupyynnön haku URL on virheellinen: %1</translation>
     </message>
@@ -1467,8 +1513,16 @@
 <context>
     <name>QObject::QObject</name>
     <message>
+        <source>Error parsing command line arguments: %1.</source>
+        <translation>Virhe käsitellessä komentorivin valintaa: %1.</translation>
+    </message>
+    <message>
         <source>Error: Specified data directory "%1" does not exist.</source>
         <translation>Virhe: Annettua data-hakemistoa "%1" ei ole olemassa.</translation>
+    </message>
+    <message>
+        <source>Error: Cannot parse configuration file: %1.</source>
+        <translation>Virhe: Asetustiedostoa ei voida käsitellä: %1.</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -1559,6 +1613,10 @@
     <message>
         <source>Memory usage</source>
         <translation>Muistin käyttö</translation>
+    </message>
+    <message>
+        <source>Wallet: </source>
+        <translation>Lompakko:</translation>
     </message>
     <message>
         <source>&amp;Reset</source>
@@ -1741,6 +1799,10 @@
         <translation>Käytä nuolia ylös ja alas selataksesi historiaa, sekä %1 tyhjentääkseksi ruudun.</translation>
     </message>
     <message>
+        <source>Type %1 for an overview of available commands.</source>
+        <translation>Kirjoita %1 nähdäksesi yleiskatsauksen käytettävissä olevista komennoista.</translation>
+    </message>
+    <message>
         <source>For more information on using this console type %1.</source>
         <translation>Lisätietoja konsolin käytöstä saat kirjoittamalla %1.</translation>
     </message>
@@ -1751,6 +1813,10 @@
     <message>
         <source>Network activity disabled</source>
         <translation>Verkkoliikenne pysäytetty</translation>
+    </message>
+    <message>
+        <source>Executing command without any wallet</source>
+        <translation>Suoritetaan komento ilman lomakkoa</translation>
     </message>
     <message>
         <source>(node id: %1)</source>
@@ -1822,6 +1888,14 @@
     <message>
         <source>Clear</source>
         <translation>Tyhjennä</translation>
+    </message>
+    <message>
+        <source>Native segwit addresses (aka Bech32 or BIP-173) reduce your transaction fees later on and offer better protection against typos, but old wallets don't support them. When unchecked, an address compatible with older wallets will be created instead.</source>
+        <translation>Natiivi segwit osoite (nk. Bech32 tai BIP173) rajoittaa siirtomaksuja myöhemmin ja tarjoaa paremman suojan kirjoitusvihreitä vastaan, mutta vanhat lompakot eivät tue ominaisuutta. Jos tätä ei valita, luodaan vanhojen lompakoiden kanssa yhteensopivia osoitteita.</translation>
+    </message>
+    <message>
+        <source>Generate native segwit (Bech32) address</source>
+        <translation>Luo natiivi segwit (Bech32) -osoite</translation>
     </message>
     <message>
         <source>Requested payments history</source>
@@ -2037,6 +2111,10 @@
         <translation>Piilota</translation>
     </message>
     <message>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
+        <translation>Vähimmäispalkkion maksaminen käy hyvin, kunhan verkossa on vähemmän siirtotapahtumia kuin lohkoissa on tilaa. Huomaa, että tämä saattaa johtaa ei-koskaan-vahvistuvaan siirtoon, jos verkon käsittelykyky ylittyy.</translation>
+    </message>
+    <message>
         <source>(read the tooltip)</source>
         <translation>(lue työkaluvinkki)</translation>
     </message>
@@ -2075,6 +2153,10 @@
     <message>
         <source>Enable Replace-By-Fee</source>
         <translation>Käytä Replace-By-Fee:tä</translation>
+    </message>
+    <message>
+        <source>With Replace-By-Fee (BIP-125) you can increase a transaction's fee after it is sent. Without this, a higher fee may be recommended to compensate for increased transaction delay risk.</source>
+        <translation>Replace-By-Fee:tä (BIP-125) käyttämällä voit korottaa siirtotapahtuman palkkiota sen lähettämisen jälkeen. Ilman tätä saatetaan suositella käyttämään suurempaa palkkiota kompensoimaan viiveen kasvamisen riskiä.</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
@@ -2137,8 +2219,24 @@
         <translation>tai</translation>
     </message>
     <message>
+        <source>You can increase the fee later (signals Replace-By-Fee, BIP-125).</source>
+        <translation>Voit korottaa palkkiota myöhemmin (osoittaa Replace-By-Fee:tä, BIP-125).</translation>
+    </message>
+    <message>
+        <source>from wallet %1</source>
+        <translation>lompakosta %1</translation>
+    </message>
+    <message>
+        <source>Please, review your transaction.</source>
+        <translation>Tarkistathan siirtosi.</translation>
+    </message>
+    <message>
         <source>Transaction fee</source>
         <translation>Siirtokulu</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation>Yhteensä</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -2183,6 +2281,10 @@
     <message>
         <source>Pay only the required fee of %1</source>
         <translation>Maksa vain vaadittu kulu %1 </translation>
+    </message>
+    <message numerus="yes">
+        <source>Estimated to begin confirmation within %n block(s).</source>
+        <translation><numerusform>Vahvistuminen alkaa arviolta %n lohkon sisällä.</numerusform><numerusform>Vahvistuminen alkaa arviolta %n lohkon sisällä.</numerusform></translation>
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
@@ -2465,6 +2567,10 @@
 </context>
 <context>
     <name>TransactionDesc</name>
+    <message numerus="yes">
+        <source>Open for %n more block(s)</source>
+        <translation><numerusform>Avoinna vielä %n lohkon ajan</numerusform><numerusform>Avoinna vielä %n lohkon ajan</numerusform></translation>
+    </message>
     <message>
         <source>Open until %1</source>
         <translation>Avoinna %1 asti</translation>
@@ -2540,6 +2646,10 @@
     <message>
         <source>Credit</source>
         <translation>Krediitti</translation>
+    </message>
+    <message numerus="yes">
+        <source>matures in %n more block(s)</source>
+        <translation><numerusform>kypsyy %n lohkon kuluttua</numerusform><numerusform>kypsyy %n lohkon kuluttua</numerusform></translation>
     </message>
     <message>
         <source>not accepted</source>
@@ -2638,6 +2748,10 @@
     <message>
         <source>Label</source>
         <translation>Nimike</translation>
+    </message>
+    <message numerus="yes">
+        <source>Open for %n more block(s)</source>
+        <translation><numerusform>Avoinna vielä %n lohkon ajan</numerusform><numerusform>Avoinna vielä %n lohkon ajan</numerusform></translation>
     </message>
     <message>
         <source>Open until %1</source>
@@ -2908,6 +3022,10 @@
         <translation>Lähetä kolikoita</translation>
     </message>
     <message>
+        <source>Fee bump error</source>
+        <translation>Virhe nostaessa palkkiota.</translation>
+    </message>
+    <message>
         <source>Increasing transaction fee failed</source>
         <translation>Siirtokulun nosto epäonnistui</translation>
     </message>
@@ -2974,7 +3092,11 @@
         <source>The wallet data was successfully saved to %1.</source>
         <translation>Lompakko tallennettiin onnistuneesti tiedostoon %1.</translation>
     </message>
-    </context>
+    <message>
+        <source>Cancel</source>
+        <translation>Peruuta</translation>
+    </message>
+</context>
 <context>
     <name>bitcoin-core</name>
     <message>
@@ -3146,6 +3268,14 @@
         <translation>Virheellinen määrä -fallbackfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
+        <source>Specified blocks directory "%s" does not exist.</source>
+        <translation>Määrättyä lohkohakemistoa "%s" ei ole olemassa.</translation>
+    </message>
+    <message>
+        <source>Upgrading txindex database</source>
+        <translation>Päivitetään txindex -tietokantaa</translation>
+    </message>
+    <message>
         <source>Loading P2P addresses...</source>
         <translation>Ladataan P2P-vertaisten osoitteita...</translation>
     </message>
@@ -3166,6 +3296,10 @@
         <translation>Karsittu tila ei ole yhteensopiva -txindex:n kanssa.</translation>
     </message>
     <message>
+        <source>Replaying blocks...</source>
+        <translation>Tarkastetaan lohkoja..</translation>
+    </message>
+    <message>
         <source>Rewinding blocks...</source>
         <translation>Varmistetaan lohkoja...</translation>
     </message>
@@ -3180,6 +3314,10 @@
     <message>
         <source>Unable to bind to %s on this computer. %s is probably already running.</source>
         <translation>Kytkeytyminen kohteeseen %s ei onnistu tällä tietokoneella. %s on luultavasti jo käynnissä.</translation>
+    </message>
+    <message>
+        <source>Unable to generate keys</source>
+        <translation>Avaimia ei voitu luoda</translation>
     </message>
     <message>
         <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
@@ -3230,6 +3368,10 @@
         <translation>Virheitä tietokantaa luettaessa, ohjelma pysäytetään.</translation>
     </message>
     <message>
+        <source>Error upgrading chainstate database</source>
+        <translation>Virhe päivittäessä chainstate-tietokantaa</translation>
+    </message>
+    <message>
         <source>Information</source>
         <translation>Tietoa</translation>
     </message>
@@ -3262,6 +3404,18 @@
         <translation>Siirron vahvistus epäonnistui</translation>
     </message>
     <message>
+        <source>Specified -walletdir "%s" does not exist</source>
+        <translation>Määriteltyä lompakon hakemistoa "%s" ei ole olemassa.</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is a relative path</source>
+        <translation>Määritelty lompakkohakemisto "%s" sijaitsee suhteellisessa polussa</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is not a directory</source>
+        <translation>Määritelty -walletdir "%s" ei ole hakemisto</translation>
+    </message>
+    <message>
         <source>The transaction amount is too small to pay the fee</source>
         <translation>Rahansiirron määrä on liian pieni kattaakseen maksukulun</translation>
     </message>
@@ -3290,6 +3444,10 @@
         <translation>Varmistetaan lompakko(ja)...</translation>
     </message>
     <message>
+        <source>Wallet %s resides outside wallet directory %s</source>
+        <translation>Lompakko %s sijaitsee lompakkohakemiston %s ulkopuolella.</translation>
+    </message>
+    <message>
         <source>Warning</source>
         <translation>Varoitus</translation>
     </message>
@@ -3308,6 +3466,10 @@
     <message>
         <source>Error loading %s: You can't enable HD on an already existing non-HD wallet</source>
         <translation>Virhe ladattaessa %s: Et voi ottaa HD:ta käyttöön jo olemassa olevalle ei-HD -lompakolle.</translation>
+    </message>
+    <message>
+        <source>This is the transaction fee you may pay when fee estimates are not available.</source>
+        <translation>Tämän siirtomaksun maksat, kun siirtomaksun arviointi ei ole käytettävissä.</translation>
     </message>
     <message>
         <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
@@ -3338,6 +3500,10 @@
         <translation>Käynnistetään verkkoa...</translation>
     </message>
     <message>
+        <source>The wallet will avoid paying less than the minimum relay fee.</source>
+        <translation>Lompakko välttää maksamasta alle vähimmäisen välityskulun.</translation>
+    </message>
+    <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
         <translation>Tämä on jokaisesta siirrosta maksettava vähimmäismaksu.</translation>
     </message>
@@ -3364,6 +3530,18 @@
     <message>
         <source>Insufficient funds</source>
         <translation>Lompakon saldo ei riitä</translation>
+    </message>
+    <message>
+        <source>Can't generate a change-address key. Private keys are disabled for this wallet.</source>
+        <translation>Vaihtorahaosoitetteen avainta ei voitu luoda. Yksityisavaimet on poistettu käytöstä tässä lompakossa.</translation>
+    </message>
+    <message>
+        <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
+        <translation>Siirtomaksun arviointi epäonnistui. Odota muutama lohko tai käytä -fallbackfee -valintaa..</translation>
+    </message>
+    <message>
+        <source>Cannot write to data directory '%s'; check permissions.</source>
+        <translation>Hakemistoon '%s' ei voida kirjoittaa. Tarkista käyttöoikeudet.</translation>
     </message>
     <message>
         <source>Loading block index...</source>

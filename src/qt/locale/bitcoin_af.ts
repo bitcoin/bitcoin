@@ -246,10 +246,6 @@
         <translation>&amp;Oorsig</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation>Node</translation>
-    </message>
-    <message>
         <source>Show general overview of wallet</source>
         <translation>Vertoon 'n algemene oorsig van die beursie</translation>
     </message>
@@ -306,14 +302,6 @@
         <translation>&amp;Verander Wagwoord</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;Versending adresse...</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>&amp;Ontvanger adresse</translation>
-    </message>
-    <message>
         <source>Open &amp;URI...</source>
         <translation>Oop &amp; URI...</translation>
     </message>
@@ -328,6 +316,10 @@
     <message>
         <source>Click to enable network activity again.</source>
         <translation>Kliek om netwerkaktiwiteit weer aan te skakel.</translation>
+    </message>
+    <message>
+        <source>Syncing Headers (%1%)...</source>
+        <translation>Sinkroniseer tans Hoofde (%1%)...</translation>
     </message>
     <message>
         <source>Reindexing blocks on disk...</source>
@@ -466,6 +458,10 @@
         <translation>Op datum</translation>
     </message>
     <message>
+        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
+        <translation>Vertoon die %1 hulp boodskap vir 'n lys met moontlike Bitcoin bevelreël opsies</translation>
+    </message>
+    <message>
         <source>%1 client</source>
         <translation>%1 kliënt</translation>
     </message>
@@ -514,6 +510,22 @@
     <message>
         <source>Incoming transaction</source>
         <translation>Inkomende transaksie</translation>
+    </message>
+    <message>
+        <source>HD key generation is &lt;b&gt;enabled&lt;/b&gt;</source>
+        <translation>HD sleutel generasie is &lt;b&gt;aangesit&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
+        <translation>HD sleutel generasie is &lt;b&gt;afgesit&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
+        <translation>Beursie is &lt;b&gt;versleutel&lt;/b&gt; en is tans &lt;b&gt;oopgesluit&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
+        <translation>Beursie is &lt;b&gt;versleutel&lt;/b&gt; en is tans &lt;b&gt;gesluit&lt;/b&gt;</translation>
     </message>
     <message>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
@@ -833,11 +845,7 @@
         <source>Hide</source>
         <translation>Versteek</translation>
     </message>
-    <message>
-        <source>Unknown. Syncing Headers (%1)...</source>
-        <translation>Onbekend. Besig Met Sinchroniseer Van Hoofde (%1)...</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -884,16 +892,8 @@
         <translation>Grootte van &amp;databasis kas</translation>
     </message>
     <message>
-        <source>MB</source>
-        <translation>MG</translation>
-    </message>
-    <message>
         <source>Number of script &amp;verification threads</source>
         <translation>Aantal skrip &amp;verifikasie drade</translation>
-    </message>
-    <message>
-        <source>Active command-line options that override above options:</source>
-        <translation>Aktiewe opdrag lyn opsies wat die boonste opsies ignoreer:</translation>
     </message>
     <message>
         <source>Open the %1 configuration file from the working directory.</source>
@@ -1195,7 +1195,11 @@
         <source>%1 GB</source>
         <translation>%1 GB</translation>
     </message>
-    </context>
+    <message>
+        <source>unknown</source>
+        <translation>onbekend</translation>
+    </message>
+</context>
 <context>
     <name>QObject::QObject</name>
     <message>
@@ -1205,6 +1209,10 @@
 </context>
 <context>
     <name>QRImageWidget</name>
+    <message>
+        <source>&amp;Save Image...</source>
+        <translation>&amp;Stoor beeld</translation>
+    </message>
     </context>
 <context>
     <name>RPCConsole</name>
@@ -1364,6 +1372,10 @@
         <translation>&amp;Boodslap:</translation>
     </message>
     <message>
+        <source>Clear all fields of the form.</source>
+        <translation>Vee alle velde op die vorm skoon</translation>
+    </message>
+    <message>
         <source>Clear</source>
         <translation>Skoonmaak</translation>
     </message>
@@ -1399,8 +1411,16 @@
         <translation>QR Kode</translation>
     </message>
     <message>
+        <source>Copy &amp;URI</source>
+        <translation>Kopieer &amp;URI</translation>
+    </message>
+    <message>
         <source>Copy &amp;Address</source>
         <translation>Kopieer &amp;Address</translation>
+    </message>
+    <message>
+        <source>&amp;Save Image...</source>
+        <translation>&amp;Stoor beeld</translation>
     </message>
     <message>
         <source>Request payment to %1</source>
@@ -1434,7 +1454,15 @@
         <source>Wallet</source>
         <translation>Beursie</translation>
     </message>
-    </context>
+    <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>Gevolglike URI te lank, probeer teks verkort vir etiket/boodskap</translation>
+    </message>
+    <message>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>Fout met enkodering van URI na QR kode</translation>
+    </message>
+</context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
@@ -1521,6 +1549,20 @@
         <translation>Kies...</translation>
     </message>
     <message>
+        <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</source>
+        <translation>Die verstekfooi kan veroorsaak dat 'n transaksie gestuur word wat
+etlike ure of dae (of nooit) sal neem om te bevestig. Oorweeg om 
+'n fooi met die hand te kies, of wag tot jy die hele ketting bevestig het.</translation>
+    </message>
+    <message>
+        <source>Warning: Fee estimation is currently not possible.</source>
+        <translation>Waarskuwing: fooiskatting is tans onbeskikbaar</translation>
+    </message>
+    <message>
+        <source>collapse fee-settings</source>
+        <translation>Vou fooi-nistellings in</translation>
+    </message>
+    <message>
         <source>per kilobyte</source>
         <translation>per kilogreep</translation>
     </message>
@@ -1537,20 +1579,50 @@
         <translation>Aangepaste:</translation>
     </message>
     <message>
+        <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
+        <translation>(Slimfooi nog nie opgestel nie. Dit neem gewoonlik 'n paar blokke...)</translation>
+    </message>
+    <message>
+        <source>Send to multiple recipients at once</source>
+        <translation>Stuur aan veelvuldige ontvangers tegelyk</translation>
+    </message>
+    <message>
         <source>Add &amp;Recipient</source>
         <translation>Voeg by &amp;Ontvanger</translation>
+    </message>
+    <message>
+        <source>Clear all fields of the form.</source>
+        <translation>Vee alle velde op die vorm skoon</translation>
     </message>
     <message>
         <source>Dust:</source>
         <translation>Stof:</translation>
     </message>
     <message>
+        <source>Confirmation time target:</source>
+        <translation>Bevestigingstyd teiken:</translation>
+    </message>
+    <message>
+        <source>Enable Replace-By-Fee</source>
+        <translation>Bemoontlik vervang-deur-fooi</translation>
+    </message>
+    <message>
+        <source>With Replace-By-Fee (BIP-125) you can increase a transaction's fee after it is sent. Without this, a higher fee may be recommended to compensate for increased transaction delay risk.</source>
+        <translation>Met Vervang-Met-Fooi (BIP-125) kan jy 'n transaskiefooi verhoog nadat dit gestuur is.
+Daarsonder mag 'n hoër fooi dalk aanbeveel word om te kompenseer vir 'n verhoogde
+transaksievertragingsrisiko.</translation>
+    </message>
+    <message>
         <source>Clear &amp;All</source>
-        <translation>Maak skoon &amp;Alles</translation>
+        <translation>Vee &amp;Alles skoon</translation>
     </message>
     <message>
         <source>Balance:</source>
-        <translation>Balans:</translation>
+        <translation>Saldo:</translation>
+    </message>
+    <message>
+        <source>Confirm the send action</source>
+        <translation>Bevestig stuuraksie</translation>
     </message>
     <message>
         <source>S&amp;end</source>
@@ -1593,12 +1665,74 @@
         <translation>%1 tot %2</translation>
     </message>
     <message>
+        <source>Are you sure you want to send?</source>
+        <translation>Is u seker u wil verstuur?</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation>of</translation>
+    </message>
+    <message>
+        <source>You can increase the fee later (signals Replace-By-Fee, BIP-125).</source>
+        <translation>U kan die fooi later verhoog (sein Vervang-met-Fooi, BIP-125)</translation>
+    </message>
+    <message>
         <source>Transaction fee</source>
         <translation>Transaksie fooi</translation>
     </message>
     <message>
+        <source>Not signalling Replace-By-Fee, BIP-125.</source>
+        <translation>Sein nie Vervang-Met-Fooi nie, BIP-25</translation>
+    </message>
+    <message>
+        <source>Confirm send coins</source>
+        <translation>Bevestig versending van munte</translation>
+    </message>
+    <message>
+        <source>The recipient address is not valid. Please recheck.</source>
+        <translation>Die ontvangeradres is ongeldig. Kyk asseblief weer mooi.</translation>
+    </message>
+    <message>
+        <source>The amount to pay must be larger than 0.</source>
+        <translation>Bedrag moet groter as nul wees</translation>
+    </message>
+    <message>
+        <source>The amount exceeds your balance.</source>
+        <translation>Die bedrag oorskry jou saldo</translation>
+    </message>
+    <message>
+        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
+        <translation>Die somtotaal oorskry jou saldo as die %1 transaksiefooi ingereken word</translation>
+    </message>
+    <message>
+        <source>Duplicate address found: addresses should only be used once each.</source>
+        <translation>Duplikaatadres: adresse behoort slegs eenkeer gebruik te word</translation>
+    </message>
+    <message>
+        <source>Transaction creation failed!</source>
+        <translation>Transaksieopstelling het gefaal</translation>
+    </message>
+    <message>
+        <source>The transaction was rejected with the following reason: %1</source>
+        <translation>Die transaksie is afgekeur met die volgende rede: %1</translation>
+    </message>
+    <message>
+        <source>A fee higher than %1 is considered an absurdly high fee.</source>
+        <translation>'n Fooi hoër as %1 word as buitensporig beskou</translation>
+    </message>
+    <message>
         <source>Payment request expired.</source>
         <translation>Betalings versoek verstryk.</translation>
+    </message>
+    <message>
+        <source>Warning: Invalid Bitcoin address</source>
+        <translation>Waarskuwing: Ongeldige Bitcoinadres</translation>
+    </message>
+    <message>
+        <source>The address you selected for change is not part of this wallet. Any or all funds in your wallet may be sent to this address. Are you sure?</source>
+        <translation>Die adres wat u gekies het vir verandering is nie deel van hierdie
+beursie nie. Enige of alle fondse mag dalk daarheen gestuur word.
+Is u seker?</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -1612,16 +1746,64 @@
         <translation>B&amp;edrag:</translation>
     </message>
     <message>
+        <source>Pay &amp;To:</source>
+        <translation>Betaal &amp;Vir:</translation>
+    </message>
+    <message>
         <source>&amp;Label:</source>
         <translation>&amp;Etiket:</translation>
+    </message>
+    <message>
+        <source>Choose previously used address</source>
+        <translation>Kies voorheen gebruikte adres</translation>
+    </message>
+    <message>
+        <source>This is a normal payment.</source>
+        <translation>Hierdie is 'n gewone betaling</translation>
+    </message>
+    <message>
+        <source>The Bitcoin address to send the payment to</source>
+        <translation>Die Bitcoinadres waarheen die betaling gestuur word</translation>
     </message>
     <message>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
     </message>
     <message>
+        <source>Paste address from clipboard</source>
+        <translation>Plak adres van aanknipbord af</translation>
+    </message>
+    <message>
+        <source>Remove this entry</source>
+        <translation>Verwyder hierdie inskrywing</translation>
+    </message>
+    <message>
+        <source>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <translation>De fooi word afgetrek van die gestuurde bedrag.
+Die ontvanger sal minder ontvang as wat u in die 
+bedrag opgee. As daar meer as een ontvanger is,
+word die fooi eweredig verdeel.</translation>
+    </message>
+    <message>
+        <source>S&amp;ubtract fee from amount</source>
+        <translation>Bedrag &amp;Sonder fooi </translation>
+    </message>
+    <message>
+        <source>Use available balance</source>
+        <translation>Gebruik beskikbare saldo</translation>
+    </message>
+    <message>
         <source>Message:</source>
         <translation>Boodskap:</translation>
+    </message>
+    <message>
+        <source>This is an unauthenticated payment request.</source>
+        <translation>Hierdie is 'n ongemagtigde uitbetalingsversoek</translation>
+    </message>
+    <message>
+        <source>This is an authenticated payment request.</source>
+        <translation>Hierdie is 'n gemagtigde uitbetalingsversoek
+</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -1645,16 +1827,28 @@
         <translation>&amp;Teken Boodskap</translation>
     </message>
     <message>
+        <source>Choose previously used address</source>
+        <translation>Kies voorheen gebruikte adres</translation>
+    </message>
+    <message>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
+    </message>
+    <message>
+        <source>Paste address from clipboard</source>
+        <translation>Plak adres van aanknipbord af</translation>
     </message>
     <message>
         <source>Signature</source>
         <translation>Handtekening</translation>
     </message>
     <message>
+        <source>Sign &amp;Message</source>
+        <translation>Teken &amp;Boodskap</translation>
+    </message>
+    <message>
         <source>Clear &amp;All</source>
-        <translation>Maak skoon &amp;Alles</translation>
+        <translation>Vee &amp;Alles skoon</translation>
     </message>
     <message>
         <source>&amp;Verify Message</source>
@@ -1688,6 +1882,18 @@
     <message>
         <source>Date</source>
         <translation>Datum</translation>
+    </message>
+    <message>
+        <source>From</source>
+        <translation>Van</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>onbekend</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>Na</translation>
     </message>
     <message>
         <source>own address</source>
@@ -1738,6 +1944,10 @@
         <translation>Kommentaar</translation>
     </message>
     <message>
+        <source>Transaction ID</source>
+        <translation>Transaksie ID</translation>
+    </message>
+    <message>
         <source>Transaction total size</source>
         <translation>Transaksie totale grootte</translation>
     </message>
@@ -1749,7 +1959,15 @@
         <source>Amount</source>
         <translation>Bedrag</translation>
     </message>
-    </context>
+    <message>
+        <source>true</source>
+        <translation>waar</translation>
+    </message>
+    <message>
+        <source>false</source>
+        <translation>onwaar</translation>
+    </message>
+</context>
 <context>
     <name>TransactionDescDialog</name>
     </context>
@@ -1768,6 +1986,22 @@
         <translation>Merk</translation>
     </message>
     <message>
+        <source>Received with</source>
+        <translation>Ontvang met</translation>
+    </message>
+    <message>
+        <source>Received from</source>
+        <translation>Ontvang van</translation>
+    </message>
+    <message>
+        <source>Sent to</source>
+        <translation>Gestuur na</translation>
+    </message>
+    <message>
+        <source>Payment to yourself</source>
+        <translation>Betalings Aan/na jouself</translation>
+    </message>
+    <message>
         <source>Mined</source>
         <translation>Gemyn</translation>
     </message>
@@ -1776,8 +2010,20 @@
         <translation>kyk-net</translation>
     </message>
     <message>
+        <source>(n/a)</source>
+        <translation>(n.v.t)</translation>
+    </message>
+    <message>
         <source>(no label)</source>
         <translation>(geen etiket)</translation>
+    </message>
+    <message>
+        <source>Date and time that the transaction was received.</source>
+        <translation>Datum en tyd wat die transaksie ontvang was.</translation>
+    </message>
+    <message>
+        <source>Type of transaction.</source>
+        <translation>Tipe transaksie.</translation>
     </message>
     </context>
 <context>
@@ -1787,12 +2033,52 @@
         <translation>Alles</translation>
     </message>
     <message>
+        <source>Today</source>
+        <translation>Vandag</translation>
+    </message>
+    <message>
+        <source>This week</source>
+        <translation>Hierdie week</translation>
+    </message>
+    <message>
+        <source>This month</source>
+        <translation>Hierdie maand</translation>
+    </message>
+    <message>
+        <source>Last month</source>
+        <translation>Verlede maand</translation>
+    </message>
+    <message>
+        <source>This year</source>
+        <translation>Hierdie jaar</translation>
+    </message>
+    <message>
+        <source>Range...</source>
+        <translation>Reeks...</translation>
+    </message>
+    <message>
+        <source>Received with</source>
+        <translation>Ontvang met</translation>
+    </message>
+    <message>
+        <source>Sent to</source>
+        <translation>Gestuur na</translation>
+    </message>
+    <message>
+        <source>To yourself</source>
+        <translation>Aan/na jouself</translation>
+    </message>
+    <message>
         <source>Mined</source>
         <translation>Gemyn</translation>
     </message>
     <message>
         <source>Other</source>
         <translation>Ander</translation>
+    </message>
+    <message>
+        <source>Min amount</source>
+        <translation>Min bedrag</translation>
     </message>
     <message>
         <source>Copy address</source>
@@ -1843,6 +2129,10 @@
         <translation>Uitvoer was onsuksesvol</translation>
     </message>
     <message>
+        <source>Range:</source>
+        <translation>Reeks:</translation>
+    </message>
+    <message>
         <source>to</source>
         <translation>na</translation>
     </message>
@@ -1884,6 +2174,10 @@
     <message>
         <source>Error loading %s</source>
         <translation>Fout met laai %s</translation>
+    </message>
+    <message>
+        <source>Error: Disk space is low!</source>
+        <translation>Fout: Hardeskyf spasie is baie laag!</translation>
     </message>
     <message>
         <source>Importing...</source>
