@@ -377,12 +377,8 @@ void SendCoinsDialog::on_sendButton_clicked()
 
     const QString confirmation = model->wallet().privateKeysDisabled() ? tr("Confirm transaction proposal") : tr("Confirm send coins");
     const QString confirmButtonText = model->wallet().privateKeysDisabled() ? tr("Create Unsigned") : tr("Send");
-    SendConfirmationDialog confirmationDialog(confirmation, question_string, informative_text, detailed_text, SEND_CONFIRM_DELAY, confirmButtonText, this);
-    confirmationDialog.exec();
-    QMessageBox::StandardButton retval = static_cast<QMessageBox::StandardButton>(confirmationDialog.result());
-
-    if(retval != QMessageBox::Yes)
-    {
+    SendConfirmationDialog confirmationDialog(confirmation, question_string, QMessageBox::Yes, confirmButtonText, QMessageBox::Cancel, informative_text, detailed_text, SEND_CONFIRM_DELAY, this);
+    if (!confirmationDialog.exec()) {
         fNewRecipientAllowed = true;
         return;
     }
@@ -947,17 +943,29 @@ void SendCoinsDialog::coinControlUpdateLabels()
     }
 }
 
-SendConfirmationDialog::SendConfirmationDialog(const QString& title, const QString& text, const QString& informative_text, const QString& detailed_text, int _secDelay, const QString& yes_button_text, QWidget* parent)
-    : QMessageBox(parent), secDelay(_secDelay), m_yes_button_text(yes_button_text)
+SendConfirmationDialog::SendConfirmationDialog(const QString& title, const QString& text, const QMessageBox::StandardButton yes_button, const QString &yes_button_text, const QMessageBox::StandardButton cancel_button, const QString& informative_text, const QString& detailed_text, int _secDelay, QWidget *parent)
+    : QMessageBox(parent),
+    secDelay(_secDelay),
+    m_yes_button_text(yes_button_text)
 {
     setIcon(QMessageBox::Question);
     setWindowTitle(title); // On macOS, the window title is ignored (as required by the macOS Guidelines).
     setText(text);
     setInformativeText(informative_text);
     setDetailedText(detailed_text);
-    setStandardButtons(QMessageBox::Yes | QMessageBox::Cancel);
-    setDefaultButton(QMessageBox::Cancel);
-    yesButton = button(QMessageBox::Yes);
+    setStandardButtons(yes_button | cancel_button);
+
+    // We need to ensure the buttons have Yes/No roles, or they'll get ordered weird
+    QAbstractButton * const cancel_button_obj = button(cancel_button);
+    removeButton(cancel_button_obj);
+    addButton(cancel_button_obj, QMessageBox::NoRole);
+    setEscapeButton(cancel_button_obj);
+    setDefaultButton(cancel_button);
+
+    yesButton = button(yes_button);
+    removeButton(yesButton);
+    addButton(yesButton, QMessageBox::YesRole);
+    if (yes_button_text.isEmpty()) m_yes_button_text = tr("Send");
     updateYesButton();
     connect(&countDownTimer, &QTimer::timeout, this, &SendConfirmationDialog::countDown);
 }
@@ -966,7 +974,8 @@ int SendConfirmationDialog::exec()
 {
     updateYesButton();
     countDownTimer.start(1000);
-    return QMessageBox::exec();
+    QMessageBox::exec();
+    return (buttonRole(clickedButton()) == QMessageBox::YesRole);
 }
 
 void SendConfirmationDialog::countDown()
