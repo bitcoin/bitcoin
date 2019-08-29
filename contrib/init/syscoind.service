@@ -5,8 +5,9 @@
 # See "man systemd.service" for details.
 
 # Note that almost all daemon options could be specified in
-# /etc/syscoin/syscoin.conf, except for those explicitly specified as arguments
-# in ExecStart=
+# /etc/syscoin/syscoin.conf, but keep in mind those explicitly
+# specified as arguments in ExecStart= will override those in the
+# config file.
 
 [Unit]
 Description=Syscoin daemon
@@ -17,6 +18,10 @@ ExecStart=/usr/bin/syscoind -daemon \
                             -pid=/run/syscoind/syscoind.pid \
                             -conf=/etc/syscoin/syscoin.conf \
                             -datadir=/var/lib/syscoind
+
+# Make sure the config directory is readable by the service user
+PermissionsStartOnly=true
+ExecStartPre=/bin/chgrp syscoin /etc/syscoin
 
 # Process management
 ####################
@@ -52,6 +57,9 @@ PrivateTmp=true
 
 # Mount /usr, /boot/ and /etc read-only for the process.
 ProtectSystem=full
+
+# Deny access to /home, /root and /run/user
+ProtectHome=true
 
 # Disallow the process and all of its children to gain
 # new privileges through execve().
