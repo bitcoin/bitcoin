@@ -6,9 +6,9 @@
 #ifndef BITCOIN_UTIL_VALIDATION_H
 #define BITCOIN_UTIL_VALIDATION_H
 
-#include <string>
+#include <consensus/validation.h>
 
-class ValidationState;
+#include <string>
 
 /** Convert ValidationState to a human-readable message for logging */
 std::string FormatStateMessage(const ValidationState &state);
