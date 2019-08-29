@@ -28,4 +28,6 @@
 #define INDEX 4
 #define ITER 9
 
+#define MAX_DIFF_LEVEL 380 //This defined constant denotes the possible level of ldpc problems.
+
 #define DEBUG 0

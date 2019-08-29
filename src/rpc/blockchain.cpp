@@ -45,6 +45,8 @@
 #include <mutex>
 #include <condition_variable>
 
+#include <ldpc/LDPC.h>
+
 struct CUpdatedBlock
 {
     uint256 hash;
