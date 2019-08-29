@@ -88,7 +88,6 @@ FUZZ_SUITE_LD_COMMON = \
 # test_syscoin binary #
 SYSCOIN_TESTS =\
   test/syscoin_asset_tests.cpp \
-  test/syscoin_asset_allocation_tests.cpp \
   test/test_syscoin_services.cpp \
   test/test_syscoin_services.h \
   test/ethereum_tests.cpp \
