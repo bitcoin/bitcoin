@@ -3426,6 +3426,11 @@ static FlatFilePos SaveBlockToDisk(const CBlock& block, int nHeight, const CChai
 /** Store block on disk. If dbp is non-nullptr, the file is known to already reside on disk */
 bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex, bool fRequested, const FlatFilePos* dbp, bool* fNewBlock)
 {
+    // Ignore blockpause in regtest
+    if (Params().NetworkIDString() != "regtest")
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(blockpause));
+    }
     const CBlock& block = *pblock;
 
     if (fNewBlock) *fNewBlock = false;

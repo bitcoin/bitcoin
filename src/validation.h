@@ -21,6 +21,7 @@
 #include <txmempool.h> // For CTxMemPool::cs
 #include <txdb.h>
 #include <versionbits.h>
+#include <chainparams.h> // For Params().NetworkIDString()
 
 #include <algorithm>
 #include <atomic>
@@ -32,6 +33,8 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <chrono>
+#include <thread>
 
 class CChainState;
 class CBlockIndex;
@@ -98,6 +101,8 @@ static const int MAX_BLOCKTXN_DEPTH = 10;
  *  degree of disordering of blocks on disk (which make reindexing and pruning harder). We'll probably
  *  want to make this a per-peer adaptive value at some point. */
 static const unsigned int BLOCK_DOWNLOAD_WINDOW = 1024;
+/** Blockpause */
+static const unsigned int DEFAULT_BLOCKPAUSE = 0;
 /** Time to wait (in seconds) between writing blocks/block index to disk. */
 static const unsigned int DATABASE_WRITE_INTERVAL = 60 * 60;
 /** Time to wait (in seconds) between flushing chainstate to disk. */
@@ -167,6 +172,9 @@ extern arith_uint256 nMinimumChainWork;
 
 /** Best header we've seen so far (used for getheaders queries' starting points). */
 extern CBlockIndex *pindexBestHeader;
+
+/** Time to wait between blocks */
+extern unsigned int blockpause;
 
 /** Pruning-related variables and constants */
 /** True if any block files have ever been pruned. */

@@ -154,6 +154,8 @@ static std::unique_ptr<ECCVerifyHandle> globalVerifyHandle;
 static boost::thread_group threadGroup;
 static CScheduler scheduler;
 
+unsigned int blockpause;
+
 void Interrupt()
 {
     InterruptHTTPServer();
@@ -365,6 +367,7 @@ void SetupServerArgs()
 #if HAVE_SYSTEM
     gArgs.AddArg("-blocknotify=<cmd>", "Execute command when the best block changes (%s in cmd is replaced by block hash)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 #endif
+    gArgs.AddArg("-blockpause=<miliseconds>", "Set a delay between the blocks at the initial sync (default: 0)", ArgsManager::ALLOW_INT, OptionsCategory::OPTIONS);
     gArgs.AddArg("-blockreconstructionextratxn=<n>", strprintf("Extra transactions to keep in memory for compact block reconstructions (default: %u)", DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-blocksonly", strprintf("Whether to reject transactions from network peers. Transactions from the wallet, RPC and relay whitelisted inbound peers are not affected. (default: %u)", DEFAULT_BLOCKSONLY), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-conf=<file>", strprintf("Specify configuration file. Relative paths will be prefixed by datadir location. (default: %s)", BITCOIN_CONF_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -1243,6 +1246,11 @@ bool AppInitMain(InitInterfaces& interfaces)
     } else {
         // Not categorizing as "Warning" because it's the default behavior
         LogPrintf("Config file: %s (not found, skipping)\n", config_file_path.string());
+    }
+
+    if (gArgs.IsArgSet("-blockpause")) {
+        blockpause = gArgs.GetArg("-blockpause", DEFAULT_BLOCKPAUSE);
+        LogPrintf("Blockpause: %d\n", blockpause);
     }
 
     LogPrintf("Using at most %i automatic connections (%i file descriptors available)\n", nMaxConnections, nFD);
