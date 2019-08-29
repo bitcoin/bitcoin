@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#include <policy/policy.h>
 #include <script/script.h>
 #include <span.h>
 #include <util/spanparsing.h>
@@ -203,6 +204,47 @@ size_t ComputeScriptLen(NodeType nodetype, Type sub0typ, size_t subsize, uint32_
 //! A helper sanitizer/checker for the output of CalcType.
 Type SanitizeType(Type x);
 
+//! Class whose objects represent the maximum of a list of integers.
+template<typename I>
+struct MaxInt {
+    const bool valid;
+    const I value;
+
+    MaxInt() : valid(false), value(0) {}
+    MaxInt(I val) : valid(true), value(val) {}
+
+    friend MaxInt<I> operator+(const MaxInt<I>& a, const MaxInt<I>& b) {
+        if (!a.valid || !b.valid) return {};
+        return a.value + b.value;
+    }
+
+    friend MaxInt<I> Choose(const MaxInt<I>& a, const MaxInt<I>& b) {
+        if (!a.valid) return b;
+        if (!b.valid) return a;
+        return std::max(a.value, b.value);
+    }
+};
+
+struct Ops {
+    //! Non-push opcodes.
+    uint32_t stat;
+    //! Number of keys in possibly executed OP_CHECKMULTISIG(VERIFY)s to satisfy.
+    MaxInt<uint32_t> sat;
+    //! Number of keys in possibly executed OP_CHECKMULTISIG(VERIFY)s to dissatisfy.
+    MaxInt<uint32_t> dsat;
+
+    Ops(uint32_t in_stat, MaxInt<uint32_t> in_sat, MaxInt<uint32_t> in_dsat) : stat(in_stat), sat(in_sat), dsat(in_dsat) {};
+};
+
+struct StackSize {
+    //! Maximum stack size to satisfy;
+    MaxInt<uint32_t> sat;
+    //! Maximum stack size to dissatisfy;
+    MaxInt<uint32_t> dsat;
+
+    StackSize(MaxInt<uint32_t> in_sat, MaxInt<uint32_t> in_dsat) : sat(in_sat), dsat(in_dsat) {};
+};
+
 } // namespace internal
 
 //! A node in a miniscript expression.
@@ -220,6 +262,10 @@ struct Node {
     const std::vector<NodeRef<Key>> subs;
 
 private:
+    //! Cached ops counts.
+    const internal::Ops ops;
+    //! Cached stack size bounds.
+    const internal::StackSize ss;
     //! Cached expression type (computed by CalcType and fed through SanitizeType).
     const Type typ;
     //! Cached script length (computed by CalcScriptLen).
@@ -375,9 +421,107 @@ private:
         return "";
     }
 
+    internal::Ops CalcOps() const {
+        switch (nodetype) {
+            case NodeType::PK: return {0, 0, 0};
+            case NodeType::PK_H: return {3, 0, 0};
+            case NodeType::OLDER: return {1, 0, {}};
+            case NodeType::AFTER: return {1, 0, {}};
+            case NodeType::SHA256: return {4, 0, {}};
+            case NodeType::RIPEMD160: return {4, 0, {}};
+            case NodeType::HASH256: return {4, 0, {}};
+            case NodeType::HASH160: return {4, 0, {}};
+            case NodeType::AND_V: return {subs[0]->ops.stat + subs[1]->ops.stat, subs[0]->ops.sat + subs[1]->ops.sat, {}};
+            case NodeType::AND_B: return {1 + subs[0]->ops.stat + subs[1]->ops.stat, subs[0]->ops.sat + subs[1]->ops.sat, subs[0]->ops.dsat + subs[1]->ops.dsat};
+            case NodeType::OR_B: return {1 + subs[0]->ops.stat + subs[1]->ops.stat, Choose(subs[0]->ops.sat + subs[1]->ops.dsat, subs[1]->ops.sat + subs[0]->ops.dsat), subs[0]->ops.dsat + subs[1]->ops.dsat};
+            case NodeType::OR_D: return {3 + subs[0]->ops.stat + subs[1]->ops.stat, Choose(subs[0]->ops.sat, subs[1]->ops.sat + subs[0]->ops.dsat), subs[0]->ops.dsat + subs[1]->ops.dsat};
+            case NodeType::OR_C: return {2 + subs[0]->ops.stat + subs[1]->ops.stat, Choose(subs[0]->ops.sat, subs[1]->ops.sat + subs[0]->ops.dsat), {}};
+            case NodeType::OR_I: return {3 + subs[0]->ops.stat + subs[1]->ops.stat, Choose(subs[0]->ops.sat, subs[1]->ops.sat), Choose(subs[0]->ops.dsat, subs[1]->ops.dsat)};
+            case NodeType::ANDOR: return {3 + subs[0]->ops.stat + subs[1]->ops.stat + subs[2]->ops.stat, Choose(subs[1]->ops.sat + subs[0]->ops.sat, subs[0]->ops.dsat + subs[2]->ops.sat), subs[0]->ops.dsat + subs[2]->ops.dsat};
+            case NodeType::THRESH_M: return {1, (uint32_t)keys.size(), (uint32_t)keys.size()};
+            case NodeType::WRAP_A: return {2 + subs[0]->ops.stat, subs[0]->ops.sat, subs[0]->ops.dsat};
+            case NodeType::WRAP_S: return {1 + subs[0]->ops.stat, subs[0]->ops.sat, subs[0]->ops.dsat};
+            case NodeType::WRAP_C: return {1 + subs[0]->ops.stat, subs[0]->ops.sat, subs[0]->ops.dsat};
+            case NodeType::WRAP_D: return {3 + subs[0]->ops.stat, subs[0]->ops.sat, 0};
+            case NodeType::WRAP_V: return {subs[0]->ops.stat + (subs[0]->GetType() << "x"_mst), subs[0]->ops.sat, {}};
+            case NodeType::WRAP_J: return {4 + subs[0]->ops.stat, subs[0]->ops.sat, 0};
+            case NodeType::WRAP_N: return {1 + subs[0]->ops.stat, subs[0]->ops.sat, subs[0]->ops.dsat};
+            case NodeType::JUST_1: return {0, 0, {}};
+            case NodeType::JUST_0: return {0, {}, 0};
+            case NodeType::THRESH: {
+                uint32_t stat = 0;
+                auto sats = Vector(internal::MaxInt<uint32_t>(0));
+                for (const auto& sub : subs) {
+                    stat += sub->ops.stat + 1;
+                    auto next_sats = Vector(sats[0] + sub->ops.dsat);
+                    for (size_t j = 1; j < sats.size(); ++j) next_sats.push_back(Choose(sats[j] + sub->ops.dsat, sats[j - 1] + sub->ops.sat));
+                    next_sats.push_back(sats[sats.size() - 1] + sub->ops.sat);
+                    sats = std::move(next_sats);
+                }
+                return {stat, sats[k], sats[0]};
+            }
+        }
+        assert(false);
+        return {0, {}, {}};
+    }
+
+    internal::StackSize CalcStackSize() const {
+        switch (nodetype) {
+            case NodeType::PK: return {1, 1};
+            case NodeType::PK_H: return {2, 2};
+            case NodeType::OLDER: return {0, {}};
+            case NodeType::AFTER: return {0, {}};
+            case NodeType::SHA256: return {1, {}};
+            case NodeType::RIPEMD160: return {1, {}};
+            case NodeType::HASH256: return {1, {}};
+            case NodeType::HASH160: return {1, {}};
+            case NodeType::ANDOR: return {Choose(subs[0]->ss.sat + subs[1]->ss.sat, subs[0]->ss.dsat + subs[2]->ss.sat), subs[0]->ss.dsat + subs[2]->ss.dsat};
+            case NodeType::AND_V: return {subs[0]->ss.sat + subs[1]->ss.sat, {}};
+            case NodeType::AND_B: return {subs[0]->ss.sat + subs[1]->ss.sat, subs[0]->ss.dsat + subs[1]->ss.dsat};
+            case NodeType::OR_B: return {Choose(subs[0]->ss.dsat + subs[1]->ss.sat, subs[0]->ss.sat + subs[1]->ss.dsat), subs[0]->ss.dsat + subs[1]->ss.dsat};
+            case NodeType::OR_C: return {Choose(subs[0]->ss.sat, subs[0]->ss.dsat + subs[1]->ss.sat), {}};
+            case NodeType::OR_D: return {Choose(subs[0]->ss.sat, subs[0]->ss.dsat + subs[1]->ss.sat), subs[0]->ss.dsat + subs[1]->ss.dsat};
+            case NodeType::OR_I: return {Choose(subs[0]->ss.sat + 1, subs[1]->ss.sat + 1), Choose(subs[0]->ss.dsat + 1, subs[1]->ss.dsat + 1)};
+            case NodeType::THRESH_M: return {(uint32_t)keys.size() + 1, (uint32_t)keys.size() + 1};
+            case NodeType::WRAP_A: return subs[0]->ss;
+            case NodeType::WRAP_S: return subs[0]->ss;
+            case NodeType::WRAP_C: return subs[0]->ss;
+            case NodeType::WRAP_D: return {1 + subs[0]->ss.sat, 1};
+            case NodeType::WRAP_V: return {subs[0]->ss.sat, {}};
+            case NodeType::WRAP_J: return {subs[0]->ss.sat, 1};
+            case NodeType::WRAP_N: return subs[0]->ss;
+            case NodeType::JUST_1: return {0, {}};
+            case NodeType::JUST_0: return {{}, 0};
+            case NodeType::THRESH: {
+                auto sats = Vector(internal::MaxInt<uint32_t>(0));
+                for (const auto& sub : subs) {
+                    auto next_sats = Vector(sats[0] + sub->ss.dsat);
+                    for (size_t j = 1; j < sats.size(); ++j) next_sats.push_back(Choose(sats[j] + sub->ss.dsat, sats[j - 1] + sub->ss.sat));
+                    next_sats.push_back(sats[sats.size() - 1] + sub->ss.sat);
+                    sats = std::move(next_sats);
+                }
+                return {sats[k], sats[0]};
+            }
+        }
+        assert(false);
+        return {{}, {}};
+    }
+
 public:
     //! Return the size of the script for this expression (faster than ToString().size()).
     size_t ScriptSize() const { return scriptlen; }
+
+    //! Return the maximum number of ops needed to satisfy this script non-malleably.
+    uint32_t GetOps() const { return ops.stat + ops.sat.value; }
+
+    //! Check the ops limit of this script against the consensus limit.
+    bool CheckOpsLimit() const { return GetOps() <= MAX_OPS_PER_SCRIPT; }
+
+    //! Return the maximum number of stack elements needed to satisfy this script non-malleably.
+    uint32_t GetStackSize() const { return ss.sat.value; }
+
+    //! Check the maximum stack size for this script against the policy limit.
+    bool CheckStackSize() const { return GetStackSize() <= MAX_STANDARD_P2WSH_STACK_ITEMS; }
 
     //! Return the expression type.
     Type GetType() const { return typ; }
@@ -395,7 +539,7 @@ public:
     bool NeedsSignature() const { return GetType() << "s"_mst; }
 
     //! Do all sanity checks.
-    bool IsSafeTopLevel() const { return GetType() << "Bms"_mst; }
+    bool IsSafeTopLevel() const { return GetType() << "Bms"_mst && CheckOpsLimit() && CheckStackSize(); }
 
     //! Construct the script for this miniscript (including subexpressions).
     template<typename Ctx>
@@ -427,12 +571,12 @@ public:
     }
 
     // Constructors with various argument combinations.
-    Node(NodeType nt, std::vector<NodeRef<Key>> sub, std::vector<unsigned char> arg, uint32_t val = 0) : nodetype(nt), k(val), data(std::move(arg)), subs(std::move(sub)), typ(CalcType()), scriptlen(CalcScriptLen()) {}
-    Node(NodeType nt, std::vector<unsigned char> arg, uint32_t val = 0) : nodetype(nt), k(val), data(std::move(arg)), typ(CalcType()), scriptlen(CalcScriptLen()) {}
-    Node(NodeType nt, std::vector<NodeRef<Key>> sub, std::vector<Key> key, uint32_t val = 0) : nodetype(nt), k(val), keys(std::move(key)), subs(std::move(sub)), typ(CalcType()), scriptlen(CalcScriptLen()) {}
-    Node(NodeType nt, std::vector<Key> key, uint32_t val = 0) : nodetype(nt), k(val), keys(std::move(key)), typ(CalcType()), scriptlen(CalcScriptLen()) {}
-    Node(NodeType nt, std::vector<NodeRef<Key>> sub, uint32_t val = 0) : nodetype(nt), k(val), subs(std::move(sub)), typ(CalcType()), scriptlen(CalcScriptLen()) {}
-    Node(NodeType nt, uint32_t val = 0) : nodetype(nt), k(val), typ(CalcType()), scriptlen(CalcScriptLen()) {}
+    Node(NodeType nt, std::vector<NodeRef<Key>> sub, std::vector<unsigned char> arg, uint32_t val = 0) : nodetype(nt), k(val), data(std::move(arg)), subs(std::move(sub)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
+    Node(NodeType nt, std::vector<unsigned char> arg, uint32_t val = 0) : nodetype(nt), k(val), data(std::move(arg)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
+    Node(NodeType nt, std::vector<NodeRef<Key>> sub, std::vector<Key> key, uint32_t val = 0) : nodetype(nt), k(val), keys(std::move(key)), subs(std::move(sub)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
+    Node(NodeType nt, std::vector<Key> key, uint32_t val = 0) : nodetype(nt), k(val), keys(std::move(key)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
+    Node(NodeType nt, std::vector<NodeRef<Key>> sub, uint32_t val = 0) : nodetype(nt), k(val), subs(std::move(sub)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
+    Node(NodeType nt, uint32_t val = 0) : nodetype(nt), k(val), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
 };
 
 namespace internal {
