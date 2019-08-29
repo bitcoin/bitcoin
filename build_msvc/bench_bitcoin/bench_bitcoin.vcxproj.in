@@ -9,27 +9,7 @@
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\test\util.cpp" />
-    <ClCompile Include="..\..\src\test\setup_common.cpp" />
-    <ClCompile Include="..\..\src\bench\base58.cpp" />
-    <ClCompile Include="..\..\src\bench\bech32.cpp" />
-    <ClCompile Include="..\..\src\bench\bench.cpp" />
-    <ClCompile Include="..\..\src\bench\bench_bitcoin.cpp" />
-    <ClCompile Include="..\..\src\bench\ccoins_caching.cpp" />
-    <ClCompile Include="..\..\src\bench\checkblock.cpp" />
-    <ClCompile Include="..\..\src\bench\checkqueue.cpp" />
-    <ClCompile Include="..\..\src\bench\coin_selection.cpp" />
-    <ClCompile Include="..\..\src\bench\crypto_hash.cpp" />
-    <ClCompile Include="..\..\src\bench\data.cpp" />
-    <ClCompile Include="..\..\src\bench\examples.cpp" />
-    <ClCompile Include="..\..\src\bench\lockedpool.cpp" />
-    <ClCompile Include="..\..\src\bench\mempool_eviction.cpp" />
-    <ClCompile Include="..\..\src\bench\rpc_blockchain.cpp" />
-    <ClCompile Include="..\..\src\bench\rpc_mempool.cpp" />
-    <ClCompile Include="..\..\src\bench\merkle_root.cpp" />
-    <ClCompile Include="..\..\src\bench\rollingbloom.cpp" />
-    <ClCompile Include="..\..\src\bench\wallet_balance.cpp" />
-    <ClCompile Include="..\..\src\bench\verify_script.cpp" />
+@SOURCE_FILES@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\libbitcoinconsensus\libbitcoinconsensus.vcxproj">
