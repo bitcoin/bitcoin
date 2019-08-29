@@ -44,7 +44,14 @@ void ConfirmSend(QString* text = nullptr, bool cancel = false)
             if (widget->inherits("SendConfirmationDialog")) {
                 SendConfirmationDialog* dialog = qobject_cast<SendConfirmationDialog*>(widget);
                 if (text) *text = dialog->text();
-                QAbstractButton* button = dialog->button(cancel ? QMessageBox::Cancel : QMessageBox::Yes);
+                QAbstractButton* button = nullptr;
+                auto desired_button_role = cancel ? QMessageBox::NoRole : QMessageBox::YesRole;
+                for (QAbstractButton* maybe_button : dialog->buttons()) {
+                    if (dialog->buttonRole(maybe_button) == desired_button_role) {
+                        button = maybe_button;
+                        break;
+                    }
+                }
                 button->setEnabled(true);
                 button->click();
             }
