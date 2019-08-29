@@ -211,7 +211,7 @@ static const uint64_t MIN_DISK_SPACE_FOR_BLOCK_FILES = 550 * 1024 * 1024;
  * @param[in]   pblock  The block we want to process.
  * @param[in]   fForceProcessing Process this block even if unrequested; used for non-network block sources and whitelisted peers.
  * @param[out]  fNewBlock A boolean which is set to indicate if the block was first received via this call
- * @return True if state.IsValid()
+ * @returns     If the block was processed, independently of block validity
  */
 bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, bool fForceProcessing, bool* fNewBlock) LOCKS_EXCLUDED(cs_main);
 
@@ -653,6 +653,8 @@ public:
      *
      * If FlushStateMode::NONE is used, then FlushStateToDisk(...) won't do anything
      * besides checking if we need to prune.
+     *
+     * @returns true unless a system error occurred
      */
     bool FlushStateToDisk(
         const CChainParams& chainparams,
