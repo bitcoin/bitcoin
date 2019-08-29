@@ -232,6 +232,47 @@ size_t ComputeScriptLen(Fragment nodetype, Type sub0typ, size_t subsize, uint32_
 //! A helper sanitizer/checker for the output of CalcType.
 Type SanitizeType(Type x);
 
+//! Class whose objects represent the maximum of a list of integers.
+template<typename I>
+struct MaxInt {
+    const bool valid;
+    const I value;
+
+    MaxInt() : valid(false), value(0) {}
+    MaxInt(I val) : valid(true), value(val) {}
+
+    friend MaxInt<I> operator+(const MaxInt<I>& a, const MaxInt<I>& b) {
+        if (!a.valid || !b.valid) return {};
+        return a.value + b.value;
+    }
+
+    friend MaxInt<I> operator|(const MaxInt<I>& a, const MaxInt<I>& b) {
+        if (!a.valid) return b;
+        if (!b.valid) return a;
+        return std::max(a.value, b.value);
+    }
+};
+
+struct Ops {
+    //! Non-push opcodes.
+    uint32_t count;
+    //! Number of keys in possibly executed OP_CHECKMULTISIG(VERIFY)s to satisfy.
+    MaxInt<uint32_t> sat;
+    //! Number of keys in possibly executed OP_CHECKMULTISIG(VERIFY)s to dissatisfy.
+    MaxInt<uint32_t> dsat;
+
+    Ops(uint32_t in_count, MaxInt<uint32_t> in_sat, MaxInt<uint32_t> in_dsat) : count(in_count), sat(in_sat), dsat(in_dsat) {};
+};
+
+struct StackSize {
+    //! Maximum stack size to satisfy;
+    MaxInt<uint32_t> sat;
+    //! Maximum stack size to dissatisfy;
+    MaxInt<uint32_t> dsat;
+
+    StackSize(MaxInt<uint32_t> in_sat, MaxInt<uint32_t> in_dsat) : sat(in_sat), dsat(in_dsat) {};
+};
+
 } // namespace internal
 
 //! A node in a miniscript expression.
@@ -249,6 +290,10 @@ struct Node {
     const std::vector<NodeRef<Key>> subs;
 
 private:
+    //! Cached ops counts.
+    const internal::Ops ops;
+    //! Cached stack size bounds.
+    const internal::StackSize ss;
     //! Cached expression type (computed by CalcType and fed through SanitizeType).
     const Type typ;
     //! Cached script length (computed by CalcScriptLen).
@@ -556,9 +601,147 @@ public:
         return res.has_value();
     }
 
+    internal::Ops CalcOps() const {
+        switch (nodetype) {
+            case Fragment::JUST_1: return {0, 0, {}};
+            case Fragment::JUST_0: return {0, {}, 0};
+            case Fragment::PK_K: return {0, 0, 0};
+            case Fragment::PK_H: return {3, 0, 0};
+            case Fragment::OLDER:
+            case Fragment::AFTER: return {1, 0, {}};
+            case Fragment::SHA256:
+            case Fragment::RIPEMD160:
+            case Fragment::HASH256:
+            case Fragment::HASH160: return {4, 0, {}};
+            case Fragment::AND_V: return {subs[0]->ops.count + subs[1]->ops.count, subs[0]->ops.sat + subs[1]->ops.sat, {}};
+            case Fragment::AND_B: {
+                const auto count{1 + subs[0]->ops.count + subs[1]->ops.count};
+                const auto sat{subs[0]->ops.sat + subs[1]->ops.sat};
+                const auto dsat{subs[0]->ops.dsat + subs[1]->ops.dsat};
+                return {count, sat, dsat};
+            }
+            case Fragment::OR_B: {
+                const auto count{1 + subs[0]->ops.count + subs[1]->ops.count};
+                const auto sat{(subs[0]->ops.sat + subs[1]->ops.dsat) | (subs[1]->ops.sat + subs[0]->ops.dsat)};
+                const auto dsat{subs[0]->ops.dsat + subs[1]->ops.dsat};
+                return {count, sat, dsat};
+            }
+            case Fragment::OR_D: {
+                const auto count{3 + subs[0]->ops.count + subs[1]->ops.count};
+                const auto sat{subs[0]->ops.sat | (subs[1]->ops.sat + subs[0]->ops.dsat)};
+                const auto dsat{subs[0]->ops.dsat + subs[1]->ops.dsat};
+                return {count, sat, dsat};
+            }
+            case Fragment::OR_C: {
+                const auto count{2 + subs[0]->ops.count + subs[1]->ops.count};
+                const auto sat{subs[0]->ops.sat | (subs[1]->ops.sat + subs[0]->ops.dsat)};
+                return {count, sat, {}};
+            }
+            case Fragment::OR_I: {
+                const auto count{3 + subs[0]->ops.count + subs[1]->ops.count};
+                const auto sat{subs[0]->ops.sat | subs[1]->ops.sat};
+                const auto dsat{subs[0]->ops.dsat | subs[1]->ops.dsat};
+                return {count, sat, dsat};
+            }
+            case Fragment::ANDOR: {
+                const auto count{3 + subs[0]->ops.count + subs[1]->ops.count + subs[2]->ops.count};
+                const auto sat{(subs[1]->ops.sat + subs[0]->ops.sat) | (subs[0]->ops.dsat + subs[2]->ops.sat)};
+                const auto dsat{subs[0]->ops.dsat + subs[2]->ops.dsat};
+                return {count, sat, dsat};
+            }
+            case Fragment::MULTI: return {1, (uint32_t)keys.size(), (uint32_t)keys.size()};
+            case Fragment::WRAP_S:
+            case Fragment::WRAP_C:
+            case Fragment::WRAP_N: return {1 + subs[0]->ops.count, subs[0]->ops.sat, subs[0]->ops.dsat};
+            case Fragment::WRAP_A: return {2 + subs[0]->ops.count, subs[0]->ops.sat, subs[0]->ops.dsat};
+            case Fragment::WRAP_D: return {3 + subs[0]->ops.count, subs[0]->ops.sat, 0};
+            case Fragment::WRAP_J: return {4 + subs[0]->ops.count, subs[0]->ops.sat, 0};
+            case Fragment::WRAP_V: return {subs[0]->ops.count + (subs[0]->GetType() << "x"_mst), subs[0]->ops.sat, {}};
+            case Fragment::THRESH: {
+                uint32_t count = 0;
+                auto sats = Vector(internal::MaxInt<uint32_t>(0));
+                for (const auto& sub : subs) {
+                    count += sub->ops.count + 1;
+                    auto next_sats = Vector(sats[0] + sub->ops.dsat);
+                    for (size_t j = 1; j < sats.size(); ++j) next_sats.push_back((sats[j] + sub->ops.dsat) | (sats[j - 1] + sub->ops.sat));
+                    next_sats.push_back(sats[sats.size() - 1] + sub->ops.sat);
+                    sats = std::move(next_sats);
+                }
+                assert(k <= sats.size());
+                return {count, sats[k], sats[0]};
+            }
+        }
+        assert(false);
+        return {0, {}, {}};
+    }
+
+    internal::StackSize CalcStackSize() const {
+        switch (nodetype) {
+            case Fragment::JUST_0: return {{}, 0};
+            case Fragment::JUST_1:
+            case Fragment::OLDER:
+            case Fragment::AFTER: return {0, {}};
+            case Fragment::PK_K: return {1, 1};
+            case Fragment::PK_H: return {2, 2};
+            case Fragment::SHA256:
+            case Fragment::RIPEMD160:
+            case Fragment::HASH256:
+            case Fragment::HASH160: return {1, {}};
+            case Fragment::ANDOR: {
+                const auto sat{(subs[0]->ss.sat + subs[1]->ss.sat) | (subs[0]->ss.dsat + subs[2]->ss.sat)};
+                const auto dsat{subs[0]->ss.dsat + subs[2]->ss.dsat};
+                return {sat, dsat};
+            }
+            case Fragment::AND_V: return {subs[0]->ss.sat + subs[1]->ss.sat, {}};
+            case Fragment::AND_B: return {subs[0]->ss.sat + subs[1]->ss.sat, subs[0]->ss.dsat + subs[1]->ss.dsat};
+            case Fragment::OR_B: {
+                const auto sat{(subs[0]->ss.dsat + subs[1]->ss.sat) | (subs[0]->ss.sat + subs[1]->ss.dsat)};
+                const auto dsat{subs[0]->ss.dsat + subs[1]->ss.dsat};
+                return {sat, dsat};
+            }
+            case Fragment::OR_C: return {subs[0]->ss.sat | (subs[0]->ss.dsat + subs[1]->ss.sat), {}};
+            case Fragment::OR_D: return {subs[0]->ss.sat | (subs[0]->ss.dsat + subs[1]->ss.sat), subs[0]->ss.dsat + subs[1]->ss.dsat};
+            case Fragment::OR_I: return {(subs[0]->ss.sat + 1) | (subs[1]->ss.sat + 1), (subs[0]->ss.dsat + 1) | (subs[1]->ss.dsat + 1)};
+            case Fragment::MULTI: return {k + 1, k + 1};
+            case Fragment::WRAP_A:
+            case Fragment::WRAP_N:
+            case Fragment::WRAP_S:
+            case Fragment::WRAP_C: return subs[0]->ss;
+            case Fragment::WRAP_D: return {1 + subs[0]->ss.sat, 1};
+            case Fragment::WRAP_V: return {subs[0]->ss.sat, {}};
+            case Fragment::WRAP_J: return {subs[0]->ss.sat, 1};
+            case Fragment::THRESH: {
+                auto sats = Vector(internal::MaxInt<uint32_t>(0));
+                for (const auto& sub : subs) {
+                    auto next_sats = Vector(sats[0] + sub->ss.dsat);
+                    for (size_t j = 1; j < sats.size(); ++j) next_sats.push_back((sats[j] + sub->ss.dsat) | (sats[j - 1] + sub->ss.sat));
+                    next_sats.push_back(sats[sats.size() - 1] + sub->ss.sat);
+                    sats = std::move(next_sats);
+                }
+                assert(k <= sats.size());
+                return {sats[k], sats[0]};
+            }
+        }
+        assert(false);
+        return {{}, {}};
+    }
+
 public:
     //! Return the size of the script for this expression (faster than ToScript().size()).
     size_t ScriptSize() const { return scriptlen; }
+
+    //! Return the maximum number of ops needed to satisfy this script non-malleably.
+    uint32_t GetOps() const { return ops.count + ops.sat.value; }
+
+    //! Check the ops limit of this script against the consensus limit.
+    bool CheckOpsLimit() const { return GetOps() <= MAX_OPS_PER_SCRIPT; }
+
+    /** Return the maximum number of stack elements needed to satisfy this script non-malleably, including
+     * the script push. */
+    uint32_t GetStackSize() const { return ss.sat.value + 1; }
+
+    //! Check the maximum stack size for this script against the policy limit.
+    bool CheckStackSize() const { return GetStackSize() - 1 <= MAX_STANDARD_P2WSH_STACK_ITEMS; }
 
     //! Return the expression type.
     Type GetType() const { return typ; }
@@ -576,7 +759,7 @@ public:
     bool NeedsSignature() const { return GetType() << "s"_mst; }
 
     //! Do all sanity checks.
-    bool IsSane() const { return IsValid() && GetType() << "mk"_mst; }
+    bool IsSane() const { return IsValid() && GetType() << "mk"_mst && CheckOpsLimit() && CheckStackSize(); }
 
     //! Check whether this node is safe as a script on its own.
     bool IsSaneTopLevel() const { return IsValidTopLevel() && IsSane() && NeedsSignature(); }
@@ -598,12 +781,12 @@ public:
     }
 
     // Constructors with various argument combinations.
-    Node(Fragment nt, std::vector<NodeRef<Key>> sub, std::vector<unsigned char> arg, uint32_t val = 0) : nodetype(nt), k(val), data(std::move(arg)), subs(std::move(sub)), typ(CalcType()), scriptlen(CalcScriptLen()) {}
-    Node(Fragment nt, std::vector<unsigned char> arg, uint32_t val = 0) : nodetype(nt), k(val), data(std::move(arg)), typ(CalcType()), scriptlen(CalcScriptLen()) {}
-    Node(Fragment nt, std::vector<NodeRef<Key>> sub, std::vector<Key> key, uint32_t val = 0) : nodetype(nt), k(val), keys(std::move(key)), subs(std::move(sub)), typ(CalcType()), scriptlen(CalcScriptLen()) {}
-    Node(Fragment nt, std::vector<Key> key, uint32_t val = 0) : nodetype(nt), k(val), keys(std::move(key)), typ(CalcType()), scriptlen(CalcScriptLen()) {}
-    Node(Fragment nt, std::vector<NodeRef<Key>> sub, uint32_t val = 0) : nodetype(nt), k(val), subs(std::move(sub)), typ(CalcType()), scriptlen(CalcScriptLen()) {}
-    Node(Fragment nt, uint32_t val = 0) : nodetype(nt), k(val), typ(CalcType()), scriptlen(CalcScriptLen()) {}
+    Node(Fragment nt, std::vector<NodeRef<Key>> sub, std::vector<unsigned char> arg, uint32_t val = 0) : nodetype(nt), k(val), data(std::move(arg)), subs(std::move(sub)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
+    Node(Fragment nt, std::vector<unsigned char> arg, uint32_t val = 0) : nodetype(nt), k(val), data(std::move(arg)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
+    Node(Fragment nt, std::vector<NodeRef<Key>> sub, std::vector<Key> key, uint32_t val = 0) : nodetype(nt), k(val), keys(std::move(key)), subs(std::move(sub)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
+    Node(Fragment nt, std::vector<Key> key, uint32_t val = 0) : nodetype(nt), k(val), keys(std::move(key)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
+    Node(Fragment nt, std::vector<NodeRef<Key>> sub, uint32_t val = 0) : nodetype(nt), k(val), subs(std::move(sub)), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
+    Node(Fragment nt, uint32_t val = 0) : nodetype(nt), k(val), ops(CalcOps()), ss(CalcStackSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
 };
 
 namespace internal {
