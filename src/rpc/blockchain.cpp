@@ -1034,6 +1034,45 @@ static UniValue pruneblockchain(const JSONRPCRequest& request)
     return uint64_t(block->nHeight);
 }
 
+static UniValue pruneaftertip(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"pruneaftertip",
+        "Prune any blocks past the chain tip.\n",
+        {},
+        RPCResult{
+            "n    (numeric) Current Chain Tip height.\n"
+        },
+        RPCExamples{
+            HelpExampleCli("pruneaftertip", "")
+            + HelpExampleRpc("pruneaftertip", "")
+        },
+    }.Check(request);
+
+    if (!fPruneMode)
+        throw JSONRPCError(RPC_MISC_ERROR, "Cannot prune blocks because node is not in prune mode.");
+
+    LOCK(cs_main);
+
+    int heightParam = ::ChainActive().Tip()->nHeight;
+    if (heightParam < 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative block height.");
+
+    unsigned int height = (unsigned int) heightParam;
+    unsigned int chainHeight = (unsigned int) ::ChainActive().Height();
+    if (chainHeight < Params().PruneAfterHeight())
+        throw JSONRPCError(RPC_MISC_ERROR, "Blockchain is too short for pruning.");
+    else if (height > chainHeight)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Blockchain is shorter than the attempted prune height.");
+
+    PruneBlockFilesManual(height);
+    const CBlockIndex* block = ::ChainActive().Tip();
+    assert(block);
+    while (block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA)) {
+        block = block->pprev;
+    }
+    return uint64_t(height);
+}
+
 static UniValue gettxoutsetinfo(const JSONRPCRequest& request)
 {
             RPCHelpMan{"gettxoutsetinfo",
@@ -2331,6 +2370,7 @@ static const CRPCCommand commands[] =
     { "blockchain",         "getrawmempool",          &getrawmempool,          {"verbose"} },
     { "blockchain",         "gettxout",               &gettxout,               {"txid","n","include_mempool"} },
     { "blockchain",         "gettxoutsetinfo",        &gettxoutsetinfo,        {} },
+    { "blockchain",         "pruneaftertip",          &pruneaftertip,          {} },
     { "blockchain",         "pruneblockchain",        &pruneblockchain,        {"height"} },
     { "blockchain",         "savemempool",            &savemempool,            {} },
     { "blockchain",         "verifychain",            &verifychain,            {"checklevel","nblocks"} },

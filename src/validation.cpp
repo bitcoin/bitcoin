@@ -3590,6 +3590,14 @@ void UnlinkPrunedFiles(const std::set<int>& setFilesToPrune)
     }
 }
 
+bool isNormalPruningFile(int fileNumber, unsigned int nLastBlockWeCanPrune) {
+    return (vinfoBlockFile[fileNumber].nSize == 0 || vinfoBlockFile[fileNumber].nHeightLast > nLastBlockWeCanPrune);
+}
+
+bool isAfterTipPruningFile(int fileNumber, unsigned int nFirstBlockWeCanPrune) {
+    return (vinfoBlockFile[fileNumber].nSize == 0  || vinfoBlockFile[fileNumber].nHeightFirst < nFirstBlockWeCanPrune || vinfoBlockFile[fileNumber].nHeightLast < nFirstBlockWeCanPrune);
+}
+
 /* Calculate the block/rev files to delete based on height specified by user with RPC command pruneblockchain */
 static void FindFilesToPruneManual(std::set<int>& setFilesToPrune, int nManualPruneHeight)
 {
@@ -3599,17 +3607,20 @@ static void FindFilesToPruneManual(std::set<int>& setFilesToPrune, int nManualPr
     if (::ChainActive().Tip() == nullptr)
         return;
 
-    // last block to prune is the lesser of (user-specified height, MIN_BLOCKS_TO_KEEP from the tip)
-    unsigned int nLastBlockWeCanPrune = std::min((unsigned)nManualPruneHeight, ::ChainActive().Tip()->nHeight - MIN_BLOCKS_TO_KEEP);
+    bool afterTip = nManualPruneHeight == ::ChainActive().Tip()->nHeight;
+    bool (*isProtectedFile)(int, unsigned int) = afterTip ? isAfterTipPruningFile : isNormalPruningFile;
+    // last block to prune is the lesser of (user-specified height, MIN_BLOCKS_TO_KEEP from the tip) UNLESS we are pruning after the Tip
+    unsigned int nFirstOrLastBlockWeCanPrune = afterTip ? (unsigned int) ::ChainActive().Tip()->nHeight + 1 : std::min((unsigned)nManualPruneHeight, ::ChainActive().Tip()->nHeight - MIN_BLOCKS_TO_KEEP);
+    
     int count=0;
-    for (int fileNumber = 0; fileNumber < nLastBlockFile; fileNumber++) {
-        if (vinfoBlockFile[fileNumber].nSize == 0 || vinfoBlockFile[fileNumber].nHeightLast > nLastBlockWeCanPrune)
+    for (int fileNumber = 0; fileNumber <= nLastBlockFile; fileNumber++) {
+        if (isProtectedFile(fileNumber, nFirstOrLastBlockWeCanPrune))
             continue;
         PruneOneBlockFile(fileNumber);
         setFilesToPrune.insert(fileNumber);
         count++;
     }
-    LogPrintf("Prune (Manual): prune_height=%d removed %d blk/rev pairs\n", nLastBlockWeCanPrune, count);
+    LogPrintf("Prune (Manual): prune_height=%d removed %d blk/rev pairs\n", nFirstOrLastBlockWeCanPrune, count);
 }
 
 /* This function is called from the RPC code for pruneblockchain */
