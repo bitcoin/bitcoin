@@ -1042,9 +1042,24 @@ SendConfirmationDialog::SendConfirmationDialog(const QString& title, const QStri
 
 int SendConfirmationDialog::exec()
 {
-    setStandardButtons(QMessageBox::Yes | QMessageBox::Cancel);
-    setDefaultButton(QMessageBox::Cancel);
-    yesButton = button(QMessageBox::Yes);
+    setStandardButtons(m_yes_button | m_cancel_button);
+
+    yesButton = button(m_yes_button);
+
+    if (m_yes_button != QMessageBox::Yes || m_cancel_button != QMessageBox::Cancel) {
+        // We need to ensure the buttons have Yes/No roles, or they'll get ordered weird
+        // But only do it for customised yes/cancel buttons, so simple code can check results simply too
+        QAbstractButton * const cancel_button_obj = button(m_cancel_button);
+        removeButton(cancel_button_obj);
+        addButton(cancel_button_obj, QMessageBox::NoRole);
+        setEscapeButton(cancel_button_obj);
+
+        removeButton(yesButton);
+        addButton(yesButton, QMessageBox::YesRole);
+    }
+
+    setDefaultButton(m_cancel_button);
+
     if (confirmButtonText.isEmpty()) {
         confirmButtonText = yesButton->text();
     }
