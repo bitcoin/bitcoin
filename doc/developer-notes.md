@@ -27,7 +27,7 @@ Developer Notes
     - [General C++](#general-c)
     - [C++ data structures](#c-data-structures)
     - [Strings and formatting](#strings-and-formatting)
-    - [Variable names](#variable-names)
+    - [Shadowing](#shadowing)
     - [Threads and synchronization](#threads-and-synchronization)
     - [Scripts](#scripts)
         - [Shebang](#shebang)
@@ -613,26 +613,12 @@ Strings and formatting
 
   - *Rationale*: Bitcoin Core uses tinyformat, which is type safe. Leave them out to avoid confusion.
 
-Variable names
+Shadowing
 --------------
 
 Although the shadowing warning (`-Wshadow`) is not enabled by default (it prevents issues arising
 from using a different variable with the same name),
 please name variables so that their names do not shadow variables defined in the source code.
-
-E.g. in member initializers, prepend `_` to the argument name shadowing the
-member name:
-
-```c++
-class AddressBookPage
-{
-    Mode m_mode;
-}
-
-AddressBookPage::AddressBookPage(Mode _mode)
-    : m_mode(_mode)
-...
-```
 
 When using nested cycles, do not name the inner cycle variable the same as in
 the upper cycle, etc.
