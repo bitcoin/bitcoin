@@ -363,6 +363,7 @@ void GenerateMainNetBlocks(int nBlocks, const string& node)
 	if (!otherNode1.empty())
 		BOOST_CHECK(height >= targetHeight);
 }
+
 // generate n Blocks, with up to 10 seconds relay time buffer for other nodes to get the blocks.
 // may fail if your network is slow or you try to generate too many blocks such that can't relay within 10 seconds
 void GenerateBlocks(int nBlocks, const string& node, bool bRegtest)
