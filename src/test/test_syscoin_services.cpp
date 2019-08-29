@@ -385,13 +385,37 @@ void GenerateBlocks(int nBlocks, const string& node, bool bRegtest)
 	}
 	newHeight = find_value(r.get_obj(), "blocks").get_int() + nBlocks;
 	const string &sBlocks = strprintf("%d", nBlocks);
-	BOOST_CHECK_NO_THROW(r = CallExtRPC(node,  "generate", sBlocks, false));
-	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "getblockchaininfo"));
-	height = find_value(r.get_obj(), "blocks").get_int();
-	BOOST_CHECK(height >= newHeight);
+	BOOST_CHECK_NO_THROW(CallExtRPC(node,  "generate", sBlocks, false));
 	height = 0;
 	timeoutCounter = 0;
 	MilliSleep(10);
+	while (!node.empty() && height < newHeight)
+	{
+		try
+		{
+			r = CallExtRPC(node, "getblockchaininfo");
+		}
+		catch (const runtime_error &e)
+		{
+			r = NullUniValue;
+		}
+		if (!r.isObject())
+		{
+			height = newHeight;
+			break;
+		}
+		height = find_value(r.get_obj(), "blocks").get_int();
+		timeoutCounter++;
+		if (timeoutCounter > 100) {
+			tfm::format(std::cout,"Error: Timeout on getblockchaininfo for %s, height %d vs newHeight %d!\n", node.c_str(), height, newHeight);
+			break;
+		}
+		MilliSleep(10);
+	}
+	if (!node.empty())
+		BOOST_CHECK(height >= newHeight);
+	height = 0;
+	timeoutCounter = 0;
 	while (!otherNode1.empty() && height < newHeight)
 	{
 		try
