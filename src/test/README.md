@@ -49,7 +49,3 @@ unit tests.  The file naming convention is `<source_filename>_tests.cpp`
 and such files should wrap their tests in a test suite
 called `<source_filename>_tests`. For an example of this pattern,
 examine `uint256_tests.cpp`.
-
-For further reading, I found the following website to be helpful in
-explaining how the boost unit test framework works:
-[http://www.alittlemadness.com/2009/03/31/c-unit-testing-with-boosttest/](http://archive.is/dRBGf).
