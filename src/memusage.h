@@ -159,8 +159,8 @@ static inline size_t DynamicUsage(const std::unordered_set<X, Y>& s)
     return MallocUsage(sizeof(unordered_node<X>)) * s.size() + MallocUsage(sizeof(void*) * s.bucket_count());
 }
 
-template<typename X, typename Y, typename Z>
-static inline size_t DynamicUsage(const std::unordered_map<X, Y, Z>& m)
+template<typename X, typename Y, typename Z, typename E, typename A>
+static inline size_t DynamicUsage(const std::unordered_map<X, Y, Z, E, A>& m)
 {
     return MallocUsage(sizeof(unordered_node<std::pair<const X, Y> >)) * m.size() + MallocUsage(sizeof(void*) * m.bucket_count());
 }

@@ -6,6 +6,7 @@
 #ifndef BITCOIN_COINS_H
 #define BITCOIN_COINS_H
 
+#include <support/allocators/bulk_pool.h>
 #include <primitives/transaction.h>
 #include <compressor.h>
 #include <core_memusage.h>
@@ -128,7 +129,7 @@ struct CCoinsCacheEntry
     explicit CCoinsCacheEntry(Coin&& coin_) : coin(std::move(coin_)), flags(0) {}
 };
 
-typedef std::unordered_map<COutPoint, CCoinsCacheEntry, SaltedOutpointHasher> CCoinsMap;
+typedef std::unordered_map<COutPoint, CCoinsCacheEntry, SaltedOutpointHasher, std::equal_to<COutPoint>, bulk_pool::Allocator<std::pair<const COutPoint, CCoinsCacheEntry>>> CCoinsMap;
 
 /** Cursor for iterating over CoinsView state */
 class CCoinsViewCursor
@@ -215,10 +216,11 @@ protected:
      * declared as "const".
      */
     mutable uint256 hashBlock;
-    mutable CCoinsMap cacheCoins;
+    mutable bulk_pool::Pool cacheCoinsPool{};
+    mutable CCoinsMap cacheCoins{0, CCoinsMap::hasher{}, CCoinsMap::key_equal{}, CCoinsMap::allocator_type{&cacheCoinsPool}};
 
     /* Cached dynamic memory usage for the inner Coin objects. */
-    mutable size_t cachedCoinsUsage;
+    mutable size_t cachedCoinsUsage{0};
 
 public:
     CCoinsViewCache(CCoinsView *baseIn);

@@ -592,7 +592,8 @@ void GetCoinsMapEntry(const CCoinsMap& map, CAmount& value, char& flags)
 
 void WriteCoinsViewEntry(CCoinsView& view, CAmount value, char flags)
 {
-    CCoinsMap map;
+    bulk_pool::Pool pool;
+    CCoinsMap map(0, CCoinsMap::hasher{}, CCoinsMap::key_equal{}, CCoinsMap::allocator_type{&pool});
     InsertCoinsMapEntry(map, value, flags);
     BOOST_CHECK(view.BatchWrite(map, {}));
 }
