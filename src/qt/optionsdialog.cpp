@@ -93,7 +93,7 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     ui->openBitcoinConfButton->setToolTip(ui->openBitcoinConfButton->toolTip().arg(PACKAGE_NAME));
 
     ui->lang->setToolTip(ui->lang->toolTip().arg(PACKAGE_NAME));
-    ui->lang->addItem(QString("(") + tr("default") + QString(")"), QVariant(""));
+    ui->lang->addItem(QString("English (") + tr("default") + QString(")"), QVariant(""));
     for (const QString &langStr : translations.entryList())
     {
         QLocale locale(langStr);
