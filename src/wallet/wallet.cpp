@@ -2319,7 +2319,11 @@ bool CWalletTx::IsTrusted(interfaces::Chain::Lock& locked_chain) const
         if (parent == nullptr)
             return false;
         const CTxOut& parentOut = parent->tx->vout[txin.prevout.n];
+        // Check that this specific input being spent is trusted
         if (pwallet->IsMine(parentOut) != ISMINE_SPENDABLE)
+            return false;
+        // Recurse to check that the parent is also trusted
+        if (!parent->IsTrusted(locked_chain))
             return false;
     }
     return true;
