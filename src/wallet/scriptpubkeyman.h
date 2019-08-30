@@ -406,6 +406,7 @@ public:
     bool GetKey(const CKeyID &address, CKey& keyOut) const override;
     bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const override;
     bool AddCScript(const CScript& redeemScript) override;
+    bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const override;
 
     //! Load a keypool entry
     void LoadKeyPool(int64_t nIndex, const CKeyPool &keypool);
