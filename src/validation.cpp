@@ -2919,8 +2919,7 @@ void ResetBlockFailureFlags(CBlockIndex *pindex) {
 }
 
 CBlockIndex* CChainState::AddToBlockIndex(const CBlockHeader& block)
-{
-    printf("addtoblock\n");
+{    
     AssertLockHeld(cs_main);
 
     // Check for duplicate

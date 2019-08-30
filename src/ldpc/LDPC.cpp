@@ -301,8 +301,7 @@ bool LDPC::set_difficulty(int n, int wc, int wr)
 
 void LDPC::set_difficulty(int level)
 {
-    if (level <= 0 || level >= MAX_DIFF_LEVEL)
-        printf("error_set_difficulty\n");
+    assert(level >= 1 && level <= MAX_DIFF_LEVEL);
     ldpc_level_parameter tmp = ldpc_level_table[level];
     this->level = level;
     this->n = tmp.n;

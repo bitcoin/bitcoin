@@ -52,33 +52,21 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 
 unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& params)
 {
-    printf("call\n");
     if (params.fPowNoRetargeting)
         return pindexLast->nBits;
 
     // Limit adjustment step
     int64_t nActualTimespan = pindexLast->GetBlockTime() - nFirstBlockTime;
+    printf("nActualTimespan = %d\tnPoWTargetTimespan = %d\n",nActualTimespan,params.nPowTargetTimespan);
     if (nActualTimespan < params.nPowTargetTimespan/4)
         nActualTimespan = params.nPowTargetTimespan/4;
     if (nActualTimespan > params.nPowTargetTimespan*4)
         nActualTimespan = params.nPowTargetTimespan*4;
 
     // Retarget
-    /*
-    const arith_uint256 bnPowLimit = UintToArith256(params.powLimit);
-    arith_uint256 bnNew;
-    bnNew.SetCompact(pindexLast->nBits);
-    bnNew *= nActualTimespan;
-    bnNew /= params.nPowTargetTimespan;
-
-    if (bnNew > bnPowLimit)
-        bnNew = bnPowLimit;
-
-    */
-
     int cur_level = pindexLast->nBits;
-    double cur_difficulty = 1./ldpc_level_table[cur_level].prob;
-    double ret_difficulty = ret_difficulty*nActualTimespan/params.nPowTargetTimespan;
+    double cur_difficulty = static_cast<double>(1)/ldpc_level_table[cur_level].prob;
+    double ret_difficulty = cur_difficulty/((double)nActualTimespan/(double)params.nPowTargetTimespan);
 
     /*cur_difficulty is the number of expected iterations to solving the last 2016 problems for a given level.
      *ret_difficulty is the number of expected iterations to solving next 2016 problems.
@@ -88,7 +76,8 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
      *lpdc_table.prob[1] >  lpdc_table.prob[2] > lpdc_table.prob[3] > ... > lpdc_table.prob[MAX_LEVEL_DIFF]
      *Thus, the inverse of thems are also sorted, i.e.,
      *1./ldpc_table.prob[1] < 1./ldpc_table.prob[2] < 1./ldpc_table.prob[3] < ... < 1./ldpc_table.prob[MAX_LEVEL_DIFF]
-     * consider a example in which we assume that cur_level = 10 and cur_difficulty is 187.
+     *
+     *  consider a example in which we assume that cur_level = 10 and cur_difficulty is 187.
      * 1./lpdc_level_table[10] = 100;
      * 1./lpdc_level_table[11] = 150;
      * 1./lpdc_level_table[12] = 175;
@@ -96,45 +85,61 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
      * 1./lpdc_level_table[14] = 195;
      * 1./lpdc_level_table[20] = 1288;
      *
-     * Then, the new level is 12.
+     * Then, new level is 12..
+     *
+     * consider a different example in which we assume that cur_level = 10 and cur_difficulty is 187, but
+     * 1./lpdc_level_table[10] = 100;
+     * 1./lpdc_level_table[11] = 120;
+     * 1./lpdc_level_table[12] = 135;
+     * 1./lpdc_level_table[13] = 140;
+     *             ...
+     *             ...
+     * 1./lpdc_level_table[20] = 185;
+     * In this case, new_level is 20 because 20 is the maximum level among the possible levels.
      */
 
     int from_level = cur_level - 10, to_level = cur_level + 10, new_level;
 
     // prevent the memory violation
-    if (from_level <= 0)
+    if (from_level <= 1)
         from_level = 1;
-    if ( to_level > MAX_DIFF_LEVEL )
+    if ( to_level >= MAX_DIFF_LEVEL )
         to_level = MAX_DIFF_LEVEL;
-
-    if (cur_difficulty - ret_difficulty < 0)
+    if (cur_difficulty - ret_difficulty < static_cast<double>(0))
     {
-        // since the difficulty increases, we have to increase level as well.
-        for ( new_level = cur_level + 1 ; new_level <= to_level ; new_level++)
+        if (cur_level == MAX_DIFF_LEVEL)
+            new_level = cur_level;
+        else
         {
-            double tmp = (1./ldpc_level_table[new_level].prob - ret_difficulty);
-            if ( tmp > 0.0 )
-                break;
+            // since the difficulty increases, we have to increase level as well.
+            for ( new_level = cur_level + 1 ; new_level <= to_level ; new_level++)
+            {
+                double tmp = (static_cast<double>(1)/ldpc_level_table[new_level].prob - ret_difficulty);
+                if ( tmp > static_cast<double>(0) )
+                    break;
+            }
         }
     }
-    else if ( cur_difficulty - ret_difficulty > 0 )
+    else if (cur_difficulty - ret_difficulty > static_cast<double>(0))
     {
-        // since the difficulty decreases, we have to decrease level as well.
-        for ( new_level = cur_level - 1 ; new_level >= from_level ; new_level--)
+        if (cur_level == 1 )
+            new_level = cur_level;
+        else
         {
-            double tmp = (1./ldpc_level_table[new_level].prob - ret_difficulty);
-            if ( tmp < 0.0 )
-                break;
+            // since the difficulty decreases, we have to decrease level as well.
+            for ( new_level = cur_level - 1 ; new_level >= from_level ; new_level--)
+            {
+                double tmp = (static_cast<double>(1)/ldpc_level_table[new_level].prob - ret_difficulty);
+                if ( tmp < static_cast<double>(0) )
+                    break;
+            }
         }
     }
-     else   //no changes in difficulty.
-    {
-        printf("%lf %lf\n",cur_difficulty,ret_difficulty);
-        return cur_level;
-
-    }
+    else   //no changes in difficulty.
+        new_level = cur_level;
+    printf("cur_diff = %lf\t ret_diff = %lf\n",cur_difficulty,ret_difficulty);
     printf("curt_level = %d\t curt_expected_num = %lf\n",cur_level,1/ldpc_level_table[cur_level].prob);
-    printf(" new_level = %d\t  new_expected_num = %lf\n",new_level,1/ldpc_level_table[new_level].prob);
+    printf(" new_level = %d\t  new_expected_num = %lf\n\n",new_level,1/ldpc_level_table[new_level].prob);
     return new_level;
 }
 
