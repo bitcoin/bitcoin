@@ -523,18 +523,9 @@ bool CWallet::LoadCScript(const CScript& redeemScript)
 
 static bool ExtractPubKey(const CScript &dest, CPubKey& pubKeyOut)
 {
-    //TODO: Use Solver to extract this?
-    CScript::const_iterator pc = dest.begin();
-    opcodetype opcode;
-    std::vector<unsigned char> vch;
-    if (!dest.GetOp(pc, opcode, vch) || !CPubKey::ValidSize(vch))
-        return false;
-    pubKeyOut = CPubKey(vch);
-    if (!pubKeyOut.IsFullyValid())
-        return false;
-    if (!dest.GetOp(pc, opcode, vch) || opcode != OP_CHECKSIG || dest.GetOp(pc, opcode, vch))
-        return false;
-    return true;
+    std::vector<std::vector<unsigned char>> solutions;
+    return Solver(dest, solutions) == TX_PUBKEY &&
+        (pubKeyOut = CPubKey(solutions[0])).IsFullyValid();
 }
 
 bool CWallet::AddWatchOnlyInMem(const CScript &dest)
