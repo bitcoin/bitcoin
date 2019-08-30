@@ -100,7 +100,12 @@ Installing this .service file consists of just copying it to
 To test, run `systemctl start bitcoind` and to enable for system startup run
 `systemctl enable bitcoind`
 
-NOTE: When installing for systemd in Debian/Ubuntu the .service file needs to be copied to the /lib/systemd/system directory instead.
+NOTES: When installing for systemd in Debian/Ubuntu the .service file
+needs to be copied to the /lib/systemd/system directory instead. On
+some systems `bitcoind` gets installed to `/usr/local/bin/bitcoind` in
+which case the `bitcoind.service` file must be modified (since it
+refers to `/usr/bin/bitcoind`). 
+
 
 ### OpenRC
 
