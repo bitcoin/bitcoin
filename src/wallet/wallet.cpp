@@ -2295,6 +2295,12 @@ bool CWalletTx::InMempool() const
 
 bool CWalletTx::IsTrusted(interfaces::Chain::Lock& locked_chain) const
 {
+    std::set<uint256> s;
+    return IsTrusted(locked_chain, s);
+}
+
+bool CWalletTx::IsTrusted(interfaces::Chain::Lock& locked_chain, std::set<uint256>& trustedParents) const
+{
     // Quick answer in most cases
     if (!locked_chain.checkFinalTx(*tx)) {
         return false;
@@ -2322,9 +2328,13 @@ bool CWalletTx::IsTrusted(interfaces::Chain::Lock& locked_chain) const
         // Check that this specific input being spent is trusted
         if (pwallet->IsMine(parentOut) != ISMINE_SPENDABLE)
             return false;
+        // If we've already trusted this parent, continue
+        if (trustedParents.count(parent->GetHash()))
+            continue;
         // Recurse to check that the parent is also trusted
-        if (!parent->IsTrusted(locked_chain))
+        if (!parent->IsTrusted(locked_chain, trustedParents))
             return false;
+        trustedParents.insert(parent->GetHash());
     }
     return true;
 }
