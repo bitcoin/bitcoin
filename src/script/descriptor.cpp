@@ -334,9 +334,22 @@ public:
     }
 };
 
+/** Helper to convert keys in descriptors to strings, optionally with access to private keys. */
+bool KeyToString(const SigningProvider* arg, std::string& out, bool priv, const PubkeyProvider& key)
+{
+    if (priv) {
+        if (!key.ToPrivateString(*arg, out)) return false;
+    } else {
+        out = key.ToString();
+    }
+    return true;
+}
+
+
 /** Base class for all Descriptor implementations. */
 class DescriptorImpl : public Descriptor
 {
+protected:
     //! Public key arguments for this descriptor (size 1 for PK, PKH, WPKH; any size for Multisig).
     const std::vector<std::unique_ptr<PubkeyProvider>> m_pubkey_args;
     //! The sub-descriptor argument (nullptr for everything but SH and WSH).
@@ -346,7 +359,6 @@ class DescriptorImpl : public Descriptor
     //! The string name of the descriptor function.
     const std::string m_name;
 
-protected:
     //! Return a serialization of anything except pubkey and script arguments, to be prepended to those.
     virtual std::string ToStringExtra() const { return ""; }
 
@@ -362,6 +374,27 @@ protected:
      *  @return A vector with scriptPubKeys for this descriptor.
      */
     virtual std::vector<CScript> MakeScripts(const std::vector<CPubKey>& pubkeys, const CScript* script, FlatSigningProvider& out) const = 0;
+
+    virtual bool ToStringHelper(const SigningProvider* arg, std::string& out, bool priv) const
+    {
+        std::string extra = ToStringExtra();
+        size_t pos = extra.size() > 0 ? 1 : 0;
+        std::string ret = m_name + "(" + extra;
+        for (const auto& pubkey : m_pubkey_args) {
+            if (pos++) ret += ",";
+            std::string tmp;
+            if (!KeyToString(arg, tmp, priv, *pubkey)) return false;
+            ret += std::move(tmp);
+        }
+        if (m_subdescriptor_arg) {
+            if (pos++) ret += ",";
+            std::string tmp;
+            if (!m_subdescriptor_arg->ToStringHelper(arg, tmp, priv)) return false;
+            ret += std::move(tmp);
+        }
+        out = std::move(ret) + ")";
+        return true;
+    }
 
 public:
     DescriptorImpl(std::vector<std::unique_ptr<PubkeyProvider>> pubkeys, std::unique_ptr<DescriptorImpl> script, const std::string& name) : m_pubkey_args(std::move(pubkeys)), m_subdescriptor_arg(std::move(script)), m_name(name) {}
@@ -383,31 +416,6 @@ public:
             if (m_subdescriptor_arg->IsRange()) return true;
         }
         return false;
-    }
-
-    bool ToStringHelper(const SigningProvider* arg, std::string& out, bool priv) const
-    {
-        std::string extra = ToStringExtra();
-        size_t pos = extra.size() > 0 ? 1 : 0;
-        std::string ret = m_name + "(" + extra;
-        for (const auto& pubkey : m_pubkey_args) {
-            if (pos++) ret += ",";
-            std::string tmp;
-            if (priv) {
-                if (!pubkey->ToPrivateString(*arg, tmp)) return false;
-            } else {
-                tmp = pubkey->ToString();
-            }
-            ret += std::move(tmp);
-        }
-        if (m_subdescriptor_arg) {
-            if (pos++) ret += ",";
-            std::string tmp;
-            if (!m_subdescriptor_arg->ToStringHelper(arg, tmp, priv)) return false;
-            ret += std::move(tmp);
-        }
-        out = std::move(ret) + ")";
-        return true;
     }
 
     std::string ToString() const final
