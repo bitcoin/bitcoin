@@ -134,6 +134,7 @@ public:
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
         m_is_test_chain = false;
+        m_default_fallbackfee = "0";
 
         checkpointData = {
             {
@@ -229,7 +230,7 @@ public:
         fDefaultConsistencyChecks = false;
         fRequireStandard = false;
         m_is_test_chain = true;
-
+        m_default_fallbackfee = "0.0002";
 
         checkpointData = {
             {
@@ -300,6 +301,7 @@ public:
         fDefaultConsistencyChecks = true;
         fRequireStandard = true;
         m_is_test_chain = true;
+        m_default_fallbackfee = "0.0002";
 
         checkpointData = {
             {
