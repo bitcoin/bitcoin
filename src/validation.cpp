@@ -3427,7 +3427,8 @@ static FlatFilePos SaveBlockToDisk(const CBlock& block, int nHeight, const CChai
 bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex, bool fRequested, const FlatFilePos* dbp, bool* fNewBlock)
 {
     // Ignore blockpause in regtest
-    if (Params().NetworkIDString() != "regtest")
+    bool IsRegtest;
+    if (!IsRegtest)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(blockpause));
     }

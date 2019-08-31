@@ -21,7 +21,6 @@
 #include <txmempool.h> // For CTxMemPool::cs
 #include <txdb.h>
 #include <versionbits.h>
-#include <chainparams.h> // For Params().NetworkIDString()
 
 #include <algorithm>
 #include <atomic>
@@ -790,5 +789,7 @@ inline bool IsBlockPruned(const CBlockIndex* pblockindex)
 {
     return (fHavePruned && !(pblockindex->nStatus & BLOCK_HAVE_DATA) && pblockindex->nTx > 0);
 }
+
+extern bool IsRegtest;
 
 #endif // BITCOIN_VALIDATION_H

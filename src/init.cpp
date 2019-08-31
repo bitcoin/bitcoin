@@ -1249,6 +1249,11 @@ bool AppInitMain(InitInterfaces& interfaces)
     }
 
     if (gArgs.IsArgSet("-blockpause")) {
+        bool IsRegtest;
+        if (Params().NetworkIDString() != "regtest")
+            IsRegtest = false;
+        else
+            IsRegtest = true;
         blockpause = gArgs.GetArg("-blockpause", DEFAULT_BLOCKPAUSE);
         LogPrintf("Blockpause: %d\n", blockpause);
     }

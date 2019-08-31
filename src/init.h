@@ -9,6 +9,7 @@
 #include <memory>
 #include <string>
 #include <util/system.h>
+#include <chainparams.h> // For Params().NetworkIDString()
 
 namespace interfaces {
 class Chain;
