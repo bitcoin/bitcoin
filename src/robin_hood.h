@@ -187,66 +187,6 @@ template <class T>
 struct alignment_of
     : std::integral_constant<std::size_t, alignof(typename std::remove_all_extents<T>::type)> {};
 
-template <class T, T... Ints>
-class integer_sequence {
-public:
-    using value_type = T;
-    static_assert(std::is_integral<value_type>::value, "not integral type");
-    static constexpr std::size_t size() noexcept {
-        return sizeof...(Ints);
-    }
-};
-template <std::size_t... Inds>
-using index_sequence = integer_sequence<std::size_t, Inds...>;
-
-namespace detail_ {
-template <class T, T Begin, T End, bool>
-struct IntSeqImpl {
-    using TValue = T;
-    static_assert(std::is_integral<TValue>::value, "not integral type");
-    static_assert(Begin >= 0 && Begin < End, "unexpected argument (Begin<0 || Begin<=End)");
-
-    template <class, class>
-    struct IntSeqCombiner;
-
-    template <TValue... Inds0, TValue... Inds1>
-    struct IntSeqCombiner<integer_sequence<TValue, Inds0...>, integer_sequence<TValue, Inds1...>> {
-        using TResult = integer_sequence<TValue, Inds0..., Inds1...>;
-    };
-
-    using TResult =
-        typename IntSeqCombiner<typename IntSeqImpl<TValue, Begin, Begin + (End - Begin) / 2,
-                                                    (End - Begin) / 2 == 1>::TResult,
-                                typename IntSeqImpl<TValue, Begin + (End - Begin) / 2, End,
-                                                    (End - Begin + 1) / 2 == 1>::TResult>::TResult;
-};
-
-template <class T, T Begin>
-struct IntSeqImpl<T, Begin, Begin, false> {
-    using TValue = T;
-    static_assert(std::is_integral<TValue>::value, "not integral type");
-    static_assert(Begin >= 0, "unexpected argument (Begin<0)");
-    using TResult = integer_sequence<TValue>;
-};
-
-template <class T, T Begin, T End>
-struct IntSeqImpl<T, Begin, End, true> {
-    using TValue = T;
-    static_assert(std::is_integral<TValue>::value, "not integral type");
-    static_assert(Begin >= 0, "unexpected argument (Begin<0)");
-    using TResult = integer_sequence<TValue, Begin>;
-};
-} // namespace detail_
-
-template <class T, T N>
-using make_integer_sequence = typename detail_::IntSeqImpl<T, 0, N, (N - 0) == 1>::TResult;
-
-template <std::size_t N>
-using make_index_sequence = make_integer_sequence<std::size_t, N>;
-
-template <class... T>
-using index_sequence_for = make_index_sequence<sizeof...(T)>;
-
 } // namespace ROBIN_HOOD_STD
 
 #endif
