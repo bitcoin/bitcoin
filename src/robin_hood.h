@@ -640,143 +640,6 @@ void swap(pair<A, B>& a, pair<A, B>& b) noexcept(
     a.swap(b);
 }
 
-// Hash an arbitrary amount of bytes. This is basically Murmur2 hash without caring about big
-// endianness. TODO(martinus) add a fallback for very large strings?
-static size_t hash_bytes(void const* ptr, size_t const len) noexcept {
-    static constexpr uint64_t m = UINT64_C(0xc6a4a7935bd1e995);
-    static constexpr uint64_t seed = UINT64_C(0xe17a1465);
-    static constexpr unsigned int r = 47;
-
-    auto const data64 = static_cast<uint64_t const*>(ptr);
-    uint64_t h = seed ^ (len * m);
-
-    size_t const n_blocks = len / 8;
-    for (size_t i = 0; i < n_blocks; ++i) {
-        auto k = detail::unaligned_load<uint64_t>(data64 + i);
-
-        k *= m;
-        k ^= k >> r;
-        k *= m;
-
-        h ^= k;
-        h *= m;
-    }
-
-    auto const data8 = reinterpret_cast<uint8_t const*>(data64 + n_blocks);
-    switch (len & 7U) {
-    case 7:
-        h ^= static_cast<uint64_t>(data8[6]) << 48U;
-        ROBIN_HOOD(FALLTHROUGH); // FALLTHROUGH
-    case 6:
-        h ^= static_cast<uint64_t>(data8[5]) << 40U;
-        ROBIN_HOOD(FALLTHROUGH); // FALLTHROUGH
-    case 5:
-        h ^= static_cast<uint64_t>(data8[4]) << 32U;
-        ROBIN_HOOD(FALLTHROUGH); // FALLTHROUGH
-    case 4:
-        h ^= static_cast<uint64_t>(data8[3]) << 24U;
-        ROBIN_HOOD(FALLTHROUGH); // FALLTHROUGH
-    case 3:
-        h ^= static_cast<uint64_t>(data8[2]) << 16U;
-        ROBIN_HOOD(FALLTHROUGH); // FALLTHROUGH
-    case 2:
-        h ^= static_cast<uint64_t>(data8[1]) << 8U;
-        ROBIN_HOOD(FALLTHROUGH); // FALLTHROUGH
-    case 1:
-        h ^= static_cast<uint64_t>(data8[0]);
-        h *= m;
-        ROBIN_HOOD(FALLTHROUGH); // FALLTHROUGH
-    default:
-        break;
-    }
-
-    h ^= h >> r;
-    h *= m;
-    h ^= h >> r;
-    return static_cast<size_t>(h);
-}
-
-inline size_t hash_int(uint64_t obj) noexcept {
-#if ROBIN_HOOD(HAS_UMUL128)
-    // 167079903232 masksum, 120428523 ops best: 0xde5fb9d2630458e9
-    static constexpr uint64_t k = UINT64_C(0xde5fb9d2630458e9);
-    uint64_t h;
-    uint64_t l = detail::umul128(obj, k, &h);
-    return h + l;
-#elif ROBIN_HOOD(BITNESS) == 32
-    uint64_t const r = obj * UINT64_C(0xca4bcaa75ec3f625);
-    auto h = static_cast<uint32_t>(r >> 32U);
-    auto l = static_cast<uint32_t>(r);
-    return h + l;
-#else
-    // murmurhash 3 finalizer
-    uint64_t h = obj;
-    h ^= h >> 33;
-    h *= 0xff51afd7ed558ccd;
-    h ^= h >> 33;
-    h *= 0xc4ceb9fe1a85ec53;
-    h ^= h >> 33;
-    return static_cast<size_t>(h);
-#endif
-}
-
-// A thin wrapper around std::hash, performing an additional simple mixing step of the result.
-template <typename T>
-struct hash : public std::hash<T> {
-    size_t operator()(T const& obj) const
-        noexcept(noexcept(std::declval<std::hash<T>>().operator()(std::declval<T const&>()))) {
-        // call base hash
-        auto result = std::hash<T>::operator()(obj);
-        // return mixed of that, to be save against identity has
-        return hash_int(static_cast<uint64_t>(result));
-    }
-};
-
-template <>
-struct hash<std::string> {
-    size_t operator()(std::string const& str) const noexcept {
-        return hash_bytes(str.data(), str.size());
-    }
-};
-
-template <class T>
-struct hash<T*> {
-    size_t operator()(T* ptr) const noexcept {
-        return hash_int(reinterpret_cast<size_t>(ptr));
-    }
-};
-
-#define ROBIN_HOOD_HASH_INT(T)                           \
-    template <>                                          \
-    struct hash<T> {                                     \
-        size_t operator()(T obj) const noexcept {        \
-            return hash_int(static_cast<uint64_t>(obj)); \
-        }                                                \
-    }
-
-#if defined(__GNUC__) && !defined(__clang__)
-#    pragma GCC diagnostic push
-#    pragma GCC diagnostic ignored "-Wuseless-cast"
-#endif
-// see https://en.cppreference.com/w/cpp/utility/hash
-ROBIN_HOOD_HASH_INT(bool);
-ROBIN_HOOD_HASH_INT(char);
-ROBIN_HOOD_HASH_INT(signed char);
-ROBIN_HOOD_HASH_INT(unsigned char);
-ROBIN_HOOD_HASH_INT(char16_t);
-ROBIN_HOOD_HASH_INT(char32_t);
-ROBIN_HOOD_HASH_INT(wchar_t);
-ROBIN_HOOD_HASH_INT(short);
-ROBIN_HOOD_HASH_INT(unsigned short);
-ROBIN_HOOD_HASH_INT(int);
-ROBIN_HOOD_HASH_INT(unsigned int);
-ROBIN_HOOD_HASH_INT(long);
-ROBIN_HOOD_HASH_INT(long long);
-ROBIN_HOOD_HASH_INT(unsigned long);
-ROBIN_HOOD_HASH_INT(unsigned long long);
-#if defined(__GNUC__) && !defined(__clang__)
-#    pragma GCC diagnostic pop
-#endif
 namespace detail {
 
 // A highly optimized hashmap implementation, using the Robin Hood algorithm.
@@ -1153,15 +1016,7 @@ private:
     // The upper 1-5 bits need to be a reasonable good hash, to save comparisons.
     template <typename HashKey>
     void keyToIdx(HashKey&& key, size_t* idx, InfoType* info) const {
-        // for a user-specified hash that is *not* robin_hood::hash, apply robin_hood::hash as an
-        // additional mixing step. This serves as a bad hash prevention, if the given data is badly
-        // mixed.
-        using Mix =
-            typename std::conditional<std::is_same<::robin_hood::hash<key_type>, hasher>::value,
-                                      ::robin_hood::detail::identity_hash<size_t>,
-                                      ::robin_hood::hash<size_t>>::type;
-        *idx = Mix{}(Hash::operator()(key));
-
+        *idx = Hash::operator()(key);
         *info = mInfoInc + static_cast<InfoType>(*idx >> mInfoHashShift);
         *idx &= mMask;
     }
@@ -2016,15 +1871,15 @@ private:
 
 } // namespace detail
 
-template <typename Key, typename T, typename Hash = hash<Key>,
+template <typename Key, typename T, typename Hash,
           typename KeyEqual = std::equal_to<Key>, size_t MaxLoadFactor100 = 80>
 using unordered_flat_map = detail::unordered_map<true, MaxLoadFactor100, Key, T, Hash, KeyEqual>;
 
-template <typename Key, typename T, typename Hash = hash<Key>,
+template <typename Key, typename T, typename Hash,
           typename KeyEqual = std::equal_to<Key>, size_t MaxLoadFactor100 = 80>
 using unordered_node_map = detail::unordered_map<false, MaxLoadFactor100, Key, T, Hash, KeyEqual>;
 
-template <typename Key, typename T, typename Hash = hash<Key>,
+template <typename Key, typename T, typename Hash,
           typename KeyEqual = std::equal_to<Key>, size_t MaxLoadFactor100 = 80>
 using unordered_map =
     detail::unordered_map<sizeof(robin_hood::pair<Key, T>) <= sizeof(size_t) * 6 &&
