@@ -1282,7 +1282,7 @@ void InitScriptExecutionCache() {
 }
 
 /**
- * Check whether all inputs of this transaction are valid (no double spends, scripts & sigs, amounts)
+ * Check whether all inputs of this transaction are valid (scripts & sigs)
  * This does not modify the UTXO set.
  *
  * If pvChecks is not nullptr, script checks are pushed onto it instead of being performed inline. Any
