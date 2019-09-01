@@ -31,14 +31,14 @@ import os
 # Taking the minimum of these as our target.
 #
 # According to GNU ABI document (http://gcc.gnu.org/onlinedocs/libstdc++/manual/abi.html) this corresponds to:
-#   GCC 4.4.0: GCC_4.4.0
-#   GCC 4.4.2: GLIBCXX_3.4.13, CXXABI_1.3.3
+#   GCC 4.5.0: GCC_4.5.0
+#   GCC 4.5.0: GLIBCXX_3.4.14, CXXABI_1.3.4
 #   (glibc)    GLIBC_2_11
 #
 MAX_VERSIONS = {
-'GCC':       (4,4,0),
-'CXXABI':    (1,3,3),
-'GLIBCXX':   (3,4,13),
+'GCC':       (4,5,0),
+'CXXABI':    (1,3,4),
+'GLIBCXX':   (3,4,14),
 'GLIBC':     (2,11),
 'LIBATOMIC': (1,0)
 }
