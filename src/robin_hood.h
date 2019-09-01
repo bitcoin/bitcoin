@@ -688,18 +688,6 @@ private:
     template <typename M, bool UseMemcpy>
     struct Cloner;
 
-    // fast path: Just copy data, without allocating anything.
-    template <typename M>
-    struct Cloner<M, true> {
-        void operator()(M const& source, M& target) const {
-            // std::memcpy(target.mKeyVals, source.mKeyVals,
-            //             target.calcNumBytesTotal(target.mMask + 1));
-            auto src = reinterpret_cast<char const*>(source.mKeyVals);
-            auto tgt = reinterpret_cast<char*>(target.mKeyVals);
-            std::copy(src, src + target.calcNumBytesTotal(target.mMask + 1), tgt);
-        }
-    };
-
     template <typename M>
     struct Cloner<M, false> {
         void operator()(M const& s, M& t) const {
@@ -717,17 +705,6 @@ private:
 
     template <typename M, bool IsFlatMapAndTrivial>
     struct Destroyer {};
-
-    template <typename M>
-    struct Destroyer<M, true> {
-        void nodes(M& m) const noexcept {
-            m.mNumElements = 0;
-        }
-
-        void nodesDoNotDeallocate(M& m) const noexcept {
-            m.mNumElements = 0;
-        }
-    };
 
     template <typename M>
     struct Destroyer<M, false> {
@@ -947,7 +924,7 @@ private:
     }
 
     void cloneData(const unordered_map& o) {
-        Cloner<unordered_map, IsFlatMap && ROBIN_HOOD_IS_TRIVIALLY_COPYABLE(Node)>()(o, *this);
+        Cloner<unordered_map, false>()(o, *this);
     }
 
     // inserts a keyval that is guaranteed to be new, e.g. when the hashmap is resized.
@@ -1127,7 +1104,7 @@ public:
         }
 
         // clean up old stuff
-        Destroyer<Self, IsFlatMap && std::is_trivially_destructible<Node>::value>{}.nodes(*this);
+        Destroyer<Self, false>{}.nodes(*this);
 
         if (mMask != o.mMask) {
             // no luck: we don't have the same array size allocated, so we need to realloc.
