@@ -703,6 +703,8 @@ private:
     using DataPool = detail::NodeAllocator<value_type, 4, 16384, IsFlatMap>;
 
     // type needs to be wider than uint8_t.
+    //
+    // TODO(jamesob): why? advertised as a byte?
     using InfoType = uint32_t;
 
     // DataNode ////////////////////////////////////////////////////////
@@ -712,63 +714,6 @@ private:
     // the heap so swap merely swaps a pointer.
     template <typename M, bool>
     class DataNode {};
-
-    // Small: just allocate on the stack.
-    template <typename M>
-    class DataNode<M, true> final {
-    public:
-        template <typename... Args>
-        explicit DataNode(M& ROBIN_HOOD_UNUSED(map) /*unused*/, Args&&... args) noexcept(
-            noexcept(value_type(std::forward<Args>(args)...)))
-            : mData(std::forward<Args>(args)...) {}
-
-        DataNode(M& ROBIN_HOOD_UNUSED(map) /*unused*/, DataNode<M, true>&& n) noexcept(
-            std::is_nothrow_move_constructible<value_type>::value)
-            : mData(std::move(n.mData)) {}
-
-        // doesn't do anything
-        void destroy(M& ROBIN_HOOD_UNUSED(map) /*unused*/) noexcept {}
-        void destroyDoNotDeallocate() noexcept {}
-
-        value_type const* operator->() const noexcept {
-            return &mData;
-        }
-        value_type* operator->() noexcept {
-            return &mData;
-        }
-
-        const value_type& operator*() const noexcept {
-            return mData;
-        }
-
-        value_type& operator*() noexcept {
-            return mData;
-        }
-
-        ROBIN_HOOD(NODISCARD) typename value_type::first_type& getFirst() noexcept {
-            return mData.first;
-        }
-
-        ROBIN_HOOD(NODISCARD) typename value_type::first_type const& getFirst() const noexcept {
-            return mData.first;
-        }
-
-        ROBIN_HOOD(NODISCARD) typename value_type::second_type& getSecond() noexcept {
-            return mData.second;
-        }
-
-        ROBIN_HOOD(NODISCARD) typename value_type::second_type const& getSecond() const noexcept {
-            return mData.second;
-        }
-
-        void swap(DataNode<M, true>& o) noexcept(
-            noexcept(std::declval<value_type>().swap(std::declval<value_type>()))) {
-            mData.swap(o.mData);
-        }
-
-    private:
-        value_type mData;
-    };
 
     // big object: allocate on heap.
     template <typename M>
@@ -834,7 +779,7 @@ private:
         value_type* mData;
     };
 
-    using Node = DataNode<Self, IsFlatMap>;
+    using Node = DataNode<Self, false>;
 
     // Cloner //////////////////////////////////////////////////////////
 
