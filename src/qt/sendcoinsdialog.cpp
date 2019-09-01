@@ -305,28 +305,27 @@ void SendCoinsDialog::on_sendButton_clicked()
             });
         }
 
-        QString reuse_question;
+        QString reuse_question, reuse_details;
         if (recipients.size() > 1) {
             reuse_question = tr("You've already paid some of these addresses.");
         } else {
             reuse_question = tr("You've already paid this address.");
         }
-        reuse_question.append("<br />");
 
         for (const auto& rcp : recipients) {
 #ifdef ENABLE_BIP70
             if (rcp.paymentRequest.IsInitialized()) continue;
 #endif
             if (!prior_usage_info.contains(rcp.address)) continue;
+            if (!reuse_details.isEmpty()) reuse_details.append("\n\n");
             const auto& rcp_prior_usage_info = prior_usage_info.value(rcp.address);
             const QString label_and_address = rcp.label.isEmpty() ? rcp.address : (QString("'") + rcp.label + "' (" + rcp.address + ")");
-            reuse_question.append("<br />");
             if (rcp_prior_usage_info.num_txs == 1) {
                 //: %1 is an amount (eg, "1 BTC"); %2 is a Bitcoin address and its label; %3 is a date (eg, "2019-05-08")
-                reuse_question.append(tr("Sent %1 to %2 on %3").arg(BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp_prior_usage_info.total_amount), label_and_address, GUIUtil::dateStr(rcp_prior_usage_info.tx_time_newest)));
+                reuse_details.append(tr("Sent %1 to %2 on %3").arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp_prior_usage_info.total_amount), label_and_address, GUIUtil::dateStr(rcp_prior_usage_info.tx_time_newest)));
             } else {
                 //: %1 is an amount (eg, "1 BTC"); %2 is a Bitcoin address and its label; %3 is the number of transactions; %4 and %5 are dates (eg, "2019-05-08"), earlier first
-                reuse_question.append(tr("Sent %1 to %2 across %3 transactions from %4 through %5").arg(BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp_prior_usage_info.total_amount), label_and_address, QString::number(rcp_prior_usage_info.num_txs), GUIUtil::dateStr(rcp_prior_usage_info.tx_time_oldest), GUIUtil::dateStr(rcp_prior_usage_info.tx_time_newest)));
+                reuse_details.append(tr("Sent %1 to %2 across %3 transactions from %4 through %5").arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp_prior_usage_info.total_amount), label_and_address, QString::number(rcp_prior_usage_info.num_txs), GUIUtil::dateStr(rcp_prior_usage_info.tx_time_oldest), GUIUtil::dateStr(rcp_prior_usage_info.tx_time_newest)));
             }
         }
 
@@ -334,7 +333,7 @@ void SendCoinsDialog::on_sendButton_clicked()
         reuse_question.append(tr("Bitcoin addresses are intended to only be used once, for a single payment. Sending to the same address again will harm the recipient's security, as well as the privacy of all Bitcoin users!"));
         reuse_question.append("</span>");
 
-        SendConfirmationDialog confirmation_dialog(QMessageBox::Warning, tr("Already paid"), reuse_question, QMessageBox::Ignore, tr("Override"), QMessageBox::Ok, "", "", ADDRESS_REUSE_OVERRIDE_DELAY, this);
+        SendConfirmationDialog confirmation_dialog(QMessageBox::Warning, tr("Already paid"), reuse_question, QMessageBox::Ignore, tr("Override"), QMessageBox::Ok, "", reuse_details, ADDRESS_REUSE_OVERRIDE_DELAY, this);
         if (!confirmation_dialog.exec()) {
             fNewRecipientAllowed = true;
             return;
