@@ -503,22 +503,6 @@ private:
     T** mListForFree{nullptr};
 };
 
-template <typename T, size_t MinSize, size_t MaxSize, bool IsFlatMap>
-struct NodeAllocator;
-
-// dummy allocator that does nothing
-template <typename T, size_t MinSize, size_t MaxSize>
-struct NodeAllocator<T, MinSize, MaxSize, true> {
-
-    // we are not using the data, so just free it.
-    void addOrFree(void* ptr, size_t ROBIN_HOOD_UNUSED(numBytes) /*unused*/) noexcept {
-        free(ptr);
-    }
-};
-
-template <typename T, size_t MinSize, size_t MaxSize>
-struct NodeAllocator<T, MinSize, MaxSize, false> : public BulkPoolAllocator<T, MinSize, MaxSize> {};
-
 // dummy hash, unsed as mixer when robin_hood::hash is already used
 template <typename T>
 struct identity_hash {
@@ -571,25 +555,21 @@ namespace detail {
 // According to STL, order of templates has effect on throughput. That's why I've moved the boolean
 // to the front.
 // https://www.reddit.com/r/cpp/comments/ahp6iu/compile_time_binary_size_reductions_and_cs_future/eeguck4/
-template <bool IsFlatMap, size_t MaxLoadFactor100, typename Key, typename T, typename Hash,
+template <size_t MaxLoadFactor100, typename Key, typename T, typename Hash,
           typename KeyEqual>
 class unordered_map
     : public Hash,
       public KeyEqual,
-      detail::NodeAllocator<
-          std::pair<typename std::conditional<IsFlatMap, Key, Key const>::type, T>, 4, 16384,
-          IsFlatMap> {
+      detail::BulkPoolAllocator<std::pair<Key const, T>, 4, 16384> {
 public:
     using key_type = Key;
     using mapped_type = T;
-    using value_type =
-        std::pair<typename std::conditional<IsFlatMap, Key, Key const>::type, T>;
+    using value_type = std::pair<Key const, T>;
     using size_type = size_t;
     using hasher = Hash;
     using key_equal = KeyEqual;
     using Self =
-        unordered_map<IsFlatMap, MaxLoadFactor100, key_type, mapped_type, hasher, key_equal>;
-    static constexpr bool is_flat_map = IsFlatMap;
+        unordered_map<MaxLoadFactor100, key_type, mapped_type, hasher, key_equal>;
 
 private:
     static_assert(MaxLoadFactor100 > 10 && MaxLoadFactor100 < 100,
@@ -602,7 +582,7 @@ private:
     static constexpr uint32_t InitialInfoNumBits = 5;
     static constexpr uint8_t InitialInfoInc = 1U << InitialInfoNumBits;
     static constexpr uint8_t InitialInfoHashShift = sizeof(size_t) * 8 - InitialInfoNumBits;
-    using DataPool = detail::NodeAllocator<value_type, 4, 16384, IsFlatMap>;
+    using DataPool = detail::BulkPoolAllocator<value_type, 4, 16384>;
 
     // type needs to be wider than uint8_t.
     //
@@ -827,8 +807,7 @@ private:
             } while (inc == static_cast<int>(sizeof(size_t)));
         }
 
-        friend class unordered_map<IsFlatMap, MaxLoadFactor100, key_type, mapped_type, hasher,
-                                   key_equal>;
+        friend class unordered_map<MaxLoadFactor100, key_type, mapped_type, hasher, key_equal>;
         NodePtr mKeyVals{nullptr};
         uint8_t const* mInfo{nullptr};
     };
@@ -1025,7 +1004,7 @@ public:
             return;
         }
 
-        Destroyer<Self, IsFlatMap && std::is_trivially_destructible<Node>::value>{}.nodes(*this);
+        Destroyer<Self, false>{}.nodes(*this);
 
         // clear everything except the sentinel
         // std::memset(mInfo, 0, sizeof(uint8_t) * (mMask + 1));
@@ -1543,8 +1522,7 @@ private:
             return;
         }
 
-        Destroyer<Self, IsFlatMap && std::is_trivially_destructible<Node>::value>{}
-            .nodesDoNotDeallocate(*this);
+        Destroyer<Self, false>{}.nodesDoNotDeallocate(*this);
         free(mKeyVals);
     }
 
@@ -1573,19 +1551,7 @@ private:
 
 template <typename Key, typename T, typename Hash,
           typename KeyEqual = std::equal_to<Key>, size_t MaxLoadFactor100 = 80>
-using unordered_flat_map = detail::unordered_map<true, MaxLoadFactor100, Key, T, Hash, KeyEqual>;
-
-template <typename Key, typename T, typename Hash,
-          typename KeyEqual = std::equal_to<Key>, size_t MaxLoadFactor100 = 80>
-using unordered_node_map = detail::unordered_map<false, MaxLoadFactor100, Key, T, Hash, KeyEqual>;
-
-template <typename Key, typename T, typename Hash,
-          typename KeyEqual = std::equal_to<Key>, size_t MaxLoadFactor100 = 80>
-using unordered_map =
-    detail::unordered_map<sizeof(std::pair<Key, T>) <= sizeof(size_t) * 6 &&
-                              std::is_nothrow_move_constructible<std::pair<Key, T>>::value &&
-                              std::is_nothrow_move_assignable<std::pair<Key, T>>::value,
-                          MaxLoadFactor100, Key, T, Hash, KeyEqual>;
+using unordered_node_map = detail::unordered_map< MaxLoadFactor100, Key, T, Hash, KeyEqual>;
 
 } // namespace robin_hood
 
