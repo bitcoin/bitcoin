@@ -230,5 +230,51 @@ size_t ComputeScriptLen(NodeType nodetype, Type sub0typ, size_t subsize, uint32_
     return 0;
 }
 
+bool DecomposeScript(const CScript& script, std::vector<std::pair<opcodetype, std::vector<unsigned char>>>& out)
+{
+    out.clear();
+    CScript::const_iterator it = script.begin(), itend = script.end();
+    while (it != itend) {
+        std::vector<unsigned char> push_data;
+        opcodetype opcode;
+        if (!script.GetOp(it, opcode, push_data)) {
+            out.clear();
+            return false;
+        } else if (opcode >= OP_1 && opcode <= OP_16) {
+            // Deal with OP_n (GetOp does not turn them into pushes).
+            push_data.assign(1, CScript::DecodeOP_N(opcode));
+        } else if (opcode == OP_CHECKSIGVERIFY) {
+            // Decompose OP_CHECKSIGVERIFY into OP_CHECKSIG OP_VERIFY
+            out.emplace_back(OP_CHECKSIG, std::vector<unsigned char>());
+            opcode = OP_VERIFY;
+        } else if (opcode == OP_CHECKMULTISIGVERIFY) {
+            // Decompose OP_CHECKMULTISIGVERIFY into OP_CHECKMULTISIG OP_VERIFY
+            out.emplace_back(OP_CHECKMULTISIG, std::vector<unsigned char>());
+            opcode = OP_VERIFY;
+        } else if (opcode == OP_EQUALVERIFY) {
+            // Decompose OP_EQUALVERIFY into OP_EQUAL OP_VERIFY
+            out.emplace_back(OP_EQUAL, std::vector<unsigned char>());
+            opcode = OP_VERIFY;
+        }
+        out.emplace_back(opcode, std::move(push_data));
+    }
+    std::reverse(out.begin(), out.end());
+    return true;
+}
+
+bool ParseScriptNumber(const std::pair<opcodetype, std::vector<unsigned char>>& in, int64_t& k) {
+    if (in.first == OP_0) {
+        k = 0;
+        return true;
+    }
+    if (!in.second.empty()) {
+        try {
+            k = CScriptNum(in.second, true).GetInt64();
+            return true;
+        } catch(const scriptnum_error&) {}
+    }
+    return false;
+}
+
 } // namespace internal
 } // namespace miniscript

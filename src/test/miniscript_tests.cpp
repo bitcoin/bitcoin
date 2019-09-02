@@ -23,6 +23,7 @@ struct TestData {
     std::vector<CPubKey> pubkeys;
     //! A map from the public keys to their CKeyIDs (faster than hashing every time).
     std::map<CPubKey, CKeyID> pkhashes;
+    std::map<CKeyID, CPubKey> pkmap;
 
     // Various precomputed hashes
     std::vector<std::vector<unsigned char>> sha256;
@@ -45,6 +46,7 @@ struct TestData {
             CKeyID keyid = pubkey.GetID();
             pubkeys.push_back(pubkey);
             pkhashes.emplace(pubkey, keyid);
+            pkmap.emplace(keyid, pubkey);
 
             // Compute various hashes
             std::vector<unsigned char> hash;
@@ -89,6 +91,23 @@ struct KeyConverter {
         auto bytes = ParseHex(std::string(first, last));
         key.Set(bytes.begin(), bytes.end());
         return key.IsValid();
+    }
+
+    template<typename I>
+    bool FromPKBytes(I first, I last, CPubKey& key) const {
+        key.Set(first, last);
+        return key.IsValid();
+    }
+
+    template<typename I>
+    bool FromPKHBytes(I first, I last, CPubKey& key) const {
+        assert(last - first == 20);
+        CKeyID keyid;
+        std::copy(first, last, keyid.begin());
+        auto it = g_testdata->pkmap.find(keyid);
+        assert(it != g_testdata->pkmap.end());
+        key = it->second;
+        return true;
     }
 };
 
@@ -250,6 +269,9 @@ void Test(const std::string& ms, const std::string& hexscript, int mode)
         if (hexscript != "?") BOOST_CHECK_MESSAGE(HexStr(computed_script) == hexscript, "Script mismatch: " + ms + " (" + HexStr(computed_script) + " vs " + hexscript + ")");
         BOOST_CHECK_MESSAGE(node->IsNonMalleable() == !!(mode & TESTMODE_NONMAL), "Malleability mismatch: " + ms);
         BOOST_CHECK_MESSAGE(node->NeedsSignature() == !!(mode & TESTMODE_NEEDSIG), "Signature necessity mismatch: " + ms);
+        auto inferred_miniscript = miniscript::FromScript(computed_script, CONVERTER);
+        BOOST_CHECK_MESSAGE(inferred_miniscript, "Cannot infer miniscript from script: " + ms);
+        BOOST_CHECK_MESSAGE(inferred_miniscript->ToScript(CONVERTER) == computed_script, "Roundtrip failure: miniscript->script != miniscript->script->miniscript->script: " + ms);
     }
 
 }
@@ -316,6 +338,11 @@ BOOST_AUTO_TEST_CASE(random_tests)
         auto parsed = miniscript::FromString(str, CONVERTER);
         BOOST_CHECK(parsed); // Check that we can convert back
         BOOST_CHECK(*parsed == *node); // Check that it matches the original
+        auto decoded = miniscript::FromScript(script, CONVERTER);
+        BOOST_CHECK(decoded); // Check that we can decode the miniscript back from the script.
+        // Check that it matches the original (we can't use *decoded == *node because the miniscript representation may differ)
+        BOOST_CHECK(decoded->ToScript(CONVERTER) == script); // The script corresponding to that decoded form must match exactly.
+        BOOST_CHECK(decoded->GetType() == node->GetType()); // The type also has to match exactly.
     }
 
     g_testdata.reset();
