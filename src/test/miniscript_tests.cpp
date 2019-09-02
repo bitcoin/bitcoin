@@ -23,6 +23,7 @@ struct TestData {
     std::vector<CPubKey> pubkeys;
     //! A map from the public keys to their CKeyIDs (faster than hashing every time).
     std::map<CPubKey, CKeyID> pkhashes;
+    std::map<CKeyID, CPubKey> pkmap;
 
     // Various precomputed hashes
     std::vector<std::vector<unsigned char>> sha256;
@@ -45,6 +46,7 @@ struct TestData {
             CKeyID keyid = pubkey.GetID();
             pubkeys.push_back(pubkey);
             pkhashes.emplace(pubkey, keyid);
+            pkmap.emplace(keyid, pubkey);
 
             // Compute various hashes
             std::vector<unsigned char> hash;
@@ -87,6 +89,23 @@ struct KeyConverter {
         key.Set(bytes.begin(), bytes.end());
         return key.IsValid();
     }
+
+    template<typename I>
+    bool FromPKBytes(I first, I last, CPubKey& key) const {
+        key.Set(first, last);
+        return key.IsValid();
+    }
+
+    template<typename I>
+    bool FromPKHBytes(I first, I last, CPubKey& key) const {
+        assert(last - first == 20);
+        CKeyID keyid;
+        std::copy(first, last, keyid.begin());
+        auto it = g_testdata->pkmap.find(keyid);
+        assert(it != g_testdata->pkmap.end());
+        key = it->second;
+        return true;
+    }
 };
 
 //! Singleton instance of KeyConverter.
@@ -117,6 +136,9 @@ void Test(const std::string& ms, const std::string& hexscript, int mode)
         BOOST_CHECK_MESSAGE(node->IsNonMalleable() == !!(mode & TESTMODE_NONMAL), "Malleability mismatch: " + ms);
         BOOST_CHECK_MESSAGE(node->NeedsSignature() == !!(mode & TESTMODE_NEEDSIG), "Signature necessity mismatch: " + ms);
         BOOST_CHECK_MESSAGE((node->GetType() << "k"_mst) == !(mode & TESTMODE_TIMELOCKMIX), "Timelock mix mismatch: " + ms);
+        auto inferred_miniscript = miniscript::FromScript(computed_script, CONVERTER);
+        BOOST_CHECK_MESSAGE(inferred_miniscript, "Cannot infer miniscript from script: " + ms);
+        BOOST_CHECK_MESSAGE(inferred_miniscript->ToScript(CONVERTER) == computed_script, "Roundtrip failure: miniscript->script != miniscript->script->miniscript->script: " + ms);
     }
 
 }
@@ -217,6 +239,16 @@ BOOST_AUTO_TEST_CASE(fixed_tests)
     Test("c:or_i(andor(c:pk_h(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),pk_h(022f01e5e15cca351daff3843fb70f3c2f0a1bdd05e5af888a67784ef3e10a2a01),pk_h(02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5)),pk_k(02d7924d4f7d43ea965a465ae3095ff41131e5946f3c85f79e44adbcf8e27e080e))", "6376a914fcd35ddacad9f2d5be5e464639441c6065e6955d88ac6476a91406afd46bcdfd22ef94ac122aa11f241244a37ecc886776a9149652d86bedf43ad264362e6e6eba6eb7645081278868672102d7924d4f7d43ea965a465ae3095ff41131e5946f3c85f79e44adbcf8e27e080e68ac", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_NEEDSIG);
     Test("thresh(1,c:pk_k(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),altv:after(1000000000),altv:after(100))", "2103d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65ac6b6300670400ca9a3bb16951686c936b6300670164b16951686c935187", TESTMODE_VALID);
     Test("thresh(2,c:pk_k(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),ac:pk_k(03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556),altv:after(1000000000),altv:after(100))", "2103d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65ac6b2103fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556ac6c936b6300670400ca9a3bb16951686c936b6300670164b16951686c935287", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_TIMELOCKMIX);
+
+    // Misc unit tests
+    // A Script with a non minimal push is invalid
+    std::vector<unsigned char> nonminpush = ParseHex("0000210232780000feff00ffffffffffff21ff005f00ae21ae00000000060602060406564c2102320000060900fe00005f00ae21ae00100000060606060606000000000000000000000000000000000000000000000000000000000000000000");
+    const CScript nonminpush_script(nonminpush.begin(), nonminpush.end());
+    BOOST_CHECK(miniscript::FromScript(nonminpush_script, CONVERTER) == nullptr);
+    // A non-minimal VERIFY (<key> CHECKSIG VERIFY 1)
+    std::vector<unsigned char> nonminverify = ParseHex("2103a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7ac6951");
+    const CScript nonminverify_script(nonminverify.begin(), nonminverify.end());
+    BOOST_CHECK(miniscript::FromScript(nonminverify_script, CONVERTER) == nullptr);
     // A threshold as large as the number of subs is valid.
     Test("thresh(2,c:pk_k(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),altv:after(100))", "2103d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65ac6b6300670164b16951686c935287", TESTMODE_VALID | TESTMODE_NEEDSIG | TESTMODE_NONMAL);
     // A threshold of 1 is valid.
