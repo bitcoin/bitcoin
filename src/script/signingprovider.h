@@ -18,7 +18,15 @@ struct KeyOriginInfo;
 class SigningProvider
 {
 public:
-    virtual ~SigningProvider() {}
+    SigningProvider() = default;
+    virtual ~SigningProvider() = default;
+
+    SigningProvider(const SigningProvider&) = default;
+    SigningProvider& operator=(const SigningProvider&) = default;
+
+    SigningProvider(SigningProvider&&) = default;
+    SigningProvider& operator=(SigningProvider&&) = default;
+
     virtual bool GetCScript(const CScriptID &scriptid, CScript& script) const { return false; }
     virtual bool HaveCScript(const CScriptID &scriptid) const { return false; }
     virtual bool GetPubKey(const CKeyID &address, CPubKey& pubkey) const { return false; }
