@@ -112,10 +112,10 @@ class WalletTest(BitcoinTestFramework):
         def test_balances(*, fee_node_1=0):
             # getbalance without any arguments includes unconfirmed transactions, but not untrusted transactions
             assert_equal(self.nodes[0].getbalance(), Decimal('9.99'))  # change from node 0's send
-            assert_equal(self.nodes[1].getbalance(), Decimal('30') - fee_node_1)  # change from node 1's send
+            assert_equal(self.nodes[1].getbalance(), Decimal('0'))  # change from node 1's send
             # Same with minconf=0
             assert_equal(self.nodes[0].getbalance(minconf=0), Decimal('9.99'))
-            assert_equal(self.nodes[1].getbalance(minconf=0), Decimal('30') - fee_node_1)
+            assert_equal(self.nodes[1].getbalance(minconf=0), Decimal('0'))
             # getbalance with a minconf incorrectly excludes coins that have been spent more recently than the minconf blocks ago
             # TODO: fix getbalance tracking of coin spentness depth
             assert_equal(self.nodes[0].getbalance(minconf=1), Decimal('0'))
@@ -125,9 +125,9 @@ class WalletTest(BitcoinTestFramework):
             assert_equal(self.nodes[0].getbalances()['mine']['untrusted_pending'], Decimal('60'))
             assert_equal(self.nodes[0].getwalletinfo()["unconfirmed_balance"], Decimal('60'))
 
-            assert_equal(self.nodes[1].getunconfirmedbalance(), Decimal('0'))  # Doesn't include output of node 0's send since it was spent
-            assert_equal(self.nodes[1].getbalances()['mine']['untrusted_pending'], Decimal('0'))
-            assert_equal(self.nodes[1].getwalletinfo()["unconfirmed_balance"], Decimal('0'))
+            assert_equal(self.nodes[1].getunconfirmedbalance(), Decimal('30') - fee_node_1)  # Doesn't include output of node 0's send since it was spent
+            assert_equal(self.nodes[1].getbalances()['mine']['untrusted_pending'], Decimal('30') - fee_node_1)
+            assert_equal(self.nodes[1].getwalletinfo()["unconfirmed_balance"], Decimal('30') - fee_node_1)
 
         test_balances(fee_node_1=Decimal('0.01'))
 
