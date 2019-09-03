@@ -112,6 +112,7 @@ struct FrozenCleanupCheck {
         return true;
     }
     FrozenCleanupCheck() {}
+    FrozenCleanupCheck(const FrozenCleanupCheck&) = default;
     ~FrozenCleanupCheck()
     {
         if (should_freeze) {
