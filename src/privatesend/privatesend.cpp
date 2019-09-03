@@ -64,7 +64,7 @@ bool CPrivateSendQueue::CheckSignature(const CBLSPublicKey& blsPubKey) const
     CBLSSignature sig;
     sig.SetBuf(vchSig);
     if (!sig.IsValid() || !sig.VerifyInsecure(blsPubKey, hash)) {
-        LogPrintf("CTxLockVote::CheckSignature -- VerifyInsecure() failed\n");
+        LogPrint(BCLog::PRIVATESEND, "CPrivateSendQueue::CheckSignature -- VerifyInsecure() failed\n");
         return false;
     }
 
@@ -109,7 +109,7 @@ bool CPrivateSendBroadcastTx::CheckSignature(const CBLSPublicKey& blsPubKey) con
     CBLSSignature sig;
     sig.SetBuf(vchSig);
     if (!sig.IsValid() || !sig.VerifyInsecure(blsPubKey, hash)) {
-        LogPrintf("CTxLockVote::CheckSignature -- VerifyInsecure() failed\n");
+        LogPrint(BCLog::PRIVATESEND, "CPrivateSendBroadcastTx::CheckSignature -- VerifyInsecure() failed\n");
         return false;
     }
 
@@ -259,7 +259,7 @@ bool CPrivateSend::IsCollateralValid(const CTransaction& txCollateral)
         nValueOut += txout.nValue;
 
         if (!txout.scriptPubKey.IsPayToPublicKeyHash() && !txout.scriptPubKey.IsUnspendable()) {
-            LogPrintf("CPrivateSend::IsCollateralValid -- Invalid Script, txCollateral=%s", txCollateral.ToString());
+            LogPrint(BCLog::PRIVATESEND, "CPrivateSend::IsCollateralValid -- Invalid Script, txCollateral=%s", txCollateral.ToString());
             return false;
         }
     }
