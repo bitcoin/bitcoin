@@ -36,8 +36,8 @@ bilingual_str TransactionErrorString(const TransactionError error);
 
 bilingual_str ResolveErrMsg(const std::string& optname, const std::string& strBind);
 
-std::string AmountHighWarn(const std::string& optname);
+bilingual_str AmountHighWarn(const std::string& optname);
 
-std::string AmountErrMsg(const std::string& optname, const std::string& strValue);
+bilingual_str AmountErrMsg(const std::string& optname, const std::string& strValue);
 
 #endif // BITCOIN_UTIL_ERROR_H
