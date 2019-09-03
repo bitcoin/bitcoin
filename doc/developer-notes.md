@@ -843,16 +843,18 @@ the result of the script is identical to the commit. This aids reviewers since t
 does exactly what it's supposed to do. It is also helpful for rebasing (since the same script can just be re-run
 on the new master commit).
 
-To create a scripted-diff:
+To create a scripted-diff, use [`commit-scripted-diff.sh`](/contrib/devtools/README.md#commit-scripted-diff.sh).
 
-- start the commit message with `scripted-diff:` (and then a description of the diff on the same line)
-- in the commit message include the bash script between lines containing just the following text:
+This will automatically:
+
+- start the commit message with `scripted-diff: `
+- in the commit message, include the bash script between two lines:
     - `-BEGIN VERIFY SCRIPT-`
     - `-END VERIFY SCRIPT-`
 
-The scripted-diff is verified by the tool `test/lint/commit-script-check.sh`. The tool's default behavior, when supplied
-with a commit is to verify all scripted-diffs from the beginning of time up to said commit. Internally, the tool passes
-the first supplied argument to `git rev-list --reverse` to determine which commits to verify script-diffs for, ignoring
+The scripted-diff can be verified by running `./test/lint/commit-script-check.sh <commit>`. The tool's default behavior
+is to verify all scripted-diffs from the beginning of time up to said commit. Internally, the tool passes
+the first supplied argument to `git rev-list --reverse` to determine which commits should be verified, ignoring
 commits that don't conform to the commit message format described above.
 
 For development, it might be more convenient to verify all scripted-diffs in a range `A..B`, for example:

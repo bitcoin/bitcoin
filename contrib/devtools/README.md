@@ -3,7 +3,7 @@ Contents
 This directory contains tools for developers working on this repository.
 
 clang-format-diff.py
-===================
+====================
 
 A script to format unified git diffs according to [.clang-format](../../src/.clang-format).
 
@@ -15,6 +15,18 @@ the script should be called from the git root folder as follows.
 ```
 git diff -U0 HEAD~1.. | ./contrib/devtools/clang-format-diff.py -p1 -i -v
 ```
+
+commit-scripted-diff.sh
+=======================
+
+Commits a [scripted-diff](/doc/developer-notes.md#scripted-diffs) from a script or text file.
+This avoids manually copying the script when building the commit. To use from a clean `git status`:
+
+1. Run the script to apply changes (`sed` or similar)
+2. `git add -A` to stage all changes
+3. `./contrib/devtools/commit-scripted-diff.sh <script_filename> <commit_message> [commit_description]`
+
+To further customize the commit message, `git commit --amend`.
 
 copyright\_header.py
 ====================
