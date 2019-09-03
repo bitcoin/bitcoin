@@ -41,12 +41,12 @@ std::string ResolveErrMsg(const std::string& optname, const std::string& strBind
     return strprintf(_("Cannot resolve -%s address: '%s'").translated, optname, strBind);
 }
 
-std::string AmountHighWarn(const std::string& optname)
+bilingual_str AmountHighWarn(const std::string& optname)
 {
-    return strprintf(_("%s is set very high!").translated, optname);
+    return strprintf(_("%s is set very high!"), optname);
 }
 
-std::string AmountErrMsg(const std::string& optname, const std::string& strValue)
+bilingual_str AmountErrMsg(const std::string& optname, const std::string& strValue)
 {
-    return strprintf(_("Invalid amount for -%s=<amount>: '%s'").translated, optname, strValue);
+    return strprintf(_("Invalid amount for -%s=<amount>: '%s'"), optname, strValue);
 }
