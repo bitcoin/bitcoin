@@ -228,6 +228,12 @@ AC_ARG_ENABLE([bip70],
   [enable_bip70=$enableval],
   [enable_bip70=auto])
 
+  AC_ARG_ENABLE([thinlto],
+  [AS_HELP_STRING([--disable-thinlto],
+  [do not attempt to use Link Time Optimizations (default is to use when possible)])],
+  [use_thinlto=$enableval],
+  [use_thinlto=auto])
+
 AC_ARG_WITH([protoc-bindir],[AS_HELP_STRING([--with-protoc-bindir=BIN_DIR],[specify protoc bin path])], [protoc_bin_path=$withval], [])
 
 AC_ARG_ENABLE(man,
@@ -312,6 +318,20 @@ if test x$use_sanitizers != x; then
     extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) { return 0; }
     __attribute__((weak)) // allow for libFuzzer linking
     ]],[[]])])
+fi
+
+if test x$use_thinlto != xno; then
+  # Check if the compiler accepts `-flto=thin`. in gcc it will enable just lto, clang will chose thinlto.
+  AX_CHECK_COMPILE_FLAG(
+    [[-flto=thin]],
+    [[LTO_CXXFLAGS=-flto=thin]],
+    [AC_MSG_ERROR([compiler did not accept requested flags])])
+
+  # Same thing for the linker.
+  AX_CHECK_LINK_FLAG(
+    [[-flto=thin]],
+    [[LTO_LDFLAGS=-flto=thin]],
+    [AC_MSG_ERROR([linker did not accept requested flags])])
 fi
 
 ERROR_CXXFLAGS=
@@ -1526,6 +1546,8 @@ AM_CONDITIONAL([ENABLE_SSE41],[test x$enable_sse41 = xyes])
 AM_CONDITIONAL([ENABLE_AVX2],[test x$enable_avx2 = xyes])
 AM_CONDITIONAL([ENABLE_SHANI],[test x$enable_shani = xyes])
 AM_CONDITIONAL([USE_ASM],[test x$use_asm = xyes])
+AM_CONDITIONAL([THINLTO],[test x$use_thinlto = xyes])
+
 
 AC_DEFINE(CLIENT_VERSION_MAJOR, _CLIENT_VERSION_MAJOR, [Major version])
 AC_DEFINE(CLIENT_VERSION_MINOR, _CLIENT_VERSION_MINOR, [Minor version])
@@ -1587,6 +1609,8 @@ AC_SUBST(EVENT_PTHREADS_LIBS)
 AC_SUBST(ZMQ_LIBS)
 AC_SUBST(PROTOBUF_LIBS)
 AC_SUBST(QR_LIBS)
+AC_SUBST(LTO_CXXFLAGS)
+AC_SUBST(LTO_LDFLAGS)
 AC_CONFIG_FILES([Makefile src/Makefile doc/man/Makefile share/setup.nsi share/qt/Info.plist test/config.ini])
 AC_CONFIG_FILES([contrib/devtools/split-debug.sh],[chmod +x contrib/devtools/split-debug.sh])
 AM_COND_IF([HAVE_DOXYGEN], [AC_CONFIG_FILES([doc/Doxyfile])])
@@ -1675,7 +1699,7 @@ echo "  CC            = $CC"
 echo "  CFLAGS        = $CFLAGS"
 echo "  CPPFLAGS      = $DEBUG_CPPFLAGS $HARDENED_CPPFLAGS $CPPFLAGS"
 echo "  CXX           = $CXX"
-echo "  CXXFLAGS      = $DEBUG_CXXFLAGS $HARDENED_CXXFLAGS $WARN_CXXFLAGS $NOWARN_CXXFLAGS $ERROR_CXXFLAGS $GPROF_CXXFLAGS $CXXFLAGS"
-echo "  LDFLAGS       = $PTHREAD_CFLAGS $HARDENED_LDFLAGS $GPROF_LDFLAGS $LDFLAGS"
+echo "  CXXFLAGS      = $LTO_CXXFLAGS $DEBUG_CXXFLAGS $HARDENED_CXXFLAGS $WARN_CXXFLAGS $NOWARN_CXXFLAGS $ERROR_CXXFLAGS $GPROF_CXXFLAGS $CXXFLAGS"
+echo "  LDFLAGS       = $LTO_LDFLAGS $PTHREAD_CFLAGS $HARDENED_LDFLAGS $GPROF_LDFLAGS $LDFLAGS"
 echo "  ARFLAGS       = $ARFLAGS"
 echo
