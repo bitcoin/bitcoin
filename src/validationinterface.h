@@ -98,18 +98,18 @@ public:
     /** Call any remaining callbacks on the calling thread */
     void FlushBackgroundCallbacks();
 
-    void AcceptedBlockHeader(const CBlockIndex *pindexNew) {}
-    void NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload) {}
+    void AcceptedBlockHeader(const CBlockIndex *pindexNew);
+    void NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload);
     void UpdatedBlockTip(const CBlockIndex *, const CBlockIndex *, bool fInitialDownload);
     void TransactionAddedToMempool(const CTransactionRef &);
     void BlockConnected(const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex, const std::vector<CTransactionRef> &);
     void BlockDisconnected(const std::shared_ptr<const CBlock> &);
-    void NotifyTransactionLock(const CTransaction &tx, const llmq::CInstantSendLock& islock) {}
-    void NotifyChainLock(const CBlockIndex* pindex, const llmq::CChainLockSig& clsig) {}
-    void NotifyGovernanceVote(const CGovernanceVote &vote) {}
-    void NotifyGovernanceObject(const CGovernanceObject &object) {}
-    void NotifyInstantSendDoubleSpendAttempt(const CTransaction &currentTx, const CTransaction &previousTx) {}
-    void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff) {}
+    void NotifyTransactionLock(const CTransaction &tx, const llmq::CInstantSendLock& islock);
+    void NotifyChainLock(const CBlockIndex* pindex, const llmq::CChainLockSig& clsig);
+    void NotifyGovernanceVote(const CGovernanceVote &vote);
+    void NotifyGovernanceObject(const CGovernanceObject &object);
+    void NotifyInstantSendDoubleSpendAttempt(const CTransaction &currentTx, const CTransaction &previousTx);
+    void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff);
     void SetBestChain(const CBlockLocator &);
     void Inventory(const uint256 &);
     void Broadcast(int64_t nBestBlockTime, CConnman* connman);
