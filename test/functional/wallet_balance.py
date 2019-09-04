@@ -112,7 +112,7 @@ class WalletTest(BitcoinTestFramework):
         def test_balances(*, fee_node_1=0):
             # getbalance without any arguments includes unconfirmed transactions, but not untrusted transactions
             assert_equal(self.nodes[0].getbalance(), Decimal('9.99'))  # change from node 0's send
-            assert_equal(self.nodes[1].getbalance(), Decimal('0'))  # change from node 1's send
+            assert_equal(self.nodes[1].getbalance(), Decimal('0'))  # node 1's send had an unsafe input
             # Same with minconf=0
             assert_equal(self.nodes[0].getbalance(minconf=0), Decimal('9.99'))
             assert_equal(self.nodes[1].getbalance(minconf=0), Decimal('0'))
