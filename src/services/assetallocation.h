@@ -90,15 +90,10 @@ class CAssetAllocation {
 public:
 	CAssetAllocationTuple assetAllocationTuple;
 	RangeAmountTuples listSendingAllocationAmounts;
-	CAmount nBalance;
 	COutPoint lockedOutpoint;
+	unsigned char lockedOutpointSet; // use bit to control read/write of lockedOutpoint (saves 39 bytes on bandwidth on non-locked asset txs)
 	template <typename Stream, typename Operation>
-	inline void SerializationOp(Stream& s, Operation ser_action) {
-		READWRITE(assetAllocationTuple);
-		READWRITE(listSendingAllocationAmounts);
-		READWRITE(nBalance);
-		READWRITE(lockedOutpoint);
-	}
+	void SerializationOp(Stream& s, Operation ser_action);
 	CAssetAllocation() {
 		SetNull();
 	}
@@ -125,18 +120,51 @@ public:
 	inline friend bool operator!=(const CAssetAllocation &a, const CAssetAllocation &b) {
 		return !(a == b);
 	}
-	inline void SetNull() { ClearAssetAllocation(); nBalance = 0;}
+	inline void SetNull() { ClearAssetAllocation();}
 	bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData);
 	void Serialize(std::vector<unsigned char>& vchData);
 };
-typedef std::unordered_map<std::string, CAssetAllocation > AssetAllocationMap;
+class CAssetAllocationDBEntry {
+public:
+	CAssetAllocationTuple assetAllocationTuple;
+	CAmount nBalance;
+	COutPoint lockedOutpoint;
+	unsigned char lockedOutpointSet; // use bit to control read/write of lockedOutpoint (saves 39 bytes on bandwidth on non-locked asset txs)
+	template <typename Stream, typename Operation>
+	void SerializationOp(Stream& s, Operation ser_action);
+	CAssetAllocationDBEntry() {
+		SetNull();
+	}
+	inline void ClearAssetAllocation()
+	{
+		lockedOutpoint.SetNull();
+	}
+	ADD_SERIALIZE_METHODS;
+
+	inline friend bool operator==(const CAssetAllocationDBEntry &a, const CAssetAllocationDBEntry &b) {
+		return (a.assetAllocationTuple == b.assetAllocationTuple
+			);
+	}
+    CAssetAllocationDBEntry(const CAssetAllocationDBEntry&) = delete;
+    CAssetAllocationDBEntry(CAssetAllocationDBEntry && other) = default;
+    CAssetAllocationDBEntry& operator=( CAssetAllocationDBEntry& a ) = delete;
+	CAssetAllocationDBEntry& operator=( CAssetAllocationDBEntry&& a ) = default;
+ 
+	inline friend bool operator!=(const CAssetAllocationDBEntry &a, const CAssetAllocationDBEntry &b) {
+		return !(a == b);
+	}
+	inline void SetNull() { ClearAssetAllocation(); nBalance = 0;}
+	bool UnserializeFromData(const std::vector<unsigned char> &vchData);
+	void Serialize(std::vector<unsigned char>& vchData);
+};
+typedef std::unordered_map<std::string, CAssetAllocationDBEntry > AssetAllocationMap;
 typedef std::unordered_map<std::string, COutPoint > AssetPrevTxMap;
 class CAssetAllocationDB : public CDBWrapper {
 public:
 	CAssetAllocationDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetallocations", nCacheSize, fMemory, fWipe) {}
     
-    bool ReadAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple, CAssetAllocation& assetallocation) {
+    bool ReadAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple, CAssetAllocationDBEntry& assetallocation) {
         return Read(assetAllocationTuple, assetallocation);
     }
     bool ReadAssetsByAddress(const CWitnessAddress &address, std::vector<uint32_t> &assetGuids){
@@ -177,8 +205,8 @@ public:
     bool ScanAssetAllocationMempoolBalances(const uint32_t count, const uint32_t from, const UniValue& oOptions, UniValue& oRes);
 };
 static COutPoint emptyOutPoint;
-bool GetAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple,CAssetAllocation& txPos);
-bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, const CAsset& asset, UniValue& oName);
+bool GetAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple,CAssetAllocationDBEntry& txPos);
+bool BuildAssetAllocationJson(const CAssetAllocationDBEntry& assetallocation, const CAsset& asset, UniValue& oName);
 bool AssetAllocationTxToJSON(const CTransaction &tx, const CAsset& dbAsset, const int& nHeight, const uint256& blockhash, UniValue &entry, CAssetAllocation& assetallocation);
 #ifdef ENABLE_WALLET
 bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry, CWallet* const pwallet, const isminefilter* filter_ismine);

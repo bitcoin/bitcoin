@@ -13,7 +13,7 @@
 #endif
 #include <services/rpc/assetrpc.h>
 #include <rpc/server.h>
-
+#include <chainparams.h>
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
 extern UniValue ValueFromAmount(const CAmount& amount);
@@ -159,6 +159,22 @@ void CAssetAllocation::Serialize( vector<unsigned char> &vchData) {
 	vchData = vector<unsigned char>(dsAsset.begin(), dsAsset.end());
 
 }
+bool CAssetAllocationDBEntry::UnserializeFromData(const vector<unsigned char> &vchData) {
+    try {
+        CDataStream dsAsset(vchData, SER_NETWORK, PROTOCOL_VERSION);
+        dsAsset >> *this;
+    } catch (std::exception &e) {
+		SetNull();
+        return false;
+    }
+	return true;
+}
+void CAssetAllocationDBEntry::Serialize( vector<unsigned char> &vchData) {
+    CDataStream dsAsset(SER_NETWORK, PROTOCOL_VERSION);
+    dsAsset << *this;
+	vchData = vector<unsigned char>(dsAsset.begin(), dsAsset.end());
+
+}
 bool CAssetAllocationDB::WriteMintIndex(const CTransaction& tx, const uint256& txHash, const CMintSyscoin& mintSyscoin, const int &nHeight, const uint256& blockhash){
     if (fZMQAssetAllocation || fAssetIndex) {
         if(!fAssetIndexGuids.empty() && std::find(fAssetIndexGuids.begin(),fAssetIndexGuids.end(), mintSyscoin.assetAllocationTuple.nAsset) == fAssetIndexGuids.end()){
@@ -284,13 +300,13 @@ bool WriteAssetAllocationIndexTXID(const CAssetAllocationTuple& allocationTuple,
     }   
     return true;
 }
-bool GetAssetAllocation(const CAssetAllocationTuple &assetAllocationTuple, CAssetAllocation& txPos) {
+bool GetAssetAllocation(const CAssetAllocationTuple &assetAllocationTuple, CAssetAllocationDBEntry& txPos) {
     if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos))
         return false;
     return true;
 }
 
-bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, const CAsset& asset, UniValue& oAssetAllocation)
+bool BuildAssetAllocationJson(const CAssetAllocationDBEntry& assetallocation, const CAsset& asset, UniValue& oAssetAllocation)
 {
     CAmount nBalanceZDAG = assetallocation.nBalance;
     const string &allocationTupleStr = assetallocation.assetAllocationTuple.ToString();
@@ -703,7 +719,7 @@ bool CAssetAllocationDB::ScanAssetAllocations(const uint32_t count, const uint32
 
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->SeekToFirst();
-	CAssetAllocation txPos;
+	CAssetAllocationDBEntry txPos;
     CAssetAllocationTuple key;
 	CAsset theAsset;
 	uint32_t index = 0;
@@ -851,4 +867,39 @@ void GetActorsFromAssetAllocationTx(const CAssetAllocation &theAssetAllocation, 
         actorSet.insert(bGetAddress? theAssetAllocation.assetAllocationTuple.witnessAddress.ToString(): theAssetAllocation.assetAllocationTuple.ToString());
     }
     
+}
+template <typename Stream, typename Operation>
+void CAssetAllocation::SerializationOp(Stream& s, Operation ser_action) {
+    READWRITE(assetAllocationTuple);
+    READWRITE(listSendingAllocationAmounts);
+    if(::ChainActive().Tip()->nHeight <= Params().GetConsensus().nBridgeStartBlock){
+        CAmount nBalance;
+        READWRITE(nBalance);
+        READWRITE(lockedOutpoint);
+    }
+    else{
+        if(!ser_action.ForRead())
+            lockedOutpointSet = lockedOutpoint.n == COutPoint::NULL_INDEX? 0: 1;
+        READWRITE(lockedOutpointSet);
+        if(lockedOutpointSet == 1)
+            READWRITE(lockedOutpoint);
+    }
+}
+template <typename Stream, typename Operation>
+void CAssetAllocationDBEntry::SerializationOp(Stream& s, Operation ser_action) {
+    READWRITE(assetAllocationTuple);
+    if(::ChainActive().Tip()->nHeight <= Params().GetConsensus().nBridgeStartBlock){
+        READWRITE(nBalance);
+        RangeAmountTuples listSendingAllocationAmounts;
+        READWRITE(listSendingAllocationAmounts);
+        READWRITE(lockedOutpoint);
+    }
+    else{
+        READWRITE(nBalance);
+        if(!ser_action.ForRead())
+            lockedOutpointSet = lockedOutpoint.n == COutPoint::NULL_INDEX? 0: 1;
+        READWRITE(lockedOutpointSet);
+        if(lockedOutpointSet == 1)
+            READWRITE(lockedOutpoint);
+    }
 }

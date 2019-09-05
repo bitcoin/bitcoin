@@ -198,7 +198,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
         auto mapAssetAllocation = result1.first;
         const bool &mapAssetAllocationNotFound = result1.second;
         if(mapAssetAllocationNotFound){
-            CAssetAllocation receiverAllocation;
+            CAssetAllocationDBEntry receiverAllocation;
             GetAssetAllocation(mintSyscoin.assetAllocationTuple, receiverAllocation);
             if (receiverAllocation.assetAllocationTuple.IsNull()) {           
                 receiverAllocation.assetAllocationTuple.nAsset = std::move(mintSyscoin.assetAllocationTuple.nAsset);
@@ -422,7 +422,7 @@ bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, AssetSup
     auto mapAssetAllocation = result1.first;
     const bool& mapAssetAllocationNotFound = result1.second;
     if(mapAssetAllocationNotFound){
-        CAssetAllocation receiverAllocation;
+        CAssetAllocationDBEntry receiverAllocation;
         GetAssetAllocation(mintSyscoin.assetAllocationTuple, receiverAllocation);
         if (receiverAllocation.assetAllocationTuple.IsNull()) {
             receiverAllocation.assetAllocationTuple.nAsset = std::move(mintSyscoin.assetAllocationTuple.nAsset);
@@ -430,7 +430,7 @@ bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, AssetSup
         } 
         mapAssetAllocation->second = std::move(receiverAllocation);                 
     }
-    CAssetAllocation& storedReceiverAllocationRef = mapAssetAllocation->second;
+    CAssetAllocationDBEntry& storedReceiverAllocationRef = mapAssetAllocation->second;
     
     storedReceiverAllocationRef.nBalance -= mintSyscoin.nValueAsset;
     if(storedReceiverAllocationRef.nBalance < 0) {
@@ -490,7 +490,7 @@ bool DisconnectAssetAllocation(const CTransaction &tx, const uint256& txid, cons
     auto mapAssetAllocation = result.first;
     const bool & mapAssetAllocationNotFound = result.second;
     if(mapAssetAllocationNotFound){
-        CAssetAllocation senderAllocation;
+        CAssetAllocationDBEntry senderAllocation;
         GetAssetAllocation(theAssetAllocation.assetAllocationTuple, senderAllocation);
         if (senderAllocation.assetAllocationTuple.IsNull()) {
             senderAllocation.assetAllocationTuple.nAsset = std::move(theAssetAllocation.assetAllocationTuple.nAsset);
@@ -498,13 +498,13 @@ bool DisconnectAssetAllocation(const CTransaction &tx, const uint256& txid, cons
         } 
         mapAssetAllocation->second = std::move(senderAllocation);               
     }
-    CAssetAllocation& storedSenderAllocationRef = mapAssetAllocation->second;
+    CAssetAllocationDBEntry& storedSenderAllocationRef = mapAssetAllocation->second;
     CAmount nTotal = 0;
     for(const auto& amountTuple:theAssetAllocation.listSendingAllocationAmounts){
         const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.assetAllocationTuple.nAsset, amountTuple.first);
        
         const std::string &receiverTupleStr = receiverAllocationTuple.ToString();
-        CAssetAllocation receiverAllocation;
+        CAssetAllocationDBEntry receiverAllocation;
         #if __cplusplus > 201402 
         auto result1 = mapAssetAllocations.try_emplace(std::move(receiverTupleStr),  std::move(emptyAllocation));
         #else
@@ -521,7 +521,7 @@ bool DisconnectAssetAllocation(const CTransaction &tx, const uint256& txid, cons
             } 
             mapAssetAllocationReceiver->second = std::move(receiverAllocation);               
         }
-        CAssetAllocation& storedReceiverAllocationRef = mapAssetAllocationReceiver->second;
+        CAssetAllocationDBEntry& storedReceiverAllocationRef = mapAssetAllocationReceiver->second;
 
         // reverse allocations
         storedReceiverAllocationRef.nBalance -= amountTuple.second;
@@ -691,7 +691,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
     const CWitnessAddress &user1 = theAssetAllocation.assetAllocationTuple.witnessAddress;
     const std::string &senderTupleStr = theAssetAllocation.assetAllocationTuple.ToString();
     const CWitnessAddress burnWitness(0, vchFromString("burn"));
-    CAssetAllocation dbAssetAllocation;
+    CAssetAllocationDBEntry dbAssetAllocation;
     AssetAllocationMap::iterator mapAssetAllocation;
     CAsset dbAsset;
     if(fJustCheck){
@@ -718,7 +718,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
             mapAssetAllocation->second = std::move(dbAssetAllocation);             
         }
     }
-    CAssetAllocation& storedSenderAllocationRef = fJustCheck? dbAssetAllocation:mapAssetAllocation->second;
+    CAssetAllocationDBEntry& storedSenderAllocationRef = fJustCheck? dbAssetAllocation:mapAssetAllocation->second;
     
     if (!GetAsset(storedSenderAllocationRef.assetAllocationTuple.nAsset, dbAsset))
     {
@@ -811,7 +811,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
             auto mapAssetAllocationReceiver = resultReceiver.first;
             const bool& mapAssetAllocationReceiverNotFound = resultReceiver.second;
             if(mapAssetAllocationReceiverNotFound){
-                CAssetAllocation dbAssetAllocationReceiver;
+                CAssetAllocationDBEntry dbAssetAllocationReceiver;
                 if (!GetAssetAllocation(receiverAllocationTuple, dbAssetAllocationReceiver)) {               
                     dbAssetAllocationReceiver.assetAllocationTuple.nAsset = std::move(receiverAllocationTuple.nAsset);
                     dbAssetAllocationReceiver.assetAllocationTuple.witnessAddress = std::move(receiverAllocationTuple.witnessAddress);              
@@ -925,7 +925,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
             auto mapAssetAllocationReceiver = resultReceiver.first;
             const bool& mapAssetAllocationReceiverNotFound = resultReceiver.second;
             if(mapAssetAllocationReceiverNotFound){
-                CAssetAllocation dbAssetAllocationReceiver;
+                CAssetAllocationDBEntry dbAssetAllocationReceiver;
                 if (!GetAssetAllocation(receiverAllocationTuple, dbAssetAllocationReceiver)) {               
                     dbAssetAllocationReceiver.assetAllocationTuple.nAsset = std::move(receiverAllocationTuple.nAsset);
                     dbAssetAllocationReceiver.assetAllocationTuple.witnessAddress = std::move(receiverAllocationTuple.witnessAddress);              
@@ -1037,7 +1037,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
                 auto mapBalanceReceiver = result1.first;
                 const bool& mapAssetAllocationReceiverNotFound = result1.second;
                 if(mapAssetAllocationReceiverNotFound){
-                    CAssetAllocation receiverAllocation;
+                    CAssetAllocationDBEntry receiverAllocation;
                     GetAssetAllocation(receiverAllocationTuple, receiverAllocation);
                     mapBalanceReceiver->second = receiverAllocation.nBalance;
                 }
@@ -1057,7 +1057,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
                 auto mapBalanceReceiverBlock = result1.first;
                 const bool& mapAssetAllocationReceiverBlockNotFound = result1.second;
                 if(mapAssetAllocationReceiverBlockNotFound){
-                    CAssetAllocation receiverAllocation;
+                    CAssetAllocationDBEntry receiverAllocation;
                     if (!GetAssetAllocation(receiverAllocationTuple, receiverAllocation)) {                   
                         receiverAllocation.assetAllocationTuple.nAsset = std::move(receiverAllocationTuple.nAsset);
                         receiverAllocation.assetAllocationTuple.witnessAddress = std::move(receiverAllocationTuple.witnessAddress);                       
@@ -1075,7 +1075,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
     // write assetallocation  
     // asset sends are the only ones confirming without PoW
     if(!fJustCheck){
-        storedSenderAllocationRef.listSendingAllocationAmounts.clear();
         storedSenderAllocationRef.nBalance = std::move(mapBalanceSenderCopy);
         if(storedSenderAllocationRef.nBalance == 0)
             storedSenderAllocationRef.SetNull();    
@@ -1138,7 +1137,7 @@ bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, AssetMap &
     for(const auto& amountTuple:theAssetAllocation.listSendingAllocationAmounts){
         const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.assetAllocationTuple.nAsset, amountTuple.first);
         const std::string &receiverTupleStr = receiverAllocationTuple.ToString();
-        CAssetAllocation receiverAllocation;
+        CAssetAllocationDBEntry receiverAllocation;
         #if __cplusplus > 201402 
         auto result = mapAssetAllocations.try_emplace(std::move(receiverTupleStr),  std::move(emptyAllocation));
         #else
@@ -1155,7 +1154,7 @@ bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, AssetMap &
             } 
             mapAssetAllocation->second = std::move(receiverAllocation);            
         }
-        CAssetAllocation& storedReceiverAllocationRef = mapAssetAllocation->second;
+        CAssetAllocationDBEntry& storedReceiverAllocationRef = mapAssetAllocation->second;
                     
         // reverse allocation
         if(storedReceiverAllocationRef.nBalance >= amountTuple.second){
@@ -1559,7 +1558,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, CValidation
         }
         for (const auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
             if (!bSanityCheck) {
-                CAssetAllocation receiverAllocation;
+                CAssetAllocationDBEntry receiverAllocation;
                 const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.assetAllocationTuple.nAsset, amountTuple.first);
                 const string& receiverTupleStr = receiverAllocationTuple.ToString();
                 #if __cplusplus > 201402 
@@ -1690,7 +1689,7 @@ bool CheckSyscoinLockedOutpoints(const CTransactionRef &tx, CValidationState& st
 	}
 	// ensure that the locked outpoint is being spent
 	else if(assetAllocationVersion){
-		CAssetAllocation assetAllocationDB;
+		CAssetAllocationDBEntry assetAllocationDB;
 		if (!GetAssetAllocation(theAssetAllocation.assetAllocationTuple, assetAllocationDB)) {
             return FormatSyscoinErrorMessage(state, "lock-non-existing-allocation", true, false);
 		}
