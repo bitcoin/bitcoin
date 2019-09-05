@@ -5,18 +5,18 @@ Geth
 ----
 
 This folder contains the binaries for geth for different platforms
-The current version is Blue Thessia (v1.9.2)
+The current version is Tasty Tankard (v1.9.3)
 Downloaded from [Go Ethereum](https://geth.ethereum.org/downloads/)
 
 MD5 of the BIN are as the following:
 Linux (64-bit)
-`bc7f6837a0fdbbecac36fc3bc4c3d3ae`
+`8101644c16c7e163ac3f98638bc7e3fe`
 
 MacOS
-`f97d506a0c27d970fb67337f008d74e7`
+`2caa0a9180d196d6ad466fd526294251`
 
 Windows (64-bit)
-`3384163d24586959586c874bd8fed8af`
+`23bb9cea0b244a2aae20400689b13c4d`
 
 
 Relayer
