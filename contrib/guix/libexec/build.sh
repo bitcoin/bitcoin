@@ -136,17 +136,10 @@ DISTNAME="$(basename "$SOURCEDIST" '.tar.gz')"
 # Binary Tarball Building #
 ###########################
 
-# Create a spec file to normalize ssp linking behaviour
-spec_file="$(mktemp)"
-cat << EOF > "$spec_file"
-*link_ssp:
-%{fstack-protector|fstack-protector-all|fstack-protector-strong|fstack-protector-explicit:}
-EOF
-
 # Similar flags to Gitian
 CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
-HOST_CFLAGS="-O2 -g -specs=${spec_file} -ffile-prefix-map=${PWD}=."
-HOST_CXXFLAGS="-O2 -g -specs=${spec_file} -ffile-prefix-map=${PWD}=."
+HOST_CFLAGS="-O2 -g -ffile-prefix-map=${PWD}=."
+HOST_CXXFLAGS="-O2 -g -ffile-prefix-map=${PWD}=."
 HOST_LDFLAGS="-Wl,--as-needed -Wl,--dynamic-linker=$glibc_dynamic_linker -static-libstdc++"
 
 # Make $HOST-specific native binaries from depends available in $PATH
