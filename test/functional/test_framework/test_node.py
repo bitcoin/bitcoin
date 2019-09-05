@@ -313,24 +313,24 @@ class TestNode():
         with open(debug_log, encoding='utf-8') as dl:
             dl.seek(0, 2)
             prev_size = dl.tell()
-        try:
-            yield
-        finally:
-            while True:
-                found = True
-                with open(debug_log, encoding='utf-8') as dl:
-                    dl.seek(prev_size)
-                    log = dl.read()
-                print_log = " - " + "\n - ".join(log.splitlines())
-                for expected_msg in expected_msgs:
-                    if re.search(re.escape(expected_msg), log, flags=re.MULTILINE) is None:
-                        found = False
-                if found:
-                    return
-                if time.time() >= time_end:
-                    break
-                time.sleep(0.05)
-            self._raise_assertion_error('Expected messages "{}" does not partially match log:\n\n{}\n\n'.format(str(expected_msgs), print_log))
+
+        yield
+
+        while True:
+            found = True
+            with open(debug_log, encoding='utf-8') as dl:
+                dl.seek(prev_size)
+                log = dl.read()
+            print_log = " - " + "\n - ".join(log.splitlines())
+            for expected_msg in expected_msgs:
+                if re.search(re.escape(expected_msg), log, flags=re.MULTILINE) is None:
+                    found = False
+            if found:
+                return
+            if time.time() >= time_end:
+                break
+            time.sleep(0.05)
+        self._raise_assertion_error('Expected messages "{}" does not partially match log:\n\n{}\n\n'.format(str(expected_msgs), print_log))
 
     @contextlib.contextmanager
     def assert_memory_usage_stable(self, *, increase_allowed=0.03):
