@@ -30,23 +30,38 @@ fi
 # Given a package name and an output name, return the path of that output in our
 # current guix environment
 store_path() {
-    grep --extended-regexp "/[^-]{32}-${1}-cross-${HOST}-[^-]+${2:+-${2}}" "${GUIX_ENVIRONMENT}/manifest" \
+    grep --extended-regexp "/[^-]{32}-${1}-[^-]+${2:+-${2}}" "${GUIX_ENVIRONMENT}/manifest" \
         | head --lines=1 \
         | sed --expression='s|^[[:space:]]*"||' \
               --expression='s|"[[:space:]]*$||'
 }
 
 # Determine output paths to use in CROSS_* environment variables
-CROSS_GLIBC="$(store_path glibc)"
-CROSS_GLIBC_STATIC="$(store_path glibc static)"
-CROSS_KERNEL="$(store_path linux-libre-headers)"
-CROSS_GCC="$(store_path gcc)"
+CROSS_GLIBC="$(store_path glibc-cross-${HOST})"
+CROSS_GLIBC_STATIC="$(store_path glibc-cross-${HOST} static)"
+CROSS_KERNEL="$(store_path linux-libre-headers-cross-${HOST})"
+CROSS_GCC="$(store_path gcc-cross-${HOST})"
+CROSS_GCC_LIBS=( "${CROSS_GCC}/lib/gcc/${HOST}"/* ) # This expands to an array of directories...
+CROSS_GCC_LIB="${CROSS_GCC_LIBS[0]}" # ...we just want the first one (there should only be one)
 
 # Set environment variables to point Guix's cross-toolchain to the right
 # includes/libs for $HOST
-export CROSS_C_INCLUDE_PATH="${CROSS_GCC}/include:${CROSS_GLIBC}/include:${CROSS_KERNEL}/include"
-export CROSS_CPLUS_INCLUDE_PATH="${CROSS_GCC}/include/c++:${CROSS_GLIBC}/include:${CROSS_KERNEL}/include"
-export CROSS_LIBRARY_PATH="${CROSS_GLIBC}/lib:${CROSS_GLIBC_STATIC}/lib:${CROSS_GCC}/lib:${CROSS_GCC}/${HOST}/lib:${CROSS_KERNEL}/lib"
+#
+# NOTE: CROSS_C_INCLUDE_PATH is missing ${CROSS_GCC_LIB}/include-fixed, because
+# the limits.h in it is missing a '#include_next <limits.h>'
+#
+export CROSS_C_INCLUDE_PATH="${CROSS_GCC_LIB}/include:${CROSS_GLIBC}/include:${CROSS_KERNEL}/include"
+export CROSS_CPLUS_INCLUDE_PATH="${CROSS_GCC}/include/c++:${CROSS_GCC}/include/c++/${HOST}:${CROSS_GCC}/include/c++/backward:${CROSS_C_INCLUDE_PATH}"
+export CROSS_LIBRARY_PATH="${CROSS_GCC}/lib:${CROSS_GCC}/${HOST}/lib:${CROSS_GCC_LIB}:${CROSS_GLIBC}/lib:${CROSS_GLIBC_STATIC}/lib"
+
+# Sanity check CROSS_*_PATH directories
+IFS=':' read -ra PATHS <<< "${CROSS_C_INCLUDE_PATH}:${CROSS_CPLUS_INCLUDE_PATH}:${CROSS_LIBRARY_PATH}"
+for p in "${PATHS[@]}"; do
+    if [ ! -d "$p" ]; then
+        echo "'$p' doesn't exist or isn't a directory... Aborting..."
+        exit 1
+    fi
+done
 
 # Disable Guix ld auto-rpath behavior
 export GUIX_LD_WRAPPER_DISABLE_RPATH=yes
