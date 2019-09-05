@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -98,15 +98,39 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     {
         QLocale locale(langStr);
 
-        /** check if the locale name consists of 2 parts (language_country) */
-        if(langStr.contains("_"))
+        if (locale.nativeLanguageName().length()==0) /* If locale name is an empty string, fix it manually. */
         {
-            /** display language strings as "native language - native country (locale name)", e.g. "Deutsch - Deutschland (de)" */
+            if (langStr.contains("szl") && langStr.length()==3)
+            {
+                ui->lang->addItem(QString("Silesian (") + langStr + QString(")"), QVariant(langStr));
+            }
+            else if (langStr.contains("pam") && langStr.length()==3)
+            {
+                ui->lang->addItem(QString("Kapampangan (") + langStr + QString(")"), QVariant(langStr));
+            }
+            else if (langStr.contains("la") && langStr.length()==2)
+            {
+                ui->lang->addItem(QString("Latin (") + langStr + QString(")"), QVariant(langStr));
+            }
+            else if (langStr.contains("eo") && langStr.length()==2)
+            {
+                ui->lang->addItem(QString("esperanto (") + langStr + QString(")"), QVariant(langStr));
+            }
+            else
+            {
+                ui->lang->addItem(QString("Unknown (") + langStr + QString(")"), QVariant(langStr));
+            }
+        }
+
+        /* check if the locale name consists of 2 parts (language_country) */
+        else if (langStr.contains("_"))
+        {
+            /* display language strings as "native language - native country (locale name)", e.g. "Deutsch - Deutschland (de)" */
             ui->lang->addItem(locale.nativeLanguageName() + QString(" - ") + locale.nativeCountryName() + QString(" (") + langStr + QString(")"), QVariant(langStr));
         }
         else
         {
-            /** display language strings as "native language (locale name)", e.g. "Deutsch (de)" */
+            /* display language strings as "native language (locale name)", e.g. "Deutsch (de)" */
             ui->lang->addItem(locale.nativeLanguageName() + QString(" (") + langStr + QString(")"), QVariant(langStr));
         }
     }
