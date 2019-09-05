@@ -784,22 +784,22 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 		throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Array of receivers not found");
     const CWitnessAddress &witnessAddress = DescribeWitnessAddress(strAddress);
     strAddress = witnessAddress.ToString();
-	CAssetAllocation theAssetAllocation;
+	CAssetAllocationDBEntry dbAssetAllocation;
+    CAssetAllocation theAssetAllocation;
 	const CAssetAllocationTuple assetAllocationTuple(nAsset, DescribeWitnessAddress(strAddress));
-	if (!GetAssetAllocation(assetAllocationTuple, theAssetAllocation))
+	if (!GetAssetAllocation(assetAllocationTuple, dbAssetAllocation))
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset allocation with this key");
 
 	CAsset theAsset;
 	if (!GetAsset(nAsset, theAsset))
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
-	const COutPoint lockedOutpoint = theAssetAllocation.lockedOutpoint;
+	const COutPoint lockedOutpoint = dbAssetAllocation.lockedOutpoint;
     if(!lockedOutpoint.IsNull() && !IsOutpointMature(lockedOutpoint))
         throw JSONRPCError(RPC_MISC_ERROR, "Locked outpoint not mature");
     if(!lockedOutpoint.IsNull()){
         // this will let syscointxfund try to select this outpoint as the input
         mapSenderLockedOutPoints[strAddress] = lockedOutpoint;
     }
-    const CAmount nBalance = theAssetAllocation.nBalance;
 	theAssetAllocation.SetNull();
     theAssetAllocation.assetAllocationTuple.nAsset = assetAllocationTuple.nAsset;
     theAssetAllocation.assetAllocationTuple.witnessAddress = assetAllocationTuple.witnessAddress; 
@@ -825,7 +825,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 			throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected amount as number in receiver array");
 
 	}
-    CAmount nBalanceZDAG = nBalance;
+    CAmount nBalanceZDAG = dbAssetAllocation.nBalance;
     const string &allocationTupleStr = theAssetAllocation.assetAllocationTuple.ToString();
     {
         LOCK(cs_assetallocationmempoolbalance);
@@ -904,8 +904,9 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
 	const CWitnessAddress& witnessAddress = DescribeWitnessAddress(strAddress); 
     strAddress = witnessAddress.ToString();  	
 	CAssetAllocation theAssetAllocation;
+    CAssetAllocationDBEntry dbAssetAllocation;
 	const CAssetAllocationTuple assetAllocationTuple(nAsset, witnessAddress);
-	if (!GetAssetAllocation(assetAllocationTuple, theAssetAllocation))
+	if (!GetAssetAllocation(assetAllocationTuple, dbAssetAllocation))
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset allocation with this key");
 
 	CAsset theAsset;
@@ -921,8 +922,8 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
     vector<CRecipient> vecSend;
     CScript scriptData;
     int nVersion = 0;
-    CAmount nBalanceZDAG = theAssetAllocation.nBalance;
-    const string &allocationTupleStr = theAssetAllocation.assetAllocationTuple.ToString();
+    CAmount nBalanceZDAG = dbAssetAllocation.nBalance;
+    const string &allocationTupleStr = dbAssetAllocation.assetAllocationTuple.ToString();
     {
         LOCK(cs_assetallocationmempoolbalance);
         AssetBalanceMap::iterator mapIt =  mempoolMapAssetBalances.find(allocationTupleStr);
@@ -934,7 +935,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
     }  
     // if no eth address provided just send as a std asset allocation send but to burn address
     if(ethAddress.empty() || ethAddress == "''"){
-        const COutPoint lockedOutpoint = theAssetAllocation.lockedOutpoint;
+        const COutPoint lockedOutpoint = dbAssetAllocation.lockedOutpoint;
         if(!lockedOutpoint.IsNull() && !IsOutpointMature(lockedOutpoint))
             throw JSONRPCError(RPC_MISC_ERROR, "Locked outpoint not mature");
         if(!lockedOutpoint.IsNull()){
@@ -1163,11 +1164,12 @@ UniValue assetallocationlock(const JSONRPCRequest& request) {
     const CWitnessAddress& witnessAddress = DescribeWitnessAddress(strAddress); 
     strAddress = witnessAddress.ToString();  	
 	CAssetAllocation theAssetAllocation;
+    CAssetAllocationDBEntry dbAssetAllocation;
 	const CAssetAllocationTuple assetAllocationTuple(nAsset, witnessAddress);
-	if (!GetAssetAllocation(assetAllocationTuple, theAssetAllocation))
+	if (!GetAssetAllocation(assetAllocationTuple, dbAssetAllocation))
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset allocation with this key");
 
-	const COutPoint lockedOutpoint = theAssetAllocation.lockedOutpoint;
+	const COutPoint lockedOutpoint = dbAssetAllocation.lockedOutpoint;
     if(!lockedOutpoint.IsNull() && !IsOutpointMature(lockedOutpoint))
         throw JSONRPCError(RPC_MISC_ERROR, "Locked outpoint not mature");
     if(!lockedOutpoint.IsNull()){

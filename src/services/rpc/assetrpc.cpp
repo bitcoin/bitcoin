@@ -315,7 +315,7 @@ UniValue assetallocationbalance(const JSONRPCRequest& request) {
     string strAddressFrom = params[1].get_str();
     UniValue oAssetAllocation(UniValue::VOBJ);
     const CAssetAllocationTuple assetAllocationTuple(nAsset, DescribeWitnessAddress(strAddressFrom));
-    CAssetAllocation txPos;
+    CAssetAllocationDBEntry txPos;
     if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos))
         throw JSONRPCError(RPC_DATABASE_ERROR, "Failed to read from assetallocation DB");
 
@@ -365,7 +365,7 @@ UniValue assetallocationbalances(const JSONRPCRequest& request) {
        
         UniValue oAssetAllocation(UniValue::VOBJ);
         const CAssetAllocationTuple assetAllocationTuple(nAsset, DescribeWitnessAddress(strAddressFrom));
-        CAssetAllocation txPos;
+        CAssetAllocationDBEntry txPos;
         if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos))
             continue;
 
@@ -403,7 +403,7 @@ UniValue assetallocationinfo(const JSONRPCRequest& request) {
     const std::string &strAddressFrom = params[1].get_str();
     UniValue oAssetAllocation(UniValue::VOBJ);
     const CAssetAllocationTuple assetAllocationTuple(nAsset, DescribeWitnessAddress(strAddressFrom));
-    CAssetAllocation txPos;
+    CAssetAllocationDBEntry txPos;
     if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos)){
         throw JSONRPCError(RPC_DATABASE_ERROR, "Failed to read from assetallocation DB");
     }
@@ -463,7 +463,7 @@ UniValue listassetindexallocations(const JSONRPCRequest& request) {
     for(const uint32_t& guid: assetGuids){
         UniValue oAssetAllocation(UniValue::VOBJ);
         const CAssetAllocationTuple assetAllocationTuple(guid, witnessAddress);
-        CAssetAllocation txPos;
+        CAssetAllocationDBEntry txPos;
         if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos))
             continue;
         CAsset theAsset;
