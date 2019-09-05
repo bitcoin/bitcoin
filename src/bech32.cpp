@@ -5,6 +5,8 @@
 #include <bech32.h>
 #include <util/vector.h>
 
+#include <assert.h>
+
 namespace
 {
 
@@ -52,7 +54,7 @@ uint32_t PolyMod(const data& v)
 
     // During the course of the loop below, `c` contains the bitpacked coefficients of the
     // polynomial constructed from just the values of v that were processed so far, mod g(x). In
-    // the above example, `c` initially corresponds to 1 mod (x), and after processing 2 inputs of
+    // the above example, `c` initially corresponds to 1 mod g(x), and after processing 2 inputs of
     // v, it corresponds to x^2 + v0*x + v1 mod g(x). As 1 mod g(x) = 1, that is the starting value
     // for `c`.
     uint32_t c = 1;
@@ -139,6 +141,10 @@ namespace bech32
 
 /** Encode a Bech32 string. */
 std::string Encode(const std::string& hrp, const data& values) {
+    // First ensure that the HRP is all lowercase. BIP-173 requires an encoder
+    // to return a lowercase Bech32 string, but if given an uppercase HRP, the
+    // result will always be invalid.
+    for (const char& c : hrp) assert(c < 'A' || c > 'Z');
     data checksum = CreateChecksum(hrp, values);
     data combined = Cat(values, checksum);
     std::string ret = hrp + '1';
