@@ -1159,7 +1159,7 @@ static void BIP9SoftForkDescPushBack(UniValue& softforks, const std::string &nam
     {
         bip9.pushKV("bit", consensusParams.vDeployments[id].bit);
     }
-    bip9.pushKV("startTime", consensusParams.vDeployments[id].nStartTime);
+    bip9.pushKV("start_time", consensusParams.vDeployments[id].nStartTime);
     bip9.pushKV("timeout", consensusParams.vDeployments[id].nTimeout);
     int64_t since_height = VersionBitsTipStateSinceHeight(consensusParams, id);
     bip9.pushKV("since", since_height);
@@ -1213,7 +1213,7 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
             "        \"bip9\": {               (object) status of bip9 softforks (only for \"bip9\" type)\n"
             "           \"status\": \"xxxx\",    (string) one of \"defined\", \"started\", \"locked_in\", \"active\", \"failed\"\n"
             "           \"bit\": xx,           (numeric) the bit (0-28) in the block version field used to signal this softfork (only for \"started\" status)\n"
-            "           \"startTime\": xx,     (numeric) the minimum median time past of a block at which the bit gains its meaning\n"
+            "           \"start_time\": xx,     (numeric) the minimum median time past of a block at which the bit gains its meaning\n"
             "           \"timeout\": xx,       (numeric) the median time past of a block at which the deployment is considered failed if not yet locked in\n"
             "           \"since\": xx,         (numeric) height of the first block to which the status applies\n"
             "           \"statistics\": {      (object) numeric statistics about BIP9 signalling for a softfork\n"
