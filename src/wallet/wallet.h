@@ -616,7 +616,7 @@ public:
 
     bool InMempool() const;
     bool IsTrusted(interfaces::Chain::Lock& locked_chain) const;
-    bool IsTrusted(interfaces::Chain::Lock& locked_chain, std::set<uint256>& trustedParents) const;
+    bool IsTrusted(interfaces::Chain::Lock& locked_chain, std::set<uint256>& trusted_parents) const;
 
     int64_t GetTxTime() const;
 
