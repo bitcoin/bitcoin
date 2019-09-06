@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chain.h>
+#include <ldpc/LDPC.h> //This header is needed to access the ldpc_level_table.
 
 /**
  * CChain implementation
@@ -120,6 +121,8 @@ void CBlockIndex::BuildSkip()
 
 arith_uint256 GetBlockProof(const CBlockIndex& block)
 {
+    return static_cast<double>(1)/ldpc_level_table[block.nBits].prob;
+    /*
     arith_uint256 bnTarget;
     bool fNegative;
     bool fOverflow;
@@ -131,6 +134,7 @@ arith_uint256 GetBlockProof(const CBlockIndex& block)
     // as bnTarget+1, it is equal to ((2**256 - bnTarget - 1) / (bnTarget+1)) + 1,
     // or ~bnTarget / (bnTarget+1) + 1.
     return (~bnTarget / (bnTarget + 1)) + 1;
+    */
 }
 
 int64_t GetBlockProofEquivalentTime(const CBlockIndex& to, const CBlockIndex& from, const CBlockIndex& tip, const Consensus::Params& params)

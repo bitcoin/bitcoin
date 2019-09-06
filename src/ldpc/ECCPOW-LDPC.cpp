@@ -14,7 +14,11 @@ int main()
   string current_block_header = "1fdf22ffc2233ff";
 
   LDPC *ldpc = new LDPC;
-  ldpc->set_difficulty(1);
+  int level = 103;
+  ldpc->set_difficulty(level);
+  printf("level : %d, difficulty : %lf\n", level, ptr->get_ldpc_difficulty(level));
+  printf("n : %d\t wc : %d\t wr : %d\n", ldpc_level_table[level].n, ldpc_level_table[level].wc, ldpc_level_table[level].wr);
+
   ldpc->initialization();
   std::cout << "SEED:" << phv << std::endl;
 
@@ -22,9 +26,6 @@ int main()
   ldpc->generate_H();
   ldpc->generate_Q();
 
-  // ptr->print_H("H2.txt");
-//  ldpc->print_Q(NULL, 1);
-//  ldpc->print_Q(NULL, 2);
 
   string current_block_header_with_nonce;
   while (1)
@@ -43,10 +44,6 @@ int main()
 
     nonce++;
   }
-
-
-//  ldpc->print_word(NULL, 1);
-//  ldpc->print_word(NULL, 2);
   delete ldpc;
   return 0;
 }

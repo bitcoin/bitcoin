@@ -19,6 +19,9 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     // Only change once per difficulty adjustment interval
     if ((pindexLast->nHeight+1) % params.DifficultyAdjustmentInterval() != 0)
     {
+        /*In the mainnetmode, fPoWAllowMinDiffcultyBlocks is set to be negative.
+         *Thus, we don't care the following routines
+         */
         if (params.fPowAllowMinDifficultyBlocks)
         {
             // Special difficulty rule for testnet:
@@ -54,22 +57,90 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
 
     // Limit adjustment step
     int64_t nActualTimespan = pindexLast->GetBlockTime() - nFirstBlockTime;
+    printf("nActualTimespan = %d\tnPoWTargetTimespan = %d\n",nActualTimespan,params.nPowTargetTimespan);
     if (nActualTimespan < params.nPowTargetTimespan/4)
         nActualTimespan = params.nPowTargetTimespan/4;
     if (nActualTimespan > params.nPowTargetTimespan*4)
         nActualTimespan = params.nPowTargetTimespan*4;
 
     // Retarget
-    const arith_uint256 bnPowLimit = UintToArith256(params.powLimit);
-    arith_uint256 bnNew;
-    bnNew.SetCompact(pindexLast->nBits);
-    bnNew *= nActualTimespan;
-    bnNew /= params.nPowTargetTimespan;
+    int cur_level = pindexLast->nBits;
+    double cur_difficulty = static_cast<double>(1)/ldpc_level_table[cur_level].prob;
+    double ret_difficulty = cur_difficulty/((double)nActualTimespan/(double)params.nPowTargetTimespan);
 
-    if (bnNew > bnPowLimit)
-        bnNew = bnPowLimit;
+    /*cur_difficulty is the number of expected iterations to solving the last 2016 problems for a given level.
+     *ret_difficulty is the number of expected iterations to solving next 2016 problems.
+     *We have to find a level in which the number of expected iterations is firstly greather (less) than ret_difficulty.
+     *To prevent dramastically change in level, we only consider +- 10 levels at the current level.
+     *In addition, note that ldpc_level_table.prob is alrady sorted, i.e.,
+     *lpdc_table.prob[1] >  lpdc_table.prob[2] > lpdc_table.prob[3] > ... > lpdc_table.prob[MAX_LEVEL_DIFF]
+     *Thus, the inverse of thems are also sorted, i.e.,
+     *1./ldpc_table.prob[1] < 1./ldpc_table.prob[2] < 1./ldpc_table.prob[3] < ... < 1./ldpc_table.prob[MAX_LEVEL_DIFF]
+     *
+     *  consider a example in which we assume that cur_level = 10 and cur_difficulty is 187.
+     * 1./lpdc_level_table[10] = 100;
+     * 1./lpdc_level_table[11] = 150;
+     * 1./lpdc_level_table[12] = 175;
+     * 1./lpdc_level_table[13] = 190;
+     * 1./lpdc_level_table[14] = 195;
+     * 1./lpdc_level_table[20] = 1288;
+     *
+     * Then, new level is 12..
+     *
+     * consider a different example in which we assume that cur_level = 10 and cur_difficulty is 187, but
+     * 1./lpdc_level_table[10] = 100;
+     * 1./lpdc_level_table[11] = 120;
+     * 1./lpdc_level_table[12] = 135;
+     * 1./lpdc_level_table[13] = 140;
+     *             ...
+     *             ...
+     * 1./lpdc_level_table[20] = 185;
+     * In this case, new_level is 20 because 20 is the maximum level among the possible levels.
+     */
 
-    return bnNew.GetCompact();
+    int from_level = cur_level - 10, to_level = cur_level + 10, new_level;
+
+    // prevent the memory violation
+    if (from_level <= 1)
+        from_level = 1;
+    if ( to_level >= MAX_DIFF_LEVEL )
+        to_level = MAX_DIFF_LEVEL;
+    if (cur_difficulty - ret_difficulty < static_cast<double>(0))
+    {
+        if (cur_level == MAX_DIFF_LEVEL)
+            new_level = cur_level;
+        else
+        {
+            // since the difficulty increases, we have to increase level as well.
+            for ( new_level = cur_level + 1 ; new_level <= to_level ; new_level++)
+            {
+                double tmp = (static_cast<double>(1)/ldpc_level_table[new_level].prob - ret_difficulty);
+                if ( tmp > static_cast<double>(0) )
+                    break;
+            }
+        }
+    }
+    else if (cur_difficulty - ret_difficulty > static_cast<double>(0))
+    {
+        if (cur_level == 1 )
+            new_level = cur_level;
+        else
+        {
+            // since the difficulty decreases, we have to decrease level as well.
+            for ( new_level = cur_level - 1 ; new_level >= from_level ; new_level--)
+            {
+                double tmp = (static_cast<double>(1)/ldpc_level_table[new_level].prob - ret_difficulty);
+                if ( tmp < static_cast<double>(0) )
+                    break;
+            }
+        }
+    }
+    else   //no changes in difficulty.
+        new_level = cur_level;
+    printf("cur_diff = %lf\t ret_diff = %lf\n",cur_difficulty,ret_difficulty);
+    printf("curt_level = %d\t curt_expected_num = %lf\n",cur_level,1/ldpc_level_table[cur_level].prob);
+    printf(" new_level = %d\t  new_expected_num = %lf\n\n",new_level,1/ldpc_level_table[new_level].prob);
+    return new_level;
 }
 
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params& params)
@@ -100,20 +171,10 @@ bool CheckProofOfWork(CBlockHeader block, const Consensus::Params& params)
     std::cout  << block.hashPrevBlock.ToString() << std::endl;
     std::cout  << block.hashMerkleRoot.ToString() << std::endl;
     */
-
-    bool fNegative;
-    bool fOverflow;
-    arith_uint256 bnTarget;
     bool result = false;
-
-    bnTarget.SetCompact(block.nBits, &fNegative, &fOverflow);
-    
-    // Check range
-    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(params.powLimit))
-        return result;
-
     LDPC *ldpc = new LDPC;
-    ldpc->set_difficulty(1);
+    ldpc->set_difficulty(block.nBits);
+    //ldpc->set_difficulty(1);
     ldpc->initialization();
     ldpc->generate_seeds(UintToArith256(block.hashPrevBlock).GetLow64());
     ldpc->generate_H();
