@@ -2302,38 +2302,29 @@ bool CWalletTx::IsTrusted(interfaces::Chain::Lock& locked_chain) const
 bool CWalletTx::IsTrusted(interfaces::Chain::Lock& locked_chain, std::set<uint256>& trusted_parents) const
 {
     // Quick answer in most cases
-    if (!locked_chain.checkFinalTx(*tx)) {
-        return false;
-    }
+    if (!locked_chain.checkFinalTx(*tx)) return false;
     int nDepth = GetDepthInMainChain(locked_chain);
-    if (nDepth >= 1)
-        return true;
-    if (nDepth < 0)
-        return false;
-    if (!pwallet->m_spend_zero_conf_change || !IsFromMe(ISMINE_ALL)) // using wtx's cached debit
-        return false;
+    if (nDepth >= 1) return true;
+    if (nDepth < 0) return false;
+    // using wtx's cached debit
+    if (!pwallet->m_spend_zero_conf_change || !IsFromMe(ISMINE_ALL)) return false;
 
     // Don't trust unconfirmed transactions from us unless they are in the mempool.
-    if (!InMempool())
-        return false;
+    if (!InMempool()) return false;
 
     // Trusted if all inputs are from us and are in the mempool:
     for (const CTxIn& txin : tx->vin)
     {
         // Transactions not sent by us: not trusted
         const CWalletTx* parent = pwallet->GetWalletTx(txin.prevout.hash);
-        if (parent == nullptr)
-            return false;
+        if (parent == nullptr) return false;
         const CTxOut& parentOut = parent->tx->vout[txin.prevout.n];
         // Check that this specific input being spent is trusted
-        if (pwallet->IsMine(parentOut) != ISMINE_SPENDABLE)
-            return false;
+        if (pwallet->IsMine(parentOut) != ISMINE_SPENDABLE) return false;
         // If we've already trusted this parent, continue
-        if (trusted_parents.count(parent->GetHash()))
-            continue;
+        if (trusted_parents.count(parent->GetHash())) continue;
         // Recurse to check that the parent is also trusted
-        if (!parent->IsTrusted(locked_chain, trusted_parents))
-            return false;
+        if (!parent->IsTrusted(locked_chain, trusted_parents)) return false;
         trusted_parents.insert(parent->GetHash());
     }
     return true;
