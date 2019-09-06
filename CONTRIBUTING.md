@@ -22,7 +22,7 @@ Communication Channels
 ----------------------
 
 Most communication about Bitcoin Core development happens on IRC, in the
-#bitcoin-core-dev channel on Freenode. The easiest way to participate on IRC is
+#bitcoin-core-dev channel on Freenode. The easiest way to participate in IRC is
 with the web client, [webchat.freenode.net](https://webchat.freenode.net/). Chat
 history logs can be found
 on [http://www.erisian.com.au/bitcoin-core-dev/](http://www.erisian.com.au/bitcoin-core-dev/)
@@ -42,7 +42,7 @@ Contributor Workflow
 
 The codebase is maintained using the "contributor workflow" where everyone
 without exception contributes patch proposals using "pull requests". This
-facilitates social contribution, easy testing and peer review.
+facilitates social contribution, easy testing, and peer review.
 
 To contribute a patch, the workflow is as follows:
 
@@ -53,8 +53,8 @@ To contribute a patch, the workflow is as follows:
 The project coding conventions in the [developer notes](doc/developer-notes.md)
 must be adhered to.
 
-In general [commits should be atomic](https://en.wikipedia.org/wiki/Atomic_commit#Atomic_commit_convention)
-and diffs should be easy to read. For this reason do not mix any formatting
+In general, [commits should be atomic](https://en.wikipedia.org/wiki/Atomic_commit#Atomic_commit_convention)
+and diffs should be easy to read. For this reason, do not mix any formatting
 fixes or code moves with actual code changes.
 
 Commit messages should be verbose by default consisting of a short subject line
@@ -113,7 +113,7 @@ patch does together with any justification/reasoning. You should include
 references to any discussions (for example other tickets or mailing list
 discussions).
 
-At this stage one should expect comments and review from other contributors. You
+At this stage, one should expect comments and review from other contributors. You
 can add more commits to your pull request by committing them locally and pushing
 to your fork until you have satisfied all feedback.
 
@@ -134,7 +134,7 @@ before it will be merged. The basic squashing workflow is shown below.
     git push -f # (force push to GitHub)
 
 Please update the resulting commit message if needed, it should read as a
-coherent message. In most cases this means that you should not just list the
+coherent message. In most cases, this means that you should not just list the
 interim commits.
 
 If you have problems with squashing (or other workflows with `git`), you can
