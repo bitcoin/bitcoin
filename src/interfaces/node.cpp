@@ -24,6 +24,7 @@
 #include <primitives/block.h>
 #include <rpc/server.h>
 #include <shutdown.h>
+#include <support/allocators/secure.h>
 #include <sync.h>
 #include <txmempool.h>
 #include <ui_interface.h>
@@ -43,6 +44,7 @@ fs::path GetWalletDir();
 std::vector<fs::path> ListWalletDir();
 std::vector<std::shared_ptr<CWallet>> GetWallets();
 std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const std::string& name, std::string& error, std::string& warning);
+WalletCreationStatus CreateWallet(interfaces::Chain& chain, const SecureString& passphrase, uint64_t wallet_creation_flags, const std::string& name, std::string& error, std::string& warning, std::shared_ptr<CWallet>& result);
 
 namespace interfaces {
 
@@ -257,6 +259,13 @@ public:
     std::unique_ptr<Wallet> loadWallet(const std::string& name, std::string& error, std::string& warning) override
     {
         return MakeWallet(LoadWallet(*m_interfaces.chain, name, error, warning));
+    }
+    WalletCreationStatus createWallet(const SecureString& passphrase, uint64_t wallet_creation_flags, const std::string& name, std::string& error, std::string& warning, std::unique_ptr<Wallet>& result) override
+    {
+        std::shared_ptr<CWallet> wallet;
+        WalletCreationStatus status = CreateWallet(*m_interfaces.chain, passphrase, wallet_creation_flags, name, error, warning, wallet);
+        result = MakeWallet(wallet);
+        return status;
     }
     std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) override
     {
