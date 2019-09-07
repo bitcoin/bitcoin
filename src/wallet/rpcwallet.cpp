@@ -16,9 +16,7 @@
 #include "policy/feerate.h"
 #include "policy/fees.h"
 #include "privatesend/privatesend-client.h"
-#if ENABLE_MINER
 #include "rpc/mining.h"
-#endif //ENABLE_MINER
 #include "rpc/server.h"
 #include "timedata.h"
 #include "util.h"
