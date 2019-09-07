@@ -67,6 +67,8 @@ static const int MAX_OUTBOUND_FULL_RELAY_CONNECTIONS = 8;
 static const int MAX_ADDNODE_CONNECTIONS = 8;
 /** Maximum number of block-relay-only outgoing connections */
 static const int MAX_BLOCKS_ONLY_CONNECTIONS = 2;
+/** Maximum number of block-relay-only outgoing connections made only to Tor nodes */
+static const int MAX_EXTRA_TOR_BLOCKS_ONLY_CONNECTIONS = 2;
 /** -listen default */
 static const bool DEFAULT_LISTEN = true;
 /** -upnp default */

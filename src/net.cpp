@@ -1773,6 +1773,14 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
 
         addrman.ResolveCollisions();
 
+        // Open this connection as block-relay-only if we're already at our
+        // full-relay capacity, but not yet at our block-relay peer limit.
+        // (It should not be possible for fFeeler to be set if we're not
+        // also at our block-relay peer limit, but check against that as
+        // well for sanity.)
+        bool block_relay_only = nOutboundBlockRelay < m_max_outbound_block_relay && !fFeeler && nOutboundFullRelay >= m_max_outbound_full_relay;
+        bool block_relay_tor_only = block_relay_only && nOutboundBlockRelay >= MAX_BLOCKS_ONLY_CONNECTIONS;
+
         int64_t nANow = GetAdjustedTime();
         int nTries = 0;
         while (!interruptNet)
@@ -1801,7 +1809,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             if (nTries > 100)
                 break;
 
-            if (!IsReachable(addr))
+            if (!IsReachable(addr) || (block_relay_tor_only && addr.GetNetwork() != NET_ONION))
                 continue;
 
             // only consider very recently tried nodes after 30 failed attempts
@@ -1826,7 +1834,6 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         }
 
         if (addrConnect.IsValid()) {
-
             if (fFeeler) {
                 // Add small amount of random noise before connection to avoid synchronization.
                 int randsleep = GetRandInt(FEELER_SLEEP_WINDOW * 1000);
@@ -1834,14 +1841,6 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                     return;
                 LogPrint(BCLog::NET, "Making feeler connection to %s\n", addrConnect.ToString());
             }
-
-            // Open this connection as block-relay-only if we're already at our
-            // full-relay capacity, but not yet at our block-relay peer limit.
-            // (It should not be possible for fFeeler to be set if we're not
-            // also at our block-relay peer limit, but check against that as
-            // well for sanity.)
-            bool block_relay_only = nOutboundBlockRelay < m_max_outbound_block_relay && !fFeeler && nOutboundFullRelay >= m_max_outbound_full_relay;
-
             OpenNetworkConnection(addrConnect, (int)setConnected.size() >= std::min(nMaxConnections - 1, 2), &grant, nullptr, false, fFeeler, false, block_relay_only);
         }
     }
