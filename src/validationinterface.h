@@ -103,7 +103,7 @@ public:
     void UpdatedBlockTip(const CBlockIndex *, const CBlockIndex *, bool fInitialDownload);
     void TransactionAddedToMempool(const CTransactionRef &);
     void BlockConnected(const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex, const std::vector<CTransactionRef> &);
-    void BlockDisconnected(const std::shared_ptr<const CBlock> &);
+    void BlockDisconnected(const std::shared_ptr<const CBlock> &, const CBlockIndex* pindexDisconnected);
     void NotifyTransactionLock(const CTransaction &tx, const llmq::CInstantSendLock& islock);
     void NotifyChainLock(const CBlockIndex* pindex, const llmq::CChainLockSig& clsig);
     void NotifyGovernanceVote(const CGovernanceVote &vote);
