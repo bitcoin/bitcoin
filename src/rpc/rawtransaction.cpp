@@ -779,7 +779,10 @@ static UniValue signrawtransactionwithkey(const JSONRPCRequest& request)
     NodeContext& node = EnsureNodeContext(request.context);
     FindCoins(node, coins);
 
-    return SignTransaction(mtx, request.params[2], &keystore, coins, true, request.params[3]);
+    // Parse the prevtxs array
+    ParsePrevouts(request.params[2], &keystore, coins);
+
+    return SignTransaction(mtx, &keystore, coins, request.params[3]);
 }
 
 UniValue sendrawtransaction(const JSONRPCRequest& request)
