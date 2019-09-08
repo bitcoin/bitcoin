@@ -7,12 +7,16 @@ clone_depth: 5
 environment:
   APPVEYOR_SAVE_CACHE_ON_ERROR: true
   CLCACHE_SERVER: 1
-  PACKAGES: berkeleydb boost-filesystem boost-signals2 boost-test libevent openssl rapidcheck zeromq
+  PACKAGES: berkeleydb boost-filesystem boost-signals2 boost-test libevent openssl rapidcheck zeromq double-conversion
   PATH: 'C:\Python37-x64;C:\Python37-x64\Scripts;%PATH%'
   PYTHONUTF8: 1
+  QT_DOWNLOAD_URL: 'https://github.com/sipsorcery/qt_win_binary/releases/download/v1.0/Qt5.9.7_ssl_x64_static_vs2017.zip'
+  QT_DOWNLOAD_HASH: 'D4D35B8112302B67E5610A03421BB3E43FE13F14D9A5F637C22AE60DCEC0E0F5'
+  QT_LOCAL_PATH: 'C:\Qt5.9.7_ssl_x64_static_vs2017'
 cache:
-- C:\tools\vcpkg\installed -> .appveyor.yml
+- C:\tools\vcpkg\installed
 - C:\Users\appveyor\clcache -> .appveyor.yml, build_msvc\**, **\Makefile.am, **\*.vcxproj.in
+- C:\Qt5.9.7_ssl_x64_static_vs2017
 install:
 - cmd: pip install --quiet git+https://github.com/frerich/clcache.git@v4.2.0
 # Disable zmq test for now since python zmq library on Windows would cause Access violation sometimes.
@@ -22,6 +26,23 @@ install:
 - cmd: vcpkg install --triplet %PLATFORM%-windows-static %PACKAGES% > NUL
 before_build:
 - ps:  clcache -M 536870912
+- ps: |
+      if(!(Test-Path -Path ($env:QT_LOCAL_PATH))) {
+        Write-Host "Downloading Qt binaries.";
+        Invoke-WebRequest -Uri $env:QT_DOWNLOAD_URL -Out qtdownload.zip;
+        Write-Host "Qt binaries successfully downloaded, checking hash against $env:QT_DOWNLOAD_HASH...";
+        if((Get-FileHash qtdownload.zip).Hash -eq $env:QT_DOWNLOAD_HASH) {
+          Expand-Archive qtdownload.zip -DestinationPath $env:QT_LOCAL_PATH;
+          Write-Host "Qt binary download matched the expected hash.";
+        }
+        else {
+          Write-Host "ERROR: Qt binary download did not match the expected hash.";
+          Exit-AppveyorBuild;
+        }
+      }
+      else {
+         Write-Host "Qt binaries already present.";
+      }
 - cmd: python build_msvc\msvc-autogen.py
 - ps:  $files = (Get-ChildItem -Recurse | where {$_.extension -eq ".vcxproj"}).FullName
 - ps:  for (${i} = 0; ${i} -lt ${files}.length; ${i}++) {
@@ -37,10 +58,13 @@ build_script:
 after_build:
 - ps:  fsutil behavior set disablelastaccess 1 # Disable Access time feature on Windows (better performance)
 - ps:  clcache -z
+#- 7z a bitcoin-%APPVEYOR_BUILD_VERSION%.zip %APPVEYOR_BUILD_FOLDER%\build_msvc\%platform%\%configuration%\*.exe
 test_script:
 - cmd: src\test_bitcoin.exe -k stdout -e stdout 2> NUL
 - cmd: src\bench_bitcoin.exe -evals=1 -scaling=0 > NUL
 - ps:  python test\util\bitcoin-util-test.py
 - cmd: python test\util\rpcauth-test.py
 - cmd: python test\functional\test_runner.py --ci --quiet --combinedlogslen=4000 --failfast
+artifacts:
+#- path: bitcoin-%APPVEYOR_BUILD_VERSION%.zip
 deploy: off
