@@ -170,7 +170,7 @@ void WalletView::processNewTransaction(const QModelIndex& parent, int start, int
     QString type = ttm->index(start, TransactionTableModel::Type, parent).data().toString();
     QModelIndex index = ttm->index(start, 0, parent);
     QString address = ttm->data(index, TransactionTableModel::AddressRole).toString();
-    QString label = ttm->data(index, TransactionTableModel::LabelRole).toString();
+    QString label = GUIUtil::HtmlEscape(ttm->data(index, TransactionTableModel::LabelRole).toString());
 
     Q_EMIT incomingTransaction(date, walletModel->getOptionsModel()->getDisplayUnit(), amount, type, address, label, GUIUtil::HtmlEscape(walletModel->getWalletName()));
 }
