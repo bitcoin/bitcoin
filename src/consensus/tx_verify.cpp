@@ -135,6 +135,20 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& in
     return nSigOps;
 }
 
+unsigned int GetTransactionSigOpCount(const CTransaction& tx, const CCoinsViewCache& inputs, int flags)
+{
+    unsigned int nSigOps = GetLegacySigOpCount(tx);
+
+    if (tx.IsCoinBase())
+        return nSigOps;
+
+    if (flags & SCRIPT_VERIFY_P2SH) {
+        nSigOps += GetP2SHSigOpCount(tx, inputs);
+    }
+
+    return nSigOps;
+}
+
 bool CheckTransaction(const CTransaction& tx, CValidationState &state)
 {
     bool allowEmptyTxInOut = false;
