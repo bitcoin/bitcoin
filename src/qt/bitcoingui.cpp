@@ -471,24 +471,16 @@ void BitcoinGUI::createMenuBar()
     connect(qApp, &QApplication::focusWindowChanged, [zoom_action] (QWindow* window) {
         zoom_action->setEnabled(window != nullptr);
     });
-#else
-    QAction* restore_action = window_menu->addAction(tr("Restore"));
-    connect(restore_action, &QAction::triggered, [] {
-        qApp->focusWindow()->showNormal();
-    });
-
-    connect(qApp, &QApplication::focusWindowChanged, [restore_action] (QWindow* window) {
-        restore_action->setEnabled(window != nullptr);
-    });
 #endif
 
     if (walletFrame) {
+#ifdef Q_OS_MAC
         window_menu->addSeparator();
         QAction* main_window_action = window_menu->addAction(tr("Main Window"));
         connect(main_window_action, &QAction::triggered, [this] {
             GUIUtil::bringToFront(this);
         });
-
+#endif
         window_menu->addSeparator();
         window_menu->addAction(usedSendingAddressesAction);
         window_menu->addAction(usedReceivingAddressesAction);
