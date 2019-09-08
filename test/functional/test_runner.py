@@ -129,6 +129,8 @@ BASE_SCRIPTS= [
     'rpc_getblockstats.py',
     'p2p-fingerprint.py',
     'wallet-encryption.py',
+    'bipdersig-p2p.py',
+    'bip65-cltv-p2p.py',
     'uptime.py',
     'resendwallettransactions.py',
 ]
@@ -152,10 +154,6 @@ EXTENDED_SCRIPTS = [
     'rpcbind_test.py',
     # vv Tests less than 30s vv
     'assumevalid.py',
-    'bip65-cltv.py',
-    'bip65-cltv-p2p.py', # NOTE: needs dash_hash to pass
-    'bipdersig-p2p.py', # NOTE: needs dash_hash to pass
-    'bipdersig.py',
     'example_test.py',
     'txn_doublespend.py',
     'txn_clone.py --mineblock',
