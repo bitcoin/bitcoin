@@ -57,6 +57,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #ifndef WIN32
 #include <attributes.h>
@@ -548,6 +549,32 @@ void SetupServerArgs()
 
     // Add the hidden options
     gArgs.AddHiddenArgs(hidden_args);
+}
+
+void InstallEnvVars(ArgsManager &am)
+{
+    // Set args based on their environment variable
+    std::vector<std::string> args = am.GetAddedArgs();
+    for (long unsigned int i = 0; i < args.size(); ++i)
+    {
+        std::string element;
+        for(auto &c: args[i]) {
+            element += toupper(c);
+        }
+        // Schema = BITCOIND_<ARG>
+        std::string envname = "BITCOIND_" + element.substr(1, element.size()); 
+        const char *envvar = getenv(envname.c_str());
+        // Check if envvar is set
+        if (envvar != NULL)
+        {
+            if (gArgs.IsArgSet(args[i]))
+                LogPrintf("Envvar %s is set but is not being used\n", envname);
+            else
+                LogPrintf("Envvar %s is set and used\n", envname);
+            
+            am.SoftSetArg(args[i], std::string(envvar));
+        }
+    }
 }
 
 std::string LicenseInfo()

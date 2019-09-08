@@ -199,6 +199,13 @@ public:
     std::vector<std::string> GetArgs(const std::string& strArg) const;
 
     /**
+     * Return list of all args
+     * 
+     * @return Return list of all args
+    */
+   std::vector<std::string> GetAddedArgs() const;
+
+    /**
      * Return true if the given argument has been manually set
      *
      * @param strArg Argument to get (e.g. "-foo")

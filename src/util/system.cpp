@@ -469,6 +469,21 @@ std::vector<std::string> ArgsManager::GetArgs(const std::string& strArg) const
     return result;
 }
 
+std::vector<std::string> ArgsManager::GetAddedArgs() const
+{
+    std::vector<std::string> ret;
+    LOCK(cs_args);
+    for (auto const& x : m_available_args)
+    {
+        for(auto const& y : x.second)
+        {
+            ret.push_back(y.first);
+        }
+    }
+
+    return ret;
+}
+
 bool ArgsManager::IsArgSet(const std::string& strArg) const
 {
     if (IsArgNegated(strArg)) return true; // special case

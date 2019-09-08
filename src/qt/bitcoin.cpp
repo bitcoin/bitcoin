@@ -461,6 +461,8 @@ int GuiMain(int argc, char* argv[])
             QString::fromStdString("Error parsing command line arguments: %1.").arg(QString::fromStdString(error)));
         return EXIT_FAILURE;
     }
+    // Setup env vars
+    node->installEnvvars(gArgs);
 
     // Now that the QApplication is setup and we have parsed our parameters, we can set the platform style
     app.setupPlatformStyle();

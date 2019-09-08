@@ -95,6 +95,9 @@ public:
     //! Setup arguments
     virtual void setupServerArgs() = 0;
 
+    //! Install Envvars
+    virtual void installEnvvars(ArgsManager &am) = 0;
+
     //! Map port.
     virtual void mapPort(bool use_upnp) = 0;
 

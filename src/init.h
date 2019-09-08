@@ -70,6 +70,8 @@ bool AppInitMain(InitInterfaces& interfaces);
  */
 void SetupServerArgs();
 
+void InstallEnvVars(ArgsManager &am);
+
 /** Returns licensing information (for -version) */
 std::string LicenseInfo();
 
