@@ -26,7 +26,7 @@ Before building, a unique build-id is generated for each package. This id
 consists of a hash of all files used to build the package (Makefiles, packages,
 etc), and as well as a hash of the same data for each recursive dependency. If
 any portion of a package's build recipe changes, it will be rebuilt as well as
-any other package that depends on it. If any of the main makefiles (Makefile, 
+any other package that depends on it. If any of the main makefiles (Makefile,
 funcs.mk, etc) are changed, all packages will be rebuilt. After building, the
 results are cached into a tarball that can be re-used and distributed.
 
