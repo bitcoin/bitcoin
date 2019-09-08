@@ -40,6 +40,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libsecp256k1", "libsecp256k
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libleveldb", "libleveldb\libleveldb.vcxproj", "{18430FEF-6B61-4C53-B396-718E02850F1B}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbitcoin_qt", "libbitcoin_qt\libbitcoin_qt.vcxproj", "{2B4ABFF8-D1FD-4845-88C9-1F3C0A6512BF}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bitcoin-qt", "bitcoin-qt\bitcoin-qt.vcxproj", "{7E99172D-7FF2-4CB6-B736-AC9B76ED412A}"
+EndProject
 Global
     GlobalSection(SolutionConfigurationPlatforms) = preSolution
         Debug|x64 = Debug|x64
@@ -200,11 +204,27 @@ Global
         {18430FEF-6B61-4C53-B396-718E02850F1B}.Release|x64.Build.0 = Release|x64
         {18430FEF-6B61-4C53-B396-718E02850F1B}.Release|x86.ActiveCfg = Release|Win32
         {18430FEF-6B61-4C53-B396-718E02850F1B}.Release|x86.Build.0 = Release|Win32
+        {2B4ABFF8-D1FD-4845-88C9-1F3C0A6512BF}.Debug|x64.ActiveCfg = Debug|x64
+        {2B4ABFF8-D1FD-4845-88C9-1F3C0A6512BF}.Debug|x64.Build.0 = Debug|x64
+        {2B4ABFF8-D1FD-4845-88C9-1F3C0A6512BF}.Debug|x86.ActiveCfg = Debug|Win32
+        {2B4ABFF8-D1FD-4845-88C9-1F3C0A6512BF}.Debug|x86.Build.0 = Debug|Win32
+        {2B4ABFF8-D1FD-4845-88C9-1F3C0A6512BF}.Release|x64.ActiveCfg = Release|x64
+        {2B4ABFF8-D1FD-4845-88C9-1F3C0A6512BF}.Release|x64.Build.0 = Release|x64
+        {2B4ABFF8-D1FD-4845-88C9-1F3C0A6512BF}.Release|x86.ActiveCfg = Release|Win32
+        {2B4ABFF8-D1FD-4845-88C9-1F3C0A6512BF}.Release|x86.Build.0 = Release|Win32
+        {7E99172D-7FF2-4CB6-B736-AC9B76ED412A}.Debug|x64.ActiveCfg = Debug|x64
+        {7E99172D-7FF2-4CB6-B736-AC9B76ED412A}.Debug|x64.Build.0 = Debug|x64
+        {7E99172D-7FF2-4CB6-B736-AC9B76ED412A}.Debug|x86.ActiveCfg = Debug|Win32
+        {7E99172D-7FF2-4CB6-B736-AC9B76ED412A}.Debug|x86.Build.0 = Debug|Win32
+        {7E99172D-7FF2-4CB6-B736-AC9B76ED412A}.Release|x64.ActiveCfg = Release|x64
+        {7E99172D-7FF2-4CB6-B736-AC9B76ED412A}.Release|x64.Build.0 = Release|x64
+        {7E99172D-7FF2-4CB6-B736-AC9B76ED412A}.Release|x86.ActiveCfg = Release|Win32
+        {7E99172D-7FF2-4CB6-B736-AC9B76ED412A}.Release|x86.Build.0 = Release|Win32
     EndGlobalSection
     GlobalSection(SolutionProperties) = preSolution
         HideSolutionNode = FALSE
     EndGlobalSection
     GlobalSection(ExtensibilityGlobals) = postSolution
-        SolutionGuid = {DA7D16A6-E5F0-45B3-B194-C3FE64F1BFCD}
+        SolutionGuid = {8AA72EDA-2CD4-4564-B1E4-688B760EEEE9}
     EndGlobalSection
 EndGlobal
