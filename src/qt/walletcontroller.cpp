@@ -75,7 +75,7 @@ void WalletController::closeWallet(WalletModel* wallet_model, QWidget* parent)
 {
     QMessageBox box(parent);
     box.setWindowTitle(tr("Close wallet"));
-    box.setText(tr("Are you sure you wish to close wallet <i>%1</i>?").arg(wallet_model->getDisplayName()));
+    box.setText(tr("Are you sure you wish to close wallet <i>%1</i>?").arg(GUIUtil::HtmlEscape(wallet_model->getDisplayName())));
     box.setInformativeText(tr("Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled."));
     box.setStandardButtons(QMessageBox::Yes|QMessageBox::Cancel);
     box.setDefaultButton(QMessageBox::Yes);
