@@ -562,7 +562,7 @@ void InstallEnvVars(ArgsManager &am)
             element += toupper(c);
         }
         // Schema = BITCOIND_<ARG>
-        std::string envname = "BITCOIND_" + element.substr(1, element.size()); 
+        std::string envname = "BITCOIND_" + element.substr(1, element.size());
         const char *envvar = getenv(envname.c_str());
         // Check if envvar is set
         if (envvar != NULL)
@@ -571,7 +571,7 @@ void InstallEnvVars(ArgsManager &am)
                 LogPrintf("Envvar %s is set but is not being used\n", envname);
             else
                 LogPrintf("Envvar %s is set and used\n", envname);
-            
+
             am.SoftSetArg(args[i], std::string(envvar));
         }
     }

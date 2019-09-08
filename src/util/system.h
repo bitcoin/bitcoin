@@ -200,7 +200,7 @@ public:
 
     /**
      * Return list of all args
-     * 
+     *
      * @return Return list of all args
     */
    std::vector<std::string> GetAddedArgs() const;
