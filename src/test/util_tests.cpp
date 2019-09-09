@@ -1147,6 +1147,8 @@ BOOST_AUTO_TEST_CASE(test_ParseInt32)
     // Valid values
     BOOST_CHECK(ParseInt32("1234", nullptr));
     BOOST_CHECK(ParseInt32("0", &n) && n == 0);
+    BOOST_CHECK(ParseInt32("0000", &n) && n == 0);
+    BOOST_CHECK(ParseInt32("-0", &n) && n == 0);
     BOOST_CHECK(ParseInt32("1234", &n) && n == 1234);
     BOOST_CHECK(ParseInt32("01234", &n) && n == 1234); // no octal
     BOOST_CHECK(ParseInt32("2147483647", &n) && n == 2147483647);
@@ -1154,6 +1156,7 @@ BOOST_AUTO_TEST_CASE(test_ParseInt32)
     BOOST_CHECK(ParseInt32("-1234", &n) && n == -1234);
     // Invalid values
     BOOST_CHECK(!ParseInt32("", &n));
+    BOOST_CHECK(!ParseInt32("--0", &n));
     BOOST_CHECK(!ParseInt32(" 1", &n)); // no padding inside
     BOOST_CHECK(!ParseInt32("1 ", &n));
     BOOST_CHECK(!ParseInt32("1a", &n));
@@ -1176,6 +1179,8 @@ BOOST_AUTO_TEST_CASE(test_ParseInt64)
     // Valid values
     BOOST_CHECK(ParseInt64("1234", nullptr));
     BOOST_CHECK(ParseInt64("0", &n) && n == 0LL);
+    BOOST_CHECK(ParseInt64("0000", &n) && n == 0LL);
+    BOOST_CHECK(ParseInt64("-0", &n) && n == 0LL);
     BOOST_CHECK(ParseInt64("1234", &n) && n == 1234LL);
     BOOST_CHECK(ParseInt64("01234", &n) && n == 1234LL); // no octal
     BOOST_CHECK(ParseInt64("2147483647", &n) && n == 2147483647LL);
@@ -1185,6 +1190,7 @@ BOOST_AUTO_TEST_CASE(test_ParseInt64)
     BOOST_CHECK(ParseInt64("-1234", &n) && n == -1234LL);
     // Invalid values
     BOOST_CHECK(!ParseInt64("", &n));
+    BOOST_CHECK(!ParseInt64("--0", &n));
     BOOST_CHECK(!ParseInt64(" 1", &n)); // no padding inside
     BOOST_CHECK(!ParseInt64("1 ", &n));
     BOOST_CHECK(!ParseInt64("1a", &n));
@@ -1206,6 +1212,7 @@ BOOST_AUTO_TEST_CASE(test_ParseUInt32)
     // Valid values
     BOOST_CHECK(ParseUInt32("1234", nullptr));
     BOOST_CHECK(ParseUInt32("0", &n) && n == 0);
+    BOOST_CHECK(ParseUInt32("00000", &n) && n == 0);
     BOOST_CHECK(ParseUInt32("1234", &n) && n == 1234);
     BOOST_CHECK(ParseUInt32("01234", &n) && n == 1234); // no octal
     BOOST_CHECK(ParseUInt32("2147483647", &n) && n == 2147483647);
@@ -1213,6 +1220,8 @@ BOOST_AUTO_TEST_CASE(test_ParseUInt32)
     BOOST_CHECK(ParseUInt32("4294967295", &n) && n == (uint32_t)4294967295);
     // Invalid values
     BOOST_CHECK(!ParseUInt32("", &n));
+    BOOST_CHECK(!ParseUInt32("-0", &n));
+    BOOST_CHECK(!ParseUInt32("--0", &n));
     BOOST_CHECK(!ParseUInt32(" 1", &n)); // no padding inside
     BOOST_CHECK(!ParseUInt32(" -1", &n));
     BOOST_CHECK(!ParseUInt32("1 ", &n));
@@ -1237,6 +1246,7 @@ BOOST_AUTO_TEST_CASE(test_ParseUInt64)
     // Valid values
     BOOST_CHECK(ParseUInt64("1234", nullptr));
     BOOST_CHECK(ParseUInt64("0", &n) && n == 0LL);
+    BOOST_CHECK(ParseUInt64("00000", &n) && n == 0LL);
     BOOST_CHECK(ParseUInt64("1234", &n) && n == 1234LL);
     BOOST_CHECK(ParseUInt64("01234", &n) && n == 1234LL); // no octal
     BOOST_CHECK(ParseUInt64("2147483647", &n) && n == 2147483647LL);
@@ -1245,6 +1255,8 @@ BOOST_AUTO_TEST_CASE(test_ParseUInt64)
     BOOST_CHECK(ParseUInt64("18446744073709551615", &n) && n == 18446744073709551615ULL);
     // Invalid values
     BOOST_CHECK(!ParseUInt64("", &n));
+    BOOST_CHECK(!ParseUInt64("-0", &n));
+    BOOST_CHECK(!ParseUInt64("--0", &n));
     BOOST_CHECK(!ParseUInt64(" 1", &n)); // no padding inside
     BOOST_CHECK(!ParseUInt64(" -1", &n));
     BOOST_CHECK(!ParseUInt64("1 ", &n));
