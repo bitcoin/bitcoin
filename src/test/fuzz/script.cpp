@@ -63,8 +63,6 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     int required_ret;
     (void)ExtractDestinations(script, type_ret, addresses, required_ret);
 
-    (void)GetScriptForWitness(script);
-
     const FlatSigningProvider signing_provider;
     (void)InferDescriptor(script, signing_provider);
 
