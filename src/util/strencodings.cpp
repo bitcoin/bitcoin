@@ -274,70 +274,40 @@ NODISCARD static bool ParsePrechecks(const std::string& str)
     return true;
 }
 
-bool ParseInt32(const std::string& str, int32_t *out)
+namespace {
+template<typename R, typename I>
+bool ParseInt(I it, I end, R* out)
 {
-    if (!ParsePrechecks(str))
-        return false;
-    char *endp = nullptr;
-    errno = 0; // strtol will not set errno if valid
-    long int n = strtol(str.c_str(), &endp, 10);
-    if(out) *out = (int32_t)n;
-    // Note that strtol returns a *long int*, so even if strtol doesn't report an over/underflow
-    // we still have to check that the returned value is within the range of an *int32_t*. On 64-bit
-    // platforms the size of these types may be different.
-    return endp && *endp == 0 && !errno &&
-        n >= std::numeric_limits<int32_t>::min() &&
-        n <= std::numeric_limits<int32_t>::max();
+    int sign = 1;
+    if (it != end && *it == '-') {
+        sign = -1;
+        ++it;
+    }
+    if (it == end) return false;
+    R val = 0;
+    while (it != end) {
+        if (*it < '0' || *it > '9') return false;
+        R newval = 10 * val + sign * (*it - '0');
+        if (sign > 0 ? newval < val : newval > val) return false;
+        val = newval;
+        ++it;
+    }
+    if (out) *out = val;
+    return true;
 }
 
-bool ParseInt64(const std::string& str, int64_t *out)
+template<typename R, typename I>
+bool ParseUInt(I it, I end, R* out)
 {
-    if (!ParsePrechecks(str))
-        return false;
-    char *endp = nullptr;
-    errno = 0; // strtoll will not set errno if valid
-    long long int n = strtoll(str.c_str(), &endp, 10);
-    if(out) *out = (int64_t)n;
-    // Note that strtoll returns a *long long int*, so even if strtol doesn't report an over/underflow
-    // we still have to check that the returned value is within the range of an *int64_t*.
-    return endp && *endp == 0 && !errno &&
-        n >= std::numeric_limits<int64_t>::min() &&
-        n <= std::numeric_limits<int64_t>::max();
+    if (it != end && *it == '-') return false;
+    return ParseInt(it, end, out);
+}
 }
 
-bool ParseUInt32(const std::string& str, uint32_t *out)
-{
-    if (!ParsePrechecks(str))
-        return false;
-    if (str.size() >= 1 && str[0] == '-') // Reject negative values, unfortunately strtoul accepts these by default if they fit in the range
-        return false;
-    char *endp = nullptr;
-    errno = 0; // strtoul will not set errno if valid
-    unsigned long int n = strtoul(str.c_str(), &endp, 10);
-    if(out) *out = (uint32_t)n;
-    // Note that strtoul returns a *unsigned long int*, so even if it doesn't report an over/underflow
-    // we still have to check that the returned value is within the range of an *uint32_t*. On 64-bit
-    // platforms the size of these types may be different.
-    return endp && *endp == 0 && !errno &&
-        n <= std::numeric_limits<uint32_t>::max();
-}
-
-bool ParseUInt64(const std::string& str, uint64_t *out)
-{
-    if (!ParsePrechecks(str))
-        return false;
-    if (str.size() >= 1 && str[0] == '-') // Reject negative values, unfortunately strtoull accepts these by default if they fit in the range
-        return false;
-    char *endp = nullptr;
-    errno = 0; // strtoull will not set errno if valid
-    unsigned long long int n = strtoull(str.c_str(), &endp, 10);
-    if(out) *out = (uint64_t)n;
-    // Note that strtoull returns a *unsigned long long int*, so even if it doesn't report an over/underflow
-    // we still have to check that the returned value is within the range of an *uint64_t*.
-    return endp && *endp == 0 && !errno &&
-        n <= std::numeric_limits<uint64_t>::max();
-}
-
+bool ParseInt32(const std::string& str, int32_t *out) { return ParseInt(str.begin(), str.end(), out); }
+bool ParseInt64(const std::string& str, int64_t *out) { return ParseInt(str.begin(), str.end(), out); }
+bool ParseUInt32(const std::string& str, uint32_t *out) { return ParseUInt(str.begin(), str.end(), out); }
+bool ParseUInt64(const std::string& str, uint64_t *out) { return ParseUInt(str.begin(), str.end(), out); }
 
 bool ParseDouble(const std::string& str, double *out)
 {
