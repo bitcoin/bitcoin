@@ -320,7 +320,7 @@ static void MutateTxAddOutPubKey(CMutableTransaction& tx, const std::string& str
         if (!pubkey.IsCompressed()) {
             throw std::runtime_error("Uncompressed pubkeys are not useable for SegWit outputs");
         }
-        // Call GetScriptForWitness() to build a P2WPKH scriptPubKey
+        // Build a P2WPKH script
         scriptPubKey = GetScriptForWitness(scriptPubKey);
     }
     if (bScriptHash) {
@@ -390,7 +390,7 @@ static void MutateTxAddOutMultiSig(CMutableTransaction& tx, const std::string& s
                 throw std::runtime_error("Uncompressed pubkeys are not useable for SegWit outputs");
             }
         }
-        // Call GetScriptForWitness() to build a P2WSH scriptPubKey
+        // Build a P2WSH script
         scriptPubKey = GetScriptForWitness(scriptPubKey);
     }
     if (bScriptHash) {
