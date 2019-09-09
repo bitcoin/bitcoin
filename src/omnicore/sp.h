@@ -4,7 +4,6 @@
 #include <omnicore/dbbase.h>
 #include <omnicore/dbspinfo.h>
 #include <omnicore/log.h>
-#include <omnicore/omnicore.h>
 
 class CBlockIndex;
 class uint256;

@@ -64,7 +64,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "omnicore/dbtxlist -> omnicore/omnicore -> omnicore/mdex -> omnicore/dbtxlist"
     "omnicore/dbtxlist -> omnicore/dex -> omnicore/rules -> omnicore/dbtxlist"
     "omnicore/dex -> omnicore/omnicore -> omnicore/persistence -> omnicore/dex"
-    "omnicore/errors -> omnicore/omnicore -> omnicore/mdex -> omnicore/errors"
     "omnicore/omnicore -> omnicore/tx -> omnicore/sto -> omnicore/omnicore"
 )
 
