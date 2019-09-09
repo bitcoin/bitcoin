@@ -55,7 +55,7 @@ void InitOnce(OnceType* once, void (*initializer)()) {
 
 bool HasAcceleratedCRC32C() {
 #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
-  unsigned int eax, ebx, ecx, edx;
+  unsigned int eax = 0, ebx = 0, ecx = 0, edx = 0;
   __get_cpuid(1, &eax, &ebx, &ecx, &edx);
   return (ecx & (1 << 20)) != 0;
 #else
