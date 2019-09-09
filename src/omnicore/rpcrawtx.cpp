@@ -231,7 +231,7 @@ static UniValue omni_createrawtx_reference(const JSONRPCRequest& request)
                {
                    {"rawtx", RPCArg::Type::STR, RPCArg::Optional::NO, "the raw transaction to extend (can be null)\n"},
                    {"destination", RPCArg::Type::STR, RPCArg::Optional::NO, "the reference address or destination\n"},
-                   {"amount", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "the optional reference amount (minimal by default)\n"},
+                   {"referenceamount", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "the optional reference amount (minimal by default)\n"},
                },
                RPCResult{
                    "\"rawtx\"                 (string) the hex-encoded modified raw transaction\n"
@@ -244,7 +244,7 @@ static UniValue omni_createrawtx_reference(const JSONRPCRequest& request)
 
     CMutableTransaction tx = ParseMutableTransaction(request.params[0]);
     std::string destination = ParseAddress(request.params[1]);
-    int64_t amount = (request.params.size() > 2) ? AmountFromValue(request.params[2]) : 0;
+    int64_t amount = (request.params.size() > 2) ? ParseAmount(request.params[2], true): 0;
 
     // extend the transaction
     tx = OmniTxBuilder(tx)
@@ -322,7 +322,7 @@ static const CRPCCommand commands[] =
     { "omni layer (raw transactions)", "omni_createrawtx_opreturn",  &omni_createrawtx_opreturn,  {"rawtx", "payload"} },
     { "omni layer (raw transactions)", "omni_createrawtx_multisig",  &omni_createrawtx_multisig,  {"rawtx", "payload", "seed", "redeemkey"} },
     { "omni layer (raw transactions)", "omni_createrawtx_input",     &omni_createrawtx_input,     {"rawtx", "txid", "n"} },
-    { "omni layer (raw transactions)", "omni_createrawtx_reference", &omni_createrawtx_reference, {"rawtx", "destination", "amount"} },
+    { "omni layer (raw transactions)", "omni_createrawtx_reference", &omni_createrawtx_reference, {"rawtx", "destination", "referenceamount"} },
     { "omni layer (raw transactions)", "omni_createrawtx_change",    &omni_createrawtx_change,    {"rawtx", "prevtxs", "destination", "fee", "position"} },
 
 };

@@ -1905,7 +1905,7 @@ The output value is set to at least the dust threshold.
 |---------------------|---------|----------|----------------------------------------------------------------------------------------------|
 | `rawtx`             | string  | required | the raw transaction to extend (can be `null`)                                                |
 | `destination`       | string  | required | the reference address or destination                                                         |
-| `amount`            | number  | optional | the optional reference amount (minimal by default)                                           |
+| `referenceamount`   | number  | optional | the optional reference amount (minimal by default)                                           |
 
 **Result:**
 ```js
