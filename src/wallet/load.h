@@ -17,7 +17,7 @@ class Chain;
 
 //! Responsible for reading and validating the -wallet arguments and verifying the wallet database.
 //! This function will perform salvage on the wallet if requested, as long as only one wallet is
-//! being loaded (WalletParameterInteraction forbids -salvagewallet, -zapwallettxes or -upgradewallet with multiwallet).
+//! being loaded (WalletInit::ParameterInteraction() forbids -salvagewallet, -zapwallettxes or -upgradewallet with multiwallet).
 bool VerifyWallets(interfaces::Chain& chain, const std::vector<std::string>& wallet_files);
 
 //! Load wallet databases.
