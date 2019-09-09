@@ -1106,7 +1106,7 @@ bool AppInitParameterInteraction()
         if (!ParseMoney(gArgs.GetArg("-minrelaytxfee", ""), n)) {
             return InitError(AmountErrMsg("minrelaytxfee", gArgs.GetArg("-minrelaytxfee", "")).translated);
         }
-        // High fee check is done afterward in WalletParameterInteraction()
+        // High fee check is done afterward in CWallet::CreateWalletFromFile()
         ::minRelayTxFee = CFeeRate(n);
     } else if (incrementalRelayFee > ::minRelayTxFee) {
         // Allow only setting incrementalRelayFee to control both
