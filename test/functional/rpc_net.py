@@ -56,7 +56,7 @@ class NetTest(BitcoinTestFramework):
     def run_test(self):
         self._test_connection_count()
         self._test_getnettotals()
-        self._test_getnetworkinginfo()
+        self._test_getnetworkinfo()
         self._test_getaddednodeinfo()
         self._test_getpeerinfo()
         self._test_getnodeaddresses()
@@ -95,7 +95,7 @@ class NetTest(BitcoinTestFramework):
             assert_greater_than_or_equal(after['bytesrecv_per_msg'].get('pong', 0), before['bytesrecv_per_msg'].get('pong', 0) + 32)
             assert_greater_than_or_equal(after['bytessent_per_msg'].get('ping', 0), before['bytessent_per_msg'].get('ping', 0) + 32)
 
-    def _test_getnetworkinginfo(self):
+    def _test_getnetworkinfo(self):
         assert_equal(self.nodes[0].getnetworkinfo()['networkactive'], True)
         assert_equal(self.nodes[0].getnetworkinfo()['connections'], 2)
 
