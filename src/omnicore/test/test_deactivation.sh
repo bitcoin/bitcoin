@@ -165,7 +165,7 @@ if [ $RESULT == "true," ]
     FAIL=$((FAIL+1))
 fi
 printf "   * Making sure the orderbook for #3/#4 is now empty... "
-ORDERS=$($SRCDIR/omnicore-cli --regtest omni_getorderbook 3 4 | grep -vF "[" | grep -vF "]" | wc -l)
+ORDERS=$($SRCDIR/omnicore-cli --regtest omni_getorderbook 3 4 | grep -vF "[" | grep -vFc "]")
 if [ $ORDERS == "0" ]
   then
     printf "PASS\\n"
@@ -235,7 +235,7 @@ if [ $RESULT == "true," ]
     FAIL=$((FAIL+1))
 fi
 printf "   * Making sure the orderbook for #3/#1 is now empty... "
-ORDERSB=$($SRCDIR/omnicore-cli --regtest omni_getorderbook 3 1 | grep -vF "[" | grep -vF "]" | wc -l)
+ORDERSB=$($SRCDIR/omnicore-cli --regtest omni_getorderbook 3 1 | grep -vF "[" | grep -vFc "]")
 if [ $ORDERSB == "0" ]
   then
     printf "PASS\\n"
@@ -245,7 +245,7 @@ if [ $ORDERSB == "0" ]
     FAIL=$((FAIL+1))
 fi
 printf "   * Making sure the orderbook for #4/#1 is now empty... "
-ORDERSC=$($SRCDIR/omnicore-cli --regtest omni_getorderbook 4 1 | grep -vF "[" | grep -vF "]" | wc -l)
+ORDERSC=$($SRCDIR/omnicore-cli --regtest omni_getorderbook 4 1 | grep -vF "[" | grep -vFc "]")
 if [ $ORDERSC == "0" ]
   then
     printf "PASS\\n"
