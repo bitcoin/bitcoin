@@ -549,12 +549,20 @@
         <translation>&amp;Copia Inscriptionem</translation>
     </message>
     <message>
+        <source>Amount</source>
+        <translation>Quantitas</translation>
+    </message>
+    <message>
         <source>Wallet</source>
         <translation>Cassidile</translation>
     </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation>Dies</translation>
+    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -723,6 +731,22 @@
     </context>
 <context>
     <name>TransactionDesc</name>
+    <message>
+        <source>Date</source>
+        <translation>Dies</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>ignotum</translation>
+    </message>
+    <message>
+        <source>Transaction fee</source>
+        <translation>Transactionis merces</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>Quantitas</translation>
+    </message>
     </context>
 <context>
     <name>TransactionDescDialog</name>
@@ -733,9 +757,21 @@
     </context>
 <context>
     <name>TransactionTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation>Dies</translation>
+    </message>
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>Confirmed</source>
+        <translation>Confirmatum</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation>Dies</translation>
+    </message>
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
@@ -745,9 +781,21 @@
     </context>
 <context>
     <name>WalletModel</name>
+    <message>
+        <source>Send Coins</source>
+        <translation>Mitte Nummos</translation>
+    </message>
     </context>
 <context>
     <name>WalletView</name>
+    <message>
+        <source>&amp;Export</source>
+        <translation>&amp;Exporta</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Exporta data in hac tabella in plicam</translation>
+    </message>
     </context>
 <context>
     <name>bitcoin-core</name>

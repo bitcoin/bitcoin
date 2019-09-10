@@ -298,6 +298,10 @@
         <translation>&amp;Opciones</translation>
     </message>
     <message>
+        <source>Modify configuration options for %1</source>
+        <translation>Modificar las opciones de configuración para %1</translation>
+    </message>
+    <message>
         <source>&amp;Encrypt Wallet...</source>
         <translation>&amp;Encriptar cartera</translation>
     </message>
@@ -320,6 +324,18 @@
     <message>
         <source>Open &amp;URI...</source>
         <translation>Abrir &amp;URL...</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>Cartera:</translation>
+    </message>
+    <message>
+        <source>Click to disable network activity.</source>
+        <translation>Haga clic para desactivar la actividad de la red.</translation>
+    </message>
+    <message>
+        <source>Network activity disabled.</source>
+        <translation>Actividad de red deshabilitada.</translation>
     </message>
     <message>
         <source>Reindexing blocks on disk...</source>
@@ -625,6 +641,10 @@
         <translation>Dirección</translation>
     </message>
     <message>
+        <source>Amount</source>
+        <translation>Monto</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation>Etiqueta</translation>
     </message>
@@ -635,6 +655,10 @@
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation>Fecha</translation>
+    </message>
     <message>
         <source>Label</source>
         <translation>Etiqueta</translation>
@@ -771,6 +795,18 @@
     </context>
 <context>
     <name>TransactionDesc</name>
+    <message>
+        <source>Date</source>
+        <translation>Fecha</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>desconocido</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>Monto</translation>
+    </message>
     </context>
 <context>
     <name>TransactionDescDialog</name>
@@ -781,6 +817,10 @@
     </context>
 <context>
     <name>TransactionTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation>Fecha</translation>
+    </message>
     <message>
         <source>Label</source>
         <translation>Etiqueta</translation>
@@ -795,6 +835,14 @@
     <message>
         <source>Comma separated file (*.csv)</source>
         <translation>Arhchivo separado por comas (*.csv)</translation>
+    </message>
+    <message>
+        <source>Confirmed</source>
+        <translation>Confirmado </translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation>Fecha</translation>
     </message>
     <message>
         <source>Label</source>
@@ -824,6 +872,10 @@
     </context>
 <context>
     <name>WalletView</name>
+    <message>
+        <source>&amp;Export</source>
+        <translation>&amp;Exportar</translation>
+    </message>
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Exportar la información en la pestaña actual a un archivo</translation>

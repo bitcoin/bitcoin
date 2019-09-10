@@ -3,11 +3,11 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Regsklik om adres of etiket te verander</translation>
+        <translation>Regs-klik om die adres of etiket te wysig</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Skep ’n nuwe adres</translation>
+        <translation>Skep 'n nuwe adres</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -15,11 +15,11 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Dupliseer die geselekteerde adres na die sisteem se geheuebord</translation>
+        <translation>Maak 'n kopie van die huidige adres na die stelsel klipbord</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation>&amp;Dupliseer</translation>
+        <translation>&amp;Kopie</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
@@ -27,27 +27,27 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>Verwyder die adres wat u gekies het van die lys</translation>
+        <translation>Verwyder die uitgekiesde adres van die lys</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Voer die inligting op hierdie bladsy uit na 'n leer</translation>
+        <translation>Voer inligting uit van die huidige blad na n lêer</translation>
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Voer uit</translation>
+        <translation>&amp;Uitvoer</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp;Vee uit</translation>
+        <translation>&amp;Verwyder</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation>Kies die adres waarheen u munte wil stuur</translation>
+        <translation>Kies die address na wie die muntstukke gestuur moet word</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation>Kies die adres wat die munte moet ontvang</translation>
+        <translation>Kies die adres vir die ontvangs van betaaling</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
@@ -55,54 +55,54 @@
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation>Stuurders adresse</translation>
+        <translation>Stuur adresse</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
-        <translation>Ontvanger adresse</translation>
+        <translation>Ontvang adresse</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Hierdie is die adresse vanwaar u Bitcoin betalings stuur. U moet altyd die bedrag en die adres van die ontvanger nagaan voordat u enige munte stuur.</translation>
+        <translation>Dit is jou Bitcoin-adresse vir die stuur van betalings. Kontroleer altyd die bedrag en die ontvangsadres voordat u munte stuur.</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Hierdie is die adresse waar u Bitcoins sal ontvang. Ons beveel aan dat u 'n nuwe adres kies vir elke transaksie</translation>
+        <translation>Dit is jou Bitcoin-adresse vir die stuur van betalings. Kontroleer altyd die bedrag en die ontvangsadres voordat jy munte stuur.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation>&amp;Dupliseer Adres</translation>
+        <translation>&amp;Kopie Adres</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation>Kopieer &amp;Etiket</translation>
+        <translation>Kopie &amp;Etiket</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
-        <translation>&amp;Verander</translation>
+        <translation>&amp;Wysig</translation>
     </message>
     <message>
         <source>Export Address List</source>
-        <translation>Voer adreslys uit</translation>
+        <translation>Voer adres lys uit</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation>Comma separated file (*.csv)</translation>
+        <translation>Koma geskeide lêer (*.csv)</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation>Uitvoer was onsuksesvol</translation>
+        <translation>Uitvoering Misluk</translation>
     </message>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
-        <translation>Die adreslys kon nie in %1  gestoor word nie.  Probeer asseblief weer.</translation>
+        <translation>Kon nie die adreslys stoor na %1 nie. Probeer asseblief weer.</translation>
     </message>
 </context>
 <context>
     <name>AddressTableModel</name>
     <message>
         <source>Label</source>
-        <translation>Merk</translation>
+        <translation>Etiket</translation>
     </message>
     <message>
         <source>Address</source>
@@ -117,19 +117,19 @@
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
-        <translation>Wagwoord Dialoog</translation>
+        <translation>Wagfrase Dialoog</translation>
     </message>
     <message>
         <source>Enter passphrase</source>
-        <translation>Tik u wagwoord in</translation>
+        <translation>Tik wagfrase in</translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation>Nuwe wagwoord</translation>
+        <translation>Nuwe wagfrase</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>Herhaal nuwe wagwoord</translation>
+        <translation>Herhaal nuwe wagfrase</translation>
     </message>
     <message>
         <source>Show password</source>
@@ -137,87 +137,91 @@
     </message>
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Tik die nuwe wagwoord vir u beursie.&lt;br/&gt;Gerbuik asseblief 'n wagwoord met &lt;b&gt;tien of meer lukrake karakters&lt;/b&gt;, of &lt;b&gt;agt of meer woorde&lt;/b&gt;.</translation>
+        <translation>Tik die nuwe wagwoord vir die beursie in.&lt;br/&gt;Gebruik asseblief 'n wagwoord van &lt;b&gt;ten minste 10 ewekansige karakters&lt;/b&gt;, of &lt;b&gt;agt (8) of meer woorde.&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
-        <translation>Kodifiseer beursie</translation>
+        <translation>Enkripteer beursie</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>U het u beursie se wagwoord nodig om toegang tot u beursie te verkry.</translation>
+        <translation>Hierdie operasie benodig 'n wagwoord om die beursie oop te sluit.</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
-        <translation>Sluit beursie oop</translation>
+        <translation>Ontsluit beursie</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>U het u beursie se wagwoord nodig om u beursie se kode te ontsyfer.</translation>
+        <translation>Hierdie operasie benodig 'n wagwoord om die beursie oop te sluit.</translation>
     </message>
     <message>
         <source>Decrypt wallet</source>
-        <translation>Ontsleutel beursie</translation>
+        <translation>Dekripteer beursie</translation>
     </message>
     <message>
         <source>Change passphrase</source>
-        <translation>Verander wagwoord</translation>
+        <translation>Verander wagfrase</translation>
     </message>
     <message>
         <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Tik die ou en die nuwe wagwoorde vir die beursie.</translation>
+        <translation>Tik in die ou wagfrase en die nuwe wagfrase vir die beursie.</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
-        <translation>Bevestig dat die beursie gekodifiseer is</translation>
+        <translation>Bevestig beursie enkripsie.</translation>
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>Waarskuwing: Indien u die beursie kodifiseer en u vergeet u wagwoord &lt;b&gt;VERLOOR U AL U BITCOINS&lt;/b&gt;!</translation>
+        <translation>Waarskuwing: As jy jou beursie enkripteer en jou wagwoord verloor, sal jy &lt;b&gt;AL JOU BITCOINS VERLOOR&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation>Is u seker dat u die beursie wil kodifiseer?</translation>
+        <translation>Is jy seker jy wil jou beursie enkripteer?</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
-        <translation>Beursie gekodifiseer</translation>
+        <translation>Beursie enkriptasie voltooi</translation>
+    </message>
+    <message>
+        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>%1 gaan nou toe maak om die enkripsie proses klaar te maak. Onthou dat jou bitcoins nie ten volle beskerm kan word deur die beursie te enkrip teen "malware" wat jou rekenaar besmet.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>BELANGRIK:  Alle vorige kopieë en rugsteun-weergawes wat u tevore van die gemaak het, moet vervang word met die jongste weergawe van u nuutste gekodifiseerde beursie.  Alle vorige weergawes en rugsteun-kopieë van u beursie sal nutteloos raak die oomblik wat u die nuut-gekodifiseerde beursie begin gebruik.</translation>
+        <translation>BELANGRIK: Enige vorige rugsteune wat u gemaak het van u beursie-lêer moet vervang word met die nuut-gegenereerde, versleutelde beursie-lêer. Vir sekuriteitsredes sal vorige rugsteune van die onversleutelde beursie-lêer onbruikbaar word sodra u die nuwe, versleutelde beursie begin gebruik.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
-        <translation>Kodifikasie was onsuksesvol</translation>
+        <translation>Beursie enkriptasie het misluk</translation>
     </message>
     <message>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation>Weens 'n interne fout het kodifikasie het nie geslaag nie.  U beursie is nie gekodifiseer nie</translation>
+        <translation>Beursie bewaaking het misluk as gevolg van 'n interne fout. Die beursie is nie bewaak nie!</translation>
     </message>
     <message>
         <source>The supplied passphrases do not match.</source>
-        <translation>Die wagwoorde stem nie ooreen nie.</translation>
+        <translation>Die wagfrase stem nie ooreen nie</translation>
     </message>
     <message>
         <source>Wallet unlock failed</source>
-        <translation>Die beursie is nie oopgesluit nie</translation>
+        <translation>Beursie oopsluiting het misluk</translation>
     </message>
     <message>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation>U het die verkeerde wagwoord ingetik.</translation>
+        <translation>Die wagfrase wat ingetik was om die beursie oop te sluit, was verkeerd.</translation>
     </message>
     <message>
         <source>Wallet decryption failed</source>
-        <translation>Beursie-dekripsie het misluk</translation>
+        <translation>Beursie dekripsie het misluk</translation>
     </message>
     <message>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation>Beursie wagwoordfrase is suksesvol verander.</translation>
+        <translation>Die beursie se wagfrase verandering was suksesvol.</translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation>WAARSKUWING:  Outomatiese Kapitalisering is aktief op u sleutelbord!</translation>
+        <translation>Waarskuwing: Die Caps Lock is aan!</translation>
     </message>
 </context>
 <context>
@@ -228,26 +232,30 @@
     </message>
     <message>
         <source>Banned Until</source>
-        <translation>Verban tot</translation>
+        <translation>Verban Tot</translation>
     </message>
 </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
         <source>Sign &amp;message...</source>
-        <translation>Teken &amp;boodskap...</translation>
+        <translation>Teken &amp;Boodskap</translation>
     </message>
     <message>
         <source>Synchronizing with network...</source>
-        <translation>Netwerk-sinkronisasie...</translation>
+        <translation>Sinchroniseer met die netwerk ...</translation>
     </message>
     <message>
         <source>&amp;Overview</source>
         <translation>&amp;Oorsig</translation>
     </message>
     <message>
+        <source>Node</source>
+        <translation>Node</translation>
+    </message>
+    <message>
         <source>Show general overview of wallet</source>
-        <translation>Vertoon 'n algemene oorsig van die beursie</translation>
+        <translation>Wys algemene oorsig van die beursie</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
@@ -255,15 +263,15 @@
     </message>
     <message>
         <source>Browse transaction history</source>
-        <translation>Blaai deur transaksiegeskiedenis</translation>
+        <translation>Besoek transaksie geskiedenis</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
-        <translation>&amp;Sluit</translation>
+        <translation>S&amp;luit af</translation>
     </message>
     <message>
         <source>Quit application</source>
-        <translation>Stop en verlaat die applikasie</translation>
+        <translation>Sluit af</translation>
     </message>
     <message>
         <source>&amp;About %1</source>
@@ -287,35 +295,43 @@
     </message>
     <message>
         <source>Modify configuration options for %1</source>
-        <translation>Verander konfigurasie-opsies vir %1</translation>
+        <translation>Verander konfigurasie opsies vir %1</translation>
     </message>
     <message>
         <source>&amp;Encrypt Wallet...</source>
-        <translation>&amp;Kodifiseer Beursie</translation>
+        <translation>&amp;Enkripteer Beursie...</translation>
     </message>
     <message>
         <source>&amp;Backup Wallet...</source>
-        <translation>&amp;Rugsteun-kopie van Beursie</translation>
+        <translation>&amp;Rugsteun Beursie...</translation>
     </message>
     <message>
         <source>&amp;Change Passphrase...</source>
-        <translation>&amp;Verander Wagwoord</translation>
+        <translation>Verander wagwoord frase...</translation>
+    </message>
+    <message>
+        <source>&amp;Sending addresses...</source>
+        <translation>Uitstuur adresse...</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses...</source>
+        <translation>&amp;Ontvang adresse...</translation>
     </message>
     <message>
         <source>Open &amp;URI...</source>
-        <translation>Oop &amp; URI...</translation>
+        <translation>Maak &amp;URI oop...</translation>
     </message>
     <message>
         <source>Click to disable network activity.</source>
-        <translation>Kliek om netwerkaktiwiteit af te skakel.</translation>
+        <translation>Klik om netwerk aktiwiteit af te skakel.</translation>
     </message>
     <message>
         <source>Network activity disabled.</source>
-        <translation>Netwerkaktiwiteit gedeaktiveer.</translation>
+        <translation>Netwerk aktiwiteid afgeskakel.</translation>
     </message>
     <message>
         <source>Click to enable network activity again.</source>
-        <translation>Kliek om netwerkaktiwiteit weer aan te skakel.</translation>
+        <translation>Klik om netwerk aktiwiteit weer aan te skakel.</translation>
     </message>
     <message>
         <source>Syncing Headers (%1%)...</source>
@@ -323,27 +339,27 @@
     </message>
     <message>
         <source>Reindexing blocks on disk...</source>
-        <translation>Besig met herindeksering van blokke op hardeskyf...</translation>
+        <translation>Herindekseer blokke op skyf...</translation>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
-        <translation>Stuur munte na 'n Bitcoin adres</translation>
+        <translation>Stuur muntstukke na 'n Bitcoin adres</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
-        <translation>Maak 'n rugsteun-kopié van beursie na 'n ander stoorplek</translation>
+        <translation>Rugsteun beursie na 'n ander plek</translation>
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation>Verander die wagwoord wat ek vir kodifikasie van my beursie gebruik</translation>
+        <translation>Verander die wagwoordfrase wat vir beursie-versleuteling gebruik word</translation>
     </message>
     <message>
         <source>&amp;Debug window</source>
-        <translation>&amp;Ontfout venster</translation>
+        <translation>&amp;Ontfoutvenster</translation>
     </message>
     <message>
         <source>Open debugging and diagnostic console</source>
-        <translation>Maak ontfouting en diagnostiese konsole oop</translation>
+        <translation>Open ontfouting en diagnostiese konsole</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
@@ -371,63 +387,63 @@
     </message>
     <message>
         <source>Show or hide the main Window</source>
-        <translation>Wys of versteek die hoofbladsy</translation>
+        <translation>Wys of versteek die hoof Venster</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>Kodifiseer die private sleutes wat aan jou beursie gekoppel is.</translation>
+        <translation>Versleutel die private sleutels wat aan u beursie behoort</translation>
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Onderteken boodskappe met u Bitcoin adresse om u eienaarskap te bewys</translation>
+        <translation>Teken boodskappe met u Bitcoin adresse om te bewys dat u hul besit</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>Verifieër boodskappe om seker te maak dat dit met die gespesifiseerde Bitcoin adresse</translation>
+        <translation>Bevestig boodskappe om te verseker dat hulle geteken was met gespesifiseerde Bitcoin adresse</translation>
     </message>
     <message>
         <source>&amp;File</source>
-        <translation>&amp;Leër</translation>
+        <translation>&amp;Lêer</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation>&amp;Verstellings</translation>
+        <translation>&amp;Instellings</translation>
     </message>
     <message>
         <source>&amp;Help</source>
-        <translation>&amp;Help</translation>
+        <translation>&amp;Hulp</translation>
     </message>
     <message>
         <source>Tabs toolbar</source>
-        <translation>Orebalk</translation>
+        <translation>Blad nutsbalk</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Versoek betalings (genereer QR-kodes en bitcoin: URI's)</translation>
+        <translation>Versoek betalings (genereer QR kodes en bitcoin: URIs)</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
-        <translation>Vertoon die lys van gebruikte versendingsadresse en etikette</translation>
+        <translation>Wys die lys van gebruikte stuur adresse en etikette</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
-        <translation>Vertoon die lys van gebruikte ontvangers-adresse en etikette</translation>
+        <translation>Wys die lys van gebruikte ontvangsadresse en etikette</translation>
     </message>
     <message>
         <source>Open a bitcoin: URI or payment request</source>
-        <translation>Skep 'n bitcoin: URI of betalingsversoek</translation>
+        <translation>Open 'n bitcoin: URI of betalingsversoek</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
-        <translation>&amp;Opdrag lyn opsies</translation>
+        <translation>&amp;Opdrag lys opsies</translation>
     </message>
     <message>
         <source>Indexing blocks on disk...</source>
-        <translation>Blokke op skyf word geïndekseer...</translation>
+        <translation>Indekseer tans blokke op skyf...</translation>
     </message>
     <message>
         <source>Processing blocks on disk...</source>
-        <translation>Blokke op skyf word geprosesseer...</translation>
+        <translation>Prosesseer tans blokke op skyf...</translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -435,11 +451,11 @@
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
-        <translation>Laaste ontvange blok is %1 gelede gegenereer.</translation>
+        <translation>Ontvangs van laaste blok is %1 terug.</translation>
     </message>
     <message>
         <source>Transactions after this will not yet be visible.</source>
-        <translation>Transaksies hierna sal nog nie sigbaar wees nie.</translation>
+        <translation>Opvolgende transaksies sal nog nie sigbaar wees nie.</translation>
     </message>
     <message>
         <source>Error</source>
@@ -451,7 +467,7 @@
     </message>
     <message>
         <source>Information</source>
-        <translation>Inligting</translation>
+        <translation>Informasie</translation>
     </message>
     <message>
         <source>Up to date</source>
@@ -459,19 +475,19 @@
     </message>
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation>Vertoon die %1 hulp boodskap vir 'n lys met moontlike Bitcoin bevelreël opsies</translation>
+        <translation>Wys die %1 hulpboodskap om 'n lys met moontlike Bitcoin bevel-lyn opsies te verkry</translation>
     </message>
     <message>
         <source>%1 client</source>
-        <translation>%1 kliënt</translation>
+        <translation>%1 klient</translation>
     </message>
     <message>
         <source>Connecting to peers...</source>
-        <translation>Koppel aan eweknieë...</translation>
+        <translation>Verbind tans aan eweknieë...</translation>
     </message>
     <message>
         <source>Catching up...</source>
-        <translation>Word op datum gebring...</translation>
+        <translation>Besig om op te vang...</translation>
     </message>
     <message>
         <source>Date: %1
@@ -529,14 +545,14 @@
     </message>
     <message>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>'N fatale fout het voorgekom. Bitcoin kan nie meer veilig voortgaan nie en sal nou toemaak.</translation>
+        <translation>'n Noodlottige fout het voorgekom. Bitcoin kan nie langer voortgaan nie en sal afsluit.</translation>
     </message>
 </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
         <source>Coin Selection</source>
-        <translation>Munt Seleksie</translation>
+        <translation>Munt Keuse</translation>
     </message>
     <message>
         <source>Quantity:</source>
@@ -568,7 +584,7 @@
     </message>
     <message>
         <source>(un)select all</source>
-        <translation>(de)selekteer alle</translation>
+        <translation>(on)selekteer alles</translation>
     </message>
     <message>
         <source>Tree mode</source>
@@ -576,7 +592,7 @@
     </message>
     <message>
         <source>List mode</source>
-        <translation>Lysmodus</translation>
+        <translation>Lys wyse</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -604,7 +620,7 @@
     </message>
     <message>
         <source>Copy address</source>
-        <translation>Kopieer adres</translation>
+        <translation>Maak kopie van adres</translation>
     </message>
     <message>
         <source>Copy label</source>
@@ -620,11 +636,11 @@
     </message>
     <message>
         <source>Lock unspent</source>
-        <translation>Sluit ongespandeer</translation>
+        <translation>Sluit ongespandeerde</translation>
     </message>
     <message>
         <source>Unlock unspent</source>
-        <translation>Ontsluit ongespandeer</translation>
+        <translation>Onsluit ongespandeerde</translation>
     </message>
     <message>
         <source>Copy quantity</source>
@@ -664,11 +680,11 @@
     </message>
     <message>
         <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation>Hierdie etiket raak rooi as enige ontvanger 'n bedrag kleiner as die huidige stof drempel ontvang.</translation>
+        <translation>Hierdie etiket verander na rooi as enige ontvanger 'n bedrag kleiner as die huidige stof drempelwaarde ontvang.</translation>
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
-        <translation>Kan verskil met +/- %1 satoshi(s) per invoer.</translation>
+        <translation>Kan wissel met +/- %1 satoshi(s) per inset.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -676,7 +692,7 @@
     </message>
     <message>
         <source>change from %1 (%2)</source>
-        <translation>verander van %1 (%2)</translation>
+        <translation>Verander vanaf %1 (%2)</translation>
     </message>
     <message>
         <source>(change)</source>
@@ -695,11 +711,11 @@
     </message>
     <message>
         <source>The label associated with this address list entry</source>
-        <translation>Die etiket wat verband hou met hierdie adres lys inskrywing</translation>
+        <translation>Die etiket geassosieer met hierdie adreslys inskrywing</translation>
     </message>
     <message>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation>Die adres wat verband hou met hierdie adres lys inskrywing. Dit kan net verander word vir stuur adresse.</translation>
+        <translation>Die adres geassosieer met hierdie adreslys inskrywing. Dié kan slegs gewysig word vir stuur-adresse.</translation>
     </message>
     <message>
         <source>&amp;Address</source>
@@ -707,34 +723,34 @@
     </message>
     <message>
         <source>New sending address</source>
-        <translation>Nuwe stuur adres</translation>
+        <translation>Nuwe stuurende adres</translation>
     </message>
     <message>
         <source>Edit receiving address</source>
-        <translation>Wysig ontvang adres</translation>
+        <translation>Wysig ontvangende adres</translation>
     </message>
     <message>
         <source>Edit sending address</source>
-        <translation>Wysig stuur adres</translation>
+        <translation>Wysig stuurende adres</translation>
     </message>
     <message>
         <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation>Die ingevoerde adres "%1" is nie 'n geldige Bitcoin adres nie.</translation>
+        <translation>Die ingeskrewe adres "%1" is nie 'n geldige Bitcoin adres nie.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
-        <translation>Kon beursie nie oopsluit nie.</translation>
+        <translation>Kon nie die beursie oopsluit nie.</translation>
     </message>
     <message>
         <source>New key generation failed.</source>
-        <translation>Nuwe sleutel generasie het misluk.</translation>
+        <translation>Nuwe sleutel genereering het misluk.</translation>
     </message>
 </context>
 <context>
     <name>FreespaceChecker</name>
     <message>
         <source>A new data directory will be created.</source>
-        <translation>'N Nuwe data gids sal geskep word.</translation>
+        <translation>n Nuwe data  lêer sal geskep word.</translation>
     </message>
     <message>
         <source>name</source>
@@ -742,15 +758,15 @@
     </message>
     <message>
         <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
-        <translation>Gids bestaan reeds. Voeg %1 by indien u van plan is om 'n nuwe gids hier te skep.</translation>
+        <translation>Lêer bestaan reeds. Voeg %1 indien u van plan is om n nuwe lêer hier te skep.</translation>
     </message>
     <message>
         <source>Path already exists, and is not a directory.</source>
-        <translation>Pad bestaan reeds, en is nie 'n gids nie.</translation>
+        <translation>Pad bestaan reeds en is nie 'n lêergids nie.</translation>
     </message>
     <message>
         <source>Cannot create data directory here.</source>
-        <translation>Kan hier nie data gids skep nie.</translation>
+        <translation>Kan nie data gids hier skep nie.</translation>
     </message>
 </context>
 <context>
@@ -765,11 +781,11 @@
     </message>
     <message>
         <source>About %1</source>
-        <translation>Ongeveer %1</translation>
+        <translation>Oor %1</translation>
     </message>
     <message>
         <source>Command-line options</source>
-        <translation>Opdrag lyn opsies</translation>
+        <translation>Opdrag lys opsies</translation>
     </message>
 </context>
 <context>
@@ -796,7 +812,7 @@
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
-        <translation>Die beursie sal ook in hierdie gids gestoor word.</translation>
+        <translation>Die beursie sal ook gestoor word in hierdie lêer.</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
@@ -827,7 +843,7 @@
     </message>
     <message>
         <source>Progress</source>
-        <translation>Vordering</translation>
+        <translation>Vorderering</translation>
     </message>
     <message>
         <source>Progress increase per hour</source>
@@ -843,7 +859,7 @@
     </message>
     <message>
         <source>Hide</source>
-        <translation>Versteek</translation>
+        <translation>Steek weg</translation>
     </message>
     </context>
 <context>
@@ -917,7 +933,7 @@
     </message>
     <message>
         <source>W&amp;allet</source>
-        <translation>B&amp;eursie</translation>
+        <translation>&amp;Beursie</translation>
     </message>
     <message>
         <source>Expert</source>
@@ -933,7 +949,7 @@
     </message>
     <message>
         <source>&amp;Port:</source>
-        <translation>&amp;Poort:</translation>
+        <translation>&amp;Port:</translation>
     </message>
     <message>
         <source>Used for reaching peers via:</source>
@@ -957,7 +973,7 @@
     </message>
     <message>
         <source>M&amp;inimize on close</source>
-        <translation>M&amp;inimaliseer op toemaak</translation>
+        <translation>V&amp;erminder op toemaak</translation>
     </message>
     <message>
         <source>&amp;Display</source>
@@ -985,11 +1001,11 @@
     </message>
     <message>
         <source>default</source>
-        <translation>verstek</translation>
+        <translation>standaard</translation>
     </message>
     <message>
         <source>none</source>
-        <translation>geen</translation>
+        <translation>niks</translation>
     </message>
     <message>
         <source>Confirm options reset</source>
@@ -1052,7 +1068,7 @@
     </message>
     <message>
         <source>Balances</source>
-        <translation>Balanse</translation>
+        <translation>Balans</translation>
     </message>
     <message>
         <source>Total:</source>
@@ -1153,7 +1169,7 @@
     </message>
     <message>
         <source>%1 h</source>
-        <translation>%1 u</translation>
+        <translation>%1 h</translation>
     </message>
     <message>
         <source>%1 m</source>
@@ -1226,7 +1242,7 @@
     </message>
     <message>
         <source>&amp;Information</source>
-        <translation>&amp;Informasie</translation>
+        <translation>Informasie</translation>
     </message>
     <message>
         <source>General</source>
@@ -1361,7 +1377,7 @@
     <name>ReceiveCoinsDialog</name>
     <message>
         <source>&amp;Amount:</source>
-        <translation>&amp;Bedrag</translation>
+        <translation>&amp;Bedrag:</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
@@ -1369,7 +1385,7 @@
     </message>
     <message>
         <source>&amp;Message:</source>
-        <translation>&amp;Boodslap:</translation>
+        <translation>&amp;Boodskap:</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
@@ -1444,7 +1460,7 @@
     </message>
     <message>
         <source>Label</source>
-        <translation>Merk</translation>
+        <translation>Etiket</translation>
     </message>
     <message>
         <source>Message</source>
@@ -1471,7 +1487,7 @@
     </message>
     <message>
         <source>Label</source>
-        <translation>Merk</translation>
+        <translation>Etiket</translation>
     </message>
     <message>
         <source>Message</source>
@@ -1498,7 +1514,7 @@
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
-        <translation>Stuur Munte</translation>
+        <translation>Stuur Munstukke</translation>
     </message>
     <message>
         <source>Coin Control Features</source>
@@ -1514,7 +1530,7 @@
     </message>
     <message>
         <source>Insufficient funds!</source>
-        <translation>Onvoldoende fondse!</translation>
+        <translation>Onvoldoende fondse</translation>
     </message>
     <message>
         <source>Quantity:</source>
@@ -1542,7 +1558,7 @@
     </message>
     <message>
         <source>Transaction Fee:</source>
-        <translation>Transaksiefooi:</translation>
+        <translation>Transaksie fooi:</translation>
     </message>
     <message>
         <source>Choose...</source>
@@ -1568,7 +1584,7 @@ etlike ure of dae (of nooit) sal neem om te bevestig. Oorweeg om
     </message>
     <message>
         <source>Hide</source>
-        <translation>Versteek</translation>
+        <translation>Steek weg</translation>
     </message>
     <message>
         <source>Recommended:</source>
@@ -1584,7 +1600,7 @@ etlike ure of dae (of nooit) sal neem om te bevestig. Oorweeg om
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
-        <translation>Stuur aan veelvuldige ontvangers tegelyk</translation>
+        <translation>Stuur aan vele ontvangers op eens</translation>
     </message>
     <message>
         <source>Add &amp;Recipient</source>
@@ -1618,7 +1634,7 @@ transaksievertragingsrisiko.</translation>
     </message>
     <message>
         <source>Balance:</source>
-        <translation>Saldo:</translation>
+        <translation>Balans:</translation>
     </message>
     <message>
         <source>Confirm the send action</source>
@@ -1743,7 +1759,7 @@ Is u seker?</translation>
     <name>SendCoinsEntry</name>
     <message>
         <source>A&amp;mount:</source>
-        <translation>B&amp;edrag:</translation>
+        <translation>&amp;Bedrag:</translation>
     </message>
     <message>
         <source>Pay &amp;To:</source>
@@ -1824,7 +1840,7 @@ word die fooi eweredig verdeel.</translation>
     <name>SignVerifyMessageDialog</name>
     <message>
         <source>&amp;Sign Message</source>
-        <translation>&amp;Teken Boodskap</translation>
+        <translation>&amp;Teken boodskap</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -1913,7 +1929,7 @@ word die fooi eweredig verdeel.</translation>
     </message>
     <message>
         <source>not accepted</source>
-        <translation>nie geaanvaar</translation>
+        <translation>nie aanvaar nie</translation>
     </message>
     <message>
         <source>Debit</source>
@@ -1933,7 +1949,7 @@ word die fooi eweredig verdeel.</translation>
     </message>
     <message>
         <source>Net amount</source>
-        <translation>Net bedrag</translation>
+        <translation>Netto bedrag</translation>
     </message>
     <message>
         <source>Message</source>
@@ -1983,7 +1999,7 @@ word die fooi eweredig verdeel.</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation>Merk</translation>
+        <translation>Etiket</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -2082,7 +2098,7 @@ word die fooi eweredig verdeel.</translation>
     </message>
     <message>
         <source>Copy address</source>
-        <translation>Kopieer adres</translation>
+        <translation>Maak kopie van adres</translation>
     </message>
     <message>
         <source>Copy label</source>
@@ -2098,7 +2114,7 @@ word die fooi eweredig verdeel.</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation>Comma separated file (*.csv)</translation>
+        <translation>Koma geskeide lêer (*.csv)</translation>
     </message>
     <message>
         <source>Confirmed</source>
@@ -2114,7 +2130,7 @@ word die fooi eweredig verdeel.</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation>Merk</translation>
+        <translation>Etiket</translation>
     </message>
     <message>
         <source>Address</source>
@@ -2126,7 +2142,7 @@ word die fooi eweredig verdeel.</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation>Uitvoer was onsuksesvol</translation>
+        <translation>Uitvoering Misluk</translation>
     </message>
     <message>
         <source>Range:</source>
@@ -2134,7 +2150,7 @@ word die fooi eweredig verdeel.</translation>
     </message>
     <message>
         <source>to</source>
-        <translation>na</translation>
+        <translation>aan</translation>
     </message>
 </context>
 <context>
@@ -2147,7 +2163,7 @@ word die fooi eweredig verdeel.</translation>
     <name>WalletModel</name>
     <message>
         <source>Send Coins</source>
-        <translation>Stuur Munte</translation>
+        <translation>Stuur Munstukke</translation>
     </message>
     <message>
         <source>New fee:</source>
@@ -2158,11 +2174,11 @@ word die fooi eweredig verdeel.</translation>
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Voer uit</translation>
+        <translation>&amp;Uitvoer</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Voer die inligting op hierdie bladsy uit na 'n leer</translation>
+        <translation>Voer inligting uit van die huidige blad na n lêer</translation>
     </message>
     </context>
 <context>
@@ -2181,11 +2197,11 @@ word die fooi eweredig verdeel.</translation>
     </message>
     <message>
         <source>Importing...</source>
-        <translation>Besig met invoer...</translation>
+        <translation>Invoer proses tans besig..</translation>
     </message>
     <message>
         <source>Information</source>
-        <translation>Inligting</translation>
+        <translation>Informasie</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
@@ -2249,11 +2265,11 @@ word die fooi eweredig verdeel.</translation>
     </message>
     <message>
         <source>Loading block index...</source>
-        <translation>Blokindeks word gelaai...</translation>
+        <translation>Laai blok indeks...</translation>
     </message>
     <message>
         <source>Loading wallet...</source>
-        <translation>Beursie word gelaai...</translation>
+        <translation>Laai beursie...</translation>
     </message>
     <message>
         <source>Cannot downgrade wallet</source>

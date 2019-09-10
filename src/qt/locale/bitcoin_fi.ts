@@ -1619,6 +1619,10 @@
         <translation>Lompakko:</translation>
     </message>
     <message>
+        <source>(none)</source>
+        <translation>(tyhjä)</translation>
+    </message>
+    <message>
         <source>&amp;Reset</source>
         <translation>&amp;Nollaa</translation>
     </message>
@@ -1817,6 +1821,10 @@
     <message>
         <source>Executing command without any wallet</source>
         <translation>Suoritetaan komento ilman lomakkoa</translation>
+    </message>
+    <message>
+        <source>Executing command using "%1" wallet</source>
+        <translation>Suoritetaan komento käyttäen lompakkoa "%1"</translation>
     </message>
     <message>
         <source>(node id: %1)</source>
@@ -2101,6 +2109,14 @@
     <message>
         <source>collapse fee-settings</source>
         <translation>pudota kulujen asetukset</translation>
+    </message>
+    <message>
+        <source>Specify a custom fee per kB (1,000 bytes) of the transaction's virtual size.
+
+Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis per kB" for a transaction size of 500 bytes (half of 1 kB) would ultimately yield a fee of only 50 satoshis.</source>
+        <translation>Määrittele siirtotapahtuman näennäiskooksi siirtomaksu kilotavua (1,000 tavua) kohti.
+
+Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 tavun (puoli kt) siirrolle "100 sat / kt", johtaa tämä lopulta vain 50 satoshin maksuun.</translation>
     </message>
     <message>
         <source>per kilobyte</source>
@@ -2692,6 +2708,10 @@
         <translation>Maksutapahtuman kokonaiskoko</translation>
     </message>
     <message>
+        <source>Transaction virtual size</source>
+        <translation>Tapahtuman näennäiskoko</translation>
+    </message>
+    <message>
         <source>Merchant</source>
         <translation>Kauppias</translation>
     </message>
@@ -3160,6 +3180,10 @@
         <translation>Tämä on esi-julkaistu kokeiluversio - Käyttö omalla vastuullasi - Ethän käytä louhimiseen tai kauppasovelluksiin.</translation>
     </message>
     <message>
+        <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
+        <translation>Voit ohittaa tämän siirtomaksun, mikäli vaihtoraha on pienempi kuin tomun arvo tällä hetkellä</translation>
+    </message>
+    <message>
         <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
         <translation>Lohkoja ei voida uudelleenlukea. Joulut uudelleenrakentamaan tietokannan käyttämällä -reindex-chainstate -valitsinta.</translation>
     </message>
@@ -3242,6 +3266,10 @@
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Ei onnistuttu kuuntelemaan missään portissa. Käytä -listen=0 jos haluat tätä.</translation>
+    </message>
+    <message>
+        <source>Failed to rescan the wallet during initialization</source>
+        <translation>Lompakkoa ei voitu tarkastaa alustuksen yhteydessä.</translation>
     </message>
     <message>
         <source>Importing...</source>
@@ -3338,6 +3366,10 @@
     <message>
         <source>Upgrading UTXO database</source>
         <translation>Päivitetään UTXO-tietokantaa</translation>
+    </message>
+    <message>
+        <source>User Agent comment (%s) contains unsafe characters.</source>
+        <translation>User Agent -kommentti (%s) sisältää turvattomia merkkejä.</translation>
     </message>
     <message>
         <source>Verifying blocks...</source>
@@ -3472,6 +3504,10 @@
         <translation>Tämän siirtomaksun maksat, kun siirtomaksun arviointi ei ole käytettävissä.</translation>
     </message>
     <message>
+        <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
+        <translation>Verkon versiokenttä (%i) ylittää sallitun pituuden (%i). Vähennä uacomments:in arvoa tai kokoa.</translation>
+    </message>
+    <message>
         <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
         <translation>Ei tuettu argumentti -socks löytynyt. SOCKS -version asetusta ei enää tueta, ainoastaan SOCKS5 -välityspalvelimet on tuettu.</translation>
     </message>
@@ -3482,6 +3518,10 @@
     <message>
         <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
         <translation>Varoitus: Tuntemattomia lohkoversioita louhitaan! Tuntemattomia sääntöjä saattaa olla voimassa</translation>
+    </message>
+    <message>
+        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
+        <translation>Varoitus: Lompakkotiedosto on vahingoittunut, tiedot on korjattu. Alkuperäinen %s talletettu nimellä %s kohteeseen %s; mikäli taseesi tai siirtotapahtumat ovat virheellisiä, on suositeltavaa palauttaa lompakko varmuuskopioista.</translation>
     </message>
     <message>
         <source>%s is set very high!</source>

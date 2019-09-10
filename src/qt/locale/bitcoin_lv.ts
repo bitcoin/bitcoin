@@ -1,117 +1,137 @@
-<TS language="gl" version="2.1">
+<TS language="lv" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
         <source>Create a new address</source>
-        <translation>Crear unha nova dirección</translation>
+        <translation>Izveidot jaunu adresi</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation>&amp;Novo</translation>
+        <translation>&amp;Jauns</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Copiar a dirección seleccionada ao cartafol</translation>
+        <translation>Kopēt iezīmēto adresi uz starpliktuvi</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation>&amp;Copiar</translation>
+        <translation>&amp;Kopēt</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation>&amp;Pechar</translation>
+        <translation>&amp;Aizvērt</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>Borrar a dirección actualmente seleccionada da listaxe</translation>
+        <translation>Izdzēst iezīmētās adreses no saraksta</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation>Introduce dirección ou etiqueta para buscar</translation>
+        <translation>Ierakstiet meklējamo nosaukumu vai adresi</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Exportar os datos da pestaña actual a un arquivo.</translation>
+        <translation>Datus no tekošā ieliktņa eksportēt uz failu</translation>
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Exportar</translation>
+        <translation>&amp;Eksportēt</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp;Borrar</translation>
+        <translation>&amp;Dzēst</translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation>Enviando enderezos</translation>
+        <source>Choose the address to send coins to</source>
+        <translation>Izvēlies adresi uz kuru sūtīt bitcoins</translation>
     </message>
     <message>
-        <source>Receiving addresses</source>
-        <translation>Recibindo enderezos</translation>
+        <source>Choose the address to receive coins with</source>
+        <translation>Izvēlies adresi ar kuru saņemt bitcoins</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation>&amp;Copiar Enderezo</translation>
+        <translation>&amp;Kopēt adresi</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Label</source>
+        <translation>Kopēt &amp;Marķējumu</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
-        <translation>&amp;Editar</translation>
+        <translation>&amp;Rediģēt</translation>
     </message>
     <message>
         <source>Export Address List</source>
-        <translation>Exportar Lista de Enderezos</translation>
+        <translation>Eksportēt Adrešu Sarakstu</translation>
     </message>
     <message>
-        <source>Comma separated file (*.csv)</source>
-        <translation>Arquivo separado por comas (*.csv)</translation>
+        <source>Exporting Failed</source>
+        <translation>Eksportēšana Neizdevās</translation>
     </message>
     </context>
 <context>
     <name>AddressTableModel</name>
     <message>
         <source>Label</source>
-        <translation>Etiqueta</translation>
+        <translation>Nosaukums</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation>Enderezo</translation>
+        <translation>Adrese</translation>
     </message>
-    </context>
+    <message>
+        <source>(no label)</source>
+        <translation>(bez nosaukuma)</translation>
+    </message>
+</context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
-        <translation>Diálogo de Contrasinal</translation>
+        <translation>Paroles dialogs</translation>
     </message>
     <message>
         <source>Enter passphrase</source>
-        <translation>Introduce contrasinal</translation>
+        <translation>Ierakstiet paroli</translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation>Novo contrasinal</translation>
+        <translation>Jauna parole</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>Repite novo contrasinal</translation>
+        <translation>Jaunā parole vēlreiz</translation>
+    </message>
+    <message>
+        <source>Show password</source>
+        <translation>Rādīt paroli</translation>
+    </message>
+    <message>
+        <source>Encrypt wallet</source>
+        <translation>Šifrēt maciņu</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
-        <translation>Desbloquear moedeiro</translation>
+        <translation>Atslēgt maciņu</translation>
     </message>
     <message>
         <source>Decrypt wallet</source>
-        <translation>Desencriptar moedeiro</translation>
+        <translation>Atšifrēt maciņu</translation>
     </message>
     <message>
-        <source>Wallet encrypted</source>
-        <translation>Moedeiro encriptado</translation>
+        <source>Confirm wallet encryption</source>
+        <translation>Apstiprināt maciņa šifrēšanu</translation>
     </message>
     <message>
-        <source>Warning: The Caps Lock key is on!</source>
-        <translation>Aviso: O Bloqueo de Maiúsculas está activo!</translation>
+        <source>Are you sure you wish to encrypt your wallet?</source>
+        <translation>Vai tu tiešām vēlies šifrēt savu maciņu?</translation>
     </message>
-</context>
+    <message>
+        <source>Wallet encryption failed</source>
+        <translation>Maciņa šifrēšana neizdevās</translation>
+    </message>
+    </context>
 <context>
     <name>BanTableModel</name>
     </context>
@@ -119,99 +139,103 @@
     <name>BitcoinGUI</name>
     <message>
         <source>Sign &amp;message...</source>
-        <translation>&amp;Asinar mensaxe...</translation>
+        <translation>Parakstīt &amp;ziņojumu...</translation>
     </message>
     <message>
         <source>Synchronizing with network...</source>
-        <translation>Sincronizando coa rede...</translation>
+        <translation>Sinhronizācija ar tīklu...</translation>
     </message>
     <message>
         <source>&amp;Overview</source>
-        <translation>&amp;Vista xeral</translation>
+        <translation>&amp;Pārskats</translation>
+    </message>
+    <message>
+        <source>Node</source>
+        <translation>Node</translation>
     </message>
     <message>
         <source>Show general overview of wallet</source>
-        <translation>Amosar vista xeral do moedeiro</translation>
+        <translation>Rādīt vispārēju maciņa pārskatu</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
-        <translation>&amp;Transacciones</translation>
+        <translation>&amp;Transakcijas</translation>
     </message>
     <message>
         <source>Browse transaction history</source>
-        <translation>Navegar historial de transaccións</translation>
+        <translation>Skatīt transakciju vēsturi</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
-        <translation>&amp;Saír</translation>
+        <translation>&amp;Iziet</translation>
     </message>
     <message>
         <source>Quit application</source>
-        <translation>Saír da aplicación</translation>
+        <translation>Aizvērt programmu</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
-        <translation>Acerca de &amp;Qt</translation>
+        <translation>Par &amp;Qt</translation>
     </message>
     <message>
         <source>Show information about Qt</source>
-        <translation>Amosar información acerca de Qt</translation>
+        <translation>Parādīt informāciju par Qt</translation>
     </message>
     <message>
         <source>&amp;Options...</source>
-        <translation>&amp;Opcións...</translation>
+        <translation>&amp;Iespējas...</translation>
     </message>
     <message>
         <source>&amp;Encrypt Wallet...</source>
-        <translation>&amp;Encriptar Moedeiro...</translation>
+        <translation>Šifrēt &amp;maciņu...</translation>
     </message>
     <message>
         <source>&amp;Backup Wallet...</source>
-        <translation>Copia de &amp;Seguridade do Moedeiro...</translation>
+        <translation>&amp;Maciņa Rezerves Kopija...</translation>
     </message>
     <message>
         <source>&amp;Change Passphrase...</source>
-        <translation>&amp;Cambiar contrasinal...</translation>
+        <translation>Mainīt &amp;Paroli...</translation>
+    </message>
+    <message>
+        <source>&amp;Sending addresses...</source>
+        <translation>&amp;Sūtīšanas adreses...</translation>
     </message>
     <message>
         <source>&amp;Receiving addresses...</source>
-        <translation>Direccións para recibir</translation>
+        <translation>Saņemšanas &amp;adreses...</translation>
     </message>
     <message>
-        <source>Wallet:</source>
-        <translation>Moedeiro:</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation>moedeiro por defecto</translation>
+        <source>Open &amp;URI...</source>
+        <translation>Atvērt &amp;URI...</translation>
     </message>
     <message>
         <source>Reindexing blocks on disk...</source>
-        <translation>Reindexando bloques no disco...</translation>
+        <translation>Bloku reindeksēšana no diska...</translation>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
-        <translation>Enviar moedas a unha dirección Bitcoin</translation>
+        <translation>Nosūtīt bitkoinus uz Bitcoin adresi</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
-        <translation>Facer copia de seguridade do moedeiro noutra localización</translation>
+        <translation>Izveidot maciņa rezerves kopiju citur</translation>
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation>Cambiar o contrasinal empregado para a encriptación do moedeiro</translation>
+        <translation>Mainīt maciņa šifrēšanas paroli</translation>
     </message>
     <message>
         <source>&amp;Debug window</source>
-        <translation>Ventana de &amp;Depuración</translation>
+        <translation>&amp;Atkļūdošanas logs</translation>
     </message>
     <message>
         <source>Open debugging and diagnostic console</source>
-        <translation>Abrir consola de depuración e diagnóstico</translation>
+        <translation>Atvērt atkļūdošanas un diagnostikas konsoli</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
-        <translation>&amp;Verificar mensaxe...</translation>
+        <translation>&amp;Pārbaudīt ziņojumu...</translation>
     </message>
     <message>
         <source>Bitcoin</source>
@@ -219,258 +243,230 @@
     </message>
     <message>
         <source>Wallet</source>
-        <translation>Moedeiro</translation>
+        <translation>Maciņš</translation>
     </message>
     <message>
         <source>&amp;Send</source>
-        <translation>&amp;Enviar</translation>
+        <translation>&amp;Sūtīt</translation>
     </message>
     <message>
         <source>&amp;Receive</source>
-        <translation>&amp;Recibir</translation>
+        <translation>&amp;Saņemt</translation>
     </message>
     <message>
         <source>&amp;Show / Hide</source>
-        <translation>&amp;Amosar/Agachar</translation>
+        <translation>&amp;Rādīt / Paslēpt</translation>
     </message>
     <message>
         <source>Show or hide the main Window</source>
-        <translation>Amosar ou agachar a ventana principal</translation>
+        <translation>Parādīt vai paslēpt galveno Logu</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>Encriptar as claves privadas que pertencen ao teu moedeiro</translation>
+        <translation>Šifrēt privātās atslēgas kuras pieder tavam maciņam</translation>
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Asina mensaxes coas túas direccións Bitcoin para probar que te pertencen</translation>
+        <translation>Parakstīt ziņojumus ar savām Bitcoin adresēm lai pierādītu ka tās pieder tev</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>Verificar mensaxes para asegurar que foron asinados con direccións Bitcoin dadas.</translation>
+        <translation>Pārbaudīt ziņojumus lai pārliecinātos, ka tie tika parakstīti ar norādītajām Bitcoin adresēm</translation>
     </message>
     <message>
         <source>&amp;File</source>
-        <translation>&amp;Arquivo</translation>
+        <translation>&amp;Fails</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation>Axus&amp;tes</translation>
+        <translation>&amp;Uzstādījumi</translation>
     </message>
     <message>
         <source>&amp;Help</source>
-        <translation>A&amp;xuda</translation>
+        <translation>&amp;Palīdzība</translation>
     </message>
     <message>
         <source>Tabs toolbar</source>
-        <translation>Barra de ferramentas</translation>
+        <translation>Ciļņu rīkjosla</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>Solicitar pagos (xenera códigos QR e bitcoin: URIs)</translation>
-    </message>
-    <message>
-        <source>Show the list of used sending addresses and labels</source>
-        <translation>Amosar a listaxe de direccións e etiquetas para enviar empregadas</translation>
-    </message>
-    <message>
-        <source>Show the list of used receiving addresses and labels</source>
-        <translation>Amosar a listaxe de etiquetas e direccións para recibir empregadas</translation>
+        <translation>Pieprasīt maksājumus (izveido QR kodu un bitcoin: URIs)</translation>
     </message>
     <message>
         <source>Open a bitcoin: URI or payment request</source>
-        <translation>Abrir un bitcoin: URI ou solicitude de pago</translation>
+        <translation>Atvērt bitcoin URI vai maksājuma pieprasījumu</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
-        <translation>Opcións da liña de comandos</translation>
+        <translation>&amp;Komandrindas iespējas</translation>
     </message>
     <message>
         <source>%1 behind</source>
-        <translation>%1 detrás</translation>
-    </message>
-    <message>
-        <source>Last received block was generated %1 ago.</source>
-        <translation>O último bloque recibido foi xerado fai %1.</translation>
+        <translation>%1 aizmugurē</translation>
     </message>
     <message>
         <source>Transactions after this will not yet be visible.</source>
-        <translation>As transaccións despois desta non serán todavía visibles.</translation>
+        <translation>Transakcijas pēc šī vel nebūs redzamas</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation>Erro</translation>
+        <translation>Kļūda</translation>
     </message>
     <message>
         <source>Warning</source>
-        <translation>Precaución</translation>
+        <translation>Brīdinājums</translation>
     </message>
     <message>
         <source>Information</source>
-        <translation>Información</translation>
+        <translation>Informācija</translation>
     </message>
     <message>
         <source>Up to date</source>
-        <translation>Actualizado</translation>
-    </message>
-    <message>
-        <source>%1 client</source>
-        <translation>%1 cliente</translation>
+        <translation>Sinhronizēts</translation>
     </message>
     <message>
         <source>Catching up...</source>
-        <translation>Poñendo ao día...</translation>
+        <translation>Sinhronizējos...</translation>
     </message>
     <message>
         <source>Sent transaction</source>
-        <translation>Transacción enviada</translation>
+        <translation>Transakcija nosūtīta</translation>
     </message>
     <message>
         <source>Incoming transaction</source>
-        <translation>Transacción entrante</translation>
+        <translation>Ienākoša transakcija</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>O moedeiro está &lt;b&gt;encriptado&lt;/b&gt; e actualmente &lt;b&gt;desbloqueado&lt;/b&gt;</translation>
+        <translation>Maciņš ir &lt;b&gt;šifrēts&lt;/b&gt; un pašlaik &lt;b&gt;atslēgts&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>O moedeiro está &lt;b&gt;encriptado&lt;/b&gt; e actualmente &lt;b&gt;bloqueado&lt;/b&gt;</translation>
+        <translation>Maciņš ir &lt;b&gt;šifrēts&lt;/b&gt; un pašlaik &lt;b&gt;slēgts&lt;/b&gt;</translation>
     </message>
     </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
         <source>Quantity:</source>
-        <translation>Cantidade:</translation>
+        <translation>Daudzums:</translation>
     </message>
     <message>
         <source>Bytes:</source>
-        <translation>Bytes:</translation>
+        <translation>Baiti:</translation>
     </message>
     <message>
         <source>Amount:</source>
-        <translation>Importe:</translation>
+        <translation>Daudzums:</translation>
     </message>
     <message>
         <source>Fee:</source>
-        <translation>Pago:</translation>
+        <translation>Maksa:</translation>
+    </message>
+    <message>
+        <source>After Fee:</source>
+        <translation>Pēc Maksas:</translation>
     </message>
     <message>
         <source>Change:</source>
-        <translation>Cambiar:</translation>
+        <translation>Atlikums:</translation>
     </message>
     <message>
         <source>(un)select all</source>
-        <translation>(des)selecciona todo</translation>
+        <translation>iezīmēt visus</translation>
     </message>
     <message>
         <source>Tree mode</source>
-        <translation>Modo árbore</translation>
+        <translation>Koka režīms</translation>
     </message>
     <message>
         <source>List mode</source>
-        <translation>Modo lista</translation>
+        <translation>Saraksta režīms</translation>
     </message>
     <message>
         <source>Amount</source>
-        <translation>Cantidade</translation>
+        <translation>Daudzums</translation>
     </message>
     <message>
         <source>Date</source>
-        <translation>Data</translation>
+        <translation>Datums</translation>
     </message>
     <message>
         <source>Confirmations</source>
-        <translation>Confirmacións</translation>
+        <translation>Apstiprinājumi</translation>
     </message>
     <message>
         <source>Confirmed</source>
-        <translation>Confirmado</translation>
+        <translation>Apstiprināts</translation>
     </message>
     <message>
-        <source>yes</source>
-        <translation>si</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation>non</translation>
+        <source>(no label)</source>
+        <translation>(bez nosaukuma)</translation>
     </message>
     </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
-        <translation>Modificar Dirección</translation>
+        <translation>Mainīt adrese</translation>
     </message>
     <message>
         <source>&amp;Label</source>
-        <translation>&amp;Etiqueta</translation>
-    </message>
-    <message>
-        <source>The label associated with this address list entry</source>
-        <translation>A etiqueta asociada con esta entrada da listaxe de direccións</translation>
-    </message>
-    <message>
-        <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation>A dirección asociada con esta entrada na listaxe de dirección. Esta so pode ser modificada por direccións para enviar.</translation>
+        <translation>&amp;Nosaukums</translation>
     </message>
     <message>
         <source>&amp;Address</source>
-        <translation>&amp;Dirección</translation>
+        <translation>&amp;Adrese</translation>
     </message>
     </context>
 <context>
     <name>FreespaceChecker</name>
     <message>
         <source>A new data directory will be created.</source>
-        <translation>Crearáse un novo directorio de datos.</translation>
+        <translation>Tiks izveidota jauna datu mape.</translation>
     </message>
     <message>
         <source>name</source>
-        <translation>nome</translation>
-    </message>
-    <message>
-        <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
-        <translation>O directorio xa existe. Engade %1 se queres crear un novo directorio aquí.</translation>
+        <translation>vārds</translation>
     </message>
     <message>
         <source>Path already exists, and is not a directory.</source>
-        <translation>A ruta xa existe e non é un directorio.</translation>
+        <translation>Šāds ceļš jau pastāv un tā nav mape.</translation>
     </message>
     <message>
         <source>Cannot create data directory here.</source>
-        <translation>Non se pode crear directorio de datos aquí</translation>
+        <translation>Šeit nevar izveidot datu mapi.</translation>
     </message>
 </context>
 <context>
     <name>HelpMessageDialog</name>
     <message>
         <source>version</source>
-        <translation>versión</translation>
+        <translation>versija</translation>
+    </message>
+    <message>
+        <source>(%1-bit)</source>
+        <translation>(%1-biti)</translation>
     </message>
     <message>
         <source>Command-line options</source>
-        <translation>Opcións da liña de comandos</translation>
+        <translation>Komandrindas iespējas</translation>
     </message>
 </context>
 <context>
     <name>Intro</name>
     <message>
         <source>Welcome</source>
-        <translation>Benvido</translation>
-    </message>
-    <message>
-        <source>Welcome to %1.</source>
-        <translation>Benvido a %1.</translation>
+        <translation>Sveiciens</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
-        <translation>Empregar o directorio de datos por defecto</translation>
+        <translation>Izmantot noklusēto datu mapi</translation>
     </message>
     <message>
         <source>Use a custom data directory:</source>
-        <translation>Empregar un directorio de datos personalizado</translation>
+        <translation>Izmantot pielāgotu datu mapi:</translation>
     </message>
     <message>
         <source>Bitcoin</source>
@@ -478,33 +474,29 @@
     </message>
     <message>
         <source>Error</source>
-        <translation>Erro</translation>
+        <translation>Kļūda</translation>
     </message>
     </context>
 <context>
     <name>ModalOverlay</name>
     <message>
         <source>Form</source>
-        <translation>Formulario</translation>
+        <translation>Forma</translation>
     </message>
     <message>
         <source>Last block time</source>
-        <translation>Hora do último bloque</translation>
-    </message>
-    <message>
-        <source>calculating...</source>
-        <translation>calculando...</translation>
+        <translation>Pēdējā bloka laiks</translation>
     </message>
     </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
         <source>Open URI</source>
-        <translation>Abrir URI</translation>
+        <translation>Atvērt URI</translation>
     </message>
     <message>
         <source>Open payment request from URI or file</source>
-        <translation>Abrir solicitude de pago dende URI ou ficheiro</translation>
+        <translation>Atvērt maksājuma pieprasījumu no URI vai datnes</translation>
     </message>
     <message>
         <source>URI:</source>
@@ -512,205 +504,197 @@
     </message>
     <message>
         <source>Select payment request file</source>
-        <translation>Seleccionar ficheiro de solicitude de pago</translation>
+        <translation>Izvēlies maksājuma pieprasījuma datni</translation>
     </message>
     </context>
 <context>
     <name>OptionsDialog</name>
     <message>
         <source>Options</source>
-        <translation>Opcións</translation>
+        <translation>Iespējas</translation>
     </message>
     <message>
         <source>&amp;Main</source>
-        <translation>&amp;Principal</translation>
+        <translation>&amp;Galvenais</translation>
+    </message>
+    <message>
+        <source>Size of &amp;database cache</source>
+        <translation>&amp;Datubāzes kešatmiņas izmērs</translation>
+    </message>
+    <message>
+        <source>MB</source>
+        <translation>MB</translation>
+    </message>
+    <message>
+        <source>Number of script &amp;verification threads</source>
+        <translation>Skriptu &amp;pārbaudes pavedienu skaits</translation>
+    </message>
+    <message>
+        <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
+        <translation>Starpniekservera IP adrese (piem. IPv4: 127.0.0.1 / IPv6: ::1)</translation>
+    </message>
+    <message>
+        <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
+        <translation>Minimizēt nevis aizvērt aplikāciju, kad logs tiek aizvērts. Kad šī iespēja ir ieslēgta, aplikācija tiks aizvērta, izvēloties Aizvērt izvēlnē.</translation>
+    </message>
+    <message>
+        <source>Active command-line options that override above options:</source>
+        <translation>Aktīvās komandrindas opcijas, kuras pārspēko šos iestatījumus:</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
-        <translation>Restaurar todas as opcións de cliente ás por defecto</translation>
+        <translation>Atiestatīt visus klienta iestatījumus uz noklusējumu.</translation>
     </message>
     <message>
         <source>&amp;Reset Options</source>
-        <translation>Opcións de &amp;Restaurar</translation>
+        <translation>&amp;Atiestatīt Iestatījumus.</translation>
     </message>
     <message>
         <source>&amp;Network</source>
-        <translation>&amp;Rede</translation>
-    </message>
-    <message>
-        <source>GB</source>
-        <translation>GB</translation>
+        <translation>&amp;Tīkls</translation>
     </message>
     <message>
         <source>W&amp;allet</source>
-        <translation>Moedeiro</translation>
+        <translation>&amp;Maciņš</translation>
     </message>
     <message>
         <source>Expert</source>
-        <translation>Experto</translation>
+        <translation>Eksperts</translation>
+    </message>
+    <message>
+        <source>Enable coin &amp;control features</source>
+        <translation>Ieslēgt bitcoin &amp;kontroles funkcijas</translation>
+    </message>
+    <message>
+        <source>&amp;Spend unconfirmed change</source>
+        <translation>&amp;Tērēt neapstiprinātu atlikumu</translation>
     </message>
     <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Abrir automáticamente o porto do cliente Bitcoin no router. Esto so funciona se o teu router soporta UPnP e está habilitado.</translation>
+        <translation>Uz rūtera automātiski atvērt Bitcoin klienta portu. Tas strādā tikai tad, ja rūteris atbalsta UPnP un tas ir ieslēgts.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
-        <translation>Mapear porto empregando &amp;UPnP</translation>
+        <translation>Kartēt portu, izmantojot &amp;UPnP</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
-        <translation>&amp;IP do Proxy:</translation>
+        <translation>Starpniekservera &amp;IP:</translation>
     </message>
     <message>
         <source>&amp;Port:</source>
-        <translation>&amp;Porto:</translation>
+        <translation>&amp;Ports:</translation>
     </message>
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
-        <translation>Porto do proxy (exemplo: 9050)</translation>
-    </message>
-    <message>
-        <source>IPv4</source>
-        <translation>IPv4</translation>
-    </message>
-    <message>
-        <source>IPv6</source>
-        <translation>IPv6</translation>
-    </message>
-    <message>
-        <source>Tor</source>
-        <translation>Tor</translation>
+        <translation>Starpniekservera ports (piem. 9050)</translation>
     </message>
     <message>
         <source>&amp;Window</source>
-        <translation>&amp;Xanela</translation>
+        <translation>&amp;Logs</translation>
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>
-        <translation>Amosar so un icono na bandexa tras minimiza-la xanela.</translation>
+        <translation>Pēc loga minimizācijas rādīt tikai ikonu sistēmas teknē.</translation>
     </message>
     <message>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
-        <translation>&amp;Minimizar á bandexa en lugar de á barra de tarefas.</translation>
+        <translation>&amp;Minimizēt uz sistēmas tekni, nevis rīkjoslu</translation>
     </message>
     <message>
         <source>M&amp;inimize on close</source>
-        <translation>M&amp;inimizar ao pechar</translation>
+        <translation>M&amp;inimizēt aizverot</translation>
     </message>
     <message>
         <source>&amp;Display</source>
-        <translation>&amp;Visualización</translation>
+        <translation>&amp;Izskats</translation>
     </message>
     <message>
         <source>User Interface &amp;language:</source>
-        <translation>&amp;Linguaxe de interface de usuario:</translation>
+        <translation>Lietotāja interfeiss un &amp;valoda:</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
-        <translation>&amp;Unidade na que amosar as cantidades:</translation>
+        <translation>&amp;Vienības, kurās attēlot daudzumus:</translation>
     </message>
     <message>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation>Escolle a unidade de subdivisión por defecto para amosar na interface e ao enviar moedas.</translation>
+        <translation>Izvēlēties dalījuma vienību pēc noklusēšanas, ko izmantot interfeisā un nosūtot bitkoinus.</translation>
+    </message>
+    <message>
+        <source>Whether to show coin control features or not.</source>
+        <translation>Vai rādīt Bitcoin kontroles funkcijas vai nē.</translation>
     </message>
     <message>
         <source>&amp;OK</source>
-        <translation>&amp;OK</translation>
+        <translation>&amp;Labi</translation>
     </message>
     <message>
         <source>&amp;Cancel</source>
-        <translation>&amp;Cancelar</translation>
+        <translation>&amp;Atcelt</translation>
     </message>
     <message>
         <source>default</source>
-        <translation>por defecto</translation>
+        <translation>pēc noklusēšanas</translation>
+    </message>
+    <message>
+        <source>none</source>
+        <translation>neviena</translation>
     </message>
     <message>
         <source>Confirm options reset</source>
-        <translation>Confirmar opcións de restaurar</translation>
-    </message>
-    <message>
-        <source>Configuration options</source>
-        <translation>Opcións de configuración</translation>
+        <translation>Apstiprināt iestatījumu atiestatīšanu</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation>Erro</translation>
-    </message>
-    <message>
-        <source>The configuration file could not be opened.</source>
-        <translation>O arquivo de configuración non puido ser aberto.</translation>
-    </message>
-    <message>
-        <source>This change would require a client restart.</source>
-        <translation>Este cambio requeriría un reinicio do cliente.</translation>
+        <translation>Kļūda</translation>
     </message>
     <message>
         <source>The supplied proxy address is invalid.</source>
-        <translation>A dirección de proxy suministrada é inválida.</translation>
+        <translation>Norādītā starpniekservera adrese nav derīga.</translation>
     </message>
 </context>
 <context>
     <name>OverviewPage</name>
     <message>
         <source>Form</source>
-        <translation>Formulario</translation>
+        <translation>Forma</translation>
     </message>
     <message>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>A información amosada por estar desactualizada. O teu moedeiro sincronízase automáticamente coa rede Bitcoin despois de que se estableza unha conexión, pero este proceso non está todavía rematado.</translation>
+        <translation>Attēlotā informācija var būt novecojusi. Jūsu maciņš pēc savienojuma izveides automātiski sinhronizējas ar Bitcoin tīklu, taču šis process vēl nav beidzies.</translation>
+    </message>
+    <message>
+        <source>Available:</source>
+        <translation>Pieejams:</translation>
     </message>
     <message>
         <source>Your current spendable balance</source>
-        <translation>O teu balance actualmente dispoñible</translation>
+        <translation>Tava pašreizējā tērējamā bilance</translation>
+    </message>
+    <message>
+        <source>Pending:</source>
+        <translation>Neizšķirts:</translation>
     </message>
     <message>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
-        <translation>Total de transaccións que aínda teñen que ser confirmadas, e non contan todavía dentro do balance gastable</translation>
+        <translation>Kopējā apstiprināmo transakciju vērtība, vēl nav ieskaitīta tērējamajā bilancē</translation>
     </message>
     <message>
         <source>Immature:</source>
-        <translation>Inmaduro:</translation>
-    </message>
-    <message>
-        <source>Mined balance that has not yet matured</source>
-        <translation>O balance minado todavía non madurou</translation>
+        <translation>Nenobriedušu:</translation>
     </message>
     <message>
         <source>Total:</source>
-        <translation>Total:</translation>
+        <translation>Kopsumma:</translation>
     </message>
     <message>
         <source>Your current total balance</source>
-        <translation>O teu balance actual total</translation>
-    </message>
-    <message>
-        <source>Recent transactions</source>
-        <translation>Transaccións recentes</translation>
+        <translation>Jūsu kopējā tekošā bilance</translation>
     </message>
     </context>
 <context>
     <name>PaymentServer</name>
-    <message>
-        <source>Payment request error</source>
-        <translation>Erro na solicitude de pagamento</translation>
-    </message>
-    <message>
-        <source>Payment request rejected</source>
-        <translation>Solicitude de pagamento rexeitada</translation>
-    </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation>Solicitude de pagamento expirada.</translation>
-    </message>
-    <message>
-        <source>Payment request is not initialized.</source>
-        <translation>A solicitude de pagamento non está inicializada.</translation>
-    </message>
-    <message>
-        <source>Invalid payment request.</source>
-        <translation>Solicitude de pagamento inválida.</translation>
-    </message>
     </context>
 <context>
     <name>PeerTableModel</name>
@@ -719,11 +703,11 @@
     <name>QObject</name>
     <message>
         <source>Amount</source>
-        <translation>Cantidade</translation>
+        <translation>Daudzums</translation>
     </message>
     <message>
         <source>%1 h</source>
-        <translation>%1 h</translation>
+        <translation>%1 st</translation>
     </message>
     <message>
         <source>%1 m</source>
@@ -732,6 +716,10 @@
     <message>
         <source>N/A</source>
         <translation>N/A</translation>
+    </message>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 un %2</translation>
     </message>
     <message>
         <source>%1 B</source>
@@ -751,7 +739,7 @@
     </message>
     <message>
         <source>unknown</source>
-        <translation>descoñecido</translation>
+        <translation>nav zināms</translation>
     </message>
 </context>
 <context>
@@ -761,7 +749,7 @@
     <name>QRImageWidget</name>
     <message>
         <source>&amp;Save Image...</source>
-        <translation>&amp;Gardar Imaxe...</translation>
+        <translation>&amp;Saglabāt Attēlu...</translation>
     </message>
     </context>
 <context>
@@ -772,242 +760,290 @@
     </message>
     <message>
         <source>Client version</source>
-        <translation>Versión do cliente</translation>
+        <translation>Klienta versija</translation>
     </message>
     <message>
         <source>&amp;Information</source>
-        <translation>&amp;Información</translation>
+        <translation>&amp;Informācija</translation>
     </message>
     <message>
         <source>Debug window</source>
-        <translation>Ventana de Depuración</translation>
+        <translation>Atkļūdošanas logs</translation>
+    </message>
+    <message>
+        <source>General</source>
+        <translation>Vispārējs</translation>
     </message>
     <message>
         <source>Startup time</source>
-        <translation>Tempo de arranque</translation>
+        <translation>Sākuma laiks</translation>
     </message>
     <message>
         <source>Network</source>
-        <translation>Rede</translation>
+        <translation>Tīkls</translation>
+    </message>
+    <message>
+        <source>Name</source>
+        <translation>Vārds</translation>
     </message>
     <message>
         <source>Number of connections</source>
-        <translation>Número de conexións</translation>
+        <translation>Savienojumu skaits</translation>
     </message>
     <message>
         <source>Block chain</source>
-        <translation>Cadea de bloques</translation>
+        <translation>Bloku virkne</translation>
     </message>
     <message>
         <source>Current number of blocks</source>
-        <translation>Número actual de bloques</translation>
+        <translation>Pašreizējais bloku skaits</translation>
     </message>
     <message>
         <source>Last block time</source>
-        <translation>Hora do último bloque</translation>
+        <translation>Pēdējā bloka laiks</translation>
     </message>
     <message>
         <source>&amp;Open</source>
-        <translation>&amp;Abrir</translation>
+        <translation>&amp;Atvērt</translation>
     </message>
     <message>
         <source>&amp;Console</source>
-        <translation>&amp;Consola</translation>
+        <translation>&amp;Konsole</translation>
     </message>
     <message>
         <source>&amp;Network Traffic</source>
-        <translation>&amp;Tráfico de Rede</translation>
+        <translation>&amp;Tīkla Satiksme</translation>
     </message>
     <message>
         <source>Totals</source>
-        <translation>Totais</translation>
+        <translation>Kopsummas</translation>
     </message>
     <message>
         <source>In:</source>
-        <translation>Dentro:</translation>
+        <translation>Ie.:</translation>
     </message>
     <message>
         <source>Out:</source>
-        <translation>Fóra:</translation>
+        <translation>Iz.:</translation>
     </message>
     <message>
         <source>Debug log file</source>
-        <translation>Arquivo de log de depuración</translation>
+        <translation>Atkļūdošanas žurnāla datne</translation>
     </message>
     <message>
         <source>Clear console</source>
-        <translation>Limpar consola</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation>moedeiro por defecto</translation>
+        <translation>Notīrīt konsoli</translation>
     </message>
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
         <source>&amp;Amount:</source>
-        <translation>&amp;Cantidade:</translation>
+        <translation>&amp;Daudzums:</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
-        <translation>&amp;Etiqueta:</translation>
+        <translation>&amp;Nosaukums:</translation>
     </message>
     <message>
         <source>&amp;Message:</source>
-        <translation>&amp;Mensaxe:</translation>
+        <translation>&amp;Ziņojums:</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
-        <translation>Limpar tódolos campos do formulario</translation>
+        <translation>Notīrīt visus laukus formā.</translation>
     </message>
     <message>
         <source>Clear</source>
-        <translation>Limpar</translation>
+        <translation>Notīrīt</translation>
+    </message>
+    <message>
+        <source>Requested payments history</source>
+        <translation>Pieprasīto maksājumu vēsture</translation>
     </message>
     <message>
         <source>&amp;Request payment</source>
-        <translation>&amp;Solicitar pago</translation>
+        <translation>&amp;Pieprasīt maksājumu</translation>
+    </message>
+    <message>
+        <source>Show the selected request (does the same as double clicking an entry)</source>
+        <translation>Parādīt atlasītos pieprasījumus (tas pats, kas dubultklikšķis uz ieraksta)</translation>
+    </message>
+    <message>
+        <source>Show</source>
+        <translation>Rādīt</translation>
+    </message>
+    <message>
+        <source>Remove the selected entries from the list</source>
+        <translation>Noņemt atlasītos ierakstus no saraksta.</translation>
+    </message>
+    <message>
+        <source>Remove</source>
+        <translation>Noņemt</translation>
     </message>
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
         <source>QR Code</source>
-        <translation>Código QR</translation>
+        <translation>QR Kods</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
-        <translation>Copiar &amp;URI</translation>
+        <translation>Kopēt &amp;URI</translation>
     </message>
     <message>
         <source>Copy &amp;Address</source>
-        <translation>Copiar &amp;Dirección</translation>
+        <translation>Kopēt &amp;Adresi</translation>
     </message>
     <message>
         <source>&amp;Save Image...</source>
-        <translation>&amp;Gardar Imaxe...</translation>
+        <translation>&amp;Saglabāt Attēlu...</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation>Enderezo</translation>
+        <translation>Adrese</translation>
     </message>
     <message>
         <source>Amount</source>
-        <translation>Cantidade</translation>
+        <translation>Daudzums</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation>Etiqueta</translation>
+        <translation>Nosaukums</translation>
     </message>
     <message>
         <source>Wallet</source>
-        <translation>Moedeiro</translation>
+        <translation>Maciņš</translation>
     </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
         <source>Date</source>
-        <translation>Data</translation>
+        <translation>Datums</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation>Etiqueta</translation>
+        <translation>Nosaukums</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(bez nosaukuma)</translation>
     </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
-        <translation>Moedas Enviadas</translation>
+        <translation>Sūtīt Bitkoinus</translation>
+    </message>
+    <message>
+        <source>Coin Control Features</source>
+        <translation>Bitcoin Kontroles Funkcijas</translation>
+    </message>
+    <message>
+        <source>Inputs...</source>
+        <translation>Ieejas...</translation>
+    </message>
+    <message>
+        <source>automatically selected</source>
+        <translation>automātiski atlasīts</translation>
     </message>
     <message>
         <source>Insufficient funds!</source>
-        <translation>Fondos insuficientes</translation>
+        <translation>Nepietiekami līdzekļi!</translation>
     </message>
     <message>
         <source>Quantity:</source>
-        <translation>Cantidade:</translation>
+        <translation>Daudzums:</translation>
     </message>
     <message>
         <source>Bytes:</source>
-        <translation>Bytes:</translation>
+        <translation>Baiti:</translation>
     </message>
     <message>
         <source>Amount:</source>
-        <translation>Importe:</translation>
+        <translation>Daudzums:</translation>
     </message>
     <message>
         <source>Fee:</source>
-        <translation>Pago:</translation>
+        <translation>Maksa:</translation>
+    </message>
+    <message>
+        <source>After Fee:</source>
+        <translation>Pēc Maksas:</translation>
     </message>
     <message>
         <source>Change:</source>
-        <translation>Cambiar:</translation>
+        <translation>Atlikums:</translation>
+    </message>
+    <message>
+        <source>Custom change address</source>
+        <translation>Pielāgota atlikuma adrese</translation>
     </message>
     <message>
         <source>Transaction Fee:</source>
-        <translation>Tarifa de transacción:</translation>
+        <translation>Transakcijas maksa:</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
-        <translation>Enviar a múltiples receptores á vez</translation>
+        <translation>Sūtīt vairākiem saņēmējiem uzreiz</translation>
     </message>
     <message>
         <source>Add &amp;Recipient</source>
-        <translation>Engadir &amp;Receptor</translation>
+        <translation>&amp;Pievienot Saņēmēju</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
-        <translation>Limpar tódolos campos do formulario</translation>
+        <translation>Notīrīt visus laukus formā.</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
-        <translation>Limpar &amp;Todo</translation>
+        <translation>&amp;Notīrīt visu</translation>
     </message>
     <message>
         <source>Balance:</source>
-        <translation>Balance:</translation>
+        <translation>Bilance:</translation>
     </message>
     <message>
         <source>Confirm the send action</source>
-        <translation>Confirmar a acción de envío</translation>
+        <translation>Apstiprināt nosūtīšanu</translation>
     </message>
     <message>
         <source>S&amp;end</source>
-        <translation>&amp;Enviar</translation>
+        <translation>&amp;Sūtīt</translation>
     </message>
     <message>
         <source>Transaction fee</source>
-        <translation>Tarifa de transacción</translation>
+        <translation>Transakcijas maksa</translation>
     </message>
     <message>
-        <source>Payment request expired.</source>
-        <translation>Solicitude de pagamento expirada.</translation>
+        <source>(no label)</source>
+        <translation>(bez nosaukuma)</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
         <source>A&amp;mount:</source>
-        <translation>&amp;Cantidade:</translation>
+        <translation>Apjo&amp;ms</translation>
     </message>
     <message>
         <source>Pay &amp;To:</source>
-        <translation>Pagar &amp;A:</translation>
+        <translation>&amp;Saņēmējs:</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
-        <translation>&amp;Etiqueta:</translation>
+        <translation>&amp;Nosaukums:</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
-        <translation>Escoller dirección previamente empregada</translation>
+        <translation>Izvēlies iepriekš izmantoto adresi</translation>
     </message>
     <message>
         <source>This is a normal payment.</source>
-        <translation>Este é un pago normal</translation>
+        <translation>Šis ir parasts maksājums.</translation>
     </message>
     <message>
         <source>Alt+A</source>
@@ -1015,7 +1051,7 @@
     </message>
     <message>
         <source>Paste address from clipboard</source>
-        <translation>Pegar dirección dende portapapeis</translation>
+        <translation>ielīmēt adresi no starpliktuves</translation>
     </message>
     <message>
         <source>Alt+P</source>
@@ -1023,19 +1059,15 @@
     </message>
     <message>
         <source>Remove this entry</source>
-        <translation>Eliminar esta entrada</translation>
+        <translation>Noņem šo ierakstu</translation>
     </message>
     <message>
         <source>Message:</source>
-        <translation>Mensaxe:</translation>
-    </message>
-    <message>
-        <source>Enter a label for this address to add it to the list of used addresses</source>
-        <translation>Introduce unha etiqueta para esta dirección para engadila á listaxe de direccións empregadas</translation>
+        <translation>Ziņojums:</translation>
     </message>
     <message>
         <source>Pay To:</source>
-        <translation>Pagar A:</translation>
+        <translation>Maksāt:</translation>
     </message>
     <message>
         <source>Memo:</source>
@@ -1047,20 +1079,24 @@
     </context>
 <context>
     <name>ShutdownWindow</name>
-    </context>
+    <message>
+        <source>Do not shut down the computer until this window disappears.</source>
+        <translation>Neizslēdziet datoru kamēr šis logs nepazūd.</translation>
+    </message>
+</context>
 <context>
     <name>SignVerifyMessageDialog</name>
     <message>
         <source>Signatures - Sign / Verify a Message</source>
-        <translation>Sinaturas - Asinar / Verificar unha Mensaxe</translation>
+        <translation>Paraksti - Parakstīt / Pabaudīt Ziņojumu</translation>
     </message>
     <message>
         <source>&amp;Sign Message</source>
-        <translation>&amp;Asinar Mensaxe</translation>
+        <translation>Parakstīt &amp;Ziņojumu</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
-        <translation>Escoller dirección previamente empregada</translation>
+        <translation>Izvēlies iepriekš izmantoto adresi</translation>
     </message>
     <message>
         <source>Alt+A</source>
@@ -1068,7 +1104,7 @@
     </message>
     <message>
         <source>Paste address from clipboard</source>
-        <translation>Pegar dirección dende portapapeis</translation>
+        <translation>ielīmēt adresi no starpliktuves</translation>
     </message>
     <message>
         <source>Alt+P</source>
@@ -1076,54 +1112,50 @@
     </message>
     <message>
         <source>Enter the message you want to sign here</source>
-        <translation>Introduce a mensaxe que queres asinar aquí</translation>
+        <translation>Šeit ievadi ziņojumu kuru vēlies parakstīt</translation>
     </message>
     <message>
         <source>Signature</source>
-        <translation>Sinatura</translation>
+        <translation>Paraksts</translation>
     </message>
     <message>
         <source>Copy the current signature to the system clipboard</source>
-        <translation>Copiar a sinatura actual ao portapapeis do sistema</translation>
+        <translation>Kopēt parakstu uz sistēmas starpliktuvi</translation>
     </message>
     <message>
         <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation>Asina a mensaxe para probar que posees esta dirección Bitcoin</translation>
+        <translation>Parakstīt ziņojumu lai pierādītu, ka esi šīs Bitcoin adreses īpašnieks.</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
-        <translation>Asinar &amp;Mensaxe</translation>
+        <translation>Parakstīt &amp;Ziņojumu</translation>
     </message>
     <message>
         <source>Reset all sign message fields</source>
-        <translation>Restaurar todos os campos de sinatura de mensaxe</translation>
+        <translation>Atiestatīt visus laukus</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
-        <translation>Limpar &amp;Todo</translation>
+        <translation>&amp;Notīrīt visu</translation>
     </message>
     <message>
         <source>&amp;Verify Message</source>
-        <translation>&amp;Verificar Mensaxe</translation>
-    </message>
-    <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation>Verificar a mensaxe para asegurar que foi asinada coa dirección Bitcoin especificada</translation>
+        <translation>&amp;Pārbaudīt Ziņojumu</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
-        <translation>Verificar &amp;Mensaxe</translation>
+        <translation>&amp;Pārbaudīt Ziņojumu</translation>
     </message>
     <message>
         <source>Reset all verify message fields</source>
-        <translation>Restaurar todos os campos de verificación de mensaxe</translation>
+        <translation>Atiestatīt visus laukus</translation>
     </message>
     </context>
 <context>
     <name>SplashScreen</name>
     <message>
         <source>[testnet]</source>
-        <translation>[testnet]</translation>
+        <translation>[testnets]</translation>
     </message>
 </context>
 <context>
@@ -1137,60 +1169,64 @@
     <name>TransactionDesc</name>
     <message>
         <source>Date</source>
-        <translation>Data</translation>
+        <translation>Datums</translation>
     </message>
     <message>
         <source>unknown</source>
-        <translation>descoñecido</translation>
+        <translation>nav zināms</translation>
     </message>
     <message>
         <source>Transaction fee</source>
-        <translation>Tarifa de transacción</translation>
+        <translation>Transakcijas maksa</translation>
     </message>
     <message>
         <source>Amount</source>
-        <translation>Cantidade</translation>
+        <translation>Daudzums</translation>
     </message>
     </context>
 <context>
     <name>TransactionDescDialog</name>
     <message>
         <source>This pane shows a detailed description of the transaction</source>
-        <translation>Este panel amosa unha descripción detallada da transacción</translation>
+        <translation>Šis panelis parāda transakcijas detaļas</translation>
     </message>
     </context>
 <context>
     <name>TransactionTableModel</name>
     <message>
         <source>Date</source>
-        <translation>Data</translation>
+        <translation>Datums</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation>Etiqueta</translation>
+        <translation>Nosaukums</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(bez nosaukuma)</translation>
     </message>
     </context>
 <context>
     <name>TransactionView</name>
     <message>
-        <source>Comma separated file (*.csv)</source>
-        <translation>Arquivo separado por comas (*.csv)</translation>
-    </message>
-    <message>
         <source>Confirmed</source>
-        <translation>Confirmado</translation>
+        <translation>Apstiprināts</translation>
     </message>
     <message>
         <source>Date</source>
-        <translation>Data</translation>
+        <translation>Datums</translation>
     </message>
     <message>
         <source>Label</source>
-        <translation>Etiqueta</translation>
+        <translation>Nosaukums</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation>Enderezo</translation>
+        <translation>Adrese</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Eksportēšana Neizdevās</translation>
     </message>
     </context>
 <context>
@@ -1203,121 +1239,93 @@
     <name>WalletModel</name>
     <message>
         <source>Send Coins</source>
-        <translation>Moedas Enviadas</translation>
+        <translation>Sūtīt Bitkoinus</translation>
     </message>
     </context>
 <context>
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Exportar</translation>
+        <translation>&amp;Eksportēt</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Exportar os datos da pestaña actual a un arquivo.</translation>
+        <translation>Datus no tekošā ieliktņa eksportēt uz failu</translation>
     </message>
     </context>
 <context>
     <name>bitcoin-core</name>
     <message>
         <source>Bitcoin Core</source>
-        <translation>Core de Bitcoin</translation>
-    </message>
-    <message>
-        <source>Corrupted block database detected</source>
-        <translation>Detectada base de datos de bloques corrupta.</translation>
-    </message>
-    <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation>Queres reconstruír a base de datos de bloques agora?</translation>
-    </message>
-    <message>
-        <source>Error initializing block database</source>
-        <translation>Erro inicializando a base de datos de bloques</translation>
-    </message>
-    <message>
-        <source>Error initializing wallet database environment %s!</source>
-        <translation>Erro inicializando entorno de base de datos de moedeiro %s!</translation>
+        <translation>Bitcoin Core</translation>
     </message>
     <message>
         <source>Error loading block database</source>
-        <translation>Erro cargando base de datos do bloque</translation>
-    </message>
-    <message>
-        <source>Error opening block database</source>
-        <translation>Erro abrindo base de datos de bloques</translation>
+        <translation>Kļūda ielādējot bloku datubāzi</translation>
     </message>
     <message>
         <source>Error: Disk space is low!</source>
-        <translation>Erro: Espacio en disco escaso!</translation>
+        <translation>Kļūda: Zema diska vieta!</translation>
     </message>
     <message>
-        <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation>Fallou escoitar en calquera porto. Emprega -listen=0 se queres esto.</translation>
-    </message>
-    <message>
-        <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
-        <translation>Bloque genesis incorrecto o no existente. Datadir erróneo para a rede?</translation>
-    </message>
-    <message>
-        <source>Not enough file descriptors available.</source>
-        <translation>Non hai suficientes descritores de arquivo dispoñibles.</translation>
+        <source>Importing...</source>
+        <translation>Importē...</translation>
     </message>
     <message>
         <source>Verifying blocks...</source>
-        <translation>Verificando bloques...</translation>
+        <translation>Pārbauda blokus...</translation>
     </message>
     <message>
         <source>Information</source>
-        <translation>Información</translation>
+        <translation>Informācija</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
-        <translation>Fallou a sinatura da transacción</translation>
+        <translation>Transakcijas parakstīšana neizdevās</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
-        <translation>A cantidade da transacción é demasiado pequena</translation>
+        <translation>Transakcijas summa ir pārāk maza</translation>
     </message>
     <message>
         <source>Transaction too large</source>
-        <translation>A transacción é demasiado grande</translation>
+        <translation>Transakcija ir pārāk liela</translation>
     </message>
     <message>
         <source>Warning</source>
-        <translation>Precaución</translation>
+        <translation>Brīdinājums</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>
-        <translation>Rede descoñecida especificada en -onlynet: '%s'</translation>
+        <translation>-onlynet komandā norādīts nepazīstams tīkls: '%s'</translation>
     </message>
     <message>
         <source>Insufficient funds</source>
-        <translation>Fondos insuficientes</translation>
+        <translation>Nepietiek bitkoinu</translation>
     </message>
     <message>
         <source>Loading block index...</source>
-        <translation>Cargando índice de bloques...</translation>
+        <translation>Ielādē bloku indeksu...</translation>
     </message>
     <message>
         <source>Loading wallet...</source>
-        <translation>Cargando moedeiro...</translation>
+        <translation>Ielādē maciņu...</translation>
     </message>
     <message>
         <source>Cannot downgrade wallet</source>
-        <translation>Non se pode desactualizar o moedeiro</translation>
+        <translation>Nevar maciņa formātu padarīt vecāku</translation>
     </message>
     <message>
         <source>Rescanning...</source>
-        <translation>Rescaneando...</translation>
+        <translation>Skanēju no jauna...</translation>
     </message>
     <message>
         <source>Done loading</source>
-        <translation>Carga completa</translation>
+        <translation>Ielāde pabeigta</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation>Erro</translation>
+        <translation>Kļūda</translation>
     </message>
 </context>
 </TS>

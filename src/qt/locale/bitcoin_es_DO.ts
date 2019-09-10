@@ -54,6 +54,10 @@
         <translation>Escoja la dirección donde quiere recibir monedas</translation>
     </message>
     <message>
+        <source>C&amp;hoose</source>
+        <translation>Escoger</translation>
+    </message>
+    <message>
         <source>Sending addresses</source>
         <translation>Direcciones de envío</translation>
     </message>
@@ -68,6 +72,18 @@
     <message>
         <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
         <translation>Estas son sus direcciones de Bitcoin para recibir pagos. Se recomienda utilizar una nueva dirección de recepción para cada transacción.</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation>Copiar dirección</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Label</source>
+        <translation>Copiar &amp;Etiqueta</translation>
+    </message>
+    <message>
+        <source>&amp;Edit</source>
+        <translation>&amp;Editar</translation>
     </message>
     <message>
         <source>Export Address List</source>
@@ -96,7 +112,11 @@
         <source>Address</source>
         <translation>Dirección</translation>
     </message>
-    </context>
+    <message>
+        <source>(no label)</source>
+        <translation>(sin etiqueta)</translation>
+    </message>
+</context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -142,6 +162,10 @@
     <message>
         <source>Decrypt wallet</source>
         <translation>Descifrar monedero</translation>
+    </message>
+    <message>
+        <source>Change passphrase</source>
+        <translation>Cambiar frase secreta</translation>
     </message>
     <message>
         <source>Enter the old passphrase and new passphrase to the wallet.</source>
@@ -397,6 +421,10 @@
 <context>
     <name>CoinControlDialog</name>
     <message>
+        <source>Coin Selection</source>
+        <translation>Selección de moneda</translation>
+    </message>
+    <message>
         <source>Quantity:</source>
         <translation>Cantidad:</translation>
     </message>
@@ -411,6 +439,10 @@
     <message>
         <source>Fee:</source>
         <translation>Tasa:</translation>
+    </message>
+    <message>
+        <source>Dust:</source>
+        <translation>Polvo:</translation>
     </message>
     <message>
         <source>After Fee:</source>
@@ -437,6 +469,14 @@
         <translation>Cantidad</translation>
     </message>
     <message>
+        <source>Received with label</source>
+        <translation>Recibido con etiqueta</translation>
+    </message>
+    <message>
+        <source>Received with address</source>
+        <translation>Recibido con dirección</translation>
+    </message>
+    <message>
         <source>Date</source>
         <translation>Fecha</translation>
     </message>
@@ -447,6 +487,34 @@
     <message>
         <source>Confirmed</source>
         <translation>Confirmado</translation>
+    </message>
+    <message>
+        <source>Copy quantity</source>
+        <translation>Copiar cantidad</translation>
+    </message>
+    <message>
+        <source>Copy fee</source>
+        <translation>Copiar comisión</translation>
+    </message>
+    <message>
+        <source>Copy bytes</source>
+        <translation>Copiar bytes</translation>
+    </message>
+    <message>
+        <source>Copy change</source>
+        <translation>Copiar cambio</translation>
+    </message>
+    <message>
+        <source>yes</source>
+        <translation>si</translation>
+    </message>
+    <message>
+        <source>no</source>
+        <translation>no</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(sin etiqueta)</translation>
     </message>
     </context>
 <context>
@@ -502,6 +570,10 @@
         <translation>versión</translation>
     </message>
     <message>
+        <source>(%1-bit)</source>
+        <translation>(%1-bit)</translation>
+    </message>
+    <message>
         <source>Command-line options</source>
         <translation>Opciones de la línea de órdenes</translation>
     </message>
@@ -511,6 +583,10 @@
     <message>
         <source>Welcome</source>
         <translation>Bienvenido</translation>
+    </message>
+    <message>
+        <source>Welcome to %1.</source>
+        <translation>Bienvenido a %1.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -523,6 +599,10 @@
     <message>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
+    </message>
+    <message>
+        <source>Error: Specified data directory "%1" cannot be created.</source>
+        <translation>Error: Directorio de datos especificado "%1" no puede ser creado.</translation>
     </message>
     <message>
         <source>Error</source>
@@ -701,8 +781,16 @@
         <translation>La información mostrada puede estar desactualizada. Su monedero se sincroniza automáticamente con la red Bitcoin después de que se haya establecido una conexión, pero este proceso aún no se ha completado.</translation>
     </message>
     <message>
+        <source>Available:</source>
+        <translation>Disponible:</translation>
+    </message>
+    <message>
         <source>Your current spendable balance</source>
         <translation>Su balance actual gastable</translation>
+    </message>
+    <message>
+        <source>Pending:</source>
+        <translation>Pendiente:</translation>
     </message>
     <message>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
@@ -750,6 +838,10 @@
         <translation>N/D</translation>
     </message>
     <message>
+        <source>%1 and %2</source>
+        <translation>%1 y %2</translation>
+    </message>
+    <message>
         <source>%1 B</source>
         <translation>%1 B</translation>
     </message>
@@ -775,6 +867,10 @@
     </context>
 <context>
     <name>QRImageWidget</name>
+    <message>
+        <source>&amp;Save Image...</source>
+        <translation>Guardar Imagen...</translation>
+    </message>
     </context>
 <context>
     <name>RPCConsole</name>
@@ -925,6 +1021,10 @@
         <translation>Dirección</translation>
     </message>
     <message>
+        <source>Amount</source>
+        <translation>Monto</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation>Etiqueta</translation>
     </message>
@@ -936,8 +1036,16 @@
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
+        <source>Date</source>
+        <translation>Fecha</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation>Etiqueta</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(sin etiqueta)</translation>
     </message>
     </context>
 <context>
@@ -1011,6 +1119,10 @@
         <translation>Limpiar todos los campos del formulario</translation>
     </message>
     <message>
+        <source>Dust:</source>
+        <translation>Polvo:</translation>
+    </message>
+    <message>
         <source>Clear &amp;All</source>
         <translation>Limpiar &amp;todo</translation>
     </message>
@@ -1027,10 +1139,30 @@
         <translation>&amp;Enviar</translation>
     </message>
     <message>
+        <source>Copy quantity</source>
+        <translation>Copiar cantidad</translation>
+    </message>
+    <message>
+        <source>Copy fee</source>
+        <translation>Copiar comisión</translation>
+    </message>
+    <message>
+        <source>Copy bytes</source>
+        <translation>Copiar bytes</translation>
+    </message>
+    <message>
+        <source>Copy change</source>
+        <translation>Copiar cambio</translation>
+    </message>
+    <message>
         <source>Transaction fee</source>
         <translation>Comisión de transacción</translation>
     </message>
-    </context>
+    <message>
+        <source>(no label)</source>
+        <translation>(sin etiqueta)</translation>
+    </message>
+</context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
@@ -1179,6 +1311,22 @@
 </context>
 <context>
     <name>TransactionDesc</name>
+    <message>
+        <source>Date</source>
+        <translation>Fecha</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>desconocido</translation>
+    </message>
+    <message>
+        <source>Transaction fee</source>
+        <translation>Comisión de transacción</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>Monto</translation>
+    </message>
     </context>
 <context>
     <name>TransactionDescDialog</name>
@@ -1190,8 +1338,16 @@
 <context>
     <name>TransactionTableModel</name>
     <message>
+        <source>Date</source>
+        <translation>Fecha</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation>Etiqueta</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(sin etiqueta)</translation>
     </message>
     </context>
 <context>
@@ -1199,6 +1355,14 @@
     <message>
         <source>Comma separated file (*.csv)</source>
         <translation>Archivo de columnas separadas por coma (*.csv)</translation>
+    </message>
+    <message>
+        <source>Confirmed</source>
+        <translation>Confirmado</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation>Fecha</translation>
     </message>
     <message>
         <source>Label</source>
@@ -1221,9 +1385,21 @@
     </context>
 <context>
     <name>WalletModel</name>
+    <message>
+        <source>Send Coins</source>
+        <translation>Enviar monedas</translation>
+    </message>
     </context>
 <context>
     <name>WalletView</name>
+    <message>
+        <source>&amp;Export</source>
+        <translation>&amp;Exportar</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Exportar los datos en la pestaña actual a un archivo</translation>
+    </message>
     </context>
 <context>
     <name>bitcoin-core</name>
@@ -1294,6 +1470,26 @@
     <message>
         <source>Warning</source>
         <translation>Aviso</translation>
+    </message>
+    <message>
+        <source>This is the minimum transaction fee you pay on every transaction.</source>
+        <translation>Esta es la tarifa mínima a pagar en cada transacción.</translation>
+    </message>
+    <message>
+        <source>This is the transaction fee you will pay if you send a transaction.</source>
+        <translation>Esta es la tarifa a pagar si realizas una transacción.</translation>
+    </message>
+    <message>
+        <source>Transaction amounts must not be negative</source>
+        <translation>Los montos de la transacción no debe ser negativo</translation>
+    </message>
+    <message>
+        <source>Transaction has too long of a mempool chain</source>
+        <translation>La transacción tiene largo tiempo en una cadena mempool</translation>
+    </message>
+    <message>
+        <source>Transaction must have at least one recipient</source>
+        <translation>La transacción debe tener al menos un destinatario</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>

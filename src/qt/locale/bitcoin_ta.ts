@@ -2055,6 +2055,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
 <context>
     <name>TransactionView</name>
     <message>
+        <source>Today</source>
+        <translation>இன்று</translation>
+    </message>
+    <message>
         <source>Copy address</source>
         <translation>முகவரி முகவரியை நகலெடுக்கவும்</translation>
     </message>
@@ -2132,6 +2136,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Warning</source>
         <translation>எச்சரிக்கை</translation>
+    </message>
+    <message>
+        <source>Insufficient funds</source>
+        <translation>போதுமான பணம் இல்லை</translation>
     </message>
     <message>
         <source>Error</source>
