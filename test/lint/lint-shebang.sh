@@ -12,7 +12,6 @@ for PYTHON_FILE in $(git ls-files -- "*.py"); do
 done
 for SHELL_FILE in $(git ls-files -- "*.sh"); do
     if [[ $(head -n 1 "${SHELL_FILE}") != "#!/usr/bin/env bash" &&
-          $(head -n 1 "${SHELL_FILE}") != "#!/bin/bash" &&
           $(head -n 1 "${SHELL_FILE}") != "#!/bin/sh" ]]; then
         echo "Missing expected shebang \"#!/usr/bin/env bash\" or \"#!/bin/sh\" in ${SHELL_FILE}"
         EXIT_CODE=1
