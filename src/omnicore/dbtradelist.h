@@ -1,5 +1,5 @@
-#ifndef OMNICORE_DBTRADELIST_H
-#define OMNICORE_DBTRADELIST_H
+#ifndef BITCOIN_OMNICORE_DBTRADELIST_H
+#define BITCOIN_OMNICORE_DBTRADELIST_H
 
 #include <omnicore/dbbase.h>
 
@@ -39,4 +39,4 @@ namespace mastercore
     extern CMPTradeList* pDbTradeList;
 }
 
-#endif // OMNICORE_DBTRADELIST_H
+#endif // BITCOIN_OMNICORE_DBTRADELIST_H

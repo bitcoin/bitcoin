@@ -1,5 +1,5 @@
-#ifndef OMNICORE_BITCOIN_H
-#define	OMNICORE_BITCOIN_H
+#ifndef BITCOIN_OMNICORE_UTILSBITCOIN_H
+#define BITCOIN_OMNICORE_UTILSBITCOIN_H
 
 class CBlockIndex;
 class uint256;
@@ -22,4 +22,4 @@ bool UnitTest();
 bool isNonMainNet();
 }
 
-#endif // OMNICORE_BITCOIN_H
+#endif // BITCOIN_OMNICORE_UTILSBITCOIN_H

@@ -1,5 +1,5 @@
-#ifndef OMNICORE_PARSING_H
-#define OMNICORE_PARSING_H
+#ifndef BITCOIN_OMNICORE_PARSING_H
+#define BITCOIN_OMNICORE_PARSING_H
 
 #include <string>
 #include <vector>
@@ -38,4 +38,4 @@ void PrepareObfuscatedHashes(const std::string& strSeed, int hashCount, std::str
 int ParseTransaction(const CTransaction& tx, int nBlock, unsigned int idx, CMPTransaction& mptx, unsigned int nTime=0);
 
 
-#endif // OMNICORE_PARSING_H
+#endif // BITCOIN_OMNICORE_PARSING_H

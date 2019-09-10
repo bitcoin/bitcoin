@@ -11,13 +11,10 @@
  * Created on 13. Oktober 2016, 23:32
  */
 
-#ifndef RPC_H
-#define RPC_H
+#ifndef BITCOIN_OMNICORE_RPC_H
+#define BITCOIN_OMNICORE_RPC_H
 
 /** Throws a JSONRPCError, depending on error code. */
 void PopulateFailure(int error);
 
-
-
-#endif /* RPC_H */
-
+#endif /* BITCOIN_OMNICORE_RPC_H */

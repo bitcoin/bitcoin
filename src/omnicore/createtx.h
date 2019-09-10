@@ -1,5 +1,5 @@
-#ifndef OMNICORE_CREATETX_H
-#define OMNICORE_CREATETX_H
+#ifndef BITCOIN_OMNICORE_CREATETX_H
+#define BITCOIN_OMNICORE_CREATETX_H
 
 class CCoinsViewCache;
 class CMutableTransaction;
@@ -225,4 +225,4 @@ public:
 void InputsToView(const std::vector<PrevTxsEntry>& prevTxs, CCoinsViewCache& view);
 
 
-#endif // OMNICORE_CREATETX_H
+#endif // BITCOIN_OMNICORE_CREATETX_H

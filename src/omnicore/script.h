@@ -1,5 +1,5 @@
-#ifndef OMNICORE_SCRIPT_H
-#define OMNICORE_SCRIPT_H
+#ifndef BITCOIN_OMNICORE_SCRIPT_H
+#define BITCOIN_OMNICORE_SCRIPT_H
 
 #include <string>
 #include <vector>
@@ -21,4 +21,4 @@ bool GetScriptPushes(const CScript& script, std::vector<std::string>& vstrRet, b
 bool SafeSolver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::vector<unsigned char> >& vSolutionsRet);
 
 
-#endif // OMNICORE_SCRIPT_H
+#endif // BITCOIN_OMNICORE_SCRIPT_H

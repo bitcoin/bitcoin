@@ -1,5 +1,5 @@
-#ifndef OMNICORE_RPCTXOBJECT_H
-#define OMNICORE_RPCTXOBJECT_H
+#ifndef BITCOIN_OMNICORE_RPCTXOBJECT_H
+#define BITCOIN_OMNICORE_RPCTXOBJECT_H
 
 #include <univalue.h>
 
@@ -49,4 +49,4 @@ int populateRPCSendAllSubSends(const uint256& txid, UniValue& subSends);
 
 bool showRefForTx(uint32_t txType);
 
-#endif // OMNICORE_RPCTXOBJECT_H
+#endif // BITCOIN_OMNICORE_RPCTXOBJECT_H

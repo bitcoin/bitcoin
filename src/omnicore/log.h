@@ -1,5 +1,5 @@
-#ifndef OMNICORE_LOG_H
-#define OMNICORE_LOG_H
+#ifndef BITCOIN_OMNICORE_LOG_H
+#define BITCOIN_OMNICORE_LOG_H
 
 #include <util/system.h>
 #include <tinyformat.h>
@@ -83,4 +83,4 @@ TINYFORMAT_FOREACH_ARGNUM(MAKE_OMNI_CORE_ERROR_AND_LOG_FUNC)
 #undef MAKE_OMNI_CORE_ERROR_AND_LOG_FUNC
 
 
-#endif // OMNICORE_LOG_H
+#endif // BITCOIN_OMNICORE_LOG_H

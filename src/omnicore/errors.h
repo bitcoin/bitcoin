@@ -1,5 +1,5 @@
-#ifndef OMNICORE_ERRORS_H
-#define OMNICORE_ERRORS_H
+#ifndef BITCOIN_OMNICORE_ERRORS_H
+#define BITCOIN_OMNICORE_ERRORS_H
 
 #include <string>
 
@@ -346,4 +346,4 @@ inline std::string error_str(int ec) {
 }
 
 
-#endif // OMNICORE_ERRORS_H
+#endif // BITCOIN_OMNICORE_ERRORS_H

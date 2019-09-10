@@ -1,5 +1,5 @@
-#ifndef OMNICORE_TX_H
-#define OMNICORE_TX_H
+#ifndef BITCOIN_OMNICORE_TX_H
+#define BITCOIN_OMNICORE_TX_H
 
 class CMPMetaDEx;
 class CMPOffer;
@@ -307,4 +307,4 @@ public:
 };
 
 
-#endif // OMNICORE_TX_H
+#endif // BITCOIN_OMNICORE_TX_H

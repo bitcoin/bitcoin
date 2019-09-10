@@ -1,5 +1,5 @@
-#ifndef OMNICORE_PARSE_STRING_H
-#define OMNICORE_PARSE_STRING_H
+#ifndef BITCOIN_OMNICORE_PARSE_STRING_H
+#define BITCOIN_OMNICORE_PARSE_STRING_H
 
 #include <stdint.h>
 #include <string>
@@ -18,4 +18,4 @@ int64_t StrToInt64(const std::string& str, bool divisible);
 }
 
 
-#endif // OMNICORE_PARSE_STRING_H
+#endif // BITCOIN_OMNICORE_PARSE_STRING_H
