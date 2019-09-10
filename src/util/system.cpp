@@ -976,10 +976,11 @@ std::string ArgsManager::GetChainName() const
     const bool fRegTest = get_net("-regtest");
     const bool fTestNet = get_net("-testnet");
     const bool fDevNet = get_net("-devnet", false);
+    const bool is_chain_arg_set = IsArgSet("-chain");
 
-    int nameParamsCount = (fRegTest ? 1 : 0) + (fDevNet ? 1 : 0) + (fTestNet ? 1 : 0);
+    int nameParamsCount = (fRegTest ? 1 : 0) + (fDevNet ? 1 : 0) + (fTestNet ? 1 : 0) + (is_chain_arg_set ? 1 : 0);
     if (nameParamsCount > 1)
-        throw std::runtime_error("Only one of -regtest, -testnet or -devnet can be used.");
+        throw std::runtime_error("Only one of -regtest, -testnet, -devnet or -chain can be used.");
 
     if (fDevNet)
         return CBaseChainParams::DEVNET;
@@ -987,7 +988,7 @@ std::string ArgsManager::GetChainName() const
         return CBaseChainParams::REGTEST;
     if (fTestNet)
         return CBaseChainParams::TESTNET;
-    return CBaseChainParams::MAIN;
+    return GetArg("-chain", CBaseChainParams::MAIN);
 }
 
 std::string ArgsManager::GetDevNetName() const

@@ -541,7 +541,7 @@ int GuiMain(int argc, char* argv[])
     // - QSettings() will use the new application name after this, resulting in network-specific settings
     // - Needs to be done before createOptionsModel
 
-    // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
+    // Check for -chain, -testnet or -regtest parameter (Params() calls are only valid after this clause)
     try {
         node->selectParams(gArgs.GetChainName());
     } catch(std::exception &e) {
@@ -559,7 +559,7 @@ int GuiMain(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    QScopedPointer<const NetworkStyle> networkStyle(NetworkStyle::instantiate(QString::fromStdString(Params().NetworkIDString())));
+    QScopedPointer<const NetworkStyle> networkStyle(NetworkStyle::instantiate(Params().NetworkIDString()));
     assert(!networkStyle.isNull());
     // Allow for separate UI settings for testnets
     // QApplication::setApplicationName(networkStyle->getAppName()); // moved to NetworkStyle::NetworkStyle

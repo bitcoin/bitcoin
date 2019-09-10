@@ -88,7 +88,7 @@ static int AppInitRawTx(int argc, char* argv[])
         return true;
     }
 
-    // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
+    // Check for -chain, -testnet or -regtest parameter (Params() calls are only valid after this clause)
     try {
         SelectParams(gArgs.GetChainName());
     } catch (const std::exception& e) {

@@ -12,6 +12,8 @@
 #include <tinyformat.h>
 #include <util/system.h>
 
+#include <chainparamsbase.h>
+
 #include <QApplication>
 
 static const struct {
@@ -22,9 +24,9 @@ static const struct {
     const std::string titleAddText;
 } network_styles[] = {
     {"main", QAPP_APP_NAME_DEFAULT, 0, 0, ""},
-    {"test", QAPP_APP_NAME_TESTNET, 190, 20, QT_TRANSLATE_NOOP("SplashScreen", "[testnet]")},
+    {"test", QAPP_APP_NAME_TESTNET, 190, 20},
     {"devnet", QAPP_APP_NAME_DEVNET, 190, 20, "[devnet: %s]"},
-    {"regtest", QAPP_APP_NAME_REGTEST, 160, 30, "[regtest]"}
+    {"regtest", QAPP_APP_NAME_REGTEST, 160, 30}
 };
 
 void NetworkStyle::rotateColor(QColor& col, const int iconColorHueShift, const int iconColorSaturationReduction)
@@ -86,8 +88,9 @@ NetworkStyle::NetworkStyle(const QString &_appName, const int iconColorHueShift,
     splashImage         = QPixmap(":/images/splash");
 }
 
-const NetworkStyle *NetworkStyle::instantiate(const QString &networkId)
+const NetworkStyle* NetworkStyle::instantiate(const std::string& networkId)
 {
+    std::string titleAddText = networkId == CBaseChainParams::MAIN ? "" : strprintf("[%s]", networkId);
     for (const auto& network_style : network_styles)
     {
         if (networkId == network_style.networkId)
@@ -95,7 +98,7 @@ const NetworkStyle *NetworkStyle::instantiate(const QString &networkId)
             std::string appName = network_style.appName;
             std::string titleAddText = network_style.titleAddText;
 
-            if (networkId == QString(CBaseChainParams::DEVNET.c_str())) {
+            if (networkId == CBaseChainParams::DEVNET.c_str()) {
                 appName = strprintf(appName, gArgs.GetDevNetName());
                 titleAddText = strprintf(titleAddText, gArgs.GetDevNetName());
             }
