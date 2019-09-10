@@ -30,8 +30,8 @@ printf "   * Funding the address with some testnet BTC for fees\\n"
 $SRCDIR/omnicore-cli --regtest sendtoaddress $ADDR 20 >$NUL
 $SRCDIR/omnicore-cli --regtest setgenerate true 1 >$NUL
 printf "   * Participating in the Exodus crowdsale to obtain some OMNI\\n"
-JSON="{\"moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP\":10,\""$ADDR"\":4}"
-$SRCDIR/omnicore-cli --regtest sendmany OMNIAccount $JSON >$NUL
+JSON=({\"moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP\":10,\""$ADDR"\":4})
+$SRCDIR/omnicore-cli --regtest sendmany OMNIAccount "${JSON[@]}" >$NUL
 $SRCDIR/omnicore-cli --regtest setgenerate true 1 >$NUL
 printf "   * Creating an indivisible test property\\n"
 $SRCDIR/omnicore-cli --regtest omni_sendissuancefixed $ADDR 1 1 0 "Z_TestCat" "Z_TestSubCat" "Z_IndivisTestProperty" "Z_TestURL" "Z_TestData" 10000000 >$NUL
@@ -824,7 +824,7 @@ if [ $CACHEDFEE == "0.00000002" ]
 fi
 printf "\\nAdding some test ecosystem volume to trigger distribution\\n"
 printf "   * Executing the trades\\n"
-for i in {1..9}
+for ((i=0;i<9;i++))
 do
     $SRCDIR/omnicore-cli --regtest omni_sendtrade $ADDR 2147483651 20000 2147483652 10.0 >$NUL
     $SRCDIR/omnicore-cli --regtest setgenerate true 1 >$NUL

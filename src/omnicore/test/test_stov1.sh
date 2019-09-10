@@ -19,8 +19,8 @@ printf "   * Funding the address with some testnet BTC for fees\\n"
 $SRCDIR/omnicore-cli --regtest sendtoaddress $ADDR 20 >$NUL
 $SRCDIR/omnicore-cli --regtest setgenerate true 1 >$NUL
 printf "   * Participating in the Exodus crowdsale to obtain some OMNI\\n"
-JSON="{\"moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP\":10,\""$ADDR"\":4}"
-$SRCDIR/omnicore-cli --regtest sendmany OMNIAccount $JSON >$NUL
+JSON=({\"moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP\":10,\""$ADDR"\":4})
+$SRCDIR/omnicore-cli --regtest sendmany OMNIAccount "${JSON[@]}" >$NUL
 $SRCDIR/omnicore-cli --regtest setgenerate true 1 >$NUL
 printf "   * Creating an indivisible test property\\n"
 $SRCDIR/omnicore-cli --regtest omni_sendissuancefixed $ADDR 1 1 0 "Z_TestCat" "Z_TestSubCat" "Z_IndivisTestProperty" "Z_TestURL" "Z_TestData" 100 >$NUL
@@ -30,7 +30,7 @@ $SRCDIR/omnicore-cli --regtest omni_sendissuancefixed $ADDR 1 2 0 "Z_TestCat" "Z
 $SRCDIR/omnicore-cli --regtest setgenerate true 1 >$NUL
 printf "   * Generating addresses to use as STO recipients\\n"
 ADDRESS=()
-for i in {1..11}
+for ((i=0;i<11;i++))
 do
    ADDRESS=("${ADDRESS[@]}" $($SRCDIR/omnicore-cli --regtest getnewaddress))
 done

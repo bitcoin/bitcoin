@@ -18,8 +18,8 @@ ADDR=$($SRCDIR/omnicore-cli --regtest getnewaddress OMNIAccount)
 FADDR=$($SRCDIR/omnicore-cli --regtest getnewaddress)
 printf "   * Master address is %s\\n" $ADDR
 printf "   * Funding the addresses with some testnet BTC for fees\\n"
-JSON="{\""$ADDR"\":5,\""$FADDR"\":4}"
-$SRCDIR/omnicore-cli --regtest sendmany "" $JSON >$NUL
+JSON=({\""$ADDR"\":5,\""$FADDR"\":4})
+$SRCDIR/omnicore-cli --regtest sendmany "" "${JSON[@]}" >$NUL
 $SRCDIR/omnicore-cli --regtest sendtoaddress $ADDR 6 >$NUL
 $SRCDIR/omnicore-cli --regtest sendtoaddress $ADDR 7 >$NUL
 $SRCDIR/omnicore-cli --regtest sendtoaddress $ADDR 8 >$NUL
@@ -349,7 +349,6 @@ printf "   * Rolling back the chain to test reversing the last UNFREEZE tx\\n"
 BLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
 BLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $(($BLOCK)))
 $SRCDIR/omnicore-cli --regtest invalidateblock $BLOCKHASH >$NUL
-PREVBLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
 $SRCDIR/omnicore-cli --regtest clearmempool >$NUL
 $SRCDIR/omnicore-cli --regtest generate 1 >$NUL
 NEWBLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
@@ -416,7 +415,6 @@ printf "   * Rolling back the chain to test reversing the last FREEZE tx\\n"
 BLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
 BLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $(($BLOCK)))
 $SRCDIR/omnicore-cli --regtest invalidateblock $BLOCKHASH >$NUL
-PREVBLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
 $SRCDIR/omnicore-cli --regtest clearmempool >$NUL
 $SRCDIR/omnicore-cli --regtest generate 1 >$NUL
 NEWBLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
@@ -492,7 +490,6 @@ printf "   * Rolling back the chain to test reversing the last DISABLE FREEZEING
 BLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
 BLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $(($BLOCK)))
 $SRCDIR/omnicore-cli --regtest invalidateblock $BLOCKHASH >$NUL
-PREVBLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
 $SRCDIR/omnicore-cli --regtest clearmempool >$NUL
 $SRCDIR/omnicore-cli --regtest generate 1 >$NUL
 NEWBLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
@@ -576,7 +573,6 @@ printf "   * Rolling back the chain to test reversing the last ENABLE FREEZEING 
 BLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
 BLOCKHASH=$($SRCDIR/omnicore-cli --regtest getblockhash $(($BLOCK)))
 $SRCDIR/omnicore-cli --regtest invalidateblock $BLOCKHASH >$NUL
-PREVBLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)
 $SRCDIR/omnicore-cli --regtest clearmempool >$NUL
 $SRCDIR/omnicore-cli --regtest generate 1 >$NUL
 NEWBLOCK=$($SRCDIR/omnicore-cli --regtest getblockcount)

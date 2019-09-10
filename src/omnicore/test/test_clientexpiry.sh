@@ -3,8 +3,6 @@
 export LC_ALL=C
 SRCDIR=./src/
 NUL=/dev/null
-PASS=0
-FAIL=0
 clear
 printf "Preparing a test environment...\\n"
 printf "   * Starting a fresh regtest daemon\\n"
