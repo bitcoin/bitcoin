@@ -1,5 +1,5 @@
-#ifndef OMNICORE_WALLETUTILS_H
-#define OMNICORE_WALLETUTILS_H
+#ifndef BITCOIN_OMNICORE_WALLETUTILS_H
+#define BITCOIN_OMNICORE_WALLETUTILS_H
 
 class CCoinControl;
 class CPubKey;
@@ -48,4 +48,4 @@ int64_t SelectAllCoins(interfaces::Wallet& iWallet, const std::string& fromAddre
 #endif
 }
 
-#endif // OMNICORE_WALLETUTILS_H
+#endif // BITCOIN_OMNICORE_WALLETUTILS_H

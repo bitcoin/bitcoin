@@ -1,5 +1,5 @@
-#ifndef OMNICORE_RPCVALUES_H
-#define OMNICORE_RPCVALUES_H
+#ifndef BITCOIN_OMNICORE_RPCVALUES_H
+#define BITCOIN_OMNICORE_RPCVALUES_H
 
 class CPubKey;
 class CTransaction;
@@ -42,4 +42,4 @@ uint32_t ParseOutputIndex(const UniValue& value);
 std::vector<PrevTxsEntry> ParsePrevTxs(const UniValue& value);
 
 
-#endif // OMNICORE_RPCVALUES_H
+#endif // BITCOIN_OMNICORE_RPCVALUES_H

@@ -1,5 +1,5 @@
-#ifndef OMNICORE_WALLETTXBUILDER_H
-#define OMNICORE_WALLETTXBUILDER_H
+#ifndef BITCOIN_OMNICORE_WALLETTXBUILDER_H
+#define BITCOIN_OMNICORE_WALLETTXBUILDER_H
 
 class uint256;
 class CWallet;
@@ -39,4 +39,4 @@ int CreateFundedTransaction(
         interfaces::Wallet* iWallet);
 
 
-#endif // OMNICORE_WALLETTXBUILDER_H
+#endif // BITCOIN_OMNICORE_WALLETTXBUILDER_H

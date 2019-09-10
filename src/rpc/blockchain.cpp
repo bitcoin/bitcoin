@@ -2184,7 +2184,7 @@ UniValue scantxoutset(const JSONRPCRequest& request)
                 "In the latter case, a range needs to be specified by below if different from 1000.\n"
                 "For more information on output descriptors, see the documentation in the doc/descriptors.md file.\n",
                 {
-                    {"action", RPCArg::Type::STR, RPCArg::Optional::NO, "The action to execute\n"
+                    {"actiontoexecute", RPCArg::Type::STR, RPCArg::Optional::NO, "The action to execute\n"
             "                                      \"start\" for starting a scan\n"
             "                                      \"abort\" for aborting the current scan (returns true when abort was successful)\n"
             "                                      \"status\" for progress report (in %) of the current scan"},
@@ -2360,7 +2360,7 @@ static const CRPCCommand commands[] =
     { "blockchain",         "verifychain",            &verifychain,            {"checklevel","nblocks"} },
 
     { "blockchain",         "preciousblock",          &preciousblock,          {"blockhash"} },
-    { "blockchain",         "scantxoutset",           &scantxoutset,           {"action", "scanobjects"} },
+    { "blockchain",         "scantxoutset",           &scantxoutset,           {"actiontoexecute", "scanobjects"} },
 
     /* Not shown in help */
     { "hidden",             "invalidateblock",        &invalidateblock,        {"blockhash"} },

@@ -2,8 +2,6 @@
 
 #include <omnicore/log.h>
 #include <omnicore/sp.h>
-#include <omnicore/walletcache.h>
-#include <omnicore/mdex.h>
 
 #include <amount.h>
 #include <validation.h>

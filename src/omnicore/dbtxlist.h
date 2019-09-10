@@ -1,5 +1,5 @@
-#ifndef OMNICORE_DBTXLIST_H
-#define OMNICORE_DBTXLIST_H
+#ifndef BITCOIN_OMNICORE_DBTXLIST_H
+#define BITCOIN_OMNICORE_DBTXLIST_H
 
 #include <omnicore/dbbase.h>
 
@@ -64,4 +64,4 @@ namespace mastercore
 }
 
 
-#endif // OMNICORE_DBTXLIST_H
+#endif // BITCOIN_OMNICORE_DBTXLIST_H

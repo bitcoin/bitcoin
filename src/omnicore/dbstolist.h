@@ -1,5 +1,5 @@
-#ifndef OMNICORE_DBSTOLIST_H
-#define OMNICORE_DBSTOLIST_H
+#ifndef BITCOIN_OMNICORE_DBSTOLIST_H
+#define BITCOIN_OMNICORE_DBSTOLIST_H
 
 #include <omnicore/dbbase.h>
 
@@ -45,4 +45,4 @@ namespace mastercore
     extern CMPSTOList* pDbStoList;
 }
 
-#endif // OMNICORE_DBSTOLIST_H
+#endif // BITCOIN_OMNICORE_DBSTOLIST_H

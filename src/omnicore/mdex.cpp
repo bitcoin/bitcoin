@@ -3,7 +3,6 @@
 #include <omnicore/dbfees.h>
 #include <omnicore/dbtradelist.h>
 #include <omnicore/dbtxlist.h>
-#include <omnicore/errors.h>
 #include <omnicore/log.h>
 #include <omnicore/rules.h>
 #include <omnicore/sp.h>

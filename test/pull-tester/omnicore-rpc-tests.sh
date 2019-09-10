@@ -1,9 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 export LC_ALL=C
 
 # Get BUILDDIR
-CURDIR=$(cd $(dirname "$0"); pwd)
+CURDIR=$(cd $(dirname "$0") || exit; pwd)
+# shellcheck source=/dev/null
 . "${CURDIR}/../config.ini"
 
 if [ -z "$BUILDDIR" ]; then
@@ -23,10 +24,10 @@ rm -rf "$BUILDDIR/test/tmp"
 git clone https://github.com/OmniLayer/OmniJ.git $TESTDIR
 mkdir -p "$DATADIR/regtest"
 touch "$DATADIR/regtest/omnicore.log"
-cd $TESTDIR
+cd $TESTDIR || exit
 echo "Omni Core RPC test dir: "$TESTDIR
 echo "Last OmniJ commit: "$(git log -n 1 --format="%H Author: %cn <%ce>")
-if [ "$@" = "true" ]; then
+if [ "$1" = "true" ]; then
     echo "Debug logging level: maximum"
     $OMNICORED -datadir="$DATADIR" -regtest -txindex -server -daemon -rpcuser=bitcoinrpc -rpcpassword=pass -debug=1 -omnidebug=all -omnialertallowsender=any -omniactivationallowsender=any -paytxfee=0.0001 -minrelaytxfee=0.00001 -limitancestorcount=750 -limitdescendantcount=750 -rpcserialversion=0 -discover=0 -listen=0 -deprecatedrpc=generate &
 else

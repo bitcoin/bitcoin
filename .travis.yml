@@ -31,7 +31,7 @@ env:
 before_install:
   - set -o errexit; source .travis/test_03_before_install.sh
 install:
-  - set -o errexit; source .travis/test_04_install.sh
+  - travis_wait 20 set -o errexit; source .travis/test_04_install.sh
 before_script:
   - set -o errexit; source .travis/test_05_before_script.sh
 script:
