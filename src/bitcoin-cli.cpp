@@ -92,6 +92,25 @@ public:
 
 };
 
+void BitcoinCliInstallEnvVars(ArgsManager &am)
+{
+    // Set args based on their environment variable
+    std::vector<std::string> args = am.GetAddedArgs();
+    for (long unsigned int i = 0; i < args.size(); ++i)
+    {
+        std::string element;
+        for(auto &c: args[i]) {
+            element += toupper(c);
+        }
+        // Schema = BITCOIND_<ARG>
+        std::string envname = "BITCOIND_" + element.substr(1, element.size());
+        const char *envvar = getenv(envname.c_str());
+        // Check if envvar is set
+        if (envvar != NULL)
+            am.SoftSetArg(args[i], std::string(envvar));
+    }
+}
+
 //
 // This function returns either one of EXIT_ codes when it's expected to stop the process or
 // CONTINUE_EXECUTION when it's expected to continue further.
@@ -107,6 +126,7 @@ static int AppInitRPC(int argc, char* argv[])
         tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error.c_str());
         return EXIT_FAILURE;
     }
+    BitcoinCliInstallEnvVars(gArgs);
     if (argc < 2 || HelpRequested(gArgs) || gArgs.IsArgSet("-version")) {
         std::string strUsage = PACKAGE_NAME " RPC client version " + FormatFullVersion() + "\n";
         if (!gArgs.IsArgSet("-version")) {
