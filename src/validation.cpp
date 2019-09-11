@@ -2792,6 +2792,8 @@ bool CChainState::InvalidateBlock(CValidationState& state, const CChainParams& c
     // work as we go.
     std::multimap<const arith_uint256, CBlockIndex *> candidate_blocks_by_work;
 
+    std::set<CBlockIndex *> failed_valid_descendants;
+
     {
         LOCK(cs_main);
         for (const auto& entry : m_blockman.m_block_index) {
@@ -2801,11 +2803,12 @@ bool CChainState::InvalidateBlock(CValidationState& state, const CChainParams& c
             // as we disconnect.
             // Instead, consider only non-active-chain blocks that have at
             // least as much work as where we expect the new tip to end up.
-            if (!m_chain.Contains(candidate) &&
-                    !CBlockIndexWorkComparator()(candidate, pindex->pprev) &&
-                    candidate->IsValid(BLOCK_VALID_TRANSACTIONS) &&
-                    candidate->HaveTxsDownloaded()) {
-                candidate_blocks_by_work.insert(std::make_pair(candidate->nChainWork, candidate));
+            if (!m_chain.Contains(candidate) && !CBlockIndexWorkComparator()(candidate, pindex->pprev)) {
+                if (candidate->IsValid(BLOCK_VALID_TRANSACTIONS) && candidate->HaveTxsDownloaded()) {
+                    candidate_blocks_by_work.insert(std::make_pair(candidate->nChainWork, candidate));
+                } else if ((candidate->nStatus & BLOCK_FAILED_VALID) && candidate->GetAncestor(pindex->nHeight) == pindex) {
+                    failed_valid_descendants.insert(candidate);
+                }
             }
         }
     }
@@ -2860,6 +2863,15 @@ bool CChainState::InvalidateBlock(CValidationState& state, const CChainParams& c
                 candidate_it = candidate_blocks_by_work.erase(candidate_it);
             } else {
                 ++candidate_it;
+            }
+        }
+
+        for (auto candidate_descendant_it = failed_valid_descendants.begin(); candidate_descendant_it != failed_valid_descendants.end(); ) {
+            if ((*candidate_descendant_it)->nHeight > invalid_walk_tip->nHeight && (*candidate_descendant_it)->GetAncestor(invalid_walk_tip->nHeight) == invalid_walk_tip) {
+                (*candidate_descendant_it)->nStatus = ((*candidate_descendant_it)->nStatus ^ BLOCK_FAILED_VALID) | BLOCK_FAILED_CHILD;
+                candidate_descendant_it = failed_valid_descendants.erase(candidate_descendant_it);
+            } else {
+                ++candidate_descendant_it;
             }
         }
 
@@ -4652,6 +4664,11 @@ void CChainState::CheckBlockIndex(const Consensus::Params& consensusParams)
         if (pindexFirstInvalid == nullptr) {
             // Checks for not-invalid blocks.
             assert((pindex->nStatus & BLOCK_FAILED_MASK) == 0); // The failed mask cannot be set for blocks without invalid parents.
+        } else if (pindexFirstInvalid != pindex) {
+            // If a parent is invalid, we may be BLOCK_FAILED_CHILD (though no guarantee thereof),
+            // but we must not be BLOCK_FAILED_VALID (as we shouldn't have attempted to connect
+            // this block in the first place).
+            assert((pindex->nStatus & BLOCK_FAILED_VALID) == 0);
         }
         if (!CBlockIndexWorkComparator()(pindex, m_chain.Tip()) && pindexFirstNeverProcessed == nullptr) {
             if (pindexFirstInvalid == nullptr) {
