@@ -134,6 +134,27 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
 
         assert_raises_rpc_error(-8, "Missing redeemScript/witnessScript", node2.signrawtransactionwithkey, rawtx, self.priv[0:self.nsigs-1], [prevtx_err])
 
+        # if witnessScript specified, all ok
+        prevtx_err["witnessScript"] = prevtxs[0]["redeemScript"]
+        node2.signrawtransactionwithkey(rawtx, self.priv[0:self.nsigs-1], [prevtx_err])
+
+        # both specified, also ok
+        prevtx_err["redeemScript"] = prevtxs[0]["redeemScript"]
+        node2.signrawtransactionwithkey(rawtx, self.priv[0:self.nsigs-1], [prevtx_err])
+
+        # redeemScript mismatch to witnessScript
+        prevtx_err["redeemScript"] = "6a" # OP_RETURN
+        assert_raises_rpc_error(-8, "redeemScript does not correspond to witnessScript", node2.signrawtransactionwithkey, rawtx, self.priv[0:self.nsigs-1], [prevtx_err])
+
+        # redeemScript does not match scriptPubKey
+        del prevtx_err["witnessScript"]
+        assert_raises_rpc_error(-8, "redeemScript/witnessScript does not match scriptPubKey", node2.signrawtransactionwithkey, rawtx, self.priv[0:self.nsigs-1], [prevtx_err])
+
+        # witnessScript does not match scriptPubKey
+        prevtx_err["witnessScript"] = prevtx_err["redeemScript"]
+        del prevtx_err["redeemScript"]
+        assert_raises_rpc_error(-8, "redeemScript/witnessScript does not match scriptPubKey", node2.signrawtransactionwithkey, rawtx, self.priv[0:self.nsigs-1], [prevtx_err])
+
         rawtx2 = node2.signrawtransactionwithkey(rawtx, self.priv[0:self.nsigs - 1], prevtxs)
         rawtx3 = node2.signrawtransactionwithkey(rawtx2["hex"], [self.priv[-1]], prevtxs)
 

@@ -196,31 +196,72 @@ void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keyst
             }
 
             // if redeemScript and private keys were given, add redeemScript to the keystore so it can be signed
-            if (keystore && (scriptPubKey.IsPayToScriptHash() || scriptPubKey.IsPayToWitnessScriptHash())) {
+            const bool is_p2sh = scriptPubKey.IsPayToScriptHash();
+            const bool is_p2wsh = scriptPubKey.IsPayToWitnessScriptHash();
+            if (keystore && (is_p2sh || is_p2wsh)) {
                 RPCTypeCheckObj(prevOut,
                     {
                         {"redeemScript", UniValueType(UniValue::VSTR)},
                         {"witnessScript", UniValueType(UniValue::VSTR)},
                     }, true);
                 UniValue rs = find_value(prevOut, "redeemScript");
-                if (!rs.isNull()) {
-                    std::vector<unsigned char> rsData(ParseHexV(rs, "redeemScript"));
-                    CScript redeemScript(rsData.begin(), rsData.end());
-                    keystore->AddCScript(redeemScript);
-                    // Automatically also add the P2WSH wrapped version of the script (to deal with P2SH-P2WSH).
-                    // This is only for compatibility, it is encouraged to use the explicit witnessScript field instead.
-                    keystore->AddCScript(GetScriptForWitness(redeemScript));
-                }
                 UniValue ws = find_value(prevOut, "witnessScript");
-                if (!ws.isNull()) {
-                    std::vector<unsigned char> wsData(ParseHexV(ws, "witnessScript"));
-                    CScript witnessScript(wsData.begin(), wsData.end());
-                    keystore->AddCScript(witnessScript);
-                    // Automatically also add the P2WSH wrapped version of the script (to deal with P2SH-P2WSH).
-                    keystore->AddCScript(GetScriptForWitness(witnessScript));
-                }
                 if (rs.isNull() && ws.isNull()) {
                     throw JSONRPCError(RPC_INVALID_PARAMETER, "Missing redeemScript/witnessScript");
+                }
+
+                // work from witnessScript when possible
+                std::vector<unsigned char> scriptData(!ws.isNull() ? ParseHexV(ws, "witnessScript") : ParseHexV(rs, "redeemScript"));
+                CScript script(scriptData.begin(), scriptData.end());
+                keystore->AddCScript(script);
+                // Automatically also add the P2WSH wrapped version of the script (to deal with P2SH-P2WSH).
+                // This is done for redeemScript only for compatibility, it is encouraged to use the explicit witnessScript field instead.
+                CScript witness_output_script{GetScriptForWitness(script)};
+                keystore->AddCScript(witness_output_script);
+
+                if (!ws.isNull() && !rs.isNull()) {
+                    // if both witnessScript and redeemScript are provided,
+                    // they should either be the same (for backwards compat),
+                    // or the redeemScript should be the encoded form of
+                    // the witnessScript (ie, for p2sh-p2wsh)
+                    if (ws.get_str() != rs.get_str()) {
+                        std::vector<unsigned char> redeemScriptData(ParseHexV(rs, "redeemScript"));
+                        CScript redeemScript(redeemScriptData.begin(), redeemScriptData.end());
+                        if (redeemScript != witness_output_script) {
+                            throw JSONRPCError(RPC_INVALID_PARAMETER, "redeemScript does not correspond to witnessScript");
+                        }
+                    }
+                }
+
+                if (is_p2sh) {
+                    const CTxDestination p2sh{ScriptHash(script)};
+                    const CTxDestination p2sh_p2wsh{ScriptHash(witness_output_script)};
+                    if (scriptPubKey == GetScriptForDestination(p2sh)) {
+                        // traditional p2sh; arguably an error if
+                        // we got here with rs.IsNull(), because
+                        // that means the p2sh script was specified
+                        // via witnessScript param, but for now
+                        // we'll just quietly accept it
+                    } else if (scriptPubKey == GetScriptForDestination(p2sh_p2wsh)) {
+                        // p2wsh encoded as p2sh; ideally the witness
+                        // script was specified in the witnessScript
+                        // param, but also support specifying it via
+                        // redeemScript param for backwards compat
+                        // (in which case ws.IsNull() == true)
+                    } else {
+                        // otherwise, can't generate scriptPubKey from
+                        // either script, so we got unusable parameters
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, "redeemScript/witnessScript does not match scriptPubKey");
+                    }
+                } else if (is_p2wsh) {
+                    // plain p2wsh; could throw an error if script
+                    // was specified by redeemScript rather than
+                    // witnessScript (ie, ws.IsNull() == true), but
+                    // accept it for backwards compat
+                    const CTxDestination p2wsh{WitnessV0ScriptHash(script)};
+                    if (scriptPubKey != GetScriptForDestination(p2wsh)) {
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, "redeemScript/witnessScript does not match scriptPubKey");
+                    }
                 }
             }
         }
@@ -268,6 +309,9 @@ UniValue SignTransaction(CMutableTransaction& mtx, const SigningProvider* keysto
             if (serror == SCRIPT_ERR_INVALID_STACK_OPERATION) {
                 // Unable to sign input and verification failed (possible attempt to partially sign).
                 TxInErrorToJSON(txin, vErrors, "Unable to sign input, invalid stack size (possibly missing key)");
+            } else if (serror == SCRIPT_ERR_SIG_NULLFAIL) {
+                // Verification failed (possibly due to insufficient signatures).
+                TxInErrorToJSON(txin, vErrors, "CHECK(MULTI)SIG failing with non-zero signature (possibly need more signatures)");
             } else {
                 TxInErrorToJSON(txin, vErrors, ScriptErrorString(serror));
             }
