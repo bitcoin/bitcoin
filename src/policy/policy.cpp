@@ -24,7 +24,7 @@ CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
     // need a CTxIn of at least 148 bytes to spend:
     // so dust is a spendable txout less than
     // 182*dustRelayFee/1000 (in duffs).
-    // 546 duffs at the default rate of 3000 sat/kB.
+    // 546 duffs at the default rate of 3000 duff/kB.
     if (txout.scriptPubKey.IsUnspendable())
         return 0;
 
