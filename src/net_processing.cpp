@@ -2778,7 +2778,7 @@ void PeerManagerImpl::UpdatePeerStateForReceivedHeaders(CNode& pfrom, Peer& peer
 
     // If we're in IBD, we want outbound peers that will serve us a useful
     // chain. Disconnect peers that are on chains with insufficient work.
-    if (m_chainman.ActiveChainstate().IsInitialBlockDownload() && !may_have_more_headers) {
+    if (m_chainman.IsAnyChainInIBD() && !may_have_more_headers) {
         // If the peer has no more headers to give us, then we know we have
         // their tip.
         if (nodestate->pindexBestKnownBlock && nodestate->pindexBestKnownBlock->nChainWork < m_chainman.MinimumChainWork()) {
@@ -5224,9 +5224,10 @@ void PeerManagerImpl::MaybeSendAddr(CNode& node, Peer& peer, std::chrono::micros
     if (!peer.m_addr_relay_enabled) return;
 
     LOCK(peer.m_addr_send_times_mutex);
+    const bool is_ibd{WITH_LOCK(::cs_main, return m_chainman.IsAnyChainInIBD())};
+
     // Periodically advertise our local address to the peer.
-    if (fListen && !m_chainman.ActiveChainstate().IsInitialBlockDownload() &&
-        peer.m_next_local_addr_send < current_time) {
+    if (fListen && !is_ibd && peer.m_next_local_addr_send < current_time) {
         // If we've sent before, clear the bloom filter for the peer, so that our
         // self-announcement will actually go out.
         // This might be unnecessary if the bloom filter has already rolled
