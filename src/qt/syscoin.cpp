@@ -283,6 +283,10 @@ void SyscoinApplication::parameterSetup()
     m_node.initParameterInteraction();
 }
 
+void SyscoinApplication::SetPrune(bool prune, bool force) {
+     optionsModel->SetPrune(prune, force);
+}
+
 void SyscoinApplication::requestInitialize()
 {
     qDebug() << __func__ << ": Requesting initialize";
@@ -489,8 +493,10 @@ int GuiMain(int argc, char* argv[])
 
     /// 5. Now that settings and translations are available, ask user for data directory
     // User language is set up: pick a data directory
-    if (!Intro::pickDataDirectory(*node))
-        return EXIT_SUCCESS;
+    bool did_show_intro = false;
+    bool prune = false; // Intro dialog prune check box
+    // Gracefully exit if the user cancels
+    if (!Intro::showIfNeeded(*node, did_show_intro, prune)) return EXIT_SUCCESS;
 
     /// 6. Determine availability of data directory and parse syscoin.conf
     /// - Do not call GetDataDir(true) before this step finishes
@@ -571,6 +577,11 @@ int GuiMain(int argc, char* argv[])
     app.parameterSetup();
     // Load GUI settings from QSettings
     app.createOptionsModel(gArgs.GetBoolArg("-resetguisettings", false));
+
+    if (did_show_intro) {
+        // Store intro dialog settings other than datadir (network specific)
+        app.SetPrune(prune, true);
+    }
 
     if (gArgs.GetBoolArg("-splash", DEFAULT_SPLASHSCREEN) && !gArgs.GetBoolArg("-min", false))
         app.createSplashScreen(networkStyle.data());
