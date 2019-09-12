@@ -105,8 +105,10 @@ Documentation
 - #12493 Reopen CDBEnv after encryption instead of shutting down (achow101)
 - #14320 Fix duplicate fileid detection (ken2812221)
 - #14350 Add WalletLocation class (promag)
-- #14552 detecting duplicate wallet by comparing the db filename (ken2812221)
+- #14552 Detecting duplicate wallet by comparing the db filename (ken2812221)
 - #15297 Releases dangling files on BerkeleyEnvironment::Close (promag)
+- #16257 Abort when attempting to fund a transaction above -maxtxfee (sjors)
+- #16322 Fix -maxtxfee check by moving it to CWallet::CreateTransaction (promag)
 
 Credits
 =======
@@ -130,6 +132,7 @@ Thanks to everyone who directly contributed to this release:
 - Pieter Wuille
 - priscoan
 - Russell Yanofsky
+- Sjors Provoost
 - Wladimir J. van der Laan
 
 As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
