@@ -94,6 +94,9 @@ public:
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
     void emitCoinJoinEnabledChanged();
 
+    /* Explicit setters */
+    void SetPrune(bool prune, bool force = false);
+
     /* Restart flag helper */
     void setRestartRequired(bool fRequired);
     bool isRestartRequired() const;

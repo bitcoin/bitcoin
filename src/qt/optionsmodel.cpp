@@ -186,11 +186,7 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("bPrune", false);
     if (!settings.contains("nPruneSize"))
         settings.setValue("nPruneSize", 2);
-    // Convert prune size from GB to MiB:
-    const uint64_t nPruneSizeMiB = (settings.value("nPruneSize").toInt() * GB_BYTES) >> 20;
-    if (!m_node.softSetArg("-prune", settings.value("bPrune").toBool() ? ToString(nPruneSizeMiB) : "0")) {
-        addOverriddenOption("-prune");
-    }
+    SetPrune(settings.value("bPrune").toBool());
 
     // If GUI is setting prune, then we also must set disablegovernance and txindex
     if (settings.value("bPrune").toBool()) {
@@ -375,6 +371,22 @@ static void SetProxySetting(QSettings &settings, const QString &name, const Prox
 static const QString GetDefaultProxyAddress()
 {
     return QString("%1:%2").arg(DEFAULT_GUI_PROXY_HOST).arg(DEFAULT_GUI_PROXY_PORT);
+}
+
+void OptionsModel::SetPrune(bool prune, bool force)
+{
+    QSettings settings;
+    settings.setValue("bPrune", prune);
+    // Convert prune size from GB to MiB:
+    const uint64_t nPruneSizeMiB = (settings.value("nPruneSize").toInt() * GB_BYTES) >> 20;
+    std::string prune_val = prune ? std::to_string(nPruneSizeMiB) : "0";
+    if (force) {
+        m_node.forceSetArg("-prune", prune_val);
+        return;
+    }
+    if (!m_node.softSetArg("-prune", prune_val)) {
+        addOverriddenOption("-prune");
+    }
 }
 
 // read QSettings values and return them
