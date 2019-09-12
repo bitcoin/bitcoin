@@ -28,6 +28,7 @@ packages:
 - "python3-dev"
 - "python3-setuptools"
 - "fonts-tuffy"
+- "clang-6.0"
 remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
   "dir": "bitcoin"
@@ -90,6 +91,9 @@ script: |
 
   mkdir -p ${BASEPREFIX}/SDKs
   tar -C ${BASEPREFIX}/SDKs -xf ${BUILD_DIR}/MacOSX10.14.sdk.tar.gz
+
+  ln -s /usr/bin/clang++-6.0 ${WRAP_DIR}/clang++
+  ln -s /usr/bin/clang-6.0 ${WRAP_DIR}/clang
 
   # Build dependencies for each host
   for i in $HOSTS; do
