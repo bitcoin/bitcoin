@@ -489,7 +489,7 @@ class TestNode():
         if 'dstaddr' not in kwargs:
             kwargs['dstaddr'] = '127.0.0.1'
 
-        p2p_conn.peer_connect(**kwargs)()
+        p2p_conn.peer_connect(**kwargs, net=self.chain)()
         self.p2ps.append(p2p_conn)
         if wait_for_verack:
             p2p_conn.wait_for_verack()
