@@ -4949,7 +4949,7 @@ LegacyScriptPubKeyMan* CWallet::GetOrCreateLegacyScriptPubKeyMan()
 void CWallet::SetupLegacyScriptPubKeyMan()
 {
     if (m_internal_spk_managers.empty() && m_external_spk_managers.empty() && m_spk_managers.empty()) {
-        auto spk_manager = std::unique_ptr<ScriptPubKeyMan>(new LegacyScriptPubKeyMan());
+        auto spk_manager = std::unique_ptr<ScriptPubKeyMan>(new LegacyScriptPubKeyMan(*this));
         for (const auto& type : OUTPUT_TYPES) {
             m_internal_spk_managers[type] = spk_manager.get();
             m_external_spk_managers[type] = spk_manager.get();
@@ -4964,4 +4964,14 @@ void CWallet::SetupLegacyScriptPubKeyMan()
         assert(m_external_spk_managers.at(type) == spk_man);
     }
     assert(m_spk_managers.size() == 1);
+}
+
+const CKeyingMaterial& CWallet::GetEncryptionKey() const
+{
+    return vMasterKey;
+}
+
+bool CWallet::HasEncryptionKeys() const
+{
+    return !mapMasterKeys.empty();
 }

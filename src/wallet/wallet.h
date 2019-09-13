@@ -680,7 +680,7 @@ class WalletRescanReserver; //forward declarations for ScanForWalletTransactions
  * A CWallet is an extension of a keystore, which also maintains a set of transactions and balances,
  * and provides the ability to create new transactions.
  */
-class CWallet final : public FillableSigningProvider, private interfaces::Chain::Notifications
+class CWallet final : public FillableSigningProvider, public WalletStorage, private interfaces::Chain::Notifications
 {
 private:
     CKeyingMaterial vMasterKey GUARDED_BY(cs_KeyStore);
@@ -811,9 +811,6 @@ private:
     //! Adds a script to the store and saves it to disk
     bool AddCScriptWithDB(WalletBatch& batch, const CScript& script);
 
-    //! Unsets a wallet flag and saves it to disk
-    void UnsetWalletFlagWithDB(WalletBatch& batch, uint64_t flag);
-
     /** Interface for accessing chain state. */
     interfaces::Chain* m_chain;
 
@@ -821,7 +818,7 @@ private:
     WalletLocation m_location;
 
     /** Internal database handle. */
-    std::unique_ptr<WalletDatabase> database;
+    std::shared_ptr<WalletDatabase> database;
 
     /**
      * The following is used to keep track of how far behind the wallet is
@@ -856,6 +853,10 @@ public:
     WalletDatabase& GetDBHandle()
     {
         return *database;
+    }
+    std::shared_ptr<WalletDatabase> GetDatabase() override
+    {
+        return database;
     }
 
     /**
@@ -904,7 +905,7 @@ public:
     }
 
     bool IsCrypted() const { return fUseCrypto; }
-    bool IsLocked() const;
+    bool IsLocked() const override;
     bool Lock();
 
     /** Interface to assert chain access and if successful lock it */
@@ -934,7 +935,7 @@ public:
     const CWalletTx* GetWalletTx(const uint256& hash) const;
 
     //! check whether we are allowed to upgrade (or already support) to the named feature
-    bool CanSupportFeature(enum WalletFeature wf) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { AssertLockHeld(cs_wallet); return nWalletMaxVersion >= wf; }
+    bool CanSupportFeature(enum WalletFeature wf) const override EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { AssertLockHeld(cs_wallet); return nWalletMaxVersion >= wf; }
 
     /**
      * populate vCoins with vector of available COutputs.
@@ -1214,7 +1215,7 @@ public:
     }
 
     //! signify that a particular wallet feature is now used. this may change nWalletVersion and nWalletMaxVersion if those are lower
-    void SetMinVersion(enum WalletFeature, WalletBatch* batch_in = nullptr, bool fExplicit = false);
+    void SetMinVersion(enum WalletFeature, WalletBatch* batch_in = nullptr, bool fExplicit = false) override;
 
     //! change which version we're allowed to upgrade to (note that this does not immediately imply upgrading to that format)
     bool SetMaxVersion(int nVersion);
@@ -1341,20 +1342,23 @@ public:
     void LearnAllRelatedScripts(const CPubKey& key);
 
     /** set a single wallet flag */
-    void SetWalletFlag(uint64_t flags);
+    void SetWalletFlag(uint64_t flags) override;
 
     /** Unsets a single wallet flag */
     void UnsetWalletFlag(uint64_t flag);
 
+    //! Unsets a wallet flag and saves it to disk
+    void UnsetWalletFlagWithDB(WalletBatch& batch, uint64_t flag) override;
+
     /** check if a certain wallet flag is set */
-    bool IsWalletFlagSet(uint64_t flag) const;
+    bool IsWalletFlagSet(uint64_t flag) const override;
 
     /** overwrite all flags by the given uint64_t
        returns false if unknown, non-tolerable flags are present */
     bool SetWalletFlags(uint64_t overwriteFlags, bool memOnly);
 
     /** Returns a bracketed wallet name for displaying in logs, will return [default wallet] if the wallet has no name */
-    const std::string GetDisplayName() const {
+    const std::string GetDisplayName() const override {
         std::string wallet_name = GetName().length() == 0 ? "default wallet" : GetName();
         return strprintf("[%s]", wallet_name);
     };
@@ -1374,6 +1378,9 @@ public:
 
     //! Make a LegacyScriptPubKeyMan and set it for all types, internal, and external.
     void SetupLegacyScriptPubKeyMan();
+
+    const CKeyingMaterial& GetEncryptionKey() const override;
+    bool HasEncryptionKeys() const override;
 };
 
 /**

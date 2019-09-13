@@ -10,21 +10,59 @@
 #include <wallet/crypter.h>
 #include <wallet/ismine.h>
 #include <wallet/walletdb.h>
+#include <wallet/walletutil.h>
 
 #include <boost/signals2/signal.hpp>
 
 enum class OutputType;
+
+// Wallet storage things that ScriptPubKeyMans need in order to be able to store things to the wallet database.
+// It provides access to things that are part of the entire wallet and not specific to a ScriptPubKeyMan such as
+// wallet flags, wallet version, encryption keys, encryption status, and the database itself. This allows a
+// ScriptPubKeyMan to have callbacks into CWallet without causing a circular dependency.
+// WalletStorage should be the same for all ScriptPubKeyMans.
+class WalletStorage
+{
+public:
+    virtual ~WalletStorage() = default;
+    virtual const std::string GetDisplayName() const = 0;
+    virtual std::shared_ptr<WalletDatabase> GetDatabase() = 0;
+    virtual bool IsWalletFlagSet(uint64_t) const = 0;
+    virtual void SetWalletFlag(uint64_t) = 0;
+    virtual void UnsetWalletFlagWithDB(WalletBatch&, uint64_t) = 0;
+    virtual bool CanSupportFeature(enum WalletFeature) const = 0;
+    virtual void SetMinVersion(enum WalletFeature, WalletBatch* = nullptr, bool = false) = 0;
+    virtual const CKeyingMaterial& GetEncryptionKey() const = 0;
+    virtual bool HasEncryptionKeys() const = 0;
+    virtual bool IsLocked() const = 0;
+};
 
 /*
  * A class implementing ScriptPubKeyMan manages some (or all) scriptPubKeys used in a wallet.
  * It contains the scripts and keys related to the scriptPubKeys it manages.
  * A ScriptPubKeyMan will be able to give out scriptPubKeys to be used, as well as marking
  * when a scriptPubKey has been used. It also handles when and how to store a scriptPubKey
- * and it's related scripts and keys, including encryption.
+ * and its related scripts and keys, including encryption.
  */
 class ScriptPubKeyMan
 {
+protected:
+    WalletStorage& m_storage;
+    std::shared_ptr<WalletDatabase> m_database;
+
+    const std::string GetDisplayName() const { return m_storage.GetDisplayName(); }
+    bool IsWalletFlagSet(uint64_t flag) const { return m_storage.IsWalletFlagSet(flag); }
+    void SetWalletFlag(uint64_t flag) { return m_storage.SetWalletFlag(flag); }
+    void UnsetWalletFlagWithDB(WalletBatch& batch, uint64_t flag) { return m_storage.UnsetWalletFlagWithDB(batch, flag); }
+    bool CanSupportFeature(enum WalletFeature wf) const { return m_storage.CanSupportFeature(wf); }
+    void SetMinVersion(enum WalletFeature wf) { return m_storage.SetMinVersion(wf); }
+    const CKeyingMaterial& GetEncryptionKey() const { return m_storage.GetEncryptionKey(); }
+    bool HasEncryptionKeys() const { return m_storage.HasEncryptionKeys(); }
+    bool IsLocked() const { return m_storage.IsLocked(); }
+
 public:
+    ScriptPubKeyMan(WalletStorage& storage) : m_storage(storage), m_database(storage.GetDatabase()) {}
+
     virtual ~ScriptPubKeyMan() {};
     virtual bool GetNewDestination(const OutputType type, CTxDestination& dest, std::string& error) { return false; }
     virtual isminetype IsMine(const CScript& script) const { return ISMINE_NO; }
