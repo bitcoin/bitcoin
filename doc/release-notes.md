@@ -71,6 +71,11 @@ Documentation
   implementations, and many other cases where two or more programs need
   to interact to generate a complete transaction.
 
+Wallet
+------
+
+- When creating a transaction with a fee above -maxtxfee (default 0.1 BTC), the RPC commands walletcreatefundedpsbt and fundrawtransaction will now fail instead of rounding down the fee. Be aware that the feeRate argument is specified in BTC per 1,000 vbytes, not satoshi per vbyte. (#16639)
+
 0.17.2 change log
 =================
 
