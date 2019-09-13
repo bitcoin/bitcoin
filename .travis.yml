@@ -99,7 +99,7 @@ jobs:
         FILE_ENV="./ci/test/00_setup_env_win64.sh"
 
     - stage: test
-      name: '32-bit + dash  [GOAL: install]  [GUI: no BIP70]'
+      name: '32-bit + dash  [GOAL: install]  [GUI: BIP70 enabled]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_i686.sh"
 
