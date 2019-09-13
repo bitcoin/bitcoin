@@ -60,3 +60,15 @@ Linux | `$HOME/.bitcoin/` | `/home/username/.bitcoin/bitcoin.conf`
 macOS | `$HOME/Library/Application Support/Bitcoin/` | `/Users/username/Library/Application Support/Bitcoin/bitcoin.conf`
 
 You can find an example bitcoin.conf file in [share/examples/bitcoin.conf](../share/examples/bitcoin.conf).
+
+## Environment variables
+If an environment variable is set, it will be used unless it is set in the config file or provided as a command line argument.
+The order is:
+```
+Environment variable < Config file < Command line arguments
+```
+
+Name | Option equivalent
+-- | --
+BITCOIN_DATADIR | -datadir
+BITCOIN_CONF	| -conf

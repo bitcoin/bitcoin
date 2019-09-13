@@ -8,6 +8,7 @@
 
 #include <chainparams.h>
 #include <chainparamsbase.h>
+#include <envvar.h>
 #include <logging.h>
 #include <util/strencodings.h>
 #include <util/system.h>
@@ -41,6 +42,8 @@ static bool WalletAppInit(int argc, char* argv[])
         tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error_message.c_str());
         return false;
     }
+    // Install envvars
+    InstallEnvVars(gArgs);
     if (argc < 2 || HelpRequested(gArgs)) {
         std::string usage = strprintf("%s bitcoin-wallet version", PACKAGE_NAME) + " " + FormatFullVersion() + "\n\n" +
                                       "wallet-tool is an offline tool for creating and interacting with Bitcoin Core wallet files.\n" +

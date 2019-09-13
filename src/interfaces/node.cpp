@@ -96,6 +96,7 @@ public:
         }
     }
     void setupServerArgs() override { return SetupServerArgs(); }
+    void installEnvVars(ArgsManager& am) { return InstallEnvVars(am); }
     bool getProxy(Network net, proxyType& proxy_info) override { return GetProxy(net, proxy_info); }
     size_t getNodeCount(CConnman::NumConnections flags) override
     {

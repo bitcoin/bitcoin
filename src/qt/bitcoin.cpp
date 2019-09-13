@@ -466,6 +466,9 @@ int GuiMain(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
+    // Install envvars
+    node->installEnvVars(gArgs);
+
     // Now that the QApplication is setup and we have parsed our parameters, we can set the platform style
     app.setupPlatformStyle();
 

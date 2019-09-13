@@ -10,6 +10,7 @@
 #include <net.h>        // For CConnman::NumConnections
 #include <netaddress.h> // For Network
 #include <support/allocators/secure.h> // For SecureString
+#include <envvar.h> // For InstallEnvVars
 
 #include <functional>
 #include <memory>
@@ -99,6 +100,9 @@ public:
 
     //! Setup arguments
     virtual void setupServerArgs() = 0;
+
+    //! Install envvars
+    virtual void installEnvVars(ArgsManager& am) = 0;
 
     //! Map port.
     virtual void mapPort(bool use_upnp) = 0;

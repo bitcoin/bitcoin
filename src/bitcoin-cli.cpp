@@ -9,6 +9,7 @@
 
 #include <chainparamsbase.h>
 #include <clientversion.h>
+#include <envvar.h>
 #include <fs.h>
 #include <rpc/client.h>
 #include <rpc/protocol.h>
@@ -107,6 +108,8 @@ static int AppInitRPC(int argc, char* argv[])
         tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error.c_str());
         return EXIT_FAILURE;
     }
+    // Install envvars
+    InstallEnvVars(gArgs);
     if (argc < 2 || HelpRequested(gArgs) || gArgs.IsArgSet("-version")) {
         std::string strUsage = PACKAGE_NAME " RPC client version " + FormatFullVersion() + "\n";
         if (!gArgs.IsArgSet("-version")) {

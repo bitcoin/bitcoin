@@ -10,6 +10,7 @@
 #include <chainparams.h>
 #include <clientversion.h>
 #include <compat.h>
+#include <envvar.h>
 #include <fs.h>
 #include <init.h>
 #include <interfaces/chain.h>
@@ -74,6 +75,9 @@ static bool AppInit(int argc, char* argv[])
     if (!gArgs.ParseParameters(argc, argv, error)) {
         return InitError(strprintf("Error parsing command line arguments: %s\n", error));
     }
+
+    // Install envvars
+    InstallEnvVars(gArgs);
 
     // Process help and version before taking care about datadir
     if (HelpRequested(gArgs) || gArgs.IsArgSet("-version")) {

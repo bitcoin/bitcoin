@@ -128,6 +128,7 @@ BITCOIN_CORE_H = \
   core_io.h \
   core_memusage.h \
   cuckoocache.h \
+  envvar.h \
   flatfile.h \
   fs.h \
   httprpc.h \
@@ -487,6 +488,7 @@ libbitcoin_util_a_SOURCES = \
   compat/glibc_sanity.cpp \
   compat/glibcxx_sanity.cpp \
   compat/strnlen.cpp \
+  envvar.cpp \
   fs.cpp \
   interfaces/handler.cpp \
   logging.cpp \
