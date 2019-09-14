@@ -499,10 +499,10 @@ class WalletTest(BitcoinTestFramework):
         self.nodes[0].setlabel(change, 'foobar')
         assert_equal(self.nodes[0].getaddressinfo(change)['ischange'], False)
 
-        # Test "verbose" field value in gettransaction response
+        # Test "decoded" field value in gettransaction `verbose` response.
         self.log.info("Testing verbose gettransaction...")
         tx = self.nodes[0].gettransaction(txid=txid, verbose=True)
-        assert_equal(tx["details"], self.nodes[0].decoderawtransaction(tx["hex"]))
+        assert_equal(tx["decoded"], self.nodes[0].decoderawtransaction(tx["hex"]))
 
 
 if __name__ == '__main__':
