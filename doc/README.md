@@ -1,4 +1,4 @@
-Peercoin 0.8.3 BETA
+Peercoin 0.8.4 BETA
 
 Setup
 ---------------------
