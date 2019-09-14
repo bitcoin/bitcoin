@@ -236,13 +236,14 @@ bool CDB::Recover(const std::string& filename, void *callbackDataIn, bool (*reco
     }
 
     std::vector<CDBEnv::KeyValPair> salvagedData;
-    bool fSuccess = bitdb.Salvage(newFilename, true, salvagedData);
+    bool fAggressive = gArgs.GetBoolArg("-salvageaggressive", false);
+    bool fSuccess = bitdb.Salvage(newFilename, fAggressive, salvagedData);
     if (salvagedData.empty())
     {
-        LogPrintf("Salvage(aggressive) found no records in %s.\n", newFilename);
+        LogPrintf("Salvage(%s) found no records in %s.\n", fAggressive ? "aggressive" : "normal", newFilename);
         return false;
     }
-    LogPrintf("Salvage(aggressive) found %u records\n", salvagedData.size());
+    LogPrintf("Salvage(%s) found %u records\n", fAggressive ? "aggressive" : "normal", salvagedData.size());
 
     std::unique_ptr<Db> pdbCopy = MakeUnique<Db>(bitdb.dbenv.get(), 0);
     int ret = pdbCopy->open(nullptr,               // Txn pointer
