@@ -37,6 +37,10 @@ if test -z $enable_zmq && test -n "@no_zmq@"; then
   enable_zmq=no
 fi
 
+if test -n $enable_bip70 && test -n "@enable_bip70@"; then
+  enable_bip70=yes
+fi
+
 if test x@host_os@ = xdarwin; then
   BREW=no
   PORT=no
