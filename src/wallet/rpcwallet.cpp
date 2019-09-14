@@ -1655,7 +1655,7 @@ static UniValue gettransaction(const JSONRPCRequest& request)
         {
             {"txid", RPCArg::Type::STR, RPCArg::Optional::NO, "The transaction id"},
             {"include_watchonly", RPCArg::Type::BOOL, /* default */ "true for watch-only wallets, otherwise false", "Whether to include watch-only addresses in balance calculation and details[]"},
-            {"decode", RPCArg::Type::BOOL, /* default */ "false", "Whether to add a field with the decoded transaction"},
+            {"verbose", RPCArg::Type::BOOL, /* default */ "false", "Whether to add a field with additional transaction details"},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "", Cat(Cat<std::vector<RPCResult>>(
@@ -1689,7 +1689,7 @@ static UniValue gettransaction(const JSONRPCRequest& request)
                             }},
                     }},
                   {RPCResult::Type::STR_HEX, "hex", "Raw data for transaction"},
-                  {RPCResult::Type::OBJ, "decoded", /*optional=*/true, "The decoded transaction",
+                  {RPCResult::Type::OBJ, "details", /*optional=*/true, "Additional transaction details",
                   {
                         {RPCResult::Type::ELISION, "", "Equivalent to the RPC decoderawtransaction method, or the RPC getrawtransaction method when `verbose` is passed."},
                   }},
@@ -1720,7 +1720,7 @@ static UniValue gettransaction(const JSONRPCRequest& request)
         filter |= ISMINE_WATCH_ONLY;
     }
 
-    bool decode_tx = request.params[2].isNull() ? false : request.params[2].get_bool();
+    bool verbose = request.params[2].isNull() ? false : request.params[2].get_bool();
 
     UniValue entry(UniValue::VOBJ);
     auto it = pwallet->mapWallet.find(hash);
@@ -1747,10 +1747,10 @@ static UniValue gettransaction(const JSONRPCRequest& request)
     std::string strHex = EncodeHexTx(*wtx.tx);
     entry.pushKV("hex", strHex);
 
-    if (decode_tx) {
-        UniValue decoded(UniValue::VOBJ);
-        TxToUniv(*wtx.tx, uint256(), decoded, false);
-        entry.pushKV("decoded", decoded);
+    if (verbose) {
+        UniValue details(UniValue::VOBJ);
+        TxToUniv(*wtx.tx, uint256(), details, false);
+        entry.pushKV("details", details);
     }
 
     return entry;
@@ -4106,7 +4106,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "getrawchangeaddress",              &getrawchangeaddress,           {} },
     { "wallet",             "getreceivedbyaddress",             &getreceivedbyaddress,          {"address","minconf","addlocked"} },
     { "wallet",             "getreceivedbylabel",               &getreceivedbylabel,            {"label","minconf","addlocked"} },
-    { "wallet",             "gettransaction",                   &gettransaction,                {"txid","include_watchonly","decode"} },
+    { "wallet",             "gettransaction",                   &gettransaction,                {"txid","include_watchonly","verbose"} },
     { "wallet",             "getunconfirmedbalance",            &getunconfirmedbalance,         {} },
     { "wallet",             "getbalances",                      &getbalances,                   {} },
     { "wallet",             "getwalletinfo",                    &getwalletinfo,                 {} },
