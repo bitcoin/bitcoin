@@ -1648,8 +1648,10 @@ static UniValue gettransaction(const JSONRPCRequest& request)
                 "\nGet detailed information about in-wallet transaction <txid>\n",
                 {
                     {"txid", RPCArg::Type::STR, RPCArg::Optional::NO, "The transaction id"},
-                    {"include_watchonly", RPCArg::Type::BOOL, /* default */ "true for watch-only wallets, otherwise false", "Whether to include watch-only addresses in balance calculation and details[]"},
-                    {"verbose", RPCArg::Type::BOOL, /* default */ "false", "Whether to add a field with additional transaction details"},
+                    {"include_watchonly", RPCArg::Type::BOOL, /* default */ "true for watch-only wallets, otherwise false",
+                            "Whether to include watch-only addresses in balance calculation and details[]"},
+                    {"verbose", RPCArg::Type::BOOL, /* default */ "false",
+                            "Whether to include a `decoded` field containing the decoded transaction (equivalent to RPC decoderawtransaction)"},
                 },
                 RPCResult{
             "{\n"
@@ -1685,7 +1687,8 @@ static UniValue gettransaction(const JSONRPCRequest& request)
             "    ,...\n"
             "  ],\n"
             "  \"hex\" : \"data\"         (string) Raw data for transaction\n"
-            "  \"details\" : transaction         (json object) Optional, additional transaction details. This object contains the same transaction details as the `getrawtransaction` RPC method\n"
+            "  \"decoded\" : transaction         (json object) Optional, the decoded transaction (only present when `verbose` is passed), equivalent to the\n"
+            "                                                RPC decoderawtransaction method, or the RPC getrawtransaction method when `verbose` is passed.\n"
             "}\n"
                 },
                 RPCExamples{
@@ -1739,9 +1742,9 @@ static UniValue gettransaction(const JSONRPCRequest& request)
     entry.pushKV("hex", strHex);
 
     if (verbose) {
-        UniValue details(UniValue::VOBJ);
-        TxToUniv(*wtx.tx, uint256(), details, false);
-        entry.pushKV("details", details);
+        UniValue decoded(UniValue::VOBJ);
+        TxToUniv(*wtx.tx, uint256(), decoded, false);
+        entry.pushKV("decoded", decoded);
     }
 
     return entry;
