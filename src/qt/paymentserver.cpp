@@ -328,7 +328,9 @@ void PaymentServer::handleURIOrFile(const QString& s)
 #ifndef ENABLE_BIP70
                     if (uri.hasQueryItem("r")) {  // payment request
                         Q_EMIT message(tr("URI handling"),
-                            tr("Cannot process payment request because BIP70 support was not compiled in."),
+                            tr("Cannot process payment request because BIP70 support was not compiled in.")+
+                            tr("Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.")+
+                            tr("If you are receiving this error you should request the merchant provide a BIP21 compatible URI."),
                             CClientUIInterface::ICON_WARNING);
                     }
 #endif
@@ -364,7 +366,9 @@ void PaymentServer::handleURIOrFile(const QString& s)
         return;
 #else
         Q_EMIT message(tr("Payment request file handling"),
-            tr("Cannot process payment request because BIP70 support was not compiled in."),
+            tr("Cannot process payment request because BIP70 support was not compiled in.")+
+            tr("Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.")+
+            tr("If you are receiving this error you should request the merchant provide a BIP21 compatible URI."),
             CClientUIInterface::ICON_WARNING);
 #endif
     }
