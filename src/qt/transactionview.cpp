@@ -437,8 +437,6 @@ void TransactionView::bumpFee()
         // Update the table
         transactionView->selectionModel()->clearSelection();
         model->getTransactionTableModel()->updateTransaction(hashQStr, CT_UPDATED, true);
-
-        qApp->processEvents();
         Q_EMIT bumpedFee(newHash);
     }
 }
