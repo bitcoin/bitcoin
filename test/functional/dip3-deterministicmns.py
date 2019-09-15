@@ -143,7 +143,7 @@ class DIP3Test(BitcoinTestFramework):
         for i in range(20):
             node = self.nodes[i % len(self.nodes)]
             self.test_invalid_mn_payment(node)
-            node.generate(1)
+            self.nodes[0].generate(1)
             self.sync_all()
 
         self.log.info("testing ProUpServTx")
@@ -378,7 +378,7 @@ class DIP3Test(BitcoinTestFramework):
 
         coinbasevalue = bt['coinbasevalue']
         if miner_address is None:
-            miner_address = node.getnewaddress()
+            miner_address = self.nodes[0].getnewaddress()
         if mn_payee is None:
             if isinstance(bt['masternode'], list):
                 mn_payee = bt['masternode'][0]['payee']

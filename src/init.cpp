@@ -908,6 +908,11 @@ void InitParameterInteraction()
         // masternodes MUST accept connections from outside
         gArgs.ForceSetArg("-listen", "1");
         LogPrintf("%s: parameter interaction: -masternode=1 -> setting -listen=1\n", __func__);
+#ifdef ENABLE_WALLET
+        // masternode should not have wallet enabled
+        gArgs.ForceSetArg("-disablewallet", "1");
+        LogPrintf("%s: parameter interaction: -masternode=1 -> setting -disablewallet=1\n", __func__);
+#endif // ENABLE_WALLET
         if (gArgs.GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS) < DEFAULT_MAX_PEER_CONNECTIONS) {
             // masternodes MUST be able to handle at least DEFAULT_MAX_PEER_CONNECTIONS connections
             gArgs.ForceSetArg("-maxconnections", itostr(DEFAULT_MAX_PEER_CONNECTIONS));
@@ -1900,13 +1905,18 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     // ********************************************************* Step 10a: Prepare Masternode related stuff
     fMasternodeMode = gArgs.GetBoolArg("-masternode", false);
-    // TODO: masternode should have no wallet
 
     if(fLiteMode && fMasternodeMode) {
         return InitError(_("You can not start a masternode in lite mode."));
     }
 
     if(fMasternodeMode) {
+#ifdef ENABLE_WALLET
+        if (!vpwallets.empty()) {
+            return InitError(_("You can not start a masternode with wallet enabled."));
+        }
+#endif //ENABLE_WALLET
+
         LogPrintf("MASTERNODE:\n");
 
         std::string strMasterNodeBLSPrivKey = gArgs.GetArg("-masternodeblsprivkey", "");

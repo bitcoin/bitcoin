@@ -48,23 +48,24 @@ class LLMQChainLocksTest(DashTestFramework):
 
         # Isolate node, mine on another, and reconnect
         isolate_node(self.nodes[0])
+        node0_mining_addr = self.nodes[0].getnewaddress()
         node0_tip = self.nodes[0].getbestblockhash()
-        self.nodes[1].generate(5)
+        self.nodes[1].generatetoaddress(5, node0_mining_addr)
         self.wait_for_chainlock_tip(self.nodes[1])
         assert(self.nodes[0].getbestblockhash() == node0_tip)
         reconnect_isolated_node(self.nodes[0], 1)
-        self.nodes[1].generate(1)
+        self.nodes[1].generatetoaddress(1, node0_mining_addr)
         self.wait_for_chainlock(self.nodes[0], self.nodes[1].getbestblockhash())
 
         # Isolate node, mine on both parts of the network, and reconnect
         isolate_node(self.nodes[0])
         self.nodes[0].generate(5)
-        self.nodes[1].generate(1)
+        self.nodes[1].generatetoaddress(1, node0_mining_addr)
         good_tip = self.nodes[1].getbestblockhash()
         self.wait_for_chainlock_tip(self.nodes[1])
         assert(not self.nodes[0].getblock(self.nodes[0].getbestblockhash())["chainlock"])
         reconnect_isolated_node(self.nodes[0], 1)
-        self.nodes[1].generate(1)
+        self.nodes[1].generatetoaddress(1, node0_mining_addr)
         self.wait_for_chainlock(self.nodes[0], self.nodes[1].getbestblockhash())
         assert(self.nodes[0].getblock(self.nodes[0].getbestblockhash())["previousblockhash"] == good_tip)
         assert(self.nodes[1].getblock(self.nodes[1].getbestblockhash())["previousblockhash"] == good_tip)
@@ -87,7 +88,7 @@ class LLMQChainLocksTest(DashTestFramework):
         # Now let the node which is on the wrong chain reorg back to the locked chain
         self.nodes[0].reconsiderblock(good_tip)
         assert(self.nodes[0].getbestblockhash() != good_tip)
-        self.nodes[1].generate(1)
+        self.nodes[1].generatetoaddress(1, node0_mining_addr)
         self.wait_for_chainlock(self.nodes[0], self.nodes[1].getbestblockhash())
         assert(self.nodes[0].getbestblockhash() == self.nodes[1].getbestblockhash())
 
