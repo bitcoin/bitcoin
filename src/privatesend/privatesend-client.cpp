@@ -928,13 +928,10 @@ bool CPrivateSendClientSession::DoAutomaticDenominating(CConnman& connman, bool 
     } // LOCK2(cs_main, vpwallets[0]->cs_wallet);
 
     bool fUseQueue = GetRandInt(100) > 33;
-    // don't use the queues all of the time for mixing unless we are a liquidity provider
-    if ((privateSendClient.nLiquidityProvider || fUseQueue) && JoinExistingQueue(nBalanceNeedsAnonymized, connman)) {
+    // don't use the queues all of the time for mixing
+    if (fUseQueue && JoinExistingQueue(nBalanceNeedsAnonymized, connman)) {
         return true;
     }
-
-    // do not initiate queue if we are a liquidity provider to avoid useless inter-mixing
-    if (privateSendClient.nLiquidityProvider) return false;
 
     if (StartNewQueue(nBalanceNeedsAnonymized, connman)) return true;
 
@@ -1225,15 +1222,10 @@ bool CPrivateSendClientSession::SubmitDenominate(CConnman& connman)
     }
 
     std::vector<std::pair<int, size_t> > vecInputsByRounds;
-    // Note: liquidity providers are fine with whatever number of inputs they've got
-    bool fDryRun = privateSendClient.nLiquidityProvider == 0;
 
     for (int i = 0; i < privateSendClient.nPrivateSendRounds; i++) {
-        if (PrepareDenominate(i, i, strError, vecPSInOutPairs, vecPSInOutPairsTmp, fDryRun)) {
+        if (PrepareDenominate(i, i, strError, vecPSInOutPairs, vecPSInOutPairsTmp, true)) {
             LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::SubmitDenominate -- Running PrivateSend denominate for %d rounds, success\n", i);
-            if (!fDryRun) {
-                return SendDenominate(vecPSInOutPairsTmp, connman);
-            }
             vecInputsByRounds.emplace_back(i, vecPSInOutPairsTmp.size());
         } else {
             LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::SubmitDenominate -- Running PrivateSend denominate for %d rounds, error: %s\n", i, strError);

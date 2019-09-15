@@ -194,10 +194,6 @@ QT_TRANSLATE_NOOP("dash-core", ""
 "PrivateSend uses exact denominated amounts to send funds, you might simply "
 "need to anonymize some more coins."),
 QT_TRANSLATE_NOOP("dash-core", ""
-"Provide liquidity to PrivateSend by infrequently mixing coins on a continual "
-"basis (%u-%u, default: %u, 1=very frequent, high fees, %u=very infrequent, "
-"low fees)"),
-QT_TRANSLATE_NOOP("dash-core", ""
 "Prune configured below the minimum of %d MiB.  Please use a higher number."),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Prune: last wallet synchronisation goes beyond pruned data. You need to -"

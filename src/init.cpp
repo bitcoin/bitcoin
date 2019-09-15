@@ -608,8 +608,6 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-privatesendrounds=<n>", strprintf(_("Use N separate masternodes for each denominated input to mix funds (%u-%u, default: %u)"), MIN_PRIVATESEND_ROUNDS, MAX_PRIVATESEND_ROUNDS, DEFAULT_PRIVATESEND_ROUNDS));
     strUsage += HelpMessageOpt("-privatesendamount=<n>", strprintf(_("Keep N DASH anonymized (%u-%u, default: %u)"), MIN_PRIVATESEND_AMOUNT, MAX_PRIVATESEND_AMOUNT, DEFAULT_PRIVATESEND_AMOUNT));
     strUsage += HelpMessageOpt("-privatesenddenoms=<n>", strprintf(_("Create up to N inputs of each denominated amount (%u-%u, default: %u)"), MIN_PRIVATESEND_DENOMS, MAX_PRIVATESEND_DENOMS, DEFAULT_PRIVATESEND_DENOMS));
-    strUsage += HelpMessageOpt("-liquidityprovider=<n>", strprintf(_("Provide liquidity to PrivateSend by infrequently mixing coins on a continual basis (%u-%u, default: %u, 1=very frequent, high fees, %u=very infrequent, low fees)"),
-        MIN_PRIVATESEND_LIQUIDITY, MAX_PRIVATESEND_LIQUIDITY, DEFAULT_PRIVATESEND_LIQUIDITY, MAX_PRIVATESEND_LIQUIDITY));
 #endif // ENABLE_WALLET
 
     strUsage += HelpMessageGroup(_("InstantSend options:"));
@@ -968,24 +966,6 @@ void InitParameterInteraction()
     }
 
 #ifdef ENABLE_WALLET
-    int nLiqProvTmp = gArgs.GetArg("-liquidityprovider", DEFAULT_PRIVATESEND_LIQUIDITY);
-    if (nLiqProvTmp > 0) {
-        gArgs.ForceSetArg("-enableprivatesend", "1");
-        LogPrintf("%s: parameter interaction: -liquidityprovider=%d -> setting -enableprivatesend=1\n", __func__, nLiqProvTmp);
-        gArgs.ForceSetArg("-privatesendautostart", "1");
-        LogPrintf("%s: parameter interaction: -liquidityprovider=%d -> setting -privatesendautostart=1\n", __func__, nLiqProvTmp);
-        gArgs.ForceSetArg("-privatesendsessions", itostr(MIN_PRIVATESEND_SESSIONS));
-        LogPrintf("%s: parameter interaction: -liquidityprovider=%d -> setting -privatesendsessions=%d\n", __func__, nLiqProvTmp, itostr(std::numeric_limits<int>::max()));
-        gArgs.ForceSetArg("-privatesendrounds", itostr(std::numeric_limits<int>::max()));
-        LogPrintf("%s: parameter interaction: -liquidityprovider=%d -> setting -privatesendrounds=%d\n", __func__, nLiqProvTmp, itostr(std::numeric_limits<int>::max()));
-        gArgs.ForceSetArg("-privatesendamount", itostr(MAX_PRIVATESEND_AMOUNT));
-        LogPrintf("%s: parameter interaction: -liquidityprovider=%d -> setting -privatesendamount=%d\n", __func__, nLiqProvTmp, MAX_PRIVATESEND_AMOUNT);
-        gArgs.ForceSetArg("-privatesenddenoms", itostr(MAX_PRIVATESEND_DENOMS));
-        LogPrintf("%s: parameter interaction: -liquidityprovider=%d -> setting -privatesenddenoms=%d\n", __func__, nLiqProvTmp, itostr(MAX_PRIVATESEND_DENOMS));
-        gArgs.ForceSetArg("-privatesendmultisession", "0");
-        LogPrintf("%s: parameter interaction: -liquidityprovider=%d -> setting -privatesendmultisession=0\n", __func__, nLiqProvTmp);
-    }
-
     if (gArgs.IsArgSet("-hdseed") && IsHex(gArgs.GetArg("-hdseed", "not hex")) && (gArgs.IsArgSet("-mnemonic") || gArgs.IsArgSet("-mnemonicpassphrase"))) {
         gArgs.ForceRemoveArg("-mnemonic");
         gArgs.ForceRemoveArg("-mnemonicpassphrase");
@@ -1960,13 +1940,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     // ********************************************************* Step 10b: setup PrivateSend
 
 #ifdef ENABLE_WALLET
-    privateSendClient.nLiquidityProvider = std::min(std::max((int)gArgs.GetArg("-liquidityprovider", DEFAULT_PRIVATESEND_LIQUIDITY), MIN_PRIVATESEND_LIQUIDITY), MAX_PRIVATESEND_LIQUIDITY);
     int nMaxRounds = MAX_PRIVATESEND_ROUNDS;
-    if(privateSendClient.nLiquidityProvider) {
-        // special case for liquidity providers only, normal clients should use default value
-        privateSendClient.SetMinBlocksToWait(privateSendClient.nLiquidityProvider * 15);
-        nMaxRounds = std::numeric_limits<int>::max();
-    }
 
     if (vpwallets.empty()) {
         privateSendClient.fEnablePrivateSend = privateSendClient.fPrivateSendRunning = false;
@@ -1981,12 +1955,11 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     privateSendClient.nPrivateSendDenoms = std::min(std::max((int)gArgs.GetArg("-privatesenddenoms", DEFAULT_PRIVATESEND_DENOMS), MIN_PRIVATESEND_DENOMS), MAX_PRIVATESEND_DENOMS);
 
     if (privateSendClient.fEnablePrivateSend) {
-        LogPrintf("PrivateSend: liquidityprovider=%d, autostart=%d, multisession=%d, "
+        LogPrintf("PrivateSend: autostart=%d, multisession=%d, "
             "sessions=%d, rounds=%d, amount=%d, denoms=%d\n",
-            privateSendClient.nLiquidityProvider, privateSendClient.fPrivateSendRunning,
-            privateSendClient.fPrivateSendMultiSession, privateSendClient.nPrivateSendSessions,
-            privateSendClient.nPrivateSendRounds, privateSendClient.nPrivateSendAmount,
-            privateSendClient.nPrivateSendDenoms);
+            privateSendClient.fPrivateSendRunning, privateSendClient.fPrivateSendMultiSession,
+            privateSendClient.nPrivateSendSessions, privateSendClient.nPrivateSendRounds,
+            privateSendClient.nPrivateSendAmount, privateSendClient.nPrivateSendDenoms);
     }
 #endif // ENABLE_WALLET
 
