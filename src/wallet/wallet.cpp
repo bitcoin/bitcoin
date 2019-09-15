@@ -155,9 +155,31 @@ std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const WalletLocati
     return wallet;
 }
 
-std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const std::string& name, std::string& error, std::vector<std::string>& warnings)
+std::shared_ptr<CWallet> LoadExistingWallet(interfaces::Chain& chain, const WalletLocation& location, bool& exists, std::string& error, std::vector<std::string>& warnings)
 {
-    return LoadWallet(chain, WalletLocation(name), error, warnings);
+    if (!location.Exists()) {
+        exists = false;
+        error = "Wallet " + location.GetName() + " not found.";
+        return nullptr;
+    }
+
+    if (fs::is_directory(location.GetPath())) {
+        // The given filename is a directory. Check that there's a wallet.dat file.
+        fs::path wallet_dat_file = location.GetPath() / "wallet.dat";
+        if (fs::symlink_status(wallet_dat_file).type() == fs::file_not_found) {
+            exists = false;
+            error = "Directory " + location.GetName() + " does not contain a wallet.dat file.";
+            return nullptr;
+        }
+    }
+
+    exists = true;
+    return LoadWallet(chain, location, error, warnings);
+}
+
+std::shared_ptr<CWallet> LoadExistingWallet(interfaces::Chain& chain, const std::string& name, bool& exists, std::string& error, std::vector<std::string>& warnings)
+{
+    return LoadExistingWallet(chain, WalletLocation(name), exists, error, warnings);
 }
 
 WalletCreationStatus CreateWallet(interfaces::Chain& chain, const SecureString& passphrase, uint64_t wallet_creation_flags, const std::string& name, std::string& error, std::vector<std::string>& warnings, std::shared_ptr<CWallet>& result)
