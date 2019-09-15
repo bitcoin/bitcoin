@@ -38,12 +38,6 @@ void SetfLargeWorkInvalidChainFound(bool flag)
     fLargeWorkInvalidChainFound = flag;
 }
 
-bool GetfLargeWorkInvalidChainFound()
-{
-    LOCK(cs_warnings);
-    return fLargeWorkInvalidChainFound;
-}
-
 std::string GetWarnings(const std::string& strFor)
 {
     std::string strStatusBar;

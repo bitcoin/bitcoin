@@ -46,6 +46,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
         SetupEnvironment();
         SetupNetworking();
         InitSignatureCache();
+        InitScriptExecutionCache();
         fPrintToDebugLog = false; // don't want to write to debug.log file
         fCheckBlockIndex = true;
         SelectParams(chainName);
@@ -73,6 +74,11 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         pathTemp = GetTempPath() / strprintf("test_dash_%lu_%i", (unsigned long)GetTime(), (int)(InsecureRandRange(100000)));
         fs::create_directories(pathTemp);
         gArgs.ForceSetArg("-datadir", pathTemp.string());
+
+        // Note that because we don't bother running a scheduler thread here,
+        // callbacks via CValidationInterface are unreliable, but that's OK,
+        // our unit tests aren't testing multiple parts of the code at once.
+        GetMainSignals().RegisterBackgroundSignalScheduler(scheduler);
         mempool.setSanityCheck(1.0);
         g_connman = std::unique_ptr<CConnman>(new CConnman(0x1337, 0x1337)); // Deterministic randomness for tests.
         connman = g_connman.get();
@@ -101,6 +107,8 @@ TestingSetup::~TestingSetup()
         llmq::InterruptLLMQSystem();
         threadGroup.interrupt_all();
         threadGroup.join_all();
+        GetMainSignals().FlushBackgroundCallbacks();
+        GetMainSignals().UnregisterBackgroundSignalScheduler();
         UnloadBlockIndex();
         delete pcoinsTip;
         llmq::DestroyLLMQSystem();

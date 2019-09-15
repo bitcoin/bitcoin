@@ -634,20 +634,9 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_fee_amount(result2['fee'], count_bytes(result2['hex']), 2 * result_fee_rate)
         assert_fee_amount(result3['fee'], count_bytes(result3['hex']), 10 * result_fee_rate)
 
-        #############################
-        # Test address reuse option #
-        #############################
-
-        result3 = self.nodes[3].fundrawtransaction(rawtx, {"reserveChangeKey": False})
-        res_dec = self.nodes[0].decoderawtransaction(result3["hex"])
-        changeaddress = ""
-        for out in res_dec['vout']:
-            if out['value'] > 1.0:
-                changeaddress += out['scriptPubKey']['addresses'][0]
-        assert(changeaddress != "")
-        nextaddr = self.nodes[3].getnewaddress()
-        # frt should not have removed the key from the keypool
-        assert(changeaddress == nextaddr)
+        ################################
+        # Test no address reuse occurs #
+        ################################
 
         result3 = self.nodes[3].fundrawtransaction(rawtx)
         res_dec = self.nodes[0].decoderawtransaction(result3["hex"])

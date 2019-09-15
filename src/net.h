@@ -398,8 +398,6 @@ public:
     bool DisconnectNode(const std::string& node);
     bool DisconnectNode(NodeId id);
 
-    unsigned int GetSendBufferSize() const;
-
     ServiceFlags GetLocalServices() const;
 
     //!set the max outbound target in bytes

@@ -16,6 +16,7 @@
 #include "consensus/merkle.h"
 #include "consensus/tx_verify.h"
 #include "consensus/validation.h"
+#include "cuckoocache.h"
 #include "fs.h"
 #include "hash.h"
 #include "init.h"
@@ -206,7 +207,7 @@ enum FlushStateMode {
 static bool FlushStateToDisk(const CChainParams& chainParams, CValidationState &state, FlushStateMode mode, int nManualPruneHeight=0);
 static void FindFilesToPruneManual(std::set<int>& setFilesToPrune, int nManualPruneHeight);
 static void FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPruneAfterHeight);
-static bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, PrecomputedTransactionData& txdata, std::vector<CScriptCheck> *pvChecks = nullptr);
+bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheSigStore, bool cacheFullScriptStore, PrecomputedTransactionData& txdata, std::vector<CScriptCheck> *pvChecks = nullptr);
 static FILE* OpenUndoFile(const CDiskBlockPos &pos, bool fReadOnly = false);
 
 bool CheckFinalTx(const CTransaction &tx, int flags)
@@ -387,6 +388,9 @@ bool ContextualCheckTransaction(const CTransaction& tx, CValidationState &state,
     return true;
 }
 
+// Returns the script flags which should be checked for a given block
+static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consensus::Params& chainparams);
+
 static void LimitMempoolSize(CTxMemPool& pool, size_t limit, unsigned long age) {
     int expired = pool.Expire(GetTime() - age);
     if (expired != 0) {
@@ -470,6 +474,42 @@ void UpdateMempoolForReorg(DisconnectedBlockTransactions &disconnectpool, bool f
     LimitMempoolSize(mempool, gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000, gArgs.GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60);
 }
 
+// Used to avoid mempool polluting consensus critical paths if CCoinsViewMempool
+// were somehow broken and returning the wrong scriptPubKeys
+static bool CheckInputsFromMempoolAndCache(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &view, CTxMemPool& pool,
+                 unsigned int flags, bool cacheSigStore, PrecomputedTransactionData& txdata) {
+    AssertLockHeld(cs_main);
+
+    // pool.cs should be locked already, but go ahead and re-take the lock here
+    // to enforce that mempool doesn't change between when we check the view
+    // and when we actually call through to CheckInputs
+    LOCK(pool.cs);
+
+    assert(!tx.IsCoinBase());
+    for (const CTxIn& txin : tx.vin) {
+        const Coin& coin = view.AccessCoin(txin.prevout);
+
+        // At this point we haven't actually checked if the coins are all
+        // available (or shouldn't assume we have, since CheckInputs does).
+        // So we just return failure if the inputs are not available here,
+        // and then only have to check equivalence for available inputs.
+        if (coin.IsSpent()) return false;
+
+        const CTransactionRef& txFrom = pool.get(txin.prevout.hash);
+        if (txFrom) {
+            assert(txFrom->GetHash() == txin.prevout.hash);
+            assert(txFrom->vout.size() > txin.prevout.n);
+            assert(txFrom->vout[txin.prevout.n] == coin.out);
+        } else {
+            const Coin& coinFromDisk = pcoinsTip->AccessCoin(txin.prevout);
+            assert(!coinFromDisk.IsSpent());
+            assert(coinFromDisk.out == coin.out);
+        }
+    }
+
+    return CheckInputs(tx, state, view, true, flags, cacheSigStore, true, txdata);
+}
+
 static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool& pool, CValidationState& state, const CTransactionRef& ptx, bool fLimitFree,
                                      bool* pfMissingInputs, int64_t nAcceptTime, bool fOverrideMempoolLimit,
                                      const CAmount& nAbsurdFee, std::vector<COutPoint>& coins_to_uncache, bool fDryRun)
@@ -483,7 +523,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
     if (!CheckTransaction(tx, state))
         return false; // state filled in by CheckTransaction
 
-    if (!ContextualCheckTransaction(tx, state, Params().GetConsensus(), chainActive.Tip()))
+    if (!ContextualCheckTransaction(tx, state, chainparams.GetConsensus(), chainActive.Tip()))
         return error("%s: ContextualCheckTransaction: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
 
     if (tx.nVersion == 3 && tx.nType == TRANSACTION_QUORUM_COMMITMENT) {
@@ -515,7 +555,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
     if (conflictLock) {
         CTransactionRef txConflict;
         uint256 hashBlock;
-        if (GetTransaction(conflictLock->txid, txConflict, Params().GetConsensus(), hashBlock)) {
+        if (GetTransaction(conflictLock->txid, txConflict, chainparams.GetConsensus(), hashBlock)) {
             GetMainSignals().NotifyInstantSendDoubleSpendAttempt(tx, *txConflict);
         }
         return state.DoS(10, error("AcceptToMemoryPool : Transaction %s conflicts with locked TX %s",
@@ -592,8 +632,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         if (fRequireStandard && !AreInputsStandard(tx, view))
             return state.Invalid(false, REJECT_NONSTANDARD, "bad-txns-nonstandard-inputs");
 
-        unsigned int nSigOps = GetLegacySigOpCount(tx);
-        nSigOps += GetP2SHSigOpCount(tx, view);
+        unsigned int nSigOps = GetTransactionSigOpCount(tx, view, STANDARD_SCRIPT_VERIFY_FLAGS);
 
         CAmount nValueOut = tx.GetValueOut();
         CAmount nFees = nValueIn-nValueOut;
@@ -664,25 +703,33 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         // If we aren't going to actually accept it but just were verifying it, we are fine already
         if(fDryRun) return true;
 
+        constexpr unsigned int scriptVerifyFlags = STANDARD_SCRIPT_VERIFY_FLAGS;
+
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
         PrecomputedTransactionData txdata(tx);
-        if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true, txdata))
+        if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true, false, txdata))
             return false; // state filled in by CheckInputs
 
-        // Check again against just the consensus-critical mandatory script
-        // verification flags, in case of bugs in the standard flags that cause
+        // Check again against the current block tip's script verification
+        // flags to cache our script execution flags. This is, of course,
+        // useless if the next block has different script flags from the
+        // previous one, but because the cache tracks script flags for us it
+        // will auto-invalidate and we'll just have a few blocks of extra
+        // misses on soft-fork activation.
+        //
+        // This is also useful in case of bugs in the standard flags that cause
         // transactions to pass as valid when they're actually invalid. For
         // instance the STRICTENC flag was incorrectly allowing certain
         // CHECKSIG NOT scripts to pass, even though they were invalid.
         //
         // There is a similar check in CreateNewBlock() to prevent creating
-        // invalid blocks, however allowing such transactions into the mempool
-        // can be exploited as a DoS attack.
-        if (!CheckInputs(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS, true, txdata))
-        {
-            return error("%s: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s, %s",
-                __func__, hash.ToString(), FormatStateMessage(state));
+        // invalid blocks (using TestBlockValidity), however allowing such
+        // transactions into the mempool can be exploited as a DoS attack.
+        unsigned int currentBlockScriptVerifyFlags = GetBlockScriptFlags(chainActive.Tip(), chainparams.GetConsensus());
+        if (!CheckInputsFromMempoolAndCache(tx, state, view, pool, currentBlockScriptVerifyFlags, true, txdata)) {
+            return error("%s: BUG! PLEASE REPORT THIS! CheckInputs failed against latest-block but not STANDARD flags %s, %s",
+                    __func__, hash.ToString(), FormatStateMessage(state));
         }
 
         // This transaction should only count for fee estimation if the
@@ -1197,12 +1244,34 @@ int GetSpendHeight(const CCoinsViewCache& inputs)
     return pindexPrev->nHeight + 1;
 }
 
+
+static CuckooCache::cache<uint256, SignatureCacheHasher> scriptExecutionCache;
+static uint256 scriptExecutionCacheNonce(GetRandHash());
+
+void InitScriptExecutionCache() {
+    // nMaxCacheSize is unsigned. If -maxsigcachesize is set to zero,
+    // setup_bytes creates the minimum possible cache (2 elements).
+    size_t nMaxCacheSize = std::min(std::max((int64_t)0, gArgs.GetArg("-maxsigcachesize", DEFAULT_MAX_SIG_CACHE_SIZE) / 2), MAX_MAX_SIG_CACHE_SIZE) * ((size_t) 1 << 20);
+    size_t nElems = scriptExecutionCache.setup_bytes(nMaxCacheSize);
+    LogPrintf("Using %zu MiB out of %zu/2 requested for script execution cache, able to store %zu elements\n",
+            (nElems*sizeof(uint256)) >>20, (nMaxCacheSize*2)>>20, nElems);
+}
+
 /**
  * Check whether all inputs of this transaction are valid (no double spends, scripts & sigs, amounts)
- * This does not modify the UTXO set. If pvChecks is not nullptr, script checks are pushed onto it
- * instead of being performed inline.
+ * This does not modify the UTXO set.
+ *
+ * If pvChecks is not nullptr, script checks are pushed onto it instead of being performed inline. Any
+ * script checks which are not necessary (eg due to script execution cache hits) are, obviously,
+ * not pushed onto pvChecks/run.
+ *
+ * Setting cacheSigStore/cacheFullScriptStore to false will remove elements from the corresponding cache
+ * which are matched. This is useful for checking blocks where we will likely never need the cache
+ * entry again.
+ *
+ * Non-static (and re-declared) in src/test/txvalidationcache_tests.cpp
  */
-static bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, PrecomputedTransactionData& txdata, std::vector<CScriptCheck> *pvChecks)
+bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheSigStore, bool cacheFullScriptStore, PrecomputedTransactionData& txdata, std::vector<CScriptCheck> *pvChecks)
 {
     if (!tx.IsCoinBase())
     {
@@ -1222,6 +1291,21 @@ static bool CheckInputs(const CTransaction& tx, CValidationState &state, const C
         // Of course, if an assumed valid block is invalid due to false scriptSigs
         // this optimization would allow an invalid chain to be accepted.
         if (fScriptChecks) {
+            // First check if script executions have been cached with the same
+            // flags. Note that this assumes that the inputs provided are
+            // correct (ie that the transaction hash which is in tx's prevouts
+            // properly commits to the scriptPubKey in the inputs view of that
+            // transaction).
+            uint256 hashCacheEntry;
+            // We only use the first 19 bytes of nonce to avoid a second SHA
+            // round - giving us 19 + 32 + 4 = 55 bytes (+ 8 + 1 = 64)
+            static_assert(55 - sizeof(flags) - 32 >= 128/8, "Want at least 128 bits of nonce for script execution cache");
+            CSHA256().Write(scriptExecutionCacheNonce.begin(), 55 - sizeof(flags) - 32).Write(tx.GetHash().begin(), 32).Write((unsigned char*)&flags, sizeof(flags)).Finalize(hashCacheEntry.begin());
+            AssertLockHeld(cs_main); //TODO: Remove this requirement by making CuckooCache not require external locks
+            if (scriptExecutionCache.contains(hashCacheEntry, !cacheFullScriptStore)) {
+                return true;
+            }
+
             for (unsigned int i = 0; i < tx.vin.size(); i++) {
                 const COutPoint &prevout = tx.vin[i].prevout;
                 const Coin& coin = inputs.AccessCoin(prevout);
@@ -1236,7 +1320,7 @@ static bool CheckInputs(const CTransaction& tx, CValidationState &state, const C
                 const CAmount amount = coin.out.nValue;
 
                 // Verify signature
-                CScriptCheck check(scriptPubKey, amount, tx, i, flags, cacheStore, &txdata);
+                CScriptCheck check(scriptPubKey, amount, tx, i, flags, cacheSigStore, &txdata);
                 if (pvChecks) {
                     pvChecks->push_back(CScriptCheck());
                     check.swap(pvChecks->back());
@@ -1249,7 +1333,7 @@ static bool CheckInputs(const CTransaction& tx, CValidationState &state, const C
                         // avoid splitting the network between upgraded and
                         // non-upgraded nodes.
                         CScriptCheck check2(scriptPubKey, amount, tx, i,
-                                flags & ~STANDARD_NOT_MANDATORY_VERIFY_FLAGS, cacheStore, &txdata);
+                                flags & ~STANDARD_NOT_MANDATORY_VERIFY_FLAGS, cacheSigStore, &txdata);
                         if (check2())
                             return state.Invalid(false, REJECT_NONSTANDARD, strprintf("non-mandatory-script-verify-flag (%s)", ScriptErrorString(check.GetScriptError())));
                     }
@@ -1262,6 +1346,12 @@ static bool CheckInputs(const CTransaction& tx, CValidationState &state, const C
                     // super-majority signaling has occurred.
                     return state.DoS(100,false, REJECT_INVALID, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(check.GetScriptError())));
                 }
+            }
+
+            if (cacheFullScriptStore && !pvChecks) {
+                // We executed all of the provided scripts, and were told to
+                // cache the result. Do so now.
+                scriptExecutionCache.insert(hashCacheEntry);
             }
         }
     }
@@ -1646,6 +1736,40 @@ public:
 // Protected by cs_main
 static ThresholdConditionCache warningcache[VERSIONBITS_NUM_BITS];
 
+static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consensus::Params& consensusparams) {
+    AssertLockHeld(cs_main);
+
+    // BIP16 didn't become active until Apr 1 2012
+    int64_t nBIP16SwitchTime = 1333238400;
+    bool fStrictPayToScriptHash = (pindex->GetBlockTime() >= nBIP16SwitchTime);
+
+    unsigned int flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
+
+    // Start enforcing the DERSIG (BIP66) rule
+    if (pindex->nHeight >= consensusparams.BIP66Height) {
+        flags |= SCRIPT_VERIFY_DERSIG;
+    }
+
+    // Start enforcing CHECKLOCKTIMEVERIFY (BIP65) rule
+    if (pindex->nHeight >= consensusparams.BIP65Height) {
+        flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
+    }
+
+    // Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY) using versionbits logic.
+    if (VersionBitsState(pindex->pprev, consensusparams, Consensus::DEPLOYMENT_CSV, versionbitscache) == THRESHOLD_ACTIVE) {
+        flags |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
+    }
+
+    // Start enforcing BIP147 (NULLDUMMY) rule using versionbits logic.
+    if (VersionBitsState(pindex->pprev, consensusparams, Consensus::DEPLOYMENT_BIP147, versionbitscache) == THRESHOLD_ACTIVE) {
+        flags |= SCRIPT_VERIFY_NULLDUMMY;
+    }
+
+    return flags;
+}
+
+
+
 static int64_t nTimeCheck = 0;
 static int64_t nTimeForks = 0;
 static int64_t nTimeVerify = 0;
@@ -1780,32 +1904,14 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 
     /// END DASH
 
-    // BIP16 didn't become active until Apr 1 2012
-    int64_t nBIP16SwitchTime = 1333238400;
-    bool fStrictPayToScriptHash = (pindex->GetBlockTime() >= nBIP16SwitchTime);
-
-    unsigned int flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
-
-    // Start enforcing the DERSIG (BIP66) rule
-    if (pindex->nHeight >= chainparams.GetConsensus().BIP66Height) {
-        flags |= SCRIPT_VERIFY_DERSIG;
-    }
-
-    // Start enforcing CHECKLOCKTIMEVERIFY (BIP65) rule
-    if (pindex->nHeight >= chainparams.GetConsensus().BIP65Height) {
-        flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
-    }
-
     // Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY) using versionbits logic.
     int nLockTimeFlags = 0;
     if (VersionBitsState(pindex->pprev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_CSV, versionbitscache) == THRESHOLD_ACTIVE) {
-        flags |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
         nLockTimeFlags |= LOCKTIME_VERIFY_SEQUENCE;
     }
 
-    if (VersionBitsState(pindex->pprev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_BIP147, versionbitscache) == THRESHOLD_ACTIVE) {
-        flags |= SCRIPT_VERIFY_NULLDUMMY;
-    }
+    // Get the script flags for this block
+    unsigned int flags = GetBlockScriptFlags(pindex, chainparams.GetConsensus());
 
     int64_t nTime2 = GetTimeMicros(); nTimeForks += nTime2 - nTime1;
     LogPrint(BCLog::BENCHMARK, "    - Fork checks: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimeForks * 0.000001);
@@ -1837,12 +1943,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
         const uint256 txhash = tx.GetHash();
 
         nInputs += tx.vin.size();
-        nSigOps += GetLegacySigOpCount(tx);
-        if (nSigOps > MaxBlockSigOps(fDIP0001Active_context))
-            return state.DoS(100, error("ConnectBlock(): too many sigops"),
-                             REJECT_INVALID, "bad-blk-sigops");
 
-        txdata.emplace_back(tx);
         if (!tx.IsCoinBase())
         {
             if (!view.HaveInputs(tx))
@@ -1902,22 +2003,25 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 
             }
 
-            if (fStrictPayToScriptHash)
-            {
-                // Add in sigops done by pay-to-script-hash inputs;
-                // this is to prevent a "rogue miner" from creating
-                // an incredibly-expensive-to-validate block.
-                nSigOps += GetP2SHSigOpCount(tx, view);
-                if (nSigOps > MaxBlockSigOps(fDIP0001Active_context))
-                    return state.DoS(100, error("ConnectBlock(): too many sigops"),
-                                     REJECT_INVALID, "bad-blk-sigops");
-            }
+        }
+
+        // GetTransactionSigOpCount counts 2 types of sigops:
+        // * legacy (always)
+        // * p2sh (when P2SH enabled in flags and excludes coinbase)
+        nSigOps += GetTransactionSigOpCount(tx, view, flags);
+        if (nSigOps > MaxBlockSigOps(fDIP0001Active_context))
+            return state.DoS(100, error("ConnectBlock(): too many sigops"),
+                             REJECT_INVALID, "bad-blk-sigops");
+
+        txdata.emplace_back(tx);
+        if (!tx.IsCoinBase())
+        {
 
             nFees += view.GetValueIn(tx)-tx.GetValueOut();
 
             std::vector<CScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
-            if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, txdata[i], nScriptCheckThreads ? &vChecks : nullptr))
+            if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, fCacheResults, txdata[i], nScriptCheckThreads ? &vChecks : nullptr))
                 return error("ConnectBlock(): CheckInputs on %s failed with %s",
                     tx.GetHash().ToString(), FormatStateMessage(state));
             control.Add(vChecks);

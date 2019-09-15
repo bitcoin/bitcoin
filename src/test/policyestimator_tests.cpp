@@ -176,16 +176,6 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     for (int i = 2; i < 9; i++) { // At 9, the original estimate was already at the bottom (b/c scale = 2)
         BOOST_CHECK(feeEst.estimateFee(i).GetFeePerK() < origFeeEst[i-1] - deltaFee);
     }
-
-    // Test that if the mempool is limited, estimateSmartFee won't return a value below the mempool min fee
-    mpool.addUnchecked(tx.GetHash(),  entry.Fee(feeV[5]).Time(GetTime()).Height(blocknum).FromTx(tx));
-    // evict that transaction which should set a mempool min fee of minRelayTxFee + feeV[5]
-    mpool.TrimToSize(1);
-    BOOST_CHECK(mpool.GetMinFee(1).GetFeePerK() > feeV[5]);
-    for (int i = 1; i < 10; i++) {
-        BOOST_CHECK(feeEst.estimateSmartFee(i, nullptr, mpool, true).GetFeePerK() >= feeEst.estimateRawFee(i, 0.85, FeeEstimateHorizon::MED_HALFLIFE).GetFeePerK());
-        BOOST_CHECK(feeEst.estimateSmartFee(i, nullptr, mpool, true).GetFeePerK() >= mpool.GetMinFee(1).GetFeePerK());
-    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

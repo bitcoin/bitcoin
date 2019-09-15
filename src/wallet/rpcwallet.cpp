@@ -16,9 +16,7 @@
 #include "policy/feerate.h"
 #include "policy/fees.h"
 #include "privatesend/privatesend-client.h"
-#if ENABLE_MINER
 #include "rpc/mining.h"
-#endif //ENABLE_MINER
 #include "rpc/server.h"
 #include "timedata.h"
 #include "util.h"
@@ -375,7 +373,7 @@ UniValue getaddressesbyaccount(const JSONRPCRequest& request)
     return ret;
 }
 
-static void SendMoney(CWallet * const pwallet, const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, bool fUsePrivateSend = false, CCoinControl *coin_control = nullptr)
+static void SendMoney(CWallet * const pwallet, const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CCoinControl& coin_control, bool fUsePrivateSend = false)
 {
     CAmount curBalance = pwallet->GetBalance();
 
@@ -483,7 +481,7 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
     }
 
     if (request.params.size() > 7 && !request.params[7].isNull()) {
-        coin_control.nConfirmTarget = request.params[7].get_int();
+        coin_control.m_confirm_target = ParseConfirmTarget(request.params[7]);
     }
 
     if (request.params.size() > 8 && !request.params[8].isNull()) {
@@ -494,7 +492,7 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
 
     EnsureWalletIsUnlocked(pwallet);
 
-    SendMoney(pwallet, address.Get(), nAmount, fSubtractFeeFromAmount, wtx, fUsePrivateSend, &coin_control);
+    SendMoney(pwallet, address.Get(), nAmount, fSubtractFeeFromAmount, wtx, coin_control, fUsePrivateSend);
 
     return wtx.GetHash().GetHex();
 }
@@ -969,7 +967,8 @@ UniValue sendfrom(const JSONRPCRequest& request)
     if (nAmount > nBalance)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
 
-    SendMoney(pwallet, address.Get(), nAmount, false, wtx);
+    CCoinControl no_coin_control; // This is a deprecated API
+    SendMoney(pwallet, address.Get(), nAmount, false, wtx, no_coin_control);
 
     return wtx.GetHash().GetHex();
 }
@@ -1054,7 +1053,7 @@ UniValue sendmany(const JSONRPCRequest& request)
     }
 
     if (request.params.size() > 8 && !request.params[8].isNull()) {
-        coin_control.nConfirmTarget = request.params[8].get_int();
+        coin_control.m_confirm_target = ParseConfirmTarget(request.params[8]);
     }
 
     if (request.params.size() > 9 && !request.params[9].isNull()) {
@@ -1109,7 +1108,7 @@ UniValue sendmany(const JSONRPCRequest& request)
     std::string strFailReason;
 
     bool fCreated = pwallet->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, nChangePosRet, strFailReason,
-                                               &coin_control, true, fUsePrivateSend ? ONLY_DENOMINATED : ALL_COINS);
+                                               coin_control, true, fUsePrivateSend ? ONLY_DENOMINATED : ALL_COINS);
     if (!fCreated)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strFailReason);
     CValidationState state;
@@ -1745,7 +1744,7 @@ UniValue listsinceblock(const JSONRPCRequest& request)
             "Additionally, if include_removed is set, transactions affecting the wallet which were removed are returned in the \"removed\" array.\n"
             "\nArguments:\n"
             "1. \"blockhash\"            (string, optional) The block hash to list transactions since\n"
-            "2. target_confirmations:    (numeric, optional, default=1) The confirmations required, must be 1 or more\n"
+            "2. target_confirmations:    (numeric, optional, default=1) Return the nth block hash from the main chain. e.g. 1 would mean the best block hash. Note: this is not used as a filter, but only affects [lastblock] in the return value\n"
             "3. include_watchonly:       (bool, optional, default=false) Include transactions to watch-only addresses (see 'importaddress')\n"
             "4. include_removed:         (bool, optional, default=true) Show transactions that were removed due to a reorg in the \"removed\" array\n"
             "                                                           (not guaranteed to work on pruned nodes)\n"
@@ -1779,7 +1778,7 @@ UniValue listsinceblock(const JSONRPCRequest& request)
             "    <structure is the same as \"transactions\" above, only present if include_removed=true>\n"
             "    Note: transactions that were readded in the active chain will appear as-is in this array, and may thus have a positive confirmation count.\n"
             "  ],\n"
-            "  \"lastblock\": \"lastblockhash\"  (string) The hash of the last block\n"
+            "  \"lastblock\": \"lastblockhash\"  (string) The hash of the block (target_confirmations-1) from the best block on the main chain. This is typically used to feed back into listsinceblock the next time you call it. So you would generally use a target_confirmations of say 6, so you will be continually re-notified of transactions until they've reached 6 confirmations plus any new ones\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("listsinceblock", "")
@@ -2918,7 +2917,6 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
                             "     \"changePosition\"         (numeric, optional, default random) The index of the change output\n"
                             "     \"includeWatching\"        (boolean, optional, default false) Also select inputs which are watch only\n"
                             "     \"lockUnspents\"           (boolean, optional, default false) Lock selected unspent outputs\n"
-                            "     \"reserveChangeKey\"       (boolean, optional, default true) Reserves the change output key from the keypool\n"
                             "     \"feeRate\"                (numeric, optional, default not set: makes wallet determine the fee) Set a specific feerate (" + CURRENCY_UNIT + " per KB)\n"
                             "     \"subtractFeeFromOutputs\" (array, optional) A json array of integers.\n"
                             "                              The fee will be equally deducted from the amount of each specified output.\n"
@@ -2953,13 +2951,8 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
     RPCTypeCheck(request.params, {UniValue::VSTR});
 
     CCoinControl coinControl;
-    coinControl.destChange = CNoDestination();
     int changePosition = -1;
-    coinControl.fAllowWatchOnly = false;  // include watching
     bool lockUnspents = false;
-    bool reserveChangeKey = true;
-    coinControl.nFeeRate = CFeeRate(0);
-    coinControl.fOverrideFeeRate = false;
     UniValue subtractFeeFromOutputs;
     std::set<int> setSubtractFeeFromOutputs;
 
@@ -2979,7 +2972,7 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
                 {"changePosition", UniValueType(UniValue::VNUM)},
                 {"includeWatching", UniValueType(UniValue::VBOOL)},
                 {"lockUnspents", UniValueType(UniValue::VBOOL)},
-                {"reserveChangeKey", UniValueType(UniValue::VBOOL)},
+                {"reserveChangeKey", UniValueType(UniValue::VBOOL)}, // DEPRECATED (and ignored), should be removed in 0.16 or so.
                 {"feeRate", UniValueType()}, // will be checked below
                 {"subtractFeeFromOutputs", UniValueType(UniValue::VARR)},
                 {"conf_target", UniValueType(UniValue::VNUM)},
@@ -3005,21 +2998,24 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
         if (options.exists("lockUnspents"))
             lockUnspents = options["lockUnspents"].get_bool();
 
-        if (options.exists("reserveChangeKey"))
-            reserveChangeKey = options["reserveChangeKey"].get_bool();
-
         if (options.exists("feeRate"))
         {
-            coinControl.nFeeRate = CFeeRate(AmountFromValue(options["feeRate"]));
+            coinControl.m_feerate = CFeeRate(AmountFromValue(options["feeRate"]));
             coinControl.fOverrideFeeRate = true;
         }
 
         if (options.exists("subtractFeeFromOutputs"))
             subtractFeeFromOutputs = options["subtractFeeFromOutputs"].get_array();
         if (options.exists("conf_target")) {
-            coinControl.nConfirmTarget = options["conf_target"].get_int();
+            if (options.exists("feeRate")) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both conf_target and feeRate");
+            }
+            coinControl.m_confirm_target = ParseConfirmTarget(options["conf_target"]);
         }
         if (options.exists("estimate_mode")) {
+            if (options.exists("feeRate")) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both estimate_mode and feeRate");
+            }
             if (!FeeModeFromString(options["estimate_mode"].get_str(), coinControl.m_fee_mode)) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
             }
@@ -3052,7 +3048,7 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
     CAmount nFeeOut;
     std::string strFailReason;
 
-    if (!pwallet->FundTransaction(tx, nFeeOut, changePosition, strFailReason, lockUnspents, setSubtractFeeFromOutputs, coinControl, reserveChangeKey)) {
+    if (!pwallet->FundTransaction(tx, nFeeOut, changePosition, strFailReason, lockUnspents, setSubtractFeeFromOutputs, coinControl)) {
         throw JSONRPCError(RPC_WALLET_ERROR, strFailReason);
     }
 

@@ -65,6 +65,8 @@ CFeeRate CWallet::minTxFee = CFeeRate(DEFAULT_TRANSACTION_MINFEE);
  */
 CFeeRate CWallet::fallbackFee = CFeeRate(DEFAULT_FALLBACK_FEE);
 
+CFeeRate CWallet::m_discard_rate = CFeeRate(DEFAULT_DISCARD_FEE);
+
 const uint256 CMerkleTx::ABANDON_HASH(uint256S("0000000000000000000000000000000000000000000000000000000000000001"));
 
 /** @defgroup mapWallet
@@ -3107,7 +3109,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
     return res;
 }
 
-bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, std::string& strFailReason, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl coinControl, bool keepReserveKey)
+bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, std::string& strFailReason, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl coinControl)
 {
     std::vector<CRecipient> vecSend;
 
@@ -3130,11 +3132,16 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
 
     CReserveKey reservekey(this);
     CWalletTx wtx;
-    if (!CreateTransaction(vecSend, wtx, reservekey, nFeeRet, nChangePosInOut, strFailReason, &coinControl, false, ALL_COINS, nExtraPayloadSize))
+    if (!CreateTransaction(vecSend, wtx, reservekey, nFeeRet, nChangePosInOut, strFailReason, coinControl, false, ALL_COINS, nExtraPayloadSize)) {
         return false;
+    }
 
-    if (nChangePosInOut != -1)
+    if (nChangePosInOut != -1) {
         tx.vout.insert(tx.vout.begin() + nChangePosInOut, wtx.tx->vout[nChangePosInOut]);
+        // we dont have the normal Create/Commit cycle, and dont want to risk reusing change,
+        // so just remove the key from the keypool here.
+        reservekey.KeepKey();
+    }
 
     // Copy output sizes from new transaction; they may have had the fee subtracted from them
     for (unsigned int idx = 0; idx < tx.vout.size(); idx++)
@@ -3155,9 +3162,6 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
         }
     }
 
-    // optionally keep the change output key
-    if (keepReserveKey)
-        reservekey.KeepKey();
 
     return true;
 }
@@ -3510,7 +3514,7 @@ bool CWallet::GetBudgetSystemCollateralTX(CWalletTx& tx, uint256 hash, CAmount a
     if (!outpoint.IsNull()) {
         coinControl.Select(outpoint);
     }
-    bool success = CreateTransaction(vecSend, tx, reservekey, nFeeRet, nChangePosRet, strFail, &coinControl, true, ALL_COINS);
+    bool success = CreateTransaction(vecSend, tx, reservekey, nFeeRet, nChangePosRet, strFail, coinControl, true, ALL_COINS);
     if(!success){
         LogPrintf("CWallet::GetBudgetSystemCollateralTX -- Error: %s\n", strFail);
         return false;
@@ -3537,8 +3541,19 @@ bool CWallet::ConvertList(std::vector<CTxIn> vecTxIn, std::vector<CAmount>& vecA
     return true;
 }
 
+static CFeeRate GetDiscardRate(const CBlockPolicyEstimator& estimator)
+{
+    unsigned int highest_target = estimator.HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
+    CFeeRate discard_rate = estimator.estimateSmartFee(highest_target, nullptr /* FeeCalculation */, false /* conservative */);
+    // Don't let discard_rate be greater than longest possible fee estimate if we get a valid fee estimate
+    discard_rate = (discard_rate == CFeeRate(0)) ? CWallet::m_discard_rate : std::min(discard_rate, CWallet::m_discard_rate);
+    // Discard rate must be at least dustRelayFee
+    discard_rate = std::max(discard_rate, ::dustRelayFee);
+    return discard_rate;
+}
+
 bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet,
-                                int& nChangePosInOut, std::string& strFailReason, const CCoinControl* coinControl, bool sign, AvailableCoinsType nCoinType, int nExtraPayloadSize)
+                                int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign, AvailableCoinsType nCoinType, int nExtraPayloadSize)
 {
     CAmount nValue = 0;
     int nChangePosRequest = nChangePosInOut;
@@ -3605,7 +3620,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
         LOCK2(cs_main, cs_wallet);
         {
             std::vector<COutput> vAvailableCoins;
-            AvailableCoins(vAvailableCoins, true, coinControl, 1, MAX_MONEY, MAX_MONEY, 0, 0, 9999999, nCoinType);
+            AvailableCoins(vAvailableCoins, true, &coin_control, 1, MAX_MONEY, MAX_MONEY, 0, 0, 9999999, nCoinType);
 
             // Create change script that will be used if we need change
             // TODO: pass in scriptChange instead of reservekey so
@@ -3613,12 +3628,9 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
             CScript scriptChange;
 
             // coin control: send change to custom address
-            if (coinControl && !boost::get<CNoDestination>(&coinControl->destChange))
-                scriptChange = GetScriptForDestination(coinControl->destChange);
-
-            // no coin control: send change to newly generated address
-            else
-            {
+            if (!boost::get<CNoDestination>(&coin_control.destChange)) {
+                scriptChange = GetScriptForDestination(coin_control.destChange);
+            } else { // no coin control: send change to newly generated address
                 // Note: We use a new key here to keep it from being obvious which side is the change.
                 //  The drawback is that by not reusing a previous key, the change may be lost if a
                 //  backup is restored, if the backup doesn't have the new private key for the change.
@@ -3641,6 +3653,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
             CTxOut change_prototype_txout(0, scriptChange);
             size_t change_prototype_size = GetSerializeSize(change_prototype_txout, SER_DISK, 0);
 
+            CFeeRate discard_rate = GetDiscardRate(::feeEstimator);
             nFeeRet = 0;
             bool pick_new_inputs = true;
             CAmount nValueIn = 0;
@@ -3692,7 +3705,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 if (pick_new_inputs) {
                     nValueIn = 0;
                     setCoins.clear();
-                    if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, coinControl, nCoinType)) {
+                    if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, &coin_control, nCoinType)) {
                         if (nCoinType == ONLY_NONDENOMINATED) {
                             strFailReason = _("Unable to locate enough PrivateSend non-denominated funds for this transaction.");
                         } else if (nCoinType == ONLY_DENOMINATED) {
@@ -3720,7 +3733,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
 
                         // Never create dust outputs; if we would, just
                         // add the dust to the fee.
-                        if (IsDust(newTxOut, ::dustRelayFee))
+                        if (IsDust(newTxOut, discard_rate))
                         {
                             nChangePosInOut = -1;
                             nFeeRet += nChange;
@@ -3812,17 +3825,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                     txin.scriptSig = CScript();
                 }
 
-                // Allow to override the default confirmation target over the CoinControl instance
-                int currentConfirmationTarget = nTxConfirmTarget;
-                if (coinControl && coinControl->nConfirmTarget > 0)
-                    currentConfirmationTarget = coinControl->nConfirmTarget;
-
-                // Allow to override the default fee estimate mode over the CoinControl instance
-                bool conservative_estimate = CalculateEstimateType(coinControl ? coinControl->m_fee_mode : FeeEstimateMode::UNSET);
-
-                CAmount nFeeNeeded = GetMinimumFee(nBytes, currentConfirmationTarget, ::mempool, ::feeEstimator, &feeCalc, false /* ignoreGlobalPayTxFee */, conservative_estimate);
-                if (coinControl && coinControl->fOverrideFeeRate)
-                    nFeeNeeded = coinControl->nFeeRate.GetFee(nBytes);
+                CAmount nFeeNeeded = GetMinimumFee(nBytes, coin_control, ::mempool, ::feeEstimator, &feeCalc);
 
                 // If we made it here and we aren't even able to meet the relay fee on the next pass, give up
                 // because we must be at the maximum allowed fee.
@@ -3843,8 +3846,8 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                     // new inputs. We now know we only need the smaller fee
                     // (because of reduced tx size) and so we should add a
                     // change output. Only try this once.
-                    CAmount fee_needed_for_change = GetMinimumFee(change_prototype_size, currentConfirmationTarget, ::mempool, ::feeEstimator, nullptr, false /* ignoreGlobalPayTxFee */, conservative_estimate);
-                    CAmount minimum_value_for_change = GetDustThreshold(change_prototype_txout, ::dustRelayFee);
+                    CAmount fee_needed_for_change = GetMinimumFee(change_prototype_size, coin_control, ::mempool, ::feeEstimator, nullptr);
+                    CAmount minimum_value_for_change = GetDustThreshold(change_prototype_txout, discard_rate);
                     CAmount max_excess_fee = fee_needed_for_change + minimum_value_for_change;
                     if (nFeeRet > nFeeNeeded + max_excess_fee && nChangePosInOut == -1 && nSubtractFeeFromAmount == 0 && pick_new_inputs) {
                         pick_new_inputs = false;
@@ -4024,33 +4027,61 @@ CAmount CWallet::GetRequiredFee(unsigned int nTxBytes)
     return std::max(minTxFee.GetFee(nTxBytes), ::minRelayTxFee.GetFee(nTxBytes));
 }
 
-CAmount CWallet::GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarget, const CTxMemPool& pool, const CBlockPolicyEstimator& estimator, FeeCalculation *feeCalc, bool ignoreGlobalPayTxFee, bool conservative_estimate)
+CAmount CWallet::GetMinimumFee(unsigned int nTxBytes, const CCoinControl& coin_control, const CTxMemPool& pool, const CBlockPolicyEstimator& estimator, FeeCalculation *feeCalc)
 {
-    // payTxFee is the user-set global for desired feerate
-    CAmount nFeeNeeded = payTxFee.GetFee(nTxBytes);
-    // User didn't set: use -txconfirmtarget to estimate...
-    if (nFeeNeeded == 0 || ignoreGlobalPayTxFee) {
-        nFeeNeeded = estimator.estimateSmartFee(nConfirmTarget, feeCalc, pool, conservative_estimate).GetFee(nTxBytes);
-        // ... unless we don't have enough mempool data for estimatefee, then use fallbackFee
-        if (nFeeNeeded == 0) {
-            nFeeNeeded = fallbackFee.GetFee(nTxBytes);
-            if (feeCalc) feeCalc->reason = FeeReason::FALLBACK;
-        }
-    } else {
+    /* User control of how to calculate fee uses the following parameter precedence:
+       1. coin_control.m_feerate
+       2. coin_control.m_confirm_target
+       3. payTxFee (user-set global variable)
+       4. nTxConfirmTarget (user-set global variable)
+       The first parameter that is set is used.
+    */
+    CAmount fee_needed;
+    if (coin_control.m_feerate) { // 1.
+        fee_needed = coin_control.m_feerate->GetFee(nTxBytes);
+        if (feeCalc) feeCalc->reason = FeeReason::PAYTXFEE;
+        // Allow to override automatic min/max check over coin control instance
+        if (coin_control.fOverrideFeeRate) return fee_needed;
+    }
+    else if (!coin_control.m_confirm_target && ::payTxFee != CFeeRate(0)) { // 3. TODO: remove magic value of 0 for global payTxFee
+        fee_needed = ::payTxFee.GetFee(nTxBytes);
         if (feeCalc) feeCalc->reason = FeeReason::PAYTXFEE;
     }
+    else { // 2. or 4.
+        // We will use smart fee estimation
+        unsigned int target = coin_control.m_confirm_target ? *coin_control.m_confirm_target : ::nTxConfirmTarget;
+        // By default estimates are economical
+        bool conservative_estimate = true;
+        // Allow to override the default fee estimate mode over the CoinControl instance
+        if (coin_control.m_fee_mode == FeeEstimateMode::CONSERVATIVE) conservative_estimate = true;
+        else if (coin_control.m_fee_mode == FeeEstimateMode::ECONOMICAL) conservative_estimate = false;
+
+        fee_needed = estimator.estimateSmartFee(target, feeCalc, conservative_estimate).GetFee(nTxBytes);
+        if (fee_needed == 0) {
+            // if we don't have enough data for estimateSmartFee, then use fallbackFee
+            fee_needed = fallbackFee.GetFee(nTxBytes);
+            if (feeCalc) feeCalc->reason = FeeReason::FALLBACK;
+        }
+        // Obey mempool min fee when using smart fee estimation
+        CAmount min_mempool_fee = pool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFee(nTxBytes);
+        if (fee_needed < min_mempool_fee) {
+            fee_needed = min_mempool_fee;
+            if (feeCalc) feeCalc->reason = FeeReason::MEMPOOL_MIN;
+        }
+    }
+
     // prevent user from paying a fee below minRelayTxFee or minTxFee
-    CAmount requiredFee = GetRequiredFee(nTxBytes);
-    if (requiredFee > nFeeNeeded) {
-        nFeeNeeded = requiredFee;
+    CAmount required_fee = GetRequiredFee(nTxBytes);
+    if (required_fee > fee_needed) {
+        fee_needed = required_fee;
         if (feeCalc) feeCalc->reason = FeeReason::REQUIRED;
     }
     // But always obey the maximum
-    if (nFeeNeeded > maxTxFee) {
-        nFeeNeeded = maxTxFee;
+    if (fee_needed > maxTxFee) {
+        fee_needed = maxTxFee;
         if (feeCalc) feeCalc->reason = FeeReason::MAXTXFEE;
     }
-    return nFeeNeeded;
+    return fee_needed;
 }
 
 DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
@@ -4945,6 +4976,9 @@ std::string CWallet::GetWalletHelpString(bool showDebug)
     strUsage += HelpMessageOpt("-keypool=<n>", strprintf(_("Set key pool size to <n> (default: %u)"), DEFAULT_KEYPOOL_SIZE));
     strUsage += HelpMessageOpt("-fallbackfee=<amt>", strprintf(_("A fee rate (in %s/kB) that will be used when fee estimation has insufficient data (default: %s)"),
                                                                CURRENCY_UNIT, FormatMoney(DEFAULT_FALLBACK_FEE)));
+    strUsage += HelpMessageOpt("-discardfee=<amt>", strprintf(_("The fee rate (in %s/kB) that indicates your tolerance for discarding change by adding it to the fee (default: %s). "
+                                                                "Note: An output is discarded if it is dust at this rate, but we will always discard up to the dust relay fee and a discard fee above that is limited by the fee estimate for the longest target"),
+                                                              CURRENCY_UNIT, FormatMoney(DEFAULT_DISCARD_FEE)));
     strUsage += HelpMessageOpt("-mintxfee=<amt>", strprintf(_("Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)"),
                                                             CURRENCY_UNIT, FormatMoney(DEFAULT_TRANSACTION_MINFEE)));
     strUsage += HelpMessageOpt("-paytxfee=<amt>", strprintf(_("Fee (in %s/kB) to add to transactions you send (default: %s)"),
@@ -5303,6 +5337,16 @@ bool CWallet::ParameterInteraction()
                         _("This is the transaction fee you may pay when fee estimates are not available."));
         CWallet::fallbackFee = CFeeRate(nFeePerK);
     }
+    if (gArgs.IsArgSet("-discardfee"))
+    {
+        CAmount nFeePerK = 0;
+        if (!ParseMoney(gArgs.GetArg("-discardfee", ""), nFeePerK))
+            return InitError(strprintf(_("Invalid amount for -discardfee=<amount>: '%s'"), gArgs.GetArg("-discardfee", "")));
+        if (nFeePerK > HIGH_TX_FEE_PER_KB)
+            InitWarning(AmountHighWarn("-discardfee") + " " +
+                        _("This is the transaction fee you may discard if change is smaller than dust at this level"));
+        CWallet::m_discard_rate = CFeeRate(nFeePerK);
+    }
     if (gArgs.IsArgSet("-paytxfee"))
     {
         CAmount nFeePerK = 0;
@@ -5608,15 +5652,4 @@ int CMerkleTx::GetBlocksToMaturity() const
 bool CMerkleTx::AcceptToMemoryPool(const CAmount& nAbsurdFee, CValidationState& state)
 {
     return ::AcceptToMemoryPool(mempool, state, tx, true, nullptr, false, nAbsurdFee);
-}
-
-bool CalculateEstimateType(FeeEstimateMode mode) {
-    switch (mode) {
-    case FeeEstimateMode::UNSET:
-    case FeeEstimateMode::CONSERVATIVE:
-        return true;
-    case FeeEstimateMode::ECONOMICAL:
-        return false;
-    }
-    return true;
 }

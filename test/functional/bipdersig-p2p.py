@@ -4,27 +4,24 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test BIP66 (DER SIG).
 
-Connect to a single node.
-Mine 2 (version 2) blocks (save the coinbases for later).
-Generate 98 more version 2 blocks, verify the node accepts.
-Mine 749 version 3 blocks, verify the node accepts.
-Check that the new DERSIG rules are not enforced on the 750th version 3 block.
-Check that the new DERSIG rules are enforced on the 751st version 3 block.
-Mine 199 new version blocks.
-Mine 1 old-version block.
-Mine 1 new version block.
-Mine 1 old version block, see that the node rejects.
+Test that the DERSIG soft-fork activates at (regtest) height 1251.
 """
 
-from test_framework.test_framework import ComparisonTestFramework
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-from test_framework.mininode import CTransaction, NetworkThread
+from test_framework.mininode import *
 from test_framework.blocktools import create_coinbase, create_block
-from test_framework.comptool import TestInstance, TestManager
 from test_framework.script import CScript
 from io import BytesIO
 
-# A canonical signature consists of: 
+DERSIG_HEIGHT = 1251
+
+# Reject codes that we might receive in this test
+REJECT_INVALID = 16
+REJECT_OBSOLETE = 17
+REJECT_NONSTANDARD = 64
+
+# A canonical signature consists of:
 # <30> <total len> <02> <len R> <R> <02> <len S> <S> <hashtype>
 def unDERify(tx):
     """
@@ -39,144 +36,121 @@ def unDERify(tx):
         else:
             newscript.append(i)
     tx.vin[0].scriptSig = CScript(newscript)
-            
-class BIP66Test(ComparisonTestFramework):
+
+def create_transaction(node, coinbase, to_address, amount):
+    from_txid = node.getblock(coinbase)['tx'][0]
+    inputs = [{ "txid" : from_txid, "vout" : 0}]
+    outputs = { to_address : amount }
+    rawtx = node.createrawtransaction(inputs, outputs)
+    signresult = node.signrawtransaction(rawtx)
+    tx = CTransaction()
+    tx.deserialize(BytesIO(hex_str_to_bytes(signresult['hex'])))
+    return tx
+
+
+class BIP66Test(BitcoinTestFramework):
 
     def __init__(self):
         super().__init__()
         self.num_nodes = 1
-        self.extra_args = [['-dip3params=9000:9000']]
+        self.extra_args = [['-whitelist=127.0.0.1', '-dip3params=9000:9000']]
+        self.setup_clean_chain = True
 
     def run_test(self):
-        test = TestManager(self, self.options.tmpdir)
-        test.add_all_connections(self.nodes)
+        node0 = NodeConnCB()
+        connections = []
+        connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], node0))
+        node0.add_connection(connections[0])
         NetworkThread().start() # Start up network handling in another thread
-        test.run()
 
-    def create_transaction(self, node, coinbase, to_address, amount):
-        from_txid = node.getblock(coinbase)['tx'][0]
-        inputs = [{ "txid" : from_txid, "vout" : 0}]
-        outputs = { to_address : amount }
-        rawtx = node.createrawtransaction(inputs, outputs)
-        signresult = node.signrawtransaction(rawtx)
-        tx = CTransaction()
-        f = BytesIO(hex_str_to_bytes(signresult['hex']))
-        tx.deserialize(f)
-        return tx
+        # wait_for_verack ensures that the P2P connection is fully up.
+        node0.wait_for_verack()
 
-    def get_tests(self):
-
-        self.coinbase_blocks = self.nodes[0].generate(2)
-        height = 3  # height of the next block to build
-        self.tip = int("0x" + self.nodes[0].getbestblockhash(), 0)
+        self.log.info("Mining %d blocks", DERSIG_HEIGHT - 2)
+        self.coinbase_blocks = self.nodes[0].generate(DERSIG_HEIGHT - 2)
         self.nodeaddress = self.nodes[0].getnewaddress()
-        self.last_block_time = self.mocktime + 1
 
-        ''' 298 more version 2 blocks '''
-        test_blocks = []
-        for i in range(298):
-            block = create_block(self.tip, create_coinbase(height), self.last_block_time + 1)
-            block.nVersion = 2
-            block.rehash()
-            block.solve()
-            test_blocks.append([block, True])
-            self.last_block_time += 1
-            self.tip = block.sha256
-            height += 1
-        yield TestInstance(test_blocks, sync_every_block=False)
+        self.log.info("Test that a transaction with non-DER signature can still appear in a block")
 
-        ''' Mine 749 version 3 blocks '''
-        test_blocks = []
-        for i in range(749):
-            block = create_block(self.tip, create_coinbase(height), self.last_block_time + 1)
-            block.nVersion = 3
-            block.rehash()
-            block.solve()
-            test_blocks.append([block, True])
-            self.last_block_time += 1
-            self.tip = block.sha256
-            height += 1
-        yield TestInstance(test_blocks, sync_every_block=False)
-
-        ''' 
-        Check that the new DERSIG rules are not enforced in the 750th
-        version 3 block.
-        '''
-        spendtx = self.create_transaction(self.nodes[0],
-                self.coinbase_blocks[0], self.nodeaddress, 1.0)
+        spendtx = create_transaction(self.nodes[0], self.coinbase_blocks[0],
+                self.nodeaddress, 1.0)
         unDERify(spendtx)
         spendtx.rehash()
 
-        block = create_block(self.tip, create_coinbase(height), self.last_block_time + 1)
-        block.nVersion = 3
+        tip = self.nodes[0].getbestblockhash()
+        block_time = self.nodes[0].getblockheader(tip)['mediantime'] + 1
+        block = create_block(int(tip, 16), create_coinbase(DERSIG_HEIGHT - 1), block_time)
+        block.nVersion = 2
         block.vtx.append(spendtx)
         block.hashMerkleRoot = block.calc_merkle_root()
         block.rehash()
         block.solve()
 
-        self.last_block_time += 1
-        self.tip = block.sha256
-        height += 1
-        yield TestInstance([[block, True]])       
+        node0.send_and_ping(msg_block(block))
+        assert_equal(self.nodes[0].getbestblockhash(), block.hash)
 
-        ''' Mine 199 new version blocks on last valid tip '''
-        test_blocks = []
-        for i in range(199):
-            block = create_block(self.tip, create_coinbase(height), self.last_block_time + 1)
-            block.nVersion = 3
-            block.rehash()
-            block.solve()
-            test_blocks.append([block, True])
-            self.last_block_time += 1
-            self.tip = block.sha256
-            height += 1
-        yield TestInstance(test_blocks, sync_every_block=False)
-
-        ''' Mine 1 old version block '''
-        block = create_block(self.tip, create_coinbase(height), self.last_block_time + 1)
+        self.log.info("Test that blocks must now be at least version 3")
+        tip = block.sha256
+        block_time += 1
+        block = create_block(tip, create_coinbase(DERSIG_HEIGHT), block_time)
         block.nVersion = 2
         block.rehash()
         block.solve()
-        self.last_block_time += 1
-        self.tip = block.sha256
-        height += 1
-        yield TestInstance([[block, True]])
+        node0.send_and_ping(msg_block(block))
+        assert_equal(int(self.nodes[0].getbestblockhash(), 16), tip)
 
-        ''' Mine 1 new version block '''
-        block = create_block(self.tip, create_coinbase(height), self.last_block_time + 1)
+        assert wait_until(lambda: "reject" in node0.last_message.keys())
+        with mininode_lock:
+            assert_equal(node0.last_message["reject"].code, REJECT_OBSOLETE)
+            assert_equal(node0.last_message["reject"].reason, b'bad-version(0x00000002)')
+            assert_equal(node0.last_message["reject"].data, block.sha256)
+            del node0.last_message["reject"]
+
+        self.log.info("Test that transactions with non-DER signatures cannot appear in a block")
         block.nVersion = 3
+
+        spendtx = create_transaction(self.nodes[0], self.coinbase_blocks[1],
+                self.nodeaddress, 1.0)
+        unDERify(spendtx)
+        spendtx.rehash()
+
+        # First we show that this tx is valid except for DERSIG by getting it
+        # rejected from the mempool for exactly that reason.
+        assert_raises_jsonrpc(-26, '64: non-mandatory-script-verify-flag (Non-canonical DER signature)', self.nodes[0].sendrawtransaction, bytes_to_hex_str(spendtx.serialize()), True)
+
+        # Now we verify that a block with this transaction is also invalid.
+        block.vtx.append(spendtx)
+        block.hashMerkleRoot = block.calc_merkle_root()
         block.rehash()
         block.solve()
-        self.last_block_time += 1
-        self.tip = block.sha256
-        height += 1
-        yield TestInstance([[block, True]])
 
-        ''' 
-        Check that the new DERSIG rules are enforced in the 951st version 3
-        block.
-        '''
-        spendtx = self.create_transaction(self.nodes[0],
+        node0.send_and_ping(msg_block(block))
+        assert_equal(int(self.nodes[0].getbestblockhash(), 16), tip)
+
+        assert wait_until (lambda: "reject" in node0.last_message.keys())
+        with mininode_lock:
+            # We can receive different reject messages depending on whether
+            # bitcoind is running with multiple script check threads. If script
+            # check threads are not in use, then transaction script validation
+            # happens sequentially, and bitcoind produces more specific reject
+            # reasons.
+            assert node0.last_message["reject"].code in [REJECT_INVALID, REJECT_NONSTANDARD]
+            assert_equal(node0.last_message["reject"].data, block.sha256)
+            if node0.last_message["reject"].code == REJECT_INVALID:
+                # Generic rejection when a block is invalid
+                assert_equal(node0.last_message["reject"].reason, b'block-validation-failed')
+            else:
+                assert b'Non-canonical DER signature' in node0.last_message["reject"].reason
+
+        self.log.info("Test that a version 3 block with a DERSIG-compliant transaction is accepted")
+        block.vtx[1] = create_transaction(self.nodes[0],
                 self.coinbase_blocks[1], self.nodeaddress, 1.0)
-        unDERify(spendtx)
-        spendtx.rehash()
-
-        block = create_block(self.tip, create_coinbase(height), self.last_block_time + 1)
-        block.nVersion = 3
-        block.vtx.append(spendtx)
         block.hashMerkleRoot = block.calc_merkle_root()
         block.rehash()
         block.solve()
-        self.last_block_time += 1
-        yield TestInstance([[block, False]])
 
-        ''' Mine 1 old version block, should be invalid '''
-        block = create_block(self.tip, create_coinbase(height), self.last_block_time + 1)
-        block.nVersion = 2
-        block.rehash()
-        block.solve()
-        self.last_block_time += 1
-        yield TestInstance([[block, False]])
+        node0.send_and_ping(msg_block(block))
+        assert_equal(int(self.nodes[0].getbestblockhash(), 16), block.sha256)
 
 if __name__ == '__main__':
     BIP66Test().main()

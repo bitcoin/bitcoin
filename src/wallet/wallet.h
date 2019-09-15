@@ -49,6 +49,8 @@ static const unsigned int DEFAULT_KEYPOOL_SIZE = 1000;
 static const CAmount DEFAULT_TRANSACTION_FEE = 0;
 //! -fallbackfee default
 static const CAmount DEFAULT_FALLBACK_FEE = 1000;
+//! -m_discard_rate default
+static const CAmount DEFAULT_DISCARD_FEE = 10000;
 //! -mintxfee default
 static const CAmount DEFAULT_TRANSACTION_MINFEE = 1000;
 //! minimum recommended increment for BIP 125 replacement txs
@@ -1051,7 +1053,7 @@ public:
      * Insert additional inputs into the transaction by
      * calling CreateTransaction();
      */
-    bool FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, std::string& strFailReason, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl, bool keepReserveKey = true);
+    bool FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, std::string& strFailReason, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl);
     bool SignTransaction(CMutableTransaction& tx);
 
     /**
@@ -1060,7 +1062,7 @@ public:
      * @note passing nChangePosInOut as -1 will result in setting a random position
      */
     bool CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosInOut,
-                           std::string& strFailReason, const CCoinControl *coinControl = nullptr, bool sign = true, AvailableCoinsType nCoinType=ALL_COINS, int nExtraPayloadSize = 0);
+                           std::string& strFailReason, const CCoinControl& coin_control, bool sign = true, AvailableCoinsType nCoinType=ALL_COINS, int nExtraPayloadSize = 0);
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey, CConnman* connman, CValidationState& state);
 
     bool CreateCollateralTransaction(CMutableTransaction& txCollateral, std::string& strReason);
@@ -1072,11 +1074,12 @@ public:
 
     static CFeeRate minTxFee;
     static CFeeRate fallbackFee;
+    static CFeeRate m_discard_rate;
     /**
      * Estimate the minimum fee considering user set parameters
      * and the required fee
      */
-    static CAmount GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarget, const CTxMemPool& pool, const CBlockPolicyEstimator& estimator, FeeCalculation *feeCalc, bool ignoreUserSetFee, bool conservative_estimate);
+    static CAmount GetMinimumFee(unsigned int nTxBytes, const CCoinControl& coin_control, const CTxMemPool& pool, const CBlockPolicyEstimator& estimator, FeeCalculation *feeCalc);
     /**
      * Return the minimum required fee taking into account the
      * floating relay fee and user set minimum transaction fee
@@ -1315,7 +1318,5 @@ public:
         READWRITE(vchPubKey);
     }
 };
-
-bool CalculateEstimateType(FeeEstimateMode mode);
 
 #endif // BITCOIN_WALLET_WALLET_H

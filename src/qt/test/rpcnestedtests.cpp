@@ -12,6 +12,7 @@
 #include "rpc/server.h"
 #include "rpcconsole.h"
 #include "test/testutil.h"
+#include "test/test_dash.h"
 #include "univalue.h"
 #include "util.h"
 
@@ -38,8 +39,6 @@ void RPCNestedTests::rpcNestedTests()
 {
     // do some test setup
     // could be moved to a more generic place when we add more tests on QT level
-    const CChainParams& chainparams = Params();
-    RegisterAllCoreRPCCommands(tableRPC);
     tableRPC.appendCommand("rpcNestedTest", &vRPCCommands[0]);
     ClearDatadirCache();
     std::string path = QDir::tempPath().toStdString() + "/" + strprintf("test_dash_qt_%lu_%i", (unsigned long)GetTime(), (int)(GetRand(100000)));
@@ -47,19 +46,8 @@ void RPCNestedTests::rpcNestedTests()
     dir.mkpath(".");
     gArgs.ForceSetArg("-datadir", path);
     //mempool.setSanityCheck(1.0);
-    evoDb = new CEvoDB(1 << 20, true, true);
-    pblocktree = new CBlockTreeDB(1 << 20, true);
-    pcoinsdbview = new CCoinsViewDB(1 << 23, true);
-    deterministicMNManager = new CDeterministicMNManager(*evoDb);
-    llmq::InitLLMQSystem(*evoDb, nullptr, true);
 
-    pcoinsTip = new CCoinsViewCache(pcoinsdbview);
-    InitBlockIndex(chainparams);
-    {
-        CValidationState state;
-        bool ok = ActivateBestChain(state, chainparams);
-        QVERIFY(ok);
-    }
+    TestingSetup test;
 
     SetRPCWarmupFinished();
 
@@ -151,19 +139,6 @@ void RPCNestedTests::rpcNestedTests()
     QVERIFY_EXCEPTION_THROWN(RPCConsole::RPCExecuteCommandLine(result, "rpcNestedTest(abc,,abc)"), std::runtime_error); //don't tollerate empty arguments when using ,
     QVERIFY_EXCEPTION_THROWN(RPCConsole::RPCExecuteCommandLine(result, "rpcNestedTest(abc,,)"), std::runtime_error); //don't tollerate empty arguments when using ,
 #endif
-
-    UnloadBlockIndex();
-    delete pcoinsTip;
-    pcoinsTip = nullptr;
-    llmq::DestroyLLMQSystem();
-    delete deterministicMNManager;
-    deterministicMNManager = nullptr;
-    delete pcoinsdbview;
-    pcoinsdbview = nullptr;
-    delete pblocktree;
-    pblocktree = nullptr;
-    delete evoDb;
-    evoDb = nullptr;
 
     fs::remove_all(fs::path(path));
 }

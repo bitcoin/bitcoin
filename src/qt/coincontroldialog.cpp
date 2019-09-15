@@ -537,8 +537,6 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         else nBytesInputs += 148;
     }
 
-    bool conservative_estimate = CalculateEstimateType(FeeEstimateMode::UNSET);
-
     // calculation
     if (nQuantity > 0)
     {
@@ -551,7 +549,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
                 nBytes -= 34;
 
         // Fee
-        nPayFee = CWallet::GetMinimumFee(nBytes, coinControl->nConfirmTarget, ::mempool, ::feeEstimator, nullptr /* FeeCalculation */, false /* ignoreGlobalPayTxFee */, conservative_estimate);
+        nPayFee = CWallet::GetMinimumFee(nBytes, *coinControl, ::mempool, ::feeEstimator, nullptr /* FeeCalculation */);
 
         if (nPayAmount > 0)
         {
@@ -628,12 +626,8 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     QString toolTipDust = tr("This label turns red if any recipient receives an amount smaller than the current dust threshold.");
 
     // how many satoshis the estimated fee can vary per byte we guess wrong
-    double dFeeVary;
-    if (payTxFee.GetFeePerK() > 0)
-        dFeeVary = (double)std::max(CWallet::GetRequiredFee(1000), payTxFee.GetFeePerK()) / 1000;
-    else {
-        dFeeVary = (double)std::max(CWallet::GetRequiredFee(1000), ::feeEstimator.estimateSmartFee(coinControl->nConfirmTarget, nullptr, ::mempool, conservative_estimate).GetFeePerK()) / 1000;
-    }
+    double dFeeVary = (double)nPayFee / nBytes;
+
     QString toolTip4 = tr("Can vary +/- %1 duff(s) per input.").arg(dFeeVary);
 
     l3->setToolTip(toolTip4);
