@@ -1655,7 +1655,7 @@ static UniValue gettransaction(const JSONRPCRequest& request)
         {
             {"txid", RPCArg::Type::STR, RPCArg::Optional::NO, "The transaction id"},
             {"include_watchonly", RPCArg::Type::BOOL, /* default */ "true for watch-only wallets, otherwise false", "Whether to include watch-only addresses in balance calculation and details[]"},
-            {"verbose", RPCArg::Type::BOOL, /* default */ "false", "Whether to add a field with additional transaction details"},
+            {"verbose", RPCArg::Type::BOOL, /* default */ "false", "Whether to include a `decoded` field containing the decoded transaction (equivalent to RPC decoderawtransaction)"},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "", Cat(Cat<std::vector<RPCResult>>(
@@ -1689,9 +1689,9 @@ static UniValue gettransaction(const JSONRPCRequest& request)
                             }},
                     }},
                   {RPCResult::Type::STR_HEX, "hex", "Raw data for transaction"},
-                  {RPCResult::Type::OBJ, "details", /*optional=*/true, "Additional transaction details",
+                  {RPCResult::Type::OBJ, "decoded", /*optional=*/true, "the decoded transaction (only present when `verbose` is passed), equivalent to the",
                   {
-                        {RPCResult::Type::ELISION, "", "Equivalent to the RPC decoderawtransaction method, or the RPC getrawtransaction method when `verbose` is passed."},
+                        {RPCResult::Type::ELISION, "", "RPC decoderawtransaction method, or the RPC getrawtransaction method when `verbose` is passed."},
                   }},
                 }),
         },
@@ -1748,9 +1748,9 @@ static UniValue gettransaction(const JSONRPCRequest& request)
     entry.pushKV("hex", strHex);
 
     if (verbose) {
-        UniValue details(UniValue::VOBJ);
-        TxToUniv(*wtx.tx, uint256(), details, false);
-        entry.pushKV("details", details);
+        UniValue decoded(UniValue::VOBJ);
+        TxToUniv(*wtx.tx, uint256(), decoded, false);
+        entry.pushKV("decoded", decoded);
     }
 
     return entry;
