@@ -83,4 +83,13 @@
         <file alias="spinner-034">res/movies/spinner-034.png</file>
         <file alias="spinner-035">res/movies/spinner-035.png</file>
     </qresource>
+    <qresource prefix="/qml">
+        <file alias="main.qml">res/qml/main.qml</file>
+        <file alias="WalletPane.qml">res/qml/WalletPane.qml</file>
+        <file alias="SendPane.qml">res/qml/SendPane.qml</file>
+        <file alias="ReceivePane.qml">res/qml/ReceivePane.qml</file>
+    </qresource>
+    <qresource prefix="/fonts">
+        <file alias="Roboto-Thin.ttf">res/fonts/Roboto-Thin.ttf</file>
+    </qresource>
 </RCC>

@@ -8,6 +8,9 @@
 
 #include <qt/bitcoin.h>
 #include <qt/bitcoingui.h>
+#ifdef MOBILE_GUI
+#include <qt/bitcoinmobilegui.h>
+#endif
 
 #include <chainparams.h>
 #include <qt/clientmodel.h>
@@ -230,10 +233,16 @@ void BitcoinApplication::createOptionsModel(bool resetSettings)
 
 void BitcoinApplication::createWindow(const NetworkStyle *networkStyle)
 {
-    window = new BitcoinGUI(m_node, platformStyle, networkStyle, nullptr);
 
+#ifdef MOBILE_GUI
+    window = new BitcoinMobileGUI(m_node, platformStyle, networkStyle, nullptr);
+    connect(this, &BitcoinApplication::splashFinished, window, &BitcoinMobileGUI::splashFinished);
+    window->show();
+#else
+    window = new BitcoinGUI(m_node, platformStyle, networkStyle, nullptr);
     pollShutdownTimer = new QTimer(window);
     connect(pollShutdownTimer, &QTimer::timeout, window, &BitcoinGUI::detectShutdown);
+#endif
 }
 
 void BitcoinApplication::createSplashScreen(const NetworkStyle *networkStyle)
@@ -294,6 +303,9 @@ void BitcoinApplication::requestInitialize()
 
 void BitcoinApplication::requestShutdown()
 {
+#ifdef MOBILE_GUI
+    // Mobile GUI should let the user know of shutdown in the main window
+#else
     // Show a simple window indicating shutdown status
     // Do this first as some of the steps may take some time below,
     // for example the RPC console may still be executing a command.
@@ -302,6 +314,7 @@ void BitcoinApplication::requestShutdown()
     qDebug() << __func__ << ": Requesting shutdown";
     startThread();
     window->hide();
+#endif
     // Must disconnect node signals otherwise current thread can deadlock since
     // no event loop is running.
     window->unsubscribeFromCoreSignals();
@@ -341,6 +354,11 @@ void BitcoinApplication::initializeResult(bool success)
         }
 #endif // ENABLE_WALLET
 
+        clientModel = new ClientModel(m_node, optionsModel);
+        window->setClientModel(clientModel);
+        Q_EMIT splashFinished();
+
+#ifndef MOBILE_GUI
         // If -min option passed, start window minimized (iconified) or minimized to tray
         if (!gArgs.GetBoolArg("-min", false)) {
             window->show();
@@ -349,7 +367,7 @@ void BitcoinApplication::initializeResult(bool success)
         } else {
             window->showMinimized();
         }
-        Q_EMIT splashFinished();
+
         Q_EMIT windowShown(window);
 
 #ifdef ENABLE_WALLET
@@ -368,6 +386,7 @@ void BitcoinApplication::initializeResult(bool success)
     } else {
         Q_EMIT splashFinished(); // Make sure splash screen doesn't stick around during shutdown
         quit(); // Exit first main loop invocation
+#endif
     }
 }
 

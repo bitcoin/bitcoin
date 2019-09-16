@@ -112,6 +112,12 @@ AC_ARG_ENABLE([wallet],
   [disable wallet (enabled by default)])],
   [enable_wallet=$enableval],
   [enable_wallet=yes])
+  
+AC_ARG_ENABLE([mobile-gui],
+  [AS_HELP_STRING([--enable-mobile-gui],
+  [enable mobile GUI (disabled by default)])],
+  [use_mobile_gui=$enableval],
+  [use_mobile_gui=no])
 
 AC_ARG_WITH([miniupnpc],
   [AS_HELP_STRING([--with-miniupnpc],
@@ -1418,6 +1424,16 @@ AC_MSG_CHECKING([if wallet should be enabled])
 if test x$enable_wallet != xno; then
   AC_MSG_RESULT(yes)
   AC_DEFINE_UNQUOTED([ENABLE_WALLET],[1],[Define to 1 to enable wallet functions])
+
+else
+  AC_MSG_RESULT(no)
+fi
+
+dnl enable mobile gui
+AC_MSG_CHECKING([if mobile GUI should be enabled])
+if test x$use_mobile_gui != xno; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE_UNQUOTED([MOBILE_GUI],[1],[Define to 1 to enable mobile GUI])
 
 else
   AC_MSG_RESULT(no)
