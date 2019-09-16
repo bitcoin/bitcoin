@@ -12,7 +12,7 @@ The size of some in-memory caches can be reduced. As caches trade off memory usa
 
 ## Memory pool
 
-- In Bitcoin Core there is a memory pool limiter which can be configured with `-maxmempool=<n>`, where `<n>` is the size in MB (1000). The default value is `300`.
+- In Syscoin Core there is a memory pool limiter which can be configured with `-maxmempool=<n>`, where `<n>` is the size in MB (1000). The default value is `300`.
   - The minimum value for `-maxmempool` is 5.
   - A lower maximum mempool size means that transactions will be evicted sooner. This will affect any uses of `syscoind` that process unconfirmed transactions.
 
@@ -46,4 +46,4 @@ export MALLOC_ARENA_MAX=1
 syscoind
 ```
 
-The behavior was introduced to increase CPU locality of allocated memory and performance with concurrent allocation, so this setting could in theory reduce performance. However, in Bitcoin Core very little parallel allocation happens, so the impact is expected to be small or absent.
+The behavior was introduced to increase CPU locality of allocated memory and performance with concurrent allocation, so this setting could in theory reduce performance. However, in Syscoin Core very little parallel allocation happens, so the impact is expected to be small or absent.
