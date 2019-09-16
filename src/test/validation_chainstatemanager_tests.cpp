@@ -103,4 +103,58 @@ BOOST_AUTO_TEST_CASE(chainstatemanager)
     WITH_LOCK(::cs_main, manager.Unload());
 }
 
+//! Test rebalancing the caches associated with each chainstate.
+BOOST_AUTO_TEST_CASE(chainstatemanager_rebalance_caches)
+{
+    ChainstateManager manager;
+    size_t max_cache = 10000;
+    manager.m_total_coinsdb_cache = max_cache;
+    manager.m_total_coinstip_cache = max_cache;
+
+    std::vector<CChainState*> chainstates;
+
+    // Create a legacy (IBD) chainstate.
+    //
+    ENTER_CRITICAL_SECTION(cs_main);
+    CChainState& c1 = manager.InitializeChainstate();
+    LEAVE_CRITICAL_SECTION(cs_main);
+    chainstates.push_back(&c1);
+    c1.InitCoinsDB(
+        /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
+
+    {
+        LOCK(::cs_main);
+        c1.InitCoinsCache(1 << 23);
+        c1.CoinsTip().SetBestBlock(InsecureRand256());
+        manager.MaybeRebalanceCaches();
+    }
+
+    BOOST_CHECK_EQUAL(c1.m_coinstip_cache_size_bytes, max_cache);
+    BOOST_CHECK_EQUAL(c1.m_coinsdb_cache_size_bytes, max_cache);
+
+    // Create a snapshot-based chainstate.
+    //
+    ENTER_CRITICAL_SECTION(cs_main);
+    CChainState& c2 = manager.InitializeChainstate(GetRandHash());
+    LEAVE_CRITICAL_SECTION(cs_main);
+    chainstates.push_back(&c2);
+    c2.InitCoinsDB(
+        /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
+
+    {
+        LOCK(::cs_main);
+        c2.InitCoinsCache(1 << 23);
+        c2.CoinsTip().SetBestBlock(InsecureRand256());
+        manager.MaybeRebalanceCaches();
+    }
+
+    // Since both chainstates are considered to be in initial block download,
+    // the snapshot chainstate should take priority.
+    BOOST_CHECK_CLOSE(c1.m_coinstip_cache_size_bytes, max_cache * 0.05, 1);
+    BOOST_CHECK_CLOSE(c1.m_coinsdb_cache_size_bytes, max_cache * 0.05, 1);
+    BOOST_CHECK_CLOSE(c2.m_coinstip_cache_size_bytes, max_cache * 0.95, 1);
+    BOOST_CHECK_CLOSE(c2.m_coinsdb_cache_size_bytes, max_cache * 0.95, 1);
+
+}
+
 BOOST_AUTO_TEST_SUITE_END()
