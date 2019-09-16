@@ -8,7 +8,7 @@ $(package)_dependencies=openssl zlib
 $(package)_linux_dependencies=freetype fontconfig libxcb
 $(package)_build_subdir=qtbase
 $(package)_qt_libs=corelib network widgets gui plugins testlib
-$(package)_patches=fix_qt_pkgconfig.patch mac-qmake.conf fix_configure_mac.patch fix_no_printer.patch fix_rcc_determinism.patch fix_riscv64_arch.patch xkb-default.patch no-xlib.patch
+$(package)_patches=fix_qt_pkgconfig.patch mac-qmake.conf fix_configure_mac.patch fix_no_printer.patch fix_rcc_determinism.patch fix_riscv64_arch.patch xkb-default.patch no-xlib.patch fix_android_qmake_conf.patch
 
 $(package)_qttranslations_file_name=qttranslations-$($(package)_suffix)
 $(package)_qttranslations_sha256_hash=fb5a47799754af73d3bf501fe513342cfe2fc37f64e80df5533f6110e804220c
@@ -18,6 +18,8 @@ $(package)_qttools_sha256_hash=a97556eb7b2f30252cdd8a598c396cfce2b2f79d2bae883af
 
 $(package)_extra_sources  = $($(package)_qttranslations_file_name)
 $(package)_extra_sources += $($(package)_qttools_file_name)
+
+$(package)_config_opts_aarch64_android = -xplatform android-clang -android-sdk $(ANDROID_SDK) -android-ndk $(ANDROID_NDK) -android-ndk-platform android-$(ANDROID_API_LEVEL) -device-option CROSS_COMPILE="$(host)-" -egl -qpa xcb -no-eglfs -opengl es2 -qt-freetype -no-fontconfig -L $(host_prefix)/lib -I $(host_prefix)/include
 
 define $(package)_set_vars
 $(package)_config_opts_release = -release
@@ -127,6 +129,19 @@ $(package)_config_opts_x86_64_linux = -xplatform linux-g++-64
 $(package)_config_opts_aarch64_linux = -xplatform linux-aarch64-gnu-g++
 $(package)_config_opts_riscv64_linux = -platform linux-g++ -xplatform bitcoin-linux-g++
 $(package)_config_opts_mingw32  = -no-opengl -xplatform win32-g++ -device-option CROSS_COMPILE="$(host)-"
+$(package)_config_opts_aarch64_android = -xplatform android-clang
+$(package)_config_opts_aarch64_android += -android-sdk $(ANDROID_SDK)
+$(package)_config_opts_aarch64_android += -android-ndk $(ANDROID_NDK)
+$(package)_config_opts_aarch64_android += -android-ndk-platform android-$(ANDROID_API_LEVEL)
+$(package)_config_opts_aarch64_android += -device-option CROSS_COMPILE="$(host)-"
+$(package)_config_opts_aarch64_android += -egl
+$(package)_config_opts_aarch64_android += -qpa xcb
+$(package)_config_opts_aarch64_android += -no-eglfs
+$(package)_config_opts_aarch64_android += -opengl es2
+$(package)_config_opts_aarch64_android += -qt-freetype
+$(package)_config_opts_aarch64_android += -no-fontconfig
+$(package)_config_opts_aarch64_android += -L $(host_prefix)/lib
+$(package)_config_opts_aarch64_android += -I $(host_prefix)/include
 $(package)_build_env  = QT_RCC_TEST=1
 $(package)_build_env += QT_RCC_SOURCE_DATE_OVERRIDE=1
 endef
@@ -169,6 +184,7 @@ define $(package)_preprocess_cmds
   patch -p1 -i $($(package)_patch_dir)/fix_no_printer.patch &&\
   patch -p1 -i $($(package)_patch_dir)/fix_rcc_determinism.patch &&\
   patch -p1 -i $($(package)_patch_dir)/xkb-default.patch &&\
+  patch -p1 -i $($(package)_patch_dir)/fix_android_qmake_conf.patch &&\
   echo "!host_build: QMAKE_CFLAGS     += $($(package)_cflags) $($(package)_cppflags)" >> qtbase/mkspecs/common/gcc-base.conf && \
   echo "!host_build: QMAKE_CXXFLAGS   += $($(package)_cxxflags) $($(package)_cppflags)" >> qtbase/mkspecs/common/gcc-base.conf && \
   echo "!host_build: QMAKE_LFLAGS     += $($(package)_ldflags)" >> qtbase/mkspecs/common/gcc-base.conf && \

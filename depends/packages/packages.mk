@@ -6,6 +6,7 @@ protobuf_packages = protobuf
 qt_packages = qrencode zlib
 
 qt_linux_packages:=qt expat libxcb xcb_proto libXau xproto freetype fontconfig
+qt_android_packages=qt
 
 rapidcheck_packages = rapidcheck
 
