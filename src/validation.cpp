@@ -3908,8 +3908,10 @@ bool ChainstateManager::ProcessNewBlockHeaders(const std::vector<CBlockHeader>& 
         for (const CBlockHeader& header : headers) {
             CBlockIndex *pindex = nullptr; // Use a temp pindex instead of ppindex to avoid a const_cast
             bool accepted{AcceptBlockHeader(header, state, &pindex, min_pow_checked)};
-            ActiveChainstate().CheckBlockIndex();
 
+            for (Chainstate* chainstate : this->GetAll()) {
+                chainstate->CheckBlockIndex();
+            }
             if (!accepted) {
                 return false;
             }
