@@ -175,7 +175,7 @@ static void AppendWithSpace(std::string* str, Slice msg) {
 
 class Stats {
  private:
-  double start_;
+  double start_ = 0.0;
   double finish_;
   double seconds_;
   int done_;
