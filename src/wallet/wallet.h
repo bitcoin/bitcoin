@@ -60,6 +60,8 @@ enum class WalletCreationStatus {
 };
 
 WalletCreationStatus CreateWallet(interfaces::Chain& chain, const SecureString& passphrase, uint64_t wallet_creation_flags, const std::string& name, std::string& error, std::vector<std::string>& warnings, std::shared_ptr<CWallet>& result);
+typedef std::pair<std::string, std::pair<std::string, std::string>> SignerDevice;
+WalletCreationStatus CreateMultisigWallet(interfaces::Chain& chain, uint64_t wallet_creation_flags, const std::string& name, int threshold, std::vector<SignerDevice> devices, std::string& error, std::vector<std::string>& warnings, std::shared_ptr<CWallet>& result);
 
 //! -paytxfee default
 constexpr CAmount DEFAULT_PAY_TX_FEE = 0;
@@ -1208,6 +1210,9 @@ public:
 
     //! Create new DescriptoScriptPubKeyMans and add them to the wallet
     void SetupDescriptorScriptPubKeyMans();
+
+    //! Create new DescriptoScriptPubKeyMans and add them to the multisig wallet
+    void SetupMultisigDescriptorScriptPubKeyMans(const int threshold, const std::vector<std::pair<std::string, std::pair<std::string, std::string>>> devices);
 
     //! Check if the wallet already has a descriptor
     DescriptorScriptPubKeyMan* HasWalletDescriptor(const WalletDescriptor& desc) const;

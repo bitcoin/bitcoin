@@ -259,6 +259,63 @@ WalletCreationStatus CreateWallet(interfaces::Chain& chain, const SecureString& 
     return WalletCreationStatus::SUCCESS;
 }
 
+WalletCreationStatus CreateMultisigWallet(interfaces::Chain& chain, uint64_t wallet_creation_flags, const std::string& name, int threshold, std::vector<SignerDevice> devices, std::string& error, std::vector<std::string>& warnings, std::shared_ptr<CWallet>& result)
+{
+    // Check the wallet file location
+    WalletLocation location(name);
+    if (location.Exists()) {
+        error = "Wallet " + location.GetName() + " already exists.";
+        return WalletCreationStatus::CREATION_FAILED;
+    }
+
+    // External signer flag must be set
+    if (!(wallet_creation_flags & WALLET_FLAG_EXTERNAL_SIGNER)) {
+        error = "External signer flag must be set";
+        return WalletCreationStatus::CREATION_FAILED;
+    }
+
+    // Private keys must be disabled
+    if (!(wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        error = "Private keys must be disabled";
+        return WalletCreationStatus::CREATION_FAILED;
+    }
+
+    // Blank flag must be set
+    if (!(wallet_creation_flags & WALLET_FLAG_BLANK_WALLET)) {
+        error = "Blank flag must be set";
+        return WalletCreationStatus::CREATION_FAILED;
+    }
+
+    // Descriptor support must be enabled
+    if (!(wallet_creation_flags & WALLET_FLAG_DESCRIPTORS)) {
+        error = "Descriptor support must be enabled";
+        return WalletCreationStatus::CREATION_FAILED;
+    }
+
+    // Wallet::Verify will check if we're trying to create a wallet with a duplicate name.
+    if (!CWallet::Verify(chain, location, false, error, warnings)) {
+        error = "Wallet file verification failed: " + error;
+        return WalletCreationStatus::CREATION_FAILED;
+    }
+
+    // Make the wallet
+    std::shared_ptr<CWallet> wallet = CWallet::CreateWalletFromFile(chain, location, error, warnings, wallet_creation_flags);
+    if (!wallet) {
+        error = "Wallet creation failed";
+        return WalletCreationStatus::CREATION_FAILED;
+    }
+
+    {
+        LOCK(wallet->cs_wallet);
+        wallet->SetupMultisigDescriptorScriptPubKeyMans(threshold, devices);
+    }
+
+    AddWallet(wallet);
+    wallet->postInitProcess();
+    result = wallet;
+    return WalletCreationStatus::SUCCESS;
+}
+
 const uint256 CWalletTx::ABANDON_HASH(UINT256_ONE());
 
 /** @defgroup mapWallet
@@ -3822,7 +3879,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
             walletInstance->SetupLegacyScriptPubKeyMan();
         }
 
-        if ((wallet_creation_flags & WALLET_FLAG_EXTERNAL_SIGNER) || !(wallet_creation_flags & (WALLET_FLAG_DISABLE_PRIVATE_KEYS | WALLET_FLAG_BLANK_WALLET))) {
+        if (((wallet_creation_flags & WALLET_FLAG_EXTERNAL_SIGNER) && !(wallet_creation_flags & WALLET_FLAG_BLANK_WALLET)) || !(wallet_creation_flags & (WALLET_FLAG_DISABLE_PRIVATE_KEYS | WALLET_FLAG_BLANK_WALLET))) {
             LOCK(walletInstance->cs_wallet);
             if (walletInstance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
                 walletInstance->SetupDescriptorScriptPubKeyMans();
@@ -4387,6 +4444,40 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
 #else
         throw std::runtime_error(std::string(__func__) + ": Wallets with external signers require Boost::System library.");
 #endif
+    }
+}
+
+void CWallet::SetupMultisigDescriptorScriptPubKeyMans(const int threshold, const std::vector<std::pair<std::string, std::pair<std::string, std::string>>> devices)
+{
+    AssertLockHeld(cs_wallet);
+
+    for (bool internal : {false, true}) {
+        for (const OutputType& t : { OutputType::P2SH_SEGWIT, OutputType::BECH32 }) {
+            std::string desc_str = strprintf("wsh(sortedmulti(%d,", threshold);
+            if (t == OutputType::P2SH_SEGWIT) {
+                desc_str.insert(0, "sh(");
+            }
+            for (auto device : devices) {
+                // Based on Electrum: https://github.com/spesmilo/electrum/pull/4465
+                desc_str += "[" + device.first + "/48h/0h/0h/" + (t == OutputType::P2SH_SEGWIT ? "1h]" + device.second.first : "2h]" + device.second.second) + strprintf("/%d/*", !internal);
+                desc_str += ",";
+            }
+            desc_str.pop_back();
+            desc_str += "))";
+            if (t == OutputType::P2SH_SEGWIT) {
+                desc_str += ")";
+            }
+
+            FlatSigningProvider keys;
+            std::string dummy_error;
+            std::unique_ptr<Descriptor> desc = Parse(desc_str, keys, dummy_error, false);
+
+            auto spk_manager = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, t, internal));
+            spk_manager->SetupDescriptor(std::move(desc));
+            uint256 id = spk_manager->GetID();
+            m_spk_managers[id] = std::move(spk_manager);
+            SetActiveScriptPubKeyMan(id, t, internal);
+        }
     }
 }
 
