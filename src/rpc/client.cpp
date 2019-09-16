@@ -172,6 +172,9 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "createwallet", 4, "avoid_reuse"},
     { "createwallet", 5, "descriptors"},
     { "createwallet", 6, "external_signer"},
+    { "createmultisigwallet", 1, "threshold"},
+    { "createmultisigwallet", 2, "signers"},
+    { "createmultisigwallet", 3, "avoid_reuse"},
     { "getnodeaddresses", 0, "count"},
     { "stop", 0, "wait" },
 };

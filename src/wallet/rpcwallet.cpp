@@ -2761,6 +2761,101 @@ static UniValue createwallet(const JSONRPCRequest& request)
     return obj;
 }
 
+static UniValue createmultisigwallet(const JSONRPCRequest& request)
+{
+    RPCHelpMan{
+        "createmultisigwallet",
+        "\nCreates and loads a new multisig wallet.\n"
+        "Only native segwit bech32 addresses are supported.",
+        {
+            {"wallet_name", RPCArg::Type::STR, RPCArg::Optional::NO, "The name for the new wallet. If this is a path, the wallet will be created at the path location."},
+            {"threshold", RPCArg::Type::NUM, RPCArg::Optional::NO, "Number of required signatures"},
+            {"signers", RPCArg::Type::ARR, RPCArg::Optional::NO, "A json array of signers identified by their BIP32 fingerprint",
+                {
+                    {"fingerprint", RPCArg::Type::STR, RPCArg::Optional::NO, "master key fingerprint. Can be obtained using emumeratesigners."},
+                    {"xpub1", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "the xpub at deriviation path m/48h/0h/0h/1h used for P2SH_SEGWIT"},
+                    {"xpub2", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "the xpub at deriviation path m/48h/0h/0h/2h used for native SegWit"}
+                },
+            },
+            {"avoid_reuse", RPCArg::Type::BOOL, /* default */ "false", "Keep track of coin reuse, and treat dirty and clean coins differently with privacy considerations in mind."},
+        },
+        RPCResult{
+            "{\n"
+            "  \"name\" :    <wallet_name>,        (string) The wallet name if created successfully. If the wallet was created using a full path, the wallet_name will be the full path.\n"
+            "  \"warning\" : <warning>,            (string) Warning message if wallet was not loaded cleanly.\n"
+            "}\n"
+        },
+        RPCExamples{
+            HelpExampleCli("createmultisigwallet", "\"ManualMultisigWallet\" 2 '[{\"fingerprint\": \"d34db33f\", \"xpub2\": \"xpub6DJ2dNUysrn5Vt36jH2KLBT2i1auw1tTSSomg8PhqNiUtx8QX2SvC9nrHu81fT41fvDUnhMjEzQgXnQjKEu3oaqMSzhSrHMxyyoEAmUHQbY\"}, {\"fingerprint\": \"3442193e\", \"xpub1\": \"xpub661MyMwAqRbcFtXgS5sYJABqqG9YLmC4Q1Rdap9gSE8NqtwybGhePY2gZ29ESFjqJoCu1Rupje8YtGqsefD265TMg7usUDFdp6W1EGMcet8\"}]'")
+            + HelpExampleRpc("createmultisigwallet", "\"ManualMultisigWallet\", 2, '[{\"fingerprint\": \"d34db33f\", \"xpub2\": \"xpub6DJ2dNUysrn5Vt36jH2KLBT2i1auw1tTSSomg8PhqNiUtx8QX2SvC9nrHu81fT41fvDUnhMjEzQgXnQjKEu3oaqMSzhSrHMxyyoEAmUHQbY\"}, {\"fingerprint\": \"3442193e\", \"xpub1\": \"xpub661MyMwAqRbcFtXgS5sYJABqqG9YLmC4Q1Rdap9gSE8NqtwybGhePY2gZ29ESFjqJoCu1Rupje8YtGqsefD265TMg7usUDFdp6W1EGMcet8\"}]'")
+        },
+    }.Check(request);
+
+    uint64_t flags = WALLET_FLAG_DISABLE_PRIVATE_KEYS | WALLET_FLAG_BLANK_WALLET | WALLET_FLAG_DESCRIPTORS;
+
+    if (!request.params[3].isNull() && request.params[3].get_bool()) {
+        flags |= WALLET_FLAG_AVOID_REUSE;
+    }
+
+    int threshold = request.params[1].get_int();
+    if (threshold == 0) throw JSONRPCError(RPC_INVALID_PARAMETER, "cannot require zero signatures");
+
+    int signer_count = request.params[2].get_array().size();
+    if (threshold > signer_count) throw JSONRPCError(RPC_INVALID_PARAMETER, "cannot require more signatures than signers");
+
+    std::vector<SignerDevice> devices;
+    for (const UniValue& signer_data : request.params[2].getValues()) {
+        const std::string& fingerprint = signer_data["fingerprint"].get_str();
+        if (fingerprint.length() != 8 || !IsHex(fingerprint)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("invalid BIP32 fingerprint: %s", fingerprint));
+        }
+
+        std::string xpub1 = "";
+        std::string xpub2 = "";
+        if(signer_data.exists("xpub1")) {
+            xpub1 = signer_data["xpub"].get_str();
+        }
+        if(signer_data.exists("xpub2")) {
+            xpub2 = signer_data["xpub2"].get_str();
+        }
+        if (xpub1 == "" && xpub2 == "") {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("missing xpub for native and/or wrapped SegWit for signer %s", fingerprint));
+        }
+
+        for (std::string xpub : {xpub1, xpub2}) {
+            if (xpub == "") break;
+            CExtPubKey extpubkey = DecodeExtPubKey(xpub);
+            if (!extpubkey.pubkey.IsValid()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("'%s' is not valid", xpub));
+            }
+        }
+
+        devices.push_back(std::make_pair(fingerprint, std::make_pair(xpub1, xpub2)));
+    }
+
+    // TODO: sort by fingerprint
+
+    std::string error;
+    std::vector<std::string> warnings;
+    std::shared_ptr<CWallet> wallet;
+    WalletCreationStatus status = CreateMultisigWallet(*g_rpc_chain, flags, request.params[0].get_str(), threshold, devices, error, warnings, wallet);
+    switch (status) {
+        case WalletCreationStatus::CREATION_FAILED:
+            throw JSONRPCError(RPC_WALLET_ERROR, error);
+        case WalletCreationStatus::ENCRYPTION_FAILED:
+            CHECK_NONFATAL(false);
+        case WalletCreationStatus::SUCCESS:
+            break;
+        // no default case, so the compiler can warn about missing cases
+    }
+
+    UniValue obj(UniValue::VOBJ);
+    obj.pushKV("name", wallet->GetName());
+    obj.pushKV("warning", Join(warnings, "\n"));
+
+    return obj;
+}
+
 static UniValue unloadwallet(const JSONRPCRequest& request)
 {
             RPCHelpMan{"unloadwallet",
@@ -4283,6 +4378,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "backupwallet",                     &backupwallet,                  {"destination"} },
     { "wallet",             "bumpfee",                          &bumpfee,                       {"txid", "options"} },
     { "wallet",             "createwallet",                     &createwallet,                  {"wallet_name", "disable_private_keys", "blank", "passphrase", "avoid_reuse", "descriptors", "external_signer"} },
+    { "wallet",             "createmultisigwallet",             &createmultisigwallet,          {"wallet_name", "threshold", "signers", "avoid_reuse"} },
     { "wallet",             "dumpprivkey",                      &dumpprivkey,                   {"address"}  },
     { "wallet",             "dumpwallet",                       &dumpwallet,                    {"filename"} },
     { "wallet",             "encryptwallet",                    &encryptwallet,                 {"passphrase"} },
