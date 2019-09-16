@@ -89,6 +89,12 @@ void ReceiveRequestDialog::setInfo(const SendCoinsRecipient &_info)
         ui->wallet_tag->hide();
         ui->wallet_content->hide();
     }
+
+    ui->btnVerify->setVisible(this->model->wallet().hasExternalSigner());
+
+    connect(ui->btnVerify, &QPushButton::clicked, [this] {
+        model->displayAddress(info.address.toStdString());
+    });
 }
 
 void ReceiveRequestDialog::updateDisplayUnit()

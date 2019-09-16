@@ -258,6 +258,9 @@ public:
     // Return whether private keys enabled.
     virtual bool privateKeysDisabled() = 0;
 
+    // Return whether wallet uses an external signer.
+    virtual bool hasExternalSigner() = 0;
+
     // Get default address type.
     virtual OutputType getDefaultAddressType() = 0;
 
