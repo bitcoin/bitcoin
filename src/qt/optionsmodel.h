@@ -65,6 +65,7 @@ public:
         Prune,                  // bool
         PruneSize,              // int
         DatabaseCache,          // int
+        ExternalSignerPath,     // QString
         SpendZeroConfChange,    // bool
         Listen,                 // bool
         OptionIDRowCount,
