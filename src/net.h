@@ -282,6 +282,12 @@ public:
     bool DisconnectNode(const CNetAddr& addr);
     bool DisconnectNode(NodeId id);
 
+    //! Used to convey which local services we are offering peers during node
+    //! connection.
+    //!
+    //! The data returned by this is used in CNode construction,
+    //! which is used to advertise which services we are offering
+    //! that peer during `net_processing.cpp:PushNodeVersion()`.
     ServiceFlags GetLocalServices() const;
 
     //!set the max outbound target in bytes
@@ -413,7 +419,18 @@ private:
     std::atomic<NodeId> nLastNodeId{0};
     unsigned int nPrevNodeCount{0};
 
-    /** Services this instance offers */
+    /**
+     * Services this instance offers.
+     *
+     * This data is replicated in each CNode instance we create during peer
+     * connection (in ConnectNode()) under a member also called
+     * nLocalServices.
+     *
+     * This data is not marked const, but after being set it should not
+     * change. See the note in CNode::nLocalServices documentation.
+     *
+     * \sa CNode::nLocalServices
+     */
     ServiceFlags nLocalServices;
 
     std::unique_ptr<CSemaphore> semOutbound;
@@ -786,8 +803,24 @@ public:
 private:
     const NodeId id;
     const uint64_t nLocalHostNonce;
-    // Services offered to this peer
+
+    //! Services offered to this peer.
+    //!
+    //! This is supplied by the parent CConnman during peer connection
+    //! (CConnman::ConnectNode()) from its attribute of the same name.
+    //!
+    //! This is const because there is no protocol defined for renegotiating
+    //! services initially offered to a peer. The set of local services we
+    //! offer should not change after initialization.
+    //!
+    //! An interesting example of this is NODE_NETWORK and initial block
+    //! download: a node which starts up from scratch doesn't have any blocks
+    //! to serve, but still advertises NODE_NETWORK because it will eventually
+    //! fulfill this role after IBD completes. P2P code is written in such a
+    //! way that it can gracefully handle peers who don't make good on their
+    //! service advertisements.
     const ServiceFlags nLocalServices;
+
     const int nMyStartingHeight;
     int nSendVersion{0};
     NetPermissionFlags m_permissionFlags{ PF_NONE };
