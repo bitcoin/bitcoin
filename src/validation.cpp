@@ -2208,8 +2208,42 @@ static void AppendWarning(bilingual_str& res, const bilingual_str& warn)
     res += warn;
 }
 
+static void UpdateTipLog(
+    const CCoinsViewCache& coins_tip,
+    const CBlockIndex* tip,
+    const CChainParams& params,
+    const std::string& func_name,
+    const std::string& prefix,
+    const std::string& warning_messages) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+{
+
+    AssertLockHeld(::cs_main);
+    LogPrintf("%s%s: new best=%s height=%d version=0x%08x log2_work=%f tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)%s\n",
+        prefix, func_name,
+        tip->GetBlockHash().ToString(), tip->nHeight, tip->nVersion,
+        log(tip->nChainWork.getdouble()) / log(2.0), (unsigned long)tip->nChainTx,
+        FormatISO8601DateTime(tip->GetBlockTime()),
+        GuessVerificationProgress(params.TxData(), tip),
+        coins_tip.DynamicMemoryUsage() * (1.0 / (1 << 20)),
+        coins_tip.GetCacheSize(),
+        !warning_messages.empty() ? strprintf(" warning='%s'", warning_messages) : "");
+}
+
 void CChainState::UpdateTip(const CBlockIndex* pindexNew)
 {
+    const auto& coins_tip = this->CoinsTip();
+
+    // The remainder of the function isn't relevant if we are not acting on
+    // the active chainstate, so return if need be.
+    if (this != &m_chainman.ActiveChainstate()) {
+        // Only log every so often so that we don't bury log messages at the tip.
+        constexpr int BACKGROUND_LOG_INTERVAL = 2000;
+        if (pindexNew->nHeight % BACKGROUND_LOG_INTERVAL == 0) {
+            UpdateTipLog(coins_tip, pindexNew, m_params, __func__, "[background validation] ", "");
+        }
+        return;
+    }
+
     // New best block
     if (m_mempool) {
         m_mempool->AddTransactionsUpdated(1);
@@ -2237,12 +2271,7 @@ void CChainState::UpdateTip(const CBlockIndex* pindexNew)
             }
         }
     }
-    LogPrintf("%s: new best=%s height=%d version=0x%08x log2_work=%f tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)%s\n", __func__,
-      pindexNew->GetBlockHash().ToString(), pindexNew->nHeight, pindexNew->nVersion,
-      log(pindexNew->nChainWork.getdouble())/log(2.0), (unsigned long)pindexNew->nChainTx,
-      FormatISO8601DateTime(pindexNew->GetBlockTime()),
-      GuessVerificationProgress(m_params.TxData(), pindexNew), this->CoinsTip().DynamicMemoryUsage() * (1.0 / (1<<20)), this->CoinsTip().GetCacheSize(),
-      !warning_messages.empty() ? strprintf(" warning='%s'", warning_messages.original) : "");
+    UpdateTipLog(coins_tip, pindexNew, m_params, __func__, "", warning_messages.original);
 }
 
 /** Disconnect m_chain's tip.
