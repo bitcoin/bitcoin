@@ -214,6 +214,11 @@ public:
         LOCK(m_wallet->cs_wallet);
         return m_wallet->GetDestValues(prefix);
     }
+    bool displayAddress(const CTxDestination& dest) override
+    {
+        LOCK(m_wallet->cs_wallet);
+        return m_wallet->DisplayAddress(dest);
+    }
     void lockCoin(const COutPoint& output) override
     {
         LOCK(m_wallet->cs_wallet);

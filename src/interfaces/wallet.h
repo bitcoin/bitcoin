@@ -121,6 +121,9 @@ public:
     //! Get dest values with prefix.
     virtual std::vector<std::string> getDestValues(const std::string& prefix) = 0;
 
+    //! Display address on external signer
+    virtual bool displayAddress(const CTxDestination& dest) = 0;
+
     //! Lock coin.
     virtual void lockCoin(const COutPoint& output) = 0;
 
