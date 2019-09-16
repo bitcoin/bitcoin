@@ -150,7 +150,12 @@ void BlockManager::PruneOneBlockFile(const int fileNumber)
     m_dirty_fileinfo.insert(fileNumber);
 }
 
-void BlockManager::FindFilesToPruneManual(std::set<int>& setFilesToPrune, int nManualPruneHeight, int chain_tip_height)
+void BlockManager::FindFilesToPruneManual(
+    std::set<int>& setFilesToPrune,
+    int nManualPruneHeight,
+    int chain_tip_height,
+    const Chainstate& chain,
+    ChainstateManager& chainman)
 {
     assert(IsPruneMode() && nManualPruneHeight > 0);
 
@@ -159,13 +164,21 @@ void BlockManager::FindFilesToPruneManual(std::set<int>& setFilesToPrune, int nM
         return;
     }
 
-    // last block to prune is the lesser of (user-specified height, MIN_BLOCKS_TO_KEEP from the tip)
-    unsigned int nLastBlockWeCanPrune = std::min((unsigned)nManualPruneHeight, chain_tip_height - MIN_BLOCKS_TO_KEEP);
+    unsigned int min_block_to_prune;
+    unsigned int nLastBlockWeCanPrune;
+
+    std::tie(min_block_to_prune, nLastBlockWeCanPrune) = chainman.GetPruneRange(
+        chain, chain_tip_height);
+
+    nLastBlockWeCanPrune = std::min(nLastBlockWeCanPrune, (unsigned)nManualPruneHeight);
+
     int count = 0;
     for (int fileNumber = 0; fileNumber < m_last_blockfile; fileNumber++) {
-        if (m_blockfile_info[fileNumber].nSize == 0 || m_blockfile_info[fileNumber].nHeightLast > nLastBlockWeCanPrune) {
+        const auto& fileinfo = m_blockfile_info[fileNumber];
+        if (fileinfo.nSize == 0 || fileinfo.nHeightLast > nLastBlockWeCanPrune || fileinfo.nHeightFirst < min_block_to_prune) {
             continue;
         }
+
         PruneOneBlockFile(fileNumber);
         setFilesToPrune.insert(fileNumber);
         count++;
@@ -173,7 +186,13 @@ void BlockManager::FindFilesToPruneManual(std::set<int>& setFilesToPrune, int nM
     LogPrintf("Prune (Manual): prune_height=%d removed %d blk/rev pairs\n", nLastBlockWeCanPrune, count);
 }
 
-void BlockManager::FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPruneAfterHeight, int chain_tip_height, int prune_height, bool is_ibd)
+void BlockManager::FindFilesToPrune(
+    std::set<int>& setFilesToPrune,
+    uint64_t nPruneAfterHeight,
+    int chain_tip_height,
+    int prune_height,
+    const Chainstate& chain,
+    ChainstateManager& chainman)
 {
     LOCK2(cs_main, cs_LastBlockFile);
     if (chain_tip_height < 0 || GetPruneTarget() == 0) {
@@ -183,7 +202,12 @@ void BlockManager::FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPr
         return;
     }
 
-    unsigned int nLastBlockWeCanPrune{(unsigned)std::min(prune_height, chain_tip_height - static_cast<int>(MIN_BLOCKS_TO_KEEP))};
+    unsigned int min_block_to_prune;
+    unsigned int nLastBlockWeCanPrune;
+
+    std::tie(min_block_to_prune, nLastBlockWeCanPrune) =
+        chainman.GetPruneRange(chain, prune_height);
+
     uint64_t nCurrentUsage = CalculateCurrentUsage();
     // We don't check to prune until after we've allocated new space for files
     // So we should leave a buffer under our target to account for another allocation
@@ -197,15 +221,16 @@ void BlockManager::FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPr
         // To avoid excessive prune events negating the benefit of high dbcache
         // values, we should not prune too rapidly.
         // So when pruning in IBD, increase the buffer a bit to avoid a re-prune too soon.
-        if (is_ibd) {
+        if (chain.IsInitialBlockDownload()) {
             // Since this is only relevant during IBD, we use a fixed 10%
             nBuffer += GetPruneTarget() / 10;
         }
 
         for (int fileNumber = 0; fileNumber < m_last_blockfile; fileNumber++) {
-            nBytesToPrune = m_blockfile_info[fileNumber].nSize + m_blockfile_info[fileNumber].nUndoSize;
+            const auto& fileinfo = m_blockfile_info[fileNumber];
+            nBytesToPrune = fileinfo.nSize + fileinfo.nUndoSize;
 
-            if (m_blockfile_info[fileNumber].nSize == 0) {
+            if (fileinfo.nSize == 0) {
                 continue;
             }
 
@@ -213,8 +238,9 @@ void BlockManager::FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPr
                 break;
             }
 
-            // don't prune files that could have a block within MIN_BLOCKS_TO_KEEP of the main chain's tip but keep scanning
-            if (m_blockfile_info[fileNumber].nHeightLast > nLastBlockWeCanPrune) {
+            // don't prune files that could have a block that's not within the allowable
+            // prune range for the chain being pruned.
+            if (fileinfo.nHeightLast > nLastBlockWeCanPrune || fileinfo.nHeightFirst < min_block_to_prune) {
                 continue;
             }
 

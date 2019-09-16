@@ -939,10 +939,6 @@ private:
     //! Returns nullptr if no snapshot has been loaded.
     const CBlockIndex* GetSnapshotBaseBlock() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-    //! Return the height of the base block of the snapshot in use, if one exists, else
-    //! nullopt.
-    std::optional<int> GetSnapshotBaseHeight() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-
     //! Return true if a chainstate is considered usable.
     //!
     //! This is false when a background validation chainstate has completed its
@@ -1205,6 +1201,17 @@ public:
     //!   when using an assumed-valid chainstate based upon a snapshot, return only the
     //!   fully validated chain.
     Chainstate& GetChainstateForIndexing() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    //! Return the [start, end] (inclusive) of block heights we can prune.
+    //!
+    //! If we're pruning the snapshot chainstate, be sure not to
+    //! prune blocks being used by the background chainstate.
+    std::pair<unsigned int, unsigned int> GetPruneRange(
+        const Chainstate& chainstate, unsigned int prune_height) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    //! Return the height of the base block of the snapshot in use, if one exists, else
+    //! nullopt.
+    std::optional<int> GetSnapshotBaseHeight() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     ~ChainstateManager();
 };
