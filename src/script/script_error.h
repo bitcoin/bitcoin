@@ -68,6 +68,10 @@ typedef enum ScriptError_t
     SCRIPT_ERR_OP_CODESEPARATOR,
     SCRIPT_ERR_SIG_FINDANDDELETE,
 
+    /* Script Num */
+    SCRIPT_ERR_NUMOVERFLOW,
+    SCRIPT_ERR_MINIMALNUM,
+
     SCRIPT_ERR_ERROR_COUNT
 } ScriptError;
 

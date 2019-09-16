@@ -1071,6 +1071,8 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
             if (stack.size() + altstack.size() > MAX_STACK_SIZE)
                 return set_error(serror, SCRIPT_ERR_STACK_SIZE);
         }
+    } catch (ScriptError runtime_error) {
+        return set_error(serror, runtime_error);
     }
     catch (...)
     {

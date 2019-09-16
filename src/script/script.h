@@ -9,6 +9,7 @@
 #include <crypto/common.h>
 #include <prevector.h>
 #include <serialize.h>
+#include <script/script_error.h>
 
 #include <assert.h>
 #include <climits>
@@ -195,12 +196,6 @@ static const unsigned int MAX_OPCODE = OP_NOP10;
 
 const char* GetOpName(opcodetype opcode);
 
-class scriptnum_error : public std::runtime_error
-{
-public:
-    explicit scriptnum_error(const std::string& str) : std::runtime_error(str) {}
-};
-
 class CScriptNum
 {
 /**
@@ -224,7 +219,7 @@ public:
                         const size_t nMaxNumSize = nDefaultMaxNumSize)
     {
         if (vch.size() > nMaxNumSize) {
-            throw scriptnum_error("script number overflow");
+            throw SCRIPT_ERR_NUMOVERFLOW;
         }
         if (fRequireMinimal && vch.size() > 0) {
             // Check that the number is encoded with the minimum possible
@@ -240,7 +235,7 @@ public:
                 // is +-255, which encode to 0xff00 and 0xff80 respectively.
                 // (big-endian).
                 if (vch.size() <= 1 || (vch[vch.size() - 2] & 0x80) == 0) {
-                    throw scriptnum_error("non-minimally encoded script number");
+                    throw SCRIPT_ERR_MINIMALNUM;
                 }
             }
         }
