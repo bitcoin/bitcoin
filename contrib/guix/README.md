@@ -1,4 +1,4 @@
-# Bootstrappable Bitcoin Core Builds
+# Bootstrappable Syscoin Core Builds
 
 This directory contains the files necessary to perform bootstrappable Bitcoin
 Core builds.
@@ -15,7 +15,7 @@ Conservatively, a x86_64 machine with:
 
 - 2 or more logical cores
 - 4GB of free disk space on the partition that /gnu/store will reside in
-- 24GB of free disk space on the partition that the Bitcoin Core git repository
+- 24GB of free disk space on the partition that the Syscoin Core git repository
   resides in
 
 > Note: these requirements are slightly less onerous than those of Gitian builds
@@ -87,7 +87,7 @@ export PATH="${HOME}/.config/guix/current/bin${PATH:+:}$PATH"
 
 ### As a Development Environment
 
-For a Bitcoin Core depends development environment, simply invoke
+For a Syscoin Core depends development environment, simply invoke
 
 ```sh
 guix environment --manifest=contrib/guix/manifest.scm
@@ -98,7 +98,7 @@ a `depends` build injected into your environment.
 
 ### As a Tool for Deterministic Builds
 
-From the top of a clean Bitcoin Core repository:
+From the top of a clean Syscoin Core repository:
 
 ```sh
 ./contrib/guix/guix-build.sh

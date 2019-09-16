@@ -1,8 +1,8 @@
-# RapidCheck property-based testing for Bitcoin Core
+# RapidCheck property-based testing for Syscoin Core
 
 ## Concept
 
-Property-based testing is experimentally being added to Bitcoin Core with
+Property-based testing is experimentally being added to Syscoin Core with
 [RapidCheck](https://github.com/emil-e/rapidcheck), a C++ framework for
 property-based testing inspired by the Haskell library
 [QuickCheck](https://hackage.haskell.org/package/QuickCheck).
@@ -19,7 +19,7 @@ find the smallest integer for which the property is false.
 
 ## Running
 
-If RapidCheck is installed, Bitcoin Core will automatically run the
+If RapidCheck is installed, Syscoin Core will automatically run the
 property-based tests with the unit tests during `make check`, unless the
 `--without-rapidcheck` flag is passed when configuring.
 
@@ -44,7 +44,7 @@ The following instructions have been tested with Linux Debian and macOS.
     make && make install
     ```
 
-3. Configure Bitcoin Core with RapidCheck.
+3. Configure Syscoin Core with RapidCheck.
 
     `cd` to the directory of your local bitcoin repository and run
     `./configure`. In the output you should see:
@@ -60,7 +60,7 @@ The following instructions have been tested with Linux Debian and macOS.
         with prop   = yes
     ```
 
-4. Build Bitcoin Core with RapidCheck.
+4. Build Syscoin Core with RapidCheck.
 
     Now you can run `make` and should see the property-based tests compiled with
     the unit tests:
@@ -81,4 +81,4 @@ The following instructions have been tested with Linux Debian and macOS.
     Running tests: key_properties from test/key_properties.cpp
     ```
 
-That's it! You are now running property-based tests in Bitcoin Core.
+That's it! You are now running property-based tests in Syscoin Core.
