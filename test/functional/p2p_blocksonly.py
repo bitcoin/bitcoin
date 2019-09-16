@@ -7,7 +7,7 @@
 from test_framework.messages import msg_tx, CTransaction, FromHex
 from test_framework.mininode import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import assert_equal, assert_raises_rpc_error
 
 
 class P2PBlocksOnly(BitcoinTestFramework):
@@ -56,6 +56,11 @@ class P2PBlocksOnly(BitcoinTestFramework):
             self.nodes[0].sendrawtransaction(sigtx)
             self.nodes[0].p2p.wait_for_tx(txid)
             assert_equal(self.nodes[0].getmempoolinfo()['size'], 1)
+
+        # Test that we cant `estimatesmartfee` in blocksonly mode.
+        assert_raises_rpc_error(-1, "Can not estimate fees if not relaying "
+                                "transactions.",
+                                self.nodes[0].estimatesmartfee, 6)
 
 
 if __name__ == '__main__':

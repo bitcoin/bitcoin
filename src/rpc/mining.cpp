@@ -830,6 +830,9 @@ static UniValue estimatesmartfee(const JSONRPCRequest& request)
         if (fee_mode == FeeEstimateMode::ECONOMICAL) conservative = false;
     }
 
+    if (!g_relay_txes)
+        throw JSONRPCError(RPC_MISC_ERROR, "Can not estimate fees if not relaying transactions.");
+
     UniValue result(UniValue::VOBJ);
     UniValue errors(UniValue::VARR);
     FeeCalculation feeCalc;
