@@ -68,8 +68,8 @@ The following instructions have been tested with Linux Debian and macOS.
     ```shell
     Making all in src
     [...]
-    CXX      test/gen/test_bitcoin-crypto_gen.o
-    CXX      test/test_bitcoin-key_properties.o
+    CXX      test/gen/test_syscoin-crypto_gen.o
+    CXX      test/test_syscoin-key_properties.o
     ```
 
 5. Run the unit tests with `make check`. The property-based tests will be run

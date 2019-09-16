@@ -8,5 +8,5 @@ packages/*
 */Release
 */x64
 */Win32
-libbitcoin_qt/QtGeneratedFiles/*
-test_bitcoin-qt/QtGeneratedFiles/*
+libsyscoin_qt/QtGeneratedFiles/*
+test_syscoin-qt/QtGeneratedFiles/*
