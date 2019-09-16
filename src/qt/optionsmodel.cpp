@@ -114,6 +114,13 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("bSpendZeroConfChange", true);
     if (!m_node.softSetBoolArg("-spendzeroconfchange", settings.value("bSpendZeroConfChange").toBool()))
         addOverriddenOption("-spendzeroconfchange");
+
+    if (!settings.contains("strExternalSigner"))
+        settings.setValue("strExternalSigner", "");
+
+    if (!m_node.softSetArg("-signer", settings.value("strExternalSignerPath").toString().toStdString())) {
+        addOverriddenOption("-signer");
+    }
 #endif
 
     // Network
@@ -304,6 +311,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
 #ifdef ENABLE_WALLET
         case SpendZeroConfChange:
             return settings.value("bSpendZeroConfChange");
+        case ExternalSignerPath:
+            return settings.value("strExternalSignerPath");
 #endif
         case DisplayUnit:
             return nDisplayUnit;
@@ -416,6 +425,12 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         case SpendZeroConfChange:
             if (settings.value("bSpendZeroConfChange") != value) {
                 settings.setValue("bSpendZeroConfChange", value);
+                setRestartRequired(true);
+            }
+            break;
+        case ExternalSignerPath:
+            if (settings.value("strExternalSignerPath") != value.toString()) {
+                settings.setValue("strExternalSignerPath", value.toString());
                 setRestartRequired(true);
             }
             break;
