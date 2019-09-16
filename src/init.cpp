@@ -1834,17 +1834,6 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                     assert(chainActive.Tip() != NULL);
                 }
 
-                if (!fReindex) {
-                    // Note that RewindBlockIndex MUST run even if we're about to -reindex-chainstate.
-                    // It both disconnects blocks based on chainActive, and drops block data in
-                    // mapBlockIndex based on lack of available witness data.
-                    uiInterface.InitMessage(_("Rewinding blocks..."));
-                    if (!RewindBlockIndex(chainparams)) {
-                        strLoadError = _("Unable to rewind the database to a pre-fork state. You will need to redownload the blockchain");
-                        break;
-                    }
-                }
-
                 if (!fReindex && !fReindexChainState) {
                     uiInterface.InitMessage(_("Verifying blocks..."));
                     if (fHavePruned && gArgs.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS) > MIN_BLOCKS_TO_KEEP) {
