@@ -82,6 +82,8 @@ class InputMissing(BadTxTemplate):
         return tx
 
 
+# The following check prevents exploit of lack of merkle
+# tree depth commitment (CVE-2017-12842)
 class SizeTooSmall(BadTxTemplate):
     reject_reason = "tx-size-small"
     expect_disconnect = False
