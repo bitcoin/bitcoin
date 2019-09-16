@@ -62,7 +62,7 @@
     </rect>
    </property>
    <property name="toolTip">
-    <string>Encrypt the wallet. The wallet will be encrypted with a password of your choice.</string>
+    <string>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</string>
    </property>
    <property name="text">
     <string>Encrypt Wallet</string>
