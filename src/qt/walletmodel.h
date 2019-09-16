@@ -139,6 +139,7 @@ public:
     bool saveReceiveRequest(const std::string &sAddress, const int64_t nId, const std::string &sRequest);
 
     bool bumpFee(uint256 hash, uint256& new_hash);
+    bool displayAddress(std::string sAddress);
 
     static bool isWalletEnabled();
 

@@ -89,6 +89,8 @@ void ReceiveRequestDialog::setInfo(const SendCoinsRecipient &_info)
         ui->wallet_tag->hide();
         ui->wallet_content->hide();
     }
+
+    ui->btnVerify->setVisible(this->model->wallet().hasExternalSigner());
 }
 
 void ReceiveRequestDialog::updateDisplayUnit()
@@ -105,4 +107,9 @@ void ReceiveRequestDialog::on_btnCopyURI_clicked()
 void ReceiveRequestDialog::on_btnCopyAddress_clicked()
 {
     GUIUtil::setClipboard(info.address);
+}
+
+void ReceiveRequestDialog::on_btnVerify_clicked()
+{
+    model->displayAddress(info.address.toStdString());
 }
