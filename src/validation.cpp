@@ -3129,10 +3129,12 @@ bool IsWitnessEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& pa
 // commitment occurs, or -1 if not found.
 static int GetWitnessCommitmentIndex(const CBlock& block)
 {
+    static const unsigned char commitment_header[] = { OP_RETURN, 36, 0xaa,0x21,0xa9,0xed };
     int commitpos = -1;
     if (!block.vtx.empty()) {
         for (size_t o = 0; o < block.vtx[0]->vout.size(); o++) {
-            if (block.vtx[0]->vout[o].scriptPubKey.size() >= 38 && block.vtx[0]->vout[o].scriptPubKey[0] == OP_RETURN && block.vtx[0]->vout[o].scriptPubKey[1] == 0x24 && block.vtx[0]->vout[o].scriptPubKey[2] == 0xaa && block.vtx[0]->vout[o].scriptPubKey[3] == 0x21 && block.vtx[0]->vout[o].scriptPubKey[4] == 0xa9 && block.vtx[0]->vout[o].scriptPubKey[5] == 0xed) {
+            if (block.vtx[0]->vout[o].scriptPubKey.size() >= 38 &&
+                memcmp(&block.vtx[0]->vout[o].scriptPubKey[0], commitment_header, sizeof(commitment_header)) == 0) {
                 commitpos = o;
             }
         }
