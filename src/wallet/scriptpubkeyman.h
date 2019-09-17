@@ -19,6 +19,7 @@
 #include <boost/signals2/signal.hpp>
 
 #include <unordered_map>
+#include <unordered_set>
 
 enum class OutputType;
 struct bilingual_str;
@@ -259,12 +260,12 @@ private:
     //! keeps track of whether Unlock has run a thorough check before
     bool fDecryptionThoroughlyChecked = true;
 
-    using WatchOnlySet = std::set<CScript>;
-    using WatchKeyMap = std::map<CKeyID, CPubKey>;
+    using WatchOnlySet = std::unordered_set<CScript, SaltedScriptHasher>;
+    using WatchKeyMap = std::unordered_map<CKeyID, CPubKey, SaltedKeyIDHasher>;
 
     WalletBatch *encrypted_batch GUARDED_BY(cs_KeyStore) = nullptr;
 
-    using CryptedKeyMap = std::map<CKeyID, std::pair<CPubKey, std::vector<unsigned char>>>;
+    using CryptedKeyMap = std::unordered_map<CKeyID, std::pair<CPubKey, std::vector<unsigned char>>, SaltedKeyIDHasher>;
 
     CryptedKeyMap mapCryptedKeys GUARDED_BY(cs_KeyStore);
     WatchOnlySet setWatchOnly GUARDED_BY(cs_KeyStore);
@@ -400,10 +401,10 @@ public:
     void SetInternal(bool internal) override;
 
     // Map from Key ID to key metadata.
-    std::map<CKeyID, CKeyMetadata> mapKeyMetadata GUARDED_BY(cs_KeyStore);
+    std::unordered_map<CKeyID, CKeyMetadata, SaltedKeyIDHasher> mapKeyMetadata GUARDED_BY(cs_KeyStore);
 
     // Map from Script ID to key metadata (for watch-only keys).
-    std::map<CScriptID, CKeyMetadata> m_script_metadata GUARDED_BY(cs_KeyStore);
+    std::unordered_map<CScriptID, CKeyMetadata, SaltedScriptIDHasher> m_script_metadata GUARDED_BY(cs_KeyStore);
 
     //! Adds a key to the store, and saves it to disk.
     bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey) override;
@@ -516,10 +517,10 @@ class DescriptorScriptPubKeyMan : public ScriptPubKeyMan
 private:
     WalletDescriptor m_wallet_descriptor GUARDED_BY(cs_desc_man);
 
-    using ScriptPubKeyMap = std::map<CScript, int32_t>; // Map of scripts to descriptor range index
-    using PubKeyMap = std::map<CPubKey, int32_t>; // Map of pubkeys involved in scripts to descriptor range index
-    using CryptedKeyMap = std::map<CKeyID, std::pair<CPubKey, std::vector<unsigned char>>>;
-    using KeyMap = std::map<CKeyID, CKey>;
+    using ScriptPubKeyMap = std::unordered_map<CScript, int32_t, SaltedScriptHasher>; // Map of scripts to descriptor range index
+    using PubKeyMap = std::unordered_map<CPubKey, int32_t, SaltedPubkeyHasher>; // Map of pubkeys involved in scripts to descriptor range index
+    using CryptedKeyMap = std::unordered_map<CKeyID, std::pair<CPubKey, std::vector<unsigned char>>, SaltedKeyIDHasher>;
+    using KeyMap = std::unordered_map<CKeyID, CKey, SaltedKeyIDHasher>;
 
     ScriptPubKeyMap m_map_script_pub_keys GUARDED_BY(cs_desc_man);
     PubKeyMap m_map_pubkeys GUARDED_BY(cs_desc_man);

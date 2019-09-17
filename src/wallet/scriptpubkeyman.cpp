@@ -1717,7 +1717,7 @@ void DescriptorScriptPubKeyMan::ReturnDestination(int64_t index, bool internal, 
     NotifyCanGetAddressesChanged();
 }
 
-std::map<CKeyID, CKey> DescriptorScriptPubKeyMan::GetKeys() const
+DescriptorScriptPubKeyMan::KeyMap DescriptorScriptPubKeyMan::GetKeys() const
 {
     AssertLockHeld(cs_desc_man);
     if (m_storage.HasEncryptionKeys() && !m_storage.IsLocked()) {
@@ -1755,7 +1755,8 @@ bool DescriptorScriptPubKeyMan::TopUp(unsigned int size)
     }
 
     FlatSigningProvider provider;
-    provider.keys = GetKeys();
+    KeyMap keys = GetKeys();
+    provider.keys.insert(keys.begin(), keys.end());
 
     WalletBatch batch(m_storage.GetDatabase());
     uint256 id = GetID();
@@ -2024,7 +2025,8 @@ std::unique_ptr<FlatSigningProvider> DescriptorScriptPubKeyMan::GetSigningProvid
 
     if (HavePrivateKeys() && include_private) {
         FlatSigningProvider master_provider;
-        master_provider.keys = GetKeys();
+        KeyMap keys = GetKeys();
+        master_provider.keys.insert(keys.begin(), keys.end());
         m_wallet_descriptor.descriptor->ExpandPrivate(index, master_provider, *out_keys);
     }
 

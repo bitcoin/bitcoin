@@ -8,9 +8,12 @@
 
 #include <key.h>
 #include <pubkey.h>
+#include <saltedhash.h>
 #include <script/script.h>
 #include <script/standard.h>
 #include <sync.h>
+
+#include <unordered_map>
 
 struct KeyOriginInfo;
 
@@ -63,8 +66,8 @@ FlatSigningProvider Merge(const FlatSigningProvider& a, const FlatSigningProvide
 class FillableSigningProvider : public SigningProvider
 {
 protected:
-    using KeyMap = std::map<CKeyID, CKey>;
-    using ScriptMap = std::map<CScriptID, CScript>;
+    using KeyMap = std::unordered_map<CKeyID, CKey, SaltedKeyIDHasher>;
+    using ScriptMap = std::unordered_map<CScriptID, CScript, SaltedScriptIDHasher>;
 
     /**
      * Map of key id to unencrypted private keys known by the signing provider.
