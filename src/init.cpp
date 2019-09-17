@@ -170,7 +170,7 @@ void Interrupt()
     ForEachBlockFilterIndex([](BlockFilterIndex& index) { index.Interrupt(); });
 }
 
-void Shutdown(InitInterfaces& interfaces)
+void Shutdown(NodeContext& node)
 {
     LogPrintf("%s: In progress...\n", __func__);
     static CCriticalSection cs_Shutdown;
@@ -189,7 +189,7 @@ void Shutdown(InitInterfaces& interfaces)
     StopREST();
     StopRPC();
     StopHTTPServer();
-    for (const auto& client : interfaces.chain_clients) {
+    for (const auto& client : node.chain_clients) {
         client->flush();
     }
     StopMapPort();
@@ -261,7 +261,7 @@ void Shutdown(InitInterfaces& interfaces)
         }
         pblocktree.reset();
     }
-    for (const auto& client : interfaces.chain_clients) {
+    for (const auto& client : node.chain_clients) {
         client->stop();
     }
 
@@ -280,7 +280,7 @@ void Shutdown(InitInterfaces& interfaces)
     } catch (const fs::filesystem_error& e) {
         LogPrintf("%s: Unable to remove PID file: %s\n", __func__, fsbridge::get_filesystem_error_message(e));
     }
-    interfaces.chain_clients.clear();
+    node.chain_clients.clear();
     UnregisterAllValidationInterfaces();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
     GetMainSignals().UnregisterWithMempoolSignals(mempool);
@@ -1207,7 +1207,7 @@ bool AppInitLockDataDirectory()
     return true;
 }
 
-bool AppInitMain(InitInterfaces& interfaces)
+bool AppInitMain(NodeContext& node)
 {
     const CChainParams& chainparams = Params();
     // ********************************************************* Step 4a: application initialization
@@ -1275,16 +1275,16 @@ bool AppInitMain(InitInterfaces& interfaces)
     // according to -wallet and -disablewallet options. This only constructs
     // the interfaces, it doesn't load wallet data. Wallets actually get loaded
     // when load() and start() interface methods are called below.
-    g_wallet_init_interface.Construct(interfaces);
+    g_wallet_init_interface.Construct(node);
 
     /* Register RPC commands regardless of -server setting so they will be
      * available in the GUI RPC console even if external calls are disabled.
      */
     RegisterAllCoreRPCCommands(tableRPC);
-    for (const auto& client : interfaces.chain_clients) {
+    for (const auto& client : node.chain_clients) {
         client->registerRpcs();
     }
-    g_rpc_interfaces = &interfaces;
+    g_rpc_node = &node;
 #if ENABLE_ZMQ
     RegisterZMQRPCCommands(tableRPC);
 #endif
@@ -1302,7 +1302,7 @@ bool AppInitMain(InitInterfaces& interfaces)
     }
 
     // ********************************************************* Step 5: verify wallet database integrity
-    for (const auto& client : interfaces.chain_clients) {
+    for (const auto& client : node.chain_clients) {
         if (!client->verify()) {
             return false;
         }
@@ -1661,7 +1661,7 @@ bool AppInitMain(InitInterfaces& interfaces)
     }
 
     // ********************************************************* Step 9: load wallet
-    for (const auto& client : interfaces.chain_clients) {
+    for (const auto& client : node.chain_clients) {
         if (!client->load()) {
             return false;
         }
@@ -1815,7 +1815,7 @@ bool AppInitMain(InitInterfaces& interfaces)
     SetRPCWarmupFinished();
     uiInterface.InitMessage(_("Done loading").translated);
 
-    for (const auto& client : interfaces.chain_clients) {
+    for (const auto& client : node.chain_clients) {
         client->start(scheduler);
     }
 
