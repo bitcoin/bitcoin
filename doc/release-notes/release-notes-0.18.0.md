@@ -54,7 +54,7 @@ platform.
 If you are using the `systemd` unit configuration file located at
 `contrib/init/bitcoind.service`, it has been changed to use
 `/var/lib/bitcoind` as the data directory instead of
-`~bitcoin/.bitcoin`. When switching over to the new configuration file,
+`~/.bitcoin`. When switching over to the new configuration file,
 please make sure that the filesystem on which `/var/lib/bitcoind` will
 exist has enough space (check using `df -h /var/lib/bitcoind`), and
 optionally copy over your existing data directory. See the [systemd init
@@ -128,7 +128,7 @@ systemd init file
 
 The systemd init file (`contrib/init/bitcoind.service`) has been changed
 to use `/var/lib/bitcoind` as the data directory instead of
-`~bitcoin/.bitcoin`. This change makes Bitcoin Core more consistent with
+`~/.bitcoin`. This change makes Bitcoin Core more consistent with
 other services, and makes the systemd init config more consistent with
 existing Upstart and OpenRC configs.
 
