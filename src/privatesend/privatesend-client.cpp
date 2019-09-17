@@ -927,12 +927,12 @@ bool CPrivateSendClientSession::DoAutomaticDenominating(CConnman& connman, bool 
         }
     } // LOCK2(cs_main, vpwallets[0]->cs_wallet);
 
-    bool fUseQueue = GetRandInt(100) > 33;
-    // don't use the queues all of the time for mixing
-    if (fUseQueue && JoinExistingQueue(nBalanceNeedsAnonymized, connman)) {
+    // Always attempt to join an existing queue
+    if (JoinExistingQueue(nBalanceNeedsAnonymized, connman)) {
         return true;
     }
 
+    // If we were unable to find/join an existing queue then start a new one.
     if (StartNewQueue(nBalanceNeedsAnonymized, connman)) return true;
 
     strAutoDenomResult = _("No compatible Masternode found.");
