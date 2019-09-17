@@ -85,6 +85,7 @@ class PruneTest(BitcoinTestFramework):
             ["-dip3params=2000:2000", "-dip8params=2000", "-disablegovernance","-txindex=0","-maxreceivebuffer=20000","-blockmaxsize=999000"],
             ["-dip3params=2000:2000", "-dip8params=2000", "-disablegovernance","-txindex=0","-prune=550"],
         ]
+        self.rpc_timeout = 120
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
