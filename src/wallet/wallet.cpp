@@ -2983,7 +2983,10 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                 }
 
                 if (!complete) {
-                    strFailReason = "PSBT incomplete";
+                    // TODO: return PSBT properly
+                    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+                    ssTx << psbtx;
+                    strFailReason = EncodeBase64(ssTx.str());
                     return false;
                 }
 #else
