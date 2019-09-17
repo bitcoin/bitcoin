@@ -339,6 +339,11 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CConnman
 
 void CGovernanceManager::UpdateCachesAndClean()
 {
+    // Return on initial sync, spammed the debug.log and provided no use
+    if (!masternodeSync.IsBlockchainSynced()) {
+        return;
+    }
+
     LogPrint(BCLog::GOBJECT, "CGovernanceManager::UpdateCachesAndClean\n");
 
     std::vector<uint256> vecDirtyHashes = mmetaman.GetAndClearDirtyGovernanceObjectHashes();
