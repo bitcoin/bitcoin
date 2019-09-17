@@ -9,6 +9,7 @@
 
 #include <interfaces/chain.h>
 #include <interfaces/wallet.h>
+#include <node/context.h>
 #include <wallet/wallet.h>
 
 #include <memory>
@@ -18,7 +19,8 @@
 struct WalletTestingSetup: public TestingSetup {
     explicit WalletTestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
 
-    std::unique_ptr<interfaces::Chain> m_chain = interfaces::MakeChain();
+    NodeContext m_node;
+    std::unique_ptr<interfaces::Chain> m_chain = interfaces::MakeChain(m_node);
     std::unique_ptr<interfaces::ChainClient> m_chain_client = interfaces::MakeWalletClient(*m_chain, {});
     CWallet m_wallet;
 };

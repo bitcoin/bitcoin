@@ -8,6 +8,7 @@
 #include <chainparamsbase.h>
 #include <fs.h>
 #include <key.h>
+#include <node/context.h>
 #include <pubkey.h>
 #include <random.h>
 #include <scheduler.h>
@@ -67,6 +68,7 @@ private:
  * Included are coins database, script check threads setup.
  */
 struct TestingSetup : public BasicTestingSetup {
+    NodeContext m_node;
     boost::thread_group threadGroup;
     CScheduler scheduler;
 
