@@ -496,8 +496,14 @@ public:
         : m_chain(chain), m_wallet_filenames(std::move(wallet_filenames))
     {
     }
-    // SYSCOIN
-    void registerRpcs() override { RegisterAssetWalletRPCCommands(m_chain, m_rpc_handlers); RegisterGovernanceWalletRPCCommands(m_chain, m_rpc_handlers);; return RegisterWalletRPCCommands(m_chain, m_rpc_handlers); }
+    void registerRpcs() override
+    {
+        g_rpc_chain = &m_chain;
+        // SYSCOIN
+        RegisterAssetWalletRPCCommands(m_chain, m_rpc_handlers);
+        RegisterGovernanceWalletRPCCommands(m_chain, m_rpc_handlers);
+        return RegisterWalletRPCCommands(m_chain, m_rpc_handlers);
+    }
     bool verify() override { return VerifyWallets(m_chain, m_wallet_filenames); }
     bool load() override { return LoadWallets(m_chain, m_wallet_filenames); }
     void start(CScheduler& scheduler) override { return StartWallets(scheduler); }
