@@ -25,6 +25,7 @@
 #include <util/url.h>
 #include <util/validation.h>
 #include <wallet/coincontrol.h>
+#include <wallet/externalsigner.h>
 #include <wallet/feebumper.h>
 #include <wallet/psbtwallet.h>
 #include <wallet/rpcwallet.h>
@@ -2773,8 +2774,8 @@ static UniValue createmultisigwallet(const JSONRPCRequest& request)
             {"signers", RPCArg::Type::ARR, RPCArg::Optional::NO, "A json array of signers identified by their BIP32 fingerprint",
                 {
                     {"fingerprint", RPCArg::Type::STR, RPCArg::Optional::NO, "master key fingerprint. Can be obtained using emumeratesigners."},
-                    {"xpub1", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "the xpub at deriviation path m/48h/0h/0h/1h used for P2SH_SEGWIT"},
-                    {"xpub2", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "the xpub at deriviation path m/48h/0h/0h/2h used for native SegWit"}
+                    {"xpub1", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "the xpub at deriviation path m/48h/0h/0h/1h used for P2SH_SEGWIT, obtained automatically if -signer if configured"},
+                    {"xpub2", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "the xpub at deriviation path m/48h/0h/0h/2h used for native SegWit, obtained automatically if -signer if configured"}
                 },
             },
             {"avoid_reuse", RPCArg::Type::BOOL, /* default */ "false", "Keep track of coin reuse, and treat dirty and clean coins differently with privacy considerations in mind."},
@@ -2787,7 +2788,9 @@ static UniValue createmultisigwallet(const JSONRPCRequest& request)
         },
         RPCExamples{
             HelpExampleCli("createmultisigwallet", "\"ManualMultisigWallet\" 2 '[{\"fingerprint\": \"d34db33f\", \"xpub2\": \"xpub6DJ2dNUysrn5Vt36jH2KLBT2i1auw1tTSSomg8PhqNiUtx8QX2SvC9nrHu81fT41fvDUnhMjEzQgXnQjKEu3oaqMSzhSrHMxyyoEAmUHQbY\"}, {\"fingerprint\": \"3442193e\", \"xpub1\": \"xpub661MyMwAqRbcFtXgS5sYJABqqG9YLmC4Q1Rdap9gSE8NqtwybGhePY2gZ29ESFjqJoCu1Rupje8YtGqsefD265TMg7usUDFdp6W1EGMcet8\"}]'")
+            + HelpExampleCli("createmultisigwallet", "\"AutomaticMultisigWallet\" 2 '[{\"fingerprint\": \"d34db33f\"}, {\"fingerprint\": \"3442193e\"}]'")
             + HelpExampleRpc("createmultisigwallet", "\"ManualMultisigWallet\", 2, '[{\"fingerprint\": \"d34db33f\", \"xpub2\": \"xpub6DJ2dNUysrn5Vt36jH2KLBT2i1auw1tTSSomg8PhqNiUtx8QX2SvC9nrHu81fT41fvDUnhMjEzQgXnQjKEu3oaqMSzhSrHMxyyoEAmUHQbY\"}, {\"fingerprint\": \"3442193e\", \"xpub1\": \"xpub661MyMwAqRbcFtXgS5sYJABqqG9YLmC4Q1Rdap9gSE8NqtwybGhePY2gZ29ESFjqJoCu1Rupje8YtGqsefD265TMg7usUDFdp6W1EGMcet8\"}]'")
+            + HelpExampleRpc("createmultisigwallet", "\"AutomaticMultisigWallet\", 2, '[{\"fingerprint\": \"d34db33f\"}, {\"fingerprint\": \"3442193e\"}]'")
         },
     }.Check(request);
 
@@ -2810,13 +2813,39 @@ static UniValue createmultisigwallet(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("invalid BIP32 fingerprint: %s", fingerprint));
         }
 
+#ifdef ENABLE_EXTERNAL_SIGNER
+        const std::string command = gArgs.GetArg("-signer", DEFAULT_EXTERNAL_SIGNER);
+        if (command == "") throw JSONRPCError(RPC_WALLET_ERROR, "Error: restart bitcoind with -signer=<cmd>");
+        std::string chain = gArgs.GetChainName();
+        const bool mainnet = chain == CBaseChainParams::MAIN;
+        ExternalSigner signer = ExternalSigner(command, fingerprint, mainnet, "" /* dummy name */);
+#endif
+
         std::string xpub1 = "";
         std::string xpub2 = "";
         if(signer_data.exists("xpub1")) {
             xpub1 = signer_data["xpub"].get_str();
+        } else {
+#ifdef ENABLE_EXTERNAL_SIGNER
+            flags |= WALLET_FLAG_EXTERNAL_SIGNER;
+            UniValue result = signer.getXpub("m/48h/0h/0h/1h");
+            if (!result.exists("xpub")) {
+                throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Error: unable to obtain xpub1 for signer %s", fingerprint));
+            }
+            xpub1 = result["xpub"].get_str();
+#endif
         }
         if(signer_data.exists("xpub2")) {
             xpub2 = signer_data["xpub2"].get_str();
+        } else {
+#ifdef ENABLE_EXTERNAL_SIGNER
+            flags |= WALLET_FLAG_EXTERNAL_SIGNER;
+            UniValue result = signer.getXpub("m/48h/0h/0h/2h");
+            if (!result.exists("xpub")) {
+                throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Error: unable to obtain xpub2 for signer %s", fingerprint));
+            }
+            xpub2 = result["xpub"].get_str();
+#endif
         }
         if (xpub1 == "" && xpub2 == "") {
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("missing xpub for native and/or wrapped SegWit for signer %s", fingerprint));
@@ -2838,6 +2867,7 @@ static UniValue createmultisigwallet(const JSONRPCRequest& request)
     std::string error;
     std::vector<std::string> warnings;
     std::shared_ptr<CWallet> wallet;
+
     WalletCreationStatus status = CreateMultisigWallet(*g_rpc_chain, flags, request.params[0].get_str(), threshold, devices, error, warnings, wallet);
     switch (status) {
         case WalletCreationStatus::CREATION_FAILED:
