@@ -11,6 +11,7 @@
 #include <net_processing.h>
 #include <net_permissions.h>
 #include <netbase.h>
+#include <node/context.h>
 #include <policy/settings.h>
 #include <rpc/protocol.h>
 #include <rpc/util.h>

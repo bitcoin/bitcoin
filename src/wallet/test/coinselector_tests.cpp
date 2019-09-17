@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <node/context.h>
 #include <wallet/wallet.h>
 #include <wallet/coinselection.h>
 #include <wallet/coincontrol.h>
@@ -28,7 +29,8 @@ std::vector<std::unique_ptr<CWalletTx>> wtxn;
 typedef std::set<CInputCoin> CoinSet;
 
 static std::vector<COutput> vCoins;
-static auto testChain = interfaces::MakeChain();
+static NodeContext testNode;
+static auto testChain = interfaces::MakeChain(testNode);
 static CWallet testWallet(testChain.get(), WalletLocation(), WalletDatabase::CreateDummy());
 static CAmount balance = 0;
 
