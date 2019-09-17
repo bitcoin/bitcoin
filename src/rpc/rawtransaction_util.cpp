@@ -268,7 +268,7 @@ void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keyst
     }
 }
 
-UniValue SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, std::map<COutPoint, Coin>& coins, const UniValue& hashType)
+UniValue SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, const std::map<COutPoint, Coin>& coins, const UniValue& hashType)
 {
     int nHashType = ParseSighashString(hashType);
 
