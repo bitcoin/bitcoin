@@ -1134,5 +1134,3 @@ CTxMemPool::EpochGuard::~EpochGuard()
     ++pool.m_epoch;
     pool.m_has_epoch_guard = false;
 }
-
-SaltedTxidHasher::SaltedTxidHasher() : k0(GetRand(std::numeric_limits<uint64_t>::max())), k1(GetRand(std::numeric_limits<uint64_t>::max())) {}
