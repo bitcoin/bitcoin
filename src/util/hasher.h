@@ -84,4 +84,16 @@ struct BlockHasher
     size_t operator()(const uint256& hash) const { return ReadLE64(hash.begin()); }
 };
 
+class SaltedSipHasher
+{
+private:
+    /** Salt */
+    const uint64_t m_k0, m_k1;
+
+public:
+    SaltedSipHasher();
+
+    size_t operator()(const Span<const unsigned char>& script) const;
+};
+
 #endif // BITCOIN_UTIL_HASHER_H
