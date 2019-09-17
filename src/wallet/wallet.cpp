@@ -2976,11 +2976,12 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                 std::vector<ExternalSigner> signers;
                 ExternalSigner::Enumerate(command, signers, mainnet);
                 if (signers.empty()) throw std::runtime_error(std::string(__func__) + ": No external signers found");
-                // TODO: add fingerprint argument in case of multiple signers
-                ExternalSigner signer = signers[0];
+                for (ExternalSigner signer : signers) {
+                    if( !signer.signTransaction(psbtx, strFailReason)) return false;
+                    complete = FinalizeAndExtractPSBT(psbtx, txNew);
+                    if (complete) break;
+                }
 
-                if( !signer.signTransaction(psbtx, strFailReason)) return false;
-                complete = FinalizeAndExtractPSBT(psbtx, txNew);
                 if (!complete) {
                     strFailReason = "PSBT incomplete";
                     return false;
