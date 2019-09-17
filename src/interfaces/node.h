@@ -28,6 +28,7 @@ class RPCTimerInterface;
 class UniValue;
 class proxyType;
 struct CNodeStateStats;
+struct NodeContext;
 enum class WalletCreationStatus;
 
 namespace interfaces {
@@ -260,6 +261,8 @@ public:
     //! Register handler for additional sync messages.
     using NotifyAdditionalDataSyncProgressChangedFn = std::function<void(double nSyncProgress)>;
     virtual std::unique_ptr<Handler> handleNotifyAdditionalDataSyncProgressChanged(NotifyAdditionalDataSyncProgressChangedFn fn) = 0;  
+    //! Return pointer to internal chain interface, useful for testing.
+    virtual NodeContext* context() { return nullptr; }
 };
 
 //! Return implementation of Node interface.
