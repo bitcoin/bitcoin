@@ -1443,7 +1443,7 @@ private:
     {
         int64_t secondsTotal = 0.001 * remainingTime;
         int64_t hours = secondsTotal / 3600;
-        int64_t minutes = secondsTotal / 60;
+        int64_t minutes = (secondsTotal / 60) % 60;
         int64_t seconds = secondsTotal % 60;
 
         if (hours > 0) {
