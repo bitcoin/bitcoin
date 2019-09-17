@@ -2574,7 +2574,7 @@ static UniValue loadwallet(const JSONRPCRequest& request)
 
     std::string error;
     std::vector<std::string> warning;
-    std::shared_ptr<CWallet> const wallet = LoadWallet(*g_rpc_node->chain, location, error, warning);
+    std::shared_ptr<CWallet> const wallet = LoadWallet(*g_rpc_chain, location, error, warning);
     if (!wallet) throw JSONRPCError(RPC_WALLET_ERROR, error);
 
     UniValue obj(UniValue::VOBJ);
@@ -2700,7 +2700,7 @@ static UniValue createwallet(const JSONRPCRequest& request)
 
     std::string error;
     std::shared_ptr<CWallet> wallet;
-    WalletCreationStatus status = CreateWallet(*g_rpc_node->chain, passphrase, flags, request.params[0].get_str(), error, warnings, wallet);
+    WalletCreationStatus status = CreateWallet(*g_rpc_chain, passphrase, flags, request.params[0].get_str(), error, warnings, wallet);
     switch (status) {
         case WalletCreationStatus::CREATION_FAILED:
             throw JSONRPCError(RPC_WALLET_ERROR, error);
@@ -4231,3 +4231,5 @@ void RegisterWalletRPCCommands(interfaces::Chain& chain, std::vector<std::unique
     for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
         handlers.emplace_back(chain.handleRpc(commands[vcidx]));
 }
+
+interfaces::Chain* g_rpc_chain = nullptr;

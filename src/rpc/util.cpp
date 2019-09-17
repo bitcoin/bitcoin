@@ -13,8 +13,6 @@
 
 #include <tuple>
 
-NodeContext* g_rpc_node = nullptr;
-
 void RPCTypeCheck(const UniValue& params,
                   const std::list<UniValueType>& typesExpected,
                   bool fAllowNull)
