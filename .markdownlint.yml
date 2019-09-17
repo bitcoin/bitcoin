@@ -1,0 +1,44 @@
+# github.com/DavidAnson/markdownlint/blob/master/doc/Rules.md#rules
+---
+MD001: true
+MD003: false
+MD004:
+  style: consistent
+MD005: true
+MD006: true
+MD007: false
+MD009: true
+MD010: true
+MD011: true
+MD012: true
+MD013: false
+MD014: true
+MD018: true
+MD019: true
+MD022: 0
+MD023: true
+MD024: false
+MD025: true
+MD026: false
+MD027: true
+MD028: true
+MD029:
+  style: ordered
+MD030: true
+MD031: false
+MD032: false
+MD033: false
+MD034: false
+MD035:
+  style: "---"
+MD036: true
+MD037: true
+MD038: true
+MD039: true
+MD040: false
+MD041: true
+MD042: true
+MD045: true
+MD046: false
+MD047: true
+
