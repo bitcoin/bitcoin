@@ -104,8 +104,8 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
     for (int i = 0; i < nScriptCheckThreads - 1; i++)
         threadGroup.create_thread([i]() { return ThreadScriptCheck(i); });
 
-    g_banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
-    g_connman = MakeUnique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
+    m_node.banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
+    m_node.connman = MakeUnique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
 }
 
 TestingSetup::~TestingSetup()
@@ -114,8 +114,8 @@ TestingSetup::~TestingSetup()
     threadGroup.join_all();
     GetMainSignals().FlushBackgroundCallbacks();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
-    g_connman.reset();
-    g_banman.reset();
+    m_node.connman.reset();
+    m_node.banman.reset();
     UnloadBlockIndex();
     g_chainstate.reset();
     pblocktree.reset();
