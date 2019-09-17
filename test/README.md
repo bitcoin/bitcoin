@@ -1,3 +1,5 @@
+# Integration Tests
+
 This directory contains integration tests that test bitcoind and its
 utilities in their entirety. It does not contain unit tests, which
 can be found in [/src/test](/src/test), [/src/wallet/test](/src/wallet/test),
@@ -15,10 +17,9 @@ bitcoin-tx.
 The util tests are run as part of `make check` target. The functional
 tests and lint scripts can be run as explained in the sections below.
 
-# Running tests locally
+## Running tests locally
 
 Before tests can be run locally, Bitcoin Core must be built.  See the [building instructions](/doc#building) for help.
-
 
 ### Functional tests
 
@@ -118,7 +119,6 @@ or
 ```bash
 pkill -9 bitcoind
 ```
-
 
 ##### Data directory cache
 
@@ -245,7 +245,7 @@ You can run all the shell-based lint tests by running:
 test/lint/lint-all.sh
 ```
 
-# Writing functional tests
+## Writing functional tests
 
 You are encouraged to write functional tests for new or existing features.
 Further information about the functional test framework and individual

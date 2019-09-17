@@ -87,7 +87,6 @@ hardware implementations will typically implement multiple roles simultaneously.
   possible, computes the fee of the resulting transaction and estimates the
   final weight and feerate.
 
-
 ### Workflows
 
 #### Multisig with multiple Bitcoin Core instances

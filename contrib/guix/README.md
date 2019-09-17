@@ -113,7 +113,7 @@ find output/ -type f -print0 | sort -z | xargs -r0 sha256sum
 
 #### Recognized environment variables
 
-* _**HOSTS**_
+- _**HOSTS**_
 
   Override the space-separated list of platform triples for which to perform a
   bootstrappable build. _(defaults to "i686-linux-gnu x86\_64-linux-gnu
@@ -121,31 +121,31 @@ find output/ -type f -print0 | sort -z | xargs -r0 sha256sum
 
   > Windows and OS X platform triplet support are WIP.
 
-* _**SOURCES_PATH**_
+- _**SOURCES_PATH**_
 
   Set the depends tree download cache for sources. This is passed through to the
   depends tree. Setting this to the same directory across multiple builds of the
   depends tree can eliminate unnecessary redownloading of package sources.
 
-* _**MAX_JOBS**_
+- _**MAX_JOBS**_
 
   Override the maximum number of jobs to run simultaneously, you might want to
   do so on a memory-limited machine. This may be passed to `make` as in `make
   --jobs="$MAX_JOBS"` or `xargs` as in `xargs -P"$MAX_JOBS"`. _(defaults to the
   value of `nproc` outside the container)_
 
-* _**SOURCE_DATE_EPOCH**_
+- _**SOURCE_DATE_EPOCH**_
 
   Override the reference UNIX timestamp used for bit-for-bit reproducibility,
   the variable name conforms to [standard][r12e/source-date-epoch]. _(defaults
   to the output of `$(git log --format=%at -1)`)_
 
-* _**V**_
+- _**V**_
 
   If non-empty, will pass `V=1` to all `make` invocations, making `make` output
   verbose.
 
-* _**ADDITIONAL_GUIX_ENVIRONMENT_FLAGS**_
+- _**ADDITIONAL_GUIX_ENVIRONMENT_FLAGS**_
 
   Additional flags to be passed to `guix environment`. For a fully-bootstrapped
   build, set this to `--bootstrap --no-substitutes` (refer to the [security

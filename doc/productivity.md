@@ -4,25 +4,27 @@ Productivity Notes
 Table of Contents
 -----------------
 
-* [General](#general)
-   * [Cache compilations with `ccache`](#cache-compilations-with-ccache)
-   * [Disable features with `./configure`](#disable-features-with-configure)
-   * [Make use of your threads with `make -j`](#make-use-of-your-threads-with-make--j)
-   * [Only build what you need](#only-build-what-you-need)
-   * [Multiple working directories with `git worktrees`](#multiple-working-directories-with-git-worktrees)
-   * [Interactive "dummy rebases" for fixups and execs with `git merge-base`](#interactive-dummy-rebases-for-fixups-and-execs-with-git-merge-base)
-* [Writing code](#writing-code)
-   * [Format C/C++/Protobuf diffs with `clang-format-diff.py`](#format-ccprotobuf-diffs-with-clang-format-diffpy)
-   * [Format Python diffs with `yapf-diff.py`](#format-python-diffs-with-yapf-diffpy)
-* [Rebasing/Merging code](#rebasingmerging-code)
-   * [More conflict context with `merge.conflictstyle diff3`](#more-conflict-context-with-mergeconflictstyle-diff3)
-* [Reviewing code](#reviewing-code)
-   * [Reduce mental load with `git diff` options](#reduce-mental-load-with-git-diff-options)
-   * [Reference PRs easily with `refspec`s](#reference-prs-easily-with-refspecs)
-   * [Diff the diffs with `git range-diff`](#diff-the-diffs-with-git-range-diff)
+- [Productivity Notes](#productivity-notes)
+  - [Table of Contents](#table-of-contents)
+  - [General](#general)
+    - [Cache compilations with `ccache`](#cache-compilations-with-ccache)
+    - [Disable features with `./configure`](#disable-features-with-configure)
+    - [Make use of your threads with `make -j`](#make-use-of-your-threads-with-make--j)
+    - [Only build what you need](#only-build-what-you-need)
+    - [Multiple working directories with `git worktrees`](#multiple-working-directories-with-git-worktrees)
+    - [Interactive "dummy rebases" for fixups and execs with `git merge-base`](#interactive-%22dummy-rebases%22-for-fixups-and-execs-with-git-merge-base)
+  - [Writing code](#writing-code)
+    - [Format C/C++/Protobuf diffs with `clang-format-diff.py`](#format-ccprotobuf-diffs-with-clang-format-diffpy)
+    - [Format Python diffs with `yapf-diff.py`](#format-python-diffs-with-yapf-diffpy)
+  - [Rebasing/Merging code](#rebasingmerging-code)
+    - [More conflict context with `merge.conflictstyle diff3`](#more-conflict-context-with-mergeconflictstyle-diff3)
+  - [Reviewing code](#reviewing-code)
+    - [Reduce mental load with `git diff` options](#reduce-mental-load-with-git-diff-options)
+    - [Reference PRs easily with `refspec`s](#reference-prs-easily-with-refspecs)
+    - [Diff the diffs with `git range-diff`](#diff-the-diffs-with-git-range-diff)
 
 General
-------
+-------
 
 ### Cache compilations with `ccache`
 
@@ -109,7 +111,7 @@ To execute `make check` on every commit since last diverged from master, but wit
 git rebase -i --exec "make check" "$(git merge-base master HEAD)"
 ```
 
------
+---
 
 This synergizes well with [`ccache`](#cache-compilations-with-ccache) as objects resulting from unchanged code will most likely hit the cache and won't need to be recompiled.
 
@@ -127,7 +129,7 @@ See [contrib/devtools/README.md](/contrib/devtools/README.md#clang-format-diff.p
 Usage is exactly the same as [`clang-format-diff.py`](#format-ccprotobuf-diffs-with-clang-format-diffpy). You can get it [here](https://github.com/MarcoFalke/yapf-diff).
 
 Rebasing/Merging code
--------------
+---------------------
 
 ### More conflict context with `merge.conflictstyle diff3`
 
@@ -210,7 +212,7 @@ PREV=P5 N=4 && git range-diff `git merge-base --all HEAD $PREV`...$PREV HEAD~$N.
 
 Where `P5` is the commit you last reviewed and `4` is the number of commits in the new version.
 
------
+---
 
 `git range-diff` also accepts normal `git diff` options, see [Reduce mental load with `git diff` options](#reduce-mental-load-with-git-diff-options) for useful `git diff` options.
 

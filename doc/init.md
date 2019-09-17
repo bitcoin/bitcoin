@@ -30,13 +30,13 @@ file, however it is recommended that a strong and secure password be used
 as this password is security critical to securing the wallet should the
 wallet be enabled.
 
-If bitcoind is run with the "-server" flag (set by default), and no rpcpassword is set,
+If bitcoind is run with the `-server` flag (set by default), and no rpcpassword is set,
 it will use a special cookie file for authentication. The cookie is generated with random
 content when the daemon starts, and deleted when it exits. Read access to this file
 controls who can access it through RPC.
 
 By default the cookie is stored in the data directory, but it's location can be overridden
-with the option '-rpccookiefile'.
+with the option `-rpccookiefile`.
 
 This allows for running bitcoind without having to do any manual configuration.
 
@@ -53,11 +53,11 @@ Paths
 
 All three configurations assume several paths that might need to be adjusted.
 
-Binary:              `/usr/bin/bitcoind`
-Configuration file:  `/etc/bitcoin/bitcoin.conf`
-Data directory:      `/var/lib/bitcoind`
-PID file:            `/var/run/bitcoind/bitcoind.pid` (OpenRC and Upstart) or `/run/bitcoind/bitcoind.pid` (systemd)
-Lock file:           `/var/lock/subsys/bitcoind` (CentOS)
+- Binary:              `/usr/bin/bitcoind`
+- Configuration file:  `/etc/bitcoin/bitcoin.conf`
+- Data directory:      `/var/lib/bitcoind`
+- PID file:            `/var/run/bitcoind/bitcoind.pid` (OpenRC and Upstart) or `/run/bitcoind/bitcoind.pid` (systemd)
+- Lock file:           `/var/lock/subsys/bitcoind` (CentOS)
 
 The PID directory (if applicable) and data directory should both be owned by the
 bitcoin user and group. It is advised for security reasons to make the
@@ -81,12 +81,12 @@ configuration mechanisms that would allow for overriding the command line
 options specified in the init files (e.g. setting `BITCOIND_DATADIR` for
 OpenRC).
 
-### macOS
+### MacOS
 
-Binary:              `/usr/local/bin/bitcoind`
-Configuration file:  `~/Library/Application Support/Bitcoin/bitcoin.conf`
-Data directory:      `~/Library/Application Support/Bitcoin`
-Lock file:           `~/Library/Application Support/Bitcoin/.lock`
+- Binary:              `/usr/local/bin/bitcoind`
+- Configuration file:  `~/Library/Application Support/Bitcoin/bitcoin.conf`
+- Data directory:      `~/Library/Application Support/Bitcoin`
+- Lock file:           `~/Library/Application Support/Bitcoin/.lock`
 
 Installing Service Configuration
 -----------------------------------

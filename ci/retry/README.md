@@ -1,9 +1,8 @@
-retry - The command line retry tool
-------------------------------------------
+# retry - The command line retry tool
 
 Retry any shell command with exponential backoff or constant delay.
 
-### Instructions
+## Instructions
 
 Install:
 
@@ -21,7 +20,7 @@ brew install retry
 ```
 Not popular enough for homebrew-core. Please star this project to help.
 
-### Usage
+## Usage
 
 Help:
 
@@ -32,8 +31,8 @@ Help:
         -v, --verbose                    Verbose output
         -t, --tries=#                    Set max retries: Default 10
         -s, --sleep=secs                 Constant sleep amount (seconds)
-        -m, --min=secs                   Exponenetial Backoff: minimum sleep amount (seconds): Default 0.3
-        -x, --max=secs                   Exponenetial Backoff: maximum sleep amount (seconds): Default 60
+        -m, --min=secs                   Exponential Backoff: minimum sleep amount (seconds): Default 0.3
+        -x, --max=secs                   Exponential Backoff: maximum sleep amount (seconds): Default 60
         -f, --fail="script +cmds"        Fail Script: run in case of final failure
 
 ### Examples

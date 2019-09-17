@@ -1,3 +1,5 @@
+# Dependencies - Packages
+
 Each recipe consists of 3 main parts: defining identifiers, setting build
 variables, and defining build commands.
 
@@ -48,7 +50,6 @@ These variables are optional:
     Any extra files that will be fetched via $(package)_fetch_cmds. These are
     specified so that they can be fetched and verified via 'make download'.
 
-
 ## Build Variables:
 After defining the main identifiers, build variables may be added or customized
 before running the build commands. They should be added to a function called
@@ -61,10 +62,10 @@ $(package)_set_vars. For example:
 Most variables can be prefixed with the host, architecture, or both, to make
 the modifications specific to that case. For example:
 
-    Universal:     $(package)_cc=gcc
-    Linux only:    $(package)_linux_cc=gcc
-    x86_64 only:       $(package)_x86_64_cc = gcc
-    x86_64 linux only: $(package)_x86_64_linux_cc = gcc
+    Universal:         $(package)_cc=gcc
+    Linux only:        $(package)_linux_cc=gcc
+    x86_64 only:       $(package)_x86_64_cc=gcc
+    x86_64 linux only: $(package)_x86_64_linux_cc=gcc
 
 These variables may be set to override or append their default values.
 
@@ -159,9 +160,9 @@ possible.
 
 From the [Gentoo Wiki entry](https://wiki.gentoo.org/wiki/Project:Quality_Assurance/Handling_Libtool_Archives):
 
->  Libtool pulls in all direct and indirect dependencies into the .la files it
->  creates. This leads to massive overlinking, which is toxic to the Gentoo
->  ecosystem, as it leads to a massive number of unnecessary rebuilds.
+> Libtool pulls in all direct and indirect dependencies into the .la files it
+> creates. This leads to massive overlinking, which is toxic to the Gentoo
+> ecosystem, as it leads to a massive number of unnecessary rebuilds.
 
 ## Secondary dependencies:
 

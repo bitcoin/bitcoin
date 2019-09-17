@@ -1,4 +1,6 @@
-### Usage
+# Dependencies
+
+## Usage
 
 To build dependencies for the current arch+OS:
 
@@ -33,17 +35,17 @@ Common `host-platform-triplets` for cross compilation are:
 
 No other options are needed, the paths are automatically configured.
 
-### Install the required dependencies: Ubuntu & Debian
+## Install the required dependencies: Ubuntu & Debian
 
-#### For macOS cross compilation
+### For macOS cross compilation
 
     sudo apt-get install curl librsvg2-bin libtiff-tools bsdmainutils cmake imagemagick libcap-dev libz-dev libbz2-dev python3-setuptools
 
-#### For Win32/Win64 cross compilation
+### For Win32/Win64 cross compilation
 
-- see [build-windows.md](../doc/build-windows.md#cross-compilation-for-ubuntu-and-windows-subsystem-for-linux)
+See [build-windows.md](../doc/build-windows.md#cross-compilation-for-ubuntu-and-windows-subsystem-for-linux)
 
-#### For linux (including i386, ARM) cross compilation
+### For linux (including i386, ARM) cross compilation
 
 Common linux dependencies:
 
@@ -95,4 +97,3 @@ options will be passed to bitcoin's configure. In this case, `--disable-wallet`.
 
 - [description.md](description.md): General description of the depends system
 - [packages.md](packages.md): Steps for adding packages
-

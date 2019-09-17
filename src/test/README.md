@@ -1,4 +1,4 @@
-### Compiling/running unit tests
+# Compiling/running unit tests
 
 Unit tests will be automatically compiled if dependencies were met in `./configure`
 and tests weren't explicitly disabled.
@@ -12,14 +12,14 @@ to run the bitcoind tests.
 
 To add more bitcoind tests, add `BOOST_AUTO_TEST_CASE` functions to the existing
 .cpp files in the `test/` directory or add new .cpp files that
-implement new BOOST_AUTO_TEST_SUITE sections.
+implement new `BOOST_AUTO_TEST_SUITE` sections.
 
 To run the bitcoin-qt tests manually, launch `src/qt/test/test_bitcoin-qt`
 
 To add more bitcoin-qt tests, add them to the `src/qt/test/` directory and
 the `src/qt/test/test_main.cpp` file.
 
-### Running individual tests
+## Running individual tests
 
 test_bitcoin has some built-in command-line arguments; for
 example, to run just the getarg_tests verbosely:
@@ -32,7 +32,7 @@ example, to run just the getarg_tests verbosely:
 
 Run `test_bitcoin --help` for the full list.
 
-### Note on adding test cases
+## Note on adding test cases
 
 The sources in this directory are unit test cases.  Boost includes a
 unit testing framework, and since bitcoin already uses boost, it makes

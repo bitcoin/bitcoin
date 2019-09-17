@@ -1,4 +1,4 @@
-# macOS Build Instructions and Notes
+# MacOS Build Guide and Notes
 
 The commands in this guide should be executed in a Terminal application.
 The built-in one is located in
@@ -50,7 +50,7 @@ from the root of the repository.
     cd bitcoin
     ```
 
-2.  Build Bitcoin Core:
+2. Build Bitcoin Core:
 
     Configure and build the headless Bitcoin Core binaries as well as the GUI (if Qt is found).
 
@@ -61,12 +61,12 @@ from the root of the repository.
     make
     ```
 
-3.  It is recommended to build and run the unit tests:
+3. It is recommended to build and run the unit tests:
     ```shell
     make check
     ```
 
-4.  You can also create a  `.dmg` that contains the `.app` bundle (optional):
+4. You can also create a  `.dmg` that contains the `.app` bundle (optional):
     ```shell
     make deploy
     ```
@@ -197,12 +197,11 @@ order to satisfy the new Gatekeeper requirements. Because this private key canno
 shared, we'll have to be a bit creative in order for the build process to remain somewhat
 deterministic. Here's how it works:
 
-- Builders use Gitian to create an unsigned release. This outputs an unsigned DMG which
+* Builders use Gitian to create an unsigned release. This outputs an unsigned DMG which
   users may choose to bless and run. It also outputs an unsigned app structure in the form
   of a tarball, which also contains all of the tools that have been previously (deterministically)
   built in order to create a final DMG.
-- The Apple keyholder uses this unsigned app to create a detached signature, using the
+* The Apple keyholder uses this unsigned app to create a detached signature, using the
   script that is also included there. Detached signatures are available from this [repository](https://github.com/bitcoin-core/bitcoin-detached-sigs).
-- Builders feed the unsigned app + detached signature back into Gitian. It uses the
+* Builders feed the unsigned app + detached signature back into Gitian. It uses the
   pre-built tools to recombine the pieces into a deterministic DMG.
-

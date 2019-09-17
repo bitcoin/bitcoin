@@ -1,3 +1,5 @@
+# Bitcoin Data Files
+
 Filename            | Description
 --------------------|----------------------------------------------------------------------------------------------------------------------------
 banlist.dat         | stores the IPs/Subnets of banned nodes

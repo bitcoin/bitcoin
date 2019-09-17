@@ -32,7 +32,7 @@ Controlling dependencies
 ------------------------
 Some dependencies are not needed in all configurations. The following are some factors that affect the dependency list.
 
-#### Options passed to `./configure`
+### Options passed to `./configure`
 * MiniUPnPc is not needed with  `--with-miniupnpc=no`.
 * Berkeley DB is not needed with `--disable-wallet`.
 * protobuf is only needed with `--enable-bip70`.
@@ -40,5 +40,5 @@ Some dependencies are not needed in all configurations. The following are some f
 * If the qrencode dependency is absent, QR support won't be added. To force an error when that happens, pass `--with-qrencode`.
 * ZeroMQ is needed only with the `--with-zmq` option.
 
-#### Other
+### Other
 * librsvg is only needed if you need to run `make deploy` on (cross-compilation to) macOS.

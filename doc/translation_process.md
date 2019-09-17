@@ -3,14 +3,14 @@ Translations
 
 The Bitcoin-Core project has been designed to support multiple localisations. This makes adding new phrases, and completely new languages easily achievable. For managing all application translations, Bitcoin-Core makes use of the Transifex online translation management tool.
 
-### Helping to translate (using Transifex)
+## Helping to translate (using Transifex)
 Transifex is setup to monitor the GitHub repo for updates, and when code containing new translations is found, Transifex will process any changes. It may take several hours after a pull-request has been merged, to appear in the Transifex web interface.
 
 Multiple language support is critical in assisting Bitcoin’s global adoption, and growth. One of Bitcoin’s greatest strengths is cross-border money transfers, any help making that easier is greatly appreciated.
 
 See the [Transifex Bitcoin project](https://www.transifex.com/bitcoin/bitcoin/) to assist in translations. You should also join the translation mailing list for announcements - see details below.
 
-### Writing code with translations
+## Writing code with translations
 We use automated scripts to help extract translations in both Qt, and non-Qt source files. It is rarely necessary to manually edit the files in `src/qt/locale/`. The translation source files must adhere to the following format:
 `bitcoin_xx_YY.ts or bitcoin_xx.ts`
 
@@ -24,12 +24,12 @@ make translate
 
 `contrib/bitcoin-qt.pro` takes care of generating `.qm` (binary compiled) files from `.ts` (source files) files. It’s mostly automated, and you shouldn’t need to worry about it.
 
-**Example Qt translation**
+### Example Qt translation
 ```cpp
 QToolBar *toolbar = addToolBar(tr("Tabs toolbar"));
 ```
 
-### Creating a pull-request
+## Creating a pull-request
 For general PRs, you shouldn’t include any updates to the translation source files. They will be updated periodically, primarily around pre-releases, allowing time for any new phrases to be translated before public releases. This is also important in avoiding translation related merge conflicts.
 
 When an updated source file is merged into the GitHub repo, Transifex will automatically detect it (although it can take several hours). Once processed, the new strings will show up as "Remaining" in the Transifex web interface and are ready for translators.
@@ -40,17 +40,17 @@ git add src/qt/bitcoinstrings.cpp src/qt/locale/bitcoin_en.ts
 git commit
 ```
 
-### Creating a Transifex account
+## Creating a Transifex account
 Visit the [Transifex Signup](https://www.transifex.com/signup/) page to create an account. Take note of your username and password, as they will be required to configure the command-line tool.
 
 You can find the Bitcoin translation project at [https://www.transifex.com/bitcoin/bitcoin/](https://www.transifex.com/bitcoin/bitcoin/).
 
-### Installing the Transifex client command-line tool
+## Installing the Transifex client command-line tool
 The client is used to fetch updated translations. If you are having problems, or need more details, see [https://docs.transifex.com/client/installing-the-client](https://docs.transifex.com/client/installing-the-client)
 
 `pip install transifex-client`
 
-Setup your Transifex client config as follows. Please *ignore the token field*.
+Setup your Transifex client config as follows (**ignore the token field**):
 
 ```ini
 nano ~/.transifexrc
@@ -70,19 +70,19 @@ To assist in updating translations, a helper script is available in the [maintai
 1. `python3 ../bitcoin-maintainer-tools/update-translations.py`
 2. `git add` new translations from `src/qt/locale/`
 3. Update `src/qt/bitcoin_locale.qrc` manually or via
-```bash
-git ls-files src/qt/locale/*ts|xargs -n1 basename|sed 's/\(bitcoin_\(.*\)\).ts/        <file alias="\2">locale\/\1.qm<\/file>/'
-```
+   ```bash
+   git ls-files src/qt/locale/*ts|xargs -n1 basename|sed 's/\(bitcoin_\(.*\)\).ts/        <file alias="\2">locale\/\1.qm<\/file>/'
+   ```
 4. Update `src/Makefile.qt.include` manually or via
-```bash
-git ls-files src/qt/locale/*ts|xargs -n1 basename|sed 's/\(bitcoin_\(.*\)\).ts/  qt\/locale\/\1.ts \\/'
-```
+   ```bash
+   git ls-files src/qt/locale/*ts|xargs -n1 basename|sed 's/\(bitcoin_\(.*\)\).ts/  qt\/locale\/\1.ts \\/'
+   ```
 5. Update `build_msvc/libbitcoin_qt/libbitcoin_qt.vcxproj` or via
-```bash
-git ls-files src/qt/locale/*ts|xargs -n1 basename |
-  sed 's/@/%40/' |
-  sed 's/\(bitcoin_\(.*\)\).ts/    <None Include="..\\..\\src\\qt\\locale\\\1.ts">\n      <DeploymentContent>true<\/DeploymentContent>\n    <\/None>/'
-```
+   ```bash
+   git ls-files src/qt/locale/*ts|xargs -n1 basename |
+     sed 's/@/%40/' |
+     sed 's/\(bitcoin_\(.*\)\).ts/    <None Include="..\\..\\src\\qt\\locale\\\1.ts">\n      <DeploymentContent>true<\/DeploymentContent>\n    <\/None>/'
+   ```
 
 **Do not directly download translations** one by one from the Transifex website, as we do a few post-processing steps before committing the translations.
 

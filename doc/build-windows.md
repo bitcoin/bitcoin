@@ -1,4 +1,4 @@
-WINDOWS BUILD NOTES
+Windows Build Notes
 ====================
 
 Below are some notes on how to build Bitcoin Core for Windows.
@@ -34,18 +34,18 @@ Full instructions to install WSL are available on the above link.
 To install WSL on Windows 10 with Fall Creators Update installed (version >= 16215.0) do the following:
 
 1. Enable the Windows Subsystem for Linux feature
-  * Open the Windows Features dialog (`OptionalFeatures.exe`)
-  * Enable 'Windows Subsystem for Linux'
-  * Click 'OK' and restart if necessary
+   * Open the Windows Features dialog (`OptionalFeatures.exe`)
+   * Enable 'Windows Subsystem for Linux'
+   * Click 'OK' and restart if necessary
 2. Install Ubuntu
-  * Open Microsoft Store and search for "Ubuntu 18.04" or use [this link](https://www.microsoft.com/store/productId/9N9TNGVNDL3Q)
-  * Click Install
+   * Open Microsoft Store and search for "Ubuntu 18.04" or use [this link](https://www.microsoft.com/store/productId/9N9TNGVNDL3Q)
+   * Click Install
 3. Complete Installation
-  * Open a cmd prompt and type "Ubuntu1804"
-  * Create a new UNIX user account (this is a separate account from your Windows account)
+   * Open a cmd prompt and type `Ubuntu1804`
+   * Create a new UNIX user account (this is a separate account from your Windows account)
 
 After the bash shell is active, you can follow the instructions below, starting
-with the "Cross-compilation" section. Compiling the 64-bit version is
+with the cross-compilation section. Compiling the 64-bit version is
 recommended, but it is possible to compile the 32-bit version.
 
 Cross-compilation for Ubuntu and Windows Subsystem for Linux

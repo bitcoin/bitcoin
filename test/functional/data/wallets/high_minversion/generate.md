@@ -1,3 +1,5 @@
+# Generating the `high_minversion` wallet
+
 The wallet has been created by starting Bitcoin Core with the options
 `-regtest -datadir=/tmp -nowallet -walletdir=$(pwd)/test/functional/data/wallets/`.
 

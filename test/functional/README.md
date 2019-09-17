@@ -1,21 +1,21 @@
 # Functional tests
 
-### Writing Functional Tests
+## Writing Functional Tests
 
-#### Example test
+### Example test
 
 The [example_test.py](example_test.py) is a heavily commented example of a test case that uses both
 the RPC and P2P interfaces. If you are writing your first test, copy that file
 and modify to fit your needs.
 
-#### Coverage
+### Coverage
 
 Running `test_runner.py` with the `--coverage` argument tracks which RPCs are
 called by the tests and prints a report of uncovered RPCs in the summary. This
 can be used (along with the `--extended` argument) to find out which RPCs we
 don't have test cases for.
 
-#### Style guidelines
+### Style guidelines
 
 - Where possible, try to adhere to [PEP-8 guidelines](https://www.python.org/dev/peps/pep-0008/)
 - Use a python linter like flake8 before submitting PRs to catch common style
@@ -34,7 +34,7 @@ don't have test cases for.
   the subclass, then locally-defined helper methods, then the `run_test()` method.
 - Use `'{}'.format(x)` for string formatting, not `'%s' % x`.
 
-#### Naming guidelines
+### Naming guidelines
 
 - Name the test `<area>_test.py`, where area can be one of the following:
     - `feature` for tests for full features that aren't wallet/mining/mempool, eg `feature_rbf.py`
@@ -49,7 +49,7 @@ don't have test cases for.
     - exception: for tests for specific RPCs or command line options which don't include underscores, name the test after the exact RPC or argument name, eg `rpc_decodescript.py`, not `rpc_decode_script.py`
 - Don't use the redundant word `test` in the name, eg `interface_zmq.py`, not `interface_zmq_test.py`
 
-#### General test-writing advice
+### General test-writing advice
 
 - Set `self.num_nodes` to the minimum number of nodes necessary for the test.
   Having additional unrequired nodes adds to the execution time of the test as
@@ -71,7 +71,7 @@ don't have test cases for.
   from typographical errors or usage of the objects outside of their intended
   purpose.
 
-#### RPC and P2P definitions
+### RPC and P2P definitions
 
 Test writers may find it helpful to refer to the definitions for the RPC and
 P2P messages. These can be found in the following source files:
@@ -80,7 +80,7 @@ P2P messages. These can be found in the following source files:
 - `/src/wallet/rpc*` for wallet RPCs
 - `ProcessMessage()` in `/src/net_processing.cpp` for parsing P2P messages
 
-#### Using the P2P interface
+### Using the P2P interface
 
 - `messages.py` contains all the definitions for objects that pass
 over the network (`CBlock`, `CTransaction`, etc, along with the network-level
@@ -98,33 +98,33 @@ P2PInterface object and override the callback methods.
 - Can be used to write tests where specific P2P protocol behavior is tested.
 Examples tests are `p2p_unrequested_blocks.py`, `p2p_compactblocks.py`.
 
-### test-framework modules
+## test-framework modules
 
-#### [test_framework/authproxy.py](test_framework/authproxy.py)
+## [test_framework/authproxy.py](test_framework/authproxy.py)
 Taken from the [python-bitcoinrpc repository](https://github.com/jgarzik/python-bitcoinrpc).
 
-#### [test_framework/test_framework.py](test_framework/test_framework.py)
+### [test_framework/test_framework.py](test_framework/test_framework.py)
 Base class for functional tests.
 
-#### [test_framework/util.py](test_framework/util.py)
+### [test_framework/util.py](test_framework/util.py)
 Generally useful functions.
 
-#### [test_framework/mininode.py](test_framework/mininode.py)
+### [test_framework/mininode.py](test_framework/mininode.py)
 Basic code to support P2P connectivity to a bitcoind.
 
-#### [test_framework/script.py](test_framework/script.py)
+### [test_framework/script.py](test_framework/script.py)
 Utilities for manipulating transaction scripts (originally from python-bitcoinlib)
 
-#### [test_framework/key.py](test_framework/key.py)
+### [test_framework/key.py](test_framework/key.py)
 Wrapper around OpenSSL EC_Key (originally from python-bitcoinlib)
 
-#### [test_framework/bignum.py](test_framework/bignum.py)
+### [test_framework/bignum.py](test_framework/bignum.py)
 Helpers for script.py
 
-#### [test_framework/blocktools.py](test_framework/blocktools.py)
+### [test_framework/blocktools.py](test_framework/blocktools.py)
 Helper functions for creating blocks and transactions.
 
-### Benchmarking with perf
+## Benchmarking with perf
 
 An easy way to profile node performance during functional tests is provided
 for Linux platforms using `perf`.
@@ -151,7 +151,7 @@ To see useful textual output, run
 perf report -i /path/to/datadir/send-big-msgs.perf.data.xxxx --stdio | c++filt | less
 ```
 
-#### See also:
+### See also:
 
 - [Installing perf](https://askubuntu.com/q/50145)
 - [Perf examples](http://www.brendangregg.com/perf.html)

@@ -1,15 +1,15 @@
-This folder contains lint scripts.
+# Lint Scripts
 
-check-doc.py
-============
+## check-doc.py
+
 Check for missing documentation of command line options.
 
-commit-script-check.sh
-======================
+## commit-script-check.sh
+
 Verification of [scripted diffs](/doc/developer-notes.md#scripted-diffs).
 
-git-subtree-check.sh
-====================
+## git-subtree-check.sh
+
 Run this script from the root of the repository to verify that a subtree matches the contents of
 the commit it claims to have been updated to.
 
@@ -24,6 +24,6 @@ Usage: `git-subtree-check.sh DIR (COMMIT)`
 
 `COMMIT` may be omitted, in which case `HEAD` is used.
 
-lint-all.sh
-===========
+## lint-all.sh
+
 Calls other scripts with the `lint-` prefix.

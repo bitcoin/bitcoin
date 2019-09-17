@@ -2,41 +2,47 @@ Developer Notes
 ===============
 
 <!-- markdown-toc start -->
+<!-- markdownlint-disable no-emphasis-as-header -->
 **Table of Contents**
+<!-- markdownlint-enable no-emphasis-as-header -->
 
 - [Developer Notes](#developer-notes)
-    - [Coding Style (General)](#coding-style-general)
-    - [Coding Style (C++)](#coding-style-c)
-    - [Coding Style (Python)](#coding-style-python)
-    - [Coding Style (Doxygen-compatible comments)](#coding-style-doxygen-compatible-comments)
-    - [Development tips and tricks](#development-tips-and-tricks)
-        - [Compiling for debugging](#compiling-for-debugging)
-        - [Compiling for gprof profiling](#compiling-for-gprof-profiling)
-        - [debug.log](#debuglog)
-        - [Testnet and Regtest modes](#testnet-and-regtest-modes)
-        - [DEBUG_LOCKORDER](#debug_lockorder)
-        - [Valgrind suppressions file](#valgrind-suppressions-file)
-        - [Compiling for test coverage](#compiling-for-test-coverage)
-        - [Performance profiling with perf](#performance-profiling-with-perf)
-    - [Locking/mutex usage notes](#lockingmutex-usage-notes)
-    - [Threads](#threads)
-    - [Ignoring IDE/editor files](#ignoring-ideeditor-files)
-- [Development guidelines](#development-guidelines)
-    - [General Bitcoin Core](#general-bitcoin-core)
-    - [Wallet](#wallet)
-    - [General C++](#general-c)
-    - [C++ data structures](#c-data-structures)
-    - [Strings and formatting](#strings-and-formatting)
-    - [Shadowing](#shadowing)
-    - [Threads and synchronization](#threads-and-synchronization)
-    - [Scripts](#scripts)
-        - [Shebang](#shebang)
-    - [Source code organization](#source-code-organization)
-    - [GUI](#gui)
-    - [Subtrees](#subtrees)
-    - [Scripted diffs](#scripted-diffs)
-    - [Release notes](#release-notes)
-    - [RPC interface guidelines](#rpc-interface-guidelines)
+  - [Coding Style (General)](#coding-style-general)
+  - [Coding Style (C++)](#coding-style-c)
+  - [Coding Style (Python)](#coding-style-python)
+  - [Coding Style (Doxygen-compatible comments)](#coding-style-doxygen-compatible-comments)
+  - [Development tips and tricks](#development-tips-and-tricks)
+    - [Compiling for debugging](#compiling-for-debugging)
+    - [Compiling for gprof profiling](#compiling-for-gprof-profiling)
+    - [debug.log](#debuglog)
+    - [Testnet and Regtest modes](#testnet-and-regtest-modes)
+    - [DEBUG_LOCKORDER](#debuglockorder)
+    - [Valgrind suppressions file](#valgrind-suppressions-file)
+    - [Compiling for test coverage](#compiling-for-test-coverage)
+    - [Performance profiling with perf](#performance-profiling-with-perf)
+      - [Sanitizers](#sanitizers)
+  - [Locking/mutex usage notes](#lockingmutex-usage-notes)
+  - [Threads](#threads)
+  - [Ignoring IDE/editor files](#ignoring-ideeditor-files)
+- [Development Guidelines](#development-guidelines)
+  - [General Bitcoin Core](#general-bitcoin-core)
+  - [Wallet](#wallet)
+  - [General C++](#general-c)
+  - [C++ data structures](#c-data-structures)
+  - [Strings and formatting](#strings-and-formatting)
+  - [Shadowing](#shadowing)
+  - [Threads and synchronization](#threads-and-synchronization)
+  - [Scripts](#scripts)
+    - [Shebang](#shebang)
+  - [Source code organization](#source-code-organization)
+  - [GUI](#gui)
+  - [Subtrees](#subtrees)
+  - [Upgrading LevelDB](#upgrading-leveldb)
+    - [File Descriptor Counts](#file-descriptor-counts)
+    - [Consensus Compatibility](#consensus-compatibility)
+  - [Scripted diffs](#scripted-diffs)
+  - [Release notes](#release-notes)
+  - [RPC interface guidelines](#rpc-interface-guidelines)
 
 <!-- markdown-toc end -->
 
@@ -284,8 +290,8 @@ Certain kernel parameters may need to be set for perf to be able to inspect the
 running process's stack.
 
 ```sh
-$ sudo sysctl -w kernel.perf_event_paranoid=-1
-$ sudo sysctl -w kernel.kptr_restrict=0
+sudo sysctl -w kernel.perf_event_paranoid=-1
+sudo sysctl -w kernel.kptr_restrict=0
 ```
 
 Make sure you [understand the security
@@ -311,8 +317,7 @@ or using a graphical tool like [Hotspot](https://github.com/KDAB/hotspot).
 
 See the functional test documentation for how to invoke perf within tests.
 
-
-**Sanitizers**
+#### Sanitizers
 
 Bitcoin Core can be compiled with various "sanitizers" enabled, which add
 instrumentation for issues regarding things like memory safety, thread race
@@ -354,14 +359,14 @@ compiler.
 
 Additional resources:
 
- * [AddressSanitizer](https://clang.llvm.org/docs/AddressSanitizer.html)
- * [LeakSanitizer](https://clang.llvm.org/docs/LeakSanitizer.html)
- * [MemorySanitizer](https://clang.llvm.org/docs/MemorySanitizer.html)
- * [ThreadSanitizer](https://clang.llvm.org/docs/ThreadSanitizer.html)
- * [UndefinedBehaviorSanitizer](https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html)
- * [GCC Instrumentation Options](https://gcc.gnu.org/onlinedocs/gcc/Instrumentation-Options.html)
- * [Google Sanitizers Wiki](https://github.com/google/sanitizers/wiki)
- * [Issue #12691: Enable -fsanitize flags in Travis](https://github.com/bitcoin/bitcoin/issues/12691)
+- [AddressSanitizer](https://clang.llvm.org/docs/AddressSanitizer.html)
+- [LeakSanitizer](https://clang.llvm.org/docs/LeakSanitizer.html)
+- [MemorySanitizer](https://clang.llvm.org/docs/MemorySanitizer.html)
+- [ThreadSanitizer](https://clang.llvm.org/docs/ThreadSanitizer.html)
+- [UndefinedBehaviorSanitizer](https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html)
+- [GCC Instrumentation Options](https://gcc.gnu.org/onlinedocs/gcc/Instrumentation-Options.html)
+- [Google Sanitizers Wiki](https://github.com/google/sanitizers/wiki)
+- [Issue #12691: Enable -fsanitize flags in Travis](https://github.com/bitcoin/bitcoin/issues/12691)
 
 Locking/mutex usage notes
 -------------------------
@@ -420,7 +425,7 @@ to do this is thus to create your local gitignore. Add this to `~/.gitconfig`:
 
 ```
 [core]
-        excludesfile = /home/.../.gitignore_global
+    excludesfile = /home/.../.gitignore_global
 ```
 
 (alternatively, type the command `git config --global core.excludesfile ~/.gitignore_global`
@@ -439,8 +444,10 @@ If a set of tools is used by the build system or scripts the repository (for
 example, lcov) it is perfectly acceptable to add its files to `.gitignore`
 and commit them.
 
-Development guidelines
-============================
+<!-- markdownlint-disable single-h1 -->
+Development Guidelines
+======================
+<!-- markdownlint-enable single-h1 -->
 
 A few non-style-related recommendations for developers, as well as points to
 pay attention to for reviewers of Bitcoin Core code.
@@ -539,12 +546,12 @@ C++ data structures
     Initializing the members in the declaration makes it easy to
     spot uninitialized ones.
 
-```cpp
-class A
-{
-    uint32_t m_count{0};
-}
-```
+  ```cpp
+  class A
+  {
+      uint32_t m_count{0};
+  }
+  ```
 
 - By default, declare single-argument constructors `explicit`.
 
@@ -634,7 +641,7 @@ Threads and synchronization
   the current scope, so surround the statement and the code that needs the lock
   with braces.
 
-  OK:
+OK:
 ```c++
 {
     TRY_LOCK(cs_vNodes, lockNodes);
@@ -642,7 +649,7 @@ Threads and synchronization
 }
 ```
 
-  Wrong:
+Wrong:
 ```c++
 TRY_LOCK(cs_vNodes, lockNodes);
 {
@@ -663,12 +670,12 @@ Scripts
 
     `#!/usr/bin/env bash` searches the user's PATH to find the bash binary.
 
-  OK:
+OK:
 ```bash
 #!/usr/bin/env bash
 ```
 
-  Wrong:
+Wrong:
 ```bash
 #!/bin/bash
 ```
@@ -702,15 +709,15 @@ Source code organization
 - Terminate namespaces with a comment (`// namespace mynamespace`). The comment
   should be placed on the same line as the brace closing the namespace, e.g.
 
-```c++
-namespace mynamespace {
-...
-} // namespace mynamespace
+  ```c++
+  namespace mynamespace {
+  ...
+  } // namespace mynamespace
 
-namespace {
-...
-} // namespace
-```
+  namespace {
+  ...
+  } // namespace
+  ```
 
   - *Rationale*: Avoids confusion about the namespace context.
 
@@ -725,12 +732,12 @@ namespace {
 - Use include guards to avoid the problem of double inclusion. The header file
   `foo/bar.h` should use the include guard identifier `BITCOIN_FOO_BAR_H`, e.g.
 
-```c++
-#ifndef BITCOIN_FOO_BAR_H
-#define BITCOIN_FOO_BAR_H
-...
-#endif // BITCOIN_FOO_BAR_H
-```
+  ```c++
+  #ifndef BITCOIN_FOO_BAR_H
+  #define BITCOIN_FOO_BAR_H
+  ...
+  #endif // BITCOIN_FOO_BAR_H
+  ```
 
 GUI
 -----

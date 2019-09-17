@@ -1,4 +1,4 @@
-## PGP keys of Gitian builders and Developers
+# PGP keys of Gitian builders and Developers
 
 The file `keys.txt` contains fingerprints of the public keys of Gitian builders
 and active developers.

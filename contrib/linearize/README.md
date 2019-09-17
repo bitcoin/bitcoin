@@ -3,7 +3,7 @@ Construct a linear, no-fork, best version of the Bitcoin blockchain.
 
 ## Step 1: Download hash list
 
-    $ ./linearize-hashes.py linearize.cfg > hashlist.txt
+    ./linearize-hashes.py linearize.cfg > hashlist.txt
 
 Required configuration file settings for linearize-hashes:
 * RPC: `datadir` (Required if `rpcuser` and `rpcpassword` are not specified)
@@ -24,7 +24,7 @@ JSON-RPC server. Running `bitcoind` or `bitcoin-qt -server` will be sufficient.
 
 ## Step 2: Copy local block data
 
-    $ ./linearize-data.py linearize.cfg
+    ./linearize-data.py linearize.cfg
 
 Required configuration file settings:
 * `output_file`: The file that will contain the final blockchain.
