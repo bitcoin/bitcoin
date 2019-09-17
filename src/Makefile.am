@@ -187,6 +187,7 @@ SYSCOIN_CORE_H = \
   netmessagemaker.h \
   node/coin.h \
   node/coinstats.h \
+  node/context.h \
   node/psbt.h \
   node/transaction.h \
   noui.h \
