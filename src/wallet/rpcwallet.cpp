@@ -4252,6 +4252,26 @@ UniValue walletprocesspsbt(const JSONRPCRequest& request)
         throw JSONRPCTransactionError(err);
     }
 
+#ifdef ENABLE_EXTERNAL_SIGNER
+    if (!complete && pwallet->IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER)) {
+        const std::string command = gArgs.GetArg("-signer", DEFAULT_EXTERNAL_SIGNER);
+        if (command == "") throw std::runtime_error(std::string(__func__) + ": restart bitcoind with -signer=<cmd>");
+
+        std::string chain = gArgs.GetChainName();
+        const bool mainnet = chain == CBaseChainParams::MAIN;
+        std::vector<ExternalSigner> signers;
+        ExternalSigner::Enumerate(command, signers, mainnet);
+        if (signers.empty()) throw std::runtime_error(std::string(__func__) + ": No external signers found");
+
+        for (ExternalSigner signer : signers) {
+            std::string strFailReason;
+            if( !signer.signTransaction(psbtx, strFailReason)) JSONRPCError(RPC_WALLET_ERROR, strprintf("Signing failed %s", strFailReason));
+            complete = FinalizePSBT(psbtx);
+            if (complete) break;
+        }
+    }
+#endif
+
     UniValue result(UniValue::VOBJ);
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
     ssTx << psbtx;
