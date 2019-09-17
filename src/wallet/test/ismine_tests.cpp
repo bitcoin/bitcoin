@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <key.h>
+#include <node/context.h>
 #include <script/script.h>
 #include <script/standard.h>
 #include <test/setup_common.h>
@@ -26,7 +27,8 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
     CKey uncompressedKey;
     uncompressedKey.MakeNewKey(false);
     CPubKey uncompressedPubkey = uncompressedKey.GetPubKey();
-    std::unique_ptr<interfaces::Chain> chain = interfaces::MakeChain();
+    NodeContext node;
+    std::unique_ptr<interfaces::Chain> chain = interfaces::MakeChain(node);
 
     CScript scriptPubKey;
     isminetype result;

@@ -7,17 +7,16 @@
 #define BITCOIN_INIT_H
 
 #include <memory>
-#include <node/context.h>
 #include <string>
 #include <util/system.h>
 
-namespace boost
-{
+struct NodeContext;
+namespace boost {
 class thread_group;
 } // namespace boost
 
 /** Interrupt threads */
-void Interrupt();
+void Interrupt(NodeContext& node);
 void Shutdown(NodeContext& node);
 //!Initialize the logging infrastructure
 void InitLogging();

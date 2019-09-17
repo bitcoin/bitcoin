@@ -29,6 +29,7 @@
 #include <net_permissions.h>
 #include <net_processing.h>
 #include <netbase.h>
+#include <node/context.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
@@ -154,7 +155,7 @@ static std::unique_ptr<ECCVerifyHandle> globalVerifyHandle;
 static boost::thread_group threadGroup;
 static CScheduler scheduler;
 
-void Interrupt()
+void Interrupt(NodeContext& node)
 {
     InterruptHTTPServer();
     InterruptHTTPRPC();
@@ -1819,8 +1820,9 @@ bool AppInitMain(NodeContext& node)
         client->start(scheduler);
     }
 
-    scheduler.scheduleEvery([]{
-        g_banman->DumpBanlist();
+    BanMan* banman = g_banman.get();
+    scheduler.scheduleEvery([banman]{
+        banman->DumpBanlist();
     }, DUMP_BANS_INTERVAL * 1000);
 
     return true;

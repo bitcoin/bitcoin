@@ -16,6 +16,7 @@
 #include <net_processing.h>
 #include <netaddress.h>
 #include <netbase.h>
+#include <node/context.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <policy/settings.h>
@@ -52,7 +53,6 @@ namespace {
 class NodeImpl : public Node
 {
 public:
-    NodeImpl() { m_context.chain = MakeChain(); }
     void initError(const std::string& message) override { InitError(message); }
     bool parseParameters(int argc, const char* const argv[], std::string& error) override
     {
@@ -75,10 +75,14 @@ public:
         return AppInitBasicSetup() && AppInitParameterInteraction() && AppInitSanityChecks() &&
                AppInitLockDataDirectory();
     }
-    bool appInitMain() override { return AppInitMain(m_context); }
+    bool appInitMain() override
+    {
+        m_context.chain = MakeChain(m_context);
+        return AppInitMain(m_context);
+    }
     void appShutdown() override
     {
-        Interrupt();
+        Interrupt(m_context);
         Shutdown(m_context);
     }
     void startShutdown() override { StartShutdown(); }
@@ -315,6 +319,7 @@ public:
                     /* verification progress is unused when a header was received */ 0);
             }));
     }
+    NodeContext* context() override { return &m_context; }
     NodeContext m_context;
 };
 
