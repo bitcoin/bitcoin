@@ -7,6 +7,8 @@
 
 #include <crypto/siphash.h>
 #include <primitives/transaction.h>
+#include <pubkey.h>
+#include <script/standard.h>
 #include <uint256.h>
 
 class SaltedTxidHasher
@@ -48,6 +50,54 @@ public:
     size_t operator()(const COutPoint& id) const noexcept {
         return SipHashUint256Extra(k0, k1, id.hash, id.n);
     }
+};
+
+class SaltedKeyIDHasher
+{
+private:
+    /** Salt */
+    uint64_t m_k0, m_k1;
+
+public:
+    SaltedKeyIDHasher();
+
+    size_t operator()(const CKeyID& id) const;
+};
+
+class SaltedScriptIDHasher
+{
+private:
+    /** Salt */
+    const uint64_t m_k0, m_k1;
+
+public:
+    SaltedScriptIDHasher();
+
+    size_t operator()(const CScriptID& id) const;
+};
+
+class SaltedScriptHasher
+{
+private:
+    /** Salt */
+    const uint64_t m_k0, m_k1;
+
+public:
+    SaltedScriptHasher();
+
+    size_t operator()(const CScript& script) const;
+};
+
+class SaltedPubkeyHasher
+{
+private:
+    /** Salt */
+    const uint64_t m_k0, m_k1;
+
+public:
+    SaltedPubkeyHasher();
+
+    size_t operator()(const CPubKey& pubkey) const;
 };
 
 #endif // BITCOIN_SALTEDHASH_H
