@@ -52,7 +52,7 @@ namespace {
 class NodeImpl : public Node
 {
 public:
-    NodeImpl() { m_interfaces.chain = MakeChain(); }
+    NodeImpl() { m_context.chain = MakeChain(); }
     void initError(const std::string& message) override { InitError(message); }
     bool parseParameters(int argc, const char* const argv[], std::string& error) override
     {
@@ -76,11 +76,11 @@ public:
         return AppInitBasicSetup(argv) && AppInitParameterInteraction() && AppInitSanityChecks() &&
                AppInitLockDataDirectory();
     }
-    bool appInitMain() override { return AppInitMain(m_interfaces); }
+    bool appInitMain() override { return AppInitMain(m_context); }
     void appShutdown() override
     {
         Interrupt();
-        Shutdown(m_interfaces);
+        Shutdown(m_context);
     }
     void startShutdown() override { StartShutdown(); }
     bool shutdownRequested() override { return ShutdownRequested(); }
@@ -256,12 +256,12 @@ public:
     }
     std::unique_ptr<Wallet> loadWallet(const std::string& name, std::string& error, std::vector<std::string>& warnings) override
     {
-        return MakeWallet(LoadWallet(*m_interfaces.chain, name, error, warnings));
+        return MakeWallet(LoadWallet(*m_context.chain, name, error, warnings));
     }
     WalletCreationStatus createWallet(const SecureString& passphrase, uint64_t wallet_creation_flags, const std::string& name, std::string& error, std::vector<std::string>& warnings, std::unique_ptr<Wallet>& result) override
     {
         std::shared_ptr<CWallet> wallet;
-        WalletCreationStatus status = CreateWallet(*m_interfaces.chain, passphrase, wallet_creation_flags, name, error, warnings, wallet);
+        WalletCreationStatus status = CreateWallet(*m_context.chain, passphrase, wallet_creation_flags, name, error, warnings, wallet);
         result = MakeWallet(wallet);
         return status;
     }
@@ -321,7 +321,7 @@ public:
     {
         return MakeHandler(::uiInterface.NotifyAdditionalDataSyncProgressChanged_connect(fn));
     }
-    InitInterfaces m_interfaces;
+    NodeContext m_context;
 };
 
 } // namespace

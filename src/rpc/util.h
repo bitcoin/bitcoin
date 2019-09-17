@@ -25,12 +25,12 @@
 class FillableSigningProvider;
 class CPubKey;
 class CScript;
-struct InitInterfaces;
+struct NodeContext;
 
 //! Pointers to interfaces that need to be accessible from RPC methods. Due to
 //! limitations of the RPC framework, there's currently no direct way to pass in
 //! state to RPC method implementations.
-extern InitInterfaces* g_rpc_interfaces;
+extern NodeContext* g_rpc_node;
 
 /** Wrapper for UniValue::VType, which includes typeAny:
  * Used to denote don't care type. */
