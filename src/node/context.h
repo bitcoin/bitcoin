@@ -8,6 +8,9 @@
 #include <memory>
 #include <vector>
 
+class BanMan;
+class CConnman;
+class PeerLogicValidation;
 namespace interfaces {
 class Chain;
 class ChainClient;
@@ -25,6 +28,9 @@ class ChainClient;
 //! be used without pulling in unwanted dependencies or functionality.
 struct NodeContext
 {
+    std::unique_ptr<CConnman> connman;
+    std::unique_ptr<PeerLogicValidation> peer_logic;
+    std::unique_ptr<BanMan> banman;
     std::unique_ptr<interfaces::Chain> chain;
     std::vector<std::unique_ptr<interfaces::ChainClient>> chain_clients;
 

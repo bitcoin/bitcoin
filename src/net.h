@@ -566,8 +566,6 @@ private:
 
     friend struct CConnmanTest;
 };
-extern std::unique_ptr<CConnman> g_connman;
-extern std::unique_ptr<BanMan> g_banman;
 void Discover();
 void StartMapPort();
 void InterruptMapPort();

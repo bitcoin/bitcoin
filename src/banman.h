@@ -66,5 +66,4 @@ private:
     const int64_t m_default_ban_time;
 };
 
-extern std::unique_ptr<BanMan> g_banman;
 #endif
