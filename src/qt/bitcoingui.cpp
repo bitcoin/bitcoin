@@ -337,6 +337,9 @@ void BitcoinGUI::createActions()
     m_open_wallet_action->setStatusTip(tr("Open a wallet"));
     m_open_wallet_menu = new QMenu(this);
 
+    m_open_external_wallet_action = new QAction(tr("Other..."), this);
+    m_open_external_wallet_action->setStatusTip(tr("Open a wallet in an external directory"));
+
     m_close_wallet_action = new QAction(tr("Close Wallet..."), this);
     m_close_wallet_action->setStatusTip(tr("Close wallet"));
 
@@ -399,6 +402,8 @@ void BitcoinGUI::createActions()
                 QAction* action = m_open_wallet_menu->addAction(tr("No wallets available"));
                 action->setEnabled(false);
             }
+            m_open_wallet_menu->addSeparator();
+            m_open_wallet_menu->addAction(m_open_external_wallet_action);
         });
         connect(m_close_wallet_action, &QAction::triggered, [this] {
             m_wallet_controller->closeWallet(walletFrame->currentWalletModel(), this);
@@ -408,6 +413,12 @@ void BitcoinGUI::createActions()
             connect(activity, &CreateWalletActivity::created, this, &BitcoinGUI::setCurrentWallet);
             connect(activity, &CreateWalletActivity::finished, activity, &QObject::deleteLater);
             activity->create();
+        });
+        connect(m_open_external_wallet_action, &QAction::triggered, [this] {
+            auto activity = new OpenExternalWalletActivity(m_wallet_controller, this);
+            connect(activity, &OpenExternalWalletActivity::opened, this, &BitcoinGUI::setCurrentWallet);
+            connect(activity, &OpenExternalWalletActivity::finished, activity, &QObject::deleteLater);
+            activity->open();
         });
     }
 #endif // ENABLE_WALLET
