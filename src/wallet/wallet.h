@@ -12,6 +12,7 @@
 #include <outputtype.h>
 #include <policy/feerate.h>
 #include <psbt.h>
+#include <saltedhash.h>
 #include <tinyformat.h>
 #include <ui_interface.h>
 #include <util/message.h>
@@ -34,6 +35,7 @@
 #include <stdint.h>
 #include <string>
 #include <utility>
+#include <unordered_map>
 #include <vector>
 
 #include <boost/signals2/signal.hpp>
@@ -777,7 +779,7 @@ public:
     /** Interface to assert chain access */
     bool HaveChain() const { return m_chain ? true : false; }
 
-    std::map<uint256, CWalletTx> mapWallet GUARDED_BY(cs_wallet);
+    std::unordered_map<uint256, CWalletTx, SaltedTxidHasher> mapWallet GUARDED_BY(cs_wallet);
 
     typedef std::multimap<int64_t, CWalletTx*> TxItems;
     TxItems wtxOrdered;
