@@ -7,20 +7,9 @@
 #define BITCOIN_INIT_H
 
 #include <memory>
+#include <node/context.h>
 #include <string>
 #include <util/system.h>
-
-namespace interfaces {
-class Chain;
-class ChainClient;
-} // namespace interfaces
-
-//! Pointers to interfaces used during init and destroyed on shutdown.
-struct NodeContext
-{
-    std::unique_ptr<interfaces::Chain> chain;
-    std::vector<std::unique_ptr<interfaces::ChainClient>> chain_clients;
-};
 
 namespace boost
 {
