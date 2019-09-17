@@ -59,6 +59,12 @@ public:
     //! @param[out] UniValue see doc/external-signer.md
     UniValue getDescriptors(int account);
 
+    //! Get xpub for a given path.
+    //! Calls `<command> getxpub <path>`
+    //! @param[in] path  which derivation path to use (e.g. `m/44'/0'/account'`)
+    //! @param[out] UniValue see doc/external-signer.md
+    UniValue getXpub(const std::string& path);
+
     //! Sign PartiallySignedTransaction on the device.
     //! Calls `<command> signtransaction` and passes the PSBT via stdin.
     //! @param[in,out] psbt  PartiallySignedTransaction to be signed

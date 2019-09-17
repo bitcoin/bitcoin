@@ -135,6 +135,22 @@ $ <cmd> --fingerprint=00000000 --testnet getdescriptors
 }
 ```
 
+### `getxpub` (optional)
+
+Usage:
+
+```
+$ <cmd> --fingerprint=<fingerprint> (--testnet) getxpub <path>
+<xpub>
+```
+
+Returns xpub at a given path. Example:
+
+```
+$ <cmd> --fingerprint=00000000 --testnet getxpub "44h/0h/0h"
+"xpub..."
+```
+
 ### `displayaddress` (optional)
 
 Usage:

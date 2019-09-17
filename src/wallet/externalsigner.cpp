@@ -53,6 +53,11 @@ UniValue ExternalSigner::getDescriptors(int account)
     return runCommandParseJSON(m_command + " --fingerprint \"" + m_fingerprint + "\"" + (m_mainnet ? "" : " --testnet ") + " getdescriptors --account " + strprintf("%d", account));
 }
 
+UniValue ExternalSigner::getXpub(const std::string& path)
+{
+    return runCommandParseJSON(m_command + " --fingerprint \"" + m_fingerprint + "\"" + (m_mainnet ? "" : " --testnet ") + " getxpub " + path);
+}
+
 bool ExternalSigner::signTransaction(PartiallySignedTransaction& psbtx, std::string& error)
 {
     // Check if signer fingerpint matches any input master key fingerprint
