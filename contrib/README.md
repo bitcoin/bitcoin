@@ -31,12 +31,12 @@ Notes on getting Gitian builds up and running using KVM.
 PGP keys used for signing Dash Core [Gitian release](/doc/release-process.md) results.
 
 ### [MacDeploy](/contrib/macdeploy) ###
-Scripts and notes for Mac builds. 
+Scripts and notes for Mac builds.
 
 ### [Gitian-build](/contrib/gitian-build.py) ###
 Script for running full Gitian builds.
 
-Test and Verify Tools 
+Test and Verify Tools
 ---------------------
 
 ### [TestGen](/contrib/testgen) ###
