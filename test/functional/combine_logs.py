@@ -24,9 +24,11 @@ import tempfile
 TMPDIR_PREFIX = "bitcoin_func_test_"
 
 # Matches on the date format at the start of the log event
-TIMESTAMP_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{6})?Z")
+TIMESTAMP_PATTERN = re.compile(
+    r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{6})?Z")
 
 LogEvent = namedtuple('LogEvent', ['timestamp', 'source', 'event'])
+
 
 def main():
     """Main function. Parses args, reads the log files and renders them as text or html."""
@@ -36,8 +38,10 @@ def main():
         'testdir', nargs='?', default='',
         help=('temporary test directory to combine logs from. '
               'Defaults to the most recent'))
-    parser.add_argument('-c', '--color', dest='color', action='store_true', help='outputs the combined log with events colored by source (requires posix terminal colors. Use less -r for viewing)')
-    parser.add_argument('--html', dest='html', action='store_true', help='outputs the combined log as html. Requires jinja2. pip install jinja2')
+    parser.add_argument('-c', '--color', dest='color', action='store_true',
+                        help='outputs the combined log with events colored by source (requires posix terminal colors. Use less -r for viewing)')
+    parser.add_argument('--html', dest='html', action='store_true',
+                        help='outputs the combined log as html. Requires jinja2. pip install jinja2')
     args = parser.parse_args()
 
     if args.html and args.color:
@@ -51,7 +55,8 @@ def main():
         sys.exit(1)
 
     if not args.testdir:
-        print("Opening latest test directory: {}".format(testdir), file=sys.stderr)
+        print("Opening latest test directory: {}".format(
+            testdir), file=sys.stderr)
 
     colors = defaultdict(lambda: '')
     if args.color:
@@ -78,16 +83,21 @@ def read_logs(tmp_dir):
     for each of the input log files."""
 
     # Find out what the folder is called that holds the debug.log file
-    chain = glob.glob("{}/node0/*/debug.log".format(tmp_dir))
-    if chain:
-        chain = chain[0]  # pick the first one if more than one chain was found (should never happen)
-        chain = re.search(r'node0/(.+?)/debug\.log$', chain).group(1)  # extract the chain name
-    else:
-        chain = 'regtest'  # fallback to regtest (should only happen when none exists)
 
-    files = [("test", "%s/test_framework.log" % tmp_dir)]
+    chain = glob.glob(os.path.join(tmp_dir, "node0", "*", "debug.log"))
+    if chain:
+        # pick the first one if more than one chain was found (should never happen)
+        chain = chain[0]
+        sep = os.path.sep
+        chain = re.search(r'node0' + sep + '(.+?)' + sep +
+                          'debug\.log$', chain).group(1)  # extract the chain name
+    else:
+        # fallback to regtest (should only happen when none exists)
+        chain = 'regtest'
+
+    files = [("test", os.path.join(tmp_dir, "test_framework.log"))]
     for i in itertools.count():
-        logfile = "{}/node{}/{}/debug.log".format(tmp_dir, i, chain)
+        logfile = os.path.join(tmp_dir, "node{}".format(i), chain, "debug.log")
         if not os.path.isfile(logfile):
             break
         files.append(("node%d" % i, logfile))
@@ -101,18 +111,21 @@ def print_node_warnings(tmp_dir, colors):
     warnings = []
     for stream in ['stdout', 'stderr']:
         for i in itertools.count():
-            folder = "{}/node{}/{}".format(tmp_dir, i, stream)
+            folder = os.path.join(tmp_dir, "node{}".format(i), stream)
             if not os.path.isdir(folder):
                 break
             for (_, _, fns) in os.walk(folder):
                 for fn in fns:
-                    warning = pathlib.Path('{}/{}'.format(folder, fn)).read_text().strip()
+                    warning = pathlib.Path(os.path.join(
+                        folder, fn)).read_text().strip()
                     if warning:
-                        warnings.append(("node{} {}".format(i, stream), warning))
+                        warnings.append(
+                            ("node{} {}".format(i, stream), warning))
 
     print()
     for w in warnings:
-        print("{} {} {} {}".format(colors[w[0].split()[0]], w[0], w[1], colors["reset"]))
+        print("{} {} {} {}".format(
+            colors[w[0].split()[0]], w[0], w[1], colors["reset"]))
 
 
 def find_latest_test_dir():
@@ -169,17 +182,20 @@ def get_log_events(source, logfile):
             # Flush the final event
             yield LogEvent(timestamp=timestamp, source=source, event=event.rstrip())
     except FileNotFoundError:
-        print("File %s could not be opened. Continuing without it." % logfile, file=sys.stderr)
+        print("File %s could not be opened. Continuing without it." %
+              logfile, file=sys.stderr)
 
 
 def print_logs_plain(log_events, colors):
     """Renders the iterator of log events into text."""
     for event in log_events:
         lines = event.event.splitlines()
-        print("{0} {1: <5} {2} {3}".format(colors[event.source.rstrip()], event.source, lines[0], colors["reset"]))
+        print("{0} {1: <5} {2} {3}".format(
+            colors[event.source.rstrip()], event.source, lines[0], colors["reset"]))
         if len(lines) > 1:
             for line in lines[1:]:
-                print("{0}{1}{2}".format(colors[event.source.rstrip()], line, colors["reset"]))
+                print("{0}{1}{2}".format(
+                    colors[event.source.rstrip()], line, colors["reset"]))
 
 
 def print_logs_html(log_events):
@@ -190,8 +206,8 @@ def print_logs_html(log_events):
         print("jinja2 not found. Try `pip install jinja2`")
         sys.exit(1)
     print(jinja2.Environment(loader=jinja2.FileSystemLoader('./'))
-                    .get_template('combined_log_template.html')
-                    .render(title="Combined Logs from testcase", log_events=[event._asdict() for event in log_events]))
+          .get_template('combined_log_template.html')
+          .render(title="Combined Logs from testcase", log_events=[event._asdict() for event in log_events]))
 
 
 if __name__ == '__main__':
