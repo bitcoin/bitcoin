@@ -377,24 +377,50 @@ target_link_libraries(crown_wallet
 #LIBCROWN-PLATFORM
 
 add_library(crown_platform
+  platform/specialtx-common.h
+  platform/specialtx.h
   platform/specialtx.cpp
+  platform/governance-vote.h
   platform/governance-vote.cpp
+  platform/governance-approval-voting.h
   platform/governance-approval-voting.cpp
   platform/governance.cpp
+  platform/agent.h
   platform/agent.cpp
   platform/platform-utils.h
   platform/platform-db.h
   platform/platform-db.cpp
+
+  platform/rpc/specialtx-rpc-utils.h
   platform/rpc/specialtx-rpc-utils.cpp
+  platform/rpc/rpcagents.h
   platform/rpc/rpcagents.cpp
+  platform/rpc/rpc-nf-token.h
   platform/rpc/rpc-nf-token.cpp
+  platform/rpc/rpc-nft-proto.h
+  platform/rpc/rpc-nft-proto.cpp
+
+  platform/nf-token/nf-token.h
+  platform/nf-token/nf-token-index.h
+  platform/nf-token/nf-token-multiindex-utils.h
   platform/nf-token/nf-token-multiindex-utils.cpp
-  platform/nf-token/nf-tokens-single-protocol-manager.cpp
-  platform/nf-token/nf-tokens-manager.cpp
-  platform/nf-token/nf-token-tx-mem-pool-handler.cpp
-  platform/nf-token/nf-token-reg-tx.cpp
+  platform/nf-token/nf-token-protocol.h
+  platform/nf-token/nf-token-protocol-index.h
+  platform/nf-token/nf-token-protocol-reg-tx.h
   platform/nf-token/nf-token-protocol-reg-tx.cpp
-  platform/nf-token/nf-token-index.h)
+  platform/nf-token/nf-token-reg-tx.h
+  platform/nf-token/nf-token-reg-tx.cpp
+  platform/nf-token/nf-token-reg-tx-builder.h
+  platform/nf-token/nf-token-tx-mem-pool-handler.h
+  platform/nf-token/nf-token-tx-mem-pool-handler.cpp
+  platform/nf-token/nft-protocols-manager.h
+  platform/nf-token/nf-tokens-manager.cpp
+
+
+
+
+
+  )
 
 target_include_directories(crown_platform
   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} PRIVATE leveldb/include
