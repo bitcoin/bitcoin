@@ -4,7 +4,7 @@
 /* Define if building universal (internal helper macro) */
 /* #undef AC_APPLE_UNIVERSAL_BUILD */
 
-/* Version Build */
+/* Version build */
 #define CLIENT_VERSION_BUILD 0
 
 /* Version is release */
@@ -22,11 +22,11 @@
 /* Copyright holder(s) before %s replacement */
 #define COPYRIGHT_HOLDERS "The %s developers"
 
-/* Copyright holder(s) */
-#define COPYRIGHT_HOLDERS_FINAL "The Bitcoin Core developers"
-
 /* Replacement for %s in copyright holders string */
 #define COPYRIGHT_HOLDERS_SUBSTITUTION "Bitcoin Core"
+
+/* Copyright holder(s) */
+#define COPYRIGHT_HOLDERS_FINAL "The Bitcoin Core developers"
 
 /* Copyright year */
 #define COPYRIGHT_YEAR 2019
