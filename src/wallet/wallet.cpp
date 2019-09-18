@@ -4417,7 +4417,7 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
             assert(m_max_keypool_index < std::numeric_limits<int64_t>::max()); // How in the hell did you use so many keys?
             int64_t index = ++m_max_keypool_index;
 
-            CPubKey pubkey(GenerateNewKey(walletdb, fInternal));
+            CPubKey pubkey(GenerateNewKey(walletdb, 0, fInternal));
             if (!walletdb.WritePool(index, CKeyPool(pubkey, fInternal))) {
                 throw std::runtime_error(std::string(__func__) + ": writing generated key failed");
             }
