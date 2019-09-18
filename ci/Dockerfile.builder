@@ -17,7 +17,7 @@ RUN pip3 install pyzmq # really needed?
 RUN pip3 install jinja2
 RUN pip3 install flake8==3.5.0
 RUN pip3 install codespell==1.15.0
-RUN pip3 install vulture==0.29
+RUN pip3 install vulture==1.0
 RUN pip3 install yq
 
 # dash_hash
