@@ -6,7 +6,7 @@
 
 from test_framework.mininode import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, connect_nodes_bi
+from test_framework.util import assert_equal, connect_nodes
 
 class ConnectDevnetNodes(BitcoinTestFramework):
     def set_test_params(self):
@@ -18,13 +18,13 @@ class ConnectDevnetNodes(BitcoinTestFramework):
         self.add_nodes(self.num_nodes)
         self.start_node(0)
         self.start_node(1)
-        connect_nodes_bi(self.nodes, 0, 1)
+        connect_nodes(self.nodes[0], 1)
         self.sync_all()
 
 
     def run_test(self):
         self.nodes[0].add_p2p_connection(P2PInterface())
-        assert_equal(self.nodes[0].getconnectioncount(), 3)  # 2 in/out dashd + 1 p2p
+        assert_equal(self.nodes[0].getconnectioncount(), 2)  # 1 out dashd + 1 p2p
 
 
 if __name__ == '__main__':

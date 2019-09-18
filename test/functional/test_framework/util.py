@@ -445,10 +445,6 @@ def connect_nodes(from_connection, node_num):
     wait_until(lambda: all(peer['version'] != 0 for peer in from_connection.getpeerinfo()))
     wait_until(lambda: all(peer['bytesrecv_per_msg'].pop('verack', 0) == 24 for peer in from_connection.getpeerinfo()))
 
-def connect_nodes_bi(nodes, a, b):
-    connect_nodes(nodes[a], b)
-    connect_nodes(nodes[b], a)
-
 def isolate_node(node, timeout=5):
     node.setnetworkactive(False)
     st = time.time()

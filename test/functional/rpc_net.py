@@ -13,7 +13,7 @@ from test_framework.util import (
     assert_greater_than_or_equal,
     assert_greater_than,
     assert_raises_rpc_error,
-    connect_nodes_bi,
+    connect_nodes,
     p2p_port,
     wait_until,
 )
@@ -50,13 +50,16 @@ class NetTest(BitcoinTestFramework):
     def setup_network(self):
         self.disable_mocktime()
         self.setup_nodes()
-        connect_nodes_bi(self.nodes, 0, 1)
+        connect_nodes(self.nodes[0], 1)
 
     def run_test(self):
         # Wait for one ping/pong to finish so that we can be sure that there is no chatter between nodes for some time
         # Especially the exchange of messages like getheaders and friends causes test failures here
         self.nodes[0].ping()
         wait_until(lambda: all(['pingtime' in n for n in self.nodes[0].getpeerinfo()]))
+        self.log.info('Connect nodes both way')
+        connect_nodes(self.nodes[0], 1)
+        connect_nodes(self.nodes[1], 0)
 
         self._test_connection_count()
         self._test_getnettotals()
@@ -66,7 +69,7 @@ class NetTest(BitcoinTestFramework):
         self._test_getnodeaddresses()
 
     def _test_connection_count(self):
-        # connect_nodes_bi connects each node to the other
+        # connect_nodes connects each node to the other
         assert_equal(self.nodes[0].getconnectioncount(), 2)
 
     def _test_getnettotals(self):
@@ -110,7 +113,10 @@ class NetTest(BitcoinTestFramework):
         wait_until(lambda: self.nodes[1].getnetworkinfo()['connections'] == 0, timeout=3)
 
         self.nodes[0].setnetworkactive(state=True)
-        connect_nodes_bi(self.nodes, 0, 1)
+        self.log.info('Connect nodes both way')
+        connect_nodes(self.nodes[0], 1)
+        connect_nodes(self.nodes[1], 0)
+
         assert_equal(self.nodes[0].getnetworkinfo()['networkactive'], True)
         assert_equal(self.nodes[0].getnetworkinfo()['connections'], 2)
 
