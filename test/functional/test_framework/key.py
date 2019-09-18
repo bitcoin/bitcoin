@@ -247,6 +247,7 @@ class ECPubKey():
                 self.valid = False
         else:
             self.valid = False
+        return self
 
     @property
     def is_compressed(self):
@@ -336,10 +337,12 @@ class ECKey():
         if self.valid:
             self.secret = secret
             self.compressed = compressed
+        return self
 
     def generate(self, compressed=True):
         """Generate a random private key (compressed or uncompressed)."""
         self.set(random.randrange(1, SECP256K1_ORDER).to_bytes(32, 'big'), compressed)
+        return self
 
     def get_bytes(self):
         """Retrieve the 32-byte representation of this key."""
