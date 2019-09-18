@@ -806,7 +806,7 @@ class FullBlockTest(BitcoinTestFramework):
         #
         # Blocks are not allowed to contain a transaction whose id matches that of an earlier,
         # not-fully-spent transaction in the same chain. To test, make identical coinbases;
-        # the second one should be rejected.
+        # the second one should be rejected. See also CVE-2012-1909.
         #
         self.log.info("Reject a block with a transaction with a duplicate hash of a previous transaction (BIP30)")
         self.move_tip(60)
