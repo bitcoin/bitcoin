@@ -4352,7 +4352,7 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
                           setInternalKeyPool.size() + setExternalKeyPool.size(), setInternalKeyPool.size());
             }
 
-            double dProgress = 100.f * nEnd / (nTargetSize + 1);
+            double dProgress = 100.f * index / (nTargetSize + 1);
             std::string strMsg = strprintf(_("Loading wallet... (%3.2f %%)"), dProgress);
             uiInterface.InitMessage(strMsg);
         }
