@@ -6,6 +6,7 @@ _.converter  # unused attribute (test/functional/test_framework/test_framework.p
 _.daemon  # unused attribute (test/functional/test_framework/socks5.py)
 data_received  # unused function (test/functional/test_framework/mininode.py)
 DuplicateInput  # unused class (test/functional/data/invalid_txs.py)
+DisabledOpcodeTemplates  # unused class (test/functional/data/invalid_txs.py)
 _.filename  # unused attribute (contrib/macdeploy/custom_dsstore.py)
 InvalidOPIFConstruction  # unused class (test/functional/data/invalid_txs.py)
 _.is_compressed  # unused property (test/functional/test_framework/key.py)
