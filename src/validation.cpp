@@ -4572,7 +4572,6 @@ bool CChainState::ReplayBlocks(const CChainParams& params)
     ActorSet actorSet;
     CCoinsView& db = this->CoinsDB();
     CCoinsViewCache cache(&db);
-
     std::vector<uint256> hashHeads = db.GetHeadBlocks();
     if (hashHeads.empty()) return true; // We're already in a consistent state.
     if (hashHeads.size() != 2) return error("ReplayBlocks(): unknown inconsistent state");
