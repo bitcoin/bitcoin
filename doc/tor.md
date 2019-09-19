@@ -114,7 +114,10 @@ preconfigured and the creation of a hidden service is automatic. If permission p
 are seen with `-debug=tor` they can be resolved by adding both the user running Tor and
 the user running bitcoind to the same group and setting permissions appropriately. On
 Debian-based systems the user running bitcoind can be added to the debian-tor group,
-which has the appropriate permissions.
+which has the appropriate permissions. Before starting bitcoind you will need to re-login
+to allow debian-tor group to be applied. Otherwise you will see the following notice: "tor:
+Authentication cookie /run/tor/control.authcookie could not be opened (check permissions)"
+on debug.log.
 
 An alternative authentication method is the use
 of the `-torpassword=password` option. The `password` is the clear text form that

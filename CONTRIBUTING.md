@@ -79,25 +79,26 @@ about Git.
 The title of the pull request should be prefixed by the component or area that
 the pull request affects. Valid areas as:
 
-  - *Consensus* for changes to consensus critical code
-  - *Doc* for changes to the documentation
-  - *Qt* for changes to bitcoin-qt
-  - *Log* Changes to log messages
-  - *Mining* for changes to the mining code
-  - *Net* or *P2P* for changes to the peer-to-peer network code
-  - *Refactor* for structural changes that do not change behavior
-  - *RPC/REST/ZMQ* for changes to the RPC, REST or ZMQ APIs
-  - *Scripts and tools* for changes to the scripts and tools
-  - *Test* for changes to the bitcoin unit tests or QA tests
-  - *Utils and libraries* for changes to the utils and libraries
-  - *Wallet* for changes to the wallet code
+  - `consensus` for changes to consensus critical code
+  - `doc` for changes to the documentation
+  - `qt` or `gui` for changes to bitcoin-qt
+  - `log` for changes to log messages
+  - `mining` for changes to the mining code
+  - `net` or `p2p` for changes to the peer-to-peer network code
+  - `refactor` for structural changes that do not change behavior
+  - `rpc`, `rest` or `zmq` for changes to the RPC, REST or ZMQ APIs
+  - `script` for changes to the scripts and tools
+  - `test` for changes to the bitcoin unit tests or QA tests
+  - `util` or `lib` for changes to the utils or libraries
+  - `wallet` for changes to the wallet code
+  - `build` for changes to the GNU Autotools, reproducible builds or CI code
 
 Examples:
 
-    Consensus: Add new opcode for BIP-XXXX OP_CHECKAWESOMESIG
-    Net: Automatically create hidden service, listen on Tor
-    Qt: Add feed bump button
-    Log: Fix typo in log message
+    consensus: Add new opcode for BIP-XXXX OP_CHECKAWESOMESIG
+    net: Automatically create hidden service, listen on Tor
+    qt: Add feed bump button
+    log: Fix typo in log message
 
 Note that translations should not be submitted as pull requests, please see
 [Translation Process](https://github.com/bitcoin/bitcoin/blob/master/doc/translation_process.md)

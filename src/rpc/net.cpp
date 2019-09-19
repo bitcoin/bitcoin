@@ -82,6 +82,10 @@ static UniValue getpeerinfo(const JSONRPCRequest& request)
             "    \"addrbind\":\"ip:port\",    (string) Bind address of the connection to the peer\n"
             "    \"addrlocal\":\"ip:port\",   (string) Local address as reported by the peer\n"
             "    \"services\":\"xxxxxxxxxxxxxxxx\",   (string) The services offered\n"
+            "    \"servicesnames\":[              (array) the services offered, in human-readable form\n"
+            "        \"SERVICE_NAME\",         (string) the service name if it is recognised\n"
+            "         ...\n"
+            "     ],\n"
             "    \"relaytxes\":true|false,    (boolean) Whether peer has asked us to relay transactions to it\n"
             "    \"lastsend\": ttt,           (numeric) The time in seconds since epoch (Jan 1 1970 GMT) of the last send\n"
             "    \"lastrecv\": ttt,           (numeric) The time in seconds since epoch (Jan 1 1970 GMT) of the last receive\n"
@@ -147,6 +151,7 @@ static UniValue getpeerinfo(const JSONRPCRequest& request)
         if (stats.addrBind.IsValid())
             obj.pushKV("addrbind", stats.addrBind.ToString());
         obj.pushKV("services", strprintf("%016x", stats.nServices));
+        obj.pushKV("servicesnames", GetServicesNames(stats.nServices));
         obj.pushKV("relaytxes", stats.fRelayTxes);
         obj.pushKV("lastsend", stats.nLastSend);
         obj.pushKV("lastrecv", stats.nLastRecv);
@@ -446,6 +451,10 @@ static UniValue getnetworkinfo(const JSONRPCRequest& request)
             "  \"subversion\": \"/Satoshi:x.x.x/\",     (string) the server subversion string\n"
             "  \"protocolversion\": xxxxx,              (numeric) the protocol version\n"
             "  \"localservices\": \"xxxxxxxxxxxxxxxx\", (string) the services we offer to the network\n"
+            "  \"localservicesnames\": [                (array) the services we offer to the network, in human-readable form\n"
+            "      \"SERVICE_NAME\",                    (string) the service name\n"
+            "       ...\n"
+            "   ],\n"
             "  \"localrelay\": true|false,              (bool) true if transaction relay is requested from peers\n"
             "  \"timeoffset\": xxxxx,                   (numeric) the time offset\n"
             "  \"connections\": xxxxx,                  (numeric) the number of connections\n"
@@ -484,8 +493,11 @@ static UniValue getnetworkinfo(const JSONRPCRequest& request)
     obj.pushKV("version",       CLIENT_VERSION);
     obj.pushKV("subversion",    strSubVersion);
     obj.pushKV("protocolversion",PROTOCOL_VERSION);
-    if(g_connman)
-        obj.pushKV("localservices", strprintf("%016x", g_connman->GetLocalServices()));
+    if (g_connman) {
+        ServiceFlags services = g_connman->GetLocalServices();
+        obj.pushKV("localservices", strprintf("%016x", services));
+        obj.pushKV("localservicesnames", GetServicesNames(services));
+    }
     obj.pushKV("localrelay", g_relay_txes);
     obj.pushKV("timeoffset",    GetTimeOffset());
     if (g_connman) {

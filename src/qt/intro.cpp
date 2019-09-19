@@ -131,6 +131,11 @@ Intro::Intro(QWidget *parent, uint64_t blockchain_size, uint64_t chain_state_siz
     ui->lblExplanation2->setText(ui->lblExplanation2->text().arg(PACKAGE_NAME));
 
     uint64_t pruneTarget = std::max<int64_t>(0, gArgs.GetArg("-prune", 0));
+    if (pruneTarget > 1) { // -prune=1 means enabled, above that it's a size in MB
+        ui->prune->setChecked(true);
+        ui->prune->setEnabled(false);
+    }
+    ui->prune->setText(tr("Discard blocks after verification, except most recent %1 GB (prune)").arg(pruneTarget ? pruneTarget / 1000 : 2));
     requiredSpace = m_blockchain_size;
     QString storageRequiresMsg = tr("At least %1 GB of data will be stored in this directory, and it will grow over time.");
     if (pruneTarget) {
@@ -180,8 +185,10 @@ void Intro::setDataDirectory(const QString &dataDir)
     }
 }
 
-bool Intro::pickDataDirectory(interfaces::Node& node)
+bool Intro::showIfNeeded(interfaces::Node& node, bool& did_show_intro, bool& prune)
 {
+    did_show_intro = false;
+
     QSettings settings;
     /* If data directory provided on command line, no need to look at settings
        or show a picking dialog */
@@ -205,6 +212,7 @@ bool Intro::pickDataDirectory(interfaces::Node& node)
         Intro intro(0, node.getAssumedBlockchainSize(), node.getAssumedChainStateSize());
         intro.setDataDirectory(dataDir);
         intro.setWindowIcon(QIcon(":icons/bitcoin"));
+        did_show_intro = true;
 
         while(true)
         {
@@ -226,6 +234,9 @@ bool Intro::pickDataDirectory(interfaces::Node& node)
                 /* fall through, back to choosing screen */
             }
         }
+
+        // Additional preferences:
+        prune = intro.ui->prune->isChecked();
 
         settings.setValue("strDataDir", dataDir);
         settings.setValue("fReset", false);
@@ -263,6 +274,11 @@ void Intro::setStatus(int status, const QString &message, quint64 bytesAvailable
         {
             freeString += " " + tr("(of %n GB needed)", "", requiredSpace);
             ui->freeSpace->setStyleSheet("QLabel { color: #800000 }");
+            ui->prune->setChecked(true);
+        } else if (bytesAvailable / GB_BYTES - requiredSpace < 10) {
+            freeString += " " + tr("(%n GB needed for full chain)", "", requiredSpace);
+            ui->freeSpace->setStyleSheet("QLabel { color: #999900 }");
+            ui->prune->setChecked(true);
         } else {
             ui->freeSpace->setStyleSheet("");
         }

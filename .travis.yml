@@ -33,7 +33,7 @@ cache:
   directories:
     - $TRAVIS_BUILD_DIR/depends/built
     - $TRAVIS_BUILD_DIR/depends/sdk-sources
-    - $HOME/.ccache
+    - $TRAVIS_BUILD_DIR/ci/scratch/.ccache
 stages:
   - lint
   - test
@@ -99,7 +99,7 @@ jobs:
         FILE_ENV="./ci/test/00_setup_env_win64.sh"
 
     - stage: test
-      name: '32-bit + dash  [GOAL: install]  [GUI: no BIP70]'
+      name: '32-bit + dash  [GOAL: install]  [GUI: BIP70 enabled]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_i686.sh"
 

@@ -151,17 +151,17 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
     auto peerLogic = MakeUnique<PeerLogicValidation>(connman.get(), nullptr, scheduler, false);
 
     const Consensus::Params& consensusParams = Params().GetConsensus();
-    constexpr int nMaxOutbound = 8;
+    constexpr int max_outbound_full_relay = 8;
     CConnman::Options options;
     options.nMaxConnections = 125;
-    options.nMaxOutbound = nMaxOutbound;
+    options.m_max_outbound_full_relay = max_outbound_full_relay;
     options.nMaxFeeler = 1;
 
     connman->Init(options);
     std::vector<CNode *> vNodes;
 
     // Mock some outbound peers
-    for (int i=0; i<nMaxOutbound; ++i) {
+    for (int i=0; i<max_outbound_full_relay; ++i) {
         AddRandomOutboundPeer(vNodes, *peerLogic, connman.get());
     }
 
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
     AddRandomOutboundPeer(vNodes, *peerLogic, connman.get());
 
     peerLogic->CheckForStaleTipAndEvictPeers(consensusParams);
-    for (int i=0; i<nMaxOutbound; ++i) {
+    for (int i=0; i<max_outbound_full_relay; ++i) {
         BOOST_CHECK(vNodes[i]->fDisconnect == false);
     }
     // Last added node should get marked for eviction
@@ -203,10 +203,10 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
     UpdateLastBlockAnnounceTime(vNodes.back()->GetId(), GetTime());
 
     peerLogic->CheckForStaleTipAndEvictPeers(consensusParams);
-    for (int i=0; i<nMaxOutbound-1; ++i) {
+    for (int i=0; i<max_outbound_full_relay-1; ++i) {
         BOOST_CHECK(vNodes[i]->fDisconnect == false);
     }
-    BOOST_CHECK(vNodes[nMaxOutbound-1]->fDisconnect == true);
+    BOOST_CHECK(vNodes[max_outbound_full_relay-1]->fDisconnect == true);
     BOOST_CHECK(vNodes.back()->fDisconnect == false);
 
     bool dummy;

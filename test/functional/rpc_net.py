@@ -15,12 +15,37 @@ from test_framework.util import (
     assert_greater_than_or_equal,
     assert_greater_than,
     assert_raises_rpc_error,
-    connect_nodes_bi,
+    connect_nodes,
     p2p_port,
     wait_until,
 )
 from test_framework.mininode import P2PInterface
-from test_framework.messages import CAddress, msg_addr, NODE_NETWORK, NODE_WITNESS
+from test_framework.messages import (
+    CAddress,
+    msg_addr,
+    NODE_NETWORK,
+    NODE_WITNESS,
+    NODE_GETUTXO,NODE_BLOOM,
+    NODE_NETWORK_LIMITED,
+)
+
+def assert_net_servicesnames(servicesflag, servicenames):
+    """Utility that checks if all flags are correctly decoded in
+    `getpeerinfo` and `getnetworkinfo`.
+
+    :param servicesflag: The services as an integer.
+    :param servicesnames: The list of decoded services names, as strings.
+    """
+    if servicesflag & NODE_NETWORK:
+        assert "NETWORK" in servicenames
+    if servicesflag & NODE_GETUTXO:
+        assert "GETUTXO" in servicenames
+    if servicesflag & NODE_BLOOM:
+        assert "BLOOM" in servicenames
+    if servicesflag & NODE_WITNESS:
+        assert "WITNESS" in servicenames
+    if servicesflag & NODE_NETWORK_LIMITED:
+        assert "NETWORK_LIMITED" in servicenames
 
 class NetTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -29,15 +54,19 @@ class NetTest(BitcoinTestFramework):
         self.extra_args = [["-minrelaytxfee=0.00001000"],["-minrelaytxfee=0.00000500"]]
 
     def run_test(self):
+        self.log.info('Connect nodes both way')
+        connect_nodes(self.nodes[0], 1)
+        connect_nodes(self.nodes[1], 0)
+
         self._test_connection_count()
         self._test_getnettotals()
-        self._test_getnetworkinginfo()
+        self._test_getnetworkinfo()
         self._test_getaddednodeinfo()
         self._test_getpeerinfo()
         self._test_getnodeaddresses()
 
     def _test_connection_count(self):
-        # connect_nodes_bi connects each node to the other
+        # connect_nodes connects each node to the other
         assert_equal(self.nodes[0].getconnectioncount(), 2)
 
     def _test_getnettotals(self):
@@ -70,7 +99,7 @@ class NetTest(BitcoinTestFramework):
             assert_greater_than_or_equal(after['bytesrecv_per_msg'].get('pong', 0), before['bytesrecv_per_msg'].get('pong', 0) + 32)
             assert_greater_than_or_equal(after['bytessent_per_msg'].get('ping', 0), before['bytessent_per_msg'].get('ping', 0) + 32)
 
-    def _test_getnetworkinginfo(self):
+    def _test_getnetworkinfo(self):
         assert_equal(self.nodes[0].getnetworkinfo()['networkactive'], True)
         assert_equal(self.nodes[0].getnetworkinfo()['connections'], 2)
 
@@ -80,9 +109,17 @@ class NetTest(BitcoinTestFramework):
         wait_until(lambda: self.nodes[0].getnetworkinfo()['connections'] == 0, timeout=3)
 
         self.nodes[0].setnetworkactive(state=True)
-        connect_nodes_bi(self.nodes, 0, 1)
+        self.log.info('Connect nodes both way')
+        connect_nodes(self.nodes[0], 1)
+        connect_nodes(self.nodes[1], 0)
+
         assert_equal(self.nodes[0].getnetworkinfo()['networkactive'], True)
         assert_equal(self.nodes[0].getnetworkinfo()['connections'], 2)
+
+        # check the `servicesnames` field
+        network_info = [node.getnetworkinfo() for node in self.nodes]
+        for info in network_info:
+            assert_net_servicesnames(int(info["localservices"]), info["localservicesnames"])
 
     def _test_getaddednodeinfo(self):
         assert_equal(self.nodes[0].getaddednodeinfo(), [])
@@ -104,6 +141,9 @@ class NetTest(BitcoinTestFramework):
         assert_equal(peer_info[1][0]['addrbind'], peer_info[0][0]['addr'])
         assert_equal(peer_info[0][0]['minfeefilter'], Decimal("0.00000500"))
         assert_equal(peer_info[1][0]['minfeefilter'], Decimal("0.00001000"))
+        # check the `servicesnames` field
+        for info in peer_info:
+            assert_net_servicesnames(int(info[0]["services"]), info[0]["servicesnames"])
 
     def _test_getnodeaddresses(self):
         self.nodes[0].add_p2p_connection(P2PInterface())
