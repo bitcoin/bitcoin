@@ -1156,62 +1156,6 @@ PrecomputedTransactionData::PrecomputedTransactionData(const CTransaction& txTo)
 
 uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType, const CAmount& amount, SigVersion sigversion, const PrecomputedTransactionData* cache)
 {
-    if (sigversion == SIGVERSION_WITNESS_V0) {
-        uint256 hashPrevouts;
-        uint256 hashSequence;
-        uint256 hashOutputs;
-
-        if (!(nHashType & SIGHASH_ANYONECANPAY)) {
-            CHashWriter ss(SER_GETHASH, 0);
-            for (unsigned int n = 0; n < txTo.vin.size(); n++) {
-                ss << txTo.vin[n].prevout;
-            }
-            hashPrevouts = ss.GetHash(); // TODO: cache this value for all signatures in a transaction
-        }
-
-        if (!(nHashType & SIGHASH_ANYONECANPAY) && (nHashType & 0x1f) != SIGHASH_SINGLE && (nHashType & 0x1f) != SIGHASH_NONE) {
-            CHashWriter ss(SER_GETHASH, 0);
-            for (unsigned int n = 0; n < txTo.vin.size(); n++) {
-                ss << txTo.vin[n].nSequence;
-            }
-            hashSequence = ss.GetHash(); // TODO: cache this value for all signatures in a transaction
-        }
-
-        if ((nHashType & 0x1f) != SIGHASH_SINGLE && (nHashType & 0x1f) != SIGHASH_NONE) {
-            CHashWriter ss(SER_GETHASH, 0);
-            for (unsigned int n = 0; n < txTo.vout.size(); n++) {
-                ss << txTo.vout[n];
-            }
-            hashOutputs = ss.GetHash(); // TODO: cache this value for all signatures in a transaction
-        } else if ((nHashType & 0x1f) == SIGHASH_SINGLE && nIn < txTo.vout.size()) {
-            CHashWriter ss(SER_GETHASH, 0);
-            ss << txTo.vout[nIn];
-            hashOutputs = ss.GetHash();
-        }
-
-        CHashWriter ss(SER_GETHASH, 0);
-        // Version
-        ss << txTo.nVersion;
-        // Input prevouts/nSequence (none/all, depending on flags)
-        ss << hashPrevouts;
-        ss << hashSequence;
-        // The input being signed (replacing the scriptSig with scriptCode + amount)
-        // The prevout may already be contained in hashPrevout, and the nSequence
-        // may already be contain in hashSequence.
-        ss << txTo.vin[nIn].prevout;
-        ss << static_cast<const CScriptBase&>(scriptCode);
-        ss << amount;
-        ss << txTo.vin[nIn].nSequence;
-        // Outputs (none/one/all, depending on flags)
-        ss << hashOutputs;
-        // Locktime
-        ss << txTo.nLockTime;
-        // Sighash type
-        ss << nHashType;
-
-        return ss.GetHash();
-    }
-
     static const uint256 one(uint256S("0000000000000000000000000000000000000000000000000000000000000001"));
     if (nIn >= txTo.vin.size()) {
         //  nIn out of range

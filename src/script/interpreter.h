@@ -104,7 +104,6 @@ struct PrecomputedTransactionData
 enum SigVersion
 {
     SIGVERSION_BASE = 0,
-    SIGVERSION_WITNESS_V0 = 1,
 };
 
 uint256 SignatureHash(const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType, const CAmount& amount, SigVersion sigversion, const PrecomputedTransactionData* cache = nullptr);

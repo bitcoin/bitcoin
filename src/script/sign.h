@@ -61,7 +61,6 @@ public:
 
 struct SignatureData {
     CScript scriptSig;
-    CScriptWitness scriptWitness;
 
     SignatureData() {}
     explicit SignatureData(const CScript& script) : scriptSig(script) {}
