@@ -4217,8 +4217,6 @@ bool LoadGenesisBlock(const CChainParams& chainparams)
     fSpentIndex = gArgs.GetBoolArg("-spentindex", DEFAULT_SPENTINDEX);
     pblocktree->WriteFlag("spentindex", fSpentIndex);
 
-    LogPrintf("Initializing databases...\n");
-
     try {
         CBlock &block = const_cast<CBlock&>(chainparams.GenesisBlock());
         // Start new block file
