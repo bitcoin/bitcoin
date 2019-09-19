@@ -11,6 +11,7 @@ $(package)_config_opts+=RANLIB="$($(package)_ranlib)"
 $(package)_config_opts+=AR="$($(package)_ar)"
 $(package)_config_opts_darwin+=AR="$($(package)_libtool)"
 $(package)_config_opts_darwin+=ARFLAGS="-o"
+$(package)_config_opts_aarch64_android+=CHOST=$(host)
 endef
 
 # zlib has its own custom configure script that takes in options like CC,
