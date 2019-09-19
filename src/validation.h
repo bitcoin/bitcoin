@@ -240,8 +240,6 @@ bool LoadGenesisBlock(const CChainParams& chainparams);
 /** Load the block tree and coins database from disk,
  * initializing state if we're running with -reindex. */
 bool LoadBlockIndex(const CChainParams& chainparams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-/** Update the chain tip based on database information. */
-bool LoadChainTip(const CChainParams& chainparams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 /** Unload database information */
 void UnloadBlockIndex();
 /** Run an instance of the script checking thread */
@@ -399,9 +397,6 @@ public:
     ~CVerifyDB();
     bool VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview, int nCheckLevel, int nCheckDepth);
 };
-
-/** Replay blocks that aren't fully applied to the database. */
-bool ReplayBlocks(const CChainParams& params, CCoinsView* view);
 
 CBlockIndex* LookupBlockIndex(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -678,9 +673,13 @@ public:
      * we avoid holding cs_main for an extended period of time; the length of this
      * call may be quite long during reindexing or a substantial reorg.
      *
+     * May not be called with cs_main held. May not be called in a
+     * validationinterface callback.
+     *
      * @returns true unless a system error occurred
      */
-    bool ActivateBestChain(CValidationState& state,
+    bool ActivateBestChain(
+        CValidationState& state,
         const CChainParams& chainparams,
         std::shared_ptr<const CBlock> pblock) LOCKS_EXCLUDED(cs_main);
 
@@ -699,7 +698,8 @@ public:
     bool InvalidateBlock(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindex) LOCKS_EXCLUDED(cs_main);
     void ResetBlockFailureFlags(CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-    bool ReplayBlocks(const CChainParams& params, CCoinsView* view);
+    /** Replay blocks that aren't fully applied to the database. */
+    bool ReplayBlocks(const CChainParams& params);
     bool RewindBlockIndex(const CChainParams& params) LOCKS_EXCLUDED(cs_main);
     bool LoadGenesisBlock(const CChainParams& chainparams);
 
@@ -716,6 +716,9 @@ public:
      * By default this only executes fully when using the Regtest chain; see: fCheckBlockIndex.
      */
     void CheckBlockIndex(const Consensus::Params& consensusParams);
+
+    /** Update the chain tip based on database information, i.e. CoinsTip()'s best block. */
+    bool LoadChainTip(const CChainParams& chainparams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 private:
     bool ActivateBestChainStep(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexMostWork, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, ConnectTrace& connectTrace) EXCLUSIVE_LOCKS_REQUIRED(cs_main, ::mempool.cs);
