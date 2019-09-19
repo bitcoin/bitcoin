@@ -3123,6 +3123,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             LOCK(pfrom->m_tx_relay->cs_filter);
             if (pfrom->m_tx_relay->pfilter) {
                 pfrom->m_tx_relay->pfilter->insert(vData);
+                pfrom->m_tx_relay->pfilter->UpdateEmptyFull();
             } else {
                 bad = true;
             }
