@@ -6,17 +6,11 @@
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_approx,
     assert_equal,
     assert_raises_rpc_error,
     connect_nodes,
 )
-
-# TODO: Copied from wallet_groups.py -- should perhaps move into util.py
-def assert_approx(v, vexp, vspan=0.00001):
-    if v < vexp - vspan:
-        raise AssertionError("%s < [%s..%s]" % (str(v), str(vexp - vspan), str(vexp + vspan)))
-    if v > vexp + vspan:
-        raise AssertionError("%s > [%s..%s]" % (str(v), str(vexp - vspan), str(vexp + vspan)))
 
 def reset_balance(node, discardaddr):
     '''Throw away all owned coins by the node so it gets a balance of 0.'''
