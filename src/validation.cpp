@@ -465,7 +465,8 @@ public:
 
 private:
     // All the intermediate state that gets passed between the various levels
-    // of checking a given transaction.
+    // of checking a given transaction. Initialization of the members is done
+    // in PreChecks(ATMPArgs& args, Workspace& ws).
     struct Workspace {
         Workspace(const CTransactionRef& ptx) : m_ptx(ptx), m_hash(ptx->GetHash()) {}
         std::set<uint256> m_conflicts;
