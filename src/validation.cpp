@@ -4218,20 +4218,22 @@ bool LoadGenesisBlock(const CChainParams& chainparams)
     pblocktree->WriteFlag("spentindex", fSpentIndex);
 
     try {
-        CBlock &block = const_cast<CBlock&>(chainparams.GenesisBlock());
-        // Start new block file
-        unsigned int nBlockSize = ::GetSerializeSize(block, SER_DISK, CLIENT_VERSION);
-        CDiskBlockPos blockPos;
         CValidationState state;
-        if (!FindBlockPos(state, blockPos, nBlockSize+8, 0, block.GetBlockTime()))
-            return error("%s: FindBlockPos failed", __func__);
-        if (!WriteBlockToDisk(block, blockPos, chainparams.MessageStart()))
-            return error("%s: writing genesis block to disk failed", __func__);
-        CBlockIndex *pindex = AddToBlockIndex(block);
-        if (!ReceivedBlockTransactions(block, state, pindex, blockPos))
-            return error("%s: genesis block not accepted", __func__);
-    } catch (const std::runtime_error& e) {
-        return error("%s: failed to write genesis block: %s", __func__, e.what());
+
+        if (!AddGenesisBlock(chainparams, chainparams.GenesisBlock(), state))
+            return false;
+
+        if (chainparams.NetworkIDString() == CBaseChainParams::DEVNET) {
+            // We can't continue if devnet genesis block is invalid
+            std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(
+                    chainparams.DevNetGenesisBlock());
+            bool fCheckBlock = CheckBlock(*shared_pblock, state, chainparams.GetConsensus());
+            assert(fCheckBlock);
+            if (!AcceptBlock(shared_pblock, state, chainparams, nullptr, true, nullptr, nullptr))
+                return false;
+        }
+    } catch (const std::runtime_error &e) {
+        return error("%s: failed to initialize block database: %s", __func__, e.what());
     }
 
     return true;
