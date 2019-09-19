@@ -69,6 +69,7 @@ BITCOIN_TESTS =\
   test/key_tests.cpp \
   test/lcg.h \
   test/limitedmap_tests.cpp \
+  test/logging_tests.cpp \
   test/dbwrapper_tests.cpp \
   test/main_tests.cpp \
   test/mempool_tests.cpp \
