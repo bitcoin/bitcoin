@@ -2704,6 +2704,30 @@ UniValue listlockunspent(const JSONRPCRequest& request)
     return ret;
 }
 
+UniValue settxfee(const JSONRPCRequest& request)
+{
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 1 || AmountFromValue(request.params[0]) < MIN_TX_FEE)
+        throw std::runtime_error(
+            "settxfee amount\n"
+            "\nDeprecated method used to set the transaction fee per kB.\n"
+            "Minimum and default transaction fee per KB is 1 cent\n"
+            "\nArguments:\n"
+            "1. amount         (numeric or string, required but ignored) The transaction fee in " + CURRENCY_UNIT + "/kB\n"
+            "\nResult\n"
+            "true        (boolean) Returns true, does not change anything\n"
+            "\nExamples:\n"
+            + HelpExampleCli("settxfee", "0.01")
+            + HelpExampleRpc("settxfee", "0.01")
+        );
+
+    return true;
+}
+
 UniValue getwalletinfo(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
@@ -3561,6 +3585,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "sendmany",                 &sendmany,                 {"fromaccount","amounts","minconf","comment","subtractfeefrom","replaceable","conf_target"} },
     { "wallet",             "sendtoaddress",            &sendtoaddress,            {"address","amount","comment","comment_to","subtractfeefromamount","replaceable","conf_target"} },
     { "wallet",             "setaccount",               &setaccount,               {"address","account"} },
+    { "wallet",             "settxfee",                 &settxfee,                 {"amount"} },
     { "wallet",             "signmessage",              &signmessage,              {"address","message"} },
     { "wallet",             "walletlock",               &walletlock,               {} },
     { "wallet",             "walletpassphrasechange",   &walletpassphrasechange,   {"oldpassphrase","newpassphrase"} },
