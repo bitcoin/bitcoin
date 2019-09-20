@@ -238,6 +238,23 @@ extern const char *GETBLOCKTXN;
  * @since protocol version 70014 as described by BIP 152
  */
 extern const char *BLOCKTXN;
+
+// BitGreen message types
+extern const char *SYNCSTATUSCOUNT;
+extern const char *QSENDRECSIGS;
+extern const char *QFCOMMITMENT;
+extern const char *QCONTRIB;
+extern const char *QCOMPLAINT;
+extern const char *QJUSTIFICATION;
+extern const char *QPCOMMITMENT;
+extern const char *QWATCH;
+extern const char *CLSIG;
+extern const char *QSIGREC;
+extern const char *QSIGSESANN;
+extern const char *QSIGSHARESINV;
+extern const char *QGETSIGSHARES;
+extern const char *QBSIGSHARES;
+extern const char *MNAUTH;
 };
 
 /* Get a vector of all valid message types (see above) */
@@ -376,6 +393,14 @@ enum GetDataMsg
     MSG_WITNESS_BLOCK = MSG_BLOCK | MSG_WITNESS_FLAG, //!< Defined in BIP144
     MSG_WITNESS_TX = MSG_TX | MSG_WITNESS_FLAG,       //!< Defined in BIP144
     MSG_FILTERED_WITNESS_BLOCK = MSG_FILTERED_BLOCK | MSG_WITNESS_FLAG,
+    // BitGreen message types
+    MSG_QUORUM_FINAL_COMMITMENT = 21,
+    MSG_QUORUM_CONTRIB = 22,
+    MSG_QUORUM_COMPLAINT = 23,
+    MSG_QUORUM_JUSTIFICATION = 24,
+    MSG_QUORUM_PREMATURE_COMMITMENT = 25,
+    MSG_QUORUM_RECOVERED_SIG = 28,
+    MSG_CLSIG = 29
 };
 
 /** inv message data */
