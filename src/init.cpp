@@ -13,6 +13,7 @@
 #include <amount.h>
 #include <banman.h>
 #include <blockfilter.h>
+#include <bls/bls.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <coins.h>
@@ -740,6 +741,9 @@ static bool InitSanityCheck()
     }
 
     if (!glibc_sanity_test() || !glibcxx_sanity_test())
+        return false;
+
+    if (!BLSInit())
         return false;
 
     if (!Random_SanityCheck()) {

@@ -94,6 +94,7 @@ BITGREEN_TESTS =\
   test/blockfilter_tests.cpp \
   test/blockfilter_index_tests.cpp \
   test/bloom_tests.cpp \
+  test/bls_tests.cpp \
   test/bswap_tests.cpp \
   test/checkqueue_tests.cpp \
   test/coins_tests.cpp \
@@ -184,8 +185,7 @@ if ENABLE_WALLET
 test_test_bitgreen_LDADD += $(LIBBITGREEN_WALLET)
 endif
 
-test_test_bitgreen_LDADD += $(LIBBITGREEN_SERVER) $(LIBBITGREEN_CLI) $(LIBBITGREEN_COMMON) $(LIBBITGREEN_UTIL) $(LIBBITGREEN_CONSENSUS) $(LIBBITGREEN_CRYPTO) $(LIBUNIVALUE) \
-  $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(LIBSECP256K1) $(EVENT_LIBS) $(EVENT_PTHREADS_LIBS)
+  $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(LIBSECP256K1) $(EVENT_LIBS) $(EVENT_PTHREADS_LIBS) $(BLS_LIBS)
 test_test_bitgreen_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
 test_test_bitgreen_LDADD += $(BDB_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(RAPIDCHECK_LIBS)

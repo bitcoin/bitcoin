@@ -15,6 +15,8 @@ bench_bench_bitgreen_SOURCES = \
   bench/bench_bitgreen.cpp \
   bench/bench.cpp \
   bench/bench.h \
+  bench/bls.cpp \
+  bench/bls_dkg.cpp \
   bench/block_assemble.cpp \
   bench/checkblock.cpp \
   bench/checkqueue.cpp \
@@ -73,7 +75,7 @@ bench_bench_bitgreen_SOURCES += bench/coin_selection.cpp
 bench_bench_bitgreen_SOURCES += bench/wallet_balance.cpp
 endif
 
-bench_bench_bitgreen_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS)
+bench_bench_bitgreen_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(BLS_LIBS)
 bench_bench_bitgreen_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 CLEAN_BITGREEN_BENCH = bench/*.gcda bench/*.gcno $(GENERATED_BENCH_FILES)

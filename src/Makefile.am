@@ -24,13 +24,7 @@ BITGREEN_INCLUDES=-I$(builddir) $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPF
 BITGREEN_INCLUDES += -I$(srcdir)/secp256k1/include
 BITGREEN_INCLUDES += $(UNIVALUE_CFLAGS)
 
-LIBBITGREEN_SERVER=libbitgreen_server.a
-LIBBITGREEN_COMMON=libbitgreen_common.a
-LIBBITGREEN_CONSENSUS=libbitgreen_consensus.a
-LIBBITGREEN_CLI=libbitgreen_cli.a
-LIBBITGREEN_UTIL=libbitgreen_util.a
-LIBBITGREEN_CRYPTO_BASE=crypto/libbitgreen_crypto_base.a
-LIBBITGREENQT=qt/libbitgreenqt.a
+BLS_LIBS=-lchiabls -lgmp
 LIBSECP256K1=secp256k1/libsecp256k1.la
 
 if ENABLE_ZMQ
@@ -128,6 +122,7 @@ BITGREEN_CORE_H = \
   core_io.h \
   core_memusage.h \
   cuckoocache.h \
+  ctpl.h \
   flatfile.h \
   fs.h \
   httprpc.h \
@@ -334,6 +329,7 @@ libbitgreen_wallet_a_SOURCES = \
   banman.cpp \
   blockencodings.cpp \
   blockfilter.cpp \
+  bls/bls.cpp \
   chain.cpp \
   consensus/tx_verify.cpp \
   flatfile.cpp \
@@ -458,6 +454,8 @@ libbitgreen_consensus_a_SOURCES = \
   amount.h \
   arith_uint256.cpp \
   arith_uint256.h \
+  bls/bls.cpp \
+  bls/bls.h \
   consensus/merkle.cpp \
   consensus/merkle.h \
   consensus/params.h \
@@ -527,6 +525,11 @@ libbitgreen_common_a_SOURCES = \
 libbitgreen_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITGREEN_INCLUDES)
 libbitgreen_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitgreen_util_a_SOURCES = \
+  bls/bls_batchverifier.h \
+  bls/bls_ies.cpp \
+  bls/bls_ies.h \
+  bls/bls_worker.cpp \
+  bls/bls_worker.h \
   support/lockedpool.cpp \
   chainparamsbase.cpp \
   clientversion.cpp \
@@ -596,7 +599,7 @@ bitgreend_LDADD = \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-bitgreend_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
+bitgreend_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(BLS_LIBS)
 
 # bitgreen-cli binary #
 bitgreen_cli_SOURCES = bitgreen-cli.cpp
@@ -614,7 +617,7 @@ bitgreen_cli_LDADD = \
   $(LIBBITGREEN_UTIL) \
   $(LIBBITGREEN_CRYPTO)
 
-bitgreen_cli_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
+bitgreen_cli_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS) $(BLS_LIBS)
 #
 
 # bitgreen-tx binary #
@@ -635,7 +638,7 @@ bitgreen_tx_LDADD = \
   $(LIBBITGREEN_CRYPTO) \
   $(LIBSECP256K1)
 
-bitgreen_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
+bitgreen_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(BLS_LIBS)
 #
 
 # bitgreen-wallet binary #
@@ -662,7 +665,7 @@ bitgreen_wallet_LDADD = \
   $(LIBSECP256K1) \
   $(LIBUNIVALUE)
 
-bitgreen_wallet_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(ZMQ_LIBS)
+bitgreen_wallet_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(ZMQ_LIBS) $(BLS_LIBS)
 #
 
 # bitgreenconsensus library #
@@ -675,8 +678,7 @@ if GLIBC_BACK_COMPAT
 endif
 
 libbitgreenconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
-libbitgreenconsensus_la_LIBADD = $(LIBSECP256K1)
-libbitgreenconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITGREEN_INTERNAL
+libbitgreenconsensus_la_LIBADD = $(LIBSECP256K1) $(BLS_LIBS)
 libbitgreenconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
 endif
