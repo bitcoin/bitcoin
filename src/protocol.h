@@ -255,6 +255,8 @@ extern const char *QSIGSHARESINV;
 extern const char *QGETSIGSHARES;
 extern const char *QBSIGSHARES;
 extern const char *MNAUTH;
+extern const char *GETMNLISTDIFF;
+extern const char *MNLISTDIFF;
 };
 
 /* Get a vector of all valid message types (see above) */

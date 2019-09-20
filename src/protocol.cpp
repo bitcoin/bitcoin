@@ -57,6 +57,8 @@ const char *QSIGSHARESINV="qsigsinv";
 const char *QGETSIGSHARES="qgetsigs";
 const char *QBSIGSHARES="qbsigs";
 const char *MNAUTH="mnauth";
+const char *GETMNLISTDIFF="getmnlistd";
+const char *MNLISTDIFF="mnlistdiff";
 } // namespace NetMsgType
 
 /** All known message types. Keep this in the same order as the list of
@@ -105,6 +107,8 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::QGETSIGSHARES,
     NetMsgType::QBSIGSHARES,
     NetMsgType::MNAUTH,
+    NetMsgType::GETMNLISTDIFF,
+    NetMsgType::MNLISTDIFF,
 };
 const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));
 
