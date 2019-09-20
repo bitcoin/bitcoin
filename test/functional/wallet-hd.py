@@ -76,6 +76,8 @@ class WalletHDTest(BitcoinTestFramework):
         # otherwise node1 would auto-recover all funds in flag the keypool keys as used
         shutil.rmtree(tmpdir + "/node1/regtest/blocks")
         shutil.rmtree(tmpdir + "/node1/regtest/chainstate")
+        shutil.rmtree(tmpdir + "/node1/regtest/evodb")
+        shutil.rmtree(tmpdir + "/node1/regtest/llmq")
         shutil.copyfile(tmpdir + "/hd.bak", tmpdir + "/node1/regtest/wallet.dat")
         self.nodes[1] = self.start_node(1, self.options.tmpdir, self.extra_args[1], stderr=sys.stdout)
 

@@ -1751,10 +1751,10 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 delete deterministicMNManager;
                 delete evoDb;
 
-                evoDb = new CEvoDB(nEvoDbCache, false, fReindex || fReindexChainState);
+                evoDb = new CEvoDB(nEvoDbCache, false, fReset || fReindexChainState);
                 deterministicMNManager = new CDeterministicMNManager(*evoDb);
                 pblocktree = new CBlockTreeDB(nBlockTreeDBCache, false, fReset);
-                llmq::InitLLMQSystem(*evoDb, &scheduler, false, fReindex || fReindexChainState);
+                llmq::InitLLMQSystem(*evoDb, &scheduler, false, fReset || fReindexChainState);
 
                 if (fReset) {
                     pblocktree->WriteReindexing(true);

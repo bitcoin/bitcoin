@@ -26,6 +26,7 @@ from test_framework.util import (connect_nodes, sync_blocks, assert_equal, set_n
 import collections
 import enum
 import itertools
+import sys
 
 Call = enum.Enum("Call", "single multi")
 Data = enum.Enum("Data", "address pub priv")
@@ -120,9 +121,9 @@ class ImportRescanTest(BitcoinTestFramework):
         for i, import_node in enumerate(IMPORT_NODES, 2):
             if import_node.prune:
                 # txindex is enabled by default in Dash and needs to be disabled for import-rescan.py
-                extra_args[i] += ["-prune=1", "-txindex=0", "-reindex-chainstate"]
+                extra_args[i] += ["-prune=1", "-txindex=0", "-reindex"]
 
-        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, extra_args)
+        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, extra_args, stderr=sys.stdout)
         for i in range(1, self.num_nodes):
             connect_nodes(self.nodes[i], 0)
 

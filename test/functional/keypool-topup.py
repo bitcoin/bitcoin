@@ -11,6 +11,7 @@ Two nodes. Node1 is under test. Node0 is providing transactions and generating b
 - Stop node1, clear the datadir, move wallet file back into the datadir and restart node1.
 - connect node1 to node0. Verify that they sync and node1 receives its funds."""
 import shutil
+import sys
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -26,6 +27,9 @@ class KeypoolRestoreTest(BitcoinTestFramework):
         self.num_nodes = 2
         self.extra_args = [['-usehd=0'], ['-usehd=1', '-keypool=100', '-keypoolmin=20']]
 
+    def setup_network(self):
+        self.setup_nodes(stderr=sys.stdout)
+
     def run_test(self):
         self.tmpdir = self.options.tmpdir
         self.nodes[0].generate(101)
@@ -35,7 +39,7 @@ class KeypoolRestoreTest(BitcoinTestFramework):
         self.stop_node(1)
 
         shutil.copyfile(self.tmpdir + "/node1/regtest/wallet.dat", self.tmpdir + "/wallet.bak")
-        self.nodes[1] = self.start_node(1, self.tmpdir, self.extra_args[1])
+        self.nodes[1] = self.start_node(1, self.tmpdir, self.extra_args[1], stderr=sys.stdout)
         connect_nodes_bi(self.nodes, 0, 1)
 
         self.log.info("Generate keys for wallet")
@@ -61,7 +65,7 @@ class KeypoolRestoreTest(BitcoinTestFramework):
 
         self.log.info("Verify keypool is restored and balance is correct")
 
-        self.nodes[1] = self.start_node(1, self.tmpdir, self.extra_args[1])
+        self.nodes[1] = self.start_node(1, self.tmpdir, self.extra_args[1], stderr=sys.stdout)
         connect_nodes_bi(self.nodes, 0, 1)
         self.sync_all()
 
@@ -69,7 +73,7 @@ class KeypoolRestoreTest(BitcoinTestFramework):
         assert_equal(self.nodes[1].listtransactions()[0]['category'], "receive")
 
         # Check that we have marked all keys up to the used keypool key as used
-        assert_equal(self.nodes[1].validateaddress(self.nodes[1].getnewaddress())['hdkeypath'], "m/0'/0'/111'")
+        assert_equal(self.nodes[1].validateaddress(self.nodes[1].getnewaddress())['hdkeypath'], "m/44'/1'/0'/0/111")
 
 if __name__ == '__main__':
     KeypoolRestoreTest().main()
