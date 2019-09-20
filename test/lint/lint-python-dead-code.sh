@@ -13,7 +13,11 @@ if ! command -v vulture > /dev/null; then
     exit 0
 fi
 
-vulture \
+VULTURE_SUPPRESSIONS=$(dirname "${BASH_SOURCE[0]}")/lint-python-dead-code-whitelist
+if ! vulture \
     --min-confidence 60 \
     $(git rev-parse --show-toplevel) \
-    $(dirname "${BASH_SOURCE[0]}")/lint-python-dead-code-whitelist
+    "${VULTURE_SUPPRESSIONS}"; then
+    echo "False positives? Suppressions can be added to ${VULTURE_SUPPRESSIONS}"
+    exit 1
+fi
