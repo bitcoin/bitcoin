@@ -209,6 +209,7 @@ BITCOIN_CORE_H = \
   txmempool.h \
   ui_interface.h \
   undo.h \
+  unordered_lru_cache.h \
   util/bip32.h \
   util/bytevectorhash.h \
   util/error.h \
