@@ -48,16 +48,16 @@ bench_bench_bitgreen_SOURCES = \
 
 nodist_bench_bench_bitgreen_SOURCES = $(GENERATED_BENCH_FILES)
 
-bench_bench_bitgreen_CPPFLAGS = $(AM_CPPFLAGS) $(BITGREEN_INCLUDES) $(EVENT_CLFAGS) $(EVENT_PTHREADS_CFLAGS) -I$(builddir)/bench/
+bench_bench_bitgreen_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CLFAGS) $(EVENT_PTHREADS_CFLAGS) -I$(builddir)/bench/
 bench_bench_bitgreen_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 bench_bench_bitgreen_LDADD = \
-  $(LIBBITGREEN_SERVER) \
-  $(LIBBITGREEN_WALLET) \
-  $(LIBBITGREEN_SERVER) \
-  $(LIBBITGREEN_COMMON) \
-  $(LIBBITGREEN_UTIL) \
-  $(LIBBITGREEN_CONSENSUS) \
-  $(LIBBITGREEN_CRYPTO) \
+  $(LIBBITCOIN_SERVER) \
+  $(LIBBITCOIN_WALLET) \
+  $(LIBBITCOIN_SERVER) \
+  $(LIBBITCOIN_COMMON) \
+  $(LIBBITCOIN_UTIL) \
+  $(LIBBITCOIN_CONSENSUS) \
+  $(LIBBITCOIN_CRYPTO) \
   $(LIBLEVELDB) \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
@@ -67,7 +67,7 @@ bench_bench_bitgreen_LDADD = \
   $(EVENT_LIBS)
 
 if ENABLE_ZMQ
-bench_bench_bitgreen_LDADD += $(LIBBITGREEN_ZMQ) $(ZMQ_LIBS)
+bench_bench_bitgreen_LDADD += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)
 endif
 
 if ENABLE_WALLET
@@ -78,9 +78,9 @@ endif
 bench_bench_bitgreen_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(BLS_LIBS)
 bench_bench_bitgreen_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
-CLEAN_BITGREEN_BENCH = bench/*.gcda bench/*.gcno $(GENERATED_BENCH_FILES)
+CLEAN_BITCOIN_BENCH = bench/*.gcda bench/*.gcno $(GENERATED_BENCH_FILES)
 
-CLEANFILES += $(CLEAN_BITGREEN_BENCH)
+CLEANFILES += $(CLEAN_BITCOIN_BENCH)
 
 bench/data.cpp: bench/data/block413567.raw.h
 
@@ -90,7 +90,7 @@ bench: $(BENCH_BINARY) FORCE
 	$(BENCH_BINARY)
 
 bitgreen_bench_clean : FORCE
-	rm -f $(CLEAN_BITGREEN_BENCH) $(bench_bench_bitgreen_OBJECTS) $(BENCH_BINARY)
+	rm -f $(CLEAN_BITCOIN_BENCH) $(bench_bench_bitgreen_OBJECTS) $(BENCH_BINARY)
 
 %.raw.h: %.raw
 	@$(MKDIR_P) $(@D)

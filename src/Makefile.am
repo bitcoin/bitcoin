@@ -19,37 +19,45 @@ else
 LIBUNIVALUE = $(UNIVALUE_LIBS)
 endif
 
-BITGREEN_INCLUDES=-I$(builddir) $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) $(CRYPTO_CFLAGS) $(SSL_CFLAGS)
+BITCOIN_INCLUDES=-I$(builddir) $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) $(CRYPTO_CFLAGS) $(SSL_CFLAGS)
 
-BITGREEN_INCLUDES += -I$(srcdir)/secp256k1/include
-BITGREEN_INCLUDES += $(UNIVALUE_CFLAGS)
+BITCOIN_INCLUDES += -I$(srcdir)/secp256k1/include
+BITCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
 
 BLS_LIBS=-lchiabls -lgmp
+
+LIBBITCOIN_SERVER=libbitgreen_server.a
+LIBBITCOIN_COMMON=libbitgreen_common.a
+LIBBITCOIN_CONSENSUS=libbitgreen_consensus.a
+LIBBITCOIN_CLI=libbitgreen_cli.a
+LIBBITCOIN_UTIL=libbitgreen_util.a
+LIBBITCOIN_CRYPTO_BASE=crypto/libbitgreen_crypto_base.a
+LIBBITCOINQT=qt/libbitgreenqt.a
 LIBSECP256K1=secp256k1/libsecp256k1.la
 
 if ENABLE_ZMQ
-LIBBITGREEN_ZMQ=libbitgreen_zmq.a
+LIBBITCOIN_ZMQ=libbitgreen_zmq.a
 endif
-if BUILD_BITGREEN_LIBS
-LIBBITGREENCONSENSUS=libbitgreenconsensus.la
+if BUILD_BITCOIN_LIBS
+LIBBITCOINCONSENSUS=libbitgreenconsensus.la
 endif
 if ENABLE_WALLET
-LIBBITGREEN_WALLET=libbitgreen_wallet.a
-LIBBITGREEN_WALLET_TOOL=libbitgreen_wallet_tool.a
+LIBBITCOIN_WALLET=libbitgreen_wallet.a
+LIBBITCOIN_WALLET_TOOL=libbitgreen_wallet_tool.a
 endif
 
-LIBBITGREEN_CRYPTO= $(LIBBITGREEN_CRYPTO_BASE)
+LIBBITCOIN_CRYPTO= $(LIBBITCOIN_CRYPTO_BASE)
 if ENABLE_SSE41
-LIBBITGREEN_CRYPTO_SSE41 = crypto/libbitgreen_crypto_sse41.a
-LIBBITGREEN_CRYPTO += $(LIBBITGREEN_CRYPTO_SSE41)
+LIBBITCOIN_CRYPTO_SSE41 = crypto/libbitgreen_crypto_sse41.a
+LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_SSE41)
 endif
 if ENABLE_AVX2
-LIBBITGREEN_CRYPTO_AVX2 = crypto/libbitgreen_crypto_avx2.a
-LIBBITGREEN_CRYPTO += $(LIBBITGREEN_CRYPTO_AVX2)
+LIBBITCOIN_CRYPTO_AVX2 = crypto/libbitgreen_crypto_avx2.a
+LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_AVX2)
 endif
 if ENABLE_SHANI
-LIBBITGREEN_CRYPTO_SHANI = crypto/libbitgreen_crypto_shani.a
-LIBBITGREEN_CRYPTO += $(LIBBITGREEN_CRYPTO_SHANI)
+LIBBITCOIN_CRYPTO_SHANI = crypto/libbitgreen_crypto_shani.a
+LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_SHANI)
 endif
 
 $(LIBSECP256K1): $(wildcard secp256k1/src/*.h) $(wildcard secp256k1/src/*.c) $(wildcard secp256k1/include/*)
@@ -58,42 +66,42 @@ $(LIBSECP256K1): $(wildcard secp256k1/src/*.h) $(wildcard secp256k1/src/*.c) $(w
 # Make is not made aware of per-object dependencies to avoid limiting building parallelization
 # But to build the less dependent modules first, we manually select their order here:
 EXTRA_LIBRARIES += \
-  $(LIBBITGREEN_CRYPTO) \
-  $(LIBBITGREEN_UTIL) \
-  $(LIBBITGREEN_COMMON) \
-  $(LIBBITGREEN_CONSENSUS) \
-  $(LIBBITGREEN_SERVER) \
-  $(LIBBITGREEN_CLI) \
-  $(LIBBITGREEN_WALLET) \
-  $(LIBBITGREEN_WALLET_TOOL) \
-  $(LIBBITGREEN_ZMQ)
+  $(LIBBITCOIN_CRYPTO) \
+  $(LIBBITCOIN_UTIL) \
+  $(LIBBITCOIN_COMMON) \
+  $(LIBBITCOIN_CONSENSUS) \
+  $(LIBBITCOIN_SERVER) \
+  $(LIBBITCOIN_CLI) \
+  $(LIBBITCOIN_WALLET) \
+  $(LIBBITCOIN_WALLET_TOOL) \
+  $(LIBBITCOIN_ZMQ)
 
-lib_LTLIBRARIES = $(LIBBITGREENCONSENSUS)
+lib_LTLIBRARIES = $(LIBBITCOINCONSENSUS)
 
 bin_PROGRAMS =
 noinst_PROGRAMS =
 TESTS =
 BENCHMARKS =
 
-if BUILD_BITGREEND
+if BUILD_BITCOIND
   bin_PROGRAMS += bitgreend
 endif
 
-if BUILD_BITGREEN_CLI
+if BUILD_BITCOIN_CLI
   bin_PROGRAMS += bitgreen-cli
 endif
-if BUILD_BITGREEN_TX
+if BUILD_BITCOIN_TX
   bin_PROGRAMS += bitgreen-tx
 endif
 if ENABLE_WALLET
-if BUILD_BITGREEN_WALLET
+if BUILD_BITCOIN_WALLET
   bin_PROGRAMS += bitgreen-wallet
 endif
 endif
 
 .PHONY: FORCE check-symbols check-security
 # bitgreen core #
-BITGREEN_CORE_H = \
+BITCOIN_CORE_H = \
   addrdb.h \
   addrman.h \
   attributes.h \
@@ -249,7 +257,7 @@ libbitgreen_util_a-clientversion.$(OBJEXT): obj/build.h
 # Contains code accessing mempool and chain state that is meant to be separated
 # from wallet and gui code (see node/README.md). Shared code should go in
 # libbitgreen_common or libbitgreen_util libraries, instead.
-libbitgreen_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITGREEN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
+libbitgreen_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
 libbitgreen_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitgreen_server_a_SOURCES = \
   addrdb.cpp \
@@ -299,7 +307,7 @@ libbitgreen_server_a_SOURCES = \
   validation.cpp \
   validationinterface.cpp \
   versionbits.cpp \
-  $(BITGREEN_CORE_H)
+  $(BITCOIN_CORE_H)
 
 if ENABLE_WALLET
 libbitgreen_server_a_SOURCES += wallet/init.cpp
@@ -309,7 +317,7 @@ libbitgreen_server_a_SOURCES += dummywallet.cpp
 endif
 
 if ENABLE_ZMQ
-libbitgreen_zmq_a_CPPFLAGS = $(BITGREEN_INCLUDES) $(ZMQ_CFLAGS)
+libbitgreen_zmq_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(ZMQ_CFLAGS)
 libbitgreen_zmq_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitgreen_zmq_a_SOURCES = \
   zmq/zmqabstractnotifier.cpp \
@@ -321,7 +329,7 @@ endif
 
 # wallet: shared between bitgreend and bitgreen-qt, but only linked
 # when wallet enabled
-libbitgreen_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITGREEN_INCLUDES)
+libbitgreen_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitgreen_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitgreen_wallet_a_SOURCES = \
   addrdb.cpp \
@@ -387,13 +395,13 @@ libbitgreen_wallet_a_SOURCES = \
   wallet/walletdb.cpp \
   wallet/walletutil.cpp \
   wallet/coinselection.cpp \
-  $(BITGREEN_CORE_H)
+  $(BITCOIN_CORE_H)
 
 libbitgreen_wallet_tool_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITGREEN_INCLUDES)
 libbitgreen_wallet_tool_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitgreen_wallet_tool_a_SOURCES = \
   wallet/wallettool.cpp \
-  $(BITGREEN_CORE_H)
+  $(BITCOIN_CORE_H)
 
 # crypto primitives library
 crypto_libbitgreen_crypto_base_a_CPPFLAGS = $(AM_CPPFLAGS)
@@ -448,7 +456,7 @@ crypto_libbitgreen_crypto_shani_a_CPPFLAGS += -DENABLE_SHANI
 crypto_libbitgreen_crypto_shani_a_SOURCES = crypto/sha256_shani.cpp
 
 # consensus: shared between all executables that validate any consensus rules.
-libbitgreen_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITGREEN_INCLUDES)
+libbitgreen_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitgreen_consensus_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitgreen_consensus_a_SOURCES = \
   amount.h \
@@ -487,7 +495,7 @@ libbitgreen_consensus_a_SOURCES = \
   version.h
 
 # common: shared between bitgreend, and bitgreen-qt and non-server tools
-libbitgreen_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITGREEN_INCLUDES)
+libbitgreen_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitgreen_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitgreen_common_a_SOURCES = \
   base58.cpp \
@@ -517,12 +525,12 @@ libbitgreen_common_a_SOURCES = \
   script/standard.cpp \
   versionbitsinfo.cpp \
   warnings.cpp \
-  $(BITGREEN_CORE_H)
+  $(BITCOIN_CORE_H)
 
 # util: shared between all executables.
 # This library *must* be included to make sure that the glibc
 # backward-compatibility objects and their sanity checks are linked.
-libbitgreen_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITGREEN_INCLUDES)
+libbitgreen_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitgreen_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitgreen_util_a_SOURCES = \
   bls/bls_batchverifier.h \
@@ -556,7 +564,7 @@ libbitgreen_util_a_SOURCES = \
   util/time.cpp \
   util/url.cpp \
   util/validation.cpp \
-  $(BITGREEN_CORE_H)
+  $(BITCOIN_CORE_H)
 
 if GLIBC_BACK_COMPAT
 libbitgreen_util_a_SOURCES += compat/glibc_compat.cpp
@@ -564,18 +572,18 @@ AM_LDFLAGS += $(COMPAT_LDFLAGS)
 endif
 
 # cli: shared between bitgreen-cli and bitgreen-qt
-libbitgreen_cli_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITGREEN_INCLUDES)
+libbitgreen_cli_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitgreen_cli_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitgreen_cli_a_SOURCES = \
   rpc/client.cpp \
-  $(BITGREEN_CORE_H)
+  $(BITCOIN_CORE_H)
 
 nodist_libbitgreen_util_a_SOURCES = $(srcdir)/obj/build.h
 #
 
 # bitgreend binary #
 bitgreend_SOURCES = bitgreend.cpp
-bitgreend_CPPFLAGS = $(AM_CPPFLAGS) $(BITGREEN_INCLUDES)
+bitgreend_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 bitgreend_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 bitgreend_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
@@ -586,14 +594,14 @@ endif
 # Libraries below may be listed more than once to resolve circular dependencies (see
 # https://eli.thegreenplace.net/2013/07/09/library-order-in-static-linking#circular-dependency)
 bitgreend_LDADD = \
-  $(LIBBITGREEN_SERVER) \
-  $(LIBBITGREEN_COMMON) \
-  $(LIBBITGREEN_WALLET) \
+  $(LIBBITCOIN_SERVER) \
+  $(LIBBITCOIN_COMMON) \
   $(LIBUNIVALUE) \
-  $(LIBBITGREEN_UTIL) \
-  $(LIBBITGREEN_ZMQ) \
-  $(LIBBITGREEN_CONSENSUS) \
-  $(LIBBITGREEN_CRYPTO) \
+  $(LIBBITCOIN_UTIL) \
+  $(LIBBITCOIN_WALLET) \
+  $(LIBBITCOIN_ZMQ) \
+  $(LIBBITCOIN_CONSENSUS) \
+  $(LIBBITCOIN_CRYPTO) \
   $(LIBLEVELDB) \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
@@ -603,7 +611,7 @@ bitgreend_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(
 
 # bitgreen-cli binary #
 bitgreen_cli_SOURCES = bitgreen-cli.cpp
-bitgreen_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITGREEN_INCLUDES) $(EVENT_CFLAGS)
+bitgreen_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
 bitgreen_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 bitgreen_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
@@ -612,17 +620,17 @@ bitgreen_cli_SOURCES += bitgreen-cli-res.rc
 endif
 
 bitgreen_cli_LDADD = \
-  $(LIBBITGREEN_CLI) \
+  $(LIBBITCOIN_CLI) \
   $(LIBUNIVALUE) \
-  $(LIBBITGREEN_UTIL) \
-  $(LIBBITGREEN_CRYPTO)
+  $(LIBBITCOIN_UTIL) \
+  $(LIBBITCOIN_CRYPTO)
 
 bitgreen_cli_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS) $(BLS_LIBS)
 #
 
 # bitgreen-tx binary #
 bitgreen_tx_SOURCES = bitgreen-tx.cpp
-bitgreen_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITGREEN_INCLUDES)
+bitgreen_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 bitgreen_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 bitgreen_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
@@ -632,10 +640,10 @@ endif
 
 bitgreen_tx_LDADD = \
   $(LIBUNIVALUE) \
-  $(LIBBITGREEN_COMMON) \
-  $(LIBBITGREEN_UTIL) \
-  $(LIBBITGREEN_CONSENSUS) \
-  $(LIBBITGREEN_CRYPTO) \
+  $(LIBBITCOIN_COMMON) \
+  $(LIBBITCOIN_UTIL) \
+  $(LIBBITCOIN_CONSENSUS) \
+  $(LIBBITCOIN_CRYPTO) \
   $(LIBSECP256K1)
 
 bitgreen_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(BLS_LIBS)
@@ -643,7 +651,7 @@ bitgreen_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(BLS_LIBS)
 
 # bitgreen-wallet binary #
 bitgreen_wallet_SOURCES = bitgreen-wallet.cpp
-bitgreen_wallet_CPPFLAGS = $(AM_CPPFLAGS) $(BITGREEN_INCLUDES)
+bitgreen_wallet_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 bitgreen_wallet_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 bitgreen_wallet_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
@@ -652,13 +660,13 @@ bitgreen_wallet_SOURCES += bitgreen-wallet-res.rc
 endif
 
 bitgreen_wallet_LDADD = \
-  $(LIBBITGREEN_WALLET_TOOL) \
-  $(LIBBITGREEN_WALLET) \
-  $(LIBBITGREEN_COMMON) \
-  $(LIBBITGREEN_CONSENSUS) \
-  $(LIBBITGREEN_UTIL) \
-  $(LIBBITGREEN_CRYPTO) \
-  $(LIBBITGREEN_ZMQ) \
+  $(LIBBITCOIN_WALLET_TOOL) \
+  $(LIBBITCOIN_WALLET) \
+  $(LIBBITCOIN_COMMON) \
+  $(LIBBITCOIN_CONSENSUS) \
+  $(LIBBITCOIN_UTIL) \
+  $(LIBBITCOIN_CRYPTO) \
+  $(LIBBITCOIN_ZMQ) \
   $(LIBLEVELDB) \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
@@ -669,7 +677,7 @@ bitgreen_wallet_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(EVENT_PTHREA
 #
 
 # bitgreenconsensus library #
-if BUILD_BITGREEN_LIBS
+if BUILD_BITCOIN_LIBS
 include_HEADERS = script/bitgreenconsensus.h
 libbitgreenconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libbitgreen_crypto_base_a_SOURCES) $(libbitgreen_consensus_a_SOURCES)
 
@@ -679,6 +687,7 @@ endif
 
 libbitgreenconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
 libbitgreenconsensus_la_LIBADD = $(LIBSECP256K1) $(BLS_LIBS)
+libbitgreenconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL
 libbitgreenconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
 endif
