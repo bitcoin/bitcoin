@@ -184,6 +184,7 @@ BITCOIN_CORE_H = \
   rpc/request.h \
   rpc/server.h \
   rpc/util.h \
+  saltedhasher.h \
   scheduler.h \
   script/descriptor.h \
   script/keyorigin.h \
@@ -370,6 +371,7 @@ libbitgreen_wallet_a_SOURCES = \
   rpc/net.cpp \
   rpc/rawtransaction.cpp \
   rpc/server.cpp \
+  saltedhasher.cpp \
   script/sigcache.cpp \
   shutdown.cpp \
   timedata.cpp \
