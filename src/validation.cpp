@@ -1720,6 +1720,7 @@ bool PoSContextualBlockChecks(const CBlock& block, CValidationState& state, CBlo
     // write everything to index
     if (block.IsProofOfStake())
     {
+        pindex->SetProofOfStake();
         pindex->prevoutStake = block.vtx[1]->vin[0].prevout;
         pindex->nStakeTime = block.nTime;
         pindex->hashProofOfStake = hashProofOfStake;
@@ -2940,8 +2941,6 @@ CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block, bool fProo
         pindexNew->nHeight = pindexNew->pprev->nHeight + 1;
         pindexNew->BuildSkip();
     }
-    if (fProofOfStake)
-        pindexNew->SetProofOfStake();
     pindexNew->nTimeMax = (pindexNew->pprev ? std::max(pindexNew->pprev->nTimeMax, pindexNew->nTime) : pindexNew->nTime);
     pindexNew->nChainWork = (pindexNew->pprev ? pindexNew->pprev->nChainWork : 0) + GetBlockProof(*pindexNew);
     pindexNew->RaiseValidity(BLOCK_VALID_TREE);
@@ -3403,7 +3402,7 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, CValidationState
             return true;
         }
 
-        if (!CheckBlockHeader(block, state, chainparams.GetConsensus(), !fProofOfStake))
+        if (!CheckBlockHeader(block, state, chainparams.GetConsensus(), false))
             return error("%s: Consensus::CheckBlockHeader: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
 
         // Get prev block index

@@ -131,7 +131,7 @@ arith_uint256 GetBlockProof(const CBlockIndex& block)
     // as it's too large for an arith_uint256. However, as 2**256 is at least as large
     // as bnTarget+1, it is equal to ((2**256 - bnTarget - 1) / (bnTarget+1)) + 1,
     // or ~bnTarget / (bnTarget+1) + 1.
-    return block.IsProofOfStake() ? (~bnTarget / (bnTarget + 1)) + 1 : 1;
+    return (~bnTarget / (bnTarget + 1)) + 1;
 
 }
 
