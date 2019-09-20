@@ -133,7 +133,7 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::TOR, "tor"},
     {BCLog::MEMPOOL, "mempool"},
     {BCLog::HTTP, "http"},
-    {BCLog::BENCH, "bench"},
+    {BCLog::BENCHMARK, "bench"},
     {BCLog::ZMQ, "zmq"},
     {BCLog::DB, "db"},
     {BCLog::RPC, "rpc"},
@@ -142,7 +142,7 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::SELECTCOINS, "selectcoins"},
     {BCLog::REINDEX, "reindex"},
     {BCLog::CMPCTBLOCK, "cmpctblock"},
-    {BCLog::RAND, "rand"},
+    {BCLog::RANDOM, "rand"},
     {BCLog::PRUNE, "prune"},
     {BCLog::PROXY, "proxy"},
     {BCLog::MEMPOOLREJ, "mempoolrej"},
@@ -151,8 +151,13 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::QT, "qt"},
     {BCLog::LEVELDB, "leveldb"},
     {BCLog::KERNEL, "kernel"},
+    {BCLog::MNSYNC, "mnsync"},
+    {BCLog::LLMQ, "llmq"},
+    {BCLog::LLMQDKG, "llmq-dkg"},
+    {BCLog::LLMQSIGS, "llmq-sigs"},
+    {BCLog::CHAINLOCKS, "chainlocks"},
     {BCLog::ALL, "1"},
-    {BCLog::ALL, "all"},
+    {BCLog::ALL, "all"}
 };
 
 bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str)
