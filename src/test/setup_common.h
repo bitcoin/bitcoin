@@ -87,11 +87,17 @@ struct TestingSetup : public BasicTestingSetup {
     ~TestingSetup();
 };
 
+/** Identical to TestingSetup, but chain set to regtest */
+struct RegTestingSetup : public TestingSetup {
+    RegTestingSetup()
+        : TestingSetup{CBaseChainParams::REGTEST} {}
+};
+
 class CBlock;
 struct CMutableTransaction;
 class CScript;
 
-struct TestChainSetup : public TestingSetup
+struct TestChainSetup : public RegTestingSetup
 {
     TestChainSetup(int blockCount);
     ~TestChainSetup();

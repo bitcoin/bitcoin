@@ -51,7 +51,7 @@ void benchmark::BenchRunner::RunAll(const Args& args)
 
     std::vector<ankerl::nanobench::Result> benchmarkResults;
     for (const auto& p : benchmarks()) {
-        TestingSetup test{CBaseChainParams::REGTEST};
+        RegTestingSetup test{};
         {
             assert(::ChainActive().Height() == 0);
         }
