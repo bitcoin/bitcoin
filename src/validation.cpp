@@ -3381,6 +3381,9 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
         return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-blk-weight", strprintf("%s : weight limit failed", __func__));
     }
 
+    if (block.vtx[0]->nType != TRANSACTION_COINBASE)
+        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-cb-type", "coinbase is not a CbTx");
+
     return true;
 }
 

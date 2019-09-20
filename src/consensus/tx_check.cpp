@@ -17,6 +17,21 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
     // Size limits (this doesn't take the witness into account, as that hasn't been checked for malleability)
     if (::GetSerializeSize(tx, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * WITNESS_SCALE_FACTOR > MAX_BLOCK_WEIGHT)
         return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-txns-oversize");
+    if (tx.vExtraPayload.size() > MAX_TX_EXTRA_PAYLOAD)
+        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-txns-payload-oversize");
+
+    // check transaction types
+    if (tx.nVersion >= 2 &&
+        tx.nType != TRANSACTION_NORMAL &&
+        tx.nType != TRANSACTION_COINBASE &&
+        tx.nType != TRANSACTION_PROVIDER_REGISTER &&
+        tx.nType != TRANSACTION_PROVIDER_UPDATE_SERVICE &&
+        tx.nType != TRANSACTION_PROVIDER_UPDATE_REVOKE)
+        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-txns-type");
+    if ((tx.IsCoinBase() || tx.IsCoinStake()) &&
+        tx.nVersion >= 2 &&
+        tx.nType != TRANSACTION_COINBASE)
+        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-txns-cb-type");
 
     // Check for negative or overflow output values
     CAmount nValueOut = 0;

@@ -14,6 +14,17 @@
 
 static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
 
+/** Transaction types */
+enum {
+    TRANSACTION_COINBASE = 0,
+    TRANSACTION_NORMAL = 1,
+    TRANSACTION_PROVIDER_REGISTER = 2,
+    TRANSACTION_PROVIDER_UPDATE_SERVICE = 3,
+    TRANSACTION_PROVIDER_UPDATE_REGISTRAR = 4,
+    TRANSACTION_PROVIDER_UPDATE_REVOKE = 5,
+    TRANSACTION_QUORUM_COMMITMENT = 6
+};
+
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
 class COutPoint
 {
@@ -191,13 +202,13 @@ struct CMutableTransaction;
 
 /**
  * Basic transaction serialization format:
- * - int32_t nVersion
+ * - int32_t nVersion + nType
  * - std::vector<CTxIn> vin
  * - std::vector<CTxOut> vout
  * - uint32_t nLockTime
  *
  * Extended transaction serialization format:
- * - int32_t nVersion
+ * - int32_t nVersion + nType
  * - unsigned char dummy = 0x00
  * - unsigned char flags (!= 0)
  * - std::vector<CTxIn> vin
@@ -210,7 +221,10 @@ template<typename Stream, typename TxType>
 inline void UnserializeTransaction(TxType& tx, Stream& s) {
     const bool fAllowWitness = !(s.GetVersion() & SERIALIZE_TRANSACTION_NO_WITNESS);
 
-    s >> tx.nVersion;
+    int32_t n32bitVersion;
+    s >> n32bitVersion;
+    tx.nVersion = (int16_t)(n32bitVersion & 0xffff);
+    tx.nType = (int16_t)((n32bitVersion >> 16) & 0xffff);
     unsigned char flags = 0;
     tx.vin.clear();
     tx.vout.clear();
@@ -243,13 +257,18 @@ inline void UnserializeTransaction(TxType& tx, Stream& s) {
         throw std::ios_base::failure("Unknown transaction optional data");
     }
     s >> tx.nLockTime;
+    if (tx.nVersion >= 2 &&
+        tx.nType != TRANSACTION_NORMAL &&
+        tx.nType != TRANSACTION_COINBASE)
+        s >> tx.vExtraPayload;
 }
 
 template<typename Stream, typename TxType>
 inline void SerializeTransaction(const TxType& tx, Stream& s) {
     const bool fAllowWitness = !(s.GetVersion() & SERIALIZE_TRANSACTION_NO_WITNESS);
 
-    s << tx.nVersion;
+    int32_t n32bitVersion = tx.nVersion | (tx.nType << 16);
+    s << n32bitVersion;
     unsigned char flags = 0;
     // Consistency check
     if (fAllowWitness) {
@@ -272,6 +291,10 @@ inline void SerializeTransaction(const TxType& tx, Stream& s) {
         }
     }
     s << tx.nLockTime;
+    if (tx.nVersion >= 2 &&
+        tx.nType != TRANSACTION_NORMAL &&
+        tx.nType != TRANSACTION_COINBASE)
+        s << tx.vExtraPayload;
 }
 
 
@@ -297,8 +320,10 @@ public:
     // structure, including the hash.
     const std::vector<CTxIn> vin;
     const std::vector<CTxOut> vout;
-    const int32_t nVersion;
+    const int16_t nVersion;
+    const int16_t nType;
     const uint32_t nLockTime;
+    const std::vector<uint8_t> vExtraPayload; // only available for special transaction types
 
 private:
     /** Memory only. */
@@ -384,8 +409,10 @@ struct CMutableTransaction
 {
     std::vector<CTxIn> vin;
     std::vector<CTxOut> vout;
-    int32_t nVersion;
+    int16_t nVersion;
+    int16_t nType;
     uint32_t nLockTime;
+    std::vector<uint8_t> vExtraPayload; // only available for special transaction types
 
     CMutableTransaction();
     explicit CMutableTransaction(const CTransaction& tx);

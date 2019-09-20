@@ -153,6 +153,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.vin.resize(1);
     coinbaseTx.vin[0].prevout.SetNull();
     coinbaseTx.vout.resize(1);
+    coinbaseTx.nVersion = 2;
+    coinbaseTx.nType = TRANSACTION_COINBASE;
 
     if (fProofOfStake)
         pblock->vtx.resize(2);
