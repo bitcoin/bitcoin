@@ -190,7 +190,7 @@ Documentation can be generated with `make docs` and cleaned up with `make clean-
 
 Before running `make docs`, you will need to install dependencies `doxygen` and `dot`. For example, on MacOS via Homebrew:
 ```
-brew install doxygen --with-graphviz
+brew install graphviz doxygen
 ```
 
 Development tips and tricks
