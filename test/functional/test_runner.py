@@ -262,7 +262,7 @@ def main():
 
     logging.debug("Temporary test directory at %s" % tmpdir)
 
-    enable_bitgreend = config["components"].getboolean("ENABLE_BITGREEND")
+    enable_bitgreend = config["components"].getboolean("ENABLE_BITCOIND")
 
     if not enable_bitgreend:
         print("No functional tests to run.")
