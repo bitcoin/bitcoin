@@ -445,7 +445,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         self.sync_all()
         inputs = [{ "txid" : txId, "vout" : vout['n'] }]
-        outputs = { self.nodes[0].getnewaddress() : Decimal("0.999990000") } # 10000 sat fee
+        outputs = { self.nodes[0].getnewaddress() : Decimal("0.99990000") } # 10000 sat fee
         rawTx = self.nodes[2].createrawtransaction(inputs, outputs)
         rawTxSigned = self.nodes[2].signrawtransactionwithwallet(rawTx)
         assert_equal(rawTxSigned['complete'], True)
