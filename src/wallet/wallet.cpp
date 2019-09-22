@@ -3545,7 +3545,7 @@ bool CWallet::CreateCollateralTransaction(CMutableTransaction& txCollateral, std
         txCollateral.vout.push_back(CTxOut(0, CScript() << OP_RETURN));
     }
 
-    if (!SignSignature(*this, txdsinCollateral.prevPubKey, txCollateral, 0)) {
+    if (!SignSignature(*this, txdsinCollateral.prevPubKey, txCollateral, 0, nValue, SIGHASH_ALL)) {
         strReason = "Unable to sign collateral transaction!";
         return false;
     }
@@ -3855,12 +3855,15 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 for (const auto& txdsin : vecTxDSInTmp)
                 {
                     const CScript& scriptPubKey = txdsin.prevPubKey;
-                    CScript& scriptSigRes = txNew.vin[nIn].scriptSig;
-                    if (!ProduceSignature(DummySignatureCreator(this), scriptPubKey, scriptSigRes))
+                    SignatureData sigdata;
+                    if (!ProduceSignature(DummySignatureCreator(this), scriptPubKey, sigdata))
                     {
                         strFailReason = _("Signing transaction failed");
                         return false;
+                    } else {
+                        UpdateTransaction(txNew, nIn, sigdata);
                     }
+
                     nIn++;
                 }
 
@@ -3963,12 +3966,14 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
             for(const auto& txdsin : vecTxDSInTmp)
             {
                 const CScript& scriptPubKey = txdsin.prevPubKey;
-                CScript& scriptSigRes = txNew.vin[nIn].scriptSig;
+                SignatureData sigdata;
 
-                if (!ProduceSignature(TransactionSignatureCreator(this, &txNewConst, nIn, SIGHASH_ALL), scriptPubKey, scriptSigRes))
+                if (!ProduceSignature(TransactionSignatureCreator(this, &txNewConst, nIn, SIGHASH_ALL), scriptPubKey, sigdata))
                 {
                     strFailReason = _("Signing transaction failed");
                     return false;
+                } else {
+                    UpdateTransaction(txNew, nIn, sigdata);
                 }
 
                 nIn++;

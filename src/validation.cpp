@@ -1234,7 +1234,7 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight)
 bool CScriptCheck::operator()() {
     const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
     PrecomputedTransactionData txdata(*ptxTo);
-    return VerifyScript(scriptSig, scriptPubKey, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, txdata, cacheStore), &error);
+    return VerifyScript(scriptSig, scriptPubKey, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, amount, txdata, cacheStore), &error);
 }
 
 int GetSpendHeight(const CCoinsViewCache& inputs)

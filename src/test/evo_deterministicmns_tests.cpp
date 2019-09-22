@@ -86,7 +86,7 @@ static void SignTransaction(CMutableTransaction& tx, const CKey& coinbaseKey)
         CTransactionRef txFrom;
         uint256 hashBlock;
         BOOST_ASSERT(GetTransaction(tx.vin[i].prevout.hash, txFrom, Params().GetConsensus(), hashBlock));
-        BOOST_ASSERT(SignSignature(tempKeystore, *txFrom, tx, i));
+        BOOST_ASSERT(SignSignature(tempKeystore, *txFrom, tx, i, SIGHASH_ALL));
     }
 }
 
@@ -231,7 +231,8 @@ static bool CheckTransactionSignature(const CMutableTransaction& tx)
         uint256 hashBlock;
         BOOST_ASSERT(GetTransaction(txin.prevout.hash, txFrom, Params().GetConsensus(), hashBlock));
 
-        if (!VerifyScript(txin.scriptSig, txFrom->vout[txin.prevout.n].scriptPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&tx, i))) {
+        CAmount amount = txFrom->vout[txin.prevout.n].nValue;
+        if (!VerifyScript(txin.scriptSig, txFrom->vout[txin.prevout.n].scriptPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&tx, i, amount))) {
             return false;
         }
     }
