@@ -554,15 +554,18 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         if (nPayAmount > 0)
         {
             nChange = nAmount - nPayAmount;
-            if (!CoinControlDialog::fSubtractFeeFromAmount)
-                nChange -= nPayFee;
 
             // PrivateSend Fee = overpay
             if(coinControl->fUsePrivateSend && nChange > 0)
             {
-                nPayFee += nChange;
+                nPayFee = std::max(nChange, nPayFee);
                 nChange = 0;
+                if (CoinControlDialog::fSubtractFeeFromAmount)
+                    nBytes -= 34; // we didn't detect lack of change above
+            } else if (!CoinControlDialog::fSubtractFeeFromAmount) {
+                nChange -= nPayFee;
             }
+
             // Never create dust outputs; if we would, just add the dust to the fee.
             if (nChange > 0 && nChange < MIN_CHANGE)
             {

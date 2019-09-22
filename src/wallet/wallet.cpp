@@ -3782,6 +3782,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 {
                     //over pay for denominated transactions
                     if (nCoinType == ONLY_DENOMINATED) {
+                        nChangePosInOut = -1;
                         nFeeRet += nChange;
                         wtxNew.mapValue["DS"] = "1";
                     } else {
