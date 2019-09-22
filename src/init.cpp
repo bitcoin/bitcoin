@@ -1827,7 +1827,6 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 // The on-disk coinsdb is now in a good state, create the cache
                 pcoinsTip = new CCoinsViewCache(pcoinscatcher);
 
-                deterministicMNManager->UpgradeDBIfNeeded();
                 bool is_coinsview_empty = fReset || fReindexChainState || pcoinsTip->GetBestBlock().IsNull();
                 if (!is_coinsview_empty) {
                     // LoadChainTip sets chainActive based on pcoinsTip's best block
@@ -1837,6 +1836,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                     }
                     assert(chainActive.Tip() != NULL);
                 }
+
+                deterministicMNManager->UpgradeDBIfNeeded();
 
                 if (!is_coinsview_empty) {
                     uiInterface.InitMessage(_("Verifying blocks..."));
