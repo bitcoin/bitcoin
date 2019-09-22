@@ -2987,13 +2987,13 @@ static bool SendRejectsAndCheckIfBanned(CNode* pnode, CConnman& connman)
     if (state.fShouldBan) {
         state.fShouldBan = false;
         if (pnode->fWhitelisted)
-            LogPrintf("Warning: not punishing whitelisted peer %s!\n", pnode->addr.ToString());
+            LogPrintf("Warning: not punishing whitelisted peer %s!\n", pnode->GetLogString());
         else if (pnode->fAddnode)
-            LogPrintf("Warning: not punishing addnoded peer %s!\n", pnode->addr.ToString());
+            LogPrintf("Warning: not punishing addnoded peer %s!\n", pnode->GetLogString());
         else {
             pnode->fDisconnect = true;
             if (pnode->addr.IsLocal())
-                LogPrintf("Warning: not banning local peer %s!\n", pnode->addr.ToString());
+                LogPrintf("Warning: not banning local peer %s!\n", pnode->GetLogString());
             else
             {
                 connman.Ban(pnode->addr, BanReasonNodeMisbehaving);

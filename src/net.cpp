@@ -392,9 +392,14 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
     }
 
     /// debug print
-    LogPrint(BCLog::NET, "trying connection %s lastseen=%.1fhrs\n",
-        pszDest ? pszDest : addrConnect.ToString(),
-        pszDest ? 0.0 : (double)(GetAdjustedTime() - addrConnect.nTime)/3600.0);
+    if (fLogIPs) {
+        LogPrint(BCLog::NET, "trying connection %s lastseen=%.1fhrs\n",
+            pszDest ? pszDest : addrConnect.ToString(),
+            pszDest ? 0.0 : (double)(GetAdjustedTime() - addrConnect.nTime)/3600.0);
+    } else {
+        LogPrint(BCLog::NET, "trying connection lastseen=%.1fhrs\n",
+            pszDest ? 0.0 : (double)(GetAdjustedTime() - addrConnect.nTime)/3600.0);
+    }
 
     // Connect
     SOCKET hSocket;
@@ -653,6 +658,11 @@ void CNode::SetAddrLocal(const CService& addrLocalIn) {
     } else {
         addrLocal = addrLocalIn;
     }
+}
+
+std::string CNode::GetLogString() const
+{
+    return fLogIPs ? addr.ToString() : strprintf("%d", id);
 }
 
 #undef X
@@ -1131,15 +1141,22 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
         return;
     }
 
+    std::string strDropped;
+    if (fLogIPs) {
+        strDropped = strprintf("connection from %s dropped", addr.ToString());
+    } else {
+        strDropped = "connection dropped";
+    }
+
     if (!fNetworkActive) {
-        LogPrintf("connection from %s dropped: not accepting new connections\n", addr.ToString());
+        LogPrintf("%s: not accepting new connections\n", strDropped);
         CloseSocket(hSocket);
         return;
     }
 
     if (!IsSelectableSocket(hSocket))
     {
-        LogPrintf("connection from %s dropped: non-selectable socket\n", addr.ToString());
+        LogPrintf("%s: non-selectable socket\n", strDropped);
         CloseSocket(hSocket);
         return;
     }
@@ -1150,7 +1167,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
 
     if (IsBanned(addr) && !whitelisted)
     {
-        LogPrintf("connection from %s dropped (banned)\n", addr.ToString());
+        LogPrintf("%s (banned)\n", strDropped);
         CloseSocket(hSocket);
         return;
     }
@@ -1187,7 +1204,11 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     pnode->fWhitelisted = whitelisted;
     GetNodeSignals().InitializeNode(pnode, *this);
 
-    LogPrint(BCLog::NET, "connection from %s accepted\n", addr.ToString());
+    if (fLogIPs) {
+        LogPrint(BCLog::NET, "connection from %s accepted\n", addr.ToString());
+    } else {
+        LogPrint(BCLog::NET, "connection accepted\n");
+    }
 
     {
         LOCK(cs_vNodes);
@@ -1211,8 +1232,13 @@ void CConnman::ThreadSocketHandler()
             {
                 if (pnode->fDisconnect)
                 {
-                    LogPrintf("ThreadSocketHandler -- removing node: peer=%d addr=%s nRefCount=%d fInbound=%d fMasternode=%d\n",
+                    if (fLogIPs) {
+                        LogPrintf("ThreadSocketHandler -- removing node: peer=%d addr=%s nRefCount=%d fInbound=%d fMasternode=%d\n",
                               pnode->GetId(), pnode->addr.ToString(), pnode->GetRefCount(), pnode->fInbound, pnode->fMasternode);
+                    } else {
+                        LogPrintf("ThreadSocketHandler -- removing node: peer=%d nRefCount=%d fInbound=%d fMasternode=%d\n",
+                              pnode->GetId(), pnode->GetRefCount(), pnode->fInbound, pnode->fMasternode);
+                    }
 
                     // remove from vNodes
                     vNodes.erase(remove(vNodes.begin(), vNodes.end(), pnode), vNodes.end());
@@ -1957,7 +1983,11 @@ void CConnman::ThreadOpenConnections()
                 int randsleep = GetRandInt(FEELER_SLEEP_WINDOW * 1000);
                 if (!interruptNet.sleep_for(std::chrono::milliseconds(randsleep)))
                     return;
-                LogPrint(BCLog::NET, "Making feeler connection to %s\n", addrConnect.ToString());
+                if (fLogIPs) {
+                    LogPrint(BCLog::NET, "Making feeler connection to %s\n", addrConnect.ToString());
+                } else {
+                    LogPrint(BCLog::NET, "Making feeler connection\n");
+                }
             }
 
             OpenNetworkConnection(addrConnect, (int)setConnected.size() >= std::min(nMaxConnections - 1, 2), &grant, nullptr, false, fFeeler);

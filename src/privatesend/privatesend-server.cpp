@@ -72,7 +72,11 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
 
             int64_t nLastDsq = mmetaman.GetMetaInfo(dmn->proTxHash)->GetLastDsq();
             if (nLastDsq != 0 && nLastDsq + mnList.GetValidMNsCount() / 5 > mmetaman.GetDsqCount()) {
-                LogPrint(BCLog::PRIVATESEND, "DSACCEPT -- last dsq too recent, must wait: addr=%s\n", pfrom->addr.ToString());
+                if (fLogIPs) {
+                    LogPrint(BCLog::PRIVATESEND, "DSACCEPT -- last dsq too recent, must wait: peer=%d, addr=%s\n", pfrom->GetId(), pfrom->addr.ToString());
+                } else {
+                    LogPrint(BCLog::PRIVATESEND, "DSACCEPT -- last dsq too recent, must wait: peer=%d\n", pfrom->GetId());
+                }
                 PushStatus(pfrom, STATUS_REJECTED, ERR_RECENT, connman);
                 return;
             }

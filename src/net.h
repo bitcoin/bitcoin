@@ -1020,6 +1020,8 @@ public:
     std::string GetAddrName() const;
     //! Sets the addrName only if it was not previously set
     void MaybeSetAddrName(const std::string& addrNameIn);
+
+    std::string GetLogString() const;
 };
 
 class CExplicitNetCleanup

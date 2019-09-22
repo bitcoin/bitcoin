@@ -121,7 +121,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
         } else {
             SyncSingleObjVotes(pfrom, nProp, filter, connman);
         }
-        LogPrint(BCLog::GOBJECT, "MNGOVERNANCESYNC -- syncing governance objects to our peer at %s\n", pfrom->addr.ToString());
+        LogPrint(BCLog::GOBJECT, "MNGOVERNANCESYNC -- syncing governance objects to our peer %s\n", pfrom->GetLogString());
     }
 
     // A NEW GOVERNANCE OBJECT HAS ARRIVED
@@ -320,7 +320,7 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CConnman
         }
     }
 
-    LogPrintf("CGovernanceManager::AddGovernanceObject -- %s new, received from %s\n", strHash, pfrom ? pfrom->GetAddrName() : "nullptr");
+    LogPrintf("CGovernanceManager::AddGovernanceObject -- %s new, received from peer %s\n", strHash, pfrom ? pfrom->GetLogString() : "nullptr");
     govobj.Relay(connman);
 
     // Update the rate buffer
