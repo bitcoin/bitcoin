@@ -17,12 +17,6 @@
 struct CActiveMasternodeInfo;
 class CActiveMasternodeManager;
 
-static const int ACTIVE_MASTERNODE_INITIAL          = 0; // initial state
-static const int ACTIVE_MASTERNODE_SYNC_IN_PROCESS  = 1;
-static const int ACTIVE_MASTERNODE_INPUT_TOO_NEW    = 2;
-static const int ACTIVE_MASTERNODE_NOT_CAPABLE      = 3;
-static const int ACTIVE_MASTERNODE_STARTED          = 4;
-
 extern CActiveMasternodeInfo activeMasternodeInfo;
 extern CActiveMasternodeManager* activeMasternodeManager;
 

@@ -173,15 +173,6 @@ CDeterministicMNCPtr CDeterministicMNList::GetMNByService(const CService& servic
     return GetUniquePropertyMN(service);
 }
 
-CDeterministicMNCPtr CDeterministicMNList::GetValidMNByService(const CService& service) const
-{
-    auto dmn = GetUniquePropertyMN(service);
-    if (dmn && !IsMNValid(dmn)) {
-        return nullptr;
-    }
-    return dmn;
-}
-
 CDeterministicMNCPtr CDeterministicMNList::GetMNByInternalId(uint64_t internalId) const
 {
     auto proTxHash = mnInternalIdMap.find(internalId);

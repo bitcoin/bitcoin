@@ -240,7 +240,6 @@ class CDKGSession
     friend class CDKGSessionHandler;
     friend class CDKGSessionManager;
     friend class CDKGLogger;
-    template<typename Message> friend class CDKGMessageHandler;
 
 private:
     const Consensus::LLMQParams& params;

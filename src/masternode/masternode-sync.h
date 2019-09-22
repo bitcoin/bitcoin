@@ -41,8 +41,6 @@ private:
     // ... or failed
     int64_t nTimeLastFailure;
 
-    void Fail();
-
 public:
     CMasternodeSync() { Reset(); }
 

@@ -176,14 +176,6 @@ void CDKGDebugManager::InitLocalSessionStatus(Consensus::LLMQType llmqType, cons
     session.members.resize((size_t)params.size);
 }
 
-void CDKGDebugManager::UpdateLocalStatus(std::function<bool(CDKGDebugStatus& status)>&& func)
-{
-    LOCK(cs);
-    if (func(localStatus)) {
-        localStatus.nTime = GetAdjustedTime();
-    }
-}
-
 void CDKGDebugManager::UpdateLocalSessionStatus(Consensus::LLMQType llmqType, std::function<bool(CDKGDebugSessionStatus& status)>&& func)
 {
     LOCK(cs);

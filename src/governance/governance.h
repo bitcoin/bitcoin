@@ -198,10 +198,6 @@ public: // Types
 
     typedef txout_m_t::iterator txout_m_it;
 
-    typedef txout_m_t::const_iterator txout_m_cit;
-
-    typedef std::map<COutPoint, int> txout_int_m_t;
-
     typedef std::set<uint256> hash_s_t;
 
     typedef hash_s_t::iterator hash_s_it;
@@ -212,13 +208,9 @@ public: // Types
 
     typedef object_info_m_t::iterator object_info_m_it;
 
-    typedef object_info_m_t::const_iterator object_info_m_cit;
-
     typedef std::map<uint256, int64_t> hash_time_m_t;
 
     typedef hash_time_m_t::iterator hash_time_m_it;
-
-    typedef hash_time_m_t::const_iterator hash_time_m_cit;
 
 private:
     static const int MAX_CACHE_SIZE = 1000000;
@@ -380,10 +372,6 @@ public:
         mapPostponedObjects.insert(std::make_pair(govobj.GetHash(), govobj));
     }
 
-    void AddSeenGovernanceObject(const uint256& nHash, int status);
-
-    void AddSeenVote(const uint256& nHash, int status);
-
     void MasternodeRateUpdate(const CGovernanceObject& govobj);
 
     bool MasternodeRateCheck(const CGovernanceObject& govobj, bool fUpdateFailStatus = false);
@@ -418,11 +406,6 @@ private:
     void AddInvalidVote(const CGovernanceVote& vote)
     {
         cmapInvalidVotes.Insert(vote.GetHash(), vote);
-    }
-
-    void AddOrphanVote(const CGovernanceVote& vote)
-    {
-        cmmapOrphanVotes.Insert(vote.GetHash(), vote_time_pair_t(vote, GetAdjustedTime() + GOVERNANCE_ORPHAN_EXPIRATION_TIME));
     }
 
     bool ProcessVote(CNode* pfrom, const CGovernanceVote& vote, CGovernanceException& exception, CConnman& connman);

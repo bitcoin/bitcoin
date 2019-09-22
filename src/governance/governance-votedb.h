@@ -37,8 +37,6 @@ public: // Types
     typedef vote_m_t::const_iterator vote_m_cit;
 
 private:
-    static const int MAX_MEMORY_VOTES = -1;
-
     int nMemoryVotes;
 
     vote_l_t listVotes;

@@ -410,13 +410,4 @@ CQuorumCPtr CQuorumManager::GetQuorum(Consensus::LLMQType llmqType, const CBlock
     return quorum;
 }
 
-CQuorumCPtr CQuorumManager::GetNewestQuorum(Consensus::LLMQType llmqType)
-{
-    auto quorums = ScanQuorums(llmqType, 1);
-    if (quorums.empty()) {
-        return nullptr;
-    }
-    return quorums.front();
-}
-
 } // namespace llmq

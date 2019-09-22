@@ -230,7 +230,6 @@ public:
     std::string ToString() const;
     void ToJson(UniValue& obj) const;
 };
-typedef std::shared_ptr<CDeterministicMN> CDeterministicMNPtr;
 typedef std::shared_ptr<const CDeterministicMN> CDeterministicMNCPtr;
 
 class CDeterministicMNListDiff;
@@ -392,10 +391,6 @@ public:
     {
         return GetMN(proTxHash) != nullptr;
     }
-    bool HasValidMN(const uint256& proTxHash) const
-    {
-        return GetValidMN(proTxHash) != nullptr;
-    }
     bool HasMNByCollateral(const COutPoint& collateralOutpoint) const
     {
         return GetMNByCollateral(collateralOutpoint) != nullptr;
@@ -410,7 +405,6 @@ public:
     CDeterministicMNCPtr GetMNByCollateral(const COutPoint& collateralOutpoint) const;
     CDeterministicMNCPtr GetValidMNByCollateral(const COutPoint& collateralOutpoint) const;
     CDeterministicMNCPtr GetMNByService(const CService& service) const;
-    CDeterministicMNCPtr GetValidMNByService(const CService& service) const;
     CDeterministicMNCPtr GetMNByInternalId(uint64_t internalId) const;
     CDeterministicMNCPtr GetMNPayee() const;
 

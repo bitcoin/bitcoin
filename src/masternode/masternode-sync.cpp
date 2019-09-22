@@ -16,12 +16,6 @@
 class CMasternodeSync;
 CMasternodeSync masternodeSync;
 
-void CMasternodeSync::Fail()
-{
-    nTimeLastFailure = GetTime();
-    nCurrentAsset = MASTERNODE_SYNC_FAILED;
-}
-
 void CMasternodeSync::Reset()
 {
     nCurrentAsset = MASTERNODE_SYNC_INITIAL;

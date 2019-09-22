@@ -150,8 +150,6 @@ public:
     int GetStatus() { return nStatus; }
     void SetStatus(int nStatusIn) { nStatus = nStatusIn; }
 
-    // IS THIS TRIGGER ALREADY EXECUTED?
-    bool IsExecuted() { return nStatus == SEEN_OBJECT_EXECUTED; }
     // TELL THE ENGINE WE EXECUTED THIS EVENT
     void SetExecuted() { nStatus = SEEN_OBJECT_EXECUTED; }
 

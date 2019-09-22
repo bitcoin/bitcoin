@@ -275,19 +275,6 @@ std::set<uint256> CGovernanceObject::RemoveInvalidVotes(const COutPoint& mnOutpo
     return removedVotes;
 }
 
-std::string CGovernanceObject::GetSignatureMessage() const
-{
-    LOCK(cs);
-    std::string strMessage = nHashParent.ToString() + "|" +
-                             std::to_string(nRevision) + "|" +
-                             std::to_string(nTime) + "|" +
-                             GetDataAsHexString() + "|" +
-                             masternodeOutpoint.ToStringShort() + "|" +
-                             nCollateralHash.ToString();
-
-    return strMessage;
-}
-
 uint256 CGovernanceObject::GetHash() const
 {
     // Note: doesn't match serialization

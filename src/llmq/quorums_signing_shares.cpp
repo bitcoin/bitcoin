@@ -151,7 +151,6 @@ bool CSigSharesNodeState::GetSessionInfoByRecvId(uint32_t sessionId, SessionInfo
     if (!s) {
         return false;
     }
-    retInfo.recvSessionId = sessionId;
     retInfo.llmqType = s->llmqType;
     retInfo.quorumHash = s->quorumHash;
     retInfo.id = s->id;
