@@ -13,7 +13,7 @@ $(package)_dependencies=gmp
 
 define $(package)_set_vars
   $(package)_config_opts=-DCMAKE_INSTALL_PREFIX=$($(package)_staging_dir)/$(host_prefix)
-  $(package)_config_opts+= -DCMAKE_PREFIX_PATH=$(host_prefix)
+  $(package)_config_opts+= -DCMAKE_PREFIX_PATH=$($(package)_staging_dir)/$(host_prefix)
   $(package)_config_opts+= -DSTLIB=ON -DSHLIB=OFF -DSTBIN=ON
   $(package)_config_opts_linux=-DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux
   $(package)_config_opts_darwin=-DOPSYS=MACOSX -DCMAKE_SYSTEM_NAME=Darwin
