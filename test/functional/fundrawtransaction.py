@@ -683,9 +683,10 @@ class RawTransactionsTest(BitcoinTestFramework):
         outputs = {self.nodes[2].getnewaddress(): value for value in (1.0, 1.1, 1.2, 1.3)}
         rawtx = self.nodes[3].createrawtransaction(inputs, outputs)
 
-        result = [self.nodes[3].fundrawtransaction(rawtx),
+        # Add changePosition=4 to circumvent BIP69 input/output sorting
+        result = [self.nodes[3].fundrawtransaction(rawtx, {"changePosition": 4}),
                   # split the fee between outputs 0, 2, and 3, but not output 1
-                  self.nodes[3].fundrawtransaction(rawtx, {"subtractFeeFromOutputs": [0, 2, 3]})]
+                  self.nodes[3].fundrawtransaction(rawtx, {"subtractFeeFromOutputs": [0, 2, 3], "changePosition": 4})]
 
         dec_tx = [self.nodes[3].decoderawtransaction(result[0]['hex']),
                   self.nodes[3].decoderawtransaction(result[1]['hex'])]
