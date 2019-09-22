@@ -833,41 +833,58 @@ UniValue estimatesmartfee(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
-            "estimatesmartfee nblocks (conservative)\n"
+            "estimatesmartfee conf_target (\"estimate_mode\")\n"
             "\nEstimates the approximate fee per kilobyte needed for a transaction to begin\n"
-            "confirmation within nblocks blocks if possible and return the number of blocks\n"
+            "confirmation within conf_target blocks if possible and return the number of blocks\n"
             "for which the estimate is valid.\n"
             "\nArguments:\n"
-            "1. nblocks       (numeric)\n"
-            "2. conservative  (bool, optional, default=true) Whether to return a more conservative estimate which\n"
-            "                 also satisfies a longer history. A conservative estimate potentially returns a higher\n"
-            "                 feerate and is more likely to be sufficient for the desired target, but is not as\n"
-            "                 responsive to short term drops in the prevailing fee market\n"
+            "1. conf_target     (numeric) Confirmation target in blocks (1 - 1008)\n"
+            "2. \"estimate_mode\" (string, optional, default=CONSERVATIVE) The fee estimate mode.\n"
+            "                   Whether to return a more conservative estimate which also satisfies\n"
+            "                   a longer history. A conservative estimate potentially returns a\n"
+            "                   higher feerate and is more likely to be sufficient for the desired\n"
+            "                   target, but is not as responsive to short term drops in the\n"
+            "                   prevailing fee market.  Must be one of:\n"
+            "       \"UNSET\" (defaults to CONSERVATIVE)\n"
+            "       \"ECONOMICAL\"\n"
+            "       \"CONSERVATIVE\"\n"
             "\nResult:\n"
             "{\n"
-            "  \"feerate\" : x.x,     (numeric) estimate fee-per-kilobyte (in " + CURRENCY_UNIT + ")\n"
+            "  \"feerate\" : x.x,     (numeric, optional) estimate fee-per-kilobyte (in " + CURRENCY_UNIT + ")\n"
+            "  \"errors\": [ str... ] (json array of strings, optional) Errors encountered during processing\n"
             "  \"blocks\" : n         (numeric) block number where estimate was found\n"
             "}\n"
             "\n"
-            "A negative value is returned if not enough transactions and blocks\n"
+            "The request target will be clamped between 2 and the highest target\n"
+            "fee estimation is able to return based on how long it has been running.\n"
+            "An error is returned if not enough transactions and blocks\n"
             "have been observed to make an estimate for any number of blocks.\n"
             "\nExample:\n"
             + HelpExampleCli("estimatesmartfee", "6")
             );
 
-    RPCTypeCheck(request.params, {UniValue::VNUM});
-
-    int nBlocks = request.params[0].get_int();
+    RPCTypeCheck(request.params, {UniValue::VNUM, UniValue::VSTR});
+    RPCTypeCheckArgument(request.params[0], UniValue::VNUM);
+    unsigned int conf_target = ParseConfirmTarget(request.params[0]);
     bool conservative = true;
     if (request.params.size() > 1 && !request.params[1].isNull()) {
-        RPCTypeCheckArgument(request.params[1], UniValue::VBOOL);
-        conservative = request.params[1].get_bool();
+        FeeEstimateMode fee_mode;
+        if (!FeeModeFromString(request.params[1].get_str(), fee_mode)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
+        }
+        if (fee_mode == FeeEstimateMode::ECONOMICAL) conservative = false;
     }
 
     UniValue result(UniValue::VOBJ);
+    UniValue errors(UniValue::VARR);
     FeeCalculation feeCalc;
-    CFeeRate feeRate = ::feeEstimator.estimateSmartFee(nBlocks, &feeCalc, conservative);
-    result.push_back(Pair("feerate", feeRate == CFeeRate(0) ? -1.0 : ValueFromAmount(feeRate.GetFeePerK())));
+    CFeeRate feeRate = ::feeEstimator.estimateSmartFee(conf_target, &feeCalc, conservative);
+    if (feeRate != CFeeRate(0)) {
+        result.push_back(Pair("feerate", ValueFromAmount(feeRate.GetFeePerK())));
+    } else {
+        errors.push_back("Insufficient data or no feerate found");
+        result.push_back(Pair("errors", errors));
+    }
     result.push_back(Pair("blocks", feeCalc.returnedTarget));
     return result;
 }
@@ -876,17 +893,17 @@ UniValue estimaterawfee(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
-            "estimaterawfee nblocks (threshold)\n"
+            "estimaterawfee conf_target (threshold)\n"
             "\nWARNING: This interface is unstable and may disappear or change!\n"
             "\nWARNING: This is an advanced API call that is tightly coupled to the specific\n"
             "         implementation of fee estimation. The parameters it can be called with\n"
             "         and the results it returns will change if the internal implementation changes.\n"
             "\nEstimates the approximate fee per kilobyte needed for a transaction to begin\n"
-            "confirmation within nblocks blocks if possible.\n"
+            "confirmation within conf_target blocks if possible.\n"
             "\nArguments:\n"
-            "1. nblocks     (numeric) Confirmation target in blocks (1 - 1008)\n"
+            "1. conf_target (numeric) Confirmation target in blocks (1 - 1008)\n"
             "2. threshold   (numeric, optional) The proportion of transactions in a given feerate range that must have been\n"
-            "               confirmed within nblocks in order to consider those feerates as high enough and proceed to check\n"
+            "               confirmed within conf_target in order to consider those feerates as high enough and proceed to check\n"
             "               lower buckets.  Default: 0.95\n"
             "\nResult:\n"
             "{\n"
@@ -914,12 +931,9 @@ UniValue estimaterawfee(const JSONRPCRequest& request)
             + HelpExampleCli("estimaterawfee", "6 0.9")
             );
 
-    RPCTypeCheck(request.params, {UniValue::VNUM, UniValue::VNUM, UniValue::VNUM}, true);
+    RPCTypeCheck(request.params, {UniValue::VNUM, UniValue::VNUM}, true);
     RPCTypeCheckArgument(request.params[0], UniValue::VNUM);
-    int nBlocks = request.params[0].get_int();
-    if (nBlocks < 1 || (unsigned int)nBlocks > ::feeEstimator.HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid nblocks");
-    }
+    unsigned int conf_target = ParseConfirmTarget(request.params[0]);
     double threshold = 0.95;
     if (!request.params[1].isNull()) {
         threshold = request.params[1].get_real();
@@ -935,9 +949,9 @@ UniValue estimaterawfee(const JSONRPCRequest& request)
         EstimationResult buckets;
 
         // Only output results for horizons which track the target
-        if ((unsigned int)nBlocks > ::feeEstimator.HighestTargetTracked(horizon)) continue;
+        if (conf_target > ::feeEstimator.HighestTargetTracked(horizon)) continue;
 
-        feeRate = ::feeEstimator.estimateRawFee(nBlocks, threshold, horizon, &buckets);
+        feeRate = ::feeEstimator.estimateRawFee(conf_target, threshold, horizon, &buckets);
         UniValue horizon_result(UniValue::VOBJ);
         UniValue errors(UniValue::VARR);
         UniValue passbucket(UniValue::VOBJ);
@@ -989,9 +1003,9 @@ static const CRPCCommand commands[] =
     { "generating",         "generatetoaddress",      &generatetoaddress,      true,  {"nblocks","address","maxtries"} },
 #endif // ENABLE_MINER
     { "util",               "estimatefee",            &estimatefee,            true,  {"nblocks"} },
-    { "util",               "estimatesmartfee",       &estimatesmartfee,       true,  {"nblocks", "conservative"} },
+    { "util",               "estimatesmartfee",       &estimatesmartfee,       true,  {"conf_target", "estimate_mode"} },
 
-    { "hidden",             "estimaterawfee",         &estimaterawfee,         true,  {"nblocks", "threshold"} },
+    { "hidden",             "estimaterawfee",         &estimaterawfee,         true,  {"conf_target", "threshold"} },
 };
 
 void RegisterMiningRPCCommands(CRPCTable &t)

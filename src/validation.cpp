@@ -2218,99 +2218,104 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
  */
 bool static FlushStateToDisk(const CChainParams& chainparams, CValidationState &state, FlushStateMode mode, int nManualPruneHeight) {
     int64_t nMempoolUsage = mempool.DynamicMemoryUsage();
-    LOCK2(cs_main, cs_LastBlockFile);
+    LOCK(cs_main);
     static int64_t nLastWrite = 0;
     static int64_t nLastFlush = 0;
     static int64_t nLastSetChain = 0;
     std::set<int> setFilesToPrune;
     bool fFlushForPrune = false;
+    bool fDoFullFlush = false;
+    int64_t nNow = 0;
     try {
-    if (fPruneMode && (fCheckForPruning || nManualPruneHeight > 0) && !fReindex) {
-        if (nManualPruneHeight > 0) {
-            FindFilesToPruneManual(setFilesToPrune, nManualPruneHeight);
-        } else {
-            FindFilesToPrune(setFilesToPrune, chainparams.PruneAfterHeight());
-            fCheckForPruning = false;
-        }
-        if (!setFilesToPrune.empty()) {
-            fFlushForPrune = true;
-            if (!fHavePruned) {
-                pblocktree->WriteFlag("prunedblockfiles", true);
-                fHavePruned = true;
+    {
+        LOCK(cs_LastBlockFile);
+        if (fPruneMode && (fCheckForPruning || nManualPruneHeight > 0) && !fReindex) {
+            if (nManualPruneHeight > 0) {
+                FindFilesToPruneManual(setFilesToPrune, nManualPruneHeight);
+            } else {
+                FindFilesToPrune(setFilesToPrune, chainparams.PruneAfterHeight());
+                fCheckForPruning = false;
+            }
+            if (!setFilesToPrune.empty()) {
+                fFlushForPrune = true;
+                if (!fHavePruned) {
+                    pblocktree->WriteFlag("prunedblockfiles", true);
+                    fHavePruned = true;
+                }
             }
         }
-    }
-    int64_t nNow = GetTimeMicros();
-    // Avoid writing/flushing immediately after startup.
-    if (nLastWrite == 0) {
-        nLastWrite = nNow;
-    }
-    if (nLastFlush == 0) {
-        nLastFlush = nNow;
-    }
-    if (nLastSetChain == 0) {
-        nLastSetChain = nNow;
-    }
-    int64_t nMempoolSizeMax = gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
-    int64_t cacheSize = pcoinsTip->DynamicMemoryUsage();
+        nNow = GetTimeMicros();
+        // Avoid writing/flushing immediately after startup.
+        if (nLastWrite == 0) {
+            nLastWrite = nNow;
+        }
+        if (nLastFlush == 0) {
+            nLastFlush = nNow;
+        }
+        if (nLastSetChain == 0) {
+            nLastSetChain = nNow;
+        }
+        int64_t nMempoolSizeMax = gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
+        int64_t cacheSize = pcoinsTip->DynamicMemoryUsage();
     cacheSize += evoDb->GetMemoryUsage();
-    int64_t nTotalSpace = nCoinCacheUsage + std::max<int64_t>(nMempoolSizeMax - nMempoolUsage, 0);
-    // The cache is large and we're within 10% and 10 MiB of the limit, but we have time now (not in the middle of a block processing).
-    bool fCacheLarge = mode == FLUSH_STATE_PERIODIC && cacheSize > std::max((9 * nTotalSpace) / 10, nTotalSpace - MAX_BLOCK_COINSDB_USAGE * 1024 * 1024);
-    // The cache is over the limit, we have to write now.
-    bool fCacheCritical = mode == FLUSH_STATE_IF_NEEDED && cacheSize > nCoinCacheUsage;
-    // It's been a while since we wrote the block index to disk. Do this frequently, so we don't need to redownload after a crash.
-    bool fPeriodicWrite = mode == FLUSH_STATE_PERIODIC && nNow > nLastWrite + (int64_t)DATABASE_WRITE_INTERVAL * 1000000;
-    // It's been very long since we flushed the cache. Do this infrequently, to optimize cache usage.
-    bool fPeriodicFlush = mode == FLUSH_STATE_PERIODIC && nNow > nLastFlush + (int64_t)DATABASE_FLUSH_INTERVAL * 1000000;
-    // Combine all conditions that result in a full cache flush.
-    bool fDoFullFlush = (mode == FLUSH_STATE_ALWAYS) || fCacheLarge || fCacheCritical || fPeriodicFlush || fFlushForPrune;
-    // Write blocks and block index to disk.
-    if (fDoFullFlush || fPeriodicWrite) {
-        // Depend on nMinDiskSpace to ensure we can write block index
-        if (!CheckDiskSpace(0))
-            return state.Error("out of disk space");
-        // First make sure all block and undo data is flushed to disk.
-        FlushBlockFile();
-        // Then update all block file information (which may refer to block and undo files).
-        {
-            std::vector<std::pair<int, const CBlockFileInfo*> > vFiles;
-            vFiles.reserve(setDirtyFileInfo.size());
-            for (std::set<int>::iterator it = setDirtyFileInfo.begin(); it != setDirtyFileInfo.end(); ) {
-                vFiles.push_back(std::make_pair(*it, &vinfoBlockFile[*it]));
-                setDirtyFileInfo.erase(it++);
+        int64_t nTotalSpace = nCoinCacheUsage + std::max<int64_t>(nMempoolSizeMax - nMempoolUsage, 0);
+        // The cache is large and we're within 10% and 10 MiB of the limit, but we have time now (not in the middle of a block processing).
+        bool fCacheLarge = mode == FLUSH_STATE_PERIODIC && cacheSize > std::max((9 * nTotalSpace) / 10, nTotalSpace - MAX_BLOCK_COINSDB_USAGE * 1024 * 1024);
+        // The cache is over the limit, we have to write now.
+        bool fCacheCritical = mode == FLUSH_STATE_IF_NEEDED && cacheSize > nCoinCacheUsage;
+        // It's been a while since we wrote the block index to disk. Do this frequently, so we don't need to redownload after a crash.
+        bool fPeriodicWrite = mode == FLUSH_STATE_PERIODIC && nNow > nLastWrite + (int64_t)DATABASE_WRITE_INTERVAL * 1000000;
+        // It's been very long since we flushed the cache. Do this infrequently, to optimize cache usage.
+        bool fPeriodicFlush = mode == FLUSH_STATE_PERIODIC && nNow > nLastFlush + (int64_t)DATABASE_FLUSH_INTERVAL * 1000000;
+        // Combine all conditions that result in a full cache flush.
+        fDoFullFlush = (mode == FLUSH_STATE_ALWAYS) || fCacheLarge || fCacheCritical || fPeriodicFlush || fFlushForPrune;
+        // Write blocks and block index to disk.
+        if (fDoFullFlush || fPeriodicWrite) {
+            // Depend on nMinDiskSpace to ensure we can write block index
+            if (!CheckDiskSpace(0))
+                return state.Error("out of disk space");
+            // First make sure all block and undo data is flushed to disk.
+            FlushBlockFile();
+            // Then update all block file information (which may refer to block and undo files).
+            {
+                std::vector<std::pair<int, const CBlockFileInfo*> > vFiles;
+                vFiles.reserve(setDirtyFileInfo.size());
+                for (std::set<int>::iterator it = setDirtyFileInfo.begin(); it != setDirtyFileInfo.end(); ) {
+                    vFiles.push_back(std::make_pair(*it, &vinfoBlockFile[*it]));
+                    setDirtyFileInfo.erase(it++);
+                }
+                std::vector<const CBlockIndex*> vBlocks;
+                vBlocks.reserve(setDirtyBlockIndex.size());
+                for (std::set<CBlockIndex*>::iterator it = setDirtyBlockIndex.begin(); it != setDirtyBlockIndex.end(); ) {
+                    vBlocks.push_back(*it);
+                    setDirtyBlockIndex.erase(it++);
+                }
+                if (!pblocktree->WriteBatchSync(vFiles, nLastBlockFile, vBlocks)) {
+                    return AbortNode(state, "Failed to write to block index database");
+                }
             }
-            std::vector<const CBlockIndex*> vBlocks;
-            vBlocks.reserve(setDirtyBlockIndex.size());
-            for (std::set<CBlockIndex*>::iterator it = setDirtyBlockIndex.begin(); it != setDirtyBlockIndex.end(); ) {
-                vBlocks.push_back(*it);
-                setDirtyBlockIndex.erase(it++);
-            }
-            if (!pblocktree->WriteBatchSync(vFiles, nLastBlockFile, vBlocks)) {
-                return AbortNode(state, "Failed to write to block index database");
-            }
+            // Finally remove any pruned files
+            if (fFlushForPrune)
+                UnlinkPrunedFiles(setFilesToPrune);
+            nLastWrite = nNow;
         }
-        // Finally remove any pruned files
-        if (fFlushForPrune)
-            UnlinkPrunedFiles(setFilesToPrune);
-        nLastWrite = nNow;
-    }
-    // Flush best chain related state. This can only be done if the blocks / block index write was also done.
-    if (fDoFullFlush) {
-        // Typical Coin structures on disk are around 48 bytes in size.
-        // Pushing a new one to the database can cause it to be written
-        // twice (once in the log, and once in the tables). This is already
-        // an overestimation, as most will delete an existing entry or
-        // overwrite one. Still, use a conservative safety factor of 2.
-        if (!CheckDiskSpace(48 * 2 * 2 * pcoinsTip->GetCacheSize()))
-            return state.Error("out of disk space");
-        // Flush the chainstate (which may refer to block index entries).
-        if (!pcoinsTip->Flush())
-            return AbortNode(state, "Failed to write to coin database");
+        // Flush best chain related state. This can only be done if the blocks / block index write was also done.
+        if (fDoFullFlush) {
+            // Typical Coin structures on disk are around 48 bytes in size.
+            // Pushing a new one to the database can cause it to be written
+            // twice (once in the log, and once in the tables). This is already
+            // an overestimation, as most will delete an existing entry or
+            // overwrite one. Still, use a conservative safety factor of 2.
+            if (!CheckDiskSpace(48 * 2 * 2 * pcoinsTip->GetCacheSize()))
+                return state.Error("out of disk space");
+            // Flush the chainstate (which may refer to block index entries).
+            if (!pcoinsTip->Flush())
+                return AbortNode(state, "Failed to write to coin database");
         if (!evoDb->CommitRootTransaction()) {
             return AbortNode(state, "Failed to commit EvoDB");
         }
-        nLastFlush = nNow;
+            nLastFlush = nNow;
+        }
     }
     if (fDoFullFlush || ((mode == FLUSH_STATE_ALWAYS || mode == FLUSH_STATE_PERIODIC) && nNow > nLastSetChain + (int64_t)DATABASE_WRITE_INTERVAL * 1000000)) {
         // Update best block in wallet (so we can detect restored wallets).
@@ -3226,30 +3231,16 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     return true;
 }
 
-static bool CheckIndexAgainstCheckpoint(const CBlockIndex* pindexPrev, CValidationState& state, const CChainParams& chainparams, const uint256& hash)
-{
-    if (*pindexPrev->phashBlock == chainparams.GetConsensus().hashGenesisBlock)
-        return true;
-
-    int nHeight = pindexPrev->nHeight+1;
-    // Don't accept any forks from the main chain prior to last checkpoint.
-    // GetLastCheckpoint finds the last checkpoint in MapCheckpoints that's in our
-    // MapBlockIndex.
-    CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(chainparams.Checkpoints());
-    if (pcheckpoint && nHeight < pcheckpoint->nHeight)
-        return state.DoS(100, error("%s: forked chain older than last checkpoint (height %d)", __func__, nHeight), REJECT_CHECKPOINT, "bad-fork-prior-to-checkpoint");
-
-    return true;
-}
-
 /** Context-dependent validity checks.
  *  By "context", we mean only the previous block headers, but not the UTXO
  *  set; UTXO-related validity checks are done in ConnectBlock(). */
-static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev, int64_t nAdjustedTime)
+static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const CChainParams& params, const CBlockIndex* pindexPrev, int64_t nAdjustedTime)
 {
     assert(pindexPrev != nullptr);
     const int nHeight = pindexPrev->nHeight + 1;
+
     // Check proof of work
+    const Consensus::Params& consensusParams = params.GetConsensus();
     if(Params().NetworkIDString() == CBaseChainParams::MAIN && nHeight <= 68589){
         // architecture issues with DGW v1 and v2)
         unsigned int nBitsNext = GetNextWorkRequired(pindexPrev, &block, consensusParams);
@@ -3262,6 +3253,16 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
     } else {
         if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
             return state.DoS(100, false, REJECT_INVALID, "bad-diffbits", false, strprintf("incorrect proof of work at %d", nHeight));
+    }
+
+    // Check against checkpoints
+    if (fCheckpointsEnabled) {
+        // Don't accept any forks from the main chain prior to last checkpoint.
+        // GetLastCheckpoint finds the last checkpoint in MapCheckpoints that's in our
+        // MapBlockIndex.
+        CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(params.Checkpoints());
+        if (pcheckpoint && nHeight < pcheckpoint->nHeight)
+            return state.DoS(100, error("%s: forked chain older than last checkpoint (height %d)", __func__, nHeight), REJECT_CHECKPOINT, "bad-fork-prior-to-checkpoint");
     }
 
     // Check timestamp against prev
@@ -3381,10 +3382,7 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
             // it's ok-ish, the other node is probably missing the latest chainlock
             return state.DoS(10, error("%s: prev block %s conflicts with chainlock", __func__, block.hashPrevBlock.ToString()), REJECT_INVALID, "bad-prevblk-chainlock");
 
-        if (fCheckpointsEnabled && !CheckIndexAgainstCheckpoint(pindexPrev, state, chainparams, hash))
-            return error("%s: CheckIndexAgainstCheckpoint(): %s", __func__, state.GetRejectReason().c_str());
-
-        if (!ContextualCheckBlockHeader(block, state, chainparams.GetConsensus(), pindexPrev, GetAdjustedTime()))
+        if (!ContextualCheckBlockHeader(block, state, chainparams, pindexPrev, GetAdjustedTime()))
             return error("%s: Consensus::ContextualCheckBlockHeader: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
 
         if (llmq::chainLocksHandler->HasConflictingChainLock(pindexPrev->nHeight + 1, hash)) {
@@ -3548,9 +3546,6 @@ bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams,
     assert(pindexPrev && pindexPrev == chainActive.Tip());
 
     uint256 hash = block.GetHash();
-    if (fCheckpointsEnabled && !CheckIndexAgainstCheckpoint(pindexPrev, state, chainparams, hash))
-        return error("%s: CheckIndexAgainstCheckpoint(): %s", __func__, state.GetRejectReason().c_str());
-
     if (llmq::chainLocksHandler->HasConflictingChainLock(pindexPrev->nHeight + 1, hash)) {
         return state.DoS(10, error("%s: conflicting with chainlock", __func__), REJECT_INVALID, "bad-chainlock");
     }
@@ -3564,7 +3559,7 @@ bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams,
     auto dbTx = evoDb->BeginTransaction();
 
     // NOTE: CheckBlockHeader is called by CheckBlock
-    if (!ContextualCheckBlockHeader(block, state, chainparams.GetConsensus(), pindexPrev, GetAdjustedTime()))
+    if (!ContextualCheckBlockHeader(block, state, chainparams, pindexPrev, GetAdjustedTime()))
         return error("%s: Consensus::ContextualCheckBlockHeader: %s", __func__, FormatStateMessage(state));
     if (!CheckBlock(block, state, chainparams.GetConsensus(), fCheckPOW, fCheckMerkleRoot))
         return error("%s: Consensus::CheckBlock: %s", __func__, FormatStateMessage(state));
@@ -3908,14 +3903,24 @@ bool static LoadBlockIndexDB(const CChainParams& chainparams)
     return true;
 }
 
-void LoadChainTip(const CChainParams& chainparams)
+bool LoadChainTip(const CChainParams& chainparams)
 {
-    if (chainActive.Tip() && chainActive.Tip()->GetBlockHash() == pcoinsTip->GetBestBlock()) return;
+    if (chainActive.Tip() && chainActive.Tip()->GetBlockHash() == pcoinsTip->GetBestBlock()) return true;
+
+    if (pcoinsTip->GetBestBlock().IsNull() && mapBlockIndex.size() == 1) {
+        // In case we just added the genesis block, connect it now, so
+        // that we always have a chainActive.Tip() when we return.
+        LogPrintf("%s: Connecting genesis block...\n", __func__);
+        CValidationState state;
+        if (!ActivateBestChain(state, chainparams)) {
+            return false;
+        }
+    }
 
     // Load pointer to end of best chain
     BlockMap::iterator it = mapBlockIndex.find(pcoinsTip->GetBestBlock());
     if (it == mapBlockIndex.end())
-        return;
+        return false;
     chainActive.SetTip(it->second);
 
     PruneBlockIndexCandidates();
@@ -3924,6 +3929,7 @@ void LoadChainTip(const CChainParams& chainparams)
         chainActive.Tip()->GetBlockHash().ToString(), chainActive.Height(),
         DateTimeStrFormat("%Y-%m-%d %H:%M:%S", chainActive.Tip()->GetBlockTime()),
         GuessVerificationProgress(chainparams.TxData(), chainActive.Tip()));
+    return true;
 }
 
 CVerifyDB::CVerifyDB()
@@ -4152,8 +4158,25 @@ void UnloadBlockIndex()
 bool LoadBlockIndex(const CChainParams& chainparams)
 {
     // Load block index from databases
-    if (!fReindex && !LoadBlockIndexDB(chainparams))
-        return false;
+    bool needs_init = fReindex;
+    if (!fReindex) {
+        bool ret = LoadBlockIndexDB(chainparams);
+        if (!ret) return false;
+        needs_init = mapBlockIndex.empty();
+    }
+
+    if (needs_init) {
+        // Everything here is for *new* reindex/DBs. Thus, though
+        // LoadBlockIndexDB may have set fReindex if we shut down
+        // mid-reindex previously, we don't check fReindex and
+        // instead only check it prior to LoadBlockIndexDB to set
+        // needs_init.
+
+        LogPrintf("Initializing databases...\n");
+        // Use the provided setting for -txindex in the new database
+        fTxIndex = gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX);
+        pblocktree->WriteFlag("txindex", fTxIndex);
+    }
     return true;
 }
 
@@ -4172,17 +4195,16 @@ static bool AddGenesisBlock(const CChainParams& chainparams, const CBlock& block
     return true;
 }
 
-bool InitBlockIndex(const CChainParams& chainparams)
+bool LoadGenesisBlock(const CChainParams& chainparams)
 {
     LOCK(cs_main);
 
-    // Check whether we're already initialized
-    if (chainActive.Genesis() != nullptr)
+    // Check whether we're already initialized by checking for genesis in
+    // mapBlockIndex. Note that we can't use chainActive here, since it is
+    // set based on the coins db, not the block index db, which is the only
+    // thing loaded at this point.
+    if (mapBlockIndex.count(chainparams.GenesisBlock().GetHash()))
         return true;
-
-    // Use the provided setting for -txindex in the new database
-    fTxIndex = gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX);
-    pblocktree->WriteFlag("txindex", fTxIndex);
 
     // Use the provided setting for -addressindex in the new database
     fAddressIndex = gArgs.GetBoolArg("-addressindex", DEFAULT_ADDRESSINDEX);
@@ -4195,27 +4217,23 @@ bool InitBlockIndex(const CChainParams& chainparams)
     fSpentIndex = gArgs.GetBoolArg("-spentindex", DEFAULT_SPENTINDEX);
     pblocktree->WriteFlag("spentindex", fSpentIndex);
 
-    LogPrintf("Initializing databases...\n");
+    try {
+        CValidationState state;
 
-    // Only add the genesis block if not reindexing (in which case we reuse the one already on disk)
-    if (!fReindex) {
-        try {
-            CValidationState state;
+        if (!AddGenesisBlock(chainparams, chainparams.GenesisBlock(), state))
+            return false;
 
-            if (!AddGenesisBlock(chainparams, chainparams.GenesisBlock(), state))
+        if (chainparams.NetworkIDString() == CBaseChainParams::DEVNET) {
+            // We can't continue if devnet genesis block is invalid
+            std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(
+                    chainparams.DevNetGenesisBlock());
+            bool fCheckBlock = CheckBlock(*shared_pblock, state, chainparams.GetConsensus());
+            assert(fCheckBlock);
+            if (!AcceptBlock(shared_pblock, state, chainparams, nullptr, true, nullptr, nullptr))
                 return false;
-
-            if (chainparams.NetworkIDString() == CBaseChainParams::DEVNET) {
-                // We can't continue if devnet genesis block is invalid
-                std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(chainparams.DevNetGenesisBlock());
-                bool fCheckBlock = CheckBlock(*shared_pblock, state, chainparams.GetConsensus());
-                assert(fCheckBlock);
-                if (!AcceptBlock(shared_pblock, state, chainparams, nullptr, true, nullptr, nullptr))
-                    return false;
-            }
-        } catch (const std::runtime_error& e) {
-            return error("%s: failed to initialize block database: %s", __func__, e.what());
         }
+    } catch (const std::runtime_error &e) {
+        return error("%s: failed to initialize block database: %s", __func__, e.what());
     }
 
     return true;
