@@ -1,5 +1,7 @@
 #include "bitcoinmobilegui.h"
 
+#include <init.h>
+
 #include <qt/guiutil.h>
 #include <qt/walletcontroller.h>
 #include <qt/networkstyle.h>
@@ -154,7 +156,7 @@ static void InitMessage(BitcoinMobileGUI *gui, const std::string &message)
 
 static void ShowProgress(BitcoinMobileGUI *gui, const std::string &title, int nProgress)
 {
-    InitMessage(gui, title + std::string("\n") + strprintf("\n%d", nProgress) + "%");
+    InitMessage(gui, title + strprintf("%d", nProgress) + "%");
 }
 
 static bool ThreadSafeMessageBox(BitcoinMobileGUI* gui, const std::string& message, const std::string& caption, unsigned int style)
