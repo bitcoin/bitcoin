@@ -93,6 +93,17 @@ BitcoinMobileGUI::BitcoinMobileGUI(interfaces::Node& node, const PlatformStyle *
     this->setHeight(2160/3);
     this->setWidth(1080/3);
 
+    QString licenseInfoHTML = QString::fromStdString(LicenseInfo());
+    // Make URLs clickable
+    QRegExp uri("<(.*)>", Qt::CaseSensitive, QRegExp::RegExp2);
+    uri.setMinimal(true); // use non-greedy matching
+    licenseInfoHTML.replace(uri, "<a href=\"\\1\">\\1</a>");
+    // Replace newlines with HTML breaks
+    licenseInfoHTML.replace("\n", "<br>");
+
+    this->rootContext()->setContextProperty("licenceInfo", licenseInfoHTML);
+    this->rootContext()->setContextProperty("version", QString::fromStdString(FormatFullVersion()));
+
     m_walletPane = this->rootObject()->findChild<QObject*>("walletPane");
 
     if (m_walletPane) {
