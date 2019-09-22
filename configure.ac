@@ -631,7 +631,7 @@ if test x$TARGET_OS = xdarwin; then
   AX_CHECK_LINK_FLAG([[-Wl,-dead_strip]], [LDFLAGS="$LDFLAGS -Wl,-dead_strip"])
 fi
 
-AC_CHECK_HEADERS([endian.h sys/endian.h byteswap.h stdio.h stdlib.h unistd.h strings.h sys/types.h sys/stat.h sys/select.h sys/prctl.h])
+AC_CHECK_HEADERS([endian.h sys/endian.h byteswap.h stdio.h stdlib.h unistd.h strings.h sys/types.h sys/stat.h sys/select.h sys/prctl.h execinfo.h])
 
 AC_CHECK_DECLS([strnlen])
 
@@ -734,6 +734,13 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
  [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_SYSCTL_ARND, 1,[Define this symbol if the BSD sysctl(KERN_ARND) is available]) ],
  [ AC_MSG_RESULT(no)]
 )
+
+# ensure backtrace() is found, check -lexecinfo if necessary
+if test x$TARGET_OS != xwindows; then
+  AC_SEARCH_LIBS([backtrace], [execinfo], [], [
+    AC_MSG_ERROR([Unable to find backtrace()])
+  ])
+fi
 
 # Check for reduced exports
 if test x$use_reduce_exports = xyes; then
