@@ -3,41 +3,60 @@ import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.9
 import QtQuick.Controls.Material 2.2
 
-
 Pane {
-    id: receivePane
-
-    property alias qrSource: qrImage.source
+    id: aboutPane
 
     ColumnLayout {
-        id: qrColumn
+        id: aboutColumn
         anchors.fill: parent
 
         Column {
             Layout.fillWidth: true
-            Image {
-                anchors.horizontalCenter: parent.horizontalCenter
-                id: qrImage
-                Layout.preferredWidth: parent.parent.width / 6 * 5
-                Layout.preferredHeight: parent.parent.width / 6 * 5
-            }
 
             Text {
-                anchors.horizontalCenter: qrImage.horizontalCenter
-                font: theme.thinFont
+                id: bitcoinCoreText
+
+                anchors.horizontalCenter: parent.horizontalCenter
+
+                text: "Bitcoin<b>Core</b>"
+                font.family: robotoThin.name
+                font.styleName: "Thin"
+                font.pointSize: 30
                 color: primaryColor
-                text: qsTr("Tap to copy to clipboard")
+            }
+
+
+            Text {
+                id: versionText
+
+                anchors.horizontalCenter: parent.horizontalCenter
                 horizontalAlignment: Text.AlignHCenter
 
+                text: version
+
+                font.family: robotoThin.name
+                font.styleName: "Thin"
+                font.pointSize: 10
+
+                color: primaryColor
             }
+        }
+
+        Text {
+            id: licenceText
+
+            Layout.fillWidth: true
+
+            text: licenceInfo
+            font: theme.thinFont
+            color: primaryColor
+            wrapMode: Text.Wrap
         }
 
         ToolBar {
             Material.elevation: 0
             Material.foreground: primaryColor
-
             Layout.fillWidth: true
-            Layout.alignment: Qt.AlignBottom
 
             RowLayout {
                 anchors.fill: parent
@@ -49,17 +68,8 @@ Pane {
                     }
                     font: theme.thinFont
                 }
-                ToolButton {
-                    text: qsTr("SHARE")
-                    Layout.alignment: Qt.AlignHCenter
-                    onClicked: {}
-                    font: theme.thinFont
-                }
-                ToolButton {
-                    text: qsTr("⋮")
-                    Layout.alignment: Qt.AlignRight
-                }
             }
         }
     }
 }
+

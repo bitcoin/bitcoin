@@ -27,6 +27,7 @@ Pane {
             Layout.fillWidth: true
 
             font: theme.thinFont
+            color: primaryColor
             text: qsTr("Scan QR Code")
             horizontalAlignment: Text.AlignHCenter
 
@@ -64,6 +65,7 @@ Pane {
             Layout.fillWidth: true
             placeholderText: qsTr("...or enter the address here")
             font: theme.thinFont
+            color: primaryColor
         }
 
         SpinBox {
@@ -129,6 +131,7 @@ Pane {
             Text {
                 id: feeExplainer
                 font: theme.thinFont
+                color: primaryColor
                 text: qsTr("Transaction should confirm in ") + sendPane.confirmationsString
                 width: 180
                 wrapMode: Text.WordWrap
@@ -138,6 +141,7 @@ Pane {
 
         ToolBar {
             Material.elevation: 0
+            Material.foreground: primaryColor
             Layout.fillWidth: true
             RowLayout {
                 anchors.fill: parent

@@ -88,6 +88,8 @@
         <file alias="WalletPane.qml">res/qml/WalletPane.qml</file>
         <file alias="SendPane.qml">res/qml/SendPane.qml</file>
         <file alias="ReceivePane.qml">res/qml/ReceivePane.qml</file>
+        <file alias="SettingsPane.qml">res/qml/SettingsPane.qml</file>
+        <file alias="AboutPane.qml">res/qml/AboutPane.qml</file>
     </qresource>
     <qresource prefix="/fonts">
         <file alias="Roboto-Thin.ttf">res/fonts/Roboto-Thin.ttf</file>

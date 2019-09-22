@@ -5,19 +5,24 @@ import QtGraphicalEffects 1.0
 
 StackView {
     id: stackView
+
+    property bool darkMode: false
+    property string primaryColor: darkMode ? "white" : "black"
+    property string secondaryColor: darkMode ? "black" : "white"
+
     anchors.fill: parent
 
-    Material.accent: "black"
-    Material.foreground: "black"
-    Material.background: "white"
-    Material.primary: "white"
+    Material.accent: primaryColor
+    Material.foreground: primaryColor
+    Material.background: secondaryColor
+    Material.primary: secondaryColor
 
     function showInitMessage(msg) {
         initMessage.text = msg
     }
 
     function hideSplash() {
-        stackView.push(walletPane)
+        stackView.replace(walletPane)
     }
 
     FontLoader
@@ -31,7 +36,7 @@ StackView {
         property font thinFont: Qt.font({
                                             family: robotoThin.name,
                                             styleName: "Thin",
-                                            pointSize: 12
+                                            pointSize: 12,
                                         })
     }
 
@@ -44,6 +49,18 @@ StackView {
     SendPane {
         id: sendPane
         objectName: "sendPane"
+        visible: false
+    }
+
+    AboutPane {
+        id: aboutPane
+        objectName: "aboutPane"
+        visible: false
+    }
+
+    SettingsPane {
+        id: settingsPane
+        objectName: "settingsPane"
         visible: false
     }
 
@@ -64,6 +81,7 @@ StackView {
             font.family: robotoThin.name
             font.styleName: "Thin"
             font.pointSize: 30
+            color: primaryColor
         }
 
         Image {
@@ -94,6 +112,7 @@ StackView {
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.margins: 10
             font: theme.thinFont
+            color: primaryColor
         }
     }
 }
