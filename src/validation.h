@@ -148,6 +148,7 @@ extern CCriticalSection cs_main;
 extern CBlockPolicyEstimator feeEstimator;
 extern CTxMemPool mempool;
 typedef std::unordered_map<uint256, CBlockIndex*, BlockHasher> BlockMap;
+typedef std::unordered_multimap<uint256, CBlockIndex*, BlockHasher> PrevBlockMap;
 extern Mutex g_best_block_mutex;
 extern std::condition_variable g_best_block_cv;
 extern uint256 g_best_block;
@@ -446,6 +447,7 @@ struct CBlockIndexWorkComparator
 class BlockManager {
 public:
     BlockMap m_block_index GUARDED_BY(cs_main);
+    PrevBlockMap m_prev_block_index GUARDED_BY(cs_main);
 
     /** In order to efficiently track invalidity of headers, we keep the set of
       * blocks which we tried to connect and found to be invalid here (ie which
@@ -660,6 +662,9 @@ CChain& ChainActive();
 /** @returns the global block index map. */
 BlockMap& BlockIndex();
 
+/** @returns the global previous block index map */
+PrevBlockMap& PrevBlockIndex();
+
 /** Global variable that points to the coins database (protected by cs_main) */
 extern std::unique_ptr<CCoinsViewDB> pcoinsdbview;
 
@@ -705,5 +710,11 @@ inline bool IsBlockPruned(const CBlockIndex* pblockindex)
 {
     return (fHavePruned && !(pblockindex->nStatus & BLOCK_HAVE_DATA) && pblockindex->nTx > 0);
 }
+
+/**
+ * Return true if hash can be found in ChainActive at nBlockHeight height.
+ * Fills hashRet with found hash, if no nBlockHeight is specified - ChainActive.Height() is used.
+ */
+bool GetBlockHash(uint256& hashRet, int nBlockHeight = -1);
 
 #endif // BITGREEN_VALIDATION_H

@@ -9,6 +9,7 @@
 #include <init.h>
 #include <interfaces/chain.h>
 #include <key_io.h>
+#include <llmq/quorums_chainlocks.h>
 #include <node/transaction.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
@@ -25,6 +26,7 @@
 #include <util/system.h>
 #include <util/url.h>
 #include <util/validation.h>
+#include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/feebumper.h>
 #include <wallet/psbtwallet.h>
@@ -116,6 +118,12 @@ static void WalletTxToJSON(interfaces::Chain& chain, interfaces::Chain::Lock& lo
 {
     int confirms = wtx.GetDepthInMainChain(locked_chain);
     entry.pushKV("confirmations", confirms);
+
+    bool chainlock = false;
+    if (confirms > 0)
+        chainlock = llmq::chainLocksHandler->HasChainLock(::BlockIndex()[wtx.hashBlock]->nHeight, wtx.hashBlock);
+    entry.pushKV("chainlock", chainlock);
+
     if (wtx.IsCoinBase())
         entry.pushKV("generated", true);
     if (confirms > 0)

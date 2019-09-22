@@ -14,6 +14,7 @@
 #include <core_io.h>
 #include <hash.h>
 #include <index/blockfilterindex.h>
+#include <llmq/quorums_chainlocks.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
@@ -21,6 +22,8 @@
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
+#include <special/specialtx.h>
+#include <special/cbtx.h>
 #include <streams.h>
 #include <sync.h>
 #include <txdb.h>
@@ -115,6 +118,9 @@ UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex
         result.pushKV("previousblockhash", blockindex->pprev->GetBlockHash().GetHex());
     if (pnext)
         result.pushKV("nextblockhash", pnext->GetBlockHash().GetHex());
+
+    result.pushKV("chainlock", llmq::chainLocksHandler->HasChainLock(blockindex->nHeight, blockindex->GetBlockHash()));
+
     return result;
 }
 
@@ -148,6 +154,14 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
             txs.push_back(tx->GetHash().GetHex());
     }
     result.pushKV("tx", txs);
+    if (!block.vtx[0]->vExtraPayload.empty()) {
+        CCbTx cbTx;
+        if (GetTxPayload(block.vtx[0]->vExtraPayload, cbTx)) {
+            UniValue cbTxObj;
+            cbTx.ToJson(cbTxObj);
+            result.pushKV("cbTx", cbTxObj);
+        }
+    }
     result.pushKV("time", block.GetBlockTime());
     result.pushKV("mediantime", (int64_t)blockindex->GetMedianTimePast());
     result.pushKV("nonce", (uint64_t)block.nNonce);
@@ -169,6 +183,7 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
     result.pushKV("modifier", strprintf("%016llx", blockindex->nStakeModifier));
     result.pushKV("modifierchecksum", strprintf("%08x", blockindex->nStakeModifierChecksum));
     result.pushKV("blocksignature", HexStr(block.vchBlockSig));
+    result.pushKV("chainlock", llmq::chainLocksHandler->HasChainLock(blockindex->nHeight, blockindex->GetBlockHash()));
 
     return result;
 }

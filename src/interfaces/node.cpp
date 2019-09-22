@@ -308,6 +308,11 @@ public:
                     GuessVerificationProgress(Params().TxData(), block));
             }));
     }
+    std::unique_ptr<Handler> handleNotifyMasternodeListChanged(NotifyMasternodeListChangedFn fn) override
+    {
+        return MakeHandler(::uiInterface.NotifyMasternodeListChanged_connect(fn));
+    }
+
     InitInterfaces m_interfaces;
 };
 

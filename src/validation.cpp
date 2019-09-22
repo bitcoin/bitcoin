@@ -18,6 +18,7 @@
 #include <flatfile.h>
 #include <hash.h>
 #include <index/txindex.h>
+#include <llmq/quorums_chainlocks.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
@@ -32,6 +33,8 @@
 #include <script/sigcache.h>
 #include <script/standard.h>
 #include <shutdown.h>
+#include <special/specialdb.h>
+#include <special/specialtx.h>
 #include <timedata.h>
 #include <tinyformat.h>
 #include <txdb.h>
@@ -764,6 +767,15 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
             }
         }
 
+        // check special TXs after all the other checks. If we'd do this before the other checks, we might end up
+        // DoS scoring a node for non-critical errors, e.g. duplicate keys because a TX is received that was already
+        // mined
+        if (!CheckSpecialTx(tx, ChainActive().Tip(), state))
+            return false;
+
+        if (pool.existsProviderTxConflict(tx))
+            return state.Invalid(ValidationInvalidReason::TX_MEMPOOL_POLICY, false, REJECT_DUPLICATE, "protx-dup");
+
         constexpr unsigned int scriptVerifyFlags = STANDARD_SCRIPT_VERIFY_FLAGS;
 
         // Check against previous transactions
@@ -1029,6 +1041,9 @@ bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const CBlockIndex* pindex
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 {
+    if (Params().NetworkIDString() == "regtest")
+        return 50 * COIN;
+
     int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
     // Force block reward to zero when right shift is undefined.
     if (halvings >= 64)
@@ -1072,6 +1087,11 @@ static CBlockIndex *pindexBestForkTip = nullptr, *pindexBestForkBase = nullptr;
 BlockMap& BlockIndex()
 {
     return g_blockman.m_block_index;
+}
+
+PrevBlockMap& PrevBlockIndex()
+{
+    return g_blockman.m_prev_block_index;
 }
 
 static void AlertNotify(const std::string& strMessage)
@@ -1463,6 +1483,11 @@ int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out)
 DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view)
 {
     bool fClean = true;
+    bool fHasBestBlock = pspecialdb->VerifyBestBlock(pindex->GetBlockHash());
+    if (!fHasBestBlock) {
+        AbortNode("found specialDB inconsistency, you must reindex to continue");
+        return DISCONNECT_FAILED;
+    }
 
     CBlockUndo blockUndo;
     if (!UndoReadFromDisk(blockUndo, pindex)) {
@@ -1474,6 +1499,9 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
         error("DisconnectBlock(): block and undo data inconsistent");
         return DISCONNECT_FAILED;
     }
+
+    if (!UndoSpecialTxsInBlock(block, pindex))
+        return DISCONNECT_FAILED;
 
     // undo transactions in reverse order
     for (int i = block.vtx.size() - 1; i >= 0; i--) {
@@ -1514,6 +1542,8 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
 
     // move best block pointer to prevout block
     view.SetBestBlock(pindex->pprev->GetBlockHash());
+
+    pspecialdb->WriteBestBlock(pindex->pprev->GetBlockHash());
 
     return fClean ? DISCONNECT_OK : DISCONNECT_UNCLEAN;
 }
@@ -1771,9 +1801,21 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
         return error("%s: Consensus::CheckBlock: %s", __func__, FormatStateMessage(state));
     }
 
+    // verify chainlocks
+    if (pindex->pprev && pindex->phashBlock && llmq::chainLocksHandler->HasConflictingChainLock(pindex->nHeight, pindex->GetBlockHash()))
+        return state.Invalid(ValidationInvalidReason::CONSENSUS, error("%s: conflicting with chainlock", __func__), REJECT_INVALID, "bad-chainlock");
+
     // verify that the view's current state corresponds to the previous block
     uint256 hashPrevBlock = pindex->pprev == nullptr ? uint256() : pindex->pprev->GetBlockHash();
     assert(hashPrevBlock == view.GetBestBlock());
+
+    if (pindex->pprev) {
+        bool fHasBestBlock = pspecialdb->VerifyBestBlock(pindex->pprev->GetBlockHash());
+
+        if (pindex->nHeight > 1 && !fHasBestBlock) {
+            return AbortNode(state, "Found specialDB inconsistency, you must reindex to continue");
+        }
+    }
 
     // Special case for the genesis block, skipping connection of its transactions
     // (its coinbase is unspendable)
@@ -2023,6 +2065,9 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
     LogPrint(BCLog::BENCHMARK, "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs (%.2fms/blk)]\n", (unsigned)block.vtx.size(), MILLI * (nTime3 - nTime2), MILLI * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : MILLI * (nTime3 - nTime2) / (nInputs-1), nTimeConnect * MICRO, nTimeConnect * MILLI / nBlocksTotal);
 
+    if (!ProcessSpecialTxsInBlock(block, pindex, state, fJustCheck, fScriptChecks))
+        return false;
+
     CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus());
     if (block.IsProofOfWork() && block.vtx[0]->GetValueOut() > blockReward)
         return state.Invalid(ValidationInvalidReason::CONSENSUS,
@@ -2065,6 +2110,8 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
 
     int64_t nTime5 = GetTimeMicros(); nTimeIndex += nTime5 - nTime4;
     LogPrint(BCLog::BENCHMARK, "    - Index writing: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime5 - nTime4), nTimeIndex * MICRO, nTimeIndex * MILLI / nBlocksTotal);
+
+    pspecialdb->WriteBestBlock(pindex->GetBlockHash());
 
     int64_t nTime6 = GetTimeMicros(); nTimeCallbacks += nTime6 - nTime5;
     LogPrint(BCLog::BENCHMARK, "    - Callbacks: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime6 - nTime5), nTimeCallbacks * MICRO, nTimeCallbacks * MILLI / nBlocksTotal);
@@ -2169,6 +2216,8 @@ bool CChainState::FlushStateToDisk(
             // Flush the chainstate (which may refer to block index entries).
             if (!pcoinsTip->Flush())
                 return AbortNode(state, "Failed to write to coin database");
+            if (!pspecialdb->CommitRootTransaction())
+                return AbortNode(state, "Failed to commit specialDB");
             nLastFlush = nNow;
             full_flush_completed = true;
         }
@@ -2290,14 +2339,16 @@ bool CChainState::DisconnectTip(CValidationState& state, const CChainParams& cha
     // Apply the block atomically to the chain state.
     int64_t nStart = GetTimeMicros();
     {
+        auto dbTx = pspecialdb->BeginTransaction();
         CCoinsViewCache view(pcoinsTip.get());
         assert(view.GetBestBlock() == pindexDelete->GetBlockHash());
         if (DisconnectBlock(block, pindexDelete, view) != DISCONNECT_OK)
             return error("DisconnectTip(): DisconnectBlock %s failed", pindexDelete->GetBlockHash().ToString());
         bool flushed = view.Flush();
         assert(flushed);
+        dbTx->Commit();
     }
-    LogPrint(BCLog::BENCH, "- Disconnect block: %.2fms\n", (GetTimeMicros() - nStart) * MILLI);
+    LogPrint(BCLog::BENCHMARK, "- Disconnect block: %.2fms\n", (GetTimeMicros() - nStart) * MILLI);
     // Write the chain state to disk, if necessary.
     if (!FlushStateToDisk(chainparams, state, FlushStateMode::IF_NEEDED))
         return false;
@@ -2418,6 +2469,7 @@ bool CChainState::ConnectTip(CValidationState& state, const CChainParams& chainp
     int64_t nTime3;
     LogPrint(BCLog::BENCHMARK, "  - Load block from disk: %.2fms [%.2fs]\n", (nTime2 - nTime1) * MILLI, nTimeReadFromDisk * MICRO);
     {
+        auto dbTx = pspecialdb->BeginTransaction();
         CCoinsViewCache view(pcoinsTip.get());
         bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams);
         GetMainSignals().BlockChecked(blockConnecting, state);
@@ -2430,6 +2482,7 @@ bool CChainState::ConnectTip(CValidationState& state, const CChainParams& chainp
         LogPrint(BCLog::BENCHMARK, "  - Connect total: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime3 - nTime2) * MILLI, nTimeConnectTotal * MICRO, nTimeConnectTotal * MILLI / nBlocksTotal);
         bool flushed = view.Flush();
         assert(flushed);
+        dbTx->Commit();
     }
     int64_t nTime4 = GetTimeMicros(); nTimeFlush += nTime4 - nTime3;
     LogPrint(BCLog::BENCHMARK, "  - Flush: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime4 - nTime3) * MILLI, nTimeFlush * MICRO, nTimeFlush * MILLI / nBlocksTotal);
@@ -2949,6 +3002,10 @@ CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block, bool fProo
 
     setDirtyBlockIndex.insert(pindexNew);
 
+    // track prevBlockHash -> pindex (multimap)
+    if (pindexNew->pprev)
+        ::PrevBlockIndex().emplace(pindexNew->pprev->GetBlockHash(), pindexNew);
+
     return pindexNew;
 }
 
@@ -3248,6 +3305,20 @@ static CBlockIndex* GetLastCheckpoint(const CCheckpointData& data) EXCLUSIVE_LOC
     return nullptr;
 }
 
+static bool CheckIndexAgainstCheckpoint(const CBlockIndex* pindexPrev, CValidationState& state, const CChainParams& chainparams, const uint256& hash)
+{
+    if (*pindexPrev->phashBlock == chainparams.GetConsensus().hashGenesisBlock)
+        return true;
+
+    int nHeight = pindexPrev->nHeight+1;
+    // Don't accept any forks from the main chain prior to last checkpoint
+    CBlockIndex* pcheckpoint = GetLastCheckpoint(chainparams.Checkpoints());
+    if (pcheckpoint && nHeight < pcheckpoint->nHeight)
+        return state.Invalid(ValidationInvalidReason::CONSENSUS, error("%s: forked chain older than last checkpoint (height %d)", __func__, nHeight));
+
+    return true;
+}
+
 /** Context-dependent validity checks.
  *  By "context", we mean only the previous block headers, but not the UTXO
  *  set; UTXO-related validity checks are done in ConnectBlock().
@@ -3416,8 +3487,22 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, CValidationState
         pindexPrev = (*mi).second;
         if (pindexPrev->nStatus & BLOCK_FAILED_MASK)
             return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_PREV, error("%s: prev block invalid", __func__), REJECT_INVALID, "bad-prevblk");
+
+        if (pindexPrev->nStatus & BLOCK_CONFLICT_CHAINLOCK)
+            // it's ok-ish, the other node is probably missing the latest chainlock
+            return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_PREV, error("%s: prev block %s conflicts with chainlock", __func__, block.hashPrevBlock.ToString()), REJECT_INVALID, "bad-prevblk-chainlock");
+
+        if (fCheckpointsEnabled && !CheckIndexAgainstCheckpoint(pindexPrev, state, chainparams, hash))
+            return error("%s: CheckIndexAgainstCheckpoint(): %s", __func__, state.GetRejectReason().c_str());
+
         if (!ContextualCheckBlockHeader(block, state, chainparams, pindexPrev, GetAdjustedTime()))
             return error("%s: Consensus::ContextualCheckBlockHeader: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
+
+        if (llmq::chainLocksHandler->HasConflictingChainLock(pindexPrev->nHeight + 1, hash)) {
+            if (pindex == NULL)
+                AddToBlockIndex(block, BLOCK_CONFLICT_CHAINLOCK);
+            return state.Invalid(ValidationInvalidReason::CONSENSUS, error("%s: header %s conflicts with chainlock", __func__, hash.ToString()), REJECT_INVALID, "bad-chainlock");
+        }
 
         /* Determine if this block descends from any block which has been found
          * invalid (m_failed_blocks), then mark pindexPrev and any blocks between
@@ -3644,12 +3729,23 @@ bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams,
 {
     AssertLockHeld(cs_main);
     assert(pindexPrev && pindexPrev == ::ChainActive().Tip());
+
+    uint256 hash = block.GetHash();
+    if (fCheckpointsEnabled && !CheckIndexAgainstCheckpoint(pindexPrev, state, chainparams, hash))
+        return error("%s: CheckIndexAgainstCheckpoint(): %s", __func__, state.GetRejectReason().c_str());
+
+    if (llmq::chainLocksHandler->HasConflictingChainLock(pindexPrev->nHeight + 1, hash))
+        return state.Invalid(ValidationInvalidReason::CONSENSUS, error("%s: conflicting with chainlock", __func__), REJECT_INVALID, "bad-chainlock");
+
     CCoinsViewCache viewNew(pcoinsTip.get());
     uint256 block_hash(block.GetHash());
     CBlockIndex indexDummy(block);
     indexDummy.pprev = pindexPrev;
     indexDummy.nHeight = pindexPrev->nHeight + 1;
     indexDummy.phashBlock = &block_hash;
+
+    // begin tx and let it rollback
+    auto dbTx = pspecialdb->BeginTransaction();
 
     // NOTE: CheckBlockHeader is called by CheckBlock
     if (!ContextualCheckBlockHeader(block, state, chainparams, pindexPrev, GetAdjustedTime()))
@@ -3978,6 +4074,10 @@ bool static LoadBlockIndexDB(const CChainParams& chainparams) EXCLUSIVE_LOCKS_RE
         if (pindex->nStatus & BLOCK_HAVE_DATA) {
             setBlkDataFiles.insert(pindex->nFile);
         }
+
+        // build PrevBlockIndex
+        if (pindex->pprev)
+            g_blockman.m_prev_block_index.emplace(pindex->pprev->GetBlockHash(), pindex);
     }
     for (std::set<int>::iterator it = setBlkDataFiles.begin(); it != setBlkDataFiles.end(); it++)
     {
@@ -4038,6 +4138,9 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
     LOCK(cs_main);
     if (::ChainActive().Tip() == nullptr || ::ChainActive().Tip()->pprev == nullptr)
         return true;
+
+    // begin tx and let it rollback
+    auto dbTx = pspecialdb->BeginTransaction();
 
     // Verify blocks in the best chain
     if (nCheckDepth <= 0 || nCheckDepth > ::ChainActive().Height())
@@ -4954,3 +5057,13 @@ public:
     }
 };
 static CMainCleanup instance_of_cmaincleanup;
+
+bool GetBlockHash(uint256& hashRet, int nBlockHeight)
+{
+    LOCK(cs_main);
+    if (ChainActive().Tip() == NULL) return false;
+    if (nBlockHeight < -1 || nBlockHeight > ChainActive().Height()) return false;
+    if (nBlockHeight == -1) nBlockHeight = ChainActive().Height();
+    hashRet = ChainActive()[nBlockHeight]->GetBlockHash();
+    return true;
+}

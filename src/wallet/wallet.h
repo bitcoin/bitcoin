@@ -430,6 +430,7 @@ public:
      */
     int GetDepthInMainChain(interfaces::Chain::Lock& locked_chain) const;
     bool IsInMainChain(interfaces::Chain::Lock& locked_chain) const { return GetDepthInMainChain(locked_chain) > 0; }
+    bool IsChainLocked() const;
 
     /**
      * @return number of blocks to maturity for this transaction:
@@ -1011,6 +1012,8 @@ public:
     void UnlockAllCoins() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void ListLockedCoins(std::vector<COutPoint>& vOutpts) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
+    void AutoLockMasternodeCollaterals() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
     /*
      * Rescan abort properties
      */
@@ -1303,6 +1306,9 @@ public:
      */
     boost::signals2::signal<void (CWallet* wallet)> NotifyStatusChanged;
 
+    /** ChainLock received */
+    boost::signals2::signal<void (int height)> NotifyChainLockReceived;
+
     /** Inquire whether this wallet broadcasts transactions. */
     bool GetBroadcastTransactions() const { return fBroadcastTransactions; }
     /** Set whether this wallet broadcasts transactions. */
@@ -1415,6 +1421,8 @@ public:
     bool SelectStakeCoins(StakeCoinsSet& setCoins, CAmount nTargetAmount) const;
     bool CreateCoinStake(unsigned int nBits, int64_t nSearchInterval, CMutableTransaction& txNew, uint32_t& nTxNewTime, CAmount nFees);
     void GetScriptForMining(CScript& script);
+
+    void NotifyChainLock(const CBlockIndex* pindexChainLock);
 };
 
 /**

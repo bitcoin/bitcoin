@@ -132,6 +132,7 @@ BITCOIN_CORE_H = \
   cuckoocache.h \
   ctpl.h \
   cxxtimer.hpp \
+  flat-database.h \
   flatfile.h \
   fs.h \
   httprpc.h \
@@ -149,7 +150,22 @@ BITCOIN_CORE_H = \
   key_io.h \
   dbwrapper.h \
   limitedmap.h \
+  llmq/quorums.h \
+  llmq/quorums_blockprocessor.h \
+  llmq/quorums_commitment.h \
+  llmq/quorums_chainlocks.h \
+  llmq/quorums_debug.h \
+  llmq/quorums_dkgsessionhandler.h \
+  llmq/quorums_dkgsessionmgr.h \
+  llmq/quorums_dkgsession.h \
+  llmq/quorums_init.h \
+  llmq/quorums_signing.h \
+  llmq/quorums_signing_shares.h \
+  llmq/quorums_utils.h \
   logging.h \
+  masternodes/activemasternode.h \
+  masternodes/sync.h \
+  masternodes/utils.h \
   memusage.h \
   merkleblock.h \
   messagesigner.h \
@@ -158,6 +174,7 @@ BITCOIN_CORE_H = \
   net_processing.h \
   netaddress.h \
   netbase.h \
+  netfulfilledman.h \
   netmessagemaker.h \
   node/coin.h \
   node/psbt.h \
@@ -187,6 +204,14 @@ BITCOIN_CORE_H = \
   rpc/server.h \
   rpc/util.h \
   saltedhasher.h \
+  special/cbtx.h \
+  special/deterministicmns.h \
+  special/mnauth.h \
+  special/providertx.h \
+  special/simplifiedmns.h \
+  special/specialdb.h \
+  special/specialtx.h \
+  special/util.h \
   scheduler.h \
   script/descriptor.h \
   script/keyorigin.h \
@@ -196,6 +221,8 @@ BITCOIN_CORE_H = \
   script/standard.h \
   shutdown.h \
   streams.h \
+  support/allocators/mt_pooled_secure.h \
+  support/allocators/pooled_secure.h \
   support/allocators/secure.h \
   support/allocators/zeroafterfree.h \
   support/cleanse.h \
@@ -215,6 +242,7 @@ BITCOIN_CORE_H = \
   util/bytevectorhash.h \
   util/error.h \
   util/fees.h \
+  util/init.h \
   util/system.h \
   util/memory.h \
   util/moneystr.h \
@@ -281,9 +309,25 @@ libbitgreen_server_a_SOURCES = \
   interfaces/node.cpp \
   init.cpp \
   dbwrapper.cpp \
+  llmq/quorums.cpp \
+  llmq/quorums_blockprocessor.cpp \
+  llmq/quorums_commitment.cpp \
+  llmq/quorums_chainlocks.cpp \
+  llmq/quorums_debug.cpp \
+  llmq/quorums_dkgsessionhandler.cpp \
+  llmq/quorums_dkgsessionmgr.cpp \
+  llmq/quorums_dkgsession.cpp \
+  llmq/quorums_init.cpp \
+  llmq/quorums_signing.cpp \
+  llmq/quorums_signing_shares.cpp \
+  llmq/quorums_utils.cpp \
+  masternodes/activemasternode.cpp \
+  masternodes/sync.cpp \
+  masternodes/utils.cpp \
   messagesigner.cpp \
   miner.cpp \
   net.cpp \
+  netfulfilledman.cpp \
   net_processing.cpp \
   node/coin.cpp \
   node/psbt.cpp \
@@ -302,6 +346,15 @@ libbitgreen_server_a_SOURCES = \
   rpc/net.cpp \
   rpc/rawtransaction.cpp \
   rpc/server.cpp \
+  rpc/special.cpp \
+  special/cbtx.cpp \
+  special/deterministicmns.cpp \
+  special/mnauth.cpp \
+  special/providertx.cpp \
+  special/simplifiedmns.cpp \
+  special/specialdb.cpp \
+  special/specialtx.cpp \
+  special/util.cpp \
   script/sigcache.cpp \
   shutdown.cpp \
   timedata.cpp \
@@ -352,12 +405,29 @@ libbitgreen_wallet_a_SOURCES = \
   index/blockfilterindex.cpp \
   index/txindex.cpp \
   interfaces/chain.cpp \
+  interfaces/handler.cpp \
   interfaces/node.cpp \
   init.cpp \
   dbwrapper.cpp \
+  llmq/quorums.cpp \
+  llmq/quorums_blockprocessor.cpp \
+  llmq/quorums_commitment.cpp \
+  llmq/quorums_chainlocks.cpp \
+  llmq/quorums_debug.cpp \
+  llmq/quorums_dkgsessionhandler.cpp \
+  llmq/quorums_dkgsessionmgr.cpp \
+  llmq/quorums_dkgsession.cpp \
+  llmq/quorums_init.cpp \
+  llmq/quorums_signing.cpp \
+  llmq/quorums_signing_shares.cpp \
+  llmq/quorums_utils.cpp \
+  masternodes/activemasternode.cpp \
+  masternodes/sync.cpp \
+  masternodes/utils.cpp \
   messagesigner.cpp \
   miner.cpp \
   net.cpp \
+  netfulfilledman.cpp \
   net_processing.cpp \
   node/coin.cpp \
   node/psbt.cpp \
@@ -376,14 +446,27 @@ libbitgreen_wallet_a_SOURCES = \
   rpc/net.cpp \
   rpc/rawtransaction.cpp \
   rpc/server.cpp \
+  rpc/special.cpp \
   saltedhasher.cpp \
   script/sigcache.cpp \
   shutdown.cpp \
+  special/cbtx.cpp \
+  special/providertx.cpp \
+  special/deterministicmns.cpp \
+  special/mnauth.cpp \
+  special/simplifiedmns.h \
+  special/simplifiedmns.cpp \
+  special/specialdb.h \
+  special/specialdb.cpp \
+  special/specialtx.cpp \
+  special/util.cpp \
   timedata.cpp \
   torcontrol.cpp \
   txdb.cpp \
   txmempool.cpp \
   ui_interface.cpp \
+  util/init.cpp \
+  util/url.cpp \
   validation.cpp \
   validationinterface.cpp \
   versionbits.cpp \
@@ -404,7 +487,14 @@ libbitgreen_wallet_a_SOURCES = \
   wallet/coinselection.cpp \
   $(BITCOIN_CORE_H)
 
-libbitgreen_wallet_tool_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITGREEN_INCLUDES)
+if ENABLE_WALLET
+libbitgreen_wallet_a_SOURCES += wallet/init.cpp
+endif
+if !ENABLE_WALLET
+libbitgreen_wallet_a_SOURCES += dummywallet.cpp
+endif
+
+libbitgreen_wallet_tool_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitgreen_wallet_tool_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitgreen_wallet_tool_a_SOURCES = \
   wallet/wallettool.cpp \

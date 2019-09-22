@@ -14,6 +14,7 @@
 #include <interfaces/wallet.h>
 #include <key.h>
 #include <key_io.h>
+#include <llmq/quorums_chainlocks.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <pos/kernel.h>
@@ -4051,6 +4052,25 @@ void CWallet::ListLockedCoins(std::vector<COutPoint>& vOutpts) const
     }
 }
 
+// Goes through all wallet transactions and checks if they are masternode collaterals, in which case these are locked
+// This avoids accidential spending of collaterals. They can still be unlocked manually if a spend is really intended.
+void CWallet::AutoLockMasternodeCollaterals()
+{
+    auto mnList = deterministicMNManager->GetListAtChainTip();
+
+    auto locked_chain = chain().lock();
+    LOCK2(cs_main, cs_wallet);
+    for (const auto& pair : mapWallet) {
+        for (unsigned int i = 0; i < pair.second.tx->vout.size(); ++i) {
+            if (IsMine(pair.second.tx->vout[i]) && !IsSpent(*locked_chain, pair.first, i)) {
+                if (deterministicMNManager->IsProTxWithCollateral(pair.second.tx, i) || mnList.HasMNByCollateral(COutPoint(pair.first, i))) {
+                    LockCoin(COutPoint(pair.first, i));
+                }
+            }
+        }
+    }
+}
+
 /** @} */ // end of Actions
 
 void CWallet::GetKeyBirthTimes(interfaces::Chain::Lock& locked_chain, std::map<CKeyID, int64_t>& mapKeyBirth) const {
@@ -4703,6 +4723,15 @@ bool CMerkleTx::IsImmatureCoinBase(interfaces::Chain::Lock& locked_chain) const
     return GetBlocksToMaturity(locked_chain) > 0;
 }
 
+bool CMerkleTx::IsChainLocked() const
+{
+    AssertLockHeld(cs_main);
+    BlockMap::iterator mi = ::BlockIndex().find(hashBlock);
+    if (mi != ::BlockIndex().end() && mi->second != nullptr)
+        return llmq::chainLocksHandler->HasChainLock(mi->second->nHeight, hashBlock);
+    return false;
+}
+
 bool CWalletTx::AcceptToMemoryPool(interfaces::Chain::Lock& locked_chain, CValidationState& state)
 {
     // We must set fInMempool here - while it will be re-set to true by the
@@ -5232,4 +5261,9 @@ bool CWallet::MintableCoins()
             return true;
 
     return false;
+}
+
+void CWallet::NotifyChainLock(const CBlockIndex* pindexChainLock)
+{
+    NotifyChainLockReceived(pindexChainLock->nHeight);
 }

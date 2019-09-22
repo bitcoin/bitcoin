@@ -86,6 +86,10 @@ public:
     const ChainTxData& TxData() const { return chainTxData; }
     /** Make miner wait to have peers to avoid wasting work */
     bool MiningRequiresPeers() const { return fMiningRequiresPeers; }
+    /** Allow nodes with the same address and multiple ports */
+    bool AllowMultiplePorts() const { return fAllowMultiplePorts; }
+    /** Expire time for fulfilled requests */
+    int FulfilledRequestExpireTime() const { return nFulfilledRequestExpireTime; }
 protected:
     CChainParams() {}
 
@@ -107,6 +111,8 @@ protected:
     bool fMiningRequiresPeers;
     CCheckpointData checkpointData;
     ChainTxData chainTxData;
+    bool fAllowMultiplePorts;
+    int nFulfilledRequestExpireTime;
 };
 
 /**

@@ -22,6 +22,8 @@ class CValidationState;
 class uint256;
 class CScheduler;
 class CTxMemPool;
+class CDeterministicMNList;
+class CDeterministicMNListDiff;
 enum class MemPoolRemovalReason;
 
 // These functions dispatch to one or all registered wallets
@@ -146,6 +148,11 @@ protected:
     friend void ::RegisterValidationInterface(CValidationInterface*);
     friend void ::UnregisterValidationInterface(CValidationInterface*);
     friend void ::UnregisterAllValidationInterfaces();
+
+    /** Notifies new chain lock block */
+    virtual void NotifyChainLock(const CBlockIndex* pindex) {}
+    /** Notifies masternode list changes */
+    virtual void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff) {}
 };
 
 struct MainSignalsInstance;
@@ -182,6 +189,12 @@ public:
     void ChainStateFlushed(const CBlockLocator &);
     void BlockChecked(const CBlock&, const CValidationState&);
     void NewPoWValidBlock(const CBlockIndex *, const std::shared_ptr<const CBlock>&);
+
+    /** Notifies listeners of a ChainLock. */
+    void NotifyChainLock(const CBlockIndex*);
+
+    /** Notifies masternode list changes */
+    virtual void NotifyMasternodeListChanged(bool, const CDeterministicMNList&, const CDeterministicMNListDiff&);
 };
 
 CMainSignals& GetMainSignals();

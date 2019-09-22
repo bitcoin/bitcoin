@@ -414,6 +414,12 @@ static void NotifyTransactionChanged(WalletModel *walletmodel, const uint256 &ha
     assert(invoked);
 }
 
+static void NotifyChainLockReceived(WalletModel *walletmodel, int chainLockHeight)
+{
+    QMetaObject::invokeMethod(walletmodel, "updateChainLockHeight", Qt::QueuedConnection,
+                              Q_ARG(int, chainLockHeight));
+}
+
 static void ShowProgress(WalletModel *walletmodel, const std::string &title, int nProgress)
 {
     // emits signal "showProgress"
@@ -446,6 +452,7 @@ void WalletModel::subscribeToCoreSignals()
     m_handler_show_progress = m_wallet->handleShowProgress(std::bind(ShowProgress, this, std::placeholders::_1, std::placeholders::_2));
     m_handler_watch_only_changed = m_wallet->handleWatchOnlyChanged(std::bind(NotifyWatchonlyChanged, this, std::placeholders::_1));
     m_handler_can_get_addrs_changed = m_wallet->handleCanGetAddressesChanged(boost::bind(NotifyCanGetAddressesChanged, this));
+    m_handler_notify_lock_received = m_wallet->handleChainLockReceived(std::bind(NotifyChainLockReceived, this, std::placeholders::_1));
 }
 
 void WalletModel::unsubscribeFromCoreSignals()
@@ -458,6 +465,7 @@ void WalletModel::unsubscribeFromCoreSignals()
     m_handler_show_progress->disconnect();
     m_handler_watch_only_changed->disconnect();
     m_handler_can_get_addrs_changed->disconnect();
+    m_handler_notify_lock_received->disconnect();
 }
 
 // WalletModel::UnlockContext implementation

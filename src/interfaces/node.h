@@ -26,6 +26,7 @@ class Coin;
 class RPCTimerInterface;
 class UniValue;
 class proxyType;
+class CDeterministicMNList;
 struct CNodeStateStats;
 
 namespace interfaces {
@@ -246,6 +247,11 @@ public:
     using NotifyHeaderTipFn =
         std::function<void(bool initial_download, int height, int64_t block_time, double verification_progress)>;
     virtual std::unique_ptr<Handler> handleNotifyHeaderTip(NotifyHeaderTipFn fn) = 0;
+
+    //! Register handler for notify masternode list.
+    using NotifyMasternodeListChangedFn =
+        std::function<void(const CDeterministicMNList& newList)>;
+    virtual std::unique_ptr<Handler> handleNotifyMasternodeListChanged(NotifyMasternodeListChangedFn fn) = 0;
 };
 
 //! Return implementation of Node interface.

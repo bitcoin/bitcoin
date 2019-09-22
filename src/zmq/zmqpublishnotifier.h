@@ -52,4 +52,16 @@ public:
     bool NotifyTransaction(const CTransaction &transaction) override;
 };
 
+class CZMQPublishHashChainLockNotifier : public CZMQAbstractPublishNotifier
+{
+public:
+    bool NotifyChainLock(const CBlockIndex *pindex) override;
+};
+
+class CZMQPublishRawChainLockNotifier : public CZMQAbstractPublishNotifier
+{
+public:
+    bool NotifyChainLock(const CBlockIndex *pindex) override;
+};
+
 #endif // BITGREEN_ZMQ_ZMQPUBLISHNOTIFIER_H

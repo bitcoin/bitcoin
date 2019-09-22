@@ -52,7 +52,7 @@ public:
         // only for header sync.
         // **DONT** compute the hash using nFlags or PoS wont work!
         // if (!(s.GetType() & SER_GETHASH))
-            // READWRITE(nFlags);
+        // READWRITE(nFlags);
     }
 
     void SetNull()

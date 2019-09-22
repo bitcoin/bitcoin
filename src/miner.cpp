@@ -13,6 +13,7 @@
 #include <consensus/merkle.h>
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
+#include <llmq/quorums_chainlocks.h>
 #include <net.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
@@ -20,6 +21,8 @@
 #include <pos/sign.h>
 #include <primitives/transaction.h>
 #include <script/standard.h>
+#include <special/specialtx.h>
+#include <special/cbtx.h>
 #include <timedata.h>
 #include <util/moneystr.h>
 #include <util/system.h>
@@ -194,7 +197,19 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         coinbaseTx.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
     }
 
-    coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
+    coinbaseTx.vin[0].scriptSig = CScript() << OP_RETURN;
+
+    CCbTx cbTx;
+    cbTx.nHeight = nHeight;
+
+    CValidationState state;
+    if (!CalcCbTxMerkleRootMNList(*pblock, pindexPrev, cbTx.merkleRootMNList, state))
+        throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootMNList failed: %s", __func__, FormatStateMessage(state)));
+    if (!CalcCbTxMerkleRootQuorums(*pblock, pindexPrev, cbTx.merkleRootQuorums, state))
+        throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootQuorums failed: %s", __func__, FormatStateMessage(state)));
+
+    SetTxPayload(coinbaseTx, cbTx);
+
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
     if (fIncludeWitness)
         pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
@@ -212,7 +227,6 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     pblock->nNonce         = 0;
     pblocktemplate->vTxSigOpsCost[0] = WITNESS_SCALE_FACTOR * GetLegacySigOpCount(*pblock->vtx[0]);
 
-    CValidationState state;
     if (!TestBlockValidity(state, chainparams, *pblock, pindexPrev, false, false)) {
         throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, FormatStateMessage(state)));
     }
@@ -255,6 +269,8 @@ bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& packa
 {
     for (CTxMemPool::txiter it : package) {
         if (!IsFinalTx(it->GetTx(), nHeight, nLockTimeCutoff))
+            return false;
+        if (!llmq::chainLocksHandler->IsTxSafeForMining(it->GetTx().GetHash()))
             return false;
         if (!fIncludeWitness && it->GetTx().HasWitness())
             return false;

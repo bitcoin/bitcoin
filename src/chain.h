@@ -130,6 +130,8 @@ enum BlockStatus: uint32_t {
     BLOCK_FAILED_MASK        =   BLOCK_FAILED_VALID | BLOCK_FAILED_CHILD,
 
     BLOCK_OPT_WITNESS       =   128, //!< block data in blk*.data was received with a witness-enforcing client
+
+    BLOCK_CONFLICT_CHAINLOCK =   256, //!< conflicts with chainlock system
 };
 
 /** The block chain is a tree shaped structure starting with the

@@ -194,4 +194,21 @@ void CZMQNotificationInterface::BlockDisconnected(const std::shared_ptr<const CB
     }
 }
 
+void CZMQNotificationInterface::NotifyChainLock(const CBlockIndex *pindex)
+{
+    for (std::list<CZMQAbstractNotifier*>::iterator i = notifiers.begin(); i!=notifiers.end(); )
+    {
+        CZMQAbstractNotifier *notifier = *i;
+        if (notifier->NotifyChainLock(pindex))
+        {
+            i++;
+        }
+        else
+        {
+            notifier->Shutdown();
+            i = notifiers.erase(i);
+        }
+    }
+}
+
 CZMQNotificationInterface* g_zmq_notification_interface = nullptr;

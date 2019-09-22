@@ -31,6 +31,10 @@
 #include <validation.h>
 #include <validationinterface.h>
 
+#include <llmq/quorums_chainlocks.h>
+#include <special/cbtx.h>
+#include <special/providertx.h>
+#include <special/specialtx.h>
 
 #include <numeric>
 #include <stdint.h>
@@ -52,6 +56,49 @@ static void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& 
     // data into the returned UniValue.
     TxToUniv(tx, uint256(), entry, true, RPCSerializationFlags());
 
+    if (!tx.vExtraPayload.empty()) {
+        entry.pushKV("extraPayloadSize", tx.vExtraPayload.size());
+        entry.pushKV("extraPayload", HexStr(tx.vExtraPayload));
+    }
+
+    if (tx.nType == TRANSACTION_PROVIDER_REGISTER) {
+        CProRegTx proTx;
+        if (GetTxPayload(tx, proTx)) {
+            UniValue obj;
+            proTx.ToJson(obj);
+            entry.pushKV("proRegTx", obj);
+        }
+    } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
+        CProUpServTx proTx;
+        if (GetTxPayload(tx, proTx)) {
+            UniValue obj;
+            proTx.ToJson(obj);
+            entry.pushKV("proUpServTx", obj);
+        }
+    } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
+        CProUpRegTx proTx;
+        if (GetTxPayload(tx, proTx)) {
+            UniValue obj;
+            proTx.ToJson(obj);
+            entry.pushKV("proUpRegTx", obj);
+        }
+    } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REVOKE) {
+        CProUpRevTx proTx;
+        if (GetTxPayload(tx, proTx)) {
+            UniValue obj;
+            proTx.ToJson(obj);
+            entry.pushKV("proUpRevTx", obj);
+        }
+    } else if (tx.nType == TRANSACTION_COINBASE) {
+        CCbTx cbTx;
+        if (GetTxPayload(tx, cbTx)) {
+            UniValue obj;
+            cbTx.ToJson(obj);
+            entry.pushKV("cbTx", obj);
+        }
+    }
+
+    bool chainLock = false;
     if (!hashBlock.IsNull()) {
         LOCK(cs_main);
 
@@ -62,11 +109,13 @@ static void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& 
                 entry.pushKV("confirmations", 1 + ::ChainActive().Height() - pindex->nHeight);
                 entry.pushKV("time", pindex->GetBlockTime());
                 entry.pushKV("blocktime", pindex->GetBlockTime());
+                chainLock = llmq::chainLocksHandler->HasChainLock(pindex->nHeight, pindex->GetBlockHash());
             }
             else
                 entry.pushKV("confirmations", 0);
         }
     }
+    entry.pushKV("chainlock", chainLock);
 }
 
 static UniValue getrawtransaction(const JSONRPCRequest& request)
@@ -135,6 +184,8 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
             "     }\n"
             "     ,...\n"
             "  ],\n"
+            "  \"extraPayloadSize\" : n           (numeric) Size of extra payload. Only present if it's a special TX\n"
+            "  \"extraPayload\" : \"hex\"           (string) Hex encoded extra payload data. Only present if it's a special TX\n"
             "  \"blockhash\" : \"hash\",   (string) the block hash\n"
             "  \"confirmations\" : n,      (numeric) The confirmations\n"
             "  \"blocktime\" : ttt         (numeric) The block time in seconds since epoch (Jan 1 1970 GMT)\n"
@@ -433,6 +484,7 @@ static UniValue decoderawtransaction(const JSONRPCRequest& request)
             "  \"vsize\" : n,            (numeric) The virtual transaction size (differs from size for witness transactions)\n"
             "  \"weight\" : n,           (numeric) The transaction's weight (between vsize*4 - 3 and vsize*4)\n"
             "  \"version\" : n,          (numeric) The version\n"
+            "  \"type\" : n,             (numeric) The type\n"
             "  \"locktime\" : ttt,       (numeric) The lock time\n"
             "  \"vin\" : [               (array of json objects)\n"
             "     {\n"
@@ -464,6 +516,8 @@ static UniValue decoderawtransaction(const JSONRPCRequest& request)
             "     }\n"
             "     ,...\n"
             "  ],\n"
+            "  \"extraPayloadSize\" : n           (numeric) Size of extra payload. Only present if it's a special TX\n"
+            "  \"extraPayload\" : \"hex\"           (string) Hex encoded extra payload data. Only present if it's a special TX\n"
             "}\n"
                 },
                 RPCExamples{
@@ -757,7 +811,7 @@ static UniValue signrawtransactionwithkey(const JSONRPCRequest& request)
     return SignTransaction(mtx, request.params[2], &keystore, coins, true, request.params[3]);
 }
 
-static UniValue sendrawtransaction(const JSONRPCRequest& request)
+UniValue sendrawtransaction(const JSONRPCRequest& request)
 {
     RPCHelpMan{"sendrawtransaction",
                 "\nSubmits raw transaction (serialized, hex-encoded) to local node and network.\n"

@@ -25,9 +25,22 @@
 #include <scheduler.h>
 #include <tinyformat.h>
 #include <txmempool.h>
+#include <util/init.h>
 #include <util/system.h>
 #include <util/strencodings.h>
 #include <util/validation.h>
+
+#include <masternodes/sync.h>
+#include <special/deterministicmns.h>
+#include <special/mnauth.h>
+#include <special/simplifiedmns.h>
+#include <llmq/quorums_blockprocessor.h>
+#include <llmq/quorums_commitment.h>
+#include <llmq/quorums_chainlocks.h>
+#include <llmq/quorums_dkgsessionmgr.h>
+#include <llmq/quorums_init.h>
+#include <llmq/quorums_signing.h>
+#include <llmq/quorums_signing_shares.h>
 
 #include <memory>
 
@@ -92,9 +105,6 @@ CCriticalSection g_cs_orphans;
 std::map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(g_cs_orphans);
 
 void EraseOrphansFor(NodeId peer);
-
-/** Increase a node's misbehavior score. */
-void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="") EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 /** Average delay between local address broadcasts in seconds. */
 static constexpr unsigned int AVG_LOCAL_ADDRESS_BROADCAST_INTERVAL = 24 * 60 * 60;
@@ -424,8 +434,15 @@ static void PushNodeVersion(CNode *pnode, CConnman* connman, int64_t nTime)
     CAddress addrYou = (addr.IsRoutable() && !IsProxy(addr) ? addr : CAddress(CService(), addr.nServices));
     CAddress addrMe = CAddress(CService(), nLocalNodeServices);
 
+    uint256 mnauthChallenge;
+    GetRandBytes(mnauthChallenge.begin(), mnauthChallenge.size());
+    {
+        LOCK(pnode->cs_mnauth);
+        pnode->sentMNAuthChallenge = mnauthChallenge;
+    }
+
     connman->PushMessage(pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERSION, PROTOCOL_VERSION, (uint64_t)nLocalNodeServices, nTime, addrYou, addrMe,
-            nonce, strSubVersion, nNodeStartingHeight, ::g_relay_txes));
+            nonce, strSubVersion, nNodeStartingHeight, ::g_relay_txes, mnauthChallenge));
 
     if (fLogIPs) {
         LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, us=%s, them=%s, peer=%d\n", PROTOCOL_VERSION, nNodeStartingHeight, addrMe.ToString(), addrYou.ToString(), nodeid);
@@ -981,6 +998,18 @@ void Misbehaving(NodeId pnode, int howmuch, const std::string& message) EXCLUSIV
         LogPrint(BCLog::NET, "%s: %s peer=%d (%d -> %d)%s\n", __func__, state->name, pnode, state->nMisbehavior-howmuch, state->nMisbehavior, message_prefixed);
 }
 
+// Requires cs_main.
+bool IsBanned(NodeId pnode)
+{
+    CNodeState *state = State(pnode);
+    if (state == NULL)
+        return false;
+    if (state->fShouldBan) {
+        return true;
+    }
+    return false;
+}
+
 /**
  * Returns true if the given validation state result may result in a peer
  * banning/disconnecting us. We use this to determine which unaccepted
@@ -1300,6 +1329,27 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     case MSG_BLOCK:
     case MSG_WITNESS_BLOCK:
         return LookupBlockIndex(inv.hash) != nullptr;
+
+    /*
+        BitGreen Related Inventory Messages
+
+        --
+
+        We shouldn't update the sync times for each of the messages when we already have it.
+        We're going to be asking many nodes upfront for the full inventory list, so we'll get duplicates of these.
+        We want to only update the time on new hits, so that we can time out appropriately if needed.
+    */
+    case MSG_QUORUM_FINAL_COMMITMENT:
+        return llmq::quorumBlockProcessor->HasMinableCommitment(inv.hash);
+    case MSG_QUORUM_CONTRIB:
+    case MSG_QUORUM_COMPLAINT:
+    case MSG_QUORUM_JUSTIFICATION:
+    case MSG_QUORUM_PREMATURE_COMMITMENT:
+        return llmq::quorumDKGSessionManager->AlreadyHave(inv);
+    case MSG_QUORUM_RECOVERED_SIG:
+        return llmq::quorumSigningManager->AlreadyHave(inv);
+    case MSG_CLSIG:
+        return llmq::chainLocksHandler->AlreadyHave(inv);
     }
     // Don't know what it is, just say we already got one
     return true;
@@ -1543,6 +1593,62 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
             }
             if (!push) {
                 vNotFound.push_back(inv);
+            }
+
+            if (!push && (inv.type == MSG_QUORUM_FINAL_COMMITMENT)) {
+                llmq::CFinalCommitment o;
+                if (llmq::quorumBlockProcessor->GetMinableCommitmentByHash(inv.hash, o)) {
+                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::QFCOMMITMENT, o));
+                    push = true;
+                }
+            }
+
+            if (!push && (inv.type == MSG_QUORUM_CONTRIB)) {
+                llmq::CDKGContribution o;
+                if (llmq::quorumDKGSessionManager->GetContribution(inv.hash, o)) {
+                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::QCONTRIB, o));
+                    push = true;
+                }
+            }
+
+            if (!push && (inv.type == MSG_QUORUM_COMPLAINT)) {
+                llmq::CDKGComplaint o;
+                if (llmq::quorumDKGSessionManager->GetComplaint(inv.hash, o)) {
+                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::QCOMPLAINT, o));
+                    push = true;
+                }
+            }
+
+            if (!push && (inv.type == MSG_QUORUM_JUSTIFICATION)) {
+                llmq::CDKGJustification o;
+                if (llmq::quorumDKGSessionManager->GetJustification(inv.hash, o)) {
+                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::QJUSTIFICATION, o));
+                    push = true;
+                }
+            }
+
+            if (!push && (inv.type == MSG_QUORUM_PREMATURE_COMMITMENT)) {
+                llmq::CDKGPrematureCommitment o;
+                if (llmq::quorumDKGSessionManager->GetPrematureCommitment(inv.hash, o)) {
+                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::QPCOMMITMENT, o));
+                    push = true;
+                }
+            }
+
+            if (!push && (inv.type == MSG_QUORUM_RECOVERED_SIG)) {
+                llmq::CRecoveredSig o;
+                if (llmq::quorumSigningManager->GetRecoveredSigForGetData(inv.hash, o)) {
+                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::QSIGREC, o));
+                    push = true;
+                }
+            }
+
+            if (!push && (inv.type == MSG_CLSIG)) {
+                llmq::CChainLockSig o;
+                if (llmq::chainLocksHandler->GetChainLockByHash(inv.hash, o)) {
+                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::CLSIG, o));
+                    push = true;
+                }
             }
         }
     } // release cs_main
@@ -1962,6 +2068,10 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         }
         if (!vRecv.empty())
             vRecv >> fRelay;
+        if (!vRecv.empty()) {
+            LOCK(pfrom->cs_mnauth);
+            vRecv >> pfrom->receivedMNAuthChallenge;
+        }
         // Disconnect if we connected to ourself
         if (pfrom->fInbound && !connman->CheckIncomingNonce(nNonce))
         {
@@ -2093,6 +2203,8 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                       (fLogIPs ? strprintf(", peeraddr=%s", pfrom->addr.ToString()) : ""));
         }
 
+        CMNAuth::PushMNAUTH(pfrom, connman);
+
         if (pfrom->nVersion >= SENDHEADERS_VERSION) {
             // Tell our peer we prefer to receive headers rather than inv's
             // We send this to non-NODE NETWORK peers as well, because even
@@ -2113,6 +2225,16 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             nCMPCTBLOCKVersion = 1;
             connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::SENDCMPCT, fAnnounceUsingCMPCTBLOCK, nCMPCTBLOCKVersion));
         }
+
+        // Tell our peer that we're interested in plain LLMQ recovered signatures.
+        // Otherwise the peer would only announce/send messages resulting from QRECSIG,
+        // e.g. InstantSend locks or ChainLocks. SPV nodes should not send this message
+        // as they are usually only interested in the higher level messages
+        connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::QSENDRECSIGS, true));
+
+        if (gArgs.GetBoolArg("-watchquorums", llmq::DEFAULT_WATCH_QUORUMS))
+            connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::QWATCH));
+
         pfrom->fSuccessfullyConnected = true;
         return true;
     }
@@ -2202,6 +2324,12 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             }
         }
         return true;
+    }
+
+    if (strCommand == NetMsgType::QSENDRECSIGS) {
+        bool b;
+        vRecv >> b;
+        pfrom->fSendRecSigs = b;
     }
 
     if (strCommand == NetMsgType::INV) {
@@ -3172,6 +3300,29 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         return true;
     }
 
+    if (strCommand == NetMsgType::GETMNLISTDIFF) {
+        CGetSimplifiedMNListDiff cmd;
+        vRecv >> cmd;
+
+        LOCK(cs_main);
+
+        CSimplifiedMNListDiff mnListDiff;
+        std::string strError;
+        if (BuildSimplifiedMNListDiff(cmd.baseBlockHash, cmd.blockHash, mnListDiff, strError)) {
+            connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MNLISTDIFF, mnListDiff));
+        } else {
+            LogPrint(BCLog::NET, "getmnlistdiff failed for baseBlockHash=%s, blockHash=%s. error=%s\n", cmd.baseBlockHash.ToString(), cmd.blockHash.ToString(), strError);
+            Misbehaving(pfrom->GetId(), 1);
+        }
+    }
+
+    if (strCommand == NetMsgType::MNLISTDIFF) {
+        // we have never requested this
+        LOCK(cs_main);
+        Misbehaving(pfrom->GetId(), 100);
+        LogPrint(BCLog::NET, "received not-requested mnlistdiff. peer=%d\n", pfrom->GetId());
+    }
+
     if (strCommand == NetMsgType::NOTFOUND) {
         // Remove the NOTFOUND transactions from the peer
         LOCK(cs_main);
@@ -3195,6 +3346,28 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             }
         }
         return true;
+    }
+    else {
+        // BitGreen: manage protocol extensions
+        bool found = false;
+        const std::vector<std::string> &allMessages = getAllNetMessageTypes();
+        for (const std::string msg : allMessages) {
+            if (msg == strCommand) {
+                found = true;
+                break;
+            }
+        }
+
+        if (found)
+        {
+            masternodeSync.ProcessMessage(pfrom, strCommand, vRecv);
+            CMNAuth::ProcessMessage(pfrom, strCommand, vRecv, connman);
+            llmq::quorumBlockProcessor->ProcessMessage(pfrom, strCommand, vRecv, connman);
+            llmq::quorumDKGSessionManager->ProcessMessage(pfrom, strCommand, vRecv, connman);
+            llmq::quorumSigSharesManager->ProcessMessage(pfrom, strCommand, vRecv, connman);
+            llmq::quorumSigningManager->ProcessMessage(pfrom, strCommand, vRecv, connman);
+            llmq::chainLocksHandler->ProcessMessage(pfrom, strCommand, vRecv, connman);
+        }
     }
 
     // Ignore unknown commands for extensibility
@@ -3786,7 +3959,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
             pto->vInventoryBlockToSend.clear();
 
             // Check whether periodic sends should happen
-            bool fSendTrickle = pto->fWhitelisted;
+            bool fSendTrickle = pto->fWhitelisted || fMasternodeMode;
             if (pto->nNextInvSend < nNow) {
                 fSendTrickle = true;
                 if (pto->fInbound) {

@@ -238,6 +238,7 @@ private:
     std::unique_ptr<interfaces::Handler> m_handler_show_progress;
     std::unique_ptr<interfaces::Handler> m_handler_watch_only_changed;
     std::unique_ptr<interfaces::Handler> m_handler_can_get_addrs_changed;
+    std::unique_ptr<interfaces::Handler> m_handler_notify_lock_received;
     interfaces::Node& m_node;
 
     bool fHaveWatchOnly;
