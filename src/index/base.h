@@ -15,6 +15,7 @@
 class CBlock;
 class CBlockIndex;
 class Chainstate;
+class ChainstateManager;
 namespace interfaces {
 class Chain;
 } // namespace interfaces
@@ -30,6 +31,11 @@ struct IndexSummary {
  * Base class for indices of blockchain data. This implements
  * CValidationInterface and ensures blocks are indexed sequentially according
  * to their position in the active chain.
+ *
+ * In the presence of multiple chainstates (i.e. if a UTXO snapshot is loaded),
+ * only the background "IBD" chainstate will be indexed to avoid building the
+ * index out of order. When the background chainstate completes validation, the
+ * index will be reinitialized and indexing will continue.
  */
 class BaseIndex : public CValidationInterface
 {
@@ -122,9 +128,6 @@ protected:
 
     virtual DB& GetDB() const = 0;
 
-    /// Get the name of the index for display in logs.
-    const std::string& GetName() const LIFETIMEBOUND { return m_name; }
-
     /// Update the internal best block index as well as the prune lock.
     void SetBestBlockIndex(const CBlockIndex* block);
 
@@ -132,6 +135,9 @@ public:
     BaseIndex(std::unique_ptr<interfaces::Chain> chain, std::string name);
     /// Destructor interrupts sync thread if running and blocks until it exits.
     virtual ~BaseIndex();
+
+    /// Get the name of the index for display in logs.
+    const std::string& GetName() const LIFETIMEBOUND { return m_name; }
 
     /// Blocks the current thread until the index is caught up to the current
     /// state of the block chain. This only blocks if the index has gotten in
