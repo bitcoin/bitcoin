@@ -1543,6 +1543,8 @@ void CConnman::ThreadDNSAddressSeed()
     Shuffle(seeds.begin(), seeds.end(), rng);
     int seeds_right_now = 0; // Number of seeds left before testing if we have enough connections
     int found = 0;
+    std::chrono::seconds seeds_wait_time{11};
+    if (addrman.size() >= 1000) seeds_wait_time = std::chrono::seconds{300};
 
     if (gArgs.GetBoolArg("-forcednsseed", DEFAULT_FORCEDNSSEED)) {
         // When -forcednsseed is provided, query all.
@@ -1555,16 +1557,24 @@ void CConnman::ThreadDNSAddressSeed()
         // creating fewer identifying DNS requests, reduces trust by giving seeds
         // less influence on the network topology, and reduces traffic to the seeds.
         if (addrman.size() > 0 && seeds_right_now == 0) {
-            if (!interruptNet.sleep_for(std::chrono::seconds(11))) return;
+            LogPrintf("Waiting %d seconds before falling back to DNS seeds.\n", seeds_wait_time.count());
+            while (seeds_wait_time.count() > 0) {
+                std::chrono::seconds w{25};
+                if (w > seeds_wait_time) w = seeds_wait_time;
+                if (!interruptNet.sleep_for(w)) return;
+                seeds_wait_time -= w;
 
-            LOCK(cs_vNodes);
-            int nRelevant = 0;
-            for (const CNode* pnode : vNodes) {
-                nRelevant += pnode->fSuccessfullyConnected && !pnode->fFeeler && !pnode->fOneShot && !pnode->m_manual_connection && !pnode->fInbound;
-            }
-            if (nRelevant >= 2) {
-                LogPrintf("P2P peers available. Skipped DNS seeding.\n");
-                return;
+                int nRelevant = 0;
+                {
+                    LOCK(cs_vNodes);
+                    for (const CNode* pnode : vNodes) {
+                        nRelevant += pnode->fSuccessfullyConnected && !pnode->fFeeler && !pnode->fOneShot && !pnode->m_manual_connection && !pnode->fInbound;
+                    }
+                }
+                if (nRelevant >= 2) {
+                    LogPrintf("P2P peers available. Skipped DNS seeding.\n");
+                    return;
+                }
             }
             seeds_right_now += DNSSEEDS_TO_QUERY_AT_ONCE;
         }
