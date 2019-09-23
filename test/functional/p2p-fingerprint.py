@@ -29,11 +29,6 @@ from test_framework.util import (
     p2p_port)
 
 class P2PFingerprintTest(BitcoinTestFramework):
-    def __init__(self):
-        BitcoinTestFramework.__init__(self)
-        # TODO When this asserts, you have probably backported bitcoin#11121, so you'll have to remove this constructor
-        assert(not callable(getattr(BitcoinTestFramework(), "set_test_params", None)))
-        self.set_test_params()
 
     def set_test_params(self):
         self.setup_clean_chain = True

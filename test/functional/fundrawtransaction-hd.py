@@ -11,8 +11,7 @@ from test_framework.util import *
 # Create one-input, one-output, no-fee transaction:
 class RawTransactionsTest(BitcoinTestFramework):
 
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 4
         self.extra_args = [['-usehd=1']] * self.num_nodes
@@ -444,7 +443,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.stop_node(2)
         self.stop_node(3)
         self.nodes[1].node_encrypt_wallet("test")
-        self.nodes.pop(1)
 
         self.start_nodes()
         # This test is not meant to test fee estimation and we'd like

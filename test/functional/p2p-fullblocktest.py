@@ -59,12 +59,8 @@ class FullBlockTest(ComparisonTestFramework):
         self.coinbase_pubkey = self.coinbase_key.get_pubkey()
         self.tip = None
         self.blocks = {}
-
-    def setup_network(self):
         # Must set '-dip3params=2000:2000' to create pre-dip3 blocks only
-        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir,
-                                 extra_args=[['-whitelist=127.0.0.1', '-dip3params=2000:2000']],
-                                 binary=[self.options.testbinary])
+        self.extra_args = [['-whitelist=127.0.0.1', '-dip3params=2000:2000']]
 
     def add_options(self, parser):
         super().add_options(parser)

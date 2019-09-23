@@ -74,7 +74,7 @@ class LLMQChainLocksTest(DashTestFramework):
         good_tip = self.nodes[0].getbestblockhash()
         # Restart it so that it forgets all the chainlocks from the past
         self.stop_node(0)
-        self.nodes[0] = self.start_node(0, self.options.tmpdir, self.extra_args)
+        self.start_node(0)
         connect_nodes(self.nodes[0], 1)
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
         # Now try to reorg the chain

@@ -15,19 +15,18 @@ import binascii
 
 class AddressIndexTest(BitcoinTestFramework):
 
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 4
 
     def setup_network(self):
-        self.nodes = []
+        self.add_nodes(self.num_nodes)
         # Nodes 0/1 are "wallet" nodes
-        self.nodes.append(self.start_node(0, self.options.tmpdir, ["-relaypriority=0"]))
-        self.nodes.append(self.start_node(1, self.options.tmpdir, ["-addressindex"]))
+        self.start_node(0, ["-relaypriority=0"])
+        self.start_node(1, ["-addressindex"])
         # Nodes 2/3 are used for testing
-        self.nodes.append(self.start_node(2, self.options.tmpdir, ["-addressindex", "-relaypriority=0"]))
-        self.nodes.append(self.start_node(3, self.options.tmpdir, ["-addressindex"]))
+        self.start_node(2, ["-addressindex", "-relaypriority=0"])
+        self.start_node(3, ["-addressindex"])
         connect_nodes(self.nodes[0], 1)
         connect_nodes(self.nodes[0], 2)
         connect_nodes(self.nodes[0], 3)
