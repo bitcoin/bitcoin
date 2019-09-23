@@ -90,7 +90,8 @@ bool BaseIndex::Init()
     }
 
     LOCK(cs_main);
-    CChain& active_chain = m_chainstate->m_chain;
+    CChain& index_chain = m_chainstate->m_chain;
+
     if (locator.IsNull()) {
         SetBestBlockIndex(nullptr);
     } else {
@@ -100,24 +101,25 @@ bool BaseIndex::Init()
     // Note: this will latch to true immediately if the user starts up with an empty
     // datadir and an index enabled. If this is the case, indexation will happen solely
     // via `BlockConnected` signals until, possibly, the next restart.
-    m_synced = m_best_block_index.load() == active_chain.Tip();
+    m_synced = m_best_block_index.load() == index_chain.Tip();
     if (!m_synced) {
         bool prune_violation = false;
         if (!m_best_block_index) {
             // index is not built yet
             // make sure we have all block data back to the genesis
-            prune_violation = m_chainstate->m_blockman.GetFirstStoredBlock(*active_chain.Tip()) != active_chain.Genesis();
+            prune_violation = m_chainstate->m_blockman.GetFirstStoredBlock(
+                *index_chain.Tip()) != index_chain.Genesis();
         }
         // in case the index has a best block set and is not fully synced
         // check if we have the required blocks to continue building the index
         else {
             const CBlockIndex* block_to_test = m_best_block_index.load();
-            if (!active_chain.Contains(block_to_test)) {
+            if (!index_chain.Contains(block_to_test)) {
                 // if the bestblock is not part of the mainchain, find the fork
                 // and make sure we have all data down to the fork
-                block_to_test = active_chain.FindFork(block_to_test);
+                block_to_test = index_chain.FindFork(block_to_test);
             }
-            const CBlockIndex* block = active_chain.Tip();
+            const CBlockIndex* block = index_chain.Tip();
             prune_violation = true;
             // check backwards from the tip if we have all block data until we reach the indexes bestblock
             while (block_to_test && block && (block->nStatus & BLOCK_HAVE_DATA)) {
@@ -165,6 +167,8 @@ void BaseIndex::ThreadSync()
         std::chrono::steady_clock::time_point last_locator_write_time{0s};
         while (true) {
             if (m_interrupt) {
+                LogPrintf("%s: m_interrupt set; exiting ThreadSync\n", GetName());
+
                 SetBestBlockIndex(pindex);
                 // No need to handle errors in Commit. If it fails, the error will be already be
                 // logged. The best way to recover is to continue, as index cannot be corrupted by
@@ -274,6 +278,17 @@ bool BaseIndex::Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_ti
 
 void BaseIndex::BlockConnected(const ChainstateRole role, const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex)
 {
+    // Ignore events from the assumed-valid chain; we will process its blocks
+    // (sequentially) after it is fully verified by the background chainstate. This
+    // is to avoid any out-of-order indexation.
+    //
+    // TODO at some point we could parameterize whether a particular index can be
+    // built out of order, but for now just do the conservative simple thing.
+    if (role == ChainstateRole::ASSUMEDVALID) {
+        return;
+    }
+
+    // Ignore BlockConnected signals until we have fully indexed the chain.
     if (!m_synced) {
         return;
     }
@@ -320,6 +335,12 @@ void BaseIndex::BlockConnected(const ChainstateRole role, const std::shared_ptr<
 
 void BaseIndex::ChainStateFlushed(const ChainstateRole role, const CBlockLocator& locator)
 {
+    // Ignore events from the assumed-valid chain; we will process its blocks
+    // (sequentially) after it is fully verified by the background chainstate.
+    if (role == ChainstateRole::ASSUMEDVALID) {
+        return;
+    }
+
     if (!m_synced) {
         return;
     }
@@ -388,9 +409,15 @@ void BaseIndex::Interrupt()
 
 bool BaseIndex::Start()
 {
+    AssertLockNotHeld(cs_main);
+
+    // May need reset if index is being restarted.
+    m_interrupt.reset();
+
     // m_chainstate member gives indexing code access to node internals. It is
     // removed in followup https://github.com/bitcoin/bitcoin/pull/24230
-    m_chainstate = &m_chain->context()->chainman->ActiveChainstate();
+    m_chainstate = WITH_LOCK(::cs_main,
+        return &m_chain->context()->chainman->GetChainstateForIndexing());
     // Need to register this ValidationInterface before running Init(), so that
     // callbacks are not missed if Init sets m_synced to true.
     RegisterValidationInterface(this);

@@ -3224,6 +3224,14 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
 
         if (WITH_LOCK(::cs_main, return m_disabled)) {
             // Background chainstate has reached the snapshot base block, so exit.
+
+            // Restart indexers to resume indexing for all blocks unique to the snapshot
+            // chain. This resumes indexing "in order" from where the indexation on the
+            // background validation chain left off.
+            //
+            // This cannot be done while holding cs_main (within
+            // MaybeCompleteSnapshotValidation) or a cs_main deadlock will occur.
+            m_chainman.restart_indexers(m_chainman);
             break;
         }
 
@@ -5876,4 +5884,10 @@ bool ChainstateManager::IsAnyChainInIBD() const
     return
         (m_snapshot_chainstate && m_snapshot_chainstate->IsInitialBlockDownload()) ||
         (m_ibd_chainstate && m_ibd_chainstate->IsInitialBlockDownload());
+}
+
+Chainstate& ChainstateManager::GetChainstateForIndexing()
+{
+    return (IsSnapshotActive() && !IsSnapshotValidated()) ?
+        *m_ibd_chainstate : *m_active_chainstate;
 }

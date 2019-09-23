@@ -958,6 +958,10 @@ public:
     explicit ChainstateManager(Options options, node::BlockManager::Options blockman_options);
 
     std::vector<BaseIndex*> indexers{};
+    //! Function to restart active indexers; set dynamically to avoid a circular
+    //! dependency on `base/index.cpp`.
+    std::function<void(const ChainstateManager&)> restart_indexers =
+        std::function<void(const ChainstateManager&)>();
 
     const CChainParams& GetParams() const { return m_options.chainparams; }
     const Consensus::Params& GetConsensus() const { return m_options.chainparams.GetConsensus(); }
@@ -1191,6 +1195,16 @@ public:
 
     //! Returns true if any chainstate in use is in initial block download.
     bool IsAnyChainInIBD() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    //! @returns the chainstate that indexers should consult when ensuring that an
+    //!   index is synced with a chain where we can expect block index entries to have
+    //!   BLOCK_HAVE_DATA beneath the tip.
+    //!
+    //!   In other words, give us the chainstate for which we can reasonably expect
+    //!   that all blocks beneath the tip have been indexed. In practice this means
+    //!   when using an assumed-valid chainstate based upon a snapshot, return only the
+    //!   fully validated chain.
+    Chainstate& GetChainstateForIndexing() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     ~ChainstateManager();
 };
