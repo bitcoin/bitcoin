@@ -5,18 +5,18 @@ Geth
 ----
 
 This folder contains the binaries for geth for different platforms
-The current version is Tasty Tankard (v1.9.3)
+The current version is Memory Stealer (v1.9.5)
 Downloaded from [Go Ethereum](https://geth.ethereum.org/downloads/)
 
 MD5 of the BIN are as the following:
 Linux (64-bit)
-`8101644c16c7e163ac3f98638bc7e3fe`
+`c9381b57ce71e2c75e856a8536c86be0`
 
 MacOS
-`2caa0a9180d196d6ad466fd526294251`
+`81352a28def907571e1ccd39f76c8eb6`
 
 Windows (64-bit)
-`23bb9cea0b244a2aae20400689b13c4d`
+`93a775332d45ebe6914d5c94d92bf9d0`
 
 
 Relayer
