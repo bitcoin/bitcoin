@@ -263,13 +263,13 @@ class BitcoinTestFramework(object):
 
         return nodes
 
-    def stop_node(self, i, wait=True):
+    def stop_node(self, i):
         """Stop a dashd test node"""
         self.nodes[i].stop_node()
         while not self.nodes[i].is_node_stopped():
             time.sleep(0.1)
 
-    def stop_nodes(self, fast=True):
+    def stop_nodes(self):
         """Stop multiple dashd test nodes"""
         for node in self.nodes:
             # Issue RPC to stop nodes
@@ -300,11 +300,6 @@ class BitcoinTestFramework(object):
                 else:
                     assert_msg = "dashd should have exited with expected error " + expected_msg
                 raise AssertionError(assert_msg)
-
-    def wait_node(self, i):
-        return_code = self.bitcoind_processes[i].wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT)
-        del self.bitcoind_processes[i]
-        assert_equal(return_code, 0)
 
     def wait_for_node_exit(self, i, timeout):
         self.nodes[i].process.wait(timeout)
