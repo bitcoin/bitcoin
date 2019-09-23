@@ -109,7 +109,11 @@ bool WalletBatch::WriteCryptedKey(const CPubKey& vchPubKey,
         return false;
     }
 
-    if (!WriteIC(std::make_pair(DBKeys::CRYPTED_KEY, vchPubKey), vchCryptedSecret, false)) {
+    // Compute a checksum of the encrypted key
+    uint256 checksum = Hash(vchCryptedSecret.begin(), vchCryptedSecret.end());
+
+    const auto key = std::make_pair(DBKeys::CRYPTED_KEY, vchPubKey);
+    if (!WriteIC(key, std::make_pair(vchCryptedSecret, checksum), false)) {
         return false;
     }
     EraseIC(std::make_pair(DBKeys::KEY, vchPubKey));
@@ -332,6 +336,17 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             }
             std::vector<unsigned char> vchPrivKey;
             ssValue >> vchPrivKey;
+
+            // Get the checksum and check it
+            if (!ssValue.eof()) {
+                uint256 checksum;
+                ssValue >> checksum;
+                if (Hash(vchPrivKey.begin(), vchPrivKey.end()) != checksum) {
+                    strErr = "Error reading wallet database: Crypted key corrupt";
+                    return false;
+                }
+            }
+
             wss.nCKeys++;
 
             if (!pwallet->GetOrCreateLegacyScriptPubKeyMan()->LoadCryptedKey(vchPubKey, vchPrivKey))
