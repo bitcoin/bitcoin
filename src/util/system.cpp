@@ -1233,9 +1233,9 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
         // 6. ../Resources
         std::string portStr = std::to_string(websocketport);
         std::string rpcportStr = std::to_string(ethrpcport);
-        char * argvAttempt1[22] = {(char*)attempt1.string().c_str(), 
+        char * argvAttempt1[23] = {(char*)attempt1.string().c_str(), 
                 (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), 
-                (char*)"--rpc", (char*)"--rpcapi", (char*)"eth", (char*)"--rpcport", (char*)rpcportStr.c_str(),
+                (char*)"--rpc", (char*)"--rpcapi", (char*)"eth", (char*)"personal", (char*)"--rpcport", (char*)rpcportStr.c_str(),
                 (char*)"--wsorigins", (char*)"*",
                 (char*)"--syncmode", (char*)"light", 
                 (char*)"--datadir", (char*)dataDir.c_str(),
@@ -1244,9 +1244,9 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
                 (char*)"--rpccorsdomain",(char*)"*",
                 (char*)"--maxpeers",(char*)"0",
                 NULL };
-        char * argvAttempt2[22] = {(char*)attempt2.string().c_str(), 
+        char * argvAttempt2[23] = {(char*)attempt2.string().c_str(), 
                 (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(),
-                (char*)"--rpc", (char*)"--rpcapi", (char*)"eth", (char*)"--rpcport", (char*)rpcportStr.c_str(),
+                (char*)"--rpc", (char*)"--rpcapi", (char*)"eth", (char*)"personal", (char*)"--rpcport", (char*)rpcportStr.c_str(),
                 (char*)"--wsorigins", (char*)"*",
                 (char*)"--syncmode", (char*)"light", 
                 (char*)"--datadir", (char*)dataDir.c_str(),
@@ -1255,9 +1255,9 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
                 (char*)"--rpccorsdomain",(char*)"*",
                 (char*)"--maxpeers",(char*)"0",
                 NULL };
-        char * argvAttempt3[22] = {(char*)attempt3.string().c_str(), 
+        char * argvAttempt3[23] = {(char*)attempt3.string().c_str(), 
                 (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), 
-                (char*)"--rpc", (char*)"--rpcapi", (char*)"eth", (char*)"--rpcport", (char*)rpcportStr.c_str(),
+                (char*)"--rpc", (char*)"--rpcapi", (char*)"eth", (char*)"personal", (char*)"--rpcport", (char*)rpcportStr.c_str(),
                 (char*)"--wsorigins", (char*)"*",
                 (char*)"--syncmode", (char*)"light", 
                 (char*)"--datadir", (char*)dataDir.c_str(),
@@ -1266,9 +1266,9 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
                 (char*)"--rpccorsdomain",(char*)"*",
                 (char*)"--maxpeers",(char*)"0",
                 NULL };
-        char * argvAttempt4[22] = {(char*)attempt4.string().c_str(), 
+        char * argvAttempt4[23] = {(char*)attempt4.string().c_str(), 
                 (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), 
-                (char*)"--rpc", (char*)"--rpcapi", (char*)"eth", (char*)"--rpcport", (char*)rpcportStr.c_str(),
+                (char*)"--rpc", (char*)"--rpcapi", (char*)"eth", (char*)"personal", (char*)"--rpcport", (char*)rpcportStr.c_str(),
                 (char*)"--wsorigins", (char*)"*",
                 (char*)"--syncmode", (char*)"light", 
                 (char*)"--datadir", (char*)dataDir.c_str(),
@@ -1277,9 +1277,9 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
                 (char*)"--rpccorsdomain",(char*)"*",
                 (char*)"--maxpeers",(char*)"0",
                 NULL };
-        char * argvAttempt5[22] = {(char*)attempt5.string().c_str(), 
+        char * argvAttempt5[23] = {(char*)attempt5.string().c_str(), 
                 (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(),
-                (char*)"--rpc", (char*)"--rpcapi", (char*)"eth", (char*)"--rpcport", (char*)rpcportStr.c_str(),
+                (char*)"--rpc", (char*)"--rpcapi", (char*)"eth", (char*)"personal", (char*)"--rpcport", (char*)rpcportStr.c_str(),
                 (char*)"--wsorigins", (char*)"*",
                 (char*)"--syncmode", (char*)"light", 
                 (char*)"--datadir", (char*)dataDir.c_str(),
@@ -1288,9 +1288,9 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
                 (char*)"--rpccorsdomain",(char*)"*",
                 (char*)"--maxpeers",(char*)"0",
                 NULL };   
-        char * argvAttempt6[22] = {(char*)attempt6.string().c_str(), 
+        char * argvAttempt6[23] = {(char*)attempt6.string().c_str(), 
                 (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), 
-                (char*)"--rpc", (char*)"--rpcapi", (char*)"eth", (char*)"--rpcport", (char*)rpcportStr.c_str(),
+                (char*)"--rpc", (char*)"--rpcapi", (char*)"eth", (char*)"personal", (char*)"--rpcport", (char*)rpcportStr.c_str(),
                 (char*)"--wsorigins", (char*)"*",
                 (char*)"--syncmode", (char*)"light", 
                 (char*)"--datadir", (char*)dataDir.c_str(),
@@ -1330,7 +1330,7 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
     #else
         std::string portStr = std::to_string(websocketport);
         std::string rpcportStr = std::to_string(ethrpcport);
-        std::string args =  std::string("--rpc --rpcapi eth --rpccorsdomain * --rpcport ") + rpcportStr + std::string(" --ws --wsport ") + portStr + std::string(" --wsorigins * --syncmode light --maxpeers 0 --datadir ") +  dataDir.string();
+        std::string args =  std::string("--rpc --rpcapi personal,eth --rpccorsdomain * --rpcport ") + rpcportStr + std::string(" --ws --wsport ") + portStr + std::string(" --wsorigins * --syncmode light --maxpeers 0 --datadir ") +  dataDir.string();
         pid = fork(attempt1.string(), args);
         if( pid <= 0 ) {
             LogPrintf("Geth not found at %s, trying in current direction bin folder\n", attempt1.string());
