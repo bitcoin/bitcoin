@@ -2305,7 +2305,7 @@ bool CChainState::FlushStateToDisk(
                (bool)fFlushForPrune,
                (bool)fDoFullFlush);
     }
-    if (full_flush_completed) {
+    if (full_flush_completed && this == &m_chainman.ActiveChainstate()) {
         // Update best block in wallet (so we can detect restored wallets).
         GetMainSignals().ChainStateFlushed(m_chain.GetLocator());
     }
@@ -2472,7 +2472,9 @@ bool CChainState::DisconnectTip(BlockValidationState& state, DisconnectedBlockTr
     UpdateTip(pindexDelete->pprev);
     // Let wallets know transactions went from 1-confirmed to
     // 0-confirmed or conflicted:
-    GetMainSignals().BlockDisconnected(pblock, pindexDelete);
+    if (this == &m_chainman.ActiveChainstate()) {
+        GetMainSignals().BlockDisconnected(pblock, pindexDelete);
+    }
     return true;
 }
 
@@ -2554,7 +2556,9 @@ bool CChainState::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew
     {
         CCoinsViewCache view(&CoinsTip());
         bool rv = ConnectBlock(blockConnecting, state, pindexNew, view);
-        GetMainSignals().BlockChecked(blockConnecting, state);
+        if (this == &m_chainman.ActiveChainstate()) {
+            GetMainSignals().BlockChecked(blockConnecting, state);
+        }
         if (!rv) {
             if (state.IsInvalid())
                 InvalidBlockFound(pindexNew, state);
@@ -2851,9 +2855,11 @@ bool CChainState::ActivateBestChain(BlockValidationState& state, std::shared_ptr
                 }
                 pindexNewTip = m_chain.Tip();
 
-                for (const PerBlockConnectTrace& trace : connectTrace.GetBlocksConnected()) {
-                    assert(trace.pblock && trace.pindex);
-                    GetMainSignals().BlockConnected(trace.pblock, trace.pindex);
+                if (this == &m_chainman.ActiveChainstate()) {
+                    for (const PerBlockConnectTrace& trace : connectTrace.GetBlocksConnected()) {
+                        assert(trace.pblock && trace.pindex);
+                        GetMainSignals().BlockConnected(trace.pblock, trace.pindex);
+                    }
                 }
             } while (!m_chain.Tip() || (starting_tip && CBlockIndexWorkComparator()(m_chain.Tip(), starting_tip)));
             if (!blocks_connected) return true;
@@ -2864,11 +2870,13 @@ bool CChainState::ActivateBestChain(BlockValidationState& state, std::shared_ptr
             // Notify external listeners about the new tip.
             // Enqueue while holding cs_main to ensure that UpdatedBlockTip is called in the order in which blocks are connected
             if (pindexFork != pindexNewTip) {
-                // Notify ValidationInterface subscribers
-                GetMainSignals().UpdatedBlockTip(pindexNewTip, pindexFork, fInitialDownload);
+                if (this == &m_chainman.ActiveChainstate()) {
+                    // Notify ValidationInterface subscribers
+                    GetMainSignals().UpdatedBlockTip(pindexNewTip, pindexFork, fInitialDownload);
 
-                // Always notify the UI if a new block tip was connected
-                uiInterface.NotifyBlockTip(GetSynchronizationState(fInitialDownload), pindexNewTip);
+                    // Always notify the UI if a new block tip was connected
+                    uiInterface.NotifyBlockTip(GetSynchronizationState(fInitialDownload), pindexNewTip);
+                }
             }
         }
         // When we reach this point, we switched to a new tip (stored in pindexNewTip).
@@ -3576,8 +3584,11 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
 
     // Header is valid/has work, merkle tree and segwit merkle tree are good...RELAY NOW
     // (but if it does not build on our best tip, let the SendMessages loop relay it)
-    if (!IsInitialBlockDownload() && m_chain.Tip() == pindex->pprev)
+    if (!IsInitialBlockDownload() &&
+            m_chain.Tip() == pindex->pprev &&
+            this == &m_chainman.ActiveChainstate()) {
         GetMainSignals().NewPoWValidBlock(pindex, pblock);
+    }
 
     // Write block to history file
     if (fNewBlock) *fNewBlock = true;

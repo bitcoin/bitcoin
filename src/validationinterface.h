@@ -89,13 +89,13 @@ protected:
      * but may not be called on every intermediate tip. If the latter behavior is desired,
      * subscribe to BlockConnected() instead.
      *
-     * Called on a background thread.
+     * Called on a background thread. Only called for the active chainstate.
      */
     virtual void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {}
     /**
      * Notifies listeners of a transaction having been added to mempool.
      *
-     * Called on a background thread.
+     * Called on a background thread. Only called for the active chainstate.
      */
     virtual void TransactionAddedToMempool(const CTransactionRef& tx, uint64_t mempool_sequence) {}
 
@@ -129,20 +129,20 @@ protected:
      * - BlockConnected(A)
      * - BlockConnected(B)
      *
-     * Called on a background thread.
+     * Called on a background thread. Only called for the active chainstate.
      */
     virtual void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t mempool_sequence) {}
     /**
      * Notifies listeners of a block being connected.
      * Provides a vector of transactions evicted from the mempool as a result.
      *
-     * Called on a background thread.
+     * Called on a background thread. Only called for the active chainstate.
      */
     virtual void BlockConnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex *pindex) {}
     /**
      * Notifies listeners of a block being disconnected
      *
-     * Called on a background thread.
+     * Called on a background thread. Only called for the active chainstate.
      */
     virtual void BlockDisconnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex* pindex) {}
     /**
@@ -159,19 +159,24 @@ protected:
      * Provides a locator describing the best chain, which is likely useful for
      * storing current state on disk in client DBs.
      *
-     * Called on a background thread.
+     * Called on a background thread. Only called for the active chainstate.
      */
     virtual void ChainStateFlushed(const CBlockLocator &locator) {}
     /**
      * Notifies listeners of a block validation result.
      * If the provided BlockValidationState IsValid, the provided block
      * is guaranteed to be the current best block at the time the
-     * callback was generated (not necessarily now)
+     * callback was generated (not necessarily now).
+     *
+     * Only called for the active chainstate.
      */
     virtual void BlockChecked(const CBlock&, const BlockValidationState&) {}
     /**
      * Notifies listeners that a block which builds directly on our current tip
-     * has been received and connected to the headers tree, though not validated yet */
+     * has been received and connected to the headers tree, though not validated yet.
+     *
+     * Only called for the active chainstate.
+     */
     virtual void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& block) {};
     friend class CMainSignals;
 };
