@@ -242,7 +242,7 @@ class DIP3Test(BitcoinTestFramework):
         while len(self.nodes) <= mn.idx:
             self.add_nodes(1)
         extra_args = ['-masternode=1', '-masternodeblsprivkey=%s' % mn.blsMnkey]
-        self.start_node(mn.idx, extra_args = self.extra_args + extra_args, stderr=sys.stdout)
+        self.start_node(mn.idx, extra_args = self.extra_args + extra_args)
         for i in range(0, len(self.nodes)):
             if i < len(self.nodes) and self.nodes[i] is not None and self.nodes[i].process is not None and i != mn.idx:
                 connect_nodes_bi(self.nodes, mn.idx, i)
