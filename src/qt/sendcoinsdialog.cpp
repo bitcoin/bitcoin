@@ -611,6 +611,9 @@ void SendCoinsDialog::useAvailableBalance(SendCoinsEntry* entry)
         coin_control = *CoinControlDialog::coinControl();
     }
 
+    // Include watch-only for wallets without private key
+    coin_control.fAllowWatchOnly = model->privateKeysDisabled();
+
     // Calculate available amount to send.
     CAmount amount = model->wallet().getAvailableBalance(coin_control);
     for (int i = 0; i < ui->entries->count(); ++i) {
@@ -663,6 +666,8 @@ void SendCoinsDialog::updateCoinControlState(CCoinControl& ctrl)
     // Either custom fee will be used or if not selected, the confirmation target from dropdown box
     ctrl.m_confirm_target = getConfTargetForIndex(ui->confTargetSelector->currentIndex());
     ctrl.m_signal_bip125_rbf = ui->optInRBF->isChecked();
+    // Include watch-only for wallets without private key
+    ctrl.fAllowWatchOnly = model->privateKeysDisabled();
 }
 
 void SendCoinsDialog::updateSmartFeeLabel()
