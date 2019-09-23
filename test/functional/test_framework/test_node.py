@@ -51,7 +51,7 @@ class TestNode():
         self.extra_args = extra_args
         self.args = [self.binary, "-datadir=" + self.datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-logtimemicros", "-debug", "-debugexclude=libevent", "-debugexclude=leveldb", "-mocktime=" + str(mocktime), "-uacomment=testnode%d" % i]
 
-        self.cli = TestNodeCLI(os.getenv("BITCOINCLI", "bitcoin-cli"), self.datadir)
+        self.cli = TestNodeCLI(os.getenv("BITCOINCLI", "dash-cli"), self.datadir)
 
         # Don't try auto backups (they fail a lot when running tests)
         self.args.append("-createwalletbackups=0")
