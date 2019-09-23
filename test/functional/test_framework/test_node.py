@@ -2,7 +2,7 @@
 # Copyright (c) 2017 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Class for bitcoind node under test"""
+"""Class for dashd node under test"""
 
 import errno
 import http.client
@@ -19,7 +19,7 @@ from .util import (
 from .authproxy import JSONRPCException
 
 class TestNode():
-    """A class for representing a bitcoind node under test.
+    """A class for representing a dashd node under test.
 
     This class contains:
 
@@ -36,7 +36,7 @@ class TestNode():
         self.rpchost = rpchost
         self.rpc_timeout = timewait
         if binary is None:
-            self.binary = os.getenv("BITCOIND", "bitcoind")
+            self.binary = os.getenv("BITCOIND", "dashd")
         else:
             self.binary = binary
         self.stderr = stderr
@@ -61,14 +61,14 @@ class TestNode():
         """Start the node."""
         self.process = subprocess.Popen(self.args + self.extra_args, stderr=self.stderr)
         self.running = True
-        self.log.debug("bitcoind started, waiting for RPC to come up")
+        self.log.debug("dashd started, waiting for RPC to come up")
 
     def wait_for_rpc_connection(self):
-        """Sets up an RPC connection to the bitcoind process. Returns False if unable to connect."""
+        """Sets up an RPC connection to the dashd process. Returns False if unable to connect."""
 
         # Wait for up to 10 seconds for the RPC server to respond
         for _ in range(40):
-            assert not self.process.poll(), "bitcoind exited with status %i during initialization" % self.process.returncode
+            assert not self.process.poll(), "dashd exited with status %i during initialization" % self.process.returncode
             try:
                 self.rpc = get_rpc_proxy(rpc_url(self.datadir, self.index, self.rpchost), self.index, coveragedir=self.coverage_dir)
                 self.rpc.getblockcount()
@@ -83,11 +83,11 @@ class TestNode():
             except JSONRPCException as e:  # Initialization phase
                 if e.error['code'] != -28:  # RPC in warmup?
                     raise  # unknown JSON RPC exception
-            except ValueError as e:  # cookie file not found and no rpcuser or rpcassword. bitcoind still starting
+            except ValueError as e:  # cookie file not found and no rpcuser or rpcassword. dashd still starting
                 if "No RPC credentials" not in str(e):
                     raise
             time.sleep(0.25)
-        raise AssertionError("Unable to connect to bitcoind")
+        raise AssertionError("Unable to connect to dashd")
 
     def get_wallet_rpc(self, wallet_name):
         assert self.rpc_connected
@@ -125,7 +125,7 @@ class TestNode():
     def node_encrypt_wallet(self, passphrase):
         """"Encrypts the wallet.
 
-        This causes bitcoind to shutdown, so this method takes
+        This causes dashd to shutdown, so this method takes
         care of cleaning up resources."""
         self.encryptwallet(passphrase)
         while not self.is_node_stopped():
