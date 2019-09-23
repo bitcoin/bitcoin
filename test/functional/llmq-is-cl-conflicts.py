@@ -112,9 +112,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         cl = self.create_chainlock(self.nodes[0].getblockcount() + 1, block.sha256)
         self.test_node.send_clsig(cl)
 
-        # Give the CLSIG some time to propagate. We unfortunately can't check propagation here as "getblock/getblockheader"
-        # is required to check for CLSIGs, but this requires the block header to be propagated already
-        time.sleep(1)
+        self.wait_for_best_chainlock(self.nodes[1], "%064x" % block.sha256)
 
         # The block should get accepted now, and at the same time prune the conflicting ISLOCKs
         submit_result = self.nodes[1].submitblock(ToHex(block))
@@ -222,6 +220,17 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
                 pass
             time.sleep(0.1)
         raise AssertionError("wait_for_chainlock timed out")
+
+    def wait_for_best_chainlock(self, node, block_hash):
+        t = time.time()
+        while time.time() - t < 15:
+            try:
+                if node.getbestchainlock()["blockhash"] == block_hash:
+                    return
+            except:
+                pass
+            time.sleep(0.1)
+        raise AssertionError("wait_for_best_chainlock timed out")
 
     def create_block(self, node, vtx=[]):
         bt = node.getblocktemplate()
