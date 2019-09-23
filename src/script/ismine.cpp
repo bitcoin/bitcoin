@@ -34,8 +34,6 @@ isminetype IsMine(const CKeyStore &keystore, const CTxDestination& dest)
 
 isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey)
 {
-    isInvalid = false;
-
     std::vector<valtype> vSolutions;
     txnouttype whichType;
     if (!Solver(scriptPubKey, whichType, vSolutions)) {
