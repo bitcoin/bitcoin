@@ -229,6 +229,13 @@ Not picked up by Doxygen:
 //
 ```
 
+Also not picked up by Doxygen:
+```c++
+/*
+ * ... Description ...
+ */
+```
+
 A full list of comment syntaxes picked up by Doxygen can be found at https://www.doxygen.nl/manual/docblocks.html,
 but the above styles are favored.
 
