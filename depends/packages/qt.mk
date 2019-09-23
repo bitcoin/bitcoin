@@ -19,8 +19,6 @@ $(package)_qttools_sha256_hash=a97556eb7b2f30252cdd8a598c396cfce2b2f79d2bae883af
 $(package)_extra_sources  = $($(package)_qttranslations_file_name)
 $(package)_extra_sources += $($(package)_qttools_file_name)
 
-$(package)_config_opts_aarch64_android = -xplatform android-clang -android-sdk $(ANDROID_SDK) -android-ndk $(ANDROID_NDK) -android-ndk-platform android-$(ANDROID_API_LEVEL) -device-option CROSS_COMPILE="$(host)-" -egl -qpa xcb -no-eglfs -opengl es2 -qt-freetype -no-fontconfig -L $(host_prefix)/lib -I $(host_prefix)/include
-
 define $(package)_set_vars
 $(package)_config_opts_release = -release
 $(package)_config_opts_debug = -debug
@@ -134,6 +132,7 @@ $(package)_config_opts_aarch64_android += -android-sdk $(ANDROID_SDK)
 $(package)_config_opts_aarch64_android += -android-ndk $(ANDROID_NDK)
 $(package)_config_opts_aarch64_android += -android-ndk-platform android-$(ANDROID_API_LEVEL)
 $(package)_config_opts_aarch64_android += -device-option CROSS_COMPILE="$(host)-"
+$(package)_config_opts_aarch64_android += -android-arch arm64-v8a
 $(package)_config_opts_aarch64_android += -egl
 $(package)_config_opts_aarch64_android += -qpa xcb
 $(package)_config_opts_aarch64_android += -no-eglfs
