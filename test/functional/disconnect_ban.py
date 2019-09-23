@@ -62,7 +62,7 @@ class DisconnectBanTest(BitcoinTestFramework):
         assert_equal("192.168.0.1/32", listBeforeShutdown[2]['address'])
         self.bump_mocktime(2)
         set_node_times(self.nodes, self.mocktime)
-        assert wait_until(lambda: len(self.nodes[1].listbanned()) == 3, timeout=10)
+        wait_until(lambda: len(self.nodes[1].listbanned()) == 3, timeout=10)
 
         self.stop_node(1)
 
