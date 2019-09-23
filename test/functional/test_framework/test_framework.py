@@ -220,9 +220,12 @@ class BitcoinTestFramework(object):
     def setup_nodes(self):
         """Override this method to customize test node setup"""
         extra_args = None
+        stderr = None
         if hasattr(self, "extra_args"):
             extra_args = self.extra_args
-        self.add_nodes(self.num_nodes, extra_args)
+        if hasattr(self, "stderr"):
+            stderr = self.stderr
+        self.add_nodes(self.num_nodes, extra_args, stderr=stderr)
         self.start_nodes()
 
     def run_test(self):
