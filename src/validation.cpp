@@ -2329,7 +2329,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
             mapRejectedBlocks.insert(std::make_pair(block.GetHash(), GetTime()));
         }
         LogPrintf("ERROR: ConnectBlock(): couldn't find masternode or superblock payments\n");
-        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, false, "bad-cb-payee");
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-payee");
     }
 
     std::string strError = "";

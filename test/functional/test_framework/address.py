@@ -19,6 +19,8 @@ class AddressType(enum.Enum):
     p2sh_segwit = 'p2sh-segwit'
     legacy = 'legacy'  # P2PKH
 
+ADDRESS_BCRT1_UNSPENDABLE = 'bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj'
+ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR = 'addr(bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj)#juyq9d97'
 
 
 class AddressType(enum.Enum):
