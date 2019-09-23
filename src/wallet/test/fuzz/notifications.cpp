@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <kernel/chain.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
@@ -141,8 +142,8 @@ FUZZ_TARGET_INIT(wallet_notifications, initialize_setup)
                 info.prev_hash = &block.hashPrevBlock;
                 info.height = chain.size();
                 info.data = &block;
-                a.wallet->blockConnected(info);
-                b.wallet->blockConnected(info);
+                a.wallet->blockConnected(ChainstateRole::NORMAL, info);
+                b.wallet->blockConnected(ChainstateRole::NORMAL, info);
                 // Store the coins for the next block
                 Coins coins_new;
                 for (const auto& tx : block.vtx) {

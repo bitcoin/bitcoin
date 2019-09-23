@@ -8,6 +8,7 @@
 #include <scheduler.h>
 #include <test/util/setup_common.h>
 #include <util/check.h>
+#include <kernel/chain.h>
 #include <validationinterface.h>
 
 #include <atomic>
@@ -15,7 +16,7 @@
 BOOST_FIXTURE_TEST_SUITE(validationinterface_tests, TestingSetup)
 
 struct TestSubscriberNoop final : public CValidationInterface {
-    void BlockChecked(const CBlock&, const BlockValidationState&) override {}
+    void BlockChecked(const ChainstateRole role, const CBlock&, const BlockValidationState&) override {}
 };
 
 BOOST_AUTO_TEST_CASE(unregister_validation_interface_race)
@@ -27,7 +28,7 @@ BOOST_AUTO_TEST_CASE(unregister_validation_interface_race)
         const CBlock block_dummy;
         BlockValidationState state_dummy;
         while (generate) {
-            GetMainSignals().BlockChecked(block_dummy, state_dummy);
+            GetMainSignals().BlockChecked(ChainstateRole::NORMAL, block_dummy, state_dummy);
         }
     }};
 
@@ -59,7 +60,7 @@ public:
     {
         if (m_on_destroy) m_on_destroy();
     }
-    void BlockChecked(const CBlock& block, const BlockValidationState& state) override
+    void BlockChecked(const ChainstateRole role, const CBlock& block, const BlockValidationState& state) override
     {
         if (m_on_call) m_on_call();
     }
@@ -67,7 +68,7 @@ public:
     {
         CBlock block;
         BlockValidationState state;
-        GetMainSignals().BlockChecked(block, state);
+        GetMainSignals().BlockChecked(ChainstateRole::NORMAL, block, state);
     }
     std::function<void()> m_on_call;
     std::function<void()> m_on_destroy;
