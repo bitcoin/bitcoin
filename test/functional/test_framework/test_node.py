@@ -45,6 +45,9 @@ class TestNode():
         self.extra_args = extra_args
         self.args = [self.binary, "-datadir=" + self.datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-logtimemicros", "-debug", "-debugexclude=libevent", "-debugexclude=leveldb", "-mocktime=" + str(mocktime), "-uacomment=testnode%d" % i]
 
+        # Don't try auto backups (they fail a lot when running tests)
+        self.args.append("-createwalletbackups=0")
+
         self.running = False
         self.process = None
         self.rpc_connected = False

@@ -225,8 +225,6 @@ class BitcoinTestFramework(object):
             extra_args = []
         if binary is None:
             binary = os.getenv("BITCOIND", "dashd")
-        # Don't try auto backups (they fail a lot when running tests)
-        extra_args = extra_args + [ "-createwalletbackups=0" ]
         node = TestNode(i, dirname, extra_args, rpchost, timewait, binary, stderr, self.mocktime, coverage_dir=self.options.coveragedir)
         node.start()
         node.wait_for_rpc_connection()
