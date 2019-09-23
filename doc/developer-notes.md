@@ -5,38 +5,42 @@ Developer Notes
 **Table of Contents**
 
 - [Developer Notes](#developer-notes)
-    - [Coding Style (General)](#coding-style-general)
-    - [Coding Style (C++)](#coding-style-c)
-    - [Coding Style (Python)](#coding-style-python)
-    - [Coding Style (Doxygen-compatible comments)](#coding-style-doxygen-compatible-comments)
-    - [Development tips and tricks](#development-tips-and-tricks)
-        - [Compiling for debugging](#compiling-for-debugging)
-        - [Compiling for gprof profiling](#compiling-for-gprof-profiling)
-        - [debug.log](#debuglog)
-        - [Testnet and Regtest modes](#testnet-and-regtest-modes)
-        - [DEBUG_LOCKORDER](#debug_lockorder)
-        - [Valgrind suppressions file](#valgrind-suppressions-file)
-        - [Compiling for test coverage](#compiling-for-test-coverage)
-        - [Performance profiling with perf](#performance-profiling-with-perf)
-    - [Locking/mutex usage notes](#lockingmutex-usage-notes)
-    - [Threads](#threads)
-    - [Ignoring IDE/editor files](#ignoring-ideeditor-files)
+  - [Coding Style (General)](#coding-style-general)
+  - [Coding Style (C++)](#coding-style-c)
+  - [Coding Style (Python)](#coding-style-python)
+  - [Coding Style (Doxygen-compatible comments)](#coding-style-doxygen-compatible-comments)
+    - [Generating Documentation](#generating-documentation)
+  - [Development tips and tricks](#development-tips-and-tricks)
+    - [Compiling for debugging](#compiling-for-debugging)
+    - [Compiling for gprof profiling](#compiling-for-gprof-profiling)
+    - [debug.log](#debuglog)
+    - [Testnet and Regtest modes](#testnet-and-regtest-modes)
+    - [DEBUG_LOCKORDER](#debuglockorder)
+    - [Valgrind suppressions file](#valgrind-suppressions-file)
+    - [Compiling for test coverage](#compiling-for-test-coverage)
+    - [Performance profiling with perf](#performance-profiling-with-perf)
+  - [Locking/mutex usage notes](#lockingmutex-usage-notes)
+  - [Threads](#threads)
+  - [Ignoring IDE/editor files](#ignoring-ideeditor-files)
 - [Development guidelines](#development-guidelines)
-    - [General Bitcoin Core](#general-bitcoin-core)
-    - [Wallet](#wallet)
-    - [General C++](#general-c)
-    - [C++ data structures](#c-data-structures)
-    - [Strings and formatting](#strings-and-formatting)
-    - [Shadowing](#shadowing)
-    - [Threads and synchronization](#threads-and-synchronization)
-    - [Scripts](#scripts)
-        - [Shebang](#shebang)
-    - [Source code organization](#source-code-organization)
-    - [GUI](#gui)
-    - [Subtrees](#subtrees)
-    - [Scripted diffs](#scripted-diffs)
-    - [Release notes](#release-notes)
-    - [RPC interface guidelines](#rpc-interface-guidelines)
+  - [General Bitcoin Core](#general-bitcoin-core)
+  - [Wallet](#wallet)
+  - [General C++](#general-c)
+  - [C++ data structures](#c-data-structures)
+  - [Strings and formatting](#strings-and-formatting)
+  - [Shadowing](#shadowing)
+  - [Threads and synchronization](#threads-and-synchronization)
+  - [Scripts](#scripts)
+    - [Shebang](#shebang)
+  - [Source code organization](#source-code-organization)
+  - [GUI](#gui)
+  - [Subtrees](#subtrees)
+  - [Upgrading LevelDB](#upgrading-leveldb)
+    - [File Descriptor Counts](#file-descriptor-counts)
+    - [Consensus Compatibility](#consensus-compatibility)
+  - [Scripted diffs](#scripted-diffs)
+  - [Release notes](#release-notes)
+  - [RPC interface guidelines](#rpc-interface-guidelines)
 
 <!-- markdown-toc end -->
 
@@ -138,18 +142,21 @@ For example, to describe a function use:
 ```c++
 /**
  * ... text ...
- * @param[in] arg1    A description
- * @param[in] arg2    Another argument description
+ *
+ * @param[in] arg1: An argument description.
+ * @param[out] arg2: Another (output) argument description.
+ * @return Return cases...
  * @pre Precondition for function...
+ * @post Postcondition for function...
  */
-bool function(int arg1, const char *arg2)
+bool function(int arg1, std::string& arg2)
 ```
 
-A complete list of `@xxx` commands can be found at http://www.doxygen.nl/manual/commands.html.
-As Doxygen recognizes the comments by the delimiters (`/**` and `*/` in this case), you don't
-*need* to provide any commands for a comment to be valid; just a description text is fine.
+Doxygen recognizes comments by the delimiters, `/**` and `*/` in this case.
 
-To describe a class, use the same construct above the class definition:
+A complete list of `@xxx` commands can be found at http://www.doxygen.nl/manual/commands.html.
+
+Describing a class:
 ```c++
 /**
  * Alerts are for notifying old versions if they become too obsolete and
@@ -160,41 +167,68 @@ class CAlert
 {
 ```
 
-To describe a member or variable use:
-```c++
-int var; //!< Detailed description after the member
-```
-
-or
+Describing a member or variable:
 ```c++
 //! Description before the member
 int var;
 ```
 
-Also OK:
+or:
+```c++
+int var; //!< Description after the member
+```
+
+Also works:
 ```c++
 ///
-/// ... text ...
+/// Description ...
 ///
 bool function2(int arg1, const char *arg2)
 ```
 
-Not OK (used plenty in the current source, but not picked up):
+Not picked up by Doxygen (this is often OK):
 ```c++
 //
 // ... text ...
 //
 ```
 
-A full list of comment syntaxes picked up by Doxygen can be found at http://www.doxygen.nl/manual/docblocks.html,
-but the above styles are favored.
-
-Documentation can be generated with `make docs` and cleaned up with `make clean-docs`. The resulting files are located in `doc/doxygen/html`; open `index.html` to view the homepage.
-
-Before running `make docs`, you will need to install dependencies `doxygen` and `dot`. For example, on macOS via Homebrew:
+or:
+```c++
+/*
+ * ... text ...
+ */
 ```
-brew install graphviz doxygen
-```
+
+For more examples, see http://www.doxygen.nl/manual/docblocks.html.
+
+Other recommendations:
+
+- Avoid duplicating type and in/out information in function descriptions.
+
+  For example, if a `@param[out]` is an `std::vector<int>& vals`, the description should say `Resulting values`
+  or `Values`, not `The resulting int values will be put here`.
+
+- Use backticks (&#96;&#96;) to refer to `argument name`s in function and param descriptions.
+
+- Backticks aren't required when referring to a Function() that Doxygen already knows about; it will build a hyperlink
+  automatically. See http://www.doxygen.nl/manual/autolink.html for complete info.
+
+- Avoid linking to external documentation; links can break.
+
+- Javadoc and all valid Doxygen comments are stripped from Doxygen source code previews (`STRIP_CODE_COMMENTS = YES`
+  in [Doxyfile.in](doc/Doxyfile.in)). If you want a comment to be preserved, it must instead use `//` or `/* */`.
+
+### Generating Documentation
+
+The documentation can be generated with `make docs` and cleaned up with `make clean-docs`. The resulting files are
+located in `doc/doxygen/html`; open `index.html` to view the homepage.
+
+Before running `make docs`, you will need to install dependencies:
+
+Linux: `sudo apt install doxygen graphviz`
+
+MacOS: `brew install doxygen graphviz`
 
 Development tips and tricks
 ---------------------------
