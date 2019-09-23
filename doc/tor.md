@@ -15,8 +15,9 @@ outgoing connections, but more is possible.
 	                server will be used to try to reach .onion addresses as well.
 
 	-onion=ip:port  Set the proxy server to use for Tor hidden services. You do not
-	                need to set this if it's the same as -proxy. You can use -noonion
-	                to explicitly disable access to hidden services.
+	                need to set this if it's the same as -proxy and both bitcoind
+	                and tor are running on the same host. You can use -noonion to
+	                explicitly disable access to hidden services.
 
 	-listen         When using -proxy, listening is disabled by default. If you want
 	                to run a hidden service (see next section), you'll need to enable
