@@ -110,17 +110,21 @@ IsMineResult IsMineInner(const LegacyScriptPubKeyMan& keystore, const CScript& s
         break;
     }
     case TX_PUBKEYHASH:
+    {
         keyID = CKeyID(uint160(vSolutions[0]));
-        if (!PermitsUncompressed(sigversion)) {
-            CPubKey pubkey;
-            if (keystore.GetPubKey(keyID, pubkey) && !pubkey.IsCompressed()) {
+        CPubKey pubkey;
+        if (keystore.GetPubKey(keyID, pubkey)) {
+            if (!PermitsUncompressed(sigversion) && !pubkey.IsCompressed()) {
                 return IsMineResult::INVALID;
+            } else {
+                ret = std::max(ret, IsMineResult::WATCH_ONLY);
             }
         }
         if (keystore.HaveKey(keyID)) {
             ret = std::max(ret, IsMineResult::SPENDABLE);
         }
         break;
+    }
     case TX_SCRIPTHASH:
     {
         if (sigversion != IsMineSigVersion::TOP) {
