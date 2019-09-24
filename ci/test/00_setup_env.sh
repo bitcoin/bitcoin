@@ -6,11 +6,17 @@
 
 export LC_ALL=C.UTF-8
 
-echo "Setting default values in env"
+echo "Setting specific values in env"
+if [ -n "${FILE_ENV}" ]; then
+  set -o errexit;
+  # shellcheck disable=SC1090
+  source "${FILE_ENV}"
+fi
 
 BASE_ROOT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )"/../../ >/dev/null 2>&1 && pwd )
 export BASE_ROOT_DIR
 
+echo "Fallback to default values in env (if not yet set)"
 # The number of parallel jobs to pass down to make and test_runner.py
 export MAKEJOBS=${MAKEJOBS:--j4}
 # A folder for the ci system to put temporary files (ccache, datadirs for tests, ...)
@@ -34,10 +40,3 @@ export GOAL=${GOAL:-install}
 export DIR_QA_ASSETS=${DIR_QA_ASSETS:-${BASE_BUILD_DIR}/qa-assets}
 export PATH=${BASE_ROOT_DIR}/ci/retry:$PATH
 export CI_RETRY_EXE=${CI_RETRY_EXE:retry}
-
-echo "Setting specific values in env"
-if [ -n "${FILE_ENV}" ]; then
-  set -o errexit;
-  # shellcheck disable=SC1090
-  source "${FILE_ENV}"
-fi
