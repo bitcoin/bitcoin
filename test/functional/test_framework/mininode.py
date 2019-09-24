@@ -1684,7 +1684,12 @@ class NodeConn(asyncore.dispatcher):
         b"blocktxn": msg_blocktxn,
         b"mnlistdiff": msg_mnlistdiff,
         b"clsig": msg_clsig,
-        b"islock": msg_islock
+        b"islock": msg_islock,
+        b"senddsq": None,
+        b"qsendrecsigs": None,
+        b"spork": None,
+        b"govsync": None,
+        b"qfcommit": None,
     }
     MAGIC_BYTES = {
         "mainnet": b"\xbf\x0c\x6b\xbd",   # mainnet
@@ -1808,6 +1813,9 @@ class NodeConn(asyncore.dispatcher):
                         raise ValueError("got bad checksum " + repr(self.recvbuf))
                     self.recvbuf = self.recvbuf[4+12+4+4+msglen:]
                 if command in self.messagemap:
+                    if self.messagemap[command] is None:
+                        # Command is known but we don't want/need to handle it
+                        continue
                     f = BytesIO(msg)
                     t = self.messagemap[command]()
                     t.deserialize(f)
