@@ -26,12 +26,16 @@ export RUN_UNIT_TESTS=${RUN_UNIT_TESTS:-true}
 export RUN_FUNCTIONAL_TESTS=${RUN_FUNCTIONAL_TESTS:-true}
 export RUN_FUZZ_TESTS=${RUN_FUZZ_TESTS:-false}
 export DOCKER_NAME_TAG=${DOCKER_NAME_TAG:-ubuntu:18.04}
-export BOOST_TEST_RANDOM=${BOOST_TEST_RANDOM:-1$TRAVIS_BUILD_ID}
+# Randomize test order.
+# See https://www.boost.org/doc/libs/1_71_0/libs/test/doc/html/boost_test/utf_reference/rt_param_reference/random.html
+export BOOST_TEST_RANDOM=${BOOST_TEST_RANDOM:-1}
 export CCACHE_SIZE=${CCACHE_SIZE:-100M}
 export CCACHE_TEMPDIR=${CCACHE_TEMPDIR:-/tmp/.ccache-temp}
 export CCACHE_COMPRESS=${CCACHE_COMPRESS:-1}
 export CCACHE_DIR=${CCACHE_DIR:-$BASE_SCRATCH_DIR/.ccache}
-export BASE_BUILD_DIR=${BASE_BUILD_DIR:-${TRAVIS_BUILD_DIR:-$BASE_ROOT_DIR}}
+# Folder where the build is done (depends and dist). Can not be changed and is equal to the root of the git repo
+export BASE_BUILD_DIR=${BASE_BUILD_DIR:-$BASE_ROOT_DIR}
+# Folder where the build is done (bin and lib). Can not be changed.
 export BASE_OUTDIR=${BASE_OUTDIR:-$BASE_BUILD_DIR/out/$HOST}
 export SDK_URL=${SDK_URL:-https://bitcoincore.org/depends-sources/sdks}
 export WINEDEBUG=${WINEDEBUG:-fixme-all}
