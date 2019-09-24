@@ -61,6 +61,8 @@ BITCOIN_TEST_SUITE = \
   test/lib/transaction_utils.cpp \
   test/lib/transaction_utils.h \
   test/main.cpp \
+  test/util.cpp \
+  test/util.h \
   test/setup_common.h \
   test/setup_common.cpp
 
