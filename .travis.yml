@@ -117,6 +117,7 @@ jobs:
       name: 'x86_64 Linux  [GOAL: install]  [xenial]  [no depends, only system libs, sanitizers: thread (TSan), no wallet]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_amd64_tsan.sh"
+        TEST_RUNNER_EXTRA="--exclude feature_block"  # Not enough memory on travis machines
 
     - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no depends, only system libs, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer]'
