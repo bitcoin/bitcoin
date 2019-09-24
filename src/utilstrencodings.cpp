@@ -671,14 +671,16 @@ bool ParseFixedPoint(const std::string &val, int decimals, int64_t *amount_out)
     } else return false; /* empty string or loose '-' */
     if (ptr < end && val[ptr] == '.')
     {
+        int significantdigits = decimals;
         ++ptr;
         if (ptr < end && val[ptr] >= '0' && val[ptr] <= '9')
         {
-            while (ptr < end && val[ptr] >= '0' && val[ptr] <= '9') {
+            while (ptr < end && significantdigits && val[ptr] >= '0' && val[ptr] <= '9') {
                 if (!ProcessMantissaDigit(val[ptr], mantissa, mantissa_tzeros))
                     return false; /* overflow */
                 ++ptr;
                 ++point_ofs;
+                --significantdigits;
             }
         } else return false; /* missing expected digit */
     }
@@ -700,8 +702,6 @@ bool ParseFixedPoint(const std::string &val, int decimals, int64_t *amount_out)
             }
         } else return false; /* missing expected digit */
     }
-    if (ptr != end)
-        return false; /* trailing garbage */
 
     /* finalize exponent */
     if (exponent_sign)
