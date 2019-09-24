@@ -114,11 +114,60 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawTx = self.nodes[2].createrawtransaction(inputs, outputs)
         rawTxPartialSigned = self.nodes[1].signrawtransaction(rawTx, inputs)
         assert_equal(rawTxPartialSigned['complete'], False) #node1 only has one key, can't comp. sign the tx
-        
+
         rawTxSigned = self.nodes[2].signrawtransaction(rawTx, inputs)
         assert_equal(rawTxSigned['complete'], True) #node2 can sign the tx compl., own two of three keys
         self.nodes[2].sendrawtransaction(rawTxSigned['hex'])
         rawTx = self.nodes[0].decoderawtransaction(rawTxSigned['hex'])
+        self.sync_all()
+        self.nodes[0].generate(1)
+        self.sync_all()
+        assert_equal(self.nodes[0].getbalance(), bal+Decimal('500.00000000')+Decimal('2.19000000')) #block reward + tx
+
+        # 2of2 test for combining transactions
+        bal = self.nodes[2].getbalance()
+        addr1 = self.nodes[1].getnewaddress()
+        addr2 = self.nodes[2].getnewaddress()
+
+        addr1Obj = self.nodes[1].validateaddress(addr1)
+        addr2Obj = self.nodes[2].validateaddress(addr2)
+
+        self.nodes[1].addmultisigaddress(2, [addr1Obj['pubkey'], addr2Obj['pubkey']])
+        mSigObj = self.nodes[2].addmultisigaddress(2, [addr1Obj['pubkey'], addr2Obj['pubkey']])
+        mSigObjValid = self.nodes[2].validateaddress(mSigObj)
+
+        txId = self.nodes[0].sendtoaddress(mSigObj, 2.2)
+        decTx = self.nodes[0].gettransaction(txId)
+        rawTx2 = self.nodes[0].decoderawtransaction(decTx['hex'])
+        self.sync_all()
+        self.nodes[0].generate(1)
+        self.sync_all()
+
+        assert_equal(self.nodes[2].getbalance(), bal) # the funds of a 2of2 multisig tx should not be marked as spendable
+
+        txDetails = self.nodes[0].gettransaction(txId, True)
+        rawTx2 = self.nodes[0].decoderawtransaction(txDetails['hex'])
+        vout = False
+        for outpoint in rawTx2['vout']:
+            if outpoint['value'] == Decimal('2.20000000'):
+                vout = outpoint
+                break
+
+        bal = self.nodes[0].getbalance()
+        inputs = [{ "txid" : txId, "vout" : vout['n'], "scriptPubKey" : vout['scriptPubKey']['hex'], "redeemScript" : mSigObjValid['hex']}]
+        outputs = { self.nodes[0].getnewaddress() : 2.19 }
+        rawTx2 = self.nodes[2].createrawtransaction(inputs, outputs)
+        rawTxPartialSigned1 = self.nodes[1].signrawtransaction(rawTx2, inputs)
+        self.log.info(rawTxPartialSigned1)
+        assert_equal(rawTxPartialSigned['complete'], False) #node1 only has one key, can't comp. sign the tx
+
+        rawTxPartialSigned2 = self.nodes[2].signrawtransaction(rawTx2, inputs)
+        self.log.info(rawTxPartialSigned2)
+        assert_equal(rawTxPartialSigned2['complete'], False) #node2 only has one key, can't comp. sign the tx
+        rawTxComb = self.nodes[2].combinerawtransaction([rawTxPartialSigned1['hex'], rawTxPartialSigned2['hex']])
+        self.log.info(rawTxComb)
+        self.nodes[2].sendrawtransaction(rawTxComb)
+        rawTx2 = self.nodes[0].decoderawtransaction(rawTxComb)
         self.sync_all()
         self.nodes[0].generate(1)
         self.sync_all()
@@ -156,17 +205,17 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawtx   = self.nodes[0].createrawtransaction(inputs, outputs)
         decrawtx= self.nodes[0].decoderawtransaction(rawtx)
         assert_equal(decrawtx['vin'][0]['sequence'], 1000)
-        
+
         # 9. invalid parameters - sequence number out of range
         inputs  = [ {'txid' : "1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000", 'vout' : 1, 'sequence' : -1}]
         outputs = { self.nodes[0].getnewaddress() : 1 }
         assert_raises_jsonrpc(-8, 'Invalid parameter, sequence number is out of range', self.nodes[0].createrawtransaction, inputs, outputs)
-        
+
         # 10. invalid parameters - sequence number out of range
         inputs  = [ {'txid' : "1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000", 'vout' : 1, 'sequence' : 4294967296}]
         outputs = { self.nodes[0].getnewaddress() : 1 }
         assert_raises_jsonrpc(-8, 'Invalid parameter, sequence number is out of range', self.nodes[0].createrawtransaction, inputs, outputs)
-        
+
         inputs  = [ {'txid' : "1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000", 'vout' : 1, 'sequence' : 4294967294}]
         outputs = { self.nodes[0].getnewaddress() : 1 }
         rawtx   = self.nodes[0].createrawtransaction(inputs, outputs)
