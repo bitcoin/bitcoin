@@ -31,7 +31,7 @@ WalletController::WalletController(interfaces::Node& node, const PlatformStyle* 
     , m_options_model(options_model)
 {
     m_handler_load_wallet = m_node.handleLoadWallet([this](std::unique_ptr<interfaces::Wallet> wallet) {
-        getOrCreateWallet(std::move(wallet));
+        if (wallet) getOrCreateWallet(std::move(wallet));
     });
 
     for (std::unique_ptr<interfaces::Wallet>& wallet : m_node.getWallets()) {
