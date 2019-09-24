@@ -6,7 +6,7 @@ from collections import namedtuple
 
 from test_framework.mininode import *
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import *
+from test_framework.util import p2p_port, assert_equal, sync_blocks, set_node_times
 
 '''
 dip4-coinbasemerkleroots.py
