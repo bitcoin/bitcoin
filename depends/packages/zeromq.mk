@@ -8,7 +8,7 @@ $(package)_patches=0001-fix-build-with-older-mingw64.patch 0002-disable-pthread_
 define $(package)_set_vars
   $(package)_config_opts=--without-docs --disable-shared --disable-curve --disable-curve-keygen --disable-perf --disable-Werror --disable-drafts
   $(package)_config_opts += --without-libsodium --without-libgssapi_krb5 --without-pgm --without-norm --without-vmci
-  $(package)_config_opts += --disable-libunwind --disable-radix-tree --without-gcov
+  $(package)_config_opts += --disable-libunwind --disable-radix-tree --without-gcov --disable-dependency-tracking
   $(package)_config_opts_linux=--with-pic
   $(package)_cxxflags=-std=c++11
 endef
