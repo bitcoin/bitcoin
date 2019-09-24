@@ -12,6 +12,11 @@
 
 #include <boost/test/unit_test.hpp>
 
+static isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& isInvalid)
+{
+    isInvalid = false;
+    return IsMine(keystore, scriptPubKey);
+}
 
 BOOST_FIXTURE_TEST_SUITE(script_standard_tests, BasicTestingSetup)
 
@@ -91,26 +96,6 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_success)
     BOOST_CHECK(Solver(s, whichType, solutions));
     BOOST_CHECK_EQUAL(whichType, TX_NULL_DATA);
     BOOST_CHECK_EQUAL(solutions.size(), 0);
-
-    // TX_WITNESS_V0_KEYHASH
-    s.clear();
-    s << OP_0 << ToByteVector(pubkeys[0].GetID());
-    BOOST_CHECK(Solver(s, whichType, solutions));
-    BOOST_CHECK_EQUAL(whichType, TX_WITNESS_V0_KEYHASH);
-    BOOST_CHECK_EQUAL(solutions.size(), 1);
-    BOOST_CHECK(solutions[0] == ToByteVector(pubkeys[0].GetID()));
-
-    // TX_WITNESS_V0_SCRIPTHASH
-    uint256 scriptHash;
-    CSHA256().Write(&redeemScript[0], redeemScript.size())
-        .Finalize(scriptHash.begin());
-
-    s.clear();
-    s << OP_0 << ToByteVector(scriptHash);
-    BOOST_CHECK(Solver(s, whichType, solutions));
-    BOOST_CHECK_EQUAL(whichType, TX_WITNESS_V0_SCRIPTHASH);
-    BOOST_CHECK_EQUAL(solutions.size(), 1);
-    BOOST_CHECK(solutions[0] == ToByteVector(scriptHash));
 
     // TX_NONSTANDARD
     s.clear();
@@ -354,32 +339,6 @@ BOOST_AUTO_TEST_CASE(script_standard_GetScriptFor_)
         OP_3 << OP_CHECKMULTISIG;
     result = GetScriptForMultisig(2, std::vector<CPubKey>(pubkeys, pubkeys + 3));
     BOOST_CHECK(result == expected);
-
-    // GetScriptForWitness
-    CScript witnessScript;
-
-    witnessScript << ToByteVector(pubkeys[0]) << OP_CHECKSIG;
-    expected.clear();
-    expected << OP_0 << ToByteVector(pubkeys[0].GetID());
-    result = GetScriptForWitness(witnessScript);
-    BOOST_CHECK(result == expected);
-
-    witnessScript.clear();
-    witnessScript << OP_DUP << OP_HASH160 << ToByteVector(pubkeys[0].GetID()) << OP_EQUALVERIFY << OP_CHECKSIG;
-    result = GetScriptForWitness(witnessScript);
-    BOOST_CHECK(result == expected);
-
-    witnessScript.clear();
-    witnessScript << OP_1 << ToByteVector(pubkeys[0]) << OP_1 << OP_CHECKMULTISIG;
-
-    uint256 scriptHash;
-    CSHA256().Write(&witnessScript[0], witnessScript.size())
-        .Finalize(scriptHash.begin());
-
-    expected.clear();
-    expected << OP_0 << ToByteVector(scriptHash);
-    result = GetScriptForWitness(witnessScript);
-    BOOST_CHECK(result == expected);
 }
 
 BOOST_AUTO_TEST_CASE(script_standard_IsMine)
@@ -499,46 +458,6 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
         BOOST_CHECK(!isInvalid);
     }
 
-    // P2WPKH compressed
-    {
-        CBasicKeyStore keystore;
-        keystore.AddKey(keys[0]);
-
-        scriptPubKey.clear();
-        scriptPubKey << OP_0 << ToByteVector(pubkeys[0].GetID());
-
-        // Keystore has key, but no P2SH redeemScript
-        result = IsMine(keystore, scriptPubKey, isInvalid);
-        BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(!isInvalid);
-
-        // Keystore has key and P2SH redeemScript
-        keystore.AddCScript(scriptPubKey);
-        result = IsMine(keystore, scriptPubKey, isInvalid);
-        BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
-        BOOST_CHECK(!isInvalid);
-    }
-
-    // P2WPKH uncompressed
-    {
-        CBasicKeyStore keystore;
-        keystore.AddKey(uncompressedKey);
-
-        scriptPubKey.clear();
-        scriptPubKey << OP_0 << ToByteVector(uncompressedPubkey.GetID());
-
-        // Keystore has key, but no P2SH redeemScript
-        result = IsMine(keystore, scriptPubKey, isInvalid);
-        BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(!isInvalid);
-
-        // Keystore has key and P2SH redeemScript
-        keystore.AddCScript(scriptPubKey);
-        result = IsMine(keystore, scriptPubKey, isInvalid);
-        BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(isInvalid);
-    }
-
     // scriptPubKey multisig
     {
         CBasicKeyStore keystore;
@@ -591,120 +510,6 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
 
         // Keystore has redeemScript
         keystore.AddCScript(redeemScript);
-        result = IsMine(keystore, scriptPubKey, isInvalid);
-        BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
-        BOOST_CHECK(!isInvalid);
-    }
-
-    // P2WSH multisig with compressed keys
-    {
-        CBasicKeyStore keystore;
-        keystore.AddKey(keys[0]);
-        keystore.AddKey(keys[1]);
-
-        CScript witnessScript;
-        witnessScript << OP_2 <<
-            ToByteVector(pubkeys[0]) <<
-            ToByteVector(pubkeys[1]) <<
-            OP_2 << OP_CHECKMULTISIG;
-
-        uint256 scriptHash;
-        CSHA256().Write(&witnessScript[0], witnessScript.size())
-            .Finalize(scriptHash.begin());
-
-        scriptPubKey.clear();
-        scriptPubKey << OP_0 << ToByteVector(scriptHash);
-
-        // Keystore has keys, but no witnessScript or P2SH redeemScript
-        result = IsMine(keystore, scriptPubKey, isInvalid);
-        BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(!isInvalid);
-
-        // Keystore has keys and witnessScript, but no P2SH redeemScript
-        keystore.AddCScript(witnessScript);
-        result = IsMine(keystore, scriptPubKey, isInvalid);
-        BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(!isInvalid);
-
-        // Keystore has keys, witnessScript, P2SH redeemScript
-        keystore.AddCScript(scriptPubKey);
-        result = IsMine(keystore, scriptPubKey, isInvalid);
-        BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
-        BOOST_CHECK(!isInvalid);
-    }
-
-    // P2WSH multisig with uncompressed key
-    {
-        CBasicKeyStore keystore;
-        keystore.AddKey(uncompressedKey);
-        keystore.AddKey(keys[1]);
-
-        CScript witnessScript;
-        witnessScript << OP_2 <<
-            ToByteVector(uncompressedPubkey) <<
-            ToByteVector(pubkeys[1]) <<
-            OP_2 << OP_CHECKMULTISIG;
-
-        uint256 scriptHash;
-        CSHA256().Write(&witnessScript[0], witnessScript.size())
-            .Finalize(scriptHash.begin());
-
-        scriptPubKey.clear();
-        scriptPubKey << OP_0 << ToByteVector(scriptHash);
-
-        // Keystore has keys, but no witnessScript or P2SH redeemScript
-        result = IsMine(keystore, scriptPubKey, isInvalid);
-        BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(!isInvalid);
-
-        // Keystore has keys and witnessScript, but no P2SH redeemScript
-        keystore.AddCScript(witnessScript);
-        result = IsMine(keystore, scriptPubKey, isInvalid);
-        BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(!isInvalid);
-
-        // Keystore has keys, witnessScript, P2SH redeemScript
-        keystore.AddCScript(scriptPubKey);
-        result = IsMine(keystore, scriptPubKey, isInvalid);
-        BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(isInvalid);
-    }
-
-    // P2WSH multisig wrapped in P2SH
-    {
-        CBasicKeyStore keystore;
-
-        CScript witnessScript;
-        witnessScript << OP_2 <<
-            ToByteVector(pubkeys[0]) <<
-            ToByteVector(pubkeys[1]) <<
-            OP_2 << OP_CHECKMULTISIG;
-
-        uint256 scriptHash;
-        CSHA256().Write(&witnessScript[0], witnessScript.size())
-            .Finalize(scriptHash.begin());
-
-        CScript redeemScript;
-        redeemScript << OP_0 << ToByteVector(scriptHash);
-
-        scriptPubKey.clear();
-        scriptPubKey << OP_HASH160 << ToByteVector(CScriptID(redeemScript)) << OP_EQUAL;
-
-        // Keystore has no witnessScript, P2SH redeemScript, or keys
-        result = IsMine(keystore, scriptPubKey, isInvalid);
-        BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(!isInvalid);
-
-        // Keystore has witnessScript and P2SH redeemScript, but no keys
-        keystore.AddCScript(redeemScript);
-        keystore.AddCScript(witnessScript);
-        result = IsMine(keystore, scriptPubKey, isInvalid);
-        BOOST_CHECK_EQUAL(result, ISMINE_NO);
-        BOOST_CHECK(!isInvalid);
-
-        // Keystore has keys, witnessScript, P2SH redeemScript
-        keystore.AddKey(keys[0]);
-        keystore.AddKey(keys[1]);
         result = IsMine(keystore, scriptPubKey, isInvalid);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
         BOOST_CHECK(!isInvalid);
