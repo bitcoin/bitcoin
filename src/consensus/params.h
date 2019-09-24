@@ -176,8 +176,8 @@ struct Params {
     int nHighSubsidyFactor{1};
 
     std::map<LLMQType, LLMQParams> llmqs;
-    LLMQType llmqChainLocks;
-    LLMQType llmqForInstantSend{LLMQ_NONE};
+    LLMQType llmqTypeChainLocks;
+    LLMQType llmqTypeInstantSend{LLMQ_NONE};
 };
 } // namespace Consensus
 

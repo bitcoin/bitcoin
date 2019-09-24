@@ -1400,10 +1400,10 @@ bool AppInitParameterInteraction()
     }
 
     if (chainparams.NetworkIDString() == CBaseChainParams::DEVNET) {
-        std::string llmqChainLocks = gArgs.GetArg("-llmqchainlocks", Params().GetConsensus().llmqs.at(Params().GetConsensus().llmqChainLocks).name);
+        std::string llmqTypeChainLocks = gArgs.GetArg("-llmqchainlocks", Params().GetConsensus().llmqs.at(Params().GetConsensus().llmqTypeChainLocks).name);
         Consensus::LLMQType llmqType = Consensus::LLMQ_NONE;
         for (const auto& p : Params().GetConsensus().llmqs) {
-            if (p.second.name == llmqChainLocks) {
+            if (p.second.name == llmqTypeChainLocks) {
                 llmqType = p.first;
                 break;
             }

@@ -889,7 +889,7 @@ CQuorumCPtr CSigningManager::SelectQuorumForSigning(Consensus::LLMQType llmqType
 
 bool CSigningManager::VerifyRecoveredSig(Consensus::LLMQType llmqType, int signedAtHeight, const uint256& id, const uint256& msgHash, const CBLSSignature& sig)
 {
-    auto& llmqParams = Params().GetConsensus().llmqs.at(Params().GetConsensus().llmqChainLocks);
+    auto& llmqParams = Params().GetConsensus().llmqs.at(Params().GetConsensus().llmqTypeChainLocks);
 
     auto quorum = SelectQuorumForSigning(llmqParams.type, signedAtHeight, id);
     if (!quorum) {

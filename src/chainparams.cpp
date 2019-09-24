@@ -114,7 +114,7 @@ void CChainParams::UpdateSubsidyAndDiffParams(int nMinimumDifficultyBlocks, int 
 }
 
 void CChainParams::UpdateLLMQChainLocks(Consensus::LLMQType llmqType) {
-    consensus.llmqChainLocks = llmqType;
+    consensus.llmqTypeChainLocks = llmqType;
 }
 
 static CBlock FindDevNetGenesisBlock(const Consensus::Params& params, const CBlock &prevBlock, const CAmount& reward)
@@ -348,8 +348,8 @@ public:
         consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
         consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
         consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
-        consensus.llmqChainLocks = Consensus::LLMQ_400_60;
-        consensus.llmqForInstantSend = Consensus::LLMQ_50_60;
+        consensus.llmqTypeChainLocks = Consensus::LLMQ_400_60;
+        consensus.llmqTypeInstantSend = Consensus::LLMQ_50_60;
 
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
@@ -524,8 +524,8 @@ public:
         consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
         consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
         consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
-        consensus.llmqChainLocks = Consensus::LLMQ_50_60;
-        consensus.llmqForInstantSend = Consensus::LLMQ_50_60;
+        consensus.llmqTypeChainLocks = Consensus::LLMQ_50_60;
+        consensus.llmqTypeInstantSend = Consensus::LLMQ_50_60;
 
         fDefaultConsistencyChecks = false;
         fRequireStandard = false;
@@ -679,8 +679,8 @@ public:
         consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
         consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
         consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
-        consensus.llmqChainLocks = Consensus::LLMQ_50_60;
-        consensus.llmqForInstantSend = Consensus::LLMQ_50_60;
+        consensus.llmqTypeChainLocks = Consensus::LLMQ_50_60;
+        consensus.llmqTypeInstantSend = Consensus::LLMQ_50_60;
 
         fDefaultConsistencyChecks = false;
         fRequireStandard = false;
@@ -837,8 +837,8 @@ public:
         // long living quorum params
         consensus.llmqs[Consensus::LLMQ_5_60] = llmq5_60;
         consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
-        consensus.llmqChainLocks = Consensus::LLMQ_5_60;
-        consensus.llmqForInstantSend = Consensus::LLMQ_5_60;
+        consensus.llmqTypeChainLocks = Consensus::LLMQ_5_60;
+        consensus.llmqTypeInstantSend = Consensus::LLMQ_5_60;
     }
 };
 

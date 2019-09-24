@@ -377,7 +377,7 @@ bool CInstantSendManager::ProcessTx(const CTransaction& tx, const Consensus::Par
         return true;
     }
 
-    auto llmqType = params.llmqForInstantSend;
+    auto llmqType = params.llmqTypeInstantSend;
     if (llmqType == Consensus::LLMQ_NONE) {
         return true;
     }
@@ -534,7 +534,7 @@ void CInstantSendManager::HandleNewRecoveredSig(const CRecoveredSig& recoveredSi
         return;
     }
 
-    auto llmqType = Params().GetConsensus().llmqForInstantSend;
+    auto llmqType = Params().GetConsensus().llmqTypeInstantSend;
     if (llmqType == Consensus::LLMQ_NONE) {
         return;
     }
@@ -560,7 +560,7 @@ void CInstantSendManager::HandleNewRecoveredSig(const CRecoveredSig& recoveredSi
 
 void CInstantSendManager::HandleNewInputLockRecoveredSig(const CRecoveredSig& recoveredSig, const uint256& txid)
 {
-    auto llmqType = Params().GetConsensus().llmqForInstantSend;
+    auto llmqType = Params().GetConsensus().llmqTypeInstantSend;
 
     CTransactionRef tx;
     uint256 hashBlock;
@@ -584,7 +584,7 @@ void CInstantSendManager::HandleNewInputLockRecoveredSig(const CRecoveredSig& re
 
 void CInstantSendManager::TrySignInstantSendLock(const CTransaction& tx)
 {
-    auto llmqType = Params().GetConsensus().llmqForInstantSend;
+    auto llmqType = Params().GetConsensus().llmqTypeInstantSend;
 
     for (auto& in : tx.vin) {
         auto id = ::SerializeHash(std::make_pair(INPUTLOCK_REQUESTID_PREFIX, in.prevout));
@@ -729,7 +729,7 @@ bool CInstantSendManager::ProcessPendingInstantSendLocks()
         tipHeight = chainActive.Height();
     }
 
-    auto llmqType = Params().GetConsensus().llmqForInstantSend;
+    auto llmqType = Params().GetConsensus().llmqTypeInstantSend;
 
     // Every time a new quorum enters the active set, an older one is removed. This means that between two blocks, the
     // active set can be different, leading to different selection of the signing quorum. When we detect such rotation
@@ -765,7 +765,7 @@ bool CInstantSendManager::ProcessPendingInstantSendLocks()
 
 std::unordered_set<uint256> CInstantSendManager::ProcessPendingInstantSendLocks(int signHeight, const std::unordered_map<uint256, std::pair<NodeId, CInstantSendLock>>& pend, bool ban)
 {
-    auto llmqType = Params().GetConsensus().llmqForInstantSend;
+    auto llmqType = Params().GetConsensus().llmqTypeInstantSend;
 
     CBLSBatchVerifier<NodeId, uint256> batchVerifier(false, true, 8);
     std::unordered_map<uint256, std::pair<CQuorumCPtr, CRecoveredSig>> recSigs;
@@ -1144,11 +1144,11 @@ void CInstantSendManager::HandleFullyConfirmedBlock(const CBlockIndex* pindex)
 
             // no need to keep recovered sigs for fully confirmed IS locks, as there is no chance for conflicts
             // from now on. All inputs are spent now and can't be spend in any other TX.
-            quorumSigningManager->RemoveRecoveredSig(consensusParams.llmqForInstantSend, inputRequestId);
+            quorumSigningManager->RemoveRecoveredSig(consensusParams.llmqTypeInstantSend, inputRequestId);
         }
 
         // same as in the loop
-        quorumSigningManager->RemoveRecoveredSig(consensusParams.llmqForInstantSend, islock->GetRequestId());
+        quorumSigningManager->RemoveRecoveredSig(consensusParams.llmqTypeInstantSend, islock->GetRequestId());
     }
 
     // Find all previously unlocked TXs that got locked by this fully confirmed (ChainLock) block and remove them
