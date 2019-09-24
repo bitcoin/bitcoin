@@ -8,6 +8,8 @@
 #include <memory>
 #include <string>
 
+#include <optional.h>
+
 class CBlock;
 class CScript;
 class CTxIn;
@@ -19,8 +21,10 @@ extern const std::string ADDRESS_BCRT1_UNSPENDABLE;
 
 // Lower-level utils //
 
-/** Returns the generated coin */
+/** Returns the generated coin (output at index 0 in the coinbase tx) */
 CTxIn MineBlock(const CScript& coinbase_scriptPubKey);
+/** Returns the generated coins (output at index 0 in the coinbase tx), or nothing if the block was invalid */
+Optional<CTxIn> MineBlock(std::shared_ptr<CBlock>& block);
 /** Prepare a block to be mined */
 std::shared_ptr<CBlock> PrepareBlock(const CScript& coinbase_scriptPubKey);
 

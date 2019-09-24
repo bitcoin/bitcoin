@@ -57,6 +57,22 @@ CTxIn generatetoaddress(const std::string& address)
 CTxIn MineBlock(const CScript& coinbase_scriptPubKey)
 {
     auto block = PrepareBlock(coinbase_scriptPubKey);
+    return *MineBlock(block);
+}
+
+Optional<CTxIn> MineBlock(std::shared_ptr<CBlock>& block)
+{
+    const auto idx = GetWitnessCommitmentIndex(*block);
+    if (idx != -1) {
+        // Refresh witness commitment, in case a tx has been added or modified
+        CMutableTransaction tx_cb{*block->vtx[0]};
+        tx_cb.vout.erase(tx_cb.vout.begin() + idx);
+        block->vtx[0] = MakeTransactionRef(std::move(tx_cb));
+        LOCK(cs_main);
+        GenerateCoinbaseCommitment(*block, ChainActive().Tip()->pprev, Params().GetConsensus());
+    }
+    // Refresh merkle root, in case a tx has been added or modified
+    block->hashMerkleRoot = BlockMerkleRoot(*block);
 
     while (!CheckProofOfWork(block->GetHash(), block->nBits, Params().GetConsensus())) {
         ++block->nNonce;
@@ -65,6 +81,8 @@ CTxIn MineBlock(const CScript& coinbase_scriptPubKey)
 
     bool processed{ProcessNewBlock(Params(), block, true, nullptr)};
     assert(processed);
+
+    // TODO: Return nothing if the block was invalid
 
     return CTxIn{block->vtx[0]->GetHash(), 0};
 }
