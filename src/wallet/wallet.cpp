@@ -3826,7 +3826,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 vecTxDSInTmp.clear();
                 for (const auto& coin : setCoins) {
                     CTxIn txin = CTxIn(coin.outpoint,CScript(),
-                                              std::numeric_limits<unsigned int>::max()-1);
+                                              CTxIn::SEQUENCE_FINAL - 1);
                     vecTxDSInTmp.push_back(CTxDSIn(txin, coin.txout.scriptPubKey));
                     txNew.vin.push_back(txin);
                 }
