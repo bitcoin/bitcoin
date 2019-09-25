@@ -381,8 +381,11 @@ private:
  *  of vectors in cases where they normally contain a small number of small elements.
  * Tests in October 2015 showed use of this reduced dbcache memory usage by 23%
  *  and made an initial sync 13% faster.
+ *
+ * Most scripts seem to have <= 25 bytes. So with 27 entries + 1 byte for size(),
+ * the prevector will have a size of 28 bytes.
  */
-typedef prevector<28, unsigned char> CScriptBase;
+typedef prevector<27, unsigned char> CScriptBase;
 
 bool GetScriptOp(CScriptBase::const_iterator& pc, CScriptBase::const_iterator end, opcodetype& opcodeRet, std::vector<unsigned char>* pvchRet);
 

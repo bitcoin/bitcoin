@@ -127,13 +127,72 @@ public:
     std::string ToString() const;
 };
 
+
+/**
+ * CAmount is an int64_t, which requires alignment of 8. This wrapper stores the data
+ * in a memory array and packs/unpacks it whenever needed, regarldess of alignment.
+ *
+ * Since CAmount's size is know, the compiler should be able to optimize the std::memcpy away
+ * in most cases.
+ */
+class PackableCAmount
+{
+    uint8_t m_data[sizeof(CAmount)];
+
+public:
+    PackableCAmount(CAmount val) noexcept
+    {
+        std::memcpy(m_data, &val, sizeof(CAmount));
+    }
+
+    PackableCAmount() noexcept
+        : PackableCAmount(0) {}
+
+    operator CAmount() const noexcept
+    {
+        CAmount ret;
+        std::memcpy(&ret, m_data, sizeof(CAmount));
+        return ret;
+    }
+
+    PackableCAmount& operator-=(CAmount other) noexcept
+    {
+        *this = ((CAmount) * this) - other;
+        return *this;
+    }
+
+    PackableCAmount& operator+=(CAmount other) noexcept
+    {
+        *this = ((CAmount) * this) + other;
+        return *this;
+    }
+
+    template <typename Stream>
+    void Unserialize(Stream& s)
+    {
+        CAmount val;
+        ::Unserialize(s, val);
+        *this = val;
+    }
+
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
+        ::Serialize(s, (CAmount) * this);
+    }
+};
+
 /** An output of a transaction.  It contains the public key that the next input
  * must be able to sign with to claim it.
+ *
+ * We align the struct to 4 bytes: that way, CTxOut will have 36 bytes: 8 for
+ * CAmount, and 28 for CScript. As a member of Coin, this leaves 4 bytes for
+ * Coin's nHeight without the need for any padding.
  */
 class CTxOut
 {
 public:
-    CAmount nValue;
+    PackableCAmount nValue;
     CScript scriptPubKey;
 
     CTxOut()
