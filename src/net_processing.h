@@ -15,6 +15,8 @@ static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS = 100;
 static const int64_t ORPHAN_TX_EXPIRE_TIME = 20 * 60;
 /** Minimum time between orphan transactions expire time checks in seconds */
 static const int64_t ORPHAN_TX_EXPIRE_INTERVAL = 5 * 60;
+/** Default number of orphan+recently-replaced txn to keep around for block reconstruction */
+static const unsigned int DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN = 100;
 
 /** Headers download timeout expressed in microseconds
  *  Timeout = base + per_header * (expected number of headers) */
@@ -26,9 +28,6 @@ static constexpr int64_t HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER = 1000; // 1ms/head
 static constexpr int32_t MAX_OUTBOUND_PEERS_TO_PROTECT_FROM_DISCONNECT = 4;
 /** Timeout for (unprotected) outbound peers to sync to our chainwork, in seconds */
 static constexpr int64_t CHAIN_SYNC_TIMEOUT = 20 * 60; // 20 minutes
-
-/** Default number of orphan+recently-replaced txn to keep around for block reconstruction */
-static const unsigned int DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN = 100;
 
 class PeerLogicValidation : public CValidationInterface, public NetEventsInterface {
 private:
