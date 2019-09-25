@@ -129,7 +129,12 @@ public:
 
 /** An output of a transaction.  It contains the public key that the next input
  * must be able to sign with to claim it.
+ *
+ * We align the struct to 4 bytes: that way, CTxOut will have 36 bytes: 8 for
+ * CAmount, and 28 for CScript. As a member of Coin, this leaves 4 bytes for
+ * Coin's nHeight without the need for any padding.
  */
+#pragma pack(push, 4)
 class CTxOut
 {
 public:
@@ -175,6 +180,7 @@ public:
 
     std::string ToString() const;
 };
+#pragma pack(pop)
 
 struct CMutableTransaction;
 

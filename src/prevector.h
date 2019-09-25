@@ -22,13 +22,14 @@
  *
  *  Storage layout is either:
  *  - Direct allocation:
- *    - Size _size: the number of used elements (between 0 and N)
  *    - T direct[N]: an array of N elements of type T
- *      (only the first _size are initialized).
+ *    - unsigned char _size_direct: the number of used elements
+ *      between 0 and N. 0xFF means indirect allocation.
+ *      (only the first _size_direct are initialized).
  *  - Indirect allocation:
- *    - Size _size: the number of used elements plus N + 1
- *    - Size capacity: the number of allocated elements
- *    - T* indirect: a pointer to an array of capacity elements of type T
+ *    - size_type _size: the number of used elements
+ *    - size_type capacity: the number of allocated elements
+ *    - char* indirect: a pointer to an array of capacity elements of type T
  *      (only the first _size are initialized).
  *
  *  The data type T must be movable by memmove/realloc(). Once we switch to C++,
@@ -36,6 +37,8 @@
  */
 template<unsigned int N, typename T, typename Size = uint32_t, typename Diff = int32_t>
 class prevector {
+    static_assert(N < 0xff, "can't directly allocate more than 254 elements");
+
 public:
     typedef Size size_type;
     typedef Diff difference_type;
@@ -147,30 +150,31 @@ public:
     };
 
 private:
-    size_type _size = 0;
     union direct_or_indirect {
         char direct[sizeof(T) * N];
         struct {
+            size_type size;
             size_type capacity;
             char* indirect;
         };
     } _union = {};
+    unsigned char _size_direct = 0;
 
     T* direct_ptr(difference_type pos) { return reinterpret_cast<T*>(_union.direct) + pos; }
     const T* direct_ptr(difference_type pos) const { return reinterpret_cast<const T*>(_union.direct) + pos; }
     T* indirect_ptr(difference_type pos) { return reinterpret_cast<T*>(_union.indirect) + pos; }
     const T* indirect_ptr(difference_type pos) const { return reinterpret_cast<const T*>(_union.indirect) + pos; }
-    bool is_direct() const { return _size <= N; }
+    bool is_direct() const { return _size_direct != 0xFF; }
 
     void change_capacity(size_type new_capacity) {
         if (new_capacity <= N) {
             if (!is_direct()) {
+                _size_direct = static_cast<unsigned char>(_union.size);
                 T* indirect = indirect_ptr(0);
                 T* src = indirect;
                 T* dst = direct_ptr(0);
-                memcpy(dst, src, size() * sizeof(T));
+                memcpy(dst, src, _size_direct * sizeof(T));
                 free(indirect);
-                _size -= N + 1;
             }
         } else {
             if (!is_direct()) {
@@ -188,7 +192,8 @@ private:
                 memcpy(dst, src, size() * sizeof(T));
                 _union.indirect = new_indirect;
                 _union.capacity = new_capacity;
-                _size += N + 1;
+                _union.size = _size_direct;
+                _size_direct = 0xff;
             }
         }
     }
@@ -209,13 +214,21 @@ private:
         }
     }
 
+    void change_size_by(Diff diff) {
+        if (is_direct()) {
+            _size_direct += diff;
+        } else {
+            _union.size += diff;
+        }
+    }
+
 public:
     void assign(size_type n, const T& val) {
         clear();
         if (capacity() < n) {
             change_capacity(n);
         }
-        _size += n;
+        change_size_by(n);
         fill(item_ptr(0), n, val);
     }
 
@@ -226,7 +239,7 @@ public:
         if (capacity() < n) {
             change_capacity(n);
         }
-        _size += n;
+        change_size_by(n);
         fill(item_ptr(0), first, last);
     }
 
@@ -238,7 +251,7 @@ public:
 
     explicit prevector(size_type n, const T& val) {
         change_capacity(n);
-        _size += n;
+        change_size_by(n);
         fill(item_ptr(0), n, val);
     }
 
@@ -246,14 +259,14 @@ public:
     prevector(InputIterator first, InputIterator last) {
         size_type n = last - first;
         change_capacity(n);
-        _size += n;
+        change_size_by(n);
         fill(item_ptr(0), first, last);
     }
 
     prevector(const prevector<N, T, Size, Diff>& other) {
         size_type n = other.size();
         change_capacity(n);
-        _size += n;
+        change_size_by(n);
         fill(item_ptr(0), other.begin(),  other.end());
     }
 
@@ -275,7 +288,7 @@ public:
     }
 
     size_type size() const {
-        return is_direct() ? _size : _size - N - 1;
+        return is_direct() ? _size_direct : _union.size;
     }
 
     bool empty() const {
@@ -322,7 +335,7 @@ public:
         }
         ptrdiff_t increase = new_size - cur_size;
         fill(item_ptr(cur_size), increase);
-        _size += increase;
+        change_size_by(increase);
     }
 
     void reserve(size_type new_capacity) {
@@ -347,7 +360,7 @@ public:
         }
         T* ptr = item_ptr(p);
         memmove(ptr + 1, ptr, (size() - p) * sizeof(T));
-        _size++;
+        change_size_by(1);
         new(static_cast<void*>(ptr)) T(value);
         return iterator(ptr);
     }
@@ -360,7 +373,7 @@ public:
         }
         T* ptr = item_ptr(p);
         memmove(ptr + count, ptr, (size() - p) * sizeof(T));
-        _size += count;
+        change_size_by(count);
         fill(item_ptr(p), count, value);
     }
 
@@ -374,7 +387,7 @@ public:
         }
         T* ptr = item_ptr(p);
         memmove(ptr + count, ptr, (size() - p) * sizeof(T));
-        _size += count;
+        change_size_by(count);
         fill(ptr, first, last);
     }
 
@@ -383,13 +396,13 @@ public:
         // If size < new_size, the added elements must be initialized explicitly.
         if (capacity() < new_size) {
             change_capacity(new_size);
-            _size += new_size - size();
+            change_size_by(new_size - size());
             return;
         }
         if (new_size < size()) {
             erase(item_ptr(new_size), end());
         } else {
-            _size += new_size - size();
+            change_size_by(new_size - size());
         }
     }
 
@@ -409,11 +422,11 @@ public:
         if (!std::is_trivially_destructible<T>::value) {
             while (p != last) {
                 (*p).~T();
-                _size--;
+                change_size_by(-1);
                 ++p;
             }
         } else {
-            _size -= last - p;
+            change_size_by(-(last - p));
         }
         memmove(&(*first), &(*last), endp - ((char*)(&(*last))));
         return first;
@@ -425,7 +438,7 @@ public:
             change_capacity(new_size + (new_size >> 1));
         }
         new(item_ptr(size())) T(value);
-        _size++;
+        change_size_by(1);
     }
 
     void pop_back() {
@@ -450,7 +463,7 @@ public:
 
     void swap(prevector<N, T, Size, Diff>& other) {
         std::swap(_union, other._union);
-        std::swap(_size, other._size);
+        std::swap(_size_direct, other._size_direct);
     }
 
     ~prevector() {
