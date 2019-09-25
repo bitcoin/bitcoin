@@ -148,8 +148,8 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
 
         # Lets verify that the ISLOCKs got pruned
         for node in self.nodes:
-            assert_raises_jsonrpc(-5, "No such mempool or blockchain transaction", node.getrawtransaction, rawtx1_txid, True)
-            assert_raises_jsonrpc(-5, "No such mempool or blockchain transaction", node.getrawtransaction, rawtx4_txid, True)
+            assert_raises_rpc_error(-5, "No such mempool or blockchain transaction", node.getrawtransaction, rawtx1_txid, True)
+            assert_raises_rpc_error(-5, "No such mempool or blockchain transaction", node.getrawtransaction, rawtx4_txid, True)
             rawtx = node.getrawtransaction(rawtx2_txid, True)
             assert(rawtx['chainlock'])
             assert(rawtx['instantlock'])
@@ -186,7 +186,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
 
         # Assert that the conflicting tx got mined and the locked TX is not valid
         assert(self.nodes[0].getrawtransaction(rawtx1_txid, True)['confirmations'] > 0)
-        assert_raises_jsonrpc(-25, "Missing inputs", self.nodes[0].sendrawtransaction, rawtx2)
+        assert_raises_rpc_error(-25, "Missing inputs", self.nodes[0].sendrawtransaction, rawtx2)
 
         # Send the ISLOCK, which should result in the last 2 blocks to be invalidated, even though the nodes don't know
         # the locked transaction yet

@@ -25,7 +25,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises,
-    assert_raises_jsonrpc,
+    assert_raises_rpc_error,
     assert_is_hex_string,
     assert_is_hash_string,
 )
@@ -95,7 +95,7 @@ class BlockchainTest(BitcoinTestFramework):
     def _test_getblockheader(self):
         node = self.nodes[0]
 
-        assert_raises_jsonrpc(-5, "Block not found",
+        assert_raises_rpc_error(-5, "Block not found",
                               node.getblockheader, "nonsense")
 
         besthash = node.getbestblockhash()

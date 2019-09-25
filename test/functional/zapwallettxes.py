@@ -17,7 +17,7 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_raises_jsonrpc,
+    assert_raises_rpc_error,
 )
 from test_framework.mininode import wait_until
 
@@ -72,7 +72,7 @@ class ZapWalletTXesTest (BitcoinTestFramework):
         assert_equal(self.nodes[0].gettransaction(txid1)['txid'], txid1)
 
         # This will raise an exception because the unconfirmed transaction has been zapped
-        assert_raises_jsonrpc(-5, 'Invalid or non-wallet transaction id', self.nodes[0].gettransaction, txid2)
+        assert_raises_rpc_error(-5, 'Invalid or non-wallet transaction id', self.nodes[0].gettransaction, txid2)
 
 if __name__ == '__main__':
     ZapWalletTXesTest().main()

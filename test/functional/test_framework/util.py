@@ -54,7 +54,7 @@ def assert_raises_message(exc, message, fun, *args, **kwds):
     try:
         fun(*args, **kwds)
     except JSONRPCException:
-        raise AssertionError("Use assert_raises_jsonrpc() to test RPC failures")
+        raise AssertionError("Use assert_raises_rpc_error() to test RPC failures")
     except exc as e:
         if message is not None and message not in e.error['message']:
             raise AssertionError("Expected substring not found:" + e.error['message'])
@@ -87,7 +87,7 @@ def assert_raises_process_error(returncode, output, fun, *args, **kwds):
     else:
         raise AssertionError("No exception raised")
 
-def assert_raises_jsonrpc(code, message, fun, *args, **kwds):
+def assert_raises_rpc_error(code, message, fun, *args, **kwds):
     """Run an RPC and verify that a specific JSONRPC exception code and message is raised.
 
     Calls function `fun` with arguments `args` and `kwds`. Catches a JSONRPCException

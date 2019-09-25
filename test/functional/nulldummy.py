@@ -66,7 +66,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
         self.log.info("Test 2: Non-NULLDUMMY base multisig transaction should not be accepted to mempool before activation")
         test2tx = self.create_transaction(self.nodes[0], txid2, self.ms_address, 47)
         trueDummy(test2tx)
-        assert_raises_jsonrpc(-26, NULLDUMMY_ERROR, self.nodes[0].sendrawtransaction, bytes_to_hex_str(test2tx.serialize()), True)
+        assert_raises_rpc_error(-26, NULLDUMMY_ERROR, self.nodes[0].sendrawtransaction, bytes_to_hex_str(test2tx.serialize()), True)
 
         self.log.info("Test 3: Non-NULLDUMMY base transactions should be accepted in a block before activation [431]")
         self.block_submit(self.nodes[0], [test2tx], True)
@@ -75,7 +75,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
         test4tx = self.create_transaction(self.nodes[0], test2tx.hash, self.address, 46)
         test6txs=[CTransaction(test4tx)]
         trueDummy(test4tx)
-        assert_raises_jsonrpc(-26, NULLDUMMY_ERROR, self.nodes[0].sendrawtransaction, bytes_to_hex_str(test4tx.serialize()), True)
+        assert_raises_rpc_error(-26, NULLDUMMY_ERROR, self.nodes[0].sendrawtransaction, bytes_to_hex_str(test4tx.serialize()), True)
         self.block_submit(self.nodes[0], [test4tx])
 
         self.log.info("Test 6: NULLDUMMY compliant transactions should be accepted to mempool and in block after activation [432]")

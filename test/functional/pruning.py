@@ -186,7 +186,7 @@ class PruneTest(BitcoinTestFramework):
 
     def reorg_back(self):
         # Verify that a block on the old main chain fork has been pruned away
-        assert_raises_jsonrpc(-1, "Block not available (pruned data)", self.nodes[2].getblock, self.forkhash)
+        assert_raises_rpc_error(-1, "Block not available (pruned data)", self.nodes[2].getblock, self.forkhash)
         self.log.info("Will need to redownload block %d" % self.forkheight)
 
         # Verify that we have enough history to reorg back to the fork point
@@ -233,7 +233,7 @@ class PruneTest(BitcoinTestFramework):
         self.start_node(node_number, extra_args=["-litemode", "-txindex=0"])
         node = self.nodes[node_number]
         assert_equal(node.getblockcount(), 995)
-        assert_raises_jsonrpc(-1, "not in prune mode", node.pruneblockchain, 500)
+        assert_raises_rpc_error(-1, "not in prune mode", node.pruneblockchain, 500)
 
         # now re-start in manual pruning mode
         self.stop_node(node_number)
@@ -266,14 +266,14 @@ class PruneTest(BitcoinTestFramework):
             return os.path.isfile(self.options.tmpdir + "/node{}/regtest/blocks/blk{:05}.dat".format(node_number, index))
 
         # should not prune because chain tip of node 3 (995) < PruneAfterHeight (1000)
-        assert_raises_jsonrpc(-1, "Blockchain is too short for pruning", node.pruneblockchain, height(500))
+        assert_raises_rpc_error(-1, "Blockchain is too short for pruning", node.pruneblockchain, height(500))
 
         # mine 6 blocks so we are at height 1001 (i.e., above PruneAfterHeight)
         node.generate(6)
         assert_equal(node.getblockchaininfo()["blocks"], 1001)
 
         # negative heights should raise an exception
-        assert_raises_jsonrpc(-8, "Negative", node.pruneblockchain, -10)
+        assert_raises_rpc_error(-8, "Negative", node.pruneblockchain, -10)
 
         # height=100 too low to prune first block file so this is a no-op
         prune(100)

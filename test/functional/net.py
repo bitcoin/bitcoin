@@ -12,7 +12,7 @@ import time
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_raises_jsonrpc,
+    assert_raises_rpc_error,
     connect_nodes_bi,
     p2p_port
 )
@@ -84,7 +84,7 @@ class NetTest(BitcoinTestFramework):
         assert_equal(len(added_nodes), 1)
         assert_equal(added_nodes[0]['addednode'], ip_port)
         # check that a non-existant node returns an error
-        assert_raises_jsonrpc(-24, "Node has not been added",
+        assert_raises_rpc_error(-24, "Node has not been added",
                               self.nodes[0].getaddednodeinfo, '1.1.1.1')
 
     def _test_getpeerinfo(self):

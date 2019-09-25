@@ -104,14 +104,14 @@ class InstantSendTest(DashTestFramework):
         reconnect_isolated_node(isolated, 0)
         for node in self.nodes:
             if node is not isolated:
-                assert_raises_jsonrpc(-5, "No such mempool or blockchain transaction", node.getrawtransaction, dblspnd_txid)
+                assert_raises_rpc_error(-5, "No such mempool or blockchain transaction", node.getrawtransaction, dblspnd_txid)
         # instantsend to receiver. The previously isolated node should prune the doublespend TX and request the correct
         # TX from other nodes.
         receiver_addr = receiver.getnewaddress()
         is_id = sender.sendtoaddress(receiver_addr, 0.9)
         for node in self.nodes:
             self.wait_for_instantlock(is_id, node)
-        assert_raises_jsonrpc(-5, "No such mempool or blockchain transaction", isolated.getrawtransaction, dblspnd_txid)
+        assert_raises_rpc_error(-5, "No such mempool or blockchain transaction", isolated.getrawtransaction, dblspnd_txid)
         # send coins back to the controller node without waiting for confirmations
         receiver.sendtoaddress(self.nodes[0].getnewaddress(), 0.9, "", "", True)
         assert_equal(receiver.getwalletinfo()["balance"], 0)

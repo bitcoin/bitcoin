@@ -7,7 +7,7 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_raises_jsonrpc,
+    assert_raises_rpc_error,
     connect_nodes_bi,
     wait_until,
 	set_node_times,
@@ -34,14 +34,14 @@ class DisconnectBanTest(BitcoinTestFramework):
 
         self.log.info("setban: fail to ban an already banned subnet")
         assert_equal(len(self.nodes[1].listbanned()), 1)
-        assert_raises_jsonrpc(-23, "IP/Subnet already banned", self.nodes[1].setban, "127.0.0.1", "add")
+        assert_raises_rpc_error(-23, "IP/Subnet already banned", self.nodes[1].setban, "127.0.0.1", "add")
 
         self.log.info("setban: fail to ban an invalid subnet")
-        assert_raises_jsonrpc(-30, "Error: Invalid IP/Subnet", self.nodes[1].setban, "127.0.0.1/42", "add")
+        assert_raises_rpc_error(-30, "Error: Invalid IP/Subnet", self.nodes[1].setban, "127.0.0.1/42", "add")
         assert_equal(len(self.nodes[1].listbanned()), 1)  # still only one banned ip because 127.0.0.1 is within the range of 127.0.0.0/24
 
         self.log.info("setban remove: fail to unban a non-banned subnet")
-        assert_raises_jsonrpc(-30, "Error: Unban failed", self.nodes[1].setban, "127.0.0.1", "remove")
+        assert_raises_rpc_error(-30, "Error: Unban failed", self.nodes[1].setban, "127.0.0.1", "remove")
         assert_equal(len(self.nodes[1].listbanned()), 1)
 
         self.log.info("setban remove: successfully unban subnet")
@@ -78,10 +78,10 @@ class DisconnectBanTest(BitcoinTestFramework):
         self.log.info("disconnectnode: fail to disconnect when calling with address and nodeid")
         address1 = self.nodes[0].getpeerinfo()[0]['addr']
         node1 = self.nodes[0].getpeerinfo()[0]['addr']
-        assert_raises_jsonrpc(-32602, "Only one of address and nodeid should be provided.", self.nodes[0].disconnectnode, address=address1, nodeid=node1)
+        assert_raises_rpc_error(-32602, "Only one of address and nodeid should be provided.", self.nodes[0].disconnectnode, address=address1, nodeid=node1)
 
         self.log.info("disconnectnode: fail to disconnect when calling with junk address")
-        assert_raises_jsonrpc(-29, "Node not found in connected nodes", self.nodes[0].disconnectnode, address="221B Baker Street")
+        assert_raises_rpc_error(-29, "Node not found in connected nodes", self.nodes[0].disconnectnode, address="221B Baker Street")
 
         self.log.info("disconnectnode: successfully disconnect node by address")
         address1 = self.nodes[0].getpeerinfo()[0]['addr']

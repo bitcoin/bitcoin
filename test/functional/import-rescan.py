@@ -20,7 +20,7 @@ happened previously.
 """
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (assert_raises_jsonrpc, connect_nodes, sync_blocks, assert_equal, set_node_times)
+from test_framework.util import (assert_raises_rpc_error, connect_nodes, sync_blocks, assert_equal, set_node_times)
 
 import collections
 import enum
@@ -37,7 +37,7 @@ class Variant(collections.namedtuple("Variant", "call data rescan prune")):
 
     def try_rpc(self, func, *args, **kwargs):
         if self.expect_disabled:
-            assert_raises_jsonrpc(-4, "Rescan is disabled in pruned mode", func, *args, **kwargs)
+            assert_raises_rpc_error(-4, "Rescan is disabled in pruned mode", func, *args, **kwargs)
         else:
             return func(*args, **kwargs)
 
