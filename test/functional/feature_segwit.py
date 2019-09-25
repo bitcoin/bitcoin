@@ -257,7 +257,7 @@ class SegWitTest(BitcoinTestFramework):
         tx.vin.append(CTxIn(COutPoint(int(txid2, 16), 0), b""))
         tx.vout.append(CTxOut(int(49.95 * COIN), CScript([OP_TRUE, OP_DROP] * 15 + [OP_TRUE])))  # Huge fee
         tx.calc_sha256()
-        txid3 = self.nodes[0].sendrawtransaction(ToHex(tx), 0)
+        txid3 = self.nodes[0].sendrawtransaction(hexstring=ToHex(tx), maxfeerate=0)
         assert tx.wit.is_null()
         assert txid3 in self.nodes[0].getrawmempool()
 
@@ -566,7 +566,7 @@ class SegWitTest(BitcoinTestFramework):
             tx.vout.append(CTxOut(10000000, i))
         tx.rehash()
         signresults = self.nodes[0].signrawtransactionwithwallet(tx.serialize_without_witness().hex())['hex']
-        txid = self.nodes[0].sendrawtransaction(signresults, 0)
+        txid = self.nodes[0].sendrawtransaction(hexstring=signresults, maxfeerate=0)
         txs_mined[txid] = self.nodes[0].generate(1)[0]
         self.sync_blocks()
         watchcount = 0
@@ -618,7 +618,7 @@ class SegWitTest(BitcoinTestFramework):
         tx.vout.append(CTxOut(0, CScript()))
         tx.rehash()
         signresults = self.nodes[0].signrawtransactionwithwallet(tx.serialize_without_witness().hex())['hex']
-        self.nodes[0].sendrawtransaction(signresults, 0)
+        self.nodes[0].sendrawtransaction(hexstring=signresults, maxfeerate=0)
         self.nodes[0].generate(1)
         self.sync_blocks()
 
