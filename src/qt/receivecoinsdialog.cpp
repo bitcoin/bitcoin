@@ -96,13 +96,13 @@ void ReceiveCoinsDialog::setModel(WalletModel *_model)
         if (model->node().isAddressTypeSet()) {
             // user explicitly set the type, use it
             if (model->wallet().getDefaultAddressType() == OutputType::BECH32) {
-                ui->useLegacyAddress->setCheckState(Qt::Unchecked);
+                ui->useBech32->setCheckState(Qt::Checked);
             } else {
-                ui->useLegacyAddress->setCheckState(Qt::Checked);
+                ui->useBech32->setCheckState(Qt::Unchecked);
             }
         } else {
             // Always fall back to bech32 in the gui
-            ui->useLegacyAddress->setCheckState(Qt::Unchecked);
+            ui->useBech32->setCheckState(Qt::Checked);
         }
 
         // Set the button to be enabled or disabled based on whether the wallet can give out new addresses.
@@ -155,7 +155,7 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
     QString label = ui->reqLabel->text();
     /* Generate new receiving address */
     OutputType address_type;
-    if (!ui->useLegacyAddress->isChecked()) {
+    if (ui->useBech32->isChecked()) {
         address_type = OutputType::BECH32;
     } else {
         address_type = model->wallet().getDefaultAddressType();
