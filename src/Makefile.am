@@ -265,6 +265,7 @@ BITCOIN_CORE_H = \
   util/fees.h \
   util/system.h \
   util/asmap.h \
+  util/macros.h \
   util/memory.h \
   util/moneystr.h \
   util/string.h \
