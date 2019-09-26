@@ -23,6 +23,8 @@
 #include <QQuickStyle>
 #include <QQuickImageProvider>
 
+static const std::array<int, 9> confTargets = { {2, 4, 6, 12, 24, 48, 144, 504, 1008} };
+
 class IconProvider : public QQuickImageProvider
 {
 public:
@@ -103,10 +105,28 @@ BitcoinMobileGUI::BitcoinMobileGUI(interfaces::Node& node, const PlatformStyle *
     // Replace newlines with HTML breaks
     licenseInfoHTML.replace("\n", "<br>");
 
+    QList<QString> availableUnitNames;
+
+    Q_FOREACH(BitcoinUnits::Unit unit, BitcoinUnits::availableUnits()) {
+        availableUnitNames.append(BitcoinUnits::longName(unit));
+    }
+
+    QVariantMap confirmationTargets;
+
+    for (const int n : confTargets) {
+        confirmationTargets.insert(QString::number(n),
+                                   QCoreApplication::translate("SendCoinsDialog", "%1 (%2 blocks)")
+                                   .arg(GUIUtil::formatNiceTimeOffset(n*10*60))
+                                   .arg(n));
+    }
+
+    this->rootContext()->setContextProperty("availableUnits", QVariant(availableUnitNames));
+    this->rootContext()->setContextProperty("confirmationTargets", QVariant(confirmationTargets));
     this->rootContext()->setContextProperty("licenceInfo", licenseInfoHTML);
     this->rootContext()->setContextProperty("version", QString::fromStdString(FormatFullVersion()));
 
     connect(this->rootObject(), SIGNAL(copyToClipboard(QString)), this, SLOT(setClipboard(QString)));
+    connect(this->rootObject(), SIGNAL(changeUnit(int)), this, SLOT(setDisplayUnit(int)));
 
     m_walletPane = this->rootObject()->findChild<QObject*>("walletPane");
 
@@ -306,9 +326,15 @@ void BitcoinMobileGUI::setBalance(const interfaces::WalletBalances& balances)
 
 void BitcoinMobileGUI::setClipboard(QString text)
 {
-    qDebug() << tr("Send");
-
     GUIUtil::setClipboard(text);
+}
+
+void BitcoinMobileGUI::setDisplayUnit(int index)
+{
+    if(m_walletModel && m_walletModel->getOptionsModel())
+    {
+        m_walletModel->getOptionsModel()->setDisplayUnit(index);
+    }
 }
 
 void BitcoinMobileGUI::updateDisplayUnit()

@@ -17,6 +17,15 @@ StackView {
     Material.background: secondaryColor
     Material.primary: secondaryColor
 
+    // Use this function to reuse translations from QtWidget contexts
+    // For mobile-specific strings use the standard qsTr()
+    function bitcoinTr(context, sourceText) {
+        var translated = qsTranslate(context, sourceText)
+        return translated
+               //.replace(translated.match("\((.*?)\)"), "") // Remove text in brackets
+               .replace("&", "") // Remove the underscores
+    }
+
     function showInitMessage(msg) {
         initMessage.text = msg
     }
@@ -26,6 +35,7 @@ StackView {
     }
 
     signal copyToClipboard(string clipboardText)
+    signal changeUnit(int unit)
 
     FontLoader
     {

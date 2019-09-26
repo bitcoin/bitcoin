@@ -14,9 +14,18 @@ Pane {
             Layout.fillWidth: true
             Material.foreground: primaryColor
             Material.primary: primaryColor
-            title: qsTr("Display")
+            title: bitcoinTr("OptionsDialog", "&Display")
             ColumnLayout {
                 anchors.fill: parent
+                ComboBox {
+                    Material.foreground: primaryColor
+                    model: availableUnits
+
+                    onActivated: {
+                        changeUnit(index)
+                    }
+                }
+
                 Switch {
                     text: qsTr("Dark Mode")
                     font: theme.thinFont
@@ -43,7 +52,7 @@ Pane {
                 anchors.fill: parent
                 ToolButton {
                     Layout.alignment: Qt.AlignHCenter
-                    text: qsTr("‹")
+                    text: "‹"
                     onClicked: {
                         stackView.pop()
                     }

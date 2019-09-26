@@ -3,7 +3,6 @@ import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.9
 import QtQuick.Controls.Material 2.2
 
-
 Pane {
     id: receivePane
 
@@ -28,7 +27,7 @@ Pane {
                     anchors.fill: parent
                     onClicked: {
                         textAnimation.running = true
-                        clipboardText.text = qsTranslate("","Address copied to clipboard")
+                        clipboardText.text = qsTr("Address copied to clipboard")
                         copyToClipboard(address)
                     }
                 }
@@ -39,7 +38,7 @@ Pane {
                 anchors.horizontalCenter: qrImage.horizontalCenter
                 font: theme.thinFont
                 color: primaryColor
-                text: qsTranslate("","Tap to copy to clipboard")
+                text: qsTr("Tap to copy to clipboard")
                 horizontalAlignment: Text.AlignHCenter
 
                 NumberAnimation {
@@ -49,7 +48,6 @@ Pane {
                     from: 0
                     to: 1
                     duration: 1000
-                    easing.type: Easing.bezierCurve
                 }
             }
         }
@@ -65,20 +63,20 @@ Pane {
                 anchors.fill: parent
                 ToolButton {
                     Layout.alignment: Qt.AlignHCenter
-                    text: qsTr("‹")
+                    text: "‹"
                     onClicked: {
                         stackView.pop()
                     }
                     font: theme.thinFont
                 }
                 ToolButton {
-                    text: qsTr("SHARE")
+                    text: qsTr("Share")
                     Layout.alignment: Qt.AlignHCenter
                     onClicked: {}
                     font: theme.thinFont
                 }
                 ToolButton {
-                    text: qsTr("⋮")
+                    text: "⋮"
                     Layout.alignment: Qt.AlignRight
                 }
             }

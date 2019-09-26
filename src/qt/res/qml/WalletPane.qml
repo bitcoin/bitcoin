@@ -11,7 +11,7 @@ Pane {
     }
 
     function showQr(address) {
-        receivePane.qrSource = "image://qr/bitcoin:" + address
+        receivePane.address = address
         stackView.push(receivePane)
     }
 
@@ -93,14 +93,14 @@ Pane {
         Dialog {
             id: transactionInfoDialog
 
-            property string transactionInfoString: ""
+            property string transactionInfoString
 
             Material.background: secondaryColor
 
             modal: true
             focus: true
             x: (parent.width - width) / 2
-            y: parent.height / 10
+            y: parent.height / 15
             width: Math.min(parent.width, parent.height) / 8 * 7
             contentHeight: transactionInfoText.height
 
@@ -122,7 +122,7 @@ Pane {
                 anchors.fill: parent
                 ToolButton {
                     Layout.alignment: Qt.AlignHCenter
-                    text: qsTr("SEND")
+                    text: bitcoinTr("BitcoinGUI","&Send")
                     onClicked: {
                         sendPane.camera.start()
                         stackView.push(sendPane)
@@ -130,14 +130,14 @@ Pane {
                     font: theme.thinFont
                 }
                 ToolButton {
-                    text: qsTr("RECEIVE")
+                    text: bitcoinTr("BitcoinGUI","&Receive")
                     Layout.alignment: Qt.AlignHCenter
                     onClicked: request()
                     font: theme.thinFont
                 }
 
                 ToolButton {
-                    text: qsTr("⋮")
+                    text: "⋮"
                     Layout.alignment: Qt.AlignRight
 
                     onClicked: optionsMenu.open()
@@ -151,7 +151,7 @@ Pane {
                         transformOrigin: Menu.TopRight
 
                         MenuItem {
-                            text: qsTr("Settings")
+                            text: bitcoinTr("BitcoinGUI", "&Settings")
                             font: theme.thinFont
                             onTriggered: {
                                 stackView.push(settingsPane)
@@ -159,7 +159,7 @@ Pane {
                         }
 
                         MenuItem {
-                            text: qsTr("About")
+                            text: bitcoinTr("BitcoinGUI", "&About %1")
                             font: theme.thinFont
                             onTriggered: {
                                 stackView.push(aboutPane)

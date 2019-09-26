@@ -42,15 +42,25 @@ Pane {
             }
         }
 
-        Text {
-            id: licenceText
-
+        Flickable {
             Layout.fillWidth: true
+            Layout.fillHeight: true
 
-            text: licenceInfo
-            font: theme.thinFont
-            color: primaryColor
-            wrapMode: Text.Wrap
+            contentWidth: licenceText.width
+            contentHeight: licenceText.height
+
+            clip: true
+
+            Text {
+                id: licenceText
+
+                width: parent.parent.width
+
+                text: licenceInfo
+                font: theme.thinFont
+                color: primaryColor
+                wrapMode: Text.Wrap
+            }
         }
 
         ToolBar {
@@ -62,7 +72,7 @@ Pane {
                 anchors.fill: parent
                 ToolButton {
                     Layout.alignment: Qt.AlignHCenter
-                    text: qsTr("‹")
+                    text: qsTranslate("","‹")
                     onClicked: {
                         stackView.pop()
                     }
