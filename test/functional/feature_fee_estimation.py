@@ -10,12 +10,14 @@ from test_framework.messages import CTransaction, CTxIn, CTxOut, COutPoint, ToHe
 from test_framework.script import CScript, OP_1, OP_DROP, OP_2, OP_HASH160, OP_EQUAL, hash160, OP_TRUE
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_approx,
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
     connect_nodes,
     satoshi_round,
 )
+from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
 
 # Construct 2 trivial P2SH's and the ScriptSigs that spend them
 # So we can create many transactions without needing to spend
@@ -255,9 +257,44 @@ class EstimateFeeTest(BitcoinTestFramework):
             self.transact_and_mine(10, self.nodes[1])
             check_estimates(self.nodes[1], self.fees_per_kb)
 
+        # Test the conf_target argument for sendtoaddress when whole coins are spent
+        # and subtractfeefromamount is used
+        low_count = 288
+        high_count = 2
+        low_feerate = self.nodes[1].estimatesmartfee(low_count, "ECONOMICAL")
+        high_feerate = self.nodes[1].estimatesmartfee(high_count, "ECONOMICAL")
+        assert high_feerate["feerate"]/2 > low_feerate["feerate"] # comfortably larger
+        assert high_feerate["blocks"] < low_feerate["blocks"]
+
+        # Spend all coins at once
+        self.nodes[1].sendtoaddress(address=self.nodes[1].getnewaddress(), amount=self.nodes[1].getbalance(), subtractfeefromamount=True, conf_target=low_count, estimate_mode="ECONOMICAL")
+        self.nodes[1].generatetoaddress(1, ADDRESS_BCRT1_UNSPENDABLE)
+        # Then re-spend the change a couple times to test close as possible scenarios
+        low_txid = self.nodes[1].sendtoaddress(address=self.nodes[1].getnewaddress(), amount=self.nodes[1].getbalance(), subtractfeefromamount=True, conf_target=low_count, estimate_mode="ECONOMICAL")
+        high_txid = self.nodes[1].sendtoaddress(address=self.nodes[1].getnewaddress(), amount=self.nodes[1].getbalance(), subtractfeefromamount=True, conf_target=high_count, estimate_mode="ECONOMICAL")
+        # Send exactly the UTXO amount to multiple destinations, with one output paying the fee
+        sum_total = self.nodes[1].getbalances()["mine"]["trusted"]
+        subtract_address = self.nodes[1].getnewaddress()
+        low_many_txid = self.nodes[1].sendmany(amounts={self.nodes[1].getnewaddress(): sum_total-10, subtract_address: 10}, subtractfeefrom=[subtract_address], conf_target=low_count, estimate_mode="ECONOMICAL")
+        sum_total = self.nodes[1].getbalances()["mine"]["trusted"]
+        high_many_txid = self.nodes[1].sendmany(amounts={self.nodes[1].getnewaddress(): sum_total-10, subtract_address: 10}, subtractfeefrom=[subtract_address], conf_target=high_count, estimate_mode="ECONOMICAL")
+
+
+        # Total fee should be really close to one-off estimates
+        low_info = self.nodes[1].getmempoolentry(low_txid)
+        high_info = self.nodes[1].getmempoolentry(high_txid)
+        low_many_info = self.nodes[1].getmempoolentry(low_many_txid)
+        high_many_info = self.nodes[1].getmempoolentry(high_many_txid)
+
+        assert_approx(low_info["vsize"]*low_feerate["feerate"]/1000, float(low_info["fee"]))
+        assert_approx(high_info["vsize"]*high_feerate["feerate"]/1000, float(high_info["fee"]))
+        assert_approx(low_many_info["vsize"]*low_feerate["feerate"]/1000, float(low_many_info["fee"]))
+        assert_approx(high_many_info["vsize"]*high_feerate["feerate"]/1000, float(high_many_info["fee"]))
+
+
         # Finish by mining a normal-sized block:
         while len(self.nodes[1].getrawmempool()) > 0:
-            self.nodes[1].generate(1)
+            self.nodes[1].generatetoaddress(1, ADDRESS_BCRT1_UNSPENDABLE)
 
         self.sync_blocks(self.nodes[0:3], wait=.1)
         self.log.info("Final estimates after emptying mempools")
