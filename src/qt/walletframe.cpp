@@ -40,11 +40,11 @@ void WalletFrame::setClientModel(ClientModel *_clientModel)
     this->clientModel = _clientModel;
 }
 
-void WalletFrame::addWallet(WalletModel *walletModel)
+bool WalletFrame::addWallet(WalletModel *walletModel)
 {
-    if (!gui || !clientModel || !walletModel) return;
+    if (!gui || !clientModel || !walletModel) return false;
 
-    if (mapWalletViews.count(walletModel) > 0) return;
+    if (mapWalletViews.count(walletModel) > 0) return false;
 
     WalletView *walletView = new WalletView(platformStyle, this);
     walletView->setBitcoinGUI(gui);
@@ -68,6 +68,8 @@ void WalletFrame::addWallet(WalletModel *walletModel)
     });
 
     connect(walletView, &WalletView::outOfSyncWarningClicked, this, &WalletFrame::outOfSyncWarningClicked);
+
+    return true;
 }
 
 void WalletFrame::setCurrentWallet(WalletModel* wallet_model)
