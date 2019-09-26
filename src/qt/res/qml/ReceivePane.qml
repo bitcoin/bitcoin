@@ -7,7 +7,7 @@ import QtQuick.Controls.Material 2.2
 Pane {
     id: receivePane
 
-    property alias qrSource: qrImage.source
+    property string address
 
     ColumnLayout {
         id: qrColumn
@@ -16,19 +16,41 @@ Pane {
         Column {
             Layout.fillWidth: true
             Image {
-                anchors.horizontalCenter: parent.horizontalCenter
                 id: qrImage
+
+                source: "image://qr/bitcoin:" + address
+
+                anchors.horizontalCenter: parent.horizontalCenter
                 Layout.preferredWidth: parent.parent.width / 6 * 5
                 Layout.preferredHeight: parent.parent.width / 6 * 5
+
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
+                        textAnimation.running = true
+                        clipboardText.text = qsTranslate("","Address copied to clipboard")
+                        copyToClipboard(address)
+                    }
+                }
             }
 
             Text {
+                id: clipboardText
                 anchors.horizontalCenter: qrImage.horizontalCenter
                 font: theme.thinFont
                 color: primaryColor
-                text: qsTr("Tap to copy to clipboard")
+                text: qsTranslate("","Tap to copy to clipboard")
                 horizontalAlignment: Text.AlignHCenter
 
+                NumberAnimation {
+                    id: textAnimation
+                    target: clipboardText
+                    property: "opacity"
+                    from: 0
+                    to: 1
+                    duration: 1000
+                    easing.type: Easing.bezierCurve
+                }
             }
         }
 
