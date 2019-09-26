@@ -176,6 +176,7 @@ if ENABLE_WALLET
 BITCOIN_TESTS += \
   wallet/test/db_tests.cpp \
   wallet/test/psbt_wallet_tests.cpp \
+  wallet/test/wallet_blockfilter_tests.cpp \
   wallet/test/wallet_tests.cpp \
   wallet/test/wallet_crypto_tests.cpp \
   wallet/test/coinselector_tests.cpp \

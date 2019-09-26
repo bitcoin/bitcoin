@@ -5,6 +5,7 @@
 #ifndef BITCOIN_WALLET_SCRIPTPUBKEYMAN_H
 #define BITCOIN_WALLET_SCRIPTPUBKEYMAN_H
 
+#include <blockfilter.h>
 #include <script/signingprovider.h>
 #include <script/standard.h>
 #include <wallet/crypter.h>
@@ -345,6 +346,9 @@ public:
 
     //! Fetches a pubkey from mapWatchKeys if it exists there
     bool GetWatchPubKey(const CKeyID &address, CPubKey &pubkey_out) const;
+
+    /** Get all bare scripts, p2sh destinations of redeem scripts and watched scripts to a BIP 157 set */
+    GCSFilter::ElementSet GetAllRelevantScriptPubKeys() const;
 
     /* SigningProvider overrides */
     bool HaveKey(const CKeyID &address) const override;

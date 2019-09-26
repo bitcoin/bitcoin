@@ -820,6 +820,31 @@ bool LegacyScriptPubKeyMan::GetPubKey(const CKeyID &address, CPubKey& vchPubKeyO
     return GetWatchPubKey(address, vchPubKeyOut);
 }
 
+GCSFilter::ElementSet LegacyScriptPubKeyMan::GetAllRelevantScriptPubKeys() const
+{
+    LOCK(cs_KeyStore);
+    GCSFilter::ElementSet ret;
+    for (const auto& k : mapKeys) {
+        const CPubKey& pk = k.second.GetPubKey();
+        const CScript& p2pk = GetScriptForRawPubKey(pk);
+        ret.emplace(p2pk.begin(), p2pk.end());
+        const CScript& p2pkh = GetScriptForDestination(PKHash{pk});
+        ret.emplace(p2pkh.begin(), p2pkh.end());
+    }
+    for (const auto& bs : mapScripts) {
+        // The bare script could be P2WPKH, P2WSH, or a redeem script
+        const CScript& bare = bs.second;
+        // Make a P2SH version out of it
+        const CScript& wrapped = GetScriptForDestination(ScriptHash{bs.first});
+        ret.emplace(bare.begin(), bare.end());
+        ret.emplace(wrapped.begin(), wrapped.end());
+    }
+    for (const auto& i : setWatchOnly) {
+        ret.emplace(i.begin(), i.end());
+    }
+    return ret;
+}
+
 CPubKey LegacyScriptPubKeyMan::GenerateNewKey(WalletBatch &batch, bool internal)
 {
     assert(!m_storage.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS));

@@ -15,7 +15,7 @@
  * blocks by height. An index is constructed for each supported filter type with its own database
  * (ie. filter data for different types are stored in separate databases).
  *
- * This index is used to serve BIP 157 net requests.
+ * This index can be used to serve BIP 157 net requests or to rescan the wallet more efficiently.
  */
 class BlockFilterIndex final : public BaseIndex
 {
