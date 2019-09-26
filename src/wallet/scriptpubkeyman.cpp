@@ -1254,3 +1254,16 @@ bool LegacyScriptPubKeyMan::ImportScriptPubKeys(const std::set<CScript>& script_
     }
     return true;
 }
+
+std::set<CKeyID> LegacyScriptPubKeyMan::GetKeys() const
+{
+    LOCK(cs_KeyStore);
+    if (!HasEncryptionKeys()) {
+        return FillableSigningProvider::GetKeys();
+    }
+    std::set<CKeyID> set_address;
+    for (const auto& mi : mapCryptedKeys) {
+        set_address.insert(mi.first);
+    }
+    return set_address;
+}
