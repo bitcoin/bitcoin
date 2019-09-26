@@ -1574,14 +1574,14 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
 {
     int64_t nNow = GetTime();
     int64_t start_time = GetTimeMillis();
-
     assert(reserver.isReserved());
-
-    uint256 block_hash = start_block;
     ScanResult result;
 
     WalletLogPrintf("Rescan started from block %s...\n", start_block.ToString());
 
+    uint256 block_hash = start_block;
+    const auto filter_set = GetLegacyScriptPubKeyMan()->GetAllRelevantScriptPubKeys();
+    Optional<bool> filter_matches{true}; // Assume the filter index exists
     fAbortRescan = false;
     ShowProgress(strprintf("%s " + _("Rescanning...").translated, GetDisplayName()), 0); // show rescan progress in GUI as dialog or on splashscreen, if -rescan on startup
     uint256 tip_hash;
@@ -1606,11 +1606,22 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
         }
         if (GetTime() >= nNow + 60) {
             nNow = GetTime();
-            WalletLogPrintf("Still rescanning. At block %d. Progress=%f\n", *block_height, progress_current);
+            const std::string using_blockfilters{filter_matches /* exists */ ? " via blockfilters" : ""};
+            WalletLogPrintf("Still rescanning%s. At block %d. Progress=%f\n",
+                using_blockfilters, *block_height, progress_current);
         }
 
+        // Only query the filter index if it exists
+        if (filter_matches /* exists */) filter_matches = chain().filterMatchesAny(block_hash, filter_set);
+
         CBlock block;
-        if (chain().findBlock(block_hash, &block) && !block.IsNull()) {
+        if (filter_matches && !*filter_matches) {
+            // Filter did not match, pretend we scanned this block successfully
+            result.last_scanned_block = block_hash;
+            result.last_scanned_height = *block_height;
+        }
+        // Only read block from disk when filter matched
+        else if (chain().findBlock(block_hash, &block) && !block.IsNull()) {
             auto locked_chain = chain().lock();
             LOCK(cs_wallet);
             if (!locked_chain->getBlockHeight(block_hash)) {

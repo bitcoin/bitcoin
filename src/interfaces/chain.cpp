@@ -6,6 +6,7 @@
 
 #include <chain.h>
 #include <chainparams.h>
+#include <index/blockfilterindex.h>
 #include <interfaces/handler.h>
 #include <interfaces/wallet.h>
 #include <net.h>
@@ -247,6 +248,20 @@ public:
         // std::move necessary on some compilers due to conversion from
         // LockImpl to Lock pointer
         return std::move(result);
+    }
+    Optional<bool> filterMatchesAny(const uint256& hash, const GCSFilter::ElementSet& filter_set) override
+    {
+        const BlockFilterIndex* block_filter_index = GetBlockFilterIndex(BlockFilterType::BASIC);
+        if (!block_filter_index) return {};
+        BlockFilter filter;
+        const CBlockIndex* index;
+        {
+            LOCK(cs_main);
+            index = LookupBlockIndex(hash);
+            if (!index) return {};
+        }
+        if (!block_filter_index->LookupFilter(index, filter)) return {};
+        return filter.GetFilter().MatchAny(filter_set);
     }
     bool findBlock(const uint256& hash, CBlock* block, int64_t* time, int64_t* time_max) override
     {

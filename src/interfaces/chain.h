@@ -5,6 +5,7 @@
 #ifndef BITCOIN_INTERFACES_CHAIN_H
 #define BITCOIN_INTERFACES_CHAIN_H
 
+#include <blockfilter.h>            // For GCSFilter::ElementSet
 #include <optional.h>               // For Optional and nullopt
 #include <primitives/transaction.h> // For CTransactionRef
 
@@ -128,6 +129,10 @@ public:
     //! Return Lock interface. Chain is locked when this is called, and
     //! unlocked when the returned interface is freed.
     virtual std::unique_ptr<Lock> lock(bool try_lock = false) = 0;
+
+    //! Returns whether any of the elements match the block via a BIP 157 block filter or nothing if the block filter
+    //! for this block could be found.
+    virtual Optional<bool> filterMatchesAny(const uint256& hash, const GCSFilter::ElementSet& filter_set) = 0;
 
     //! Return whether node has the block and optionally return block metadata
     //! or contents.
