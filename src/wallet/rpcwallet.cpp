@@ -1808,8 +1808,6 @@ UniValue listsinceblock(const JSONRPCRequest& request)
             // chain, we want to instead use the last common ancestor
             pindex = chainActive.FindFork(pindex);
         }
-        else
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid blockhash");
     }
 
     if (!request.params[1].isNull()) {
