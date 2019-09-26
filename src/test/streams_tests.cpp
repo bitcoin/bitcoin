@@ -339,7 +339,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
 BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
 {
     // Make this test deterministic.
-    SeedInsecureRand(true);
+    SeedInsecureRand(SeedRand::ZEROS);
 
     for (int rep = 0; rep < 50; ++rep) {
         FILE* file = fsbridge::fopen("streams_test_tmp", "w+b");
