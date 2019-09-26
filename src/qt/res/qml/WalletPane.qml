@@ -124,6 +124,7 @@ Pane {
                     Layout.alignment: Qt.AlignHCenter
                     text: qsTr("SEND")
                     onClicked: {
+                        sendPane.camera.start()
                         stackView.push(sendPane)
                     }
                     font: theme.thinFont

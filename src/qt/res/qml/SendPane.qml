@@ -9,10 +9,7 @@ Pane {
 
     property int confirmations: 2
     property string confirmationsString: "20 minutes (2 blocks)"
-
-    Component.onCompleted: {
-        camera.start()
-    }
+    property alias camera: camera
 
     signal send(string address, int amount, int confirmations)
 
@@ -149,6 +146,7 @@ Pane {
                     Layout.alignment: Qt.AlignHCenter
                     text: qsTr("‹")
                     onClicked: {
+                        camera.stop()
                         stackView.pop()
                     }
                     font: theme.thinFont
