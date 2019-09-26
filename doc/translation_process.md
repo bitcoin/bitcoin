@@ -77,12 +77,6 @@ git ls-files src/qt/locale/*ts|xargs -n1 basename|sed 's/\(syscoin_\(.*\)\).ts/ 
 ```bash
 git ls-files src/qt/locale/*ts|xargs -n1 basename|sed 's/\(syscoin_\(.*\)\).ts/  qt\/locale\/\1.ts \\/'
 ```
-5. Update `build_msvc/libsyscoin_qt/libsyscoin_qt.vcxproj` or via
-```bash
-git ls-files src/qt/locale/*ts|xargs -n1 basename |
-  sed 's/@/%40/' |
-  sed 's/\(syscoin_\(.*\)\).ts/    <None Include="..\\..\\src\\qt\\locale\\\1.ts">\n      <DeploymentContent>true<\/DeploymentContent>\n    <\/None>/'
-```
 
 **Do not directly download translations** one by one from the Transifex website, as we do a few post-processing steps before committing the translations.
 
