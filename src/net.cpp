@@ -1827,6 +1827,10 @@ int CConnman::GetExtraOutboundCount()
     {
         LOCK(cs_vNodes);
         for (CNode* pnode : vNodes) {
+            // don't count outbound masternodes
+            if (pnode->fMasternode) {
+                continue;
+            }
             if (!pnode->fInbound && !pnode->m_manual_connection && !pnode->fFeeler && !pnode->fDisconnect && !pnode->fOneShot && pnode->fSuccessfullyConnected) {
                 ++nOutbound;
             }
