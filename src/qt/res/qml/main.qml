@@ -25,6 +25,8 @@ StackView {
         stackView.replace(walletPane)
     }
 
+    signal copyToClipboard(string clipboardText)
+
     FontLoader
     {
         id: robotoThin

@@ -35,6 +35,7 @@ public Q_SLOTS:
 private Q_SLOTS:
     void requestBitcoin();
     void sendBitcoin(QString address, int amount, int confirmations);
+    void setClipboard(QString text);
 
 private:
     void addWallet(WalletModel* m_walletModel);

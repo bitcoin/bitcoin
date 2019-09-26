@@ -106,6 +106,8 @@ BitcoinMobileGUI::BitcoinMobileGUI(interfaces::Node& node, const PlatformStyle *
     this->rootContext()->setContextProperty("licenceInfo", licenseInfoHTML);
     this->rootContext()->setContextProperty("version", QString::fromStdString(FormatFullVersion()));
 
+    connect(this->rootObject(), SIGNAL(copyToClipboard(QString)), this, SLOT(setClipboard(QString)));
+
     m_walletPane = this->rootObject()->findChild<QObject*>("walletPane");
 
     if (m_walletPane) {
@@ -300,6 +302,13 @@ void BitcoinMobileGUI::setBalance(const interfaces::WalletBalances& balances)
 
     QMetaObject::invokeMethod(m_walletPane, "updateBalance",
                               Q_ARG(QVariant, BitcoinUnits::formatWithUnit(unit, balances.balance, false, BitcoinUnits::separatorAlways)));
+}
+
+void BitcoinMobileGUI::setClipboard(QString text)
+{
+    qDebug() << tr("Send");
+
+    GUIUtil::setClipboard(text);
 }
 
 void BitcoinMobileGUI::updateDisplayUnit()
