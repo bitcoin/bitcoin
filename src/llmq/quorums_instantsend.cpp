@@ -402,11 +402,11 @@ bool CInstantSendManager::ProcessTx(const CTransaction& tx, const Consensus::Par
         g_connman->RelayInvFiltered(inv, tx, LLMQS_PROTO_VERSION);
     }
 
-    if (IsConflicted(tx)) {
+    if (!CheckCanLock(tx, true, params)) {
         return false;
     }
 
-    if (!CheckCanLock(tx, true, params)) {
+    if (IsConflicted(tx)) {
         return false;
     }
 
@@ -461,14 +461,11 @@ bool CInstantSendManager::CheckCanLock(const CTransaction& tx, bool printDebug, 
         return false;
     }
 
-    CAmount nValueIn = 0;
     for (const auto& in : tx.vin) {
         CAmount v = 0;
         if (!CheckCanLock(in.prevout, printDebug, tx.GetHash(), &v, params)) {
             return false;
         }
-
-        nValueIn += v;
     }
 
     return true;
@@ -560,8 +557,6 @@ void CInstantSendManager::HandleNewRecoveredSig(const CRecoveredSig& recoveredSi
 
 void CInstantSendManager::HandleNewInputLockRecoveredSig(const CRecoveredSig& recoveredSig, const uint256& txid)
 {
-    auto llmqType = Params().GetConsensus().llmqTypeInstantSend;
-
     CTransactionRef tx;
     uint256 hashBlock;
     if (!GetTransaction(txid, tx, Params().GetConsensus(), hashBlock, true)) {
@@ -957,8 +952,6 @@ void CInstantSendManager::ProcessNewTransaction(const CTransactionRef& tx, const
         // coinbase and TXs with no inputs can't be locked
         return;
     }
-
-    bool inMempool = mempool.get(tx->GetHash()) != nullptr;
 
     uint256 islockHash;
     {
