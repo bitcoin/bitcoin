@@ -72,7 +72,7 @@ Pane {
                 anchors.fill: parent
                 ToolButton {
                     Layout.alignment: Qt.AlignHCenter
-                    text: qsTranslate("","‹")
+                    text: "‹"
                     onClicked: {
                         stackView.pop()
                     }
