@@ -48,24 +48,19 @@ class CBrokenBlock(CBlock):
         return r
 
 class FullBlockTest(ComparisonTestFramework):
-
     # Can either run this test as 1 node with expected answers, or two and compare them.
     # Change the "outcome" variable from each TestInstance object to only do the comparison.
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.num_nodes = 1
+        self.setup_clean_chain = True
         self.block_heights = {}
         self.coinbase_key = CECKey()
         self.coinbase_key.set_secretbytes(b"horsebattery")
         self.coinbase_pubkey = self.coinbase_key.get_pubkey()
         self.tip = None
         self.blocks = {}
-
-    def setup_network(self):
         # Must set '-dip3params=2000:2000' to create pre-dip3 blocks only
-        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir,
-                                 extra_args=[['-whitelist=127.0.0.1', '-dip3params=2000:2000']],
-                                 binary=[self.options.testbinary])
+        self.extra_args = [['-whitelist=127.0.0.1', '-dip3params=2000:2000']]
 
     def add_options(self, parser):
         super().add_options(parser)

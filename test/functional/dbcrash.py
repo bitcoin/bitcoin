@@ -42,8 +42,7 @@ Test structure:
 
 class ChainstateWriteCrashTest(BitcoinTestFramework):
 
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.num_nodes = 4
         self.setup_clean_chain = False
 
@@ -67,7 +66,9 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
         self.crashed_on_restart = 0     # Track count of crashes during recovery
 
     def setup_network(self):
-        self.setup_nodes()
+        # Need a bit of extra time for the nodes to start up for this test
+        self.add_nodes(self.num_nodes, extra_args=self.extra_args, timewait=90)
+        self.start_nodes()
         # Leave them unconnected, we'll use submitblock directly in this test
 
     # Starts up a given node id, waits for the tip to reach the given block
@@ -77,10 +78,10 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
     # Returns the utxo hash of the given node.
     def restart_node(self, node_index, expected_tip):
         time_start = time.time()
-        while time.time() - time_start < 60:
+        while time.time() - time_start < 120:
             try:
                 # Any of these RPC calls could throw due to node crash
-                self.nodes[node_index] = self.start_node(node_index, self.options.tmpdir, self.extra_args[node_index])
+                self.start_node(node_index)
                 self.nodes[node_index].waitforblock(expected_tip)
                 utxo_hash = self.nodes[node_index].gettxoutsetinfo()['hash_serialized_2']
                 return utxo_hash

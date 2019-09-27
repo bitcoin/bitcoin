@@ -3,11 +3,13 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 import time
+from decimal import Decimal
 
+from test_framework import mininode
 from test_framework.blocktools import get_masternode_payment, create_coinbase, create_block
 from test_framework.mininode import *
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import *
+from test_framework.util import sync_blocks, p2p_port, assert_raises_jsonrpc, set_node_times
 
 '''
 llmq-is-cl-conflicts.py
@@ -45,8 +47,8 @@ class TestNode(NodeConnCB):
 
 
 class LLMQ_IS_CL_Conflicts(DashTestFramework):
-    def __init__(self):
-        super().__init__(6, 5, [], fast_dip3_enforcement=True)
+    def set_test_params(self):
+        self.set_dash_test_params(6, 5, [], fast_dip3_enforcement=True)
         #disable_mocktime()
 
     def run_test(self):

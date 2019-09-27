@@ -17,8 +17,7 @@ class Masternode(object):
     pass
 
 class DIP3Test(BitcoinTestFramework):
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.num_initial_mn = 11 # Should be >= 11 to make sure quorums are not always the same MNs
         self.num_nodes = 1 + self.num_initial_mn + 2 # +1 for controller, +1 for mn-qt, +1 for mn created after dip3 activation
         self.setup_clean_chain = True
@@ -30,18 +29,14 @@ class DIP3Test(BitcoinTestFramework):
 
     def setup_network(self):
         self.disable_mocktime()
+        self.add_nodes(1)
         self.start_controller_node()
 
-    def start_controller_node(self, extra_args=None):
+    def start_controller_node(self):
         self.log.info("starting controller node")
-        if len(self.nodes) == 0:
-            self.nodes.append(None)
-        args = self.extra_args
-        if extra_args is not None:
-            args += extra_args
-        self.nodes[0] = self.start_node(0, self.options.tmpdir, extra_args=args)
+        self.start_node(0, extra_args=self.extra_args)
         for i in range(1, self.num_nodes):
-            if i < len(self.nodes) and self.nodes[i] is not None:
+            if i < len(self.nodes) and self.nodes[i] is not None and self.nodes[i].process is not None:
                 connect_nodes_bi(self.nodes, 0, i)
 
     def stop_controller_node(self):
@@ -245,12 +240,11 @@ class DIP3Test(BitcoinTestFramework):
 
     def start_mn(self, mn):
         while len(self.nodes) <= mn.idx:
-            self.nodes.append(None)
+            self.add_nodes(1)
         extra_args = ['-masternode=1', '-masternodeblsprivkey=%s' % mn.blsMnkey]
-        n = self.start_node(mn.idx, self.options.tmpdir, self.extra_args + extra_args, stderr=sys.stdout)
-        self.nodes[mn.idx] = n
-        for i in range(0, self.num_nodes):
-            if i < len(self.nodes) and self.nodes[i] is not None and i != mn.idx:
+        self.start_node(mn.idx, extra_args = self.extra_args + extra_args)
+        for i in range(0, len(self.nodes)):
+            if i < len(self.nodes) and self.nodes[i] is not None and self.nodes[i].process is not None and i != mn.idx:
                 connect_nodes_bi(self.nodes, mn.idx, i)
         mn.node = self.nodes[mn.idx]
         self.sync_all()

@@ -12,34 +12,38 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_jsonrpc
 
 class MultiWalletTest(BitcoinTestFramework):
-
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
         self.extra_args = [['-wallet=w1', '-wallet=w2', '-wallet=w3']]
 
     def run_test(self):
+        assert_equal(set(self.nodes[0].listwallets()), {"w1", "w2", "w3"})
+
         self.stop_node(0)
 
         # should not initialize if there are duplicate wallets
-        self.assert_start_raises_init_error(0, self.options.tmpdir, ['-wallet=w1', '-wallet=w1'], 'Error loading wallet w1. Duplicate -wallet filename specified.')
+        self.assert_start_raises_init_error(0, ['-wallet=w1', '-wallet=w1'], 'Error loading wallet w1. Duplicate -wallet filename specified.')
 
         # should not initialize if wallet file is a directory
         os.mkdir(os.path.join(self.options.tmpdir, 'node0', 'regtest', 'w11'))
-        self.assert_start_raises_init_error(0, self.options.tmpdir, ['-wallet=w11'], 'Error loading wallet w11. -wallet filename must be a regular file.')
+        self.assert_start_raises_init_error(0, ['-wallet=w11'], 'Error loading wallet w11. -wallet filename must be a regular file.')
 
         # should not initialize if wallet file is a symlink
         os.symlink(os.path.join(self.options.tmpdir, 'node0', 'regtest', 'w1'), os.path.join(self.options.tmpdir, 'node0', 'regtest', 'w12'))
-        self.assert_start_raises_init_error(0, self.options.tmpdir, ['-wallet=w12'], 'Error loading wallet w12. -wallet filename must be a regular file.')
+        self.assert_start_raises_init_error(0, ['-wallet=w12'], 'Error loading wallet w12. -wallet filename must be a regular file.')
 
-        self.nodes[0] = self.start_node(0, self.options.tmpdir, self.extra_args[0])
+        self.start_node(0, self.extra_args[0])
 
-        w1 = self.nodes[0] / "wallet/w1"
+        w1 = self.nodes[0].get_wallet_rpc("w1")
+        w2 = self.nodes[0].get_wallet_rpc("w2")
+        w3 = self.nodes[0].get_wallet_rpc("w3")
+        wallet_bad = self.nodes[0].get_wallet_rpc("bad")
+
         w1.generate(1)
 
         # accessing invalid wallet fails
-        assert_raises_jsonrpc(-18, "Requested wallet does not exist or is not loaded", (self.nodes[0] / "wallet/bad").getwalletinfo)
+        assert_raises_jsonrpc(-18, "Requested wallet does not exist or is not loaded", wallet_bad.getwalletinfo)
 
         # accessing wallet RPC without using wallet endpoint fails
         assert_raises_jsonrpc(-19, "Wallet file not specified", self.nodes[0].getwalletinfo)
@@ -50,14 +54,12 @@ class MultiWalletTest(BitcoinTestFramework):
         w1_name = w1_info['walletname']
         assert_equal(w1_name, "w1")
 
-        # check w1 wallet balance
-        w2 = self.nodes[0] / "wallet/w2"
+        # check w2 wallet balance
         w2_info = w2.getwalletinfo()
         assert_equal(w2_info['immature_balance'], 0)
         w2_name = w2_info['walletname']
         assert_equal(w2_name, "w2")
 
-        w3 = self.nodes[0] / "wallet/w3"
         w3_name = w3.getwalletinfo()['walletname']
         assert_equal(w3_name, "w3")
 

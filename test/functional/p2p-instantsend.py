@@ -5,15 +5,16 @@
 
 from test_framework.mininode import *
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import *
+from test_framework.util import isolate_node, set_node_times, reconnect_isolated_node, assert_equal, \
+    assert_raises_jsonrpc
 
 '''
 InstantSendTest -- test InstantSend functionality (prevent doublespend for unconfirmed transactions)
 '''
 
 class InstantSendTest(DashTestFramework):
-    def __init__(self):
-        super().__init__(9, 5, [], fast_dip3_enforcement=True)
+    def set_test_params(self):
+        self.set_dash_test_params(9, 5, [], fast_dip3_enforcement=True)
         # set sender,  receiver,  isolated nodes
         self.isolated_idx = 1
         self.receiver_idx = 2

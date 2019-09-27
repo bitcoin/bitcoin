@@ -23,16 +23,9 @@ def get_sub_array_from_array(object_array, to_match):
     return []
 
 class ReceivedByTest(BitcoinTestFramework):
-
-    def __init__(self):
-        super().__init__()
-        self.num_nodes = 4
-        self.setup_clean_chain = False
-
-    def setup_nodes(self):
-        #This test requires mocktime
+    def set_test_params(self):
+        self.num_nodes = 2
         self.set_cache_mocktime()
-        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir)
 
     def run_test(self):
         '''

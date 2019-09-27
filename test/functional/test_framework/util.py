@@ -8,12 +8,14 @@
 from base64 import b64encode
 from binascii import hexlify, unhexlify
 from decimal import Decimal, ROUND_DOWN
+import hashlib
 import json
 import logging
 import os
 import random
 import shutil
 import re
+from subprocess import CalledProcessError
 import time
 
 from . import coverage
@@ -59,18 +61,42 @@ def assert_raises_message(exc, message, fun, *args, **kwds):
     else:
         raise AssertionError("No exception raised")
 
+def assert_raises_process_error(returncode, output, fun, *args, **kwds):
+    """Execute a process and asserts the process return code and output.
+
+    Calls function `fun` with arguments `args` and `kwds`. Catches a CalledProcessError
+    and verifies that the return code and output are as expected. Throws AssertionError if
+    no CalledProcessError was raised or if the return code and output are not as expected.
+
+    Args:
+        returncode (int): the process return code.
+        output (string): [a substring of] the process output.
+        fun (function): the function to call. This should execute a process.
+        args*: positional arguments for the function.
+        kwds**: named arguments for the function.
+    """
+    try:
+        fun(*args, **kwds)
+    except CalledProcessError as e:
+        if returncode != e.returncode:
+            raise AssertionError("Unexpected returncode %i" % e.returncode)
+        if output not in e.output:
+            raise AssertionError("Expected substring not found:" + e.output)
+    else:
+        raise AssertionError("No exception raised")
+
 def assert_raises_jsonrpc(code, message, fun, *args, **kwds):
     """Run an RPC and verify that a specific JSONRPC exception code and message is raised.
 
     Calls function `fun` with arguments `args` and `kwds`. Catches a JSONRPCException
     and verifies that the error code and message are as expected. Throws AssertionError if
-    no JSONRPCException was returned or if the error code/message are not as expected.
+    no JSONRPCException was raised or if the error code/message are not as expected.
 
     Args:
         code (int), optional: the error code returned by the RPC call (defined
             in src/rpc/protocol.h). Set to None if checking the error code is not required.
         message (string), optional: [a substring of] the error string returned by the
-            RPC call. Set to None if checking the error string is not required
+            RPC call. Set to None if checking the error string is not required.
         fun (function): the function to call. This should be the name of an RPC.
         args*: positional arguments for the function.
         kwds**: named arguments for the function.
@@ -150,6 +176,13 @@ def count_bytes(hex_string):
 def bytes_to_hex_str(byte_str):
     return hexlify(byte_str).decode('ascii')
 
+def hash256(byte_str):
+    sha256 = hashlib.sha256()
+    sha256.update(byte_str)
+    sha256d = hashlib.sha256()
+    sha256d.update(sha256.digest())
+    return sha256d.digest()[::-1]
+
 def hex_str_to_bytes(hex_str):
     return unhexlify(hex_str.encode('ascii'))
 
@@ -158,6 +191,28 @@ def str_to_b64str(string):
 
 def satoshi_round(amount):
     return Decimal(amount).quantize(Decimal('0.00000001'), rounding=ROUND_DOWN)
+
+def wait_until(predicate, *, attempts=float('inf'), timeout=float('inf'), sleep=0.05, lock=None):
+    if attempts == float('inf') and timeout == float('inf'):
+        timeout = 60
+    attempt = 0
+    timeout += time.time()
+
+    while attempt < attempts and time.time() < timeout:
+        if lock:
+            with lock:
+                if predicate():
+                    return
+        else:
+            if predicate():
+                return
+        attempt += 1
+        time.sleep(sleep)
+
+    # Print the cause of the timeout
+    assert_greater_than(attempts, attempt)
+    assert_greater_than(timeout, time.time())
+    raise RuntimeError('Unreachable')
 
 # RPC/P2P connection constants and functions
 ############################################
@@ -220,7 +275,7 @@ def rpc_port(n):
     return PORT_MIN + PORT_RANGE + n + (MAX_NODES * PortSeed.n) % (PORT_RANGE - 1 - MAX_NODES)
 
 def rpc_url(datadir, i, rpchost=None):
-    rpc_u, rpc_p = get_auth_cookie(datadir, i)
+    rpc_u, rpc_p = get_auth_cookie(datadir)
     host = '127.0.0.1'
     port = rpc_port(i)
     if rpchost:
@@ -248,7 +303,7 @@ def initialize_datadir(dirname, n):
 def get_datadir_path(dirname, n):
     return os.path.join(dirname, "node" + str(n))
 
-def get_auth_cookie(datadir, n):
+def get_auth_cookie(datadir):
     user = None
     password = None
     if os.path.isfile(os.path.join(datadir, "dash.conf")):

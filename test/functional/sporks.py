@@ -12,8 +12,7 @@ from test_framework.util import *
 '''
 
 class SporkTest(BitcoinTestFramework):
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.num_nodes = 3
         self.setup_clean_chain = True
         self.extra_args = [["-sporkkey=cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK"], [], []]
@@ -59,8 +58,8 @@ class SporkTest(BitcoinTestFramework):
         # restart nodes to check spork persistence
         self.stop_node(0)
         self.stop_node(1)
-        self.nodes[0] = self.start_node(0, self.options.tmpdir)
-        self.nodes[1] = self.start_node(1, self.options.tmpdir)
+        self.start_node(0)
+        self.start_node(1)
         assert(self.get_test_spork_state(self.nodes[0]))
         assert(self.get_test_spork_state(self.nodes[1]))
 

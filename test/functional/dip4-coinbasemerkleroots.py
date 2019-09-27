@@ -6,7 +6,7 @@ from collections import namedtuple
 
 from test_framework.mininode import *
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import *
+from test_framework.util import p2p_port, assert_equal, sync_blocks, set_node_times
 
 '''
 dip4-coinbasemerkleroots.py
@@ -37,8 +37,8 @@ class TestNode(NodeConnCB):
 
 
 class LLMQCoinbaseCommitmentsTest(DashTestFramework):
-    def __init__(self):
-        super().__init__(6, 5, [], fast_dip3_enforcement=True)
+    def set_test_params(self):
+        self.set_dash_test_params(6, 5, [], fast_dip3_enforcement=True)
 
     def run_test(self):
         self.test_node = TestNode()

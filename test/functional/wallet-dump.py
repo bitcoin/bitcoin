@@ -55,9 +55,7 @@ def read_dump(file_name, addrs, hd_master_addr_old):
 
 
 class WalletDumpTest(BitcoinTestFramework):
-
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
         self.extra_args = [["-keypool=90", "-usehd=1"]]
@@ -65,16 +63,19 @@ class WalletDumpTest(BitcoinTestFramework):
     def setup_network(self):
         # TODO remove this when usehd=1 becomes the default
         # use our own cache and -usehd=1 as extra arg as the default cache is run with -usehd=0
-        self._initialize_chain(os.path.join(self.options.tmpdir, "hd"), self.num_nodes, os.path.join(self.options.cachedir, "hd"), extra_args=self.extra_args[0], stderr=sys.stdout)
+        self.options.tmpdir = os.path.join(self.options.tmpdir, 'hd')
+        self.options.cachedir = os.path.join(self.options.cachedir, 'hd')
+        self._initialize_chain(extra_args=self.extra_args[0], stderr=sys.stdout)
         self.set_cache_mocktime()
         # Use 1 minute timeout because the initial getnewaddress RPC can take
         # longer than the default 30 seconds due to an expensive
         # CWallet::TopUpKeyPool call, and the encryptwallet RPC made later in
         # the test often takes even longer.
-        self.nodes = self.start_nodes(self.num_nodes, os.path.join(self.options.tmpdir, "hd"), self.extra_args, timewait=60, stderr=sys.stdout)
+        self.add_nodes(self.num_nodes, self.extra_args, timewait=60, stderr=sys.stdout)
+        self.start_nodes()
 
     def run_test (self):
-        tmpdir = os.path.join(self.options.tmpdir, "hd")
+        tmpdir = self.options.tmpdir
 
         # generate 20 addresses to compare against the dump
         test_addr_count = 20
@@ -96,9 +97,8 @@ class WalletDumpTest(BitcoinTestFramework):
         assert_equal(found_addr_rsv, 180)  # keypool size (external+internal)
 
         #encrypt wallet, restart, unlock and dump
-        self.nodes[0].encryptwallet('test')
-        self.bitcoind_processes[0].wait()
-        self.nodes[0] = self.start_node(0, tmpdir, self.extra_args[0])
+        self.nodes[0].node_encrypt_wallet('test')
+        self.start_node(0)
         self.nodes[0].walletpassphrase('test', 10)
         # Should be a no-op:
         self.nodes[0].keypoolrefill()

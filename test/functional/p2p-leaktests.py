@@ -88,8 +88,7 @@ class CNodeNoVerackIdle(CLazyNode):
         conn.send_message(msg_getaddr())
 
 class P2PLeakTest(BitcoinTestFramework):
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [['-banscore='+str(banscore)]]
 
@@ -108,9 +107,9 @@ class P2PLeakTest(BitcoinTestFramework):
 
         NetworkThread().start()  # Start up network handling in another thread
 
-        assert wait_until(lambda: no_version_bannode.ever_connected, timeout=10)
-        assert wait_until(lambda: no_version_idlenode.ever_connected, timeout=10)
-        assert wait_until(lambda: no_verack_idlenode.version_received, timeout=10)
+        wait_until(lambda: no_version_bannode.ever_connected, timeout=10, lock=mininode_lock)
+        wait_until(lambda: no_version_idlenode.ever_connected, timeout=10, lock=mininode_lock)
+        wait_until(lambda: no_verack_idlenode.version_received, timeout=10, lock=mininode_lock)
 
         # Mine a block and make sure that it's not sent to the connected nodes
         self.nodes[0].generate(1)

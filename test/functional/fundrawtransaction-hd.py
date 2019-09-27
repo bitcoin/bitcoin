@@ -5,20 +5,20 @@
 
 import sys
 
-from test_framework.test_framework import (BitcoinTestFramework, BITCOIND_PROC_WAIT_TIMEOUT)
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
 # Create one-input, one-output, no-fee transaction:
 class RawTransactionsTest(BitcoinTestFramework):
 
-    def __init__(self):
-        super().__init__()
+    def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 4
         self.extra_args = [['-usehd=1']] * self.num_nodes
+        self.stderr = sys.stdout
 
     def setup_network(self):
-        self.setup_nodes(stderr=sys.stdout)
+        super().setup_network()
         connect_nodes_bi(self.nodes,0,1)
         connect_nodes_bi(self.nodes,1,2)
         connect_nodes_bi(self.nodes,0,2)
@@ -442,11 +442,9 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.stop_node(0)
         self.stop_node(2)
         self.stop_node(3)
-        self.nodes[1].encryptwallet("test")
-        self.nodes.pop(1)
-        self.wait_node(1)
+        self.nodes[1].node_encrypt_wallet("test")
 
-        self.nodes = self.start_nodes(4, self.options.tmpdir, [['-usehd=1']] * self.num_nodes, stderr=sys.stdout)
+        self.start_nodes()
         # This test is not meant to test fee estimation and we'd like
         # to be sure all txs are sent at a consistent desired feerate
         for node in self.nodes:
