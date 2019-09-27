@@ -195,9 +195,31 @@ void OptionsModel::Init(bool resetSettings)
     language = settings.value("language").toString();
 }
 
+/** Helper function to copy contents from one QSettings to another.
+ * By using allKeys this also covers nested settings in a hierarchy.
+ */
+static void CopySettings(QSettings& dst, const QSettings& src)
+{
+    for (const QString& key : src.allKeys()) {
+        dst.setValue(key, src.value(key));
+    }
+}
+
+/** Back up a QSettings to an ini-formatted file. */
+static void BackupSettings(const fs::path& filename, const QSettings& src)
+{
+    qWarning() << "Backing up GUI settings to" << GUIUtil::boostPathToQString(filename);
+    QSettings dst(GUIUtil::boostPathToQString(filename), QSettings::IniFormat);
+    dst.clear();
+    CopySettings(dst, src);
+}
+
 void OptionsModel::Reset()
 {
     QSettings settings;
+
+    // Backup old settings to chain-specific datadir for troubleshooting
+    BackupSettings(GetDataDir(true) / "guisettings.ini.bak", settings);
 
     // Remove all entries from our QSettings object
     settings.clear();

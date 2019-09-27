@@ -177,10 +177,10 @@ void MasternodeList::updateDIP3List()
     mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
         if (walletModel && ui->checkBoxMyMasternodesOnly->isChecked()) {
             bool fMyMasternode = setOutpts.count(dmn->collateralOutpoint) ||
-                walletModel->havePrivKey(dmn->pdmnState->keyIDOwner) ||
-                walletModel->havePrivKey(dmn->pdmnState->keyIDVoting) ||
-                walletModel->havePrivKey(dmn->pdmnState->scriptPayout) ||
-                walletModel->havePrivKey(dmn->pdmnState->scriptOperatorPayout);
+                walletModel->IsSpendable(dmn->pdmnState->keyIDOwner) ||
+                walletModel->IsSpendable(dmn->pdmnState->keyIDVoting) ||
+                walletModel->IsSpendable(dmn->pdmnState->scriptPayout) ||
+                walletModel->IsSpendable(dmn->pdmnState->scriptOperatorPayout);
             if (!fMyMasternode) return;
         }
         // populate list

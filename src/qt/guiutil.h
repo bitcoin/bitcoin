@@ -185,11 +185,6 @@ namespace GUIUtil
     /** Modify Qt network specific settings on migration */
     void migrateQtSettings();
 
-    /** Save window size and position */
-    void saveWindowGeometry(const QString& strSetting, QWidget *parent);
-    /** Restore window size and position */
-    void restoreWindowGeometry(const QString& strSetting, const QSize &defaultSizeIn, QWidget *parent);
-
     /** Load global CSS theme */
     QString loadStyleSheet();
 

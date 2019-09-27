@@ -867,32 +867,6 @@ void migrateQtSettings()
     }
 }
 
-void saveWindowGeometry(const QString& strSetting, QWidget *parent)
-{
-    QSettings settings;
-    settings.setValue(strSetting + "Pos", parent->pos());
-    settings.setValue(strSetting + "Size", parent->size());
-}
-
-void restoreWindowGeometry(const QString& strSetting, const QSize& defaultSize, QWidget *parent)
-{
-    QSettings settings;
-    QPoint pos = settings.value(strSetting + "Pos").toPoint();
-    QSize size = settings.value(strSetting + "Size", defaultSize).toSize();
-
-    parent->resize(size);
-    parent->move(pos);
-
-    if ((!pos.x() && !pos.y()) || (QApplication::desktop()->screenNumber(parent) == -1))
-    {
-        QRect screen = QApplication::desktop()->screenGeometry();
-        QPoint defaultPos = screen.center() -
-            QPoint(defaultSize.width() / 2, defaultSize.height() / 2);
-        parent->resize(defaultSize);
-        parent->move(defaultPos);
-    }
-}
-
 // Return name of current UI-theme or default theme if no theme was found
 QString getThemeName()
 {

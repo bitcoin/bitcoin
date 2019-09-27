@@ -3,10 +3,11 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the dumpwallet RPC."""
+import os
 import sys
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (assert_equal, assert_raises_jsonrpc)
 
 
 def read_dump(file_name, addrs, hd_master_addr_old):
@@ -110,6 +111,9 @@ class WalletDumpTest(BitcoinTestFramework):
         # TODO clarify if we want the behavior that is tested below in Dash (only when HD seed was generated and not user-provided)
         # assert_equal(found_addr_chg, 180 + 50)  # old reserve keys are marked as change now
         assert_equal(found_addr_rsv, 180)  # keypool size
+
+        # Overwriting should fail
+        assert_raises_jsonrpc(-8, "already exists", self.nodes[0].dumpwallet, tmpdir + "/node0/wallet.unencrypted.dump")
 
 if __name__ == '__main__':
     WalletDumpTest().main ()

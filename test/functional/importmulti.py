@@ -169,6 +169,18 @@ class ImportMultiTest (BitcoinTestFramework):
         assert_equal(address_assert['ismine'], True)
         assert_equal(address_assert['timestamp'], timestamp)
 
+        self.log.info("Should not import an address with private key if is already imported")
+        result = self.nodes[1].importmulti([{
+            "scriptPubKey": {
+                "address": address['address']
+            },
+            "timestamp": "now",
+            "keys": [ self.nodes[0].dumpprivkey(address['address']) ]
+        }])
+        assert_equal(result[0]['success'], False)
+        assert_equal(result[0]['error']['code'], -4)
+        assert_equal(result[0]['error']['message'], 'The wallet already contains the private key for this address or script')
+
         # Address + Private key + watchonly
         self.log.info("Should not import an address with private key and with watchonly")
         address = self.nodes[0].validateaddress(self.nodes[0].getnewaddress())

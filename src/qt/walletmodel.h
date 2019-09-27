@@ -200,8 +200,8 @@ public:
     UnlockContext requestUnlock(bool fForMixingOnly=false);
 
     bool getPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
-    bool havePrivKey(const CKeyID &address) const;
-    bool havePrivKey(const CScript& script) const;
+    bool IsSpendable(const CTxDestination& dest) const;
+    bool IsSpendable(const CScript& script) const;
     bool getPrivKey(const CKeyID &address, CKey& vchPrivKeyOut) const;
     void getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<COutput>& vOutputs);
     bool isSpent(const COutPoint& outpoint) const;
