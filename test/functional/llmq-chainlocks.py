@@ -122,7 +122,7 @@ class LLMQChainLocksTest(DashTestFramework):
         # Enable network on first node again, which will cause the blocks to propagate and IS locks to happen retroactively
         # for the mined TXs, which will then allow the network to create a CLSIG
         reconnect_isolated_node(self.nodes[0], 1)
-        self.wait_for_chainlock(self.nodes[0], self.nodes[1].getbestblockhash())
+        self.wait_for_chainlock(self.nodes[0], self.nodes[0].getbestblockhash(), 30)
 
     def wait_for_chainlock_tip_all_nodes(self):
         for node in self.nodes:
@@ -133,9 +133,9 @@ class LLMQChainLocksTest(DashTestFramework):
         tip = node.getbestblockhash()
         self.wait_for_chainlock(node, tip)
 
-    def wait_for_chainlock(self, node, block_hash):
+    def wait_for_chainlock(self, node, block_hash, timeout=15):
         t = time.time()
-        while time.time() - t < 15:
+        while time.time() - t < timeout:
             try:
                 block = node.getblock(block_hash)
                 if block["confirmations"] > 0 and block["chainlock"]:
