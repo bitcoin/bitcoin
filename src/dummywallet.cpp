@@ -12,6 +12,8 @@ enum class WalletCreationStatus;
 
 namespace interfaces {
 class Chain;
+class Handler;
+class Wallet;
 }
 
 class DummyWalletInit : public WalletInitInterface {
@@ -81,9 +83,13 @@ WalletCreationStatus CreateWallet(interfaces::Chain& chain, const SecureString& 
     throw std::logic_error("Wallet function called in non-wallet build.");
 }
 
-namespace interfaces {
+using LoadWalletFn = std::function<void(std::unique_ptr<interfaces::Wallet> wallet)>;
+std::unique_ptr<interfaces::Handler> HandleLoadWallet(LoadWalletFn load_wallet)
+{
+    throw std::logic_error("Wallet function called in non-wallet build.");
+}
 
-class Wallet;
+namespace interfaces {
 
 std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet)
 {
