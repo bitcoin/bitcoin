@@ -165,6 +165,14 @@ Pane {
                                 stackView.push(aboutPane)
                             }
                         }
+
+                        MenuItem {
+                            text: bitcoinTr("RPCConsole", "&Console")
+                            font: theme.thinFont
+                            onTriggered: {
+                                stackView.push(consolePane)
+                            }
+                        }
                     }
                 }
             }

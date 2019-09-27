@@ -37,6 +37,7 @@ private Q_SLOTS:
     void sendBitcoin(QString address, int amount, int confirmations);
     void setClipboard(QString text);
     void setDisplayUnit(int index);
+    void executeRpcCommand(QString command);
 
 private:
     void addWallet(WalletModel* m_walletModel);
@@ -55,6 +56,7 @@ private:
 
     QObject* m_walletPane;
     QObject* m_sendPane;
+    QObject* m_consolePane;
 
     std::unique_ptr<interfaces::Handler> m_handler_init_message;
     std::unique_ptr<interfaces::Handler> m_handler_show_progress;

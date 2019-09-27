@@ -1,6 +1,7 @@
 #include "bitcoinmobilegui.h"
 
 #include <init.h>
+#include <univalue.h>
 
 #include <qt/guiutil.h>
 #include <qt/walletcontroller.h>
@@ -12,6 +13,7 @@
 #include <qt/optionsmodel.h>
 #include <qt/bitcoinunits.h>
 #include <qt/walletmodel.h>
+#include <qt/rpcconsole.h>
 
 #include <wallet/wallet.h>
 #include <wallet/coincontrol.h>
@@ -140,12 +142,18 @@ BitcoinMobileGUI::BitcoinMobileGUI(interfaces::Node& node, const PlatformStyle *
         connect(m_sendPane, SIGNAL(send(QString, int, int)), this, SLOT(sendBitcoin(QString, int, int)));
     }
 
+    m_consolePane = this->rootObject()->findChild<QObject*>("consolePane");
+
+    if (m_consolePane) {
+        connect(m_consolePane, SIGNAL(executeCommand(QString)), this, SLOT(executeRpcCommand(QString)));
+    }
+
     subscribeToCoreSignals();
 }
 
-void BitcoinMobileGUI::setClientModel(ClientModel *_clientModel)
+void BitcoinMobileGUI::setClientModel(ClientModel *clientModel)
 {
-    this->m_clientModel = _clientModel;
+    this->m_clientModel = clientModel;
 }
 
 void BitcoinMobileGUI::setWalletController(WalletController* wallet_controller)
@@ -250,7 +258,6 @@ void BitcoinMobileGUI::requestBitcoin()
 
     QMetaObject::invokeMethod(m_walletPane, "showQr",
                               Q_ARG(QVariant, address));
-
 }
 
 void BitcoinMobileGUI::sendBitcoin(QString address, int amount, int confirmations)
@@ -335,6 +342,43 @@ void BitcoinMobileGUI::setDisplayUnit(int index)
     {
         m_walletModel->getOptionsModel()->setDisplayUnit(index);
     }
+}
+
+void BitcoinMobileGUI::executeRpcCommand(QString command)
+{
+    QString response;
+
+    try
+    {
+        std::string result;
+        std::string executableCommand = command.toStdString() + "\n";
+
+        if (!RPCConsole::RPCExecuteCommandLine(m_node, result, executableCommand, nullptr, m_walletModel)) {
+            response = "Parse error: unbalanced ' or \"";
+        }
+        else {
+            response = QString::fromStdString(result);
+        }
+    }
+    catch (UniValue& objError)
+    {
+        try // Nice formatting for standard-format error
+        {
+            int code = find_value(objError, "code").get_int();
+            std::string message = find_value(objError, "message").get_str();
+            response =  QString::fromStdString(message) + " (code " + QString::number(code) + ")";
+        }
+        catch (const std::runtime_error&) // raised when converting to invalid type, i.e. missing code or message
+        {   // Show raw JSON object
+            response = QString::fromStdString(objError.write());
+        }
+    }
+    catch (const std::exception& e)
+    {
+        response = QString("Error: ") + QString::fromStdString(e.what());
+    }
+
+    QMetaObject::invokeMethod(m_consolePane, "showReply", Q_ARG(QVariant, response));
 }
 
 void BitcoinMobileGUI::updateDisplayUnit()

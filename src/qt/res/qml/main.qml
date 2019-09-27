@@ -76,6 +76,12 @@ StackView {
         visible: false
     }
 
+    ConsolePane {
+        id: consolePane
+        objectName: "consolePane"
+        visible: false
+    }
+
     WalletPane {
         id: walletPane
         objectName: "walletPane"
