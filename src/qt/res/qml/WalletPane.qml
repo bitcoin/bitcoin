@@ -44,6 +44,9 @@ Pane {
             Layout.fillWidth: true
             Layout.margins: 10
 
+            clip: true
+            snapMode: ListView.SnapToItem
+
             delegate: RowLayout {
                 width: parent.width
                 Image {
