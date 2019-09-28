@@ -1015,7 +1015,7 @@ UniValue listassetindex(const JSONRPCRequest& request) {
         throw JSONRPCError(RPC_MISC_ERROR, "You must start syscoin with -assetindex enabled");
     }
     UniValue options;
-    int64_t page = params[0].get_int64();
+    uint32_t page = params[0].get_uint();
    
     if (page < 0) {
         throw JSONRPCError(RPC_INVALID_PARAMS, "'page' must be 0 or greater");

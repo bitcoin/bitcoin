@@ -443,14 +443,16 @@ bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, AssetSup
     if(fAssetIndex){
         const uint256& txid = tx.GetHash();
         if(fAssetIndexGuids.empty() || std::find(fAssetIndexGuids.begin(), fAssetIndexGuids.end(), mintSyscoin.assetAllocationTuple.nAsset) != fAssetIndexGuids.end()){
-            if(passetindexdb->Exists(assetallocationindexpage) && !passetindexdb->EraseIndexTXID(mintSyscoin.assetAllocationTuple, txid)){
-                LogPrint(BCLog::SYS,"DisconnectMintAsset: Could not erase mint asset allocation from asset allocation index\n");
-                return false;
+            if(passetindexdb->Exists(std::make_pair(false, mintSyscoin.assetAllocationTuple.nAsset))){
+                if(!passetindexdb->EraseIndexTXID(mintSyscoin.assetAllocationTuple, txid)){
+                    LogPrint(BCLog::SYS,"DisconnectMintAsset: Could not erase mint asset allocation from asset allocation index\n");
+                    return false;
+                }
+                if(!passetindexdb->EraseIndexTXID(mintSyscoin.assetAllocationTuple.nAsset, txid)){
+                    LogPrint(BCLog::SYS,"DisconnectMintAsset: Could not erase mint asset allocation from asset index\n");
+                    return false;
+                }
             }
-            if(passetindexdb->Exists(assetallocationindexpage) && !passetindexdb->EraseIndexTXID(mintSyscoin.assetAllocationTuple.nAsset, txid)){
-                LogPrint(BCLog::SYS,"DisconnectMintAsset: Could not erase mint asset allocation from asset index\n");
-                return false;
-            } 
         }      
     }
     // update supply stats if index enabled
@@ -536,26 +538,30 @@ bool DisconnectAssetAllocation(const CTransaction &tx, const uint256& txid, cons
         }
         if(fAssetIndex){
             if(fAssetIndexGuids.empty() || std::find(fAssetIndexGuids.begin(), fAssetIndexGuids.end(), receiverAllocationTuple.nAsset) != fAssetIndexGuids.end()){
-                if(passetindexdb->Exists(assetallocationindexpage) && !passetindexdb->EraseIndexTXID(receiverAllocationTuple, txid)){
-                    LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Could not erase receiver allocation from asset allocation index\n");
-                    return false;
-                }
-                if(passetindexdb->Exists(assetallocationindexpage) && !passetindexdb->EraseIndexTXID(receiverAllocationTuple.nAsset, txid)){
-                    LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Could not erase receiver allocation from asset index\n");
-                    return false;
-                }
+                if(passetindexdb->Exists(std::make_pair(false, receiverAllocationTuple.nAsset))){
+                    if(!passetindexdb->EraseIndexTXID(receiverAllocationTuple, txid)){
+                        LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Could not erase receiver allocation from asset allocation index\n");
+                        return false;
+                    }
+                    if(!passetindexdb->EraseIndexTXID(receiverAllocationTuple.nAsset, txid)){
+                        LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Could not erase receiver allocation from asset index\n");
+                        return false;
+                    }
+                } 
             }
         }                                       
     }
     if(fAssetIndex){
         if(fAssetIndexGuids.empty() || std::find(fAssetIndexGuids.begin(), fAssetIndexGuids.end(), theAssetAllocation.assetAllocationTuple.nAsset) != fAssetIndexGuids.end()){
-            if(passetindexdb->Exists(assetallocationindexpage) && !passetindexdb->EraseIndexTXID(theAssetAllocation.assetAllocationTuple, txid)){
-                LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Could not erase sender allocation from asset allocation index\n");
-                return false;
-            }
-            if(passetindexdb->Exists(assetallocationindexpage) && !passetindexdb->EraseIndexTXID(theAssetAllocation.assetAllocationTuple.nAsset, txid)){
-                LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Could not erase sender allocation from asset index\n");
-                return false;
+            if(passetindexdb->Exists(std::make_pair(false, theAssetAllocation.assetAllocationTuple.nAsset))){
+                if(!passetindexdb->EraseIndexTXID(theAssetAllocation.assetAllocationTuple, txid)){
+                    LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Could not erase sender allocation from asset allocation index\n");
+                    return false;
+                }
+                if(!passetindexdb->EraseIndexTXID(theAssetAllocation.assetAllocationTuple.nAsset, txid)){
+                    LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Could not erase sender allocation from asset index\n");
+                    return false;
+                }
             }
         }     
     }
@@ -723,8 +729,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
     if (!GetAsset(storedSenderAllocationRef.assetAllocationTuple.nAsset, dbAsset))
     {
         return FormatSyscoinErrorMessage(state, "assetallocation-non-existing-asset", bMiner);
-    }
-        
+    }   
     AssetBalanceMap::iterator mapBalanceSender;
     CAmount mapBalanceSenderCopy;
     bool mapSenderMempoolBalanceNotFound = false;
@@ -1168,26 +1173,30 @@ bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, AssetMap &
         
         if(fAssetIndex){
             if(fAssetIndexGuids.empty() || std::find(fAssetIndexGuids.begin(), fAssetIndexGuids.end(), receiverAllocationTuple.nAsset) != fAssetIndexGuids.end()){
-                if(passetindexdb->Exists(assetallocationindexpage) && !passetindexdb->EraseIndexTXID(receiverAllocationTuple, txid)){
-                    LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not erase receiver allocation from asset allocation index\n");
-                    return false;
+                if(passetindexdb->Exists(std::make_pair(false, receiverAllocationTuple.nAsset))){
+                    if(!passetindexdb->EraseIndexTXID(receiverAllocationTuple, txid)){
+                        LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not erase receiver allocation from asset allocation index\n");
+                        return false;
+                    }
+                    if(!passetindexdb->EraseIndexTXID(receiverAllocationTuple.nAsset, txid)){
+                        LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not erase receiver allocation from asset index\n");
+                        return false;
+                    }
                 }
-                if(passetindexdb->Exists(assetallocationindexpage) && !passetindexdb->EraseIndexTXID(receiverAllocationTuple.nAsset, txid)){
-                    LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not erase receiver allocation from asset index\n");
-                    return false;
-                } 
             }
         }                                             
     }     
     if(fAssetIndex){
         if(fAssetIndexGuids.empty() || std::find(fAssetIndexGuids.begin(), fAssetIndexGuids.end(), theAssetAllocation.assetAllocationTuple.nAsset) != fAssetIndexGuids.end()){
-            if(passetindexdb->Exists(assetallocationindexpage) && !passetindexdb->EraseIndexTXID(theAssetAllocation.assetAllocationTuple, txid)){
-                LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not erase sender allocation from asset allocation index\n");
-                return false;
-            }
-            if(passetindexdb->Exists(assetallocationindexpage) && !passetindexdb->EraseIndexTXID(theAssetAllocation.assetAllocationTuple.nAsset, txid)){
-                LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not erase sender allocation from asset index\n");
-                return false;
+            if(passetindexdb->Exists(std::make_pair(false, theAssetAllocation.assetAllocationTuple.nAsset))){
+                if(!passetindexdb->EraseIndexTXID(theAssetAllocation.assetAllocationTuple, txid)){
+                    LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not erase sender allocation from asset allocation index\n");
+                    return false;
+                }
+                if(!passetindexdb->EraseIndexTXID(theAssetAllocation.assetAllocationTuple.nAsset, txid)){
+                    LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not erase sender allocation from asset index\n");
+                    return false;
+                }
             }
         }     
     }          
@@ -1229,7 +1238,7 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
     } 
     if(fAssetIndex){
         if(fAssetIndexGuids.empty() || std::find(fAssetIndexGuids.begin(), fAssetIndexGuids.end(), theAsset.nAsset) != fAssetIndexGuids.end()){
-            if(passetindexdb->Exists(assetallocationindexpage) && !passetindexdb->EraseIndexTXID(theAsset.nAsset, txid)){
+            if(passetindexdb->Exists(std::make_pair(false, theAsset.nAsset)) && !passetindexdb->EraseIndexTXID(theAsset.nAsset, txid)){
                 LogPrint(BCLog::SYS,"DisconnectAssetUpdate: Could not erase asset update from asset index\n");
                 return false;
             }
@@ -1265,7 +1274,7 @@ bool DisconnectAssetTransfer(const CTransaction &tx, const uint256& txid, AssetM
     storedSenderRef.witnessAddress = theAsset.witnessAddress;   
     if(fAssetIndex){
         if(fAssetIndexGuids.empty() || std::find(fAssetIndexGuids.begin(), fAssetIndexGuids.end(), theAsset.nAsset) != fAssetIndexGuids.end()){
-            if(passetindexdb->Exists(assetallocationindexpage) && !passetindexdb->EraseIndexTXID(theAsset.nAsset, txid)){
+            if(passetindexdb->Exists(std::make_pair(false, theAsset.nAsset)) && !passetindexdb->EraseIndexTXID(theAsset.nAsset, txid)){
                 LogPrint(BCLog::SYS,"DisconnectAssetTransfer: Could not erase asset update from asset index\n");
                 return false;
             }
@@ -1299,7 +1308,7 @@ bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txid, AssetM
     mapAsset->second.SetNull();  
     if(fAssetIndex){
         if(fAssetIndexGuids.empty() || std::find(fAssetIndexGuids.begin(), fAssetIndexGuids.end(), theAsset.nAsset) != fAssetIndexGuids.end()){
-            if(passetindexdb->Exists(assetallocationindexpage) && !passetindexdb->EraseIndexTXID(theAsset.nAsset, txid)){
+            if(passetindexdb->Exists(std::make_pair(false, theAsset.nAsset)) && !passetindexdb->EraseIndexTXID(theAsset.nAsset, txid)){
                 LogPrint(BCLog::SYS,"DisconnectAssetActivate: Could not erase asset activate from asset index\n");
                 return false;
             }
