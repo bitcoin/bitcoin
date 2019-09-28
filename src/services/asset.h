@@ -233,6 +233,8 @@ public:
         const std::string &allocationTupleStr = allocationTuple.ToString();
         while(walkBackPage >= 0){
             if(!ReadIndexTXIDs(allocationTuple, walkBackPage, TXIDS)){
+                if(walkBackPage == 0)
+                    break;
                 walkBackPage--;
                 continue;
             }
@@ -240,11 +242,16 @@ public:
                 const std::pair<std::string, uint32_t> &pagePair = std::make_pair(allocationTupleStr, walkBackPage);
                 if(Exists(pagePair) && !Erase(pagePair))
                     return false;
+                if(walkBackPage == 0)
+                    break;
                 walkBackPage--;
+
                 continue;
             }
             std::vector<uint256>::iterator it = std::find(TXIDS.begin(), TXIDS.end(), txid);
             if(it == TXIDS.end()){
+                if(walkBackPage == 0)
+                    break;
                 walkBackPage--;
                 continue;
             }
@@ -272,6 +279,8 @@ public:
         uint32_t walkBackPage = page;
         while(walkBackPage >= 0){
             if(!ReadIndexTXIDs(assetGuid, walkBackPage, TXIDS)){
+                if(walkBackPage == 0)
+                    break;
                 walkBackPage--;
                 continue;
             }
@@ -279,11 +288,15 @@ public:
                 const std::pair<uint32_t, uint32_t> &pagePair = std::make_pair(assetGuid, walkBackPage);
                 if(Exists(pagePair) && !Erase(pagePair))
                     return false;
+                if(walkBackPage == 0)
+                    break;
                 walkBackPage--;
                 continue;
             }            
             std::vector<uint256>::iterator it = std::find(TXIDS.begin(), TXIDS.end(), txid);
             if(it == TXIDS.end()){
+                if(walkBackPage == 0)
+                    break;
                 walkBackPage--;
                 continue;
             }
