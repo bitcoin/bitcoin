@@ -199,7 +199,7 @@ bool CAssetAllocationDB::WriteAssetAllocationIndex(const CTransaction &tx, const
         }
 		UniValue oName(UniValue::VOBJ);
         CAssetAllocation allocation;
-        if(AssetAllocationTxToJSON(tx, dbAsset, nHeight, blockhash, oName, allocation)){
+        if(AssetAllocationTxToJSON(tx, dbAsset, nHeight, blockhash, oName, allocation)){  
             if(fZMQAssetAllocation)
                 GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "assetallocation");
             if(fAssetIndex)
@@ -213,7 +213,7 @@ bool WriteAssetIndexForAllocation(const CAssetAllocation& assetallocation, const
         LogPrint(BCLog::SYS, "Asset allocation cannot be indexed because asset is not set in -assetindexguids list\n");
         return true;
     }
-    bool ret = true;
+    bool ret = true;  
     // sender
     ret = WriteAssetAllocationIndexTXID(assetallocation.assetAllocationTuple, txid);
     if(!ret){
@@ -273,10 +273,10 @@ bool WriteAssetIndexForAllocation(const CMintSyscoin& mintSyscoin, const uint256
 }
 bool WriteAssetAllocationIndexTXID(const CAssetAllocationTuple& allocationTuple, const uint256& txid){
     // index the allocation
-    int64_t page;
-    if(!passetindexdb->ReadAssetAllocationPage(page)){
+    uint32_t page;
+    if(!passetindexdb->ReadAssetAllocationPage(allocationTuple.nAsset, page)){
         page = 0;
-        if(!passetindexdb->WriteAssetAllocationPage(page)){
+        if(!passetindexdb->WriteAssetAllocationPage(allocationTuple.nAsset, page)){
             LogPrint(BCLog::SYS, "Failed to write asset allocation page\n");   
             return false; 
         }
@@ -288,7 +288,7 @@ bool WriteAssetAllocationIndexTXID(const CAssetAllocationTuple& allocationTuple,
     if(((int)TXIDS.size()) >= fAssetIndexPageSize){
         TXIDS.clear();
         page++;
-        if(!passetindexdb->WriteAssetAllocationPage(page)){
+        if(!passetindexdb->WriteAssetAllocationPage(allocationTuple.nAsset, page)){
             LogPrint(BCLog::SYS, "Failed to write asset allocation new page\n");
             return false;    
         }    

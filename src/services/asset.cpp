@@ -497,10 +497,10 @@ void CMintSyscoin::Serialize( vector<unsigned char> &vchData) {
 
 }
 bool WriteAssetIndexTXID(const uint32_t& nAsset, const uint256& txid){
-    int64_t page;
-    if(!passetindexdb->ReadAssetPage(page)){
+    uint32_t page;
+    if(!passetindexdb->ReadAssetPage(nAsset, page)){
         page = 0;
-        if(!passetindexdb->WriteAssetPage(page)){
+        if(!passetindexdb->WriteAssetPage(nAsset, page)){
            LogPrint(BCLog::SYS, "Failed to write asset page\n");   
            return false; 
         }              
@@ -509,9 +509,10 @@ bool WriteAssetIndexTXID(const uint32_t& nAsset, const uint256& txid){
     passetindexdb->ReadIndexTXIDs(nAsset, page, TXIDS);
     // new page needed
     if(((int)TXIDS.size()) >= fAssetIndexPageSize){
+
         TXIDS.clear();
         page++;
-        if(!passetindexdb->WriteAssetPage(page)){
+        if(!passetindexdb->WriteAssetPage(nAsset, page)){
             LogPrint(BCLog::SYS, "Failed to write asset page\n");
             return false;
         }
@@ -826,7 +827,7 @@ bool CAssetSupplyStatsDB::Flush(const AssetSupplyStatsMap &mapAssetSupplyStats){
     LogPrint(BCLog::SYS, "Flushing %d asset supply stats\n", mapAssetSupplyStats.size());
     return WriteBatch(batch);
 }
-bool CAssetIndexDB::ScanAssetIndex(int64_t page, const UniValue& oOptions, UniValue& oRes) {
+bool CAssetIndexDB::ScanAssetIndex(uint32_t page, const UniValue& oOptions, UniValue& oRes) {
     CAssetAllocationTuple assetTuple;
     uint32_t nAsset = 0;
     if (!oOptions.isNull()) {
@@ -850,14 +851,14 @@ bool CAssetIndexDB::ScanAssetIndex(int64_t page, const UniValue& oOptions, UniVa
         return false;
     }
     vector<uint256> vecTX;
-    int64_t pageFound;
+    uint32_t pageFound;
     bool scanAllocation = !assetTuple.IsNull();
     if(scanAllocation){
-        if(!ReadAssetAllocationPage(pageFound))
+        if(!ReadAssetAllocationPage(nAsset, pageFound))
             return true;
     }
     else{
-        if(!ReadAssetPage(pageFound))
+        if(!ReadAssetPage(nAsset, pageFound))
             return true;
     }
     if(pageFound < page){
