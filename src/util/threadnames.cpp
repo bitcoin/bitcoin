@@ -57,6 +57,6 @@ static void SetInternalName(std::string name) { }
 
 void util::ThreadRename(std::string&& name)
 {
-    SetThreadName(("syscoin-" + name).c_str());
+    SetThreadName(("s-" + name).c_str());
     SetInternalName(std::move(name));
 }
