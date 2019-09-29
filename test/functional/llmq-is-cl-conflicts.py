@@ -9,7 +9,7 @@ from test_framework import mininode
 from test_framework.blocktools import get_masternode_payment, create_coinbase, create_block
 from test_framework.mininode import *
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import sync_blocks, p2p_port, assert_raises_jsonrpc, set_node_times
+from test_framework.util import sync_blocks, p2p_port, assert_raises_rpc_error, set_node_times
 
 '''
 llmq-is-cl-conflicts.py
