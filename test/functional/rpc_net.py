@@ -33,7 +33,7 @@ def assert_net_servicesnames(servicesflag, servicenames):
     `getpeerinfo` and `getnetworkinfo`.
 
     :param servicesflag: The services as an integer.
-    :param servicesnames: The list of decoded services names, as strings.
+    :param servicenames: The list of decoded services names, as strings.
     """
     servicesflag_generated = 0
     for servicename in servicenames:
