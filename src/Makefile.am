@@ -37,6 +37,7 @@ LIBSECP256K1=secp256k1/libsecp256k1.la
 
 if ENABLE_RUSTY
 LIBBITCOIN_RUSTY = rusty/librusty.a
+LIBBITCOIN_RUSTY_BRIDGE = libbitcoin_rustybridge.a
 endif
 if ENABLE_ZMQ
 LIBBITCOIN_ZMQ=libbitcoin_zmq.a
@@ -77,6 +78,7 @@ EXTRA_LIBRARIES += \
   $(LIBBITCOIN_CLI) \
   $(LIBBITCOIN_WALLET) \
   $(LIBBITCOIN_WALLET_TOOL) \
+  $(LIBBITCOIN_RUSTY_BRIDGE) \
   $(LIBBITCOIN_ZMQ)
 
 lib_LTLIBRARIES = $(LIBBITCOINCONSENSUS)
@@ -268,6 +270,10 @@ obj/build.h: FORCE
 	  "$(abs_top_srcdir)"
 libbitcoin_util_a-clientversion.$(OBJEXT): obj/build.h
 
+# libbitcoin_rustybridge should not need headers other than Core's internal ones.
+libbitcoin_rustybridge_a_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir) $(LEVELDB_CPPFLAGS)
+libbitcoin_rustybridge_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libbitcoin_rustybridge_a_SOURCES = rusty/src/cpp_bridge.cpp
 # server: shared between bitcoind and bitcoin-qt
 # Contains code accessing mempool and chain state that is meant to be separated
 # from wallet and gui code (see node/README.md). Shared code should go in
@@ -374,7 +380,11 @@ libbitcoin_wallet_tool_a_SOURCES = \
 # if any of the other files change. List the main file first, then targets can
 # depend on $(LIBBITCOIN_RUSTY_SRCS), but only build the first source file ($<).
 LIBBITCOIN_RUSTY_SRCS= \
-  rusty/src/lib.rs
+  rusty/src/lib.rs \
+  rusty/src/bridge.rs
+
+LIBBITCOIN_RUSTY_TEST_SRCS= \
+  rusty/src/test_bridge.rs
 
 # We force overflow checks on so that any integer overflows result in a panic
 # instead of, eg, attempting to alloc 4GB of memory (though we will catch such
@@ -688,10 +698,11 @@ BITCOIN_CORE_H += rusty/src/rust_bridge.h
 
 if ENABLE_RUSTY
 LIBBITCOIN_RUST_LIBS += $(LIBBITCOIN_RUSTY)
+LIBBITCOIN_RUST_LIBS += $(LIBBITCOIN_RUSTY_BRIDGE)
 
 RUSTY_TEST_BIN=rusty/test_rusty
-$(RUSTY_TEST_BIN): $(LIBBITCOIN_RUSTY_SRCS)
-	$(RUSTC) --crate-name test_rusty $< --emit=link --test $(RUST_FLAGS) low-checks=on --out-dir $(@D)
+$(RUSTY_TEST_BIN): $(LIBBITCOIN_RUSTY_SRCS) $(LIBBITCOIN_RUSTY_TEST_SRCS)
+	$(RUSTC) --crate-name test_rusty $< --emit=link --test $(RUST_FLAGS) -C overflow-checks=on --out-dir $(@D)
 
 ## FIXME: always build RUSTY_TEST_BIN the same as we do test_bitcoin
 RUSTY_CHECK=rusty-check
@@ -716,7 +727,7 @@ CLEANFILES += wallet/test/*.gcda wallet/test/*.gcno
 CLEANFILES += zmq/*.gcda zmq/*.gcno
 CLEANFILES += obj/build.h
 
-EXTRA_DIST = $(CTAES_DIST) $(LIBBITCOIN_RUSTY_SRCS)
+EXTRA_DIST = $(CTAES_DIST) $(LIBBITCOIN_RUSTY_SRCS) $(LIBBITCOIN_RUSTY_TEST_SRCS)
 
 
 config/bitcoin-config.h: config/stamp-h1
