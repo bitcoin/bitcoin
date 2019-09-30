@@ -30,7 +30,15 @@ SUSPICIOUS_HOSTS = {
 PATTERN_IPV4 = re.compile(r"^((\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})):(\d+)$")
 PATTERN_IPV6 = re.compile(r"^\[([0-9a-z:]+)\]:(\d+)$")
 PATTERN_ONION = re.compile(r"^([abcdefghijklmnopqrstuvwxyz234567]{16}\.onion):(\d+)$")
-PATTERN_AGENT = re.compile(r"^(/Satoshi:0.14.(0|1|2|99)/|/Satoshi:0.15.(0|1|2|99)|/Satoshi:0.16.(0|1|2|99)/)$")
+PATTERN_AGENT = re.compile(
+    r"^/Satoshi:("
+    r"0.14.(0|1|2|3|99)|"
+    r"0.15.(0|1|2|99)|"
+    r"0.16.(0|1|2|3|99)|"
+    r"0.17.(0|0.1|1|2|99)|"
+    r"0.18.(0|1|99)|"
+    r"0.19.99"
+    r")")
 
 def parseline(line):
     sline = line.split()
@@ -99,6 +107,13 @@ def parseline(line):
         'sortkey': sortkey,
     }
 
+def dedup(ips):
+    '''deduplicate by address'''
+    d = {}
+    for ip in ips:
+        d[ip['ip']] = ip
+    return list(d.values())
+
 def filtermultiport(ips):
     '''Filter out hosts with more nodes per IP'''
     hist = collections.defaultdict(list)
@@ -146,29 +161,54 @@ def filterbyasn(ips, max_per_asn, max_total):
     result.extend(ips_onion)
     return result
 
+def ip_stats(ips):
+    hist = collections.defaultdict(int)
+    for ip in ips:
+        if ip is not None:
+            hist[ip['net']] += 1
+
+    return 'IPv4 %d, IPv6 %d, Onion %d' % (hist['ipv4'], hist['ipv6'], hist['onion'])
+
 def main():
     lines = sys.stdin.readlines()
     ips = [parseline(line) for line in lines]
 
-    # Skip entries with valid address.
+    print('Initial: %s' % (ip_stats(ips)), file=sys.stderr)
+    # Skip entries with invalid address.
     ips = [ip for ip in ips if ip is not None]
+    print('Skip entries with invalid address: %s' % (ip_stats(ips)), file=sys.stderr)
+    # Skip duplicattes (in case multiple seeds files were concatenated)
+    ips = dedup(ips)
+    print('After removing duplicates: %s' % (ip_stats(ips)), file=sys.stderr)
     # Skip entries from suspicious hosts.
     ips = [ip for ip in ips if ip['ip'] not in SUSPICIOUS_HOSTS]
+    print('Skip entries from suspicious hosts: %s' % (ip_stats(ips)), file=sys.stderr)
     # Enforce minimal number of blocks.
     ips = [ip for ip in ips if ip['blocks'] >= MIN_BLOCKS]
+    print('Enforce minimal number of blocks: %s' % (ip_stats(ips)), file=sys.stderr)
     # Require service bit 1.
     ips = [ip for ip in ips if (ip['service'] & 1) == 1]
-    # Require at least 50% 30-day uptime.
-    ips = [ip for ip in ips if ip['uptime'] > 50]
+    print('Require service bit 1: %s' % (ip_stats(ips)), file=sys.stderr)
+    # Require at least 50% 30-day uptime for clearnet, 10% for onion.
+    req_uptime = {
+        'ipv4': 50,
+        'ipv6': 50,
+        'onion': 10,
+    }
+    ips = [ip for ip in ips if ip['uptime'] > req_uptime[ip['net']]]
+    print('Require minimum uptime: %s' % (ip_stats(ips)), file=sys.stderr)
     # Require a known and recent user agent.
     ips = [ip for ip in ips if PATTERN_AGENT.match(ip['agent'])]
+    print('Require a known and recent user agent: %s' % (ip_stats(ips)), file=sys.stderr)
     # Sort by availability (and use last success as tie breaker)
     ips.sort(key=lambda x: (x['uptime'], x['lastsuccess'], x['ip']), reverse=True)
     # Filter out hosts with multiple bitcoin ports, these are likely abusive
     ips = filtermultiport(ips)
+    print('Filter out hosts with multiple bitcoin ports: %s' % (ip_stats(ips)), file=sys.stderr)
     # Look up ASNs and limit results, both per ASN and globally.
     ips = filterbyasn(ips, MAX_SEEDS_PER_ASN, NSEEDS)
     # Sort the results by IP address (for deterministic output).
+    print('Look up ASNs and limit results, both per ASN and globally: %s' % (ip_stats(ips)), file=sys.stderr)
     ips.sort(key=lambda x: (x['net'], x['sortkey']))
 
     for ip in ips:
