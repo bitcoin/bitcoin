@@ -3499,7 +3499,7 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, CValidationState
             return error("%s: Consensus::ContextualCheckBlockHeader: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
 
         if (llmq::chainLocksHandler->HasConflictingChainLock(pindexPrev->nHeight + 1, hash)) {
-            if (pindex == NULL)
+            if (pindex == nullptr)
                 AddToBlockIndex(block, BLOCK_CONFLICT_CHAINLOCK);
             return state.Invalid(ValidationInvalidReason::CONSENSUS, error("%s: header %s conflicts with chainlock", __func__, hash.ToString()), REJECT_INVALID, "bad-chainlock");
         }
@@ -5061,7 +5061,7 @@ static CMainCleanup instance_of_cmaincleanup;
 bool GetBlockHash(uint256& hashRet, int nBlockHeight)
 {
     LOCK(cs_main);
-    if (ChainActive().Tip() == NULL) return false;
+    if (ChainActive().Tip() == nullptr) return false;
     if (nBlockHeight < -1 || nBlockHeight > ChainActive().Height()) return false;
     if (nBlockHeight == -1) nBlockHeight = ChainActive().Height();
     hashRet = ChainActive()[nBlockHeight]->GetBlockHash();

@@ -4437,7 +4437,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
     } else if (wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS) {
         // Make it impossible to disable private keys after creation
         chain.initError(strprintf(_("Error loading %s: Private keys can only be disabled during creation").translated, walletFile));
-        return NULL;
+        return nullptr;
     } else if (walletInstance->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
         LOCK(walletInstance->cs_KeyStore);
         if (!walletInstance->mapKeys.empty() || !walletInstance->mapCryptedKeys.empty()) {
@@ -5100,7 +5100,7 @@ bool CWallet::CreateCoinStake(unsigned int nBits,
 
     for (const auto& pcoin : setStakeCoins) {
         //make sure that enough time has elapsed between
-        CBlockIndex* pindex = NULL;
+        CBlockIndex* pindex = nullptr;
         BlockMap::iterator it = ::BlockIndex().find(pcoin.first->hashBlock);
         if (it != ::BlockIndex().end())
             pindex = it->second;
