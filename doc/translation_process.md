@@ -77,7 +77,7 @@ To assist in updating translations, we have created a script to help.
 1. `python contrib/devtools/update-translations.py`
 2. Update `src/qt/dash_locale.qrc` manually or via
    `ls src/qt/locale/*ts|xargs -n1 basename|sed 's/\(dash_\(.*\)\).ts/<file alias="\2">locale\/\1.qm<\/file>/'`
-3. Update `src/Makefile.qt.include` manually or via
+3. Update `src/Makefile.qt_locale.include` manually or via
    `ls src/qt/locale/*ts|xargs -n1 basename|sed 's/\(dash_\(.*\)\).ts/  qt\/locale\/\1.ts \\/'`
 4. `git add` new translations from `src/qt/locale/`
 
