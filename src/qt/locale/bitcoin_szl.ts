@@ -70,10 +70,6 @@
         <translation>Tukej sōm adresy Bitcoin na kere posyłŏsz płaty. Dycki wybaduj wielość i adresã ôdbiyrŏcza przed posłaniym mōnet.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Tukej sōm adresy Bitcoin do ôdbiyraniŏ płatōw. Zalycŏ sie używaniŏ nowych adres ôdbiorczych dlŏ kożdyj transakcyje.</translation>
-    </message>
-    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;Kopiyruj Adresã</translation>
     </message>
@@ -136,14 +132,6 @@
         <translation>Powtōrz nowe hasło</translation>
     </message>
     <message>
-        <source>Show password</source>
-        <translation>Pokŏż hasło</translation>
-    </message>
-    <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Wkludź nowe hasło do portmanyja.&lt;br/&gt;Proszã używać hasła słożōnego z &lt;b&gt;10 abo wiyncyj losowych liter&lt;/b&gt; abo &lt;b&gt;8 abo wiyncyj słōw.&lt;/b&gt;.</translation>
-    </message>
-    <message>
         <source>Encrypt wallet</source>
         <translation>Zaszyfruj portmanyj</translation>
     </message>
@@ -168,10 +156,6 @@
         <translation>Pōmiyń hasło</translation>
     </message>
     <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Podej stare i nowe hasło do portmanyja.</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>Przituplikuj szyfrowanie portmanyja</translation>
     </message>
@@ -186,10 +170,6 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>Portmanyj zaszyfrowany</translation>
-    </message>
-    <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 zawrzi sie coby dokōńczyć proces szyfrowaniŏ. Pamiyntej, iże szyfrowanie portmanyja ganc niy zabezpieczŏ Twojich bitcoinów przed chabiyniym bez wirusy abo trojany mogōnce zakażać Twōj kōmputer.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -310,24 +290,12 @@
         <translation>Pōmiyń &amp;hasło</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;Adresy posyłaniŏ</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>Ad&amp;resy ôdbiyraniŏ</translation>
-    </message>
-    <message>
         <source>Open &amp;URI...</source>
         <translation>Ôdewrzij &amp;URI...</translation>
     </message>
     <message>
         <source>Wallet:</source>
         <translation>Portmanyj:</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation>wychodny portmanyj</translation>
     </message>
     <message>
         <source>Click to disable network activity.</source>
@@ -376,14 +344,6 @@
     <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;Weryfikuj wiadōmość...</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Portmanyj</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -447,7 +407,7 @@
     </message>
     <message>
         <source>&amp;Command-line options</source>
-        <translation>Ôp&amp;cyje piski kōmynd</translation>
+        <translation>Ôp&amp;cyje piski nakŏzań</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
@@ -494,8 +454,20 @@
         <translation>Terŏźny</translation>
     </message>
     <message>
+        <source>&amp;Sending addresses</source>
+        <translation>&amp;Adresy posyłaniŏ</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>Pokŏż pōmoc %1 coby zobŏczyć wykŏz wszyjskich ôpcyji piski nakŏzań.</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>wychodny portmanyj</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>Ô&amp;kno</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -504,6 +476,10 @@
     <message>
         <source>Catching up...</source>
         <translation>Trwŏ synchrōnizacyjŏ...</translation>
+    </message>
+    <message>
+        <source>Error: %1</source>
+        <translation>Feler: %1</translation>
     </message>
     <message>
         <source>Date: %1
@@ -722,6 +698,12 @@
     </message>
 </context>
 <context>
+    <name>CreateWalletActivity</name>
+    </context>
+<context>
+    <name>CreateWalletDialog</name>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
@@ -811,7 +793,7 @@
     </message>
     <message>
         <source>Command-line options</source>
-        <translation>Ôpcyje piski kōmynd</translation>
+        <translation>Ôpcyje piski nakŏzań</translation>
     </message>
 </context>
 <context>
@@ -834,11 +816,11 @@
     </message>
     <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
-        <translation>Wstympnŏ synchrōnizacyjŏ je barzo wymŏgajōncŏ i może wyzdradzić wczaśnij niyzaôbserwowane niyprzileżytości sprzyntowe. Za kożdym sztartniyńciym %1 pobiyranie bydzie kōntynuowane ôd placu w kerym ôstało zastawiōne.</translation>
+        <translation>Wstympnŏ synchrōnizacyjŏ je barzo wymŏgajōncŏ i może wyzdradzić wczaśnij niyzaôbserwowane niyprzileżytości sprzyntowe. Za kożdym sztartniyńciym %1 sebiyranie bydzie kōntynuowane ôd placu w kerym ôstało zastawiōne.</translation>
     </message>
     <message>
         <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
-        <translation>Jeźli ôbrołś ôpcyjõ ukrōcyniŏ spamiyntowaniŏ kety blokōw (przicinanie) daty historyczne cołki czas bydōm musiały być pobrane i przetworzōne, jednak po tym ôstanõ wychrōniōne coby ôgraniczyć użycie dysku.</translation>
+        <translation>Jeźli ôbrołś ôpcyjõ ukrōcyniŏ spamiyntowaniŏ kety blokōw (przicinanie) daty historyczne cołki czas bydōm musiały być sebrane i przetworzōne, jednak po tym ôstanõ wychrōniōne coby ôgraniczyć użycie dysku.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -884,7 +866,7 @@
         <source>(of %n GB needed)</source>
         <translation><numerusform>(z %n GB przidajnego)</numerusform><numerusform>(z %n GB przidajnych)</numerusform><numerusform>(z %n GB przidajnych)</numerusform></translation>
     </message>
-</context>
+    </context>
 <context>
     <name>ModalOverlay</name>
     <message>
@@ -931,11 +913,7 @@
         <source>Hide</source>
         <translation>Skryj</translation>
     </message>
-    <message>
-        <source>Unknown. Syncing Headers (%1)...</source>
-        <translation>Niyznōme. Synchrōnizowanie nŏgōwkōw (%1)...</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -960,6 +938,13 @@
     </message>
 </context>
 <context>
+    <name>OpenWalletActivity</name>
+    <message>
+        <source>default wallet</source>
+        <translation>wychodny portmanyj</translation>
+    </message>
+    </context>
+<context>
     <name>OptionsDialog</name>
     <message>
         <source>Options</source>
@@ -982,10 +967,6 @@
         <translation>Srogość bufōra bazy datōw</translation>
     </message>
     <message>
-        <source>MB</source>
-        <translation>MB</translation>
-    </message>
-    <message>
         <source>Number of script &amp;verification threads</source>
         <translation>Wielość wōntkōw &amp;weryfikacyje skryptu</translation>
     </message>
@@ -996,10 +977,6 @@
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
         <translation>Minimalizuje zamiast zakōńczyć fungowanie aplikacyje przi zawiyraniu ôkna. Kej ta ôpcyjŏ je zapuszczonŏ, aplikacyjŏ zakōńczy fungowanie po ôbraniu Zawrzij w myni.</translation>
-    </message>
-    <message>
-        <source>Active command-line options that override above options:</source>
-        <translation>Aktywne ôpcyje piski kōmynd, kere nadpisujōm powyższe ôpcyje:</translation>
     </message>
     <message>
         <source>Open the %1 configuration file from the working directory.</source>
@@ -1035,7 +1012,7 @@
     </message>
     <message>
         <source>Reverting this setting requires re-downloading the entire blockchain.</source>
-        <translation>Cŏfniyńcie tego ustawiyniŏ wymŏgŏ pōnownego sebraniŏ cołkij kety blokōw.</translation>
+        <translation>Cŏfniyńcie tego ustawiyniŏ fołdruje pōnownego sebraniŏ cołkij kety blokōw.</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
@@ -1184,6 +1161,10 @@
 <context>
     <name>PaymentServer</name>
     <message>
+        <source>Payment request error</source>
+        <translation>Feler żōndaniŏ płatu</translation>
+    </message>
+    <message>
         <source>URI handling</source>
         <translation>Bedynōng URI</translation>
     </message>
@@ -1198,6 +1179,10 @@
     <message>
         <source>Unverified payment requests to custom payment scripts are unsupported.</source>
         <translation>Niyzweryfikowane żōndaniŏ płatu do włŏsnych skryptōw płatu sōm niypodpiyrane.</translation>
+    </message>
+    <message>
+        <source>Error communicating with %1: %2</source>
+        <translation>Feler kōmunikacyje z %1: %2</translation>
     </message>
     <message>
         <source>Network request error</source>
@@ -1274,15 +1259,12 @@
         <translation>%1 GB</translation>
     </message>
     <message>
-        <source>unknown</source>
-        <translation>niyznōme</translation>
-    </message>
-</context>
-<context>
-    <name>QObject::QObject</name>
-    <message>
         <source>Error: %1</source>
         <translation>Feler: %1</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>niyznōme</translation>
     </message>
 </context>
 <context>
@@ -1411,10 +1393,6 @@
         <translation>Ô&amp;dkupluj</translation>
     </message>
     <message>
-        <source>default wallet</source>
-        <translation>wychodny portmanyj</translation>
-    </message>
-    <message>
         <source>Welcome to the %1 RPC console.</source>
         <translation>Witej w %1 kōnsoli RPC.</translation>
     </message>
@@ -1536,7 +1514,7 @@
         <source>Wallet</source>
         <translation>Portmanyj</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
@@ -1682,6 +1660,10 @@
         <translation>To je normalny płat.</translation>
     </message>
     <message>
+        <source>The Bitcoin address to send the payment to</source>
+        <translation>Adresa Bitcoin, na kerõ chcesz posłać płat</translation>
+    </message>
+    <message>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
     </message>
@@ -1751,13 +1733,6 @@
         <translation>Weryfikacyjŏ wiadōmości niy podarziła sie.</translation>
     </message>
     </context>
-<context>
-    <name>SplashScreen</name>
-    <message>
-        <source>[testnet]</source>
-        <translation>[testnet]</translation>
-    </message>
-</context>
 <context>
     <name>TrafficGraphWidget</name>
     <message>
@@ -1929,6 +1904,9 @@
     <name>UnitDisplayStatusBarControl</name>
     </context>
 <context>
+    <name>WalletController</name>
+    </context>
+<context>
     <name>WalletFrame</name>
     </context>
 <context>
@@ -1941,9 +1919,17 @@
         <source>New fee:</source>
         <translation>Nowŏ ôpłŏcka:</translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation>wychodny portmanyj</translation>
+    </message>
+</context>
 <context>
     <name>WalletView</name>
+    <message>
+        <source>&amp;Export</source>
+        <translation>&amp;Eksportuj</translation>
+    </message>
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Eksportuj dane z aktywnyj szkarty do zbioru</translation>
@@ -1959,10 +1945,6 @@
 </context>
 <context>
     <name>bitcoin-core</name>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
-    </message>
     <message>
         <source>The %s developers</source>
         <translation>Twōrcy %s</translation>
@@ -1989,15 +1971,11 @@
     </message>
     <message>
         <source>Error loading %s: Wallet requires newer version of %s</source>
-        <translation>Feler wgrŏwaniŏ %s: Portmanyj wymŏgŏ nowszyj wersyje %s</translation>
+        <translation>Feler wgrŏwaniŏ %s: Portmanyj fołdruje nowszyj wersyje %s</translation>
     </message>
     <message>
         <source>Error loading block database</source>
         <translation>Feler wgrŏwaniŏ bazy blokōw</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is low!</source>
-        <translation>Feler: Za mało wolnego placu na dysku!</translation>
     </message>
     <message>
         <source>Loading P2P addresses...</source>
@@ -2008,18 +1986,6 @@
         <translation>Wgrŏwanie wykŏzu zaszperowanych...</translation>
     </message>
     <message>
-        <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
-        <translation>Niypodpiyrany argumynt -benchmark zignorowany, użyj -debug=bench.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
-        <translation>Niypodpiyrany argumynt -debugnet zignorowany, użyj -debug=net.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -tor found, use -onion.</source>
-        <translation>Znŏdniynto było niypodpiyrany argumynt -tor, użyj -onion.</translation>
-    </message>
-    <message>
         <source>Unsupported logging category %s=%s.</source>
         <translation>Niypodpiyranŏ kategoryjŏ registrowaniŏ %s=%s.</translation>
     </message>
@@ -2028,12 +1994,8 @@
         <translation>Weryfikacyjŏ blokōw...</translation>
     </message>
     <message>
-        <source>Error loading %s: You can't disable HD on an already existing HD wallet</source>
-        <translation>Feler w czasie wgrŏwaniŏ %s: Niy idzie zastawić HD w już bydōncym portmanyju HD</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Informacyjŏ</translation>
+        <source>Error: Disk space is low for %s</source>
+        <translation>Feler: Za mało wolnego placu na dysku dlŏ %s</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
@@ -2052,32 +2014,12 @@
         <translation>Weryfikacyjŏ portmanyja(ōw)...</translation>
     </message>
     <message>
-        <source>Warning</source>
-        <translation>Pozōr</translation>
-    </message>
-    <message>
         <source>Warning: unknown new rules activated (versionbit %i)</source>
         <translation>Pozōr: aktywowano było niyznōme nowe prawidła (versionbit %i)</translation>
     </message>
     <message>
-        <source>Error loading %s: You can't enable HD on an already existing non-HD wallet</source>
-        <translation>Feler w czasie wgrŏwaniŏ %s: Niy idzie zapuścić HD w już bydōncym portmanyju niy-HD</translation>
-    </message>
-    <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>Imyntnŏ dugość kety wersyje (%i) przekrŏczŏ maksymalnõ dopuszczalnõ dugość (%i). Zmyńsz wielość abo miara parametra uacomment.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
-        <translation>Znŏdniynto było niypodpiyrany argumynt -socks. Ôbiyranie wersyje SOCKS je już niymożebne, podpiyrane sōm ino proxy SOCKS5.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
-        <translation>Niypodpiyrany argumynt -whitelistalwaysrelay zignorowany, użyj -whitelistrelay i/abo -whitelistforcerelay.</translation>
-    </message>
-    <message>
-        <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
-        <translation>Pozōr: wydobywane sōm niyznōme wersyje blokōw! Możliwe, iże ôbowiōnzujōm niyznōme prawidła.</translation>
     </message>
     <message>
         <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
@@ -2114,10 +2056,6 @@
     <message>
         <source>Done loading</source>
         <translation>Wgrŏwanie zakōńczōne</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Feler</translation>
     </message>
 </context>
 </TS>
