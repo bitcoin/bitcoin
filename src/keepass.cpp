@@ -117,8 +117,6 @@ void CKeePassIntegrator::init()
         sUrl = SecureString("http://");
         sUrl += SecureString(strKeePassEntryName.c_str());
         sUrl += SecureString("/");
-        //sSubmitUrl = "http://";
-        //sSubmitUrl += SecureString(strKeePassEntryName.c_str());
     }
 }
 
@@ -288,28 +286,6 @@ static void http_request_done(struct evhttp_request *req, void *ctx)
 // Send RPC message to KeePassHttp
 void CKeePassIntegrator::doHTTPPost(const std::string& sRequest, int& nStatusRet, std::string& strResponseRet)
 {
-//    // Prepare communication
-//    boost::asio::io_service io_service;
-
-//    // Get a list of endpoints corresponding to the server name.
-//    tcp::resolver resolver(io_service);
-//    tcp::resolver::query query(KEEPASS_HTTP_HOST, boost::lexical_cast<std::string>(nPort));
-//    tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
-//    tcp::resolver::iterator end;
-
-//    // Try each endpoint until we successfully establish a connection.
-//    tcp::socket socket(io_service);
-//    boost::system::error_code error = boost::asio::error::host_not_found;
-//    while (error && endpoint_iterator != end)
-//    {
-//      socket.close();
-//      socket.connect(*endpoint_iterator++, error);
-//    }
-
-//    if(error)
-//    {
-//        throw boost::system::system_error(error);
-//    }
     // Create event base
     struct event_base *base = event_base_new(); // TODO RAII
     if (!base)
@@ -321,10 +297,6 @@ void CKeePassIntegrator::doHTTPPost(const std::string& sRequest, int& nStatusRet
         throw std::runtime_error("create connection failed");
     evhttp_connection_set_timeout(evcon, KEEPASS_HTTP_CONNECT_TIMEOUT);
 
-    // Form the request.
-//    std::map<std::string, std::string> mapRequestHeaders;
-//    std::string strPost = constructHTTPPost(sRequest, mapRequestHeaders);
-
     HTTPReply response;
     struct evhttp_request *req = evhttp_request_new(http_request_done, (void*)&response); // TODO RAII
     if (req == nullptr)
@@ -332,42 +304,14 @@ void CKeePassIntegrator::doHTTPPost(const std::string& sRequest, int& nStatusRet
 
     struct evkeyvalq *output_headers = evhttp_request_get_output_headers(req);
     assert(output_headers);
-//    s << "POST / HTTP/1.1\r\n"
     evhttp_add_header(output_headers, "User-Agent", ("dash-json-rpc/" + FormatFullVersion()).c_str());
     evhttp_add_header(output_headers, "Host", KEEPASS_HTTP_HOST);
     evhttp_add_header(output_headers, "Accept", "application/json");
     evhttp_add_header(output_headers, "Content-Type", "application/json");
-//    evhttp_add_header(output_headers, "Content-Length", itostr(strMsg.size()).c_str());
     evhttp_add_header(output_headers, "Connection", "close");
 
-    // Logging of actual post data disabled as to not write passphrase in debug.log. Only enable temporarily when needed
-    //LogPrint(BCLog::KEEPASS, "CKeePassIntegrator::doHTTPPost -- send POST data: %s\n", strPost);
     LogPrint(BCLog::KEEPASS, "CKeePassIntegrator::doHTTPPost -- send POST data\n");
 
-//    boost::asio::streambuf request;
-//    std::ostream request_stream(&request);
-//    request_stream << strPost;
-
-//    // Send the request.
-//    boost::asio::write(socket, request);
-
-//    LogPrint(BCLog::KEEPASS, "CKeePassIntegrator::doHTTPPost -- request written\n");
-
-//    // Read the response status line. The response streambuf will automatically
-//    // grow to accommodate the entire line. The growth may be limited by passing
-//    // a maximum size to the streambuf constructor.
-//    boost::asio::streambuf response;
-//    boost::asio::read_until(socket, response, "\r\n");
-
-//    LogPrint(BCLog::KEEPASS, "CKeePassIntegrator::doHTTPPost -- request status line read\n");
-
-//    // Receive HTTP reply status
-//    int nProto = 0;
-//    std::istream response_stream(&response);
-//    nStatus = ReadHTTPStatus(response_stream, nProto);
-
-    // Attach request data
-//    std::string sRequest = JSONRPCRequest(strMethod, params, 1);
     struct evbuffer * output_buffer = evhttp_request_get_output_buffer(req);
     assert(output_buffer);
     evbuffer_add(output_buffer, sRequest.data(), sRequest.size());
@@ -382,25 +326,6 @@ void CKeePassIntegrator::doHTTPPost(const std::string& sRequest, int& nStatusRet
     event_base_dispatch(base);
     evhttp_connection_free(evcon);
     event_base_free(base);
-
-//    LogPrint(BCLog::KEEPASS, "CKeePassIntegrator::doHTTPPost -- reading response body start\n");
-//    // Read until EOF, writing data to output as we go.
-//    while (boost::asio::read(socket, response, boost::asio::transfer_at_least(1), error))
-//    {
-//        if (error != boost::asio::error::eof)
-//        {
-//            if (error != 0)
-//            { // 0 is success
-//                throw boost::system::system_error(error);
-//            }
-//        }
-//    }
-//    LogPrint(BCLog::KEEPASS, "CKeePassIntegrator::doHTTPPost -- reading response body end\n");
-//
-//    // Receive HTTP reply message headers and body
-//    std::map<std::string, std::string> mapHeaders;
-//    ReadHTTPMessage(response_stream, mapHeaders, strResponse, nProto, std::numeric_limits<size_t>::max());
-//    LogPrint(BCLog::KEEPASS, "CKeePassIntegrator::doHTTPPost -- Processed body\n");
 
     nStatusRet = response.nStatus;
     if (response.nStatus == 0)
@@ -451,8 +376,6 @@ std::vector<CKeePassIntegrator::CKeePassEntry> CKeePassIntegrator::rpcGetLogins(
 
     doHTTPPost(request.getJson(), nStatus, strResponse);
 
-    // Logging of actual response data disabled as to not write passphrase in debug.log. Only enable temporarily when needed
-    //LogPrint(BCLog::KEEPASS, "CKeePassIntegrator::rpcGetLogins -- send result: status: %d response: %s\n", nStatus, strResponse);
     LogPrint(BCLog::KEEPASS, "CKeePassIntegrator::rpcGetLogins -- send result: status: %d\n", nStatus);
 
     if(nStatus != 200)

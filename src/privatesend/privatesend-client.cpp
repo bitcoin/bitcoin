@@ -52,7 +52,6 @@ void CPrivateSendClientManager::ProcessMessage(CNode* pfrom, const std::string& 
             // process every dsq only once
             for (const auto& q : vecPrivateSendQueue) {
                 if (q == dsq) {
-                    // LogPrint(BCLog::PRIVATESEND, "DSQUEUE -- %s seen\n", dsq.ToString());
                     return;
                 }
             }
@@ -143,7 +142,6 @@ void CPrivateSendClientSession::ProcessMessage(CNode* pfrom, const std::string& 
 
         if (!mixingMasternode) return;
         if (mixingMasternode->pdmnState->addr != pfrom->addr) {
-            //LogPrint(BCLog::PRIVATESEND, "DSSTATUSUPDATE -- message doesn't match current Masternode: infoMixingMasternode %s addr %s\n", infoMixingMasternode.addr.ToString(), pfrom->addr.ToString());
             return;
         }
 
@@ -181,7 +179,6 @@ void CPrivateSendClientSession::ProcessMessage(CNode* pfrom, const std::string& 
 
         if (!mixingMasternode) return;
         if (mixingMasternode->pdmnState->addr != pfrom->addr) {
-            //LogPrint(BCLog::PRIVATESEND, "DSFINALTX -- message doesn't match current Masternode: infoMixingMasternode %s addr %s\n", infoMixingMasternode.addr.ToString(), pfrom->addr.ToString());
             return;
         }
 

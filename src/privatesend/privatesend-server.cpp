@@ -112,7 +112,6 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
         // process every dsq only once
         for (const auto& q : vecPrivateSendQueue) {
             if (q == dsq) {
-                // LogPrint(BCLog::PRIVATESEND, "DSQUEUE -- %s seen\n", dsq.ToString());
                 return;
             }
         }

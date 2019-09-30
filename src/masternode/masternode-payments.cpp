@@ -56,7 +56,6 @@ bool IsOldBudgetBlockValueValid(const CBlock& block, int nBlockHeight, CAmount b
         LogPrint(BCLog::GOBJECT, "%s -- WARNING: Skipping old budget block value checks, accepting block\n", __func__);
         return true;
     }
-    // LogPrint(BCLog::GOBJECT, "%s -- Block is not in budget cycle window, checking block value against block reward\n", __func__);
     if(!isBlockRewardValueMet) {
         strErrorRet = strprintf("coinbase pays too much at height %d (actual=%d vs limit=%d), exceeded block reward, block is not in old budget cycle window",
                                 nBlockHeight, block.vtx[0]->GetValueOut(), blockReward);

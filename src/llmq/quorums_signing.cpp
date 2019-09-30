@@ -791,7 +791,6 @@ bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, const uint
     }
 
     if (!quorum->IsValidMember(activeMasternodeInfo.proTxHash)) {
-        //LogPrint(BCLog::LLMQ, "CSigningManager::%s -- we're not a valid member of quorum %s\n", __func__, quorum->quorumHash.ToString());
         return false;
     }
 
