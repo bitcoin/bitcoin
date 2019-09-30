@@ -1932,7 +1932,7 @@ class EarlyDisconnectError(Exception):
     def __str__(self):
         return repr(self.value)
 
-class P2PDataStore(P2PInterface):
+class P2PDataStore(NodeConnCB):
     """A P2P data store class.
 
     Keeps a block and transaction store and responds correctly to getdata and getheaders requests."""
@@ -1948,7 +1948,7 @@ class P2PDataStore(P2PInterface):
         self.tx_store = {}
         self.getdata_requests = []
 
-    def on_getdata(self, message):
+    def on_getdata(self, conn, message):
         """Check for the tx/block in our stores and if found, reply with an inv message."""
         for inv in message.inv:
             self.getdata_requests.append(inv.hash)
@@ -1959,7 +1959,7 @@ class P2PDataStore(P2PInterface):
             else:
                 logger.debug('getdata message type {} received.'.format(hex(inv.type)))
 
-    def on_getheaders(self, message):
+    def on_getheaders(self, conn, message):
         """Search back through our block store for the locator, and reply with a headers message if found."""
 
         locator, hash_stop = message.locator, message.hashstop
@@ -1991,7 +1991,7 @@ class P2PDataStore(P2PInterface):
         if response is not None:
             self.send_message(response)
 
-    def on_reject(self, message):
+    def on_reject(self, conn, message):
         """Store reject reason and code for testing."""
         self.reject_code_received = message.code
         self.reject_reason_received = message.reason
