@@ -125,7 +125,7 @@ jobs:
         FILE_ENV="./ci/test/00_setup_env_amd64_asan.sh"
 
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no depends, only system libs, sanitizers: fuzzer,address]'
+      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no depends, only system libs, sanitizers: fuzzer,address,undefined]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_amd64_fuzz.sh"
 
