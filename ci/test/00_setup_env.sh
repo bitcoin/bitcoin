@@ -22,6 +22,8 @@ export MAKEJOBS=${MAKEJOBS:--j4}
 # A folder for the ci system to put temporary files (ccache, datadirs for tests, ...)
 export BASE_SCRATCH_DIR=${BASE_SCRATCH_DIR:-$BASE_ROOT_DIR/ci/scratch/}
 export HOST=${HOST:-x86_64-unknown-linux-gnu}
+# Whether to prefer BusyBox over GNU utilities
+export USE_BUSY_BOX=${USE_BUSY_BOX:-false}
 export RUN_UNIT_TESTS=${RUN_UNIT_TESTS:-true}
 export RUN_FUNCTIONAL_TESTS=${RUN_FUNCTIONAL_TESTS:-true}
 export RUN_FUZZ_TESTS=${RUN_FUZZ_TESTS:-false}
