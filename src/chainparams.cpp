@@ -83,7 +83,7 @@ public:
         consensus.nStakeMinAge = 60 * 60; // 1 hour
         consensus.nStakeMaxAge = 60 * 60 * 24; // 24 hours
         consensus.nModifierInterval = 60; // Modifier interval: time to elapse before new modifier is computed (60 seconds)
-        consensus.nLastPoWBlock = 1000;
+        consensus.nLastPoWBlock = 100;
         consensus.nRuleChangeActivationThreshold = 1916; // 95% of 2016
         consensus.nMinerConfirmationWindow = 2016;       // nPowTargetTimespan / nPowTargetSpacing
         consensus.nMasternodeMinimumConfirmations = 15;
@@ -102,8 +102,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1510704000;   // November 15th, 2017.
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000000003e003e0");
-
+        consensus.nMinimumChainWork = uint256S("0x00");
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x00");
 
