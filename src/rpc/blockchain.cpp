@@ -993,6 +993,9 @@ static UniValue gettxoutsetinfo(const JSONRPCRequest& request)
     UniValue ret(UniValue::VOBJ);
 
     CCoinsStats stats;
+
+    LOCK(::ChainstateActive().m_cs_chainstate);
+
     ::ChainstateActive().ForceFlushStateToDisk();
 
     CCoinsView* coins_view = WITH_LOCK(cs_main, return &ChainstateActive().CoinsDB());
