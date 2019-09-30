@@ -41,13 +41,13 @@ class FrameworkInfo(object):
         self.sourceContentsDirectory = ""
         self.destinationResourcesDirectory = ""
         self.destinationVersionContentsDirectory = ""
-    
+
     def __eq__(self, other):
         if self.__class__ == other.__class__:
             return self.__dict__ == other.__dict__
         else:
             return False
-    
+
     def __str__(self):
         return """ Framework name: {}
  Framework directory: {}
@@ -71,51 +71,51 @@ class FrameworkInfo(object):
        self.deployedInstallName,
        self.sourceFilePath,
        self.destinationDirectory)
-    
+
     def isDylib(self):
         return self.frameworkName.endswith(".dylib")
-    
+
     def isQtFramework(self):
         if self.isDylib():
             return self.frameworkName.startswith("libQt")
         else:
             return self.frameworkName.startswith("Qt")
-    
+
     reOLine = re.compile(r'^(.+) \(compatibility version [0-9.]+, current version [0-9.]+\)$')
     bundleFrameworkDirectory = "Contents/Frameworks"
     bundleBinaryDirectory = "Contents/MacOS"
-    
+
     @classmethod
     def fromOtoolLibraryLine(cls, line: str) -> Optional['FrameworkInfo']:
         # Note: line must be trimmed
         if line == "":
             return None
-        
+
         # Don't deploy system libraries (exception for libQtuitools and libQtlucene).
         if line.startswith("/System/Library/") or line.startswith("@executable_path") or (line.startswith("/usr/lib/") and "libQt" not in line):
             return None
-        
+
         m = cls.reOLine.match(line)
         if m is None:
             raise RuntimeError("otool line could not be parsed: " + line)
-        
+
         path = m.group(1)
-        
+
         info = cls()
         info.sourceFilePath = path
         info.installName = path
-        
+
         if path.endswith(".dylib"):
             dirname, filename = os.path.split(path)
             info.frameworkName = filename
             info.frameworkDirectory = dirname
             info.frameworkPath = path
-            
+
             info.binaryDirectory = dirname
             info.binaryName = filename
             info.binaryPath = path
             info.version = "-"
-            
+
             info.installName = path
             info.deployedInstallName = "@executable_path/../Frameworks/" + info.binaryName
             info.sourceFilePath = path
@@ -130,25 +130,25 @@ class FrameworkInfo(object):
                 i += 1
             if i == len(parts):
                 raise RuntimeError("Could not find .framework or .dylib in otool line: " + line)
-            
+
             info.frameworkName = parts[i]
             info.frameworkDirectory = "/".join(parts[:i])
             info.frameworkPath = os.path.join(info.frameworkDirectory, info.frameworkName)
-            
+
             info.binaryName = parts[i+3]
             info.binaryDirectory = "/".join(parts[i+1:i+3])
             info.binaryPath = os.path.join(info.binaryDirectory, info.binaryName)
             info.version = parts[i+2]
-            
+
             info.deployedInstallName = "@executable_path/../Frameworks/" + os.path.join(info.frameworkName, info.binaryPath)
             info.destinationDirectory = os.path.join(cls.bundleFrameworkDirectory, info.frameworkName, info.binaryDirectory)
-            
+
             info.sourceResourcesDirectory = os.path.join(info.frameworkPath, "Resources")
             info.sourceContentsDirectory = os.path.join(info.frameworkPath, "Contents")
             info.sourceVersionContentsDirectory = os.path.join(info.frameworkPath, "Versions", info.version, "Contents")
             info.destinationResourcesDirectory = os.path.join(cls.bundleFrameworkDirectory, info.frameworkName, "Resources")
             info.destinationVersionContentsDirectory = os.path.join(cls.bundleFrameworkDirectory, info.frameworkName, "Versions", info.version, "Contents")
-        
+
         return info
 
 class ApplicationBundleInfo(object):
@@ -166,7 +166,7 @@ class DeploymentInfo(object):
         self.qtPath = None
         self.pluginPath = None
         self.deployedFrameworks = []
-    
+
     def detectQtPath(self, frameworkDirectory: str):
         parentDir = os.path.dirname(frameworkDirectory)
         if os.path.exists(os.path.join(parentDir, "translations")):
@@ -179,7 +179,7 @@ class DeploymentInfo(object):
             pluginPath = os.path.join(self.qtPath, "plugins")
             if os.path.exists(pluginPath):
                 self.pluginPath = pluginPath
-    
+
     def usesFramework(self, name: str) -> bool:
         nameDot = "{}.".format(name)
         libNameDot = "lib{}.".format(name)
@@ -208,7 +208,7 @@ def getFrameworks(binaryPath: str, verbose: int) -> List[FrameworkInfo]:
     otoolLines.pop(0) # First line is the inspected binary
     if ".framework" in binaryPath or binaryPath.endswith(".dylib"):
         otoolLines.pop(0) # Frameworks and dylibs list themselves as a dependency.
-    
+
     libraries = []
     for line in otoolLines:
         line = line.replace("@loader_path", os.path.dirname(binaryPath))
@@ -218,7 +218,7 @@ def getFrameworks(binaryPath: str, verbose: int) -> List[FrameworkInfo]:
                 print("Found framework:")
                 print(info)
             libraries.append(info)
-    
+
     return libraries
 
 def runInstallNameTool(action: str, *args):
@@ -255,16 +255,16 @@ def copyFramework(framework: FrameworkInfo, path: str, verbose: int) -> Optional
         fromPath = framework.sourceFilePath
     toDir = os.path.join(path, framework.destinationDirectory)
     toPath = os.path.join(toDir, framework.binaryName)
-    
+
     if not os.path.exists(fromPath):
         raise RuntimeError("No file at " + fromPath)
-    
+
     if os.path.exists(toPath):
         return None # Already there
-    
+
     if not os.path.exists(toDir):
         os.makedirs(toDir)
-    
+
     shutil.copy2(fromPath, toPath)
     if verbose >= 3:
         print("Copied:", fromPath)
@@ -306,53 +306,53 @@ def copyFramework(framework: FrameworkInfo, path: str, verbose: int) -> Optional
             if verbose >= 3:
                 print("Copied for libQtGui:", qtMenuNibSourcePath)
                 print(" to:", qtMenuNibDestinationPath)
-    
+
     return toPath
 
 def deployFrameworks(frameworks: List[FrameworkInfo], bundlePath: str, binaryPath: str, strip: bool, verbose: int, deploymentInfo: Optional[DeploymentInfo] = None) -> DeploymentInfo:
     if deploymentInfo is None:
         deploymentInfo = DeploymentInfo()
-    
+
     while len(frameworks) > 0:
         framework = frameworks.pop(0)
         deploymentInfo.deployedFrameworks.append(framework.frameworkName)
-        
+
         if verbose >= 2:
             print("Processing", framework.frameworkName, "...")
-        
+
         # Get the Qt path from one of the Qt frameworks
         if deploymentInfo.qtPath is None and framework.isQtFramework():
             deploymentInfo.detectQtPath(framework.frameworkDirectory)
-        
+
         if framework.installName.startswith("@executable_path") or framework.installName.startswith(bundlePath):
             if verbose >= 2:
                 print(framework.frameworkName, "already deployed, skipping.")
             continue
-        
+
         # install_name_tool the new id into the binary
         changeInstallName(framework.installName, framework.deployedInstallName, binaryPath, verbose)
-        
+
         # Copy framework to app bundle.
         deployedBinaryPath = copyFramework(framework, bundlePath, verbose)
         # Skip the rest if already was deployed.
         if deployedBinaryPath is None:
             continue
-        
+
         if strip:
             runStrip(deployedBinaryPath, verbose)
-        
+
         # install_name_tool it a new id.
         changeIdentification(framework.deployedInstallName, deployedBinaryPath, verbose)
         # Check for framework dependencies
         dependencies = getFrameworks(deployedBinaryPath, verbose)
-        
+
         for dependency in dependencies:
             changeInstallName(dependency.installName, dependency.deployedInstallName, deployedBinaryPath, verbose)
-            
+
             # Deploy framework if necessary.
             if dependency.frameworkName not in deploymentInfo.deployedFrameworks and dependency not in frameworks:
                 frameworks.append(dependency)
-    
+
     return deploymentInfo
 
 def deployFrameworksForAppBundle(applicationBundle: ApplicationBundleInfo, strip: bool, verbose: int) -> DeploymentInfo:
@@ -475,30 +475,30 @@ def deployPlugins(appBundleInfo: ApplicationBundleInfo, deploymentInfo: Deployme
                     continue
 
             plugins.append((pluginDirectory, pluginName))
-    
+
     for pluginDirectory, pluginName in plugins:
         if verbose >= 2:
             print("Processing plugin", os.path.join(pluginDirectory, pluginName), "...")
-        
+
         sourcePath = os.path.join(deploymentInfo.pluginPath, pluginDirectory, pluginName)
         destinationDirectory = os.path.join(appBundleInfo.pluginPath, pluginDirectory)
         if not os.path.exists(destinationDirectory):
             os.makedirs(destinationDirectory)
-        
+
         destinationPath = os.path.join(destinationDirectory, pluginName)
         shutil.copy2(sourcePath, destinationPath)
         if verbose >= 3:
             print("Copied:", sourcePath)
             print(" to:", destinationPath)
-        
+
         if strip:
             runStrip(destinationPath, verbose)
-        
+
         dependencies = getFrameworks(destinationPath, verbose)
-        
+
         for dependency in dependencies:
             changeInstallName(dependency.installName, dependency.deployedInstallName, destinationPath, verbose)
-            
+
             # Deploy framework if necessary.
             if dependency.frameworkName not in deploymentInfo.deployedFrameworks:
                 deployFrameworks([dependency], appBundleInfo.path, destinationPath, strip, verbose, deploymentInfo)
@@ -576,7 +576,7 @@ if len(config.fancy) == 1:
         if verbose >= 1:
             sys.stderr.write("Error: Could not import plistlib which is required for fancy disk images.\n")
         sys.exit(1)
-    
+
     p = config.fancy[0]
     if verbose >= 3:
         print("Fancy: Loading \"{}\"...".format(p))
@@ -584,14 +584,14 @@ if len(config.fancy) == 1:
         if verbose >= 1:
             sys.stderr.write("Error: Could not find fancy disk image plist at \"{}\"\n".format(p))
         sys.exit(1)
-    
+
     try:
         fancy = plistlib.readPlist(p)
     except:
         if verbose >= 1:
             sys.stderr.write("Error: Could not parse fancy disk image plist at \"{}\"\n".format(p))
         sys.exit(1)
-    
+
     try:
         assert "window_bounds" not in fancy or (isinstance(fancy["window_bounds"], list) and len(fancy["window_bounds"]) == 4)
         assert "background_picture" not in fancy or isinstance(fancy["background_picture"], str)
@@ -605,7 +605,7 @@ if len(config.fancy) == 1:
         if verbose >= 1:
             sys.stderr.write("Error: Bad format of fancy disk image plist at \"{}\"\n".format(p))
         sys.exit(1)
-    
+
     if "background_picture" in fancy:
         bp = fancy["background_picture"]
         if verbose >= 3:
@@ -626,7 +626,7 @@ else:
 if os.path.exists("dist"):
     if verbose >= 2:
         print("+ Removing old dist folder +")
-    
+
     shutil.rmtree("dist")
 
 # ------------------------------------------------
@@ -673,7 +673,7 @@ except RuntimeError as e:
 if config.plugins:
     if verbose >= 2:
         print("+ Deploying plugins +")
-    
+
     try:
         deployPlugins(applicationBundle, deploymentInfo, config.strip, verbose)
     except RuntimeError as e:
@@ -760,26 +760,26 @@ if config.dmg is not None:
             elif verbose >= 3:
                 hdiutil_args.append("-verbose")
             run = subprocess.check_call
-        
+
         for key, value in kwargs.items():
             hdiutil_args.append("-" + key)
             if value is not True:
                 hdiutil_args.append(str(value))
-        
+
         return run(hdiutil_args, universal_newlines=True)
-    
+
     if verbose >= 2:
         if fancy is None:
             print("+ Creating .dmg disk image +")
         else:
             print("+ Preparing .dmg disk image +")
-    
+
     if config.dmg != "":
         dmg_name = config.dmg
     else:
         spl = app_bundle_name.split(" ")
         dmg_name = spl[0] + "".join(p.capitalize() for p in spl[1:])
-    
+
     if fancy is None:
         try:
             runHDIUtil("create", dmg_name, srcfolder="dist", format="UDBZ", volname=volname, ov=True)
@@ -793,14 +793,14 @@ if config.dmg is not None:
             for file in files:
                 size += os.path.getsize(os.path.join(path, file))
         size += int(size * 0.15)
-        
+
         if verbose >= 3:
             print("Creating temp image for modification...")
         try:
             runHDIUtil("create", dmg_name + ".temp", srcfolder="dist", format="UDRW", size=size, volname=volname, ov=True)
         except subprocess.CalledProcessError as e:
             sys.exit(e.returncode)
-        
+
         if verbose >= 3:
             print("Attaching temp image...")
         try:
@@ -811,10 +811,10 @@ if config.dmg is not None:
         m = re.search(r"/Volumes/(.+$)", output)
         disk_root = m.group(0)
         disk_name = m.group(1)
-        
+
         if verbose >= 2:
             print("+ Applying fancy settings +")
-        
+
         if "background_picture" in fancy:
             bg_path = os.path.join(disk_root, ".background", os.path.basename(fancy["background_picture"]))
             os.mkdir(os.path.dirname(bg_path))
@@ -823,10 +823,10 @@ if config.dmg is not None:
             shutil.copy2(fancy["background_picture"], bg_path)
         else:
             bg_path = None
-        
+
         if fancy.get("applications_symlink", False):
             os.symlink("/Applications", os.path.join(disk_root, "Applications"))
-        
+
         # The Python appscript package broke with OSX 10.8 and isn't being fixed.
         # So we now build up an AppleScript string and use the osascript command
         # to make the .dmg file pretty:
@@ -892,12 +892,12 @@ if config.dmg is not None:
         if verbose >= 2:
             print("+ Finalizing .dmg disk image +")
             time.sleep(5)
-        
+
         try:
             runHDIUtil("convert", dmg_name + ".temp", format="UDBZ", o=dmg_name + ".dmg", ov=True)
         except subprocess.CalledProcessError as e:
             sys.exit(e.returncode)
-        
+
         os.unlink(dmg_name + ".temp.dmg")
 
 # ------------------------------------------------
