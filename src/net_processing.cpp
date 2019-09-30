@@ -774,6 +774,8 @@ unsigned int LimitOrphanTxSize(unsigned int nMaxOrphansSize)
     return nEvicted;
 }
 
+void static ProcessOrphanTx(CConnman* connman, std::set<uint256>& orphan_work_set) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_cs_orphans);
+
 // Requires cs_main.
 void Misbehaving(NodeId pnode, int howmuch)
 {
@@ -843,12 +845,22 @@ PeerLogicValidation::PeerLogicValidation(CConnman* connmanIn, CScheduler &schedu
 }
 
 void PeerLogicValidation::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex, const std::vector<CTransactionRef>& vtxConflicted) {
-    LOCK(g_cs_orphans);
+    LOCK2(cs_main, g_cs_orphans);
 
     std::vector<uint256> vOrphanErase;
+    std::set<uint256> orphanWorkSet;
 
     for (const CTransactionRef& ptx : pblock->vtx) {
         const CTransaction& tx = *ptx;
+
+        // Which orphan pool entries we should reprocess and potentially try to accept into mempool again?
+        for (size_t i = 0; i < tx.vin.size(); i++) {
+            auto itByPrev = mapOrphanTransactionsByPrev.find(COutPoint(tx.GetHash(), (uint32_t)i));
+            if (itByPrev == mapOrphanTransactionsByPrev.end()) continue;
+            for (const auto& elem : itByPrev->second) {
+                orphanWorkSet.insert(elem->first);
+            }
+        }
 
         // Which orphan pool entries must we evict?
         for (const auto& txin : tx.vin) {
@@ -869,6 +881,11 @@ void PeerLogicValidation::BlockConnected(const std::shared_ptr<const CBlock>& pb
             nErased += EraseOrphanTx(orphanHash);
         }
         LogPrint(BCLog::MEMPOOL, "Erased %d orphan tx included or conflicted by block\n", nErased);
+    }
+
+    while (!orphanWorkSet.empty()) {
+        LogPrint(BCLog::MEMPOOL, "Trying to process %d orphans\n", orphanWorkSet.size());
+        ProcessOrphanTx(g_connman.get(), orphanWorkSet);
     }
 
     g_last_tip_update = GetTime();
