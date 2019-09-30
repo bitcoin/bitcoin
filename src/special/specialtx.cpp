@@ -114,9 +114,8 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
     int64_t nTime4 = GetTimeMicros(); nTimeDMN += nTime4 - nTime3;
     LogPrint(BCLog::BENCHMARK, "        - deterministicMNManager: %.2fms [%.2fs]\n", 0.001 * (nTime4 - nTime3), nTimeDMN * 0.000001);
 
-    if (fCheckCbTxMerleRoots && !CheckCbTxMerkleRoots(block, pindex, state)) {
+    if (fCheckCbTxMerleRoots && block.IsProofOfStake() && !CheckCbTxMerkleRoots(block, pindex, state))
         return false;
-    }
 
     int64_t nTime5 = GetTimeMicros(); nTimeMerkle += nTime5 - nTime4;
     LogPrint(BCLog::BENCHMARK, "        - CheckCbTxMerkleRoots: %.2fms [%.2fs]\n", 0.001 * (nTime5 - nTime4), nTimeMerkle * 0.000001);
