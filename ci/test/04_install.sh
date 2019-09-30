@@ -33,18 +33,29 @@ if [ -z "$RUN_CI_ON_HOST" ]; then
   DOCKER_ID=$(docker run $DOCKER_ADMIN -idt --mount type=bind,src=$BASE_BUILD_DIR,dst=$BASE_BUILD_DIR --mount type=bind,src=$CCACHE_DIR,dst=$CCACHE_DIR -w $BASE_BUILD_DIR --env-file /tmp/env $DOCKER_NAME_TAG)
 
   DOCKER_EXEC () {
-    docker exec $DOCKER_ID bash -c "cd $PWD && $*"
+    docker exec $DOCKER_ID bash -c "export PATH=$BASE_SCRATCH_DIR/bins/:\$PATH && cd $PWD && $*"
   }
 else
   echo "Running on host system without docker wrapper"
   DOCKER_EXEC () {
-    bash -c "cd $PWD && $*"
+    bash -c "export PATH=$BASE_SCRATCH_DIR/bins/:\$PATH && cd $PWD && $*"
   }
 fi
 
 DOCKER_EXEC free -m -h
-DOCKER_EXEC echo "Number of CPUs \(nproc\): $(nproc)"
+DOCKER_EXEC echo "Number of CPUs \(nproc\):" \$\(nproc\)
 
 ${CI_RETRY_EXE} DOCKER_EXEC apt-get update
 ${CI_RETRY_EXE} DOCKER_EXEC apt-get install --no-install-recommends --no-upgrade -qq $PACKAGES $DOCKER_PACKAGES
 
+if [ "$USE_BUSY_BOX" = "true" ]; then
+  echo "Setup to use BusyBox utils"
+  DOCKER_EXEC mkdir -p $BASE_SCRATCH_DIR/bins/
+  # tar excluded for now because it requires passing in the exact archive type in ./depends (fixed in later BusyBox version)
+  # find excluded for now because it does not recognize the -delete option in ./depends (fixed in later BusyBox version)
+  # ar excluded for now because it does not recognize the -q option in ./depends (unknown if fixed)
+  # shellcheck disable=SC1010
+  DOCKER_EXEC for util in \$\(busybox --list \| grep -v "^ar$" \| grep -v "^tar$" \| grep -v "^find$"\)\; do ln -s \$\(command -v busybox\) $BASE_SCRATCH_DIR/bins/\$util\; done
+  # Print BusyBox version
+  DOCKER_EXEC patch --help
+fi
