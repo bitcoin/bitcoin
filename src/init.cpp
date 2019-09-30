@@ -177,6 +177,7 @@ void Interrupt()
     InterruptREST();
     InterruptTorControl();
     InterruptMapPort();
+    llmq::InterruptLLMQSystem();
     if (g_connman)
         g_connman->Interrupt();
     if (g_txindex) {
@@ -285,6 +286,8 @@ void Shutdown(InitInterfaces& interfaces)
         pcoinscatcher.reset();
         pcoinsdbview.reset();
         pblocktree.reset();
+        llmq::DestroyLLMQSystem();
+        deterministicMNManager.reset();
         pspecialdb.reset();
     }
     for (const auto& client : interfaces.chain_clients) {
@@ -1476,25 +1479,7 @@ bool AppInitMain(InitInterfaces& interfaces)
         nMaxOutboundLimit = gArgs.GetArg("-maxuploadtarget", DEFAULT_MAX_UPLOAD_TARGET)*1024*1024;
     }
 
-    // ********************************************************* Step 7-A: check lite mode and load sporks
-
-    // lite mode disables all Dash-specific functionality
-    fLiteMode = gArgs.GetBoolArg("-litemode", false);
-    LogPrintf("fLiteMode %d\n", fLiteMode);
-
-    if (fLiteMode)
-        InitWarning(_("You are starting in lite mode, all BitGreen-specific functionality is disabled.").translated);
-
-    if ((!fLiteMode && !g_txindex)
-       && chainparams.NetworkIDString() != CBaseChainParams::REGTEST) {
-        return InitError(_("Transaction index can't be disabled in full mode. Either start with -litemode command line switch or enable transaction index.").translated);
-    }
-
-    if (!fLiteMode) {
-        //TODO: BitGreen - Load sporks cache
-    }
-
-    // ********************************************************* Step 7-B: load block chain
+    // ********************************************************* Step 7: load block chain
 
     fReindex = gArgs.GetBoolArg("-reindex", false);
     bool fReindexChainState = gArgs.GetBoolArg("-reindex-chainstate", false);
@@ -1560,8 +1545,12 @@ bool AppInitMain(InitInterfaces& interfaces)
                         CleanupBlockRevFiles();
                 }
 
+                llmq::DestroyLLMQSystem();
+                deterministicMNManager.reset();
                 pspecialdb.reset();
                 pspecialdb.reset(new CSpecialDB(nSpecialDbCache, false, fReindex || fReindexChainState));
+                deterministicMNManager.reset(new CDeterministicMNManager(*pspecialdb));
+                llmq::InitLLMQSystem(*pspecialdb, &scheduler, false, fReindex || fReindexChainState);
 
                 if (ShutdownRequested()) break;
 
@@ -1720,7 +1709,7 @@ bool AppInitMain(InitInterfaces& interfaces)
         ::feeEstimator.Read(est_filein);
     fFeeEstimatesInitialized = true;
 
-    // ********************************************************* Step 8: start indexers
+    // ********************************************************* Step 8-A: start indexers
     if (gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
         g_txindex = MakeUnique<TxIndex>(nTxIndexCache, false, fReindex);
         g_txindex->Start();
@@ -1729,6 +1718,24 @@ bool AppInitMain(InitInterfaces& interfaces)
     for (const auto& filter_type : g_enabled_filter_types) {
         InitBlockFilterIndex(filter_type, filter_index_cache, false, fReindex);
         GetBlockFilterIndex(filter_type)->Start();
+    }
+
+    // ********************************************************* Step 8-B: check lite mode and load sporks
+
+    // lite mode disables all Dash-specific functionality
+    fLiteMode = gArgs.GetBoolArg("-litemode", false);
+    LogPrintf("fLiteMode %d\n", fLiteMode);
+
+    if (fLiteMode)
+        InitWarning(_("You are starting in lite mode, all BitGreen-specific functionality is disabled.").translated);
+
+    if ((!fLiteMode && !g_txindex)
+       && chainparams.NetworkIDString() != CBaseChainParams::REGTEST) {
+        return InitError(_("Transaction index can't be disabled in full mode. Either start with -litemode command line switch or enable transaction index.").translated);
+    }
+
+    if (!fLiteMode) {
+        //TODO: BitGreen - Load sporks cache
     }
 
     // ********************************************************* Step 9: load wallet
@@ -1819,7 +1826,7 @@ bool AppInitMain(InitInterfaces& interfaces)
 
     if (!fLiteMode) {
         scheduler.scheduleEvery(boost::bind(&CNetFulfilledRequestManager::DoMaintenance, boost::ref(netfulfilledman)), 60 * 1000);
-        scheduler.scheduleEvery(boost::bind(&CMasternodeSync::DoMaintenance, boost::ref(masternodeSync), boost::ref(*g_connman)), 1 * 1000);
+        // scheduler.scheduleEvery(boost::bind(&CMasternodeSync::DoMaintenance, boost::ref(masternodeSync), boost::ref(*g_connman)), 1 * 1000);
         scheduler.scheduleEvery(boost::bind(&CMasternodeUtils::DoMaintenance, boost::ref(*g_connman)), 1 * 1000);
         // TODO: BitGreen - governance scheduler
     }
