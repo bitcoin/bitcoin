@@ -16,6 +16,20 @@ use bridge::*;
 mod dns_headers;
 mod rest_downloader;
 
+// Our P2P socket handler currently only supports poll(), so we stub out all the P2P client for
+// Windows with dumy init/stop functions.
+#[cfg(target_family = "unix")] mod p2p_addrs;
+#[cfg(target_family = "unix")] mod p2p_client;
+#[cfg(target_family = "unix")] mod p2p_socket_handler;
+
+#[cfg(target_family = "windows")]
+mod dummy_p2p {
+    #[no_mangle]
+    pub extern "C" fn init_p2p_client(_connman_ptr: *mut c_void, _datadir_path: *const c_char, _subver_c: *const c_char, _bind_port: u16, _dnsseed_names: *const *const c_char, _dnsseed_count: usize) { }
+    #[no_mangle]
+    pub extern "C" fn stop_p2p_client() { }
+}
+
 use std::alloc::{GlobalAlloc, Layout, System};
 use std::ptr;
 use std::sync::atomic::{AtomicUsize, Ordering};

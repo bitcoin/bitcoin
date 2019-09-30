@@ -190,6 +190,7 @@ void Shutdown(NodeContext& node)
 #if ENABLE_RUSTY
     rust_block_fetch::stop_fetch_dns_headers();
     rust_block_fetch::stop_fetch_rest_blocks();
+    rust_block_fetch::stop_p2p_client();
 #endif
 
     StopHTTPRPC();
@@ -409,6 +410,8 @@ void SetupServerArgs()
 #if ENABLE_RUSTY
     gArgs.AddArg("-blockfetchrest=<uri>", "A REST endpoint from which to fetch blocks. Acts as a redundant backup for P2P connectivity. eg http://cloudflare.deanonymizingseed.com/rest/", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
     gArgs.AddArg("-headersfetchdns=<domain>", "A domain name from which to fetch headers. eg bitcoinheaders.net", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
+    gArgs.AddArg("-parallelp2p", strprintf("Whether to run a parallel P2P client to provide redundancy in block fetch implementation (default: %u).", rust_block_fetch::DEFAULT_P2P), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
+    gArgs.AddArg("-parallelp2pport=<port>", strprintf("Listen for connections on <port> with the parallel P2P client (default: %u, testnet: %u, regtest: %u). 0 indicates no listening, only outbound connections are made.", defaultChainParams->GetDefaultPort() + 1, testnetChainParams->GetDefaultPort() + 1, regtestChainParams->GetDefaultPort() + 1), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
 #endif
     gArgs.AddArg("-addnode=<ip>", "Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info). This option can be specified multiple times to add multiple nodes.", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
     gArgs.AddArg("-banscore=<n>", strprintf("Threshold for disconnecting misbehaving peers (default: %u)", DEFAULT_BANSCORE_THRESHOLD), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
@@ -1345,6 +1348,13 @@ bool AppInitMain(NodeContext& node)
         return InitError(strprintf(_("Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.").translated,
             strSubVersion.size(), MAX_SUBVERSION_LENGTH));
     }
+#ifdef ENABLE_RUSTY
+    std::string rusty_sub_ver = FormatSubVersion(RUSTY_CLIENT_NAME, CLIENT_VERSION, uacomments);
+    if (gArgs.GetBoolArg("-parallelp2p", rust_block_fetch::DEFAULT_P2P) && rusty_sub_ver.size() > MAX_SUBVERSION_LENGTH) {
+        return InitError(strprintf(_("Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.").translated,
+            rusty_sub_ver.size(), MAX_SUBVERSION_LENGTH));
+    }
+#endif
 
     if (gArgs.IsArgSet("-onlynet")) {
         std::set<enum Network> nets;
@@ -1843,6 +1853,14 @@ bool AppInitMain(NodeContext& node)
     }
     for (const std::string& uri : gArgs.GetArgs("-blockfetchrest")) {
         rust_block_fetch::init_fetch_rest_blocks(uri.c_str());
+    }
+    if (gArgs.GetBoolArg("-parallelp2p", rust_block_fetch::DEFAULT_P2P)) {
+        std::vector<const char*> dnsseeds;
+        for (const std::string& seed : Params().DNSSeeds()) {
+            dnsseeds.push_back(seed.c_str());
+        }
+        unsigned short bind_port = (unsigned short)(gArgs.GetArg("-parallelp2pport", Params().GetDefaultPort() + 1));
+        rust_block_fetch::init_p2p_client(node.connman.get(), GetDataDir().c_str(), rusty_sub_ver.c_str(), bind_port, dnsseeds.data(), dnsseeds.size());
     }
 #endif
 
