@@ -135,6 +135,8 @@ BASE_SCRIPTS= [
     'bip65-cltv-p2p.py',
     'uptime.py',
     'resendwallettransactions.py',
+    'minchainwork.py',
+    'p2p-acceptblock.py', # NOTE: needs dash_hash to pass
 ]
 
 EXTENDED_SCRIPTS = [
@@ -162,7 +164,6 @@ EXTENDED_SCRIPTS = [
     'txindex.py',
     'forknotify.py',
     'invalidateblock.py',
-    'p2p-acceptblock.py', # NOTE: needs dash_hash to pass
 ]
 
 # Place EXTENDED_SCRIPTS first since it has the 3 longest running tests

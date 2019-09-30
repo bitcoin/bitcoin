@@ -83,7 +83,7 @@ class BIP68Test(BitcoinTestFramework):
         tx2.vout = [CTxOut(int(value-self.relayfee*COIN), CScript([b'a']))]
         tx2.rehash()
 
-        assert_raises_jsonrpc(-26, NOT_FINAL_ERROR, self.nodes[0].sendrawtransaction, ToHex(tx2))
+        assert_raises_rpc_error(-26, NOT_FINAL_ERROR, self.nodes[0].sendrawtransaction, ToHex(tx2))
 
         # Setting the version back down to 1 should disable the sequence lock,
         # so this should be accepted.
@@ -180,7 +180,7 @@ class BIP68Test(BitcoinTestFramework):
 
             if (using_sequence_locks and not should_pass):
                 # This transaction should be rejected
-                assert_raises_jsonrpc(-26, NOT_FINAL_ERROR, self.nodes[0].sendrawtransaction, rawtx)
+                assert_raises_rpc_error(-26, NOT_FINAL_ERROR, self.nodes[0].sendrawtransaction, rawtx)
             else:
                 # This raw transaction should be accepted
                 self.nodes[0].sendrawtransaction(rawtx)
@@ -227,7 +227,7 @@ class BIP68Test(BitcoinTestFramework):
 
             if (orig_tx.hash in node.getrawmempool()):
                 # sendrawtransaction should fail if the tx is in the mempool
-                assert_raises_jsonrpc(-26, NOT_FINAL_ERROR, node.sendrawtransaction, ToHex(tx))
+                assert_raises_rpc_error(-26, NOT_FINAL_ERROR, node.sendrawtransaction, ToHex(tx))
             else:
                 # sendrawtransaction should succeed if the tx is not in the mempool
                 node.sendrawtransaction(ToHex(tx))
@@ -280,7 +280,7 @@ class BIP68Test(BitcoinTestFramework):
         tx5.vout[0].nValue += int(utxos[0]["amount"]*COIN)
         raw_tx5 = self.nodes[0].signrawtransaction(ToHex(tx5))["hex"]
 
-        assert_raises_jsonrpc(-26, NOT_FINAL_ERROR, self.nodes[0].sendrawtransaction, raw_tx5)
+        assert_raises_rpc_error(-26, NOT_FINAL_ERROR, self.nodes[0].sendrawtransaction, raw_tx5)
 
         # Test mempool-BIP68 consistency after reorg
         #
@@ -353,7 +353,7 @@ class BIP68Test(BitcoinTestFramework):
         tx3.vout = [CTxOut(int(tx2.vout[0].nValue - self.relayfee*COIN), CScript([b'a']))]
         tx3.rehash()
 
-        assert_raises_jsonrpc(-26, NOT_FINAL_ERROR, self.nodes[0].sendrawtransaction, ToHex(tx3))
+        assert_raises_rpc_error(-26, NOT_FINAL_ERROR, self.nodes[0].sendrawtransaction, ToHex(tx3))
 
         # make a block that violates bip68; ensure that the tip updates
         tip = int(self.nodes[0].getbestblockhash(), 16)

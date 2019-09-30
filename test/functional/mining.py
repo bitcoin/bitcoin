@@ -15,7 +15,7 @@ from decimal import Decimal
 from test_framework.blocktools import create_coinbase
 from test_framework.mininode import CBlock
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_jsonrpc
+from test_framework.util import assert_equal, assert_raises_rpc_error
 
 def b2x(b):
     return b2a_hex(b).decode('ascii')
@@ -68,7 +68,7 @@ class MiningTest(BitcoinTestFramework):
         assert_template(node, block, None)
 
         self.log.info("submitblock: Test block decode failure")
-        assert_raises_jsonrpc(-22, "Block decode failed", node.submitblock, b2x(block.serialize()[:-15]))
+        assert_raises_rpc_error(-22, "Block decode failed", node.submitblock, b2x(block.serialize()[:-15]))
 
         self.log.info("getblocktemplate: Test bad input hash for coinbase transaction")
         bad_block = copy.deepcopy(block)
@@ -77,10 +77,10 @@ class MiningTest(BitcoinTestFramework):
         assert_template(node, bad_block, 'bad-cb-missing')
 
         self.log.info("submitblock: Test invalid coinbase transaction")
-        assert_raises_jsonrpc(-22, "Block does not start with a coinbase", node.submitblock, b2x(bad_block.serialize()))
+        assert_raises_rpc_error(-22, "Block does not start with a coinbase", node.submitblock, b2x(bad_block.serialize()))
 
         self.log.info("getblocktemplate: Test truncated final transaction")
-        assert_raises_jsonrpc(-22, "Block decode failed", node.getblocktemplate, {'data': b2x(block.serialize()[:-1]), 'mode': 'proposal'})
+        assert_raises_rpc_error(-22, "Block decode failed", node.getblocktemplate, {'data': b2x(block.serialize()[:-1]), 'mode': 'proposal'})
 
         self.log.info("getblocktemplate: Test duplicate transaction")
         bad_block = copy.deepcopy(block)
@@ -107,7 +107,7 @@ class MiningTest(BitcoinTestFramework):
         bad_block_sn = bytearray(block.serialize())
         assert_equal(bad_block_sn[TX_COUNT_OFFSET], 1)
         bad_block_sn[TX_COUNT_OFFSET] += 1
-        assert_raises_jsonrpc(-22, "Block decode failed", node.getblocktemplate, {'data': b2x(bad_block_sn), 'mode': 'proposal'})
+        assert_raises_rpc_error(-22, "Block decode failed", node.getblocktemplate, {'data': b2x(bad_block_sn), 'mode': 'proposal'})
 
         self.log.info("getblocktemplate: Test bad bits")
         bad_block = copy.deepcopy(block)

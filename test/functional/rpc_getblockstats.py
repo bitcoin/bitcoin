@@ -9,7 +9,7 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_raises_jsonrpc,
+    assert_raises_rpc_error,
 )
 import json
 import os
@@ -148,9 +148,9 @@ class GetblockstatsTest(BitcoinTestFramework):
 
         # Test invalid parameters raise the proper json exceptions
         tip = self.start_height + self.max_stat_pos
-        assert_raises_jsonrpc(-8, 'Target block height %d after current tip %d' % (tip+1, tip),
+        assert_raises_rpc_error(-8, 'Target block height %d after current tip %d' % (tip+1, tip),
                                 self.nodes[0].getblockstats, hash_or_height=tip+1)
-        assert_raises_jsonrpc(-8, 'Target block height %d is negative' % (-1),
+        assert_raises_rpc_error(-8, 'Target block height %d is negative' % (-1),
                                 self.nodes[0].getblockstats, hash_or_height=-1)
 
         # Make sure not valid stats aren't allowed
@@ -162,18 +162,18 @@ class GetblockstatsTest(BitcoinTestFramework):
             ['minfee', inv_sel_stat, 'maxfee'],
         ]
         for inv_stat in inv_stats:
-            assert_raises_jsonrpc(-8, 'Invalid selected statistic %s' % inv_sel_stat,
+            assert_raises_rpc_error(-8, 'Invalid selected statistic %s' % inv_sel_stat,
                                     self.nodes[0].getblockstats, hash_or_height=1, stats=inv_stat)
 
         # Make sure we aren't always returning inv_sel_stat as the culprit stat
-        assert_raises_jsonrpc(-8, 'Invalid selected statistic aaa%s' % inv_sel_stat,
+        assert_raises_rpc_error(-8, 'Invalid selected statistic aaa%s' % inv_sel_stat,
                                 self.nodes[0].getblockstats, hash_or_height=1, stats=['minfee' , 'aaa%s' % inv_sel_stat])
 
-        assert_raises_jsonrpc(-8, 'One or more of the selected stats requires -txindex enabled',
+        assert_raises_rpc_error(-8, 'One or more of the selected stats requires -txindex enabled',
                                 self.nodes[1].getblockstats, hash_or_height=self.start_height + self.max_stat_pos)
 
         # Mainchain's genesis block shouldn't be found on regtest
-        assert_raises_jsonrpc(-5, 'Block not found', self.nodes[0].getblockstats,
+        assert_raises_rpc_error(-5, 'Block not found', self.nodes[0].getblockstats,
                                 hash_or_height='000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f')
 
 if __name__ == '__main__':

@@ -9,7 +9,7 @@ from test_framework import mininode
 from test_framework.blocktools import get_masternode_payment, create_coinbase, create_block
 from test_framework.mininode import *
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import sync_blocks, p2p_port, assert_raises_jsonrpc, set_node_times
+from test_framework.util import sync_blocks, p2p_port, assert_raises_rpc_error, set_node_times
 
 '''
 llmq-is-cl-conflicts.py
@@ -148,8 +148,8 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
 
         # Lets verify that the ISLOCKs got pruned
         for node in self.nodes:
-            assert_raises_jsonrpc(-5, "No such mempool or blockchain transaction", node.getrawtransaction, rawtx1_txid, True)
-            assert_raises_jsonrpc(-5, "No such mempool or blockchain transaction", node.getrawtransaction, rawtx4_txid, True)
+            assert_raises_rpc_error(-5, "No such mempool or blockchain transaction", node.getrawtransaction, rawtx1_txid, True)
+            assert_raises_rpc_error(-5, "No such mempool or blockchain transaction", node.getrawtransaction, rawtx4_txid, True)
             rawtx = node.getrawtransaction(rawtx2_txid, True)
             assert(rawtx['chainlock'])
             assert(rawtx['instantlock'])
@@ -186,7 +186,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
 
         # Assert that the conflicting tx got mined and the locked TX is not valid
         assert(self.nodes[0].getrawtransaction(rawtx1_txid, True)['confirmations'] > 0)
-        assert_raises_jsonrpc(-25, "Missing inputs", self.nodes[0].sendrawtransaction, rawtx2)
+        assert_raises_rpc_error(-25, "Missing inputs", self.nodes[0].sendrawtransaction, rawtx2)
 
         # Send the ISLOCK, which should result in the last 2 blocks to be invalidated, even though the nodes don't know
         # the locked transaction yet

@@ -1656,7 +1656,6 @@ class NodeConnCB(object):
         test_function = lambda: self.last_message.get("pong") and self.last_message["pong"].nonce == self.ping_counter
         wait_until(test_function, timeout=timeout, lock=mininode_lock)
         self.ping_counter += 1
-        return True
 
 # The actual NodeConn class
 # This class provides an interface for a p2p connection to a specified node

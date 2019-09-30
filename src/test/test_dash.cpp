@@ -29,6 +29,18 @@
 
 #include <memory>
 
+void CConnmanTest::AddNode(CNode& node)
+{
+    LOCK(g_connman->cs_vNodes);
+    g_connman->vNodes.push_back(&node);
+}
+
+void CConnmanTest::ClearNodes()
+{
+    LOCK(g_connman->cs_vNodes);
+    g_connman->vNodes.clear();
+}
+
 uint256 insecure_rand_seed = GetRandHash();
 FastRandomContext insecure_rand_ctx(insecure_rand_seed);
 
@@ -59,7 +71,6 @@ BasicTestingSetup::~BasicTestingSetup()
         delete evoDb;
 
         ECC_Stop();
-        g_connman.reset();
 }
 
 TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(chainName)
@@ -96,17 +107,18 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         nScriptCheckThreads = 3;
         for (int i=0; i < nScriptCheckThreads-1; i++)
             threadGroup.create_thread(&ThreadScriptCheck);
-        RegisterNodeSignals(GetNodeSignals());
+        peerLogic.reset(new PeerLogicValidation(connman, scheduler));
 }
 
 TestingSetup::~TestingSetup()
 {
-        UnregisterNodeSignals(GetNodeSignals());
         llmq::InterruptLLMQSystem();
         threadGroup.interrupt_all();
         threadGroup.join_all();
         GetMainSignals().FlushBackgroundCallbacks();
         GetMainSignals().UnregisterBackgroundSignalScheduler();
+        g_connman.reset();
+        peerLogic.reset();
         UnloadBlockIndex();
         delete pcoinsTip;
         llmq::DestroyLLMQSystem();

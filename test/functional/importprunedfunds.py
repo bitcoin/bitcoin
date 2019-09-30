@@ -67,7 +67,7 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         self.sync_all()
 
         #Import with no affiliated address
-        assert_raises_jsonrpc(-5, "No addresses", self.nodes[1].importprunedfunds, rawtxn1, proof1)
+        assert_raises_rpc_error(-5, "No addresses", self.nodes[1].importprunedfunds, rawtxn1, proof1)
 
         balance1 = self.nodes[1].getbalance("", 0, False, True)
         assert_equal(balance1, Decimal(0))
@@ -98,7 +98,7 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         assert_equal(address_info['ismine'], True)
 
         #Remove transactions
-        assert_raises_jsonrpc(-8, "Transaction does not exist in wallet.", self.nodes[1].removeprunedfunds, txnid1)
+        assert_raises_rpc_error(-8, "Transaction does not exist in wallet.", self.nodes[1].removeprunedfunds, txnid1)
 
         balance1 = self.nodes[1].getbalance("*", 0, False, True)
         assert_equal(balance1, Decimal('0.075'))

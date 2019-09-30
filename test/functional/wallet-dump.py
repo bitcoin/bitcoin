@@ -7,7 +7,7 @@ import os
 import sys
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (assert_equal, assert_raises_jsonrpc)
+from test_framework.util import (assert_equal, assert_raises_rpc_error)
 
 
 def read_dump(file_name, addrs, hd_master_addr_old):
@@ -113,7 +113,7 @@ class WalletDumpTest(BitcoinTestFramework):
         assert_equal(found_addr_rsv, 180)  # keypool size
 
         # Overwriting should fail
-        assert_raises_jsonrpc(-8, "already exists", self.nodes[0].dumpwallet, tmpdir + "/node0/wallet.unencrypted.dump")
+        assert_raises_rpc_error(-8, "already exists", self.nodes[0].dumpwallet, tmpdir + "/node0/wallet.unencrypted.dump")
 
 if __name__ == '__main__':
     WalletDumpTest().main ()

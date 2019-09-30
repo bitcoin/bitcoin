@@ -22,7 +22,7 @@ class KeyPoolTest(BitcoinTestFramework):
         # Keep creating keys
         addr = nodes[0].getnewaddress()
 
-        assert_raises_jsonrpc(-12, "Error: Keypool ran out, please call keypoolrefill first", nodes[0].getnewaddress)
+        assert_raises_rpc_error(-12, "Error: Keypool ran out, please call keypoolrefill first", nodes[0].getnewaddress)
 
         # put three new keys in the keypool
         nodes[0].walletpassphrase('test', 12000)
@@ -37,7 +37,7 @@ class KeyPoolTest(BitcoinTestFramework):
         # assert that three unique addresses were returned
         assert(len(addr) == 3)
         # the next one should fail
-        assert_raises_jsonrpc(-12, "Keypool ran out", nodes[0].getrawchangeaddress)
+        assert_raises_rpc_error(-12, "Keypool ran out", nodes[0].getrawchangeaddress)
 
         # refill keypool with three new addresses
         nodes[0].walletpassphrase('test', 1)
@@ -50,7 +50,7 @@ class KeyPoolTest(BitcoinTestFramework):
         nodes[0].generate(1)
         nodes[0].generate(1)
         nodes[0].generate(1)
-        assert_raises_jsonrpc(-12, "Keypool ran out", nodes[0].generate, 1)
+        assert_raises_rpc_error(-12, "Keypool ran out", nodes[0].generate, 1)
 
 if __name__ == '__main__':
     KeyPoolTest().main()

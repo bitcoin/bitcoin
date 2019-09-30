@@ -306,6 +306,43 @@ enum ServiceFlags : uint64_t {
     // BIP process.
 };
 
+/**
+ * Gets the set of service flags which are "desirable" for a given peer.
+ *
+ * These are the flags which are required for a peer to support for them
+ * to be "interesting" to us, ie for us to wish to use one of our few
+ * outbound connection slots for or for us to wish to prioritize keeping
+ * their connection around.
+ *
+ * Relevant service flags may be peer- and state-specific in that the
+ * version of the peer may determine which flags are required (eg in the
+ * case of NODE_NETWORK_LIMITED where we seek out NODE_NETWORK peers
+ * unless they set NODE_NETWORK_LIMITED and we are out of IBD, in which
+ * case NODE_NETWORK_LIMITED suffices).
+ *
+ * Thus, generally, avoid calling with peerServices == NODE_NONE.
+ */
+static ServiceFlags GetDesirableServiceFlags(ServiceFlags services) {
+    return ServiceFlags(NODE_NETWORK);
+}
+
+/**
+ * A shortcut for (services & GetDesirableServiceFlags(services))
+ * == GetDesirableServiceFlags(services), ie determines whether the given
+ * set of service flags are sufficient for a peer to be "relevant".
+ */
+static inline bool HasAllDesirableServiceFlags(ServiceFlags services) {
+    return !(GetDesirableServiceFlags(services) & (~services));
+}
+
+/**
+ * Checks if a peer with the given service flags may be capable of having a
+ * robust address-storage DB. Currently an alias for checking NODE_NETWORK.
+ */
+static inline bool MayHaveUsefulAddressDB(ServiceFlags services) {
+    return services & NODE_NETWORK;
+}
+
 /** A CService with information about it as peer */
 class CAddress : public CService
 {

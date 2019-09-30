@@ -50,12 +50,20 @@ struct BasicTestingSetup {
  * Included are data directory, coins database, script check threads setup.
  */
 class CConnman;
+class CNode;
+struct CConnmanTest {
+    static void AddNode(CNode& node);
+    static void ClearNodes();
+};
+
+class PeerLogicValidation;
 struct TestingSetup: public BasicTestingSetup {
     CCoinsViewDB *pcoinsdbview;
     fs::path pathTemp;
     boost::thread_group threadGroup;
     CConnman* connman;
     CScheduler scheduler;
+    std::unique_ptr<PeerLogicValidation> peerLogic;
 
     TestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
     ~TestingSetup();
