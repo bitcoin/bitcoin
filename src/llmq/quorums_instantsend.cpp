@@ -459,10 +459,6 @@ bool CInstantSendManager::ProcessTx(const CTransaction& tx, const Consensus::Par
 
 bool CInstantSendManager::CheckCanLock(const CTransaction& tx, bool printDebug, const Consensus::Params& params)
 {
-    if (sporkManager.IsSporkActive(SPORK_16_INSTANTSEND_AUTOLOCKS) && (mempool.UsedMemoryShare() > CInstantSend::AUTO_IX_MEMPOOL_THRESHOLD)) {
-        return false;
-    }
-
     if (tx.vin.empty()) {
         // can't lock TXs without inputs (e.g. quorum commitments)
         return false;

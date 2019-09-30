@@ -99,9 +99,10 @@ class AutoISMempoolTest(DashTestFramework):
         self.wait_for_sporks_same()
 
         # autoIS is not working now
-        assert(not self.send_simple_tx(sender, receiver))
-        # regular IS is still working for old IS but not for new one
-        assert(not self.send_regular_instantsend(sender, receiver, False) if new_is else self.send_regular_instantsend(sender, receiver))
+        if not new_is:
+            assert(not self.send_simple_tx(sender, receiver))
+            # regular IS is still working for old IS but not for new one
+            assert(not self.send_regular_instantsend(sender, receiver, False) if new_is else self.send_regular_instantsend(sender, receiver))
 
         # generate one block to clean up mempool and retry auto and regular IS
         # generate 5 more blocks to avoid retroactive signing (which would overload Travis)
