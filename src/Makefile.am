@@ -164,6 +164,8 @@ BITCOIN_CORE_H = \
   llmq/quorums_utils.h \
   logging.h \
   masternodes/activemasternode.h \
+  masternodes/notificationinterface.h \
+  masternodes/payments.h \
   masternodes/sync.h \
   masternodes/utils.h \
   memusage.h \
@@ -322,6 +324,8 @@ libbitgreen_server_a_SOURCES = \
   llmq/quorums_signing_shares.cpp \
   llmq/quorums_utils.cpp \
   masternodes/activemasternode.cpp \
+  masternodes/notificationinterface.cpp \
+  masternodes/payments.cpp \
   masternodes/sync.cpp \
   masternodes/utils.cpp \
   messagesigner.cpp \
@@ -422,6 +426,8 @@ libbitgreen_wallet_a_SOURCES = \
   llmq/quorums_signing_shares.cpp \
   llmq/quorums_utils.cpp \
   masternodes/activemasternode.cpp \
+  masternodes/notificationinterface.cpp \
+  masternodes/payments.cpp \
   masternodes/sync.cpp \
   masternodes/utils.cpp \
   messagesigner.cpp \

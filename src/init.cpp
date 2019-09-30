@@ -29,6 +29,7 @@
 #include <key.h>
 #include <llmq/quorums_init.h>
 #include <masternodes/activemasternode.h>
+#include <masternodes/notificationinterface.h>
 #include <masternodes/sync.h>
 #include <masternodes/utils.h>
 #include <miner.h>
@@ -301,6 +302,12 @@ void Shutdown(InitInterfaces& interfaces)
         g_zmq_notification_interface = nullptr;
     }
 #endif
+
+    if (g_mn_notification_interface) {
+        UnregisterValidationInterface(g_mn_notification_interface);
+        delete g_mn_notification_interface;
+        g_mn_notification_interface = nullptr;
+    }
 
     // Unregister masternode
     if (fMasternodeMode)
@@ -761,8 +768,7 @@ static void ThreadImport(std::vector<fs::path> vImportFiles)
     // TODO: BitGreen
     // force UpdatedBlockTip to initialize nCachedBlockHeight for DS, MN payments and budgets
     // but don't call it directly to prevent triggering of other listeners like zmq etc.
-    // GetMainSignals().UpdatedBlockTip(chainActive.Tip());
-    // pdsNotificationInterface->InitializeCurrentBlockTip();
+    g_mn_notification_interface->InitializeCurrentBlockTip();
 
     if (fMasternodeMode) {
         assert(activeMasternodeManager);
@@ -1472,6 +1478,10 @@ bool AppInitMain(InitInterfaces& interfaces)
         RegisterValidationInterface(g_zmq_notification_interface);
     }
 #endif
+
+    g_mn_notification_interface = new CMNNotificationInterface(*g_connman.get());
+    RegisterValidationInterface(g_mn_notification_interface);
+
     uint64_t nMaxOutboundLimit = 0; //unlimited unless -maxuploadtarget is set
     uint64_t nMaxOutboundTimeframe = MAX_UPLOAD_TIMEFRAME;
 

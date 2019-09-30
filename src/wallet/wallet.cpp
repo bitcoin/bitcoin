@@ -15,6 +15,7 @@
 #include <key.h>
 #include <key_io.h>
 #include <llmq/quorums_chainlocks.h>
+#include <masternodes/payments.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <pos/kernel.h>
@@ -5216,6 +5217,15 @@ bool CWallet::CreateCoinStake(unsigned int nBits,
             break;
         }
     }
+
+    std::vector<CTxOut> voutMasternodePayments; // masternode payment
+    std::vector<CTxOut> voutSuperblockPayments; // superblock payment
+
+    // Update coinbase transaction with additional info about masternode and governance payments,
+    // get some info back to pass to getblocktemplate
+    FillBlockPayments(txNew, pIndex0->nHeight, nReward, voutMasternodePayments, voutSuperblockPayments);
+    LogPrintf("CreateNewBlock -- nBlockHeight %d blockReward %lld coinbaseTx %s",
+                pIndex0->nHeight, nReward, CTransaction(txNew).ToString());
 
     // Sign
     int nIn = 0;

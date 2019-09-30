@@ -1044,6 +1044,11 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
     if (Params().NetworkIDString() == "regtest")
         return 50 * COIN;
 
+    // TODO: BitGreen - Update with money supply
+    // premine 10M for testing
+    if (nHeight == 1)
+        return 10000000 * COIN;
+
     int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
     // Force block reward to zero when right shift is undefined.
     if (halvings >= 64)
@@ -1053,6 +1058,12 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
     // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
     nSubsidy >>= halvings;
     return nSubsidy;
+}
+
+CAmount GetMasternodePayment(int nHeight, CAmount blockValue)
+{
+    CAmount ret = blockValue/5; // start at 20%
+    return ret;
 }
 
 // Note that though this is marked const, we may end up modifying `m_cached_finished_ibd`, which
