@@ -342,10 +342,6 @@ static void OnRPCStopped()
 
 void SetupServerArgs()
 {
-#if ENABLE_RUSTY
-    assert(rust_hello_world_example::RUST_CONSTANT == 43);
-    rust_hello_world_example::hello_world();
-#endif
     SetupHelpOptions(gArgs);
     gArgs.AddArg("-help-debug", "Print help message with debugging options and exit", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST); // server-only for now
 
