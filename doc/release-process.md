@@ -24,7 +24,7 @@ Release Process
 ### Before every major release
 
 * Update hardcoded [seeds](/contrib/seeds/README.md), see [this pull request](https://github.com/bitcoin/bitcoin/pull/7415) for an example.
-* Update [`src/chainparams.cpp`](/src/chainparams.cpp) m_assumed_blockchain_size and m_assumed_chain_state_size with the current size plus some overhead.
+* Update [`src/chainparams.cpp`](/src/chainparams.cpp) m_assumed_blockchain_size and m_assumed_chain_state_size with the current size plus some overhead (see [this](#how-to-calculate-m_assumed_blockchain_size-and-m_assumed_chain_state_size) for information on how to calculate them).
 * Update `src/chainparams.cpp` chainTxData with statistics about the transaction count and rate. Use the output of the RPC `getchaintxstats`, see
   [this pull request](https://github.com/bitcoin/bitcoin/pull/12270) for an example. Reviewers can verify the results by running `getchaintxstats <window_block_count> <window_last_block_hash>` with the `window_block_count` and `window_last_block_hash` from your output.
 * On both the master branch and the new release branch:
@@ -369,3 +369,23 @@ bitcoin.org (see below for bitcoin.org update instructions).
   - Optionally twitter, reddit /r/Bitcoin, ... but this will usually sort out itself
 
   - Celebrate
+
+### Additional information
+
+#### How to calculate `m_assumed_blockchain_size` and `m_assumed_chain_state_size`
+
+Both variables are used as a guideline for how much space the user needs on their drive in total, not just strictly for the blockchain.
+Note that all values should be taken from a **fully synced** node and have an overhead of 5-10% added on top of its base value.
+
+To calculate `m_assumed_blockchain_size`:
+- For `mainnet` -> Take the size of the Bitcoin data directory, excluding `/regtest` and `/testnet3` directories.
+- For `testnet` -> Take the size of the `/testnet3` directory.
+
+
+To calculate `m_assumed_chain_state_size`:
+- For `mainnet` -> Take the size of the `/chainstate` directory.
+- For `testnet` -> Take the size of the `/testnet3/chainstate` directory.
+
+Notes:
+- When taking the size for `m_assumed_blockchain_size`, there's no need to exclude the `/chainstate` directory since it's a guideline value and an overhead will be added anyway.
+- The expected overhead for growth may change over time, so it may not be the same value as last release; pay attention to that when changing the variables.
