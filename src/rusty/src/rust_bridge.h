@@ -3,24 +3,21 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_RUSTY_H
-#define BITCOIN_RUSTY_H
+#ifndef BITCOIN_RUSTY_SRC_RUST_BRIDGE_H
+#define BITCOIN_RUSTY_SRC_RUST_BRIDGE_H
 
 #include <cstdarg>
 #include <cstdint>
 #include <cstdlib>
 #include <new>
 
-namespace rust_hello_world_example {
+namespace rust_block_fetch {
 
 extern "C" {
 
-extern int32_t RUST_CONSTANT;
-
-void hello_world();
 
 } // extern "C"
 
-} // namespace rust_hello_world_example
+} // namespace rust_block_fetch
 
-#endif // BITCOIN_RUSTY_H
+#endif // BITCOIN_RUSTY_SRC_RUST_BRIDGE_H
