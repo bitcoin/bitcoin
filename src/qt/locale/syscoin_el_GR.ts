@@ -176,8 +176,8 @@
         <translation>Επιβεβαίωσε κρυπτογράφηση πορτοφολιού</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR SYSCOINS&lt;/b&gt;!</source>
-        <translation>Προσόχη! Εάν κρυπτογραφήσεις το πορτοφόλι σου και χάσεις τη φράση αποκατάστασης, θα &lt;b&gt; ΧΑΣΕΙΣ ΟΛΑ ΣΟΥ ΤΑ SYSCOIN &lt;/b&gt;!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <translation>Προσόχη! Εάν κρυπτογραφήσεις το πορτοφόλι σου και χάσεις τη φράση αποκατάστασης, θα &lt;b&gt; ΧΑΣΕΙΣ ΟΛΑ ΣΟΥ ΤΑ BITCOIN &lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
