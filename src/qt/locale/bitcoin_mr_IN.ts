@@ -151,7 +151,7 @@
     <name>RecentRequestsTableModel</name>
     </context>
 <context>
-    <name>SendCoinsDialog</name>
+    <name>SendCompose</name>
     </context>
 <context>
     <name>SendCoinsEntry</name>

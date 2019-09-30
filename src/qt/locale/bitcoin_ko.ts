@@ -2095,7 +2095,7 @@
     </message>
 </context>
 <context>
-    <name>SendCoinsDialog</name>
+    <name>SendCompose</name>
     <message>
         <source>Send Coins</source>
         <translation>코인 전송내기</translation>

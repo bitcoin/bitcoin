@@ -13,7 +13,7 @@
 #include <qt/optionsmodel.h>
 #include <qt/paymentserver.h>
 #include <qt/recentrequeststablemodel.h>
-#include <qt/sendcoinsdialog.h>
+#include <qt/sendcompose.h>
 #include <qt/transactiontablemodel.h>
 
 #include <interfaces/handler.h>

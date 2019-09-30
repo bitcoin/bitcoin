@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_SENDCOINSDIALOG_H
-#define BITCOIN_QT_SENDCOINSDIALOG_H
+#ifndef BITCOIN_QT_SENDCOMPOSE_H
+#define BITCOIN_QT_SENDCOMPOSE_H
 
 #include <qt/walletmodel.h>
 
@@ -18,7 +18,7 @@ class SendCoinsEntry;
 class SendCoinsRecipient;
 
 namespace Ui {
-    class SendCoinsDialog;
+    class SendCompose;
 }
 
 QT_BEGIN_NAMESPACE
@@ -26,13 +26,13 @@ class QUrl;
 QT_END_NAMESPACE
 
 /** Dialog for sending bitcoins */
-class SendCoinsDialog : public QDialog
+class SendCompose : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit SendCoinsDialog(const PlatformStyle *platformStyle, QWidget *parent = nullptr);
-    ~SendCoinsDialog();
+    explicit SendCompose(const PlatformStyle *platformStyle, QWidget *parent = nullptr);
+    ~SendCompose();
 
     void setClientModel(ClientModel *clientModel);
     void setModel(WalletModel *model);
@@ -57,7 +57,7 @@ Q_SIGNALS:
     void coinsSent(const uint256& txid);
 
 private:
-    Ui::SendCoinsDialog *ui;
+    Ui::SendCompose *ui;
     ClientModel *clientModel;
     WalletModel *model;
     bool fNewRecipientAllowed;
@@ -122,4 +122,4 @@ private:
     QString confirmButtonText;
 };
 
-#endif // BITCOIN_QT_SENDCOINSDIALOG_H
+#endif // BITCOIN_QT_SENDCOMPOSE_H

@@ -1951,7 +1951,7 @@
     </message>
 </context>
 <context>
-    <name>SendCoinsDialog</name>
+    <name>SendCompose</name>
     <message>
         <source>Send Coins</source>
         <translation>Érmék küldése</translation>

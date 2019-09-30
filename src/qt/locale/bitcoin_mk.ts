@@ -505,7 +505,7 @@
     </message>
     </context>
 <context>
-    <name>SendCoinsDialog</name>
+    <name>SendCompose</name>
     <message>
         <source>Bytes:</source>
         <translation>Бајти:</translation>

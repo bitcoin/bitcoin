@@ -236,7 +236,7 @@
     </message>
     </context>
 <context>
-    <name>SendCoinsDialog</name>
+    <name>SendCompose</name>
     <message>
         <source>(no label)</source>
         <translation>(គ្មាន​ឡាបែល)</translation>

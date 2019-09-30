@@ -165,7 +165,7 @@
     <name>RecentRequestsTableModel</name>
     </context>
 <context>
-    <name>SendCoinsDialog</name>
+    <name>SendCompose</name>
     <message>
         <source>Copy quantity</source>
         <translation>העתק כמות</translation>

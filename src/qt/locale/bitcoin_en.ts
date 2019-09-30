@@ -2874,7 +2874,7 @@
     </message>
 </context>
 <context>
-    <name>SendCoinsDialog</name>
+    <name>SendCompose</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
         <location filename="../sendcoinsdialog.cpp" line="+601"/>

@@ -6,8 +6,8 @@
 #include <config/bitcoin-config.h>
 #endif
 
-#include <qt/sendcoinsdialog.h>
-#include <qt/forms/ui_sendcoinsdialog.h>
+#include <qt/sendcompose.h>
+#include <qt/forms/ui_sendcompose.h>
 
 #include <qt/addresstablemodel.h>
 #include <qt/bitcoinunits.h>
@@ -52,9 +52,9 @@ int getIndexForConfTarget(int target) {
     return confTargets.size() - 1;
 }
 
-SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *parent) :
+SendCompose::SendCompose(const PlatformStyle *_platformStyle, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::SendCoinsDialog),
+    ui(new Ui::SendCompose),
     clientModel(nullptr),
     model(nullptr),
     fNewRecipientAllowed(true),
@@ -77,13 +77,13 @@ SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *p
 
     addEntry();
 
-    connect(ui->addButton, &QPushButton::clicked, this, &SendCoinsDialog::addEntry);
-    connect(ui->clearButton, &QPushButton::clicked, this, &SendCoinsDialog::clear);
+    connect(ui->addButton, &QPushButton::clicked, this, &SendCompose::addEntry);
+    connect(ui->clearButton, &QPushButton::clicked, this, &SendCompose::clear);
 
     // Coin Control
-    connect(ui->pushButtonCoinControl, &QPushButton::clicked, this, &SendCoinsDialog::coinControlButtonClicked);
-    connect(ui->checkBoxCoinControlChange, &QCheckBox::stateChanged, this, &SendCoinsDialog::coinControlChangeChecked);
-    connect(ui->lineEditCoinControlChange, &QValidatedLineEdit::textEdited, this, &SendCoinsDialog::coinControlChangeEdited);
+    connect(ui->pushButtonCoinControl, &QPushButton::clicked, this, &SendCompose::coinControlButtonClicked);
+    connect(ui->checkBoxCoinControlChange, &QCheckBox::stateChanged, this, &SendCompose::coinControlChangeChecked);
+    connect(ui->lineEditCoinControlChange, &QValidatedLineEdit::textEdited, this, &SendCompose::coinControlChangeEdited);
 
     // Coin Control: clipboard actions
     QAction *clipboardQuantityAction = new QAction(tr("Copy quantity"), this);
@@ -93,13 +93,13 @@ SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *p
     QAction *clipboardBytesAction = new QAction(tr("Copy bytes"), this);
     QAction *clipboardLowOutputAction = new QAction(tr("Copy dust"), this);
     QAction *clipboardChangeAction = new QAction(tr("Copy change"), this);
-    connect(clipboardQuantityAction, &QAction::triggered, this, &SendCoinsDialog::coinControlClipboardQuantity);
-    connect(clipboardAmountAction, &QAction::triggered, this, &SendCoinsDialog::coinControlClipboardAmount);
-    connect(clipboardFeeAction, &QAction::triggered, this, &SendCoinsDialog::coinControlClipboardFee);
-    connect(clipboardAfterFeeAction, &QAction::triggered, this, &SendCoinsDialog::coinControlClipboardAfterFee);
-    connect(clipboardBytesAction, &QAction::triggered, this, &SendCoinsDialog::coinControlClipboardBytes);
-    connect(clipboardLowOutputAction, &QAction::triggered, this, &SendCoinsDialog::coinControlClipboardLowOutput);
-    connect(clipboardChangeAction, &QAction::triggered, this, &SendCoinsDialog::coinControlClipboardChange);
+    connect(clipboardQuantityAction, &QAction::triggered, this, &SendCompose::coinControlClipboardQuantity);
+    connect(clipboardAmountAction, &QAction::triggered, this, &SendCompose::coinControlClipboardAmount);
+    connect(clipboardFeeAction, &QAction::triggered, this, &SendCompose::coinControlClipboardFee);
+    connect(clipboardAfterFeeAction, &QAction::triggered, this, &SendCompose::coinControlClipboardAfterFee);
+    connect(clipboardBytesAction, &QAction::triggered, this, &SendCompose::coinControlClipboardBytes);
+    connect(clipboardLowOutputAction, &QAction::triggered, this, &SendCompose::coinControlClipboardLowOutput);
+    connect(clipboardChangeAction, &QAction::triggered, this, &SendCompose::coinControlClipboardChange);
     ui->labelCoinControlQuantity->addAction(clipboardQuantityAction);
     ui->labelCoinControlAmount->addAction(clipboardAmountAction);
     ui->labelCoinControlFee->addAction(clipboardFeeAction);
@@ -128,16 +128,16 @@ SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *p
     minimizeFeeSection(settings.value("fFeeSectionMinimized").toBool());
 }
 
-void SendCoinsDialog::setClientModel(ClientModel *_clientModel)
+void SendCompose::setClientModel(ClientModel *_clientModel)
 {
     this->clientModel = _clientModel;
 
     if (_clientModel) {
-        connect(_clientModel, &ClientModel::numBlocksChanged, this, &SendCoinsDialog::updateSmartFeeLabel);
+        connect(_clientModel, &ClientModel::numBlocksChanged, this, &SendCompose::updateSmartFeeLabel);
     }
 }
 
-void SendCoinsDialog::setModel(WalletModel *_model)
+void SendCompose::setModel(WalletModel *_model)
 {
     this->model = _model;
 
@@ -154,13 +154,13 @@ void SendCoinsDialog::setModel(WalletModel *_model)
 
         interfaces::WalletBalances balances = _model->wallet().getBalances();
         setBalance(balances);
-        connect(_model, &WalletModel::balanceChanged, this, &SendCoinsDialog::setBalance);
-        connect(_model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &SendCoinsDialog::updateDisplayUnit);
+        connect(_model, &WalletModel::balanceChanged, this, &SendCompose::setBalance);
+        connect(_model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &SendCompose::updateDisplayUnit);
         updateDisplayUnit();
 
         // Coin Control
-        connect(_model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &SendCoinsDialog::coinControlUpdateLabels);
-        connect(_model->getOptionsModel(), &OptionsModel::coinControlFeaturesChanged, this, &SendCoinsDialog::coinControlFeatureChanged);
+        connect(_model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &SendCompose::coinControlUpdateLabels);
+        connect(_model->getOptionsModel(), &OptionsModel::coinControlFeaturesChanged, this, &SendCompose::coinControlFeatureChanged);
         ui->frameCoinControl->setVisible(_model->getOptionsModel()->getCoinControlFeatures());
         coinControlUpdateLabels();
 
@@ -168,13 +168,13 @@ void SendCoinsDialog::setModel(WalletModel *_model)
         for (const int n : confTargets) {
             ui->confTargetSelector->addItem(tr("%1 (%2 blocks)").arg(GUIUtil::formatNiceTimeOffset(n*Params().GetConsensus().nPowTargetSpacing)).arg(n));
         }
-        connect(ui->confTargetSelector, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &SendCoinsDialog::updateSmartFeeLabel);
-        connect(ui->confTargetSelector, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &SendCoinsDialog::coinControlUpdateLabels);
-        connect(ui->groupFee, static_cast<void (QButtonGroup::*)(int)>(&QButtonGroup::buttonClicked), this, &SendCoinsDialog::updateFeeSectionControls);
-        connect(ui->groupFee, static_cast<void (QButtonGroup::*)(int)>(&QButtonGroup::buttonClicked), this, &SendCoinsDialog::coinControlUpdateLabels);
-        connect(ui->customFee, &BitcoinAmountField::valueChanged, this, &SendCoinsDialog::coinControlUpdateLabels);
-        connect(ui->optInRBF, &QCheckBox::stateChanged, this, &SendCoinsDialog::updateSmartFeeLabel);
-        connect(ui->optInRBF, &QCheckBox::stateChanged, this, &SendCoinsDialog::coinControlUpdateLabels);
+        connect(ui->confTargetSelector, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &SendCompose::updateSmartFeeLabel);
+        connect(ui->confTargetSelector, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &SendCompose::coinControlUpdateLabels);
+        connect(ui->groupFee, static_cast<void (QButtonGroup::*)(int)>(&QButtonGroup::buttonClicked), this, &SendCompose::updateFeeSectionControls);
+        connect(ui->groupFee, static_cast<void (QButtonGroup::*)(int)>(&QButtonGroup::buttonClicked), this, &SendCompose::coinControlUpdateLabels);
+        connect(ui->customFee, &BitcoinAmountField::valueChanged, this, &SendCompose::coinControlUpdateLabels);
+        connect(ui->optInRBF, &QCheckBox::stateChanged, this, &SendCompose::updateSmartFeeLabel);
+        connect(ui->optInRBF, &QCheckBox::stateChanged, this, &SendCompose::coinControlUpdateLabels);
         CAmount requiredFee = model->wallet().getRequiredFee(1000);
         ui->customFee->SetMinValue(requiredFee);
         if (ui->customFee->value() < requiredFee) {
@@ -210,7 +210,7 @@ void SendCoinsDialog::setModel(WalletModel *_model)
     }
 }
 
-SendCoinsDialog::~SendCoinsDialog()
+SendCompose::~SendCompose()
 {
     QSettings settings;
     settings.setValue("fFeeSectionMinimized", fFeeMinimized);
@@ -221,7 +221,7 @@ SendCoinsDialog::~SendCoinsDialog()
     delete ui;
 }
 
-void SendCoinsDialog::on_sendButton_clicked()
+void SendCompose::on_sendButton_clicked()
 {
     if(!model || !model->getOptionsModel())
         return;
@@ -441,7 +441,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     fNewRecipientAllowed = true;
 }
 
-void SendCoinsDialog::clear()
+void SendCompose::clear()
 {
     // Clear coin control settings
     CoinControlDialog::coinControl()->UnSelectAll();
@@ -459,25 +459,25 @@ void SendCoinsDialog::clear()
     updateTabsAndLabels();
 }
 
-void SendCoinsDialog::reject()
+void SendCompose::reject()
 {
     clear();
 }
 
-void SendCoinsDialog::accept()
+void SendCompose::accept()
 {
     clear();
 }
 
-SendCoinsEntry *SendCoinsDialog::addEntry()
+SendCoinsEntry *SendCompose::addEntry()
 {
     SendCoinsEntry *entry = new SendCoinsEntry(platformStyle, this);
     entry->setModel(model);
     ui->entries->addWidget(entry);
-    connect(entry, &SendCoinsEntry::removeEntry, this, &SendCoinsDialog::removeEntry);
-    connect(entry, &SendCoinsEntry::useAvailableBalance, this, &SendCoinsDialog::useAvailableBalance);
-    connect(entry, &SendCoinsEntry::payAmountChanged, this, &SendCoinsDialog::coinControlUpdateLabels);
-    connect(entry, &SendCoinsEntry::subtractFeeFromAmountChanged, this, &SendCoinsDialog::coinControlUpdateLabels);
+    connect(entry, &SendCoinsEntry::removeEntry, this, &SendCompose::removeEntry);
+    connect(entry, &SendCoinsEntry::useAvailableBalance, this, &SendCompose::useAvailableBalance);
+    connect(entry, &SendCoinsEntry::payAmountChanged, this, &SendCompose::coinControlUpdateLabels);
+    connect(entry, &SendCoinsEntry::subtractFeeFromAmountChanged, this, &SendCompose::coinControlUpdateLabels);
 
     // Focus the field, so that entry can start immediately
     entry->clear();
@@ -492,13 +492,13 @@ SendCoinsEntry *SendCoinsDialog::addEntry()
     return entry;
 }
 
-void SendCoinsDialog::updateTabsAndLabels()
+void SendCompose::updateTabsAndLabels()
 {
     setupTabChain(nullptr);
     coinControlUpdateLabels();
 }
 
-void SendCoinsDialog::removeEntry(SendCoinsEntry* entry)
+void SendCompose::removeEntry(SendCoinsEntry* entry)
 {
     entry->hide();
 
@@ -511,7 +511,7 @@ void SendCoinsDialog::removeEntry(SendCoinsEntry* entry)
     updateTabsAndLabels();
 }
 
-QWidget *SendCoinsDialog::setupTabChain(QWidget *prev)
+QWidget *SendCompose::setupTabChain(QWidget *prev)
 {
     for(int i = 0; i < ui->entries->count(); ++i)
     {
@@ -527,7 +527,7 @@ QWidget *SendCoinsDialog::setupTabChain(QWidget *prev)
     return ui->addButton;
 }
 
-void SendCoinsDialog::setAddress(const QString &address)
+void SendCompose::setAddress(const QString &address)
 {
     SendCoinsEntry *entry = nullptr;
     // Replace the first entry if it is still unused
@@ -547,7 +547,7 @@ void SendCoinsDialog::setAddress(const QString &address)
     entry->setAddress(address);
 }
 
-void SendCoinsDialog::pasteEntry(const SendCoinsRecipient &rv)
+void SendCompose::pasteEntry(const SendCoinsRecipient &rv)
 {
     if(!fNewRecipientAllowed)
         return;
@@ -571,7 +571,7 @@ void SendCoinsDialog::pasteEntry(const SendCoinsRecipient &rv)
     updateTabsAndLabels();
 }
 
-bool SendCoinsDialog::handlePaymentRequest(const SendCoinsRecipient &rv)
+bool SendCompose::handlePaymentRequest(const SendCoinsRecipient &rv)
 {
     // Just paste the entry, all pre-checks
     // are done in paymentserver.cpp.
@@ -579,7 +579,7 @@ bool SendCoinsDialog::handlePaymentRequest(const SendCoinsRecipient &rv)
     return true;
 }
 
-void SendCoinsDialog::setBalance(const interfaces::WalletBalances& balances)
+void SendCompose::setBalance(const interfaces::WalletBalances& balances)
 {
     if(model && model->getOptionsModel())
     {
@@ -587,20 +587,20 @@ void SendCoinsDialog::setBalance(const interfaces::WalletBalances& balances)
     }
 }
 
-void SendCoinsDialog::updateDisplayUnit()
+void SendCompose::updateDisplayUnit()
 {
     setBalance(model->wallet().getBalances());
     ui->customFee->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
     updateSmartFeeLabel();
 }
 
-void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn &sendCoinsReturn, const QString &msgArg)
+void SendCompose::processSendCoinsReturn(const WalletModel::SendCoinsReturn &sendCoinsReturn, const QString &msgArg)
 {
     QPair<QString, CClientUIInterface::MessageBoxFlags> msgParams;
     // Default to a warning message, override if error message is needed
     msgParams.second = CClientUIInterface::MSG_WARNING;
 
-    // This comment is specific to SendCoinsDialog usage of WalletModel::SendCoinsReturn.
+    // This comment is specific to SendCompose usage of WalletModel::SendCoinsReturn.
     // WalletModel::TransactionCommitFailed is used only in WalletModel::sendCoins()
     // all others are used only in WalletModel::prepareTransaction()
     switch(sendCoinsReturn.status)
@@ -644,7 +644,7 @@ void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn 
     Q_EMIT message(tr("Send Coins"), msgParams.first, msgParams.second);
 }
 
-void SendCoinsDialog::minimizeFeeSection(bool fMinimize)
+void SendCompose::minimizeFeeSection(bool fMinimize)
 {
     ui->labelFeeMinimized->setVisible(fMinimize);
     ui->buttonChooseFee  ->setVisible(fMinimize);
@@ -654,18 +654,18 @@ void SendCoinsDialog::minimizeFeeSection(bool fMinimize)
     fFeeMinimized = fMinimize;
 }
 
-void SendCoinsDialog::on_buttonChooseFee_clicked()
+void SendCompose::on_buttonChooseFee_clicked()
 {
     minimizeFeeSection(false);
 }
 
-void SendCoinsDialog::on_buttonMinimizeFee_clicked()
+void SendCompose::on_buttonMinimizeFee_clicked()
 {
     updateFeeMinimizedLabel();
     minimizeFeeSection(true);
 }
 
-void SendCoinsDialog::useAvailableBalance(SendCoinsEntry* entry)
+void SendCompose::useAvailableBalance(SendCoinsEntry* entry)
 {
     // Get CCoinControl instance if CoinControl is enabled or create a new one.
     CCoinControl coin_control;
@@ -693,7 +693,7 @@ void SendCoinsDialog::useAvailableBalance(SendCoinsEntry* entry)
     }
 }
 
-void SendCoinsDialog::updateFeeSectionControls()
+void SendCompose::updateFeeSectionControls()
 {
     ui->confTargetSelector      ->setEnabled(ui->radioSmartFee->isChecked());
     ui->labelSmartFee           ->setEnabled(ui->radioSmartFee->isChecked());
@@ -705,7 +705,7 @@ void SendCoinsDialog::updateFeeSectionControls()
     ui->customFee               ->setEnabled(ui->radioCustomFee->isChecked());
 }
 
-void SendCoinsDialog::updateFeeMinimizedLabel()
+void SendCompose::updateFeeMinimizedLabel()
 {
     if(!model || !model->getOptionsModel())
         return;
@@ -717,7 +717,7 @@ void SendCoinsDialog::updateFeeMinimizedLabel()
     }
 }
 
-void SendCoinsDialog::updateCoinControlState(CCoinControl& ctrl)
+void SendCompose::updateCoinControlState(CCoinControl& ctrl)
 {
     if (ui->radioCustomFee->isChecked()) {
         ctrl.m_feerate = CFeeRate(ui->customFee->value());
@@ -732,7 +732,7 @@ void SendCoinsDialog::updateCoinControlState(CCoinControl& ctrl)
     ctrl.fAllowWatchOnly = model->privateKeysDisabled();
 }
 
-void SendCoinsDialog::updateSmartFeeLabel()
+void SendCompose::updateSmartFeeLabel()
 {
     if(!model || !model->getOptionsModel())
         return;
@@ -765,49 +765,49 @@ void SendCoinsDialog::updateSmartFeeLabel()
 }
 
 // Coin Control: copy label "Quantity" to clipboard
-void SendCoinsDialog::coinControlClipboardQuantity()
+void SendCompose::coinControlClipboardQuantity()
 {
     GUIUtil::setClipboard(ui->labelCoinControlQuantity->text());
 }
 
 // Coin Control: copy label "Amount" to clipboard
-void SendCoinsDialog::coinControlClipboardAmount()
+void SendCompose::coinControlClipboardAmount()
 {
     GUIUtil::setClipboard(ui->labelCoinControlAmount->text().left(ui->labelCoinControlAmount->text().indexOf(" ")));
 }
 
 // Coin Control: copy label "Fee" to clipboard
-void SendCoinsDialog::coinControlClipboardFee()
+void SendCompose::coinControlClipboardFee()
 {
     GUIUtil::setClipboard(ui->labelCoinControlFee->text().left(ui->labelCoinControlFee->text().indexOf(" ")).replace(ASYMP_UTF8, ""));
 }
 
 // Coin Control: copy label "After fee" to clipboard
-void SendCoinsDialog::coinControlClipboardAfterFee()
+void SendCompose::coinControlClipboardAfterFee()
 {
     GUIUtil::setClipboard(ui->labelCoinControlAfterFee->text().left(ui->labelCoinControlAfterFee->text().indexOf(" ")).replace(ASYMP_UTF8, ""));
 }
 
 // Coin Control: copy label "Bytes" to clipboard
-void SendCoinsDialog::coinControlClipboardBytes()
+void SendCompose::coinControlClipboardBytes()
 {
     GUIUtil::setClipboard(ui->labelCoinControlBytes->text().replace(ASYMP_UTF8, ""));
 }
 
 // Coin Control: copy label "Dust" to clipboard
-void SendCoinsDialog::coinControlClipboardLowOutput()
+void SendCompose::coinControlClipboardLowOutput()
 {
     GUIUtil::setClipboard(ui->labelCoinControlLowOutput->text());
 }
 
 // Coin Control: copy label "Change" to clipboard
-void SendCoinsDialog::coinControlClipboardChange()
+void SendCompose::coinControlClipboardChange()
 {
     GUIUtil::setClipboard(ui->labelCoinControlChange->text().left(ui->labelCoinControlChange->text().indexOf(" ")).replace(ASYMP_UTF8, ""));
 }
 
 // Coin Control: settings menu - coin control enabled/disabled by user
-void SendCoinsDialog::coinControlFeatureChanged(bool checked)
+void SendCompose::coinControlFeatureChanged(bool checked)
 {
     ui->frameCoinControl->setVisible(checked);
 
@@ -818,7 +818,7 @@ void SendCoinsDialog::coinControlFeatureChanged(bool checked)
 }
 
 // Coin Control: button inputs -> show actual coin control dialog
-void SendCoinsDialog::coinControlButtonClicked()
+void SendCompose::coinControlButtonClicked()
 {
     CoinControlDialog dlg(platformStyle);
     dlg.setModel(model);
@@ -827,7 +827,7 @@ void SendCoinsDialog::coinControlButtonClicked()
 }
 
 // Coin Control: checkbox custom change address
-void SendCoinsDialog::coinControlChangeChecked(int state)
+void SendCompose::coinControlChangeChecked(int state)
 {
     if (state == Qt::Unchecked)
     {
@@ -842,7 +842,7 @@ void SendCoinsDialog::coinControlChangeChecked(int state)
 }
 
 // Coin Control: custom change address changed
-void SendCoinsDialog::coinControlChangeEdited(const QString& text)
+void SendCompose::coinControlChangeEdited(const QString& text)
 {
     if (model && model->getAddressTableModel())
     {
@@ -896,7 +896,7 @@ void SendCoinsDialog::coinControlChangeEdited(const QString& text)
 }
 
 // Coin Control: update labels
-void SendCoinsDialog::coinControlUpdateLabels()
+void SendCompose::coinControlUpdateLabels()
 {
     if (!model || !model->getOptionsModel())
         return;

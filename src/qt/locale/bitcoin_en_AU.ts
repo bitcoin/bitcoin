@@ -113,7 +113,7 @@
     <name>RecentRequestsTableModel</name>
     </context>
 <context>
-    <name>SendCoinsDialog</name>
+    <name>SendCompose</name>
     <message>
         <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
         <translation>(Smart fee not initialised yet. This usually takes a few blocks...)</translation>

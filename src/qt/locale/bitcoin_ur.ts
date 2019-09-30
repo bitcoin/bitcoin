@@ -243,7 +243,7 @@
     </message>
     </context>
 <context>
-    <name>SendCoinsDialog</name>
+    <name>SendCompose</name>
     <message>
         <source>Insufficient funds!</source>
         <translation>ناکافی فنڈز</translation>

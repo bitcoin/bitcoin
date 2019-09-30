@@ -1964,7 +1964,7 @@ Exportar los datos en la pestaña actual a un archivo</translation>
     </message>
 </context>
 <context>
-    <name>SendCoinsDialog</name>
+    <name>SendCompose</name>
     <message>
         <source>Send Coins</source>
         <translation>Enviar monedas</translation>

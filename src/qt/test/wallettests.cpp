@@ -7,7 +7,7 @@
 #include <qt/optionsmodel.h>
 #include <qt/platformstyle.h>
 #include <qt/qvalidatedlineedit.h>
-#include <qt/sendcoinsdialog.h>
+#include <qt/sendcompose.h>
 #include <qt/sendcoinsentry.h>
 #include <qt/transactiontablemodel.h>
 #include <qt/transactionview.h>
@@ -53,7 +53,7 @@ void ConfirmSend(QString* text = nullptr, bool cancel = false)
 }
 
 //! Send coins to address and return txid.
-uint256 SendCoins(CWallet& wallet, SendCoinsDialog& sendCoinsDialog, const CTxDestination& address, CAmount amount, bool rbf)
+uint256 SendCoins(CWallet& wallet, SendCompose& sendCoinsDialog, const CTxDestination& address, CAmount amount, bool rbf)
 {
     QVBoxLayout* entries = sendCoinsDialog.findChild<QVBoxLayout*>("entries");
     SendCoinsEntry* entry = qobject_cast<SendCoinsEntry*>(entries->itemAt(0)->widget());
@@ -157,7 +157,7 @@ void TestGUI()
 
     // Create widgets for sending coins and listing transactions.
     std::unique_ptr<const PlatformStyle> platformStyle(PlatformStyle::instantiate("other"));
-    SendCoinsDialog sendCoinsDialog(platformStyle.get());
+    SendCompose sendCoinsDialog(platformStyle.get());
     TransactionView transactionView(platformStyle.get());
     auto node = interfaces::MakeNode();
     OptionsModel optionsModel(*node);

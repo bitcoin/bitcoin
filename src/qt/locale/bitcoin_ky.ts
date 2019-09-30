@@ -243,7 +243,7 @@
     </message>
     </context>
 <context>
-    <name>SendCoinsDialog</name>
+    <name>SendCompose</name>
     <message>
         <source>Clear &amp;All</source>
         <translation>&amp;Бардыгын тазалоо</translation>

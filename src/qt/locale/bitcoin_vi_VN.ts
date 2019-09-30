@@ -992,7 +992,7 @@ Ví của bạn chưa được mã hóa.</translation>
     </message>
     </context>
 <context>
-    <name>SendCoinsDialog</name>
+    <name>SendCompose</name>
     <message>
         <source>Send Coins</source>
         <translation>Gửi Coins</translation>

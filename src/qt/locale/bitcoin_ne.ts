@@ -337,7 +337,7 @@
     <name>RecentRequestsTableModel</name>
     </context>
 <context>
-    <name>SendCoinsDialog</name>
+    <name>SendCompose</name>
     <message>
         <source>Choose...</source>
         <translation>छनौट गर्नुहोस्...</translation>

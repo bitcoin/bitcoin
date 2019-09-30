@@ -42,7 +42,7 @@
     <ClCompile Include="..\..\src\qt\receiverequestdialog.cpp" />
     <ClCompile Include="..\..\src\qt\recentrequeststablemodel.cpp" />
     <ClCompile Include="..\..\src\qt\rpcconsole.cpp" />
-    <ClCompile Include="..\..\src\qt\sendcoinsdialog.cpp" />
+    <ClCompile Include="..\..\src\qt\sendcompose.cpp" />
     <ClCompile Include="..\..\src\qt\sendcoinsentry.cpp" />
     <ClCompile Include="..\..\src\qt\signverifymessagedialog.cpp" />
     <ClCompile Include="..\..\src\qt\splashscreen.cpp" />
@@ -94,7 +94,7 @@
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_receiverequestdialog.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_recentrequeststablemodel.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_rpcconsole.cpp" />
-    <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_sendcoinsdialog.cpp" />
+    <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_sendcompose.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_sendcoinsentry.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_signverifymessagedialog.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_splashscreen.cpp" />

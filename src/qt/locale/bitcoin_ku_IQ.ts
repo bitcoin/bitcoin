@@ -295,7 +295,7 @@
     </message>
     </context>
 <context>
-    <name>SendCoinsDialog</name>
+    <name>SendCompose</name>
     <message>
         <source>Amount:</source>
         <translation>کۆ:</translation>
