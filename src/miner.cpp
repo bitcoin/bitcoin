@@ -145,7 +145,6 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     // transaction (which in most cases can be a no-op).
     fIncludeWitness = IsWitnessEnabled(pindexPrev, chainparams.GetConsensus());
 
-
     int64_t nTime1 = GetTimeMicros();
 
     m_last_block_num_txs = nBlockTx;
@@ -156,7 +155,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.vin.resize(1);
     coinbaseTx.vin[0].prevout.SetNull();
     coinbaseTx.vout.resize(1);
-    coinbaseTx.nVersion = 2;
+    coinbaseTx.nVersion = fProofOfStake ? 2 : 1;
     coinbaseTx.nType = TRANSACTION_COINBASE;
 
     if (fProofOfStake)
@@ -197,18 +196,24 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         coinbaseTx.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
     }
 
-    coinbaseTx.vin[0].scriptSig = CScript() << OP_RETURN;
-
-    CCbTx cbTx;
-    cbTx.nHeight = nHeight;
-
     CValidationState state;
-    if (!CalcCbTxMerkleRootMNList(*pblock, pindexPrev, cbTx.merkleRootMNList, state))
-        throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootMNList failed: %s", __func__, FormatStateMessage(state)));
-    if (!CalcCbTxMerkleRootQuorums(*pblock, pindexPrev, cbTx.merkleRootQuorums, state))
-        throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootQuorums failed: %s", __func__, FormatStateMessage(state)));
 
-    SetTxPayload(coinbaseTx, cbTx);
+    if (!fProofOfStake) {
+        coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
+    } else {
+        coinbaseTx.vin[0].scriptSig = CScript() << OP_RETURN;
+
+        CCbTx cbTx;
+        cbTx.nVersion = 1;
+        cbTx.nHeight = nHeight;
+
+        if (!CalcCbTxMerkleRootMNList(*pblock, pindexPrev, cbTx.merkleRootMNList, state))
+            throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootMNList failed: %s", __func__, FormatStateMessage(state)));
+        if (!CalcCbTxMerkleRootQuorums(*pblock, pindexPrev, cbTx.merkleRootQuorums, state))
+            throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootQuorums failed: %s", __func__, FormatStateMessage(state)));
+
+        SetTxPayload(coinbaseTx, cbTx);
+    }
 
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
     if (fIncludeWitness)
@@ -537,13 +542,13 @@ void PoSMiner(std::shared_ptr<CWallet> pwallet)
     pwallet->GetScriptForMining(coinbaseScript);
 
     // Compute timeout for pos as sqrt(numUTXO)
-    unsigned int pos_timio;
+    unsigned int pos_timio = 5000;
     {
-        std::vector<COutput> vCoins;
-        auto locked_chain = pwallet->chain().lock();
-        pwallet->AvailableCoins(*locked_chain, vCoins, false);
-        pos_timio = gArgs.GetArg("-staketimio", 500) + 30 * sqrt(vCoins.size());
-        LogPrintf("set proof-of-stake timeout: %ums for %u UTXOs\n", pos_timio, vCoins.size());
+        // std::vector<COutput> vCoins;
+        // auto locked_chain = pwallet->chain().lock();
+        // pwallet->AvailableCoins(*locked_chain, vCoins, false);
+        // pos_timio = gArgs.GetArg("-staketimio", 500) + 30 * sqrt(vCoins.size());
+        // LogPrintf("set proof-of-stake timeout: %ums for %u UTXOs\n", pos_timio, vCoins.size());
     }
 
     std::string strMintMessage = _("Info: Minting suspended due to locked wallet.").translated;
