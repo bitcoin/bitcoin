@@ -562,12 +562,6 @@ private:
     arith_uint256 nLastPreciousChainwork = 0;
 
     /**
-     * the ChainState CriticalSection
-     * A lock that must be held when modifying this ChainState - held in ActivateBestChain()
-     */
-    CCriticalSection m_cs_chainstate;
-
-    /**
      * Whether this chainstate is undergoing initial block download.
      *
      * Mutable because we need to be able to mark IsInitialBlockDownload()
@@ -586,6 +580,12 @@ private:
 public:
     CChainState(BlockManager& blockman) : m_blockman(blockman) {}
     CChainState();
+
+    /**
+     * the ChainState CriticalSection
+     * A lock that must be held when modifying this ChainState - held in ActivateBestChain()
+     */
+    CCriticalSection m_cs_chainstate;
 
     /**
      * Initialize the CoinsViews UTXO set database management data structures. The in-memory
