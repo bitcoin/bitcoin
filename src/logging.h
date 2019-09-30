@@ -60,6 +60,7 @@ namespace BCLog {
         LLMQDKG     = (1 << 24),
         LLMQSIGS    = (1 << 25),
         CHAINLOCKS  = (1 << 26),
+        MASTERNODE  = (1 << 27),
         ALL         = ~(uint32_t)0
     };
 
