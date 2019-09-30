@@ -228,7 +228,11 @@ AC_DEFUN([SYSCOIN_QT_CONFIGURE],[
   ],[
     syscoin_enable_qt=no
   ])
-  AC_MSG_RESULT([$syscoin_enable_qt (Qt5)])
+  if test x$syscoin_enable_qt = xyes; then
+    AC_MSG_RESULT([$syscoin_enable_qt ($QT_LIB_PREFIX)])
+  else
+    AC_MSG_RESULT([$syscoin_enable_qt])
+  fi
 
   AC_SUBST(QT_PIE_FLAGS)
   AC_SUBST(QT_INCLUDES)
