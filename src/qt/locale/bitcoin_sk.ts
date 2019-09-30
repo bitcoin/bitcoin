@@ -2474,7 +2474,7 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
     </message>
 </context>
 <context>
-    <name>SendConfirmationDialog</name>
+    <name>SendSign</name>
     <message>
         <source>Yes</source>
         <translation>áno</translation>

@@ -2435,7 +2435,7 @@ Nota: Cum taxa este calculata per byte, o taxa de "100 satoshi per kB" pentru o 
     </message>
 </context>
 <context>
-    <name>SendConfirmationDialog</name>
+    <name>SendSign</name>
     <message>
         <source>Yes</source>
         <translation>Da</translation>

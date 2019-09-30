@@ -2465,7 +2465,7 @@ Poznámka: Jelikož je poplatek počítaný za bajt, poplatek o hodnotě "100 sa
     </message>
 </context>
 <context>
-    <name>SendConfirmationDialog</name>
+    <name>SendSign</name>
     <message>
         <source>Yes</source>
         <translation>Ano</translation>

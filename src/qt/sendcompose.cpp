@@ -398,7 +398,7 @@ void SendCompose::on_sendButton_clicked()
     if (model->privateKeysDisabled()) {
         confirmButtonText = tr("Copy PSBT to clipboard");
     }
-    SendConfirmationDialog confirmationDialog(confirmation, questionString, informative_text, detailed_text, SEND_CONFIRM_DELAY, confirmButtonText, this);
+    SendSign confirmationDialog(confirmation, questionString, informative_text, detailed_text, SEND_CONFIRM_DELAY, confirmButtonText, this);
     confirmationDialog.exec();
     QMessageBox::StandardButton retval = static_cast<QMessageBox::StandardButton>(confirmationDialog.result());
 
@@ -937,7 +937,7 @@ void SendCompose::coinControlUpdateLabels()
     }
 }
 
-SendConfirmationDialog::SendConfirmationDialog(const QString& title, const QString& text, const QString& informative_text, const QString& detailed_text, int _secDelay, const QString& _confirmButtonText, QWidget* parent)
+SendSign::SendSign(const QString& title, const QString& text, const QString& informative_text, const QString& detailed_text, int _secDelay, const QString& _confirmButtonText, QWidget* parent)
     : QMessageBox(parent), secDelay(_secDelay), confirmButtonText(_confirmButtonText)
 {
     setIcon(QMessageBox::Question);
@@ -949,17 +949,17 @@ SendConfirmationDialog::SendConfirmationDialog(const QString& title, const QStri
     setDefaultButton(QMessageBox::Cancel);
     yesButton = button(QMessageBox::Yes);
     updateYesButton();
-    connect(&countDownTimer, &QTimer::timeout, this, &SendConfirmationDialog::countDown);
+    connect(&countDownTimer, &QTimer::timeout, this, &SendSign::countDown);
 }
 
-int SendConfirmationDialog::exec()
+int SendSign::exec()
 {
     updateYesButton();
     countDownTimer.start(1000);
     return QMessageBox::exec();
 }
 
-void SendConfirmationDialog::countDown()
+void SendSign::countDown()
 {
     secDelay--;
     updateYesButton();
@@ -970,7 +970,7 @@ void SendConfirmationDialog::countDown()
     }
 }
 
-void SendConfirmationDialog::updateYesButton()
+void SendSign::updateYesButton()
 {
     if(secDelay > 0)
     {

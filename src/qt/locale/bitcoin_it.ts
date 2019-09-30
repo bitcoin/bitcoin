@@ -2606,7 +2606,7 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     </message>
 </context>
 <context>
-    <name>SendConfirmationDialog</name>
+    <name>SendSign</name>
     <message>
         <source>Yes</source>
         <translation>Si</translation>

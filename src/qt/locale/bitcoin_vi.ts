@@ -2473,7 +2473,7 @@ Lưu ý: Vì phí được tính trên cơ sở mỗi byte, nên phí "100 satos
     </message>
 </context>
 <context>
-    <name>SendConfirmationDialog</name>
+    <name>SendSign</name>
     <message>
         <source>Yes</source>
         <translation>Yes</translation>

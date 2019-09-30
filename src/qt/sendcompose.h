@@ -103,12 +103,12 @@ Q_SIGNALS:
 
 #define SEND_CONFIRM_DELAY   3
 
-class SendConfirmationDialog : public QMessageBox
+class SendSign : public QMessageBox
 {
     Q_OBJECT
 
 public:
-    SendConfirmationDialog(const QString& title, const QString& text, const QString& informative_text = "", const QString& detailed_text = "", int secDelay = SEND_CONFIRM_DELAY, const QString& confirmText = "Send", QWidget* parent = nullptr);
+    SendSign(const QString& title, const QString& text, const QString& informative_text = "", const QString& detailed_text = "", int secDelay = SEND_CONFIRM_DELAY, const QString& confirmText = "Send", QWidget* parent = nullptr);
     int exec();
 
 private Q_SLOTS:

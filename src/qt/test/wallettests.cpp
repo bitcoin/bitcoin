@@ -41,8 +41,8 @@ void ConfirmSend(QString* text = nullptr, bool cancel = false)
 {
     QTimer::singleShot(0, [text, cancel]() {
         for (QWidget* widget : QApplication::topLevelWidgets()) {
-            if (widget->inherits("SendConfirmationDialog")) {
-                SendConfirmationDialog* dialog = qobject_cast<SendConfirmationDialog*>(widget);
+            if (widget->inherits("SendSign")) {
+                SendSign* dialog = qobject_cast<SendSign*>(widget);
                 if (text) *text = dialog->text();
                 QAbstractButton* button = dialog->button(cancel ? QMessageBox::Cancel : QMessageBox::Yes);
                 button->setEnabled(true);

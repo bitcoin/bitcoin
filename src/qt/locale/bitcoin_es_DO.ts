@@ -1195,7 +1195,7 @@
     </message>
     </context>
 <context>
-    <name>SendConfirmationDialog</name>
+    <name>SendSign</name>
     </context>
 <context>
     <name>ShutdownWindow</name>

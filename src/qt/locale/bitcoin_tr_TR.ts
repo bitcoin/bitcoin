@@ -1130,7 +1130,7 @@
     </message>
     </context>
 <context>
-    <name>SendConfirmationDialog</name>
+    <name>SendSign</name>
     <message>
         <source>Yes</source>
         <translation>Evet</translation>

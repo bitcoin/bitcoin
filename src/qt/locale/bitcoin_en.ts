@@ -2876,8 +2876,8 @@
 <context>
     <name>SendCompose</name>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+601"/>
+        <location filename="../forms/sendcompose.ui" line="+14"/>
+        <location filename="../sendcompose.cpp" line="+601"/>
         <source>Send Coins</source>
         <translation>Send Coins</translation>
     </message>
@@ -3064,7 +3064,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 satos
         <translation>S&amp;end</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="-513"/>
+        <location filename="../sendcompose.cpp" line="-513"/>
         <source>Copy quantity</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3359,9 +3359,9 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 satos
     </message>
 </context>
 <context>
-    <name>SendConfirmationDialog</name>
+    <name>SendSign</name>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="+88"/>
+        <location filename="../sendcompose.cpp" line="+88"/>
         <location line="+5"/>
         <source>Yes</source>
         <translation type="unfinished"></translation>
