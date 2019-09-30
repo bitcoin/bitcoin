@@ -388,6 +388,9 @@ void BitcoinMobileGUI::updateDisplayUnit()
         if (m_balances.balance != -1) {
             setBalance(m_balances);
         }
+
+        m_displayUnit = m_walletModel->getOptionsModel()->getDisplayUnit();
+        this->rootContext()->setContextProperty("displayUnit", m_displayUnit);
     }
 }
 

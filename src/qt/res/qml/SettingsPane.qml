@@ -17,12 +17,24 @@ Pane {
             title: bitcoinTr("OptionsDialog", "&Display")
             ColumnLayout {
                 anchors.fill: parent
-                ComboBox {
-                    Material.foreground: primaryColor
-                    model: availableUnits
 
-                    onActivated: {
-                        changeUnit(index)
+                RowLayout {
+                    spacing: 10
+
+                    Label {
+                        text: bitcoinTr("OptionsDialog", "&Unit to show amounts in:")
+                        font: theme.thinFont
+                    }
+
+                    ComboBox {
+                        Material.foreground: primaryColor
+                        model: availableUnits
+
+                        onActivated: {
+                            changeUnit(index)
+                        }
+
+                        font: theme.thinFont
                     }
                 }
 

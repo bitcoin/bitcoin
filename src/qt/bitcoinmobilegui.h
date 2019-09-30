@@ -68,6 +68,7 @@ private:
     std::unique_ptr<TransactionFilterProxy> filter;
 
     interfaces::WalletBalances m_balances;
+    int m_displayUnit;
 };
 
 #endif // BITCOINMOBILEGUI_H
