@@ -15,6 +15,12 @@
 const std::string CLIENT_NAME("Satoshi");
 
 /**
+ * Name of client reported in the 'version' message when connected to the
+ * in-Rust P2P client.
+ */
+const std::string RUSTY_CLIENT_NAME("RustySatoshi");
+
+/**
  * Client version number
  */
 #define CLIENT_VERSION_SUFFIX ""
