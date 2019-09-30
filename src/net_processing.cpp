@@ -74,10 +74,12 @@ struct COrphanTx {
     CTransactionRef tx;
     NodeId fromPeer;
     int64_t nTimeExpire;
+    size_t nTxSize;
 };
 static CCriticalSection g_cs_orphans;
 std::map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(g_cs_orphans);
 std::map<COutPoint, std::set<std::map<uint256, COrphanTx>::iterator, IteratorComparator>> mapOrphanTransactionsByPrev GUARDED_BY(g_cs_orphans);
+size_t nMapOrphanTransactionsSize = 0;
 void EraseOrphansFor(NodeId peer);
 
 static size_t vExtraTxnForCompactIt GUARDED_BY(g_cs_orphans) = 0;
@@ -681,13 +683,15 @@ bool AddOrphanTx(const CTransactionRef& tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRE
         return false;
     }
 
-    auto ret = mapOrphanTransactions.emplace(hash, COrphanTx{tx, peer, GetTime() + ORPHAN_TX_EXPIRE_TIME});
+    auto ret = mapOrphanTransactions.emplace(hash, COrphanTx{tx, peer, GetTime() + ORPHAN_TX_EXPIRE_TIME, sz});
     assert(ret.second);
     for (const CTxIn& txin : tx->vin) {
         mapOrphanTransactionsByPrev[txin.prevout].insert(ret.first);
     }
 
     AddToCompactExtraTransactions(tx);
+
+    nMapOrphanTransactionsSize += sz;
 
     LogPrint(BCLog::MEMPOOL, "stored orphan tx %s (mapsz %u outsz %u)\n", hash.ToString(),
              mapOrphanTransactions.size(), mapOrphanTransactionsByPrev.size());
@@ -708,6 +712,8 @@ int static EraseOrphanTx(uint256 hash) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
         if (itPrev->second.empty())
             mapOrphanTransactionsByPrev.erase(itPrev);
     }
+    assert(nMapOrphanTransactionsSize >= it->second.nTxSize);
+    nMapOrphanTransactionsSize -= it->second.nTxSize;
     mapOrphanTransactions.erase(it);
     return 1;
 }
@@ -729,7 +735,7 @@ void EraseOrphansFor(NodeId peer)
 }
 
 
-unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans)
+unsigned int LimitOrphanTxSize(unsigned int nMaxOrphansSize)
 {
     LOCK(g_cs_orphans);
 
@@ -754,7 +760,7 @@ unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans)
         nNextSweep = nMinExpTime + ORPHAN_TX_EXPIRE_INTERVAL;
         if (nErased > 0) LogPrint(BCLog::MEMPOOL, "Erased %d orphan tx due to expiration\n", nErased);
     }
-    while (mapOrphanTransactions.size() > nMaxOrphans)
+    while (!mapOrphanTransactions.empty() && nMapOrphanTransactionsSize > nMaxOrphansSize)
     {
         // Evict a random orphan:
         uint256 randomhash = GetRandHash();
@@ -2491,8 +2497,8 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 AddOrphanTx(ptx, pfrom->GetId());
 
                 // DoS prevention: do not allow mapOrphanTransactions to grow unbounded
-                unsigned int nMaxOrphanTx = (unsigned int)std::max((int64_t)0, gArgs.GetArg("-maxorphantx", DEFAULT_MAX_ORPHAN_TRANSACTIONS));
-                unsigned int nEvicted = LimitOrphanTxSize(nMaxOrphanTx);
+                unsigned int nMaxOrphanTxSize = (unsigned int)std::max((int64_t)0, gArgs.GetArg("-maxorphantxsize", DEFAULT_MAX_ORPHAN_TRANSACTIONS_SIZE)) * 1000000;
+                unsigned int nEvicted = LimitOrphanTxSize(nMaxOrphanTxSize);
                 if (nEvicted > 0) {
                     LogPrint(BCLog::MEMPOOL, "mapOrphan overflow, removed %u tx\n", nEvicted);
                 }
@@ -3962,5 +3968,6 @@ public:
         // orphan transactions
         mapOrphanTransactions.clear();
         mapOrphanTransactionsByPrev.clear();
+        nMapOrphanTransactionsSize = 0;
     }
 } instance_of_cnetprocessingcleanup;

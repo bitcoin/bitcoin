@@ -458,7 +458,7 @@ std::string HelpMessage(HelpMessageMode mode)
     }
     strUsage += HelpMessageOpt("-dbcache=<n>", strprintf(_("Set database cache size in megabytes (%d to %d, default: %d)"), nMinDbCache, nMaxDbCache, nDefaultDbCache));
     strUsage += HelpMessageOpt("-loadblock=<file>", _("Imports blocks from external blk000??.dat file on startup"));
-    strUsage += HelpMessageOpt("-maxorphantx=<n>", strprintf(_("Keep at most <n> unconnectable transactions in memory (default: %u)"), DEFAULT_MAX_ORPHAN_TRANSACTIONS));
+    strUsage += HelpMessageOpt("-maxorphantxsize=<n>", strprintf(_("Maximum total size of all orphan transactions in megabytes (default: %u)"), DEFAULT_MAX_ORPHAN_TRANSACTIONS_SIZE));
     strUsage += HelpMessageOpt("-maxmempool=<n>", strprintf(_("Keep the transaction memory pool below <n> megabytes (default: %u)"), DEFAULT_MAX_MEMPOOL_SIZE));
     strUsage += HelpMessageOpt("-mempoolexpiry=<n>", strprintf(_("Do not keep transactions in the mempool longer than <n> hours (default: %u)"), DEFAULT_MEMPOOL_EXPIRY));
     if (showDebug) {
@@ -1429,6 +1429,10 @@ bool AppInitParameterInteraction()
         UpdateDevnetLLMQChainLocks(llmqType);
     } else if (gArgs.IsArgSet("-llmqchainlocks")) {
         return InitError("LLMQ type for ChainLocks can only be overridden on devnet.");
+    }
+
+    if (gArgs.IsArgSet("-maxorphantx")) {
+        InitWarning("-maxorphantx is not supported anymore. Use -maxorphantxsize instead.");
     }
 
     return true;
