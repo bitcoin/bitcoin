@@ -20,6 +20,8 @@
 #include <functional>
 #include <unordered_map>
 
+static constexpr uint32_t COIN_NHEIGHT_BITS = 29;
+
 /**
  * A UTXO entry.
  *
@@ -36,12 +38,18 @@ public:
     //! whether containing transaction was a coinbase
     unsigned int fCoinBase : 1;
 
+    //! Cache entry: This cache entry is potentially different from the version in the parent view.
+    unsigned int dirty : 1;
+
+    //! Cache entry: The parent view does not have this entry (or it is pruned).
+    unsigned int fresh : 1;
+
     //! at which height this containing transaction was included in the active block chain
-    uint32_t nHeight : 31;
+    uint32_t nHeight : COIN_NHEIGHT_BITS;
 
     //! construct a Coin from a CTxOut and height/coinbase information.
-    Coin(CTxOut&& outIn, int nHeightIn, bool fCoinBaseIn) : out(std::move(outIn)), fCoinBase(fCoinBaseIn), nHeight(nHeightIn) {}
-    Coin(const CTxOut& outIn, int nHeightIn, bool fCoinBaseIn) : out(outIn), fCoinBase(fCoinBaseIn),nHeight(nHeightIn) {}
+    Coin(CTxOut&& outIn, int nHeightIn, bool fCoinBaseIn) : out(std::move(outIn)), fCoinBase(fCoinBaseIn), dirty(false), fresh(false), nHeight(nHeightIn) {}
+    Coin(const CTxOut& outIn, int nHeightIn, bool fCoinBaseIn) : out(outIn), fCoinBase(fCoinBaseIn), dirty(false), fresh(false), nHeight(nHeightIn) {}
 
     void Clear() {
         out.SetNull();
@@ -50,7 +58,7 @@ public:
     }
 
     //! empty constructor
-    Coin() : fCoinBase(false), nHeight(0) { }
+    Coin() : fCoinBase(false), dirty(false), fresh(false), nHeight(0) { }
 
     bool IsCoinBase() const {
         return fCoinBase;
@@ -112,7 +120,6 @@ public:
 struct CCoinsCacheEntry
 {
     Coin coin; // The actual cached data.
-    unsigned char flags;
 
     enum Flags {
         DIRTY = (1 << 0), // This cache entry is potentially different from the version in the parent view.
@@ -124,8 +131,11 @@ struct CCoinsCacheEntry
          */
     };
 
-    CCoinsCacheEntry() : flags(0) {}
-    explicit CCoinsCacheEntry(Coin&& coin_) : coin(std::move(coin_)), flags(0) {}
+    CCoinsCacheEntry() {}
+    explicit CCoinsCacheEntry(Coin&& coin_) : coin(std::move(coin_)) {
+        coin.dirty = false;
+        coin.fresh = false;
+    }
 };
 
 typedef std::unordered_map<COutPoint, CCoinsCacheEntry, SaltedOutpointHasher> CCoinsMap;

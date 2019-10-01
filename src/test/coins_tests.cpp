@@ -43,7 +43,11 @@ public:
         if (it == map_.end()) {
             return false;
         }
+        auto oldDirty = coin.dirty;
+        auto oldFresh = coin.fresh;
         coin = it->second;
+        coin.dirty = oldDirty;
+        coin.fresh = oldFresh;
         if (coin.IsSpent() && InsecureRandBool() == 0) {
             // Randomly return false in case of an empty entry.
             return false;
@@ -56,9 +60,14 @@ public:
     bool BatchWrite(CCoinsMap& mapCoins, const uint256& hashBlock) override
     {
         for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end(); ) {
-            if (it->second.flags & CCoinsCacheEntry::DIRTY) {
+            if (it->second.coin.dirty) {
                 // Same optimization used in CCoinsViewDB is to only write dirty entries.
-                map_[it->first] = it->second.coin;
+                auto& c = map_[it->first];
+                auto oldDirty = c.dirty;
+                auto oldFresh = c.fresh;
+                c = it->second.coin;
+                c.dirty = oldDirty;
+                c.fresh = oldFresh;
                 if (it->second.coin.IsSpent() && InsecureRandRange(3) == 0) {
                     // Randomly delete empty entries on write.
                     map_.erase(it->first);
@@ -170,7 +179,11 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
                 } else {
                     newcoin.out.scriptPubKey.assign(InsecureRandBits(6), 0); // Random sizes so we can test memory usage accounting
                     (coin.IsSpent() ? added_an_entry : updated_an_entry) = true;
+                    auto oldDirty = coin.dirty;
+                    auto oldFresh = coin.fresh;
                     coin = newcoin;
+                    coin.dirty = oldDirty;
+                    coin.fresh = oldFresh;
                 }
                 stack.back()->AddCoin(COutPoint(txid, 0), std::move(newcoin), !coin.IsSpent() || InsecureRand32() & 1);
             } else {
@@ -360,7 +373,11 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
                     assert(!CTransaction(tx).IsCoinBase());
                 }
                 // In this simple test coins only have two states, spent or unspent, save the unspent state to restore
+                auto oldDirty = old_coin.dirty;
+                auto oldFresh = old_coin.fresh;
                 old_coin = result[prevout];
+                old_coin.dirty = oldDirty;
+                old_coin.fresh = oldFresh;
                 // Update the expected result of prevouthash to know these coins are spent
                 result[prevout].Clear();
 
@@ -376,7 +393,12 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
             // Update the expected result to know about the new output coins
             assert(tx.vout.size() == 1);
             const COutPoint outpoint(tx.GetHash(), 0);
+
+            auto oldDirty = result[outpoint].dirty;
+            auto oldFresh = result[outpoint].fresh;
             result[outpoint] = Coin(tx.vout[0], height, CTransaction(tx).IsCoinBase());
+            result[outpoint].dirty = oldDirty;
+            result[outpoint].fresh = oldFresh;
 
             // Call UpdateCoins on the top cache
             CTxUndo undo;
@@ -400,7 +422,12 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
             result[utxod->first].Clear();
             // If not coinbase restore prevout
             if (!tx.IsCoinBase()) {
-                result[tx.vin[0].prevout] = orig_coin;
+                auto& c = result[tx.vin[0].prevout];
+                auto oldDirty = c.dirty;
+                auto oldFresh = c.fresh;
+                c = orig_coin;
+                c.dirty = oldDirty;
+                c.fresh = oldFresh;
             }
 
             // Disconnect the tx from the current UTXO
@@ -411,6 +438,8 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
             if (!tx.IsCoinBase()) {
                 const COutPoint &out = tx.vin[0].prevout;
                 Coin coin = undo.vprevout[0];
+                coin.dirty = false;
+                coin.fresh = false;
                 ApplyTxInUndo(std::move(coin), *(stack.back()), out);
             }
             // Store as a candidate for reconnection
@@ -566,7 +595,8 @@ static size_t InsertCoinsMapEntry(CCoinsMap& map, CAmount value, char flags)
     }
     assert(flags != NO_ENTRY);
     CCoinsCacheEntry entry;
-    entry.flags = flags;
+    entry.coin.dirty = (flags & CCoinsCacheEntry::DIRTY) ? true : false;
+    entry.coin.fresh = (flags & CCoinsCacheEntry::FRESH) ? true : false;
     SetCoinsValue(value, entry.coin);
     auto inserted = map.emplace(OUTPOINT, std::move(entry));
     assert(inserted.second);
@@ -585,7 +615,7 @@ void GetCoinsMapEntry(const CCoinsMap& map, CAmount& value, char& flags)
         } else {
             value = it->second.coin.out.nValue;
         }
-        flags = it->second.flags;
+        flags = (it->second.coin.dirty ? CCoinsCacheEntry::DIRTY : 0) | (it->second.coin.fresh ? CCoinsCacheEntry::FRESH : 0);
         assert(flags != NO_ENTRY);
     }
 }
@@ -859,6 +889,16 @@ BOOST_AUTO_TEST_CASE(ccoins_write)
             for (const char parent_flags : parent_value == ABSENT ? ABSENT_FLAGS : FLAGS)
                 for (const char child_flags : child_value == ABSENT ? ABSENT_FLAGS : CLEAN_FLAGS)
                     CheckWriteCoins(parent_value, child_value, parent_value, parent_flags, child_flags, parent_flags);
+}
+
+BOOST_AUTO_TEST_CASE(ccoins_no_padding)
+{
+    // we could use static_assert but we get better error messages this way
+    BOOST_CHECK_EQUAL(sizeof(CCoinsMap::value_type), sizeof(COutPoint) + sizeof(CCoinsCacheEntry));
+    BOOST_CHECK_EQUAL(sizeof(COutPoint), sizeof(uint256) + sizeof(uint32_t));
+    BOOST_CHECK_EQUAL(sizeof(CCoinsCacheEntry), sizeof(Coin));
+    BOOST_CHECK_EQUAL(sizeof(Coin), sizeof(CTxOut) + sizeof(uint32_t));
+    BOOST_CHECK_EQUAL(sizeof(CTxOut), sizeof(PackableCAmount) + sizeof(CScript));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
