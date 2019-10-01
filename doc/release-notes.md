@@ -132,6 +132,10 @@ Low-level Changes section below.
   would risk using up the "wrong" UTXO for an address reuse case.
   (#13756)
 
+- RPCs which have an `include_watchonly` argument or `includeWatching` option now default to `true` for watch-only
+  wallets. Affected RPCs are: `getbalance`, `listreceivedbyaddress`, `listreceivedbylabel`, `listtransactions`,
+  `listsinceblock`, `gettransaction`, `walletcreatefundedpsbt`, and `fundrawtransaction`. (#16383)
+
 - `listunspent` now returns a "reused" bool for each output if the
   wallet flag "avoid_reuse" is enabled. (#13756)
 
@@ -273,7 +277,7 @@ Configuration
 ------------
 
 - A setting specified in the default section but not also specified in a
-  network-specific section (e.g. testnet) will now produce a error
+  network-specific section (e.g. testnet) will now produce an error
   preventing startup instead of just a warning unless the network is
   mainnet.  This prevents settings intended for mainnet from being
   applied to testnet or regtest. (#15629)
