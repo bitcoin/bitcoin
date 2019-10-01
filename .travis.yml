@@ -120,6 +120,7 @@ before_install:
 install:
     # Our scripts try to be Travis agnostic
     - export PULL_REQUEST="$TRAVIS_PULL_REQUEST"
+    - export COMMIT_RANGE="$TRAVIS_COMMIT_RANGE"
     - export JOB_NUMBER="$TRAVIS_JOB_NUMBER"
     - export HOST_SRC_DIR=$TRAVIS_BUILD_DIR
     - export HOST_CACHE_DIR=$HOME/cache
