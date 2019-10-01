@@ -176,28 +176,29 @@ def ip_stats(ips):
         if ip is not None:
             hist[ip['net']] += 1
 
-    return 'IPv4 %d, IPv6 %d, Onion %d' % (hist['ipv4'], hist['ipv6'], hist['onion'])
+    return '%6d %6d %6d' % (hist['ipv4'], hist['ipv6'], hist['onion'])
 
 def main():
     lines = sys.stdin.readlines()
     ips = [parseline(line) for line in lines]
 
-    print('Initial: %s' % (ip_stats(ips)), file=sys.stderr)
+    print('\x1b[7m  IPv4   IPv6  Onion Pass                                               \x1b[0m', file=sys.stderr)
+    print('%s Initial' % (ip_stats(ips)), file=sys.stderr)
     # Skip entries with invalid address.
     ips = [ip for ip in ips if ip is not None]
-    print('Skip entries with invalid address: %s' % (ip_stats(ips)), file=sys.stderr)
+    print('%s Skip entries with invalid address' % (ip_stats(ips)), file=sys.stderr)
     # Skip duplicattes (in case multiple seeds files were concatenated)
     ips = dedup(ips)
-    print('After removing duplicates: %s' % (ip_stats(ips)), file=sys.stderr)
+    print('%s After removing duplicates' % (ip_stats(ips)), file=sys.stderr)
     # Skip entries from suspicious hosts.
     ips = [ip for ip in ips if ip['ip'] not in SUSPICIOUS_HOSTS]
-    print('Skip entries from suspicious hosts: %s' % (ip_stats(ips)), file=sys.stderr)
+    print('%s Skip entries from suspicious hosts' % (ip_stats(ips)), file=sys.stderr)
     # Enforce minimal number of blocks.
     ips = [ip for ip in ips if ip['blocks'] >= MIN_BLOCKS]
-    print('Enforce minimal number of blocks: %s' % (ip_stats(ips)), file=sys.stderr)
+    print('%s Enforce minimal number of blocks' % (ip_stats(ips)), file=sys.stderr)
     # Require service bit 1.
     ips = [ip for ip in ips if (ip['service'] & 1) == 1]
-    print('Require service bit 1: %s' % (ip_stats(ips)), file=sys.stderr)
+    print('%s Require service bit 1' % (ip_stats(ips)), file=sys.stderr)
     # Require at least 50% 30-day uptime for clearnet, 10% for onion.
     req_uptime = {
         'ipv4': 50,
@@ -205,21 +206,20 @@ def main():
         'onion': 10,
     }
     ips = [ip for ip in ips if ip['uptime'] > req_uptime[ip['net']]]
-    print('Require minimum uptime: %s' % (ip_stats(ips)), file=sys.stderr)
+    print('%s Require minimum uptime' % (ip_stats(ips)), file=sys.stderr)
     # Require a known and recent user agent.
     ips = [ip for ip in ips if PATTERN_AGENT.match(ip['agent'])]
-    print('Require a known and recent user agent: %s' % (ip_stats(ips)), file=sys.stderr)
+    print('%s Require a known and recent user agent' % (ip_stats(ips)), file=sys.stderr)
     # Sort by availability (and use last success as tie breaker)
     ips.sort(key=lambda x: (x['uptime'], x['lastsuccess'], x['ip']), reverse=True)
     # Filter out hosts with multiple bitcoin ports, these are likely abusive
     ips = filtermultiport(ips)
-    print('Filter out hosts with multiple bitcoin ports: %s' % (ip_stats(ips)), file=sys.stderr)
+    print('%s Filter out hosts with multiple bitcoin ports' % (ip_stats(ips)), file=sys.stderr)
     # Look up ASNs and limit results, both per ASN and globally.
     ips = filterbyasn(ips, MAX_SEEDS_PER_ASN, NSEEDS)
+    print('%s Look up ASNs and limit results per ASN and per net' % (ip_stats(ips)), file=sys.stderr)
     # Sort the results by IP address (for deterministic output).
-    print('Look up ASNs and limit results, both per ASN and globally: %s' % (ip_stats(ips)), file=sys.stderr)
     ips.sort(key=lambda x: (x['net'], x['sortkey']))
-
     for ip in ips:
         if ip['net'] == 'ipv6':
             print('[%s]:%i' % (ip['ip'], ip['port']))
