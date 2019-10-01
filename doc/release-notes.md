@@ -168,18 +168,31 @@ Low-level Changes section below.
   progress of the wallet's scanning historical blocks for transactions
   affecting its balances. (#15730)
 
+- `gettransaction` now accepts a third (boolean) argument `verbose`. If
+  set to `true`, a new `decoded` field will be added to the response containing
+  the decoded transaction. This field is equivalent to RPC `decoderawtransaction`,
+  or RPC `getrawtransaction` when `verbose` is passed.
+
 - `createwallet` accepts a new `passphrase` parameter.  If set, this
   will create the new wallet encrypted with the given passphrase.  If
   unset (the default) or set to an empty string, no encryption will be
   used. (#16394)
 
+- `getchaintxstats` RPC now returns the additional key of
+  `window_final_block_height`.
+
 - `getmempoolentry` now provides a `weight` field containing the
   transaction weight as defined in BIP141. (#16647)
+
+- The `getnetworkinfo` and `getpeerinfo` commands now contain a new field with decoded network service flags.
 
 - `getdescriptorinfo` now returns an additional `checksum` field
   containing the checksum for the unmodified descriptor provided by the
   user (that is, before the descriptor is normalized for the
   `descriptor` field). (#15986)
+
+- `joinpsbts` will shuffle the order of the inputs and outputs of the resulting joined psbt.
+  Previously inputs and outputs were added in the order that the PSBTs were provided which makes correlating inputs to outputs extremely easy.
 
 - `walletcreatefundedpsbt` now signals BIP125 Replace-by-Fee if the
   `-walletrbf` configuration option is set to true. (#15911)
@@ -191,6 +204,9 @@ GUI changes
   during invoice generation using a GUI toggle, or the default address
   type may be changed by the `-addresstype` configuration option.
   (#15711, #16497)
+
+- In 0.18.0 a `./configure` flag was introduced to allow disabling BIP70 support in the GUI (support was enabled by default). In 0.19.0 this flag is now __disabled__ by default.
+- If you want compile Bitcoin Core with BIP70 support in the GUI, you can pass `--enable-bip70` to `./configure`.
 
 Deprecated or removed configuration options
 -------------------------------------------
