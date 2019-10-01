@@ -5,7 +5,6 @@
 """Test node responses to invalid transactions.
 
 In this test we connect to one node over p2p, and test tx requests."""
-import time
 
 from test_framework.blocktools import create_block, create_coinbase, create_transaction
 from test_framework.mininode import (
