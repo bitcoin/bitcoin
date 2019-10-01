@@ -108,10 +108,10 @@ def parseline(line):
     }
 
 def dedup(ips):
-    '''deduplicate by address'''
+    '''deduplicate by address,port'''
     d = {}
     for ip in ips:
-        d[ip['ip']] = ip
+        d[ip['ip'],ip['port']] = ip
     return list(d.values())
 
 def filtermultiport(ips):
