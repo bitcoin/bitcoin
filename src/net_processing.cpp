@@ -1011,7 +1011,12 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
                 if (mapOrphanTransactions.count(inv.hash)) return true;
             }
 
-            return recentRejects->contains(inv.hash) ||
+            // When we receive an islock for a previously rejected transaction, we have to
+            // drop the first-seen tx (which such a locked transaction was conflicting with)
+            // and re-request the locked transaction (which did not make it into the mempool
+            // previously due to txn-mempool-conflict rule). This means that we must ignore
+            // recentRejects filter for such locked txes here.
+            return (recentRejects->contains(inv.hash) && !llmq::quorumInstantSendManager->IsLocked(inv.hash)) ||
                    mempool.exists(inv.hash) ||
                    pcoinsTip->HaveCoinInCache(COutPoint(inv.hash, 0)) || // Best effort: only try output 0 and 1
                    pcoinsTip->HaveCoinInCache(COutPoint(inv.hash, 1));
