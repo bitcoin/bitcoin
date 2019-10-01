@@ -275,7 +275,7 @@ Both variables are used as a guideline for how much space the user needs on thei
 Note that all values should be taken from a **fully synced** node and have an overhead of 5-10% added on top of its base value.
 
 To calculate `m_assumed_blockchain_size`:
-- For `mainnet` -> Take the size of the Dash Core data directory, excluding `/regtest` and `/testnet3` directories.
+- For `mainnet` -> Take the size of the data directory, excluding `/regtest` and `/testnet3` directories.
 - For `testnet` -> Take the size of the `/testnet3` directory.
 
 
