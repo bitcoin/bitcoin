@@ -138,17 +138,20 @@ class AuthServiceProxy(object):
             self.__conn.request(method, path, postdata, headers)
             return self._get_response()
 
-    def __call__(self, *args, **argsn):
+    def get_request(self, *args, **argsn):
         AuthServiceProxy.__id_count += 1
 
         log.debug("-%s-> %s %s"%(AuthServiceProxy.__id_count, self._service_name,
                                  json.dumps(args, default=EncodeDecimal, ensure_ascii=self.ensure_ascii)))
         if args and argsn:
             raise ValueError('Cannot handle both named and positional arguments')
-        postdata = json.dumps({'version': '1.1',
-                               'method': self._service_name,
-                               'params': args or argsn,
-                               'id': AuthServiceProxy.__id_count}, default=EncodeDecimal, ensure_ascii=self.ensure_ascii)
+        return {'version': '1.1',
+                'method': self._service_name,
+                'params': args or argsn,
+                'id': AuthServiceProxy.__id_count}
+
+    def __call__(self, *args, **argsn):
+        postdata = json.dumps(self.get_request(*args, **argsn), default=EncodeDecimal, ensure_ascii=self.ensure_ascii)
         response = self._request('POST', self.__url.path, postdata.encode('utf-8'))
         if response['error'] is not None:
             raise JSONRPCException(response['error'])
@@ -158,7 +161,7 @@ class AuthServiceProxy(object):
         else:
             return response['result']
 
-    def _batch(self, rpc_call_list):
+    def batch(self, rpc_call_list):
         postdata = json.dumps(list(rpc_call_list), default=EncodeDecimal, ensure_ascii=self.ensure_ascii)
         log.debug("--> "+postdata)
         return self._request('POST', self.__url.path, postdata.encode('utf-8'))

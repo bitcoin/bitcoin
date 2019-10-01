@@ -6,7 +6,7 @@ sudo: required
 dist: trusty
 
 os: linux
-language: generic
+language: minimal
 
 services:
   - docker

@@ -126,24 +126,39 @@ Building on OpenBSD
 -------------------
 
 (TODO, this is untested, please report if it works and if changes to this documentation are needed)
-(TODO, clang might also be an option. Old documentation reported it to to not work due to linking errors, but we're building all dependencies now as part of the depends system, so this might have changed)
 
-Building on OpenBSD might require installation of a newer GCC version. If needed, do this with:
+**Important**: From OpenBSD 6.2 onwards a C++11-supporting clang compiler is
+part of the base image, and while building it is necessary to make sure that this
+compiler is used and not ancient g++ 4.2.1. This is done by appending
+`CC=cc CXX=c++` to configuration commands. Mixing different compilers
+within the same executable will result in linker errors.
 
-```bash
-$ pkg_add g++ # (select newest 6.x version)
-```
-
-This compiler will not overwrite the system compiler, it will be installed as `egcc` and `eg++` in `/usr/local/bin`.
-
-Add `CC=egcc CXX=eg++ CPP=ecpp` to the dependencies build and the Dash Core build:
 ```bash
 $ cd depends
-$ make CC=egcc CXX=eg++ CPP=ecpp # do not use -jX, this is broken
+$ make CC=cc CXX=c++
 $ cd ..
 $ export AUTOCONF_VERSION=2.69 # replace this with the autoconf version that you installed
 $ export AUTOMAKE_VERSION=1.15 # replace this with the automake version that you installed
 $ ./autogen.sh
-$ ./configure --prefix=<prefix> CC=egcc CXX=eg++ CPP=ecpp
-$ gmake # do not use -jX, this is broken
+$ ./configure --prefix=<prefix> CC=cc CXX=c++
+$ gmake # use -jX here for parallelism
 ```
+
+OpenBSD Resource limits
+-------------------
+If the build runs into out-of-memory errors, the instructions in this section
+might help.
+
+The standard ulimit restrictions in OpenBSD are very strict:
+
+    data(kbytes)         1572864
+
+This, unfortunately, in some cases not enough to compile some `.cpp` files in the project,
+(see issue [#6658](https://github.com/bitcoin/bitcoin/issues/6658)).
+If your user is in the `staff` group the limit can be raised with:
+
+    ulimit -d 3000000
+
+The change will only affect the current shell and processes spawned by it. To
+make the change system-wide, change `datasize-cur` and `datasize-max` in
+`/etc/login.conf`, and reboot.
