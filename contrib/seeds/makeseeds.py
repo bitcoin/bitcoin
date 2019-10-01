@@ -147,25 +147,27 @@ def lookup_asn(net, ip):
         return None
 
 # Based on Greg Maxwell's seed_filter.py
-def filterbyasn(ips, max_per_asn, max_total):
+def filterbyasn(ips, max_per_asn, max_per_net):
     # Sift out ips by type
     ips_ipv46 = [ip for ip in ips if ip['net'] in ['ipv4', 'ipv6']]
     ips_onion = [ip for ip in ips if ip['net'] == 'onion']
 
-    # Filter IPv46 by ASN
+    # Filter IPv46 by ASN, and limit to max_per_net per network
     result = []
+    net_count = collections.defaultdict(int)
     asn_count = collections.defaultdict(int)
     for ip in ips_ipv46:
-        if len(result) == max_total:
-            break
+        if net_count[ip['net']] == max_per_net:
+            continue
         asn = lookup_asn(ip['net'], ip['ip'])
         if asn is None or asn_count[asn] == max_per_asn:
             continue
         asn_count[asn] += 1
+        net_count[ip['net']] += 1
         result.append(ip)
 
-    # Add back Onions
-    result.extend(ips_onion)
+    # Add back Onions (up to max_per_net)
+    result.extend(ips_onion[0:max_per_net])
     return result
 
 def ip_stats(ips):
