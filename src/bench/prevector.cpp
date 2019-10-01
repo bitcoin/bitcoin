@@ -66,11 +66,11 @@ void PrevectorResize(benchmark::State& state)
     static void Prevector ## name ## Nontrivial(benchmark::State& state) { \
         PrevectorResize<nontrivial_t>(state);                           \
     }                                                                   \
-    BENCHMARK(Prevector ## name ## Nontrivial, nontrivops);             \
+    BENCHMARK(Prevector ## name ## Nontrivial/*, nontrivops*/);             \
     static void Prevector ## name ## Trivial(benchmark::State& state) { \
         PrevectorResize<trivial_t>(state);                              \
     }                                                                   \
-    BENCHMARK(Prevector ## name ## Trivial, trivops);
+    BENCHMARK(Prevector ## name ## Trivial/*, trivops*/);
 
 PREVECTOR_TEST(Clear, 28300, 88600)
 PREVECTOR_TEST(Destructor, 28800, 88900)
