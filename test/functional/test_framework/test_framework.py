@@ -38,7 +38,9 @@ from .util import (
     sync_blocks,
     sync_mempools,
     sync_masternodes,
-    wait_to_sync)
+    wait_to_sync,
+    wait_until,
+)
 
 class TestStatus(Enum):
     PASSED = 1
@@ -687,22 +689,12 @@ class DashTestFramework(BitcoinTestFramework):
         return ret
 
     def wait_for_instantlock(self, txid, node):
-        # wait for instantsend locks
-        start = time.time()
-        locked = False
-        while True:
+        def check_instantlock():
             try:
-                is_tx = node.getrawtransaction(txid, True)
-                if is_tx['instantlock']:
-                    locked = True
-                    break
+                return node.getrawtransaction(txid, True)["instantlock"]
             except:
-                # TX not received yet?
-                pass
-            if time.time() > start + 10:
-                break
-            time.sleep(0.5)
-        return locked
+                return False
+        wait_until(check_instantlock, timeout=10, sleep=0.5)
 
     def wait_for_sporks_same(self, timeout=30):
         st = time.time()

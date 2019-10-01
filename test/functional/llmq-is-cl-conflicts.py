@@ -9,7 +9,7 @@ from test_framework import mininode
 from test_framework.blocktools import get_masternode_payment, create_coinbase, create_block
 from test_framework.mininode import *
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import sync_blocks, p2p_port, assert_raises_rpc_error, set_node_times
+from test_framework.util import sync_blocks, sync_mempools, p2p_port, assert_raises_rpc_error, set_node_times
 
 '''
 llmq-is-cl-conflicts.py
@@ -102,6 +102,8 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         rawtx4 = self.nodes[0].signrawtransaction(rawtx4)['hex']
         rawtx4_txid = self.nodes[0].sendrawtransaction(rawtx4)
 
+        # wait for transactions to propagate
+        sync_mempools(self.nodes)
         for node in self.nodes:
             self.wait_for_instantlock(rawtx1_txid, node)
             self.wait_for_instantlock(rawtx4_txid, node)
@@ -143,6 +145,8 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         rawtx5 = self.nodes[0].createrawtransaction(inputs, {self.nodes[0].getnewaddress(): 0.999})
         rawtx5 = self.nodes[0].signrawtransaction(rawtx5)['hex']
         rawtx5_txid = self.nodes[0].sendrawtransaction(rawtx5)
+        # wait for the transaction to propagate
+        sync_mempools(self.nodes)
         for node in self.nodes:
             self.wait_for_instantlock(rawtx5_txid, node)
 

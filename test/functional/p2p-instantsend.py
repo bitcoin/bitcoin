@@ -5,7 +5,7 @@
 
 from test_framework.mininode import *
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import isolate_node, set_node_times, reconnect_isolated_node, assert_equal, \
+from test_framework.util import isolate_node, sync_mempools, set_node_times, reconnect_isolated_node, assert_equal, \
     assert_raises_rpc_error
 
 '''
@@ -50,9 +50,12 @@ class InstantSendTest(DashTestFramework):
         # instantsend to receiver
         receiver_addr = receiver.getnewaddress()
         is_id = sender.sendtoaddress(receiver_addr, 0.9)
-        for node in self.nodes:
-            if node is not isolated:
-                self.wait_for_instantlock(is_id, node)
+        # wait for the transaction to propagate
+        connected_nodes = self.nodes.copy()
+        del connected_nodes[self.isolated_idx]
+        sync_mempools(connected_nodes)
+        for node in connected_nodes:
+            self.wait_for_instantlock(is_id, node)
         # send doublespend transaction to isolated node
         isolated.sendrawtransaction(dblspnd_tx['hex'])
         # generate block on isolated node with doublespend transaction
@@ -109,6 +112,8 @@ class InstantSendTest(DashTestFramework):
         # TX from other nodes.
         receiver_addr = receiver.getnewaddress()
         is_id = sender.sendtoaddress(receiver_addr, 0.9)
+        # wait for the transaction to propagate
+        sync_mempools(self.nodes)
         for node in self.nodes:
             self.wait_for_instantlock(is_id, node)
         assert_raises_rpc_error(-5, "No such mempool or blockchain transaction", isolated.getrawtransaction, dblspnd_txid)
