@@ -170,10 +170,11 @@ UniValue deriveaddresses(const JSONRPCRequest& request)
             RPCHelpMan{"deriveaddresses",
             {"\nDerives one or more addresses corresponding to an output descriptor.\n"
             "Examples of output descriptors are:\n"
-            "    pkh(<pubkey>)                        P2PKH outputs for the given pubkey\n"
-            "    wpkh(<pubkey>)                       Native segwit P2PKH outputs for the given pubkey\n"
-            "    sh(multi(<n>,<pubkey>,<pubkey>,...)) P2SH-multisig outputs for the given threshold and pubkeys\n"
-            "    raw(<hex script>)                    Outputs whose scriptPubKey equals the specified hex scripts\n"
+            "    pkh(<pubkey>)                             P2PKH outputs for the given pubkey\n"
+            "    wpkh(<pubkey>)                            Native segwit P2PKH outputs for the given pubkey\n"
+            "    sh(multi(<n>,<pubkey>,<pubkey>,...))      P2SH-multisig outputs for the given threshold and pubkeys\n"
+            "    wsh(multi(<n>,<xpub>/0/*,<xpub>/0/*,...)) Native segwit multisig output range (incompatible with BIP67)\n"
+            "    raw(<hex script>)                         Outputs whose scriptPubKey equals the specified hex scripts\n"
             "\nIn the above, <pubkey> either refers to a fixed public key in hexadecimal notation, or to an xpub/xprv optionally followed by one\n"
             "or more path elements separated by \"/\", where \"h\" represents a hardened child key.\n"
             "For more information on output descriptors, see the documentation in the doc/descriptors.md file.\n"},

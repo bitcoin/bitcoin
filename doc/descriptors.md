@@ -114,6 +114,10 @@ or `*'`, the `multi()` expression only matches multisig scripts with the `i`th
 child key from each wildcard path in lockstep, rather than scripts with any
 combination of child keys from each wildcard path.
 
+Ranged multi() descriptors are incompatible with
+[BIP67](https://github.com/bitcoin/bips/blob/master/bip-0067.mediawiki), because
+public keys are not canonically ordered for each index.
+
 ### BIP32 derived keys and chains
 
 Most modern wallet software and hardware uses keys that are derived using
