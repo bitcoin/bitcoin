@@ -701,7 +701,7 @@ static UniValue getaddressmempool(const JSONRPCRequest& request)
         delta.pushKV("txid", it->first.txhash.GetHex());
         delta.pushKV("index", (int)it->first.index);
         delta.pushKV("satoshis", it->second.amount);
-        delta.pushKV("timestamp", it->second.time);
+        delta.pushKV("timestamp", count_seconds(it->second.time));
         if (it->second.amount < 0) {
             delta.pushKV("prevtxid", it->second.prevhash.GetHex());
             delta.pushKV("prevout", (int)it->second.prevout);

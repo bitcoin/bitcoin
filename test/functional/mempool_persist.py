@@ -40,7 +40,10 @@ import os
 
 from test_framework.test_framework import BitcoinTestFramework
 # from test_framework.mininode import P2PTxInvStore
-from test_framework.util import assert_equal, assert_raises_rpc_error, connect_nodes, disconnect_nodes
+from test_framework.util import (
+    assert_equal,
+    assert_greater_than_or_equal, assert_raises_rpc_error, connect_nodes, disconnect_nodes,
+)
 
 
 class MempoolPersistTest(BitcoinTestFramework):
@@ -52,18 +55,13 @@ class MempoolPersistTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
-        chain_height = self.nodes[0].getblockcount()
-        assert_equal(chain_height, 200)
-
-        self.log.debug("Mine a single block to get out of IBD")
-        self.nodes[0].generate(1)
-        self.sync_all()
-
         self.log.debug("Send 5 transactions from node2 (to its own address)")
+        tx_creation_time_lower = self.mocktime
         for i in range(5):
             last_txid = self.nodes[2].sendtoaddress(self.nodes[2].getnewaddress(), Decimal("10"))
         node2_balance = self.nodes[2].getbalance()
         self.sync_all()
+        tx_creation_time_higher = self.mocktime
 
         self.log.debug("Verify that node0 and node1 have 5 transactions in their mempools")
         assert_equal(len(self.nodes[0].getrawmempool()), 5)
@@ -75,6 +73,10 @@ class MempoolPersistTest(BitcoinTestFramework):
         self.nodes[0].prioritisetransaction(txid=last_txid, fee_delta=1000)
         fees = self.nodes[0].getmempoolentry(txid=last_txid)['fees']
         assert_equal(fees['base'] + Decimal('0.00001000'), fees['modified'])
+
+        tx_creation_time = self.nodes[0].getmempoolentry(txid=last_txid)['time']
+        assert_greater_than_or_equal(tx_creation_time, tx_creation_time_lower)
+        assert_greater_than_or_equal(tx_creation_time_higher, tx_creation_time)
 
         # disconnect nodes & make a txn that remains in the unbroadcast set.
         disconnect_nodes(self.nodes[0], 2)
@@ -98,6 +100,9 @@ class MempoolPersistTest(BitcoinTestFramework):
         self.log.debug('Verify prioritization is loaded correctly')
         fees = self.nodes[0].getmempoolentry(txid=last_txid)['fees']
         assert_equal(fees['base'] + Decimal('0.00001000'), fees['modified'])
+
+        self.log.debug('Verify time is loaded correctly')
+        assert_equal(tx_creation_time, self.nodes[0].getmempoolentry(txid=last_txid)['time'])
 
         # Verify accounting of mempool transactions after restart is correct
         self.nodes[2].syncwithvalidationinterfacequeue()  # Flush mempool to wallet
