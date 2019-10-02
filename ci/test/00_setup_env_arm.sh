@@ -7,9 +7,10 @@
 export LC_ALL=C.UTF-8
 
 export HOST=arm-linux-gnueabihf
-export PACKAGES="python3 g++-arm-linux-gnueabihf busybox"
+export QEMU_USER_CMD="qemu-arm -L /usr/arm-linux-gnueabihf/"
+export PACKAGES="python3 g++-arm-linux-gnueabihf busybox qemu-user"
 export USE_BUSY_BOX=true
-export RUN_UNIT_TESTS=false
+export RUN_UNIT_TESTS=true
 export RUN_FUNCTIONAL_TESTS=false
 export GOAL="install"
 # -Wno-psabi is to disable ABI warnings: "note: parameter passing for argument of type ... changed in GCC 7.1"
