@@ -258,40 +258,9 @@ class CRegTestParams : public CChainParams {
 public:
     explicit CRegTestParams(const ArgsManager& args) {
         strNetworkID = "regtest";
-        consensus.nSubsidyHalvingInterval = 150;
-        consensus.BIP16Exception = uint256();
-        consensus.BIP34Height = 500; // BIP34 activated on regtest (Used in functional tests)
-        consensus.BIP34Hash = uint256();
-        consensus.BIP65Height = 1351; // BIP65 activated on regtest (Used in functional tests)
-        consensus.BIP66Height = 1251; // BIP66 activated on regtest (Used in functional tests)
-        consensus.CSVHeight = 432; // CSV activated on regtest (Used in rpc activation tests)
-        consensus.SegwitHeight = 0; // SEGWIT is always activated on regtest unless overridden
-        consensus.MinBIP9WarningHeight = 0;
-        consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
-        consensus.nPowTargetSpacing = 10 * 60;
-        consensus.fPowAllowMinDifficultyBlocks = true;
-        consensus.fPowNoRetargeting = true;
-        consensus.nRuleChangeActivationThreshold = 108; // 75% for testchains
-        consensus.nMinerConfirmationWindow = 144; // Faster than normal for regtest (144 instead of 2016)
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
-
-        // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x00");
-
-        // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x00");
-
-        pchMessageStart[0] = 0xfa;
-        pchMessageStart[1] = 0xbf;
-        pchMessageStart[2] = 0xb5;
-        pchMessageStart[3] = 0xda;
-        nDefaultPort = 18444;
-        nPruneAfterHeight = 1000;
-        m_assumed_blockchain_size = 0;
-        m_assumed_chain_state_size = 0;
 
         UpdateFromArgs(args);
 
@@ -299,34 +268,14 @@ public:
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0x0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
-
-        vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
-        vSeeds.clear();      //!< Regtest mode doesn't have any DNS seeds.
-
-        fDefaultConsistencyChecks = true;
-        fRequireStandard = true;
-
         checkpointData = {
             {
-                {0, uint256S("0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206")},
+                {0, uint256S(consensus.hashGenesisBlock.GetHex())},
             }
         };
-
-        chainTxData = ChainTxData{
-            0,
-            0,
-            0
-        };
-
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);
-        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);
-        base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,239);
-        base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
-        base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
-
-        bech32_hrp = "bcrt";
     }
 
+protected:
     /**
      * Allows modifying the Version Bits regtest parameters.
      */
@@ -341,6 +290,7 @@ public:
 
 void CRegTestParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
 {
+    consensus.SegwitHeight = 0; // SEGWIT is always activated on regtest unless overridden
     if (gArgs.IsArgSet("-segwitheight")) {
         int64_t height = gArgs.GetArg("-segwitheight", consensus.SegwitHeight);
         if (height < -1 || height >= std::numeric_limits<int>::max()) {
@@ -386,7 +336,69 @@ void CRegTestParams::UpdateFromArgs(const ArgsManager& args)
 {
     UpdateActivationParametersFromArgs(args);
 
+    consensus.nSubsidyHalvingInterval = args.GetArg("-con_nsubsidyhalvinginterval", 150);
+    consensus.BIP16Exception = uint256S(args.GetArg("-con_bip16exception", "0x0"));
+    consensus.BIP34Height = args.GetArg("-con_bip34height", 500); // BIP34 activation (Used in functional tests)
+    consensus.BIP34Hash = uint256S(args.GetArg("-con_bip34hash", "0x0"));
+    consensus.BIP65Height = args.GetArg("-con_bip65height", 1351); // BIP65 activation (Used in functional tests)
+    consensus.BIP66Height = args.GetArg("-con_bip66height", 1251); // BIP66 activation (Used in functional tests)
+    consensus.CSVHeight = args.GetArg("-con_csvheight", 432); // CSV activation (Used in functional tests)
+    consensus.MinBIP9WarningHeight = args.GetArg("-con_minbip9warningheight", 0); // BIP9 warning activation (Used in functional tests)
+    consensus.powLimit = uint256S(args.GetArg("-con_powlimit", "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
+    consensus.nPowTargetTimespan = args.GetArg("-con_npowtargettimespan", 14 * 24 * 60 * 60); // two weeks
+    consensus.nPowTargetSpacing = args.GetArg("-con_npowtargetspacing", 10 * 60);
+    consensus.fPowAllowMinDifficultyBlocks = args.GetBoolArg("-con_fpowallowmindifficultyblocks", true);
+    consensus.fPowNoRetargeting = args.GetBoolArg("-con_fpownoretargeting", true);
+    // 75% of 144 for regtest by default
+    consensus.nRuleChangeActivationThreshold = (uint32_t)args.GetArg("-con_nrulechangeactivationthreshold", 108);
+    // Faster than normal for regtest (144 instead of 2016)
+    consensus.nMinerConfirmationWindow = (uint32_t)args.GetArg("-con_nminerconfirmationwindow", 144);
+
+    // The best chain should have at least this much work.
+    consensus.nMinimumChainWork = uint256S(args.GetArg("-con_nminimumchainwork", "0x00"));
+
+    // By default assume that the signatures in ancestors of this block are valid.
+    consensus.defaultAssumeValid = uint256S(args.GetArg("-con_defaultassumevalid", "0x00"));
+
+    nDefaultPort = (uint64_t)args.GetArg("-ndefaultport", 18444);
+    nPruneAfterHeight = (uint64_t)args.GetArg("-npruneafterheight", 1000);
+    m_assumed_blockchain_size = (uint64_t)args.GetArg("-assumed_blockchain_size", 0);
+    m_assumed_chain_state_size = (uint64_t)args.GetArg("-assumed_chain_state_size", 0);
+    fDefaultConsistencyChecks = args.GetBoolArg("-fdefaultconsistencychecks", true);
+    fRequireStandard = args.GetBoolArg("-frequirestandard", true);
     m_is_test_chain = args.GetBoolArg("-is_test_chain", true);
+
+    bech32_hrp = args.GetArg("-bech32_hrp", "bcrt");
+    base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, args.GetArg("-pubkeyprefix", 111));
+    base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, args.GetArg("-scriptprefix", 196));
+    base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1, args.GetArg("-secretprefix", 239));
+
+    const std::string extpubprefix = args.GetArg("-extpubkeyprefix", "043587CF");
+    assert(IsHex(extpubprefix) && extpubprefix.size() == 8 && "-extpubkeyprefix must be hex string of length 8");
+    base58Prefixes[EXT_PUBLIC_KEY] = ParseHex(extpubprefix);
+
+    const std::string extprvprefix = args.GetArg("-extprvkeyprefix", "04358394");
+    assert(IsHex(extprvprefix) && extprvprefix.size() == 8 && "-extprvkeyprefix must be hex string of length 8");
+    base58Prefixes[EXT_SECRET_KEY] = ParseHex(extprvprefix);
+
+    const std::string magic_str = args.GetArg("-pchmessagestart", "FABFB5DA");
+    assert(IsHex(magic_str) && magic_str.size() == 8 && "-pchmessagestart must be hex string of length 8");
+    const std::vector<unsigned char> magic_byte = ParseHex(magic_str);
+    std::copy(begin(magic_byte), end(magic_byte), pchMessageStart);
+
+    vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
+    vSeeds.clear(); //!< Regtest mode doesn't have any DNS seeds by default
+    if (gArgs.IsArgSet("-seednode")) {
+        const auto seednodes = gArgs.GetArgs("-seednode");
+        if (seednodes.size() != 1 || seednodes[0] != "0") {
+            vSeeds = seednodes;
+        }
+    }
+    chainTxData = ChainTxData{
+        0,
+        0,
+        0
+    };
 }
 
 /**
