@@ -83,7 +83,7 @@ def read_logs(tmp_dir):
         chain = chain[0]  # pick the first one if more than one chain was found (should never happen)
         chain = re.search(r'node0/(.+?)/debug\.log$', chain).group(1)  # extract the chain name
     else:
-        chain = 'regtest'  # fallback to regtest (should only happen when none exists)
+        chain = 'regtest2'  # fallback to regtest2 (should only happen when none exists)
 
     files = [("test", "%s/test_framework.log" % tmp_dir)]
     for i in itertools.count():

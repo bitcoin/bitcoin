@@ -89,7 +89,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
     This class also contains various public and private helper methods."""
 
-    def __init__(self, chain='regtest'):
+    def __init__(self, chain='regtest2'):
         """Sets test framework defaults. Do not override this method. Instead, override the set_test_params() method"""
         self.chain = chain
         self.setup_clean_chain = False

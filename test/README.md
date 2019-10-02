@@ -204,7 +204,7 @@ test run:
 Use the path to find the pid file in the temp folder:
 
 ```bash
-cat /tmp/user/1000/testo9vsdjo3/node1/regtest/bitcoind.pid
+cat /tmp/user/1000/testo9vsdjo3/node1/regtest2/bitcoind.pid
 ```
 
 Then you can use the pid to start `gdb`:

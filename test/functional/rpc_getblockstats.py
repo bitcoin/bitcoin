@@ -31,6 +31,7 @@ class GetblockstatsTest(BitcoinTestFramework):
                             help='Test data file')
 
     def set_test_params(self):
+        self.chain = 'regtest'
         self.num_nodes = 1
         self.setup_clean_chain = True
 
