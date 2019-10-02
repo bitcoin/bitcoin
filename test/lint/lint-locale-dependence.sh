@@ -11,6 +11,7 @@ KNOWN_VIOLATIONS=(
     "src/qt/rpcconsole.cpp:.*atoi"
     "src/rest.cpp:.*strtol"
     "src/test/dbwrapper_tests.cpp:.*snprintf"
+    "src/test/fuzz/parse_numbers.cpp:.*atoi"
     "src/torcontrol.cpp:.*atoi"
     "src/torcontrol.cpp:.*strtol"
     "src/util/strencodings.cpp:.*atoi"
