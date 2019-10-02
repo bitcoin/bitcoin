@@ -22,7 +22,6 @@ packages:
 - "zip"
 - "ca-certificates"
 - "python3"
-- "rename"
 remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
   "dir": "bitcoin"
@@ -154,8 +153,10 @@ script: |
     make ${MAKEOPTS} -C src check-security
     make deploy
     make install DESTDIR=${INSTALLPATH}
-    rename 's/-setup\.exe$/-setup-unsigned.exe/' *-setup.exe
-    cp -f bitcoin-*setup*.exe $OUTDIR/
+    (
+      SETUP_EXE="$(basename "$(echo ./*-setup.exe)")"
+      cp -f "$SETUP_EXE" "${OUTDIR}/${SETUP_EXE/%-setup.exe/-setup-unsigned.exe}"
+    )
     cd installed
     mv ${DISTNAME}/bin/*.dll ${DISTNAME}/lib/
     find . -name "lib*.la" -delete
