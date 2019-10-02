@@ -2926,6 +2926,38 @@ bool CChainState::InvalidateBlock(CValidationState& state, const CChainParams& c
     bool pindex_was_in_chain = false;
     int disconnected = 0;
 
+    // We do not allow ActivateBestChain() to run while InvalidateBlock() is
+    // running, as that could cause the tip to change while we disconnect
+    // blocks.
+    LOCK(m_cs_chainstate);
+
+    // We'll be acquiring and releasing cs_main below, to allow the validation
+    // callbacks to run. However, we should keep the block index in a
+    // consistent state as we disconnect blocks -- in particular we need to
+    // add equal-work blocks to setBlockIndexCandidates as we disconnect.
+    // To avoid walking the block index repeatedly in search of candidates,
+    // build a map once so that we can look up candidate blocks by chain
+    // work as we go.
+    std::multimap<const arith_uint256, CBlockIndex *> candidate_blocks_by_work;
+
+    {
+        LOCK(cs_main);
+        for (const auto& entry : m_blockman.m_block_index) {
+            CBlockIndex *candidate = entry.second;
+            // We don't need to put anything in our active chain into the
+            // multimap, because those candidates will be found and considered
+            // as we disconnect.
+            // Instead, consider only non-active-chain blocks that have at
+            // least as much work as where we expect the new tip to end up.
+            if (!m_chain.Contains(candidate) &&
+                    !CBlockIndexWorkComparator()(candidate, pindex->pprev) &&
+                    candidate->IsValid(BLOCK_VALID_TRANSACTIONS) &&
+                    candidate->HaveTxsDownloaded()) {
+                candidate_blocks_by_work.insert(std::make_pair(candidate->nChainWork, candidate));
+            }
+        }
+    }
+
     // Disconnect (descendants of) pindex, and mark them invalid.
     while (true) {
         if (ShutdownRequested()) break;
@@ -2968,10 +3000,23 @@ bool CChainState::InvalidateBlock(CValidationState& state, const CChainParams& c
             setDirtyBlockIndex.insert(to_mark_failed);
         }
 
+        // Add any equal or more work headers to setBlockIndexCandidates
+        auto candidate_it = candidate_blocks_by_work.lower_bound(invalid_walk_tip->pprev->nChainWork);
+        while (candidate_it != candidate_blocks_by_work.end()) {
+            if (!CBlockIndexWorkComparator()(candidate_it->second, invalid_walk_tip->pprev)) {
+                setBlockIndexCandidates.insert(candidate_it->second);
+                candidate_it = candidate_blocks_by_work.erase(candidate_it);
+            } else {
+                ++candidate_it;
+            }
+        }
+
         // Track the last disconnected block, so we can correct its BLOCK_FAILED_CHILD status in future
         // iterations, or, if it's the last one, call InvalidChainFound on it.
         to_mark_failed = invalid_walk_tip;
     }
+
+    CheckBlockIndex(chainparams.GetConsensus());
 
     {
         LOCK(cs_main);
@@ -2986,8 +3031,13 @@ bool CChainState::InvalidateBlock(CValidationState& state, const CChainParams& c
         setBlockIndexCandidates.erase(to_mark_failed);
         m_blockman.m_failed_blocks.insert(to_mark_failed);
 
-        // The resulting new best tip may not be in setBlockIndexCandidates anymore, so
-        // add it again.
+        // If any new blocks somehow arrived while we were disconnecting
+        // (above), then the pre-calculation of what should go into
+        // setBlockIndexCandidates may have missed entries. This would
+        // technically be an inconsistency in the block index, but if we clean
+        // it up here, this should be an essentially unobservable error.
+        // Loop back over all block index entries and add any missing entries
+        // to setBlockIndexCandidates.
         BlockMap::iterator it = m_blockman.m_block_index.begin();
         while (it != m_blockman.m_block_index.end()) {
             if (it->second->IsValid(BLOCK_VALID_TRANSACTIONS) && it->second->HaveTxsDownloaded() && !setBlockIndexCandidates.value_comp()(it->second, m_chain.Tip())) {
