@@ -27,6 +27,7 @@
 #include <support/events.h>
 
 #include <univalue.h>
+#include <compat/stdin.h>
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
@@ -58,7 +59,8 @@ static void SetupCliArgs()
     gArgs.AddArg("-rpcwait", "Wait for RPC server to start", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-rpcwallet=<walletname>", "Send RPC for non-default wallet on RPC server (needs to exactly match corresponding -wallet option passed to bitcoind). This changes the RPC endpoint used, e.g. http://127.0.0.1:8332/wallet/<walletname>", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-stdin", "Read extra arguments from standard input, one per line until EOF/Ctrl-D (recommended for sensitive information such as passphrases). When combined with -stdinrpcpass, the first line from standard input is used for the RPC password.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-stdinrpcpass", "Read RPC password from standard input as a single line. When combined with -stdin, the first line from standard input is used for the RPC password.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-stdinrpcpass", "Read RPC password from standard input as a single line. When combined with -stdin, the first line from standard input is used for the RPC password. When combined with -stdinwalletpassphrase, -stdinrpcpass consumes the first line, and -stdinwalletpassphrase consumes the second.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-stdinwalletpassphrase", "Read wallet passphrase from standard input as a single line. When combined with -stdin, the first line from standard input is used for the wallet passphrase.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 }
 
 /** libevent event log callback */
@@ -411,17 +413,46 @@ static int CommandLineRPC(int argc, char *argv[])
         }
         std::string rpcPass;
         if (gArgs.GetBoolArg("-stdinrpcpass", false)) {
+            NO_STDIN_ECHO();
+            if (!StdinReady()) {
+                fputs("RPC password> ", stderr);
+                fflush(stderr);
+            }
             if (!std::getline(std::cin, rpcPass)) {
                 throw std::runtime_error("-stdinrpcpass specified but failed to read from standard input");
+            }
+            if (StdinTerminal()) {
+                fputc('\n', stdout);
             }
             gArgs.ForceSetArg("-rpcpassword", rpcPass);
         }
         std::vector<std::string> args = std::vector<std::string>(&argv[1], &argv[argc]);
+        if (gArgs.GetBoolArg("-stdinwalletpassphrase", false)) {
+            NO_STDIN_ECHO();
+            std::string walletPass;
+            if (args.size() < 1 || args[0].substr(0, 16) != "walletpassphrase") {
+                throw std::runtime_error("-stdinwalletpassphrase is only applicable for walletpassphrase(change)");
+            }
+            if (!StdinReady()) {
+                fputs("Wallet passphrase> ", stderr);
+                fflush(stderr);
+            }
+            if (!std::getline(std::cin, walletPass)) {
+                throw std::runtime_error("-stdinwalletpassphrase specified but failed to read from standard input");
+            }
+            if (StdinTerminal()) {
+                fputc('\n', stdout);
+            }
+            args.insert(args.begin() + 1, walletPass);
+        }
         if (gArgs.GetBoolArg("-stdin", false)) {
             // Read one arg per line from stdin and append
             std::string line;
             while (std::getline(std::cin, line)) {
                 args.push_back(line);
+            }
+            if (StdinTerminal()) {
+                fputc('\n', stdout);
             }
         }
         std::unique_ptr<BaseRequestHandler> rh;
