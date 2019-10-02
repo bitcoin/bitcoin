@@ -11,6 +11,14 @@
 #include <chrono>
 
 /**
+ * Helper to count the seconds of a duration.
+ *
+ * All durations should be using std::chrono and calling this should generally be avoided in code. Though, it is still
+ * preferred to an inline t.count() to protect against a reliance on the exact type of t.
+ */
+inline int64_t count_seconds(std::chrono::seconds t) { return t.count(); }
+
+/**
  * DEPRECATED
  * Use either GetSystemTimeInSeconds (not mockable) or GetTime<T> (mockable)
  */
