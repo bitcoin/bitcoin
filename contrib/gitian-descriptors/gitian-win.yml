@@ -22,7 +22,6 @@ packages:
 - "zip"
 - "ca-certificates"
 - "python3"
-- "rename"
 remotes:
 - "url": "https://github.com/syscoin/syscoin.git"
   "dir": "syscoin"
@@ -156,8 +155,10 @@ script: |
     make ${MAKEOPTS} -C src check-security
     make deploy
     make install DESTDIR=${INSTALLPATH}
-    rename 's/-setup\.exe$/-setup-unsigned.exe/' *-setup.exe
-    cp -f syscoin-*setup*.exe $OUTDIR/
+    (
+      SETUP_EXE="$(basename "$(echo ./*-setup.exe)")"
+      cp -f "$SETUP_EXE" "${OUTDIR}/${SETUP_EXE/%-setup.exe/-setup-unsigned.exe}"
+    )
     cd installed
     mv ${DISTNAME}/bin/*.dll ${DISTNAME}/lib/
     find . -name "lib*.la" -delete
