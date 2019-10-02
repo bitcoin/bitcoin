@@ -89,12 +89,12 @@ jobs:
         - set -o errexit; source ./ci/extended_lint/06_script.sh
 
     - stage: test
-      name: 'ARM  [GOAL: install]  [no unit or functional tests]'
+      name: 'ARM  [GOAL: install]  [unit tests, no functional tests]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_arm.sh"
 
     - stage: test
-      name: 'Win64  [GOAL: deploy]  [no gui or functional tests]'
+      name: 'Win64  [GOAL: deploy]  [unit tests, no gui, no functional tests]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_win64.sh"
 
