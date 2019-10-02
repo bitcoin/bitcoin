@@ -33,6 +33,7 @@ FUZZ_TARGETS = \
   test/fuzz/messageheader_deserialize \
   test/fuzz/netaddr_deserialize \
   test/fuzz/out_point_deserialize \
+  test/fuzz/parse_hd_keypath \
   test/fuzz/parse_iso8601 \
   test/fuzz/partial_merkle_tree_deserialize \
   test/fuzz/partially_signed_transaction_deserialize \
@@ -517,6 +518,12 @@ test_fuzz_tx_out_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_tx_out_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_tx_out_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_tx_out_LDADD = $(FUZZ_SUITE_LD_COMMON)
+
+test_fuzz_parse_hd_keypath_SOURCES = $(FUZZ_SUITE) test/fuzz/parse_hd_keypath.cpp
+test_fuzz_parse_hd_keypath_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_parse_hd_keypath_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_parse_hd_keypath_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_parse_hd_keypath_LDADD = $(FUZZ_SUITE_LD_COMMON)
 
 endif # ENABLE_FUZZ
 
