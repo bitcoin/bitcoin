@@ -143,7 +143,7 @@ void DeserializeHDKeypaths(Stream& s, const std::vector<unsigned char>& key, std
 
 // Serialize HD keypaths to a stream from a map
 template<typename Stream>
-void SerializeHDKeypaths(Stream& s, const std::map<CPubKey, KeyOriginInfo>& hd_keypaths, uint8_t type)
+void SerializeHDKeypaths(Stream& s, const std::map<CPubKey, KeyOriginInfo>& hd_keypaths, CompactSizeWriter type)
 {
     for (auto keypath_pair : hd_keypaths) {
         if (!keypath_pair.first.IsValid()) {
