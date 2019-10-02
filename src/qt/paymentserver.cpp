@@ -82,7 +82,7 @@ static QString ipcServerName()
 // the main GUI window is up and ready to ask the user
 // to send payment.
 
-static QList<QString> savedPaymentRequests;
+static QSet<QString> savedPaymentRequests;
 
 //
 // Sending to the server is done synchronously, at startup.
@@ -107,7 +107,8 @@ void PaymentServer::ipcParseCommandLine(interfaces::Node& node, int argc, char* 
         // will start a mainnet instance and throw a "wrong network" error.
         if (arg.startsWith(BITCOIN_IPC_PREFIX, Qt::CaseInsensitive)) // bitcoin: URI
         {
-            savedPaymentRequests.append(arg);
+            if (savedPaymentRequests.contains(arg)) continue;
+            savedPaymentRequests.insert(arg);
 
             SendCoinsRecipient r;
             if (GUIUtil::parseBitcoinURI(arg, &r) && !r.address.isEmpty())
@@ -127,7 +128,8 @@ void PaymentServer::ipcParseCommandLine(interfaces::Node& node, int argc, char* 
 #ifdef ENABLE_BIP70
         else if (QFile::exists(arg)) // Filename
         {
-            savedPaymentRequests.append(arg);
+            if (savedPaymentRequests.contains(arg)) continue;
+            savedPaymentRequests.insert(arg);
 
             PaymentRequestPlus request;
             if (readPaymentRequestFromFile(arg, request))
@@ -280,7 +282,7 @@ void PaymentServer::handleURIOrFile(const QString& s)
 {
     if (saveURIs)
     {
-        savedPaymentRequests.append(s);
+        savedPaymentRequests.insert(s);
         return;
     }
 
