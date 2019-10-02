@@ -12,6 +12,10 @@ import sys
 import subprocess
 import logging
 
+# Fuzzers known to lack a seed corpus in https://github.com/bitcoin-core/qa-assets/tree/master/fuzz_seed_corpus
+FUZZERS_MISSING_CORPORA = [
+    "from_script",
+]
 
 def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -100,10 +104,14 @@ def main():
 
 def run_once(*, corpus, test_list, build_dir, export_coverage):
     for t in test_list:
+        corpus_path = os.path.join(corpus, t)
+        if t in FUZZERS_MISSING_CORPORA:
+            os.makedirs(corpus_path, exist_ok=True)
         args = [
             os.path.join(build_dir, 'src', 'test', 'fuzz', t),
             '-runs=1',
-            os.path.join(corpus, t),
+            '-detect_leaks=0',
+            corpus_path,
         ]
         logging.debug('Run {} with args {}'.format(t, args))
         result = subprocess.run(args, stderr=subprocess.PIPE, universal_newlines=True)
