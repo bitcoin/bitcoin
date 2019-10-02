@@ -20,6 +20,7 @@ static constexpr uint8_t PSBT_MAGIC_BYTES[5] = {'p', 's', 'b', 't', 0xff};
 
 // Global types
 static constexpr uint8_t PSBT_GLOBAL_UNSIGNED_TX = 0x00;
+static constexpr uint8_t PSBT_GLOBAL_VERSION = 0xFB;
 
 // Input types
 static constexpr uint8_t PSBT_IN_NON_WITNESS_UTXO = 0x00;
@@ -44,6 +45,9 @@ static constexpr uint8_t PSBT_SEPARATOR = 0x00;
 // BIP 174 does not specify a maximum file size, but we set a limit anyway
 // to prevent reading a stream indefinitely and running out of memory.
 const std::streamsize MAX_FILE_SIZE_PSBT = 100000000; // 100 MiB
+
+// PSBT version number
+static constexpr uint32_t PSBT_HIGHEST_VERSION = 0;
 
 /** A structure for PSBTs which contain per-input information */
 struct PSBTInput
@@ -398,6 +402,7 @@ struct PartiallySignedTransaction
     std::vector<PSBTInput> inputs;
     std::vector<PSBTOutput> outputs;
     std::map<std::vector<unsigned char>, std::vector<unsigned char>> unknown;
+    std::optional<uint32_t> m_version;
 
     bool IsNull() const;
 
@@ -429,6 +434,12 @@ struct PartiallySignedTransaction
         // Write serialized tx to a stream
         OverrideStream<Stream> os(&s, s.GetType(), s.GetVersion() | SERIALIZE_TRANSACTION_NO_WITNESS);
         SerializeToVector(os, *tx);
+
+        // PSBT version
+        if (m_version != std::nullopt && *m_version > 0) {
+            SerializeToVector(s, CompactSizeWriter(PSBT_GLOBAL_VERSION));
+            SerializeToVector(s, *m_version);
+        }
 
         // Write the unknown things
         for (auto& entry : unknown) {
@@ -499,6 +510,21 @@ struct PartiallySignedTransaction
                         if (!txin.scriptSig.empty() || !txin.scriptWitness.IsNull()) {
                             throw std::ios_base::failure("Unsigned tx does not have empty scriptSigs and scriptWitnesses.");
                         }
+                    }
+                    break;
+                }
+                case PSBT_GLOBAL_VERSION:
+                {
+                    if (m_version) {
+                        throw std::ios_base::failure("Duplicate Key, version already provided");
+                    } else if (key.size() != 1) {
+                        throw std::ios_base::failure("Global version key is more than one byte type");
+                    }
+                    uint32_t v;
+                    UnserializeFromVector(s, v);
+                    m_version = v;
+                    if (*m_version > PSBT_HIGHEST_VERSION) {
+                        throw std::ios_base::failure("Unsupported version number");
                     }
                     break;
                 }
