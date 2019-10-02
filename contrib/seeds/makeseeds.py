@@ -92,21 +92,32 @@ def filtermultipayoutaddress(mns):
     return [mn for mn in mns if len(hist[mn['state']['payoutAddress']]) == 1]
 
 def resolveasn(resolver, ip):
-    if ip['net'] == 'ipv4':
-        ipaddr = ip['ip']
-        prefix = '.origin'
-    else:                  # http://www.team-cymru.com/IP-ASN-mapping.html
-        res = str()                         # 2001:4860:b002:23::68
-        for nb in ip['ip'].split(':')[:4]:  # pick the first 4 nibbles
-            for c in nb.zfill(4):           # right padded with '0'
-                res += c + '.'              # 2001 4860 b002 0023
-        ipaddr = res.rstrip('.')            # 2.0.0.1.4.8.6.0.b.0.0.2.0.0.2.3
-        prefix = '.origin6'
-    asn = int([x.to_text() for x in resolver.resolve('.'.join(reversed(ipaddr.split('.'))) + prefix  + '.asn.cymru.com', 'TXT').response.answer][0].split('\"')[1].split(' ')[0])
-    return asn
+    '''
+    Look up the asn for an IP (4 or 6) address by querying cymry.com, or None
+    if it could not be found.
+    '''
+    try:
+        if ip['net'] == 'ipv4':
+            ipaddr = ip['ip']
+            prefix = '.origin'
+        else:                  # http://www.team-cymru.com/IP-ASN-mapping.html
+            res = str()                         # 2001:4860:b002:23::68
+            for nb in ip['ip'].split(':')[:4]:  # pick the first 4 nibbles
+                for c in nb.zfill(4):           # right padded with '0'
+                    res += c + '.'              # 2001 4860 b002 0023
+            ipaddr = res.rstrip('.')            # 2.0.0.1.4.8.6.0.b.0.0.2.0.0.2.3
+            prefix = '.origin6'
+
+        asn = int([x.to_text() for x in resolver.resolve('.'.join(
+                   reversed(ipaddr.split('.'))) + prefix + '.asn.cymru.com',
+                   'TXT').response.answer][0].split('\"')[1].split(' ')[0])
+        return asn
+    except Exception:
+        sys.stderr.write('ERR: Could not resolve ASN for "' + ip + '"\n')
+        return None
 
 # Based on Greg Maxwell's seed_filter.py
-def filterbyasn(ips, max_per_asn, max_total):
+def filterbyasn(ips, max_per_asn, max_per_net):
     # Sift out ips by type
     ips_ipv46 = [ip for ip in ips if ip['net'] in ['ipv4', 'ipv6']]
     ips_onion = [ip for ip in ips if ip['net'] == 'onion']
@@ -121,26 +132,31 @@ def filterbyasn(ips, max_per_asn, max_total):
     # Resolve ASNs in parallel
     asns = [pool.apply_async(resolveasn, args=(my_resolver, ip)) for ip in ips_ipv46]
 
-    # Filter IPv46 by ASN
+    # Filter IPv46 by ASN, and limit to max_per_net per network
     result = []
-    asn_count = {}
+    net_count = collections.defaultdict(int)
+    asn_count = collections.defaultdict(int)
     for i, ip in enumerate(ips_ipv46):
-        if len(result) == max_total:
-            break
-        try:
-            asn = asns[i].get()
-            if asn not in asn_count:
-                asn_count[asn] = 0
-            if asn_count[asn] == max_per_asn:
-                continue
-            asn_count[asn] += 1
-            result.append(ip)
-        except Exception as e:
-            sys.stderr.write(f'ERR: Could not resolve ASN for {ip["ip"]}: {e}\n')
+        if net_count[ip['net']] == max_per_net:
+            continue
+        asn = asns[i].get()
+        if asn is None or asn_count[asn] == max_per_asn:
+            continue
+        asn_count[asn] += 1
+        net_count[ip['net']] += 1
+        result.append(ip)
 
-    # Add back Onions
-    result.extend(ips_onion)
+    # Add back Onions (up to max_per_net)
+    result.extend(ips_onion[0:max_per_net])
     return result
+
+def ip_stats(ips):
+    hist = collections.defaultdict(int)
+    for ip in ips:
+        if ip is not None:
+            hist[ip['net']] += 1
+
+    return '%6d %6d %6d' % (hist['ipv4'], hist['ipv6'], hist['onion'])
 
 def main():
     # This expects a json as outputted by "protx list valid 1"
@@ -155,22 +171,36 @@ def main():
         with open(sys.argv[2], 'r', encoding="utf8") as f:
             onions = f.read().split('\n')
 
+    print(f"Total mns: {len(mns)}", file=sys.stderr)
     # Skip PoSe banned MNs
     mns = [mn for mn in mns if mn['state']['PoSeBanHeight'] == -1]
+    print(f"After skip entries from PoSe banned MNs: {len(mns)}", file=sys.stderr)
     # Skip MNs with < 10000 confirmations
     mns = [mn for mn in mns if mn['confirmations'] >= 10000]
+    print(f"After skip MNs with less than 10000 confirmations: {len(mns)}", file=sys.stderr)
+
     # Filter out MNs which are definitely from the same person/operator
     mns = filtermulticollateralhash(mns)
     mns = filtermulticollateraladdress(mns)
     mns = filtermultipayoutaddress(mns)
+    print(f"After removing duplicates: {len(mns)}", file=sys.stderr)
+
     # Extract IPs
     ips = [parseip(mn['state']['addresses'][0]) for mn in mns]
     for onion in onions:
         parsed = parseip(onion)
         if parsed is not None:
             ips.append(parsed)
+
+    print('\x1b[7m  IPv4   IPv6  Onion Pass                                               \x1b[0m', file=sys.stderr)
+    print('%s Initial' % (ip_stats(ips)), file=sys.stderr)
+    # Skip entries with invalid address.
+    mns = [ip for ip in ips if ip is not None]
+    print('%s Skip entries with invalid address' % (ip_stats(mns)), file=sys.stderr)
+
     # Look up ASNs and limit results, both per ASN and globally.
     ips = filterbyasn(ips, MAX_SEEDS_PER_ASN, NSEEDS)
+    print('%s Look up ASNs and limit results per ASN and per net' % (ip_stats(ips)), file=sys.stderr)
     # Sort the results by IP address (for deterministic output).
     ips.sort(key=lambda x: (x['net'], x['sortkey']), reverse=True)
 
