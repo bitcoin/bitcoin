@@ -78,8 +78,12 @@ static constexpr std::chrono::microseconds MAX_GETDATA_RANDOM_DELAY{std::chrono:
 static constexpr std::chrono::microseconds TX_EXPIRY_INTERVAL{GETDATA_TX_INTERVAL * 10};
 static_assert(INBOUND_PEER_TX_DELAY >= MAX_GETDATA_RANDOM_DELAY,
 "To preserve security, MAX_GETDATA_RANDOM_DELAY should not exceed INBOUND_PEER_DELAY");
+/* How much MTP (in seconds) must elapse in a full headers message to store the set of headers, rather than just the hash of the last block header */
+static const int64_t MIN_MTP_INCREASE_FOR_STORAGE = 24*3600*10;
 /** Limit to avoid sending big packets. Not used in processing incoming GETDATA for compatibility */
 static const unsigned int MAX_GETDATA_SZ = 1000;
+/** Implied consensus limit on the minimum time on the 2000th header of headers message, relative to the MTP of the last header in the prior header message */
+static const int64_t MIN_MTP_INCREASE_PER_HEADERS_BATCH = 333; // 2000/6; MTP rule implies at most 6 blocks per second
 
 
 struct COrphanTx {
@@ -191,6 +195,10 @@ namespace {
 
     static size_t vExtraTxnForCompactIt GUARDED_BY(g_cs_orphans) = 0;
     static std::vector<std::pair<uint256, CTransactionRef>> vExtraTxnForCompact GUARDED_BY(g_cs_orphans);
+
+    /** The peer that is permitted to continue adding headers to its
+     * m_headers_sync_state (see below) */
+    NodeId g_headers_sync_peer GUARDED_BY(cs_main) = -1;
 } // namespace
 
 namespace {
@@ -353,6 +361,173 @@ struct CNodeState {
     //! Whether this peer is a manual connection
     bool m_is_manual_connection;
 
+    /* Per-peer state associated with headers download of low-work headers
+     *
+     * Header with low cumulative work should not be stored in our block index,
+     * to prevent memory DoS. We avoid this by only committing a header to the
+     * block index if it has some descendant with sufficient work (at least as
+     * much work as nMinimumChainWork and within some recent window of our
+     * current tip).
+     *
+     * For headers with nChainWork greater than the bound, we will validate and
+     * store as long as they are well-formed (the headers connect to each other
+     * and build off a known header).
+     *
+     * For headers with nChainWork below the bound, we only commit the headers
+     * to per-peer storage, which will be deleted if:
+     * - the headers don't result in a sufficient-work chain, as defined above
+     * - the peer disconnects
+     * - something goes wrong with the headers download process (eg we receive
+     *   headers that don't build off prior headers; this would reset the
+     *   process)
+     *
+     * Ideally we would store all headers from a given peer until the headers
+     * chain has sufficient work, and at that point we would process. However,
+     * because of the time-warp problem, it's possible to cheaply produce
+     * extremely long headers chains (using many gigabytes of memory). To avoid
+     * such memory DoS, if a headers chain isn't advancing time quickly enough
+     * (calculated by looking at average MTP elapsed time on each headers
+     * message (2000 headers) and comparing against
+     * MIN_MTP_INCREASE_FOR_STORAGE (10 days)), then instead of storing all the
+     * headers from that peer as we go, we will instead just store the final
+     * block hash from each headers message. This drastically reduces the
+     * memory used in evaluating the headers chain, and is sufficient
+     * information to allow us to redownload the chain and verify that we're
+     * getting the same chain again, and thus can go ahead and fully validate
+     * and store those headers permanently.
+     *
+     * In the case of what we think of as the honest mainnet chain, these
+     * parameters result in us downloading the headers once, and once we cross
+     * the nMinimumChainWork threshold, we process all and continue downloading
+     * the rest.
+     *
+     * In the case of an adversary giving us a headers chain mined at the
+     * fastest possible rate possible under consensus rules (eg by using
+     * time-warp as well to ensure the difficulty remains at 1), storing 1
+     * block hash every 2000 results in using approximately the same amount of
+     * memory as the honest chain would require us to use, anyway.
+     *
+     * To bound memory across peers, we only allow one peer at a time to use
+     * more than a small, bounded amount of CNodeState memory. A peer using its
+     * per-peer memory for headers will have its nodeid put in
+     * g_headers_sync_peers, which permits it to make subsequent headers
+     * requests and continue to use more memory, while peers that are waiting
+     * to be able to use their per-peer memory set m_try_continue_sync, which
+     * is checked from time to time across all peers to determine which peer
+     * syncs next.
+     *
+     * To prevent the designated HeadersSyncPeer from stalling headers download
+     * from other peers, we use two strategies:
+     * - once we have a headers chain that is more than nMinimumChainWork and
+     *   within 24 hours of the tip, we'll send a getheaders to all our peers.
+     *   Those responses may be processed without using any peer-local state,
+     *   eg because their headers build off something with more than
+     *   nMinimumChainWork and within a week of our tip.
+     * - If we detect that we have more than one peer that needs to use its
+     *   peer-storage in order to sync headers, then we enable a timeout on the
+     *   peer holding the HeadersSyncPeer position, so that after the timeout
+     *   if there's a peer waiting, the sync will be abandoned to give the
+     *   other peer a chance to sync.
+     */
+
+    struct HeadersSyncState {
+        arith_uint256 m_cumulative_chain_work; // work on the chain we're processing, so far
+
+        // We use a list of hashes to store a fingerprint of a peer's chain as
+        // we go, if it looks like their chain is longer than we expect (more
+        // than a block every 10 minutes)
+        std::list<uint256> m_header_cache;
+
+        // Otherwise, We directly store all our peer's headers if their
+        // timestamps seem reasonable.
+        // Note: we'll only store headers in one place; either all of them are
+        // in m_stored_headers, or 1 hash every 2000 in m_header_cache.
+        std::vector<CBlockHeader> m_stored_headers;
+
+        uint256 m_sufficient_work_hash; // hash of the block that has enough work to justify permanent storage of these headers
+
+        // These are used for the heuristic regarding whether the peer's chain
+        // looks longer than expected. We store the MTP of the last block in
+        // each headers message (m_mtp_last_block). We calculate the MTP for
+        // the last block in each headers message, and if the average increase
+        // of MTP from one message to the next is below
+        // MIN_MTP_INCREASE_FOR_STORAGE, we will stop using m_stored_headers
+        // and only use m_header_cache to track the peer's headers chain.
+        int64_t m_mtp_advanced{0};
+        int64_t m_intervals_seen{0};
+        int64_t m_mtp_last_block{0};
+
+        // We only permit one peer at a time to use more than 1 "entry" (either
+        // a set of 2000 headers from one headers message, or a single block
+        // hash stored in m_header_cache) in this sync state object.
+        // If another peer is already assigned to be the sync peer, we will
+        // pause headers sync for other peers that would need to use additional
+        // memory by setting m_try_continue_sync and waiting for the sync peer
+        // to finish.
+        // The next sync peer will be the one who started waiting first.
+        std::chrono::microseconds m_try_continue_sync{0}; // the time at which we realized we want to sync further
+
+        // To prevent the sync peer from starving other peers from being able
+        // to sync, we set a timeout at the time the sync peer is assigned,
+        // which is based on how long we expect their blockchain to be (using
+        // consensus pow-target-spacing and the time between now and the
+        // genesis block). If at the end of that time the peer is still syncing
+        // and some other peer is waiting to sync, we'll abort, clearing all
+        // memory for that peer and allowing a new sync peer to be assigned.
+        std::chrono::microseconds m_headers_sync_peer_timeout{0};
+
+        // Return the last block hash in the last headers message received from
+        // this peer
+        uint256 GetLastBlockHash() {
+            if (!m_stored_headers.empty()) return m_stored_headers.back().GetHash();
+            if (!m_header_cache.empty()) return m_header_cache.back();
+            return uint256();
+        }
+
+        // Add a set of headers to our stored state for this peer. Once we
+        // start using the header cache, we never switch back to using
+        // m_stored_headers. Otherwise, as long as the chain continues to pass
+        // the threshold for time passage with each headers message (on
+        // average), we'll continue storing all the headers received.
+        void AddHeaders(const std::vector<CBlockHeader> &headers, int64_t min_average_time_passed, int64_t last_block_mtp) {
+            if (m_mtp_advanced / m_intervals_seen > min_average_time_passed && m_header_cache.empty()) {
+                m_stored_headers.insert(m_stored_headers.end(), headers.begin(), headers.end());
+            } else {
+                // Only use the header cache; empty out the stored headers if necessary.
+                size_t headers_stored = m_stored_headers.size();
+                if (headers_stored > 0) {
+                    for (auto i=MAX_HEADERS_RESULTS-1; i<headers_stored; i += MAX_HEADERS_RESULTS) {
+                        m_header_cache.emplace_back(m_stored_headers[i].GetHash());
+                    }
+                    m_stored_headers.clear();
+                }
+                m_header_cache.emplace_back(headers.back().GetHash());
+            }
+            // Update last block mtp
+            m_mtp_last_block = last_block_mtp;
+        }
+
+        // Whether we're using any storage for this peer
+        bool IsEmpty() const {
+            return m_header_cache.empty() && m_stored_headers.empty();
+        }
+
+        // Reset all state
+        void Clear() {
+            m_header_cache.clear();
+            std::vector<CBlockHeader>().swap(m_stored_headers);
+            m_cumulative_chain_work = arith_uint256();
+            m_sufficient_work_hash = uint256();
+            m_mtp_advanced = 0;
+            m_intervals_seen = 0;
+            m_mtp_last_block = 0;
+            m_try_continue_sync = std::chrono::microseconds(0);
+            m_headers_sync_peer_timeout = std::chrono::microseconds(0);
+        }
+    };
+
+    HeadersSyncState m_headers_sync_state;
+
     CNodeState(CAddress addrIn, std::string addrNameIn, bool is_inbound, bool is_manual) :
         address(addrIn), name(std::move(addrNameIn)), m_is_inbound(is_inbound),
         m_is_manual_connection (is_manual)
@@ -404,6 +579,58 @@ static void UpdatePreferredDownload(CNode* node, CNodeState* state) EXCLUSIVE_LO
     state->fPreferredDownload = (!node->fInbound || node->HasPermission(PF_NOBAN)) && !node->fOneShot && !node->fClient;
 
     nPreferredDownload += state->fPreferredDownload;
+}
+
+// Calculate a timeout for headers sync from a given peer, based on the
+// expected download time of a chain that has 1 block per nPowTargetSpacing
+// from the known block header being built from.
+static std::chrono::microseconds GetTimeout(const Consensus::Params &consensusParams, int64_t block_time_start)
+{
+    return GetTime<std::chrono::microseconds>() + std::chrono::microseconds(HEADERS_DOWNLOAD_TIMEOUT_BASE + HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER * (GetAdjustedTime() - block_time_start)/consensusParams.nPowTargetSpacing);
+}
+
+static void SetHeadersSyncPeer(NodeId nodeid, std::chrono::microseconds timeout) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    assert(g_headers_sync_peer == -1);
+    State(nodeid)->m_headers_sync_state.m_headers_sync_peer_timeout = timeout;
+    g_headers_sync_peer = nodeid;
+}
+
+static void RemoveHeadersSyncPeer(NodeId nodeid) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    if (g_headers_sync_peer == nodeid) g_headers_sync_peer = -1;
+}
+
+static bool IsHeadersSyncPeer(NodeId nodeid) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    return g_headers_sync_peer == nodeid;
+}
+
+static bool HaveHeadersSyncPeer() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    return g_headers_sync_peer != -1;
+}
+
+static void ClearHeadersSyncState(CNodeState *nodestate, NodeId nodeid) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    nodestate->m_headers_sync_state.Clear();
+    nodestate->m_headers_sync_state.m_try_continue_sync = std::chrono::microseconds(0);
+    RemoveHeadersSyncPeer(nodeid);
+}
+
+// Find the peer who has been waiting longest to continue syncing
+static NodeId GetNextHeadersSyncPeer() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    NodeId node_waiting_for_sync = -1;
+    std::chrono::microseconds wait_start_time(0);
+    for (auto it = mapNodeState.begin(); it != mapNodeState.end(); ++it) {
+        const auto& peer_wait_time = it->second.m_headers_sync_state.m_try_continue_sync;
+        if (peer_wait_time > std::chrono::microseconds(0) && peer_wait_time < wait_start_time) {
+            wait_start_time = peer_wait_time;
+            node_waiting_for_sync = it->first;
+        }
+    }
+    return node_waiting_for_sync;
 }
 
 static void PushNodeVersion(CNode *pnode, CConnman* connman, int64_t nTime)
@@ -793,6 +1020,8 @@ void PeerLogicValidation::FinalizeNode(NodeId nodeid, bool& fUpdateConnectionTim
     assert(nPeersWithValidatedDownloads >= 0);
     g_outbound_peers_with_protect_from_disconnect -= state->m_chain_sync.m_protect;
     assert(g_outbound_peers_with_protect_from_disconnect >= 0);
+
+    RemoveHeadersSyncPeer(nodeid);
 
     mapNodeState.erase(nodeid);
 
@@ -1644,6 +1873,8 @@ inline void static SendBlockTransactions(const CBlock& block, const BlockTransac
  * - empty messages are discarded
  * - unconnecting headers that appear to be block announcements are handled with a GETHEADERS
  * - non-continuous headers are rejected
+ * - if cumulative work on the chain is below our work threshold, anti-DoS
+ *   behavior is invoked - see comments in CNodeState above.
  *
  * @param[in]  pfrom The peer sending us the headers
  * @param[in] connman Network handler, for sending messages back to the peer
@@ -1664,24 +1895,32 @@ bool static InspectHeaders(CNode *pfrom, CConnman *connman, const std::vector<CB
 
     size_t nCount = headers.size();
 
-    if (nCount == 0) {
-        // Nothing interesting. Stop asking this peers for more headers.
-        return true;
-    }
-
     {
         LOCK(cs_main);
         CNodeState *nodestate = State(pfrom->GetId());
 
+        if (nCount == 0) {
+            if (!nodestate->m_headers_sync_state.IsEmpty()) {
+                // If we get an empty headers message before we have crossed
+                // the minchainwork threshold for considering whatever headers
+                // we've been caching, throw it all away.
+                ClearHeadersSyncState(nodestate, pfrom->GetId());
+            }
+            // Nothing interesting. Stop asking this peers for more headers.
+            return true;
+        }
+
         // If this looks like it could be a block announcement (nCount <
-        // MAX_BLOCKS_TO_ANNOUNCE), use special logic for handling headers that
-        // don't connect:
+        // MAX_BLOCKS_TO_ANNOUNCE, with no headers cached in CNodeState), use
+        // special logic for handling headers that don't connect:
         // - Send a getheaders message in response to try to connect the chain.
         // - The peer can send up to MAX_UNCONNECTING_HEADERS in a row that
         //   don't connect before giving DoS points
         // - Once a headers message is received that is valid and does connect,
         //   nUnconnectingHeaders gets reset back to 0.
-        if (!LookupBlockIndex(headers[0].hashPrevBlock) && nCount < MAX_BLOCKS_TO_ANNOUNCE) {
+        const CBlockIndex* chain_start_header  = LookupBlockIndex(headers[0].hashPrevBlock);
+        bool first_header_connects_to_block_index = chain_start_header != nullptr;
+        if (!first_header_connects_to_block_index && nCount < MAX_BLOCKS_TO_ANNOUNCE && nodestate->m_headers_sync_state.IsEmpty()) {
             nodestate->nUnconnectingHeaders++;
             connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::GETHEADERS, ::ChainActive().GetLocator(pindexBestHeader), uint256()));
             LogPrint(BCLog::NET, "received header %s: missing prev block %s, sending getheaders (%d) to end (peer=%d, nUnconnectingHeaders=%d)\n",
@@ -1714,8 +1953,180 @@ bool static InspectHeaders(CNode *pfrom, CConnman *connman, const std::vector<CB
         if (!LookupBlockIndex(hashLastBlock)) {
             *received_new_header = true;
         }
-    }
 
+        // Anti-DoS thresholds
+        arith_uint256 minimum_chain_work = ::ChainActive().Tip()->nChainWork;
+        if (minimum_chain_work >= 1008*GetBlockProof(*::ChainActive().Tip())) {
+            minimum_chain_work -= 1008*GetBlockProof(*::ChainActive().Tip());
+        } else {
+            minimum_chain_work = 0;
+        }
+        if (minimum_chain_work < nMinimumChainWork) minimum_chain_work = nMinimumChainWork;
+
+        // Don't accept headers unless the last one has enough work
+        if (first_header_connects_to_block_index) {
+            if (!nodestate->m_headers_sync_state.m_sufficient_work_hash.IsNull()) {
+                // If we have previously validated a headers chain as having
+                // sufficient work, then this might be us re-downloading.
+                // Ensure that this chain matches what we previously cached.
+                if (!nodestate->m_headers_sync_state.m_stored_headers.empty()) {
+                    // This should be impossible.
+                    // Clear sync state and continue processing these headers
+                    // as though there were no sync in progress.
+                    ClearHeadersSyncState(nodestate, pfrom->GetId());
+                } else if (nodestate->m_headers_sync_state.m_header_cache.empty()) {
+                    // This should also be impossible!
+                    ClearHeadersSyncState(nodestate, pfrom->GetId());
+                } else if (nodestate->m_headers_sync_state.m_header_cache.front() == headers.back().GetHash()) {
+                    // This is the block hash we expected.
+                    *should_validate = true;
+                    return true;
+                } else {
+                    // This is an unexpected block hash!
+                    ClearHeadersSyncState(nodestate, pfrom->GetId());
+                }
+            } else if (!nodestate->m_headers_sync_state.IsEmpty()) {
+                // If we're not redownloading towards a sufficient-work header,
+                // and this connects to something in our block index, then we
+                // should not have a download in progress.
+                ClearHeadersSyncState(nodestate, pfrom->GetId());
+            }
+            arith_uint256 total_work = chain_start_header->nChainWork;
+            if (total_work < minimum_chain_work) total_work += CalculateHeadersWork(headers);
+            if (total_work < minimum_chain_work) {
+                // Our peer is giving us a chain that is below our anti-DoS
+                // work threshold
+                if (nCount < MAX_HEADERS_RESULTS) {
+                    // Discard this message and don't try to sync headers, as
+                    // the peer is on a too-little-work chain.
+                    ClearHeadersSyncState(nodestate, pfrom->GetId());
+                    return true;
+                } else {
+                    // This chain might end up having sufficient work. Cache
+                    // the headers if possible and try to keep downloading.
+                    // Start by verifying the proof of work on each block
+                    // matches the claimed amount:
+                    if (!HasValidProofOfWork(headers, chainparams.GetConsensus())) {
+                        // This is a DoS-er
+                        Misbehaving(pfrom->GetId(), 100, "invalid proof of work");
+                        ClearHeadersSyncState(nodestate, pfrom->GetId());
+                        return true;
+                    }
+                    // Ensure that MTP is sufficiently progressing on this chain.
+                    int64_t last_block_mtp = GetMTPLastHeader(headers);
+                    if (last_block_mtp - chain_start_header->GetMedianTimePast() < MIN_MTP_INCREASE_PER_HEADERS_BATCH) {
+                        Misbehaving(pfrom->GetId(), 100, "invalid header timestamps");
+                        ClearHeadersSyncState(nodestate, pfrom->GetId());
+                        return true;
+                    }
+                    if (headers.back().GetBlockTime() > GetAdjustedTime() + MAX_FUTURE_BLOCK_TIME) {
+                        // This won't validate -- give up for now.
+                        ClearHeadersSyncState(nodestate, pfrom->GetId());
+                        return true;
+                    }
+                    // We'll cache our progress.
+                    // Update total work for this peer's chain.
+                    nodestate->m_headers_sync_state.m_cumulative_chain_work = total_work;
+                    // If the MTP of this chain is advancing enough, cache
+                    // these headers in CNodeState
+                    nodestate->m_headers_sync_state.m_mtp_advanced += last_block_mtp - chain_start_header->GetMedianTimePast();
+                    nodestate->m_headers_sync_state.m_intervals_seen++;
+                    nodestate->m_headers_sync_state.AddHeaders(headers, MIN_MTP_INCREASE_FOR_STORAGE, last_block_mtp);
+                    // For now, only allow one peer at a time to have
+                    // concurrent downloads, to bound memory usage as tightly
+                    // as possible.
+                    if (!HaveHeadersSyncPeer() && nodestate->fSyncStarted && GetNextHeadersSyncPeer() == -1) {
+                        SetHeadersSyncPeer(pfrom->GetId(), GetTimeout(chainparams.GetConsensus(), headers.back().GetBlockTime()));
+                    }
+                    if (IsHeadersSyncPeer(pfrom->GetId())) {
+                        // Keep downloading from this peer. We set our locator to
+                        // just be the hash of the last block -- this would only be
+                        // problematic if our peer somehow reorged away from this
+                        // chain in-between requests, which should be unlikely for
+                        // portions of the chain below nMinimumChainWork(!)
+                        connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::GETHEADERS, CBlockLocator({headers.back().GetHash()}), uint256()));
+                    } else {
+                        nodestate->m_headers_sync_state.m_try_continue_sync = GetTime<std::chrono::microseconds>();
+                    }
+                    return true;
+                }
+            } else {
+                // Our peer's chain has legitimate work and builds off a known
+                // block header; set the validation flag for processing/storage.
+                *should_validate = true;
+            }
+        } else {
+            // This headers message does not build off something stored in our
+            // block index. This is either a misbehaving peer sending us a
+            // non-connecting header, or we may be in the middle of initial
+            // headers sync with this peer and not yet permanently stored their
+            // headers chain.
+            // If this is normal headers sync, then this should build off
+            // something in our peer's cache.
+            if (nodestate->m_headers_sync_state.GetLastBlockHash() != headers[0].hashPrevBlock) {
+                // This does not connect to the last header our peer sent us.
+                // It's possible they've reorged away from their chain in
+                // between headers requests, but that is very unlikely.
+                // Clear any download state and give up on headers sync with
+                // this peer for now. (We can try again later if they announce a
+                // new block.)
+                ClearHeadersSyncState(nodestate, pfrom->GetId());
+                return true;
+            } else {
+                // Ensure that we have headers sync going from this peer
+                // -- if not that would imply an unrequested headers
+                // message from this peer, which we should drop to avoid memory
+                // DoS.
+                if (!IsHeadersSyncPeer(pfrom->GetId()) && HaveHeadersSyncPeer()) {
+                    // Don't process/store these headers; we have a sync going
+                    // from some other peer.
+                    // Set a flag to try this peer again later.
+                    nodestate->m_headers_sync_state.m_try_continue_sync = GetTime<std::chrono::microseconds>();
+                    return true;
+                }
+                // We are in the middle of downloading our peer's headers chain.
+                // Once it has sufficient work, we'll permanently store the
+                // headers in our block index.
+                // Check that each header has valid proof-of-work.
+                if (!HasValidProofOfWork(headers, chainparams.GetConsensus())) {
+                    // This is a DoS-er
+                    Misbehaving(pfrom->GetId(), 100, "invalid proof of work");
+                    ClearHeadersSyncState(nodestate, pfrom->GetId());
+                    return false;
+                }
+                // Ensure that MTP is sufficiently progressing on this chain.
+                int64_t last_block_mtp = GetMTPLastHeader(headers);
+                if (last_block_mtp - nodestate->m_headers_sync_state.m_mtp_last_block < MIN_MTP_INCREASE_PER_HEADERS_BATCH) {
+                    Misbehaving(pfrom->GetId(), 100, "invalid header timestamps");
+                    ClearHeadersSyncState(nodestate, pfrom->GetId());
+                    return true;
+                }
+                // Check whether the accumulated proof-of-work is now in excess of nMinimumChainWork.
+                nodestate->m_headers_sync_state.m_cumulative_chain_work += CalculateHeadersWork(headers);
+                if (nodestate->m_headers_sync_state.m_cumulative_chain_work >= minimum_chain_work) {
+                    nodestate->m_headers_sync_state.m_sufficient_work_hash = headers.back().GetHash();
+                    nodestate->m_headers_sync_state.AddHeaders(headers, true, last_block_mtp);
+                    *should_validate = true;
+                    return true;
+                } else {
+                    // We're still below the anti-DoS threshold; try caching.
+                    if (!IsHeadersSyncPeer(pfrom->GetId())) {
+                        // We already checked that either this is the header
+                        // sync peer, or that we have none -- we only want to
+                        // set the timeout once, so we check to make sure that
+                        // we're not already the headers sync peer to avoid
+                        // bumping it accidentally.
+                        SetHeadersSyncPeer(pfrom->GetId(), GetTimeout(chainparams.GetConsensus(), headers.back().GetBlockTime()));
+                    }
+                    nodestate->m_headers_sync_state.m_mtp_advanced += last_block_mtp - nodestate->m_headers_sync_state.m_mtp_last_block;
+                    nodestate->m_headers_sync_state.m_intervals_seen++;
+                    nodestate->m_headers_sync_state.AddHeaders(headers, MIN_MTP_INCREASE_FOR_STORAGE, last_block_mtp);
+                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::GETHEADERS, CBlockLocator({headers.back().GetHash()}), uint256()));
+                    return true;
+                }
+            }
+        }
+    }
     *should_validate = true;
     return true;
 }
@@ -1863,8 +2274,38 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
     bool received_new_header = false;
     if (!InspectHeaders(pfrom, connman, headers, chainparams, via_compact_block, &received_new_header, &should_validate)) return false;
     if (should_validate) {
+        LOCK(cs_main);
+        CNodeState *nodestate = State(pfrom->GetId());
         const CBlockIndex *pindexLast = nullptr;
-        if (!ValidateHeaders(pfrom, headers, chainparams, via_compact_block, &pindexLast)) return false;
+        bool ret = false;
+        if (!nodestate->m_headers_sync_state.IsEmpty()) {
+            if (!nodestate->m_headers_sync_state.m_stored_headers.empty()) {
+                // In this case we're validating a LOT of headers at once (will get us up to nMinimumChainWork).
+                ret = ValidateHeaders(pfrom, nodestate->m_headers_sync_state.m_stored_headers, chainparams, /*via_compact_block=*/ false, &pindexLast);
+                ClearHeadersSyncState(nodestate, pfrom->GetId());
+            } else if (LookupBlockIndex(headers[0].hashPrevBlock) != nullptr) {
+                // In this case, we're re-receiving headers that we previously
+                // downloaded, but this time we're ready to store them.
+                ret = ValidateHeaders(pfrom, headers, chainparams, /*via_compact_block=*/ false, &pindexLast);
+                if (!ret) {
+                    // Clear the sync state for this peer and give up syncing.
+                    ClearHeadersSyncState(nodestate, pfrom->GetId());
+                    return false;
+                }
+                // Clear the top entry from our list
+                nodestate->m_headers_sync_state.m_header_cache.pop_front();
+                // If we have no more cached headers left, clear the whole data structure.
+                if (nodestate->m_headers_sync_state.IsEmpty()) ClearHeadersSyncState(nodestate, pfrom->GetId());
+            } else {
+                // We need to request the headers again, and process them as they come in.
+                const CNetMsgMaker msgMaker(pfrom->GetSendVersion());
+                connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::GETHEADERS, ::ChainActive().GetLocator(pindexBestHeader), uint256()));
+                return true;
+            }
+        } else {
+            ret = ValidateHeaders(pfrom, headers, chainparams, via_compact_block, &pindexLast);
+        }
+        if (!ret) return false;
         if (!UpdateHeadersAndMaybeFetch(pfrom, connman, pindexLast, chainparams, headers.size() == MAX_HEADERS_RESULTS, received_new_header)) return false;
     }
     return true;
@@ -2291,7 +2732,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
             if (inv.type == MSG_BLOCK) {
                 UpdateBlockAvailability(pfrom->GetId(), inv.hash);
-                if (!fAlreadyHave && !fImporting && !fReindex && !mapBlocksInFlight.count(inv.hash)) {
+                if (!fAlreadyHave && !fImporting && !fReindex && !mapBlocksInFlight.count(inv.hash) && !IsHeadersSyncPeer(pfrom->GetId())) {
                     // We used to request the full block here, but since headers-announcements are now the
                     // primary method of announcement on the network, and since, in the case that a node
                     // fell back to inv we probably have a reorg which we should get the headers for first,
@@ -3682,6 +4123,40 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                 LogPrint(BCLog::NET, "initial getheaders (%d) to peer=%d (startheight:%d)\n", pindexStart->nHeight, pto->GetId(), pto->nStartingHeight);
                 connman->PushMessage(pto, msgMaker.Make(NetMsgType::GETHEADERS, ::ChainActive().GetLocator(pindexStart), uint256()));
             }
+        } else if (state.fSyncStarted && state.m_headers_sync_state.m_try_continue_sync > std::chrono::microseconds(0)) {
+            // We previously started syncing headers with this peer, but we had
+            // in-flight headers that were being stored from another peer as
+            // well. Resume syncing from this peer if possible.
+            if (state.m_headers_sync_state.IsEmpty()) {
+                // If we somehow have nowhere to continue from, give up.
+                ClearHeadersSyncState(&state, pto->GetId());
+            } else if (!HaveHeadersSyncPeer()) {
+                // We will choose the smallest nodeid to sync from next, among
+                // all peers that have m_try_continue_sync set.
+                if (GetNextHeadersSyncPeer() == pto->GetId()) {
+                    // Estimate the block time of their last block from the mtp
+                    // of that last block, for calculating the timeout.
+                    int64_t start_time = state.m_headers_sync_state.m_mtp_last_block;
+                    state.m_headers_sync_state.m_try_continue_sync = std::chrono::microseconds(0);
+                    // It's this peer's turn to sync from next; continue with a
+                    // getheaders from where we left off.
+                    if (LookupBlockIndex(state.m_headers_sync_state.GetLastBlockHash()) != nullptr) {
+                        // We now have the header that we last cached for this
+                        // peer, so we can construct a full locator from there.
+                        const CBlockIndex *pindexStart = LookupBlockIndex(state.m_headers_sync_state.GetLastBlockHash());
+                        connman->PushMessage(pto, msgMaker.Make(NetMsgType::GETHEADERS, ::ChainActive().GetLocator(pindexStart), uint256()));
+                        // If the peer's last given block is now known, clear
+                        // the sync state -- we expect the next header to now
+                        // build off a known block.
+                        ClearHeadersSyncState(&state, pto->GetId());
+                    } else {
+                        // Continue from where we left off with this peer.
+                        connman->PushMessage(pto, msgMaker.Make(NetMsgType::GETHEADERS, CBlockLocator({state.m_headers_sync_state.GetLastBlockHash()}), uint256()));
+                    }
+                    // We set this after potentially clearing the sync state above.
+                    SetHeadersSyncPeer(pto->GetId(), GetTimeout(consensusParams, start_time));
+                }
+            }
         }
 
         //
@@ -4022,6 +4497,14 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                 // After we've caught up once, reset the timeout so we can't trigger
                 // disconnect later.
                 state.nHeadersSyncTimeout = std::numeric_limits<int64_t>::max();
+            }
+        } else if (IsHeadersSyncPeer(pto->GetId()) && state.m_headers_sync_state.m_headers_sync_peer_timeout < GetTime<std::chrono::microseconds>()) {
+            // Check to see if we're holding on to being the sync peer for too long
+            NodeId next_peer = GetNextHeadersSyncPeer();
+            if (next_peer != -1) {
+                LogPrint(BCLog::NET, "Timeout syncing headers from peer=%d (stalling peer=%d), will try again later\n", pto->GetId(), next_peer);
+                ClearHeadersSyncState(&state, pto->GetId());
+                state.m_headers_sync_state.m_try_continue_sync = GetTime<std::chrono::microseconds>();
             }
         }
 

@@ -792,4 +792,13 @@ inline bool IsBlockPruned(const CBlockIndex* pblockindex)
     return (fHavePruned && !(pblockindex->nStatus & BLOCK_HAVE_DATA) && pblockindex->nTx > 0);
 }
 
+//! Return true if the headers given have valid proof of work.
+bool HasValidProofOfWork(const std::vector<CBlockHeader>& headers, const Consensus::Params& params);
+
+//! Calculate the sum of the work on the given block headers, based on nBits values
+arith_uint256 CalculateHeadersWork(const std::vector<CBlockHeader>& headers);
+
+//! Calculate the MedianTimePast of the last block in a set of headers.
+int64_t GetMTPLastHeader(const std::vector<CBlockHeader>& headers);
+
 #endif // BITCOIN_VALIDATION_H

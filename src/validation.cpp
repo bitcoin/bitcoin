@@ -5069,6 +5069,42 @@ double GuessVerificationProgress(const ChainTxData& data, const CBlockIndex *pin
     return pindex->nChainTx / fTxTotal;
 }
 
+bool HasValidProofOfWork(const std::vector<CBlockHeader>& headers, const Consensus::Params& params)
+{
+    bool proof_of_work_valid = true;
+    for (const CBlockHeader& header : headers) {
+        proof_of_work_valid = proof_of_work_valid && CheckProofOfWork(header.GetHash(), header.nBits, params);
+    }
+    return proof_of_work_valid;
+}
+
+arith_uint256 CalculateHeadersWork(const std::vector<CBlockHeader>& headers)
+{
+    arith_uint256 total_work{0};
+    for (const CBlockHeader& header : headers) {
+        CBlockIndex dummy(header);
+        total_work += GetBlockProof(dummy);
+    }
+    return total_work;
+}
+
+int64_t GetMTPLastHeader(const std::vector<CBlockHeader>& headers)
+{
+    if (headers.size() == 0) return 0;
+
+    std::vector<CBlockIndex> dummy_chain;
+    dummy_chain.reserve(headers.size());
+    CBlockIndex* last_block = nullptr;
+
+    for (const CBlockHeader& header : headers) {
+        dummy_chain.emplace_back(CBlockIndex(header));
+        dummy_chain.back().pprev = last_block;
+        last_block = &dummy_chain.back();
+    }
+    return dummy_chain.back().GetMedianTimePast();
+
+}
+
 class CMainCleanup
 {
 public:
