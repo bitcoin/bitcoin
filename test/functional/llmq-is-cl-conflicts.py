@@ -72,7 +72,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
 
         # mine single block, wait for chainlock
         self.nodes[0].generate(1)
-        self.wait_for_chainlock_tip_all_nodes()
+        self.wait_for_chainlocked_tip_all_nodes()
 
         self.test_chainlock_overrides_islock(False)
         self.test_chainlock_overrides_islock(True)
@@ -133,7 +133,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
             assert(submit_result is None)
 
         for node in self.nodes:
-            self.wait_for_chainlock(node, "%064x" % block.sha256)
+            self.wait_for_chainlocked_block(node, "%064x" % block.sha256)
 
         # Create a chained TX on top of tx2
         inputs = []
@@ -211,39 +211,6 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         assert(self.nodes[1].getrawtransaction(rawtx2_txid, True)['instantlock'])
         assert(self.nodes[0].getbestblockhash() != good_tip)
         assert(self.nodes[1].getbestblockhash() != good_tip)
-
-    def wait_for_chainlock_tip_all_nodes(self):
-        for node in self.nodes:
-            tip = node.getbestblockhash()
-            self.wait_for_chainlock(node, tip)
-
-    def wait_for_chainlock_tip(self, node):
-        tip = node.getbestblockhash()
-        self.wait_for_chainlock(node, tip)
-
-    def wait_for_chainlock(self, node, block_hash):
-        t = time.time()
-        while time.time() - t < 15:
-            try:
-                block = node.getblockheader(block_hash)
-                if block["confirmations"] > 0 and block["chainlock"]:
-                    return
-            except:
-                # block might not be on the node yet
-                pass
-            time.sleep(0.1)
-        raise AssertionError("wait_for_chainlock timed out")
-
-    def wait_for_best_chainlock(self, node, block_hash):
-        t = time.time()
-        while time.time() - t < 15:
-            try:
-                if node.getbestchainlock()["blockhash"] == block_hash:
-                    return
-            except:
-                pass
-            time.sleep(0.1)
-        raise AssertionError("wait_for_best_chainlock timed out")
 
     def create_block(self, node, vtx=[]):
         bt = node.getblocktemplate()

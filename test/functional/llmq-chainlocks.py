@@ -35,11 +35,11 @@ class LLMQChainLocksTest(DashTestFramework):
 
         # mine single block, wait for chainlock
         self.nodes[0].generate(1)
-        self.wait_for_chainlock_tip_all_nodes()
+        self.wait_for_chainlocked_tip_all_nodes()
 
         # mine many blocks, wait for chainlock
         self.nodes[0].generate(20)
-        self.wait_for_chainlock_tip_all_nodes()
+        self.wait_for_chainlocked_tip_all_nodes()
 
         # assert that all blocks up until the tip are chainlocked
         for h in range(1, self.nodes[0].getblockcount()):
@@ -51,22 +51,22 @@ class LLMQChainLocksTest(DashTestFramework):
         node0_mining_addr = self.nodes[0].getnewaddress()
         node0_tip = self.nodes[0].getbestblockhash()
         self.nodes[1].generatetoaddress(5, node0_mining_addr)
-        self.wait_for_chainlock_tip(self.nodes[1])
+        self.wait_for_chainlocked_tip(self.nodes[1])
         assert(self.nodes[0].getbestblockhash() == node0_tip)
         reconnect_isolated_node(self.nodes[0], 1)
         self.nodes[1].generatetoaddress(1, node0_mining_addr)
-        self.wait_for_chainlock(self.nodes[0], self.nodes[1].getbestblockhash())
+        self.wait_for_chainlocked_block(self.nodes[0], self.nodes[1].getbestblockhash())
 
         # Isolate node, mine on both parts of the network, and reconnect
         isolate_node(self.nodes[0])
         self.nodes[0].generate(5)
         self.nodes[1].generatetoaddress(1, node0_mining_addr)
         good_tip = self.nodes[1].getbestblockhash()
-        self.wait_for_chainlock_tip(self.nodes[1])
+        self.wait_for_chainlocked_tip(self.nodes[1])
         assert(not self.nodes[0].getblock(self.nodes[0].getbestblockhash())["chainlock"])
         reconnect_isolated_node(self.nodes[0], 1)
         self.nodes[1].generatetoaddress(1, node0_mining_addr)
-        self.wait_for_chainlock(self.nodes[0], self.nodes[1].getbestblockhash())
+        self.wait_for_chainlocked_block(self.nodes[0], self.nodes[1].getbestblockhash())
         assert(self.nodes[0].getblock(self.nodes[0].getbestblockhash())["previousblockhash"] == good_tip)
         assert(self.nodes[1].getblock(self.nodes[1].getbestblockhash())["previousblockhash"] == good_tip)
 
@@ -89,7 +89,7 @@ class LLMQChainLocksTest(DashTestFramework):
         self.nodes[0].reconsiderblock(good_tip)
         assert(self.nodes[0].getbestblockhash() != good_tip)
         self.nodes[1].generatetoaddress(1, node0_mining_addr)
-        self.wait_for_chainlock(self.nodes[0], self.nodes[1].getbestblockhash())
+        self.wait_for_chainlocked_block(self.nodes[0], self.nodes[1].getbestblockhash())
         assert(self.nodes[0].getbestblockhash() == self.nodes[1].getbestblockhash())
 
         # Enable LLMQ bases InstantSend, which also enables checks for "safe" transactions
@@ -122,29 +122,7 @@ class LLMQChainLocksTest(DashTestFramework):
         # Enable network on first node again, which will cause the blocks to propagate and IS locks to happen retroactively
         # for the mined TXs, which will then allow the network to create a CLSIG
         reconnect_isolated_node(self.nodes[0], 1)
-        self.wait_for_chainlock(self.nodes[0], self.nodes[0].getbestblockhash(), 30)
-
-    def wait_for_chainlock_tip_all_nodes(self):
-        for node in self.nodes:
-            tip = node.getbestblockhash()
-            self.wait_for_chainlock(node, tip)
-
-    def wait_for_chainlock_tip(self, node):
-        tip = node.getbestblockhash()
-        self.wait_for_chainlock(node, tip)
-
-    def wait_for_chainlock(self, node, block_hash, timeout=15):
-        t = time.time()
-        while time.time() - t < timeout:
-            try:
-                block = node.getblock(block_hash)
-                if block["confirmations"] > 0 and block["chainlock"]:
-                    return
-            except:
-                # block might not be on the node yet
-                pass
-            time.sleep(0.1)
-        raise AssertionError("wait_for_chainlock timed out")
+        self.wait_for_chainlocked_block(self.nodes[0], self.nodes[0].getbestblockhash(), 30)
 
     def create_chained_txs(self, node, amount):
         txid = node.sendtoaddress(node.getnewaddress(), amount)

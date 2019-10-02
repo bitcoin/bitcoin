@@ -696,25 +696,34 @@ class DashTestFramework(BitcoinTestFramework):
                 return False
         wait_until(check_instantlock, timeout=10, sleep=0.5)
 
-    def wait_for_sporks_same(self, timeout=30):
-        st = time.time()
-        while time.time() < st + timeout:
-            if self.check_sporks_same():
-                return
-            time.sleep(0.5)
-        raise AssertionError("wait_for_sporks_same timed out")
-
-    def check_sporks_same(self):
-        sporks = self.nodes[0].spork('show')
-        for node in self.nodes[1:]:
-            sporks2 = node.spork('show')
-            if sporks != sporks2:
+    def wait_for_chainlocked_block(self, node, block_hash, timeout=15):
+        def check_chainlocked_block():
+            try:
+                block = node.getblock(block_hash)
+                return block["confirmations"] > 0 and block["chainlock"]
+            except:
                 return False
-        return True
+        wait_until(check_chainlocked_block, timeout=timeout, sleep=0.1)
+
+    def wait_for_chainlocked_tip(self, node):
+        tip = node.getbestblockhash()
+        self.wait_for_chainlocked_block(node, tip)
+
+    def wait_for_chainlocked_tip_all_nodes(self):
+        for node in self.nodes:
+            self.wait_for_chainlocked_tip(node)
+
+    def wait_for_best_chainlock(self, node, block_hash):
+        wait_until(lambda: node.getbestchainlock()["blockhash"] == block_hash, timeout=15, sleep=0.1)
+
+    def wait_for_sporks_same(self, timeout=30):
+        def check_sporks_same():
+            sporks = self.nodes[0].spork('show')
+            return all(node.spork('show') == sporks for node in self.nodes[1:])
+        wait_until(check_sporks_same, timeout=timeout, sleep=0.5)
 
     def wait_for_quorum_phase(self, phase, check_received_messages, check_received_messages_count, timeout=30):
-        t = time.time()
-        while time.time() - t < timeout:
+        def check_dkg_session():
             all_ok = True
             for mn in self.mninfo:
                 s = mn.node.quorum("dkgstatus")["session"]
@@ -732,14 +741,11 @@ class DashTestFramework(BitcoinTestFramework):
                     if s[check_received_messages] < check_received_messages_count:
                         all_ok = False
                         break
-            if all_ok:
-                return
-            time.sleep(0.1)
-        raise AssertionError("wait_for_quorum_phase timed out")
+            return all_ok
+        wait_until(check_dkg_session, timeout=timeout, sleep=0.1)
 
     def wait_for_quorum_commitment(self, timeout = 15):
-        t = time.time()
-        while time.time() - t < timeout:
+        def check_dkg_comitments():
             all_ok = True
             for node in self.nodes:
                 s = node.quorum("dkgstatus")
@@ -750,10 +756,8 @@ class DashTestFramework(BitcoinTestFramework):
                 if "llmq_5_60" not in s:
                     all_ok = False
                     break
-            if all_ok:
-                return
-            time.sleep(0.1)
-        raise AssertionError("wait_for_quorum_commitment timed out")
+            return all_ok
+        wait_until(check_dkg_comitments, timeout=timeout, sleep=0.1)
 
     def mine_quorum(self, expected_contributions=5, expected_complaints=0, expected_justifications=0, expected_commitments=5):
         quorums = self.nodes[0].quorum("list")
