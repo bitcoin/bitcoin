@@ -69,52 +69,52 @@ struct PSBTInput
     inline void Serialize(Stream& s) const {
         // Write the utxo
         if (non_witness_utxo) {
-            SerializeToVector(s, PSBT_IN_NON_WITNESS_UTXO);
+            SerializeToVector(s, CompactSizeWriter(PSBT_IN_NON_WITNESS_UTXO));
             OverrideStream<Stream> os(&s, s.GetType(), s.GetVersion() | SERIALIZE_TRANSACTION_NO_WITNESS);
             SerializeToVector(os, non_witness_utxo);
         }
         if (!witness_utxo.IsNull()) {
-            SerializeToVector(s, PSBT_IN_WITNESS_UTXO);
+            SerializeToVector(s, CompactSizeWriter(PSBT_IN_WITNESS_UTXO));
             SerializeToVector(s, witness_utxo);
         }
 
         if (final_script_sig.empty() && final_script_witness.IsNull()) {
             // Write any partial signatures
             for (auto sig_pair : partial_sigs) {
-                SerializeToVector(s, PSBT_IN_PARTIAL_SIG, MakeSpan(sig_pair.second.first));
+                SerializeToVector(s, CompactSizeWriter(PSBT_IN_PARTIAL_SIG), MakeSpan(sig_pair.second.first));
                 s << sig_pair.second.second;
             }
 
             // Write the sighash type
             if (sighash_type > 0) {
-                SerializeToVector(s, PSBT_IN_SIGHASH);
+                SerializeToVector(s, CompactSizeWriter(PSBT_IN_SIGHASH));
                 SerializeToVector(s, sighash_type);
             }
 
             // Write the redeem script
             if (!redeem_script.empty()) {
-                SerializeToVector(s, PSBT_IN_REDEEMSCRIPT);
+                SerializeToVector(s, CompactSizeWriter(PSBT_IN_REDEEMSCRIPT));
                 s << redeem_script;
             }
 
             // Write the witness script
             if (!witness_script.empty()) {
-                SerializeToVector(s, PSBT_IN_WITNESSSCRIPT);
+                SerializeToVector(s, CompactSizeWriter(PSBT_IN_WITNESSSCRIPT));
                 s << witness_script;
             }
 
             // Write any hd keypaths
-            SerializeHDKeypaths(s, hd_keypaths, PSBT_IN_BIP32_DERIVATION);
+            SerializeHDKeypaths(s, hd_keypaths, CompactSizeWriter(PSBT_IN_BIP32_DERIVATION));
         }
 
         // Write script sig
         if (!final_script_sig.empty()) {
-            SerializeToVector(s, PSBT_IN_SCRIPTSIG);
+            SerializeToVector(s, CompactSizeWriter(PSBT_IN_SCRIPTSIG));
             s << final_script_sig;
         }
         // write script witness
         if (!final_script_witness.IsNull()) {
-            SerializeToVector(s, PSBT_IN_SCRIPTWITNESS);
+            SerializeToVector(s, CompactSizeWriter(PSBT_IN_SCRIPTWITNESS));
             SerializeToVector(s, final_script_witness.stack);
         }
 
@@ -147,8 +147,9 @@ struct PSBTInput
                 break;
             }
 
-            // First byte of key is the type
-            unsigned char type = key[0];
+            // Type is compact size uint at beginning of key
+            VectorReader skey(s.GetType(), s.GetVersion(), key, 0);
+            uint64_t type = ReadCompactSize(skey);
 
             // Do stuff based on type
             switch(type) {
@@ -290,18 +291,18 @@ struct PSBTOutput
     inline void Serialize(Stream& s) const {
         // Write the redeem script
         if (!redeem_script.empty()) {
-            SerializeToVector(s, PSBT_OUT_REDEEMSCRIPT);
+            SerializeToVector(s, CompactSizeWriter(PSBT_OUT_REDEEMSCRIPT));
             s << redeem_script;
         }
 
         // Write the witness script
         if (!witness_script.empty()) {
-            SerializeToVector(s, PSBT_OUT_WITNESSSCRIPT);
+            SerializeToVector(s, CompactSizeWriter(PSBT_OUT_WITNESSSCRIPT));
             s << witness_script;
         }
 
         // Write any hd keypaths
-        SerializeHDKeypaths(s, hd_keypaths, PSBT_OUT_BIP32_DERIVATION);
+        SerializeHDKeypaths(s, hd_keypaths, CompactSizeWriter(PSBT_OUT_BIP32_DERIVATION));
 
         // Write unknown things
         for (auto& entry : unknown) {
@@ -332,8 +333,9 @@ struct PSBTOutput
                 break;
             }
 
-            // First byte of key is the type
-            unsigned char type = key[0];
+            // Type is compact size uint at beginning of key
+            VectorReader skey(s.GetType(), s.GetVersion(), key, 0);
+            uint64_t type = ReadCompactSize(skey);
 
             // Do stuff based on type
             switch(type) {
@@ -420,7 +422,7 @@ struct PartiallySignedTransaction
         s << PSBT_MAGIC_BYTES;
 
         // unsigned tx flag
-        SerializeToVector(s, PSBT_GLOBAL_UNSIGNED_TX);
+        SerializeToVector(s, CompactSizeWriter(PSBT_GLOBAL_UNSIGNED_TX));
 
         // Write serialized tx to a stream
         OverrideStream<Stream> os(&s, s.GetType(), s.GetVersion() | SERIALIZE_TRANSACTION_NO_WITNESS);
@@ -472,8 +474,9 @@ struct PartiallySignedTransaction
                 break;
             }
 
-            // First byte of key is the type
-            unsigned char type = key[0];
+            // Type is compact size uint at beginning of key
+            VectorReader skey(s.GetType(), s.GetVersion(), key, 0);
+            uint64_t type = ReadCompactSize(skey);
 
             // Do stuff based on type
             switch(type) {
