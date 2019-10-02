@@ -67,7 +67,9 @@ class BumpFeeTest(BitcoinTestFramework):
 
         self.log.info("Running tests")
         dest_address = peer_node.getnewaddress()
-        test_simple_bumpfee_succeeds(self, rbf_node, peer_node, dest_address)
+        test_simple_bumpfee_succeeds(self, "default", rbf_node, peer_node, dest_address)
+        test_simple_bumpfee_succeeds(self, "fee_rate", rbf_node, peer_node, dest_address)
+        test_feerate_args(self, rbf_node, peer_node, dest_address)
         test_segwit_bumpfee_succeeds(rbf_node, dest_address)
         test_nonrbf_bumpfee_fails(peer_node, dest_address)
         test_notmine_bumpfee_fails(rbf_node, peer_node, dest_address)
@@ -88,12 +90,15 @@ class BumpFeeTest(BitcoinTestFramework):
         self.log.info("Success")
 
 
-def test_simple_bumpfee_succeeds(self, rbf_node, peer_node, dest_address):
+def test_simple_bumpfee_succeeds(self, mode, rbf_node, peer_node, dest_address):
     rbfid = spend_one_input(rbf_node, dest_address)
     rbftx = rbf_node.gettransaction(rbfid)
     self.sync_mempools((rbf_node, peer_node))
     assert rbfid in rbf_node.getrawmempool() and rbfid in peer_node.getrawmempool()
-    bumped_tx = rbf_node.bumpfee(rbfid)
+    if mode == "fee_rate":
+        bumped_tx = rbf_node.bumpfee(rbfid, {"fee_rate":0.0015})
+    else:
+        bumped_tx = rbf_node.bumpfee(rbfid)
     assert_equal(bumped_tx["errors"], [])
     assert bumped_tx["fee"] - abs(rbftx["fee"]) > 0
     # check that bumped_tx propagates, original tx was evicted and has a wallet conflict
@@ -108,6 +113,22 @@ def test_simple_bumpfee_succeeds(self, rbf_node, peer_node, dest_address):
     bumpedwtx = rbf_node.gettransaction(bumped_tx["txid"])
     assert_equal(oldwtx["replaced_by_txid"], bumped_tx["txid"])
     assert_equal(bumpedwtx["replaces_txid"], rbfid)
+
+def test_feerate_args(self, rbf_node, peer_node, dest_address):
+    rbfid = spend_one_input(rbf_node, dest_address)
+    self.sync_mempools((rbf_node, peer_node))
+    assert rbfid in rbf_node.getrawmempool() and rbfid in peer_node.getrawmempool()
+
+    assert_raises_rpc_error(-8, "confTarget can't be set with totalFee or fee_rate. Please provide either a confirmation target in blocks for automatic fee estimation, or an explicit fee rate.", rbf_node.bumpfee, rbfid, {"fee_rate":0.00001, "confTarget":1})
+    assert_raises_rpc_error(-8, "confTarget can't be set with totalFee or fee_rate. Please provide either a confirmation target in blocks for automatic fee estimation, or an explicit fee rate.", rbf_node.bumpfee, rbfid, {"totalFee":0.00001, "confTarget":1})
+    assert_raises_rpc_error(-8, "fee_rate can't be set along with totalFee.", rbf_node.bumpfee, rbfid, {"fee_rate":0.00001, "totalFee":0.001})
+
+    # Bumping to just above minrelay should fail to increase total fee enough, at least
+    assert_raises_rpc_error(-8, "Insufficient total fee", rbf_node.bumpfee, rbfid, {"fee_rate":0.00001000})
+
+    assert_raises_rpc_error(-3, "Amount out of range", rbf_node.bumpfee, rbfid, {"fee_rate":-1})
+
+    assert_raises_rpc_error(-4, "is too high (cannot be higher than", rbf_node.bumpfee, rbfid, {"fee_rate":1})
 
 
 def test_segwit_bumpfee_succeeds(rbf_node, dest_address):
@@ -175,7 +196,6 @@ def test_bumpfee_with_descendant_fails(rbf_node, rbf_node_address, dest_address)
     tx = rbf_node.signrawtransactionwithwallet(tx)
     rbf_node.sendrawtransaction(tx["hex"])
     assert_raises_rpc_error(-8, "Transaction has descendants in the wallet", rbf_node.bumpfee, parent_id)
-
 
 def test_small_output_fails(rbf_node, dest_address):
     # cannot bump fee with a too-small output
