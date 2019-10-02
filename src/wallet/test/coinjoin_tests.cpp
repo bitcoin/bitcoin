@@ -178,6 +178,7 @@ public:
         int nChangePosRet = -1;
         bilingual_str strError;
         CCoinControl coinControl;
+        coinControl.m_feerate = CFeeRate(1000);
         {
             LOCK(wallet->cs_wallet);
             BOOST_CHECK(reserveDest.GetReservedDestination(tallyItem.txdest, false));
