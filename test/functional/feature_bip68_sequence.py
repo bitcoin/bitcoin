@@ -29,9 +29,10 @@ NOT_FINAL_ERROR = "non-BIP68-final (code 64)"
 class BIP68Test(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
+        # TODO remove output type argument and fix resulting "tx-size-small" errors
         self.extra_args = [
-            ["-acceptnonstdtxn=1"],
-            ["-acceptnonstdtxn=0"],
+            ["-acceptnonstdtxn=1", "-addresstype=p2sh-segwit"],
+            ["-acceptnonstdtxn=0", "-addresstype=p2sh-segwit"],
         ]
 
     def skip_test_if_missing_module(self):

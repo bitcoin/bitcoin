@@ -65,6 +65,7 @@ def make_utxo(node, amount, confirmed=True, scriptPubKey=CScript([1])):
 class ReplaceByFeeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
+        # TODO remove output type argument and fix resulting "tx-size-small" errors
         self.extra_args = [
             [
                 "-acceptnonstdtxn=1",
@@ -73,6 +74,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
                 "-limitancestorsize=101",
                 "-limitdescendantcount=200",
                 "-limitdescendantsize=101",
+                "-addresstype=p2sh-segwit",
             ],
         ]
 
