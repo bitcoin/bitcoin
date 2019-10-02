@@ -38,6 +38,7 @@ FUZZ_TARGETS = \
   test/fuzz/partial_merkle_tree_deserialize \
   test/fuzz/partially_signed_transaction_deserialize \
   test/fuzz/prefilled_transaction_deserialize \
+  test/fuzz/parse_numbers \
   test/fuzz/parse_script \
   test/fuzz/psbt \
   test/fuzz/psbt_input_deserialize \
@@ -531,6 +532,12 @@ test_fuzz_parse_script_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_parse_script_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_parse_script_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_parse_script_LDADD = $(FUZZ_SUITE_LD_COMMON)
+
+test_fuzz_parse_numbers_SOURCES = $(FUZZ_SUITE) test/fuzz/parse_numbers.cpp
+test_fuzz_parse_numbers_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_parse_numbers_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_parse_numbers_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_parse_numbers_LDADD = $(FUZZ_SUITE_LD_COMMON)
 
 endif # ENABLE_FUZZ
 
