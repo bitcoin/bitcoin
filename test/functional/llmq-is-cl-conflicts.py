@@ -72,7 +72,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
 
         # mine single block, wait for chainlock
         self.nodes[0].generate(1)
-        self.wait_for_chainlocked_tip_all_nodes()
+        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
 
         self.test_chainlock_overrides_islock(False)
         self.test_chainlock_overrides_islock(True)

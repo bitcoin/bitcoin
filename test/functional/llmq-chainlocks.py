@@ -22,6 +22,8 @@ class LLMQChainLocksTest(DashTestFramework):
 
     def run_test(self):
 
+        self.log.info("Wait for dip0008 activation")
+
         while self.nodes[0].getblockchaininfo()["bip9_softforks"]["dip0008"]["status"] != "active":
             self.nodes[0].generate(10)
         sync_blocks(self.nodes, timeout=60*5)
@@ -30,39 +32,41 @@ class LLMQChainLocksTest(DashTestFramework):
         self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 0)
         self.wait_for_sporks_same()
 
+        self.log.info("Mining 4 quorums")
         for i in range(4):
             self.mine_quorum()
 
-        # mine single block, wait for chainlock
+        self.log.info("Mine single block, wait for chainlock")
         self.nodes[0].generate(1)
-        self.wait_for_chainlocked_tip_all_nodes()
+        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
 
-        # mine many blocks, wait for chainlock
+        self.log.info("Mine many blocks, wait for chainlock")
         self.nodes[0].generate(20)
-        self.wait_for_chainlocked_tip_all_nodes()
+        # We need more time here due to 20 blocks being generated at once
+        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash(), timeout=30)
 
-        # assert that all blocks up until the tip are chainlocked
+        self.log.info("Assert that all blocks up until the tip are chainlocked")
         for h in range(1, self.nodes[0].getblockcount()):
             block = self.nodes[0].getblock(self.nodes[0].getblockhash(h))
             assert(block['chainlock'])
 
-        # Isolate node, mine on another, and reconnect
+        self.log.info("Isolate node, mine on another, and reconnect")
         isolate_node(self.nodes[0])
         node0_mining_addr = self.nodes[0].getnewaddress()
         node0_tip = self.nodes[0].getbestblockhash()
         self.nodes[1].generatetoaddress(5, node0_mining_addr)
-        self.wait_for_chainlocked_tip(self.nodes[1])
+        self.wait_for_chainlocked_block(self.nodes[1], self.nodes[1].getbestblockhash())
         assert(self.nodes[0].getbestblockhash() == node0_tip)
         reconnect_isolated_node(self.nodes[0], 1)
         self.nodes[1].generatetoaddress(1, node0_mining_addr)
         self.wait_for_chainlocked_block(self.nodes[0], self.nodes[1].getbestblockhash())
 
-        # Isolate node, mine on both parts of the network, and reconnect
+        self.log.info("Isolate node, mine on both parts of the network, and reconnect")
         isolate_node(self.nodes[0])
         self.nodes[0].generate(5)
         self.nodes[1].generatetoaddress(1, node0_mining_addr)
         good_tip = self.nodes[1].getbestblockhash()
-        self.wait_for_chainlocked_tip(self.nodes[1])
+        self.wait_for_chainlocked_block(self.nodes[1], good_tip)
         assert(not self.nodes[0].getblock(self.nodes[0].getbestblockhash())["chainlock"])
         reconnect_isolated_node(self.nodes[0], 1)
         self.nodes[1].generatetoaddress(1, node0_mining_addr)
@@ -70,14 +74,14 @@ class LLMQChainLocksTest(DashTestFramework):
         assert(self.nodes[0].getblock(self.nodes[0].getbestblockhash())["previousblockhash"] == good_tip)
         assert(self.nodes[1].getblock(self.nodes[1].getbestblockhash())["previousblockhash"] == good_tip)
 
-        # Keep node connected and let it try to reorg the chain
+        self.log.info("Keep node connected and let it try to reorg the chain")
         good_tip = self.nodes[0].getbestblockhash()
-        # Restart it so that it forgets all the chainlocks from the past
+        self.log.info("Restart it so that it forgets all the chainlocks from the past")
         self.stop_node(0)
         self.start_node(0)
         connect_nodes(self.nodes[0], 1)
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
-        # Now try to reorg the chain
+        self.log.info("Now try to reorg the chain")
         self.nodes[0].generate(2)
         time.sleep(6)
         assert(self.nodes[1].getbestblockhash() == good_tip)
@@ -85,42 +89,43 @@ class LLMQChainLocksTest(DashTestFramework):
         time.sleep(6)
         assert(self.nodes[1].getbestblockhash() == good_tip)
 
-        # Now let the node which is on the wrong chain reorg back to the locked chain
+        self.log.info("Now let the node which is on the wrong chain reorg back to the locked chain")
         self.nodes[0].reconsiderblock(good_tip)
         assert(self.nodes[0].getbestblockhash() != good_tip)
         self.nodes[1].generatetoaddress(1, node0_mining_addr)
         self.wait_for_chainlocked_block(self.nodes[0], self.nodes[1].getbestblockhash())
         assert(self.nodes[0].getbestblockhash() == self.nodes[1].getbestblockhash())
 
-        # Enable LLMQ bases InstantSend, which also enables checks for "safe" transactions
+        self.log.info("Enable LLMQ bases InstantSend, which also enables checks for \"safe\" transactions")
         self.nodes[0].spork("SPORK_2_INSTANTSEND_ENABLED", 0)
         self.nodes[0].spork("SPORK_3_INSTANTSEND_BLOCK_FILTERING", 0)
         self.wait_for_sporks_same()
 
-        # Isolate a node and let it create some transactions which won't get IS locked
+        self.log.info("Isolate a node and let it create some transactions which won't get IS locked")
         isolate_node(self.nodes[0])
         txs = []
         for i in range(3):
             txs.append(self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1))
         txs += self.create_chained_txs(self.nodes[0], 1)
-        # Assert that after block generation these TXs are NOT included (as they are "unsafe")
+        self.log.info("Assert that after block generation these TXs are NOT included (as they are \"unsafe\")")
         self.nodes[0].generate(1)
         for txid in txs:
             tx = self.nodes[0].getrawtransaction(txid, 1)
             assert("confirmations" not in tx)
         time.sleep(1)
         assert(not self.nodes[0].getblock(self.nodes[0].getbestblockhash())["chainlock"])
-        # Disable LLMQ based InstantSend for a very short time (this never gets propagated to other nodes)
+        self.log.info("Disable LLMQ based InstantSend for a very short time (this never gets propagated to other nodes)")
         self.nodes[0].spork("SPORK_2_INSTANTSEND_ENABLED", 4070908800)
-        # Now the TXs should be included
+        self.log.info("Now the TXs should be included")
         self.nodes[0].generate(1)
         self.nodes[0].spork("SPORK_2_INSTANTSEND_ENABLED", 0)
-        # Assert that TXs got included now
+        self.log.info("Assert that TXs got included now")
         for txid in txs:
             tx = self.nodes[0].getrawtransaction(txid, 1)
             assert("confirmations" in tx and tx["confirmations"] > 0)
         # Enable network on first node again, which will cause the blocks to propagate and IS locks to happen retroactively
         # for the mined TXs, which will then allow the network to create a CLSIG
+        self.log.info("Reenable network on first node and wait for chainlock")
         reconnect_isolated_node(self.nodes[0], 1)
         self.wait_for_chainlocked_block(self.nodes[0], self.nodes[0].getbestblockhash(), 30)
 
