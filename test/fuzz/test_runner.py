@@ -15,12 +15,14 @@ import logging
 # Fuzzers known to lack a seed corpus in https://github.com/bitcoin-core/qa-assets/tree/master/fuzz_seed_corpus
 FUZZERS_MISSING_CORPORA = [
     "addr_info_deserialize",
+    "base_encode_decode",
     "block",
     "block_file_info_deserialize",
     "block_filter_deserialize",
     "block_header_and_short_txids_deserialize",
     "fee_rate_deserialize",
     "flat_file_pos_deserialize",
+    "hex",
     "integer",
     "key_origin_info_deserialize",
     "merkle_block_deserialize",
