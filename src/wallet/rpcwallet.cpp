@@ -2830,7 +2830,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
             "    \"reused\" : xxx,           (bool) (only present if avoid_reuse is set) Whether this output is reused/dirty (sent to an address that was previously spent from)\n"
             "    \"desc\" : xxx,             (string, only when solvable) A descriptor for spending this output\n"
             "    \"safe\" : xxx              (bool) Whether this output is considered safe to spend. Unconfirmed transactions\n"
-            "                              from outside keys and unconfirmed replacement transactions are considered unsafe\n"
+            "                              from outside keys, unconfirmed replacement transactions, and immature coinbase transactions are considered unsafe\n"
             "                              and are not eligible for spending by fundrawtransaction and sendtoaddress.\n"
             "  }\n"
             "  ,...\n"
@@ -2904,6 +2904,8 @@ static UniValue listunspent(const JSONRPCRequest& request)
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
+    auto locked_chain = pwallet->chain().lock();
+
     UniValue results(UniValue::VARR);
     std::vector<COutput> vecOutputs;
     {
@@ -2911,9 +2913,8 @@ static UniValue listunspent(const JSONRPCRequest& request)
         cctl.m_avoid_address_reuse = false;
         cctl.m_min_depth = nMinDepth;
         cctl.m_max_depth = nMaxDepth;
-        auto locked_chain = pwallet->chain().lock();
         LOCK(pwallet->cs_wallet);
-        pwallet->AvailableCoins(*locked_chain, vecOutputs, !include_unsafe, &cctl, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount);
+        pwallet->AvailableCoins(*locked_chain, vecOutputs, !include_unsafe, &cctl, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, include_unsafe);
     }
 
     LOCK(pwallet->cs_wallet);
@@ -2982,7 +2983,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
             entry.pushKV("desc", descriptor->ToString());
         }
         if (avoid_reuse) entry.pushKV("reused", reused);
-        entry.pushKV("safe", out.fSafe);
+        entry.pushKV("safe", out.fSafe && !out.tx->IsImmatureCoinBase(*locked_chain));
         results.push_back(entry);
     }
 
