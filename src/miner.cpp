@@ -116,9 +116,13 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     pblocktemplate->vTxFees.push_back(-1); // updated at end
     pblocktemplate->vTxSigOpsCost.push_back(-1); // updated at end
 
-    LOCK2(cs_main, mempool.cs);
-    CBlockIndex* pindexPrev = ::ChainActive().Tip();
-    assert(pindexPrev != nullptr);
+//    LOCK2(cs_main, mempool.cs);
+    CBlockIndex* pindexPrev = nullptr;
+    {
+        LOCK(cs_main);
+        pindexPrev = ::ChainActive().Tip();
+        assert(pindexPrev != nullptr);
+    }
     nHeight = pindexPrev->nHeight + 1;
 
     pblock->nVersion = ComputeBlockVersion(pindexPrev, chainparams.GetConsensus());

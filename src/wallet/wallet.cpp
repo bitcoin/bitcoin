@@ -5064,7 +5064,7 @@ bool CWallet::CreateCoinStake(unsigned int nBits,
     if (!g_txindex)
         return error("%s: transaction index unavailable", __func__);
 
-    LOCK2(cs_main, cs_wallet);
+//    LOCK2(cs_main, cs_wallet);
     txNew.vin.clear();
     txNew.vout.clear();
 
