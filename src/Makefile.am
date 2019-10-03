@@ -50,7 +50,7 @@ LIBBITCOIN_COMMON=libdash_common.a
 LIBBITCOIN_CONSENSUS=libdash_consensus.a
 LIBBITCOIN_CLI=libdash_cli.a
 LIBBITCOIN_UTIL=libdash_util.a
-LIBBITCOIN_CRYPTO=crypto/libdash_crypto.a
+LIBBITCOIN_CRYPTO_BASE=crypto/libdash_crypto_base.a
 LIBBITCOINQT=qt/libdashqt.a
 LIBSECP256K1=secp256k1/libsecp256k1.la
 
@@ -62,6 +62,20 @@ LIBBITCOINCONSENSUS=libdashconsensus.la
 endif
 if ENABLE_WALLET
 LIBBITCOIN_WALLET=libdash_wallet.a
+endif
+
+LIBBITCOIN_CRYPTO= $(LIBBITCOIN_CRYPTO_BASE)
+if ENABLE_SSE41
+LIBBITCOIN_CRYPTO_SSE41 = crypto/libdash_crypto_sse41.a
+LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_SSE41)
+endif
+if ENABLE_AVX2
+LIBBITCOIN_CRYPTO_AVX2 = crypto/libdash_crypto_avx2.a
+LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_AVX2)
+endif
+if ENABLE_SHANI
+LIBBITCOIN_CRYPTO_SHANI = crypto/libdash_crypto_shani.a
+LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_SHANI)
 endif
 
 $(LIBSECP256K1): $(wildcard secp256k1/src/*) $(wildcard secp256k1/include/*)
@@ -365,9 +379,9 @@ libdash_wallet_a_SOURCES = \
   $(BITCOIN_CORE_H)
 
 # crypto primitives library
-crypto_libdash_crypto_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_CONFIG_INCLUDES) $(PIC_FLAGS)
-crypto_libdash_crypto_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(PIC_FLAGS)
-crypto_libdash_crypto_a_SOURCES = \
+crypto_libdash_crypto_base_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_CONFIG_INCLUDES) $(PIC_FLAGS)
+crypto_libdash_crypto_base_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(PIC_FLAGS)
+crypto_libdash_crypto_base_a_SOURCES = \
   crypto/aes.cpp \
   crypto/aes.h \
   crypto/chacha_poly_aead.h \
@@ -391,12 +405,24 @@ crypto_libdash_crypto_a_SOURCES = \
   crypto/sha512.cpp \
   crypto/sha512.h
 
-if EXPERIMENTAL_ASM
-crypto_libdash_crypto_a_SOURCES += crypto/sha256_sse4.cpp
+if USE_ASM
+crypto_libdash_crypto_base_a_SOURCES += crypto/sha256_sse4.cpp
 endif
 
+crypto_libdash_crypto_sse41_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+crypto_libdash_crypto_sse41_a_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libdash_crypto_sse41_a_CXXFLAGS += $(SSE41_CXXFLAGS)
+crypto_libdash_crypto_sse41_a_CPPFLAGS += -DENABLE_SSE41
+crypto_libdash_crypto_sse41_a_SOURCES = crypto/sha256_sse41.cpp
+
+crypto_libdash_crypto_avx2_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+crypto_libdash_crypto_avx2_a_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libdash_crypto_avx2_a_CXXFLAGS += $(AVX2_CXXFLAGS)
+crypto_libdash_crypto_avx2_a_CPPFLAGS += -DENABLE_AVX2
+crypto_libdash_crypto_avx2_a_SOURCES = crypto/sha256_avx2.cpp
+
 # x11
-crypto_libdash_crypto_a_SOURCES += \
+crypto_libdash_crypto_base_a_SOURCES += \
   crypto/blake.c \
   crypto/bmw.c \
   crypto/cubehash.c \
@@ -420,6 +446,12 @@ crypto_libdash_crypto_a_SOURCES += \
   crypto/sph_simd.h \
   crypto/sph_skein.h \
   crypto/sph_types.h
+
+crypto_libdash_crypto_shani_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+crypto_libdash_crypto_shani_a_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libdash_crypto_shani_a_CXXFLAGS += $(SHANI_CXXFLAGS)
+crypto_libdash_crypto_shani_a_CPPFLAGS += -DENABLE_SHANI
+crypto_libdash_crypto_shani_a_SOURCES = crypto/sha256_shani.cpp
 
 # consensus: shared between all executables that validate any consensus rules.
 libdash_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
@@ -597,7 +629,7 @@ dash_tx_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(CRYPTO_LIBS) $(BLS_LIBS)
 # dashconsensus library #
 if BUILD_BITCOIN_LIBS
 include_HEADERS = script/dashconsensus.h
-libdashconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libdash_crypto_a_SOURCES) $(libdash_consensus_a_SOURCES)
+libdashconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libdash_crypto_base_a_SOURCES) $(libdash_consensus_a_SOURCES)
 
 if GLIBC_BACK_COMPAT
   libdashconsensus_la_SOURCES += compat/glibc_compat.cpp

@@ -26,6 +26,7 @@ bench_bench_dash_SOURCES = \
   bench/chacha_poly_aead.cpp \
   bench/crypto_hash.cpp \
   bench/ccoins_caching.cpp \
+  bench/merkle_root.cpp \
   bench/mempool_eviction.cpp \
   bench/base58.cpp \
   bench/lockedpool.cpp \

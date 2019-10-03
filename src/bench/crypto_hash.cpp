@@ -71,6 +71,14 @@ static void HASH_DSHA256_0032b(benchmark::State& state)
     }
 }
 
+static void HASH_SHA256D64_1024(benchmark::State& state)
+{
+    std::vector<uint8_t> in(64 * 1024, 0);
+    while (state.KeepRunning()) {
+        SHA256D64(in.data(), in.data(), 1024);
+    }
+}
+
 static void HASH_SHA512(benchmark::State& state)
 {
     uint8_t hash[CSHA512::OUTPUT_SIZE];
@@ -219,6 +227,7 @@ BENCHMARK(HASH_X11);
 BENCHMARK(HASH_SHA256_0032b);
 BENCHMARK(HASH_DSHA256_0032b);
 BENCHMARK(HASH_SipHash_0032b);
+BENCHMARK(HASH_SHA256D64_1024/*, 7400*/);
 
 BENCHMARK(HASH_DSHA256_0032b_single);
 BENCHMARK(HASH_DSHA256_0080b_single);
