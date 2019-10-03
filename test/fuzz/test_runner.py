@@ -22,7 +22,6 @@ FUZZERS_MISSING_CORPORA = [
     "flat_file_pos_deserialize",
     "key_origin_info_deserialize",
     "merkle_block_deserialize",
-    "mutable_transaction_deserialize",
     "out_point_deserialize",
     "partial_merkle_tree_deserialize",
     "partially_signed_transaction_deserialize",
