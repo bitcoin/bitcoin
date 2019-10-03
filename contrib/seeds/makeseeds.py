@@ -123,7 +123,7 @@ def filtermultiport(ips):
 
 def lookup_asn(net, ip):
     '''
-    Look up the asn for an IP (4 or 6) address by querying cymry.com, or None
+    Look up the asn for an IP (4 or 6) address by querying cymru.com, or None
     if it could not be found.
     '''
     try:
@@ -187,7 +187,7 @@ def main():
     # Skip entries with invalid address.
     ips = [ip for ip in ips if ip is not None]
     print('%s Skip entries with invalid address' % (ip_stats(ips)), file=sys.stderr)
-    # Skip duplicattes (in case multiple seeds files were concatenated)
+    # Skip duplicates (in case multiple seeds files were concatenated)
     ips = dedup(ips)
     print('%s After removing duplicates' % (ip_stats(ips)), file=sys.stderr)
     # Skip entries from suspicious hosts.
