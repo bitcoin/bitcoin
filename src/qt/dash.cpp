@@ -447,7 +447,7 @@ int GuiMain(int argc, char* argv[])
     std::tie(argc, argv) = winArgs.get();
 #endif
     SetupEnvironment();
-    util::ThreadRename("main");
+    util::ThreadSetInternalName("main");
 
     std::unique_ptr<interfaces::Node> node = interfaces::MakeNode();
 
