@@ -426,7 +426,7 @@ UniValue protx_register(const JSONRPCRequest& request)
 
     if (isFundRegister && (request.fHelp || (request.params.size() != 8 && request.params.size() != 9)))
         protx_register_fund_help(pwallet);
-    else if ( (request.fHelp || (request.params.size() != 9 && request.params.size() != 10)))
+    else if (isExternalRegister && (request.fHelp || (request.params.size() != 9 && request.params.size() != 10)))
         protx_register_help(pwallet);
     else if (isPrepareRegister && (request.fHelp || (request.params.size() != 9 && request.params.size() != 10)))
         protx_register_prepare_help();
