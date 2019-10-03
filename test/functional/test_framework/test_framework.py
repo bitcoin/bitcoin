@@ -506,6 +506,7 @@ class DashTestFramework(BitcoinTestFramework):
             connect_nodes(self.nodes[i], idx)
 
     def prepare_masternodes(self):
+        self.log.info("Preparing %d masternodes" % self.mn_count)
         for idx in range(0, self.mn_count):
             self.prepare_masternode(idx)
 
@@ -541,6 +542,8 @@ class DashTestFramework(BitcoinTestFramework):
         self.mninfo.append(MasternodeInfo(proTxHash, ownerAddr, votingAddr, bls['public'], bls['secret'], address, txid, collateral_vout))
         self.sync_all()
 
+        self.log.info("Prepared masternode %d: collateral_txid=%s, collateral_vout=%d, protxHash=%s" % (idx, txid, collateral_vout, proTxHash))
+
     def remove_mastermode(self, idx):
         mn = self.mninfo[idx]
         rawtx = self.nodes[0].createrawtransaction([{"txid": mn.collateral_txid, "vout": mn.collateral_vout}], {self.nodes[0].getnewaddress(): 999.9999})
@@ -549,6 +552,8 @@ class DashTestFramework(BitcoinTestFramework):
         self.nodes[0].generate(1)
         self.sync_all()
         self.mninfo.remove(mn)
+
+        self.log.info("Removed masternode %d", idx)
 
     def prepare_datadirs(self):
         # stop faucet node so that we can copy the datadir
@@ -562,6 +567,8 @@ class DashTestFramework(BitcoinTestFramework):
         self.start_node(0)
 
     def start_masternodes(self):
+        self.log.info("Starting %d masternodes", self.mn_count)
+
         start_idx = len(self.nodes)
 
         self.add_nodes(self.mn_count)
@@ -604,20 +611,22 @@ class DashTestFramework(BitcoinTestFramework):
         executor.shutdown()
 
     def setup_network(self):
-        # create faucet node for collateral and transactions
+        self.log.info("Creating and starting controller node")
         self.add_nodes(1, extra_args=[self.extra_args])
         self.start_node(0)
         required_balance = MASTERNODE_COLLATERAL * self.mn_count + 1
+        self.log.info("Generating %d coins" % required_balance)
         while self.nodes[0].getbalance() < required_balance:
             self.bump_mocktime(1)
             set_node_times(self.nodes, self.mocktime)
             self.nodes[0].generate(1)
-        # create connected simple nodes
-        for i in range(0, self.num_nodes - self.mn_count - 1):
+        num_simple_nodes = self.num_nodes - self.mn_count - 1
+        self.log.info("Creating and starting %s simple nodes", num_simple_nodes)
+        for i in range(0, num_simple_nodes):
             self.create_simple_node()
         sync_masternodes(self.nodes, True)
 
-        # activate DIP3
+        self.log.info("Activating DIP3")
         if not self.fast_dip3_enforcement:
             while self.nodes[0].getblockcount() < 500:
                 self.nodes[0].generate(10)
@@ -756,6 +765,10 @@ class DashTestFramework(BitcoinTestFramework):
         wait_until(check_dkg_comitments, timeout=timeout, sleep=0.1)
 
     def mine_quorum(self, expected_contributions=5, expected_complaints=0, expected_justifications=0, expected_commitments=5):
+        self.log.info("Mining quorum: expected_contributions=%d, expected_complaints=%d, expected_justifications=%d, "
+                      "expected_commitments=%d" % (expected_contributions, expected_complaints,
+                                                   expected_justifications, expected_commitments))
+
         quorums = self.nodes[0].quorum("list")
 
         # move forward to next DKG
@@ -766,7 +779,7 @@ class DashTestFramework(BitcoinTestFramework):
             self.nodes[0].generate(skip_count)
         sync_blocks(self.nodes)
 
-        # Make sure all reached phase 1 (init)
+        self.log.info("Waiting for phase 1 (init)")
         self.wait_for_quorum_phase(1, None, 0)
         # Give nodes some time to connect to neighbors
         time.sleep(2)
@@ -775,41 +788,41 @@ class DashTestFramework(BitcoinTestFramework):
         self.nodes[0].generate(2)
         sync_blocks(self.nodes)
 
-        # Make sure all reached phase 2 (contribute) and received all contributions
+        self.log.info("Waiting for phase 2 (contribute)")
         self.wait_for_quorum_phase(2, "receivedContributions", expected_contributions)
         self.bump_mocktime(1)
         set_node_times(self.nodes, self.mocktime)
         self.nodes[0].generate(2)
         sync_blocks(self.nodes)
 
-        # Make sure all reached phase 3 (complain) and received all complaints
+        self.log.info("Waiting for phase 3 (complain)")
         self.wait_for_quorum_phase(3, "receivedComplaints", expected_complaints)
         self.bump_mocktime(1)
         set_node_times(self.nodes, self.mocktime)
         self.nodes[0].generate(2)
         sync_blocks(self.nodes)
 
-        # Make sure all reached phase 4 (justify)
+        self.log.info("Waiting for phase 4 (justify)")
         self.wait_for_quorum_phase(4, "receivedJustifications", expected_justifications)
         self.bump_mocktime(1)
         set_node_times(self.nodes, self.mocktime)
         self.nodes[0].generate(2)
         sync_blocks(self.nodes)
 
-        # Make sure all reached phase 5 (commit)
+        self.log.info("Waiting for phase 5 (commit)")
         self.wait_for_quorum_phase(5, "receivedPrematureCommitments", expected_commitments)
         self.bump_mocktime(1)
         set_node_times(self.nodes, self.mocktime)
         self.nodes[0].generate(2)
         sync_blocks(self.nodes)
 
-        # Make sure all reached phase 6 (mining)
+        self.log.info("Waiting for phase 6 (mining)")
         self.wait_for_quorum_phase(6, None, 0)
 
-        # Wait for final commitment
+        self.log.info("Waiting final commitment")
         self.wait_for_quorum_commitment()
 
-        # mine the final commitment
+        self.log.info("Mining final commitment")
         self.bump_mocktime(1)
         set_node_times(self.nodes, self.mocktime)
         self.nodes[0].generate(1)
@@ -820,11 +833,14 @@ class DashTestFramework(BitcoinTestFramework):
             self.nodes[0].generate(1)
             sync_blocks(self.nodes)
         new_quorum = self.nodes[0].quorum("list", 1)["llmq_5_60"][0]
+        quorum_info = self.nodes[0].quorum("info", 100, new_quorum)
 
         # Mine 8 (SIGN_HEIGHT_OFFSET) more blocks to make sure that the new quorum gets eligable for signing sessions
         self.nodes[0].generate(8)
 
         sync_blocks(self.nodes)
+
+        self.log.info("New quorum: height=%d, quorumHash=%s, minedBlock=%s" % (quorum_info["height"], new_quorum, quorum_info["minedBlock"]))
 
         return new_quorum
 
