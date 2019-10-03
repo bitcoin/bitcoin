@@ -69,10 +69,13 @@ private:
     QString pathToCheck;
     uint64_t m_blockchain_size;
     uint64_t m_chain_state_size;
+    bool m_prune_set{false};
+    uint64_t m_prune_target{0};
 
     void startThread();
     void checkPath(const QString &dataDir);
     QString getPathToCheck();
+    void setSizeWarningLabel();
 
     friend class FreespaceChecker;
 };
