@@ -40,6 +40,7 @@ FUZZ_TARGETS = \
   test/fuzz/prefilled_transaction_deserialize \
   test/fuzz/parse_numbers \
   test/fuzz/parse_script \
+  test/fuzz/parse_univalue \
   test/fuzz/psbt \
   test/fuzz/psbt_input_deserialize \
   test/fuzz/psbt_output_deserialize \
@@ -97,6 +98,7 @@ FUZZ_SUITE_LD_COMMON = \
  $(LIBTEST_UTIL) \
  $(LIBBITCOIN_CONSENSUS) \
  $(LIBBITCOIN_CRYPTO) \
+ $(LIBBITCOIN_CLI) \
  $(LIBUNIVALUE) \
  $(LIBLEVELDB) \
  $(LIBLEVELDB_SSE42) \
@@ -538,6 +540,12 @@ test_fuzz_parse_numbers_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_parse_numbers_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_parse_numbers_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_parse_numbers_LDADD = $(FUZZ_SUITE_LD_COMMON)
+
+test_fuzz_parse_univalue_SOURCES = $(FUZZ_SUITE) test/fuzz/parse_univalue.cpp
+test_fuzz_parse_univalue_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_parse_univalue_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_parse_univalue_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_parse_univalue_LDADD = $(FUZZ_SUITE_LD_COMMON)
 
 endif # ENABLE_FUZZ
 
