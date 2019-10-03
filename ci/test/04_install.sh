@@ -44,7 +44,7 @@ DOCKER_EXEC free -m -h
 DOCKER_EXEC echo "Number of CPUs \(nproc\):" \$\(nproc\)
 
 ${CI_RETRY_EXE} DOCKER_EXEC apt-get update
-${CI_RETRY_EXE} DOCKER_EXEC apt-get install --no-install-recommends --no-upgrade -qq $PACKAGES $DOCKER_PACKAGES
+${CI_RETRY_EXE} DOCKER_EXEC apt-get install --no-install-recommends --no-upgrade -y $PACKAGES $DOCKER_PACKAGES
 
 if [ "$USE_BUSY_BOX" = "true" ]; then
   echo "Setup to use BusyBox utils"
