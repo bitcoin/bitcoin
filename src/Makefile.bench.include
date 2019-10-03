@@ -32,7 +32,7 @@ bench_bench_dash_SOURCES = \
   bench/poly1305.cpp \
   bench/perf.cpp \
   bench/perf.h \
-  bench/prevector_destructor.cpp \
+  bench/prevector.cpp \
   bench/string_cast.cpp
 
 nodist_bench_bench_dash_SOURCES = $(GENERATED_TEST_FILES)
