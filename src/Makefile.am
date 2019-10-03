@@ -345,6 +345,7 @@ libbitgreen_server_a_SOURCES = \
   pos/sign.cpp \
   rest.cpp \
   rpc/blockchain.cpp \
+  rpc/masternode.cpp \
   rpc/mining.cpp \
   rpc/misc.cpp \
   rpc/net.cpp \
@@ -447,6 +448,7 @@ libbitgreen_wallet_a_SOURCES = \
   pos/sign.cpp \
   rest.cpp \
   rpc/blockchain.cpp \
+  rpc/masternode.cpp \
   rpc/mining.cpp \
   rpc/misc.cpp \
   rpc/net.cpp \
