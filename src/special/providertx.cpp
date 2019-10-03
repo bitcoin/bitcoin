@@ -18,6 +18,7 @@
 #include <streams.h>
 #include <univalue.h>
 #include <validation.h>
+#include <wallet/wallet.h>
 
 template <typename ProTx>
 static bool CheckService(const uint256& proTxHash, const ProTx& proTx, CValidationState& state)
@@ -25,8 +26,8 @@ static bool CheckService(const uint256& proTxHash, const ProTx& proTx, CValidati
     if (!proTx.addr.IsValid())
         return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-protx-addr");
 
-    if (Params().NetworkIDString() != CBaseChainParams::REGTEST && !proTx.addr.IsRoutable())
-        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-protx-addr");
+   if (Params().NetworkIDString() != CBaseChainParams::REGTEST && !proTx.addr.IsRoutable())
+       return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-protx-addr");
 
     int mainnetDefaultPort = Params().GetDefaultPort();
     if (Params().NetworkIDString() == CBaseChainParams::MAIN) {
@@ -124,14 +125,37 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
     CKeyID keyForPayloadSig;
     COutPoint collateralOutpoint;
 
-    if (ptx.collateralOutpoint.n >= tx.vout.size())
-        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-protx-collateral-index");
-    if (tx.vout[ptx.collateralOutpoint.n].nValue != 2500 * COIN)
-        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-protx-collateral");
-    if (!ExtractDestination(tx.vout[ptx.collateralOutpoint.n].scriptPubKey, collateralTxDest))
-        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-protx-collateral-dest");
+    if (!ptx.collateralOutpoint.hash.IsNull()) {
+        Coin coin;
+        if (!GetUTXOCoin(ptx.collateralOutpoint, coin) || coin.out.nValue != 2500 * COIN)
+            return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-protx-collateral");
+        if (!ExtractDestination(coin.out.scriptPubKey, collateralTxDest))
+            return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-protx-collateral-dest");
 
-    collateralOutpoint = COutPoint(tx.GetHash(), ptx.collateralOutpoint.n);
+        if (!GetWallets().front())
+            return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-protx-wallet");
+
+        CWallet* const pwallet = GetWallets().front().get();
+
+        // Extract key from collateral. This only works for P2PK and P2PKH collaterals and will fail for P2SH.
+        // Issuer of this ProRegTx must prove ownership with this key by signing the ProRegTx
+        keyForPayloadSig = GetKeyForDestination(*pwallet, collateralTxDest);
+        if (keyForPayloadSig.IsNull())
+            return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-protx-collateral-pkh");
+
+        collateralOutpoint = ptx.collateralOutpoint;
+    } else {
+        if (ptx.collateralOutpoint.n >= tx.vout.size())
+            return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID,
+                                 "bad-protx-collateral-index");
+        if (tx.vout[ptx.collateralOutpoint.n].nValue != 2500 * COIN)
+            return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-protx-collateral");
+        if (!ExtractDestination(tx.vout[ptx.collateralOutpoint.n].scriptPubKey, collateralTxDest))
+            return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID,
+                                 "bad-protx-collateral-dest");
+
+        collateralOutpoint = COutPoint(tx.GetHash(), ptx.collateralOutpoint.n);
+    }
 
     // don't allow reuse of collateral key for other keys (don't allow people to put the collateral key onto an online server)
     // this check applies to internal and external collateral, but internal collaterals are not necessarely a P2PKH
