@@ -171,7 +171,7 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
     for (size_t i = 1; i < block.vtx.size(); i++) {
         auto& tx = block.vtx[i];
 
-        if (tx->nVersion == 3 && tx->nType == TRANSACTION_QUORUM_COMMITMENT) {
+        if (tx->nVersion == 2 && tx->nType == TRANSACTION_QUORUM_COMMITMENT) {
             llmq::CFinalCommitmentTxPayload qc;
             if (!GetTxPayload(*tx, qc)) {
                 assert(false);
