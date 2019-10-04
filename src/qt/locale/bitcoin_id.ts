@@ -1633,8 +1633,16 @@
         <translation>Datadir</translation>
     </message>
     <message>
+        <source>To specify a non-default location of the data directory use the '%1' option.</source>
+        <translation>Untuk menentukan lokasi direktori data yang tidak standar gunakan opsi '%1'.</translation>
+    </message>
+    <message>
         <source>Blocksdir</source>
         <translation>Blocksdir</translation>
+    </message>
+    <message>
+        <source>To specify a non-default location of the blocks directory use the '%1' option.</source>
+        <translation>Untuk menentukan lokasi direktori block non-default, gunakan opsi '%1'.</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -1733,6 +1741,10 @@
         <translation>Agen Pengguna
 
 </translation>
+    </message>
+    <message>
+        <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
+        <translation>Buka file log debug %1 dari direktori data saat ini. Dapat memakan waktu beberapa detik untuk file log besar.</translation>
     </message>
     <message>
         <source>Decrease font size</source>
