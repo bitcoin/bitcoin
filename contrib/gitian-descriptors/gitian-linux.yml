@@ -1,5 +1,5 @@
 ---
-name: "syscoin-core-linux-4.0"
+name: "syscoin-core-linux-4.1"
 enable_cache: true
 distro: "ubuntu"
 suites:
