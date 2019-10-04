@@ -62,7 +62,16 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         # Save the coinbase for later
         block1 = block
         tip = block.sha256
-        node.p2p.send_blocks_and_test([block], node, success=True)
+
+        # Create a second one to test orphan resolution via block receival
+        height += 1
+        block_time += 1
+        block = create_block(tip, create_coinbase(height), block_time)
+        block.solve()
+        # Save the coinbase for later
+        block2 = block
+        tip = block.sha256
+        node.p2p.send_blocks_and_test([block1, block2], node, success=True)
 
         self.log.info("Mature the block.")
         self.nodes[0].generate(100)
@@ -80,10 +89,18 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         self.reconnect_p2p(num_connections=2)
 
         self.log.info('Test orphan transaction handling ... ')
+        self.test_orphan_tx_handling(block1.vtx[0].sha256, False)
+        node.generate(1) # Clear mempool
+        self.reconnect_p2p(num_connections=2)
+        self.test_orphan_tx_handling(block2.vtx[0].sha256, True)
+
+    def test_orphan_tx_handling(self, base_tx, resolve_via_block):
+        node = self.nodes[0]  # convenience reference to the node
+
         # Create a root transaction that we withold until all dependend transactions
         # are sent out and in the orphan cache
         tx_withhold = CTransaction()
-        tx_withhold.vin.append(CTxIn(outpoint=COutPoint(block1.vtx[0].sha256, 0)))
+        tx_withhold.vin.append(CTxIn(outpoint=COutPoint(base_tx, 0)))
         tx_withhold.vout.append(CTxOut(nValue=50 * COIN - 12000, scriptPubKey=b'\x51'))
         tx_withhold.calc_sha256()
 
@@ -119,7 +136,17 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         assert_equal(2, len(node.getpeerinfo()))  # p2ps[1] is still connected
 
         self.log.info('Send the withhold tx ... ')
-        node.p2p.send_txs_and_test([tx_withhold], node, success=True)
+        if resolve_via_block:
+            # Test orphan handling/resolution by publishing the withhold TX via a mined block
+            prev_block = node.getblockheader(node.getbestblockhash())
+            block = create_block(int(prev_block['hash'], 16), create_coinbase(prev_block['height'] + 1), prev_block["time"] + 1)
+            block.vtx.append(tx_withhold)
+            block.hashMerkleRoot = block.calc_merkle_root()
+            block.solve()
+            node.p2p.send_blocks_and_test([block], node, success=True)
+        else:
+            # Test orphan handling/resolution by publishing the withhold TX via the mempool
+            node.p2p.send_txs_and_test([tx_withhold], node, success=True)
 
         # Transactions that should end up in the mempool
         expected_mempool = {
@@ -133,6 +160,9 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         # Transactions that do not end up in the mempool
         # tx_orphan_no_fee, because it has too low fee (p2ps[0] is not disconnected for relaying that tx)
         # tx_orphan_invaid, because it has negative fee (p2ps[1] is disconnected for relaying that tx)
+        if resolve_via_block:
+            # This TX has appeared in a block instead of being broadcasted via the mempool
+            expected_mempool.remove(tx_withhold.hash)
 
         wait_until(lambda: 1 == len(node.getpeerinfo()), timeout=12)  # p2ps[1] is no longer connected
         assert_equal(expected_mempool, set(node.getrawmempool()))
