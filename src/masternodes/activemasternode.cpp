@@ -106,9 +106,12 @@ void CActiveMasternodeManager::Init()
     if (Params().NetworkIDString() != CBaseChainParams::REGTEST) {
         // Check socket connectivity
         LogPrintf("CActiveDeterministicMasternodeManager::Init -- Checking inbound connection to '%s'\n", activeMasternodeInfo.service.ToString());
-        SOCKET hSocket;
-        bool fConnected = ConnectSocketDirectly(activeMasternodeInfo.service, hSocket, nConnectTimeout, true) && IsSelectableSocket(hSocket);
-        CloseSocket(hSocket);
+        SOCKET hSocket = CreateSocket(activeMasternodeInfo.service);
+        if (hSocket == INVALID_SOCKET) {
+            LogPrintf("CActiveDeterministicMasternodeManager::Init -- ERROR: could not create socket\n");
+            return;
+        }
+        bool fConnected = ConnectSocketDirectly(activeMasternodeInfo.service, hSocket, nConnectTimeout, true);
 
         if (!fConnected) {
             state = MASTERNODE_ERROR;
@@ -116,6 +119,8 @@ void CActiveMasternodeManager::Init()
             LogPrintf("CActiveDeterministicMasternodeManager::Init -- ERROR: %s\n", strError);
             return;
         }
+
+        CloseSocket(hSocket);
     }
 
     activeMasternodeInfo.proTxHash = mnListEntry->proTxHash;
