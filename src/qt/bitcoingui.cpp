@@ -301,6 +301,7 @@ void BitcoinGUI::createActions()
     aboutQtAction->setMenuRole(QAction::AboutQtRole);
     optionsAction = new QAction(tr("&Options..."), this);
     optionsAction->setStatusTip(tr("Modify configuration options for %1").arg(PACKAGE_NAME));
+    optionsAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_O));
     optionsAction->setMenuRole(QAction::PreferencesRole);
     optionsAction->setEnabled(false);
     toggleHideAction = new QAction(tr("&Show / Hide"), this);
@@ -344,6 +345,7 @@ void BitcoinGUI::createActions()
     m_create_wallet_action->setStatusTip(tr("Create a new wallet"));
 
     showHelpMessageAction = new QAction(tr("&Command-line options"), this);
+    showHelpMessageAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_H));
     showHelpMessageAction->setMenuRole(QAction::NoRole);
     showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible Bitcoin command-line options").arg(PACKAGE_NAME));
 
