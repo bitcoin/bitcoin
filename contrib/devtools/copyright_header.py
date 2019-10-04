@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016 The Bitcoin Core developers
+# Copyright (c) 2016-2019 The Bitcoin Core developers
 # Copyright (c) 2019 The Dash Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -36,7 +36,7 @@ EXCLUDE_DIRS = [
     "src/univalue/",
 ]
 
-INCLUDE = ['*.h', '*.cpp', '*.cc', '*.c', '*.mm', '*.py']
+INCLUDE = ['*.h', '*.cpp', '*.cc', '*.c', '*.mm', '*.py', '*.sh', '*.bash-completion']
 INCLUDE_COMPILED = re.compile('|'.join([fnmatch.translate(m) for m in INCLUDE]))
 
 def applies_to_file(filename):
