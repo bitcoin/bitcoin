@@ -334,8 +334,11 @@ struct TxMempoolInfo
     /** Time the transaction entered the mempool. */
     std::chrono::seconds m_time;
 
-    /** Feerate of the transaction. */
-    CFeeRate feeRate;
+    /** Fee of the transaction. */
+    CAmount fee;
+
+    /** Virtual size of the transaction. */
+    size_t vsize;
 
     /** The fee delta. */
     int64_t nFeeDelta;
