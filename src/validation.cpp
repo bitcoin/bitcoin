@@ -19,6 +19,7 @@
 #include <hash.h>
 #include <index/txindex.h>
 #include <llmq/quorums_chainlocks.h>
+#include <masternodes/payments.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
@@ -1708,6 +1709,7 @@ static int64_t nTimeConnect = 0;
 static int64_t nTimeIndex = 0;
 static int64_t nTimeCallbacks = 0;
 static int64_t nTimeTotal = 0;
+static int64_t nTimeBitgreenSpecific = 0;
 static int64_t nBlocksTotal = 0;
 
 
@@ -2076,9 +2078,6 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
     LogPrint(BCLog::BENCHMARK, "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs (%.2fms/blk)]\n", (unsigned)block.vtx.size(), MILLI * (nTime3 - nTime2), MILLI * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : MILLI * (nTime3 - nTime2) / (nInputs-1), nTimeConnect * MICRO, nTimeConnect * MILLI / nBlocksTotal);
 
-    if (!ProcessSpecialTxsInBlock(block, pindex, state, fJustCheck, fScriptChecks))
-        return false;
-
     CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus());
     if (block.IsProofOfWork() && block.vtx[0]->GetValueOut() > blockReward)
         return state.Invalid(ValidationInvalidReason::CONSENSUS,
@@ -2091,6 +2090,8 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     int64_t nTime4 = GetTimeMicros(); nTimeVerify += nTime4 - nTime2;
     LogPrint(BCLog::BENCHMARK, "    - Verify %u txins: %.2fms (%.3fms/txin) [%.2fs (%.2fms/blk)]\n", nInputs - 1, MILLI * (nTime4 - nTime2), nInputs <= 1 ? 0 : MILLI * (nTime4 - nTime2) / (nInputs-1), nTimeVerify * MICRO, nTimeVerify * MILLI / nBlocksTotal);
 
+    // BITGREEN: Check Proof-of-Stake, masternode payments and superblocks
+
     // proof-of-stake: keep track of money supply and mint amount.
     CAmount nMoneySupplyPrev = pindex->pprev ? pindex->pprev->nMoneySupply : 0;
     pindex->nMoneySupply = nMoneySupplyPrev + (nValueOut - nValueIn) - nFees;
@@ -2102,6 +2103,36 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
                          error("ConnectBlock(): PoS reward pays too much (actual=%d vs limit=%d)",
                                FormatMoney(pindex->nMint), blockReward),
                                REJECT_INVALID, "bad-cb-amount");
+
+    std::string strError = "";
+
+    if (!IsBlockValueValid(block, pindex->nHeight, blockReward, strError))
+        return state.Invalid(ValidationInvalidReason::CONSENSUS, error("%s: Check block value ERROR: %s", __func__, strError), REJECT_INVALID, "bad-cb-amount");
+
+    int64_t nTime4_1 = GetTimeMicros(); nTimeVerify += nTime4_1 - nTime4;
+    LogPrint(BCLog::BENCHMARK, "      - IsBlockValueValid: %.2fms [%.2fs]\n", MILLI * (nTime4_1 - nTime2), nTimeVerify * MICRO);
+
+    if (!IsBlockPayeeValid(*block.vtx[0], pindex->nHeight, blockReward)) {
+        return state.Invalid(ValidationInvalidReason::CONSENSUS, error("%s: couldn't find masternode or superblock payments", __func__),
+                                REJECT_INVALID, "bad-cb-payee");
+    }
+
+    int64_t nTime4_2 = GetTimeMicros(); nTimeVerify += nTime4_2 - nTime4_1;
+    LogPrint(BCLog::BENCHMARK, "      - IsBlockPayeeValid: %.2fms [%.2fs]\n", MILLI * (nTime4_2 - nTime4_1), nTimeVerify * MICRO);
+
+    if (!ProcessSpecialTxsInBlock(block, pindex, state, fJustCheck, fScriptChecks)) {
+        LogPrintf("%s: ProcessSpecialTxsInBlock for block %s failed with %s",
+                    pindex->GetBlockHash().ToString(), FormatStateMessage(state));
+        return false;
+    }
+
+    int64_t nTime4_3 = GetTimeMicros(); nTimeVerify += nTime4_3 - nTime4_2;
+    LogPrint(BCLog::BENCHMARK, "      - ProcessSpecialTxsInBlock: %.2fms [%.2fs]\n", MILLI * (nTime4_3 - nTime4_2), nTimeVerify * MICRO);
+
+    int64_t nTime4_4 = GetTimeMicros(); nTimeBitgreenSpecific += nTime4_4 - nTime4_1;
+    LogPrint(BCLog::BENCHMARK, "    - Bitgreen specific: %.2fms [%.2fs]\n", MILLI * (nTime4_4 - nTime4_3), nTimeBitgreenSpecific * MICRO);
+
+    // END BITGREEN
 
     //IMPORTANT NOTE: Nothing before this point should actually store to disk (or even memory)
     if (fJustCheck)
