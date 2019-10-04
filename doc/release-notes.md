@@ -63,6 +63,39 @@ distribution provides binaries for the RISC-V platform.
 Notable changes
 ===============
 
+New RPCs
+--------
+
+New settings
+------------
+
+Updated settings
+----------------
+
+Updated RPCs
+------------
+
+Note: some low-level RPC changes mainly useful for testing are described in the
+Low-level Changes section below.
+
+GUI changes
+-----------
+
+Wallet
+------
+
+- The wallet now by default uses bech32 addresses when using RPC, and creates native segwit change outputs.
+
+Low-level changes
+=================
+
+Tests
+-----
+
+- `-fallbackfee` was 0 (disabled) by default for the main chain, but 0.0002 by default for the test chains. Now it is 0
+  by default for all chains. Testnet and regtest users will have to add `fallbackfee=0.0002` to their configuration if
+  they weren't setting it and they want it to keep working like before. (#16524)
+
 Credits
 =======
 
