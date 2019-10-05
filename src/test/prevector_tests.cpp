@@ -13,6 +13,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <test/boost_bench.h>
+
 BOOST_FIXTURE_TEST_SUITE(prevector_tests, TestingSetup)
 
 template<unsigned int N, typename T>
@@ -290,6 +292,26 @@ BOOST_AUTO_TEST_CASE(PrevectorTestInt)
             }
         }
     }
+}
+
+// This is just a boost test with the label "benchmark", and defaults to disabled.
+BENCHMARK(prevector_resize)
+{
+    // Run a benchmark called "resize", where each iteration consists of a batch of 1000*4 operations.
+    // Perform a total of 20000 iterations. Once the loop has finish, show timing results.
+    Benchmark("resize").Batch(1000 * 4).Iters(20000).Run([] {
+        prevector<28, int> t0;
+        prevector<28, int> t1;
+        for (auto x = 0; x < 1000; ++x) {
+            t0.resize(28);
+            t0.resize(0);
+            t1.resize(29);
+            t1.resize(0);
+        }
+    });
+
+    // When the loop has finished, it prints the benchmark results, something like this:
+    // 4.35599 ns for resize (0.348479 s total)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
