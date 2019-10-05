@@ -296,16 +296,14 @@ def initialize_datadir(dirname, n, chain):
     datadir = get_datadir_path(dirname, n)
     if not os.path.isdir(datadir):
         os.makedirs(datadir)
-    # Translate chain name to config name
+
+    # Translate datadir name to chain bip70 name
     if chain == 'testnet3':
-        chain_name_conf_arg = 'testnet'
-        chain_name_conf_section = 'test'
-    else:
-        chain_name_conf_arg = chain
-        chain_name_conf_section = chain
+        chain = 'test'
+
     with open(os.path.join(datadir, "bitcoin.conf"), 'w', encoding='utf8') as f:
-        f.write("{}=1\n".format(chain_name_conf_arg))
-        f.write("[{}]\n".format(chain_name_conf_section))
+        f.write("chain={}\n".format(chain))
+        f.write("[{}]\n".format(chain))
         f.write("port=" + str(p2p_port(n)) + "\n")
         f.write("rpcport=" + str(rpc_port(n)) + "\n")
         f.write("fallbackfee=0.0002\n")
