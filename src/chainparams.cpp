@@ -290,7 +290,7 @@ public:
         m_assumed_blockchain_size = 0;
         m_assumed_chain_state_size = 0;
 
-        UpdateActivationParametersFromArgs(args);
+        UpdateFromArgs(args);
 
         genesis = CreateGenesisBlock(1296688602, 2, 0x207fffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
@@ -302,7 +302,6 @@ public:
 
         fDefaultConsistencyChecks = true;
         fRequireStandard = true;
-        m_is_test_chain = true;
 
         checkpointData = {
             {
@@ -334,6 +333,7 @@ public:
         consensus.vDeployments[d].nTimeout = nTimeout;
     }
     void UpdateActivationParametersFromArgs(const ArgsManager& args);
+    void UpdateFromArgs(const ArgsManager& args);
 };
 
 void CRegTestParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
@@ -377,6 +377,13 @@ void CRegTestParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
             throw std::runtime_error(strprintf("Invalid deployment (%s)", vDeploymentParams[0]));
         }
     }
+}
+
+void CRegTestParams::UpdateFromArgs(const ArgsManager& args)
+{
+    UpdateActivationParametersFromArgs(args);
+
+    m_is_test_chain = args.GetBoolArg("-is_test_chain", true);
 }
 
 static std::unique_ptr<const CChainParams> globalChainParams;
