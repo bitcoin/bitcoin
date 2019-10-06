@@ -162,7 +162,7 @@ void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, CAmount blo
     }
 
     txNew.vout.insert(txNew.vout.end(), voutMasternodePaymentsRet.begin(), voutMasternodePaymentsRet.end());
-    txNew.vout.insert(txNew.vout.end(), voutSuperblockPaymentsRet.begin(), voutSuperblockPaymentsRet.end());
+    // txNew.vout.insert(txNew.vout.end(), voutSuperblockPaymentsRet.begin(), voutSuperblockPaymentsRet.end());
 
     std::string voutMasternodeStr;
     for (const auto& txout : voutMasternodePaymentsRet) {
