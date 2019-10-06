@@ -10,5 +10,7 @@
 #include <coins.h>
 
 bool GetUTXOCoin(const COutPoint& outpoint, Coin& coin);
+int GetUTXOHeight(const COutPoint& outpoint);
+int GetUTXOConfirmations(const COutPoint& outpoint);
 
 #endif // BITGREEN_SPECIAL_UTIL

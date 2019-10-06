@@ -957,6 +957,7 @@ public:
 
     std::map<CTxDestination, CAddressBookData> mapAddressBook GUARDED_BY(cs_wallet);
 
+    std::set<COutPoint> setWalletUTXO;
     std::set<COutPoint> setLockedCoins GUARDED_BY(cs_wallet);
 
     /** Registered interfaces::Chain::Notifications handler. */
@@ -1011,6 +1012,7 @@ public:
     void UnlockCoin(const COutPoint& output) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void UnlockAllCoins() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void ListLockedCoins(std::vector<COutPoint>& vOutpts) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void ListProTxCoins(std::vector<COutPoint>& vOutpts);
 
     void AutoLockMasternodeCollaterals() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 

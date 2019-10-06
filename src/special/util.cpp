@@ -16,3 +16,18 @@ bool GetUTXOCoin(const COutPoint& outpoint, Coin& coin)
         return false;
     return true;
 }
+
+int GetUTXOHeight(const COutPoint& outpoint)
+{
+    // -1 means UTXO is yet unknown or already spent
+    Coin coin;
+    return GetUTXOCoin(outpoint, coin) ? coin.nHeight : -1;
+}
+
+int GetUTXOConfirmations(const COutPoint& outpoint)
+{
+    // -1 means UTXO is yet unknown or already spent
+    LOCK(cs_main);
+    int nPrevoutHeight = GetUTXOHeight(outpoint);
+    return (nPrevoutHeight > -1 && ChainActive().Tip()) ? ChainActive().Height() - nPrevoutHeight + 1 : -1;
+}
