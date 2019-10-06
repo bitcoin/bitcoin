@@ -132,6 +132,10 @@
         <translation>Pakartokite naują slaptafrazę</translation>
     </message>
     <message>
+        <source>Show passphrase</source>
+        <translation>Rodyti slaptafrazę</translation>
+    </message>
+    <message>
         <source>Encrypt wallet</source>
         <translation>Užšifruoti piniginę</translation>
     </message>
