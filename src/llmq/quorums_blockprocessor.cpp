@@ -259,25 +259,22 @@ bool CQuorumBlockProcessor::GetCommitmentsFromBlock(const CBlock& block, const C
 {
     AssertLockHeld(cs_main);
 
-    // auto& consensus = Params().GetConsensus();
-
     ret.clear();
 
     for (const auto& tx : block.vtx) {
-        // TODO: BitGreen
         if (tx->nType == TRANSACTION_QUORUM_COMMITMENT) {
-        //     CFinalCommitmentTxPayload qc;
-        //     if (!GetTxPayload(*tx, qc)) {
-        //         // should not happen as it was verified before processing the block
-        //         return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-tx-payload");
-        //     }
+            CFinalCommitmentTxPayload qc;
+            if (!GetTxPayload(*tx, qc)) {
+                // should not happen as it was verified before processing the block
+                return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-tx-payload");
+            }
 
-        //     // only allow one commitment per type and per block
-        //     if (ret.count((Consensus::LLMQType)qc.commitment.llmqType)) {
-        //         return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-qc-dup");
-        //     }
+            // only allow one commitment per type and per block
+            if (ret.count((Consensus::LLMQType)qc.commitment.llmqType)) {
+                return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-qc-dup");
+            }
 
-        //     ret.emplace((Consensus::LLMQType)qc.commitment.llmqType, std::move(qc.commitment));
+            ret.emplace((Consensus::LLMQType)qc.commitment.llmqType, std::move(qc.commitment));
         }
     }
 
