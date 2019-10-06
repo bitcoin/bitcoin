@@ -25,6 +25,7 @@
 
 #include <netbase.h>
 
+#include <special/deterministicmns.h>
 #include <special/specialtx.h>
 #include <special/providertx.h>
 
@@ -875,6 +876,211 @@ UniValue protx_revoke(const JSONRPCRequest& request)
 }
 #endif//ENABLE_WALLET
 
+void protx_list_help()
+{
+    throw std::runtime_error(
+        RPCHelpMan{"protx list",
+            "\nLists all ProTxs in your wallet or on-chain, depending on the given type.\n"
+            "\nAvailable types:\n"
+            "  registered   - List all ProTx which are registered at the given chain height.\n"
+            "                 This will also include ProTx which failed PoSe verfication.\n"
+            "  valid        - List only ProTx which are active/valid at the given chain height.\n"
+#ifdef ENABLE_WALLET
+            "  wallet       - List only ProTx which are found in your wallet at the given chain height.\n"
+            "                 This will also include ProTx which failed PoSe verfication.\n"
+#endif
+            ,{
+                {"type", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "If not specified, defaults to \"registered\"."},
+                {"detailed", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "If not specified, defaults to \"false\" and only the hashes of the ProTx will be returned."},
+                {"height", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "If not specified, defaults to the current chain-tip."},
+            },
+            RPCResult{""},
+            RPCExamples{""}
+        }.ToString()
+    );
+}
+
+static bool CheckWalletOwnsKey(CWallet* pwallet, const CKeyID& keyID) {
+#ifndef ENABLE_WALLET
+    return false;
+#else
+    if (!pwallet) {
+        return false;
+    }
+    return pwallet->HaveKey(keyID);
+#endif
+}
+
+static bool CheckWalletOwnsScript(CWallet* pwallet, const CScript& script) {
+#ifndef ENABLE_WALLET
+    return false;
+#else
+    if (!pwallet) {
+        return false;
+    }
+
+    CTxDestination dest;
+    if (ExtractDestination(script, dest))
+        if (IsMine(*pwallet, dest))
+            return true;
+
+    return false;
+#endif
+}
+
+UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMNCPtr& dmn, bool detailed)
+{
+    if (!detailed)
+        return dmn->proTxHash.ToString();
+
+    UniValue o(UniValue::VOBJ);
+
+    dmn->ToJson(o);
+
+    int confirmations = GetUTXOConfirmations(dmn->collateralOutpoint);
+    o.pushKV("confirmations", confirmations);
+
+    bool hasOwnerKey = CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDOwner);
+    bool hasOperatorKey = false; //CheckWalletOwnsKey(dmn->pdmnState->keyIDOperator);
+    bool hasVotingKey = CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDVoting);
+
+    bool ownsCollateral = false;
+    CTransactionRef collateralTx;
+    uint256 tmpHashBlock;
+    if (GetTransaction(dmn->collateralOutpoint.hash, collateralTx, Params().GetConsensus(), tmpHashBlock))
+        ownsCollateral = CheckWalletOwnsScript(pwallet, collateralTx->vout[dmn->collateralOutpoint.n].scriptPubKey);
+
+    UniValue walletObj(UniValue::VOBJ);
+    walletObj.pushKV("hasOwnerKey", hasOwnerKey);
+    walletObj.pushKV("hasOperatorKey", hasOperatorKey);
+    walletObj.pushKV("hasVotingKey", hasVotingKey);
+    walletObj.pushKV("ownsCollateral", ownsCollateral);
+    walletObj.pushKV("ownsPayeeScript", CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptPayout));
+    walletObj.pushKV("ownsOperatorRewardScript", CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptOperatorPayout));
+    o.pushKV("wallet", walletObj);
+
+    return o;
+}
+
+UniValue protx_list(const JSONRPCRequest& request)
+{
+    if (request.fHelp)
+        protx_list_help();
+
+#ifdef ENABLE_WALLET
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+#else
+    CWallet* const pwallet = nullptr;
+#endif
+
+    std::string type = "registered";
+    if (request.params.size() > 1)
+        type = request.params[1].get_str();
+
+    UniValue ret(UniValue::VARR);
+
+    LOCK(cs_main);
+
+    if (type == "wallet") {
+        if (!pwallet)
+            throw std::runtime_error("\"protx list wallet\" not supported when wallet is disabled");
+
+#ifdef ENABLE_WALLET
+        LOCK2(cs_main, pwallet->cs_wallet);
+
+        if (request.params.size() > 3)
+            protx_list_help();
+
+        bool detailed = request.params.size() > 2 ? request.params[2].get_bool() : false;
+
+        int height = request.params.size() > 3 ? UniValue(UniValue::VNUM, request.params[3].getValStr()).get_int() : ChainActive().Height();
+        if (height < 1 || height > ChainActive().Height())
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid height specified");
+
+        std::vector<COutPoint> vOutpts;
+        pwallet->ListProTxCoins(vOutpts);
+        std::set<COutPoint> setOutpts;
+        for (const auto& outpt : vOutpts)
+            setOutpts.emplace(outpt);
+
+        CDeterministicMNList mnList = deterministicMNManager->GetListForBlock(ChainActive()[height]);
+        mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
+            if (setOutpts.count(dmn->collateralOutpoint) ||
+                CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDOwner) ||
+                CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDVoting) ||
+                CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptPayout) ||
+                CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptOperatorPayout)) {
+                ret.push_back(BuildDMNListEntry(pwallet, dmn, detailed));
+            }
+        });
+#endif
+    } else if (type == "valid" || type == "registered") {
+        if (request.params.size() > 4)
+            protx_list_help();
+
+        LOCK(cs_main);
+
+        bool detailed = request.params.size() > 2 ? request.params[2].get_bool() : false;
+
+        int height = request.params.size() > 3 ? UniValue(UniValue::VNUM, request.params[3].getValStr()).get_int() : ChainActive().Height();
+        if (height < 1 || height > ChainActive().Height()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid height specified");
+        }
+
+        CDeterministicMNList mnList = deterministicMNManager->GetListForBlock(ChainActive()[height]);
+        bool onlyValid = type == "valid";
+        mnList.ForEachMN(onlyValid, [&](const CDeterministicMNCPtr& dmn) {
+            ret.push_back(BuildDMNListEntry(pwallet, dmn, detailed));
+        });
+    } else {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid type specified");
+    }
+
+    return ret;
+}
+
+void protx_info_help()
+{
+    throw std::runtime_error(
+        RPCHelpMan{"protx info",
+            "\nReturns detailed information about a deterministic masternode.\n",
+            {
+                GetHelpArg("proTxHash")
+            },
+            RPCResult{
+                "{\n"
+                "    (json object) Details about a specific deterministic masternode\n"
+                "}\n"
+            },
+            RPCExamples{
+                HelpExampleCli("protx", "info \"0123456701234567012345670123456701234567012345670123456701234567\"")
+            }
+        }.ToString()
+    );
+}
+
+UniValue protx_info(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 2)
+        protx_info_help();
+
+#ifdef ENABLE_WALLET
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+#else
+    CWallet* const pwallet = nullptr;
+#endif
+
+    uint256 proTxHash = ParseHashV(request.params[1], "proTxHash");
+    auto mnList = deterministicMNManager->GetListAtChainTip();
+    auto dmn = mnList.GetMN(proTxHash);
+    if (!dmn)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s not found", proTxHash.ToString()));
+
+    return BuildDMNListEntry(pwallet, dmn, true);
+}
+
 void protx_help()
 {
     throw std::runtime_error(
@@ -890,9 +1096,13 @@ void protx_help()
                 "  register_prepare  - Create an unsigned ProTx\n"
                 "  register_submit   - Sign and submit a ProTx\n"
 #endif
+                "  list              - List ProTxs\n"
+                "  info              - Return information about a ProTx\n"
+#ifdef ENABLE_WALLET
                 "  update_service    - Create and send ProUpServTx to network\n"
                 "  update_registrar  - Create and send ProUpRegTx to network\n"
                 "  revoke            - Create and send ProUpRevTx to network\n"
+#endif
             },
             RPCExamples{""},
         }.ToString()
@@ -919,7 +1129,12 @@ UniValue protx(const JSONRPCRequest& request)
         return protx_update_registrar(request);
     else if (command == "revoke")
         return protx_revoke(request);
+    else
 #endif
+    if (command == "list")
+        return protx_list(request);
+    if (command == "info")
+        return protx_info(request);
     else
         protx_help();
 
