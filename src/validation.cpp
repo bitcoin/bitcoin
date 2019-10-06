@@ -2122,7 +2122,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
 
     if (!ProcessSpecialTxsInBlock(block, pindex, state, fJustCheck, fScriptChecks)) {
         LogPrintf("%s: ProcessSpecialTxsInBlock for block %s failed with %s",
-                    pindex->GetBlockHash().ToString(), FormatStateMessage(state));
+                    __func__, pindex->GetBlockHash().ToString(), FormatStateMessage(state));
         return false;
     }
 
