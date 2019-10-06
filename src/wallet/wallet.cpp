@@ -5171,7 +5171,8 @@ bool CWallet::CreateCoinStake(unsigned int nBits,
                 uint64_t nTotalSize = pcoin.first->tx->vout[pcoin.second].nValue + nFees + GetBlockSubsidy(pIndex0->nHeight, Params().GetConsensus());
 
                 //presstab HyperStake - if MultiSend is set to send in coinstake we will add our outputs here (values asigned further down)
-                if (nTotalSize / 2 > nStakeSplitThreshold * COIN)
+                // TODO: BitGreen - check if threshold split conflicts with masternode payment.
+                if (nStakeSplitThreshold >= 100 && nTotalSize / 2 > nStakeSplitThreshold * COIN)
                     txNew.vout.push_back(CTxOut(0, scriptPubKeyOut)); //split stake
 
                 LogPrint(BCLog::KERNEL, "%s: added kernel type=%d\n", __func__, whichType);
