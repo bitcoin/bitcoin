@@ -240,9 +240,11 @@ int CreateFundedTransaction(
 
     auto wtxNew = iWallet->createTransaction(vecRecipients, coinControl, false /* sign */, nChangePosRet, nFeeRequired, strFailReason);
 
-    if (wtxNew)
-        fSuccess = false;
-    if (wtxNew && nChangePosRet == -1 && receiverAddress == feeAddress) {
+    if (wtxNew) {
+        fSuccess = true;
+    }
+
+    if (fSuccess && nChangePosRet == -1 && receiverAddress == feeAddress) {
         fSuccess = false;
         strFailReason = "send to self without change";
     }
