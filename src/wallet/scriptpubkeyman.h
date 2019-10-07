@@ -206,6 +206,18 @@ public:
     virtual bool CanProvide(const CScript& script, SignatureData& sigdata) { return false; }
 
     virtual uint256 GetID() const { return uint256(); }
+
+    /** Prepends the wallet name in logging output to ease debugging in multi-wallet use cases */
+    template<typename... Params>
+    void WalletLogPrintf(std::string fmt, Params... parameters) const {
+        LogPrintf(("%s " + fmt).c_str(), m_storage.GetDisplayName(), parameters...);
+    };
+
+    /** Watch-only address added */
+    boost::signals2::signal<void (bool fHaveWatchOnly)> NotifyWatchonlyChanged;
+
+    /** Keypool has new keys */
+    boost::signals2::signal<void ()> NotifyCanGetAddressesChanged;
 };
 
 class LegacyScriptPubKeyMan : public ScriptPubKeyMan, public FillableSigningProvider
@@ -290,6 +302,8 @@ private:
     bool ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& keypool, bool fRequestedInternal);
 
 public:
+    using ScriptPubKeyMan::ScriptPubKeyMan;
+
     bool GetNewDestination(const OutputType type, CTxDestination& dest, std::string& error) override;
     isminetype IsMine(const CScript& script) const override;
 
@@ -426,14 +440,6 @@ public:
     const std::map<CKeyID, int64_t>& GetAllReserveKeys() const { return m_pool_key_to_index; }
 
     std::set<CKeyID> GetKeys() const override;
-    // Temporary CWallet accessors and aliases.
-    friend class CWallet;
-    friend class ReserveDestination;
-    LegacyScriptPubKeyMan(CWallet& wallet);
-    void NotifyWatchonlyChanged(bool fHaveWatchOnly) const;
-    void NotifyCanGetAddressesChanged() const;
-    template<typename... Params> void WalletLogPrintf(const std::string& fmt, const Params&... parameters) const;
-    CWallet& m_wallet;
 };
 
 #endif // BITCOIN_WALLET_SCRIPTPUBKEYMAN_H
