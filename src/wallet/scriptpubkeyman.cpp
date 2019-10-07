@@ -396,6 +396,12 @@ bool LegacyScriptPubKeyMan::Upgrade(int prev_version, std::string& error)
     return true;
 }
 
+bool LegacyScriptPubKeyMan::HavePrivateKeys() const
+{
+    LOCK(cs_KeyStore);
+    return !mapKeys.empty() || !mapCryptedKeys.empty();
+}
+
 static int64_t GetOldestKeyTimeInPool(const std::set<int64_t>& setKeyPool, WalletBatch& batch) {
     if (setKeyPool.empty()) {
         return GetTime();
