@@ -37,6 +37,8 @@ public:
 //! Default for -keypool
 static const unsigned int DEFAULT_KEYPOOL_SIZE = 1000;
 
+std::vector<CKeyID> GetAffectedKeys(const CScript& spk, const SigningProvider& provider);
+
 /** A key from a CWallet's keypool
  *
  * The wallet holds one (for pre HD-split wallets) or several keypools. These
@@ -154,6 +156,9 @@ public:
 
     virtual bool TopUp(unsigned int size = 0) { return false; }
 
+    //! Mark unused addresses as being used
+    virtual void MarkUnusedAddresses(const CScript& script) {}
+
     /* Returns true if HD is enabled */
     virtual bool IsHDEnabled() const { return false; }
 
@@ -258,6 +263,8 @@ public:
     void ReturnDestination(int64_t index, bool internal, const CPubKey& pubkey) override;
 
     bool TopUp(unsigned int size = 0) override;
+
+    void MarkUnusedAddresses(const CScript& script) override;
 
     //! Upgrade stored CKeyMetadata objects to store key origin info as KeyOriginInfo
     void UpgradeKeyMetadata() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
