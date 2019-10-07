@@ -398,6 +398,11 @@ void LegacyScriptPubKeyMan::UpdateTimeFirstKey(int64_t nCreateTime)
     }
 }
 
+bool LegacyScriptPubKeyMan::LoadKey(const CKey& key, const CPubKey &pubkey)
+{
+    return AddKeyPubKeyInner(key, pubkey);
+}
+
 bool LegacyScriptPubKeyMan::AddKeyPubKey(const CKey& secret, const CPubKey &pubkey)
 {
     WalletBatch batch(m_storage.GetDatabase());
