@@ -24,7 +24,7 @@ bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidatio
     if (tx.nType != TRANSACTION_COINBASE)
         return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-cbtx-type");
 
-    if (!tx.IsCoinBase() && !tx.IsCoinStake())
+    if (!tx.IsCoinBase())
         return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-cbtx-invalid");
 
     CCbTx cbTx;

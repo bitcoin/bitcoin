@@ -259,8 +259,7 @@ inline void UnserializeTransaction(TxType& tx, Stream& s) {
     }
     s >> tx.nLockTime;
     if (tx.nVersion >= 2 &&
-        tx.nType != TRANSACTION_NORMAL &&
-        tx.nType != TRANSACTION_COINBASE)
+        tx.nType != TRANSACTION_NORMAL)
         s >> tx.vExtraPayload;
 }
 
@@ -293,8 +292,7 @@ inline void SerializeTransaction(const TxType& tx, Stream& s) {
     }
     s << tx.nLockTime;
     if (tx.nVersion >= 2 &&
-        tx.nType != TRANSACTION_NORMAL &&
-        tx.nType != TRANSACTION_COINBASE)
+        tx.nType != TRANSACTION_NORMAL)
         s << tx.vExtraPayload;
 }
 

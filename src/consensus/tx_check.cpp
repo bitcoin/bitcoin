@@ -26,11 +26,10 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
         tx.nType != TRANSACTION_COINBASE &&
         tx.nType != TRANSACTION_PROVIDER_REGISTER &&
         tx.nType != TRANSACTION_PROVIDER_UPDATE_SERVICE &&
-        tx.nType != TRANSACTION_PROVIDER_UPDATE_REVOKE)
+        tx.nType != TRANSACTION_PROVIDER_UPDATE_REVOKE &&
+        tx.nType != TRANSACTION_STAKE)
         return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-txns-type");
-    if ((tx.IsCoinBase() || tx.IsCoinStake()) &&
-        tx.nVersion >= 2 &&
-        tx.nType != TRANSACTION_COINBASE)
+    if (tx.IsCoinBase() && tx.nVersion >= 2 && tx.nType != TRANSACTION_COINBASE)
         return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-txns-cb-type");
 
     // Check for negative or overflow output values

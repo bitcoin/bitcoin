@@ -1181,8 +1181,7 @@ public:
         // Serialize nLockTime
         ::Serialize(s, txTo.nLockTime);
         if (txTo.nVersion >= 2 &&
-            txTo.nType != TRANSACTION_NORMAL &&
-            txTo.nType != TRANSACTION_COINBASE)
+            txTo.nType != TRANSACTION_NORMAL)
             ::Serialize(s, txTo.vExtraPayload);
     }
 };
