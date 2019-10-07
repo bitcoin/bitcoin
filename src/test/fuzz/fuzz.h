@@ -10,6 +10,6 @@
 #include <vector>
 
 
-void test_one_input(std::vector<uint8_t> buffer);
+void test_one_input(const std::vector<uint8_t>& buffer);
 
 #endif // BITCOIN_TEST_FUZZ_FUZZ_H
