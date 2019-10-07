@@ -15,6 +15,8 @@
 #include <util/strencodings.h>
 #include <util/validation.h>
 
+#include <masternodes/sync.h>
+
 #include <stdint.h>
 #include <tuple>
 #ifdef HAVE_MALLOC_INFO
@@ -334,6 +336,43 @@ static UniValue signmessagewithprivkey(const JSONRPCRequest& request)
     return EncodeBase64(vchSig.data(), vchSig.size());
 }
 
+UniValue mnsync(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 1)
+        throw std::runtime_error(
+            "mnsync [status|next|reset]\n"
+            "Returns the sync status, updates to the next step or resets it entirely.\n"
+        );
+
+    std::string strMode = request.params[0].get_str();
+
+    if(strMode == "status") {
+        UniValue objStatus(UniValue::VOBJ);
+        objStatus.pushKV("AssetID", masternodeSync.GetAssetID());
+        objStatus.pushKV("AssetName", masternodeSync.GetAssetName());
+        objStatus.pushKV("AssetStartTime", masternodeSync.GetAssetStartTime());
+        objStatus.pushKV("Attempt", masternodeSync.GetAttempt());
+        objStatus.pushKV("IsBlockchainSynced", masternodeSync.IsBlockchainSynced());
+        objStatus.pushKV("IsSynced", masternodeSync.IsSynced());
+        objStatus.pushKV("IsFailed", masternodeSync.IsFailed());
+        return objStatus;
+    }
+
+    if(strMode == "next")
+    {
+        masternodeSync.SwitchToNextAsset(*g_connman);
+        return "sync updated to " + masternodeSync.GetAssetName();
+    }
+
+    if(strMode == "reset")
+    {
+        masternodeSync.Reset();
+        masternodeSync.SwitchToNextAsset(*g_connman);
+        return "success";
+    }
+    return "failure";
+}
+
 static UniValue setmocktime(const JSONRPCRequest& request)
 {
             RPCHelpMan{"setmocktime",
@@ -560,6 +599,9 @@ static const CRPCCommand commands[] =
     { "util",               "getdescriptorinfo",      &getdescriptorinfo,      {"descriptor"} },
     { "util",               "verifymessage",          &verifymessage,          {"address","signature","message"} },
     { "util",               "signmessagewithprivkey", &signmessagewithprivkey, {"privkey","message"} },
+
+    /* BitGreen features */
+    { "bitgreen",           "mnsync",                 &mnsync,                 {} },
 
     /* Not shown in help */
     { "hidden",             "setmocktime",            &setmocktime,            {"timestamp"}},

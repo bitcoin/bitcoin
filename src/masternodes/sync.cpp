@@ -147,12 +147,12 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
 
     // TODO: BitGreen
     // gradually request the rest of the votes after sync finished
-    // if (IsSynced()) {
+    if (IsSynced()) {
     //     std::vector<CNode*> vNodesCopy = connman.CopyNodeVector(CConnman::FullyConnectedOnly);
     //     governance.RequestGovernanceObjectVotes(vNodesCopy, connman);
     //     connman.ReleaseNodeVector(vNodesCopy);
-    //     return;
-    // }
+        return;
+    }
 
     // Calculate "progress" for LOG reporting / GUI notification
     double nSyncProgress = double(nTriedPeerCount + (nCurrentAsset - 1) * 8) / (8*4);
