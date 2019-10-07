@@ -3401,17 +3401,15 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
         }
     }
 
-    {
-        LOCK2(cs_main, cs_wallet);
-        auto locked_chain = chain().lock();
-        for (auto& pair : mapWallet) {
-            for(unsigned int i = 0; i < pair.second.tx->vout.size(); ++i) {
-                if (IsMine(pair.second.tx->vout[i]) && !IsSpent(*locked_chain, pair.first, i)) {
-                    setWalletUTXO.insert(COutPoint(pair.first, i));
-                }
+    auto locked_chain = chain().lock();
+    for (auto& pair : mapWallet) {
+        for(size_t i = 0; i < pair.second.tx->vout.size(); ++i) {
+            if (IsMine(pair.second.tx->vout[i]) && !IsSpent(*locked_chain, pair.first, i)) {
+                setWalletUTXO.insert(COutPoint(pair.first, i));
             }
         }
     }
+    locked_chain.release();
 
     {
         LOCK(cs_KeyStore);
