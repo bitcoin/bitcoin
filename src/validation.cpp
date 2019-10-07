@@ -2121,7 +2121,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     LogPrint(BCLog::BENCHMARK, "      - IsBlockPayeeValid: %.2fms [%.2fs]\n", MILLI * (nTime4_2 - nTime4_1), nTimeVerify * MICRO);
 
     if (!ProcessSpecialTxsInBlock(block, pindex, state, fJustCheck, fScriptChecks)) {
-        LogPrintf("%s: ProcessSpecialTxsInBlock for block %s failed with %s",
+        LogPrintf("%s: ProcessSpecialTxsInBlock for block %s failed with %s\n",
                     __func__, pindex->GetBlockHash().ToString(), FormatStateMessage(state));
         return false;
     }
