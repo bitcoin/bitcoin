@@ -168,6 +168,8 @@ public:
     /** Upgrades the wallet to the specified version */
     virtual bool Upgrade(int prev_version, std::string& error) { return false; }
 
+    virtual bool HavePrivateKeys() const { return false; }
+
     virtual int64_t GetOldestKeyPoolTime() { return GetTime(); }
 
     virtual size_t KeypoolCountExternalKeys() { return 0; }
@@ -275,6 +277,8 @@ public:
     bool IsHDEnabled() const override;
 
     bool Upgrade(int prev_version, std::string& error) override;
+
+    bool HavePrivateKeys() const override;
 
     int64_t GetOldestKeyPoolTime() override;
     size_t KeypoolCountExternalKeys() override EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
