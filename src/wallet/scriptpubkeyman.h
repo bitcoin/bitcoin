@@ -148,8 +148,11 @@ public:
     virtual ~ScriptPubKeyMan() {};
     virtual isminetype IsMine(const CScript& script) const { return ISMINE_NO; }
 
-    //! Upgrade stored CKeyMetadata objects to store key origin info as KeyOriginInfo
-    virtual void UpgradeKeyMetadata() {}
+    virtual bool GetReservedDestination(const OutputType type, bool internal, int64_t& index, CKeyPool& keypool) { return false; }
+    virtual void KeepDestination(int64_t index) {}
+    virtual void ReturnDestination(int64_t index, bool internal, const CPubKey& pubkey) {}
+
+    virtual bool TopUp(unsigned int size = 0) { return false; }
 
     /* Returns true if HD is enabled */
     virtual bool IsHDEnabled() const { return false; }
@@ -247,7 +250,15 @@ public:
 
     //! will encrypt previously unencrypted keys
     bool EncryptKeys(CKeyingMaterial& vMasterKeyIn);
-    void UpgradeKeyMetadata() override EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    bool GetReservedDestination(const OutputType type, bool internal, int64_t& index, CKeyPool& keypool) override;
+    void KeepDestination(int64_t index) override;
+    void ReturnDestination(int64_t index, bool internal, const CPubKey& pubkey) override;
+
+    bool TopUp(unsigned int size = 0) override;
+
+    //! Upgrade stored CKeyMetadata objects to store key origin info as KeyOriginInfo
+    void UpgradeKeyMetadata() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     bool IsHDEnabled() const override;
 

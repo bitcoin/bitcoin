@@ -265,6 +265,31 @@ bool LegacyScriptPubKeyMan::EncryptKeys(CKeyingMaterial& vMasterKeyIn)
     return true;
 }
 
+bool LegacyScriptPubKeyMan::GetReservedDestination(const OutputType type, bool internal, int64_t& index, CKeyPool& keypool)
+{
+    {
+        if (!ReserveKeyFromKeyPool(index, keypool, internal)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void LegacyScriptPubKeyMan::KeepDestination(int64_t index)
+{
+    KeepKey(index);
+}
+
+void LegacyScriptPubKeyMan::ReturnDestination(int64_t index, bool internal, const CPubKey& pubkey)
+{
+    ReturnKey(index, internal, pubkey);
+}
+
+bool LegacyScriptPubKeyMan::TopUp(unsigned int size)
+{
+    return TopUpKeyPool(size);
+}
+
 void LegacyScriptPubKeyMan::UpgradeKeyMetadata()
 {
     AssertLockHeld(cs_wallet);
