@@ -150,7 +150,7 @@ public:
     virtual bool GetNewDestination(const OutputType type, CTxDestination& dest, std::string& error) { return false; }
     virtual isminetype IsMine(const CScript& script) const { return ISMINE_NO; }
 
-    virtual bool GetReservedDestination(const OutputType type, bool internal, int64_t& index, CKeyPool& keypool) { return false; }
+    virtual bool GetReservedDestination(const OutputType type, bool internal, CTxDestination& address, int64_t& index, CKeyPool& keypool) { return false; }
     virtual void KeepDestination(int64_t index, const OutputType& type, const CPubKey& pubkey) {}
     virtual void ReturnDestination(int64_t index, bool internal, const CPubKey& pubkey) {}
 
@@ -273,7 +273,7 @@ public:
     //! will encrypt previously unencrypted keys
     bool EncryptKeys(CKeyingMaterial& vMasterKeyIn);
 
-    bool GetReservedDestination(const OutputType type, bool internal, int64_t& index, CKeyPool& keypool) override;
+    bool GetReservedDestination(const OutputType type, bool internal, CTxDestination& address, int64_t& index, CKeyPool& keypool) override;
     void KeepDestination(int64_t index, const OutputType& type, const CPubKey& pubkey) override;
     void ReturnDestination(int64_t index, bool internal, const CPubKey& pubkey) override;
 
