@@ -180,7 +180,6 @@ public:
         }
         return result;
     }
-    void learnRelatedScripts(const CPubKey& key, OutputType type) override { m_wallet->GetLegacyScriptPubKeyMan()->LearnRelatedScripts(key, type); }
     bool addDestData(const CTxDestination& dest, const std::string& key, const std::string& value) override
     {
         LOCK(m_wallet->cs_wallet);
