@@ -4,6 +4,7 @@
 
 #include <chainparamsbase.h>
 #include <key_io.h>
+#include <outputtype.h>
 #include <pubkey.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
@@ -210,7 +211,7 @@ CPubKey AddrToPubKey(const FillableSigningProvider& keystore, const std::string&
 }
 
 // Creates a multisig address from a given list of public keys, number of signatures required
-CTxDestination AddAndGetMultisigDestination(const int required, const std::vector<CPubKey>& pubkeys, CScript& script_out)
+CTxDestination AddAndGetMultisigDestination(const int required, const std::vector<CPubKey>& pubkeys, FillableSigningProvider& keystore, CScript& script_out)
 {
     // Gather public keys
     if (required < 1) {
@@ -230,7 +231,7 @@ CTxDestination AddAndGetMultisigDestination(const int required, const std::vecto
     }
 
     // Make the address (simplier implementation in compare to bitcoin)
-    return ScriptHash(script_out);
+    return AddAndGetDestinationForScript(keystore, script_out);
 }
 
 class DescribeAddressVisitor

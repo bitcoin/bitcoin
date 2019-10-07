@@ -23,9 +23,11 @@ static void WalletToolReleaseWallet(CWallet* wallet)
 
 static void WalletCreate(CWallet* wallet_instance)
 {
+    LOCK(wallet_instance->cs_wallet);
     wallet_instance->SetMinVersion(FEATURE_COMPRPUBKEY);
 
     // generate a new HD seed
+    wallet_instance->SetupLegacyScriptPubKeyMan();
     // NOTE: we do not yet create HD wallets by default
     // auto spk_man = wallet_instance->GetLegacyScriptPubKeyMan();
     // spk_man->GenerateNewHDChain("", "");

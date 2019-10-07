@@ -279,8 +279,9 @@ static UniValue createmultisig(const JSONRPCRequest& request)
     }
 
     // Construct using pay-to-script-hash:
+    FillableSigningProvider keystore;
     CScript inner;
-    const CTxDestination dest = AddAndGetMultisigDestination(required, pubkeys, inner);
+    const CTxDestination dest = AddAndGetMultisigDestination(required, pubkeys, keystore, inner);
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("address", EncodeDestination(dest));
