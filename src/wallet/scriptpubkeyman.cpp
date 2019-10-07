@@ -875,7 +875,8 @@ void LegacyScriptPubKeyMan::SetHDSeed(const CPubKey& seed)
     newHdChain.seed_id = seed.GetID();
     SetHDChain(newHdChain, false);
     NotifyCanGetAddressesChanged();
-    m_wallet.UnsetWalletFlag(WALLET_FLAG_BLANK_WALLET);
+    WalletBatch batch(m_storage.GetDatabase());
+    m_storage.UnsetWalletFlagWithDB(batch, WALLET_FLAG_BLANK_WALLET);
 }
 
 /**
