@@ -167,7 +167,7 @@ UniValue importprivkey(const JSONRPCRequest& request)
 
             // Don't throw error in case a key is already there
             if (pwallet->HaveKey(vchAddress)) {
-                return NullUniValue;
+                return true;
             }
 
             // whenever a key is imported, we need to scan the whole chain
@@ -184,7 +184,7 @@ UniValue importprivkey(const JSONRPCRequest& request)
         pwallet->RescanFromTime(TIMESTAMP_MIN, reserver, true /* update */);
     }
 
-    return NullUniValue;
+    return true;
 }
 
 UniValue abortrescan(const JSONRPCRequest& request)
@@ -314,7 +314,7 @@ UniValue importaddress(const JSONRPCRequest& request)
             std::vector<unsigned char> data(ParseHex(request.params[0].get_str()));
             ImportScript(pwallet, CScript(data.begin(), data.end()), strLabel, fP2SH);
         } else {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address or script");
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid BitcoinHD address or script");
         }
     }
     if (fRescan)
@@ -589,22 +589,22 @@ UniValue importwallet(const JSONRPCRequest& request)
                     pwallet->SetAddressBook(keyid, strLabel, "receive");
                 nTimeBegin = std::min(nTimeBegin, nTime);
             } else if(IsHex(vstr[0])) {
-               std::vector<unsigned char> vData(ParseHex(vstr[0]));
-               CScript script = CScript(vData.begin(), vData.end());
-               if (pwallet->HaveCScript(script)) {
-                   LogPrintf("Skipping import of %s (script already present)\n", vstr[0]);
-                   continue;
-               }
-               if(!pwallet->AddCScript(script)) {
-                   LogPrintf("Error importing script %s\n", vstr[0]);
-                   fGood = false;
-                   continue;
-               }
-               int64_t birth_time = DecodeDumpTime(vstr[1]);
-               if (birth_time > 0) {
-                   pwallet->m_script_metadata[CScriptID(script)].nCreateTime = birth_time;
-                   nTimeBegin = std::min(nTimeBegin, birth_time);
-               }
+                std::vector<unsigned char> vData(ParseHex(vstr[0]));
+                CScript script = CScript(vData.begin(), vData.end());
+                if (pwallet->HaveCScript(script)) {
+                    LogPrintf("Skipping import of %s (script already present)\n", vstr[0]);
+                    continue;
+                }
+                if(!pwallet->AddCScript(script)) {
+                    LogPrintf("Error importing script %s\n", vstr[0]);
+                    fGood = false;
+                    continue;
+                }
+                int64_t birth_time = DecodeDumpTime(vstr[1]);
+                if (birth_time > 0) {
+                    pwallet->m_script_metadata[CScriptID(script)].nCreateTime = birth_time;
+                    nTimeBegin = std::min(nTimeBegin, birth_time);
+                }
             }
         }
         file.close();
@@ -633,7 +633,7 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
             "\nReveals the private key corresponding to 'address'.\n"
             "Then the importprivkey can be used with this output\n"
             "\nArguments:\n"
-            "1. \"address\"   (string, required) The bitcoin address for the private key\n"
+            "1. \"address\"   (string, required) The BitcoinHD address for the private key\n"
             "\nResult:\n"
             "\"key\"                (string) The private key\n"
             "\nExamples:\n"
@@ -649,7 +649,7 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
     std::string strAddress = request.params[0].get_str();
     CTxDestination dest = DecodeDestination(strAddress);
     if (!IsValidDestination(dest)) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid BitcoinHD address");
     }
     auto keyid = GetKeyForDestination(*pwallet, dest);
     if (keyid.IsNull()) {
@@ -660,6 +660,67 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + strAddress + " is not known");
     }
     return CBitcoinSecret(vchSecret).ToString();
+}
+
+UniValue dumpprivkeys(const JSONRPCRequest& request)
+{
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() != 2) {
+        throw std::runtime_error(
+            "dumpprivkeys \"from_index\" \"to_index\"\n"
+            "\nReveals the private key corresponding to 'from_index' and 'to_index' range.\n"
+            "\nArguments:\n"
+            "1. \"from_index\"      (numeric, required) key start index\n"
+            "2. \"to_index\"        (numeric, required) key end index\n"
+            "\nResult:\n"
+            "[\n"
+            "]\n"
+            "\nExamples:\n"
+            + HelpExampleCli("dumpprivkeys", "0 100")
+            + HelpExampleRpc("dumpprivkeys", "0, 100")
+            );
+    }
+
+    LOCK2(cs_main, pwallet->cs_wallet);
+
+    int64_t fromIndex = request.params[0].get_int64();
+    int64_t toIndex = request.params[1].get_int64();
+    if (fromIndex < 0 || fromIndex > toIndex) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid index");
+    }
+    EnsureWalletIsUnlocked(pwallet);
+
+    UniValue keys(UniValue::VARR);
+    for (CTxDestination dest : pwallet->GetExternalAddresses(fromIndex, toIndex)) {
+        auto keyid = GetKeyForDestination(*pwallet, dest);
+        if (keyid.IsNull()) {
+            throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to a key");
+        }
+        CKey vchSecret;
+        if (!pwallet->GetKey(keyid, vchSecret)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + EncodeDestination(dest) + " is not known");
+        }
+
+        CAmount balance = pcoinsTip->GetAccountBalance(ExtractAccountID(dest));
+
+        UniValue item(UniValue::VOBJ);
+        item.pushKV("privkey", CBitcoinSecret(vchSecret).ToString());
+        item.pushKV("address", EncodeDestination(dest));
+        item.pushKV("balance", ValueFromAmount(balance));
+        item.pushKV("account", pwallet->GetAccountName(dest));
+        keys.push_back(item);
+    }
+
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("total", (uint64_t)pwallet->KeypoolCountExternalKeys());
+    result.pushKV("from", fromIndex);
+    result.pushKV("to", toIndex);
+    result.pushKV("keys", keys);
+    return result;
 }
 
 
@@ -727,7 +788,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     std::sort(vKeyBirth.begin(), vKeyBirth.end());
 
     // produce output
-    file << strprintf("# Wallet dump created by Bitcoin %s\n", CLIENT_BUILD);
+    file << strprintf("# Wallet dump created by BitcoinHD %s\n", CLIENT_BUILD);
     file << strprintf("# * Created on %s\n", EncodeDumpTime(GetTime()));
     file << strprintf("# * Best block at time of backup was %i (%s),\n", chainActive.Height(), chainActive.Tip()->GetBlockHash().ToString());
     file << strprintf("#   mined on %s\n", EncodeDumpTime(chainActive.Tip()->GetBlockTime()));
@@ -757,7 +818,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
         if (pwallet->GetKey(keyid, key)) {
             file << strprintf("%s %s ", CBitcoinSecret(key).ToString(), strTime);
             if (GetWalletAddressesForKey(pwallet, keyid, strAddr, strLabel)) {
-               file << strprintf("label=%s", strLabel);
+                file << strprintf("label=%s", strLabel);
             } else if (keyid == masterKeyID) {
                 file << "hdmaster=1";
             } else if (mapKeyPool.count(keyid)) {

@@ -35,6 +35,101 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     uint256 hash = wtx.GetHash();
     std::map<std::string, std::string> mapValue = wtx.mapValue;
 
+    // Bind plotter, Rental
+    auto itType = mapValue.find("type");
+    if (itType != mapValue.end())
+    {
+        if (itType->second == "bindplotter")
+        {
+            TransactionRecord sub(hash, nTime);
+            sub.debit = -wtx.tx->vout[0].nValue + nNet;
+            sub.involvesWatchAddress = wallet->IsMine(wtx.tx->vout[0]) & ISMINE_WATCH_ONLY;
+            sub.type = TransactionRecord::BindPlotter;
+            sub.address = mapValue["from"];
+            sub.comment = mapValue["plotter_id"];
+
+            parts.append(sub);
+            return parts;
+        }
+        else if (itType->second == "unbindplotter")
+        {
+            TransactionRecord sub(hash, nTime);
+            sub.credit = wtx.tx->vout[0].nValue;
+            sub.involvesWatchAddress = wallet->IsMine(wtx.tx->vout[0]) & ISMINE_WATCH_ONLY;
+            sub.type = TransactionRecord::UnbindPlotter;
+            sub.address = mapValue["from"];
+            sub.comment = mapValue["plotter_id"];
+
+            parts.append(sub);
+            return parts;
+        }
+        else if (itType->second == "pledge")
+        {
+            isminetype sendIsmine = ::IsMine(*wallet, DecodeDestination(mapValue["from"]));
+            isminetype toIsmine = ::IsMine(*wallet, DecodeDestination(mapValue["to"]));
+            TransactionRecord sub(hash, nTime);
+            if ((sendIsmine & ISMINE_SPENDABLE) && (toIsmine & ISMINE_SPENDABLE)) {
+                // Mine -> Mine
+                sub.debit = -wtx.tx->vout[0].nValue + nNet;
+                sub.involvesWatchAddress = false;
+                sub.type = TransactionRecord::SelfRental;
+                sub.address = mapValue["to"];
+                parts.append(sub);
+            } else if (sendIsmine & ISMINE_SPENDABLE) {
+                // Mine -> Other
+                sub.debit = -wtx.tx->vout[0].nValue + nNet;
+                sub.involvesWatchAddress = false;
+                sub.type = TransactionRecord::LoanTo;
+                sub.address = mapValue["to"];
+                parts.append(sub);
+            } else if (toIsmine & ISMINE_SPENDABLE) {
+                // Other -> Mine
+                sub.credit = wtx.tx->vout[0].nValue + nNet;
+                sub.involvesWatchAddress = false;
+                sub.type = TransactionRecord::BorrowFrom;
+                sub.address = mapValue["from"];
+                parts.append(sub);
+            } else if ((sendIsmine & ISMINE_WATCH_ONLY) && (toIsmine & ISMINE_WATCH_ONLY)) {
+                // WatchOnly -> WatchOnly
+                sub.debit = -wtx.tx->vout[0].nValue + nNet;
+                sub.involvesWatchAddress = true;
+                sub.type = TransactionRecord::SelfRental;
+                sub.address = mapValue["to"];
+                parts.append(sub);
+            } else if (sendIsmine & ISMINE_WATCH_ONLY) {
+                // WatchOnly -> Other
+                sub.debit = -wtx.tx->vout[0].nValue + nNet;
+                sub.involvesWatchAddress = true;
+                sub.type = TransactionRecord::LoanTo;
+                sub.address = mapValue["to"];
+                parts.append(sub);
+            } else if (toIsmine & ISMINE_WATCH_ONLY) {
+                // Other -> WatchOnly
+                sub.credit = wtx.tx->vout[0].nValue + nNet;
+                sub.involvesWatchAddress = true;
+                sub.type = TransactionRecord::BorrowFrom;
+                sub.address = mapValue["from"];
+                parts.append(sub);
+            }
+
+            return parts;
+        }
+        else if (itType->second == "withdrawpledge")
+        {
+            isminetype sendIsmine = ::IsMine(*wallet, DecodeDestination(mapValue["from"]));
+            isminetype toIsmine = ::IsMine(*wallet, DecodeDestination(mapValue["to"]));
+            TransactionRecord sub(hash, nTime);
+            sub.credit = wtx.tx->vout[0].nValue;
+            sub.involvesWatchAddress = ((sendIsmine & ISMINE_WATCH_ONLY) || (toIsmine & ISMINE_WATCH_ONLY)) &&
+                (!(sendIsmine & ISMINE_SPENDABLE) && !(toIsmine & ISMINE_SPENDABLE));
+            sub.type = TransactionRecord::WithdrawRental;
+            sub.address = sendIsmine ? mapValue["to"] : mapValue["from"];
+
+            parts.append(sub);
+            return parts;
+        }
+    }
+
     if (nNet > 0 || wtx.IsCoinBase())
     {
         //
@@ -87,6 +182,8 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
         isminetype fAllToMe = ISMINE_SPENDABLE;
         for (const CTxOut& txout : wtx.tx->vout)
         {
+            if (txout.nValue == 0 && !txout.scriptPubKey.empty() && txout.scriptPubKey[0] == OP_RETURN) continue;
+
             isminetype mine = wallet->IsMine(txout);
             if(mine & ISMINE_WATCH_ONLY) involvesWatchAddress = true;
             if(fAllToMe > mine) fAllToMe = mine;
@@ -111,6 +208,12 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             for (unsigned int nOut = 0; nOut < wtx.tx->vout.size(); nOut++)
             {
                 const CTxOut& txout = wtx.tx->vout[nOut];
+                if (txout.nValue == 0 && !txout.scriptPubKey.empty() && txout.scriptPubKey[0] == OP_RETURN)
+                {
+                    // Ignore OP_RETURN
+                    continue;
+                }
+
                 TransactionRecord sub(hash, nTime);
                 sub.idx = nOut;
                 sub.involvesWatchAddress = involvesWatchAddress;
@@ -243,6 +346,27 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
         else
         {
             status.status = TransactionStatus::Confirmed;
+        }
+
+        // Rewrite special tx status
+        if (status.status == TransactionStatus::Confirming || status.status == TransactionStatus::Confirmed)
+        {
+            if (type == TransactionRecord::BindPlotter || type == TransactionRecord::LoanTo ||
+                type == TransactionRecord::BorrowFrom || type == TransactionRecord::SelfRental)
+            {
+                COutPoint coinEntry(wtx.tx->GetHash(), 0);
+                const Coin &coin = pcoinsTip->AccessCoin(coinEntry);
+                if (coin.IsSpent())
+                {
+                    status.status = (TransactionStatus::Status) (status.status | TransactionStatus::Disabled);
+                }
+                else if (coin.IsBindPlotter())
+                {
+                    const CBindPlotterInfo lastBindInfo = pcoinsTip->GetLastBindPlotterInfo(BindPlotterPayload::As(coin.extraData)->GetId());
+                    if (lastBindInfo.outpoint != coinEntry)
+                        status.status = (TransactionStatus::Status) (status.status | TransactionStatus::Inactived);
+                }
+            }
         }
     }
     status.needsUpdate = false;

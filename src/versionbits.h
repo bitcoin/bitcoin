@@ -9,13 +9,20 @@
 #include <map>
 
 /** What block version to use for new blocks (pre versionbits) */
-static const int32_t VERSIONBITS_LAST_OLD_BLOCK_VERSION = 4;
+static const int32_t VERSIONBITS_LAST_OLD_BLOCK_VERSION = 0x20000000UL;
 /** What bits to set in version for versionbits blocks */
 static const int32_t VERSIONBITS_TOP_BITS = 0x20000000UL;
 /** What bitmask determines whether versionbits is in use */
 static const int32_t VERSIONBITS_TOP_MASK = 0xE0000000UL;
 /** Total bits available for versionbits */
 static const int32_t VERSIONBITS_NUM_BITS = 29;
+
+/** Reserved bits */
+static const int32_t VERSIONBITS_CSV_BITS       = (1UL << 0);
+static const int32_t VERSIONBITS_SEGWIT_BITS    = (1UL << 1);
+
+/** BitcoinHD for versionbits */
+static const int32_t VERSIONBITS_BHDV2_BITS     = (1UL << 2);
 
 enum ThresholdState {
     THRESHOLD_DEFINED,

@@ -5,6 +5,7 @@
 
 #include <script/standard.h>
 
+#include <base58.h>
 #include <pubkey.h>
 #include <script/script.h>
 #include <util.h>
@@ -227,6 +228,15 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
     return false;
 }
 
+CTxDestination ExtractDestination(const CScript& scriptPubKey)
+{
+    CTxDestination addressRet;
+    if (ExtractDestination(scriptPubKey, addressRet))
+        return addressRet;
+
+    return CTxDestination();
+}
+
 bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<CTxDestination>& addressRet, int& nRequiredRet)
 {
     addressRet.clear();
@@ -234,7 +244,7 @@ bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, std::
     std::vector<valtype> vSolutions;
     if (!Solver(scriptPubKey, typeRet, vSolutions))
         return false;
-    if (typeRet == TX_NULL_DATA){
+    if (typeRet == TX_NULL_DATA) {
         // This is data, not addresses
         return false;
     }
@@ -260,7 +270,7 @@ bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, std::
         nRequiredRet = 1;
         CTxDestination address;
         if (!ExtractDestination(scriptPubKey, address))
-           return false;
+            return false;
         addressRet.push_back(address);
     }
 
@@ -360,4 +370,221 @@ CScript GetScriptForWitness(const CScript& redeemscript)
 
 bool IsValidDestination(const CTxDestination& dest) {
     return dest.which() != 0;
+}
+
+CAccountID ExtractAccountID(const CPubKey& pubkey)
+{
+    if (!pubkey.IsValid() || !pubkey.IsCompressed())
+        return CAccountID();
+
+    // P2SH-Segwit
+    CKeyID keyid = pubkey.GetID();
+    CTxDestination segwit = WitnessV0KeyHash(keyid);
+    CTxDestination p2sh = CScriptID(GetScriptForDestination(segwit));
+    return ExtractAccountID(p2sh);
+}
+
+CAccountID ExtractAccountID(const CScript& scriptPubKey)
+{
+    return ExtractAccountID(ExtractDestination(scriptPubKey));
+}
+
+CAccountID ExtractAccountID(const CTxDestination& dest)
+{
+    const CScriptID *scriptID = boost::get<CScriptID>(&dest);
+    if (scriptID != nullptr) {
+        return CAccountID(*scriptID);
+    } else {
+        return CAccountID();
+    }
+}
+
+namespace {
+
+std::vector<unsigned char> ToByteVector(uint32_t v) {
+    return {
+        (unsigned char)((v >> 0)&0xff),
+        (unsigned char)((v >> 8)&0xff),
+        (unsigned char)((v >> 16)&0xff),
+        (unsigned char)((v >> 24)&0xff),
+    };
+}
+
+std::vector<unsigned char> ToByteVector(DatacarrierType type) {
+    return ToByteVector((uint32_t) type);
+}
+
+}
+
+bool IsValidPassphrase(const std::string& passphrase) {
+    return !passphrase.empty();
+}
+
+bool IsValidPlotterID(const std::string& strPlotterId, uint64_t *id) {
+    if (strPlotterId.empty() || strPlotterId.size() > 20 || strPlotterId[0] == '0')
+        return false;
+
+    if (strPlotterId.find_first_not_of("0123456789") != std::string::npos)
+        return false;
+
+    if (id) *id = static_cast<uint64_t>(std::stoull(strPlotterId));
+    return true;
+}
+
+CScript GetBindPlotterScriptForDestination(const CTxDestination& dest, const std::string& passphrase, int lastActiveHeight) {
+    CScript script;
+
+    if (lastActiveHeight <= 0 || !IsValidPassphrase(passphrase))
+        return script;
+
+    // Check destination type is P2SH
+    const CScriptID *scriptID = boost::get<CScriptID>(&dest);
+    if (scriptID == nullptr)
+        return script;
+
+    unsigned char data[32], signature[64], publicKey[32];
+    CSHA256().Write(scriptID->begin(), CScriptID::WIDTH).Write((const unsigned char*)&lastActiveHeight, 4).Finalize(data);
+    if (!PocLegacy::Sign(passphrase, data, signature, publicKey))
+        return script;
+    assert(PocLegacy::Verify(publicKey, data, signature));
+    if (PocLegacy::ToPlotterId(publicKey) == 0)
+        return script;
+
+    script << OP_RETURN;
+    script << ToByteVector(DATACARRIER_TYPE_BINDPLOTTER);
+    script << ToByteVector((uint32_t) lastActiveHeight);
+    script << std::vector<unsigned char>(publicKey, publicKey+32);
+    script << std::vector<unsigned char>(signature, signature+64);
+
+    assert(script.size() == PROTOCOL_BINDPLOTTER_SCRIPTSIZE);
+
+    return script;
+}
+
+uint64_t GetBindPlotterIdFromScript(const CScript &script)
+{
+    if (script.size() != PROTOCOL_BINDPLOTTER_SCRIPTSIZE)
+        return 0;
+
+    return PocLegacy::ToPlotterId(&script[12]);
+}
+
+CScript GetRentalScriptForDestination(const CTxDestination& dest) {
+    CScript script;
+
+    const CScriptID *scriptID = boost::get<CScriptID>(&dest);
+    if (scriptID != nullptr) {
+        script << OP_RETURN;
+        script << ToByteVector(DATACARRIER_TYPE_RENTAL);
+        script << ToByteVector(*scriptID);
+    }
+
+    assert(script.empty() || script.size() == PROTOCOL_RENTAL_SCRIPTSIZE);
+    return script;
+}
+
+CScript GetTextScript(const std::string& text) {
+    CScript script;
+    if (text.size() <= PROTOCOL_TEXT_MAXSIZE) {
+        script << OP_RETURN;
+        script << ToByteVector(DATACARRIER_TYPE_TEXT);
+        script << ToByteVector(text);
+    }
+    return script;
+}
+
+static CDatacarrierPayloadRef ExtractDatacarrier(const CTransaction& tx, int nHeight, bool fAllData, bool *pReject, int *pLastActiveHeight) {
+    // OP_RETURN 0x04 <Protocol> <...>
+    const CScript &scriptPubKey = tx.vout.back().scriptPubKey;
+    if (scriptPubKey.size() < 6 || scriptPubKey[0] != OP_RETURN || scriptPubKey[1] != 0x04)
+        return nullptr;
+    CScript::const_iterator pc = scriptPubKey.begin() + 1;
+    opcodetype opcode;
+    std::vector<unsigned char> vData;
+
+    // Get data type
+    if (!scriptPubKey.GetOp(pc, opcode, vData) || opcode != 0x04)
+        return nullptr;
+    unsigned int type = (vData[0] << 0) | (vData[1] << 8) | (vData[2] << 16) | (vData[3] << 24);
+    if (type == DATACARRIER_TYPE_BINDPLOTTER) {
+        // Bind plotter transaction
+        if (tx.nVersion != CTransaction::UNIFORM_VERSION || tx.vout.size() < 2 || tx.vout.size() > 3 || tx.vout[0].scriptPubKey.IsUnspendable())
+            return nullptr;
+        if (scriptPubKey.size() != PROTOCOL_BINDPLOTTER_SCRIPTSIZE || tx.vout[0].nValue != PROTOCOL_BINDPLOTTER_LOCKAMOUNT)
+            return nullptr;
+        // Check destination
+        CTxDestination dest;
+        if (!ExtractDestination(tx.vout[0].scriptPubKey, dest))
+            return nullptr;
+        const CScriptID *scriptID = boost::get<CScriptID>(&dest);
+        if (scriptID == nullptr)
+            return nullptr;
+
+        // Check last active height
+        if (!scriptPubKey.GetOp(pc, opcode, vData) || opcode != sizeof(uint32_t))
+            return nullptr;
+        uint32_t lastActiveHeight = (((uint32_t)vData[0]) >> 0) | (((uint32_t)vData[1]) << 8) | (((uint32_t)vData[2]) << 16) | (((uint32_t)vData[3]) << 24);
+        if (nHeight != 0 && (nHeight > (int)lastActiveHeight || nHeight + PROTOCOL_BINDPLOTTER_MAXALIVE < (int)lastActiveHeight))
+            return nullptr;
+        if (pLastActiveHeight) *pLastActiveHeight = (int) lastActiveHeight;
+
+        // Verify signature
+        unsigned char data[32];
+        std::vector<unsigned char> vPublicKey, vSignature;
+        if (!scriptPubKey.GetOp(pc, opcode, vPublicKey) || opcode != 0x20)
+            return nullptr;
+        if (!scriptPubKey.GetOp(pc, opcode, vSignature) || opcode != 0x40)
+            return nullptr;
+        CSHA256().Write(scriptID->begin(), CScriptID::WIDTH).Write((const unsigned char*)&lastActiveHeight, 4).Finalize(data);
+        if (!PocLegacy::Verify(&vPublicKey[0], data, &vSignature[0])) {
+            if (pReject) *pReject = true;
+            return nullptr;
+        }
+
+        uint64_t plotterId = PocLegacy::ToPlotterId(&vPublicKey[0]);
+        if (plotterId == 0)
+            return nullptr;
+
+        std::shared_ptr<BindPlotterPayload> payload = std::make_shared<BindPlotterPayload>();
+        payload->id = plotterId;
+        return payload;
+    } else if (type == DATACARRIER_TYPE_RENTAL) {
+        // Plege transaction
+        if (tx.nVersion != CTransaction::UNIFORM_VERSION || tx.vout.size() < 2 || tx.vout.size() > 3 || tx.vout[0].scriptPubKey.IsUnspendable())
+            return nullptr;
+        if (tx.vout[0].nValue < PROTOCOL_RENTAL_AMOUNT_MIN || scriptPubKey.size() != PROTOCOL_RENTAL_SCRIPTSIZE)
+            return nullptr;
+
+        // Debit account
+        if (!scriptPubKey.GetOp(pc, opcode, vData) || opcode != CScriptID::WIDTH)
+            return nullptr;
+
+        std::shared_ptr<RentalPayload> payload = std::make_shared<RentalPayload>();
+        payload->borrowerAccountID = uint160(vData);
+        if (payload->GetBorrowerAccountID().IsNull())
+            return nullptr;
+        return payload;
+    } else if (type == DATACARRIER_TYPE_TEXT && fAllData) {
+        if (scriptPubKey.size() > MAX_OP_RETURN_RELAY)
+            return nullptr;
+        if (!scriptPubKey.GetOp(pc, opcode, vData))
+            return nullptr;
+        std::shared_ptr<TextPayload> payload = std::make_shared<TextPayload>();
+        payload->text = std::string(vData.cbegin(), vData.cend());
+        return payload;
+    }
+
+    return nullptr;
+}
+
+CDatacarrierPayloadRef ExtractTransactionDatacarrier(const CTransaction& tx, int nHeight) {
+    return ExtractDatacarrier(tx, nHeight, false, nullptr, nullptr);
+}
+
+CDatacarrierPayloadRef ExtractTransactionDatacarrier(const CTransaction& tx, int nHeight, bool& fReject, int& lastActiveHeight) {
+    return ExtractDatacarrier(tx, nHeight, false, &fReject, &lastActiveHeight);
+}
+
+CDatacarrierPayloadRef ExtractTransactionDatacarrierUnlimit(const CTransaction& tx, int nHeight) {
+    return ExtractDatacarrier(tx, nHeight, true, nullptr, nullptr);
 }

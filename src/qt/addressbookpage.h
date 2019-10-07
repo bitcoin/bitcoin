@@ -56,6 +56,7 @@ private:
     QSortFilterProxyModel *proxyModel;
     QMenu *contextMenu;
     QAction *deleteAction; // to be able to explicitly disable it
+    QAction *setPrimaryAction;
     QString newAddressToSelect;
 
 private Q_SLOTS:
@@ -67,6 +68,8 @@ private Q_SLOTS:
     void on_copyAddress_clicked();
     /** Copy label of currently selected address entry to clipboard (no button) */
     void onCopyLabelAction();
+    /** Set primary address */
+    void onSetPrimaryAction();
     /** Edit currently selected address entry (no button) */
     void onEditAction();
     /** Export button clicked */

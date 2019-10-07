@@ -6,6 +6,7 @@
 #ifndef BITCOIN_MINER_H
 #define BITCOIN_MINER_H
 
+#include <key.h>
 #include <primitives/block.h>
 #include <txmempool.h>
 
@@ -140,6 +141,9 @@ private:
     CAmount nFees;
     CTxMemPool::setEntries inBlock;
 
+    // Current mined account
+    CAccountID generatorAccountID;
+
     // Chain context for the block
     int nHeight;
     int64_t nLockTimeCutoff;
@@ -156,8 +160,10 @@ public:
     BlockAssembler(const CChainParams& params, const Options& options);
 
     /** Construct a new block template with coinbase to scriptPubKeyIn */
-    std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn, bool fMineWitnessTx=true);
-
+    std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn,
+                                                   bool fMineWitnessTx = true,
+                                                   uint64_t plotterId = 0, uint64_t nonce = 0, uint64_t deadline = 0,
+                                                   const std::shared_ptr<CKey> privKey = nullptr);
 private:
     // utility functions
     /** Clear the block's state and prepare for assembling a new block */
@@ -190,10 +196,9 @@ private:
       * state updated assuming given transactions are inBlock. Returns number
       * of updated descendants. */
     int UpdatePackagesForAdded(const CTxMemPool::setEntries& alreadyAdded, indexed_modified_transaction_set &mapModifiedTx);
-};
 
-/** Modify the extranonce in a block */
-void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce);
-int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev);
+    // Signing block by private key
+    bool sign(CBlock &block, const CKey &privKey);
+};
 
 #endif // BITCOIN_MINER_H

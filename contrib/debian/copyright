@@ -1,11 +1,11 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: Bitcoin
+Upstream-Name: BitcoinHD
 Upstream-Contact: Satoshi Nakamoto <satoshin@gmx.com>
- irc://#bitcoin@freenode.net
-Source: https://github.com/bitcoin/bitcoin
+ irc://#btchd@freenode.net
+Source: https://github.com/btchd/btchd
 
 Files: *
-Copyright: 2009-2018, Bitcoin Core Developers
+Copyright: 2017-2018, Bitcoin Core Developers
 License: Expat
 Comment: The Bitcoin Core Developers encompasses the current developers listed on bitcoin.org,
          as well as the numerous contributors to the project.
@@ -48,6 +48,7 @@ Files: src/qt/res/icons/add.png
        src/qt/res/icons/transaction*.png
        src/qt/res/icons/tx_output.png
        src/qt/res/icons/warning.png
+       src/qt/res/icons/miner.png
 Copyright: Stephen Hutchings (and more)
            http://typicons.com
 License: Expat
@@ -87,12 +88,13 @@ Comment: Modifications of Stephan Hutchings Typicons
 
 Files: src/qt/res/icons/about.png
        src/qt/res/icons/bitcoin.*
-       share/pixmaps/bitcoin*
+       share/pixmaps/btchd*
        src/qt/res/src/bitcoin.svg
-Copyright: Bitboy, Jonas Schnelli
+       src/qt/res/icons/tx_bindplotter*.png
+       src/qt/res/icons/tx_point_*.png
+Copyright: BitcoinHD
 License: public-domain
-Comment: Site: https://bitcointalk.org/?topic=1756.0
-
+Comment: Site: https://btchd.org
 
 License: Expat
  Permission is hereby granted, free of charge, to any person obtaining a

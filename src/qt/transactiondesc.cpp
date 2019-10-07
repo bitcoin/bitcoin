@@ -11,6 +11,7 @@
 
 #include <base58.h>
 #include <consensus/consensus.h>
+#include <consensus/tx_verify.h>
 #include <validation.h>
 #include <script/script.h>
 #include <timedata.h>
@@ -20,6 +21,18 @@
 
 #include <stdint.h>
 #include <string>
+
+namespace {
+
+QString AddLinkToAddress(const QString &address) {
+    return "<a href=\"https://btchd.org/explorer/address/" + address + "\">" + address + "</a>";
+}
+
+QString AddLinkToTx(const QString &tx) {
+    return "<a href=\"https://btchd.org/explorer/tx/" + tx + "\">" + tx + "</a>";
+}
+
+}
 
 QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
 {
@@ -60,7 +73,23 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
     CAmount nDebit = wtx.GetDebit(ISMINE_ALL);
     CAmount nNet = nCredit - nDebit;
 
-    strHTML += "<b>" + tr("Status") + ":</b> " + FormatTxStatus(wtx);
+    if ((rec->type == TransactionRecord::LoanTo || rec->type == TransactionRecord::BorrowFrom || rec->type == TransactionRecord::SelfRental) && rec->status.status == TransactionStatus::Disabled)
+    {
+        strHTML += "<b>" + tr("Status") + ":</b> " + tr("Withdrawn") + " (" + FormatTxStatus(wtx) + ")";
+    }
+    else if (rec->type == TransactionRecord::BindPlotter && (rec->status.status & TransactionStatus::Disabled))
+    {
+        strHTML += "<b>" + tr("Status") + ":</b> " + tr("Unbinded Plotter ID") + " (" + FormatTxStatus(wtx) + ")";
+    }
+    else if (rec->type == TransactionRecord::BindPlotter && (rec->status.status & TransactionStatus::Inactived))
+    {
+        strHTML += "<b>" + tr("Status") + ":</b> " + tr("This binding has been unable to mine") + " (" + FormatTxStatus(wtx) + ")";
+    }
+    else
+    {
+        strHTML += "<b>" + tr("Status") + ":</b> " + FormatTxStatus(wtx);
+    }
+
     int nRequests = wtx.GetRequestCount();
     if (nRequests != -1)
     {
@@ -97,7 +126,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
                 {
                     strHTML += "<b>" + tr("From") + ":</b> " + tr("unknown") + "<br>";
                     strHTML += "<b>" + tr("To") + ":</b> ";
-                    strHTML += GUIUtil::HtmlEscape(rec->address);
+                    strHTML += AddLinkToAddress(QString::fromStdString(rec->address));
                     QString addressOwned = (::IsMine(*wallet, address) == ISMINE_SPENDABLE) ? tr("own address") : tr("watch-only");
                     if (!wallet->mapAddressBook[address].name.empty())
                         strHTML += " (" + addressOwned + ", " + tr("label") + ": " + GUIUtil::HtmlEscape(wallet->mapAddressBook[address].name) + ")";
@@ -120,7 +149,18 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
         CTxDestination dest = DecodeDestination(strAddress);
         if (wallet->mapAddressBook.count(dest) && !wallet->mapAddressBook[dest].name.empty())
             strHTML += GUIUtil::HtmlEscape(wallet->mapAddressBook[dest].name) + " ";
-        strHTML += GUIUtil::HtmlEscape(strAddress) + "<br>";
+        strHTML += AddLinkToAddress(QString::fromStdString(strAddress)) + "<br>";
+    }
+
+    if (rec->type == TransactionRecord::BindPlotter || rec->type == TransactionRecord::UnbindPlotter)
+    {
+        strHTML += "<b>" + tr("Plotter ID") + ":</b> " + QString::fromStdString(wtx.mapValue["plotter_id"]) + "<br>";
+        if (rec->type == TransactionRecord::UnbindPlotter)
+            strHTML += "<b>" + tr("Relevant transaction ID") + ":</b> " + AddLinkToTx(QString::fromStdString(wtx.mapValue["relevant_txid"])) + "<br>";
+    }
+    else if (rec->type == TransactionRecord::WithdrawRental)
+    {
+        strHTML += "<b>" + tr("Relevant transaction ID") + ":</b> " + AddLinkToTx(QString::fromStdString(wtx.mapValue["relevant_txid"])) + "<br>";
     }
 
     //
@@ -131,13 +171,19 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
         //
         // Coinbase
         //
-        CAmount nUnmatured = 0;
+        CAmount nUnmatured = 0, nUnmaturedTotal = 0;
+        if (rec->getOutputIndex() >= 0 && rec->getOutputIndex() < (int) wtx.tx->vout.size()) {
+            nUnmatured = wallet->GetCredit(wtx.tx->vout[rec->getOutputIndex()], ISMINE_ALL);
+        }
         for (const CTxOut& txout : wtx.tx->vout)
-            nUnmatured += wallet->GetCredit(txout, ISMINE_ALL);
+            nUnmaturedTotal += wallet->GetCredit(txout, ISMINE_ALL);
         strHTML += "<b>" + tr("Credit") + ":</b> ";
-        if (wtx.IsInMainChain())
-            strHTML += BitcoinUnits::formatHtmlWithUnit(unit, nUnmatured)+ " (" + tr("matures in %n more block(s)", "", wtx.GetBlocksToMaturity()) + ")";
-        else
+        if (wtx.IsInMainChain()) {
+            strHTML += BitcoinUnits::formatHtmlWithUnit(unit, nUnmatured);
+            if (nUnmaturedTotal != nUnmatured)
+                strHTML += " / " + BitcoinUnits::formatHtmlWithUnit(unit, nUnmaturedTotal);
+            strHTML += " (" + tr("matures in %n more block(s)", "", wtx.GetBlocksToMaturity()) + ")";
+        } else
             strHTML += "(" + tr("not accepted") + ")";
         strHTML += "<br>";
     }
@@ -188,7 +234,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
                         strHTML += "<b>" + tr("To") + ":</b> ";
                         if (wallet->mapAddressBook.count(address) && !wallet->mapAddressBook[address].name.empty())
                             strHTML += GUIUtil::HtmlEscape(wallet->mapAddressBook[address].name) + " ";
-                        strHTML += GUIUtil::HtmlEscape(EncodeDestination(address));
+                        strHTML += AddLinkToAddress(QString::fromStdString(EncodeDestination(address)));
                         if(toSelf == ISMINE_SPENDABLE)
                             strHTML += " (own address)";
                         else if(toSelf & ISMINE_WATCH_ONLY)
@@ -234,19 +280,23 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
     //
     // Message
     //
+    if (wtx.mapValue.count("tx_text") && !wtx.mapValue["tx_text"].empty())
+        strHTML += "<br><b>" + tr("Message") + ":</b><br>@@" + GUIUtil::HtmlEscape(HexStr(wtx.mapValue["tx_text"]), true) + "<br><br>";
     if (wtx.mapValue.count("message") && !wtx.mapValue["message"].empty())
-        strHTML += "<br><b>" + tr("Message") + ":</b><br>" + GUIUtil::HtmlEscape(wtx.mapValue["message"], true) + "<br>";
+        strHTML += "<br><b>" + tr("Message") + ":</b><br>" + GUIUtil::HtmlEscape(wtx.mapValue["message"], true) + "<br><br>";
     if (wtx.mapValue.count("comment") && !wtx.mapValue["comment"].empty())
-        strHTML += "<br><b>" + tr("Comment") + ":</b><br>" + GUIUtil::HtmlEscape(wtx.mapValue["comment"], true) + "<br>";
+        strHTML += "<br><b>" + tr("Comment") + ":</b><br>" + GUIUtil::HtmlEscape(wtx.mapValue["comment"], true) + "<br><br>";
 
-    strHTML += "<b>" + tr("Transaction ID") + ":</b> " + rec->getTxID() + "<br>";
+    strHTML += "<b>" + tr("Transaction ID") + ":</b> " + AddLinkToTx(rec->getTxID()) + "<br>";
     strHTML += "<b>" + tr("Transaction total size") + ":</b> " + QString::number(wtx.tx->GetTotalSize()) + " bytes<br>";
     strHTML += "<b>" + tr("Output index") + ":</b> " + QString::number(rec->getOutputIndex()) + "<br>";
 
-    // Message from normal bitcoin:URI (bitcoin:123...?message=example)
+    // Message from normal btchd:URI (btchd:123...?message=example)
     for (const std::pair<std::string, std::string>& r : wtx.vOrderForm)
+    {
         if (r.first == "Message")
             strHTML += "<br><b>" + tr("Message") + ":</b><br>" + GUIUtil::HtmlEscape(r.second, true) + "<br>";
+    }
 
     //
     // PaymentRequest info:
@@ -269,6 +319,26 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
         strHTML += "<br>" + tr("Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to \"not accepted\" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.").arg(QString::number(numBlocksToMaturity)) + "<br>";
     }
 
+    // Unbind tip
+    if (rec->type == TransactionRecord::BindPlotter && rec->status.status != TransactionStatus::Disabled)
+    {
+        uint64_t plotterId = 0;
+        if (IsValidPlotterID(wtx.mapValue["plotter_id"], &plotterId)) {
+            const COutPoint coinEntry(wtx.tx->GetHash(), 0);
+            const Coin &bindCoin = pcoinsTip->AccessCoin(coinEntry);
+            if (!bindCoin.IsSpent() && bindCoin.IsBindPlotter()) {
+                int nSpendHeight = GetSpendHeight(*pcoinsTip);
+                int activeHeight = Consensus::GetUnbindPlotterLimitHeight(CBindPlotterInfo(coinEntry, bindCoin), *pcoinsTip, Params().GetConsensus());
+                if (nSpendHeight < activeHeight) {
+                    strHTML += "<br>" + tr("Unbind plotter active on %1 block height (%2 blocks after, about %3 minute).").
+                                            arg(QString::number(activeHeight),
+                                                QString::number(activeHeight - nSpendHeight),
+                                                QString::number((activeHeight - nSpendHeight) * Consensus::GetTargetSpacing(nSpendHeight, Params().GetConsensus()) / 60));
+                }
+            }
+        }
+    }
+
     //
     // Debug view
     //
@@ -286,15 +356,16 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
         strHTML += GUIUtil::HtmlEscape(wtx.tx->ToString(), true);
 
         strHTML += "<br><b>" + tr("Inputs") + ":</b>";
-        strHTML += "<ul>";
-
-        for (const CTxIn& txin : wtx.tx->vin)
-        {
-            COutPoint prevout = txin.prevout;
-
-            Coin prev;
-            if(pcoinsTip->GetCoin(prevout, prev))
+        if (wtx.IsCoinBase()) {
+            strHTML += "<br>" + tr("No Inputs") + "";
+        } else {
+            strHTML += "<ul>";
+            for (const CTxIn& txin : wtx.tx->vin)
             {
+                COutPoint prevout = txin.prevout;
+
+                Coin prev;
+                if(pcoinsTip->GetCoin(prevout, prev))
                 {
                     strHTML += "<li>";
                     const CTxOut &vout = prev.out;
@@ -303,16 +374,17 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
                     {
                         if (wallet->mapAddressBook.count(address) && !wallet->mapAddressBook[address].name.empty())
                             strHTML += GUIUtil::HtmlEscape(wallet->mapAddressBook[address].name) + " ";
-                        strHTML += QString::fromStdString(EncodeDestination(address));
+                        strHTML += AddLinkToAddress(QString::fromStdString(EncodeDestination(address)));
                     }
                     strHTML = strHTML + " " + tr("Amount") + "=" + BitcoinUnits::formatHtmlWithUnit(unit, vout.nValue);
-                    strHTML = strHTML + " IsMine=" + (wallet->IsMine(vout) & ISMINE_SPENDABLE ? tr("true") : tr("false")) + "</li>";
-                    strHTML = strHTML + " IsWatchOnly=" + (wallet->IsMine(vout) & ISMINE_WATCH_ONLY ? tr("true") : tr("false")) + "</li>";
+                    strHTML = strHTML + " IsMine=" + (wallet->IsMine(vout) & ISMINE_SPENDABLE ? tr("true") : tr("false"));
+                    strHTML = strHTML + " IsWatchOnly=" + (wallet->IsMine(vout) & ISMINE_WATCH_ONLY ? tr("true") : tr("false"));
+                    strHTML += "</li>";
                 }
             }
-        }
 
-        strHTML += "</ul>";
+            strHTML += "</ul>";
+        }
     }
 
     strHTML += "</font></html>";

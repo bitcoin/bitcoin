@@ -17,9 +17,9 @@ BitcoinUnits::BitcoinUnits(QObject *parent):
 QList<BitcoinUnits::Unit> BitcoinUnits::availableUnits()
 {
     QList<BitcoinUnits::Unit> unitlist;
-    unitlist.append(BTC);
-    unitlist.append(mBTC);
-    unitlist.append(uBTC);
+    unitlist.append(BHD);
+    unitlist.append(mBHD);
+    unitlist.append(uBHD);
     return unitlist;
 }
 
@@ -27,9 +27,9 @@ bool BitcoinUnits::valid(int unit)
 {
     switch(unit)
     {
-    case BTC:
-    case mBTC:
-    case uBTC:
+    case BHD:
+    case mBHD:
+    case uBHD:
         return true;
     default:
         return false;
@@ -40,9 +40,9 @@ QString BitcoinUnits::longName(int unit)
 {
     switch(unit)
     {
-    case BTC: return QString("BTC");
-    case mBTC: return QString("mBTC");
-    case uBTC: return QString::fromUtf8("µBTC (bits)");
+    case BHD: return QString("BHD");
+    case mBHD: return QString("mBHD");
+    case uBHD: return QString::fromUtf8("µBHD (bits)");
     default: return QString("???");
     }
 }
@@ -51,7 +51,7 @@ QString BitcoinUnits::shortName(int unit)
 {
     switch(unit)
     {
-    case uBTC: return QString::fromUtf8("bits");
+    case uBHD: return QString::fromUtf8("bits");
     default:   return longName(unit);
     }
 }
@@ -60,9 +60,9 @@ QString BitcoinUnits::description(int unit)
 {
     switch(unit)
     {
-    case BTC: return QString("Bitcoins");
-    case mBTC: return QString("Milli-Bitcoins (1 / 1" THIN_SP_UTF8 "000)");
-    case uBTC: return QString("Micro-Bitcoins (bits) (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+    case BHD: return QString("BHDs");
+    case mBHD: return QString("Milli-BHDs (1 / 1" THIN_SP_UTF8 "000)");
+    case uBHD: return QString("Micro-BHDs (bits) (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
     default: return QString("???");
     }
 }
@@ -71,9 +71,9 @@ qint64 BitcoinUnits::factor(int unit)
 {
     switch(unit)
     {
-    case BTC:  return 100000000;
-    case mBTC: return 100000;
-    case uBTC: return 100;
+    case BHD:  return 100000000;
+    case mBHD: return 100000;
+    case uBHD: return 100;
     default:   return 100000000;
     }
 }
@@ -82,9 +82,9 @@ int BitcoinUnits::decimals(int unit)
 {
     switch(unit)
     {
-    case BTC: return 8;
-    case mBTC: return 5;
-    case uBTC: return 2;
+    case BHD: return 8;
+    case mBHD: return 5;
+    case uBHD: return 2;
     default: return 0;
     }
 }
@@ -178,6 +178,17 @@ bool BitcoinUnits::parse(int unit, const QString &value, CAmount *val_out)
         *val_out = retvalue;
     }
     return ok;
+}
+
+QString BitcoinUnits::formatCapacity(uint64_t capacityGB)
+{
+    if (capacityGB >= 1024 * 1024) {
+        return QString::number(capacityGB/(1024.0 * 1024), 'f', 2) + " PB";
+    } else if (capacityGB >= 1024) {
+        return QString::number(capacityGB/1024.0, 'f', 2) + " TB";
+    } else {
+        return QString::number(capacityGB * 1.0, 'f', 2) + " GB";
+    }
 }
 
 QString BitcoinUnits::getAmountColumnTitle(int unit)

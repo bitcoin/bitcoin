@@ -1,0 +1,92 @@
+#!/sbin/openrc-run
+
+# backward compatibility for existing gentoo layout 
+#
+if [ -d "/var/lib/btchd/.btchd" ]; then
+	BTCHDD_DEFAULT_DATADIR="/var/lib/btchd/.btchd"
+else
+	BTCHDD_DEFAULT_DATADIR="/var/lib/btchdd"
+fi
+
+BTCHDD_CONFIGFILE=${BTCHDD_CONFIGFILE:-/etc/btchd/btchd.conf}
+BTCHDD_PIDDIR=${BTCHDD_PIDDIR:-/var/run/btchdd}
+BTCHDD_PIDFILE=${BTCHDD_PIDFILE:-${BTCHDD_PIDDIR}/btchdd.pid}
+BTCHDD_DATADIR=${BTCHDD_DATADIR:-${BTCHDD_DEFAULT_DATADIR}}
+BTCHDD_USER=${BTCHDD_USER:-${BTCHD_USER:-btchd}}
+BTCHDD_GROUP=${BTCHDD_GROUP:-btchd}
+BTCHDD_BIN=${BTCHDD_BIN:-/usr/bin/btchdd}
+BTCHDD_NICE=${BTCHDD_NICE:-${NICELEVEL:-0}}
+BTCHDD_OPTS="${BTCHDD_OPTS:-${BTCHD_OPTS}}"
+
+name="BitcoinHD Core Daemon"
+description="BitcoinHD cryptocurrency P2P network daemon"
+
+command="/usr/bin/btchdd"
+command_args="-pid=\"${BTCHDD_PIDFILE}\" \
+		-conf=\"${BTCHDD_CONFIGFILE}\" \
+		-datadir=\"${BTCHDD_DATADIR}\" \
+		-daemon \
+		${BTCHDD_OPTS}"
+
+required_files="${BTCHDD_CONFIGFILE}"
+start_stop_daemon_args="-u ${BTCHDD_USER} \
+			-N ${BTCHDD_NICE} -w 2000"
+pidfile="${BTCHDD_PIDFILE}"
+
+# The retry schedule to use when stopping the daemon. Could be either
+# a timeout in seconds or multiple signal/timeout pairs (like
+# "SIGKILL/180 SIGTERM/300")
+retry="${BTCHDD_SIGTERM_TIMEOUT}"
+
+depend() {
+	need localmount net
+}
+
+# verify
+# 1) that the datadir exists and is writable (or create it)
+# 2) that a directory for the pid exists and is writable
+# 3) ownership and permissions on the config file
+start_pre() {
+	checkpath \
+	-d \
+	--mode 0750 \
+	--owner "${BTCHDD_USER}:${BTCHDD_GROUP}" \
+	"${BTCHDD_DATADIR}"
+
+	checkpath \
+	-d \
+	--mode 0755 \
+	--owner "${BTCHDD_USER}:${BTCHDD_GROUP}" \
+	"${BTCHDD_PIDDIR}"
+
+	checkpath -f \
+	-o ${BTCHDD_USER}:${BTCHDD_GROUP} \
+	-m 0660 \
+	${BTCHDD_CONFIGFILE}
+
+	checkconfig || return 1
+}
+
+checkconfig()
+{
+	if ! grep -qs '^rpcpassword=' "${BTCHDD_CONFIGFILE}" ; then
+		eerror ""
+		eerror "ERROR: You must set a secure rpcpassword to run btchdd."
+		eerror "The setting must appear in ${BTCHDD_CONFIGFILE}"
+		eerror ""
+		eerror "This password is security critical to securing wallets "
+		eerror "and must not be the same as the rpcuser setting."
+		eerror "You can generate a suitable random password using the following "
+		eerror "command from the shell:"
+		eerror ""
+		eerror "bash -c 'tr -dc a-zA-Z0-9 < /dev/urandom | head -c32 && echo'"
+		eerror ""
+		eerror "It is recommended that you also set alertnotify so you are "
+		eerror "notified of problems:"
+		eerror ""
+		eerror "ie: alertnotify=echo %%s | mail -s \"BitcoinHD Alert\"" \
+			"admin@foo.com"
+		eerror ""
+		return 1
+	fi
+}

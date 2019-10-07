@@ -82,8 +82,8 @@
 // Application startup time (used for uptime calculation)
 const int64_t nStartupTime = GetTime();
 
-const char * const BITCOIN_CONF_FILENAME = "bitcoin.conf";
-const char * const BITCOIN_PID_FILENAME = "bitcoind.pid";
+const char * const BITCOIN_CONF_FILENAME = "btchd.conf";
+const char * const BITCOIN_PID_FILENAME = "btchdd.pid";
 const char * const DEFAULT_DEBUGLOGFILE = "debug.log";
 
 ArgsManager gArgs;
@@ -252,6 +252,7 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::COINDB, "coindb"},
     {BCLog::QT, "qt"},
     {BCLog::LEVELDB, "leveldb"},
+    {BCLog::POC, "poc"},
     {BCLog::ALL, "1"},
     {BCLog::ALL, "all"},
 };
@@ -558,7 +559,7 @@ static std::string FormatException(const std::exception* pex, const char* pszThr
     char pszModule[MAX_PATH] = "";
     GetModuleFileNameA(nullptr, pszModule, sizeof(pszModule));
 #else
-    const char* pszModule = "bitcoin";
+    const char* pszModule = "btchd";
 #endif
     if (pex)
         return strprintf(
@@ -575,15 +576,43 @@ void PrintExceptionContinue(const std::exception* pex, const char* pszThread)
     fprintf(stderr, "\n\n************************\n%s\n", message.c_str());
 }
 
+static fs::path appPathCached;
+
+const fs::path &GetAppDir()
+{
+    if (appPathCached.empty()) {
+#ifdef WIN32
+        char path[MAX_PATH];
+        memset(path, 0, sizeof(path));
+        ::GetModuleFileNameA(NULL, path, MAX_PATH);
+        appPathCached = path;
+        appPathCached = appPathCached.parent_path();
+#else
+        char path[1024];
+        memset(path, 0, sizeof(path));
+        if (readlink("/proc/self/exe", path, sizeof(path)/sizeof(path[0])) != -1) {
+            appPathCached = path;
+            appPathCached = appPathCached.parent_path();
+        } else if (getcwd(path, sizeof(path) / sizeof(path[0])) != NULL) {
+            appPathCached = path;
+        } else {
+            appPathCached = "/opt/btchd";
+        }
+#endif
+    }
+
+    return appPathCached;
+}
+
 fs::path GetDefaultDataDir()
 {
-    // Windows < Vista: C:\Documents and Settings\Username\Application Data\Bitcoin
-    // Windows >= Vista: C:\Users\Username\AppData\Roaming\Bitcoin
-    // Mac: ~/Library/Application Support/Bitcoin
-    // Unix: ~/.bitcoin
+    // Windows < Vista: C:\Documents and Settings\Username\Application Data\btchd
+    // Windows >= Vista: C:\Users\Username\AppData\Roaming\btchd
+    // Mac: ~/Library/Application Support/btchd
+    // Unix: ~/.btchd
 #ifdef WIN32
     // Windows
-    return GetSpecialFolderPath(CSIDL_APPDATA) / "Bitcoin";
+    return GetSpecialFolderPath(CSIDL_APPDATA) / "btchd";
 #else
     fs::path pathRet;
     char* pszHome = getenv("HOME");
@@ -593,10 +622,10 @@ fs::path GetDefaultDataDir()
         pathRet = fs::path(pszHome);
 #ifdef MAC_OSX
     // Mac
-    return pathRet / "Library/Application Support/Bitcoin";
+    return pathRet / "Library/Application Support/btchd";
 #else
     // Unix
-    return pathRet / ".bitcoin";
+    return pathRet / ".btchd";
 #endif
 #endif
 }
@@ -658,7 +687,7 @@ void ArgsManager::ReadConfigFile(const std::string& confPath)
 {
     fs::ifstream streamConfig(GetConfigFile(confPath));
     if (!streamConfig.good())
-        return; // No bitcoin.conf file is OK
+        return; // No btchd.conf file is OK
 
     {
         LOCK(cs_args);
@@ -667,7 +696,7 @@ void ArgsManager::ReadConfigFile(const std::string& confPath)
 
         for (boost::program_options::detail::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it)
         {
-            // Don't overwrite existing settings so command line settings override bitcoin.conf
+            // Don't overwrite existing settings so command line settings override btchd.conf
             std::string strKey = std::string("-") + it->string_key;
             std::string strValue = it->value[0];
             InterpretNegativeSetting(strKey, strValue);
@@ -943,14 +972,14 @@ int GetNumCores()
 #endif
 }
 
-std::string CopyrightHolders(const std::string& strPrefix)
+std::string CopyrightHolders(const std::string& strHolder)
 {
-    std::string strCopyrightHolders = strPrefix + strprintf(_(COPYRIGHT_HOLDERS), _(COPYRIGHT_HOLDERS_SUBSTITUTION));
+    std::string strCopyrightHolders;
+    // BitcoinHD
+    strCopyrightHolders += strprintf(strHolder, strprintf("2017-%i ", COPYRIGHT_YEAR) + strprintf(_(COPYRIGHT_HOLDERS), _(COPYRIGHT_HOLDERS_SUBSTITUTION)));
+    // BTC
+    strCopyrightHolders += "\n" + strprintf(strHolder, std::string("2009-2017 ") + strprintf(_("The %s developers"), "Bitcoin Core"));
 
-    // Check for untranslated substitution to make sure Bitcoin Core copyright is not removed by accident
-    if (strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION).find("Bitcoin Core") == std::string::npos) {
-        strCopyrightHolders += "\n" + strPrefix + "The Bitcoin Core developers";
-    }
     return strCopyrightHolders;
 }
 

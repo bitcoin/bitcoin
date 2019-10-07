@@ -52,8 +52,8 @@ public:
     enum ColumnWidths {
         STATUS_COLUMN_WIDTH = 30,
         WATCHONLY_COLUMN_WIDTH = 23,
-        DATE_COLUMN_WIDTH = 120,
-        TYPE_COLUMN_WIDTH = 113,
+        DATE_COLUMN_WIDTH = 130,
+        TYPE_COLUMN_WIDTH = 120,
         AMOUNT_MINIMUM_COLUMN_WIDTH = 120,
         MINIMUM_COLUMN_WIDTH = 23
     };
@@ -77,6 +77,8 @@ private:
     QDateTimeEdit *dateTo;
     QAction *abandonAction;
     QAction *bumpFeeAction;
+    QAction *unbindPlotterAction;
+    QAction *withdrawPledgeAction;
 
     QWidget *createDateRangeWidget();
 
@@ -101,6 +103,7 @@ private Q_SLOTS:
     void updateWatchOnlyColumn(bool fHaveWatchOnly);
     void abandonTx();
     void bumpFee();
+    void unlockTx();
 
 Q_SIGNALS:
     void doubleClicked(const QModelIndex&);

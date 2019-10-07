@@ -16,6 +16,7 @@ class ClientModel;
 class PlatformStyle;
 class SendCoinsEntry;
 class SendCoinsRecipient;
+class CWallet;
 
 namespace Ui {
     class SendCoinsDialog;
@@ -52,7 +53,14 @@ public Q_SLOTS:
     SendCoinsEntry *addEntry();
     void updateTabsAndLabels();
     void setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
-                    const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
+                    const CAmount& loanBalance, const CAmount& borrowBalance, const CAmount& lockedBalance,
+                    const CAmount& watchBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance,
+                    const CAmount& watchLoanBalance, const CAmount& watchBorrowBalance, const CAmount& watchLockedBalance);
+
+#ifdef ENABLE_WALLET
+    /** Current wallet primary address changed */
+    void currentWalletPrimaryAddressChanged(CWallet *wallet);
+#endif
 
 private:
     Ui::SendCoinsDialog *ui;
@@ -61,6 +69,7 @@ private:
     bool fNewRecipientAllowed;
     bool fFeeMinimized;
     const PlatformStyle *platformStyle;
+    QString txCustomText;
 
     // Process WalletModel::SendCoinsReturn and generate a pair consisting
     // of a message and message flags for use in Q_EMIT message().
@@ -71,8 +80,13 @@ private:
     // Update the passed in CCoinControl with state from the GUI
     void updateCoinControlState(CCoinControl& ctrl);
 
+    // Get operate method
+    PayOperateMethod getPayOperateMethod();
+
 private Q_SLOTS:
+    void onOperateMethodComboBoxChanged(int index);
     void on_sendButton_clicked();
+    void on_genBindDataButton_clicked();
     void on_buttonChooseFee_clicked();
     void on_buttonMinimizeFee_clicked();
     void removeEntry(SendCoinsEntry* entry);

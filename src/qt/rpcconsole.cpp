@@ -8,15 +8,19 @@
 
 #include <qt/rpcconsole.h>
 #include <qt/forms/ui_debugwindow.h>
-
 #include <qt/bantablemodel.h>
+#include <qt/bitcoinunits.h>
 #include <qt/clientmodel.h>
 #include <qt/platformstyle.h>
+#include <base58.h>
 #include <chainparams.h>
 #include <netbase.h>
+#include <poc/poc.h>
 #include <rpc/server.h>
 #include <rpc/client.h>
 #include <util.h>
+#include <validation.h>
+#include <wallet/wallet.h>
 
 #include <openssl/crypto.h>
 
@@ -29,6 +33,7 @@
 
 #include <QDesktopWidget>
 #include <QKeyEvent>
+#include <QInputDialog>
 #include <QMenu>
 #include <QMessageBox>
 #include <QScrollBar>
@@ -72,7 +77,8 @@ const QStringList historyFilter = QStringList()
     << "signrawtransaction"
     << "walletpassphrase"
     << "walletpassphrasechange"
-    << "encryptwallet";
+    << "encryptwallet"
+    << "addsignprivkey";
 
 }
 
@@ -460,6 +466,7 @@ RPCConsole::RPCConsole(const PlatformStyle *_platformStyle, QWidget *parent) :
     }
 
     ui->openDebugLogfileButton->setToolTip(ui->openDebugLogfileButton->toolTip().arg(tr(PACKAGE_NAME)));
+    ui->bindPlotterIdContainer->setStyleSheet("background:transparent;");
 
     if (platformStyle->getImagesOnButtons()) {
         ui->openDebugLogfileButton->setIcon(platformStyle->SingleColorIcon(":/icons/export"));
@@ -476,6 +483,7 @@ RPCConsole::RPCConsole(const PlatformStyle *_platformStyle, QWidget *parent) :
     connect(ui->fontBiggerButton, SIGNAL(clicked()), this, SLOT(fontBigger()));
     connect(ui->fontSmallerButton, SIGNAL(clicked()), this, SLOT(fontSmaller()));
     connect(ui->btnClearTrafficGraph, SIGNAL(clicked()), ui->trafficGraph, SLOT(clear()));
+    connect(ui->promptIcon, SIGNAL(clicked()), this, SLOT(inputLargeCommand()));
 
     // set library version labels
 #ifdef ENABLE_WALLET
@@ -484,6 +492,25 @@ RPCConsole::RPCConsole(const PlatformStyle *_platformStyle, QWidget *parent) :
     ui->label_berkeleyDBVersion->hide();
     ui->berkeleyDBVersion->hide();
 #endif
+
+    // set current wallet view
+#ifdef ENABLE_WALLET
+    bool fCurrentWalletVisible = !gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET);
+#else
+    bool fCurrentWalletVisible = false;
+#endif
+    ui->labelCurrentWalletTitle->setVisible(fCurrentWalletVisible);
+    ui->labelPrimaryAddress->setVisible(fCurrentWalletVisible);
+    ui->primaryAddress->setVisible(fCurrentWalletVisible);
+    ui->labelPrimaryAddressBalance->setVisible(fCurrentWalletVisible);
+    ui->primaryAddressBalance->setVisible(fCurrentWalletVisible);
+    ui->labelBindPlotter->setVisible(fCurrentWalletVisible);
+    ui->bindPlotterIdContainer->setVisible(fCurrentWalletVisible);
+    ui->labelEstimateCapacity->setVisible(fCurrentWalletVisible);
+    ui->estimateCapacity->setVisible(fCurrentWalletVisible);
+    ui->labelMiningRequireBalance->setVisible(fCurrentWalletVisible);
+    ui->miningRequireBalance->setVisible(fCurrentWalletVisible);
+
     // Register RPC timer interface
     rpcTimerInterface = new QtRPCTimerInterface();
     // avoid accidentally overwriting an existing, non QTThread
@@ -572,6 +599,10 @@ void RPCConsole::setClientModel(ClientModel *model)
 
         connect(model, SIGNAL(mempoolSizeChanged(long,size_t)), this, SLOT(setMempoolSize(long,size_t)));
 
+#ifdef ENABLE_WALLET
+        connect(model, SIGNAL(walletChanged(CWallet*)), this, SLOT(currentWalletPrimaryAddressChanged(CWallet*)));
+        connect(model, SIGNAL(walletPrimaryAddressChanged(CWallet*)), this, SLOT(currentWalletPrimaryAddressChanged(CWallet*)));
+#endif
         // set up peer table
         ui->peerWidget->setModel(model->getPeerTableModel());
         ui->peerWidget->verticalHeader()->hide();
@@ -837,7 +868,9 @@ void RPCConsole::setNumBlocks(int count, const QDateTime& blockDate, double nVer
 {
     if (!headers) {
         ui->numberOfBlocks->setText(QString::number(count));
-        ui->lastBlockTime->setText(blockDate.toString());
+        ui->lastBlockTime->setText(blockDate.toString(Qt::SystemLocaleLongDate));
+
+        updateWalletInfo();
     }
 }
 
@@ -849,6 +882,93 @@ void RPCConsole::setMempoolSize(long numberOfTxs, size_t dynUsage)
         ui->mempoolSize->setText(QString::number(dynUsage/1000.0, 'f', 2) + " KB");
     else
         ui->mempoolSize->setText(QString::number(dynUsage/1000000.0, 'f', 2) + " MB");
+}
+
+#ifdef ENABLE_WALLET
+void RPCConsole::currentWalletPrimaryAddressChanged(CWallet *wallet)
+{
+    if (wallet != nullptr) {
+        ui->primaryAddress->setText(QString::fromStdString(EncodeDestination(wallet->GetPrimaryDestination())));
+    } else {
+        ui->primaryAddress->clear();
+    }
+    updateWalletInfo();
+}
+#endif
+
+void RPCConsole::updateWalletInfo()
+{
+    const QString primaryAddress = ui->primaryAddress->text();
+    if (!primaryAddress.isEmpty() && !IsInitialBlockDownload()) {
+        LOCK(cs_main);
+        const Consensus::Params& params = Params().GetConsensus();
+
+        // Get account id of address
+        const CAccountID accountID = ExtractAccountID(DecodeDestination(primaryAddress.toStdString()));
+        if (!accountID.IsNull()) {
+            // Primary address total balance
+            CAmount balance;
+            {
+                CAmount balanceLoan = 0, balanceBorrow = 0;
+                balance = pcoinsTip->GetAccountBalance(accountID, nullptr, &balanceLoan, &balanceBorrow);
+                balance = balance - balanceLoan + balanceBorrow;
+            }
+            ui->primaryAddressBalance->setText(BitcoinUnits::formatWithUnit(BitcoinUnits::BHD, balance, false, BitcoinUnits::separatorAlways));
+
+            // Primary address capacity and pledge
+            int64_t nCapacityTB;
+            CAmount balanceRequire = poc::GetMiningRequireBalance(accountID, 0, chainActive.Height() + 1, *pcoinsTip, &nCapacityTB, nullptr, params);
+
+            // Binded plotter
+            QString strBindPlotters;
+            if (chainActive.Height() < params.BHDIP006BindPlotterActiveHeight) {
+                std::set<uint64_t> existPlotterId;
+                for (const CBlockIndex& block : poc::GetEvalBlocks(chainActive.Height(), false, params)) {
+                    if (block.generatorAccountID != accountID || existPlotterId.count(block.nPlotterId))
+                        continue;
+                    if (!strBindPlotters.isEmpty())
+                        strBindPlotters += ",";
+                    strBindPlotters += QString::number(block.nPlotterId);
+                    existPlotterId.insert(block.nPlotterId);
+                }
+            } else {
+                for (const uint64_t& plotterId : pcoinsTip->GetAccountBindPlotters(accountID)) {
+                    if (!strBindPlotters.isEmpty())
+                        strBindPlotters += ",";
+                    strBindPlotters += QString::number(plotterId);
+                }
+            }
+            bool fMiningEnabled = !strBindPlotters.isEmpty();
+            if (fMiningEnabled) {
+                ui->bindPlotterId->setText(strBindPlotters);
+                ui->estimateCapacity->setText(BitcoinUnits::formatCapacity(nCapacityTB * 1024));
+                ui->miningRequireBalance->setText(BitcoinUnits::formatWithUnit(BitcoinUnits::BHD, balanceRequire, false, BitcoinUnits::separatorAlways));
+                ui->miningRequireBalance->setStyleSheet(balanceRequire > balance ? "QLabel { color: red; }" : "");
+            } else {
+                ui->bindPlotterId->setText(tr("None"));
+                ui->estimateCapacity->setText(tr("None"));
+                ui->miningRequireBalance->setText(tr("None"));
+                ui->miningRequireBalance->setStyleSheet("");
+            }
+
+            ui->labelBindPlotter->setVisible(fMiningEnabled);
+            ui->bindPlotterIdContainer->setVisible(fMiningEnabled);
+            ui->labelEstimateCapacity->setVisible(fMiningEnabled);
+            ui->estimateCapacity->setVisible(fMiningEnabled);
+            ui->labelMiningRequireBalance->setVisible(fMiningEnabled);
+            ui->miningRequireBalance->setVisible(fMiningEnabled);
+        }
+    } else {
+        // Pending
+        ui->primaryAddressBalance->setText("N/A");
+
+        ui->labelBindPlotter->setVisible(false);
+        ui->bindPlotterIdContainer->setVisible(false);
+        ui->labelEstimateCapacity->setVisible(false);
+        ui->estimateCapacity->setVisible(false);
+        ui->labelMiningRequireBalance->setVisible(false);
+        ui->miningRequireBalance->setVisible(false);
+    }
 }
 
 void RPCConsole::on_lineEdit_returnPressed()
@@ -1227,4 +1347,15 @@ void RPCConsole::showOrHideBanTableIfRequired()
 void RPCConsole::setTabFocus(enum TabTypes tabType)
 {
     ui->tabWidget->setCurrentIndex(tabType);
+}
+
+void RPCConsole::inputLargeCommand()
+{
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 2, 0))
+    bool fOk = false;
+    QString cmd = QInputDialog::getMultiLineText(this, this->windowTitle(), tr("Input command:"), "", &fOk);
+    if (fOk) {
+        ui->lineEdit->setText(cmd.replace("\n", " ").trimmed());
+    }
+#endif
 }

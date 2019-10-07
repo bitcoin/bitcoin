@@ -26,6 +26,15 @@ UniValue ValueFromAmount(const CAmount& amount)
             strprintf("%s%d.%08d", sign ? "-" : "", quotient, remainder));
 }
 
+UniValue ValueFromCapacity(const uint64_t& capacityTB)
+{
+    if (capacityTB < 10 * 1024) {
+        return std::to_string(capacityTB) + " TB";
+    } else {
+        return std::to_string(capacityTB / 1024) + " PB";
+    }
+}
+
 std::string FormatScript(const CScript& script)
 {
     std::string ret;
@@ -154,7 +163,7 @@ void ScriptPubKeyToUniv(const CScript& scriptPubKey,
     out.pushKV("addresses", a);
 }
 
-void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry, bool include_hex, int serialize_flags)
+void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry, bool include_hex, int serialize_flags, int nHeight)
 {
     entry.pushKV("txid", tx.GetHash().GetHex());
     entry.pushKV("hash", tx.GetWitnessHash().GetHex());
@@ -205,10 +214,36 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
     }
     entry.pushKV("vout", vout);
 
-    if (!hashBlock.IsNull())
+    if (!hashBlock.IsNull()) {
         entry.pushKV("blockhash", hashBlock.GetHex());
+    }
+
+    if (tx.IsUniform()) {
+        CDatacarrierPayloadRef payload = ExtractTransactionDatacarrier(tx, nHeight);
+        if (payload) {
+            UniValue extra(UniValue::VOBJ);;
+            DatacarrierPayloadToUniv(payload, tx.vout[0], extra);
+            entry.push_back(Pair("extra", extra));
+        }
+    }
 
     if (include_hex) {
         entry.pushKV("hex", EncodeHexTx(tx, serialize_flags)); // the hex-encoded transaction. used the name "hex" to be consistent with the verbose output of "getrawtransaction".
+    }
+}
+
+void DatacarrierPayloadToUniv(const CDatacarrierPayloadRef& payload, const CTxOut& txOut, UniValue& out)
+{
+    assert(payload != nullptr);
+    if (payload->type == DATACARRIER_TYPE_BINDPLOTTER) {
+        out.push_back(Pair("type", "bindplotter"));
+        out.push_back(Pair("amount", ValueFromAmount(txOut.nValue)));
+        out.push_back(Pair("address", EncodeDestination(ExtractDestination(txOut.scriptPubKey))));
+        out.push_back(Pair("id", std::to_string(BindPlotterPayload::As(payload)->GetId())));
+    } else if (payload->type == DATACARRIER_TYPE_RENTAL) {
+        out.push_back(Pair("type", "pledge"));
+        out.push_back(Pair("amount", ValueFromAmount(txOut.nValue)));
+        out.push_back(Pair("from", EncodeDestination(ExtractDestination(txOut.scriptPubKey))));
+        out.push_back(Pair("to", EncodeDestination(CScriptID(RentalPayload::As(payload)->GetBorrowerAccountID()))));
     }
 }

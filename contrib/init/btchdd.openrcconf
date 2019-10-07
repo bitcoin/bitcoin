@@ -1,0 +1,33 @@
+# /etc/conf.d/btchdd: config file for /etc/init.d/btchdd
+
+# Config file location
+#BTCHDD_CONFIGFILE="/etc/btchd/btchd.conf"
+
+# What directory to write pidfile to?  (created and owned by $BTCHDD_USER)
+#BTCHDD_PIDDIR="/var/run/btchdd"
+
+# What filename to give the pidfile
+#BTCHDD_PIDFILE="${BTCHDD_PIDDIR}/btchdd.pid"
+
+# Where to write btchdd data (be mindful that the blockchain is large)
+#BTCHDD_DATADIR="/var/lib/btchdd"
+
+# User and group to own btchdd process
+#BTCHDD_USER="btchd"
+#BTCHDD_GROUP="btchd"
+
+# Path to btchdd executable
+#BTCHDD_BIN="/usr/bin/btchdd"
+
+# Nice value to run btchdd under
+#BTCHDD_NICE=0
+
+# Additional options (avoid -conf and -datadir, use flags above)
+#BTCHDD_OPTS=""
+
+# The timeout in seconds OpenRC will wait for btchdd to terminate
+# after a SIGTERM has been raised.
+# Note that this will be mapped as argument to start-stop-daemon's
+# '--retry' option, which means you can specify a retry schedule
+# here. For more information see man 8 start-stop-daemon.
+BTCHDD_SIGTERM_TIMEOUT=60

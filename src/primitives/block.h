@@ -7,6 +7,7 @@
 #define BITCOIN_PRIMITIVES_BLOCK_H
 
 #include <primitives/transaction.h>
+#include <pubkey.h>
 #include <serialize.h>
 #include <uint256.h>
 
@@ -25,8 +26,12 @@ public:
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
     uint32_t nTime;
-    uint32_t nBits;
-    uint32_t nNonce;
+    uint64_t nBaseTarget;
+    uint64_t nNonce;
+    uint64_t nPlotterId;
+    // block signature by generator
+    std::vector<unsigned char> vchPubKey;
+    std::vector<unsigned char> vchSignature;
 
     CBlockHeader()
     {
@@ -37,12 +42,24 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
+        // Read: Signature flag and base target read from stream. Real base target require remove mask
+        // Write: Signature flag and base target write to stream
+        uint64_t nFlags = nBaseTarget | (vchPubKey.empty() ? 0 : 0x8000000000000000L);
         READWRITE(this->nVersion);
         READWRITE(hashPrevBlock);
         READWRITE(hashMerkleRoot);
         READWRITE(nTime);
-        READWRITE(nBits);
+        READWRITE(nFlags);
         READWRITE(nNonce);
+        READWRITE(nPlotterId);
+        nBaseTarget = nFlags & 0x7fffffffffffffffL;
+        if (nFlags & 0x8000000000000000L) {
+            READWRITE(LIMITED_VECTOR(vchPubKey, CPubKey::COMPRESSED_PUBLIC_KEY_SIZE));
+            // Signature block data exclude vchSignature
+            if (!(s.GetType() & SER_UNSIGNATURED)) {
+                READWRITE(LIMITED_VECTOR(vchSignature, CPubKey::SIGNATURE_SIZE));
+            }
+        }
     }
 
     void SetNull()
@@ -51,16 +68,20 @@ public:
         hashPrevBlock.SetNull();
         hashMerkleRoot.SetNull();
         nTime = 0;
-        nBits = 0;
+        nBaseTarget = 0;
         nNonce = 0;
+        nPlotterId = 0;
+        vchPubKey.clear();
+        vchSignature.clear();
     }
 
     bool IsNull() const
     {
-        return (nBits == 0);
+        return (nBaseTarget == 0);
     }
 
     uint256 GetHash() const;
+    uint256 GetUnsignaturedHash() const;
 
     int64_t GetBlockTime() const
     {
@@ -111,8 +132,11 @@ public:
         block.hashPrevBlock  = hashPrevBlock;
         block.hashMerkleRoot = hashMerkleRoot;
         block.nTime          = nTime;
-        block.nBits          = nBits;
+        block.nBaseTarget    = nBaseTarget;
         block.nNonce         = nNonce;
+        block.nPlotterId     = nPlotterId;
+        block.vchPubKey      = vchPubKey;
+        block.vchSignature   = vchSignature;
         return block;
     }
 

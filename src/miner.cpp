@@ -6,6 +6,7 @@
 #include <miner.h>
 
 #include <amount.h>
+#include <base58.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <coins.h>
@@ -16,9 +17,9 @@
 #include <hash.h>
 #include <validation.h>
 #include <net.h>
+#include <poc/poc.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
-#include <pow.h>
 #include <primitives/transaction.h>
 #include <script/standard.h>
 #include <timedata.h>
@@ -29,6 +30,8 @@
 #include <algorithm>
 #include <queue>
 #include <utility>
+
+#include <inttypes.h>
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -44,21 +47,6 @@
 uint64_t nLastBlockTx = 0;
 uint64_t nLastBlockWeight = 0;
 
-int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
-{
-    int64_t nOldTime = pblock->nTime;
-    int64_t nNewTime = std::max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
-
-    if (nOldTime < nNewTime)
-        pblock->nTime = nNewTime;
-
-    // Updating time can change work required on testnet:
-    if (consensusParams.fPowAllowMinDifficultyBlocks)
-        pblock->nBits = GetNextWorkRequired(pindexPrev, pblock, consensusParams);
-
-    return nNewTime - nOldTime;
-}
-
 BlockAssembler::Options::Options() {
     blockMinFeeRate = CFeeRate(DEFAULT_BLOCK_MIN_TX_FEE);
     nBlockMaxWeight = DEFAULT_BLOCK_MAX_WEIGHT;
@@ -67,8 +55,9 @@ BlockAssembler::Options::Options() {
 BlockAssembler::BlockAssembler(const CChainParams& params, const Options& options) : chainparams(params)
 {
     blockMinFeeRate = options.blockMinFeeRate;
-    // Limit weight to between 4K and MAX_BLOCK_WEIGHT-4K for sanity:
-    nBlockMaxWeight = std::max<size_t>(4000, std::min<size_t>(MAX_BLOCK_WEIGHT - 4000, options.nBlockMaxWeight));
+    // Limit weight to between 4K and MaxBlockSize-4K for sanity:
+    unsigned int nAbsMaxSize = MAX_BLOCK_WEIGHT;
+    nBlockMaxWeight = std::max<size_t>(4000, std::min<size_t>(nAbsMaxSize - 4000, options.nBlockMaxWeight));
 }
 
 static BlockAssembler::Options DefaultOptions(const CChainParams& params)
@@ -94,6 +83,7 @@ BlockAssembler::BlockAssembler(const CChainParams& params) : BlockAssembler(para
 void BlockAssembler::resetBlock()
 {
     inBlock.clear();
+    generatorAccountID.SetNull();
 
     // Reserve space for coinbase tx
     nBlockWeight = 4000;
@@ -105,7 +95,8 @@ void BlockAssembler::resetBlock()
     nFees = 0;
 }
 
-std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn, bool fMineWitnessTx)
+std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn, bool fMineWitnessTx,
+    uint64_t plotterId, uint64_t nonce, uint64_t deadline, const std::shared_ptr<CKey> privKey)
 {
     int64_t nTimeStart = GetTimeMicros();
 
@@ -117,13 +108,16 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         return nullptr;
     pblock = &pblocktemplate->block; // pointer for convenience
 
+    generatorAccountID = ExtractAccountID(scriptPubKeyIn);
+    assert (!generatorAccountID.IsNull());
+
     // Add dummy coinbase tx as first transaction
     pblock->vtx.emplace_back();
     pblocktemplate->vTxFees.push_back(-1); // updated at end
     pblocktemplate->vTxSigOpsCost.push_back(-1); // updated at end
 
     LOCK2(cs_main, mempool.cs);
-    CBlockIndex* pindexPrev = chainActive.Tip();
+    CBlockIndex *pindexPrev = chainActive.Tip();
     assert(pindexPrev != nullptr);
     nHeight = pindexPrev->nHeight + 1;
 
@@ -133,7 +127,9 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     if (chainparams.MineBlocksOnDemand())
         pblock->nVersion = gArgs.GetArg("-blockversion", pblock->nVersion);
 
-    pblock->nTime = GetAdjustedTime();
+    // Keep largest difficulty
+    pblock->nTime = static_cast<uint32_t>(pindexPrev->GetBlockTime() + static_cast<int64_t>(deadline) + 1);
+
     const int64_t nMedianTimePast = pindexPrev->GetMedianTimePast();
 
     nLockTimeCutoff = (STANDARD_LOCKTIME_VERIFY_FLAGS & LOCKTIME_MEDIAN_TIME_PAST)
@@ -161,10 +157,35 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     CMutableTransaction coinbaseTx;
     coinbaseTx.vin.resize(1);
     coinbaseTx.vin[0].prevout.SetNull();
-    coinbaseTx.vout.resize(1);
+    coinbaseTx.vin[0].scriptSig = (CScript() << nHeight << CScriptNum(static_cast<int64_t>(nonce)) << CScriptNum(static_cast<int64_t>(plotterId))) + COINBASE_FLAGS;
+    assert(coinbaseTx.vin[0].scriptSig.size() <= 100);
+    // Reward
+    BlockReward blockReward = GetBlockReward(pindexPrev, nFees, generatorAccountID, plotterId, *pcoinsTip, chainparams.GetConsensus());
+    assert(blockReward.miner + blockReward.accumulate >= 0);
+    unsigned int fundOutIndex = std::numeric_limits<unsigned int>::max();
+    if (blockReward.miner0 != 0) {
+        // Let old wallet can verify
+        if (blockReward.fund != 0) {
+            fundOutIndex = 2;
+            coinbaseTx.vout.resize(3);
+        } else {
+            coinbaseTx.vout.resize(2);
+        }
+        // Old consensus will check [1] amount
+        coinbaseTx.vout[1].scriptPubKey = scriptPubKeyIn;
+        coinbaseTx.vout[1].nValue = blockReward.miner0;
+    } else if (blockReward.fund != 0) {
+        fundOutIndex = 1;
+        coinbaseTx.vout.resize(2);
+    } else {
+        coinbaseTx.vout.resize(1);
+    }
     coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
-    coinbaseTx.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
-    coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
+    coinbaseTx.vout[0].nValue = blockReward.miner + blockReward.accumulate;
+    if (fundOutIndex < coinbaseTx.vout.size()) {
+        coinbaseTx.vout[fundOutIndex].scriptPubKey = GetScriptForDestination(DecodeDestination(chainparams.GetConsensus().BHDFundAddress));
+        coinbaseTx.vout[fundOutIndex].nValue = blockReward.fund;
+    }
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
     pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
     pblocktemplate->vTxFees[0] = -nFees;
@@ -173,14 +194,24 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
     // Fill in header
     pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
-    UpdateTime(pblock, chainparams.GetConsensus(), pindexPrev);
-    pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock, chainparams.GetConsensus());
-    pblock->nNonce         = 0;
+    pblock->nNonce         = nonce;
+    pblock->nPlotterId     = plotterId;
+    pblock->nBaseTarget    = poc::CalculateBaseTarget(*pindexPrev, *pblock, chainparams.GetConsensus());
+
+    pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
+
     pblocktemplate->vTxSigOpsCost[0] = WITNESS_SCALE_FACTOR * GetLegacySigOpCount(*pblock->vtx[0]);
 
-    CValidationState state;
-    if (!TestBlockValidity(state, chainparams, *pblock, pindexPrev, false, false)) {
-        throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, FormatStateMessage(state)));
+    if (plotterId != 0) {
+        // Signature
+        if (nHeight >= chainparams.GetConsensus().BHDIP007Height && (!privKey || !privKey->IsValid() || !sign(*pblock, *privKey))) {
+            throw std::runtime_error(strprintf("%s: Signature block error", __func__));
+        }
+
+        CValidationState state;
+        if (!TestBlockValidity(state, chainparams, *pblock, pindexPrev, false, false)) {
+            throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, FormatStateMessage(state)));
+        }
     }
     int64_t nTime2 = GetTimeMicros();
 
@@ -330,6 +361,8 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
     const int64_t MAX_CONSECUTIVE_FAILURES = 1000;
     int64_t nConsecutiveFailed = 0;
 
+    CCoinsViewCache view(pcoinsTip.get());
+
     while (mi != mempool.mapTx.get<ancestor_score>().end() || !mapModifiedTx.empty())
     {
         // First try to find a new transaction in mapTx to evaluate.
@@ -426,34 +459,52 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
         std::vector<CTxMemPool::txiter> sortedEntries;
         SortForBlock(ancestors, iter, sortedEntries);
 
-        for (size_t i=0; i<sortedEntries.size(); ++i) {
+        for (size_t i = 0; i < sortedEntries.size(); ++i) {
+            // Check transaction inputs and type
+            if (!Consensus::CheckTxInputs(sortedEntries[i]->GetTx(), view, *pcoinsTip, nHeight, generatorAccountID,
+                    true, // v1.2.4 crash when unbind same height bind coin
+                    chainparams.GetConsensus())) {
+                // All descendants move to failed
+                for (size_t j = i; j < sortedEntries.size(); ++j) {
+                    failedTx.insert(sortedEntries[j]);
+                    ancestors.erase(sortedEntries[j]);
+                }
+                break;
+            }
+            // Add to block
+            UpdateCoins(sortedEntries[i]->GetTx(), view, nHeight);
             AddToBlock(sortedEntries[i]);
             // Erase from the modified set, if present
             mapModifiedTx.erase(sortedEntries[i]);
         }
 
-        ++nPackagesSelected;
+        if (ancestors.empty()) {
+            if (fUsingModified) {
+                mapModifiedTx.get<ancestor_score>().erase(modit);
+                failedTx.insert(iter);
+            }
+        } else {
+            ++nPackagesSelected;
 
-        // Update transactions that depend on each of these
-        nDescendantsUpdated += UpdatePackagesForAdded(ancestors, mapModifiedTx);
+            // Update transactions that depend on each of these
+            nDescendantsUpdated += UpdatePackagesForAdded(ancestors, mapModifiedTx);
+        }
     }
 }
 
-void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce)
+bool BlockAssembler::sign(CBlock &block, const CKey &privKey)
 {
-    // Update nExtraNonce
-    static uint256 hashPrevBlock;
-    if (hashPrevBlock != pblock->hashPrevBlock)
-    {
-        nExtraNonce = 0;
-        hashPrevBlock = pblock->hashPrevBlock;
+    assert (privKey.IsValid());
+    CPubKey pubKey = privKey.GetPubKey();
+    if (ExtractAccountID(pubKey) != ExtractAccountID(block.vtx[0]->vout[0].scriptPubKey)) {
+        return false;
     }
-    ++nExtraNonce;
-    unsigned int nHeight = pindexPrev->nHeight+1; // Height first in coinbase required for block.version=2
-    CMutableTransaction txCoinbase(*pblock->vtx[0]);
-    txCoinbase.vin[0].scriptSig = (CScript() << nHeight << CScriptNum(nExtraNonce)) + COINBASE_FLAGS;
-    assert(txCoinbase.vin[0].scriptSig.size() <= 100);
+    block.vchPubKey = std::vector<unsigned char>(pubKey.begin(), pubKey.end());
 
-    pblock->vtx[0] = MakeTransactionRef(std::move(txCoinbase));
-    pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
+    uint256 unsignaturedBlockHash = block.GetUnsignaturedHash();
+    if (!privKey.Sign(unsignaturedBlockHash, block.vchSignature)) {
+        return false;
+    }
+
+    return true;
 }

@@ -18,7 +18,7 @@ CBlockIndex* CreateBlockIndexWithNbits(uint32_t nbits)
     CBlockIndex* block_index = new CBlockIndex();
     block_index->nHeight = 46367;
     block_index->nTime = 1269211443;
-    block_index->nBits = nbits;
+    block_index->nBaseTarget = nbits;
     return block_index;
 }
 

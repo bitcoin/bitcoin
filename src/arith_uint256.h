@@ -176,6 +176,8 @@ public:
     base_uint& operator*=(const base_uint& b);
     base_uint& operator/=(const base_uint& b);
 
+    uint32_t operator%(uint32_t b32);
+
     base_uint& operator++()
     {
         // prefix operator

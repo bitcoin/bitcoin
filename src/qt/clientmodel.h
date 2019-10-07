@@ -5,6 +5,10 @@
 #ifndef BITCOIN_QT_CLIENTMODEL_H
 #define BITCOIN_QT_CLIENTMODEL_H
 
+#if defined(HAVE_CONFIG_H)
+#include <config/bitcoin-config.h>
+#endif
+
 #include <QObject>
 #include <QDateTime>
 
@@ -15,6 +19,10 @@ class OptionsModel;
 class PeerTableModel;
 
 class CBlockIndex;
+
+#ifdef ENABLE_WALLET
+class CWallet;
+#endif
 
 QT_BEGIN_NAMESPACE
 class QTimer;
@@ -101,6 +109,10 @@ Q_SIGNALS:
     void networkActiveChanged(bool networkActive);
     void alertsChanged(const QString &warnings);
     void bytesChanged(quint64 totalBytesIn, quint64 totalBytesOut);
+#ifdef ENABLE_WALLET
+    void walletChanged(CWallet *wallet);
+    void walletPrimaryAddressChanged(CWallet *wallet);
+#endif
 
     //! Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);

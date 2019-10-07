@@ -97,6 +97,7 @@ enum class FeeEstimateMode {
     UNSET,        //! Use default settings based on other criteria
     ECONOMICAL,   //! Force estimateSmartFee to use non-conservative estimates
     CONSERVATIVE, //! Force estimateSmartFee to use conservative estimates
+    FIXED,        //! Fixed fee
 };
 
 bool FeeModeFromString(const std::string& mode_string, FeeEstimateMode& fee_estimate_mode);

@@ -22,6 +22,7 @@ CAmount GetRequiredFee(unsigned int nTxBytes)
 CAmount GetMinimumFee(unsigned int nTxBytes, const CCoinControl& coin_control, const CTxMemPool& pool, const CBlockPolicyEstimator& estimator, FeeCalculation *feeCalc)
 {
     /* User control of how to calculate fee uses the following parameter precedence:
+       0. fixedFee
        1. coin_control.m_feerate
        2. coin_control.m_confirm_target
        3. payTxFee (user-set global variable)
@@ -29,7 +30,11 @@ CAmount GetMinimumFee(unsigned int nTxBytes, const CCoinControl& coin_control, c
        The first parameter that is set is used.
     */
     CAmount fee_needed;
-    if (coin_control.m_feerate) { // 1.
+    if (coin_control.m_fee_mode == FeeEstimateMode::FIXED) { // 0.
+        fee_needed = coin_control.fixedFee;
+        if (feeCalc) feeCalc->reason = FeeReason::PAYTXFEE;
+    }
+    else if (coin_control.m_feerate) { // 1.
         fee_needed = coin_control.m_feerate->GetFee(nTxBytes);
         if (feeCalc) feeCalc->reason = FeeReason::PAYTXFEE;
         // Allow to override automatic min/max check over coin control instance
@@ -69,7 +74,7 @@ CAmount GetMinimumFee(unsigned int nTxBytes, const CCoinControl& coin_control, c
         if (feeCalc) feeCalc->reason = FeeReason::REQUIRED;
     }
     // But always obey the maximum
-    if (fee_needed > maxTxFee) {
+    if (fee_needed > maxTxFee && coin_control.m_fee_mode != FeeEstimateMode::FIXED) {
         fee_needed = maxTxFee;
         if (feeCalc) feeCalc->reason = FeeReason::MAXTXFEE;
     }

@@ -238,7 +238,7 @@ bool ClientModel::isReleaseVersion() const
 
 QString ClientModel::formatClientStartupTime() const
 {
-    return QDateTime::fromTime_t(GetStartupTime()).toString();
+    return QDateTime::fromTime_t(GetStartupTime()).toString(Qt::SystemLocaleLongDate);
 }
 
 QString ClientModel::dataDir() const
@@ -313,6 +313,14 @@ static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, const CB
     }
 }
 
+#ifdef ENABLE_WALLET
+static void NotifyWalletPrimaryAddressChanged(ClientModel *clientmodel, CWallet *wallet)
+{
+    QMetaObject::invokeMethod(clientmodel, "walletPrimaryAddressChanged", Qt::QueuedConnection,
+                              Q_ARG(CWallet*, wallet));
+}
+#endif
+
 void ClientModel::subscribeToCoreSignals()
 {
     // Connect signals to client
@@ -323,6 +331,9 @@ void ClientModel::subscribeToCoreSignals()
     uiInterface.BannedListChanged.connect(boost::bind(BannedListChanged, this));
     uiInterface.NotifyBlockTip.connect(boost::bind(BlockTipChanged, this, _1, _2, false));
     uiInterface.NotifyHeaderTip.connect(boost::bind(BlockTipChanged, this, _1, _2, true));
+#ifdef ENABLE_WALLET
+    uiInterface.NotifyWalletPrimaryAddressChanged.connect(boost::bind(NotifyWalletPrimaryAddressChanged, this, _1));
+#endif
 }
 
 void ClientModel::unsubscribeFromCoreSignals()
@@ -335,4 +346,7 @@ void ClientModel::unsubscribeFromCoreSignals()
     uiInterface.BannedListChanged.disconnect(boost::bind(BannedListChanged, this));
     uiInterface.NotifyBlockTip.disconnect(boost::bind(BlockTipChanged, this, _1, _2, false));
     uiInterface.NotifyHeaderTip.disconnect(boost::bind(BlockTipChanged, this, _1, _2, true));
+#ifdef ENABLE_WALLET
+    uiInterface.NotifyWalletPrimaryAddressChanged.disconnect(boost::bind(NotifyWalletPrimaryAddressChanged, this, _1));
+#endif
 }

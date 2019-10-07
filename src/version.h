@@ -9,16 +9,42 @@
  * network protocol versioning
  */
 
-static const int PROTOCOL_VERSION = 70015;
+static const int PROTOCOL_VERSION = 80024;
+
+//! BHDIP 008, full mortgage subsidy, 3 minutes, 2 MiB
+static const int BHDIP008_VERSION = 80024;
+
+//! BHDIP 007, Signature & Dynamic ratio version
+static const int BHDIP007_SIGN_VERSION = 80023;
+
+//! BHDIP 006, Unsignature version
+static const int BHDIP006_UNSIGN_VERSION = 80022;
+
+//! BHDIP 006, limit unbind plotter, softfork
+static const int BHDIP006_LIMITUNBIND_VERSION = 80021;
+
+//! BHDIP 006, bind plotter, point to
+static const int BHDIP006_VERSION = 80020;
+
+//! test with this version
+static const int PRETEST_VERSION = 80015;
+
+//! disconnect from peers older than this proto version
+static const int MIN_PEER_PROTO_VERSION = 80024;
+
+
+/********************************************************/
+/* Bitcoin original version */
+/********************************************************/
+
+//! fork from bitcoin 70015
+static const int BITCOIN_VERSION = 70015;
 
 //! initial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 209;
 
 //! In this version, 'getheaders' was introduced.
 static const int GETHEADERS_VERSION = 31800;
-
-//! disconnect from peers older than this proto version
-static const int MIN_PEER_PROTO_VERSION = GETHEADERS_VERSION;
 
 //! nTime field added to CAddress, starting with this version;
 //! if possible, avoid requesting addresses nodes older than this

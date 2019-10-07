@@ -1,0 +1,8 @@
+/usr/bin/btchd-cli		--	gen_context(system_u:object_r:bitcoin_exec_t,s0)
+/usr/sbin/btchdd		--	gen_context(system_u:object_r:bitcoin_exec_t,s0)
+/usr/lib(64)?/btchd/btchdd		--	gen_context(system_u:object_r:bitcoin_exec_t,s0)
+
+/etc/btchd(/.*)?		gen_context(system_u:object_r:bitcoin_conf_t,s0)
+/var/lib/btchd(/.*)?		gen_context(system_u:object_r:bitcoin_var_lib_t,s0)
+
+(/var)?/run/btchdd(/.*)?   gen_context(system_u:object_r:bitcoin_var_run_t,s0)

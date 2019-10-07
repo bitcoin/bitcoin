@@ -101,6 +101,11 @@ public:
         ssKey << key;
         leveldb::Slice slKey(ssKey.data(), ssKey.size());
 
+        EraseSlice(slKey);
+        ssKey.clear();
+    }
+
+    void EraseSlice(const leveldb::Slice &slKey) {
         batch.Delete(slKey);
         // LevelDB serializes erases as:
         // - byte: header
@@ -108,7 +113,6 @@ public:
         // - byte[]: key
         // The formula below assumes the key is less than 16kB.
         size_estimate += 2 + (slKey.size() > 127) + slKey.size();
-        ssKey.clear();
     }
 
     size_t SizeEstimate() const { return size_estimate; }
@@ -143,6 +147,14 @@ public:
     }
 
     void Next();
+
+    leveldb::Slice GetKey() {
+        return piter->key();
+    }
+
+    leveldb::Slice GetValue() {
+        return piter->value();
+    }
 
     template<typename K> bool GetKey(K& key) {
         leveldb::Slice slKey = piter->key();

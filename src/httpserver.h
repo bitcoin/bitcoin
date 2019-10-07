@@ -6,6 +6,7 @@
 #define BITCOIN_HTTPSERVER_H
 
 #include <string>
+#include <map>
 #include <stdint.h>
 #include <functional>
 
@@ -89,6 +90,12 @@ public:
      * Return a pair (isPresent,string).
      */
     std::pair<bool, std::string> GetHeader(const std::string& hdr);
+    
+    /**
+     * Get the request query parameters.
+     * Return a map (name,value).
+     */
+    std::map<std::string, std::string> GetParameters();
 
     /**
      * Read request body.

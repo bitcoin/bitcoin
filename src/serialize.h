@@ -146,6 +146,9 @@ enum
     SER_NETWORK         = (1 << 0),
     SER_DISK            = (1 << 1),
     SER_GETHASH         = (1 << 2),
+
+    // exclude signature
+    SER_UNSIGNATURED    = (1 << 4),
 };
 
 #define READWRITE(obj)      (::SerReadWrite(s, (obj), ser_action))
@@ -493,9 +496,9 @@ template<typename Stream, unsigned int N, typename T> inline void Unserialize(St
 template<typename Stream, typename T, typename A> void Serialize_impl(Stream& os, const std::vector<T, A>& v, const unsigned char&);
 template<typename Stream, typename T, typename A, typename V> void Serialize_impl(Stream& os, const std::vector<T, A>& v, const V&);
 template<typename Stream, typename T, typename A> inline void Serialize(Stream& os, const std::vector<T, A>& v);
-template<typename Stream, typename T, typename A> void Unserialize_impl(Stream& is, std::vector<T, A>& v, const unsigned char&);
-template<typename Stream, typename T, typename A, typename V> void Unserialize_impl(Stream& is, std::vector<T, A>& v, const V&);
-template<typename Stream, typename T, typename A> inline void Unserialize(Stream& is, std::vector<T, A>& v);
+template<typename Stream, typename T, typename A> void Unserialize_impl(Stream& is, std::vector<T, A>& v, const unsigned char&, size_t limitSize = 0);
+template<typename Stream, typename T, typename A, typename V> void Unserialize_impl(Stream& is, std::vector<T, A>& v, const V&, size_t limitSize = 0);
+template<typename Stream, typename T, typename A> inline void Unserialize(Stream& is, std::vector<T, A>& v, size_t limitSize = 0);
 
 /**
  * pair
@@ -545,6 +548,34 @@ inline void Unserialize(Stream& is, T& a)
 }
 
 
+#define LIMITED_VECTOR(obj,n) REF(WrapLimitedVector< n >(REF(obj)))
+
+/**
+ * size limit vector
+ */
+template<typename T, typename A, size_t Limit>
+class LimitedVector
+{
+protected:
+    std::vector<T, A>& v;
+public:
+    explicit LimitedVector(std::vector<T, A>& _v) : v(_v) {}
+
+template <typename Stream>
+    void Unserialize(Stream& s)
+    {
+        ::Unserialize(s, v, Limit);
+    }
+
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
+        ::Serialize(s, v);
+    }
+};
+
+template<size_t Limit, typename T, typename A>
+LimitedVector<T, A, Limit> WrapLimitedVector(std::vector<T, A>& v) { return LimitedVector<T, A, Limit>(v); }
 
 
 
@@ -665,11 +696,13 @@ inline void Serialize(Stream& os, const std::vector<T, A>& v)
 
 
 template<typename Stream, typename T, typename A>
-void Unserialize_impl(Stream& is, std::vector<T, A>& v, const unsigned char&)
+void Unserialize_impl(Stream& is, std::vector<T, A>& v, const unsigned char&, size_t limitSize)
 {
     // Limit size per read so bogus size value won't cause out of memory
     v.clear();
     unsigned int nSize = ReadCompactSize(is);
+    if (limitSize != 0 && nSize > limitSize)
+        throw std::ios_base::failure("Unserialize_impl(): size too large");
     unsigned int i = 0;
     while (i < nSize)
     {
@@ -681,7 +714,7 @@ void Unserialize_impl(Stream& is, std::vector<T, A>& v, const unsigned char&)
 }
 
 template<typename Stream, typename T, typename A, typename V>
-void Unserialize_impl(Stream& is, std::vector<T, A>& v, const V&)
+void Unserialize_impl(Stream& is, std::vector<T, A>& v, const V&, size_t)
 {
     v.clear();
     unsigned int nSize = ReadCompactSize(is);
@@ -699,9 +732,9 @@ void Unserialize_impl(Stream& is, std::vector<T, A>& v, const V&)
 }
 
 template<typename Stream, typename T, typename A>
-inline void Unserialize(Stream& is, std::vector<T, A>& v)
+inline void Unserialize(Stream& is, std::vector<T, A>& v, size_t limitSize)
 {
-    Unserialize_impl(is, v, T());
+    Unserialize_impl(is, v, T(), limitSize);
 }
 
 

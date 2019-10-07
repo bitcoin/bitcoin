@@ -92,10 +92,10 @@ void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
             static bool fDone;
             if (!fDone)
             {
-                // If nobody has a time different than ours but within 5 minutes of ours, give a warning
+                // If nobody has a time different than ours but within 30 seconds of ours, give a warning
                 bool fMatch = false;
                 for (int64_t nOffset : vSorted)
-                    if (nOffset != 0 && abs64(nOffset) < 5 * 60)
+                    if (nOffset != 0 && abs64(nOffset) < 30)
                         fMatch = true;
 
                 if (!fMatch)

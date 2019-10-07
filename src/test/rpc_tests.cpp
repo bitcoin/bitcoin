@@ -234,7 +234,7 @@ BOOST_AUTO_TEST_CASE(json_parse_errors)
     // Invalid, trailing garbage
     BOOST_CHECK_THROW(ParseNonRFCJSONValue("1.0sds"), std::runtime_error);
     BOOST_CHECK_THROW(ParseNonRFCJSONValue("1.0]"), std::runtime_error);
-    // BTC addresses should fail parsing
+    // BitcoinHD addresses should fail parsing
     BOOST_CHECK_THROW(ParseNonRFCJSONValue("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"), std::runtime_error);
     BOOST_CHECK_THROW(ParseNonRFCJSONValue("3J98t1WpEZ73CNmQviecrnyiWrnqRhWNL"), std::runtime_error);
 }
@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
 
     UniValue r;
     BOOST_CHECK_NO_THROW(r = CallRPC(std::string("setban 127.0.0.0 add")));
-    BOOST_CHECK_THROW(r = CallRPC(std::string("setban 127.0.0.0:8334")), std::runtime_error); //portnumber for setban not allowed
+    BOOST_CHECK_THROW(r = CallRPC(std::string("setban 127.0.0.0:8834")), std::runtime_error); //portnumber for setban not allowed
     BOOST_CHECK_NO_THROW(r = CallRPC(std::string("listbanned")));
     UniValue ar = r.get_array();
     UniValue o1 = ar[0].get_obj();

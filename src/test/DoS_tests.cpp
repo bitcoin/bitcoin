@@ -8,7 +8,7 @@
 #include <keystore.h>
 #include <net.h>
 #include <net_processing.h>
-#include <pow.h>
+#include <poc/poc.h>
 #include <script/sign.h>
 #include <serialize.h>
 #include <util.h>
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
         BOOST_CHECK(node->fDisconnect == false);
     }
 
-    SetMockTime(GetTime() + 3*consensusParams.nPowTargetSpacing + 1);
+    SetMockTime(GetTime() + 3*consensusParams.BHDIP008TargetSpacing + 1);
 
     // Now tip should definitely be stale, and we should look for an extra
     // outbound peer

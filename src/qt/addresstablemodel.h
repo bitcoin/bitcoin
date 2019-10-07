@@ -10,6 +10,7 @@
 
 enum OutputType : int;
 
+class PlatformStyle;
 class AddressTablePriv;
 class WalletModel;
 
@@ -23,12 +24,18 @@ class AddressTableModel : public QAbstractTableModel
     Q_OBJECT
 
 public:
-    explicit AddressTableModel(CWallet *wallet, WalletModel *parent = 0);
+    explicit AddressTableModel(const PlatformStyle *platformStyle, CWallet *wallet, WalletModel *parent = 0);
     ~AddressTableModel();
 
     enum ColumnIndex {
-        Label = 0,   /**< User specified label */
-        Address = 1  /**< Bitcoin address */
+        Status = 0,     /**< Status */
+        Watchonly = 1,  /**< Watchonly */
+        Label = 2,      /**< User specified label */
+        Address = 3,    /**< BitcoinHD address */
+        Amount = 4,     /**< BitcoinHD amount */
+        LockedAmount = 5, /**< BitcoinHD locked amount */
+        LoanAmount = 6,   /**< BitcoinHD rental loan amount */
+        BorrowAmount = 7,  /**< BitcoinHD  rental borrow amount */
     };
 
     enum RoleIndex {
@@ -55,7 +62,7 @@ public:
     QVariant data(const QModelIndex &index, int role) const;
     bool setData(const QModelIndex &index, const QVariant &value, int role);
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
-    QModelIndex index(int row, int column, const QModelIndex &parent) const;
+    QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const;
     bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex());
     Qt::ItemFlags flags(const QModelIndex &index) const;
     /*@}*/
@@ -76,7 +83,11 @@ public:
 
     EditStatus getEditStatus() const { return editStatus; }
 
+    CWallet * getWallet() { return wallet; }
+
 private:
+    const PlatformStyle *platformStyle;
+
     WalletModel *walletModel;
     CWallet *wallet;
     AddressTablePriv *priv;
@@ -90,6 +101,14 @@ public Q_SLOTS:
     /* Update address list from core.
      */
     void updateEntry(const QString &address, const QString &label, bool isMine, const QString &purpose, int status);
+
+    /* Update address list balance
+     */
+    void updateBalance();
+
+    /* Reload address list
+     */
+    void reload();
 
     friend class AddressTablePriv;
 };

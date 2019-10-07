@@ -25,6 +25,7 @@
 #include <netbase.h>
 #include <net.h>
 #include <net_processing.h>
+#include <poc/poc.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
@@ -160,6 +161,7 @@ static CScheduler scheduler;
 
 void Interrupt()
 {
+    InterruptPOC();
     InterruptHTTPServer();
     InterruptHTTPRPC();
     InterruptRPC();
@@ -183,6 +185,8 @@ void Shutdown()
     /// module was initialized.
     RenameThread("bitcoin-shutoff");
     mempool.AddTransactionsUpdated(1);
+
+    StopPOC();
 
     StopHTTPRPC();
     StopREST();
@@ -442,6 +446,7 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-fuzzmessagestest=<n>", "Randomly fuzz 1 of every <n> network messages");
         strUsage += HelpMessageOpt("-stopafterblockimport", strprintf("Stop running after importing blocks from disk (default: %u)", DEFAULT_STOPAFTERBLOCKIMPORT));
         strUsage += HelpMessageOpt("-stopatheight", strprintf("Stop running after reaching the given height in the main chain (default: %u)", DEFAULT_STOPATHEIGHT));
+        strUsage += HelpMessageOpt("-forcecheckdeadline", strprintf("Force check every block work (default: %u)", DEFAULT_FORCECHECKDEADLINE_ENABLED));
 
         strUsage += HelpMessageOpt("-limitancestorcount=<n>", strprintf("Do not accept transactions if number of in-mempool ancestors is <n> or more (default: %u)", DEFAULT_ANCESTOR_LIMIT));
         strUsage += HelpMessageOpt("-limitancestorsize=<n>", strprintf("Do not accept transactions whose size with all in-mempool ancestors exceeds <n> kilobytes (default: %u)", DEFAULT_ANCESTOR_SIZE_LIMIT));
@@ -470,6 +475,7 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-printpriority", strprintf("Log transaction fee per kB when mining blocks (default: %u)", DEFAULT_PRINTPRIORITY));
     }
     strUsage += HelpMessageOpt("-shrinkdebugfile", _("Shrink debug.log file on client startup (default: 1 when no -debug)"));
+    strUsage += HelpMessageOpt("-signprivkey", _("Import private key for block signature"));
 
     AppendParamsHelpMessages(strUsage, showDebug);
 
@@ -517,14 +523,14 @@ std::string HelpMessage(HelpMessageMode mode)
 
 std::string LicenseInfo()
 {
-    const std::string URL_SOURCE_CODE = "<https://github.com/bitcoin/bitcoin>";
-    const std::string URL_WEBSITE = "<https://bitcoincore.org>";
+    const std::string URL_SOURCE_CODE = "<https://github.com/btchd/btchd>";
+    const std::string URL_WEBSITE = "<https://btchd.org>";
 
-    return CopyrightHolders(strprintf(_("Copyright (C) %i-%i"), 2009, COPYRIGHT_YEAR) + " ") + "\n" +
+    return CopyrightHolders(_("Copyright (C) %s")) + "\n" +
            "\n" +
            strprintf(_("Please contribute if you find %s useful. "
                        "Visit %s for further information about the software."),
-               PACKAGE_NAME, URL_WEBSITE) +
+               _(PACKAGE_NAME), URL_WEBSITE) +
            "\n" +
            strprintf(_("The source code is available from %s."),
                URL_SOURCE_CODE) +
@@ -548,6 +554,63 @@ static void BlockNotifyCallback(bool initialSync, const CBlockIndex *pBlockIndex
         boost::thread t(runCommand, strCmd); // thread runs free
     }
 }
+
+class CBlockChainInitTrace
+{
+public:
+    CBlockChainInitTrace(const std::string& title, const CBlockIndex* pBlockIndex) : strTitle(title), prevTickTime(GetTime()), tick(0) {
+        nStartHeight = pBlockIndex ? pBlockIndex->nHeight : chainActive.Height();
+        uiInterface.InitMessage(strTitle);
+        uiInterface.NotifyBlockTip.connect(boost::bind(BlockTipChanged, this, _1, _2));
+    }
+    ~CBlockChainInitTrace() {
+        uiInterface.NotifyBlockTip.disconnect(boost::bind(BlockTipChanged, this, _1, _2));
+    }
+
+    static void BlockTipChanged(CBlockChainInitTrace *tracer, bool initialSync, const CBlockIndex *pBlockIndex) {
+        static const std::string ticks[] = {"   ", ".  ", ".. ","..."};
+        if (!pBlockIndex || pBlockIndex->nHeight % 10 != 0)
+            return;
+
+        if (tracer->nStartHeight > pBlockIndex->nHeight)
+            tracer->nStartHeight = pBlockIndex->nHeight;
+
+        int startMiningHeight = Params().GetConsensus().BHDIP001PreMiningEndHeight;
+        if (pBlockIndex->nHeight < startMiningHeight) {
+            if (pBlockIndex->nHeight >= tracer->nStartHeight && startMiningHeight > tracer->nStartHeight) {
+                tracer->NextTick(4);
+                uiInterface.ShowProgress(tracer->strTitle + ticks[tracer->tick],
+                    std::min(1, std::max(1, (int) (50 * (pBlockIndex->nHeight - tracer->nStartHeight) / (startMiningHeight - tracer->nStartHeight)))), false);
+            }
+        } else {
+            const CBlockIndex *pBeginBlockIndex = chainActive[tracer->nStartHeight];
+            if (pBeginBlockIndex) {
+                int64_t blockTimestep = pBlockIndex->GetBlockTime() - pBeginBlockIndex->GetBlockTime();
+                int64_t requireTimestep = GetTime() - pBeginBlockIndex->GetBlockTime();
+                if (blockTimestep >= 0 && requireTimestep > 0) {
+                    tracer->NextTick(4);
+                    uiInterface.ShowProgress(tracer->strTitle + ticks[tracer->tick],
+                        50 + std::min(50, (int) (50 * blockTimestep / requireTimestep)), false);
+                }
+            }
+        }
+    }
+
+private:
+    void NextTick(int m) {
+        int64_t now = GetTime();
+        if (now > prevTickTime + 2) {
+            prevTickTime = now;
+            tick = (tick + 1) % m;
+        }
+    }
+
+    const std::string strTitle;
+    int64_t nStartHeight;
+
+    int64_t prevTickTime;
+    int tick;
+};
 
 static bool fHaveGenesis = false;
 static CWaitableCriticalSection cs_GenesisWait;
@@ -985,6 +1048,7 @@ bool AppInitParameterInteraction()
     }
     fCheckBlockIndex = gArgs.GetBoolArg("-checkblockindex", chainparams.DefaultConsistencyChecks());
     fCheckpointsEnabled = gArgs.GetBoolArg("-checkpoints", DEFAULT_CHECKPOINTS_ENABLED);
+    fForceCheckDeadline = gArgs.GetBoolArg("-forcecheckdeadline", DEFAULT_FORCECHECKDEADLINE_ENABLED);
 
     hashAssumeValid = uint256S(gArgs.GetArg("-assumevalid", chainparams.GetConsensus().defaultAssumeValid.GetHex()));
     if (!hashAssumeValid.IsNull())
@@ -1264,8 +1328,7 @@ bool AppInitMain()
      * that the server is there and will be ready later).  Warmup mode will
      * be disabled when initialisation is finished.
      */
-    if (gArgs.GetBoolArg("-server", false))
-    {
+    if (gArgs.GetBoolArg("-server", false)) {
         uiInterface.InitMessage.connect(SetRPCWarmupStatus);
         if (!AppInitServers())
             return InitError(_("Unable to start HTTP server. See debug log for details."));
@@ -1486,7 +1549,8 @@ bool AppInitMain()
 
                 // If necessary, upgrade from older database format.
                 // This is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
-                if (!pcoinsdbview->Upgrade()) {
+                bool fCoinDBUpgraded = false;
+                if (!pcoinsdbview->Upgrade(fCoinDBUpgraded)) {
                     strLoadError = _("Error upgrading chainstate database");
                     break;
                 }
@@ -1508,6 +1572,27 @@ bool AppInitMain()
                         break;
                     }
                     assert(chainActive.Tip() != nullptr);
+
+                    // Upgrade UTXO after reconnect block
+                    if (fCoinDBUpgraded && chainActive.Height() >= chainparams.GetConsensus().BHDIP007Height) {
+                        CBlockChainInitTrace upgradeTracer(_("Upgrading UTXO database"), chainActive.Tip());
+
+                        CValidationState state;
+                        {
+                            LOCK(cs_main);
+                            CBlockIndex *pindex = chainActive[chainparams.GetConsensus().BHDIP007Height];
+                            InvalidateBlock(state, chainparams, pindex);
+                            if (state.IsValid())
+                                ResetBlockFailureFlags(pindex);
+                        }
+                        if (state.IsValid())
+                            ActivateBestChain(state, chainparams);
+                        if (!state.IsValid()) {
+                            LogPrintf("%s: %s\n", __func__, FormatStateMessage(state));
+                            strLoadError = _("Error upgrading chainstate database");
+                            break;
+                        }
+                    }
                 }
 
                 if (!fReset) {
@@ -1521,18 +1606,95 @@ bool AppInitMain()
                     }
                 }
 
+                // TODO Move to rewinding
                 if (!is_coinsview_empty) {
                     uiInterface.InitMessage(_("Verifying blocks..."));
                     if (fHavePruned && gArgs.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS) > MIN_BLOCKS_TO_KEEP) {
-                        LogPrintf("Prune: pruned datadir may not have more than %d blocks; only checking available blocks",
-                            MIN_BLOCKS_TO_KEEP);
+                        LogPrintf("Prune: pruned datadir may not have more than %d blocks; only checking available blocks", MIN_BLOCKS_TO_KEEP);
                     }
 
+                    // Verify checkpoints
+                    if (!chainparams.Checkpoints().mapCheckpoints.empty()) {
+                        const MapCheckpoints &mapCheckpoints = chainparams.Checkpoints().mapCheckpoints;
+                        // Find first invalid block in checkpoint
+                        CBlockIndex *pBeginResetIndex = nullptr;
+                        // 1.First invalid block on checkpoint
+                        for (auto it = mapCheckpoints.cbegin(); it != mapCheckpoints.cend(); it++) {
+                            auto mi = mapBlockIndex.find(it->second);
+                            if (mi != mapBlockIndex.end() && !mi->second->IsValid()) {
+                                pBeginResetIndex = mi->second;
+                                break;
+                            }
+                        }
+                        // 2.First valid block when block data too old
+                        if (!pBeginResetIndex && chainActive.Height() < mapCheckpoints.rbegin()->first) {
+                            // Reset last checkpoint block when block data too old
+                            for (auto it = mapCheckpoints.rbegin(); it != mapCheckpoints.rend(); it++) {
+                                if (it->first < chainActive.Height()) {
+                                    pBeginResetIndex = chainActive[it->first];
+                                    break;
+                                }
+                            }
+                        }
+                        // 3.Last checkpoint
+                        if (!pBeginResetIndex) {
+                            for (auto it = mapCheckpoints.rbegin(); it != mapCheckpoints.rend(); it++) {
+                                auto mi = mapBlockIndex.find(it->second);
+                                if (mi != mapBlockIndex.end()) {
+                                    pBeginResetIndex = mi->second;
+                                    break;
+                                }
+                            }
+                        }
+
+                        CBlockChainInitTrace verifyBlockTracer(_("Verifying blocks..."), pBeginResetIndex);
+
+                        // Reset after block fail flags
+                        if (pBeginResetIndex) {
+                            {
+                                LOCK(cs_main);
+                                ResetBlockFailureFlags(pBeginResetIndex);
+                            }
+                            CValidationState state;
+                            ActivateBestChain(state, chainparams);
+                            if (!state.IsValid()) {
+                                LogPrintf("%s: %s\n", __func__, FormatStateMessage(state));
+                                strLoadError = _("Error initializing block database");
+                                break;
+                            }
+                        }
+
+                        // Invalid bad block
+                        for (auto it = mapCheckpoints.cbegin(); it != mapCheckpoints.cend() && it->first <= chainActive.Height();) {
+                            CBlockIndex *pindex = chainActive[it->first];
+                            if (*(pindex->phashBlock) != it->second) {
+                                // Invalid
+                                CValidationState state;
+                                {
+                                    LOCK(cs_main);
+                                    InvalidateBlock(state, chainparams, pindex);
+                                }
+                                if (state.IsValid())
+                                    ActivateBestChain(state, chainparams);
+                                if (!state.IsValid()) {
+                                    LogPrintf("%s: %s\n", __func__, FormatStateMessage(state));
+                                    strLoadError = _("Error initializing block database");
+                                    break;
+                                }
+                            } else {
+                                it++;
+                            }
+                        }
+                        if (!strLoadError.empty())
+                            break; // Got error
+                    }
+
+                    // Check tip time
                     {
                         LOCK(cs_main);
                         CBlockIndex* tip = chainActive.Tip();
                         RPCNotifyBlockChange(true, tip);
-                        if (tip && tip->nTime > GetAdjustedTime() + 2 * 60 * 60) {
+                        if (tip && tip->nTime > GetAdjustedTime() + MAX_FUTURE_BLOCK_TIME) {
                             strLoadError = _("The block database contains a block which appears to be from the future. "
                                     "This may be due to your computer's date and time being set incorrectly. "
                                     "Only rebuild the block database if you are sure that your computer's date and time are correct");
@@ -1540,8 +1702,8 @@ bool AppInitMain()
                         }
                     }
 
-                    if (!CVerifyDB().VerifyDB(chainparams, pcoinsdbview.get(), gArgs.GetArg("-checklevel", DEFAULT_CHECKLEVEL),
-                                  gArgs.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS))) {
+                    if (!CVerifyDB().VerifyDB(chainparams, pcoinsTip.get(), gArgs.GetArg("-checklevel", DEFAULT_CHECKLEVEL), 
+                            gArgs.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS))) {
                         strLoadError = _("Corrupted block database detected");
                         break;
                     }
@@ -1601,6 +1763,10 @@ bool AppInitMain()
 #else
     LogPrintf("No wallet support compiled in!\n");
 #endif
+
+    // PoC module dependency wallets
+    if (!StartPOC())
+        return false;
 
     // ********************************************************* Step 9: data directory maintenance
 

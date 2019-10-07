@@ -103,6 +103,7 @@ namespace BCLog {
         COINDB      = (1 << 18),
         QT          = (1 << 19),
         LEVELDB     = (1 << 20),
+        POC         = (1 << 21),
         ALL         = ~(uint32_t)0,
     };
 }
@@ -181,6 +182,7 @@ bool LockDirectory(const fs::path& directory, const std::string lockfile_name, b
 void ReleaseDirectoryLocks();
 
 bool TryCreateDirectories(const fs::path& p);
+const fs::path &GetAppDir();
 fs::path GetDefaultDataDir();
 const fs::path &GetDataDir(bool fNetSpecific = true);
 void ClearDatadirCache();
@@ -338,7 +340,7 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
     }
 }
 
-std::string CopyrightHolders(const std::string& strPrefix);
+std::string CopyrightHolders(const std::string& strHolder);
 
 //! Substitute for C++14 std::make_unique.
 template <typename T, typename... Args>

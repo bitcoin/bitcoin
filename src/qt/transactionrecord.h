@@ -24,8 +24,8 @@ public:
         matures_in(0), status(Offline), depth(0), open_for(0), cur_num_blocks(-1)
     { }
 
-    enum Status {
-        Confirmed,          /**< Have 6 or more confirmations (normal tx) or fully mature (mined tx) **/
+    enum Status: uint32_t {
+        Confirmed = 0,      /**< Have 6 or more confirmations (normal tx) or fully mature (mined tx) **/
         /// Normal (sent/received) transactions
         OpenUntilDate,      /**< Transaction not yet final, waiting for date */
         OpenUntilBlock,     /**< Transaction not yet final, waiting for block */
@@ -37,7 +37,10 @@ public:
         /// Generated (mined) transactions
         Immature,           /**< Mined but waiting for maturity */
         MaturesWarning,     /**< Transaction will likely not mature because no nodes have confirmed */
-        NotAccepted         /**< Mined but not accepted */
+        NotAccepted,        /**< Mined but not accepted */
+
+        Inactived = 0x10000, /**< Transaction inactived for bind plotter **/
+        Disabled = 0x20000,  /**< Transaction disabled **/
     };
 
     /// Transaction counts towards available balance
@@ -79,7 +82,13 @@ public:
         SendToOther,
         RecvWithAddress,
         RecvFromOther,
-        SendToSelf
+        SendToSelf,
+        BindPlotter,
+        UnbindPlotter,
+        LoanTo,
+        BorrowFrom,
+        SelfRental,
+        WithdrawRental,
     };
 
     /** Number of confirmation recommended for accepting a transaction */
@@ -117,6 +126,7 @@ public:
     std::string address;
     CAmount debit;
     CAmount credit;
+    std::string comment;
     /**@}*/
 
     /** Subtransaction index, for sort key */

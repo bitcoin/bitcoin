@@ -11,20 +11,27 @@
 #include <core_memusage.h>
 #include <hash.h>
 #include <memusage.h>
+#include <script/standard.h>
 #include <serialize.h>
 #include <uint256.h>
 
 #include <assert.h>
 #include <stdint.h>
 
+#include <memory>
+#include <set>
 #include <unordered_map>
+
+// Max height of coin
+static const uint32_t COIN_MAXHEIGHT = 0x3FFFFFFF;
 
 /**
  * A UTXO entry.
  *
  * Serialized format:
- * - VARINT((coinbase ? 1 : 0) | (height << 1))
+ * - VARINT((coinbase ? 1 : 0) | (height << 1) | (extraData ? 0x80000000 : 0))
  * - the non-spent CTxOut (via CTxOutCompressor)
+ * - the extra-data CDatacarrierPayloadRef
  */
 class Coin
 {
@@ -32,24 +39,36 @@ public:
     //! unspent transaction output
     CTxOut out;
 
+    //! memory only. Ref from out
+    CAccountID refOutAccountID;
+
     //! whether containing transaction was a coinbase
     unsigned int fCoinBase : 1;
 
     //! at which height this containing transaction was included in the active block chain
-    uint32_t nHeight : 31;
+    uint32_t nHeight : 30;
+
+    //! relevant extra data
+    CDatacarrierPayloadRef extraData;
 
     //! construct a Coin from a CTxOut and height/coinbase information.
-    Coin(CTxOut&& outIn, int nHeightIn, bool fCoinBaseIn) : out(std::move(outIn)), fCoinBase(fCoinBaseIn), nHeight(nHeightIn) {}
-    Coin(const CTxOut& outIn, int nHeightIn, bool fCoinBaseIn) : out(outIn), fCoinBase(fCoinBaseIn),nHeight(nHeightIn) {}
+    Coin(CTxOut&& outIn, int nHeightIn, bool fCoinBaseIn) : out(std::move(outIn)), refOutAccountID(), fCoinBase(fCoinBaseIn), nHeight(nHeightIn) {
+        assert(nHeight <= COIN_MAXHEIGHT);
+    }
+    Coin(const CTxOut& outIn, int nHeightIn, bool fCoinBaseIn) : out(outIn), refOutAccountID(), fCoinBase(fCoinBaseIn), nHeight(nHeightIn) {
+        assert(nHeight <= COIN_MAXHEIGHT);
+    }
+    //! empty constructor
+    Coin() : refOutAccountID(), fCoinBase(false), nHeight(0) {}
 
-    void Clear() {
-        out.SetNull();
-        fCoinBase = false;
-        nHeight = 0;
+    //! Refresh memory data
+    void Refresh() {
+        refOutAccountID = ExtractAccountID(out.scriptPubKey);
     }
 
-    //! empty constructor
-    Coin() : fCoinBase(false), nHeight(0) { }
+    void Clear() {
+        out.scriptPubKey.clear();
+    }
 
     bool IsCoinBase() const {
         return fCoinBase;
@@ -58,26 +77,60 @@ public:
     template<typename Stream>
     void Serialize(Stream &s) const {
         assert(!IsSpent());
-        uint32_t code = nHeight * 2 + fCoinBase;
+        assert(nHeight <= COIN_MAXHEIGHT);
+        uint32_t code = (extraData ? 0x80000000 : 0) | (nHeight << 1) | (fCoinBase ? 1 : 0);
         ::Serialize(s, VARINT(code));
         ::Serialize(s, CTxOutCompressor(REF(out)));
+
+        if (code & 0x80000000) {
+            ::Serialize(s, VARINT((unsigned int&)extraData->type));
+            if (extraData->type == DATACARRIER_TYPE_BINDPLOTTER) {
+                ::Serialize(s, VARINT(BindPlotterPayload::As(extraData)->id));
+            } else if (extraData->type == DATACARRIER_TYPE_RENTAL) {
+                ::Serialize(s, REF(RentalPayload::As(extraData)->GetBorrowerAccountID()));
+            } else
+                assert(false);
+        }
     }
 
     template<typename Stream>
     void Unserialize(Stream &s) {
         uint32_t code = 0;
         ::Unserialize(s, VARINT(code));
-        nHeight = code >> 1;
-        fCoinBase = code & 1;
+        nHeight = (code&0x7fffffff) >> 1;
+        fCoinBase = code & 0x01;
         ::Unserialize(s, REF(CTxOutCompressor(out)));
+        Refresh();
+
+        extraData = nullptr;
+        if (code & 0x80000000) {
+            unsigned int extraDataType = 0;
+            ::Unserialize(s, VARINT(extraDataType));
+            if (extraDataType == DATACARRIER_TYPE_BINDPLOTTER) {
+                extraData = std::make_shared<BindPlotterPayload>();
+                ::Unserialize(s, VARINT(BindPlotterPayload::As(extraData)->id));
+            } else if (extraDataType == DATACARRIER_TYPE_RENTAL) {
+                extraData = std::make_shared<RentalPayload>();
+                ::Unserialize(s, REF(RentalPayload::As(extraData)->GetBorrowerAccountID()));
+            } else
+                assert(false);
+        }
     }
 
     bool IsSpent() const {
-        return out.IsNull();
+        return out.scriptPubKey.empty();
     }
 
     size_t DynamicMemoryUsage() const {
-        return memusage::DynamicUsage(out.scriptPubKey);
+        return memusage::DynamicUsage(out.scriptPubKey) + CAccountID::WIDTH * 2;
+    }
+
+    bool IsBindPlotter() const {
+        return extraData && extraData->type == DATACARRIER_TYPE_BINDPLOTTER;
+    }
+
+    bool IsPledge() const {
+        return extraData && extraData->type == DATACARRIER_TYPE_RENTAL;
     }
 };
 
@@ -113,6 +166,8 @@ struct CCoinsCacheEntry
          * flush the changes to the parent cache.  It is always safe to
          * not mark FRESH if that condition is not guaranteed.
          */
+
+        UNBIND = (1 << 2), // Spent for unbind
     };
 
     CCoinsCacheEntry() : flags(0) {}
@@ -121,15 +176,50 @@ struct CCoinsCacheEntry
 
 typedef std::unordered_map<COutPoint, CCoinsCacheEntry, SaltedOutpointHasher> CCoinsMap;
 
-/** Cursor for iterating over CoinsView state */
-class CCoinsViewCursor
+/** Bind plotter coin information */
+struct CBindPlotterCoinInfo
+{
+    int nHeight;
+    CAccountID accountID;
+    uint64_t plotterId;
+    bool valid;
+
+    CBindPlotterCoinInfo() : nHeight(-1), accountID(), plotterId(0), valid(false) {}
+    explicit CBindPlotterCoinInfo(const Coin& coin) : nHeight((int)coin.nHeight), accountID(coin.refOutAccountID),
+        plotterId(BindPlotterPayload::As(coin.extraData)->GetId()), valid(!coin.IsSpent()) {}
+};
+
+typedef std::map<COutPoint, CBindPlotterCoinInfo> CBindPlotterCoinsMap;
+typedef std::pair<CBindPlotterCoinsMap::key_type, CBindPlotterCoinsMap::mapped_type> CBindPlotterCoinPair;
+
+/** Bind plotter information */
+class CBindPlotterInfo
 {
 public:
-    CCoinsViewCursor(const uint256 &hashBlockIn): hashBlock(hashBlockIn) {}
-    virtual ~CCoinsViewCursor() {}
+    COutPoint outpoint;
+    int nHeight;
+    CAccountID accountID;
+    uint64_t plotterId;
+    bool valid;
 
-    virtual bool GetKey(COutPoint &key) const = 0;
-    virtual bool GetValue(Coin &coin) const = 0;
+    CBindPlotterInfo() : outpoint(), nHeight(-1), accountID(), plotterId(0), valid(false) {}
+    explicit CBindPlotterInfo(const CBindPlotterCoinPair& pair) : outpoint(pair.first),
+        nHeight(pair.second.nHeight), accountID(pair.second.accountID), plotterId(pair.second.plotterId), valid(pair.second.valid) {} 
+    CBindPlotterInfo(const COutPoint& o, const Coin& coin) : outpoint(o),
+        nHeight((int)coin.nHeight), accountID(coin.refOutAccountID),
+        plotterId(BindPlotterPayload::As(coin.extraData)->GetId()), valid(!coin.IsSpent()) {}
+};
+
+/** Cursor template for iterating over CoinsData state */
+template <typename K, typename V>
+class CCoinsDataCursor
+{
+public:
+    CCoinsDataCursor(const uint256 &hashBlockIn): hashBlock(hashBlockIn) {}
+    virtual ~CCoinsDataCursor() {}
+
+    virtual bool GetKey(K &key) const = 0;
+    virtual bool GetValue(V &coin) const = 0;
     virtual unsigned int GetValueSize() const = 0;
 
     virtual bool Valid() const = 0;
@@ -140,6 +230,10 @@ public:
 private:
     uint256 hashBlock;
 };
+
+/** Cursor for iterating over CoinsView state */
+typedef CCoinsDataCursor<COutPoint,Coin> CCoinsViewCursor;
+typedef std::shared_ptr<CCoinsViewCursor> CCoinsViewCursorRef;
 
 /** Abstract view on the open txout dataset. */
 class CCoinsView
@@ -167,14 +261,29 @@ public:
     //! The passed mapCoins can be modified.
     virtual bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock);
 
-    //! Get a cursor to iterate over the whole state
-    virtual CCoinsViewCursor *Cursor() const;
+    //! Get a cursor to iterate over the whole spendable state
+    virtual CCoinsViewCursorRef Cursor() const;
+    virtual CCoinsViewCursorRef Cursor(const CAccountID &accountID) const;
+
+    //! Get a cursor to iterate over the whole rental loan and borrow state
+    virtual CCoinsViewCursorRef RentalLoanCursor(const CAccountID &accountID) const;
+    virtual CCoinsViewCursorRef RentalBorrowCursor(const CAccountID &accountID) const;
 
     //! As we use CCoinsViews polymorphically, have a virtual destructor
     virtual ~CCoinsView() {}
 
     //! Estimate database size (0 if not implemented)
     virtual size_t EstimateSize() const { return 0; }
+
+    //! Get balance. Return amount of account
+    virtual CAmount GetBalance(const CAccountID &accountID, const CCoinsMap &mapChildCoins,
+        CAmount *balanceBindPlotter, CAmount *balanceLoan, CAmount *balanceBorrow) const;
+
+    //! Get account bind plotter all coin entries. if plotterId is 0 then return all coin entries for account.
+    virtual CBindPlotterCoinsMap GetAccountBindPlotterEntries(const CAccountID &accountID, const uint64_t &plotterId = 0) const;
+
+    //! Get plotter bind all coin entries.
+    virtual CBindPlotterCoinsMap GetBindPlotterEntries(const uint64_t &plotterId) const;
 };
 
 
@@ -192,8 +301,15 @@ public:
     std::vector<uint256> GetHeadBlocks() const override;
     void SetBackend(CCoinsView &viewIn);
     bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) override;
-    CCoinsViewCursor *Cursor() const override;
+    CCoinsViewCursorRef Cursor() const override;
+    CCoinsViewCursorRef Cursor(const CAccountID &accountID) const override;
+    CCoinsViewCursorRef RentalLoanCursor(const CAccountID &accountID) const override;
+    CCoinsViewCursorRef RentalBorrowCursor(const CAccountID &accountID) const override;
     size_t EstimateSize() const override;
+    CAmount GetBalance(const CAccountID &accountID, const CCoinsMap &mapChildCoins,
+        CAmount *balanceBindPlotter, CAmount *balanceLoan, CAmount *balanceBorrow) const override;
+    CBindPlotterCoinsMap GetAccountBindPlotterEntries(const CAccountID &accountID, const uint64_t &plotterId = 0) const override;
+    CBindPlotterCoinsMap GetBindPlotterEntries(const uint64_t &plotterId) const override;
 };
 
 
@@ -203,7 +319,7 @@ class CCoinsViewCache : public CCoinsViewBacked
 protected:
     /**
      * Make mutable so that we can "fill the cache" even from Get-methods
-     * declared as "const".  
+     * declared as "const".
      */
     mutable uint256 hashBlock;
     mutable CCoinsMap cacheCoins;
@@ -225,9 +341,22 @@ public:
     uint256 GetBestBlock() const override;
     void SetBestBlock(const uint256 &hashBlock);
     bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) override;
-    CCoinsViewCursor* Cursor() const override {
+    CCoinsViewCursorRef Cursor() const override {
         throw std::logic_error("CCoinsViewCache cursor iteration not supported.");
     }
+    CCoinsViewCursorRef Cursor(const CAccountID &accountID) const override {
+        throw std::logic_error("CCoinsViewCache cursor iteration not supported.");
+    }
+    CCoinsViewCursorRef RentalLoanCursor(const CAccountID &accountID) const override {
+        throw std::logic_error("CCoinsViewCache cursor iteration not supported.");
+    }
+    CCoinsViewCursorRef RentalBorrowCursor(const CAccountID &accountID) const override {
+        throw std::logic_error("CCoinsViewCache cursor iteration not supported.");
+    }
+    CAmount GetBalance(const CAccountID &accountID, const CCoinsMap &mapChildCoins,
+        CAmount *balanceBindPlotter, CAmount *balanceLoan, CAmount *balanceBorrow) const override;
+    CBindPlotterCoinsMap GetAccountBindPlotterEntries(const CAccountID &accountID, const uint64_t &plotterId = 0) const override;
+    CBindPlotterCoinsMap GetBindPlotterEntries(const uint64_t &plotterId) const override;
 
     /**
      * Check if we have the given utxo already loaded in this cache.
@@ -259,7 +388,7 @@ public:
      * If no unspent output exists for the passed outpoint, this call
      * has no effect.
      */
-    bool SpendCoin(const COutPoint &outpoint, Coin* moveto = nullptr);
+    bool SpendCoin(const COutPoint &outpoint, Coin* moveto = nullptr, bool rollback = false);
 
     /**
      * Push the modifications applied to this cache to its base.
@@ -292,6 +421,21 @@ public:
 
     //! Check whether all prevouts of the transaction are present in the UTXO set represented by this view
     bool HaveInputs(const CTransaction& tx) const;
+
+    /** Scan UTXO for the account. Return total balance. */
+    CAmount GetAccountBalance(const CAccountID &accountID,
+        CAmount *balanceBindPlotter = nullptr, CAmount *balanceLoan = nullptr, CAmount *balanceBorrow = nullptr) const;
+
+    /** Return a reference to lastest bind plotter information, or a pruned one if not found. */
+    CBindPlotterInfo GetChangeBindPlotterInfo(const CBindPlotterInfo &sourceBindInfo, bool compatible = false) const;
+    CBindPlotterInfo GetLastBindPlotterInfo(const uint64_t &plotterId) const;
+    const Coin& GetLastBindPlotterCoin(const uint64_t &plotterId, COutPoint *outpoint = nullptr) const;
+
+    /** Just check whether a given <accountID,plotterId> exist and lastest binded of plotterId. */
+    bool HaveActiveBindPlotter(const CAccountID &accountID, const uint64_t &plotterId) const;
+
+    /** Find accont revelate plotters */
+    std::set<uint64_t> GetAccountBindPlotters(const CAccountID &accountID) const;
 
 private:
     CCoinsMap::iterator FetchCoin(const COutPoint &outpoint) const;

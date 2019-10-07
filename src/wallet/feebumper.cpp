@@ -74,7 +74,8 @@ bool TransactionCanBeBumped(CWallet* wallet, const uint256& txid)
 {
     LOCK2(cs_main, wallet->cs_wallet);
     const CWalletTx* wtx = wallet->GetWalletTx(txid);
-    return wtx && SignalsOptInRBF(*wtx->tx) && !wtx->mapValue.count("replaced_by_txid");
+    return wtx && SignalsOptInRBF(*wtx->tx) && !wtx->mapValue.count("replaced_by_txid") &&
+        (!wtx->mapValue.count("type") || wtx->mapValue.find("type")->second != "bindplotter");
 }
 
 Result CreateTransaction(const CWallet* wallet, const uint256& txid, const CCoinControl& coin_control, CAmount total_fee, std::vector<std::string>& errors,

@@ -1,0 +1,14 @@
+[Desktop Entry]
+Version=1.0
+Name=BitcoinHD Core
+Comment=Connect to the BitcoinHD P2P Network
+Comment[de]=Verbinde mit dem BitcoinHD peer-to-peer Netzwerk
+Comment[fr]=BitcoinHD, monnaie virtuelle cryptographique pair à pair
+Comment[tr]=BitcoinHD, eşten eşe kriptografik sanal para birimi
+Exec=btchd-qt %u
+Terminal=false
+Type=Application
+Icon=bitcoin128
+MimeType=x-scheme-handler/btchd;
+Categories=Office;Finance;
+StartupWMClass=btchd-qt

@@ -10,6 +10,8 @@
 
 #include <net.h>
 
+#include <vector>
+
 #include <QWidget>
 #include <QCompleter>
 #include <QThread>
@@ -17,6 +19,10 @@
 class ClientModel;
 class PlatformStyle;
 class RPCTimerInterface;
+
+#ifdef ENABLE_WALLET
+class CWallet;
+#endif
 
 namespace Ui {
     class RPCConsole;
@@ -98,6 +104,10 @@ public Q_SLOTS:
     void setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, bool headers);
     /** Set size (number of transactions and memory usage) of the mempool in the UI */
     void setMempoolSize(long numberOfTxs, size_t dynUsage);
+#ifdef ENABLE_WALLET
+    /** Current wallet primary address changed */
+    void currentWalletPrimaryAddressChanged(CWallet *wallet);
+#endif
     /** Go forward or back in history */
     void browseHistory(int offset);
     /** Scroll console view to end */
@@ -116,6 +126,8 @@ public Q_SLOTS:
     void unbanSelectedNode();
     /** set which tab has the focus (is visible) */
     void setTabFocus(enum TabTypes tabType);
+    /** input large command */
+    void inputLargeCommand();
 
 Q_SIGNALS:
     // For RPC command executor
@@ -127,6 +139,9 @@ private:
     void setTrafficGraphRange(int mins);
     /** show detailed information on ui about selected node */
     void updateNodeDetail(const CNodeCombinedStats *stats);
+
+    /** update wallet info */
+    void updateWalletInfo();
 
     enum ColumnWidths
     {

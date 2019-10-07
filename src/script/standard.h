@@ -12,6 +12,7 @@
 #include <boost/variant.hpp>
 
 #include <stdint.h>
+#include <memory>
 
 static const bool DEFAULT_ACCEPT_DATACARRIER = true;
 
@@ -28,10 +29,10 @@ public:
 };
 
 /**
- * Default setting for nMaxDatacarrierBytes. 80 bytes of data, +1 for OP_RETURN,
- * +2 for the pushdata opcodes.
+ * Default setting for nMaxDatacarrierBytes. 8000 bytes of data,
+ * +1 for OP_RETURN, +2 for the pushdata opcodes.
  */
-static const unsigned int MAX_OP_RETURN_RELAY = 83;
+static const unsigned int MAX_OP_RETURN_RELAY = 8003;
 
 /**
  * A data carrying output is an unspendable output containing data. The script
@@ -51,7 +52,7 @@ extern unsigned nMaxDatacarrierBytes;
  * Failing one of these tests may trigger a DoS ban - see CheckInputs() for
  * details.
  */
-static const unsigned int MANDATORY_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH;
+static const unsigned int MANDATORY_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC;
 
 enum txnouttype
 {
@@ -147,6 +148,7 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
  * P2PKH, P2SH, P2WPKH, and P2WSH scripts.
  */
 bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet);
+CTxDestination ExtractDestination(const CScript& scriptPubKey);
 
 /**
  * Parse a standard scriptPubKey with one or more destination addresses. For
@@ -184,5 +186,140 @@ CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys);
  * the various witness-specific CTxDestination subtypes.
  */
 CScript GetScriptForWitness(const CScript& redeemscript);
+
+/** Utility function to get account ID. */
+CAccountID ExtractAccountID(const CPubKey& pubkey);
+CAccountID ExtractAccountID(const CScript& scriptPubKey);
+CAccountID ExtractAccountID(const CTxDestination& dest);
+
+/** opreturn type. See https://btchd.org/wiki/datacarrier */
+enum DatacarrierType : unsigned int {
+    // Range
+    DATACARRIER_TYPE_MIN = 0x0000000f,
+    DATACARRIER_TYPE_MAX = 0x10000000,
+
+    // Type of consensus relevant
+    //! See https://btchd.org/wiki/datacarrier/bind-plotter
+    DATACARRIER_TYPE_BINDPLOTTER = 0x00000010,
+    //! See https://btchd.org/wiki/datacarrier/rental
+    DATACARRIER_TYPE_RENTAL      = 0x00000011,
+    //! See https://btchd.org/wiki/datacarrier/contract
+    DATACARRIER_TYPE_CONTRACT    = 0x00000012,
+    //! See https://btchd.org/wiki/datacarrier/text
+    DATACARRIER_TYPE_TEXT        = 0x00000013,
+};
+
+/** Datacarrier payload */
+struct DatacarrierPayload
+{
+    const DatacarrierType type;
+
+    explicit DatacarrierPayload(DatacarrierType typeIn) : type(typeIn) {}
+    virtual ~DatacarrierPayload() {}
+};
+typedef std::shared_ptr<DatacarrierPayload> CDatacarrierPayloadRef;
+
+/** For bind plotter */
+struct BindPlotterPayload : public DatacarrierPayload
+{
+    uint64_t id;
+
+    BindPlotterPayload() : DatacarrierPayload(DATACARRIER_TYPE_BINDPLOTTER), id(0) {}
+    const uint64_t& GetId() const { return id; }
+
+    // Checkable cast for CDatacarrierPayloadRef
+    static BindPlotterPayload * As(CDatacarrierPayloadRef &ref) {
+        assert(ref->type == DATACARRIER_TYPE_BINDPLOTTER);
+        return (BindPlotterPayload*) ref.get();
+    }
+    static const BindPlotterPayload * As(const CDatacarrierPayloadRef &ref) {
+        assert(ref->type == DATACARRIER_TYPE_BINDPLOTTER);
+        return (const BindPlotterPayload*) ref.get();
+    }
+};
+
+/** For rental */
+struct RentalPayload : public DatacarrierPayload
+{
+    CAccountID borrowerAccountID;
+
+    RentalPayload() : DatacarrierPayload(DATACARRIER_TYPE_RENTAL) {}
+    const CAccountID& GetBorrowerAccountID() const { return borrowerAccountID; }
+
+    // Checkable cast for CDatacarrierPayloadRef
+    static RentalPayload * As(CDatacarrierPayloadRef &ref) {
+        assert(ref->type == DATACARRIER_TYPE_RENTAL);
+        return (RentalPayload*) ref.get();
+    }
+    static const RentalPayload * As(const CDatacarrierPayloadRef &ref) {
+        assert(ref->type == DATACARRIER_TYPE_RENTAL);
+        return (const RentalPayload*) ref.get();
+    }
+};
+
+/** For text */
+struct TextPayload : public DatacarrierPayload
+{
+    std::string text;
+
+    TextPayload() : DatacarrierPayload(DATACARRIER_TYPE_TEXT) {}
+    const std::string& GetText() const { return text; }
+
+    // Checkable cast for CDatacarrierPayloadRef
+    static TextPayload * As(CDatacarrierPayloadRef &ref) {
+        assert(ref->type == DATACARRIER_TYPE_TEXT);
+        return (TextPayload*) ref.get();
+    }
+    static const TextPayload * As(const CDatacarrierPayloadRef &ref) {
+        assert(ref->type == DATACARRIER_TYPE_TEXT);
+        return (const TextPayload*) ref.get();
+    }
+};
+
+/** The bind plotter lock amount */
+static const CAmount PROTOCOL_BINDPLOTTER_LOCKAMOUNT = 10 * CENT;
+
+/** The bind plotter transaction fee */
+static const CAmount PROTOCOL_BINDPLOTTER_MINFEE = 10 * CENT;
+
+/** The height for bind plotter default maximum relative tip height */
+static const int PROTOCOL_BINDPLOTTER_DEFAULTMAXALIVE = 24;
+
+/** The height for bind plotter maximum relative tip height */
+static const int PROTOCOL_BINDPLOTTER_MAXALIVE = 288 * 7;
+
+/** The bind plotter script size */
+static const int PROTOCOL_BINDPLOTTER_SCRIPTSIZE = 109;
+
+/** Check whether a string is a valid passphrase. */
+bool IsValidPassphrase(const std::string& passphrase);
+
+/** Check whether a string is a valid plotter ID. */
+bool IsValidPlotterID(const std::string& strPlotterId, uint64_t *id = nullptr);
+
+/** Generate a bind plotter script. */
+CScript GetBindPlotterScriptForDestination(const CTxDestination& dest, const std::string& passphrase, int lastActiveHeight);
+
+uint64_t GetBindPlotterIdFromScript(const CScript &script);
+
+/** The minimal rental amount */
+static const CAmount PROTOCOL_RENTAL_AMOUNT_MIN = 1 * COIN;
+
+/** The rental script size */
+static const int PROTOCOL_RENTAL_SCRIPTSIZE = 27;
+
+/** Generate a rental script. */
+CScript GetRentalScriptForDestination(const CTxDestination& dest);
+
+/** The text script maximum size. OP_RETURN(1) + type(5) + size(4) */
+static const int PROTOCOL_TEXT_MAXSIZE = MAX_OP_RETURN_RELAY - 10;
+
+/** Get text script */
+CScript GetTextScript(const std::string& text);
+
+/** Parse a datacarrier transaction. */
+CDatacarrierPayloadRef ExtractTransactionDatacarrier(const CTransaction& tx, int nHeight);
+CDatacarrierPayloadRef ExtractTransactionDatacarrier(const CTransaction& tx, int nHeight, bool& fReject, int& lastActiveHeight);
+CDatacarrierPayloadRef ExtractTransactionDatacarrierUnlimit(const CTransaction& tx, int nHeight);
 
 #endif // BITCOIN_SCRIPT_STANDARD_H

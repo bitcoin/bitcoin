@@ -10,9 +10,11 @@
 #include <stdint.h>
 #include <vector>
 
+#include <primitives/transaction.h>
+
 class CBlockIndex;
+class CBindPlotterInfo;
 class CCoinsViewCache;
-class CTransaction;
 class CValidationState;
 
 /** Transaction validation functions */
@@ -21,13 +23,23 @@ class CValidationState;
 bool CheckTransaction(const CTransaction& tx, CValidationState& state, bool fCheckDuplicateInputs=true);
 
 namespace Consensus {
+struct Params;
+
 /**
  * Check whether all inputs of this transaction are valid (no double spends and amounts)
  * This does not modify the UTXO set. This does not check scripts and sigs.
  * @param[out] txfee Set to the transaction fee if successful.
  * Preconditions: tx.IsCoinBase() is false.
  */
-bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee);
+bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, const CCoinsViewCache& prevInputs,
+    int nSpendHeight, CAmount& txfee, const CAccountID& generatorAccountID, bool fStrictCheckLimit, const Params& params);
+bool CheckTxInputs(const CTransaction& tx, const CCoinsViewCache& inputs, const CCoinsViewCache& prevInputs,
+    int nSpendHeight, const CAccountID& generatorAccountID, bool fStrictCheckLimit, const Params& params);
+
+/** Get bind/unbind plotter transaction lock height. */
+int GetBindPlotterLimitHeight(int nBindHeight, const CBindPlotterInfo& lastBindInfo, const Params& params);
+int GetUnbindPlotterLimitHeight(const CBindPlotterInfo& bindInfo, const CCoinsViewCache& inputs, const Params& params);
+
 } // namespace Consensus
 
 /** Auxiliary functions for transaction validation (ideally should not be exposed) */

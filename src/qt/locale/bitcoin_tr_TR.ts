@@ -62,12 +62,12 @@
         <translation>Alınan Adresler</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Bunlar ödeme göndermek için gereken Bitcoin adreslerinizdir. Para göndermeden önce her zaman miktarı ve alıcı adresi kontrol edin.</translation>
+        <source>These are your BitcoinHD addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Bunlar ödeme göndermek için gereken BitcoinHD adreslerinizdir. Para göndermeden önce her zaman miktarı ve alıcı adresi kontrol edin.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Bunlar ödeme almak için kullanılacak Bitcoin adreslerinizdir. Her işlem için yeni bir ödeme alma adresi kullanılması tavsiye edilir.</translation>
+        <source>These are your BitcoinHD addresses for receiving payments.</source>
+        <translation>Bunlar ödeme almak için kullanılacak BitcoinHD adreslerinizdir.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -168,8 +168,8 @@
         <translation>Cüzdan Şifrelemesini Onaylayın</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>Uyarı: Eğer cüzdanınızı şifreleyip parolanızı kaybederseniz (unutursanız) , &lt;b&gt;BÜTÜN BITCOIN'LERINIZI KAYBEDECEKSINIZ&lt;/b&gt;!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINHDS&lt;/b&gt;!</source>
+        <translation>Uyarı: Eğer cüzdanınızı şifreleyip parolanızı kaybederseniz (unutursanız) , &lt;b&gt;BÜTÜN BitcoinHD'LERINIZI KAYBEDECEKSINIZ&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -286,8 +286,8 @@
         <translation>Bloklar disk üzerinde yeniden indeksleniyor...</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>Bitcoin adresine madeni para gönderin</translation>
+        <source>Send coins to a BitcoinHD address</source>
+        <translation>BitcoinHD adresine madeni para gönderin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -302,8 +302,8 @@
         <translation>Onay mesajı...</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin
+        <source>BitcoinHD</source>
+        <translation>BitcoinHD
 </translation>
     </message>
     <message>
@@ -458,8 +458,8 @@
         <translation>Gönderim adresini düzenleyin</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation>Girilen adres "%1" Bitcoin adresiyle eşleşmiyor.</translation>
+        <source>The entered address "%1" is not a valid BitcoinHD address.</source>
+        <translation>Girilen adres "%1" BitcoinHD adresiyle eşleşmiyor.</translation>
     </message>
     <message>
         <source>The entered address "%1" is already in the address book.</source>
@@ -515,8 +515,8 @@
         <translation>Hoş geldiniz</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin
+        <source>BitcoinHD</source>
+        <translation>BitcoinHD
 </translation>
     </message>
     <message>
@@ -661,8 +661,8 @@
 <context>
     <name>QObject</name>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation>Bitcoin adresinizi girin (örneğin %1)</translation>
+        <source>Enter a BitcoinHD address (e.g. %1)</source>
+        <translation>BitcoinHD adresinizi girin (örneğin %1)</translation>
     </message>
     <message>
         <source>N/A</source>
@@ -1042,8 +1042,8 @@
         <translation>Coin gönderimini onaylayın</translation>
     </message>
     <message>
-        <source>Warning: Invalid Bitcoin address</source>
-        <translation>Uyarı: Hatalı Bitcoin adresi</translation>
+        <source>Warning: Invalid BitcoinHD address</source>
+        <translation>Uyarı: Hatalı BitcoinHD adresi</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -1343,8 +1343,8 @@
         <translation>JSON-RPC komutları ile komut satırını onaylayın</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Çekirdeği</translation>
+        <source>BitcoinHD Core</source>
+        <translation>BitcoinHD Çekirdeği</translation>
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>
@@ -1359,8 +1359,8 @@
         <translation>Bağlantı ayarları:</translation>
     </message>
     <message>
-        <source>Copyright (C) %i-%i</source>
-        <translation>Copyright (C) %i-%i</translation>
+        <source>Copyright (C) %s</source>
+        <translation>Copyright (C) %s</translation>
     </message>
     <message>
         <source>Debugging/Testing options:</source>

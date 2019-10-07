@@ -865,7 +865,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     popstack(stack);
                     stack.push_back(vchHash);
                 }
-                break;                                   
+                break;
 
                 case OP_CODESEPARATOR:
                 {
@@ -1176,7 +1176,8 @@ PrecomputedTransactionData::PrecomputedTransactionData(const CTransaction& txTo)
     }
 }
 
-uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType, const CAmount& amount, SigVersion sigversion, const PrecomputedTransactionData* cache)
+uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType, const CAmount& amount, 
+    SigVersion sigversion, const PrecomputedTransactionData* cache)
 {
     assert(nIn < txTo.vin.size());
 
@@ -1223,6 +1224,9 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
         // Sighash type
         ss << nHashType;
 
+        // BitcoinHD salt
+        ss << std::string("btchd");
+
         return ss.GetHash();
     }
 
@@ -1242,6 +1246,10 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
     // Serialize and hash
     CHashWriter ss(SER_GETHASH, 0);
     ss << txTmp << nHashType;
+
+    // BitcoinHD salt
+    ss << std::string("btchd");
+
     return ss.GetHash();
 }
 

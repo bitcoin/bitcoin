@@ -155,7 +155,7 @@ class FrameworkInfo(object):
 class ApplicationBundleInfo(object):
     def __init__(self, path):
         self.path = path
-        appName = "Bitcoin-Qt"
+        appName = "BTCHD-Qt"
         self.binaryPath = os.path.join(path, "Contents", "MacOS", appName)
         if not os.path.exists(self.binaryPath):
             raise RuntimeError("Could not find bundle binary for " + path)
@@ -215,7 +215,7 @@ def getFrameworks(binaryPath, verbose):
     otoolLines.pop(0) # First line is the inspected binary
     if ".framework" in binaryPath or binaryPath.endswith(".dylib"):
         otoolLines.pop(0) # Frameworks and dylibs list themselves as a dependency.
-    
+
     libraries = []
     for line in otoolLines:
         line = line.replace("@loader_path", os.path.dirname(binaryPath))
@@ -225,7 +225,18 @@ def getFrameworks(binaryPath, verbose):
                 print("Found framework:")
                 print(info)
             libraries.append(info)
-    
+
+    # fixes libboost_system-mt.dylib missing.
+    if binaryPath.endswith("/Contents/MacOS/BTCHD-Qt"):
+        for lib in libraries:
+            if lib.installName.endswith("/libboost_thread-mt.dylib"):
+                for lib2 in getFrameworks(lib.installName, verbose):
+                    if lib2.installName.endswith("/libboost_system-mt.dylib"):
+                        libraries.append(lib2)
+                        print("Fixes libboost_system-mt.dylib missing.")
+                        break
+                break
+
     return libraries
 
 def runInstallNameTool(action, *args):
@@ -279,7 +290,7 @@ def copyFramework(framework, path, verbose):
 
     permissions = os.stat(toPath)
     if not permissions.st_mode & stat.S_IWRITE:
-      os.chmod(toPath, permissions.st_mode | stat.S_IWRITE)
+        os.chmod(toPath, permissions.st_mode | stat.S_IWRITE)
 
     if not framework.isDylib(): # Copy resources for real frameworks
 
@@ -603,7 +614,7 @@ else:
 
 # ------------------------------------------------
 
-target = os.path.join("dist", "Bitcoin-Qt.app")
+target = os.path.join("dist", "BTCHD-Qt.app")
 
 if verbose >= 2:
     print("+ Copying source bundle +")

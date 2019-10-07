@@ -36,12 +36,19 @@ QT_BEGIN_NAMESPACE
 class QTimer;
 QT_END_NAMESPACE
 
+/** Pay operate method */
+enum class PayOperateMethod {
+    Pay,
+    LoanTo,
+    BindPlotter,
+};
+
 class SendCoinsRecipient
 {
 public:
-    explicit SendCoinsRecipient() : amount(0), fSubtractFeeFromAmount(false), nVersion(SendCoinsRecipient::CURRENT_VERSION) { }
+    explicit SendCoinsRecipient() : amount(0), fSubtractFeeFromAmount(false), plotterDataValidHeight(0), nVersion(SendCoinsRecipient::CURRENT_VERSION) { }
     explicit SendCoinsRecipient(const QString &addr, const QString &_label, const CAmount& _amount, const QString &_message):
-        address(addr), label(_label), amount(_amount), message(_message), fSubtractFeeFromAmount(false), nVersion(SendCoinsRecipient::CURRENT_VERSION) {}
+        address(addr), label(_label), amount(_amount), message(_message), fSubtractFeeFromAmount(false), plotterDataValidHeight(0), nVersion(SendCoinsRecipient::CURRENT_VERSION) { }
 
     // If from an unauthenticated payment request, this is used for storing
     // the addresses, e.g. address-A<br />address-B<br />address-C.
@@ -60,6 +67,10 @@ public:
     QString authenticatedMerchant;
 
     bool fSubtractFeeFromAmount; // memory only
+
+    // For bind plotter request
+    QString plotterPassphrase;
+    int plotterDataValidHeight;
 
     static const int CURRENT_VERSION = 1;
     int nVersion;
@@ -116,7 +127,13 @@ public:
         TransactionCreationFailed, // Error returned when wallet is still locked
         TransactionCommitFailed,
         AbsurdFee,
-        PaymentRequestExpired
+        PaymentRequestExpired,
+        // For BHDIP006
+        InactivedBHDIP006,
+        InvalidBindPlotterAmount,
+        BindPlotterExist,
+        SmallLoanAmount,
+        SmallLoanAmountExcludeFee,
     };
 
     enum EncryptionStatus
@@ -134,11 +151,20 @@ public:
     CAmount getBalance(const CCoinControl *coinControl = nullptr) const;
     CAmount getUnconfirmedBalance() const;
     CAmount getImmatureBalance() const;
+    CAmount getLoanBalance() const;
+    CAmount getBorrowBalance() const;
+    CAmount getLockedBalance() const;
     bool haveWatchOnly() const;
     CAmount getWatchBalance() const;
     CAmount getWatchUnconfirmedBalance() const;
     CAmount getWatchImmatureBalance() const;
+    CAmount getWatchLoanBalance() const;
+    CAmount getWatchBorrowBalance() const;
+    CAmount getWatchLockedBalance() const;
     EncryptionStatus getEncryptionStatus() const;
+
+    // Get wallet
+    CWallet * getWallet();
 
     // Check address for validity
     bool validateAddress(const QString &address);
@@ -156,10 +182,10 @@ public:
     };
 
     // prepare transaction for getting txfee before sending coins
-    SendCoinsReturn prepareTransaction(WalletModelTransaction &transaction, const CCoinControl& coinControl);
+    SendCoinsReturn prepareTransaction(WalletModelTransaction &transaction, const CCoinControl& coinControl, PayOperateMethod payOperateMethod);
 
     // Send coins to a list of recipients
-    SendCoinsReturn sendCoins(WalletModelTransaction &transaction);
+    SendCoinsReturn sendCoins(WalletModelTransaction &transaction, PayOperateMethod payOperateMethod);
 
     // Wallet encryption
     bool setWalletEncrypted(bool encrypted, const SecureString &passphrase);
@@ -212,6 +238,9 @@ public:
     bool transactionCanBeBumped(uint256 hash) const;
     bool bumpFee(uint256 hash);
 
+    bool transactionCanBeUnlock(uint256 hash, DatacarrierType type) const;
+    bool unlockTransaction(uint256 hash);
+
     static bool isWalletEnabled();
 
     bool hdEnabled() const;
@@ -237,9 +266,15 @@ private:
     CAmount cachedBalance;
     CAmount cachedUnconfirmedBalance;
     CAmount cachedImmatureBalance;
-    CAmount cachedWatchOnlyBalance;
+    CAmount cachedLoanBalance;
+    CAmount cachedBorrowBalance;
+    CAmount cachedLockedBalance;
+    CAmount cachedWatchBalance;
     CAmount cachedWatchUnconfBalance;
     CAmount cachedWatchImmatureBalance;
+    CAmount cachedWatchLoanBalance;
+    CAmount cachedWatchBorrowBalance;
+    CAmount cachedWatchLockedBalance;
     EncryptionStatus cachedEncryptionStatus;
     int cachedNumBlocks;
 
@@ -252,7 +287,9 @@ private:
 Q_SIGNALS:
     // Signal that balance in wallet changed
     void balanceChanged(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
-                        const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
+                        const CAmount& loanBalance, const CAmount& borrowBalance, const CAmount& lockedBalance,
+                        const CAmount& watchBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance,
+                        const CAmount& watchLoanBalance, const CAmount& watchBorrowBalance, const CAmount& watchLockedBalance);
 
     // Encryption status of wallet changed
     void encryptionStatusChanged(int status);
@@ -285,6 +322,8 @@ public Q_SLOTS:
     void updateWatchOnlyFlag(bool fHaveWatchonly);
     /* Current, immature or unconfirmed balance might have changed - emit 'balanceChanged' if so */
     void pollBalanceChanged();
+    /* Wallet primary change */
+    void walletPrimaryAddressChanged(CWallet *wallet);
 };
 
 #endif // BITCOIN_QT_WALLETMODEL_H

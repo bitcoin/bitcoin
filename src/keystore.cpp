@@ -4,7 +4,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <keystore.h>
+#include <chainparams.h>
+#include <utilstrencodings.h>
 
+#include <key.h>
+#include <pubkey.h>
 #include <util.h>
 
 bool CKeyStore::AddKey(const CKey &key) {

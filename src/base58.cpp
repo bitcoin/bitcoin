@@ -266,9 +266,11 @@ public:
 
 CTxDestination DecodeDestination(const std::string& str, const CChainParams& params)
 {
+    // Only support P2SH
     std::vector<unsigned char> data;
     uint160 hash;
     if (DecodeBase58Check(str, data)) {
+        /*
         // base58-encoded Bitcoin addresses.
         // Public-key-hash-addresses have version 0 (or 111 testnet).
         // The data vector contains RIPEMD160(SHA256(pubkey)), where pubkey is the serialized public key.
@@ -276,7 +278,7 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
         if (data.size() == hash.size() + pubkey_prefix.size() && std::equal(pubkey_prefix.begin(), pubkey_prefix.end(), data.begin())) {
             std::copy(data.begin() + pubkey_prefix.size(), data.end(), hash.begin());
             return CKeyID(hash);
-        }
+        }*/
         // Script-hash-addresses have version 5 (or 196 testnet).
         // The data vector contains RIPEMD160(SHA256(cscript)), where cscript is the serialized redemption script.
         const std::vector<unsigned char>& script_prefix = params.Base58Prefix(CChainParams::SCRIPT_ADDRESS);
@@ -285,6 +287,7 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
             return CScriptID(hash);
         }
     }
+    /*
     data.clear();
     auto bech = bech32::Decode(str);
     if (bech.second.size() > 0 && bech.first == params.Bech32HRP()) {
@@ -318,7 +321,7 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
             unk.length = data.size();
             return unk;
         }
-    }
+    }*/
     return CNoDestination();
 }
 } // namespace

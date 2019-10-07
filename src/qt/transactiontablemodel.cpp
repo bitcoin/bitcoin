@@ -300,41 +300,55 @@ QString TransactionTableModel::formatTxStatus(const TransactionRecord *wtx) cons
 {
     QString status;
 
-    switch(wtx->status.status)
-    {
-    case TransactionStatus::OpenUntilBlock:
-        status = tr("Open for %n more block(s)","",wtx->status.open_for);
-        break;
-    case TransactionStatus::OpenUntilDate:
-        status = tr("Open until %1").arg(GUIUtil::dateTimeStr(wtx->status.open_for));
-        break;
-    case TransactionStatus::Offline:
-        status = tr("Offline");
-        break;
-    case TransactionStatus::Unconfirmed:
-        status = tr("Unconfirmed");
-        break;
-    case TransactionStatus::Abandoned:
-        status = tr("Abandoned");
-        break;
-    case TransactionStatus::Confirming:
-        status = tr("Confirming (%1 of %2 recommended confirmations)").arg(wtx->status.depth).arg(TransactionRecord::RecommendedNumConfirmations);
-        break;
-    case TransactionStatus::Confirmed:
-        status = tr("Confirmed (%1 confirmations)").arg(wtx->status.depth);
-        break;
-    case TransactionStatus::Conflicted:
-        status = tr("Conflicted");
-        break;
-    case TransactionStatus::Immature:
-        status = tr("Immature (%1 confirmations, will be available after %2)").arg(wtx->status.depth).arg(wtx->status.depth + wtx->status.matures_in);
-        break;
-    case TransactionStatus::MaturesWarning:
-        status = tr("This block was not received by any other nodes and will probably not be accepted!");
-        break;
-    case TransactionStatus::NotAccepted:
-        status = tr("Generated but not accepted");
-        break;
+    if (wtx->status.status & TransactionStatus::Inactived) {
+        if (wtx->type == TransactionRecord::BindPlotter) {
+            status = tr("This binding has been unable to mine");
+        }
+    }
+    else if (wtx->status.status & TransactionStatus::Disabled) {
+        if (wtx->type == TransactionRecord::BindPlotter) {
+            status = tr("This bind plotter has unbinded");
+        } else if (wtx->type == TransactionRecord::LoanTo || wtx->type == TransactionRecord::BorrowFrom || wtx->type == TransactionRecord::SelfRental) {
+            status = tr("This rental has withdraw");
+        }
+    }
+    else {
+        switch((TransactionStatus::Status) wtx->status.status & 0xffff)
+        {
+        case TransactionStatus::OpenUntilBlock:
+            status = tr("Open for %n more block(s)","",wtx->status.open_for);
+            break;
+        case TransactionStatus::OpenUntilDate:
+            status = tr("Open until %1").arg(GUIUtil::dateTimeStr(wtx->status.open_for));
+            break;
+        case TransactionStatus::Offline:
+            status = tr("Offline");
+            break;
+        case TransactionStatus::Unconfirmed:
+            status = tr("Unconfirmed");
+            break;
+        case TransactionStatus::Abandoned:
+            status = tr("Abandoned");
+            break;
+        case TransactionStatus::Confirming:
+            status = tr("Confirming (%1 of %2 recommended confirmations)").arg(wtx->status.depth).arg(TransactionRecord::RecommendedNumConfirmations);
+            break;
+        case TransactionStatus::Confirmed:
+            status = tr("Confirmed (%1 confirmations)").arg(wtx->status.depth);
+            break;
+        case TransactionStatus::Conflicted:
+            status = tr("Conflicted");
+            break;
+        case TransactionStatus::Immature:
+            status = tr("Immature (%1 confirmations, will be available after %2)").arg(wtx->status.depth).arg(wtx->status.depth + wtx->status.matures_in);
+            break;
+        case TransactionStatus::MaturesWarning:
+            status = tr("This block was not received by any other nodes and will probably not be accepted!");
+            break;
+        case TransactionStatus::NotAccepted:
+            status = tr("Generated but not accepted");
+            break;
+        }
     }
 
     return status;
@@ -382,6 +396,18 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
         return tr("Payment to yourself");
     case TransactionRecord::Generated:
         return tr("Mined");
+    case TransactionRecord::BindPlotter:
+        return tr("Binded plotter");
+    case TransactionRecord::UnbindPlotter:
+        return tr("Unbinded plotter");
+    case TransactionRecord::LoanTo:
+        return tr("Loan to");
+    case TransactionRecord::BorrowFrom:
+        return tr("Borrow from");
+    case TransactionRecord::SelfRental:
+        return tr("Loan to yourself");
+    case TransactionRecord::WithdrawRental:
+        return tr("Withdrawn loan");
     default:
         return QString();
     }
@@ -399,6 +425,30 @@ QVariant TransactionTableModel::txAddressDecoration(const TransactionRecord *wtx
     case TransactionRecord::SendToAddress:
     case TransactionRecord::SendToOther:
         return QIcon(":/icons/tx_output");
+    case TransactionRecord::BindPlotter:
+        if (wtx->status.status & TransactionStatus::Disabled)
+            return QIcon(":/icons/tx_bindplotter_unbind");
+        else
+            return QIcon(":/icons/tx_bindplotter");
+    case TransactionRecord::UnbindPlotter:
+        return QIcon(":/icons/tx_bindplotter_unbind");
+    case TransactionRecord::BorrowFrom:
+        if (wtx->status.status & TransactionStatus::Disabled)
+            return QIcon(":/icons/tx_point_withdraw");
+        else
+            return QIcon(":/icons/tx_point_in");
+    case TransactionRecord::LoanTo:
+        if (wtx->status.status & TransactionStatus::Disabled)
+            return QIcon(":/icons/tx_point_withdraw");
+        else
+            return QIcon(":/icons/tx_point_out");
+    case TransactionRecord::SelfRental:
+        if (wtx->status.status & TransactionStatus::Disabled)
+            return QIcon(":/icons/tx_point_withdraw");
+        else
+            return QIcon(":/icons/tx_point_inout");
+    case TransactionRecord::WithdrawRental:
+        return QIcon(":/icons/tx_point_withdraw");
     default:
         return QIcon(":/icons/tx_inout");
     }
@@ -412,19 +462,29 @@ QString TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, b
         watchAddress = wtx->involvesWatchAddress ? QString(" (") + tr("watch-only") + QString(")") : "";
     }
 
+    QString comment;
+    if (!wtx->comment.empty())
+        comment = " (" + QString::fromStdString(wtx->comment) + ")";
+
     switch(wtx->type)
     {
     case TransactionRecord::RecvFromOther:
-        return QString::fromStdString(wtx->address) + watchAddress;
+        return QString::fromStdString(wtx->address) + watchAddress + comment;
     case TransactionRecord::RecvWithAddress:
     case TransactionRecord::SendToAddress:
     case TransactionRecord::Generated:
-        return lookupAddress(wtx->address, tooltip) + watchAddress;
+    case TransactionRecord::BindPlotter:
+    case TransactionRecord::UnbindPlotter:
+    case TransactionRecord::LoanTo:
+    case TransactionRecord::BorrowFrom:
+    case TransactionRecord::SelfRental:
+    case TransactionRecord::WithdrawRental:
+        return lookupAddress(wtx->address, tooltip) + watchAddress + comment;
     case TransactionRecord::SendToOther:
-        return QString::fromStdString(wtx->address) + watchAddress;
+        return QString::fromStdString(wtx->address) + watchAddress + comment;
     case TransactionRecord::SendToSelf:
     default:
-        return tr("(n/a)") + watchAddress;
+        return tr("(n/a)") + watchAddress + comment;
     }
 }
 
@@ -443,6 +503,15 @@ QVariant TransactionTableModel::addressColor(const TransactionRecord *wtx) const
         } break;
     case TransactionRecord::SendToSelf:
         return COLOR_BAREADDRESS;
+    case TransactionRecord::BindPlotter:
+        if (wtx->status.status & TransactionStatus::Inactived)
+            return COLOR_TX_STATUS_OFFLINE;
+        else
+            return COLOR_BLACK;
+    case TransactionRecord::LoanTo:
+    case TransactionRecord::BorrowFrom:
+    case TransactionRecord::SelfRental:
+        return COLOR_BLACK;
     default:
         break;
     }
@@ -464,7 +533,7 @@ QString TransactionTableModel::formatTxAmount(const TransactionRecord *wtx, bool
 
 QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx) const
 {
-    switch(wtx->status.status)
+    switch((TransactionStatus::Status) wtx->status.status & 0xffff)
     {
     case TransactionStatus::OpenUntilBlock:
     case TransactionStatus::OpenUntilDate:
@@ -512,8 +581,11 @@ QVariant TransactionTableModel::txWatchonlyDecoration(const TransactionRecord *w
 QString TransactionTableModel::formatTooltip(const TransactionRecord *rec) const
 {
     QString tooltip = formatTxStatus(rec) + QString("\n") + formatTxType(rec);
-    if(rec->type==TransactionRecord::RecvFromOther || rec->type==TransactionRecord::SendToOther ||
-       rec->type==TransactionRecord::SendToAddress || rec->type==TransactionRecord::RecvWithAddress)
+    if (rec->type==TransactionRecord::RecvFromOther || rec->type==TransactionRecord::SendToOther ||
+        rec->type==TransactionRecord::SendToAddress || rec->type==TransactionRecord::RecvWithAddress ||
+        rec->type == TransactionRecord::BindPlotter || rec->type == TransactionRecord::UnbindPlotter ||
+        rec->type == TransactionRecord::LoanTo || rec->type == TransactionRecord::BorrowFrom ||
+        rec->type == TransactionRecord::SelfRental || rec->type == TransactionRecord::WithdrawRental)
     {
         tooltip += QString(" ") + formatTxToAddress(rec, true);
     }
@@ -594,6 +666,11 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         {
             return COLOR_NEGATIVE;
         }
+        // Disabled tx
+        if(rec->status.status == TransactionStatus::Disabled)
+        {
+            return COLOR_TX_STATUS_OFFLINE;
+        }
         if(index.column() == ToAddress)
         {
             return addressColor(rec);
@@ -612,7 +689,11 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
     case AddressRole:
         return QString::fromStdString(rec->address);
     case LabelRole:
-        return walletModel->getAddressTableModel()->labelForAddress(QString::fromStdString(rec->address));
+        if (rec->comment.empty()) {
+            return walletModel->getAddressTableModel()->labelForAddress(QString::fromStdString(rec->address));
+        } else {
+            return walletModel->getAddressTableModel()->labelForAddress(QString::fromStdString(rec->address)) + " " + QString::fromStdString(rec->comment);
+        }
     case AmountRole:
         return qint64(rec->credit + rec->debit);
     case TxIDRole:
@@ -650,6 +731,22 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
             return details;
         }
     case ConfirmedRole:
+        if (rec->status.status == TransactionStatus::Inactived) {
+            if (rec->type == TransactionRecord::BindPlotter)
+            {
+                return tr("Inactived binded plotter");
+            }
+        }
+        else if (rec->status.status == TransactionStatus::Disabled) {
+            if (rec->type == TransactionRecord::BindPlotter)
+            {
+                return tr("Unbinded plotter");
+            }
+            else if (rec->type == TransactionRecord::LoanTo || rec->type == TransactionRecord::BorrowFrom || rec->type == TransactionRecord::SelfRental)
+            {
+                return tr("Withdrawn loan");
+            }
+        }
         return rec->status.countsForBalance;
     case FormattedAmountRole:
         // Used for copy/export, so don't include separators

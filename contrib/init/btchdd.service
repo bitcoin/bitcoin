@@ -1,0 +1,25 @@
+# It is not recommended to modify this file in-place, because it will
+# be overwritten during package upgrades. If you want to add further
+# options or overwrite existing ones then use
+# $ systemctl edit btchdd.service
+# See "man systemd.service" for details.
+
+# Note that almost all daemon options could be specified in
+# /etc/btchd/btchd.conf
+
+[Unit]
+Description=BitcoinHD daemon
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/btchdd -daemon -conf=/etc/btchd/btchd.conf -pid=/run/btchdd/btchdd.pid
+# Creates /run/btchdd owned by btchd
+RuntimeDirectory=btchdd
+User=btchd
+Type=forking
+PIDFile=/run/btchdd/btchdd.pid
+Restart=on-failure
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

@@ -50,6 +50,7 @@
 #include <QTimer>
 #include <QTranslator>
 #include <QSslConfiguration>
+#include <QStyleFactory>
 
 #if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
@@ -80,6 +81,13 @@ Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
 // Declare meta types used for QMetaObject::invokeMethod
 Q_DECLARE_METATYPE(bool*)
 Q_DECLARE_METATYPE(CAmount)
+Q_DECLARE_METATYPE(int32_t)
+Q_DECLARE_METATYPE(uint32_t)
+Q_DECLARE_METATYPE(uint64_t)
+
+#ifdef ENABLE_WALLET
+Q_DECLARE_METATYPE(CWallet*)
+#endif
 
 static void InitMessage(const std::string &message)
 {
@@ -489,6 +497,8 @@ void BitcoinApplication::initializeResult(bool success)
 
             connect(walletModel, SIGNAL(coinsSent(CWallet*,SendCoinsRecipient,QByteArray)),
                              paymentServer, SLOT(fetchPaymentACK(CWallet*,const SendCoinsRecipient&,QByteArray)));
+            connect(clientModel, SIGNAL(walletPrimaryAddressChanged(CWallet*)),
+                             walletModel, SLOT(walletPrimaryAddressChanged(CWallet*)));
         }
 #endif
 
@@ -505,7 +515,7 @@ void BitcoinApplication::initializeResult(bool success)
 
 #ifdef ENABLE_WALLET
         // Now that initialization/startup is done, process any command-line
-        // bitcoin: URIs or payment requests:
+        // btchd: URIs or payment requests:
         connect(paymentServer, SIGNAL(receivedPaymentRequest(SendCoinsRecipient)),
                          window, SLOT(handlePaymentRequest(SendCoinsRecipient)));
         connect(window, SIGNAL(receivedURI(QString)),
@@ -528,7 +538,7 @@ void BitcoinApplication::shutdownResult()
 
 void BitcoinApplication::handleRunawayException(const QString &message)
 {
-    QMessageBox::critical(0, "Runaway exception", BitcoinGUI::tr("A fatal error occurred. Bitcoin can no longer continue safely and will quit.") + QString("\n\n") + message);
+    QMessageBox::critical(0, "Runaway exception", BitcoinGUI::tr("A fatal error occurred. BitcoinHD can no longer continue safely and will quit.") + QString("\n\n") + message);
     ::exit(EXIT_FAILURE);
 }
 
@@ -587,6 +597,14 @@ int main(int argc, char *argv[])
     qRegisterMetaType< CAmount >("CAmount");
     qRegisterMetaType< std::function<void(void)> >("std::function<void(void)>");
 
+    qRegisterMetaType< int32_t >("int32_t");
+    qRegisterMetaType< uint32_t >("uint32_t");
+    qRegisterMetaType< uint64_t >("uint64_t");
+
+#ifdef ENABLE_WALLET
+    qRegisterMetaType< CWallet* >("CWallet*");
+#endif
+
     /// 3. Application identification
     // must be set before OptionsModel is initialized or translations are loaded,
     // as it is used to locate QSettings
@@ -615,7 +633,7 @@ int main(int argc, char *argv[])
     if (!Intro::pickDataDirectory())
         return EXIT_SUCCESS;
 
-    /// 6. Determine availability of data directory and parse bitcoin.conf
+    /// 6. Determine availability of data directory and parse btchd.conf
     /// - Do not call GetDataDir(true) before this step finishes
     if (!fs::is_directory(GetDataDir(false)))
     {
@@ -630,6 +648,16 @@ int main(int argc, char *argv[])
                               QObject::tr("Error: Cannot parse configuration file: %1. Only use key=value syntax.").arg(e.what()));
         return EXIT_FAILURE;
     }
+
+#if QT_VERSION >= 0x050000
+    if (gArgs.IsArgSet("-qtstyle")) {
+        app.setPalette(QApplication::style()->standardPalette());
+        app.setStyle(QStyleFactory::create(QString::fromStdString(gArgs.GetArg("-qtstyle", ""))));
+    #ifndef QT_NO_STYLE_STYLESHEET
+        app.setStyleSheet("");
+    #endif
+    }
+#endif
 
     /// 7. Determine network (and switch to network specific options)
     // - Do not call Params() before this step
@@ -667,7 +695,7 @@ int main(int argc, char *argv[])
         exit(EXIT_SUCCESS);
 
     // Start up the payment server early, too, so impatient users that click on
-    // bitcoin: links repeatedly have their payment requests routed to this process:
+    // btchd: links repeatedly have their payment requests routed to this process:
     app.createPaymentServer();
 #endif
 

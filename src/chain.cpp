@@ -4,6 +4,10 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chain.h>
+#include <crypto/shabal256.h>
+#include <poc/poc.h>
+#include <script/standard.h>
+#include <util.h>
 
 /**
  * CChain implementation
@@ -20,29 +24,62 @@ void CChain::SetTip(CBlockIndex *pindex) {
     }
 }
 
-CBlockLocator CChain::GetLocator(const CBlockIndex *pindex) const {
-    int nStep = 1;
+CBlockLocator CChain::GetLocator(const CBlockIndex *pindex, int lastCheckpointHeight) const {
     std::vector<uint256> vHave;
     vHave.reserve(32);
 
+    int nStep = 1;
     if (!pindex)
         pindex = Tip();
-    while (pindex) {
-        vHave.push_back(pindex->GetBlockHash());
-        // Stop when we have added the genesis block.
-        if (pindex->nHeight == 0)
-            break;
-        // Exponentially larger steps back, plus the genesis block.
-        int nHeight = std::max(pindex->nHeight - nStep, 0);
+    if (pindex && lastCheckpointHeight > pindex->nHeight + 1000) {
+        // Always use checkpoint
+        int nStep = 1000;
         if (Contains(pindex)) {
-            // Use O(1) CChain index if possible.
-            pindex = (*this)[nHeight];
+            // O(1)
+            pindex = (*this)[std::max(1000 * (pindex->nHeight / 1000), 0)];
         } else {
-            // Otherwise, use O(log n) skiplist.
-            pindex = pindex->GetAncestor(nHeight);
+            // O(log n)
+            pindex = pindex->GetAncestor(std::max(1000 * (pindex->nHeight / 1000), 0));
         }
-        if (vHave.size() > 10)
-            nStep *= 2;
+        LogPrint(BCLog::NET, "GetLocator(by checkpoints):\r\n");
+        while (pindex) {
+            vHave.push_back(pindex->GetBlockHash());
+            LogPrint(BCLog::NET, "\t%6d: %s\r\n", pindex->nHeight, pindex->GetBlockHash().ToString());
+            // Stop when we have added the genesis block.
+            if (pindex->nHeight == 0)
+                break;
+            // Exponentially larger steps back, plus the genesis block.
+            int nHeight = std::max(1000 * ((pindex->nHeight - nStep) / 1000), 0);
+            if (Contains(pindex)) {
+                // Use O(1) CChain index if possible.
+                pindex = (*this)[nHeight];
+            } else {
+                // Otherwise, use O(log n) skiplist.
+                pindex = pindex->GetAncestor(nHeight);
+            }
+            if (vHave.size() > 10)
+                nStep *= 2;
+        }
+    } else {
+        LogPrint(BCLog::NET, "GetLocator:\r\n");
+        while (pindex) {
+            vHave.push_back(pindex->GetBlockHash());
+            LogPrint(BCLog::NET, "\t%6d: %s\r\n", pindex->nHeight, pindex->GetBlockHash().ToString());
+            // Stop when we have added the genesis block.
+            if (pindex->nHeight == 0)
+                break;
+            // Exponentially larger steps back, plus the genesis block.
+            int nHeight = std::max(pindex->nHeight - nStep, 0);
+            if (Contains(pindex)) {
+                // Use O(1) CChain index if possible.
+                pindex = (*this)[nHeight];
+            } else {
+                // Otherwise, use O(log n) skiplist.
+                pindex = pindex->GetAncestor(nHeight);
+            }
+            if (vHave.size() > 10)
+                nStep *= 2;
+        }
     }
 
     return CBlockLocator(vHave);
@@ -112,25 +149,53 @@ CBlockIndex* CBlockIndex::GetAncestor(int height)
     return const_cast<CBlockIndex*>(static_cast<const CBlockIndex*>(this)->GetAncestor(height));
 }
 
+void CBlockIndex::Update(const Consensus::Params& params)
+{
+    // Genearation signature
+    static uint256 dummyGenerationSignature;
+    generationSignature = pprev ? &pprev->nextGenerationSignature : &dummyGenerationSignature;
+    if (nHeight + 1 <= params.BHDIP001PreMiningEndHeight) {
+        //! Pre-Mining not exist generation signature
+        nextGenerationSignature.SetNull();
+    } else if (nHeight + 1 <= params.BHDIP007Height) {
+        //! hashMerkleRoot + nPlotterId. Unsafe
+        // Legacy consensus use little endian
+        uint64_t plotterId = htole64(nPlotterId);
+        CShabal256()
+            .Write(hashMerkleRoot.begin(), hashMerkleRoot.size())
+            .Write((const unsigned char*)&plotterId, 8)
+            .Finalize(nextGenerationSignature.begin());
+    } else {
+        //! generationSignature + nPlotterId
+        assert(generationSignature != nullptr && !generationSignature->IsNull());
+        uint64_t plotterId = htobe64(nPlotterId);
+        CShabal256()
+            .Write(generationSignature->begin(), generationSignature->size())
+            .Write((const unsigned char*)&plotterId, 8)
+            .Finalize(nextGenerationSignature.begin());
+    }
+
+    // Generator
+    if (!vchPubKey.empty())
+        generatorAccountID = ExtractAccountID(CPubKey(vchPubKey));
+}
+
 void CBlockIndex::BuildSkip()
 {
     if (pprev)
         pskip = pprev->GetAncestor(GetSkipHeight(nHeight));
 }
 
-arith_uint256 GetBlockProof(const CBlockIndex& block)
+arith_uint256 GetBlockProof(const CBlockHeader& header, const Consensus::Params& params)
 {
-    arith_uint256 bnTarget;
-    bool fNegative;
-    bool fOverflow;
-    bnTarget.SetCompact(block.nBits, &fNegative, &fOverflow);
-    if (fNegative || fOverflow || bnTarget == 0)
-        return 0;
-    // We need to compute 2**256 / (bnTarget+1), but we can't represent 2**256
-    // as it's too large for an arith_uint256. However, as 2**256 is at least as large
-    // as bnTarget+1, it is equal to ((2**256 - bnTarget - 1) / (bnTarget+1)) + 1,
-    // or ~bnTarget / (bnTarget+1) + 1.
-    return (~bnTarget / (bnTarget + 1)) + 1;
+    //! Same nBaseTarget select biggest hash
+    return (poc::TWO64 / header.nBaseTarget) * 100 + (header.vchSignature.empty() ? 0 : header.vchSignature.back()) % 100;
+}
+
+arith_uint256 GetBlockProof(const CBlockIndex& block, const Consensus::Params& params)
+{
+    //! Same nBaseTarget select biggest hash
+    return (poc::TWO64 / block.nBaseTarget) * 100 + (block.vchSignature.empty() ? 0 : block.vchSignature.back()) % 100;
 }
 
 int64_t GetBlockProofEquivalentTime(const CBlockIndex& to, const CBlockIndex& from, const CBlockIndex& tip, const Consensus::Params& params)
@@ -143,7 +208,7 @@ int64_t GetBlockProofEquivalentTime(const CBlockIndex& to, const CBlockIndex& fr
         r = from.nChainWork - to.nChainWork;
         sign = -1;
     }
-    r = r * arith_uint256(params.nPowTargetSpacing) / GetBlockProof(tip);
+    r = r * arith_uint256(Consensus::GetTargetSpacing(tip.nHeight, params)) / GetBlockProof(tip, params);
     if (r.bits() > 63) {
         return sign * std::numeric_limits<int64_t>::max();
     }

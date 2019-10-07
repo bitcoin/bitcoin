@@ -119,6 +119,8 @@ private:
     HelpMessageDialog *helpMessageDialog;
     ModalOverlay *modalOverlay;
 
+    QAction *genMinerAccountAction;
+
     /** Keep track of previous number of blocks, to detect progress */
     int prevBlocks;
     int spinnerFrame;
@@ -241,6 +243,9 @@ private Q_SLOTS:
     void toggleNetworkActive();
 
     void showModalOverlay();
+
+    void genMinerAccount();
+
 };
 
 class UnitDisplayStatusBarControl : public QLabel

@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(BinaryOperatorTest)
     BOOST_CHECK(a <= a);
     BOOST_CHECK(b >= a);
     BOOST_CHECK(b >= b);
-    // a should be 0.00000002 BTC/kB now
+    // a should be 0.00000002 BHD/kB now
     a += a;
     BOOST_CHECK(a == b);
 }
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(ToStringTest)
 {
     CFeeRate feeRate;
     feeRate = CFeeRate(1);
-    BOOST_CHECK_EQUAL(feeRate.ToString(), "0.00000001 BTC/kB");
+    BOOST_CHECK_EQUAL(feeRate.ToString(), "0.00000001 BHD/kB");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

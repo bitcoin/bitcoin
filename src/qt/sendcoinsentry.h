@@ -26,7 +26,7 @@ class SendCoinsEntry : public QStackedWidget
     Q_OBJECT
 
 public:
-    explicit SendCoinsEntry(const PlatformStyle *platformStyle, QWidget *parent = 0);
+    explicit SendCoinsEntry(PayOperateMethod payOperateMethod, const PlatformStyle *platformStyle, QWidget *parent = 0);
     ~SendCoinsEntry();
 
     void setModel(WalletModel *model);
@@ -66,6 +66,7 @@ private Q_SLOTS:
     void updateDisplayUnit();
 
 private:
+    PayOperateMethod payOperateMethod;
     SendCoinsRecipient recipient;
     Ui::SendCoinsEntry *ui;
     WalletModel *model;

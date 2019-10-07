@@ -23,7 +23,7 @@ Sources 10-99 are for source files that are maintained in the
 the release tarball. Most of these will reside in the `contrib` sub-directory.
 
 Sources 10-19 should be reserved for miscellaneous configuration files.
-Currently only `Source10` is used, for the example `bitcoin.conf` file.
+Currently only `Source10` is used, for the example `btchd.conf` file.
 
 Sources 20-29 should be reserved for man pages. Currently only `Source20`
 through `Source23` are used.

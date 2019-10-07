@@ -94,6 +94,9 @@ public:
     /** A wallet has been loaded. */
     boost::signals2::signal<void (CWallet* wallet)> LoadWallet;
 
+    /** A wallet primary address has been loaded. */
+    boost::signals2::signal<void (CWallet* wallet)> NotifyWalletPrimaryAddressChanged;
+
     /**
      * Show progress e.g. for verifychain.
      * resume_possible indicates shutting down now will result in the current progress action resuming upon restart.
@@ -108,6 +111,9 @@ public:
 
     /** Banlist did change. */
     boost::signals2::signal<void (void)> BannedListChanged;
+
+    /** Post new deadline. */
+    boost::signals2::signal<void (int32_t nHeight, uint64_t nPlotterId, uint64_t nNonce, uint64_t nNewDeadline)> NotifyBestDeadlineChanged;
 };
 
 /** Show warning message **/

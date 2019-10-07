@@ -38,7 +38,7 @@
 
 TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *parent) :
     QWidget(parent), model(0), transactionProxyModel(0),
-    transactionView(0), abandonAction(0), bumpFeeAction(0), columnResizingFixer(0)
+    transactionView(0), abandonAction(0), bumpFeeAction(0), unbindPlotterAction(0), withdrawPledgeAction(0), columnResizingFixer(0)
 {
     // Build filter row
     setContentsMargins(0,0,0,0);
@@ -85,12 +85,25 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
 
     typeWidget->addItem(tr("All"), TransactionFilterProxy::ALL_TYPES);
     typeWidget->addItem(tr("Received with"), TransactionFilterProxy::TYPE(TransactionRecord::RecvWithAddress) |
-                                        TransactionFilterProxy::TYPE(TransactionRecord::RecvFromOther));
+        TransactionFilterProxy::TYPE(TransactionRecord::RecvFromOther) |
+        TransactionFilterProxy::TYPE(TransactionRecord::BorrowFrom) |
+        TransactionFilterProxy::TYPE(TransactionRecord::SelfRental));
     typeWidget->addItem(tr("Sent to"), TransactionFilterProxy::TYPE(TransactionRecord::SendToAddress) |
-                                  TransactionFilterProxy::TYPE(TransactionRecord::SendToOther));
-    typeWidget->addItem(tr("To yourself"), TransactionFilterProxy::TYPE(TransactionRecord::SendToSelf));
+        TransactionFilterProxy::TYPE(TransactionRecord::SendToOther) |
+        TransactionFilterProxy::TYPE(TransactionRecord::BindPlotter) |
+        TransactionFilterProxy::TYPE(TransactionRecord::LoanTo) |
+        TransactionFilterProxy::TYPE(TransactionRecord::SelfRental));
+    typeWidget->addItem(tr("To yourself"), TransactionFilterProxy::TYPE(TransactionRecord::SendToSelf) |
+        TransactionFilterProxy::TYPE(TransactionRecord::SelfRental));
     typeWidget->addItem(tr("Mined"), TransactionFilterProxy::TYPE(TransactionRecord::Generated));
-    typeWidget->addItem(tr("Other"), TransactionFilterProxy::TYPE(TransactionRecord::Other));
+    typeWidget->addItem(tr("Binded plotter"), TransactionFilterProxy::TYPE(TransactionRecord::BindPlotter));
+    typeWidget->addItem(tr("Loan to"), TransactionFilterProxy::TYPE(TransactionRecord::LoanTo) |
+        TransactionFilterProxy::TYPE(TransactionRecord::SelfRental));
+    typeWidget->addItem(tr("Borrow from"), TransactionFilterProxy::TYPE(TransactionRecord::BorrowFrom) |
+        TransactionFilterProxy::TYPE(TransactionRecord::SelfRental));
+    typeWidget->addItem(tr("Other"), TransactionFilterProxy::TYPE(TransactionRecord::Other) |
+        TransactionFilterProxy::TYPE(TransactionRecord::UnbindPlotter) |
+        TransactionFilterProxy::TYPE(TransactionRecord::WithdrawRental));
 
     hlayout->addWidget(typeWidget);
 
@@ -153,6 +166,10 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     abandonAction = new QAction(tr("Abandon transaction"), this);
     bumpFeeAction = new QAction(tr("Increase transaction fee"), this);
     bumpFeeAction->setObjectName("bumpFeeAction");
+    unbindPlotterAction = new QAction(tr("Unbind plotter"), this);
+    unbindPlotterAction->setObjectName("unbindPlotterAction");
+    withdrawPledgeAction = new QAction(tr("Withdraw rental"), this);
+    withdrawPledgeAction->setObjectName("withdrawPledgeAction");
     QAction *copyAddressAction = new QAction(tr("Copy address"), this);
     QAction *copyLabelAction = new QAction(tr("Copy label"), this);
     QAction *copyAmountAction = new QAction(tr("Copy amount"), this);
@@ -174,6 +191,8 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     contextMenu->addSeparator();
     contextMenu->addAction(bumpFeeAction);
     contextMenu->addAction(abandonAction);
+    contextMenu->addAction(unbindPlotterAction);
+    contextMenu->addAction(withdrawPledgeAction);
     contextMenu->addAction(editLabelAction);
 
     mapperThirdPartyTxUrls = new QSignalMapper(this);
@@ -194,6 +213,8 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
 
     connect(bumpFeeAction, SIGNAL(triggered()), this, SLOT(bumpFee()));
     connect(abandonAction, SIGNAL(triggered()), this, SLOT(abandonTx()));
+    connect(unbindPlotterAction, SIGNAL(triggered()), this, SLOT(unlockTx()));
+    connect(withdrawPledgeAction, SIGNAL(triggered()), this, SLOT(unlockTx()));
     connect(copyAddressAction, SIGNAL(triggered()), this, SLOT(copyAddress()));
     connect(copyLabelAction, SIGNAL(triggered()), this, SLOT(copyLabel()));
     connect(copyAmountAction, SIGNAL(triggered()), this, SLOT(copyAmount()));
@@ -222,8 +243,8 @@ void TransactionView::setModel(WalletModel *_model)
         transactionView->setAlternatingRowColors(true);
         transactionView->setSelectionBehavior(QAbstractItemView::SelectRows);
         transactionView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+        transactionView->horizontalHeader()->setSortIndicator(TransactionTableModel::Date, Qt::DescendingOrder);
         transactionView->setSortingEnabled(true);
-        transactionView->sortByColumn(TransactionTableModel::Date, Qt::DescendingOrder);
         transactionView->verticalHeader()->hide();
 
         transactionView->setColumnWidth(TransactionTableModel::Status, STATUS_COLUMN_WIDTH);
@@ -396,6 +417,8 @@ void TransactionView::contextualMenu(const QPoint &point)
     hash.SetHex(selection.at(0).data(TransactionTableModel::TxHashRole).toString().toStdString());
     abandonAction->setEnabled(model->transactionCanBeAbandoned(hash));
     bumpFeeAction->setEnabled(model->transactionCanBeBumped(hash));
+    unbindPlotterAction->setEnabled(model->transactionCanBeUnlock(hash, DATACARRIER_TYPE_BINDPLOTTER));
+    withdrawPledgeAction->setEnabled(model->transactionCanBeUnlock(hash, DATACARRIER_TYPE_RENTAL));
 
     if(index.isValid())
     {
@@ -436,6 +459,24 @@ void TransactionView::bumpFee()
     if (model->bumpFee(hash)) {
         // Update the table
         model->getTransactionTableModel()->updateTransaction(hashQStr, CT_UPDATED, true);
+    }
+}
+
+void TransactionView::unlockTx()
+{
+    if(!transactionView || !transactionView->selectionModel())
+        return;
+    QModelIndexList selection = transactionView->selectionModel()->selectedRows(0);
+
+    // get the hash from the TxHashRole (QVariant / QString)
+    uint256 hash;
+    QString hashQStr = selection.at(0).data(TransactionTableModel::TxHashRole).toString();
+    hash.SetHex(hashQStr.toStdString());
+
+    // unlock the wallet transaction over the walletModel
+    if (model->unlockTransaction(hash)) {
+        // Update the table
+        model->getTransactionTableModel()->updateTransaction(hashQStr, CT_UPDATED, false);
     }
 }
 

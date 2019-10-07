@@ -117,7 +117,7 @@ void ModalOverlay::tipUpdate(int count, const QDateTime& blockDate, double nVeri
     }
 
     // show the last block date
-    ui->newestBlockDate->setText(blockDate.toString());
+    ui->newestBlockDate->setText(blockDate.toString(Qt::SystemLocaleLongDate));
 
     // show the percentage done according to nVerificationProgress
     ui->percentageProgress->setText(QString::number(nVerificationProgress*100, 'f', 2)+"%");
@@ -127,9 +127,9 @@ void ModalOverlay::tipUpdate(int count, const QDateTime& blockDate, double nVeri
         // not syncing
         return;
 
-    // estimate the number of headers left based on nPowTargetSpacing
+    // estimate the number of headers left based on TargetSpacing
     // and check if the gui is not aware of the best header (happens rarely)
-    int estimateNumHeadersLeft = bestHeaderDate.secsTo(currentDate) / Params().GetConsensus().nPowTargetSpacing;
+    int estimateNumHeadersLeft = bestHeaderDate.secsTo(currentDate) / Consensus::GetTargetSpacing(bestHeaderHeight, Params().GetConsensus());
     bool hasBestHeader = bestHeaderHeight >= count;
 
     // show remaining number of blocks

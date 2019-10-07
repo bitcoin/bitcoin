@@ -10,20 +10,27 @@
 #include <utilstrencodings.h>
 #include <crypto/common.h>
 
+#include <inttypes.h>
+
 uint256 CBlockHeader::GetHash() const
 {
     return SerializeHash(*this);
 }
 
+uint256 CBlockHeader::GetUnsignaturedHash() const
+{
+    return SerializeHash(*this, SER_GETHASH | SER_UNSIGNATURED);
+}
+
 std::string CBlock::ToString() const
 {
     std::stringstream s;
-    s << strprintf("CBlock(hash=%s, ver=0x%08x, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vtx=%u)\n",
+    s << strprintf("CBlock(hash=%s, ver=0x%08x, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBaseTarget=%08x, nNonce=%" PRIu64 ", nPlotterId=%" PRIu64 ", vtx=%u)\n",
         GetHash().ToString(),
         nVersion,
         hashPrevBlock.ToString(),
         hashMerkleRoot.ToString(),
-        nTime, nBits, nNonce,
+        nTime, nBaseTarget, nNonce, nPlotterId,
         vtx.size());
     for (const auto& tx : vtx) {
         s << "  " << tx->ToString() << "\n";

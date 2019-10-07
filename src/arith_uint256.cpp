@@ -109,6 +109,22 @@ base_uint<BITS>& base_uint<BITS>::operator/=(const base_uint& b)
 }
 
 template <unsigned int BITS>
+uint32_t base_uint<BITS>::operator%(uint32_t b32)
+{
+    if (b32 == 0)
+        throw uint_error("Mod by zero");
+
+    const uint8_t *begin = (const uint8_t *)(const void*)pn;
+    const uint8_t *end = (const uint8_t *)(const void*)pn + size();
+    uint32_t result = 0;
+    for (const uint8_t *p = begin; p != end; p++)
+    {
+        result = static_cast<uint32_t>((result*256 + *p) % b32);
+    }
+    return result;
+}
+
+template <unsigned int BITS>
 int base_uint<BITS>::CompareTo(const base_uint<BITS>& b) const
 {
     for (int i = WIDTH - 1; i >= 0; i--) {
@@ -200,6 +216,8 @@ template std::string base_uint<256>::ToString() const;
 template void base_uint<256>::SetHex(const char*);
 template void base_uint<256>::SetHex(const std::string&);
 template unsigned int base_uint<256>::bits() const;
+
+template uint32_t base_uint<256>::operator%(uint32_t b32);
 
 // This implementation directly uses shifts instead of going
 // through an intermediate MPI representation.

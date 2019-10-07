@@ -1,0 +1,6 @@
+usr/local/bin/btchd-qt usr/bin
+share/pixmaps/btchd32.xpm usr/share/pixmaps
+share/pixmaps/btchd16.xpm usr/share/pixmaps
+share/pixmaps/btchd128.png usr/share/pixmaps
+debian/btchd-qt.desktop usr/share/applications
+debian/btchd-qt.protocol usr/share/kde4/services/

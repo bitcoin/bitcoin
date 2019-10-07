@@ -39,18 +39,33 @@
 
 void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
 {
+    const CBlockIndex* pindex = nullptr;
+    if (!hashBlock.IsNull()) {
+        BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
+        if (mi != mapBlockIndex.end() && (*mi).second)
+            pindex = (*mi).second;
+    }
+
     // Call into TxToUniv() in bitcoin-common to decode the transaction hex.
     //
     // Blockchain contextual information (confirmations and blocktime) is not
     // available to code in bitcoin-common, so we query them here and push the
     // data into the returned UniValue.
-    TxToUniv(tx, uint256(), entry, true, RPCSerializationFlags());
+    TxToUniv(tx, uint256(), entry, true, RPCSerializationFlags(), pindex ? pindex->nHeight : 0);
+
+    // Coinbase transaction accumulate subsidy and takeoff
+    if (tx.IsCoinBase() && pindex != nullptr && pindex->nHeight >= Params().GetConsensus().BHDIP008Height) {
+        if (pindex->nStatus & BLOCK_UNCONDITIONAL) {
+            int ratio = Params().GetConsensus().BHDIP001FundRoyaltyForLowMortgage - GetLowMortgageFundRoyaltyRatio(pindex->nHeight, Params().GetConsensus());
+            entry.push_back(Pair("takeoff", ValueFromAmount(GetBlockSubsidy(pindex->nHeight, Params().GetConsensus()) * ratio / 1000)));
+        } else {
+            entry.push_back(Pair("subsidy", ValueFromAmount(GetLowMortgageAccumulateSubsidy(pindex->pprev, Params().GetConsensus()))));
+        }
+    }
 
     if (!hashBlock.IsNull()) {
         entry.push_back(Pair("blockhash", hashBlock.GetHex()));
-        BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
-        if (mi != mapBlockIndex.end() && (*mi).second) {
-            CBlockIndex* pindex = (*mi).second;
+        if (pindex) {
             if (chainActive.Contains(pindex)) {
                 entry.push_back(Pair("confirmations", 1 + chainActive.Height() - pindex->nHeight));
                 entry.push_back(Pair("time", pindex->GetBlockTime()));
@@ -120,14 +135,24 @@ UniValue getrawtransaction(const JSONRPCRequest& request)
             "         \"reqSigs\" : n,            (numeric) The required sigs\n"
             "         \"type\" : \"pubkeyhash\",  (string) The type, eg 'pubkeyhash'\n"
             "         \"addresses\" : [           (json array of string)\n"
-            "           \"address\"        (string) bitcoin address\n"
+            "           \"address\"        (string) BitcoinHD address\n"
             "           ,...\n"
             "         ]\n"
             "       }\n"
             "     }\n"
             "     ,...\n"
             "  ],\n"
-            "  \"blockhash\" : \"hash\",   (string) the block hash\n"
+            "  \"extra\": {                       (json object) Only exist for bind plotter and point to\n"
+            "    \"type\": \"pledge|bindplotter\",  (string) Extra data type\n"
+            "    \"amount\": xxx,                 (numeric) The value in special tx\n"
+            "    \"address\": \"xxxx\",             (string) Bind address. Only exist for bind plotter\n"
+            "    \"id\": \"plotterID\",             (string) Bind plotter ID. Only exist for bind plotter\n"
+            "    \"from\": \"xxxx\",                (string) Pledge loan address. Only exist for point to\n"
+            "    \"to\": \"xxxx\"                   (string) Pledge loadebitn address. Only exist for point to\n"
+            "  },\n"
+            "  \"subsidy\": x.xxx          (numeric) Accumulate subsidy to block. Only exist in coinbase transaction and meet block\n"
+            "  \"takeoff\": x.xxx          (numeric) Take off reward to next meet block. Only exist in coinbase transaction and not meet block\n"
+            "  \"blockhash\" : \"hash\",     (string) The block hash\n"
             "  \"confirmations\" : n,      (numeric) The confirmations\n"
             "  \"time\" : ttt,             (numeric) The transaction time in seconds since epoch (Jan 1 1970 GMT)\n"
             "  \"blocktime\" : ttt         (numeric) The block time in seconds since epoch (Jan 1 1970 GMT)\n"
@@ -337,8 +362,9 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
             "     ]\n"
             "2. \"outputs\"               (object, required) a json object with outputs\n"
             "    {\n"
-            "      \"address\": x.xxx,    (numeric or string, required) The key is the bitcoin address, the numeric value (can be string) is the " + CURRENCY_UNIT + " amount\n"
-            "      \"data\": \"hex\"      (string, required) The key is \"data\", the value is hex encoded data\n"
+            "      \"address\": x.xxx,    (numeric or string, required) The key is the BitcoinHD address, the numeric value (can be string) is the " + CURRENCY_UNIT + " amount\n"
+            "      \"data\": \"hex\"      (string, required) The key is \"data\", the value is hex encoded data. Conflict with \"rawdata\"\n"
+            "      \"rawdata\": \"hex\"   (string, required) The key is \"rawdata\", the value is hex encoded data and \"push only\". Conflict with \"data\"\n"
             "      ,...\n"
             "    }\n"
             "3. locktime                  (numeric, optional, default=0) Raw locktime. Non-0 value also locktime-activates inputs\n"
@@ -410,19 +436,32 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
         rawTx.vin.push_back(in);
     }
 
+    bool existCustomData = false;
     std::set<CTxDestination> destinations;
     std::vector<std::string> addrList = sendTo.getKeys();
     for (const std::string& name_ : addrList) {
-
         if (name_ == "data") {
+            if (existCustomData)
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter: Conflict \"data\" and \"rawdata\"");
+            existCustomData = true;
+
             std::vector<unsigned char> data = ParseHexV(sendTo[name_].getValStr(),"Data");
 
             CTxOut out(0, CScript() << OP_RETURN << data);
             rawTx.vout.push_back(out);
+        } else if (name_ == "rawdata") {
+            if (existCustomData)
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter: Conflict \"data\" and \"rawdata\"");
+            existCustomData = true;
+
+            std::vector<unsigned char> data = ParseHexV(sendTo[name_].getValStr(),"RawData");
+
+            CTxOut out(0, CScript(data.cbegin(), data.cend()));
+            rawTx.vout.push_back(out);
         } else {
             CTxDestination destination = DecodeDestination(name_);
             if (!IsValidDestination(destination)) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Bitcoin address: ") + name_);
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid BitcoinHD address: ") + name_);
             }
 
             if (!destinations.insert(destination).second) {
@@ -487,7 +526,7 @@ UniValue decoderawtransaction(const JSONRPCRequest& request)
             "         \"reqSigs\" : n,            (numeric) The required sigs\n"
             "         \"type\" : \"pubkeyhash\",  (string) The type, eg 'pubkeyhash'\n"
             "         \"addresses\" : [           (json array of string)\n"
-            "           \"12tvKAXCxZjSmdNbao16dKXC8tRWfcF5oc\"   (string) bitcoin address\n"
+            "           \"12tvKAXCxZjSmdNbao16dKXC8tRWfcF5oc\"   (string) BitcoinHD address\n"
             "           ,...\n"
             "         ]\n"
             "       }\n"
@@ -534,7 +573,7 @@ UniValue decodescript(const JSONRPCRequest& request)
             "  \"type\":\"type\", (string) The output type\n"
             "  \"reqSigs\": n,    (numeric) The required signatures\n"
             "  \"addresses\": [   (json array of string)\n"
-            "     \"address\"     (string) bitcoin address\n"
+            "     \"address\"     (string) BitcoinHD address\n"
             "     ,...\n"
             "  ],\n"
             "  \"p2sh\",\"address\" (string) address of P2SH script wrapping this redeem script (not returned if the script is already a P2SH).\n"
@@ -872,13 +911,14 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
             {std::string("SINGLE|ANYONECANPAY"), int(SIGHASH_SINGLE|SIGHASH_ANYONECANPAY)},
         };
         std::string strHashType = request.params[3].get_str();
-        if (mapSigHashValues.count(strHashType))
+        if (mapSigHashValues.count(strHashType)) {
             nHashType = mapSigHashValues[strHashType];
+        }
         else
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid sighash param");
     }
 
-    bool fHashSingle = ((nHashType & ~SIGHASH_ANYONECANPAY) == SIGHASH_SINGLE);
+    bool fHashSingle = ((nHashType & ~(SIGHASH_ANYONECANPAY)) == SIGHASH_SINGLE);
 
     // Script verification errors
     UniValue vErrors(UniValue::VARR);
@@ -1024,6 +1064,34 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
     return hashTx.GetHex();
 }
 
+UniValue createtextdata(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 1)
+        throw std::runtime_error(
+            "createtextdata \"text\"\n"
+            "\nCreate text data.\n"
+            "\nArguments:\n"
+            "1. \"text\"         (string, required) The text\n"
+            "\nResult:\n"
+            "\"hex\"             (string) The text data in hex\n"
+            "\nExamples:\n"
+            "\nCreate text data\n"
+            + HelpExampleCli("createtextdata", "\"Hello\"") +
+            "\nAs a json rpc call\n"
+            + HelpExampleRpc("createtextdata", "\"Hello\"")
+        );
+
+    RPCTypeCheck(request.params, {UniValue::VSTR});
+    if (request.params[0].get_str().size() > PROTOCOL_TEXT_MAXSIZE)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Max text size is %d", PROTOCOL_TEXT_MAXSIZE));
+
+    CScript script = GetTextScript(request.params[0].get_str());
+    if (script.empty())
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot generate text data");
+
+    return HexStr(script.begin(), script.end());
+}
+
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
@@ -1034,6 +1102,7 @@ static const CRPCCommand commands[] =
     { "rawtransactions",    "sendrawtransaction",     &sendrawtransaction,     {"hexstring","allowhighfees"} },
     { "rawtransactions",    "combinerawtransaction",  &combinerawtransaction,  {"txs"} },
     { "rawtransactions",    "signrawtransaction",     &signrawtransaction,     {"hexstring","prevtxs","privkeys","sighashtype"} }, /* uses wallet if enabled */
+    { "rawtransactions",    "createtextdata",         &createtextdata,         {"text"} },
 
     { "blockchain",         "gettxoutproof",          &gettxoutproof,          {"txids", "blockhash"} },
     { "blockchain",         "verifytxoutproof",       &verifytxoutproof,       {"proof"} },
