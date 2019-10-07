@@ -1250,7 +1250,7 @@ bool LegacyScriptPubKeyMan::ImportPubKeys(const std::vector<CKeyID>& ordered_pub
     return true;
 }
 
-bool LegacyScriptPubKeyMan::ImportScriptPubKeys(const std::string& label, const std::set<CScript>& script_pub_keys, const bool have_solving_data, const bool apply_label, const int64_t timestamp)
+bool LegacyScriptPubKeyMan::ImportScriptPubKeys(const std::set<CScript>& script_pub_keys, const bool have_solving_data, const int64_t timestamp)
 {
     WalletBatch batch(m_storage.GetDatabase());
     for (const CScript& script : script_pub_keys) {
@@ -1258,11 +1258,6 @@ bool LegacyScriptPubKeyMan::ImportScriptPubKeys(const std::string& label, const 
             if (!AddWatchOnlyWithDB(batch, script, timestamp)) {
                 return false;
             }
-        }
-        CTxDestination dest;
-        ExtractDestination(script, dest);
-        if (apply_label && IsValidDestination(dest)) {
-            m_wallet.SetAddressBookWithDB(batch, dest, label, "receive");
         }
     }
     return true;
