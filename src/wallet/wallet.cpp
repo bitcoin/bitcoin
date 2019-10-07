@@ -3384,6 +3384,7 @@ bool CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
 
 DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
 {
+    auto locked_chain = chain().lock();
     LOCK(cs_wallet);
 
     fFirstRunRet = false;
@@ -3401,7 +3402,6 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
         }
     }
 
-    auto locked_chain = chain().lock();
     for (auto& pair : mapWallet) {
         for(size_t i = 0; i < pair.second.tx->vout.size(); ++i) {
             if (IsMine(pair.second.tx->vout[i]) && !IsSpent(*locked_chain, pair.first, i)) {
@@ -3409,7 +3409,6 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
             }
         }
     }
-    locked_chain.release();
 
     {
         LOCK(cs_KeyStore);
