@@ -1087,16 +1087,20 @@ void LegacyScriptPubKeyMan::AddKeypoolPubkeyWithDB(const CPubKey& pubkey, const 
     m_pool_key_to_index[pubkey.GetID()] = index;
 }
 
-void LegacyScriptPubKeyMan::KeepDestination(int64_t nIndex, const OutputType& type, const CPubKey& pubkey)
+void LegacyScriptPubKeyMan::KeepDestination(int64_t nIndex, const OutputType& type)
 {
     // Remove from key pool
     WalletBatch batch(m_storage.GetDatabase());
     batch.ErasePool(nIndex);
+    CPubKey pubkey;
+    bool have_pk = GetPubKey(m_index_to_reserved_key.at(nIndex), pubkey);
+    assert(have_pk);
     LearnRelatedScripts(pubkey, type);
+    m_index_to_reserved_key.erase(nIndex);
     WalletLogPrintf("keypool keep %d\n", nIndex);
 }
 
-void LegacyScriptPubKeyMan::ReturnDestination(int64_t nIndex, bool fInternal, const CPubKey& pubkey)
+void LegacyScriptPubKeyMan::ReturnDestination(int64_t nIndex, bool fInternal, const CTxDestination&)
 {
     // Return to key pool
     {
@@ -1108,7 +1112,9 @@ void LegacyScriptPubKeyMan::ReturnDestination(int64_t nIndex, bool fInternal, co
         } else {
             setExternalKeyPool.insert(nIndex);
         }
-        m_pool_key_to_index[pubkey.GetID()] = nIndex;
+        CKeyID& pubkey_id = m_index_to_reserved_key.at(nIndex);
+        m_pool_key_to_index[pubkey_id] = nIndex;
+        m_index_to_reserved_key.erase(nIndex);
         NotifyCanGetAddressesChanged();
     }
     WalletLogPrintf("keypool return %d\n", nIndex);
@@ -1130,7 +1136,7 @@ bool LegacyScriptPubKeyMan::GetKeyFromPool(CPubKey& result, const OutputType typ
             result = GenerateNewKey(batch, internal);
             return true;
         }
-        KeepDestination(nIndex, type, keypool.vchPubKey);
+        KeepDestination(nIndex, type);
         result = keypool.vchPubKey;
     }
     return true;
@@ -1175,6 +1181,8 @@ bool LegacyScriptPubKeyMan::ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& key
             throw std::runtime_error(std::string(__func__) + ": keypool entry invalid");
         }
 
+        assert(m_index_to_reserved_key.count(nIndex) == 0);
+        m_index_to_reserved_key[nIndex] = keypool.vchPubKey.GetID();
         m_pool_key_to_index.erase(keypool.vchPubKey.GetID());
         WalletLogPrintf("keypool reserve %d\n", nIndex);
     }
