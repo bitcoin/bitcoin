@@ -2903,12 +2903,9 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
     {
         if (database->Rewrite("\x04pool"))
         {
-            setInternalKeyPool.clear();
-            setExternalKeyPool.clear();
-            m_spk_man->m_pool_key_to_index.clear();
-            // Note: can't top-up keypool here, because wallet is locked.
-            // User will be prompted to unlock wallet the next operation
-            // that requires a new key.
+            if (auto spk_man = m_spk_man.get()) {
+                spk_man->RewriteDB();
+            }
         }
     }
 
@@ -2940,12 +2937,9 @@ DBErrors CWallet::ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256
     {
         if (database->Rewrite("\x04pool"))
         {
-            setInternalKeyPool.clear();
-            setExternalKeyPool.clear();
-            m_spk_man->m_pool_key_to_index.clear();
-            // Note: can't top-up keypool here, because wallet is locked.
-            // User will be prompted to unlock wallet the next operation
-            // that requires a new key.
+            if (auto spk_man = m_spk_man.get()) {
+                spk_man->RewriteDB();
+            }
         }
     }
 
@@ -2964,13 +2958,9 @@ DBErrors CWallet::ZapWalletTx(std::vector<CWalletTx>& vWtx)
     {
         if (database->Rewrite("\x04pool"))
         {
-            LOCK(cs_wallet);
-            setInternalKeyPool.clear();
-            setExternalKeyPool.clear();
-            m_spk_man->m_pool_key_to_index.clear();
-            // Note: can't top-up keypool here, because wallet is locked.
-            // User will be prompted to unlock wallet the next operation
-            // that requires a new key.
+            if (auto spk_man = m_spk_man.get()) {
+                spk_man->RewriteDB();
+            }
         }
     }
 
