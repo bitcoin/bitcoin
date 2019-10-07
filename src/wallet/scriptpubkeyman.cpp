@@ -382,6 +382,21 @@ size_t LegacyScriptPubKeyMan::KeypoolCountExternalKeys()
     return setExternalKeyPool.size() + set_pre_split_keypool.size();
 }
 
+const CKeyMetadata* LegacyScriptPubKeyMan::GetMetadata(uint160 id) const
+{
+    AssertLockHeld(cs_wallet);
+    auto it = mapKeyMetadata.find(CKeyID(id));
+    if (it != mapKeyMetadata.end()) {
+        return &it->second;
+    } else {
+        auto it2 = m_script_metadata.find(CScriptID(id));
+        if (it2 != m_script_metadata.end()) {
+            return &it2->second;
+        }
+    }
+    return nullptr;
+}
+
 /**
  * Update wallet first key creation time. This should be called whenever keys
  * are added to the wallet, with the oldest key creation time.
