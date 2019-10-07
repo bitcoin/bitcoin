@@ -2112,7 +2112,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     int64_t nTime4_1 = GetTimeMicros(); nTimeVerify += nTime4_1 - nTime4;
     LogPrint(BCLog::BENCHMARK, "      - IsBlockValueValid: %.2fms [%.2fs]\n", MILLI * (nTime4_1 - nTime2), nTimeVerify * MICRO);
 
-    if (block.IsProofOfStake() && !IsBlockPayeeValid(*block.vtx[0], pindex->nHeight, blockReward)) {
+    if (block.IsProofOfStake() && !IsBlockPayeeValid(*block.vtx[1], pindex->nHeight, blockReward)) {
         return state.Invalid(ValidationInvalidReason::CONSENSUS, error("%s: couldn't find masternode or superblock payments", __func__),
                                 REJECT_INVALID, "bad-cb-payee");
     }
