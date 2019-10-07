@@ -3027,6 +3027,17 @@ size_t CWallet::KeypoolCountExternalKeys()
     return count;
 }
 
+unsigned int CWallet::GetKeyPoolSize() const
+{
+    AssertLockHeld(cs_wallet);
+
+    unsigned int count = 0;
+    if (auto spk_man = m_spk_man.get()) {
+        count += spk_man->GetKeyPoolSize();
+    }
+    return count;
+}
+
 bool CWallet::TopUpKeyPool(unsigned int kpSize)
 {
     bool res = true;

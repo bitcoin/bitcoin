@@ -182,6 +182,7 @@ public:
     virtual int64_t GetOldestKeyPoolTime() { return GetTime(); }
 
     virtual size_t KeypoolCountExternalKeys() { return 0; }
+    virtual unsigned int GetKeyPoolSize() const { return 0; }
 
     virtual const CKeyMetadata* GetMetadata(uint160 id) const { return nullptr; }
 };
@@ -295,6 +296,7 @@ public:
 
     int64_t GetOldestKeyPoolTime() override;
     size_t KeypoolCountExternalKeys() override EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    unsigned int GetKeyPoolSize() const override;
 
     const CKeyMetadata* GetMetadata(uint160 id) const override;
 
