@@ -16,6 +16,7 @@ BOOST_FIXTURE_TEST_SUITE(psbt_wallet_tests, WalletTestingSetup)
 
 BOOST_AUTO_TEST_CASE(psbt_updater_test)
 {
+    auto spk_man = m_wallet.GetLegacyScriptPubKeyMan();
     LOCK(m_wallet.cs_wallet);
 
     // Create prevtxs and add to wallet
@@ -35,23 +36,23 @@ BOOST_AUTO_TEST_CASE(psbt_updater_test)
     CScript rs1;
     CDataStream s_rs1(ParseHex("475221029583bf39ae0a609747ad199addd634fa6108559d6c5cd39b4c2183f1ab96e07f2102dab61ff49a14db6a7d02b0cd1fbb78fc4b18312b5b4e54dae4dba2fbfef536d752ae"), SER_NETWORK, PROTOCOL_VERSION);
     s_rs1 >> rs1;
-    m_wallet.AddCScript(rs1);
+    spk_man->AddCScript(rs1);
 
     CScript rs2;
     CDataStream s_rs2(ParseHex("2200208c2353173743b595dfb4a07b72ba8e42e3797da74e87fe7d9d7497e3b2028903"), SER_NETWORK, PROTOCOL_VERSION);
     s_rs2 >> rs2;
-    m_wallet.AddCScript(rs2);
+    spk_man->AddCScript(rs2);
 
     CScript ws1;
     CDataStream s_ws1(ParseHex("47522103089dc10c7ac6db54f91329af617333db388cead0c231f723379d1b99030b02dc21023add904f3d6dcf59ddb906b0dee23529b7ffb9ed50e5e86151926860221f0e7352ae"), SER_NETWORK, PROTOCOL_VERSION);
     s_ws1 >> ws1;
-    m_wallet.AddCScript(ws1);
+    spk_man->AddCScript(ws1);
 
     // Add hd seed
     CKey key = DecodeSecret("5KSSJQ7UNfFGwVgpCZDSHm5rVNhMFcFtvWM3zQ8mW4qNDEN7LFd"); // Mainnet and uncompressed form of cUkG8i1RFfWGWy5ziR11zJ5V4U4W3viSFCfyJmZnvQaUsd1xuF3T
-    CPubKey master_pub_key = m_wallet.DeriveNewSeed(key);
-    m_wallet.SetHDSeed(master_pub_key);
-    m_wallet.NewKeyPool();
+    CPubKey master_pub_key = spk_man->DeriveNewSeed(key);
+    spk_man->SetHDSeed(master_pub_key);
+    spk_man->NewKeyPool();
 
     // Call FillPSBT
     PartiallySignedTransaction psbtx;
