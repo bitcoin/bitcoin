@@ -470,6 +470,34 @@ int64_t LegacyScriptPubKeyMan::GetTimeFirstKey() const
     return nTimeFirstKey;
 }
 
+const SigningProvider* LegacyScriptPubKeyMan::GetSigningProvider(const CScript& script) const
+{
+    return this;
+}
+
+bool LegacyScriptPubKeyMan::CanProvide(const CScript& script, SignatureData& sigdata)
+{
+    if (IsMine(script) != ISMINE_NO) {
+        // If it IsMine, we can always provide in some way
+        return true;
+    } else if (HaveCScript(CScriptID(script))) {
+        // We can still provide some stuff if we have the script, but IsMine failed because we don't have keys
+        return true;
+    } else {
+        // If, given the stuff in sigdata, we could make a valid sigature, then we can provide for this script
+        ProduceSignature(*this, DUMMY_SIGNATURE_CREATOR, script, sigdata);
+        if (!sigdata.signatures.empty()) {
+            // If we could make signatures, make sure we have a private key to actually make a signature
+            bool has_privkeys = false;
+            for (const auto& key_sig_pair : sigdata.signatures) {
+                has_privkeys |= HaveKey(key_sig_pair.first);
+            }
+            return has_privkeys;
+        }
+        return false;
+    }
+}
+
 const CKeyMetadata* LegacyScriptPubKeyMan::GetMetadata(const CTxDestination& dest) const
 {
     LOCK(cs_KeyStore);
@@ -489,6 +517,11 @@ const CKeyMetadata* LegacyScriptPubKeyMan::GetMetadata(const CTxDestination& des
     }
 
     return nullptr;
+}
+
+uint256 LegacyScriptPubKeyMan::GetID() const
+{
+    return UINT256_ONE();
 }
 
 /**
