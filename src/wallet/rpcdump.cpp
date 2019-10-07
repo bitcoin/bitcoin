@@ -700,7 +700,7 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
     LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*wallet);
 
     auto locked_chain = pwallet->chain().lock();
-    LOCK(pwallet->cs_wallet);
+    LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -751,8 +751,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*wallet);
 
     auto locked_chain = pwallet->chain().lock();
-    LOCK(pwallet->cs_wallet);
-    AssertLockHeld(spk_man.cs_wallet);
+    LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
 
     EnsureWalletIsUnlocked(pwallet);
 

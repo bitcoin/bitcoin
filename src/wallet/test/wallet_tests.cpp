@@ -29,8 +29,7 @@ BOOST_FIXTURE_TEST_SUITE(wallet_tests, WalletTestingSetup)
 static void AddKey(CWallet& wallet, const CKey& key)
 {
     auto spk_man = wallet.GetLegacyScriptPubKeyMan();
-    LOCK(wallet.cs_wallet);
-    AssertLockHeld(spk_man->cs_wallet);
+    LOCK2(wallet.cs_wallet, spk_man->cs_KeyStore);
     spk_man->AddKeyPubKey(key, key.GetPubKey());
 }
 
@@ -217,8 +216,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
     {
         std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
         auto spk_man = wallet->GetLegacyScriptPubKeyMan();
-        LOCK(wallet->cs_wallet);
-        AssertLockHeld(spk_man->cs_wallet);
+        LOCK2(wallet->cs_wallet, spk_man->cs_KeyStore);
         spk_man->mapKeyMetadata[coinbaseKey.GetPubKey().GetID()].nCreateTime = KEY_TIME;
         spk_man->AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
 
@@ -272,8 +270,7 @@ BOOST_FIXTURE_TEST_CASE(coin_mark_dirty_immature_credit, TestChain100Setup)
 
     auto locked_chain = chain->lock();
     LockAssertion lock(::cs_main);
-    LOCK(wallet.cs_wallet);
-    AssertLockHeld(spk_man->cs_wallet);
+    LOCK2(wallet.cs_wallet, spk_man->cs_KeyStore);
     wallet.SetLastBlockProcessed(::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash());
 
     CWalletTx::Confirmation confirm(CWalletTx::Status::CONFIRMED, ::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash(), 0);
@@ -377,7 +374,7 @@ static void TestWatchOnlyPubKey(LegacyScriptPubKeyMan* spk_man, const CPubKey& a
     CScript p2pk = GetScriptForRawPubKey(add_pubkey);
     CKeyID add_address = add_pubkey.GetID();
     CPubKey found_pubkey;
-    LOCK(spk_man->cs_wallet);
+    LOCK(spk_man->cs_KeyStore);
 
     // all Scripts (i.e. also all PubKeys) are added to the general watch-only set
     BOOST_CHECK(!spk_man->HaveWatchOnly(p2pk));
@@ -394,7 +391,6 @@ static void TestWatchOnlyPubKey(LegacyScriptPubKeyMan* spk_man, const CPubKey& a
         BOOST_CHECK(found_pubkey == CPubKey()); // passed key is unchanged
     }
 
-    AssertLockHeld(spk_man->cs_wallet);
     spk_man->RemoveWatchOnly(p2pk);
     BOOST_CHECK(!spk_man->HaveWatchOnly(p2pk));
 

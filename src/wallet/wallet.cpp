@@ -219,6 +219,7 @@ WalletCreationStatus CreateWallet(interfaces::Chain& chain, const SecureString& 
 
             // Set a seed for the wallet
             {
+                LOCK(wallet->cs_wallet);
                 if (auto spk_man = wallet->m_spk_man.get()) {
                     if (!spk_man->SetupGeneration()) {
                         error = "Unable to generate initial keys";
@@ -265,7 +266,6 @@ void CWallet::UpgradeKeyMetadata()
     }
 
     if (m_spk_man) {
-        AssertLockHeld(m_spk_man->cs_wallet);
         m_spk_man->UpgradeKeyMetadata();
     }
     SetWalletFlag(WALLET_FLAG_KEY_ORIGIN_METADATA);
@@ -1322,6 +1322,7 @@ bool CWallet::IsHDEnabled() const
 
 bool CWallet::CanGetAddresses(bool internal)
 {
+    LOCK(cs_wallet);
     {
         auto spk_man = m_spk_man.get();
         if (spk_man && spk_man->CanGetAddresses(internal)) {
@@ -1427,7 +1428,7 @@ bool CWallet::ImportScripts(const std::set<CScript> scripts, int64_t timestamp)
     if (!spk_man) {
         return false;
     }
-    AssertLockHeld(spk_man->cs_wallet);
+    LOCK(spk_man->cs_KeyStore);
     return spk_man->ImportScripts(scripts, timestamp);
 }
 
@@ -1437,7 +1438,7 @@ bool CWallet::ImportPrivKeys(const std::map<CKeyID, CKey>& privkey_map, const in
     if (!spk_man) {
         return false;
     }
-    AssertLockHeld(spk_man->cs_wallet);
+    LOCK(spk_man->cs_KeyStore);
     return spk_man->ImportPrivKeys(privkey_map, timestamp);
 }
 
@@ -1447,7 +1448,7 @@ bool CWallet::ImportPubKeys(const std::vector<CKeyID>& ordered_pubkeys, const st
     if (!spk_man) {
         return false;
     }
-    AssertLockHeld(spk_man->cs_wallet);
+    LOCK(spk_man->cs_KeyStore);
     return spk_man->ImportPubKeys(ordered_pubkeys, pubkey_map, key_origins, add_keypool, internal, timestamp);
 }
 
@@ -1457,7 +1458,7 @@ bool CWallet::ImportScriptPubKeys(const std::string& label, const std::set<CScri
     if (!spk_man) {
         return false;
     }
-    AssertLockHeld(spk_man->cs_wallet);
+    LOCK(spk_man->cs_KeyStore);
     if (!spk_man->ImportScriptPubKeys(script_pub_keys, have_solving_data, timestamp)) {
         return false;
     }
@@ -3103,7 +3104,6 @@ size_t CWallet::KeypoolCountExternalKeys()
 
     unsigned int count = 0;
     if (auto spk_man = m_spk_man.get()) {
-        AssertLockHeld(spk_man->cs_wallet);
         count += spk_man->KeypoolCountExternalKeys();
     }
 
@@ -3123,6 +3123,7 @@ unsigned int CWallet::GetKeyPoolSize() const
 
 bool CWallet::TopUpKeyPool(unsigned int kpSize)
 {
+    LOCK(cs_wallet);
     bool res = true;
     if (auto spk_man = m_spk_man.get()) {
         res &= spk_man->TopUp(kpSize);
@@ -3149,6 +3150,7 @@ bool CWallet::GetNewDestination(const OutputType type, const std::string label, 
 
 bool CWallet::GetNewChangeDestination(const OutputType type, CTxDestination& dest, std::string& error)
 {
+    LOCK(cs_wallet);
     error.clear();
 
     ReserveDestination reservedest(this, type);
@@ -3163,6 +3165,7 @@ bool CWallet::GetNewChangeDestination(const OutputType type, CTxDestination& des
 
 int64_t CWallet::GetOldestKeyPoolTime()
 {
+    LOCK(cs_wallet);
     int64_t oldestKey = std::numeric_limits<int64_t>::max();
     if (auto spk_man = m_spk_man.get()) {
         oldestKey = spk_man->GetOldestKeyPoolTime();
@@ -3416,7 +3419,7 @@ void CWallet::GetKeyBirthTimes(interfaces::Chain::Lock& locked_chain, std::map<C
 
     LegacyScriptPubKeyMan* spk_man = GetLegacyScriptPubKeyMan();
     assert(spk_man != nullptr);
-    AssertLockHeld(spk_man->cs_wallet);
+    LOCK(spk_man->cs_KeyStore);
 
     // get birth times for keys with metadata
     for (const auto& entry : spk_man->mapKeyMetadata) {
@@ -3725,6 +3728,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
 
         walletInstance->SetWalletFlags(wallet_creation_flags, false);
         if (!(wallet_creation_flags & (WALLET_FLAG_DISABLE_PRIVATE_KEYS | WALLET_FLAG_BLANK_WALLET))) {
+            LOCK(walletInstance->cs_wallet);
             if (auto spk_man = walletInstance->m_spk_man.get()) {
                 if (!spk_man->SetupGeneration()) {
                     error = _("Unable to generate initial keys").translated;
@@ -4064,7 +4068,7 @@ bool CWallet::IsLocked() const
     if (!IsCrypted()) {
         return false;
     }
-    LOCK(cs_KeyStore);
+    LOCK(cs_wallet);
     return vMasterKey.empty();
 }
 
@@ -4074,7 +4078,7 @@ bool CWallet::Lock()
         return false;
 
     {
-        LOCK(cs_KeyStore);
+        LOCK(cs_wallet);
         vMasterKey.clear();
     }
 
@@ -4085,7 +4089,7 @@ bool CWallet::Lock()
 bool CWallet::Unlock(const CKeyingMaterial& vMasterKeyIn, bool accept_no_keys)
 {
     {
-        LOCK(cs_KeyStore);
+        LOCK(cs_wallet);
         if (m_spk_man) {
             if (!m_spk_man->CheckDecryptionKey(vMasterKeyIn, accept_no_keys)) {
                 return false;

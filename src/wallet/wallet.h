@@ -606,7 +606,7 @@ class WalletRescanReserver; //forward declarations for ScanForWalletTransactions
 class CWallet final : public WalletStorage, private interfaces::Chain::Notifications
 {
 private:
-    CKeyingMaterial vMasterKey GUARDED_BY(cs_KeyStore);
+    CKeyingMaterial vMasterKey GUARDED_BY(cs_wallet);
 
 
     bool Unlock(const CKeyingMaterial& vMasterKeyIn, bool accept_no_keys = false);
