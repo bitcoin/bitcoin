@@ -287,6 +287,23 @@ bool LegacyScriptPubKeyMan::TopUp(unsigned int size)
     return TopUpKeyPool(size);
 }
 
+void LegacyScriptPubKeyMan::MarkUnusedAddresses(const CScript& script)
+{
+    AssertLockHeld(cs_wallet);
+    // extract addresses and check if they match with an unused keypool key
+    for (const auto& keyid : GetAffectedKeys(script, *this)) {
+        std::map<CKeyID, int64_t>::const_iterator mi = m_pool_key_to_index.find(keyid);
+        if (mi != m_pool_key_to_index.end()) {
+            WalletLogPrintf("%s: Detected a used keypool key, mark all keypool key up to this key as used\n", __func__);
+            MarkReserveKeysAsUsed(mi->second);
+
+            if (!TopUpKeyPool()) {
+                WalletLogPrintf("%s: Topping up keypool failed (locked wallet)\n", __func__);
+            }
+        }
+    }
+}
+
 void LegacyScriptPubKeyMan::UpgradeKeyMetadata()
 {
     AssertLockHeld(cs_wallet);
