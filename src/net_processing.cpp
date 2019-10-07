@@ -1638,9 +1638,30 @@ inline void static SendBlockTransactions(const CBlock& block, const BlockTransac
     connman->PushMessage(pfrom, msgMaker.Make(nSendFlags, NetMsgType::BLOCKTXN, resp));
 }
 
-bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::vector<CBlockHeader>& headers, const CChainParams& chainparams, bool via_compact_block)
+/**
+ * Check to make sure that a given headers message should be validated:
+ *
+ * - empty messages are discarded
+ * - unconnecting headers that appear to be block announcements are handled with a GETHEADERS
+ * - non-continuous headers are rejected
+ *
+ * @param[in]  pfrom The peer sending us the headers
+ * @param[in] connman Network handler, for sending messages back to the peer
+ * @param[in]  headers The headers that were sent in the network message
+ * @param[in]  chainparams The params for the chain we want to connect to
+ * @param[in]  via_compact_block Whether the given header was sent via the compact blocks protocol
+ * @param[out] received_new_header Whether the headers message contains a previously unknown block header
+ * @param[out] should_validate Set to false if further processing (validation) should be aborted
+ *
+ * Returns false if the peer's headers are non-continuous.
+ */
+
+bool static InspectHeaders(CNode *pfrom, CConnman *connman, const std::vector<CBlockHeader>& headers, const CChainParams& chainparams, bool via_compact_block, bool *received_new_header, bool *should_validate)
 {
     const CNetMsgMaker msgMaker(pfrom->GetSendVersion());
+    *should_validate = false;
+    *received_new_header = false;
+
     size_t nCount = headers.size();
 
     if (nCount == 0) {
@@ -1648,8 +1669,6 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
         return true;
     }
 
-    bool received_new_header = false;
-    const CBlockIndex *pindexLast = nullptr;
     {
         LOCK(cs_main);
         CNodeState *nodestate = State(pfrom->GetId());
@@ -1693,130 +1712,161 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
         // If we don't have the last header, then they'll have given us
         // something new (if these headers are valid).
         if (!LookupBlockIndex(hashLastBlock)) {
-            received_new_header = true;
+            *received_new_header = true;
         }
     }
 
+    *should_validate = true;
+    return true;
+}
+
+/**
+ * Validate a given set of headers from a given peer.
+ *
+ * Returns false if any fail validation.
+ *
+ * @param[out] pindexLast Pointer to the last CBlockIndex added.
+ */
+static bool ValidateHeaders(CNode *pfrom, const std::vector<CBlockHeader>& headers, const CChainParams& chainparams, bool via_compact_block, const CBlockIndex **pindexLast)
+{
     BlockValidationState state;
-    if (!ProcessNewBlockHeaders(headers, state, chainparams, &pindexLast)) {
+    if (!ProcessNewBlockHeaders(headers, state, chainparams, pindexLast)) {
         if (state.IsInvalid()) {
             MaybePunishNodeForBlock(pfrom->GetId(), state, via_compact_block, "invalid header received");
             return false;
         }
     }
+    return true;
+}
 
-    {
-        LOCK(cs_main);
-        CNodeState *nodestate = State(pfrom->GetId());
-        if (nodestate->nUnconnectingHeaders > 0) {
-            LogPrint(BCLog::NET, "peer=%d: resetting nUnconnectingHeaders (%d -> 0)\n", pfrom->GetId(), nodestate->nUnconnectingHeaders);
-        }
-        nodestate->nUnconnectingHeaders = 0;
+// Update peer's state after validly processing headers from that peer, and
+// potentially fetch more headers or blocks from the peer.
+static bool UpdateHeadersAndMaybeFetch(CNode *pfrom, CConnman *connman, const CBlockIndex *pindexLast, const CChainParams& chainparams, bool request_more_headers, bool received_new_header)
+{
+    const CNetMsgMaker msgMaker(pfrom->GetSendVersion());
 
-        assert(pindexLast);
-        UpdateBlockAvailability(pfrom->GetId(), pindexLast->GetBlockHash());
+    LOCK(cs_main);
+    CNodeState *nodestate = State(pfrom->GetId());
+    if (nodestate->nUnconnectingHeaders > 0) {
+        LogPrint(BCLog::NET, "peer=%d: resetting nUnconnectingHeaders (%d -> 0)\n", pfrom->GetId(), nodestate->nUnconnectingHeaders);
+    }
+    nodestate->nUnconnectingHeaders = 0;
 
-        // From here, pindexBestKnownBlock should be guaranteed to be non-null,
-        // because it is set in UpdateBlockAvailability. Some nullptr checks
-        // are still present, however, as belt-and-suspenders.
+    assert(pindexLast);
+    UpdateBlockAvailability(pfrom->GetId(), pindexLast->GetBlockHash());
 
-        if (received_new_header && pindexLast->nChainWork > ::ChainActive().Tip()->nChainWork) {
-            nodestate->m_last_block_announcement = GetTime();
-        }
+    // From here, pindexBestKnownBlock should be guaranteed to be non-null,
+    // because it is set in UpdateBlockAvailability. Some nullptr checks
+    // are still present, however, as belt-and-suspenders.
 
-        if (nCount == MAX_HEADERS_RESULTS) {
-            // Headers message had its maximum size; the peer may have more headers.
-            // TODO: optimize: if pindexLast is an ancestor of ::ChainActive().Tip or pindexBestHeader, continue
-            // from there instead.
-            LogPrint(BCLog::NET, "more getheaders (%d) to end to peer=%d (startheight:%d)\n", pindexLast->nHeight, pfrom->GetId(), pfrom->nStartingHeight);
-            connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::GETHEADERS, ::ChainActive().GetLocator(pindexLast), uint256()));
-        }
+    if (received_new_header && pindexLast->nChainWork > ::ChainActive().Tip()->nChainWork) {
+        nodestate->m_last_block_announcement = GetTime();
+    }
 
-        bool fCanDirectFetch = CanDirectFetch(chainparams.GetConsensus());
-        // If this set of headers is valid and ends in a block with at least as
-        // much work as our tip, download as much as possible.
-        if (fCanDirectFetch && pindexLast->IsValid(BLOCK_VALID_TREE) && ::ChainActive().Tip()->nChainWork <= pindexLast->nChainWork) {
-            std::vector<const CBlockIndex*> vToFetch;
-            const CBlockIndex *pindexWalk = pindexLast;
-            // Calculate all the blocks we'd need to switch to pindexLast, up to a limit.
-            while (pindexWalk && !::ChainActive().Contains(pindexWalk) && vToFetch.size() <= MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
-                if (!(pindexWalk->nStatus & BLOCK_HAVE_DATA) &&
-                        !mapBlocksInFlight.count(pindexWalk->GetBlockHash()) &&
-                        (!IsWitnessEnabled(pindexWalk->pprev, chainparams.GetConsensus()) || State(pfrom->GetId())->fHaveWitness)) {
-                    // We don't have this block, and it's not yet in flight.
-                    vToFetch.push_back(pindexWalk);
-                }
-                pindexWalk = pindexWalk->pprev;
+    if (request_more_headers) {
+        // Presumably the headers message had its maximum size, and the peer may have more headers.
+        // TODO: optimize: if pindexLast is an ancestor of ::ChainActive().Tip or pindexBestHeader, continue
+        // from there instead.
+        LogPrint(BCLog::NET, "more getheaders (%d) to end to peer=%d (startheight:%d)\n", pindexLast->nHeight, pfrom->GetId(), pfrom->nStartingHeight);
+        connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::GETHEADERS, ::ChainActive().GetLocator(pindexLast), uint256()));
+    }
+
+    bool fCanDirectFetch = CanDirectFetch(chainparams.GetConsensus());
+    // If this set of headers is valid and ends in a block with at least as
+    // much work as our tip, download as much as possible.
+    if (fCanDirectFetch && pindexLast->IsValid(BLOCK_VALID_TREE) && ::ChainActive().Tip()->nChainWork <= pindexLast->nChainWork) {
+        std::vector<const CBlockIndex*> vToFetch;
+        const CBlockIndex *pindexWalk = pindexLast;
+        // Calculate all the blocks we'd need to switch to pindexLast, up to a limit.
+        while (pindexWalk && !::ChainActive().Contains(pindexWalk) && vToFetch.size() <= MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
+            if (!(pindexWalk->nStatus & BLOCK_HAVE_DATA) &&
+                    !mapBlocksInFlight.count(pindexWalk->GetBlockHash()) &&
+                    (!IsWitnessEnabled(pindexWalk->pprev, chainparams.GetConsensus()) || State(pfrom->GetId())->fHaveWitness)) {
+                // We don't have this block, and it's not yet in flight.
+                vToFetch.push_back(pindexWalk);
             }
-            // If pindexWalk still isn't on our main chain, we're looking at a
-            // very large reorg at a time we think we're close to caught up to
-            // the main chain -- this shouldn't really happen.  Bail out on the
-            // direct fetch and rely on parallel download instead.
-            if (!::ChainActive().Contains(pindexWalk)) {
-                LogPrint(BCLog::NET, "Large reorg, won't direct fetch to %s (%d)\n",
-                        pindexLast->GetBlockHash().ToString(),
-                        pindexLast->nHeight);
-            } else {
-                std::vector<CInv> vGetData;
-                // Download as much as possible, from earliest to latest.
-                for (const CBlockIndex *pindex : reverse_iterate(vToFetch)) {
-                    if (nodestate->nBlocksInFlight >= MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
-                        // Can't download any more from this peer
-                        break;
-                    }
-                    uint32_t nFetchFlags = GetFetchFlags(pfrom);
-                    vGetData.push_back(CInv(MSG_BLOCK | nFetchFlags, pindex->GetBlockHash()));
-                    MarkBlockAsInFlight(pfrom->GetId(), pindex->GetBlockHash(), pindex);
-                    LogPrint(BCLog::NET, "Requesting block %s from  peer=%d\n",
-                            pindex->GetBlockHash().ToString(), pfrom->GetId());
-                }
-                if (vGetData.size() > 1) {
-                    LogPrint(BCLog::NET, "Downloading blocks toward %s (%d) via headers direct fetch\n",
-                            pindexLast->GetBlockHash().ToString(), pindexLast->nHeight);
-                }
-                if (vGetData.size() > 0) {
-                    if (nodestate->fSupportsDesiredCmpctVersion && vGetData.size() == 1 && mapBlocksInFlight.size() == 1 && pindexLast->pprev->IsValid(BLOCK_VALID_CHAIN)) {
-                        // In any case, we want to download using a compact block, not a regular one
-                        vGetData[0] = CInv(MSG_CMPCT_BLOCK, vGetData[0].hash);
-                    }
-                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::GETDATA, vGetData));
-                }
-            }
+            pindexWalk = pindexWalk->pprev;
         }
-        // If we're in IBD, we want outbound peers that will serve us a useful
-        // chain. Disconnect peers that are on chains with insufficient work.
-        if (::ChainstateActive().IsInitialBlockDownload() && nCount != MAX_HEADERS_RESULTS) {
-            // When nCount < MAX_HEADERS_RESULTS, we know we have no more
-            // headers to fetch from this peer.
-            if (nodestate->pindexBestKnownBlock && nodestate->pindexBestKnownBlock->nChainWork < nMinimumChainWork) {
-                // This peer has too little work on their headers chain to help
-                // us sync -- disconnect if using an outbound slot (unless
-                // whitelisted or addnode).
-                // Note: We compare their tip to nMinimumChainWork (rather than
-                // ::ChainActive().Tip()) because we won't start block download
-                // until we have a headers chain that has at least
-                // nMinimumChainWork, even if a peer has a chain past our tip,
-                // as an anti-DoS measure.
-                if (IsOutboundDisconnectionCandidate(pfrom)) {
-                    LogPrintf("Disconnecting outbound peer %d -- headers chain has insufficient work\n", pfrom->GetId());
-                    pfrom->fDisconnect = true;
+        // If pindexWalk still isn't on our main chain, we're looking at a
+        // very large reorg at a time we think we're close to caught up to
+        // the main chain -- this shouldn't really happen.  Bail out on the
+        // direct fetch and rely on parallel download instead.
+        if (!::ChainActive().Contains(pindexWalk)) {
+            LogPrint(BCLog::NET, "Large reorg, won't direct fetch to %s (%d)\n",
+                    pindexLast->GetBlockHash().ToString(),
+                    pindexLast->nHeight);
+        } else {
+            std::vector<CInv> vGetData;
+            // Download as much as possible, from earliest to latest.
+            for (const CBlockIndex *pindex : reverse_iterate(vToFetch)) {
+                if (nodestate->nBlocksInFlight >= MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
+                    // Can't download any more from this peer
+                    break;
                 }
+                uint32_t nFetchFlags = GetFetchFlags(pfrom);
+                vGetData.push_back(CInv(MSG_BLOCK | nFetchFlags, pindex->GetBlockHash()));
+                MarkBlockAsInFlight(pfrom->GetId(), pindex->GetBlockHash(), pindex);
+                LogPrint(BCLog::NET, "Requesting block %s from  peer=%d\n",
+                        pindex->GetBlockHash().ToString(), pfrom->GetId());
+            }
+            if (vGetData.size() > 1) {
+                LogPrint(BCLog::NET, "Downloading blocks toward %s (%d) via headers direct fetch\n",
+                        pindexLast->GetBlockHash().ToString(), pindexLast->nHeight);
+            }
+            if (vGetData.size() > 0) {
+                if (nodestate->fSupportsDesiredCmpctVersion && vGetData.size() == 1 && mapBlocksInFlight.size() == 1 && pindexLast->pprev->IsValid(BLOCK_VALID_CHAIN)) {
+                    // In any case, we want to download using a compact block, not a regular one
+                    vGetData[0] = CInv(MSG_CMPCT_BLOCK, vGetData[0].hash);
+                }
+                connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::GETDATA, vGetData));
             }
         }
-
-        if (!pfrom->fDisconnect && IsOutboundDisconnectionCandidate(pfrom) && nodestate->pindexBestKnownBlock != nullptr && pfrom->m_tx_relay != nullptr) {
-            // If this is an outbound full-relay peer, check to see if we should protect
-            // it from the bad/lagging chain logic.
-            // Note that block-relay-only peers are already implicitly protected, so we
-            // only consider setting m_protect for the full-relay peers.
-            if (g_outbound_peers_with_protect_from_disconnect < MAX_OUTBOUND_PEERS_TO_PROTECT_FROM_DISCONNECT && nodestate->pindexBestKnownBlock->nChainWork >= ::ChainActive().Tip()->nChainWork && !nodestate->m_chain_sync.m_protect) {
-                LogPrint(BCLog::NET, "Protecting outbound peer=%d from eviction\n", pfrom->GetId());
-                nodestate->m_chain_sync.m_protect = true;
-                ++g_outbound_peers_with_protect_from_disconnect;
+    }
+    // If we're in IBD, we want outbound peers that will serve us a useful
+    // chain. Disconnect peers that are on chains with insufficient work.
+    if (::ChainstateActive().IsInitialBlockDownload() && !request_more_headers) {
+        // We know we have no more headers to fetch from this peer.
+        if (nodestate->pindexBestKnownBlock && nodestate->pindexBestKnownBlock->nChainWork < nMinimumChainWork) {
+            // This peer has too little work on their headers chain to help
+            // us sync -- disconnect if using an outbound slot (unless
+            // whitelisted or addnode).
+            // Note: We compare their tip to nMinimumChainWork (rather than
+            // ::ChainActive().Tip()) because we won't start block download
+            // until we have a headers chain that has at least
+            // nMinimumChainWork, even if a peer has a chain past our tip,
+            // as an anti-DoS measure.
+            if (IsOutboundDisconnectionCandidate(pfrom)) {
+                LogPrintf("Disconnecting outbound peer %d -- headers chain has insufficient work\n", pfrom->GetId());
+                pfrom->fDisconnect = true;
             }
         }
     }
 
+    if (!pfrom->fDisconnect && IsOutboundDisconnectionCandidate(pfrom) && nodestate->pindexBestKnownBlock != nullptr && pfrom->m_tx_relay != nullptr) {
+        // If this is an outbound full-relay peer, check to see if we should protect
+        // it from the bad/lagging chain logic.
+        // Note that block-relay-only peers are already implicitly protected, so we
+        // only consider setting m_protect for the full-relay peers.
+        if (g_outbound_peers_with_protect_from_disconnect < MAX_OUTBOUND_PEERS_TO_PROTECT_FROM_DISCONNECT && nodestate->pindexBestKnownBlock->nChainWork >= ::ChainActive().Tip()->nChainWork && !nodestate->m_chain_sync.m_protect) {
+            LogPrint(BCLog::NET, "Protecting outbound peer=%d from eviction\n", pfrom->GetId());
+            nodestate->m_chain_sync.m_protect = true;
+            ++g_outbound_peers_with_protect_from_disconnect;
+        }
+    }
+    return true;
+}
+
+// Handler for receiving a HEADERS message from a peer
+bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::vector<CBlockHeader>& headers, const CChainParams& chainparams, bool via_compact_block)
+{
+    bool should_validate = false;
+    bool received_new_header = false;
+    if (!InspectHeaders(pfrom, connman, headers, chainparams, via_compact_block, &received_new_header, &should_validate)) return false;
+    if (should_validate) {
+        const CBlockIndex *pindexLast = nullptr;
+        if (!ValidateHeaders(pfrom, headers, chainparams, via_compact_block, &pindexLast)) return false;
+        if (!UpdateHeadersAndMaybeFetch(pfrom, connman, pindexLast, chainparams, headers.size() == MAX_HEADERS_RESULTS, received_new_header)) return false;
+    }
     return true;
 }
 
