@@ -29,7 +29,6 @@
 #include <util/validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/fees.h>
-#include <wallet/scriptpubkeyman.h>
 
 #include <algorithm>
 #include <assert.h>
@@ -211,9 +210,9 @@ WalletCreationStatus CreateWallet(interfaces::Chain& chain, const SecureString& 
             }
 
             // Set a seed for the wallet
-            CPubKey master_pub_key = wallet->GenerateNewSeed();
-            wallet->SetHDSeed(master_pub_key);
-            wallet->NewKeyPool();
+            CPubKey master_pub_key = wallet->m_spk_man->GenerateNewSeed();
+            wallet->m_spk_man->SetHDSeed(master_pub_key);
+            wallet->m_spk_man->NewKeyPool();
 
             // Relock the wallet
             wallet->Lock();
@@ -246,6 +245,14 @@ const CWalletTx* CWallet::GetWalletTx(const uint256& hash) const
     if (it == mapWallet.end())
         return nullptr;
     return &(it->second);
+}
+
+void CWallet::UpgradeKeyMetadata()
+{
+    AssertLockHeld(m_spk_man->cs_wallet);
+    if (m_spk_man) {
+        m_spk_man->UpgradeKeyMetadata();
+    }
 }
 
 bool CWallet::Unlock(const SecureString& strWalletPassphrase, bool accept_no_keys)
@@ -526,14 +533,15 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         }
         encrypted_batch->WriteMasterKey(nMasterKeyMaxID, kMasterKey);
 
-        if (!EncryptKeys(_vMasterKey))
-        {
-            encrypted_batch->TxnAbort();
-            delete encrypted_batch;
-            encrypted_batch = nullptr;
-            // We now probably have half of our keys encrypted in memory, and half not...
-            // die and let the user reload the unencrypted wallet.
-            assert(false);
+        if (auto spk_man = m_spk_man.get()) {
+            if (!spk_man->EncryptKeys(_vMasterKey)) {
+                encrypted_batch->TxnAbort();
+                delete encrypted_batch;
+                encrypted_batch = nullptr;
+                // We now probably have half of our keys encrypted in memory, and half not...
+                // die and let the user reload the unencrypted wallet.
+                assert(false);
+            }
         }
 
         // Encryption was introduced in version 0.4.0
@@ -554,11 +562,11 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         Unlock(strWalletPassphrase);
 
         // if we are using HD, replace the HD seed with a new one
-        if (IsHDEnabled()) {
-            SetHDSeed(GenerateNewSeed());
+        if (m_spk_man->IsHDEnabled()) {
+            m_spk_man->SetHDSeed(m_spk_man->GenerateNewSeed());
         }
 
-        NewKeyPool();
+        m_spk_man->NewKeyPool();
         Lock();
 
         // Need to completely rewrite the wallet file; if we don't, bdb might keep
@@ -690,7 +698,7 @@ void CWallet::SetUsedDestinationState(const uint256& hash, unsigned int n, bool 
 
     CTxDestination dst;
     if (ExtractDestination(srctx->tx->vout[n].scriptPubKey, dst)) {
-        if (::IsMine(*this, dst)) {
+        if (IsMine(dst)) {
             LOCK(cs_wallet);
             if (used && !GetDestData(dst, "used", nullptr)) {
                 AddDestData(dst, "used", "p"); // p for "present", opposite of absent (null)
@@ -704,7 +712,7 @@ void CWallet::SetUsedDestinationState(const uint256& hash, unsigned int n, bool 
 bool CWallet::IsUsedDestination(const CTxDestination& dst) const
 {
     LOCK(cs_wallet);
-    return ::IsMine(*this, dst) && GetDestData(dst, "used", nullptr);
+    return IsMine(dst) && GetDestData(dst, "used", nullptr);
 }
 
 bool CWallet::IsUsedDestination(const uint256& hash, unsigned int n) const
@@ -864,13 +872,13 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, CWalletTx::St
             // loop though all outputs
             for (const CTxOut& txout: tx.vout) {
                 // extract addresses and check if they match with an unused keypool key
-                for (const auto& keyid : GetAffectedKeys(txout.scriptPubKey, *this)) {
-                    std::map<CKeyID, int64_t>::const_iterator mi = m_pool_key_to_index.find(keyid);
-                    if (mi != m_pool_key_to_index.end()) {
+                for (const auto& keyid : GetAffectedKeys(txout.scriptPubKey, *m_spk_man)) {
+                    std::map<CKeyID, int64_t>::const_iterator mi = m_spk_man->m_pool_key_to_index.find(keyid);
+                    if (mi != m_spk_man->m_pool_key_to_index.end()) {
                         WalletLogPrintf("%s: Detected a used keypool key, mark all keypool key up to this key as used\n", __func__);
                         MarkReserveKeysAsUsed(mi->second);
 
-                        if (!TopUpKeyPool()) {
+                        if (!m_spk_man->TopUpKeyPool()) {
                             WalletLogPrintf("%s: Topping up keypool failed (locked wallet)\n", __func__);
                         }
                     }
@@ -1126,13 +1134,21 @@ CAmount CWallet::GetDebit(const CTxIn &txin, const isminefilter& filter) const
 
 isminetype CWallet::IsMine(const CTxOut& txout) const
 {
-    return ::IsMine(*this, txout.scriptPubKey);
+    return IsMine(txout.scriptPubKey);
 }
 
-isminetype IsMine(const CWallet& keystore, const CTxDestination& dest)
+isminetype CWallet::IsMine(const CTxDestination& dest) const
 {
-    CScript script = GetScriptForDestination(dest);
-    return IsMine(keystore, script);
+    return IsMine(GetScriptForDestination(dest));
+}
+
+isminetype CWallet::IsMine(const CScript& script) const
+{
+    isminetype result = ISMINE_NO;
+    if (auto spk_man = m_spk_man.get()) {
+        result = spk_man->IsMine(script);
+    }
+    return result;
 }
 
 CAmount CWallet::GetCredit(const CTxOut& txout, const isminefilter& filter) const
@@ -1156,7 +1172,7 @@ bool CWallet::IsChange(const CScript& script) const
     // a better way of identifying which outputs are 'the send' and which are
     // 'the change' will need to be implemented (maybe extend CWalletTx to remember
     // which output, if any, was change).
-    if (::IsMine(*this, script))
+    if (IsMine(script))
     {
         CTxDestination address;
         if (!ExtractDestination(script, address))
@@ -1246,6 +1262,26 @@ CAmount CWallet::GetChange(const CTransaction& tx) const
     return nChange;
 }
 
+bool CWallet::IsHDEnabled() const
+{
+    bool result = true;
+    if (auto spk_man = m_spk_man.get()) {
+        result &= spk_man->IsHDEnabled();
+    }
+    return result;
+}
+
+bool CWallet::CanGetAddresses(bool internal)
+{
+    {
+        auto spk_man = m_spk_man.get();
+        if (spk_man && spk_man->CanGetAddresses(internal)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void CWallet::SetWalletFlag(uint64_t flags)
 {
     LOCK(cs_wallet);
@@ -1302,7 +1338,9 @@ bool CWallet::DummySignInput(CTxIn &tx_in, const CTxOut &txout, bool use_max_sig
     const CScript& scriptPubKey = txout.scriptPubKey;
     SignatureData sigdata;
 
-    if (!ProduceSignature(*this, use_max_sig ? DUMMY_MAXIMUM_SIGNATURE_CREATOR : DUMMY_SIGNATURE_CREATOR, scriptPubKey, sigdata)) {
+    const SigningProvider* provider = GetSigningProvider();
+
+    if (!ProduceSignature(*provider, use_max_sig ? DUMMY_MAXIMUM_SIGNATURE_CREATOR : DUMMY_SIGNATURE_CREATOR, scriptPubKey, sigdata)) {
         return false;
     }
     UpdateInput(tx_in, sigdata);
@@ -1321,6 +1359,49 @@ bool CWallet::DummySignTx(CMutableTransaction &txNew, const std::vector<CTxOut> 
         }
 
         nIn++;
+    }
+    return true;
+}
+
+bool CWallet::ImportScripts(const std::set<CScript> scripts, int64_t timestamp)
+{
+    auto spk_man = GetLegacyScriptPubKeyMan();
+    if (!spk_man) {
+        return false;
+    }
+    AssertLockHeld(spk_man->cs_wallet);
+    return spk_man->ImportScripts(scripts, timestamp);
+}
+
+bool CWallet::ImportPrivKeys(const std::map<CKeyID, CKey>& privkey_map, const int64_t timestamp)
+{
+    auto spk_man = GetLegacyScriptPubKeyMan();
+    if (!spk_man) {
+        return false;
+    }
+    AssertLockHeld(spk_man->cs_wallet);
+    return spk_man->ImportPrivKeys(privkey_map, timestamp);
+}
+
+bool CWallet::ImportPubKeys(const std::vector<CKeyID>& ordered_pubkeys, const std::map<CKeyID, CPubKey>& pubkey_map, const std::map<CKeyID, std::pair<CPubKey, KeyOriginInfo>>& key_origins, const bool add_keypool, const bool internal, const int64_t timestamp)
+{
+    auto spk_man = GetLegacyScriptPubKeyMan();
+    if (!spk_man) {
+        return false;
+    }
+    AssertLockHeld(spk_man->cs_wallet);
+    return spk_man->ImportPubKeys(ordered_pubkeys, pubkey_map, key_origins, add_keypool, internal, timestamp);
+}
+
+bool CWallet::ImportScriptPubKeys(const std::string& label, const std::set<CScript>& script_pub_keys, const bool have_solving_data, const bool apply_label, const int64_t timestamp)
+{
+    auto spk_man = GetLegacyScriptPubKeyMan();
+    if (!spk_man) {
+        return false;
+    }
+    AssertLockHeld(spk_man->cs_wallet);
+    if (!spk_man->ImportScriptPubKeys(label, script_pub_keys, have_solving_data, apply_label, timestamp)) {
+        return false;
     }
     return true;
 }
@@ -2001,7 +2082,9 @@ void CWallet::AvailableCoins(interfaces::Chain::Lock& locked_chain, std::vector<
                 continue;
             }
 
-            bool solvable = IsSolvable(*this, wtx.tx->vout[i].scriptPubKey);
+            const SigningProvider* provider = GetSigningProvider();
+
+            bool solvable = provider ? IsSolvable(*provider, wtx.tx->vout[i].scriptPubKey) : false;
             bool spendable = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (((mine & ISMINE_WATCH_ONLY) != ISMINE_NO) && (coinControl && coinControl->fAllowWatchOnly && solvable));
 
             vCoins.push_back(COutput(&wtx, i, nDepth, spendable, solvable, safeTx, (coinControl && coinControl->fAllowWatchOnly)));
@@ -2235,7 +2318,13 @@ bool CWallet::SignTransaction(CMutableTransaction& tx)
         const CScript& scriptPubKey = mi->second.tx->vout[input.prevout.n].scriptPubKey;
         const CAmount& amount = mi->second.tx->vout[input.prevout.n].nValue;
         SignatureData sigdata;
-        if (!ProduceSignature(*this, MutableTransactionSignatureCreator(&tx, nIn, amount, SIGHASH_ALL), scriptPubKey, sigdata)) {
+
+        const SigningProvider* provider = GetSigningProvider();
+        if (!provider) {
+            return false;
+        }
+
+        if (!ProduceSignature(*provider, MutableTransactionSignatureCreator(&tx, nIn, amount, SIGHASH_ALL), scriptPubKey, sigdata)) {
             return false;
         }
         UpdateInput(input, sigdata);
@@ -2693,7 +2782,12 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                 const CScript& scriptPubKey = coin.txout.scriptPubKey;
                 SignatureData sigdata;
 
-                if (!ProduceSignature(*this, MutableTransactionSignatureCreator(&txNew, nIn, coin.txout.nValue, SIGHASH_ALL), scriptPubKey, sigdata))
+                const SigningProvider* provider = GetSigningProvider();
+                if (!provider) {
+                    return false;
+                }
+
+                if (!ProduceSignature(*provider, MutableTransactionSignatureCreator(&txNew, nIn, coin.txout.nValue, SIGHASH_ALL), scriptPubKey, sigdata))
                 {
                     strFailReason = _("Signing transaction failed").translated;
                     return false;
@@ -2801,7 +2895,7 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
         {
             setInternalKeyPool.clear();
             setExternalKeyPool.clear();
-            m_pool_key_to_index.clear();
+            m_spk_man->m_pool_key_to_index.clear();
             // Note: can't top-up keypool here, because wallet is locked.
             // User will be prompted to unlock wallet the next operation
             // that requires a new key.
@@ -2838,7 +2932,7 @@ DBErrors CWallet::ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256
         {
             setInternalKeyPool.clear();
             setExternalKeyPool.clear();
-            m_pool_key_to_index.clear();
+            m_spk_man->m_pool_key_to_index.clear();
             // Note: can't top-up keypool here, because wallet is locked.
             // User will be prompted to unlock wallet the next operation
             // that requires a new key.
@@ -2863,7 +2957,7 @@ DBErrors CWallet::ZapWalletTx(std::vector<CWalletTx>& vWtx)
             LOCK(cs_wallet);
             setInternalKeyPool.clear();
             setExternalKeyPool.clear();
-            m_pool_key_to_index.clear();
+            m_spk_man->m_pool_key_to_index.clear();
             // Note: can't top-up keypool here, because wallet is locked.
             // User will be prompted to unlock wallet the next operation
             // that requires a new key.
@@ -2887,7 +2981,7 @@ bool CWallet::SetAddressBookWithDB(WalletBatch& batch, const CTxDestination& add
         if (!strPurpose.empty()) /* update purpose only if requested */
             mapAddressBook[address].purpose = strPurpose;
     }
-    NotifyAddressBookChanged(this, address, strName, ::IsMine(*this, address) != ISMINE_NO,
+    NotifyAddressBookChanged(this, address, strName, IsMine(address) != ISMINE_NO,
                              strPurpose, (fUpdated ? CT_UPDATED : CT_NEW) );
     if (!strPurpose.empty() && !batch.WritePurpose(EncodeDestination(address), strPurpose))
         return false;
@@ -2914,17 +3008,50 @@ bool CWallet::DelAddressBook(const CTxDestination& address)
         mapAddressBook.erase(address);
     }
 
-    NotifyAddressBookChanged(this, address, "", ::IsMine(*this, address) != ISMINE_NO, "", CT_DELETED);
+    NotifyAddressBookChanged(this, address, "", IsMine(address) != ISMINE_NO, "", CT_DELETED);
 
     WalletBatch(*database).ErasePurpose(EncodeDestination(address));
     return WalletBatch(*database).EraseName(EncodeDestination(address));
+}
+
+size_t CWallet::KeypoolCountExternalKeys()
+{
+    AssertLockHeld(cs_wallet);
+
+    unsigned int count = 0;
+    if (auto spk_man = m_spk_man.get()) {
+        AssertLockHeld(spk_man->cs_wallet);
+        count += spk_man->KeypoolCountExternalKeys();
+    }
+
+    return count;
+}
+
+bool CWallet::TopUpKeyPool(unsigned int kpSize)
+{
+    bool res = true;
+    if (auto spk_man = m_spk_man.get()) {
+        res &= spk_man->TopUpKeyPool(kpSize);
+    }
+    return res;
+}
+
+bool CWallet::GetNewDestination(const OutputType type, const std::string label, CTxDestination& dest, std::string& error)
+{
+    error.clear();
+    bool result = false;
+    auto spk_man = m_spk_man.get();
+    if (spk_man) {
+        result = spk_man->GetNewDestination(type, label, dest, error);
+    }
+    return result;
 }
 
 bool CWallet::GetNewChangeDestination(const OutputType type, CTxDestination& dest, std::string& error)
 {
     error.clear();
 
-    TopUpKeyPool();
+    m_spk_man->TopUpKeyPool();
 
     ReserveDestination reservedest(this);
     if (!reservedest.GetReservedDestination(type, dest, true)) {
@@ -2934,6 +3061,15 @@ bool CWallet::GetNewChangeDestination(const OutputType type, CTxDestination& des
 
     reservedest.KeepDestination();
     return true;
+}
+
+int64_t CWallet::GetOldestKeyPoolTime()
+{
+    int64_t oldestKey = std::numeric_limits<int64_t>::max();
+    if (auto spk_man = m_spk_man.get()) {
+        oldestKey = spk_man->GetOldestKeyPoolTime();
+    }
+    return oldestKey;
 }
 
 std::map<CTxDestination, CAmount> CWallet::GetAddressBalances(interfaces::Chain::Lock& locked_chain)
@@ -3085,6 +3221,11 @@ std::set<CTxDestination> CWallet::GetLabelAddresses(const std::string& label) co
 
 bool ReserveDestination::GetReservedDestination(const OutputType type, CTxDestination& dest, bool internal)
 {
+    m_spk_man = pwallet->GetLegacyScriptPubKeyMan();
+    if (!m_spk_man) {
+        return false;
+    }
+
     if (!pwallet->CanGetAddresses(internal)) {
         return false;
     }
@@ -3092,14 +3233,14 @@ bool ReserveDestination::GetReservedDestination(const OutputType type, CTxDestin
     if (nIndex == -1)
     {
         CKeyPool keypool;
-        if (!pwallet->ReserveKeyFromKeyPool(nIndex, keypool, internal)) {
+        if (!m_spk_man->ReserveKeyFromKeyPool(nIndex, keypool, internal)) {
             return false;
         }
         vchPubKey = keypool.vchPubKey;
         fInternal = keypool.fInternal;
     }
     assert(vchPubKey.IsValid());
-    pwallet->LearnRelatedScripts(vchPubKey, type);
+    m_spk_man->LearnRelatedScripts(vchPubKey, type);
     address = GetDestinationForKey(vchPubKey, type);
     dest = address;
     return true;
@@ -3108,7 +3249,7 @@ bool ReserveDestination::GetReservedDestination(const OutputType type, CTxDestin
 void ReserveDestination::KeepDestination()
 {
     if (nIndex != -1)
-        pwallet->KeepKey(nIndex);
+        m_spk_man->KeepKey(nIndex);
     nIndex = -1;
     vchPubKey = CPubKey();
     address = CNoDestination();
@@ -3117,7 +3258,7 @@ void ReserveDestination::KeepDestination()
 void ReserveDestination::ReturnDestination()
 {
     if (nIndex != -1) {
-        pwallet->ReturnKey(nIndex, fInternal, vchPubKey);
+        m_spk_man->ReturnKey(nIndex, fInternal, vchPubKey);
     }
     nIndex = -1;
     vchPubKey = CPubKey();
@@ -3166,8 +3307,12 @@ void CWallet::GetKeyBirthTimes(interfaces::Chain::Lock& locked_chain, std::map<C
     AssertLockHeld(cs_wallet);
     mapKeyBirth.clear();
 
+    LegacyScriptPubKeyMan* spk_man = GetLegacyScriptPubKeyMan();
+    assert(spk_man != nullptr);
+    AssertLockHeld(spk_man->cs_wallet);
+
     // get birth times for keys with metadata
-    for (const auto& entry : mapKeyMetadata) {
+    for (const auto& entry : spk_man->mapKeyMetadata) {
         if (entry.second.nCreateTime) {
             mapKeyBirth[entry.first] = entry.second.nCreateTime;
         }
@@ -3177,7 +3322,7 @@ void CWallet::GetKeyBirthTimes(interfaces::Chain::Lock& locked_chain, std::map<C
     const Optional<int> tip_height = locked_chain.getHeight();
     const int max_height = tip_height && *tip_height > 144 ? *tip_height - 144 : 0; // the tip can be reorganized; use a 144-block safety margin
     std::map<CKeyID, int> mapKeyFirstBlock;
-    for (const CKeyID &keyid : GetKeys()) {
+    for (const CKeyID &keyid : spk_man->GetKeys()) {
         if (mapKeyBirth.count(keyid) == 0)
             mapKeyFirstBlock[keyid] = max_height;
     }
@@ -3194,7 +3339,7 @@ void CWallet::GetKeyBirthTimes(interfaces::Chain::Lock& locked_chain, std::map<C
             // ... which are already in a block
             for (const CTxOut &txout : wtx.tx->vout) {
                 // iterate over all their outputs
-                for (const auto &keyid : GetAffectedKeys(txout.scriptPubKey, *this)) {
+                for (const auto &keyid : GetAffectedKeys(txout.scriptPubKey, *spk_man)) {
                     // ... and all their affected keys
                     std::map<CKeyID, int>::iterator rit = mapKeyFirstBlock.find(keyid);
                     if (rit != mapKeyFirstBlock.end() && *height < rit->second)
@@ -3461,13 +3606,13 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
 
         bool hd_upgrade = false;
         bool split_upgrade = false;
-        if (walletInstance->CanSupportFeature(FEATURE_HD) && !walletInstance->IsHDEnabled()) {
+        if (walletInstance->CanSupportFeature(FEATURE_HD) && !walletInstance->m_spk_man->IsHDEnabled()) {
             walletInstance->WalletLogPrintf("Upgrading wallet to HD\n");
             walletInstance->SetMinVersion(FEATURE_HD);
 
             // generate a new master key
-            CPubKey masterPubKey = walletInstance->GenerateNewSeed();
-            walletInstance->SetHDSeed(masterPubKey);
+            CPubKey masterPubKey = walletInstance->m_spk_man->GenerateNewSeed();
+            walletInstance->m_spk_man->SetHDSeed(masterPubKey);
             hd_upgrade = true;
         }
         // Upgrade to HD chain split if necessary
@@ -3482,7 +3627,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
         }
         // Regenerate the keypool if upgraded to HD
         if (hd_upgrade) {
-            if (!walletInstance->TopUpKeyPool()) {
+            if (!walletInstance->m_spk_man->TopUpKeyPool()) {
                 error = _("Unable to generate keys").translated;
                 return nullptr;
             }
@@ -3497,12 +3642,12 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
         walletInstance->SetWalletFlags(wallet_creation_flags, false);
         if (!(wallet_creation_flags & (WALLET_FLAG_DISABLE_PRIVATE_KEYS | WALLET_FLAG_BLANK_WALLET))) {
             // generate a new seed
-            CPubKey seed = walletInstance->GenerateNewSeed();
-            walletInstance->SetHDSeed(seed);
+            CPubKey seed = walletInstance->m_spk_man->GenerateNewSeed();
+            walletInstance->m_spk_man->SetHDSeed(seed);
         }
 
         // Top up the keypool
-        if (walletInstance->CanGenerateKeys() && !walletInstance->TopUpKeyPool()) {
+        if (walletInstance->m_spk_man->CanGenerateKeys() && !walletInstance->m_spk_man->TopUpKeyPool()) {
             error = _("Unable to generate initial keys").translated;
             return nullptr;
         }
@@ -3857,4 +4002,19 @@ bool CWallet::Lock()
 
     NotifyStatusChanged(this);
     return true;
+}
+
+ScriptPubKeyMan* CWallet::GetScriptPubKeyMan() const
+{
+    return m_spk_man.get();
+}
+
+const SigningProvider* CWallet::GetSigningProvider() const
+{
+    return m_spk_man.get();
+}
+
+LegacyScriptPubKeyMan* CWallet::GetLegacyScriptPubKeyMan() const
+{
+    return m_spk_man.get();
 }
