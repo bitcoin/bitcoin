@@ -415,6 +415,17 @@ bool LegacyScriptPubKeyMan::HavePrivateKeys() const
     return !mapKeys.empty() || !mapCryptedKeys.empty();
 }
 
+void LegacyScriptPubKeyMan::RewriteDB()
+{
+    AssertLockHeld(cs_wallet);
+    setInternalKeyPool.clear();
+    setExternalKeyPool.clear();
+    m_pool_key_to_index.clear();
+    // Note: can't top-up keypool here, because wallet is locked.
+    // User will be prompted to unlock wallet the next operation
+    // that requires a new key.
+}
+
 static int64_t GetOldestKeyTimeInPool(const std::set<int64_t>& setKeyPool, WalletBatch& batch) {
     if (setKeyPool.empty()) {
         return GetTime();
