@@ -5108,7 +5108,7 @@ bool CWallet::CreateCoinStake(unsigned int nBits,
     txNew.vin.clear();
     txNew.vout.clear();
 
-    txNew.nType = TRANSACTION_COINBASE;
+    txNew.nType = TRANSACTION_STAKE;
 
     // Mark coin stake transaction
     CScript scriptEmpty;
