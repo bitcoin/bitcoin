@@ -361,6 +361,41 @@ bool LegacyScriptPubKeyMan::CanGetAddresses(bool internal)
     return keypool_has_keys;
 }
 
+bool LegacyScriptPubKeyMan::Upgrade(int prev_version, std::string& error)
+{
+    AssertLockHeld(cs_wallet);
+    error = "";
+    bool hd_upgrade = false;
+    bool split_upgrade = false;
+    if (m_storage.CanSupportFeature(FEATURE_HD) && !IsHDEnabled()) {
+        WalletLogPrintf("Upgrading wallet to HD\n");
+        m_storage.SetMinVersion(FEATURE_HD);
+
+        // generate a new master key
+        CPubKey masterPubKey = GenerateNewSeed();
+        SetHDSeed(masterPubKey);
+        hd_upgrade = true;
+    }
+    // Upgrade to HD chain split if necessary
+    if (m_storage.CanSupportFeature(FEATURE_HD_SPLIT)) {
+        WalletLogPrintf("Upgrading wallet to use HD chain split\n");
+        m_storage.SetMinVersion(FEATURE_PRE_SPLIT_KEYPOOL);
+        split_upgrade = FEATURE_HD_SPLIT > prev_version;
+    }
+    // Mark all keys currently in the keypool as pre-split
+    if (split_upgrade) {
+        MarkPreSplitKeys();
+    }
+    // Regenerate the keypool if upgraded to HD
+    if (hd_upgrade) {
+        if (!TopUpKeyPool()) {
+            error = _("Unable to generate keys").translated;
+            return false;
+        }
+    }
+    return true;
+}
+
 static int64_t GetOldestKeyTimeInPool(const std::set<int64_t>& setKeyPool, WalletBatch& batch) {
     if (setKeyPool.empty()) {
         return GetTime();
