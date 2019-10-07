@@ -17,18 +17,17 @@ from collections import defaultdict
 from test_framework.blocktools import (create_block, create_coinbase)
 from test_framework.mininode import (
     CInv,
-    NetworkThread,
-    NodeConn,
     NodeConnCB,
     mininode_lock,
     msg_block,
     msg_getdata,
+    network_thread_join,
+    network_thread_start,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     connect_nodes,
-    p2p_port,
     wait_until,
 )
 
@@ -133,17 +132,14 @@ class ExampleTest(BitcoinTestFramework):
     def run_test(self):
         """Main test logic"""
 
-        # Create a P2P connection to one of the nodes
-        node0 = BaseNode()
-        connections = []
-        connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], node0))
-        node0.add_connection(connections[0])
+        # Create P2P connections to two of the nodes
+        self.nodes[0].add_p2p_connection(BaseNode())
 
         # Start up network handling in another thread. This needs to be called
         # after the P2P connections have been created.
-        NetworkThread().start()
+        network_thread_start()
         # wait_for_verack ensures that the P2P connection is fully up.
-        node0.wait_for_verack()
+        self.nodes[0].p2p.wait_for_verack()
 
         # Generating a block on one of the nodes will get us out of IBD
         blocks = [int(self.nodes[0].generate(nblocks=1)[0], 16)]
@@ -180,7 +176,7 @@ class ExampleTest(BitcoinTestFramework):
             block.solve()
             block_message = msg_block(block)
             # Send message is used to send a P2P message to the node over our NodeConn connection
-            node0.send_message(block_message)
+            self.nodes[0].p2p.send_message(block_message)
             self.tip = block.sha256
             blocks.append(self.tip)
             self.block_time += 1
@@ -193,28 +189,33 @@ class ExampleTest(BitcoinTestFramework):
         connect_nodes(self.nodes[1], 2)
 
         self.log.info("Add P2P connection to node2")
-        node2 = BaseNode()
-        connections.append(NodeConn('127.0.0.1', p2p_port(2), self.nodes[2], node2))
-        node2.add_connection(connections[1])
-        node2.wait_for_verack()
+        # We can't add additional P2P connections once the network thread has started. Disconnect the connection
+        # to node0, wait for the network thread to terminate, then connect to node2. This is specific to
+        # the current implementation of the network thread and may be improved in future.
+        self.nodes[0].disconnect_p2ps()
+        network_thread_join()
+
+        self.nodes[2].add_p2p_connection(BaseNode())
+        network_thread_start()
+        self.nodes[2].p2p.wait_for_verack()
 
         self.log.info("Wait for node2 reach current tip. Test that it has propogated all the blocks to us")
 
         getdata_request = msg_getdata()
         for block in blocks:
             getdata_request.inv.append(CInv(2, block))
-        node2.send_message(getdata_request)
+        self.nodes[2].p2p.send_message(getdata_request)
 
         # wait_until() will loop until a predicate condition is met. Use it to test properties of the
         # NodeConnCB objects.
-        wait_until(lambda: sorted(blocks) == sorted(list(node2.block_receive_map.keys())), timeout=5, lock=mininode_lock)
+        wait_until(lambda: sorted(blocks) == sorted(list(self.nodes[2].p2p.block_receive_map.keys())), timeout=5, lock=mininode_lock)
 
         self.log.info("Check that each block was received only once")
         # The network thread uses a global lock on data access to the NodeConn objects when sending and receiving
         # messages. The test thread should acquire the global lock before accessing any NodeConn data to avoid locking
         # and synchronization issues. Note wait_until() acquires this global lock when testing the predicate.
         with mininode_lock:
-            for block in node2.block_receive_map.values():
+            for block in self.nodes[2].p2p.block_receive_map.values():
                 assert_equal(block, 1)
 
 if __name__ == '__main__':

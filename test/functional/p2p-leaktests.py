@@ -93,19 +93,12 @@ class P2PLeakTest(BitcoinTestFramework):
         self.extra_args = [['-banscore='+str(banscore)]]
 
     def run_test(self):
-        no_version_bannode = CNodeNoVersionBan()
-        no_version_idlenode = CNodeNoVersionIdle()
-        no_verack_idlenode = CNodeNoVerackIdle()
 
-        connections = []
-        connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], no_version_bannode, send_version=False))
-        connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], no_version_idlenode, send_version=False))
-        connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], no_verack_idlenode))
-        no_version_bannode.add_connection(connections[0])
-        no_version_idlenode.add_connection(connections[1])
-        no_verack_idlenode.add_connection(connections[2])
+        no_version_bannode = self.nodes[0].add_p2p_connection(CNodeNoVersionBan(), send_version=False)
+        no_version_idlenode = self.nodes[0].add_p2p_connection(CNodeNoVersionIdle(), send_version=False)
+        no_verack_idlenode = self.nodes[0].add_p2p_connection(CNodeNoVerackIdle())
 
-        NetworkThread().start()  # Start up network handling in another thread
+        network_thread_start()
 
         wait_until(lambda: no_version_bannode.ever_connected, timeout=10, lock=mininode_lock)
         wait_until(lambda: no_version_idlenode.ever_connected, timeout=10, lock=mininode_lock)
@@ -120,7 +113,7 @@ class P2PLeakTest(BitcoinTestFramework):
         #This node should have been banned
         assert not no_version_bannode.connected
 
-        [conn.disconnect_node() for conn in connections]
+        self.nodes[0].disconnect_p2ps()
 
         # Make sure no unexpected messages came in
         assert(no_version_bannode.unexpected_msg == False)
