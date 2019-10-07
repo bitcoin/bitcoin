@@ -16,7 +16,7 @@ BOOST_FIXTURE_TEST_SUITE(psbt_wallet_tests, WalletTestingSetup)
 
 BOOST_AUTO_TEST_CASE(psbt_updater_test)
 {
-    auto spk_man = m_wallet.GetLegacyScriptPubKeyMan();
+    auto spk_man = m_wallet.GetOrCreateLegacyScriptPubKeyMan();
     LOCK2(m_wallet.cs_wallet, spk_man->cs_KeyStore);
 
     // Create prevtxs and add to wallet
