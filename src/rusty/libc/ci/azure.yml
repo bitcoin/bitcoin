@@ -1,0 +1,222 @@
+variables:
+  - group: secrets
+resources:
+  repositories:
+    - repository: rustinfra
+      type: github
+      name: rust-lang/simpleinfra
+      endpoint: gnzlbg
+trigger: ["auto-libc","try"]
+pr: ["master"]
+
+jobs:
+  - job: DockerLinuxTier1
+    pool:
+      vmImage: ubuntu-16.04
+    steps:
+      - template: azure-install-rust.yml
+      - bash: LIBC_CI=1 sh ./ci/run-docker.sh $TARGET
+        displayName: Execute run-docker.sh
+    strategy:
+      matrix:
+        i686-unknown-linux-gnu:
+          TARGET: i686-unknown-linux-gnu
+        x86_64-unknown-linux-gnu:
+          TARGET: x86_64-unknown-linux-gnu
+
+  - job: DockerLinuxTier2
+    #dependsOn: DockerLinuxTier1
+    pool:
+      vmImage: ubuntu-16.04
+    steps:
+      - template: azure-install-rust.yml
+      - bash: LIBC_CI=1 sh ./ci/run-docker.sh $TARGET
+        displayName: Execute run-docker.sh
+    strategy:
+      matrix:
+        aarch64-unknown-linux-android:
+          TARGET: aarch64-linux-android
+        aarch64-unknown-linux-gnu:
+          TARGET: aarch64-unknown-linux-gnu
+        aarch64-unknown-linux-musl:
+          TARGET: aarch64-unknown-linux-musl
+        arm-linux-androideabi:
+          TARGET: arm-linux-androideabi
+        arm-unknown-linux-gnueabihf:
+          TARGET: arm-unknown-linux-gnueabihf
+        arm-unknown-linux-musleabihf:
+          TARGET: arm-unknown-linux-musleabihf
+        asmjs-unknown-emscripten:
+          TARGET: asmjs-unknown-emscripten
+        i686-linux-android:
+          TARGET: i686-linux-android
+        i686-unknown-linux-musl:
+          TARGET: i686-unknown-linux-musl
+        mips-unknown-linux-gnu:
+          TARGET: mips-unknown-linux-gnu
+        mips-unknown-linux-musl:
+          TARGET: mips-unknown-linux-musl
+        mips64-unknown-linux-gnuabi64:
+          TARGET: mips64-unknown-linux-gnuabi64
+        mips64el-unknown-linux-gnuabi64:
+          TARGET: mips64el-unknown-linux-gnuabi64
+        mipsel-unknown-linux-musl:
+          TARGET: mipsel-unknown-linux-musl
+        #powerpc-unknown-linux-gnu:
+        #  TARGET: powerpc-unknown-linux-gnu
+        powerpc64-unknown-linux-gnu:
+          TARGET: powerpc64-unknown-linux-gnu
+        powerpc64le-unknown-linux-gnu:
+          TARGET: powerpc64le-unknown-linux-gnu
+        #s390x-unknown-linux-gnu:
+        #  TARGET: s390x-unknown-linux-gnu
+        #wasm32-wasi
+        #  TARGET: wasm32-wasi
+        sparc64-unknown-linux-gnu:
+          TARGET: sparc64-unknown-linux-gnu
+        wasm32-unknown-emscripten:
+          TARGET: wasm32-unknown-emscripten
+        x86_64-linux-android:
+          TARGET: x86_64-linux-android
+        x86_64-unknown-linux-gnux32:
+          TARGET: x86_64-unknown-linux-gnux32
+        x86_64-unknown-linux-musl:
+          TARGET: x86_64-unknown-linux-musl
+
+  - job: DockerOSX64
+    pool:
+      vmImage: macos-10.14
+    steps:
+      - template: azure-install-rust.yml
+      - bash: LIBC_CI=1 sh ./ci/run.sh $TARGET
+        displayName: Execute run.sh
+    strategy:
+      matrix:
+        x86_64-apple-darwin:
+          TARGET: x86_64-apple-darwin
+
+  - job: DockerOSX32
+    pool:
+      vmImage: macos-10.13
+    steps:
+      - template: azure-install-rust.yml
+      - bash: LIBC_CI=1 sh ./ci/run.sh $TARGET
+        displayName: Execute run.sh
+    strategy:
+      matrix:
+        i686-apple-darwin:
+          TARGET: i686-apple-darwin
+
+  - job: Windows
+    pool:
+      vmImage: vs2017-win2016
+    steps:
+      - template: azure-install-rust.yml
+      - bash: LIBC_CI=1 sh ./ci/run.sh $TARGET
+        displayName: Execute run.sh
+    strategy:
+      matrix:
+        x86_64-pc-windows-gnu:
+          TARGET: x86_64-pc-windows-gnu
+          ARCH_BITS: 64
+          ARCH: x86_64
+        x86_64-pc-windows-msvc:
+          TARGET: x86_64-pc-windows-msvc
+        i686-pc-windows-gnu:
+          TARGET: i686-pc-windows-gnu
+          ARCH_BITS: 32
+          ARCH: i686
+        i686-pc-windows-msvc:
+          TARGET: i686-pc-windows-msvc
+
+  - job: StyleAndDocs
+    pool:
+      vmImage: ubuntu-16.04
+    steps:
+      - template: azure-install-rust.yml
+      - script: sh ci/style.sh
+        displayName: Check style
+      - script: LIBC_CI=1 sh ci/dox.sh
+        displayName: Generate documentation
+      - template: azure-configs/static-websites.yml@rustinfra
+        parameters:
+          deploy_dir: target/doc
+
+  # FIXME: re-enable these after the next release
+  #- job: SemverLinux
+  #  dependsOn: BuildChannelsLinux
+  #  continueOnError: true
+  #  pool:
+  #    vmImage: ubuntu-16.04
+  #  steps:
+  #    - template: azure-install-rust.yml
+  #    - script: sh ci/semver.sh linux
+  #      displayName: Check breaking changes
+
+  #- job: SemverOSX
+  #  dependsOn: BuildChannelsOSX
+  #  continueOnError: true
+  #  pool:
+  #    vmImage: macos-10.14
+  #  steps:
+  #    - template: azure-install-rust.yml
+  #    - script: sh ci/semver.sh osx
+  #      displayName: Check breaking changes
+
+  - job: BuildChannelsLinux
+    dependsOn: StyleAndDocs
+    pool:
+      vmImage: ubuntu-16.04
+    steps:
+      - template: azure-install-rust.yml
+      - script: LIBC_CI=1 sh ./ci/build.sh
+        displayName: Execute build.sh
+    strategy:
+      matrix:
+        stable:
+          TOOLCHAIN: stable
+        beta:
+          TOOLCHAIN: beta
+        nightly:
+          TOOLCHAIN: nightly
+        1.13.0:
+          TOOLCHAIN: 1.13.0
+        1.19.0:
+          TOOLCHAIN: 1.19.0
+        1.24.0:
+          TOOLCHAIN: 1.24.0
+        1.25.0:
+          TOOLCHAIN: 1.25.0
+        1.30.0:
+          TOOLCHAIN: 1.30.0
+    variables:
+      OS: linux
+
+  - job: BuildChannelsOSX
+    dependsOn: StyleAndDocs
+    pool:
+      vmImage: macos-10.13
+    steps:
+      - template: azure-install-rust.yml
+      - script: LIBC_CI=1 sh ./ci/build.sh
+        displayName: Execute build.sh
+    strategy:
+      matrix:
+        stable:
+          TOOLCHAIN: stable
+        beta:
+          TOOLCHAIN: beta
+        nightly:
+          TOOLCHAIN: nightly
+        1.13.0:
+          TOOLCHAIN: 1.13.0
+        1.19.0:
+          TOOLCHAIN: 1.19.0
+        1.24.0:
+          TOOLCHAIN: 1.24.0
+        1.25.0:
+          TOOLCHAIN: 1.25.0
+        1.30.0:
+          TOOLCHAIN: 1.30.0
+    variables:
+      OS: osx
