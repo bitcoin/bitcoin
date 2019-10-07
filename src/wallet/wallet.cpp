@@ -3614,31 +3614,10 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
             return nullptr;
         }
 
-        bool hd_upgrade = false;
-        bool split_upgrade = false;
-        if (walletInstance->CanSupportFeature(FEATURE_HD) && !walletInstance->m_spk_man->IsHDEnabled()) {
-            walletInstance->WalletLogPrintf("Upgrading wallet to HD\n");
-            walletInstance->SetMinVersion(FEATURE_HD);
-
-            // generate a new master key
-            CPubKey masterPubKey = walletInstance->m_spk_man->GenerateNewSeed();
-            walletInstance->m_spk_man->SetHDSeed(masterPubKey);
-            hd_upgrade = true;
-        }
-        // Upgrade to HD chain split if necessary
-        if (walletInstance->CanSupportFeature(FEATURE_HD_SPLIT)) {
-            walletInstance->WalletLogPrintf("Upgrading wallet to use HD chain split\n");
-            walletInstance->SetMinVersion(FEATURE_PRE_SPLIT_KEYPOOL);
-            split_upgrade = FEATURE_HD_SPLIT > prev_version;
-        }
-        // Mark all keys currently in the keypool as pre-split
-        if (split_upgrade) {
-            walletInstance->MarkPreSplitKeys();
-        }
-        // Regenerate the keypool if upgraded to HD
-        if (hd_upgrade) {
-            if (!walletInstance->m_spk_man->TopUp()) {
-                error = _("Unable to generate keys").translated;
+        if (auto spk_man = walletInstance->m_spk_man.get()) {
+            std::string error;
+            if (!spk_man->Upgrade(prev_version, error)) {
+                chain.initError(error);
                 return nullptr;
             }
         }
