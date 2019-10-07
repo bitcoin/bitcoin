@@ -339,6 +339,19 @@ void LegacyScriptPubKeyMan::UpgradeKeyMetadata()
     }
 }
 
+bool LegacyScriptPubKeyMan::SetupGeneration(bool force)
+{
+    if ((CanGenerateKeys() && !force) || m_storage.IsLocked()) {
+        return false;
+    }
+
+    SetHDSeed(GenerateNewSeed());
+    if (!NewKeyPool()) {
+        return false;
+    }
+    return true;
+}
+
 bool LegacyScriptPubKeyMan::IsHDEnabled() const
 {
     return !hdChain.seed_id.IsNull();
