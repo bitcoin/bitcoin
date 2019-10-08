@@ -241,6 +241,7 @@ SYSCOIN_CORE_H = \
   util/error.h \
   util/fees.h \
   util/system.h \
+  util/macros.h \
   util/memory.h \
   util/moneystr.h \
   util/rbf.h \
