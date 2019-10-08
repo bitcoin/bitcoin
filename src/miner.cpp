@@ -572,15 +572,14 @@ void PoSMiner(std::shared_ptr<CWallet> pwallet)
             while (pwallet->IsLocked()) {
                 SetMiscWarning(strMintMessage);
                 MilliSleep(nSleepTime);
-                continue;
             }
 
             if (Params().MiningRequiresPeers()) {
                 // Busy-wait for the network to come online so we don't waste time mining
                 // on an obsolete chain. In regtest mode we expect to fly solo.
-                while(g_connman == nullptr || g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) == 0 || ::ChainstateActive().IsInitialBlockDownload())
+                while(g_connman == nullptr || g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) == 0 ||
+                    ::ChainstateActive().IsInitialBlockDownload() || !masternodeSync.IsSynced())
                     MilliSleep(nSleepTime);
-                continue;
             }
 
             // Check if we've reached the PoS start block.
@@ -596,7 +595,6 @@ void PoSMiner(std::shared_ptr<CWallet> pwallet)
                 LogPrintf("%s: minter thread sleeps while sync at %f\n", __func__, GuessVerificationProgress(Params().TxData(), ChainActive().Tip()));
                 SetMiscWarning(strMintSyncMessage);
                 MilliSleep(nSleepTime);
-                continue;
             }
 
             SetMiscWarning(strMintEmpty);
