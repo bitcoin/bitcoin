@@ -24,6 +24,7 @@ ExecStart=/usr/bin/dashd -daemon \
 Type=forking
 PIDFile=/run/dashd/dashd.pid
 Restart=on-failure
+TimeoutStopSec=600
 
 # Directory creation and permissions
 ####################################
