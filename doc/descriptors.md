@@ -28,6 +28,7 @@ Output descriptors currently support:
 - Pay-to-pubkey-hash scripts (P2PKH), through the `pkh` function.
 - Pay-to-script-hash scripts (P2SH), through the `sh` function.
 - Multisig scripts, through the `multi` function.
+- Multisig scripts where the public keys are sorted lexicographically, through the `sortedmulti` function.
 - Any type of supported address through the `addr` function.
 - Raw hex scripts through the `raw` function.
 - Public keys (compressed and uncompressed) in hex notation, or BIP32 extended pubkeys with derivation paths.
@@ -37,6 +38,7 @@ Output descriptors currently support:
 - `pk(0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798)` describes a P2PK output with the specified public key.
 - `combo(0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798)` describes any P2PK, P2PKH with the specified public key.
 - `multi(1,022f8bde4d1a07209355b4a7250a5c5128e88b84bddc619ab7cba8d569b240efe4,025cbdf0646e5db4eaa398f365f2ea7a0e3d419b7e0330e39ce92bddedcac4f9bc)` describes a bare *1-of-2* multisig with the specified public key.
+- `sortedmulti(1,022f8bde4d1a07209355b4a7250a5c5128e88b84bddc619ab7cba8d569b240efe4,025cbdf0646e5db4eaa398f365f2ea7a0e3d419b7e0330e39ce92bddedcac4f9bc)` describes a bare *1-of-2* multisig with keys sorted lexicographically in the resulting redeemScript.
 - `pkh(xpub68Gmy5EdvgibQVfPdqkBBCHxA5htiqg55crXYuXoQRKfDBFA1WEjWgP6LHhwBZeNK1VTsfTFUHCdrfp1bgwQ9xv5ski8PX9rL2dZXvgGDnw/1'/2)` describes a P2PKH output with child key *1'/2* of the specified xpub.
 - `pkh([d34db33f/44'/0'/0']xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/1/*)` describes a set of P2PKH outputs, but additionally specifies that the specified xpub is a child of a master with fingerprint `d34db33f`, and derived using path `44'/0'/0'`.
 
@@ -50,6 +52,7 @@ Descriptors consist of several types of expressions. The top level expression is
 - `sh(SCRIPT)` (top level only): P2SH embed the argument.
 - `combo(KEY)` (top level only): an alias for the collection of `pk(KEY)` and `pkh(KEY)`.
 - `multi(k,KEY_1,KEY_2,...,KEY_n)` (anywhere): k-of-n multisig script.
+- `sortedmulti(k,KEY_1,KEY_2,...,KEY_n)` (anywhere): k-of-n multisig script with keys sorted lexicographically in the resulting script.
 - `addr(ADDR)` (top level only): the script which ADDR expands to.
 - `raw(HEX)` (top level only): the script whose hex encoding is HEX.
 
@@ -92,11 +95,12 @@ not contain "p2" for brevity.
 
 Several pieces of software use multi-signature (multisig) scripts based
 on Bitcoin's OP_CHECKMULTISIG opcode. To support these, we introduce the
-`multi(k,key_1,key_2,...,key_n)` function. It represents a *k-of-n*
+`multi(k,key_1,key_2,...,key_n)` and `sortedmulti(k,key_1,key_2,...,key_n)`
+functions. They represents a *k-of-n*
 multisig policy, where any *k* out of the *n* provided public keys must
 sign.
 
-Key order is significant. A `multi()` expression describes a multisig script
+Key order is significant for `multi()`. A `multi()` expression describes a multisig script
 with keys in the specified order, and in a search for TXOs, it will not match
 outputs with multisig scriptPubKeys that have the same keys in a different
 order. Also, to prevent a combinatorial explosion of the search space, if more
@@ -104,6 +108,10 @@ than one of the `multi()` key arguments is a BIP32 wildcard path ending in `/*`
 or `*'`, the `multi()` expression only matches multisig scripts with the `i`th
 child key from each wildcard path in lockstep, rather than scripts with any
 combination of child keys from each wildcard path.
+
+Key order does not matter for `sortedmulti()`. `sortedmulti()` behaves in the same way
+as `multi()` does but the keys are reordered in the resulting script such that they
+are lexicographically ordered as described in BIP67.
 
 ### BIP32 derived keys and chains
 
