@@ -253,24 +253,27 @@ int CreateFundedTransaction(
     // inputs and outputs step by step
     CMutableTransaction tx;
 
-    std::vector<COutPoint> vSelectedInputs;
-    coinControl.ListSelected(vSelectedInputs);
+    if (fSuccess)
+    {
+        std::vector<COutPoint> vSelectedInputs;
+        coinControl.ListSelected(vSelectedInputs);
 
-    // add previously selected coins
-    for(const COutPoint& txIn : vSelectedInputs) {
-        tx.vin.push_back(CTxIn(txIn));
-    }
-
-    // add other selected coins
-    for(const CTxIn& txin : wtxNew->get().vin) {
-        if (!coinControl.IsSelected(txin.prevout)) {
-            tx.vin.push_back(txin);
+        // add previously selected coins
+        for(const COutPoint& txIn : vSelectedInputs) {
+            tx.vin.push_back(CTxIn(txIn));
         }
-    }
 
-    // add outputs
-    for(const CTxOut& txOut : wtxNew->get().vout) {
-        tx.vout.push_back(txOut);
+        // add other selected coins
+        for(const CTxIn& txin : wtxNew->get().vin) {
+            if (!coinControl.IsSelected(txin.prevout)) {
+                tx.vin.push_back(txin);
+            }
+        }
+
+        // add outputs
+        for(const CTxOut& txOut : wtxNew->get().vout) {
+            tx.vout.push_back(txOut);
+        }
     }
 
     // restore original locking state
