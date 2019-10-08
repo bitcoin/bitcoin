@@ -1,26 +1,22 @@
-BitcoinHD Core integration/staging tree
-=======================================
+Bitcoin Core integration/staging tree
+=====================================
 
-https://btchd.org
+[![Build Status](https://travis-ci.org/bitcoin/bitcoin.svg?branch=master)](https://travis-ci.org/bitcoin/bitcoin)
 
-The Crypto Currency System Based on CPoC.
+https://bitcoincore.org
 
-Pay Tribute to Cryptocurrency Pioneers [Bitcoin](https://bitcoincore.org)
-and [Burst](https://www.burst-coin.org)!
+What is Bitcoin?
+----------------
 
-About BitcoinHD
----------------
-
-- BitcoinHD is a new type of crypto currency based on Proof of Capacity.
-- BHD uses an upgraded version of cPOC mining (Conditioned Proof of Capacity), with a perfect economic model and consensus algorithm.
-- BHD uses hard disk as the participant of consensus, which reduces power consumption.
-- BHD mining lowers the entry barriers, and makes the coin generation process more decentralized, secure and reliable.
-- Compared with POW mining, cPOC mining saves energy, consumes much less power, has lower noise, no heat, and is anti-ASIC. cPOC-mining-based BHD can realize the original intention of Satoshi Nakamoto ---- everyone can become a miner.
-- Lowered the cost of credit, increased the strength and breadth of consensus, and improved the security of the consensus architecture
+Bitcoin is an experimental digital currency that enables instant payments to
+anyone, anywhere in the world. Bitcoin uses peer-to-peer technology to operate
+with no central authority: managing transactions and issuing money are carried
+out collectively by the network. Bitcoin Core is the name of open source
+software which enables the use of this currency.
 
 For more information, as well as an immediately useable, binary version of
-the BitcoinHD Core software, see https://btchd.org/#wallet, or read the
-[original whitepaper](https://btchd.org/BHD-Whitepaper2.0.pdf).
+the Bitcoin Core software, see https://bitcoin.org/en/download, or read the
+[original whitepaper](https://bitcoincore.org/bitcoin.pdf).
 
 License
 -------
@@ -28,18 +24,20 @@ License
 Bitcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
 information or see https://opensource.org/licenses/MIT.
 
-BitcoinHD Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
-information or see https://opensource.org/licenses/MIT.
-
 Development Process
 -------------------
 
 The `master` branch is regularly built and tested, but is not guaranteed to be
-completely stable. [Tags](https://github.com/btchd/btchd/tags) are created
-regularly to indicate new official, stable release versions of BitcoinHD Core.
+completely stable. [Tags](https://github.com/bitcoin/bitcoin/tags) are created
+regularly to indicate new official, stable release versions of Bitcoin Core.
 
-The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md)
-and useful hints for developers can be found in [doc/developer-notes.md](doc/developer-notes.md).
+The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md).
+
+The developer [mailing list](https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev)
+should be used to discuss complicated or controversial changes before working
+on a patch set.
+
+Developer IRC can be found on Freenode at #bitcoin-core-dev.
 
 Testing
 -------
@@ -60,7 +58,7 @@ There are also [regression and integration tests](/test), written
 in Python, that are run automatically on the build server.
 These tests can be run (if the [test dependencies](/test) are installed) with: `test/functional/test_runner.py`
 
-The Travis CI system makes sure that every pull request is built for Windows, Linux, and macOS, and that unit/sanity tests are run automatically.
+The Travis CI system makes sure that every pull request is built for Windows, Linux, and OS X, and that unit/sanity tests are run automatically.
 
 ### Manual Quality Assurance (QA) Testing
 
@@ -72,10 +70,8 @@ not straightforward.
 Translations
 ------------
 
-BitcoinHD base on bitcoin and shares resources with it.
-
 Changes to translations as well as new translations can be submitted to
-[Bitcoin Core's Transifex page](https://www.transifex.com/bitcoin/bitcoin/).
+[Bitcoin Core's Transifex page](https://www.transifex.com/projects/p/bitcoin/).
 
 Translations are periodically pulled from Transifex and merged into the git repository. See the
 [translation process](doc/translation_process.md) for details on how this works.
