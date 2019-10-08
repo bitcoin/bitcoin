@@ -11,7 +11,7 @@ Running
 For benchmarks purposes you only need to compile `syscoin_bench`. Beware of configuring without `--enable-debug` as this would impact
 benchmarking by unlatching log printers and lock analysis.
 
-    make -C src bench_syscoin
+    make -C src syscoin_bench
 
 After compiling syscoin-core, the benchmarks can be run with:
 
