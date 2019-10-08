@@ -59,7 +59,8 @@ FUZZ_SUITE = \
   test/setup_common.h \
   test/setup_common.cpp \
   test/fuzz/fuzz.cpp \
-  test/fuzz/fuzz.h
+  test/fuzz/fuzz.h \
+  test/fuzz/FuzzedDataProvider.h
 
 FUZZ_SUITE_LD_COMMON = \
  $(LIBBITCOIN_SERVER) \
