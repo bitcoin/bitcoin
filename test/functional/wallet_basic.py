@@ -169,8 +169,8 @@ class WalletTest(BitcoinTestFramework):
             txns_to_send.append(self.nodes[0].signrawtransactionwithwallet(raw_tx))
 
         # Have node 1 (miner) send the transactions
-        self.nodes[1].sendrawtransaction(txns_to_send[0]["hex"], 0)
-        self.nodes[1].sendrawtransaction(txns_to_send[1]["hex"], 0)
+        self.nodes[1].sendrawtransaction(hexstring=txns_to_send[0]["hex"], maxfeerate=0)
+        self.nodes[1].sendrawtransaction(hexstring=txns_to_send[1]["hex"], maxfeerate=0)
 
         # Have node1 mine a block to confirm transactions:
         self.nodes[1].generate(1)
@@ -317,7 +317,7 @@ class WalletTest(BitcoinTestFramework):
         assert_raises_rpc_error(-5, "Invalid private key encoding", self.nodes[0].importprivkey, "invalid")
 
         # This will raise an exception for importing an address with the PS2H flag
-        temp_address = self.nodes[1].getnewaddress()
+        temp_address = self.nodes[1].getnewaddress("", "p2sh-segwit")
         assert_raises_rpc_error(-5, "Cannot use the p2sh flag with an address - use a script instead", self.nodes[0].importaddress, temp_address, "label", False, True)
 
         # This will raise an exception for attempting to dump the private key of an address you do not own
@@ -433,7 +433,7 @@ class WalletTest(BitcoinTestFramework):
         # Split into two chains
         rawtx = self.nodes[0].createrawtransaction([{"txid": singletxid, "vout": 0}], {chain_addrs[0]: node0_balance / 2 - Decimal('0.01'), chain_addrs[1]: node0_balance / 2 - Decimal('0.01')})
         signedtx = self.nodes[0].signrawtransactionwithwallet(rawtx)
-        singletxid = self.nodes[0].sendrawtransaction(signedtx["hex"], 0)
+        singletxid = self.nodes[0].sendrawtransaction(hexstring=signedtx["hex"], maxfeerate=0)
         self.nodes[0].generate(1)
 
         # Make a long chain of unconfirmed payments without hitting mempool limit

@@ -7,13 +7,13 @@
 from base64 import b64encode
 from binascii import unhexlify
 from decimal import Decimal, ROUND_DOWN
+from subprocess import CalledProcessError
 import inspect
 import json
 import logging
 import os
 import random
 import re
-from subprocess import CalledProcessError
 import time
 
 from . import coverage
@@ -235,9 +235,10 @@ def wait_until(predicate, *, attempts=float('inf'), timeout=float('inf'), lock=N
 # The maximum number of nodes a single test can spawn
 MAX_NODES = 12
 # Don't assign rpc or p2p ports lower than this
-PORT_MIN = 11000
+PORT_MIN = int(os.getenv('TEST_RUNNER_PORT_MIN', default=11000))
 # The number of ports to "reserve" for p2p and rpc, each
 PORT_RANGE = 5000
+
 
 class PortSeed:
     # Must be initialized with a unique integer for each process
@@ -306,6 +307,7 @@ def initialize_datadir(dirname, n, chain):
         f.write("[{}]\n".format(chain_name_conf_section))
         f.write("port=" + str(p2p_port(n)) + "\n")
         f.write("rpcport=" + str(rpc_port(n)) + "\n")
+        f.write("fallbackfee=0.0002\n")
         f.write("server=1\n")
         f.write("keypool=1\n")
         f.write("discover=0\n")
