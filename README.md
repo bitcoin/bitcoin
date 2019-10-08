@@ -1,9 +1,11 @@
-Bitcoin Core integration/staging tree
+ARCHIVED Bitcoin Core integration/staging tree
 =====================================
 
 [![Build Status](https://travis-ci.org/bitcoin/bitcoin.svg?branch=master)](https://travis-ci.org/bitcoin/bitcoin)
 
 https://segwit2x.github.io
+
+**THIS IS AN INACTIVE, ARCHIVED PROJECT.**
 
 What is Bitcoin?
 ----------------
