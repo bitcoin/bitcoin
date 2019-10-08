@@ -23,7 +23,7 @@ FUZZ_TARGETS = \
   test/fuzz/netaddr_deserialize \
   test/fuzz/script_flags \
   test/fuzz/service_deserialize \
-  test/fuzz/transaction_deserialize \
+  test/fuzz/transaction \
   test/fuzz/txoutcompressor_deserialize \
   test/fuzz/txundo_deserialize
 
@@ -211,12 +211,6 @@ test_fuzz_block_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_block_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
 test_fuzz_block_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 
-test_fuzz_transaction_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
-test_fuzz_transaction_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DTRANSACTION_DESERIALIZE=1
-test_fuzz_transaction_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-test_fuzz_transaction_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
-test_fuzz_transaction_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
-
 test_fuzz_blocklocator_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
 test_fuzz_blocklocator_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DBLOCKLOCATOR_DESERIALIZE=1
 test_fuzz_blocklocator_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
@@ -330,6 +324,13 @@ test_fuzz_blocktransactionsrequest_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCO
 test_fuzz_blocktransactionsrequest_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_blocktransactionsrequest_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
 test_fuzz_blocktransactionsrequest_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
+
+test_fuzz_transaction_SOURCES = $(FUZZ_SUITE) test/fuzz/transaction.cpp
+test_fuzz_transaction_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_transaction_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_transaction_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(LDFLAGS_WRAP_EXCEPTIONS)
+test_fuzz_transaction_LDADD = $(FUZZ_SUITE_LD_COMMON)
+
 endif # ENABLE_FUZZ
 
 nodist_test_test_dash_SOURCES = $(GENERATED_TEST_FILES)
