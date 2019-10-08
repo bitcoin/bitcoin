@@ -29,6 +29,7 @@ ExecStartPre=/bin/chgrp syscoin /etc/syscoin
 Type=forking
 PIDFile=/run/syscoind/syscoind.pid
 Restart=on-failure
+TimeoutStopSec=600
 
 # Directory creation and permissions
 ####################################
