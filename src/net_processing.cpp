@@ -1227,6 +1227,9 @@ void PeerLogicValidation::UpdatedBlockTip(const CBlockIndex *pindexNew, const CB
 /**
  * Handle invalid block rejection and consequent peer banning, maintain which
  * peers announce compact blocks.
+ * Called both in case of cursory DoS checks failing (implying the peer is likely
+ * sending us bogus data) and after full validation of the block fails (which may
+ * be OK if it was sent over compact blocks).
  */
 static void BlockChecked(const CBlock& block, const CValidationState& state, CConnman* connman) {
     LOCK(cs_main);
