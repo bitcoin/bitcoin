@@ -26,6 +26,7 @@ FUZZ_TARGETS = \
   test/fuzz/eval_script \
   test/fuzz/fee_rate_deserialize \
   test/fuzz/flat_file_pos_deserialize \
+  test/fuzz/integer \
   test/fuzz/inv_deserialize \
   test/fuzz/key_origin_info_deserialize \
   test/fuzz/merkle_block_deserialize \
@@ -364,6 +365,12 @@ test_fuzz_eval_script_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_eval_script_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_eval_script_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_eval_script_LDADD = $(FUZZ_SUITE_LD_COMMON)
+
+test_fuzz_integer_SOURCES = $(FUZZ_SUITE) test/fuzz/integer.cpp
+test_fuzz_integer_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_integer_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_integer_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_integer_LDADD = $(FUZZ_SUITE_LD_COMMON)
 
 test_fuzz_txoutcompressor_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
 test_fuzz_txoutcompressor_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DTXOUTCOMPRESSOR_DESERIALIZE=1
