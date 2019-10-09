@@ -123,6 +123,11 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, const CBlockIndex*
 {
     AssertLockHeld(cs_main);
 
+    if (pindex->nHeight < Params().GetConsensus().nLLMQActivationHeight) {
+        specialDb.Write(DB_BEST_BLOCK_UPGRADE, block.GetHash());
+        return true;
+    }
+
     std::map<Consensus::LLMQType, CFinalCommitment> qcs;
     if (!GetCommitmentsFromBlock(block, pindex, qcs, state)) {
         return false;
@@ -277,6 +282,9 @@ bool CQuorumBlockProcessor::GetCommitmentsFromBlock(const CBlock& block, const C
             ret.emplace((Consensus::LLMQType)qc.commitment.llmqType, std::move(qc.commitment));
         }
     }
+
+    if (pindex->nHeight < Params().GetConsensus().nLLMQActivationHeight && !ret.empty())
+        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-qc-premature");
 
     return true;
 }

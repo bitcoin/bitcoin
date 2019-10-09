@@ -147,6 +147,9 @@ bool CDKGSessionHandler::InitNewQuorum(const CBlockIndex* pindexQuorum)
 
     const auto& consensus = Params().GetConsensus();
 
+    if (pindexQuorum->nHeight < consensus.nLLMQActivationHeight)
+        return false;
+
     curSession = std::make_shared<CDKGSession>(params, blsWorker, dkgManager);
 
     auto mns = CLLMQUtils::GetAllQuorumMembers(params.type, pindexQuorum);

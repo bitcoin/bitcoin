@@ -210,6 +210,8 @@ void CChainLocksHandler::CheckActiveState()
 {
     // TODO: BitGreen - Check if chainlock spork is active
 
+    isEnforced = ChainActive().Tip()->nHeight > Params().GetConsensus().nLLMQActivationHeight;
+
     LOCK(cs);
     bestChainLockHash = uint256();
     bestChainLock = bestChainLockWithKnownBlock = CChainLockSig();

@@ -56,6 +56,8 @@ void CDKGSessionManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fIni
 
     if (fInitialDownload)
         return;
+    if (pindexNew->nHeight < consensus.nLLMQActivationHeight)
+        return;
 
     // TODO: BitGreen - Check spork quorum dkg
 
