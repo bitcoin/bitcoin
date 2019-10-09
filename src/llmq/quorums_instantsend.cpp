@@ -405,11 +405,17 @@ bool CInstantSendManager::ProcessTx(const CTransaction& tx, const Consensus::Par
         g_connman->RelayInvFiltered(inv, tx, LLMQS_PROTO_VERSION);
     }
 
-    if (IsConflicted(tx)) {
+    auto conflictingLock = GetConflictingLock(tx);
+    if (conflictingLock) {
+        auto islockHash = ::SerializeHash(*conflictingLock);
+        LogPrintf("CInstantSendManager::%s -- txid=%s: conflicts with islock %s, txid=%s\n", __func__,
+                  tx.GetHash().ToString(), islockHash.ToString(), conflictingLock->txid.ToString());
         return false;
     }
 
     if (!CheckCanLock(tx, true, params)) {
+        LogPrint("instantsend", "CInstantSendManager::%s -- txid=%s: CheckCanLock returned false\n", __func__,
+                  tx.GetHash().ToString());
         return false;
     }
 
@@ -424,7 +430,7 @@ bool CInstantSendManager::ProcessTx(const CTransaction& tx, const Consensus::Par
         uint256 otherTxHash;
         if (quorumSigningManager->GetVoteForId(llmqType, id, otherTxHash)) {
             if (otherTxHash != tx.GetHash()) {
-                LogPrintf("CInstantSendManager::%s -- txid=%s: input %s is conflicting with islock %s\n", __func__,
+                LogPrintf("CInstantSendManager::%s -- txid=%s: input %s is conflicting with previous vote for tx %s\n", __func__,
                          tx.GetHash().ToString(), in.prevout.ToStringShort(), otherTxHash.ToString());
                 return false;
             }
@@ -433,19 +439,28 @@ bool CInstantSendManager::ProcessTx(const CTransaction& tx, const Consensus::Par
 
         // don't even try the actual signing if any input is conflicting
         if (quorumSigningManager->IsConflicting(llmqType, id, tx.GetHash())) {
+            LogPrintf("CInstantSendManager::%s -- txid=%s: quorumSigningManager->IsConflicting returned true. id=%s\n", __func__,
+                     tx.GetHash().ToString(), id.ToString());
             return false;
         }
     }
     if (alreadyVotedCount == ids.size()) {
+        LogPrint("instantsend", "CInstantSendManager::%s -- txid=%s: already voted on all inputs, bailing out\n", __func__,
+                 tx.GetHash().ToString());
         return true;
     }
+
+    LogPrint("instantsend", "CInstantSendManager::%s -- txid=%s: trying to vote on %d inputs\n", __func__,
+             tx.GetHash().ToString(), tx.vin.size());
 
     for (size_t i = 0; i < tx.vin.size(); i++) {
         auto& in = tx.vin[i];
         auto& id = ids[i];
         inputRequestIds.emplace(id);
+        LogPrint("instantsend", "CInstantSendManager::%s -- txid=%s: trying to vote on input %s with id %s\n", __func__,
+                 tx.GetHash().ToString(), in.prevout.ToStringShort(), id.ToString());
         if (quorumSigningManager->AsyncSignIfMember(llmqType, id, tx.GetHash())) {
-            LogPrintf("CInstantSendManager::%s -- txid=%s: voted on input %s with id %s\n", __func__,
+            LogPrint("instantsend", "CInstantSendManager::%s -- txid=%s: voted on input %s with id %s\n", __func__,
                       tx.GetHash().ToString(), in.prevout.ToStringShort(), id.ToString());
         }
     }
@@ -1054,6 +1069,9 @@ void CInstantSendManager::AddNonLockedTx(const CTransactionRef& tx)
             nonLockedTxsByInputs.emplace(in.prevout.hash, std::make_pair(in.prevout.n, tx->GetHash()));
         }
     }
+
+    LogPrint("instantsend", "CInstantSendManager::%s -- txid=%s\n", __func__,
+             tx->GetHash().ToString());
 }
 
 void CInstantSendManager::RemoveNonLockedTx(const uint256& txid, bool retryChildren)
@@ -1066,10 +1084,12 @@ void CInstantSendManager::RemoveNonLockedTx(const uint256& txid, bool retryChild
     }
     auto& info = it->second;
 
+    size_t retryChildrenCount = 0;
     if (retryChildren) {
         // TX got locked, so we can retry locking children
         for (auto& childTxid : info.children) {
             pendingRetryTxs.emplace(childTxid);
+            retryChildrenCount++;
         }
     }
 
@@ -1096,6 +1116,9 @@ void CInstantSendManager::RemoveNonLockedTx(const uint256& txid, bool retryChild
     }
 
     nonLockedTxs.erase(it);
+
+    LogPrint("instantsend", "CInstantSendManager::%s -- txid=%s, retryChildren=%d, retryChildrenCount=%d\n", __func__,
+             txid.ToString(), retryChildren, retryChildrenCount);
 }
 
 void CInstantSendManager::RemoveConflictedTx(const CTransaction& tx)
