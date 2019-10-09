@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (c) 2012-2016 The Bitcointalkcoin Core developers
+# Copyright (c) 2012-2016 The Talkcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -24,7 +24,7 @@ git_check_in_repo() {
 
 DESC=""
 SUFFIX=""
-if [ "${BITCOINTALKCOIN_GENBUILD_NO_GIT}" != "1" -a -e "$(which git 2>/dev/null)" -a "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ] && git_check_in_repo share/genbuild.sh; then
+if [ "${TALKCOIN_GENBUILD_NO_GIT}" != "1" -a -e "$(which git 2>/dev/null)" -a "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ] && git_check_in_repo share/genbuild.sh; then
     # clean 'dirty' status of touched files that haven't been modified
     git diff >/dev/null 2>/dev/null 
 

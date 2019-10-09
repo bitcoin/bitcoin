@@ -9,7 +9,7 @@ SetCompressor /SOLID lzma
 !define URL @PACKAGE_URL@
 
 # MUI Symbol Definitions
-!define MUI_ICON "@abs_top_srcdir@/share/pixmaps/bitcointalkcoin.ico"
+!define MUI_ICON "@abs_top_srcdir@/share/pixmaps/talkcoin.ico"
 !define MUI_WELCOMEFINISHPAGE_BITMAP "@abs_top_srcdir@/share/pixmaps/nsis-wizard.bmp"
 !define MUI_HEADERIMAGE
 !define MUI_HEADERIMAGE_RIGHT
@@ -20,7 +20,7 @@ SetCompressor /SOLID lzma
 !define MUI_STARTMENUPAGE_REGISTRY_VALUENAME StartMenuGroup
 !define MUI_STARTMENUPAGE_DEFAULTFOLDER "@PACKAGE_NAME@"
 !define MUI_FINISHPAGE_RUN "$WINDIR\explorer.exe"
-!define MUI_FINISHPAGE_RUN_PARAMETERS $INSTDIR\@BITCOINTALKCOIN_GUI_NAME@@EXEEXT@
+!define MUI_FINISHPAGE_RUN_PARAMETERS $INSTDIR\@TALKCOIN_GUI_NAME@@EXEEXT@
 !define MUI_UNICON "${NSISDIR}\Contrib\Graphics\Icons\modern-uninstall.ico"
 !define MUI_UNWELCOMEFINISHPAGE_BITMAP "@abs_top_srcdir@/share/pixmaps/nsis-wizard.bmp"
 !define MUI_UNFINISHPAGE_NOAUTOCLOSE
@@ -50,9 +50,9 @@ Var StartMenuGroup
 # Installer attributes
 OutFile @abs_top_srcdir@/@PACKAGE_TARNAME@-@PACKAGE_VERSION@-win@WINDOWS_BITS@-setup.exe
 !if "@WINDOWS_BITS@" == "64"
-InstallDir $PROGRAMFILES64\Bitcointalkcoin
+InstallDir $PROGRAMFILES64\Talkcoin
 !else
-InstallDir $PROGRAMFILES\Bitcointalkcoin
+InstallDir $PROGRAMFILES\Talkcoin
 !endif
 CRCCheck on
 XPStyle on
@@ -73,14 +73,14 @@ ShowUninstDetails show
 Section -Main SEC0000
     SetOutPath $INSTDIR
     SetOverwrite on
-    File @abs_top_srcdir@/release/@BITCOINTALKCOIN_GUI_NAME@@EXEEXT@
+    File @abs_top_srcdir@/release/@TALKCOIN_GUI_NAME@@EXEEXT@
     File /oname=COPYING.txt @abs_top_srcdir@/COPYING
     File /oname=readme.txt @abs_top_srcdir@/doc/README_windows.txt
     SetOutPath $INSTDIR\daemon
-    File @abs_top_srcdir@/release/@BITCOINTALKCOIN_DAEMON_NAME@@EXEEXT@
-    File @abs_top_srcdir@/release/@BITCOINTALKCOIN_CLI_NAME@@EXEEXT@
-    File @abs_top_srcdir@/release/@BITCOINTALKCOIN_TX_NAME@@EXEEXT@
-    File @abs_top_srcdir@/release/@BITCOINTALKCOIN_WALLET_TOOL_NAME@@EXEEXT@
+    File @abs_top_srcdir@/release/@TALKCOIN_DAEMON_NAME@@EXEEXT@
+    File @abs_top_srcdir@/release/@TALKCOIN_CLI_NAME@@EXEEXT@
+    File @abs_top_srcdir@/release/@TALKCOIN_TX_NAME@@EXEEXT@
+    File @abs_top_srcdir@/release/@TALKCOIN_WALLET_TOOL_NAME@@EXEEXT@
     SetOutPath $INSTDIR\doc
     File /r /x Makefile* @abs_top_srcdir@/doc\*.*
     SetOutPath $INSTDIR
@@ -93,8 +93,8 @@ Section -post SEC0001
     WriteUninstaller $INSTDIR\uninstall.exe
     !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
     CreateDirectory $SMPROGRAMS\$StartMenuGroup
-    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\$(^Name).lnk" $INSTDIR\@BITCOINTALKCOIN_GUI_NAME@@EXEEXT@
-    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\@PACKAGE_NAME@ (testnet, @WINDOWS_BITS@-bit).lnk" "$INSTDIR\@BITCOINTALKCOIN_GUI_NAME@@EXEEXT@" "-testnet" "$INSTDIR\@BITCOINTALKCOIN_GUI_NAME@@EXEEXT@" 1
+    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\$(^Name).lnk" $INSTDIR\@TALKCOIN_GUI_NAME@@EXEEXT@
+    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\@PACKAGE_NAME@ (testnet, @WINDOWS_BITS@-bit).lnk" "$INSTDIR\@TALKCOIN_GUI_NAME@@EXEEXT@" "-testnet" "$INSTDIR\@TALKCOIN_GUI_NAME@@EXEEXT@" 1
     CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Uninstall $(^Name).lnk" $INSTDIR\uninstall.exe
     !insertmacro MUI_STARTMENU_WRITE_END
     WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" DisplayName "$(^Name)"
@@ -106,9 +106,9 @@ Section -post SEC0001
     WriteRegDWORD HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" NoModify 1
     WriteRegDWORD HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" NoRepair 1
     WriteRegStr HKCR "@PACKAGE_TARNAME@" "URL Protocol" ""
-    WriteRegStr HKCR "@PACKAGE_TARNAME@" "" "URL:Bitcointalkcoin"
-    WriteRegStr HKCR "@PACKAGE_TARNAME@\DefaultIcon" "" $INSTDIR\@BITCOINTALKCOIN_GUI_NAME@@EXEEXT@
-    WriteRegStr HKCR "@PACKAGE_TARNAME@\shell\open\command" "" '"$INSTDIR\@BITCOINTALKCOIN_GUI_NAME@@EXEEXT@" "%1"'
+    WriteRegStr HKCR "@PACKAGE_TARNAME@" "" "URL:Talkcoin"
+    WriteRegStr HKCR "@PACKAGE_TARNAME@\DefaultIcon" "" $INSTDIR\@TALKCOIN_GUI_NAME@@EXEEXT@
+    WriteRegStr HKCR "@PACKAGE_TARNAME@\shell\open\command" "" '"$INSTDIR\@TALKCOIN_GUI_NAME@@EXEEXT@" "%1"'
 SectionEnd
 
 # Macro for selecting uninstaller sections
@@ -126,7 +126,7 @@ done${UNSECTION_ID}:
 
 # Uninstaller sections
 Section /o -un.Main UNSEC0000
-    Delete /REBOOTOK $INSTDIR\@BITCOINTALKCOIN_GUI_NAME@@EXEEXT@
+    Delete /REBOOTOK $INSTDIR\@TALKCOIN_GUI_NAME@@EXEEXT@
     Delete /REBOOTOK $INSTDIR\COPYING.txt
     Delete /REBOOTOK $INSTDIR\readme.txt
     RMDir /r /REBOOTOK $INSTDIR\daemon
@@ -139,7 +139,7 @@ Section -un.post UNSEC0001
     Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Uninstall $(^Name).lnk"
     Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\$(^Name).lnk"
     Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\@PACKAGE_NAME@ (testnet, @WINDOWS_BITS@-bit).lnk"
-    Delete /REBOOTOK "$SMSTARTUP\Bitcointalkcoin.lnk"
+    Delete /REBOOTOK "$SMSTARTUP\Talkcoin.lnk"
     Delete /REBOOTOK $INSTDIR\uninstall.exe
     Delete /REBOOTOK $INSTDIR\debug.log
     Delete /REBOOTOK $INSTDIR\db.log
