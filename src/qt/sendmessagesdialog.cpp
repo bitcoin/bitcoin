@@ -379,9 +379,9 @@ bool SendMessagesDialog::handleURI(const QString &uri)
 {
     SendMessagessRecipient rv;
     // URI has to be valid
-    if (GUIUtil::parseBitcointalkcoinURI(uri, &rv))
+    if (GUIUtil::parseTalkcoinURI(uri, &rv))
     {
-        CBitcointalkcoinAddress address(rv.address.toStdString());
+        CTalkcoinAddress address(rv.address.toStdString());
         if (!address.IsValid())
             return false;
         pasteEntry(rv);

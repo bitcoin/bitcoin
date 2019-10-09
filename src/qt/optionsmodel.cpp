@@ -1,14 +1,14 @@
-// Copyright (c) 2011-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2011-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcointalkcoin-config.h>
+#include <config/talkcoin-config.h>
 #endif
 
 #include <qt/optionsmodel.h>
 
-#include <qt/bitcointalkcoinunits.h>
+#include <qt/talkcoinunits.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
 
@@ -74,7 +74,7 @@ void OptionsModel::Init(bool resetSettings)
 
     // Display
     if (!settings.contains("nDisplayUnit"))
-        settings.setValue("nDisplayUnit", BitcointalkcoinUnits::TALK);
+        settings.setValue("nDisplayUnit", TalkcoinUnits::TALK);
     nDisplayUnit = settings.value("nDisplayUnit").toInt();
 
     if (!settings.contains("strThirdPartyTxUrls"))
@@ -98,6 +98,8 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("bPrune", false);
     if (!settings.contains("nPruneSize"))
         settings.setValue("nPruneSize", 2);
+    SetPrune(settings.value("bPrune").toBool());
+
     // Convert prune size from GB to MiB:
     const uint64_t nPruneSizeMiB = (settings.value("nPruneSize").toInt() * GB_BYTES) >> 20;
     if (!m_node.softSetArg("-prune", settings.value("bPrune").toBool() ? std::to_string(nPruneSizeMiB) : "0")) {
@@ -109,12 +111,11 @@ void OptionsModel::Init(bool resetSettings)
     if (!m_node.softSetArg("-dbcache", settings.value("nDatabaseCache").toString().toStdString()))
         addOverriddenOption("-dbcache");
 
-#ifdef ENABLE_PROOF_OF_STAKE
     if (!settings.contains("nReserveBalance"))
         settings.setValue("nReserveBalance", (long long)DEFAULT_RESERVE_BALANCE);
     if (!m_node.softSetArg("-reservebalance", FormatMoney(settings.value("nReserveBalance").toLongLong())))
         addOverriddenOption("-reservebalance");
-#endif
+
     if (!settings.contains("nThreadsScriptVerif"))
         settings.setValue("nThreadsScriptVerif", DEFAULT_SCRIPTCHECK_THREADS);
     if (!m_node.softSetArg("-par", settings.value("nThreadsScriptVerif").toString().toStdString()))
@@ -255,6 +256,22 @@ static void SetProxySetting(QSettings &settings, const QString &name, const Prox
 static const QString GetDefaultProxyAddress()
 {
     return QString("%1:%2").arg(DEFAULT_GUI_PROXY_HOST).arg(DEFAULT_GUI_PROXY_PORT);
+}
+
+void OptionsModel::SetPrune(bool prune, bool force)
+{
+    QSettings settings;
+    settings.setValue("bPrune", prune);
+    // Convert prune size from GB to MiB:
+    const uint64_t nPruneSizeMiB = (settings.value("nPruneSize").toInt() * GB_BYTES) >> 20;
+    std::string prune_val = prune ? std::to_string(nPruneSizeMiB) : "0";
+    if (force) {
+        m_node.forceSetArg("-prune", prune_val);
+        return;
+    }
+    if (!m_node.softSetArg("-prune", prune_val)) {
+        addOverriddenOption("-prune");
+    }
 }
 
 // read QSettings values and return them
@@ -534,7 +551,7 @@ void OptionsModel::checkAndMigrate()
     if (settingsVersion < CLIENT_VERSION)
     {
         // -dbcache was bumped from 100 to 300 in 0.13
-        // see https://github.com/bitcointalkcoin/bitcointalkcoin/pull/8273
+        // see https://github.com/talkcoin/talkcoin/pull/8273
         // force people to upgrade to the new value if they are using 100MB
         if (settingsVersion < 130000 && settings.contains("nDatabaseCache") && settings.value("nDatabaseCache").toLongLong() == 100)
             settings.setValue("nDatabaseCache", (qint64)nDefaultDbCache);
