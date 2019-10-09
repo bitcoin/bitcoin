@@ -22,9 +22,6 @@ from io import BytesIO
 
 CLTV_HEIGHT = 1351
 
-# Reject codes that we might receive in this test
-REJECT_INVALID = 16
-REJECT_NONSTANDARD = 64
 
 def cltv_invalidate(tx):
     '''Modify the signature in vin 0 of the tx to fail CLTV
