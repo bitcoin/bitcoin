@@ -1,17 +1,17 @@
-Bitcointalkcoin Core version 0.18.0 is now available from:
+Talkcoin Core version 0.18.0 is now available from:
 
-  <https://bitcointalkcoincore.org/bin/bitcointalkcoin-core-0.18.0/>
+  <https://talkcoincore.org/bin/talkcoin-core-0.18.0/>
 
 This is a new major version release, including new features, various bug
 fixes and performance improvements, as well as updated translations.
 
 Please report bugs using the issue tracker at GitHub:
 
-  <https://github.com/bitcointalkcoin/bitcointalkcoin/issues>
+  <https://github.com/talkcoin/talkcoin/issues>
 
 To receive security and update notifications, please subscribe to:
 
-  <https://bitcointalkcoincore.org/en/list/announcements/join/>
+  <https://talkcoincore.org/en/list/announcements/join/>
 
 How to Upgrade
 ==============
@@ -19,7 +19,7 @@ How to Upgrade
 If you are running an older version, shut it down. Wait until it has
 completely shut down (which might take a few minutes for older
 versions), then run the installer (on Windows) or just copy over
-`/Applications/Bitcointalkcoin-Qt` (on Mac) or `bitcointalkcoind`/`bitcointalkcoin-qt` (on
+`/Applications/Talkcoin-Qt` (on Mac) or `talkcoind`/`talkcoin-qt` (on
 Linux).
 
 The first time you run version 0.15.0 or newer, your chainstate database
@@ -35,16 +35,16 @@ wallet versions are still supported.
 Compatibility
 ==============
 
-Bitcointalkcoin Core is supported and extensively tested on operating systems
+Talkcoin Core is supported and extensively tested on operating systems
 using the Linux kernel, macOS 10.10+, and Windows 7 and newer. It is not
-recommended to use Bitcointalkcoin Core on unsupported systems.
+recommended to use Talkcoin Core on unsupported systems.
 
-Bitcointalkcoin Core should also work on most other Unix-like systems but is not
+Talkcoin Core should also work on most other Unix-like systems but is not
 as frequently tested on them.
 
 From 0.17.0 onwards, macOS <10.10 is no longer supported. 0.17.0 is
 built using Qt 5.9.x, which doesn't support versions of macOS older than
-10.10. Additionally, Bitcointalkcoin Core does not yet change appearance when
+10.10. Additionally, Talkcoin Core does not yet change appearance when
 macOS "dark mode" is activated.
 
 In addition to previously-supported CPU platforms, this release's
@@ -52,11 +52,11 @@ pre-compiled distribution also provides binaries for the RISC-V
 platform.
 
 If you are using the `systemd` unit configuration file located at
-`contrib/init/bitcointalkcoind.service`, it has been changed to use
-`/var/lib/bitcointalkcoind` as the data directory instead of
-`~bitcointalkcoin/.bitcointalkcoin`. When switching over to the new configuration file,
-please make sure that the filesystem on which `/var/lib/bitcointalkcoind` will
-exist has enough space (check using `df -h /var/lib/bitcointalkcoind`), and
+`contrib/init/talkcoind.service`, it has been changed to use
+`/var/lib/talkcoind` as the data directory instead of
+`~talkcoin/.talkcoin`. When switching over to the new configuration file,
+please make sure that the filesystem on which `/var/lib/talkcoind` will
+exist has enough space (check using `df -h /var/lib/talkcoind`), and
 optionally copy over your existing data directory. See the [systemd init
 file section](#systemd-init-file) for more details.
 
@@ -95,7 +95,7 @@ Configuration option changes
   messages that ZMQ will queue in memory (the "high water mark") before
   dropping additional messages.  The default value is 1,000, the same as
   was used for previous releases.  See the [ZMQ
-  documentation](https://github.com/bitcointalkcoin/bitcointalkcoin/blob/master/doc/zmq.md#usage)
+  documentation](https://github.com/talkcoin/talkcoin/blob/master/doc/zmq.md#usage)
   for details.
 
 - The `rpcallowip` option can no longer be used to automatically listen
@@ -119,16 +119,16 @@ Configuration option changes
   disconnect/ban behavior will not cause a node that is whitelisting
   another to be dropped by peers.  Users can still explicitly enable
   this behavior with the command line option (and may want to consider
-  [contacting](https://bitcointalkcoincore.org/en/contact/) the Bitcointalkcoin Core
+  [contacting](https://talkcoincore.org/en/contact/) the Talkcoin Core
   project to let us know about their use-case, as this feature could be
   deprecated in the future).
 
 systemd init file
 -----------------
 
-The systemd init file (`contrib/init/bitcointalkcoind.service`) has been changed
-to use `/var/lib/bitcointalkcoind` as the data directory instead of
-`~bitcointalkcoin/.bitcointalkcoin`. This change makes Bitcointalkcoin Core more consistent with
+The systemd init file (`contrib/init/talkcoind.service`) has been changed
+to use `/var/lib/talkcoind` as the data directory instead of
+`~talkcoin/.talkcoin`. This change makes Talkcoin Core more consistent with
 other services, and makes the systemd init config more consistent with
 existing Upstart and OpenRC configs.
 
@@ -138,33 +138,33 @@ See [`systemd.exec(5)`](https://www.freedesktop.org/software/systemd/man/systemd
 for more details.
 
 When using the provided init files under `contrib/init`, overriding the
-`datadir` option in `/etc/bitcointalkcoin/bitcointalkcoin.conf` will have no effect.
+`datadir` option in `/etc/talkcoin/talkcoin.conf` will have no effect.
 This is because the command line arguments specified in the init files
 take precedence over the options specified in
-`/etc/bitcointalkcoin/bitcointalkcoin.conf`.
+`/etc/talkcoin/talkcoin.conf`.
 
 
 Documentation
 -------------
 
-- A new short [document](https://github.com/bitcointalkcoin/bitcointalkcoin/blob/master/doc/JSON-RPC-interface.md)
+- A new short [document](https://github.com/talkcoin/talkcoin/blob/master/doc/JSON-RPC-interface.md)
   about the JSON-RPC interface describes cases where the results of an
   RPC might contain inconsistencies between data sourced from different
   subsystems, such as wallet state and mempool state.  A note is added
-  to the [REST interface documentation](https://github.com/bitcointalkcoin/bitcointalkcoin/blob/master/doc/REST-interface.md)
+  to the [REST interface documentation](https://github.com/talkcoin/talkcoin/blob/master/doc/REST-interface.md)
   indicating that the same rules apply.
 
 - Further information is added to the [JSON-RPC
-  documentation](https://github.com/bitcointalkcoin/bitcointalkcoin/blob/master/doc/JSON-RPC-interface.md)
+  documentation](https://github.com/talkcoin/talkcoin/blob/master/doc/JSON-RPC-interface.md)
   about how to secure this interface.
 
-- A new [document](https://github.com/bitcointalkcoin/bitcointalkcoin/blob/master/doc/bitcointalkcoin-conf.md)
-  about the `bitcointalkcoin.conf` file describes how to use it to configure
-  Bitcointalkcoin Core.
+- A new [document](https://github.com/talkcoin/talkcoin/blob/master/doc/talkcoin-conf.md)
+  about the `talkcoin.conf` file describes how to use it to configure
+  Talkcoin Core.
 
-- A new document introduces Bitcointalkcoin Core's BIP174 [Partially-Signed
-  Bitcointalkcoin Transactions
-  (PSBT)](https://github.com/bitcointalkcoin/bitcointalkcoin/blob/master/doc/psbt.md)
+- A new document introduces Talkcoin Core's BIP174 [Partially-Signed
+  Talkcoin Transactions
+  (PSBT)](https://github.com/talkcoin/talkcoin/blob/master/doc/psbt.md)
   interface, which is used to allow multiple programs to collaboratively
   work to create, sign, and broadcast new transactions.  This is useful
   for offline (cold storage) wallets, multisig wallets, coinjoin
@@ -172,7 +172,7 @@ Documentation
   to interact to generate a complete transaction.
 
 - The [output script
-  descriptor](https://github.com/bitcointalkcoin/bitcointalkcoin/blob/master/doc/descriptors.md)
+  descriptor](https://github.com/talkcoin/talkcoin/blob/master/doc/descriptors.md)
   documentation has been updated with information about new features in
   this still-developing language for describing the output scripts that
   a wallet or other program wants to receive notifications for, such as
@@ -185,15 +185,15 @@ Build system changes
 --------------------
 
 - A new `--disable-bip70` option may be passed to `./configure` to
-  prevent Bitcointalkcoin-Qt from being built with support for the BIP70 payment
+  prevent Talkcoin-Qt from being built with support for the BIP70 payment
   protocol or from linking libssl.  As the payment protocol has exposed
-  Bitcointalkcoin Core to libssl vulnerabilities in the past, builders who don't
+  Talkcoin Core to libssl vulnerabilities in the past, builders who don't
   need BIP70 support are encouraged to use this option to reduce their
   exposure to future vulnerabilities.
 
 - The minimum required version of Qt (when building the GUI) has been
   increased from 5.2 to 5.5.1 (the [depends
-  system](https://github.com/bitcointalkcoin/bitcointalkcoin/blob/master/depends/README.md)
+  system](https://github.com/talkcoin/talkcoin/blob/master/depends/README.md)
   provides 5.9.7)
 
 New RPCs
@@ -211,7 +211,7 @@ New RPCs
   they've been running.
 
 - `deriveaddresses` returns one or more addresses corresponding to an
-  [output descriptor](https://github.com/bitcointalkcoin/bitcointalkcoin/blob/master/doc/descriptors.md).
+  [output descriptor](https://github.com/talkcoin/talkcoin/blob/master/doc/descriptors.md).
 
 - `getdescriptorinfo` accepts a descriptor and returns information about
   it, including its computed checksum.
@@ -278,7 +278,7 @@ in the Low-level Changes section below.
   ignored or are inconsistent, if there are any.
 
 - `getaddressinfo` now returns an additional `solvable` boolean field
-  when Bitcointalkcoin Core knows enough about the address's scriptPubKey,
+  when Talkcoin Core knows enough about the address's scriptPubKey,
   optional redeemScript, and optional witnessScript in order for the
   wallet to be able to generate an unsigned input spending funds sent to
   that address.
@@ -292,7 +292,7 @@ in the Low-level Changes section below.
 - `importprivkey` will preserve previously-set labels for addresses or
   public keys corresponding to the private key being imported.  For
   example, if you imported a watch-only address with the label "cold
-  wallet" in earlier releases of Bitcointalkcoin Core, subsequently importing
+  wallet" in earlier releases of Talkcoin Core, subsequently importing
   the private key would default to resetting the address's label to the
   default empty-string label ("").  In this release, the previous label
   of "cold wallet" will be retained.  If you optionally specify any
@@ -320,7 +320,7 @@ in the Low-level Changes section below.
   origin information imported through `importmulti` will have their key
   origin information stored in the wallet for use with creating PSBTs.
   More information about descriptors can be found
-  [here](https://github.com/bitcointalkcoin/bitcointalkcoin/blob/master/doc/descriptors.md).
+  [here](https://github.com/talkcoin/talkcoin/blob/master/doc/descriptors.md).
 
 - `listunspent` has been modified so that it also returns
   `witnessScript`, the witness script in the case of a P2WSH or
@@ -343,7 +343,7 @@ Deprecated or removed RPCs
 - The 'account' API is removed after being deprecated in v0.17.  The
   'label' API was introduced in v0.17 as a replacement for accounts.
   See the [release notes from
-  v0.17](https://github.com/bitcointalkcoin/bitcointalkcoin/blob/master/doc/release-notes/release-notes-0.17.0.md#label-and-account-apis-for-wallet)
+  v0.17](https://github.com/talkcoin/talkcoin/blob/master/doc/release-notes/release-notes-0.17.0.md#label-and-account-apis-for-wallet)
   for a full description of the changes from the 'account' API to the
   'label' API.
 
@@ -359,7 +359,7 @@ Deprecated or removed RPCs
   require or use the wallet component. Calling `generatetoaddress` with
   an address returned by the `getnewaddress` RPC gives the same
   functionality as the old `generate` RPC.  To continue using `generate`
-  in this version, restart bitcointalkcoind with the `-deprecatedrpc=generate`
+  in this version, restart talkcoind with the `-deprecatedrpc=generate`
   configuration option.
 
 - Be reminded that parts of the `validateaddress` command have been
@@ -406,7 +406,7 @@ Graphical User Interface (GUI)
 Tools
 -----
 
-- A new `bitcointalkcoin-wallet` tool is now distributed alongside Bitcointalkcoin
+- A new `talkcoin-wallet` tool is now distributed alongside Talkcoin
   Core's other executables.  Without needing to use any RPCs, this tool
   can currently create a new wallet file or display some basic
   information about an existing wallet, such as whether the wallet is
@@ -416,24 +416,24 @@ Tools
 Planned changes
 ===============
 
-This section describes planned changes to Bitcointalkcoin Core that may affect
-other Bitcointalkcoin software and services.
+This section describes planned changes to Talkcoin Core that may affect
+other Talkcoin software and services.
 
-- Since version 0.16.0, Bitcointalkcoin Core’s built-in wallet has defaulted to
+- Since version 0.16.0, Talkcoin Core’s built-in wallet has defaulted to
   generating P2SH-wrapped segwit addresses when users want to receive
   payments. These addresses are backwards compatible with all
-  widely-used software.  Starting with Bitcointalkcoin Core 0.20 (expected about
-  a year after 0.18), Bitcointalkcoin Core will default to native segwit
+  widely-used software.  Starting with Talkcoin Core 0.20 (expected about
+  a year after 0.18), Talkcoin Core will default to native segwit
   addresses (bech32) that provide additional fee savings and other
   benefits. Currently, many wallets and services already support sending
-  to bech32 addresses, and if the Bitcointalkcoin Core project sees enough
+  to bech32 addresses, and if the Talkcoin Core project sees enough
   additional adoption, it will instead default to bech32 receiving
-  addresses in Bitcointalkcoin Core 0.19 (approximately November 2019).
+  addresses in Talkcoin Core 0.19 (approximately November 2019).
   P2SH-wrapped segwit addresses will continue to be provided if the user
   requests them in the GUI or by RPC, and anyone who doesn’t want the
   update will be able to configure their default address type.
   (Similarly, pioneering users who want to change their default now may
-  set the `addresstype=bech32` configuration option in any Bitcointalkcoin Core
+  set the `addresstype=bech32` configuration option in any Talkcoin Core
   release from 0.16.0 up.)
 
 Deprecated P2P messages
@@ -495,7 +495,7 @@ Network
   a misbehaving node will be disconnected to make room for nodes without
   a history of problems (unless the misbehaving node helps your node in
   some other way, such as by connecting to a part of the Internet from
-  which you don't have many other peers).  Previously, Bitcointalkcoin Core
+  which you don't have many other peers).  Previously, Talkcoin Core
   banned the IP addresses of misbehaving peers for a period of time
   (default of 1 day); this was easily circumvented by attackers with
   multiple IP addresses. If you manually ban a peer, such as by using
@@ -514,18 +514,18 @@ Wallet
   software. Instead such wallets will be completely unloaded and
   reloaded to achieve the same effect.
 
-- A sub-project of Bitcointalkcoin Core now provides Hardware Wallet Interaction
+- A sub-project of Talkcoin Core now provides Hardware Wallet Interaction
   (HWI) scripts that allow command-line users to use several popular
-  hardware key management devices with Bitcointalkcoin Core.  See their [project
-  page](https://github.com/bitcointalkcoin-core/HWI#readme) for details.
+  hardware key management devices with Talkcoin Core.  See their [project
+  page](https://github.com/talkcoin-core/HWI#readme) for details.
 
 Security
 --------
 
 - This release changes the Random Number Generator (RNG) used from
-  OpenSSL to Bitcointalkcoin Core's own implementation, although entropy
-  gathered by Bitcointalkcoin Core is fed out to OpenSSL and then read back in
-  when the program needs strong randomness. This moves Bitcointalkcoin Core a
+  OpenSSL to Talkcoin Core's own implementation, although entropy
+  gathered by Talkcoin Core is fed out to OpenSSL and then read back in
+  when the program needs strong randomness. This moves Talkcoin Core a
   little closer to no longer needing to depend on OpenSSL, a dependency
   that has caused security issues in the past.  The new implementation
   gathers entropy from multiple sources, including from hardware
@@ -534,7 +534,7 @@ Security
 Changes for particular platforms
 --------------------------------
 
-- On macOS, Bitcointalkcoin Core now opts out of application CPU throttling
+- On macOS, Talkcoin Core now opts out of application CPU throttling
   ("app nap") during initial blockchain download, when catching up from
   over 100 blocks behind the current chain tip, or when reindexing chain
   data. This helps prevent these operations from taking an excessively
@@ -589,9 +589,9 @@ Changes for particular platforms
 - #14023 Remove accounts RPCs (jnewbery)
 - #13825 Kill accounts (jnewbery)
 - #10605 Add AssertLockHeld assertions in CWallet::ListCoins (ryanofsky)
-- #12490 Remove deprecated wallet rpc features from `bitcointalkcoin_server` (jnewbery)
+- #12490 Remove deprecated wallet rpc features from `talkcoin_server` (jnewbery)
 - #14138 Set `encrypted_batch` to nullptr after delete. Avoid double free in the case of NDEBUG (practicalswift)
-- #14168 Remove `ENABLE_WALLET` from `libbitcointalkcoin_server.a` (jnewbery)
+- #14168 Remove `ENABLE_WALLET` from `libtalkcoin_server.a` (jnewbery)
 - #12493 Reopen CDBEnv after encryption instead of shutting down (achow101)
 - #14282 Remove `-usehd` option (jnewbery)
 - #14146 Remove trailing separators from `-walletdir` arg (PierreRochard)
@@ -623,7 +623,7 @@ Changes for particular platforms
 - #14711 Remove uses of chainActive and mapBlockIndex in wallet code (ryanofsky)
 - #15279 Clarify rescanblockchain doc (MarcoFalke)
 - #15292 Remove `boost::optional`-related false positive -Wmaybe-uninitialized warnings on GCC compiler (hebasto)
-- #13926 [Tools] bitcointalkcoin-wallet - a tool for creating and managing wallets offline (jnewbery)
+- #13926 [Tools] talkcoin-wallet - a tool for creating and managing wallets offline (jnewbery)
 - #11911 Free BerkeleyEnvironment instances when not in use (ryanofsky)
 - #15235 Do not import private keys to wallets with private keys disabled (achow101)
 - #15263 Descriptor expansions only need pubkey entries for PKH/WPKH (sipa)
@@ -709,7 +709,7 @@ Changes for particular platforms
 - #13248 Make proxy icon from statusbar clickable (mess110)
 - #12818 TransactionView: highlight replacement tx after fee bump (Sjors)
 - #13529 Use new Qt5 connect syntax (promag)
-- #14162 Also log and print messages or questions like bitcointalkcoind (MarcoFalke)
+- #14162 Also log and print messages or questions like talkcoind (MarcoFalke)
 - #14385 Avoid system harfbuzz and bz2 (theuni)
 - #14450 Fix QCompleter popup regression (hebasto)
 - #14177 Set C locale for amountWidget (hebasto)
@@ -717,7 +717,7 @@ Changes for particular platforms
 - #14554 Remove unused `adjustedTime` parameter (hebasto)
 - #14228 Enable system tray icon by default if available (hebasto)
 - #14608 Remove the "Pay only required fee…" checkbox (hebasto)
-- #14521 qt, docs: Fix `bitcointalkcoin-qt -version` output formatting (hebasto)
+- #14521 qt, docs: Fix `talkcoin-qt -version` output formatting (hebasto)
 - #13966 When private key is disabled, only show watch-only balance (ken2812221)
 - #14828 Remove hidden columns in coin control dialog (promag)
 - #14783 Fix `boost::signals2::no_slots_error` in early calls to InitWarning (promag)
@@ -730,7 +730,7 @@ Changes for particular platforms
 - #14375 Correct misleading "overridden options" label (hebasto)
 - #15007 Notificator class refactoring (hebasto)
 - #14784 Use `WalletModel*` instead of the wallet name as map key (promag)
-- #11625 Add BitcointalkcoinApplication & RPCConsole tests (ryanofsky)
+- #11625 Add TalkcoinApplication & RPCConsole tests (ryanofsky)
 - #14517 Fix start with the `-min` option (hebasto)
 - #13216 implements concept for different disk sizes on intro (marcoagner)
 - #15114 Replace remaining 0 with nullptr (Empact)
@@ -766,7 +766,7 @@ Changes for particular platforms
 - #14183 Remove unused Qt 4 dependencies (ken2812221)
 - #14127 Avoid getifaddrs when unavailable (greenaddress)
 - #14184 Scripts and tools: increased timeout downloading (cisba)
-- #14204 Move `interfaces/*` to `libbitcointalkcoin_server` (laanwj)
+- #14204 Move `interfaces/*` to `libtalkcoin_server` (laanwj)
 - #14208 Actually remove `ENABLE_WALLET` (jnewbery)
 - #14212 Remove libssl from LDADD unless GUI (MarcoFalke)
 - #13578 Upgrade zeromq to 4.2.5 and avoid deprecated zeromq API functions (mruddy)
@@ -786,19 +786,19 @@ Changes for particular platforms
 - #14849 Qt 5.9.7 (fanquake)
 - #15020 Add names to Travis jobs (gkrizek)
 - #15047 Allow to configure --with-sanitizers=fuzzer (MarcoFalke)
-- #15154 Configure: bitcointalkcoin-tx doesn't need libevent, so don't pull it in (luke-jr)
+- #15154 Configure: talkcoin-tx doesn't need libevent, so don't pull it in (luke-jr)
 - #15175 Drop macports support (Empact)
 - #15308 Restore compatibility with older boost (Empact)
 - #15407 msvc: Fix silent merge conflict between #13926 and #14372 part II (ken2812221)
-- #15388 Makefile.am: add rule for src/bitcointalkcoin-wallet (Sjors)
+- #15388 Makefile.am: add rule for src/talkcoin-wallet (Sjors)
 - #15393 Bump minimum Qt version to 5.5.1 (Sjors)
 - #15285 Prefer Python 3.4 even if newer versions are present on the system (Sjors)
 - #15398 msvc: Add rapidcheck property tests (ken2812221)
 - #15431 msvc: scripted-diff: Remove NDEBUG pre-define in project file (ken2812221)
 - #15549 gitian: Improve error handling (laanwj)
 - #15548 use full version string in setup.exe (MarcoFalke)
-- #11526 Visual Studio build configuration for Bitcointalkcoin Core (sipsorcery)
-- #15110 build\_msvc: Fix the build problem in `libbitcointalkcoin_server` (Mr-Leshiy)
+- #11526 Visual Studio build configuration for Talkcoin Core (sipsorcery)
+- #15110 build\_msvc: Fix the build problem in `libtalkcoin_server` (Mr-Leshiy)
 - #14372 msvc: build secp256k1 and leveldb locally (ken2812221)
 - #15325 msvc: Fix silent merge conflict between #13926 and #14372 (ken2812221)
 - #15391 Add compile time verification of assumptions we're currently making implicitly/tacitly (practicalswift)
@@ -808,7 +808,7 @@ Changes for particular platforms
 
 ### Tests and QA
 - #15405 appveyor: Clean cache when build configuration changes (Sjors)
-- #13953 Fix deprecation in bitcointalkcoin-util-test.py (isghe)
+- #13953 Fix deprecation in talkcoin-util-test.py (isghe)
 - #13963 Replace usage of tostring() with tobytes() (dongcarl)
 - #13964 ci: Add appveyor ci (ken2812221)
 - #13997 appveyor: fetch the latest port data (ken2812221)
@@ -824,7 +824,7 @@ Changes for particular platforms
 - #14088 Don't assert(…) with side effects (practicalswift)
 - #14086 appveyor: Use clcache to speed up build (ken2812221)
 - #13954 Warn (don't fail!) on spelling errors. Fix typos reported by codespell (practicalswift)
-- #12775 Integration of property based testing into Bitcointalkcoin Core (Christewart)
+- #12775 Integration of property based testing into Talkcoin Core (Christewart)
 - #14119 Read reject reasons from debug log, not P2P messages (MarcoFalke)
 - #14189 Fix silent merge conflict in `wallet_importmulti` (MarcoFalke)
 - #13419 Speed up `knapsack_solver_test` by not recreating wallet 100 times (lucash-dev)
@@ -837,7 +837,7 @@ Changes for particular platforms
 - #14275 Write the notification message to different files to avoid race condition in `feature_notifications.py` (ken2812221)
 - #14306 appveyor: Move AppVeyor YAML to dot-file-style YAML (MitchellCash)
 - #14305 Enforce critical class instance attributes in functional tests, fix segwit test specificity (JustinTArthur)
-- #12246 Bugfix: Only run bitcointalkcoin-tx tests when bitcointalkcoin-tx is enabled (luke-jr)
+- #12246 Bugfix: Only run talkcoin-tx tests when talkcoin-tx is enabled (luke-jr)
 - #14316 Exclude all tests with difference parameters in `--exclude` list (ken2812221)
 - #14381 Add missing call to `skip_if_no_cli()` (practicalswift)
 - #14389 travis: Set codespell version to avoid breakage (MarcoFalke)
@@ -859,7 +859,7 @@ Changes for particular platforms
 - #14631 Move deterministic address import to `setup_nodes` (jnewbery)
 - #14630 test: Remove travis specific code (MarcoFalke)
 - #14528 travis: Compile once on xenial (MarcoFalke)
-- #14092 Dry run `bench_bitcointalkcoin` as part `make check` to allow for quick identification of assertion/sanitizer failures in benchmarking code (practicalswift)
+- #14092 Dry run `bench_talkcoin` as part `make check` to allow for quick identification of assertion/sanitizer failures in benchmarking code (practicalswift)
 - #14664 `example_test.py`: fixup coinbase height argument, derive number clearly (instagibbs)
 - #14522 Add invalid P2P message tests (jamesob)
 - #14619 Fix value display name in `test_runner` help text (merland)
@@ -903,7 +903,7 @@ Changes for particular platforms
 - #14969 Fix `cuckoocache_tests` TSAN failure introduced in 14935 (practicalswift)
 - #14964 Fix race in `mempool_accept` (MarcoFalke)
 - #14829 travis: Enable functional tests in the threadsanitizer (tsan) build job (practicalswift)
-- #14985 Remove `thread_local` from `test_bitcointalkcoin` (MarcoFalke)
+- #14985 Remove `thread_local` from `test_talkcoin` (MarcoFalke)
 - #15005 Bump timeout to run tests in travis thread sanitizer (MarcoFalke)
 - #15013 Avoid race in `p2p_timeouts` (MarcoFalke)
 - #14960 lint/format-strings: Correctly exclude escaped percent symbols (luke-jr)
@@ -980,8 +980,8 @@ Changes for particular platforms
 - #14097 validation: Log FormatStateMessage on ConnectBlock error in ConnectTip (MarcoFalke)
 - #13724 contrib: Support ARM and RISC-V symbol check (ken2812221)
 - #13159 Don't close old debug log file handle prematurely when trying to re-open (on SIGHUP) (practicalswift)
-- #14186 bitcointalkcoin-cli: don't translate command line options (HashUnlimited)
-- #14057 logging: Only log `using config file path_to_bitcointalkcoin.conf` message on startup if conf file exists (leishman)
+- #14186 talkcoin-cli: don't translate command line options (HashUnlimited)
+- #14057 logging: Only log `using config file path_to_talkcoin.conf` message on startup if conf file exists (leishman)
 - #14164 Update univalue subtree (MarcoFalke)
 - #14272 init: Remove deprecated args from hidden args (MarcoFalke)
 - #14494 Error if # is used in rpcpassword in conf (MeshCollider)
@@ -1001,7 +1001,7 @@ Changes for particular platforms
 - #14839 threads: Fix unitialized members in `sched_param` (fanquake)
 - #14955 Switch all RNG code to the built-in PRNG (sipa)
 - #15258 Scripts and tools: Fix `devtools/copyright_header.py` to always honor exclusions (Empact)
-- #12255 Update bitcointalkcoin.service to conform to init.md (dongcarl)
+- #12255 Update talkcoin.service to conform to init.md (dongcarl)
 - #15266 memory: Construct globals on first use (MarcoFalke)
 - #15347 Fix build after pr 15266 merged (hebasto)
 - #15351 Update linearize-hashes.py (OverlordQ)
@@ -1037,7 +1037,7 @@ Changes for particular platforms
 - #14428 Fix macOS files description in qt/README.md (hebasto)
 - #14390 release process: RPC documentation (karel-3d)
 - #14472 getblocktemplate: use SegWit in example (Sjors)
-- #14497 Add doc/bitcointalkcoin-conf.md (hebasto)
+- #14497 Add doc/talkcoin-conf.md (hebasto)
 - #14526 Document lint tests (fanquake)
 - #14511 Remove explicit storage requirement from README.md (merland)
 - #14600 Clarify commit message guidelines (merland)
@@ -1073,7 +1073,7 @@ Changes for particular platforms
 - #15272 Correct logging return type and RPC example (fanquake)
 - #15244 Gdb attaching to process during tests has non-sudo solution (instagibbs)
 - #15332 Small updates to `getrawtransaction` description (amitiuttarwar)
-- #15354 Add missing `bitcointalkcoin-wallet` tool manpages (MarcoFalke)
+- #15354 Add missing `talkcoin-wallet` tool manpages (MarcoFalke)
 - #15343 netaddress: Make IPv4 loopback comment more descriptive (dongcarl)
 - #15353 Minor textual improvements in `translation_strings_policy.md` (merland)
 - #15426 importmulti: add missing description of keypool option (harding)
@@ -1091,9 +1091,9 @@ Changes for particular platforms
 - #15754 getrpcinfo docs (benthecarman)
 - #15763 Update bips.md for 0.18.0 (sipa)
 - #15757 List new RPCs in psbt.md and descriptors.md (sipa)
-- #15765 correct bitcointalkcoinconsensus_version in shared-libraries.md (fanquake)
+- #15765 correct talkcoinconsensus_version in shared-libraries.md (fanquake)
 - #15792 describe onlynet option in doc/tor.md (jonatack)
-- #15802 mention creating application support bitcointalkcoin folder on OSX (JimmyMow)
+- #15802 mention creating application support talkcoin folder on OSX (JimmyMow)
 - #15799 Clarify RPC versioning (MarcoFalke)
 
 Credits
@@ -1122,7 +1122,7 @@ Thanks to everyone who directly contributed to this release:
 - Ben Carman
 - Ben Woosley
 - benthecarman
-- bitcointalkcoinhodler
+- talkcoinhodler
 - Carl Dong
 - Chakib Benziane
 - Chris Moore
@@ -1221,4 +1221,4 @@ Thanks to everyone who directly contributed to this release:
 - Wladimir J. van der Laan
 - Zain Iqbal Allarakhia
 
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcointalkcoin/).
+As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/talkcoin/).

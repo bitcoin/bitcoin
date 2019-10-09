@@ -1,28 +1,28 @@
 Translations
 ============
 
-The Bitcointalkcoin-Core project has been designed to support multiple localisations. This makes adding new phrases, and completely new languages easily achievable. For managing all application translations, Bitcointalkcoin-Core makes use of the Transifex online translation management tool.
+The Talkcoin-Core project has been designed to support multiple localisations. This makes adding new phrases, and completely new languages easily achievable. For managing all application translations, Talkcoin-Core makes use of the Transifex online translation management tool.
 
 ### Helping to translate (using Transifex)
 Transifex is setup to monitor the GitHub repo for updates, and when code containing new translations is found, Transifex will process any changes. It may take several hours after a pull-request has been merged, to appear in the Transifex web interface.
 
-Multiple language support is critical in assisting Bitcointalkcoin’s global adoption, and growth. One of Bitcointalkcoin’s greatest strengths is cross-border money transfers, any help making that easier is greatly appreciated.
+Multiple language support is critical in assisting Talkcoin’s global adoption, and growth. One of Talkcoin’s greatest strengths is cross-border money transfers, any help making that easier is greatly appreciated.
 
-See the [Transifex Bitcointalkcoin project](https://www.transifex.com/bitcointalkcoin/bitcointalkcoin/) to assist in translations. You should also join the translation mailing list for announcements - see details below.
+See the [Transifex Talkcoin project](https://www.transifex.com/talkcoin/talkcoin/) to assist in translations. You should also join the translation mailing list for announcements - see details below.
 
 ### Writing code with translations
 We use automated scripts to help extract translations in both Qt, and non-Qt source files. It is rarely necessary to manually edit the files in `src/qt/locale/`. The translation source files must adhere to the following format:
-`bitcointalkcoin_xx_YY.ts or bitcointalkcoin_xx.ts`
+`talkcoin_xx_YY.ts or talkcoin_xx.ts`
 
-`src/qt/locale/bitcointalkcoin_en.ts` is treated in a special way. It is used as the source for all other translations. Whenever a string in the source code is changed, this file must be updated to reflect those changes. A custom script is used to extract strings from the non-Qt parts. This script makes use of `gettext`, so make sure that utility is installed (ie, `apt-get install gettext` on Ubuntu/Debian). Once this has been updated, `lupdate` (included in the Qt SDK) is used to update `bitcointalkcoin_en.ts`.
+`src/qt/locale/talkcoin_en.ts` is treated in a special way. It is used as the source for all other translations. Whenever a string in the source code is changed, this file must be updated to reflect those changes. A custom script is used to extract strings from the non-Qt parts. This script makes use of `gettext`, so make sure that utility is installed (ie, `apt-get install gettext` on Ubuntu/Debian). Once this has been updated, `lupdate` (included in the Qt SDK) is used to update `talkcoin_en.ts`.
 
-To automatically regenerate the `bitcointalkcoin_en.ts` file, run the following commands:
+To automatically regenerate the `talkcoin_en.ts` file, run the following commands:
 ```sh
 cd src/
 make translate
 ```
 
-`contrib/bitcointalkcoin-qt.pro` takes care of generating `.qm` (binary compiled) files from `.ts` (source files) files. It’s mostly automated, and you shouldn’t need to worry about it.
+`contrib/talkcoin-qt.pro` takes care of generating `.qm` (binary compiled) files from `.ts` (source files) files. It’s mostly automated, and you shouldn’t need to worry about it.
 
 **Example Qt translation**
 ```cpp
@@ -36,14 +36,14 @@ When an updated source file is merged into the GitHub repo, Transifex will autom
 
 To create the pull-request, use the following commands:
 ```
-git add src/qt/bitcointalkcoinstrings.cpp src/qt/locale/bitcointalkcoin_en.ts
+git add src/qt/talkcoinstrings.cpp src/qt/locale/talkcoin_en.ts
 git commit
 ```
 
 ### Creating a Transifex account
 Visit the [Transifex Signup](https://www.transifex.com/signup/) page to create an account. Take note of your username and password, as they will be required to configure the command-line tool.
 
-You can find the Bitcointalkcoin translation project at [https://www.transifex.com/bitcointalkcoin/bitcointalkcoin/](https://www.transifex.com/bitcointalkcoin/bitcointalkcoin/).
+You can find the Talkcoin translation project at [https://www.transifex.com/talkcoin/talkcoin/](https://www.transifex.com/talkcoin/talkcoin/).
 
 ### Installing the Transifex client command-line tool
 The client is used to fetch updated translations. If you are having problems, or need more details, see [https://docs.transifex.com/client/installing-the-client](https://docs.transifex.com/client/installing-the-client)
@@ -62,26 +62,26 @@ token =
 username = USERNAME
 ```
 
-The Transifex Bitcointalkcoin project config file is included as part of the repo. It can be found at `.tx/config`, however you shouldn’t need to change anything.
+The Transifex Talkcoin project config file is included as part of the repo. It can be found at `.tx/config`, however you shouldn’t need to change anything.
 
 ### Synchronising translations
 To assist in updating translations, we have created a script to help.
 
 1. `python contrib/devtools/update-translations.py`
 2. `git add` new translations from `src/qt/locale/`
-3. Update `src/qt/bitcointalkcoin_locale.qrc` manually or via
+3. Update `src/qt/talkcoin_locale.qrc` manually or via
 ```bash
-git ls-files src/qt/locale/*ts|xargs -n1 basename|sed 's/\(bitcointalkcoin_\(.*\)\).ts/<file alias="\2">locale\/\1.qm<\/file>/'
+git ls-files src/qt/locale/*ts|xargs -n1 basename|sed 's/\(talkcoin_\(.*\)\).ts/<file alias="\2">locale\/\1.qm<\/file>/'
 ```
 4. Update `src/Makefile.qt.include` manually or via
 ```bash
-git ls-files src/qt/locale/*ts|xargs -n1 basename|sed 's/\(bitcointalkcoin_\(.*\)\).ts/  qt\/locale\/\1.ts \\/'
+git ls-files src/qt/locale/*ts|xargs -n1 basename|sed 's/\(talkcoin_\(.*\)\).ts/  qt\/locale\/\1.ts \\/'
 ```
-5. Update `build_msvc/libbitcointalkcoin_qt/libbitcointalkcoin_qt.vcxproj` or via
+5. Update `build_msvc/libtalkcoin_qt/libtalkcoin_qt.vcxproj` or via
 ```bash
 git ls-files src/qt/locale/*ts|xargs -n1 basename |
   sed 's/@/%40/' |
-  sed 's/\(bitcointalkcoin_\(.*\)\).ts/    <None Include="..\\..\\src\\qt\\locale\\\1.ts">\n      <DeploymentContent>true<\/DeploymentContent>\n    <\/None>/'
+  sed 's/\(talkcoin_\(.*\)\).ts/    <None Include="..\\..\\src\\qt\\locale\\\1.ts">\n      <DeploymentContent>true<\/DeploymentContent>\n    <\/None>/'
 ```
 
 **Do not directly download translations** one by one from the Transifex website, as we do a few post-processing steps before committing the translations.
@@ -89,7 +89,7 @@ git ls-files src/qt/locale/*ts|xargs -n1 basename |
 ### Handling Plurals (in source files)
 When new plurals are added to the source file, it's important to do the following steps:
 
-1. Open `bitcointalkcoin_en.ts` in Qt Linguist (included in the Qt SDK)
+1. Open `talkcoin_en.ts` in Qt Linguist (included in the Qt SDK)
 2. Search for `%n`, which will take you to the parts in the translation that use plurals
 3. Look for empty `English Translation (Singular)` and `English Translation (Plural)` fields
 4. Add the appropriate strings for the singular and plural form of the base string
@@ -98,11 +98,11 @@ When new plurals are added to the source file, it's important to do the followin
 7. Save the source file
 
 ### Translating a new language
-To create a new language template, you will need to edit the languages manifest file `src/qt/bitcointalkcoin_locale.qrc` and add a new entry. Below is an example of the English language entry.
+To create a new language template, you will need to edit the languages manifest file `src/qt/talkcoin_locale.qrc` and add a new entry. Below is an example of the English language entry.
 
 ```xml
 <qresource prefix="/translations">
-    <file alias="en">locale/bitcointalkcoin_en.qm</file>
+    <file alias="en">locale/talkcoin_en.qm</file>
     ...
 </qresource>
 ```
@@ -110,6 +110,6 @@ To create a new language template, you will need to edit the languages manifest 
 **Note:** that the language translation file **must end in `.qm`** (the compiled extension), and not `.ts`.
 
 ### Questions and general assistance
-The Bitcointalkcoin-Core translation maintainers include *tcatm, seone, Diapolo, wumpus and luke-jr*. You can find them, and others, in the Freenode IRC chatroom - `irc.freenode.net #bitcointalkcoin-core-dev`.
+The Talkcoin-Core translation maintainers include *tcatm, seone, Diapolo, wumpus and luke-jr*. You can find them, and others, in the Freenode IRC chatroom - `irc.freenode.net #talkcoin-core-dev`.
 
-If you are a translator, you should also subscribe to the mailing list, https://groups.google.com/forum/#!forum/bitcointalkcoin-translators. Announcements will be posted during application pre-releases to notify translators to check for updates.
+If you are a translator, you should also subscribe to the mailing list, https://groups.google.com/forum/#!forum/talkcoin-translators. Announcements will be posted during application pre-releases to notify translators to check for updates.

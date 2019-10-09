@@ -1,6 +1,6 @@
-# `bitcointalkcoin.conf` Configuration File
+# `talkcoin.conf` Configuration File
 
-The configuration file is used by `bitcointalkcoind`, `bitcointalkcoin-qt` and `bitcointalkcoin-cli`.
+The configuration file is used by `talkcoind`, `talkcoin-qt` and `talkcoin-cli`.
 
 All command-line options (except for `-?`, `-help`, `-version` and `-conf`) may be specified in a configuration file, and all configuration file options (except for `includeconf`) may also be specified on the command line. Command-line options override values set in the configuration file and configuration file options override values set in the GUI.
 
@@ -32,6 +32,6 @@ Network specific options can be:
 
 ## Configuration File Path
 
-The configuration file is not automatically created; you can create it using your favorite text editor. By default, the configuration file name is `bitcointalkcoin.conf` and it is located in the Bitcointalkcoin data directory, but both the Bitcointalkcoin data directory and the configuration file path may be changed using the `-datadir` and `-conf` command-line options.
+The configuration file is not automatically created; you can create it using your favorite text editor. By default, the configuration file name is `talkcoin.conf` and it is located in the Talkcoin data directory, but both the Talkcoin data directory and the configuration file path may be changed using the `-datadir` and `-conf` command-line options.
 
-The `includeconf=<file>` option in the `bitcointalkcoin.conf` file can be used to include additional configuration files.
+The `includeconf=<file>` option in the `talkcoin.conf` file can be used to include additional configuration files.

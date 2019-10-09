@@ -1,5 +1,5 @@
-Bitcointalkcoin version 0.4.1 is now available for download at:
-http://sourceforge.net/projects/bitcointalkcoin/files/Bitcointalkcoin/bitcointalkcoin-0.4.1/
+Talkcoin version 0.4.1 is now available for download at:
+http://sourceforge.net/projects/talkcoin/files/Talkcoin/talkcoin-0.4.1/
 
 This is a bugfix only release based on 0.4.0.
 
@@ -7,32 +7,32 @@ Please report bugs by replying to this forum thread.
 
 MAJOR BUG FIX  (CVE-2011-4447)
 
-The wallet encryption feature introduced in Bitcointalkcoin version 0.4.0 did not sufficiently secure the private keys. An attacker who
+The wallet encryption feature introduced in Talkcoin version 0.4.0 did not sufficiently secure the private keys. An attacker who
 managed to get a copy of your encrypted wallet.dat file might be able to recover some or all of the unencrypted keys and steal the
 associated coins.
 
-If you have a previously encrypted wallet.dat, the first time you run wxbitcointalkcoin or bitcointalkcoind the wallet will be rewritten, Bitcointalkcoin will
+If you have a previously encrypted wallet.dat, the first time you run wxtalkcoin or talkcoind the wallet will be rewritten, Talkcoin will
 shut down, and you will be prompted to restart it to run with the new, properly encrypted file.
 
 If you had a previously encrypted wallet.dat that might have been copied or stolen (for example, you backed it up to a public
-location) you should send all of your bitcointalkcoins to yourself using a new bitcointalkcoin address and stop using any previously generated addresses.
+location) you should send all of your talkcoins to yourself using a new talkcoin address and stop using any previously generated addresses.
 
-Wallets encrypted with this version of Bitcointalkcoin are written properly.
+Wallets encrypted with this version of Talkcoin are written properly.
 
-Technical note: the encrypted wallet's 'keypool' will be regenerated the first time you request a new bitcointalkcoin address; to be certain that the
+Technical note: the encrypted wallet's 'keypool' will be regenerated the first time you request a new talkcoin address; to be certain that the
 new private keys are properly backed up you should:
 
-1. Run Bitcointalkcoin and let it rewrite the wallet.dat file
+1. Run Talkcoin and let it rewrite the wallet.dat file
 
-2. Run it again, then ask it for a new bitcointalkcoin address.
-wxBitcointalkcoin: new address visible on main window
-bitcointalkcoind: run the 'walletpassphrase' RPC command to unlock the wallet,  then run the 'getnewaddress' RPC command.
+2. Run it again, then ask it for a new talkcoin address.
+wxTalkcoin: new address visible on main window
+talkcoind: run the 'walletpassphrase' RPC command to unlock the wallet,  then run the 'getnewaddress' RPC command.
 
-3. If your encrypted wallet.dat may have been copied or stolen, send all of your bitcointalkcoins to the new bitcointalkcoin address.
+3. If your encrypted wallet.dat may have been copied or stolen, send all of your talkcoins to the new talkcoin address.
 
-4. Shut down Bitcointalkcoin, then backup the wallet.dat file.
-IMPORTANT: be sure to request a new bitcointalkcoin address before backing up, so that the 'keypool' is regenerated and backed up.
+4. Shut down Talkcoin, then backup the wallet.dat file.
+IMPORTANT: be sure to request a new talkcoin address before backing up, so that the 'keypool' is regenerated and backed up.
 
-"Security in depth" is always a good idea, so choosing a secure location for the backup and/or encrypting the backup before uploading it is recommended. And as in previous releases, if your machine is infected by malware there are several ways an attacker might steal your bitcointalkcoins.
+"Security in depth" is always a good idea, so choosing a secure location for the backup and/or encrypting the backup before uploading it is recommended. And as in previous releases, if your machine is infected by malware there are several ways an attacker might steal your talkcoins.
 
 Thanks to Alan Reiner (etotheipi) for finding and reporting this bug.

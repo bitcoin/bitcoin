@@ -1,8 +1,8 @@
-# PSBT Howto for Bitcointalkcoin Core
+# PSBT Howto for Talkcoin Core
 
-Since Bitcointalkcoin Core 0.17, an RPC interface exists for Partially Signed Bitcointalkcoin
+Since Talkcoin Core 0.17, an RPC interface exists for Partially Signed Talkcoin
 Transactions (PSBTs, as specified in
-[BIP 174](https://github.com/bitcointalkcoin/bips/blob/master/bip-0174.mediawiki)).
+[BIP 174](https://github.com/talkcoin/bips/blob/master/bip-0174.mediawiki)).
 
 This document describes the overall workflow for producing signed transactions
 through the use of PSBT, and the specific RPC commands used in typical
@@ -10,15 +10,15 @@ scenarios.
 
 ## PSBT in general
 
-PSBT is an interchange format for Bitcointalkcoin transactions that are not fully signed
+PSBT is an interchange format for Talkcoin transactions that are not fully signed
 yet, together with relevant metadata to help entities work towards signing it.
 It is intended to simplify workflows where multiple parties need to cooperate to
 produce a transaction. Examples include hardware wallets, multisig setups, and
-[CoinJoin](https://bitcointalkcointalk.org/?topic=279249) transactions.
+[CoinJoin](https://talkcointalk.org/?topic=279249) transactions.
 
 ### Overall workflow
 
-Overall, the construction of a fully signed Bitcointalkcoin transaction goes through the
+Overall, the construction of a fully signed Talkcoin transaction goes through the
 following steps:
 
 - A **Creator** proposes a particular transaction to be created. They construct
@@ -32,7 +32,7 @@ following steps:
   partial signature for the inputs for which they have relevant key(s).
 - A **Finalizer** is run for each input to convert the partial signatures and
   possibly script information into a final `scriptSig` and/or `scriptWitness`.
-- An **Extractor** produces a valid Bitcointalkcoin transaction (in network format)
+- An **Extractor** produces a valid Talkcoin transaction (in network format)
   from a PSBT for which all inputs are finalized.
 
 Generally, each of the above (excluding Creator and Extractor) will simply
@@ -46,7 +46,7 @@ The names above in bold are the names of the roles defined in BIP174. They're
 useful in understanding the underlying steps, but in practice, software and
 hardware implementations will typically implement multiple roles simultaneously.
 
-## PSBT in Bitcointalkcoin Core
+## PSBT in Talkcoin Core
 
 ### RPCs
 
@@ -90,13 +90,13 @@ hardware implementations will typically implement multiple roles simultaneously.
 
 ### Workflows
 
-#### Multisig with multiple Bitcointalkcoin Core instances
+#### Multisig with multiple Talkcoin Core instances
 
 Alice, Bob, and Carol want to create a 2-of-3 multisig address. They're all using
-Bitcointalkcoin Core. We assume their wallets only contain the multisig funds. In case
+Talkcoin Core. We assume their wallets only contain the multisig funds. In case
 they also have a personal wallet, this can be accomplished through the
 multiwallet feature - possibly resulting in a need to add `-rpcwallet=name` to
-the command line in case `bitcointalkcoin-cli` is used.
+the command line in case `talkcoin-cli` is used.
 
 Setup:
 - All three call `getnewaddress` to create a new address; call these addresses
