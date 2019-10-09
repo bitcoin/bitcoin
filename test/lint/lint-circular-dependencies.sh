@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2018 The Bitcointalkcoin Core developers
+# Copyright (c) 2018 The Talkcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
@@ -14,9 +14,9 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "policy/fees -> txmempool -> policy/fees"
     "qt/addresstablemodel -> qt/walletmodel -> qt/addresstablemodel"
     "qt/bantablemodel -> qt/clientmodel -> qt/bantablemodel"
-    "qt/bitcointalkcoingui -> qt/utilitydialog -> qt/bitcointalkcoingui"
-    "qt/bitcointalkcoingui -> qt/walletframe -> qt/bitcointalkcoingui"
-    "qt/bitcointalkcoingui -> qt/walletview -> qt/bitcointalkcoingui"
+    "qt/talkcoingui -> qt/utilitydialog -> qt/talkcoingui"
+    "qt/talkcoingui -> qt/walletframe -> qt/talkcoingui"
+    "qt/talkcoingui -> qt/walletview -> qt/talkcoingui"
     "qt/clientmodel -> qt/peertablemodel -> qt/clientmodel"
     "qt/paymentserver -> qt/walletmodel -> qt/paymentserver"
     "qt/recentrequeststablemodel -> qt/walletmodel -> qt/recentrequeststablemodel"

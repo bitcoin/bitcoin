@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2019 The Bitcointalkcoin Core developers
+# Copyright (c) 2017-2019 The Talkcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Test bitcointalkcoin-cli"""
-from test_framework.test_framework import BitcointalkcoinTestFramework
+"""Test talkcoin-cli"""
+from test_framework.test_framework import TalkcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_process_error, get_auth_cookie
 
-class TestBitcointalkcoinCli(BitcointalkcoinTestFramework):
+class TestTalkcoinCli(TalkcoinTestFramework):
 
     def set_test_params(self):
         self.setup_clean_chain = True
@@ -18,13 +18,13 @@ class TestBitcointalkcoinCli(BitcointalkcoinTestFramework):
         cli_response = self.nodes[0].cli("-version").send_cli()
         assert "{} RPC client version".format(self.config['environment']['PACKAGE_NAME']) in cli_response
 
-        self.log.info("Compare responses from getwalletinfo RPC and `bitcointalkcoin-cli getwalletinfo`")
+        self.log.info("Compare responses from getwalletinfo RPC and `talkcoin-cli getwalletinfo`")
         if self.is_wallet_compiled():
             cli_response = self.nodes[0].cli.getwalletinfo()
             rpc_response = self.nodes[0].getwalletinfo()
             assert_equal(cli_response, rpc_response)
 
-        self.log.info("Compare responses from getblockchaininfo RPC and `bitcointalkcoin-cli getblockchaininfo`")
+        self.log.info("Compare responses from getblockchaininfo RPC and `talkcoin-cli getblockchaininfo`")
         cli_response = self.nodes[0].cli.getblockchaininfo()
         rpc_response = self.nodes[0].getblockchaininfo()
         assert_equal(cli_response, rpc_response)
@@ -48,7 +48,7 @@ class TestBitcointalkcoinCli(BitcointalkcoinTestFramework):
         self.log.info("Make sure that -getinfo with arguments fails")
         assert_raises_process_error(1, "-getinfo takes no arguments", self.nodes[0].cli('-getinfo').help)
 
-        self.log.info("Compare responses from `bitcointalkcoin-cli -getinfo` and the RPCs data is retrieved from.")
+        self.log.info("Compare responses from `talkcoin-cli -getinfo` and the RPCs data is retrieved from.")
         cli_get_info = self.nodes[0].cli('-getinfo').send_cli()
         if self.is_wallet_compiled():
             wallet_info = self.nodes[0].getwalletinfo()
@@ -74,4 +74,4 @@ class TestBitcointalkcoinCli(BitcointalkcoinTestFramework):
 
 
 if __name__ == '__main__':
-    TestBitcointalkcoinCli().main()
+    TestTalkcoinCli().main()

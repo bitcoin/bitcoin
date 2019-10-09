@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2019 The Bitcointalkcoin Core developers
+# Copyright (c) 2018-2019 The Talkcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the scantxoutset rpc call."""
-from test_framework.test_framework import BitcointalkcoinTestFramework
+from test_framework.test_framework import TalkcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 
 from decimal import Decimal
@@ -13,7 +13,7 @@ import os
 def descriptors(out):
     return sorted(u['desc'] for u in out['unspents'])
 
-class ScantxoutsetTest(BitcointalkcoinTestFramework):
+class ScantxoutsetTest(TalkcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True

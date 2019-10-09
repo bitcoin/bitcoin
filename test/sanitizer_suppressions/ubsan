@@ -7,7 +7,7 @@ float-divide-by-zero:wallet/wallet.cpp
 unsigned-integer-overflow:arith_uint256.h
 unsigned-integer-overflow:basic_string.h
 unsigned-integer-overflow:bench/bench.h
-unsigned-integer-overflow:bitcointalkcoin-tx.cpp
+unsigned-integer-overflow:talkcoin-tx.cpp
 unsigned-integer-overflow:bloom.cpp
 unsigned-integer-overflow:chain.cpp
 unsigned-integer-overflow:chain.h

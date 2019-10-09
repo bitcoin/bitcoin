@@ -2,8 +2,8 @@
 
 export LC_ALL=C
 KNOWN_VIOLATIONS=(
-    "src/bitcointalkcoin-tx.cpp.*stoul"
-    "src/bitcointalkcoin-tx.cpp.*trim_right"
+    "src/talkcoin-tx.cpp.*stoul"
+    "src/talkcoin-tx.cpp.*trim_right"
     "src/dbwrapper.cpp.*stoul"
     "src/dbwrapper.cpp:.*vsnprintf"
     "src/httprpc.cpp.*trim"

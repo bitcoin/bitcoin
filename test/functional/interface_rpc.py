@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2019 The Bitcointalkcoin Core developers
+# Copyright (c) 2018-2019 The Talkcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Tests some generic aspects of the RPC interface."""
 
 from test_framework.authproxy import JSONRPCException
-from test_framework.test_framework import BitcointalkcoinTestFramework
+from test_framework.test_framework import TalkcoinTestFramework
 from test_framework.util import assert_equal, assert_greater_than_or_equal
 
 def expect_http_status(expected_http_status, expected_rpc_code,
@@ -17,7 +17,7 @@ def expect_http_status(expected_http_status, expected_rpc_code,
         assert_equal(exc.error["code"], expected_rpc_code)
         assert_equal(exc.http_status, expected_http_status)
 
-class RPCInterfaceTest(BitcointalkcoinTestFramework):
+class RPCInterfaceTest(TalkcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True

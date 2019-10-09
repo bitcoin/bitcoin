@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2019 The Bitcointalkcoin Core developers
+# Copyright (c) 2015-2019 The Talkcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the ZMQ notification interface."""
 import struct
 
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
-from test_framework.test_framework import BitcointalkcoinTestFramework
+from test_framework.test_framework import TalkcoinTestFramework
 from test_framework.messages import CTransaction
 from test_framework.util import (
     assert_equal,
@@ -35,13 +35,13 @@ class ZMQSubscriber:
         return body
 
 
-class ZMQTest (BitcointalkcoinTestFramework):
+class ZMQTest (TalkcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_py3_zmq()
-        self.skip_if_no_bitcointalkcoind_zmq()
+        self.skip_if_no_talkcoind_zmq()
 
     def setup_nodes(self):
         import zmq
