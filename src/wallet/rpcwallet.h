@@ -1,9 +1,9 @@
-// Copyright (c) 2016-2019 The Bitcointalkcoin Core developers
+// Copyright (c) 2016-2019 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_WALLET_RPCWALLET_H
-#define BITCOINTALKCOIN_WALLET_RPCWALLET_H
+#ifndef TALKCOIN_WALLET_RPCWALLET_H
+#define TALKCOIN_WALLET_RPCWALLET_H
 
 #include <memory>
 #include <string>
@@ -37,4 +37,4 @@ bool EnsureWalletIsAvailable(const CWallet*, bool avoidException);
 
 UniValue getaddressinfo(const JSONRPCRequest& request);
 UniValue signrawtransactionwithwallet(const JSONRPCRequest& request);
-#endif //BITCOINTALKCOIN_WALLET_RPCWALLET_H
+#endif //TALKCOIN_WALLET_RPCWALLET_H

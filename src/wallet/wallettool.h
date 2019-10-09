@@ -1,9 +1,9 @@
-// Copyright (c) 2016 The Bitcointalkcoin Core developers
+// Copyright (c) 2016 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_WALLET_WALLETTOOL_H
-#define BITCOINTALKCOIN_WALLET_WALLETTOOL_H
+#ifndef TALKCOIN_WALLET_WALLETTOOL_H
+#define TALKCOIN_WALLET_WALLETTOOL_H
 
 #include <wallet/ismine.h>
 #include <wallet/wallet.h>
@@ -17,4 +17,4 @@ bool ExecuteWalletToolFunc(const std::string& command, const std::string& file);
 
 } // namespace WalletTool
 
-#endif // BITCOINTALKCOIN_WALLET_WALLETTOOL_H
+#endif // TALKCOIN_WALLET_WALLETTOOL_H

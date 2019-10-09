@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2009-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_WALLET_FEES_H
-#define BITCOINTALKCOIN_WALLET_FEES_H
+#ifndef TALKCOIN_WALLET_FEES_H
+#define TALKCOIN_WALLET_FEES_H
 
 #include <amount.h>
 
@@ -42,4 +42,4 @@ CFeeRate GetMinimumFeeRate(const CWallet& wallet, const CCoinControl& coin_contr
  */
 CFeeRate GetDiscardRate(const CWallet& wallet);
 
-#endif // BITCOINTALKCOIN_WALLET_FEES_H
+#endif // TALKCOIN_WALLET_FEES_H

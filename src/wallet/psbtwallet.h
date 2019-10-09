@@ -1,9 +1,9 @@
-// Copyright (c) 2009-2019 The Bitcointalkcoin Core developers
+// Copyright (c) 2009-2019 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_WALLET_PSBTWALLET_H
-#define BITCOINTALKCOIN_WALLET_PSBTWALLET_H
+#ifndef TALKCOIN_WALLET_PSBTWALLET_H
+#define TALKCOIN_WALLET_PSBTWALLET_H
 
 #include <node/transaction.h>
 #include <psbt.h>
@@ -31,4 +31,4 @@ NODISCARD TransactionError FillPSBT(const CWallet* pwallet,
               bool sign = true,
               bool bip32derivs = false);
 
-#endif // BITCOINTALKCOIN_WALLET_PSBTWALLET_H
+#endif // TALKCOIN_WALLET_PSBTWALLET_H
