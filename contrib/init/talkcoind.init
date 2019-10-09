@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+#
+#  talkcoind The talkcoin core server.
+#
+#
+# chkconfig: 345 80 20
+# description: talkcoind
+# processname: talkcoind
+#
+
+# Source function library.
+. /etc/init.d/functions
+
+# you can override defaults in /etc/sysconfig/talkcoind, see below
+if [ -f /etc/sysconfig/talkcoind ]; then
+        . /etc/sysconfig/talkcoind
+fi
+
+RETVAL=0
+
+prog=talkcoind
+# you can override the lockfile via TALKCOIND_LOCKFILE in /etc/sysconfig/talkcoind
+lockfile=${TALKCOIND_LOCKFILE-/var/lock/subsys/talkcoind}
+
+# talkcoind defaults to /usr/bin/talkcoind, override with TALKCOIND_BIN
+talkcoind=${TALKCOIND_BIN-/usr/bin/talkcoind}
+
+# talkcoind opts default to -disablewallet, override with TALKCOIND_OPTS
+talkcoind_opts=${TALKCOIND_OPTS--disablewallet}
+
+start() {
+    echo -n $"Starting $prog: "
+    daemon $DAEMONOPTS $talkcoind $talkcoind_opts
+    RETVAL=$?
+    echo
+    [ $RETVAL -eq 0 ] && touch $lockfile
+    return $RETVAL
+}
+
+stop() {
+    echo -n $"Stopping $prog: "
+    killproc $prog
+    RETVAL=$?
+    echo
+    [ $RETVAL -eq 0 ] && rm -f $lockfile
+    return $RETVAL
+}
+
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    status)
+        status $prog
+        ;;
+    restart)
+        stop
+        start
+        ;;
+    *)
+        echo "Usage: service $prog {start|stop|status|restart}"
+        exit 1
+        ;;
+esac

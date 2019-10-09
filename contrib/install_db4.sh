@@ -9,7 +9,7 @@ if [ -z "${1}" ]; then
   echo "Usage: $0 <base-dir> [<extra-bdb-configure-flag> ...]"
   echo
   echo "Must specify a single argument: the directory in which db4 will be built."
-  echo "This is probably \`pwd\` if you're at the root of the bitcointalkcoin repository."
+  echo "This is probably \`pwd\` if you're at the root of the talkcoin repository."
   exit 1
 fi
 
@@ -72,7 +72,7 @@ patch -p2 < clang.patch
 
 # The packaged config.guess and config.sub are ancient (2009) and can cause build issues.
 # Replace them with modern versions.
-# See https://github.com/bitcointalkcoin/bitcointalkcoin/issues/16064
+# See https://github.com/talkcoin/talkcoin/issues/16064
 CONFIG_GUESS_URL='https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=55eaf3e779455c4e5cc9f82efb5278be8f8f900b'
 CONFIG_GUESS_HASH='2d1ff7bca773d2ec3c6217118129220fa72d8adda67c7d2bf79994b3129232c1'
 CONFIG_SUB_URL='https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub;hb=55eaf3e779455c4e5cc9f82efb5278be8f8f900b'
@@ -95,7 +95,7 @@ make install
 echo
 echo "db4 build complete."
 echo
-echo 'When compiling bitcointalkcoind, run `./configure` in the following way:'
+echo 'When compiling talkcoind, run `./configure` in the following way:'
 echo
 echo "  export BDB_PREFIX='${BDB_PREFIX}'"
 echo '  ./configure BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" BDB_CFLAGS="-I${BDB_PREFIX}/include" ...'

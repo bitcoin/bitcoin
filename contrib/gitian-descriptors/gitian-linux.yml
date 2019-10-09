@@ -1,5 +1,5 @@
 ---
-name: "bitcointalkcoin-core-linux-0.19"
+name: "talkcoin-core-linux-0.19"
 enable_cache: true
 distro: "ubuntu"
 suites:
@@ -33,8 +33,8 @@ packages:
 - "ca-certificates"
 - "python3"
 remotes:
-- "url": "https://github.com/bitcointalkcoin/bitcointalkcoin.git"
-  "dir": "bitcointalkcoin"
+- "url": "https://github.com/talkcoin/talkcoin.git"
+  "dir": "talkcoin"
 files: []
 script: |
   set -e -o pipefail
@@ -121,7 +121,7 @@ script: |
   chmod +x ${WRAP_DIR}/${prog}
   done
 
-  cd bitcointalkcoin
+  cd talkcoin
   BASEPREFIX=`pwd`/depends
   # Build dependencies for each host
   for i in $HOSTS; do
@@ -143,13 +143,13 @@ script: |
   ./autogen.sh
   CONFIG_SITE=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`/share/config.site ./configure --prefix=/
   make dist
-  SOURCEDIST=`echo bitcointalkcoin-*.tar.gz`
+  SOURCEDIST=`echo talkcoin-*.tar.gz`
   DISTNAME=`echo ${SOURCEDIST} | sed 's/.tar.*//'`
   # Correct tar file order
   mkdir -p temp
   pushd temp
   tar -xf ../$SOURCEDIST
-  find bitcointalkcoin-* | sort | tar --mtime="$REFERENCE_DATETIME" --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ../$SOURCEDIST
+  find talkcoin-* | sort | tar --mtime="$REFERENCE_DATETIME" --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ../$SOURCEDIST
   popd
 
   # Workaround for tarball not building with the bare tag version (prep)
