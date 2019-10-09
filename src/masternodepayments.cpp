@@ -282,8 +282,6 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, const std::string& strCom
 
         if(pfrom->nVersion < GetMinMasternodePaymentsProto()) {
             LogPrint(BCLog::MNPAYMENT, "MASTERNODEPAYMENTSYNC -- peer=%d using obsolete version %i\n", pfrom->GetId(), pfrom->nVersion);
-            connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::REJECT, strCommand, REJECT_OBSOLETE,
-                               strprintf("Version must be %d or greater", GetMinMasternodePaymentsProto())));
             return;
         }
 
@@ -311,8 +309,6 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, const std::string& strCom
 
         if(pfrom->nVersion < GetMinMasternodePaymentsProto()) {
             LogPrint(BCLog::MNPAYMENT, "MASTERNODEPAYMENTVOTE -- peer=%d using obsolete version %i\n", pfrom->GetId(), pfrom->nVersion);
-            connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::REJECT, strCommand, REJECT_OBSOLETE,
-                               strprintf("Version must be %d or greater", GetMinMasternodePaymentsProto())));
             return;
         }
 
