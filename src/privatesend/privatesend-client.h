@@ -14,7 +14,7 @@
 class CPrivateSendClientManager;
 class CConnman;
 class CNode;
-
+class UniValue;
 
 static const int MIN_PRIVATESEND_SESSIONS = 1;
 static const int MIN_PRIVATESEND_ROUNDS = 2;
@@ -162,6 +162,8 @@ public:
     bool ProcessPendingDsaRequest(CConnman& connman);
 
     bool CheckTimeout();
+
+    void GetJsonInfo(UniValue& obj) const;
 };
 
 /** Used to keep track of current status of mixing pool
@@ -249,6 +251,8 @@ public:
     void UpdatedBlockTip(const CBlockIndex* pindex);
 
     void DoMaintenance(CConnman& connman);
+
+    void GetJsonInfo(UniValue& obj) const;
 };
 
 #endif

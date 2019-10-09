@@ -19,6 +19,7 @@
 #include "wallet/coincontrol.h"
 
 #include <memory>
+#include <univalue.h>
 
 CPrivateSendClientManager privateSendClient;
 
@@ -1666,4 +1667,55 @@ void CPrivateSendClientManager::DoMaintenance(CConnman& connman)
         DoAutomaticDenominating(connman);
         nDoAutoNextRun = nTick + PRIVATESEND_AUTO_TIMEOUT_MIN + GetRandInt(PRIVATESEND_AUTO_TIMEOUT_MAX - PRIVATESEND_AUTO_TIMEOUT_MIN);
     }
+}
+
+void CPrivateSendClientSession::GetJsonInfo(UniValue& obj) const
+{
+    obj.clear();
+    obj.setObject();
+    if (mixingMasternode != nullptr) {
+        assert(mixingMasternode->pdmnState);
+        obj.push_back(Pair("protxhash", mixingMasternode->proTxHash.ToString()));
+        obj.push_back(Pair("outpoint",  mixingMasternode->collateralOutpoint.ToStringShort()));
+        obj.push_back(Pair("service",   mixingMasternode->pdmnState->addr.ToString()));
+    }
+    CAmount amount{0};
+    if (nSessionDenom) {
+        // TODO: GetDenominationsToString has few issues:
+        // - it returns a string of denomination amounts concatenated via "+" if there are many of them
+        // - it uses FormatMoney which drops trailing zeros
+        // We no longer use multiple denominations in one session and this thing should be refactored
+        // together with other similar functions in CPrivatesend.
+        // For now, we just use a workaround here to convert a string into CAmount and convert it to a
+        // proper format via ValueFromAmount later.
+        ParseFixedPoint(CPrivateSend::GetDenominationsToString(nSessionDenom), 8, &amount);
+    }
+    obj.push_back(Pair("denomination",  ValueFromAmount(amount)));
+    obj.push_back(Pair("state",         GetStateString()));
+    obj.push_back(Pair("entries_count", GetEntriesCount()));
+}
+
+void CPrivateSendClientManager::GetJsonInfo(UniValue& obj) const
+{
+    LOCK(cs_deqsessions);
+    obj.clear();
+    obj.setObject();
+    obj.push_back(Pair("enabled",       fEnablePrivateSend));
+    obj.push_back(Pair("running",       fPrivateSendRunning));
+    obj.push_back(Pair("multisession",  fPrivateSendMultiSession));
+    obj.push_back(Pair("max_sessions",  nPrivateSendSessions));
+    obj.push_back(Pair("max_rounds",    nPrivateSendRounds));
+    obj.push_back(Pair("max_amount",    nPrivateSendAmount));
+    obj.push_back(Pair("max_denoms",    nPrivateSendDenoms));
+    obj.push_back(Pair("queue_size",    GetQueueSize()));
+
+    UniValue arrSessions(UniValue::VARR);
+    for (const auto& session : deqSessions) {
+        if (session.GetState() != POOL_STATE_IDLE) {
+            UniValue objSession(UniValue::VOBJ);
+            session.GetJsonInfo(objSession);
+            arrSessions.push_back(objSession);
+        }
+    }
+    obj.push_back(Pair("sessions",  arrSessions));
 }

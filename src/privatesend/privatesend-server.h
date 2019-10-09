@@ -9,6 +9,7 @@
 #include "privatesend.h"
 
 class CPrivateSendServer;
+class UniValue;
 
 // The main object for accessing mixing
 extern CPrivateSendServer privateSendServer;
@@ -82,6 +83,8 @@ public:
     void CheckForCompleteQueue(CConnman& connman);
 
     void DoMaintenance(CConnman& connman);
+
+    void GetJsonInfo(UniValue& obj) const;
 };
 
 #endif

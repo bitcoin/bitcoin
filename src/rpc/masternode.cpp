@@ -93,44 +93,75 @@ UniValue privatesend(const JSONRPCRequest& request)
 
 UniValue getpoolinfo(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 0)
+    throw std::runtime_error(
+        "getpoolinfo\n"
+        "DEPRECATED. Please use getprivatesendinfo instead.\n"
+    );
+}
+
+UniValue getprivatesendinfo(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 0) {
         throw std::runtime_error(
-            "getpoolinfo\n"
-            "Returns an object containing mixing pool related information.\n");
+            "getprivatesendinfo\n"
+            "Returns an object containing an information about PrivateSend settings and state.\n"
+            "\nResult (for regular nodes):\n"
+            "{\n"
+            "  \"enabled\": true|false,             (bool) Whether mixing functionality is enabled\n"
+            "  \"running\": true|false,             (bool) Whether mixing is currently running\n"
+            "  \"multisession\": true|false,        (bool) Whether PrivateSend Multisession option is enabled\n"
+            "  \"max_sessions\": xxx,               (numeric) How many parallel mixing sessions can there be at once\n"
+            "  \"max_rounds\": xxx,                 (numeric) How many rounds to mix\n"
+            "  \"max_amount\": xxx,                 (numeric) How many " + CURRENCY_UNIT + " to keep anonimized\n"
+            "  \"max_denoms\": xxx,                 (numeric) How many inputs of each denominated amount to create\n"
+            "  \"queue_size\": xxx,                 (numeric) How many queues there are currently on the network\n"
+            "  \"sessions\":                        (array of json objects)\n"
+            "    [\n"
+            "      {\n"
+            "      \"protxhash\": \"...\",            (string) The ProTxHash of the masternode\n"
+            "      \"outpoint\": \"txid-index\",      (string) The outpoint of the masternode\n"
+            "      \"service\": \"host:port\",        (string) The IP address and port of the masternode\n"
+            "      \"denomination\": xxx,           (numeric) The denomination of the mixing session in " + CURRENCY_UNIT + "\n"
+            "      \"state\": \"...\",                (string) Current state of the mixing session\n"
+            "      \"entries_count\": xxx,          (numeric) The number of entries in the mixing session\n"
+            "      }\n"
+            "      ,...\n"
+            "    ],\n"
+            "  \"keys_left\": xxx,                  (numeric) How many new keys are left since last automatic backup\n"
+            "  \"warnings\": \"...\"                  (string) Warnings if any\n"
+            "}\n"
+            "\nResult (for masternodes):\n"
+            "{\n"
+            "  \"queue_size\": xxx,                 (numeric) How many queues there are currently on the network\n"
+            "  \"denomination\": xxx,               (numeric) The denomination of the mixing session in " + CURRENCY_UNIT + "\n"
+            "  \"state\": \"...\",                    (string) Current state of the mixing session\n"
+            "  \"entries_count\": xxx,              (numeric) The number of entries in the mixing session\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getprivatesendinfo", "")
+            + HelpExampleRpc("getprivatesendinfo", "")
+        );
+    }
+
+    UniValue obj(UniValue::VOBJ);
+
+    if (fMasternodeMode) {
+        privateSendServer.GetJsonInfo(obj);
+        return obj;
+    }
+
 
 #ifdef ENABLE_WALLET
-    CPrivateSendBaseManager* pprivateSendBaseManager = fMasternodeMode ? (CPrivateSendBaseManager*)&privateSendServer : (CPrivateSendBaseManager*)&privateSendClient;
-
-    UniValue obj(UniValue::VOBJ);
-    // TODO:
-    // obj.push_back(Pair("state",             pprivateSendBase->GetStateString()));
-    obj.push_back(Pair("queue",             pprivateSendBaseManager->GetQueueSize()));
-    // obj.push_back(Pair("entries",           pprivateSendBase->GetEntriesCount()));
-    obj.push_back(Pair("status",            privateSendClient.GetStatuses()));
-
-    std::vector<CDeterministicMNCPtr> vecDmns;
-    if (privateSendClient.GetMixingMasternodesInfo(vecDmns)) {
-        UniValue pools(UniValue::VARR);
-        for (const auto& dmn : vecDmns) {
-            UniValue pool(UniValue::VOBJ);
-            pool.push_back(Pair("outpoint",      dmn->collateralOutpoint.ToStringShort()));
-            pool.push_back(Pair("addr",          dmn->pdmnState->addr.ToString()));
-            pools.push_back(pool);
-        }
-        obj.push_back(Pair("pools", pools));
-    }
+    privateSendClient.GetJsonInfo(obj);
 
     CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
-    if (pwallet) {
-        obj.push_back(Pair("keys_left",     pwallet->nKeysLeftSinceAutoBackup));
-        obj.push_back(Pair("warnings",      pwallet->nKeysLeftSinceAutoBackup < PRIVATESEND_KEYS_THRESHOLD_WARNING
-                                                ? "WARNING: keypool is almost depleted!" : ""));
+    if (!pwallet) {
+        return obj;
     }
-#else // ENABLE_WALLET
-    UniValue obj(UniValue::VOBJ);
-    obj.push_back(Pair("state",             privateSendServer.GetStateString()));
-    obj.push_back(Pair("queue",             privateSendServer.GetQueueSize()));
-    obj.push_back(Pair("entries",           privateSendServer.GetEntriesCount()));
+
+    obj.push_back(Pair("keys_left",     pwallet->nKeysLeftSinceAutoBackup));
+    obj.push_back(Pair("warnings",      pwallet->nKeysLeftSinceAutoBackup < PRIVATESEND_KEYS_THRESHOLD_WARNING
+                                                ? "WARNING: keypool is almost depleted!" : ""));
 #endif // ENABLE_WALLET
 
     return obj;
@@ -635,6 +666,7 @@ static const CRPCCommand commands[] =
     { "dash",               "masternode",             &masternode,             true,  {} },
     { "dash",               "masternodelist",         &masternodelist,         true,  {} },
     { "dash",               "getpoolinfo",            &getpoolinfo,            true,  {} },
+    { "dash",               "getprivatesendinfo",     &getprivatesendinfo,     true,  {} },
 #ifdef ENABLE_WALLET
     { "dash",               "privatesend",            &privatesend,            false, {} },
 #endif // ENABLE_WALLET
