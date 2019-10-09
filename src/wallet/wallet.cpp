@@ -17,6 +17,7 @@
 #include <keystore.h>
 #include <validation.h>
 #include <net.h>
+#include <omnicore/script.h> // OmniGetDustThreshold
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
@@ -2790,7 +2791,7 @@ OutputType CWallet::TransactionChangeType(OutputType change_type, const std::vec
 }
 
 bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CReserveKey& reservekey, CAmount& nFeeRet,
-                         int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign)
+                         int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign, bool omni)
 {
     CAmount nValue = 0;
     int nChangePosRequest = nChangePosInOut;
@@ -2949,6 +2950,20 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                             continue;
                         }
                         else {
+                            strFailReason = _("Insufficient funds");
+                            return false;
+                        }
+                    }
+
+                    // Omni funded send. If vin amount minus the amount to select is less than the dust
+                    // threshold then add the dust threshol to the amount to select and try again. This
+                    // avoids dropping the "change" output which would otherwise be added to the fee and
+                    // generating an Omni "send to self without change" error.
+                    while (omni && nValueIn - nValueToSelect < OmniGetDustThreshold(scriptChange)) {
+                        nValueIn = 0;
+                        nValueToSelect += OmniGetDustThreshold(scriptChange);
+                        if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, coin_control, coin_selection_params, bnb_used))
+                        {
                             strFailReason = _("Insufficient funds");
                             return false;
                         }

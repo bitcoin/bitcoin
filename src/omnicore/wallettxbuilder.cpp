@@ -104,7 +104,7 @@ int WalletTxBuilder(
     CAmount nFeeRet = 0;
     int nChangePosInOut = -1;
     std::string strFailReason;
-    auto wtxNew = iWallet->createTransaction(vecRecipients, coinControl, true /* sign */, nChangePosInOut, nFeeRet, strFailReason);
+    auto wtxNew = iWallet->createTransaction(vecRecipients, coinControl, true /* sign */, nChangePosInOut, nFeeRet, strFailReason, false);
 
     if (!wtxNew) {
         PrintToLog("%s: ERROR: wallet transaction creation failed: %s\n", __func__, strFailReason);
@@ -238,7 +238,7 @@ int CreateFundedTransaction(
     std::vector<COutPoint> vLockedCoins;
     LockUnrelatedCoins(iWallet, feeSources, vLockedCoins);
 
-    auto wtxNew = iWallet->createTransaction(vecRecipients, coinControl, false /* sign */, nChangePosRet, nFeeRequired, strFailReason);
+    auto wtxNew = iWallet->createTransaction(vecRecipients, coinControl, false /* sign */, nChangePosRet, nFeeRequired, strFailReason, true);
 
     if (wtxNew) {
         fSuccess = true;
