@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcointalkcoin Core developers
+// Copyright (c) 2009-2019 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_UTIL_TIME_H
-#define BITCOINTALKCOIN_UTIL_TIME_H
+#ifndef TALKCOIN_UTIL_TIME_H
+#define TALKCOIN_UTIL_TIME_H
 
 #include <stdint.h>
 #include <string>
@@ -42,4 +42,4 @@ std::string FormatISO8601DateTime(int64_t nTime);
 std::string FormatISO8601Date(int64_t nTime);
 std::string FormatISO8601Time(int64_t nTime);
 std::string DateTimeStrFormat(const char* pszFormat, int64_t nTime);
-#endif // BITCOINTALKCOIN_UTIL_TIME_H
+#endif // TALKCOIN_UTIL_TIME_H
