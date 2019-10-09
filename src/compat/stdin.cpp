@@ -14,7 +14,7 @@
 #else
 #include <termios.h>    // for SetStdinEcho()
 #include <unistd.h>     // for SetStdinEcho(), isatty()
-#include <sys/poll.h>   // for StdinReady()
+#include <poll.h>       // for StdinReady()
 #endif
 
 #include <compat/stdin.h>
