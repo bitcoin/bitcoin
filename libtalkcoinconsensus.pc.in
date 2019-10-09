@@ -4,8 +4,8 @@ libdir=@libdir@
 includedir=@includedir@
 
 Name: @PACKAGE_NAME@ consensus library
-Description: Library for the Bitcointalkcoin consensus protocol.
+Description: Library for the Talkcoin consensus protocol.
 Version: @PACKAGE_VERSION@
-Libs: -L${libdir} -lbitcointalkcoinconsensus
+Libs: -L${libdir} -ltalkcoinconsensus
 Cflags: -I${includedir}
 Requires.private: libcrypto
