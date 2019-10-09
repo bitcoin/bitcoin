@@ -37,6 +37,6 @@ if [ -z "$NO_DEPENDS" ]; then
 fi
 if [ "$TEST_PREVIOUS_RELEASES" = "true" ]; then
   BEGIN_FOLD previous-versions
-  DOCKER_EXEC contrib/devtools/previous_release.sh -b -t "$PREVIOUS_RELEASES_DIR" v0.17.1 v0.18.1
+  DOCKER_EXEC contrib/devtools/previous_release.sh -b -t "$PREVIOUS_RELEASES_DIR" v0.17.1 v0.18.1 v0.19.0.1
   END_FOLD
 fi
