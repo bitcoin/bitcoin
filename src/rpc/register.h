@@ -1,9 +1,9 @@
-// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2009-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_RPC_REGISTER_H
-#define BITCOINTALKCOIN_RPC_REGISTER_H
+#ifndef TALKCOIN_RPC_REGISTER_H
+#define TALKCOIN_RPC_REGISTER_H
 
 /** These are in one header file to avoid creating tons of single-function
  * headers for everything under src/rpc/ */
@@ -33,4 +33,4 @@ static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
     RegisterRawTransactionRPCCommands(t);
 }
 
-#endif // BITCOINTALKCOIN_RPC_REGISTER_H
+#endif // TALKCOIN_RPC_REGISTER_H

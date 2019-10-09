@@ -13,9 +13,12 @@
 #include <pubkey.h>
 #include <streams.h>
 #include <ui_interface.h>
-#include <wallet/wallet.h>
 #include <smessage/lz4.h>
+#include <support/allocators/secure.h>
 
+#include <boost/signals2/signal.hpp>
+
+class CBlock;
 
 typedef std::vector<unsigned char, secure_allocator<unsigned char> > secure_buffer;
 typedef std::basic_string<char, std::char_traits<char>, secure_allocator<char> > secure_string;

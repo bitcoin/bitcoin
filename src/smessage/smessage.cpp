@@ -50,8 +50,6 @@ Notes:
 
 
 #include "base58.h"
-#include "wallet/crypter.h"
-#include "wallet/db.h"
 #include "init.h"
 #include "key_io.h"
 #include <logging.h>
@@ -65,6 +63,11 @@ Notes:
 #include "validation.h"
 //#include "xxhash/xxhash.c"
 #include <secp256k1_recovery.h>
+#ifdef ENABLE_WALLET
+#include "wallet/crypter.h"
+#include "wallet/db.h"
+#include <wallet/wallet.h>
+#endif
 
 static secp256k1_context *ctx = NULL;
 
@@ -544,7 +547,7 @@ void ThreadSecureMsg(void* parg)
 {
     nThreadCount.fetch_add(1, boost::memory_order_relaxed);
     // -- bucket management thread
-    RenameThread("bitcointalkcoin-smsg"); // Make this thread recognisable
+    RenameThread("talkcoin-smsg"); // Make this thread recognisable
 const CNetMsgMaker msgMaker(PROTOCOL_VERSION);
 
 
@@ -833,7 +836,8 @@ int SecureMsgAddWalletAddresses()
     std::string sAnonPrefix("ao");
 
     uint32_t nAdded = 0;
-    for (const std::pair<CTxDestination, CAddressBookData>& entry : pwallet->mapAddressBook)
+    LOCK(pwallet->cs_wallet);
+    for (const auto& entry : pwallet->mapAddressBook)
     {
         if (IsMine(*pwallet, entry.first) != ISMINE_SPENDABLE)
             continue;
@@ -885,7 +889,7 @@ int SecureMsgReadIni()
     if (LogInstance().WillLogCategory(BCLog::SMSG))
         LogPrintf("SecureMsgReadIni()\n");
 
-    fs::path fullpath = GetDataDir() / "bitcointalkcoin.conf";
+    fs::path fullpath = GetDataDir() / "talkcoin.conf";
 
     FILE *fp;
     errno = 0;
@@ -1147,8 +1151,9 @@ bool SecureMsgReceiveData(CNode* pfrom, std::string strCommand, CDataStream& vRe
         Called from ProcessMessage
         Runs in ThreadMessageHandler2
     */
-const CNetMsgMaker msgMaker(PROTOCOL_VERSION);
+    const CNetMsgMaker msgMaker(PROTOCOL_VERSION);
 
+    LOCK(pfrom->cs_addrName);
     if (LogInstance().WillLogCategory(BCLog::SMSG))
         LogPrintf("SecureMsgReceiveData() %s %s.\n", pfrom->addrName.c_str(), strCommand.c_str());
 
@@ -1163,6 +1168,7 @@ const CNetMsgMaker msgMaker(PROTOCOL_VERSION);
 
         if (vchData.size() < 4)
         {
+			LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 1);
 
             return false; // not enough data received to be a valid smsgInv
@@ -1189,6 +1195,7 @@ const CNetMsgMaker msgMaker(PROTOCOL_VERSION);
         if (nInvBuckets > (SMSG_RETENTION / SMSG_BUCKET_LEN) + 1) // +1 for some leeway
         {
             LogPrintf("Peer sent more bucket headers than possible %u, %u.\n", nInvBuckets, (SMSG_RETENTION / SMSG_BUCKET_LEN));
+            LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 1);
             return false;
         }
@@ -1196,6 +1203,7 @@ const CNetMsgMaker msgMaker(PROTOCOL_VERSION);
         if (vchData.size() < 4 + nInvBuckets*16)
         {
             LogPrintf("Remote node did not send enough data.\n");
+            LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 1);
             return false;
         }
@@ -1224,6 +1232,7 @@ const CNetMsgMaker msgMaker(PROTOCOL_VERSION);
                     LogPrintf("Not interested in peer bucket %d, has expired.\n", (int) time);
 
                 if (time < now - SMSG_RETENTION - SMSG_TIME_LEEWAY){
+					LOCK(cs_main);
                     Misbehaving(pfrom->GetId(), 1);
                 }
                 continue;
@@ -1232,6 +1241,7 @@ const CNetMsgMaker msgMaker(PROTOCOL_VERSION);
             {
                 if (LogInstance().WillLogCategory(BCLog::SMSG))
                     LogPrintf("Not interested in peer bucket %d, in the future.\n", (int) time);
+                LOCK(cs_main);
                 Misbehaving(pfrom->GetId(), 1);
                 continue;
             }
@@ -1376,6 +1386,7 @@ const CNetMsgMaker msgMaker(PROTOCOL_VERSION);
         {
             if (LogInstance().WillLogCategory(BCLog::SMSG))
                 LogPrintf("Not interested in peer bucket %d, in the future.\n", (int32_t) time);
+            LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 1);
             return false;
         }
@@ -1535,6 +1546,7 @@ const CNetMsgMaker msgMaker(PROTOCOL_VERSION);
         if (vchData.size() < 8)
         {
             LogPrintf("smsgMatch, not enough data %d.\n", (int) vchData.size());
+            LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 1);
             return false;
         }
@@ -1589,6 +1601,7 @@ const CNetMsgMaker msgMaker(PROTOCOL_VERSION);
         if (vchData.size() < 8)
         {
             LogPrintf("smsgIgnore, not enough data %d.\n", (int) vchData.size());
+            LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 1);
             return false;
         }
@@ -1627,8 +1640,11 @@ const CNetMsgMaker msgMaker(PROTOCOL_VERSION);
     {
         // -- first contact
         pto->smsgData.nPeerId = nPeerIdCounter++;
-        if (LogInstance().WillLogCategory(BCLog::SMSG))
+        
+        if (LogInstance().WillLogCategory(BCLog::SMSG)){
+            LOCK(pto->cs_addrName);
             LogPrintf("SecureMsgSendData() new node %s, peer id %u.\n", pto->addrName.c_str(), pto->smsgData.nPeerId);
+		}
         // -- Send smsgPing once, do nothing until receive 1st smsgPong (then set fEnabled)
 
         g_connman->PushMessage(pto, msgMaker.Make(NetMsgType::SMSGPING));
@@ -1648,9 +1664,11 @@ const CNetMsgMaker msgMaker(PROTOCOL_VERSION);
         pto->smsgData.lastMatched = 0;
         pto->smsgData.nWakeCounter = 10 + GetRandInt(300);  // set to a random time between [10, 300] * SMSG_SEND_DELAY seconds
 
-        if (LogInstance().WillLogCategory(BCLog::SMSG))
+        if (LogInstance().WillLogCategory(BCLog::SMSG)){
+			LOCK(pto->cs_addrName);
             LogPrintf("SecureMsgSendData(): nWakeCounter expired, sending bucket inventory to %s.\n"
             "Now %d next wake counter %u\n", pto->addrName.c_str(), (int32_t) now, pto->smsgData.nWakeCounter);
+		}
     }
     pto->smsgData.nWakeCounter--;
 
@@ -1822,6 +1840,7 @@ static bool ScanBlock(CBlock& block, SecMsgDB& addrpkdb, uint32_t& nTransactions
                     prevoutHash = tx->vin[i].prevout.hash;
                     CTransactionRef txOfPrevOutput;
                     CBlockIndex* blockindex = nullptr;
+                    LOCK(cs_main);
                     blockindex = LookupBlockIndex(block.GetHash());
                     //const Consensus::Params& consensusParams = Params().GetConsensus();
 
@@ -2517,6 +2536,7 @@ int SecureMsgReceive(CNode* pfrom, std::vector<unsigned char>& vchData)
 
     if (nBunch == 0 || nBunch > 500) {
         LogPrintf("Error: Invalid no. messages received in bunch %u, for bucket %d.\n", nBunch, (int32_t) bktTime);
+        LOCK(cs_main);
         Misbehaving(pfrom->GetId(), 1);
 
         // -- release lock on bucket if it exists
@@ -2539,6 +2559,7 @@ int SecureMsgReceive(CNode* pfrom, std::vector<unsigned char>& vchData)
         int rv = SecureMsgValidate(header, vchData.size() - (n + SMSG_HDR_LEN));
         std::string reason;
         if (rv != 0) {
+			LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 0);
             if( rv==1 )
                 reason ="error";
@@ -3118,8 +3139,8 @@ int SecureMsgSend(std::string& addressFrom, std::string& addressTo, std::string&
 
     std::string addressOutbox = "None";
     CTxDestination destr;
-
-    for (const std::pair<CTxDestination, CAddressBookData>& entry : pwallet->mapAddressBook)
+    LOCK(pwallet->cs_wallet);
+    for (const auto& entry : pwallet->mapAddressBook)
     {
         // -- get first owned address
         if (IsMine(*pwallet, entry.first) != ISMINE_SPENDABLE)

@@ -1,6 +1,6 @@
 all:
-	$(MAKE) -C .. bitcointalkcoin_test
+	$(MAKE) -C .. talkcoin_test
 clean:
-	$(MAKE) -C .. bitcointalkcoin_test_clean
+	$(MAKE) -C .. talkcoin_test_clean
 check:
-	$(MAKE) -C .. bitcointalkcoin_test_check
+	$(MAKE) -C .. talkcoin_test_check

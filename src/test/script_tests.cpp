@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2019 The Bitcointalkcoin Core developers
+// Copyright (c) 2011-2019 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,20 +6,20 @@
 
 #include <core_io.h>
 #include <key.h>
-#include <keystore.h>
 #include <script/script.h>
 #include <script/script_error.h>
 #include <script/sign.h>
+#include <script/signingprovider.h>
 #include <util/system.h>
 #include <util/strencodings.h>
 #include <test/setup_common.h>
 #include <rpc/util.h>
+#include <streams.h>
 
 #if defined(HAVE_CONSENSUS_LIB)
-#include <script/bitcointalkcoinconsensus.h>
+#include <script/talkcoinconsensus.h>
 #endif
 
-#include <fstream>
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -182,14 +182,14 @@ void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, const CScript
 #if defined(HAVE_CONSENSUS_LIB)
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << tx2;
-    int libconsensus_flags = flags & bitcointalkcoinconsensus_SCRIPT_FLAGS_VERIFY_ALL;
+    int libconsensus_flags = flags & talkcoinconsensus_SCRIPT_FLAGS_VERIFY_ALL;
     if (libconsensus_flags == flags) {
         int expectedSuccessCode = expect ? 1 : 0;
-        if (flags & bitcointalkcoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS) {
-            BOOST_CHECK_MESSAGE(bitcointalkcoinconsensus_verify_script_with_amount(scriptPubKey.data(), scriptPubKey.size(), txCredit.vout[0].nValue, (const unsigned char*)&stream[0], stream.size(), 0, libconsensus_flags, nullptr) == expectedSuccessCode, message);
+        if (flags & talkcoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS) {
+            BOOST_CHECK_MESSAGE(talkcoinconsensus_verify_script_with_amount(scriptPubKey.data(), scriptPubKey.size(), txCredit.vout[0].nValue, (const unsigned char*)&stream[0], stream.size(), 0, libconsensus_flags, nullptr) == expectedSuccessCode, message);
         } else {
-            BOOST_CHECK_MESSAGE(bitcointalkcoinconsensus_verify_script_with_amount(scriptPubKey.data(), scriptPubKey.size(), 0, (const unsigned char*)&stream[0], stream.size(), 0, libconsensus_flags, nullptr) == expectedSuccessCode, message);
-            BOOST_CHECK_MESSAGE(bitcointalkcoinconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), (const unsigned char*)&stream[0], stream.size(), 0, libconsensus_flags, nullptr) == expectedSuccessCode, message);
+            BOOST_CHECK_MESSAGE(talkcoinconsensus_verify_script_with_amount(scriptPubKey.data(), scriptPubKey.size(), 0, (const unsigned char*)&stream[0], stream.size(), 0, libconsensus_flags, nullptr) == expectedSuccessCode, message);
+            BOOST_CHECK_MESSAGE(talkcoinconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), (const unsigned char*)&stream[0], stream.size(), 0, libconsensus_flags, nullptr) == expectedSuccessCode, message);
         }
     }
 #endif
@@ -1199,7 +1199,7 @@ SignatureData CombineSignatures(const CTxOut& txout, const CMutableTransaction& 
 BOOST_AUTO_TEST_CASE(script_combineSigs)
 {
     // Test the ProduceSignature's ability to combine signatures function
-    CBasicKeyStore keystore;
+    FillableSigningProvider keystore;
     std::vector<CKey> keys;
     std::vector<CPubKey> pubkeys;
     for (int i = 0; i < 3; i++)
@@ -1523,8 +1523,8 @@ BOOST_AUTO_TEST_CASE(script_can_append_self)
 
 #if defined(HAVE_CONSENSUS_LIB)
 
-/* Test simple (successful) usage of bitcointalkcoinconsensus_verify_script */
-BOOST_AUTO_TEST_CASE(bitcointalkcoinconsensus_verify_script_returns_true)
+/* Test simple (successful) usage of talkcoinconsensus_verify_script */
+BOOST_AUTO_TEST_CASE(talkcoinconsensus_verify_script_returns_true)
 {
     unsigned int libconsensus_flags = 0;
     int nIn = 0;
@@ -1540,14 +1540,14 @@ BOOST_AUTO_TEST_CASE(bitcointalkcoinconsensus_verify_script_returns_true)
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << spendTx;
 
-    bitcointalkcoinconsensus_error err;
-    int result = bitcointalkcoinconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), (const unsigned char*)&stream[0], stream.size(), nIn, libconsensus_flags, &err);
+    talkcoinconsensus_error err;
+    int result = talkcoinconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), (const unsigned char*)&stream[0], stream.size(), nIn, libconsensus_flags, &err);
     BOOST_CHECK_EQUAL(result, 1);
-    BOOST_CHECK_EQUAL(err, bitcointalkcoinconsensus_ERR_OK);
+    BOOST_CHECK_EQUAL(err, talkcoinconsensus_ERR_OK);
 }
 
-/* Test bitcointalkcoinconsensus_verify_script returns invalid tx index err*/
-BOOST_AUTO_TEST_CASE(bitcointalkcoinconsensus_verify_script_tx_index_err)
+/* Test talkcoinconsensus_verify_script returns invalid tx index err*/
+BOOST_AUTO_TEST_CASE(talkcoinconsensus_verify_script_tx_index_err)
 {
     unsigned int libconsensus_flags = 0;
     int nIn = 3;
@@ -1563,14 +1563,14 @@ BOOST_AUTO_TEST_CASE(bitcointalkcoinconsensus_verify_script_tx_index_err)
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << spendTx;
 
-    bitcointalkcoinconsensus_error err;
-    int result = bitcointalkcoinconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), (const unsigned char*)&stream[0], stream.size(), nIn, libconsensus_flags, &err);
+    talkcoinconsensus_error err;
+    int result = talkcoinconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), (const unsigned char*)&stream[0], stream.size(), nIn, libconsensus_flags, &err);
     BOOST_CHECK_EQUAL(result, 0);
-    BOOST_CHECK_EQUAL(err, bitcointalkcoinconsensus_ERR_TX_INDEX);
+    BOOST_CHECK_EQUAL(err, talkcoinconsensus_ERR_TX_INDEX);
 }
 
-/* Test bitcointalkcoinconsensus_verify_script returns tx size mismatch err*/
-BOOST_AUTO_TEST_CASE(bitcointalkcoinconsensus_verify_script_tx_size)
+/* Test talkcoinconsensus_verify_script returns tx size mismatch err*/
+BOOST_AUTO_TEST_CASE(talkcoinconsensus_verify_script_tx_size)
 {
     unsigned int libconsensus_flags = 0;
     int nIn = 0;
@@ -1586,14 +1586,14 @@ BOOST_AUTO_TEST_CASE(bitcointalkcoinconsensus_verify_script_tx_size)
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << spendTx;
 
-    bitcointalkcoinconsensus_error err;
-    int result = bitcointalkcoinconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), (const unsigned char*)&stream[0], stream.size() * 2, nIn, libconsensus_flags, &err);
+    talkcoinconsensus_error err;
+    int result = talkcoinconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), (const unsigned char*)&stream[0], stream.size() * 2, nIn, libconsensus_flags, &err);
     BOOST_CHECK_EQUAL(result, 0);
-    BOOST_CHECK_EQUAL(err, bitcointalkcoinconsensus_ERR_TX_SIZE_MISMATCH);
+    BOOST_CHECK_EQUAL(err, talkcoinconsensus_ERR_TX_SIZE_MISMATCH);
 }
 
-/* Test bitcointalkcoinconsensus_verify_script returns invalid tx serialization error */
-BOOST_AUTO_TEST_CASE(bitcointalkcoinconsensus_verify_script_tx_serialization)
+/* Test talkcoinconsensus_verify_script returns invalid tx serialization error */
+BOOST_AUTO_TEST_CASE(talkcoinconsensus_verify_script_tx_serialization)
 {
     unsigned int libconsensus_flags = 0;
     int nIn = 0;
@@ -1609,16 +1609,16 @@ BOOST_AUTO_TEST_CASE(bitcointalkcoinconsensus_verify_script_tx_serialization)
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << 0xffffffff;
 
-    bitcointalkcoinconsensus_error err;
-    int result = bitcointalkcoinconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), (const unsigned char*)&stream[0], stream.size(), nIn, libconsensus_flags, &err);
+    talkcoinconsensus_error err;
+    int result = talkcoinconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), (const unsigned char*)&stream[0], stream.size(), nIn, libconsensus_flags, &err);
     BOOST_CHECK_EQUAL(result, 0);
-    BOOST_CHECK_EQUAL(err, bitcointalkcoinconsensus_ERR_TX_DESERIALIZE);
+    BOOST_CHECK_EQUAL(err, talkcoinconsensus_ERR_TX_DESERIALIZE);
 }
 
-/* Test bitcointalkcoinconsensus_verify_script returns amount required error */
-BOOST_AUTO_TEST_CASE(bitcointalkcoinconsensus_verify_script_amount_required_err)
+/* Test talkcoinconsensus_verify_script returns amount required error */
+BOOST_AUTO_TEST_CASE(talkcoinconsensus_verify_script_amount_required_err)
 {
-    unsigned int libconsensus_flags = bitcointalkcoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS;
+    unsigned int libconsensus_flags = talkcoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS;
     int nIn = 0;
 
     CScript scriptPubKey;
@@ -1632,14 +1632,14 @@ BOOST_AUTO_TEST_CASE(bitcointalkcoinconsensus_verify_script_amount_required_err)
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << spendTx;
 
-    bitcointalkcoinconsensus_error err;
-    int result = bitcointalkcoinconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), (const unsigned char*)&stream[0], stream.size(), nIn, libconsensus_flags, &err);
+    talkcoinconsensus_error err;
+    int result = talkcoinconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), (const unsigned char*)&stream[0], stream.size(), nIn, libconsensus_flags, &err);
     BOOST_CHECK_EQUAL(result, 0);
-    BOOST_CHECK_EQUAL(err, bitcointalkcoinconsensus_ERR_AMOUNT_REQUIRED);
+    BOOST_CHECK_EQUAL(err, talkcoinconsensus_ERR_AMOUNT_REQUIRED);
 }
 
-/* Test bitcointalkcoinconsensus_verify_script returns invalid flags err */
-BOOST_AUTO_TEST_CASE(bitcointalkcoinconsensus_verify_script_invalid_flags)
+/* Test talkcoinconsensus_verify_script returns invalid flags err */
+BOOST_AUTO_TEST_CASE(talkcoinconsensus_verify_script_invalid_flags)
 {
     unsigned int libconsensus_flags = 1 << 3;
     int nIn = 0;
@@ -1655,10 +1655,10 @@ BOOST_AUTO_TEST_CASE(bitcointalkcoinconsensus_verify_script_invalid_flags)
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << spendTx;
 
-    bitcointalkcoinconsensus_error err;
-    int result = bitcointalkcoinconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), (const unsigned char*)&stream[0], stream.size(), nIn, libconsensus_flags, &err);
+    talkcoinconsensus_error err;
+    int result = talkcoinconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), (const unsigned char*)&stream[0], stream.size(), nIn, libconsensus_flags, &err);
     BOOST_CHECK_EQUAL(result, 0);
-    BOOST_CHECK_EQUAL(err, bitcointalkcoinconsensus_ERR_INVALID_FLAGS);
+    BOOST_CHECK_EQUAL(err, talkcoinconsensus_ERR_INVALID_FLAGS);
 }
 
 #endif

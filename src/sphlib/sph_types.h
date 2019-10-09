@@ -309,11 +309,11 @@
  *   - Fugue-256: short name: <code>fugue256</code>
  *   - Fugue-384: short name: <code>fugue384</code>
  *   - Fugue-512: short name: <code>fugue512</code>
- * - Groestl family: file <code>sph_bitcointalkcoin.h</code>
- *   - Groestl-224: short name: <code>bitcointalkcoin224</code>
- *   - Groestl-256: short name: <code>bitcointalkcoin256</code>
- *   - Groestl-384: short name: <code>bitcointalkcoin384</code>
- *   - Groestl-512: short name: <code>bitcointalkcoin512</code>
+ * - Groestl family: file <code>sph_talkcoin.h</code>
+ *   - Groestl-224: short name: <code>talkcoin224</code>
+ *   - Groestl-256: short name: <code>talkcoin256</code>
+ *   - Groestl-384: short name: <code>talkcoin384</code>
+ *   - Groestl-512: short name: <code>talkcoin512</code>
  * - Hamsi family: file <code>sph_hamsi.h</code>
  *   - Hamsi-224: short name: <code>hamsi224</code>
  *   - Hamsi-256: short name: <code>hamsi256</code>

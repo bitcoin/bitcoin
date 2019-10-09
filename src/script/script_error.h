@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2009-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_SCRIPT_SCRIPT_ERROR_H
-#define BITCOINTALKCOIN_SCRIPT_SCRIPT_ERROR_H
+#ifndef TALKCOIN_SCRIPT_SCRIPT_ERROR_H
+#define TALKCOIN_SCRIPT_SCRIPT_ERROR_H
 
 typedef enum ScriptError_t
 {
@@ -75,4 +75,4 @@ typedef enum ScriptError_t
 
 const char* ScriptErrorString(const ScriptError error);
 
-#endif // BITCOINTALKCOIN_SCRIPT_SCRIPT_ERROR_H
+#endif // TALKCOIN_SCRIPT_SCRIPT_ERROR_H
