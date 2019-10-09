@@ -1,11 +1,11 @@
-// Copyright (c) 2011-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2011-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <qt/overviewpage.h>
 #include <qt/forms/ui_overviewpage.h>
 
-#include <qt/bitcointalkcoinunits.h>
+#include <qt/talkcoinunits.h>
 #include <qt/clientmodel.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
@@ -28,7 +28,7 @@ class TxViewDelegate : public QAbstractItemDelegate
     Q_OBJECT
 public:
     explicit TxViewDelegate(const PlatformStyle *_platformStyle, QObject *parent=nullptr):
-        QAbstractItemDelegate(parent), unit(BitcointalkcoinUnits::TALK),
+        QAbstractItemDelegate(parent), unit(TalkcoinUnits::TALK),
         platformStyle(_platformStyle)
     {
 
@@ -86,7 +86,7 @@ public:
             foreground = option.palette.color(QPalette::Text);
         }
         painter->setPen(foreground);
-        QString amountText = BitcointalkcoinUnits::formatWithUnit(unit, amount, true, BitcointalkcoinUnits::separatorAlways);
+        QString amountText = TalkcoinUnits::formatWithUnit(unit, amount, true, TalkcoinUnits::separatorAlways);
         if(!confirmed)
         {
             amountText = QString("[") + amountText + QString("]");
@@ -162,41 +162,43 @@ void OverviewPage::setBalance(const interfaces::WalletBalances& balances)
     int unit = walletModel->getOptionsModel()->getDisplayUnit();
     m_balances = balances;
     if (walletModel->privateKeysDisabled()) {
-        ui->labelBalance->setText(BitcointalkcoinUnits::formatWithUnit(unit, balances.watch_only_balance, false, BitcointalkcoinUnits::separatorAlways));
-        ui->labelUnconfirmed->setText(BitcointalkcoinUnits::formatWithUnit(unit, balances.unconfirmed_watch_only_balance, false, BitcointalkcoinUnits::separatorAlways));
-        ui->labelImmature->setText(BitcointalkcoinUnits::formatWithUnit(unit, balances.immature_watch_only_balance, false, BitcointalkcoinUnits::separatorAlways));
-        ui->labelStake->setText(BitcointalkcoinUnits::formatWithUnit(unit, balances.stake, false, BitcointalkcoinUnits::separatorAlways));
+        ui->labelBalance->setText(TalkcoinUnits::formatWithUnit(unit, balances.watch_only_balance, false, TalkcoinUnits::separatorAlways));
+        ui->labelUnconfirmed->setText(TalkcoinUnits::formatWithUnit(unit, balances.unconfirmed_watch_only_balance, false, TalkcoinUnits::separatorAlways));
+        ui->labelImmature->setText(TalkcoinUnits::formatWithUnit(unit, balances.immature_watch_only_balance, false, TalkcoinUnits::separatorAlways));
+        ui->labelStake->setText(TalkcoinUnits::formatWithUnit(unit, balances.stake, false, TalkcoinUnits::separatorAlways));
 
-        ui->labelTotal->setText(BitcointalkcoinUnits::formatWithUnit(unit, balances.watch_only_balance + balances.unconfirmed_watch_only_balance + balances.immature_watch_only_balance + balances.stake, false, BitcointalkcoinUnits::separatorAlways));
+        ui->labelTotal->setText(TalkcoinUnits::formatWithUnit(unit, balances.watch_only_balance + balances.unconfirmed_watch_only_balance + balances.immature_watch_only_balance + balances.stake, false, TalkcoinUnits::separatorAlways));
     } else {
-        ui->labelBalance->setText(BitcointalkcoinUnits::formatWithUnit(unit, balances.balance, false, BitcointalkcoinUnits::separatorAlways));
-        ui->labelUnconfirmed->setText(BitcointalkcoinUnits::formatWithUnit(unit, balances.unconfirmed_balance, false, BitcointalkcoinUnits::separatorAlways));
-        ui->labelImmature->setText(BitcointalkcoinUnits::formatWithUnit(unit, balances.immature_balance, false, BitcointalkcoinUnits::separatorAlways));
-        ui->labelStake->setText(BitcointalkcoinUnits::formatWithUnit(unit, balances.stake, false, BitcointalkcoinUnits::separatorAlways));
-        ui->labelTotal->setText(BitcointalkcoinUnits::formatWithUnit(unit, balances.balance + balances.unconfirmed_balance + balances.immature_balance + balances.stake, false, BitcointalkcoinUnits::separatorAlways));
-        ui->labelWatchAvailable->setText(BitcointalkcoinUnits::formatWithUnit(unit, balances.watch_only_balance, false, BitcointalkcoinUnits::separatorAlways));
-        ui->labelWatchPending->setText(BitcointalkcoinUnits::formatWithUnit(unit, balances.unconfirmed_watch_only_balance, false, BitcointalkcoinUnits::separatorAlways));
-        ui->labelWatchImmature->setText(BitcointalkcoinUnits::formatWithUnit(unit, balances.immature_watch_only_balance, false, BitcointalkcoinUnits::separatorAlways));
-        ui->labelWatchStake->setText(BitcointalkcoinUnits::formatWithUnit(unit, balances.watch_only_stake, false, BitcointalkcoinUnits::separatorAlways));
-        ui->labelWatchTotal->setText(BitcointalkcoinUnits::formatWithUnit(unit, balances.watch_only_balance + balances.unconfirmed_watch_only_balance + balances.immature_watch_only_balance + balances.stake, false, BitcointalkcoinUnits::separatorAlways));
+        ui->labelBalance->setText(TalkcoinUnits::formatWithUnit(unit, balances.balance, false, TalkcoinUnits::separatorAlways));
+        ui->labelUnconfirmed->setText(TalkcoinUnits::formatWithUnit(unit, balances.unconfirmed_balance, false, TalkcoinUnits::separatorAlways));
+        ui->labelImmature->setText(TalkcoinUnits::formatWithUnit(unit, balances.immature_balance, false, TalkcoinUnits::separatorAlways));
+        ui->labelStake->setText(TalkcoinUnits::formatWithUnit(unit, balances.stake, false, TalkcoinUnits::separatorAlways));
+        ui->labelTotal->setText(TalkcoinUnits::formatWithUnit(unit, balances.balance + balances.unconfirmed_balance + balances.immature_balance + balances.stake, false, TalkcoinUnits::separatorAlways));
+#ifndef OS_ANDROID
+//        ui->labelWatchAvailable->setText(TalkcoinUnits::formatWithUnit(unit, balances.watch_only_balance, false, TalkcoinUnits::separatorAlways));
+//        ui->labelWatchPending->setText(TalkcoinUnits::formatWithUnit(unit, balances.unconfirmed_watch_only_balance, false, TalkcoinUnits::separatorAlways));
+//        ui->labelWatchImmature->setText(TalkcoinUnits::formatWithUnit(unit, balances.immature_watch_only_balance, false, TalkcoinUnits::separatorAlways));
+//        ui->labelWatchStake->setText(TalkcoinUnits::formatWithUnit(unit, balances.watch_only_stake, false, TalkcoinUnits::separatorAlways));
+//        ui->labelWatchTotal->setText(TalkcoinUnits::formatWithUnit(unit, balances.watch_only_balance + balances.unconfirmed_watch_only_balance + balances.immature_watch_only_balance + balances.stake, false, TalkcoinUnits::separatorAlways));
+#endif
     }
     // only show immature (newly mined) balance if it's non-zero, so as not to complicate things
     // for the non-mining users
     bool showImmature = balances.immature_balance != 0;
 
     bool showStake = balances.stake != 0;
-    bool showWatchOnlyStake = balances.watch_only_stake != 0;
+//    bool showWatchOnlyStake = balances.watch_only_stake != 0;
 
-    bool showWatchOnlyImmature = balances.immature_watch_only_balance != 0;
+//    bool showWatchOnlyImmature = balances.immature_watch_only_balance != 0;
 
     // for symmetry reasons also show immature label when the watch-only one is shown
-    ui->labelImmature->setVisible(showImmature || showWatchOnlyImmature);
-    ui->labelImmatureText->setVisible(showImmature || showWatchOnlyImmature);
-    ui->labelWatchImmature->setVisible(!walletModel->privateKeysDisabled() && showWatchOnlyImmature); // show watch-only immature balance
+    ui->labelImmature->setVisible(showImmature);
+    ui->labelImmatureText->setVisible(showImmature);
+//    ui->labelWatchImmature->setVisible(!walletModel->privateKeysDisabled() && showWatchOnlyImmature); // show watch-only immature balance
 
-    ui->labelStake->setVisible(showStake || showWatchOnlyStake);
-    ui->labelStakeText->setVisible(showStake || showWatchOnlyStake);
-    ui->labelWatchStake->setVisible(showWatchOnlyStake); // show watch-only stake balance
+    ui->labelStake->setVisible(showStake);
+    ui->labelStakeText->setVisible(showStake);
+//    ui->labelWatchStake->setVisible(showWatchOnlyStake); // show watch-only stake balance
 
 }
 
@@ -204,17 +206,17 @@ void OverviewPage::setBalance(const interfaces::WalletBalances& balances)
 void OverviewPage::updateWatchOnlyLabels(bool showWatchOnly)
 {
     ui->labelSpendable->setVisible(showWatchOnly);      // show spendable label (only when watch-only is active)
-    ui->labelWatchonly->setVisible(showWatchOnly);      // show watch-only label
-    ui->lineWatchBalance->setVisible(showWatchOnly);    // show watch-only balance separator line
-    ui->labelWatchAvailable->setVisible(showWatchOnly); // show watch-only available balance
-    ui->labelWatchPending->setVisible(showWatchOnly);   // show watch-only pending balance
-    ui->labelWatchTotal->setVisible(showWatchOnly);     // show watch-only total balance
+//    ui->labelWatchonly->setVisible(showWatchOnly);      // show watch-only label
+//    ui->lineWatchBalance->setVisible(showWatchOnly);    // show watch-only balance separator line
+//    ui->labelWatchAvailable->setVisible(showWatchOnly); // show watch-only available balance
+//    ui->labelWatchPending->setVisible(showWatchOnly);   // show watch-only pending balance
+//    ui->labelWatchTotal->setVisible(showWatchOnly);     // show watch-only total balance
 
-    if (!showWatchOnly)
-    {
-        ui->labelWatchImmature->hide();
-        ui->labelWatchStake->hide();
-    }
+//    if (!showWatchOnly)
+//    {
+//        ui->labelWatchImmature->hide();
+//        ui->labelWatchStake->hide();
+//    }
 }
 
 void OverviewPage::setClientModel(ClientModel *model)
