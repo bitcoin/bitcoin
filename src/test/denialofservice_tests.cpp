@@ -78,7 +78,7 @@ BOOST_FIXTURE_TEST_SUITE(denialofservice_tests, TestingSetup)
 BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
 {
     auto connman = MakeUnique<CConnman>(0x1337, 0x1337);
-    auto peerLogic = MakeUnique<PeerLogicValidation>(connman.get(), nullptr, scheduler, false);
+    auto peerLogic = MakeUnique<PeerLogicValidation>(connman.get(), nullptr, scheduler);
 
     // Mock an outbound peer
     CAddress addr1(ip(0xa0b0c001), NODE_NONE);
@@ -148,7 +148,7 @@ static void AddRandomOutboundPeer(std::vector<CNode *> &vNodes, PeerLogicValidat
 BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
 {
     auto connman = MakeUnique<CConnmanTest>(0x1337, 0x1337);
-    auto peerLogic = MakeUnique<PeerLogicValidation>(connman.get(), nullptr, scheduler, false);
+    auto peerLogic = MakeUnique<PeerLogicValidation>(connman.get(), nullptr, scheduler);
 
     const Consensus::Params& consensusParams = Params().GetConsensus();
     constexpr int max_outbound_full_relay = 8;
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
 {
     auto banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     auto connman = MakeUnique<CConnman>(0x1337, 0x1337);
-    auto peerLogic = MakeUnique<PeerLogicValidation>(connman.get(), banman.get(), scheduler, false);
+    auto peerLogic = MakeUnique<PeerLogicValidation>(connman.get(), banman.get(), scheduler);
 
     banman->ClearBanned();
     CAddress addr1(ip(0xa0b0c001), NODE_NONE);
@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_CASE(DoS_banscore)
 {
     auto banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     auto connman = MakeUnique<CConnman>(0x1337, 0x1337);
-    auto peerLogic = MakeUnique<PeerLogicValidation>(connman.get(), banman.get(), scheduler, false);
+    auto peerLogic = MakeUnique<PeerLogicValidation>(connman.get(), banman.get(), scheduler);
 
     banman->ClearBanned();
     gArgs.ForceSetArg("-banscore", "111"); // because 11 is my favorite number
@@ -323,7 +323,7 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
 {
     auto banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     auto connman = MakeUnique<CConnman>(0x1337, 0x1337);
-    auto peerLogic = MakeUnique<PeerLogicValidation>(connman.get(), banman.get(), scheduler, false);
+    auto peerLogic = MakeUnique<PeerLogicValidation>(connman.get(), banman.get(), scheduler);
 
     banman->ClearBanned();
     int64_t nStartTime = GetTime();
