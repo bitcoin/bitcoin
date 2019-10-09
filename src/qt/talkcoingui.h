@@ -1,12 +1,12 @@
-// Copyright (c) 2011-2019 The Bitcointalkcoin Core developers
+// Copyright (c) 2011-2019 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_QT_BITCOINTALKCOINGUI_H
-#define BITCOINTALKCOIN_QT_BITCOINTALKCOINGUI_H
+#ifndef TALKCOIN_QT_TALKCOINGUI_H
+#define TALKCOIN_QT_TALKCOINGUI_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcointalkcoin-config.h>
+#include <config/talkcoin-config.h>
 #endif
 
 #include <qt/optionsdialog.h>
@@ -14,6 +14,7 @@
 #include <amount.h>
 
 #include <QLabel>
+#include <QPushButton>
 #include <QMainWindow>
 #include <QMap>
 #include <QPoint>
@@ -58,18 +59,18 @@ class ClickableProgressBar;
 }
 
 /**
-  Bitcointalkcoin GUI main class. This class represents the main window of the Bitcointalkcoin UI. It communicates with both the client and
+  Talkcoin GUI main class. This class represents the main window of the Talkcoin UI. It communicates with both the client and
   wallet models to give the user an up-to-date view of the current core state.
 */
-class BitcointalkcoinGUI : public QMainWindow
+class TalkcoinGUI : public QMainWindow
 {
     Q_OBJECT
 
 public:
     static const std::string DEFAULT_UIPLATFORM;
 
-    explicit BitcointalkcoinGUI(interfaces::Node& node, const PlatformStyle *platformStyle, const NetworkStyle *networkStyle, QWidget *parent = nullptr);
-    ~BitcointalkcoinGUI();
+    explicit TalkcoinGUI(interfaces::Node& node, const PlatformStyle *platformStyle, const NetworkStyle *networkStyle, QWidget *parent = nullptr);
+    ~TalkcoinGUI();
 
     /** Set the client model.
         The client model represents the part of the core that communicates with the P2P network, and is wallet-agnostic.
@@ -79,7 +80,7 @@ public:
     void setWalletController(WalletController* wallet_controller);
 
     /** Set the wallet model.
-        The wallet model represents a bitcointalkcoin wallet, and offers access to the list of transactions, address book and sending
+        The wallet model represents a talkcoin wallet, and offers access to the list of transactions, address book and sending
         functionality.
     */
     void addWallet(WalletModel* walletModel);
@@ -103,10 +104,15 @@ protected:
     void dragEnterEvent(QDragEnterEvent *event);
     void dropEvent(QDropEvent *event);
     bool eventFilter(QObject *object, QEvent *event);
-	void mousePressEvent(QMouseEvent *event);
+
+#ifndef OS_ANDROID
+
+    void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
     int m_nMouseClick_X_Coordinate;
     int m_nMouseClick_Y_Coordinate;
+#endif
+
 private:
     interfaces::Node& m_node;
     WalletController* m_wallet_controller{nullptr};
@@ -115,9 +121,12 @@ private:
     ClientModel* clientModel = nullptr;
     WalletFrame* walletFrame = nullptr;
 
+    QPushButton *Logo;
+
     UnitDisplayStatusBarControl* unitDisplayControl = nullptr;
     QLabel* labelWalletEncryptionIcon = nullptr;
     QLabel* labelWalletHDStatusIcon = nullptr;
+    QLabel* labelWalletSPVStatusIcon = nullptr;
     GUIUtil::ClickableLabel* labelProxyIcon = nullptr;
     GUIUtil::ClickableLabel* connectionsControl = nullptr;
     GUIUtil::ClickableLabel* labelBlocksIcon = nullptr;
@@ -221,6 +230,8 @@ public Q_SLOTS:
     void setNetworkActive(bool networkActive);
     /** Set number of blocks and last block date shown in the UI */
     void setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, bool headers);
+    /** Set the auxiliary block request progress in the UI */
+    void setAuxiliaryBlockRequestProgress(const QDateTime& blockDate, int requestesBlocks, int loadedBlocks, int processedBlocks);
 
     /** Notify the user of an event from the core network or transaction handling code.
        @param[in] title     the message box / notification title
@@ -229,7 +240,7 @@ public Q_SLOTS:
                             @see CClientUIInterface::MessageBoxFlags
        @param[in] ret       pointer to a bool that will be modified to whether Ok was clicked (modal only)
     */
-    void message(const QString &title, const QString &message, unsigned int style, bool *ret = nullptr);
+    void message(const QString& title, QString message, unsigned int style, bool* ret = nullptr);
 
 #ifdef ENABLE_WALLET
     void setCurrentWallet(WalletModel* wallet_model);
@@ -251,6 +262,11 @@ private:
      */
     void setHDStatus(bool privkeyDisabled, int hdEnabled);
 
+    /** Set the spv-enabled status as shown in the UI.
+     @param[in] status            current spv enabled status
+     */
+    void setSPVStatus(int spvEnabled);
+
 public Q_SLOTS:
     bool handlePaymentRequest(const SendCoinsRecipient& recipient);
 
@@ -263,7 +279,7 @@ public Q_SLOTS:
 
 private Q_SLOTS:
     void engageDisengageMining(int cores);
-
+    void toggleSPVMode();
 private:
     /** Set the proxy-enabled icon as shown in the UI. */
     void updateProxyIcon();
@@ -279,6 +295,7 @@ public Q_SLOTS:
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
+
 #ifdef ENABLE_SECURE_MESSAGING
     void gotoSendMessagesPage();
     /** Switch to send anonymous messages page */
@@ -360,4 +377,4 @@ private Q_SLOTS:
     void onMenuSelection(QAction* action);
 };
 
-#endif // BITCOINTALKCOIN_QT_BITCOINTALKCOINGUI_H
+#endif // TALKCOIN_QT_TALKCOINGUI_H
