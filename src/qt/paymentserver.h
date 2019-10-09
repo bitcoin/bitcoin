@@ -1,12 +1,12 @@
-// Copyright (c) 2011-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2011-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_QT_PAYMENTSERVER_H
-#define BITCOINTALKCOIN_QT_PAYMENTSERVER_H
+#ifndef TALKCOIN_QT_PAYMENTSERVER_H
+#define TALKCOIN_QT_PAYMENTSERVER_H
 
 // This class handles payment requests from clicking on
-// bitcointalkcoin: URIs
+// talkcoin: URIs
 //
 // This is somewhat tricky, because we have to deal with
 // the situation where the user clicks on a link during
@@ -33,7 +33,7 @@
 //
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcointalkcoin-config.h>
+#include <config/talkcoin-config.h>
 #endif
 
 #ifdef ENABLE_BIP70
@@ -157,4 +157,4 @@ private:
 #endif
 };
 
-#endif // BITCOINTALKCOIN_QT_PAYMENTSERVER_H
+#endif // TALKCOIN_QT_PAYMENTSERVER_H

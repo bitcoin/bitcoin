@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2011-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_QT_QRIMAGEWIDGET_H
-#define BITCOINTALKCOIN_QT_QRIMAGEWIDGET_H
+#ifndef TALKCOIN_QT_QRIMAGEWIDGET_H
+#define TALKCOIN_QT_QRIMAGEWIDGET_H
 
 #include <QImage>
 #include <QLabel>
@@ -42,4 +42,4 @@ private:
     QMenu *contextMenu;
 };
 
-#endif // BITCOINTALKCOIN_QT_QRIMAGEWIDGET_H
+#endif // TALKCOIN_QT_QRIMAGEWIDGET_H

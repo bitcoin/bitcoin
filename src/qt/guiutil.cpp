@@ -1,20 +1,20 @@
-// Copyright (c) 2011-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2011-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <qt/guiutil.h>
 
-#include <qt/bitcointalkcoinaddressvalidator.h>
-#include <qt/bitcointalkcoinunits.h>
+#include <qt/talkcoinaddressvalidator.h>
+#include <qt/talkcoinunits.h>
 #include <qt/qvalidatedlineedit.h>
 #include <qt/walletmodel.h>
 
 #include <base58.h>
 #include <chainparams.h>
-#include <primitives/transaction.h>
-#include <key_io.h>
 #include <interfaces/node.h>
+#include <key_io.h>
 #include <policy/policy.h>
+#include <primitives/transaction.h>
 #include <protocol.h>
 #include <script/script.h>
 #include <script/standard.h>
@@ -39,7 +39,6 @@
 #include <QClipboard>
 #include <QDateTime>
 #include <QDesktopServices>
-#include <QDesktopWidget>
 #include <QDoubleValidator>
 #include <QFileDialog>
 #include <QFont>
@@ -50,6 +49,7 @@
 #include <QMouseEvent>
 #include <QProgressDialog>
 #include <QSettings>
+#include <QStandardPaths>
 #include <QTextDocument> // for Qt::mightBeRichText
 #include <QThread>
 #include <QUrlQuery>
@@ -58,12 +58,24 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
-#include <objc/objc-runtime.h>
 #include <CoreServices/CoreServices.h>
 #include <QProcess>
+
+void ForceActivation();
 #endif
 
 namespace GUIUtil {
+
+QString defaultTheme()
+{
+    QSettings settings;
+    QString theme = settings.value("theme", "").toString();
+    if (theme == "") theme = "qtdark";
+    theme.prepend(":css/");	
+	
+    return theme;
+}
+
 
 QString dateTimeStr(const QDateTime &date)
 {
@@ -105,16 +117,16 @@ void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent)
     widget->setFont(fixedPitchFont());
     // We don't want translators to use own addresses in translations
     // and this is the only place, where this address is supplied.
-    widget->setPlaceholderText(QObject::tr("Enter a Bitcointalkcoin address (e.g. %1)").arg(
+    widget->setPlaceholderText(QObject::tr("Enter a Talkcoin address (e.g. %1)").arg(
         QString::fromStdString(DummyAddress(Params()))));
-    widget->setValidator(new BitcointalkcoinAddressEntryValidator(parent));
-    widget->setCheckValidator(new BitcointalkcoinAddressCheckValidator(parent));
+    widget->setValidator(new TalkcoinAddressEntryValidator(parent));
+    widget->setCheckValidator(new TalkcoinAddressCheckValidator(parent));
 }
 
-bool parseBitcointalkcoinURI(const QUrl &uri, SendCoinsRecipient *out)
+bool parseTalkcoinURI(const QUrl &uri, SendCoinsRecipient *out)
 {
-    // return if URI is not valid or is no bitcointalkcoin: URI
-    if(!uri.isValid() || uri.scheme() != QString("bitcointalkcoin"))
+    // return if URI is not valid or is no talkcoin: URI
+    if(!uri.isValid() || uri.scheme() != QString("talkcoin"))
         return false;
 
     SendCoinsRecipient rv;
@@ -150,7 +162,7 @@ bool parseBitcointalkcoinURI(const QUrl &uri, SendCoinsRecipient *out)
         {
             if(!i->second.isEmpty())
             {
-                if(!BitcointalkcoinUnits::parse(BitcointalkcoinUnits::TALK, i->second, &rv.amount))
+                if(!TalkcoinUnits::parse(TalkcoinUnits::TALK, i->second, &rv.amount))
                 {
                     return false;
                 }
@@ -168,22 +180,22 @@ bool parseBitcointalkcoinURI(const QUrl &uri, SendCoinsRecipient *out)
     return true;
 }
 
-bool parseBitcointalkcoinURI(QString uri, SendCoinsRecipient *out)
+bool parseTalkcoinURI(QString uri, SendCoinsRecipient *out)
 {
     QUrl uriInstance(uri);
-    return parseBitcointalkcoinURI(uriInstance, out);
+    return parseTalkcoinURI(uriInstance, out);
 }
 
-QString formatBitcointalkcoinURI(const SendCoinsRecipient &info)
+QString formatTalkcoinURI(const SendCoinsRecipient &info)
 {
     bool bech_32 = info.address.startsWith(QString::fromStdString(Params().Bech32HRP() + "1"));
 
-    QString ret = QString("bitcointalkcoin:%1").arg(bech_32 ? info.address.toUpper() : info.address);
+    QString ret = QString("talkcoin:%1").arg(bech_32 ? info.address.toUpper() : info.address);
     int paramCount = 0;
 
     if (info.amount)
     {
-        ret += QString("?amount=%1").arg(BitcointalkcoinUnits::format(BitcointalkcoinUnits::TALK, info.amount, false, BitcointalkcoinUnits::separatorNever));
+        ret += QString("?amount=%1").arg(TalkcoinUnits::format(TalkcoinUnits::TALK, info.amount, false, TalkcoinUnits::separatorNever));
         paramCount++;
     }
 
@@ -249,7 +261,26 @@ QList<QModelIndex> getEntryData(QAbstractItemView *view, int column)
 
 QString getDefaultDataDirectory()
 {
+#ifdef Q_OS_ANDROID
+//	QAndroidJniObject mediaDir = QAndroidJniObject::callStaticObjectMethod("android/os/Environment", "getExternalStorageDirectory", "()Ljava/io/File;");
+//	QAndroidJniObject mediaPath = mediaDir.callObjectMethod( "getAbsolutePath", "()Ljava/lang/String;" );
+//	QAndroidJniObject activity = QAndroidJniObject::callStaticObjectMethod("org/qtproject/qt5/android/QtNative", "activity", "()Landroid/app/Activity;");
+//	QAndroidJniObject package = activity.callObjectMethod("getPackageName", "()Ljava/lang/String;");
+//  dataDir = mediaPath.toString()+"/.talkcoin/";
+//  dataDir = mediaPath.toString()+"/Android/obb/"+package.toString()+"/.talkcoin"; 
+
+//    QAndroidJniEnvironment env;
+//    if (env->ExceptionCheck()) {
+//			// Handle exception here.
+//            env->ExceptionClear();
+//    }
+
+
+    QString writableLocation = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
+    return writableLocation+"/.talkcoin/";
+#else
     return boostPathToQString(GetDefaultDataDir());
+#endif
 }
 
 QString getSaveFileName(QWidget *parent, const QString &caption, const QString &dir,
@@ -360,10 +391,7 @@ bool isObscured(QWidget *w)
 void bringToFront(QWidget* w)
 {
 #ifdef Q_OS_MAC
-    // Force application activation on macOS. With Qt 5.4 this is required when
-    // an action in the dock menu is triggered.
-    id app = objc_msgSend((id) objc_getClass("NSApplication"), sel_registerName("sharedApplication"));
-    objc_msgSend(app, sel_registerName("activateIgnoringOtherApps:"), YES);
+    ForceActivation();
 #endif
 
     if (w) {
@@ -387,9 +415,9 @@ void openDebugLogfile()
         QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathDebug)));
 }
 
-bool openBitcointalkcoinConf()
+bool openTalkcoinConf()
 {
-    fs::path pathConfig = GetConfigFile(gArgs.GetArg("-conf", BITCOINTALKCOIN_CONF_FILENAME));
+    fs::path pathConfig = GetConfigFile(gArgs.GetArg("-conf", TALKCOIN_CONF_FILENAME));
 
     /* Create the file */
     fsbridge::ofstream configFile(pathConfig, std::ios_base::app);
@@ -399,7 +427,7 @@ bool openBitcointalkcoinConf()
 
     configFile.close();
 
-    /* Open bitcointalkcoin.conf with the associated application */
+    /* Open talkcoin.conf with the associated application */
     bool res = QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathConfig)));
 #ifdef Q_OS_MAC
     // Workaround for macOS-specific behavior; see #15409.
@@ -555,15 +583,15 @@ fs::path static StartupShortcutPath()
 {
     std::string chain = gArgs.GetChainName();
     if (chain == CBaseChainParams::MAIN)
-        return GetSpecialFolderPath(CSIDL_STARTUP) / "Bitcointalkcoin.lnk";
+        return GetSpecialFolderPath(CSIDL_STARTUP) / "Talkcoin.lnk";
     if (chain == CBaseChainParams::TESTNET) // Remove this special case when CBaseChainParams::TESTNET = "testnet4"
-        return GetSpecialFolderPath(CSIDL_STARTUP) / "Bitcointalkcoin (testnet).lnk";
-    return GetSpecialFolderPath(CSIDL_STARTUP) / strprintf("Bitcointalkcoin (%s).lnk", chain);
+        return GetSpecialFolderPath(CSIDL_STARTUP) / "Talkcoin (testnet).lnk";
+    return GetSpecialFolderPath(CSIDL_STARTUP) / strprintf("Talkcoin (%s).lnk", chain);
 }
 
 bool GetStartOnSystemStartup()
 {
-    // check for Bitcointalkcoin*.lnk
+    // check for Talkcoin*.lnk
     return fs::exists(StartupShortcutPath());
 }
 
@@ -638,8 +666,8 @@ fs::path static GetAutostartFilePath()
 {
     std::string chain = gArgs.GetChainName();
     if (chain == CBaseChainParams::MAIN)
-        return GetAutostartDir() / "bitcointalkcoin.desktop";
-    return GetAutostartDir() / strprintf("bitcointalkcoin-%s.lnk", chain);
+        return GetAutostartDir() / "talkcoin.desktop";
+    return GetAutostartDir() / strprintf("talkcoin-%s.desktop", chain);
 }
 
 bool GetStartOnSystemStartup()
@@ -679,13 +707,13 @@ bool SetStartOnSystemStartup(bool fAutoStart)
         if (!optionFile.good())
             return false;
         std::string chain = gArgs.GetChainName();
-        // Write a bitcointalkcoin.desktop file to the autostart directory:
+        // Write a talkcoin.desktop file to the autostart directory:
         optionFile << "[Desktop Entry]\n";
         optionFile << "Type=Application\n";
         if (chain == CBaseChainParams::MAIN)
-            optionFile << "Name=Bitcointalkcoin\n";
+            optionFile << "Name=Talkcoin\n";
         else
-            optionFile << strprintf("Name=Bitcointalkcoin (%s)\n", chain);
+            optionFile << strprintf("Name=Talkcoin (%s)\n", chain);
         optionFile << "Exec=" << pszExePath << strprintf(" -min -testnet=%d -regtest=%d\n", gArgs.GetBoolArg("-testnet", false), gArgs.GetBoolArg("-regtest", false));
         optionFile << "Terminal=false\n";
         optionFile << "Hidden=false\n";
@@ -704,7 +732,7 @@ LSSharedFileListItemRef findStartupItemInList(CFArrayRef listSnapshot, LSSharedF
         return nullptr;
     }
 
-    // loop through the list of startup items and try to find the bitcointalkcoin app
+    // loop through the list of startup items and try to find the talkcoin app
     for(int i = 0; i < CFArrayGetCount(listSnapshot); i++) {
         LSSharedFileListItemRef item = (LSSharedFileListItemRef)CFArrayGetValueAtIndex(listSnapshot, i);
         UInt32 resolutionFlags = kLSSharedFileListNoUserInteraction | kLSSharedFileListDoNotMountVolumes;
@@ -735,15 +763,15 @@ LSSharedFileListItemRef findStartupItemInList(CFArrayRef listSnapshot, LSSharedF
 
 bool GetStartOnSystemStartup()
 {
-    CFURLRef bitcointalkcoinAppUrl = CFBundleCopyBundleURL(CFBundleGetMainBundle());
-    if (bitcointalkcoinAppUrl == nullptr) {
+    CFURLRef talkcoinAppUrl = CFBundleCopyBundleURL(CFBundleGetMainBundle());
+    if (talkcoinAppUrl == nullptr) {
         return false;
     }
 
     LSSharedFileListRef loginItems = LSSharedFileListCreate(nullptr, kLSSharedFileListSessionLoginItems, nullptr);
     CFArrayRef listSnapshot = LSSharedFileListCopySnapshot(loginItems, nullptr);
-    bool res = (findStartupItemInList(listSnapshot, loginItems, bitcointalkcoinAppUrl) != nullptr);
-    CFRelease(bitcointalkcoinAppUrl);
+    bool res = (findStartupItemInList(listSnapshot, loginItems, talkcoinAppUrl) != nullptr);
+    CFRelease(talkcoinAppUrl);
     CFRelease(loginItems);
     CFRelease(listSnapshot);
     return res;
@@ -751,25 +779,25 @@ bool GetStartOnSystemStartup()
 
 bool SetStartOnSystemStartup(bool fAutoStart)
 {
-    CFURLRef bitcointalkcoinAppUrl = CFBundleCopyBundleURL(CFBundleGetMainBundle());
-    if (bitcointalkcoinAppUrl == nullptr) {
+    CFURLRef talkcoinAppUrl = CFBundleCopyBundleURL(CFBundleGetMainBundle());
+    if (talkcoinAppUrl == nullptr) {
         return false;
     }
 
     LSSharedFileListRef loginItems = LSSharedFileListCreate(nullptr, kLSSharedFileListSessionLoginItems, nullptr);
     CFArrayRef listSnapshot = LSSharedFileListCopySnapshot(loginItems, nullptr);
-    LSSharedFileListItemRef foundItem = findStartupItemInList(listSnapshot, loginItems, bitcointalkcoinAppUrl);
+    LSSharedFileListItemRef foundItem = findStartupItemInList(listSnapshot, loginItems, talkcoinAppUrl);
 
     if(fAutoStart && !foundItem) {
-        // add bitcointalkcoin app to startup item list
-        LSSharedFileListInsertItemURL(loginItems, kLSSharedFileListItemBeforeFirst, nullptr, nullptr, bitcointalkcoinAppUrl, nullptr, nullptr);
+        // add talkcoin app to startup item list
+        LSSharedFileListInsertItemURL(loginItems, kLSSharedFileListItemBeforeFirst, nullptr, nullptr, talkcoinAppUrl, nullptr, nullptr);
     }
     else if(!fAutoStart && foundItem) {
         // remove item
         LSSharedFileListItemRemove(loginItems, foundItem);
     }
 
-    CFRelease(bitcointalkcoinAppUrl);
+    CFRelease(talkcoinAppUrl);
     CFRelease(loginItems);
     CFRelease(listSnapshot);
     return true;
@@ -919,7 +947,7 @@ qreal calculateIdealFontSize(int width, const QString& text, QFont font, qreal m
     while(font_size >= minPointSize) {
         font.setPointSizeF(font_size);
         QFontMetrics fm(font);
-        if (fm.width(text) < width) {
+        if (TextWidth(fm, text) < width) {
             break;
         }
         font_size -= 0.5;
@@ -951,11 +979,20 @@ void PolishProgressDialog(QProgressDialog* dialog)
 {
 #ifdef Q_OS_MAC
     // Workaround for macOS-only Qt bug; see: QTBUG-65750, QTBUG-70357.
-    const int margin = dialog->fontMetrics().width("X");
+    const int margin = TextWidth(dialog->fontMetrics(), ("X"));
     dialog->resize(dialog->width() + 2 * margin, dialog->height());
     dialog->show();
 #else
     Q_UNUSED(dialog);
+#endif
+}
+
+int TextWidth(const QFontMetrics& fm, const QString& text)
+{
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 11, 0))
+    return fm.horizontalAdvance(text);
+#else
+    return fm.width(text);
 #endif
 }
 

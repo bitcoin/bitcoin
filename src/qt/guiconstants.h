@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2011-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_QT_GUICONSTANTS_H
-#define BITCOINTALKCOIN_QT_GUICONSTANTS_H
+#ifndef TALKCOIN_QT_GUICONSTANTS_H
+#define TALKCOIN_QT_GUICONSTANTS_H
 
 /* Milliseconds between model updates */
 static const int MODEL_UPDATE_DELAY = 250;
@@ -11,10 +11,14 @@ static const int MODEL_UPDATE_DELAY = 250;
 /* AskPassphraseDialog -- Maximum passphrase length */
 static const int MAX_PASSPHRASE_SIZE = 1024;
 
-/* BitcointalkcoinGUI -- Size of icons in status bar */
+/* TalkcoinGUI -- Size of icons in status bar */
 static const int STATUSBAR_ICONSIZE = 16;
 
-static const bool DEFAULT_SPLASHSCREEN = true;
+#if defined(Q_OS_ANDROID)
+    static const bool DEFAULT_SPLASHSCREEN = false;
+#else
+    static const bool DEFAULT_SPLASHSCREEN = true;
+#endif
 
 /* Invalid field background style */
 #define STYLE_INVALID "background:#FF8080"
@@ -30,6 +34,8 @@ static const bool DEFAULT_SPLASHSCREEN = true;
 /* Transaction list -- TX status decoration - danger, tx needs attention */
 #define COLOR_TX_STATUS_DANGER QColor(200, 100, 100)
 /* Transaction list -- TX status decoration - default color */
+#define COLOR_TX_STATUS_SPV_BACKGROUND QColor(240,240,240)
+/* Transaction list -- TX status decoration - default color */
 #define COLOR_BLACK QColor(0, 0, 0)
 
 /* Tooltips longer than this (in characters) are converted into rich text,
@@ -40,13 +46,13 @@ static const int TOOLTIP_WRAP_THRESHOLD = 80;
 /* Number of frames in spinner animation */
 #define SPINNER_FRAMES 36
 
-#define QAPP_ORG_NAME "Bitcointalkcoin"
-#define QAPP_ORG_DOMAIN "bitcointalkcoin.org"
-#define QAPP_APP_NAME_DEFAULT "Bitcointalkcoin-Qt"
-#define QAPP_APP_NAME_TESTNET "Bitcointalkcoin-Qt-testnet"
-#define QAPP_APP_NAME_REGTEST "Bitcointalkcoin-Qt-regtest"
+#define QAPP_ORG_NAME "Talkcoin"
+#define QAPP_ORG_DOMAIN "talkcoin.org"
+#define QAPP_APP_NAME_DEFAULT "Talkcoin-Qt"
+#define QAPP_APP_NAME_TESTNET "Talkcoin-Qt-testnet"
+#define QAPP_APP_NAME_REGTEST "Talkcoin-Qt-regtest"
 
 /* One gigabyte (GB) in bytes */
 static constexpr uint64_t GB_BYTES{1000000000};
 
-#endif // BITCOINTALKCOIN_QT_GUICONSTANTS_H
+#endif // TALKCOIN_QT_GUICONSTANTS_H

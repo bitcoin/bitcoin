@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2015 The Bitcointalkcoin Core developers
+// Copyright (c) 2011-2015 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_QT_SIGNVERIFYMESSAGEDIALOG_H
-#define BITCOINTALKCOIN_QT_SIGNVERIFYMESSAGEDIALOG_H
+#ifndef TALKCOIN_QT_SIGNVERIFYMESSAGEDIALOG_H
+#define TALKCOIN_QT_SIGNVERIFYMESSAGEDIALOG_H
 
 #include <QDialog>
 
@@ -50,4 +50,4 @@ private Q_SLOTS:
     void on_clearButton_VM_clicked();
 };
 
-#endif // BITCOINTALKCOIN_QT_SIGNVERIFYMESSAGEDIALOG_H
+#endif // TALKCOIN_QT_SIGNVERIFYMESSAGEDIALOG_H

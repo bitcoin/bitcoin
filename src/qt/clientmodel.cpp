@@ -1,9 +1,10 @@
-// Copyright (c) 2011-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2011-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <qt/clientmodel.h>
 
+#include <auxiliaryblockrequest.h>
 #include <qt/bantablemodel.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
@@ -180,38 +181,60 @@ void ClientModel::updateBanlist()
     banTableModel->refresh();
 }
 
+bool ClientModel::hasAuxiliaryBlockRequest(int64_t* createdRet, size_t* requestedBlocksRet, size_t* loadedBlocksRet, size_t* processedBlocksRet)
+{
+    std::shared_ptr<CAuxiliaryBlockRequest> blockRequest = CAuxiliaryBlockRequest::GetCurrentRequest();
+    if (!blockRequest)
+        return false;
+
+    if (createdRet)
+        *createdRet = blockRequest->created;
+    if (requestedBlocksRet)
+        *requestedBlocksRet = blockRequest->vBlocksToDownload.size();
+    if (loadedBlocksRet)
+        *loadedBlocksRet = blockRequest->amountOfBlocksLoaded();
+    if (processedBlocksRet)
+        *processedBlocksRet = blockRequest->processedUpToSize;
+    return true;
+}
+
 // Handlers for core signals
 static void ShowProgress(ClientModel *clientmodel, const std::string &title, int nProgress)
 {
     // emits signal "showProgress"
-    QMetaObject::invokeMethod(clientmodel, "showProgress", Qt::QueuedConnection,
+    bool invoked = QMetaObject::invokeMethod(clientmodel, "showProgress", Qt::QueuedConnection,
                               Q_ARG(QString, QString::fromStdString(title)),
                               Q_ARG(int, nProgress));
+    assert(invoked);
 }
 
 static void NotifyNumConnectionsChanged(ClientModel *clientmodel, int newNumConnections)
 {
     // Too noisy: qDebug() << "NotifyNumConnectionsChanged: " + QString::number(newNumConnections);
-    QMetaObject::invokeMethod(clientmodel, "updateNumConnections", Qt::QueuedConnection,
+    bool invoked = QMetaObject::invokeMethod(clientmodel, "updateNumConnections", Qt::QueuedConnection,
                               Q_ARG(int, newNumConnections));
+    assert(invoked);
 }
 
 static void NotifyNetworkActiveChanged(ClientModel *clientmodel, bool networkActive)
 {
-    QMetaObject::invokeMethod(clientmodel, "updateNetworkActive", Qt::QueuedConnection,
+    bool invoked = QMetaObject::invokeMethod(clientmodel, "updateNetworkActive", Qt::QueuedConnection,
                               Q_ARG(bool, networkActive));
+    assert(invoked);
 }
 
 static void NotifyAlertChanged(ClientModel *clientmodel)
 {
     qDebug() << "NotifyAlertChanged";
-    QMetaObject::invokeMethod(clientmodel, "updateAlert", Qt::QueuedConnection);
+    bool invoked = QMetaObject::invokeMethod(clientmodel, "updateAlert", Qt::QueuedConnection);
+    assert(invoked);
 }
 
 static void BannedListChanged(ClientModel *clientmodel)
 {
     qDebug() << QString("%1: Requesting update for peer banlist").arg(__func__);
-    QMetaObject::invokeMethod(clientmodel, "updateBanlist", Qt::QueuedConnection);
+    bool invoked = QMetaObject::invokeMethod(clientmodel, "updateBanlist", Qt::QueuedConnection);
+    assert(invoked);
 }
 
 static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, int height, int64_t blockTime, double verificationProgress, bool fHeader)
@@ -233,13 +256,23 @@ static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, int heig
     // if we are in-sync or if we notify a header update, update the UI regardless of last update time
     if (fHeader || !initialSync || now - nLastUpdateNotification > MODEL_UPDATE_DELAY) {
         //pass an async signal to the UI thread
-        QMetaObject::invokeMethod(clientmodel, "numBlocksChanged", Qt::QueuedConnection,
+        bool invoked = QMetaObject::invokeMethod(clientmodel, "numBlocksChanged", Qt::QueuedConnection,
                                   Q_ARG(int, height),
                                   Q_ARG(QDateTime, QDateTime::fromTime_t(blockTime)),
                                   Q_ARG(double, verificationProgress),
                                   Q_ARG(bool, fHeader));
+        assert(invoked);
         nLastUpdateNotification = now;
     }
+}
+
+static void AuxiliaryBlockRequestProgressUpdate(ClientModel *clientmodel, int64_t created, size_t blocksRequested, size_t blocksLoaded, size_t blocksProcessed)
+{
+    QMetaObject::invokeMethod(clientmodel, "auxiliaryBlockRequestProgressChanged", Qt::QueuedConnection,
+                              Q_ARG(QDateTime, QDateTime::fromTime_t(created)),
+                              Q_ARG(int, (int)blocksRequested),
+                              Q_ARG(int, (int)blocksLoaded),
+                              Q_ARG(int, (int)blocksProcessed));
 }
 
 void ClientModel::subscribeToCoreSignals()
@@ -252,6 +285,7 @@ void ClientModel::subscribeToCoreSignals()
     m_handler_banned_list_changed = m_node.handleBannedListChanged(std::bind(BannedListChanged, this));
     m_handler_notify_block_tip = m_node.handleNotifyBlockTip(std::bind(BlockTipChanged, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, false));
     m_handler_notify_header_tip = m_node.handleNotifyHeaderTip(std::bind(BlockTipChanged, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, true));
+    m_handler_auxiliary_block_request_progress = m_node.handleAuxiliaryBlockRequestProgress(std::bind(AuxiliaryBlockRequestProgressUpdate, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
 }
 
 void ClientModel::unsubscribeFromCoreSignals()
@@ -264,6 +298,7 @@ void ClientModel::unsubscribeFromCoreSignals()
     m_handler_banned_list_changed->disconnect();
     m_handler_notify_block_tip->disconnect();
     m_handler_notify_header_tip->disconnect();
+    m_handler_auxiliary_block_request_progress->disconnect();
 }
 
 bool ClientModel::getProxyInfo(std::string& ip_port) const

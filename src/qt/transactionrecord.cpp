@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2011-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -35,11 +35,8 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
     uint256 hash = wtx.tx->GetHash();
     std::map<std::string, std::string> mapValue = wtx.value_map;
     bool cbcs = false;
-#ifdef ENABLE_PROOF_OF_STAKE
     cbcs = wtx.is_coinstake || wtx.is_coinbase;
-#else
-    cbcs = wtx.is_coinbase;
-#endif
+
     if (nNet > 0 || cbcs)
     {
         //
@@ -65,7 +62,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
                 sub.involvesWatchAddress = mine & ISMINE_WATCH_ONLY;
                 if (wtx.txout_address_is_mine[i])
                 {
-                    // Received by Bitcointalkcoin Address
+                    // Received by Talkcoin Address
                     sub.type = TransactionRecord::RecvWithAddress;
                     sub.address = EncodeDestination(wtx.txout_address[i]);
                 }
@@ -80,19 +77,15 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
                     // Generated
                     sub.type = TransactionRecord::Generated;
                 }
-
-#ifdef ENABLE_PROOF_OF_STAKE
                 if (wtx.is_coinstake)
                 {
                     // Generated
                     sub.type = TransactionRecord::Staked;
                 }
-#endif
+
                 parts.append(sub);
-#ifdef ENABLE_PROOF_OF_STAKE
                 if(wtx.is_coinstake)
                     break; // Single output for coinstake
-#endif
             }
         }
     }
@@ -145,7 +138,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
 
                 if (!boost::get<CNoDestination>(&wtx.txout_address[nOut]))
                 {
-                    // Sent to Bitcointalkcoin Address
+                    // Sent to Talkcoin Address
                     sub.type = TransactionRecord::SendToAddress;
                     sub.address = EncodeDestination(wtx.txout_address[nOut]);
                 }
@@ -181,22 +174,19 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
     return parts;
 }
 
-void TransactionRecord::updateStatus(const interfaces::WalletTxStatus& wtx, int numBlocks, int64_t adjustedTime)
+void TransactionRecord::updateStatus(const interfaces::WalletTxStatus& wtx, int numBlocks, int64_t adjustedTime, int64_t numHeaders)
 {
     // Determine transaction status
 
     // Sort order, unrecorded transactions sort to the top
-#ifdef ENABLE_PROOF_OF_STAKE
     status.sortKey = strprintf("%010d-%01d-%010u-%03d", wtx.block_height, (wtx.is_coinbase || wtx.is_coinstake) ? 1 : 0,  wtx.time_received, idx);
-#else
-    status.sortKey = strprintf("%010d-%01d-%010u-%03d",  wtx.block_height, wtx.is_coinbase ? 1 : 0, wtx.time_received,  idx);
-#endif
-
     status.countsForBalance = wtx.is_trusted && !(wtx.blocks_to_maturity > 0);
     status.depth = wtx.depth_in_main_chain;
     status.cur_num_blocks = numBlocks;
+    status.cur_num_blocks_headers_chain = numHeaders;
 
     const bool up_to_date = ((int64_t)QDateTime::currentMSecsSinceEpoch() / 1000 - adjustedTime < MAX_BLOCK_TIME_GAP);
+    status.fValidated = wtx.fValidated;
     if (up_to_date && !wtx.is_final) {
         if (wtx.lock_time < LOCKTIME_THRESHOLD) {
             status.status = TransactionStatus::OpenUntilBlock;
@@ -253,9 +243,9 @@ void TransactionRecord::updateStatus(const interfaces::WalletTxStatus& wtx, int 
     status.needsUpdate = false;
 }
 
-bool TransactionRecord::statusUpdateNeeded(int numBlocks) const
+bool TransactionRecord::statusUpdateNeeded(int numBlocks, int numHeaders) const
 {
-    return status.cur_num_blocks != numBlocks || status.needsUpdate;
+    return status.cur_num_blocks != (numBlocks || status.needsUpdate  || status.cur_num_blocks_headers_chain != numHeaders);
 }
 
 QString TransactionRecord::getTxHash() const

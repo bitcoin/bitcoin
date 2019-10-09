@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2019 The Bitcointalkcoin Core developers
+// Copyright (c) 2011-2019 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_QT_WALLETMODEL_H
-#define BITCOINTALKCOIN_QT_WALLETMODEL_H
+#ifndef TALKCOIN_QT_WALLETMODEL_H
+#define TALKCOIN_QT_WALLETMODEL_H
 
 #include <amount.h>
 #include <key.h>
@@ -11,7 +11,7 @@
 #include <script/standard.h>
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcointalkcoin-config.h>
+#include <config/talkcoin-config.h>
 #endif
 
 #ifdef ENABLE_BIP70
@@ -85,7 +85,7 @@ public:
     static const int CURRENT_VERSION = 1;
     int nVersion;
 
-    ADD_SERIALIZE_METHODS;
+    ADD_SERIALIZE_METHODS
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
@@ -121,7 +121,7 @@ public:
     }
 };
 
-/** Interface to Bitcointalkcoin wallet from Qt view code. */
+/** Interface to Talkcoin wallet from Qt view code. */
 class WalletModel : public QObject
 {
     Q_OBJECT
@@ -157,7 +157,7 @@ public:
     RecentRequestsTableModel *getRecentRequestsTableModel();
 
     EncryptionStatus getEncryptionStatus() const;
-    void getScriptForMining(std::shared_ptr<CReserveScript> &script);
+    void getScriptForMining(std::shared_ptr<CTxDestination> &script);
 
 
     // Check address for validity
@@ -186,10 +186,9 @@ public:
     // Passphrase only needed when unlocking
     bool setWalletLocked(bool locked, const SecureString &passPhrase=SecureString());
     bool changePassphrase(const SecureString &oldPass, const SecureString &newPass);
-#ifdef ENABLE_PROOF_OF_STAKE
+
     bool getWalletUnlockStakingOnly();
     void setWalletUnlockStakingOnly(bool unlock);
-#endif
 
     // RAI object for unlocking wallet, returned by requestUnlock()
     class UnlockContext
@@ -226,6 +225,10 @@ public:
     bool bumpFee(uint256 hash, uint256& new_hash);
 
     static bool isWalletEnabled();
+
+    bool spvEnabled() const;
+    void setSpvEnabled(bool state);
+
     bool privateKeysDisabled() const;
     bool canGetAddresses() const;
 
@@ -248,6 +251,7 @@ private:
     std::unique_ptr<interfaces::Handler> m_handler_show_progress;
     std::unique_ptr<interfaces::Handler> m_handler_watch_only_changed;
     std::unique_ptr<interfaces::Handler> m_handler_can_get_addrs_changed;
+    std::unique_ptr<interfaces::Handler> m_handler_spv_mode_changed;
     interfaces::Node& m_node;
 
     bool fHaveWatchOnly;
@@ -265,6 +269,7 @@ private:
     interfaces::WalletBalances m_cached_balances;
     EncryptionStatus cachedEncryptionStatus;
     int cachedNumBlocks;
+    int cachedNumBlocksHeadersChain;
 
     QTimer *pollTimer;
 
@@ -300,6 +305,9 @@ Q_SIGNALS:
     void notifyWatchonlyChanged(bool fHaveWatchonly);
 
     // Signal that wallet is about to be removed
+    void spvEnabledStatusChanged(int status);
+
+    // Signal that wallet is about to be removed
     void unload();
 
     // Notify that there are now keys in the keypool
@@ -316,11 +324,12 @@ public Q_SLOTS:
     void updateWatchOnlyFlag(bool fHaveWatchonly);
     /* Current, immature or unconfirmed balance might have changed - emit 'balanceChanged' if so */
     void pollBalanceChanged();
+    /* Update the SPV Mode */
+    void updateSPVMode(bool state);
 
-#ifdef ENABLE_PROOF_OF_STAKE
     /* Update stake weight when changed*/
     void checkStakeWeightChanged();
-#endif
+
 };
 
-#endif // BITCOINTALKCOIN_QT_WALLETMODEL_H
+#endif // TALKCOIN_QT_WALLETMODEL_H
