@@ -1,98 +1,98 @@
-# Copyright (c) 2013-2016 The Bitcointalkcoin Core developers
+# Copyright (c) 2013-2016 The Talkcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-bin_PROGRAMS += qt/bitcointalkcoin-qt
-EXTRA_LIBRARIES += qt/libbitcointalkcoinqt.a
+bin_PROGRAMS += qt/talkcoin-qt
+EXTRA_LIBRARIES += qt/libtalkcoinqt.a
 
-# bitcointalkcoin qt core #
+# talkcoin qt core #
 QT_TS = \
-  qt/locale/bitcointalkcoin_af.ts \
-  qt/locale/bitcointalkcoin_af_ZA.ts \
-  qt/locale/bitcointalkcoin_ar.ts \
-  qt/locale/bitcointalkcoin_be_BY.ts \
-  qt/locale/bitcointalkcoin_bg_BG.ts \
-  qt/locale/bitcointalkcoin_bg.ts \
-  qt/locale/bitcointalkcoin_ca_ES.ts \
-  qt/locale/bitcointalkcoin_ca.ts \
-  qt/locale/bitcointalkcoin_ca@valencia.ts \
-  qt/locale/bitcointalkcoin_cs.ts \
-  qt/locale/bitcointalkcoin_cy.ts \
-  qt/locale/bitcointalkcoin_da.ts \
-  qt/locale/bitcointalkcoin_de.ts \
-  qt/locale/bitcointalkcoin_el_GR.ts \
-  qt/locale/bitcointalkcoin_el.ts \
-  qt/locale/bitcointalkcoin_en_GB.ts \
-  qt/locale/bitcointalkcoin_en.ts \
-  qt/locale/bitcointalkcoin_eo.ts \
-  qt/locale/bitcointalkcoin_es_AR.ts \
-  qt/locale/bitcointalkcoin_es_CL.ts \
-  qt/locale/bitcointalkcoin_es_CO.ts \
-  qt/locale/bitcointalkcoin_es_DO.ts \
-  qt/locale/bitcointalkcoin_es_ES.ts \
-  qt/locale/bitcointalkcoin_es_MX.ts \
-  qt/locale/bitcointalkcoin_es.ts \
-  qt/locale/bitcointalkcoin_es_UY.ts \
-  qt/locale/bitcointalkcoin_es_VE.ts \
-  qt/locale/bitcointalkcoin_et_EE.ts \
-  qt/locale/bitcointalkcoin_et.ts \
-  qt/locale/bitcointalkcoin_eu_ES.ts \
-  qt/locale/bitcointalkcoin_fa_IR.ts \
-  qt/locale/bitcointalkcoin_fa.ts \
-  qt/locale/bitcointalkcoin_fi.ts \
-  qt/locale/bitcointalkcoin_fr_CA.ts \
-  qt/locale/bitcointalkcoin_fr_FR.ts \
-  qt/locale/bitcointalkcoin_fr.ts \
-  qt/locale/bitcointalkcoin_gl.ts \
-  qt/locale/bitcointalkcoin_he.ts \
-  qt/locale/bitcointalkcoin_hi_IN.ts \
-  qt/locale/bitcointalkcoin_hr.ts \
-  qt/locale/bitcointalkcoin_hu.ts \
-  qt/locale/bitcointalkcoin_id_ID.ts \
-  qt/locale/bitcointalkcoin_it_IT.ts \
-  qt/locale/bitcointalkcoin_it.ts \
-  qt/locale/bitcointalkcoin_ja.ts \
-  qt/locale/bitcointalkcoin_ka.ts \
-  qt/locale/bitcointalkcoin_kk_KZ.ts \
-  qt/locale/bitcointalkcoin_ko_KR.ts \
-  qt/locale/bitcointalkcoin_ku_IQ.ts \
-  qt/locale/bitcointalkcoin_ky.ts \
-  qt/locale/bitcointalkcoin_la.ts \
-  qt/locale/bitcointalkcoin_lt.ts \
-  qt/locale/bitcointalkcoin_lv_LV.ts \
-  qt/locale/bitcointalkcoin_mk_MK.ts \
-  qt/locale/bitcointalkcoin_mn.ts \
-  qt/locale/bitcointalkcoin_ms_MY.ts \
-  qt/locale/bitcointalkcoin_nb.ts \
-  qt/locale/bitcointalkcoin_ne.ts \
-  qt/locale/bitcointalkcoin_nl.ts \
-  qt/locale/bitcointalkcoin_pam.ts \
-  qt/locale/bitcointalkcoin_pl.ts \
-  qt/locale/bitcointalkcoin_pt_BR.ts \
-  qt/locale/bitcointalkcoin_pt_PT.ts \
-  qt/locale/bitcointalkcoin_ro_RO.ts \
-  qt/locale/bitcointalkcoin_ro.ts \
-  qt/locale/bitcointalkcoin_ru_RU.ts \
-  qt/locale/bitcointalkcoin_ru.ts \
-  qt/locale/bitcointalkcoin_sk.ts \
-  qt/locale/bitcointalkcoin_sl_SI.ts \
-  qt/locale/bitcointalkcoin_sq.ts \
-  qt/locale/bitcointalkcoin_sr@latin.ts \
-  qt/locale/bitcointalkcoin_sr.ts \
-  qt/locale/bitcointalkcoin_sv.ts \
-  qt/locale/bitcointalkcoin_ta.ts \
-  qt/locale/bitcointalkcoin_th_TH.ts \
-  qt/locale/bitcointalkcoin_tr_TR.ts \
-  qt/locale/bitcointalkcoin_tr.ts \
-  qt/locale/bitcointalkcoin_uk.ts \
-  qt/locale/bitcointalkcoin_ur_PK.ts \
-  qt/locale/bitcointalkcoin_uz@Cyrl.ts \
-  qt/locale/bitcointalkcoin_vi.ts \
-  qt/locale/bitcointalkcoin_vi_VN.ts \
-  qt/locale/bitcointalkcoin_zh_CN.ts \
-  qt/locale/bitcointalkcoin_zh_HK.ts \
-  qt/locale/bitcointalkcoin_zh.ts \
-  qt/locale/bitcointalkcoin_zh_TW.ts
+  qt/locale/talkcoin_af.ts \
+  qt/locale/talkcoin_af_ZA.ts \
+  qt/locale/talkcoin_ar.ts \
+  qt/locale/talkcoin_be_BY.ts \
+  qt/locale/talkcoin_bg_BG.ts \
+  qt/locale/talkcoin_bg.ts \
+  qt/locale/talkcoin_ca_ES.ts \
+  qt/locale/talkcoin_ca.ts \
+  qt/locale/talkcoin_ca@valencia.ts \
+  qt/locale/talkcoin_cs.ts \
+  qt/locale/talkcoin_cy.ts \
+  qt/locale/talkcoin_da.ts \
+  qt/locale/talkcoin_de.ts \
+  qt/locale/talkcoin_el_GR.ts \
+  qt/locale/talkcoin_el.ts \
+  qt/locale/talkcoin_en_GB.ts \
+  qt/locale/talkcoin_en.ts \
+  qt/locale/talkcoin_eo.ts \
+  qt/locale/talkcoin_es_AR.ts \
+  qt/locale/talkcoin_es_CL.ts \
+  qt/locale/talkcoin_es_CO.ts \
+  qt/locale/talkcoin_es_DO.ts \
+  qt/locale/talkcoin_es_ES.ts \
+  qt/locale/talkcoin_es_MX.ts \
+  qt/locale/talkcoin_es.ts \
+  qt/locale/talkcoin_es_UY.ts \
+  qt/locale/talkcoin_es_VE.ts \
+  qt/locale/talkcoin_et_EE.ts \
+  qt/locale/talkcoin_et.ts \
+  qt/locale/talkcoin_eu_ES.ts \
+  qt/locale/talkcoin_fa_IR.ts \
+  qt/locale/talkcoin_fa.ts \
+  qt/locale/talkcoin_fi.ts \
+  qt/locale/talkcoin_fr_CA.ts \
+  qt/locale/talkcoin_fr_FR.ts \
+  qt/locale/talkcoin_fr.ts \
+  qt/locale/talkcoin_gl.ts \
+  qt/locale/talkcoin_he.ts \
+  qt/locale/talkcoin_hi_IN.ts \
+  qt/locale/talkcoin_hr.ts \
+  qt/locale/talkcoin_hu.ts \
+  qt/locale/talkcoin_id_ID.ts \
+  qt/locale/talkcoin_it_IT.ts \
+  qt/locale/talkcoin_it.ts \
+  qt/locale/talkcoin_ja.ts \
+  qt/locale/talkcoin_ka.ts \
+  qt/locale/talkcoin_kk_KZ.ts \
+  qt/locale/talkcoin_ko_KR.ts \
+  qt/locale/talkcoin_ku_IQ.ts \
+  qt/locale/talkcoin_ky.ts \
+  qt/locale/talkcoin_la.ts \
+  qt/locale/talkcoin_lt.ts \
+  qt/locale/talkcoin_lv_LV.ts \
+  qt/locale/talkcoin_mk_MK.ts \
+  qt/locale/talkcoin_mn.ts \
+  qt/locale/talkcoin_ms_MY.ts \
+  qt/locale/talkcoin_nb.ts \
+  qt/locale/talkcoin_ne.ts \
+  qt/locale/talkcoin_nl.ts \
+  qt/locale/talkcoin_pam.ts \
+  qt/locale/talkcoin_pl.ts \
+  qt/locale/talkcoin_pt_BR.ts \
+  qt/locale/talkcoin_pt_PT.ts \
+  qt/locale/talkcoin_ro_RO.ts \
+  qt/locale/talkcoin_ro.ts \
+  qt/locale/talkcoin_ru_RU.ts \
+  qt/locale/talkcoin_ru.ts \
+  qt/locale/talkcoin_sk.ts \
+  qt/locale/talkcoin_sl_SI.ts \
+  qt/locale/talkcoin_sq.ts \
+  qt/locale/talkcoin_sr@latin.ts \
+  qt/locale/talkcoin_sr.ts \
+  qt/locale/talkcoin_sv.ts \
+  qt/locale/talkcoin_ta.ts \
+  qt/locale/talkcoin_th_TH.ts \
+  qt/locale/talkcoin_tr_TR.ts \
+  qt/locale/talkcoin_tr.ts \
+  qt/locale/talkcoin_uk.ts \
+  qt/locale/talkcoin_ur_PK.ts \
+  qt/locale/talkcoin_uz@Cyrl.ts \
+  qt/locale/talkcoin_vi.ts \
+  qt/locale/talkcoin_vi_VN.ts \
+  qt/locale/talkcoin_zh_CN.ts \
+  qt/locale/talkcoin_zh_HK.ts \
+  qt/locale/talkcoin_zh.ts \
+  qt/locale/talkcoin_zh_TW.ts
 
 QT_FORMS_UI = \
   qt/forms/addressbookpage.ui \
@@ -121,11 +121,11 @@ QT_MOC_CPP = \
   qt/moc_addresstablemodel.cpp \
   qt/moc_askpassphrasedialog.cpp \
   qt/moc_bantablemodel.cpp \
-  qt/moc_bitcointalkcoinaddressvalidator.cpp \
-  qt/moc_bitcointalkcoinamountfield.cpp \
-  qt/moc_bitcointalkcoin.cpp \
-  qt/moc_bitcointalkcoingui.cpp \
-  qt/moc_bitcointalkcoinunits.cpp \
+  qt/moc_talkcoinaddressvalidator.cpp \
+  qt/moc_talkcoinamountfield.cpp \
+  qt/moc_talkcoin.cpp \
+  qt/moc_talkcoingui.cpp \
+  qt/moc_talkcoinunits.cpp \
   qt/moc_clientmodel.cpp \
   qt/moc_coincontroldialog.cpp \
   qt/moc_coincontroltreewidget.cpp \
@@ -169,23 +169,24 @@ QT_MOC_CPP = \
   qt/moc_sendmessagesentry.cpp \
   qt/moc_sendmessagesdialog.cpp \
   qt/moc_messagepage.cpp \
-  qt/moc_messagemodel.cpp
+  qt/moc_messagemodel.cpp \
+  qt/moc_talkcoinmobilegui.cpp
 
-BITCOINTALKCOIN_MM = \
+TALKCOIN_MM = \
   qt/macdockiconhandler.mm \
   qt/macnotificationhandler.mm \
   qt/macos_appnap.mm
 
 QT_MOC = \
-  qt/bitcointalkcoinamountfield.moc \
+  qt/talkcoinamountfield.moc \
   qt/intro.moc \
   qt/overviewpage.moc \
   qt/rpcconsole.moc
 
-QT_QRC_CPP = qt/qrc_bitcointalkcoin.cpp
-QT_QRC = qt/bitcointalkcoin.qrc
-QT_QRC_LOCALE_CPP = qt/qrc_bitcointalkcoin_locale.cpp
-QT_QRC_LOCALE = qt/bitcointalkcoin_locale.qrc
+QT_QRC_CPP = qt/qrc_talkcoin.cpp
+QT_QRC = qt/talkcoin.qrc
+QT_QRC_LOCALE_CPP = qt/qrc_talkcoin_locale.cpp
+QT_QRC_LOCALE = qt/talkcoin_locale.qrc
 
 if ENABLE_BIP70
 PROTOBUF_CC = qt/paymentrequest.pb.cc
@@ -197,16 +198,16 @@ PROTOBUF_H =
 PROTOBUF_PROTO =
 endif
 
-BITCOINTALKCOIN_QT_H = \
+TALKCOIN_QT_H = \
   qt/addressbookpage.h \
   qt/addresstablemodel.h \
   qt/askpassphrasedialog.h \
   qt/bantablemodel.h \
-  qt/bitcointalkcoinaddressvalidator.h \
-  qt/bitcointalkcoinamountfield.h \
-  qt/bitcointalkcoin.h \
-  qt/bitcointalkcoingui.h \
-  qt/bitcointalkcoinunits.h \
+  qt/talkcoinaddressvalidator.h \
+  qt/talkcoinamountfield.h \
+  qt/talkcoin.h \
+  qt/talkcoingui.h \
+  qt/talkcoinunits.h \
   qt/clientmodel.h \
   qt/coincontroldialog.h \
   qt/coincontroltreewidget.h \
@@ -258,16 +259,17 @@ BITCOINTALKCOIN_QT_H = \
   qt/sendmessagesentry.h \
   qt/sendmessagesdialog.h \
   qt/messagemodel.h \
-  qt/messagepage.h
+  qt/messagepage.h \
+  qt/talkcoinmobilegui.h
 
 RES_ICONS = \
   qt/res/icons/add.png \
   qt/res/icons/address-book.png \
   qt/res/icons/about.png \
   qt/res/icons/about_qt.png \
-  qt/res/icons/bitcointalkcoin.ico \
-  qt/res/icons/bitcointalkcoin_testnet.ico \
-  qt/res/icons/bitcointalkcoin.png \
+  qt/res/icons/talkcoin.ico \
+  qt/res/icons/talkcoin_testnet.ico \
+  qt/res/icons/talkcoin.png \
   qt/res/icons/chevron.png \
   qt/res/icons/clock1.png \
   qt/res/icons/clock2.png \
@@ -306,6 +308,8 @@ RES_ICONS = \
   qt/res/icons/receive.png \
   qt/res/icons/remove.png \
   qt/res/icons/send.png \
+  qt/res/icons/spv_disabled.png \
+  qt/res/icons/spv_enabled.png \
   qt/res/icons/synced.png \
   qt/res/icons/transaction0.png \
   qt/res/icons/transaction2.png \
@@ -322,13 +326,13 @@ RES_ICONS = \
   qt/res/icons/lock_staking.png \
   qt/res/icons/encrypt.png
 
-BITCOINTALKCOIN_QT_BASE_CPP = \
+TALKCOIN_QT_BASE_CPP = \
   qt/bantablemodel.cpp \
-  qt/bitcointalkcoin.cpp \
-  qt/bitcointalkcoinaddressvalidator.cpp \
-  qt/bitcointalkcoinamountfield.cpp \
-  qt/bitcointalkcoingui.cpp \
-  qt/bitcointalkcoinunits.cpp \
+  qt/talkcoin.cpp \
+  qt/talkcoinaddressvalidator.cpp \
+  qt/talkcoinamountfield.cpp \
+  qt/talkcoingui.cpp \
+  qt/talkcoinunits.cpp \
   qt/clientmodel.cpp \
   qt/csvmodelwriter.cpp \
   qt/guiutil.cpp \
@@ -349,9 +353,9 @@ BITCOINTALKCOIN_QT_BASE_CPP = \
   qt/messagemodel.cpp\
   qt/qvalidatedtextedit.cpp
 
-BITCOINTALKCOIN_QT_WINDOWS_CPP = qt/winshutdownmonitor.cpp
+TALKCOIN_QT_WINDOWS_CPP = qt/winshutdownmonitor.cpp
 
-BITCOINTALKCOIN_QT_WALLET_CPP = \
+TALKCOIN_QT_WALLET_CPP = \
   qt/addressbookpage.cpp \
   qt/addresstablemodel.cpp \
   qt/askpassphrasedialog.cpp \
@@ -381,19 +385,20 @@ BITCOINTALKCOIN_QT_WALLET_CPP = \
   qt/walletview.cpp \
   qt/sendmessagesentry.cpp \
   qt/sendmessagesdialog.cpp \
-  qt/messagepage.cpp
+  qt/messagepage.cpp \
+  qt/talkcoinmobilegui.cpp
 
-BITCOINTALKCOIN_QT_WALLET_BIP70_CPP = \
+TALKCOIN_QT_WALLET_BIP70_CPP = \
   qt/paymentrequestplus.cpp
 
-BITCOINTALKCOIN_QT_CPP = $(BITCOINTALKCOIN_QT_BASE_CPP)
+TALKCOIN_QT_CPP = $(TALKCOIN_QT_BASE_CPP)
 if TARGET_WINDOWS
-BITCOINTALKCOIN_QT_CPP += $(BITCOINTALKCOIN_QT_WINDOWS_CPP)
+TALKCOIN_QT_CPP += $(TALKCOIN_QT_WINDOWS_CPP)
 endif
 if ENABLE_WALLET
-BITCOINTALKCOIN_QT_CPP += $(BITCOINTALKCOIN_QT_WALLET_CPP)
+TALKCOIN_QT_CPP += $(TALKCOIN_QT_WALLET_CPP)
 if ENABLE_BIP70
-BITCOINTALKCOIN_QT_CPP += $(BITCOINTALKCOIN_QT_WALLET_BIP70_CPP)
+TALKCOIN_QT_CPP += $(TALKCOIN_QT_WALLET_BIP70_CPP)
 endif # ENABLE_BIP70
 endif # ENABLE_WALLET
 
@@ -401,22 +406,24 @@ RES_IMAGES =
 
 RES_MOVIES = $(wildcard $(srcdir)/qt/res/movies/spinner-*.png)
 
-BITCOINTALKCOIN_RC = qt/res/bitcointalkcoin-qt-res.rc
+RES_QML = $(wildcard $(srcdir)/qt/res/qml/*.qml)
 
-BITCOINTALKCOIN_QT_INCLUDES = -DQT_NO_KEYWORDS
+TALKCOIN_RC = qt/res/talkcoin-qt-res.rc
 
-qt_libbitcointalkcoinqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOINTALKCOIN_INCLUDES) $(BITCOINTALKCOIN_QT_INCLUDES) \
+TALKCOIN_QT_INCLUDES = -DQT_NO_KEYWORDS
+
+qt_libtalkcoinqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(TALKCOIN_INCLUDES) $(TALKCOIN_QT_INCLUDES) \
   $(QT_INCLUDES) $(QT_DBUS_INCLUDES) $(PROTOBUF_CFLAGS) $(QR_CFLAGS)
-qt_libbitcointalkcoinqt_a_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
-qt_libbitcointalkcoinqt_a_OBJCXXFLAGS = $(AM_OBJCXXFLAGS) $(QT_PIE_FLAGS)
+qt_libtalkcoinqt_a_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
+qt_libtalkcoinqt_a_OBJCXXFLAGS = $(AM_OBJCXXFLAGS) $(QT_PIE_FLAGS)
 
-qt_libbitcointalkcoinqt_a_SOURCES = $(BITCOINTALKCOIN_QT_CPP) $(BITCOINTALKCOIN_QT_H) $(QT_FORMS_UI) \
+qt_libtalkcoinqt_a_SOURCES = $(TALKCOIN_QT_CPP) $(TALKCOIN_QT_H) $(QT_FORMS_UI) \
   $(QT_QRC) $(QT_QRC_LOCALE) $(QT_TS) $(PROTOBUF_PROTO) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES)
 if TARGET_DARWIN
-  qt_libbitcointalkcoinqt_a_SOURCES += $(BITCOINTALKCOIN_MM)
+  qt_libtalkcoinqt_a_SOURCES += $(TALKCOIN_MM)
 endif
 
-nodist_qt_libbitcointalkcoinqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(PROTOBUF_CC) \
+nodist_qt_libtalkcoinqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(PROTOBUF_CC) \
   $(PROTOBUF_H) $(QT_QRC_CPP) $(QT_QRC_LOCALE_CPP)
 
 # forms/foo.h -> forms/ui_foo.h
@@ -425,76 +432,76 @@ QT_FORMS_H=$(join $(dir $(QT_FORMS_UI)),$(addprefix ui_, $(notdir $(QT_FORMS_UI:
 # Most files will depend on the forms and moc files as includes. Generate them
 # before anything else.
 $(QT_MOC): $(QT_FORMS_H)
-$(qt_libbitcointalkcoinqt_a_OBJECTS) $(qt_bitcointalkcoin_qt_OBJECTS) : | $(QT_MOC)
+$(qt_libtalkcoinqt_a_OBJECTS) $(qt_talkcoin_qt_OBJECTS) : | $(QT_MOC)
 
 #Generating these with a half-written protobuf header leads to wacky results.
 #This makes sure it's done.
 $(QT_MOC): $(PROTOBUF_H)
 $(QT_MOC_CPP): $(PROTOBUF_H)
 
-# bitcointalkcoin-qt binary #
-qt_bitcointalkcoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOINTALKCOIN_INCLUDES) $(BITCOINTALKCOIN_QT_INCLUDES) \
+# talkcoin-qt binary #
+qt_talkcoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(TALKCOIN_INCLUDES) $(TALKCOIN_QT_INCLUDES) \
   $(QT_INCLUDES) $(PROTOBUF_CFLAGS) $(QR_CFLAGS)
-qt_bitcointalkcoin_qt_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
+qt_talkcoin_qt_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
 
-qt_bitcointalkcoin_qt_SOURCES = qt/main.cpp
+qt_talkcoin_qt_SOURCES = qt/main.cpp
 if TARGET_WINDOWS
-  qt_bitcointalkcoin_qt_SOURCES += $(BITCOINTALKCOIN_RC)
+  qt_talkcoin_qt_SOURCES += $(TALKCOIN_RC)
 endif
-qt_bitcointalkcoin_qt_LDADD = qt/libbitcointalkcoinqt.a $(LIBBITCOINTALKCOIN_SERVER)
+qt_talkcoin_qt_LDADD = qt/libtalkcoinqt.a $(LIBTALKCOIN_SERVER)
 if ENABLE_WALLET
-qt_bitcointalkcoin_qt_LDADD += $(LIBBITCOINTALKCOIN_UTIL) $(LIBBITCOINTALKCOIN_WALLET)
+qt_talkcoin_qt_LDADD += $(LIBTALKCOIN_UTIL) $(LIBTALKCOIN_WALLET)
 endif
 if ENABLE_ZMQ
-qt_bitcointalkcoin_qt_LDADD += $(LIBBITCOINTALKCOIN_ZMQ) $(ZMQ_LIBS)
+qt_talkcoin_qt_LDADD += $(LIBTALKCOIN_ZMQ) $(ZMQ_LIBS)
 endif
-qt_bitcointalkcoin_qt_LDADD += $(LIBBITCOINTALKCOIN_CLI) $(LIBBITCOINTALKCOIN_COMMON) $(LIBBITCOINTALKCOIN_UTIL) $(LIBBITCOINTALKCOIN_CONSENSUS) $(LIBBITCOINTALKCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) \
+qt_talkcoin_qt_LDADD += $(LIBTALKCOIN_CLI) $(LIBTALKCOIN_COMMON) $(LIBTALKCOIN_UTIL) $(LIBTALKCOIN_CONSENSUS) $(LIBTALKCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) \
   $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QR_LIBS) $(PROTOBUF_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(LIBSECP256K1) \
   $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
 if ENABLE_BIP70
-qt_bitcointalkcoin_qt_LDADD += $(SSL_LIBS)
+qt_talkcoin_qt_LDADD += $(SSL_LIBS)
 else
 if TARGET_WINDOWS
-qt_bitcointalkcoin_qt_LDADD += $(SSL_LIBS)
+qt_talkcoin_qt_LDADD += $(SSL_LIBS)
 endif
 endif
-qt_bitcointalkcoin_qt_LDADD += $(CRYPTO_LIBS)
-qt_bitcointalkcoin_qt_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
-qt_bitcointalkcoin_qt_LIBTOOLFLAGS = $(AM_LIBTOOLFLAGS) --tag CXX
+qt_talkcoin_qt_LDADD += $(CRYPTO_LIBS)
+qt_talkcoin_qt_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+qt_talkcoin_qt_LIBTOOLFLAGS = $(AM_LIBTOOLFLAGS) --tag CXX
 
 #locale/foo.ts -> locale/foo.qm
 QT_QM=$(QT_TS:.ts=.qm)
 
 SECONDARY: $(QT_QM)
 
-$(srcdir)/qt/bitcointalkcoinstrings.cpp: $(libbitcointalkcoin_server_a_SOURCES) $(libbitcointalkcoin_wallet_a_SOURCES) $(libbitcointalkcoin_common_a_SOURCES) $(libbitcointalkcoin_zmq_a_SOURCES) $(libbitcointalkcoin_consensus_a_SOURCES) $(libbitcointalkcoin_util_a_SOURCES)
+$(srcdir)/qt/talkcoinstrings.cpp: $(libtalkcoin_server_a_SOURCES) $(libtalkcoin_wallet_a_SOURCES) $(libtalkcoin_common_a_SOURCES) $(libtalkcoin_zmq_a_SOURCES) $(libtalkcoin_consensus_a_SOURCES) $(libtalkcoin_util_a_SOURCES)
 	@test -n $(XGETTEXT) || echo "xgettext is required for updating translations"
 	$(AM_V_GEN) cd $(srcdir); XGETTEXT=$(XGETTEXT) PACKAGE_NAME="$(PACKAGE_NAME)" COPYRIGHT_HOLDERS="$(COPYRIGHT_HOLDERS)" COPYRIGHT_HOLDERS_SUBSTITUTION="$(COPYRIGHT_HOLDERS_SUBSTITUTION)" $(PYTHON) ../share/qt/extract_strings_qt.py $^
 
-translate: $(srcdir)/qt/bitcointalkcoinstrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(BITCOINTALKCOIN_QT_BASE_CPP) qt/bitcointalkcoin.cpp $(BITCOINTALKCOIN_QT_WINDOWS_CPP) $(BITCOINTALKCOIN_QT_WALLET_CPP) $(BITCOINTALKCOIN_QT_H) $(BITCOINTALKCOIN_MM)
+translate: $(srcdir)/qt/talkcoinstrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(TALKCOIN_QT_BASE_CPP) qt/talkcoin.cpp $(TALKCOIN_QT_WINDOWS_CPP) $(TALKCOIN_QT_WALLET_CPP) $(TALKCOIN_QT_H) $(TALKCOIN_MM)
 	@test -n $(LUPDATE) || echo "lupdate is required for updating translations"
-	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(LUPDATE) $^ -locations relative -no-obsolete -ts $(srcdir)/qt/locale/bitcointalkcoin_en.ts
+	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(LUPDATE) $^ -locations relative -no-obsolete -ts $(srcdir)/qt/locale/talkcoin_en.ts
 
 $(QT_QRC_LOCALE_CPP): $(QT_QRC_LOCALE) $(QT_QM)
 	@test -f $(RCC)
 	@cp -f $< $(@D)/temp_$(<F)
-	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name bitcointalkcoin_locale $(@D)/temp_$(<F) | \
+	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name talkcoin_locale $(@D)/temp_$(<F) | \
 	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@
 	@rm $(@D)/temp_$(<F)
 
 $(QT_QRC_CPP): $(QT_QRC) $(QT_FORMS_H) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES) $(PROTOBUF_H)
 	@test -f $(RCC)
-	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name bitcointalkcoin $< | \
+	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name talkcoin $< | \
 	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@
 
-CLEAN_QT = $(nodist_qt_libbitcointalkcoinqt_a_SOURCES) $(QT_QM) $(QT_FORMS_H) qt/*.gcda qt/*.gcno qt/temp_bitcointalkcoin_locale.qrc
+CLEAN_QT = $(nodist_qt_libtalkcoinqt_a_SOURCES) $(QT_QM) $(QT_FORMS_H) qt/*.gcda qt/*.gcno qt/temp_talkcoin_locale.qrc
 
 CLEANFILES += $(CLEAN_QT)
 
-bitcointalkcoin_qt_clean: FORCE
-	rm -f $(CLEAN_QT) $(qt_libbitcointalkcoinqt_a_OBJECTS) $(qt_bitcointalkcoin_qt_OBJECTS) qt/bitcointalkcoin-qt$(EXEEXT) $(LIBBITCOINTALKCOINTALKCOINQT)
+talkcoin_qt_clean: FORCE
+	rm -f $(CLEAN_QT) $(qt_libtalkcoinqt_a_OBJECTS) $(qt_talkcoin_qt_OBJECTS) qt/talkcoin-qt$(EXEEXT) $(LIBTALKCOINTALKCOINQT)
 
-bitcointalkcoin_qt : qt/bitcointalkcoin-qt$(EXEEXT)
+talkcoin_qt : qt/talkcoin-qt$(EXEEXT)
 
 ui_%.h: %.ui
 	@test -f $(UIC)

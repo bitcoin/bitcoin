@@ -1,9 +1,9 @@
-# Copyright (c) 2013-2016 The Bitcointalkcoin Core developers
+# Copyright (c) 2013-2016 The Talkcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-bin_PROGRAMS += qt/test/test_bitcointalkcoin-qt
-TESTS += qt/test/test_bitcointalkcoin-qt
+bin_PROGRAMS += qt/test/test_talkcoin-qt
+TESTS += qt/test/test_talkcoin-qt
 
 TEST_QT_MOC_CPP = \
   qt/test/moc_apptests.cpp \
@@ -32,16 +32,16 @@ TEST_QT_H = \
   qt/test/paymentservertests.h \
   qt/test/wallettests.h
 
-TEST_BITCOINTALKCOIN_CPP = \
+TEST_TALKCOIN_CPP = \
   test/setup_common.cpp
 
-TEST_BITCOINTALKCOIN_H = \
+TEST_TALKCOIN_H = \
   test/setup_common.h
 
-qt_test_test_bitcointalkcoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOINTALKCOIN_INCLUDES) $(BITCOINTALKCOIN_QT_INCLUDES) \
+qt_test_test_talkcoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(TALKCOIN_INCLUDES) $(TALKCOIN_QT_INCLUDES) \
   $(QT_INCLUDES) $(QT_TEST_INCLUDES) $(PROTOBUF_CFLAGS)
 
-qt_test_test_bitcointalkcoin_qt_SOURCES = \
+qt_test_test_talkcoin_qt_SOURCES = \
   qt/test/apptests.cpp \
   qt/test/compattests.cpp \
   qt/test/rpcnestedtests.cpp \
@@ -49,43 +49,43 @@ qt_test_test_bitcointalkcoin_qt_SOURCES = \
   qt/test/uritests.cpp \
   qt/test/util.cpp \
   $(TEST_QT_H) \
-  $(TEST_BITCOINTALKCOIN_CPP) \
-  $(TEST_BITCOINTALKCOIN_H)
+  $(TEST_TALKCOIN_CPP) \
+  $(TEST_TALKCOIN_H)
 if ENABLE_WALLET
-qt_test_test_bitcointalkcoin_qt_SOURCES += \
+qt_test_test_talkcoin_qt_SOURCES += \
   qt/test/addressbooktests.cpp \
   qt/test/wallettests.cpp \
   wallet/test/wallet_test_fixture.cpp
 if ENABLE_BIP70
-qt_test_test_bitcointalkcoin_qt_SOURCES += \
+qt_test_test_talkcoin_qt_SOURCES += \
   qt/test/paymentservertests.cpp
 endif # ENABLE_BIP70
 endif # ENABLE_WALLET
 
-nodist_qt_test_test_bitcointalkcoin_qt_SOURCES = $(TEST_QT_MOC_CPP)
+nodist_qt_test_test_talkcoin_qt_SOURCES = $(TEST_QT_MOC_CPP)
 
-qt_test_test_bitcointalkcoin_qt_LDADD = $(LIBBITCOINTALKCOINQT) $(LIBBITCOINTALKCOIN_SERVER)
+qt_test_test_talkcoin_qt_LDADD = $(LIBTALKCOINQT) $(LIBTALKCOIN_SERVER)
 if ENABLE_WALLET
-qt_test_test_bitcointalkcoin_qt_LDADD += $(LIBBITCOINTALKCOIN_UTIL) $(LIBBITCOINTALKCOIN_WALLET)
+qt_test_test_talkcoin_qt_LDADD += $(LIBTALKCOIN_UTIL) $(LIBTALKCOIN_WALLET)
 endif
 if ENABLE_ZMQ
-qt_test_test_bitcointalkcoin_qt_LDADD += $(LIBBITCOINTALKCOIN_ZMQ) $(ZMQ_LIBS)
+qt_test_test_talkcoin_qt_LDADD += $(LIBTALKCOIN_ZMQ) $(ZMQ_LIBS)
 endif
-qt_test_test_bitcointalkcoin_qt_LDADD += $(LIBBITCOINTALKCOIN_CLI) $(LIBBITCOINTALKCOIN_COMMON) $(LIBBITCOINTALKCOIN_UTIL) $(LIBBITCOINTALKCOIN_CONSENSUS) $(LIBBITCOINTALKCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) \
+qt_test_test_talkcoin_qt_LDADD += $(LIBTALKCOIN_CLI) $(LIBTALKCOIN_COMMON) $(LIBTALKCOIN_UTIL) $(LIBTALKCOIN_CONSENSUS) $(LIBTALKCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) \
   $(LIBLEVELDB_SSE42) $(LIBMEMENV) $(BOOST_LIBS) $(QT_DBUS_LIBS) $(QT_TEST_LIBS) $(QT_LIBS) \
   $(QR_LIBS) $(PROTOBUF_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(LIBSECP256K1) \
   $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
-qt_test_test_bitcointalkcoin_qt_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
-qt_test_test_bitcointalkcoin_qt_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
+qt_test_test_talkcoin_qt_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+qt_test_test_talkcoin_qt_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
 
-CLEAN_BITCOINTALKCOIN_QT_TEST = $(TEST_QT_MOC_CPP) qt/test/*.gcda qt/test/*.gcno
+CLEAN_TALKCOIN_QT_TEST = $(TEST_QT_MOC_CPP) qt/test/*.gcda qt/test/*.gcno
 
-CLEANFILES += $(CLEAN_BITCOINTALKCOIN_QT_TEST)
+CLEANFILES += $(CLEAN_TALKCOIN_QT_TEST)
 
-test_bitcointalkcoin_qt : qt/test/test_bitcointalkcoin-qt$(EXEEXT)
+test_talkcoin_qt : qt/test/test_talkcoin-qt$(EXEEXT)
 
-test_bitcointalkcoin_qt_check : qt/test/test_bitcointalkcoin-qt$(EXEEXT) FORCE
+test_talkcoin_qt_check : qt/test/test_talkcoin-qt$(EXEEXT) FORCE
 	$(MAKE) check-TESTS TESTS=$^
 
-test_bitcointalkcoin_qt_clean: FORCE
-	rm -f $(CLEAN_BITCOINTALKCOIN_QT_TEST) $(qt_test_test_bitcointalkcoin_qt_OBJECTS)
+test_talkcoin_qt_clean: FORCE
+	rm -f $(CLEAN_TALKCOIN_QT_TEST) $(qt_test_test_talkcoin_qt_OBJECTS)
