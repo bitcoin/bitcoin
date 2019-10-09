@@ -1,4 +1,5 @@
 #include <momentum.h>
+#include <uint256.h>
 
 #include <iostream>
 #include <openssl/sha.h>

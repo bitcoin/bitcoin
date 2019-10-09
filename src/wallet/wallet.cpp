@@ -3474,7 +3474,6 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
             CTxOut change_prototype_txout(0, scriptChange);
             coin_selection_params.change_output_size = GetSerializeSize(change_prototype_txout, SER_DISK, 0);
 
-
             CFeeRate discard_rate = GetDiscardRate(*this);
 
             // Get the fee rate to use effective values in coin selection

@@ -906,7 +906,7 @@ bool CheckHeaderPoW(const CBlockHeader& block, const Consensus::Params& consensu
     return CheckProofOfWork(block.GetHash(), block.nBits, consensusParams);
 }
 
-bool CheckHeaderPoS(const CBlockHeader& block, const Consensus::Params& consensusParams)
+bool CheckHeaderPoS(const CBlockHeader& block, const Consensus::Params& consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     // Check for proof of stake block header
     // Get prev block index
@@ -923,7 +923,7 @@ bool CheckHeaderPoS(const CBlockHeader& block, const Consensus::Params& consensu
     return CheckKernel(block.nBits, block.StakeTime(), block.prevoutStake, *pcoinsTip);
 }
 
-bool CheckHeaderProof(const CBlockHeader& block, const Consensus::Params& consensusParams){
+bool CheckHeaderProof(const CBlockHeader& block, const Consensus::Params& consensusParams)EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
     if(block.IsProofOfWork()){
         return CheckHeaderPoW(block, consensusParams);
     }
@@ -3170,7 +3170,7 @@ bool CheckFirstCoinstakeOutput(const CBlock& block)
 
 #ifdef ENABLE_WALLET
 // novacoin: attempt to generate suitable proof-of-stake
-bool SignBlock(std::shared_ptr<CBlock> pblock, CWallet& wallet, const CAmount& nTotalFees, uint32_t nTime)
+bool SignBlock(std::shared_ptr<CBlock> pblock, CWallet& wallet, const CAmount& nTotalFees, uint32_t nTime) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     // if we are trying to sign
     //    something except proof-of-stake block template
@@ -3275,7 +3275,7 @@ bool CheckBlockSignature(const CBlock& block)
 }
 
 
-static bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true, bool fCheckPOS = true)
+static bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true, bool fCheckPOS = true) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     // Check proof of work matches claimed amount
     if (fCheckPOW && block.IsProofOfWork() && !CheckHeaderPoW(block, consensusParams))

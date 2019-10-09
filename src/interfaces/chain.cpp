@@ -109,7 +109,7 @@ class LockImpl : public Chain::Lock, public UniqueLock<CCriticalSection>
 		}
         return stakeAddress;
     }
-    bool startStake(bool fStake, CWallet *pwallet, boost::thread_group*& stakeThread){
+    bool startStake(bool fStake, CWallet *pwallet, boost::thread_group*& stakeThread)override{
 		
 		::Stake(fStake, pwallet, stakeThread);
 		return true;
@@ -123,14 +123,14 @@ class LockImpl : public Chain::Lock, public UniqueLock<CCriticalSection>
 	}
 #endif
 #ifdef ENABLE_SECURE_MESSAGING
-    bool smsgStart(){
+    bool smsgStart() override{
         SecureMsgStart(true, true);
         return true;
     }
-    void secureMsgWalletUnlocked(){
+    void secureMsgWalletUnlocked()override{
 		SecureMsgWalletUnlocked();
 	}
-    void secureMsgWalletKeyChanged(std::string sAddress, std::string sLabel, ChangeType mode){
+    void secureMsgWalletKeyChanged(std::string sAddress, std::string sLabel, ChangeType mode) override{
 		SecureMsgWalletKeyChanged(sAddress, sLabel, mode);
 	}
 #endif

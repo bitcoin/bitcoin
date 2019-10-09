@@ -29,7 +29,6 @@ static const bool DEFAULT_GENERATE = true;
 static const int DEFAULT_GENERATE_THREADS = 1;
 
 static const bool DEFAULT_PRINTPRIORITY = false;
-#ifdef ENABLE_PROOF_OF_STAKE
 static const bool DEFAULT_STAKE = true;
 
 static const bool DEFAULT_STAKE_CACHE = true;
@@ -38,7 +37,7 @@ static const bool DEFAULT_STAKE_CACHE = true;
 //Look ahead up to 3 "timeslots" in the future, 48 seconds
 //Reduce this to reduce computational waste for stakers, increase this to increase the amount of time available to construct full blocks
 static const int32_t MAX_STAKE_LOOKAHEAD = 16 * 3;
-#endif
+
 
 struct CBlockTemplate
 {
@@ -174,14 +173,9 @@ public:
     explicit BlockAssembler(const CChainParams& params);
     BlockAssembler(const CChainParams& params, const Options& options);
 
-#ifdef ENABLE_PROOF_OF_STAKE
     /** Construct a new block template with coinbase to scriptPubKeyIn */
     std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn, bool fProofOfStake=false);
     std::unique_ptr<CBlockTemplate> CreateEmptyBlock(const CScript& scriptPubKeyIn, bool fMineWitnessTx=true, bool fProofOfStake=false, int64_t* pTotalFees = 0, int32_t nTime=0);
-#else
-    /** Construct a new block template with coinbase to scriptPubKeyIn */
-    std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn);
-#endif
 
     static Optional<int64_t> m_last_block_num_txs;
     static Optional<int64_t> m_last_block_weight;
@@ -230,5 +224,6 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
 std::string convertAddress(const char address[], char newVersionByte);
 extern double dHashesPerMin;
 extern int64_t nHPSTimerStart;
+bool CheckStake(const std::shared_ptr<const CBlock> pblock, CWallet& wallet) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 #endif // BITCOINTALKCOIN_MINER_H
