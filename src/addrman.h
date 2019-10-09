@@ -1,10 +1,10 @@
 // Copyright (c) 2012 Pieter Wuille
-// Copyright (c) 2012-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2012-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_ADDRMAN_H
-#define BITCOINTALKCOIN_ADDRMAN_H
+#ifndef TALKCOIN_ADDRMAN_H
+#define TALKCOIN_ADDRMAN_H
 
 #include <netaddress.h>
 #include <protocol.h>
@@ -623,4 +623,4 @@ public:
 
 };
 
-#endif // BITCOINTALKCOIN_ADDRMAN_H
+#endif // TALKCOIN_ADDRMAN_H

@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2009-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_ADDRDB_H
-#define BITCOINTALKCOIN_ADDRDB_H
+#ifndef TALKCOIN_ADDRDB_H
+#define TALKCOIN_ADDRDB_H
 
 #include <fs.h>
 #include <serialize.h>
@@ -104,4 +104,4 @@ public:
     bool Read(banmap_t& banSet);
 };
 
-#endif // BITCOINTALKCOIN_ADDRDB_H
+#endif // TALKCOIN_ADDRDB_H
