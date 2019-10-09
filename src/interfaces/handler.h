@@ -1,9 +1,9 @@
-// Copyright (c) 2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_INTERFACES_HANDLER_H
-#define BITCOINTALKCOIN_INTERFACES_HANDLER_H
+#ifndef TALKCOIN_INTERFACES_HANDLER_H
+#define TALKCOIN_INTERFACES_HANDLER_H
 
 #include <memory>
 
@@ -32,4 +32,4 @@ std::unique_ptr<Handler> MakeHandler(boost::signals2::connection connection);
 
 } // namespace interfaces
 
-#endif // BITCOINTALKCOIN_INTERFACES_HANDLER_H
+#endif // TALKCOIN_INTERFACES_HANDLER_H

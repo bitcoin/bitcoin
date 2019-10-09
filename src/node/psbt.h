@@ -1,9 +1,9 @@
-// Copyright (c) 2009-2019 The Bitcointalkcoin Core developers
+// Copyright (c) 2009-2019 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_NODE_PSBT_H
-#define BITCOINTALKCOIN_NODE_PSBT_H
+#ifndef TALKCOIN_NODE_PSBT_H
+#define TALKCOIN_NODE_PSBT_H
 
 #include <psbt.h>
 
@@ -40,4 +40,4 @@ struct PSBTAnalysis {
  */
 PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx);
 
-#endif // BITCOINTALKCOIN_NODE_PSBT_H
+#endif // TALKCOIN_NODE_PSBT_H

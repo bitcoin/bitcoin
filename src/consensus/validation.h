@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2009-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_CONSENSUS_VALIDATION_H
-#define BITCOINTALKCOIN_CONSENSUS_VALIDATION_H
+#ifndef TALKCOIN_CONSENSUS_VALIDATION_H
+#define TALKCOIN_CONSENSUS_VALIDATION_H
 
 #include <string>
 #include <version.h>
@@ -159,4 +159,4 @@ static inline int64_t GetTransactionInputWeight(const CTxIn& txin)
     return ::GetSerializeSize(txin, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * (WITNESS_SCALE_FACTOR - 1) + ::GetSerializeSize(txin, PROTOCOL_VERSION) + ::GetSerializeSize(txin.scriptWitness.stack, PROTOCOL_VERSION);
 }
 
-#endif // BITCOINTALKCOIN_CONSENSUS_VALIDATION_H
+#endif // TALKCOIN_CONSENSUS_VALIDATION_H

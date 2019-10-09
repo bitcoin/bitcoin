@@ -1,4 +1,4 @@
-// Copyright (c) 2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -32,7 +32,7 @@
 #include <warnings.h>
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcointalkcoin-config.h>
+#include <config/talkcoin-config.h>
 #endif
 
 #include <atomic>
@@ -54,11 +54,13 @@ class NodeImpl : public Node
 {
 public:
     NodeImpl() { m_interfaces.chain = MakeChain(); }
+    void initError(const std::string& message) override { InitError(message); }
     bool parseParameters(int argc, const char* const argv[], std::string& error) override
     {
         return gArgs.ParseParameters(argc, argv, error);
     }
     bool readConfigFiles(std::string& error) override { return gArgs.ReadConfigFiles(error, true); }
+    void forceSetArg(const std::string& arg, const std::string& value) override { gArgs.ForceSetArg(arg, value); }
     bool softSetArg(const std::string& arg, const std::string& value) override { return gArgs.SoftSetArg(arg, value); }
     bool softSetBoolArg(const std::string& arg, bool value) override { return gArgs.SoftSetBoolArg(arg, value); }
     void selectParams(const std::string& network) override { SelectParams(network); }
@@ -179,6 +181,11 @@ public:
         LOCK(::cs_main);
         return ::ChainActive().Height();
     }
+    int getNumHeaders() override
+    {
+        LOCK(::cs_main);
+        return ::HeadersChainActive().Height();
+    }
     int64_t getLastBlockTime() override
     {
         LOCK(::cs_main);
@@ -211,6 +218,7 @@ public:
         return GuessVerificationProgress(Params().TxData(), tip);
     }
     bool isInitialBlockDownload() override { return ::ChainstateActive().IsInitialBlockDownload(); }
+    bool isAddressTypeSet() override { return !::gArgs.GetArg("-addresstype", "").empty(); }
     bool getReindex() override { return ::fReindex; }
     bool getImporting() override { return ::fImporting; }
     void setNetworkActive(bool active) override
@@ -319,6 +327,13 @@ public:
             ::uiInterface.NotifyHeaderTip_connect([fn](bool initial_download, const CBlockIndex* block) {
                 fn(initial_download, block->nHeight, block->GetBlockTime(),
                     GuessVerificationProgress(Params().TxData(), block));
+            }));
+    }
+    std::unique_ptr<Handler> handleAuxiliaryBlockRequestProgress(AuxiliaryBlockRequestProgress fn) override
+    {
+        return MakeHandler(
+            ::uiInterface.NotifyAuxiliaryBlockRequestProgress_connect([fn](int64_t time, size_t blockssize, size_t blocks, size_t uptosize) {
+                fn(time, blockssize, blocks, uptosize);
             }));
     }
     InitInterfaces m_interfaces;

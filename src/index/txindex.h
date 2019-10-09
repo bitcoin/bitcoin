@@ -1,9 +1,9 @@
-// Copyright (c) 2017-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2017-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_INDEX_TXINDEX_H
-#define BITCOINTALKCOIN_INDEX_TXINDEX_H
+#ifndef TALKCOIN_INDEX_TXINDEX_H
+#define TALKCOIN_INDEX_TXINDEX_H
 
 #include <chain.h>
 #include <index/base.h>
@@ -51,4 +51,4 @@ public:
 /// The global transaction index, used in GetTransaction. May be null.
 extern std::unique_ptr<TxIndex> g_txindex;
 
-#endif // BITCOINTALKCOIN_INDEX_TXINDEX_H
+#endif // TALKCOIN_INDEX_TXINDEX_H

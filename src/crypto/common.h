@@ -1,12 +1,12 @@
-// Copyright (c) 2014-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2014-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_CRYPTO_COMMON_H
-#define BITCOINTALKCOIN_CRYPTO_COMMON_H
+#ifndef TALKCOIN_CRYPTO_COMMON_H
+#define TALKCOIN_CRYPTO_COMMON_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcointalkcoin-config.h>
+#include <config/talkcoin-config.h>
 #endif
 
 #include <stdint.h>
@@ -100,4 +100,4 @@ uint64_t static inline CountBits(uint64_t x)
     return ret;
 }
 
-#endif // BITCOINTALKCOIN_CRYPTO_COMMON_H
+#endif // TALKCOIN_CRYPTO_COMMON_H
