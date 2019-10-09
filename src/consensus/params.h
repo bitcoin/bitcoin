@@ -161,6 +161,7 @@ struct Params {
 
     std::map<LLMQType, LLMQParams> llmqs;
     LLMQType llmqChainLocks;
+    int nLLMQActivationHeight;
 
     int nMasternodeMinimumConfirmations;
 };

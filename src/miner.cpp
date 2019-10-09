@@ -13,7 +13,9 @@
 #include <consensus/merkle.h>
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
+#include <llmq/quorums_blockprocessor.h>
 #include <llmq/quorums_chainlocks.h>
+#include <masternodes/sync.h>
 #include <net.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
@@ -116,13 +118,9 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     pblocktemplate->vTxFees.push_back(-1); // updated at end
     pblocktemplate->vTxSigOpsCost.push_back(-1); // updated at end
 
-//    LOCK2(cs_main, mempool.cs);
-    CBlockIndex* pindexPrev = nullptr;
-    {
-        LOCK(cs_main);
-        pindexPrev = ::ChainActive().Tip();
-        assert(pindexPrev != nullptr);
-    }
+    LOCK(cs_main);
+    CBlockIndex* pindexPrev = ::ChainActive().Tip();
+    assert(pindexPrev != nullptr);
     nHeight = pindexPrev->nHeight + 1;
 
     pblock->nVersion = ComputeBlockVersion(pindexPrev, chainparams.GetConsensus());
@@ -151,23 +149,25 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
     int64_t nTime1 = GetTimeMicros();
 
-    m_last_block_num_txs = nBlockTx;
-    m_last_block_weight = nBlockWeight;
-
     // Create coinbase transaction.
     CMutableTransaction coinbaseTx;
     coinbaseTx.vin.resize(1);
     coinbaseTx.vin[0].prevout.SetNull();
     coinbaseTx.vout.resize(1);
-    coinbaseTx.nVersion = fProofOfStake ? 2 : 1;
+    // coinbaseTx.nVersion = fProofOfStake ? 2 : 1;
+    coinbaseTx.nVersion = 2;
     coinbaseTx.nType = TRANSACTION_COINBASE;
 
     if (fProofOfStake)
-        pblock->vtx.resize(2);
+        pblock->vtx.resize(pblock->vtx.size() + 1);
 
     int nPackagesSelected = 0;
     int nDescendantsUpdated = 0;
-    addPackageTxs(nPackagesSelected, nDescendantsUpdated);
+
+    {
+        LOCK(mempool.cs);
+        addPackageTxs(nPackagesSelected, nDescendantsUpdated);
+    }
 
     if (fProofOfStake) // attemp to find a coinstake
     {
@@ -200,11 +200,27 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         coinbaseTx.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
     }
 
+    if (nHeight > chainparams.GetConsensus().nLLMQActivationHeight) {
+        for (auto& p : chainparams.GetConsensus().llmqs) {
+            CTransactionRef qcTx;
+            if (llmq::quorumBlockProcessor->GetMinableCommitmentTx(p.first, nHeight, qcTx)) {
+                pblock->vtx.emplace_back(qcTx);
+                pblocktemplate->vTxFees.emplace_back(0);
+                pblocktemplate->vTxSigOpsCost.emplace_back(0);
+                nBlockWeight += qcTx->GetTotalSize();
+                ++nBlockTx;
+            }
+        }
+    }
+
+    m_last_block_num_txs = nBlockTx;
+    m_last_block_weight = nBlockWeight;
+
     CValidationState state;
 
-    if (!fProofOfStake) {
-        coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
-    } else {
+    // if (!fProofOfStake) {
+    //     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
+    // } else {
         coinbaseTx.vin[0].scriptSig = CScript() << OP_RETURN;
 
         CCbTx cbTx;
@@ -217,7 +233,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
             throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootQuorums failed: %s", __func__, FormatStateMessage(state)));
 
         SetTxPayload(coinbaseTx, cbTx);
-    }
+    // }
 
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
     if (fIncludeWitness)
