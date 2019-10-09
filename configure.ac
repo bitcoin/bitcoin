@@ -8,18 +8,18 @@ define(_CLIENT_VERSION_RC, 0)
 define(_CLIENT_VERSION_IS_RELEASE, true)
 define(_COPYRIGHT_YEAR, 2019)
 define(_COPYRIGHT_HOLDERS,[The %s developers])
-define(_COPYRIGHT_HOLDERS_SUBSTITUTION,[[Bitcointalkcoin Core]])
-AC_INIT([Bitcointalkcoin Core],m4_join([.], _CLIENT_VERSION_MAJOR, _CLIENT_VERSION_MINOR, _CLIENT_VERSION_REVISION, m4_if(_CLIENT_VERSION_BUILD, [0], [], _CLIENT_VERSION_BUILD))m4_if(_CLIENT_VERSION_RC, [0], [], [rc]_CLIENT_VERSION_RC),[https://github.com/bitcointalkcoin/bitcointalkcoin/issues],[bitcointalkcoin],[https://bitcointalkcoincore.org/])
+define(_COPYRIGHT_HOLDERS_SUBSTITUTION,[[Talkcoin Core]])
+AC_INIT([Talkcoin Core],m4_join([.], _CLIENT_VERSION_MAJOR, _CLIENT_VERSION_MINOR, _CLIENT_VERSION_REVISION, m4_if(_CLIENT_VERSION_BUILD, [0], [], _CLIENT_VERSION_BUILD))m4_if(_CLIENT_VERSION_RC, [0], [], [rc]_CLIENT_VERSION_RC),[https://github.com/talkcoin/talkcoin/issues],[talkcoin],[https://talkcoincore.org/])
 AC_CONFIG_SRCDIR([src/validation.cpp])
-AC_CONFIG_HEADERS([src/config/bitcointalkcoin-config.h])
+AC_CONFIG_HEADERS([src/config/talkcoin-config.h])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
 
-BITCOINTALKCOIN_DAEMON_NAME=bitcointalkcoind
-BITCOINTALKCOIN_GUI_NAME=bitcointalkcoin-qt
-BITCOINTALKCOIN_CLI_NAME=bitcointalkcoin-cli
-BITCOINTALKCOIN_TX_NAME=bitcointalkcoin-tx
-BITCOINTALKCOIN_WALLET_TOOL_NAME=bitcointalkcoin-wallet
+TALKCOIN_DAEMON_NAME=talkcoind
+TALKCOIN_GUI_NAME=talkcoin-qt
+TALKCOIN_CLI_NAME=talkcoin-cli
+TALKCOIN_TX_NAME=talkcoin-tx
+TALKCOIN_WALLET_TOOL_NAME=talkcoin-wallet
 
 dnl Unless the user specified ARFLAGS, force it to be cr
 AC_ARG_VAR(ARFLAGS, [Flags for the archiver, defaults to <cr> if not set])
@@ -29,9 +29,9 @@ fi
 
 AC_CANONICAL_HOST
 
-AH_TOP([#ifndef BITCOINTALKCOIN_CONFIG_H])
-AH_TOP([#define BITCOINTALKCOIN_CONFIG_H])
-AH_BOTTOM([#endif //BITCOINTALKCOIN_CONFIG_H])
+AH_TOP([#ifndef TALKCOIN_CONFIG_H])
+AH_TOP([#define TALKCOIN_CONFIG_H])
+AH_BOTTOM([#endif //TALKCOIN_CONFIG_H])
 
 dnl faketime breaks configure and is only needed for make. Disable it here.
 unset FAKETIME
@@ -156,6 +156,12 @@ AC_ARG_ENABLE([wallet],
   [disable wallet (enabled by default)])],
   [enable_wallet=$enableval],
   [enable_wallet=yes])
+  
+AC_ARG_ENABLE([mobile-gui],
+  [AS_HELP_STRING([--enable-mobile-gui],
+  [enable mobile GUI (disabled by default)])],
+  [use_mobile_gui=$enableval],
+  [use_mobile_gui=no])
 
 AC_ARG_WITH([miniupnpc],
   [AS_HELP_STRING([--with-miniupnpc],
@@ -181,7 +187,7 @@ AC_ARG_ENABLE(gui-tests,
 
 AC_ARG_WITH([rapidcheck],
   [AS_HELP_STRING([--with-rapidcheck],
-  [enable RapidCheck property based tests (default is yes if librapidcheck is found)])],
+  [enable RapidCheck property-based tests (default is yes if librapidcheck is found)])],
   [use_rapidcheck=$withval],
   [use_rapidcheck=auto])
 
@@ -196,7 +202,8 @@ AC_ARG_ENABLE([extended-functional-tests],
     [use_extended_functional_tests=no])
 
 AC_ARG_ENABLE([fuzz],
-    AS_HELP_STRING([--enable-fuzz],[enable building of fuzz targets (default no)]),
+    AS_HELP_STRING([--enable-fuzz],
+    [enable building of fuzz targets (default no). enabling this will disable all other targets]),
     [enable_fuzz=$enableval],
     [enable_fuzz=no])
 
@@ -286,7 +293,7 @@ AM_CONDITIONAL(ENABLE_MAN, test "$enable_man" != no)
 # Enable debug
 AC_ARG_ENABLE([debug],
     [AS_HELP_STRING([--enable-debug],
-                    [use debug compiler flags and macros (default is no)])],
+                    [use compiler flags and macros suited for debugging (default is no)])],
     [enable_debug=$enableval],
     [enable_debug=no])
 
@@ -318,12 +325,9 @@ if test "x$enable_debug" = xyes; then
   if test "x$CXXFLAGS_overridden" = xno; then
 	CXXFLAGS=""
   fi
-  # Prefer -Og, fall back to -O0 if that is unavailable.
-  AX_CHECK_COMPILE_FLAG(
-    [-Og],
-    [[DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -Og"]],
-    [AX_CHECK_COMPILE_FLAG([-O0],[[DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -O0"]],,[[$CXXFLAG_WERROR]])],
-    [[$CXXFLAG_WERROR]])
+
+  # Disable all optimizations
+  AX_CHECK_COMPILE_FLAG([-O0], [[DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -O0"]],,[[$CXXFLAG_WERROR]])
 
   # Prefer -g3, fall back to -g if that is unavailable.
   AX_CHECK_COMPILE_FLAG(
@@ -370,6 +374,7 @@ if test "x$enable_werror" = "xyes"; then
     AC_MSG_ERROR("enable-werror set but -Werror is not usable")
   fi
   AX_CHECK_COMPILE_FLAG([-Werror=vla],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=vla"],,[[$CXXFLAG_WERROR]])
+  AX_CHECK_COMPILE_FLAG([-Werror=switch],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=switch"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Werror=thread-safety-analysis],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=thread-safety-analysis"],,[[$CXXFLAG_WERROR]])
 fi
 
@@ -378,6 +383,7 @@ if test "x$CXXFLAGS_overridden" = "xno"; then
   AX_CHECK_COMPILE_FLAG([-Wextra],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wextra"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Wformat],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wformat"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Wvla],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wvla"],,[[$CXXFLAG_WERROR]])
+  AX_CHECK_COMPILE_FLAG([-Wswitch],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wswitch"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Wformat-security],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wformat-security"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Wthread-safety-analysis],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wthread-safety-analysis"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Wrange-loop-analysis],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wrange-loop-analysis"],,[[$CXXFLAG_WERROR]])
@@ -483,39 +489,39 @@ CPPFLAGS="$CPPFLAGS -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS"
 
 AC_ARG_WITH([utils],
   [AS_HELP_STRING([--with-utils],
-  [build bitcointalkcoin-cli bitcointalkcoin-tx bitcointalkcoin-wallet (default=yes)])],
-  [build_bitcointalkcoin_utils=$withval],
-  [build_bitcointalkcoin_utils=yes])
+  [build talkcoin-cli talkcoin-tx talkcoin-wallet (default=yes)])],
+  [build_talkcoin_utils=$withval],
+  [build_talkcoin_utils=yes])
 
 AC_ARG_ENABLE([util-cli],
   [AS_HELP_STRING([--enable-util-cli],
-  [build bitcointalkcoin-cli])],
-  [build_bitcointalkcoin_cli=$enableval],
-  [build_bitcointalkcoin_cli=$build_bitcointalkcoin_utils])
+  [build talkcoin-cli])],
+  [build_talkcoin_cli=$enableval],
+  [build_talkcoin_cli=$build_talkcoin_utils])
 
 AC_ARG_ENABLE([util-tx],
   [AS_HELP_STRING([--enable-util-tx],
-  [build bitcointalkcoin-tx])],
-  [build_bitcointalkcoin_tx=$enableval],
-  [build_bitcointalkcoin_tx=$build_bitcointalkcoin_utils])
+  [build talkcoin-tx])],
+  [build_talkcoin_tx=$enableval],
+  [build_talkcoin_tx=$build_talkcoin_utils])
 
 AC_ARG_ENABLE([util-wallet],
   [AS_HELP_STRING([--enable-util-wallet],
-  [build bitcointalkcoin-wallet])],
-  [build_bitcointalkcoin_wallet=$enableval],
-  [build_bitcointalkcoin_wallet=$build_bitcointalkcoin_utils])
+  [build talkcoin-wallet])],
+  [build_talkcoin_wallet=$enableval],
+  [build_talkcoin_wallet=$build_talkcoin_utils])
 
 AC_ARG_WITH([libs],
   [AS_HELP_STRING([--with-libs],
   [build libraries (default=yes)])],
-  [build_bitcointalkcoin_libs=$withval],
-  [build_bitcointalkcoin_libs=yes])
+  [build_talkcoin_libs=$withval],
+  [build_talkcoin_libs=yes])
 
 AC_ARG_WITH([daemon],
   [AS_HELP_STRING([--with-daemon],
-  [build bitcointalkcoind daemon (default=yes)])],
-  [build_bitcointalkcoind=$withval],
-  [build_bitcointalkcoind=yes])
+  [build talkcoind daemon (default=yes)])],
+  [build_talkcoind=$withval],
+  [build_talkcoind=yes])
 
 use_pkgconfig=yes
 case $host in
@@ -638,7 +644,8 @@ case $host in
      ;;
    *android*)
      dnl make sure android stays above linux for hosts like *linux-android*
-     LEVELDB_TARGET_FLAGS="-DOS_ANDROID"
+     TARGET_OS=android
+     LEVELDB_TARGET_FLAGS="-DOS_ANDROID -fPIC"
      ;;
    *linux*)
      TARGET_OS=linux
@@ -716,7 +723,7 @@ AC_C_BIGENDIAN
 dnl Check for pthread compile/link requirements
 AX_PTHREAD
 
-# The following macro will add the necessary defines to bitcointalkcoin-config.h, but
+# The following macro will add the necessary defines to talkcoin-config.h, but
 # they also need to be passed down to any subprojects. Pull the results out of
 # the cache and add them to CPPFLAGS.
 AC_SYS_LARGEFILE
@@ -767,7 +774,7 @@ else
 fi
 
 if test "x$enable_gprof" = xyes; then
-    dnl -pg is incompatible with -pie. Since hardening and profiling together doesn't make sense,
+    dnl -pg is incompatible with -pie. Since hardening and profiling together doesnt make sense,
     dnl we simply make them mutually exclusive here. Additionally, hardened toolchains may force
     dnl -pie by default, in which case it needs to be turned off with -no-pie.
 
@@ -821,6 +828,26 @@ fi
 dnl this flag screws up non-darwin gcc even when the check fails. special-case it.
 if test x$TARGET_OS = xdarwin; then
   AX_CHECK_LINK_FLAG([[-Wl,-dead_strip]], [LDFLAGS="$LDFLAGS -Wl,-dead_strip"])
+fi
+
+if test x$TARGET_OS = xdarwin; then
+    AC_MSG_CHECKING([for Apple iOS targets])
+    AC_PREPROC_IFELSE([AC_LANG_SOURCE([
+        #if defined(__APPLE__) && defined(__MACH__)
+        #include <TargetConditionals.h>
+        #  if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
+           // success: ios or simulator
+        #  else
+        #    error non-iphone
+        #  endif
+        #else
+        #error non-apple
+        #endif
+    ])], [
+        AC_MSG_RESULT([yes]); AC_DEFINE(APPLE_TARGET_IOS, 1,[Define to 1 if (TARGET_OS_PHONE || TARGET_IPHONE_SIMULATOR) is set])
+    ], [
+        AC_MSG_RESULT([no])
+    ])
 fi
 
 AC_CHECK_HEADERS([endian.h sys/endian.h byteswap.h stdio.h stdlib.h unistd.h strings.h sys/types.h sys/stat.h sys/select.h sys/prctl.h])
@@ -973,6 +1000,29 @@ if test x$use_reduce_exports = xyes; then
   [AC_MSG_ERROR([Cannot set default symbol visibility. Use --disable-reduce-exports.])])
 fi
 
+AC_MSG_CHECKING([for std::system])
+AC_LINK_IFELSE(
+    [ AC_LANG_PROGRAM(
+        [[ #include <cstdlib> ]],
+        [[ int nErr = std::system(""); ]]
+    )],
+    [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_STD__SYSTEM, 1, Define to 1 if you have the 'std::system' function.)],
+    [ AC_MSG_RESULT(no) ]
+)
+
+AC_MSG_CHECKING([for ::_wsystem])
+AC_LINK_IFELSE(
+    [ AC_LANG_PROGRAM(
+        [[ ]],
+        [[ int nErr = ::_wsystem(""); ]]
+    )],
+    [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_WSYSTEM, 1, Define to 1 if you have the '::wsystem' function.)],
+    [ AC_MSG_RESULT(no) ]
+)
+
+# Define to 1 if std::system or ::wsystem (Windows) is available
+AC_DEFINE([HAVE_SYSTEM], [HAVE_STD__SYSTEM || HAVE_WSYSTEM], [std::system or ::wsystem])
+
 LEVELDB_CPPFLAGS=
 LIBLEVELDB=
 LIBMEMENV=
@@ -981,9 +1031,32 @@ AC_SUBST(LEVELDB_CPPFLAGS)
 AC_SUBST(LIBLEVELDB)
 AC_SUBST(LIBMEMENV)
 
+dnl enable-fuzz should disable all other targets
+if test "x$enable_fuzz" = "xyes"; then
+  AC_MSG_WARN(enable-fuzz will disable all other targets)
+  build_talkcoin_utils=no
+  build_talkcoin_cli=no
+  build_talkcoin_tx=no
+  build_talkcoin_wallet=no
+  build_talkcoind=no
+  build_talkcoin_libs=no
+  talkcoin_enable_qt=no
+  talkcoin_enable_qt_test=no
+  talkcoin_enable_qt_dbus=no
+  enable_wallet=no
+  use_bench=no
+  use_upnp=no
+  use_zmq=no
+else
+  TALKCOIN_QT_INIT
+
+  dnl sets $talkcoin_enable_qt, $talkcoin_enable_qt_test, $talkcoin_enable_qt_dbus
+  TALKCOIN_QT_CONFIGURE([$use_pkgconfig])
+fi
+
 if test x$enable_wallet != xno; then
     dnl Check for libdb_cxx only if wallet enabled
-    BITCOINTALKCOIN_FIND_BDB48
+    TALKCOIN_FIND_BDB48
 fi
 
 dnl Check for libminiupnpc (optional)
@@ -993,14 +1066,29 @@ if test x$use_upnp != xno; then
     [AC_CHECK_LIB([miniupnpc], [upnpDiscover], [MINIUPNPC_LIBS=-lminiupnpc], [have_miniupnpc=no])],
     [have_miniupnpc=no]
   )
+dnl The minimum supported miniUPnPc API version is set to 10. This keeps compatibility
+dnl with Ubuntu 16.04 LTS and Debian 8 libminiupnpc-dev packages.
+if test x$have_miniupnpc != xno; then
+  AC_MSG_CHECKING([whether miniUPnPc API version is supported])
+  AC_PREPROC_IFELSE([AC_LANG_PROGRAM([[
+      @%:@include <miniupnpc/miniupnpc.h>
+    ]], [[
+      #if MINIUPNPC_API_VERSION >= 10
+      // Everything is okay
+      #else
+      #  error miniUPnPc API version is too old
+      #endif
+    ]])],[
+      AC_MSG_RESULT(yes)
+    ],[
+    AC_MSG_RESULT(no)
+    AC_MSG_WARN([miniUPnPc API version < 10 is unsupported, disabling UPnP support.])
+    have_miniupnpc=no
+  ])
+fi
 fi
 
-BITCOINTALKCOIN_QT_INIT
-
-dnl sets $bitcointalkcoin_enable_qt, $bitcointalkcoin_enable_qt_test, $bitcointalkcoin_enable_qt_dbus
-BITCOINTALKCOIN_QT_CONFIGURE([$use_pkgconfig])
-
-if test x$build_bitcointalkcoin_wallet$build_bitcointalkcoin_cli$build_bitcointalkcoin_tx$build_bitcointalkcoind$bitcointalkcoin_enable_qt$use_tests$use_bench = xnonononononono; then
+if test x$build_talkcoin_wallet$build_talkcoin_cli$build_talkcoin_tx$build_talkcoind$talkcoin_enable_qt$use_tests$use_bench = xnonononononono; then
     use_boost=no
 else
     use_boost=yes
@@ -1014,7 +1102,7 @@ define(MINIMUM_REQUIRED_BOOST, 1.47.0)
 dnl Check for boost libs
 AX_BOOST_BASE([MINIMUM_REQUIRED_BOOST])
 if test x$want_boost = xno; then
-    AC_MSG_ERROR([[only libbitcointalkcoinconsensus can be built without boost]])
+    AC_MSG_ERROR([[only libtalkcoinconsensus can be built without boost]])
 fi
 AX_BOOST_SYSTEM
 AX_BOOST_FILESYSTEM
@@ -1023,7 +1111,7 @@ AX_BOOST_CHRONO
 
 dnl Boost 1.56 through 1.62 allow using std::atomic instead of its own atomic
 dnl counter implementations. In 1.63 and later the std::atomic approach is default.
-m4_pattern_allow(DBOOST_AC_USE_STD_ATOMIC) dnl otherwise it's treated like a macro
+m4_pattern_allow(DBOOST_AC_USE_STD_ATOMIC) dnl otherwise its treated like a macro
 BOOST_CPPFLAGS="-DBOOST_SP_USE_STD_ATOMIC -DBOOST_AC_USE_STD_ATOMIC $BOOST_CPPFLAGS"
 
 if test x$use_reduce_exports = xyes; then
@@ -1185,12 +1273,12 @@ if test x$use_pkgconfig = xyes; then
       PKG_CHECK_MODULES([SSL], [libssl],, [AC_MSG_ERROR(openssl not found.)])
       PKG_CHECK_MODULES([CRYPTO], [libcrypto],,[AC_MSG_ERROR(libcrypto not found.)])
       if test x$enable_bip70 != xno; then
-        BITCOINTALKCOIN_QT_CHECK([PKG_CHECK_MODULES([PROTOBUF], [protobuf], [have_protobuf=yes], [have_protobuf=no])])
+        TALKCOIN_QT_CHECK([PKG_CHECK_MODULES([PROTOBUF], [protobuf], [have_protobuf=yes], [have_protobuf=no])])
       fi
       if test x$use_qr != xno; then
-        BITCOINTALKCOIN_QT_CHECK([PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])])
+        TALKCOIN_QT_CHECK([PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])])
       fi
-      if test x$build_bitcointalkcoin_cli$build_bitcointalkcoind$bitcointalkcoin_enable_qt$use_tests != xnononono; then
+      if test x$build_talkcoin_cli$build_talkcoind$talkcoin_enable_qt$use_tests != xnononono; then
         PKG_CHECK_MODULES([EVENT], [libevent],, [AC_MSG_ERROR(libevent not found.)])
         if test x$TARGET_OS != xwindows; then
           PKG_CHECK_MODULES([EVENT_PTHREADS], [libevent_pthreads],, [AC_MSG_ERROR(libevent_pthreads not found.)])
@@ -1215,7 +1303,7 @@ else
   AC_CHECK_HEADER([openssl/ssl.h],, AC_MSG_ERROR(libssl headers missing),)
   AC_CHECK_LIB([ssl],         [main],SSL_LIBS=-lssl, AC_MSG_ERROR(libssl missing))
 
-  if test x$build_bitcointalkcoin_cli$build_bitcointalkcoind$bitcointalkcoin_enable_qt$use_tests != xnononono; then
+  if test x$build_talkcoin_cli$build_talkcoind$talkcoin_enable_qt$use_tests != xnononono; then
     AC_CHECK_HEADER([event2/event.h],, AC_MSG_ERROR(libevent headers missing),)
     AC_CHECK_LIB([event],[main],EVENT_LIBS=-levent,AC_MSG_ERROR(libevent missing))
     if test x$TARGET_OS != xwindows; then
@@ -1247,11 +1335,11 @@ else
   fi
 
   if test x$enable_bip70 != xno; then
-    BITCOINTALKCOIN_QT_CHECK(AC_CHECK_LIB([protobuf] ,[main],[PROTOBUF_LIBS=-lprotobuf], [have_protobuf=no]))
+    TALKCOIN_QT_CHECK(AC_CHECK_LIB([protobuf] ,[main],[PROTOBUF_LIBS=-lprotobuf], [have_protobuf=no]))
   fi
   if test x$use_qr != xno; then
-    BITCOINTALKCOIN_QT_CHECK([AC_CHECK_LIB([qrencode], [main],[QR_LIBS=-lqrencode], [have_qrencode=no])])
-    BITCOINTALKCOIN_QT_CHECK([AC_CHECK_HEADER([qrencode.h],, have_qrencode=no)])
+    TALKCOIN_QT_CHECK([AC_CHECK_LIB([qrencode], [main],[QR_LIBS=-lqrencode], [have_qrencode=no])])
+    TALKCOIN_QT_CHECK([AC_CHECK_HEADER([qrencode.h],, have_qrencode=no)])
   fi
 fi
 
@@ -1262,7 +1350,7 @@ AC_CHECK_DECLS([EVP_MD_CTX_new],,,[AC_INCLUDES_DEFAULT
 ])
 CXXFLAGS="${save_CXXFLAGS}"
 
-dnl RapidCheck Property Based Testing
+dnl RapidCheck property-based testing
 
 enable_property_tests=no
 if test "x$use_rapidcheck" = xauto; then
@@ -1282,7 +1370,7 @@ dnl univalue check
 
 need_bundled_univalue=yes
 
-if test x$build_bitcointalkcoin_wallet$build_bitcointalkcoin_cli$build_bitcointalkcoin_tx$build_bitcointalkcoind$bitcointalkcoin_enable_qt$use_tests$use_bench = xnonononononono; then
+if test x$build_talkcoin_wallet$build_talkcoin_cli$build_talkcoin_tx$build_talkcoind$talkcoin_enable_qt$use_tests$use_bench = xnonononononono; then
   need_bundled_univalue=no
 else
 
@@ -1329,32 +1417,32 @@ AC_SUBST(UNIVALUE_LIBS)
 
 if test x$have_protobuf != xno &&
    test x$enable_bip70 != xno; then
-  BITCOINTALKCOIN_QT_PATH_PROGS([PROTOC], [protoc],$protoc_bin_path)
+  TALKCOIN_QT_PATH_PROGS([PROTOC], [protoc],$protoc_bin_path)
 fi
 
-AC_MSG_CHECKING([whether to build bitcointalkcoind])
-AM_CONDITIONAL([BUILD_BITCOINTALKCOIND], [test x$build_bitcointalkcoind = xyes])
-AC_MSG_RESULT($build_bitcointalkcoind)
+AC_MSG_CHECKING([whether to build talkcoind])
+AM_CONDITIONAL([BUILD_TALKCOIND], [test x$build_talkcoind = xyes])
+AC_MSG_RESULT($build_talkcoind)
 
-AC_MSG_CHECKING([whether to build bitcointalkcoin-cli])
-AM_CONDITIONAL([BUILD_BITCOINTALKCOIN_CLI], [test x$build_bitcointalkcoin_cli = xyes])
-AC_MSG_RESULT($build_bitcointalkcoin_cli)
+AC_MSG_CHECKING([whether to build talkcoin-cli])
+AM_CONDITIONAL([BUILD_TALKCOIN_CLI], [test x$build_talkcoin_cli = xyes])
+AC_MSG_RESULT($build_talkcoin_cli)
 
-AC_MSG_CHECKING([whether to build bitcointalkcoin-tx])
-AM_CONDITIONAL([BUILD_BITCOINTALKCOIN_TX], [test x$build_bitcointalkcoin_tx = xyes])
-AC_MSG_RESULT($build_bitcointalkcoin_tx)
+AC_MSG_CHECKING([whether to build talkcoin-tx])
+AM_CONDITIONAL([BUILD_TALKCOIN_TX], [test x$build_talkcoin_tx = xyes])
+AC_MSG_RESULT($build_talkcoin_tx)
 
-AC_MSG_CHECKING([whether to build bitcointalkcoin-wallet])
-AM_CONDITIONAL([BUILD_BITCOINTALKCOIN_WALLET], [test x$build_bitcointalkcoin_wallet = xyes])
-AC_MSG_RESULT($build_bitcointalkcoin_wallet)
+AC_MSG_CHECKING([whether to build talkcoin-wallet])
+AM_CONDITIONAL([BUILD_TALKCOIN_WALLET], [test x$build_talkcoin_wallet = xyes])
+AC_MSG_RESULT($build_talkcoin_wallet)
 
 AC_MSG_CHECKING([whether to build libraries])
-AM_CONDITIONAL([BUILD_BITCOINTALKCOIN_LIBS], [test x$build_bitcointalkcoin_libs = xyes])
-if test x$build_bitcointalkcoin_libs = xyes; then
+AM_CONDITIONAL([BUILD_TALKCOIN_LIBS], [test x$build_talkcoin_libs = xyes])
+if test x$build_talkcoin_libs = xyes; then
   AC_DEFINE(HAVE_CONSENSUS_LIB, 1, [Define this symbol if the consensus lib has been built])
-  AC_CONFIG_FILES([libbitcointalkcoinconsensus.pc:libbitcointalkcoinconsensus.pc.in])
+  AC_CONFIG_FILES([libtalkcoinconsensus.pc:libtalkcoinconsensus.pc.in])
 fi
-AC_MSG_RESULT($build_bitcointalkcoin_libs)
+AC_MSG_RESULT($build_talkcoin_libs)
 
 AC_LANG_POP
 
@@ -1387,13 +1475,24 @@ else
   AC_MSG_RESULT(no)
 fi
 
+dnl enable mobile gui
+AC_MSG_CHECKING([if mobile GUI should be enabled])
+if test x$use_mobile_gui != xno; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE_UNQUOTED([MOBILE_GUI],[1],[Define to 1 to enable mobile GUI])
+
+else
+  AC_MSG_RESULT(no)
+fi
+
 dnl enable upnp support
 AC_MSG_CHECKING([whether to build with support for UPnP])
 if test x$have_miniupnpc = xno; then
   if test x$use_upnp = xyes; then
-     AC_MSG_ERROR("UPnP requested but cannot be built. use --without-miniupnpc")
+     AC_MSG_ERROR("UPnP requested but cannot be built. Use --without-miniupnpc.")
   fi
   AC_MSG_RESULT(no)
+  use_upnp=no
 else
   if test x$use_upnp != xno; then
     AC_MSG_RESULT(yes)
@@ -1416,13 +1515,13 @@ fi
 
 dnl these are only used when qt is enabled
 BUILD_TEST_QT=""
-if test x$bitcointalkcoin_enable_qt != xno; then
+if test x$talkcoin_enable_qt != xno; then
   dnl enable dbus support
   AC_MSG_CHECKING([whether to build GUI with support for D-Bus])
-  if test x$bitcointalkcoin_enable_qt_dbus != xno; then
+  if test x$talkcoin_enable_qt_dbus != xno; then
     AC_DEFINE([USE_DBUS],[1],[Define if dbus support should be compiled in])
   fi
-  AC_MSG_RESULT($bitcointalkcoin_enable_qt_dbus)
+  AC_MSG_RESULT($talkcoin_enable_qt_dbus)
 
   dnl enable qr support
   AC_MSG_CHECKING([whether to build GUI with support for QR codes])
@@ -1445,8 +1544,8 @@ if test x$bitcointalkcoin_enable_qt != xno; then
     AC_MSG_WARN("xgettext is required to update qt translations")
   fi
 
-  AC_MSG_CHECKING([whether to build test_bitcointalkcoin-qt])
-  if test x$use_gui_tests$bitcointalkcoin_enable_qt_test = xyesyes; then
+  AC_MSG_CHECKING([whether to build test_talkcoin-qt])
+  if test x$use_gui_tests$talkcoin_enable_qt_test = xyesyes; then
     AC_MSG_RESULT([yes])
     BUILD_TEST_QT="yes"
   else
@@ -1473,7 +1572,7 @@ fi
 
 AM_CONDITIONAL([ENABLE_ZMQ], [test "x$use_zmq" = "xyes"])
 
-AC_MSG_CHECKING([whether to build test_bitcointalkcoin])
+AC_MSG_CHECKING([whether to build test_talkcoin])
 if test x$use_tests = xyes; then
   AC_MSG_RESULT([yes])
   BUILD_TEST="yes"
@@ -1489,13 +1588,14 @@ else
   AC_MSG_RESULT([no])
 fi
 
-if test x$build_bitcointalkcoin_wallet$build_bitcointalkcoin_cli$build_bitcointalkcoin_tx$build_bitcointalkcoin_libs$build_bitcointalkcoind$bitcointalkcoin_enable_qt$use_bench$use_tests = xnononononononono; then
+if test x$build_talkcoin_wallet$build_talkcoin_cli$build_talkcoin_tx$build_talkcoin_libs$build_talkcoind$talkcoin_enable_qt$use_bench$use_tests = xnononononononono; then
   AC_MSG_ERROR([No targets! Please specify at least one of: --with-utils --with-libs --with-daemon --with-gui --enable-bench or --enable-tests])
 fi
 
 AM_CONDITIONAL([TARGET_DARWIN], [test x$TARGET_OS = xdarwin])
 AM_CONDITIONAL([BUILD_DARWIN], [test x$BUILD_OS = xdarwin])
 AM_CONDITIONAL([TARGET_WINDOWS], [test x$TARGET_OS = xwindows])
+AM_CONDITIONAL([TARGET_ANDROID], [test x$TARGET_OS = xandroid])
 AM_CONDITIONAL([ENABLE_WALLET],[test x$enable_wallet = xyes])
 AM_CONDITIONAL([ENABLE_PROOF_OF_STAKE],[test x$enable_pos = xyes])
 AM_CONDITIONAL([ENABLE_SECURE_MESSAGING],[test x$enable_smsg = xyes])
@@ -1505,9 +1605,10 @@ AM_CONDITIONAL([ENABLE_MOMENTUM_HASH_ALGO],[test x$momentum_algo = xyes])
 AM_CONDITIONAL([ENABLE_MEM_HASH_ALGO],[test x$axiom_algo = xyes])
 AM_CONDITIONAL([ENABLE_GROESTL_HASH_ALGO],[test x$groestl_algo = xyes])
 AM_CONDITIONAL([ENABLE_SHA_HASH_ALGO],[test x$sha_algo = xyes])
+AM_CONDITIONAL([MOBILE_GUI],[test x$use_mobile_gui = xyes])
 AM_CONDITIONAL([ENABLE_TESTS],[test x$BUILD_TEST = xyes])
 AM_CONDITIONAL([ENABLE_FUZZ],[test x$enable_fuzz = xyes])
-AM_CONDITIONAL([ENABLE_QT],[test x$bitcointalkcoin_enable_qt = xyes])
+AM_CONDITIONAL([ENABLE_QT],[test x$talkcoin_enable_qt = xyes])
 AM_CONDITIONAL([ENABLE_QT_TESTS],[test x$BUILD_TEST_QT = xyes])
 AM_CONDITIONAL([ENABLE_BIP70],[test x$enable_bip70 = xyes])
 AM_CONDITIONAL([ENABLE_BENCH],[test x$use_bench = xyes])
@@ -1540,11 +1641,11 @@ AC_SUBST(COPYRIGHT_YEAR, _COPYRIGHT_YEAR)
 AC_SUBST(COPYRIGHT_HOLDERS, "_COPYRIGHT_HOLDERS")
 AC_SUBST(COPYRIGHT_HOLDERS_SUBSTITUTION, "_COPYRIGHT_HOLDERS_SUBSTITUTION")
 AC_SUBST(COPYRIGHT_HOLDERS_FINAL, "_COPYRIGHT_HOLDERS_FINAL")
-AC_SUBST(BITCOINTALKCOIN_DAEMON_NAME)
-AC_SUBST(BITCOINTALKCOIN_GUI_NAME)
-AC_SUBST(BITCOINTALKCOIN_CLI_NAME)
-AC_SUBST(BITCOINTALKCOIN_TX_NAME)
-AC_SUBST(BITCOINTALKCOIN_WALLET_TOOL_NAME)
+AC_SUBST(TALKCOIN_DAEMON_NAME)
+AC_SUBST(TALKCOIN_GUI_NAME)
+AC_SUBST(TALKCOIN_CLI_NAME)
+AC_SUBST(TALKCOIN_TX_NAME)
+AC_SUBST(TALKCOIN_WALLET_TOOL_NAME)
 
 AC_SUBST(RELDFLAGS)
 AC_SUBST(DEBUG_CPPFLAGS)
@@ -1586,11 +1687,11 @@ AC_CONFIG_FILES([contrib/devtools/split-debug.sh],[chmod +x contrib/devtools/spl
 AM_COND_IF([HAVE_DOXYGEN], [AC_CONFIG_FILES([doc/Doxyfile])])
 AC_CONFIG_LINKS([contrib/filter-lcov.py:contrib/filter-lcov.py])
 AC_CONFIG_LINKS([test/functional/test_runner.py:test/functional/test_runner.py])
-AC_CONFIG_LINKS([test/util/bitcointalkcoin-util-test.py:test/util/bitcointalkcoin-util-test.py])
+AC_CONFIG_LINKS([test/util/talkcoin-util-test.py:test/util/talkcoin-util-test.py])
 AC_CONFIG_LINKS([test/util/rpcauth-test.py:test/util/rpcauth-test.py])
 
-dnl boost's m4 checks do something really nasty: they export these vars. As a
-dnl result, they leak into secp256k1's configure and crazy things happen.
+dnl boosts m4 checks do something really nasty: they export these vars. As a
+dnl result, they leak into secp256k1s configure and crazy things happen.
 dnl Until this is fixed upstream and we've synced, we'll just un-export them.
 CPPFLAGS_TEMP="$CPPFLAGS"
 unset CPPFLAGS
@@ -1616,7 +1717,7 @@ if test x$need_bundled_univalue = xyes; then
   AC_CONFIG_SUBDIRS([src/univalue])
 fi
 
-ac_configure_args="${ac_configure_args} --disable-shared --with-pic --with-bignum=no --enable-module-recovery --disable-jni"
+ac_configure_args="${ac_configure_args} --disable-shared --with-pic --with-bignum=no --enable-module-recovery "
 AC_CONFIG_SUBDIRS([src/secp256k1])
 
 AC_OUTPUT
@@ -1651,14 +1752,16 @@ echo "  momentum hash algorithm    = $momentum_algo"
 echo "  axiom hash algorithm   = $axiom_algo"
 echo "  sha256 hash algorithm   = $sha_algo"
 echo "  groestl hash algorithm   = $groestl_algo"
-echo "  with gui / qt = $bitcointalkcoin_enable_qt"
-if test x$bitcointalkcoin_enable_qt != xno; then
+echo "  with gui / qt = $talkcoin_enable_qt"
+if test x$talkcoin_enable_qt != xno; then
     echo "    with bip70  = $enable_bip70"
     echo "    with qr     = $use_qr"
+    echo "    mobile gui  = $use_mobile_gui"
 fi
 echo "  with zmq      = $use_zmq"
 echo "  with test     = $use_tests"
 if test x$use_tests != xno; then
+    echo "    with prop   = $enable_property_tests"
     echo "    with fuzz   = $enable_fuzz"
 fi
 echo "  with bench    = $use_bench"

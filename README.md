@@ -1,33 +1,33 @@
-Bitcointalkcoin Core integration/staging tree
+Talkcoin Core integration/staging tree
 =====================================
 
-https://bitcointalkcoincore.org
+https://talkcoincore.org
 
-What is Bitcointalkcoin?
+What is Talkcoin?
 ----------------
 
-Bitcointalkcoin is an experimental digital currency that enables instant payments to
-anyone, anywhere in the world. Bitcointalkcoin uses peer-to-peer technology to operate
+Talkcoin is an experimental digital currency that enables instant payments to
+anyone, anywhere in the world. Talkcoin uses peer-to-peer technology to operate
 with no central authority: managing transactions and issuing money are carried
-out collectively by the network. Bitcointalkcoin Core is the name of open source
+out collectively by the network. Talkcoin Core is the name of open source
 software which enables the use of this currency.
 
 For more information, as well as an immediately useable, binary version of
-the Bitcointalkcoin Core software, see https://bitcointalkcoincore.org/en/download/, or read the
-[original whitepaper](https://bitcointalkcoincore.org/bitcointalkcoin.pdf).
+the Talkcoin Core software, see https://talkcoincore.org/en/download/, or read the
+[original whitepaper](https://talkcoincore.org/talkcoin.pdf).
 
 License
 -------
 
-Bitcointalkcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
+Talkcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
 information or see https://opensource.org/licenses/MIT.
 
 Development Process
 -------------------
 
 The `master` branch is regularly built and tested, but is not guaranteed to be
-completely stable. [Tags](https://github.com/bitcointalkcoin/bitcointalkcoin/tags) are created
-regularly to indicate new official, stable release versions of Bitcointalkcoin Core.
+completely stable. [Tags](https://github.com/talkcoin/talkcoin/tags) are created
+regularly to indicate new official, stable release versions of Talkcoin Core.
 
 The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md)
 and useful hints for developers can be found in [doc/developer-notes.md](doc/developer-notes.md).
@@ -64,7 +64,7 @@ Translations
 ------------
 
 Changes to translations as well as new translations can be submitted to
-[Bitcointalkcoin Core's Transifex page](https://www.transifex.com/bitcointalkcoin/bitcointalkcoin/).
+[Talkcoin Core's Transifex page](https://www.transifex.com/talkcoin/talkcoin/).
 
 Translations are periodically pulled from Transifex and merged into the git repository. See the
 [translation process](doc/translation_process.md) for details on how this works.
@@ -72,4 +72,4 @@ Translations are periodically pulled from Transifex and merged into the git repo
 **Important**: We do not accept translation changes as GitHub pull requests because the next
 pull from Transifex would automatically overwrite them again.
 
-Translators should also subscribe to the [mailing list](https://groups.google.com/forum/#!forum/bitcointalkcoin-translators).
+Translators should also subscribe to the [mailing list](https://groups.google.com/forum/#!forum/talkcoin-translators).
