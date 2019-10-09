@@ -80,6 +80,11 @@ bool CPrivateSendQueue::Relay(CConnman& connman)
     return true;
 }
 
+bool CPrivateSendQueue::IsTimeOutOfBounds() const
+{
+    return GetAdjustedTime() - nTime > PRIVATESEND_QUEUE_TIMEOUT || nTime - GetAdjustedTime() > PRIVATESEND_QUEUE_TIMEOUT;
+}
+
 uint256 CPrivateSendBroadcastTx::GetSignatureHash() const
 {
     return SerializeHash(*this);
@@ -149,8 +154,8 @@ void CPrivateSendBaseManager::CheckQueue()
     // check mixing queue objects for timeouts
     std::vector<CPrivateSendQueue>::iterator it = vecPrivateSendQueue.begin();
     while (it != vecPrivateSendQueue.end()) {
-        if ((*it).IsExpired()) {
-            LogPrint("privatesend", "CPrivateSendBaseManager::%s -- Removing expired queue (%s)\n", __func__, (*it).ToString());
+        if ((*it).IsTimeOutOfBounds()) {
+            LogPrint("privatesend", "CPrivateSendBaseManager::%s -- Removing a queue (%s)\n", __func__, (*it).ToString());
             it = vecPrivateSendQueue.erase(it);
         } else
             ++it;
@@ -164,7 +169,7 @@ bool CPrivateSendBaseManager::GetQueueItemAndTry(CPrivateSendQueue& dsqRet)
 
     for (auto& dsq : vecPrivateSendQueue) {
         // only try each queue once
-        if (dsq.fTried || dsq.IsExpired()) continue;
+        if (dsq.fTried || dsq.IsTimeOutOfBounds()) continue;
         dsq.fTried = true;
         dsqRet = dsq;
         return true;
