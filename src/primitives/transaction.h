@@ -130,9 +130,9 @@ public:
 
 /**
  * CAmount is an int64_t, which requires alignment of 8. This wrapper stores the data
- * in a memory array and packs/unpacks it whenever needed, regarldess of alignment.
+ * in a memory array and packs/unpacks it whenever needed, regardless of alignment.
  *
- * Since CAmount's size is know, the compiler should be able to optimize the std::memcpy away
+ * Since CAmount's size is known, the compiler should be able to optimize the std::memcpy away
  * in most cases.
  */
 class PackableCAmount
@@ -140,9 +140,9 @@ class PackableCAmount
     uint8_t m_data[sizeof(CAmount)];
 
 public:
-    PackableCAmount(CAmount val) noexcept
+    explicit PackableCAmount(CAmount val) noexcept
     {
-        std::memcpy(m_data, &val, sizeof(CAmount));
+        *this = val;
     }
 
     PackableCAmount() noexcept
@@ -157,13 +157,17 @@ public:
 
     PackableCAmount& operator-=(CAmount other) noexcept
     {
-        *this = ((CAmount) * this) - other;
-        return *this;
+        return *this = static_cast<CAmount>(*this) - other;
     }
 
     PackableCAmount& operator+=(CAmount other) noexcept
     {
-        *this = ((CAmount) * this) + other;
+        return *this = static_cast<CAmount>(*this) + other;
+    }
+
+    PackableCAmount& operator=(CAmount other) noexcept
+    {
+        std::memcpy(m_data, &other, sizeof(CAmount));
         return *this;
     }
 
@@ -178,7 +182,7 @@ public:
     template <typename Stream>
     void Serialize(Stream& s) const
     {
-        ::Serialize(s, (CAmount) * this);
+        ::Serialize(s, static_cast<CAmount>(*this));
     }
 };
 
