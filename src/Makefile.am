@@ -349,6 +349,7 @@ libbitgreen_server_a_SOURCES = \
   rpc/mining.cpp \
   rpc/misc.cpp \
   rpc/net.cpp \
+  rpc/quorum.cpp \
   rpc/rawtransaction.cpp \
   rpc/server.cpp \
   rpc/special.cpp \
@@ -452,6 +453,7 @@ libbitgreen_wallet_a_SOURCES = \
   rpc/mining.cpp \
   rpc/misc.cpp \
   rpc/net.cpp \
+  rpc/quorum.cpp \
   rpc/rawtransaction.cpp \
   rpc/server.cpp \
   rpc/special.cpp \
