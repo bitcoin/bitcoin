@@ -30,6 +30,7 @@ from .util import (
     connect_nodes,
     copy_datadir,
     disconnect_nodes,
+    force_finish_mnsync,
     initialize_datadir,
     log_filename,
     p2p_port,
@@ -37,8 +38,6 @@ from .util import (
     satoshi_round,
     sync_blocks,
     sync_mempools,
-    sync_masternodes,
-    wait_to_sync,
     wait_until,
 )
 
@@ -580,7 +579,7 @@ class DashTestFramework(BitcoinTestFramework):
             self.start_node(idx + start_idx, extra_args=args)
             self.mninfo[idx].nodeIdx = idx + start_idx
             self.mninfo[idx].node = self.nodes[idx + start_idx]
-            wait_to_sync(self.mninfo[idx].node, True)
+            force_finish_mnsync(self.mninfo[idx].node)
 
         def do_connect(idx):
             for i in range(0, idx + 1):
@@ -606,8 +605,6 @@ class DashTestFramework(BitcoinTestFramework):
             job.result()
         jobs.clear()
 
-        sync_masternodes(self.nodes, True)
-
         executor.shutdown()
 
     def setup_network(self):
@@ -624,7 +621,6 @@ class DashTestFramework(BitcoinTestFramework):
         self.log.info("Creating and starting %s simple nodes", num_simple_nodes)
         for i in range(0, num_simple_nodes):
             self.create_simple_node()
-        sync_masternodes(self.nodes, True)
 
         self.log.info("Activating DIP3")
         if not self.fast_dip3_enforcement:

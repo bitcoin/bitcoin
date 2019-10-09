@@ -63,9 +63,6 @@ class SporkTest(BitcoinTestFramework):
         assert(self.get_test_spork_state(self.nodes[0]))
         assert(self.get_test_spork_state(self.nodes[1]))
 
-        # Force finish mnsync node as otherwise it will never send out headers to other peers
-        wait_to_sync(self.nodes[1], fast_mnsync=True)
-
         # Generate one block to kick off masternode sync, which also starts sporks syncing for node2
         self.nodes[1].generate(1)
 

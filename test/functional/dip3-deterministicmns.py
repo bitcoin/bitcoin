@@ -243,12 +243,12 @@ class DIP3Test(BitcoinTestFramework):
             self.add_nodes(1)
         extra_args = ['-masternode=1', '-masternodeblsprivkey=%s' % mn.blsMnkey]
         self.start_node(mn.idx, extra_args = self.extra_args + extra_args)
+        force_finish_mnsync(self.nodes[mn.idx])
         for i in range(0, len(self.nodes)):
             if i < len(self.nodes) and self.nodes[i] is not None and self.nodes[i].process is not None and i != mn.idx:
                 connect_nodes_bi(self.nodes, mn.idx, i)
         mn.node = self.nodes[mn.idx]
         self.sync_all()
-        self.force_finish_mnsync(mn.node)
 
     def spend_mn_collateral(self, mn, with_dummy_input_output=False):
         return self.spend_input(mn.collateral_txid, mn.collateral_vout, 1000, with_dummy_input_output)
@@ -275,25 +275,6 @@ class DIP3Test(BitcoinTestFramework):
         # undo
         self.nodes[0].protx('update_service', mn.protx_hash, '127.0.0.1:%d' % mn.p2p_port, mn.blsMnkey, "", mn.fundsAddr)
         self.nodes[0].generate(1)
-
-    def force_finish_mnsync(self, node):
-        while True:
-            s = node.mnsync('next')
-            if s == 'sync updated to MASTERNODE_SYNC_FINISHED':
-                break
-            time.sleep(0.1)
-
-    def force_finish_mnsync_list(self, node):
-        if node.mnsync('status')['AssetName'] == 'MASTERNODE_SYNC_WAITING':
-            node.mnsync('next')
-
-        while True:
-            mnlist = node.masternode('list', 'status')
-            if len(mnlist) != 0:
-                time.sleep(0.5)
-                self.force_finish_mnsync(node)
-                return
-            time.sleep(0.1)
 
     def assert_mnlists(self, mns):
         for node in self.nodes:

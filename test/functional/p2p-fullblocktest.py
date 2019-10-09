@@ -71,7 +71,6 @@ class FullBlockTest(ComparisonTestFramework):
         self.test = TestManager(self, self.options.tmpdir)
         self.test.add_all_connections(self.nodes)
         network_thread_start()
-        sync_masternodes(self.nodes, True)
         self.test.run()
 
     def add_transactions_to_block(self, block, tx_list):

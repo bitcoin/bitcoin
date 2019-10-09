@@ -15,7 +15,7 @@ import copy
 from test_framework.blocktools import create_block, create_coinbase, create_transaction, network_thread_start
 from test_framework.mininode import P2PDataStore, COIN
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, sync_masternodes
+from test_framework.util import assert_equal
 
 
 class InvalidBlockRequestTest(BitcoinTestFramework):
@@ -30,7 +30,6 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
         node.add_p2p_connection(P2PDataStore())
 
         network_thread_start()
-        sync_masternodes(self.nodes, True)
         node.p2p.wait_for_verack()
 
         best_block = node.getblock(node.getbestblockhash())
