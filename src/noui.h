@@ -1,9 +1,9 @@
-// Copyright (c) 2013-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2013-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_NOUI_H
-#define BITCOINTALKCOIN_NOUI_H
+#ifndef TALKCOIN_NOUI_H
+#define TALKCOIN_NOUI_H
 
 #include <string>
 
@@ -14,7 +14,13 @@ bool noui_ThreadSafeQuestion(const std::string& /* ignored interactive message *
 /** Non-GUI handler, which only logs a message. */
 void noui_InitMessage(const std::string& message);
 
-/** Connect all bitcointalkcoind signal handlers */
+/** Connect all talkcoind signal handlers */
 void noui_connect();
 
-#endif // BITCOINTALKCOIN_NOUI_H
+/** Suppress all talkcoind signal handlers. Used to suppress output during test runs that produce expected errors */
+void noui_suppress();
+
+/** Reconnects the regular Non-GUI handlers after having used noui_suppress */
+void noui_reconnect();
+
+#endif // TALKCOIN_NOUI_H

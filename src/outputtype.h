@@ -1,13 +1,13 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2009-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_OUTPUTTYPE_H
-#define BITCOINTALKCOIN_OUTPUTTYPE_H
+#ifndef TALKCOIN_OUTPUTTYPE_H
+#define TALKCOIN_OUTPUTTYPE_H
 
 #include <attributes.h>
-#include <keystore.h>
+#include <script/signingprovider.h>
 #include <script/standard.h>
 
 #include <string>
@@ -44,7 +44,7 @@ std::vector<CTxDestination> GetAllDestinationsForKey(const CPubKey& key);
  * This function will automatically add the script (and any other
  * necessary scripts) to the keystore.
  */
-CTxDestination AddAndGetDestinationForScript(CKeyStore& keystore, const CScript& script, OutputType);
+CTxDestination AddAndGetDestinationForScript(FillableSigningProvider& keystore, const CScript& script, OutputType);
 
-#endif // BITCOINTALKCOIN_OUTPUTTYPE_H
+#endif // TALKCOIN_OUTPUTTYPE_H
 

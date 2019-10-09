@@ -1,9 +1,9 @@
-// Copyright (c) 2016 The Bitcointalkcoin Core developers
+// Copyright (c) 2016 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_INDIRECTMAP_H
-#define BITCOINTALKCOIN_INDIRECTMAP_H
+#ifndef TALKCOIN_INDIRECTMAP_H
+#define TALKCOIN_INDIRECTMAP_H
 
 template <class T>
 struct DereferencingComparator { bool operator()(const T a, const T b) const { return *a < *b; } };
@@ -53,4 +53,4 @@ public:
     const_iterator cend() const     { return m.cend(); }
 };
 
-#endif // BITCOINTALKCOIN_INDIRECTMAP_H
+#endif // TALKCOIN_INDIRECTMAP_H

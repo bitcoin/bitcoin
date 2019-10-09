@@ -1,9 +1,9 @@
-// Copyright (c) 2016-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2016-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_BLOCKENCODINGS_H
-#define BITCOINTALKCOIN_BLOCKENCODINGS_H
+#ifndef TALKCOIN_BLOCKENCODINGS_H
+#define TALKCOIN_BLOCKENCODINGS_H
 
 #include <primitives/block.h>
 
@@ -209,4 +209,4 @@ public:
     ReadStatus FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing);
 };
 
-#endif // BITCOINTALKCOIN_BLOCKENCODINGS_H
+#endif // TALKCOIN_BLOCKENCODINGS_H

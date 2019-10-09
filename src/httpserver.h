@@ -1,9 +1,9 @@
-// Copyright (c) 2015-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2015-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_HTTPSERVER_H
-#define BITCOINTALKCOIN_HTTPSERVER_H
+#ifndef TALKCOIN_HTTPSERVER_H
+#define TALKCOIN_HTTPSERVER_H
 
 #include <string>
 #include <stdint.h>
@@ -148,4 +148,4 @@ private:
     struct event* ev;
 };
 
-#endif // BITCOINTALKCOIN_HTTPSERVER_H
+#endif // TALKCOIN_HTTPSERVER_H

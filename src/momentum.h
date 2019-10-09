@@ -1,5 +1,5 @@
-#ifndef BITCOINTALKCOIN_MOMENTUM_H
-#define BITCOINTALKCOIN_MOMENTUM_H
+#ifndef TALKCOIN_MOMENTUM_H
+#define TALKCOIN_MOMENTUM_H
 #include <vector>
 #include "semiOrderedMap.h"
 

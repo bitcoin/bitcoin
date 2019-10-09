@@ -1,16 +1,16 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcointalkcoin Core developers
+// Copyright (c) 2009-2019 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_MINER_H
-#define BITCOINTALKCOIN_MINER_H
+#ifndef TALKCOIN_MINER_H
+#define TALKCOIN_MINER_H
 
 #include <optional.h>
 #include <primitives/block.h>
 #include <txmempool.h>
 #include <validation.h>
-
+#include <script/standard.h>
 #include <memory>
 #include <stdint.h>
 
@@ -20,7 +20,6 @@
 
 class CBlockIndex;
 class CChainParams;
-class CReserveKey;
 class CScript;
 class CWallet;
 namespace Consensus { struct Params; };
@@ -48,7 +47,7 @@ struct CBlockTemplate
 };
 
 // Container for tracking updates to ancestor feerate as we include (parent)
-void GenerateBitcointalkcoins(bool fGenerate, int nThreads, std::shared_ptr<CReserveScript> coinbaseScript);
+void GenerateTalkcoins(bool fGenerate, int nThreads, std::shared_ptr<CTxDestination> coinbaseScript);
 // transactions in a block
 struct CTxMemPoolModifiedEntry {
     explicit CTxMemPoolModifiedEntry(CTxMemPool::txiter entry)
@@ -213,10 +212,9 @@ private:
       * of updated descendants. */
     int UpdatePackagesForAdded(const CTxMemPool::setEntries& alreadyAdded, indexed_modified_transaction_set &mapModifiedTx) EXCLUSIVE_LOCKS_REQUIRED(mempool.cs);
 };
-#ifdef ENABLE_PROOF_OF_STAKE
 /** Generate a new block, without valid proof-of-work */
 void Stake(bool fStake, CWallet *pwallet, boost::thread_group*& stakeThread);
-#endif
+
 
 /** Modify the extranonce in a block */
 void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce);
@@ -226,4 +224,4 @@ extern double dHashesPerMin;
 extern int64_t nHPSTimerStart;
 bool CheckStake(const std::shared_ptr<const CBlock> pblock, CWallet& wallet) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-#endif // BITCOINTALKCOIN_MINER_H
+#endif // TALKCOIN_MINER_H

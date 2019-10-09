@@ -1,4 +1,4 @@
-// Copyright (c) 2010-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2010-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -21,6 +21,7 @@ struct UISignals {
     boost::signals2::signal<CClientUIInterface::NotifyBlockTipSig> NotifyBlockTip;
     boost::signals2::signal<CClientUIInterface::NotifyHeaderTipSig> NotifyHeaderTip;
     boost::signals2::signal<CClientUIInterface::BannedListChangedSig> BannedListChanged;
+    boost::signals2::signal<CClientUIInterface::NotifyAuxiliaryBlockRequestProgressSig> NotifyAuxiliaryBlockRequestProgress;
 };
 static UISignals g_ui_signals;
 
@@ -41,6 +42,7 @@ ADD_SIGNALS_IMPL_WRAPPER(ShowProgress);
 ADD_SIGNALS_IMPL_WRAPPER(NotifyBlockTip);
 ADD_SIGNALS_IMPL_WRAPPER(NotifyHeaderTip);
 ADD_SIGNALS_IMPL_WRAPPER(BannedListChanged);
+ADD_SIGNALS_IMPL_WRAPPER(NotifyAuxiliaryBlockRequestProgress);
 
 bool CClientUIInterface::ThreadSafeMessageBox(const std::string& message, const std::string& caption, unsigned int style) { return g_ui_signals.ThreadSafeMessageBox(message, caption, style); }
 bool CClientUIInterface::ThreadSafeQuestion(const std::string& message, const std::string& non_interactive_message, const std::string& caption, unsigned int style) { return g_ui_signals.ThreadSafeQuestion(message, non_interactive_message, caption, style); }
@@ -53,7 +55,7 @@ void CClientUIInterface::ShowProgress(const std::string& title, int nProgress, b
 void CClientUIInterface::NotifyBlockTip(bool b, const CBlockIndex* i) { return g_ui_signals.NotifyBlockTip(b, i); }
 void CClientUIInterface::NotifyHeaderTip(bool b, const CBlockIndex* i) { return g_ui_signals.NotifyHeaderTip(b, i); }
 void CClientUIInterface::BannedListChanged() { return g_ui_signals.BannedListChanged(); }
-
+void CClientUIInterface::NotifyAuxiliaryBlockRequestProgress(int64_t a, size_t b, size_t c, size_t d) { return g_ui_signals.NotifyAuxiliaryBlockRequestProgress(a,b,c,d); }
 
 bool InitError(const std::string& str)
 {

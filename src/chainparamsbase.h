@@ -1,17 +1,16 @@
-// Copyright (c) 2014-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2014-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_CHAINPARAMSBASE_H
-#define BITCOINTALKCOIN_CHAINPARAMSBASE_H
+#ifndef TALKCOIN_CHAINPARAMSBASE_H
+#define TALKCOIN_CHAINPARAMSBASE_H
 
 #include <memory>
 #include <string>
-#include <vector>
 
 /**
- * CBaseChainParams defines the base parameters (shared between bitcointalkcoin-cli and bitcointalkcoind)
- * of a given instance of the Bitcointalkcoin system.
+ * CBaseChainParams defines the base parameters (shared between talkcoin-cli and talkcoind)
+ * of a given instance of the Talkcoin system.
  */
 class CBaseChainParams
 {
@@ -53,4 +52,4 @@ const CBaseChainParams& BaseParams();
 /** Sets the params returned by Params() to those for the given network. */
 void SelectBaseParams(const std::string& chain);
 
-#endif // BITCOINTALKCOIN_CHAINPARAMSBASE_H
+#endif // TALKCOIN_CHAINPARAMSBASE_H

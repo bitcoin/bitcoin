@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2009-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_NET_PROCESSING_H
-#define BITCOINTALKCOIN_NET_PROCESSING_H
+#ifndef TALKCOIN_NET_PROCESSING_H
+#define TALKCOIN_NET_PROCESSING_H
 
 #include <net.h>
 #include <validationinterface.h>
@@ -22,6 +22,14 @@ static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS = 100;
 static const unsigned int DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN = 100;
 /** Default for BIP61 (sending reject messages) */
 static constexpr bool DEFAULT_ENABLE_BIP61{false};
+static const bool DEFAULT_PEERBLOOMFILTERS = false;
+
+/** if disabled, blocks will not be requested automatically, usefull for non-validation mode */
+static const bool DEFAULT_AUTOMATIC_BLOCK_REQUESTS = true;
+extern std::atomic<bool> fAutoRequestBlocks;
+
+static const bool DEFAULT_FETCH_BLOCKS_WHILE_FETCH_HEADERS = true;
+extern std::atomic<bool> fFetchBlocksWhileFetchingHeaders;
 
 static const bool DEFAULT_HEADER_SPAM_FILTER = true;
 
@@ -103,8 +111,23 @@ struct CNodeStateStats {
 /** Get statistics from node state */
 bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 /** Process network block received from a given node */
-bool ProcessNetBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, bool fForceProcessing, bool* fNewBlock, CNode* pfrom, CConnman& connman);
+/**
+ * Prioritize a block for downloading
+ * Blocks requested with priority will be downloaded and processed first
+ * Downloaded blocks will not trigger ActivateBestChain
+ */
+void AddPriorityDownload(const std::vector<const CBlockIndex*>& blocksToDownload);
+void ProcessPriorityRequests(const std::shared_ptr<CBlock> block);
+bool FlushPriorityDownloads();
+size_t CountPriorityDownloads();
 
+void SetAutoRequestBlocks(bool state);
+bool isAutoRequestingBlocks();
+
+/** Process network block received from a given node */
+bool ProcessNetBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, bool fForceProcessing, bool* fNewBlock, bool fPriorityRequest, CNode* pfrom, CConnman& connman);
+
+void RelayTransaction(const uint256&, const CConnman& connman);
 /** Increase a node's misbehavior score. */
 void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="") EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-#endif // BITCOINTALKCOIN_NET_PROCESSING_H
+#endif // TALKCOIN_NET_PROCESSING_H

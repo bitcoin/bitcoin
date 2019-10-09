@@ -4,6 +4,8 @@
 
 #include <bech32.h>
 
+#include <assert.h>
+
 namespace
 {
 
@@ -145,6 +147,10 @@ namespace bech32
 
 /** Encode a Bech32 string. */
 std::string Encode(const std::string& hrp, const data& values) {
+    // First ensure that the HRP is all lowercase. BIP-173 requires an encoder
+    // to return a lowercase Bech32 string, but if given an uppercase HRP, the
+    // result will always be invalid.
+    for (const char& c : hrp) assert(c < 'A' || c > 'Z');
     data checksum = CreateChecksum(hrp, values);
     data combined = Cat(values, checksum);
     std::string ret = hrp + '1';

@@ -1,9 +1,9 @@
-// Copyright (c) 2017-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2017-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_FS_H
-#define BITCOINTALKCOIN_FS_H
+#ifndef TALKCOIN_FS_H
+#define TALKCOIN_FS_H
 
 #include <stdio.h>
 #include <string>
@@ -93,4 +93,4 @@ namespace fsbridge {
 #endif // WIN32 && __GLIBCXX__
 };
 
-#endif // BITCOINTALKCOIN_FS_H
+#endif // TALKCOIN_FS_H

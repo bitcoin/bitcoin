@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2009-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_COMPRESSOR_H
-#define BITCOINTALKCOIN_COMPRESSOR_H
+#ifndef TALKCOIN_COMPRESSOR_H
+#define TALKCOIN_COMPRESSOR_H
 
 #include <primitives/transaction.h>
 #include <script/script.h>
@@ -108,4 +108,4 @@ public:
     }
 };
 
-#endif // BITCOINTALKCOIN_COMPRESSOR_H
+#endif // TALKCOIN_COMPRESSOR_H

@@ -1,7 +1,7 @@
 // Taken from https://gist.github.com/arvidsson/7231973
 
-#ifndef BITCOINTALKCOIN_REVERSE_ITERATOR_H
-#define BITCOINTALKCOIN_REVERSE_ITERATOR_H
+#ifndef TALKCOIN_REVERSE_ITERATOR_H
+#define TALKCOIN_REVERSE_ITERATOR_H
 
 /**
  * Template used for reverse iteration in C++11 range-based for loops.
@@ -36,4 +36,4 @@ reverse_range<T> reverse_iterate(T &x)
     return reverse_range<T>(x);
 }
 
-#endif // BITCOINTALKCOIN_REVERSE_ITERATOR_H
+#endif // TALKCOIN_REVERSE_ITERATOR_H
