@@ -47,6 +47,7 @@ FUZZ_TARGETS = \
   test/fuzz/spanparsing \
   test/fuzz/sub_net_deserialize \
   test/fuzz/transaction \
+  test/fuzz/tx_in \
   test/fuzz/tx_in_deserialize \
   test/fuzz/txoutcompressor_deserialize \
   test/fuzz/txundo_deserialize
@@ -496,6 +497,12 @@ test_fuzz_tx_in_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DTX_I
 test_fuzz_tx_in_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_tx_in_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_tx_in_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
+
+test_fuzz_tx_in_SOURCES = $(FUZZ_SUITE) test/fuzz/tx_in.cpp
+test_fuzz_tx_in_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_tx_in_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_tx_in_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_tx_in_LDADD = $(FUZZ_SUITE_LD_COMMON)
 
 endif # ENABLE_FUZZ
 
