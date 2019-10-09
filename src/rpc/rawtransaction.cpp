@@ -96,6 +96,13 @@ static void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& 
             cbTx.ToJson(obj);
             entry.pushKV("cbTx", obj);
         }
+    } else if (tx.nType == TRANSACTION_QUORUM_COMMITMENT) {
+        llmq::CFinalCommitmentTxPayload qcTx;
+        if (GetTxPayload(tx, qcTx)) {
+            UniValue obj;
+            qcTx.ToJson(obj);
+            entry.pushKV("qcTx", obj);
+        }
     }
 
     bool chainLock = false;
