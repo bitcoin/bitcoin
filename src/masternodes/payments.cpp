@@ -300,6 +300,9 @@ bool CMasternodePayments::IsScheduled(const CDeterministicMNCPtr& dmnIn, int nNo
 
 bool CMasternodePayments::IsTransactionValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward) const
 {
+    if (nBlockHeight < Params().GetConsensus().nLastPoWBlock)
+        return true;
+
     std::vector<CTxOut> voutMasternodePayments;
     if (!GetBlockTxOuts(nBlockHeight, blockReward, voutMasternodePayments)) {
         LogPrint(BCLog::MASTERNODE, "CMasternodePayments::%s -- ERROR failed to get payees for block at height %s\n", __func__, nBlockHeight);
