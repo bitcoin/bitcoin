@@ -12,9 +12,9 @@ For example:
 
     make HOST=x86_64-w64-mingw32 -j4
 
-A prefix will be generated that's suitable for plugging into Bitcointalkcoin's
+A prefix will be generated that's suitable for plugging into Bitcoin's
 configure. In the above example, a dir named x86_64-w64-mingw32 will be
-created. To use it for Bitcointalkcoin:
+created. To use it for Bitcoin:
 
     ./configure --prefix=`pwd`/depends/x86_64-w64-mingw32
 
@@ -22,12 +22,17 @@ Common `host-platform-triplets` for cross compilation are:
 
 - `x86_64-w64-mingw32` for Win64
 - `x86_64-apple-darwin14` for macOS
+- `aarch64-apple-darwin14` for iOS
 - `arm-linux-gnueabihf` for Linux ARM 32 bit
 - `aarch64-linux-gnu` for Linux ARM 64 bit
 - `riscv32-linux-gnu` for Linux RISC-V 32 bit
 - `riscv64-linux-gnu` for Linux RISC-V 64 bit
+- `aarch64-linux-android` for Android ARM 64 bit
 
-No other options are needed, the paths are automatically configured.
+The paths are automatically configured and no other options are needed unless targeting Android.
+In that case one needs to set `ANDROID_API_LEVEL` and `ANDROID_TOOLCHAIN_BIN`:
+
+    make HOST=aarch64-linux-android ANDROID_API_LEVEL=28 ANDROID_TOOLCHAIN_BIN=/home/user/Android/Sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin NO_QT=1 NO_WALLET=1
 
 ### Install the required dependencies: Ubuntu & Debian
 
@@ -57,8 +62,25 @@ For linux RISC-V 64-bit cross compilation (there are no packages for 32-bit):
 
     sudo apt-get install g++-riscv64-linux-gnu binutils-riscv64-linux-gnu
 
-RISC-V known issue: gcc-7.3.0 and gcc-7.3.1 result in a broken `test_bitcointalkcoin` executable (see https://github.com/bitcointalkcoin/bitcointalkcoin/pull/13543),
+RISC-V known issue: gcc-7.3.0 and gcc-7.3.1 result in a broken `test_bitcoin` executable (see https://github.com/bitcoin/bitcoin/pull/13543),
 this is apparently fixed in gcc-8.1.0.
+
+#### For iOS cross compilation
+
+This produces a library which can be used in an iOS application. It is not well tested and does not provide a GUI.
+
+For iOS cross compilation you need to obtain the iOS SDK. It's easiest to add a symlink:
+
+    ln -s /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs SDKs
+
+Make sure the IOS_SDK_VERSION version specified in [hosts/darwin.mk](hosts/darwin.mk) is available.
+
+    make HOST=aarch64-apple-darwin14 NO_WALLET=1 NO_QT=1 NO_UPNP=1
+
+There is currently no wallet support, because BDB compilation fails. There is also
+no GUI support (QT).
+
+See also: https://github.com/bitcoin/bitcoin/issues/11720
 
 ### Dependency Options
 The following can be set when running make: make FOO=bar
@@ -77,7 +99,7 @@ The following can be set when running make: make FOO=bar
     BUILD_ID_SALT: Optional salt to use when generating build package ids
 
 If some packages are not built, for example `make NO_WALLET=1`, the appropriate
-options will be passed to bitcointalkcoin's configure. In this case, `--disable-wallet`.
+options will be passed to bitcoin's configure. In this case, `--disable-wallet`.
 
 ### Additional targets
 
