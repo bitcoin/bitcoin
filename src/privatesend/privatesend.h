@@ -271,8 +271,8 @@ public:
 
     bool Relay(CConnman& connman);
 
-    /// Is this queue expired?
-    bool IsExpired() { return GetAdjustedTime() - nTime > PRIVATESEND_QUEUE_TIMEOUT; }
+    /// Check if a queue is too old or too far into the future
+    bool IsTimeOutOfBounds() const;
 
     std::string ToString() const
     {
