@@ -1153,12 +1153,12 @@ void SetupEnvironment()
     }
 #endif
     // On most POSIX systems (e.g. Linux, but not BSD) the environment's locale
-    // may be invalid, in which case the "C" locale is used as fallback.
+    // may be invalid, in which case the "C.UTF-8" locale is used as fallback.
 #if !defined(WIN32) && !defined(MAC_OSX) && !defined(__FreeBSD__) && !defined(__OpenBSD__)
     try {
         std::locale(""); // Raises a runtime error if current locale is invalid
     } catch (const std::runtime_error&) {
-        setenv("LC_ALL", "C", 1);
+        setenv("LC_ALL", "C.UTF-8", 1);
     }
 #elif defined(WIN32)
     // Set the default input/output charset is utf-8
