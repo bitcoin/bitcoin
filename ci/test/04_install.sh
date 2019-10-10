@@ -33,7 +33,7 @@ if [ "$TRAVIS_OS_NAME" == "osx" ]; then
 fi
 
 mkdir -p "${BASE_SCRATCH_DIR}"
-ccache echo "Creating ccache dir if it didn't already exist"
+mkdir -p "${CCACHE_DIR}"
 
 if [ ! -d ${DIR_QA_ASSETS} ]; then
   git clone https://github.com/bitcoin-core/qa-assets ${DIR_QA_ASSETS}
