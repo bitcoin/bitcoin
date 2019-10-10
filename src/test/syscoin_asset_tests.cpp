@@ -21,7 +21,7 @@
 #include <services/rpc/assetrpc.h>
 using namespace std;
 extern UniValue read_json(const std::string& jsondata);
-
+extern CAmount getAuxFee(const std::string &publicData, const CAmount& nAmount, CWitnessAddress & address);
 BOOST_FIXTURE_TEST_SUITE(syscoin_asset_tests, BasicSyscoinTestingSetup)
 
 BOOST_AUTO_TEST_CASE(generate_big_assetdata)
@@ -100,6 +100,49 @@ BOOST_AUTO_TEST_CASE(generate_asset_auxfees)
     auxfeesObj.pushKV("fee_struct", feestructArr);
     string auxfees = auxfeesObj.write();
 	string guid = AssetNew("node1", newaddress, "AGX silver backed token, licensed and operated by Interfix corporation", "''", "8", "100", "1000", "31", "''", "AGX", auxfees);
+}
+BOOST_AUTO_TEST_CASE(generate_auxfees)
+{
+	tfm::format(std::cout,"Running generate_auxfees...\n");
+	string newaddress = GetNewFundedAddress("node1");
+    string newaddressfee = GetNewFundedAddress("node1");
+    UniValue pubDataObj(UniValue::VOBJ);
+    pubDataObj.pushKV("description", "AGX silver backed token, licensed and operated by Interfix corporation");
+    UniValue auxfeesObj(UniValue::VOBJ);
+    auxfeesObj.pushKV("address", newaddressfee);
+    UniValue feestructArr(UniValue::VARR);
+    UniValue boundsArr(UniValue::VARR);
+    boundsArr.push_back("0");
+    boundsArr.push_back("0.01");
+    feestructArr.push_back(boundsArr);
+    UniValue boundsArr1(UniValue::VARR);
+    boundsArr1.push_back("10");
+    boundsArr1.push_back("0.004");
+    feestructArr.push_back(boundsArr1);
+    UniValue boundsArr2(UniValue::VARR);
+    boundsArr2.push_back("250");
+    boundsArr2.push_back("0.002");
+    feestructArr.push_back(boundsArr2);
+    UniValue boundsArr3(UniValue::VARR);
+    boundsArr3.push_back("2500");
+    boundsArr3.push_back("0.0007");
+    feestructArr.push_back(boundsArr3);
+    UniValue boundsArr4(UniValue::VARR);
+    boundsArr4.push_back("25000");
+    boundsArr4.push_back("0.00007");
+    feestructArr.push_back(boundsArr4);
+    UniValue boundsArr5(UniValue::VARR);
+    boundsArr5.push_back("2500000");
+    boundsArr5.push_back("0");
+    feestructArr.push_back(boundsArr5);
+    auxfeesObj.pushKV("fee_struct", feestructArr);
+    pubDataObj.pushKV("aux_fees", auxfeesObj);
+    CWitnessAddress address;
+    const std::string& pubDataStr = pubDataObj.write();
+    BOOST_CHECK_EQUAL(getAuxFee(pubDataStr, 2500000*COIN, address), 194.56*COIN);
+    BOOST_CHECK_EQUAL(getAuxFee(pubDataStr, 2500001*COIN, address), 194.56*COIN);
+    BOOST_CHECK_EQUAL(getAuxFee(pubDataStr, 5000000*COIN, address), 194.56*COIN);
+    BOOST_CHECK_EQUAL(getAuxFee(pubDataStr, 10*COIN, address), 0.1*COIN);
 }
 BOOST_AUTO_TEST_CASE(generate_asset_address_spend)
 {
