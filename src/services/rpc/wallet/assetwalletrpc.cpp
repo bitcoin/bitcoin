@@ -21,6 +21,7 @@ extern CTxDestination DecodeDestination(const std::string& str);
 extern UniValue ValueFromAmount(const CAmount& amount);
 extern std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags = 0);
 extern bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no_witness = false, bool try_witness = true);
+extern CAmount getAuxFee(const std::string &publicData, const CAmount& nAmount, CWitnessAddress & address);
 extern ArrivalTimesMapImpl arrivalTimesMap; 
 extern CCriticalSection cs_assetallocationarrival;
 extern AssetPrevTxMap mapAssetPrevTxSender;
@@ -824,17 +825,14 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 	const CAssetAllocationTuple assetAllocationTuple(nAsset, DescribeWitnessAddress(strAddress));
 	if (!GetAssetAllocation(assetAllocationTuple, dbAssetAllocation))
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset allocation with this key");
-
+    
 	CAsset theAsset;
 	if (!GetAsset(nAsset, theAsset))
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
 	const COutPoint lockedOutpoint = dbAssetAllocation.lockedOutpoint;
     if(!lockedOutpoint.IsNull() && !IsOutpointMature(lockedOutpoint))
         throw JSONRPCError(RPC_MISC_ERROR, "Locked outpoint not mature");
-    if(!lockedOutpoint.IsNull()){
-        // this will let syscointxfund try to select this outpoint as the input
-        mapSenderLockedOutPoints[strAddress] = lockedOutpoint;
-    }
+
 	theAssetAllocation.SetNull();
     theAssetAllocation.assetAllocationTuple.nAsset = assetAllocationTuple.nAsset;
     theAssetAllocation.assetAllocationTuple.witnessAddress = assetAllocationTuple.witnessAddress; 
@@ -860,6 +858,12 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 			throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected amount as number in receiver array");
 
 	}
+    CWitnessAddress auxFeeAddress;
+    const CAmount &nAuxFee = getAuxFee(stringFromVch(theAsset.vchContract), nTotalSending, auxFeeAddress);
+    if(nAuxFee > 0){
+        theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(auxFeeAddress.nVersion, auxFeeAddress.vchWitnessProgram), nAuxFee));
+        nTotalSending += nAuxFee;
+    }
     CAmount nBalanceZDAG = dbAssetAllocation.nBalance;
     const string &allocationTupleStr = theAssetAllocation.assetAllocationTuple.ToString();
     {
@@ -900,7 +904,10 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
             vecSend.push_back(recipient);
         }
 	}
-
+    if(!lockedOutpoint.IsNull()){
+        // this will let syscointxfund try to select this outpoint as the input
+        mapSenderLockedOutPoints[strAddress] = lockedOutpoint;
+    }
 	return syscointxfund_helper(pwallet, strAddress, SYSCOIN_TX_VERSION_ALLOCATION_SEND, strWitness, vecSend);
 }
 template <typename T>
@@ -1204,6 +1211,7 @@ UniValue assetallocationlock(const JSONRPCRequest& request) {
 	if (!GetAssetAllocation(assetAllocationTuple, dbAssetAllocation))
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset allocation with this key");
 
+    
 	const COutPoint lockedOutpoint = dbAssetAllocation.lockedOutpoint;
     if(!lockedOutpoint.IsNull() && !IsOutpointMature(lockedOutpoint))
         throw JSONRPCError(RPC_MISC_ERROR, "Locked outpoint not mature");
