@@ -76,6 +76,9 @@ else
   DOCKER_EXEC echo "Number of CPUs \(nproc\):" \$\(nproc\)
 fi
 
+if [ -n "$DPKG_ADD_ARCH" ]; then
+  DOCKER_EXEC dpkg --add-architecture "$DPKG_ADD_ARCH"
+fi
 
 if [ "$TRAVIS_OS_NAME" != "osx" ]; then
   ${CI_RETRY_EXE} DOCKER_EXEC apt-get update
