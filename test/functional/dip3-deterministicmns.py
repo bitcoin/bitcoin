@@ -289,22 +289,6 @@ class DIP3Test(BitcoinTestFramework):
             self.log.error('expected: ' + str(expected))
             raise AssertionError("mnlists does not match provided mns")
 
-    def wait_for_sporks(self, timeout=30):
-        st = time.time()
-        while time.time() < st + timeout:
-            if self.compare_sporks():
-                return
-            time.sleep(0.5)
-        raise AssertionError("wait_for_sporks timed out")
-
-    def compare_sporks(self):
-        sporks = self.nodes[0].spork('show')
-        for node in self.nodes[1:]:
-            sporks2 = node.spork('show')
-            if sporks != sporks2:
-                return False
-        return True
-
     def compare_mnlist(self, node, mns):
         mnlist = node.masternode('list', 'status')
         for mn in mns:

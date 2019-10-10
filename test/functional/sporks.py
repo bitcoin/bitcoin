@@ -2,11 +2,10 @@
 # Copyright (c) 2018 The Dash Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-import time
 
 from test_framework.mininode import *
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import connect_nodes, wait_until
 
 '''
 '''
@@ -44,16 +43,7 @@ class SporkTest(BitcoinTestFramework):
 
         # check spork propagation for connected nodes
         self.set_test_spork_state(self.nodes[0], True)
-        start = time.time()
-        sent = False
-        while True:
-            if self.get_test_spork_state(self.nodes[1]):
-                sent = True
-                break
-            if time.time() > start + 10:
-                break
-            time.sleep(0.1)
-        assert(sent)
+        wait_until(lambda: self.get_test_spork_state(self.nodes[1]), sleep=0.1, timeout=10)
 
         # restart nodes to check spork persistence
         self.stop_node(0)
@@ -68,17 +58,7 @@ class SporkTest(BitcoinTestFramework):
 
         # connect new node and check spork propagation after restoring from cache
         connect_nodes(self.nodes[1], 2)
-        start = time.time()
-        sent = False
-        while True:
-            if self.get_test_spork_state(self.nodes[2]):
-                sent = True
-                break
-            if time.time() > start + 10:
-                break
-            time.sleep(0.1)
-        assert(sent)
-
+        wait_until(lambda: self.get_test_spork_state(self.nodes[2]), sleep=0.1, timeout=10)
 
 if __name__ == '__main__':
     SporkTest().main()

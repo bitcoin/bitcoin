@@ -4,9 +4,8 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 import time
 
-from test_framework.mininode import *
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import connect_nodes, set_node_times, wait_until
 
 '''
 multikeysporks.py
@@ -89,56 +88,45 @@ class MultiKeySporkTest(BitcoinTestFramework):
             for j in range(i, 5):
                 connect_nodes(self.nodes[i], j)
 
-    def get_test_spork_state(self, node):
+    def get_test_spork_value(self, node):
         info = node.spork('show')
         # use InstantSend spork for tests
         return info['SPORK_2_INSTANTSEND_ENABLED']
 
-    def set_test_spork_state(self, node, value):
+    def set_test_spork_value(self, node, value):
         # use InstantSend spork for tests
         node.spork('SPORK_2_INSTANTSEND_ENABLED', value)
-
-    def wait_for_test_spork_state(self, node, value):
-        start = time.time()
-        got_state = False
-        while True:
-            if self.get_test_spork_state(node) == value:
-                got_state = True
-                break
-            if time.time() > start + 10:
-                break
-            time.sleep(0.1)
-        return got_state
 
     def run_test(self):
         # check test spork default state
         for node in self.nodes:
-            assert(self.get_test_spork_state(node) == 4070908800)
+            assert(self.get_test_spork_value(node) == 4070908800)
 
         self.bump_mocktime(1)
         set_node_times(self.nodes, self.mocktime)
         # first and second signers set spork value
-        self.set_test_spork_state(self.nodes[0], 1)
-        self.set_test_spork_state(self.nodes[1], 1)
+        self.set_test_spork_value(self.nodes[0], 1)
+        self.set_test_spork_value(self.nodes[1], 1)
         # spork change requires at least 3 signers
+        time.sleep(10)
         for node in self.nodes:
-            assert(not self.wait_for_test_spork_state(node, 1))
+            assert(self.get_test_spork_value(node) != 1)
 
         # third signer set spork value
-        self.set_test_spork_state(self.nodes[2], 1)
+        self.set_test_spork_value(self.nodes[2], 1)
         # now spork state is changed
         for node in self.nodes:
-            assert(self.wait_for_test_spork_state(node, 1))
+            wait_until(lambda: self.get_test_spork_value(node) == 1, sleep=0.1, timeout=10)
 
         self.bump_mocktime(1)
         set_node_times(self.nodes, self.mocktime)
         # now set the spork again with other signers to test
         # old and new spork messages interaction
-        self.set_test_spork_state(self.nodes[2], 2)
-        self.set_test_spork_state(self.nodes[3], 2)
-        self.set_test_spork_state(self.nodes[4], 2)
+        self.set_test_spork_value(self.nodes[2], 2)
+        self.set_test_spork_value(self.nodes[3], 2)
+        self.set_test_spork_value(self.nodes[4], 2)
         for node in self.nodes:
-            assert(self.wait_for_test_spork_state(node, 2))
+            wait_until(lambda: self.get_test_spork_value(node) == 2, sleep=0.1, timeout=10)
 
 
 if __name__ == '__main__':
