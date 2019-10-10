@@ -123,7 +123,7 @@ static CFeeRate EstimateFeeRate(CWallet* wallet, const CWalletTx& wtx, CCoinCont
     // the minimum of that and the wallet's conservative
     // WALLET_INCREMENTAL_RELAY_FEE value to future proof against changes to
     // network wide policy for incremental relay fee that our node may not be
-    // aware of. This ensures we're over the over the required relay fee rate
+    // aware of. This ensures we're over the required relay fee rate
     // (BIP 125 rule 4).  The replacement tx will be at least as large as the
     // original tx, so the total fee will be greater (BIP 125 rule 3)
     CFeeRate node_incremental_relay_fee = wallet->chain().relayIncrementalFee();
@@ -314,7 +314,7 @@ Result CreateRateBumpTransaction(CWallet* wallet, const uint256& txid, const CCo
         // The user provided a feeRate argument.
         // We calculate this here to avoid compiler warning on the cs_wallet lock
         const int64_t maxTxSize = CalculateMaximumSignedTxSize(*wtx.tx, wallet);
-        Result res = CheckFeeRate(wallet, wtx, *(new_coin_control.m_feerate), maxTxSize, errors);
+        Result res = CheckFeeRate(wallet, wtx, *new_coin_control.m_feerate, maxTxSize, errors);
         if (res != Result::OK) {
             return res;
         }
