@@ -119,7 +119,7 @@ jobs:
         FILE_ENV="./ci/test/00_setup_env_amd64_trusty.sh"
 
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [xenial]  [no depends, only system libs, sanitizers: thread (TSan), no wallet]'
+      name: 'x86_64 Linux  [GOAL: install]  [xenial]  [no depends, only system libs, rust, sanitizers: thread (TSan), no wallet]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_amd64_tsan.sh"
         TEST_RUNNER_EXTRA="--exclude feature_block"  # Not enough memory on travis machines
