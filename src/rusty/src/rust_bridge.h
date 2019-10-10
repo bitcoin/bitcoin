@@ -15,6 +15,8 @@ namespace rust_block_fetch {
 
 extern "C" {
 
+bool init_fetch_dns_headers(const char *domain);
+bool stop_fetch_dns_headers();
 
 } // extern "C"
 

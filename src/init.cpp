@@ -77,6 +77,10 @@
 #include <zmq/zmqrpc.h>
 #endif
 
+#if ENABLE_RUSTY
+#include <rusty/src/rust_bridge.h>
+#endif
+
 static bool fFeeEstimatesInitialized = false;
 static const bool DEFAULT_PROXYRANDOMIZE = true;
 static const bool DEFAULT_REST_ENABLE = false;
@@ -182,6 +186,10 @@ void Shutdown(NodeContext& node)
     /// module was initialized.
     util::ThreadRename("shutoff");
     mempool.AddTransactionsUpdated(1);
+
+#if ENABLE_RUSTY
+    rust_block_fetch::stop_fetch_dns_headers();
+#endif
 
     StopHTTPRPC();
     StopREST();
@@ -336,10 +344,6 @@ static void OnRPCStopped()
     LogPrint(BCLog::RPC, "RPC stopped.\n");
 }
 
-#if ENABLE_RUSTY
-#include <rusty/src/rust_bridge.h>
-#endif
-
 void SetupServerArgs()
 {
     SetupHelpOptions(gArgs);
@@ -401,6 +405,9 @@ void SetupServerArgs()
                  " If <type> is not supplied or if <type> = 1, indexes for all known types are enabled.",
                  ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 
+#if ENABLE_RUSTY
+    gArgs.AddArg("-headersfetchdns=<domain>", "A domain name from which to fetch headers. eg bitcoinheaders.net", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
+#endif
     gArgs.AddArg("-addnode=<ip>", "Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info). This option can be specified multiple times to add multiple nodes.", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
     gArgs.AddArg("-banscore=<n>", strprintf("Threshold for disconnecting misbehaving peers (default: %u)", DEFAULT_BANSCORE_THRESHOLD), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     gArgs.AddArg("-bantime=<n>", strprintf("Number of seconds to keep misbehaving peers from reconnecting (default: %u)", DEFAULT_MISBEHAVING_BANTIME), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
@@ -1824,6 +1831,14 @@ bool AppInitMain(NodeContext& node)
     scheduler.scheduleEvery([banman]{
         banman->DumpBanlist();
     }, DUMP_BANS_INTERVAL * 1000);
+
+    // ********************************************************* Step 14: kick off backup block downloaders
+
+#if ENABLE_RUSTY
+    for (const std::string& domain : gArgs.GetArgs("-headersfetchdns")) {
+        rust_block_fetch::init_fetch_dns_headers(domain.c_str());
+    }
+#endif
 
     return true;
 }
