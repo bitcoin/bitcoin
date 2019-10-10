@@ -1350,6 +1350,27 @@ static void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, int n
     }
 }
 
+static const std::vector<RPCResult> TransactionDescriptionString()
+{
+    return  {{RPCResult::Type::NUM, "confirmations", "The number of blockchain confirmations for the transaction. Available for 'send' and\n"
+                                                    "'receive' category of transactions. Negative confirmations indicate the\n"
+                                                    "transaction conflicts with the block chain"},
+            {RPCResult::Type::BOOL, "instantlock", "Current transaction lock state. Available for 'send' and 'receive' category of transactions"},
+            {RPCResult::Type::BOOL, "instantlock-internal", "Current internal transaction lock state. Available for 'send' and 'receive' category of transactions"},
+            {RPCResult::Type::BOOL, "chainlock", "The state of the corresponding block chainlock"},
+            {RPCResult::Type::BOOL, "trusted", "Whether we consider the outputs of this unconfirmed transaction safe to spend."},
+            {RPCResult::Type::STR_HEX, "blockhash", "The block hash containing the transaction. Available for 'send' and 'receive'\n"
+                                                   "category of transactions."},
+            {RPCResult::Type::NUM, "blockindex", "The index of the transaction in the block that includes it. Available for 'send' and 'receive'\n"
+                                                "category of transactions."},
+            {RPCResult::Type::NUM_TIME, "blocktime", "The block time expressed in " + UNIX_EPOCH_TIME + "."},
+            {RPCResult::Type::STR_HEX, "txid", "The transaction id. Available for 'send' and 'receive' category of transactions."},
+            {RPCResult::Type::NUM_TIME, "time", "The transaction time expressed in " + UNIX_EPOCH_TIME + "."},
+            {RPCResult::Type::NUM_TIME, "timereceived", "The time received expressed in " + UNIX_EPOCH_TIME + ". Available \n"
+                                               "for 'send' and 'receive' category of transactions."},
+            {RPCResult::Type::STR, "comment", "If a comment is associated with the transaction."}};
+}
+
 static UniValue listtransactions(const JSONRPCRequest& request)
 {
     RPCHelpMan{"listtransactions",
@@ -1365,45 +1386,30 @@ static UniValue listtransactions(const JSONRPCRequest& request)
         RPCResult{
             RPCResult::Type::ARR, "", "",
             {
-                {RPCResult::Type::OBJ, "", "", Cat<std::vector<RPCResult>>(
-                   {
-                       {RPCResult::Type::STR, "address", "The dash address of the transaction. Not present for\n"
-                             "move transactions (category = move)."},
-                       {RPCResult::Type::STR, "category", "The transaction category.\n"
-                           "\"send\"                  Transactions sent.\n"
-                           "\"coinjoin\"              Transactions sent using CoinJoin funds.\n"
-                           "\"receive\"               Non-coinbase transactions received.\n"
-                           "\"generate\"              Coinbase transactions received with more than 100 confirmations.\n"
-                           "\"immature\"              Coinbase transactions received with 100 or fewer confirmations.\n"
-                           "\"orphan\"                Orphaned coinbase transactions received.\n"},
-                       {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT + ". This is negative for the 'send' category, and is positive\n"
-                            "for all other categories"},
-                       {RPCResult::Type::STR, "label", "A comment for the address/transaction, if any"},
-                       {RPCResult::Type::NUM, "vout", "the vout value"},
-                       {RPCResult::Type::STR_AMOUNT, "fee", "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
-                           "'send' category of transactions."},
-                       {RPCResult::Type::NUM, "confirmations", "The number of blockchain confirmations for the transaction. Available for 'send' and\n"
-                                                               "'receive' category of transactions. Negative confirmations indicate the\n"
-                                                               "transaction conflicts with the block chain"},
-                       {RPCResult::Type::BOOL, "instantlock", "Current transaction lock state. Available for 'send' and 'receive' category of transactions"},
-                       {RPCResult::Type::BOOL, "instantlock-internal", "Current internal transaction lock state. Available for 'send' and 'receive' category of transactions"},
-                       {RPCResult::Type::BOOL, "chainlock", "The state of the corresponding block chainlock"},
-                       {RPCResult::Type::BOOL, "trusted", "Whether we consider the outputs of this unconfirmed transaction safe to spend."},
-                       {RPCResult::Type::STR_HEX, "blockhash", "The block hash containing the transaction. Available for 'send' and 'receive'\n"
-                                                               "category of transactions."},
-                       {RPCResult::Type::NUM, "blockindex", "The index of the transaction in the block that includes it. Available for 'send' and 'receive'\n"
-                                                            "category of transactions."},
-                       {RPCResult::Type::NUM_TIME, "blocktime", "The block time expressed in " + UNIX_EPOCH_TIME + "."},
-                       {RPCResult::Type::STR_HEX, "txid", "The transaction id. Available for 'send' and 'receive' category of transactions."},
-                       {RPCResult::Type::NUM_TIME, "time", "The transaction time expressed in " + UNIX_EPOCH_TIME + "."},
-                       {RPCResult::Type::NUM_TIME, "timereceived", "The time received expressed in " + UNIX_EPOCH_TIME + ". Available \n"
-                                                           "for 'send' and 'receive' category of transactions."},
-                       {RPCResult::Type::STR, "comment", "If a comment is associated with the transaction."},
-                       },
-                   {
-                           {RPCResult::Type::BOOL, "abandoned", "'true' if the transaction has been abandoned (inputs are respendable). Only available for the \n"
-                                                                "'send' category of transactions."},
-                   })},
+                {RPCResult::Type::OBJ, "", "", Cat(Cat<std::vector<RPCResult>>(
+                    {
+                        {RPCResult::Type::BOOL, "involvesWatchonly", "Only returns true if imported addresses were involved in transaction"},
+                        {RPCResult::Type::STR, "address", "The dash address of the transaction. Not present for\n"
+                              "move transactions (category = move)."},
+                        {RPCResult::Type::STR, "category", "The transaction category.\n"
+                            "\"send\"                  Transactions sent.\n"
+                            "\"coinjoin\"              Transactions sent using CoinJoin funds.\n"
+                            "\"receive\"               Non-coinbase transactions received.\n"
+                            "\"generate\"              Coinbase transactions received with more than 100 confirmations.\n"
+                            "\"immature\"              Coinbase transactions received with 100 or fewer confirmations.\n"
+                            "\"orphan\"                Orphaned coinbase transactions received.\n"},
+                        {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT + ". This is negative for the 'send' category, and is positive\n"
+                             "for all other categories"},
+                        {RPCResult::Type::STR, "label", "A comment for the address/transaction, if any"},
+                        {RPCResult::Type::NUM, "vout", "the vout value"},
+                        {RPCResult::Type::STR_AMOUNT, "fee", "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
+                            "'send' category of transactions."},
+                    },
+                    TransactionDescriptionString()),
+                    {
+                       {RPCResult::Type::BOOL, "abandoned", "'true' if the transaction has been abandoned (inputs are respendable). Only available for the \n"
+                                                            "'send' category of transactions."},
+                    })},
             }
         },
         RPCExamples{
@@ -1490,12 +1496,13 @@ static UniValue listsinceblock(const JSONRPCRequest& request)
     "                                                           (not guaranteed to work on pruned nodes)"},
         },
         RPCResult{
-            RPCResult::Type::OBJ, "", "", Cat<std::vector<RPCResult>>(
+            RPCResult::Type::OBJ, "", "",
             {
                 {RPCResult::Type::ARR, "transactions", "",
                 {
-                    {RPCResult::Type::OBJ, "", "", Cat<std::vector<RPCResult>>(
+                    {RPCResult::Type::OBJ, "", "", Cat(Cat<std::vector<RPCResult>>(
                     {
+                        {RPCResult::Type::BOOL, "involvesWatchonly", "Only returns true if imported addresses were involved in transaction"},
                         {RPCResult::Type::STR, "address", "The dash address of the transaction."},
                         {RPCResult::Type::STR, "category", "The transaction category.\n"
                             "\"send\"                  Transactions sent.\n"
@@ -1508,59 +1515,20 @@ static UniValue listsinceblock(const JSONRPCRequest& request)
                             "for all other categories"},
                         {RPCResult::Type::NUM, "vout", "the vout value"},
                         {RPCResult::Type::NUM, "fee", "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the 'send' category of transactions."},
-                        {RPCResult::Type::NUM, "confirmations", "The number of confirmations for the transaction."},
-                        {RPCResult::Type::BOOL, "instantlock", "Current transaction lock state. Available for 'send' and 'receive' category of transactions."},
-                        {RPCResult::Type::BOOL, "instantlock_internal", "Current internal transaction lock state. Available for 'send' and 'receive' category of transactions."},
-                        {RPCResult::Type::BOOL, "chainlock", "The state of the corresponding block chainlock."},
-                        {RPCResult::Type::STR_HEX, "blockhash", "The block hash containing the transaction."},
-                        {RPCResult::Type::NUM, "blockindex", "The index of the transaction in the block that includes it."},
-                        {RPCResult::Type::NUM_TIME, "blocktime", "The block time expressed in " + UNIX_EPOCH_TIME + "."},
-                        {RPCResult::Type::STR_HEX, "txid", "The transaction id."},
-                        {RPCResult::Type::NUM_TIME, "time", "The transaction time expressed in " + UNIX_EPOCH_TIME + "."},
-                        {RPCResult::Type::NUM_TIME, "timereceived", "The time received expressed in " + UNIX_EPOCH_TIME + "."},
+                    },
+                    TransactionDescriptionString()),
+                    {
                         {RPCResult::Type::BOOL, "abandoned", "'true' if the transaction has been abandoned (inputs are respendable). Only available for the 'send' category of transactions."},
                         {RPCResult::Type::STR, "comment", "If a comment is associated with the transaction."},
                         {RPCResult::Type::STR, "label", "A comment for the address/transaction, if any."},
                         {RPCResult::Type::STR, "to", "If a comment to is associated with the transaction."},
-                    },
-                     {
-                             {RPCResult::Type::STR_HEX, "lastblockhash", "The hash of the block (target_confirmations-1) from the best block on the main chain. This is typically used to feed back into listsinceblock the next time you call it. So you would generally use a target_confirmations of say 6, so you will be continually re-notified of transactions until they've reached 6 confirmations plus any new ones."}
-                     }
-                )},
-            }}},
-            {
-                {RPCResult::Type::ARR, "removed", "<structure is the same as \"transactions\" above, only present if include_removed=true>\n Note: transactions that were re-added in the active chain will appear as-is in this array, and may thus have a positive confirmation count.",
-                {
-                    {RPCResult::Type::OBJ, "", "", Cat<std::vector<RPCResult>>(
-                    {
-                        {RPCResult::Type::STR, "address", "The dash address of the transaction. Not present for move transactions (category = move)."},
-                        {RPCResult::Type::STR, "category", "The transaction category. 'send' has negative amounts, 'receive' has positive amounts."},
-                        {RPCResult::Type::NUM, "amount", "The amount in " + CURRENCY_UNIT + ". This is negative for the 'send' category, and for the 'move' category for moves \n"
-                                                                                            "outbound. It is positive for the 'receive' category, and for the 'move' category for inbound funds."},
-                        {RPCResult::Type::NUM, "vout", "the vout value"},
-                        {RPCResult::Type::NUM, "fee", "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the 'send' category of transactions."},
-                        {RPCResult::Type::NUM, "confirmations", "The number of blockchain confirmations for the transaction. Available for 'send' and 'receive' category of transactions.\n"
-                                                                "When it's < 0, it means the transaction conflicted that many blocks ago."},
-                        {RPCResult::Type::BOOL, "instantlock", "Current transaction lock state. Available for 'send' and 'receive' category of transactions."},
-                        {RPCResult::Type::BOOL, "instantlock_internal", "Current internal transaction lock state. Available for 'send' and 'receive' category of transactions."},
-                        {RPCResult::Type::BOOL, "chainlock", "The state of the corresponding block chainlock."},
-                        {RPCResult::Type::STR_HEX, "blockhash", "The block hash containing the transaction. Available for 'send' and 'receive' category of transactions."},
-                        {RPCResult::Type::NUM, "blockindex", "The index of the transaction in the block that includes it. Available for 'send' and 'receive' category of transactions."},
-                        {RPCResult::Type::NUM_TIME, "blocktime", "The block time expressed in " + UNIX_EPOCH_TIME + "."},
-                        {RPCResult::Type::STR_HEX, "txid", "The transaction id. Available for 'send' and 'receive' category of transactions."},
-                        {RPCResult::Type::NUM_TIME, "time", "The transaction time expressed in " + UNIX_EPOCH_TIME + "."},
-                        {RPCResult::Type::NUM_TIME, "timereceived", "The time received expressed in " + UNIX_EPOCH_TIME + ". Available for 'send' and 'receive' category of transactions."},
-                        {RPCResult::Type::BOOL, "abandoned", "'true' if the transaction has been abandoned (inputs are respendable). Only available for the 'send' category of transactions."},
-                        {RPCResult::Type::STR, "comment", "If a comment is associated with the transaction."},
-                        {RPCResult::Type::STR, "label", "A comment for the address/transaction, if any."},
-                        {RPCResult::Type::STR, "to", "If a comment to is associated with the transaction."},
-                    },
-                    {
-                        {RPCResult::Type::STR_HEX, "lastblockhash", "The hash of the block (target_confirmations-1) from the best block on the main chain. This is typically used to feed back into listsinceblock the next time you call it. So you would generally use a target_confirmations of say 6, so you will be continually re-notified of transactions until they've reached 6 confirmations plus any new ones."}
-                    }
-                    )},
-                }}
-            })
+                    })},
+                }},
+                {RPCResult::Type::ARR, "removed", "<structure is the same as \"transactions\" above, only present if include_removed=true>\n"
+                    "Note: transactions that were re-added in the active chain will appear as-is in this array, and may thus have a positive confirmation count."
+                , {{RPCResult::Type::ELISION, "", ""},}},
+                {RPCResult::Type::STR_HEX, "lastblockhash", "The hash of the block (target_confirmations-1) from the best block on the main chain. This is typically used to feed back into listsinceblock the next time you call it. So you would generally use a target_confirmations of say 6, so you will be continually re-notified of transactions until they've reached 6 confirmations plus any new ones."}
+            }
         },
         RPCExamples{
             HelpExampleCli("listsinceblock", "")
@@ -1662,25 +1630,19 @@ static UniValue gettransaction(const JSONRPCRequest& request)
             {"include_watchonly", RPCArg::Type::BOOL, /* default */ "false", "Whether to include watch-only addresses in balance calculation and details[]"},
         },
         RPCResult{
-            RPCResult::Type::OBJ, "", "",
+            RPCResult::Type::OBJ, "", "", Cat(Cat<std::vector<RPCResult>>(
                 {
                     {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT},
                     {RPCResult::Type::STR_AMOUNT, "fee", "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
                                                                                                        "'send' category of transactions."},
-                    {RPCResult::Type::BOOL, "instantlock", "Current transaction lock state."},
-                    {RPCResult::Type::BOOL, "instantlock_internal", "Current internal transaction lock state."},
-                    {RPCResult::Type::BOOL, "chainlock", "The state of the corresponding block chainlock."},
-                    {RPCResult::Type::NUM, "confirmations", "The number of blockchain confirmations."},
-                    {RPCResult::Type::STR_HEX, "blockhash", "The block hash."},
-                    {RPCResult::Type::NUM, "blockindex", "The index of the transaction in the block that includes it."},
-                    {RPCResult::Type::NUM_TIME, "blocktime", "The time expressed in " + UNIX_EPOCH_TIME + "."},
-                    {RPCResult::Type::STR_HEX, "txid", "The transaction id."},
-                    {RPCResult::Type::NUM_TIME, "time", "The transaction time expressed in " + UNIX_EPOCH_TIME + "."},
-                    {RPCResult::Type::NUM_TIME, "timereceived", "The time received expressed in " + UNIX_EPOCH_TIME + "."},
+                },
+                TransactionDescriptionString()),
+                {
                     {RPCResult::Type::ARR, "details", "",
                         {
                             {RPCResult::Type::OBJ, "", "",
                                 {
+                                    {RPCResult::Type::BOOL, "involvesWatchonly", "Only returns true if imported addresses were involved in transaction"},
                                     {RPCResult::Type::STR, "address", "The dash address involved in the transaction."},
                                     {RPCResult::Type::STR, "category", "The transaction category.\n"
                                         "\"send\"                  Transactions sent.\n"
@@ -1699,7 +1661,7 @@ static UniValue gettransaction(const JSONRPCRequest& request)
                             }},
                     }},
                   {RPCResult::Type::STR_HEX, "hex", "Raw data for transaction"},
-                },
+                }),
         },
         RPCExamples{
             HelpExampleCli("gettransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
