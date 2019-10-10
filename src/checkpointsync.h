@@ -1,5 +1,5 @@
 // Copyright (c) 2012-2019 The Peercoin developers
-// Distributed under conditional MIT/X11 open source software license
+// Distributed under conditional MIT open source software license
 // see the accompanying file COPYING
 #ifndef PEERCOIN_CHECKPOINTSYNC_H
 #define PEERCOIN_CHECKPOINTSYNC_H
