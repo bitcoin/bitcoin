@@ -1436,3 +1436,14 @@ QString RPCConsole::tabTitle(TabTypes tab_type) const
 {
     return pageButtons->button(tab_type)->text();
 }
+
+QKeySequence RPCConsole::tabShortcut(TabTypes tab_type) const
+{
+    switch (tab_type) {
+    case TAB_INFO: return QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_I);
+    case TAB_CONSOLE: return QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_C);
+    case TAB_GRAPH: return QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_G);
+    case TAB_PEERS: return QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_P);
+    case TAB_REPAIR: return QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_R);
+    }
+}
