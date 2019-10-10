@@ -263,7 +263,7 @@ BaseIndex::DB& TxIndex::GetDB() const { return *m_db; }
 int TxIndex::ReadTxPos(const uint256& txid) const
 {
     CDiskTxPos postx;
-    if (!m_db->ReadTxPos(txid, postx)) {
+    if (m_db->ReadTxPos(txid, postx)) {
         return postx.nTxOffset;
     }
 
