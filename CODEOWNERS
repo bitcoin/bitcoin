@@ -1,0 +1,25 @@
+# Nonspecific maintainers
+#   @laanwj
+#   @sipa
+#   @fanquake
+
+# Build system maintainer
+/configure.ac         @theuni
+/build-aux/           @theuni
+/depends/             @theuni
+*.am                  @theuni
+Makefile.*            @theuni
+
+# Test framework maintainer
+/src/test/            @marcofalke
+/test/                @marcofalke
+/ci/                  @marcofalke
+
+# GUI maintainer
+/src/qt/              @jonasschnelli
+
+# Wallet maintainer
+/src/wallet/          @meshcollider
+
+# MSVC build system maintainer
+/build_msvc/          @sipsorcery
