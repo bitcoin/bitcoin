@@ -3,6 +3,8 @@
 #[cfg(test)] pub use test_bridge as bridge;
 use bridge::*;
 
+mod dns_headers;
+
 use std::time::{Duration, Instant};
 
 /// Waits for IBD to complete, to get stuck, or shutdown to be initiated. This should be called
