@@ -29,9 +29,9 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 	tfm::format(std::cout,"Running generate_big_assetdata...\n");
 	GenerateBlocks(5);
 	string newaddress = GetNewFundedAddress("node1");
-	// 256 bytes long
-	string gooddata = "SfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfdd";
-	// 257 bytes long
+	// 480 bytes long
+	string gooddata = "SfsddfdfsdsdffsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfddSfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdssfsddSfdd";
+	// 481 bytes long (makes 513 with the pubdata overhead)
 	UniValue r;
 	string baddata = gooddata + "a";
 	string guid = AssetNew("node1", newaddress, gooddata);
@@ -44,6 +44,12 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 	BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_uint()) == guid);
 	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetinfo" , guid1));
     BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_uint()) == guid1);
+    // data too big
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetnew" , "\"" + newaddress + "\",\"tmp\",\"" + baddata + "\",\"''\",3,2000,1000,31,{},\"''\""));
+
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "signrawtransactionwithwallet" , "\"" +  find_value(r.get_obj(), "hex").get_str() + "\""));
+    string hexStr = find_value(r.get_obj(), "hex").get_str();
+    BOOST_CHECK_THROW(r = CallExtRPC("node1", "sendrawtransaction" , "\"" + hexStr + "\""), runtime_error);
 }
 BOOST_AUTO_TEST_CASE(generate_asset_spt_sysx)
 {
@@ -54,7 +60,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_spt_sysx)
     GenerateBlocks(5, "node3");
     string updateFlags = itostr(ASSET_UPDATE_CONTRACT | ASSET_UPDATE_DATA);
     // cannot edit supply
-    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetupdate" , strSYSXAsset + ",\"" + strSYSXAddress + "\",\"''\",1," + updateFlags + ",\"''\""));
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetupdate" , strSYSXAsset + ",\"pub\",\"''\",1," + updateFlags + ",{},\"''\""));
 
 	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "signrawtransactionwithwallet" , "\"" + find_value(r.get_obj(), "hex").get_str() + "\""));
     string hexStr = find_value(r.get_obj(), "hex").get_str();
@@ -62,6 +68,38 @@ BOOST_AUTO_TEST_CASE(generate_asset_spt_sysx)
 
     // can update contract + pub data
     AssetUpdate("node1", strSYSXAsset, "pub", "''", updateFlags, "0x931d387731bbbc988b312206c74f77d004d6b84b");   
+}
+BOOST_AUTO_TEST_CASE(generate_asset_auxfees)
+{
+	tfm::format(std::cout,"Running generate_asset_auxfees...\n");
+	string newaddress = GetNewFundedAddress("node1");
+    string newaddressfee = GetNewFundedAddress("node1");
+    UniValue auxfeesObj(UniValue::VOBJ);
+    auxfeesObj.pushKV("address", newaddressfee);
+    UniValue feestructArr(UniValue::VARR);
+    UniValue boundsArr(UniValue::VARR);
+    boundsArr.push_back("0");
+    boundsArr.push_back("0.01");
+    feestructArr.push_back(boundsArr);
+    UniValue boundsArr1(UniValue::VARR);
+    boundsArr1.push_back("10");
+    boundsArr1.push_back("0.004");
+    feestructArr.push_back(boundsArr1);
+    UniValue boundsArr2(UniValue::VARR);
+    boundsArr2.push_back("250");
+    boundsArr2.push_back("0.002");
+    feestructArr.push_back(boundsArr2);
+    UniValue boundsArr3(UniValue::VARR);
+    boundsArr3.push_back("2500");
+    boundsArr3.push_back("0.0007");
+    feestructArr.push_back(boundsArr3);
+    UniValue boundsArr4(UniValue::VARR);
+    boundsArr4.push_back("25000");
+    boundsArr4.push_back("0.00007");
+    feestructArr.push_back(boundsArr4);
+    auxfeesObj.pushKV("fee_struct", feestructArr);
+    string auxfees = auxfeesObj.write();
+	string guid = AssetNew("node1", newaddress, "AGX silver backed token, licensed and operated by Interfix corporation", "''", "8", "100", "1000", "31", "''", "AGX", auxfees);
 }
 BOOST_AUTO_TEST_CASE(generate_asset_address_spend)
 {
@@ -355,7 +393,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
     // create assets needed
     tfm::format(std::cout,"creating %d sender assets...\n", numAssets);
     for(int i =0;i<numAssets;i++){
-        BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetnew" , "\"" +  vecFundedAddresses[i] + "\",\"tps\",\"''\",\"''\",8,250,250,31,\"''\""));
+        BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetnew" , "\"" +  vecFundedAddresses[i] + "\",\"tps\",\"''\",\"''\",8,250,250,31,{},\"''\""));
         string guid = itostr(find_value(r.get_obj(), "asset_guid").get_uint());
         BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "signrawtransactionwithwallet", "\"" + find_value(r.get_obj(), "hex").get_str() + "\""));
         string hex_str = find_value(r.get_obj(), "hex").get_str();
@@ -1243,7 +1281,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag_dbl_spend_long_chain)
     BOOST_CHECK(AreTwoTransactionsLinked("node1", tx20, tx22));
     string tx23 = AssetSend("node1", assetguid, "[{\"address\":\"" + useraddress2 + "\",\"amount\":0.1}]", "''", true, true, false);
     BOOST_CHECK(AreTwoTransactionsLinked("node1", tx21, tx23));
-    string tx24 = AssetUpdate("node1", strSYSXAsset, "''", "''", "''", "", "''", false);
+    string tx24 = AssetUpdate("node1", strSYSXAsset, "''", "''", "''", "''", "''", false);
     BOOST_CHECK(AreTwoTransactionsLinked("node1", tx22, tx24));
     MilliSleep(500);
     
@@ -1345,11 +1383,11 @@ BOOST_AUTO_TEST_CASE(generate_bad_assetmaxsupply_address)
 	// 256 bytes long
 	string gooddata = "SfsddfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfdd";
 	// 0 max supply good
-	BOOST_CHECK_NO_THROW(CallExtRPC("node1", "assetnew" , "\"" + newaddress + "\",\"tmp\",\"" + gooddata + "\",\"''\",8,1,0,31,\"''\""));
+	BOOST_CHECK_NO_THROW(CallExtRPC("node1", "assetnew" , "\"" + newaddress + "\",\"tmp\",\"" + gooddata + "\",\"''\",8,1,0,31,{},\"''\""));
 	// 1 max supply good
-	BOOST_CHECK_NO_THROW(CallExtRPC("node1", "assetnew" , "\"" + newaddress + "\",\"tmp\",\"" + gooddata + "\",\"''\",8,1,1,31,\"''\""));
+	BOOST_CHECK_NO_THROW(CallExtRPC("node1", "assetnew" , "\"" + newaddress + "\",\"tmp\",\"" + gooddata + "\",\"''\",8,1,1,31,{},\"''\""));
 	// balance > max supply
-	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetnew" , "\"" + newaddress + "\",\"tmp\",\"" + gooddata + "\",\"''\",3,2000,1000,31,\"''\""));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetnew" , "\"" + newaddress + "\",\"tmp\",\"" + gooddata + "\",\"''\",3,2000,1000,31,{},\"''\""));
 
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "signrawtransactionwithwallet" , "\"" +  find_value(r.get_obj(), "hex").get_str() + "\""));
     string hexStr = find_value(r.get_obj(), "hex").get_str();
@@ -1364,8 +1402,8 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_address)
 	string guid = AssetNew("node1", newaddress, "data");
 	// update an asset that isn't yours
 	UniValue r;
-	//"assetupdate [asset] [public] [supply] [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallExtRPC("node2", "assetupdate" , guid + ",\"" + newaddress + "\",\"''\",1,31,\"''\""));
+	// "assetupdate [asset] [description] [contract] [supply] [update_flags] [aux_fees] [witness]\n"
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node2", "assetupdate" , guid + ",\"pub\",\"''\",1,31,{},\"''\""));
 
 	BOOST_CHECK_NO_THROW(r = CallExtRPC("node2", "signrawtransactionwithwallet" , "\"" +  find_value(r.get_obj(), "hex").get_str() + "\""));
     string hexStr = find_value(r.get_obj(), "hex").get_str();
@@ -1383,7 +1421,7 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_address)
     int updateflags = ASSET_UPDATE_ALL & ~ASSET_UPDATE_SUPPLY;
 	string guid1 = AssetNew("node1", newaddress, "data", "''", "8", "1", "10", "31");
     // can't change supply > max supply (current balance already 6, max is 10)
-	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetupdate" , guid + ",\"" + newaddress + "\",\"''\",5," + itostr(updateflags) + ",\"''\""));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetupdate" , guid + ",\"pub\",\"''\",5," + itostr(updateflags) + ",{},\"''\""));
 
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "signrawtransactionwithwallet" , "\"" +  find_value(r.get_obj(), "hex").get_str() + "\""));
     hexStr = find_value(r.get_obj(), "hex").get_str();
@@ -1392,7 +1430,7 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_address)
 
 	AssetUpdate("node1", guid1, "pub12", "1", itostr(updateflags));
 	// ensure can't update supply (update flags is set to not allowsupply update)
-	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetupdate" , guid1 + ",\"" + newaddress + "\",\"''\",1," + itostr(updateflags) + ",\"''\""));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetupdate" , guid1 + ",\"pub\",\"''\",1," + itostr(updateflags) + ",{},\"''\""));
 
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "signrawtransactionwithwallet" , "\"" +  find_value(r.get_obj(), "hex").get_str() + "\""));
     hexStr = find_value(r.get_obj(), "hex").get_str();
@@ -1421,27 +1459,27 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_precision_address)
 
 		string guid = AssetNew("node1", addressName, "data", "''", istr, "1", maxstrnew);
 		AssetUpdate("node1", guid, "pub12", maxstrupdate);
-		// "assetupdate [asset] [public] [contract] [supply] [update_flags] [witness]\n"
+		// "assetupdate [asset] [description] [contract] [supply] [update_flags] [aux_fees] [witness]\n"
 		// can't go above max balance (10^18) / (10^i) for i decimal places
-		BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetupdate" , guid + ",\"pub\",\"''\",1,31,\"''\""));
+		BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetupdate" , guid + ",\"pub\",\"''\",1,31,{},\"''\""));
         BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "signrawtransactionwithwallet" , "\"" +  find_value(r.get_obj(), "hex").get_str() + "\""));
         hexStr = find_value(r.get_obj(), "hex").get_str();
         BOOST_CHECK_THROW(r = CallExtRPC("node1", "sendrawtransaction" , "\"" + hexStr + "\""), runtime_error);
 
 
-		// "assetnew [address] [symbol] [public value] [contract] [precision=8] [supply] [max_supply] [update_flags] [witness]\n"
-		BOOST_CHECK_NO_THROW(r= CallExtRPC("node1", "assetnew" , "\"" + addressName + "\",\"cat\",\"pub\",\"''\"," + istr + "," + maxstrnew + "," + maxstrnew + ",31,\"''\""));
+		// "assetnew [address] [symbol] [description] [contract] [precision=8] [supply] [max_supply] [update_flags] [aux_fees] [witness]\n"
+		BOOST_CHECK_NO_THROW(r= CallExtRPC("node1", "assetnew" , "\"" + addressName + "\",\"cat\",\"pub\",\"''\"," + istr + "," + maxstrnew + "," + maxstrnew + ",31,{},\"''\""));
         BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "signrawtransactionwithwallet" , "\"" +  find_value(r.get_obj(), "hex").get_str() + "\""));
         hexStr = find_value(r.get_obj(), "hex").get_str();
         BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "sendrawtransaction" , "\"" + hexStr + "\""));
 
-        BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetnew","\"" + addressName + "\",\"sysx\",\"pub\",\"''\"," + istr + ",1," + maxstrnew + ",31,\"''\""));
+        BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetnew","\"" + addressName + "\",\"sysx\",\"pub\",\"''\"," + istr + ",1," + maxstrnew + ",31,{},\"''\""));
         BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "signrawtransactionwithwallet" , "\"" +  find_value(r.get_obj(), "hex").get_str() + "\""));
         hexStr = find_value(r.get_obj(), "hex").get_str();
         BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "sendrawtransaction" , "\"" + hexStr + "\""));
 
         // will send transaction but use 0 for total supply + balance
-        BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetnew","\"" + addressName + "\",\"syse\",\"pub\",\"''\"," + istr + "," + maxstrplusone + "," + maxstrnew + ",31,\"''\""));
+        BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetnew","\"" + addressName + "\",\"syse\",\"pub\",\"''\"," + istr + "," + maxstrplusone + "," + maxstrnew + ",31,{},\"''\""));
         string guidZero = itostr(find_value(r.get_obj(), "asset_guid").get_uint());
         BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "signrawtransactionwithwallet" , "\"" +  find_value(r.get_obj(), "hex").get_str() + "\""));
         hexStr = find_value(r.get_obj(), "hex").get_str();
@@ -1455,7 +1493,7 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_precision_address)
         BOOST_CHECK(AmountFromValue(totalsupply) == 0);
 
 
-		BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetnew" , "\"" + addressName + "\",\"syst\",\"pub\",\"''\"," + istr + ",1," + maxstrplusone + ",31,\"''\""));
+		BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetnew" , "\"" + addressName + "\",\"syst\",\"pub\",\"''\"," + istr + ",1," + maxstrplusone + ",31,{},\"''\""));
         BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "signrawtransactionwithwallet" , "\"" +  find_value(r.get_obj(), "hex").get_str() + "\""));
         hexStr = find_value(r.get_obj(), "hex").get_str();
         BOOST_CHECK_THROW(r = CallExtRPC("node1", "sendrawtransaction" , "\"" + hexStr + "\""), runtime_error);
@@ -1463,12 +1501,12 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_precision_address)
 	}
     string newaddress = GetNewFundedAddress("node1");
 	// invalid precisions
-	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetnew" , "\"" + newaddress + "\",\"dow\",\"pub\",\"''\",9,1,2,31,\"''\""));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetnew" , "\"" + newaddress + "\",\"dow\",\"pub\",\"''\",9,1,2,31,{},\"''\""));
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "signrawtransactionwithwallet" , "\"" +  find_value(r.get_obj(), "hex").get_str() + "\""));
     hexStr = find_value(r.get_obj(), "hex").get_str();
     BOOST_CHECK_THROW(r = CallExtRPC("node1", "sendrawtransaction" , "\"" + hexStr + "\""), runtime_error);
 
-	BOOST_CHECK_THROW(r = CallExtRPC("node1", "assetnew" , "\"" + newaddress + "\",\"ep500\",\"pub\",\"''\",-1,1,2,31,\"''\""), runtime_error);
+	BOOST_CHECK_THROW(r = CallExtRPC("node1", "assetnew" , "\"" + newaddress + "\",\"ep500\",\"pub\",\"''\",-1,1,2,31,{},\"''\""), runtime_error);
 
 }
 BOOST_AUTO_TEST_CASE(generate_assetsend_address)
@@ -1517,7 +1555,7 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_address)
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, 8), 20 * COIN);
 
 	// can't go over 20 supply
-	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetupdate" , guid + ",\"" + newaddress + "\",\"''\",1,31,\"''\""));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetupdate" , guid + ",\"pub\",\"''\",1,31,{},\"''\""));
 
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "signrawtransactionwithwallet" , "\"" +  find_value(r.get_obj(), "hex").get_str() + "\""));
     string hexStr = find_value(r.get_obj(), "hex").get_str();
@@ -1790,4 +1828,5 @@ BOOST_AUTO_TEST_CASE(generate_asset_consistency_check)
 	BOOST_CHECK_NO_THROW(assetAllocationsValidatedResults = CallExtRPC("node3", "listassetallocations" , itostr(INT_MAX) + ",0"));
 	BOOST_CHECK(assetAllocationsValidatedResults.write() == assetAllocationsNowResults.write());	
 }
+
 BOOST_AUTO_TEST_SUITE_END ()

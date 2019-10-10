@@ -335,9 +335,9 @@ UniValue assetallocationbalances(const JSONRPCRequest& request) {
         {
             {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The guid of the asset"},
             {"addresses", RPCArg::Type::ARR, RPCArg::Optional::NO, "The addresses owning the allocations",
-                        {
-                            {"address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "syscoin address"},
-                        },
+                {
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "syscoin address"},
+                },
             }
         },
         RPCResult{
