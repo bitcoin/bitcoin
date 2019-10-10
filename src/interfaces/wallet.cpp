@@ -241,7 +241,7 @@ public:
     }
     bool transactionCanBeBumped(const uint256& txid) override
     {
-        return feebumper::TransactionCanBeBumped(m_wallet.get(), txid);
+        return feebumper::TransactionCanBeBumped(*m_wallet.get(), txid);
     }
     bool createBumpTransaction(const uint256& txid,
         const CCoinControl& coin_control,
@@ -255,17 +255,17 @@ public:
             return feebumper::CreateTotalBumpTransaction(m_wallet.get(), txid, coin_control, total_fee, errors, old_fee, new_fee, mtx) ==
                 feebumper::Result::OK;
         } else {
-            return feebumper::CreateRateBumpTransaction(m_wallet.get(), txid, coin_control, errors, old_fee, new_fee, mtx) ==
+            return feebumper::CreateRateBumpTransaction(*m_wallet.get(), txid, coin_control, errors, old_fee, new_fee, mtx) ==
                 feebumper::Result::OK;
         }
     }
-    bool signBumpTransaction(CMutableTransaction& mtx) override { return feebumper::SignTransaction(m_wallet.get(), mtx); }
+    bool signBumpTransaction(CMutableTransaction& mtx) override { return feebumper::SignTransaction(*m_wallet.get(), mtx); }
     bool commitBumpTransaction(const uint256& txid,
         CMutableTransaction&& mtx,
         std::vector<std::string>& errors,
         uint256& bumped_txid) override
     {
-        return feebumper::CommitTransaction(m_wallet.get(), txid, std::move(mtx), errors, bumped_txid) ==
+        return feebumper::CommitTransaction(*m_wallet.get(), txid, std::move(mtx), errors, bumped_txid) ==
                feebumper::Result::OK;
     }
     CTransactionRef getTx(const uint256& txid) override
