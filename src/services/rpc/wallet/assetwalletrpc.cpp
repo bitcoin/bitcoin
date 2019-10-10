@@ -461,7 +461,10 @@ UniValue assetnew(const JSONRPCRequest& request) {
     newAsset.nAsset = GenerateSyscoinGuid();
     UniValue publicData(UniValue::VOBJ);
     publicData.pushKV("description", strPubData);
-    publicData.pushKV("aux_fees", params[8]);
+    UniValue feesStructArr = find_value(params[8].get_obj(), "fee_struct");
+    if(feesStructArr.isArray() && feesStructArr.get_array().size() > 0)
+        publicData.pushKV("aux_fees", params[8]);
+
     newAsset.strSymbol = strSymbol;
     newAsset.vchPubData = vchFromString(publicData.write());
     newAsset.vchContract = ParseHex(strContract);
@@ -561,7 +564,9 @@ UniValue assetupdate(const JSONRPCRequest& request) {
         nBalance = AssetAmountFromValue(params3, theAsset.nPrecision);
     UniValue publicData(UniValue::VOBJ);
     publicData.pushKV("description", strPubData);
-    publicData.pushKV("aux_fees", params[5]);
+    UniValue feesStructArr = find_value(params[5].get_obj(), "fee_struct");
+    if(feesStructArr.isArray() && feesStructArr.get_array().size() > 0)
+        publicData.pushKV("aux_fees", params[5]);
     strPubData = publicData.write();
     if(strPubData != oldData)
         theAsset.vchPubData = vchFromString(strPubData);

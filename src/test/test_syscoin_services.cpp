@@ -806,7 +806,10 @@ string AssetNew(const string& node, const string& address, string pubdata, strin
 	auxfeesObj.read(auxfees);
 	UniValue publicData(UniValue::VOBJ);
     publicData.pushKV("description", pubdata);
-    publicData.pushKV("aux_fees", auxfeesObj);
+    UniValue feesStructArr = find_value(auxfeesObj, "fee_struct");
+    if(feesStructArr.isArray() && feesStructArr.get_array().size() > 0)
+        publicData.pushKV("aux_fees", auxfeesObj);
+
     pubdata = publicData.write();
 
 	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "assetinfo",  guid ));
@@ -932,7 +935,9 @@ string AssetUpdate(const string& node, const string& guid, const string& pubdata
 
 	UniValue publicData(UniValue::VOBJ);
     publicData.pushKV("description", newpubdata1);
-    publicData.pushKV("aux_fees", auxfeesObj);
+	UniValue feesStructArr = find_value(auxfeesObj, "fee_struct");
+    if(feesStructArr.isArray() && feesStructArr.get_array().size() > 0)
+        publicData.pushKV("aux_fees", auxfeesObj);
     newpubdata = publicData.write();
 
 
