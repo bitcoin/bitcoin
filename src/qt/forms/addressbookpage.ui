@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>760</width>
-    <height>380</height>
+    <width>450</width>
+    <height>177</height>
    </rect>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
@@ -67,7 +67,7 @@
         <string>&amp;New</string>
        </property>
        <property name="icon">
-        <iconset resource="../bitcointalkcoin.qrc">
+        <iconset resource="../talkcoin.qrc">
          <normaloff>:/icons/add</normaloff>:/icons/add</iconset>
        </property>
        <property name="autoDefault">
@@ -84,7 +84,7 @@
         <string>&amp;Copy</string>
        </property>
        <property name="icon">
-        <iconset resource="../bitcointalkcoin.qrc">
+        <iconset resource="../talkcoin.qrc">
          <normaloff>:/icons/editcopy</normaloff>:/icons/editcopy</iconset>
        </property>
        <property name="autoDefault">
@@ -101,7 +101,7 @@
         <string>&amp;Delete</string>
        </property>
        <property name="icon">
-        <iconset resource="../bitcointalkcoin.qrc">
+        <iconset resource="../talkcoin.qrc">
          <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
        </property>
        <property name="autoDefault">
@@ -131,7 +131,7 @@
         <string>&amp;Export</string>
        </property>
        <property name="icon">
-        <iconset resource="../bitcointalkcoin.qrc">
+        <iconset resource="../talkcoin.qrc">
          <normaloff>:/icons/export</normaloff>:/icons/export</iconset>
        </property>
        <property name="autoDefault">
@@ -160,7 +160,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="../bitcointalkcoin.qrc"/>
+  <include location="../talkcoin.qrc"/>
  </resources>
  <connections/>
 </ui>

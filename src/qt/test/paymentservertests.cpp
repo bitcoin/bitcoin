@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2009-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,9 +13,10 @@
 #include <random.h>
 #include <script/script.h>
 #include <script/standard.h>
-#include <util/system.h>
+#include <test/setup_common.h>
 #include <util/strencodings.h>
 
+#include <openssl/ssl.h>
 #include <openssl/x509.h>
 #include <openssl/x509_vfy.h>
 
@@ -66,7 +67,8 @@ static SendCoinsRecipient handleRequest(PaymentServer* server, std::vector<unsig
 
 void PaymentServerTests::paymentServerTests()
 {
-    SelectParams(CBaseChainParams::MAIN);
+    SSL_library_init();
+    BasicTestingSetup testing_setup(CBaseChainParams::MAIN);
     auto node = interfaces::MakeNode();
     OptionsModel optionsModel(*node);
     PaymentServer* server = new PaymentServer(nullptr, false);

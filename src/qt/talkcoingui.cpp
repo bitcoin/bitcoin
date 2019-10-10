@@ -1777,7 +1777,7 @@ void TalkcoinGUI::unsubscribeFromCoreSignals()
     m_handler_message_box->disconnect();
     m_handler_question->disconnect();
 }
-/*
+#ifndef OS_ANDROID
 void TalkcoinGUI::mousePressEvent(QMouseEvent *event)
 {
     m_nMouseClick_X_Coordinate = event->x();
@@ -1788,7 +1788,7 @@ void TalkcoinGUI::mouseMoveEvent(QMouseEvent *event)
 {
     move(event->globalX() - m_nMouseClick_X_Coordinate, event->globalY() - m_nMouseClick_Y_Coordinate);
 }
-*/
+#endif
 void TalkcoinGUI::engageDisengageMining(int cores)
 {
     WalletView * const walletView = walletFrame->currentWalletView();
@@ -1878,13 +1878,3 @@ void UnitDisplayStatusBarControl::onMenuSelection(QAction* action)
         optionsModel->setDisplayUnit(action->data());
     }
 }
-#ifndef OS_ANDROID
-void BitcointalkcoinGUI::mousePressEvent(QMouseEvent *event) {
-    m_nMouseClick_X_Coordinate = event->x();
-    m_nMouseClick_Y_Coordinate = event->y();
-}
-
-void BitcointalkcoinGUI::mouseMoveEvent(QMouseEvent *event) {
-    move(event->globalX() - m_nMouseClick_X_Coordinate, event->globalY() - m_nMouseClick_Y_Coordinate);
-}
-#endif

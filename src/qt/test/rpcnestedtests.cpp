@@ -1,10 +1,9 @@
-// Copyright (c) 2016-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2016-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <qt/test/rpcnestedtests.h>
 
-#include <fs.h>
 #include <interfaces/node.h>
 #include <rpc/server.h>
 #include <qt/rpcconsole.h>

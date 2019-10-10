@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>818</width>
-    <height>398</height>
+    <height>373</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -114,19 +114,6 @@
             </property>
            </widget>
           </item>
-          <item>
-           <spacer name="horizontalSpacer_2">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
          </layout>
         </item>
         <item>
@@ -146,19 +133,6 @@
                <string/>
               </property>
              </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer_3">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
             </item>
            </layout>
           </item>
@@ -185,20 +159,32 @@
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
         <widget class="QPushButton" name="replyButton">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="toolTip">
-          <string>Sign a message to prove you own a Bitcointalkcoin address</string>
+          <string>Sign a message to prove you own a Talkcoin address</string>
          </property>
          <property name="text">
           <string>&amp;Reply</string>
          </property>
          <property name="icon">
-          <iconset resource="../bitcointalkcoin.qrc">
+          <iconset resource="../talkcoin.qrc">
            <normaloff>:/icons/send</normaloff>:/icons/send</iconset>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QPushButton" name="copyFromAddressButton">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="toolTip">
           <string>Copy the currently selected address to the system clipboard</string>
          </property>
@@ -206,13 +192,19 @@
           <string>&amp;Copy From Address</string>
          </property>
          <property name="icon">
-          <iconset resource="../bitcointalkcoin.qrc">
+          <iconset resource="../talkcoin.qrc">
            <normaloff>:/icons/editcopy</normaloff>:/icons/editcopy</iconset>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QPushButton" name="copyToAddressButton">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="toolTip">
           <string>Copy the currently selected address to the system clipboard</string>
          </property>
@@ -220,13 +212,19 @@
           <string>Copy To &amp;Address</string>
          </property>
          <property name="icon">
-          <iconset resource="../bitcointalkcoin.qrc">
+          <iconset resource="../talkcoin.qrc">
            <normaloff>:/icons/editcopy</normaloff>:/icons/editcopy</iconset>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QPushButton" name="deleteButton">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="toolTip">
           <string>Delete the currently selected address from the list</string>
          </property>
@@ -234,23 +232,10 @@
           <string>&amp;Delete</string>
          </property>
          <property name="icon">
-          <iconset resource="../bitcointalkcoin.qrc">
+          <iconset resource="../talkcoin.qrc">
            <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
          </property>
         </widget>
-       </item>
-       <item>
-        <spacer name="horizontalSpacer">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
        </item>
       </layout>
      </item>
@@ -259,7 +244,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="../bitcointalkcoin.qrc"/>
+  <include location="../talkcoin.qrc"/>
  </resources>
  <connections/>
 </ui>

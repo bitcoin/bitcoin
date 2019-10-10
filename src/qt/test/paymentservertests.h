@@ -1,9 +1,9 @@
-// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2009-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_QT_TEST_PAYMENTSERVERTESTS_H
-#define BITCOINTALKCOIN_QT_TEST_PAYMENTSERVERTESTS_H
+#ifndef TALKCOIN_QT_TEST_PAYMENTSERVERTESTS_H
+#define TALKCOIN_QT_TEST_PAYMENTSERVERTESTS_H
 
 #include <qt/paymentserver.h>
 
@@ -32,4 +32,4 @@ public:
     SendCoinsRecipient recipient;
 };
 
-#endif // BITCOINTALKCOIN_QT_TEST_PAYMENTSERVERTESTS_H
+#endif // TALKCOIN_QT_TEST_PAYMENTSERVERTESTS_H

@@ -33,27 +33,27 @@ before_build:
 - ps:  Start-Process clcache-server
 - ps:  fsutil behavior set disablelastaccess 0 # Enable Access time feature on Windows (for clcache)
 build_script:
-- cmd: msbuild /p:TrackFileAccess=false /p:CLToolExe=clcache.exe build_msvc\bitcointalkcoin.sln /m /v:q /nologo
+- cmd: msbuild /p:TrackFileAccess=false /p:CLToolExe=clcache.exe build_msvc\talkcoin.sln /m /v:q /nologo
 after_build:
 - ps:  fsutil behavior set disablelastaccess 1 # Disable Access time feature on Windows (better performance)
 - ps:  clcache -z
 before_test:
 - ps:  ${conf_ini} = (Get-Content([IO.Path]::Combine(${env:APPVEYOR_BUILD_FOLDER}, "test", "config.ini.in")))
-- ps:  ${conf_ini} = ${conf_ini}.Replace("@PACKAGE_NAME@", "Bitcointalkcoin Core")
+- ps:  ${conf_ini} = ${conf_ini}.Replace("@PACKAGE_NAME@", "Talkcoin Core")
 - ps:  ${conf_ini} = ${conf_ini}.Replace("@abs_top_srcdir@", ${env:APPVEYOR_BUILD_FOLDER})
 - ps:  ${conf_ini} = ${conf_ini}.Replace("@abs_top_builddir@", ${env:APPVEYOR_BUILD_FOLDER})
 - ps:  ${conf_ini} = ${conf_ini}.Replace("@EXEEXT@", ".exe")
 - ps:  ${conf_ini} = ${conf_ini}.Replace("@ENABLE_WALLET_TRUE@", "")
-- ps:  ${conf_ini} = ${conf_ini}.Replace("@BUILD_BITCOINTALKCOIN_CLI_TRUE@", "")
-- ps:  ${conf_ini} = ${conf_ini}.Replace("@BUILD_BITCOINTALKCOIND_TRUE@", "")
+- ps:  ${conf_ini} = ${conf_ini}.Replace("@BUILD_TALKCOIN_CLI_TRUE@", "")
+- ps:  ${conf_ini} = ${conf_ini}.Replace("@BUILD_TALKCOIND_TRUE@", "")
 - ps:  ${conf_ini} = ${conf_ini}.Replace("@ENABLE_ZMQ_TRUE@", "")
 - ps:  ${utf8} = New-Object System.Text.UTF8Encoding ${false}
 - ps:  '[IO.File]::WriteAllLines([IO.Path]::Combine(${env:APPVEYOR_BUILD_FOLDER}, "test", "config.ini"), ${conf_ini}, ${utf8})'
 - ps:  move "build_msvc\${env:PLATFORM}\${env:CONFIGURATION}\*.exe" src
 test_script:
-- cmd: src\test_bitcointalkcoin.exe -k stdout -e stdout 2> NUL
-- cmd: src\bench_bitcointalkcoin.exe -evals=1 -scaling=0 > NUL
-- ps:  python test\util\bitcointalkcoin-util-test.py
+- cmd: src\test_talkcoin.exe -k stdout -e stdout 2> NUL
+- cmd: src\bench_talkcoin.exe -evals=1 -scaling=0 > NUL
+- ps:  python test\util\talkcoin-util-test.py
 - cmd: python test\util\rpcauth-test.py
 - cmd: python test\functional\test_runner.py --ci --quiet --combinedlogslen=4000 --failfast
 deploy: off
