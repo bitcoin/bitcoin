@@ -12,6 +12,7 @@
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/time.h>
+#include <util/spanparsing.h>
 
 #include <stdint.h>
 #include <thread>
@@ -1570,6 +1571,129 @@ BOOST_AUTO_TEST_CASE(test_Capitalize)
     BOOST_CHECK_EQUAL(Capitalize(""), "");
     BOOST_CHECK_EQUAL(Capitalize("bitcoin"), "Bitcoin");
     BOOST_CHECK_EQUAL(Capitalize("\x00\xfe\xff"), "\x00\xfe\xff");
+}
+
+static std::string SpanToStr(Span<const char>& span)
+{
+    return std::string(span.begin(), span.end());
+}
+
+BOOST_AUTO_TEST_CASE(test_spanparsing)
+{
+    using namespace spanparsing;
+    std::string input;
+    Span<const char> sp;
+    bool success;
+
+    // Const(...): parse a constant, update span to skip it if successful
+    input = "MilkToastHoney";
+    sp = MakeSpan(input);
+    success = Const("", sp); // empty
+    BOOST_CHECK(success);
+    BOOST_CHECK_EQUAL(SpanToStr(sp), "MilkToastHoney");
+
+    success = Const("Milk", sp);
+    BOOST_CHECK(success);
+    BOOST_CHECK_EQUAL(SpanToStr(sp), "ToastHoney");
+
+    success = Const("Bread", sp);
+    BOOST_CHECK(!success);
+
+    success = Const("Toast", sp);
+    BOOST_CHECK(success);
+    BOOST_CHECK_EQUAL(SpanToStr(sp), "Honey");
+
+    success = Const("Honeybadger", sp);
+    BOOST_CHECK(!success);
+
+    success = Const("Honey", sp);
+    BOOST_CHECK(success);
+    BOOST_CHECK_EQUAL(SpanToStr(sp), "");
+
+    // Func(...): parse a function call, update span to argument if successful
+    input = "Foo(Bar(xy,z()))";
+    sp = MakeSpan(input);
+
+    success = Func("FooBar", sp);
+    BOOST_CHECK(!success);
+
+    success = Func("Foo(", sp);
+    BOOST_CHECK(!success);
+
+    success = Func("Foo", sp);
+    BOOST_CHECK(success);
+    BOOST_CHECK_EQUAL(SpanToStr(sp), "Bar(xy,z())");
+
+    success = Func("Bar", sp);
+    BOOST_CHECK(success);
+    BOOST_CHECK_EQUAL(SpanToStr(sp), "xy,z()");
+
+    success = Func("xy", sp);
+    BOOST_CHECK(!success);
+
+    // Expr(...): return expression that span begins with, update span to skip it
+    Span<const char> result;
+
+    input = "(n*(n-1))/2";
+    sp = MakeSpan(input);
+    result = Expr(sp);
+    BOOST_CHECK_EQUAL(SpanToStr(result), "(n*(n-1))/2");
+    BOOST_CHECK_EQUAL(SpanToStr(sp), "");
+
+    input = "foo,bar";
+    sp = MakeSpan(input);
+    result = Expr(sp);
+    BOOST_CHECK_EQUAL(SpanToStr(result), "foo");
+    BOOST_CHECK_EQUAL(SpanToStr(sp), ",bar");
+
+    input = "(aaaaa,bbbbb()),c";
+    sp = MakeSpan(input);
+    result = Expr(sp);
+    BOOST_CHECK_EQUAL(SpanToStr(result), "(aaaaa,bbbbb())");
+    BOOST_CHECK_EQUAL(SpanToStr(sp), ",c");
+
+    input = "xyz)foo";
+    sp = MakeSpan(input);
+    result = Expr(sp);
+    BOOST_CHECK_EQUAL(SpanToStr(result), "xyz");
+    BOOST_CHECK_EQUAL(SpanToStr(sp), ")foo");
+
+    input = "((a),(b),(c)),xxx";
+    sp = MakeSpan(input);
+    result = Expr(sp);
+    BOOST_CHECK_EQUAL(SpanToStr(result), "((a),(b),(c))");
+    BOOST_CHECK_EQUAL(SpanToStr(sp), ",xxx");
+
+    // Split(...): split a string on every instance of sep, return vector
+    std::vector<Span<const char>> results;
+
+    input = "xxx";
+    results = Split(MakeSpan(input), 'x');
+    BOOST_CHECK_EQUAL(results.size(), 4);
+    BOOST_CHECK_EQUAL(SpanToStr(results[0]), "");
+    BOOST_CHECK_EQUAL(SpanToStr(results[1]), "");
+    BOOST_CHECK_EQUAL(SpanToStr(results[2]), "");
+    BOOST_CHECK_EQUAL(SpanToStr(results[3]), "");
+
+    input = "one#two#three";
+    results = Split(MakeSpan(input), '-');
+    BOOST_CHECK_EQUAL(results.size(), 1);
+    BOOST_CHECK_EQUAL(SpanToStr(results[0]), "one#two#three");
+
+    input = "one#two#three";
+    results = Split(MakeSpan(input), '#');
+    BOOST_CHECK_EQUAL(results.size(), 3);
+    BOOST_CHECK_EQUAL(SpanToStr(results[0]), "one");
+    BOOST_CHECK_EQUAL(SpanToStr(results[1]), "two");
+    BOOST_CHECK_EQUAL(SpanToStr(results[2]), "three");
+
+    input = "*foo*bar*";
+    results = Split(MakeSpan(input), '*');
+    BOOST_CHECK_EQUAL(results.size(), 4);
+    BOOST_CHECK_EQUAL(SpanToStr(results[0]), "");
+    BOOST_CHECK_EQUAL(SpanToStr(results[1]), "foo");
+    BOOST_CHECK_EQUAL(SpanToStr(results[2]), "bar");
+    BOOST_CHECK_EQUAL(SpanToStr(results[3]), "");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
