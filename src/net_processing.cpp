@@ -117,8 +117,8 @@ namespace {
     int nSyncStarted GUARDED_BY(cs_main) = 0;
 
     /**
-     * Sources of received blocks, saved to be able to send them reject
-     * messages or ban them when processing happens afterwards.
+     * Sources of received blocks, saved to be able punish them when processing
+     * happens afterwards.
      * Set mapBlockSource[hash].second to false if the node should not be
      * punished if the block is invalid.
      */
@@ -2861,11 +2861,12 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 // been run).  This is handled below, so just treat this as
                 // though the block was successfully read, and rely on the
                 // handling in ProcessNewBlock to ensure the block index is
-                // updated, reject messages go out, etc.
+                // updated, etc.
                 MarkBlockAsReceived(resp.blockhash); // it is now an empty pointer
                 fBlockRead = true;
-                // mapBlockSource is only used for sending reject messages and DoS scores,
-                // so the race between here and cs_main in ProcessNewBlock is fine.
+                // mapBlockSource is used for potentially punishing peers and
+                // updating which peers send us compact blocks, so the race
+                // between here and cs_main in ProcessNewBlock is fine.
                 // BIP 152 permits peers to relay compact blocks after validating
                 // the header only; we should not punish peers if the block turns
                 // out to be invalid.
@@ -2937,8 +2938,9 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             // Also always process if we requested the block explicitly, as we may
             // need it even though it is not a candidate for a new best tip.
             forceProcessing |= MarkBlockAsReceived(hash);
-            // mapBlockSource is only used for sending reject messages and DoS scores,
-            // so the race between here and cs_main in ProcessNewBlock is fine.
+            // mapBlockSource is only used for punishing peers and setting
+            // which peers send us compact blocks, so the race between here and
+            // cs_main in ProcessNewBlock is fine.
             mapBlockSource.emplace(hash, std::make_pair(pfrom->GetId(), true));
         }
         bool fNewBlock = false;
