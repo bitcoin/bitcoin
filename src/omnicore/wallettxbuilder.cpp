@@ -104,7 +104,7 @@ int WalletTxBuilder(
     CAmount nFeeRet = 0;
     int nChangePosInOut = -1;
     std::string strFailReason;
-    auto wtxNew = iWallet->createTransaction(vecRecipients, coinControl, true /* sign */, nChangePosInOut, nFeeRet, strFailReason);
+    auto wtxNew = iWallet->createTransaction(vecRecipients, coinControl, true /* sign */, nChangePosInOut, nFeeRet, strFailReason, false);
 
     if (!wtxNew) {
         PrintToLog("%s: ERROR: wallet transaction creation failed: %s\n", __func__, strFailReason);
@@ -238,7 +238,7 @@ int CreateFundedTransaction(
     std::vector<COutPoint> vLockedCoins;
     LockUnrelatedCoins(iWallet, feeSources, vLockedCoins);
 
-    auto wtxNew = iWallet->createTransaction(vecRecipients, coinControl, false /* sign */, nChangePosRet, nFeeRequired, strFailReason);
+    auto wtxNew = iWallet->createTransaction(vecRecipients, coinControl, false /* sign */, nChangePosRet, nFeeRequired, strFailReason, true);
 
     if (wtxNew) {
         fSuccess = true;
@@ -253,24 +253,27 @@ int CreateFundedTransaction(
     // inputs and outputs step by step
     CMutableTransaction tx;
 
-    std::vector<COutPoint> vSelectedInputs;
-    coinControl.ListSelected(vSelectedInputs);
+    if (fSuccess)
+    {
+        std::vector<COutPoint> vSelectedInputs;
+        coinControl.ListSelected(vSelectedInputs);
 
-    // add previously selected coins
-    for(const COutPoint& txIn : vSelectedInputs) {
-        tx.vin.push_back(CTxIn(txIn));
-    }
-
-    // add other selected coins
-    for(const CTxIn& txin : wtxNew->get().vin) {
-        if (!coinControl.IsSelected(txin.prevout)) {
-            tx.vin.push_back(txin);
+        // add previously selected coins
+        for(const COutPoint& txIn : vSelectedInputs) {
+            tx.vin.push_back(CTxIn(txIn));
         }
-    }
 
-    // add outputs
-    for(const CTxOut& txOut : wtxNew->get().vout) {
-        tx.vout.push_back(txOut);
+        // add other selected coins
+        for(const CTxIn& txin : wtxNew->get().vin) {
+            if (!coinControl.IsSelected(txin.prevout)) {
+                tx.vin.push_back(txin);
+            }
+        }
+
+        // add outputs
+        for(const CTxOut& txOut : wtxNew->get().vout) {
+            tx.vout.push_back(txOut);
+        }
     }
 
     // restore original locking state
