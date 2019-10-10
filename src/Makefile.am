@@ -381,7 +381,8 @@ libbitcoin_wallet_tool_a_SOURCES = \
 # depend on $(LIBBITCOIN_RUSTY_SRCS), but only build the first source file ($<).
 LIBBITCOIN_RUSTY_SRCS= \
   rusty/src/lib.rs \
-  rusty/src/bridge.rs
+  rusty/src/bridge.rs \
+  rusty/src/dns_headers.rs
 
 LIBBITCOIN_RUSTY_TEST_SRCS= \
   rusty/src/test_bridge.rs
