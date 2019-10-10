@@ -14,7 +14,7 @@ if ENABLE_MAN
 SUBDIRS += doc/man
 endif
 
-.PHONY: deploy FORCE
+.PHONY: dist deploy FORCE
 
 export PYTHONPATH
 
@@ -63,8 +63,16 @@ COVERAGE_INFO = baseline.info \
   baseline_filtered.info functional_test.info functional_test_filtered.info \
   test_bitcoin_coverage.info test_bitcoin.info
 
-dist-hook:
-	- $(GIT) archive --format=tar HEAD -- src/clientversion.cpp | $(AMTAR) -C $(top_distdir) -xf -
+dist:
+	$(GIT) archive --format=tar HEAD -- src/clientversion.cpp | $(AMTAR) -C $(top_builddir) -xf -
+	$(GIT) add -f \
+	aclocal.m4 configure build-aux Makefile.in src/Makefile.in src/config/bitcoin-config.h.in \
+	src/univalue/aclocal.m4 src/univalue/configure src/univalue/build-aux src/univalue/Makefile.in src/univalue/univalue-config.h.in \
+	src/secp256k1/aclocal.m4 src/secp256k1/configure src/secp256k1/build-aux src/secp256k1/Makefile.in src/secp256k1/src/libsecp256k1-config.h.in \
+	doc/man/Makefile.in
+	$(GIT) reset -- build-aux/m4 src/univalue/build-aux/m4 src/secp256k1/build-aux/m4
+	$(GIT) stash --all && $(GIT) archive --format=tar --prefix=$(top_distdir)/ stash@{0} > $(top_builddir)/$(top_distdir).tar && gzip $(top_distdir).tar
+	$(GIT) stash pop --quiet && $(GIT) reset && $(GIT) checkout -- src/clientversion.cpp
 
 # Begin Windows rules
 $(WIN_INSTALLER): all-recursive
