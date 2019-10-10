@@ -32,14 +32,12 @@ SendCoinsEntry::SendCoinsEntry(const PlatformStyle *_platformStyle, QWidget *par
     ui->addAsLabel->setPlaceholderText(tr("Enter a label for this address to add it to your address book"));
 #endif
 
-    QString theme = GUIUtil::getThemeName();
-
     // These icons are needed on Mac also!
-    ui->addressBookButton->setIcon(QIcon(":/icons/" + theme + "/address-book"));
-    ui->pasteButton->setIcon(QIcon(":/icons/" + theme + "/editpaste"));
-    ui->deleteButton->setIcon(QIcon(":/icons/" + theme + "/remove"));
-    ui->deleteButton_is->setIcon(QIcon(":/icons/" + theme + "/remove"));
-    ui->deleteButton_s->setIcon(QIcon(":/icons/" + theme + "/remove"));
+    ui->addressBookButton->setIcon(QIcon(":/icons/address-book"));
+    ui->pasteButton->setIcon(QIcon(":/icons/editpaste"));
+    ui->deleteButton->setIcon(QIcon(":/icons/remove"));
+    ui->deleteButton_is->setIcon(QIcon(":/icons/remove"));
+    ui->deleteButton_s->setIcon(QIcon(":/icons/remove"));
       
     // normal dash address field
     GUIUtil::setupAddressWidget(ui->payTo, this);

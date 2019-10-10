@@ -867,18 +867,6 @@ void migrateQtSettings()
     }
 }
 
-// Return name of current UI-theme or default theme if no theme was found
-QString getThemeName()
-{
-    QSettings settings;
-    QString theme = settings.value("theme", "").toString();
-
-    if(!theme.isEmpty()){
-        return theme;
-    }
-    return QString("light");
-}
-
 // Open CSS when configured
 QString loadStyleSheet()
 {

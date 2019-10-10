@@ -1,5 +1,5 @@
 WalletFrame {
-border-image: url(':/images/light/drkblue_walletFrame_bg') 0 0 0 0 stretch stretch;
+border-image: url(':/images/walletframe_background') 0 0 0 0 stretch stretch;
 border-top:0px solid #000;
 margin:0;
 padding-top:20px;
@@ -153,7 +153,7 @@ border:0px;
 }
 
 QComboBox::down-arrow {
-border-image: url(':/images/light/drkblue_downArrow') 0 0 0 0 stretch stretch;
+border-image: url(':/images/arrow_down') 0 0 0 0 stretch stretch;
 }
 
 QComboBox QListView {
@@ -208,7 +208,7 @@ padding-top:2px;
 }
 
 QAbstractSpinBox::up-arrow {
-image:url(':/images/light/drkblue_upArrow_small');
+image:url(':/images/arrow_up_small');
 }
 
 QAbstractSpinBox::down-button {
@@ -226,7 +226,7 @@ padding-bottom:2px;
 }
 
 QAbstractSpinBox::down-arrow {
-image:url(':/images/light/drkblue_downArrow_small');
+image:url(':/images/arrow_down_small');
 }
 
 QCheckBox {
@@ -239,35 +239,35 @@ height: 16px;
 }
 
 QCheckBox::indicator:unchecked {
-image:url(':/images/light/unchecked');
+image:url(':/images/unchecked');
 }
 
 QCheckBox::indicator:unchecked:hover {
-image:url(':/images/light/unchecked');
+image:url(':/images/unchecked');
 }
 
 QCheckBox::indicator:unchecked:pressed {
-image:url(':/images/light/checked');
+image:url(':/images/checked');
 }
 
 QCheckBox::indicator:checked {
-image:url(':/images/light/checked');
+image:url(':/images/checked');
 }
 
 QCheckBox::indicator:checked:hover {
-image:url(':/images/light/checked');
+image:url(':/images/checked');
 }
 
 QCheckBox::indicator:checked:pressed {
-image:url(':/images/light/unchecked');
+image:url(':/images/unchecked');
 }
 
 QCheckBox::indicator:indeterminate:hover {
-image:url(':/images/light/unchecked');
+image:url(':/images/unchecked');
 }
 
 QCheckBox::indicator:indeterminate:pressed {
-image:url(':/images/light/checked');
+image:url(':/images/checked');
 }
 
 /*******************************************************/
@@ -386,19 +386,19 @@ height:10px;
 }
 
 QScrollBar:up-arrow {
-background-image: url(':/images/light/drkblue_upArrow_small');
+background-image: url(':/images/arrow_up_small');
 }
 
 QScrollBar:down-arrow {
-background-image: url(':/images/light/drkblue_downArrow_small');
+background-image: url(':/images/arrow_down_small');
 }
 
 QScrollBar:left-arrow {
-background-image: url(':/images/light/drkblue_leftArrow_small');
+background-image: url(':/images/arrow_left_small');
 }
 
 QScrollBar:right-arrow {
-background-image: url(':/images/light/drkblue_rightArrow_small');
+background-image: url(':/images/arrow_right_small');
 }
 
 
@@ -508,7 +508,6 @@ background-color:#fff;
 }
 
 QDialog#SignVerifyMessageDialog QPushButton#pasteButton_SM { /* Paste Button */
-/* qproperty-icon: url(":/icons/light/drkblue_editpaste"); */
 background-color:transparent;
 padding-left:15px;
 }
@@ -518,7 +517,6 @@ font-size:8pt;
 }
 
 QDialog#SignVerifyMessageDialog QPushButton#copySignatureButton_SM { /* Copy Button */
-/* qproperty-icon: url(":/icons/light/drkblue_editcopy"); */
 background-color:transparent;
 padding-left:10px;
 padding-right:10px;
@@ -1126,7 +1124,7 @@ min-width:410px;
 margin-right:20px;
 margin-left:0;
 margin-top:15px;
-background-image: url(':/images/light/dash_logo_horizontal');
+background-image: url(':/images/dash_logo_horizontal');
 background-repeat:none;
 }
 
@@ -1175,7 +1173,7 @@ background-color:transparent;
 }
 
 QWidget#contentWidget { /* The actual content with the text/buttons/etc... */
-border-image: url(':/images/light/drkblue_walletFrame_bg') 0 0 0 0 stretch stretch;
+border-image: url(':/images/walletframe_background') 0 0 0 0 stretch stretch;
 border-top:0px solid #000;
 margin:0;
 padding-top:20px;
@@ -1478,7 +1476,7 @@ color:#333;
 }
 
 QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::branch:selected { /* Coin Control Branch Icon */
-background-image: url(':/images/light/drkblue_qtreeview_selected');
+background-image: url(':/images/qtreeview_selected');
 background-repeat:no-repeat;
 background-position:center;
 background-color:#f7f7f7;
@@ -1486,7 +1484,7 @@ color:#333;
 }
 
 QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::branch:checked { /* Coin Control Branch Icon */
-background-image: url(':/images/light/drkblue_qtreeview_selected');
+background-image: url(':/images/qtreeview_selected');
 background-repeat:no-repeat;
 background-position:center;
 background-color:#f7f7f7;

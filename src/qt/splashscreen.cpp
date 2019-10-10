@@ -50,19 +50,11 @@ SplashScreen::SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle) 
     QString versionText     = QString(tr("Version %1")).arg(QString::fromStdString(FormatFullVersion()));
     QString copyrightText   = QString::fromUtf8(CopyrightHolders("\xc2\xA9", 2014, COPYRIGHT_YEAR).c_str());
     QString titleAddText    = networkStyle->getTitleAddText();
-    // networkstyle.cpp can't (yet) read themes, so we do it here to get the correct Splash-screen
-    QString splashScreenPath = ":/images/" + GUIUtil::getThemeName() + "/splash";
-    if(gArgs.GetBoolArg("-regtest", false))
-        splashScreenPath = ":/images/" + GUIUtil::getThemeName() + "/splash_testnet";
-    if(gArgs.GetBoolArg("-testnet", false))
-        splashScreenPath = ":/images/" + GUIUtil::getThemeName() + "/splash_testnet";
-    if(gArgs.IsArgSet("-devnet"))
-        splashScreenPath = ":/images/" + GUIUtil::getThemeName() + "/splash_testnet";
 
     QString font = QApplication::font().toString();
 
     // load the bitmap for writing some text over it
-    pixmap = QPixmap(splashScreenPath);
+    pixmap = networkStyle->getSplashImage();
 
     QPainter pixPaint(&pixmap);
     pixPaint.setPen(QColor(100,100,100));

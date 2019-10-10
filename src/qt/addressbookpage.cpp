@@ -31,7 +31,6 @@ AddressBookPage::AddressBookPage(const PlatformStyle *platformStyle, Mode _mode,
     mode(_mode),
     tab(_tab)
 {
-    QString theme = GUIUtil::getThemeName();
     ui->setupUi(this);
     if (!platformStyle->getImagesOnButtons()) {
         ui->newAddress->setIcon(QIcon());
@@ -39,10 +38,10 @@ AddressBookPage::AddressBookPage(const PlatformStyle *platformStyle, Mode _mode,
         ui->deleteAddress->setIcon(QIcon());
         ui->exportButton->setIcon(QIcon());
     } else {
-        ui->newAddress->setIcon(QIcon(":/icons/" + theme + "/add"));
-        ui->copyAddress->setIcon(QIcon(":/icons/" + theme + "/editcopy"));
-        ui->deleteAddress->setIcon(QIcon(":/icons/" + theme + "/remove"));
-        ui->exportButton->setIcon(QIcon(":/icons/" + theme + "/export"));
+        ui->newAddress->setIcon(QIcon(":/icons/add"));
+        ui->copyAddress->setIcon(QIcon(":/icons/editcopy"));
+        ui->deleteAddress->setIcon(QIcon(":/icons/remove"));
+        ui->exportButton->setIcon(QIcon(":/icons/export"));
     }
     ui->showAddressQRCode->setIcon(QIcon());
 
