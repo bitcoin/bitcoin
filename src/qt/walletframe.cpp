@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2019 The Bitcointalkcoin Core developers
+// Copyright (c) 2011-2019 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -159,6 +159,13 @@ void WalletFrame::gotoSendCoinsPage(QString addr)
     QMap<WalletModel*, WalletView*>::const_iterator i;
     for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
         i.value()->gotoSendCoinsPage(addr);
+}
+
+void WalletFrame::gotoRpcPage()
+{
+    WalletView *walletView = currentWalletView();
+    if (walletView)
+        walletView->gotoRpcPage();
 }
 
 void WalletFrame::gotoSignMessageTab(QString addr)

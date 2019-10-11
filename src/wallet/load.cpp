@@ -82,12 +82,16 @@ void StartWallets(CScheduler& scheduler)
 {
     for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
         pwallet->postInitProcess();
-		if (gArgs.GetBoolArg("-spv", DEFAULT_USE_SPV))
+
+        if(gArgs.GetBoolArg("-spv", DEFAULT_USE_SPV))
 		{
 			// don't download blocks for validating before we have all headers
 			// allow to first request auxiliary blocks for SPV
 			pwallet->setSPVEnabled(true);
 		}
+        else{
+            pwallet->setSPVEnabled(false);
+        }
     }
 
 

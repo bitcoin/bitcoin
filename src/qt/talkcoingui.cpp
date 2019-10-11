@@ -112,11 +112,6 @@ TalkcoinGUI::TalkcoinGUI(interfaces::Node& node, const PlatformStyle *_platformS
     setWindowIcon(m_network_style->getTrayAndWindowIcon());
     updateWindowTitle();
 
-#if defined(Q_OS_ANDROID)
-
-#else
-    rpcConsole = new RPCConsole(node, _platformStyle, nullptr);
-#endif
     helpMessageDialog = new HelpMessageDialog(node, this, false);
 #ifdef ENABLE_WALLET
     if(enableWallet)
@@ -130,12 +125,6 @@ TalkcoinGUI::TalkcoinGUI(interfaces::Node& node, const PlatformStyle *_platformS
         /* When compiled without wallet or -disablewallet is provided,
          * the central widget is the rpc console.
          */
-#if defined(Q_OS_ANDROID)
-
-#else
-    setCentralWidget(rpcConsole);
-#endif
-        Q_EMIT consoleShown(rpcConsole);
     }
 
     // Accept D&D of URIs
@@ -286,11 +275,6 @@ TalkcoinGUI::~TalkcoinGUI()
     delete appMenuBar;
     MacDockIconHandler::cleanup();
 #endif
-#if defined(Q_OS_ANDROID)
-
-#else
-    delete rpcConsole;
-#endif
 
 }
 
@@ -362,7 +346,7 @@ void TalkcoinGUI::createActions()
 #if defined(Q_OS_ANDROID)
     sendMessagesAction = new QAction(platformStyle->SingleColorIcon(":/icons/chat"), nullptr, this);
 #else
-    sendMessagesAction = new QAction(platformStyle->SingleColorIcon(":/icons/null"), tr("Send &Message"), this);
+    sendMessagesAction = new QAction(platformStyle->SingleColorIcon(":/icons/chat"), tr("Send &Message"), this);
 #endif
     sendMessagesAction->setCheckable(true);
     sendMessagesAction->setStatusTip(tr("Send Messages"));
@@ -372,7 +356,7 @@ void TalkcoinGUI::createActions()
 #if defined(Q_OS_ANDROID)
     messageAction = new QAction(platformStyle->SingleColorIcon(":/icons/messages"), nullptr, this);
 #else
-    messageAction = new QAction(platformStyle->SingleColorIcon(":/icons/null"), tr("Mess&ages"), this);
+    messageAction = new QAction(platformStyle->SingleColorIcon(":/icons/messages"), tr("Mess&ages"), this);
 #endif
     messageAction->setStatusTip(tr("View Messages"));
     messageAction->setToolTip(messageAction->statusTip());
@@ -441,13 +425,12 @@ void TalkcoinGUI::createActions()
 
 
 #if defined(Q_OS_ANDROID)
-    openRPCConsoleAction = new QAction(platformStyle->TextColorIcon(":/icons/debugwindow"), tr(""), this);
+    openRPCConsoleAction = new QAction(platformStyle->SingleColorIcon(":/icons/debugwindow"), nullptr, this);
 #else
-    openRPCConsoleAction = new QAction(platformStyle->TextColorIcon(":/icons/debugwindow"), tr("&Debug window"), this);
+    openRPCConsoleAction = new QAction(platformStyle->SingleColorIcon(":/icons/debugwindow"), tr("&Debug window"), this);
 #endif
     openRPCConsoleAction->setStatusTip(tr("Open debugging and diagnostic console"));
     // initially disable the debug window menu item
-    //openRPCConsoleAction->setEnabled(false);
     openRPCConsoleAction->setObjectName("openRPCConsoleAction");
 
     usedSendingAddressesAction = new QAction(platformStyle->TextColorIcon(":/icons/address-book"), tr("&Sending addresses"), this);
@@ -478,11 +461,6 @@ void TalkcoinGUI::createActions()
     connect(showHelpMessageAction, &QAction::triggered, this, &TalkcoinGUI::showHelpMessageClicked);
     connect(openRPCConsoleAction, &QAction::triggered, this, &TalkcoinGUI::showDebugWindow);
     // prevents an open debug window from becoming stuck/unusable on client shutdown
-#if defined(Q_OS_ANDROID)
-
-#else
-    connect(quitAction, &QAction::triggered, rpcConsole, &QWidget::hide);
-#endif
 
 #ifdef ENABLE_WALLET
     if(walletFrame)
@@ -641,18 +619,6 @@ void TalkcoinGUI::createMenuBar()
     }
 
     window_menu->addSeparator();
-#if defined(Q_OS_ANDROID)
-
-#else
-    for (RPCConsole::TabTypes tab_type : rpcConsole->tabs()) {
-        QAction* tab_action = window_menu->addAction(rpcConsole->tabTitle(tab_type));
-        connect(tab_action, &QAction::triggered, [this, tab_type] {
-            rpcConsole->setTabFocus(tab_type);
-            showDebugWindow();
-        });
-    }
-#endif
-
 
     QMenu *help = appMenuBar->addMenu(tr("&Help"));
     help->addAction(showHelpMessageAction);
@@ -682,7 +648,7 @@ void TalkcoinGUI::createToolBars()
         toolbar->addAction(historyAction);
 #ifdef ENABLE_SECURE_MESSAGING
         toolbar->addAction(messageAction);
-        toolbar->addAction(sendMessagesAction);
+//        toolbar->addAction(sendMessagesAction);
 #endif
         overviewAction->setChecked(true);
 
@@ -702,9 +668,9 @@ void TalkcoinGUI::createToolBars()
         m_wallet_selector_action->setVisible(false);
 #endif
     }
-#if defined(Q_OS_ANDROID)
+//#if defined(Q_OS_ANDROID)
         toolbar->addAction(openRPCConsoleAction);
-#endif
+//#endif
     toolbar->setIconSize(QSize(30,30));
 }
 
@@ -744,11 +710,6 @@ void TalkcoinGUI::setClientModel(ClientModel *_clientModel)
         {
             setAuxiliaryBlockRequestProgress(QDateTime::fromTime_t(created), requestedBlocks, loadedBlocks, processedBlocks);
         }
-#if defined(Q_OS_ANDROID)
-
-#else
-        rpcConsole->setClientModel(_clientModel);
-#endif
 
         updateProxyIcon();
 
@@ -777,12 +738,6 @@ void TalkcoinGUI::setClientModel(ClientModel *_clientModel)
             trayIconMenu->clear();
         }
         // Propagate cleared model to child objects
-#if defined(Q_OS_ANDROID)
-
-#else
-        rpcConsole->setClientModel(nullptr);
-#endif
-
 #ifdef ENABLE_WALLET
         if (walletFrame)
         {
@@ -817,11 +772,6 @@ void TalkcoinGUI::addWallet(WalletModel* walletModel)
     if (!walletFrame) return;
     const QString display_name = walletModel->getDisplayName();
     setWalletActionsEnabled(true);
-#if defined(Q_OS_ANDROID)
-
-#else
-    rpcConsole->addWallet(walletModel);
-#endif
 
     walletFrame->addWallet(walletModel);
     m_wallet_selector->addItem(display_name, QVariant::fromValue(walletModel));
@@ -842,11 +792,7 @@ void TalkcoinGUI::removeWallet(WalletModel* walletModel)
         m_wallet_selector_label_action->setVisible(false);
         m_wallet_selector_action->setVisible(false);
     }
-#if defined(Q_OS_ANDROID)
-    
-#else
-    rpcConsole->removeWallet(walletModel);
-#endif 
+
     walletFrame->removeWallet(walletModel);
     updateWindowTitle();
 }
@@ -902,6 +848,8 @@ void TalkcoinGUI::setWalletActionsEnabled(bool enabled)
     unlockWalletAction->setEnabled(enabled);
     lockWalletAction->setEnabled(enabled);
     m_close_wallet_action->setEnabled(enabled);
+    openRPCConsoleAction->setEnabled(enabled);
+
 }
 
 void TalkcoinGUI::createTrayIcon()
@@ -988,23 +936,13 @@ void TalkcoinGUI::aboutClicked()
 
 void TalkcoinGUI::showDebugWindow()
 {
-#if defined(Q_OS_ANDROID)
     openRPCConsoleAction->setChecked(true);
     if (walletFrame) walletFrame->gotoRpcPage();
-#else
-    GUIUtil::bringToFront(rpcConsole);
-    Q_EMIT consoleShown(rpcConsole);
-#endif
 }
 
 void TalkcoinGUI::showDebugWindowActivateConsole()
 {
-#if defined(Q_OS_ANDROID)
-
-#else
-    rpcConsole->setTabFocus(RPCConsole::TAB_CONSOLE);
     showDebugWindow();
-#endif
 }
 
 void TalkcoinGUI::showHelpMessageClicked()
@@ -1377,11 +1315,7 @@ void TalkcoinGUI::closeEvent(QCloseEvent *event)
         if(!clientModel->getOptionsModel()->getMinimizeOnClose())
         {
             // close rpcConsole in case it was open to make some space for the shutdown window
-#if defined(Q_OS_ANDROID)
 
-#else
-            rpcConsole->close();
-#endif
             QApplication::quit();
         }
         else
@@ -1702,12 +1636,8 @@ void TalkcoinGUI::detectShutdown()
     {
         if (isMiningEngaged)
             engageDisengageMining(0);
-#if defined(Q_OS_ANDROID)
+        
 
-#else
-        if(rpcConsole)
-            rpcConsole->hide();
-#endif
         qApp->quit();
     }
 }

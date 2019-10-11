@@ -111,6 +111,7 @@ protected:
     void mouseMoveEvent(QMouseEvent *event);
     int m_nMouseClick_X_Coordinate;
     int m_nMouseClick_Y_Coordinate;
+    
 #endif
 
 private:

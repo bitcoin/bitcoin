@@ -2572,7 +2572,7 @@ CWallet::Balance CWallet::GetBalance(const int min_depth, bool avoid_reuse) cons
     Balance ret;
     const CAmount tx_credit_stake = GetStake();
     ret.m_mine_stake += tx_credit_stake;
-    isminefilter reuse_filter = avoid_reuse ? 0 : ISMINE_USED;
+    isminefilter reuse_filter = avoid_reuse ? ISMINE_NO : ISMINE_USED;
     {
         auto locked_chain = chain().lock();
         LOCK(cs_wallet);
@@ -5213,29 +5213,8 @@ void CWallet::RequestSPVScan(int64_t optional_timestamp)
     // reverse the blocks vector from older->newer
     std::reverse(blocksToDownload.begin(), blocksToDownload.end());
     // create an auxiliary block request
-    std::shared_ptr<CAuxiliaryBlockRequest> auxiliaryRequest(new CAuxiliaryBlockRequest(blocksToDownload, chain().getAdjustedTime(), true, [this](std::shared_ptr<CAuxiliaryBlockRequest> cb_AuxiliaryBlockRequest, const CBlockIndex *pindex) -> bool {
-        LOCK(cs_wallet);
-        if (pindex && (!pNVSBestBlock || pindex->nHeight > pNVSBestBlock->nHeight))
-        {
-            // write non validation best block
-            pNVSBestBlock = const_cast<CBlockIndex *>(pindex);
-            CBlockLocator locator = ::HeadersChainActive().GetLocator(pNVSBestBlock);
-            if (!locator.IsNull())
-            {
-                //CWalletDB walletdb(strWalletFile);
-                WalletBatch walletdb(*database);
-                walletdb.WriteNonValidationBestBlock(locator);
-            }
-        }
-        // try to download more blocks if this on has been completed
-        if (cb_AuxiliaryBlockRequest->isCompleted())
-            RequestSPVScan();
-        // continue with the request
-        return true;
-    }));
+    chain().addPriorityDownload(blocksToDownload);
 
-    // set the global Auxiliarry Block Request
-    auxiliaryRequest->setAsCurrentRequest();
 }
 
 void CWallet::setSPVEnabled(bool status)

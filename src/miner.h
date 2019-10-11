@@ -222,6 +222,6 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
 std::string convertAddress(const char address[], char newVersionByte);
 extern double dHashesPerMin;
 extern int64_t nHPSTimerStart;
-bool CheckStake(const std::shared_ptr<const CBlock> pblock, CWallet& wallet) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+bool CheckStake(const std::shared_ptr<const CBlock> pblock, CWallet& wallet);
 
 #endif // TALKCOIN_MINER_H

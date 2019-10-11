@@ -64,6 +64,8 @@
         <file alias="proxy">res/icons/proxy.png</file>
         <file alias="staking_on">res/icons/staking_on.png</file>
         <file alias="staking_off">res/icons/staking_off.png</file>
+        <file alias="sendtr">res/icons/sendtr.png</file>
+        <file alias="receivetr">res/icons/receivetr.png</file>
     </qresource>
     <qresource prefix="/css">
         <file alias="dyno">res/css/dyno.css</file>

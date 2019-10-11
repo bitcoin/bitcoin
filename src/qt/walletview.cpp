@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2011-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,8 +15,9 @@
 #include <qt/overviewpage.h>
 #include <qt/platformstyle.h>
 #include <qt/receivecoinsdialog.h>
+#include <qt/rpcconsole.h>
 #include <qt/sendcoinsdialog.h>
-#include <qt/sendmessagesdialog.h>
+#include <qt/sendmessagespage.h>
 #include <qt/signverifymessagedialog.h>
 #include <qt/transactiontablemodel.h>
 #include <qt/transactionview.h>
@@ -63,9 +64,12 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
 
     usedSendingAddressesPage = new AddressBookPage(platformStyle, AddressBookPage::ForEditing, AddressBookPage::SendingTab, this);
     usedReceivingAddressesPage = new AddressBookPage(platformStyle, AddressBookPage::ForEditing, AddressBookPage::ReceivingTab, this);
+    
+    rpcConsole = new RPCConsole(platformStyle, this);
+        
 #ifdef ENABLE_SECURE_MESSAGING
-    sendMessagesPage = new SendMessagesDialog(platformStyle);
-    messagePage = new MessagePage(platformStyle);
+    sendMessagesPage = new SendMessagesPage(platformStyle, this);
+    messagePage = new MessagePage(platformStyle, this);
 #endif
     addWidget(overviewPage);
     addWidget(transactionsPage);
@@ -75,6 +79,8 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
 	addWidget(sendMessagesPage);
     addWidget(messagePage);
 #endif
+    addWidget(rpcConsole);
+    
     // Clicking on a transaction on the overview pre-selects the transaction on the transaction history page
     connect(overviewPage, &OverviewPage::transactionClicked, transactionView, static_cast<void (TransactionView::*)(const QModelIndex&)>(&TransactionView::focusTransaction));
 
@@ -94,6 +100,7 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
 
 WalletView::~WalletView()
 {
+//    delete rpcConsole;
 }
 
 void WalletView::setTalkcoinGUI(TalkcoinGUI *gui)
@@ -133,6 +140,7 @@ void WalletView::setClientModel(ClientModel *_clientModel)
 
     overviewPage->setClientModel(_clientModel);
     sendCoinsPage->setClientModel(_clientModel);
+    rpcConsole->setClientModel(_clientModel);
 }
 
 void WalletView::setWalletModel(WalletModel *_walletModel)
@@ -251,6 +259,11 @@ void WalletView::gotoMessagesPage()
 void WalletView::gotoHistoryPage()
 {
     setCurrentWidget(transactionsPage);
+}
+
+void WalletView::gotoRpcPage()
+{
+    setCurrentWidget(rpcConsole);
 }
 
 void WalletView::gotoReceiveCoinsPage()

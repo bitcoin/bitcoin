@@ -252,6 +252,8 @@ public:
 
    	virtual std::shared_ptr<CAuxiliaryBlockRequest> BlockRequest() =0;
    	virtual int64_t getheaders() =0;
+   	
+   	virtual void addPriorityDownload(const std::vector<const CBlockIndex*>& blocksToDownload) =0;
 
     //! Chain notifications.
     class Notifications

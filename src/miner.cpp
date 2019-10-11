@@ -643,16 +643,15 @@ bool CheckStake(const std::shared_ptr<const CBlock> pblock, CWallet& wallet)
     LogPrint(BCLog::COINSTAKE, "CheckStake() : new proof-of-stake block found  \n  hash: %s \nproofhash: %s  \ntarget: %s\n", hashBlock.GetHex(), proofHash.GetHex(), hashTarget.GetHex());
     LogPrint(BCLog::COINSTAKE, "%s\n", pblock->ToString());
     LogPrint(BCLog::COINSTAKE, "out %s\n", FormatMoney(pblock->vtx[1]->GetValueOut()));
-    interfaces::Chain* m_chain;
-    //result.is_spent = wallet.IsSpent(locked_chain, wtx.GetHash(), n);
-    // Found a solution
-    {
-        if (pblock->hashPrevBlock != ::ChainActive().Tip()->GetBlockHash())
-            return error("CheckStake() : generated block is stale");
+    auto locked_chain = wallet.chain().lock();
 
+    if (pblock->hashPrevBlock != ::ChainActive().Tip()->GetBlockHash())
+        return error("CheckStake() : generated block is stale");
+
+    {
+        LOCK(wallet.cs_wallet);
         for(const CTxIn& vin : pblock->vtx[1]->vin) {
-			LOCK(wallet.cs_wallet);
-            if (wallet.IsSpent(*m_chain->lock(),vin.prevout.hash, vin.prevout.n)) {
+            if (wallet.IsSpent(*locked_chain,vin.prevout.hash, vin.prevout.n)) {
                 return error("CheckStake() : generated block became invalid due to stake UTXO being spent");
             }
         }
@@ -669,7 +668,7 @@ bool CheckStake(const std::shared_ptr<const CBlock> pblock, CWallet& wallet)
 void ThreadStakeMiner(CWallet *pwallet)
 {
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
-    MilliSleep(60000);
+    MilliSleep(90000);
 
     // Make this thread recognisable as the mining thread
     std::string threadName = "stake";
@@ -693,7 +692,7 @@ void ThreadStakeMiner(CWallet *pwallet)
         }
         //don't disable PoS mining for no connections if in regtest mode
         if(!gArgs.GetBoolArg("-emergencystaking", false)) {
-			LogPrintf("Emergeny Staking Disabled \n");
+			LogPrint(BCLog::COINSTAKE, "Emergeny Staking Disabled \n");
             while (g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) == 0 || ::ChainstateActive().IsInitialBlockDownload()) {
                 pwallet->m_last_coin_stake_search_interval = 0;
                 fTryToSync = true;
@@ -795,7 +794,7 @@ void ThreadStakeMiner(CWallet *pwallet)
                 }
             }
         }
-        MilliSleep(60000);
+        MilliSleep(90000);
     }
 }
 

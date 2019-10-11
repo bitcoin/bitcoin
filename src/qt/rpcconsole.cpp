@@ -441,9 +441,8 @@ void RPCExecutor::request(const QString &command, const WalletModel* wallet_mode
     }
 }
 
-RPCConsole::RPCConsole(interfaces::Node& node, const PlatformStyle *_platformStyle, QWidget *parent) :
+RPCConsole::RPCConsole(const PlatformStyle *_platformStyle, QWidget *parent) :
     QWidget(parent),
-    m_node(node),
     ui(new Ui::RPCConsole),
     platformStyle(_platformStyle)
 {
@@ -488,9 +487,6 @@ RPCConsole::RPCConsole(interfaces::Node& node, const PlatformStyle *_platformSty
 #endif
     // Register RPC timer interface
     rpcTimerInterface = new QtRPCTimerInterface();
-    // avoid accidentally overwriting an existing, non QTThread
-    // based timer interface
-    m_node.rpcSetTimerInterfaceIfUnset(rpcTimerInterface);
 
     setTrafficGraphRange(INITIAL_TRAFFIC_GRAPH_MINS);
 
@@ -505,7 +501,7 @@ RPCConsole::~RPCConsole()
 {
     QSettings settings;
     settings.setValue("RPCConsoleWindowGeometry", saveGeometry());
-    m_node.rpcUnsetTimerInterface(rpcTimerInterface);
+    clientModel->node().rpcUnsetTimerInterface(rpcTimerInterface);
     delete rpcTimerInterface;
     delete ui;
 }
@@ -558,6 +554,10 @@ bool RPCConsole::eventFilter(QObject* obj, QEvent *event)
 void RPCConsole::setClientModel(ClientModel *model)
 {
     clientModel = model;
+
+    // avoid accidentally overwriting an existing, non QTThread
+    // based timer interface
+    model->node().rpcSetTimerInterfaceIfUnset(rpcTimerInterface);
 
     bool wallet_enabled{false};
 #ifdef ENABLE_WALLET
@@ -668,7 +668,7 @@ void RPCConsole::setClientModel(ClientModel *model)
 
         //Setup autocomplete and attach it
         QStringList wordList;
-        std::vector<std::string> commandList = m_node.listRpcCommands();
+        std::vector<std::string> commandList = clientModel->node().listRpcCommands();
         for (size_t i = 0; i < commandList.size(); ++i)
         {
             wordList << commandList[i].c_str();
@@ -966,7 +966,7 @@ void RPCConsole::browseHistory(int offset)
 
 void RPCConsole::startExecutor()
 {
-    RPCExecutor *executor = new RPCExecutor(m_node);
+    RPCExecutor *executor = new RPCExecutor(clientModel->node());
     executor->moveToThread(&thread);
 
     // Replies from executor object must go to this object
@@ -1196,7 +1196,7 @@ void RPCConsole::disconnectSelectedNode()
         // Get currently selected peer address
         NodeId id = nodes.at(i).data().toLongLong();
         // Find the node, disconnect it and clear the selected node
-        if(m_node.disconnect(id))
+        if(clientModel->node().disconnect(id))
             clearSelectedNode();
     }
 }
@@ -1220,8 +1220,8 @@ void RPCConsole::banSelectedNode(int bantime)
         // Find possible nodes, ban it and clear the selected node
         const CNodeCombinedStats *stats = clientModel->getPeerTableModel()->getNodeStats(detailNodeRow);
         if (stats) {
-            m_node.ban(stats->nodeStats.addr, BanReasonManuallyAdded, bantime);
-            m_node.disconnect(stats->nodeStats.addr);
+            clientModel->node().ban(stats->nodeStats.addr, BanReasonManuallyAdded, bantime);
+            clientModel->node().disconnect(stats->nodeStats.addr);
         }
     }
     clearSelectedNode();
@@ -1242,7 +1242,7 @@ void RPCConsole::unbanSelectedNode()
         CSubNet possibleSubnet;
 
         LookupSubNet(strNode.toStdString().c_str(), possibleSubnet);
-        if (possibleSubnet.IsValid() && m_node.unban(possibleSubnet))
+        if (possibleSubnet.IsValid() && clientModel->node().unban(possibleSubnet))
         {
             clientModel->getBanTableModel()->refresh();
         }

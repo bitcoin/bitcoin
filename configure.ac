@@ -2,7 +2,7 @@ dnl require autoconf 2.60 (AS_ECHO/AS_ECHO_N)
 AC_PREREQ([2.60])
 define(_CLIENT_VERSION_MAJOR, 0)
 define(_CLIENT_VERSION_MINOR, 18)
-define(_CLIENT_VERSION_REVISION, 01)
+define(_CLIENT_VERSION_REVISION, 02)
 define(_CLIENT_VERSION_BUILD, 0)
 define(_CLIENT_VERSION_RC, 0)
 define(_CLIENT_VERSION_IS_RELEASE, true)
@@ -156,7 +156,7 @@ AC_ARG_ENABLE([wallet],
   [disable wallet (enabled by default)])],
   [enable_wallet=$enableval],
   [enable_wallet=yes])
-  
+
 AC_ARG_ENABLE([mobile-gui],
   [AS_HELP_STRING([--enable-mobile-gui],
   [enable mobile GUI (disabled by default)])],

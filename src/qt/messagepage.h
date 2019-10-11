@@ -26,7 +26,7 @@ class MessagePage : public QWidget
 
 public:
 
-    explicit MessagePage(const PlatformStyle *platformStyle, QWidget *parent = 0);
+    explicit MessagePage(const PlatformStyle *platformStyle, QWidget *parent = nullptr);
     ~MessagePage();
 
     void setModel(MessageModel *model);
@@ -50,6 +50,7 @@ private Q_SLOTS:
     void on_copyFromAddressButton_clicked();
     void on_copyToAddressButton_clicked();
     void on_deleteButton_clicked();
+    void on_newmessageButton_clicked();
     void selectionChanged();
     /** Spawn contextual menu (right mouse menu) for address book entry */
     void contextualMenu(const QPoint &point);
