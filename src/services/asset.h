@@ -231,7 +231,7 @@ public:
             return false;
         uint32_t walkBackPage = page;
         const std::string &allocationTupleStr = allocationTuple.ToString();
-        while(walkBackPage >= 0){
+        while(true){
             if(!ReadIndexTXIDs(allocationTuple, walkBackPage, TXIDS)){
                 if(walkBackPage == 0)
                     break;
@@ -258,13 +258,11 @@ public:
             TXIDS.erase(it);
             break;
         }
-        if(walkBackPage < 0)
-            return true;
         if(TXIDS.empty() && walkBackPage == page){
             const std::pair<std::string, uint32_t> &pagePair = std::make_pair(allocationTupleStr, page);
             if(Exists(pagePair) && !Erase(pagePair))
                 return false;
-            if(page <= 0)
+            if(page == 0)
                 return true;
             page--;
             return WriteAssetAllocationPage(allocationTuple.nAsset, page);
@@ -277,7 +275,7 @@ public:
         if(!ReadAssetPage(assetGuid, page))
             return false;
         uint32_t walkBackPage = page;
-        while(walkBackPage >= 0){
+        while(true){
             if(!ReadIndexTXIDs(assetGuid, walkBackPage, TXIDS)){
                 if(walkBackPage == 0)
                     break;
@@ -303,13 +301,11 @@ public:
             TXIDS.erase(it);
             break;
         }
-        if(walkBackPage < 0)
-            return true;
         if(TXIDS.empty() && walkBackPage == page){
             const std::pair<uint32_t, uint32_t> &pagePair = std::make_pair(assetGuid, page);
             if(Exists(pagePair) && !Erase(pagePair))
                 return false;
-            if(page <= 0)
+            if(page == 0)
                 return true;
             page--;
             return WriteAssetPage(assetGuid, page);
