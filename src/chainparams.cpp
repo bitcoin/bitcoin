@@ -292,7 +292,7 @@ public:
         m_assumed_blockchain_size = 0;
         m_assumed_chain_state_size = 0;
 
-        UpdateActivationParametersFromArgs(args);
+        UpdateFromArgs(args);
 
         genesis = CreateGenesisBlock(1296688602, 2, 0x207fffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
@@ -302,7 +302,6 @@ public:
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
         vSeeds.clear();      //!< Regtest mode doesn't have any DNS seeds.
 
-        m_allow_set_mocktime = true;
         fDefaultConsistencyChecks = true;
         fRequireStandard = true;
         m_is_test_chain = true;
@@ -337,6 +336,7 @@ public:
         consensus.vDeployments[d].nTimeout = nTimeout;
     }
     void UpdateActivationParametersFromArgs(const ArgsManager& args);
+    void UpdateFromArgs(const ArgsManager& args);
 };
 
 void CRegTestParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
@@ -380,6 +380,12 @@ void CRegTestParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
             throw std::runtime_error(strprintf("Invalid deployment (%s)", vDeploymentParams[0]));
         }
     }
+}
+void CRegTestParams::UpdateFromArgs(const ArgsManager& args)
+{
+    UpdateActivationParametersFromArgs(args);
+
+    m_allow_set_mocktime = args.GetBoolArg("-allow_set_mocktime", true);
 }
 
 static std::unique_ptr<const CChainParams> globalChainParams;
