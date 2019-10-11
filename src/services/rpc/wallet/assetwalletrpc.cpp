@@ -859,7 +859,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 
 	}
     CWitnessAddress auxFeeAddress;
-    const CAmount &nAuxFee = getAuxFee(stringFromVch(theAsset.vchContract), nTotalSending, auxFeeAddress);
+    const CAmount &nAuxFee = getAuxFee(stringFromVch(theAsset.vchPubData), nTotalSending, auxFeeAddress);
     if(nAuxFee > 0){
         theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(auxFeeAddress.nVersion, auxFeeAddress.vchWitnessProgram), nAuxFee));
         nTotalSending += nAuxFee;
