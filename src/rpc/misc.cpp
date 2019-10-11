@@ -350,8 +350,8 @@ static UniValue setmocktime(const JSONRPCRequest& request)
                 RPCExamples{""},
             }.Check(request);
 
-    if (!Params().MineBlocksOnDemand())
-        throw std::runtime_error("setmocktime for regression testing (-regtest mode) only");
+    if (!Params().AllowSetMockTime())
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("setmocktime is not allowed for chain %s", Params().NetworkIDString()));
 
     // For now, don't change mocktime if we're in the middle of validation, as
     // this could have an effect on mempool time-based eviction, as well as
