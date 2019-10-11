@@ -21,6 +21,7 @@ extern CTxDestination DecodeDestination(const std::string& str);
 extern UniValue ValueFromAmount(const CAmount& amount);
 extern std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags = 0);
 extern bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no_witness = false, bool try_witness = true);
+extern CAmount getAuxFee(const std::string &publicData, const CAmount& nAmount, CWitnessAddress & address);
 extern ArrivalTimesMapImpl arrivalTimesMap; 
 extern CCriticalSection cs_assetallocationarrival;
 extern AssetPrevTxMap mapAssetPrevTxSender;
@@ -391,12 +392,23 @@ UniValue assetnew(const JSONRPCRequest& request) {
     {
         {"address", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "An address that you own."},
         {"symbol", RPCArg::Type::STR, RPCArg::Optional::NO, "Asset symbol (1-8 characters)"},
-        {"public_value", RPCArg::Type::STR, RPCArg::Optional::NO, "public data, 256 characters max."},
+        {"description", RPCArg::Type::STR, RPCArg::Optional::NO, "Public description of the token."},
         {"contract", RPCArg::Type::STR, RPCArg::Optional::NO, "Ethereum token contract for SyscoinX bridge. Must be in hex and not include the '0x' format tag. For example contract '0xb060ddb93707d2bc2f8bcc39451a5a28852f8d1d' should be set as 'b060ddb93707d2bc2f8bcc39451a5a28852f8d1d'. Leave empty for no smart contract bridge."},
         {"precision", RPCArg::Type::NUM, RPCArg::Optional::NO, "Precision of balances. Must be between 0 and 8. The lower it is the higher possible max_supply is available since the supply is represented as a 64 bit integer. With a precision of 8 the max supply is 10 billion."},
         {"total_supply", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Initial supply of asset. Can mint more supply up to total_supply amount or if total_supply is -1 then minting is uncapped."},
         {"max_supply", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Maximum supply of this asset. Set to -1 for uncapped. Depends on the precision value that is set, the lower the precision the higher max_supply can be."},
         {"update_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 0x01(1) to give admin status (needed to update flags), 0x10(2) for updating public data field, 0x100(4) for updating the smart contract field, 0x1000(8) for updating supply, 0x10000(16) for being able to update flags (need admin access to update flags as well). 0x11111(31) for all."},
+        {"aux_fees", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Auxiliary fee structure",
+            {
+                {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to pay auxiliary fees to"},
+                {"fee_struct", RPCArg::Type::ARR, RPCArg::Optional::NO, "Auxiliary fee structure",
+                    {
+                        {"", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Bound (in amount) for for the fee level based on total transaction amount"},
+                        {"", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Percentage of total transaction amount applied as a fee"},
+                    },
+                }
+            }
+        },
         {"witness", RPCArg::Type::STR, RPCArg::Optional::NO, "Witness address that will sign for web-of-trust notarization of this transaction."}
     },
     RPCResult{
@@ -406,8 +418,8 @@ UniValue assetnew(const JSONRPCRequest& request) {
     "}\n"
     },
     RPCExamples{
-    HelpExampleCli("assetnew", "\"myaddress\" \"CAT\" \"publicvalue\" \"contractaddr\" 8 100 1000 31 \"\"")
-    + HelpExampleRpc("assetnew", "\"myaddress\", \"CAT\", \"publicvalue\", \"contractaddr\", 8, 100, 1000, 31, \"\"")
+    HelpExampleCli("assetnew", "\"myaddress\" \"CAT\" \"publicvalue\" \"contractaddr\" 8 100 1000 31 {} \"\"")
+    + HelpExampleRpc("assetnew", "\"myaddress\", \"CAT\", \"publicvalue\", \"contractaddr\", 8, 100, 1000, 31, {}, \"\"")
     }
     }.Check(request);
     string strAddress = params[0].get_str();
@@ -441,15 +453,21 @@ UniValue assetnew(const JSONRPCRequest& request) {
         nMaxSupply = 0;
     }
     uint32_t nUpdateFlags = params[7].get_uint();
-    vchWitness = params[8].get_str();
+    vchWitness = params[9].get_str();
     const CWitnessAddress& witnessAddress = DescribeWitnessAddress(strAddress);
     strAddress = witnessAddress.ToString();
     // calculate net
     // build asset object
     CAsset newAsset;
     newAsset.nAsset = GenerateSyscoinGuid();
+    UniValue publicData(UniValue::VOBJ);
+    publicData.pushKV("description", strPubData);
+    UniValue feesStructArr = find_value(params[8].get_obj(), "fee_struct");
+    if(feesStructArr.isArray() && feesStructArr.get_array().size() > 0)
+        publicData.pushKV("aux_fees", params[8]);
+
     newAsset.strSymbol = strSymbol;
-    newAsset.vchPubData = vchFromString(strPubData);
+    newAsset.vchPubData = vchFromString(publicData.write());
     newAsset.vchContract = ParseHex(strContract);
     newAsset.witnessAddress = witnessAddress;
     newAsset.nBalance = nBalance;
@@ -487,10 +505,21 @@ UniValue assetupdate(const JSONRPCRequest& request) {
         "\nPerform an update on an asset you control.\n",
         {
             {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
-            {"public_value", RPCArg::Type::STR, RPCArg::Optional::NO, "Public data, 256 characters max."},
+            {"description", RPCArg::Type::STR, RPCArg::Optional::NO, "Public description of the token."},
             {"contract",  RPCArg::Type::STR, RPCArg::Optional::NO, "Ethereum token contract for SyscoinX bridge. Leave empty for no smart contract bridg."},
             {"supply", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "New supply of asset. Can mint more supply up to total_supply amount or if max_supply is -1 then minting is uncapped. If greater than zero, minting is assumed otherwise set to 0 to not mint any additional tokens."},
             {"update_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 0x01(1) to give admin status (needed to update flags), 0x10(2) for updating public data field, 0x100(4) for updating the smart contract field, 0x1000(8) for updating supply, 0x10000(16) for being able to update flags (need admin access to update flags as well). 0x11111(31) for all."},
+            {"aux_fees", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Auxiliary fee structure",
+                {
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to pay auxiliary fees to"},
+                    {"fee_struct", RPCArg::Type::ARR, RPCArg::Optional::NO, "Auxiliary fee structure",
+                        {
+                            {"", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Bound (in amount) for for the fee level based on total transaction amount"},
+                            {"", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Percentage of total transaction amount applied as a fee"},
+                        },
+                    }
+                }
+            },
             {"witness", RPCArg::Type::STR, RPCArg::Optional::NO, "Witness address that will sign for web-of-trust notarization of this transaction."}
         },
         RPCResult{
@@ -499,8 +528,8 @@ UniValue assetupdate(const JSONRPCRequest& request) {
             "}\n"
         },
         RPCExamples{
-            HelpExampleCli("assetupdate", "\"assetguid\" \"publicvalue\" \"contractaddress\" \"supply\" \"update_flags\" \"\"")
-            + HelpExampleRpc("assetupdate", "\"assetguid\", \"publicvalue\", \"contractaddress\", \"supply\", \"update_flags\", \"\"")
+            HelpExampleCli("assetupdate", "\"assetguid\" \"publicvalue\" \"contractaddress\" \"supply\" \"update_flags\" {} \"\"")
+            + HelpExampleRpc("assetupdate", "\"assetguid\", \"publicvalue\", \"contractaddress\", \"supply\", \"update_flags\", {}, \"\"")
         }
         }.Check(request);
     const uint32_t &nAsset = params[0].get_uint();
@@ -518,7 +547,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
 
     uint32_t nUpdateFlags = params[4].get_uint();
     string vchWitness;
-    vchWitness = params[5].get_str();
+    vchWitness = params[6].get_str();
     
     CAsset theAsset;
 
@@ -534,10 +563,17 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     CAmount nBalance = 0;
     if((params3.isStr() && params3.get_str() != "0") || (params3.isNum() && params3.get_real() != 0))
         nBalance = AssetAmountFromValue(params3, theAsset.nPrecision);
+    UniValue publicData(UniValue::VOBJ);
+    publicData.pushKV("description", strPubData);
+    UniValue feesStructArr = find_value(params[5].get_obj(), "fee_struct");
+    if(feesStructArr.isArray() && feesStructArr.get_array().size() > 0)
+        publicData.pushKV("aux_fees", params[5]);
+    strPubData = publicData.write();
     if(strPubData != oldData)
         theAsset.vchPubData = vchFromString(strPubData);
     else
         theAsset.vchPubData.clear();
+    
     if(vchContract != oldContract)
         theAsset.vchContract = vchContract;
     else
@@ -789,17 +825,14 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 	const CAssetAllocationTuple assetAllocationTuple(nAsset, DescribeWitnessAddress(strAddress));
 	if (!GetAssetAllocation(assetAllocationTuple, dbAssetAllocation))
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset allocation with this key");
-
+    
 	CAsset theAsset;
 	if (!GetAsset(nAsset, theAsset))
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
 	const COutPoint lockedOutpoint = dbAssetAllocation.lockedOutpoint;
     if(!lockedOutpoint.IsNull() && !IsOutpointMature(lockedOutpoint))
         throw JSONRPCError(RPC_MISC_ERROR, "Locked outpoint not mature");
-    if(!lockedOutpoint.IsNull()){
-        // this will let syscointxfund try to select this outpoint as the input
-        mapSenderLockedOutPoints[strAddress] = lockedOutpoint;
-    }
+
 	theAssetAllocation.SetNull();
     theAssetAllocation.assetAllocationTuple.nAsset = assetAllocationTuple.nAsset;
     theAssetAllocation.assetAllocationTuple.witnessAddress = assetAllocationTuple.witnessAddress; 
@@ -825,6 +858,12 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 			throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected amount as number in receiver array");
 
 	}
+    CWitnessAddress auxFeeAddress;
+    const CAmount &nAuxFee = getAuxFee(stringFromVch(theAsset.vchPubData), nTotalSending, auxFeeAddress);
+    if(nAuxFee > 0){
+        theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(auxFeeAddress.nVersion, auxFeeAddress.vchWitnessProgram), nAuxFee));
+        nTotalSending += nAuxFee;
+    }
     CAmount nBalanceZDAG = dbAssetAllocation.nBalance;
     const string &allocationTupleStr = theAssetAllocation.assetAllocationTuple.ToString();
     {
@@ -865,7 +904,10 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
             vecSend.push_back(recipient);
         }
 	}
-
+    if(!lockedOutpoint.IsNull()){
+        // this will let syscointxfund try to select this outpoint as the input
+        mapSenderLockedOutPoints[strAddress] = lockedOutpoint;
+    }
 	return syscointxfund_helper(pwallet, strAddress, SYSCOIN_TX_VERSION_ALLOCATION_SEND, strWitness, vecSend);
 }
 template <typename T>
@@ -1169,6 +1211,7 @@ UniValue assetallocationlock(const JSONRPCRequest& request) {
 	if (!GetAssetAllocation(assetAllocationTuple, dbAssetAllocation))
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset allocation with this key");
 
+    
 	const COutPoint lockedOutpoint = dbAssetAllocation.lockedOutpoint;
     if(!lockedOutpoint.IsNull() && !IsOutpointMature(lockedOutpoint))
         throw JSONRPCError(RPC_MISC_ERROR, "Locked outpoint not mature");
@@ -1349,8 +1392,8 @@ static const CRPCCommand commands[] =
     { "syscoinwallet",            "convertaddresswallet",             &convertaddresswallet,          {"address","label","rescan"} },
     { "syscoinwallet",            "assetallocationburn",              &assetallocationburn,           {"asset_guid","address","amount","ethereum_destination_address"} }, 
     { "syscoinwallet",            "assetallocationmint",              &assetallocationmint,           {"asset_guid","address","amount","blocknumber","tx_hex","txroot_hex","txmerkleproof_hex","txmerkleproofpath_hex","receipt_hex","receiptroot_hex","receiptmerkleproof","witness"} },     
-    { "syscoinwallet",            "assetnew",                         &assetnew,                      {"address","symbol","public value","contract","precision","total_supply","max_supply","update_flags","witness"}},
-    { "syscoinwallet",            "assetupdate",                      &assetupdate,                   {"asset_guid","public value","contract","supply","update_flags","witness"}},
+    { "syscoinwallet",            "assetnew",                         &assetnew,                      {"address","symbol","description","contract","precision","total_supply","max_supply","update_flags","aux_fees","witness"}},
+    { "syscoinwallet",            "assetupdate",                      &assetupdate,                   {"asset_guid","description","contract","supply","update_flags","aux_fees","witness"}},
     { "syscoinwallet",            "assettransfer",                    &assettransfer,                 {"asset_guid","address","witness"}},
     { "syscoinwallet",            "assetsend",                        &assetsend,                     {"asset_guid","address","amount"}},
     { "syscoinwallet",            "assetsendmany",                    &assetsendmany,                 {"asset_guid","inputs"}},

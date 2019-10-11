@@ -901,4 +901,50 @@ bool CAssetIndexDB::FlushErase(const std::vector<uint256> &vecTXIDs){
     LogPrint(BCLog::SYS, "Flushing %d asset index removals\n", vecTXIDs.size());
     return WriteBatch(batch);
 }
+CAmount getAuxFee(const std::string &public_data, const CAmount& nAmount, CWitnessAddress & address) {
+    UniValue publicObj;
+    if(!publicObj.read(public_data))
+        return -1;
+    const UniValue &auxFeesObj = find_value(publicObj, "aux_fees");
+    if(!auxFeesObj.isObject())
+        return -1;
+    const UniValue &addressObj = find_value(auxFeesObj, "address");
+    if(!addressObj.isStr())
+        return -1;
+    address = DescribeWitnessAddress(addressObj.get_str());
+    const UniValue &feeStructObj = find_value(auxFeesObj, "fee_struct");
+    if(!feeStructObj.isArray())
+        return -1;
+    const UniValue &feeStructArray = feeStructObj.get_array();
+    if(feeStructArray.size() == 0)
+        return -1;
+     
+    CAmount nAccumulatedFee = 0;
+    CAmount nBoundAmount = 0;
+    CAmount nNextBoundAmount = 0;
+    double nRate = 0;
+    for(unsigned int i =0;i<feeStructArray.size();i++){
+        if(!feeStructArray[i].isArray())
+            return -1;
+        const UniValue &feeStruct = feeStructArray[i].get_array();
+        const UniValue &feeStructNext = feeStructArray[i < feeStructArray.size()-1? i+1:i].get_array();
+        if(!feeStruct[0].isStr() && !feeStruct[0].isNum())
+            return -1;
+        if(!feeStructNext[0].isStr() && !feeStructNext[0].isNum())
+                return -1;    
+        nBoundAmount = AmountFromValue(feeStruct[0]);
+        nNextBoundAmount = AmountFromValue(feeStructNext[0]);
+        if(!feeStruct[1].isStr())
+            return -1;
+        if(!ParseDouble(feeStruct[1].get_str(), &nRate))
+            return -1;
+        // case where amount is in between the bounds
+        if(nAmount >= nBoundAmount && nAmount < nNextBoundAmount){
+            return (nAmount - nBoundAmount) * nRate + nAccumulatedFee;    
+        }
+        nBoundAmount = nNextBoundAmount - nBoundAmount;
+        nAccumulatedFee += (nBoundAmount * nRate);
+    }
+    return (nAmount - nBoundAmount) * nRate + nAccumulatedFee;    
+}
 

@@ -68,6 +68,7 @@ public:
     std::vector<TabTypes> tabs() const { return {TAB_INFO, TAB_CONSOLE, TAB_GRAPH, TAB_PEERS}; }
 
     QString tabTitle(TabTypes tab_type) const;
+    QKeySequence tabShortcut(TabTypes tab_type) const;
 
 protected:
     virtual bool eventFilter(QObject* obj, QEvent *event);

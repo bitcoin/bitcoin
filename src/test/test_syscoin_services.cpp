@@ -32,6 +32,7 @@ static bool node2Online = false;
 static bool node3Online = false;
 static bool started = false;
 std::map<string, string> mapNodes;
+extern CAmount getAuxFee(const std::string &publicData, const CAmount& nAmount, CWitnessAddress & address);
 string strSYSXAsset = "";
 string strSYSXAddress = "";
 // create a map between node alias names and URLs to be used in testing for example CallExtRPC("mynode", "getblockchaininfo") would call getblockchaininfo on the node alias mynode which would be pushed as a URL here.
@@ -783,13 +784,13 @@ bool FindAssetGUIDFromAssetIndexResults(const UniValue& results, std::string gui
 	return false;
 }
 	
-string AssetNew(const string& node, const string& address, string pubdata, string contract, const string& precision, const string& supply, const string& maxsupply, const string& updateflags, const string& witness, const string& symbol, bool bRegtest)
+string AssetNew(const string& node, const string& address, string pubdata, string contract, const string& precision, const string& supply, const string& maxsupply, const string& updateflags, const string& witness, const string& symbol, const string& auxfees, bool bRegtest)
 {
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
 	UniValue r;
-	// "assetnew [address] [symbol] [public value] [contract] [precision=8] [supply] [max_supply] [update_flags] [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "assetnew", "\"" + address + "\",\"" + symbol + "\",\"" + pubdata + "\",\"" + contract + "\"," + precision + "," + supply + "," + maxsupply + "," + updateflags + ",\"" + witness + "\""));
+	// "assetnew [address] [symbol] [description] [contract] [precision=8] [supply] [max_supply] [update_flags] [aux_fees] [witness]\n"
+	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "assetnew", "\"" + address + "\",\"" + symbol + "\",\"" + pubdata + "\",\"" + contract + "\"," + precision + "," + supply + "," + maxsupply + "," + updateflags + "," + auxfees + ",\"" + witness + "\""));
 	if(contract == "''")
 		contract.clear();
 	if(pubdata == "''")
@@ -802,11 +803,23 @@ string AssetNew(const string& node, const string& address, string pubdata, strin
 	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "decoderawtransaction", "\"" + hex_str + "\",true"));
 	
 	GenerateBlocks(1, node, bRegtest);
+	UniValue auxfeesObj;
+	auxfeesObj.read(auxfees);
+	UniValue publicData(UniValue::VOBJ);
+    publicData.pushKV("description", pubdata);
+    UniValue feesStructArr = find_value(auxfeesObj, "fee_struct");
+    if(feesStructArr.isArray() && feesStructArr.get_array().size() > 0)
+        publicData.pushKV("aux_fees", auxfeesObj);
+
+    pubdata = publicData.write();
+
 	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "assetinfo",  guid ));
 	int nprecision;
 	ParseInt32(precision, &nprecision);
 	BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_uint()) == guid);
 	BOOST_CHECK(find_value(r.get_obj(), "address").get_str() == address);
+
+
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "public_value").get_str() , pubdata);
 	UniValue balance = find_value(r.get_obj(), "balance");
 	UniValue totalsupply = find_value(r.get_obj(), "total_supply");
@@ -827,6 +840,8 @@ string AssetNew(const string& node, const string& address, string pubdata, strin
 	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "listassetindexassets", "\"" + address + "\""));
 	BOOST_CHECK(FindAssetGUIDFromAssetIndexResults(r, guid));
 	GenerateBlocks(1, node, bRegtest);
+
+
 	if (!otherNode1.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallExtRPC(otherNode1, "assetinfo",  guid));
@@ -866,7 +881,7 @@ string AssetNew(const string& node, const string& address, string pubdata, strin
 	}
 	return guid;
 }
-string AssetUpdate(const string& node, const string& guid, const string& pubdata, const string& supply, const string& updateflags, const string& contract, const string& witness, bool confirm)
+string AssetUpdate(const string& node, const string& guid, const string& pubdata, const string& supply, const string& updateflags, const string& contract, const string& witness, bool confirm, const string& auxfees)
 {
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
@@ -874,6 +889,9 @@ string AssetUpdate(const string& node, const string& guid, const string& pubdata
 	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "assetinfo",  guid));
 	string oldaddress = find_value(r.get_obj(), "address").get_str();
 	string oldpubdata = find_value(r.get_obj(), "public_value").get_str();
+	UniValue oldpubdataObj;
+	oldpubdataObj.read(oldpubdata);
+	string oldpubdata1 = find_value(oldpubdataObj, "description").get_str();
 	string oldcontract = find_value(r.get_obj(), "contract").get_str();
     UniValue totalsupply = find_value(r.get_obj(), "total_supply");
 	uint32_t nprecision = find_value(r.get_obj(), "precision").get_uint();
@@ -886,7 +904,7 @@ string AssetUpdate(const string& node, const string& guid, const string& pubdata
 		supplyamount = AssetAmountFromValue(supplytmp, nprecision);
 	}
 	CAmount newamount = oldsupplyamount + supplyamount;
-	string newpubdata = pubdata == "''" ? oldpubdata : pubdata;
+	string newpubdata = pubdata == "''" ? oldpubdata1 : pubdata;
 	string newcontract = contract == "''" ? oldcontract : contract;
 	string newcontract1 = newcontract;
 	string newpubdata1 = newpubdata;
@@ -899,8 +917,8 @@ string AssetUpdate(const string& node, const string& guid, const string& pubdata
 	ParseInt32(updateflags, &flagsi);
 	int newflags = updateflags == "''" ? oldflags : flagsi;
 	string newflagsstr = itostr(newflags);
-	// "assetupdate [asset] [public] [contract] [supply] [update_flags] [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "assetupdate", guid + ",\"" + newpubdata1 + "\",\"" + newcontract1 + "\"," +  newsupply + "," + newflagsstr + ",\"" + witness + "\""));
+	// "assetupdate [asset] [description] [contract] [supply] [update_flags] [aux_fees] [witness]\n"
+	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "assetupdate", guid + ",\"" + newpubdata1 + "\",\"" + newcontract1 + "\"," +  newsupply + "," + newflagsstr + "," + auxfees + ",\"" + witness + "\""));
     BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "signrawtransactionwithwallet", "\"" +  find_value(r.get_obj(), "hex").get_str() + "\""));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
    
@@ -912,6 +930,18 @@ string AssetUpdate(const string& node, const string& guid, const string& pubdata
 	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "assetinfo", guid));
 	BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_uint()) == guid);
 	BOOST_CHECK(find_value(r.get_obj(), "address").get_str() == oldaddress);
+
+	UniValue auxfeesObj;
+	auxfeesObj.read(auxfees);
+
+	UniValue publicData(UniValue::VOBJ);
+    publicData.pushKV("description", newpubdata1);
+	UniValue feesStructArr = find_value(auxfeesObj, "fee_struct");
+    if(feesStructArr.isArray() && feesStructArr.get_array().size() > 0)
+        publicData.pushKV("aux_fees", auxfeesObj);
+    newpubdata = publicData.write();
+
+
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "public_value").get_str(), oldpubdata);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "update_flags").get_uint(), oldflags);
 
@@ -999,7 +1029,7 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
 	UniValue r;
 	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "assetinfo" , guid));
 	int nprecision = find_value(r.get_obj(), "precision").get_uint();
-
+	
 	CAssetAllocation theAssetAllocation;
 	UniValue valueTo;
 	string inputsTmp = inputs;
@@ -1026,7 +1056,12 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
     	strAddress = witnessAddress.ToString(); 
 		theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(witnessAddress.nVersion, witnessAddress.vchWitnessProgram), amount));
 	}
-
+	CWitnessAddress auxFeeAddress;
+	const CAmount &nAuxFee = getAuxFee(find_value(r.get_obj(), "public_value").get_str(), inputamount, auxFeeAddress);
+	if(nAuxFee > 0){
+		theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(auxFeeAddress.nVersion, auxFeeAddress.vchWitnessProgram), nAuxFee));
+		inputamount += nAuxFee;
+	}
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
 

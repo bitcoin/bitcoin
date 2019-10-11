@@ -240,6 +240,7 @@ SYSCOIN_CORE_H = \
   util/bytevectorhash.h \
   util/error.h \
   util/fees.h \
+  util/spanparsing.h \
   util/system.h \
   util/macros.h \
   util/memory.h \
@@ -594,6 +595,7 @@ libsyscoin_util_a_SOURCES = \
   util/moneystr.cpp \
   util/rbf.cpp \
   util/threadnames.cpp \
+  util/spanparsing.cpp \
   util/strencodings.cpp \
   util/string.cpp \
   util/time.cpp \
