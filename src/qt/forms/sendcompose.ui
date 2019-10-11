@@ -1,18 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>SendCompose</class>
- <widget class="QDialog" name="SendCompose">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>850</width>
-    <height>526</height>
-   </rect>
-  </property>
-  <property name="windowTitle">
-   <string>Send Coins</string>
-  </property>
+ <widget class="QWidget" name="SendCompose">
   <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1,0,0">
    <property name="bottomMargin">
     <number>8</number>

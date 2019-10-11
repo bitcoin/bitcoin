@@ -8,7 +8,10 @@
 #include <qt/platformstyle.h>
 #include <qt/qvalidatedlineedit.h>
 #include <qt/sendcompose.h>
+#include <qt/senddialog.h>
+#include <qt/sendfinish.h>
 #include <qt/sendcoinsentry.h>
+#include <qt/sendsign.h>
 #include <qt/transactiontablemodel.h>
 #include <qt/transactionview.h>
 #include <qt/walletmodel.h>
@@ -36,41 +39,31 @@
 
 namespace
 {
-//! Press "Yes" or "Cancel" buttons in modal send confirmation dialog.
-void ConfirmSend(QString* text = nullptr, bool cancel = false)
-{
-    QTimer::singleShot(0, [text, cancel]() {
-        for (QWidget* widget : QApplication::topLevelWidgets()) {
-            if (widget->inherits("SendSign")) {
-                SendSign* dialog = qobject_cast<SendSign*>(widget);
-                if (text) *text = dialog->text();
-                QAbstractButton* button = dialog->button(cancel ? QMessageBox::Cancel : QMessageBox::Yes);
-                button->setEnabled(true);
-                button->click();
-            }
-        }
-    });
-}
 
 //! Send coins to address and return txid.
-uint256 SendCoins(CWallet& wallet, SendCompose& sendCoinsDialog, const CTxDestination& address, CAmount amount, bool rbf)
+void SendCoins(uint256& txid, CWallet& wallet, SendDialog& sendDialog, const CTxDestination& address, CAmount amount, bool rbf)
 {
-    QVBoxLayout* entries = sendCoinsDialog.findChild<QVBoxLayout*>("entries");
+    QVERIFY(sendDialog.draftWidget->isActiveWidget());
+    QVBoxLayout* entries = sendDialog.findChild<QVBoxLayout*>("entries");
     SendCoinsEntry* entry = qobject_cast<SendCoinsEntry*>(entries->itemAt(0)->widget());
     entry->findChild<QValidatedLineEdit*>("payTo")->setText(QString::fromStdString(EncodeDestination(address)));
     entry->findChild<BitcoinAmountField*>("payAmount")->setValue(amount);
-    sendCoinsDialog.findChild<QFrame*>("frameFee")
+    sendDialog.findChild<QFrame*>("frameFee")
         ->findChild<QFrame*>("frameFeeSelection")
         ->findChild<QCheckBox*>("optInRBF")
         ->setCheckState(rbf ? Qt::Checked : Qt::Unchecked);
-    uint256 txid;
     boost::signals2::scoped_connection c(wallet.NotifyTransactionChanged.connect([&txid](CWallet*, const uint256& hash, ChangeType status) {
         if (status == CT_NEW) txid = hash;
     }));
-    ConfirmSend();
-    bool invoked = QMetaObject::invokeMethod(&sendCoinsDialog, "on_sendButton_clicked");
+    bool invoked = QMetaObject::invokeMethod(sendDialog.draftWidget, "on_sendButton_clicked");
     assert(invoked);
-    return txid;
+    QVERIFY(sendDialog.signWidget->isActiveWidget());
+    sendDialog.signWidget->confirm();
+    // NotifyTransactionChanged in WalletModel calls "updateTransaction" using a Qt::QueuedConnection
+    QTest::qWait(0);
+    QVERIFY(sendDialog.finishWidget->isActiveWidget());
+    sendDialog.finishWidget->goNewTransaction();
+    QVERIFY(sendDialog.draftWidget->isActiveWidget());
 }
 
 //! Find index of txid in transaction list.
@@ -92,7 +85,7 @@ QModelIndex FindTx(const QAbstractItemModel& model, const uint256& txid)
 // Test widgets can be debugged interactively calling show() on them and
 // manually running the event loop, e.g.:
 //
-//     sendCoinsDialog.show();
+//     sendDialog.show();
 //     QEventLoop().exec();
 //
 // This also requires overriding the default minimal Qt platform:
@@ -131,21 +124,23 @@ void TestGUI()
 
     // Create widgets for sending coins and listing transactions.
     std::unique_ptr<const PlatformStyle> platformStyle(PlatformStyle::instantiate("other"));
-    SendCompose sendCoinsDialog(platformStyle.get());
+    SendDialog sendDialog(platformStyle.get());
     TransactionView transactionView(platformStyle.get());
     auto node = interfaces::MakeNode();
     OptionsModel optionsModel(*node);
     AddWallet(wallet);
     WalletModel walletModel(std::move(node->getWallets().back()), *node, platformStyle.get(), &optionsModel);
     RemoveWallet(wallet);
-    sendCoinsDialog.setModel(&walletModel);
+    sendDialog.setModel(&walletModel);
     transactionView.setModel(&walletModel);
 
     // Send two transactions, and verify they are added to transaction list.
     TransactionTableModel* transactionTableModel = walletModel.getTransactionTableModel();
     QCOMPARE(transactionTableModel->rowCount({}), 105);
-    uint256 txid1 = SendCoins(*wallet.get(), sendCoinsDialog, PKHash(), 5 * COIN, false /* rbf */);
-    uint256 txid2 = SendCoins(*wallet.get(), sendCoinsDialog, PKHash(), 10 * COIN, true /* rbf */);
+    uint256 txid1, txid2;
+    SendCoins(txid1, *wallet.get(), sendDialog, PKHash(), 5 * COIN, false /* rbf */);
+    SendCoins(txid2, *wallet.get(), sendDialog, PKHash(), 10 * COIN, true /* rbf */);
+
     QCOMPARE(transactionTableModel->rowCount({}), 107);
     QVERIFY(FindTx(*transactionTableModel, txid1).isValid());
     QVERIFY(FindTx(*transactionTableModel, txid2).isValid());

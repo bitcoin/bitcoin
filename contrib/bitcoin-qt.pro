@@ -14,7 +14,10 @@ FORMS += \
     ../src/qt/forms/debugwindow.ui \
     ../src/qt/forms/sendcompose.ui \
     ../src/qt/forms/sendcoinsentry.ui \
+    ../src/qt/forms/sendsign.ui \
+    ../src/qt/forms/sendfinish.ui \
     ../src/qt/forms/signverifymessagedialog.ui \
+    ../src/qt/forms/senddialog.ui \
     ../src/qt/forms/transactiondescdialog.ui \
     ../src/qt/forms/createwalletdialog.ui
 

@@ -25,7 +25,10 @@ QT_FORMS_UI = \
   qt/forms/debugwindow.ui \
   qt/forms/sendcompose.ui \
   qt/forms/sendcoinsentry.ui \
+  qt/forms/sendsign.ui \
+  qt/forms/sendfinish.ui \
   qt/forms/signverifymessagedialog.ui \
+  qt/forms/senddialog.ui \
   qt/forms/transactiondescdialog.ui
 
 QT_MOC_CPP = \
@@ -64,12 +67,15 @@ QT_MOC_CPP = \
   qt/moc_recentrequeststablemodel.cpp \
   qt/moc_rpcconsole.cpp \
   qt/moc_sendcompose.cpp \
+  qt/moc_sendsign.cpp \
   qt/moc_sendcoinsentry.cpp \
+  qt/moc_sendfinish.cpp \
   qt/moc_signverifymessagedialog.cpp \
   qt/moc_splashscreen.cpp \
   qt/moc_trafficgraphwidget.cpp \
   qt/moc_transactiondesc.cpp \
   qt/moc_transactiondescdialog.cpp \
+  qt/moc_senddialog.cpp \
   qt/moc_transactionfilterproxy.cpp \
   qt/moc_transactiontablemodel.cpp \
   qt/moc_transactionview.cpp \
@@ -146,7 +152,10 @@ BITCOIN_QT_H = \
   qt/recentrequeststablemodel.h \
   qt/rpcconsole.h \
   qt/sendcompose.h \
+  qt/sendsign.h \
   qt/sendcoinsentry.h \
+  qt/senddialog.h \
+  qt/sendfinish.h \
   qt/signverifymessagedialog.h \
   qt/splashscreen.h \
   qt/trafficgraphwidget.h \
@@ -255,9 +264,12 @@ BITCOIN_QT_WALLET_CPP = \
   qt/receiverequestdialog.cpp \
   qt/recentrequeststablemodel.cpp \
   qt/sendcompose.cpp \
+  qt/sendsign.cpp \
   qt/sendcoinsentry.cpp \
+  qt/sendfinish.cpp \
   qt/signverifymessagedialog.cpp \
   qt/transactiondesc.cpp \
+  qt/senddialog.cpp \
   qt/transactiondescdialog.cpp \
   qt/transactionfilterproxy.cpp \
   qt/transactionrecord.cpp \

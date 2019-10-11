@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SendDialog</class>
+  <widget class="QTabWidget" name="SendDialog">
+   <property name="currentIndex">
+    <number>0</number>
+   </property>
+  </widget>
+ <resources/>
+ <connections/>
+</ui>

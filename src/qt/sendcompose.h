@@ -5,12 +5,12 @@
 #ifndef BITCOIN_QT_SENDCOMPOSE_H
 #define BITCOIN_QT_SENDCOMPOSE_H
 
+#include <util/memory.h>
+
 #include <qt/walletmodel.h>
 
-#include <QDialog>
 #include <QMessageBox>
 #include <QString>
-#include <QTimer>
 
 class ClientModel;
 class PlatformStyle;
@@ -26,13 +26,18 @@ class QUrl;
 QT_END_NAMESPACE
 
 /** Dialog for sending bitcoins */
-class SendCompose : public QDialog
+class SendCompose : public QWidget
 {
     Q_OBJECT
 
 public:
     explicit SendCompose(const PlatformStyle *platformStyle, QWidget *parent = nullptr);
     ~SendCompose();
+    bool isActiveWidget();
+    void setActiveWidget(bool active);
+
+    std::unique_ptr<WalletModelTransaction> transaction;
+    std::unique_ptr<CCoinControl> coinControl;
 
     void setClientModel(ClientModel *clientModel);
     void setModel(WalletModel *model);
@@ -44,6 +49,8 @@ public:
     void setAddress(const QString &address);
     void pasteEntry(const SendCoinsRecipient &rv);
     bool handlePaymentRequest(const SendCoinsRecipient &recipient);
+    void signCancelled();
+    void signCompleted();
 
 public Q_SLOTS:
     void clear();
@@ -53,10 +60,8 @@ public Q_SLOTS:
     void updateTabsAndLabels();
     void setBalance(const interfaces::WalletBalances& balances);
 
-Q_SIGNALS:
-    void coinsSent(const uint256& txid);
-
 private:
+    bool m_is_active_widget{false};
     Ui::SendCompose *ui;
     ClientModel *clientModel;
     WalletModel *model;
@@ -64,10 +69,6 @@ private:
     bool fFeeMinimized;
     const PlatformStyle *platformStyle;
 
-    // Process WalletModel::SendCoinsReturn and generate a pair consisting
-    // of a message and message flags for use in Q_EMIT message().
-    // Additional parameter msgArg can be used via .arg(msgArg).
-    void processSendCoinsReturn(const WalletModel::SendCoinsReturn &sendCoinsReturn, const QString &msgArg = QString());
     void minimizeFeeSection(bool fMinimize);
     void updateFeeMinimizedLabel();
     // Update the passed in CCoinControl with state from the GUI
@@ -98,28 +99,11 @@ private Q_SLOTS:
 Q_SIGNALS:
     // Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);
-};
+    void psbtCopied(const std::string& psbt);
 
 
-#define SEND_CONFIRM_DELAY   3
-
-class SendSign : public QMessageBox
-{
-    Q_OBJECT
-
-public:
-    SendSign(const QString& title, const QString& text, const QString& informative_text = "", const QString& detailed_text = "", int secDelay = SEND_CONFIRM_DELAY, const QString& confirmText = "Send", QWidget* parent = nullptr);
-    int exec();
-
-private Q_SLOTS:
-    void countDown();
-    void updateYesButton();
-
-private:
-    QAbstractButton *yesButton;
-    QTimer countDownTimer;
-    int secDelay;
-    QString confirmButtonText;
+    // Fired after initial validation when user clicks Send
+    void gotoSign();
 };
 
 #endif // BITCOIN_QT_SENDCOMPOSE_H

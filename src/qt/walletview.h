@@ -16,6 +16,7 @@ class PlatformStyle;
 class ReceiveCoinsDialog;
 class SendCompose;
 class SendCoinsRecipient;
+class SendDialog;
 class TransactionView;
 class WalletModel;
 class AddressBookPage;
@@ -62,7 +63,7 @@ private:
     OverviewPage *overviewPage;
     QWidget *transactionsPage;
     ReceiveCoinsDialog *receiveCoinsPage;
-    SendCompose *sendCoinsPage;
+    SendDialog *sendCoinsPage;
     AddressBookPage *usedSendingAddressesPage;
     AddressBookPage *usedReceivingAddressesPage;
 
