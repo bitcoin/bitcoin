@@ -921,28 +921,28 @@ CAmount getAuxFee(const std::string &public_data, const CAmount& nAmount, CWitne
      
     CAmount nAccumulatedFee = 0;
     CAmount nBoundAmount = 0;
+    CAmount nNextBoundAmount = 0;
     double nRate = 0;
     for(unsigned int i =0;i<feeStructArray.size();i++){
         if(!feeStructArray[i].isArray())
             return -1;
         const UniValue &feeStruct = feeStructArray[i].get_array();
+        const UniValue &feeStructNext = feeStructArray[i < feeStructArray.size()-1? i+1:i].get_array();
         if(!feeStruct[0].isStr() && !feeStruct[0].isNum())
             return -1;
+        if(!feeStructNext[0].isStr() && !feeStructNext[0].isNum())
+                return -1;    
         nBoundAmount = AmountFromValue(feeStruct[0]);
+        nNextBoundAmount = AmountFromValue(feeStructNext[0]);
         if(!feeStruct[1].isStr())
             return -1;
         if(!ParseDouble(feeStruct[1].get_str(), &nRate))
             return -1;
         // case where amount is in between the bounds
-        if(nBoundAmount >= nAmount){
+        if(nAmount >= nBoundAmount && nAmount < nNextBoundAmount){
             return (nAmount - nBoundAmount) * nRate + nAccumulatedFee;    
         }
-        if(i < feeStructArray.size()-1){
-            const UniValue &feeStructNext = feeStructArray[i+1].get_array();
-            if(!feeStructNext[0].isStr() && !feeStructNext[0].isNum())
-                return -1;
-            nBoundAmount = AmountFromValue(feeStructNext[0]) - nBoundAmount;
-        }
+        nBoundAmount = nNextBoundAmount - nBoundAmount;
         nAccumulatedFee += (nBoundAmount * nRate);
     }
     return (nAmount - nBoundAmount) * nRate + nAccumulatedFee;    
