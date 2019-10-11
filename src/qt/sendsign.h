@@ -25,6 +25,7 @@ namespace Ui {
 enum Mode {
     SignTransaction = 0,
     CreatePsbt = 1,
+    SignRbf = 2
 };
 
 class SendSign : public QWidget
@@ -44,6 +45,8 @@ public:
     // Prepares an usigned transaction, to be signed or turned into a PSBT
     void prepareTransaction();
 
+    void prepareSignRbf(uint256 txid, CMutableTransaction mtx, CAmount old_fee, CAmount new_fee);
+
 public Q_SLOTS:
     void cancel();
     void confirm();
@@ -61,6 +64,12 @@ Q_SIGNALS:
     // Fired when user confirms sign
     void signConfirmed();
 
+    // Fired when user cancels RBF
+    void rbfCancelled(uint256 txid);
+
+    // Fired when user confirms RBF
+    void rbfConfirmed(uint256 txid, CMutableTransaction mtx);
+
 private:
     Ui::SendSign *ui;
     bool m_is_active_widget{false};
@@ -68,6 +77,10 @@ private:
     QTimer countDownTimer;
     int secDelay;
     WalletModel *walletModel;
+
+    // RBF:
+    uint256 txid; // Original transaction
+    CMutableTransaction mtx;
 
     void renderForm();
     void processSendCoinsReturn(const WalletModel::SendCoinsReturn &sendCoinsReturn, const QString &msgArg = QString());

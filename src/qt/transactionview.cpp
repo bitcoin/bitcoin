@@ -427,6 +427,9 @@ void TransactionView::bumpFee()
     QString hashQStr = selection.at(0).data(TransactionTableModel::TxHashRole).toString();
     hash.SetHex(hashQStr.toStdString());
 
+    // Go to send screen to handle fee bump
+    Q_EMIT gotoBumpFee(hash);
+    Q_EMIT gotoSendCoinsPage();
 }
 
 void TransactionView::copyAddress()

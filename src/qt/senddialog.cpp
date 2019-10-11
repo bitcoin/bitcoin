@@ -53,6 +53,15 @@ SendDialog::SendDialog(const PlatformStyle *_platformStyle, QWidget *parent) :
     // Handle confirmed signing
     connect(signWidget, &SendSign::signConfirmed, this, &SendDialog::signConfirmed);
 
+    // Handle cancelled RBF
+    connect(signWidget, &SendSign::rbfCancelled, this, &SendDialog::rbfCancelled);
+
+    // Handle confirmed RBF
+    connect(signWidget, &SendSign::rbfConfirmed, this, &SendDialog::rbfConfirmed);
+
+    // Handle failed RBF
+    connect(finishWidget, &SendFinish::rbfSendFailed, this, &SendDialog::rbfCancelled);
+
     // Handle go to transactions page
     connect(finishWidget, &SendFinish::showTransaction, this, &SendDialog::showTransaction);
 
@@ -128,12 +137,20 @@ void SendDialog::signConfirmed() {
     setWorkflowState(WorkflowState::Finish);
 }
 
+void SendDialog::rbfCancelled(uint256 txid) {
+    setWorkflowState(WorkflowState::Draft);
+    Q_EMIT showTransaction(txid);
+}
+
+void SendDialog::rbfConfirmed(uint256 txid, CMutableTransaction mtx) {
+    finishWidget->broadcastRbf(txid, mtx);
+    setWorkflowState(WorkflowState::Finish);
+}
 
 void SendDialog::sendFailed() {
     assert(m_workflow_state == WorkflowState::Finish);
     // Clear transaction; draft widget will provide new one:
     finishWidget->transaction.reset();
-
     setWorkflowState(WorkflowState::Draft);
     draftWidget->signCancelled();
 }
@@ -155,4 +172,20 @@ void SendDialog::goNewTransaction() {
     // Clear transaction; draft widget will provide new one:
     finishWidget->transaction.reset();
     setWorkflowState(WorkflowState::Draft);
+}
+
+void SendDialog::gotoBumpFee(const uint256& txid) {
+    CCoinControl coin_control;
+    coin_control.m_signal_bip125_rbf = true;
+    std::vector<std::string> errors;
+    CAmount old_fee;
+    CAmount new_fee;
+    CMutableTransaction mtx;
+    if (!walletModel->wallet().createBumpTransaction(txid, coin_control, 0 /* totalFee */, errors, old_fee, new_fee, mtx)) {
+        QMessageBox::critical(nullptr, tr("Fee bump error"), tr("Increasing transaction fee failed") + "<br />(" +
+        (errors.size() ? QString::fromStdString(errors[0]) : "") +")");
+        return;
+    }
+    setWorkflowState(WorkflowState::Sign);
+    signWidget->prepareSignRbf(txid, mtx, old_fee, new_fee);
 }

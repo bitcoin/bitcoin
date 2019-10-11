@@ -76,6 +76,9 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
     // Clicking on "Export" allows to export the transaction list
     connect(exportButton, &QPushButton::clicked, transactionView, &TransactionView::exportClicked);
 
+    // Bump transaction fee
+    connect(transactionView, &TransactionView::gotoBumpFee, sendCoinsPage, &SendDialog::gotoBumpFee);
+
     // Pass through messages from send dialog
     connect(sendCoinsPage, &SendDialog::message, this, &WalletView::message);
     // Pass through messages from transactionView
@@ -95,6 +98,9 @@ void WalletView::setBitcoinGUI(BitcoinGUI *gui)
 
         // Navigate to transaction history page after send
         connect(sendCoinsPage, &SendDialog::showTransaction, gui, &BitcoinGUI::gotoHistoryPage);
+
+        // Navigate to send page for RBF
+        connect(transactionView, &TransactionView::gotoSendCoinsPage, gui, &BitcoinGUI::gotoSendCoinsPage);
 
         // Receive and report messages
         connect(this, &WalletView::message, [gui](const QString &title, const QString &message, unsigned int style) {

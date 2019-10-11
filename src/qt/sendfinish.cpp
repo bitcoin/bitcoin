@@ -54,6 +54,9 @@ void SendFinish::prepareForm() {
         ui->showTransaction->setVisible(false);
         ui->labelTransactionFinish->setText("PSBT created");
         break;
+    case Mode::FinishRbf:
+        ui->showTransaction->setVisible(true);
+        break;
     }
 }
 
@@ -127,6 +130,23 @@ void SendFinish::broadcastTransaction() {
     }
 }
 
+void SendFinish::broadcastRbf(uint256 _txid, CMutableTransaction _mtx) {
+    mode = Mode::FinishRbf;
+    txid = _txid;
+    mtx = std::make_shared<CMutableTransaction>(_mtx);
+
+    std::vector<std::string> errors;
+    if(walletModel->wallet().commitBumpTransaction(txid, std::move(*mtx), errors, new_hash)) {
+
+        ui->labelTransaction->setText(tr("Original transaction identifier: %1<br />New transaction identifier: %2").arg(QString::fromStdString(txid.GetHex()), QString::fromStdString(new_hash.GetHex())));
+        Q_EMIT rbfCompleted();
+    } else {
+        QMessageBox::critical(nullptr, tr("Fee bump error"), tr("Could not commit transaction") + "<br />(" +
+            QString::fromStdString(errors[0])+")");
+        Q_EMIT rbfSendFailed(txid);
+    }
+}
+
 void SendFinish::showTransactionClicked() {
     switch (mode) {
     case Mode::FinishTransaction:
@@ -135,6 +155,10 @@ void SendFinish::showTransactionClicked() {
         break;
     case Mode::FinishPsbt:
         assert(false);
+        break;
+    case Mode::FinishRbf:
+        assert(mtx != nullptr);
+        Q_EMIT showTransaction(new_hash);
         break;
     }
 }

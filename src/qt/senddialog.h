@@ -50,13 +50,17 @@ public:
     bool handlePaymentRequest(const SendCoinsRecipient &recipient);
     void signCancelled();
     void signConfirmed();
+    void rbfCancelled(uint256 txid);
+    void rbfConfirmed(uint256 txid, CMutableTransaction mtx);
     void sendFailed();
     void sendCompleted();
+    void rbfSendFailed(uint256 txid);
 
     // Also called when creating a PSBT in a watch-only wallet:
     void gotoSign();
 
     void goNewTransaction();
+    void gotoBumpFee(const uint256& txid);
 
 // public Q_SLOTS:
 

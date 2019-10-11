@@ -30,6 +30,7 @@ public:
     void setModel(WalletModel *walletModel);
     void broadcastTransaction();
     void createPsbt();
+    void broadcastRbf(uint256 txid, CMutableTransaction mtx);
 
 private Q_SLOTS:
     void showTransactionClicked();
@@ -45,6 +46,12 @@ Q_SIGNALS:
     // Fired when send succeeds
     void sendCompleted();
 
+    // Fired when RBF send fails
+    void rbfSendFailed(uint256 txid);
+
+    // Fired when RBF send succeeds
+    void rbfCompleted();
+
     // Fired when user asks to see transaction
     void showTransaction(uint256 txid);
 
@@ -56,11 +63,17 @@ private:
     enum Mode {
         FinishTransaction = 0,
         FinishPsbt = 1,
+        FinishRbf = 2
     };
 
     Ui::SendFinish *ui;
     Mode mode;
     WalletModel *walletModel;
+
+    // RBF:
+    std::shared_ptr<CMutableTransaction> mtx;
+    uint256 txid;
+    uint256 new_hash;
 
     void prepareForm();
 

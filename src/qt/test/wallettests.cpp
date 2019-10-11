@@ -30,6 +30,7 @@
 #include <QAction>
 #include <QApplication>
 #include <QCheckBox>
+#include <QDebug>
 #include <QPushButton>
 #include <QTimer>
 #include <QVBoxLayout>
@@ -78,6 +79,51 @@ QModelIndex FindTx(const QAbstractItemModel& model, const uint256& txid)
         }
     }
     return {};
+}
+
+//! Invoke bumpfee on txid and check results.
+void BumpFee(SendDialog& sendDialog, TransactionView& view, const uint256& txid, bool expectDisabled, std::string expectError, bool cancel)
+{
+    QTableView* table = view.findChild<QTableView*>("transactionView");
+    QModelIndex index = FindTx(*table->selectionModel()->model(), txid);
+    QVERIFY2(index.isValid(), "Could not find BumpFee txid");
+
+    // Select row in table, invoke context menu, and make sure bumpfee action is
+    // enabled or disabled as expected.
+    QAction* action = view.findChild<QAction*>("bumpFeeAction");
+    table->selectionModel()->select(index, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+    table->customContextMenuRequested({});
+    QCOMPARE(action->isEnabled(), !expectDisabled);
+
+    // TransactionView::gotoBumpFee is connected to SendDialog::gotoBumpFee in WalletView
+    // Perform this action regardless of isEnabled in order to test error messages
+    QString text;
+    if (!expectError.empty()) {
+        ConfirmMessage(&text);
+    }
+    sendDialog.gotoBumpFee(txid);
+
+    if (cancel) {
+        sendDialog.signWidget->cancel();
+    } else {
+        if (expectError.empty()) {
+            // If the sign widget is not active, it means there was an unexpected error
+            QVERIFY(sendDialog.signWidget->isActiveWidget());
+        } else {
+            // The error message didn't occur during gotoBumpFee(), see if it occurs during broadcast
+            ConfirmMessage(&text);
+        }
+        if (sendDialog.signWidget->isActiveWidget()) {
+            sendDialog.signWidget->confirm();
+        }
+    }
+
+    if (!expectError.empty()) {
+        QVERIFY(text.indexOf(QString::fromStdString(expectError)) != -1);
+    }
+
+    // NotifyTransactionChanged in WalletModel calls "updateTransaction" using a Qt::QueuedConnection
+    QTest::qWait(0);
 }
 
 //! Simple qt wallet tests.
@@ -144,6 +190,20 @@ void TestGUI()
     QCOMPARE(transactionTableModel->rowCount({}), 107);
     QVERIFY(FindTx(*transactionTableModel, txid1).isValid());
     QVERIFY(FindTx(*transactionTableModel, txid2).isValid());
+
+    // Call bumpfee. Test disabled, canceled, enabled, then failing cases.
+    qDebug() << "Bumpfee non-RBF transaction";
+    BumpFee(sendDialog, transactionView, txid1, true /* expect disabled */, "not BIP 125 replaceable" /* expected error */, false /* cancel */);
+    QCOMPARE(transactionTableModel->rowCount({}), 107);
+    qDebug() << "Cancel bumpfee RBF transaction";
+    BumpFee(sendDialog, transactionView, txid2, false /* expect disabled */, {} /* expected error */, true /* cancel */);
+    QCOMPARE(transactionTableModel->rowCount({}), 107);
+    qDebug() << "Bumpfee RBF transaction";
+    BumpFee(sendDialog, transactionView, txid2, false /* expect disabled */, {} /* expected error */, false /* cancel */);
+    QCOMPARE(transactionTableModel->rowCount({}), 108);
+    qDebug() << "Bumpfee already bumped transaction";
+    BumpFee(sendDialog, transactionView, txid2, true /* expect disabled */, "already bumped" /* expected error */, false /* cancel */);
+    QCOMPARE(transactionTableModel->rowCount({}), 108);
 
     // Check current balance on OverviewPage
     OverviewPage overviewPage(platformStyle.get());

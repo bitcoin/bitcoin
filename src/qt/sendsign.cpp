@@ -110,6 +110,13 @@ void SendSign::renderForm() {
         areYouSure = tr("Do you want to draft this transaction? This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can copy and then sign with e.g. an offline Bitcoin Core wallet, or a PSBT-compatible hardware wallet.");
         send = tr("Copy PSBT to clipboard");
         break;
+    case Mode::SignRbf:
+        ui->editButton->setVisible(false);
+        ui->cancelButton->setVisible(true);
+        areYouSure = tr("Do you want to increase the fee?");
+        send = tr("Bump fee");
+        sendTooltip = tr("Confirm the fee increase");
+        break;
     }
     ui->labelAreYouSure->setText(areYouSure);
     ui->labelAreYouSure->setWordWrap(true);
@@ -246,6 +253,44 @@ void SendSign::prepareTransaction()
     ui->questionLabel->setText(questionString);
 }
 
+void SendSign::prepareSignRbf(uint256 _txid, CMutableTransaction _mtx, CAmount old_fee, CAmount new_fee) {
+    assert(m_is_active_widget);
+    mode = Mode::SignRbf;
+    secDelay = SEND_CONFIRM_DELAY;
+    countDownTimer.start(1000);
+    renderForm();
+
+    txid = _txid;
+    mtx = _mtx;
+
+    WalletModel::UnlockContext ctx(walletModel->requestUnlock());
+    if(!ctx.isValid())
+    {
+        // Unlock wallet was cancelled
+        Q_EMIT rbfCancelled(txid);
+        return;
+    }
+
+    QString questionString;
+    questionString.append("<br />");
+    questionString.append("<table style=\"text-align: left;\">");
+    questionString.append("<tr><td>");
+    questionString.append(tr("Current fee:"));
+    questionString.append("</td><td>");
+    questionString.append(BitcoinUnits::formatHtmlWithUnit(walletModel->getOptionsModel()->getDisplayUnit(), old_fee));
+    questionString.append("</td></tr><tr><td>");
+    questionString.append(tr("Increase:"));
+    questionString.append("</td><td>");
+    questionString.append(BitcoinUnits::formatHtmlWithUnit(walletModel->getOptionsModel()->getDisplayUnit(), new_fee - old_fee));
+    questionString.append("</td></tr><tr><td>");
+    questionString.append(tr("New fee:"));
+    questionString.append("</td><td>");
+    questionString.append(BitcoinUnits::formatHtmlWithUnit(walletModel->getOptionsModel()->getDisplayUnit(), new_fee));
+    questionString.append("</td></tr></table>");
+
+    ui->questionLabel->setText(questionString);
+}
+
 void SendSign::countDown()
 {
     secDelay--;
@@ -265,6 +310,9 @@ void SendSign::cancel()
     case Mode::CreatePsbt:
         Q_EMIT signCancelled();
         break;
+    case Mode::SignRbf:
+        Q_EMIT rbfCancelled(txid);
+        break;
     }
 
 }
@@ -276,6 +324,9 @@ void SendSign::confirm()
     case Mode::SignTransaction:
     case Mode::CreatePsbt:
         Q_EMIT signConfirmed();
+        break;
+    case Mode::SignRbf:
+        Q_EMIT rbfConfirmed(txid, mtx);
         break;
     }
 }
