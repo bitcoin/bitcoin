@@ -87,32 +87,6 @@ QModelIndex FindTx(const QAbstractItemModel& model, const uint256& txid)
     return {};
 }
 
-//! Invoke bumpfee on txid and check results.
-void BumpFee(TransactionView& view, const uint256& txid, bool expectDisabled, std::string expectError, bool cancel)
-{
-    QTableView* table = view.findChild<QTableView*>("transactionView");
-    QModelIndex index = FindTx(*table->selectionModel()->model(), txid);
-    QVERIFY2(index.isValid(), "Could not find BumpFee txid");
-
-    // Select row in table, invoke context menu, and make sure bumpfee action is
-    // enabled or disabled as expected.
-    QAction* action = view.findChild<QAction*>("bumpFeeAction");
-    table->selectionModel()->select(index, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
-    action->setEnabled(expectDisabled);
-    table->customContextMenuRequested({});
-    QCOMPARE(action->isEnabled(), !expectDisabled);
-
-    action->setEnabled(true);
-    QString text;
-    if (expectError.empty()) {
-        ConfirmSend(&text, cancel);
-    } else {
-        ConfirmMessage(&text);
-    }
-    action->trigger();
-    QVERIFY(text.indexOf(QString::fromStdString(expectError)) != -1);
-}
-
 //! Simple qt wallet tests.
 //
 // Test widgets can be debugged interactively calling show() on them and
@@ -175,12 +149,6 @@ void TestGUI()
     QCOMPARE(transactionTableModel->rowCount({}), 107);
     QVERIFY(FindTx(*transactionTableModel, txid1).isValid());
     QVERIFY(FindTx(*transactionTableModel, txid2).isValid());
-
-    // Call bumpfee. Test disabled, canceled, enabled, then failing cases.
-    BumpFee(transactionView, txid1, true /* expect disabled */, "not BIP 125 replaceable" /* expected error */, false /* cancel */);
-    BumpFee(transactionView, txid2, false /* expect disabled */, {} /* expected error */, true /* cancel */);
-    BumpFee(transactionView, txid2, false /* expect disabled */, {} /* expected error */, false /* cancel */);
-    BumpFee(transactionView, txid2, true /* expect disabled */, "already bumped" /* expected error */, false /* cancel */);
 
     // Check current balance on OverviewPage
     OverviewPage overviewPage(platformStyle.get());

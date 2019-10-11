@@ -198,10 +198,6 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     connect(showDetailsAction, &QAction::triggered, this, &TransactionView::showDetails);
     // Double-clicking on a transaction on the transaction history page shows details
     connect(this, &TransactionView::doubleClicked, this, &TransactionView::showDetails);
-    // Highlight transaction after fee bump
-    connect(this, &TransactionView::bumpedFee, [this](const uint256& txid) {
-      focusTransaction(txid);
-    });
 }
 
 void TransactionView::setModel(WalletModel *_model)
@@ -431,16 +427,6 @@ void TransactionView::bumpFee()
     QString hashQStr = selection.at(0).data(TransactionTableModel::TxHashRole).toString();
     hash.SetHex(hashQStr.toStdString());
 
-    // Bump tx fee over the walletModel
-    uint256 newHash;
-    if (model->bumpFee(hash, newHash)) {
-        // Update the table
-        transactionView->selectionModel()->clearSelection();
-        model->getTransactionTableModel()->updateTransaction(hashQStr, CT_UPDATED, true);
-
-        qApp->processEvents();
-        Q_EMIT bumpedFee(newHash);
-    }
 }
 
 void TransactionView::copyAddress()

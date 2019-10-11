@@ -516,66 +516,6 @@ bool WalletModel::saveReceiveRequest(const std::string &sAddress, const int64_t 
         return m_wallet->addDestData(dest, key, sRequest);
 }
 
-bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
-{
-    CCoinControl coin_control;
-    coin_control.m_signal_bip125_rbf = true;
-    std::vector<std::string> errors;
-    CAmount old_fee;
-    CAmount new_fee;
-    CMutableTransaction mtx;
-    if (!m_wallet->createBumpTransaction(hash, coin_control, 0 /* totalFee */, errors, old_fee, new_fee, mtx)) {
-        QMessageBox::critical(nullptr, tr("Fee bump error"), tr("Increasing transaction fee failed") + "<br />(" +
-            (errors.size() ? QString::fromStdString(errors[0]) : "") +")");
-         return false;
-    }
-
-    // allow a user based fee verification
-    QString questionString = tr("Do you want to increase the fee?");
-    questionString.append("<br />");
-    questionString.append("<table style=\"text-align: left;\">");
-    questionString.append("<tr><td>");
-    questionString.append(tr("Current fee:"));
-    questionString.append("</td><td>");
-    questionString.append(BitcoinUnits::formatHtmlWithUnit(getOptionsModel()->getDisplayUnit(), old_fee));
-    questionString.append("</td></tr><tr><td>");
-    questionString.append(tr("Increase:"));
-    questionString.append("</td><td>");
-    questionString.append(BitcoinUnits::formatHtmlWithUnit(getOptionsModel()->getDisplayUnit(), new_fee - old_fee));
-    questionString.append("</td></tr><tr><td>");
-    questionString.append(tr("New fee:"));
-    questionString.append("</td><td>");
-    questionString.append(BitcoinUnits::formatHtmlWithUnit(getOptionsModel()->getDisplayUnit(), new_fee));
-    questionString.append("</td></tr></table>");
-    SendSign confirmationDialog(tr("Confirm fee bump"), questionString);
-    confirmationDialog.exec();
-    QMessageBox::StandardButton retval = static_cast<QMessageBox::StandardButton>(confirmationDialog.result());
-
-    // cancel sign&broadcast if user doesn't want to bump the fee
-    if (retval != QMessageBox::Yes) {
-        return false;
-    }
-
-    WalletModel::UnlockContext ctx(requestUnlock());
-    if(!ctx.isValid())
-    {
-        return false;
-    }
-
-    // sign bumped transaction
-    if (!m_wallet->signBumpTransaction(mtx)) {
-        QMessageBox::critical(nullptr, tr("Fee bump error"), tr("Can't sign transaction."));
-        return false;
-    }
-    // commit the bumped transaction
-    if(!m_wallet->commitBumpTransaction(hash, std::move(mtx), errors, new_hash)) {
-        QMessageBox::critical(nullptr, tr("Fee bump error"), tr("Could not commit transaction") + "<br />(" +
-            QString::fromStdString(errors[0])+")");
-         return false;
-    }
-    return true;
-}
-
 bool WalletModel::isWalletEnabled()
 {
    return !gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET);
