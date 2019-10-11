@@ -169,6 +169,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         addPackageTxs(nPackagesSelected, nDescendantsUpdated);
     }
 
+    coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
+
     if (fProofOfStake) // attemp to find a coinstake
     {
         assert(pwallet);
@@ -196,7 +198,6 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         if (*pfPoSCancel)
             return nullptr; // there is no point to continue if we failed to create coinstake
     } else {
-        coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
         coinbaseTx.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
     }
 
