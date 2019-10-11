@@ -6,6 +6,12 @@
 
 export LC_ALL=C.UTF-8
 
+if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+    ${CI_RETRY_EXE} brew install $BREW_PACKAGES
+    ${CI_RETRY_EXE} pyenv install 3.5.6
+    return 0
+ fi
+
 mkdir -p "${BASE_SCRATCH_DIR}"
 ccache echo "Creating ccache dir if it didn't already exist"
 
