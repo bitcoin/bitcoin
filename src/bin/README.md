@@ -5,18 +5,18 @@ Geth
 ----
 
 This folder contains the binaries for geth for different platforms
-The current version is Memory Stealer (v1.9.5)
+The current version is Elasar (v1.9.6)
 Downloaded from [Go Ethereum](https://geth.ethereum.org/downloads/)
 
 MD5 of the BIN are as the following:
 Linux (64-bit)
-`c9381b57ce71e2c75e856a8536c86be0`
+`f380184012be22ed06ae861e8312a35f`
 
 MacOS
-`81352a28def907571e1ccd39f76c8eb6`
+`d689e8e9f859b7eb4b13ccc2f71cc695`
 
 Windows (64-bit)
-`93a775332d45ebe6914d5c94d92bf9d0`
+`7c83560caf1a25680a9ec6a5749142df`
 
 
 Relayer
