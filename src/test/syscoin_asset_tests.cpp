@@ -132,6 +132,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_auxfees)
 	tfm::format(std::cout,"Running generate_asset_auxfees...\n");
 	string newaddress = GetNewFundedAddress("node1");
     string newaddressfee = GetNewFundedAddress("node1");
+    string newaddressrecv = GetNewFundedAddress("node1");
     UniValue auxfeesObj(UniValue::VOBJ);
     auxfeesObj.pushKV("address", newaddressfee);
     UniValue feestructArr(UniValue::VARR);
@@ -161,7 +162,49 @@ BOOST_AUTO_TEST_CASE(generate_asset_auxfees)
     feestructArr.push_back(boundsArr5);
     auxfeesObj.pushKV("fee_struct", feestructArr);
     string auxfees = auxfeesObj.write();
-	string guid = AssetNew("node1", newaddress, "AGX silver backed token, licensed and operated by Interfix corporation", "''", "8", "100", "1000", "31", "''", "AGX", auxfees);
+	string guid = AssetNew("node1", newaddress, "AGX silver backed token, licensed and operated by Interfix corporation", "''", "8", "1000", "1000", "31", "''", "AGX", auxfees);
+    AssetSend("node1", guid, "[{\"address\":\"" + newaddress + "\",\"amount\":1000}]");
+    string txid = AssetAllocationTransfer(false, "node1", guid, newaddress, "[{\"address\":\"" + newaddressrecv + "\",\"amount\":250}]");
+	UniValue r;
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationinfo",  guid + ",\"" + newaddressrecv + "\"" ));
+	UniValue balance = find_value(r.get_obj(), "balance");
+    BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8), 250 * COIN);
+    // ensure auxfee is attached
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "getrawtransaction" , "\"" + txid + "\",true"));
+
+	UniValue systxObj = find_value(r.get_obj(), "systx").get_obj();
+    UniValue allocationsArr = find_value(systxObj, "allocations").get_array();
+    bool foundAuxFee = false;
+	for (unsigned int i = 0; i<allocationsArr.size(); i++) {
+		string allocationRecvAddress = find_value(allocationsArr[i].get_obj(), "address").get_str();
+		CAmount allocationRecvAmount = AmountFromValue(find_value(allocationsArr[i].get_obj(), "amount"));
+		if(allocationRecvAddress == newaddressfee && allocationRecvAmount == 106000000){
+            foundAuxFee = true;
+            break;
+        }
+	}
+    BOOST_CHECK(foundAuxFee);
+    // remove auxfee
+    AssetUpdate("node1", guid);
+    // ensure auxfee is not attached
+    txid = AssetAllocationTransfer(false, "node1", guid, newaddress, "[{\"address\":\"" + newaddressrecv + "\",\"amount\":250}]");
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationinfo",  guid + ",\"" + newaddressrecv + "\"" ));
+	balance = find_value(r.get_obj(), "balance");
+    BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8), 500 * COIN);
+
+	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "getrawtransaction" , "\"" + txid + "\",true"));
+	systxObj = find_value(r.get_obj(), "systx").get_obj();
+    allocationsArr = find_value(systxObj, "allocations").get_array();
+    foundAuxFee = false;
+	for (unsigned int i = 0; i<allocationsArr.size(); i++) {
+		string allocationRecvAddress = find_value(allocationsArr[i].get_obj(), "address").get_str();
+		CAmount allocationRecvAmount = AmountFromValue(find_value(allocationsArr[i].get_obj(), "amount"));
+		if(allocationRecvAddress == newaddressfee){
+            foundAuxFee = true;
+            break;
+        }
+	}
+    BOOST_CHECK(!foundAuxFee);
 }
 BOOST_AUTO_TEST_CASE(generate_asset_address_spend)
 {

@@ -32,6 +32,7 @@ static bool node2Online = false;
 static bool node3Online = false;
 static bool started = false;
 std::map<string, string> mapNodes;
+extern CAmount getAuxFee(const std::string &publicData, const CAmount& nAmount, CWitnessAddress & address);
 string strSYSXAsset = "";
 string strSYSXAddress = "";
 // create a map between node alias names and URLs to be used in testing for example CallExtRPC("mynode", "getblockchaininfo") would call getblockchaininfo on the node alias mynode which would be pushed as a URL here.
@@ -1028,7 +1029,7 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
 	UniValue r;
 	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "assetinfo" , guid));
 	int nprecision = find_value(r.get_obj(), "precision").get_uint();
-
+	
 	CAssetAllocation theAssetAllocation;
 	UniValue valueTo;
 	string inputsTmp = inputs;
@@ -1055,7 +1056,12 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
     	strAddress = witnessAddress.ToString(); 
 		theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(witnessAddress.nVersion, witnessAddress.vchWitnessProgram), amount));
 	}
-
+	CWitnessAddress auxFeeAddress;
+	const CAmount &nAuxFee = getAuxFee(find_value(r.get_obj(), "public_value").get_str(), inputamount, auxFeeAddress);
+	if(nAuxFee > 0){
+		theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(auxFeeAddress.nVersion, auxFeeAddress.vchWitnessProgram), nAuxFee));
+		inputamount += nAuxFee;
+	}
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
 
