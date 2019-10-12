@@ -2638,7 +2638,7 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                 bool ret = reservedest.GetReservedDestination(dest, true);
                 if (!ret)
                 {
-                    strFailReason = "Keypool ran out, please call keypoolrefill first";
+                    strFailReason = _("Keypool ran out, please call keypoolrefill first").translated;
                     return false;
                 }
 
@@ -3161,7 +3161,7 @@ bool CWallet::GetNewChangeDestination(const OutputType type, CTxDestination& des
 
     ReserveDestination reservedest(this, type);
     if (!reservedest.GetReservedDestination(dest, true)) {
-        error = "Error: Keypool ran out, please call keypoolrefill first";
+        error = _("Error: Keypool ran out, please call keypoolrefill first").translated;
         return false;
     }
 
