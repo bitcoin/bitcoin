@@ -48,7 +48,6 @@ QString TransactionDesc::FormatTxStatus(const interfaces::WalletTx& wtx, const i
     }
 }
 
-#ifndef ENABLE_BIP70
 // Takes an encoded PaymentRequest as a string and tries to find the Common Name of the X.509 certificate
 // used to sign the PaymentRequest.
 bool GetPaymentRequestMerchant(const std::string& pr, QString& merchant)
@@ -76,7 +75,6 @@ bool GetPaymentRequestMerchant(const std::string& pr, QString& merchant)
     }
     return false;
 }
-#endif
 
 QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wallet, TransactionRecord *rec, int unit)
 {
@@ -294,19 +292,11 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
         if (r.first == "PaymentRequest")
         {
             QString merchant;
-#ifdef ENABLE_BIP70
-            PaymentRequestPlus req;
-            req.parse(QByteArray::fromRawData(r.second.data(), r.second.size()));
-            if (!req.getMerchant(PaymentServer::getCertStore(), merchant)) {
-                merchant.clear();
-            }
-#else
             if (!GetPaymentRequestMerchant(r.second, merchant)) {
                 merchant.clear();
             } else {
                 merchant += tr(" (Certificate was not verified)");
             }
-#endif
             if (!merchant.isNull()) {
                 strHTML += "<b>" + tr("Merchant") + ":</b> " + GUIUtil::HtmlEscape(merchant) + "<br>";
             }
