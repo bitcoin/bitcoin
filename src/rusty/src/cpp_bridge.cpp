@@ -57,6 +57,19 @@ bool rusty_ShutdownRequested() {
     return ShutdownRequested();
 }
 
+void rusty_ProcessNewBlock(const uint8_t* blockdata, size_t blocklen, const void* pindexvoid) {
+    const CBlockIndex *pindex = (const CBlockIndex*) pindexvoid;
+    CBlock block;
+    try {
+        InputStream(SER_NETWORK, PROTOCOL_VERSION, blockdata, blocklen) >> block;
+    } catch (...) {}
+    if (pindex && block.GetHash() == pindex->GetBlockHash()) {
+        ProcessNewBlock(::Params(), std::make_shared<const CBlock>(block), true, nullptr);
+    } else {
+        ProcessNewBlock(::Params(), std::make_shared<const CBlock>(block), false, nullptr);
+    }
+}
+
 const void* rusty_ConnectHeaders(const uint8_t* headers_data, size_t stride, size_t count) {
     std::vector<CBlockHeader> headers;
     for(size_t i = 0; i < count; i++) {
@@ -79,10 +92,49 @@ const void* rusty_GetChainTip() {
     return tip;
 }
 
+const void* rusty_GetGenesisIndex() {
+    LOCK(cs_main);
+    const CBlockIndex* genesis = ::ChainActive().Genesis();
+    assert(genesis != nullptr);
+    return genesis;
+}
+
 int32_t rusty_IndexToHeight(const void* pindexvoid) {
     const CBlockIndex *pindex = (const CBlockIndex*) pindexvoid;
     assert(pindex != nullptr);
     return pindex->nHeight;
+}
+
+const uint8_t* rusty_IndexToHash(const void* pindexvoid) {
+    const CBlockIndex *pindex = (const CBlockIndex*) pindexvoid;
+    assert(pindex != nullptr);
+    return pindex->phashBlock->begin();
+}
+
+void* rusty_ProviderStateInit(const void* pindexvoid) {
+    const CBlockIndex *pindex = (const CBlockIndex*) pindexvoid;
+    BlockProviderState* state = new BlockProviderState;
+    state->m_best_known_block = pindex;
+    return state;
+}
+
+void rusty_ProviderStateFree(void* providerindexvoid) {
+    BlockProviderState* state = (BlockProviderState*) providerindexvoid;
+    delete state;
+}
+
+void rusty_ProviderStateSetBest(void* providerindexvoid, const void* pindexvoid) {
+    BlockProviderState* state = (BlockProviderState*) providerindexvoid;
+    const CBlockIndex *pindex = (const CBlockIndex*) pindexvoid;
+    state->m_best_known_block = pindex;
+}
+
+const void* rusty_ProviderStateGetNextDownloads(void* providerindexvoid, bool has_witness) {
+    BlockProviderState* state = (BlockProviderState*) providerindexvoid;
+    std::vector<const CBlockIndex*> blocks;
+    LOCK(cs_main);
+    state->FindNextBlocksToDownload(has_witness, 1, blocks, ::Params().GetConsensus(), [] (const uint256& block_hash) { return false; });
+    return blocks.empty() ? nullptr : blocks[0];
 }
 
 }
