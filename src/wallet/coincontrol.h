@@ -51,6 +51,8 @@ public:
         SetNull();
     }
 
+    CCoinControl(const CCoinControl &obj);
+
     void SetNull();
 
     bool HasSelected() const
