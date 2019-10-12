@@ -58,6 +58,7 @@ void SendCoins(uint256& txid, CWallet& wallet, SendDialog& sendDialog, const CTx
     }));
     bool invoked = QMetaObject::invokeMethod(sendDialog.draftWidget, "on_sendButton_clicked");
     assert(invoked);
+    qApp->processEvents();
     QVERIFY(sendDialog.signWidget->isActiveWidget());
     sendDialog.signWidget->confirm();
     // NotifyTransactionChanged in WalletModel calls "updateTransaction" using a Qt::QueuedConnection
