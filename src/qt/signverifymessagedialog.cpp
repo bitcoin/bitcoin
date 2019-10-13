@@ -41,6 +41,9 @@ SignVerifyMessageDialog::SignVerifyMessageDialog(const PlatformStyle *_platformS
     GUIUtil::setupAddressWidget(ui->addressIn_SM, this);
     GUIUtil::setupAddressWidget(ui->addressIn_VM, this);
 
+    ui->messageIn_VM->setPlaceholderText(tr("Enter the signed message to verify"));
+    ui->signatureIn_VM->setPlaceholderText(tr("Enter the signature given when the message was signed"));
+
     ui->addressIn_SM->installEventFilter(this);
     ui->messageIn_SM->installEventFilter(this);
     ui->signatureOut_SM->installEventFilter(this);
