@@ -21,6 +21,8 @@
 #include <util/strencodings.h>
 #include <util/vector.h>
 
+using namespace spanparsing;
+
 namespace miniscript {
 
 /** This type encapsulates the miniscript type system properties.
