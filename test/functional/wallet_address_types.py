@@ -80,6 +80,9 @@ class AddressTypeTest(BitcoinTestFramework):
             ["-changetype=p2sh-segwit"],
             [],
         ]
+        # whitelist all peers to speed up tx relay / mempool sync
+        for args in self.extra_args:
+            args.append("-whitelist=127.0.0.1")
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
