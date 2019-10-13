@@ -747,6 +747,8 @@ public:
     // There is no final sorting before sending, as they are always sent immediately
     // and in the order requested.
     std::vector<uint256> vInventoryBlockToSend GUARDED_BY(cs_inventory);
+    // List of non-tx/non-block inventory items
+    std::vector<CInv> vInventoryOtherToSend GUARDED_BY(cs_inventory);
     CCriticalSection cs_inventory;
     int64_t nNextInvSend{0};
     // Used for headers announcements - unfiltered blocks to relay

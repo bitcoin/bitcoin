@@ -92,5 +92,5 @@ bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 bool IsBanned(NodeId nodeid);
 /** Increase a node's misbehavior score. */
 void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="") EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-
+extern void EraseInvRequest(const CNode* pfrom, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 #endif // BITGREEN_NET_PROCESSING_H

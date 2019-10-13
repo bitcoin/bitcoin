@@ -90,6 +90,9 @@ public:
     bool AllowMultiplePorts() const { return fAllowMultiplePorts; }
     /** Expire time for fulfilled requests */
     int FulfilledRequestExpireTime() const { return nFulfilledRequestExpireTime; }
+    const std::vector<std::string>& SporkAddresses() const { return vSporkAddresses; }
+    int MinSporkKeys() const { return nMinSporkKeys; }
+
 protected:
     CChainParams() {}
 
@@ -113,6 +116,8 @@ protected:
     ChainTxData chainTxData;
     bool fAllowMultiplePorts;
     int nFulfilledRequestExpireTime;
+    std::vector<std::string> vSporkAddresses;
+    int nMinSporkKeys;
 };
 
 /**
