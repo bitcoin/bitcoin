@@ -116,7 +116,7 @@ Basic code to support P2P connectivity to a bitcoind.
 Utilities for manipulating transaction scripts (originally from python-bitcoinlib)
 
 #### [test_framework/key.py](test_framework/key.py)
-Wrapper around OpenSSL EC_Key (originally from python-bitcoinlib)
+Test-only secp256k1 elliptic curve implementation
 
 #### [test_framework/bignum.py](test_framework/bignum.py)
 Helpers for script.py

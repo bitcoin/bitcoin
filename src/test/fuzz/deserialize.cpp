@@ -23,7 +23,7 @@
 
 #include <test/fuzz/fuzz.h>
 
-void test_one_input(std::vector<uint8_t> buffer)
+void test_one_input(const std::vector<uint8_t>& buffer)
 {
     CDataStream ds(buffer, SER_NETWORK, INIT_PROTO_VERSION);
     try {
@@ -39,11 +39,6 @@ void test_one_input(std::vector<uint8_t> buffer)
             {
                 CBlock block;
                 ds >> block;
-            } catch (const std::ios_base::failure& e) {return;}
-#elif TRANSACTION_DESERIALIZE
-            try
-            {
-                CTransaction tx(deserialize, ds);
             } catch (const std::ios_base::failure& e) {return;}
 #elif BLOCKLOCATOR_DESERIALIZE
             try

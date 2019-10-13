@@ -70,8 +70,8 @@
         <translation>Disse er dine Bitcoin-adresser til afsendelse af betalinger. Tjek altid beløb og modtagelsesadresse, inden du sender bitcoins.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Dette er dine Bitcoin-adresser til modtagelse af betalinger. Det anbefales at bruge en ny modtagelsesadresse for hver transaktion.</translation>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
+        <translation>Disse er dine Bitcoin adresser til at modtage betalinger. Benyt 'Opret ny modtager adresse' knappen i modtag fanen for at oprette nye adresser. </translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -136,12 +136,8 @@
         <translation>Gentag ny adgangskode</translation>
     </message>
     <message>
-        <source>Show password</source>
+        <source>Show passphrase</source>
         <translation>Vis adgangskode</translation>
-    </message>
-    <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Indtast det nye kodeord til tegnebogen.&lt;br/&gt;Brug venligst et kodeord på &lt;b&gt;ti eller flere tilfældige tegn&lt;/b&gt; eller &lt;b&gt;otte eller flere ord&lt;/b&gt;.</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -168,10 +164,6 @@
         <translation>Skift adgangskode</translation>
     </message>
     <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Indtast den gamle adgangskode og en ny adgangskode til tegnebogen.</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>Bekræft tegnebogskryptering</translation>
     </message>
@@ -188,8 +180,28 @@
         <translation>Tegnebog krypteret</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 vil nu lukke for at færdiggøre krypteringsprocessen. Husk at kryptering af din tegnebog kan ikke beskytte dine bitcoin fuldt ud mod at blive stjålet af eventuel malware, der måtte have inficeret din computer.</translation>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Indtast den nye adgangskode til tegnebogen.&lt;br/&gt;Brug venligst en adgangskode på &lt;b&gt;ti eller flere tilfældige tegn&lt;/b&gt; eller &lt;b&gt;otte eller flere ord&lt;/b&gt;.</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation>Indtast den gamle adgangskode og en ny adgangskode til tegnebogen.</translation>
+    </message>
+    <message>
+        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>Husk, at kryptere din tegnebog vil ikke fuldt ud beskytte dine bitcoins mod at blive stjålet af malware på din computer.</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation>Tegnebog, der skal krypteres</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation>Din tegnebog krypteres om et øjeblik.</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>Din tegnebog er nu krypteret.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -254,10 +266,6 @@
         <translation>&amp;Oversigt</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation>Knude</translation>
-    </message>
-    <message>
         <source>Show general overview of wallet</source>
         <translation>Vis generel oversigt over tegnebog</translation>
     </message>
@@ -314,24 +322,20 @@
         <translation>&amp;Skift adgangskode…</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;Afsendelsesadresser…</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>&amp;Modtagelsesadresser…</translation>
-    </message>
-    <message>
         <source>Open &amp;URI...</source>
         <translation>&amp;Åbn URI…</translation>
     </message>
     <message>
-        <source>Wallet:</source>
-        <translation>Tegnebog:</translation>
+        <source>Create Wallet...</source>
+        <translation>Opret tegnebog…</translation>
     </message>
     <message>
-        <source>default wallet</source>
-        <translation>Standard tegnebog</translation>
+        <source>Create a new wallet</source>
+        <translation>Opret en ny tegnebog</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>Tegnebog:</translation>
     </message>
     <message>
         <source>Click to disable network activity.</source>
@@ -380,14 +384,6 @@
     <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;Verificér besked…</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Tegnebog</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -498,8 +494,56 @@
         <translation>Opdateret</translation>
     </message>
     <message>
+        <source>&amp;Sending addresses</source>
+        <translation>&amp;Afsenderadresser</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses</source>
+        <translation>&amp;Modtageradresser</translation>
+    </message>
+    <message>
+        <source>Open Wallet</source>
+        <translation>Åben Tegnebog</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation>Åben en tegnebog</translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>Luk Tegnebog...</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>Luk tegnebog</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>Vis %1 hjælpebesked for at få en liste over mulige tilvalg for Bitcoin kommandolinje</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>Standard tegnebog</translation>
+    </message>
+    <message>
+        <source>No wallets available</source>
+        <translation>Ingen tegnebøger tilgængelige</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>&amp;Vindue</translation>
+    </message>
+    <message>
+        <source>Minimize</source>
+        <translation>Minimér</translation>
+    </message>
+    <message>
+        <source>Zoom</source>
+        <translation>Zoom</translation>
+    </message>
+    <message>
+        <source>Main Window</source>
+        <translation>Hoved Vindue</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -512,6 +556,14 @@
     <message>
         <source>Catching up...</source>
         <translation>Indhenter…</translation>
+    </message>
+    <message>
+        <source>Error: %1</source>
+        <translation>Fejl: %1</translation>
+    </message>
+    <message>
+        <source>Warning: %1</source>
+        <translation>Advarsel: %1</translation>
     </message>
     <message>
         <source>Date: %1
@@ -564,6 +616,10 @@
     <message>
         <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
         <translation>Generering af HD-nøgler er &lt;b&gt;deaktiveret&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Private key &lt;b&gt;disabled&lt;/b&gt;</source>
+        <translation>Private nøgle &lt;b&gt;deaktiveret&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
@@ -730,6 +786,60 @@
     </message>
 </context>
 <context>
+    <name>CreateWalletActivity</name>
+    <message>
+        <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Opretter tegnebog &lt;b&gt;%1&lt;/b&gt;…</translation>
+    </message>
+    <message>
+        <source>Create wallet failed</source>
+        <translation>Oprettelse af tegnebog mislykkedes</translation>
+    </message>
+    <message>
+        <source>Create wallet warning</source>
+        <translation>Advarsel for oprettelse af tegnebog</translation>
+    </message>
+</context>
+<context>
+    <name>CreateWalletDialog</name>
+    <message>
+        <source>Create Wallet</source>
+        <translation>Opret tegnebog</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <translation>Navn på tegnebog</translation>
+    </message>
+    <message>
+        <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
+        <translation>Kryptér tegnebogen. Tegnebogen bliver krypteret med en adgangskode, du vælger.</translation>
+    </message>
+    <message>
+        <source>Encrypt Wallet</source>
+        <translation>Kryptér tegnebog</translation>
+    </message>
+    <message>
+        <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
+        <translation>Slå private nøgler fra for denne tegnebog. Tegnebøger med private nøgler slået fra vil ikke have nogen private nøgler og kan ikke have et HD-seed eller importerede private nøgler. Dette er ideelt til kigge-tegnebøger.</translation>
+    </message>
+    <message>
+        <source>Disable Private Keys</source>
+        <translation>Slå private nøgler fra</translation>
+    </message>
+    <message>
+        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
+        <translation>Lav en flad tegnebog. Flade tegnebøger har indledningsvist ikke private nøgler eller skripter. Private nøgler og adresser kan importeres, eller et HD-seed kan indstilles senere.</translation>
+    </message>
+    <message>
+        <source>Make Blank Wallet</source>
+        <translation>Lav flad tegnebog</translation>
+    </message>
+    <message>
+        <source>Create</source>
+        <translation>Opret</translation>
+    </message>
+</context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
@@ -845,6 +955,10 @@
         <translation>Når du klikker OK, vil %1 begynde at downloade og bearbejde den fulde %4-blokkæde (%2 GB), startende med de tidligste transaktioner i %3, da %4 først startede.</translation>
     </message>
     <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
+        <translation>Ændring af denne indstilling senere kræver gendownload af hele blokkæden. Det er hurtigere at downloade den komplette kæde først og beskære den senere. Slår nogle avancerede funktioner fra.</translation>
+    </message>
+    <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
         <translation>Denne indledningsvise synkronisering er meget krævende, og den kan potentielt afsløre hardwareproblemer med din computer, som du ellers ikke har lagt mærke til. Hver gang, du kører %1, vil den fortsætte med at downloade, hvor den sidst slap.</translation>
     </message>
@@ -863,6 +977,10 @@
     <message>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
+    </message>
+    <message>
+        <source>Discard blocks after verification, except most recent %1 GB (prune)</source>
+        <translation>Kassér blokke efter verificering, undtaget de seneste %1 GB (beskær)</translation>
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
@@ -895,6 +1013,10 @@
     <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation><numerusform>(ud af %n GB nødvendig)</numerusform><numerusform>(ud af %n GB nødvendig)</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation><numerusform>(%n GB nødvendig for komplet kæde)</numerusform><numerusform>(%n GB nødvendig for komplet kæde)</numerusform></translation>
     </message>
 </context>
 <context>
@@ -944,8 +1066,8 @@
         <translation>Skjul</translation>
     </message>
     <message>
-        <source>Unknown. Syncing Headers (%1)...</source>
-        <translation>Ukendt. Synkroniserer hoveder (%1)…</translation>
+        <source>Unknown. Syncing Headers (%1, %2%)...</source>
+        <translation>Ukendt. Synkroniserer Hoveder (%1, %2%)...</translation>
     </message>
 </context>
 <context>
@@ -972,6 +1094,25 @@
     </message>
 </context>
 <context>
+    <name>OpenWalletActivity</name>
+    <message>
+        <source>Open wallet failed</source>
+        <translation>Åbning af tegnebog mislykkedes</translation>
+    </message>
+    <message>
+        <source>Open wallet warning</source>
+        <translation>Advarsel for åbning af tegnebog</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>Standard tegnebog</translation>
+    </message>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Åbner Tegnebog &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+</context>
+<context>
     <name>OptionsDialog</name>
     <message>
         <source>Options</source>
@@ -992,10 +1133,6 @@
     <message>
         <source>Size of &amp;database cache</source>
         <translation>Størrelsen på &amp;databasens cache</translation>
-    </message>
-    <message>
-        <source>MB</source>
-        <translation>MB</translation>
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
@@ -1030,10 +1167,6 @@
         <translation>Tredjeparts-URL'er (fx et blokhåndteringsværktøj), der vises i transaktionsfanen som genvejsmenupunkter. %s i URL'en erstattes med transaktionens hash. Flere URL'er separeres med en lodret streg |.</translation>
     </message>
     <message>
-        <source>Active command-line options that override above options:</source>
-        <translation>Aktuelle tilvalg for kommandolinjen, der tilsidesætter ovenstående tilvalg:</translation>
-    </message>
-    <message>
         <source>Open the %1 configuration file from the working directory.</source>
         <translation>Åbn konfigurationsfilen for %1 fra arbejdsmappen.</translation>
     </message>
@@ -1055,7 +1188,7 @@
     </message>
     <message>
         <source>Disables some advanced features but all blocks will still be fully validated. Reverting this setting requires re-downloading the entire blockchain. Actual disk usage may be somewhat higher.</source>
-        <translation>Deaktiverer nogle avancerede funktioner men alle blokke vil stadig blive fuldt validerede. Tilbagevending af denne indstilling kræver afhentning af hele blokkæden igen. Det aktuelle disk forbrug kan være noget højere.</translation>
+        <translation>Deaktiverer nogle avancerede funktioner men alle blokke vil stadig blive fuldt validerede. Ændring af denne indstilling senere kræver download af hele blokkæden igen. Det aktuelle disk forbrug kan være noget højere.</translation>
     </message>
     <message>
         <source>Prune &amp;block storage to</source>
@@ -1067,7 +1200,11 @@
     </message>
     <message>
         <source>Reverting this setting requires re-downloading the entire blockchain.</source>
-        <translation>Tilbagevending af denne indstilling kræver afhentning af hele blokkæden igen.</translation>
+        <translation>Ændring af denne indstilling senere kræver download af hele blokkæden igen.</translation>
+    </message>
+    <message>
+        <source>MiB</source>
+        <translation>MiB</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
@@ -1192,6 +1329,10 @@
     <message>
         <source>&amp;Third party transaction URLs</source>
         <translation>&amp;Tredjeparts-transaktions-URL'er</translation>
+    </message>
+    <message>
+        <source>Options set in this dialog are overridden by the command line or in the configuration file:</source>
+        <translation>Valgmuligheder sat i denne dialog er overskrevet af kommandolinjen eller i konfigurationsfilen:</translation>
     </message>
     <message>
         <source>&amp;OK</source>
@@ -1340,8 +1481,24 @@
         <translation>'bitcoin://' er ikke et gyldigt URI. Brug 'bitcoin:' istedet. </translation>
     </message>
     <message>
+        <source>You are using a BIP70 URL which will be unsupported in the future.</source>
+        <translation>Du anvender et BIP70 URL hvilket ikke vil være understøttet i fremtiden.</translation>
+    </message>
+    <message>
         <source>Payment request fetch URL is invalid: %1</source>
         <translation>Hentnings-URL for betalingsanmodning er ugyldig: %1</translation>
+    </message>
+    <message>
+        <source>Cannot process payment request because BIP70 support was not compiled in.</source>
+        <translation>Kan ikke behandle betalingsanmodningen, da BIP70-understøttelse ikke er medtaget under programkodeoversættelsen.</translation>
+    </message>
+    <message>
+        <source>Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.</source>
+        <translation>På grund af vidtstrakte sikkerhedsfejl i BIP70 anbefales det kraftigt, at enhver instruktion til handlende om at skifte tegnebog ignoreres.</translation>
+    </message>
+    <message>
+        <source>If you are receiving this error you should request the merchant provide a BIP21 compatible URI.</source>
+        <translation>Hvis du modtager denne fejl, bør du anmode den handlende om at give dig en BIP21-kompatibel URI.</translation>
     </message>
     <message>
         <source>Invalid payment address %1</source>
@@ -1526,21 +1683,6 @@
         <translation>%1 GB</translation>
     </message>
     <message>
-        <source>%1 didn't yet exit safely...</source>
-        <translation>%1 har endnu ikke afsluttet på sikker vis…</translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation>ukendt</translation>
-    </message>
-</context>
-<context>
-    <name>QObject::QObject</name>
-    <message>
-        <source>Error parsing command line arguments: %1.</source>
-        <translation>Fejl ved fortolkning af kommandolinje argumenter: %1.</translation>
-    </message>
-    <message>
         <source>Error: Specified data directory "%1" does not exist.</source>
         <translation>Fejl: Angivet datamappe “%1” eksisterer ikke.</translation>
     </message>
@@ -1552,6 +1694,14 @@
         <source>Error: %1</source>
         <translation>Fejl: %1</translation>
     </message>
+    <message>
+        <source>%1 didn't yet exit safely...</source>
+        <translation>%1 har endnu ikke afsluttet på sikker vis…</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>ukendt</translation>
+    </message>
 </context>
 <context>
     <name>QRImageWidget</name>
@@ -1562,6 +1712,18 @@
     <message>
         <source>&amp;Copy Image</source>
         <translation>&amp;Kopiér foto</translation>
+    </message>
+    <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>Resulterende URI var for lang; prøv at forkorte teksten til mærkaten/beskeden.</translation>
+    </message>
+    <message>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>Fejl ved kodning fra URI til QR-kode.</translation>
+    </message>
+    <message>
+        <source>QR code support not available.</source>
+        <translation>QR-kode understøttelse er ikke tilgængelig.</translation>
     </message>
     <message>
         <source>Save QR Code</source>
@@ -1601,6 +1763,18 @@
     <message>
         <source>Datadir</source>
         <translation>Datamappe</translation>
+    </message>
+    <message>
+        <source>To specify a non-default location of the data directory use the '%1' option.</source>
+        <translation>For at angive en alternativ placering af mappen med data, skal du bruge tilvalget ‘%1’.</translation>
+    </message>
+    <message>
+        <source>Blocksdir</source>
+        <translation>Blokmappe</translation>
+    </message>
+    <message>
+        <source>To specify a non-default location of the blocks directory use the '%1' option.</source>
+        <translation>For at angive en alternativ placering af mappen med blokke, skal du bruge tilvalget ‘%1’.</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -1815,10 +1989,6 @@
         <translation>&amp;Fjern bandlysning</translation>
     </message>
     <message>
-        <source>default wallet</source>
-        <translation>Standard tegnebog</translation>
-    </message>
-    <message>
         <source>Welcome to the %1 RPC console.</source>
         <translation>Velkommen til %1s RPC-konsol.</translation>
     </message>
@@ -1914,6 +2084,10 @@
         <translation>Et valgfrit beløb til anmodning. Lad dette felt være tomt eller indeholde nul for at anmode om et ikke-specifikt beløb.</translation>
     </message>
     <message>
+        <source>&amp;Create new receiving address</source>
+        <translation>&amp;Opret ny modtager adresse</translation>
+    </message>
+    <message>
         <source>Clear all fields of the form.</source>
         <translation>Ryd alle felter af formen.</translation>
     </message>
@@ -1932,10 +2106,6 @@
     <message>
         <source>Requested payments history</source>
         <translation>Historik over betalingsanmodninger</translation>
-    </message>
-    <message>
-        <source>&amp;Request payment</source>
-        <translation>&amp;Anmod om betaling</translation>
     </message>
     <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
@@ -2019,14 +2189,6 @@
     <message>
         <source>Wallet</source>
         <translation>Tegnebog</translation>
-    </message>
-    <message>
-        <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation>Resulterende URI var for lang; prøv at forkorte teksten til mærkaten/beskeden.</translation>
-    </message>
-    <message>
-        <source>Error encoding URI into QR Code.</source>
-        <translation>Fejl ved kodning fra URI til QR-kode.</translation>
     </message>
 </context>
 <context>
@@ -2151,14 +2313,6 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
         <translation>Skjul</translation>
     </message>
     <message>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
-        <translation>Det er helt fint kun at betale det minimale gebyr, så længe den totale transaktionsvolumen er mindre end den plads, der er tilgængelig i blokkene. Men vær opmærksom på, at dette kan ende ud i transaktioner, der aldrig bliver bekræftet, når der bliver større forespørgsel efter bitcoin-transaktioner, end hvad netværket kan bearbejde.</translation>
-    </message>
-    <message>
-        <source>(read the tooltip)</source>
-        <translation>(læs værktøjstippet)</translation>
-    </message>
-    <message>
         <source>Recommended:</source>
         <translation>Anbefalet:</translation>
     </message>
@@ -2185,6 +2339,14 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
     <message>
         <source>Dust:</source>
         <translation>Støv:</translation>
+    </message>
+    <message>
+        <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
+        <translation>På tidspunkter, hvor der er færre transaktioner, end der er plads til i nye blokke, kan minere og videresendende knuder gennemtvinge et minimumsgebyr. Du kan vælge kun at betale dette minimumsgebyr, men vær opmærksom på, at det kan resultere i en transaktion, der aldrig bliver bekræftet, hvis mængden af nye bitcoin-transaktioner stiger til mere, end hvad netværket kan behandle ad gangen.</translation>
+    </message>
+    <message>
+        <source>A too low fee might result in a never confirming transaction (read the tooltip)</source>
+        <translation>Et for lavt gebyr kan resultere i en transaktion, der aldrig bekræftes (læs værktøjstippet)</translation>
     </message>
     <message>
         <source>Confirmation time target:</source>
@@ -2247,6 +2409,14 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
         <translation>%1 (%2 blokke)</translation>
     </message>
     <message>
+        <source> from wallet '%1'</source>
+        <translation>fra tegnebog '%1'</translation>
+    </message>
+    <message>
+        <source>%1 to '%2'</source>
+        <translation>%1 til '%2'</translation>
+    </message>
+    <message>
         <source>%1 to %2</source>
         <translation>%1 til %2</translation>
     </message>
@@ -2263,10 +2433,6 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
         <translation>Du kan øge gebyret senere (signalerer erstat-med-gebyr, BIP-125).</translation>
     </message>
     <message>
-        <source>from wallet %1</source>
-        <translation>fra tegnebog %1</translation>
-    </message>
-    <message>
         <source>Please, review your transaction.</source>
         <translation>Venligst, vurder din transaktion.</translation>
     </message>
@@ -2281,6 +2447,10 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
     <message>
         <source>Total Amount</source>
         <translation>Total Mængde</translation>
+    </message>
+    <message>
+        <source>To review recipient list click "Show Details..."</source>
+        <translation>For at vurdere modtager listen tryk "Vis Detaljer..."</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -2321,10 +2491,6 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
     <message>
         <source>Payment request expired.</source>
         <translation>Betalingsanmodning er udløbet.</translation>
-    </message>
-    <message>
-        <source>Pay only the required fee of %1</source>
-        <translation>Betal kun det påkrævede gebyr på %1</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
@@ -2593,13 +2759,6 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
     <message>
         <source>Message verified.</source>
         <translation>Besked verificeret.</translation>
-    </message>
-</context>
-<context>
-    <name>SplashScreen</name>
-    <message>
-        <source>[testnet]</source>
-        <translation>[testnetværk]</translation>
     </message>
 </context>
 <context>
@@ -3061,6 +3220,21 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
     </message>
 </context>
 <context>
+    <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation>Luk tegnebog</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to close the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation>Er du sikker på, at du ønsker at lukke tegnebog &lt;i&gt;%1&lt;/i&gt;?</translation>
+    </message>
+    <message>
+        <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
+        <translation>Lukning af tegnebog i for lang tid kan resultere i at synkronisere hele kæden forfra, hvis beskæring er aktiveret.</translation>
+    </message>
+</context>
+<context>
     <name>WalletFrame</name>
     <message>
         <source>No wallet has been loaded.</source>
@@ -3108,6 +3282,10 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
     <message>
         <source>Could not commit transaction</source>
         <translation>Kunne ikke gennemføre transaktionen</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>Standard tegnebog</translation>
     </message>
 </context>
 <context>
@@ -3180,12 +3358,12 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
         <translation>Kunne ikke starte HTTP-server. Se fejlretningslog for detaljer.</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
-    </message>
-    <message>
         <source>The %s developers</source>
         <translation>Udviklerne af %s</translation>
+    </message>
+    <message>
+        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
+        <translation>Kan ikke generere en bytte-adresse nøgle. Ingen nøgler i den interne nøglepulje og kan ikke generere nogle nøgler. </translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
@@ -3198,10 +3376,6 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
     <message>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
         <translation>Fejl under læsning af %s! Alle nøgler blev læst korrekt, men transaktionsdata eller indgange i adressebogen kan mangle eller være ukorrekte.</translation>
-    </message>
-    <message>
-        <source>Group outputs by address, selecting all or none, instead of selecting on a per-output basis. Privacy is improved as an address is only used once (unless someone sends to it after spending from it), but may result in slightly higher fees as suboptimal coin selection may result due to the added limitation (default: %u)</source>
-        <translation>Gruppér output efter adresse og vælg alle eller ingen, i stedet for at vælge på per-output-basis. Højere sikring af privatliv, da en adresse kun bruges én gang (med mindre nogen sender til en adresse efter den er brugt), men kan resultere i en anelse højere gebyrer, da ikke-optimal valg af output-adresser kan forekomme på grund af den tilføjede begrænsning (standard: %u)</translation>
     </message>
     <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
@@ -3260,6 +3434,10 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
         <translation>Ændr indeks uden for interval</translation>
     </message>
     <message>
+        <source>Config setting for %s only applied on %s network when in [%s] section.</source>
+        <translation>Opsætningen af %s bliver kun udført på %s-netværk under [%s]-sektionen.</translation>
+    </message>
+    <message>
         <source>Copyright (C) %i-%i</source>
         <translation>Ophavsret © %i-%i</translation>
     </message>
@@ -3270,10 +3448,6 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
     <message>
         <source>Do you want to rebuild the block database now?</source>
         <translation>Ønsker du at genopbygge blokdatabasen nu?</translation>
-    </message>
-    <message>
-        <source>Error creating %s: You can't create non-HD wallets with this version.</source>
-        <translation>Fejl under oprettelse af %s: Du kan ikke oprette ikke-HD-tegnebøger med denne version.</translation>
     </message>
     <message>
         <source>Error initializing block database</source>
@@ -3308,10 +3482,6 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
         <translation>Åbning af blokdatabase mislykkedes</translation>
     </message>
     <message>
-        <source>Error: Disk space is low!</source>
-        <translation>Fejl: Mangel på ledig diskplads!</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Lytning på enhver port mislykkedes. Brug -listen=0, hvis du ønsker dette.</translation>
     </message>
@@ -3332,6 +3502,10 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
         <translation>Sundhedstjek under initialisering mislykkedes. %s lukker ned.</translation>
     </message>
     <message>
+        <source>Invalid P2P permission: '%s'</source>
+        <translation>Invalid P2P tilladelse: '%s'</translation>
+    </message>
+    <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
         <translation>Ugyldigt beløb for -%s=&lt;beløb&gt;: “%s”</translation>
     </message>
@@ -3348,12 +3522,24 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
         <translation>Angivet blokmappe “%s” eksisterer ikke.</translation>
     </message>
     <message>
+        <source>Unknown address type '%s'</source>
+        <translation>Ukendt adressetype ‘%s’</translation>
+    </message>
+    <message>
+        <source>Unknown change type '%s'</source>
+        <translation>Ukendt byttepengetype ‘%s’</translation>
+    </message>
+    <message>
         <source>Upgrading txindex database</source>
         <translation>Opgraderer txindex database</translation>
     </message>
     <message>
         <source>Loading P2P addresses...</source>
         <translation>Indlæser P2P-adresser…</translation>
+    </message>
+    <message>
+        <source>Error: Disk space is too low!</source>
+        <translation>Fejl: Disk pladsen er for lav! </translation>
     </message>
     <message>
         <source>Loading banlist...</source>
@@ -3396,18 +3582,6 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
         <translation>U-istand til at generere nøgler</translation>
     </message>
     <message>
-        <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
-        <translation>Argument -benchmark understøttes ikke og ignoreres; brug -debug=bench.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
-        <translation>Argument -debugnet understøttes ikke og ignoreres; brug -debug=net.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -tor found, use -onion.</source>
-        <translation>Argument -tor understøttes ikke; brug -onion.</translation>
-    </message>
-    <message>
         <source>Unsupported logging category %s=%s.</source>
         <translation>Ikke understøttet logningskategori %s=%s.</translation>
     </message>
@@ -3444,10 +3618,6 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
         <translation>Du er nødt til at genopbygge databasen ved hjælp af -reindex for at gå tilbage til ikke-beskåret tilstand. Dette vil downloade hele blokkæden igen</translation>
     </message>
     <message>
-        <source>Error loading %s: You can't disable HD on an already existing HD wallet</source>
-        <translation>Fejl under indlæsning af %s: Du kan ikke slå HD fra på en allerede eksisterende HD-tegnebog</translation>
-    </message>
-    <message>
         <source>Error reading from database, shutting down.</source>
         <translation>Fejl under læsning fra database; lukker ned.</translation>
     </message>
@@ -3456,8 +3626,8 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
         <translation>Fejl under opgradering af kædetilstandsdatabase</translation>
     </message>
     <message>
-        <source>Information</source>
-        <translation>Information</translation>
+        <source>Error: Disk space is low for %s</source>
+        <translation>Fejl: Disk plads er lavt for %s</translation>
     </message>
     <message>
         <source>Invalid -onion address or hostname: '%s'</source>
@@ -3480,12 +3650,38 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
         <translation>Nødt til at angive en port med -whitebinde: “%s”</translation>
     </message>
     <message>
+        <source>Prune mode is incompatible with -blockfilterindex.</source>
+        <translation>Beskærings tilstand er ikke understøttet med -blockfilterindex.</translation>
+    </message>
+    <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
         <translation>Reducerer -maxconnections fra %d til %d på grund af systembegrænsninger.</translation>
     </message>
     <message>
+        <source>Section [%s] is not recognized.</source>
+        <translation>Sektion [%s] er ikke genkendt.</translation>
+    </message>
+    <message>
         <source>Signing transaction failed</source>
         <translation>Signering af transaktion mislykkedes</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" does not exist</source>
+        <translation>Angivet -walletdir “%s” eksisterer ikke</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is a relative path</source>
+        <translation>Angivet -walletdir “%s” er en relativ sti</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is not a directory</source>
+        <translation>Angivet -walletdir “%s” er ikke en mappe</translation>
+    </message>
+    <message>
+        <source>The specified config file %s does not exist
+</source>
+        <translation>Den specificerede konfigurationsfil %s eksisterer ikke.
+</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -3500,10 +3696,6 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
         <translation>Transaktionsbeløb er for lavt</translation>
     </message>
     <message>
-        <source>Transaction too large for fee policy</source>
-        <translation>Transaktion for stor til gebyrretningslinjer</translation>
-    </message>
-    <message>
         <source>Transaction too large</source>
         <translation>Transaktionen er for stor</translation>
     </message>
@@ -3512,20 +3704,20 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
         <translation>Ikke i stand til at tildele til %s på denne computer (bind returnerede fejl %s)</translation>
     </message>
     <message>
+        <source>Unable to create the PID file '%s': %s</source>
+        <translation>Ikke i stand til at oprette PID fil '%s': %s</translation>
+    </message>
+    <message>
         <source>Unable to generate initial keys</source>
         <translation>Kan ikke generere indledningsvise nøgler</translation>
     </message>
     <message>
+        <source>Unknown -blockfilterindex value %s.</source>
+        <translation>Ukendt -blockfilterindex værdi %s.</translation>
+    </message>
+    <message>
         <source>Verifying wallet(s)...</source>
         <translation>Verificerer tegnebøger…</translation>
-    </message>
-    <message>
-        <source>Wallet %s resides outside wallet directory %s</source>
-        <translation>Tegnebog %s findes uden for tegnebogsmappen %s</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Advarsel</translation>
     </message>
     <message>
         <source>Warning: unknown new rules activated (versionbit %i)</source>
@@ -3540,10 +3732,6 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
         <translation>-maxtxfee er sat meget højt! Gebyrer så store risikeres betalt på en enkelt transaktion.</translation>
     </message>
     <message>
-        <source>Error loading %s: You can't enable HD on an already existing non-HD wallet</source>
-        <translation>Fejl under indlæsning af %s: Du kan ikke aktivere HD på en allerede eksisterende ikke-HD-tegnebog</translation>
-    </message>
-    <message>
         <source>This is the transaction fee you may pay when fee estimates are not available.</source>
         <translation>Dette er transaktionsgebyret, du kan betale, når gebyrestimeringer ikke er tilgængelige.</translation>
     </message>
@@ -3556,18 +3744,6 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
         <translation>Den totale længde på netværksversionsstrengen (%i) overstiger maksimallængden (%i). Reducér antaller af eller størrelsen på uacomments.</translation>
     </message>
     <message>
-        <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
-        <translation>Argument -socks understøttes ikke. Det er ikke længere muligt at sætte SOCKS-version; kun SOCKS5-proxier understøttes.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
-        <translation>Argument -whitelistalwaysrelay understøttes ikke og ignoreres; brug -whitelistrelay og/eller -whitelistforcerelay.</translation>
-    </message>
-    <message>
-        <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
-        <translation>Advarsel: Ukendte blokversioner bliver minet! Det er muligt, at ukendte regler er i brug</translation>
-    </message>
-    <message>
         <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
         <translation>Advarsel: Tegnebogsfil ødelagt, data reddet! Oprindelig %s gemt som %s i %s; hvis din saldo eller dine transaktioner er forkert, bør du genskabe fra en sikkerhedskopi.</translation>
     </message>
@@ -3578,10 +3754,6 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
     <message>
         <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
         <translation>Fejl under indlæsning af tegnebog %s. -wallet filnavn angivet mere end én gang.</translation>
-    </message>
-    <message>
-        <source>Keypool ran out, please call keypoolrefill first</source>
-        <translation>Nøglepulje løb tør; kald venligst keypoolrefill først</translation>
     </message>
     <message>
         <source>Starting network threads...</source>
@@ -3620,16 +3792,12 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
         <translation>Manglende dækning</translation>
     </message>
     <message>
-        <source>Can't generate a change-address key. Private keys are disabled for this wallet.</source>
-        <translation>Kan ikke generere en bytte-adresse nøgle. Private nøgler er deaktiveret for denne tegnebog.</translation>
-    </message>
-    <message>
         <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified.</source>
         <translation>Kan ikke opgradere en ikke HD dele tegnebog uden opgradering til at støtte før split nøglepool. Venligst brug -upgradewallet=169900 eller -upgradewallet med ingen version specificeret.</translation>
     </message>
     <message>
         <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
-        <translation>Gebyr estimering fejlede. Tilbagefaldsgebyr er deaktiveret. Vent et par blokke eller aktiver -fallbackfee.</translation>
+        <translation>Estimering af gebyr mislykkedes. Tilbagefaldsgebyr er deaktiveret. Vent et par blokke eller aktiver -fallbackfee.</translation>
     </message>
     <message>
         <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
@@ -3658,10 +3826,6 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
     <message>
         <source>Done loading</source>
         <translation>Indlæsning gennemført</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Fejl</translation>
     </message>
 </context>
 </TS>

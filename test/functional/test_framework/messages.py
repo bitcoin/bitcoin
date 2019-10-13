@@ -43,8 +43,8 @@ COIN = 100000000  # 1 btc in satoshis
 BIP125_SEQUENCE_NUMBER = 0xfffffffd  # Sequence number that is BIP 125 opt-in and BIP 68-opt-out
 
 NODE_NETWORK = (1 << 0)
-# NODE_GETUTXO = (1 << 1)
-# NODE_BLOOM = (1 << 2)
+NODE_GETUTXO = (1 << 1)
+NODE_BLOOM = (1 << 2)
 NODE_WITNESS = (1 << 3)
 NODE_NETWORK_LIMITED = (1 << 10)
 
@@ -803,7 +803,9 @@ class HeaderAndShortIDs:
         return [ key0, key1 ]
 
     # Version 2 compact blocks use wtxid in shortids (rather than txid)
-    def initialize_from_block(self, block, nonce=0, prefill_list = [0], use_witness = False):
+    def initialize_from_block(self, block, nonce=0, prefill_list=None, use_witness=False):
+        if prefill_list is None:
+            prefill_list = [0]
         self.header = CBlockHeader(block)
         self.nonce = nonce
         self.prefilled_txn = [ PrefilledTransaction(i, block.vtx[i]) for i in prefill_list ]
@@ -1314,38 +1316,6 @@ class msg_headers:
     def __repr__(self):
         return "msg_headers(headers=%s)" % repr(self.headers)
 
-
-class msg_reject:
-    __slots__ = ("code", "data", "message", "reason")
-    command = b"reject"
-    REJECT_MALFORMED = 1
-
-    def __init__(self):
-        self.message = b""
-        self.code = 0
-        self.reason = b""
-        self.data = 0
-
-    def deserialize(self, f):
-        self.message = deser_string(f)
-        self.code = struct.unpack("<B", f.read(1))[0]
-        self.reason = deser_string(f)
-        if (self.code != self.REJECT_MALFORMED and
-                (self.message == b"block" or self.message == b"tx")):
-            self.data = deser_uint256(f)
-
-    def serialize(self):
-        r = ser_string(self.message)
-        r += struct.pack("<B", self.code)
-        r += ser_string(self.reason)
-        if (self.code != self.REJECT_MALFORMED and
-                (self.message == b"block" or self.message == b"tx")):
-            r += ser_uint256(self.data)
-        return r
-
-    def __repr__(self):
-        return "msg_reject: %s %d %s [%064x]" \
-            % (self.message, self.code, self.reason, self.data)
 
 
 class msg_feefilter:

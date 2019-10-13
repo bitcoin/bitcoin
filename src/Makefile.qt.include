@@ -6,98 +6,13 @@ bin_PROGRAMS += qt/bitcoin-qt
 EXTRA_LIBRARIES += qt/libbitcoinqt.a
 
 # bitcoin qt core #
-QT_TS = \
-  qt/locale/bitcoin_af.ts \
-  qt/locale/bitcoin_af_ZA.ts \
-  qt/locale/bitcoin_ar.ts \
-  qt/locale/bitcoin_be_BY.ts \
-  qt/locale/bitcoin_bg_BG.ts \
-  qt/locale/bitcoin_bg.ts \
-  qt/locale/bitcoin_ca_ES.ts \
-  qt/locale/bitcoin_ca.ts \
-  qt/locale/bitcoin_ca@valencia.ts \
-  qt/locale/bitcoin_cs.ts \
-  qt/locale/bitcoin_cy.ts \
-  qt/locale/bitcoin_da.ts \
-  qt/locale/bitcoin_de.ts \
-  qt/locale/bitcoin_el_GR.ts \
-  qt/locale/bitcoin_el.ts \
-  qt/locale/bitcoin_en_GB.ts \
-  qt/locale/bitcoin_en.ts \
-  qt/locale/bitcoin_eo.ts \
-  qt/locale/bitcoin_es_AR.ts \
-  qt/locale/bitcoin_es_CL.ts \
-  qt/locale/bitcoin_es_CO.ts \
-  qt/locale/bitcoin_es_DO.ts \
-  qt/locale/bitcoin_es_ES.ts \
-  qt/locale/bitcoin_es_MX.ts \
-  qt/locale/bitcoin_es.ts \
-  qt/locale/bitcoin_es_UY.ts \
-  qt/locale/bitcoin_es_VE.ts \
-  qt/locale/bitcoin_et_EE.ts \
-  qt/locale/bitcoin_et.ts \
-  qt/locale/bitcoin_eu_ES.ts \
-  qt/locale/bitcoin_fa_IR.ts \
-  qt/locale/bitcoin_fa.ts \
-  qt/locale/bitcoin_fi.ts \
-  qt/locale/bitcoin_fr_CA.ts \
-  qt/locale/bitcoin_fr_FR.ts \
-  qt/locale/bitcoin_fr.ts \
-  qt/locale/bitcoin_gl.ts \
-  qt/locale/bitcoin_he.ts \
-  qt/locale/bitcoin_hi_IN.ts \
-  qt/locale/bitcoin_hr.ts \
-  qt/locale/bitcoin_hu.ts \
-  qt/locale/bitcoin_id_ID.ts \
-  qt/locale/bitcoin_it_IT.ts \
-  qt/locale/bitcoin_it.ts \
-  qt/locale/bitcoin_ja.ts \
-  qt/locale/bitcoin_ka.ts \
-  qt/locale/bitcoin_kk_KZ.ts \
-  qt/locale/bitcoin_ko_KR.ts \
-  qt/locale/bitcoin_ku_IQ.ts \
-  qt/locale/bitcoin_ky.ts \
-  qt/locale/bitcoin_la.ts \
-  qt/locale/bitcoin_lt.ts \
-  qt/locale/bitcoin_lv_LV.ts \
-  qt/locale/bitcoin_mk_MK.ts \
-  qt/locale/bitcoin_mn.ts \
-  qt/locale/bitcoin_ms_MY.ts \
-  qt/locale/bitcoin_nb.ts \
-  qt/locale/bitcoin_ne.ts \
-  qt/locale/bitcoin_nl.ts \
-  qt/locale/bitcoin_pam.ts \
-  qt/locale/bitcoin_pl.ts \
-  qt/locale/bitcoin_pt_BR.ts \
-  qt/locale/bitcoin_pt_PT.ts \
-  qt/locale/bitcoin_ro_RO.ts \
-  qt/locale/bitcoin_ro.ts \
-  qt/locale/bitcoin_ru_RU.ts \
-  qt/locale/bitcoin_ru.ts \
-  qt/locale/bitcoin_sk.ts \
-  qt/locale/bitcoin_sl_SI.ts \
-  qt/locale/bitcoin_sq.ts \
-  qt/locale/bitcoin_sr@latin.ts \
-  qt/locale/bitcoin_sr.ts \
-  qt/locale/bitcoin_sv.ts \
-  qt/locale/bitcoin_ta.ts \
-  qt/locale/bitcoin_th_TH.ts \
-  qt/locale/bitcoin_tr_TR.ts \
-  qt/locale/bitcoin_tr.ts \
-  qt/locale/bitcoin_uk.ts \
-  qt/locale/bitcoin_ur_PK.ts \
-  qt/locale/bitcoin_uz@Cyrl.ts \
-  qt/locale/bitcoin_vi.ts \
-  qt/locale/bitcoin_vi_VN.ts \
-  qt/locale/bitcoin_zh_CN.ts \
-  qt/locale/bitcoin_zh_HK.ts \
-  qt/locale/bitcoin_zh.ts \
-  qt/locale/bitcoin_zh_TW.ts
+include Makefile.qt_locale.include
 
 QT_FORMS_UI = \
   qt/forms/addressbookpage.ui \
   qt/forms/askpassphrasedialog.ui \
   qt/forms/coincontroldialog.ui \
+  qt/forms/createwalletdialog.ui \
   qt/forms/editaddressdialog.ui \
   qt/forms/helpmessagedialog.ui \
   qt/forms/intro.ui \
@@ -117,6 +32,7 @@ QT_MOC_CPP = \
   qt/moc_addressbookpage.cpp \
   qt/moc_addresstablemodel.cpp \
   qt/moc_askpassphrasedialog.cpp \
+  qt/moc_createwalletdialog.cpp \
   qt/moc_bantablemodel.cpp \
   qt/moc_bitcoinaddressvalidator.cpp \
   qt/moc_bitcoinamountfield.cpp \
@@ -202,6 +118,7 @@ BITCOIN_QT_H = \
   qt/clientmodel.h \
   qt/coincontroldialog.h \
   qt/coincontroltreewidget.h \
+  qt/createwalletdialog.h \
   qt/csvmodelwriter.h \
   qt/editaddressdialog.h \
   qt/guiconstants.h \
@@ -250,8 +167,6 @@ BITCOIN_QT_H = \
 RES_ICONS = \
   qt/res/icons/add.png \
   qt/res/icons/address-book.png \
-  qt/res/icons/about.png \
-  qt/res/icons/about_qt.png \
   qt/res/icons/bitcoin.ico \
   qt/res/icons/bitcoin_testnet.ico \
   qt/res/icons/bitcoin.png \
@@ -261,13 +176,11 @@ RES_ICONS = \
   qt/res/icons/clock3.png \
   qt/res/icons/clock4.png \
   qt/res/icons/clock5.png \
-  qt/res/icons/configure.png \
   qt/res/icons/connect0.png \
   qt/res/icons/connect1.png \
   qt/res/icons/connect2.png \
   qt/res/icons/connect3.png \
   qt/res/icons/connect4.png \
-  qt/res/icons/debugwindow.png \
   qt/res/icons/edit.png \
   qt/res/icons/editcopy.png \
   qt/res/icons/editpaste.png \
@@ -275,21 +188,16 @@ RES_ICONS = \
   qt/res/icons/eye.png \
   qt/res/icons/eye_minus.png \
   qt/res/icons/eye_plus.png \
-  qt/res/icons/filesave.png \
   qt/res/icons/fontbigger.png \
   qt/res/icons/fontsmaller.png \
   qt/res/icons/hd_disabled.png \
   qt/res/icons/hd_enabled.png \
   qt/res/icons/history.png \
-  qt/res/icons/info.png \
-  qt/res/icons/key.png \
   qt/res/icons/lock_closed.png \
   qt/res/icons/lock_open.png \
   qt/res/icons/network_disabled.png \
-  qt/res/icons/open.png \
   qt/res/icons/overview.png \
   qt/res/icons/proxy.png \
-  qt/res/icons/quit.png \
   qt/res/icons/receive.png \
   qt/res/icons/remove.png \
   qt/res/icons/send.png \
@@ -302,8 +210,7 @@ RES_ICONS = \
   qt/res/icons/tx_input.png \
   qt/res/icons/tx_output.png \
   qt/res/icons/tx_mined.png \
-  qt/res/icons/warning.png \
-  qt/res/icons/verify.png
+  qt/res/icons/warning.png
 
 BITCOIN_QT_BASE_CPP = \
   qt/bantablemodel.cpp \
@@ -338,6 +245,7 @@ BITCOIN_QT_WALLET_CPP = \
   qt/askpassphrasedialog.cpp \
   qt/coincontroldialog.cpp \
   qt/coincontroltreewidget.cpp \
+  qt/createwalletdialog.cpp \
   qt/editaddressdialog.cpp \
   qt/openuridialog.cpp \
   qt/overviewpage.cpp \
@@ -445,9 +353,9 @@ QT_QM=$(QT_TS:.ts=.qm)
 
 SECONDARY: $(QT_QM)
 
-$(srcdir)/qt/bitcoinstrings.cpp: $(libbitcoin_server_a_SOURCES) $(libbitcoin_wallet_a_SOURCES) $(libbitcoin_common_a_SOURCES) $(libbitcoin_zmq_a_SOURCES) $(libbitcoin_consensus_a_SOURCES) $(libbitcoin_util_a_SOURCES)
+$(srcdir)/qt/bitcoinstrings.cpp: FORCE
 	@test -n $(XGETTEXT) || echo "xgettext is required for updating translations"
-	$(AM_V_GEN) cd $(srcdir); XGETTEXT=$(XGETTEXT) COPYRIGHT_HOLDERS="$(COPYRIGHT_HOLDERS)" $(PYTHON) ../share/qt/extract_strings_qt.py $^
+	$(AM_V_GEN) cd $(srcdir); XGETTEXT=$(XGETTEXT) COPYRIGHT_HOLDERS="$(COPYRIGHT_HOLDERS)" $(PYTHON) ../share/qt/extract_strings_qt.py $(libbitcoin_server_a_SOURCES) $(libbitcoin_wallet_a_SOURCES) $(libbitcoin_common_a_SOURCES) $(libbitcoin_zmq_a_SOURCES) $(libbitcoin_consensus_a_SOURCES) $(libbitcoin_util_a_SOURCES)
 
 translate: $(srcdir)/qt/bitcoinstrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(BITCOIN_QT_BASE_CPP) qt/bitcoin.cpp $(BITCOIN_QT_WINDOWS_CPP) $(BITCOIN_QT_WALLET_CPP) $(BITCOIN_QT_H) $(BITCOIN_MM)
 	@test -n $(LUPDATE) || echo "lupdate is required for updating translations"

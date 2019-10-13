@@ -193,13 +193,6 @@ extern const char *FILTERADD;
  */
 extern const char *FILTERCLEAR;
 /**
- * The reject message informs the receiving node that one of its previous
- * messages has been rejected.
- * @since protocol version 70002 as described by BIP61.
- * @see https://bitcoin.org/en/developer-reference#reject
- */
-extern const char *REJECT;
-/**
  * Indicates that a node prefers to receive new block announcements via a
  * "headers" message rather than an "inv".
  * @since protocol version 70012 as described by BIP130.

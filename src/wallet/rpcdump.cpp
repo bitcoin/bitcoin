@@ -384,8 +384,7 @@ UniValue importprunedfunds(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Something wrong with merkleblock");
     }
 
-    wtx.nIndex = txnIndex;
-    wtx.hashBlock = merkleBlock.header.GetHash();
+    wtx.SetConf(CWalletTx::Status::CONFIRMED, merkleBlock.header.GetHash(), txnIndex);
 
     auto locked_chain = pwallet->chain().lock();
     LOCK(pwallet->cs_wallet);
@@ -1098,9 +1097,10 @@ static UniValue ProcessImportDescriptor(ImportData& import_data, std::map<CKeyID
 
     const std::string& descriptor = data["desc"].get_str();
     FlatSigningProvider keys;
-    auto parsed_desc = Parse(descriptor, keys, /* require_checksum = */ true);
+    std::string error;
+    auto parsed_desc = Parse(descriptor, keys, error, /* require_checksum = */ true);
     if (!parsed_desc) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Descriptor is invalid");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
     }
 
     have_solving_data = parsed_desc->IsSolvable();

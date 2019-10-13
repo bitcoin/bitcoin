@@ -141,7 +141,7 @@ def read_libraries(filename):
     for line in stdout.splitlines():
         tokens = line.split()
         if len(tokens)>2 and tokens[1] == '(NEEDED)':
-            match = re.match('^Shared library: \[(.*)\]$', ' '.join(tokens[2:]))
+            match = re.match(r'^Shared library: \[(.*)\]$', ' '.join(tokens[2:]))
             if match:
                 libraries.append(match.group(1))
             else:
@@ -171,5 +171,3 @@ if __name__ == '__main__':
                 retval = 1
 
     sys.exit(retval)
-
-

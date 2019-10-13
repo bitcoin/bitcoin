@@ -249,8 +249,7 @@ BOOST_FIXTURE_TEST_CASE(coin_mark_dirty_immature_credit, TestChain100Setup)
     LockAssertion lock(::cs_main);
     LOCK(wallet.cs_wallet);
 
-    wtx.hashBlock = ::ChainActive().Tip()->GetBlockHash();
-    wtx.nIndex = 0;
+    wtx.SetConf(CWalletTx::Status::CONFIRMED, ::ChainActive().Tip()->GetBlockHash(), 0);
 
     // Call GetImmatureCredit() once before adding the key to the wallet to
     // cache the current immature credit amount, which is 0.
@@ -281,14 +280,19 @@ static int64_t AddTx(CWallet& wallet, uint32_t lockTime, int64_t mockTime, int64
     }
 
     CWalletTx wtx(&wallet, MakeTransactionRef(tx));
-    if (block) {
-        wtx.SetMerkleBranch(block->GetBlockHash(), 0);
-    }
-    {
-        LOCK(cs_main);
+    LOCK(cs_main);
+    LOCK(wallet.cs_wallet);
+    // If transaction is already in map, to avoid inconsistencies, unconfirmation
+    // is needed before confirm again with different block.
+    std::map<uint256, CWalletTx>::iterator it = wallet.mapWallet.find(wtx.GetHash());
+    if (it != wallet.mapWallet.end()) {
+        wtx.setUnconfirmed();
         wallet.AddToWallet(wtx);
     }
-    LOCK(wallet.cs_wallet);
+    if (block) {
+        wtx.SetConf(CWalletTx::Status::CONFIRMED, block->GetBlockHash(), 0);
+    }
+    wallet.AddToWallet(wtx);
     return wallet.mapWallet.at(wtx.GetHash()).nTimeSmart;
 }
 
@@ -332,6 +336,84 @@ BOOST_AUTO_TEST_CASE(LoadReceiveRequests)
     BOOST_CHECK_EQUAL(values.size(), 2U);
     BOOST_CHECK_EQUAL(values[0], "val_rr0");
     BOOST_CHECK_EQUAL(values[1], "val_rr1");
+}
+
+// Test some watch-only wallet methods by the procedure of loading (LoadWatchOnly),
+// checking (HaveWatchOnly), getting (GetWatchPubKey) and removing (RemoveWatchOnly) a
+// given PubKey, resp. its corresponding P2PK Script. Results of the the impact on
+// the address -> PubKey map is dependent on whether the PubKey is a point on the curve
+static void TestWatchOnlyPubKey(CWallet& wallet, const CPubKey& add_pubkey)
+{
+    CScript p2pk = GetScriptForRawPubKey(add_pubkey);
+    CKeyID add_address = add_pubkey.GetID();
+    CPubKey found_pubkey;
+    LOCK(wallet.cs_wallet);
+
+    // all Scripts (i.e. also all PubKeys) are added to the general watch-only set
+    BOOST_CHECK(!wallet.HaveWatchOnly(p2pk));
+    wallet.LoadWatchOnly(p2pk);
+    BOOST_CHECK(wallet.HaveWatchOnly(p2pk));
+
+    // only PubKeys on the curve shall be added to the watch-only address -> PubKey map
+    bool is_pubkey_fully_valid = add_pubkey.IsFullyValid();
+    if (is_pubkey_fully_valid) {
+        BOOST_CHECK(wallet.GetWatchPubKey(add_address, found_pubkey));
+        BOOST_CHECK(found_pubkey == add_pubkey);
+    } else {
+        BOOST_CHECK(!wallet.GetWatchPubKey(add_address, found_pubkey));
+        BOOST_CHECK(found_pubkey == CPubKey()); // passed key is unchanged
+    }
+
+    wallet.RemoveWatchOnly(p2pk);
+    BOOST_CHECK(!wallet.HaveWatchOnly(p2pk));
+
+    if (is_pubkey_fully_valid) {
+        BOOST_CHECK(!wallet.GetWatchPubKey(add_address, found_pubkey));
+        BOOST_CHECK(found_pubkey == add_pubkey); // passed key is unchanged
+    }
+}
+
+// Cryptographically invalidate a PubKey whilst keeping length and first byte
+static void PollutePubKey(CPubKey& pubkey)
+{
+    std::vector<unsigned char> pubkey_raw(pubkey.begin(), pubkey.end());
+    std::fill(pubkey_raw.begin()+1, pubkey_raw.end(), 0);
+    pubkey = CPubKey(pubkey_raw);
+    assert(!pubkey.IsFullyValid());
+    assert(pubkey.IsValid());
+}
+
+// Test watch-only wallet logic for PubKeys
+BOOST_AUTO_TEST_CASE(WatchOnlyPubKeys)
+{
+    CKey key;
+    CPubKey pubkey;
+
+    BOOST_CHECK(!m_wallet.HaveWatchOnly());
+
+    // uncompressed valid PubKey
+    key.MakeNewKey(false);
+    pubkey = key.GetPubKey();
+    assert(!pubkey.IsCompressed());
+    TestWatchOnlyPubKey(m_wallet, pubkey);
+
+    // uncompressed cryptographically invalid PubKey
+    PollutePubKey(pubkey);
+    TestWatchOnlyPubKey(m_wallet, pubkey);
+
+    // compressed valid PubKey
+    key.MakeNewKey(true);
+    pubkey = key.GetPubKey();
+    assert(pubkey.IsCompressed());
+    TestWatchOnlyPubKey(m_wallet, pubkey);
+
+    // compressed cryptographically invalid PubKey
+    PollutePubKey(pubkey);
+    TestWatchOnlyPubKey(m_wallet, pubkey);
+
+    // invalid empty PubKey
+    pubkey = CPubKey();
+    TestWatchOnlyPubKey(m_wallet, pubkey);
 }
 
 class ListCoinsTestingSetup : public TestChain100Setup
@@ -382,7 +464,7 @@ public:
         LOCK(wallet->cs_wallet);
         auto it = wallet->mapWallet.find(tx->GetHash());
         BOOST_CHECK(it != wallet->mapWallet.end());
-        it->second.SetMerkleBranch(::ChainActive().Tip()->GetBlockHash(), 1);
+        it->second.SetConf(CWalletTx::Status::CONFIRMED, ::ChainActive().Tip()->GetBlockHash(), 1);
         return it->second;
     }
 

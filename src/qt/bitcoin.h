@@ -56,7 +56,7 @@ class BitcoinApplication: public QApplication
 {
     Q_OBJECT
 public:
-    explicit BitcoinApplication(interfaces::Node& node, int &argc, char **argv);
+    explicit BitcoinApplication(interfaces::Node& node);
     ~BitcoinApplication();
 
 #ifdef ENABLE_WALLET
@@ -67,6 +67,8 @@ public:
     void parameterSetup();
     /// Create options model
     void createOptionsModel(bool resetSettings);
+    /// Update prune value
+    void SetPrune(bool prune, bool force = false);
     /// Create main window
     void createWindow(const NetworkStyle *networkStyle);
     /// Create splash screen

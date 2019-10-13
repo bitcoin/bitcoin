@@ -12,3 +12,4 @@ cachable
 errorstring
 keyserver
 homogenous
+setban

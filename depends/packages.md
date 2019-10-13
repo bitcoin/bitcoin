@@ -32,15 +32,15 @@ These variables are optional:
 
     $(package)_build_subdir:
     cd to this dir before running configure/build/stage commands.
-    
+
     $(package)_download_file:
     The file-name of the upstream source if it differs from how it should be
     stored locally. This can be used to avoid storing file-names with strange
     characters.
-    
+
     $(package)_dependencies:
     Names of any other packages that this one depends on.
-    
+
     $(package)_patches:
     Filenames of any patches needed to build the package
 
@@ -134,7 +134,7 @@ the user. Other variables may be defined as needed.
     Stage the build results. If undefined, does nothing.
 
   The following variables are available for each recipe:
-    
+
     $(1)_staging_dir: package's destination sysroot path
     $(1)_staging_prefix_dir: prefix path inside of the package's staging dir
     $(1)_extract_dir: path to the package's extracted sources
@@ -181,3 +181,18 @@ For us, it's much easier to just link a static `libsecondary` into a shared
 static or dynamic `libseconday`, that's not our concern. With a static
 `libseconday`, when we need to link `libprimary` into our executable, there's no
 dependency chain to worry about as `libprimary` has all the symbols.
+
+## Build targets:
+
+To build an individual package (useful for debugging), following build targets are available.
+
+    make ${package}
+    make ${package}_fetched
+    make ${package}_extracted
+    make ${package}_preprocessed
+    make ${package}_configured
+    make ${package}_built
+    make ${package}_staged
+    make ${package}_postprocessed
+    make ${package}_cached
+    make ${package}_cached_checksum

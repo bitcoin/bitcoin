@@ -1,7 +1,7 @@
 dnl require autoconf 2.60 (AS_ECHO/AS_ECHO_N)
 AC_PREREQ([2.60])
 define(_CLIENT_VERSION_MAJOR, 0)
-define(_CLIENT_VERSION_MINOR, 18)
+define(_CLIENT_VERSION_MINOR, 19)
 define(_CLIENT_VERSION_REVISION, 99)
 define(_CLIENT_VERSION_BUILD, 0)
 define(_CLIENT_VERSION_RC, 0)
@@ -76,6 +76,10 @@ fi
 AC_PROG_OBJCXX
 ])
 
+dnl Since libtool 1.5.2 (released 2004-01-25), on Linux libtool no longer
+dnl sets RPATH for any directories in the dynamic linker search path.
+dnl See more: https://wiki.debian.org/RpathIssue
+LT_PREREQ([1.5.2])
 dnl Libtool init checks.
 LT_INIT([pic-only])
 
@@ -133,7 +137,7 @@ AC_ARG_ENABLE(gui-tests,
 
 AC_ARG_WITH([rapidcheck],
   [AS_HELP_STRING([--with-rapidcheck],
-  [enable RapidCheck property based tests (default is yes if librapidcheck is found)])],
+  [enable RapidCheck property-based tests (default is yes if librapidcheck is found)])],
   [use_rapidcheck=$withval],
   [use_rapidcheck=auto])
 
@@ -223,10 +227,10 @@ AC_ARG_ENABLE([zmq],
   [use_zmq=$enableval],
   [use_zmq=yes])
 AC_ARG_ENABLE([bip70],
-  [AS_HELP_STRING([--disable-bip70],
-  [disable BIP70 (payment protocol) support in GUI (enabled by default)])],
+  [AS_HELP_STRING([--enable-bip70],
+  [enable BIP70 (payment protocol) support in the GUI (default is to disable)])],
   [enable_bip70=$enableval],
-  [enable_bip70=auto])
+  [enable_bip70=no])
 
 AC_ARG_WITH([protoc-bindir],[AS_HELP_STRING([--with-protoc-bindir=BIN_DIR],[specify protoc bin path])], [protoc_bin_path=$withval], [])
 
@@ -585,7 +589,7 @@ case $host in
      fi
 
      AX_CHECK_LINK_FLAG([[-Wl,-headerpad_max_install_names]], [LDFLAGS="$LDFLAGS -Wl,-headerpad_max_install_names"])
-     CPPFLAGS="$CPPFLAGS -DMAC_OSX"
+     CPPFLAGS="$CPPFLAGS -DMAC_OSX -DOBJC_OLD_DISPATCH_PROTOTYPES=0"
      OBJCXXFLAGS="$CXXFLAGS"
      ;;
    *android*)
@@ -776,6 +780,39 @@ if test x$TARGET_OS = xdarwin; then
 fi
 
 AC_CHECK_HEADERS([endian.h sys/endian.h byteswap.h stdio.h stdlib.h unistd.h strings.h sys/types.h sys/stat.h sys/select.h sys/prctl.h])
+
+# FD_ZERO may be dependent on a declaration of memcpy, e.g. in SmartOS
+# check that it fails to build without memcpy, then that it builds with
+AC_MSG_CHECKING(FD_ZERO memcpy dependence)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+    #include <cstddef>
+    #if HAVE_SYS_SELECT_H
+    #include <sys/select.h>
+    #endif
+  ]],[[
+    #if HAVE_SYS_SELECT_H
+    fd_set fds;
+    FD_ZERO(&fds);
+    #endif
+  ]])],
+  [ AC_MSG_RESULT(no) ],
+  [
+      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+          #include <cstring>
+          #if HAVE_SYS_SELECT_H
+          #include <sys/select.h>
+          #endif
+        ]], [[
+          #if HAVE_SYS_SELECT_H
+          fd_set fds;
+          FD_ZERO(&fds);
+          #endif
+        ]])],
+        [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_CSTRING_DEPENDENT_FD_ZERO, 1, [Define this symbol if FD_ZERO is dependent of a memcpy declaration being available]) ],
+        [ AC_MSG_ERROR(failed with cstring include) ]
+      )
+  ]
+)
 
 AC_CHECK_DECLS([getifaddrs, freeifaddrs],,,
     [#include <sys/types.h>
@@ -1275,7 +1312,7 @@ AC_CHECK_DECLS([EVP_MD_CTX_new],,,[AC_INCLUDES_DEFAULT
 ])
 CXXFLAGS="${save_CXXFLAGS}"
 
-dnl RapidCheck Property Based Testing
+dnl RapidCheck property-based testing
 
 enable_property_tests=no
 if test "x$use_rapidcheck" = xauto; then
@@ -1627,17 +1664,6 @@ AC_CONFIG_SUBDIRS([src/secp256k1])
 
 AC_OUTPUT
 
-dnl Taken from https://wiki.debian.org/RpathIssue
-case $host in
-   *-*-linux-gnu)
-     AC_MSG_RESULT([Fixing libtool for -rpath problems.])
-     sed < libtool > libtool-2 \
-     's/^hardcode_libdir_flag_spec.*$'/'hardcode_libdir_flag_spec=" -D__LIBTOOL_IS_A_FOOL__ "/'
-     mv libtool-2 libtool
-     chmod 755 libtool
-   ;;
-esac
-
 dnl Replace the BUILDDIR path with the correct Windows path if compiling on Native Windows
 case ${OS} in
    *Windows*)
@@ -1657,6 +1683,7 @@ fi
 echo "  with zmq      = $use_zmq"
 echo "  with test     = $use_tests"
 if test x$use_tests != xno; then
+    echo "    with prop   = $enable_property_tests"
     echo "    with fuzz   = $enable_fuzz"
 fi
 echo "  with bench    = $use_bench"

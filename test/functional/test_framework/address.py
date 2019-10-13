@@ -4,12 +4,21 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Encode and decode BASE58, P2PKH and P2SH addresses."""
 
+import enum
+
 from .script import hash256, hash160, sha256, CScript, OP_0
 from .util import hex_str_to_bytes
 
 from . import segwit_addr
 
 ADDRESS_BCRT1_UNSPENDABLE = 'bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj'
+
+
+class AddressType(enum.Enum):
+    bech32 = 'bech32'
+    p2sh_segwit = 'p2sh-segwit'
+    legacy = 'legacy'  # P2PKH
+
 
 chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 

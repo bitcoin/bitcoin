@@ -9,6 +9,7 @@ task:
     MAKEJOBS: "-j9"
     CONFIGURE_OPTS: "--disable-dependency-tracking"
     GOAL: "install"
+    TEST_RUNNER_PORT_MIN: "14000"  # Must be larger than 12321, which is used for the http cache. See https://cirrus-ci.org/guide/writing-tasks/#http-cache
     CCACHE_SIZE: "200M"
     CCACHE_COMPRESS: 1
     CCACHE_DIR: "/tmp/ccache_dir"
@@ -27,3 +28,28 @@ task:
     - gmake check ${MAKEJOBS} VERBOSE=1
   functional_test_script:
     - ./test/functional/test_runner.py --jobs 9 --ci --extended --exclude feature_dbcrash --combinedlogslen=1000 --quiet --failfast
+task:
+  name: "x86_64 Linux  [GOAL: install]  [bionic]  [Using ./ci/ system]"
+  container:
+    image: ubuntu:18.04
+    cpu: 8
+    memory: 8G
+  timeout_in: 60m
+  env:
+    MAKEJOBS: "-j9"
+    RUN_CI_ON_HOST: "1"
+    TEST_RUNNER_PORT_MIN: "14000"  # Must be larger than 12321, which is used for the http cache. See https://cirrus-ci.org/guide/writing-tasks/#http-cache
+    CCACHE_SIZE: "200M"
+    CCACHE_DIR: "/tmp/ccache_dir"
+  ccache_cache:
+    folder: "/tmp/ccache_dir"
+  depends_built_cache:
+    folder: "/tmp/cirrus-ci-build/depends/built"
+  depends_sdk_cache:
+    folder: "/tmp/cirrus-ci-build/depends/sdk-sources"
+  install_script:
+    - apt-get update
+    - apt-get -y install git bash ccache
+    - ccache --max-size=${CCACHE_SIZE}
+  ci_script:
+    - ./ci/test_run_all.sh

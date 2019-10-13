@@ -230,8 +230,9 @@ void SendCoinsDialog::on_sendButton_clicked()
             {
                 recipients.append(entry->getValue());
             }
-            else
+            else if (valid)
             {
+                ui->scrollArea->ensureWidgetVisible(entry);
                 valid = false;
             }
         }
@@ -282,7 +283,7 @@ void SendCoinsDialog::on_sendButton_clicked()
         // generate amount string with wallet name in case of multiwallet
         QString amount = BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
         if (model->isMultiwallet()) {
-            amount.append(tr(" from wallet '%1'").arg(model->getWalletName()));
+            amount.append(tr(" from wallet '%1'").arg(GUIUtil::HtmlEscape(model->getWalletName())));
         }
 
         // generate address string
@@ -296,7 +297,7 @@ void SendCoinsDialog::on_sendButton_clicked()
         {
             if(rcp.label.length() > 0) // label with address
             {
-                recipientElement.append(tr("%1 to '%2'").arg(amount, rcp.label));
+                recipientElement.append(tr("%1 to '%2'").arg(amount, GUIUtil::HtmlEscape(rcp.label)));
                 recipientElement.append(QString(" (%1)").arg(address));
             }
             else // just address
@@ -703,7 +704,7 @@ void SendCoinsDialog::updateSmartFeeLabel()
         int lightness = ui->fallbackFeeWarningLabel->palette().color(QPalette::WindowText).lightness();
         QColor warning_colour(255 - (lightness / 5), 176 - (lightness / 3), 48 - (lightness / 14));
         ui->fallbackFeeWarningLabel->setStyleSheet("QLabel { color: " + warning_colour.name() + "; }");
-        ui->fallbackFeeWarningLabel->setIndent(QFontMetrics(ui->fallbackFeeWarningLabel->font()).width("x"));
+        ui->fallbackFeeWarningLabel->setIndent(GUIUtil::TextWidth(QFontMetrics(ui->fallbackFeeWarningLabel->font()), "x"));
     }
     else
     {
@@ -926,11 +927,11 @@ void SendConfirmationDialog::updateYesButton()
     if(secDelay > 0)
     {
         yesButton->setEnabled(false);
-        yesButton->setText(tr("Yes") + " (" + QString::number(secDelay) + ")");
+        yesButton->setText(tr("Send") + " (" + QString::number(secDelay) + ")");
     }
     else
     {
         yesButton->setEnabled(true);
-        yesButton->setText(tr("Yes"));
+        yesButton->setText(tr("Send"));
     }
 }

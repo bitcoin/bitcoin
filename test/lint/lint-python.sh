@@ -73,7 +73,6 @@ enabled=(
     W291 # trailing whitespace
     W292 # no newline at end of file
     W293 # blank line contains whitespace
-    W504 # line break after binary operator
     W601 # .has_key() is deprecated, use "in"
     W602 # deprecated form of raising exception
     W603 # "<>" is deprecated, use "!="

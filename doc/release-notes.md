@@ -39,7 +39,7 @@ installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on Mac)
 or `bitcoind`/`bitcoin-qt` (on Linux).
 
 Upgrading directly from a version of Bitcoin Core that has reached its EOL is
-possible, but might take some time if the datadir needs to be migrated.  Old
+possible, but it might take some time if the datadir needs to be migrated. Old
 wallet versions of Bitcoin Core are generally supported.
 
 Compatibility
@@ -52,14 +52,13 @@ to use Bitcoin Core on unsupported systems.
 Bitcoin Core should also work on most other Unix-like systems but is not
 as frequently tested on them.
 
-From 0.17.0 onwards, macOS <10.10 is no longer supported. 0.17.0 is
-built using Qt 5.9.x, which doesn't support versions of macOS older than
-10.10. Additionally, Bitcoin Core does not yet change appearance when
+From Bitcoin Core 0.17.0 onwards, macOS versions earlier than 10.10 are no
+longer supported, as Bitcoin Core is now built using Qt 5.9.x which requires
+macOS 10.10+. Additionally, Bitcoin Core does not yet change appearance when
 macOS "dark mode" is activated.
 
-In addition to previously-supported CPU platforms, this release's
-pre-compiled distribution also provides binaries for the RISC-V
-platform.
+In addition to previously supported CPU platforms, this release's pre-compiled
+distribution provides binaries for the RISC-V platform.
 
 Notable changes
 ===============
@@ -67,11 +66,11 @@ Notable changes
 New RPCs
 --------
 
-- `getbalances` returns an object with all balances (`mine`,
-  `untrusted_pending` and `immature`). Please refer to the RPC help of
-  `getbalances` for details. The new RPC is intended to replace
-  `getunconfirmedbalance` and the balance fields in `getwalletinfo`, as well as
-  `getbalance`. The old calls may be removed in a future version.
+New settings
+------------
+
+Updated settings
+----------------
 
 Updated RPCs
 ------------
@@ -79,67 +78,23 @@ Updated RPCs
 Note: some low-level RPC changes mainly useful for testing are described in the
 Low-level Changes section below.
 
-- The `sendmany` RPC had an argument `minconf` that was not well specified and
-  would lead to RPC errors even when the wallet's coin selection would succeed.
-  The `sendtoaddress` RPC never had this check, so to normalize the behavior,
-  `minconf` is now ignored in `sendmany`. If the coin selection does not
-  succeed due to missing coins, it will still throw an RPC error. Be reminded
-  that coin selection is influenced by the `-spendzeroconfchange`,
-  `-limitancestorcount`, `-limitdescendantcount` and `-walletrejectlongchains`
-  command line arguments.
-
-Deprecated or removed RPCs
---------------------------
-
-- The `totalFee` option of the `bumpfee` RPC has been deprecated and will be
-  removed in 0.20.  To continue using this option start with
-  `-deprecatedrpc=totalFee`.  See the `bumpfee` RPC help text for more details.
-
-Low-level changes
-=================
-
-RPC
----
-
-
-Tests
------
-
-- The regression test chain, that can be enabled by the `-regtest` command line
-  flag, now requires transactions to not violate standard policy by default.
-  Making the default the same as for mainnet, makes it easier to test mainnet
-  behavior on regtest. Be reminded that the testnet still allows non-standard
-  txs by default and that the policy can be locally adjusted with the
-  `-acceptnonstdtxn` command line flag for both test chains.
-
-Configuration
-------------
-
-- An error is issued where previously a warning was issued when a setting in
-  the config file was specified in the default section, but not overridden for
-  the selected network. This change takes only effect if the selected network
-  is not mainnet.
-
-Network
--------
-
-- When fetching a transaction announced by multiple peers, previous versions of
-  Bitcoin Core would sequentially attempt to download the transaction from each
-  announcing peer until the transaction is received, in the order that those
-  peers' announcements were received.  In this release, the download logic has
-  changed to randomize the fetch order across peers and to prefer sending
-  download requests to outbound peers over inbound peers. This fixes an issue
-  where inbound peers can prevent a node from getting a transaction.
+GUI changes
+-----------
 
 Wallet
 ------
 
-- When in pruned mode, a rescan that was triggered by an `importwallet`,
-  `importpubkey`, `importaddress`, or `importprivkey` RPC will only fail when
-  blocks have been pruned. Previously it would fail when `-prune` has been set.
-  This change allows to set `-prune` to a high value (e.g. the disk size) and
-  the calls to any of the import RPCs would fail when the first block is
-  pruned.
+- The wallet now by default uses bech32 addresses when using RPC, and creates native segwit change outputs.
+
+Low-level changes
+=================
+
+Tests
+-----
+
+- `-fallbackfee` was 0 (disabled) by default for the main chain, but 0.0002 by default for the test chains. Now it is 0
+  by default for all chains. Testnet and regtest users will have to add `fallbackfee=0.0002` to their configuration if
+  they weren't setting it and they want it to keep working like before. (#16524)
 
 Credits
 =======
@@ -147,4 +102,5 @@ Credits
 Thanks to everyone who directly contributed to this release:
 
 
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/bitcoin/bitcoin/).
+As well as to everyone that helped with translations on
+[Transifex](https://www.transifex.com/bitcoin/bitcoin/).

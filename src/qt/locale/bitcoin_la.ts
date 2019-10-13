@@ -142,14 +142,6 @@
         <translation>&amp;Verifica nuntium...</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Cassidile</translation>
-    </message>
-    <message>
         <source>&amp;Send</source>
         <translation>&amp;Mitte</translation>
     </message>
@@ -226,6 +218,10 @@
         <translation>Recentissimo</translation>
     </message>
     <message>
+        <source>&amp;Window</source>
+        <translation>&amp;Fenestra</translation>
+    </message>
+    <message>
         <source>Catching up...</source>
         <translation>Persequens...</translation>
     </message>
@@ -264,6 +260,12 @@
         <source>Confirmed</source>
         <translation>Confirmatum</translation>
     </message>
+    </context>
+<context>
+    <name>CreateWalletActivity</name>
+    </context>
+<context>
+    <name>CreateWalletDialog</name>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -318,6 +320,9 @@
     </context>
 <context>
     <name>OpenURIDialog</name>
+    </context>
+<context>
+    <name>OpenWalletActivity</name>
     </context>
 <context>
     <name>OptionsDialog</name>
@@ -463,10 +468,15 @@
     </message>
 </context>
 <context>
-    <name>QObject::QObject</name>
-    </context>
-<context>
     <name>QRImageWidget</name>
+    <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>Resultato URI nimis longo, conare minuere verba pro titulo / nuntio.</translation>
+    </message>
+    <message>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>Error codificandi URI in codicem QR.</translation>
+    </message>
     </context>
 <context>
     <name>RPCConsole</name>
@@ -549,12 +559,20 @@
         <translation>&amp;Copia Inscriptionem</translation>
     </message>
     <message>
+        <source>Amount</source>
+        <translation>Quantitas</translation>
+    </message>
+    <message>
         <source>Wallet</source>
         <translation>Cassidile</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation>Dies</translation>
+    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -712,17 +730,26 @@
     </message>
     </context>
 <context>
-    <name>SplashScreen</name>
-    <message>
-        <source>[testnet]</source>
-        <translation>[testnet]</translation>
-    </message>
-</context>
-<context>
     <name>TrafficGraphWidget</name>
     </context>
 <context>
     <name>TransactionDesc</name>
+    <message>
+        <source>Date</source>
+        <translation>Dies</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>ignotum</translation>
+    </message>
+    <message>
+        <source>Transaction fee</source>
+        <translation>Transactionis merces</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>Quantitas</translation>
+    </message>
     </context>
 <context>
     <name>TransactionDescDialog</name>
@@ -733,28 +760,51 @@
     </context>
 <context>
     <name>TransactionTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation>Dies</translation>
+    </message>
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>Confirmed</source>
+        <translation>Confirmatum</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation>Dies</translation>
+    </message>
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
+    </context>
+<context>
+    <name>WalletController</name>
     </context>
 <context>
     <name>WalletFrame</name>
     </context>
 <context>
     <name>WalletModel</name>
+    <message>
+        <source>Send Coins</source>
+        <translation>Mitte Nummos</translation>
+    </message>
     </context>
 <context>
     <name>WalletView</name>
+    <message>
+        <source>&amp;Export</source>
+        <translation>&amp;Exporta</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Exporta data in hac tabella in plicam</translation>
+    </message>
     </context>
 <context>
     <name>bitcoin-core</name>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Nucleus</translation>
-    </message>
     <message>
         <source>Corrupted block database detected</source>
         <translation>Corruptum databasum frustorum invenitur</translation>
@@ -780,10 +830,6 @@
         <translation>Error aperiendo databasum frustorum</translation>
     </message>
     <message>
-        <source>Error: Disk space is low!</source>
-        <translation>Error: Inopia spatii disci!</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Non potuisse auscultare in ulla porta.  Utere -listen=0 si hoc vis.</translation>
     </message>
@@ -796,10 +842,6 @@
         <translation>Verificante frusta...</translation>
     </message>
     <message>
-        <source>Information</source>
-        <translation>Informatio</translation>
-    </message>
-    <message>
         <source>Signing transaction failed</source>
         <translation>Signandum transactionis abortum est</translation>
     </message>
@@ -810,10 +852,6 @@
     <message>
         <source>Transaction too large</source>
         <translation>Transactio nimis magna</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Monitio</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>
@@ -842,10 +880,6 @@
     <message>
         <source>Done loading</source>
         <translation>Completo lengendi</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Error</translation>
     </message>
 </context>
 </TS>

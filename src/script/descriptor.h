@@ -79,7 +79,15 @@ struct Descriptor {
  * If a parse error occurs, or the checksum is missing/invalid, or anything
  * else is wrong, nullptr is returned.
  */
-std::unique_ptr<Descriptor> Parse(const std::string& descriptor, FlatSigningProvider& out, bool require_checksum = false);
+std::unique_ptr<Descriptor> Parse(const std::string& descriptor, FlatSigningProvider& out, std::string& error, bool require_checksum = false);
+
+/** Get the checksum for a descriptor.
+ *
+ * If it already has one, and it is correct, return the checksum in the input.
+ * If it already has one that is wrong, return "".
+ * If it does not already have one, return the checksum that would need to be added.
+ */
+std::string GetDescriptorChecksum(const std::string& descriptor);
 
 /** Find a descriptor for the specified script, using information from provider where possible.
  *

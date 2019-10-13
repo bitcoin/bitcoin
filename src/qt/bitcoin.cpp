@@ -169,8 +169,11 @@ void BitcoinCore::shutdown()
     }
 }
 
-BitcoinApplication::BitcoinApplication(interfaces::Node& node, int &argc, char **argv):
-    QApplication(argc, argv),
+static int qt_argc = 1;
+static const char* qt_argv = "bitcoin-qt";
+
+BitcoinApplication::BitcoinApplication(interfaces::Node& node):
+    QApplication(qt_argc, const_cast<char **>(&qt_argv)),
     coreThread(nullptr),
     m_node(node),
     optionsModel(nullptr),
@@ -277,6 +280,10 @@ void BitcoinApplication::parameterSetup()
 
     m_node.initLogging();
     m_node.initParameterInteraction();
+}
+
+void BitcoinApplication::SetPrune(bool prune, bool force) {
+     optionsModel->SetPrune(prune, force);
 }
 
 void BitcoinApplication::requestInitialize()
@@ -409,7 +416,7 @@ int GuiMain(int argc, char* argv[])
     std::tie(argc, argv) = winArgs.get();
 #endif
     SetupEnvironment();
-    util::ThreadRename("main");
+    util::ThreadSetInternalName("main");
 
     std::unique_ptr<interfaces::Node> node = interfaces::MakeNode();
 
@@ -429,11 +436,8 @@ int GuiMain(int argc, char* argv[])
 #if QT_VERSION >= 0x050600
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 #endif
-#ifdef Q_OS_MAC
-    QApplication::setAttribute(Qt::AA_DontShowIconsInMenus);
-#endif
 
-    BitcoinApplication app(*node, argc, argv);
+    BitcoinApplication app(*node);
 
     // Register meta types used for QMetaObject::invokeMethod
     qRegisterMetaType< bool* >();
@@ -484,13 +488,14 @@ int GuiMain(int argc, char* argv[])
 
     /// 5. Now that settings and translations are available, ask user for data directory
     // User language is set up: pick a data directory
-    if (!Intro::pickDataDirectory(*node))
-        return EXIT_SUCCESS;
+    bool did_show_intro = false;
+    bool prune = false; // Intro dialog prune check box
+    // Gracefully exit if the user cancels
+    if (!Intro::showIfNeeded(*node, did_show_intro, prune)) return EXIT_SUCCESS;
 
-    /// 6. Determine availability of data and blocks directory and parse bitcoin.conf
+    /// 6. Determine availability of data directory and parse bitcoin.conf
     /// - Do not call GetDataDir(true) before this step finishes
-    if (!fs::is_directory(GetDataDir(false)))
-    {
+    if (!CheckDataDirOption()) {
         node->initError(strprintf("Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "")));
         QMessageBox::critical(nullptr, PACKAGE_NAME,
             QObject::tr("Error: Specified data directory \"%1\" does not exist.").arg(QString::fromStdString(gArgs.GetArg("-datadir", ""))));
@@ -509,7 +514,7 @@ int GuiMain(int argc, char* argv[])
     // - QSettings() will use the new application name after this, resulting in network-specific settings
     // - Needs to be done before createOptionsModel
 
-    // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
+    // Check for -chain, -testnet or -regtest parameter (Params() calls are only valid after this clause)
     try {
         node->selectParams(gArgs.GetChainName());
     } catch(std::exception &e) {
@@ -522,7 +527,7 @@ int GuiMain(int argc, char* argv[])
     PaymentServer::ipcParseCommandLine(*node, argc, argv);
 #endif
 
-    QScopedPointer<const NetworkStyle> networkStyle(NetworkStyle::instantiate(QString::fromStdString(Params().NetworkIDString())));
+    QScopedPointer<const NetworkStyle> networkStyle(NetworkStyle::instantiate(Params().NetworkIDString()));
     assert(!networkStyle.isNull());
     // Allow for separate UI settings for testnets
     QApplication::setApplicationName(networkStyle->getAppName());
@@ -559,6 +564,11 @@ int GuiMain(int argc, char* argv[])
     app.parameterSetup();
     // Load GUI settings from QSettings
     app.createOptionsModel(gArgs.GetBoolArg("-resetguisettings", false));
+
+    if (did_show_intro) {
+        // Store intro dialog settings other than datadir (network specific)
+        app.SetPrune(prune, true);
+    }
 
     if (gArgs.GetBoolArg("-splash", DEFAULT_SPLASHSCREEN) && !gArgs.GetBoolArg("-min", false))
         app.createSplashScreen(networkStyle.data());

@@ -30,7 +30,7 @@
 
   <key>CFBundleExecutable</key>
   <string>Bitcoin-Qt</string>
-  
+
   <key>CFBundleName</key>
   <string>Bitcoin-Qt</string>
 
@@ -99,7 +99,7 @@
 
   <key>NSRequiresAquaSystemAppearance</key>
     <string>True</string>
-  
+
   <key>LSApplicationCategoryType</key>
     <string>public.app-category.finance</string>
 </dict>

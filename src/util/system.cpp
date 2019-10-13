@@ -748,8 +748,9 @@ const fs::path &GetDataDir(bool fNetSpecific)
     // this function
     if (!path.empty()) return path;
 
-    if (gArgs.IsArgSet("-datadir")) {
-        path = fs::system_complete(gArgs.GetArg("-datadir", ""));
+    std::string datadir = gArgs.GetArg("-datadir", "");
+    if (!datadir.empty()) {
+        path = fs::system_complete(datadir);
         if (!fs::is_directory(path)) {
             path = "";
             return path;
@@ -766,6 +767,12 @@ const fs::path &GetDataDir(bool fNetSpecific)
     }
 
     return path;
+}
+
+bool CheckDataDirOption()
+{
+    std::string datadir = gArgs.GetArg("-datadir", "");
+    return datadir.empty() || fs::is_directory(fs::system_complete(datadir));
 }
 
 void ClearDatadirCache()
@@ -937,7 +944,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
 
     // If datadir is changed in .conf file:
     ClearDatadirCache();
-    if (!fs::is_directory(GetDataDir(false))) {
+    if (!CheckDataDirOption()) {
         error = strprintf("specified data directory \"%s\" does not exist.", gArgs.GetArg("-datadir", "").c_str());
         return false;
     }
@@ -947,16 +954,18 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
 std::string ArgsManager::GetChainName() const
 {
     LOCK(cs_args);
-    bool fRegTest = ArgsManagerHelper::GetNetBoolArg(*this, "-regtest");
-    bool fTestNet = ArgsManagerHelper::GetNetBoolArg(*this, "-testnet");
+    const bool fRegTest = ArgsManagerHelper::GetNetBoolArg(*this, "-regtest");
+    const bool fTestNet = ArgsManagerHelper::GetNetBoolArg(*this, "-testnet");
+    const bool is_chain_arg_set = IsArgSet("-chain");
 
-    if (fTestNet && fRegTest)
-        throw std::runtime_error("Invalid combination of -regtest and -testnet.");
+    if ((int)is_chain_arg_set + (int)fRegTest + (int)fTestNet > 1) {
+        throw std::runtime_error("Invalid combination of -regtest, -testnet and -chain. Can use at most one.");
+    }
     if (fRegTest)
         return CBaseChainParams::REGTEST;
     if (fTestNet)
         return CBaseChainParams::TESTNET;
-    return CBaseChainParams::MAIN;
+    return GetArg("-chain", CBaseChainParams::MAIN);
 }
 
 bool RenameOver(fs::path src, fs::path dest)
@@ -1144,12 +1153,12 @@ void SetupEnvironment()
     }
 #endif
     // On most POSIX systems (e.g. Linux, but not BSD) the environment's locale
-    // may be invalid, in which case the "C" locale is used as fallback.
+    // may be invalid, in which case the "C.UTF-8" locale is used as fallback.
 #if !defined(WIN32) && !defined(MAC_OSX) && !defined(__FreeBSD__) && !defined(__OpenBSD__)
     try {
         std::locale(""); // Raises a runtime error if current locale is invalid
     } catch (const std::runtime_error&) {
-        setenv("LC_ALL", "C", 1);
+        setenv("LC_ALL", "C.UTF-8", 1);
     }
 #elif defined(WIN32)
     // Set the default input/output charset is utf-8
@@ -1205,6 +1214,9 @@ int64_t GetStartupTime()
 
 fs::path AbsPathForConfigVal(const fs::path& path, bool net_specific)
 {
+    if (path.is_absolute()) {
+        return path;
+    }
     return fs::absolute(path, GetDataDir(net_specific));
 }
 
