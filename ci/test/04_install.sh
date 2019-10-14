@@ -6,6 +6,32 @@
 
 export LC_ALL=C.UTF-8
 
+if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+  set +o errexit
+  pushd /usr/local/Homebrew || exit 1
+  git reset --hard origin/master
+  popd || exit 1
+  set -o errexit
+  ${CI_RETRY_EXE} brew update
+  # brew upgrade returns an error if any of the packages is already up to date
+  # Failure is safe to ignore, unless we really need an update.
+  brew upgrade $BREW_PACKAGES || true
+
+  # install new packages (brew install returns an error if already installed)
+  for i in $BREW_PACKAGES; do
+    if ! brew list | grep -q $i; then
+      ${CI_RETRY_EXE} brew install $i
+    fi
+  done
+
+  export PATH="/usr/local/opt/ccache/libexec:$PATH"
+  OPENSSL_PKG_CONFIG_PATH="/usr/local/opt/openssl@1.1/lib/pkgconfig"
+  export PKG_CONFIG_PATH=$OPENSSL_PKG_CONFIG_PATH:$PKG_CONFIG_PATH
+
+  ${CI_RETRY_EXE} pip3 install $PIP_PACKAGES
+
+fi
+
 mkdir -p "${BASE_SCRATCH_DIR}"
 mkdir -p "${CCACHE_DIR}"
 
@@ -41,15 +67,22 @@ else
 fi
 export -f DOCKER_EXEC
 
-DOCKER_EXEC free -m -h
-DOCKER_EXEC echo "Number of CPUs \(nproc\):" \$\(nproc\)
+if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+  top -l 1 -s 0 | awk ' /PhysMem/ {print}'
+  echo "Number of CPUs: $(sysctl -n hw.logicalcpu)"
+else
+  DOCKER_EXEC free -m -h
+  DOCKER_EXEC echo "Number of CPUs \(nproc\):" \$\(nproc\)
+fi
 
 if [ -n "$DPKG_ADD_ARCH" ]; then
   DOCKER_EXEC dpkg --add-architecture "$DPKG_ADD_ARCH"
 fi
 
-${CI_RETRY_EXE} DOCKER_EXEC apt-get update
-${CI_RETRY_EXE} DOCKER_EXEC apt-get install --no-install-recommends --no-upgrade -y $PACKAGES $DOCKER_PACKAGES
+if [ "$TRAVIS_OS_NAME" != "osx" ]; then
+  ${CI_RETRY_EXE} DOCKER_EXEC apt-get update
+  ${CI_RETRY_EXE} DOCKER_EXEC apt-get install --no-install-recommends --no-upgrade -y $PACKAGES $DOCKER_PACKAGES
+fi
 
 if [ ! -d ${DIR_QA_ASSETS} ]; then
   DOCKER_EXEC git clone https://github.com/bitcoin-core/qa-assets ${DIR_QA_ASSETS}
