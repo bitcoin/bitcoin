@@ -337,9 +337,12 @@ int CreateFundedTransaction(
     bool missing_inputs;
     CTransactionRef ctx(MakeTransactionRef(std::move(tx)));
 
-    if (!AcceptToMemoryPool(mempool, state, ctx, &missing_inputs, nullptr, false, DEFAULT_TRANSACTION_MAXFEE)) {
-        PrintToLog("%s: ERROR: failed to broadcast transaction: %s\n", __func__, state.GetRejectReason());
-        return MP_ERR_COMMIT_TX;
+    {
+        LOCK(cs_main);
+        if (!AcceptToMemoryPool(mempool, state, ctx, &missing_inputs, nullptr, false, DEFAULT_TRANSACTION_MAXFEE)) {
+            PrintToLog("%s: ERROR: failed to broadcast transaction: %s\n", __func__, state.GetRejectReason());
+            return MP_ERR_COMMIT_TX;
+        }
     }
 
     uint256 txid;
