@@ -4,13 +4,13 @@
 
 #include "httpserver.h"
 
+#include "init.h"
 #include "chainparamsbase.h"
 #include "compat.h"
 #include "util.h"
 #include "utilstrencodings.h"
 #include "netbase.h"
 #include "rpc/protocol.h" // For HTTP status codes
-#include "shutdown.h"
 #include "sync.h"
 #include "ui_interface.h"
 
@@ -36,6 +36,10 @@
 #include <arpa/inet.h>
 #endif
 #endif
+
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 
 /** Maximum size of http request (request line + headers) */
 static const size_t MAX_HEADERS_SIZE = 8192;
