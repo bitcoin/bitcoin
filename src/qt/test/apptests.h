@@ -18,6 +18,7 @@ class AppTests : public QObject
 {
     Q_OBJECT
 public:
+    //! Entry point for AppTests
     explicit AppTests(BitcoinApplication& app) : m_app(app) {}
 
 private Q_SLOTS:
