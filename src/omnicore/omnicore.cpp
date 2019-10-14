@@ -1648,162 +1648,171 @@ void RewindDBsAndState(int nHeight, int nBlockPrev = 0, bool fInitialParse = fal
  */
 int mastercore_init()
 {
-    LOCK(cs_tally);
+    {
+        LOCK(cs_tally);
 
-    if (mastercoreInitialized) {
-        // nothing to do
-        return 0;
-    }
-
-    PrintToConsole("Initializing Omni Core v%s [%s]\n", OmniCoreVersion(), Params().NetworkIDString());
-
-    PrintToLog("\nInitializing Omni Core v%s [%s]\n", OmniCoreVersion(), Params().NetworkIDString());
-    PrintToLog("Startup time: %s\n", FormatISO8601DateTime(GetTime()));
-
-    InitDebugLogLevels();
-    ShrinkDebugLog();
-
-    if (isNonMainNet()) {
-        exodus_address = exodus_testnet;
-    }
-
-    // check for --autocommit option and set transaction commit flag accordingly
-    if (!gArgs.GetBoolArg("-autocommit", true)) {
-        PrintToLog("Process was started with --autocommit set to false. "
-                "Created Omni transactions will not be committed to wallet or broadcast.\n");
-        autoCommit = false;
-    }
-
-    // check for --startclean option and delete MP_ folders if present
-    bool startClean = false;
-    if (gArgs.GetBoolArg("-startclean", false)) {
-        PrintToLog("Process was started with --startclean option, attempting to clear persistence files..\n");
-        try {
-            fs::path persistPath = GetDataDir() / "MP_persist";
-            fs::path txlistPath = GetDataDir() / "MP_txlist";
-            fs::path tradePath = GetDataDir() / "MP_tradelist";
-            fs::path spPath = GetDataDir() / "MP_spinfo";
-            fs::path stoPath = GetDataDir() / "MP_stolist";
-            fs::path omniTXDBPath = GetDataDir() / "Omni_TXDB";
-            fs::path feesPath = GetDataDir() / "OMNI_feecache";
-            fs::path feeHistoryPath = GetDataDir() / "OMNI_feehistory";
-            if (fs::exists(persistPath)) fs::remove_all(persistPath);
-            if (fs::exists(txlistPath)) fs::remove_all(txlistPath);
-            if (fs::exists(tradePath)) fs::remove_all(tradePath);
-            if (fs::exists(spPath)) fs::remove_all(spPath);
-            if (fs::exists(stoPath)) fs::remove_all(stoPath);
-            if (fs::exists(omniTXDBPath)) fs::remove_all(omniTXDBPath);
-            if (fs::exists(feesPath)) fs::remove_all(feesPath);
-            if (fs::exists(feeHistoryPath)) fs::remove_all(feeHistoryPath);
-            PrintToLog("Success clearing persistence files in datadir %s\n", GetDataDir().string());
-            startClean = true;
-        } catch (const fs::filesystem_error& e) {
-            PrintToLog("Failed to delete persistence folders: %s\n", e.what());
-            PrintToConsole("Failed to delete persistence folders: %s\n", e.what());
+        if (mastercoreInitialized) {
+            // nothing to do
+            return 0;
         }
+
+        PrintToConsole("Initializing Omni Core v%s [%s]\n", OmniCoreVersion(), Params().NetworkIDString());
+
+        PrintToLog("\nInitializing Omni Core v%s [%s]\n", OmniCoreVersion(), Params().NetworkIDString());
+        PrintToLog("Startup time: %s\n", FormatISO8601DateTime(GetTime()));
+
+        InitDebugLogLevels();
+        ShrinkDebugLog();
+
+        if (isNonMainNet()) {
+            exodus_address = exodus_testnet;
+        }
+
+        // check for --autocommit option and set transaction commit flag accordingly
+        if (!gArgs.GetBoolArg("-autocommit", true)) {
+            PrintToLog("Process was started with --autocommit set to false. "
+                    "Created Omni transactions will not be committed to wallet or broadcast.\n");
+            autoCommit = false;
+        }
+
+        // check for --startclean option and delete MP_ folders if present
+        bool startClean = false;
+        if (gArgs.GetBoolArg("-startclean", false)) {
+            PrintToLog("Process was started with --startclean option, attempting to clear persistence files..\n");
+            try {
+                fs::path persistPath = GetDataDir() / "MP_persist";
+                fs::path txlistPath = GetDataDir() / "MP_txlist";
+                fs::path tradePath = GetDataDir() / "MP_tradelist";
+                fs::path spPath = GetDataDir() / "MP_spinfo";
+                fs::path stoPath = GetDataDir() / "MP_stolist";
+                fs::path omniTXDBPath = GetDataDir() / "Omni_TXDB";
+                fs::path feesPath = GetDataDir() / "OMNI_feecache";
+                fs::path feeHistoryPath = GetDataDir() / "OMNI_feehistory";
+                if (fs::exists(persistPath)) fs::remove_all(persistPath);
+                if (fs::exists(txlistPath)) fs::remove_all(txlistPath);
+                if (fs::exists(tradePath)) fs::remove_all(tradePath);
+                if (fs::exists(spPath)) fs::remove_all(spPath);
+                if (fs::exists(stoPath)) fs::remove_all(stoPath);
+                if (fs::exists(omniTXDBPath)) fs::remove_all(omniTXDBPath);
+                if (fs::exists(feesPath)) fs::remove_all(feesPath);
+                if (fs::exists(feeHistoryPath)) fs::remove_all(feeHistoryPath);
+                PrintToLog("Success clearing persistence files in datadir %s\n", GetDataDir().string());
+                startClean = true;
+            } catch (const fs::filesystem_error& e) {
+                PrintToLog("Failed to delete persistence folders: %s\n", e.what());
+                PrintToConsole("Failed to delete persistence folders: %s\n", e.what());
+            }
+        }
+
+        pDbTradeList = new CMPTradeList(GetDataDir() / "MP_tradelist", fReindex);
+        pDbStoList = new CMPSTOList(GetDataDir() / "MP_stolist", fReindex);
+        pDbTransactionList = new CMPTxList(GetDataDir() / "MP_txlist", fReindex);
+        pDbSpInfo = new CMPSPInfo(GetDataDir() / "MP_spinfo", fReindex);
+        pDbTransaction = new COmniTransactionDB(GetDataDir() / "Omni_TXDB", fReindex);
+        pDbFeeCache = new COmniFeeCache(GetDataDir() / "OMNI_feecache", fReindex);
+        pDbFeeHistory = new COmniFeeHistory(GetDataDir() / "OMNI_feehistory", fReindex);
+
+        pathStateFiles = GetDataDir() / "MP_persist";
+        TryCreateDirectories(pathStateFiles);
+
+        bool wrongDBVersion = (pDbTransactionList->getDBVersion() != DB_VERSION);
+
+        ++mastercoreInitialized;
+
+        nWaterlineBlock = LoadMostRelevantInMemoryState();
+
+        if (!startClean && nWaterlineBlock > 0 && nWaterlineBlock < GetHeight()) {
+            RewindDBsAndState(nWaterlineBlock + 1, 0, true);
+        }
+
+        bool noPreviousState = (nWaterlineBlock <= 0);
+
+        if (startClean) {
+            assert(pDbTransactionList->setDBVersion() == DB_VERSION); // new set of databases, set DB version
+        } else if (wrongDBVersion) {
+            nWaterlineBlock = -1; // force a clear_all_state and parse from start
+        }
+
+        // consistency check
+        bool inconsistentDb = !VerifyTransactionExistence(nWaterlineBlock);
+        if (inconsistentDb) {
+            nWaterlineBlock = -1; // force a clear_all_state and parse from start
+        }
+
+        if (nWaterlineBlock > 0) {
+            PrintToConsole("Loading persistent state: OK [block %d]\n", nWaterlineBlock);
+        } else {
+            std::string strReason = "unknown";
+            if (wrongDBVersion) strReason = "client version changed";
+            if (noPreviousState) strReason = "no usable previous state found";
+            if (startClean) strReason = "-startclean parameter used";
+            if (inconsistentDb) strReason = "INCONSISTENT DB DETECTED!\n"
+                    "\n!!! WARNING !!!\n\n"
+                    "IF YOU ARE USING AN OVERLAY DB, YOU MAY NEED TO REPROCESS\n"
+                    "ALL OMNI LAYER TRANSACTIONS TO AVOID INCONSISTENCIES!\n"
+                    "\n!!! WARNING !!!";
+            PrintToConsole("Loading persistent state: NONE (%s)\n", strReason);
+        }
+
+        if (nWaterlineBlock < 0) {
+            // persistence says we reparse!, nuke some stuff in case the partial loads left stale bits
+            clear_all_state();
+        }
+
+        if (inconsistentDb) {
+            std::string strAlert("INCONSISTENT DB DETECTED! IF YOU ARE USING AN OVERLAY DB, YOU MAY NEED TO REPROCESS"
+                    "ALL OMNI LAYER TRANSACTIONS TO AVOID INCONSISTENCIES!");
+            AddAlert("omnicore", ALERT_CLIENT_VERSION_EXPIRY, std::numeric_limits<uint32_t>::max(), strAlert);
+            DoWarning(strAlert);
+        }
+
+        // legacy code, setting to pre-genesis-block
+        int snapshotHeight = ConsensusParams().GENESIS_BLOCK - 1;
+
+        if (nWaterlineBlock < snapshotHeight) {
+            nWaterlineBlock = snapshotHeight;
+            exodus_prev = 0;
+        }
+
+        // advance the waterline so that we start on the next unaccounted for block
+        nWaterlineBlock += 1;
+
+        // collect the real Exodus balances available at the snapshot time
+        // redundant? do we need to show it both pre-parse and post-parse?  if so let's label the printfs accordingly
+        if (msc_debug_exo) {
+            int64_t exodus_balance = GetTokenBalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
+            PrintToLog("Exodus balance at start: %s\n", FormatDivisibleMP(exodus_balance));
+        }
+
+        // load feature activation messages from txlistdb and process them accordingly
+        pDbTransactionList->LoadActivations(nWaterlineBlock);
     }
 
-    pDbTradeList = new CMPTradeList(GetDataDir() / "MP_tradelist", fReindex);
-    pDbStoList = new CMPSTOList(GetDataDir() / "MP_stolist", fReindex);
-    pDbTransactionList = new CMPTxList(GetDataDir() / "MP_txlist", fReindex);
-    pDbSpInfo = new CMPSPInfo(GetDataDir() / "MP_spinfo", fReindex);
-    pDbTransaction = new COmniTransactionDB(GetDataDir() / "Omni_TXDB", fReindex);
-    pDbFeeCache = new COmniFeeCache(GetDataDir() / "OMNI_feecache", fReindex);
-    pDbFeeHistory = new COmniFeeHistory(GetDataDir() / "OMNI_feehistory", fReindex);
-
-    pathStateFiles = GetDataDir() / "MP_persist";
-    TryCreateDirectories(pathStateFiles);
-
-    bool wrongDBVersion = (pDbTransactionList->getDBVersion() != DB_VERSION);
-
-    ++mastercoreInitialized;
-
-    nWaterlineBlock = LoadMostRelevantInMemoryState();
-
-    if (!startClean && nWaterlineBlock > 0 && nWaterlineBlock < GetHeight()) {
-        RewindDBsAndState(nWaterlineBlock + 1, 0, true);
+    {
+        LOCK2(cs_main, cs_tally);
+        // load all alerts from levelDB (and immediately expire old ones)
+        pDbTransactionList->LoadAlerts(nWaterlineBlock);
     }
 
-    bool noPreviousState = (nWaterlineBlock <= 0);
+    {
+        LOCK(cs_tally);
+        // load the state of any freeable properties and frozen addresses from levelDB
+        if (!pDbTransactionList->LoadFreezeState(nWaterlineBlock)) {
+            std::string strShutdownReason = "Failed to load freeze state from levelDB.  It is unsafe to continue.\n";
+            PrintToLog(strShutdownReason);
+            if (!gArgs.GetBoolArg("-overrideforcedshutdown", false)) {
+                DoAbortNode(strShutdownReason, strShutdownReason);
+            }
+        }
 
-    if (startClean) {
-        assert(pDbTransactionList->setDBVersion() == DB_VERSION); // new set of databases, set DB version
-    } else if (wrongDBVersion) {
-        nWaterlineBlock = -1; // force a clear_all_state and parse from start
-    }
+        // initial scan
+        msc_initial_scan(nWaterlineBlock);
 
-    // consistency check
-    bool inconsistentDb = !VerifyTransactionExistence(nWaterlineBlock);
-    if (inconsistentDb) {
-        nWaterlineBlock = -1; // force a clear_all_state and parse from start
-    }
-
-    if (nWaterlineBlock > 0) {
-        PrintToConsole("Loading persistent state: OK [block %d]\n", nWaterlineBlock);
-    } else {
-        std::string strReason = "unknown";
-        if (wrongDBVersion) strReason = "client version changed";
-        if (noPreviousState) strReason = "no usable previous state found";
-        if (startClean) strReason = "-startclean parameter used";
-        if (inconsistentDb) strReason = "INCONSISTENT DB DETECTED!\n"
-                "\n!!! WARNING !!!\n\n"
-                "IF YOU ARE USING AN OVERLAY DB, YOU MAY NEED TO REPROCESS\n"
-                "ALL OMNI LAYER TRANSACTIONS TO AVOID INCONSISTENCIES!\n"
-                "\n!!! WARNING !!!";
-        PrintToConsole("Loading persistent state: NONE (%s)\n", strReason);
-    }
-
-    if (nWaterlineBlock < 0) {
-        // persistence says we reparse!, nuke some stuff in case the partial loads left stale bits
-        clear_all_state();
-    }
-
-    if (inconsistentDb) {
-        std::string strAlert("INCONSISTENT DB DETECTED! IF YOU ARE USING AN OVERLAY DB, YOU MAY NEED TO REPROCESS"
-                "ALL OMNI LAYER TRANSACTIONS TO AVOID INCONSISTENCIES!");
-        AddAlert("omnicore", ALERT_CLIENT_VERSION_EXPIRY, std::numeric_limits<uint32_t>::max(), strAlert);
-        DoWarning(strAlert);
-    }
-
-    // legacy code, setting to pre-genesis-block
-    int snapshotHeight = ConsensusParams().GENESIS_BLOCK - 1;
-
-    if (nWaterlineBlock < snapshotHeight) {
-        nWaterlineBlock = snapshotHeight;
-        exodus_prev = 0;
-    }
-
-    // advance the waterline so that we start on the next unaccounted for block
-    nWaterlineBlock += 1;
-
-    // collect the real Exodus balances available at the snapshot time
-    // redundant? do we need to show it both pre-parse and post-parse?  if so let's label the printfs accordingly
-    if (msc_debug_exo) {
+        // display Exodus balance
         int64_t exodus_balance = GetTokenBalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
-        PrintToLog("Exodus balance at start: %s\n", FormatDivisibleMP(exodus_balance));
+
+        PrintToLog("Exodus balance after initialization: %s\n", FormatDivisibleMP(exodus_balance));
     }
-
-    // load feature activation messages from txlistdb and process them accordingly
-    pDbTransactionList->LoadActivations(nWaterlineBlock);
-
-    // load all alerts from levelDB (and immediately expire old ones)
-    pDbTransactionList->LoadAlerts(nWaterlineBlock);
-
-    // load the state of any freeable properties and frozen addresses from levelDB
-    if (!pDbTransactionList->LoadFreezeState(nWaterlineBlock)) {
-        std::string strShutdownReason = "Failed to load freeze state from levelDB.  It is unsafe to continue.\n";
-        PrintToLog(strShutdownReason);
-        if (!gArgs.GetBoolArg("-overrideforcedshutdown", false)) {
-            DoAbortNode(strShutdownReason, strShutdownReason);
-        }
-    }
-
-    // initial scan
-    msc_initial_scan(nWaterlineBlock);
-
-    // display Exodus balance
-    int64_t exodus_balance = GetTokenBalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
-    PrintToLog("Exodus balance after initialization: %s\n", FormatDivisibleMP(exodus_balance));
 
     PrintToConsole("Omni Core initialization completed\n");
 
