@@ -197,6 +197,11 @@ public:
         }
         return GuessVerificationProgress(Params().TxData(), tip);
     }
+    bool havePruned() override
+    {
+        LOCK(cs_main);
+        return ::fHavePruned;
+    }
     bool isInitialBlockDownload() override { return ::ChainstateActive().IsInitialBlockDownload(); }
     bool getReindex() override { return ::fReindex; }
     bool getImporting() override { return ::fImporting; }

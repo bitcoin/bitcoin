@@ -152,6 +152,9 @@ public:
     //! Get verification progress.
     virtual double getVerificationProgress() = 0;
 
+    //! Check if any block has been pruned.
+    virtual bool havePruned() = 0;
+
     //! Is initial block download.
     virtual bool isInitialBlockDownload() = 0;
 
