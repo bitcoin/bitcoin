@@ -65,11 +65,12 @@ Q_DECLARE_METATYPE(uint256)
 
 static QString GetLangTerritory()
 {
-    QSettings settings;
     // Get desired locale (e.g. "de_DE")
     // 1) System default language
     QString lang_territory = QLocale::system().name();
-    // 2) Language from QSettings
+    // 2) Language from QSettings (DEPRECATED)
+    // This method is called before QSetting "language" is migrated to config file.
+    QSettings settings;
     QString lang_territory_qsettings = settings.value("language", "").toString();
     if(!lang_territory_qsettings.isEmpty())
         lang_territory = lang_territory_qsettings;

@@ -272,7 +272,7 @@ public:
     bool SoftSetBoolArg(const std::string& strArg, bool fValue);
 
     // Forces an arg setting. Called by SoftSetArg() if the arg hasn't already
-    // been set. Also called directly in testing.
+    // been set. Also used in testing and when migrating from QTSettings.
     void ForceSetArg(const std::string& strArg, const std::string& strValue);
 
     /**

@@ -14,6 +14,7 @@
 
 #include <interfaces/node.h>
 #include <validation.h> // For DEFAULT_SCRIPTCHECK_THREADS
+#include <wallet/walletconstants.h>
 #include <net.h>
 #include <netbase.h>
 #include <txdb.h> // for -dbcache defaults
@@ -30,10 +31,6 @@ OptionsModel::OptionsModel(interfaces::Node& node, QObject *parent, bool resetSe
     QAbstractListModel(parent), m_node(node)
 {
     Init(resetSettings);
-}
-
-void OptionsModel::addOverriddenOption(const std::string &option)
-{
 }
 
 // Writes all missing QSettings with their default values
@@ -78,80 +75,13 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("fCoinControlFeatures", false);
     fCoinControlFeatures = settings.value("fCoinControlFeatures", false).toBool();
 
-    // These are shared with the core or have a command-line parameter
-    // and we want command-line parameters to overwrite the GUI settings.
-    //
+    // These are shared with the core.
     // If setting doesn't exist create it with defaults.
-    //
-    // If gArgs.SoftSetArg() or gArgs.SoftSetBoolArg() return false we were overridden
-    // by command-line and show this in the UI.
 
     // Main
-    if (!settings.contains("bPrune"))
-        settings.setValue("bPrune", false);
-    if (!settings.contains("nPruneSize"))
-        settings.setValue("nPruneSize", 2);
-    SetPrune(settings.value("bPrune").toBool());
-
-    if (!settings.contains("nDatabaseCache"))
-        settings.setValue("nDatabaseCache", (qint64)nDefaultDbCache);
-    if (!m_node.softSetArg("-dbcache", settings.value("nDatabaseCache").toString().toStdString()))
-        addOverriddenOption("-dbcache");
-
-    if (!settings.contains("nThreadsScriptVerif"))
-        settings.setValue("nThreadsScriptVerif", DEFAULT_SCRIPTCHECK_THREADS);
-    if (!m_node.softSetArg("-par", settings.value("nThreadsScriptVerif").toString().toStdString()))
-        addOverriddenOption("-par");
 
     if (!settings.contains("strDataDir"))
         settings.setValue("strDataDir", GUIUtil::getDefaultDataDirectory());
-
-    // Wallet
-#ifdef ENABLE_WALLET
-    if (!settings.contains("bSpendZeroConfChange"))
-        settings.setValue("bSpendZeroConfChange", true);
-    if (!m_node.softSetBoolArg("-spendzeroconfchange", settings.value("bSpendZeroConfChange").toBool()))
-        addOverriddenOption("-spendzeroconfchange");
-#endif
-
-    // Network
-    if (!settings.contains("fUseUPnP"))
-        settings.setValue("fUseUPnP", DEFAULT_UPNP);
-    if (!m_node.softSetBoolArg("-upnp", settings.value("fUseUPnP").toBool()))
-        addOverriddenOption("-upnp");
-
-    if (!settings.contains("fListen"))
-        settings.setValue("fListen", DEFAULT_LISTEN);
-    if (!m_node.softSetBoolArg("-listen", settings.value("fListen").toBool()))
-        addOverriddenOption("-listen");
-
-    if (!settings.contains("fUseProxy"))
-        settings.setValue("fUseProxy", false);
-    if (!settings.contains("addrProxy"))
-        settings.setValue("addrProxy", GetDefaultProxyAddress());
-    // Only try to set -proxy, if user has enabled fUseProxy
-    if (settings.value("fUseProxy").toBool() && !m_node.softSetArg("-proxy", settings.value("addrProxy").toString().toStdString()))
-        addOverriddenOption("-proxy");
-    else if(!settings.value("fUseProxy").toBool() && !gArgs.GetArg("-proxy", "").empty())
-        addOverriddenOption("-proxy");
-
-    if (!settings.contains("fUseSeparateProxyTor"))
-        settings.setValue("fUseSeparateProxyTor", false);
-    if (!settings.contains("addrSeparateProxyTor"))
-        settings.setValue("addrSeparateProxyTor", GetDefaultProxyAddress());
-    // Only try to set -onion, if user has enabled fUseSeparateProxyTor
-    if (settings.value("fUseSeparateProxyTor").toBool() && !m_node.softSetArg("-onion", settings.value("addrSeparateProxyTor").toString().toStdString()))
-        addOverriddenOption("-onion");
-    else if(!settings.value("fUseSeparateProxyTor").toBool() && !gArgs.GetArg("-onion", "").empty())
-        addOverriddenOption("-onion");
-
-    // Display
-    if (!settings.contains("language"))
-        settings.setValue("language", "");
-    if (!m_node.softSetArg("-lang", settings.value("language").toString().toStdString()))
-        addOverriddenOption("-lang");
-
-    language = settings.value("language").toString();
 }
 
 /** Helper function to copy contents from one QSettings to another.
@@ -249,13 +179,12 @@ void OptionsModel::SetPrune(bool prune, bool force)
         m_node.forceSetArg("-prune", prune_val);
         return;
     }
-    if (!m_node.softSetArg("-prune", prune_val)) {
-    }
 }
 
 // read QSettings values and return them
 QVariant OptionsModel::data(const QModelIndex & index, int role) const
 {
+    int64_t prune = -1;
     if(role == Qt::EditRole)
     {
         QSettings settings;
@@ -269,7 +198,7 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return fMinimizeToTray;
         case MapPortUPnP:
 #ifdef USE_UPNP
-            return settings.value("fUseUPnP");
+            return gArgs.GetBoolArg("-upnp", DEFAULT_UPNP);
 #else
             return false;
 #endif
@@ -278,7 +207,7 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
 
         // default proxy
         case ProxyUse:
-            return settings.value("fUseProxy", false);
+            return gArgs.GetArg("-proxy", "") != "";
         case ProxyIP:
             return GetProxySetting(settings, "addrProxy").ip;
         case ProxyPort:
@@ -286,7 +215,7 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
 
         // separate Tor proxy
         case ProxyUseTor:
-            return settings.value("fUseSeparateProxyTor", false);
+            return gArgs.GetArg("-onion", "") != "";
         case ProxyIPTor:
             return GetProxySetting(settings, "addrSeparateProxyTor").ip;
         case ProxyPortTor:
@@ -294,26 +223,35 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
 
 #ifdef ENABLE_WALLET
         case SpendZeroConfChange:
-            return settings.value("bSpendZeroConfChange");
+            return gArgs.GetBoolArg("-spendzeroconfchange", DEFAULT_SPEND_ZEROCONF_CHANGE);
 #endif
         case DisplayUnit:
             return nDisplayUnit;
         case ThirdPartyTxUrls:
             return strThirdPartyTxUrls;
         case Language:
-            return settings.value("language");
+            return QString::fromStdString(gArgs.GetArg("-lang", ""));
         case CoinControlFeatures:
             return fCoinControlFeatures;
         case Prune:
-            return settings.value("bPrune");
+            prune = gArgs.GetArg("-prune", 0);
+            // prune=0  is the default, prune=1 is set if the chain has actually been pruned
+            return !(prune == 0 || prune == 1);
         case PruneSize:
-            return settings.value("nPruneSize");
+            prune = gArgs.GetArg("-prune", 0);
+            if (prune == 0 || prune == 1) {
+              // When automatic pruning is disabled, fall back to settings in order to remember the last used value
+              return settings.value("nPruneSize");
+            } else {
+              return qlonglong(prune / 1000);
+            }
         case DatabaseCache:
-            return settings.value("nDatabaseCache");
+            // (int64_t) is required for QT4
+            return (qlonglong)gArgs.GetArg("-dbcache", (qint64)nDefaultDbCache);
         case ThreadsScriptVerif:
-            return settings.value("nThreadsScriptVerif");
+            return (qlonglong)gArgs.GetArg("-par", DEFAULT_SCRIPTCHECK_THREADS);
         case Listen:
-            return settings.value("fListen");
+            return gArgs.GetBoolArg("-listen", DEFAULT_LISTEN);
         default:
             return QVariant();
         }
@@ -325,6 +263,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
 bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, int role)
 {
     bool successful = true; /* set to false on parse error */
+    uint64_t prune = 0; // in GB
+    uint64_t nPruneSizeMiB = 0;
     if(role == Qt::EditRole)
     {
         QSettings settings;
@@ -342,8 +282,11 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             fMinimizeToTray = value.toBool();
             settings.setValue("fMinimizeToTray", fMinimizeToTray);
             break;
-        case MapPortUPnP: // core option - can be changed on-the-fly
-            settings.setValue("fUseUPnP", value.toBool());
+        case MapPortUPnP:
+            if (gArgs.GetBoolArg("-upnp", DEFAULT_UPNP) != value) {
+                gArgs.ModifyRWConfigFile("upnp", value.toBool() ? "1" : "0");
+                gArgs.ForceSetArg("-upnp", value.toBool() ? "1" : "0");
+            }
             m_node.mapPort(value.toBool());
             break;
         case MinimizeOnClose:
@@ -353,8 +296,16 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
 
         // default proxy
         case ProxyUse:
-            if (settings.value("fUseProxy") != value) {
-                settings.setValue("fUseProxy", value.toBool());
+            if (value.toBool() ^ (gArgs.GetArg("-proxy", "") != "")) {
+                if (value.toBool()) {
+                    // Turn on proxy
+                    gArgs.ModifyRWConfigFile("proxy", settings.value("addrProxy").toString().toStdString());
+                    gArgs.ForceSetArg("-proxy", settings.value("addrProxy").toString().toStdString());
+                } else {
+                    // Turn off proxy
+                    gArgs.ModifyRWConfigFile("proxy", "");
+                    gArgs.ForceSetArg("-proxy", "");
+                }
                 setRestartRequired(true);
             }
             break;
@@ -363,6 +314,10 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             if (!ip_port.is_set || ip_port.ip != value.toString()) {
                 ip_port.ip = value.toString();
                 SetProxySetting(settings, "addrProxy", ip_port);
+                if (gArgs.GetArg("-proxy", "") != "") {
+                    gArgs.ModifyRWConfigFile("proxy", settings.value("addrProxy").toString().toStdString());
+                    gArgs.ForceSetArg("-proxy", settings.value("addrProxy").toString().toStdString());
+                }
                 setRestartRequired(true);
             }
         }
@@ -372,6 +327,10 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             if (!ip_port.is_set || ip_port.port != value.toString()) {
                 ip_port.port = value.toString();
                 SetProxySetting(settings, "addrProxy", ip_port);
+                if (gArgs.GetArg("-proxy", "") != "") {
+                    gArgs.ModifyRWConfigFile("proxy", settings.value("addrProxy").toString().toStdString());
+                    gArgs.ForceSetArg("-proxy", settings.value("addrProxy").toString().toStdString());
+                }
                 setRestartRequired(true);
             }
         }
@@ -379,8 +338,16 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
 
         // separate Tor proxy
         case ProxyUseTor:
-            if (settings.value("fUseSeparateProxyTor") != value) {
-                settings.setValue("fUseSeparateProxyTor", value.toBool());
+            if (value.toBool() ^ (gArgs.GetArg("-onion", "") != "")) {
+                if (value.toBool()) {
+                    // Turn on proxy
+                    gArgs.ModifyRWConfigFile("onion", settings.value("addrSeparateProxyTor").toString().toStdString());
+                    gArgs.ForceSetArg("-onion", settings.value("addrSeparateProxyTor").toString().toStdString());
+                } else {
+                    // Turn off proxy
+                    gArgs.ModifyRWConfigFile("onion", "");
+                    gArgs.ForceSetArg("-onion", "");
+                }
                 setRestartRequired(true);
             }
             break;
@@ -389,6 +356,10 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             if (!ip_port.is_set || ip_port.ip != value.toString()) {
                 ip_port.ip = value.toString();
                 SetProxySetting(settings, "addrSeparateProxyTor", ip_port);
+                if (gArgs.GetArg("-onion", "") != "") {
+                    gArgs.ModifyRWConfigFile("onion", settings.value("addrSeparateProxyTor").toString().toStdString());
+                    gArgs.ForceSetArg("-onion", settings.value("addrSeparateProxyTor").toString().toStdString());
+                }
                 setRestartRequired(true);
             }
         }
@@ -398,6 +369,10 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             if (!ip_port.is_set || ip_port.port != value.toString()) {
                 ip_port.port = value.toString();
                 SetProxySetting(settings, "addrSeparateProxyTor", ip_port);
+                if (gArgs.GetArg("-onion", "") != "") {
+                    gArgs.ModifyRWConfigFile("onion", settings.value("addrSeparateProxyTor").toString().toStdString());
+                    gArgs.ForceSetArg("-onion", settings.value("addrSeparateProxyTor").toString().toStdString());
+                }
                 setRestartRequired(true);
             }
         }
@@ -405,8 +380,9 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
 
 #ifdef ENABLE_WALLET
         case SpendZeroConfChange:
-            if (settings.value("bSpendZeroConfChange") != value) {
-                settings.setValue("bSpendZeroConfChange", value);
+            if (gArgs.GetBoolArg("-spendzeroconfchange", DEFAULT_SPEND_ZEROCONF_CHANGE) != value) {
+                gArgs.ModifyRWConfigFile("spendzeroconfchange", value.toBool() ? "1" : "0");
+                gArgs.ForceSetArg("-spendzeroconfchange", value.toBool() ? "1" : "0");
                 setRestartRequired(true);
             }
             break;
@@ -422,8 +398,9 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             }
             break;
         case Language:
-            if (settings.value("language") != value) {
-                settings.setValue("language", value);
+            if (gArgs.GetArg("-lang", "") != value.toString().toStdString()) {
+                gArgs.ModifyRWConfigFile("lang", value.toString().toStdString());
+                gArgs.ForceSetArg("-lang", value.toString().toStdString());
                 setRestartRequired(true);
             }
             break;
@@ -433,32 +410,61 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             Q_EMIT coinControlFeaturesChanged(fCoinControlFeatures);
             break;
         case Prune:
-            if (settings.value("bPrune") != value) {
-                settings.setValue("bPrune", value);
-                setRestartRequired(true);
+            if (value.toBool()) {
+              // When user enables pruning, store the prune size:
+              nPruneSizeMiB = settings.value("nPruneSize").toInt() * 1000;
+              gArgs.ModifyRWConfigFile("prune", std::to_string(nPruneSizeMiB));
+              gArgs.ForceSetArg("-prune", std::to_string(nPruneSizeMiB));
+            } else {
+              // When user disables pruning, set prune=1 and store last used prune
+              // size in settings.
+              nPruneSizeMiB = gArgs.GetArg("-prune", (qint64)nDefaultDbCache);
+              settings.setValue("nPruneSize", qint64(nPruneSizeMiB / 1000));
+              // Check if the chain has actually been pruned
+              if (m_node.havePruned()) {
+                  gArgs.ModifyRWConfigFile("prune", "1");
+                  gArgs.ForceSetArg("-prune", "1");
+              } else {
+                  // This permits indexes like -txindex
+                  gArgs.ModifyRWConfigFile("prune", "0");
+                  gArgs.ForceSetArg("-prune", "0");
+              }
             }
+            setRestartRequired(true);
             break;
         case PruneSize:
-            if (settings.value("nPruneSize") != value) {
+            // Convert prune size to MiB:
+            prune = gArgs.GetArg("-prune", 0);
+            nPruneSizeMiB = value.toInt() * 1000;
+            if (uint64_t(gArgs.GetArg("-prune", 0)) != nPruneSizeMiB) {
+                // Don't update rw_conf is prune is disabled:
+                if (!(prune == 0 || prune == 1)) {
+                  gArgs.ModifyRWConfigFile("prune", std::to_string(nPruneSizeMiB));
+                  gArgs.ForceSetArg("-prune", std::to_string(nPruneSizeMiB));
+                  setRestartRequired(true);
+                }
+                // Always update the setting, in case user toggles Prune:
                 settings.setValue("nPruneSize", value);
-                setRestartRequired(true);
             }
             break;
         case DatabaseCache:
-            if (settings.value("nDatabaseCache") != value) {
-                settings.setValue("nDatabaseCache", value);
+            if (gArgs.GetArg("-dbcache", (qint64)nDefaultDbCache) != value.toLongLong()) {
+                gArgs.ModifyRWConfigFile("dbcache", value.toString().toStdString());
+                gArgs.ForceSetArg("-dbcache", value.toString().toStdString());
                 setRestartRequired(true);
             }
             break;
         case ThreadsScriptVerif:
-            if (settings.value("nThreadsScriptVerif") != value) {
-                settings.setValue("nThreadsScriptVerif", value);
+            if (gArgs.GetArg("-par", DEFAULT_SCRIPTCHECK_THREADS) != value.toLongLong()) {
+                gArgs.ModifyRWConfigFile("par", value.toString().toStdString());
+                gArgs.ForceSetArg("-par", value.toString().toStdString());
                 setRestartRequired(true);
             }
             break;
         case Listen:
-            if (settings.value("fListen") != value) {
-                settings.setValue("fListen", value);
+            if (gArgs.GetBoolArg("-listen", DEFAULT_LISTEN) != value) {
+                gArgs.ModifyRWConfigFile("listen", value.toBool() ? "1" : "0");
+                gArgs.ForceSetArg("-listen", value.toBool() ? "1" : "0");
                 setRestartRequired(true);
             }
             break;
@@ -524,5 +530,97 @@ void OptionsModel::checkAndMigrate()
     // default value (see issue #12623; PR #12650).
     if (settings.contains("addrSeparateProxyTor") && settings.value("addrSeparateProxyTor").toString().endsWith("%2")) {
         settings.setValue("addrSeparateProxyTor", GetDefaultProxyAddress());
+    }
+
+    // Move the following QSettings to bitcoin_rw.conf, unless they are already set:
+    if (!gArgs.IsArgSet("-lang")) {
+        QString lang_territory_qsettings = settings.value("language", "").toString();
+        if (!lang_territory_qsettings.isEmpty()) {
+            gArgs.ModifyRWConfigFile("lang", lang_territory_qsettings.toStdString());
+            // This is currently too late in the initialization process, so
+            // GetLangTerritory() also checks QSettings.
+            gArgs.ForceSetArg("-lang", lang_territory_qsettings.toStdString());
+            settings.remove("language");
+        }
+    }
+
+    if (!gArgs.IsArgSet("-prune")) {
+        if (settings.contains("bPrune") && settings.value("bPrune").toBool()) {
+            const uint64_t nPruneSizeMiB = settings.value("nPruneSize").toInt() * 1000;
+            gArgs.ModifyRWConfigFile("prune", std::to_string(nPruneSizeMiB));
+            gArgs.ForceSetArg("-prune", std::to_string(nPruneSizeMiB));
+            settings.remove("bPrune");
+            // Do not remove nPruneSize, because we need track this when the user
+            // toggles the prune setting.
+        }
+    }
+
+    if (!gArgs.IsArgSet("-dbcache")) {
+        if (settings.contains("nDatabaseCache") && settings.value("nDatabaseCache") != (qint64)nDefaultDbCache) {
+            gArgs.ModifyRWConfigFile("dbcache", settings.value("nDatabaseCache").toString().toStdString());
+            gArgs.ForceSetArg("-dbcache", settings.value("nDatabaseCache").toString().toStdString());
+            settings.remove("nDatabaseCache");
+        }
+    }
+
+    if (!gArgs.IsArgSet("-par")) {
+        if (settings.contains("nThreadsScriptVerif") && settings.value("nThreadsScriptVerif") != DEFAULT_SCRIPTCHECK_THREADS) {
+            gArgs.ModifyRWConfigFile("par", settings.value("nThreadsScriptVerif").toString().toStdString());
+            gArgs.ForceSetArg("-par", settings.value("nThreadsScriptVerif").toString().toStdString());
+            settings.remove("nThreadsScriptVerif");
+        }
+    }
+
+    if (!gArgs.IsArgSet("-spendzeroconfchange")) {
+        const bool bSpendZeroConfChange = settings.value("bSpendZeroConfChange").toBool();
+        if (settings.contains("bSpendZeroConfChange") && bSpendZeroConfChange != DEFAULT_SPEND_ZEROCONF_CHANGE) {
+            gArgs.ModifyRWConfigFile("spendzeroconfchange", bSpendZeroConfChange ? "1" : "0");
+            gArgs.ForceSetArg("-spendzeroconfchange", bSpendZeroConfChange ? "1" : "0");
+            settings.remove("bSpendZeroConfChange");
+        }
+    }
+
+    if (!gArgs.IsArgSet("-upnp")) {
+        const bool upnp = settings.value("fUseUPnP").toBool();
+        if (settings.contains("fUseUPnP") && upnp != DEFAULT_UPNP) {
+            gArgs.ModifyRWConfigFile("upnp", upnp ? "1" : "0");
+            gArgs.ForceSetArg("-upnp", upnp ? "1" : "0");
+            settings.remove("fUseUPnP");
+        }
+    }
+
+    if (!gArgs.IsArgSet("-listen")) {
+        const bool listen = settings.value("fListen").toBool();
+        if (settings.contains("fListen") && listen != DEFAULT_LISTEN) {
+            gArgs.ModifyRWConfigFile("listen", listen ? "1" : "0");
+            gArgs.ForceSetArg("-listen", listen ? "1" : "0");
+            settings.remove("fListen");
+        }
+    }
+
+    if (gArgs.GetArg("-proxy", "") == "") {
+        // If proxy is enabled for the GUI (fUseProxy), set -proxy
+        // based on addrProxy.
+        const bool fUseProxy = settings.value("fUseProxy").toBool();
+        if (settings.contains("fUseProxy") && fUseProxy) {
+            QString address_proxy = settings.value("addrProxy", "").toString();
+
+            gArgs.ModifyRWConfigFile("proxy", address_proxy.toStdString());
+            gArgs.ForceSetArg("-proxy", address_proxy.toStdString());
+            settings.remove("fUseProxy");
+        }
+    }
+
+    if (gArgs.GetArg("-onion", "") == "") {
+        // If Tor is enabled for the GUI (fUseSeparateProxyTor), set -onion
+        // based on addrSeparateProxyTor.
+        const bool fUseSeparateProxyTor = settings.value("fUseSeparateProxyTor").toBool();
+        if (settings.contains("fUseSeparateProxyTor") && fUseSeparateProxyTor) {
+            QString address_tor = settings.value("addrSeparateProxyTor", "").toString();
+
+            gArgs.ModifyRWConfigFile("onion", address_tor.toStdString());
+            gArgs.ForceSetArg("-onion", address_tor.toStdString());
+            settings.remove("fUseSeparateProxyTor");
+        }
     }
 }
