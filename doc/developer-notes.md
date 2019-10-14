@@ -87,7 +87,6 @@ code.
   - `++i` is preferred over `i++`.
   - `nullptr` is preferred over `NULL` or `(void*)0`.
   - `static_assert` is preferred over `assert` where possible. Generally; compile-time checking is preferred over run-time checking.
-  - `enum class` is preferred over `enum` where possible. Scoped enumerations avoid two potential pitfalls/problems with traditional C++ enumerations: implicit conversions to int, and name clashes due to enumerators being exported to the surrounding scope.
 
 Block style example:
 ```c++
@@ -562,6 +561,34 @@ class A
 
   - *Rationale*: Easier to understand what is happening, thus easier to spot mistakes, even for those
   that are not language lawyers.
+
+- Prefer `enum class` (scoped enumerations) over `enum` (traditional enumerations) where possible.
+
+  - *Rationale*: Scoped enumerations avoid two potential pitfalls/problems with traditional C++ enumerations: implicit conversions to `int`, and name clashes due to enumerators being exported to the surrounding scope.
+
+- `switch` statement on an enumeration example:
+
+```cpp
+enum class Tabs {
+    INFO,
+    CONSOLE,
+    GRAPH,
+    PEERS
+};
+
+int GetInt(Tabs tab)
+{
+    switch (tab) {
+    case Tabs::INFO: return 0;
+    case Tabs::CONSOLE: return 1;
+    case Tabs::GRAPH: return 2;
+    case Tabs::PEERS: return 3;
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
+}
+```
+
+*Rationale*: The comment documents skipping `default:` label, and it complies with `clang-format` rules. The assertion prevents firing of `-Wreturn-type` warning on some compilers.
 
 Strings and formatting
 ------------------------
