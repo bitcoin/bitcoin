@@ -357,6 +357,20 @@ CAmount CWallet::GetLegacyBalance(const isminefilter& filter, int minDepth) cons
             continue;
         }
 
+        if (depth == 0) {
+            bool have_conflicts = false;
+            for (const CTxIn& txin : wtx.tx->vin) {
+                if (mapTxSpends.count(txin.prevout) > 1) {
+                    have_conflicts = true;
+                    break;
+                }
+            }
+            if (have_conflicts && !wtx.InMempool()) {
+                // Rather than include two conflicting unconfirmed transactions in the same balance, only include ones in our mempool (which cannot contain conflicts)
+                continue;
+            }
+        }
+
         // Loop through tx outputs and add incoming payments. For outgoing txs,
         // treat change outputs specially, as part of the amount debited.
         CAmount debit = wtx.GetDebit(filter);
