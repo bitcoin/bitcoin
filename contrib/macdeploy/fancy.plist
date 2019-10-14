@@ -22,10 +22,20 @@
 			<integer>370</integer>
 			<integer>156</integer>
 		</array>
+		<key>.fseventsd</key>
+		<array>
+			<integer>370</integer>
+			<integer>1</integer>
+		</array>
 		<key>Bitcoin-Qt.app</key>
 		<array>
 			<integer>128</integer>
 			<integer>156</integer>
+		</array>
+		<key>.background</key>
+		<array>
+			<integer>128</integer>
+			<integer>1</integer>
 		</array>
 	</dict>
 </dict>
