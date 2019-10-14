@@ -14,6 +14,7 @@
 #include <util/system.h>
 #include <util/strencodings.h>
 #include <util/validation.h>
+#include <update.h>
 
 #include <stdint.h>
 #include <tuple>
@@ -552,12 +553,29 @@ static UniValue echo(const JSONRPCRequest& request)
     return request.params;
 }
 
+static UniValue check_update(const JSONRPCRequest& request)
+{
+    if (request.fHelp)
+        throw std::runtime_error(
+            RPCHelpMan{"check-update",
+            "\nCheck if a newer version of Bitcoin Core is available.\n"
+            "\nIt will never update Bitcoin Core.",
+            {},
+            RPCResults{},
+            RPCExamples{""},
+            }.ToString()
+        );
+    UpdateManager updater;
+    return updater.checkUpdate();
+}
+
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
     { "control",            "getmemoryinfo",          &getmemoryinfo,          {"mode"} },
     { "control",            "logging",                &logging,                {"include", "exclude"}},
+    { "util",               "check-update",           &check_update,           {}, },
     { "util",               "validateaddress",        &validateaddress,        {"address"} },
     { "util",               "createmultisig",         &createmultisig,         {"nrequired","keys","address_type"} },
     { "util",               "deriveaddresses",        &deriveaddresses,        {"descriptor", "range"} },

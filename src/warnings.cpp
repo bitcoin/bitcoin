@@ -8,6 +8,7 @@
 #include <sync.h>
 #include <util/system.h>
 #include <util/translation.h>
+#include <update.h>
 
 static RecursiveMutex cs_warnings;
 static std::string strMiscWarning GUARDED_BY(cs_warnings);
@@ -43,12 +44,19 @@ std::string GetWarnings(const std::string& strFor)
     std::string strStatusBar;
     std::string strGUI;
     const std::string uiAlertSeperator = "<hr />";
+    UpdateManager manager;
 
     LOCK(cs_warnings);
 
     if (!CLIENT_VERSION_IS_RELEASE) {
         strStatusBar = "This is a pre-release test build - use at your own risk - do not use for mining or merchant applications";
         strGUI = _("This is a pre-release test build - use at your own risk - do not use for mining or merchant applications").translated;
+    }
+
+    // If a newer version is available
+    if (manager.checkUpdate() != "false") {
+        strStatusBar = "A newer version of Bitcoin Core is available, you may want to update";
+        strGUI = _("A newer version of Bitcoin Core is available, you may want to update").translated;
     }
 
     // Misc warnings like out of disk space and clock is wrong
