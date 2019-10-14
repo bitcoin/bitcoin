@@ -2,7 +2,7 @@
 # Copyright (c) 2015-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Functionality to build scripts, as well as SignatureHash().
+"""Functionality to build scripts, as well as signature hash functions.
 
 This file is modified from python-bitcoinlib.
 """
@@ -608,7 +608,7 @@ def FindAndDelete(script, sig):
     return CScript(r)
 
 
-def SignatureHash(script, txTo, inIdx, hashtype):
+def LegacySignatureHash(script, txTo, inIdx, hashtype):
     """Consensus-correct SignatureHash
 
     Returns (hash, err) to precisely match the consensus-critical behavior of
@@ -662,7 +662,7 @@ def SignatureHash(script, txTo, inIdx, hashtype):
 # Performance optimization probably not necessary for python tests, however.
 # Note that this corresponds to sigversion == 1 in EvalScript, which is used
 # for version 0 witnesses.
-def SegwitVersion1SignatureHash(script, txTo, inIdx, hashtype, amount):
+def SegwitV0SignatureHash(script, txTo, inIdx, hashtype, amount):
 
     hashPrevouts = 0
     hashSequence = 0
