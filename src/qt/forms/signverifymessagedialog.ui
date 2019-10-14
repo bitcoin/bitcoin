@@ -289,11 +289,17 @@
           <property name="toolTip">
             <string>The signed message to verify</string>
           </property>
+          <property name="placeholderText">
+            <string>The signed message to verify</string>
+          </property>
         </widget>
        </item>
        <item>
         <widget class="QValidatedLineEdit" name="signatureIn_VM">
           <property name="toolTip">
+            <string>The signature given when the message was signed</string>
+          </property>
+          <property name="placeholderText">
             <string>The signature given when the message was signed</string>
           </property>
         </widget>
