@@ -34,7 +34,6 @@ OptionsModel::OptionsModel(interfaces::Node& node, QObject *parent, bool resetSe
 
 void OptionsModel::addOverriddenOption(const std::string &option)
 {
-    strOverriddenByCommandLine += QString::fromStdString(option) + "=" + QString::fromStdString(gArgs.GetArg(option, "")) + " ";
 }
 
 // Writes all missing QSettings with their default values
@@ -251,7 +250,6 @@ void OptionsModel::SetPrune(bool prune, bool force)
         return;
     }
     if (!m_node.softSetArg("-prune", prune_val)) {
-        addOverriddenOption("-prune");
     }
 }
 

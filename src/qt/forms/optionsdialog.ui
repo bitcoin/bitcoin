@@ -707,52 +707,6 @@
     </widget>
    </item>
    <item>
-    <widget class="QFrame" name="frame">
-     <layout class="QVBoxLayout" name="verticalLayout_Bottom">
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_Bottom">
-        <item>
-         <widget class="QLabel" name="overriddenByCommandLineInfoLabel">
-          <property name="text">
-           <string>Options set in this dialog are overridden by the command line or in the configuration file:</string>
-          </property>
-          <property name="textFormat">
-           <enum>Qt::PlainText</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer_Bottom">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <widget class="QLabel" name="overriddenByCommandLineLabel">
-        <property name="text">
-         <string/>
-        </property>
-        <property name="textFormat">
-         <enum>Qt::PlainText</enum>
-        </property>
-        <property name="wordWrap">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
     <layout class="QHBoxLayout" name="horizontalLayout_Buttons">
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_Buttons">
