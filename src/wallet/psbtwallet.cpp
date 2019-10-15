@@ -39,6 +39,13 @@ TransactionError FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& ps
             return TransactionError::SIGHASH_MISMATCH;
         }
 
+        // Backport of #17156 fix, without #17371 refactor
+        if (input.witness_utxo.IsNull() && input.non_witness_utxo) {
+            if (txin.prevout.n >= input.non_witness_utxo->vout.size()) {
+                return TransactionError::MISSING_INPUTS;
+            }
+        }
+
         complete &= SignPSBTInput(HidingSigningProvider(pwallet, !sign, !bip32derivs), psbtx, i, sighash_type);
     }
 

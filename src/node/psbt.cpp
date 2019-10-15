@@ -39,6 +39,10 @@ PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx)
             in_amt += utxo.nValue;
             input_analysis.has_utxo = true;
         } else {
+            if (input.non_witness_utxo && psbtx.tx->vin[i].prevout.n >= input.non_witness_utxo->vout.size()) {
+                result.SetInvalid(strprintf("PSBT is not valid. Input %u specifies invalid prevout", i));
+                return result;
+            }
             input_analysis.has_utxo = false;
             input_analysis.is_final = false;
             input_analysis.next = PSBTRole::UPDATER;
