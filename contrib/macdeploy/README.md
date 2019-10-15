@@ -14,9 +14,11 @@ When complete, it will have produced `Bitcoin-Qt.dmg`.
 
 ## SDK Extraction
 
-After Xcode version 7.x, Apple started shipping the `Xcode.app` in a `.xip` archive.
-This makes the SDK less-trivial to extract on non-macOS machines.
-One approach (tested on Debian Buster) is outlined below:
+### Step 1: Obtaining `Xcode.app`
+
+After Xcode version 7.x, Apple started shipping the `Xcode.app` in a `.xip`
+archive. This makes the SDK less-trivial to extract on non-macOS machines. One
+approach (tested on Debian Buster) is outlined below:
 
 ```bash
 
@@ -37,16 +39,26 @@ popd
 xar -xf Xcode_10.2.1.xip -C .
 
 ./pbzx/pbzx -n Content | cpio -i
-
-find Xcode.app -type d -name MacOSX.sdk -execdir sh -c 'tar -c MacOSX.sdk/ | gzip -9n > /MacOSX10.14.sdk.tar.gz' \;
 ```
 
-on macOS the process is more straightforward:
+On macOS the process is more straightforward:
 
 ```bash
 xip -x Xcode_10.2.1.xip
-tar -C Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/ -czf MacOSX10.14.sdk.tar.gz MacOSX.sdk
 ```
+
+### Step 2: Generating `MacOSX10.14.sdk.tar.gz` from `Xcode.app`
+
+To generate `MacOSX10.14.sdk.tar.gz`, run the script
+[`gen_sdk_package.sh`](./gen_sdk_package.sh) with the XCODEDIR environment
+variable pointing to the `Xcode.app` extracted in the previous stage.
+
+```bash
+env SDK_COMPRESSOR=gz XCODEDIR="<path_to_Xcode.app>" \
+    contrib/macdeploy/gen_sdk_package.sh
+```
+
+### Historial macOS SDK Extraction Notes
 
 Our previously used macOS SDK (`MacOSX10.11.sdk`) can be extracted from
 [Xcode 7.3.1 dmg](https://developer.apple.com/devcenter/download.action?path=/Developer_Tools/Xcode_7.3.1/Xcode_7.3.1.dmg).
