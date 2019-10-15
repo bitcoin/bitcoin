@@ -66,6 +66,8 @@
 #define MICRO 0.000001
 #define MILLI 0.001
 
+std::map <uint256, int64_t> mapRejectedBlocks GUARDED_BY(cs_main);
+
 bool CBlockIndexWorkComparator::operator()(const CBlockIndex *pa, const CBlockIndex *pb) const {
     // First sort by most total work, ...
     if (pa->nChainWork > pb->nChainWork) return false;
@@ -2551,6 +2553,52 @@ bool CChainState::ConnectTip(CValidationState& state, const CChainParams& chainp
 
     connectTrace.BlockConnected(pindexNew, std::move(pthisBlock));
     return true;
+}
+
+bool DisconnectBlocks(int blocks)
+{
+    LOCK(cs_main);
+
+    CValidationState state;
+    const CChainParams& chainparams = Params();
+
+    LogPrintf("DisconnectBlocks -- Got command to replay %d blocks\n", blocks);
+    for(int i = 0; i < blocks; i++) {
+        DisconnectedBlockTransactions disconnectpool;
+        if(!g_chainstate.DisconnectTip(state, chainparams,&disconnectpool) || !state.IsValid()) {
+            // This is likely a fatal error, but keep the mempool consistent,
+            // just in case. Only remove from the mempool in this case.
+            UpdateMempoolForReorg(disconnectpool, false);
+            return false;
+        }
+    }
+    return true;
+}
+
+void ReprocessBlocks(int nBlocks)
+{
+    LOCK(cs_main);
+
+    std::map<uint256, int64_t>::iterator it = mapRejectedBlocks.begin();
+    while(it != mapRejectedBlocks.end()){
+        //use a window twice as large as is usual for the nBlocks we want to reset
+        if((*it).second  > GetTime() - (nBlocks*60*5)) {
+            BlockMap::iterator mi = BlockIndex().find((*it).first);
+            if (mi != BlockIndex().end() && (*mi).second) {
+
+                CBlockIndex* pindex = (*mi).second;
+                LogPrintf("ReprocessBlocks -- %s\n", (*it).first.ToString());
+
+                ResetBlockFailureFlags(pindex);
+            }
+        }
+        ++it;
+    }
+
+    DisconnectBlocks(nBlocks);
+
+    CValidationState state;
+    ActivateBestChain(state, Params());
 }
 
 /**

@@ -30,6 +30,7 @@
 #include <llmq/quorums_init.h>
 #include <masternodes/activemasternode.h>
 #include <masternodes/notificationinterface.h>
+#include <masternodes/meta.h>
 #include <masternodes/sync.h>
 #include <masternodes/utils.h>
 #include <miner.h>
@@ -50,6 +51,7 @@
 #include <script/standard.h>
 #include <shutdown.h>
 #include <special/specialdb.h>
+#include <spork.h>
 #include <timedata.h>
 #include <torcontrol.h>
 #include <txdb.h>
@@ -240,11 +242,8 @@ void Shutdown(InitInterfaces& interfaces)
     DestroyAllBlockFilterIndexes();
 
     if (!fLiteMode && !fRPCInWarmup) {
-        // STORE DATA CACHES INTO SERIALIZED DAT FILES
-        // TODO: BitGreen
-        // mncache / governance / sporks
-        CFlatDB<CNetFulfilledRequestManager> flatdb4("netfulfilled.dat", "magicFulfilledCache");
-        flatdb4.Dump(netfulfilledman);
+        CFlatDB<CSporkManager> flatdb6("sporks.dat", "magicSporkCache");
+        flatdb6.Dump(sporkManager);
     }
 
     if (::mempool.IsLoaded() && gArgs.GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
@@ -583,6 +582,8 @@ void SetupServerArgs()
 
     gArgs.AddArg("-masternode", strprintf("Enable the client to act as a masternode (default: %u)", false), false, OptionsCategory::MASTERNODES);
     gArgs.AddArg("-masternodeblsprivkey=<hex>", "Set the masternode BLS private key", false, OptionsCategory::MASTERNODES);
+
+    gArgs.AddArg("-sporkkey", "Private key to send spork messages", false, OptionsCategory::OPTIONS);
 
     // Add the hidden options
     gArgs.AddHiddenArgs(hidden_args);
@@ -1327,6 +1328,33 @@ bool AppInitMain(InitInterfaces& interfaces)
             threadGroup.create_thread([i]() { return ThreadScriptCheck(i); });
     }
 
+    std::vector<std::string> vSporkAddresses;
+    if (mapMultiArgs.count("-sporkaddr")) {
+        vSporkAddresses = mapMultiArgs.at("-sporkaddr");
+    } else {
+        vSporkAddresses = Params().SporkAddresses();
+    }
+    for (const auto& address: vSporkAddresses) {
+        if (!sporkManager.SetSporkAddress(address)) {
+            LogPrintf("Invalid spork address specified with -sporkaddr\n");
+            return false;
+        }
+    }
+
+    int minsporkkeys = gArgs.GetArg("-minsporkkeys", Params().MinSporkKeys());
+    if (!sporkManager.SetMinSporkKeys(minsporkkeys)) {
+        LogPrintf("Invalid minimum number of spork signers specified with -minsporkkeys\n");
+        return false;
+    }
+
+
+    if (gArgs.IsArgSet("-sporkkey")) {
+        if (!sporkManager.SetPrivKey(gArgs.GetArg("-sporkkey", ""))) {
+            LogPrintf("Unable to sign spork message, wrong key?\n");
+            return false;
+        }
+    }
+
     // Start the lightweight task scheduler thread
     CScheduler::Function serviceLoop = std::bind(&CScheduler::serviceQueue, &scheduler);
     threadGroup.create_thread(std::bind(&TraceThread<CScheduler::Function>, "scheduler", serviceLoop));
@@ -1736,16 +1764,15 @@ bool AppInitMain(InitInterfaces& interfaces)
     fLiteMode = gArgs.GetBoolArg("-litemode", false);
     LogPrintf("fLiteMode %d\n", fLiteMode);
 
-    if (fLiteMode)
-        InitWarning(_("You are starting in lite mode, all BitGreen-specific functionality is disabled.").translated);
-
     if ((!fLiteMode && !g_txindex)
        && chainparams.NetworkIDString() != CBaseChainParams::REGTEST) {
         return InitError(_("Transaction index can't be disabled in full mode. Either start with -litemode command line switch or enable transaction index.").translated);
     }
 
-    if (!fLiteMode) {
-        //TODO: BitGreen - Load sporks cache
+    CFlatDB<CSporkManager> flatdb6("sporks.dat", "magicSporkCache");
+    if (!flatdb6.Load(sporkManager)) {
+        LogPrintf("Failed to load sporks cache from %s", (GetDataDir() / "sporks.dat").string());
+        return false;
     }
 
     // ********************************************************* Step 9: load wallet
@@ -1816,20 +1843,11 @@ bool AppInitMain(InitInterfaces& interfaces)
     // ********************************************************* Step 10-B: Load cache data
 
     // LOAD SERIALIZED DAT FILES INTO DATA CACHES FOR INTERNAL USE
-
     bool fIgnoreCacheFiles = fLiteMode || fReindex || fReindexChainState;
     if (!fIgnoreCacheFiles) {
         boost::filesystem::path pathDB = GetDataDir();
         std::string strDBName;
-
-        // TODO: BitGreen - load mncache / governance
-
-        strDBName = "netfulfilled.dat";
-        uiInterface.InitMessage(_("Loading fulfilled requests cache...").translated);
-        CFlatDB<CNetFulfilledRequestManager> flatdb4(strDBName, "magicFulfilledCache");
-        if(!flatdb4.Load(netfulfilledman)) {
-            return InitError(_("Failed to load fulfilled requests cache from").translated + "\n" + (pathDB / strDBName).string());
-        }
+        // TODO: IMPLEMENT CACHE FOR GOVERNANCE/NETFULFILLED
     }
 
     // ********************************************************* Step 10-C: schedule BitGreen-specific tasks

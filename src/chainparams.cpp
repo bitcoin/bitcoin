@@ -233,6 +233,9 @@ public:
         fAllowMultiplePorts = false;
         nFulfilledRequestExpireTime = 60*60; // fulfilled requests expire in 1 hour
 
+        vSporkAddresses = {"GTKdD1S9HrSbT8Puvsh7nTdXEokictDXE2"};
+        nMinSporkKeys = 1;
+
         checkpointData = {
             {}};
 
@@ -259,7 +262,7 @@ public:
         consensus.BIP34Hash = uint256();
         consensus.BIP65Height = 200;
         consensus.BIP66Height = 200;
-        consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.powLimit = uint256S("00000ffff0000000000000000000000000000000000000000000000000000000");
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 1 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
@@ -334,6 +337,9 @@ public:
         fMiningRequiresPeers = true;
         fAllowMultiplePorts = false;
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
+
+        vSporkAddresses = {"GTKdD1S9HrSbT8Puvsh7nTdXEokictDXE2"};
+        nMinSporkKeys = 1;
 
         checkpointData = {
             {}};
@@ -416,6 +422,9 @@ public:
         fMiningRequiresPeers = false;
         fAllowMultiplePorts = true;
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
+
+        vSporkAddresses = {"GTKdD1S9HrSbT8Puvsh7nTdXEokictDXE2"};
+        nMinSporkKeys = 1;
 
         checkpointData = {
             {}};

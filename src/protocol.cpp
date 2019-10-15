@@ -41,8 +41,12 @@ const char *SENDCMPCT="sendcmpct";
 const char *CMPCTBLOCK="cmpctblock";
 const char *GETBLOCKTXN="getblocktxn";
 const char *BLOCKTXN="blocktxn";
-// BitGreen message types
+// Dash message types
+const char *SPORK="spork";
+const char *GETSPORKS="getsporks";
 const char *SYNCSTATUSCOUNT="ssc";
+const char *GETMNLISTDIFF="getmnlistd";
+const char *MNLISTDIFF="mnlistdiff";
 const char *QSENDRECSIGS="qsendrecsigs";
 const char *QFCOMMITMENT="qfcommit";
 const char *QCONTRIB="qcontrib";
@@ -50,16 +54,50 @@ const char *QCOMPLAINT="qcomplaint";
 const char *QJUSTIFICATION="qjustify";
 const char *QPCOMMITMENT="qpcommit";
 const char *QWATCH="qwatch";
-const char *CLSIG="clsig";
-const char *QSIGREC="qsigrec";
 const char *QSIGSESANN="qsigsesann";
 const char *QSIGSHARESINV="qsigsinv";
 const char *QGETSIGSHARES="qgetsigs";
 const char *QBSIGSHARES="qbsigs";
+const char *QSIGREC="qsigrec";
+const char *CLSIG="clsig";
+const char *ISLOCK="islock";
 const char *MNAUTH="mnauth";
-const char *GETMNLISTDIFF="getmnlistd";
-const char *MNLISTDIFF="mnlistdiff";
 } // namespace NetMsgType
+
+static const char* ppszTypeName[] =
+{
+    "ERROR", // Should never occur
+    NetMsgType::TX,
+    NetMsgType::BLOCK,
+    "filtered block",
+    // Dash message types
+    // NOTE: include non-implmented here, we must keep this list in sync with enum in protocol.h
+    "unused0",
+    "unused1",
+    NetMsgType::SPORK,
+    "unused3",
+    "unused4",
+    "unused5",
+    "unused6",
+    "unused7",
+    "unused8",
+    "unused9",
+    "unuseda",
+    "unusedb",
+    "unusedc",
+    "unusedf",
+    "compact block",
+    NetMsgType::QFCOMMITMENT,
+    "qdcommit",
+    NetMsgType::QCONTRIB,
+    NetMsgType::QCOMPLAINT,
+    NetMsgType::QJUSTIFICATION,
+    NetMsgType::QPCOMMITMENT,
+    "qdebugstatus",
+    NetMsgType::QSIGREC,
+    NetMsgType::CLSIG,
+    "endenum",
+};
 
 /** All known message types. Keep this in the same order as the list of
  * messages above and in protocol.h.
@@ -91,8 +129,11 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::CMPCTBLOCK,
     NetMsgType::GETBLOCKTXN,
     NetMsgType::BLOCKTXN,
-    // BitGreen message types
+    NetMsgType::SPORK,
+    NetMsgType::GETSPORKS,
     NetMsgType::SYNCSTATUSCOUNT,
+    NetMsgType::GETMNLISTDIFF,
+    NetMsgType::MNLISTDIFF,
     NetMsgType::QSENDRECSIGS,
     NetMsgType::QFCOMMITMENT,
     NetMsgType::QCONTRIB,
@@ -100,15 +141,13 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::QJUSTIFICATION,
     NetMsgType::QPCOMMITMENT,
     NetMsgType::QWATCH,
-    NetMsgType::CLSIG,
-    NetMsgType::QSIGREC,
     NetMsgType::QSIGSESANN,
     NetMsgType::QSIGSHARESINV,
     NetMsgType::QGETSIGSHARES,
     NetMsgType::QBSIGSHARES,
+    NetMsgType::QSIGREC,
+    NetMsgType::CLSIG,
     NetMsgType::MNAUTH,
-    NetMsgType::GETMNLISTDIFF,
-    NetMsgType::MNLISTDIFF,
 };
 const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));
 
@@ -222,6 +261,11 @@ std::string CInv::GetCommand() const
     default:
         throw std::out_of_range(strprintf("CInv::GetCommand(): type=%d unknown type", type));
     }
+}
+
+bool CInv::IsKnownType() const
+{
+    return (type >= 1 && type < (int)ARRAYLEN(ppszTypeName));
 }
 
 std::string CInv::ToString() const

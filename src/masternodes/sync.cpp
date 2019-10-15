@@ -45,7 +45,7 @@ std::string CMasternodeSync::GetAssetName()
     {
         case(MASTERNODE_SYNC_INITIAL):      return "MASTERNODE_SYNC_INITIAL";
         case(MASTERNODE_SYNC_WAITING):      return "MASTERNODE_SYNC_WAITING";
-        case(MASTERNODE_SYNC_GOVERNANCE):   return "MASTERNODE_SYNC_GOVERNANCE";
+        //case(MASTERNODE_SYNC_GOVERNANCE): return "MASTERNODE_SYNC_GOVERNANCE";
         case(MASTERNODE_SYNC_FAILED):       return "MASTERNODE_SYNC_FAILED";
         case MASTERNODE_SYNC_FINISHED:      return "MASTERNODE_SYNC_FINISHED";
         default:                            return "UNKNOWN";
@@ -91,7 +91,7 @@ std::string CMasternodeSync::GetSyncStatus()
     switch (masternodeSync.nCurrentAsset) {
         case MASTERNODE_SYNC_INITIAL:       return _("Synchronizing blockchain...").translated;
         case MASTERNODE_SYNC_WAITING:       return _("Synchronization pending...").translated;
-        case MASTERNODE_SYNC_GOVERNANCE:    return _("Synchronizing governance objects...").translated;
+        //case MASTERNODE_SYNC_GOVERNANCE:  return _("Synchronizing governance objects...").translated;
         case MASTERNODE_SYNC_FAILED:        return _("Synchronization failed").translated;
         case MASTERNODE_SYNC_FINISHED:      return _("Synchronization finished").translated;
         default:                            return "";
@@ -169,18 +169,20 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
         if (pnode->fMasternode || (fMasternodeMode && pnode->fInbound)) return;
 
         // QUICK MODE (REGTEST ONLY!)
+        /*
         if (Params().NetworkIDString() == CBaseChainParams::REGTEST)
         {
             // TODO: BitGreen
-            // if (nCurrentAsset == MASTERNODE_SYNC_WAITING) {
-            //     g_connman->PushMessage(pnode, msgMaker.Make(NetMsgType::GETSPORKS)); //get current network sporks
-            //     SwitchToNextAsset(connman);
-            // } else if (nCurrentAsset == MASTERNODE_SYNC_GOVERNANCE) {
-            //     SendGovernanceSyncRequest(pnode, connman);
-            //     SwitchToNextAsset(connman);
-            // }
+            if (nCurrentAsset == MASTERNODE_SYNC_WAITING) {
+                g_connman->PushMessage(pnode, msgMaker.Make(NetMsgType::GETSPORKS)); //get current network sporks
+                SwitchToNextAsset(connman);
+            } else if (nCurrentAsset == MASTERNODE_SYNC_GOVERNANCE) {
+                SendGovernanceSyncRequest(pnode, connman);
+                SwitchToNextAsset(connman);
+            }
             return;
         }
+        */
 
         // NORMAL NETWORK MODE - TESTNET/MAINNET
         {
@@ -193,8 +195,6 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
             }
 
             // SPORK : ALWAYS ASK FOR SPORKS AS WE SYNC
-            // TODO: BitGreen - Sporks
-            /*
             if (!netfulfilledman.HasFulfilledRequest(pnode->addr, "spork-sync")) {
                 // always get sporks first, only request once from each peer
                 netfulfilledman.AddFulfilledRequest(pnode->addr, "spork-sync");
@@ -202,7 +202,6 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
                 connman.PushMessage(pnode, msgMaker.Make(NetMsgType::GETSPORKS));
                 LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nCurrentAsset %d -- requesting sporks from peer=%d\n", nTick, nCurrentAsset, pnode->GetId());
             }
-            */
 
             // INITIAL TIMEOUT
 

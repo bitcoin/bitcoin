@@ -164,6 +164,7 @@ BITCOIN_CORE_H = \
   llmq/quorums_utils.h \
   logging.h \
   masternodes/activemasternode.h \
+  masternodes/meta.h \
   masternodes/notificationinterface.h \
   masternodes/payments.h \
   masternodes/sync.h \
@@ -194,6 +195,7 @@ BITCOIN_CORE_H = \
   pos/sign.h \
   protocol.h \
   psbt.h \
+  spork.h \
   random.h \
   reverse_iterator.h \
   reverselock.h \
@@ -222,6 +224,7 @@ BITCOIN_CORE_H = \
   script/signingprovider.h \
   script/standard.h \
   shutdown.h \
+  spork.h \
   streams.h \
   support/allocators/mt_pooled_secure.h \
   support/allocators/pooled_secure.h \
@@ -324,6 +327,7 @@ libbitgreen_server_a_SOURCES = \
   llmq/quorums_signing_shares.cpp \
   llmq/quorums_utils.cpp \
   masternodes/activemasternode.cpp \
+  masternodes/meta.cpp \
   masternodes/notificationinterface.cpp \
   masternodes/payments.cpp \
   masternodes/sync.cpp \
@@ -363,6 +367,7 @@ libbitgreen_server_a_SOURCES = \
   special/util.cpp \
   script/sigcache.cpp \
   shutdown.cpp \
+  spork.cpp \
   timedata.cpp \
   torcontrol.cpp \
   txdb.cpp \
@@ -428,6 +433,7 @@ libbitgreen_wallet_a_SOURCES = \
   llmq/quorums_signing_shares.cpp \
   llmq/quorums_utils.cpp \
   masternodes/activemasternode.cpp \
+  masternodes/meta.cpp \
   masternodes/notificationinterface.cpp \
   masternodes/payments.cpp \
   masternodes/sync.cpp \
@@ -630,6 +636,7 @@ libbitgreen_common_a_SOURCES = \
   script/sign.cpp \
   script/signingprovider.cpp \
   script/standard.cpp \
+  spork.cpp \
   versionbitsinfo.cpp \
   warnings.cpp \
   $(BITCOIN_CORE_H)

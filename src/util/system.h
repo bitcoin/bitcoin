@@ -32,6 +32,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <unordered_map>
 
 #include <boost/thread/condition_variable.hpp> // for boost::thread_interrupted
 
@@ -283,6 +284,7 @@ public:
     bool IsArgKnown(const std::string& key) const;
 };
 
+extern const std::unordered_map<std::string, std::vector<std::string> >& mapMultiArgs;
 extern ArgsManager gArgs;
 
 /**

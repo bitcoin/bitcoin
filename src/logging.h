@@ -61,6 +61,7 @@ namespace BCLog {
         LLMQSIGS    = (1 << 25),
         CHAINLOCKS  = (1 << 26),
         MASTERNODE  = (1 << 27),
+        SPORK       = (1 << 28),
         ALL         = ~(uint32_t)0
     };
 

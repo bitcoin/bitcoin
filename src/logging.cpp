@@ -152,6 +152,7 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::LEVELDB, "leveldb"},
     {BCLog::KERNEL, "kernel"},
     {BCLog::MNSYNC, "mnsync"},
+    {BCLog::SPORK, "spork"},
     {BCLog::LLMQ, "llmq"},
     {BCLog::LLMQDKG, "llmq-dkg"},
     {BCLog::LLMQSIGS, "llmq-sigs"},

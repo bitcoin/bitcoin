@@ -9,6 +9,7 @@
 #include <consensus/params.h>
 #include <sync.h>
 #include <univalue.h>
+#include <util/system.h>
 
 #include <set>
 
