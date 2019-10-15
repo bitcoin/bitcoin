@@ -127,12 +127,45 @@ arith_uint256 GetBlockProof(const CBlockIndex& block)
     bnTarget.SetCompact(block.nBits, &fNegative, &fOverflow);
     if (fNegative || fOverflow || bnTarget == 0)
         return 0;
+
+        /*
+
+まず SetCompact() 関数を使い、nBits から bnTarget を取得しています
+        計算している処理　(~bnTarget / (bnTarget + 1)) + 1;
+下のコメントにもあるように、 2**256 はとても巨大な値で、そのままでは扱えないため、`~bnTarget` に
+近似しています。`~bnTarget` は bnTarget のビット反転であるため、例えば bnTarget が
+`0x00000000FFFF0000000000000000000000000000000000000000000000000000` のとき、
+`0xFFFFFFFF0000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF`
+となって、ほぼ 2*256 と同じ値として使っても差し支えが無いという話のようです。
+
+ちなみに、`arith_uint256` という型は Bitcoin Core の中で定義されている 256bit の整数値を扱うための型で、秘密鍵やハッシュ値など 256bit のデータを扱う事が多い事情からとても多くの処理で使われているものです。
+
+        */
+
     // We need to compute 2**256 / (bnTarget+1), but we can't represent 2**256
     // as it's too large for an arith_uint256. However, as 2**256 is at least as large
     // as bnTarget+1, it is equal to ((2**256 - bnTarget - 1) / (bnTarget+1)) + 1,
     // or ~bnTarget / (bnTarget+1) + 1.
+
+    /*
+
+    BlockProof は個別のブロックに対するマイニング計算の大変さを表す値です。よく使われるハッシュパワーという言葉と似た概念ですが、
+    ハッシュパワーが hash / sec の単位で表されるのに対して、BlockProof は以下の式で求められます。
+
+    //BlockProof = 2**256 / (bnTarget+1)
+
+    bnTarget はこのブロックにおけるマイニングの目指すべき値です。マイナーはブロックのハッシュ値が bnTarget
+    より小さい値になるように nonce を変えながらハッシュ計算を繰り返します。このbnTargetはブロックの中には
+    nBits というフィールドにコンパクトな値に変換されて格納されています。
+
+    この式からわかるのは BlockProof は bnTargetの値に反比例しているということです。つまりbnTarget
+    が小さくなる（難易度が上がる）ごとに BlockProofの値は大きくなります。
+
+    */
     return (~bnTarget / (bnTarget + 1)) + 1;
 }
+
+  /*
 
 int64_t GetBlockProofEquivalentTime(const CBlockIndex& to, const CBlockIndex& from, const CBlockIndex& tip, const Consensus::Params& params)
 {

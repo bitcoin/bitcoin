@@ -3,6 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+//チェーン自体のデータ構造とシリアライズに関する処理が記述されている。
+
 #ifndef BITCOIN_CHAIN_H
 #define BITCOIN_CHAIN_H
 
@@ -136,14 +138,19 @@ enum BlockStatus: uint32_t {
  * candidates to be the next block. A blockindex may have multiple pprev pointing
  * to it, but at most one of them can be part of the currently active branch.
  */
-class CBlockIndex
+class CBlockIndex //ブロックのデータ、チェーン内で扱うための便利なメタ情報を持ったブロッククラス
 {
+
+  //CBlockIndex=ブロックの実データ、CBlockだけだと一個前のブロックを参照しようとしても持っているのはブロックハッシュだけで、
+  //そのハッシュ値からブロックの実態を探さなければならなく取り回しが悪いのですが、CBlockIndexは前のブロックへの参照を持っているので順番にプレビューに辿ることで
+  //チェーンを遡るなどの操作がやりやすくなる
+
 public:
     //! pointer to the hash of the block, if any. Memory is owned by this CBlockIndex
     const uint256* phashBlock;
 
     //! pointer to the index of the predecessor of this block
-    CBlockIndex* pprev;
+    CBlockIndex* pprev;  //pprev(頭のpはポインタのp)、これが情報を色々持っている
 
     //! pointer to the index of some further predecessor of this block
     CBlockIndex* pskip;
@@ -161,7 +168,16 @@ public:
     unsigned int nUndoPos;
 
     //! (memory only) Total amount of work (expected number of hashes) in the chain up to and including this block
-    arith_uint256 nChainWork;
+    arith_uint256 nChainWork;　
+
+    /*nChainWorkはチェーンに掛けられたハッシュパワーの合計値でチェーンが分岐した時にどっちのチェーンが強いか比較する時に使われる
+    ブロックそのものではなくGenesisBlockからのマイニングの積み上げなので少しメタ情報敵になるのでそういったものは
+    CBlockでは持ちにくいのでBlockIndexに持たせている。*/
+
+   /*nChainWorkはCBlockIndexクラスのフィールドで、あるブロックがつながっているチェーンにおいて、
+   そのブロックの採掘までにかけられた全てのマイニングの手間の合計を示す値です。
+   validation.cppに計算コードあり
+*/
 
     //! Number of transactions in this block.
     //! Note: in a potential headers-first mode, this number cannot be relied upon
@@ -175,12 +191,14 @@ public:
     //! Verification status of this block. See enum BlockStatus
     uint32_t nStatus;
 
-    //! block header
+    //! block header　
     int32_t nVersion;
     uint256 hashMerkleRoot;
     uint32_t nTime;
     uint32_t nBits;
     uint32_t nNonce;
+
+    //block headerの情報がほぼそのまま入っている(前のブロックのハッシュ値はない)
 
     //! (memory only) Sequential id assigned to distinguish order in which blocks are received.
     int32_t nSequenceId;
@@ -257,6 +275,8 @@ public:
         block.nNonce         = nNonce;
         return block;
     }
+
+//前のブロックのハッシュ値はこのようにプレビュを辿って取得している
 
     uint256 GetBlockHash() const
     {
@@ -409,10 +429,11 @@ public:
     }
 };
 
+
 /** An in-memory indexed chain of blocks. */
 class CChain {
 private:
-    std::vector<CBlockIndex*> vChain;
+    std::vector<CBlockIndex*> vChain; //CBlockindexのベクターとなっている。
 
 public:
     /** Returns the index entry for the genesis block of this chain, or nullptr if none. */
@@ -420,10 +441,14 @@ public:
         return vChain.size() > 0 ? vChain[0] : nullptr;
     }
 
+    //Genesis Blockを返す実装
+
     /** Returns the index entry for the tip of this chain, or nullptr if none. */
     CBlockIndex *Tip() const {
         return vChain.size() > 0 ? vChain[vChain.size() - 1] : nullptr;
     }
+
+    //最新のブロックを返す実装、Tip=最新のブロック
 
     /** Returns the index entry at a particular height in this chain, or nullptr if no such height exists. */
     CBlockIndex *operator[](int nHeight) const {
@@ -431,6 +456,8 @@ public:
             return nullptr;
         return vChain[nHeight];
     }
+
+  //Block Hightを取得できる、GenesisBlockはゼロなのでそのまま添字を入れれば取得可能[nHeight]
 
     /** Compare two chains efficiently. */
     friend bool operator==(const CChain &a, const CChain &b) {

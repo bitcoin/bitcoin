@@ -83,6 +83,18 @@ BlockManager g_blockman;
 } // anon namespace
 
 std::unique_ptr<CChainState> g_chainstate;
+/*CChainState=Bitcoincoreにおいてチェーンを扱う時の大本となるクラス。注意点はヘッダファイルではなくて実装ファイルに記述されていること。
+なのでStateそのものはvalidationの中からでしか参照できない構造。だがチェーンの情報はもっといろんなとこで
+使わなければならない、CChainStateはグローバル変数のg_chainstate(gはグローバルの略)というsingletonの変数として存在している
+g_chainstateに唯一のインスタンスが格納される
+singletonはインスタンスが一個しか存在しないこと*/
+
+/*CChainStateは、現在のベストチェーンとヘッダーツリーのローカル知識を更新するためのAPIを提供し、提供します。
+一般に、現在のブロックツリーへのアクセスと、新しいデータを提供する機能を提供します。新しいデータは、適切に検証され、必要に応じてその
+状態に組み込まれます。結局のところ、ここでのAPIは、消費可能なlibconsensusライブラリとして外部に公開されることを目標としているため
+追加された関数は他のクラスメンバ関数、コンセンサスライブラリの他の部分の純関数、検証インタフェースを介したコールバック
+（最終的にはこれもコールバック経由で行われます）。*/
+//つまり現在のベストチェーンへの参照や、その他現在のチェーンに関する様々な情報へアクセスするための入り口として機能する。
 
 CChainState& ChainstateActive() {
     assert(g_chainstate);
@@ -94,7 +106,19 @@ CChain& ChainActive() {
     return g_chainstate->m_chain;
 }
 
-/**
+/*
+ChainActive=ChainStateが持っているフィールドの一つ、今有効なメインチェーンとして扱われているチェーンそのものを表している。
+つまり、実際の台帳としての効力を持っている唯一のチェーン。CChainState で管理する全てのフォークのうち最もchainworkが大きく
+有効であると判断されているチェーン
+
+これ自体は色んな場所から参照されているが、ChainStateが公開されているわけではなく、このChainActiveだけがグローバルな変数に参照を
+渡されてその変数経由でアクセスされている、実態はCChainというクラス。
+型の後ろに&がついているのは参照渡し、直接g_chainstateのフィールドにアクセスするのではなく一旦別の変数に参照を
+渡してアクセスしていることが多い
+*/
+
+
+/*
  * Mutex to guard access to validation specific variables, such as reading
  * or changing the chainstate.
  *
@@ -136,6 +160,11 @@ CScript COINBASE_FLAGS;
 // Internal stuff
 namespace {
     CBlockIndex* pindexBestInvalid = nullptr;
+    //BestInvalid=最長不正ブロック
+    //このCheckForkWarningConditions (validation.cpp) 内でフォークの検出に使われている。
+    //ステータスがBLOCK_FAILED_MASKであるもの、またはBLOCK_HAVE_DATAのうちChainworkが最も大きいもの
+    //Bitcoinのコンセンサスに反しているもの、または実データがなくvalid(有効)かどうか検証できないものの中で最もchainwork
+    //が大きいブロック。
 
     CCriticalSection cs_LastBlockFile;
     std::vector<CBlockFileInfo> vinfoBlockFile;
@@ -159,6 +188,7 @@ CBlockIndex* LookupBlockIndex(const uint256& hash)
     BlockMap::const_iterator it = g_blockman.m_block_index.find(hash);
     return it == g_blockman.m_block_index.end() ? nullptr : it->second;
 }
+//vald blockをストアしているマップ、フォークにあり、chainActive に含まれないブロックも保持している。
 
 CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& locator)
 {
@@ -171,7 +201,7 @@ CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& loc
         if (pindex) {
             if (chain.Contains(pindex))
                 return pindex;
-            if (pindex->GetAncestor(chain.Height()) == chain.Tip()) {
+            if (pindex->GetAncestor(chain.Height()) == chain.Tip()) { //Tipブロックの先端(一番最新のブロックのこと)
                 return chain.Tip();
             }
         }
@@ -1306,6 +1336,7 @@ bool CChainState::IsInitialBlockDownload() const
 }
 
 static CBlockIndex *pindexBestForkTip = nullptr, *pindexBestForkBase = nullptr;
+//BestFork=ChainActiveからのフォークのうち、最もchainWorkが強いもので、フォークの可能性があるとして追跡されているもの。
 
 BlockMap& BlockIndex()
 {
@@ -2617,6 +2648,7 @@ CBlockIndex* CChainState::FindMostWorkChain() {
             // to a chain unless we have all the non-active-chain parent blocks.
             bool fFailedChain = pindexTest->nStatus & BLOCK_FAILED_MASK;
             bool fMissingData = !(pindexTest->nStatus & BLOCK_HAVE_DATA);
+
             if (fFailedChain || fMissingData) {
                 // Candidate chain is not usable (either invalid or missing data)
                 if (fFailedChain && (pindexBestInvalid == nullptr || pindexNew->nChainWork > pindexBestInvalid->nChainWork))
@@ -3074,6 +3106,12 @@ CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block)
     }
     pindexNew->nTimeMax = (pindexNew->pprev ? std::max(pindexNew->pprev->nTimeMax, pindexNew->nTime) : pindexNew->nTime);
     pindexNew->nChainWork = (pindexNew->pprev ? pindexNew->pprev->nChainWork : 0) + GetBlockProof(*pindexNew);
+    //ハッシュパワーの計算コード
+    /*pindexNew->pprev は前のブロックへのポインタですが、前のブロックが無いのは genesis block だけなので、大抵の場合は前のブロックの
+    nChainWorkにそのブロックの BlockProof（ハッシュパワーみたいなもの）を足す計算になります。
+    BlockProof は個別のブロックに対するマイニング計算の大変さを表す値です。よく使われるハッシュパワーという言葉と似た概念ですが、
+    少し違う、詳しくはchain.cppへ*/
+
     pindexNew->RaiseValidity(BLOCK_VALID_TREE);
     if (pindexBestHeader == nullptr || pindexBestHeader->nChainWork < pindexNew->nChainWork)
         pindexBestHeader = pindexNew;
@@ -3698,7 +3736,9 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CVali
     return true;
 }
 
-bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, bool fForceProcessing, bool *fNewBlock)
+//ブロックの検証の実装部分
+bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock,
+bool fForceProcessing, bool *fNewBlock)
 {
     AssertLockNotHeld(cs_main);
 
@@ -4548,6 +4588,7 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, FlatFi
     // Map of disk positions for blocks with unknown parent (only used for reindex)
     static std::multimap<uint256, FlatFilePos> mapBlocksUnknownParent;
     int64_t nStart = GetTimeMillis();
+    //未確認のPublic　フィールド
 
     int nLoaded = 0;
     try {

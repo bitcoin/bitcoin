@@ -71,7 +71,7 @@ static int ec_privkey_import_der(const secp256k1_context* ctx, unsigned char *ou
         return 0;
     }
     memcpy(out32 + (32 - oslen), privkey, oslen);
-    if (!secp256k1_ec_seckey_verify(ctx, out32)) {
+    if (!secp256k1_ec_se_verify(ctx, out32)) {
         memset(out32, 0, 32);
         return 0;
     }
@@ -150,7 +150,7 @@ static int ec_privkey_export_der(const secp256k1_context *ctx, unsigned char *pr
     return 1;
 }
 
-bool CKey::Check(const unsigned char *vch) {
+bool CKey::Check(const unsigned char *vch) {//ランダムな鍵の生成
     return secp256k1_ec_seckey_verify(secp256k1_context_sign, vch);
 }
 
@@ -343,7 +343,7 @@ bool ECC_InitSanityCheck() {
     key.MakeNewKey(true);
     CPubKey pubkey = key.GetPubKey();
     return key.VerifyPubKey(pubkey);
-}
+}//秘密鍵を生成
 
 void ECC_Start() {
     assert(secp256k1_context_sign == nullptr);

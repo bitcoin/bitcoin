@@ -3,6 +3,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+/**chainparamsは
+Bitcoinのチェーンはメインネット、テストネット、開発用にレグテストとあってそれぞれチェーンのパラメータが異なっており
+(難易度の設定やGenesisBlockの設定などチェーンを特徴付ける様々なもの)そういったものを管理しているクラス
+GenesisBlockはこのchainparams自体にハードコーティングされている、チェーンをコーティングする時は
+GenesisBlockの上にどんどん積み上げていかなければならないのでこのクラスも重要、chainparamsもよく参照されている */
+
 #ifndef BITCOIN_CHAINPARAMS_H
 #define BITCOIN_CHAINPARAMS_H
 
@@ -61,7 +67,7 @@ public:
     const CMessageHeader::MessageStartChars& MessageStart() const { return pchMessageStart; }
     int GetDefaultPort() const { return nDefaultPort; }
 
-    const CBlock& GenesisBlock() const { return genesis; }
+    const CBlock& GenesisBlock() const { return genesis; } //一番初めのブロック
     /** Default value for -checkmempool and -checkblockindex argument */
     bool DefaultConsistencyChecks() const { return fDefaultConsistencyChecks; }
     /** Policy: Filter transactions that do not match well-defined patterns */

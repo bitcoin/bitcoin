@@ -24,7 +24,7 @@
 typedef std::vector<unsigned char, secure_allocator<unsigned char> > CPrivKey;
 
 /** An encapsulated private key. */
-class CKey
+class CKey//秘密鍵をカプセル化したクラス。Bitcoinで使われているsecp256k1にそった仕様になっている。
 {
 public:
     /**

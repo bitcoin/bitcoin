@@ -13,6 +13,9 @@
 class CBlockHeader;
 class CBlockIndex;
 class uint256;
+//unit256=ブロックハッシュ、Bitcoinのために定義された数値型です。
+//ブロックのデータに対して SHA256 ハッシュ関数を使い求めます。
+//ここでは3つの関数が定義されているだけ。上の2つはマイニングの難易度を扱っている。
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params&);
 unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params&);

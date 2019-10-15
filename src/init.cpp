@@ -2,6 +2,7 @@
 // Copyright (c) 2009-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+//具体的な初期化処理はこちらに書いてある
 
 #if defined(HAVE_CONFIG_H)
 #include <config/bitcoin-config.h>

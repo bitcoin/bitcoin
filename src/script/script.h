@@ -387,7 +387,7 @@ typedef prevector<28, unsigned char> CScriptBase;
 bool GetScriptOp(CScriptBase::const_iterator& pc, CScriptBase::const_iterator end, opcodetype& opcodeRet, std::vector<unsigned char>* pvchRet);
 
 /** Serialized script, used inside transaction inputs and outputs */
-class CScript : public CScriptBase
+class CScript : public CScriptBase　//スクリプトを作ったり継承したりなどスクリプトを扱う時に基軸となってくるクラス
 {
 protected:
     CScript& push_int64(int64_t n)

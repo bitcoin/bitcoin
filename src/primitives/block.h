@@ -2,6 +2,7 @@
 // Copyright (c) 2009-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+//アルゴリズムやロジックではなくデータ構造の定義に使われている
 
 #ifndef BITCOIN_PRIMITIVES_BLOCK_H
 #define BITCOIN_PRIMITIVES_BLOCK_H
@@ -21,12 +22,13 @@ class CBlockHeader
 {
 public:
     // header
-    int32_t nVersion;
-    uint256 hashPrevBlock;
-    uint256 hashMerkleRoot;
-    uint32_t nTime;
-    uint32_t nBits;
-    uint32_t nNonce;
+    int32_t nVersion; //32bitのバージョン番号
+    uint256 hashPrevBlock;//256bitの前のブロックのハッシュ値
+    uint256 hashMerkleRoot;//マークルルートの値
+    uint32_t nTime;//ブロックの生成時間（タイムスタンプ）
+    uint32_t nBits;//難易度を算出するためのデータ
+    uint32_t nNonce;//マイナーがマイニングで得るナンス
+
 
     CBlockHeader()
     {
@@ -74,6 +76,8 @@ class CBlock : public CBlockHeader
 public:
     // network and disk
     std::vector<CTransactionRef> vtx;
+    // ベクターとはC++でよく使用される可変長の配列のコンテナ、好きな数の要素を入れられる配列
+
 
     // memory only
     mutable bool fChecked;

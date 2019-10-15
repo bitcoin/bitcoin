@@ -3,6 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+//transaction のデータ構造
+
 #ifndef BITCOIN_PRIMITIVES_TRANSACTION_H
 #define BITCOIN_PRIMITIVES_TRANSACTION_H
 
@@ -63,10 +65,10 @@ public:
 class CTxIn
 {
 public:
-    COutPoint prevout;
-    CScript scriptSig;
-    uint32_t nSequence;
-    CScriptWitness scriptWitness; //!< Only serialized through CTransaction
+    COutPoint prevout;//UTXOを指している
+    CScript scriptSig;//上記のUTXOをアンロックするための署名（公開鍵と署名スクリプト）
+    uint32_t nSequence;//シーケンス番号、デフォルト値は0xffffffff
+    CScriptWitness scriptWitness; //!< Only serialized through CTransaction WITNESS領域
 
     /* Setting nSequence to this value for every input in a transaction
      * disables nLockTime. */
@@ -133,8 +135,10 @@ public:
 class CTxOut
 {
 public:
-    CAmount nValue;
-    CScript scriptPubKey;
+    CAmount nValue; //送信額
+    CScript scriptPubKey;　//locking script
+    //CScript=Bitcoinのスクリプトを扱うクラス
+
 
     CTxOut()
     {
@@ -284,8 +288,8 @@ public:
     // actually immutable; deserialization and assignment are implemented,
     // and bypass the constness. This is safe, as they update the entire
     // structure, including the hash.
-    const std::vector<CTxIn> vin;
-    const std::vector<CTxOut> vout;
+    const std::vector<CTxIn> vin;//トランザクションインプットのコレクション
+    const std::vector<CTxOut> vout;//トランザクションアウトプットのコレクション
     const int32_t nVersion;
     const uint32_t nLockTime;
 

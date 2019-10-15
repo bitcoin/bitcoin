@@ -52,6 +52,10 @@ commits.
 Do not submit patches solely to modify the style of existing code.
 
 Coding Style (C++)
+
+//Various coding styles have been used during the history of the codebase, and the result is not very consistent.
+(これまでの経緯の中で様々なコーディングスタイルが使われてきました。その結果あまり一貫性がありません。)
+サトシナカモトの実装を引き継いでコミュニティで開発してきたという経緯がありますので、仕方ないですね。でも、C++に慣れていない人には扱いにくいコードベースではありそうです。
 ------------------
 
 - **Indentation and whitespace rules** as specified in

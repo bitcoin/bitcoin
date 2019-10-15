@@ -2,6 +2,7 @@
 // Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+//ここにmain関数があります。AppInitクラスがパラメータのパースや初期化をやっているようです。
 
 #if defined(HAVE_CONFIG_H)
 #include <config/bitcoin-config.h>
