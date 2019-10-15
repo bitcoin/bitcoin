@@ -119,13 +119,13 @@ class TestNode():
         wallet_path = "wallet/%s" % wallet_name
         return self.rpc / wallet_path
 
-    def stop_node(self):
+    def stop_node(self, wait=0):
         """Stop the node."""
         if not self.running:
             return
         self.log.debug("Stopping node")
         try:
-            self.stop()
+            self.stop(wait=wait)
         except http.client.CannotSendRequest:
             self.log.exception("Unable to stop node.")
         del self.p2ps[:]
