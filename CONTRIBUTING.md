@@ -50,6 +50,10 @@ To contribute a patch, the workflow is as follows:
   1. Create topic branch
   1. Commit patches
 
+Note: You should only fork the repository for your first patch. Afterwards, add the origin
+as an upstream on your fork and create branches for each patch.
+[See here for more details](https://help.github.com/en/articles/configuring-a-remote-for-a-fork).
+
 The project coding conventions in the [developer notes](doc/developer-notes.md)
 must be adhered to.
 
