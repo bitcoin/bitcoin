@@ -90,7 +90,7 @@ void ReceiveCoinsDialog::setModel(WalletModel *_model)
 
 #ifdef OS_ANDROID
         tableView->setColumnHidden(0, true);
-        //tableView->setColumnHidden(2, true);
+        tableView->setColumnHidden(2, true);
 #endif
 
         connect(tableView->selectionModel(),

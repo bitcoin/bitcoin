@@ -638,10 +638,10 @@ static bool PeerHasHeader(CNodeState *state, const CBlockIndex *pindex) EXCLUSIV
 /** Update pindexLastCommonBlock and add not-in-flight missing successors to vBlocks, until it has
  *  at most count entries.
  *  returns true if priority downloads where used */
-bool FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<const CBlockIndex*>& vBlocks, NodeId& nodeStaller, const Consensus::Params& consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<const CBlockIndex*>& vBlocks, NodeId& nodeStaller, const Consensus::Params& consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     if (count == 0)
-        return false;
+        return;
 
     vBlocks.reserve(vBlocks.size() + count);
     CNodeState *state = State(nodeid);
@@ -650,26 +650,9 @@ bool FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<con
     // Make sure pindexBestKnownBlock is up to date, we'll need it.
     ProcessBlockAvailability(nodeid);
 
-    if (!blocksToDownloadFirst.empty()) {
-        for (const PriorityBlockRequest &r: blocksToDownloadFirst) {
-            if (r.downloaded) continue;
-            if (r.pindex && state->pindexBestKnownBlock != nullptr && state->pindexBestKnownBlock->nHeight >= r.pindex->nHeight && !mapBlocksInFlight.count(r.pindex->GetBlockHash())) {
-                vBlocks.push_back(r.pindex);
-                if (vBlocks.size() == count) {
-                    break;
-                }
-            }
-        }
-        return true;
-    }
-
-    if (!fAutoRequestBlocks) {
-        return false;
-    }
-
     if (state->pindexBestKnownBlock == nullptr || state->pindexBestKnownBlock->nChainWork < ::ChainActive().Tip()->nChainWork || state->pindexBestKnownBlock->nChainWork < nMinimumChainWork) {
         // This peer has nothing interesting.
-        return false;
+        return;
     }
 
     if (state->pindexLastCommonBlock == nullptr) {
@@ -682,7 +665,7 @@ bool FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<con
     // of its current tip anymore. Go back enough to fix that.
     state->pindexLastCommonBlock = LastCommonAncestor(state->pindexLastCommonBlock, state->pindexBestKnownBlock);
     if (state->pindexLastCommonBlock == state->pindexBestKnownBlock)
-        return false;
+        return;
 
     std::vector<const CBlockIndex*> vToFetch;
     const CBlockIndex *pindexWalk = state->pindexLastCommonBlock;
@@ -711,11 +694,11 @@ bool FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<con
         for (const CBlockIndex* pindex : vToFetch) {
             if (!pindex->IsValid(BLOCK_VALID_TREE)) {
                 // We consider the chain that this peer is on invalid.
-                return false;
+                return;
             }
             if (!State(nodeid)->fHaveWitness && IsWitnessEnabled(pindex->pprev, consensusParams)) {
                 // We wouldn't download this block or its descendants from this peer.
-                return false;
+                return;
             }
             if (pindex->nStatus & BLOCK_HAVE_DATA || ::ChainActive().Contains(pindex)) {
                 if (pindex->HaveTxsDownloaded()) //nChainTx
@@ -728,11 +711,11 @@ bool FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<con
                         // We aren't able to fetch anything, but we would be if the download window was one larger.
                         nodeStaller = waitingfor;
                     }
-                    return false;
+                    return;
                 }
                 vBlocks.push_back(pindex);
                 if (vBlocks.size() == count) {
-                    return false;
+                    return;
                 }
             } else if (waitingfor == -1) {
                 // This is the first already-in-flight block.
@@ -4087,13 +4070,13 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
         if (!pto->fClient && ((fFetch && !pto->m_limited_node) || !::ChainstateActive().IsInitialBlockDownload()) && state.nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
             std::vector<const CBlockIndex*> vToDownload;
             NodeId staller = -1;
-            bool priorityRequest = FindNextBlocksToDownload(pto->GetId(), MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.nBlocksInFlight, vToDownload, staller, consensusParams);
+            FindNextBlocksToDownload(pto->GetId(), MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.nBlocksInFlight, vToDownload, staller, consensusParams);
             for (const CBlockIndex *pindex : vToDownload) {
                 uint32_t nFetchFlags = GetFetchFlags(pto);
                 vGetData.push_back(CInv(MSG_BLOCK | nFetchFlags, pindex->GetBlockHash()));
-                MarkBlockAsInFlight(pto->GetId(), pindex->GetBlockHash(), pindex, nullptr, priorityRequest);
-                LogPrint(BCLog::NET, "Requesting %s block %s (%d) peer=%d\n", (priorityRequest ? " (auxiliary/SPV)" : " "), pindex->GetBlockHash().ToString(),
-                    pindex->nHeight, pto->GetId());
+                MarkBlockAsInFlight(pto->GetId(), pindex->GetBlockHash(), pindex, nullptr, false);
+                //LogPrint(BCLog::NET, "Requesting %s block %s (%d) peer=%d\n", (priorityRequest ? " (auxiliary/SPV)" : " "), pindex->GetBlockHash().ToString(),
+                  //  pindex->nHeight, pto->GetId());
             }
             if (state.nBlocksInFlight == 0 && staller != -1) {
                 if (State(staller)->nStallingSince == 0) {
@@ -4377,8 +4360,10 @@ bool ProcessNetBlock(const CChainParams& chainparams, const std::shared_ptr<cons
 
             bool fNewBlockOrphan = false;
             std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
-            if (ProcessNewBlock(chainparams, shared_pblock, fForceProcessing, &fNewBlockOrphan))
+            if (ProcessNewBlock(chainparams, shared_pblock, fForceProcessing, &fNewBlockOrphan)){
                 vWorkQueue.push_back(mi->second->hashBlock);
+                LogPrintf("ProcessNetBlock: func used\n");
+            }
 			mapOrphanBlocks.erase(mi->second->hashBlock);
 			setStakeSeenOrphan.erase(block.GetProofOfStake());
 			nOrphanBlocksSize -= mi->second->vchBlock.size();
