@@ -202,8 +202,12 @@ int CreateFundedTransaction(
         return MP_ENCODING_ERROR;
     }
 
+    // Maximum number of expected outputs
+    std::vector<CTxOut>::size_type max_outputs = 2;
+
     // add reference output, if there is one
     if (!receiverAddress.empty() && receiverAddress != feeAddress) {
+        max_outputs = 3;
         CScript scriptPubKey = GetScriptForDestination(DecodeDestination(receiverAddress));
         vecSend.push_back(std::make_pair(scriptPubKey, OmniGetDustThreshold(scriptPubKey)));
     }
@@ -247,6 +251,13 @@ int CreateFundedTransaction(
     if (fSuccess && nChangePosRet == -1 && receiverAddress == feeAddress) {
         fSuccess = false;
         strFailReason = "send to self without change";
+    }
+
+    if (wtxNew->get().vout.size() > max_outputs)
+    {
+        strFailReason = "more outputs than expected";
+        PrintToLog("%s: ERROR: more outputs than expected (Max expected %d, actual %d)\n Failed transaction: %s\n",
+                   __func__, max_outputs, wtxNew->get().vout.size(), wtxNew->get().ToString());
     }
 
     // to restore the original order of inputs, create a new transaction and add
