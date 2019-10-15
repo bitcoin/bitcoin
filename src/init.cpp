@@ -1349,7 +1349,6 @@ bool AppInitMain(InitInterfaces& interfaces)
         return false;
     }
 
-
     if (gArgs.IsArgSet("-sporkkey")) {
         if (!sporkManager.SetPrivKey(gArgs.GetArg("-sporkkey", ""))) {
             LogPrintf("Unable to sign spork message, wrong key?\n");
@@ -1766,15 +1765,20 @@ bool AppInitMain(InitInterfaces& interfaces)
     fLiteMode = gArgs.GetBoolArg("-litemode", false);
     LogPrintf("fLiteMode %d\n", fLiteMode);
 
+    if (fLiteMode)
+        InitWarning(_("You are starting in lite mode, all BitGreen-specific functionality is disabled.").translated);
+
     if ((!fLiteMode && !g_txindex)
        && chainparams.NetworkIDString() != CBaseChainParams::REGTEST) {
         return InitError(_("Transaction index can't be disabled in full mode. Either start with -litemode command line switch or enable transaction index.").translated);
     }
 
-    CFlatDB<CSporkManager> flatdb6("sporks.dat", "magicSporkCache");
-    if (!flatdb6.Load(sporkManager)) {
-        LogPrintf("Failed to load sporks cache from %s", (GetDataDir() / "sporks.dat").string());
-        return false;
+    if (!fLiteMode) {
+        uiInterface.InitMessage(_("Loading sporks cache...").translated);
+        CFlatDB<CSporkManager> flatdb6("sporks.dat", "magicSporkCache");
+        if (!flatdb6.Load(sporkManager)) {
+            return InitError(_("Failed to load sporks cache from").translated + "\n" + (GetDataDir() / "sporks.dat").string());
+        }
     }
 
     // ********************************************************* Step 9: load wallet
