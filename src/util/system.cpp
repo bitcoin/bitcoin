@@ -72,8 +72,6 @@ const int64_t nStartupTime = GetTime();
 const char * const BITGREEN_CONF_FILENAME = "bitgreen.conf";
 
 ArgsManager gArgs;
-static std::unordered_map<std::string, std::vector<std::string> > _mapMultiArgs;
-const std::unordered_map<std::string, std::vector<std::string> >& mapMultiArgs = _mapMultiArgs;
 
 /** A map that contains all the currently held directory locks. After
  * successful locking, these will be held here until the global destructor

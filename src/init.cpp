@@ -1329,11 +1329,11 @@ bool AppInitMain(InitInterfaces& interfaces)
     }
 
     std::vector<std::string> vSporkAddresses;
-    if (mapMultiArgs.count("-sporkaddr")) {
-        vSporkAddresses = mapMultiArgs.at("-sporkaddr");
-    } else {
+    if (!gArgs.GetArgs("-sporkaddr").empty())
+        vSporkAddresses = gArgs.GetArgs("-sporkaddr");
+    else
         vSporkAddresses = Params().SporkAddresses();
-    }
+
     for (const auto& address: vSporkAddresses) {
         if (!sporkManager.SetSporkAddress(address)) {
             LogPrintf("Invalid spork address specified with -sporkaddr\n");
