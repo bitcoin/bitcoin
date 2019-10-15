@@ -796,7 +796,7 @@ void BitcoinGUI::showDebugWindow()
 
 void BitcoinGUI::showDebugWindowActivateConsole()
 {
-    rpcConsole->setTabFocus(RPCConsole::TAB_CONSOLE);
+    rpcConsole->setTabFocus(RPCConsole::TabTypes::CONSOLE);
     showDebugWindow();
 }
 
