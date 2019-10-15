@@ -48,13 +48,17 @@ xip -x Xcode_10.2.1.xip
 tar -C Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/ -czf MacOSX10.14.sdk.tar.gz MacOSX.sdk
 ```
 
-The `extract-osx-sdk.sh` script in this directory can be used to extract 
-our previously used macOS SDK, from the `Xcode_7.3.1.dmg`. Using the following commands:
+Our previously used macOS SDK (`MacOSX10.11.sdk`) can be extracted from
+[Xcode 7.3.1 dmg](https://developer.apple.com/devcenter/download.action?path=/Developer_Tools/Xcode_7.3.1/Xcode_7.3.1.dmg).
+The script [`extract-osx-sdk.sh`](./extract-osx-sdk.sh) automates this. First
+ensure the DMG file is in the current directory, and then run the script. You
+may wish to delete the `intermediate 5.hfs` file and `MacOSX10.11.sdk` (the
+directory) when you've confirmed the extraction succeeded.
 
 ```bash
 apt-get install p7zip-full sleuthkit
 contrib/macdeploy/extract-osx-sdk.sh
-rm -rf 5.hfs MacOSX10.14.sdk
+rm -rf 5.hfs MacOSX10.11.sdk
 ```
 
 ## Deterministic macOS DMG Notes
@@ -85,7 +89,8 @@ To complicate things further, all builds must target an Apple SDK. These SDKs ar
 download, but not redistributable. To obtain it, register for an Apple Developer Account,
 then download the [Xcode 10.2.1 xip](https://download.developer.apple.com/Developer_Tools/Xcode_10.2.1/Xcode_10.2.1.xip).
 
-This file is many gigabytes in size, but only a single directory inside is needed:
+This file is many gigabytes in size, but most (but not all) of what we need is
+contained only in a single directory:
 
 ```bash
 Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk
