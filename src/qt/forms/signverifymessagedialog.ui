@@ -268,10 +268,24 @@
         </layout>
        </item>
        <item>
-        <widget class="QPlainTextEdit" name="messageIn_VM"/>
+        <widget class="QPlainTextEdit" name="messageIn_VM">
+          <property name="toolTip">
+            <string>The signed message to verify</string>
+          </property>
+          <property name="placeholderText">
+            <string>The signed message to verify</string>
+          </property>
+        </widget>
        </item>
        <item>
-        <widget class="QValidatedLineEdit" name="signatureIn_VM"/>
+        <widget class="QValidatedLineEdit" name="signatureIn_VM">
+          <property name="toolTip">
+            <string>The signature given when the message was signed</string>
+          </property>
+          <property name="placeholderText">
+            <string>The signature given when the message was signed</string>
+          </property>
+        </widget>
        </item>
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_2_VM">
