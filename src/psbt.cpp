@@ -67,8 +67,11 @@ bool PartiallySignedTransaction::AddOutput(const CTxOut& txout, const PSBTOutput
 bool PartiallySignedTransaction::GetInputUTXO(CTxOut& utxo, int input_index) const
 {
     PSBTInput input = inputs[input_index];
-    int prevout_index = tx->vin[input_index].prevout.n;
+    uint32_t prevout_index = tx->vin[input_index].prevout.n;
     if (input.non_witness_utxo) {
+        if (prevout_index >= input.non_witness_utxo->vout.size()) {
+            return false;
+        }
         utxo = input.non_witness_utxo->vout[prevout_index];
     } else if (!input.witness_utxo.IsNull()) {
         utxo = input.witness_utxo;
@@ -256,6 +259,9 @@ bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& 
     if (input.non_witness_utxo) {
         // If we're taking our information from a non-witness UTXO, verify that it matches the prevout.
         COutPoint prevout = tx.vin[index].prevout;
+        if (prevout.n >= input.non_witness_utxo->vout.size()) {
+            return false;
+        }
         if (input.non_witness_utxo->GetHash() != prevout.hash) {
             return false;
         }
