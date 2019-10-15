@@ -242,6 +242,8 @@ void Shutdown(InitInterfaces& interfaces)
     DestroyAllBlockFilterIndexes();
 
     if (!fLiteMode && !fRPCInWarmup) {
+        CFlatDB<CNetFulfilledRequestManager> flatdb4("netfulfilled.dat", "magicFulfilledCache");
+        flatdb4.Dump(netfulfilledman);
         CFlatDB<CSporkManager> flatdb6("sporks.dat", "magicSporkCache");
         flatdb6.Dump(sporkManager);
     }
@@ -1847,7 +1849,15 @@ bool AppInitMain(InitInterfaces& interfaces)
     if (!fIgnoreCacheFiles) {
         boost::filesystem::path pathDB = GetDataDir();
         std::string strDBName;
-        // TODO: IMPLEMENT CACHE FOR GOVERNANCE/NETFULFILLED
+
+        // TODO: BitGreen - load mncache / governance
+
+        strDBName = "netfulfilled.dat";
+        uiInterface.InitMessage(_("Loading fulfilled requests cache...").translated);
+        CFlatDB<CNetFulfilledRequestManager> flatdb4(strDBName, "magicFulfilledCache");
+        if(!flatdb4.Load(netfulfilledman)) {
+            return InitError(_("Failed to load fulfilled requests cache from").translated + "\n" + (pathDB / strDBName).string());
+        }
     }
 
     // ********************************************************* Step 10-C: schedule BitGreen-specific tasks
