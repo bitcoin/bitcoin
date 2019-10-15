@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Create a report to help us improve
+about: Create a report to help us improve (use this for suspected bugs only, if not sure, open a regular issue below)
 title: ''
 labels: Bug
 assignees: ''
