@@ -64,41 +64,6 @@ const char *ISLOCK="islock";
 const char *MNAUTH="mnauth";
 } // namespace NetMsgType
 
-static const char* ppszTypeName[] =
-{
-    "ERROR", // Should never occur
-    NetMsgType::TX,
-    NetMsgType::BLOCK,
-    "filtered block",
-    // Dash message types
-    // NOTE: include non-implmented here, we must keep this list in sync with enum in protocol.h
-    "unused0",
-    "unused1",
-    NetMsgType::SPORK,
-    "unused3",
-    "unused4",
-    "unused5",
-    "unused6",
-    "unused7",
-    "unused8",
-    "unused9",
-    "unuseda",
-    "unusedb",
-    "unusedc",
-    "unusedf",
-    "compact block",
-    NetMsgType::QFCOMMITMENT,
-    "qdcommit",
-    NetMsgType::QCONTRIB,
-    NetMsgType::QCOMPLAINT,
-    NetMsgType::QJUSTIFICATION,
-    NetMsgType::QPCOMMITMENT,
-    "qdebugstatus",
-    NetMsgType::QSIGREC,
-    NetMsgType::CLSIG,
-    "endenum",
-};
-
 /** All known message types. Keep this in the same order as the list of
  * messages above and in protocol.h.
  */
@@ -265,7 +230,11 @@ std::string CInv::GetCommand() const
 
 bool CInv::IsKnownType() const
 {
-    return (type >= 1 && type < (int)ARRAYLEN(ppszTypeName));
+    return (type == MSG_TX || type == MSG_WITNESS_TX ||
+        type == MSG_QUORUM_FINAL_COMMITMENT || type == MSG_QUORUM_CONTRIB ||
+        type == MSG_QUORUM_COMPLAINT || type == MSG_QUORUM_JUSTIFICATION ||
+        type == MSG_QUORUM_PREMATURE_COMMITMENT || type == MSG_QUORUM_RECOVERED_SIG ||
+        type == MSG_CLSIG || type == MSG_SPORK);
 }
 
 std::string CInv::ToString() const
