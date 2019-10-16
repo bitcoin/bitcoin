@@ -900,11 +900,13 @@ void RequestData(CNodeState* state, const CInv& inv, int64_t nNow) EXCLUSIVE_LOC
 
 } // namespace
 
-void EraseInvRequest(const CNode* pfrom, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main){
-    CNodeState* nodestate = State(pfrom->GetId());
-    nodestate->m_tx_download.m_tx_announced.erase(hash);
-    nodestate->m_tx_download.m_tx_in_flight.erase(hash);
-    EraseTxRequest(hash);
+void RemoveDataRequest(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main){
+    g_connman->ForEachNode([&inv](CNode* node) {
+        CNodeState* nodestate = State(node->GetId());
+        nodestate->m_inv_download.m_inv_announced.erase(inv);
+        nodestate->m_inv_download.m_inv_in_flight.erase(inv);
+        EraseDataRequest(inv);
+    });
 }
 
 // This function is used for testing the stale tip eviction logic, see
@@ -2554,7 +2556,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                     LogPrint(BCLog::NET, "transaction (%s) inv sent in violation of protocol peer=%d\n", inv.hash.ToString(), pfrom->GetId());
                 } else if (!fAlreadyHave && !fImporting && !fReindex && !::ChainstateActive().IsInitialBlockDownload()) {
                     if (inv.type == MSG_TX || inv.type == MSG_WITNESS_TX)
-                    RequestTx(State(pfrom->GetId()), inv.hash, nNow);
+                        RequestTx(State(pfrom->GetId()), inv.hash, nNow);
                     else
                         RequestData(State(pfrom->GetId()), inv, nNow);
                 }
