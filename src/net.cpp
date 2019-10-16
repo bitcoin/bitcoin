@@ -15,10 +15,8 @@
 #include <chainparams.h>
 #include <clientversion.h>
 #include <consensus/consensus.h>
-#include <crypto/common.h>
 #include <crypto/sha256.h>
 #include <net_permissions.h>
-#include <primitives/transaction.h>
 #include <netbase.h>
 #include <scheduler.h>
 #include <ui_interface.h>
@@ -52,7 +50,6 @@
 
 #ifdef USE_UPNP
 #include <miniupnpc/miniupnpc.h>
-#include <miniupnpc/miniwget.h>
 #include <miniupnpc/upnpcommands.h>
 #include <miniupnpc/upnperrors.h>
 // The minimum supported miniUPnPc API version is set to 10. This keeps compatibility

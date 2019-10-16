@@ -7,7 +7,6 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <coins.h>
-#include <compat/byteswap.h>
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <index/txindex.h>
@@ -25,7 +24,6 @@
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <script/script.h>
-#include <script/script_error.h>
 #include <script/sign.h>
 #include <script/standard.h>
 #include <txmempool.h>

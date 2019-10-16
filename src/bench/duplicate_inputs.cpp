@@ -4,7 +4,6 @@
 
 #include <bench/bench.h>
 #include <chainparams.h>
-#include <coins.h>
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
 #include <miner.h>
@@ -15,8 +14,6 @@
 #include <validation.h>
 #include <validationinterface.h>
 
-#include <list>
-#include <vector>
 
 
 static void DuplicateInputs(benchmark::Bench& bench)

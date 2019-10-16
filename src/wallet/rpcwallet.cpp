@@ -14,7 +14,6 @@
 #include <interfaces/chain.h>
 #include <keepass.h>
 #include <net.h>
-#include <node/transaction.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <rpc/mining.h>
@@ -47,7 +46,6 @@
 
 #include <univalue.h>
 
-#include <functional>
 
 static const std::string WALLET_ENDPOINT_BASE = "/wallet/";
 

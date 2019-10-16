@@ -14,8 +14,6 @@
 #include <util/strencodings.h>
 #include <wallet/wallettool.h>
 
-#include <stdio.h>
-
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
 static void SetupWalletToolArgs()

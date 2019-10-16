@@ -20,7 +20,6 @@
 #include <policy/policy.h>
 #include <pow.h>
 #include <primitives/transaction.h>
-#include <script/standard.h>
 #include <timedata.h>
 #include <util/system.h>
 #include <util/moneystr.h>
@@ -37,7 +36,6 @@
 #include <masternode/payments.h>
 
 #include <algorithm>
-#include <queue>
 #include <utility>
 
 // Unconfirmed transactions in the memory pool often depend on other

@@ -13,7 +13,6 @@
 #include <compat.h>
 #include <prevector.h>
 #include <serialize.h>
-#include <span.h>
 #include <tinyformat.h>
 #include <util/strencodings.h>
 #include <util/string.h>

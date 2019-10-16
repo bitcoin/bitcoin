@@ -15,7 +15,6 @@
 #include <util/validation.h> // For strMessageMagic
 #include <validation.h>
 
-#include <string>
 #include <vector>
 
 #include <QButtonGroup>

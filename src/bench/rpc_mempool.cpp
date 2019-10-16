@@ -9,8 +9,6 @@
 
 #include <univalue.h>
 
-#include <list>
-#include <vector>
 
 static void AddTx(const CTransactionRef& tx, const CAmount& fee, CTxMemPool& pool) EXCLUSIVE_LOCKS_REQUIRED(cs_main, pool.cs)
 {

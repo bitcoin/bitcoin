@@ -12,7 +12,6 @@
 #include <validation.h>
 
 
-#include <list>
 #include <vector>
 
 static void AssembleBlock(benchmark::Bench& bench)

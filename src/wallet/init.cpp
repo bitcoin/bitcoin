@@ -15,7 +15,6 @@
 #include <walletinitinterface.h>
 #include <wallet/rpcwallet.h>
 #include <wallet/wallet.h>
-#include <wallet/walletutil.h>
 
 #include <coinjoin/client.h>
 #include <coinjoin/options.h>

@@ -7,8 +7,6 @@
 #define BITCOIN_CONSENSUS_PARAMS_H
 
 #include <uint256.h>
-#include <map>
-#include <string>
 #include <llmq/params.h>
 
 namespace Consensus {

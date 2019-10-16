@@ -12,7 +12,6 @@
 
 #include <algorithm>
 #include <cstddef>
-#include <iterator>
 #include <type_traits>
 
 /** Implements a drop-in replacement for std::vector<T> which stores up to N

@@ -7,7 +7,6 @@
 #include <policy/policy.h>
 
 #include <clientversion.h>
-#include <primitives/transaction.h>
 #include <streams.h>
 #include <txmempool.h>
 #include <util/system.h>

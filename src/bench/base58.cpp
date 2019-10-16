@@ -9,7 +9,6 @@
 
 #include <array>
 #include <vector>
-#include <string>
 
 
 static void Base58Encode(benchmark::Bench& bench)

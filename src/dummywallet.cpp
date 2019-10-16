@@ -6,8 +6,6 @@
 #include <util/system.h>
 #include <walletinitinterface.h>
 
-#include <stdio.h>
-
 class CWallet;
 
 namespace interfaces {

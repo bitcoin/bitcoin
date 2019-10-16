@@ -15,13 +15,11 @@
 #include <policy/policy.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
-#include <protocol.h>
 #include <rpc/protocol.h>
 #include <rpc/server.h>
 #include <shutdown.h>
 #include <policy/settings.h>
 #include <sync.h>
-#include <threadsafety.h>
 #include <timedata.h>
 #include <txmempool.h>
 #include <ui_interface.h>
