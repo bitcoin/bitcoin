@@ -336,7 +336,20 @@ static UniValue CallRPC(BaseRequestHandler *rh, const std::string& strMethod, co
 
     // Synchronously look up hostname
     raii_evhttp_connection evcon = obtain_evhttp_connection_base(base.get(), host, port);
-    evhttp_connection_set_timeout(evcon.get(), gArgs.GetArg("-rpcclienttimeout", DEFAULT_HTTP_CLIENT_TIMEOUT));
+
+    // Set connection timeout
+    {
+        const int timeout = gArgs.GetArg("-rpcclienttimeout", DEFAULT_HTTP_CLIENT_TIMEOUT);
+        if (timeout > 0) {
+            evhttp_connection_set_timeout(evcon.get(), timeout);
+        } else {
+            // Indefinite request timeouts are not possible in libevent-http, so we
+            // set the timeout to a very long time period instead.
+
+            constexpr int YEAR_IN_SECONDS = 31556952; // Average length of year in Gregorian calendar
+            evhttp_connection_set_timeout(evcon.get(), 5 * YEAR_IN_SECONDS);
+        }
+    }
 
     HTTPReply response;
     raii_evhttp_request req = obtain_evhttp_request(http_request_done, (void*)&response);
