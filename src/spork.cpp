@@ -105,6 +105,7 @@ void CSporkManager::ProcessSpork(CNode* pfrom, const std::string& strCommand, CD
 {
     if(fLiteMode) return; // disable all BitGreen specific functionality
 
+    if (strCommand == NetMsgType::SPORK) {
         CSporkMessage spork;
         vRecv >> spork;
 
@@ -115,12 +116,12 @@ void CSporkManager::ProcessSpork(CNode* pfrom, const std::string& strCommand, CD
             LOCK(cs_main);
             EraseInvRequest(pfrom, hash);
             if(!ChainActive().Tip()) return;
-            strLogMsg = strprintf("SPORK -- hash: %s id: %d value: %10d bestHeight: %d", hash.ToString(), spork.nSporkID, spork.nValue, ChainActive().Height());
+            strLogMsg = strprintf("SPORK -- hash: %s id: %d value: %10d bestHeight: %d peer=%d", hash.ToString(), spork.nSporkID, spork.nValue, ChainActive().Height(), pfrom->GetId());
         }
 
         if (spork.nTimeSigned > GetAdjustedTime() + 2 * 60 * 60) {
             LOCK(cs_main);
-            LogPrint(BCLog::SPORK, "CSporkManager::ProcessSpork -- ERROR: too far into the future\n");
+            LogPrint(BCLog::SPORK, "CSporkManager::%s -- ERROR: too far into the future\n", __func__);
             Misbehaving(pfrom->GetId(), 100);
             return;
         }
@@ -128,7 +129,7 @@ void CSporkManager::ProcessSpork(CNode* pfrom, const std::string& strCommand, CD
         CKeyID keyIDSigner;
         if (!spork.GetSignerKeyID(keyIDSigner, false) || !setSporkPubKeyIDs.count(keyIDSigner)) {
             LOCK(cs_main);
-            LogPrint(BCLog::SPORK, "CSporkManager::ProcessSpork -- ERROR: invalid signature\n");
+            LogPrint(BCLog::SPORK, "CSporkManager::%s -- ERROR: invalid signature\n", __func__);
             Misbehaving(pfrom->GetId(), 100);
             return;
         }
@@ -138,7 +139,7 @@ void CSporkManager::ProcessSpork(CNode* pfrom, const std::string& strCommand, CD
             if (mapSporksActive.count(spork.nSporkID)) {
                 if (mapSporksActive[spork.nSporkID].count(keyIDSigner)) {
                     if (mapSporksActive[spork.nSporkID][keyIDSigner].nTimeSigned >= spork.nTimeSigned) {
-                        LogPrint(BCLog::SPORK, "CSporkManager::ProcessSpork -- %s seen\n", strLogMsg);
+                        LogPrint(BCLog::SPORK, "CSporkManager::%s -- %s seen\n", __func__, strLogMsg);
                         return;
                     } else {
                         LogPrintf("%s updated\n", strLogMsg);
