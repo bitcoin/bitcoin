@@ -92,7 +92,7 @@ UniValue spork(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
         // SPORK VALUE
-        int64_t nValue = request.params[1].get_int64();
+        int64_t nValue = UniValue(UniValue::VNUM, request.params[1].getValStr()).get_int64();
 
         //broadcast new spork
         if(sporkManager.UpdateSpork(nSporkID, nValue)){
