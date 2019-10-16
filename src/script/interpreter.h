@@ -141,6 +141,10 @@ enum : uint32_t {
     // Making unknown public key versions (in BIP 342 scripts) non-standard
     SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_PUBKEYTYPE = (1U << 20),
 
+    // support OP_CHECKTEMPLATEVERIFY for standard template
+    //
+    SCRIPT_VERIFY_DEFAULT_CHECK_TEMPLATE_VERIFY_HASH = (1U << 21),
+
     // Constants to point to the highest flag in use. Add new flags above this line.
     //
     SCRIPT_VERIFY_END_MARKER
