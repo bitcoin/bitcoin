@@ -1916,7 +1916,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
             }
         }
 		// SYSCOIN
-		vecTXIDs.emplace_back(std::move(hash));
+		vecTXIDs.emplace_back(hash);
         // restore inputs
         if (i > 0) { // not coinbases
             CTxUndo &txundo = blockUndo.vtxundo[i-1];
