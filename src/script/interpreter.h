@@ -168,8 +168,13 @@ struct PrecomputedTransactionData
     uint256 m_outputs_single_hash;
     uint256 m_spent_amounts_single_hash;
     uint256 m_spent_scripts_single_hash;
+    uint256 m_scriptSigs_single_hash;
+    uint256 m_standard_template_single_hash;
     //! Whether the 5 fields above are initialized.
     bool m_bip341_taproot_ready = false;
+
+    //! Whether the bip119 fields above are initialized.
+    bool m_bip119_ctv_ready = false;
 
     // BIP143 precomputed data (double-SHA256).
     uint256 hashPrevouts, hashSequence, hashOutputs;
