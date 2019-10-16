@@ -6,7 +6,6 @@
 #ifndef SYSCOIN_SCRIPT_SIGN_H
 #define SYSCOIN_SCRIPT_SIGN_H
 
-#include <boost/optional.hpp>
 #include <hash.h>
 #include <pubkey.h>
 #include <script/interpreter.h>
