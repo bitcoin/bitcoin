@@ -19,8 +19,6 @@
 #include <stdint.h>
 #include <string>
 #include <string.h>
-#include <unordered_map>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -1010,101 +1008,55 @@ void Unserialize(Stream& is, std::tuple<Elements...>& item)
 /**
  * map
  */
-template<typename Stream, typename Map>
-void SerializeMap(Stream& os, const Map& m)
-{
-    WriteCompactSize(os, m.size());
-    for (auto mi = m.begin(); mi != m.end(); ++mi)
-        Serialize(os, (*mi));
-}
-
-template<typename Stream, typename Map>
-void UnserializeMap(Stream& is, Map& m)
-{
-    m.clear();
-    unsigned int nSize = ReadCompactSize(is);
-    auto mi = m.begin();
-    for (unsigned int i = 0; i < nSize; i++)
-    {
-        std::pair<typename std::remove_const<typename Map::key_type>::type, typename std::remove_const<typename Map::mapped_type>::type> item;
-        Unserialize(is, item);
-        mi = m.insert(mi, item);
-    }
-}
-
 template<typename Stream, typename K, typename T, typename Pred, typename A>
 void Serialize(Stream& os, const std::map<K, T, Pred, A>& m)
 {
-    SerializeMap(os, m);
+    WriteCompactSize(os, m.size());
+    for (const auto& entry : m)
+        Serialize(os, entry);
 }
 
 template<typename Stream, typename K, typename T, typename Pred, typename A>
 void Unserialize(Stream& is, std::map<K, T, Pred, A>& m)
 {
-    UnserializeMap(is, m);
+    m.clear();
+    unsigned int nSize = ReadCompactSize(is);
+    typename std::map<K, T, Pred, A>::iterator mi = m.begin();
+    for (unsigned int i = 0; i < nSize; i++)
+    {
+        std::pair<K, T> item;
+        Unserialize(is, item);
+        mi = m.insert(mi, item);
+    }
 }
 
-template<typename Stream, typename K, typename T, typename Hash, typename Pred, typename A>
-void Serialize(Stream& os, const std::unordered_map<K, T, Hash, Pred, A>& m)
-{
-    SerializeMap(os, m);
-}
 
-template<typename Stream, typename K, typename T, typename Hash, typename Pred, typename A>
-void Unserialize(Stream& is, std::unordered_map<K, T, Hash, Pred, A>& m)
-{
-    UnserializeMap(is, m);
-}
 
 /**
  * set
  */
-
-template<typename Stream, typename Set>
-void SerializeSet(Stream& os, const Set& m)
-{
-    WriteCompactSize(os, m.size());
-    for (auto it = m.begin(); it != m.end(); ++it)
-        Serialize(os, (*it));
-}
-
-template<typename Stream, typename Set>
-void UnserializeSet(Stream& is, Set& m)
-{
-    m.clear();
-    unsigned int nSize = ReadCompactSize(is);
-    auto it = m.begin();
-    for (unsigned int i = 0; i < nSize; i++)
-    {
-        typename std::remove_const<typename Set::key_type>::type key;
-        Unserialize(is, key);
-        it = m.insert(it, key);
-    }
-}
-
 template<typename Stream, typename K, typename Pred, typename A>
 void Serialize(Stream& os, const std::set<K, Pred, A>& m)
 {
-    SerializeSet(os, m);
+    WriteCompactSize(os, m.size());
+    for (typename std::set<K, Pred, A>::const_iterator it = m.begin(); it != m.end(); ++it)
+        Serialize(os, (*it));
 }
 
 template<typename Stream, typename K, typename Pred, typename A>
 void Unserialize(Stream& is, std::set<K, Pred, A>& m)
 {
-    UnserializeSet(is, m);
+    m.clear();
+    unsigned int nSize = ReadCompactSize(is);
+    typename std::set<K, Pred, A>::iterator it = m.begin();
+    for (unsigned int i = 0; i < nSize; i++)
+    {
+        K key;
+        Unserialize(is, key);
+        it = m.insert(it, key);
+    }
 }
 
-template<typename Stream, typename K, typename Hash, typename Pred, typename A>
-void Serialize(Stream& os, const std::unordered_set<K, Hash, Pred, A>& m)
-{
-    SerializeSet(os, m);
-}
-
-template<typename Stream, typename K, typename Hash, typename Pred, typename A>
-void Unserialize(Stream& is, std::unordered_set<K, Hash, Pred, A>& m)
-{
-    UnserializeSet(is, m);
-}
 
 /**
  * list
