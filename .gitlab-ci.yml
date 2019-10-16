@@ -101,7 +101,7 @@ stages:
     - mkdir -p $CI_PROJECT_DIR/testlogs
     - |
       if [ "$CI_COMMIT_REF_SLUG" = "develop" ]; then
-        cp -ra $CACHE_DIR/* $CI_PROJECT_DIR/cache-artifact/
+        cp -ra $CI_PROJECT_DIR/cache/* $CI_PROJECT_DIR/cache-artifact/
       fi
 
   # We're actually only interested in the develop branch creating the cache artifact, but there is no way to control this
