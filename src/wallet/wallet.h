@@ -38,6 +38,9 @@
 
 #include <boost/signals2/signal.hpp>
 
+//! Obtain wallet for use with legacy commands.
+std::shared_ptr<CWallet> GetMainWallet();
+
 //! Explicitly unload and delete the wallet.
 //! Blocks the current thread after signaling the unload intent so that all
 //! wallet clients release the wallet.

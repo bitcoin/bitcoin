@@ -10,7 +10,9 @@
 #include <script/standard.h>           // For CTxDestination
 #include <support/allocators/secure.h> // For SecureString
 #include <ui_interface.h>              // For ChangeType
-
+#ifdef ENABLE_WALLET
+#include <wallet/wallet.h>
+#endif
 #include <functional>
 #include <map>
 #include <memory>
