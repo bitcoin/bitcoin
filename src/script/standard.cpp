@@ -55,6 +55,7 @@ std::string GetTxnOutputType(TxoutType t)
     case TxoutType::WITNESS_V0_KEYHASH: return "witness_v0_keyhash";
     case TxoutType::WITNESS_V0_SCRIPTHASH: return "witness_v0_scripthash";
     case TxoutType::WITNESS_V1_TAPROOT: return "witness_v1_taproot";
+    case TxoutType::TX_BARE_DEFAULT_CHECK_TEMPLATE_VERIFY_HASH: return "bare_default_ctv_hash";
     case TxoutType::WITNESS_UNKNOWN: return "witness_unknown";
     } // no default case, so the compiler can warn about missing cases
     assert(false);
@@ -178,6 +179,10 @@ TxoutType Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned c
         return TxoutType::SCRIPTHASH;
     }
 
+    if (scriptPubKey.IsPayToBareDefaultCheckTemplateVerifyHash()) {
+        return TxoutType::TX_BARE_DEFAULT_CHECK_TEMPLATE_VERIFY_HASH;
+    }
+
     int witnessversion;
     std::vector<unsigned char> witnessprogram;
     if (scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
@@ -284,6 +289,7 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
     }
     case TxoutType::MULTISIG:
     case TxoutType::NULL_DATA:
+    case TxoutType::TX_BARE_DEFAULT_CHECK_TEMPLATE_VERIFY_HASH:
     case TxoutType::NONSTANDARD:
         return false;
     } // no default case, so the compiler can warn about missing cases
