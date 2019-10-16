@@ -15,7 +15,6 @@
 #include <uint256.h>
 #include <version.h>
 
-#include <atomic>
 #include <stdint.h>
 #include <string>
 

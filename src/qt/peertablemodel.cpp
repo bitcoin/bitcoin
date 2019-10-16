@@ -9,7 +9,6 @@
 #include <qt/guiutil.h>
 
 #include <interfaces/node.h>
-#include <sync.h>
 
 #include <algorithm>
 
