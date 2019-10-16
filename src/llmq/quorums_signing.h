@@ -85,6 +85,7 @@ public:
     bool GetRecoveredSigById(Consensus::LLMQType llmqType, const uint256& id, CRecoveredSig& ret);
     void WriteRecoveredSig(const CRecoveredSig& recSig);
     void RemoveRecoveredSig(Consensus::LLMQType llmqType, const uint256& id);
+    void TruncateRecoveredSig(Consensus::LLMQType llmqType, const uint256& id);
 
     void CleanupOldRecoveredSigs(int64_t maxAge);
 
@@ -97,7 +98,7 @@ public:
 
 private:
     bool ReadRecoveredSig(Consensus::LLMQType llmqType, const uint256& id, CRecoveredSig& ret);
-    void RemoveRecoveredSig(CDBBatch& batch, Consensus::LLMQType llmqType, const uint256& id, bool deleteTimeKey);
+    void RemoveRecoveredSig(CDBBatch& batch, Consensus::LLMQType llmqType, const uint256& id, bool deleteHashKey, bool deleteTimeKey);
 };
 
 class CRecoveredSigsListener
@@ -148,7 +149,9 @@ public:
 
     // This is called when a recovered signature can be safely removed from the DB. This is only safe when some other
     // mechanism prevents possible conflicts. As an example, ChainLocks prevent conflicts in confirmed TXs InstantSend votes
-    void RemoveRecoveredSig(Consensus::LLMQType llmqType, const uint256& id);
+    // This won't completely remove all traces of the recovered sig but instead leave the hash entry in the DB. This
+    // allows AlreadyHave to keep returning true. Cleanup will later remove the remains
+    void TruncateRecoveredSig(Consensus::LLMQType llmqType, const uint256& id);
 
 private:
     void ProcessMessageRecoveredSig(CNode* pfrom, const CRecoveredSig& recoveredSig, CConnman& connman);

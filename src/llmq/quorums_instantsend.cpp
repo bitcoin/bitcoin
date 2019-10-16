@@ -403,10 +403,16 @@ bool CInstantSendManager::ProcessTx(const CTransaction& tx, const Consensus::Par
     }
 
     if (!CheckCanLock(tx, true, params)) {
+        LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s: CheckCanLock returned false\n", __func__,
+                  tx.GetHash().ToString());
         return false;
     }
 
-    if (IsConflicted(tx)) {
+    auto conflictingLock = GetConflictingLock(tx);
+    if (conflictingLock) {
+        auto islockHash = ::SerializeHash(*conflictingLock);
+        LogPrintf("CInstantSendManager::%s -- txid=%s: conflicts with islock %s, txid=%s\n", __func__,
+                  tx.GetHash().ToString(), islockHash.ToString(), conflictingLock->txid.ToString());
         return false;
     }
 
@@ -421,7 +427,7 @@ bool CInstantSendManager::ProcessTx(const CTransaction& tx, const Consensus::Par
         uint256 otherTxHash;
         if (quorumSigningManager->GetVoteForId(llmqType, id, otherTxHash)) {
             if (otherTxHash != tx.GetHash()) {
-                LogPrintf("CInstantSendManager::%s -- txid=%s: input %s is conflicting with islock %s\n", __func__,
+                LogPrintf("CInstantSendManager::%s -- txid=%s: input %s is conflicting with previous vote for tx %s\n", __func__,
                          tx.GetHash().ToString(), in.prevout.ToStringShort(), otherTxHash.ToString());
                 return false;
             }
@@ -430,19 +436,28 @@ bool CInstantSendManager::ProcessTx(const CTransaction& tx, const Consensus::Par
 
         // don't even try the actual signing if any input is conflicting
         if (quorumSigningManager->IsConflicting(llmqType, id, tx.GetHash())) {
+            LogPrintf("CInstantSendManager::%s -- txid=%s: quorumSigningManager->IsConflicting returned true. id=%s\n", __func__,
+                     tx.GetHash().ToString(), id.ToString());
             return false;
         }
     }
     if (alreadyVotedCount == ids.size()) {
+        LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s: already voted on all inputs, bailing out\n", __func__,
+                 tx.GetHash().ToString());
         return true;
     }
+
+    LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s: trying to vote on %d inputs\n", __func__,
+             tx.GetHash().ToString(), tx.vin.size());
 
     for (size_t i = 0; i < tx.vin.size(); i++) {
         auto& in = tx.vin[i];
         auto& id = ids[i];
         inputRequestIds.emplace(id);
+        LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s: trying to vote on input %s with id %s\n", __func__,
+                 tx.GetHash().ToString(), in.prevout.ToStringShort(), id.ToString());
         if (quorumSigningManager->AsyncSignIfMember(llmqType, id, tx.GetHash())) {
-            LogPrintf("CInstantSendManager::%s -- txid=%s: voted on input %s with id %s\n", __func__,
+            LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s: voted on input %s with id %s\n", __func__,
                       tx.GetHash().ToString(), in.prevout.ToStringShort(), id.ToString());
         }
     }
@@ -915,6 +930,10 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
 
         // This will also add children TXs to pendingRetryTxs
         RemoveNonLockedTx(islock.txid, true);
+
+        // We don't need the recovered sigs for the inputs anymore. This prevents unnecessary propagation of these sigs.
+        // We only need the ISLOCK from now on to detect conflicts
+        TruncateRecoveredSigsForInputs(islock);
     }
 
     CInv inv(MSG_ISLOCK, hash);
@@ -1036,6 +1055,9 @@ void CInstantSendManager::AddNonLockedTx(const CTransactionRef& tx, const CBlock
             nonLockedTxsByInputs.emplace(in.prevout.hash, std::make_pair(in.prevout.n, tx->GetHash()));
         }
     }
+
+    LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s, pindexMined=%s\n", __func__,
+             tx->GetHash().ToString(), pindexMined ? pindexMined->GetBlockHash().ToString() : "");
 }
 
 void CInstantSendManager::RemoveNonLockedTx(const uint256& txid, bool retryChildren)
@@ -1048,10 +1070,12 @@ void CInstantSendManager::RemoveNonLockedTx(const uint256& txid, bool retryChild
     }
     auto& info = it->second;
 
+    size_t retryChildrenCount = 0;
     if (retryChildren) {
         // TX got locked, so we can retry locking children
         for (auto& childTxid : info.children) {
             pendingRetryTxs.emplace(childTxid);
+            retryChildrenCount++;
         }
     }
 
@@ -1078,6 +1102,9 @@ void CInstantSendManager::RemoveNonLockedTx(const uint256& txid, bool retryChild
     }
 
     nonLockedTxs.erase(it);
+
+    LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s, retryChildren=%d, retryChildrenCount=%d\n", __func__,
+             txid.ToString(), retryChildren, retryChildrenCount);
 }
 
 void CInstantSendManager::RemoveConflictedTx(const CTransaction& tx)
@@ -1088,6 +1115,17 @@ void CInstantSendManager::RemoveConflictedTx(const CTransaction& tx)
     for (const auto& in : tx.vin) {
         auto inputRequestId = ::SerializeHash(std::make_pair(INPUTLOCK_REQUESTID_PREFIX, in));
         inputRequestIds.erase(inputRequestId);
+    }
+}
+
+void CInstantSendManager::TruncateRecoveredSigsForInputs(const llmq::CInstantSendLock& islock)
+{
+    auto& consensusParams = Params().GetConsensus();
+
+    for (auto& in : islock.inputs) {
+        auto inputRequestId = ::SerializeHash(std::make_pair(INPUTLOCK_REQUESTID_PREFIX, in));
+        inputRequestIds.erase(inputRequestId);
+        quorumSigningManager->TruncateRecoveredSig(consensusParams.llmqTypeInstantSend, inputRequestId);
     }
 }
 
@@ -1131,17 +1169,13 @@ void CInstantSendManager::HandleFullyConfirmedBlock(const CBlockIndex* pindex)
         LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s, islock=%s: removed islock as it got fully confirmed\n", __func__,
                  islock->txid.ToString(), islockHash.ToString());
 
-        for (auto& in : islock->inputs) {
-            auto inputRequestId = ::SerializeHash(std::make_pair(INPUTLOCK_REQUESTID_PREFIX, in));
-            inputRequestIds.erase(inputRequestId);
+        // No need to keep recovered sigs for fully confirmed IS locks, as there is no chance for conflicts
+        // from now on. All inputs are spent now and can't be spend in any other TX.
+        TruncateRecoveredSigsForInputs(*islock);
 
-            // no need to keep recovered sigs for fully confirmed IS locks, as there is no chance for conflicts
-            // from now on. All inputs are spent now and can't be spend in any other TX.
-            quorumSigningManager->RemoveRecoveredSig(consensusParams.llmqTypeInstantSend, inputRequestId);
-        }
-
-        // same as in the loop
-        quorumSigningManager->RemoveRecoveredSig(consensusParams.llmqTypeInstantSend, islock->GetRequestId());
+        // And we don't need the recovered sig for the ISLOCK anymore, as the block in which it got mined is considered
+        // fully confirmed now
+        quorumSigningManager->TruncateRecoveredSig(consensusParams.llmqTypeInstantSend, islock->GetRequestId());
     }
 
     // Find all previously unlocked TXs that got locked by this fully confirmed (ChainLock) block and remove them

@@ -149,6 +149,7 @@ public:
     void AddNonLockedTx(const CTransactionRef& tx, const CBlockIndex* pindexMined);
     void RemoveNonLockedTx(const uint256& txid, bool retryChildren);
     void RemoveConflictedTx(const CTransaction& tx);
+    void TruncateRecoveredSigsForInputs(const CInstantSendLock& islock);
 
     void NotifyChainLock(const CBlockIndex* pindexChainLock);
     void UpdatedBlockTip(const CBlockIndex* pindexNew);
