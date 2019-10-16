@@ -9,7 +9,6 @@
 #include <init.h>
 #include <interfaces/chain.h>
 #include <key_io.h>
-#include <node/transaction.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
@@ -39,7 +38,6 @@
 
 #include <univalue.h>
 
-#include <functional>
 // SYSCOIN
 #include <services/assetconsensus.h>
 #include <base58.h>

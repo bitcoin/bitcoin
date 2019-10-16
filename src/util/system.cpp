@@ -9,7 +9,6 @@
 #include <util/strencodings.h>
 #include <util/translation.h>
 
-#include <stdarg.h>
 
 #if (defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__))
 #include <pthread.h>

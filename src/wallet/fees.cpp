@@ -5,7 +5,6 @@
 
 #include <wallet/fees.h>
 
-#include <util/system.h>
 #include <wallet/coincontrol.h>
 #include <wallet/wallet.h>
 

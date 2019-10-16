@@ -7,7 +7,6 @@
 
 #include <addrman.h>
 #include <banman.h>
-#include <arith_uint256.h>
 #include <blockencodings.h>
 #include <chainparams.h>
 #include <consensus/validation.h>

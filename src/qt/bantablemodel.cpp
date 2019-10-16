@@ -7,8 +7,6 @@
 #include <qt/clientmodel.h>
 
 #include <interfaces/node.h>
-#include <sync.h>
-#include <util/time.h>
 
 #include <algorithm>
 

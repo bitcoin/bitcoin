@@ -5,10 +5,8 @@
 #ifndef SYSCOIN_CONSENSUS_MERKLE_H
 #define SYSCOIN_CONSENSUS_MERKLE_H
 
-#include <stdint.h>
 #include <vector>
 
-#include <primitives/transaction.h>
 #include <primitives/block.h>
 #include <uint256.h>
 

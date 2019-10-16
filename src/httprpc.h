@@ -5,8 +5,6 @@
 #ifndef SYSCOIN_HTTPRPC_H
 #define SYSCOIN_HTTPRPC_H
 
-#include <string>
-#include <map>
 
 /** Start HTTP RPC subsystem.
  * Precondition; HTTP and RPC has been started.

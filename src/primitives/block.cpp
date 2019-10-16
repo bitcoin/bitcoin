@@ -7,7 +7,6 @@
 
 #include <hash.h>
 #include <tinyformat.h>
-#include <crypto/common.h>
 
 void CBlockHeader::SetAuxpow (std::unique_ptr<CAuxPow> apow)
 {

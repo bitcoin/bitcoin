@@ -7,7 +7,6 @@
 
 #include <tinyformat.h>
 
-#include <utility>
 
 /**
  * Bilingual messages:

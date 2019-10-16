@@ -11,7 +11,6 @@
 
 #include <compat.h>
 #include <serialize.h>
-#include <span.h>
 
 #include <stdint.h>
 #include <string>

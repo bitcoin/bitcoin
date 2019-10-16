@@ -5,7 +5,6 @@
 #ifndef SYSCOIN_UTIL_STRING_H
 #define SYSCOIN_UTIL_STRING_H
 
-#include <functional>
 #include <string>
 #include <vector>
 
