@@ -71,14 +71,14 @@ ClientModel::~ClientModel()
 
 int ClientModel::getNumConnections(unsigned int flags) const
 {
-    CConnman::NumConnections connections = CConnman::CONNECTIONS_NONE;
+    ConnectionDirection connections = ConnectionDirection::None;
 
     if(flags == CONNECTIONS_IN)
-        connections = CConnman::CONNECTIONS_IN;
+        connections = ConnectionDirection::In;
     else if (flags == CONNECTIONS_OUT)
-        connections = CConnman::CONNECTIONS_OUT;
+        connections = ConnectionDirection::Out;
     else if (flags == CONNECTIONS_ALL)
-        connections = CConnman::CONNECTIONS_ALL;
+        connections = ConnectionDirection::Both;
 
     return m_node.getNodeCount(connections);
 }
