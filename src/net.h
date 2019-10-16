@@ -900,6 +900,10 @@ public:
             }
         } else if (inv.type == MSG_BLOCK) {
             vInventoryBlockToSend.push_back(inv.hash);
+        } else {
+            if (!filterInventoryKnown.contains(inv.hash)) {
+                vInventoryOtherToSend.push_back(inv);
+            }
         }
     }
 
