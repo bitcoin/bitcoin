@@ -2291,6 +2291,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
                              REJECT_INVALID, "bad-blk-sigops");
 
         txdata.emplace_back(tx);
+        const uint256& txHash = tx.GetHash(); 
         if (!tx.IsCoinBase())
         {
             std::vector<CScriptCheck> vChecks;
@@ -2311,7 +2312,6 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
             }
             control.Add(vChecks);
             // SYSCOIN
-            const uint256& txHash = tx.GetHash(); 
             if(IsSyscoinTx(tx.nVersion)){
                 if (!CheckSyscoinInputs(ibd, tx, txHash, state, view, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, fJustCheck, false, actorSet, mapAssetAllocations, mapAssets, mapAssetSupplyStats, vecMintKeys, vecLockedOutpoints))
                     return error("ConnectBlock(): CheckSyscoinInputs on block %s failed: %s\n", block.GetHash().ToString(), FormatStateMessage(state));        
