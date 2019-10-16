@@ -11,6 +11,7 @@
 
 #include <chainparams.h>
 #include <net_processing.h>
+#include <spork.h>
 #include <validation.h>
 
 namespace llmq
@@ -58,8 +59,8 @@ void CDKGSessionManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fIni
         return;
     if (pindexNew->nHeight < consensus.nLLMQActivationHeight)
         return;
-
-    // TODO: BitGreen - Check spork quorum dkg
+    if (!sporkManager.IsSporkActive(SPORK_3_QUORUM_DKG_ENABLED))
+        return;
 
     for (auto& qt : dkgSessionHandlers) {
         qt.second.UpdatedBlockTip(pindexNew);
@@ -68,7 +69,8 @@ void CDKGSessionManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fIni
 
 void CDKGSessionManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman* connman)
 {
-    // TODO: BitGreen - check spork quorum dkg
+    if (!sporkManager.IsSporkActive(SPORK_3_QUORUM_DKG_ENABLED))
+        return;
 
     if (strCommand != NetMsgType::QCONTRIB
         && strCommand != NetMsgType::QCOMPLAINT
@@ -102,7 +104,8 @@ void CDKGSessionManager::ProcessMessage(CNode* pfrom, const std::string& strComm
 
 bool CDKGSessionManager::AlreadyHave(const CInv& inv) const
 {
-    // TODO: BitGreen - check spork quorum dkg
+    if (!sporkManager.IsSporkActive(SPORK_3_QUORUM_DKG_ENABLED))
+        return false;
 
     for (const auto& p : dkgSessionHandlers) {
         auto& dkgType = p.second;
@@ -118,7 +121,8 @@ bool CDKGSessionManager::AlreadyHave(const CInv& inv) const
 
 bool CDKGSessionManager::GetContribution(const uint256& hash, CDKGContribution& ret) const
 {
-    // TODO: BitGreen - check spork quorum dkg
+    if (!sporkManager.IsSporkActive(SPORK_3_QUORUM_DKG_ENABLED))
+        return false;
 
     for (const auto& p : dkgSessionHandlers) {
         auto& dkgType = p.second;
@@ -137,7 +141,8 @@ bool CDKGSessionManager::GetContribution(const uint256& hash, CDKGContribution& 
 
 bool CDKGSessionManager::GetComplaint(const uint256& hash, CDKGComplaint& ret) const
 {
-    // TODO: BitGreen - check spork quorum dkg
+    if (!sporkManager.IsSporkActive(SPORK_3_QUORUM_DKG_ENABLED))
+        return false;
 
     for (const auto& p : dkgSessionHandlers) {
         auto& dkgType = p.second;
@@ -156,7 +161,8 @@ bool CDKGSessionManager::GetComplaint(const uint256& hash, CDKGComplaint& ret) c
 
 bool CDKGSessionManager::GetJustification(const uint256& hash, CDKGJustification& ret) const
 {
-    // TODO: BitGreen - check spork quorum dkg
+    if (!sporkManager.IsSporkActive(SPORK_3_QUORUM_DKG_ENABLED))
+        return false;
 
     for (const auto& p : dkgSessionHandlers) {
         auto& dkgType = p.second;
@@ -175,7 +181,8 @@ bool CDKGSessionManager::GetJustification(const uint256& hash, CDKGJustification
 
 bool CDKGSessionManager::GetPrematureCommitment(const uint256& hash, CDKGPrematureCommitment& ret) const
 {
-    // TODO: BitGreen - check spork quorum dkg
+    if (!sporkManager.IsSporkActive(SPORK_3_QUORUM_DKG_ENABLED))
+        return false;
 
     for (const auto& p : dkgSessionHandlers) {
         auto& dkgType = p.second;
