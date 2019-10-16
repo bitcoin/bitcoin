@@ -161,6 +161,9 @@ bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned i
 
 struct PrecomputedTransactionData
 {
+    // Order of fields is packed below (uint256 is 32 bytes, vector is 24 bytes
+    // (3 ptrs), ready flags (1 byte each).
+
     // BIP341 precomputed data.
     // These are single-SHA256, see https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki#cite_note-16.
     uint256 m_prevouts_single_hash;
@@ -168,15 +171,25 @@ struct PrecomputedTransactionData
     uint256 m_outputs_single_hash;
     uint256 m_spent_amounts_single_hash;
     uint256 m_spent_scripts_single_hash;
-    //! Whether the 5 fields above are initialized.
-    bool m_bip341_taproot_ready = false;
+
+    // BIP119 precomputed data (single SHA256).
+    uint256 m_scriptSigs_single_hash;
 
     // BIP143 precomputed data (double-SHA256).
     uint256 hashPrevouts, hashSequence, hashOutputs;
-    //! Whether the 3 fields above are initialized.
+
+    // BIP341 cached outputs.
+    std::vector<CTxOut> m_spent_outputs;
+
+    //! Whether the bip341 fields above are initialized.
+    bool m_bip341_taproot_ready = false;
+
+    //! Whether the bip119 fields above are initialized.
+    bool m_bip119_ctv_ready = false;
+
+    //! Whether the bip143 fields above are initialized.
     bool m_bip143_segwit_ready = false;
 
-    std::vector<CTxOut> m_spent_outputs;
     //! Whether m_spent_outputs is initialized.
     bool m_spent_outputs_ready = false;
 
