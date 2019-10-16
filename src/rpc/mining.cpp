@@ -132,7 +132,8 @@ static UniValue generateBlocks(const CScript& coinbase_script, int nGenerate, ui
             continue;
         }
         std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
-        if (!ProcessNewBlock(Params(), shared_pblock, true, nullptr))
+        CValidationState state;
+        if (!ProcessNewBlock(Params(), shared_pblock, state, true, nullptr) || !state.IsValid())
             throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
         ++nHeight;
         blockHashes.push_back(pblock->GetHash().GetHex());
@@ -733,10 +734,14 @@ static UniValue submitblock(const JSONRPCRequest& request)
     bool new_block;
     submitblock_StateCatcher sc(block.GetHash());
     RegisterValidationInterface(&sc);
-    bool accepted = ProcessNewBlock(Params(), blockptr, /* fForceProcessing */ true, /* fNewBlock */ &new_block);
+    CValidationState dos_state;
+    bool accepted = ProcessNewBlock(Params(), blockptr, dos_state, /* fForceProcessing */ true, /* fNewBlock */ &new_block);
     UnregisterValidationInterface(&sc);
     if (!new_block && accepted) {
         return "duplicate";
+    }
+    if (!dos_state.IsValid()) {
+        return BIP22ValidationResult(dos_state);
     }
     if (!sc.found) {
         return "inconclusive";

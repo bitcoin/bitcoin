@@ -196,22 +196,33 @@ static const uint64_t MIN_DISK_SPACE_FOR_BLOCK_FILES = 550 * 1024 * 1024;
  * block is made active. Note that it does not, however, guarantee that the
  * specific block passed to it has been checked for validity!
  *
- * If you want to *possibly* get feedback on whether pblock is valid, you must
- * install a CValidationInterface (see validationinterface.h) - this will have
- * its BlockChecked method called whenever *any* block completes validation.
+ * Performs initial sanity checks using the provided CValidationState before
+ * connecting any block(s). If you want to *possibly* get feedback on whether
+ * pblock is valid beyond just cursory mutation/DoS checks, you must install
+ * a CValidationInterface (see validationinterface.h) - this will have its
+ * BlockChecked method called whenever *any* block completes validation (note
+ * that any invalidity returned via state will *not* also be provided via
+ * BlockChecked). There is, of course, no guarantee that any given block which
+ * is not a part of the eventual best chain will ever be checked.
  *
- * Note that we guarantee that either the proof-of-work is valid on pblock, or
- * (and possibly also) BlockChecked will have been called.
+ * If the block pblock is built on is in our header tree, and pblock is a
+ * candidate for accepting to disk (either because it is a candidate for the
+ * best chain soon, or fForceProcessing is set), but pblock has been mutated,
+ * state is guaranteed to be some non-IsValid() state.
  *
- * May not be called in a
- * validationinterface callback.
+ * If fForceProcessing is set (or fNewBlock returns true), and state.IsValid(),
+ * barring pruning and a desire to re-download a pruned block, there should
+ * never be any reason to re-ProcessNewBlock any block with the same hash.
+ *
+ * May not be called in a validationinterface callback.
  *
  * @param[in]   pblock  The block we want to process.
+ * @param[out]  state This may be set to an Error state if any error occurred processing them
  * @param[in]   fForceProcessing Process this block even if unrequested; used for non-network block sources and whitelisted peers.
  * @param[out]  fNewBlock A boolean which is set to indicate if the block was first received via this call
  * @returns     If the block was processed, independently of block validity
  */
-bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, bool fForceProcessing, bool* fNewBlock) LOCKS_EXCLUDED(cs_main);
+bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, CValidationState& state, bool fForceProcessing, bool* fNewBlock) LOCKS_EXCLUDED(cs_main);
 
 /**
  * Process incoming block headers.
