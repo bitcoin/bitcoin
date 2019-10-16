@@ -221,6 +221,14 @@ bool CScript::IsPayToAnchor(int version, const std::vector<unsigned char>& progr
         program[1] == 0x73;
 }
 
+bool CScript::IsPayToBareDefaultCheckTemplateVerifyHash() const
+{
+    // Extra-fast test for pay-to-bare-default-check-template-verify-hash CScripts:
+    return (this->size() == 34 &&
+            (*this)[0] == 0x20 &&
+            (*this)[33] == OP_CHECKTEMPLATEVERIFY);
+}
+
 bool CScript::IsPayToScriptHash() const
 {
     // Extra-fast test for pay-to-script-hash CScripts:
