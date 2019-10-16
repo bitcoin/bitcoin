@@ -21,7 +21,8 @@ static bool read_stdin(std::vector<uint8_t>& data)
 }
 
 // Default initialization: Override using a non-weak initialize().
-__attribute__((weak)) void initialize()
+__attribute__((weak))
+void initialize()
 {
 }
 
