@@ -2805,8 +2805,8 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 LOCK(cs_main);
                 mapBlockSource.erase(pblock->GetHash());
             }
-            LOCK(cs_main); // hold cs_main for CBlockIndex::IsValid()
-            if (pindex->IsValid(BLOCK_VALID_TRANSACTIONS)) {
+            if (dos_state.IsValid()) {
+                LOCK(cs_main);
                 // Clear download state for this block, which is in
                 // process from some other peer.  We do this after calling
                 // ProcessNewBlock so that a malleated cmpctblock announcement
