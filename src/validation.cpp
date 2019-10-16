@@ -2316,11 +2316,10 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
                 if (!CheckSyscoinInputs(ibd, tx, txHash, state, view, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, fJustCheck, false, actorSet, mapAssetAllocations, mapAssets, mapAssetSupplyStats, vecMintKeys, vecLockedOutpoints))
                     return error("ConnectBlock(): CheckSyscoinInputs on block %s failed: %s\n", block.GetHash().ToString(), FormatStateMessage(state));        
             }
-            if(!fJustCheck){
-                blockIndex.emplace_back(std::move(txHash), std::move(blockHash));
-            } 
         }
-
+        if(!fJustCheck){
+            blockIndex.emplace_back(std::move(txHash), std::move(blockHash));
+        } 
         CTxUndo undoDummy;
         if (i > 0) {
             blockundo.vtxundo.push_back(CTxUndo());
