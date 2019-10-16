@@ -3221,11 +3221,11 @@ CNode::~CNode()
 
 void CNode::AskFor(const CInv& inv, int64_t doubleRequestDelay)
 {
-    if (vecAskFor.size() > MAPASKFOR_MAX_SZ || setAskFor.size() > SETASKFOR_MAX_SZ) {
+    if (queueAskFor.size() > MAPASKFOR_MAX_SZ || setAskFor.size() > SETASKFOR_MAX_SZ) {
         int64_t nNow = GetTime();
         if(nNow - nLastWarningTime > WARNING_INTERVAL) {
             LogPrintf("CNode::AskFor -- WARNING: inventory message dropped: vecAskFor.size = %d, setAskFor.size = %d, MAPASKFOR_MAX_SZ = %d, SETASKFOR_MAX_SZ = %d, nSkipped = %d, peer=%d\n",
-                      vecAskFor.size(), setAskFor.size(), MAPASKFOR_MAX_SZ, SETASKFOR_MAX_SZ, nNumWarningsSkipped, id);
+                      queueAskFor.size(), setAskFor.size(), MAPASKFOR_MAX_SZ, SETASKFOR_MAX_SZ, nNumWarningsSkipped, id);
             nLastWarningTime = nNow;
             nNumWarningsSkipped = 0;
         }
@@ -3235,10 +3235,10 @@ void CNode::AskFor(const CInv& inv, int64_t doubleRequestDelay)
         return;
     }
     // a peer may not have multiple non-responded queue positions for a single inv item
-    if (!setAskFor.insert(inv.hash).second)
+    if (!setAskFor.emplace(inv.hash).second)
         return;
 
-    // We're using vecAskFor as a priority queue,
+    // We're using queueAskFor as a priority queue,
     // the key is the earliest time the request can be sent
     int64_t nRequestTime;
     auto it = mapAlreadyAskedFor.find(inv.hash);
@@ -3262,16 +3262,17 @@ void CNode::AskFor(const CInv& inv, int64_t doubleRequestDelay)
         mapAlreadyAskedFor.update(it, nRequestTime);
     else
         mapAlreadyAskedFor.insert(std::make_pair(inv.hash, nRequestTime));
-    vecAskFor.emplace_back(nRequestTime, inv);
+
+    queueAskFor.emplace(nRequestTime, inv);
+    setAskForInQueue.emplace(inv.hash);
 }
 
 void CNode::RemoveAskFor(const uint256& hash)
 {
-    if (setAskFor.erase(hash)) {
-        vecAskFor.erase(std::remove_if(vecAskFor.begin(), vecAskFor.end(), [&](const std::pair<int64_t, CInv>& item) {
-            return item.second.hash == hash;
-        }), vecAskFor.end());
-    }
+    setAskFor.erase(hash);
+    // we don't really remove it from queueAskFor as it would be too expensive to rebuild the heap
+    // instead, we're ignoring the entry later as it won't be found in setAskForInQueue anymore
+    setAskForInQueue.erase(hash);
 }
 
 bool CConnman::NodeFullyConnected(const CNode* pnode)

@@ -32,6 +32,7 @@
 #include <memory>
 #include <condition_variable>
 #include <unordered_set>
+#include <queue>
 
 #ifndef WIN32
 #include <arpa/inet.h>
@@ -843,7 +844,8 @@ public:
     std::vector<CInv> vInventoryOtherToSend;
     CCriticalSection cs_inventory;
     std::unordered_set<uint256, StaticSaltedHasher> setAskFor;
-    std::vector<std::pair<int64_t, CInv>> vecAskFor;
+    std::unordered_set<uint256, StaticSaltedHasher> setAskForInQueue;
+    std::priority_queue<std::pair<int64_t, CInv>, std::vector<std::pair<int64_t, CInv>>, std::greater<>> queueAskFor;
     int64_t nNextInvSend;
     // Used for headers announcements - unfiltered blocks to relay
     // Also protected by cs_inventory

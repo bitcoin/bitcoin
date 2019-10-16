@@ -3964,11 +3964,15 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
         //
         // Message: getdata (non-blocks)
         //
-        std::sort(pto->vecAskFor.begin(), pto->vecAskFor.end());
-        auto it = pto->vecAskFor.begin();
-        while (it != pto->vecAskFor.end() && it->first <= nNow)
+        while (!pto->queueAskFor.empty() && pto->queueAskFor.top().first <= nNow)
         {
-            const CInv& inv = it->second;
+            const CInv& inv = pto->queueAskFor.top().second;
+            auto jt = pto->setAskForInQueue.find(inv.hash);
+            if (jt == pto->setAskForInQueue.end()) {
+                pto->queueAskFor.pop();
+                continue;
+            }
+
             if (!AlreadyHave(inv))
             {
                 LogPrint(BCLog::NET, "SendMessages -- GETDATA -- requesting inv = %s peer=%d\n", inv.ToString(), pto->GetId());
@@ -3984,9 +3988,9 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
                 LogPrint(BCLog::NET, "SendMessages -- GETDATA -- already have inv = %s peer=%d\n", inv.ToString(), pto->GetId());
                 pto->setAskFor.erase(inv.hash);
             }
-            ++it;
+            pto->queueAskFor.pop();
+            pto->setAskForInQueue.erase(jt);
         }
-        pto->vecAskFor.erase(pto->vecAskFor.begin(), it);
         if (!vGetData.empty()) {
             connman->PushMessage(pto, msgMaker.Make(NetMsgType::GETDATA, vGetData));
             LogPrint(BCLog::NET, "SendMessages -- GETDATA -- pushed size = %lu peer=%d\n", vGetData.size(), pto->GetId());
