@@ -152,7 +152,8 @@ void quorum_dkgstatus_help()
 {
     throw std::runtime_error(
         RPCHelpMan{"quorum dkgstatus",
-            "\nReturn the status of the current DKG process.\n",
+            "\nReturn the status of the current DKG process.\n"
+            "Works only when SPORK_3_QUORUM_DKG_ENABLED spork is ON.\n",
             {
                 {"detail_level", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Detail level of output.\n"
                     "                        0=Only show counts. 1=Show member indexes. 2=Show member's ProTxHashes."}
