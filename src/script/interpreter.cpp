@@ -1377,6 +1377,18 @@ uint256 GetSpentAmountsSHA256(const std::vector<CTxOut>& outputs_spent)
     HashWriter ss{};
     for (const auto& txout : outputs_spent) {
         ss << txout.nValue;
+
+    }
+    return ss.GetSHA256();
+}
+
+/** Compute the (single) SHA256 of the concatenation of all scriptSigs in a tx. */
+template <class T>
+uint256 GetScriptSigsSHA256(const T& txTo)
+{
+    HashWriter ss{};
+    for (const auto& in : txTo.vin) {
+        ss << in.scriptSig;
     }
     return ss.GetSHA256();
 }
@@ -1391,8 +1403,51 @@ uint256 GetSpentScriptsSHA256(const std::vector<CTxOut>& outputs_spent)
     return ss.GetSHA256();
 }
 
+/* Not Exported, just convenience */
+template<typename TxType>
+uint256 GetDefaultCheckTemplateVerifyHashWithScript(const TxType& tx, const uint256& outputs_hash, const uint256& sequences_hash,
+                                const uint256& scriptSig_hash, const uint32_t input_index) {
+    auto h = HashWriter{}
+        << tx.nVersion
+        << tx.nLockTime
+        << scriptSig_hash
+        << uint32_t(tx.vin.size())
+        << sequences_hash
+        << uint32_t(tx.vout.size())
+        << outputs_hash
+        << input_index;
+    return h.GetSHA256();
+}
+
+template<typename TxType>
+uint256 GetDefaultCheckTemplateVerifyHashEmptyScript(const TxType& tx, const uint256& outputs_hash, const uint256& sequences_hash,
+                                const uint32_t input_index) {
+    auto h = HashWriter{}
+        << tx.nVersion
+        << tx.nLockTime
+        << uint32_t(tx.vin.size())
+        << sequences_hash
+        << uint32_t(tx.vout.size())
+        << outputs_hash
+        << input_index;
+    return h.GetSHA256();
+}
 
 } // namespace
+
+template<typename TxType>
+uint256 GetDefaultCheckTemplateVerifyHash(const TxType& tx, uint32_t input_index) {
+    return GetDefaultCheckTemplateVerifyHash(tx, GetOutputsSHA256(tx), GetSequencesSHA256(tx), input_index);
+}
+
+template<typename TxType>
+uint256 GetDefaultCheckTemplateVerifyHash(const TxType& tx, const uint256& outputs_hash, const uint256& sequences_hash,
+                                const uint32_t input_index) {
+    bool skip_scriptSigs = std::find_if(tx.vin.begin(), tx.vin.end(),
+            [](const CTxIn& c) { return c.scriptSig != CScript(); }) == tx.vin.end();
+    return skip_scriptSigs ? GetDefaultCheckTemplateVerifyHashEmptyScript(tx, outputs_hash, sequences_hash, input_index) :
+        GetDefaultCheckTemplateVerifyHashWithScript(tx, outputs_hash, sequences_hash, GetScriptSigsSHA256(tx), input_index);
+}
 
 template <class T>
 void PrecomputedTransactionData::Init(const T& txTo, std::vector<CTxOut>&& spent_outputs, bool force)
