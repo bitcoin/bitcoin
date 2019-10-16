@@ -2144,7 +2144,7 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex& block_index, const Ch
 
     // Enforce ctv/csfs/internalkey (BIP 119, xxx, yyy)
     if (DeploymentActiveAt(block_index, chainman, Consensus::DEPLOYMENT_LNHANCE)) {
-        // Empty for now.
+        flags |= SCRIPT_VERIFY_LNHANCE;
     }
 
     // Enforce BIP147 NULLDUMMY (activated simultaneously with segwit)
