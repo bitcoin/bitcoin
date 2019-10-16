@@ -94,7 +94,7 @@ void CActiveMasternodeManager::Init()
 
     mnListEntry = dmn;
 
-    LogPrintf("CActiveMasternodeManager::Init -- proTxHash=%s, proTx=%s\n", mnListEntry->proTxHash.ToString(), mnListEntry->ToString());
+    LogPrintf("CActiveMasternodeManager::Init -- proTxHash=%s, proTx=%s activeMasternode=%s\n", mnListEntry->proTxHash.ToString(), mnListEntry->ToString(), activeMasternodeInfo.service.ToStringIPPort());
 
     if (activeMasternodeInfo.service != mnListEntry->pdmnState->addr) {
         state = MASTERNODE_ERROR;
