@@ -6,7 +6,6 @@
 #include <consensus/validation.h>
 #include <net.h>
 #include <net_processing.h>
-#include <txmempool.h>
 #include <util/validation.h>
 #include <validation.h>
 #include <validationinterface.h>

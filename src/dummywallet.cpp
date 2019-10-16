@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <stdio.h>
 #include <util/system.h>
 #include <walletinitinterface.h>
 #include <support/allocators/secure.h>
