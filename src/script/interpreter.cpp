@@ -591,7 +591,42 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     break;
                 }
 
-                case OP_NOP1: case OP_NOP4: case OP_NOP5:
+                case OP_CHECKTEMPLATEVERIFY:
+                {
+                    if (flags & SCRIPT_VERIFY_DISCOURAGE_CHECKTEMPLATEVERIFY) {
+                        return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS);
+                    }
+
+                    // if flags not enabled; treat as a NOP4
+                    if (!(flags & SCRIPT_VERIFY_CHECKTEMPLATEVERIFY)) {
+                        break;
+                    }
+
+                    if (stack.size() < 1) {
+                        return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+                    }
+
+                    // If the argument was not 32 bytes, treat as OP_NOP4:
+                    switch (stack.back().size()) {
+                        case 32:
+                        {
+                            const std::span<const unsigned char> hash{stack.back()};
+                            if (!checker.CheckDefaultCheckTemplateVerifyHash(hash)) {
+                                return set_error(serror, SCRIPT_ERR_TEMPLATE_MISMATCH);
+                            }
+                            break;
+                        }
+                        default:
+                            // future upgrade can add semantics for this opcode with different length args
+                            // so discourage use when applicable
+                            if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_CHECKTEMPLATEVERIFY) {
+                                return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS);
+                            }
+                    }
+                }
+                break;
+
+                case OP_NOP1: case OP_NOP5:
                 case OP_NOP6: case OP_NOP7: case OP_NOP8: case OP_NOP9: case OP_NOP10:
                 {
                     if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS)
@@ -1444,11 +1479,15 @@ uint256 GetDefaultCheckTemplateVerifyHash(const TxType& tx, uint32_t input_index
 }
 
 template<typename TxType>
+static bool NoScriptSigs(const TxType& tx)
+{
+    return std::all_of(tx.vin.begin(), tx.vin.end(), [](const CTxIn& c) { return c.scriptSig.empty(); });
+}
+
+template<typename TxType>
 uint256 GetDefaultCheckTemplateVerifyHash(
         const TxType& tx, const uint256& outputs_hash, const uint256& sequences_hash, const uint32_t input_index) {
-    bool skip_scriptSigs = std::find_if(tx.vin.begin(), tx.vin.end(),
-            [](const CTxIn& c) { return c.scriptSig != CScript(); }) == tx.vin.end();
-    return skip_scriptSigs ? GetDefaultCheckTemplateVerifyHashEmptyScript(tx, outputs_hash, sequences_hash, input_index) :
+    return NoScriptSigs(tx) ? GetDefaultCheckTemplateVerifyHashEmptyScript(tx, outputs_hash, sequences_hash, input_index) :
         GetDefaultCheckTemplateVerifyHashWithScript(tx, outputs_hash, sequences_hash, GetScriptSigsSHA256(tx), input_index);
 }
 
@@ -1847,7 +1886,7 @@ bool GenericTransactionSignatureChecker<T>::CheckSequence(const CScriptNum& nSeq
 }
 
 template <class T>
-bool GenericTransactionSignatureChecker<T>::CheckDefaultCheckTemplateVerifyHash(const std::vector<unsigned char>& hash) const
+bool GenericTransactionSignatureChecker<T>::CheckDefaultCheckTemplateVerifyHash(const std::span<const unsigned char>& hash) const
 {
     // Should already be checked before calling...
     assert(hash.size() == 32);
