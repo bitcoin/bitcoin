@@ -115,7 +115,7 @@ public:
     /**
      * Relay is used to send this spork message to other peers.
      */
-    void Relay(CConnman& connman);
+    void Relay();
 };
 
 /**
@@ -206,7 +206,7 @@ public:
      * UpdateSpork is used by the spork RPC command to set a new spork value, sign
      * and broadcast the spork message.
      */
-    bool UpdateSpork(int nSporkID, int64_t nValue, CConnman& connman);
+    bool UpdateSpork(int nSporkID, int64_t nValue);
 
     /**
      * IsSporkActive returns a bool for time-based sporks, and should be used

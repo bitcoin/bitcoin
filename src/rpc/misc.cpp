@@ -95,7 +95,7 @@ UniValue spork(const JSONRPCRequest& request)
         int64_t nValue = request.params[1].get_int64();
 
         //broadcast new spork
-        if(sporkManager.UpdateSpork(nSporkID, nValue, *g_connman)){
+        if(sporkManager.UpdateSpork(nSporkID, nValue)){
             sporkManager.ExecuteSpork(nSporkID, nValue);
             return "success";
         } else {
