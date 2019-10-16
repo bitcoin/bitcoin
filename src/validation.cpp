@@ -1039,7 +1039,9 @@ bool MemPoolAccept::PolicyScriptChecks(const ATMPArgs& args, Workspace& ws)
     const CTransaction& tx = *ws.m_ptx;
     TxValidationState& state = ws.m_state;
 
-    constexpr unsigned int scriptVerifyFlags = STANDARD_SCRIPT_VERIFY_FLAGS;
+    const bool covtools_active = DeploymentActiveAfter(m_active_chainstate.m_chain.Tip(), m_active_chainstate.m_chainman, Consensus::DEPLOYMENT_COVTOOLS);
+    const unsigned int scriptVerifyFlags = STANDARD_SCRIPT_VERIFY_FLAGS |
+        (covtools_active ? SCRIPT_VERIFY_NONE : SCRIPT_VERIFY_DISCOURAGE_CHECKTEMPLATEVERIFY);
 
     // Check input scripts and signatures.
     // This is done last to help prevent CPU exhaustion denial-of-service attacks.
