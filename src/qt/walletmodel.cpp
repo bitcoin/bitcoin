@@ -19,6 +19,7 @@
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 #include <key_io.h>
+#include <script/signingprovider.h>
 #include <ui_interface.h>
 #include <util/system.h> // for GetBoolArg
 #include <wallet/coincontrol.h>
@@ -508,6 +509,37 @@ void WalletModel::UnlockContext::CopyFrom(UnlockContext&& rhs)
     // Transfer context; old object no longer relocks wallet
     *this = rhs;
     rhs.relock = false;
+}
+
+bool WalletModel::getPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const
+{
+    return m_wallet->getPubKey(address, vchPubKeyOut);
+}
+
+//
+// !TODO - refactor the routines below (using GetMainWallet()) to use interfaces::wallet
+//
+bool WalletModel::havePrivKey(const CKeyID &address) const
+{
+    return GetMainWallet()->HaveKey(address);
+}
+
+bool WalletModel::havePrivKey(const CScript& script) const
+{
+    CTxDestination dest;
+    if (ExtractDestination(script, dest))
+        return true;
+    return false;
+}
+
+bool WalletModel::getPrivKey(const CKeyID &address, CKey& vchPrivKeyOut) const
+{
+    return GetMainWallet()->GetKey(address, vchPrivKeyOut);
+}
+
+void WalletModel::listProTxCoins(std::vector<COutPoint>& vOutpts)
+{
+    GetMainWallet()->ListProTxCoins(vOutpts);
 }
 
 void WalletModel::loadReceiveRequests(std::vector<std::string>& vReceiveRequests)

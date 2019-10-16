@@ -55,6 +55,14 @@ static const size_t OUTPUT_GROUP_MAX_ENTRIES = 10;
 static CCriticalSection cs_wallets;
 static std::vector<std::shared_ptr<CWallet>> vpwallets GUARDED_BY(cs_wallets);
 
+std::shared_ptr<CWallet> GetMainWallet()
+{
+    LOCK(cs_wallets);
+    if (!vpwallets.empty())
+        return vpwallets.at(0);
+    return nullptr;
+}
+
 // proof-of-stake: optional setting to unlock wallet only for staking;
 //         prevent sendmoney if OS account is compromised
 bool fWalletUnlockStakingOnly = false;
