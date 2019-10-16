@@ -13,6 +13,7 @@
 #include <net.h>
 #include <net_processing.h>
 #include <scheduler.h>
+#include <spork.h>
 #include <txmempool.h>
 #include <util/init.h>
 #include <validation.h>
@@ -77,7 +78,8 @@ bool CChainLocksHandler::GetChainLockByHash(const uint256& hash, llmq::CChainLoc
 
 void CChainLocksHandler::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman* connman)
 {
-    // TODO: BitGreen - Disable ChainLocks via Sporks
+    if (!sporkManager.IsSporkActive(SPORK_4_CHAINLOCKS_ENABLED))
+        return;
 
     if (strCommand == NetMsgType::CLSIG) {
         CChainLockSig clsig;
@@ -211,6 +213,7 @@ void CChainLocksHandler::CheckActiveState()
     // TODO: BitGreen - Check if chainlock spork is active
 
     isEnforced = ChainActive().Tip()->nHeight > Params().GetConsensus().nLLMQActivationHeight;
+    isSporkActive = sporkManager.IsSporkActive(SPORK_4_CHAINLOCKS_ENABLED);
 
     LOCK(cs);
     bestChainLockHash = uint256();
