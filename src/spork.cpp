@@ -10,6 +10,7 @@
 #include <net_processing.h>
 #include <netmessagemaker.h>
 #include <util/validation.h>
+#include <util/init.h>
 #include <validation.h>
 #include <string>
 
@@ -102,7 +103,7 @@ void CSporkManager::CheckAndRemove()
 
 void CSporkManager::ProcessSpork(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
 {
-    if (strCommand == NetMsgType::SPORK) {
+    if(fLiteMode) return; // disable all BitGreen specific functionality
 
         CSporkMessage spork;
         vRecv >> spork;
