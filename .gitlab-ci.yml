@@ -1,0 +1,140 @@
+image: "ubuntu:bionic"
+
+variables:
+  DOCKER_DRIVER: overlay2
+
+cache:
+  # Cache by branch/tag and job name
+  # Gitlab can't use caches from parent pipelines when doing the first build in a PR, so we use artifacts to copy
+  # caches into PRs
+  key: ${CI_COMMIT_REF_SLUG}-${CI_JOB_NAME}${CI_EXTERNAL_PULL_REQUEST_IID}
+  paths:
+    - $CI_PROJECT_DIR/cache
+
+stages:
+  - build
+
+.build_template: &build_template
+  stage: build
+  before_script:
+    - export BUILD_TARGET="$CI_JOB_NAME"
+    - echo BUILD_TARGET=$BUILD_TARGET
+    - source ./ci/matrix.sh
+
+    # The ubuntu base image has apt configured to delete caches after each invocation, which is something that is not desirable for us
+    - rm /etc/apt/apt.conf.d/docker-clean
+    - apt-get update
+    - apt-get install -y wget unzip
+
+    # Init cache
+    - export CACHE_DIR=$CI_PROJECT_DIR/cache
+    - mkdir -p $CACHE_DIR
+    - |
+      if [ "$CI_COMMIT_REF_SLUG" != "develop" -a "$CI_COMMIT_TAG" == "" ]; then
+        if [ ! -d $CACHE_DIR/ccache ]; then
+          echo "Downloading cache from develop branch"
+          if wget -O cache-artifact.zip https://gitlab.com/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME/-/jobs/artifacts/develop/download?job=$CI_JOB_NAME; then
+            unzip cache-artifact.zip
+            rm cache-artifact.zip
+            mv cache-artifact/* $CACHE_DIR/
+          else
+            echo "Failed to download cache"
+          fi
+        else
+          echo "Not touching cache (was initialized from previous build)"
+        fi
+      else
+        echo "Not touching cache (building develop branch or tag)"
+      fi
+    # Create missing cache dirs
+    - mkdir -p $CACHE_DIR/ccache && mkdir -p $CACHE_DIR/depends && mkdir -p $CACHE_DIR/sdk-sources && mkdir -p $CACHE_DIR/apt
+    # Keep this as it makes caching related debugging easier
+    - ls -lah $CACHE_DIR && ls -lah $CACHE_DIR/depends && ls -lah $CACHE_DIR/ccache && ls -lah $CACHE_DIR/apt
+    - mv $CACHE_DIR/apt/* /var/cache/apt/archives/ || true
+
+    # Install base packages
+    - apt-get dist-upgrade -y
+    - apt-get install -y git g++ autotools-dev libtool m4 automake autoconf pkg-config zlib1g-dev libssl1.0-dev curl ccache bsdmainutils cmake
+    - apt-get install -y python3 python3-dev python3-pip
+
+    # jinja2 is needed for combine_logs.py
+    - pip3 install jinja2
+
+    # Setup some environment variables
+    - if [ "$CI_EXTERNAL_PULL_REQUEST_IID" != "" ]; then export PULL_REQUEST="true"; else export PULL_REQUEST="false"; fi
+    - export COMMIT_RANGE="$CI_COMMIT_BEFORE_SHA..$CI_COMMIT_SHA"
+    - export JOB_NUMBER="$CI_JOB_ID"
+    - export HOST_SRC_DIR=$CI_PROJECT_DIR
+    - echo PULL_REQUEST=$PULL_REQUEST COMMIT_RANGE=$COMMIT_RANGE HOST_SRC_DIR=$HOST_SRC_DIR CACHE_DIR=$CACHE_DIR
+    - echo "Commit log:" && git log --format=fuller -1
+
+    # Build dash_hash
+    - git clone https://github.com/dashpay/dash_hash
+    - cd dash_hash && python3 setup.py install
+
+    # Install build target specific packages
+    - echo PACKAGES=$PACKAGES
+    - if [ -n "$DPKG_ADD_ARCH" ]; then dpkg --add-architecture "$DPKG_ADD_ARCH" ; fi
+    - if [ -n "$PACKAGES" ]; then apt-get update && apt-get install -y --no-install-recommends --no-upgrade $PACKAGES; fi
+
+    # Move apt packages into cache
+    - mv /var/cache/apt/archives/* $CACHE_DIR/apt/ || true
+
+    # Make mingw use correct threading libraries
+    - update-alternatives --set i686-w64-mingw32-gcc /usr/bin/i686-w64-mingw32-gcc-posix || true
+    - update-alternatives --set i686-w64-mingw32-g++  /usr/bin/i686-w64-mingw32-g++-posix || true
+    - update-alternatives --set x86_64-w64-mingw32-gcc  /usr/bin/x86_64-w64-mingw32-gcc-posix || true
+    - update-alternatives --set x86_64-w64-mingw32-g++  /usr/bin/x86_64-w64-mingw32-g++-posix || true
+
+  script:
+    - export BUILD_TARGET="$CI_JOB_NAME"
+    - cd $CI_PROJECT_DIR
+    - ./ci/build_depends.sh
+    - ./ci/build_src.sh
+    - ./ci/test_unittests.sh
+    - ./ci/test_integrationtests.sh
+
+  after_script:
+    # Copy all cache files into cache-artifact so that they get uploaded. We only do this for develop so that artifacts
+    # stay minimal for PRs and branches (we never need them)
+    - mkdir $CI_PROJECT_DIR/cache-artifact
+    - mkdir -p $CI_PROJECT_DIR/testlogs
+    - |
+      if [ "$CI_COMMIT_REF_SLUG" = "develop" ]; then
+        cp -ra $CACHE_DIR/* $CI_PROJECT_DIR/cache-artifact/
+      fi
+
+  # We're actually only interested in the develop branch creating the cache artifact, but there is no way to control this
+  # until https://gitlab.com/gitlab-org/gitlab-foss/issues/25478 gets implemented. Until then, we use an expiration time of
+  # 3 days and rely on daily builds to refresh the cache artifacts. We also keep non-develop artifacts at minimum size
+  artifacts:
+    name: cache-artifact
+    when: always
+    paths:
+      - $CI_PROJECT_DIR/cache-artifact
+      - $CI_PROJECT_DIR/testlogs
+    expire_in: 3 days
+
+arm-linux:
+  <<: *build_template
+
+win32:
+  <<: *build_template
+
+win64:
+  <<: *build_template
+
+linux32:
+  <<: *build_template
+
+linux64:
+  <<: *build_template
+
+linux64_nowallet:
+  <<: *build_template
+
+linux64_release:
+  <<: *build_template
+
+mac:
+  <<: *build_template

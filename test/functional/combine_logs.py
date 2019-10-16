@@ -106,7 +106,7 @@ def print_logs(log_events, color=False, html=False):
         except ImportError:
             print("jinja2 not found. Try `pip install jinja2`")
             sys.exit(1)
-        print(jinja2.Environment(loader=jinja2.FileSystemLoader('./'))
+        print(jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.dirname(os.path.abspath(__file__))))
                     .get_template('combined_log_template.html')
                     .render(title="Combined Logs from testcase", log_events=[event._asdict() for event in log_events]))
 
