@@ -298,6 +298,7 @@ BASE_SCRIPTS = [
     'wallet_balance.py --descriptors',
     'p2p_initial_headers_sync.py',
     'feature_nulldummy.py',
+    'feature_checktemplateverify.py',
     'mempool_accept.py',
     'mempool_expiry.py',
     'wallet_import_with_label.py --legacy-wallet',

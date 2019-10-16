@@ -610,6 +610,19 @@ class CTransaction:
         r += self.nLockTime.to_bytes(4, "little")
         return r
 
+    def get_standard_template_hash(self, nIn):
+        r = b""
+        r += self.nVersion.to_bytes(4, "little", signed=True)
+        r += self.nLockTime.to_bytes(4, "little")
+        if any(inp.scriptSig for inp in self.vin):
+            r += sha256(b"".join(ser_string(inp.scriptSig) for inp in self.vin))
+        r += len(self.vin).to_bytes(4, "little")
+        r += sha256(b"".join(inp.nSequence.to_bytes(4, "little") for inp in self.vin))
+        r += len(self.vout).to_bytes(4, "little")
+        r += sha256(b"".join(out.serialize() for out in self.vout))
+        r += nIn.to_bytes(4, "little")
+        return sha256(r)
+
     # Only serialize with witness when explicitly called for
     def serialize_with_witness(self):
         flags = 0
