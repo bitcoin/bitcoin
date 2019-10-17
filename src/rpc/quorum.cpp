@@ -79,7 +79,7 @@ void quorum_info_help()
                 {"quorumHash", RPCArg::Type::STR, RPCArg::Optional::NO, "Block hash of quorum.\n"},
                 {"includeSkShare", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Include secret key share in output.\n"}
             },
-            RPCResult{""},
+            RPCResults{},
             RPCExamples{""}
         }.ToString()
     );
@@ -158,7 +158,7 @@ void quorum_dkgstatus_help()
                 {"detail_level", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Detail level of output.\n"
                     "                        0=Only show counts. 1=Show member indexes. 2=Show member's ProTxHashes."}
             },
-            RPCResult{""},
+            RPCResults{},
             RPCExamples{""}
         }.ToString()
     );
@@ -213,7 +213,7 @@ void quorum_memberof_help()
                     "                              the active quorum count for each specific quorum type is used."
                 },
             },
-            RPCResult{""},
+            RPCResults{},
             RPCExamples{""}
         }.ToString()
     );
@@ -277,7 +277,7 @@ void quorum_sign_help()
                 {"id", RPCArg::Type::STR, RPCArg::Optional::NO, "Request id."},
                 {"msgHash", RPCArg::Type::STR, RPCArg::Optional::NO, "Message hash."}
             },
-            RPCResult{""},
+            RPCResults{},
             RPCExamples{""}
         }.ToString()
     );
@@ -292,7 +292,7 @@ void quorum_hasrecsig_help()
                 {"id", RPCArg::Type::STR, RPCArg::Optional::NO, "Request id."},
                 {"msgHash", RPCArg::Type::STR, RPCArg::Optional::NO, "Message hash."}
             },
-            RPCResult{""},
+            RPCResults{},
             RPCExamples{""}
         }.ToString()
     );
@@ -307,7 +307,7 @@ void quorum_getrecsig_help()
                 {"id", RPCArg::Type::STR, RPCArg::Optional::NO, "Request id."},
                 {"msgHash", RPCArg::Type::STR, RPCArg::Optional::NO, "Message hash."}
             },
-            RPCResult{""},
+            RPCResults{},
             RPCExamples{""}
         }.ToString()
     );
@@ -322,7 +322,7 @@ void quorum_isconflicting_help()
                 {"id", RPCArg::Type::STR, RPCArg::Optional::NO, "Request id."},
                 {"msgHash", RPCArg::Type::STR, RPCArg::Optional::NO, "Message hash."}
             },
-            RPCResult{""},
+            RPCResults{},
             RPCExamples{""}
         }.ToString()
     );
@@ -385,7 +385,7 @@ void quorum_dkgsimerror_help()
                 {"type", RPCArg::Type::STR, RPCArg::Optional::NO, "Error type.\n"},
                 {"rate", RPCArg::Type::NUM, RPCArg::Optional::NO, "Rate at which to simulate this error type..\n"}
             },
-            RPCResult{""},
+            RPCResults{},
             RPCExamples{""}
         }.ToString()
     );
