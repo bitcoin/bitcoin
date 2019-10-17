@@ -166,91 +166,65 @@ class CBlockIndex
 {
 public:
     //! pointer to the hash of the block, if any. Memory is owned by this CBlockIndex
-    const uint256* phashBlock;
+    const uint256* phashBlock{nullptr};
 
     //! pointer to the index of the predecessor of this block
-    CBlockIndex* pprev;
+    CBlockIndex* pprev{nullptr};
 
     //! pointer to the index of some further predecessor of this block
-    CBlockIndex* pskip;
+    CBlockIndex* pskip{nullptr};
 
     //! height of the entry in the chain. The genesis block has height 0
-    int nHeight;
+    int nHeight{0};
 
     //! Which # file this block is stored in (blk?????.dat)
-    int nFile;
+    int nFile{0};
 
     //! Byte offset within blk?????.dat where this block's data is stored
-    unsigned int nDataPos;
+    unsigned int nDataPos{0};
 
     //! Byte offset within rev?????.dat where this block's undo data is stored
-    unsigned int nUndoPos;
+    unsigned int nUndoPos{0};
 
     //! (memory only) Total amount of work (expected number of hashes) in the chain up to and including this block
-    arith_uint256 nChainWork;
+    arith_uint256 nChainWork{};
 
     //! Number of transactions in this block.
     //! Note: in a potential headers-first mode, this number cannot be relied upon
-    unsigned int nTx;
+    unsigned int nTx{0};
 
     //! (memory only) Number of transactions in the chain up to and including this block.
     //! This value will be non-zero only if and only if transactions for this block and all its parents are available.
     //! Change to 64-bit type when necessary; won't happen before 2030
-    unsigned int nChainTx;
+    unsigned int nChainTx{0};
 
     //! Verification status of this block. See enum BlockStatus
-    uint32_t nStatus;
+    uint32_t nStatus{0};
 
     //! block header
-    int32_t nVersion;
-    uint256 hashMerkleRoot;
-    uint32_t nTime;
-    uint32_t nBits;
-    uint32_t nNonce;
+    int32_t nVersion{0};
+    uint256 hashMerkleRoot{};
+    uint32_t nTime{0};
+    uint32_t nBits{0};
+    uint32_t nNonce{0};
 
     //! (memory only) Sequential id assigned to distinguish order in which blocks are received.
-    int32_t nSequenceId;
+    int32_t nSequenceId{0};
 
     //! (memory only) Maximum nTime in the chain up to and including this block.
-    unsigned int nTimeMax;
-
-    void SetNull()
-    {
-        phashBlock = nullptr;
-        pprev = nullptr;
-        pskip = nullptr;
-        nHeight = 0;
-        nFile = 0;
-        nDataPos = 0;
-        nUndoPos = 0;
-        nChainWork = arith_uint256();
-        nTx = 0;
-        nChainTx = 0;
-        nStatus = 0;
-        nSequenceId = 0;
-        nTimeMax = 0;
-
-        nVersion       = 0;
-        hashMerkleRoot = uint256();
-        nTime          = 0;
-        nBits          = 0;
-        nNonce         = 0;
-    }
+    unsigned int nTimeMax{0};
 
     CBlockIndex()
     {
-        SetNull();
     }
 
     explicit CBlockIndex(const CBlockHeader& block)
+        : nVersion{block.nVersion},
+          hashMerkleRoot{block.hashMerkleRoot},
+          nTime{block.nTime},
+          nBits{block.nBits},
+          nNonce{block.nNonce}
     {
-        SetNull();
-
-        nVersion       = block.nVersion;
-        hashMerkleRoot = block.hashMerkleRoot;
-        nTime          = block.nTime;
-        nBits          = block.nBits;
-        nNonce         = block.nNonce;
     }
 
     CDiskBlockPos GetBlockPos() const {
