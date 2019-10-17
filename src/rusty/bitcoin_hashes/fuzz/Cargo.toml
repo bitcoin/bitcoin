@@ -1,0 +1,50 @@
+[package]
+name = "bitcoin_hashes-fuzz"
+version = "0.0.1"
+authors = ["copied from rust-bitcoin"]
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+[features]
+honggfuzz_fuzz = ["honggfuzz"]
+
+[dependencies]
+honggfuzz = { version = "0.5", optional = true }
+bitcoin_hashes = { path = "..", features = ["serde"] }
+rust-crypto = "0.2"
+
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = "1.0"
+serde_cbor = "0.9"
+
+# Prevent this from interfering with workspaces
+[workspace]
+members = ["."]
+
+[[bin]]
+name = "sha1"
+path = "fuzz_targets/sha1.rs"
+
+[[bin]]
+name = "ripemd160"
+path = "fuzz_targets/ripemd160.rs"
+
+[[bin]]
+name = "sha256"
+path = "fuzz_targets/sha256.rs"
+
+[[bin]]
+name = "sha512"
+path = "fuzz_targets/sha512.rs"
+
+[[bin]]
+name = "cbor"
+path = "fuzz_targets/cbor.rs"
+
+[[bin]]
+name = "json"
+path = "fuzz_targets/json.rs"
+
