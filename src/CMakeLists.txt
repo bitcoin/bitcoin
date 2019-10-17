@@ -408,12 +408,15 @@ add_library(crown_platform
   platform/nf-token/nf-token-protocol-index.h
   platform/nf-token/nf-token-protocol-reg-tx.h
   platform/nf-token/nf-token-protocol-reg-tx.cpp
+  platform/nf-token/nf-token-protocol-tx-mem-pool-handler.h
+  platform/nf-token/nf-token-protocol-tx-mem-pool-handler.cpp
   platform/nf-token/nf-token-reg-tx.h
   platform/nf-token/nf-token-reg-tx.cpp
   platform/nf-token/nf-token-reg-tx-builder.h
   platform/nf-token/nf-token-tx-mem-pool-handler.h
   platform/nf-token/nf-token-tx-mem-pool-handler.cpp
   platform/nf-token/nft-protocols-manager.h
+  platform/nf-token/nft-protocols-manager.cpp
   platform/nf-token/nf-tokens-manager.cpp
 
 

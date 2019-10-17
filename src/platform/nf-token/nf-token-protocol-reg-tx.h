@@ -24,7 +24,13 @@ namespace Platform
             : m_nfTokenProtocol(std::move(nfTokenProtocol))
         {}
 
-        bool Sign(CKey & privKey, CPubKey & pubKey);
+        inline const NfTokenProtocol & GetNftProto() const
+        {
+            return m_nfTokenProtocol;
+        }
+
+        // TODO: encapsulate signing
+        // bool Sign(CKey & privKey, CPubKey & pubKey);
 
         std::string ToString() const;
 
