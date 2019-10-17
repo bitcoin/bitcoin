@@ -517,7 +517,7 @@ public:
 
     //! This is the top layer of the cache hierarchy - it keeps as many coins in memory as
     //! can fit per the dbcache setting.
-    std::unique_ptr<CCoinsViewCache> m_cacheview GUARDED_BY(cs_main);
+    std::unique_ptr<CCoinsViewCache> m_cacheview;
 
     //! This constructor initializes CCoinsViewDB and CCoinsViewErrorCatcher instances, but it
     //! *does not* create a CCoinsViewCache instance by default. This is done separately because the
@@ -620,7 +620,7 @@ public:
     std::set<CBlockIndex*, CBlockIndexWorkComparator> setBlockIndexCandidates;
 
     //! @returns A reference to the in-memory cache of the UTXO set.
-    CCoinsViewCache& CoinsTip() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+    CCoinsViewCache& CoinsTip()
     {
         assert(m_coins_views->m_cacheview);
         return *m_coins_views->m_cacheview.get();
