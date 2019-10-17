@@ -587,6 +587,7 @@ void SetupServerArgs()
 
     gArgs.AddArg("-masternode", strprintf("Enable the client to act as a masternode (default: %u)", false), false, OptionsCategory::MASTERNODES);
     gArgs.AddArg("-masternodeblsprivkey=<hex>", "Set the masternode BLS private key", false, OptionsCategory::MASTERNODES);
+    gArgs.AddArg("-watchquorums=<n>", strprintf("Watch and validate quorum communication (default: %u)", llmq::DEFAULT_WATCH_QUORUMS), false, OptionsCategory::MASTERNODES);
 
     // Add the hidden options
     gArgs.AddHiddenArgs(hidden_args);
