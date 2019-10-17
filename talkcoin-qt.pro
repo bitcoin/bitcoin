@@ -6,7 +6,7 @@ TEMPLATE = app
 
 QT       += core gui widgets network printsupport qml quick quickcontrols2
 
-CONFIG += c++11 no_include_pwd thread object_parallel_to_source staticlib
+CONFIG += c++11 no_include_pwd thread object_parallel_to_source static
 VERSION = 0.18.0.4
 
 INCLUDEPATH += $$PWD/src $$PWD/src/consensus $$PWD/src/interfaces $$PWD/src/crosschain $$PWD/src/authenticator $$PWD/src/qt/material-widgets
@@ -14,8 +14,8 @@ INCLUDEPATH += $$PWD/src/index $$PWD/src/leveldb $$PWD/src/bench $$PWD/src/level
 INCLUDEPATH += $$PWD/src/univalue/include $$PWD/src/zmq $$PWD/src/rpc $$PWD/src/smessage $$PWD/src/qt $$PWD/src/qt/forms $$PWD/src/compat
 INCLUDEPATH += $$PWD/src/crypto $$PWD/src/policy $$PWD/src/primitives $$PWD/src/script $$PWD/src/univalue $$PWD/src/wallet $$PWD/src/secp256k1/include
 
-include (protobuf.pri)
-PROTOS += src/qt/paymentrequest.proto \
+#include (protobuf.pri)
+#PROTOS += src/qt/paymentrequest.proto \
 
 # The following define makes your compiler emit warnings if you use
 # any Qt feature that has been marked deprecated (the exact warnings
@@ -93,7 +93,7 @@ android:{
 }
 
 #LIBS += -lssl -lcrypto
-LIBS += -lqrencode -lminiupnpc -levent -ldb_cxx$$BDB_LIB_SUFFIX -lprotobuf -lzmq -levent_pthreads -lleveldb -lmemenv -pthread
+LIBS += -lqrencode -lminiupnpc -levent -ldb_cxx$$BDB_LIB_SUFFIX -lzmq -levent_pthreads -lleveldb -lmemenv -pthread
 LIBS += -L$$PWD/src/leveldb
 LIBS += -lboost_system$$BOOST_LIB_SUFFIX -lboost_filesystem$$BOOST_LIB_SUFFIX -lboost_thread$$BOOST_LIB_SUFFIX -lboost_chrono$$BOOST_LIB_SUFFIX -lboost_atomic$$BOOST_LIB_SUFFIX
 LIBS += $$PWD/src/secp256k1/src/libsecp256k1_la-secp256k1.o
@@ -303,7 +303,6 @@ SOURCES += \
   src/qt/editaddressdialog.cpp \
   src/qt/openuridialog.cpp \
   src/qt/overviewpage.cpp \
-  src/qt/paymentrequestplus.cpp \
   src/qt/paymentserver.cpp \
   src/qt/qvalidatedtextedit.cpp \
   src/qt/receivecoinsdialog.cpp \
@@ -587,7 +586,6 @@ HEADERS += \
   src/qt/optionsdialog.h \
   src/qt/optionsmodel.h \
   src/qt/overviewpage.h \
-  src/qt/paymentrequestplus.h \
   src/qt/paymentserver.h \
   src/qt/peertablemodel.h \
   src/qt/platformstyle.h \

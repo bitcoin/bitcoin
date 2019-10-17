@@ -169,8 +169,11 @@ QT_MOC_CPP = \
   qt/moc_sendmessagesentry.cpp \
   qt/moc_sendmessagespage.cpp \
   qt/moc_messagepage.cpp \
-  qt/moc_messagemodel.cpp \
-  qt/moc_talkcoinmobilegui.cpp
+  qt/moc_messagemodel.cpp
+
+if MOBILE_GUI
+QT_MOC_CPP += qt/moc_talkcoinmobilegui.cpp
+endif  
 
 TALKCOIN_MM = \
   qt/macdockiconhandler.mm \
@@ -187,16 +190,6 @@ QT_QRC_CPP = qt/qrc_talkcoin.cpp
 QT_QRC = qt/talkcoin.qrc
 QT_QRC_LOCALE_CPP = qt/qrc_talkcoin_locale.cpp
 QT_QRC_LOCALE = qt/talkcoin_locale.qrc
-
-if ENABLE_BIP70
-PROTOBUF_CC = qt/paymentrequest.pb.cc
-PROTOBUF_H = qt/paymentrequest.pb.h
-PROTOBUF_PROTO = qt/paymentrequest.proto
-else
-PROTOBUF_CC =
-PROTOBUF_H =
-PROTOBUF_PROTO =
-endif
 
 TALKCOIN_QT_H = \
   qt/addressbookpage.h \
@@ -226,7 +219,6 @@ TALKCOIN_QT_H = \
   qt/optionsdialog.h \
   qt/optionsmodel.h \
   qt/overviewpage.h \
-  qt/paymentrequestplus.h \
   qt/paymentserver.h \
   qt/peertablemodel.h \
   qt/platformstyle.h \
@@ -259,8 +251,11 @@ TALKCOIN_QT_H = \
   qt/sendmessagesentry.h \
   qt/sendmessagespage.h \
   qt/messagemodel.h \
-  qt/messagepage.h \
-  qt/talkcoinmobilegui.h
+  qt/messagepage.h
+
+if MOBILE_GUI
+TALKCOIN_QT_H += qt/talkcoinmobilegui.h
+endif  
 
 RES_ICONS = \
   qt/res/icons/add.png \
@@ -359,6 +354,10 @@ TALKCOIN_QT_BASE_CPP = \
   qt/messagemodel.cpp\
   qt/qvalidatedtextedit.cpp
 
+if MOBILE_GUI
+TALKCOIN_QT_BASE_CPP += qt/talkcoinmobilegui.cpp
+endif 
+
 TALKCOIN_QT_WINDOWS_CPP = qt/winshutdownmonitor.cpp
 
 TALKCOIN_QT_WALLET_CPP = \
@@ -391,11 +390,7 @@ TALKCOIN_QT_WALLET_CPP = \
   qt/walletview.cpp \
   qt/sendmessagesentry.cpp \
   qt/sendmessagespage.cpp \
-  qt/messagepage.cpp \
-  qt/talkcoinmobilegui.cpp
-
-TALKCOIN_QT_WALLET_BIP70_CPP = \
-  qt/paymentrequestplus.cpp
+  qt/messagepage.cpp
 
 TALKCOIN_QT_CPP = $(TALKCOIN_QT_BASE_CPP)
 if TARGET_WINDOWS
@@ -403,9 +398,6 @@ TALKCOIN_QT_CPP += $(TALKCOIN_QT_WINDOWS_CPP)
 endif
 if ENABLE_WALLET
 TALKCOIN_QT_CPP += $(TALKCOIN_QT_WALLET_CPP)
-if ENABLE_BIP70
-TALKCOIN_QT_CPP += $(TALKCOIN_QT_WALLET_BIP70_CPP)
-endif # ENABLE_BIP70
 endif # ENABLE_WALLET
 
 RES_IMAGES =
@@ -419,18 +411,17 @@ TALKCOIN_RC = qt/res/talkcoin-qt-res.rc
 TALKCOIN_QT_INCLUDES = -DQT_NO_KEYWORDS
 
 qt_libtalkcoinqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(TALKCOIN_INCLUDES) $(TALKCOIN_QT_INCLUDES) \
-  $(QT_INCLUDES) $(QT_DBUS_INCLUDES) $(PROTOBUF_CFLAGS) $(QR_CFLAGS)
+  $(QT_INCLUDES) $(QT_DBUS_INCLUDES) $(QR_CFLAGS)
 qt_libtalkcoinqt_a_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
 qt_libtalkcoinqt_a_OBJCXXFLAGS = $(AM_OBJCXXFLAGS) $(QT_PIE_FLAGS)
 
 qt_libtalkcoinqt_a_SOURCES = $(TALKCOIN_QT_CPP) $(TALKCOIN_QT_H) $(QT_FORMS_UI) \
-  $(QT_QRC) $(QT_QRC_LOCALE) $(QT_TS) $(PROTOBUF_PROTO) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES)
+  $(QT_QRC) $(QT_QRC_LOCALE) $(QT_TS) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES)
 if TARGET_DARWIN
   qt_libtalkcoinqt_a_SOURCES += $(TALKCOIN_MM)
 endif
 
-nodist_qt_libtalkcoinqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(PROTOBUF_CC) \
-  $(PROTOBUF_H) $(QT_QRC_CPP) $(QT_QRC_LOCALE_CPP)
+nodist_qt_libtalkcoinqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(QT_QRC_CPP) $(QT_QRC_LOCALE_CPP)
 
 # forms/foo.h -> forms/ui_foo.h
 QT_FORMS_H=$(join $(dir $(QT_FORMS_UI)),$(addprefix ui_, $(notdir $(QT_FORMS_UI:.ui=.h))))
@@ -439,11 +430,6 @@ QT_FORMS_H=$(join $(dir $(QT_FORMS_UI)),$(addprefix ui_, $(notdir $(QT_FORMS_UI:
 # before anything else.
 $(QT_MOC): $(QT_FORMS_H)
 $(qt_libtalkcoinqt_a_OBJECTS) $(qt_talkcoin_qt_OBJECTS) : | $(QT_MOC)
-
-#Generating these with a half-written protobuf header leads to wacky results.
-#This makes sure it's done.
-$(QT_MOC): $(PROTOBUF_H)
-$(QT_MOC_CPP): $(PROTOBUF_H)
 
 # talkcoin-qt binary #
 qt_talkcoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(TALKCOIN_INCLUDES) $(TALKCOIN_QT_INCLUDES) \
@@ -462,15 +448,13 @@ if ENABLE_ZMQ
 qt_talkcoin_qt_LDADD += $(LIBTALKCOIN_ZMQ) $(ZMQ_LIBS)
 endif
 qt_talkcoin_qt_LDADD += $(LIBTALKCOIN_CLI) $(LIBTALKCOIN_COMMON) $(LIBTALKCOIN_UTIL) $(LIBTALKCOIN_CONSENSUS) $(LIBTALKCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) \
-  $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QR_LIBS) $(PROTOBUF_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(LIBSECP256K1) \
+  $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QR_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(LIBSECP256K1) \
   $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
-if ENABLE_BIP70
-qt_talkcoin_qt_LDADD += $(SSL_LIBS)
-else
+
 if TARGET_WINDOWS
 qt_talkcoin_qt_LDADD += $(SSL_LIBS)
 endif
-endif
+
 qt_talkcoin_qt_LDADD += $(CRYPTO_LIBS)
 qt_talkcoin_qt_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 qt_talkcoin_qt_LIBTOOLFLAGS = $(AM_LIBTOOLFLAGS) --tag CXX
@@ -495,7 +479,7 @@ $(QT_QRC_LOCALE_CPP): $(QT_QRC_LOCALE) $(QT_QM)
 	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@
 	@rm $(@D)/temp_$(<F)
 
-$(QT_QRC_CPP): $(QT_QRC) $(QT_FORMS_H) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES) $(PROTOBUF_H)
+$(QT_QRC_CPP): $(QT_QRC) $(QT_FORMS_H) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES)
 	@test -f $(RCC)
 	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name talkcoin $< | \
 	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@
