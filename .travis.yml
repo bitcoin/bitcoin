@@ -34,6 +34,13 @@ cache:
     - $TRAVIS_BUILD_DIR/depends/built
     - $TRAVIS_BUILD_DIR/depends/sdk-sources
     - $TRAVIS_BUILD_DIR/ci/scratch/.ccache
+    # macOS
+    - $HOME/Library/Caches/Homebrew
+    - /usr/local/Homebrew
+before_cache:
+  - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then brew cleanup; fi
+  # Cache only .git files under "/usr/local/Homebrew" so "brew update" does not take 5min every build
+  # - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then find /usr/local/Homebrew \! -regex ".+\.git.+" -delete; fi
 stages:
   - lint
   - test
@@ -93,7 +100,7 @@ jobs:
       os: osx
       # Use the earliest macOS that can build our lint dependencies:
       # Xcode 8.3.3, macOS 10.12, JDK 1.8.0_112-b16
-      # https://docs.travis-ci.com/user/reference/osx/#OS-X-Version
+      # https://docs.travis-ci.com/user/reference/osx/#macos-version
       osx_image: xcode8.3
       # TODO: if you're updating osx_image, try using "rvm:" to supply the
       # version of ruby required by homebrew. Despite this "rvm:" declaration,
@@ -160,3 +167,13 @@ jobs:
       name: 'macOS 10.10  [GOAL: deploy] [no functional tests]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_mac.sh"
+
+    - stage: test
+      name: 'macOS 10.14 native [GOAL: install] [GUI: BIP70 enabled] [no depends]'
+      os: osx
+      # Use the most recent version:
+      # Xcode 11, macOS 10.14, JDK 12.0.1
+      # https://docs.travis-ci.com/user/reference/osx/#macos-version
+      osx_image: xcode11
+      env: >-
+        FILE_ENV="./ci/test/00_setup_env_mac_functional.sh"

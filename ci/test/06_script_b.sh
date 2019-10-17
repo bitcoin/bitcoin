@@ -6,7 +6,10 @@
 
 export LC_ALL=C.UTF-8
 
+# Temporarily disable errexit, because Travis macOS fails without error message
+set +o errexit
 cd "build/bitcoin-$HOST" || (echo "could not enter distdir build/bitcoin-$HOST"; exit 1)
+set -o errexit
 
 if [ -n "$QEMU_USER_CMD" ]; then
   BEGIN_FOLD wrap-qemu
@@ -46,4 +49,6 @@ if [ "$RUN_FUZZ_TESTS" = "true" ]; then
   END_FOLD
 fi
 
+set +o errexit
 cd ${BASE_BUILD_DIR} || (echo "could not enter travis build dir $BASE_BUILD_DIR"; exit 1)
+set -o errexit
