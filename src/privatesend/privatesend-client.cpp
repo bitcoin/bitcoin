@@ -1367,8 +1367,12 @@ bool CPrivateSendClientSession::MakeCollateralAmounts(CConnman& connman)
 {
     if (!privateSendClient.fEnablePrivateSend || !privateSendClient.fPrivateSendRunning) return false;
 
+    // NOTE: We do not allow txes larger than 100kB, so we have to limit number of inputs here.
+    // We still want to consume a lot of inputs to avoid creating only smaller denoms though.
+    // Knowing that each CTxIn is at least 148b big, 400 inputs should take 400 x ~148b = ~60kB.
+    // This still leaves more than enough room for another data of typical MakeCollateralAmounts tx.
     std::vector<CompactTallyItem> vecTally;
-    if (!vpwallets[0]->SelectCoinsGroupedByAddresses(vecTally, false, false)) {
+    if (!vpwallets[0]->SelectCoinsGroupedByAddresses(vecTally, false, false, true, 400)) {
         LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::MakeCollateralAmounts -- SelectCoinsGroupedByAddresses can't find any inputs!\n");
         return false;
     }

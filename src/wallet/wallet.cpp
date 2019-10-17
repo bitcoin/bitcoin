@@ -1473,6 +1473,10 @@ void CWallet::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const 
     }
 
     hashPrevBestCoinbase = pblock->vtx[0]->GetHash();
+
+    // reset cache to make sure no longer immature coins are included
+    fAnonymizableTallyCached = false;
+    fAnonymizableTallyCachedNonDenom = false;
 }
 
 void CWallet::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected) {
@@ -1482,6 +1486,10 @@ void CWallet::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, con
         // NOTE: do NOT pass pindex here
         SyncTransaction(ptx);
     }
+
+    // reset cache to make sure no longer mature coins are excluded
+    fAnonymizableTallyCached = false;
+    fAnonymizableTallyCachedNonDenom = false;
 }
 
 
@@ -3277,8 +3285,9 @@ bool CWallet::SelectCoinsGroupedByAddresses(std::vector<CompactTallyItem>& vecTa
 
     isminefilter filter = ISMINE_SPENDABLE;
 
-    // try to use cache for already confirmed anonymizable inputs, no cache should be used when the limit is specified
-    if(nMaxOupointsPerAddress != -1 && fAnonymizable && fSkipUnconfirmed) {
+    // Try using the cache for already confirmed anonymizable inputs.
+    // This should only be used if nMaxOupointsPerAddress was NOT specified.
+    if(nMaxOupointsPerAddress == -1 && fAnonymizable && fSkipUnconfirmed) {
         if(fSkipDenominated && fAnonymizableTallyCachedNonDenom) {
             vecTallyRet = vecAnonymizableTallyCachedNonDenom;
             LogPrint(BCLog::SELECTCOINS, "SelectCoinsGroupedByAddresses - using cache for non-denom inputs %d\n", vecTallyRet.size());
@@ -3350,8 +3359,9 @@ bool CWallet::SelectCoinsGroupedByAddresses(std::vector<CompactTallyItem>& vecTa
         vecTallyRet.push_back(item.second);
     }
 
-    // cache already confirmed anonymizable entries for later use, no cache should be saved when the limit is specified
-    if(nMaxOupointsPerAddress != -1 && fAnonymizable && fSkipUnconfirmed) {
+    // Cache already confirmed anonymizable entries for later use.
+    // This should only be used if nMaxOupointsPerAddress was NOT specified.
+    if(nMaxOupointsPerAddress == -1 && fAnonymizable && fSkipUnconfirmed) {
         if(fSkipDenominated) {
             vecAnonymizableTallyCachedNonDenom = vecTallyRet;
             fAnonymizableTallyCachedNonDenom = true;
