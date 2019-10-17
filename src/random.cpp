@@ -111,7 +111,7 @@ static void InitHardwareRand()
 
 static void ReportHardwareRand()
 {
-    // This must be done in a separate function, as HWRandInit() may be indirectly called
+    // This must be done in a separate function, as InitHardwareRand() may be indirectly called
     // from global constructors, before logging is initialized.
     if (g_rdseed_supported) {
         LogPrintf("Using RdSeed as additional entropy source\n");
