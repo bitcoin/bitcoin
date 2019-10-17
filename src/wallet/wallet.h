@@ -10,6 +10,7 @@
 #include "amount.h"
 #include "base58.h"
 #include "policy/feerate.h"
+#include "saltedhasher.h"
 #include "streams.h"
 #include "tinyformat.h"
 #include "ui_interface.h"
@@ -518,6 +519,14 @@ public:
     std::set<uint256> GetConflicts() const;
 };
 
+struct WalletTxHasher
+{
+    StaticSaltedHasher h;
+    size_t operator()(const CWalletTx* a) const
+    {
+        return h(a->GetHash());
+    }
+};
 
 class CInputCoin {
 public:
@@ -774,6 +783,9 @@ private:
     // Used to NotifyTransactionChanged of the previous block's coinbase when
     // the next block comes in
     uint256 hashPrevBestCoinbase;
+
+    // A helper function which loops through wallet UTXOs
+    std::unordered_set<const CWalletTx*, WalletTxHasher> GetSpendableTXs() const;
 
 public:
     /*
