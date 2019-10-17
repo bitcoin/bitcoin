@@ -72,8 +72,8 @@ bool TryParsePermissionFlags(const std::string& str, NetPermissionFlags& output,
         readen++;
     }
 
-    // By default, whitelist only applies to incoming connections
-    if (connection_direction == ConnectionDirection::None) connection_direction = ConnectionDirection::In;
+    // By default, whitelist applies to all connections
+    if (connection_direction == ConnectionDirection::None) connection_direction = ConnectionDirection::Both;
 
     output = flags;
     if (output_connection_direction) *output_connection_direction = connection_direction;

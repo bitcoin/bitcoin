@@ -473,7 +473,7 @@ void SetupServerArgs(ArgsManager& argsman)
         "CIDR-notated network (e.g. 1.2.3.0/24). Uses the same permissions as "
         "-whitebind. "
         "Additional flags in and out control whether permissions apply to incoming connections and/or outgoing (default: %s). "
-        "Can be specified multiple times.", "incoming only"), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
+        "Can be specified multiple times.", "both"), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
 
     g_wallet_init_interface.AddWalletOptions(argsman);
 
