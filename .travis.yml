@@ -19,8 +19,6 @@ cache:
     - /usr/local/Homebrew
 before_cache:
   - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then brew cleanup; fi
-  # Cache only .git files under "/usr/local/Homebrew" so "brew update" does not take 5min every build
-  # - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then find /usr/local/Homebrew \! -regex ".+\.git.+" -delete; fi
 env:
   global:
     # DOCKER_HUB_USER

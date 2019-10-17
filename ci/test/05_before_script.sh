@@ -13,21 +13,17 @@ else
   DOCKER_EXEC echo \> \$HOME/.dashcore
 fi
 
-if [ "$TRAVIS_OS_NAME" != "osx" ]; then
+DOCKER_EXEC mkdir -p depends/SDKs depends/sdk-sources
 
-  DOCKER_EXEC mkdir -p depends/SDKs depends/sdk-sources
-
-  if [ -n "$XCODE_VERSION" ] && [ ! -f "$OSX_SDK_PATH" ]; then
-    DOCKER_EXEC curl --location --fail "${SDK_URL}/${OSX_SDK_BASENAME}" -o "$OSX_SDK_PATH"
-  fi
-  if [ -n "$XCODE_VERSION" ] && [ -f "$OSX_SDK_PATH" ]; then
-    DOCKER_EXEC tar -C "depends/SDKs" -xf "$OSX_SDK_PATH"
-  fi
-  if [[ $HOST = *-mingw32 ]]; then
-    DOCKER_EXEC update-alternatives --set $HOST-g++ \$\(which $HOST-g++-posix\)
-  fi
-  if [ -z "$NO_DEPENDS" ]; then
-    DOCKER_EXEC CONFIG_SHELL= make $MAKEJOBS -C depends HOST=$HOST $DEP_OPTS
-  fi
-
+if [ -n "$XCODE_VERSION" ] && [ ! -f "$OSX_SDK_PATH" ]; then
+  DOCKER_EXEC curl --location --fail "${SDK_URL}/${OSX_SDK_BASENAME}" -o "$OSX_SDK_PATH"
+fi
+if [ -n "$XCODE_VERSION" ] && [ -f "$OSX_SDK_PATH" ]; then
+  DOCKER_EXEC tar -C "depends/SDKs" -xf "$OSX_SDK_PATH"
+fi
+if [[ $HOST = *-mingw32 ]]; then
+  DOCKER_EXEC update-alternatives --set $HOST-g++ \$\(which $HOST-g++-posix\)
+fi
+if [ -z "$NO_DEPENDS" ]; then
+  DOCKER_EXEC CONFIG_SHELL= make $MAKEJOBS -C depends HOST=$HOST $DEP_OPTS
 fi
