@@ -1,0 +1,16 @@
+[package]
+name = "bech32"
+version = "0.7.1"
+authors = ["Clark Moody"]
+repository = "https://github.com/rust-bitcoin/rust-bech32"
+description = "Encodes and decodes the Bech32 format"
+readme = "README.md"
+keywords = ["base32", "encoding", "bech32"]
+categories = ["encoding"]
+license = "MIT"
+
+[features]
+# Only for CI to make all warnings errors, do not activate otherwise (may break forward compatibility)
+strict = []
+
+[dependencies]

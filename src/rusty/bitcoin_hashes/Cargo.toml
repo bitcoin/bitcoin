@@ -1,0 +1,30 @@
+[package]
+name = "bitcoin_hashes"
+version = "0.7.0"
+authors = ["Andrew Poelstra <apoelstra@wpsoftware.net>"]
+license = "CC0-1.0"
+description = "Hash functions used by rust-bitcoin which support rustc 1.14.0"
+documentation = "https://docs.rs/bitcoin_hashes/"
+keywords = [ "crypto", "bitcoin", "hash", "digest" ]
+readme = "README.md"
+
+[lib]
+name = "bitcoin_hashes"
+path = "src/lib.rs"
+
+[features]
+default = [ "std" ]
+std = []
+serde-std = ["serde/std"]
+unstable = []  # for benchmarking
+fuzztarget = [] # used by other rust-bitcoin projects to make hashes almost-noops, DON'T USE THIS
+
+[dev-dependencies]
+serde_test = "1.0"
+
+[dependencies]
+
+[dependencies.serde]
+version = "1.0"
+optional = true
+default-features = false

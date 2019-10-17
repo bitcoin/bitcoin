@@ -1,0 +1,55 @@
+[package]
+
+name = "secp256k1"
+version = "0.16.0"
+authors = [ "Dawid Ciężarkiewicz <dpc@ucore.info>",
+            "Andrew Poelstra <apoelstra@wpsoftware.net>" ]
+license = "CC0-1.0"
+homepage = "https://github.com/rust-bitcoin/rust-secp256k1/"
+repository = "https://github.com/rust-bitcoin/rust-secp256k1/"
+documentation = "https://docs.rs/secp256k1/"
+description = "Rust bindings for Pieter Wuille's `libsecp256k1` library. Implements ECDSA for the SECG elliptic curve group secp256k1 and related utilities."
+keywords = [ "crypto", "ECDSA", "secp256k1", "libsecp256k1", "bitcoin" ]
+readme = "README.md"
+build = "build.rs"
+links = "secp256k1"
+
+# Should make docs.rs show all functions, even those behind non-default features
+[package.metadata.docs.rs]
+features = [ "rand", "rand-std", "serde", "recovery", "endomorphism" ]
+
+[build-dependencies]
+cc = ">= 1.0.28, < 1.0.42"
+
+[lib]
+name = "secp256k1"
+path = "src/lib.rs"
+
+[features]
+unstable = []
+default = ["std"]
+std = []
+rand-std = ["rand/std"]
+recovery = []
+endomorphism = []
+lowmemory = []
+
+# Do not use this feature! HAZMAT. (meant for Bitcoin Core only)
+dont_replace_c_symbols = []
+# Do not use this feature! HAZMAT. (meant for Fuzzing only. this is *BROKEN CRYPTOGRAPHY*)
+fuzztarget = []
+
+[dev-dependencies]
+rand = "0.6"
+rand_core = "0.4"
+serde_test = "1.0"
+
+[dependencies.rand]
+version = "0.6"
+optional = true
+default-features = false
+
+[dependencies.serde]
+version = "1.0"
+optional = true
+default-features = false

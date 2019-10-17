@@ -1,0 +1,53 @@
+[package]
+name = "bitcoin-fuzz"
+version = "0.0.1"
+authors = ["Automatically generated"]
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+[features]
+afl_fuzz = ["afl"]
+honggfuzz_fuzz = ["honggfuzz"]
+
+[dependencies]
+honggfuzz = { version = "0.5", optional = true }
+afl = { version = "0.4", optional = true }
+bitcoin = { path = "..", features = ["fuzztarget"] }
+
+# Prevent this from interfering with workspaces
+[workspace]
+members = ["."]
+
+[[bin]]
+name = "deserialize_block"
+path = "fuzz_targets/deserialize_block.rs"
+
+[[bin]]
+name = "deserialize_script"
+path = "fuzz_targets/deserialize_script.rs"
+
+[[bin]]
+name = "deserialize_transaction"
+path = "fuzz_targets/deserialize_transaction.rs"
+
+[[bin]]
+name = "deserialize_address"
+path = "fuzz_targets/deserialize_address.rs"
+
+[[bin]]
+name = "deserialize_amount"
+path = "fuzz_targets/deserialize_amount.rs"
+
+[[bin]]
+name = "outpoint_string"
+path = "fuzz_targets/outpoint_string.rs"
+
+[[bin]]
+name = "deserialize_psbt"
+path = "fuzz_targets/deserialize_psbt.rs"
+
+[[bin]]
+name = "deser_net_msg"
+path = "fuzz_targets/deser_net_msg.rs"

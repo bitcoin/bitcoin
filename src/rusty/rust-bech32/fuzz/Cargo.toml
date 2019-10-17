@@ -1,0 +1,30 @@
+[package]
+name = "bech32-fuzz"
+version = "0.0.1"
+authors = ["Automatically generated"]
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+[features]
+afl_fuzz = ["afl"]
+honggfuzz_fuzz = ["honggfuzz"]
+
+[dependencies]
+honggfuzz = { version = "0.5", optional = true }
+afl = { version = "0.3", optional = true }
+libc = "0.2"
+bech32 = { path = ".." }
+
+# Prevent this from interfering with workspaces
+[workspace]
+members = ["."]
+
+[[bin]]
+name = "decode_rnd"
+path = "fuzz_targets/decode_rnd.rs"
+
+[[bin]]
+name = "encode_decode"
+path = "fuzz_targets/encode_decode.rs"
