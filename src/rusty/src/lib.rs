@@ -4,6 +4,10 @@
 // warnings. Thus, we should disable such useless lints below.
 #![allow(deprecated)]
 
+extern crate bitcoin;
+extern crate bitcoin_hashes;
+extern crate libc;
+
 #[cfg(not(test))] mod bridge;
 #[cfg(test)] pub mod test_bridge;
 #[cfg(test)] pub use test_bridge as bridge;

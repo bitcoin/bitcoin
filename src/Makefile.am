@@ -388,14 +388,35 @@ LIBBITCOIN_RUSTY_SRCS= \
 LIBBITCOIN_RUSTY_TEST_SRCS= \
   rusty/src/test_bridge.rs
 
+rusty/liblibc.rlib: rusty/libc/src/lib.rs $(wildcard rusty/libc/src/*.rs)
+	$(RUSTC) --crate-name libc $< --crate-type=rlib $(RUST_FLAGS) -C overflow-checks=on -C panic=unwind --out-dir $(@D) && \
+	touch $@
+
+rusty/libbech32.rlib: rusty/rust-bech32/src/lib.rs $(wildcard rusty/rust-bech32/src/*.rs)
+	$(RUSTC) --crate-name bech32 $< --crate-type=rlib $(RUST_FLAGS) -C overflow-checks=on -C panic=unwind --out-dir $(@D) && \
+	touch $@
+
+rusty/libbitcoin_hashes.rlib: rusty/bitcoin_hashes/src/lib.rs $(wildcard rusty/bitcoin_hashes/src/*.rs)
+	$(RUSTC) --crate-name bitcoin_hashes $< --crate-type=rlib $(RUST_FLAGS) -C overflow-checks=on -C panic=unwind --cfg 'feature="default"' --cfg 'feature="std"' --out-dir $(@D) && \
+	touch $@
+
+rusty/libsecp256k1.rlib: rusty/rust-secp256k1/src/lib.rs $(wildcard rusty/rust-secp256k1/src/*.rs) $(LIBSECP256K1)
+	$(RUSTC) --crate-name secp256k1 $< --crate-type=rlib $(RUST_FLAGS) -C overflow-checks=on -C panic=unwind --cfg 'feature="std"' --cfg 'feature="dont_replace_c_symbols"' --out-dir $(@D) && \
+	touch $@
+
+rusty/libbitcoin.rlib: rusty/libbech32.rlib rusty/libbitcoin_hashes.rlib rusty/libsecp256k1.rlib
+rusty/libbitcoin.rlib: rusty/rust-bitcoin/src/lib.rs $(wildcard rusty/rust-bitcoin/src/*.rs) $(wildcard rusty/rust-bitcoin/src/*/*.rs) $(wildcard rusty/rust-bitcoin/src/*/*/*.rs)
+	$(RUSTC) --crate-name bitcoin $< --crate-type=rlib $(RUST_FLAGS) -C overflow-checks=on -C panic=unwind --out-dir $(@D) --extern bech32=$(@D)/libbech32.rlib --extern bitcoin_hashes=$(@D)/libbitcoin_hashes.rlib --extern secp256k1=$(@D)/libsecp256k1.rlib && \
+	touch $@
+
 # We force overflow checks on so that any integer overflows result in a panic
 # instead of, eg, attempting to alloc 4GB of memory (though we will catch such
 # an alloc and refuse it, generating a panic instead).
 # Also force panics to unwind (instead of calling abort()) as we want to catch
 # panics in the Rust threads and simply close the thread, instead of bringing
 # down the rest of Bitcoin Core.
-$(LIBBITCOIN_RUSTY): $(LIBBITCOIN_RUSTY_SRCS)
-	$(RUSTC) --crate-name rusty $< --crate-type=staticlib --emit=link $(RUST_FLAGS) -C overflow-checks=on -C panic=unwind --out-dir $(@D)
+$(LIBBITCOIN_RUSTY): $(LIBBITCOIN_RUSTY_SRCS) rusty/libbitcoin.rlib rusty/liblibc.rlib
+	$(RUSTC) --crate-name rusty $< --crate-type=staticlib --emit=link $(RUST_FLAGS) -C lto=on -C overflow-checks=on -C panic=unwind --out-dir $(@D) -L dependency=$(@D) --extern libc=$(@D)/liblibc.rlib --extern bitcoin_hashes=$(@D)/libbitcoin_hashes.rlib --extern bitcoin=$(@D)/libbitcoin.rlib
 	touch $@
 
 # crypto primitives library
@@ -704,7 +725,7 @@ LIBBITCOIN_RUST_LIBS += $(LIBBITCOIN_RUSTY_BRIDGE)
 
 RUSTY_TEST_BIN=rusty/test_rusty
 $(RUSTY_TEST_BIN): $(LIBBITCOIN_RUSTY_SRCS) $(LIBBITCOIN_RUSTY_TEST_SRCS)
-	$(RUSTC) --crate-name test_rusty $< --emit=link --test $(RUST_FLAGS) -C overflow-checks=on --out-dir $(@D)
+	$(RUSTC) --crate-name test_rusty $< --emit=link -C lto=on --test $(RUST_FLAGS) -C overflow-checks=on --out-dir $(@D) -L dependency=$(@D) --extern libc=$(@D)/liblibc.rlib --extern bitcoin_hashes=$(@D)/libbitcoin_hashes.rlib --extern bitcoin=$(@D)/libbitcoin.rlib
 
 ## FIXME: always build RUSTY_TEST_BIN the same as we do test_bitcoin
 RUSTY_CHECK=rusty-check
