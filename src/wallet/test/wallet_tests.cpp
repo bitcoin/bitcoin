@@ -8,7 +8,6 @@
 #include <stdint.h>
 #include <vector>
 
-#include <consensus/validation.h>
 #include <interfaces/chain.h>
 #include <policy/policy.h>
 #include <rpc/server.h>
@@ -454,8 +453,7 @@ public:
             auto locked_chain = m_chain->lock();
             BOOST_CHECK(wallet->CreateTransaction(*locked_chain, {recipient}, tx, fee, changePos, error, dummy));
         }
-        CValidationState state;
-        wallet->CommitTransaction(tx, {}, {}, state);
+        wallet->CommitTransaction(tx, {}, {});
         CMutableTransaction blocktx;
         {
             LOCK(wallet->cs_wallet);
