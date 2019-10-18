@@ -17,6 +17,8 @@ extern "C" {
 
 bool init_fetch_dns_headers(const char *domain);
 bool stop_fetch_dns_headers();
+bool init_fetch_rest_blocks(const char *uri);
+bool stop_fetch_rest_blocks();
 
 } // extern "C"
 
