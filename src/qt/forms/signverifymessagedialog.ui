@@ -118,6 +118,9 @@
          <property name="toolTip">
           <string>Enter the message you want to sign here</string>
          </property>
+         <property name="placeholderText">
+          <string>Enter the message you want to sign here</string>
+         </property>
         </widget>
        </item>
        <item>
