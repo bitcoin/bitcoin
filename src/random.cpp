@@ -594,10 +594,6 @@ static void SeedSleep(CSHA512& hasher, RNGState& rng)
 
 static void SeedStartup(CSHA512& hasher, RNGState& rng) noexcept
 {
-#ifdef WIN32
-    RAND_screen();
-#endif
-
     // Gather 256 bits of hardware randomness, if available
     SeedHardwareSlow(hasher);
 
