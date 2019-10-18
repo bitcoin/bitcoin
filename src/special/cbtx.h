@@ -17,7 +17,7 @@ class UniValue;
 class CCbTx
 {
 public:
-    static const uint16_t CURRENT_VERSION = 1;
+    static const uint16_t CURRENT_VERSION = 2;
 
 public:
     uint16_t nVersion{CURRENT_VERSION};

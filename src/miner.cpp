@@ -225,7 +225,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         coinbaseTx.vin[0].scriptSig = CScript() << OP_RETURN;
 
         CCbTx cbTx;
-        cbTx.nVersion = 1;
+        cbTx.nVersion = (nHeight > chainparams.GetConsensus().nLLMQActivationHeight) ? 2 : 1;
         cbTx.nHeight = nHeight;
 
         if (!CalcCbTxMerkleRootMNList(*pblock, pindexPrev, cbTx.merkleRootMNList, state))
