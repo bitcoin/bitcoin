@@ -649,7 +649,7 @@ public:
     virtual ~TransportDeserializer() {}
 };
 
-class V1TransportDeserializer : public TransportDeserializer
+class V1TransportDeserializer final : public TransportDeserializer
 {
 private:
     mutable CHash256 hasher;
@@ -682,23 +682,23 @@ public:
         Reset();
     }
 
-    bool Complete() const
+    bool Complete() const override
     {
         if (!in_data)
             return false;
         return (hdr.nMessageSize == nDataPos);
     }
-    void SetVersion(int nVersionIn)
+    void SetVersion(int nVersionIn) override
     {
         hdrbuf.SetVersion(nVersionIn);
         vRecv.SetVersion(nVersionIn);
     }
-    int Read(const char *pch, unsigned int nBytes) {
+    int Read(const char *pch, unsigned int nBytes) override {
         int ret = in_data ? readData(pch, nBytes) : readHeader(pch, nBytes);
         if (ret < 0) Reset();
         return ret;
     }
-    CNetMessage GetMessage(const CMessageHeader::MessageStartChars& message_start, int64_t time);
+    CNetMessage GetMessage(const CMessageHeader::MessageStartChars& message_start, int64_t time) override;
 };
 
 /** Information about a peer */
