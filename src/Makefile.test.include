@@ -53,6 +53,8 @@ RAW_TEST_FILES =
 GENERATED_TEST_FILES = $(JSON_TEST_FILES:.json=.json.h) $(RAW_TEST_FILES:.raw=.raw.h)
 
 BITCOIN_TEST_SUITE = \
+  test/lib/transaction_utils.h \
+  test/lib/transaction_utils.cpp \
   test/main.cpp \
   test/setup_common.h \
   test/setup_common.cpp
