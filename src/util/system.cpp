@@ -380,6 +380,15 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
 
     for (int i = 1; i < argc; i++) {
         std::string key(argv[i]);
+
+#ifdef MAC_OSX
+        // At the first time when a user gets the "App downloaded from the
+        // internet" warning, and clicks the Open button, macOS passes
+        // a unique process serial number (PSN) as -psn_... command-line
+        // argument, which we filter out.
+        if (key.substr(0, 5) == "-psn_") continue;
+#endif
+
         if (key == "-") break; //bitcoin-tx using stdin
         std::string val;
         size_t is_index = key.find('=');
