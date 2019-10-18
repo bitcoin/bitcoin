@@ -147,7 +147,7 @@ CTransactionBuilder::CTransactionBuilder(CWallet& wallet, const CompactTallyItem
         dummyBatch.TxnAbort();
         dummyScript = ::GetScriptForDestination(PKHash(dummyPubkey));
         // Calculate required bytes for the dummy signed tx with tallyItem's inputs only
-        nBytesBase = CalculateMaximumSignedTxSize(CTransaction(dummyTx), &m_wallet, false);
+        nBytesBase = CalculateMaximumSignedTxSize(CTransaction(dummyTx), &m_wallet, /*coin_control=*/nullptr);
     }
     // Calculate the output size
     nBytesOutput = ::GetSerializeSize(CTxOut(0, dummyScript), PROTOCOL_VERSION);

@@ -18,13 +18,14 @@ int GetTxSpendSize(const CWallet& wallet, const CWalletTx& wtx, unsigned int out
 
 // Get the marginal bytes of spending the specified output
 int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* pwallet, bool use_max_sig = false);
+int CalculateMaximumSignedInputSize(const CTxOut& txout, const SigningProvider* pwallet, bool use_max_sig = false);
 
 /** Calculate the size of the transaction assuming all signatures are max size
 * Use DummySignatureCreator, which inserts 71 byte signatures everywhere.
 * NOTE: this requires that all inputs must be in mapWallet (eg the tx should
 * be IsAllFromMe). */
-int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, bool use_max_sig = false) EXCLUSIVE_LOCKS_REQUIRED(wallet->cs_wallet);
-int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, const std::vector<CTxOut>& txouts, bool use_max_sig = false);
+int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, const CCoinControl* coin_control = nullptr) EXCLUSIVE_LOCKS_REQUIRED(wallet->cs_wallet);
+int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, const std::vector<CTxOut>& txouts, const CCoinControl* coin_control = nullptr);
 
 struct CoinsResult {
     std::vector<COutput> coins;
