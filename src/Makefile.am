@@ -382,7 +382,8 @@ libbitcoin_wallet_tool_a_SOURCES = \
 LIBBITCOIN_RUSTY_SRCS= \
   rusty/src/lib.rs \
   rusty/src/bridge.rs \
-  rusty/src/dns_headers.rs
+  rusty/src/dns_headers.rs \
+  rusty/src/rest_downloader.rs
 
 LIBBITCOIN_RUSTY_TEST_SRCS= \
   rusty/src/test_bridge.rs

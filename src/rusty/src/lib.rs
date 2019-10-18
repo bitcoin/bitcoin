@@ -1,9 +1,16 @@
+// Rust has a tendency to try to force users onto the Latest And Greatest (tm)
+// with incredibly verbose warnings. Sadly, we need to support users who use rustc
+// as distributed by their linux distribution, so in generally cannot "fix" the
+// warnings. Thus, we should disable such useless lints below.
+#![allow(deprecated)]
+
 #[cfg(not(test))] mod bridge;
 #[cfg(test)] pub mod test_bridge;
 #[cfg(test)] pub use test_bridge as bridge;
 use bridge::*;
 
 mod dns_headers;
+mod rest_downloader;
 
 use std::alloc::{GlobalAlloc, Layout, System};
 use std::ptr;
