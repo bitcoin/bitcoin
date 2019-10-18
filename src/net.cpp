@@ -572,10 +572,7 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
     while (nBytes > 0) {
         // absorb network data
         int handled = m_deserializer->Read(pch, nBytes);
-        if (handled < 0) {
-            m_deserializer->Reset();
-            return false;
-        }
+        if (handled < 0) return false;
 
         pch += handled;
         nBytes -= handled;
