@@ -1116,12 +1116,14 @@ uint64_t CTxMemPool::CalculateDescendantMaximum(txiter entry) const {
     return maximum;
 }
 
-void CTxMemPool::GetTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) const {
+void CTxMemPool::GetTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants, size_t* const ancestorsize, CAmount* const ancestorfees) const {
     LOCK(cs);
     auto it = mapTx.find(txid);
     ancestors = descendants = 0;
     if (it != mapTx.end()) {
         ancestors = it->GetCountWithAncestors();
+        if (ancestorsize) *ancestorsize = it->GetSizeWithAncestors();
+        if (ancestorfees) *ancestorfees = it->GetModFeesWithAncestors();
         descendants = CalculateDescendantMaximum(it);
     }
 }
