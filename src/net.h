@@ -642,8 +642,6 @@ public:
     virtual void Reset() = 0;
     // returns true if the current deserialization is complete
     virtual bool Complete() const = 0;
-    // checks if the potential message in deserialization is oversized
-    virtual bool OversizedMessageDetected() const = 0;
     // set the serialization context version
     virtual void SetVersion(int version) = 0;
     // read and deserialize data
@@ -694,9 +692,6 @@ public:
     {
         hdrbuf.SetVersion(nVersionIn);
         vRecv.SetVersion(nVersionIn);
-    }
-    bool OversizedMessageDetected() const {
-        return (in_data && hdr.nMessageSize > MAX_PROTOCOL_MESSAGE_LENGTH);
     }
     int Read(const char *pch, unsigned int nBytes) {
         return in_data ? readData(pch, nBytes) : readHeader(pch, nBytes);
