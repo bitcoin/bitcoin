@@ -5,7 +5,6 @@
 #include <interfaces/wallet.h>
 
 #include <amount.h>
-#include <consensus/validation.h>
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
 #include <policy/feerate.h>
@@ -224,8 +223,7 @@ public:
     {
         auto locked_chain = m_wallet->chain().lock();
         LOCK(m_wallet->cs_wallet);
-        CValidationState state;
-        m_wallet->CommitTransaction(std::move(tx), std::move(value_map), std::move(order_form), state);
+        m_wallet->CommitTransaction(std::move(tx), std::move(value_map), std::move(order_form));
     }
     bool transactionCanBeAbandoned(const uint256& txid) override { return m_wallet->TransactionCanBeAbandoned(txid); }
     bool abandonTransaction(const uint256& txid) override
