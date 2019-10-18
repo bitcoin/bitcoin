@@ -101,11 +101,10 @@ class InvalidMessagesTest(BitcoinTestFramework):
             msg_over_size = msg_unrecognized(str_data="b" * (valid_data_limit + 1))
             assert len(msg_over_size.serialize()) == (msg_limit + 1)
 
-            with node.assert_debug_log(["Oversized message from peer=4, disconnecting"]):
-                # An unknown message type (or *any* message type) over
-                # MAX_PROTOCOL_MESSAGE_LENGTH should result in a disconnect.
-                node.p2p.send_message(msg_over_size)
-                node.p2p.wait_for_disconnect(timeout=4)
+            # An unknown message type (or *any* message type) over
+            # MAX_PROTOCOL_MESSAGE_LENGTH should result in a disconnect.
+            node.p2p.send_message(msg_over_size)
+            node.p2p.wait_for_disconnect(timeout=4)
 
             node.disconnect_p2ps()
             conn = node.add_p2p_connection(P2PDataStore())
