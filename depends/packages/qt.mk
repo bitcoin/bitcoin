@@ -127,20 +127,26 @@ $(package)_config_opts_x86_64_linux = -xplatform linux-g++-64
 $(package)_config_opts_aarch64_linux = -xplatform linux-aarch64-gnu-g++
 $(package)_config_opts_riscv64_linux = -platform linux-g++ -xplatform bitcoin-linux-g++
 $(package)_config_opts_mingw32  = -no-opengl -xplatform win32-g++ -device-option CROSS_COMPILE="$(host)-"
-$(package)_config_opts_aarch64_android = -xplatform android-clang
-$(package)_config_opts_aarch64_android += -android-sdk $(ANDROID_SDK)
-$(package)_config_opts_aarch64_android += -android-ndk $(ANDROID_NDK)
-$(package)_config_opts_aarch64_android += -android-ndk-platform android-$(ANDROID_API_LEVEL)
-$(package)_config_opts_aarch64_android += -device-option CROSS_COMPILE="$(host)-"
+
+$(package)_config_opts_android = -xplatform android-clang
+$(package)_config_opts_android += -android-sdk $(ANDROID_SDK)
+$(package)_config_opts_android += -android-ndk $(ANDROID_NDK)
+$(package)_config_opts_android += -android-ndk-platform android-$(ANDROID_API_LEVEL)
+$(package)_config_opts_android += -device-option CROSS_COMPILE="$(host)-"
+$(package)_config_opts_android += -egl
+$(package)_config_opts_android += -qpa xcb
+$(package)_config_opts_android += -no-eglfs
+$(package)_config_opts_android += -opengl es2
+$(package)_config_opts_android += -qt-freetype
+$(package)_config_opts_android += -no-fontconfig
+$(package)_config_opts_android += -L $(host_prefix)/lib
+$(package)_config_opts_android += -I $(host_prefix)/include
+
 $(package)_config_opts_aarch64_android += -android-arch arm64-v8a
-$(package)_config_opts_aarch64_android += -egl
-$(package)_config_opts_aarch64_android += -qpa xcb
-$(package)_config_opts_aarch64_android += -no-eglfs
-$(package)_config_opts_aarch64_android += -opengl es2
-$(package)_config_opts_aarch64_android += -qt-freetype
-$(package)_config_opts_aarch64_android += -no-fontconfig
-$(package)_config_opts_aarch64_android += -L $(host_prefix)/lib
-$(package)_config_opts_aarch64_android += -I $(host_prefix)/include
+$(package)_config_opts_armv7a_android += -android-arch armeabi-v7a
+$(package)_config_opts_x86_64_android += -android-arch x86_64
+$(package)_config_opts_i686_android += -android-arch i686
+
 $(package)_build_env  = QT_RCC_TEST=1
 $(package)_build_env += QT_RCC_SOURCE_DATE_OVERRIDE=1
 endef
