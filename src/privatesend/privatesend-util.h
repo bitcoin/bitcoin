@@ -15,8 +15,8 @@ private:
 
 public:
     CKeyHolder(CWallet* pwalletIn);
-    CKeyHolder(CKeyHolder&&) = default;
-    CKeyHolder& operator=(CKeyHolder&&) = default;
+    CKeyHolder(CKeyHolder&&) = delete;
+    CKeyHolder& operator=(CKeyHolder&&) = delete;
     void KeepKey();
     void ReturnKey();
 
