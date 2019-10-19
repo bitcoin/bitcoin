@@ -21,23 +21,23 @@ template <typename ProTx>
 static bool CheckService(const uint256& proTxHash, const ProTx& proTx, CValidationState& state)
 {
     if (!proTx.addr.IsValid()) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-protx-addr");
+        return state.DoS(10, false, REJECT_INVALID, "bad-protx-ipaddr");
     }
     if (Params().NetworkIDString() != CBaseChainParams::REGTEST && !proTx.addr.IsRoutable()) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-protx-addr");
+        return state.DoS(10, false, REJECT_INVALID, "bad-protx-ipaddr");
     }
 
     static int mainnetDefaultPort = CreateChainParams(CBaseChainParams::MAIN)->GetDefaultPort();
     if (Params().NetworkIDString() == CBaseChainParams::MAIN) {
         if (proTx.addr.GetPort() != mainnetDefaultPort) {
-            return state.DoS(10, false, REJECT_INVALID, "bad-protx-addr-port");
+            return state.DoS(10, false, REJECT_INVALID, "bad-protx-ipaddr-port");
         }
     } else if (proTx.addr.GetPort() == mainnetDefaultPort) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-protx-addr-port");
+        return state.DoS(10, false, REJECT_INVALID, "bad-protx-ipaddr-port");
     }
 
     if (!proTx.addr.IsIPv4()) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-protx-addr");
+        return state.DoS(10, false, REJECT_INVALID, "bad-protx-ipaddr");
     }
 
     return true;
