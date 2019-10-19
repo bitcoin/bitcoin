@@ -65,8 +65,8 @@ protected:
     bool filterAcceptsRow(int source_row, const QModelIndex & source_parent) const;
 
 private:
-    QDateTime dateFrom;
-    QDateTime dateTo;
+    qint64 dateFrom;
+    qint64 dateTo;
     QString addrPrefix;
     quint32 typeFilter;
     WatchOnlyFilter watchOnlyFilter;

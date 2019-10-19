@@ -422,10 +422,20 @@ bool AddressTableModel::removeRows(int row, int count, const QModelIndex &parent
  */
 QString AddressTableModel::labelForAddress(const QString &address) const
 {
+    CBitcoinAddress address_parsed(address.toStdString());
+    return labelForAddress(address_parsed);
+}
+
+QString AddressTableModel::labelForAddress(const CBitcoinAddress &address) const
+{
+    return labelForDestination(address.Get());
+}
+
+QString AddressTableModel::labelForDestination(const CTxDestination &dest) const
+{
     {
         LOCK(wallet->cs_wallet);
-        CBitcoinAddress address_parsed(address.toStdString());
-        std::map<CTxDestination, CAddressBookData>::iterator mi = wallet->mapAddressBook.find(address_parsed.Get());
+        std::map<CTxDestination, CAddressBookData>::iterator mi = wallet->mapAddressBook.find(dest);
         if (mi != wallet->mapAddressBook.end())
         {
             return QString::fromStdString(mi->second.name);

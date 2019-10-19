@@ -484,6 +484,11 @@ public:
         MarkDirty();
     }
 
+    const CWallet* GetWallet() const
+    {
+        return pwallet;
+    }
+
     //! filter decides which addresses will count towards the debit
     CAmount GetDebit(const isminefilter& filter) const;
     CAmount GetCredit(const isminefilter& filter) const;

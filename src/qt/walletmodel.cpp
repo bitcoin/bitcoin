@@ -192,16 +192,15 @@ void WalletModel::updateTransaction()
 
 void WalletModel::updateNumISLocks()
 {
-    fForceCheckBalanceChanged = true;
     cachedNumISLocks++;
-    if (transactionTableModel)
-        transactionTableModel->updateNumISLocks(cachedNumISLocks);
 }
 
 void WalletModel::updateChainLockHeight(int chainLockHeight)
 {
     if (transactionTableModel)
         transactionTableModel->updateChainLockHeight(chainLockHeight);
+    // Number and status of confirmations might have changed (WalletModel::pollBalanceChanged handles this as well)
+    fForceCheckBalanceChanged = true;
 }
 
 int WalletModel::getNumISLocks() const
