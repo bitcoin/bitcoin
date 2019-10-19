@@ -412,6 +412,9 @@ public:
     CScript(std::vector<unsigned char>::const_iterator pbegin, std::vector<unsigned char>::const_iterator pend) : CScriptBase(pbegin, pend) { }
     CScript(const unsigned char* pbegin, const unsigned char* pend) : CScriptBase(pbegin, pend) { }
 
+    // Define a copy constructor so that operator= is a copy instead of a move to avoid undefined behavior
+    CScript(const CScript& a) : CScript(a.begin(), a.end()) {}
+
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
@@ -495,6 +498,7 @@ public:
         return *this;
     }
 
+    CScript& operator=(const CScript&) = default;
 
     bool GetOp(const_iterator& pc, opcodetype& opcodeRet, std::vector<unsigned char>& vchRet) const
     {
