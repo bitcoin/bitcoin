@@ -980,7 +980,7 @@ static UniValue gettxoutsetinfo(const JSONRPCRequest& request)
             "  \"bogosize\": n,          (numeric) A meaningless metric for UTXO set size\n"
             "  \"hash_serialized_2\": \"hash\", (string) The serialized hash\n"
             "  \"disk_size\": n,         (numeric) The estimated size of the chainstate on disk\n"
-            "  \"total_amount\": x.xxx          (numeric) The total amount\n"
+            "  \"total_amount\": x.xxx          (numeric) The total amount of mined coins\n"
             "}\n"
                 },
                 RPCExamples{
