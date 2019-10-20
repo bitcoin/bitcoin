@@ -38,7 +38,7 @@ class BumpFeeTest(BitcoinTestFramework):
             "-walletrbf={}".format(i),
             "-mintxfee=0.00002",
             "-deprecatedrpc=totalFee",
-            "-addresstype=p2sh-segwit", # TODO update constants in test and remove
+            "-addresstype=bech32",
         ] for i in range(self.num_nodes)]
 
     def skip_test_if_missing_module(self):
@@ -246,10 +246,8 @@ def test_dust_to_fee(rbf_node, dest_address):
     # the bumped tx sets fee=49,900, but it converts to 50,000
     rbfid = spend_one_input(rbf_node, dest_address)
     fulltx = rbf_node.getrawtransaction(rbfid, 1)
-    # (32-byte p2sh-pwpkh output size + 148 p2pkh spend estimate) * 10k(discard_rate) / 1000 = 1800
-    # P2SH outputs are slightly "over-discarding" due to the IsDust calculation assuming it will
-    # be spent as a P2PKH.
-    bumped_tx = rbf_node.bumpfee(rbfid, {"totalFee": 50000 - 1800})
+    # (31-vbyte p2wpkh output size + 67-vbyte p2wpkh spend estimate) * 10k(discard_rate) / 1000 = 980
+    bumped_tx = rbf_node.bumpfee(rbfid, {"totalFee": 50000 - 980})
     full_bumped_tx = rbf_node.getrawtransaction(bumped_tx["txid"], 1)
     assert_equal(bumped_tx["fee"], Decimal("0.00050000"))
     assert_equal(len(fulltx["vout"]), 2)
@@ -272,7 +270,9 @@ def test_settxfee(rbf_node, dest_address):
 
 
 def test_maxtxfee_fails(test, rbf_node, dest_address):
-    test.restart_node(1, ['-maxtxfee=0.00003'] + test.extra_args[1])
+    # size of bumped transaction (p2wpkh, 1 input, 2 outputs): 141 vbytes
+    # expected bumping feerate of 20 sats/vbyte => 141*20 sats = 0.00002820 btc
+    test.restart_node(1, ['-maxtxfee=0.000025'] + test.extra_args[1])
     rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
     rbfid = spend_one_input(rbf_node, dest_address)
     assert_raises_rpc_error(-4, "Unable to create transaction: Fee exceeds maximum configured by -maxtxfee", rbf_node.bumpfee, rbfid)
