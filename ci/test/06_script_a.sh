@@ -23,7 +23,7 @@ mkdir -p build
 
 # Temporarily disable errexit, because Travis macOS fails without error message
 set +o errexit
-cd build || (echo "could not enter build directory"; exit 1)
+type cd build || (echo "could not enter build directory"; exit 1)
 set -o errexit
 
 BEGIN_FOLD configure
@@ -35,7 +35,7 @@ DOCKER_EXEC make distdir VERSION=$HOST
 END_FOLD
 
 set +o errexit
-cd "bitcoin-$HOST" || (echo "could not enter distdir bitcoin-$HOST"; exit 1)
+type cd "bitcoin-$HOST" || (echo "could not enter distdir bitcoin-$HOST"; exit 1)
 set -o errexit
 
 BEGIN_FOLD configure
@@ -50,5 +50,5 @@ DOCKER_EXEC make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows
 END_FOLD
 
 set +o errexit
-cd ${BASE_BUILD_DIR} || (echo "could not enter travis build dir $BASE_BUILD_DIR"; exit 1)
+type cd ${BASE_BUILD_DIR} || (echo "could not enter travis build dir $BASE_BUILD_DIR"; exit 1)
 set -o errexit
