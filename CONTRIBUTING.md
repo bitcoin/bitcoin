@@ -46,7 +46,7 @@ facilitates social contribution, easy testing and peer review.
 
 To contribute a patch, the workflow is as follows:
 
-  1. Fork repository
+  1. Fork repository ([only the first time](https://help.github.com/en/articles/fork-a-repo)).
   1. Create topic branch
   1. Commit patches
 
