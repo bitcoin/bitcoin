@@ -3468,21 +3468,6 @@ bool CWallet::DelAddressBook(const CTxDestination& address)
     return WalletBatch(*database).EraseName(EncodeDestination(address));
 }
 
-const std::string& CWallet::GetLabelName(const CScript& scriptPubKey) const
-{
-    CTxDestination address;
-    if (ExtractDestination(scriptPubKey, address) && !scriptPubKey.IsUnspendable()) {
-        auto mi = mapAddressBook.find(address);
-        if (mi != mapAddressBook.end()) {
-            return mi->second.name;
-        }
-    }
-    // A scriptPubKey that doesn't have an entry in the address book is
-    // associated with the default label ("").
-    const static std::string DEFAULT_LABEL_NAME;
-    return DEFAULT_LABEL_NAME;
-}
-
 /**
  * Mark old keypool keys as used,
  * and generate all new keys
