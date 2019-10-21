@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2019 The Talkcoin Core developers
+# Copyright (c) 2017-2019 The Bitcointalkcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test that the wallet resends transactions periodically."""
@@ -9,7 +9,7 @@ import time
 from test_framework.blocktools import create_block, create_coinbase
 from test_framework.messages import ToHex
 from test_framework.mininode import P2PInterface, mininode_lock
-from test_framework.test_framework import TalkcoinTestFramework
+from test_framework.test_framework import BitcointalkcoinTestFramework
 from test_framework.util import assert_equal, wait_until
 
 class P2PStoreTxInvs(P2PInterface):
@@ -24,7 +24,7 @@ class P2PStoreTxInvs(P2PInterface):
                 # save txid
                 self.tx_invs_received[i.hash] += 1
 
-class ResendWalletTransactionsTest(TalkcoinTestFramework):
+class ResendWalletTransactionsTest(BitcointalkcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 

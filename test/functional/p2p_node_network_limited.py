@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2019 The Talkcoin Core developers
+# Copyright (c) 2017-2019 The Bitcointalkcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Tests NODE_NETWORK_LIMITED.
@@ -10,7 +10,7 @@ and that it responds to getdata requests for blocks correctly:
     - disconnect peers who request blocks older than that."""
 from test_framework.messages import CInv, msg_getdata, msg_verack, NODE_BLOOM, NODE_NETWORK_LIMITED, NODE_WITNESS
 from test_framework.mininode import P2PInterface, mininode_lock
-from test_framework.test_framework import TalkcoinTestFramework
+from test_framework.test_framework import BitcointalkcoinTestFramework
 from test_framework.util import (
     assert_equal,
     disconnect_nodes,
@@ -34,7 +34,7 @@ class P2PIgnoreInv(P2PInterface):
         getdata_request.inv.append(CInv(2, int(blockhash, 16)))
         self.send_message(getdata_request)
 
-class NodeNetworkLimitedTest(TalkcoinTestFramework):
+class NodeNetworkLimitedTest(BitcointalkcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3

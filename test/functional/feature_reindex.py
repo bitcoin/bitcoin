@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2018 The Talkcoin Core developers
+# Copyright (c) 2014-2018 The Bitcointalkcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Test running talkcoind with -reindex and -reindex-chainstate options.
+"""Test running bitcointalkcoind with -reindex and -reindex-chainstate options.
 
 - Start a single node and generate 3 blocks.
 - Stop the node and restart it with -reindex. Verify that the node has reindexed up to block 3.
 - Stop the node and restart it with -reindex-chainstate. Verify that the node has reindexed up to block 3.
 """
 
-from test_framework.test_framework import TalkcoinTestFramework
+from test_framework.test_framework import BitcointalkcoinTestFramework
 from test_framework.util import wait_until
 
-class ReindexTest(TalkcoinTestFramework):
+class ReindexTest(BitcointalkcoinTestFramework):
 
     def set_test_params(self):
         self.setup_clean_chain = True

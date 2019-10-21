@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Combine logs from multiple talkcoin nodes as well as the test_framework log.
+"""Combine logs from multiple bitcointalkcoin nodes as well as the test_framework log.
 
 This streams the combined log output to stdout. Use combine_logs.py > outputfile
 to write to an outputfile.
@@ -20,7 +20,7 @@ import tempfile
 # without the parent module installed.
 
 # Should match same symbol in `test_framework.test_framework`.
-TMPDIR_PREFIX = "talkcoin_func_test_"
+TMPDIR_PREFIX = "bitcointalkcoin_func_test_"
 
 # Matches on the date format at the start of the log event
 TIMESTAMP_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{6})?Z")

@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2019 The Talkcoin Core developers
+# Copyright (c) 2017-2019 The Bitcointalkcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test multiwallet.
 
-Verify that a talkcoind node can load multiple wallet files
+Verify that a bitcointalkcoind node can load multiple wallet files
 """
 import os
 import shutil
 import time
 
-from test_framework.test_framework import TalkcoinTestFramework
+from test_framework.test_framework import BitcointalkcoinTestFramework
 from test_framework.test_node import ErrorMatch
 from test_framework.util import (
     assert_equal,
@@ -18,7 +18,7 @@ from test_framework.util import (
 )
 
 
-class MultiWalletTest(TalkcoinTestFramework):
+class MultiWalletTest(BitcointalkcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2

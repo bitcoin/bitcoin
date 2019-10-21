@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2019 The Talkcoin Core developers
+# Copyright (c) 2017-2019 The Bitcointalkcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test recovery from a crash during chainstate writing.
@@ -31,11 +31,11 @@ import random
 import time
 
 from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut, ToHex
-from test_framework.test_framework import TalkcoinTestFramework
+from test_framework.test_framework import BitcointalkcoinTestFramework
 from test_framework.util import assert_equal, create_confirmed_utxos, hex_str_to_bytes
 
 
-class ChainstateWriteCrashTest(TalkcoinTestFramework):
+class ChainstateWriteCrashTest(BitcointalkcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
         self.setup_clean_chain = False
@@ -82,14 +82,14 @@ class ChainstateWriteCrashTest(TalkcoinTestFramework):
                 return utxo_hash
             except:
                 # An exception here should mean the node is about to crash.
-                # If talkcoind exits, then try again.  wait_for_node_exit()
-                # should raise an exception if talkcoind doesn't exit.
+                # If bitcointalkcoind exits, then try again.  wait_for_node_exit()
+                # should raise an exception if bitcointalkcoind doesn't exit.
                 self.wait_for_node_exit(node_index, timeout=10)
             self.crashed_on_restart += 1
             time.sleep(1)
 
-        # If we got here, talkcoind isn't coming back up on restart.  Could be a
-        # bug in talkcoind, or we've gotten unlucky with our dbcrash ratio --
+        # If we got here, bitcointalkcoind isn't coming back up on restart.  Could be a
+        # bug in bitcointalkcoind, or we've gotten unlucky with our dbcrash ratio --
         # perhaps we generated a test case that blew up our cache?
         # TODO: If this happens a lot, we should try to restart without -dbcrashratio
         # and make sure that recovery happens.

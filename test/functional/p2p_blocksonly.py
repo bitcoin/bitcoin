@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019 The Talkcoin Core developers
+# Copyright (c) 2019 The Bitcointalkcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test p2p blocksonly"""
 
 from test_framework.messages import msg_tx, CTransaction, FromHex
 from test_framework.mininode import P2PInterface
-from test_framework.test_framework import TalkcoinTestFramework
+from test_framework.test_framework import BitcointalkcoinTestFramework
 from test_framework.util import assert_equal
 
 
-class P2PBlocksOnly(TalkcoinTestFramework):
+class P2PBlocksOnly(BitcointalkcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = False
         self.num_nodes = 1

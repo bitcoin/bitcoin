@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2019 The Talkcoin Core developers
+# Copyright (c) 2016-2019 The Bitcointalkcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test version bits warning system.
@@ -13,7 +13,7 @@ import re
 from test_framework.blocktools import create_block, create_coinbase
 from test_framework.messages import msg_block
 from test_framework.mininode import P2PInterface, mininode_lock
-from test_framework.test_framework import TalkcoinTestFramework
+from test_framework.test_framework import BitcointalkcoinTestFramework
 from test_framework.util import wait_until
 
 VB_PERIOD = 144           # versionbits period length for regtest
@@ -25,7 +25,7 @@ VB_UNKNOWN_VERSION = VB_TOP_BITS | (1 << VB_UNKNOWN_BIT)
 WARN_UNKNOWN_RULES_ACTIVE = "unknown new rules activated (versionbit {})".format(VB_UNKNOWN_BIT)
 VB_PATTERN = re.compile("Warning: unknown new rules activated.*versionbit")
 
-class VersionBitsWarningTest(TalkcoinTestFramework):
+class VersionBitsWarningTest(BitcointalkcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
@@ -86,7 +86,7 @@ class VersionBitsWarningTest(TalkcoinTestFramework):
         # is cleared. This will move the versionbit state to ACTIVE.
         node.generatetoaddress(VB_PERIOD, node_deterministic_address)
 
-        # Stop-start the node. This is required because talkcoind will only warn once about unknown versions or unknown rules activating.
+        # Stop-start the node. This is required because bitcointalkcoind will only warn once about unknown versions or unknown rules activating.
         self.restart_node(0)
 
         # Generating one block guarantees that we'll get out of IBD
