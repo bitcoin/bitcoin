@@ -2,12 +2,12 @@
 
 ## Supported Versions
 
-See our website for versions of Talkcoin Core that are currently supported with
-security updates: https://talkcoincore.org/en/lifecycle/#schedule
+See our website for versions of Bitcointalkcoin Core that are currently supported with
+security updates: https://bitcointalkcoincore.org/en/lifecycle/#schedule
 
 ## Reporting a Vulnerability
 
-To report security issues send an email to security@talkcoincore.org (not for support).
+To report security issues send an email to security@bitcointalkcoincore.org (not for support).
 
 The following keys may be used to communicate sensitive information to developers:
 
