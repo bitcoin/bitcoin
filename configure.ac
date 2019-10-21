@@ -2,7 +2,7 @@ dnl require autoconf 2.60 (AS_ECHO/AS_ECHO_N)
 AC_PREREQ([2.60])
 define(_CLIENT_VERSION_MAJOR, 0)
 define(_CLIENT_VERSION_MINOR, 18)
-define(_CLIENT_VERSION_REVISION, 01)
+define(_CLIENT_VERSION_REVISION, 05)
 define(_CLIENT_VERSION_BUILD, 0)
 define(_CLIENT_VERSION_RC, 0)
 define(_CLIENT_VERSION_IS_RELEASE, true)
@@ -157,6 +157,12 @@ AC_ARG_ENABLE([wallet],
   [enable_wallet=$enableval],
   [enable_wallet=yes])
 
+AC_ARG_ENABLE([mobile-gui],
+  [AS_HELP_STRING([--enable-mobile-gui],
+  [enable mobile GUI (disabled by default)])],
+  [use_mobile_gui=$enableval],
+  [use_mobile_gui=no])
+
 AC_ARG_WITH([miniupnpc],
   [AS_HELP_STRING([--with-miniupnpc],
   [enable UPNP (default is yes if libminiupnpc is found)])],
@@ -269,13 +275,6 @@ AC_ARG_ENABLE([zmq],
   [disable ZMQ notifications])],
   [use_zmq=$enableval],
   [use_zmq=yes])
-AC_ARG_ENABLE([bip70],
-  [AS_HELP_STRING([--disable-bip70],
-  [disable BIP70 (payment protocol) support in GUI (enabled by default)])],
-  [enable_bip70=$enableval],
-  [enable_bip70=auto])
-
-AC_ARG_WITH([protoc-bindir],[AS_HELP_STRING([--with-protoc-bindir=BIN_DIR],[specify protoc bin path])], [protoc_bin_path=$withval], [])
 
 AC_ARG_ENABLE(man,
     [AS_HELP_STRING([--disable-man],
@@ -638,6 +637,7 @@ case $host in
      ;;
    *android*)
      dnl make sure android stays above linux for hosts like *linux-android*
+     TARGET_OS=android
      LEVELDB_TARGET_FLAGS="-DOS_ANDROID"
      ;;
    *linux*)
@@ -1184,9 +1184,6 @@ if test x$use_pkgconfig = xyes; then
     [
       PKG_CHECK_MODULES([SSL], [libssl],, [AC_MSG_ERROR(openssl not found.)])
       PKG_CHECK_MODULES([CRYPTO], [libcrypto],,[AC_MSG_ERROR(libcrypto not found.)])
-      if test x$enable_bip70 != xno; then
-        BITCOINTALKCOIN_QT_CHECK([PKG_CHECK_MODULES([PROTOBUF], [protobuf], [have_protobuf=yes], [have_protobuf=no])])
-      fi
       if test x$use_qr != xno; then
         BITCOINTALKCOIN_QT_CHECK([PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])])
       fi
@@ -1246,9 +1243,6 @@ else
     esac
   fi
 
-  if test x$enable_bip70 != xno; then
-    BITCOINTALKCOIN_QT_CHECK(AC_CHECK_LIB([protobuf] ,[main],[PROTOBUF_LIBS=-lprotobuf], [have_protobuf=no]))
-  fi
   if test x$use_qr != xno; then
     BITCOINTALKCOIN_QT_CHECK([AC_CHECK_LIB([qrencode], [main],[QR_LIBS=-lqrencode], [have_qrencode=no])])
     BITCOINTALKCOIN_QT_CHECK([AC_CHECK_HEADER([qrencode.h],, have_qrencode=no)])
@@ -1327,11 +1321,6 @@ AC_SUBST(UNIVALUE_CFLAGS)
 AC_SUBST(UNIVALUE_LIBS)
 
 
-if test x$have_protobuf != xno &&
-   test x$enable_bip70 != xno; then
-  BITCOINTALKCOIN_QT_PATH_PROGS([PROTOC], [protoc],$protoc_bin_path)
-fi
-
 AC_MSG_CHECKING([whether to build bitcointalkcoind])
 AM_CONDITIONAL([BUILD_BITCOINTALKCOIND], [test x$build_bitcointalkcoind = xyes])
 AC_MSG_RESULT($build_bitcointalkcoind)
@@ -1382,6 +1371,16 @@ AC_MSG_CHECKING([if wallet should be enabled])
 if test x$enable_wallet != xno; then
   AC_MSG_RESULT(yes)
   AC_DEFINE_UNQUOTED([ENABLE_WALLET],[1],[Define to 1 to enable wallet functions])
+
+else
+  AC_MSG_RESULT(no)
+fi
+
+dnl enable mobile gui
+AC_MSG_CHECKING([if mobile GUI should be enabled])
+if test x$use_mobile_gui != xno; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE_UNQUOTED([MOBILE_GUI],[1],[Define to 1 to enable mobile GUI])
 
 else
   AC_MSG_RESULT(no)
@@ -1452,23 +1451,6 @@ if test x$bitcointalkcoin_enable_qt != xno; then
   else
     AC_MSG_RESULT([no])
   fi
-
-  AC_MSG_CHECKING([whether to build BIP70 support])
-  if test x$have_protobuf = xno; then
-    if test x$enable_bip70 = xyes; then
-      AC_MSG_ERROR(protobuf missing)
-    fi
-    enable_bip70=no
-    AC_MSG_RESULT(no)
-  else
-    if test x$enable_bip70 != xno; then
-      AC_DEFINE([ENABLE_BIP70],[1],[Define if BIP70 support should be compiled in])
-      enable_bip70=yes
-      AC_MSG_RESULT([yes])
-    else
-      AC_MSG_RESULT([no])
-    fi
-  fi
 fi
 
 AM_CONDITIONAL([ENABLE_ZMQ], [test "x$use_zmq" = "xyes"])
@@ -1496,6 +1478,7 @@ fi
 AM_CONDITIONAL([TARGET_DARWIN], [test x$TARGET_OS = xdarwin])
 AM_CONDITIONAL([BUILD_DARWIN], [test x$BUILD_OS = xdarwin])
 AM_CONDITIONAL([TARGET_WINDOWS], [test x$TARGET_OS = xwindows])
+AM_CONDITIONAL([TARGET_ANDROID], [test x$TARGET_OS = xandroid])
 AM_CONDITIONAL([ENABLE_WALLET],[test x$enable_wallet = xyes])
 AM_CONDITIONAL([ENABLE_PROOF_OF_STAKE],[test x$enable_pos = xyes])
 AM_CONDITIONAL([ENABLE_SECURE_MESSAGING],[test x$enable_smsg = xyes])
@@ -1505,11 +1488,11 @@ AM_CONDITIONAL([ENABLE_MOMENTUM_HASH_ALGO],[test x$momentum_algo = xyes])
 AM_CONDITIONAL([ENABLE_MEM_HASH_ALGO],[test x$axiom_algo = xyes])
 AM_CONDITIONAL([ENABLE_GROESTL_HASH_ALGO],[test x$groestl_algo = xyes])
 AM_CONDITIONAL([ENABLE_SHA_HASH_ALGO],[test x$sha_algo = xyes])
+AM_CONDITIONAL([MOBILE_GUI],[test x$use_mobile_gui = xyes])
 AM_CONDITIONAL([ENABLE_TESTS],[test x$BUILD_TEST = xyes])
 AM_CONDITIONAL([ENABLE_FUZZ],[test x$enable_fuzz = xyes])
 AM_CONDITIONAL([ENABLE_QT],[test x$bitcointalkcoin_enable_qt = xyes])
 AM_CONDITIONAL([ENABLE_QT_TESTS],[test x$BUILD_TEST_QT = xyes])
-AM_CONDITIONAL([ENABLE_BIP70],[test x$enable_bip70 = xyes])
 AM_CONDITIONAL([ENABLE_BENCH],[test x$use_bench = xyes])
 AM_CONDITIONAL([USE_QRCODE], [test x$use_qr = xyes])
 AM_CONDITIONAL([USE_LCOV],[test x$use_lcov = xyes])
@@ -1579,7 +1562,6 @@ AC_SUBST(SSL_LIBS)
 AC_SUBST(EVENT_LIBS)
 AC_SUBST(EVENT_PTHREADS_LIBS)
 AC_SUBST(ZMQ_LIBS)
-AC_SUBST(PROTOBUF_LIBS)
 AC_SUBST(QR_LIBS)
 AC_CONFIG_FILES([Makefile src/Makefile doc/man/Makefile share/setup.nsi share/qt/Info.plist test/config.ini])
 AC_CONFIG_FILES([contrib/devtools/split-debug.sh],[chmod +x contrib/devtools/split-debug.sh])
@@ -1616,7 +1598,7 @@ if test x$need_bundled_univalue = xyes; then
   AC_CONFIG_SUBDIRS([src/univalue])
 fi
 
-ac_configure_args="${ac_configure_args} --disable-shared --with-pic --with-bignum=no --enable-module-recovery --disable-jni"
+ac_configure_args="${ac_configure_args} --disable-shared --with-pic --enable-benchmark=no --with-bignum=no --enable-module-recovery --disable-jni"
 AC_CONFIG_SUBDIRS([src/secp256k1])
 
 AC_OUTPUT
@@ -1653,8 +1635,8 @@ echo "  sha256 hash algorithm   = $sha_algo"
 echo "  groestl hash algorithm   = $groestl_algo"
 echo "  with gui / qt = $bitcointalkcoin_enable_qt"
 if test x$bitcointalkcoin_enable_qt != xno; then
-    echo "    with bip70  = $enable_bip70"
     echo "    with qr     = $use_qr"
+    echo "    mobile gui  = $use_mobile_gui"
 fi
 echo "  with zmq      = $use_zmq"
 echo "  with test     = $use_tests"

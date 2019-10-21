@@ -171,6 +171,10 @@ QT_MOC_CPP = \
   qt/moc_messagepage.cpp \
   qt/moc_messagemodel.cpp
 
+if MOBILE_GUI
+QT_MOC_CPP += qt/moc_bitcointalkcoinmobilegui.cpp
+endif  
+
 BITCOINTALKCOIN_MM = \
   qt/macdockiconhandler.mm \
   qt/macnotificationhandler.mm \
@@ -186,16 +190,6 @@ QT_QRC_CPP = qt/qrc_bitcointalkcoin.cpp
 QT_QRC = qt/bitcointalkcoin.qrc
 QT_QRC_LOCALE_CPP = qt/qrc_bitcointalkcoin_locale.cpp
 QT_QRC_LOCALE = qt/bitcointalkcoin_locale.qrc
-
-if ENABLE_BIP70
-PROTOBUF_CC = qt/paymentrequest.pb.cc
-PROTOBUF_H = qt/paymentrequest.pb.h
-PROTOBUF_PROTO = qt/paymentrequest.proto
-else
-PROTOBUF_CC =
-PROTOBUF_H =
-PROTOBUF_PROTO =
-endif
 
 BITCOINTALKCOIN_QT_H = \
   qt/addressbookpage.h \
@@ -225,7 +219,6 @@ BITCOINTALKCOIN_QT_H = \
   qt/optionsdialog.h \
   qt/optionsmodel.h \
   qt/overviewpage.h \
-  qt/paymentrequestplus.h \
   qt/paymentserver.h \
   qt/peertablemodel.h \
   qt/platformstyle.h \
@@ -259,6 +252,10 @@ BITCOINTALKCOIN_QT_H = \
   qt/sendmessagesdialog.h \
   qt/messagemodel.h \
   qt/messagepage.h
+
+if MOBILE_GUI
+BITCOINTALKCOIN_QT_H += qt/bitcointalkcoinmobilegui.h
+endif  
 
 RES_ICONS = \
   qt/res/icons/add.png \
@@ -349,6 +346,10 @@ BITCOINTALKCOIN_QT_BASE_CPP = \
   qt/messagemodel.cpp\
   qt/qvalidatedtextedit.cpp
 
+if MOBILE_GUI
+BITCOINTALKCOIN_QT_BASE_CPP += qt/bitcointalkcoinmobilegui.cpp
+endif 
+
 BITCOINTALKCOIN_QT_WINDOWS_CPP = qt/winshutdownmonitor.cpp
 
 BITCOINTALKCOIN_QT_WALLET_CPP = \
@@ -383,23 +384,19 @@ BITCOINTALKCOIN_QT_WALLET_CPP = \
   qt/sendmessagesdialog.cpp \
   qt/messagepage.cpp
 
-BITCOINTALKCOIN_QT_WALLET_BIP70_CPP = \
-  qt/paymentrequestplus.cpp
-
 BITCOINTALKCOIN_QT_CPP = $(BITCOINTALKCOIN_QT_BASE_CPP)
 if TARGET_WINDOWS
 BITCOINTALKCOIN_QT_CPP += $(BITCOINTALKCOIN_QT_WINDOWS_CPP)
 endif
 if ENABLE_WALLET
 BITCOINTALKCOIN_QT_CPP += $(BITCOINTALKCOIN_QT_WALLET_CPP)
-if ENABLE_BIP70
-BITCOINTALKCOIN_QT_CPP += $(BITCOINTALKCOIN_QT_WALLET_BIP70_CPP)
-endif # ENABLE_BIP70
 endif # ENABLE_WALLET
 
 RES_IMAGES =
 
 RES_MOVIES = $(wildcard $(srcdir)/qt/res/movies/spinner-*.png)
+
+RES_QML = $(wildcard $(srcdir)/qt/res/qml/*.qml)
 
 BITCOINTALKCOIN_RC = qt/res/bitcointalkcoin-qt-res.rc
 
@@ -427,11 +424,6 @@ QT_FORMS_H=$(join $(dir $(QT_FORMS_UI)),$(addprefix ui_, $(notdir $(QT_FORMS_UI:
 $(QT_MOC): $(QT_FORMS_H)
 $(qt_libbitcointalkcoinqt_a_OBJECTS) $(qt_bitcointalkcoin_qt_OBJECTS) : | $(QT_MOC)
 
-#Generating these with a half-written protobuf header leads to wacky results.
-#This makes sure it's done.
-$(QT_MOC): $(PROTOBUF_H)
-$(QT_MOC_CPP): $(PROTOBUF_H)
-
 # bitcointalkcoin-qt binary #
 qt_bitcointalkcoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOINTALKCOIN_INCLUDES) $(BITCOINTALKCOIN_QT_INCLUDES) \
   $(QT_INCLUDES) $(PROTOBUF_CFLAGS) $(QR_CFLAGS)
@@ -449,15 +441,13 @@ if ENABLE_ZMQ
 qt_bitcointalkcoin_qt_LDADD += $(LIBBITCOINTALKCOIN_ZMQ) $(ZMQ_LIBS)
 endif
 qt_bitcointalkcoin_qt_LDADD += $(LIBBITCOINTALKCOIN_CLI) $(LIBBITCOINTALKCOIN_COMMON) $(LIBBITCOINTALKCOIN_UTIL) $(LIBBITCOINTALKCOIN_CONSENSUS) $(LIBBITCOINTALKCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) \
-  $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QR_LIBS) $(PROTOBUF_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(LIBSECP256K1) \
+  $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QR_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(LIBSECP256K1) \
   $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
-if ENABLE_BIP70
-qt_bitcointalkcoin_qt_LDADD += $(SSL_LIBS)
-else
+
 if TARGET_WINDOWS
 qt_bitcointalkcoin_qt_LDADD += $(SSL_LIBS)
 endif
-endif
+
 qt_bitcointalkcoin_qt_LDADD += $(CRYPTO_LIBS)
 qt_bitcointalkcoin_qt_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 qt_bitcointalkcoin_qt_LIBTOOLFLAGS = $(AM_LIBTOOLFLAGS) --tag CXX
@@ -482,7 +472,7 @@ $(QT_QRC_LOCALE_CPP): $(QT_QRC_LOCALE) $(QT_QM)
 	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@
 	@rm $(@D)/temp_$(<F)
 
-$(QT_QRC_CPP): $(QT_QRC) $(QT_FORMS_H) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES) $(PROTOBUF_H)
+$(QT_QRC_CPP): $(QT_QRC) $(QT_FORMS_H) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES)
 	@test -f $(RCC)
 	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name bitcointalkcoin $< | \
 	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@
