@@ -1,5 +1,5 @@
-#ifndef TALKCOIN_TALKCOIN_CONFIG_H
-#define TALKCOIN_TALKCOIN_CONFIG_H
+#ifndef BITCOINTALKCOIN_BITCOINTALKCOIN_CONFIG_H
+#define BITCOINTALKCOIN_BITCOINTALKCOIN_CONFIG_H
 
 /* Define if building universal (internal helper macro) */
 /* #undef AC_APPLE_UNIVERSAL_BUILD */
@@ -23,10 +23,10 @@
 #define COPYRIGHT_HOLDERS "The %s developers"
 
 /* Copyright holder(s) */
-#define COPYRIGHT_HOLDERS_FINAL "The Talkcoin Core developers"
+#define COPYRIGHT_HOLDERS_FINAL "The Bitcointalkcoin Core developers"
 
 /* Replacement for %s in copyright holders string */
-#define COPYRIGHT_HOLDERS_SUBSTITUTION "Talkcoin Core"
+#define COPYRIGHT_HOLDERS_SUBSTITUTION "Bitcointalkcoin Core"
 
 /* Copyright year */
 #define COPYRIGHT_YEAR 2019
@@ -340,19 +340,19 @@
 #define LT_OBJDIR ".libs/"
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "https://github.com/talkcoin/talkcoin/issues"
+#define PACKAGE_BUGREPORT "https://github.com/bitcointalkcoin/bitcointalkcoin/issues"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "Talkcoin Core"
+#define PACKAGE_NAME "Bitcointalkcoin Core"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "Talkcoin Core 0.18.99"
+#define PACKAGE_STRING "Bitcointalkcoin Core 0.18.99"
 
 /* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "talkcoin"
+#define PACKAGE_TARNAME "bitcointalkcoin"
 
 /* Define to the home page for this package. */
-#define PACKAGE_URL "https://talkcoincore.org/"
+#define PACKAGE_URL "https://bitcointalkcoincore.org/"
 
 /* Define to the version of this package. */
 #define PACKAGE_VERSION "0.18.99"
@@ -421,4 +421,4 @@
 /* Define for large files, on AIX-style hosts. */
 /* #undef _LARGE_FILES */
 
-#endif //TALKCOIN_TALKCOIN_CONFIG_H
+#endif //BITCOINTALKCOIN_BITCOINTALKCOIN_CONFIG_H
