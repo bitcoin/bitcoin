@@ -13,7 +13,11 @@
 #include <memory>
 #include <vector>
 
+#ifdef MOBILE_GUI
+class BitcointalkcoinMobileGUI;
+#else
 class BitcointalkcoinGUI;
+#endif
 class ClientModel;
 class NetworkStyle;
 class OptionsModel;
@@ -69,6 +73,8 @@ public:
     /// Create options model
     void createOptionsModel(bool resetSettings);
     /// Create main window
+    void SetPrune(bool prune, bool force = false);
+    /// Create main window
     void createWindow(const NetworkStyle *networkStyle);
     /// Create splash screen
     void createSplashScreen(const NetworkStyle *networkStyle);
@@ -106,7 +112,11 @@ private:
     interfaces::Node& m_node;
     OptionsModel *optionsModel;
     ClientModel *clientModel;
+#ifdef MOBILE_GUI
+    BitcointalkcoinMobileGUI *window;
+#else
     BitcointalkcoinGUI *window;
+#endif
     QTimer *pollShutdownTimer;
 #ifdef ENABLE_WALLET
     PaymentServer* paymentServer{nullptr};

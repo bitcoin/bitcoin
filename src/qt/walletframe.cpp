@@ -161,6 +161,13 @@ void WalletFrame::gotoSendCoinsPage(QString addr)
         i.value()->gotoSendCoinsPage(addr);
 }
 
+void WalletFrame::gotoRpcPage()
+{
+    WalletView *walletView = currentWalletView();
+    if (walletView)
+        walletView->gotoRpcPage();
+}
+
 void WalletFrame::gotoSignMessageTab(QString addr)
 {
     WalletView *walletView = currentWalletView();

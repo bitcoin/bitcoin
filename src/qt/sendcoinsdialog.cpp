@@ -125,6 +125,12 @@ SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *p
     ui->customFee->SetAllowEmpty(false);
     ui->customFee->setValue(settings.value("nTransactionFee").toLongLong());
     minimizeFeeSection(settings.value("fFeeSectionMinimized").toBool());
+
+#if defined(Q_OS_ANDROID)
+    ui->frameFee->hide();
+    ui->frameCoinControl->hide();
+#endif
+
 }
 
 void SendCoinsDialog::setClientModel(ClientModel *_clientModel)
@@ -290,9 +296,6 @@ void SendCoinsDialog::on_sendButton_clicked()
 
         QString recipientElement;
 
-#ifdef ENABLE_BIP70
-        if (!rcp.paymentRequest.IsInitialized()) // normal payment
-#endif
         {
             if(rcp.label.length() > 0) // label with address
             {
@@ -304,17 +307,6 @@ void SendCoinsDialog::on_sendButton_clicked()
                 recipientElement.append(tr("%1 to %2").arg(amount, address));
             }
         }
-#ifdef ENABLE_BIP70
-        else if(!rcp.authenticatedMerchant.isEmpty()) // authenticated payment request
-        {
-            recipientElement.append(tr("%1 to '%2'").arg(amount, rcp.authenticatedMerchant));
-        }
-        else // unauthenticated payment request
-        {
-            recipientElement.append(tr("%1 to %2").arg(amount, address));
-        }
-#endif
-
         formatted.append(recipientElement);
     }
 
@@ -605,7 +597,9 @@ void SendCoinsDialog::minimizeFeeSection(bool fMinimize)
     ui->labelFeeMinimized->setVisible(fMinimize);
     ui->buttonChooseFee  ->setVisible(fMinimize);
     ui->buttonMinimizeFee->setVisible(!fMinimize);
-    ui->frameFeeSelection->setVisible(!fMinimize);
+#ifndef OS_ANDROID
+    //ui->frameFeeSelection->setVisible(!fMinimize);
+#endif
     ui->horizontalLayoutSmartFee->setContentsMargins(0, (fMinimize ? 0 : 6), 0, 0);
     fFeeMinimized = fMinimize;
 }
@@ -650,10 +644,14 @@ void SendCoinsDialog::updateFeeSectionControls()
 {
     ui->confTargetSelector      ->setEnabled(ui->radioSmartFee->isChecked());
     ui->labelSmartFee           ->setEnabled(ui->radioSmartFee->isChecked());
-    ui->labelSmartFee2          ->setEnabled(ui->radioSmartFee->isChecked());
+#ifndef OS_ANDROID
+    //ui->labelSmartFee2          ->setEnabled(ui->radioSmartFee->isChecked());
+#endif
     ui->labelSmartFee3          ->setEnabled(ui->radioSmartFee->isChecked());
     ui->labelFeeEstimation      ->setEnabled(ui->radioSmartFee->isChecked());
-    ui->labelCustomFeeWarning   ->setEnabled(ui->radioCustomFee->isChecked());
+#ifndef OS_ANDROID
+    //ui->labelCustomFeeWarning   ->setEnabled(ui->radioCustomFee->isChecked());
+#endif
     ui->labelCustomPerKilobyte  ->setEnabled(ui->radioCustomFee->isChecked());
     ui->customFee               ->setEnabled(ui->radioCustomFee->isChecked());
 }
@@ -697,19 +695,25 @@ void SendCoinsDialog::updateSmartFeeLabel()
     ui->labelSmartFee->setText(BitcointalkcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), feeRate.GetFeePerK()) + "/kB");
 
     if (reason == FeeReason::FALLBACK) {
-        ui->labelSmartFee2->show(); // (Smart fee not initialized yet. This usually takes a few blocks...)
-        ui->labelFeeEstimation->setText("");
-        ui->fallbackFeeWarningLabel->setVisible(true);
-        int lightness = ui->fallbackFeeWarningLabel->palette().color(QPalette::WindowText).lightness();
-        QColor warning_colour(255 - (lightness / 5), 176 - (lightness / 3), 48 - (lightness / 14));
-        ui->fallbackFeeWarningLabel->setStyleSheet("QLabel { color: " + warning_colour.name() + "; }");
-        ui->fallbackFeeWarningLabel->setIndent(QFontMetrics(ui->fallbackFeeWarningLabel->font()).width("x"));
+#ifndef OS_ANDROID
+//        ui->labelSmartFee2->show(); // (Smart fee not initialized yet. This usually takes a few blocks...)
+//        ui->labelFeeEstimation->setText("");
+//        ui->fallbackFeeWarningLabel->setVisible(true);
+//        int lightness = ui->fallbackFeeWarningLabel->palette().color(QPalette::WindowText).lightness();
+//        QColor warning_colour(255 - (lightness / 5), 176 - (lightness / 3), 48 - (lightness / 14));
+//        ui->fallbackFeeWarningLabel->setStyleSheet("QLabel { color: " + warning_colour.name() + "; }");
+//        ui->fallbackFeeWarningLabel->setIndent(QFontMetrics(ui->fallbackFeeWarningLabel->font()).width("x"));
+#endif
     }
     else
     {
-        ui->labelSmartFee2->hide();
+#ifndef OS_ANDROID
+//        ui->labelSmartFee2->hide();
+#endif
         ui->labelFeeEstimation->setText(tr("Estimated to begin confirmation within %n block(s).", "", returned_target));
-        ui->fallbackFeeWarningLabel->setVisible(false);
+#ifndef OS_ANDROID
+//        ui->fallbackFeeWarningLabel->setVisible(false);
+#endif
     }
 
     updateFeeMinimizedLabel();

@@ -14,6 +14,7 @@
 #include <amount.h>
 
 #include <QLabel>
+#include <QPushButton>
 #include <QMainWindow>
 #include <QMap>
 #include <QPoint>
@@ -103,10 +104,16 @@ protected:
     void dragEnterEvent(QDragEnterEvent *event);
     void dropEvent(QDropEvent *event);
     bool eventFilter(QObject *object, QEvent *event);
-	void mousePressEvent(QMouseEvent *event);
+
+#ifndef OS_ANDROID
+
+    void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
     int m_nMouseClick_X_Coordinate;
     int m_nMouseClick_Y_Coordinate;
+    
+#endif
+
 private:
     interfaces::Node& m_node;
     WalletController* m_wallet_controller{nullptr};
@@ -114,6 +121,8 @@ private:
     std::unique_ptr<interfaces::Handler> m_handler_question;
     ClientModel* clientModel = nullptr;
     WalletFrame* walletFrame = nullptr;
+
+    QPushButton *Logo;
 
     UnitDisplayStatusBarControl* unitDisplayControl = nullptr;
     QLabel* labelWalletEncryptionIcon = nullptr;
@@ -262,8 +271,6 @@ public Q_SLOTS:
 #endif // ENABLE_WALLET
 
 private Q_SLOTS:
-    void engageDisengageMining(int cores);
-
 private:
     /** Set the proxy-enabled icon as shown in the UI. */
     void updateProxyIcon();

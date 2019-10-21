@@ -45,14 +45,15 @@
 #include <QApplication>
 #include <QComboBox>
 #include <QDateTime>
-#include <QDesktopWidget>
 #include <QDragEnterEvent>
+#include <QFile>
 #include <QListWidget>
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QMimeData>
 #include <QProgressDialog>
+#include <QScreen>
 #include <QSettings>
 #include <QShortcut>
 #include <QStackedWidget>
@@ -71,6 +72,8 @@ const std::string BitcointalkcoinGUI::DEFAULT_UIPLATFORM =
         "macosx"
 #elif defined(Q_OS_WIN)
         "windows"
+#elif defined(Q_OS_ANDROID)
+        "android"
 #else
         "other"
 #endif
@@ -83,11 +86,30 @@ BitcointalkcoinGUI::BitcointalkcoinGUI(interfaces::Node& node, const PlatformSty
     platformStyle(_platformStyle),
     m_network_style(networkStyle)
 {
+
     QSettings settings;
+    
+#if defined(Q_OS_ANDROID)
+    setFixedSize(QGuiApplication::primaryScreen()->availableSize().width(), QGuiApplication::primaryScreen()->availableSize().height());
+#else
     if (!restoreGeometry(settings.value("MainWindowGeometry").toByteArray())) {
         // Restore failed (perhaps missing setting), center the window
-        move(QApplication::desktop()->availableGeometry().center() - frameGeometry().center());
+        move(QGuiApplication::primaryScreen()->availableGeometry().center() - frameGeometry().center());
+    }    
+#endif
+
+    setWindowFlags(Qt::FramelessWindowHint);
+    // load stylesheet
+
+    if (settings.value("theme", "").toString() == "transparent"){
+        setAttribute( Qt::WA_TranslucentBackground);
+        setAttribute(Qt::WA_NoSystemBackground);
     }
+
+    QFile qss(GUIUtil::defaultTheme());
+    qss.open(QFile::ReadOnly);
+    this->setStyleSheet(qss.readAll());
+    qss.close();
 
 #ifdef ENABLE_WALLET
     enableWallet = WalletModel::isWalletEnabled();
@@ -96,7 +118,6 @@ BitcointalkcoinGUI::BitcointalkcoinGUI(interfaces::Node& node, const PlatformSty
     setWindowIcon(m_network_style->getTrayAndWindowIcon());
     updateWindowTitle();
 
-    rpcConsole = new RPCConsole(node, _platformStyle, nullptr);
     helpMessageDialog = new HelpMessageDialog(node, this, false);
 #ifdef ENABLE_WALLET
     if(enableWallet)
@@ -110,8 +131,6 @@ BitcointalkcoinGUI::BitcointalkcoinGUI(interfaces::Node& node, const PlatformSty
         /* When compiled without wallet or -disablewallet is provided,
          * the central widget is the rpc console.
          */
-        setCentralWidget(rpcConsole);
-        Q_EMIT consoleShown(rpcConsole);
     }
 
     // Accept D&D of URIs
@@ -147,14 +166,6 @@ BitcointalkcoinGUI::BitcointalkcoinGUI(interfaces::Node& node, const PlatformSty
     frameBlocksLayout->setContentsMargins(3,0,3,0);
     frameBlocksLayout->setSpacing(3);
     unitDisplayControl = new UnitDisplayStatusBarControl(platformStyle);
-
-    QLabel *minerLabel = new QLabel("Miner Threads: 0");
-	QSlider *miner = new QSlider(Qt::Horizontal, this);
-	int cores = GetNumCores();
-	miner->setRange(0, cores);
-	QString minermax = QString::number(cores);
-	QLabel *maxminer = new QLabel(minermax);	
-
     labelWalletEncryptionIcon = new QLabel();
     labelWalletHDStatusIcon = new QLabel();
     labelProxyIcon = new GUIUtil::ClickableLabel();
@@ -162,14 +173,12 @@ BitcointalkcoinGUI::BitcointalkcoinGUI(interfaces::Node& node, const PlatformSty
     labelBlocksIcon = new GUIUtil::ClickableLabel();
     if(enableWallet)
     {
-        frameBlocksLayout->addStretch();
         frameBlocksLayout->addWidget(unitDisplayControl);
-        frameBlocksLayout->addStretch();
         frameBlocksLayout->addWidget(labelWalletEncryptionIcon);
         frameBlocksLayout->addWidget(labelWalletHDStatusIcon);
     }
     frameBlocksLayout->addWidget(labelProxyIcon);
-#ifdef ENABLE_PROOF_OF_STAKE
+
     labelStakingIcon = new QLabel();
     frameBlocksLayout->addStretch();
     frameBlocksLayout->addWidget(labelStakingIcon);
@@ -181,12 +190,16 @@ BitcointalkcoinGUI::BitcointalkcoinGUI(interfaces::Node& node, const PlatformSty
 
         updateStakingIcon();
     }
-#endif
-    frameBlocksLayout->addStretch();
+
     frameBlocksLayout->addWidget(connectionsControl);
-    frameBlocksLayout->addStretch();
     frameBlocksLayout->addWidget(labelBlocksIcon);
-    frameBlocksLayout->addStretch();
+
+    // Progress bar and label for blocks download
+    labelWalletEncryptionIcon->setObjectName("labelEncryptionIcon");
+    labelBlocksIcon->setObjectName("labelBlocksIcon");
+
+//    QToolBar *toolbar = addToolBar(tr("toolbar"));
+//    addToolBar(Qt::BottomToolBarArea, toolbar);
 
     // Progress bar and label for blocks download
     progressBarLabel = new QLabel();
@@ -206,9 +219,6 @@ BitcointalkcoinGUI::BitcointalkcoinGUI(interfaces::Node& node, const PlatformSty
 
     statusBar()->addWidget(progressBarLabel);
     statusBar()->addWidget(progressBar);
-    statusBar()->addWidget(minerLabel);
-    statusBar()->addWidget(miner);
-    statusBar()->addWidget(maxminer);
     statusBar()->addPermanentWidget(frameBlocks);
 
     // Install event filter to be able to catch status tip events (QEvent::StatusTip)
@@ -239,8 +249,6 @@ BitcointalkcoinGUI::BitcointalkcoinGUI(interfaces::Node& node, const PlatformSty
 #ifdef Q_OS_MAC
     m_app_nap_inhibitor = new CAppNapInhibitor;
 #endif
-
-    connect(miner, SIGNAL(valueChanged(int)), this, SLOT(engageDisengageMining(int)));
 }
 
 BitcointalkcoinGUI::~BitcointalkcoinGUI()
@@ -258,43 +266,66 @@ BitcointalkcoinGUI::~BitcointalkcoinGUI()
     MacDockIconHandler::cleanup();
 #endif
 
-    delete rpcConsole;
 }
 
 void BitcointalkcoinGUI::createActions()
 {
     QActionGroup *tabGroup = new QActionGroup(this);
 
+#if defined(Q_OS_ANDROID)
+    overviewAction = new QAction(platformStyle->SingleColorIcon(":/icons/overview"), nullptr, this);
+#else
     overviewAction = new QAction(platformStyle->SingleColorIcon(":/icons/overview"), tr("&Overview"), this);
+#endif
     overviewAction->setStatusTip(tr("Show general overview of wallet"));
     overviewAction->setToolTip(overviewAction->statusTip());
     overviewAction->setCheckable(true);
     overviewAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_1));
     tabGroup->addAction(overviewAction);
 
+#if defined(Q_OS_ANDROID)
+    sendCoinsAction = new QAction(platformStyle->SingleColorIcon(":/icons/send"), nullptr, this);
+#else
     sendCoinsAction = new QAction(platformStyle->SingleColorIcon(":/icons/send"), tr("&Send"), this);
+#endif
     sendCoinsAction->setStatusTip(tr("Send coins to a Bitcointalkcoin address"));
     sendCoinsAction->setToolTip(sendCoinsAction->statusTip());
     sendCoinsAction->setCheckable(true);
     sendCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_2));
     tabGroup->addAction(sendCoinsAction);
 
+#if defined(Q_OS_ANDROID)
+    sendCoinsMenuAction = new QAction(platformStyle->TextColorIcon(":/icons/send"), nullptr, this);
+#else
     sendCoinsMenuAction = new QAction(platformStyle->TextColorIcon(":/icons/send"), sendCoinsAction->text(), this);
+#endif
     sendCoinsMenuAction->setStatusTip(sendCoinsAction->statusTip());
     sendCoinsMenuAction->setToolTip(sendCoinsMenuAction->statusTip());
 
+#if defined(Q_OS_ANDROID)
+    receiveCoinsAction = new QAction(platformStyle->SingleColorIcon(":/icons/receiving_addresses"), nullptr, this);
+#else
     receiveCoinsAction = new QAction(platformStyle->SingleColorIcon(":/icons/receiving_addresses"), tr("&Receive"), this);
+#endif
     receiveCoinsAction->setStatusTip(tr("Request payments (generates QR codes and bitcointalkcoin: URIs)"));
     receiveCoinsAction->setToolTip(receiveCoinsAction->statusTip());
     receiveCoinsAction->setCheckable(true);
     receiveCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_3));
     tabGroup->addAction(receiveCoinsAction);
 
+#if defined(Q_OS_ANDROID)
+    receiveCoinsMenuAction = new QAction(platformStyle->TextColorIcon(":/icons/receiving_addresses"), nullptr, this);
+#else
     receiveCoinsMenuAction = new QAction(platformStyle->TextColorIcon(":/icons/receiving_addresses"), receiveCoinsAction->text(), this);
+#endif
     receiveCoinsMenuAction->setStatusTip(receiveCoinsAction->statusTip());
     receiveCoinsMenuAction->setToolTip(receiveCoinsMenuAction->statusTip());
 
+#if defined(Q_OS_ANDROID)
+    historyAction = new QAction(platformStyle->SingleColorIcon(":/icons/history"), nullptr, this);
+#else
     historyAction = new QAction(platformStyle->SingleColorIcon(":/icons/history"), tr("&Transactions"), this);
+#endif
     historyAction->setStatusTip(tr("Browse transaction history"));
     historyAction->setToolTip(historyAction->statusTip());
     historyAction->setCheckable(true);
@@ -302,13 +333,21 @@ void BitcointalkcoinGUI::createActions()
     tabGroup->addAction(historyAction);
 
 #ifdef ENABLE_SECURE_MESSAGING
-    sendMessagesAction = new QAction(platformStyle->SingleColorIcon(":/icons/null"), tr("Send &Message"), this);
+#if defined(Q_OS_ANDROID)
+    sendMessagesAction = new QAction(platformStyle->SingleColorIcon(":/icons/chat"), nullptr, this);
+#else
+    sendMessagesAction = new QAction(platformStyle->SingleColorIcon(":/icons/chat"), tr("Send &Message"), this);
+#endif
     sendMessagesAction->setCheckable(true);
     sendMessagesAction->setStatusTip(tr("Send Messages"));
     sendMessagesAction->setToolTip(sendMessagesAction->statusTip());
     tabGroup->addAction(sendMessagesAction);
 
-    messageAction = new QAction(platformStyle->SingleColorIcon(":/icons/null"), tr("Mess&ages"), this);
+#if defined(Q_OS_ANDROID)
+    messageAction = new QAction(platformStyle->SingleColorIcon(":/icons/messages"), nullptr, this);
+#else
+    messageAction = new QAction(platformStyle->SingleColorIcon(":/icons/messages"), tr("Mess&ages"), this);
+#endif
     messageAction->setStatusTip(tr("View Messages"));
     messageAction->setToolTip(messageAction->statusTip());
     messageAction->setCheckable(true);
@@ -342,17 +381,18 @@ void BitcointalkcoinGUI::createActions()
     quitAction->setStatusTip(tr("Quit application"));
     quitAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
     quitAction->setMenuRole(QAction::QuitRole);
-    aboutAction = new QAction(platformStyle->TextColorIcon(":/icons/about"), tr("&About %1").arg(tr(PACKAGE_NAME)), this);
-    aboutAction->setStatusTip(tr("Show information about %1").arg(tr(PACKAGE_NAME)));
+    aboutAction = new QAction(platformStyle->TextColorIcon(":/icons/about"), tr("&About %1").arg(tr("Bitcointalkcoin")), this);
+    aboutAction->setStatusTip(tr("Show information about %1").arg(tr("Bitcointalkcoin")));
     aboutAction->setMenuRole(QAction::AboutRole);
     aboutAction->setEnabled(false);
     aboutQtAction = new QAction(platformStyle->TextColorIcon(":/icons/about_qt"), tr("About &Qt"), this);
     aboutQtAction->setStatusTip(tr("Show information about Qt"));
     aboutQtAction->setMenuRole(QAction::AboutQtRole);
     optionsAction = new QAction(platformStyle->TextColorIcon(":/icons/options"), tr("&Options..."), this);
-    optionsAction->setStatusTip(tr("Modify configuration options for %1").arg(tr(PACKAGE_NAME)));
+    optionsAction->setStatusTip(tr("Modify configuration options for %1").arg(tr("Bitcointalkcoin")));
     optionsAction->setMenuRole(QAction::PreferencesRole);
     optionsAction->setEnabled(false);
+    optionsAction->setCheckable(true);
     toggleHideAction = new QAction(platformStyle->TextColorIcon(":/icons/about"), tr("&Show / Hide"), this);
     toggleHideAction->setStatusTip(tr("Show or hide the main Window"));
 
@@ -363,6 +403,10 @@ void BitcointalkcoinGUI::createActions()
     backupWalletAction->setStatusTip(tr("Backup wallet to another location"));
     changePassphraseAction = new QAction(platformStyle->TextColorIcon(":/icons/key"), tr("&Change Passphrase..."), this);
     changePassphraseAction->setStatusTip(tr("Change the passphrase used for wallet encryption"));
+    signMessageAction = new QAction(platformStyle->TextColorIcon(":/icons/edit"), tr("Sign &message..."), this);
+    signMessageAction->setStatusTip(tr("Sign messages with your Bitcointalkcoin addresses to prove you own them"));
+    verifyMessageAction = new QAction(platformStyle->TextColorIcon(":/icons/verify"), tr("&Verify message..."), this);
+    verifyMessageAction->setStatusTip(tr("Verify messages to ensure they were signed with specified Bitcointalkcoin addresses"));
 
     unlockWalletAction = new QAction(platformStyle->TextColorIcon(":/icons/lock_open"), tr("&Unlock Wallet..."), this);
     unlockWalletAction->setToolTip(tr("Unlock wallet"));
@@ -370,15 +414,15 @@ void BitcointalkcoinGUI::createActions()
     lockWalletAction = new QAction(platformStyle->TextColorIcon(":/icons/lock_closed"), tr("&Lock Wallet"), this);
     lockWalletAction->setToolTip(tr("Lock wallet"));
 
-    signMessageAction = new QAction(platformStyle->TextColorIcon(":/icons/edit"), tr("Sign &message..."), this);
-    signMessageAction->setStatusTip(tr("Sign messages with your Bitcointalkcoin addresses to prove you own them"));
-    verifyMessageAction = new QAction(platformStyle->TextColorIcon(":/icons/verify"), tr("&Verify message..."), this);
-    verifyMessageAction->setStatusTip(tr("Verify messages to ensure they were signed with specified Bitcointalkcoin addresses"));
 
-    openRPCConsoleAction = new QAction(platformStyle->TextColorIcon(":/icons/debugwindow"), tr("&Debug window"), this);
+#if defined(Q_OS_ANDROID)
+    openRPCConsoleAction = new QAction(platformStyle->SingleColorIcon(":/icons/debugwindow"), nullptr, this);
+#else
+    openRPCConsoleAction = new QAction(platformStyle->SingleColorIcon(":/icons/debugwindow"), tr("&Debug window"), this);
+#endif
     openRPCConsoleAction->setStatusTip(tr("Open debugging and diagnostic console"));
+    openRPCConsoleAction->setCheckable(true);
     // initially disable the debug window menu item
-    openRPCConsoleAction->setEnabled(false);
     openRPCConsoleAction->setObjectName("openRPCConsoleAction");
 
     usedSendingAddressesAction = new QAction(platformStyle->TextColorIcon(":/icons/address-book"), tr("&Sending addresses"), this);
@@ -399,7 +443,7 @@ void BitcointalkcoinGUI::createActions()
 
     showHelpMessageAction = new QAction(platformStyle->TextColorIcon(":/icons/info"), tr("&Command-line options"), this);
     showHelpMessageAction->setMenuRole(QAction::NoRole);
-    showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible Bitcointalkcoin command-line options").arg(tr(PACKAGE_NAME)));
+    showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible Bitcointalkcoin command-line options").arg(tr("Bitcointalkcoin")));
 
     connect(quitAction, &QAction::triggered, qApp, QApplication::quit);
     connect(aboutAction, &QAction::triggered, this, &BitcointalkcoinGUI::aboutClicked);
@@ -409,7 +453,6 @@ void BitcointalkcoinGUI::createActions()
     connect(showHelpMessageAction, &QAction::triggered, this, &BitcointalkcoinGUI::showHelpMessageClicked);
     connect(openRPCConsoleAction, &QAction::triggered, this, &BitcointalkcoinGUI::showDebugWindow);
     // prevents an open debug window from becoming stuck/unusable on client shutdown
-    connect(quitAction, &QAction::triggered, rpcConsole, &QWidget::hide);
 
 #ifdef ENABLE_WALLET
     if(walletFrame)
@@ -417,10 +460,8 @@ void BitcointalkcoinGUI::createActions()
         connect(encryptWalletAction, &QAction::triggered, walletFrame, &WalletFrame::encryptWallet);
         connect(backupWalletAction, &QAction::triggered, walletFrame, &WalletFrame::backupWallet);
         connect(changePassphraseAction, &QAction::triggered, walletFrame, &WalletFrame::changePassphrase);
-#ifdef ENABLE_PROOF_OF_STAKE
         connect(unlockWalletAction, &QAction::triggered, walletFrame, &WalletFrame::unlockWallet);
         connect(lockWalletAction, &QAction::triggered, walletFrame, &WalletFrame::lockWallet);
-#endif
         connect(signMessageAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
         connect(signMessageAction, &QAction::triggered, [this]{ gotoSignMessageTab(); });
         connect(verifyMessageAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
@@ -508,8 +549,6 @@ void BitcointalkcoinGUI::createMenuBar()
         file->addSeparator();
         file->addAction(usedSendingAddressesAction);
         file->addAction(usedReceivingAddressesAction);
-
-        file->addSeparator();
     }
     file->addAction(quitAction);
 
@@ -518,10 +557,8 @@ void BitcointalkcoinGUI::createMenuBar()
     {
         settings->addAction(encryptWalletAction);
         settings->addAction(changePassphraseAction);
-#ifdef ENABLE_PROOF_OF_STAKE
         settings->addAction(unlockWalletAction);
         settings->addAction(lockWalletAction);
-#endif
         settings->addSeparator();
     }
     settings->addAction(optionsAction);
@@ -575,13 +612,6 @@ void BitcointalkcoinGUI::createMenuBar()
     }
 
     window_menu->addSeparator();
-    for (RPCConsole::TabTypes tab_type : rpcConsole->tabs()) {
-        QAction* tab_action = window_menu->addAction(rpcConsole->tabTitle(tab_type));
-        connect(tab_action, &QAction::triggered, [this, tab_type] {
-            rpcConsole->setTabFocus(tab_type);
-            showDebugWindow();
-        });
-    }
 
     QMenu *help = appMenuBar->addMenu(tr("&Help"));
     help->addAction(showHelpMessageAction);
@@ -590,46 +620,32 @@ void BitcointalkcoinGUI::createMenuBar()
     help->addAction(aboutQtAction);
 }
 
-void BitcointalkcoinGUI::engageDisengageMining(int cores)
-{
-    WalletView * const walletView = walletFrame->currentWalletView();
-    WalletModel * const walletModel = walletView->getWalletModel();
-    std::shared_ptr<CReserveScript> coinbase_script;
-    walletModel->getScriptForMining(coinbase_script);	
-	
-    isMiningEngaged = false;
-    if (cores > 0)
-        isMiningEngaged = true;
-
-    //pwallet->GetScriptForMining(coinbase_script);
-    GenerateBitcointalkcoins(isMiningEngaged, cores, coinbase_script);
-
-}
-
 void BitcointalkcoinGUI::createToolBars()
 {
+    QWidget *spacer = new QWidget();
+    spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    QToolBar *toolbar = addToolBar(tr("Tabs toolbar"));
     if(walletFrame)
     {
-        QToolBar *toolbar = addToolBar(tr("Tabs toolbar"));
+        Logo = new QPushButton(QIcon(":icons/bitcointalkcoin"),"",nullptr);
+        Logo->setObjectName("Logo");
+        connect(Logo, SIGNAL(clicked()), this, SLOT(gotoOverviewPage()));
         appToolBar = toolbar;
         toolbar->setContextMenuPolicy(Qt::PreventContextMenu);
         toolbar->setMovable(false);
         toolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+        //toolbar->addWidget(Logo);
         toolbar->addAction(overviewAction);
         toolbar->addAction(sendCoinsAction);
         toolbar->addAction(receiveCoinsAction);
         toolbar->addAction(historyAction);
 #ifdef ENABLE_SECURE_MESSAGING
-        toolbar->addAction(sendMessagesAction);
         toolbar->addAction(messageAction);
+//        toolbar->addAction(sendMessagesAction);
 #endif
         overviewAction->setChecked(true);
 
 #ifdef ENABLE_WALLET
-        QWidget *spacer = new QWidget();
-        spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-        toolbar->addWidget(spacer);
-
         m_wallet_selector = new QComboBox();
         m_wallet_selector->setSizeAdjustPolicy(QComboBox::AdjustToContents);
         connect(m_wallet_selector, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &BitcointalkcoinGUI::setCurrentWalletBySelectorIndex);
@@ -645,6 +661,10 @@ void BitcointalkcoinGUI::createToolBars()
         m_wallet_selector_action->setVisible(false);
 #endif
     }
+//#if defined(Q_OS_ANDROID)
+        toolbar->addAction(openRPCConsoleAction);
+//#endif
+    toolbar->setIconSize(QSize(30,30));
 }
 
 void BitcointalkcoinGUI::setClientModel(ClientModel *_clientModel)
@@ -673,8 +693,6 @@ void BitcointalkcoinGUI::setClientModel(ClientModel *_clientModel)
         // Show progress dialog
         connect(_clientModel, &ClientModel::showProgress, this, &BitcointalkcoinGUI::showProgress);
 
-        rpcConsole->setClientModel(_clientModel);
-
         updateProxyIcon();
 
 #ifdef ENABLE_WALLET
@@ -702,7 +720,6 @@ void BitcointalkcoinGUI::setClientModel(ClientModel *_clientModel)
             trayIconMenu->clear();
         }
         // Propagate cleared model to child objects
-        rpcConsole->setClientModel(nullptr);
 #ifdef ENABLE_WALLET
         if (walletFrame)
         {
@@ -737,7 +754,7 @@ void BitcointalkcoinGUI::addWallet(WalletModel* walletModel)
     if (!walletFrame) return;
     const QString display_name = walletModel->getDisplayName();
     setWalletActionsEnabled(true);
-    rpcConsole->addWallet(walletModel);
+
     walletFrame->addWallet(walletModel);
     m_wallet_selector->addItem(display_name, QVariant::fromValue(walletModel));
     if (m_wallet_selector->count() == 2) {
@@ -757,7 +774,7 @@ void BitcointalkcoinGUI::removeWallet(WalletModel* walletModel)
         m_wallet_selector_label_action->setVisible(false);
         m_wallet_selector_action->setVisible(false);
     }
-    rpcConsole->removeWallet(walletModel);
+
     walletFrame->removeWallet(walletModel);
     updateWindowTitle();
 }
@@ -813,6 +830,8 @@ void BitcointalkcoinGUI::setWalletActionsEnabled(bool enabled)
     unlockWalletAction->setEnabled(enabled);
     lockWalletAction->setEnabled(enabled);
     m_close_wallet_action->setEnabled(enabled);
+    openRPCConsoleAction->setEnabled(enabled);
+
 }
 
 void BitcointalkcoinGUI::createTrayIcon()
@@ -822,7 +841,7 @@ void BitcointalkcoinGUI::createTrayIcon()
 #ifndef Q_OS_MAC
     if (QSystemTrayIcon::isSystemTrayAvailable()) {
         trayIcon = new QSystemTrayIcon(m_network_style->getTrayAndWindowIcon(), this);
-        QString toolTip = tr("%1 client").arg(tr(PACKAGE_NAME)) + " " + m_network_style->getTitleAddText();
+        QString toolTip = tr("%1 client").arg("Bitcointalkcoin") + " " + m_network_style->getTitleAddText();
         trayIcon->setToolTip(toolTip);
     }
 #endif
@@ -899,13 +918,12 @@ void BitcointalkcoinGUI::aboutClicked()
 
 void BitcointalkcoinGUI::showDebugWindow()
 {
-    GUIUtil::bringToFront(rpcConsole);
-    Q_EMIT consoleShown(rpcConsole);
+    openRPCConsoleAction->setChecked(true);
+    if (walletFrame) walletFrame->gotoRpcPage();
 }
 
 void BitcointalkcoinGUI::showDebugWindowActivateConsole()
 {
-    rpcConsole->setTabFocus(RPCConsole::TAB_CONSOLE);
     showDebugWindow();
 }
 
@@ -1048,10 +1066,12 @@ void BitcointalkcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, dou
     if (!clientModel)
         return;
 
+//        return;
+
     // Prevent orphan statusbar messages (e.g. hover Quit in main menu, wait until chain-sync starts -> garbled text)
-    statusBar()->clearMessage();
 
     // Acquire current block source
+//    bool headerSyncInProgress = false;
     enum BlockSource blockSource = clientModel->getBlockSource();
     switch (blockSource) {
         case BlockSource::NETWORK:
@@ -1231,15 +1251,12 @@ void BitcointalkcoinGUI::changeEvent(QEvent *e)
 
 void BitcointalkcoinGUI::closeEvent(QCloseEvent *event)
 {
-    if (isMiningEngaged)
-        engageDisengageMining(0);
 #ifndef Q_OS_MAC // Ignored on Mac
     if(clientModel && clientModel->getOptionsModel())
     {
         if(!clientModel->getOptionsModel()->getMinimizeOnClose())
         {
             // close rpcConsole in case it was open to make some space for the shutdown window
-            rpcConsole->close();
 
             QApplication::quit();
         }
@@ -1545,10 +1562,6 @@ void BitcointalkcoinGUI::detectShutdown()
 {
     if (m_node.shutdownRequested())
     {
-        if (isMiningEngaged)
-            engageDisengageMining(0);
-        if(rpcConsole)
-            rpcConsole->hide();
         qApp->quit();
     }
 }

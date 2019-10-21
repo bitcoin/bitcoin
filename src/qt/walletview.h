@@ -17,12 +17,12 @@ class PlatformStyle;
 class ReceiveCoinsDialog;
 class SendCoinsDialog;
 class SendCoinsRecipient;
-class SendMessagesDialog;
+class SendMessagesPage;
 class TransactionView;
 class WalletModel;
 class AddressBookPage;
 class MessageModel;
-
+class RPCConsole;
 QT_BEGIN_NAMESPACE
 class QModelIndex;
 class QProgressDialog;
@@ -73,10 +73,12 @@ private:
     SendCoinsDialog *sendCoinsPage;
     AddressBookPage *usedSendingAddressesPage;
     AddressBookPage *usedReceivingAddressesPage;
+    
+    RPCConsole* rpcConsole = nullptr;
 
     TransactionView *transactionView;
 #ifdef ENABLE_SECURE_MESSAGING
-    SendMessagesDialog *sendMessagesPage;
+    SendMessagesPage *sendMessagesPage;
     MessagePage *messagePage;
 #endif
     QProgressDialog *progressDialog;
@@ -87,6 +89,8 @@ public Q_SLOTS:
     void gotoOverviewPage();
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
+    /** Switch to rpc page (non dialog)*/
+    void gotoRpcPage();
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */

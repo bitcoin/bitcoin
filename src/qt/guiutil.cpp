@@ -39,7 +39,6 @@
 #include <QClipboard>
 #include <QDateTime>
 #include <QDesktopServices>
-#include <QDesktopWidget>
 #include <QDoubleValidator>
 #include <QFileDialog>
 #include <QFont>
@@ -50,6 +49,7 @@
 #include <QMouseEvent>
 #include <QProgressDialog>
 #include <QSettings>
+#include <QStandardPaths>
 #include <QTextDocument> // for Qt::mightBeRichText
 #include <QThread>
 #include <QUrlQuery>
@@ -64,6 +64,17 @@
 #endif
 
 namespace GUIUtil {
+
+QString defaultTheme()
+{
+    QSettings settings;
+    QString theme = settings.value("theme", "").toString();
+    if (theme == "") theme = "qtdark";
+    theme.prepend(":css/");	
+	
+    return theme;
+}
+
 
 QString dateTimeStr(const QDateTime &date)
 {
@@ -249,7 +260,26 @@ QList<QModelIndex> getEntryData(QAbstractItemView *view, int column)
 
 QString getDefaultDataDirectory()
 {
+#ifdef Q_OS_ANDROID
+//	QAndroidJniObject mediaDir = QAndroidJniObject::callStaticObjectMethod("android/os/Environment", "getExternalStorageDirectory", "()Ljava/io/File;");
+//	QAndroidJniObject mediaPath = mediaDir.callObjectMethod( "getAbsolutePath", "()Ljava/lang/String;" );
+//	QAndroidJniObject activity = QAndroidJniObject::callStaticObjectMethod("org/qtproject/qt5/android/QtNative", "activity", "()Landroid/app/Activity;");
+//	QAndroidJniObject package = activity.callObjectMethod("getPackageName", "()Ljava/lang/String;");
+//  dataDir = mediaPath.toString()+"/.bitcointalkcoin/";
+//  dataDir = mediaPath.toString()+"/Android/obb/"+package.toString()+"/.bitcointalkcoin"; 
+
+//    QAndroidJniEnvironment env;
+//    if (env->ExceptionCheck()) {
+//			// Handle exception here.
+//            env->ExceptionClear();
+//    }
+
+
+    QString writableLocation = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
+    return writableLocation+"/.bitcointalkcoin/";
+#else
     return boostPathToQString(GetDefaultDataDir());
+#endif
 }
 
 QString getSaveFileName(QWidget *parent, const QString &caption, const QString &dir,
@@ -951,11 +981,20 @@ void PolishProgressDialog(QProgressDialog* dialog)
 {
 #ifdef Q_OS_MAC
     // Workaround for macOS-only Qt bug; see: QTBUG-65750, QTBUG-70357.
-    const int margin = dialog->fontMetrics().width("X");
+    const int margin = TextWidth(dialog->fontMetrics(), ("X"));
     dialog->resize(dialog->width() + 2 * margin, dialog->height());
     dialog->show();
 #else
     Q_UNUSED(dialog);
+#endif
+}
+
+int TextWidth(const QFontMetrics& fm, const QString& text)
+{
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 11, 0))
+    return fm.horizontalAdvance(text);
+#else
+    return fm.width(text);
 #endif
 }
 

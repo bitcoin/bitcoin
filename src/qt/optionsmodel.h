@@ -57,9 +57,7 @@ public:
         Listen,                 // bool
 		EnableMessageSendConf, // bool
         NotUseChangeAddress,    // bool
-#ifdef ENABLE_PROOF_OF_STAKE
         ReserveBalance,         // CAmount
-#endif
         OptionIDRowCount,
     };
 
@@ -81,6 +79,10 @@ public:
     bool getProxySettings(QNetworkProxy& proxy) const;
     bool getCoinControlFeatures() const { return fCoinControlFeatures; }
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
+
+    /* Explicit setters */
+    void SetPrune(bool prune, bool force = false);
+
 #ifdef ENABLE_SECURE_MESSAGING
 	bool getEnableMessageSendConf();
 #endif

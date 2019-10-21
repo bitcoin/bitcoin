@@ -505,7 +505,7 @@ UniValue getwork(const JSONRPCRequest& request)
             "If [data] is specified, tries to solve the block and returns true if it was successful.");
 
     if (::ChainstateActive().IsInitialBlockDownload())
-        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Cryptotalkcoin is downloading blocks...");
+        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Bitcointalkcoin is downloading blocks...");
 
 
     typedef std::map<uint256, std::pair<CBlock*, CScript> > mapNewBlock_t;

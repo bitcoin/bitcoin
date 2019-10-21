@@ -8,10 +8,13 @@
 
 #include <qt/bitcointalkcoin.h>
 #include <qt/bitcointalkcoingui.h>
+#ifdef MOBILE_GUI
+#include <qt/bitcointalkcoinmobilegui.h>
+#endif
 
 #include <chainparams.h>
-#include <qt/clientmodel.h>
 #include <fs.h>
+#include <qt/clientmodel.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
 #include <qt/intro.h>
@@ -25,20 +28,18 @@
 #ifdef ENABLE_WALLET
 #include <qt/paymentserver.h>
 #include <qt/walletcontroller.h>
-#endif
+#include <qt/walletmodel.h>
+#endif // ENABLE_WALLET
 
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 #include <noui.h>
-#include <util/threadnames.h>
 #include <ui_interface.h>
 #include <uint256.h>
 #include <util/system.h>
+#include <util/threadnames.h>
 
 #include <memory>
-#include <stdint.h>
-
-#include <boost/thread.hpp>
 
 #include <QApplication>
 #include <QDebug>
@@ -58,6 +59,8 @@ Q_IMPORT_PLUGIN(QXcbIntegrationPlugin);
 Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin);
 #elif defined(QT_QPA_PLATFORM_COCOA)
 Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
+#elif defined(QT_QPA_PLATFORM_ANDROID)
+Q_IMPORT_PLUGIN(QAndroidPlatformIntegration);
 #endif
 #endif
 
@@ -236,10 +239,16 @@ void BitcointalkcoinApplication::createOptionsModel(bool resetSettings)
 
 void BitcointalkcoinApplication::createWindow(const NetworkStyle *networkStyle)
 {
-    window = new BitcointalkcoinGUI(m_node, platformStyle, networkStyle, nullptr);
 
+#ifdef MOBILE_GUI
+    window = new BitcointalkcoinMobileGUI(m_node, platformStyle, networkStyle, nullptr);
+    connect(this, &BitcointalkcoinApplication::splashFinished, window, &BitcointalkcoinMobileGUI::splashFinished);
+    window->show();
+#else
+    window = new BitcointalkcoinGUI(m_node, platformStyle, networkStyle, nullptr);
     pollShutdownTimer = new QTimer(window);
     connect(pollShutdownTimer, &QTimer::timeout, window, &BitcointalkcoinGUI::detectShutdown);
+#endif
 }
 
 void BitcointalkcoinApplication::createSplashScreen(const NetworkStyle *networkStyle)
@@ -287,6 +296,10 @@ void BitcointalkcoinApplication::parameterSetup()
     m_node.initParameterInteraction();
 }
 
+void BitcointalkcoinApplication::SetPrune(bool prune, bool force) {
+     optionsModel->SetPrune(prune, force);
+}
+
 void BitcointalkcoinApplication::requestInitialize()
 {
     qDebug() << __func__ << ": Requesting initialize";
@@ -296,6 +309,9 @@ void BitcointalkcoinApplication::requestInitialize()
 
 void BitcointalkcoinApplication::requestShutdown()
 {
+#ifdef MOBILE_GUI
+    // Mobile GUI should let the user know of shutdown in the main window
+#else
     // Show a simple window indicating shutdown status
     // Do this first as some of the steps may take some time below,
     // for example the RPC console may still be executing a command.
@@ -304,6 +320,7 @@ void BitcointalkcoinApplication::requestShutdown()
     qDebug() << __func__ << ": Requesting shutdown";
     startThread();
     window->hide();
+#endif
     // Must disconnect node signals otherwise current thread can deadlock since
     // no event loop is running.
     window->unsubscribeFromCoreSignals();
@@ -333,9 +350,6 @@ void BitcointalkcoinApplication::initializeResult(bool success)
         qInfo() << "Platform customization:" << platformStyle->getName();
 #ifdef ENABLE_WALLET
         m_wallet_controller = new WalletController(m_node, platformStyle, optionsModel, this);
-#ifdef ENABLE_BIP70
-        PaymentServer::LoadRootCAs();
-#endif
         if (paymentServer) {
             paymentServer->setOptionsModel(optionsModel);
 #ifdef ENABLE_BIP70
@@ -349,7 +363,9 @@ void BitcointalkcoinApplication::initializeResult(bool success)
 #ifdef ENABLE_WALLET
         window->setWalletController(m_wallet_controller);
 #endif
+        Q_EMIT splashFinished();
 
+#ifndef MOBILE_GUI
         // If -min option passed, start window minimized (iconified) or minimized to tray
         if (!gArgs.GetBoolArg("-min", false)) {
             window->show();
@@ -358,7 +374,7 @@ void BitcointalkcoinApplication::initializeResult(bool success)
         } else {
             window->showMinimized();
         }
-        Q_EMIT splashFinished();
+
         Q_EMIT windowShown(window);
 
 #ifdef ENABLE_WALLET
@@ -377,6 +393,7 @@ void BitcointalkcoinApplication::initializeResult(bool success)
     } else {
         Q_EMIT splashFinished(); // Make sure splash screen doesn't stick around during shutdown
         quit(); // Exit first main loop invocation
+#endif
     }
 }
 
@@ -413,13 +430,13 @@ static void SetupUIArgs()
     gArgs.AddArg("-uiplatform", strprintf("Select platform to customize UI for (one of windows, macosx, other; default: %s)", BitcointalkcoinGUI::DEFAULT_UIPLATFORM), true, OptionsCategory::GUI);
 }
 
-#ifndef BITCOINTALKCOIN_QT_TEST
 int GuiMain(int argc, char* argv[])
 {
 #ifdef WIN32
     util::WinCmdLineArgs winArgs;
     std::tie(argc, argv) = winArgs.get();
 #endif
+
     SetupEnvironment();
     util::ThreadRename("main");
 
@@ -460,8 +477,11 @@ int GuiMain(int argc, char* argv[])
     SetupUIArgs();
     std::string error;
     if (!node->parseParameters(argc, argv, error)) {
-        QMessageBox::critical(nullptr, QObject::tr(PACKAGE_NAME),
-            QObject::tr("Error parsing command line arguments: %1.").arg(QString::fromStdString(error)));
+        node->initError(strprintf("Error parsing command line arguments: %s\n", error));
+        // Create a message box, because the gui has neither been created nor has subscribed to core signals
+        QMessageBox::critical(nullptr, "Bitcointalkcoin",
+            // message can not be translated because translations have not been initialized
+            QString::fromStdString("Error parsing command line arguments: %1.").arg(QString::fromStdString(error)));
         return EXIT_FAILURE;
     }
 
@@ -490,8 +510,10 @@ int GuiMain(int argc, char* argv[])
 
     /// 5. Now that settings and translations are available, ask user for data directory
     // User language is set up: pick a data directory
-    if (!Intro::pickDataDirectory(*node))
-        return EXIT_SUCCESS;
+    bool did_show_intro = false;
+    bool prune = false; // Intro dialog prune check box
+    // Gracefully exit if the user cancels
+    if (!Intro::showIfNeeded(*node, did_show_intro, prune)) return EXIT_SUCCESS;
 
     /// 6. Determine availability of data and blocks directory and parse bitcointalkcoin.conf
     /// - Do not call GetDataDir(true) before this step finishes
@@ -501,8 +523,10 @@ int GuiMain(int argc, char* argv[])
             QObject::tr("Error: Specified data directory \"%1\" does not exist.").arg(QString::fromStdString(gArgs.GetArg("-datadir", ""))));
         return EXIT_FAILURE;
     }
+    
     if (!node->readConfigFiles(error)) {
-        QMessageBox::critical(nullptr, QObject::tr(PACKAGE_NAME),
+        node->initError(strprintf("Error reading configuration file: %s\n", error));
+        QMessageBox::critical(nullptr, "Bitcointalkcoin",
             QObject::tr("Error: Cannot parse configuration file: %1.").arg(QString::fromStdString(error)));
         return EXIT_FAILURE;
     }
@@ -517,7 +541,8 @@ int GuiMain(int argc, char* argv[])
     try {
         node->selectParams(gArgs.GetChainName());
     } catch(std::exception &e) {
-        QMessageBox::critical(nullptr, QObject::tr(PACKAGE_NAME), QObject::tr("Error: %1").arg(e.what()));
+        node->initError(strprintf("%s\n", e.what()));
+        QMessageBox::critical(nullptr, "Bitcointalkcoin", QObject::tr("Error: %1").arg(e.what()));
         return EXIT_FAILURE;
     }
 #ifdef ENABLE_WALLET
@@ -561,6 +586,11 @@ int GuiMain(int argc, char* argv[])
     // Load GUI settings from QSettings
     app.createOptionsModel(gArgs.GetBoolArg("-resetguisettings", false));
 
+    if (did_show_intro) {
+        // Store intro dialog settings other than datadir (network specific)
+        app.SetPrune(prune, true);
+    }
+
     if (gArgs.GetBoolArg("-splash", DEFAULT_SPLASHSCREEN) && !gArgs.GetBoolArg("-min", false))
         app.createSplashScreen(networkStyle.data());
 
@@ -593,4 +623,3 @@ int GuiMain(int argc, char* argv[])
     }
     return rv;
 }
-#endif // BITCOINTALKCOIN_QT_TEST

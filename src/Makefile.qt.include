@@ -113,7 +113,7 @@ QT_FORMS_UI = \
   qt/forms/signverifymessagedialog.ui \
   qt/forms/transactiondescdialog.ui \
   qt/forms/sendmessagesentry.ui \
-  qt/forms/sendmessagesdialog.ui \
+  qt/forms/sendmessagespage.ui \
   qt/forms/messagepage.ui
 
 QT_MOC_CPP = \
@@ -167,7 +167,7 @@ QT_MOC_CPP = \
   qt/moc_walletmodel.cpp \
   qt/moc_walletview.cpp \
   qt/moc_sendmessagesentry.cpp \
-  qt/moc_sendmessagesdialog.cpp \
+  qt/moc_sendmessagespage.cpp \
   qt/moc_messagepage.cpp \
   qt/moc_messagemodel.cpp
 
@@ -249,7 +249,7 @@ BITCOINTALKCOIN_QT_H = \
   qt/walletview.h \
   qt/winshutdownmonitor.h \
   qt/sendmessagesentry.h \
-  qt/sendmessagesdialog.h \
+  qt/sendmessagespage.h \
   qt/messagemodel.h \
   qt/messagepage.h
 
@@ -303,6 +303,8 @@ RES_ICONS = \
   qt/res/icons/receive.png \
   qt/res/icons/remove.png \
   qt/res/icons/send.png \
+  qt/res/icons/spv_disabled.png \
+  qt/res/icons/spv_enabled.png \
   qt/res/icons/synced.png \
   qt/res/icons/transaction0.png \
   qt/res/icons/transaction2.png \
@@ -317,7 +319,13 @@ RES_ICONS = \
   qt/res/icons/staking_on.png \
   qt/res/icons/staking_off.png \
   qt/res/icons/lock_staking.png \
-  qt/res/icons/encrypt.png
+  qt/res/icons/encrypt.png \
+  qt/res/icons/exchange.png \
+  qt/res/icons/sendtr.png \
+  qt/res/icons/receivetr.png \
+  qt/res/icons/chat.png \
+  qt/res/icons/messages.png \
+  qt/res/icons/home.png
 
 BITCOINTALKCOIN_QT_BASE_CPP = \
   qt/bantablemodel.cpp \
@@ -381,7 +389,7 @@ BITCOINTALKCOIN_QT_WALLET_CPP = \
   qt/walletmodeltransaction.cpp \
   qt/walletview.cpp \
   qt/sendmessagesentry.cpp \
-  qt/sendmessagesdialog.cpp \
+  qt/sendmessagespage.cpp \
   qt/messagepage.cpp
 
 BITCOINTALKCOIN_QT_CPP = $(BITCOINTALKCOIN_QT_BASE_CPP)
@@ -403,18 +411,17 @@ BITCOINTALKCOIN_RC = qt/res/bitcointalkcoin-qt-res.rc
 BITCOINTALKCOIN_QT_INCLUDES = -DQT_NO_KEYWORDS
 
 qt_libbitcointalkcoinqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOINTALKCOIN_INCLUDES) $(BITCOINTALKCOIN_QT_INCLUDES) \
-  $(QT_INCLUDES) $(QT_DBUS_INCLUDES) $(PROTOBUF_CFLAGS) $(QR_CFLAGS)
+  $(QT_INCLUDES) $(QT_DBUS_INCLUDES) $(QR_CFLAGS)
 qt_libbitcointalkcoinqt_a_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
 qt_libbitcointalkcoinqt_a_OBJCXXFLAGS = $(AM_OBJCXXFLAGS) $(QT_PIE_FLAGS)
 
 qt_libbitcointalkcoinqt_a_SOURCES = $(BITCOINTALKCOIN_QT_CPP) $(BITCOINTALKCOIN_QT_H) $(QT_FORMS_UI) \
-  $(QT_QRC) $(QT_QRC_LOCALE) $(QT_TS) $(PROTOBUF_PROTO) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES)
+  $(QT_QRC) $(QT_QRC_LOCALE) $(QT_TS) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES)
 if TARGET_DARWIN
   qt_libbitcointalkcoinqt_a_SOURCES += $(BITCOINTALKCOIN_MM)
 endif
 
-nodist_qt_libbitcointalkcoinqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(PROTOBUF_CC) \
-  $(PROTOBUF_H) $(QT_QRC_CPP) $(QT_QRC_LOCALE_CPP)
+nodist_qt_libbitcointalkcoinqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(QT_QRC_CPP) $(QT_QRC_LOCALE_CPP)
 
 # forms/foo.h -> forms/ui_foo.h
 QT_FORMS_H=$(join $(dir $(QT_FORMS_UI)),$(addprefix ui_, $(notdir $(QT_FORMS_UI:.ui=.h))))

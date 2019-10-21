@@ -1,5 +1,9 @@
 <!DOCTYPE RCC><RCC version="1.0">
     <qresource prefix="/icons">
+        <file alias="chat">res/icons/chat.png</file>
+        <file alias="messages">res/icons/messages.png</file>
+        <file alias="home">res/icons/home.png</file>
+        <file alias="exchange">res/icons/exchange.png</file>
         <file alias="bitcointalkcoin">res/icons/bitcointalkcoin.png</file>
         <file alias="address-book">res/icons/address-book.png</file>
         <file alias="quit">res/icons/quit.png</file>
@@ -55,9 +59,28 @@
         <file alias="hd_enabled">res/icons/hd_enabled.png</file>
         <file alias="hd_disabled">res/icons/hd_disabled.png</file>
         <file alias="network_disabled">res/icons/network_disabled.png</file>
+        <file alias="spv_enabled">res/icons/spv_enabled.png</file>
+        <file alias="spv_disabled">res/icons/spv_disabled.png</file>
         <file alias="proxy">res/icons/proxy.png</file>
         <file alias="staking_on">res/icons/staking_on.png</file>
         <file alias="staking_off">res/icons/staking_off.png</file>
+        <file alias="sendtr">res/icons/sendtr.png</file>
+        <file alias="receivetr">res/icons/receivetr.png</file>
+    </qresource>
+    <qresource prefix="/css">
+        <file alias="dyno">res/css/dyno.css</file>
+        <file alias="logo">res/css/logo2.png</file>
+        <file alias="logo-menu">res/css/logo-menu.png</file>
+        <file alias="up_arrow">res/css/up_arrow.png</file>
+        <file alias="intro">res/css/intro.png</file>
+        <file alias="down_arrow">res/css/down_arrow.png</file>
+        <file alias="material-blue">res/css/material-blue.css</file>
+        <file alias="transparent">res/css/transparent.css</file>
+        <file alias="dark">res/css/dark.css</file>
+        <file alias="qtdark">res/css/qtdark.css</file>
+        <file alias="orange">res/css/orange.css</file>
+        <file alias="ferrari">res/css/ferrari.css</file>
+        <file alias="darkorange">res/css/darkorange.css</file>
     </qresource>
     <qresource prefix="/movies">
         <file alias="spinner-000">res/movies/spinner-000.png</file>
@@ -96,5 +119,17 @@
         <file alias="spinner-033">res/movies/spinner-033.png</file>
         <file alias="spinner-034">res/movies/spinner-034.png</file>
         <file alias="spinner-035">res/movies/spinner-035.png</file>
+    </qresource>
+    <qresource prefix="/qml">
+        <file alias="main.qml">res/qml/main.qml</file>
+        <file alias="WalletPane.qml">res/qml/WalletPane.qml</file>
+        <file alias="SendPane.qml">res/qml/SendPane.qml</file>
+        <file alias="ReceivePane.qml">res/qml/ReceivePane.qml</file>
+        <file alias="SettingsPane.qml">res/qml/SettingsPane.qml</file>
+        <file alias="AboutPane.qml">res/qml/AboutPane.qml</file>
+        <file alias="ConsolePane.qml">res/qml/ConsolePane.qml</file>
+    </qresource>
+    <qresource prefix="/fonts">
+        <file alias="Roboto-Thin.ttf">res/fonts/Roboto-Thin.ttf</file>
     </qresource>
 </RCC>

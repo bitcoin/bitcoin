@@ -19,8 +19,15 @@
 #include <QFileDialog>
 #include <QSettings>
 #include <QMessageBox>
-
+#include <QSettings>
+#include <QStandardPaths>
 #include <cmath>
+
+#ifdef Q_OS_ANDROID
+#include <QtAndroidExtras/QAndroidJniEnvironment>
+#include <QtAndroidExtras/QAndroidJniObject>
+#include <QtAndroidExtras/QtAndroid>
+#endif
 
 /* Total required space (in GB) depending on user choice (prune, not prune) */
 static uint64_t requiredSpace;
@@ -119,18 +126,26 @@ Intro::Intro(QWidget *parent, uint64_t blockchain_size, uint64_t chain_state_siz
     m_chain_state_size(chain_state_size)
 {
     ui->setupUi(this);
-    ui->welcomeLabel->setText(ui->welcomeLabel->text().arg(tr(PACKAGE_NAME)));
-    ui->storageLabel->setText(ui->storageLabel->text().arg(tr(PACKAGE_NAME)));
 
-    ui->lblExplanation1->setText(ui->lblExplanation1->text()
-        .arg(tr(PACKAGE_NAME))
-        .arg(m_blockchain_size)
-        .arg(2009)
-        .arg(tr("Bitcointalkcoin"))
-    );
-    ui->lblExplanation2->setText(ui->lblExplanation2->text().arg(tr(PACKAGE_NAME)));
+    QFile qss(GUIUtil::defaultTheme());
+    qss.open(QFile::ReadOnly);
+    this->setStyleSheet(qss.readAll());
+    qss.close();
+
+
+    //ui->welcomeLabel->setText(ui->welcomeLabel->text().arg("Bitcointalkcoin"));
+    ui->storageLabel->setText(ui->storageLabel->text().arg("Bitcointalkcoin"));
+    //ui->buttonBox->AndroidLayout;
+    ui->buttonBox->button(ui->buttonBox->Ok)->setFlat(true);
+    ui->buttonBox->button(ui->buttonBox->Cancel)->setFlat(true);
+
 
     uint64_t pruneTarget = std::max<int64_t>(0, gArgs.GetArg("-prune", 0));
+    if (pruneTarget > 1) { // -prune=1 means enabled, above that it's a size in MB
+        ui->prune->setChecked(true);
+        ui->prune->setEnabled(false);
+    }
+    ui->prune->setText(tr("Prune except most recent %1 GB").arg(pruneTarget ? pruneTarget / 1000 : 2));
     requiredSpace = m_blockchain_size;
     QString storageRequiresMsg = tr("At least %1 GB of data will be stored in this directory, and it will grow over time.");
     if (pruneTarget) {
@@ -139,13 +154,13 @@ Intro::Intro(QWidget *parent, uint64_t blockchain_size, uint64_t chain_state_siz
             requiredSpace = prunedGBs;
             storageRequiresMsg = tr("Approximately %1 GB of data will be stored in this directory.");
         }
-        ui->lblExplanation3->setVisible(true);
+   //     ui->lblExplanation3->setVisible(true);
     } else {
-        ui->lblExplanation3->setVisible(false);
+  //      ui->lblExplanation3->setVisible(false);
     }
     requiredSpace += m_chain_state_size;
     ui->sizeWarningLabel->setText(
-        tr("%1 will download and store a copy of the Bitcointalkcoin block chain.").arg(tr(PACKAGE_NAME)) + " " +
+        tr("%1 will download and store a copy of the Bitcointalkcoin block chain.").arg("Bitcointalkcoin") + " " +
         storageRequiresMsg.arg(requiredSpace) + " " +
         tr("The wallet will also be stored in this directory.")
     );
@@ -180,8 +195,10 @@ void Intro::setDataDirectory(const QString &dataDir)
     }
 }
 
-bool Intro::pickDataDirectory(interfaces::Node& node)
+bool Intro::showIfNeeded(interfaces::Node& node, bool& did_show_intro, bool& prune)
 {
+    did_show_intro = false;
+
     QSettings settings;
     /* If data directory provided on command line, no need to look at settings
        or show a picking dialog */
@@ -205,6 +222,7 @@ bool Intro::pickDataDirectory(interfaces::Node& node)
         Intro intro(0, node.getAssumedBlockchainSize(), node.getAssumedChainStateSize());
         intro.setDataDirectory(dataDir);
         intro.setWindowIcon(QIcon(":icons/bitcointalkcoin"));
+        did_show_intro = true;
 
         while(true)
         {
@@ -215,17 +233,43 @@ bool Intro::pickDataDirectory(interfaces::Node& node)
             }
             dataDir = intro.getDataDirectory();
             try {
+#ifdef Q_OS_ANDROID
+
+   const QVector<QString> permissions({"android.permission.INTERNET",
+                                    "android.permission.CAMERA",
+                                    "android.permission.WRITE_EXTERNAL_STORAGE",
+                                    "android.permission.READ_EXTERNAL_STORAGE"});
+
+    for(const QString &permission : permissions){
+        auto result = QtAndroid::checkPermission(permission);
+        if(result == QtAndroid::PermissionResult::Denied){
+            auto resultHash = QtAndroid::requestPermissionsSync(QStringList({permission}));
+            if(resultHash[permission] == QtAndroid::PermissionResult::Denied)
+                return 0;
+        }
+    }
+
+	QDir dir;
+	if(dir.mkpath(QString(dataDir))){
+		if(dir.mkpath(QString(dataDir+"/wallets"))){
+		}
+	}
+#else
                 if (TryCreateDirectories(GUIUtil::qstringToBoostPath(dataDir))) {
                     // If a new data directory has been created, make wallets subdirectory too
                     TryCreateDirectories(GUIUtil::qstringToBoostPath(dataDir) / "wallets");
                 }
+#endif
                 break;
             } catch (const fs::filesystem_error&) {
-                QMessageBox::critical(nullptr, tr(PACKAGE_NAME),
+                QMessageBox::critical(nullptr, "Bitcointalkcoin",
                     tr("Error: Specified data directory \"%1\" cannot be created.").arg(dataDir));
                 /* fall through, back to choosing screen */
             }
         }
+
+        // Additional preferences:
+        prune = intro.ui->prune->isChecked();
 
         settings.setValue("strDataDir", dataDir);
         settings.setValue("fReset", false);
@@ -263,6 +307,11 @@ void Intro::setStatus(int status, const QString &message, quint64 bytesAvailable
         {
             freeString += " " + tr("(of %n GB needed)", "", requiredSpace);
             ui->freeSpace->setStyleSheet("QLabel { color: #800000 }");
+            ui->prune->setChecked(true);
+        } else if (bytesAvailable / GB_BYTES - requiredSpace < 10) {
+            freeString += " " + tr("(%n GB needed for full chain)", "", requiredSpace);
+            ui->freeSpace->setStyleSheet("QLabel { color: #999900 }");
+            ui->prune->setChecked(true);
         } else {
             ui->freeSpace->setStyleSheet("");
         }
