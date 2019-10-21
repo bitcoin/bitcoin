@@ -327,6 +327,12 @@ bool CheckSequenceLocks(const CTxMemPool& pool, const CTransaction& tx, int flag
                 }
             }
             lp->maxInputBlock = tip->GetAncestor(maxInputHeight);
+            // tip->GetAncestor(maxInputHeight) should never return a nullptr
+            // because maxInputHeight is always less than the tip height.
+            // It would, however, be a bad bug to continue execution, since a
+            // LockPoints object with the maxInputBlock member set to nullptr
+            // signifies no relative lock time.
+            assert(lp->maxInputBlock);
         }
     }
     return EvaluateSequenceLocks(index, lockPair);
@@ -4450,6 +4456,7 @@ bool CChainState::ReplayBlocks(const CChainParams& params)
     int nForkHeight = pindexFork ? pindexFork->nHeight : 0;
     for (int nHeight = nForkHeight + 1; nHeight <= pindexNew->nHeight; ++nHeight) {
         const CBlockIndex* pindex = pindexNew->GetAncestor(nHeight);
+        assert(pindex != nullptr);
         LogPrintf("Rolling forward %s (%i)\n", pindex->GetBlockHash().ToString(), nHeight);
         uiInterface.ShowProgress(_("Replaying blocks...").translated, (int) ((nHeight - nForkHeight) * 100.0 / (pindexNew->nHeight - nForkHeight)) , false);
         if (!RollforwardBlock(pindex, cache, params)) return false;
