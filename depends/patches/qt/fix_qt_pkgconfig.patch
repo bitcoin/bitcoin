@@ -4,8 +4,8 @@
  load(qt_targets)
  
  # this builds on top of qt_common
--!internal_module:!lib_bundle:if(unix|mingw) {
-+unix|mingw {
+-!internal_module:if(unix|mingw) {
++unix|mingw|android {
      CONFIG += create_pc
      QMAKE_PKGCONFIG_DESTDIR = pkgconfig
      host_build: \
