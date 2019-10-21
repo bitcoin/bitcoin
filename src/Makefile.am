@@ -205,6 +205,7 @@ TALKCOIN_CORE_H = \
   memusage.h \
   merkleblock.h \
   miner.h \
+  momentum.h  \
   net.h \
   net_permissions.h \
   net_processing.h \
@@ -307,6 +308,7 @@ TALKCOIN_CORE_H = \
   zmq/zmqnotificationinterface.h \
   zmq/zmqpublishnotifier.h \
   zmq/zmqrpc.h
+
 
 obj/build.h: FORCE
 	@$(MKDIR_P) $(builddir)/obj
@@ -449,9 +451,7 @@ crypto_libtalkcoin_crypto_base_a_SOURCES = \
   crypto/sha512.cpp \
   crypto/sha512.h \
   crypto/siphash.cpp \
-  crypto/siphash.h \
-  momentum.cpp \
-  momentum.h
+  crypto/siphash.h
 
 if USE_ASM
 crypto_libtalkcoin_crypto_base_a_SOURCES += crypto/sha256_sse4.cpp
@@ -493,6 +493,7 @@ libtalkcoin_consensus_a_SOURCES = \
   sphlib/sph_shabal.cpp \
   sphlib/groestl.cpp \
   groestl-hash.cpp \
+  momentum.cpp \
   prevector.h \
   primitives/block.cpp \
   primitives/block.h \
@@ -738,6 +739,7 @@ CLEANFILES += obj/build.h
 
 EXTRA_DIST = $(CTAES_DIST)
 
+
 config/talkcoin-config.h: config/stamp-h1
 	@$(MAKE) -C $(top_builddir) $(subdir)/$(@)
 config/stamp-h1: $(top_srcdir)/$(subdir)/config/talkcoin-config.h.in $(top_builddir)/config.status
@@ -767,6 +769,12 @@ check-security: $(bin_PROGRAMS)
 if HARDEN
 	@echo "Checking binary security..."
 	$(AM_V_at) READELF=$(READELF) OBJDUMP=$(OBJDUMP) $(PYTHON) $(top_srcdir)/contrib/devtools/security-check.py < $(bin_PROGRAMS)
+endif
+
+if ENABLE_BIP70
+%.pb.cc %.pb.h: %.proto
+	@test -f $(PROTOC)
+	$(AM_V_GEN) $(PROTOC) --cpp_out=$(@D) --proto_path=$(<D) $<
 endif
 
 if EMBEDDED_LEVELDB
