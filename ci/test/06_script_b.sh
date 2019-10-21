@@ -6,9 +6,9 @@
 
 export LC_ALL=C.UTF-8
 
-lcd = cd
+lcd=cd
 if [[ "$OSTYPE" == "darwin"* ]]; then
-  lcd = type cd
+  lcd=type cd
 fi
 
 safe_cd()
