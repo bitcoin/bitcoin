@@ -189,7 +189,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="useBech32">
+           <widget class="QCheckBox" name="useP2SH">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -209,7 +209,7 @@
              <string>Native segwit addresses (aka Bech32 or BIP-173) reduce your transaction fees later on and offer better protection against typos, but old wallets don't support them. When unchecked, an address compatible with older wallets will be created instead.</string>
             </property>
             <property name="text">
-             <string>Generate native segwit (Bech32) address</string>
+             <string>Generate P2SH segwit address</string>
             </property>
            </widget>
           </item>
@@ -360,7 +360,7 @@
  <tabstops>
   <tabstop>reqLabel</tabstop>
   <tabstop>reqAmount</tabstop>
-  <tabstop>useBech32</tabstop>
+  <tabstop>useP2SH</tabstop>
   <tabstop>reqMessage</tabstop>
   <tabstop>receiveButton</tabstop>
   <tabstop>clearButton</tabstop>
