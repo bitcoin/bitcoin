@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2018 The Talkcoin Core developers
+// Copyright (c) 2011-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_QT_TRANSACTIONVIEW_H
-#define TALKCOIN_QT_TRANSACTIONVIEW_H
+#ifndef BITCOINTALKCOIN_QT_TRANSACTIONVIEW_H
+#define BITCOINTALKCOIN_QT_TRANSACTIONVIEW_H
 
 #include <qt/guiutil.h>
 
@@ -23,6 +23,7 @@ class QFrame;
 class QLineEdit;
 class QMenu;
 class QModelIndex;
+class QSignalMapper;
 class QTableView;
 QT_END_NAMESPACE
 
@@ -71,6 +72,7 @@ private:
     QLineEdit *amountWidget;
 
     QMenu *contextMenu;
+    QSignalMapper *mapperThirdPartyTxUrls;
 
     QFrame *dateRangeWidget;
     QDateTimeEdit *dateFrom;
@@ -124,4 +126,4 @@ public Q_SLOTS:
     void computeSum();
 };
 
-#endif // TALKCOIN_QT_TRANSACTIONVIEW_H
+#endif // BITCOINTALKCOIN_QT_TRANSACTIONVIEW_H

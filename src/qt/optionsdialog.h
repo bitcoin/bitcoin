@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2018 The Talkcoin Core developers
+// Copyright (c) 2011-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_QT_OPTIONSDIALOG_H
-#define TALKCOIN_QT_OPTIONSDIALOG_H
+#ifndef BITCOINTALKCOIN_QT_OPTIONSDIALOG_H
+#define BITCOINTALKCOIN_QT_OPTIONSDIALOG_H
 
 #include <QDialog>
 #include <QValidator>
@@ -53,7 +53,7 @@ private Q_SLOTS:
     /* set OK button state (enabled / disabled) */
     void setOkButtonState(bool fState);
     void on_resetButton_clicked();
-    void on_openTalkcoinConfButton_clicked();
+    void on_openBitcointalkcoinConfButton_clicked();
     void on_okButton_clicked();
     void on_cancelButton_clicked();
 
@@ -75,4 +75,4 @@ private:
     QDataWidgetMapper *mapper;
 };
 
-#endif // TALKCOIN_QT_OPTIONSDIALOG_H
+#endif // BITCOINTALKCOIN_QT_OPTIONSDIALOG_H

@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2015 The Talkcoin Core developers
+// Copyright (c) 2011-2015 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_QT_QVALUECOMBOBOX_H
-#define TALKCOIN_QT_QVALUECOMBOBOX_H
+#ifndef BITCOINTALKCOIN_QT_QVALUECOMBOBOX_H
+#define BITCOINTALKCOIN_QT_QVALUECOMBOBOX_H
 
 #include <QComboBox>
 #include <QVariant>
@@ -34,4 +34,4 @@ private Q_SLOTS:
     void handleSelectionChanged(int idx);
 };
 
-#endif // TALKCOIN_QT_QVALUECOMBOBOX_H
+#endif // BITCOINTALKCOIN_QT_QVALUECOMBOBOX_H

@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2018 The Talkcoin Core developers
+// Copyright (c) 2011-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_QT_WALLETMODELTRANSACTION_H
-#define TALKCOIN_QT_WALLETMODELTRANSACTION_H
+#ifndef BITCOINTALKCOIN_QT_WALLETMODELTRANSACTION_H
+#define BITCOINTALKCOIN_QT_WALLETMODELTRANSACTION_H
 
 #include <qt/walletmodel.h>
 
@@ -16,6 +16,7 @@ class SendCoinsRecipient;
 
 namespace interfaces {
 class Node;
+class PendingWalletTx;
 }
 
 /** Data model for a walletmodel transaction. */
@@ -26,7 +27,7 @@ public:
 
     QList<SendCoinsRecipient> getRecipients() const;
 
-    CTransactionRef& getWtx();
+    std::unique_ptr<interfaces::PendingWalletTx>& getWtx();
     unsigned int getTransactionSize();
 
     void setTransactionFee(const CAmount& newFee);
@@ -38,8 +39,8 @@ public:
 
 private:
     QList<SendCoinsRecipient> recipients;
-    CTransactionRef wtx;
+    std::unique_ptr<interfaces::PendingWalletTx> wtx;
     CAmount fee;
 };
 
-#endif // TALKCOIN_QT_WALLETMODELTRANSACTION_H
+#endif // BITCOINTALKCOIN_QT_WALLETMODELTRANSACTION_H

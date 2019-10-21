@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2018 The Talkcoin Core developers
+// Copyright (c) 2011-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_QT_OPTIONSMODEL_H
-#define TALKCOIN_QT_OPTIONSMODEL_H
+#ifndef BITCOINTALKCOIN_QT_OPTIONSMODEL_H
+#define BITCOINTALKCOIN_QT_OPTIONSMODEL_H
 
 #include <amount.h>
 
@@ -20,7 +20,7 @@ QT_END_NAMESPACE
 extern const char *DEFAULT_GUI_PROXY_HOST;
 static constexpr unsigned short DEFAULT_GUI_PROXY_PORT = 9050;
 
-/** Interface from Qt to configuration data structure for Talkcoin client.
+/** Interface from Qt to configuration data structure for Bitcointalkcoin client.
    To Qt, the options are presented as a list with the different options
    laid out vertically.
    This can be changed to a tree once the settings become sufficiently
@@ -45,7 +45,7 @@ public:
         ProxyUseTor,            // bool
         ProxyIPTor,             // QString
         ProxyPortTor,           // int
-        DisplayUnit,            // TalkcoinUnits::Unit
+        DisplayUnit,            // BitcointalkcoinUnits::Unit
         ThirdPartyTxUrls,       // QString
         Language,               // QString
         CoinControlFeatures,    // bool
@@ -57,7 +57,9 @@ public:
         Listen,                 // bool
 		EnableMessageSendConf, // bool
         NotUseChangeAddress,    // bool
+#ifdef ENABLE_PROOF_OF_STAKE
         ReserveBalance,         // CAmount
+#endif
         OptionIDRowCount,
     };
 
@@ -79,10 +81,6 @@ public:
     bool getProxySettings(QNetworkProxy& proxy) const;
     bool getCoinControlFeatures() const { return fCoinControlFeatures; }
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
-
-    /* Explicit setters */
-    void SetPrune(bool prune, bool force = false);
-
 #ifdef ENABLE_SECURE_MESSAGING
 	bool getEnableMessageSendConf();
 #endif
@@ -119,4 +117,4 @@ Q_SIGNALS:
     void enableMessageSendConfChanged(bool);
 };
 
-#endif // TALKCOIN_QT_OPTIONSMODEL_H
+#endif // BITCOINTALKCOIN_QT_OPTIONSMODEL_H

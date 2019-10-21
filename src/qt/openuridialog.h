@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2015 The Talkcoin Core developers
+// Copyright (c) 2011-2015 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_QT_OPENURIDIALOG_H
-#define TALKCOIN_QT_OPENURIDIALOG_H
+#ifndef BITCOINTALKCOIN_QT_OPENURIDIALOG_H
+#define BITCOINTALKCOIN_QT_OPENURIDIALOG_H
 
 #include <QDialog>
 
@@ -31,4 +31,4 @@ private:
     Ui::OpenURIDialog *ui;
 };
 
-#endif // TALKCOIN_QT_OPENURIDIALOG_H
+#endif // BITCOINTALKCOIN_QT_OPENURIDIALOG_H

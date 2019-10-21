@@ -1,4 +1,4 @@
-// Copyright (c) 2019 The Talkcoin Core developers
+// Copyright (c) 2019 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -40,22 +40,19 @@ WalletController::~WalletController()
     m_activity_thread.wait();
 }
 
-std::vector<WalletModel*> WalletController::getOpenWallets() const
+std::vector<WalletModel*> WalletController::getWallets() const
 {
     QMutexLocker locker(&m_mutex);
     return m_wallets;
 }
 
-std::map<std::string, bool> WalletController::listWalletDir() const
+std::vector<std::string> WalletController::getWalletsAvailableToOpen() const
 {
     QMutexLocker locker(&m_mutex);
-    std::map<std::string, bool> wallets;
-    for (const std::string& name : m_node.listWalletDir()) {
-        wallets[name] = false;
-    }
+    std::vector<std::string> wallets = m_node.listWalletDir();
     for (WalletModel* wallet_model : m_wallets) {
-        auto it = wallets.find(wallet_model->wallet().getWalletName());
-        if (it != wallets.end()) it->second = true;
+        auto it = std::remove(wallets.begin(), wallets.end(), wallet_model->wallet().getWalletName());
+        if (it != wallets.end()) wallets.erase(it);
     }
     return wallets;
 }
@@ -99,9 +96,6 @@ WalletModel* WalletController::getOrCreateWallet(std::unique_ptr<interfaces::Wal
 
     // Instantiate model and register it.
     WalletModel* wallet_model = new WalletModel(std::move(wallet), m_node, m_platform_style, m_options_model, nullptr);
-    // Handler callback runs in a different thread so fix wallet model thread affinity.
-    wallet_model->moveToThread(thread());
-    wallet_model->setParent(this);
     m_wallets.push_back(wallet_model);
 
     connect(wallet_model, &WalletModel::unload, [this, wallet_model] {
@@ -122,9 +116,22 @@ WalletModel* WalletController::getOrCreateWallet(std::unique_ptr<interfaces::Wal
     connect(wallet_model, &WalletModel::coinsSent, this, &WalletController::coinsSent);
 
     // Notify walletAdded signal on the GUI thread.
-    Q_EMIT walletAdded(wallet_model);
+    if (QThread::currentThread() == thread()) {
+        addWallet(wallet_model);
+    } else {
+        // Handler callback runs in a different thread so fix wallet model thread affinity.
+        wallet_model->moveToThread(thread());
+        QMetaObject::invokeMethod(this, "addWallet", Qt::QueuedConnection, Q_ARG(WalletModel*, wallet_model));
+    }
 
     return wallet_model;
+}
+
+void WalletController::addWallet(WalletModel* wallet_model)
+{
+    // Take ownership of the wallet model and register it.
+    wallet_model->setParent(this);
+    Q_EMIT walletAdded(wallet_model);
 }
 
 void WalletController::removeAndDeleteWallet(WalletModel* wallet_model)

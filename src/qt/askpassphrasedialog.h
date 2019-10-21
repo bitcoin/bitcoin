@@ -1,13 +1,11 @@
-// Copyright (c) 2011-2018 The Talkcoin Core developers
+// Copyright (c) 2011-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_QT_ASKPASSPHRASEDIALOG_H
-#define TALKCOIN_QT_ASKPASSPHRASEDIALOG_H
+#ifndef BITCOINTALKCOIN_QT_ASKPASSPHRASEDIALOG_H
+#define BITCOINTALKCOIN_QT_ASKPASSPHRASEDIALOG_H
 
 #include <QDialog>
-
-#include <support/allocators/secure.h>
 
 class WalletModel;
 
@@ -23,14 +21,15 @@ class AskPassphraseDialog : public QDialog
 
 public:
     enum Mode {
-        Encrypt,    /**< Ask passphrase twice and encrypt */
+        Encrypt,        /**< Ask passphrase twice and encrypt */
         UnlockStaking,  /**< Ask passphrase and unlock staking only */
-        Unlock,     /**< Ask passphrase and unlock */
-        ChangePass, /**< Ask old passphrase + new passphrase twice */
-        Decrypt     /**< Ask passphrase and decrypt wallet */
+
+        Unlock,         /**< Ask passphrase and unlock */
+        ChangePass,     /**< Ask old passphrase + new passphrase twice */
+        Decrypt         /**< Ask passphrase and decrypt wallet */
     };
 
-    explicit AskPassphraseDialog(Mode mode, QWidget *parent, SecureString* passphrase_out = nullptr);
+    explicit AskPassphraseDialog(Mode mode, QWidget *parent);
     ~AskPassphraseDialog();
 
     void accept();
@@ -42,7 +41,6 @@ private:
     Mode mode;
     WalletModel *model;
     bool fCapsLock;
-    SecureString* m_passphrase_out;
 
 private Q_SLOTS:
     void textChanged();
@@ -54,4 +52,4 @@ protected:
     bool eventFilter(QObject *object, QEvent *event);
 };
 
-#endif // TALKCOIN_QT_ASKPASSPHRASEDIALOG_H
+#endif // BITCOINTALKCOIN_QT_ASKPASSPHRASEDIALOG_H
