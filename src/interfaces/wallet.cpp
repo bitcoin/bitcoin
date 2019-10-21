@@ -1,4 +1,4 @@
-// Copyright (c) 2018 The Talkcoin Core developers
+// Copyright (c) 2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -33,6 +33,32 @@
 namespace interfaces {
 namespace {
 
+class PendingWalletTxImpl : public PendingWalletTx
+{
+public:
+    explicit PendingWalletTxImpl(CWallet& wallet) : m_wallet(wallet), m_key(&wallet) {}
+
+    const CTransaction& get() override { return *m_tx; }
+
+    bool commit(WalletValueMap value_map,
+        WalletOrderForm order_form,
+        std::string& reject_reason) override
+    {
+        auto locked_chain = m_wallet.chain().lock();
+        LOCK(m_wallet.cs_wallet);
+        CValidationState state;
+        if (!m_wallet.CommitTransaction(m_tx, std::move(value_map), std::move(order_form), m_key, state)) {
+            reject_reason = state.GetRejectReason();
+            return false;
+        }
+        return true;
+    }
+
+    CTransactionRef m_tx;
+    CWallet& m_wallet;
+    CReserveKey m_key;
+};
+
 //! Construct wallet tx struct.
 WalletTx MakeWalletTx(interfaces::Chain::Lock& locked_chain, CWallet& wallet, const CWalletTx& wtx)
 {
@@ -59,7 +85,6 @@ WalletTx MakeWalletTx(interfaces::Chain::Lock& locked_chain, CWallet& wallet, co
     result.value_map = wtx.mapValue;
     result.is_coinbase = wtx.IsCoinBase();
     result.is_coinstake = wtx.IsCoinStake();
-    result.fValidated = wtx.fValidated;
     return result;
 }
 
@@ -72,13 +97,12 @@ WalletTxStatus MakeWalletTxStatus(interfaces::Chain::Lock& locked_chain, const C
     result.depth_in_main_chain = wtx.GetDepthInMainChain(locked_chain);
     result.time_received = wtx.nTimeReceived;
     result.lock_time = wtx.tx->nLockTime;
-    result.is_final = locked_chain.checkFinalTx(*wtx.tx, -1, wtx.fValidated);
+    result.is_final = locked_chain.checkFinalTx(*wtx.tx);
     result.is_trusted = wtx.IsTrusted(locked_chain);
     result.is_abandoned = wtx.isAbandoned();
     result.is_coinbase = wtx.IsCoinBase();
     result.is_coinstake = wtx.IsCoinStake();
     result.is_in_main_chain = wtx.IsInMainChain(locked_chain);
-    result.fValidated = wtx.fValidated;
     return result;
 }
 
@@ -118,11 +142,9 @@ public:
     void abortRescan() override { m_wallet->AbortRescan(); }
     bool backupWallet(const std::string& filename) override { return m_wallet->BackupWallet(filename); }
     std::string getWalletName() override { return m_wallet->GetName(); }
-    bool getNewDestination(const OutputType type, const std::string label, CTxDestination& dest) override
+    bool getKeyFromPool(bool internal, CPubKey& pub_key) override
     {
-        LOCK(m_wallet->cs_wallet);
-        std::string error;
-        return m_wallet->GetNewDestination(type, label, dest, error);
+        return m_wallet->GetKeyFromPool(pub_key, internal);
     }
     bool getPubKey(const CKeyID& address, CPubKey& pub_key) override { return m_wallet->GetPubKey(address, pub_key); }
     bool getPrivKey(const CKeyID& address, CKey& key) override { return m_wallet->GetKey(address, key); }
@@ -206,7 +228,7 @@ public:
         LOCK(m_wallet->cs_wallet);
         return m_wallet->ListLockedCoins(outputs);
     }
-    CTransactionRef createTransaction(const std::vector<CRecipient>& recipients,
+    std::unique_ptr<PendingWalletTx> createTransaction(const std::vector<CRecipient>& recipients,
         const CCoinControl& coin_control,
         bool sign,
         int& change_pos,
@@ -215,26 +237,12 @@ public:
     {
         auto locked_chain = m_wallet->chain().lock();
         LOCK(m_wallet->cs_wallet);
-        CTransactionRef tx;
-        if (!m_wallet->CreateTransaction(*locked_chain, recipients, tx, fee, change_pos,
+        auto pending = MakeUnique<PendingWalletTxImpl>(*m_wallet);
+        if (!m_wallet->CreateTransaction(*locked_chain, recipients, pending->m_tx, pending->m_key, fee, change_pos,
                 fail_reason, coin_control, sign)) {
             return {};
         }
-        return tx;
-    }
-    bool commitTransaction(CTransactionRef tx,
-        WalletValueMap value_map,
-        WalletOrderForm order_form,
-        std::string& reject_reason) override
-    {
-        auto locked_chain = m_wallet->chain().lock();
-        LOCK(m_wallet->cs_wallet);
-        CValidationState state;
-        if (!m_wallet->CommitTransaction(std::move(tx), std::move(value_map), std::move(order_form), state)) {
-            reject_reason = state.GetRejectReason();
-            return false;
-        }
-        return true;
+        return std::move(pending);
     }
     bool transactionCanBeAbandoned(const uint256& txid) override { return m_wallet->TransactionCanBeAbandoned(txid); }
     bool abandonTransaction(const uint256& txid) override
@@ -306,7 +314,7 @@ public:
     bool tryGetTxStatus(const uint256& txid,
         interfaces::WalletTxStatus& tx_status,
         int& num_blocks,
-        int64_t& block_time, int64_t& headers) override
+        int64_t& block_time) override
     {
         auto locked_chain = m_wallet->chain().lock(true /* try_lock */);
         if (!locked_chain) {
@@ -328,8 +336,6 @@ public:
             block_time = -1;
         }
         tx_status = MakeWalletTxStatus(*locked_chain, mi->second);
-        headers = m_wallet->chain().getheaders();
-        
         return true;
     }
     WalletTx getWalletTxDetails(const uint256& txid,
@@ -366,6 +372,7 @@ public:
             result.unconfirmed_watch_only_balance = bal.m_watchonly_untrusted_pending;
             result.immature_watch_only_balance = bal.m_watchonly_immature;
             result.watch_only_stake = m_wallet->GetWatchOnlyStake();
+
         }
         return result;
     }
@@ -504,7 +511,7 @@ public:
     }
     std::unique_ptr<Handler> handleStatusChanged(StatusChangedFn fn) override
     {
-        return MakeHandler(m_wallet->NotifyStatusChanged.connect([fn](CWallet*) { fn(); }));
+        return MakeHandler(m_wallet->NotifyStatusChanged.connect([fn](CCryptoKeyStore*) { fn(); }));
     }
     std::unique_ptr<Handler> handleAddressBookChanged(AddressBookChangedFn fn) override
     {
@@ -525,21 +532,10 @@ public:
     {
         return MakeHandler(m_wallet->NotifyCanGetAddressesChanged.connect(fn));
     }
-    void getScriptForMining(std::shared_ptr<CTxDestination> &script) override{
+    void getScriptForMining(std::shared_ptr<CReserveScript> &script) override{
 		m_wallet->GetScriptForMining(script);
 	}
-    std::unique_ptr<Handler> handleSPVModeChanged(SPVModeChangedFn fn) override
-    {
-        return MakeHandler(m_wallet->NotifySPVModeChanged.connect(fn));
-    }
-	bool isSPVEnabled() override
-	{
-		return m_wallet->IsSPVEnabled();
-	}
-	void SetSPVEnabled(bool state) override
-	{
-		m_wallet->setSPVEnabled(state);
-	}
+
     std::shared_ptr<CWallet> m_wallet;
 };
 

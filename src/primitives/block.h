@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Talkcoin Core developers
+// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_PRIMITIVES_BLOCK_H
-#define TALKCOIN_PRIMITIVES_BLOCK_H
+#ifndef BITCOINTALKCOIN_PRIMITIVES_BLOCK_H
+#define BITCOINTALKCOIN_PRIMITIVES_BLOCK_H
 
 #include <primitives/transaction.h>
 #include <serialize.h>
@@ -240,4 +240,4 @@ struct CBlockLocator
     }
 };
 
-#endif // TALKCOIN_PRIMITIVES_BLOCK_H
+#endif // BITCOINTALKCOIN_PRIMITIVES_BLOCK_H

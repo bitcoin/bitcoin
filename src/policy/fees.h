@@ -1,9 +1,9 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Talkcoin Core developers
+// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef TALKCOIN_POLICY_FEES_H
-#define TALKCOIN_POLICY_FEES_H
+#ifndef BITCOINTALKCOIN_POLICY_FEES_H
+#define BITCOINTALKCOIN_POLICY_FEES_H
 
 #include <amount.h>
 #include <policy/feerate.h>
@@ -43,6 +43,7 @@ enum class FeeReason {
     PAYTXFEE,
     FALLBACK,
     REQUIRED,
+    MAXTXFEE,
 };
 
 /* Used to determine type of fee estimation requested */
@@ -288,4 +289,4 @@ private:
     FastRandomContext insecure_rand;
 };
 
-#endif // TALKCOIN_POLICY_FEES_H
+#endif // BITCOINTALKCOIN_POLICY_FEES_H

@@ -1,9 +1,9 @@
-// Copyright (c) 2018 The Talkcoin Core developers
+// Copyright (c) 2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_INDEX_BLOCKFILTERINDEX_H
-#define TALKCOIN_INDEX_BLOCKFILTERINDEX_H
+#ifndef BITCOINTALKCOIN_INDEX_BLOCKFILTERINDEX_H
+#define BITCOINTALKCOIN_INDEX_BLOCKFILTERINDEX_H
 
 #include <blockfilter.h>
 #include <chain.h>
@@ -91,4 +91,4 @@ bool DestroyBlockFilterIndex(BlockFilterType filter_type);
 /** Destroy all open block filter indexes. */
 void DestroyAllBlockFilterIndexes();
 
-#endif // TALKCOIN_INDEX_BLOCKFILTERINDEX_H
+#endif // BITCOINTALKCOIN_INDEX_BLOCKFILTERINDEX_H

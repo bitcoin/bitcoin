@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Talkcoin Core developers
+// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -30,7 +30,11 @@ CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
     if (txout.scriptPubKey.IsUnspendable())
         return 0;
 
+#ifdef ENABLE_PROOF_OF_STAKE
     size_t nSize = GetSerializeSize(txout, SER_DISK, 0);
+#else
+    size_t nSize = GetSerializeSize(txout);
+#endif
     int witnessversion = 0;
     std::vector<unsigned char> witnessprogram;
 

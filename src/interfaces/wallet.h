@@ -1,9 +1,9 @@
-// Copyright (c) 2018 The Talkcoin Core developers
+// Copyright (c) 2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_INTERFACES_WALLET_H
-#define TALKCOIN_INTERFACES_WALLET_H
+#ifndef BITCOINTALKCOIN_INTERFACES_WALLET_H
+#define BITCOINTALKCOIN_INTERFACES_WALLET_H
 
 #include <amount.h>                    // For CAmount
 #include <pubkey.h>                    // For CKeyID and CScriptID (definitions needed in CTxDestination instantiation)
@@ -34,6 +34,7 @@ struct CRecipient;
 namespace interfaces {
 
 class Handler;
+class PendingWalletTx;
 struct WalletAddress;
 struct WalletBalances;
 struct WalletTx;
@@ -78,7 +79,7 @@ public:
     virtual std::string getWalletName() = 0;
 
     // Get key from pool.
-    virtual bool getNewDestination(const OutputType type, const std::string label, CTxDestination& dest) = 0;
+    virtual bool getKeyFromPool(bool internal, CPubKey& pub_key) = 0;
 
     //! Get public key.
     virtual bool getPubKey(const CKeyID& address, CPubKey& pub_key) = 0;
@@ -133,18 +134,12 @@ public:
     virtual void listLockedCoins(std::vector<COutPoint>& outputs) = 0;
 
     //! Create transaction.
-    virtual CTransactionRef createTransaction(const std::vector<CRecipient>& recipients,
+    virtual std::unique_ptr<PendingWalletTx> createTransaction(const std::vector<CRecipient>& recipients,
         const CCoinControl& coin_control,
         bool sign,
         int& change_pos,
         CAmount& fee,
         std::string& fail_reason) = 0;
-
-    //! Commit transaction.
-    virtual bool commitTransaction(CTransactionRef tx,
-        WalletValueMap value_map,
-        WalletOrderForm order_form,
-        std::string& reject_reason) = 0;
 
     //! Return whether transaction can be abandoned.
     virtual bool transactionCanBeAbandoned(const uint256& txid) = 0;
@@ -186,7 +181,7 @@ public:
     virtual bool tryGetTxStatus(const uint256& txid,
         WalletTxStatus& tx_status,
         int& num_blocks,
-        int64_t& block_time, int64_t& headers) = 0;
+        int64_t& block_time) = 0;
 
     //! Get transaction details.
     virtual WalletTx getWalletTxDetails(const uint256& txid,
@@ -261,12 +256,10 @@ public:
     // Remove wallet.
     virtual void remove() = 0;
 
-	virtual bool isSPVEnabled() = 0;
-	virtual void SetSPVEnabled(bool state)= 0;
 
     //! Try get the stake weight
     virtual bool tryGetStakeWeight(uint64_t& nWeight) = 0;
-
+#ifdef ENABLE_PROOF_OF_STAKE
     //! Get last coin stake search interval
     virtual int64_t getLastCoinStakeSearchInterval() = 0;
 
@@ -275,6 +268,7 @@ public:
 
     //! Set wallet unlock for staking only
     virtual void setWalletUnlockStakingOnly(bool unlock) = 0;
+#endif
 
     //! Register handler for unload message.
     using UnloadFn = std::function<void()>;
@@ -307,10 +301,23 @@ public:
     //! Register handler for keypool changed messages.
     using CanGetAddressesChangedFn = std::function<void()>;
     virtual std::unique_ptr<Handler> handleCanGetAddressesChanged(CanGetAddressesChangedFn fn) = 0;
-    virtual void getScriptForMining(std::shared_ptr<CTxDestination> &script) =0;;
+    virtual void getScriptForMining(std::shared_ptr<CReserveScript> &script) =0;;
 
-    using SPVModeChangedFn = std::function<void(bool spv_mode_changed)>;
-    virtual std::unique_ptr<Handler> handleSPVModeChanged(SPVModeChangedFn fn) = 0;
+};
+
+//! Tracking object returned by CreateTransaction and passed to CommitTransaction.
+class PendingWalletTx
+{
+public:
+    virtual ~PendingWalletTx() {}
+
+    //! Get transaction data.
+    virtual const CTransaction& get() = 0;
+
+    //! Send pending transaction and commit to wallet.
+    virtual bool commit(WalletValueMap value_map,
+        WalletOrderForm order_form,
+        std::string& reject_reason) = 0;
 };
 
 //! Information about one wallet address.
@@ -343,10 +350,17 @@ struct WalletBalances
 
     bool balanceChanged(const WalletBalances& prev) const
     {
+#ifdef ENABLE_PROOF_OF_STAKE
         return balance != prev.balance || unconfirmed_balance != prev.unconfirmed_balance ||
                immature_balance != prev.immature_balance || stake != prev.stake || watch_only_balance != prev.watch_only_balance ||
                unconfirmed_watch_only_balance != prev.unconfirmed_watch_only_balance ||
                immature_watch_only_balance != prev.immature_watch_only_balance || watch_only_stake != prev.watch_only_stake;
+#else
+        return balance != prev.balance || unconfirmed_balance != prev.unconfirmed_balance ||
+               immature_balance != prev.immature_balance || watch_only_balance != prev.watch_only_balance ||
+               unconfirmed_watch_only_balance != prev.unconfirmed_watch_only_balance ||
+               immature_watch_only_balance != prev.immature_watch_only_balance;
+#endif
     }
 };
 
@@ -365,7 +379,6 @@ struct WalletTx
     std::map<std::string, std::string> value_map;
     bool is_coinbase;
     bool is_coinstake;
-    bool fValidated;
 };
 
 //! Updated transaction status.
@@ -382,7 +395,6 @@ struct WalletTxStatus
     bool is_coinbase;
     bool is_coinstake;
     bool is_in_main_chain;
-    bool fValidated;
 };
 
 //! Wallet transaction output.
@@ -400,4 +412,4 @@ std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet);
 
 } // namespace interfaces
 
-#endif // TALKCOIN_INTERFACES_WALLET_H
+#endif // BITCOINTALKCOIN_INTERFACES_WALLET_H

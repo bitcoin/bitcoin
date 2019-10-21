@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Talkcoin Core developers
+// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_POLICY_POLICY_H
-#define TALKCOIN_POLICY_POLICY_H
+#ifndef BITCOINTALKCOIN_POLICY_POLICY_H
+#define BITCOINTALKCOIN_POLICY_POLICY_H
 
 #include <consensus/consensus.h>
 #include <policy/feerate.h>
@@ -115,4 +115,4 @@ static inline int64_t GetVirtualTransactionInputSize(const CTxIn& tx)
     return GetVirtualTransactionInputSize(tx, 0, 0);
 }
 
-#endif // TALKCOIN_POLICY_POLICY_H
+#endif // BITCOINTALKCOIN_POLICY_POLICY_H

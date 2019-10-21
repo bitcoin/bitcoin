@@ -1,9 +1,9 @@
-// Copyright (c) 2017-2018 The Talkcoin Core developers
+// Copyright (c) 2017-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_CONSENSUS_TX_VERIFY_H
-#define TALKCOIN_CONSENSUS_TX_VERIFY_H
+#ifndef BITCOINTALKCOIN_CONSENSUS_TX_VERIFY_H
+#define BITCOINTALKCOIN_CONSENSUS_TX_VERIFY_H
 
 #include <amount.h>
 
@@ -75,4 +75,4 @@ bool EvaluateSequenceLocks(const CBlockIndex& block, std::pair<int, int64_t> loc
  */
 bool SequenceLocks(const CTransaction &tx, int flags, std::vector<int>* prevHeights, const CBlockIndex& block);
 
-#endif // TALKCOIN_CONSENSUS_TX_VERIFY_H
+#endif // BITCOINTALKCOIN_CONSENSUS_TX_VERIFY_H

@@ -1,9 +1,9 @@
-// Copyright (c) 2014-2016 The Talkcoin Core developers
+// Copyright (c) 2014-2016 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_CRYPTO_RIPEMD160_H
-#define TALKCOIN_CRYPTO_RIPEMD160_H
+#ifndef BITCOINTALKCOIN_CRYPTO_RIPEMD160_H
+#define BITCOINTALKCOIN_CRYPTO_RIPEMD160_H
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -25,4 +25,4 @@ public:
     CRIPEMD160& Reset();
 };
 
-#endif // TALKCOIN_CRYPTO_RIPEMD160_H
+#endif // BITCOINTALKCOIN_CRYPTO_RIPEMD160_H

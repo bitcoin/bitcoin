@@ -1,9 +1,9 @@
-// Copyright (c) 2016-2018 The Talkcoin Core developers
+// Copyright (c) 2016-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_POLICY_RBF_H
-#define TALKCOIN_POLICY_RBF_H
+#ifndef BITCOINTALKCOIN_POLICY_RBF_H
+#define BITCOINTALKCOIN_POLICY_RBF_H
 
 #include <txmempool.h>
 
@@ -19,4 +19,4 @@ enum class RBFTransactionState {
 // as the sequence numbers of all in-mempool ancestors.
 RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool) EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
 
-#endif // TALKCOIN_POLICY_RBF_H
+#endif // BITCOINTALKCOIN_POLICY_RBF_H

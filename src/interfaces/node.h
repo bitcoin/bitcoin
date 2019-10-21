@@ -1,9 +1,9 @@
-// Copyright (c) 2018 The Talkcoin Core developers
+// Copyright (c) 2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_INTERFACES_NODE_H
-#define TALKCOIN_INTERFACES_NODE_H
+#ifndef BITCOINTALKCOIN_INTERFACES_NODE_H
+#define BITCOINTALKCOIN_INTERFACES_NODE_H
 
 #include <addrdb.h>     // For banmap_t
 #include <amount.h>     // For CAmount
@@ -32,20 +32,14 @@ namespace interfaces {
 class Handler;
 class Wallet;
 
-//! Top-level interface for a talkcoin node (talkcoind process).
+//! Top-level interface for a bitcointalkcoin node (bitcointalkcoind process).
 class Node
 {
 public:
     virtual ~Node() {}
 
     //! Set command line arguments.
-    virtual void initError(const std::string& message) = 0;
-
-    //! Set command line arguments.
     virtual bool parseParameters(int argc, const char* const argv[], std::string& error) = 0;
-
-    //! Set a command line argument if it doesn't already have a value
-    virtual void forceSetArg(const std::string& arg, const std::string& value) = 0;
 
     //! Set a command line argument if it doesn't already have a value
     virtual bool softSetArg(const std::string& arg, const std::string& value) = 0;
@@ -145,9 +139,6 @@ public:
     virtual int getNumBlocks() = 0;
 
     //! Get last block time.
-    virtual int getNumHeaders() = 0;
-
-    //! Get last block time.
     virtual int64_t getLastBlockTime() = 0;
 
     //! Get block hash.
@@ -161,9 +152,6 @@ public:
 
     //! Is initial block download.
     virtual bool isInitialBlockDownload() = 0;
-
-    //! Get reindex.
-    virtual bool isAddressTypeSet() = 0;
 
     //! Get reindex.
     virtual bool getReindex() = 0;
@@ -261,11 +249,6 @@ public:
     using NotifyHeaderTipFn =
         std::function<void(bool initial_download, int height, int64_t block_time, double verification_progress)>;
     virtual std::unique_ptr<Handler> handleNotifyHeaderTip(NotifyHeaderTipFn fn) = 0;
-
-    //! Register handler for header tip messages.
-    using AuxiliaryBlockRequestProgress =
-        std::function<void(int64_t initial_download, size_t requested, size_t blocks, size_t progress)>;
-    virtual std::unique_ptr<Handler> handleAuxiliaryBlockRequestProgress(AuxiliaryBlockRequestProgress fn) = 0;
 };
 
 //! Return implementation of Node interface.
@@ -273,4 +256,4 @@ std::unique_ptr<Node> MakeNode();
 
 } // namespace interfaces
 
-#endif // TALKCOIN_INTERFACES_NODE_H
+#endif // BITCOINTALKCOIN_INTERFACES_NODE_H

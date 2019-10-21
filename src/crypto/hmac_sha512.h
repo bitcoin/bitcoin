@@ -1,9 +1,9 @@
-// Copyright (c) 2014-2018 The Talkcoin Core developers
+// Copyright (c) 2014-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_CRYPTO_HMAC_SHA512_H
-#define TALKCOIN_CRYPTO_HMAC_SHA512_H
+#ifndef BITCOINTALKCOIN_CRYPTO_HMAC_SHA512_H
+#define BITCOINTALKCOIN_CRYPTO_HMAC_SHA512_H
 
 #include <crypto/sha512.h>
 
@@ -29,4 +29,4 @@ public:
     void Finalize(unsigned char hash[OUTPUT_SIZE]);
 };
 
-#endif // TALKCOIN_CRYPTO_HMAC_SHA512_H
+#endif // BITCOINTALKCOIN_CRYPTO_HMAC_SHA512_H

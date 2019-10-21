@@ -1,9 +1,9 @@
-// Copyright (c) 2018-2019 The Talkcoin Core developers
+// Copyright (c) 2018-2019 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_INTERFACES_CHAIN_H
-#define TALKCOIN_INTERFACES_CHAIN_H
+#ifndef BITCOINTALKCOIN_INTERFACES_CHAIN_H
+#define BITCOINTALKCOIN_INTERFACES_CHAIN_H
 
 #include <optional.h>               // For Optional and nullopt
 #include <primitives/transaction.h> // For CTransactionRef
@@ -30,7 +30,6 @@ class uint256;
 enum class RBFTransactionState;
 struct CBlockLocator;
 struct FeeCalculation;
-class CAuxiliaryBlockRequest;
 
 namespace interfaces {
 
@@ -42,22 +41,22 @@ class Wallet;
 //! estimate fees, and submit transactions.
 //!
 //! TODO: Current chain methods are too low level, exposing too much of the
-//! internal workings of the talkcoin node, and not being very convenient to use.
+//! internal workings of the bitcointalkcoin node, and not being very convenient to use.
 //! Chain methods should be cleaned up and simplified over time. Examples:
 //!
 //! * The Chain::lock() method, which lets clients delay chain tip updates
 //!   should be removed when clients are able to respond to updates
 //!   asynchronously
-//!   (https://github.com/talkcoin/talkcoin/pull/10973#issuecomment-380101269).
+//!   (https://github.com/bitcointalkcoin/bitcointalkcoin/pull/10973#issuecomment-380101269).
 //!
 //! * The relayTransactions() and submitToMemoryPool() methods could be replaced
 //!   with a higher-level broadcastTransaction method
-//!   (https://github.com/talkcoin/talkcoin/pull/14978#issuecomment-459373984).
+//!   (https://github.com/bitcointalkcoin/bitcointalkcoin/pull/14978#issuecomment-459373984).
 //!
 //! * The initMessages() and loadWallet() methods which the wallet uses to send
 //!   notifications to the GUI should go away when GUI and wallet can directly
 //!   communicate with each other without going through the node
-//!   (https://github.com/talkcoin/talkcoin/pull/15288#discussion_r253321096).
+//!   (https://github.com/bitcointalkcoin/bitcointalkcoin/pull/15288#discussion_r253321096).
 //!
 //! * The handleRpc, registerRpcs, rpcEnableDeprecated methods and other RPC
 //!   methods can go away if wallets listen for HTTP requests on their own
@@ -104,6 +103,7 @@ public:
         //! Check that the block is available on disk (i.e. has not been
         //! pruned), and contains transactions.
         virtual bool haveBlockOnDisk(int height) = 0;
+#ifdef ENABLE_PROOF_OF_STAKE
         //! Check that the block is is available on disk and is proof of stake.
         virtual bool IsProofOfStake(int height) = 0;
         
@@ -115,7 +115,7 @@ public:
         
         virtual void cacheKernel(std::map<COutPoint, CStakeCache>& cache, const COutPoint& prevout) =0;
         virtual	bool checkKernel(unsigned int nBits, uint32_t nTimeBlock, const COutPoint& prevout, const std::map<COutPoint, CStakeCache>& cache) =0;
-
+#endif
 #ifdef ENABLE_SECURE_MESSAGING
         virtual bool smsgStart()=0;
         virtual void secureMsgWalletUnlocked()=0;
@@ -150,7 +150,12 @@ public:
         virtual Optional<int> findLocatorFork(const CBlockLocator& locator) = 0;
 
         //! Check if transaction will be final given chain height current time.
-        virtual bool checkFinalTx(const CTransaction& tx, int flags, bool calcHeightFromHeaders) = 0;
+        virtual bool checkFinalTx(const CTransaction& tx) = 0;
+
+        //! Add transaction to memory pool if the transaction fee is below the
+        //! amount specified by absurd_fee. Returns false if the transaction
+        //! could not be added due to the fee or for another reason.
+        virtual bool submitToMemoryPool(const CTransactionRef& tx, CAmount absurd_fee, CValidationState& state) = 0;
     };
 
     //! Return Lock interface. Chain is locked when this is called, and
@@ -184,9 +189,7 @@ public:
     virtual bool hasDescendantsInMempool(const uint256& txid) = 0;
 
     //! Relay transaction.
-    //! amount specified by max_tx_fee, and broadcast to all peers if relay is set to true.
-    //! Return false if the transaction could not be added due to the fee or for another reason.
-    virtual bool broadcastTransaction(const CTransactionRef& tx, std::string& err_string, const CAmount& max_tx_fee, bool relay) = 0;
+    virtual void relayTransaction(const uint256& txid) = 0;
 
     //! Calculate mempool ancestor and descendant counts for the given transaction.
     virtual void getTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) = 0;
@@ -215,6 +218,9 @@ public:
     //! Check if any block has been pruned.
     virtual bool havePruned() = 0;
 
+    //! Check if p2p enabled.
+    virtual bool p2pEnabled() = 0;
+
     //! Check if the node is ready to broadcast transactions.
     virtual bool isReadyToBroadcast() = 0;
 
@@ -241,17 +247,6 @@ public:
 
     //! Send progress indicator.
     virtual void showProgress(const std::string& title, int progress, bool resume_possible) = 0;
-    
-    virtual bool checkSPVScan() =0;
-    
-    virtual void getSPVTips(CBlockIndex *pIndex,CBlockIndex *chainActiveTip)=0;
-    virtual CBlockIndex * setpNVSBestBlock(bool genesis, CBlockLocator &locator) =0;
-    virtual bool checkpNVSLastKnownBestHeader(CBlockIndex *block) =0;
-   	virtual const CBlockIndex * setpNVSLastKnownBestHeader(CBlockIndex *block) =0;
-   	virtual bool checkActiveHeader(const CBlockIndex *pindexFork)= 0;
-
-   	virtual std::shared_ptr<CAuxiliaryBlockRequest> BlockRequest() =0;
-   	virtual int64_t getheaders() =0;
 
     //! Chain notifications.
     class Notifications
@@ -339,4 +334,4 @@ std::unique_ptr<ChainClient> MakeWalletClient(Chain& chain, std::vector<std::str
 
 } // namespace interfaces
 
-#endif // TALKCOIN_INTERFACES_CHAIN_H
+#endif // BITCOINTALKCOIN_INTERFACES_CHAIN_H

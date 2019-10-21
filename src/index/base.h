@@ -1,9 +1,9 @@
-// Copyright (c) 2017-2018 The Talkcoin Core developers
+// Copyright (c) 2017-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_INDEX_BASE_H
-#define TALKCOIN_INDEX_BASE_H
+#ifndef BITCOINTALKCOIN_INDEX_BASE_H
+#define BITCOINTALKCOIN_INDEX_BASE_H
 
 #include <dbwrapper.h>
 #include <primitives/block.h>
@@ -110,4 +110,4 @@ public:
     void Stop();
 };
 
-#endif // TALKCOIN_INDEX_BASE_H
+#endif // BITCOINTALKCOIN_INDEX_BASE_H

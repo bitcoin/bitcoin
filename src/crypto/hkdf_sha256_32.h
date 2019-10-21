@@ -1,9 +1,9 @@
-// Copyright (c) 2018 The Talkcoin Core developers
+// Copyright (c) 2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_CRYPTO_HKDF_SHA256_32_H
-#define TALKCOIN_CRYPTO_HKDF_SHA256_32_H
+#ifndef BITCOINTALKCOIN_CRYPTO_HKDF_SHA256_32_H
+#define BITCOINTALKCOIN_CRYPTO_HKDF_SHA256_32_H
 
 #include <crypto/hmac_sha256.h>
 
@@ -22,4 +22,4 @@ public:
     void Expand32(const std::string& info, unsigned char hash[OUTPUT_SIZE]);
 };
 
-#endif // TALKCOIN_CRYPTO_HKDF_SHA256_32_H
+#endif // BITCOINTALKCOIN_CRYPTO_HKDF_SHA256_32_H

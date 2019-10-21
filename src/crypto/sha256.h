@@ -1,9 +1,9 @@
-// Copyright (c) 2014-2018 The Talkcoin Core developers
+// Copyright (c) 2014-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_CRYPTO_SHA256_H
-#define TALKCOIN_CRYPTO_SHA256_H
+#ifndef BITCOINTALKCOIN_CRYPTO_SHA256_H
+#define BITCOINTALKCOIN_CRYPTO_SHA256_H
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -38,4 +38,4 @@ std::string SHA256AutoDetect();
  */
 void SHA256D64(unsigned char* output, const unsigned char* input, size_t blocks);
 
-#endif // TALKCOIN_CRYPTO_SHA256_H
+#endif // BITCOINTALKCOIN_CRYPTO_SHA256_H

@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2018 The Talkcoin Core developers
+// Copyright (c) 2015-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -71,7 +71,7 @@ uint256 BlockMerkleRoot(const CBlock& block, bool* mutated)
     }
     return ComputeMerkleRoot(std::move(leaves), mutated);
 }
-
+#ifdef ENABLE_PROOF_OF_STAKE
 uint256 BlockWitnessMerkleRoot(const CBlock& block, bool* mutated, bool* pfProofOfStake)
 {
     bool fProofOfStake = pfProofOfStake ? *pfProofOfStake : block.IsProofOfStake();
@@ -87,4 +87,17 @@ uint256 BlockWitnessMerkleRoot(const CBlock& block, bool* mutated, bool* pfProof
     }
     return ComputeMerkleRoot(std::move(leaves), mutated);
 }
+#else
 
+uint256 BlockWitnessMerkleRoot(const CBlock& block, bool* mutated)
+{
+    std::vector<uint256> leaves;
+    leaves.resize(block.vtx.size());
+    leaves[0].SetNull(); // The witness hash of the coinbase is 0.
+    for (size_t s = 1; s < block.vtx.size(); s++) {
+        leaves[s] = block.vtx[s]->GetWitnessHash();
+    }
+    return ComputeMerkleRoot(std::move(leaves), mutated);
+}
+
+#endif
