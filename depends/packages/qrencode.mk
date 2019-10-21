@@ -7,8 +7,6 @@ $(package)_sha256_hash=efe5188b1ddbcbf98763b819b146be6a90481aac30cfc8d858ab78a19
 define $(package)_set_vars
 $(package)_config_opts=--disable-shared -without-tools --disable-sdltest
 $(package)_config_opts_linux=--with-pic
-$(package)_config_opts_armv7a_android=--with-pic
-$(package)_config_opts_i686_android=--with-pic
 endef
 
 define $(package)_preprocess_cmds

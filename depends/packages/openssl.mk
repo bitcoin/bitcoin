@@ -54,27 +54,14 @@ $(package)_config_opts_mips_linux=linux-generic32
 $(package)_config_opts_powerpc_linux=linux-generic32
 $(package)_config_opts_riscv32_linux=linux-generic32
 $(package)_config_opts_riscv64_linux=linux-generic64
-$(package)_config_opts_powerpc64le_linux=linux-generic64
-$(package)_config_opts_sparc64_linux=linux-generic64
-$(package)_config_opts_s390x_linux=linux-generic64
-$(package)_config_opts_alpha_linux=linux-generic64
-$(package)_config_opts_m68k_linux=linux-generic32
 $(package)_config_opts_x86_64_darwin=darwin64-x86_64-cc
-$(package)_config_opts_aarch64_darwin=iphoneos-cross
 $(package)_config_opts_x86_64_mingw32=mingw64
 $(package)_config_opts_i686_mingw32=mingw
-#$(package)_config_opts_android=linux-generic64
-$(package)_config_opts_aarch64_android=linux-generic64 -fPIC
-$(package)_config_opts_x86_64_android=linux-generic64 -fPIC
-$(package)_config_opts_armv7a_android=linux-generic32 -fPIC
-$(package)_config_opts_x86_android=linux-generic32 -fPIC
-$(package)_config_opts_i686_android=linux-generic32 -fPIC
 endef
 
 define $(package)_preprocess_cmds
   sed -i.old "/define DATE/d" util/mkbuildinf.pl && \
-  sed -i.old "s|engines apps test|engines|" Makefile.org && \
-  LC_ALL=C sed -i.old "s/-isysroot.*(CROSS_SDK)//" Configure
+  sed -i.old "s|engines apps test|engines|" Makefile.org
 endef
 
 define $(package)_config_cmds
