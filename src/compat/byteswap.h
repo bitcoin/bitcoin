@@ -1,12 +1,12 @@
-// Copyright (c) 2014-2018 The Talkcoin Core developers
+// Copyright (c) 2014-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_COMPAT_BYTESWAP_H
-#define TALKCOIN_COMPAT_BYTESWAP_H
+#ifndef BITCOINTALKCOIN_COMPAT_BYTESWAP_H
+#define BITCOINTALKCOIN_COMPAT_BYTESWAP_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/talkcoin-config.h>
+#include <config/bitcointalkcoin-config.h>
 #endif
 
 #include <stdint.h>
@@ -63,4 +63,4 @@ inline uint64_t bswap_64(uint64_t x)
 
 #endif // defined(MAC_OSX)
 
-#endif // TALKCOIN_COMPAT_BYTESWAP_H
+#endif // BITCOINTALKCOIN_COMPAT_BYTESWAP_H

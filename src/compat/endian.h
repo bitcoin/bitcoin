@@ -1,12 +1,12 @@
-// Copyright (c) 2014-2018 The Talkcoin Core developers
+// Copyright (c) 2014-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_COMPAT_ENDIAN_H
-#define TALKCOIN_COMPAT_ENDIAN_H
+#ifndef BITCOINTALKCOIN_COMPAT_ENDIAN_H
+#define BITCOINTALKCOIN_COMPAT_ENDIAN_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/talkcoin-config.h>
+#include <config/bitcointalkcoin-config.h>
 #endif
 
 #include <compat/byteswap.h>
@@ -22,7 +22,7 @@
 #ifndef HAVE_CONFIG_H
 // While not technically a supported configuration, defaulting to defining these
 // DECLs when we were compiled without autotools makes it easier for other build
-// systems to build things like libtalkcoinconsensus for strange targets.
+// systems to build things like libbitcointalkcoinconsensus for strange targets.
 #ifdef htobe16
 #define HAVE_DECL_HTOBE16 1
 #endif
@@ -238,4 +238,4 @@ inline uint64_t le64toh(uint64_t little_endian_64bits)
 
 #endif // WORDS_BIGENDIAN
 
-#endif // TALKCOIN_COMPAT_ENDIAN_H
+#endif // BITCOINTALKCOIN_COMPAT_ENDIAN_H
