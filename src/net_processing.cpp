@@ -3219,7 +3219,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         SecureMsgReceiveData(pfrom, strCommand, vRecv);
 
     }
-#endif
+#endif 
 
     // Ignore unknown commands for extensibility
     LogPrint(BCLog::NET, "Unknown command \"%s\" from peer=%d\n", SanitizeString(strCommand), pfrom->GetId());
@@ -3326,8 +3326,8 @@ bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& inter
         }
         else
         {
-            pfrom->fDisconnect = true;
-            return false;
+			pfrom->fDisconnect = true;
+			return false;
         }
     }
 
@@ -4128,7 +4128,7 @@ void PushGetBlocks(CNode* pnode, const CBlockIndex* pindexBegin, const uint256& 
     connman.PushMessage(pnode, msgMaker.Make(NetMsgType::GETBLOCKS, ::ChainActive().GetLocator(pindexBegin), hashEnd));
 }
 
-uint256 static GetOrphanRoot(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+uint256 static GetOrphanRoot(const uint256& hash)
 {
     std::map<uint256, COrphanBlock*>::iterator it = mapOrphanBlocks.find(hash);
     if (it == mapOrphanBlocks.end())
@@ -4144,7 +4144,7 @@ uint256 static GetOrphanRoot(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_ma
 }
 
 // ppcoin: find block wanted by given orphan block
-uint256 WantedByOrphan(const COrphanBlock* pblockOrphan) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+uint256 WantedByOrphan(const COrphanBlock* pblockOrphan)
 {
     // Work back to the first block in the orphan chain
     while (mapOrphanBlocks.count(pblockOrphan->hashPrev))
@@ -4153,7 +4153,7 @@ uint256 WantedByOrphan(const COrphanBlock* pblockOrphan) EXCLUSIVE_LOCKS_REQUIRE
 }
 
 // Remove a random orphan block (which does not have any dependent orphans).
-void static PruneOrphanBlocks() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+void static PruneOrphanBlocks()
 {
     size_t nMaxOrphanBlocksSize = gArgs.GetArg("-maxorphanblocksmib", DEFAULT_MAX_ORPHAN_BLOCKS) * ((size_t) 1 << 20);
     while (nOrphanBlocksSize > nMaxOrphanBlocksSize)
@@ -4184,10 +4184,11 @@ void static PruneOrphanBlocks() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 bool ProcessNetBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, bool fForceProcessing, bool* fNewBlock, CNode* pfrom, CConnman& connman)
 {
     {
+        LOCK(cs_main);
+
         // Check that the coinstake transaction exist in the received block
         if(pblock->IsProofOfStake() && !(pblock->vtx.size() > 1 && pblock->vtx[1]->IsCoinStake()))
         {
-			LOCK(cs_main);
             if (pfrom)
                 Misbehaving(pfrom->GetId(), 100);
             return error("ProcessNetBlock() : coinstake transaction does not exist");
@@ -4198,11 +4199,10 @@ bool ProcessNetBlock(const CChainParams& chainparams, const std::shared_ptr<cons
         CValidationState state;
         if (!ProcessNewBlockHeaders({*pblock}, state, chainparams, &pindex)) {
             if (state.IsInvalid()) {
-                MaybePunishNode(pfrom->GetId(), state, true, "invalid header received");
+				MaybePunishNode(pfrom->GetId(), state, true, "invalid header received");
             }
         }
-        
-        LOCK(cs_main);
+
         // Check for duplicate orphan block
         uint256 hash = pblock->GetHash();
         if (mapOrphanBlocks.count(hash))
@@ -4230,7 +4230,7 @@ bool ProcessNetBlock(const CChainParams& chainparams, const std::shared_ptr<cons
         }
 
         // Check for the signiture encoding
-        if (!CheckCanonicalBlockSignature(pblock.get()))
+        if (!CheckCanonicalBlockSignature(pblock.get())) 
         {
             if (pfrom)
                 Misbehaving(pfrom->GetId(), 100);
@@ -4288,9 +4288,10 @@ bool ProcessNetBlock(const CChainParams& chainparams, const std::shared_ptr<cons
     for (unsigned int i = 0; i < vWorkQueue.size(); i++)
     {
         uint256 hashPrev = vWorkQueue[i];
-
-        for (std::multimap<uint256, COrphanBlock*>::iterator mi = mapOrphanBlocksByPrev.lower_bound(hashPrev);  mi != mapOrphanBlocksByPrev.upper_bound(hashPrev);  ++mi) {
-
+        for (std::multimap<uint256, COrphanBlock*>::iterator mi = mapOrphanBlocksByPrev.lower_bound(hashPrev);
+             mi != mapOrphanBlocksByPrev.upper_bound(hashPrev);
+             ++mi)
+        {
             CBlock block;
             {
                 CDataStream ss(mi->second->vchBlock, SER_DISK, CLIENT_VERSION);
@@ -4303,12 +4304,14 @@ bool ProcessNetBlock(const CChainParams& chainparams, const std::shared_ptr<cons
             if (ProcessNewBlock(chainparams, shared_pblock, fForceProcessing, &fNewBlockOrphan))
                 vWorkQueue.push_back(mi->second->hashBlock);
 
-			mapOrphanBlocks.erase(mi->second->hashBlock);
-			setStakeSeenOrphan.erase(block.GetProofOfStake());
-			nOrphanBlocksSize -= mi->second->vchBlock.size();
-            
+            LOCK(cs_main);
+            mapOrphanBlocks.erase(mi->second->hashBlock);
+            setStakeSeenOrphan.erase(block.GetProofOfStake());
+            nOrphanBlocksSize -= mi->second->vchBlock.size();
             delete mi->second;
         }
+
+        LOCK(cs_main);
         mapOrphanBlocksByPrev.erase(hashPrev);
     }
 

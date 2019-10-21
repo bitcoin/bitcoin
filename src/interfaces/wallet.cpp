@@ -532,7 +532,7 @@ public:
     {
         return MakeHandler(m_wallet->NotifyCanGetAddressesChanged.connect(fn));
     }
-    void getScriptForMining(std::shared_ptr<CReserveScript> &script) override{
+    void getScriptForMining(std::shared_ptr<CReserveScript> &script){
 		m_wallet->GetScriptForMining(script);
 	}
 

@@ -1,7 +1,7 @@
 #ifndef BITCOINTALKCOIN_SEMIORDEREDMAP_H
 #define BITCOINTALKCOIN_SEMIORDEREDMAP_H
 
-#include <stdint.h>
+
 #include <math.h>
 
 class semiOrderedMap
