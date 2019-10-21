@@ -1,19 +1,19 @@
-// Copyright (c) 2011-2016 The Talkcoin Core developers
+// Copyright (c) 2011-2016 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_QT_TALKCOIN_H
-#define TALKCOIN_QT_TALKCOIN_H
+#ifndef BITCOINTALKCOIN_QT_BITCOINTALKCOIN_H
+#define BITCOINTALKCOIN_QT_BITCOINTALKCOIN_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/talkcoin-config.h>
+#include <config/bitcointalkcoin-config.h>
 #endif
 
 #include <QApplication>
 #include <memory>
+#include <vector>
 
-class TalkcoinGUI;
-class TalkcoinMobileGUI;
+class BitcointalkcoinGUI;
 class ClientModel;
 class NetworkStyle;
 class OptionsModel;
@@ -27,14 +27,14 @@ class Handler;
 class Node;
 } // namespace interfaces
 
-/** Class encapsulating Talkcoin Core startup and shutdown.
+/** Class encapsulating Bitcointalkcoin Core startup and shutdown.
  * Allows running startup and shutdown in a different thread from the UI thread.
  */
-class TalkcoinCore: public QObject
+class BitcointalkcoinCore: public QObject
 {
     Q_OBJECT
 public:
-    explicit TalkcoinCore(interfaces::Node& node);
+    explicit BitcointalkcoinCore(interfaces::Node& node);
 
 public Q_SLOTS:
     void initialize();
@@ -52,13 +52,13 @@ private:
     interfaces::Node& m_node;
 };
 
-/** Main Talkcoin application object */
-class TalkcoinApplication: public QApplication
+/** Main Bitcointalkcoin application object */
+class BitcointalkcoinApplication: public QApplication
 {
     Q_OBJECT
 public:
-    explicit TalkcoinApplication(interfaces::Node& node);
-    ~TalkcoinApplication();
+    explicit BitcointalkcoinApplication(interfaces::Node& node, int &argc, char **argv);
+    ~BitcointalkcoinApplication();
 
 #ifdef ENABLE_WALLET
     /// Create payment server
@@ -68,8 +68,6 @@ public:
     void parameterSetup();
     /// Create options model
     void createOptionsModel(bool resetSettings);
-    /// Create main window
-    void SetPrune(bool prune, bool force = false);
     /// Create main window
     void createWindow(const NetworkStyle *networkStyle);
     /// Create splash screen
@@ -85,7 +83,7 @@ public:
     /// Get process return value
     int getReturnValue() const { return returnValue; }
 
-    /// Get window identifier of QMainWindow (TalkcoinGUI)
+    /// Get window identifier of QMainWindow (BitcointalkcoinGUI)
     WId getMainWinId() const;
 
     /// Setup platform style
@@ -101,18 +99,14 @@ Q_SIGNALS:
     void requestedInitialize();
     void requestedShutdown();
     void splashFinished();
-    void windowShown(TalkcoinGUI* window);
+    void windowShown(BitcointalkcoinGUI* window);
 
 private:
     QThread *coreThread;
     interfaces::Node& m_node;
     OptionsModel *optionsModel;
     ClientModel *clientModel;
-#ifdef MOBILE_GUI
-    TalkcoinMobileGUI *window;
-#else
-    TalkcoinGUI *window;
-#endif
+    BitcointalkcoinGUI *window;
     QTimer *pollShutdownTimer;
 #ifdef ENABLE_WALLET
     PaymentServer* paymentServer{nullptr};
@@ -127,4 +121,4 @@ private:
 
 int GuiMain(int argc, char* argv[]);
 
-#endif // TALKCOIN_QT_TALKCOIN_H
+#endif // BITCOINTALKCOIN_QT_BITCOINTALKCOIN_H

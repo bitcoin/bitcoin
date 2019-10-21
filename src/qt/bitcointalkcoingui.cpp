@@ -1,10 +1,10 @@
-// Copyright (c) 2011-2019 The Talkcoin Core developers
+// Copyright (c) 2011-2019 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <qt/talkcoingui.h>
+#include <qt/bitcointalkcoingui.h>
 
-#include <qt/talkcoinunits.h>
+#include <qt/bitcointalkcoinunits.h>
 #include <qt/clientmodel.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
@@ -45,15 +45,14 @@
 #include <QApplication>
 #include <QComboBox>
 #include <QDateTime>
+#include <QDesktopWidget>
 #include <QDragEnterEvent>
-#include <QFile>
 #include <QListWidget>
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QMimeData>
 #include <QProgressDialog>
-#include <QScreen>
 #include <QSettings>
 #include <QShortcut>
 #include <QStackedWidget>
@@ -67,19 +66,17 @@
 #include <QWindow>
 
 
-const std::string TalkcoinGUI::DEFAULT_UIPLATFORM =
+const std::string BitcointalkcoinGUI::DEFAULT_UIPLATFORM =
 #if defined(Q_OS_MAC)
         "macosx"
 #elif defined(Q_OS_WIN)
         "windows"
-#elif defined(Q_OS_ANDROID)
-        "android"
 #else
         "other"
 #endif
         ;
 
-TalkcoinGUI::TalkcoinGUI(interfaces::Node& node, const PlatformStyle *_platformStyle, const NetworkStyle *networkStyle, QWidget *parent) :
+BitcointalkcoinGUI::BitcointalkcoinGUI(interfaces::Node& node, const PlatformStyle *_platformStyle, const NetworkStyle *networkStyle, QWidget *parent) :
     QMainWindow(parent),
     m_node(node),
     trayIconMenu{new QMenu()},
@@ -89,21 +86,8 @@ TalkcoinGUI::TalkcoinGUI(interfaces::Node& node, const PlatformStyle *_platformS
     QSettings settings;
     if (!restoreGeometry(settings.value("MainWindowGeometry").toByteArray())) {
         // Restore failed (perhaps missing setting), center the window
-        move(QGuiApplication::primaryScreen()->availableGeometry().center() - frameGeometry().center());
+        move(QApplication::desktop()->availableGeometry().center() - frameGeometry().center());
     }
-    //setFixedSize(400, 550);
-    setWindowFlags(Qt::FramelessWindowHint);
-    // load stylesheet
-
-    if (settings.value("theme", "").toString() == "transparent"){
-        setAttribute( Qt::WA_TranslucentBackground);
-        setAttribute(Qt::WA_NoSystemBackground);
-    }
-
-    QFile qss(GUIUtil::defaultTheme());
-    qss.open(QFile::ReadOnly);
-    this->setStyleSheet(qss.readAll());
-    qss.close();
 
 #ifdef ENABLE_WALLET
     enableWallet = WalletModel::isWalletEnabled();
@@ -112,11 +96,7 @@ TalkcoinGUI::TalkcoinGUI(interfaces::Node& node, const PlatformStyle *_platformS
     setWindowIcon(m_network_style->getTrayAndWindowIcon());
     updateWindowTitle();
 
-#if defined(Q_OS_ANDROID)
-
-#else
     rpcConsole = new RPCConsole(node, _platformStyle, nullptr);
-#endif
     helpMessageDialog = new HelpMessageDialog(node, this, false);
 #ifdef ENABLE_WALLET
     if(enableWallet)
@@ -130,11 +110,7 @@ TalkcoinGUI::TalkcoinGUI(interfaces::Node& node, const PlatformStyle *_platformS
         /* When compiled without wallet or -disablewallet is provided,
          * the central widget is the rpc console.
          */
-#if defined(Q_OS_ANDROID)
-
-#else
-    setCentralWidget(rpcConsole);
-#endif
+        setCentralWidget(rpcConsole);
         Q_EMIT consoleShown(rpcConsole);
     }
 
@@ -171,22 +147,29 @@ TalkcoinGUI::TalkcoinGUI(interfaces::Node& node, const PlatformStyle *_platformS
     frameBlocksLayout->setContentsMargins(3,0,3,0);
     frameBlocksLayout->setSpacing(3);
     unitDisplayControl = new UnitDisplayStatusBarControl(platformStyle);
+
+    QLabel *minerLabel = new QLabel("Miner Threads: 0");
+	QSlider *miner = new QSlider(Qt::Horizontal, this);
+	int cores = GetNumCores();
+	miner->setRange(0, cores);
+	QString minermax = QString::number(cores);
+	QLabel *maxminer = new QLabel(minermax);	
+
     labelWalletEncryptionIcon = new QLabel();
     labelWalletHDStatusIcon = new QLabel();
-    labelWalletSPVStatusIcon = new GUIUtil::ClickableLabel();
     labelProxyIcon = new GUIUtil::ClickableLabel();
     connectionsControl = new GUIUtil::ClickableLabel();
     labelBlocksIcon = new GUIUtil::ClickableLabel();
     if(enableWallet)
     {
+        frameBlocksLayout->addStretch();
         frameBlocksLayout->addWidget(unitDisplayControl);
+        frameBlocksLayout->addStretch();
         frameBlocksLayout->addWidget(labelWalletEncryptionIcon);
         frameBlocksLayout->addWidget(labelWalletHDStatusIcon);
-        frameBlocksLayout->addWidget(labelWalletSPVStatusIcon);
-        connect(labelWalletSPVStatusIcon, SIGNAL(clicked(QPoint)), this, SLOT(toggleSPVMode()));
     }
     frameBlocksLayout->addWidget(labelProxyIcon);
-
+#ifdef ENABLE_PROOF_OF_STAKE
     labelStakingIcon = new QLabel();
     frameBlocksLayout->addStretch();
     frameBlocksLayout->addWidget(labelStakingIcon);
@@ -198,16 +181,12 @@ TalkcoinGUI::TalkcoinGUI(interfaces::Node& node, const PlatformStyle *_platformS
 
         updateStakingIcon();
     }
-
+#endif
+    frameBlocksLayout->addStretch();
     frameBlocksLayout->addWidget(connectionsControl);
+    frameBlocksLayout->addStretch();
     frameBlocksLayout->addWidget(labelBlocksIcon);
-
-    // Progress bar and label for blocks download
-    labelWalletEncryptionIcon->setObjectName("labelEncryptionIcon");
-    labelBlocksIcon->setObjectName("labelBlocksIcon");
-
-//    QToolBar *toolbar = addToolBar(tr("toolbar"));
-//    addToolBar(Qt::BottomToolBarArea, toolbar);
+    frameBlocksLayout->addStretch();
 
     // Progress bar and label for blocks download
     progressBarLabel = new QLabel();
@@ -227,20 +206,10 @@ TalkcoinGUI::TalkcoinGUI(interfaces::Node& node, const PlatformStyle *_platformS
 
     statusBar()->addWidget(progressBarLabel);
     statusBar()->addWidget(progressBar);
-
-//    QtMaterialIconButton *quitButton = new QtMaterialIconButton(QtMaterialTheme::icon("close", ":/icons/quit"));
-//    quitButton->setIconSize(QSize(30, 30));
-//    quitButton->setFixedWidth(42);
-
-
-    QPushButton *quitButton = new QPushButton();
-    quitButton->setIcon(platformStyle->SingleColorIcon(":/icons/quit"));
-    quitButton->setToolTip("Exit");
-    quitButton->setObjectName("quitButton");
-    connect(quitButton, SIGNAL(clicked()), qApp, SLOT(quit()));
-
+    statusBar()->addWidget(minerLabel);
+    statusBar()->addWidget(miner);
+    statusBar()->addWidget(maxminer);
     statusBar()->addPermanentWidget(frameBlocks);
-    //statusBar()->addPermanentWidget(quitButton);
 
     // Install event filter to be able to catch status tip events (QEvent::StatusTip)
     this->installEventFilter(this);
@@ -261,18 +230,20 @@ TalkcoinGUI::TalkcoinGUI(interfaces::Node& node, const PlatformStyle *_platformS
     modalOverlay = new ModalOverlay(this->centralWidget());
 #ifdef ENABLE_WALLET
     if(enableWallet) {
-        connect(walletFrame, &WalletFrame::requestedSyncWarningInfo, this, &TalkcoinGUI::showModalOverlay);
-        connect(labelBlocksIcon, &GUIUtil::ClickableLabel::clicked, this, &TalkcoinGUI::showModalOverlay);
-        connect(progressBar, &GUIUtil::ClickableProgressBar::clicked, this, &TalkcoinGUI::showModalOverlay);
+        connect(walletFrame, &WalletFrame::requestedSyncWarningInfo, this, &BitcointalkcoinGUI::showModalOverlay);
+        connect(labelBlocksIcon, &GUIUtil::ClickableLabel::clicked, this, &BitcointalkcoinGUI::showModalOverlay);
+        connect(progressBar, &GUIUtil::ClickableProgressBar::clicked, this, &BitcointalkcoinGUI::showModalOverlay);
     }
 #endif
 
 #ifdef Q_OS_MAC
     m_app_nap_inhibitor = new CAppNapInhibitor;
 #endif
+
+    connect(miner, SIGNAL(valueChanged(int)), this, SLOT(engageDisengageMining(int)));
 }
 
-TalkcoinGUI::~TalkcoinGUI()
+BitcointalkcoinGUI::~BitcointalkcoinGUI()
 {
     // Unsubscribe from notifications from core
     unsubscribeFromCoreSignals();
@@ -286,72 +257,44 @@ TalkcoinGUI::~TalkcoinGUI()
     delete appMenuBar;
     MacDockIconHandler::cleanup();
 #endif
-#if defined(Q_OS_ANDROID)
 
-#else
     delete rpcConsole;
-#endif
-
 }
 
-void TalkcoinGUI::createActions()
+void BitcointalkcoinGUI::createActions()
 {
     QActionGroup *tabGroup = new QActionGroup(this);
 
-#if defined(Q_OS_ANDROID)
-    overviewAction = new QAction(platformStyle->SingleColorIcon(":/icons/overview"), nullptr, this);
-#else
     overviewAction = new QAction(platformStyle->SingleColorIcon(":/icons/overview"), tr("&Overview"), this);
-#endif
     overviewAction->setStatusTip(tr("Show general overview of wallet"));
     overviewAction->setToolTip(overviewAction->statusTip());
     overviewAction->setCheckable(true);
     overviewAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_1));
     tabGroup->addAction(overviewAction);
 
-#if defined(Q_OS_ANDROID)
-    sendCoinsAction = new QAction(platformStyle->SingleColorIcon(":/icons/send"), nullptr, this);
-#else
     sendCoinsAction = new QAction(platformStyle->SingleColorIcon(":/icons/send"), tr("&Send"), this);
-#endif
-    sendCoinsAction->setStatusTip(tr("Send coins to a Talkcoin address"));
+    sendCoinsAction->setStatusTip(tr("Send coins to a Bitcointalkcoin address"));
     sendCoinsAction->setToolTip(sendCoinsAction->statusTip());
     sendCoinsAction->setCheckable(true);
     sendCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_2));
     tabGroup->addAction(sendCoinsAction);
 
-#if defined(Q_OS_ANDROID)
-    sendCoinsMenuAction = new QAction(platformStyle->TextColorIcon(":/icons/send"), nullptr, this);
-#else
     sendCoinsMenuAction = new QAction(platformStyle->TextColorIcon(":/icons/send"), sendCoinsAction->text(), this);
-#endif
     sendCoinsMenuAction->setStatusTip(sendCoinsAction->statusTip());
     sendCoinsMenuAction->setToolTip(sendCoinsMenuAction->statusTip());
 
-#if defined(Q_OS_ANDROID)
-    receiveCoinsAction = new QAction(platformStyle->SingleColorIcon(":/icons/receiving_addresses"), nullptr, this);
-#else
     receiveCoinsAction = new QAction(platformStyle->SingleColorIcon(":/icons/receiving_addresses"), tr("&Receive"), this);
-#endif
-    receiveCoinsAction->setStatusTip(tr("Request payments (generates QR codes and talkcoin: URIs)"));
+    receiveCoinsAction->setStatusTip(tr("Request payments (generates QR codes and bitcointalkcoin: URIs)"));
     receiveCoinsAction->setToolTip(receiveCoinsAction->statusTip());
     receiveCoinsAction->setCheckable(true);
     receiveCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_3));
     tabGroup->addAction(receiveCoinsAction);
 
-#if defined(Q_OS_ANDROID)
-    receiveCoinsMenuAction = new QAction(platformStyle->TextColorIcon(":/icons/receiving_addresses"), nullptr, this);
-#else
     receiveCoinsMenuAction = new QAction(platformStyle->TextColorIcon(":/icons/receiving_addresses"), receiveCoinsAction->text(), this);
-#endif
     receiveCoinsMenuAction->setStatusTip(receiveCoinsAction->statusTip());
     receiveCoinsMenuAction->setToolTip(receiveCoinsMenuAction->statusTip());
 
-#if defined(Q_OS_ANDROID)
-    historyAction = new QAction(platformStyle->SingleColorIcon(":/icons/history"), nullptr, this);
-#else
     historyAction = new QAction(platformStyle->SingleColorIcon(":/icons/history"), tr("&Transactions"), this);
-#endif
     historyAction->setStatusTip(tr("Browse transaction history"));
     historyAction->setToolTip(historyAction->statusTip());
     historyAction->setCheckable(true);
@@ -359,21 +302,13 @@ void TalkcoinGUI::createActions()
     tabGroup->addAction(historyAction);
 
 #ifdef ENABLE_SECURE_MESSAGING
-#if defined(Q_OS_ANDROID)
-    sendMessagesAction = new QAction(platformStyle->SingleColorIcon(":/icons/chat"), nullptr, this);
-#else
     sendMessagesAction = new QAction(platformStyle->SingleColorIcon(":/icons/null"), tr("Send &Message"), this);
-#endif
     sendMessagesAction->setCheckable(true);
     sendMessagesAction->setStatusTip(tr("Send Messages"));
     sendMessagesAction->setToolTip(sendMessagesAction->statusTip());
     tabGroup->addAction(sendMessagesAction);
 
-#if defined(Q_OS_ANDROID)
-    messageAction = new QAction(platformStyle->SingleColorIcon(":/icons/messages"), nullptr, this);
-#else
     messageAction = new QAction(platformStyle->SingleColorIcon(":/icons/null"), tr("Mess&ages"), this);
-#endif
     messageAction->setStatusTip(tr("View Messages"));
     messageAction->setToolTip(messageAction->statusTip());
     messageAction->setCheckable(true);
@@ -384,22 +319,22 @@ void TalkcoinGUI::createActions()
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
     // can be triggered from the tray menu, and need to show the GUI to be useful.
     connect(overviewAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
-    connect(overviewAction, &QAction::triggered, this, &TalkcoinGUI::gotoOverviewPage);
+    connect(overviewAction, &QAction::triggered, this, &BitcointalkcoinGUI::gotoOverviewPage);
     connect(sendCoinsAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
     connect(sendCoinsAction, &QAction::triggered, [this]{ gotoSendCoinsPage(); });
     connect(sendCoinsMenuAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
     connect(sendCoinsMenuAction, &QAction::triggered, [this]{ gotoSendCoinsPage(); });
     connect(receiveCoinsAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
-    connect(receiveCoinsAction, &QAction::triggered, this, &TalkcoinGUI::gotoReceiveCoinsPage);
+    connect(receiveCoinsAction, &QAction::triggered, this, &BitcointalkcoinGUI::gotoReceiveCoinsPage);
     connect(receiveCoinsMenuAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
-    connect(receiveCoinsMenuAction, &QAction::triggered, this, &TalkcoinGUI::gotoReceiveCoinsPage);
+    connect(receiveCoinsMenuAction, &QAction::triggered, this, &BitcointalkcoinGUI::gotoReceiveCoinsPage);
     connect(historyAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
-    connect(historyAction, &QAction::triggered, this, &TalkcoinGUI::gotoHistoryPage);
+    connect(historyAction, &QAction::triggered, this, &BitcointalkcoinGUI::gotoHistoryPage);
 #ifdef ENABLE_SECURE_MESSAGING
     connect(sendMessagesAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
-    connect(sendMessagesAction, &QAction::triggered, this, &TalkcoinGUI::gotoSendMessagesPage);
+    connect(sendMessagesAction, &QAction::triggered, this, &BitcointalkcoinGUI::gotoSendMessagesPage);
     connect(messageAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
-    connect(messageAction, &QAction::triggered, this, &TalkcoinGUI::gotoMessagesPage);
+    connect(messageAction, &QAction::triggered, this, &BitcointalkcoinGUI::gotoMessagesPage);
 #endif
 #endif // ENABLE_WALLET
 
@@ -407,15 +342,15 @@ void TalkcoinGUI::createActions()
     quitAction->setStatusTip(tr("Quit application"));
     quitAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
     quitAction->setMenuRole(QAction::QuitRole);
-    aboutAction = new QAction(platformStyle->TextColorIcon(":/icons/about"), tr("&About %1").arg(tr("Talkcoin")), this);
-    aboutAction->setStatusTip(tr("Show information about %1").arg(tr("Talkcoin")));
+    aboutAction = new QAction(platformStyle->TextColorIcon(":/icons/about"), tr("&About %1").arg(tr(PACKAGE_NAME)), this);
+    aboutAction->setStatusTip(tr("Show information about %1").arg(tr(PACKAGE_NAME)));
     aboutAction->setMenuRole(QAction::AboutRole);
     aboutAction->setEnabled(false);
     aboutQtAction = new QAction(platformStyle->TextColorIcon(":/icons/about_qt"), tr("About &Qt"), this);
     aboutQtAction->setStatusTip(tr("Show information about Qt"));
     aboutQtAction->setMenuRole(QAction::AboutQtRole);
     optionsAction = new QAction(platformStyle->TextColorIcon(":/icons/options"), tr("&Options..."), this);
-    optionsAction->setStatusTip(tr("Modify configuration options for %1").arg(tr("Talkcoin")));
+    optionsAction->setStatusTip(tr("Modify configuration options for %1").arg(tr(PACKAGE_NAME)));
     optionsAction->setMenuRole(QAction::PreferencesRole);
     optionsAction->setEnabled(false);
     toggleHideAction = new QAction(platformStyle->TextColorIcon(":/icons/about"), tr("&Show / Hide"), this);
@@ -428,10 +363,6 @@ void TalkcoinGUI::createActions()
     backupWalletAction->setStatusTip(tr("Backup wallet to another location"));
     changePassphraseAction = new QAction(platformStyle->TextColorIcon(":/icons/key"), tr("&Change Passphrase..."), this);
     changePassphraseAction->setStatusTip(tr("Change the passphrase used for wallet encryption"));
-    signMessageAction = new QAction(platformStyle->TextColorIcon(":/icons/edit"), tr("Sign &message..."), this);
-    signMessageAction->setStatusTip(tr("Sign messages with your Talkcoin addresses to prove you own them"));
-    verifyMessageAction = new QAction(platformStyle->TextColorIcon(":/icons/verify"), tr("&Verify message..."), this);
-    verifyMessageAction->setStatusTip(tr("Verify messages to ensure they were signed with specified Talkcoin addresses"));
 
     unlockWalletAction = new QAction(platformStyle->TextColorIcon(":/icons/lock_open"), tr("&Unlock Wallet..."), this);
     unlockWalletAction->setToolTip(tr("Unlock wallet"));
@@ -439,15 +370,15 @@ void TalkcoinGUI::createActions()
     lockWalletAction = new QAction(platformStyle->TextColorIcon(":/icons/lock_closed"), tr("&Lock Wallet"), this);
     lockWalletAction->setToolTip(tr("Lock wallet"));
 
+    signMessageAction = new QAction(platformStyle->TextColorIcon(":/icons/edit"), tr("Sign &message..."), this);
+    signMessageAction->setStatusTip(tr("Sign messages with your Bitcointalkcoin addresses to prove you own them"));
+    verifyMessageAction = new QAction(platformStyle->TextColorIcon(":/icons/verify"), tr("&Verify message..."), this);
+    verifyMessageAction->setStatusTip(tr("Verify messages to ensure they were signed with specified Bitcointalkcoin addresses"));
 
-#if defined(Q_OS_ANDROID)
-    openRPCConsoleAction = new QAction(platformStyle->TextColorIcon(":/icons/debugwindow"), tr(""), this);
-#else
     openRPCConsoleAction = new QAction(platformStyle->TextColorIcon(":/icons/debugwindow"), tr("&Debug window"), this);
-#endif
     openRPCConsoleAction->setStatusTip(tr("Open debugging and diagnostic console"));
     // initially disable the debug window menu item
-    //openRPCConsoleAction->setEnabled(false);
+    openRPCConsoleAction->setEnabled(false);
     openRPCConsoleAction->setObjectName("openRPCConsoleAction");
 
     usedSendingAddressesAction = new QAction(platformStyle->TextColorIcon(":/icons/address-book"), tr("&Sending addresses"), this);
@@ -456,7 +387,7 @@ void TalkcoinGUI::createActions()
     usedReceivingAddressesAction->setStatusTip(tr("Show the list of used receiving addresses and labels"));
 
     openAction = new QAction(platformStyle->TextColorIcon(":/icons/open"), tr("Open &URI..."), this);
-    openAction->setStatusTip(tr("Open a talkcoin: URI or payment request"));
+    openAction->setStatusTip(tr("Open a bitcointalkcoin: URI or payment request"));
 
     m_open_wallet_action = new QAction(tr("Open Wallet"), this);
     m_open_wallet_action->setEnabled(false);
@@ -468,21 +399,17 @@ void TalkcoinGUI::createActions()
 
     showHelpMessageAction = new QAction(platformStyle->TextColorIcon(":/icons/info"), tr("&Command-line options"), this);
     showHelpMessageAction->setMenuRole(QAction::NoRole);
-    showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible Talkcoin command-line options").arg(tr("Talkcoin")));
+    showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible Bitcointalkcoin command-line options").arg(tr(PACKAGE_NAME)));
 
     connect(quitAction, &QAction::triggered, qApp, QApplication::quit);
-    connect(aboutAction, &QAction::triggered, this, &TalkcoinGUI::aboutClicked);
+    connect(aboutAction, &QAction::triggered, this, &BitcointalkcoinGUI::aboutClicked);
     connect(aboutQtAction, &QAction::triggered, qApp, QApplication::aboutQt);
-    connect(optionsAction, &QAction::triggered, this, &TalkcoinGUI::optionsClicked);
-    connect(toggleHideAction, &QAction::triggered, this, &TalkcoinGUI::toggleHidden);
-    connect(showHelpMessageAction, &QAction::triggered, this, &TalkcoinGUI::showHelpMessageClicked);
-    connect(openRPCConsoleAction, &QAction::triggered, this, &TalkcoinGUI::showDebugWindow);
+    connect(optionsAction, &QAction::triggered, this, &BitcointalkcoinGUI::optionsClicked);
+    connect(toggleHideAction, &QAction::triggered, this, &BitcointalkcoinGUI::toggleHidden);
+    connect(showHelpMessageAction, &QAction::triggered, this, &BitcointalkcoinGUI::showHelpMessageClicked);
+    connect(openRPCConsoleAction, &QAction::triggered, this, &BitcointalkcoinGUI::showDebugWindow);
     // prevents an open debug window from becoming stuck/unusable on client shutdown
-#if defined(Q_OS_ANDROID)
-
-#else
     connect(quitAction, &QAction::triggered, rpcConsole, &QWidget::hide);
-#endif
 
 #ifdef ENABLE_WALLET
     if(walletFrame)
@@ -490,23 +417,26 @@ void TalkcoinGUI::createActions()
         connect(encryptWalletAction, &QAction::triggered, walletFrame, &WalletFrame::encryptWallet);
         connect(backupWalletAction, &QAction::triggered, walletFrame, &WalletFrame::backupWallet);
         connect(changePassphraseAction, &QAction::triggered, walletFrame, &WalletFrame::changePassphrase);
+#ifdef ENABLE_PROOF_OF_STAKE
         connect(unlockWalletAction, &QAction::triggered, walletFrame, &WalletFrame::unlockWallet);
         connect(lockWalletAction, &QAction::triggered, walletFrame, &WalletFrame::lockWallet);
+#endif
         connect(signMessageAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
         connect(signMessageAction, &QAction::triggered, [this]{ gotoSignMessageTab(); });
         connect(verifyMessageAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
         connect(verifyMessageAction, &QAction::triggered, [this]{ gotoVerifyMessageTab(); });
         connect(usedSendingAddressesAction, &QAction::triggered, walletFrame, &WalletFrame::usedSendingAddresses);
         connect(usedReceivingAddressesAction, &QAction::triggered, walletFrame, &WalletFrame::usedReceivingAddresses);
-        connect(openAction, &QAction::triggered, this, &TalkcoinGUI::openClicked);
+        connect(openAction, &QAction::triggered, this, &BitcointalkcoinGUI::openClicked);
         connect(m_open_wallet_menu, &QMenu::aboutToShow, [this] {
             m_open_wallet_menu->clear();
-            for (const std::pair<const std::string, bool>& i : m_wallet_controller->listWalletDir()) {
-                const std::string& path = i.first;
+            std::vector<std::string> available_wallets = m_wallet_controller->getWalletsAvailableToOpen();
+            std::vector<std::string> wallets = m_node.listWalletDir();
+            for (const auto& path : wallets) {
                 QString name = path.empty() ? QString("["+tr("default wallet")+"]") : QString::fromStdString(path);
                 QAction* action = m_open_wallet_menu->addAction(name);
 
-                if (i.second) {
+                if (std::find(available_wallets.begin(), available_wallets.end(), path) == available_wallets.end()) {
                     // This wallet is already loaded
                     action->setEnabled(false);
                     continue;
@@ -532,14 +462,14 @@ void TalkcoinGUI::createActions()
                         connect(this, &QObject::destroyed, &box, &QDialog::accept);
                         box.exec();
                     });
-                    connect(activity, &OpenWalletActivity::opened, this, &TalkcoinGUI::setCurrentWallet);
+                    connect(activity, &OpenWalletActivity::opened, this, &BitcointalkcoinGUI::setCurrentWallet);
                     connect(activity, &OpenWalletActivity::finished, activity, &QObject::deleteLater);
                     connect(activity, &OpenWalletActivity::finished, dialog, &QObject::deleteLater);
                     bool invoked = QMetaObject::invokeMethod(activity, "open");
                     assert(invoked);
                 });
             }
-            if (m_open_wallet_menu->isEmpty()) {
+            if (wallets.empty()) {
                 QAction* action = m_open_wallet_menu->addAction(tr("No wallets available"));
                 action->setEnabled(false);
             }
@@ -550,11 +480,11 @@ void TalkcoinGUI::createActions()
     }
 #endif // ENABLE_WALLET
 
-    connect(new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_C), this), &QShortcut::activated, this, &TalkcoinGUI::showDebugWindowActivateConsole);
-    connect(new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_D), this), &QShortcut::activated, this, &TalkcoinGUI::showDebugWindow);
+    connect(new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_C), this), &QShortcut::activated, this, &BitcointalkcoinGUI::showDebugWindowActivateConsole);
+    connect(new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_D), this), &QShortcut::activated, this, &BitcointalkcoinGUI::showDebugWindow);
 }
 
-void TalkcoinGUI::createMenuBar()
+void BitcointalkcoinGUI::createMenuBar()
 {
 #ifdef Q_OS_MAC
     // Create a decoupled menu bar on Mac which stays even if the window is closed
@@ -578,6 +508,8 @@ void TalkcoinGUI::createMenuBar()
         file->addSeparator();
         file->addAction(usedSendingAddressesAction);
         file->addAction(usedReceivingAddressesAction);
+
+        file->addSeparator();
     }
     file->addAction(quitAction);
 
@@ -586,8 +518,10 @@ void TalkcoinGUI::createMenuBar()
     {
         settings->addAction(encryptWalletAction);
         settings->addAction(changePassphraseAction);
+#ifdef ENABLE_PROOF_OF_STAKE
         settings->addAction(unlockWalletAction);
         settings->addAction(lockWalletAction);
+#endif
         settings->addSeparator();
     }
     settings->addAction(optionsAction);
@@ -641,9 +575,6 @@ void TalkcoinGUI::createMenuBar()
     }
 
     window_menu->addSeparator();
-#if defined(Q_OS_ANDROID)
-
-#else
     for (RPCConsole::TabTypes tab_type : rpcConsole->tabs()) {
         QAction* tab_action = window_menu->addAction(rpcConsole->tabTitle(tab_type));
         connect(tab_action, &QAction::triggered, [this, tab_type] {
@@ -651,8 +582,6 @@ void TalkcoinGUI::createMenuBar()
             showDebugWindow();
         });
     }
-#endif
-
 
     QMenu *help = appMenuBar->addMenu(tr("&Help"));
     help->addAction(showHelpMessageAction);
@@ -661,35 +590,49 @@ void TalkcoinGUI::createMenuBar()
     help->addAction(aboutQtAction);
 }
 
-void TalkcoinGUI::createToolBars()
+void BitcointalkcoinGUI::engageDisengageMining(int cores)
 {
-    QWidget *spacer = new QWidget();
-    spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    QToolBar *toolbar = addToolBar(tr("Tabs toolbar"));
+    WalletView * const walletView = walletFrame->currentWalletView();
+    WalletModel * const walletModel = walletView->getWalletModel();
+    std::shared_ptr<CReserveScript> coinbase_script;
+    walletModel->getScriptForMining(coinbase_script);	
+	
+    isMiningEngaged = false;
+    if (cores > 0)
+        isMiningEngaged = true;
+
+    //pwallet->GetScriptForMining(coinbase_script);
+    GenerateBitcointalkcoins(isMiningEngaged, cores, coinbase_script);
+
+}
+
+void BitcointalkcoinGUI::createToolBars()
+{
     if(walletFrame)
     {
-        Logo = new QPushButton(QIcon(":icons/talkcoin"),"",nullptr);
-        Logo->setObjectName("Logo");
-        connect(Logo, SIGNAL(clicked()), this, SLOT(gotoOverviewPage()));
+        QToolBar *toolbar = addToolBar(tr("Tabs toolbar"));
         appToolBar = toolbar;
         toolbar->setContextMenuPolicy(Qt::PreventContextMenu);
         toolbar->setMovable(false);
         toolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-        //toolbar->addWidget(Logo);
         toolbar->addAction(overviewAction);
         toolbar->addAction(sendCoinsAction);
         toolbar->addAction(receiveCoinsAction);
         toolbar->addAction(historyAction);
 #ifdef ENABLE_SECURE_MESSAGING
-        toolbar->addAction(messageAction);
         toolbar->addAction(sendMessagesAction);
+        toolbar->addAction(messageAction);
 #endif
         overviewAction->setChecked(true);
 
 #ifdef ENABLE_WALLET
+        QWidget *spacer = new QWidget();
+        spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        toolbar->addWidget(spacer);
+
         m_wallet_selector = new QComboBox();
         m_wallet_selector->setSizeAdjustPolicy(QComboBox::AdjustToContents);
-        connect(m_wallet_selector, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &TalkcoinGUI::setCurrentWalletBySelectorIndex);
+        connect(m_wallet_selector, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &BitcointalkcoinGUI::setCurrentWalletBySelectorIndex);
 
         m_wallet_selector_label = new QLabel();
         m_wallet_selector_label->setText(tr("Wallet:") + " ");
@@ -702,13 +645,9 @@ void TalkcoinGUI::createToolBars()
         m_wallet_selector_action->setVisible(false);
 #endif
     }
-#if defined(Q_OS_ANDROID)
-        toolbar->addAction(openRPCConsoleAction);
-#endif
-    toolbar->setIconSize(QSize(30,30));
 }
 
-void TalkcoinGUI::setClientModel(ClientModel *_clientModel)
+void BitcointalkcoinGUI::setClientModel(ClientModel *_clientModel)
 {
     this->clientModel = _clientModel;
     if(_clientModel)
@@ -719,12 +658,12 @@ void TalkcoinGUI::setClientModel(ClientModel *_clientModel)
 
         // Keep up to date with client
         updateNetworkState();
-        connect(_clientModel, &ClientModel::numConnectionsChanged, this, &TalkcoinGUI::setNumConnections);
-        connect(_clientModel, &ClientModel::networkActiveChanged, this, &TalkcoinGUI::setNetworkActive);
+        connect(_clientModel, &ClientModel::numConnectionsChanged, this, &BitcointalkcoinGUI::setNumConnections);
+        connect(_clientModel, &ClientModel::networkActiveChanged, this, &BitcointalkcoinGUI::setNetworkActive);
 
         modalOverlay->setKnownBestHeight(_clientModel->getHeaderTipHeight(), QDateTime::fromTime_t(_clientModel->getHeaderTipTime()));
         setNumBlocks(m_node.getNumBlocks(), QDateTime::fromTime_t(m_node.getLastBlockTime()), m_node.getVerificationProgress(), false);
-        connect(_clientModel, &ClientModel::numBlocksChanged, this, &TalkcoinGUI::setNumBlocks);
+        connect(_clientModel, &ClientModel::numBlocksChanged, this, &BitcointalkcoinGUI::setNumBlocks);
 
         // Receive and report messages from client model
         connect(_clientModel, &ClientModel::message, [this](const QString &title, const QString &message, unsigned int style){
@@ -732,23 +671,9 @@ void TalkcoinGUI::setClientModel(ClientModel *_clientModel)
         });
 
         // Show progress dialog
-        connect(_clientModel, &ClientModel::showProgress, this, &TalkcoinGUI::showProgress);
+        connect(_clientModel, &ClientModel::showProgress, this, &BitcointalkcoinGUI::showProgress);
 
-        // Show auxiliary block request (SPV) progress
-        connect(_clientModel, SIGNAL(auxiliaryBlockRequestProgressChanged(QDateTime,int,int,int)), this, SLOT(setAuxiliaryBlockRequestProgress(QDateTime,int,int,int)));
-
-        // If we already have a auxiliary block request, update the progress immediately
-        int64_t created;
-        size_t requestedBlocks, loadedBlocks, processedBlocks;
-        if (_clientModel->hasAuxiliaryBlockRequest(&created, &requestedBlocks, &loadedBlocks, &processedBlocks))
-        {
-            setAuxiliaryBlockRequestProgress(QDateTime::fromTime_t(created), requestedBlocks, loadedBlocks, processedBlocks);
-        }
-#if defined(Q_OS_ANDROID)
-
-#else
         rpcConsole->setClientModel(_clientModel);
-#endif
 
         updateProxyIcon();
 
@@ -763,7 +688,7 @@ void TalkcoinGUI::setClientModel(ClientModel *_clientModel)
         OptionsModel* optionsModel = _clientModel->getOptionsModel();
         if (optionsModel && trayIcon) {
             // be aware of the tray icon disable state change reported by the OptionsModel object.
-            connect(optionsModel, &OptionsModel::hideTrayIconChanged, this, &TalkcoinGUI::setTrayIconVisible);
+            connect(optionsModel, &OptionsModel::hideTrayIconChanged, this, &BitcointalkcoinGUI::setTrayIconVisible);
 
             // initialize the disable state of the tray icon with the current value in the model.
             setTrayIconVisible(optionsModel->getHideTrayIcon());
@@ -777,12 +702,7 @@ void TalkcoinGUI::setClientModel(ClientModel *_clientModel)
             trayIconMenu->clear();
         }
         // Propagate cleared model to child objects
-#if defined(Q_OS_ANDROID)
-
-#else
         rpcConsole->setClientModel(nullptr);
-#endif
-
 #ifdef ENABLE_WALLET
         if (walletFrame)
         {
@@ -794,7 +714,7 @@ void TalkcoinGUI::setClientModel(ClientModel *_clientModel)
 }
 
 #ifdef ENABLE_WALLET
-void TalkcoinGUI::setWalletController(WalletController* wallet_controller)
+void BitcointalkcoinGUI::setWalletController(WalletController* wallet_controller)
 {
     assert(!m_wallet_controller);
     assert(wallet_controller);
@@ -804,25 +724,20 @@ void TalkcoinGUI::setWalletController(WalletController* wallet_controller)
     m_open_wallet_action->setEnabled(true);
     m_open_wallet_action->setMenu(m_open_wallet_menu);
 
-    connect(wallet_controller, &WalletController::walletAdded, this, &TalkcoinGUI::addWallet);
-    connect(wallet_controller, &WalletController::walletRemoved, this, &TalkcoinGUI::removeWallet);
+    connect(wallet_controller, &WalletController::walletAdded, this, &BitcointalkcoinGUI::addWallet);
+    connect(wallet_controller, &WalletController::walletRemoved, this, &BitcointalkcoinGUI::removeWallet);
 
-    for (WalletModel* wallet_model : m_wallet_controller->getOpenWallets()) {
+    for (WalletModel* wallet_model : m_wallet_controller->getWallets()) {
         addWallet(wallet_model);
     }
 }
 
-void TalkcoinGUI::addWallet(WalletModel* walletModel)
+void BitcointalkcoinGUI::addWallet(WalletModel* walletModel)
 {
     if (!walletFrame) return;
     const QString display_name = walletModel->getDisplayName();
     setWalletActionsEnabled(true);
-#if defined(Q_OS_ANDROID)
-
-#else
     rpcConsole->addWallet(walletModel);
-#endif
-
     walletFrame->addWallet(walletModel);
     m_wallet_selector->addItem(display_name, QVariant::fromValue(walletModel));
     if (m_wallet_selector->count() == 2) {
@@ -831,7 +746,7 @@ void TalkcoinGUI::addWallet(WalletModel* walletModel)
     }
 }
 
-void TalkcoinGUI::removeWallet(WalletModel* walletModel)
+void BitcointalkcoinGUI::removeWallet(WalletModel* walletModel)
 {
     if (!walletFrame) return;
     int index = m_wallet_selector->findData(QVariant::fromValue(walletModel));
@@ -842,16 +757,12 @@ void TalkcoinGUI::removeWallet(WalletModel* walletModel)
         m_wallet_selector_label_action->setVisible(false);
         m_wallet_selector_action->setVisible(false);
     }
-#if defined(Q_OS_ANDROID)
-    
-#else
     rpcConsole->removeWallet(walletModel);
-#endif 
     walletFrame->removeWallet(walletModel);
     updateWindowTitle();
 }
 
-void TalkcoinGUI::setCurrentWallet(WalletModel* wallet_model)
+void BitcointalkcoinGUI::setCurrentWallet(WalletModel* wallet_model)
 {
     if (!walletFrame) return;
     walletFrame->setCurrentWallet(wallet_model);
@@ -864,13 +775,13 @@ void TalkcoinGUI::setCurrentWallet(WalletModel* wallet_model)
     updateWindowTitle();
 }
 
-void TalkcoinGUI::setCurrentWalletBySelectorIndex(int index)
+void BitcointalkcoinGUI::setCurrentWalletBySelectorIndex(int index)
 {
     WalletModel* wallet_model = m_wallet_selector->itemData(index).value<WalletModel*>();
     if (wallet_model) setCurrentWallet(wallet_model);
 }
 
-void TalkcoinGUI::removeAllWallets()
+void BitcointalkcoinGUI::removeAllWallets()
 {
     if(!walletFrame)
         return;
@@ -879,7 +790,7 @@ void TalkcoinGUI::removeAllWallets()
 }
 #endif // ENABLE_WALLET
 
-void TalkcoinGUI::setWalletActionsEnabled(bool enabled)
+void BitcointalkcoinGUI::setWalletActionsEnabled(bool enabled)
 {
     overviewAction->setEnabled(enabled);
     sendCoinsAction->setEnabled(enabled);
@@ -904,20 +815,20 @@ void TalkcoinGUI::setWalletActionsEnabled(bool enabled)
     m_close_wallet_action->setEnabled(enabled);
 }
 
-void TalkcoinGUI::createTrayIcon()
+void BitcointalkcoinGUI::createTrayIcon()
 {
     assert(QSystemTrayIcon::isSystemTrayAvailable());
 
 #ifndef Q_OS_MAC
     if (QSystemTrayIcon::isSystemTrayAvailable()) {
         trayIcon = new QSystemTrayIcon(m_network_style->getTrayAndWindowIcon(), this);
-        QString toolTip = tr("%1 client").arg("Talkcoin") + " " + m_network_style->getTitleAddText();
+        QString toolTip = tr("%1 client").arg(tr(PACKAGE_NAME)) + " " + m_network_style->getTitleAddText();
         trayIcon->setToolTip(toolTip);
     }
 #endif
 }
 
-void TalkcoinGUI::createTrayIconMenu()
+void BitcointalkcoinGUI::createTrayIconMenu()
 {
 #ifndef Q_OS_MAC
     // return if trayIcon is unset (only on non-macOSes)
@@ -925,11 +836,11 @@ void TalkcoinGUI::createTrayIconMenu()
         return;
 
     trayIcon->setContextMenu(trayIconMenu.get());
-    connect(trayIcon, &QSystemTrayIcon::activated, this, &TalkcoinGUI::trayIconActivated);
+    connect(trayIcon, &QSystemTrayIcon::activated, this, &BitcointalkcoinGUI::trayIconActivated);
 #else
     // Note: On macOS, the Dock icon is used to provide the tray's functionality.
     MacDockIconHandler *dockIconHandler = MacDockIconHandler::instance();
-    connect(dockIconHandler, &MacDockIconHandler::dockIconClicked, this, &TalkcoinGUI::macosDockIconActivated);
+    connect(dockIconHandler, &MacDockIconHandler::dockIconClicked, this, &BitcointalkcoinGUI::macosDockIconActivated);
     trayIconMenu->setAsDockMenu();
 #endif
 
@@ -956,7 +867,7 @@ void TalkcoinGUI::createTrayIconMenu()
 }
 
 #ifndef Q_OS_MAC
-void TalkcoinGUI::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
+void BitcointalkcoinGUI::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
 {
     if(reason == QSystemTrayIcon::Trigger)
     {
@@ -965,19 +876,19 @@ void TalkcoinGUI::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
     }
 }
 #else
-void TalkcoinGUI::macosDockIconActivated()
+void BitcointalkcoinGUI::macosDockIconActivated()
 {
     show();
     activateWindow();
 }
 #endif
 
-void TalkcoinGUI::optionsClicked()
+void BitcointalkcoinGUI::optionsClicked()
 {
     openOptionsDialogWithTab(OptionsDialog::TAB_MAIN);
 }
 
-void TalkcoinGUI::aboutClicked()
+void BitcointalkcoinGUI::aboutClicked()
 {
     if(!clientModel)
         return;
@@ -986,34 +897,25 @@ void TalkcoinGUI::aboutClicked()
     dlg.exec();
 }
 
-void TalkcoinGUI::showDebugWindow()
+void BitcointalkcoinGUI::showDebugWindow()
 {
-#if defined(Q_OS_ANDROID)
-    openRPCConsoleAction->setChecked(true);
-    if (walletFrame) walletFrame->gotoRpcPage();
-#else
     GUIUtil::bringToFront(rpcConsole);
     Q_EMIT consoleShown(rpcConsole);
-#endif
 }
 
-void TalkcoinGUI::showDebugWindowActivateConsole()
+void BitcointalkcoinGUI::showDebugWindowActivateConsole()
 {
-#if defined(Q_OS_ANDROID)
-
-#else
     rpcConsole->setTabFocus(RPCConsole::TAB_CONSOLE);
     showDebugWindow();
-#endif
 }
 
-void TalkcoinGUI::showHelpMessageClicked()
+void BitcointalkcoinGUI::showHelpMessageClicked()
 {
     helpMessageDialog->show();
 }
 
 #ifdef ENABLE_WALLET
-void TalkcoinGUI::openClicked()
+void BitcointalkcoinGUI::openClicked()
 {
     OpenURIDialog dlg(this);
     if(dlg.exec())
@@ -1022,55 +924,55 @@ void TalkcoinGUI::openClicked()
     }
 }
 #ifdef ENABLE_SECURE_MESSAGING
-void TalkcoinGUI::gotoSendMessagesPage()
+void BitcointalkcoinGUI::gotoSendMessagesPage()
 {
     sendMessagesAction->setChecked(true);
     if (walletFrame) walletFrame->gotoSendMessagesPage();
 }
 
-void TalkcoinGUI::gotoMessagesPage()
+void BitcointalkcoinGUI::gotoMessagesPage()
 {
     messageAction->setChecked(true);
     if (walletFrame) walletFrame->gotoMessagesPage();
 }
 #endif
 
-void TalkcoinGUI::gotoOverviewPage()
+void BitcointalkcoinGUI::gotoOverviewPage()
 {
     overviewAction->setChecked(true);
     if (walletFrame) walletFrame->gotoOverviewPage();
 }
 
-void TalkcoinGUI::gotoHistoryPage()
+void BitcointalkcoinGUI::gotoHistoryPage()
 {
     historyAction->setChecked(true);
     if (walletFrame) walletFrame->gotoHistoryPage();
 }
 
-void TalkcoinGUI::gotoReceiveCoinsPage()
+void BitcointalkcoinGUI::gotoReceiveCoinsPage()
 {
     receiveCoinsAction->setChecked(true);
     if (walletFrame) walletFrame->gotoReceiveCoinsPage();
 }
 
-void TalkcoinGUI::gotoSendCoinsPage(QString addr)
+void BitcointalkcoinGUI::gotoSendCoinsPage(QString addr)
 {
     sendCoinsAction->setChecked(true);
     if (walletFrame) walletFrame->gotoSendCoinsPage(addr);
 }
 
-void TalkcoinGUI::gotoSignMessageTab(QString addr)
+void BitcointalkcoinGUI::gotoSignMessageTab(QString addr)
 {
     if (walletFrame) walletFrame->gotoSignMessageTab(addr);
 }
 
-void TalkcoinGUI::gotoVerifyMessageTab(QString addr)
+void BitcointalkcoinGUI::gotoVerifyMessageTab(QString addr)
 {
     if (walletFrame) walletFrame->gotoVerifyMessageTab(addr);
 }
 #endif // ENABLE_WALLET
 
-void TalkcoinGUI::updateNetworkState()
+void BitcointalkcoinGUI::updateNetworkState()
 {
     int count = clientModel->getNumConnections();
     QString icon;
@@ -1086,7 +988,7 @@ void TalkcoinGUI::updateNetworkState()
     QString tooltip;
 
     if (m_node.getNetworkActive()) {
-        tooltip = tr("%n active connection(s) to Talkcoin network", "", count) + QString(".<br>") + tr("Click to disable network activity.");
+        tooltip = tr("%n active connection(s) to Bitcointalkcoin network", "", count) + QString(".<br>") + tr("Click to disable network activity.");
     } else {
         tooltip = tr("Network activity disabled.") + QString("<br>") + tr("Click to enable network activity again.");
         icon = ":/icons/network_disabled";
@@ -1099,17 +1001,17 @@ void TalkcoinGUI::updateNetworkState()
     connectionsControl->setPixmap(platformStyle->SingleColorIcon(icon).pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
 }
 
-void TalkcoinGUI::setNumConnections(int count)
+void BitcointalkcoinGUI::setNumConnections(int count)
 {
     updateNetworkState();
 }
 
-void TalkcoinGUI::setNetworkActive(bool networkActive)
+void BitcointalkcoinGUI::setNetworkActive(bool networkActive)
 {
     updateNetworkState();
 }
 
-void TalkcoinGUI::updateHeadersSyncProgressLabel()
+void BitcointalkcoinGUI::updateHeadersSyncProgressLabel()
 {
     int64_t headersTipTime = clientModel->getHeaderTipTime();
     int headersTipHeight = clientModel->getHeaderTipHeight();
@@ -1118,7 +1020,7 @@ void TalkcoinGUI::updateHeadersSyncProgressLabel()
         progressBarLabel->setText(tr("Syncing Headers (%1%)...").arg(QString::number(100.0 / (headersTipHeight+estHeadersLeft)*headersTipHeight, 'f', 1)));
 }
 
-void TalkcoinGUI::openOptionsDialogWithTab(OptionsDialog::Tab tab)
+void BitcointalkcoinGUI::openOptionsDialogWithTab(OptionsDialog::Tab tab)
 {
     if (!clientModel || !clientModel->getOptionsModel())
         return;
@@ -1129,7 +1031,7 @@ void TalkcoinGUI::openOptionsDialogWithTab(OptionsDialog::Tab tab)
     dlg.exec();
 }
 
-void TalkcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, bool header)
+void BitcointalkcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, bool header)
 {
 // Disabling macOS App Nap on initial sync, disk and reindex operations.
 #ifdef Q_OS_MAC
@@ -1145,13 +1047,11 @@ void TalkcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVe
     }
     if (!clientModel)
         return;
-    if (clientModel->hasAuxiliaryBlockRequest())
-        return;
 
     // Prevent orphan statusbar messages (e.g. hover Quit in main menu, wait until chain-sync starts -> garbled text)
+    statusBar()->clearMessage();
 
     // Acquire current block source
-//    bool headerSyncInProgress = false;
     enum BlockSource blockSource = clientModel->getBlockSource();
     switch (blockSource) {
         case BlockSource::NETWORK:
@@ -1176,7 +1076,7 @@ void TalkcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVe
             if (header) {
                 return;
             }
-            progressBarLabel->setText(tr("Connecting ..."));
+            progressBarLabel->setText(tr("Connecting to peers..."));
             break;
     }
 
@@ -1227,8 +1127,7 @@ void TalkcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVe
         if(walletFrame)
         {
             walletFrame->showOutOfSyncWarning(true);
-            if (!walletFrame->getSPVMode())
-                modalOverlay->showHide();
+            modalOverlay->showHide();
         }
 #endif // ENABLE_WALLET
 
@@ -1246,86 +1145,49 @@ void TalkcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVe
     progressBar->setToolTip(tooltip);
 }
 
-void TalkcoinGUI::setAuxiliaryBlockRequestProgress(const QDateTime& blockDate, int requestesBlocks, int loadedBlocks, int processedBlocks)
+void BitcointalkcoinGUI::message(const QString &title, const QString &message, unsigned int style, bool *ret)
 {
-    // at this stage, always display the progress bar and it's label
-    progressBar->setVisible(true);
-    progressBarLabel->setVisible(true);
-
-    // if we are not yet connected to some peers, show different text
-    if (clientModel->getNumConnections() == 0)
-    {
-        progressBarLabel->setText(tr("Connecting to peers..."));
-        return;
-    }
-
-    QString tooltip = tr("Scanning %1 blocks...").arg(QString::number(requestesBlocks));
-    tooltip += QString("<br>");
-    tooltip += tr("%1 blocks loaded.").arg(QString::number(loadedBlocks));
-    tooltip += QString("<br>");
-    tooltip += tr("%1 blocks processed.").arg(QString::number(processedBlocks));
-    tooltip = QString("<nobr>") + tooltip + QString("</nobr>");
-
-    double nABRprogress = 1.0/requestesBlocks*loadedBlocks;
-    progressBar->setFormat(tr("behind"));
-    progressBar->setMaximum(1000000000);
-    progressBar->setValue(nABRprogress  * 1000000000.0 + 0.5);
-    progressBarLabel->setText("Download & scanning blocks (SPV)...");
-    progressBar->setToolTip(tooltip);
-    progressBarLabel->setToolTip(tooltip);
-    if (nABRprogress == 1)
-    {
-        // don't show progress if request has been completed
-        progressBar->setVisible(false);
-        progressBarLabel->setVisible(false);
-    }
-}
-
-void TalkcoinGUI::message(const QString& title, QString message, unsigned int style, bool* ret)
-{
-    // Default title. On macOS, the window title is ignored (as required by the macOS Guidelines).
-    QString strTitle{"Talkcoin"};
+    QString strTitle = tr("Bitcointalkcoin"); // default title
     // Default to information icon
     int nMBoxIcon = QMessageBox::Information;
     int nNotifyIcon = Notificator::Information;
 
-    bool prefix = !(style & CClientUIInterface::MSG_NOPREFIX);
-    style &= ~CClientUIInterface::MSG_NOPREFIX;
-
     QString msgType;
+
+    // Prefer supplied title over style based title
     if (!title.isEmpty()) {
         msgType = title;
-    } else {
+    }
+    else {
         switch (style) {
         case CClientUIInterface::MSG_ERROR:
             msgType = tr("Error");
-            if (prefix) message = tr("Error: %1").arg(message);
             break;
         case CClientUIInterface::MSG_WARNING:
             msgType = tr("Warning");
-            if (prefix) message = tr("Warning: %1").arg(message);
             break;
         case CClientUIInterface::MSG_INFORMATION:
             msgType = tr("Information");
-            // No need to prepend the prefix here.
             break;
         default:
             break;
         }
     }
-
-    if (!msgType.isEmpty()) {
+    // Append title to "Bitcointalkcoin - "
+    if (!msgType.isEmpty())
         strTitle += " - " + msgType;
-    }
 
+    // Check for error/warning icon
     if (style & CClientUIInterface::ICON_ERROR) {
         nMBoxIcon = QMessageBox::Critical;
         nNotifyIcon = Notificator::Critical;
-    } else if (style & CClientUIInterface::ICON_WARNING) {
+    }
+    else if (style & CClientUIInterface::ICON_WARNING) {
         nMBoxIcon = QMessageBox::Warning;
         nNotifyIcon = Notificator::Warning;
     }
 
+    // Display message
     if (style & CClientUIInterface::MODAL) {
         // Check for buttons, use OK as default, if none was supplied
         QMessageBox::StandardButton buttons;
@@ -1338,12 +1200,12 @@ void TalkcoinGUI::message(const QString& title, QString message, unsigned int st
         int r = mBox.exec();
         if (ret != nullptr)
             *ret = r == QMessageBox::Ok;
-    } else {
-        notificator->notify(static_cast<Notificator::Class>(nNotifyIcon), strTitle, message);
     }
+    else
+        notificator->notify(static_cast<Notificator::Class>(nNotifyIcon), strTitle, message);
 }
 
-void TalkcoinGUI::changeEvent(QEvent *e)
+void BitcointalkcoinGUI::changeEvent(QEvent *e)
 {
     QMainWindow::changeEvent(e);
 #ifndef Q_OS_MAC // Ignored on Mac
@@ -1354,12 +1216,12 @@ void TalkcoinGUI::changeEvent(QEvent *e)
             QWindowStateChangeEvent *wsevt = static_cast<QWindowStateChangeEvent*>(e);
             if(!(wsevt->oldState() & Qt::WindowMinimized) && isMinimized())
             {
-                QTimer::singleShot(0, this, &TalkcoinGUI::hide);
+                QTimer::singleShot(0, this, &BitcointalkcoinGUI::hide);
                 e->ignore();
             }
             else if((wsevt->oldState() & Qt::WindowMinimized) && !isMinimized())
             {
-                QTimer::singleShot(0, this, &TalkcoinGUI::show);
+                QTimer::singleShot(0, this, &BitcointalkcoinGUI::show);
                 e->ignore();
             }
         }
@@ -1367,7 +1229,7 @@ void TalkcoinGUI::changeEvent(QEvent *e)
 #endif
 }
 
-void TalkcoinGUI::closeEvent(QCloseEvent *event)
+void BitcointalkcoinGUI::closeEvent(QCloseEvent *event)
 {
     if (isMiningEngaged)
         engageDisengageMining(0);
@@ -1377,11 +1239,8 @@ void TalkcoinGUI::closeEvent(QCloseEvent *event)
         if(!clientModel->getOptionsModel()->getMinimizeOnClose())
         {
             // close rpcConsole in case it was open to make some space for the shutdown window
-#if defined(Q_OS_ANDROID)
-
-#else
             rpcConsole->close();
-#endif
+
             QApplication::quit();
         }
         else
@@ -1395,7 +1254,7 @@ void TalkcoinGUI::closeEvent(QCloseEvent *event)
 #endif
 }
 
-void TalkcoinGUI::showEvent(QShowEvent *event)
+void BitcointalkcoinGUI::showEvent(QShowEvent *event)
 {
     // enable the debug window when the main window shows up
     openRPCConsoleAction->setEnabled(true);
@@ -1404,11 +1263,11 @@ void TalkcoinGUI::showEvent(QShowEvent *event)
 }
 
 #ifdef ENABLE_WALLET
-void TalkcoinGUI::incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label, const QString& walletName)
+void BitcointalkcoinGUI::incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label, const QString& walletName)
 {
     // On new transaction, make an info balloon
     QString msg = tr("Date: %1\n").arg(date) +
-                  tr("Amount: %1\n").arg(TalkcoinUnits::formatWithUnit(unit, amount, true));
+                  tr("Amount: %1\n").arg(BitcointalkcoinUnits::formatWithUnit(unit, amount, true));
     if (m_node.getWallets().size() > 1 && !walletName.isEmpty()) {
         msg += tr("Wallet: %1\n").arg(walletName);
     }
@@ -1421,7 +1280,7 @@ void TalkcoinGUI::incomingTransaction(const QString& date, int unit, const CAmou
              msg, CClientUIInterface::MSG_INFORMATION);
 }
 #ifdef ENABLE_SECURE_MESSAGING
-void TalkcoinGUI::incomingMessage(const QString& sent_datetime, QString from_address, QString to_address, QString message, int type)
+void BitcointalkcoinGUI::incomingMessage(const QString& sent_datetime, QString from_address, QString to_address, QString message, int type)
 {
     // Prevent balloon-spam when initial block download is in progress
 
@@ -1442,14 +1301,14 @@ void TalkcoinGUI::incomingMessage(const QString& sent_datetime, QString from_add
 #endif
 #endif // ENABLE_WALLET
 
-void TalkcoinGUI::dragEnterEvent(QDragEnterEvent *event)
+void BitcointalkcoinGUI::dragEnterEvent(QDragEnterEvent *event)
 {
     // Accept only URIs
     if(event->mimeData()->hasUrls())
         event->acceptProposedAction();
 }
 
-void TalkcoinGUI::dropEvent(QDropEvent *event)
+void BitcointalkcoinGUI::dropEvent(QDropEvent *event)
 {
     if(event->mimeData()->hasUrls())
     {
@@ -1461,7 +1320,7 @@ void TalkcoinGUI::dropEvent(QDropEvent *event)
     event->acceptProposedAction();
 }
 
-bool TalkcoinGUI::eventFilter(QObject *object, QEvent *event)
+bool BitcointalkcoinGUI::eventFilter(QObject *object, QEvent *event)
 {
     // Catch status tip events
     if (event->type() == QEvent::StatusTip)
@@ -1474,7 +1333,7 @@ bool TalkcoinGUI::eventFilter(QObject *object, QEvent *event)
 }
 
 #ifdef ENABLE_WALLET
-bool TalkcoinGUI::handlePaymentRequest(const SendCoinsRecipient& recipient)
+bool BitcointalkcoinGUI::handlePaymentRequest(const SendCoinsRecipient& recipient)
 {
     // URI has to be valid
     if (walletFrame && walletFrame->handlePaymentRequest(recipient))
@@ -1486,7 +1345,7 @@ bool TalkcoinGUI::handlePaymentRequest(const SendCoinsRecipient& recipient)
     return false;
 }
 
-void TalkcoinGUI::setHDStatus(bool privkeyDisabled, int hdEnabled)
+void BitcointalkcoinGUI::setHDStatus(bool privkeyDisabled, int hdEnabled)
 {
     labelWalletHDStatusIcon->setPixmap(platformStyle->SingleColorIcon(privkeyDisabled ? ":/icons/eye" : hdEnabled ? ":/icons/hd_enabled" : ":/icons/hd_disabled").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
     labelWalletHDStatusIcon->setToolTip(privkeyDisabled ? tr("Private key <b>disabled</b>") : hdEnabled ? tr("HD key generation is <b>enabled</b>") : tr("HD key generation is <b>disabled</b>"));
@@ -1495,15 +1354,7 @@ void TalkcoinGUI::setHDStatus(bool privkeyDisabled, int hdEnabled)
     labelWalletHDStatusIcon->setEnabled(hdEnabled);
 }
 
-void TalkcoinGUI::setSPVStatus(int spvEnabled)
-{
-    labelWalletSPVStatusIcon->setPixmap(platformStyle->SingleColorIcon(spvEnabled ? ":/icons/spv_enabled" : ":/icons/spv_disabled").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
-    labelWalletSPVStatusIcon->setToolTip(spvEnabled ? tr("Simple Payment Verification is <b>enabled</b>") : tr("Simple Payment Verification is <b>disabled</b>"));
-    if(spvEnabled)
-        modalOverlay->showHide(true, false);
-}
-
-void TalkcoinGUI::setEncryptionStatus(int status)
+void BitcointalkcoinGUI::setEncryptionStatus(int status)
 {
     WalletView * const walletView = walletFrame->currentWalletView();
     WalletModel * const walletModel = walletView->getWalletModel();
@@ -1557,7 +1408,7 @@ void TalkcoinGUI::setEncryptionStatus(int status)
     }
 }
 
-void TalkcoinGUI::updateWalletStatus()
+void BitcointalkcoinGUI::updateWalletStatus()
 {
     if (!walletFrame) {
         return;
@@ -1569,18 +1420,10 @@ void TalkcoinGUI::updateWalletStatus()
     WalletModel * const walletModel = walletView->getWalletModel();
     setEncryptionStatus(walletModel->getEncryptionStatus());
     setHDStatus(walletModel->privateKeysDisabled(), walletModel->wallet().hdEnabled());
-    setSPVStatus(walletModel->spvEnabled());
 }
-
-void TalkcoinGUI::toggleSPVMode()
-{
-    if (walletFrame)
-        walletFrame->setSPVMode(!walletFrame->getSPVMode());
-}
-
 #endif // ENABLE_WALLET
 
-void TalkcoinGUI::updateProxyIcon()
+void BitcointalkcoinGUI::updateProxyIcon()
 {
     std::string ip_port;
     bool proxy_enabled = clientModel->getProxyInfo(ip_port);
@@ -1598,9 +1441,9 @@ void TalkcoinGUI::updateProxyIcon()
     }
 }
 
-void TalkcoinGUI::updateWindowTitle()
+void BitcointalkcoinGUI::updateWindowTitle()
 {
-    QString window_title = "Talkcoin";
+    QString window_title = tr(PACKAGE_NAME);
 #ifdef ENABLE_WALLET
     if (walletFrame) {
         WalletModel* const wallet_model = walletFrame->currentWalletModel();
@@ -1615,7 +1458,7 @@ void TalkcoinGUI::updateWindowTitle()
     setWindowTitle(window_title);
 }
 
-void TalkcoinGUI::showNormalIfMinimized(bool fToggleHidden)
+void BitcointalkcoinGUI::showNormalIfMinimized(bool fToggleHidden)
 {
     if(!clientModel)
         return;
@@ -1627,12 +1470,13 @@ void TalkcoinGUI::showNormalIfMinimized(bool fToggleHidden)
     }
 }
 
-void TalkcoinGUI::toggleHidden()
+void BitcointalkcoinGUI::toggleHidden()
 {
     showNormalIfMinimized(true);
 }
 
-void TalkcoinGUI::updateStakingIcon()
+#ifdef ENABLE_PROOF_OF_STAKE
+void BitcointalkcoinGUI::updateStakingIcon()
 {
     if(m_node.shutdownRequested())
         return;
@@ -1695,24 +1539,21 @@ void TalkcoinGUI::updateStakingIcon()
             labelStakingIcon->setToolTip(tr("Not staking"));
     }
 }
+#endif
 
-void TalkcoinGUI::detectShutdown()
+void BitcointalkcoinGUI::detectShutdown()
 {
     if (m_node.shutdownRequested())
     {
         if (isMiningEngaged)
             engageDisengageMining(0);
-#if defined(Q_OS_ANDROID)
-
-#else
         if(rpcConsole)
             rpcConsole->hide();
-#endif
         qApp->quit();
     }
 }
 
-void TalkcoinGUI::showProgress(const QString &title, int nProgress)
+void BitcointalkcoinGUI::showProgress(const QString &title, int nProgress)
 {
     if (nProgress == 0) {
         progressDialog = new QProgressDialog(title, QString(), 0, 100);
@@ -1732,7 +1573,7 @@ void TalkcoinGUI::showProgress(const QString &title, int nProgress)
     }
 }
 
-void TalkcoinGUI::setTrayIconVisible(bool fHideTrayIcon)
+void BitcointalkcoinGUI::setTrayIconVisible(bool fHideTrayIcon)
 {
     if (trayIcon)
     {
@@ -1740,13 +1581,13 @@ void TalkcoinGUI::setTrayIconVisible(bool fHideTrayIcon)
     }
 }
 
-void TalkcoinGUI::showModalOverlay()
+void BitcointalkcoinGUI::showModalOverlay()
 {
     if (modalOverlay && (progressBar->isVisible() || modalOverlay->isLayerVisible()))
         modalOverlay->toggleVisibility();
 }
 
-static bool ThreadSafeMessageBox(TalkcoinGUI* gui, const std::string& message, const std::string& caption, unsigned int style)
+static bool ThreadSafeMessageBox(BitcointalkcoinGUI* gui, const std::string& message, const std::string& caption, unsigned int style)
 {
     bool modal = (style & CClientUIInterface::MODAL);
     // The SECURE flag has no effect in the Qt GUI.
@@ -1754,55 +1595,27 @@ static bool ThreadSafeMessageBox(TalkcoinGUI* gui, const std::string& message, c
     style &= ~CClientUIInterface::SECURE;
     bool ret = false;
     // In case of modal message, use blocking connection to wait for user to click a button
-    bool invoked = QMetaObject::invokeMethod(gui, "message",
+    QMetaObject::invokeMethod(gui, "message",
                                modal ? GUIUtil::blockingGUIThreadConnection() : Qt::QueuedConnection,
                                Q_ARG(QString, QString::fromStdString(caption)),
                                Q_ARG(QString, QString::fromStdString(message)),
                                Q_ARG(unsigned int, style),
                                Q_ARG(bool*, &ret));
-    assert(invoked);
     return ret;
 }
 
-void TalkcoinGUI::subscribeToCoreSignals()
+void BitcointalkcoinGUI::subscribeToCoreSignals()
 {
     // Connect signals to client
     m_handler_message_box = m_node.handleMessageBox(std::bind(ThreadSafeMessageBox, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
     m_handler_question = m_node.handleQuestion(std::bind(ThreadSafeMessageBox, this, std::placeholders::_1, std::placeholders::_3, std::placeholders::_4));
 }
 
-void TalkcoinGUI::unsubscribeFromCoreSignals()
+void BitcointalkcoinGUI::unsubscribeFromCoreSignals()
 {
     // Disconnect signals from client
     m_handler_message_box->disconnect();
     m_handler_question->disconnect();
-}
-/*
-void TalkcoinGUI::mousePressEvent(QMouseEvent *event)
-{
-    m_nMouseClick_X_Coordinate = event->x();
-    m_nMouseClick_Y_Coordinate = event->y();
-}
-
-void TalkcoinGUI::mouseMoveEvent(QMouseEvent *event)
-{
-    move(event->globalX() - m_nMouseClick_X_Coordinate, event->globalY() - m_nMouseClick_Y_Coordinate);
-}
-*/
-void TalkcoinGUI::engageDisengageMining(int cores)
-{
-    WalletView * const walletView = walletFrame->currentWalletView();
-    WalletModel * const walletModel = walletView->getWalletModel();
-    std::shared_ptr<CTxDestination> coinbase_script;
-    walletModel->getScriptForMining(coinbase_script);
-
-    isMiningEngaged = false;
-    if (cores > 0)
-        isMiningEngaged = true;
-
-    //pwallet->GetScriptForMining(coinbase_script);
-    GenerateTalkcoins(isMiningEngaged, cores, coinbase_script);
-
 }
 
 UnitDisplayStatusBarControl::UnitDisplayStatusBarControl(const PlatformStyle *platformStyle) :
@@ -1811,15 +1624,15 @@ UnitDisplayStatusBarControl::UnitDisplayStatusBarControl(const PlatformStyle *pl
 {
     createContextMenu();
     setToolTip(tr("Unit to show amounts in. Click to select another unit."));
-    QList<TalkcoinUnits::Unit> units = TalkcoinUnits::availableUnits();
-//    QList<TalkcoinUnits::Unit> units = TalkcoinUnits::availableUnits();
-//    int max_width = 0;
-    //for (const TalkcoinUnits::Unit unit : units)
-    //{
-    //    max_width = qMax(max_width, fm.width(TalkcoinUnits::longName(unit)));
-    //}
-    //setMinimumSize(max_width, 0);
-    setAlignment(Qt::AlignVCenter);
+    QList<BitcointalkcoinUnits::Unit> units = BitcointalkcoinUnits::availableUnits();
+    int max_width = 0;
+    const QFontMetrics fm(font());
+    for (const BitcointalkcoinUnits::Unit unit : units)
+    {
+        max_width = qMax(max_width, fm.width(BitcointalkcoinUnits::longName(unit)));
+    }
+    setMinimumSize(max_width, 0);
+    setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     setStyleSheet(QString("QLabel { color : %1 }").arg(platformStyle->SingleColor().name()));
 }
 
@@ -1833,9 +1646,9 @@ void UnitDisplayStatusBarControl::mousePressEvent(QMouseEvent *event)
 void UnitDisplayStatusBarControl::createContextMenu()
 {
     menu = new QMenu(this);
-    for (const TalkcoinUnits::Unit u : TalkcoinUnits::availableUnits())
+    for (const BitcointalkcoinUnits::Unit u : BitcointalkcoinUnits::availableUnits())
     {
-        QAction *menuAction = new QAction(QString(TalkcoinUnits::longName(u)), this);
+        QAction *menuAction = new QAction(QString(BitcointalkcoinUnits::longName(u)), this);
         menuAction->setData(QVariant(u));
         menu->addAction(menuAction);
     }
@@ -1860,7 +1673,7 @@ void UnitDisplayStatusBarControl::setOptionsModel(OptionsModel *_optionsModel)
 /** When Display Units are changed on OptionsModel it will refresh the display text of the control on the status bar */
 void UnitDisplayStatusBarControl::updateDisplayUnit(int newUnits)
 {
-    setText(TalkcoinUnits::longName(newUnits));
+    setText(BitcointalkcoinUnits::longName(newUnits));
 }
 
 /** Shows context menu with Display Unit options by the mouse coordinates */
@@ -1878,7 +1691,7 @@ void UnitDisplayStatusBarControl::onMenuSelection(QAction* action)
         optionsModel->setDisplayUnit(action->data());
     }
 }
-#ifndef OS_ANDROID
+
 void BitcointalkcoinGUI::mousePressEvent(QMouseEvent *event) {
     m_nMouseClick_X_Coordinate = event->x();
     m_nMouseClick_Y_Coordinate = event->y();
@@ -1887,4 +1700,3 @@ void BitcointalkcoinGUI::mousePressEvent(QMouseEvent *event) {
 void BitcointalkcoinGUI::mouseMoveEvent(QMouseEvent *event) {
     move(event->globalX() - m_nMouseClick_X_Coordinate, event->globalY() - m_nMouseClick_Y_Coordinate);
 }
-#endif
