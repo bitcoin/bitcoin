@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Talkcoin Core developers
+// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_VALIDATIONINTERFACE_H
-#define TALKCOIN_VALIDATIONINTERFACE_H
+#ifndef BITCOINTALKCOIN_VALIDATIONINTERFACE_H
+#define BITCOINTALKCOIN_VALIDATIONINTERFACE_H
 
 #include <primitives/transaction.h> // CTransaction(Ref)
 #include <sync.h>
@@ -16,6 +16,7 @@ extern CCriticalSection cs_main;
 class CBlock;
 class CBlockIndex;
 struct CBlockLocator;
+class CBlockIndex;
 class CConnman;
 class CValidationInterface;
 class CValidationState;
@@ -143,10 +144,6 @@ protected:
      * Notifies listeners that a block which builds directly on our current tip
      * has been received and connected to the headers tree, though not validated yet */
     virtual void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& block) {};
-    /**
-     * Notifies listeners of that a new priorit block request is ready to process
-     */
-    virtual void ProcessPriorityRequest(const std::shared_ptr<const CBlock> &block, const CBlockIndex *pindex) {};
     friend void ::RegisterValidationInterface(CValidationInterface*);
     friend void ::UnregisterValidationInterface(CValidationInterface*);
     friend void ::UnregisterAllValidationInterfaces();
@@ -186,9 +183,8 @@ public:
     void ChainStateFlushed(const CBlockLocator &);
     void BlockChecked(const CBlock&, const CValidationState&);
     void NewPoWValidBlock(const CBlockIndex *, const std::shared_ptr<const CBlock>&);
-    void ProcessPriorityRequest(const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex);
 };
 
 CMainSignals& GetMainSignals();
 
-#endif // TALKCOIN_VALIDATIONINTERFACE_H
+#endif // BITCOINTALKCOIN_VALIDATIONINTERFACE_H

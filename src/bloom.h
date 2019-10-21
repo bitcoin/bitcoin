@@ -1,9 +1,9 @@
-// Copyright (c) 2012-2018 The Talkcoin Core developers
+// Copyright (c) 2012-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_BLOOM_H
-#define TALKCOIN_BLOOM_H
+#ifndef BITCOINTALKCOIN_BLOOM_H
+#define BITCOINTALKCOIN_BLOOM_H
 
 #include <serialize.h>
 
@@ -136,4 +136,4 @@ private:
     int nHashFuncs;
 };
 
-#endif // TALKCOIN_BLOOM_H
+#endif // BITCOINTALKCOIN_BLOOM_H

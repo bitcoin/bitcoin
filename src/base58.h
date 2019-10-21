@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Talkcoin Core developers
+// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,8 +11,8 @@
  * - E-mail usually won't line-break if there's no punctuation to break at.
  * - Double-clicking selects the whole string as one word if it's all alphanumeric.
  */
-#ifndef TALKCOIN_BASE58_H
-#define TALKCOIN_BASE58_H
+#ifndef BITCOINTALKCOIN_BASE58_H
+#define BITCOINTALKCOIN_BASE58_H
 
 #include <attributes.h>
 
@@ -60,4 +60,4 @@ bool DecodeBase58Check(const char* psz, std::vector<unsigned char>& vchRet);
  */
 NODISCARD bool DecodeBase58Check(const std::string& str, std::vector<unsigned char>& vchRet);
 
-#endif // TALKCOIN_BASE58_H
+#endif // BITCOINTALKCOIN_BASE58_H

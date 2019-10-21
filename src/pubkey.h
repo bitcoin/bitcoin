@@ -1,11 +1,11 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Talkcoin Core developers
+// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
 // Copyright (c) 2017 The Zcash developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_PUBKEY_H
-#define TALKCOIN_PUBKEY_H
+#ifndef BITCOINTALKCOIN_PUBKEY_H
+#define BITCOINTALKCOIN_PUBKEY_H
 
 #include <hash.h>
 #include <serialize.h>
@@ -267,4 +267,4 @@ public:
     ~ECCVerifyHandle();
 };
 
-#endif // TALKCOIN_PUBKEY_H
+#endif // BITCOINTALKCOIN_PUBKEY_H

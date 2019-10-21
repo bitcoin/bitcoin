@@ -1,17 +1,16 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Talkcoin Core developers
+// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_RANDOM_H
-#define TALKCOIN_RANDOM_H
+#ifndef BITCOINTALKCOIN_RANDOM_H
+#define BITCOINTALKCOIN_RANDOM_H
 
 #include <crypto/chacha20.h>
 #include <crypto/common.h>
 #include <uint256.h>
 
-#include <chrono> // For std::chrono::microseconds
-#include <cstdint>
+#include <stdint.h>
 #include <limits>
 
 /**
@@ -70,7 +69,6 @@
  */
 void GetRandBytes(unsigned char* buf, int num) noexcept;
 uint64_t GetRand(uint64_t nMax) noexcept;
-std::chrono::microseconds GetRandMicros(std::chrono::microseconds duration_max) noexcept;
 int GetRandInt(int nMax) noexcept;
 uint256 GetRandHash() noexcept;
 
@@ -241,4 +239,4 @@ bool Random_SanityCheck();
  */
 void RandomInit();
 
-#endif // TALKCOIN_RANDOM_H
+#endif // BITCOINTALKCOIN_RANDOM_H

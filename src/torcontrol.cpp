@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2018 The Talkcoin Core developers
+// Copyright (c) 2015-2018 The Bitcointalkcoin Core developers
 // Copyright (c) 2017 The Zcash developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -402,7 +402,7 @@ static bool WriteBinaryFile(const fs::path &filename, const std::string &data)
     return true;
 }
 
-/****** Talkcoin specific TorController implementation ********/
+/****** Bitcointalkcoin specific TorController implementation ********/
 
 /** Controller that connects to Tor control socket, authenticate, then create
  * and maintain an ephemeral hidden service.
@@ -759,9 +759,7 @@ void InterruptTorControl()
 {
     if (gBase) {
         LogPrintf("tor: Thread interrupt\n");
-        event_base_once(gBase, -1, EV_TIMEOUT, [](evutil_socket_t, short, void*) {
-            event_base_loopbreak(gBase);
-        }, nullptr, nullptr);
+        event_base_loopbreak(gBase);
     }
 }
 

@@ -1,12 +1,12 @@
-// Copyright (c) 2015-2018 The Talkcoin Core developers
+// Copyright (c) 2015-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 /**
  * Functionality for communicating with Tor.
  */
-#ifndef TALKCOIN_TORCONTROL_H
-#define TALKCOIN_TORCONTROL_H
+#ifndef BITCOINTALKCOIN_TORCONTROL_H
+#define BITCOINTALKCOIN_TORCONTROL_H
 
 #include <scheduler.h>
 
@@ -17,4 +17,4 @@ void StartTorControl();
 void InterruptTorControl();
 void StopTorControl();
 
-#endif /* TALKCOIN_TORCONTROL_H */
+#endif /* BITCOINTALKCOIN_TORCONTROL_H */

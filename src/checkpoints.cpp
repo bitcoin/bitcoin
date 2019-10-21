@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2018 The Talkcoin Core developers
+// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,7 +11,7 @@
 
 #include <stdint.h>
 
-static const int nCheckpointSpan = 100;
+static const int nCheckpointSpan = 500;
 
 namespace Checkpoints {
 

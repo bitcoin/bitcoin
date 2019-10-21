@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Talkcoin Core developers
+// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -104,7 +104,7 @@ void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap &cachedDescendan
 // for each such descendant, also update the ancestor state to include the parent.
 void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256> &vHashesToUpdate)
 {
-    AssertLockHeld(cs);
+    LOCK(cs);
     // For each entry in vHashesToUpdate, store the set of in-mempool, but not
     // in-vHashesToUpdate transactions, so that we don't have to recalculate
     // descendants when we come across a previously seen entry.
@@ -322,8 +322,8 @@ void CTxMemPoolEntry::UpdateAncestorState(int64_t modifySize, CAmount modifyFee,
     assert(int(nSigOpCostWithAncestors) >= 0);
 }
 
-CTxMemPool::CTxMemPool(CBlockPolicyEstimator* estimator)
-    : nTransactionsUpdated(0), minerPolicyEstimator(estimator)
+CTxMemPool::CTxMemPool(CBlockPolicyEstimator* estimator) :
+    nTransactionsUpdated(0), minerPolicyEstimator(estimator)
 {
     _clear(); //lock free clear
 
@@ -341,11 +341,13 @@ bool CTxMemPool::isSpent(const COutPoint& outpoint) const
 
 unsigned int CTxMemPool::GetTransactionsUpdated() const
 {
+    LOCK(cs);
     return nTransactionsUpdated;
 }
 
 void CTxMemPool::AddTransactionsUpdated(unsigned int n)
 {
+    LOCK(cs);
     nTransactionsUpdated += n;
 }
 
@@ -457,7 +459,8 @@ void CTxMemPool::CalculateDescendants(txiter entryit, setEntries& setDescendants
 void CTxMemPool::removeRecursive(const CTransaction &origTx, MemPoolRemovalReason reason)
 {
     // Remove transaction from memory pool
-    AssertLockHeld(cs);
+    {
+        LOCK(cs);
         setEntries txToRemove;
         txiter origit = mapTx.find(origTx.GetHash());
         if (origit != mapTx.end()) {
@@ -482,12 +485,13 @@ void CTxMemPool::removeRecursive(const CTransaction &origTx, MemPoolRemovalReaso
         }
 
         RemoveStaged(setAllRemoves, false, reason);
+    }
 }
 
 void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMemPoolHeight, int flags)
 {
     // Remove transactions spending a coinbase which are now immature and no-longer-final transactions
-    AssertLockHeld(cs);
+    LOCK(cs);
     setEntries txToRemove;
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         const CTransaction& tx = it->GetTx();
@@ -543,7 +547,7 @@ void CTxMemPool::removeConflicts(const CTransaction &tx)
  */
 void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight)
 {
-    AssertLockHeld(cs);
+    LOCK(cs);
     std::vector<const CTxMemPoolEntry*> entries;
     for (const auto& tx : vtx)
     {
@@ -894,7 +898,11 @@ bool CCoinsViewMemPool::GetCoin(const COutPoint &outpoint, Coin &coin) const {
     CTransactionRef ptx = mempool.get(outpoint.hash);
     if (ptx) {
         if (outpoint.n < ptx->vout.size()) {
+#ifdef ENABLE_PROOF_OF_STAKE
             coin = Coin(ptx->vout[outpoint.n], MEMPOOL_HEIGHT, false, false);
+#else
+            coin = Coin(ptx->vout[outpoint.n], MEMPOOL_HEIGHT, false);
+#endif
             return true;
         } else {
             return false;
@@ -918,7 +926,7 @@ void CTxMemPool::RemoveStaged(setEntries &stage, bool updateDescendants, MemPool
 }
 
 int CTxMemPool::Expire(int64_t time) {
-    AssertLockHeld(cs);
+    LOCK(cs);
     indexed_transaction_set::index<entry_time>::type::iterator it = mapTx.get<entry_time>().begin();
     setEntries toremove;
     while (it != mapTx.get<entry_time>().end() && it->GetTime() < time) {
@@ -1011,7 +1019,7 @@ void CTxMemPool::trackPackageRemoved(const CFeeRate& rate) {
 }
 
 void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpendsRemaining) {
-    AssertLockHeld(cs);
+    LOCK(cs);
 
     unsigned nTxnRemoved = 0;
     CFeeRate maxFeeRateRemoved(0);

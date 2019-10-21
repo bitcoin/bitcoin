@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Talkcoin Core developers
+// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_LOGGING_H
-#define TALKCOIN_LOGGING_H
+#ifndef BITCOINTALKCOIN_LOGGING_H
+#define BITCOINTALKCOIN_LOGGING_H
 
 #include <fs.h>
 #include <tinyformat.h>
@@ -106,8 +106,6 @@ namespace BCLog {
 
         /** Start logging (and flush all buffered messages) */
         bool StartLogging();
-        /** Only for testing */
-        void DisconnectTestLogger();
 
         void ShrinkDebugFile();
 
@@ -169,4 +167,4 @@ static inline void LogPrint(const BCLog::LogFlags& category, const Args&... args
     }
 }
 
-#endif // TALKCOIN_LOGGING_H
+#endif // BITCOINTALKCOIN_LOGGING_H

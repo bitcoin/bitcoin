@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Talkcoin Core developers
+// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_KEY_IO_H
-#define TALKCOIN_KEY_IO_H
+#ifndef BITCOINTALKCOIN_KEY_IO_H
+#define BITCOINTALKCOIN_KEY_IO_H
 
 #include <chainparams.h>
 #include <key.h>
@@ -26,4 +26,4 @@ CTxDestination DecodeDestination(const std::string& str);
 bool IsValidDestinationString(const std::string& str);
 bool IsValidDestinationString(const std::string& str, const CChainParams& params);
 
-#endif // TALKCOIN_KEY_IO_H
+#endif // BITCOINTALKCOIN_KEY_IO_H

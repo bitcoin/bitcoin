@@ -1,14 +1,13 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Talkcoin Core developers
+// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <outputtype.h>
 
+#include <keystore.h>
 #include <pubkey.h>
 #include <script/script.h>
-#include <script/sign.h>
-#include <script/signingprovider.h>
 #include <script/standard.h>
 
 #include <assert.h>
@@ -74,7 +73,7 @@ std::vector<CTxDestination> GetAllDestinationsForKey(const CPubKey& key)
     }
 }
 
-CTxDestination AddAndGetDestinationForScript(FillableSigningProvider& keystore, const CScript& script, OutputType type)
+CTxDestination AddAndGetDestinationForScript(CKeyStore& keystore, const CScript& script, OutputType type)
 {
     // Add script to keystore
     keystore.AddCScript(script);
@@ -99,3 +98,4 @@ CTxDestination AddAndGetDestinationForScript(FillableSigningProvider& keystore, 
     default: assert(false);
     }
 }
+

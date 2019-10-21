@@ -1,9 +1,9 @@
-// Copyright (c) 2015-2016 The Talkcoin Core developers
+// Copyright (c) 2015-2016 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_REVERSELOCK_H
-#define TALKCOIN_REVERSELOCK_H
+#ifndef BITCOINTALKCOIN_REVERSELOCK_H
+#define BITCOINTALKCOIN_REVERSELOCK_H
 
 /**
  * An RAII-style reverse lock. Unlocks on construction and locks on destruction.
@@ -31,4 +31,4 @@ private:
     Lock templock;
 };
 
-#endif // TALKCOIN_REVERSELOCK_H
+#endif // BITCOINTALKCOIN_REVERSELOCK_H

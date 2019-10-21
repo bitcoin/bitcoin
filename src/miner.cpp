@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Talkcoin Core developers
+// Copyright (c) 2009-2019 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -54,9 +54,14 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
     if (nOldTime < nNewTime)
         pblock->nTime = nNewTime;
 
+#ifdef ENABLE_PROOF_OF_STAKE
     // Updating time can change work required on testnet:
     if (consensusParams.fPowAllowMinDifficultyBlocks)
         pblock->nBits = GetNextWorkRequired(pindexPrev, pblock, consensusParams,pblock->IsProofOfStake());
+#else
+    if (consensusParams.fPowAllowMinDifficultyBlocks)
+        pblock->nBits = GetNextWorkRequired(pindexPrev, pblock, consensusParams);
+#endif
 
     return nNewTime - nOldTime;
 }
@@ -137,6 +142,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     // -blockversion=N to test forking scenarios
     if (chainparams.MineBlocksOnDemand())
         pblock->nVersion = gArgs.GetArg("-blockversion", pblock->nVersion);
+
 
     pblock->nTime = GetAdjustedTime();
 
@@ -617,6 +623,7 @@ void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned
     pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
 }
 
+#ifdef ENABLE_PROOF_OF_STAKE
 //////////////////////////////////////////////////////////////////////////////
 //
 // Proof of Stake miner
@@ -669,7 +676,7 @@ bool CheckStake(const std::shared_ptr<const CBlock> pblock, CWallet& wallet)
 void ThreadStakeMiner(CWallet *pwallet)
 {
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
-    MilliSleep(60000);
+MilliSleep(60000);
 
     // Make this thread recognisable as the mining thread
     std::string threadName = "stake";
@@ -679,7 +686,7 @@ void ThreadStakeMiner(CWallet *pwallet)
     }
     RenameThread(threadName.c_str());
 
-    ReserveDestination reservekey(pwallet);
+    CReserveKey reservekey(pwallet);
 
     bool fTryToSync = true;
     //bool regtestMode = Params().GetConsensus().fPoSNoRetargeting;
@@ -693,7 +700,7 @@ void ThreadStakeMiner(CWallet *pwallet)
         }
         //don't disable PoS mining for no connections if in regtest mode
         if(!gArgs.GetBoolArg("-emergencystaking", false)) {
-			LogPrintf("Emergeny Staking Disabled \n");
+			LogPrintf("Emergeny Staking Disabled");
             while (g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) == 0 || ::ChainstateActive().IsInitialBlockDownload()) {
                 pwallet->m_last_coin_stake_search_interval = 0;
                 fTryToSync = true;
@@ -707,7 +714,7 @@ void ThreadStakeMiner(CWallet *pwallet)
                 }
             }
         }
-
+        
         //
         // Create new block
         //
@@ -783,7 +790,6 @@ void ThreadStakeMiner(CWallet *pwallet)
                             validBlock=true;
                         }
                         if(validBlock) {
-							LOCK(cs_main);
                             CheckStake(pblockfilled, *pwallet);
                             // Update the search time when new valid block is created, needed for status bar icon
                             pwallet->m_last_coin_stake_search_time = pblockfilled->GetBlockTime();
@@ -815,6 +821,7 @@ void Stake(bool fStake, CWallet *pwallet, boost::thread_group*& stakeThread)
 
 }
 
+#endif
 //////////////////////////////////////////////////////////////////////////////
 //
 // Proof of Work miner
@@ -823,12 +830,12 @@ void Stake(bool fStake, CWallet *pwallet, boost::thread_group*& stakeThread)
 double dHashesPerMin = 0.0;
 int64_t nHPSTimerStart = 0;
 
-void static TalkcoinMiner(std::shared_ptr<CTxDestination> coinbase_script)
+void static BitcointalkcoinMiner(std::shared_ptr<CReserveScript> coinbase_script)
 {
     const CChainParams& chainparams = Params();
-    LogPrintf("TalkcoinMiner started\n");
+    LogPrintf("BitcointalkcoinMiner started\n");
     //SetThreadPriority(THREAD_PRIORITY_LOWEST);
-    RenameThread("talkcoin-miner");
+    RenameThread("bitcointalkcoin-miner");
 
     unsigned int nExtraNonce = 0;
 
@@ -859,7 +866,7 @@ void static TalkcoinMiner(std::shared_ptr<CTxDestination> coinbase_script)
             CBlockIndex* pindexPrev = ::ChainActive().Tip();
             static std::unique_ptr<CBlockTemplate> pblocktemplate;
 
-            pblocktemplate = BlockAssembler(Params()).CreateNewBlock(GetScriptForDestination(*coinbase_script));
+            pblocktemplate = BlockAssembler(Params()).CreateNewBlock(coinbase_script->reserveScript);
             if (!pblocktemplate.get())
                 throw std::runtime_error(strprintf("%s: Couldn't create new block", __func__));
 
@@ -869,7 +876,7 @@ void static TalkcoinMiner(std::shared_ptr<CTxDestination> coinbase_script)
                 IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
             }
 
-            LogPrintf("Running TalkcoinMiner with %u transactions in block \n", pblock->vtx.size());
+            LogPrintf("Running BitcointalkcoinMiner with %u transactions in block \n", pblock->vtx.size());
 
             //
             // Search
@@ -905,6 +912,7 @@ void static TalkcoinMiner(std::shared_ptr<CTxDestination> coinbase_script)
                         std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
                         if (!ProcessNewBlock(Params(), shared_pblock, true, nullptr))
                             throw std::runtime_error(strprintf("%s: ProcessNewBlock, block not accepted:", __func__));
+                        coinbase_script->KeepScript();
                         //SetThreadPriority(THREAD_PRIORITY_LOWEST);
                         break;
                     }
@@ -957,17 +965,17 @@ void static TalkcoinMiner(std::shared_ptr<CTxDestination> coinbase_script)
     }
     catch (const boost::thread_interrupted&)
     {
-        LogPrintf("TalkcoinMiner terminated\n");
+        LogPrintf("BitcointalkcoinMiner terminated\n");
         throw;
     }
     catch (const std::runtime_error &e)
     {
-        LogPrintf("TalkcoinMiner runtime error: %s\n", e.what());
+        LogPrintf("BitcointalkcoinMiner runtime error: %s\n", e.what());
         return;
     }
 }
 
-void GenerateTalkcoins(bool fGenerate, int nThreads, std::shared_ptr<CTxDestination> coinbase_script)
+void GenerateBitcointalkcoins(bool fGenerate, int nThreads, std::shared_ptr<CReserveScript> coinbase_script)
 {
     static boost::thread_group* minerThreads = NULL;
 
@@ -986,5 +994,5 @@ void GenerateTalkcoins(bool fGenerate, int nThreads, std::shared_ptr<CTxDestinat
 
     minerThreads = new boost::thread_group();
     for (int i = 0; i < nThreads; i++)
-        minerThreads->create_thread(boost::bind(&TalkcoinMiner, boost::cref(coinbase_script)));
+        minerThreads->create_thread(boost::bind(&BitcointalkcoinMiner, boost::cref(coinbase_script)));
 }

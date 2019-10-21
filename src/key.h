@@ -1,11 +1,11 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Talkcoin Core developers
+// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
 // Copyright (c) 2017 The Zcash developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_KEY_H
-#define TALKCOIN_KEY_H
+#ifndef BITCOINTALKCOIN_KEY_H
+#define BITCOINTALKCOIN_KEY_H
 
 #include <pubkey.h>
 #include <serialize.h>
@@ -195,4 +195,4 @@ bool ECC_InitSanityCheck();
 /** Ensure that the signature is LowS */
 bool EnsureLowS(std::vector<unsigned char>& vchSig);
 
-#endif // TALKCOIN_KEY_H
+#endif // BITCOINTALKCOIN_KEY_H

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Talkcoin Core developers
+// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -73,14 +73,6 @@ bool BCLog::Logger::StartLogging()
     if (m_print_to_console) fflush(stdout);
 
     return true;
-}
-
-void BCLog::Logger::DisconnectTestLogger()
-{
-    std::lock_guard<std::mutex> scoped_lock(m_cs);
-    m_buffering = true;
-    if (m_fileout != nullptr) fclose(m_fileout);
-    m_fileout = nullptr;
 }
 
 void BCLog::Logger::EnableCategory(BCLog::LogFlags flag)
