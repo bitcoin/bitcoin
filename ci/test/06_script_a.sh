@@ -6,10 +6,15 @@
 
 export LC_ALL=C.UTF-8
 
+lcd = cd
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  lcd = type cd
+fi
+
 safe_cd()
 {
   set +o errexit
-  type cd $1 || (echo $2; exit 1)
+  $lcd $1 || (echo $2; exit 1)
   set -o errexit
 }
 
