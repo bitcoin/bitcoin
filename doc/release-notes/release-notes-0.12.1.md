@@ -1,13 +1,13 @@
-Talkcoin Core version 0.12.1 is now available from:
+Bitcointalkcoin Core version 0.12.1 is now available from:
 
-  <https://talkcoin.org/bin/talkcoin-core-0.12.1/>
+  <https://bitcointalkcoin.org/bin/bitcointalkcoin-core-0.12.1/>
 
 This is a new minor version release, including the BIP9, BIP68 and BIP112
 softfork, various bugfixes and updated translations.
 
 Please report bugs using the issue tracker at github:
 
-  <https://github.com/talkcoin/talkcoin/issues>
+  <https://github.com/bitcointalkcoin/bitcointalkcoin/issues>
 
 Upgrading and downgrading
 =========================
@@ -17,8 +17,8 @@ How to Upgrade
 
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the
-installer (on Windows) or just copy over /Applications/Talkcoin-Qt (on Mac) or
-talkcoind/talkcoin-qt (on Linux).
+installer (on Windows) or just copy over /Applications/Bitcointalkcoin-Qt (on Mac) or
+bitcointalkcoind/bitcointalkcoin-qt (on Linux).
 
 Downgrade warning
 -----------------
@@ -27,10 +27,10 @@ Downgrade warning
 
 Because release 0.12.0 and later will obfuscate the chainstate on every
 fresh sync or reindex, the chainstate is not backwards-compatible with
-pre-0.12 versions of Talkcoin Core or other software.
+pre-0.12 versions of Bitcointalkcoin Core or other software.
 
 If you want to downgrade after you have done a reindex with 0.12.0 or later,
-you will need to reindex when you first start Talkcoin Core version 0.11 or
+you will need to reindex when you first start Bitcointalkcoin Core version 0.11 or
 earlier.
 
 Notable changes
@@ -49,15 +49,15 @@ bits together with setting bit 0 to indicate support for this combined
 deployment, shown as "csv" in the `getblockchaininfo` RPC call.
 
 For more information about the soft forking change, please see
-<https://github.com/talkcoin/talkcoin/pull/7648>
+<https://github.com/bitcointalkcoin/bitcointalkcoin/pull/7648>
 
 This specific backport pull-request can be viewed at
-<https://github.com/talkcoin/talkcoin/pull/7543>
+<https://github.com/bitcointalkcoin/bitcointalkcoin/pull/7543>
 
-[BIP9]: https://github.com/talkcoin/bips/blob/master/bip-0009.mediawiki
-[BIP68]: https://github.com/talkcoin/bips/blob/master/bip-0068.mediawiki
-[BIP112]: https://github.com/talkcoin/bips/blob/master/bip-0112.mediawiki
-[BIP113]: https://github.com/talkcoin/bips/blob/master/bip-0113.mediawiki
+[BIP9]: https://github.com/bitcointalkcoin/bips/blob/master/bip-0009.mediawiki
+[BIP68]: https://github.com/bitcointalkcoin/bips/blob/master/bip-0068.mediawiki
+[BIP112]: https://github.com/bitcointalkcoin/bips/blob/master/bip-0112.mediawiki
+[BIP113]: https://github.com/bitcointalkcoin/bips/blob/master/bip-0113.mediawiki
 
 BIP68 soft fork to enforce sequence locks for relative locktime
 ---------------------------------------------------------------
@@ -68,27 +68,27 @@ invalid for a defined period of time after confirmation of its corresponding
 outpoint.
 
 For more information about the implementation, see
-<https://github.com/talkcoin/talkcoin/pull/7184>
+<https://github.com/bitcointalkcoin/bitcointalkcoin/pull/7184>
 
 BIP112 soft fork to enforce OP_CHECKSEQUENCEVERIFY
 --------------------------------------------------
 
 [BIP112][] redefines the existing OP_NOP3 as OP_CHECKSEQUENCEVERIFY (CSV)
-for a new opcode in the Talkcoin scripting system that in combination with
+for a new opcode in the Bitcointalkcoin scripting system that in combination with
 [BIP68][] allows execution pathways of a script to be restricted based
 on the age of the output being spent.
 
 For more information about the implementation, see
-<https://github.com/talkcoin/talkcoin/pull/7524>
+<https://github.com/bitcointalkcoin/bitcointalkcoin/pull/7524>
 
 BIP113 locktime enforcement soft fork
 -------------------------------------
 
-Talkcoin Core 0.11.2 previously introduced mempool-only locktime
+Bitcointalkcoin Core 0.11.2 previously introduced mempool-only locktime
 enforcement using GetMedianTimePast(). This release seeks to
 consensus enforce the rule.
 
-Talkcoin transactions currently may specify a locktime indicating when
+Bitcointalkcoin transactions currently may specify a locktime indicating when
 they may be added to a valid block.  Current consensus rules require
 that blocks have a block header time greater than the locktime specified
 in any transaction in that block.
@@ -132,7 +132,7 @@ locktimes to allow those transactions to be included in mempools at
 approximately the expected time.
 
 For more information about the implementation, see
-<https://github.com/talkcoin/talkcoin/pull/6566>
+<https://github.com/bitcointalkcoin/bitcointalkcoin/pull/6566>
 
 Miscellaneous
 -------------
@@ -194,5 +194,5 @@ Thanks to everyone who directly contributed to this release:
 - Suhas Daftuar
 - Wladimir J. van der Laan
 
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/talkcoin/).
+As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcointalkcoin/).
 

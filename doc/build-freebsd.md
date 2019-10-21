@@ -2,7 +2,7 @@ FreeBSD build guide
 ======================
 (updated for FreeBSD 12.0)
 
-This guide describes how to build talkcoind and command-line utilities on FreeBSD.
+This guide describes how to build bitcointalkcoind and command-line utilities on FreeBSD.
 
 This guide does not contain instructions for building the GUI.
 
@@ -13,7 +13,7 @@ You will need the following dependencies, which can be installed as root via pkg
 ```shell
 pkg install autoconf automake boost-libs git gmake libevent libtool openssl pkgconf
 
-git clone https://github.com/talkcoin/talkcoin.git
+git clone https://github.com/bitcointalkcoin/bitcointalkcoin.git
 ```
 
 In order to run the test suite (recommended), you will need to have Python 3 installed:
@@ -34,7 +34,7 @@ BerkeleyDB is only necessary for the wallet functionality. To skip this, pass
 export BDB_PREFIX="$PWD/db4"
 ```
 
-## Building Talkcoin Core
+## Building Bitcointalkcoin Core
 
 **Important**: Use `gmake` (the non-GNU `make` will exit with an error):
 

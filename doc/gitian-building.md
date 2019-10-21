@@ -1,4 +1,4 @@
 Gitian building
 ================
 
-This file was moved to [the Talkcoin Core documentation repository](https://github.com/talkcoin-core/docs/blob/master/gitian-building.md) at [https://github.com/talkcoin-core/docs](https://github.com/talkcoin-core/docs).
+This file was moved to [the Bitcointalkcoin Core documentation repository](https://github.com/bitcointalkcoin-core/docs/blob/master/gitian-building.md) at [https://github.com/bitcointalkcoin-core/docs](https://github.com/bitcointalkcoin-core/docs).

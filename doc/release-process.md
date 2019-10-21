@@ -5,8 +5,8 @@ Release Process
 
 ### Before every release candidate
 
-* Update translations (ping wumpus on IRC) see [translation_process.md](https://github.com/talkcoin/talkcoin/blob/master/doc/translation_process.md#synchronising-translations).
-* Update manpages, see [gen-manpages.sh](https://github.com/talkcoin/talkcoin/blob/master/contrib/devtools/README.md#gen-manpagessh).
+* Update translations (ping wumpus on IRC) see [translation_process.md](https://github.com/bitcointalkcoin/bitcointalkcoin/blob/master/doc/translation_process.md#synchronising-translations).
+* Update manpages, see [gen-manpages.sh](https://github.com/bitcointalkcoin/bitcointalkcoin/blob/master/contrib/devtools/README.md#gen-manpagessh).
 * Update release candidate version in `configure.ac` (`CLIENT_VERSION_RC`).
 
 ### Before every major and minor release
@@ -23,14 +23,14 @@ Release Process
 
 ### Before every major release
 
-* Update hardcoded [seeds](/contrib/seeds/README.md), see [this pull request](https://github.com/talkcoin/talkcoin/pull/7415) for an example.
+* Update hardcoded [seeds](/contrib/seeds/README.md), see [this pull request](https://github.com/bitcointalkcoin/bitcointalkcoin/pull/7415) for an example.
 * Update [`src/chainparams.cpp`](/src/chainparams.cpp) m_assumed_blockchain_size and m_assumed_chain_state_size with the current size plus some overhead.
 * Update `src/chainparams.cpp` chainTxData with statistics about the transaction count and rate. Use the output of the RPC `getchaintxstats`, see
-  [this pull request](https://github.com/talkcoin/talkcoin/pull/12270) for an example. Reviewers can verify the results by running `getchaintxstats <window_block_count> <window_last_block_hash>` with the `window_block_count` and `window_last_block_hash` from your output.
+  [this pull request](https://github.com/bitcointalkcoin/bitcointalkcoin/pull/12270) for an example. Reviewers can verify the results by running `getchaintxstats <window_block_count> <window_last_block_hash>` with the `window_block_count` and `window_last_block_hash` from your output.
 * On both the master branch and the new release branch:
   - update `CLIENT_VERSION_MINOR` in [`configure.ac`](../configure.ac)
-  - update `CLIENT_VERSION_MINOR`, `PACKAGE_VERSION`, and `PACKAGE_STRING` in [`build_msvc/talkcoin_config.h`](/build_msvc/talkcoin_config.h)
-* On the new release branch in [`configure.ac`](../configure.ac) and [`build_msvc/talkcoin_config.h`](/build_msvc/talkcoin_config.h) (see [this commit](https://github.com/talkcoin/talkcoin/commit/742f7dd)):
+  - update `CLIENT_VERSION_MINOR`, `PACKAGE_VERSION`, and `PACKAGE_STRING` in [`build_msvc/bitcointalkcoin_config.h`](/build_msvc/bitcointalkcoin_config.h)
+* On the new release branch in [`configure.ac`](../configure.ac) and [`build_msvc/bitcointalkcoin_config.h`](/build_msvc/bitcointalkcoin_config.h) (see [this commit](https://github.com/bitcointalkcoin/bitcointalkcoin/commit/742f7dd)):
   - set `CLIENT_VERSION_REVISION` to `0`
   - set `CLIENT_VERSION_IS_RELEASE` to `true`
 
@@ -61,14 +61,14 @@ If you're using the automated script (found in [contrib/gitian-build.py](/contri
 Check out the source code in the following directory hierarchy.
 
     cd /path/to/your/toplevel/build
-    git clone https://github.com/talkcoin-core/gitian.sigs.git
-    git clone https://github.com/talkcoin-core/talkcoin-detached-sigs.git
+    git clone https://github.com/bitcointalkcoin-core/gitian.sigs.git
+    git clone https://github.com/bitcointalkcoin-core/bitcointalkcoin-detached-sigs.git
     git clone https://github.com/devrandom/gitian-builder.git
-    git clone https://github.com/talkcoin/talkcoin.git
+    git clone https://github.com/bitcointalkcoin/bitcointalkcoin.git
 
 ### Write the release notes
 
-Open a draft of the release notes for collaborative editing at https://github.com/talkcoin-core/talkcoin-devwiki/wiki.
+Open a draft of the release notes for collaborative editing at https://github.com/bitcointalkcoin-core/bitcointalkcoin-devwiki/wiki.
 
 For the period during which the notes are being edited on the wiki, the version on the branch should be wiped and replaced with a link to the wiki which should be used for all announcements until `-final`.
 
@@ -93,7 +93,7 @@ If you're using the automated script (found in [contrib/gitian-build.py](/contri
 
 Setup Gitian descriptors:
 
-    pushd ./talkcoin
+    pushd ./bitcointalkcoin
     export SIGNER="(your Gitian key, ie bluematt, sipa, etc)"
     export VERSION=(new version, e.g. 0.20.0)
     git fetch
@@ -116,7 +116,7 @@ Ensure gitian-builder is up-to-date:
 
     pushd ./gitian-builder
     mkdir -p inputs
-    wget -P inputs https://talkcoincore.org/cfields/osslsigncode-Backports-to-1.7.1.patch
+    wget -P inputs https://bitcointalkcoincore.org/cfields/osslsigncode-Backports-to-1.7.1.patch
     echo 'a8c4e9cafba922f89de0df1f2152e7be286aba73f78505169bc351a7938dd911 inputs/osslsigncode-Backports-to-1.7.1.patch' | sha256sum -c
     wget -P inputs https://downloads.sourceforge.net/project/osslsigncode/osslsigncode/osslsigncode-1.7.1.tar.gz
     echo 'f9a8cdb38b9c309326764ebc937cba1523a3a751a7ab05df3ecc99d18ae466c9 inputs/osslsigncode-1.7.1.tar.gz' | sha256sum -c
@@ -128,10 +128,10 @@ Create the macOS SDK tarball, see the [macOS build instructions](build-osx.md#de
 
 NOTE: Gitian is sometimes unable to download files. If you have errors, try the step below.
 
-By default, Gitian will fetch source files as needed. To cache them ahead of time, make sure you have checked out the tag you want to build in talkcoin, then:
+By default, Gitian will fetch source files as needed. To cache them ahead of time, make sure you have checked out the tag you want to build in bitcointalkcoin, then:
 
     pushd ./gitian-builder
-    make -C ../talkcoin/depends download SOURCES_PATH=`pwd`/cache/common
+    make -C ../bitcointalkcoin/depends download SOURCES_PATH=`pwd`/cache/common
     popd
 
 Only missing files will be fetched, so this is safe to re-run for each build.
@@ -139,47 +139,47 @@ Only missing files will be fetched, so this is safe to re-run for each build.
 NOTE: Offline builds must use the --url flag to ensure Gitian fetches only from local URLs. For example:
 
     pushd ./gitian-builder
-    ./bin/gbuild --url talkcoin=/path/to/talkcoin,signature=/path/to/sigs {rest of arguments}
+    ./bin/gbuild --url bitcointalkcoin=/path/to/bitcointalkcoin,signature=/path/to/sigs {rest of arguments}
     popd
 
 The gbuild invocations below <b>DO NOT DO THIS</b> by default.
 
-### Build and sign Talkcoin Core for Linux, Windows, and macOS:
+### Build and sign Bitcointalkcoin Core for Linux, Windows, and macOS:
 
     pushd ./gitian-builder
-    ./bin/gbuild --num-make 2 --memory 3000 --commit talkcoin=v${VERSION} ../talkcoin/contrib/gitian-descriptors/gitian-linux.yml
-    ./bin/gsign --signer "$SIGNER" --release ${VERSION}-linux --destination ../gitian.sigs/ ../talkcoin/contrib/gitian-descriptors/gitian-linux.yml
-    mv build/out/talkcoin-*.tar.gz build/out/src/talkcoin-*.tar.gz ../
+    ./bin/gbuild --num-make 2 --memory 3000 --commit bitcointalkcoin=v${VERSION} ../bitcointalkcoin/contrib/gitian-descriptors/gitian-linux.yml
+    ./bin/gsign --signer "$SIGNER" --release ${VERSION}-linux --destination ../gitian.sigs/ ../bitcointalkcoin/contrib/gitian-descriptors/gitian-linux.yml
+    mv build/out/bitcointalkcoin-*.tar.gz build/out/src/bitcointalkcoin-*.tar.gz ../
 
-    ./bin/gbuild --num-make 2 --memory 3000 --commit talkcoin=v${VERSION} ../talkcoin/contrib/gitian-descriptors/gitian-win.yml
-    ./bin/gsign --signer "$SIGNER" --release ${VERSION}-win-unsigned --destination ../gitian.sigs/ ../talkcoin/contrib/gitian-descriptors/gitian-win.yml
-    mv build/out/talkcoin-*-win-unsigned.tar.gz inputs/talkcoin-win-unsigned.tar.gz
-    mv build/out/talkcoin-*.zip build/out/talkcoin-*.exe ../
+    ./bin/gbuild --num-make 2 --memory 3000 --commit bitcointalkcoin=v${VERSION} ../bitcointalkcoin/contrib/gitian-descriptors/gitian-win.yml
+    ./bin/gsign --signer "$SIGNER" --release ${VERSION}-win-unsigned --destination ../gitian.sigs/ ../bitcointalkcoin/contrib/gitian-descriptors/gitian-win.yml
+    mv build/out/bitcointalkcoin-*-win-unsigned.tar.gz inputs/bitcointalkcoin-win-unsigned.tar.gz
+    mv build/out/bitcointalkcoin-*.zip build/out/bitcointalkcoin-*.exe ../
 
-    ./bin/gbuild --num-make 2 --memory 3000 --commit talkcoin=v${VERSION} ../talkcoin/contrib/gitian-descriptors/gitian-osx.yml
-    ./bin/gsign --signer "$SIGNER" --release ${VERSION}-osx-unsigned --destination ../gitian.sigs/ ../talkcoin/contrib/gitian-descriptors/gitian-osx.yml
-    mv build/out/talkcoin-*-osx-unsigned.tar.gz inputs/talkcoin-osx-unsigned.tar.gz
-    mv build/out/talkcoin-*.tar.gz build/out/talkcoin-*.dmg ../
+    ./bin/gbuild --num-make 2 --memory 3000 --commit bitcointalkcoin=v${VERSION} ../bitcointalkcoin/contrib/gitian-descriptors/gitian-osx.yml
+    ./bin/gsign --signer "$SIGNER" --release ${VERSION}-osx-unsigned --destination ../gitian.sigs/ ../bitcointalkcoin/contrib/gitian-descriptors/gitian-osx.yml
+    mv build/out/bitcointalkcoin-*-osx-unsigned.tar.gz inputs/bitcointalkcoin-osx-unsigned.tar.gz
+    mv build/out/bitcointalkcoin-*.tar.gz build/out/bitcointalkcoin-*.dmg ../
     popd
 
 Build output expected:
 
-  1. source tarball (`talkcoin-${VERSION}.tar.gz`)
-  2. linux 32-bit and 64-bit dist tarballs (`talkcoin-${VERSION}-linux[32|64].tar.gz`)
-  3. windows 32-bit and 64-bit unsigned installers and dist zips (`talkcoin-${VERSION}-win[32|64]-setup-unsigned.exe`, `talkcoin-${VERSION}-win[32|64].zip`)
-  4. macOS unsigned installer and dist tarball (`talkcoin-${VERSION}-osx-unsigned.dmg`, `talkcoin-${VERSION}-osx64.tar.gz`)
+  1. source tarball (`bitcointalkcoin-${VERSION}.tar.gz`)
+  2. linux 32-bit and 64-bit dist tarballs (`bitcointalkcoin-${VERSION}-linux[32|64].tar.gz`)
+  3. windows 32-bit and 64-bit unsigned installers and dist zips (`bitcointalkcoin-${VERSION}-win[32|64]-setup-unsigned.exe`, `bitcointalkcoin-${VERSION}-win[32|64].zip`)
+  4. macOS unsigned installer and dist tarball (`bitcointalkcoin-${VERSION}-osx-unsigned.dmg`, `bitcointalkcoin-${VERSION}-osx64.tar.gz`)
   5. Gitian signatures (in `gitian.sigs/${VERSION}-<linux|{win,osx}-unsigned>/(your Gitian key)/`)
 
 ### Verify other gitian builders signatures to your own. (Optional)
 
-Add other gitian builders keys to your gpg keyring, and/or refresh keys: See `../talkcoin/contrib/gitian-keys/README.md`.
+Add other gitian builders keys to your gpg keyring, and/or refresh keys: See `../bitcointalkcoin/contrib/gitian-keys/README.md`.
 
 Verify the signatures
 
     pushd ./gitian-builder
-    ./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-linux ../talkcoin/contrib/gitian-descriptors/gitian-linux.yml
-    ./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-win-unsigned ../talkcoin/contrib/gitian-descriptors/gitian-win.yml
-    ./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-unsigned ../talkcoin/contrib/gitian-descriptors/gitian-osx.yml
+    ./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-linux ../bitcointalkcoin/contrib/gitian-descriptors/gitian-linux.yml
+    ./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-win-unsigned ../bitcointalkcoin/contrib/gitian-descriptors/gitian-win.yml
+    ./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-unsigned ../bitcointalkcoin/contrib/gitian-descriptors/gitian-osx.yml
     popd
 
 ### Next steps:
@@ -200,22 +200,22 @@ Codesigner only: Create Windows/macOS detached signatures:
 
 Codesigner only: Sign the macOS binary:
 
-    transfer talkcoin-osx-unsigned.tar.gz to macOS for signing
-    tar xf talkcoin-osx-unsigned.tar.gz
+    transfer bitcointalkcoin-osx-unsigned.tar.gz to macOS for signing
+    tar xf bitcointalkcoin-osx-unsigned.tar.gz
     ./detached-sig-create.sh -s "Key ID"
     Enter the keychain password and authorize the signature
     Move signature-osx.tar.gz back to the gitian host
 
 Codesigner only: Sign the windows binaries:
 
-    tar xf talkcoin-win-unsigned.tar.gz
+    tar xf bitcointalkcoin-win-unsigned.tar.gz
     ./detached-sig-create.sh -key /path/to/codesign.key
     Enter the passphrase for the key when prompted
     signature-win.tar.gz will be created
 
 Codesigner only: Commit the detached codesign payloads:
 
-    cd ~/talkcoin-detached-sigs
+    cd ~/bitcointalkcoin-detached-sigs
     checkout the appropriate branch for this release series
     rm -rf *
     tar xf signature-osx.tar.gz
@@ -228,24 +228,24 @@ Codesigner only: Commit the detached codesign payloads:
 Non-codesigners: wait for Windows/macOS detached signatures:
 
 - Once the Windows/macOS builds each have 3 matching signatures, they will be signed with their respective release keys.
-- Detached signatures will then be committed to the [talkcoin-detached-sigs](https://github.com/talkcoin-core/talkcoin-detached-sigs) repository, which can be combined with the unsigned apps to create signed binaries.
+- Detached signatures will then be committed to the [bitcointalkcoin-detached-sigs](https://github.com/bitcointalkcoin-core/bitcointalkcoin-detached-sigs) repository, which can be combined with the unsigned apps to create signed binaries.
 
 Create (and optionally verify) the signed macOS binary:
 
     pushd ./gitian-builder
-    ./bin/gbuild -i --commit signature=v${VERSION} ../talkcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
-    ./bin/gsign --signer "$SIGNER" --release ${VERSION}-osx-signed --destination ../gitian.sigs/ ../talkcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
-    ./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-signed ../talkcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
-    mv build/out/talkcoin-osx-signed.dmg ../talkcoin-${VERSION}-osx.dmg
+    ./bin/gbuild -i --commit signature=v${VERSION} ../bitcointalkcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
+    ./bin/gsign --signer "$SIGNER" --release ${VERSION}-osx-signed --destination ../gitian.sigs/ ../bitcointalkcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
+    ./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-signed ../bitcointalkcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
+    mv build/out/bitcointalkcoin-osx-signed.dmg ../bitcointalkcoin-${VERSION}-osx.dmg
     popd
 
 Create (and optionally verify) the signed Windows binaries:
 
     pushd ./gitian-builder
-    ./bin/gbuild -i --commit signature=v${VERSION} ../talkcoin/contrib/gitian-descriptors/gitian-win-signer.yml
-    ./bin/gsign --signer "$SIGNER" --release ${VERSION}-win-signed --destination ../gitian.sigs/ ../talkcoin/contrib/gitian-descriptors/gitian-win-signer.yml
-    ./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-win-signed ../talkcoin/contrib/gitian-descriptors/gitian-win-signer.yml
-    mv build/out/talkcoin-*win64-setup.exe ../talkcoin-${VERSION}-win64-setup.exe
+    ./bin/gbuild -i --commit signature=v${VERSION} ../bitcointalkcoin/contrib/gitian-descriptors/gitian-win-signer.yml
+    ./bin/gsign --signer "$SIGNER" --release ${VERSION}-win-signed --destination ../gitian.sigs/ ../bitcointalkcoin/contrib/gitian-descriptors/gitian-win-signer.yml
+    ./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-win-signed ../bitcointalkcoin/contrib/gitian-descriptors/gitian-win-signer.yml
+    mv build/out/bitcointalkcoin-*win64-setup.exe ../bitcointalkcoin-${VERSION}-win64-setup.exe
     popd
 
 Commit your signature for the signed macOS/Windows binaries:
@@ -267,22 +267,22 @@ sha256sum * > SHA256SUMS
 
 The list of files should be:
 ```
-talkcoin-${VERSION}-aarch64-linux-gnu.tar.gz
-talkcoin-${VERSION}-arm-linux-gnueabihf.tar.gz
-talkcoin-${VERSION}-i686-pc-linux-gnu.tar.gz
-talkcoin-${VERSION}-riscv64-linux-gnu.tar.gz
-talkcoin-${VERSION}-x86_64-linux-gnu.tar.gz
-talkcoin-${VERSION}-osx64.tar.gz
-talkcoin-${VERSION}-osx.dmg
-talkcoin-${VERSION}.tar.gz
-talkcoin-${VERSION}-win64-setup.exe
-talkcoin-${VERSION}-win64.zip
+bitcointalkcoin-${VERSION}-aarch64-linux-gnu.tar.gz
+bitcointalkcoin-${VERSION}-arm-linux-gnueabihf.tar.gz
+bitcointalkcoin-${VERSION}-i686-pc-linux-gnu.tar.gz
+bitcointalkcoin-${VERSION}-riscv64-linux-gnu.tar.gz
+bitcointalkcoin-${VERSION}-x86_64-linux-gnu.tar.gz
+bitcointalkcoin-${VERSION}-osx64.tar.gz
+bitcointalkcoin-${VERSION}-osx.dmg
+bitcointalkcoin-${VERSION}.tar.gz
+bitcointalkcoin-${VERSION}-win64-setup.exe
+bitcointalkcoin-${VERSION}-win64.zip
 ```
 The `*-debug*` files generated by the gitian build contain debug symbols
 for troubleshooting by developers. It is assumed that anyone that is interested
 in debugging can run gitian to generate the files for themselves. To avoid
 end-user confusion about which file to pick, as well as save storage
-space *do not upload these to the talkcoin.org server, nor put them in the torrent*.
+space *do not upload these to the bitcointalkcoin.org server, nor put them in the torrent*.
 
 - GPG-sign it, delete the unsigned file:
 ```
@@ -292,80 +292,80 @@ rm SHA256SUMS
 (the digest algorithm is forced to sha256 to avoid confusion of the `Hash:` header that GPG adds with the SHA256 used for the files)
 Note: check that SHA256SUMS itself doesn't end up in SHA256SUMS, which is a spurious/nonsensical entry.
 
-- Upload zips and installers, as well as `SHA256SUMS.asc` from last step, to the talkcoin.org server
-  into `/var/www/bin/talkcoin-core-${VERSION}`
+- Upload zips and installers, as well as `SHA256SUMS.asc` from last step, to the bitcointalkcoin.org server
+  into `/var/www/bin/bitcointalkcoin-core-${VERSION}`
 
 - A `.torrent` will appear in the directory after a few minutes. Optionally help seed this torrent. To get the `magnet:` URI use:
 ```bash
 transmission-show -m <torrent file>
 ```
 Insert the magnet URI into the announcement sent to mailing lists. This permits
-people without access to `talkcoin.org` to download the binary distribution.
+people without access to `bitcointalkcoin.org` to download the binary distribution.
 Also put it into the `optional_magnetlink:` slot in the YAML file for
-talkcoin.org (see below for talkcoin.org update instructions).
+bitcointalkcoin.org (see below for bitcointalkcoin.org update instructions).
 
-- Update talkcoin.org version
+- Update bitcointalkcoin.org version
 
-  - First, check to see if the Talkcoin.org maintainers have prepared a
-    release: https://github.com/talkcoin-dot-org/talkcoin.org/labels/Core
+  - First, check to see if the Bitcointalkcoin.org maintainers have prepared a
+    release: https://github.com/bitcointalkcoin-dot-org/bitcointalkcoin.org/labels/Core
 
       - If they have, it will have previously failed their Travis CI
         checks because the final release files weren't uploaded.
         Trigger a Travis CI rebuild---if it passes, merge.
 
-  - If they have not prepared a release, follow the Talkcoin.org release
-    instructions: https://github.com/talkcoin-dot-org/talkcoin.org/blob/master/docs/adding-events-release-notes-and-alerts.md#release-notes
+  - If they have not prepared a release, follow the Bitcointalkcoin.org release
+    instructions: https://github.com/bitcointalkcoin-dot-org/bitcointalkcoin.org/blob/master/docs/adding-events-release-notes-and-alerts.md#release-notes
 
   - After the pull request is merged, the website will automatically show the newest version within 15 minutes, as well
     as update the OS download links. Ping @saivann/@harding (saivann/harding on Freenode) in case anything goes wrong
 
 - Update other repositories and websites for new version
 
-  - talkcoincore.org blog post
+  - bitcointalkcoincore.org blog post
 
-  - talkcoincore.org maintained versions update:
-    [table](https://github.com/talkcoin-core/talkcoincore.org/commits/master/_includes/posts/maintenance-table.md)
+  - bitcointalkcoincore.org maintained versions update:
+    [table](https://github.com/bitcointalkcoin-core/bitcointalkcoincore.org/commits/master/_includes/posts/maintenance-table.md)
 
-  - talkcoincore.org RPC documentation update
+  - bitcointalkcoincore.org RPC documentation update
 
   - Update packaging repo
 
-      - Notify BlueMatt so that he can start building [the PPAs](https://launchpad.net/~talkcoin/+archive/ubuntu/talkcoin)
+      - Notify BlueMatt so that he can start building [the PPAs](https://launchpad.net/~bitcointalkcoin/+archive/ubuntu/bitcointalkcoin)
 
       - Create a new branch for the major release "0.xx" (used to build the snap package)
 
       - Notify MarcoFalke so that he can start building the snap package
 
-        - https://code.launchpad.net/~talkcoin-core/talkcoin-core-snap/+git/packaging (Click "Import Now" to fetch the branch)
-        - https://code.launchpad.net/~talkcoin-core/talkcoin-core-snap/+git/packaging/+ref/0.xx (Click "Create snap package")
-        - Name it "talkcoin-core-snap-0.xx"
+        - https://code.launchpad.net/~bitcointalkcoin-core/bitcointalkcoin-core-snap/+git/packaging (Click "Import Now" to fetch the branch)
+        - https://code.launchpad.net/~bitcointalkcoin-core/bitcointalkcoin-core-snap/+git/packaging/+ref/0.xx (Click "Create snap package")
+        - Name it "bitcointalkcoin-core-snap-0.xx"
         - Leave owner and series as-is
         - Select architectures that are compiled via gitian
         - Leave "automatically build when branch changes" unticked
         - Tick "automatically upload to store"
-        - Put "talkcoin-core" in the registered store package name field
+        - Put "bitcointalkcoin-core" in the registered store package name field
         - Tick the "edge" box
         - Put "0.xx" in the track field
         - Click "create snap package"
         - Click "Request builds" for every new release on this branch (after updating the snapcraft.yml in the branch to reflect the latest gitian results)
-        - Promote release on https://snapcraft.io/talkcoin-core/releases if it passes sanity checks
+        - Promote release on https://snapcraft.io/bitcointalkcoin-core/releases if it passes sanity checks
 
   - This repo
 
       - Archive the release notes for the new version to `doc/release-notes/` (branch `master` and branch of the release)
 
-      - Create a [new GitHub release](https://github.com/talkcoin/talkcoin/releases/new) with a link to the archived release notes
+      - Create a [new GitHub release](https://github.com/bitcointalkcoin/bitcointalkcoin/releases/new) with a link to the archived release notes
 
-      - Create a pinned meta-issue for testing the release candidate (see [this issue](https://github.com/talkcoin/talkcoin/issues/15555) for an example) and provide a link to it in the release announcements where useful
+      - Create a pinned meta-issue for testing the release candidate (see [this issue](https://github.com/bitcointalkcoin/bitcointalkcoin/issues/15555) for an example) and provide a link to it in the release announcements where useful
 
 - Announce the release:
 
-  - talkcoin-dev and talkcoin-core-dev mailing list
+  - bitcointalkcoin-dev and bitcointalkcoin-core-dev mailing list
 
-  - Talkcoin Core announcements list https://talkcoincore.org/en/list/announcements/join/
+  - Bitcointalkcoin Core announcements list https://bitcointalkcoincore.org/en/list/announcements/join/
 
-  - Update title of #talkcoin on Freenode IRC
+  - Update title of #bitcointalkcoin on Freenode IRC
 
-  - Optionally twitter, reddit /r/Talkcoin, ... but this will usually sort out itself
+  - Optionally twitter, reddit /r/Bitcointalkcoin, ... but this will usually sort out itself
 
   - Celebrate

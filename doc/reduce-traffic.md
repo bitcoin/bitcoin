@@ -3,7 +3,7 @@ Reduce Traffic
 
 Some node operators need to deal with bandwidth caps imposed by their ISPs.
 
-By default, Talkcoin Core allows up to 125 connections to different peers, 8 of
+By default, Bitcointalkcoin Core allows up to 125 connections to different peers, 8 of
 which are outbound. You can therefore, have at most 117 inbound connections.
 
 The default settings can result in relatively significant traffic consumption.
@@ -33,7 +33,7 @@ blocks and transactions to fewer nodes.
 ## 3. Reduce maximum connections (`-maxconnections=<num>`)
 
 Reducing the maximum connected nodes to a minimum could be desirable if traffic
-limits are tiny. Keep in mind that talkcoin's trustless model works best if you are
+limits are tiny. Keep in mind that bitcointalkcoin's trustless model works best if you are
 connected to a handful of nodes.
 
 ## 4. Turn off transaction relay (`-blocksonly`)

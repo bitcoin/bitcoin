@@ -10,7 +10,7 @@ use the former in coin selection.
 Rescanning the blockchain is required, to correctly mark previously
 used destinations.
 
-Together with "avoid partial spends" (present as of Talkcoin v0.17), this
+Together with "avoid partial spends" (present as of Bitcointalkcoin v0.17), this
 addresses a serious privacy issue where a malicious user can track spends by
 peppering a previously paid to address with near-dust outputs, which would then
 be inadvertently included in future payments.

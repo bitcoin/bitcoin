@@ -1,41 +1,41 @@
-Talkcoin Core
+Bitcointalkcoin Core
 =============
 
 Setup
 ---------------------
-Talkcoin Core is the original Talkcoin client and it builds the backbone of the network. It downloads and, by default, stores the entire history of Talkcoin transactions, which requires a few hundred gigabytes of disk space. Depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more.
+Bitcointalkcoin Core is the original Bitcointalkcoin client and it builds the backbone of the network. It downloads and, by default, stores the entire history of Bitcointalkcoin transactions, which requires a few hundred gigabytes of disk space. Depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more.
 
-To download Talkcoin Core, visit [talkcoincore.org](https://talkcoincore.org/en/download/).
+To download Bitcointalkcoin Core, visit [bitcointalkcoincore.org](https://bitcointalkcoincore.org/en/download/).
 
 Running
 ---------------------
-The following are some helpful notes on how to run Talkcoin Core on your native platform.
+The following are some helpful notes on how to run Bitcointalkcoin Core on your native platform.
 
 ### Unix
 
 Unpack the files into a directory and run:
 
-- `bin/talkcoin-qt` (GUI) or
-- `bin/talkcoind` (headless)
+- `bin/bitcointalkcoin-qt` (GUI) or
+- `bin/bitcointalkcoind` (headless)
 
 ### Windows
 
-Unpack the files into a directory, and then run talkcoin-qt.exe.
+Unpack the files into a directory, and then run bitcointalkcoin-qt.exe.
 
 ### macOS
 
-Drag Talkcoin Core to your applications folder, and then run Talkcoin Core.
+Drag Bitcointalkcoin Core to your applications folder, and then run Bitcointalkcoin Core.
 
 ### Need Help?
 
-* See the documentation at the [Talkcoin Wiki](https://en.talkcoin.it/wiki/Main_Page)
+* See the documentation at the [Bitcointalkcoin Wiki](https://en.bitcointalkcoin.it/wiki/Main_Page)
 for help and more information.
-* Ask for help on [#talkcoin](http://webchat.freenode.net?channels=talkcoin) on Freenode. If you don't have an IRC client, use [webchat here](http://webchat.freenode.net?channels=talkcoin).
-* Ask for help on the [TalkcoinTalk](https://talkcointalk.org/) forums, in the [Technical Support board](https://talkcointalk.org/index.php?board=4.0).
+* Ask for help on [#bitcointalkcoin](http://webchat.freenode.net?channels=bitcointalkcoin) on Freenode. If you don't have an IRC client, use [webchat here](http://webchat.freenode.net?channels=bitcointalkcoin).
+* Ask for help on the [BitcointalkcoinTalk](https://bitcointalkcointalk.org/) forums, in the [Technical Support board](https://bitcointalkcointalk.org/index.php?board=4.0).
 
 Building
 ---------------------
-The following are developer notes on how to build Talkcoin Core on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
+The following are developer notes on how to build Bitcointalkcoin Core on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
 
 - [Dependencies](dependencies.md)
 - [macOS Build Notes](build-osx.md)
@@ -44,17 +44,17 @@ The following are developer notes on how to build Talkcoin Core on your native p
 - [FreeBSD Build Notes](build-freebsd.md)
 - [OpenBSD Build Notes](build-openbsd.md)
 - [NetBSD Build Notes](build-netbsd.md)
-- [Gitian Building Guide (External Link)](https://github.com/talkcoin-core/docs/blob/master/gitian-building.md)
+- [Gitian Building Guide (External Link)](https://github.com/bitcointalkcoin-core/docs/blob/master/gitian-building.md)
 
 Development
 ---------------------
-The Talkcoin repo's [root README](/README.md) contains relevant information on the development process and automated testing.
+The Bitcointalkcoin repo's [root README](/README.md) contains relevant information on the development process and automated testing.
 
 - [Developer Notes](developer-notes.md)
 - [Productivity Notes](productivity.md)
 - [Release Notes](release-notes.md)
 - [Release Process](release-process.md)
-- [Source Code Documentation (External Link)](https://dev.visucore.com/talkcoin/doxygen/)
+- [Source Code Documentation (External Link)](https://dev.visucore.com/bitcointalkcoin/doxygen/)
 - [Translation Process](translation_process.md)
 - [Translation Strings Policy](translation_strings_policy.md)
 - [JSON-RPC Interface](JSON-RPC-interface.md)
@@ -65,13 +65,13 @@ The Talkcoin repo's [root README](/README.md) contains relevant information on t
 - [Benchmarking](benchmarking.md)
 
 ### Resources
-* Discuss on the [TalkcoinTalk](https://talkcointalk.org/) forums, in the [Development & Technical Discussion board](https://talkcointalk.org/index.php?board=6.0).
-* Discuss project-specific development on #talkcoin-core-dev on Freenode. If you don't have an IRC client, use [webchat here](http://webchat.freenode.net/?channels=talkcoin-core-dev).
-* Discuss general Talkcoin development on #talkcoin-dev on Freenode. If you don't have an IRC client, use [webchat here](http://webchat.freenode.net/?channels=talkcoin-dev).
+* Discuss on the [BitcointalkcoinTalk](https://bitcointalkcointalk.org/) forums, in the [Development & Technical Discussion board](https://bitcointalkcointalk.org/index.php?board=6.0).
+* Discuss project-specific development on #bitcointalkcoin-core-dev on Freenode. If you don't have an IRC client, use [webchat here](http://webchat.freenode.net/?channels=bitcointalkcoin-core-dev).
+* Discuss general Bitcointalkcoin development on #bitcointalkcoin-dev on Freenode. If you don't have an IRC client, use [webchat here](http://webchat.freenode.net/?channels=bitcointalkcoin-dev).
 
 ### Miscellaneous
 - [Assets Attribution](assets-attribution.md)
-- [talkcoin.conf Configuration File](talkcoin-conf.md)
+- [bitcointalkcoin.conf Configuration File](bitcointalkcoin-conf.md)
 - [Files](files.md)
 - [Fuzz-testing](fuzzing.md)
 - [Reduce Traffic](reduce-traffic.md)

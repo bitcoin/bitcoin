@@ -1,9 +1,9 @@
-Talkcoin Core
+Bitcointalkcoin Core
 =============
 
 Intro
 -----
-Talkcoin is a free open source peer-to-peer electronic cash system that is
+Bitcointalkcoin is a free open source peer-to-peer electronic cash system that is
 completely decentralized, without the need for a central server or trusted
 parties.  Users hold the crypto keys to their own money and transact directly
 with each other, with the help of a P2P network to check for double-spending.
@@ -11,13 +11,13 @@ with each other, with the help of a P2P network to check for double-spending.
 
 Setup
 -----
-Unpack the files into a directory and run talkcoin-qt.exe.
+Unpack the files into a directory and run bitcointalkcoin-qt.exe.
 
-Talkcoin Core is the original Talkcoin client and it builds the backbone of the network.
-However, it downloads and stores the entire history of Talkcoin transactions;
+Bitcointalkcoin Core is the original Bitcointalkcoin client and it builds the backbone of the network.
+However, it downloads and stores the entire history of Bitcointalkcoin transactions;
 depending on the speed of your computer and network connection, the synchronization
 process can take anywhere from a few hours to a day or more.
 
-See the talkcoin wiki at:
-  https://en.talkcoin.it/wiki/Main_Page
+See the bitcointalkcoin wiki at:
+  https://en.bitcointalkcoin.it/wiki/Main_Page
 for more help and information.

@@ -1,12 +1,12 @@
-Talkcoin-Qt version 0.8.6 final is now available from:
+Bitcointalkcoin-Qt version 0.8.6 final is now available from:
 
-  http://sourceforge.net/projects/talkcoin/files/Talkcoin/talkcoin-0.8.6/
+  http://sourceforge.net/projects/bitcointalkcoin/files/Bitcointalkcoin/bitcointalkcoin-0.8.6/
 
 This is a maintenance release to fix a critical bug; we urge all users to upgrade.
 
 Please report bugs using the issue tracker at github:
 
-  https://github.com/talkcoin/talkcoin/issues
+  https://github.com/bitcointalkcoin/bitcointalkcoin/issues
 
 How to Upgrade
 --------------
@@ -16,7 +16,7 @@ If you already downloaded 0.8.6rc1 you do not need to re-download. This release 
 If you are running an older version, shut it down. Wait
 until it has completely shut down (which might take a few minutes for older
 versions), then run the installer (on Windows) or just copy over
-/Applications/Talkcoin-Qt (on Mac) or talkcoind/talkcoin-qt (on Linux).
+/Applications/Bitcointalkcoin-Qt (on Mac) or bitcointalkcoind/bitcointalkcoin-qt (on Linux).
 
 If you are upgrading from version 0.7.2 or earlier, the first time you
 run 0.8.6 your blockchain files will be re-indexed, which will take
@@ -47,7 +47,7 @@ your machine.
 
 - Additional debug.log logging for diagnosis of network problems, log timestamps by default
 
-- Fix Talkcoin-Qt startup crash when clicking dock icon on OSX 
+- Fix Bitcointalkcoin-Qt startup crash when clicking dock icon on OSX 
 
 - Fix memory leaks in CKey::SetCompactSignature() and Key::SignCompact()
 
@@ -63,4 +63,4 @@ Warning
   Hence it is recommended to use a 64-bit executable if possible.
   A 64-bit executable for Windows is planned for 0.9.
 
-Note: Gavin Andresen's GPG signing key for SHA256SUMS.asc has been changed from  key id 1FC730C1 to sub key 7BF6E212 (see https://github.com/talkcoin/talkcoin.org/pull/279).
+Note: Gavin Andresen's GPG signing key for SHA256SUMS.asc has been changed from  key id 1FC730C1 to sub key 7BF6E212 (see https://github.com/bitcointalkcoin/bitcointalkcoin.org/pull/279).

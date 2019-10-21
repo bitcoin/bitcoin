@@ -1,39 +1,39 @@
-Talkcoin Core version 0.9.4 is now available from:
+Bitcointalkcoin Core version 0.9.4 is now available from:
 
-  https://talkcoin.org/bin/0.9.4/
+  https://bitcointalkcoin.org/bin/0.9.4/
 
 This is a new minor version release, bringing only bug fixes and updated
 translations. Upgrading to this release is recommended.
 
 Please report bugs using the issue tracker at github:
 
-  https://github.com/talkcoin/talkcoin/issues
+  https://github.com/bitcointalkcoin/bitcointalkcoin/issues
 
 How to Upgrade
 ===============
 
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the
-installer (on Windows) or just copy over /Applications/Talkcoin-Qt (on Mac) or
-talkcoind/talkcoin-qt (on Linux).
+installer (on Windows) or just copy over /Applications/Bitcointalkcoin-Qt (on Mac) or
+bitcointalkcoind/bitcointalkcoin-qt (on Linux).
 
 OpenSSL Warning
 ================
 
 OpenSSL 1.0.0p / 1.0.1k was recently released and is being pushed out by
 various operating system maintainers. Review by Gregory Maxwell determined that
-this update is incompatible with the Talkcoin system and could lead to consensus
+this update is incompatible with the Bitcointalkcoin system and could lead to consensus
 forks.
 
-Talkcoin Core released binaries from https://talkcoin.org are unaffected,
+Bitcointalkcoin Core released binaries from https://bitcointalkcoin.org are unaffected,
 as are any built with the gitian deterministic build system.
 
 However, if you are running either
 
-- The Ubuntu PPA from https://launchpad.net/~talkcoin/+archive/ubuntu/talkcoin
-- A third-party or self-compiled Talkcoin Core
+- The Ubuntu PPA from https://launchpad.net/~bitcointalkcoin/+archive/ubuntu/bitcointalkcoin
+- A third-party or self-compiled Bitcointalkcoin Core
 
-upgrade to Talkcoin Core 0.9.4, which includes a workaround, **before** updating
+upgrade to Bitcointalkcoin Core 0.9.4, which includes a workaround, **before** updating
 OpenSSL.
 
 The incompatibility is due to the OpenSSL update changing the
@@ -92,4 +92,4 @@ Thanks to who contributed to this release, at least:
 - Sergio Demian Lerner
 - Wladimir J. van der Laan
 
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/talkcoin/).
+As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcointalkcoin/).
