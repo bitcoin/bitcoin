@@ -380,6 +380,15 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
 
     for (int i = 1; i < argc; i++) {
         std::string key(argv[i]);
+
+#ifdef MAC_OSX
+        // At the first time when a user gets the "App downloaded from the
+        // internet" warning, and clicks the Open button, macOS passes
+        // a unique process serial number (PSN) as -psn_... command-line
+        // argument, which we filter out.
+        if (key.substr(0, 5) == "-psn_") continue;
+#endif
+
         if (key == "-") break; //bitcoin-tx using stdin
         std::string val;
         size_t is_index = key.find('=');
@@ -1153,12 +1162,12 @@ void SetupEnvironment()
     }
 #endif
     // On most POSIX systems (e.g. Linux, but not BSD) the environment's locale
-    // may be invalid, in which case the "C" locale is used as fallback.
+    // may be invalid, in which case the "C.UTF-8" locale is used as fallback.
 #if !defined(WIN32) && !defined(MAC_OSX) && !defined(__FreeBSD__) && !defined(__OpenBSD__)
     try {
         std::locale(""); // Raises a runtime error if current locale is invalid
     } catch (const std::runtime_error&) {
-        setenv("LC_ALL", "C", 1);
+        setenv("LC_ALL", "C.UTF-8", 1);
     }
 #elif defined(WIN32)
     // Set the default input/output charset is utf-8
