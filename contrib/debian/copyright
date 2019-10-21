@@ -1,13 +1,13 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: Talkcoin
+Upstream-Name: Bitcointalkcoin
 Upstream-Contact: Satoshi Nakamoto <satoshin@gmx.com>
- irc://#talkcoin@freenode.net
-Source: https://github.com/talkcoin/talkcoin
+ irc://#bitcointalkcoin@freenode.net
+Source: https://github.com/bitcointalkcoin/bitcointalkcoin
 
 Files: *
-Copyright: 2009-2019, Talkcoin Core Developers
+Copyright: 2009-2019, Bitcointalkcoin Core Developers
 License: Expat
-Comment: The Talkcoin Core Developers encompasses the current developers listed on talkcoin.org,
+Comment: The Bitcointalkcoin Core Developers encompasses the current developers listed on bitcointalkcoin.org,
          as well as the numerous contributors to the project.
 
 Files: debian/*
@@ -86,12 +86,12 @@ License: Expat
 Comment: Modifications of Stephan Hutchings Typicons
 
 Files: src/qt/res/icons/about.png
-       src/qt/res/icons/talkcoin.*
-       share/pixmaps/talkcoin*
-       src/qt/res/src/talkcoin.svg
+       src/qt/res/icons/bitcointalkcoin.*
+       share/pixmaps/bitcointalkcoin*
+       src/qt/res/src/bitcointalkcoin.svg
 Copyright: Bitboy, Jonas Schnelli
 License: public-domain
-Comment: Site: https://talkcointalk.org/?topic=1756.0
+Comment: Site: https://bitcointalkcointalk.org/?topic=1756.0
 
 Files: src/qt/res/icons/proxy.png
        src/qt/res/src/proxy.svg

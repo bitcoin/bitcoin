@@ -1,12 +1,12 @@
-# Valgrind suppressions file for Talkcoin.
+# Valgrind suppressions file for Bitcointalkcoin.
 #
 # Includes known Valgrind warnings in our dependencies that cannot be fixed
 # in-tree.
 #
 # Example use:
-# $ valgrind --suppressions=contrib/valgrind.supp src/test/test_talkcoin
+# $ valgrind --suppressions=contrib/valgrind.supp src/test/test_bitcointalkcoin
 # $ valgrind --suppressions=contrib/valgrind.supp --leak-check=full \
-#       --show-leak-kinds=all src/test/test_talkcoin --log_level=test_suite
+#       --show-leak-kinds=all src/test/test_bitcointalkcoin --log_level=test_suite
 {
    Suppress libstdc++ warning - https://gcc.gnu.org/bugzilla/show_bug.cgi?id=65434
    Memcheck:Leak

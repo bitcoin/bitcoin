@@ -18,4 +18,4 @@ FORMS += \
     ../src/qt/forms/transactiondescdialog.ui \
 
 RESOURCES += \
-    ../src/qt/talkcoin.qrc
+    ../src/qt/bitcointalkcoin.qrc

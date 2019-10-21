@@ -1,10 +1,10 @@
-# bash programmable completion for talkcoin-cli(1)
-# Copyright (c) 2012-2016 The Talkcoin Core developers
+# bash programmable completion for bitcointalkcoin-cli(1)
+# Copyright (c) 2012-2016 The Bitcointalkcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-# call $talkcoin-cli for RPC
-_talkcoin_rpc() {
+# call $bitcointalkcoin-cli for RPC
+_bitcointalkcoin_rpc() {
     # determine already specified args necessary for RPC
     local rpcargs=()
     for i in ${COMP_LINE}; do
@@ -14,23 +14,23 @@ _talkcoin_rpc() {
                 ;;
         esac
     done
-    $talkcoin_cli "${rpcargs[@]}" "$@"
+    $bitcointalkcoin_cli "${rpcargs[@]}" "$@"
 }
 
 # Add wallet accounts to COMPREPLY
-_talkcoin_accounts() {
+_bitcointalkcoin_accounts() {
     local accounts
-    accounts=$(_talkcoin_rpc listaccounts | awk -F '"' '{ print $2 }')
+    accounts=$(_bitcointalkcoin_rpc listaccounts | awk -F '"' '{ print $2 }')
     COMPREPLY=( "${COMPREPLY[@]}" $( compgen -W "$accounts" -- "$cur" ) )
 }
 
-_talkcoin_cli() {
+_bitcointalkcoin_cli() {
     local cur prev words=() cword
-    local talkcoin_cli
+    local bitcointalkcoin_cli
 
-    # save and use original argument to invoke talkcoin-cli for -help, help and RPC
-    # as talkcoin-cli might not be in $PATH
-    talkcoin_cli="$1"
+    # save and use original argument to invoke bitcointalkcoin-cli for -help, help and RPC
+    # as bitcointalkcoin-cli might not be in $PATH
+    bitcointalkcoin_cli="$1"
 
     COMPREPLY=()
     _get_comp_words_by_ref -n = cur prev words cword
@@ -60,7 +60,7 @@ _talkcoin_cli() {
     if ((cword > 3)); then
         case ${words[cword-3]} in
             addmultisigaddress)
-                _talkcoin_accounts
+                _bitcointalkcoin_accounts
                 return 0
                 ;;
             getbalance|gettxout|importaddress|importpubkey|importprivkey|listreceivedbyaccount|listreceivedbyaddress|listsinceblock)
@@ -85,7 +85,7 @@ _talkcoin_cli() {
                 return 0
                 ;;
             move|setaccount)
-                _talkcoin_accounts
+                _bitcointalkcoin_accounts
                 return 0
                 ;;
         esac
@@ -101,7 +101,7 @@ _talkcoin_cli() {
             return 0
             ;;
         getaccountaddress|getaddressesbyaccount|getbalance|getnewaddress|getreceivedbyaccount|listtransactions|move|sendfrom|sendmany)
-            _talkcoin_accounts
+            _bitcointalkcoin_accounts
             return 0
             ;;
     esac
@@ -125,12 +125,12 @@ _talkcoin_cli() {
 
             # only parse -help if senseful
             if [[ -z "$cur" || "$cur" =~ ^- ]]; then
-                helpopts=$($talkcoin_cli -help 2>&1 | awk '$1 ~ /^-/ { sub(/=.*/, "="); print $1 }' )
+                helpopts=$($bitcointalkcoin_cli -help 2>&1 | awk '$1 ~ /^-/ { sub(/=.*/, "="); print $1 }' )
             fi
 
             # only parse help if senseful
             if [[ -z "$cur" || "$cur" =~ ^[a-z] ]]; then
-                commands=$(_talkcoin_rpc help 2>/dev/null | awk '$1 ~ /^[a-z]/ { print $1; }')
+                commands=$(_bitcointalkcoin_rpc help 2>/dev/null | awk '$1 ~ /^[a-z]/ { print $1; }')
             fi
 
             COMPREPLY=( $( compgen -W "$helpopts $commands" -- "$cur" ) )
@@ -143,7 +143,7 @@ _talkcoin_cli() {
             ;;
     esac
 } &&
-complete -F _talkcoin_cli talkcoin-cli
+complete -F _bitcointalkcoin_cli bitcointalkcoin-cli
 
 # Local variables:
 # mode: shell-script
