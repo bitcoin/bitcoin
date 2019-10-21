@@ -1,9 +1,9 @@
-// Copyright (c) 2015-2018 The Talkcoin Core developers
+// Copyright (c) 2015-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_ZMQ_ZMQPUBLISHNOTIFIER_H
-#define TALKCOIN_ZMQ_ZMQPUBLISHNOTIFIER_H
+#ifndef BITCOINTALKCOIN_ZMQ_ZMQPUBLISHNOTIFIER_H
+#define BITCOINTALKCOIN_ZMQ_ZMQPUBLISHNOTIFIER_H
 
 #include <zmq/zmqabstractnotifier.h>
 
@@ -52,4 +52,4 @@ public:
     bool NotifyTransaction(const CTransaction &transaction) override;
 };
 
-#endif // TALKCOIN_ZMQ_ZMQPUBLISHNOTIFIER_H
+#endif // BITCOINTALKCOIN_ZMQ_ZMQPUBLISHNOTIFIER_H

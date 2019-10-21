@@ -1,12 +1,12 @@
-// Copyright (c) 2014-2018 The Talkcoin Core developers
+// Copyright (c) 2014-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_ZMQ_ZMQCONFIG_H
-#define TALKCOIN_ZMQ_ZMQCONFIG_H
+#ifndef BITCOINTALKCOIN_ZMQ_ZMQCONFIG_H
+#define BITCOINTALKCOIN_ZMQ_ZMQCONFIG_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/talkcoin-config.h>
+#include <config/bitcointalkcoin-config.h>
 #endif
 
 #include <stdarg.h>
@@ -21,4 +21,4 @@
 
 void zmqError(const char *str);
 
-#endif // TALKCOIN_ZMQ_ZMQCONFIG_H
+#endif // BITCOINTALKCOIN_ZMQ_ZMQCONFIG_H

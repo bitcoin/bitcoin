@@ -1,9 +1,9 @@
-// Copyright (c) 2015-2018 The Talkcoin Core developers
+// Copyright (c) 2015-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
-#define TALKCOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
+#ifndef BITCOINTALKCOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
+#define BITCOINTALKCOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
 
 #include <zmq/zmqconfig.h>
 
@@ -50,4 +50,4 @@ protected:
     int outbound_message_high_water_mark; // aka SNDHWM
 };
 
-#endif // TALKCOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
+#endif // BITCOINTALKCOIN_ZMQ_ZMQABSTRACTNOTIFIER_H

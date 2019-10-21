@@ -1,4 +1,4 @@
-// Copyright (c) 2018 The Talkcoin Core developers
+// Copyright (c) 2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,6 +15,8 @@ namespace {
 
 UniValue getzmqnotifications(const JSONRPCRequest& request)
 {
+    if (request.fHelp || request.params.size() != 0) {
+        throw std::runtime_error(
             RPCHelpMan{"getzmqnotifications",
                 "\nReturns information about the active ZeroMQ notifications.\n",
                 {},
@@ -32,7 +34,8 @@ UniValue getzmqnotifications(const JSONRPCRequest& request)
                     HelpExampleCli("getzmqnotifications", "")
             + HelpExampleRpc("getzmqnotifications", "")
                 },
-            }.Check(request);
+            }.ToString());
+    }
 
     UniValue result(UniValue::VARR);
     if (g_zmq_notification_interface != nullptr) {
