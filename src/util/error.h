@@ -1,16 +1,16 @@
-// Copyright (c) 2010-2018 The Talkcoin Core developers
+// Copyright (c) 2010-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_UTIL_ERROR_H
-#define TALKCOIN_UTIL_ERROR_H
+#ifndef BITCOINTALKCOIN_UTIL_ERROR_H
+#define BITCOINTALKCOIN_UTIL_ERROR_H
 
 /**
  * util/error.h is a common place for definitions of simple error types and
  * string functions. Types and functions defined here should not require any
  * outside dependencies.
  *
- * Error types defined here can be used in different parts of the
+ * Error types defined here can be used in different parts of the bitcointalkcoin
  * codebase, to avoid the need to write boilerplate code catching and
  * translating errors passed across wallet/node/rpc/gui code boundaries.
  */
@@ -27,15 +27,12 @@ enum class TransactionError {
     INVALID_PSBT,
     PSBT_MISMATCH,
     SIGHASH_MISMATCH,
-    MAX_FEE_EXCEEDED,
 };
 
 std::string TransactionErrorString(const TransactionError error);
 
-std::string ResolveErrMsg(const std::string& optname, const std::string& strBind);
-
 std::string AmountHighWarn(const std::string& optname);
 
-std::string AmountErrMsg(const std::string& optname, const std::string& strValue);
+std::string AmountErrMsg(const char* const optname, const std::string& strValue);
 
-#endif // TALKCOIN_UTIL_ERROR_H
+#endif // BITCOINTALKCOIN_UTIL_ERROR_H

@@ -1,13 +1,13 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Talkcoin Core developers
+// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 /**
  * Utilities for converting data from/to strings.
  */
-#ifndef TALKCOIN_UTIL_STRENCODINGS_H
-#define TALKCOIN_UTIL_STRENCODINGS_H
+#ifndef BITCOINTALKCOIN_UTIL_STRENCODINGS_H
+#define BITCOINTALKCOIN_UTIL_STRENCODINGS_H
 
 #include <attributes.h>
 
@@ -201,8 +201,6 @@ bool ConvertBits(const O& outfn, I it, I end) {
  * Converts the given character to its lowercase equivalent.
  * This function is locale independent. It only converts uppercase
  * characters in the standard 7-bit ASCII range.
- * This is a feature, not a limitation.
- *
  * @param[in] c     the character to convert to lowercase.
  * @return          the lowercase equivalent of c; or the argument
  *                  if no conversion is possible.
@@ -213,22 +211,17 @@ constexpr char ToLower(char c)
 }
 
 /**
- * Returns the lowercase equivalent of the given string.
+ * Converts the given string to its lowercase equivalent.
  * This function is locale independent. It only converts uppercase
  * characters in the standard 7-bit ASCII range.
- * This is a feature, not a limitation.
- *
- * @param[in] str   the string to convert to lowercase.
- * @returns         lowercased equivalent of str
+ * @param[in,out] str   the string to convert to lowercase.
  */
-std::string ToLower(const std::string& str);
+void Downcase(std::string& str);
 
 /**
  * Converts the given character to its uppercase equivalent.
  * This function is locale independent. It only converts lowercase
  * characters in the standard 7-bit ASCII range.
- * This is a feature, not a limitation.
- *
  * @param[in] c     the character to convert to uppercase.
  * @return          the uppercase equivalent of c; or the argument
  *                  if no conversion is possible.
@@ -239,25 +232,13 @@ constexpr char ToUpper(char c)
 }
 
 /**
- * Returns the uppercase equivalent of the given string.
- * This function is locale independent. It only converts lowercase
- * characters in the standard 7-bit ASCII range.
- * This is a feature, not a limitation.
- *
- * @param[in] str   the string to convert to uppercase.
- * @returns         UPPERCASED EQUIVALENT OF str
- */
-std::string ToUpper(const std::string& str);
-
-/**
  * Capitalizes the first character of the given string.
- * This function is locale independent. It only converts lowercase
- * characters in the standard 7-bit ASCII range.
- * This is a feature, not a limitation.
- *
+ * This function is locale independent. It only capitalizes the
+ * first character of the argument if it has an uppercase equivalent
+ * in the standard 7-bit ASCII range.
  * @param[in] str   the string to capitalize.
- * @returns         string with the first letter capitalized.
+ * @return          string with the first letter capitalized.
  */
 std::string Capitalize(std::string str);
 
-#endif // TALKCOIN_UTIL_STRENCODINGS_H
+#endif // BITCOINTALKCOIN_UTIL_STRENCODINGS_H

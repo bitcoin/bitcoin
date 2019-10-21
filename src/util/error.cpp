@@ -1,12 +1,10 @@
-// Copyright (c) 2010-2018 The Talkcoin Core developers
+// Copyright (c) 2010-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <util/error.h>
 
-#include <tinyformat.h>
 #include <util/system.h>
-#include <util/translation.h>
 
 std::string TransactionErrorString(const TransactionError err)
 {
@@ -29,24 +27,17 @@ std::string TransactionErrorString(const TransactionError err)
             return "PSBTs not compatible (different transactions)";
         case TransactionError::SIGHASH_MISMATCH:
             return "Specified sighash value does not match existing value";
-        case TransactionError::MAX_FEE_EXCEEDED:
-            return "Fee exceeds maximum configured by -maxtxfee";
         // no default case, so the compiler can warn about missing cases
     }
     assert(false);
 }
 
-std::string ResolveErrMsg(const std::string& optname, const std::string& strBind)
-{
-    return strprintf(_("Cannot resolve -%s address: '%s'").translated, optname, strBind);
-}
-
 std::string AmountHighWarn(const std::string& optname)
 {
-    return strprintf(_("%s is set very high!").translated, optname);
+    return strprintf(_("%s is set very high!"), optname);
 }
 
-std::string AmountErrMsg(const std::string& optname, const std::string& strValue)
+std::string AmountErrMsg(const char* const optname, const std::string& strValue)
 {
-    return strprintf(_("Invalid amount for -%s=<amount>: '%s'").translated, optname, strValue);
+    return strprintf(_("Invalid amount for -%s=<amount>: '%s'"), optname, strValue);
 }

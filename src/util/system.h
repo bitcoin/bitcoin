@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Talkcoin Core developers
+// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,11 +7,11 @@
  * Server/client environment: argument handling, config file parsing,
  * thread wrappers, startup time
  */
-#ifndef TALKCOIN_UTIL_SYSTEM_H
-#define TALKCOIN_UTIL_SYSTEM_H
+#ifndef BITCOINTALKCOIN_UTIL_SYSTEM_H
+#define BITCOINTALKCOIN_UTIL_SYSTEM_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/talkcoin-config.h>
+#include <config/bitcointalkcoin-config.h>
 #endif
 
 #include <attributes.h>
@@ -20,9 +20,9 @@
 #include <fs.h>
 #include <logging.h>
 #include <sync.h>
+#include <util/threadnames.h>
 #include <tinyformat.h>
 #include <util/memory.h>
-#include <util/threadnames.h>
 #include <util/time.h>
 
 #include <atomic>
@@ -40,7 +40,19 @@
 // Application startup time (used for uptime calculation)
 int64_t GetStartupTime();
 
-extern const char * const TALKCOIN_CONF_FILENAME;
+extern const char * const BITCOINTALKCOIN_CONF_FILENAME;
+
+/** Translate a message to the native language of the user. */
+const extern std::function<std::string(const char*)> G_TRANSLATION_FUN;
+
+/**
+ * Translation function.
+ * If no translation function is set, simply return the input.
+ */
+inline std::string _(const char* psz)
+{
+    return G_TRANSLATION_FUN ? (G_TRANSLATION_FUN)(psz) : psz;
+}
 
 void SetupEnvironment();
 bool SetupNetworking();
@@ -73,17 +85,12 @@ fs::path GetDefaultDataDir();
 // The blocks directory is always net specific.
 const fs::path &GetBlocksDir();
 const fs::path &GetDataDir(bool fNetSpecific = true);
-// Return true if -datadir option points to a valid directory or is not specified.
-bool CheckDataDirOption();
-/** Tests only */
 void ClearDatadirCache();
 fs::path GetConfigFile(const std::string& confPath);
 #ifdef WIN32
 fs::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
-#if HAVE_SYSTEM
 void runCommand(const std::string& strCommand);
-#endif
 
 /**
  * Most paths passed as configuration arguments are treated as relative to
@@ -131,23 +138,6 @@ struct SectionInfo
 
 class ArgsManager
 {
-public:
-    enum Flags {
-        NONE = 0x00,
-        // Boolean options can accept negation syntax -noOPTION or -noOPTION=1
-        ALLOW_BOOL = 0x01,
-        ALLOW_INT = 0x02,
-        ALLOW_STRING = 0x04,
-        ALLOW_ANY = ALLOW_BOOL | ALLOW_INT | ALLOW_STRING,
-        DEBUG_ONLY = 0x100,
-        /* Some options would cause cross-contamination if values for
-         * mainnet were used while running on regtest/testnet (or vice-versa).
-         * Setting them as NETWORK_ONLY ensures that sharing a config file
-         * between mainnet and regtest/testnet won't cause problems due to these
-         * parameters by accident. */
-        NETWORK_ONLY = 0x200,
-    };
-
 protected:
     friend class ArgsManagerHelper;
 
@@ -155,7 +145,9 @@ protected:
     {
         std::string m_help_param;
         std::string m_help_text;
-        unsigned int m_flags;
+        bool m_debug_only;
+
+        Arg(const std::string& help_param, const std::string& help_text, bool debug_only) : m_help_param(help_param), m_help_text(help_text), m_debug_only(debug_only) {};
     };
 
     mutable CCriticalSection cs_args;
@@ -275,7 +267,7 @@ public:
     /**
      * Add argument
      */
-    void AddArg(const std::string& name, const std::string& help, unsigned int flags, const OptionsCategory& cat);
+    void AddArg(const std::string& name, const std::string& help, const bool debug_only, const OptionsCategory& cat);
 
     /**
      * Add many hidden arguments
@@ -288,7 +280,6 @@ public:
     void ClearArgs() {
         LOCK(cs_args);
         m_available_args.clear();
-        m_network_only_args.clear();
     }
 
     /**
@@ -297,10 +288,9 @@ public:
     std::string GetHelpMessage() const;
 
     /**
-     * Return Flags for known arg.
-     * Return ArgsManager::NONE for unknown arg.
+     * Check whether we know of this arg
      */
-    unsigned int FlagsOfKnownArg(const std::string& key) const;
+    bool IsArgKnown(const std::string& key) const;
 };
 
 extern ArgsManager gArgs;
@@ -364,7 +354,6 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
 }
 
 std::string CopyrightHolders(const std::string& strPrefix);
-
 void SetThreadPriority(int nPriority);
 void RenameThread(const char* name);
 /**
@@ -405,4 +394,4 @@ private:
 
 } // namespace util
 
-#endif // TALKCOIN_UTIL_SYSTEM_H
+#endif // BITCOINTALKCOIN_UTIL_SYSTEM_H

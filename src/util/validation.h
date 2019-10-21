@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Talkcoin Core developers
+// Copyright (c) 2009-2019 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_UTIL_VALIDATION_H
-#define TALKCOIN_UTIL_VALIDATION_H
+#ifndef BITCOINTALKCOIN_UTIL_VALIDATION_H
+#define BITCOINTALKCOIN_UTIL_VALIDATION_H
 
 #include <string>
 
@@ -15,4 +15,4 @@ std::string FormatStateMessage(const CValidationState &state);
 
 extern const std::string strMessageMagic;
 
-#endif // TALKCOIN_UTIL_VALIDATION_H
+#endif // BITCOINTALKCOIN_UTIL_VALIDATION_H

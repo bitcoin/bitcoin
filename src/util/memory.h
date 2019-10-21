@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Talkcoin Core developers
+// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_UTIL_MEMORY_H
-#define TALKCOIN_UTIL_MEMORY_H
+#ifndef BITCOINTALKCOIN_UTIL_MEMORY_H
+#define BITCOINTALKCOIN_UTIL_MEMORY_H
 
 #include <memory>
 #include <utility>
