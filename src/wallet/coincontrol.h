@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2019 The Talkcoin Core developers
+// Copyright (c) 2011-2019 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_WALLET_COINCONTROL_H
-#define TALKCOIN_WALLET_COINCONTROL_H
+#ifndef BITCOINTALKCOIN_WALLET_COINCONTROL_H
+#define BITCOINTALKCOIN_WALLET_COINCONTROL_H
 
 #include <policy/feerate.h>
 #include <policy/fees.h>
@@ -11,9 +11,6 @@
 #include <wallet/wallet.h>
 
 #include <boost/optional.hpp>
-
-const int DEFAULT_MIN_DEPTH = 0;
-const int DEFAULT_MAX_DEPTH = 9999999;
 
 /** Coin Control Features. */
 class CCoinControl
@@ -42,9 +39,7 @@ public:
     //! Fee estimation mode to control arguments to estimateSmartFee
     FeeEstimateMode m_fee_mode;
     //! Minimum chain depth value for coin availability
-    int m_min_depth = DEFAULT_MIN_DEPTH;
-    //! Maximum chain depth value for coin availability
-    int m_max_depth = DEFAULT_MAX_DEPTH;
+    int m_min_depth{0};
 
     CCoinControl()
     {
@@ -87,4 +82,4 @@ private:
     std::set<COutPoint> setSelected;
 };
 
-#endif // TALKCOIN_WALLET_COINCONTROL_H
+#endif // BITCOINTALKCOIN_WALLET_COINCONTROL_H

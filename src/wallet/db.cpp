@@ -1,12 +1,11 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Talkcoin Core developers
+// Copyright (c) 2009-2019 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <wallet/db.h>
 
 #include <util/strencodings.h>
-#include <util/translation.h>
 
 #include <stdint.h>
 
@@ -25,7 +24,7 @@ namespace {
 //!
 //! BerkeleyDB generates unique fileids by default
 //! (https://docs.oracle.com/cd/E17275_01/html/programmer_reference/program_copy.html),
-//! so talkcoin should never create different databases with the same fileid, but
+//! so bitcointalkcoin should never create different databases with the same fileid, but
 //! this error can be triggered if users manually copy database files.
 void CheckUniqueFileid(const BerkeleyEnvironment& env, const std::string& filename, Db& db, WalletDatabaseFileId& fileid)
 {
@@ -174,7 +173,7 @@ bool BerkeleyEnvironment::Open(bool retry)
     fs::path pathIn = strPath;
     TryCreateDirectories(pathIn);
     if (!LockDirectory(pathIn, ".walletlock")) {
-        LogPrintf("Cannot obtain a lock on wallet directory %s. Another instance of talkcoin may be using it.\n", strPath);
+        LogPrintf("Cannot obtain a lock on wallet directory %s. Another instance of bitcointalkcoin may be using it.\n", strPath);
         return false;
     }
 
@@ -405,7 +404,7 @@ bool BerkeleyBatch::VerifyEnvironment(const fs::path& file_path, std::string& er
     LogPrintf("Using wallet %s\n", file_path.string());
 
     if (!env->Open(true /* retry */)) {
-        errorStr = strprintf(_("Error initializing wallet database environment %s!").translated, walletDir);
+        errorStr = strprintf(_("Error initializing wallet database environment %s!"), walletDir);
         return false;
     }
 
@@ -427,12 +426,12 @@ bool BerkeleyBatch::VerifyDatabaseFile(const fs::path& file_path, std::string& w
             warningStr = strprintf(_("Warning: Wallet file corrupt, data salvaged!"
                                      " Original %s saved as %s in %s; if"
                                      " your balance or transactions are incorrect you should"
-                                     " restore from a backup.").translated,
+                                     " restore from a backup."),
                                    walletFile, backup_filename, walletDir);
         }
         if (r == BerkeleyEnvironment::VerifyResult::RECOVER_FAIL)
         {
-            errorStr = strprintf(_("%s corrupt, salvage failed").translated, walletFile);
+            errorStr = strprintf(_("%s corrupt, salvage failed"), walletFile);
             return false;
         }
     }
@@ -565,7 +564,7 @@ BerkeleyBatch::BerkeleyBatch(BerkeleyDatabase& database, const char* pszMode, bo
             // files in the same environment have the same fileid.
             //
             // Also call CheckUniqueFileid on all the other g_dbenvs to prevent
-            // talkcoin from opening the same data file through another
+            // bitcointalkcoin from opening the same data file through another
             // environment when the file is referenced through equivalent but
             // not obviously identical symlinked or hard linked or bind mounted
             // paths. In the future a more relaxed check for equal inode and
@@ -585,7 +584,7 @@ BerkeleyBatch::BerkeleyBatch(BerkeleyDatabase& database, const char* pszMode, bo
             if (fCreate && !Exists(std::string("version"))) {
                 bool fTmp = fReadOnly;
                 fReadOnly = false;
-                Write(std::string("version"), CLIENT_VERSION);
+                WriteVersion(CLIENT_VERSION);
                 fReadOnly = fTmp;
             }
         }

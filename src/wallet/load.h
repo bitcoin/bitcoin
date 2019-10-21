@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Talkcoin Core developers
+// Copyright (c) 2009-2019 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_WALLET_LOAD_H
-#define TALKCOIN_WALLET_LOAD_H
+#ifndef BITCOINTALKCOIN_WALLET_LOAD_H
+#define BITCOINTALKCOIN_WALLET_LOAD_H
 
 #include <string>
 #include <vector>
@@ -35,4 +35,4 @@ void StopWallets();
 //! Close all wallets.
 void UnloadWallets();
 
-#endif // TALKCOIN_WALLET_LOAD_H
+#endif // BITCOINTALKCOIN_WALLET_LOAD_H

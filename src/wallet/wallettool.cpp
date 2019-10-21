@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2019 The Talkcoin Core developers
+// Copyright (c) 2016-2019 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,7 +10,7 @@
 namespace WalletTool {
 
 // The standard wallet deleter function blocks on the validation interface
-// queue, which doesn't exist for the talkcoin-wallet. Define our own
+// queue, which doesn't exist for the bitcointalkcoin-wallet. Define our own
 // deleter here.
 static void WalletToolReleaseWallet(CWallet* wallet)
 {
@@ -74,10 +74,10 @@ static std::shared_ptr<CWallet> LoadWallet(const std::string& name, const fs::pa
                 name.c_str());
         } else if (load_wallet_ret == DBErrors::TOO_NEW) {
             tfm::format(std::cerr, "Error loading %s: Wallet requires newer version of %s",
-                name.c_str(), "Talkcoin");
+                name.c_str(), PACKAGE_NAME);
             return nullptr;
         } else if (load_wallet_ret == DBErrors::NEED_REWRITE) {
-            tfm::format(std::cerr, "Wallet needed to be rewritten: restart %s to complete", "Talkcoin");
+            tfm::format(std::cerr, "Wallet needed to be rewritten: restart %s to complete", PACKAGE_NAME);
             return nullptr;
         } else {
             tfm::format(std::cerr, "Error loading %s", name.c_str());

@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2019 The Talkcoin Core developers
+// Copyright (c) 2009-2019 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -44,7 +44,16 @@ TransactionError FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& ps
 
     // Fill in the bip32 keypaths and redeemscripts for the outputs so that hardware wallets can identify change
     for (unsigned int i = 0; i < psbtx.tx->vout.size(); ++i) {
-        UpdatePSBTOutput(HidingSigningProvider(pwallet, true, !bip32derivs), psbtx, i);
+        const CTxOut& out = psbtx.tx->vout.at(i);
+        PSBTOutput& psbt_out = psbtx.outputs.at(i);
+
+        // Fill a SignatureData with output info
+        SignatureData sigdata;
+        psbt_out.FillSignatureData(sigdata);
+
+        MutableTransactionSignatureCreator creator(psbtx.tx.get_ptr(), 0, out.nValue, 1);
+        ProduceSignature(HidingSigningProvider(pwallet, true, !bip32derivs), creator, out.scriptPubKey, sigdata);
+        psbt_out.FromSignatureData(sigdata);
     }
 
     return TransactionError::OK;

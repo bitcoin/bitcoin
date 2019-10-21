@@ -1,9 +1,8 @@
-// Copyright (c) 2018 The Talkcoin Core developers
+// Copyright (c) 2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <fs.h>
-#include <util/system.h>
 
 #include <wallet/test/init_test_fixture.h>
 
@@ -14,7 +13,7 @@ InitWalletDirTestingSetup::InitWalletDirTestingSetup(const std::string& chainNam
     std::string sep;
     sep += fs::path::preferred_separator;
 
-    m_datadir = GetDataDir();
+    m_datadir = SetDataDir("tempdir");
     m_cwd = fs::current_path();
 
     m_walletdir_path_cases["default"] = m_datadir / "wallets";
