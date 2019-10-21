@@ -2,14 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_QT_WALLETFRAME_H
-#define TALKCOIN_QT_WALLETFRAME_H
+#ifndef BITCOINTALKCOIN_QT_WALLETFRAME_H
+#define BITCOINTALKCOIN_QT_WALLETFRAME_H
 
 #include <QFrame>
 #include <QMap>
 #include <qt/messagemodel.h>
 
-class TalkcoinGUI;
+class BitcointalkcoinGUI;
 class ClientModel;
 class PlatformStyle;
 class SendCoinsRecipient;
@@ -23,9 +23,9 @@ QT_END_NAMESPACE
 
 /**
  * A container for embedding all wallet-related
- * controls into TalkcoinGUI. The purpose of this class is to allow future
+ * controls into BitcointalkcoinGUI. The purpose of this class is to allow future
  * refinements of the wallet controls with minimal need for further
- * modifications to TalkcoinGUI, thus greatly simplifying merges while
+ * modifications to BitcointalkcoinGUI, thus greatly simplifying merges while
  * reducing the risk of breaking top-level stuff.
  */
 class WalletFrame : public QFrame
@@ -33,7 +33,7 @@ class WalletFrame : public QFrame
     Q_OBJECT
 
 public:
-    explicit WalletFrame(const PlatformStyle *platformStyle, TalkcoinGUI *_gui = nullptr);
+    explicit WalletFrame(const PlatformStyle *platformStyle, BitcointalkcoinGUI *_gui = nullptr);
     ~WalletFrame();
 
     void setClientModel(ClientModel *clientModel);
@@ -53,7 +53,7 @@ Q_SIGNALS:
 
 private:
     QStackedWidget *walletStack;
-    TalkcoinGUI *gui;
+    BitcointalkcoinGUI *gui;
     ClientModel *clientModel;
 #ifdef ENABLE_SECURE_MESSAGING
     MessageModel *messageModel;
@@ -105,10 +105,6 @@ public Q_SLOTS:
     void usedReceivingAddresses();
     /** Pass on signal over requested out-of-sync-warning information */
     void outOfSyncWarningClicked();
-    /** Set the current wallets SPV mode */
-    void setSPVMode(bool state);
-    /** Get the current wallets SPV mode */
-    bool getSPVMode();
 };
 
 #endif // BITCOINTALKCOIN_QT_WALLETFRAME_H

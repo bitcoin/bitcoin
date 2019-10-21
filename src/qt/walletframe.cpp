@@ -5,7 +5,7 @@
 #include <qt/walletframe.h>
 #include <qt/walletmodel.h>
 
-#include <qt/talkcoingui.h>
+#include <qt/bitcointalkcoingui.h>
 #include <qt/walletview.h>
 
 #include <cassert>
@@ -14,7 +14,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 
-WalletFrame::WalletFrame(const PlatformStyle *_platformStyle, TalkcoinGUI *_gui) :
+WalletFrame::WalletFrame(const PlatformStyle *_platformStyle, BitcointalkcoinGUI *_gui) :
     QFrame(_gui),
     gui(_gui),
     platformStyle(_platformStyle)
@@ -47,7 +47,7 @@ void WalletFrame::addWallet(WalletModel *walletModel)
     if (mapWalletViews.count(walletModel) > 0) return;
 
     WalletView *walletView = new WalletView(platformStyle, this);
-    walletView->setTalkcoinGUI(gui);
+    walletView->setBitcointalkcoinGUI(gui);
     walletView->setClientModel(clientModel);
     walletView->setWalletModel(walletModel);
 #ifdef ENABLE_SECURE_MESSAGING
@@ -246,20 +246,4 @@ WalletModel* WalletFrame::currentWalletModel() const
 void WalletFrame::outOfSyncWarningClicked()
 {
     Q_EMIT requestedSyncWarningInfo();
-}
-
-void WalletFrame::setSPVMode(bool state)
-{
-    WalletView *walletView = currentWalletView();
-    if (walletView)
-        walletView->setSPVMode(state);
-}
-
-bool WalletFrame::getSPVMode()
-{
-    WalletView *walletView = currentWalletView();
-    if (walletView)
-        return walletView->getSPVMode();
-
-    return false;
 }

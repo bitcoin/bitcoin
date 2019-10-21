@@ -1,29 +1,28 @@
-// Copyright (c) 2011-2018 The Talkcoin Core developers
+// Copyright (c) 2011-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/talkcoin-config.h>
+#include <config/bitcointalkcoin-config.h>
 #endif
 
 #include <qt/splashscreen.h>
+
+#include <qt/networkstyle.h>
 
 #include <clientversion.h>
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 #include <interfaces/wallet.h>
-#include <qt/guiutil.h>
-#include <qt/networkstyle.h>
 #include <ui_interface.h>
 #include <util/system.h>
-#include <util/translation.h>
 #include <version.h>
 
 #include <QApplication>
 #include <QCloseEvent>
+#include <QDesktopWidget>
 #include <QPainter>
 #include <QRadialGradient>
-#include <QScreen>
 
 
 SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const NetworkStyle *networkStyle) :
@@ -40,7 +39,7 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
     devicePixelRatio = static_cast<QGuiApplication*>(QCoreApplication::instance())->devicePixelRatio();
 
     // define text to place
-    QString titleText       = "Talkcoin";
+    QString titleText       = tr(PACKAGE_NAME);
     QString versionText     = QString("Version %1").arg(QString::fromStdString(FormatFullVersion()));
     QString copyrightText   = QString::fromUtf8(CopyrightHolders(strprintf("\xc2\xA9 %u-%u ", 2009, COPYRIGHT_YEAR)).c_str());
     QString titleAddText    = networkStyle->getTitleAddText();
@@ -64,7 +63,7 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
     QRect rGradient(QPoint(0,0), splashSize);
     pixPaint.fillRect(rGradient, gradient);
 
-    // draw the talkcoin icon, expected size of PNG: 1024x1024
+    // draw the bitcointalkcoin icon, expected size of PNG: 1024x1024
     QRect rectIcon(QPoint(-150,-122), QSize(430,430));
 
     const QSize requiredSize(1024,1024);
@@ -75,21 +74,21 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
     // check font size and drawing with
     pixPaint.setFont(QFont(font, 33*fontFactor));
     QFontMetrics fm = pixPaint.fontMetrics();
-    int titleTextWidth = GUIUtil::TextWidth(fm, titleText);
+    int titleTextWidth = fm.width(titleText);
     if (titleTextWidth > 176) {
         fontFactor = fontFactor * 176 / titleTextWidth;
     }
 
     pixPaint.setFont(QFont(font, 33*fontFactor));
     fm = pixPaint.fontMetrics();
-    titleTextWidth  = GUIUtil::TextWidth(fm, titleText);
+    titleTextWidth  = fm.width(titleText);
     pixPaint.drawText(pixmap.width()/devicePixelRatio-titleTextWidth-paddingRight,paddingTop,titleText);
 
     pixPaint.setFont(QFont(font, 15*fontFactor));
 
     // if the version string is too long, reduce size
     fm = pixPaint.fontMetrics();
-    int versionTextWidth  = GUIUtil::TextWidth(fm, versionText);
+    int versionTextWidth  = fm.width(versionText);
     if(versionTextWidth > titleTextWidth+paddingRight-10) {
         pixPaint.setFont(QFont(font, 10*fontFactor));
         titleVersionVSpace -= 5;
@@ -111,7 +110,7 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
         boldFont.setWeight(QFont::Bold);
         pixPaint.setFont(boldFont);
         fm = pixPaint.fontMetrics();
-        int titleAddTextWidth  = GUIUtil::TextWidth(fm, titleAddText);
+        int titleAddTextWidth  = fm.width(titleAddText);
         pixPaint.drawText(pixmap.width()/devicePixelRatio-titleAddTextWidth-10,15,titleAddText);
     }
 
@@ -124,7 +123,7 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
     QRect r(QPoint(), QSize(pixmap.size().width()/devicePixelRatio,pixmap.size().height()/devicePixelRatio));
     resize(r.size());
     setFixedSize(r.size());
-    move(QGuiApplication::primaryScreen()->geometry().center() - r.center());
+    move(QApplication::desktop()->screenGeometry().center() - r.center());
 
     subscribeToCoreSignals();
     installEventFilter(this);
@@ -157,19 +156,18 @@ void SplashScreen::finish()
 
 static void InitMessage(SplashScreen *splash, const std::string &message)
 {
-    bool invoked = QMetaObject::invokeMethod(splash, "showMessage",
+    QMetaObject::invokeMethod(splash, "showMessage",
         Qt::QueuedConnection,
         Q_ARG(QString, QString::fromStdString(message)),
         Q_ARG(int, Qt::AlignBottom|Qt::AlignHCenter),
         Q_ARG(QColor, QColor(55,55,55)));
-    assert(invoked);
 }
 
 static void ShowProgress(SplashScreen *splash, const std::string &title, int nProgress, bool resume_possible)
 {
     InitMessage(splash, title + std::string("\n") +
-            (resume_possible ? _("(press q to shutdown and continue later)").translated
-                                : _("press q to shutdown").translated) +
+            (resume_possible ? _("(press q to shutdown and continue later)")
+                                : _("press q to shutdown")) +
             strprintf("\n%d", nProgress) + "%");
 }
 #ifdef ENABLE_WALLET
