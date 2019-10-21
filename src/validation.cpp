@@ -223,7 +223,12 @@ bool CheckSequenceLocksAtTip(CBlockIndex* tip,
                     maxInputHeight = std::max(maxInputHeight, height);
                 }
             }
-            lp->maxInputBlock = tip->GetAncestor(maxInputHeight);
+            // tip->GetAncestor(maxInputHeight) should never return a nullptr
+            // because maxInputHeight is always less than the tip height.
+            // It would, however, be a bad bug to continue execution, since a
+            // LockPoints object with the maxInputBlock member set to nullptr
+            // signifies no relative lock time.
+            lp->maxInputBlock = Assert(tip->GetAncestor(maxInputHeight));
         }
     }
     return EvaluateSequenceLocks(index, lockPair);
@@ -4732,10 +4737,11 @@ bool CChainState::ReplayBlocks()
     // Roll forward from the forking point to the new tip.
     int nForkHeight = pindexFork ? pindexFork->nHeight : 0;
     for (int nHeight = nForkHeight + 1; nHeight <= pindexNew->nHeight; ++nHeight) {
-        const CBlockIndex* pindex = pindexNew->GetAncestor(nHeight);
-        LogPrintf("Rolling forward %s (%i)\n", pindex->GetBlockHash().ToString(), nHeight);
+        const CBlockIndex& pindex{*Assert(pindexNew->GetAncestor(nHeight))};
+
+        LogPrintf("Rolling forward %s (%i)\n", pindex.GetBlockHash().ToString(), nHeight);
         uiInterface.ShowProgress(_("Replaying blocks…").translated, (int) ((nHeight - nForkHeight) * 100.0 / (pindexNew->nHeight - nForkHeight)) , false);
-        if (!RollforwardBlock(pindex, cache)) return false;
+        if (!RollforwardBlock(&pindex, cache)) return false;
     }
 
     cache.SetBestBlock(pindexNew->GetBlockHash());
