@@ -1,10 +1,11 @@
-// Copyright (c) 2012-2019 The Talkcoin Core developers
+// Copyright (c) 2012-2019 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <key.h>
 
 #include <key_io.h>
+#include <script/script.h>
 #include <uint256.h>
 #include <util/system.h>
 #include <util/strencodings.h>
@@ -191,7 +192,7 @@ BOOST_AUTO_TEST_CASE(key_key_negation)
 {
     // create a dummy hash for signature comparison
     unsigned char rnd[8];
-    std::string str = "Talkcoin key verification\n";
+    std::string str = "Bitcointalkcoin key verification\n";
     GetRandBytes(rnd, sizeof(rnd));
     uint256 hash;
     CHash256().Write((unsigned char*)str.data(), str.size()).Write(rnd, sizeof(rnd)).Finalize(hash.begin());

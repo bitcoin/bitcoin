@@ -1,15 +1,19 @@
-// Copyright (c) 2011-2019 The Talkcoin Core developers
+// Copyright (c) 2011-2019 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/validation.h>
 #include <key.h>
 #include <validation.h>
+#include <miner.h>
+#include <pubkey.h>
 #include <txmempool.h>
+#include <random.h>
 #include <script/standard.h>
 #include <script/sign.h>
-#include <script/signingprovider.h>
 #include <test/setup_common.h>
+#include <util/time.h>
+#include <keystore.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -161,7 +165,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, TestChain100Setup)
     CScript p2pkh_scriptPubKey = GetScriptForDestination(PKHash(coinbaseKey.GetPubKey()));
     CScript p2wpkh_scriptPubKey = GetScriptForWitness(p2pkh_scriptPubKey);
 
-    FillableSigningProvider keystore;
+    CBasicKeyStore keystore;
     BOOST_CHECK(keystore.AddKey(coinbaseKey));
     BOOST_CHECK(keystore.AddCScript(p2pk_scriptPubKey));
 

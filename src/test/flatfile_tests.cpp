@@ -1,12 +1,9 @@
-// Copyright (c) 2019 The Talkcoin Core developers
+// Copyright (c) 2019 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <clientversion.h>
 #include <flatfile.h>
-#include <streams.h>
 #include <test/setup_common.h>
-#include <util/system.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -14,7 +11,7 @@ BOOST_FIXTURE_TEST_SUITE(flatfile_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(flatfile_filename)
 {
-    const auto data_dir = GetDataDir();
+    auto data_dir = SetDataDir("flatfile_test");
 
     FlatFilePos pos(456, 789);
 
@@ -27,7 +24,7 @@ BOOST_AUTO_TEST_CASE(flatfile_filename)
 
 BOOST_AUTO_TEST_CASE(flatfile_open)
 {
-    const auto data_dir = GetDataDir();
+    auto data_dir = SetDataDir("flatfile_test");
     FlatFileSeq seq(data_dir, "a", 16 * 1024);
 
     std::string line1("A purely peer-to-peer version of electronic cash would allow online "
@@ -88,7 +85,7 @@ BOOST_AUTO_TEST_CASE(flatfile_open)
 
 BOOST_AUTO_TEST_CASE(flatfile_allocate)
 {
-    const auto data_dir = GetDataDir();
+    auto data_dir = SetDataDir("flatfile_test");
     FlatFileSeq seq(data_dir, "a", 100);
 
     bool out_of_space;
@@ -108,7 +105,7 @@ BOOST_AUTO_TEST_CASE(flatfile_allocate)
 
 BOOST_AUTO_TEST_CASE(flatfile_flush)
 {
-    const auto data_dir = GetDataDir();
+    auto data_dir = SetDataDir("flatfile_test");
     FlatFileSeq seq(data_dir, "a", 100);
 
     bool out_of_space;

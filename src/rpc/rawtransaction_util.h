@@ -1,13 +1,13 @@
-// Copyright (c) 2017-2018 The Talkcoin Core developers
+// Copyright (c) 2017-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_RPC_RAWTRANSACTION_UTIL_H
-#define TALKCOIN_RPC_RAWTRANSACTION_UTIL_H
+#ifndef BITCOINTALKCOIN_RPC_RAWTRANSACTION_UTIL_H
+#define BITCOINTALKCOIN_RPC_RAWTRANSACTION_UTIL_H
 
 #include <map>
 
-class FillableSigningProvider;
+class CBasicKeyStore;
 class UniValue;
 struct CMutableTransaction;
 class Coin;
@@ -25,11 +25,11 @@ class uint256;
  * @param  hashType      The signature hash type
  * @returns JSON object with details of signed transaction
  */
-UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxs, FillableSigningProvider* keystore, std::map<COutPoint, Coin>& coins, bool tempKeystore, const UniValue& hashType);
+UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxs, CBasicKeyStore* keystore, std::map<COutPoint, Coin>& coins, bool tempKeystore, const UniValue& hashType);
 
 /** Create a transaction from univalue parameters */
-CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, bool rbf);
+CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, const UniValue& rbf);
 
 extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry);
 
-#endif // TALKCOIN_RPC_RAWTRANSACTION_UTIL_H
+#endif // BITCOINTALKCOIN_RPC_RAWTRANSACTION_UTIL_H

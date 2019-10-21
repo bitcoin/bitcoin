@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Talkcoin Core developers
+// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_SCRIPT_SCRIPT_H
-#define TALKCOIN_SCRIPT_SCRIPT_H
+#ifndef BITCOINTALKCOIN_SCRIPT_SCRIPT_H
+#define BITCOINTALKCOIN_SCRIPT_SCRIPT_H
 
 #include <crypto/common.h>
 #include <prevector.h>
@@ -437,9 +437,7 @@ public:
 
     explicit CScript(opcodetype b)     { operator<<(b); }
     explicit CScript(const CScriptNum& b) { operator<<(b); }
-    // delete non-existent constructor to defend against future introduction
-    // e.g. via prevector
-    explicit CScript(const std::vector<unsigned char>& b) = delete;
+    explicit CScript(const std::vector<unsigned char>& b) { operator<<(b); }
 
 
     CScript& operator<<(int64_t b) { return push_int64(b); }
@@ -524,7 +522,7 @@ public:
     }
 
     /**
-     * Pre-version-0.6, Talkcoin always counted CHECKMULTISIGs
+     * Pre-version-0.6, Bitcointalkcoin always counted CHECKMULTISIGs
      * as 20 sigops. With pay-to-script-hash, that changed:
      * CHECKMULTISIGs serialized in scriptSigs are
      * counted more accurately, assuming they are of the form
@@ -597,4 +595,4 @@ public:
     virtual ~CReserveScript() {}
 };
 
-#endif // TALKCOIN_SCRIPT_SCRIPT_H
+#endif // BITCOINTALKCOIN_SCRIPT_SCRIPT_H

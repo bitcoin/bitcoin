@@ -2,24 +2,21 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <init.h>
-#include <key_io.h>
-#include <rpc/server.h>
-#include <rpc/util.h>
-#include <rpc/rawtransaction_util.h>
-#include <outputtype.h>
-#include <smessage/smessage.h>
-#include <util/strencodings.h>
-#include <util/system.h>
-#include <util/time.h>
+#include "init.h"
+#include "key_io.h"
+#include "rpc/server.h"
+#include "rpc/rawtransaction_util.h"
+#include "rpc/util.h"
+#include "smessage/smessage.h"
+#include "util/strencodings.h"
+#include "util/system.h"
+#include "util/time.h"
+#include "validation.h"
+#include <wallet/rpcwallet.h>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
 
-#ifdef ENABLE_WALLET
-#include <wallet/rpcwallet.h>
-#include <wallet/wallet.h>
-#endif
 
 
 //using namespace json_spirit;
@@ -197,7 +194,6 @@ UniValue smsglocalkeys(const JSONRPCRequest& request) {
             //      return true;
 
             std::string sLabel = "";
-            LOCK(pwallet->cs_wallet);
             if (pwallet->mapAddressBook.count(dest)) {
                 sLabel = pwallet->mapAddressBook[dest].name;
             }
@@ -295,8 +291,9 @@ UniValue smsglocalkeys(const JSONRPCRequest& request) {
     }
     else if (mode == "wallet") {
         uint32_t nKeys = 0;
-        LOCK(pwallet->cs_wallet);
-        for (const auto& entry : pwallet->mapAddressBook) {
+        for (const std::pair<CTxDestination, CAddressBookData>& entry : pwallet->mapAddressBook) {
+
+
             CTxDestination dest = entry.first;
 
             if (!IsValidDestination(dest))

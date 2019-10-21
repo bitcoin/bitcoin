@@ -1,8 +1,8 @@
-// Copyright (c) 2018 The Talkcoin Core developers
+// Copyright (c) 2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef TALKCOIN_TEST_GEN_CRYPTO_GEN_H
-#define TALKCOIN_TEST_GEN_CRYPTO_GEN_H
+#ifndef BITCOINTALKCOIN_TEST_GEN_CRYPTO_GEN_H
+#define BITCOINTALKCOIN_TEST_GEN_CRYPTO_GEN_H
 
 #include <key.h>
 #include <random.h>

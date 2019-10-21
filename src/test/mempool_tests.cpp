@@ -1,20 +1,18 @@
-// Copyright (c) 2011-2019 The Talkcoin Core developers
+// Copyright (c) 2011-2019 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <policy/policy.h>
 #include <txmempool.h>
 #include <util/system.h>
-#include <util/time.h>
 
 #include <test/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
+#include <list>
 #include <vector>
 
 BOOST_FIXTURE_TEST_SUITE(mempool_tests, TestingSetup)
-
-static constexpr auto REMOVAL_REASON_DUMMY = MemPoolRemovalReason::REPLACED;
 
 BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
 {
@@ -61,13 +59,13 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
 
     // Nothing in pool, remove should do nothing:
     unsigned int poolSize = testPool.size();
-    testPool.removeRecursive(CTransaction(txParent), REMOVAL_REASON_DUMMY);
+    testPool.removeRecursive(CTransaction(txParent));
     BOOST_CHECK_EQUAL(testPool.size(), poolSize);
 
     // Just the parent:
     testPool.addUnchecked(entry.FromTx(txParent));
     poolSize = testPool.size();
-    testPool.removeRecursive(CTransaction(txParent), REMOVAL_REASON_DUMMY);
+    testPool.removeRecursive(CTransaction(txParent));
     BOOST_CHECK_EQUAL(testPool.size(), poolSize - 1);
 
     // Parent, children, grandchildren:
@@ -79,18 +77,18 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
     }
     // Remove Child[0], GrandChild[0] should be removed:
     poolSize = testPool.size();
-    testPool.removeRecursive(CTransaction(txChild[0]), REMOVAL_REASON_DUMMY);
+    testPool.removeRecursive(CTransaction(txChild[0]));
     BOOST_CHECK_EQUAL(testPool.size(), poolSize - 2);
     // ... make sure grandchild and child are gone:
     poolSize = testPool.size();
-    testPool.removeRecursive(CTransaction(txGrandChild[0]), REMOVAL_REASON_DUMMY);
+    testPool.removeRecursive(CTransaction(txGrandChild[0]));
     BOOST_CHECK_EQUAL(testPool.size(), poolSize);
     poolSize = testPool.size();
-    testPool.removeRecursive(CTransaction(txChild[0]), REMOVAL_REASON_DUMMY);
+    testPool.removeRecursive(CTransaction(txChild[0]));
     BOOST_CHECK_EQUAL(testPool.size(), poolSize);
     // Remove parent, all children/grandchildren should go:
     poolSize = testPool.size();
-    testPool.removeRecursive(CTransaction(txParent), REMOVAL_REASON_DUMMY);
+    testPool.removeRecursive(CTransaction(txParent));
     BOOST_CHECK_EQUAL(testPool.size(), poolSize - 5);
     BOOST_CHECK_EQUAL(testPool.size(), 0U);
 
@@ -103,7 +101,7 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
     // Now remove the parent, as might happen if a block-re-org occurs but the parent cannot be
     // put into the mempool (maybe because it is non-standard):
     poolSize = testPool.size();
-    testPool.removeRecursive(CTransaction(txParent), REMOVAL_REASON_DUMMY);
+    testPool.removeRecursive(CTransaction(txParent));
     BOOST_CHECK_EQUAL(testPool.size(), poolSize - 6);
     BOOST_CHECK_EQUAL(testPool.size(), 0U);
 }
@@ -285,11 +283,11 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
     BOOST_CHECK_EQUAL(pool.size(), 10U);
 
     // Now try removing tx10 and verify the sort order returns to normal
-    pool.removeRecursive(pool.mapTx.find(tx10.GetHash())->GetTx(), REMOVAL_REASON_DUMMY);
+    pool.removeRecursive(pool.mapTx.find(tx10.GetHash())->GetTx());
     CheckSort<descendant_score>(pool, snapshotOrder);
 
-    pool.removeRecursive(pool.mapTx.find(tx9.GetHash())->GetTx(), REMOVAL_REASON_DUMMY);
-    pool.removeRecursive(pool.mapTx.find(tx8.GetHash())->GetTx(), REMOVAL_REASON_DUMMY);
+    pool.removeRecursive(pool.mapTx.find(tx9.GetHash())->GetTx());
+    pool.removeRecursive(pool.mapTx.find(tx8.GetHash())->GetTx());
 }
 
 BOOST_AUTO_TEST_CASE(MempoolAncestorIndexingTest)

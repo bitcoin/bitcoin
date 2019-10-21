@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.talkcoin;
+package org.bitcointalkcoin;
 
 /**
  * This class holds the context reference used in native methods 

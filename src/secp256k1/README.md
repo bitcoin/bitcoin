@@ -1,7 +1,7 @@
 libsecp256k1
 ============
 
-[![Build Status](https://travis-ci.org/talkcoin-core/secp256k1.svg?branch=master)](https://travis-ci.org/talkcoin-core/secp256k1)
+[![Build Status](https://travis-ci.org/bitcointalkcoin-core/secp256k1.svg?branch=master)](https://travis-ci.org/bitcointalkcoin-core/secp256k1)
 
 Optimized C library for EC operations on curve secp256k1.
 

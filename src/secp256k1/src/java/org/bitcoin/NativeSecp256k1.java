@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.talkcoin;
+package org.bitcointalkcoin;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -24,14 +24,14 @@ import java.math.BigInteger;
 import com.google.common.base.Preconditions;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import static org.talkcoin.NativeSecp256k1Util.*;
+import static org.bitcointalkcoin.NativeSecp256k1Util.*;
 
 /**
  * <p>This class holds native methods to handle ECDSA verification.</p>
  *
- * <p>You can find an example library that can be used for this at https://github.com/talkcoin/secp256k1</p>
+ * <p>You can find an example library that can be used for this at https://github.com/bitcointalkcoin/secp256k1</p>
  *
- * <p>To build secp256k1 for use with talkcoinj, run
+ * <p>To build secp256k1 for use with bitcointalkcoinj, run
  * `./configure --enable-jni --enable-experimental --enable-module-ecdh`
  * and `make` then copy `.libs/libsecp256k1.so` to your system library path
  * or point the JVM to the folder containing it with -Djava.library.path

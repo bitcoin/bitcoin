@@ -1,7 +1,7 @@
 Description
 ------------
 
-This directory contains data-driven tests for various aspects of Talkcoin.
+This directory contains data-driven tests for various aspects of Bitcointalkcoin.
 
 License
 --------

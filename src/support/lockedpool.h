@@ -1,9 +1,9 @@
-// Copyright (c) 2016-2018 The Talkcoin Core developers
+// Copyright (c) 2016-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_SUPPORT_LOCKEDPOOL_H
-#define TALKCOIN_SUPPORT_LOCKEDPOOL_H
+#ifndef BITCOINTALKCOIN_SUPPORT_LOCKEDPOOL_H
+#define BITCOINTALKCOIN_SUPPORT_LOCKEDPOOL_H
 
 #include <stdint.h>
 #include <list>
@@ -237,4 +237,4 @@ private:
     static std::once_flag init_flag;
 };
 
-#endif // TALKCOIN_SUPPORT_LOCKEDPOOL_H
+#endif // BITCOINTALKCOIN_SUPPORT_LOCKEDPOOL_H

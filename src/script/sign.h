@@ -1,16 +1,15 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Talkcoin Core developers
+// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_SCRIPT_SIGN_H
-#define TALKCOIN_SCRIPT_SIGN_H
+#ifndef BITCOINTALKCOIN_SCRIPT_SIGN_H
+#define BITCOINTALKCOIN_SCRIPT_SIGN_H
 
 #include <boost/optional.hpp>
 #include <hash.h>
 #include <pubkey.h>
 #include <script/interpreter.h>
-#include <script/keyorigin.h>
 #include <streams.h>
 #include <coins.h>
 
@@ -19,9 +18,76 @@ class CKeyID;
 class CScript;
 class CScriptID;
 class CTransaction;
-class SigningProvider;
 
 struct CMutableTransaction;
+
+struct KeyOriginInfo
+{
+    unsigned char fingerprint[4]; //!< First 32 bits of the Hash160 of the public key at the root of the path
+    std::vector<uint32_t> path;
+
+    friend bool operator==(const KeyOriginInfo& a, const KeyOriginInfo& b)
+    {
+        return std::equal(std::begin(a.fingerprint), std::end(a.fingerprint), std::begin(b.fingerprint)) && a.path == b.path;
+    }
+
+    ADD_SERIALIZE_METHODS;
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action)
+    {
+        READWRITE(fingerprint);
+        READWRITE(path);
+    }
+
+    void clear()
+    {
+        memset(fingerprint, 0, 4);
+        path.clear();
+    }
+};
+
+/** An interface to be implemented by keystores that support signing. */
+class SigningProvider
+{
+public:
+    virtual ~SigningProvider() {}
+    virtual bool GetCScript(const CScriptID &scriptid, CScript& script) const { return false; }
+    virtual bool GetPubKey(const CKeyID &address, CPubKey& pubkey) const { return false; }
+    virtual bool GetKey(const CKeyID &address, CKey& key) const { return false; }
+    virtual bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const { return false; }
+};
+
+extern const SigningProvider& DUMMY_SIGNING_PROVIDER;
+
+class HidingSigningProvider : public SigningProvider
+{
+private:
+    const bool m_hide_secret;
+    const bool m_hide_origin;
+    const SigningProvider* m_provider;
+
+public:
+    HidingSigningProvider(const SigningProvider* provider, bool hide_secret, bool hide_origin) : m_hide_secret(hide_secret), m_hide_origin(hide_origin), m_provider(provider) {}
+    bool GetCScript(const CScriptID& scriptid, CScript& script) const override;
+    bool GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const override;
+    bool GetKey(const CKeyID& keyid, CKey& key) const override;
+    bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const override;
+};
+
+struct FlatSigningProvider final : public SigningProvider
+{
+    std::map<CScriptID, CScript> scripts;
+    std::map<CKeyID, CPubKey> pubkeys;
+    std::map<CKeyID, std::pair<CPubKey, KeyOriginInfo>> origins;
+    std::map<CKeyID, CKey> keys;
+
+    bool GetCScript(const CScriptID& scriptid, CScript& script) const override;
+    bool GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const override;
+    bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const override;
+    bool GetKey(const CKeyID& keyid, CKey& key) const override;
+};
+
+FlatSigningProvider Merge(const FlatSigningProvider& a, const FlatSigningProvider& b);
 
 /** Interface for signature creators. */
 class BaseSignatureCreator {
@@ -81,7 +147,11 @@ struct SignatureData {
 template<typename Stream, typename... X>
 void SerializeToVector(Stream& s, const X&... args)
 {
+#ifdef ENABLE_PROOF_OF_STAKE
     WriteCompactSize(s, GetSerializeSizeMany(s, args...));
+#else
+    WriteCompactSize(s, GetSerializeSizeMany(s.GetVersion(), args...));
+#endif
     SerializeMany(s, args...);
 }
 
@@ -168,7 +238,4 @@ void UpdateInput(CTxIn& input, const SignatureData& data);
  * Solvability is unrelated to whether we consider this output to be ours. */
 bool IsSolvable(const SigningProvider& provider, const CScript& script);
 
-/** Check whether a scriptPubKey is known to be segwit. */
-bool IsSegWitOutput(const SigningProvider& provider, const CScript& script);
-
-#endif // TALKCOIN_SCRIPT_SIGN_H
+#endif // BITCOINTALKCOIN_SCRIPT_SIGN_H

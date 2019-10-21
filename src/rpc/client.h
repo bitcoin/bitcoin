@@ -1,10 +1,10 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Talkcoin Core developers
+// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_RPC_CLIENT_H
-#define TALKCOIN_RPC_CLIENT_H
+#ifndef BITCOINTALKCOIN_RPC_CLIENT_H
+#define BITCOINTALKCOIN_RPC_CLIENT_H
 
 #include <univalue.h>
 
@@ -19,4 +19,4 @@ UniValue RPCConvertNamedValues(const std::string& strMethod, const std::vector<s
  */
 UniValue ParseNonRFCJSONValue(const std::string& strVal);
 
-#endif // TALKCOIN_RPC_CLIENT_H
+#endif // BITCOINTALKCOIN_RPC_CLIENT_H

@@ -1,10 +1,10 @@
-package org.talkcoin;
+package org.bitcointalkcoin;
 
 import com.google.common.io.BaseEncoding;
 import java.util.Arrays;
 import java.math.BigInteger;
 import javax.xml.bind.DatatypeConverter;
-import static org.talkcoin.NativeSecp256k1Util.*;
+import static org.bitcointalkcoin.NativeSecp256k1Util.*;
 
 /**
  * This class holds test cases defined for testing this library.

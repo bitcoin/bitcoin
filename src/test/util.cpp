@@ -1,4 +1,4 @@
-// Copyright (c) 2019 The Talkcoin Core developers
+// Copyright (c) 2019 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,15 +17,22 @@
 #include <wallet/wallet.h>
 #endif
 
+#include <boost/thread.hpp>
+
 const std::string ADDRESS_BCRT1_UNSPENDABLE = "bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj";
 
 #ifdef ENABLE_WALLET
 std::string getnewaddress(CWallet& w)
 {
     constexpr auto output_type = OutputType::BECH32;
-    CTxDestination dest;
-    std::string error;
-    if (!w.GetNewDestination(output_type, "", dest, error)) assert(false);
+
+    CPubKey new_key;
+    if (!w.GetKeyFromPool(new_key)) assert(false);
+
+    w.LearnRelatedScripts(new_key, output_type);
+    const auto dest = GetDestinationForKey(new_key, output_type);
+
+    w.SetAddressBook(dest, /* label */ "", "receive");
 
     return EncodeDestination(dest);
 }

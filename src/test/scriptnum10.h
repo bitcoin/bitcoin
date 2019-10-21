@@ -1,11 +1,12 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Talkcoin Core developers
+// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_TEST_SCRIPTNUM10_H
-#define TALKCOIN_TEST_SCRIPTNUM10_H
+#ifndef BITCOINTALKCOIN_TEST_SCRIPTNUM10_H
+#define BITCOINTALKCOIN_TEST_SCRIPTNUM10_H
 
+#include <algorithm>
 #include <limits>
 #include <stdexcept>
 #include <stdint.h>
@@ -22,7 +23,7 @@ public:
 class CScriptNum10
 {
 /**
- * The ScriptNum implementation from Talkcoin Core 0.10.0, for cross-comparison.
+ * The ScriptNum implementation from Bitcointalkcoin Core 0.10.0, for cross-comparison.
  */
 public:
 
@@ -179,4 +180,4 @@ private:
 };
 
 
-#endif // TALKCOIN_TEST_BIGNUM_H
+#endif // BITCOINTALKCOIN_TEST_BIGNUM_H
