@@ -12,11 +12,8 @@
 #include <QApplication>
 #include <memory>
 
-#ifdef MOBILE_GUI
-class TalkcoinMobileGUI;
-#else
 class TalkcoinGUI;
-#endif
+class TalkcoinMobileGUI;
 class ClientModel;
 class NetworkStyle;
 class OptionsModel;

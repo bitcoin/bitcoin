@@ -37,6 +37,8 @@ Notes:
 #include <errno.h>
 
 #include <secp256k1.h>
+#include <openssl/aes.h>
+#include <openssl/evp.h>
 #include "crypto/sha512.h"
 #include "crypto/hmac_sha256.h"
 

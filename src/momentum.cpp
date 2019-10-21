@@ -1,9 +1,8 @@
 #include <momentum.h>
-#include "semiOrderedMap.h"
 #include <uint256.h>
 
 #include <iostream>
-#include <crypto/sha512.h>
+#include <openssl/sha.h>
 #include <boost/thread.hpp>
 
 
@@ -28,16 +27,10 @@ std::vector< std::pair<uint32_t,uint32_t> > momentum_search( uint256 midHash )
 	 }
 	 
 	 *index = i;
-	 //uint64_t  result_hash[8];
+	 uint64_t  result_hash[8];
 	 
-	 //SHA512((unsigned char*)hash_tmp, sizeof(hash_tmp), (unsigned char*)&result_hash);
-
-    unsigned char result_hash[CSHA512::OUTPUT_SIZE];
-    CSHA512 di;
-    di.Write((unsigned char*)hash_tmp, sizeof(hash_tmp));
-    di.Finalize(result_hash);
-    di.~CSHA512();
-	 
+	 SHA512((unsigned char*)hash_tmp, sizeof(hash_tmp), (unsigned char*)&result_hash);
+		 
 	 for( uint32_t x = 0; x < BIRTHDAYS_PER_HASH; ++x )
 	 { 
 		uint64_t birthday = result_hash[x] >> (64-SEARCH_SPACE_BITS);           
@@ -59,15 +52,8 @@ uint64_t getBirthdayHash(const uint256& midHash, uint32_t a)
    char  hash_tmp[sizeof(midHash)+4];
    memcpy(&hash_tmp[4], (char*)&midHash, sizeof(midHash) );
    memcpy(&hash_tmp[0], (char*)&index, sizeof(index) ); 
-   //uint64_t  result_hash[8];
-   //SHA512((unsigned char*)hash_tmp, sizeof(hash_tmp), (unsigned char*)&result_hash);
-
-    unsigned char result_hash[CSHA512::OUTPUT_SIZE];
-    CSHA512 di;
-    di.Write((unsigned char*)hash_tmp, sizeof(hash_tmp));
-    di.Finalize(result_hash);
-    di.~CSHA512();
-
+   uint64_t  result_hash[8];
+   SHA512((unsigned char*)hash_tmp, sizeof(hash_tmp), (unsigned char*)&result_hash);
    uint64_t r = result_hash[a%BIRTHDAYS_PER_HASH]>>(64-SEARCH_SPACE_BITS);
    return r;
 }
