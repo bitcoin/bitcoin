@@ -16,9 +16,6 @@ fi
 if test -z $with_qt_bindir && test -z "@no_qt@"; then
   with_qt_bindir=$depends_prefix/native/bin
 fi
-if test -z $with_protoc_bindir && test -z "@no_qt@"; then
-  with_protoc_bindir=$depends_prefix/native/bin
-fi
 
 
 if test -z $enable_wallet && test -n "@no_wallet@"; then
@@ -36,6 +33,7 @@ fi
 if test -z $enable_zmq && test -n "@no_zmq@"; then
   enable_zmq=no
 fi
+
 
 if test x@host_os@ = xdarwin; then
   BREW=no
