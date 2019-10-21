@@ -1,12 +1,15 @@
-// Copyright (c) 2016-2018 The Talkcoin Core developers
+// Copyright (c) 2016-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_QT_TEST_RPCNESTEDTESTS_H
-#define TALKCOIN_QT_TEST_RPCNESTEDTESTS_H
+#ifndef BITCOINTALKCOIN_QT_TEST_RPCNESTEDTESTS_H
+#define BITCOINTALKCOIN_QT_TEST_RPCNESTEDTESTS_H
 
 #include <QObject>
 #include <QTest>
+
+#include <txdb.h>
+#include <txmempool.h>
 
 class RPCNestedTests : public QObject
 {
@@ -16,4 +19,4 @@ class RPCNestedTests : public QObject
     void rpcNestedTests();
 };
 
-#endif // TALKCOIN_QT_TEST_RPCNESTEDTESTS_H
+#endif // BITCOINTALKCOIN_QT_TEST_RPCNESTEDTESTS_H

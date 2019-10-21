@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>312</width>
-    <height>359</height>
+    <width>729</width>
+    <height>236</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,158 +19,150 @@
   <property name="frameShadow">
    <enum>QFrame::Sunken</enum>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_2">
-   <item>
-    <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QGridLayout" name="gridLayout">
+   <property name="spacing">
+    <number>12</number>
+   </property>
+   <item row="3" column="2">
+    <layout class="QHBoxLayout" name="sendToLayout">
+     <property name="spacing">
+      <number>0</number>
+     </property>
      <item>
-      <layout class="QHBoxLayout" name="sendToLayout">
-       <property name="spacing">
-        <number>0</number>
+      <widget class="QValidatedLineEdit" name="sendTo">
+       <property name="toolTip">
+        <string>The address to send the payment to  (e.g. 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</string>
        </property>
-       <item>
-        <widget class="QLabel" name="label_2">
-         <property name="text">
-          <string>Send &amp;To:</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="buddy">
-          <cstring>sendTo</cstring>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QValidatedLineEdit" name="sendTo">
-         <property name="toolTip">
-          <string>The address to send the payment to  (e.g. 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</string>
-         </property>
-         <property name="maxLength">
-          <number>34</number>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QToolButton" name="addressBookButton">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#ffffff;&quot;&gt;Choose address from address book&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="text">
-          <string/>
-         </property>
-         <property name="icon">
-          <iconset resource="../talkcoin.qrc">
-           <normaloff>:/icons/address-book</normaloff>:/icons/address-book</iconset>
-         </property>
-         <property name="shortcut">
-          <string>Alt+A</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QToolButton" name="pasteButton">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#ffffff;&quot;&gt;Paste address from clipboard&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="text">
-          <string/>
-         </property>
-         <property name="icon">
-          <iconset resource="../talkcoin.qrc">
-           <normaloff>:/icons/editpaste</normaloff>:/icons/editpaste</iconset>
-         </property>
-         <property name="shortcut">
-          <string>Alt+P</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QToolButton" name="deleteButton">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#ffffff;&quot;&gt;Remove this recipient&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="text">
-          <string/>
-         </property>
-         <property name="icon">
-          <iconset resource="../talkcoin.qrc">
-           <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout">
-       <item>
-        <widget class="QLabel" name="label_4">
-         <property name="text">
-          <string>&amp;Label:</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="buddy">
-          <cstring>addAsLabel</cstring>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QValidatedLineEdit" name="addAsLabel">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
-         <property name="toolTip">
-          <string>Enter a label for this address to add it to your address book</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_2">
-       <item>
-        <widget class="QLabel" name="publicKeyLabel">
-         <property name="text">
-          <string>&amp;Public Key:</string>
-         </property>
-         <property name="buddy">
-          <cstring>publicKey</cstring>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QValidatedLineEdit" name="publicKey"/>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <widget class="QLabel" name="messageLabel">
-       <property name="text">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&amp;amp;Message:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
-       </property>
-       <property name="buddy">
-        <cstring>messageText</cstring>
+       <property name="maxLength">
+        <number>34</number>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QValidatedTextEdit" name="messageText">
-       <property name="mouseTracking">
-        <bool>true</bool>
+      <widget class="QToolButton" name="addressBookButton">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#ffffff;&quot;&gt;Choose address from address book&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
-       <property name="focusPolicy">
-        <enum>Qt::StrongFocus</enum>
+       <property name="text">
+        <string/>
        </property>
-       <property name="tabChangesFocus">
-        <bool>false</bool>
+       <property name="icon">
+        <iconset resource="../bitcointalkcoin.qrc">
+         <normaloff>:/icons/address-book</normaloff>:/icons/address-book</iconset>
+       </property>
+       <property name="shortcut">
+        <string>Alt+A</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="pasteButton">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#ffffff;&quot;&gt;Paste address from clipboard&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../bitcointalkcoin.qrc">
+         <normaloff>:/icons/editpaste</normaloff>:/icons/editpaste</iconset>
+       </property>
+       <property name="shortcut">
+        <string>Alt+P</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="deleteButton">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#ffffff;&quot;&gt;Remove this recipient&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../bitcointalkcoin.qrc">
+         <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
        </property>
       </widget>
      </item>
     </layout>
+   </item>
+   <item row="6" column="0">
+    <widget class="QLabel" name="messageLabel">
+     <property name="text">
+      <string>&amp;Message:</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
+     </property>
+     <property name="buddy">
+      <cstring>messageText</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>Send &amp;To:</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+     <property name="buddy">
+      <cstring>sendTo</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="2">
+    <widget class="QValidatedTextEdit" name="messageText">
+     <property name="mouseTracking">
+      <bool>true</bool>
+     </property>
+     <property name="focusPolicy">
+      <enum>Qt::StrongFocus</enum>
+     </property>
+     <property name="tabChangesFocus">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="2">
+    <widget class="QValidatedLineEdit" name="addAsLabel">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="toolTip">
+      <string>Enter a label for this address to add it to your address book</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="0">
+    <widget class="QLabel" name="label_4">
+     <property name="text">
+      <string>&amp;Label:</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+     <property name="buddy">
+      <cstring>addAsLabel</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0">
+    <widget class="QLabel" name="publicKeyLabel">
+     <property name="text">
+      <string>&amp;Public Key:</string>
+     </property>
+     <property name="buddy">
+      <cstring>publicKey</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="2">
+    <widget class="QValidatedLineEdit" name="publicKey">
+    </widget>
    </item>
   </layout>
  </widget>
@@ -187,7 +179,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../talkcoin.qrc"/>
+  <include location="../bitcointalkcoin.qrc"/>
  </resources>
  <connections/>
 </ui>

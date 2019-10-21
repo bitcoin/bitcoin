@@ -3,7 +3,7 @@
 
 #include <interfaces/chain.h>
 #include <interfaces/node.h>
-#include <qt/talkcoinamountfield.h>
+#include <qt/bitcointalkcoinamountfield.h>
 #include <qt/optionsmodel.h>
 #include <qt/platformstyle.h>
 #include <qt/qvalidatedlineedit.h>
@@ -58,7 +58,7 @@ uint256 SendCoins(CWallet& wallet, SendCoinsDialog& sendCoinsDialog, const CTxDe
     QVBoxLayout* entries = sendCoinsDialog.findChild<QVBoxLayout*>("entries");
     SendCoinsEntry* entry = qobject_cast<SendCoinsEntry*>(entries->itemAt(0)->widget());
     entry->findChild<QValidatedLineEdit*>("payTo")->setText(QString::fromStdString(EncodeDestination(address)));
-    entry->findChild<TalkcoinAmountField*>("payAmount")->setValue(amount);
+    entry->findChild<BitcointalkcoinAmountField*>("payAmount")->setValue(amount);
     sendCoinsDialog.findChild<QFrame*>("frameFee")
         ->findChild<QFrame*>("frameFeeSelection")
         ->findChild<QCheckBox*>("optInRBF")
@@ -68,8 +68,7 @@ uint256 SendCoins(CWallet& wallet, SendCoinsDialog& sendCoinsDialog, const CTxDe
         if (status == CT_NEW) txid = hash;
     }));
     ConfirmSend();
-    bool invoked = QMetaObject::invokeMethod(&sendCoinsDialog, "on_sendButton_clicked");
-    assert(invoked);
+    QMetaObject::invokeMethod(&sendCoinsDialog, "on_sendButton_clicked");
     return txid;
 }
 
@@ -123,9 +122,9 @@ void BumpFee(TransactionView& view, const uint256& txid, bool expectDisabled, st
 //
 // This also requires overriding the default minimal Qt platform:
 //
-//     src/qt/test/test_talkcoin-qt -platform xcb      # Linux
-//     src/qt/test/test_talkcoin-qt -platform windows  # Windows
-//     src/qt/test/test_talkcoin-qt -platform cocoa    # macOS
+//     src/qt/test/test_bitcointalkcoin-qt -platform xcb      # Linux
+//     src/qt/test/test_bitcointalkcoin-qt -platform windows  # Windows
+//     src/qt/test/test_bitcointalkcoin-qt -platform cocoa    # macOS
 void TestGUI()
 {
     // Set up wallet and chain with 105 blocks (5 mature blocks for spending).
@@ -189,7 +188,7 @@ void TestGUI()
     QString balanceText = balanceLabel->text();
     int unit = walletModel.getOptionsModel()->getDisplayUnit();
     CAmount balance = walletModel.wallet().getBalance();
-    QString balanceComparison = TalkcoinUnits::formatWithUnit(unit, balance, false, TalkcoinUnits::separatorAlways);
+    QString balanceComparison = BitcointalkcoinUnits::formatWithUnit(unit, balance, false, BitcointalkcoinUnits::separatorAlways);
     QCOMPARE(balanceText, balanceComparison);
 
     // Check Request Payment button
@@ -202,7 +201,7 @@ void TestGUI()
     labelInput->setText("TEST_LABEL_1");
 
     // Amount input
-    TalkcoinAmountField* amountInput = receiveCoinsDialog.findChild<TalkcoinAmountField*>("reqAmount");
+    BitcointalkcoinAmountField* amountInput = receiveCoinsDialog.findChild<BitcointalkcoinAmountField*>("reqAmount");
     amountInput->setValue(1);
 
     // Message input
@@ -218,7 +217,7 @@ void TestGUI()
             QString paymentText = rlist->toPlainText();
             QStringList paymentTextList = paymentText.split('\n');
             QCOMPARE(paymentTextList.at(0), QString("Payment information"));
-            QVERIFY(paymentTextList.at(1).indexOf(QString("URI: talkcoin:")) != -1);
+            QVERIFY(paymentTextList.at(1).indexOf(QString("URI: bitcointalkcoin:")) != -1);
             QVERIFY(paymentTextList.at(2).indexOf(QString("Address:")) != -1);
             QCOMPARE(paymentTextList.at(3), QString("Amount: 0.00000001 ") + QString::fromStdString(CURRENCY_UNIT));
             QCOMPARE(paymentTextList.at(4), QString("Label: TEST_LABEL_1"));
@@ -256,7 +255,7 @@ void WalletTests::walletTests()
         // and fails to handle returned nulls
         // (https://bugreports.qt.io/browse/QTBUG-49686).
         QWARN("Skipping WalletTests on mac build with 'minimal' platform set due to Qt bugs. To run AppTests, invoke "
-              "with 'test_talkcoin-qt -platform cocoa' on mac, or else use a linux or windows build.");
+              "with 'test_bitcointalkcoin-qt -platform cocoa' on mac, or else use a linux or windows build.");
         return;
     }
 #endif

@@ -1,5 +1,5 @@
-#ifndef TALKCOIN_QT_TEST_UTIL_H
-#define TALKCOIN_QT_TEST_UTIL_H
+#ifndef BITCOINTALKCOIN_QT_TEST_UTIL_H
+#define BITCOINTALKCOIN_QT_TEST_UTIL_H
 
 #include <QString>
 
@@ -11,4 +11,4 @@
  */
 void ConfirmMessage(QString* text = nullptr, int msec = 0);
 
-#endif // TALKCOIN_QT_TEST_UTIL_H
+#endif // BITCOINTALKCOIN_QT_TEST_UTIL_H

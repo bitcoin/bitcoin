@@ -1,18 +1,19 @@
-// Copyright (c) 2009-2018 The Talkcoin Core developers
+// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/talkcoin-config.h>
+#include <config/bitcointalkcoin-config.h>
 #endif
 
+#include <chainparams.h>
 #include <interfaces/node.h>
-#include <qt/talkcoin.h>
+#include <qt/bitcointalkcoin.h>
 #include <qt/test/apptests.h>
 #include <qt/test/rpcnestedtests.h>
+#include <util/system.h>
 #include <qt/test/uritests.h>
 #include <qt/test/compattests.h>
-#include <test/setup_common.h>
 
 #ifdef ENABLE_WALLET
 #include <qt/test/addressbooktests.h>
@@ -25,6 +26,8 @@
 #include <QApplication>
 #include <QObject>
 #include <QTest>
+
+#include <openssl/ssl.h>
 
 #if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
@@ -40,19 +43,19 @@ Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
 #endif
 #endif
 
+extern void noui_connect();
+
 // This is all you need to run all the tests
 int main(int argc, char *argv[])
 {
-    // Initialize persistent globals with the testing setup state for sanity.
-    // E.g. -datadir in gArgs is set to a temp directory dummy value (instead
-    // of defaulting to the default datadir), or globalChainParams is set to
-    // regtest params.
-    //
-    // All tests must use their own testing setup (if needed).
-    {
-        BasicTestingSetup dummy{CBaseChainParams::REGTEST};
-    }
-
+    SetupEnvironment();
+    SetupNetworking();
+    SelectParams(CBaseChainParams::REGTEST);
+    noui_connect();
+    ClearDatadirCache();
+    fs::path pathTemp = fs::temp_directory_path() / strprintf("test_bitcointalkcoin-qt_%lu_%i", (unsigned long)GetTime(), (int)GetRand(100000));
+    fs::create_directories(pathTemp);
+    gArgs.ForceSetArg("-datadir", pathTemp.string());
     auto node = interfaces::MakeNode();
 
     bool fInvalid = false;
@@ -68,8 +71,10 @@ int main(int argc, char *argv[])
 
     // Don't remove this, it's needed to access
     // QApplication:: and QCoreApplication:: in the tests
-    TalkcoinApplication app(*node);
-    app.setApplicationName("Talkcoin-Qt-test");
+    BitcointalkcoinApplication app(*node, argc, argv);
+    app.setApplicationName("Bitcointalkcoin-Qt-test");
+
+    SSL_library_init();
 
     AppTests app_tests(app);
     if (QTest::qExec(&app_tests) != 0) {
@@ -103,6 +108,8 @@ int main(int argc, char *argv[])
         fInvalid = true;
     }
 #endif
+
+    fs::remove_all(pathTemp);
 
     return fInvalid;
 }

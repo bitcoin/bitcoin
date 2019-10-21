@@ -1,28 +1,28 @@
-// Copyright (c) 2018 The Talkcoin Core developers
+// Copyright (c) 2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_QT_TEST_APPTESTS_H
-#define TALKCOIN_QT_TEST_APPTESTS_H
+#ifndef BITCOINTALKCOIN_QT_TEST_APPTESTS_H
+#define BITCOINTALKCOIN_QT_TEST_APPTESTS_H
 
 #include <QObject>
 #include <set>
 #include <string>
 #include <utility>
 
-class TalkcoinApplication;
-class TalkcoinGUI;
+class BitcointalkcoinApplication;
+class BitcointalkcoinGUI;
 class RPCConsole;
 
 class AppTests : public QObject
 {
     Q_OBJECT
 public:
-    explicit AppTests(TalkcoinApplication& app) : m_app(app) {}
+    explicit AppTests(BitcointalkcoinApplication& app) : m_app(app) {}
 
 private Q_SLOTS:
     void appTests();
-    void guiTests(TalkcoinGUI* window);
+    void guiTests(BitcointalkcoinGUI* window);
     void consoleTests(RPCConsole* console);
 
 private:
@@ -37,8 +37,8 @@ private:
         ~HandleCallback();
     };
 
-    //! Talkcoin application.
-    TalkcoinApplication& m_app;
+    //! Bitcointalkcoin application.
+    BitcointalkcoinApplication& m_app;
 
     //! Set of pending callback names. Used to track expected callbacks and shut
     //! down the app after the last callback has been handled and all tests have
@@ -47,4 +47,4 @@ private:
     std::multiset<std::string> m_callbacks;
 };
 
-#endif // TALKCOIN_QT_TEST_APPTESTS_H
+#endif // BITCOINTALKCOIN_QT_TEST_APPTESTS_H

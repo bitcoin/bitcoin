@@ -52,7 +52,7 @@
         </size>
        </property>
        <property name="pixmap">
-        <pixmap resource="../talkcoin.qrc">:/icons/talkcoin</pixmap>
+        <pixmap resource="../bitcointalkcoin.qrc">:/icons/bitcointalkcoin</pixmap>
        </property>
        <property name="scaledContents">
         <bool>true</bool>
@@ -150,7 +150,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="../talkcoin.qrc"/>
+  <include location="../bitcointalkcoin.qrc"/>
  </resources>
  <connections>
   <connection>

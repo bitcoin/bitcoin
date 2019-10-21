@@ -612,7 +612,7 @@ void SendCoinsDialog::minimizeFeeSection(bool fMinimize)
     ui->buttonChooseFee  ->setVisible(fMinimize);
     ui->buttonMinimizeFee->setVisible(!fMinimize);
 #ifndef OS_ANDROID
-    //ui->frameFeeSelection->setVisible(!fMinimize);
+    ui->frameFeeSelection->setVisible(!fMinimize);
 #endif
     ui->horizontalLayoutSmartFee->setContentsMargins(0, (fMinimize ? 0 : 6), 0, 0);
     fFeeMinimized = fMinimize;
@@ -659,12 +659,12 @@ void SendCoinsDialog::updateFeeSectionControls()
     ui->confTargetSelector      ->setEnabled(ui->radioSmartFee->isChecked());
     ui->labelSmartFee           ->setEnabled(ui->radioSmartFee->isChecked());
 #ifndef OS_ANDROID
-    //ui->labelSmartFee2          ->setEnabled(ui->radioSmartFee->isChecked());
+    ui->labelSmartFee2          ->setEnabled(ui->radioSmartFee->isChecked());
 #endif
     ui->labelSmartFee3          ->setEnabled(ui->radioSmartFee->isChecked());
     ui->labelFeeEstimation      ->setEnabled(ui->radioSmartFee->isChecked());
 #ifndef OS_ANDROID
-    //ui->labelCustomFeeWarning   ->setEnabled(ui->radioCustomFee->isChecked());
+    ui->labelCustomFeeWarning   ->setEnabled(ui->radioCustomFee->isChecked());
 #endif
     ui->labelCustomPerKilobyte  ->setEnabled(ui->radioCustomFee->isChecked());
     ui->customFee               ->setEnabled(ui->radioCustomFee->isChecked());
@@ -710,23 +710,23 @@ void SendCoinsDialog::updateSmartFeeLabel()
 
     if (reason == FeeReason::FALLBACK) {
 #ifndef OS_ANDROID
-//        ui->labelSmartFee2->show(); // (Smart fee not initialized yet. This usually takes a few blocks...)
-//        ui->labelFeeEstimation->setText("");
-//        ui->fallbackFeeWarningLabel->setVisible(true);
-//        int lightness = ui->fallbackFeeWarningLabel->palette().color(QPalette::WindowText).lightness();
-//        QColor warning_colour(255 - (lightness / 5), 176 - (lightness / 3), 48 - (lightness / 14));
-//        ui->fallbackFeeWarningLabel->setStyleSheet("QLabel { color: " + warning_colour.name() + "; }");
-//        ui->fallbackFeeWarningLabel->setIndent(QFontMetrics(ui->fallbackFeeWarningLabel->font()).width("x"));
+        ui->labelSmartFee2->show(); // (Smart fee not initialized yet. This usually takes a few blocks...)
+        ui->labelFeeEstimation->setText("");
+        ui->fallbackFeeWarningLabel->setVisible(true);
+        int lightness = ui->fallbackFeeWarningLabel->palette().color(QPalette::WindowText).lightness();
+        QColor warning_colour(255 - (lightness / 5), 176 - (lightness / 3), 48 - (lightness / 14));
+        ui->fallbackFeeWarningLabel->setStyleSheet("QLabel { color: " + warning_colour.name() + "; }");
+        ui->fallbackFeeWarningLabel->setIndent(QFontMetrics(ui->fallbackFeeWarningLabel->font()).width("x"));
 #endif
     }
     else
     {
 #ifndef OS_ANDROID
-//        ui->labelSmartFee2->hide();
+        ui->labelSmartFee2->hide();
 #endif
         ui->labelFeeEstimation->setText(tr("Estimated to begin confirmation within %n block(s).", "", returned_target));
 #ifndef OS_ANDROID
-//        ui->fallbackFeeWarningLabel->setVisible(false);
+        ui->fallbackFeeWarningLabel->setVisible(false);
 #endif
     }
 

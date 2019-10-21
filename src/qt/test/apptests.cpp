@@ -1,22 +1,19 @@
-// Copyright (c) 2018 The Talkcoin Core developers
+// Copyright (c) 2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <qt/test/apptests.h>
 
 #include <chainparams.h>
-#include <key.h>
-#include <qt/talkcoin.h>
-#include <qt/talkcoingui.h>
+#include <qt/bitcointalkcoin.h>
+#include <qt/bitcointalkcoingui.h>
 #include <qt/networkstyle.h>
 #include <qt/rpcconsole.h>
 #include <shutdown.h>
-#include <test/setup_common.h>
-#include <univalue.h>
 #include <validation.h>
 
 #if defined(HAVE_CONFIG_H)
-#include <config/talkcoin-config.h>
+#include <config/bitcointalkcoin-config.h>
 #endif
 
 #include <QAction>
@@ -28,6 +25,9 @@
 #include <QtGlobal>
 #include <QtTest/QtTestWidgets>
 #include <QtTest/QtTestGui>
+#include <new>
+#include <string>
+#include <univalue.h>
 
 namespace {
 //! Call getblockchaininfo RPC and check first field of JSON output.
@@ -47,7 +47,7 @@ void TestRpcCommand(RPCConsole* console)
 }
 } // namespace
 
-//! Entry point for TalkcoinApplication tests.
+//! Entry point for BitcointalkcoinApplication tests.
 void AppTests::appTests()
 {
 #ifdef Q_OS_MAC
@@ -57,14 +57,10 @@ void AppTests::appTests()
         // and fails to handle returned nulls
         // (https://bugreports.qt.io/browse/QTBUG-49686).
         QWARN("Skipping AppTests on mac build with 'minimal' platform set due to Qt bugs. To run AppTests, invoke "
-              "with 'test_talkcoin-qt -platform cocoa' on mac, or else use a linux or windows build.");
+              "with 'test_bitcointalkcoin-qt -platform cocoa' on mac, or else use a linux or windows build.");
         return;
     }
 #endif
-
-    BasicTestingSetup test{CBaseChainParams::REGTEST}; // Create a temp data directory to backup the gui settings to
-    ECC_Stop(); // Already started by the common test setup, so stop it to avoid interference
-    LogInstance().DisconnectTestLogger();
 
     m_app.parameterSetup();
     m_app.createOptionsModel(true /* reset settings */);
@@ -72,7 +68,7 @@ void AppTests::appTests()
         NetworkStyle::instantiate(QString::fromStdString(Params().NetworkIDString())));
     m_app.setupPlatformStyle();
     m_app.createWindow(style.data());
-    connect(&m_app, &TalkcoinApplication::windowShown, this, &AppTests::guiTests);
+    connect(&m_app, &BitcointalkcoinApplication::windowShown, this, &AppTests::guiTests);
     expectCallback("guiTests");
     m_app.baseInitialize();
     m_app.requestInitialize();
@@ -85,11 +81,11 @@ void AppTests::appTests()
     UnloadBlockIndex();
 }
 
-//! Entry point for TalkcoinGUI tests.
-void AppTests::guiTests(TalkcoinGUI* window)
+//! Entry point for BitcointalkcoinGUI tests.
+void AppTests::guiTests(BitcointalkcoinGUI* window)
 {
     HandleCallback callback{"guiTests", *this};
-    connect(window, &TalkcoinGUI::consoleShown, this, &AppTests::consoleTests);
+    connect(window, &BitcointalkcoinGUI::consoleShown, this, &AppTests::consoleTests);
     expectCallback("consoleTests");
     QAction* action = window->findChild<QAction*>("openRPCConsoleAction");
     action->activate(QAction::Trigger);

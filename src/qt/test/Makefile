@@ -1,6 +1,6 @@
 all:
-	$(MAKE) -C ../../ test_talkcoin_qt
+	$(MAKE) -C ../../ test_bitcointalkcoin_qt
 clean:
-	$(MAKE) -C ../../ test_talkcoin_qt_clean
+	$(MAKE) -C ../../ test_bitcointalkcoin_qt_clean
 check:
-	$(MAKE) -C ../../ test_talkcoin_qt_check
+	$(MAKE) -C ../../ test_bitcointalkcoin_qt_check
