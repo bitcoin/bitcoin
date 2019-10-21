@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2018 The Talkcoin Core developers
+// Copyright (c) 2011-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_QT_PAYMENTREQUESTPLUS_H
-#define TALKCOIN_QT_PAYMENTREQUESTPLUS_H
+#ifndef BITCOINTALKCOIN_QT_PAYMENTREQUESTPLUS_H
+#define BITCOINTALKCOIN_QT_PAYMENTREQUESTPLUS_H
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -49,4 +49,4 @@ private:
     payments::PaymentDetails details;
 };
 
-#endif // TALKCOIN_QT_PAYMENTREQUESTPLUS_H
+#endif // BITCOINTALKCOIN_QT_PAYMENTREQUESTPLUS_H

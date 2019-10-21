@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2019 The Talkcoin Core developers
+// Copyright (c) 2011-2019 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/talkcoin-config.h>
+#include <config/bitcointalkcoin-config.h>
 #endif
 
 #include <qt/walletmodel.h>
@@ -31,7 +31,6 @@
 #include <QSet>
 #include <QTimer>
 
-
 WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, interfaces::Node& node, const PlatformStyle *platformStyle, OptionsModel *_optionsModel, QObject *parent) :
     QObject(parent), m_wallet(std::move(wallet)), m_node(node), optionsModel(_optionsModel), addressTableModel(nullptr),
     transactionTableModel(nullptr),
@@ -39,8 +38,7 @@ WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, interfaces:
     cachedEncryptionStatus(Unencrypted),
     cachedNumBlocks(0),
     nWeight(0),
-    updateStakeWeight(true),
-    cachedNumBlocksHeadersChain(0)
+    updateStakeWeight(true)
 {
     fHaveWatchOnly = m_wallet->haveWatchOnly();
     addressTableModel = new AddressTableModel(this);
@@ -54,6 +52,7 @@ WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, interfaces:
 
     subscribeToCoreSignals();
 }
+
 
 WalletModel::~WalletModel()
 {
@@ -81,13 +80,12 @@ void WalletModel::pollBalanceChanged()
         return;
     }
 
-    if(fForceCheckBalanceChanged || m_node.getNumBlocks() != cachedNumBlocks || (spvEnabled() && m_node.getNumHeaders() != cachedNumBlocksHeadersChain))
+    if(fForceCheckBalanceChanged || m_node.getNumBlocks() != cachedNumBlocks)
     {
         fForceCheckBalanceChanged = false;
 
         // Balance and number of transactions might have changed
         cachedNumBlocks = m_node.getNumBlocks();
-        cachedNumBlocksHeadersChain = m_node.getNumHeaders();
 
         checkBalanceChanged(new_balances);
         if(transactionTableModel)
@@ -96,7 +94,6 @@ void WalletModel::pollBalanceChanged()
         // The stake weight is used for the staking icon status
         // Get the stake weight only when not syncing because it is time consuming
         updateStakeWeight = true;
-       
     }
 }
 
@@ -177,7 +174,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         }
         else
 #endif
-        {   // User-entered talkcoin address / amount:
+        {   // User-entered bitcointalkcoin address / amount:
             if(!validateAddress(rcp.address))
             {
                 return InvalidAddress;
@@ -233,9 +230,8 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         // reject absurdly high fee. (This can never happen because the
         // wallet caps the fee at m_default_max_tx_fee. This merely serves as a
         // belt-and-suspenders check)
-        if (nFeeRequired > m_wallet->getDefaultMaxTxFee()) {
+        if (nFeeRequired > m_wallet->getDefaultMaxTxFee())
             return AbsurdFee;
-        }
     }
 
     return SendCoinsReturn(OK);
@@ -264,17 +260,17 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
             }
             else
 #endif
-            if (!rcp.message.isEmpty()) // Message from normal talkcoin:URI (talkcoin:123...?message=example)
+            if (!rcp.message.isEmpty()) // Message from normal bitcointalkcoin:URI (bitcointalkcoin:123...?message=example)
                 vOrderForm.emplace_back("Message", rcp.message.toStdString());
         }
 
         auto& newTx = transaction.getWtx();
         std::string rejectReason;
-        if (!wallet().commitTransaction(newTx, {} /* mapValue */, std::move(vOrderForm), rejectReason))
+        if (!newTx->commit({} /* mapValue */, std::move(vOrderForm), rejectReason))
             return SendCoinsReturn(TransactionCommitFailed, QString::fromStdString(rejectReason));
 
         CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-        ssTx << *newTx;
+        ssTx << newTx->get();
         transaction_array.append(&(ssTx[0]), ssTx.size());
     }
 
@@ -348,7 +344,7 @@ WalletModel::EncryptionStatus WalletModel::getEncryptionStatus() const
     }
 }
 
-void WalletModel::getScriptForMining(std::shared_ptr<CTxDestination> &script){
+void WalletModel::getScriptForMining(std::shared_ptr<CReserveScript> &script){
 	
 	m_wallet->getScriptForMining(script);
 }
@@ -391,15 +387,13 @@ bool WalletModel::changePassphrase(const SecureString &oldPass, const SecureStri
 static void NotifyUnload(WalletModel* walletModel)
 {
     qDebug() << "NotifyUnload";
-    bool invoked = QMetaObject::invokeMethod(walletModel, "unload");
-    assert(invoked);
+    QMetaObject::invokeMethod(walletModel, "unload");
 }
 
 static void NotifyKeyStoreStatusChanged(WalletModel *walletmodel)
 {
     qDebug() << "NotifyKeyStoreStatusChanged";
-    bool invoked = QMetaObject::invokeMethod(walletmodel, "updateStatus", Qt::QueuedConnection);
-    assert(invoked);
+    QMetaObject::invokeMethod(walletmodel, "updateStatus", Qt::QueuedConnection);
 }
 
 static void NotifyAddressBookChanged(WalletModel *walletmodel,
@@ -411,49 +405,38 @@ static void NotifyAddressBookChanged(WalletModel *walletmodel,
     QString strPurpose = QString::fromStdString(purpose);
 
     qDebug() << "NotifyAddressBookChanged: " + strAddress + " " + strLabel + " isMine=" + QString::number(isMine) + " purpose=" + strPurpose + " status=" + QString::number(status);
-    bool invoked = QMetaObject::invokeMethod(walletmodel, "updateAddressBook", Qt::QueuedConnection,
+    QMetaObject::invokeMethod(walletmodel, "updateAddressBook", Qt::QueuedConnection,
                               Q_ARG(QString, strAddress),
                               Q_ARG(QString, strLabel),
                               Q_ARG(bool, isMine),
                               Q_ARG(QString, strPurpose),
                               Q_ARG(int, status));
-    assert(invoked);
 }
 
 static void NotifyTransactionChanged(WalletModel *walletmodel, const uint256 &hash, ChangeType status)
 {
     Q_UNUSED(hash);
     Q_UNUSED(status);
-    bool invoked = QMetaObject::invokeMethod(walletmodel, "updateTransaction", Qt::QueuedConnection);
-    assert(invoked);
+    QMetaObject::invokeMethod(walletmodel, "updateTransaction", Qt::QueuedConnection);
 }
 
 static void ShowProgress(WalletModel *walletmodel, const std::string &title, int nProgress)
 {
     // emits signal "showProgress"
-    bool invoked = QMetaObject::invokeMethod(walletmodel, "showProgress", Qt::QueuedConnection,
+    QMetaObject::invokeMethod(walletmodel, "showProgress", Qt::QueuedConnection,
                               Q_ARG(QString, QString::fromStdString(title)),
                               Q_ARG(int, nProgress));
-    assert(invoked);
 }
 
 static void NotifyWatchonlyChanged(WalletModel *walletmodel, bool fHaveWatchonly)
 {
-    bool invoked = QMetaObject::invokeMethod(walletmodel, "updateWatchOnlyFlag", Qt::QueuedConnection,
+    QMetaObject::invokeMethod(walletmodel, "updateWatchOnlyFlag", Qt::QueuedConnection,
                               Q_ARG(bool, fHaveWatchonly));
-    assert(invoked);
 }
 
 static void NotifyCanGetAddressesChanged(WalletModel* walletmodel)
 {
-    bool invoked = QMetaObject::invokeMethod(walletmodel, "canGetAddressesChanged");
-    assert(invoked);
-}
-
-static void NotifySPVModeChanged(WalletModel *walletmodel, bool fSPVModeEnabled)
-{
-    QMetaObject::invokeMethod(walletmodel, "updateSPVMode", Qt::QueuedConnection,
-                              Q_ARG(bool, fSPVModeEnabled));
+    QMetaObject::invokeMethod(walletmodel, "canGetAddressesChanged");
 }
 
 void WalletModel::subscribeToCoreSignals()
@@ -466,7 +449,6 @@ void WalletModel::subscribeToCoreSignals()
     m_handler_show_progress = m_wallet->handleShowProgress(std::bind(ShowProgress, this, std::placeholders::_1, std::placeholders::_2));
     m_handler_watch_only_changed = m_wallet->handleWatchOnlyChanged(std::bind(NotifyWatchonlyChanged, this, std::placeholders::_1));
     m_handler_can_get_addrs_changed = m_wallet->handleCanGetAddressesChanged(boost::bind(NotifyCanGetAddressesChanged, this));
-    m_handler_spv_mode_changed = m_wallet->handleSPVModeChanged(std::bind(NotifySPVModeChanged, this, std::placeholders::_1));
 }
 
 void WalletModel::unsubscribeFromCoreSignals()
@@ -479,7 +461,6 @@ void WalletModel::unsubscribeFromCoreSignals()
     m_handler_show_progress->disconnect();
     m_handler_watch_only_changed->disconnect();
     m_handler_can_get_addrs_changed->disconnect();
-    m_handler_spv_mode_changed->disconnect();
 }
 
 // WalletModel::UnlockContext implementation
@@ -598,15 +579,15 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
     questionString.append("<tr><td>");
     questionString.append(tr("Current fee:"));
     questionString.append("</td><td>");
-    questionString.append(TalkcoinUnits::formatHtmlWithUnit(getOptionsModel()->getDisplayUnit(), old_fee));
+    questionString.append(BitcointalkcoinUnits::formatHtmlWithUnit(getOptionsModel()->getDisplayUnit(), old_fee));
     questionString.append("</td></tr><tr><td>");
     questionString.append(tr("Increase:"));
     questionString.append("</td><td>");
-    questionString.append(TalkcoinUnits::formatHtmlWithUnit(getOptionsModel()->getDisplayUnit(), new_fee - old_fee));
+    questionString.append(BitcointalkcoinUnits::formatHtmlWithUnit(getOptionsModel()->getDisplayUnit(), new_fee - old_fee));
     questionString.append("</td></tr><tr><td>");
     questionString.append(tr("New fee:"));
     questionString.append("</td><td>");
-    questionString.append(TalkcoinUnits::formatHtmlWithUnit(getOptionsModel()->getDisplayUnit(), new_fee));
+    questionString.append(BitcointalkcoinUnits::formatHtmlWithUnit(getOptionsModel()->getDisplayUnit(), new_fee));
     questionString.append("</td></tr></table>");
     SendConfirmationDialog confirmationDialog(tr("Confirm fee bump"), questionString);
     confirmationDialog.exec();
@@ -642,21 +623,6 @@ bool WalletModel::isWalletEnabled()
    return !gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET);
 }
 
-bool WalletModel::spvEnabled() const
-{
-    return m_wallet->isSPVEnabled();
-}
-
-void WalletModel::setSpvEnabled(bool state)
-{
-    m_wallet->SetSPVEnabled(state);
-}
-
-void WalletModel::updateSPVMode(bool fSPVModeEnabled)
-{
-    Q_EMIT spvEnabledStatusChanged(fSPVModeEnabled);
-}
-
 bool WalletModel::privateKeysDisabled() const
 {
     return m_wallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
@@ -682,7 +648,7 @@ bool WalletModel::isMultiwallet()
 {
     return m_node.getWallets().size() > 1;
 }
-
+#ifdef ENABLE_PROOF_OF_STAKE
 uint64_t WalletModel::getStakeWeight()
 {
     return nWeight;
@@ -705,3 +671,4 @@ void WalletModel::checkStakeWeightChanged()
         updateStakeWeight = false;
     }
 }
+#endif

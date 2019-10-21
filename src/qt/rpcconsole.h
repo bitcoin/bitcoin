@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2019 The Talkcoin Core developers
+// Copyright (c) 2011-2019 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_QT_RPCCONSOLE_H
-#define TALKCOIN_QT_RPCCONSOLE_H
+#ifndef BITCOINTALKCOIN_QT_RPCCONSOLE_H
+#define BITCOINTALKCOIN_QT_RPCCONSOLE_H
 
 #include <qt/guiutil.h>
 #include <qt/peertablemodel.h>
@@ -32,7 +32,7 @@ class QMenu;
 class QItemSelection;
 QT_END_NAMESPACE
 
-/** Local Talkcoin RPC console. */
+/** Local Bitcointalkcoin RPC console. */
 class RPCConsole: public QWidget
 {
     Q_OBJECT
@@ -67,6 +67,7 @@ public:
 
     std::vector<TabTypes> tabs() const { return {TAB_INFO, TAB_CONSOLE, TAB_GRAPH, TAB_PEERS}; }
 
+    TabTypes tabFocus() const;
     QString tabTitle(TabTypes tab_type) const;
 
 protected:
@@ -167,9 +168,6 @@ private:
 
     /** Update UI with latest network info from model. */
     void updateNetworkState();
-
-private Q_SLOTS:
-    void updateAlerts(const QString& warnings);
 };
 
-#endif // TALKCOIN_QT_RPCCONSOLE_H
+#endif // BITCOINTALKCOIN_QT_RPCCONSOLE_H

@@ -6,7 +6,7 @@
 
 #include <qt/addressbookpage.h>
 #include <qt/askpassphrasedialog.h>
-#include <qt/talkcoingui.h>
+#include <qt/bitcointalkcoingui.h>
 #include <qt/clientmodel.h>
 #include <qt/guiutil.h>
 #include <qt/messagemodel.h>
@@ -96,15 +96,15 @@ WalletView::~WalletView()
 {
 }
 
-void WalletView::setTalkcoinGUI(TalkcoinGUI *gui)
+void WalletView::setBitcointalkcoinGUI(BitcointalkcoinGUI *gui)
 {
     if (gui)
     {
         // Clicking on a transaction on the overview page simply sends you to transaction history page
-        connect(overviewPage, &OverviewPage::transactionClicked, gui, &TalkcoinGUI::gotoHistoryPage);
+        connect(overviewPage, &OverviewPage::transactionClicked, gui, &BitcointalkcoinGUI::gotoHistoryPage);
 
         // Navigate to transaction history page after send
-        connect(sendCoinsPage, &SendCoinsDialog::coinsSent, gui, &TalkcoinGUI::gotoHistoryPage);
+        connect(sendCoinsPage, &SendCoinsDialog::coinsSent, gui, &BitcointalkcoinGUI::gotoHistoryPage);
 
         // Receive and report messages
         connect(this, &WalletView::message, [gui](const QString &title, const QString &message, unsigned int style) {
@@ -112,18 +112,15 @@ void WalletView::setTalkcoinGUI(TalkcoinGUI *gui)
         });
 
         // Pass through encryption status changed signals
-        connect(this, &WalletView::encryptionStatusChanged, gui, &TalkcoinGUI::updateWalletStatus);
+        connect(this, &WalletView::encryptionStatusChanged, gui, &BitcointalkcoinGUI::updateWalletStatus);
 
         // Pass through transaction notifications
-        connect(this, &WalletView::incomingTransaction, gui, &TalkcoinGUI::incomingTransaction);
+        connect(this, &WalletView::incomingTransaction, gui, &BitcointalkcoinGUI::incomingTransaction);
 
-        connect(this, &WalletView::incomingMessage, gui, &TalkcoinGUI::incomingMessage);
+        connect(this, &WalletView::incomingMessage, gui, &BitcointalkcoinGUI::incomingMessage);
 
         // Connect HD enabled state signal
-        connect(this, &WalletView::hdEnabledStatusChanged, gui, &TalkcoinGUI::updateWalletStatus);
-
-        // Connect SPV enabled state signal
-        connect(this, &WalletView::spvEnabledStatusChanged, gui, &TalkcoinGUI::updateWalletStatus);
+        connect(this, &WalletView::hdEnabledStatusChanged, gui, &BitcointalkcoinGUI::updateWalletStatus);
     }
 }
 
@@ -162,10 +159,6 @@ void WalletView::setWalletModel(WalletModel *_walletModel)
         // update HD status
         Q_EMIT hdEnabledStatusChanged();
 
-        // update SPV status
-        connect(_walletModel, SIGNAL(spvEnabledStatusChanged(int)), this, SLOT(updateSPVStatus()));
-        updateSPVStatus();
-
         // Balloon pop-up for new transaction
         connect(_walletModel->getTransactionTableModel(), &TransactionTableModel::rowsInserted, this, &WalletView::processNewTransaction);
 
@@ -184,11 +177,16 @@ void WalletView::setMessageModel(MessageModel *messageModel)
     this->messageModel = messageModel;
     if(messageModel)
     {
+        // Report errors from wallet thread
+        connect(messageModel, SIGNAL(error(QString,QString,bool)), this, SLOT(error(QString,QString,bool)));
+
         messagePage->setModel(messageModel);
         sendMessagesPage->setModel(messageModel);
 
         // Balloon pop-up for new message
-        connect(messageModel, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SLOT(processNewMessage(QModelIndex,int,int)));
+        connect(messageModel, SIGNAL(rowsInserted(QModelIndex,int,int)),
+                this, SLOT(processNewMessage(QModelIndex,int,int)));
+
     }
 }
 #endif
@@ -411,25 +409,4 @@ void WalletView::showProgress(const QString &title, int nProgress)
 void WalletView::requestedSyncWarningInfo()
 {
     Q_EMIT outOfSyncWarningClicked();
-}
-
-void WalletView::setSPVMode(bool state)
-{
-    if(!walletModel)
-        return;
-
-    walletModel->setSpvEnabled(state);
-}
-
-bool WalletView::getSPVMode()
-{
-    if(!walletModel)
-        return false;
-
-    return walletModel->spvEnabled();
-}
-
-void WalletView::updateSPVStatus()
-{
-    Q_EMIT spvEnabledStatusChanged(walletModel->spvEnabled());
 }

@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2018 The Talkcoin Core developers
+// Copyright (c) 2011-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/talkcoin-config.h>
+#include <config/bitcointalkcoin-config.h>
 #endif
 
 #include <qt/sendcoinsentry.h>
@@ -38,13 +38,13 @@ SendCoinsEntry::SendCoinsEntry(const PlatformStyle *_platformStyle, QWidget *par
         ui->payToLayout->setSpacing(4);
     ui->addAsLabel->setPlaceholderText(tr("Enter a label for this address to add it to your address book"));
 
-    // normal talkcoin address field
+    // normal bitcointalkcoin address field
     GUIUtil::setupAddressWidget(ui->payTo, this);
-    // just a label for displaying talkcoin address(es)
+    // just a label for displaying bitcointalkcoin address(es)
     ui->payTo_is->setFont(GUIUtil::fixedPitchFont());
 
     // Connect signals
-    connect(ui->payAmount, &TalkcoinAmountField::valueChanged, this, &SendCoinsEntry::payAmountChanged);
+    connect(ui->payAmount, &BitcointalkcoinAmountField::valueChanged, this, &SendCoinsEntry::payAmountChanged);
     connect(ui->checkboxSubtractFeeFromAmount, &QCheckBox::toggled, this, &SendCoinsEntry::subtractFeeFromAmountChanged);
     connect(ui->deleteButton, &QPushButton::clicked, this, &SendCoinsEntry::deleteClicked);
     connect(ui->deleteButton_is, &QPushButton::clicked, this, &SendCoinsEntry::deleteClicked);

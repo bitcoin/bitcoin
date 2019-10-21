@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2018 The Talkcoin Core developers
+// Copyright (c) 2011-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_QT_CLIENTMODEL_H
-#define TALKCOIN_QT_CLIENTMODEL_H
+#ifndef BITCOINTALKCOIN_QT_CLIENTMODEL_H
+#define BITCOINTALKCOIN_QT_CLIENTMODEL_H
 
 #include <QObject>
 #include <QDateTime>
@@ -40,7 +40,7 @@ enum NumConnections {
     CONNECTIONS_ALL  = (CONNECTIONS_IN | CONNECTIONS_OUT),
 };
 
-/** Model for Talkcoin network client. */
+/** Model for Bitcointalkcoin network client. */
 class ClientModel : public QObject
 {
     Q_OBJECT
@@ -77,8 +77,6 @@ public:
     mutable std::atomic<int> cachedBestHeaderHeight;
     mutable std::atomic<int64_t> cachedBestHeaderTime;
 
-    bool hasAuxiliaryBlockRequest(int64_t* createdRet = NULL, size_t* requestedBlocksRet = NULL, size_t* loadedBlocksRet = NULL, size_t* processedBlocksRet = NULL);
-
 private:
     interfaces::Node& m_node;
     std::unique_ptr<interfaces::Handler> m_handler_show_progress;
@@ -88,7 +86,6 @@ private:
     std::unique_ptr<interfaces::Handler> m_handler_banned_list_changed;
     std::unique_ptr<interfaces::Handler> m_handler_notify_block_tip;
     std::unique_ptr<interfaces::Handler> m_handler_notify_header_tip;
-    std::unique_ptr<interfaces::Handler> m_handler_auxiliary_block_request_progress;
     OptionsModel *optionsModel;
     PeerTableModel *peerTableModel;
     BanTableModel *banTableModel;
@@ -112,8 +109,6 @@ Q_SIGNALS:
     // Show progress dialog e.g. for verifychain
     void showProgress(const QString &title, int nProgress);
 
-    void auxiliaryBlockRequestProgressChanged(const QDateTime& created, int blocksRequested, int blocksLoaded, int blocksProcessed);
-
 public Q_SLOTS:
     void updateTimer();
     void updateNumConnections(int numConnections);
@@ -122,4 +117,4 @@ public Q_SLOTS:
     void updateBanlist();
 };
 
-#endif // TALKCOIN_QT_CLIENTMODEL_H
+#endif // BITCOINTALKCOIN_QT_CLIENTMODEL_H
