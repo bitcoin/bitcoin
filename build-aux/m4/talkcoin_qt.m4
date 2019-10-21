@@ -130,9 +130,6 @@ AC_DEFUN([TALKCOIN_QT_CONFIGURE],[
       AX_CHECK_LINK_FLAG([[-framework IOKit]],[QT_LIBS="$QT_LIBS -framework IOKit"],[AC_MSG_ERROR(could not iokit framework)])
       _TALKCOIN_QT_CHECK_STATIC_PLUGINS([Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin)],[-lqcocoa])
       AC_DEFINE(QT_QPA_PLATFORM_COCOA, 1, [Define this symbol if the qt platform is cocoa])
-    elif test "x$TARGET_OS" = xandroid; then
-      QT_LIBS="-Wl,--export-dynamic,--undefined=JNI_OnLoad -lqtforandroid -ljnigraphics -landroid -lqtfreetype -lQt5EglSupport $QT_LIBS"
-      AC_DEFINE(QT_QPA_PLATFORM_ANDROID, 1, [Define this symbol if the qt platform is android])
     fi
   fi
   CPPFLAGS=$TEMP_CPPFLAGS
@@ -346,9 +343,6 @@ AC_DEFUN([_TALKCOIN_QT_FIND_STATIC_PLUGINS],[
       if test -d "$qt_plugin_path/accessible"; then
         QT_LIBS="$QT_LIBS -L$qt_plugin_path/accessible"
       fi
-      if test -d "$qt_plugin_path/platforms/android"; then
-        QT_LIBS="$QT_LIBS -L$qt_plugin_path/platforms/android -lqtfreetype -lEGL"
-      fi
      if test "x$use_pkgconfig" = xyes; then
      : dnl
      m4_ifdef([PKG_CHECK_MODULES],[
@@ -366,10 +360,8 @@ AC_DEFUN([_TALKCOIN_QT_FIND_STATIC_PLUGINS],[
          PKG_CHECK_MODULES([QTXCBQPA], [Qt5XcbQpa], [QT_LIBS="$QTXCBQPA_LIBS $QT_LIBS"])
        elif test "x$TARGET_OS" = xandroid; then
          PKG_CHECK_MODULES([QTANDROIDEXTRAS], [Qt5AndroidExtras], [QT_LIBS="-lQt5AndroidExtras $QT_LIBS"])
-         if test x$MOBILE_GUI = xyes; then
-           PKG_CHECK_MODULES([QTQUICK], [Qt5Quick], [QT_LIBS="-lQt5Quick $QT_LIBS"])
-           PKG_CHECK_MODULES([QTQML], [Qt5Qml], [QT_LIBS="-lQt5Qml $QT_LIBS"])
-         fi
+         PKG_CHECK_MODULES([QTQUICK], [Qt5Quick], [QT_LIBS="-lQt5Quick $QT_LIBS"])
+         PKG_CHECK_MODULES([QTQML], [Qt5Qml], [QT_LIBS="-lQt5Qml $QT_LIBS"])
        elif test "x$TARGET_OS" = xdarwin; then
          PKG_CHECK_MODULES([QTCLIPBOARD], [Qt5ClipboardSupport], [QT_LIBS="-lQt5ClipboardSupport $QT_LIBS"])
          PKG_CHECK_MODULES([QTGRAPHICS], [Qt5GraphicsSupport], [QT_LIBS="-lQt5GraphicsSupport $QT_LIBS"])
@@ -421,11 +413,7 @@ dnl Outputs: have_qt_test and have_qt_dbus are set (if applicable) to yes|no.
 AC_DEFUN([_TALKCOIN_QT_FIND_LIBS_WITH_PKGCONFIG],[
   m4_ifdef([PKG_CHECK_MODULES],[
     QT_LIB_PREFIX=Qt5
-    if test "x$MOBILE_GUI" = xyes; then
-        qt5_modules="Qt5Core Qt5Gui Qt5Network Qt5Widgets Qt5Qml Qt5Quick Qt5QuickControls2"
-    else
-        qt5_modules="Qt5Core Qt5Gui Qt5Network Qt5Widgets "
-    fi
+    qt5_modules="Qt5Core Qt5Gui Qt5Network Qt5Widgets Qt5Qml Qt5Quick Qt5QuickControls2"
     TALKCOIN_QT_CHECK([
       PKG_CHECK_MODULES([QT5], [$qt5_modules], [QT_INCLUDES="$QT5_CFLAGS"; QT_LIBS="$QT5_LIBS" have_qt=yes],[have_qt=no])
 
@@ -465,12 +453,7 @@ AC_DEFUN([_TALKCOIN_QT_FIND_LIBS_WITHOUT_PKGCONFIG],[
   TALKCOIN_QT_CHECK([AC_CHECK_HEADER([QtPlugin],,TALKCOIN_QT_FAIL(QtCore headers missing))])
   TALKCOIN_QT_CHECK([AC_CHECK_HEADER([QApplication],, TALKCOIN_QT_FAIL(QtGui headers missing))])
   TALKCOIN_QT_CHECK([AC_CHECK_HEADER([QLocalSocket],, TALKCOIN_QT_FAIL(QtNetwork headers missing))])
-
-  TALKCOIN_QT_CHECK([
-    if test "x$MOBILE_GUI" = xyes; then
-      AC_CHECK_HEADER([QQmlApplicationEngine],, TALKCOIN_QT_FAIL(QtQml headers missing))
-    fi
-  ])
+  TALKCOIN_QT_CHECK([AC_CHECK_HEADER([QQmlApplicationEngine],, TALKCOIN_QT_FAIL(QtQml headers missing))])
 
 
   TALKCOIN_QT_CHECK([
