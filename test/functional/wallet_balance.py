@@ -109,6 +109,44 @@ class WalletTest(BitcoinTestFramework):
 
         self.log.info("Test getbalance and getunconfirmedbalance with unconfirmed inputs")
 
+        # Before `test_balance()`, we have had two nodes with a balance of 50
+        # each and then we:
+        #
+        # 1) Sent 40 from node A to node B with fee 0.01
+        # 2) Sent 60 from node B to node A with fee 0.01
+        #
+        # Then we check the balances:
+        #
+        # 1) As is
+        # 2) With transaction 2 from above with 2x the fee
+        #
+        # Prior to #16766, in this situation, the node would immediately report
+        # a balance of 30 on node B as unconfirmed and trusted.
+        #
+        # After #16766, we show that balance as unconfirmed.
+        #
+        # The balance is indeed "trusted" and "confirmed" insofar as removing
+        # the mempool transactions would return at least that much money. But
+        # the algorithm after #16766 marks it as unconfirmed because the 'taint'
+        # tracking of transaction trust for summing balances doesn't consider
+        # which inputs belong to a user. In this case, the change output in
+        # question could be "destroyed" by replace the 1st transaction above.
+        #
+        # The post #16766 behavior is correct; we shouldn't be treating those
+        # funds as confirmed. If you want to rely on that specific UTXO existing
+        # which has given you that balance, you cannot, as a third party
+        # spending the other input would destroy that unconfirmed.
+        #
+        # For example, if the test transactions were:
+        #
+        # 1) Sent 40 from node A to node B with fee 0.01
+        # 2) Sent 10 from node B to node A with fee 0.01
+        #
+        # Then our node would report a confirmed balance of 40 + 50 - 10 = 80
+        # BTC, which is more than would be available if transaction 1 were
+        # replaced.
+
+
         def test_balances(*, fee_node_1=0):
             # getbalance without any arguments includes unconfirmed transactions, but not untrusted transactions
             assert_equal(self.nodes[0].getbalance(), Decimal('9.99'))  # change from node 0's send
