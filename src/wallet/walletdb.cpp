@@ -729,9 +729,9 @@ bool WalletBatch::VerifyEnvironment(const fs::path& wallet_path, std::string& er
     return BerkeleyBatch::VerifyEnvironment(wallet_path, errorStr);
 }
 
-bool WalletBatch::VerifyDatabaseFile(const fs::path& wallet_path, std::string& warningStr, std::string& errorStr)
+bool WalletBatch::VerifyDatabaseFile(const fs::path& wallet_path, std::vector<std::string>& warnings, std::string& errorStr)
 {
-    return BerkeleyBatch::VerifyDatabaseFile(wallet_path, warningStr, errorStr, WalletBatch::Recover);
+    return BerkeleyBatch::VerifyDatabaseFile(wallet_path, warnings, errorStr, WalletBatch::Recover);
 }
 
 bool WalletBatch::WriteDestData(const std::string &address, const std::string &key, const std::string &value)

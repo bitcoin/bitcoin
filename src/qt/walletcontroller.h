@@ -100,7 +100,7 @@ protected:
     QProgressDialog* m_progress_dialog{nullptr};
     WalletModel* m_wallet_model{nullptr};
     std::string m_error_message;
-    std::string m_warning_message;
+    std::vector<std::string> m_warning_message;
 };
 
 
