@@ -41,7 +41,7 @@ fi
 export DIR_FUZZ_IN=${DIR_QA_ASSETS}/fuzz_seed_corpus/
 
 mkdir -p "${BASE_BUILD_DIR}/sanitizer-output/"
-export ASAN_OPTIONS=""
+export ASAN_OPTIONS="detect_stack_use_after_return=1"
 export LSAN_OPTIONS="suppressions=${BASE_BUILD_DIR}/test/sanitizer_suppressions/lsan"
 export TSAN_OPTIONS="suppressions=${BASE_BUILD_DIR}/test/sanitizer_suppressions/tsan:log_path=${BASE_BUILD_DIR}/sanitizer-output/tsan"
 export UBSAN_OPTIONS="suppressions=${BASE_BUILD_DIR}/test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1"
