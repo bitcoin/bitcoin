@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Talkcoin Core developers
+// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -44,30 +44,18 @@ bool SerializeFileDB(const std::string& prefix, const fs::path& path, const Data
     fs::path pathTmp = GetDataDir() / tmpfn;
     FILE *file = fsbridge::fopen(pathTmp, "wb");
     CAutoFile fileout(file, SER_DISK, CLIENT_VERSION);
-    if (fileout.IsNull()) {
-        fileout.fclose();
-        remove(pathTmp);
+    if (fileout.IsNull())
         return error("%s: Failed to open file %s", __func__, pathTmp.string());
-    }
 
     // Serialize
-    if (!SerializeDB(fileout, data)) {
-        fileout.fclose();
-        remove(pathTmp);
-        return false;
-    }
-    if (!FileCommit(fileout.Get())) {
-        fileout.fclose();
-        remove(pathTmp);
+    if (!SerializeDB(fileout, data)) return false;
+    if (!FileCommit(fileout.Get()))
         return error("%s: Failed to flush file %s", __func__, pathTmp.string());
-    }
     fileout.fclose();
 
     // replace existing file, if any, with new file
-    if (!RenameOver(pathTmp, path)) {
-        remove(pathTmp);
+    if (!RenameOver(pathTmp, path))
         return error("%s: Rename-into-place failed", __func__);
-    }
 
     return true;
 }

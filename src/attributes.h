@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Talkcoin Core developers
+// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TALKCOIN_ATTRIBUTES_H
-#define TALKCOIN_ATTRIBUTES_H
+#ifndef BITCOINTALKCOIN_ATTRIBUTES_H
+#define BITCOINTALKCOIN_ATTRIBUTES_H
 
 #if defined(__has_cpp_attribute)
 #  if __has_cpp_attribute(nodiscard)
@@ -19,4 +19,4 @@
 #  endif
 #endif
 
-#endif // TALKCOIN_ATTRIBUTES_H
+#endif // BITCOINTALKCOIN_ATTRIBUTES_H
