@@ -4,13 +4,12 @@ $(package)_download_path=https://download.qt.io/official_releases/qt/5.12/$($(pa
 $(package)_suffix=everywhere-src-$($(package)_version).tar.xz
 $(package)_file_name=qtbase-$($(package)_suffix)
 $(package)_sha256_hash=20fbc7efa54ff7db9552a7a2cdf9047b80253c1933c834f35b0bc5c1ae021195
-$(package)_dependencies=zlib
+$(package)_dependencies=openssl zlib
 $(package)_linux_dependencies=freetype fontconfig libxcb
 $(package)_android_dependencies=freetype fontconfig libxcb
-$(package)_mingw32_dependencies=openssl
 $(package)_build_subdir=qtbase
 $(package)_qt_libs=corelib network widgets gui plugins testlib
-$(package)_patches=fix_qt_pkgconfig.patch mac-qmake.conf fix_configure_mac.patch fix_no_printer.patch fix_s390x_powerpc_mips_mipsel_architectures.patch android-qmake.conf android-base-head.patch fix_android_jni_static.patch
+$(package)_patches=fix_qt_pkgconfig.patch mac-qmake.conf fix_configure_mac.patch fix_no_printer.patch fix_s390x_powerpc_mips_mipsel_architectures.patch aarch64-android-qmake.conf android-base-head.patch
 
 $(package)_qttranslations_file_name=qttranslations-$($(package)_suffix)
 $(package)_qttranslations_sha256_hash=ab8dd55f5ca869cab51c3a6ce0888f854b96dc03c7f25d2bd3d2c50314ab60fb
@@ -87,6 +86,7 @@ $(package)_config_opts += -no-use-gold-linker
 $(package)_config_opts += -nomake examples
 $(package)_config_opts += -nomake tests
 $(package)_config_opts += -opensource
+$(package)_config_opts += -openssl-linked
 $(package)_config_opts += -optimized-qmake
 $(package)_config_opts += -pch
 $(package)_config_opts += -pkg-config
@@ -111,7 +111,6 @@ $(package)_config_opts += -no-feature-keysequenceedit
 $(package)_config_opts += -no-feature-lcdnumber
 $(package)_config_opts += -no-feature-pdf
 $(package)_config_opts += -no-feature-printdialog
-$(package)_config_opts += -no-feature-printer
 $(package)_config_opts += -no-feature-printpreviewdialog
 $(package)_config_opts += -no-feature-printpreviewwidget
 $(package)_config_opts += -no-feature-sessionmanager
@@ -136,6 +135,7 @@ $(package)_config_opts_darwin += -device-option MAC_SDK_VERSION=$(OSX_SDK_VERSIO
 $(package)_config_opts_darwin += -device-option CROSS_COMPILE="$(host)-"
 $(package)_config_opts_darwin += -device-option MAC_MIN_VERSION=$(OSX_MIN_VERSION)
 $(package)_config_opts_darwin += -device-option MAC_TARGET=$(host)
+$(package)_config_opts_darwin += -device-option MAC_LD64_VERSION=$(LD64_VERSION)
 endif
 
 $(package)_config_opts_linux  = -qt-xkbcommon-x11
@@ -144,24 +144,26 @@ $(package)_config_opts_linux += -no-xcb-xlib
 $(package)_config_opts_linux += -no-feature-xlib
 $(package)_config_opts_linux += -system-freetype
 $(package)_config_opts_linux += -fontconfig
-$(package)_config_opts_linux += -no-opengl
-$(package)_config_opts_arm_linux += -platform linux-g++ -xplatform talkcoin-linux-g++
+#$(package)_config_opts_linux += -no-opengl
+$(package)_config_opts_arm_linux += -platform linux-g++ -xplatform bitcoin-linux-g++
 $(package)_config_opts_i686_linux  = -xplatform linux-g++-32
 $(package)_config_opts_x86_64_linux = -xplatform linux-g++-64
 $(package)_config_opts_aarch64_linux = -xplatform linux-aarch64-gnu-g++
-$(package)_config_opts_riscv64_linux = -platform linux-g++ -xplatform talkcoin-linux-g++
-$(package)_config_opts_mingw32  = -no-opengl -openssl-linked -xplatform win32-g++ -device-option CROSS_COMPILE="$(host)-"
-$(package)_config_opts_mingw32 += -L $(host_prefix)/lib -I $(host_prefix)/include
+$(package)_config_opts_riscv64_linux = -xplatform linux-g++ -xplatform bitcoin-linux-g++
+$(package)_config_opts_s390x_linux += -xplatform linux-g++ -xplatform linux-g++-64
+$(package)_config_opts_powerpc64le_linux += -xplatform linux-g++ -xplatform linux-g++-64
+$(package)_config_opts_sparc64_linux += -xplatform linux-g++ -xplatform linux-g++-64
+$(package)_config_opts_alpha_linux += -xplatform linux-g++ -xplatform linux-g++-64
+$(package)_config_opts_mingw32  = -no-opengl -xplatform win32-g++ -device-option CROSS_COMPILE="$(host)-"
 
 $(package)_config_opts_android = -xplatform android-clang
 $(package)_config_opts_android += -android-sdk $(ANDROID_SDK)
 $(package)_config_opts_android += -android-ndk $(ANDROID_NDK)
 $(package)_config_opts_android += -android-ndk-platform android-$(ANDROID_API_LEVEL)
-$(package)_config_opts_android += -device-option CROSS_COMPILE="$(host)-"
-$(package)_config_opts_android += -qpa xcb
-$(package)_config_opts_android += -qt-freetype
-$(package)_config_opts_android += -no-fontconfig
-$(package)_config_opts_android += -opengl es2
+$(package)_config_opts_android += -qpa qandroid
+$(package)_config_opts_android += -system-freetype
+$(package)_config_opts_android += -fontconfig
+$(package)_config_opts_android += -opengl
 $(package)_config_opts_android += -egl
 $(package)_config_opts_android += -L $(host_prefix)/lib -I $(host_prefix)/include -static
 
@@ -199,7 +201,7 @@ define $(package)_extract_cmds
   echo "$($(package)_qtquickcontrols2_sha256_hash)  $($(package)_source_dir)/$($(package)_qtquickcontrols2_file_name)" >> $($(package)_extract_dir)/.$($(package)_file_name).hash && \
   echo "$($(package)_qtxmlpatterns_sha256_hash)  $($(package)_source_dir)/$($(package)_qtxmlpatterns_file_name)" >> $($(package)_extract_dir)/.$($(package)_file_name).hash && \
   echo "$($(package)_qtdeclarative_sha256_hash)  $($(package)_source_dir)/$($(package)_qtdeclarative_file_name)" >> $($(package)_extract_dir)/.$($(package)_file_name).hash && \
-  $(build_SHA256SUM) -c $($(package)_extract_dir)/.$($(package)_file_name).hash && \
+ $(build_SHA256SUM) -c $($(package)_extract_dir)/.$($(package)_file_name).hash && \
   mkdir qtbase && \
   tar --no-same-owner --strip-components=1 -xf $($(package)_source) -C qtbase && \
   mkdir qttranslations && \
@@ -227,20 +229,21 @@ define $(package)_preprocess_cmds
   sed -i.old "s|updateqm.commands = \$$$$\$$$$LRELEASE|updateqm.commands = $($(package)_extract_dir)/qttools/bin/lrelease|" qttranslations/translations/translations.pro && \
   sed -i.old "/updateqm.depends =/d" qttranslations/translations/translations.pro && \
   sed -i.old "s/src_plugins.depends = src_sql src_network/src_plugins.depends = src_network/" qtbase/src/src.pro && \
+  sed -i.old "s|X11/extensions/XIproto.h|X11/X.h|" qtbase/src/plugins/platforms/xcb/qxcbxsettings.cpp && \
   sed -i.old -e 's/if \[ "$$$$XPLATFORM_MAC" = "yes" \]; then xspecvals=$$$$(macSDKify/if \[ "$$$$BUILD_ON_MAC" = "yes" \]; then xspecvals=$$$$(macSDKify/' -e 's|/bin/pwd|pwd|' qtbase/configure && \
+  sed -i.old 's/CGEventCreateMouseEvent(0, kCGEventMouseMoved, pos, 0)/CGEventCreateMouseEvent(0, kCGEventMouseMoved, pos, kCGMouseButtonLeft)/' qtbase/src/plugins/platforms/cocoa/qcocoacursor.mm && \
   mkdir -p qtbase/mkspecs/macx-clang-linux &&\
   cp -f qtbase/mkspecs/macx-clang/Info.plist.lib qtbase/mkspecs/macx-clang-linux/ &&\
   cp -f qtbase/mkspecs/macx-clang/Info.plist.app qtbase/mkspecs/macx-clang-linux/ &&\
   cp -f qtbase/mkspecs/macx-clang/qplatformdefs.h qtbase/mkspecs/macx-clang-linux/ &&\
-  cp -f $($(package)_patch_dir)/android-qmake.conf qtbase/mkspecs/android-clang/qmake.conf &&\
+  cp -f $($(package)_patch_dir)/aarch64-android-qmake.conf qtbase/mkspecs/android-clang/qmake.conf &&\
   cp -f $($(package)_patch_dir)/mac-qmake.conf qtbase/mkspecs/macx-clang-linux/qmake.conf && \
-  cp -r qtbase/mkspecs/linux-arm-gnueabi-g++ qtbase/mkspecs/talkcoin-linux-g++ && \
-  sed -i.old "s/arm-linux-gnueabi-/$(host)-/g" qtbase/mkspecs/talkcoin-linux-g++/qmake.conf && \
+  cp -r qtbase/mkspecs/linux-arm-gnueabi-g++ qtbase/mkspecs/bitcoin-linux-g++ && \
+  sed -i.old "s/arm-linux-gnueabi-/$(host)-/g" qtbase/mkspecs/bitcoin-linux-g++/qmake.conf && \
   patch -p1 -i $($(package)_patch_dir)/fix_qt_pkgconfig.patch &&\
   patch -p1 -i $($(package)_patch_dir)/fix_configure_mac.patch &&\
   patch -p1 -i $($(package)_patch_dir)/fix_no_printer.patch &&\
   patch -p1 -i $($(package)_patch_dir)/android-base-head.patch &&\
-  patch -p1 -i $($(package)_patch_dir)/fix_android_jni_static.patch &&\
   echo "!host_build: QMAKE_CFLAGS     += $($(package)_cflags) $($(package)_cppflags)" >> qtbase/mkspecs/common/gcc-base.conf && \
   echo "!host_build: QMAKE_CXXFLAGS   += $($(package)_cxxflags) $($(package)_cppflags)" >> qtbase/mkspecs/common/gcc-base.conf && \
   echo "!host_build: QMAKE_LFLAGS     += $($(package)_ldflags)" >> qtbase/mkspecs/common/gcc-base.conf && \
