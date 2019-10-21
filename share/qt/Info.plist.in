@@ -11,7 +11,7 @@
   </array>
 
   <key>CFBundleIconFile</key>
-  <string>talkcoin.icns</string>
+  <string>bitcointalkcoin.icns</string>
 
   <key>CFBundlePackageType</key>
   <string>APPL</string>
@@ -29,16 +29,16 @@
   <string>????</string>
 
   <key>CFBundleExecutable</key>
-  <string>Talkcoin-Qt</string>
+  <string>Bitcointalkcoin-Qt</string>
   
   <key>CFBundleName</key>
-  <string>Talkcoin-Qt</string>
+  <string>Bitcointalkcoin-Qt</string>
 
   <key>LSHasLocalizedDisplayName</key>
   <true/>
 
   <key>CFBundleIdentifier</key>
-  <string>org.talkcoinfoundation.Talkcoin-Qt</string>
+  <string>org.bitcointalkcoinfoundation.Bitcointalkcoin-Qt</string>
 
   <key>CFBundleURLTypes</key>
   <array>
@@ -46,10 +46,10 @@
       <key>CFBundleTypeRole</key>
       <string>Editor</string>
       <key>CFBundleURLName</key>
-      <string>org.talkcoin.TalkcoinPayment</string>
+      <string>org.bitcointalkcoin.BitcointalkcoinPayment</string>
       <key>CFBundleURLSchemes</key>
       <array>
-        <string>talkcoin</string>
+        <string>bitcointalkcoin</string>
       </array>
     </dict>
   </array>
@@ -58,9 +58,9 @@
   <array>
     <dict>
       <key>UTTypeIdentifier</key>
-      <string>org.talkcoin.paymentrequest</string>
+      <string>org.bitcointalkcoin.paymentrequest</string>
       <key>UTTypeDescription</key>
-      <string>Talkcoin payment request</string>
+      <string>Bitcointalkcoin payment request</string>
       <key>UTTypeConformsTo</key>
       <array>
         <string>public.data</string>
@@ -68,10 +68,10 @@
       <key>UTTypeTagSpecification</key>
       <dict>
         <key>public.mime-type</key>
-        <string>application/x-talkcoin-payment-request</string>
+        <string>application/x-bitcointalkcoin-payment-request</string>
         <key>public.filename-extension</key>
         <array>
-          <string>talkcoinpaymentrequest</string>
+          <string>bitcointalkcoinpaymentrequest</string>
         </array>
       </dict>
     </dict>
@@ -84,7 +84,7 @@
       <string>Editor</string>
       <key>LSItemContentTypes</key>
       <array>
-        <string>org.talkcoin.paymentrequest</string>
+        <string>org.bitcointalkcoin.paymentrequest</string>
       </array>
       <key>LSHandlerRank</key>
       <string>Owner</string>
