@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>818</width>
-    <height>398</height>
+    <width>530</width>
+    <height>373</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,23 +15,19 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
-    <widget class="QFrame" name="verticalFrame">
+    <widget class="QPushButton" name="newmessageButton">
      <property name="minimumSize">
       <size>
-       <width>800</width>
-       <height>44</height>
+       <width>0</width>
+       <height>30</height>
       </size>
      </property>
-     <property name="maximumSize">
-      <size>
-       <width>800</width>
-       <height>44</height>
-      </size>
+     <property name="text">
+      <string>New Message</string>
      </property>
-     <property name="styleSheet">
-      <string notr="true">background:transparent;sss</string>
+     <property name="flat">
+      <bool>true</bool>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_9"/>
     </widget>
    </item>
    <item>
@@ -114,19 +110,6 @@
             </property>
            </widget>
           </item>
-          <item>
-           <spacer name="horizontalSpacer_2">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
          </layout>
         </item>
         <item>
@@ -146,19 +129,6 @@
                <string/>
               </property>
              </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer_3">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
             </item>
            </layout>
           </item>
@@ -185,6 +155,12 @@
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
         <widget class="QPushButton" name="replyButton">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="toolTip">
           <string>Sign a message to prove you own a Bitcointalkcoin address</string>
          </property>
@@ -199,6 +175,12 @@
        </item>
        <item>
         <widget class="QPushButton" name="copyFromAddressButton">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="toolTip">
           <string>Copy the currently selected address to the system clipboard</string>
          </property>
@@ -213,6 +195,12 @@
        </item>
        <item>
         <widget class="QPushButton" name="copyToAddressButton">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="toolTip">
           <string>Copy the currently selected address to the system clipboard</string>
          </property>
@@ -227,6 +215,12 @@
        </item>
        <item>
         <widget class="QPushButton" name="deleteButton">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="toolTip">
           <string>Delete the currently selected address from the list</string>
          </property>
@@ -238,19 +232,6 @@
            <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
          </property>
         </widget>
-       </item>
-       <item>
-        <spacer name="horizontalSpacer">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
        </item>
       </layout>
      </item>
