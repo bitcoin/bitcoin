@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>530</width>
+    <width>818</width>
     <height>373</height>
    </rect>
   </property>
@@ -15,19 +15,23 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
-    <widget class="QPushButton" name="newmessageButton">
+    <widget class="QFrame" name="verticalFrame">
      <property name="minimumSize">
       <size>
-       <width>0</width>
-       <height>30</height>
+       <width>800</width>
+       <height>44</height>
       </size>
      </property>
-     <property name="text">
-      <string>New Message</string>
+     <property name="maximumSize">
+      <size>
+       <width>800</width>
+       <height>44</height>
+      </size>
      </property>
-     <property name="flat">
-      <bool>true</bool>
+     <property name="styleSheet">
+      <string notr="true">background:transparent;sss</string>
      </property>
+     <layout class="QVBoxLayout" name="verticalLayout_9"/>
     </widget>
    </item>
    <item>

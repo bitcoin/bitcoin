@@ -174,10 +174,10 @@ UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex
     result.pushKV("merkleroot", blockindex->hashMerkleRoot.GetHex());
     result.pushKV("time", (int64_t)blockindex->nTime);
     result.pushKV("mediantime", (int64_t)blockindex->GetMedianTimePast());
-    result.pushKV("nonce", (int)blockindex->nNonce);
+    result.pushKV("nonce", (uint64_t)blockindex->nNonce);
 #ifdef ENABLE_MOMENTUM_HASH_ALGO
-    result.pushKV("BirthdayA", (int)blockindex->nBirthdayA);
-    result.pushKV("BirthdayB", (int)blockindex->nBirthdayB);
+    result.pushKV("BirthdayA", (uint64_t)blockindex->nBirthdayA);
+    result.pushKV("BirthdayB", (uint64_t)blockindex->nBirthdayB);
 #endif
     result.pushKV("bits", strprintf("%08x", blockindex->nBits));
     result.pushKV("difficulty", GetDifficulty(blockindex));
@@ -192,7 +192,6 @@ UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex
     result.pushKV("flags", strprintf("%s", blockindex->IsProofOfStake()? "proof-of-stake" : "proof-of-work"));
     result.pushKV("proofhash", blockindex->hashProof.GetHex());
     result.pushKV("modifier", blockindex->nStakeModifier.GetHex());
-    result.pushKV("length", (uint64_t)sizeof(&blockindex));
 
     return result;
 }

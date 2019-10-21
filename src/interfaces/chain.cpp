@@ -406,36 +406,6 @@ public:
 
     std::shared_ptr<CAuxiliaryBlockRequest> BlockRequest() override { return CAuxiliaryBlockRequest::GetCurrentRequest();}
 
-	void addPriorityDownload(const std::vector<const CBlockIndex*>& blocksToDownload) override {
-		AddPriorityDownload(blocksToDownload);
-		/*std::shared_ptr<CAuxiliaryBlockRequest> auxiliaryRequest(new CAuxiliaryBlockRequest(blocksToDownload, chain().getAdjustedTime(), true, [this](std::shared_ptr<CAuxiliaryBlockRequest> cb_AuxiliaryBlockRequest, const CBlockIndex *pindex) -> bool {
-			LOCK(cs_wallet);
-			if (pindex && (!pNVSBestBlock || pindex->nHeight > pNVSBestBlock->nHeight))
-			{
-				// write non validation best block
-				pNVSBestBlock = const_cast<CBlockIndex *>(pindex);
-				CBlockLocator locator = ::HeadersChainActive().GetLocator(pNVSBestBlock);
-				if (!locator.IsNull())
-				{
-					//CWalletDB walletdb(strWalletFile);
-					WalletBatch walletdb(*database);
-					walletdb.WriteNonValidationBestBlock(locator);
-				}
-			}
-			// try to download more blocks if this on has been completed
-			if (cb_AuxiliaryBlockRequest->isCompleted())
-				RequestSPVScan();
-			// continue with the request
-			return true;
-		}));*/
-
-        // set the global Auxiliarry Block Request
-        // auxiliaryRequest->setAsCurrentRequest();
-
-	}
-
-
-
     void showProgress(const std::string& title, int progress, bool resume_possible) override
     {
         ::uiInterface.ShowProgress(title, progress, resume_possible);

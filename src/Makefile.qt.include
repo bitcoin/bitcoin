@@ -113,7 +113,7 @@ QT_FORMS_UI = \
   qt/forms/signverifymessagedialog.ui \
   qt/forms/transactiondescdialog.ui \
   qt/forms/sendmessagesentry.ui \
-  qt/forms/sendmessagespage.ui \
+  qt/forms/sendmessagesdialog.ui \
   qt/forms/messagepage.ui
 
 QT_MOC_CPP = \
@@ -167,7 +167,7 @@ QT_MOC_CPP = \
   qt/moc_walletmodel.cpp \
   qt/moc_walletview.cpp \
   qt/moc_sendmessagesentry.cpp \
-  qt/moc_sendmessagespage.cpp \
+  qt/moc_sendmessagesdialog.cpp \
   qt/moc_messagepage.cpp \
   qt/moc_messagemodel.cpp \
   qt/moc_talkcoinmobilegui.cpp
@@ -257,7 +257,7 @@ TALKCOIN_QT_H = \
   qt/walletview.h \
   qt/winshutdownmonitor.h \
   qt/sendmessagesentry.h \
-  qt/sendmessagespage.h \
+  qt/sendmessagesdialog.h \
   qt/messagemodel.h \
   qt/messagepage.h \
   qt/talkcoinmobilegui.h
@@ -324,13 +324,7 @@ RES_ICONS = \
   qt/res/icons/staking_on.png \
   qt/res/icons/staking_off.png \
   qt/res/icons/lock_staking.png \
-  qt/res/icons/encrypt.png \
-  qt/res/icons/exchange.png \
-  qt/res/icons/sendtr.png \
-  qt/res/icons/receivetr.png \
-  qt/res/icons/chat.png \
-  qt/res/icons/messages.png \
-  qt/res/icons/home.png
+  qt/res/icons/encrypt.png
 
 TALKCOIN_QT_BASE_CPP = \
   qt/bantablemodel.cpp \
@@ -390,7 +384,7 @@ TALKCOIN_QT_WALLET_CPP = \
   qt/walletmodeltransaction.cpp \
   qt/walletview.cpp \
   qt/sendmessagesentry.cpp \
-  qt/sendmessagespage.cpp \
+  qt/sendmessagesdialog.cpp \
   qt/messagepage.cpp \
   qt/talkcoinmobilegui.cpp
 

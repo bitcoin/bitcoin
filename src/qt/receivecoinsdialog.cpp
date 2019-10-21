@@ -72,7 +72,6 @@ void ReceiveCoinsDialog::setModel(WalletModel *_model)
     if(_model && _model->getOptionsModel())
     {
         _model->getRecentRequestsTableModel()->sort(RecentRequestsTableModel::Date, Qt::DescendingOrder);
-
         connect(_model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &ReceiveCoinsDialog::updateDisplayUnit);
         updateDisplayUnit();
 
@@ -87,11 +86,6 @@ void ReceiveCoinsDialog::setModel(WalletModel *_model)
         tableView->setColumnWidth(RecentRequestsTableModel::Date, DATE_COLUMN_WIDTH);
         tableView->setColumnWidth(RecentRequestsTableModel::Label, LABEL_COLUMN_WIDTH);
         tableView->setColumnWidth(RecentRequestsTableModel::Amount, AMOUNT_MINIMUM_COLUMN_WIDTH);
-
-#ifdef OS_ANDROID
-        tableView->setColumnHidden(0, true);
-        //tableView->setColumnHidden(2, true);
-#endif
 
         connect(tableView->selectionModel(),
             &QItemSelectionModel::selectionChanged, this,
@@ -170,14 +164,13 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
         }
     }
     address = model->getAddressTableModel()->addRow(AddressTableModel::Receive, label, "", address_type);
-    SendCoinsRecipient info(address, label, ui->reqAmount->value(), ui->reqMessage->text());
-#ifndef OS_ANDROID
+    SendCoinsRecipient info(address, label,
+        ui->reqAmount->value(), ui->reqMessage->text());
     ReceiveRequestDialog *dialog = new ReceiveRequestDialog(this);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->setModel(model);
     dialog->setInfo(info);
     dialog->show();
-#endif
     clear();
 
     /* Store request for later reference */

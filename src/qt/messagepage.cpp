@@ -1,13 +1,12 @@
 #include <qt/messagepage.h>
 #include <qt/forms/ui_messagepage.h>
 
-#include <qt/sendmessagespage.h>
+#include <qt/sendmessagesdialog.h>
 #include <qt/messagemodel.h>
 #include <qt/talkcoingui.h>
 #include <qt/csvmodelwriter.h>
 #include <qt/guiutil.h>
 #include <qt/platformstyle.h>
-#include <qt/walletview.h>
 
 #include <QSortFilterProxyModel>
 #include <QClipboard>
@@ -46,9 +45,6 @@ MessagePage::MessagePage(const PlatformStyle *_platformStyle, QWidget *parent) :
     connect(deleteAction,          SIGNAL(triggered()), this, SLOT(on_deleteButton_clicked()));
 
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
-
-    connect(ui->newmessageButton, SIGNAL(clicked()), this, SLOT(on_newmessageButton_clicked()));
-
 }
 
 MessagePage::~MessagePage()
@@ -106,11 +102,12 @@ void MessagePage::on_replyButton_clicked()
     if(indexes.isEmpty())
         return;
 
-    SendMessagesPage dlg(platformStyle,this);
+    SendMessagesDialog dlg(platformStyle,this);
 
     dlg.setModel(model);
     QModelIndex origIndex = proxyModel->mapToSource(indexes.at(0));
     dlg.loadRow(origIndex.row());
+    dlg.exec();
 
 }
 
@@ -134,13 +131,6 @@ void MessagePage::on_deleteButton_clicked()
     {
         table->model()->removeRow(indexes.at(0).row());
     }
-}
-
-void MessagePage::on_newmessageButton_clicked()
-{
-    WalletView* pMainWindow = qobject_cast<WalletView*>(parent());
-    if (pMainWindow)
-        pMainWindow->gotoSendMessagesPage();
 }
 
 void MessagePage::selectionChanged()

@@ -312,7 +312,7 @@ SOURCES += \
   src/qt/sendcoinsdialog.cpp \
   src/qt/sendcoinsentry.cpp \
   src/qt/sendmessagesentry.cpp \
-  src/qt/sendmessagespage.cpp \
+  src/qt/sendmessagesdialog.cpp \
   src/qt/signverifymessagedialog.cpp \
   src/qt/transactiondesc.cpp \
   src/qt/transactiondescdialog.cpp \
@@ -618,7 +618,7 @@ HEADERS += \
   src/qt/walletview.h \
   src/qt/winshutdownmonitor.h \
   src/qt/sendmessagesentry.h \
-  src/qt/sendmessagespage.h \
+  src/qt/sendmessagesdialog.h \
   src/qt/messagemodel.h \
   src/qt/messagepage.h \
   src/leveldb/port/atomic_pointer.h \
@@ -697,7 +697,7 @@ FORMS += \
   src/qt/forms/signverifymessagedialog.ui \
   src/qt/forms/transactiondescdialog.ui \
   src/qt/forms/sendmessagesentry.ui \
-  src/qt/forms/sendmessagespage.ui \
+  src/qt/forms/sendmessagesdialog.ui \
   src/qt/forms/messagepage.ui
 
 RESOURCES += \

@@ -38,7 +38,7 @@ class RPCConsole: public QWidget
     Q_OBJECT
 
 public:
-    explicit RPCConsole(const PlatformStyle *platformStyle, QWidget *parent);
+    explicit RPCConsole(interfaces::Node& node, const PlatformStyle *platformStyle, QWidget *parent);
     ~RPCConsole();
 
     static bool RPCParseCommandLine(interfaces::Node* node, std::string &strResult, const std::string &strCommand, bool fExecute, std::string * const pstrFilteredOut = nullptr, const WalletModel* wallet_model = nullptr);
@@ -149,7 +149,7 @@ private:
 
     };
 
-    //interfaces::Node *m_node  = nullptr;
+    interfaces::Node& m_node;
     Ui::RPCConsole* const ui;
     ClientModel *clientModel = nullptr;
     QStringList history;

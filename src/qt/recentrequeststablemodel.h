@@ -71,7 +71,6 @@ public:
 
     /** @name Methods overridden from QAbstractTableModel
         @{*/
-    QStringList columns;
     int rowCount(const QModelIndex &parent) const;
     int columnCount(const QModelIndex &parent) const;
     QVariant data(const QModelIndex &index, int role) const;
@@ -93,6 +92,7 @@ public Q_SLOTS:
 
 private:
     WalletModel *walletModel;
+    QStringList columns;
     QList<RecentRequestEntry> list;
     int64_t nReceiveRequestsMaxId{0};
 
