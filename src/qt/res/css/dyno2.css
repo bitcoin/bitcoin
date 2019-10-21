@@ -1,0 +1,601 @@
+QMainWindow 
+{
+color: #232323;
+background-color: #ffffff;
+}
+
+QWidget
+{
+font-family: Arial;
+color: #232323;
+background-color: #ffffff;
+}
+
+QLineEdit
+{
+color: #232323;
+background-color: #888888;
+border: none;
+border-radius: 8px;
+}
+
+
+/*   Header  */
+
+#Logo
+{
+background-image: url(':css/logo');
+background-color: #ffffff;
+background-repeat: none; 
+background-position: left;
+border: none;
+}
+#Logo:hover
+{
+/*background-color: #323232;*/
+/*background-color: QLinearGradient(x1:0, y1:0, x2:1, y2:0, stop:0 #323232, stop:0.4 #323232, stop:0.9 #323232, stop:0.95 #232323);*/
+background-image: url(':css/logo');
+}
+
+#bframe
+{
+border: 1px solid #36b452;
+border-radius: 8px;
+}
+
+#labelBalance
+{
+font: 12pt;
+background-color: #ffffff;
+color: #232323;
+qproperty-alignment: AlignCenter;
+}
+
+#labelHeaderBalance
+{
+font: 16pt;
+background-color: #ffffff;
+color: #232323;
+qproperty-alignment: AlignCenter;
+}
+
+
+
+/*    Toolbar    */
+
+#toolbarwidget
+{
+background-color: #ffffff;
+}
+
+
+
+/* bitcointalkcoingui sendrec 'toolbar' */
+#sendrec
+{
+border: none;
+}
+#bsendtab
+{
+font: 12pt;
+background-color: #888888;
+color: #232323;
+border: none;
+}
+#bsendtab:hover
+{
+background-color: QLinearGradient(x1:0, y1:0, x2:0, y2:1, stop:1 #888888, stop:0.4 #888888, stop:0.2 #888888, stop:0.02 #36b452);
+}
+#bsendtab:checked
+{
+background-color: #36b452;
+}
+#brectab
+{
+font: 12pt;
+background-color: #888888;
+color: #232323;
+border: none;
+}
+#brectab:hover
+{
+background-color: QLinearGradient(x1:0, y1:0, x2:0, y2:1, stop:1 #888888, stop:0.4 #888888, stop:0.2 #888888, stop:0.05 #36b452);
+}
+#brectab:checked
+{
+background-color: #36b452;
+}
+
+/* bitcointalkcoingui p2p lend / borrow 'toolbar' */
+#p2p
+{
+border: none;
+}
+#bborrow
+{
+font: 12pt;
+background-color: #888888;
+color: #232323;
+border: none;
+}
+#bborrow:hover
+{
+background-color: QLinearGradient(x1:0, y1:0, x2:0, y2:1, stop:1 #888888, stop:0.4 #888888, stop:0.2 #888888, stop:0.02 #36b452);
+}
+#bborrow:checked
+{
+background-color: #36b452;
+}
+#blend
+{
+font: 12pt;
+background-color: #888888;
+color: #232323;
+border: none;
+}
+#blend:hover
+{
+background-color: QLinearGradient(x1:0, y1:0, x2:0, y2:1, stop:1 #888888, stop:0.4 #888888, stop:0.2 #888888, stop:0.05 #36b452);
+}
+#blend:checked
+{
+background-color: #36b452;
+}
+
+
+
+/* Utilities and settings toolbar */
+
+#bbcrstatstab
+{
+font: 12pt;
+background-color: #888888;
+color: #232323;
+border: none;
+}
+#bbcrstatstab:hover
+{
+background-color: QLinearGradient(x1:0, y1:0, x2:0, y2:1, stop:1 #888888, stop:0.4 #888888, stop:0.2 #888888, stop:0.02 #36b452);
+}
+#bbcrstatstab:checked
+{
+background-color: #36b452;
+}
+
+#bexplorertab
+{
+font: 12pt;
+background-color: #888888;
+color: #232323;
+border: none;
+}
+#bexplorertab:hover
+{
+background-color: QLinearGradient(x1:0, y1:0, x2:0, y2:1, stop:1 #888888, stop:0.4 #888888, stop:0.2 #888888, stop:0.02 #36b452);
+}
+#bexplorertab:checked
+{
+background-color: #36b452;
+}
+
+#bmarkettab
+{
+font: 12pt;
+background-color: #888888;
+color: #232323;
+border: none;
+}
+#bmarkettab:hover
+{
+background-color: QLinearGradient(x1:0, y1:0, x2:0, y2:1, stop:1 #888888, stop:0.4 #888888, stop:0.2 #888888, stop:0.02 #36b452);
+}
+#bmarkettab:checked
+{
+background-color: #36b452;
+}
+
+#bothertab
+{
+font: 12pt;
+background-color: #888888;
+color: #232323;
+border: none;
+}
+#bothertab:hover
+{
+background-color: QLinearGradient(x1:0, y1:0, x2:0, y2:1, stop:1 #888888, stop:0.4 #888888, stop:0.2 #888888, stop:0.02 #36b452);
+}
+#bothertab:checked
+{
+background-color: #36b452;
+}
+
+
+
+
+
+/* About / Hide / Quit buttons */
+
+#aboutButton
+{
+padding: none; 
+border: none; 
+background-color: #ffffff; 
+background-image: url(':/icons/about'); 
+background-repeat: none; 
+background-position: center;
+}
+#aboutButton:hover
+{
+background-color: #888888; 
+}
+
+#hideButton
+{
+padding: none; 
+border: none; 
+background-color: #ffffff; 
+background-image: url(':/icons/hide'); 
+background-repeat: none; 
+background-position: center;
+}
+#hideButton:hover
+{
+background-color: #888888; 
+}
+
+#quitButton
+{
+padding: none; 
+border: none; 
+background-color: #ffffff; 
+background-image: url(':/icons/quit'); 
+background-repeat: none; 
+background-position: center;
+}
+#quitButton:hover
+{
+background-color: #888888; 
+}
+
+
+
+
+
+/* OverviewPage (MENU) buttons)   */
+
+#OtherPage
+{
+border: none;
+}
+
+
+#bover
+{
+font: 12pt;
+background-color: #ffffff;
+color: #232323;
+border: 1px solid #36b452;
+border-radius: 8px;
+text-align: center;
+/*background-image: url(':css/menu1');*/
+/*background-position: center;*/
+}
+#bover:hover
+{
+background-color: #36b452;
+/*background-image: url(':css/menu2');*/
+/*background-position: center;*/
+}
+
+#btx
+{
+font: 12pt;
+background-color: #ffffff;
+color: #232323;
+border: 1px solid #36b452;
+border-radius: 8px;
+}
+#btx:hover
+{
+background-color: #36b452;
+}
+
+#bsend
+{
+font: 12pt;
+background-color: #ffffff;
+color: #232323;
+border: 1px solid #36b452;
+border-radius: 8px;
+}
+#bsend:hover
+{
+background-color: #36b452;
+}
+
+#brec
+{
+font: 12pt;
+background-color: #ffffff;
+color: #232323;
+border: 1px solid #36b452;
+border-radius: 8px;
+}
+#brec:hover
+{
+background-color: #36b452;
+}
+
+#bgetbcr
+{
+font: 12pt;
+background-color: #ffffff;
+color: #232323;
+border: 1px solid #36b452;
+border-radius: 8px;
+}
+#bgetbcr:hover
+{
+background-color: #36b452;
+}
+
+#bp2p
+{
+font: 12pt;
+background-color: #ffffff;
+color: #232323;
+border: 1px solid #36b452;
+border-radius: 8px;
+}
+#bp2p:hover
+{
+background-color: #36b452;
+}
+
+
+#bassets
+{
+font: 12pt;
+background-color: #ffffff;
+color: #232323;
+border: 1px solid #36b452;
+border-radius: 8px;
+}
+#bassets:hover
+{
+background-color: #36b452;
+}
+
+#butilities
+{
+font: 12pt;
+background-color: #ffffff;
+color: #232323;
+border: 1px solid #36b452;
+border-radius: 8px;
+}
+#butilities:hover
+{
+background-color: #36b452;
+}
+
+
+/* otherStuff page buttons  *?
+
+#bRPC
+{
+font: 12pt;
+background-color: #323232;
+color: #232323;
+border: none;
+}
+#bRPC:hover
+{
+background-color: #888888;
+border: none;
+}
+
+
+*/
+
+/*   Everything else - mostly placeholding   */
+ 
+QTextEdit
+{
+background-color: #888888;
+color: #232323;
+border-radius: 8px;
+}
+
+QTableView
+{
+    alternate-background-color: #888888;
+}
+
+QProgressBar
+{
+    border: 1px solid #232323;
+    text-align: center;
+}
+
+QProgressBar::chunk
+{
+    background-color: #36b452;
+    width: 2.15px;
+    margin: 0.5px;
+}
+
+QPushButton
+{
+color: #232323;
+background-color: #ffffff;
+border: 1px solid #36b452;
+border-radius: 8px;
+outline: none;
+}
+QPushButton:hover
+{
+color: #232323;
+background-color: #36b452;
+border: none;
+}
+
+QTabBar::tab {
+    color: #b1b1b1;
+    border: 1px solid #444;
+    border-bottom-style: none;
+    background-color: #ffffff;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 3px;
+    padding-bottom: 2px;
+    margin-right: -1px;
+}
+
+QTabWidget::pane {
+    border: 1px solid #444;
+    top: 1px;
+}
+
+QTabBar::tab:last
+{
+    margin-right: 0; /* the last selected tab has nothing to overlap with on the right */
+    border-top-right-radius: 3px;
+}
+
+QTabBar::tab:first:!selected
+{
+    margin-left: 0px; /* the last selected tab has nothing to overlap with on the right */
+    border-top-left-radius: 3px;
+}
+
+QTabBar::tab:!selected
+{
+    color: #b1b1b1;
+    border-bottom-style: solid;
+    margin-top: 3px;
+    background-color: QLinearGradient(x1:0, y1:0, x2:0, y2:1, stop:1 #888888, stop:.4 #343434);
+}
+
+QTabBar::tab:selected
+{
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    margin-bottom: 0px;
+    background-color: QLinearGradient(x1:0, y1:0, x2:0, y2:1, stop:1 #888888, stop:0.4 #343434, stop:0.2 #343434, stop:0.1 #36b452);
+}
+
+QTabBar::tab:!selected:hover
+{
+    /*border-top: 2px solid #ffaa00;
+    padding-bottom: 3px;*/
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    background-color: QLinearGradient(x1:0, y1:0, x2:0, y2:1, stop:1 #888888, stop:0.4 #343434, stop:0.2 #343434, stop:0.1 #36b452);
+}
+
+QHeaderView::section
+{
+    background-color: QLinearGradient(x1:0, y1:0, x2:0, y2:1, stop:0 #616161, stop: 0.5 #505050, stop: 0.6 #434343, stop:1 #656565);
+    color: #232323;
+    padding-left: 4px;
+    border: 1px solid #6c6c6c;
+}
+
+Qcombobox QListItem
+{
+    color: #232323;
+    background-color: #ffffff;
+}
+
+
+
+QComboBox
+{
+padding: 0px 0px 0px 0px;
+background-color: #ffffff;
+selection-background-color: #ffffff;
+color: #232323;
+}
+
+QComboBox QAbstractItemView
+{
+selection-background-color: #888888;
+background-color: #ffffff;
+color: #232323;
+}
+
+QComboBox::drop-down
+{
+background-color: #888888;
+color: #232323;
+subcontrol-origin: padding;
+subcontrol-position: top right;
+width: 15px;
+border-left-width: 0px;
+border-left-color: darkgray;
+border-left-style: solid; /* just a single line */
+border-top-right-radius: 3px; /* same radius as the QComboBox */
+border-bottom-right-radius: 3px;
+}
+
+QComboBox::down-arrow
+{
+image: url(':css/down_arrow');
+}
+
+
+QScrollBar:vertical 
+{
+border: 1px solid #36b452;
+background: #232323;
+width: 15px;
+margin: 22px 0 22px 0;
+}
+QScrollBar::handle:vertical {
+background: #888888;
+min-height: 20px;
+}
+QScrollBar::add-line:vertical {
+border: 1px solid #36b452;
+background: #323232;
+height: 20px;
+subcontrol-position: bottom;
+subcontrol-origin: margin;
+}
+QScrollBar::sub-line:vertical {
+border: 1px solid #36b452;
+background: #323232;
+height: 20px;
+subcontrol-position: top;
+subcontrol-origin: margin;
+}
+QScrollBar::up-arrow:vertical 
+{
+border: none;
+image: url(':css/up_arrow');
+}
+QScrollBar::down-arrow:vertical 
+{
+border: none;
+image: url(':css/down_arrow');
+}
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical 
+{
+background: none;
+}
+
+QSpinBox
+{
+border-radius: 8px;
+}
+
+QAbstractSpinBox
+{
+background: #ffffff;
+color: black;
+}
+
+
+

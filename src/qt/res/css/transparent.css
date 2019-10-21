@@ -1,0 +1,202 @@
+QMainWindow
+{
+color: white; 
+background-color: rgba(29, 27, 27, 0.3);
+}
+
+QLineEdit
+{
+color: white; 
+background-color: transparent; 
+border: none;
+}
+
+QMenu
+{
+color: rgba(36, 224, 130, 0.5);
+}
+
+QMenu::item
+{
+background-color: transparent;
+}
+
+QMenu::item:selected
+{
+background-color: rgb(163, 3, 47);
+}
+
+QDialog
+{
+background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,stop: 0 rgba(29, 27, 27, 0.2), stop: 0.1 rgba(29, 27, 27, 0.18), stop: 0.5 rgba(29, 27, 27, 0.17), stop: 0.9 rgba(29, 27, 27, 0.16), stop: 1 rgba(29, 27, 27, 0.15));
+}
+
+QMessageBox
+{
+background-color: rgba(29, 27, 27, 0.3);
+color: white;
+}
+
+QLabel
+{
+color: white; 
+background-color: transparent; 
+}
+
+#titlelabel
+{
+background-color: transparent;
+color: rgb(255, 255, 255);
+}
+
+#labelbtcvalue
+{
+background-color: transparent;
+color: rgb(255, 255, 255);
+}
+
+#labelusdvalue
+{
+background-color: transparent;
+color: rgb(255, 255, 255);
+}
+
+#btcvalue
+{
+background-color: transparent;
+color: rgb(255, 255, 255);
+}
+
+#usdvalue
+{
+background-color: transparent;
+color: rgb(255, 255, 255);
+}
+
+#nonzerocheckBox
+{
+background-color: transparent;
+color: rgb(255, 255, 255);
+}
+
+#exportButton
+{
+background-color: transparent;
+color: rgb(255, 255, 255);
+}
+
+#liquidateButton
+{
+background-color: transparent;
+color: rgb(255, 255, 255);
+}
+
+#refreshButton
+{
+background-color: transparent;
+color: rgb(255, 255, 255);
+}
+
+QTabWidget::pane
+{
+background: transparent;
+border:0;color:white;
+border: 1px solid #444;
+top: 1px;
+}
+
+QTabBar::tab
+{
+color: white;
+border:1px solid #444;
+border-bottom-style: none;
+background-color: transparent; 
+padding-left: 10px;
+padding-right: 10px;
+padding-top: 3px;
+padding-bottom: 2px;
+margin-right: -1px;
+}
+
+QTabBar::tab:!selected{
+color: #b1b1b1;
+border-bottom-style:solid;   margin-top: 3px;
+background-color: QLinearGradient(x1:0, y1:0, x2:0, y2:1, stop:1 #aaaaaa, stop:.4 #343434);
+}
+
+QTabBar::tab:selected{
+margin-bottom: 0px; 
+background-color: QLinearGradient(x1:0, y1:0, x2:0, y2:1, stop:1 #aaaaaa, stop:0.4 #343434, stop:0.2 #343434, stop:0.1 #36b452);
+}
+
+AeroButton
+{
+background: transparent; 
+color:white;
+}
+
+QDoubleSpinBox
+{
+background:transparent;
+color:white;
+}
+
+QComboBox
+{background-color:transparent;color:white;}
+
+QComboBox::drop-down
+{background-color: #aaaaaa;color: #232323;}
+
+QHeaderView, QHeaderView::section
+{color: white; background-color:transparent;}
+
+QTableWidget
+{color: white; background-color: transparent;}
+
+#toolbar
+{ font-weight:600;background-color:transparent;text-align:left; min-width:180px;}
+
+QToolBar QToolButton
+{font-weight:600;font-size:12px; padding-left:20px; padding-top:4px;padding-bottom:4px;width:100%;text-align:left; text-transform:uppercase;}
+
+#binancepage
+{font-weight:600;font-size:11px;color: white;text-align: left;text-transform:uppercase;}
+
+#bittrexpage
+{font-weight:600;font-size:11px; color: white; text-align: left; text-transform:uppercase;}
+
+#ccexpage
+{font-weight:600;font-size:11px; color: white; text-align: left;text-transform:uppercase;}
+
+#poloniexpage
+{font-weight:600;font-size:11px; color: white; text-align: left; text-transform:uppercase;}
+
+#yobitpage
+{font-weight:600;font-size:11px; color: white; text-align: left; text-transform:uppercase;}
+
+#localbitcointalkcoinspage
+{font-weight:600;font-size:11px; color: white; text-align: left; text-transform:uppercase;}
+
+#utilitiespage
+{font-weight:600;font-size:11px; color: white;text-align: left; text-transform:uppercase;}
+
+QStatusBar
+{font-family: Arial;color: white;background-color: transparent;border: 0px;font-weight:600;font-size:11px;text-align: left; text-transform:uppercase;}
+
+#wiman
+{background-color: transparent;}
+
+#marketswitcher
+{background: QLinearGradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgba(149, 111, 211, 0.2), stop: 1 rgba(0, 0, 0, 0)); margin: 0px;}
+
+#widgetbox
+{background-color: transparent;text-transform:uppercase;}
+
+QTableWidget QTableCornerButton::section 
+{background-color: transparent;}
+
+QProgressBar 
+{ background-color: #e8e8e8; border: 1px solid grey; border-radius: 7px; padding: 1px; text-align: center; } 
+
+QProgressBar::chunk 
+{ background-color: QLinearGradient(x1: 0, y1: 0, x2: 1, y2: 0, stop: 0 #FF8000, stop: 1 orange); border-radius: 7px; margin: 0px; }
