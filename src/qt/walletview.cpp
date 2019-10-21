@@ -100,7 +100,7 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
 
 WalletView::~WalletView()
 {
-    delete rpcConsole;
+//    delete rpcConsole;
 }
 
 void WalletView::setTalkcoinGUI(TalkcoinGUI *gui)

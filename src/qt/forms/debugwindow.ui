@@ -7,13 +7,32 @@
     <x>0</x>
     <y>0</y>
     <width>426</width>
-    <height>509</height>
+    <height>480</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Debug window</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_7">
+   <item>
+    <widget class="QLabel" name="label_alerts">
+     <property name="visible">
+      <bool>true</bool>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QLabel { background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0, stop:0 #F0D0A0, stop:1 #F8D488); color:#000000; }</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+     <property name="margin">
+      <number>3</number>
+     </property>
+     <property name="textInteractionFlags">
+      <set>Qt::TextSelectableByMouse</set>
+     </property>
+    </widget>
+   </item>
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
@@ -27,10 +46,16 @@
        <property name="horizontalSpacing">
         <number>12</number>
        </property>
-       <item row="11" column="0">
-        <widget class="QLabel" name="labelNumberOfTransactions">
+       <item row="7" column="0">
+        <widget class="QLabel" name="labelNetwork">
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
          <property name="text">
-          <string>Transactions</string>
+          <string>Network</string>
          </property>
         </widget>
        </item>
@@ -41,25 +66,17 @@
          </property>
         </widget>
        </item>
-       <item row="4" column="1" colspan="2">
-        <widget class="QLabel" name="dataDir">
-         <property name="cursor">
-          <cursorShape>IBeamCursor</cursorShape>
-         </property>
-         <property name="toolTip">
-          <string>To specify a non-default location of the data directory use the '%1' option.</string>
-         </property>
+       <item row="8" column="0">
+        <widget class="QLabel" name="label_8">
          <property name="text">
-          <string>N/A</string>
+          <string>Name</string>
          </property>
-         <property name="textFormat">
-          <enum>Qt::PlainText</enum>
-         </property>
-         <property name="wordWrap">
-          <bool>true</bool>
-         </property>
-         <property name="textInteractionFlags">
-          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+        </widget>
+       </item>
+       <item row="9" column="0">
+        <widget class="QLabel" name="label_7">
+         <property name="text">
+          <string>Number of connections</string>
          </property>
         </widget>
        </item>
@@ -79,10 +96,47 @@
          </property>
         </widget>
        </item>
-       <item row="7" column="0">
-        <widget class="QLabel" name="label_8">
+       <item row="11" column="0">
+        <widget class="QLabel" name="label_3">
          <property name="text">
-          <string>Name</string>
+          <string>Current number of blocks</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0">
+        <widget class="QLabel" name="label_11">
+         <property name="text">
+          <string>Blocksdir</string>
+         </property>
+        </widget>
+       </item>
+       <item row="12" column="0">
+        <widget class="QLabel" name="labelLastBlockTime">
+         <property name="text">
+          <string>Last block time</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_6">
+         <property name="text">
+          <string>Client version</string>
+         </property>
+        </widget>
+       </item>
+       <item row="12" column="1" colspan="2">
+        <widget class="QLabel" name="lastBlockTime">
+         <property name="cursor">
+          <cursorShape>IBeamCursor</cursorShape>
+         </property>
+         <property name="text">
+          <string>N/A</string>
+         </property>
+         <property name="textFormat">
+          <enum>Qt::PlainText</enum>
+         </property>
+         <property name="textInteractionFlags">
+          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
          </property>
         </widget>
        </item>
@@ -108,29 +162,6 @@
          </property>
         </widget>
        </item>
-       <item row="12" column="1">
-        <widget class="QLabel" name="mempoolSize">
-         <property name="cursor">
-          <cursorShape>IBeamCursor</cursorShape>
-         </property>
-         <property name="text">
-          <string>N/A</string>
-         </property>
-         <property name="textFormat">
-          <enum>Qt::PlainText</enum>
-         </property>
-         <property name="textInteractionFlags">
-          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-         </property>
-        </widget>
-       </item>
-       <item row="8" column="0">
-        <widget class="QLabel" name="label_7">
-         <property name="text">
-          <string>Connections</string>
-         </property>
-        </widget>
-       </item>
        <item row="1" column="1" colspan="2">
         <widget class="QLabel" name="clientVersion">
          <property name="cursor">
@@ -148,7 +179,7 @@
         </widget>
        </item>
        <item row="8" column="1" colspan="2">
-        <widget class="QLabel" name="numberOfConnections">
+        <widget class="QLabel" name="networkName">
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
          </property>
@@ -166,15 +197,15 @@
        <item row="3" column="0">
         <widget class="QLabel" name="label_berkeleyDBVersion">
          <property name="text">
-          <string>BerkeleyDB version</string>
+          <string>Using BerkeleyDB version</string>
          </property>
          <property name="indent">
           <number>10</number>
          </property>
         </widget>
        </item>
-       <item row="7" column="1" colspan="2">
-        <widget class="QLabel" name="networkName">
+       <item row="3" column="1" colspan="2">
+        <widget class="QLabel" name="berkeleyDBVersion">
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
          </property>
@@ -189,15 +220,51 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_6">
+       <item row="14" column="0">
+        <widget class="QLabel" name="labelNumberOfTransactions">
          <property name="text">
-          <string>Client version</string>
+          <string>Current number of transactions</string>
+         </property>
+        </widget>
+       </item>
+       <item row="10" column="0">
+        <widget class="QLabel" name="label_10">
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Block chain</string>
+         </property>
+        </widget>
+       </item>
+       <item row="15" column="0">
+        <widget class="QLabel" name="labelMemoryUsage">
+         <property name="text">
+          <string>Memory usage</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="1" colspan="2">
+        <widget class="QLabel" name="startupTime">
+         <property name="cursor">
+          <cursorShape>IBeamCursor</cursorShape>
+         </property>
+         <property name="text">
+          <string>N/A</string>
+         </property>
+         <property name="textFormat">
+          <enum>Qt::PlainText</enum>
+         </property>
+         <property name="textInteractionFlags">
+          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
          </property>
         </widget>
        </item>
        <item row="9" column="1" colspan="2">
-        <widget class="QLabel" name="numberOfBlocks">
+        <widget class="QLabel" name="numberOfConnections">
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
          </property>
@@ -212,8 +279,73 @@
          </property>
         </widget>
        </item>
-       <item row="10" column="1" colspan="2">
-        <widget class="QLabel" name="lastBlockTime">
+       <item row="16" column="0">
+        <widget class="QLabel" name="labelDebugLogfile">
+         <property name="text">
+          <string>Debug log file</string>
+         </property>
+        </widget>
+       </item>
+       <item row="13" column="0">
+        <widget class="QLabel" name="labelMempoolTitle">
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Memory Pool</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="labelClientUserAgent">
+         <property name="text">
+          <string>User Agent</string>
+         </property>
+         <property name="indent">
+          <number>10</number>
+         </property>
+        </widget>
+       </item>
+       <item row="16" column="1">
+        <widget class="QPushButton" name="openDebugLogfileButton">
+         <property name="toolTip">
+          <string>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</string>
+         </property>
+         <property name="text">
+          <string>&amp;Open</string>
+         </property>
+         <property name="autoDefault">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1" colspan="2">
+        <widget class="QLabel" name="dataDir">
+         <property name="cursor">
+          <cursorShape>IBeamCursor</cursorShape>
+         </property>
+         <property name="toolTip">
+          <string>To specify a non-default location of the data directory use the '%1' option.</string>
+         </property>
+         <property name="text">
+          <string>N/A</string>
+         </property>
+         <property name="textFormat">
+          <enum>Qt::PlainText</enum>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+         <property name="textInteractionFlags">
+          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+         </property>
+        </widget>
+       </item>
+       <item row="11" column="1" colspan="2">
+        <widget class="QLabel" name="numberOfBlocks">
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
          </property>
@@ -235,14 +367,20 @@
          </property>
         </widget>
        </item>
-       <item row="12" column="0">
-        <widget class="QLabel" name="labelMemoryUsage">
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_9">
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
          <property name="text">
-          <string>Memory</string>
+          <string>General</string>
          </property>
         </widget>
        </item>
-       <item row="11" column="1">
+       <item row="14" column="1">
         <widget class="QLabel" name="mempoolNumberTxs">
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
@@ -258,28 +396,8 @@
          </property>
         </widget>
        </item>
-       <item row="5" column="0">
-        <widget class="QLabel" name="label_11">
-         <property name="text">
-          <string>Blocksdir</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="label_9">
-         <property name="font">
-          <font>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>General</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="1" colspan="2">
-        <widget class="QLabel" name="berkeleyDBVersion">
+       <item row="15" column="1">
+        <widget class="QLabel" name="mempoolSize">
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
          </property>
@@ -291,66 +409,6 @@
          </property>
          <property name="textInteractionFlags">
           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="1" colspan="2">
-        <widget class="QLabel" name="startupTime">
-         <property name="cursor">
-          <cursorShape>IBeamCursor</cursorShape>
-         </property>
-         <property name="text">
-          <string>N/A</string>
-         </property>
-         <property name="textFormat">
-          <enum>Qt::PlainText</enum>
-         </property>
-         <property name="textInteractionFlags">
-          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-         </property>
-        </widget>
-       </item>
-       <item row="13" column="0">
-        <widget class="QLabel" name="labelDebugLogfile">
-         <property name="text">
-          <string>Debug log file</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="labelClientUserAgent">
-         <property name="text">
-          <string>User Agent</string>
-         </property>
-         <property name="indent">
-          <number>10</number>
-         </property>
-        </widget>
-       </item>
-       <item row="9" column="0">
-        <widget class="QLabel" name="label_3">
-         <property name="text">
-          <string>Blocks</string>
-         </property>
-        </widget>
-       </item>
-       <item row="10" column="0">
-        <widget class="QLabel" name="labelLastBlockTime">
-         <property name="text">
-          <string>Last block time</string>
-         </property>
-        </widget>
-       </item>
-       <item row="13" column="1">
-        <widget class="QPushButton" name="openDebugLogfileButton">
-         <property name="toolTip">
-          <string>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</string>
-         </property>
-         <property name="text">
-          <string>&amp;Open</string>
-         </property>
-         <property name="autoDefault">
-          <bool>false</bool>
          </property>
         </widget>
        </item>

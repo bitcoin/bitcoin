@@ -86,18 +86,12 @@ TalkcoinGUI::TalkcoinGUI(interfaces::Node& node, const PlatformStyle *_platformS
     platformStyle(_platformStyle),
     m_network_style(networkStyle)
 {
-
     QSettings settings;
-    
-#if defined(Q_OS_ANDROID)
-    setFixedSize(QGuiApplication::primaryScreen()->availableSize().width(), QGuiApplication::primaryScreen()->availableSize().height());
-#else
     if (!restoreGeometry(settings.value("MainWindowGeometry").toByteArray())) {
         // Restore failed (perhaps missing setting), center the window
         move(QGuiApplication::primaryScreen()->availableGeometry().center() - frameGeometry().center());
-    }    
-#endif
-
+    }
+    //setFixedSize(400, 550);
     setWindowFlags(Qt::FramelessWindowHint);
     // load stylesheet
 
@@ -408,7 +402,6 @@ void TalkcoinGUI::createActions()
     optionsAction->setStatusTip(tr("Modify configuration options for %1").arg(tr("Talkcoin")));
     optionsAction->setMenuRole(QAction::PreferencesRole);
     optionsAction->setEnabled(false);
-    optionsAction->setCheckable(true);
     toggleHideAction = new QAction(platformStyle->TextColorIcon(":/icons/about"), tr("&Show / Hide"), this);
     toggleHideAction->setStatusTip(tr("Show or hide the main Window"));
 
@@ -437,7 +430,6 @@ void TalkcoinGUI::createActions()
     openRPCConsoleAction = new QAction(platformStyle->SingleColorIcon(":/icons/debugwindow"), tr("&Debug window"), this);
 #endif
     openRPCConsoleAction->setStatusTip(tr("Open debugging and diagnostic console"));
-    openRPCConsoleAction->setCheckable(true);
     // initially disable the debug window menu item
     openRPCConsoleAction->setObjectName("openRPCConsoleAction");
 
@@ -1154,7 +1146,7 @@ void TalkcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVe
         QString timeBehindText = GUIUtil::formatNiceTimeOffset(secs);
 
         progressBarLabel->setVisible(true);
-        progressBar->setFormat(tr("%1 ").arg(timeBehindText));
+        progressBar->setFormat(tr("%1 behind").arg(timeBehindText));
         progressBar->setMaximum(1000000000);
         progressBar->setValue(nVerificationProgress * 1000000000.0 + 0.5);
         progressBar->setVisible(true);
