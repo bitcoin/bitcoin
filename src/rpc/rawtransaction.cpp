@@ -57,7 +57,7 @@ static void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& 
     TxToUniv(tx, uint256(), entry, true, RPCSerializationFlags());
 
     if (!tx.vExtraPayload.empty()) {
-        entry.pushKV("extraPayloadSize", tx.vExtraPayload.size());
+        entry.pushKV("extraPayloadSize", (uint64_t)tx.vExtraPayload.size());
         entry.pushKV("extraPayload", HexStr(tx.vExtraPayload));
     }
 
