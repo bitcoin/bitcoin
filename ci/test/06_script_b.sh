@@ -15,8 +15,10 @@ fi
 #Avoid repeating this block several places in code
 safe_cd()
 {
+  type cd
+  which cd
   set +o errexit
-  $lcd $1 || (echo $2; exit 1)
+  #$lcd $1 || (echo $2; exit 1)
   set -o errexit
 }
 
