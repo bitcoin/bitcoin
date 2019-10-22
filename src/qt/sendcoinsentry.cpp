@@ -265,7 +265,7 @@ void SendCoinsEntry::updateDisplayUnit()
 {
     if(model && model->getOptionsModel())
     {
-        // Update payAmount with the current 
+        // Update payAmount with the current unit
         int unit = model->getOptionsModel()->getDisplayUnit();
         ui->payAmount->setDisplayUnit(unit);
         ui->payAmount_is->setDisplayUnit(unit);
