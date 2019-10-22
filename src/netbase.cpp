@@ -605,7 +605,7 @@ static void LogConnectFailure(bool manual_connection, const char* fmt, const Arg
  * @param nTimeout Wait this many milliseconds for the connection to be
  *                 established.
  * @param manual_connection Whether or not the connection was manually requested
- *                          (e.g. thru the addnode RPC)
+ *                          (e.g. through the addnode RPC)
  *
  * @returns Whether or not a connection was successfully made.
  */
