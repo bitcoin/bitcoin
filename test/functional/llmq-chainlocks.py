@@ -36,6 +36,7 @@ class LLMQChainLocksTest(DashTestFramework):
             self.mine_quorum()
 
         self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 0)
+        self.wait_for_sporks_same()
 
         self.log.info("Mine single block, wait for chainlock")
         self.nodes[0].generate(1)
