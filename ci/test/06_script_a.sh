@@ -7,16 +7,16 @@
 export LC_ALL=C.UTF-8
 
 #cd command is misunderstanded by cd Travis built-in command in some macOS
-lcd='cd'
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  lcd='type cd'
-fi
+#lcd='cd'
+#if [[ "$OSTYPE" == "darwin"* ]]; then
+#  lcd='type cd'
+#fi
 
 #Avoid repeating this block several places in code
 safe_cd()
 {
-  which cd
   command +V cd
+  type cd
   set +o errexit
   #$lcd $1 || (echo $2; exit 1)
   set -o errexit
