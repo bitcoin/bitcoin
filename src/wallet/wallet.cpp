@@ -5201,7 +5201,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
 
     // Warn user every time he starts non-encrypted HD wallet
     if (gArgs.GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET) && !walletInstance->IsLocked()) {
-        InitWarning(_("Make sure to encrypt your wallet and delete all non-encrypted backups after you verified that wallet works!"));
+        InitWarning(_("Make sure to encrypt your wallet and delete all non-encrypted backups after you have verified that the wallet works!"));
     }
 
     LogPrintf(" wallet      %15dms\n", GetTimeMillis() - nStart);
