@@ -1,13 +1,11 @@
-Omni Core v0.6.1
+Omni Core v0.6.0
 ================
 
-v0.6.1 is a major release and changes the code base of Omni Core from Bitcoin Core 0.13.2 to Bitcoin Core 0.18.1. No Omni Layer consensus rules were changed and the consensus behavior of this version is identidcal with Omni Core v0.5.0. An upgrade is **not required**, but recommended in an experimental environment.
-
-Omni Core v0.6.1 fixes locking issues and the RPCs for funding transactions as well as omni_listtransactions.
+v0.6.0 is a major release and changes the code base of Omni Core from Bitcoin Core 0.13.2 to Bitcoin Core 0.18.1. No Omni Layer consensus rules were changed and the consensus behavior of this version is identidcal with Omni Core v0.5.0. An upgrade is **not required**, but recommended in an experimental environment.
 
 **Due to the upgrade from Bitcoin Core 0.13.2 to 0.18.1, this version incooperates many changes, so please take your time to read through all release notes carefully. The first time you run this version, all the database is reconstructed, which can easily consume several hours.**
 
-To avoid downtime of your system, running both versions on two instances is recommended and once v0.6.1 is up-to-date and it's behavior was confirmed to work, a hot swap may be done.
+To avoid downtime of your system, running both versions on two instances is recommended and once v0.6.0 is up-to-date and it's behavior was confirmed to work, a hot swap may be done.
 
 **There is no harm in skipping this version, as it's consensus behavior is identical to Omni Core v0.5.0. If you are running v0.5.0, there is no need for an update.**
 
@@ -221,15 +219,6 @@ The following list includes relevant pull requests merged into this release:
 - #997 Bump version to Omni Core 0.6.0
 - #1004 Run lint tests as close as possible to defaults and refactor as required
 - #998 Add release notes for Omni Core 0.6.0
-- #1010 Fix rescan minutes
-- #1019 Set fSuccess true on valid wtxNew
-- #1020 Updates to omni_funded_send
-- #1022 Fix #1011: different transactions getting the same sortKey in FetchWalletOmniTransactions
-- #1023 Remove lint white space check
-- #1024 Lock cs_main and cs_tally when calling LoadAlerts
-- #1026 Lock cs_main before calling AcceptToMemoryPool
-- #1027 Fail funded send TXs with more outputs than expected
-- #1034 Prepare release of Omni Core v0.6.1
 ```
 
 
