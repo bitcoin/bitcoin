@@ -16,7 +16,7 @@ fi
 safe_cd()
 {
   type cd
-  which cd
+  command +V cd
   set +o errexit
   #$lcd $1 || (echo $2; exit 1)
   set -o errexit
