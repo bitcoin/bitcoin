@@ -709,7 +709,7 @@ bool GetProxy(enum Network net, proxyType &proxyInfoOut) {
 
 /**
  * Set the name proxy to use for all connections to nodes specified by a
- * hostname. After setting this proxy, connecting to a node sepcified by a
+ * hostname. After setting this proxy, connecting to a node specified by a
  * hostname won't result in a local lookup of said hostname, rather, connect to
  * the node by asking the name proxy for a proxy connection to the hostname,
  * effectively delegating the hostname lookup to the specified proxy.
