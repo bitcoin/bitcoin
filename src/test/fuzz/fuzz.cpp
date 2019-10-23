@@ -4,11 +4,9 @@
 
 #include <test/fuzz/fuzz.h>
 
+#include <cstdint>
 #include <unistd.h>
-
-#include <pubkey.h>
-#include <util/memory.h>
-
+#include <vector>
 
 static bool read_stdin(std::vector<uint8_t>& data)
 {
@@ -23,10 +21,8 @@ static bool read_stdin(std::vector<uint8_t>& data)
 }
 
 // Default initialization: Override using a non-weak initialize().
-__attribute__((weak))
-void initialize()
+__attribute__((weak)) void initialize()
 {
-    const static auto verify_handle = MakeUnique<ECCVerifyHandle>();
 }
 
 // This function is used by libFuzzer
@@ -50,7 +46,8 @@ extern "C" int LLVMFuzzerInitialize(int* argc, char*** argv)
 // the main(...) function.
 __attribute__((weak))
 #endif
-int main(int argc, char **argv)
+int
+main(int argc, char** argv)
 {
     initialize();
 #ifdef __AFL_INIT
