@@ -18,7 +18,7 @@
   </property>
   <widget class="QFrame" name="SendCoins">
    <property name="toolTip">
-    <string>This is a normal payment.</string>
+    <string>The amount to send in the selected unit</string>
    </property>
    <property name="frameShape">
     <enum>QFrame::NoFrame</enum>
