@@ -197,6 +197,7 @@ BASE_SCRIPTS = [
     'feature_uacomment.py',
     'wallet_coinbase_category.py',
     'feature_filelock.py',
+    'feature_loadblock.py',
     'p2p_dos_header_tree.py',
     'p2p_unrequested_blocks.py',
     'feature_includeconf.py',
