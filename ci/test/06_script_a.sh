@@ -11,8 +11,6 @@ export LC_ALL=C.UTF-8
 #if [[ "$OSTYPE" == "darwin"* ]]; then
 #  lcd='type cd'
 #fi
-
-command +V cd
 type cd
 #Avoid repeating this block several places in code
 safe_cd()

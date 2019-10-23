@@ -12,7 +12,6 @@ export LC_ALL=C.UTF-8
 #  lcd='type cd'
 #fi
 type cd
-command +V cd
 #Avoid repeating this block several places in code
 safe_cd()
 {
