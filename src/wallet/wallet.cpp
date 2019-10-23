@@ -2701,9 +2701,10 @@ CAmount CWallet::GetAvailableBalance(const CCoinControl* coinControl) const
     return balance;
 }
 
-void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const CCoinControl *coinControl, const CAmount &nMinimumAmount, const CAmount &nMaximumAmount, const CAmount &nMinimumSumAmount, const uint64_t &nMaximumCount, const int &nMinDepth, const int &nMaxDepth, AvailableCoinsType nCoinType) const
+void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const CCoinControl *coinControl, const CAmount &nMinimumAmount, const CAmount &nMaximumAmount, const CAmount &nMinimumSumAmount, const uint64_t &nMaximumCount, const int &nMinDepth, const int &nMaxDepth) const
 {
     vCoins.clear();
+    CoinType nCoinType = coinControl ? coinControl->nCoinType : CoinType::ALL_COINS;
 
     {
         LOCK2(cs_main, cs_wallet);
@@ -2737,14 +2738,14 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
 
             for (unsigned int i = 0; i < pcoin->tx->vout.size(); i++) {
                 bool found = false;
-                if(nCoinType == ONLY_DENOMINATED) {
+                if(nCoinType == CoinType::ONLY_DENOMINATED) {
                     found = CPrivateSend::IsDenominatedAmount(pcoin->tx->vout[i].nValue);
-                } else if(nCoinType == ONLY_NONDENOMINATED) {
+                } else if(nCoinType == CoinType::ONLY_NONDENOMINATED) {
                     if (CPrivateSend::IsCollateralAmount(pcoin->tx->vout[i].nValue)) continue; // do not use collateral amounts
                     found = !CPrivateSend::IsDenominatedAmount(pcoin->tx->vout[i].nValue);
-                } else if(nCoinType == ONLY_1000) {
+                } else if(nCoinType == CoinType::ONLY_1000) {
                     found = pcoin->tx->vout[i].nValue == 1000*COIN;
-                } else if(nCoinType == ONLY_PRIVATESEND_COLLATERAL) {
+                } else if(nCoinType == CoinType::ONLY_PRIVATESEND_COLLATERAL) {
                     found = CPrivateSend::IsCollateralAmount(pcoin->tx->vout[i].nValue);
                 } else {
                     found = true;
@@ -2757,7 +2758,7 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
                 if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(COutPoint(wtxid, i)))
                     continue;
 
-                if (IsLockedCoin(wtxid, i) && nCoinType != ONLY_1000)
+                if (IsLockedCoin(wtxid, i) && nCoinType != CoinType::ONLY_1000)
                     continue;
 
                 if (IsSpent(wtxid, i))
@@ -2927,7 +2928,7 @@ bool less_then_denom (const COutput& out1, const COutput& out2)
 }
 
 bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMine, const int nConfTheirs, const uint64_t nMaxAncestors, std::vector<COutput> vCoins,
-                                 std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, AvailableCoinsType nCoinType) const
+                                 std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, CoinType nCoinType) const
 {
     setCoinsRet.clear();
     nValueRet = 0;
@@ -2942,7 +2943,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
     int tryDenomStart = 0;
     CAmount nMinChange = MIN_CHANGE;
 
-    if (nCoinType == ONLY_DENOMINATED) {
+    if (nCoinType == CoinType::ONLY_DENOMINATED) {
         // larger denoms first
         std::sort(vCoins.rbegin(), vCoins.rend(), CompareByPriority());
         // we actually want denoms only, so let's skip "non-denom only" step
@@ -2983,7 +2984,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
 
             if (tryDenom == 0 && CPrivateSend::IsDenominatedAmount(coin.txout.nValue)) continue; // we don't want denom values on first run
 
-            if (nCoinType == ONLY_DENOMINATED) {
+            if (nCoinType == CoinType::ONLY_DENOMINATED) {
                 // Make sure it's actually anonymized
                 COutPoint outpoint = COutPoint(pcoin->GetHash(), i);
                 int nRounds = GetRealOutpointPrivateSendRounds(outpoint);
@@ -3032,7 +3033,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
             nValueRet += coinLowestLarger->txout.nValue;
             // There is no change in PS, so we know the fee beforehand,
             // can see if we exceeded the max fee and thus fail quickly.
-            return nCoinType == ONLY_DENOMINATED ? (nValueRet - nTargetValue <= maxTxFee) : true;
+            return (nCoinType == CoinType::ONLY_DENOMINATED) ? (nValueRet - nTargetValue <= maxTxFee) : true;
         }
 
         // nTotalLower > nTargetValue
@@ -3073,14 +3074,15 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
 
     // There is no change in PS, so we know the fee beforehand,
     // can see if we exceeded the max fee and thus fail quickly.
-    return nCoinType == ONLY_DENOMINATED ? (nValueRet - nTargetValue <= maxTxFee) : true;
+    return (nCoinType == CoinType::ONLY_DENOMINATED) ? (nValueRet - nTargetValue <= maxTxFee) : true;
 }
 
-bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CCoinControl* coinControl, AvailableCoinsType nCoinType) const
+bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CCoinControl* coinControl) const
 {
     // Note: this function should never be used for "always free" tx types like dstx
 
     std::vector<COutput> vCoins(vAvailableCoins);
+    CoinType nCoinType = coinControl ? coinControl->nCoinType : CoinType::ALL_COINS;
 
     // coin control -> return all selected outputs (we want all selected to go into the transaction for sure)
     if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs)
@@ -3090,7 +3092,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
             if(!out.fSpendable)
                 continue;
 
-            if(nCoinType == ONLY_DENOMINATED) {
+            if(nCoinType == CoinType::ONLY_DENOMINATED) {
                 COutPoint outpoint = COutPoint(out.tx->GetHash(),out.i);
                 int nRounds = GetCappedOutpointPrivateSendRounds(outpoint);
                 // make sure it's actually anonymized
@@ -3124,7 +3126,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
             // Clearly invalid input, fail
             if (pcoin->tx->vout.size() <= outpoint.n)
                 return false;
-            if (nCoinType == ONLY_DENOMINATED) {
+            if (nCoinType == CoinType::ONLY_DENOMINATED) {
                 // Make sure to include anonymized preset inputs only,
                 // even if some non-anonymized inputs were manually selected via CoinControl
                 int nRounds = GetRealOutpointPrivateSendRounds(outpoint);
@@ -3189,7 +3191,7 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
 
     CReserveKey reservekey(this);
     CWalletTx wtx;
-    if (!CreateTransaction(vecSend, wtx, reservekey, nFeeRet, nChangePosInOut, strFailReason, coinControl, false, ALL_COINS, nExtraPayloadSize)) {
+    if (!CreateTransaction(vecSend, wtx, reservekey, nFeeRet, nChangePosInOut, strFailReason, coinControl, false, nExtraPayloadSize)) {
         return false;
     }
 
@@ -3238,7 +3240,9 @@ bool CWallet::SelectPSInOutPairsByDenominations(int nDenom, CAmount nValueMin, C
         return false;
     }
 
-    AvailableCoins(vCoins, true, nullptr, 1, MAX_MONEY, MAX_MONEY, 0, 0, 9999999, ONLY_DENOMINATED);
+    CCoinControl coin_control;
+    coin_control.nCoinType = CoinType::ONLY_DENOMINATED;
+    AvailableCoins(vCoins, true, &coin_control);
     LogPrint(BCLog::PRIVATESEND, "CWallet::%s -- vCoins.size(): %d\n", __func__, vCoins.size());
 
     std::random_shuffle(vCoins.rbegin(), vCoins.rend(), GetRandInt);
@@ -3376,13 +3380,13 @@ bool CWallet::SelectCoinsGroupedByAddresses(std::vector<CompactTallyItem>& vecTa
 
 bool CWallet::SelectPrivateCoins(CAmount nValueMin, CAmount nValueMax, std::vector<CTxIn>& vecTxInRet, CAmount& nValueRet, int nPrivateSendRoundsMin, int nPrivateSendRoundsMax) const
 {
-    CCoinControl *coinControl=nullptr;
-
     vecTxInRet.clear();
     nValueRet = 0;
 
     std::vector<COutput> vCoins;
-    AvailableCoins(vCoins, true, coinControl, 1, MAX_MONEY, MAX_MONEY, 0, 0, 9999999, nPrivateSendRoundsMin < 0 ? ONLY_NONDENOMINATED : ONLY_DENOMINATED);
+    CCoinControl coin_control;
+    coin_control.nCoinType = nPrivateSendRoundsMin < 0 ? CoinType::ONLY_NONDENOMINATED : CoinType::ONLY_DENOMINATED;
+    AvailableCoins(vCoins, true, &coin_control);
 
     //order the array so largest nondenom are first, then denominations, then very small inputs.
     std::sort(vCoins.rbegin(), vCoins.rend(), CompareByPriority());
@@ -3416,7 +3420,9 @@ bool CWallet::GetCollateralTxDSIn(CTxDSIn& txdsinRet, CAmount& nValueRet) const
 
     std::vector<COutput> vCoins;
 
-    AvailableCoins(vCoins, true, nullptr, 1, MAX_MONEY, MAX_MONEY, 0, 0, 9999999, ONLY_PRIVATESEND_COLLATERAL);
+    CCoinControl coin_control;
+    coin_control.nCoinType = CoinType::ONLY_PRIVATESEND_COLLATERAL;
+    AvailableCoins(vCoins, true, &coin_control);
 
     if (vCoins.empty()) {
         return false;
@@ -3435,7 +3441,9 @@ bool CWallet::GetMasternodeOutpointAndKeys(COutPoint& outpointRet, CPubKey& pubK
 
     // Find possible candidates
     std::vector<COutput> vPossibleCoins;
-    AvailableCoins(vPossibleCoins, true, nullptr, 1, MAX_MONEY, MAX_MONEY, 0, 0, 9999999, ONLY_1000);
+    CCoinControl coin_control;
+    coin_control.nCoinType = CoinType::ONLY_1000;
+    AvailableCoins(vPossibleCoins, true, &coin_control);
     if(vPossibleCoins.empty()) {
         LogPrintf("CWallet::GetMasternodeOutpointAndKeys -- Could not locate any valid masternode vin\n");
         return false;
@@ -3506,7 +3514,9 @@ int CWallet::CountInputsWithAmount(CAmount nInputAmount) const
 bool CWallet::HasCollateralInputs(bool fOnlyConfirmed) const
 {
     std::vector<COutput> vCoins;
-    AvailableCoins(vCoins, fOnlyConfirmed, nullptr, 1, MAX_MONEY, MAX_MONEY, 0, 0, 9999999, ONLY_PRIVATESEND_COLLATERAL);
+    CCoinControl coin_control;
+    coin_control.nCoinType = CoinType::ONLY_PRIVATESEND_COLLATERAL;
+    AvailableCoins(vCoins, fOnlyConfirmed, &coin_control);
 
     return !vCoins.empty();
 }
@@ -3573,7 +3583,7 @@ bool CWallet::GetBudgetSystemCollateralTX(CWalletTx& tx, uint256 hash, CAmount a
     if (!outpoint.IsNull()) {
         coinControl.Select(outpoint);
     }
-    bool success = CreateTransaction(vecSend, tx, reservekey, nFeeRet, nChangePosRet, strFail, coinControl, true, ALL_COINS);
+    bool success = CreateTransaction(vecSend, tx, reservekey, nFeeRet, nChangePosRet, strFail, coinControl);
     if(!success){
         LogPrintf("CWallet::GetBudgetSystemCollateralTX -- Error: %s\n", strFail);
         return false;
@@ -3612,7 +3622,7 @@ static CFeeRate GetDiscardRate(const CBlockPolicyEstimator& estimator)
 }
 
 bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet,
-                                int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign, AvailableCoinsType nCoinType, int nExtraPayloadSize)
+                                int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign, int nExtraPayloadSize)
 {
     CAmount nValue = 0;
     int nChangePosRequest = nChangePosInOut;
@@ -3680,7 +3690,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
         LOCK2(cs_main, cs_wallet);
         {
             std::vector<COutput> vAvailableCoins;
-            AvailableCoins(vAvailableCoins, true, &coin_control, 1, MAX_MONEY, MAX_MONEY, 0, 0, 9999999, nCoinType);
+            AvailableCoins(vAvailableCoins, true, &coin_control);
 
             // Create change script that will be used if we need change
             // TODO: pass in scriptChange instead of reservekey so
@@ -3765,10 +3775,10 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 if (pick_new_inputs) {
                     nValueIn = 0;
                     setCoins.clear();
-                    if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, &coin_control, nCoinType)) {
-                        if (nCoinType == ONLY_NONDENOMINATED) {
+                    if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, &coin_control)) {
+                        if (coin_control.nCoinType == CoinType::ONLY_NONDENOMINATED) {
                             strFailReason = _("Unable to locate enough PrivateSend non-denominated funds for this transaction.");
-                        } else if (nCoinType == ONLY_DENOMINATED) {
+                        } else if (coin_control.nCoinType == CoinType::ONLY_DENOMINATED) {
                             strFailReason = _("Unable to locate enough PrivateSend denominated funds for this transaction.");
                             strFailReason += " " + _("PrivateSend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.");
                         } else if (nValueIn < nValueToSelect) {
@@ -3784,7 +3794,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 if (nChange > 0)
                 {
                     //over pay for denominated transactions
-                    if (nCoinType == ONLY_DENOMINATED) {
+                    if (coin_control.nCoinType == CoinType::ONLY_DENOMINATED) {
                         nChangePosInOut = -1;
                         nFeeRet += nChange;
                         wtxNew.mapValue["DS"] = "1";

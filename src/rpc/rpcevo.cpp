@@ -212,7 +212,7 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
     int nChangePos = -1;
     std::string strFailReason;
 
-    if (!pwallet->CreateTransaction(vecSend, wtx, reservekey, nFee, nChangePos, strFailReason, coinControl, false, ALL_COINS, tx.vExtraPayload.size())) {
+    if (!pwallet->CreateTransaction(vecSend, wtx, reservekey, nFee, nChangePos, strFailReason, coinControl, false, tx.vExtraPayload.size())) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason);
     }
 

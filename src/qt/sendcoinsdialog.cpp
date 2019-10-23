@@ -109,11 +109,11 @@ SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *p
     if (!privateSendClient.fEnablePrivateSend) {
         ui->checkUsePrivateSend->setChecked(false);
         ui->checkUsePrivateSend->setVisible(false);
-        CoinControlDialog::coinControl->fUsePrivateSend = false;
+        CoinControlDialog::coinControl->UsePrivateSend(false);
     } else {
         bool fUsePrivateSend = settings.value("bUsePrivateSend").toBool();
         ui->checkUsePrivateSend->setChecked(fUsePrivateSend);
-        CoinControlDialog::coinControl->fUsePrivateSend = fUsePrivateSend;
+        CoinControlDialog::coinControl->UsePrivateSend(fUsePrivateSend);
         connect(ui->checkUsePrivateSend, SIGNAL(stateChanged ( int )), this, SLOT(updateDisplayUnit()));
     }
 
@@ -287,10 +287,6 @@ void SendCoinsDialog::on_sendButton_clicked()
         strFunds = tr("using") + " <b>" + tr("any available funds (not anonymous)") + "</b>";
     }
 
-    for (SendCoinsRecipient& rcp : recipients) {
-        rcp.inputType = ui->checkUsePrivateSend->isChecked() ? ONLY_DENOMINATED : ALL_COINS;
-    }
-
     fNewRecipientAllowed = false;
     // request unlock only if was locked or unlocked for mixing:
     // this way we let users unlock by walletpassphrase or by menu
@@ -325,6 +321,8 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients, QString strFee,
         ctrl = *CoinControlDialog::coinControl;
 
     updateCoinControlState(ctrl);
+
+    ctrl.UsePrivateSend(ui->checkUsePrivateSend->isChecked());
 
     prepareStatus = model->prepareTransaction(currentTransaction, ctrl);
 
@@ -610,7 +608,7 @@ void SendCoinsDialog::updateDisplayUnit()
 {
     setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance(), model->getAnonymizedBalance(),
                    model->getWatchBalance(), model->getWatchUnconfirmedBalance(), model->getWatchImmatureBalance());
-    CoinControlDialog::coinControl->fUsePrivateSend = ui->checkUsePrivateSend->isChecked();
+    CoinControlDialog::coinControl->UsePrivateSend(ui->checkUsePrivateSend->isChecked());
     coinControlUpdateLabels();
     ui->customFee->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
     updateMinFeeLabel();
@@ -922,7 +920,7 @@ void SendCoinsDialog::coinControlUpdateLabels()
         }
     }
 
-    ui->checkUsePrivateSend->setChecked(CoinControlDialog::coinControl->fUsePrivateSend);
+    ui->checkUsePrivateSend->setChecked(CoinControlDialog::coinControl->IsUsingPrivateSend());
 
     if (CoinControlDialog::coinControl->HasSelected())
     {

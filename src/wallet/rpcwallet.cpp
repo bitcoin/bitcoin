@@ -373,7 +373,7 @@ UniValue getaddressesbyaccount(const JSONRPCRequest& request)
     return ret;
 }
 
-static void SendMoney(CWallet * const pwallet, const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CCoinControl& coin_control, bool fUsePrivateSend = false)
+static void SendMoney(CWallet * const pwallet, const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CCoinControl& coin_control)
 {
     CAmount curBalance = pwallet->GetBalance();
 
@@ -400,7 +400,7 @@ static void SendMoney(CWallet * const pwallet, const CTxDestination &address, CA
     CRecipient recipient = {scriptPubKey, nValue, fSubtractFeeFromAmount};
     vecSend.push_back(recipient);
     if (!pwallet->CreateTransaction(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet,
-                                         strError, coin_control, true, fUsePrivateSend ? ONLY_DENOMINATED : ALL_COINS)) {
+                                         strError, coin_control)) {
         if (!fSubtractFeeFromAmount && nValue + nFeeRequired > curBalance)
             strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
@@ -475,9 +475,8 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
 
     CCoinControl coin_control;
 
-    bool fUsePrivateSend = false;
     if (request.params.size() > 6 && !request.params[6].isNull()) {
-        fUsePrivateSend = request.params[6].get_bool();
+        coin_control.UsePrivateSend(request.params[6].get_bool());
     }
 
     if (request.params.size() > 7 && !request.params[7].isNull()) {
@@ -492,7 +491,7 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
 
     EnsureWalletIsUnlocked(pwallet);
 
-    SendMoney(pwallet, address.Get(), nAmount, fSubtractFeeFromAmount, wtx, coin_control, fUsePrivateSend);
+    SendMoney(pwallet, address.Get(), nAmount, fSubtractFeeFromAmount, wtx, coin_control);
 
     return wtx.GetHash().GetHex();
 }
@@ -1047,9 +1046,8 @@ UniValue sendmany(const JSONRPCRequest& request)
 
     CCoinControl coin_control;
 
-    bool fUsePrivateSend = false;
     if (request.params.size() > 7 && !request.params[7].isNull()) {
-        fUsePrivateSend = request.params[7].get_bool();
+        coin_control.UsePrivateSend(request.params[7].get_bool());
     }
 
     if (request.params.size() > 8 && !request.params[8].isNull()) {
@@ -1108,7 +1106,7 @@ UniValue sendmany(const JSONRPCRequest& request)
     std::string strFailReason;
 
     bool fCreated = pwallet->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, nChangePosRet, strFailReason,
-                                               coin_control, true, fUsePrivateSend ? ONLY_DENOMINATED : ALL_COINS);
+                                               coin_control);
     if (!fCreated)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strFailReason);
     CValidationState state;
