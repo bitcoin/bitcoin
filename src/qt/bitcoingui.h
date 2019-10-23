@@ -145,6 +145,17 @@ private:
 
     const PlatformStyle *platformStyle;
 
+    struct IncomingTransactionMessage {
+        QString date;
+        int unit;
+        CAmount amount;
+        QString type;
+        QString address;
+        QString label;
+    };
+    std::list<IncomingTransactionMessage> incomingTransactions;
+    QTimer* incomingTransactionsTimer;
+
     /** Create the main UI actions. */
     void createActions();
     /** Create the menu bar and sub-menus. */
@@ -213,6 +224,7 @@ public Q_SLOTS:
 
     /** Show incoming transaction notification for new transactions. */
     void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label);
+    void showIncomingTransactions();
 #endif // ENABLE_WALLET
 
 private Q_SLOTS:

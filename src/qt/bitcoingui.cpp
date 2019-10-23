@@ -275,6 +275,10 @@ BitcoinGUI::BitcoinGUI(const PlatformStyle *_platformStyle, const NetworkStyle *
 #ifdef Q_OS_MAC
     m_app_nap_inhibitor = new CAppNapInhibitor;
 #endif
+
+    incomingTransactionsTimer = new QTimer(this);
+    incomingTransactionsTimer->setSingleShot(true);
+    connect(incomingTransactionsTimer, SIGNAL(timeout()), SLOT(showIncomingTransactions()));
 }
 
 BitcoinGUI::~BitcoinGUI()
@@ -1248,16 +1252,83 @@ void BitcoinGUI::showEvent(QShowEvent *event)
 #ifdef ENABLE_WALLET
 void BitcoinGUI::incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label)
 {
-    // On new transaction, make an info balloon
-    QString msg = tr("Date: %1\n").arg(date) +
-                  tr("Amount: %1\n").arg(BitcoinUnits::formatWithUnit(unit, amount, true)) +
-                  tr("Type: %1\n").arg(type);
-    if (!label.isEmpty())
-        msg += tr("Label: %1\n").arg(label);
-    else if (!address.isEmpty())
-        msg += tr("Address: %1\n").arg(address);
-    message((amount)<0 ? tr("Sent transaction") : tr("Incoming transaction"),
-             msg, CClientUIInterface::MSG_INFORMATION);
+    IncomingTransactionMessage itx = {
+            date, unit, amount, type, address, label
+    };
+    incomingTransactions.emplace_back(itx);
+
+    if (incomingTransactions.size() == 1) {
+        // first TX since we last showed pending messages, let's wait 100ms and then show each individual message
+        incomingTransactionsTimer->start(100);
+    } else if (incomingTransactions.size() == 10) {
+        // we seem to have received 10 TXs in 100ms and we can expect even more, so let's pause for 1 sec and
+        // show a "Multiple TXs sent/received!" message instead of individual messages
+        incomingTransactionsTimer->start(1000);
+    }
+}
+void BitcoinGUI::showIncomingTransactions()
+{
+    auto txs = std::move(this->incomingTransactions);
+
+    if (txs.empty()) {
+        return;
+    }
+
+    if (txs.size() >= 100) {
+        // Show one balloon for all transactions instead of showing one for each individual one
+        // (which would kill some systems)
+
+        CAmount sentAmount = 0;
+        CAmount receivedAmount = 0;
+        int sentCount = 0;
+        int receivedCount = 0;
+        for (auto& itx : txs) {
+            if (itx.amount < 0) {
+                sentAmount += itx.amount;
+                sentCount++;
+            } else {
+                receivedAmount += itx.amount;
+                receivedCount++;
+            }
+        }
+
+        QString title;
+        if (sentCount > 0 && receivedCount > 0) {
+            title = tr("Received and sent multiple transactions");
+        } else if (sentCount > 0) {
+            title = tr("Sent multiple transactions");
+        } else if (receivedCount > 0) {
+            title = tr("Received multiple transactions");
+        } else {
+            return;
+        }
+
+        // Use display unit of last entry
+        int unit = txs.back().unit;
+
+        QString msg;
+        if (sentCount > 0) {
+            msg += tr("Sent Amount: %1\n").arg(BitcoinUnits::formatWithUnit(unit, sentAmount, true));
+        }
+        if (receivedCount > 0) {
+            msg += tr("Received Amount: %1\n").arg(BitcoinUnits::formatWithUnit(unit, receivedAmount, true));
+        }
+
+        message(title, msg, CClientUIInterface::MSG_INFORMATION);
+    } else {
+        for (auto& itx : txs) {
+            // On new transaction, make an info balloon
+            QString msg = tr("Date: %1\n").arg(itx.date) +
+                          tr("Amount: %1\n").arg(BitcoinUnits::formatWithUnit(itx.unit, itx.amount, true)) +
+                          tr("Type: %1\n").arg(itx.type);
+            if (!itx.label.isEmpty())
+                msg += tr("Label: %1\n").arg(itx.label);
+            else if (!itx.address.isEmpty())
+                msg += tr("Address: %1\n").arg(itx.address);
+            message((itx.amount)<0 ? tr("Sent transaction") : tr("Incoming transaction"),
+                    msg, CClientUIInterface::MSG_INFORMATION);
+        }
+    }
 }
 #endif // ENABLE_WALLET
 
