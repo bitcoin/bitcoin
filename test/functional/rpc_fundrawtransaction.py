@@ -500,11 +500,16 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.nodes[1].getnewaddress()
         self.nodes[1].getrawchangeaddress()
         inputs = []
-        outputs = {self.nodes[0].getnewaddress():1.1}
+        outputs = {self.nodes[0].getnewaddress():1.09999500}
         rawtx = self.nodes[1].createrawtransaction(inputs, outputs)
+        # fund a transaction that does not require a new key for the change output
+        self.nodes[1].fundrawtransaction(rawtx)
+
         # fund a transaction that requires a new key for the change output
         # creating the key must be impossible because the wallet is locked
-        assert_raises_rpc_error(-4, "Can't generate a change-address key. Please call keypoolrefill first.", self.nodes[1].fundrawtransaction, rawtx)
+        outputs = {self.nodes[0].getnewaddress():1.1}
+        rawtx = self.nodes[1].createrawtransaction(inputs, outputs)
+        assert_raises_rpc_error(-4, "Transaction needs a change address, but we can't generate it. Please call keypoolrefill first.", self.nodes[1].fundrawtransaction, rawtx)
 
         # Refill the keypool.
         self.nodes[1].walletpassphrase("test", 100)
