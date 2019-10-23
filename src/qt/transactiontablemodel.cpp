@@ -302,7 +302,6 @@ void TransactionTableModel::updateConfirmations()
     //  for all rows. Qt is smart enough to only actually request the data for the
     //  visible rows.
     Q_EMIT dataChanged(index(0, Status), index(priv->size()-1, Status));
-    Q_EMIT dataChanged(index(0, ToAddress), index(priv->size()-1, ToAddress));
 }
 
 
@@ -381,12 +380,11 @@ QString TransactionTableModel::formatTxDate(const TransactionRecord *wtx) const
     return QString();
 }
 
-/* Look up address in address book, if found return label (address)
+/* If label is non-empty, return label (address)
    otherwise just return (address)
  */
-QString TransactionTableModel::lookupAddress(const std::string &address, bool tooltip) const
+QString TransactionTableModel::formatAddressLabel(const std::string &address, const QString& label, bool tooltip) const
 {
-    QString label = walletModel->getAddressTableModel()->labelForAddress(QString::fromStdString(address));
     QString description;
     if(!label.isEmpty())
     {
@@ -469,7 +467,7 @@ QString TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, b
     case TransactionRecord::SendToAddress:
     case TransactionRecord::Generated:
     case TransactionRecord::PrivateSend:
-        return lookupAddress(wtx->strAddress, tooltip) + watchAddress;
+        return formatAddressLabel(wtx->strAddress, wtx->status.label, tooltip) + watchAddress;
     case TransactionRecord::SendToOther:
         return QString::fromStdString(wtx->strAddress) + watchAddress;
     case TransactionRecord::SendToSelf:
