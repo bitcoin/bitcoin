@@ -12,6 +12,7 @@
 #include <net.h>
 #include <primitives/block.h>
 #include <protocol.h>
+#include <pubkey.h>
 #include <streams.h>
 #include <undo.h>
 #include <version.h>
@@ -22,6 +23,12 @@
 #include <vector>
 
 #include <test/fuzz/fuzz.h>
+
+void initialize()
+{
+    // Fuzzers using pubkey must hold an ECCVerifyHandle.
+    static const auto verify_handle = MakeUnique<ECCVerifyHandle>();
+}
 
 void test_one_input(const std::vector<uint8_t>& buffer)
 {
