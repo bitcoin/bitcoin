@@ -2530,19 +2530,14 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                 //  post-backup change.
 
                 // Reserve a new key pair from key pool
-                if (!CanGetAddresses(true)) {
-                    strFailReason = _("Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.").translated;
-                    return false;
-                }
                 CTxDestination dest;
                 const OutputType change_type = TransactionChangeType(coin_control.m_change_type ? *coin_control.m_change_type : m_default_change_type, vecSend);
-                bool ret = reservedest.GetReservedDestination(change_type, dest, true);
-                if (!ret)
-                {
-                    strFailReason = _("Keypool ran out, please call keypoolrefill first").translated;
+                if (reservedest.GetReservedDestination(change_type, dest, true)) {
+                    scriptChange = GetScriptForDestination(dest);
+                } else {
+                    strFailReason = _("Can't generate a change-address key. Please call keypoolrefill first.").translated;
                     return false;
                 }
-
                 scriptChange = GetScriptForDestination(dest);
             }
             CTxOut change_prototype_txout(0, scriptChange);
