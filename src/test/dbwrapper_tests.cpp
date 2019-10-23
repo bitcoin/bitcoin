@@ -42,6 +42,86 @@ BOOST_AUTO_TEST_CASE(dbwrapper)
     }
 }
 
+BOOST_AUTO_TEST_CASE(dbwrapper_basic_data)
+{
+    // Perform tests both obfuscated and non-obfuscated.
+    for (bool obfuscate : {false, true}) {
+        fs::path ph = GetDataDir() / (obfuscate ? "dbwrapper_1_obfuscate_true" : "dbwrapper_1_obfuscate_false");
+        CDBWrapper dbw(ph, (1 << 20), false, true, obfuscate);
+
+        uint256 res;
+        uint32_t res_uint_32;
+        bool res_bool;
+
+        // Ensure that we're doing real obfuscation when obfuscate=true
+        BOOST_CHECK(obfuscate != is_null_key(dbwrapper_private::GetObfuscateKey(dbw)));
+
+        //Simulate block raw data - "b + block hash"
+        std::string key_block = "b" + InsecureRand256().ToString();
+
+        uint256 in_block = InsecureRand256();
+        BOOST_CHECK(dbw.Write(key_block, in_block));
+        BOOST_CHECK(dbw.Read(key_block, res));
+        BOOST_CHECK_EQUAL(res.ToString(), in_block.ToString());
+
+        //Simulate file raw data - "f + file_number"
+        std::string key_file = strprintf("f%04x", InsecureRand32());
+
+        uint256 in_file_info = InsecureRand256();
+        BOOST_CHECK(dbw.Write(key_file, in_file_info));
+        BOOST_CHECK(dbw.Read(key_file, res));
+        BOOST_CHECK_EQUAL(res.ToString(), in_file_info.ToString());
+
+        //Simulate transaction raw data - "t + transaction hash"
+        std::string key_transaction = "t" + InsecureRand256().ToString();
+
+        uint256 in_transaction = InsecureRand256();
+        BOOST_CHECK(dbw.Write(key_transaction, in_transaction));
+        BOOST_CHECK(dbw.Read(key_transaction, res));
+        BOOST_CHECK_EQUAL(res.ToString(), in_transaction.ToString());
+
+        //Simulate UTXO raw data - "c + transaction hash"
+        std::string key_utxo = "c" + InsecureRand256().ToString();
+
+        uint256 in_utxo = InsecureRand256();
+        BOOST_CHECK(dbw.Write(key_utxo, in_utxo));
+        BOOST_CHECK(dbw.Read(key_utxo, res));
+        BOOST_CHECK_EQUAL(res.ToString(), in_utxo.ToString());
+
+        //Simulate last block file number - "l"
+        char key_last_blockfile_number = 'l';
+        uint32_t lastblockfilenumber = InsecureRand32();
+        BOOST_CHECK(dbw.Write(key_last_blockfile_number, lastblockfilenumber));
+        BOOST_CHECK(dbw.Read(key_last_blockfile_number, res_uint_32));
+        BOOST_CHECK_EQUAL(lastblockfilenumber, res_uint_32);
+
+        //Simulate Is Reindexing - "R"
+        char key_IsReindexing = 'R';
+        bool isInReindexing = InsecureRandBool();
+        BOOST_CHECK(dbw.Write(key_IsReindexing, isInReindexing));
+        BOOST_CHECK(dbw.Read(key_IsReindexing, res_bool));
+        BOOST_CHECK_EQUAL(isInReindexing, res_bool);
+
+        //Simulate last block hash up to which UXTO covers - 'B'
+        char key_lastblockhash_uxto = 'B';
+        uint256 lastblock_hash = InsecureRand256();
+        BOOST_CHECK(dbw.Write(key_lastblockhash_uxto, lastblock_hash));
+        BOOST_CHECK(dbw.Read(key_lastblockhash_uxto, res));
+        BOOST_CHECK_EQUAL(lastblock_hash, res);
+
+        //Simulate file raw data - "F + filename_number + filename"
+        std::string file_option_tag = "F";
+        uint8_t filename_length = InsecureRandBits(8);
+        std::string filename = "randomfilename";
+        std::string key_file_option = strprintf("%s%01x%s", file_option_tag,filename_length,filename);
+
+        bool in_file_bool = InsecureRandBool();
+        BOOST_CHECK(dbw.Write(key_file_option, in_file_bool));
+        BOOST_CHECK(dbw.Read(key_file_option, res_bool));
+        BOOST_CHECK_EQUAL(res_bool, in_file_bool);
+   }
+}
+
 // Test batch operations
 BOOST_AUTO_TEST_CASE(dbwrapper_batch)
 {
