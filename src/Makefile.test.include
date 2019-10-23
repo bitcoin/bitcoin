@@ -8,6 +8,7 @@ FUZZ_TARGETS = \
   test/fuzz/address_deserialize \
   test/fuzz/addrman_deserialize \
   test/fuzz/banentry_deserialize \
+  test/fuzz/base_encode_decode \
   test/fuzz/bech32 \
   test/fuzz/block \
   test/fuzz/block_deserialize \
@@ -277,6 +278,12 @@ test_fuzz_bech32_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_bech32_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_bech32_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_bech32_LDADD = $(FUZZ_SUITE_LD_COMMON)
+
+test_fuzz_base_encode_decode_SOURCES = $(FUZZ_SUITE) test/fuzz/base_encode_decode.cpp
+test_fuzz_base_encode_decode_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_base_encode_decode_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_base_encode_decode_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_base_encode_decode_LDADD = $(FUZZ_SUITE_LD_COMMON)
 
 test_fuzz_txundo_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
 test_fuzz_txundo_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DTXUNDO_DESERIALIZE=1
