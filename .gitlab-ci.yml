@@ -96,7 +96,7 @@ stages:
     - ./ci/build_depends.sh
     - ./ci/build_src.sh
     - ./ci/test_unittests.sh
-    - ./ci/test_integrationtests.sh
+    - ./ci/test_integrationtests.sh --extended --exclude pruning,dbcrash
 
   after_script:
     # Copy all cache files into cache-artifact so that they get uploaded. We only do this for develop so that artifacts
