@@ -62,14 +62,14 @@ struct {
 
 static const size_t TOTAL_TRIES = 100000;
 
-bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& target_value, const CAmount& cost_of_change, std::set<CInputCoin>& out_set, CAmount& value_ret, CAmount not_input_fees)
+bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& target_value, const CAmount& cost_of_change, std::set<CInputCoin>& out_set, CAmount& value_ret, CAmount not_input_fees, bool subtract_fee_from_outputs)
 {
     out_set.clear();
     CAmount curr_value = 0;
 
     std::vector<bool> curr_selection; // select the utxo at this index
     curr_selection.reserve(utxo_pool.size());
-    CAmount actual_target = not_input_fees + target_value;
+    CAmount actual_target = (subtract_fee_from_outputs ? 0 : not_input_fees) + target_value;
 
     // Calculate curr_available_value
     CAmount curr_available_value = 0;

@@ -2186,12 +2186,19 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
             group.effective_value = 0;
             for (auto it = group.m_outputs.begin(); it != group.m_outputs.end(); ) {
                 const CInputCoin& coin = *it;
-                CAmount effective_value = coin.txout.nValue - (coin.m_input_bytes < 0 ? 0 : coin_selection_params.effective_fee.GetFee(coin.m_input_bytes));
+                CAmount effective_value = coin.txout.nValue;
+                CAmount cost_to_spend = coin.m_input_bytes < 0 ? 0 : coin_selection_params.effective_fee.GetFee(coin.m_input_bytes);
+                effective_value -= cost_to_spend;
                 // Only include outputs that are positive effective value (i.e. not dust)
                 if (effective_value > 0) {
                     group.fee += coin.m_input_bytes < 0 ? 0 : coin_selection_params.effective_fee.GetFee(coin.m_input_bytes);
                     group.long_term_fee += coin.m_input_bytes < 0 ? 0 : long_term_feerate.GetFee(coin.m_input_bytes);
                     group.effective_value += effective_value;
+                    if (coin_selection_params.subtract_fee_from_outputs) {
+                        // Don't include dust, but otherwise ignore cost to spend
+                        // in BnB coin selection.
+                        group.effective_value += cost_to_spend;
+                    }
                     ++it;
                 } else {
                     it = group.Discard(coin);
@@ -2202,7 +2209,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
         // Calculate the fees for things that aren't inputs
         CAmount not_input_fees = coin_selection_params.effective_fee.GetFee(coin_selection_params.tx_noinputs_size);
         bnb_used = true;
-        return SelectCoinsBnB(utxo_pool, nTargetValue, cost_of_change, setCoinsRet, nValueRet, not_input_fees);
+        return SelectCoinsBnB(utxo_pool, nTargetValue, cost_of_change, setCoinsRet, nValueRet, not_input_fees, coin_selection_params.subtract_fee_from_outputs);
     } else {
         // Filter by the min conf specs and add to utxo_pool
         for (const OutputGroup& group : groups) {
@@ -2513,11 +2520,17 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
             AvailableCoins(*locked_chain, vAvailableCoins, true, &coin_control, 1, MAX_MONEY, MAX_MONEY, 0);
             CoinSelectionParams coin_selection_params; // Parameters for coin selection, init with dummy
 
+            if (nSubtractFeeFromAmount > 0) {
+                coin_selection_params.subtract_fee_from_outputs = true;
+            }
+
             // Create change script that will be used if we need change
             // TODO: pass in scriptChange instead of reservedest so
             // change transaction isn't always pay-to-bitcoin-address
             CScript scriptChange;
             assert(scriptChange.empty());
+            CTxOut change_prototype_txout;
+            assert(change_prototype_txout.IsNull());
 
             // coin control: send change to custom address
             if (!boost::get<CNoDestination>(&coin_control.destChange)) {
@@ -2537,11 +2550,13 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                 if (reservedest.GetReservedDestination(change_type, dest, true)) {
                     scriptChange = GetScriptForDestination(dest);
                 } else {
-                    strFailReason = _("Can't generate a transaction without change. Please call keypoolrefill first.").translated;
+                    // Only use BnB, except when there are pre selected coins,
+                    // which BnB does not support yet:
+                    coin_selection_params.use_knapsack = coin_control.HasSelected();
                 }
                 scriptChange = GetScriptForDestination(dest);
             }
-            CTxOut change_prototype_txout(0, scriptChange);
+            change_prototype_txout = CTxOut(0, scriptChange);
             coin_selection_params.change_output_size = GetSerializeSize(change_prototype_txout);
 
             CFeeRate discard_rate = GetDiscardRate(*this);
@@ -2555,7 +2570,6 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
 
             // BnB selector is the only selector used when this is true.
             // That should only happen on the first pass through the loop.
-            coin_selection_params.use_bnb = nSubtractFeeFromAmount == 0; // If we are doing subtract fee from recipient, then don't use BnB
             // Start with no fee and loop until there is enough fee
             while (true)
             {
@@ -2604,6 +2618,10 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                     txNew.vout.push_back(txout);
                 }
 
+                if (!coin_selection_params.use_bnb && !coin_selection_params.use_knapsack) {
+                    break;
+                }
+
                 // Choose coins to use
                 bool bnb_used;
                 if (pick_new_inputs) {
@@ -2620,12 +2638,16 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                     coin_selection_params.effective_fee = nFeeRateNeeded;
                     if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, coin_control, coin_selection_params, bnb_used))
                     {
+                        if (scriptChange.empty()) {
+                            strFailReason = _("Can't generate a transaction without change. Please call keypoolrefill first.").translated;
+                            return false;
+                        }
                         // If BnB was used, it was the first pass. No longer the first pass and continue loop with knapsack.
                         if (bnb_used) {
                             coin_selection_params.use_bnb = false;
                             continue;
-                        }
-                        else {
+                        } else {
+                            // Manual coin selection failed, or invalid / non-wallet outputs were selected:
                             strFailReason = _("Insufficient funds").translated;
                             return false;
                         }
@@ -2751,10 +2773,9 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                 continue;
             }
 
-            // Give up if change keypool ran out and we failed to find a solution without change:
-            if (scriptChange.empty() && nChangePosInOut != -1) {
-                return false;
-            }
+            // If change keypool ran out and we failed to find a solution without change,
+            // we should already have returned
+            assert(!scriptChange.empty() || nChangePosInOut == -1);
         }
 
         // Shuffle selected coins and fill in final vin
