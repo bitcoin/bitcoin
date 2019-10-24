@@ -22,11 +22,11 @@ bool VerifyMNHFTx(const CTransaction& tx, CValidationState& state)
 {
     MNHFTxPayload mnhfTx;
     if (!GetTxPayload(tx, mnhfTx)) {
-        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-mnhf-payload");
+        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, "bad-mnhf-payload");
     }
 
     if (mnhfTx.nVersion == 0 || mnhfTx.nVersion > MNHFTxPayload::CURRENT_VERSION) {
-        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-mnhf-version");
+        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, "bad-mnhf-version");
     }
 
     return true;

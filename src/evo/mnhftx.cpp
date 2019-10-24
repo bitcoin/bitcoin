@@ -38,29 +38,29 @@ bool CheckMNHFTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidat
 {
     MNHFTxPayload mnhfTx;
     if (!GetTxPayload(tx, mnhfTx)) {
-        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-mnhf-payload");
+        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, "bad-mnhf-payload");
     }
 
     if (mnhfTx.nVersion == 0 || mnhfTx.nVersion > MNHFTxPayload::CURRENT_VERSION) {
-        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-mnhf-version");
+        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, "bad-mnhf-version");
     }
 
     const CBlockIndex* pindexQuorum = g_chainman.m_blockman.LookupBlockIndex(mnhfTx.signal.quorumHash);
     if (!pindexQuorum) {
-        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-mnhf-quorum-hash");
+        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, "bad-mnhf-quorum-hash");
     }
 
     if (pindexQuorum != pindexPrev->GetAncestor(pindexQuorum->nHeight)) {
         // not part of active chain
-        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-mnhf-quorum-hash");
+        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, "bad-mnhf-quorum-hash");
     }
 
     if (!llmq::GetLLMQParams(Params().GetConsensus().llmqTypeMnhf).has_value()) {
-        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-mnhf-type");
+        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, "bad-mnhf-type");
     }
 
     if (!mnhfTx.signal.Verify(pindexQuorum)) {
-        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-mnhf-invalid");
+        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, "bad-mnhf-invalid");
     }
 
     return true;
