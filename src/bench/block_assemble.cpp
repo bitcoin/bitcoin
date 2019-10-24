@@ -38,7 +38,7 @@ static void AssembleBlock(benchmark::State& state)
         LOCK(::cs_main); // Required for ::AcceptToMemoryPool.
 
         for (const auto& txr : txs) {
-            CValidationState state;
+            TxValidationState state;
             bool ret{::AcceptToMemoryPool(::mempool, state, txr, nullptr /* pfMissingInputs */, nullptr /* plTxnReplaced */, false /* bypass_limits */, /* nAbsurdFee */ 0)};
             assert(ret);
         }
