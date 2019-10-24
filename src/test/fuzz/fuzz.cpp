@@ -42,10 +42,7 @@ extern "C" int LLVMFuzzerInitialize(int* argc, char*** argv)
 
 // Declare main(...) "weak" to allow for libFuzzer linking. libFuzzer provides
 // the main(...) function.
-__attribute__((weak))
-#endif
-int
-main(int argc, char** argv)
+__attribute__((weak)) int main(int argc, char** argv)
 {
     initialize();
 #ifdef __AFL_INIT
