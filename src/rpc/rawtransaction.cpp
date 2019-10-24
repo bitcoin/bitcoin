@@ -893,7 +893,7 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
     UniValue result_0(UniValue::VOBJ);
     result_0.pushKV("txid", tx_hash.GetHex());
 
-    CValidationState state;
+    TxValidationState state;
     bool missing_inputs;
     bool test_accept_res;
     {

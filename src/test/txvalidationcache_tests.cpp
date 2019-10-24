@@ -13,7 +13,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, unsigned int flags, bool cacheSigStore, bool cacheFullScriptStore, PrecomputedTransactionData& txdata, std::vector<CScriptCheck> *pvChecks);
+bool CheckInputs(const CTransaction& tx, TxValidationState &state, const CCoinsViewCache &inputs, unsigned int flags, bool cacheSigStore, bool cacheFullScriptStore, PrecomputedTransactionData& txdata, std::vector<CScriptCheck> *pvChecks);
 
 BOOST_AUTO_TEST_SUITE(tx_validationcache_tests)
 
@@ -22,7 +22,7 @@ ToMemPool(const CMutableTransaction& tx)
 {
     LOCK(cs_main);
 
-    CValidationState state;
+    TxValidationState state;
     return AcceptToMemoryPool(mempool, state, MakeTransactionRef(tx), nullptr /* pfMissingInputs */,
                               nullptr /* plTxnReplaced */, true /* bypass_limits */, 0 /* nAbsurdFee */);
 }
@@ -114,7 +114,7 @@ static void ValidateCheckInputsForAllFlags(const CTransaction &tx, uint32_t fail
     // If we add many more flags, this loop can get too expensive, but we can
     // rewrite in the future to randomly pick a set of flags to evaluate.
     for (uint32_t test_flags=0; test_flags < (1U << 16); test_flags += 1) {
-        CValidationState state;
+        TxValidationState state;
         // Filter out incompatible flag choices
         if ((test_flags & SCRIPT_VERIFY_CLEANSTACK)) {
             // CLEANSTACK requires P2SH and WITNESS, see VerifyScript() in
@@ -201,7 +201,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, TestChain100Setup)
     {
         LOCK(cs_main);
 
-        CValidationState state;
+        TxValidationState state;
         PrecomputedTransactionData ptd_spend_tx(spend_tx);
 
         BOOST_CHECK(!CheckInputs(CTransaction(spend_tx), state, &::ChainstateActive().CoinsTip(), SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_DERSIG, true, true, ptd_spend_tx, nullptr));
@@ -270,7 +270,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, TestChain100Setup)
 
         // Make it valid, and check again
         invalid_with_cltv_tx.vin[0].scriptSig = CScript() << vchSig << 100;
-        CValidationState state;
+        TxValidationState state;
         PrecomputedTransactionData txdata(invalid_with_cltv_tx);
         BOOST_CHECK(CheckInputs(CTransaction(invalid_with_cltv_tx), state, ::ChainstateActive().CoinsTip(), SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY, true, true, txdata, nullptr));
     }
@@ -298,7 +298,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, TestChain100Setup)
 
         // Make it valid, and check again
         invalid_with_csv_tx.vin[0].scriptSig = CScript() << vchSig << 100;
-        CValidationState state;
+        TxValidationState state;
         PrecomputedTransactionData txdata(invalid_with_csv_tx);
         BOOST_CHECK(CheckInputs(CTransaction(invalid_with_csv_tx), state, &::ChainstateActive().CoinsTip(), SCRIPT_VERIFY_CHECKSEQUENCEVERIFY, true, true, txdata, nullptr));
     }
@@ -359,7 +359,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, TestChain100Setup)
         // Invalidate vin[1]
         tx.vin[1].scriptWitness.SetNull();
 
-        CValidationState state;
+        TxValidationState state;
         PrecomputedTransactionData txdata(tx);
         // This transaction is now invalid under segwit, because of the second input.
         BOOST_CHECK(!CheckInputs(CTransaction(tx), state, &::ChainstateActive().CoinsTip(), SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, true, true, txdata, nullptr));
