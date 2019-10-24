@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <consensus/validation.h>
 #include <interfaces/chain.h>
 #include <wallet/coincontrol.h>
 #include <wallet/feebumper.h>
@@ -393,21 +392,10 @@ Result CommitTransaction(CWallet& wallet, const uint256& txid, CMutableTransacti
     mapValue_t mapValue = oldWtx.mapValue;
     mapValue["replaces_txid"] = oldWtx.GetHash().ToString();
 
-    CValidationState state;
-    if (!wallet.CommitTransaction(tx, std::move(mapValue), oldWtx.vOrderForm, state)) {
-        // NOTE: CommitTransaction never returns false, so this should never happen.
-        errors.push_back(strprintf("The transaction was rejected: %s", FormatStateMessage(state)));
-        return Result::WALLET_ERROR;
-    }
-
-    bumped_txid = tx->GetHash();
-    if (state.IsInvalid()) {
-        // This can happen if the mempool rejected the transaction.  Report
-        // what happened in the "errors" response.
-        errors.push_back(strprintf("Error: The transaction was rejected: %s", FormatStateMessage(state)));
-    }
+    wallet.CommitTransaction(tx, std::move(mapValue), oldWtx.vOrderForm);
 
     // mark the original tx as bumped
+    bumped_txid = tx->GetHash();
     if (!wallet.MarkReplaced(oldWtx.GetHash(), bumped_txid)) {
         // TODO: see if JSON-RPC has a standard way of returning a response
         // along with an exception. It would be good to return information about
