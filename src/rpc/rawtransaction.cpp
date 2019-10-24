@@ -904,7 +904,7 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
     result_0.pushKV("allowed", test_accept_res);
     if (!test_accept_res) {
         if (state.IsInvalid()) {
-            result_0.pushKV("reject-reason", strprintf("%i: %s", state.GetRejectCode(), state.GetRejectReason()));
+            result_0.pushKV("reject-reason", strprintf("%s", state.GetRejectReason()));
         } else if (missing_inputs) {
             result_0.pushKV("reject-reason", "missing-inputs");
         } else {
