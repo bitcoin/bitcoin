@@ -848,19 +848,19 @@ void CWallet::LoadToWallet(CWalletTx& wtxIn)
     }
 }
 
-bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, CWalletTx::Status status, const uint256& block_hash, int posInBlock, bool fUpdate)
+bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, CWalletTx::Confirmation confirm, bool fUpdate)
 {
     const CTransaction& tx = *ptx;
     {
         AssertLockHeld(cs_wallet);
 
-        if (!block_hash.IsNull()) {
+        if (!confirm.hashBlock.IsNull()) {
             for (const CTxIn& txin : tx.vin) {
                 std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range = mapTxSpends.equal_range(txin.prevout);
                 while (range.first != range.second) {
                     if (range.first->second != tx.GetHash()) {
-                        WalletLogPrintf("Transaction %s (in block %s) conflicts with wallet transaction %s (both spend %s:%i)\n", tx.GetHash().ToString(), block_hash.ToString(), range.first->second.ToString(), range.first->first.hash.ToString(), range.first->first.n);
-                        MarkConflicted(block_hash, range.first->second);
+                        WalletLogPrintf("Transaction %s (in block %s) conflicts with wallet transaction %s (both spend %s:%i)\n", tx.GetHash().ToString(), confirm.hashBlock.ToString(), range.first->second.ToString(), range.first->first.hash.ToString(), range.first->first.n);
+                        MarkConflicted(confirm.hashBlock, range.first->second);
                     }
                     range.first++;
                 }
@@ -888,7 +888,7 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, CWalletTx::St
 
             // Block disconnection override an abandoned tx as unconfirmed
             // which means user may have to call abandontransaction again
-            wtx.SetConf(status, block_hash, posInBlock);
+            wtx.m_confirm = confirm;
 
             return AddToWallet(wtx, false);
         }
@@ -1022,9 +1022,9 @@ void CWallet::MarkConflicted(const uint256& hashBlock, const uint256& hashTx)
     }
 }
 
-void CWallet::SyncTransaction(const CTransactionRef& ptx, CWalletTx::Status status, const uint256& block_hash, int posInBlock, bool update_tx)
+void CWallet::SyncTransaction(const CTransactionRef& ptx, CWalletTx::Confirmation confirm, bool update_tx)
 {
-    if (!AddToWalletIfInvolvingMe(ptx, status, block_hash, posInBlock, update_tx))
+    if (!AddToWalletIfInvolvingMe(ptx, confirm, update_tx))
         return; // Not one of ours
 
     // If a transaction changes 'conflicted' state, that changes the balance
@@ -1036,7 +1036,8 @@ void CWallet::SyncTransaction(const CTransactionRef& ptx, CWalletTx::Status stat
 void CWallet::TransactionAddedToMempool(const CTransactionRef& ptx) {
     auto locked_chain = chain().lock();
     LOCK(cs_wallet);
-    SyncTransaction(ptx, CWalletTx::Status::UNCONFIRMED, {} /* block hash */, 0 /* position in block */);
+    CWalletTx::Confirmation confirm(CWalletTx::Status::UNCONFIRMED, {}, 0);
+    SyncTransaction(ptx, confirm);
 
     auto it = mapWallet.find(ptx->GetHash());
     if (it != mapWallet.end()) {
@@ -1061,7 +1062,8 @@ void CWallet::BlockConnected(const CBlock& block, const std::vector<CTransaction
     m_last_block_processed_height = height;
     m_last_block_processed = block_hash;
     for (size_t i = 0; i < block.vtx.size(); i++) {
-        SyncTransaction(block.vtx[i], CWalletTx::Status::CONFIRMED, block_hash, i);
+        CWalletTx::Confirmation confirm(CWalletTx::Status::CONFIRMED, m_last_block_processed, i);
+        SyncTransaction(block.vtx[i], confirm);
         TransactionRemovedFromMempool(block.vtx[i]);
     }
     for (const CTransactionRef& ptx : vtxConflicted) {
@@ -1081,7 +1083,8 @@ void CWallet::BlockDisconnected(const CBlock& block, int height)
     m_last_block_processed_height = height - 1;
     m_last_block_processed = block.hashPrevBlock;
     for (const CTransactionRef& ptx : block.vtx) {
-        SyncTransaction(ptx, CWalletTx::Status::UNCONFIRMED, {} /* block hash */, 0 /* position in block */);
+        CWalletTx::Confirmation confirm(CWalletTx::Status::UNCONFIRMED, {}, 0);
+        SyncTransaction(ptx, confirm);
     }
 }
 
@@ -1627,7 +1630,8 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
                 break;
             }
             for (size_t posInBlock = 0; posInBlock < block.vtx.size(); ++posInBlock) {
-                SyncTransaction(block.vtx[posInBlock], CWalletTx::Status::CONFIRMED, block_hash, posInBlock, fUpdate);
+                CWalletTx::Confirmation confirm(CWalletTx::Status::CONFIRMED, block_hash, posInBlock);
+                SyncTransaction(block.vtx[posInBlock], confirm, fUpdate);
             }
             // scan succeeded, record block as most recent successfully scanned
             result.last_scanned_block = block_hash;
@@ -3916,18 +3920,6 @@ CKeyPool::CKeyPool(const CPubKey& vchPubKeyIn, bool internalIn)
     vchPubKey = vchPubKeyIn;
     fInternal = internalIn;
     m_pre_split = false;
-}
-
-void CWalletTx::SetConf(Status status, const uint256& block_hash, int posInBlock)
-{
-    // Update tx status
-    m_confirm.status = status;
-
-    // Update the tx's hashBlock
-    m_confirm.hashBlock = block_hash;
-
-    // set the position of the transaction in the block
-    m_confirm.nIndex = posInBlock;
 }
 
 int CWalletTx::GetDepthInMainChain(interfaces::Chain::Lock& locked_chain) const
