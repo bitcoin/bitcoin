@@ -160,6 +160,7 @@ protected:
      * removal was due to conflict from connected block), or appeared in a
      * disconnected block.*/
     virtual void SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock) {}
+    virtual void AcceptedBlockHeader(const CBlockIndex *pindexNew) {}
 };
 
 struct MainSignalsInstance;
@@ -206,7 +207,8 @@ public:
 
     /** Notifies masternode list changes */
     void NotifyMasternodeListChanged(bool, const CDeterministicMNList&, const CDeterministicMNListDiff&);
-    void SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock);
+    void SyncTransaction(const CTransaction &, const CBlockIndex *, int);
+    void AcceptedBlockHeader(const CBlockIndex *);
 };
 
 CMainSignals& GetMainSignals();

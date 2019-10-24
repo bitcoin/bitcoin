@@ -28,6 +28,7 @@ struct ValidationInterfaceConnections {
     boost::signals2::scoped_connection NotifyChainLock;
     boost::signals2::scoped_connection NotifyMasternodeListChanged;
     boost::signals2::scoped_connection SyncTransaction;
+    boost::signals2::scoped_connection AcceptedBlockHeader;
 };
 
 struct MainSignalsInstance {
@@ -42,6 +43,7 @@ struct MainSignalsInstance {
     boost::signals2::signal<void (const CBlockIndex *)> NotifyChainLock;
     boost::signals2::signal<void (bool, const CDeterministicMNList&, const CDeterministicMNListDiff&)> NotifyMasternodeListChanged;
     boost::signals2::signal<void (const CTransaction, const CBlockIndex *, int)> SyncTransaction;
+    boost::signals2::signal<void (const CBlockIndex *)> AcceptedBlockHeader;
     // We are not allowed to assume the scheduler only runs in one thread,
     // but must ensure all callbacks happen in-order, so we end up creating
     // our own queue here :(
@@ -107,6 +109,7 @@ void RegisterValidationInterface(CValidationInterface* pwalletIn) {
     conns.NotifyChainLock = g_signals.m_internals->NotifyChainLock.connect(std::bind(&CValidationInterface::NotifyChainLock, pwalletIn, std::placeholders::_1));
     conns.NotifyMasternodeListChanged = g_signals.m_internals->NotifyMasternodeListChanged.connect(std::bind(&CValidationInterface::NotifyMasternodeListChanged, pwalletIn, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
     conns.SyncTransaction = g_signals.m_internals->SyncTransaction.connect(std::bind(&CValidationInterface::SyncTransaction, pwalletIn, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+    conns.AcceptedBlockHeader = g_signals.m_internals->AcceptedBlockHeader.connect(std::bind(&CValidationInterface::AcceptedBlockHeader, pwalletIn, std::placeholders::_1));
 }
 
 void UnregisterValidationInterface(CValidationInterface* pwalletIn) {
@@ -199,4 +202,9 @@ void CMainSignals::NotifyMasternodeListChanged(bool undo, const CDeterministicMN
 void CMainSignals::SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock)
 {
     m_internals->SyncTransaction(tx, pindex, posInBlock);
+}
+
+void CMainSignals::AcceptedBlockHeader(const CBlockIndex *pindexNew)
+{
+    m_internals->AcceptedBlockHeader(pindexNew);
 }

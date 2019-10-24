@@ -3656,6 +3656,9 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, CValidationState
     if (ppindex)
         *ppindex = pindex;
 
+    // Notify external listeners about accepted block header
+    GetMainSignals().AcceptedBlockHeader(pindex);
+
     return true;
 }
 
