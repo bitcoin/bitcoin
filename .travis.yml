@@ -152,4 +152,4 @@ jobs:
       # https://docs.travis-ci.com/user/reference/osx/#macos-version
       osx_image: xcode11
       env: >-
-        FILE_ENV="./ci/test/00_setup_env_mac_functional.sh"
+        FILE_ENV="./ci/test/00_setup_env_mac_host.sh"

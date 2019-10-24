@@ -11,7 +11,7 @@ export BREW_PACKAGES="automake berkeley-db4 libtool boost miniupnpc pkg-config p
 export PIP_PACKAGES="zmq"
 export RUN_CI_ON_HOST=true
 export RUN_UNIT_TESTS=true
-export RUN_FUNCTIONAL_TESTS=true
+export RUN_FUNCTIONAL_TESTS=false
 export GOAL="install"
 export BITCOIN_CONFIG="--enable-gui --enable-bip70 --enable-reduce-exports --enable-werror"
 # Run without depends
