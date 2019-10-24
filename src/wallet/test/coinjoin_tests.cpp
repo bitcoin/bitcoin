@@ -8,7 +8,6 @@
 #include <coinjoin/util.h>
 #include <coinjoin/coinjoin.h>
 #include <coinjoin/options.h>
-#include <consensus/validation.h>
 #include <validation.h>
 #include <wallet/wallet.h>
 
@@ -122,8 +121,7 @@ public:
                 auto locked_chain = chain->lock();
                 BOOST_CHECK(wallet->CreateTransaction(*locked_chain, {{GetScriptForDestination(tallyItem.txdest), nAmount, false}}, tx, nFeeRet, nChangePosRet, strError, coinControl));
             }
-            CValidationState state;
-            BOOST_CHECK(wallet->CommitTransaction(tx, {}, {}, state));
+            wallet->CommitTransaction(tx, {}, {});
             AddTxToChain(tx->GetHash());
             for (size_t n = 0; n < tx->vout.size(); ++n) {
                 if (nChangePosRet != -1 && int(n) == nChangePosRet) {

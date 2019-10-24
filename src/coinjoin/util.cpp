@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <coinjoin/util.h>
-#include <consensus/validation.h>
 #include <net.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
@@ -306,11 +305,7 @@ bool CTransactionBuilder::Commit(std::string& strResult)
         return false;
     }
 
-    CValidationState state;
-    if (!pwallet->CommitTransaction(tx, {}, {}, state)) {
-        strResult = state.GetRejectReason();
-        return false;
-    }
+    pwallet->CommitTransaction(tx, {}, {});
 
     fKeepKeys = true;
 

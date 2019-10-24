@@ -9,7 +9,6 @@
 #include <stdint.h>
 #include <vector>
 
-#include <consensus/validation.h>
 #include <interfaces/chain.h>
 #include <key_io.h>
 #include <policy/policy.h>
@@ -372,8 +371,7 @@ public:
             auto locked_chain = m_chain->lock();
             BOOST_CHECK(wallet->CreateTransaction(*locked_chain, {recipient}, tx, fee, changePos, error, dummy));
         }
-        CValidationState state;
-        BOOST_CHECK(wallet->CommitTransaction(tx, {}, {}, state));
+        wallet->CommitTransaction(tx, {}, {});
         CMutableTransaction blocktx;
         {
             LOCK(wallet->cs_wallet);
@@ -582,8 +580,7 @@ public:
         std::string strError;
         CCoinControl coinControl;
         BOOST_CHECK(wallet->CreateTransaction(*wallet->chain().lock(), GetRecipients(vecEntries), tx, nFeeRet, nChangePosRet, strError, coinControl));
-        CValidationState state;
-        BOOST_CHECK(wallet->CommitTransaction(tx, {}, {}, state));
+        wallet->CommitTransaction(tx, {}, {});
         CMutableTransaction blocktx;
         {
             LOCK(wallet->cs_wallet);
@@ -924,8 +921,7 @@ BOOST_FIXTURE_TEST_CASE(select_coins_grouped_by_addresses, ListCoinsTestingSetup
         BOOST_CHECK(wallet->CreateTransaction(*locked_chain, {CRecipient{GetScriptForRawPubKey({}), 1 * COIN, true /* subtract fee */}},
                                             tx2, fee, changePos, error, dummy));
     }
-    CValidationState state;
-    BOOST_CHECK(wallet->CommitTransaction(tx1, {}, {}, state));
+    wallet->CommitTransaction(tx1, {}, {});
     BOOST_CHECK_EQUAL(wallet->GetAvailableBalance(), 0);
     CreateAndProcessBlock({CMutableTransaction(*tx2)}, GetScriptForRawPubKey({}));
 
