@@ -812,7 +812,14 @@ extern VersionBitsCache versionbitscache;
  * Determine what nVersion a new block should use.
  */
 int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params);
+// SYSCOIN
 extern int64_t nTPSTestingStartTime;
+/**
+ * Return true if hash can be found in chainActive at nBlockHeight height.
+ * Fills hashRet with found hash, if no nBlockHeight is specified - ::ChainActive().Height() is used.
+ */
+bool GetBlockHash(uint256& hashRet, int nBlockHeight = -1);
+
 /** Get block file info entry for one block file */
 CBlockFileInfo* GetBlockFileInfo(size_t n);
 
