@@ -42,7 +42,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         return;
     }
 
-    CValidationState state_with_dupe_check;
+    TxValidationState state_with_dupe_check;
     (void)CheckTransaction(tx, state_with_dupe_check);
 
     const CFeeRate dust_relay_fee{DUST_RELAY_TX_FEE};

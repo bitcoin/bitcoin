@@ -14,6 +14,8 @@
 #include <netmessagemaker.h>
 #include <spork.h>
 #include <outputtype.h>
+#include <node/context.h>
+#include <rpc/blockchain.h>
 // SYSCOIN
 extern void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="") EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 extern std::vector<unsigned char> vchFromString(const std::string &str);
@@ -897,7 +899,7 @@ void CMasternodePaymentVote::Relay(CConnman& connman) const
     }
 
     CInv inv(MSG_MASTERNODE_PAYMENT_VOTE, GetHash());
-    g_connman->RelayInv(inv);
+    g_rpc_node->connman->RelayInv(inv);
 }
 
 bool CMasternodePaymentVote::CheckSignature(const CPubKey& pubKeyMasternode, int nValidationHeight, int &nDos) const

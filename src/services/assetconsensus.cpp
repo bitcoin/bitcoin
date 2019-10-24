@@ -30,15 +30,15 @@ std::vector<std::pair<uint256, uint32_t> > vecToRemoveFromMempool;
 CCriticalSection cs_assetallocationmempoolremovetx;
 extern bool AbortNode(const std::string& strMessage, const std::string& userMessage = "", unsigned int prefix = 0);
 using namespace std;
-bool FormatSyscoinErrorMessage(CValidationState& state, const std::string errorMessage, bool bErrorNotInvalid, bool bConsensus){
+bool FormatSyscoinErrorMessage(TxValidationState& state, const std::string errorMessage, bool bErrorNotInvalid, bool bConsensus){
         if(bErrorNotInvalid){
             return state.Error(errorMessage);
         }
         else{
-            return state.Invalid(bConsensus? ValidationInvalidReason::CONSENSUS: ValidationInvalidReason::TX_CONFLICT, false, errorMessage);
+            return state.Invalid(bConsensus? TxValidationResult::TX_CONSENSUS: TxValidationResult::TX_CONFLICT, false, errorMessage);
         }  
 }
-bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& txHash, CValidationState& state, const bool &fJustCheck, const bool& bSanity, const bool& bMiner, const int& nHeight, const int64_t& nTime, const uint256& blockhash, AssetMap& mapAssets, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys)
+bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const bool &fJustCheck, const bool& bSanity, const bool& bMiner, const int& nHeight, const int64_t& nTime, const uint256& blockhash, AssetMap& mapAssets, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys)
 {
     // unserialize mint object from txn, check for valid
     CMintSyscoin mintSyscoin(tx);
@@ -222,7 +222,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
                                 
     return true;
 }
-bool CheckSyscoinInputs(const CTransaction& tx, const uint256& txHash, CValidationState& state, const CCoinsViewCache &inputs, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const bool &bSanity)
+bool CheckSyscoinInputs(const CTransaction& tx, const uint256& txHash, TxValidationState& state, const CCoinsViewCache &inputs, const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const bool &bSanity)
 {
     AssetAllocationMap mapAssetAllocations;
     AssetMap mapAssets;
@@ -248,7 +248,7 @@ void RemoveDoubleSpendFromMempool(const CTransactionRef & txRef) EXCLUSIVE_LOCKS
         GetMainSignals().TransactionRemovedFromMempool(txRef);
     }
 }
-bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& txHash, CValidationState& state, const CCoinsViewCache &inputs,  const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanity, const bool &bMiner, ActorSet &actorSet, AssetAllocationMap &mapAssetAllocations, AssetMap &mapAssets, EthereumMintTxVec &vecMintKeys, std::vector<COutPoint> &vecLockedOutpoints)
+bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const CCoinsViewCache &inputs,  const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanity, const bool &bMiner, ActorSet &actorSet, AssetAllocationMap &mapAssetAllocations, AssetMap &mapAssets, EthereumMintTxVec &vecMintKeys, std::vector<COutPoint> &vecLockedOutpoints)
 {
     bool good = true;
     const bool &isBlock = !blockHash.IsNull();  
@@ -573,7 +573,7 @@ CAmount FindBurnAmountFromTx(const CTransaction& tx){
     }
     return 0;
 }
-bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, const CAssetAllocation &theAssetAllocation, CValidationState &state, const CCoinsViewCache &inputs,
+bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, const CAssetAllocation &theAssetAllocation, TxValidationState &state, const CCoinsViewCache &inputs,
         const bool &fJustCheck, const int &nHeight, const uint256& blockhash, AssetAllocationMap &mapAssetAllocations, std::vector<COutPoint> &vecLockedOutpoints, const bool &bSanityCheck, const bool &bMiner) {
     if (passetallocationdb == nullptr)
         return false;
@@ -1205,7 +1205,7 @@ bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txid, AssetM
     }     
     return true;  
 }
-bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, CValidationState &state, const CCoinsViewCache &inputs,
+bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidationState &state, const CCoinsViewCache &inputs,
         const bool &fJustCheck, const int &nHeight, const uint256& blockhash, AssetMap& mapAssets, AssetAllocationMap &mapAssetAllocations, const bool &bSanityCheck, const bool &bMiner) {
     if (passetdb == nullptr)
         return false;
@@ -1559,7 +1559,7 @@ bool CLockedOutpointsDB::FlushWrite(const std::vector<COutPoint> &lockedOutpoint
 	LogPrint(BCLog::SYS, "Flushing %d locked outpoints (erased %d, written %d)\n", lockedOutpoints.size(), erase, write);
 	return WriteBatch(batch);
 }
-bool CheckSyscoinLockedOutpoints(const CTransactionRef &tx, CValidationState& state) {
+bool CheckSyscoinLockedOutpoints(const CTransactionRef &tx, TxValidationState &state) {
 	// SYSCOIN
 	const CTransaction &myTx = (*tx);
     bool assetAllocationVersion = IsAssetAllocationTx(myTx.nVersion);

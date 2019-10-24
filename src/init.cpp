@@ -809,7 +809,7 @@ static void ThreadImport(std::vector<fs::path> vImportFiles)
     }
 
     // scan for better chains in the block chain database, that are not yet connected in the active best chain
-    CValidationState state;
+    BlockValidationState state;
     // SYSCOIN
 	const int stopatblocknumber = gArgs.GetArg("-stopatblock", 0);
     if (!ActivateBestChain(state, chainparams) && stopatblocknumber == 0) {
@@ -1541,7 +1541,7 @@ bool AppInitMain(NodeContext& node)
     }
 #endif
     // SYSCOIN
-    pdsNotificationInterface = new CDSNotificationInterface(*g_connman);
+    pdsNotificationInterface = new CDSNotificationInterface(*g_rpc_node->connman);
     RegisterValidationInterface(pdsNotificationInterface);
     uint64_t nMaxOutboundLimit = 0; //unlimited unless -maxuploadtarget is set
     uint64_t nMaxOutboundTimeframe = MAX_UPLOAD_TIMEFRAME;
@@ -1993,12 +1993,12 @@ bool AppInitMain(NodeContext& node)
 
     if (!fLiteMode) {
         scheduler.scheduleEvery(boost::bind(&CNetFulfilledRequestManager::DoMaintenance, boost::ref(netfulfilledman)), 60*1000);
-        scheduler.scheduleEvery(boost::bind(&CMasternodeSync::DoMaintenance, boost::ref(masternodeSync), boost::ref(*g_connman)), MASTERNODE_SYNC_TICK_SECONDS*1000);
-        scheduler.scheduleEvery(boost::bind(&CMasternodeMan::DoMaintenance, boost::ref(mnodeman), boost::ref(*g_connman)), 60*1000);
-        scheduler.scheduleEvery(boost::bind(&CActiveMasternode::DoMaintenance, boost::ref(activeMasternode), boost::ref(*g_connman)), MASTERNODE_MIN_MNP_SECONDS*1000);
+        scheduler.scheduleEvery(boost::bind(&CMasternodeSync::DoMaintenance, boost::ref(masternodeSync), boost::ref(*g_rpc_node->connman)), MASTERNODE_SYNC_TICK_SECONDS*1000);
+        scheduler.scheduleEvery(boost::bind(&CMasternodeMan::DoMaintenance, boost::ref(mnodeman), boost::ref(*g_rpc_node->connman)), 60*1000);
+        scheduler.scheduleEvery(boost::bind(&CActiveMasternode::DoMaintenance, boost::ref(activeMasternode), boost::ref(*g_rpc_node->connman)), MASTERNODE_MIN_MNP_SECONDS*1000);
 
         scheduler.scheduleEvery(boost::bind(&CMasternodePayments::DoMaintenance, boost::ref(mnpayments)), 60*1000);
-        scheduler.scheduleEvery(boost::bind(&CGovernanceManager::DoMaintenance, boost::ref(governance), boost::ref(*g_connman)), 60 * 5*1000);
+        scheduler.scheduleEvery(boost::bind(&CGovernanceManager::DoMaintenance, boost::ref(governance), boost::ref(*g_rpc_node->connman)), 60 * 5*1000);
     }
     // ********************************************************* Step 12: start node
 

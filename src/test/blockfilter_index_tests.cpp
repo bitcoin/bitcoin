@@ -102,7 +102,7 @@ static bool BuildChain(const CBlockIndex* pindex, const CScript& coinbase_script
         block = std::make_shared<CBlock>(CreateBlock(pindex, no_txns, coinbase_script_pub_key));
         CBlockHeader header = block->GetBlockHeader();
 
-        CValidationState state;
+        BlockValidationState state;
         if (!ProcessNewBlockHeaders({header}, state, Params(), &pindex, nullptr)) {
             return false;
         }

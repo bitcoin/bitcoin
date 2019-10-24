@@ -25,6 +25,8 @@
 // SYSCOIN
 #include <masternodesync.h>
 #include <spork.h>
+#include <node/context.h>
+#include <rpc/blockchain.h>
 UniValue mnsync(const JSONRPCRequest& request);
 UniValue spork(const JSONRPCRequest& request);
 UniValue mnsync(const JSONRPCRequest& request)
@@ -63,14 +65,14 @@ UniValue mnsync(const JSONRPCRequest& request)
 
     if(strMode == "next")
     {
-        masternodeSync.SwitchToNextAsset(*g_connman);
+        masternodeSync.SwitchToNextAsset(*g_rpc_node->connman);
         return "sync updated to " + masternodeSync.GetAssetName();
     }
 
     if(strMode == "reset")
     {
         masternodeSync.Reset();
-        masternodeSync.SwitchToNextAsset(*g_connman);
+        masternodeSync.SwitchToNextAsset(*g_rpc_node->connman);
         return "success";
     }
     return "failure";
@@ -133,14 +135,14 @@ UniValue spork(const JSONRPCRequest& request)
         if(nSporkID == -1)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid spork name");
 
-        if (!g_connman)
+        if (!g_rpc_node->connman)
             throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
         // SPORK VALUE
         int64_t nValue = request.params[1].get_int64();
 
         //broadcast new spork
-        if(sporkManager.UpdateSpork(nSporkID, nValue, *g_connman)){
+        if(sporkManager.UpdateSpork(nSporkID, nValue, *g_rpc_node->connman)){
             sporkManager.ExecuteSpork(nSporkID, nValue);
             return "success";
         } else {
