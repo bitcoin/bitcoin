@@ -227,12 +227,17 @@ public:
     CDBWrapper(const CDBWrapper&) = delete;
     CDBWrapper& operator=(const CDBWrapper&) = delete;
 
-    template <typename K, typename V>
-    bool Read(const K& key, V& value) const
+    template <typename K>
+    bool ReadDataStream(const K& key, CDataStream& value) const
     {
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey << key;
+        return ReadDataStream(ssKey, value);
+    }
+
+    bool ReadDataStream(const CDataStream& ssKey, CDataStream& value) const
+    {
         leveldb::Slice slKey(ssKey.data(), ssKey.size());
 
         std::string strValue;
@@ -243,9 +248,29 @@ public:
             LogPrintf("LevelDB read failure: %s\n", status.ToString());
             dbwrapper_private::HandleError(status);
         }
+        CDataStream ssValue(strValue.data(), strValue.data() + strValue.size(), SER_DISK, CLIENT_VERSION);
+        ssValue.Xor(obfuscate_key);
+        value = std::move(ssValue);
+        return true;
+    }
+
+    template <typename K, typename V>
+    bool Read(const K& key, V& value) const
+    {
+        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+        ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
+        ssKey << key;
+        return Read(ssKey, value);
+    }
+
+    template <typename V>
+    bool Read(const CDataStream& ssKey, V& value) const
+    {
+        CDataStream ssValue(SER_DISK, CLIENT_VERSION);
+        if (!ReadDataStream(ssKey, ssValue))
+            return false;
+
         try {
-            CDataStream ssValue(strValue.data(), strValue.data() + strValue.size(), SER_DISK, CLIENT_VERSION);
-            ssValue.Xor(obfuscate_key);
             ssValue >> value;
         } catch (const std::exception&) {
             return false;

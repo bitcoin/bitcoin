@@ -193,9 +193,15 @@ bool CRecoveredSigsDb::ReadRecoveredSig(Consensus::LLMQType llmqType, const uint
 {
     auto k = std::make_tuple(std::string("rs_r"), (uint8_t)llmqType, id);
 
-    if (!db.Read(k, ret))
+    CDataStream ds(SER_DISK, CLIENT_VERSION);
+    if (!db.ReadDataStream(k, ds))
         return false;
 
+    try {
+        ret.Unserialize(ds);
+    } catch (std::exception&) {
+        return false;
+    }
     return true;
 }
 
@@ -272,8 +278,11 @@ void CRecoveredSigsDb::RemoveRecoveredSig(CDBBatch& batch, Consensus::LLMQType l
     batch.Erase(k4);
 
     if (deleteTimeKey) {
-        uint32_t writeTime;
-        if (db.Read(k2, writeTime)) {
+        CDataStream writeTimeDs(SER_DISK, CLIENT_VERSION);
+        // TODO remove the size() == sizeof(uint32_t) in a future version (when we stop supporting upgrades from < 0.14.1)
+        if (db.ReadDataStream(k2, writeTimeDs) && writeTimeDs.size() == sizeof(uint32_t)) {
+            uint32_t writeTime;
+            writeTimeDs >> writeTime;
             auto k5 = std::make_tuple(std::string("rs_t"), (uint32_t) htobe32(writeTime), recSig.llmqType, recSig.id);
             batch.Erase(k5);
         }
