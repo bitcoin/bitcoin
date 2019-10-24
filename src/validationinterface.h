@@ -153,6 +153,13 @@ protected:
     virtual void NotifyChainLock(const CBlockIndex* pindex) {}
     /** Notifies masternode list changes */
     virtual void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff) {}
+    /** Notifies listeners of updated transaction data (transaction, and
+     * optionally the block it is found in). Called with block data when
+     * transaction is included in a connected block, and without block data when
+     * transaction was accepted to mempool, removed from mempool (only when
+     * removal was due to conflict from connected block), or appeared in a
+     * disconnected block.*/
+    virtual void SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock) {}
 };
 
 struct MainSignalsInstance;
@@ -168,6 +175,10 @@ private:
     void MempoolEntryRemoved(CTransactionRef tx, MemPoolRemovalReason reason);
 
 public:
+    /** A posInBlock value for SyncTransaction calls for transactions not
+     * included in connected blocks such as transactions removed from mempool,
+     * accepted to mempool or appearing in disconnected blocks.*/
+    static const int SYNC_TRANSACTION_NOT_IN_BLOCK = -1;
     /** Register a CScheduler to give callbacks which should run in the background (may only be called once) */
     void RegisterBackgroundSignalScheduler(CScheduler& scheduler);
     /** Unregister a CScheduler to give callbacks which should run in the background - these callbacks will now be dropped! */
@@ -194,7 +205,8 @@ public:
     void NotifyChainLock(const CBlockIndex*);
 
     /** Notifies masternode list changes */
-    virtual void NotifyMasternodeListChanged(bool, const CDeterministicMNList&, const CDeterministicMNListDiff&);
+    void NotifyMasternodeListChanged(bool, const CDeterministicMNList&, const CDeterministicMNListDiff&);
+    void SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock);
 };
 
 CMainSignals& GetMainSignals();
