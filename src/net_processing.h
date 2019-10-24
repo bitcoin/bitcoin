@@ -40,7 +40,7 @@ public:
     /**
      * Overridden from CValidationInterface.
      */
-    void BlockChecked(const CBlock& block, const CValidationState& state) override;
+    void BlockChecked(const CBlock& block, const BlockValidationState& state) override;
     /**
      * Overridden from CValidationInterface.
      */

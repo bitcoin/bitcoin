@@ -18,7 +18,6 @@ class CBlock;
 class CFeeRate;
 class CRPCCommand;
 class CScheduler;
-class CValidationState;
 class Coin;
 class uint256;
 enum class RBFTransactionState;
