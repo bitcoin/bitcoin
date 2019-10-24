@@ -21,6 +21,8 @@
 #endif // ENABLE_WALLET
 #include <outputtype.h>
 #include <rpc/util.h>
+#include <node/context.h>
+#include <rpc/blockchain.h>
 CMasternode::CMasternode() :
     masternode_info_t{ MASTERNODE_PRE_ENABLED, MIN_PEER_PROTO_VERSION, GetAdjustedTime(), 0}
 {}
@@ -1096,4 +1098,9 @@ void CMasternode::FlagGovernanceItemsAsDirty()
     for(size_t i = 0; i < vecDirty.size(); ++i) {
         mnodeman.AddDirtyGovernanceObjectHash(vecDirty[i]);
     }
+}
+void CMasternodeVerification::Relay() const
+{
+    CInv inv(MSG_MASTERNODE_VERIFY, GetHash());
+    g_rpc_node->connman->RelayInv(inv);
 }

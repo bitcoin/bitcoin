@@ -24,6 +24,8 @@
 #include <wallet/rpcwallet.h>
 #endif
 #include <rpc/util.h>
+#include <node/context.h>
+#include <rpc/blockchain.h>
 UniValue masternodelist(const JSONRPCRequest& request);
 UniValue mnsync(const JSONRPCRequest& request);
 UniValue spork(const JSONRPCRequest& request);
@@ -109,8 +111,8 @@ UniValue masternode(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Incorrect masternode address %s", strAddress));
 
         // TODO: Pass CConnman instance somehow and don't use global variable.
-        g_connman->OpenMasternodeConnection(CAddress(addr, NODE_NETWORK));
-        if (!g_connman->IsConnected(CAddress(addr, NODE_NETWORK), CConnman::AllNodes))
+        g_rpc_node->connman->OpenMasternodeConnection(CAddress(addr, NODE_NETWORK));
+        if (!g_rpc_node->connman->IsConnected(CAddress(addr, NODE_NETWORK), CConnman::AllNodes))
             throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Couldn't connect to masternode %s", strAddress));
 
         return "successfully connected";
@@ -215,7 +217,7 @@ UniValue masternode(const JSONRPCRequest& request)
                 bool fResult = CMasternodeBroadcast::Create(pwallet, mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb);
 
                 int nDoS;
-                if (fResult && !mnodeman.CheckMnbAndUpdateMasternodeList(NULL, mnb, nDoS, *g_connman)) {
+                if (fResult && !mnodeman.CheckMnbAndUpdateMasternodeList(NULL, mnb, nDoS, *g_rpc_node->connman)) {
                     strError = "Failed to verify MNB";
                     fResult = false;
                 }
@@ -224,7 +226,7 @@ UniValue masternode(const JSONRPCRequest& request)
                 if(!fResult) {
                     statusObj.pushKV("errorMessage", strError);
                 }
-                mnodeman.NotifyMasternodeUpdates(*g_connman);
+                mnodeman.NotifyMasternodeUpdates(*g_rpc_node->connman);
                 break;
             }
         }
@@ -275,7 +277,7 @@ UniValue masternode(const JSONRPCRequest& request)
             fResult = fResult && CMasternodeBroadcast::Create(pwallet, mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb);
 
             int nDoS;
-            if (fResult && !mnodeman.CheckMnbAndUpdateMasternodeList(NULL, mnb, nDoS, *g_connman)) {
+            if (fResult && !mnodeman.CheckMnbAndUpdateMasternodeList(NULL, mnb, nDoS, *g_rpc_node->connman)) {
                 strError = "Failed to verify MNB";
                 fResult = false;
             }
@@ -293,7 +295,7 @@ UniValue masternode(const JSONRPCRequest& request)
 
             resultsObj.pushKV("status", statusObj);
         }
-        mnodeman.NotifyMasternodeUpdates(*g_connman);
+        mnodeman.NotifyMasternodeUpdates(*g_rpc_node->connman);
 
         UniValue returnObj(UniValue::VOBJ);
         returnObj.pushKV("overall", strprintf("Successfully started %d masternodes, failed to start %d, total %d", nSuccessful, nFailed, nSuccessful + nFailed));
@@ -837,8 +839,8 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
             int nDos = 0;
             bool fResult;
             if (mnb.CheckSignature(nDos)) {
-                fResult = mnodeman.CheckMnbAndUpdateMasternodeList(NULL, mnb, nDos, *g_connman);
-                mnodeman.NotifyMasternodeUpdates(*g_connman);
+                fResult = mnodeman.CheckMnbAndUpdateMasternodeList(NULL, mnb, nDos, *g_rpc_node->connman);
+                mnodeman.NotifyMasternodeUpdates(*g_rpc_node->connman);
             } else fResult = false;
 
             if(fResult) {

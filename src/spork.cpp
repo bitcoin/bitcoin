@@ -11,6 +11,8 @@
 #include <messagesigner.h>
 #include <netmessagemaker.h>
 #include <key_io.h>
+#include <node/context.h>
+#include <rpc/blockchain.h>
 extern void EraseInvRequest(const CNode* pfrom, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 extern void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="") EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 CSporkManager sporkManager;
@@ -276,5 +278,5 @@ bool CSporkMessage::CheckSignature(const CKeyID& pubKeyId) const
 void CSporkMessage::Relay(CConnman& connman)
 {
     CInv inv(MSG_SPORK, GetHash());
-    g_connman->RelayInv(inv);
+    g_rpc_node->connman->RelayInv(inv);
 }

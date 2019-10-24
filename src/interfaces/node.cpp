@@ -326,6 +326,7 @@ public:
         return MakeHandler(::uiInterface.NotifyAdditionalDataSyncProgressChanged_connect(fn));
     }
     NodeContext* context() override { return &m_context; }
+    NodeContext m_context;
 };
 
 } // namespace

@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(sighash_test)
           CDataStream stream(ParseHex(raw_tx), SER_NETWORK, PROTOCOL_VERSION);
           stream >> tx;
 
-          CValidationState state;
+          TxValidationState state;
           BOOST_CHECK_MESSAGE(CheckTransaction(*tx, state), strTest);
           BOOST_CHECK(state.IsValid());
 

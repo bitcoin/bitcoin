@@ -209,7 +209,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     }
     view.SetBackend(viewDummy); // switch back to avoid locking mempool for too long
       
-    CValidationState stateInputs, stateConflict;
+    TxValidationState tx_state;
     txsToRemove.clear();
     bool bSenderConflicted = false;
     AssetAllocationMap mapAssetAllocations;
@@ -220,12 +220,11 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     bool bFoundError = false;
     for(const CTransactionRef& tx: pblock->vtx){
         const uint256& txHash = tx->GetHash();
-        if(!CheckSyscoinInputs(false, *tx, txHash, stateInputs, view, false, nHeight, ::ChainActive().Tip()->GetMedianTimePast(), pblock->GetHash(), false, true, actorSet, mapAssetAllocations, mapAssets, vecMintKeys, vecLockedOutpoints)){
+        if(!CheckSyscoinInputs(false, *tx, txHash, tx_state, view, false, nHeight, ::ChainActive().Tip()->GetMedianTimePast(), pblock->GetHash(), false, true, actorSet, mapAssetAllocations, mapAssets, vecMintKeys, vecLockedOutpoints)){
             txsToRemove.emplace_back(std::move(txHash));
-            stateConflict = stateInputs;
             bFoundError = true;
         }
-        if(stateInputs.IsError()){
+        if(tx_state.IsError()){
             bSenderConflicted = true;
         }
     }
@@ -233,7 +232,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         ResyncAssetAllocationStates();
 
     if(bFoundError){
-        LogPrint(BCLog::SYS, "CreateNewBlock: CheckSyscoinInputs failed: %s. vecToRemoveFromMempool size %d. Removed %d transactions and trying again...\n", FormatStateMessage(stateConflict), vecToRemoveFromMempool.size(), txsToRemove.size());
+        LogPrint(BCLog::SYS, "CreateNewBlock: CheckSyscoinInputs failed: %s. vecToRemoveFromMempool size %d. Removed %d transactions and trying again...\n", FormatStateMessage(tx_state), vecToRemoveFromMempool.size(), txsToRemove.size());
         return CreateNewBlock(scriptPubKeyIn, txsToRemove);
     }
     LogPrintf("CreateNewBlock(): block weight: %u txs: %u fees: %ld sigops %d\n", GetBlockWeight(*pblock), nBlockTx, nFees, nBlockSigOpsCost);
@@ -245,7 +244,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     pblock->nNonce         = 0;
     pblocktemplate->vTxSigOpsCost[0] = WITNESS_SCALE_FACTOR * GetLegacySigOpCount(*pblock->vtx[0]);
 
-    CValidationState state;
+    BlockValidationState state;
     if (!TestBlockValidity(state, chainparams, *pblock, pindexPrev, false, false)) {
         throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, FormatStateMessage(state)));
     }

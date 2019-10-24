@@ -413,11 +413,7 @@ public:
         return ss.GetHash();
     }
 
-    void Relay() const
-    {
-        CInv inv(MSG_MASTERNODE_VERIFY, GetHash());
-        g_connman->RelayInv(inv);
-    }
+    void Relay() const;
 };
 
 #endif // SYSCOIN_MASTERNODE_H

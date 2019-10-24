@@ -37,7 +37,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
     }
     if (!mempool.exists(hashTx)) {
         // Transaction is not already in the mempool. Submit it.
-        CValidationState state;
+        TxValidationState state;
         bool fMissingInputs;
         if (!AcceptToMemoryPool(mempool, state, std::move(tx), &fMissingInputs,
                 nullptr /* plTxnReplaced */, false /* bypass_limits */, max_tx_fee)) {

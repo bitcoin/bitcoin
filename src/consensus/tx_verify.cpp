@@ -157,11 +157,11 @@ int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& i
     return nSigOps;
 }
 
-bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee)
+bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee)
 {
     // are the actual inputs available?
     if (!inputs.HaveInputs(tx)) {
-        return state.Invalid(ValidationInvalidReason::TX_MISSING_INPUTS, false, "bad-txns-inputs-missingorspent",
+        return state.Invalid(TxValidationResult::TX_MISSING_INPUTS, false, "bad-txns-inputs-missingorspent",
                          strprintf("%s: inputs missing/spent", __func__));
     }
 
@@ -173,31 +173,31 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
 
         // If prev is coinbase, check that it's matured
         if (coin.IsCoinBase() && nSpendHeight - coin.nHeight < COINBASE_MATURITY) {
-            return state.Invalid(ValidationInvalidReason::TX_PREMATURE_SPEND, false, "bad-txns-premature-spend-of-coinbase",
+            return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, false, "bad-txns-premature-spend-of-coinbase",
                 strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
         }
 
         // Check for negative or overflow input values
         nValueIn += coin.out.nValue;
         if (!MoneyRange(coin.out.nValue) || !MoneyRange(nValueIn)) {
-            return state.Invalid(ValidationInvalidReason::CONSENSUS, false, "bad-txns-inputvalues-outofrange");
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, false, "bad-txns-inputvalues-outofrange");
         }
     }
     // SYSCOIN
     if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN){
         if(tx.vout.size() < 3 || tx.vout.size() > 4)
-            return state.Invalid(ValidationInvalidReason::CONSENSUS, false, "bad-txns-mint-outputs-wrong");
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, false, "bad-txns-mint-outputs-wrong");
     }
     const CAmount &value_out = tx.GetValueOut();
     if (nValueIn < value_out){
-        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, "bad-txns-in-belowout",
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, false, "bad-txns-in-belowout",
             strprintf("value in (%s) < value out (%s)", FormatMoney(nValueIn), FormatMoney(value_out)));
     }
 
     // Tally transaction fees
     const CAmount txfee_aux = nValueIn - value_out;
     if (!MoneyRange(txfee_aux)) {
-        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, "bad-txns-fee-outofrange");
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, false, "bad-txns-fee-outofrange");
     }
 
     txfee = txfee_aux;
