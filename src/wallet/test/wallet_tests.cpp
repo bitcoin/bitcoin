@@ -17,11 +17,14 @@
 #include <wallet/test/wallet_test_fixture.h>
 
 #include <boost/test/unit_test.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <univalue.h>
 
 extern UniValue importmulti(const JSONRPCRequest& request);
 extern UniValue dumpwallet(const JSONRPCRequest& request);
 extern UniValue importwallet(const JSONRPCRequest& request);
+int64_t DecodeDumpTime(const std::string &str);
 
 BOOST_FIXTURE_TEST_SUITE(wallet_tests, WalletTestingSetup)
 
@@ -589,6 +592,35 @@ BOOST_FIXTURE_TEST_CASE(dummy_input_size_test, TestChain100Setup)
 {
     BOOST_CHECK_EQUAL(CalculateNestedKeyhashInputSize(false), DUMMY_NESTED_P2WPKH_INPUT_SIZE);
     BOOST_CHECK_EQUAL(CalculateNestedKeyhashInputSize(true), DUMMY_NESTED_P2WPKH_INPUT_SIZE);
+}
+
+int64_t static OldDecodeDumpTime(const std::string &str) {
+    static const boost::posix_time::ptime epoch = boost::posix_time::from_time_t(0);
+    static const std::locale loc(std::locale::classic(),
+        new boost::posix_time::time_input_facet("%Y-%m-%dT%H:%M:%SZ"));
+    std::istringstream iss(str);
+    iss.imbue(loc);
+    boost::posix_time::ptime ptime(boost::date_time::not_a_date_time);
+    iss >> ptime;
+    if (ptime.is_not_a_date_time())
+        return 0;
+    return (ptime - epoch).total_seconds();
+}
+
+BOOST_AUTO_TEST_CASE(DecodeDumpTimeTest)
+{
+    std::string first("2019-10-24T23:46:06Z");
+    std::string zero("1970-01-01T00:00:00Z");
+    BOOST_CHECK_EQUAL(DecodeDumpTime(first), OldDecodeDumpTime(first));
+
+    std::stringstream formatted_now;
+    auto now = std::chrono::system_clock::now();
+    auto now_time = std::chrono::system_clock::to_time_t(now);
+    auto tm = std::localtime(&now_time);
+    formatted_now << std::put_time(tm, "%Y-%m-%dT%H:%M:%SZ");
+
+    BOOST_CHECK_EQUAL(DecodeDumpTime(formatted_now.str()), OldDecodeDumpTime(formatted_now.str()));
+    BOOST_CHECK_EQUAL(DecodeDumpTime(zero), 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
