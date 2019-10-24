@@ -15,6 +15,9 @@
 #    define OMNICORE_VERSION_SUFFIX ""
 #endif
 
+//! Name of client reported in the user aagent message.
+const std::string OMNI_CLIENT_NAME("Omni");
+
 //! Returns formatted Omni Core version, e.g. "1.2.0" or "1.3.4.1"
 const std::string OmniCoreVersion()
 {
