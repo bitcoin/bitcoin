@@ -42,6 +42,14 @@ static const int OMNICORE_VERSION =
                     +        1000 * OMNICORE_VERSION_PATCH
                     +           1 * OMNICORE_VERSION_BUILD;
 
+static const int OMNI_USERAGENT_VERSION =
+                           1000000 * OMNICORE_VERSION_MAJOR
+                         +   10000 * OMNICORE_VERSION_MINOR
+                         +     100 * OMNICORE_VERSION_PATCH
+                         +       1 * OMNICORE_VERSION_BUILD;
+
+extern const std::string OMNI_CLIENT_NAME;
+
 //! Returns formatted Omni Core version, e.g. "1.2.0"
 const std::string OmniCoreVersion();
 
