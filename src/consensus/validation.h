@@ -12,20 +12,8 @@
 #include <primitives/transaction.h>
 #include <primitives/block.h>
 
-/** "reject" message codes */
-static const unsigned char REJECT_MALFORMED = 0x01;
-static const unsigned char REJECT_INVALID = 0x10;
-static const unsigned char REJECT_OBSOLETE = 0x11;
-static const unsigned char REJECT_DUPLICATE = 0x12;
-static const unsigned char REJECT_NONSTANDARD = 0x40;
-// static const unsigned char REJECT_DUST = 0x41; // part of BIP 61
-static const unsigned char REJECT_INSUFFICIENTFEE = 0x42;
-static const unsigned char REJECT_CHECKPOINT = 0x43;
-
 /** A "reason" why something was invalid, suitable for determining whether the
   * provider of the object should be banned/ignored/disconnected/etc.
-  * These are much more granular than the rejection codes, which may be more
-  * useful for some other use-cases.
   */
 enum class ValidationInvalidReason {
     // txn and blocks:
@@ -104,15 +92,13 @@ private:
     } mode;
     ValidationInvalidReason m_reason;
     std::string strRejectReason;
-    unsigned int chRejectCode;
     std::string strDebugMessage;
 public:
-    CValidationState() : mode(MODE_VALID), m_reason(ValidationInvalidReason::NONE), chRejectCode(0) {}
+    CValidationState() : mode(MODE_VALID), m_reason(ValidationInvalidReason::NONE) {}
     bool Invalid(ValidationInvalidReason reasonIn, bool ret = false,
-            unsigned int chRejectCodeIn=0, const std::string &strRejectReasonIn="",
+            const std::string &strRejectReasonIn="",
             const std::string &strDebugMessageIn="") {
         m_reason = reasonIn;
-        chRejectCode = chRejectCodeIn;
         strRejectReason = strRejectReasonIn;
         strDebugMessage = strDebugMessageIn;
         if (mode == MODE_ERROR)
@@ -136,7 +122,6 @@ public:
         return mode == MODE_ERROR;
     }
     ValidationInvalidReason GetReason() const { return m_reason; }
-    unsigned int GetRejectCode() const { return chRejectCode; }
     std::string GetRejectReason() const { return strRejectReason; }
     std::string GetDebugMessage() const { return strDebugMessage; }
 };

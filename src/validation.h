@@ -813,19 +813,6 @@ extern VersionBitsCache versionbitscache;
  */
 int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params);
 extern int64_t nTPSTestingStartTime;
-/**
- * Return true if hash can be found in chainActive at nBlockHeight height.
- * Fills hashRet with found hash, if no nBlockHeight is specified - ::ChainActive().Height() is used.
- */
-bool GetBlockHash(uint256& hashRet, int nBlockHeight = -1);
-/** Reject codes greater or equal to this can be returned by AcceptToMemPool
- * for transactions, to signal internal conditions. They cannot and should not
- * be sent over the P2P network.
- */
-static const unsigned int REJECT_INTERNAL = 0x100;
-/** Too high fee. Can not be triggered by P2P transactions */
-static const unsigned int REJECT_HIGHFEE = 0x100;
-
 /** Get block file info entry for one block file */
 CBlockFileInfo* GetBlockFileInfo(size_t n);
 

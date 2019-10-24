@@ -35,7 +35,7 @@ bool FormatSyscoinErrorMessage(CValidationState& state, const std::string errorM
             return state.Error(errorMessage);
         }
         else{
-            return state.Invalid(bConsensus? ValidationInvalidReason::CONSENSUS: ValidationInvalidReason::TX_CONFLICT, false, REJECT_INVALID, errorMessage);
+            return state.Invalid(bConsensus? ValidationInvalidReason::CONSENSUS: ValidationInvalidReason::TX_CONFLICT, false, errorMessage);
         }  
 }
 bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& txHash, CValidationState& state, const bool &fJustCheck, const bool& bSanity, const bool& bMiner, const int& nHeight, const int64_t& nTime, const uint256& blockhash, AssetMap& mapAssets, AssetSupplyStatsMap &mapAssetSupplyStats, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys)
