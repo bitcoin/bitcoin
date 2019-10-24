@@ -43,9 +43,9 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     }
 
     CValidationState state_with_dupe_check;
-    const bool valid_with_dupe_check = CheckTransaction(tx, state_with_dupe_check, /* fCheckDuplicateInputs= */ true);
+    const bool valid_with_dupe_check = CheckTransaction(tx, state_with_dupe_check);
     CValidationState state_without_dupe_check;
-    const bool valid_without_dupe_check = CheckTransaction(tx, state_without_dupe_check, /* fCheckDuplicateInputs= */ false);
+    const bool valid_without_dupe_check = CheckTransaction(tx, state_without_dupe_check);
     if (valid_with_dupe_check) {
         assert(valid_without_dupe_check);
     }

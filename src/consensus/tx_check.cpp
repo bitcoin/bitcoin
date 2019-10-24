@@ -7,7 +7,7 @@
 #include <primitives/transaction.h>
 #include <consensus/validation.h>
 
-bool CheckTransaction(const CTransaction& tx, TxValidationState &state, bool fCheckDuplicateInputs)
+bool CheckTransaction(const CTransaction& tx, TxValidationState &state)
 {
     // Basic checks that don't depend on any context
     if (tx.vin.empty())
@@ -31,13 +31,11 @@ bool CheckTransaction(const CTransaction& tx, TxValidationState &state, bool fCh
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-txouttotal-toolarge");
     }
 
-    // Check for duplicate inputs - note that this check is slow so we skip it in CheckBlock
-    if (fCheckDuplicateInputs) {
-        std::set<COutPoint> vInOutPoints;
-        for (const auto& txin : tx.vin)
-        {
-            if (!vInOutPoints.insert(txin.prevout).second)
-                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-inputs-duplicate");
+    // Check for duplicate inputs
+    std::set<COutPoint> vInOutPoints;
+    for (const auto& txin : tx.vin) {
+        if (!vInOutPoints.insert(txin.prevout).second) {
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-inputs-duplicate");
         }
     }
 
