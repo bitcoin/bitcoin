@@ -1376,7 +1376,8 @@ bool AppInitMain(InitInterfaces& interfaces)
     }
 
     if (gArgs.GetArg("-omniuseragent", true)) {
-        strSubVersion = FormatSubVersion(OMNI_CLIENT_NAME, OMNI_USERAGENT_VERSION, uacomments);
+        uacomments.emplace(uacomments.begin(), OMNI_CLIENT_NAME + ":" + FormatVersion(OMNI_USERAGENT_VERSION));
+        strSubVersion = FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, uacomments);
     } else {
         strSubVersion = FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, uacomments);
     }
