@@ -206,7 +206,7 @@ download_package() {
     if [ -n "$job" ]; then
         # Pull a pipeline build by job number
         echo "Downloading pipeline job $job"
-        wget "https://gitlab.crown.tech/crown/crown-core/-/jobs/$job/artifacts/download" -O $dir/crown.zip
+        wget "https://gitlab.crownplatform.com/crown/crown-core/-/jobs/$job/artifacts/download" -O $dir/crown.zip
     else
         # Change this later to take latest release version.
         echo "Downloading $BITS bit Crown package version $LATEST_RELEASE."
@@ -217,7 +217,7 @@ download_package() {
         # Download bootstrap if requested
         if [ -n "$bootstrap" ]; then
             echo "Downloading bootstrap"
-            wget "https://nextcloud.crown.tech/nextcloud/s/RiyWmDLckmcXS6n/download" -O $dir/bootstrap.zip
+            wget "https://nextcloud.crownplatform.com/nextcloud/s/RiyWmDLckmcXS6n/download" -O $dir/bootstrap.zip
 	    if [ ! -e "$dir/bootstrap.zip" ]; then
 	        echo "Failed to download bootstrap. Continuing without it."
 	        bootstrap=
