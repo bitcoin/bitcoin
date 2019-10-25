@@ -3301,9 +3301,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
             return state.Invalid(ValidationInvalidReason::CONSENSUS, false, "bad-cb-multiple", "more than one coinbase");
 
     // Check transactions
-    // Must check for duplicate inputs (see CVE-2018-17144)
     for (const auto& tx : block.vtx)
-        if (!CheckTransaction(*tx, state, true))
+        if (!CheckTransaction(*tx, state))
             return state.Invalid(state.GetReason(), false, state.GetRejectReason(),
                                  strprintf("Transaction check failed (tx hash %s) %s", tx->GetHash().ToString(), state.GetDebugMessage()));
 
