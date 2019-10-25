@@ -478,7 +478,8 @@ class NetworkThread(threading.Thread):
         wait_until(lambda: not self.network_event_loop.is_running(), timeout=timeout)
         self.network_event_loop.close()
         self.join(timeout)
-
+        # Safe to remove event loop.
+        NetworkThread.network_event_loop = None
 
 class P2PDataStore(P2PInterface):
     """A P2P data store class.
