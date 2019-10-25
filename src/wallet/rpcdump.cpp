@@ -27,20 +27,6 @@
 
 #include <univalue.h>
 
-#ifdef WIN32
-#define timegm _mkgmtime
-#endif
-
-int64_t DecodeDumpTime(const std::string &str) {
-    std::istringstream iss(str);
-    std::tm t;
-    iss.imbue(std::locale::classic());
-    iss >> std::get_time(&t, "%Y-%m-%dT%H:%M:%SZ");
-    if (iss.fail())
-        return 0;
-    return timegm(&t);
-}
-
 
 std::string static EncodeDumpString(const std::string &str) {
     std::stringstream ret;
@@ -599,7 +585,7 @@ UniValue importwallet(const JSONRPCRequest& request)
                 continue;
             CKey key = DecodeSecret(vstr[0]);
             if (key.IsValid()) {
-                int64_t nTime = DecodeDumpTime(vstr[1]);
+                int64_t nTime = ParseISO8601DateTime(vstr[1]);
                 std::string strLabel;
                 bool fLabel = true;
                 for (unsigned int nStr = 2; nStr < vstr.size(); nStr++) {
@@ -618,7 +604,7 @@ UniValue importwallet(const JSONRPCRequest& request)
             } else if(IsHex(vstr[0])) {
                 std::vector<unsigned char> vData(ParseHex(vstr[0]));
                 CScript script = CScript(vData.begin(), vData.end());
-                int64_t birth_time = DecodeDumpTime(vstr[1]);
+                int64_t birth_time = ParseISO8601DateTime(vstr[1]);
                 scripts.push_back(std::pair<CScript, int64_t>(script, birth_time));
             }
         }

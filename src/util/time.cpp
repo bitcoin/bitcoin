@@ -111,3 +111,17 @@ std::string FormatISO8601Date(int64_t nTime) {
 #endif
     return strprintf("%04i-%02i-%02i", ts.tm_year + 1900, ts.tm_mon + 1, ts.tm_mday);
 }
+
+#ifdef WIN32
+#define timegm _mkgmtime
+#endif
+
+int64_t ParseISO8601DateTime(const std::string &str) {
+    std::istringstream iss(str);
+    std::tm t;
+    iss.imbue(std::locale::classic());
+    iss >> std::get_time(&t, "%Y-%m-%dT%H:%M:%SZ");
+    if (iss.fail())
+        return 0;
+    return timegm(&t);
+}
