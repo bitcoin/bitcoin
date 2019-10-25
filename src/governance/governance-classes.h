@@ -1,15 +1,14 @@
 // Copyright (c) 2014-2018 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+#ifndef GOVERNANCE_CLASSES_H
+#define GOVERNANCE_CLASSES_H
 
-#ifndef BITGREEN_GOVERNANCE_CLASSES_H
-#define BITGREEN_GOVERNANCE_CLASSES_H
-
-#include <base58.h>
-#include <governance/governance.h>
-#include <key.h>
-#include <script/standard.h>
-#include <util.h>
+#include "base58.h"
+#include "governance.h"
+#include "key.h"
+#include "script/standard.h"
+#include "util.h"
 
 class CSuperblock;
 class CGovernanceTriggerManager;
@@ -176,4 +175,4 @@ public:
     bool IsExpired();
 };
 
-#endif // BITGREEN_GOVERNANCE_CLASSES_H
+#endif
