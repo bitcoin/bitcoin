@@ -26,7 +26,7 @@ Before tests can be run locally, Bitcoin Core must be built.  See the [building 
 
 The ZMQ functional test requires a python ZMQ library. To install it:
 
-- on Unix, run `sudo apt-get install python3-zmq`
+- on Unix, run `sudo apt install python3-zmq`
 - on mac OS, run `pip3 install pyzmq`
 
 #### Running the tests

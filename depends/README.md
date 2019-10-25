@@ -37,7 +37,7 @@ No other options are needed, the paths are automatically configured.
 
 #### For macOS cross compilation
 
-    sudo apt-get install curl librsvg2-bin libtiff-tools bsdmainutils cmake imagemagick libcap-dev libz-dev libbz2-dev python3-setuptools
+    sudo apt install curl librsvg2-bin libtiff-tools bsdmainutils cmake imagemagick libcap-dev libz-dev libbz2-dev python3-setuptools
 
 #### For Win32/Win64 cross compilation
 
@@ -47,19 +47,19 @@ No other options are needed, the paths are automatically configured.
 
 Common linux dependencies:
 
-    sudo apt-get install make automake cmake curl g++-multilib libtool binutils-gold bsdmainutils pkg-config python3 patch
+    sudo apt install make automake cmake curl g++-multilib libtool binutils-gold bsdmainutils pkg-config python3 patch
 
 For linux ARM cross compilation:
 
-    sudo apt-get install g++-arm-linux-gnueabihf binutils-arm-linux-gnueabihf
+    sudo apt install g++-arm-linux-gnueabihf binutils-arm-linux-gnueabihf
 
 For linux AARCH64 cross compilation:
 
-    sudo apt-get install g++-aarch64-linux-gnu binutils-aarch64-linux-gnu
+    sudo apt install g++-aarch64-linux-gnu binutils-aarch64-linux-gnu
 
 For linux RISC-V 64-bit cross compilation (there are no packages for 32-bit):
 
-    sudo apt-get install g++-riscv64-linux-gnu binutils-riscv64-linux-gnu
+    sudo apt install g++-riscv64-linux-gnu binutils-riscv64-linux-gnu
 
 RISC-V known issue: gcc-7.3.0 and gcc-7.3.1 result in a broken `test_bitcoin` executable (see https://github.com/bitcoin/bitcoin/pull/13543),
 this is apparently fixed in gcc-8.1.0.

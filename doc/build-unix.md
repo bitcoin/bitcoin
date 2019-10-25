@@ -78,11 +78,11 @@ Finally, clang (often less resource hungry) can be used instead of gcc, which is
 
 Build requirements:
 
-    sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3
+    sudo apt install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3
 
 Now, you can either build from self-compiled [depends](/depends/README.md) or install the required dependencies:
 
-    sudo apt-get install libssl-dev libevent-dev libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev
+    sudo apt install libssl-dev libevent-dev libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev
 
 BerkeleyDB is required for the wallet.
 
@@ -98,11 +98,11 @@ To build Bitcoin Core without wallet, see [*Disable-wallet mode*](/doc/build-uni
 
 Optional (see `--with-miniupnpc` and `--enable-upnp-default`):
 
-    sudo apt-get install libminiupnpc-dev
+    sudo apt install libminiupnpc-dev
 
 ZMQ dependencies (provides ZMQ API):
 
-    sudo apt-get install libzmq3-dev
+    sudo apt install libzmq3-dev
 
 GUI dependencies:
 
@@ -112,15 +112,15 @@ To build without GUI pass `--without-gui`.
 
 To build with Qt 5 you need the following:
 
-    sudo apt-get install libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools
+    sudo apt install libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools
 
 libqrencode (optional) can be installed with:
 
-    sudo apt-get install libqrencode-dev
+    sudo apt install libqrencode-dev
 
 protobuf (optional) can be installed with:
 
-    sudo apt-get install libprotobuf-dev protobuf-compiler
+    sudo apt install libprotobuf-dev protobuf-compiler
 
 Once these are installed, they will be found by configure and a bitcoin-qt executable will be
 built by default.
@@ -287,7 +287,7 @@ installing the toolchain will be different.
 Make sure you install the build requirements mentioned above.
 Then, install the toolchain and curl:
 
-    sudo apt-get install g++-arm-linux-gnueabihf curl
+    sudo apt install g++-arm-linux-gnueabihf curl
 
 To build executables for ARM:
 

@@ -163,7 +163,7 @@ delete the `intermediate 5.hfs` file and `MacOSX10.11.sdk` (the directory) when 
 confirmed the extraction succeeded.
 
 ```shell
-apt-get install p7zip-full sleuthkit
+apt install p7zip-full sleuthkit
 contrib/macdeploy/extract-osx-sdk.sh
 rm -rf 5.hfs MacOSX10.11.sdk
 ```
