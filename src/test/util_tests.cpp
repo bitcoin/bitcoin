@@ -1110,6 +1110,18 @@ BOOST_AUTO_TEST_CASE(strprintf_numbers)
 BOOST_AUTO_TEST_CASE(gettime)
 {
     BOOST_CHECK((GetTime() & ~0xFFFFFFFFLL) == 0);
+
+}
+
+BOOST_AUTO_TEST_CASE(test_boost_c11)
+{
+    int64_t boost_now_millis = (boost::posix_time::microsec_clock::universal_time() -
+                boost::posix_time::ptime(boost::gregorian::date(1970,1,1))).total_milliseconds();
+    BOOST_CHECK_EQUAL(GetTimeMillis() - boost_now_millis <= 1); // Make sure the diff is less or equal then 1 millisecond, in case it's just changed.
+
+    int64_t boost_now_micros = (boost::posix_time::microsec_clock::universal_time() -
+                   boost::posix_time::ptime(boost::gregorian::date(1970,1,1))).total_microseconds();
+    BOOST_CHECK(GetTimeMicros() - boost_now_micros < 50); // Make sure that the diff between them is small enough as they probably won't be the same.
 }
 
 BOOST_AUTO_TEST_CASE(util_time_GetTime)
