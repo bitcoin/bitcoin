@@ -1,15 +1,15 @@
-# bash programmable completion for bitcointalkcoin-tx(1)
-# Copyright (c) 2016 The Bitcointalkcoin Core developers
+# bash programmable completion for talkcoin-tx(1)
+# Copyright (c) 2016 The Talkcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-_bitcointalkcoin_tx() {
+_talkcoin_tx() {
     local cur prev words=() cword
-    local bitcointalkcoin_tx
+    local talkcoin_tx
 
-    # save and use original argument to invoke bitcointalkcoin-tx for -help
+    # save and use original argument to invoke talkcoin-tx for -help
     # it might not be in $PATH
-    bitcointalkcoin_tx="$1"
+    talkcoin_tx="$1"
 
     COMPREPLY=()
     _get_comp_words_by_ref -n =: cur prev words cword
@@ -27,15 +27,15 @@ _bitcointalkcoin_tx() {
 
     if [[ "$cword" == 1 || ( "$prev" != "-create" && "$prev" == -* ) ]]; then
         # only options (or an uncompletable hex-string) allowed
-        # parse bitcointalkcoin-tx -help for options
+        # parse talkcoin-tx -help for options
         local helpopts
-        helpopts=$($bitcointalkcoin_tx -help | sed -e '/^  -/ p' -e d )
+        helpopts=$($talkcoin_tx -help | sed -e '/^  -/ p' -e d )
         COMPREPLY=( $( compgen -W "$helpopts" -- "$cur" ) )
     else
         # only commands are allowed
         # parse -help for commands
         local helpcmds
-        helpcmds=$($bitcointalkcoin_tx -help | sed -e '1,/Commands:/d' -e 's/=.*/=/' -e '/^  [a-z]/ p' -e d )
+        helpcmds=$($talkcoin_tx -help | sed -e '1,/Commands:/d' -e 's/=.*/=/' -e '/^  [a-z]/ p' -e d )
         COMPREPLY=( $( compgen -W "$helpcmds" -- "$cur" ) )
     fi
 
@@ -46,7 +46,7 @@ _bitcointalkcoin_tx() {
 
     return 0
 } &&
-complete -F _bitcointalkcoin_tx bitcointalkcoin-tx
+complete -F _talkcoin_tx talkcoin-tx
 
 # Local variables:
 # mode: shell-script

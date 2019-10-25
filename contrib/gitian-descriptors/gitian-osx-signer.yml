@@ -1,5 +1,5 @@
 ---
-name: "bitcointalkcoin-dmg-signer"
+name: "talkcoin-dmg-signer"
 distro: "ubuntu"
 suites:
 - "bionic"
@@ -8,10 +8,10 @@ architectures:
 packages:
 - "faketime"
 remotes:
-- "url": "https://github.com/bitcointalkcoin-core/bitcointalkcoin-detached-sigs.git"
+- "url": "https://github.com/talkcoin-core/talkcoin-detached-sigs.git"
   "dir": "signature"
 files:
-- "bitcointalkcoin-osx-unsigned.tar.gz"
+- "talkcoin-osx-unsigned.tar.gz"
 script: |
   set -e -o pipefail
 
@@ -30,8 +30,8 @@ script: |
     chmod +x ${WRAP_DIR}/${prog}
   done
 
-  UNSIGNED=bitcointalkcoin-osx-unsigned.tar.gz
-  SIGNED=bitcointalkcoin-osx-signed.dmg
+  UNSIGNED=talkcoin-osx-unsigned.tar.gz
+  SIGNED=talkcoin-osx-signed.dmg
 
   tar -xf ${UNSIGNED}
   OSX_VOLNAME="$(cat osx_volname)"

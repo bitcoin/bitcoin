@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2019 The Bitcointalkcoin Core developers
+# Copyright (c) 2019 The Talkcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
@@ -35,7 +35,7 @@ NON_DETERMINISTIC_TESTS=(
     "wallet_tests/wallet_disableprivkeys"                     # validation.cpp: if (GetMainSignals().CallbacksPending() > 10)
 )
 
-TEST_BITCOINTALKCOIN_BINARY="src/test/test_bitcointalkcoin"
+TEST_TALKCOIN_BINARY="src/test/test_talkcoin"
 
 print_usage() {
     echo "Usage: $0 [custom test filter (default: all but known non-deterministic tests)] [number of test runs (default: 2)]"
@@ -81,8 +81,8 @@ if ! command -v gcovr > /dev/null; then
     exit 1
 fi
 
-if [[ ! -e ${TEST_BITCOINTALKCOIN_BINARY} ]]; then
-    echo "Error: Executable ${TEST_BITCOINTALKCOIN_BINARY} not found. Run \"./configure --enable-lcov\" and compile."
+if [[ ! -e ${TEST_TALKCOIN_BINARY} ]]; then
+    echo "Error: Executable ${TEST_TALKCOIN_BINARY} not found. Run \"./configure --enable-lcov\" and compile."
     exit 1
 fi
 
@@ -109,7 +109,7 @@ while [[ ${TEST_RUN_ID} -lt ${N_TEST_RUNS} ]]; do
         exit 1
     fi
     TEST_OUTPUT_TEMPFILE=$(mktemp)
-    if ! BOOST_TEST_RUN_FILTERS="${BOOST_TEST_RUN_FILTERS}" ${TEST_BITCOINTALKCOIN_BINARY} > "${TEST_OUTPUT_TEMPFILE}" 2>&1; then
+    if ! BOOST_TEST_RUN_FILTERS="${BOOST_TEST_RUN_FILTERS}" ${TEST_TALKCOIN_BINARY} > "${TEST_OUTPUT_TEMPFILE}" 2>&1; then
         cat "${TEST_OUTPUT_TEMPFILE}"
         rm "${TEST_OUTPUT_TEMPFILE}"
         exit 1

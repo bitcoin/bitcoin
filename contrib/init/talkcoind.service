@@ -1,47 +1,47 @@
 # It is not recommended to modify this file in-place, because it will
 # be overwritten during package upgrades. If you want to add further
 # options or overwrite existing ones then use
-# $ systemctl edit bitcointalkcoind.service
+# $ systemctl edit talkcoind.service
 # See "man systemd.service" for details.
 
 # Note that almost all daemon options could be specified in
-# /etc/bitcointalkcoin/bitcointalkcoin.conf, except for those explicitly specified as arguments
+# /etc/talkcoin/talkcoin.conf, except for those explicitly specified as arguments
 # in ExecStart=
 
 [Unit]
-Description=Bitcointalkcoin daemon
+Description=Talkcoin daemon
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/bitcointalkcoind -daemon \
-                            -pid=/run/bitcointalkcoind/bitcointalkcoind.pid \
-                            -conf=/etc/bitcointalkcoin/bitcointalkcoin.conf \
-                            -datadir=/var/lib/bitcointalkcoind
+ExecStart=/usr/bin/talkcoind -daemon \
+                            -pid=/run/talkcoind/talkcoind.pid \
+                            -conf=/etc/talkcoin/talkcoin.conf \
+                            -datadir=/var/lib/talkcoind
 
 # Process management
 ####################
 
 Type=forking
-PIDFile=/run/bitcointalkcoind/bitcointalkcoind.pid
+PIDFile=/run/talkcoind/talkcoind.pid
 Restart=on-failure
 
 # Directory creation and permissions
 ####################################
 
-# Run as bitcointalkcoin:bitcointalkcoin
-User=bitcointalkcoin
-Group=bitcointalkcoin
+# Run as talkcoin:talkcoin
+User=talkcoin
+Group=talkcoin
 
-# /run/bitcointalkcoind
-RuntimeDirectory=bitcointalkcoind
+# /run/talkcoind
+RuntimeDirectory=talkcoind
 RuntimeDirectoryMode=0710
 
-# /etc/bitcointalkcoin
-ConfigurationDirectory=bitcointalkcoin
+# /etc/talkcoin
+ConfigurationDirectory=talkcoin
 ConfigurationDirectoryMode=0710
 
-# /var/lib/bitcointalkcoind
-StateDirectory=bitcointalkcoind
+# /var/lib/talkcoind
+StateDirectory=talkcoind
 StateDirectoryMode=0710
 
 # Hardening measures

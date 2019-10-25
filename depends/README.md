@@ -12,9 +12,9 @@ For example:
 
     make HOST=x86_64-w64-mingw32 -j4
 
-A prefix will be generated that's suitable for plugging into Bitcointalkcoin's
+A prefix will be generated that's suitable for plugging into Talkcoin's
 configure. In the above example, a dir named x86_64-w64-mingw32 will be
-created. To use it for Bitcointalkcoin:
+created. To use it for Talkcoin:
 
     ./configure --prefix=`pwd`/depends/x86_64-w64-mingw32
 
@@ -57,7 +57,7 @@ For linux RISC-V 64-bit cross compilation (there are no packages for 32-bit):
 
     sudo apt-get install g++-riscv64-linux-gnu binutils-riscv64-linux-gnu
 
-RISC-V known issue: gcc-7.3.0 and gcc-7.3.1 result in a broken `test_bitcointalkcoin` executable (see https://github.com/bitcointalkcoin/bitcointalkcoin/pull/13543),
+RISC-V known issue: gcc-7.3.0 and gcc-7.3.1 result in a broken `test_talkcoin` executable (see https://github.com/talkcoin/talkcoin/pull/13543),
 this is apparently fixed in gcc-8.1.0.
 
 ### Dependency Options
@@ -77,7 +77,7 @@ The following can be set when running make: make FOO=bar
     BUILD_ID_SALT: Optional salt to use when generating build package ids
 
 If some packages are not built, for example `make NO_WALLET=1`, the appropriate
-options will be passed to bitcointalkcoin's configure. In this case, `--disable-wallet`.
+options will be passed to talkcoin's configure. In this case, `--disable-wallet`.
 
 ### Additional targets
 
