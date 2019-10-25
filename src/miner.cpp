@@ -462,8 +462,7 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
         for (size_t i = 0; i < sortedEntries.size(); ++i) {
             // Check transaction inputs and type
             if (!Consensus::CheckTxInputs(sortedEntries[i]->GetTx(), view, *pcoinsTip, nHeight, generatorAccountID,
-                    true, // v1.2.4 crash when unbind same height bind coin
-                    chainparams.GetConsensus())) {
+                    Consensus::CheckTxLevel::ConsensusPackaging, chainparams.GetConsensus())) {
                 // All descendants move to failed
                 for (size_t j = i; j < sortedEntries.size(); ++j) {
                     failedTx.insert(sortedEntries[j]);

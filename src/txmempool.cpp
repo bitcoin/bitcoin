@@ -612,7 +612,10 @@ static void CheckInputsAndUpdateCoins(const CTransaction& tx, CCoinsViewCache& m
 {
     CValidationState state;
     CAmount txfee = 0;
-    bool fCheckResult = tx.IsCoinBase() || Consensus::CheckTxInputs(tx, state, mempoolDuplicate, prevTipView, spendheight, txfee, CAccountID(), false, Params().GetConsensus());
+    bool fCheckResult = tx.IsCoinBase() || Consensus::CheckTxInputs(tx, state, mempoolDuplicate, prevTipView, spendheight, txfee, CAccountID(),
+        Consensus::CheckTxLevel::CheckMempool, Params().GetConsensus());
+    if (!fCheckResult)
+        LogPrintf("%s: Check txmempool fail: %s\n%s\n", __func__, FormatStateMessage(state), tx.ToString());
     assert(fCheckResult);
     UpdateCoins(tx, mempoolDuplicate, 1000000);
 }
@@ -896,7 +899,18 @@ bool CCoinsViewMemPool::GetCoin(const COutPoint &outpoint, Coin &coin) const {
     CTransactionRef ptx = mempool.get(outpoint.hash);
     if (ptx) {
         if (outpoint.n < ptx->vout.size()) {
+            CDatacarrierPayloadRef payload;
+            if (ptx->IsUniform()) {
+                // parse uniform coin
+                payload = ExtractTransactionDatacarrier(*ptx, chainActive.Height() + 1);
+                if (!payload) {
+                    // BHDIP007 always active
+                    return false;
+                }
+            }
+
             coin = Coin(ptx->vout[outpoint.n], MEMPOOL_HEIGHT, false);
+            coin.extraData = std::move(payload);
             return true;
         } else {
             return false;

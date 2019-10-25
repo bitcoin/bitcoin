@@ -25,6 +25,19 @@ bool CheckTransaction(const CTransaction& tx, CValidationState& state, bool fChe
 namespace Consensus {
 struct Params;
 
+// CheckTxInputs run level
+enum class CheckTxLevel {
+    // Call from CTxMemPool::check
+    CheckMempool,
+
+    // Accept to memory pool
+    AcceptToMempool,
+
+    // From consensus
+    ConsensusPackaging,
+    Consensus,
+};
+
 /**
  * Check whether all inputs of this transaction are valid (no double spends and amounts)
  * This does not modify the UTXO set. This does not check scripts and sigs.
@@ -32,9 +45,9 @@ struct Params;
  * Preconditions: tx.IsCoinBase() is false.
  */
 bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, const CCoinsViewCache& prevInputs,
-    int nSpendHeight, CAmount& txfee, const CAccountID& generatorAccountID, bool fStrictCheckLimit, const Params& params);
+    int nSpendHeight, CAmount& txfee, const CAccountID& generatorAccountID, CheckTxLevel level, const Params& params);
 bool CheckTxInputs(const CTransaction& tx, const CCoinsViewCache& inputs, const CCoinsViewCache& prevInputs,
-    int nSpendHeight, const CAccountID& generatorAccountID, bool fStrictCheckLimit, const Params& params);
+    int nSpendHeight, const CAccountID& generatorAccountID, CheckTxLevel level, const Params& params);
 
 /** Get bind/unbind plotter transaction lock height. */
 int GetBindPlotterLimitHeight(int nBindHeight, const CBindPlotterInfo& lastBindInfo, const Params& params);

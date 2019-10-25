@@ -4111,7 +4111,7 @@ UniValue sendpledgetoaddress(const JSONRPCRequest& request)
     CAmount nAmount = AmountFromValue(request.params[1]);
     if (nAmount <= 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid amount for send");
-    else if (nAmount <= PROTOCOL_RENTAL_AMOUNT_MIN)
+    else if (nAmount < PROTOCOL_RENTAL_AMOUNT_MIN)
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Small amount for pledge, require more than %s BHD", FormatMoney(PROTOCOL_RENTAL_AMOUNT_MIN)));
 
     // Wallet comments
