@@ -260,6 +260,15 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     vCoins.at(0).nInputBytes = 40; // Make sure that it has a negative effective value. The next check should assert if this somehow got through. Otherwise it will fail
     BOOST_CHECK(!testWallet.SelectCoinsMinConf( 1 * CENT, filter_standard, GroupCoins(vCoins), setCoinsRet, nValueRet, coin_selection_params_bnb, bnb_used));
 
+    // Test fees subtracted from output:
+    empty_wallet();
+    add_coin(1 * CENT);
+    vCoins.at(0).nInputBytes = 40;
+    BOOST_CHECK(!testWallet.SelectCoinsMinConf( 1 * CENT, filter_standard, GroupCoins(vCoins), setCoinsRet, nValueRet, coin_selection_params_bnb, bnb_used));
+    coin_selection_params_bnb.m_subtract_fee_outputs = true;
+    BOOST_CHECK(testWallet.SelectCoinsMinConf( 1 * CENT, filter_standard, GroupCoins(vCoins), setCoinsRet, nValueRet, coin_selection_params_bnb, bnb_used));
+    BOOST_CHECK_EQUAL(nValueRet, 1 * CENT);
+
     // Make sure that can use BnB when there are preset inputs
     empty_wallet();
     {
