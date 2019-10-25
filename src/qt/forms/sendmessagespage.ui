@@ -89,7 +89,7 @@
              <string/>
             </property>
             <property name="icon">
-             <iconset resource="../bitcointalkcoin.qrc">
+             <iconset resource="../talkcoin.qrc">
               <normaloff>:/icons/address-book</normaloff>:/icons/address-book</iconset>
             </property>
             <property name="shortcut">
@@ -106,7 +106,7 @@
              <string/>
             </property>
             <property name="icon">
-             <iconset resource="../bitcointalkcoin.qrc">
+             <iconset resource="../talkcoin.qrc">
               <normaloff>:/icons/editpaste</normaloff>:/icons/editpaste</iconset>
             </property>
             <property name="shortcut">
@@ -181,7 +181,7 @@
           <string>Add</string>
          </property>
          <property name="icon">
-          <iconset resource="../bitcointalkcoin.qrc">
+          <iconset resource="../talkcoin.qrc">
            <normaloff>:/icons/add</normaloff>:/icons/add</iconset>
          </property>
          <property name="autoDefault">
@@ -204,7 +204,7 @@
           <string>Clear &amp;All</string>
          </property>
          <property name="icon">
-          <iconset resource="../bitcointalkcoin.qrc">
+          <iconset resource="../talkcoin.qrc">
            <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
          </property>
          <property name="autoRepeatDelay">
@@ -230,7 +230,7 @@
           <string>S&amp;end</string>
          </property>
          <property name="icon">
-          <iconset resource="../bitcointalkcoin.qrc">
+          <iconset resource="../talkcoin.qrc">
            <normaloff>:/icons/send</normaloff>:/icons/send</iconset>
          </property>
          <property name="default">
@@ -259,7 +259,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../bitcointalkcoin.qrc"/>
+  <include location="../talkcoin.qrc"/>
  </resources>
  <connections/>
 </ui>

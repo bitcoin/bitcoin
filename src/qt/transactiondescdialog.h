@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2014 The Bitcointalkcoin Core developers
+// Copyright (c) 2011-2014 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_QT_TRANSACTIONDESCDIALOG_H
-#define BITCOINTALKCOIN_QT_TRANSACTIONDESCDIALOG_H
+#ifndef TALKCOIN_QT_TRANSACTIONDESCDIALOG_H
+#define TALKCOIN_QT_TRANSACTIONDESCDIALOG_H
 
 #include <QDialog>
 
@@ -28,4 +28,4 @@ private:
     Ui::TransactionDescDialog *ui;
 };
 
-#endif // BITCOINTALKCOIN_QT_TRANSACTIONDESCDIALOG_H
+#endif // TALKCOIN_QT_TRANSACTIONDESCDIALOG_H

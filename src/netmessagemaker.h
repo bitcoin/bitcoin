@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2009-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_NETMESSAGEMAKER_H
-#define BITCOINTALKCOIN_NETMESSAGEMAKER_H
+#ifndef TALKCOIN_NETMESSAGEMAKER_H
+#define TALKCOIN_NETMESSAGEMAKER_H
 
 #include <net.h>
 #include <serialize.h>
@@ -33,4 +33,4 @@ private:
     const int nVersion;
 };
 
-#endif // BITCOINTALKCOIN_NETMESSAGEMAKER_H
+#endif // TALKCOIN_NETMESSAGEMAKER_H

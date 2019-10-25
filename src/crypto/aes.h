@@ -1,11 +1,11 @@
-// Copyright (c) 2015-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2015-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
 // C++ wrapper around ctaes, a constant-time AES implementation
 
-#ifndef BITCOINTALKCOIN_CRYPTO_AES_H
-#define BITCOINTALKCOIN_CRYPTO_AES_H
+#ifndef TALKCOIN_CRYPTO_AES_H
+#define TALKCOIN_CRYPTO_AES_H
 
 extern "C" {
 #include <crypto/ctaes/ctaes.h>
@@ -64,4 +64,4 @@ private:
     unsigned char iv[AES_BLOCKSIZE];
 };
 
-#endif // BITCOINTALKCOIN_CRYPTO_AES_H
+#endif // TALKCOIN_CRYPTO_AES_H

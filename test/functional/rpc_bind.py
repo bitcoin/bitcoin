@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2019 The Bitcointalkcoin Core developers
+# Copyright (c) 2014-2019 The Talkcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Test running bitcointalkcoind with the -rpcbind and -rpcallowip options."""
+"""Test running talkcoind with the -rpcbind and -rpcallowip options."""
 
 import sys
 
 from test_framework.netutil import all_interfaces, addr_to_hex, get_bind_addrs, test_ipv6_local
-from test_framework.test_framework import BitcointalkcoinTestFramework, SkipTest
+from test_framework.test_framework import TalkcoinTestFramework, SkipTest
 from test_framework.util import assert_equal, assert_raises_rpc_error, get_rpc_proxy, rpc_port, rpc_url
 
-class RPCBindTest(BitcointalkcoinTestFramework):
+class RPCBindTest(TalkcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.bind_to_localhost_only = False

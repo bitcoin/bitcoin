@@ -1,9 +1,9 @@
-// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2009-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_QT_TEST_PAYMENTREQUESTDATA_H
-#define BITCOINTALKCOIN_QT_TEST_PAYMENTREQUESTDATA_H
+#ifndef TALKCOIN_QT_TEST_PAYMENTREQUESTDATA_H
+#define TALKCOIN_QT_TEST_PAYMENTREQUESTDATA_H
 
 //
 // Data for paymentservertests.cpp
@@ -462,4 +462,4 @@ XR2T3Gy2LzRvhVA25QgGqpz0/juS2BtmNbsZPkN9gMMwKimgzc+PuCzmEKwPK9cQ\
 YQ==\
 ";
 
-#endif // BITCOINTALKCOIN_QT_TEST_PAYMENTREQUESTDATA_H
+#endif // TALKCOIN_QT_TEST_PAYMENTREQUESTDATA_H

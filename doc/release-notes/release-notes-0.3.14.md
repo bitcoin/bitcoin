@@ -1,5 +1,5 @@
 Version 0.3.14 is now available
-http://sourceforge.net/projects/bitcointalkcoin/files/Bitcointalkcoin/bitcointalkcoin-0.3.14/
+http://sourceforge.net/projects/talkcoin/files/Talkcoin/talkcoin-0.3.14/
 
 Changes:
 * Key pool feature for safer wallet backup

@@ -1,4 +1,4 @@
-*After branching off for a major version release of Bitcointalkcoin Core, use this
+*After branching off for a major version release of Talkcoin Core, use this
 template to create the initial release notes draft.*
 
 *The release notes draft is a temporary file that can be added to by anyone. See
@@ -8,39 +8,39 @@ for the process.*
 *Create the draft, named* "*version* Release Notes Draft"
 *(e.g. "0.20.0 Release Notes Draft"), as a collaborative wiki in:*
 
-https://github.com/bitcointalkcoin-core/bitcointalkcoin-devwiki/wiki/
+https://github.com/talkcoin-core/talkcoin-devwiki/wiki/
 
 *Before the final release, move the notes back to this git repository.*
 
 *version* Release Notes Draft
 ===============================
 
-Bitcointalkcoin Core version *version* is now available from:
+Talkcoin Core version *version* is now available from:
 
-  <https://bitcointalkcoincore.org/bin/bitcointalkcoin-core-*version*/>
+  <https://talkcoincore.org/bin/talkcoin-core-*version*/>
 
 This is a new major version release, including new features, various bugfixes
 and performance improvements, as well as updated translations.
 
 Please report bugs using the issue tracker at GitHub:
 
-  <https://github.com/bitcointalkcoin/bitcointalkcoin/issues>
+  <https://github.com/talkcoin/talkcoin/issues>
 
 To receive security and update notifications, please subscribe to:
 
-  <https://bitcointalkcoincore.org/en/list/announcements/join/>
+  <https://talkcoincore.org/en/list/announcements/join/>
 
 How to Upgrade
 ==============
 
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the
-installer (on Windows) or just copy over `/Applications/Bitcointalkcoin-Qt` (on Mac)
-or `bitcointalkcoind`/`bitcointalkcoin-qt` (on Linux).
+installer (on Windows) or just copy over `/Applications/Talkcoin-Qt` (on Mac)
+or `talkcoind`/`talkcoin-qt` (on Linux).
 
-Upgrading directly from a version of Bitcointalkcoin Core that has reached its EOL is
+Upgrading directly from a version of Talkcoin Core that has reached its EOL is
 possible, but might take some time if the datadir needs to be migrated.  Old
-wallet versions of Bitcointalkcoin Core are generally supported.
+wallet versions of Talkcoin Core are generally supported.
 
 Downgrading warning
 -------------------
@@ -56,16 +56,16 @@ processing the entire blockchain.
 Compatibility
 ==============
 
-Bitcointalkcoin Core is supported and extensively tested on operating systems using
+Talkcoin Core is supported and extensively tested on operating systems using
 the Linux kernel, macOS 10.10+, and Windows 7 and newer.  It is not recommended
-to use Bitcointalkcoin Core on unsupported systems.
+to use Talkcoin Core on unsupported systems.
 
-Bitcointalkcoin Core should also work on most other Unix-like systems but is not
+Talkcoin Core should also work on most other Unix-like systems but is not
 frequently tested on them.
 
 From 0.17.0 onwards, macOS <10.10 is no longer supported.  0.17.0 is
 built using Qt 5.9.x, which doesn't support versions of macOS older than
-10.10.  Additionally, Bitcointalkcoin Core does not yet change appearance when
+10.10.  Additionally, Talkcoin Core does not yet change appearance when
 macOS "dark mode" is activated.
 
 In addition to previously-supported CPU platforms, this release's
@@ -115,7 +115,7 @@ Network
 -------
 
 - When fetching a transaction announced by multiple peers, previous versions of
-  Bitcointalkcoin Core would sequentially attempt to download the transaction from each
+  Talkcoin Core would sequentially attempt to download the transaction from each
   announcing peer until the transaction is received, in the order that those
   peers' announcements were received.  In this release, the download logic has
   changed to randomize the fetch order across peers and to prefer sending
@@ -138,4 +138,4 @@ Credits
 Thanks to everyone who directly contributed to this release:
 
 
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/bitcointalkcoin/bitcointalkcoin/).
+As well as everyone that helped translating on [Transifex](https://www.transifex.com/talkcoin/talkcoin/).

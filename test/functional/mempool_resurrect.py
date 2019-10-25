@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2019 The Bitcointalkcoin Core developers
+# Copyright (c) 2014-2019 The Talkcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test resurrection of mined transactions when the blockchain is re-organized."""
 
 from test_framework.blocktools import create_raw_transaction
-from test_framework.test_framework import BitcointalkcoinTestFramework
+from test_framework.test_framework import TalkcoinTestFramework
 from test_framework.util import assert_equal
 
 
-class MempoolCoinbaseTest(BitcointalkcoinTestFramework):
+class MempoolCoinbaseTest(TalkcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 

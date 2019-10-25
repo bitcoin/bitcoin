@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2009-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -167,13 +167,11 @@ public:
 #else
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
 #endif
-#ifdef ENABLE_PROOF_OF_STAKE
         consensus.posLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.fPoSNoRetargeting = false;
         consensus.nStakeTimestampMask = 0xf;
         consensus.nLastPOWBlock = 10000;
         consensus.nStakeMinAge = 4 * 60 * 60;
-#endif
         consensus.nPowTargetTimespan = 60; // two weeks
         consensus.nPowTargetSpacing = 60;
         consensus.fPowAllowMinDifficultyBlocks = false;
@@ -195,7 +193,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1510704000; // November 15th, 2017.
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000000000000201a8ab833d");
+        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000000000000bb80bc17c06");
 
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x8620e23b97f0cda9301336ead918317dc73ee5378ac724effa15101da0264416"); //563378
@@ -252,7 +250,7 @@ public:
 
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
-        fMineBlocksOnDemand = false;
+        m_is_test_chain = false;
 
         checkpointData = {
             {
@@ -263,14 +261,15 @@ public:
                 { 14358, uint256S("0x23599282d5f953a73fac7d1710b055078f8397f2da3dbf767195a0db74160728")},
                 { 17266, uint256S("0xbe705a2a1da8e801acde811050e6fc2500c496374e960a375fb17b7af030205c")},
                 { 21500, uint256S("0xa745053f5c778e3c257f0c4e4a84880583ae35b77e4da96f52315646c4d8be54")},
+                { 114439, uint256S("0x0b3ed1f40e32540e64e89310d3157ecdb955178d80e4661fa50b8b646f9b1be1")},
             }
         };
 
         chainTxData = ChainTxData{
             // Data from rpc: getchaintxstats 4096 23599282d5f953a73fac7d1710b055078f8397f2da3dbf767195a0db74160728
-            /* nTime    */ 1565166240,
-            /* nTxCount */ 42787,
-            /* dTxRate  */ 0.1198367657383571
+            /* nTime    */ 1570807632,
+            /* nTxCount */ 228704,
+            /* dTxRate  */ 0.03119858631405764
         };
 
         /* disable fallback fee on mainnet */
@@ -298,7 +297,7 @@ public:
 #endif
         consensus.nPowTargetTimespan = 60; // two weeks
         consensus.nPowTargetSpacing = 60;
-        consensus.fPowAllowMinDifficultyBlocks = false;
+        consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 1512; // 75% for testchains
         consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
@@ -343,9 +342,9 @@ public:
         vFixedSeeds.clear();
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
-        vSeeds.emplace_back("testnet-seed.bitcointalkcoin.jonasschnelli.ch");
+        vSeeds.emplace_back("testnet-seed.talkcoin.jonasschnelli.ch");
         vSeeds.emplace_back("seed.tbtc.petertodd.org");
-        vSeeds.emplace_back("seed.testnet.bitcointalkcoin.sprovoost.nl");
+        vSeeds.emplace_back("seed.testnet.talkcoin.sprovoost.nl");
         vSeeds.emplace_back("testnet-seed.bluematt.me"); // Just a static list of stable node(s), only supports x9
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);
@@ -360,7 +359,7 @@ public:
 
         fDefaultConsistencyChecks = false;
         fRequireStandard = false;
-        fMineBlocksOnDemand = false;
+        m_is_test_chain = true;
 
 
         checkpointData = {
@@ -441,8 +440,8 @@ public:
         vSeeds.clear();      //!< Regtest mode doesn't have any DNS seeds.
 
         fDefaultConsistencyChecks = true;
-        fRequireStandard = false;
-        fMineBlocksOnDemand = true;
+        fRequireStandard = true;
+        m_is_test_chain = true;
 
         checkpointData = {
             {

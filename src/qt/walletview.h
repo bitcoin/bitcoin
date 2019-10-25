@@ -1,15 +1,15 @@
-// Copyright (c) 2011-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2011-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_QT_WALLETVIEW_H
-#define BITCOINTALKCOIN_QT_WALLETVIEW_H
+#ifndef TALKCOIN_QT_WALLETVIEW_H
+#define TALKCOIN_QT_WALLETVIEW_H
 
 #include <amount.h>
 
 #include <QStackedWidget>
 
-class BitcointalkcoinGUI;
+class TalkcoinGUI;
 class ClientModel;
 class MessagePage;
 class OverviewPage;
@@ -42,29 +42,26 @@ public:
     explicit WalletView(const PlatformStyle *platformStyle, QWidget *parent);
     ~WalletView();
 
-    void setBitcointalkcoinGUI(BitcointalkcoinGUI *gui);
+    void setTalkcoinGUI(TalkcoinGUI *gui);
     /** Set the client model.
         The client model represents the part of the core that communicates with the P2P network, and is wallet-agnostic.
     */
     void setClientModel(ClientModel *clientModel);
     WalletModel *getWalletModel() { return walletModel; }
     /** Set the wallet model.
-        The wallet model represents a bitcointalkcoin wallet, and offers access to the list of transactions, address book and sending
+        The wallet model represents a talkcoin wallet, and offers access to the list of transactions, address book and sending
         functionality.
     */
     void setWalletModel(WalletModel *walletModel);
-#ifdef ENABLE_SECURE_MESSAGING
 	void setMessageModel(MessageModel *messageModel);
-#endif
+
     bool handlePaymentRequest(const SendCoinsRecipient& recipient);
 
     void showOutOfSyncWarning(bool fShow);
 
 private:
     ClientModel *clientModel;
-#ifdef ENABLE_SECURE_MESSAGING
     MessageModel *messageModel;
-#endif
     WalletModel *walletModel;
 
     OverviewPage *overviewPage;
@@ -77,10 +74,9 @@ private:
     RPCConsole* rpcConsole = nullptr;
 
     TransactionView *transactionView;
-#ifdef ENABLE_SECURE_MESSAGING
     SendMessagesPage *sendMessagesPage;
     MessagePage *messagePage;
-#endif
+
     QProgressDialog *progressDialog;
     const PlatformStyle *platformStyle;
 
@@ -95,11 +91,9 @@ public Q_SLOTS:
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
-#ifdef ENABLE_SECURE_MESSAGING
 	void gotoSendMessagesPage();
     /** Switch to view messages page */
     void gotoMessagesPage();
-#endif
 
     /** Show Sign/Verify Message dialog and switch to sign message tab */
     void gotoSignMessageTab(QString addr = "");
@@ -140,6 +134,13 @@ public Q_SLOTS:
     /** User has requested more information about the out of sync state */
     void requestedSyncWarningInfo();
 
+    /** setter and getter of the wallet's spv mode */
+    void setSPVMode(bool state);
+    bool getSPVMode();
+
+    /** Update the GUI to reflect the new SPV status */
+    void updateSPVStatus();
+
 Q_SIGNALS:
     /** Signal that we want to show the main window */
     void showNormalIfMinimized();
@@ -149,6 +150,8 @@ Q_SIGNALS:
     void encryptionStatusChanged();
     /** HD-Enabled status of wallet changed (only possible during startup) */
     void hdEnabledStatusChanged();
+    /** SPV-Enabled status of wallet changed*/
+    void spvEnabledStatusChanged(int spvEnabled);
     /** Notify that a new transaction appeared */
     void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label, const QString& walletName);
 
@@ -158,4 +161,4 @@ Q_SIGNALS:
     void outOfSyncWarningClicked();
 };
 
-#endif // BITCOINTALKCOIN_QT_WALLETVIEW_H
+#endif // TALKCOIN_QT_WALLETVIEW_H

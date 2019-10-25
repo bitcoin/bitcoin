@@ -1,9 +1,9 @@
-// Copyright (c) 2015-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2015-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_PREVECTOR_H
-#define BITCOINTALKCOIN_PREVECTOR_H
+#ifndef TALKCOIN_PREVECTOR_H
+#define TALKCOIN_PREVECTOR_H
 
 #include <assert.h>
 #include <stdlib.h>
@@ -525,4 +525,4 @@ public:
 };
 #pragma pack(pop)
 
-#endif // BITCOINTALKCOIN_PREVECTOR_H
+#endif // TALKCOIN_PREVECTOR_H

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2018 The Bitcointalkcoin Core developers
+# Copyright (c) 2018 The Talkcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,7 +10,7 @@ TRAVIS_COMMIT_LOG=$(git log --format=fuller -1)
 export TRAVIS_COMMIT_LOG
 
 OUTDIR=$BASE_OUTDIR/$TRAVIS_PULL_REQUEST/$TRAVIS_JOB_NUMBER-$HOST
-BITCOINTALKCOIN_CONFIG_ALL="--disable-dependency-tracking --prefix=$TRAVIS_BUILD_DIR/depends/$HOST --bindir=$OUTDIR/bin --libdir=$OUTDIR/lib"
+TALKCOIN_CONFIG_ALL="--disable-dependency-tracking --prefix=$TRAVIS_BUILD_DIR/depends/$HOST --bindir=$OUTDIR/bin --libdir=$OUTDIR/lib"
 if [ -z "$NO_DEPENDS" ]; then
   DOCKER_EXEC ccache --max-size=$CCACHE_SIZE
 fi
@@ -27,17 +27,17 @@ mkdir build
 cd build || (echo "could not enter build directory"; exit 1)
 
 BEGIN_FOLD configure
-DOCKER_EXEC ../configure --cache-file=config.cache $BITCOINTALKCOIN_CONFIG_ALL $BITCOINTALKCOIN_CONFIG || ( cat config.log && false)
+DOCKER_EXEC ../configure --cache-file=config.cache $TALKCOIN_CONFIG_ALL $TALKCOIN_CONFIG || ( cat config.log && false)
 END_FOLD
 
 BEGIN_FOLD distdir
 DOCKER_EXEC make distdir VERSION=$HOST
 END_FOLD
 
-cd "bitcointalkcoin-$HOST" || (echo "could not enter distdir bitcointalkcoin-$HOST"; exit 1)
+cd "talkcoin-$HOST" || (echo "could not enter distdir talkcoin-$HOST"; exit 1)
 
 BEGIN_FOLD configure
-DOCKER_EXEC ./configure --cache-file=../config.cache $BITCOINTALKCOIN_CONFIG_ALL $BITCOINTALKCOIN_CONFIG || ( cat config.log && false)
+DOCKER_EXEC ./configure --cache-file=../config.cache $TALKCOIN_CONFIG_ALL $TALKCOIN_CONFIG || ( cat config.log && false)
 END_FOLD
 
 set -o errtrace

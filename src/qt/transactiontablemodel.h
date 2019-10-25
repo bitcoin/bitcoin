@@ -1,11 +1,11 @@
-// Copyright (c) 2011-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2011-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_QT_TRANSACTIONTABLEMODEL_H
-#define BITCOINTALKCOIN_QT_TRANSACTIONTABLEMODEL_H
+#ifndef TALKCOIN_QT_TRANSACTIONTABLEMODEL_H
+#define TALKCOIN_QT_TRANSACTIONTABLEMODEL_H
 
-#include <qt/bitcointalkcoinunits.h>
+#include <qt/talkcoinunits.h>
 
 #include <QAbstractTableModel>
 #include <QStringList>
@@ -76,6 +76,26 @@ public:
         RawDecorationRole,
     };
 
+    QHash<int, QByteArray> roleNames() const {
+        QHash<int, QByteArray> roles;
+        roles[TypeRole] = "type";
+        roles[DateRole] = "date";
+        roles[WatchonlyRole] = "watchonly";
+        roles[WatchonlyDecorationRole] = "watchonlydecoration";
+        roles[LongDescriptionRole] = "longdescription";
+        roles[AddressRole] = "address";
+        roles[LabelRole] = "label";
+        roles[AmountRole] = "amount";
+        roles[TxHashRole] = "txhash";
+        roles[TxHexRole] = "txhex";
+        roles[TxPlainTextRole] = "txplaintext";
+        roles[ConfirmedRole] = "confirmed";
+        roles[FormattedAmountRole] = "formattedamount";
+        roles[StatusRole] = "status";
+        roles[RawDecorationRole] = "rawdecoration";
+        return roles;
+    }
+
     int rowCount(const QModelIndex &parent) const;
     int columnCount(const QModelIndex &parent) const;
     QVariant data(const QModelIndex &index, int role) const;
@@ -101,11 +121,12 @@ private:
     QString formatTxDate(const TransactionRecord *wtx) const;
     QString formatTxType(const TransactionRecord *wtx) const;
     QString formatTxToAddress(const TransactionRecord *wtx, bool tooltip) const;
-    QString formatTxAmount(const TransactionRecord *wtx, bool showUnconfirmed=true, BitcointalkcoinUnits::SeparatorStyle separators=BitcointalkcoinUnits::separatorStandard) const;
+    QString formatTxAmount(const TransactionRecord *wtx, bool showUnconfirmed=true, TalkcoinUnits::SeparatorStyle separators=TalkcoinUnits::separatorStandard) const;
     QString formatTooltip(const TransactionRecord *rec) const;
     QVariant txStatusDecoration(const TransactionRecord *wtx) const;
     QVariant txWatchonlyDecoration(const TransactionRecord *wtx) const;
     QVariant txAddressDecoration(const TransactionRecord *wtx) const;
+    QVariant typeDecoration(const TransactionRecord *wtx) const;
 
 public Q_SLOTS:
     /* New transaction, or transaction changed status */
@@ -120,4 +141,4 @@ public Q_SLOTS:
     friend class TransactionTablePriv;
 };
 
-#endif // BITCOINTALKCOIN_QT_TRANSACTIONTABLEMODEL_H
+#endif // TALKCOIN_QT_TRANSACTIONTABLEMODEL_H

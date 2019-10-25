@@ -14,7 +14,7 @@ Pane {
             Layout.fillWidth: true
             Material.foreground: primaryColor
             Material.primary: primaryColor
-            title: bitcointalkcoinTr("OptionsDialog", "&Display")
+            title: talkcoinTr("OptionsDialog", "&Display")
             ColumnLayout {
                 anchors.fill: parent
 
@@ -22,7 +22,7 @@ Pane {
                     spacing: 10
 
                     Label {
-                        text: bitcointalkcoinTr("OptionsDialog", "&Unit to show amounts in:")
+                        text: talkcoinTr("OptionsDialog", "&Unit to show amounts in:")
                         font: theme.thinFont
                     }
 

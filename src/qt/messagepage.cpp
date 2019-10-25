@@ -3,7 +3,7 @@
 
 #include <qt/sendmessagespage.h>
 #include <qt/messagemodel.h>
-#include <qt/bitcointalkcoingui.h>
+#include <qt/talkcoingui.h>
 #include <qt/csvmodelwriter.h>
 #include <qt/guiutil.h>
 #include <qt/platformstyle.h>

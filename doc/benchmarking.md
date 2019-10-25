@@ -1,14 +1,14 @@
 Benchmarking
 ============
 
-Bitcointalkcoin Core has an internal benchmarking framework, with benchmarks
+Talkcoin Core has an internal benchmarking framework, with benchmarks
 for cryptographic algorithms (e.g. SHA1, SHA256, SHA512, RIPEMD160), as well as the rolling bloom filter.
 
 Running
 ---------------------
-After compiling bitcointalkcoin-core, the benchmarks can be run with:
+After compiling talkcoin-core, the benchmarks can be run with:
 
-    src/bench/bench_bitcointalkcoin
+    src/bench/bench_talkcoin
 
 The output will look similar to:
 ```
@@ -43,7 +43,7 @@ Help
 ---------------------
 `-?` will print a list of options and exit:
 
-    src/bench/bench_bitcointalkcoin -?
+    src/bench/bench_talkcoin -?
 
 Notes
 ---------------------

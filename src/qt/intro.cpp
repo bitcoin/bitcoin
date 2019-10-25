@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2011-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcointalkcoin-config.h>
+#include <config/talkcoin-config.h>
 #endif
 
 #include <fs.h>
@@ -133,8 +133,8 @@ Intro::Intro(QWidget *parent, uint64_t blockchain_size, uint64_t chain_state_siz
     qss.close();
 
 
-    //ui->welcomeLabel->setText(ui->welcomeLabel->text().arg("Bitcointalkcoin"));
-    ui->storageLabel->setText(ui->storageLabel->text().arg("Bitcointalkcoin"));
+    //ui->welcomeLabel->setText(ui->welcomeLabel->text().arg("Talkcoin"));
+    ui->storageLabel->setText(ui->storageLabel->text().arg("Talkcoin"));
     //ui->buttonBox->AndroidLayout;
     ui->buttonBox->button(ui->buttonBox->Ok)->setFlat(true);
     ui->buttonBox->button(ui->buttonBox->Cancel)->setFlat(true);
@@ -160,7 +160,7 @@ Intro::Intro(QWidget *parent, uint64_t blockchain_size, uint64_t chain_state_siz
     }
     requiredSpace += m_chain_state_size;
     ui->sizeWarningLabel->setText(
-        tr("%1 will download and store a copy of the Bitcointalkcoin block chain.").arg("Bitcointalkcoin") + " " +
+        tr("%1 will download and store a copy of the Talkcoin block chain.").arg("Talkcoin") + " " +
         storageRequiresMsg.arg(requiredSpace) + " " +
         tr("The wallet will also be stored in this directory.")
     );
@@ -221,7 +221,7 @@ bool Intro::showIfNeeded(interfaces::Node& node, bool& did_show_intro, bool& pru
         /* If current default data directory does not exist, let the user choose one */
         Intro intro(0, node.getAssumedBlockchainSize(), node.getAssumedChainStateSize());
         intro.setDataDirectory(dataDir);
-        intro.setWindowIcon(QIcon(":icons/bitcointalkcoin"));
+        intro.setWindowIcon(QIcon(":icons/talkcoin"));
         did_show_intro = true;
 
         while(true)
@@ -262,7 +262,7 @@ bool Intro::showIfNeeded(interfaces::Node& node, bool& did_show_intro, bool& pru
 #endif
                 break;
             } catch (const fs::filesystem_error&) {
-                QMessageBox::critical(nullptr, "Bitcointalkcoin",
+                QMessageBox::critical(nullptr, "Talkcoin",
                     tr("Error: Specified data directory \"%1\" cannot be created.").arg(dataDir));
                 /* fall through, back to choosing screen */
             }
@@ -275,8 +275,8 @@ bool Intro::showIfNeeded(interfaces::Node& node, bool& did_show_intro, bool& pru
         settings.setValue("fReset", false);
     }
     /* Only override -datadir if different from the default, to make it possible to
-     * override -datadir in the bitcointalkcoin.conf file in the default data directory
-     * (to be consistent with bitcointalkcoind behavior)
+     * override -datadir in the talkcoin.conf file in the default data directory
+     * (to be consistent with talkcoind behavior)
      */
     if(dataDir != GUIUtil::getDefaultDataDirectory()) {
         node.softSetArg("-datadir", GUIUtil::qstringToBoostPath(dataDir).string()); // use OS locale for path setting

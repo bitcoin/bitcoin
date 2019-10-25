@@ -1,7 +1,7 @@
-Win32, Linux, MacOSX and source releases for bitcointalkcoin v0.3.23 have been uploaded to
-https://sourceforge.net/projects/bitcointalkcoin/files/Bitcointalkcoin/bitcointalkcoin-0.3.23/
+Win32, Linux, MacOSX and source releases for talkcoin v0.3.23 have been uploaded to
+https://sourceforge.net/projects/talkcoin/files/Talkcoin/talkcoin-0.3.23/
 
-This is another quick bugfix release, trying to deal with the influx of new bitcointalkcoin users.
+This is another quick bugfix release, trying to deal with the influx of new talkcoin users.
 
 Main items of note:
 

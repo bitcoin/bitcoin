@@ -1,6 +1,6 @@
 #include <qt/guiutil.h>
 #include <qt/guiconstants.h>
-#include <qt/bitcointalkcoinunits.h>
+#include <qt/talkcoinunits.h>
 #include <qt/optionsmodel.h>
 #include <qt/walletmodel.h>
 #include <qt/messagemodel.h>

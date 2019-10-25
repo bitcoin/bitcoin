@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2011-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_QT_MACOS_APPNAP_H
-#define BITCOINTALKCOIN_QT_MACOS_APPNAP_H
+#ifndef TALKCOIN_QT_MACOS_APPNAP_H
+#define TALKCOIN_QT_MACOS_APPNAP_H
 
 #include <memory>
 
@@ -21,4 +21,4 @@ private:
     std::unique_ptr<CAppNapImpl> impl;
 };
 
-#endif // BITCOINTALKCOIN_QT_MACOS_APPNAP_H
+#endif // TALKCOIN_QT_MACOS_APPNAP_H

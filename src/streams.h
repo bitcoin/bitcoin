@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2009-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_STREAMS_H
-#define BITCOINTALKCOIN_STREAMS_H
+#ifndef TALKCOIN_STREAMS_H
+#define TALKCOIN_STREAMS_H
 
 #include <support/allocators/zeroafterfree.h>
 #include <serialize.h>
@@ -854,4 +854,4 @@ public:
     }
 };
 
-#endif // BITCOINTALKCOIN_STREAMS_H
+#endif // TALKCOIN_STREAMS_H

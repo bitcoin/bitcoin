@@ -73,13 +73,13 @@
                </size>
               </property>
               <property name="toolTip">
-               <string>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcointalkcoin network after a connection is established, but this process has not completed yet.</string>
+               <string>The displayed information may be out of date. Your wallet automatically synchronizes with the Talkcoin network after a connection is established, but this process has not completed yet.</string>
               </property>
               <property name="text">
                <string/>
               </property>
               <property name="icon">
-               <iconset resource="../bitcointalkcoin.qrc">
+               <iconset resource="../talkcoin.qrc">
                 <normaloff>:/icons/warning</normaloff>
                 <disabledoff>:/icons/warning</disabledoff>:/icons/warning</iconset>
               </property>
@@ -301,13 +301,13 @@
                </size>
               </property>
               <property name="toolTip">
-               <string>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcointalkcoin network after a connection is established, but this process has not completed yet.</string>
+               <string>The displayed information may be out of date. Your wallet automatically synchronizes with the Talkcoin network after a connection is established, but this process has not completed yet.</string>
               </property>
               <property name="text">
                <string/>
               </property>
               <property name="icon">
-               <iconset resource="../bitcointalkcoin.qrc">
+               <iconset resource="../talkcoin.qrc">
                 <normaloff>:/icons/warning</normaloff>
                 <disabledoff>:/icons/warning</disabledoff>:/icons/warning</iconset>
               </property>
@@ -366,7 +366,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="../bitcointalkcoin.qrc"/>
+  <include location="../talkcoin.qrc"/>
  </resources>
  <connections/>
 </ui>

@@ -1,4 +1,4 @@
-# Copyright (c) 2013-2016 The Bitcointalkcoin Core developers
+# Copyright (c) 2013-2016 The Talkcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,46 +11,6 @@ AM_CFLAGS = -fPIC
 AM_LIBTOOLFLAGS = --preserve-dup-deps
 EXTRA_LIBRARIES =
 
-if ENABLE_SECURE_MESSAGING
-AM_CXXFLAGS += -DENABLE_SECURE_MESSAGING
-AM_CPPFLAGS += -DENABLE_SECURE_MESSAGING
-endif
-
-if ENABLE_IBTP
-AM_CXXFLAGS += -DENABLE_IBTP
-AM_CPPFLAGS += -DENABLE_IBTP
-endif
-
-if ENABLE_PROOF_OF_STAKE
-AM_CXXFLAGS += -DENABLE_PROOF_OF_STAKE
-AM_CPPFLAGS += -DENABLE_PROOF_OF_STAKE
-endif
-
-if ENABLE_GENESIS_TX_SPEND
-AM_CXXFLAGS += -DENABLE_GENESIS_TX_SPEND
-AM_CPPFLAGS += -DENABLE_GENESIS_TX_SPEND
-endif
-
-if ENABLE_MOMENTUM_HASH_ALGO
-AM_CXXFLAGS += -DENABLE_MOMENTUM_HASH_ALGO
-AM_CPPFLAGS += -DENABLE_MOMENTUM_HASH_ALGO
-endif
-
-if ENABLE_SHA_HASH_ALGO
-AM_CXXFLAGS += -DENABLE_SHA_HASH_ALGO
-AM_CPPFLAGS += -DENABLE_SHA_HASH_ALGO
-endif
-
-if ENABLE_GROESTL_HASH_ALGO
-AM_CXXFLAGS += -DENABLE_GROESTL_HASH_ALGO
-AM_CPPFLAGS += -DENABLE_GROESTL_HASH_ALGO
-endif
-
-if ENABLE_MEM_HASH_ALGO
-AM_CXXFLAGS += -DENABLE_MEM_HASH_ALGO
-AM_CPPFLAGS += -DENABLE_MEM_HASH_ALGO
-endif
-
 
 if EMBEDDED_UNIVALUE
 LIBUNIVALUE = univalue/libunivalue.la
@@ -61,43 +21,43 @@ else
 LIBUNIVALUE = $(UNIVALUE_LIBS)
 endif
 
-BITCOINTALKCOIN_INCLUDES=-I$(builddir) $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) $(CRYPTO_CFLAGS) $(SSL_CFLAGS)
+TALKCOIN_INCLUDES=-I$(builddir) $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) $(CRYPTO_CFLAGS) $(SSL_CFLAGS)
 
-BITCOINTALKCOIN_INCLUDES += -I$(srcdir)/secp256k1/include
-BITCOINTALKCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
+TALKCOIN_INCLUDES += -I$(srcdir)/secp256k1/include
+TALKCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
 
-LIBBITCOINTALKCOIN_SERVER=libbitcointalkcoin_server.a
-LIBBITCOINTALKCOIN_COMMON=libbitcointalkcoin_common.a
-LIBBITCOINTALKCOIN_CONSENSUS=libbitcointalkcoin_consensus.a
-LIBBITCOINTALKCOIN_CLI=libbitcointalkcoin_cli.a
-LIBBITCOINTALKCOIN_UTIL=libbitcointalkcoin_util.a
-LIBBITCOINTALKCOIN_CRYPTO_BASE=crypto/libbitcointalkcoin_crypto_base.a
-LIBBITCOINTALKCOINQT=qt/libbitcointalkcoinqt.a
+LIBTALKCOIN_SERVER=libtalkcoin_server.a
+LIBTALKCOIN_COMMON=libtalkcoin_common.a
+LIBTALKCOIN_CONSENSUS=libtalkcoin_consensus.a
+LIBTALKCOIN_CLI=libtalkcoin_cli.a
+LIBTALKCOIN_UTIL=libtalkcoin_util.a
+LIBTALKCOIN_CRYPTO_BASE=crypto/libtalkcoin_crypto_base.a
+LIBTALKCOINQT=qt/libtalkcoinqt.a
 LIBSECP256K1=secp256k1/libsecp256k1.la
 
 if ENABLE_ZMQ
-LIBBITCOINTALKCOIN_ZMQ=libbitcointalkcoin_zmq.a
+LIBTALKCOIN_ZMQ=libtalkcoin_zmq.a
 endif
-if BUILD_BITCOINTALKCOIN_LIBS
-LIBBITCOINTALKCOINCONSENSUS=libbitcointalkcoinconsensus.la
+if BUILD_TALKCOIN_LIBS
+LIBTALKCOINCONSENSUS=libtalkcoinconsensus.la
 endif
 if ENABLE_WALLET
-LIBBITCOINTALKCOIN_WALLET=libbitcointalkcoin_wallet.a
-LIBBITCOINTALKCOIN_WALLET_TOOL=libbitcointalkcoin_wallet_tool.a
+LIBTALKCOIN_WALLET=libtalkcoin_wallet.a
+LIBTALKCOIN_WALLET_TOOL=libtalkcoin_wallet_tool.a
 endif
 
-LIBBITCOINTALKCOIN_CRYPTO= $(LIBBITCOINTALKCOIN_CRYPTO_BASE)
+LIBTALKCOIN_CRYPTO= $(LIBTALKCOIN_CRYPTO_BASE)
 if ENABLE_SSE41
-LIBBITCOINTALKCOIN_CRYPTO_SSE41 = crypto/libbitcointalkcoin_crypto_sse41.a
-LIBBITCOINTALKCOIN_CRYPTO += $(LIBBITCOINTALKCOIN_CRYPTO_SSE41)
+LIBTALKCOIN_CRYPTO_SSE41 = crypto/libtalkcoin_crypto_sse41.a
+LIBTALKCOIN_CRYPTO += $(LIBTALKCOIN_CRYPTO_SSE41)
 endif
 if ENABLE_AVX2
-LIBBITCOINTALKCOIN_CRYPTO_AVX2 = crypto/libbitcointalkcoin_crypto_avx2.a
-LIBBITCOINTALKCOIN_CRYPTO += $(LIBBITCOINTALKCOIN_CRYPTO_AVX2)
+LIBTALKCOIN_CRYPTO_AVX2 = crypto/libtalkcoin_crypto_avx2.a
+LIBTALKCOIN_CRYPTO += $(LIBTALKCOIN_CRYPTO_AVX2)
 endif
 if ENABLE_SHANI
-LIBBITCOINTALKCOIN_CRYPTO_SHANI = crypto/libbitcointalkcoin_crypto_shani.a
-LIBBITCOINTALKCOIN_CRYPTO += $(LIBBITCOINTALKCOIN_CRYPTO_SHANI)
+LIBTALKCOIN_CRYPTO_SHANI = crypto/libtalkcoin_crypto_shani.a
+LIBTALKCOIN_CRYPTO += $(LIBTALKCOIN_CRYPTO_SHANI)
 endif
 
 $(LIBSECP256K1): $(wildcard secp256k1/src/*.h) $(wildcard secp256k1/src/*.c) $(wildcard secp256k1/include/*)
@@ -106,42 +66,42 @@ $(LIBSECP256K1): $(wildcard secp256k1/src/*.h) $(wildcard secp256k1/src/*.c) $(w
 # Make is not made aware of per-object dependencies to avoid limiting building parallelization
 # But to build the less dependent modules first, we manually select their order here:
 EXTRA_LIBRARIES += \
-  $(LIBBITCOINTALKCOIN_CRYPTO) \
-  $(LIBBITCOINTALKCOIN_UTIL) \
-  $(LIBBITCOINTALKCOIN_COMMON) \
-  $(LIBBITCOINTALKCOIN_CONSENSUS) \
-  $(LIBBITCOINTALKCOIN_SERVER) \
-  $(LIBBITCOINTALKCOIN_CLI) \
-  $(LIBBITCOINTALKCOIN_WALLET) \
-  $(LIBBITCOINTALKCOIN_WALLET_TOOL) \
-  $(LIBBITCOINTALKCOIN_ZMQ)
+  $(LIBTALKCOIN_CRYPTO) \
+  $(LIBTALKCOIN_UTIL) \
+  $(LIBTALKCOIN_COMMON) \
+  $(LIBTALKCOIN_CONSENSUS) \
+  $(LIBTALKCOIN_SERVER) \
+  $(LIBTALKCOIN_CLI) \
+  $(LIBTALKCOIN_WALLET) \
+  $(LIBTALKCOIN_WALLET_TOOL) \
+  $(LIBTALKCOIN_ZMQ)
 
-lib_LTLIBRARIES = $(LIBBITCOINTALKCOINCONSENSUS)
+lib_LTLIBRARIES = $(LIBTALKCOINCONSENSUS)
 
 bin_PROGRAMS =
 noinst_PROGRAMS =
 TESTS =
 BENCHMARKS =
 
-if BUILD_BITCOINTALKCOIND
-  bin_PROGRAMS += bitcointalkcoind
+if BUILD_TALKCOIND
+  bin_PROGRAMS += talkcoind
 endif
 
-if BUILD_BITCOINTALKCOIN_CLI
-  bin_PROGRAMS += bitcointalkcoin-cli
+if BUILD_TALKCOIN_CLI
+  bin_PROGRAMS += talkcoin-cli
 endif
-if BUILD_BITCOINTALKCOIN_TX
-  bin_PROGRAMS += bitcointalkcoin-tx
+if BUILD_TALKCOIN_TX
+  bin_PROGRAMS += talkcoin-tx
 endif
 if ENABLE_WALLET
-if BUILD_BITCOINTALKCOIN_WALLET
-  bin_PROGRAMS += bitcointalkcoin-wallet
+if BUILD_TALKCOIN_WALLET
+  bin_PROGRAMS += talkcoin-wallet
 endif
 endif
 
 .PHONY: FORCE check-symbols check-security
-# bitcointalkcoin core #
-BITCOINTALKCOIN_CORE_H = \
+# talkcoin core #
+TALKCOIN_CORE_H = \
   addrdb.h \
   addrman.h \
   attributes.h \
@@ -189,7 +149,6 @@ BITCOINTALKCOIN_CORE_H = \
   interfaces/wallet.h \
   key.h \
   key_io.h \
-  keystore.h \
   dbwrapper.h \
   limitedmap.h \
   logging.h \
@@ -197,6 +156,7 @@ BITCOINTALKCOIN_CORE_H = \
   merkleblock.h \
   miner.h \
   net.h \
+  net_permissions.h \
   net_processing.h \
   netaddress.h \
   netbase.h \
@@ -223,14 +183,17 @@ BITCOINTALKCOIN_CORE_H = \
   rpc/client.h \
   rpc/mining.h \
   rpc/protocol.h \
-  rpc/server.h \
   rpc/rawtransaction_util.h \
   rpc/register.h \
+  rpc/request.h \
+  rpc/server.h \
   rpc/util.h \
   scheduler.h \
   script/descriptor.h \
+  script/keyorigin.h \
   script/sigcache.h \
   script/sign.h \
+  script/signingprovider.h \
   script/standard.h \
   semiOrderedMap.h \
   shutdown.h \
@@ -263,8 +226,10 @@ BITCOINTALKCOIN_CORE_H = \
   util/memory.h \
   util/moneystr.h \
   util/rbf.h \
+  util/string.h \
   util/threadnames.h \
   util/time.h \
+  util/translation.h \
   util/url.h \
   util/validation.h \
   validation.h \
@@ -293,20 +258,19 @@ BITCOINTALKCOIN_CORE_H = \
   zmq/zmqpublishnotifier.h \
   zmq/zmqrpc.h
 
-
 obj/build.h: FORCE
 	@$(MKDIR_P) $(builddir)/obj
 	@$(top_srcdir)/share/genbuild.sh "$(abs_top_builddir)/src/obj/build.h" \
 	  "$(abs_top_srcdir)"
-libbitcointalkcoin_util_a-clientversion.$(OBJEXT): obj/build.h
+libtalkcoin_util_a-clientversion.$(OBJEXT): obj/build.h
 
-# server: shared between bitcointalkcoind and bitcointalkcoin-qt
+# server: shared between talkcoind and talkcoin-qt
 # Contains code accessing mempool and chain state that is meant to be separated
 # from wallet and gui code (see node/README.md). Shared code should go in
-# libbitcointalkcoin_common or libbitcointalkcoin_util libraries, instead.
-libbitcointalkcoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOINTALKCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
-libbitcointalkcoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libbitcointalkcoin_server_a_SOURCES = \
+# libtalkcoin_common or libtalkcoin_util libraries, instead.
+libtalkcoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(TALKCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
+libtalkcoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libtalkcoin_server_a_SOURCES = \
   addrdb.cpp \
   addrman.cpp \
   banman.cpp \
@@ -358,19 +322,19 @@ libbitcointalkcoin_server_a_SOURCES = \
   validation.cpp \
   validationinterface.cpp \
   versionbits.cpp \
-  $(BITCOINTALKCOIN_CORE_H)
+  $(TALKCOIN_CORE_H)
 
 if ENABLE_WALLET
-libbitcointalkcoin_server_a_SOURCES += wallet/init.cpp
+libtalkcoin_server_a_SOURCES += wallet/init.cpp
 endif
 if !ENABLE_WALLET
-libbitcointalkcoin_server_a_SOURCES += dummywallet.cpp
+libtalkcoin_server_a_SOURCES += dummywallet.cpp
 endif
 
 if ENABLE_ZMQ
-libbitcointalkcoin_zmq_a_CPPFLAGS = $(BITCOINTALKCOIN_INCLUDES) $(ZMQ_CFLAGS)
-libbitcointalkcoin_zmq_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libbitcointalkcoin_zmq_a_SOURCES = \
+libtalkcoin_zmq_a_CPPFLAGS = $(AM_CPPFLAGS) $(TALKCOIN_INCLUDES) $(ZMQ_CFLAGS)
+libtalkcoin_zmq_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libtalkcoin_zmq_a_SOURCES = \
   zmq/zmqabstractnotifier.cpp \
   zmq/zmqnotificationinterface.cpp \
   zmq/zmqpublishnotifier.cpp \
@@ -378,11 +342,11 @@ libbitcointalkcoin_zmq_a_SOURCES = \
 endif
 
 
-# wallet: shared between bitcointalkcoind and bitcointalkcoin-qt, but only linked
+# wallet: shared between talkcoind and talkcoin-qt, but only linked
 # when wallet enabled
-libbitcointalkcoin_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOINTALKCOIN_INCLUDES)
-libbitcointalkcoin_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libbitcointalkcoin_wallet_a_SOURCES = \
+libtalkcoin_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(TALKCOIN_INCLUDES)
+libtalkcoin_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libtalkcoin_wallet_a_SOURCES = \
   interfaces/wallet.cpp \
   wallet/coincontrol.cpp \
   wallet/crypter.cpp \
@@ -398,20 +362,22 @@ libbitcointalkcoin_wallet_a_SOURCES = \
   wallet/walletdb.cpp \
   wallet/walletutil.cpp \
   wallet/coinselection.cpp \
-  $(BITCOINTALKCOIN_CORE_H)
+  $(TALKCOIN_CORE_H)
 
-libbitcointalkcoin_wallet_tool_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOINTALKCOIN_INCLUDES)
-libbitcointalkcoin_wallet_tool_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libbitcointalkcoin_wallet_tool_a_SOURCES = \
+libtalkcoin_wallet_tool_a_CPPFLAGS = $(AM_CPPFLAGS) $(TALKCOIN_INCLUDES)
+libtalkcoin_wallet_tool_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libtalkcoin_wallet_tool_a_SOURCES = \
   wallet/wallettool.cpp \
-  $(BITCOINTALKCOIN_CORE_H)
+  $(TALKCOIN_CORE_H)
 
 # crypto primitives library
-crypto_libbitcointalkcoin_crypto_base_a_CPPFLAGS = $(AM_CPPFLAGS)
-crypto_libbitcointalkcoin_crypto_base_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-crypto_libbitcointalkcoin_crypto_base_a_SOURCES = \
+crypto_libtalkcoin_crypto_base_a_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libtalkcoin_crypto_base_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+crypto_libtalkcoin_crypto_base_a_SOURCES = \
   crypto/aes.cpp \
   crypto/aes.h \
+  crypto/chacha_poly_aead.h \
+  crypto/chacha_poly_aead.cpp \
   crypto/chacha20.h \
   crypto/chacha20.cpp \
   crypto/common.h \
@@ -437,31 +403,31 @@ crypto_libbitcointalkcoin_crypto_base_a_SOURCES = \
   momentum.h
 
 if USE_ASM
-crypto_libbitcointalkcoin_crypto_base_a_SOURCES += crypto/sha256_sse4.cpp
+crypto_libtalkcoin_crypto_base_a_SOURCES += crypto/sha256_sse4.cpp
 endif
 
-crypto_libbitcointalkcoin_crypto_sse41_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-crypto_libbitcointalkcoin_crypto_sse41_a_CPPFLAGS = $(AM_CPPFLAGS)
-crypto_libbitcointalkcoin_crypto_sse41_a_CXXFLAGS += $(SSE41_CXXFLAGS)
-crypto_libbitcointalkcoin_crypto_sse41_a_CPPFLAGS += -DENABLE_SSE41
-crypto_libbitcointalkcoin_crypto_sse41_a_SOURCES = crypto/sha256_sse41.cpp
+crypto_libtalkcoin_crypto_sse41_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+crypto_libtalkcoin_crypto_sse41_a_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libtalkcoin_crypto_sse41_a_CXXFLAGS += $(SSE41_CXXFLAGS)
+crypto_libtalkcoin_crypto_sse41_a_CPPFLAGS += -DENABLE_SSE41
+crypto_libtalkcoin_crypto_sse41_a_SOURCES = crypto/sha256_sse41.cpp
 
-crypto_libbitcointalkcoin_crypto_avx2_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-crypto_libbitcointalkcoin_crypto_avx2_a_CPPFLAGS = $(AM_CPPFLAGS)
-crypto_libbitcointalkcoin_crypto_avx2_a_CXXFLAGS += $(AVX2_CXXFLAGS)
-crypto_libbitcointalkcoin_crypto_avx2_a_CPPFLAGS += -DENABLE_AVX2
-crypto_libbitcointalkcoin_crypto_avx2_a_SOURCES = crypto/sha256_avx2.cpp
+crypto_libtalkcoin_crypto_avx2_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+crypto_libtalkcoin_crypto_avx2_a_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libtalkcoin_crypto_avx2_a_CXXFLAGS += $(AVX2_CXXFLAGS)
+crypto_libtalkcoin_crypto_avx2_a_CPPFLAGS += -DENABLE_AVX2
+crypto_libtalkcoin_crypto_avx2_a_SOURCES = crypto/sha256_avx2.cpp
 
-crypto_libbitcointalkcoin_crypto_shani_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-crypto_libbitcointalkcoin_crypto_shani_a_CPPFLAGS = $(AM_CPPFLAGS)
-crypto_libbitcointalkcoin_crypto_shani_a_CXXFLAGS += $(SHANI_CXXFLAGS)
-crypto_libbitcointalkcoin_crypto_shani_a_CPPFLAGS += -DENABLE_SHANI
-crypto_libbitcointalkcoin_crypto_shani_a_SOURCES = crypto/sha256_shani.cpp
+crypto_libtalkcoin_crypto_shani_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+crypto_libtalkcoin_crypto_shani_a_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libtalkcoin_crypto_shani_a_CXXFLAGS += $(SHANI_CXXFLAGS)
+crypto_libtalkcoin_crypto_shani_a_CPPFLAGS += -DENABLE_SHANI
+crypto_libtalkcoin_crypto_shani_a_SOURCES = crypto/sha256_shani.cpp
 
 # consensus: shared between all executables that validate any consensus rules.
-libbitcointalkcoin_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOINTALKCOIN_INCLUDES)
-libbitcointalkcoin_consensus_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libbitcointalkcoin_consensus_a_SOURCES = \
+libtalkcoin_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(TALKCOIN_INCLUDES)
+libtalkcoin_consensus_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libtalkcoin_consensus_a_SOURCES = \
   amount.h \
   arith_uint256.cpp \
   arith_uint256.h \
@@ -483,7 +449,7 @@ libbitcointalkcoin_consensus_a_SOURCES = \
   primitives/transaction.h \
   pubkey.cpp \
   pubkey.h \
-  script/bitcointalkcoinconsensus.cpp \
+  script/talkcoinconsensus.cpp \
   script/interpreter.cpp \
   script/interpreter.h \
   script/script.cpp \
@@ -499,10 +465,10 @@ libbitcointalkcoin_consensus_a_SOURCES = \
   util/strencodings.h \
   version.h
 
-# common: shared between bitcointalkcoind, and bitcointalkcoin-qt and non-server tools
-libbitcointalkcoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOINTALKCOIN_INCLUDES)
-libbitcointalkcoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libbitcointalkcoin_common_a_SOURCES = \
+# common: shared between talkcoind, and talkcoin-qt and non-server tools
+libtalkcoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(TALKCOIN_INCLUDES)
+libtalkcoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libtalkcoin_common_a_SOURCES = \
   base58.cpp \
   bech32.cpp \
   bloom.cpp \
@@ -513,11 +479,11 @@ libbitcointalkcoin_common_a_SOURCES = \
   core_write.cpp \
   key.cpp \
   key_io.cpp \
-  keystore.cpp \
   merkleblock.cpp \
   crosschain/interblockchain.cpp \
   netaddress.cpp \
   netbase.cpp \
+  net_permissions.cpp \
   outputtype.cpp \
   policy/feerate.cpp \
   policy/policy.cpp \
@@ -528,17 +494,18 @@ libbitcointalkcoin_common_a_SOURCES = \
   scheduler.cpp \
   script/descriptor.cpp \
   script/sign.cpp \
+  script/signingprovider.cpp \
   script/standard.cpp \
   versionbitsinfo.cpp \
   warnings.cpp \
-  $(BITCOINTALKCOIN_CORE_H)
+  $(TALKCOIN_CORE_H)
 
 # util: shared between all executables.
 # This library *must* be included to make sure that the glibc
 # backward-compatibility objects and their sanity checks are linked.
-libbitcointalkcoin_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOINTALKCOIN_INCLUDES)
-libbitcointalkcoin_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libbitcointalkcoin_util_a_SOURCES = \
+libtalkcoin_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(TALKCOIN_INCLUDES)
+libtalkcoin_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libtalkcoin_util_a_SOURCES = \
   support/lockedpool.cpp \
   chainparamsbase.cpp \
   clientversion.cpp \
@@ -549,7 +516,7 @@ libbitcointalkcoin_util_a_SOURCES = \
   interfaces/handler.cpp \
   logging.cpp \
   random.cpp \
-  rpc/protocol.cpp \
+  rpc/request.cpp \
   support/cleanse.cpp \
   sync.cpp \
   threadinterrupt.cpp \
@@ -562,135 +529,136 @@ libbitcointalkcoin_util_a_SOURCES = \
   util/rbf.cpp \
   util/threadnames.cpp \
   util/strencodings.cpp \
+  util/string.cpp \
   util/time.cpp \
   util/url.cpp \
   util/validation.cpp \
-  $(BITCOINTALKCOIN_CORE_H)
+  $(TALKCOIN_CORE_H)
 
 if GLIBC_BACK_COMPAT
-libbitcointalkcoin_util_a_SOURCES += compat/glibc_compat.cpp
+libtalkcoin_util_a_SOURCES += compat/glibc_compat.cpp
 AM_LDFLAGS += $(COMPAT_LDFLAGS)
 endif
 
-# cli: shared between bitcointalkcoin-cli and bitcointalkcoin-qt
-libbitcointalkcoin_cli_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOINTALKCOIN_INCLUDES)
-libbitcointalkcoin_cli_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libbitcointalkcoin_cli_a_SOURCES = \
+# cli: shared between talkcoin-cli and talkcoin-qt
+libtalkcoin_cli_a_CPPFLAGS = $(AM_CPPFLAGS) $(TALKCOIN_INCLUDES)
+libtalkcoin_cli_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libtalkcoin_cli_a_SOURCES = \
   rpc/client.cpp \
-  $(BITCOINTALKCOIN_CORE_H)
+  $(TALKCOIN_CORE_H)
 
-nodist_libbitcointalkcoin_util_a_SOURCES = $(srcdir)/obj/build.h
+nodist_libtalkcoin_util_a_SOURCES = $(srcdir)/obj/build.h
 #
 
-# bitcointalkcoind binary #
-bitcointalkcoind_SOURCES = bitcointalkcoind.cpp
-bitcointalkcoind_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOINTALKCOIN_INCLUDES)
-bitcointalkcoind_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-bitcointalkcoind_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+# talkcoind binary #
+talkcoind_SOURCES = talkcoind.cpp
+talkcoind_CPPFLAGS = $(AM_CPPFLAGS) $(TALKCOIN_INCLUDES)
+talkcoind_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+talkcoind_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-bitcointalkcoind_SOURCES += bitcointalkcoind-res.rc
+talkcoind_SOURCES += talkcoind-res.rc
 endif
 
 # Libraries below may be listed more than once to resolve circular dependencies (see
 # https://eli.thegreenplace.net/2013/07/09/library-order-in-static-linking#circular-dependency)
-bitcointalkcoind_LDADD = \
-  $(LIBBITCOINTALKCOIN_SERVER) \
-  $(LIBBITCOINTALKCOIN_WALLET) \
-  $(LIBBITCOINTALKCOIN_SERVER) \
-  $(LIBBITCOINTALKCOIN_COMMON) \
+talkcoind_LDADD = \
+  $(LIBTALKCOIN_SERVER) \
+  $(LIBTALKCOIN_WALLET) \
+  $(LIBTALKCOIN_SERVER) \
+  $(LIBTALKCOIN_COMMON) \
   $(LIBUNIVALUE) \
-  $(LIBBITCOINTALKCOIN_UTIL) \
-  $(LIBBITCOINTALKCOIN_ZMQ) \
-  $(LIBBITCOINTALKCOIN_CONSENSUS) \
-  $(LIBBITCOINTALKCOIN_CRYPTO) \
+  $(LIBTALKCOIN_UTIL) \
+  $(LIBTALKCOIN_ZMQ) \
+  $(LIBTALKCOIN_CONSENSUS) \
+  $(LIBTALKCOIN_CRYPTO) \
   $(LIBLEVELDB) \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-bitcointalkcoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
+talkcoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
 
-# bitcointalkcoin-cli binary #
-bitcointalkcoin_cli_SOURCES = bitcointalkcoin-cli.cpp
-bitcointalkcoin_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOINTALKCOIN_INCLUDES) $(EVENT_CFLAGS)
-bitcointalkcoin_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-bitcointalkcoin_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+# talkcoin-cli binary #
+talkcoin_cli_SOURCES = talkcoin-cli.cpp
+talkcoin_cli_CPPFLAGS = $(AM_CPPFLAGS) $(TALKCOIN_INCLUDES) $(EVENT_CFLAGS)
+talkcoin_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+talkcoin_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-bitcointalkcoin_cli_SOURCES += bitcointalkcoin-cli-res.rc
+talkcoin_cli_SOURCES += talkcoin-cli-res.rc
 endif
 
-bitcointalkcoin_cli_LDADD = \
-  $(LIBBITCOINTALKCOIN_CLI) \
+talkcoin_cli_LDADD = \
+  $(LIBTALKCOIN_CLI) \
   $(LIBUNIVALUE) \
-  $(LIBBITCOINTALKCOIN_UTIL) \
-  $(LIBBITCOINTALKCOIN_CRYPTO)
+  $(LIBTALKCOIN_UTIL) \
+  $(LIBTALKCOIN_CRYPTO)
 
-bitcointalkcoin_cli_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
+talkcoin_cli_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 #
 
-# bitcointalkcoin-tx binary #
-bitcointalkcoin_tx_SOURCES = bitcointalkcoin-tx.cpp
-bitcointalkcoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOINTALKCOIN_INCLUDES)
-bitcointalkcoin_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-bitcointalkcoin_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+# talkcoin-tx binary #
+talkcoin_tx_SOURCES = talkcoin-tx.cpp
+talkcoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(TALKCOIN_INCLUDES)
+talkcoin_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+talkcoin_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-bitcointalkcoin_tx_SOURCES += bitcointalkcoin-tx-res.rc
+talkcoin_tx_SOURCES += talkcoin-tx-res.rc
 endif
 
-bitcointalkcoin_tx_LDADD = \
+talkcoin_tx_LDADD = \
   $(LIBUNIVALUE) \
-  $(LIBBITCOINTALKCOIN_COMMON) \
-  $(LIBBITCOINTALKCOIN_UTIL) \
-  $(LIBBITCOINTALKCOIN_CONSENSUS) \
-  $(LIBBITCOINTALKCOIN_CRYPTO) \
+  $(LIBTALKCOIN_COMMON) \
+  $(LIBTALKCOIN_UTIL) \
+  $(LIBTALKCOIN_CONSENSUS) \
+  $(LIBTALKCOIN_CRYPTO) \
   $(LIBSECP256K1)
 
-bitcointalkcoin_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
+talkcoin_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 #
 
-# bitcointalkcoin-wallet binary #
-bitcointalkcoin_wallet_SOURCES = bitcointalkcoin-wallet.cpp
-bitcointalkcoin_wallet_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOINTALKCOIN_INCLUDES)
-bitcointalkcoin_wallet_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-bitcointalkcoin_wallet_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+# talkcoin-wallet binary #
+talkcoin_wallet_SOURCES = talkcoin-wallet.cpp
+talkcoin_wallet_CPPFLAGS = $(AM_CPPFLAGS) $(TALKCOIN_INCLUDES)
+talkcoin_wallet_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+talkcoin_wallet_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-bitcointalkcoin_wallet_SOURCES += bitcointalkcoin-wallet-res.rc
+talkcoin_wallet_SOURCES += talkcoin-wallet-res.rc
 endif
 
-bitcointalkcoin_wallet_LDADD = \
-  $(LIBBITCOINTALKCOIN_WALLET_TOOL) \
-  $(LIBBITCOINTALKCOIN_WALLET) \
-  $(LIBBITCOINTALKCOIN_COMMON) \
-  $(LIBBITCOINTALKCOIN_CONSENSUS) \
-  $(LIBBITCOINTALKCOIN_UTIL) \
-  $(LIBBITCOINTALKCOIN_CRYPTO) \
-  $(LIBBITCOINTALKCOIN_ZMQ) \
+talkcoin_wallet_LDADD = \
+  $(LIBTALKCOIN_WALLET_TOOL) \
+  $(LIBTALKCOIN_WALLET) \
+  $(LIBTALKCOIN_COMMON) \
+  $(LIBTALKCOIN_CONSENSUS) \
+  $(LIBTALKCOIN_UTIL) \
+  $(LIBTALKCOIN_CRYPTO) \
+  $(LIBTALKCOIN_ZMQ) \
   $(LIBLEVELDB) \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
   $(LIBSECP256K1) \
   $(LIBUNIVALUE)
 
-bitcointalkcoin_wallet_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(ZMQ_LIBS)
+talkcoin_wallet_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(ZMQ_LIBS)
 #
 
-# bitcointalkcoinconsensus library #
-if BUILD_BITCOINTALKCOIN_LIBS
-include_HEADERS = script/bitcointalkcoinconsensus.h
-libbitcointalkcoinconsensus_la_SOURCES = $(crypto_libbitcointalkcoin_crypto_base_a_SOURCES) $(libbitcointalkcoin_consensus_a_SOURCES)
+# talkcoinconsensus library #
+if BUILD_TALKCOIN_LIBS
+include_HEADERS = script/talkcoinconsensus.h
+libtalkcoinconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libtalkcoin_crypto_base_a_SOURCES) $(libtalkcoin_consensus_a_SOURCES)
 
 if GLIBC_BACK_COMPAT
-  libbitcointalkcoinconsensus_la_SOURCES += compat/glibc_compat.cpp
+  libtalkcoinconsensus_la_SOURCES += compat/glibc_compat.cpp
 endif
 
-libbitcointalkcoinconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
-libbitcointalkcoinconsensus_la_LIBADD = $(LIBSECP256K1)
-libbitcointalkcoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOINTALKCOIN_INTERNAL
-libbitcointalkcoinconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libtalkcoinconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
+libtalkcoinconsensus_la_LIBADD = $(LIBSECP256K1)
+libtalkcoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_TALKCOIN_INTERNAL
+libtalkcoinconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
 endif
 #
@@ -719,13 +687,12 @@ CLEANFILES += obj/build.h
 
 EXTRA_DIST = $(CTAES_DIST)
 
-
-config/bitcointalkcoin-config.h: config/stamp-h1
+config/talkcoin-config.h: config/stamp-h1
 	@$(MAKE) -C $(top_builddir) $(subdir)/$(@)
-config/stamp-h1: $(top_srcdir)/$(subdir)/config/bitcointalkcoin-config.h.in $(top_builddir)/config.status
+config/stamp-h1: $(top_srcdir)/$(subdir)/config/talkcoin-config.h.in $(top_builddir)/config.status
 	$(AM_V_at)$(MAKE) -C $(top_builddir) $(subdir)/$(@)
-$(top_srcdir)/$(subdir)/config/bitcointalkcoin-config.h.in:  $(am__configure_deps)
-	$(AM_V_at)$(MAKE) -C $(top_srcdir) $(subdir)/config/bitcointalkcoin-config.h.in
+$(top_srcdir)/$(subdir)/config/talkcoin-config.h.in:  $(am__configure_deps)
+	$(AM_V_at)$(MAKE) -C $(top_srcdir) $(subdir)/config/talkcoin-config.h.in
 
 clean-local:
 	-$(MAKE) -C secp256k1 clean

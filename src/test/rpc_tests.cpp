@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2019 The Bitcointalkcoin Core developers
+// Copyright (c) 2012-2019 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,8 +9,8 @@
 #include <core_io.h>
 #include <init.h>
 #include <interfaces/chain.h>
-
 #include <test/setup_common.h>
+#include <util/time.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/test/unit_test.hpp>
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(json_parse_errors)
     // Invalid, trailing garbage
     BOOST_CHECK_THROW(ParseNonRFCJSONValue("1.0sds"), std::runtime_error);
     BOOST_CHECK_THROW(ParseNonRFCJSONValue("1.0]"), std::runtime_error);
-    // TALK addresses should fail parsing
+    // BTC addresses should fail parsing
     BOOST_CHECK_THROW(ParseNonRFCJSONValue("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"), std::runtime_error);
     BOOST_CHECK_THROW(ParseNonRFCJSONValue("3J98t1WpEZ73CNmQviecrnyiWrnqRhWNL"), std::runtime_error);
 }

@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2019 The Bitcointalkcoin Core developers
+// Copyright (c) 2011-2019 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcointalkcoin-config.h>
+#include <config/talkcoin-config.h>
 #endif
 
 #include <qt/rpcconsole.h>
@@ -456,7 +456,7 @@ RPCConsole::RPCConsole(const PlatformStyle *_platformStyle, QWidget *parent) :
     QChar nonbreaking_hyphen(8209);
     ui->dataDir->setToolTip(ui->dataDir->toolTip().arg(QString(nonbreaking_hyphen) + "datadir"));
     ui->blocksDir->setToolTip(ui->blocksDir->toolTip().arg(QString(nonbreaking_hyphen) + "blocksdir"));
-    ui->openDebugLogfileButton->setToolTip(ui->openDebugLogfileButton->toolTip().arg("Bitcointalkcoin"));
+    ui->openDebugLogfileButton->setToolTip(ui->openDebugLogfileButton->toolTip().arg("Talkcoin"));
 
     if (platformStyle->getImagesOnButtons()) {
         ui->openDebugLogfileButton->setIcon(platformStyle->SingleColorIcon(":/icons/export"));
@@ -554,6 +554,21 @@ bool RPCConsole::eventFilter(QObject* obj, QEvent *event)
 void RPCConsole::setClientModel(ClientModel *model)
 {
     clientModel = model;
+
+    // avoid accidentally overwriting an existing, non QTThread
+    // based timer interface
+    model->node().rpcSetTimerInterfaceIfUnset(rpcTimerInterface);
+
+    bool wallet_enabled{false};
+#ifdef ENABLE_WALLET
+    wallet_enabled = WalletModel::isWalletEnabled();
+#endif // ENABLE_WALLET
+    if (model && !wallet_enabled) {
+        // Show warning, for example if this is a prerelease version
+        connect(model, &ClientModel::alertsChanged, this, &RPCConsole::updateAlerts);
+        updateAlerts(model->getStatusBarWarnings());
+    }
+
     ui->trafficGraph->setClientModel(model);
     if (model && clientModel->getPeerTableModel() && clientModel->getBanTableModel()) {
         // Keep up to date with client
@@ -791,7 +806,7 @@ void RPCConsole::clear(bool clearHistory)
     QString clsKey = "Ctrl-L";
 #endif
 
-    message(CMD_REPLY, (tr("Welcome to the %1 RPC console.").arg("Bitcointalkcoin") + "<br>" +
+    message(CMD_REPLY, (tr("Welcome to the %1 RPC console.").arg("Talkcoin") + "<br>" +
                         tr("Use up and down arrows to navigate history, and %1 to clear screen.").arg("<b>"+clsKey+"</b>") + "<br>" +
                         tr("Type %1 for an overview of available commands.").arg("<b>help</b>") + "<br>" +
                         tr("For more information on using this console type %1.").arg("<b>help-console</b>") +
@@ -1107,7 +1122,7 @@ void RPCConsole::updateNodeDetail(const CNodeCombinedStats *stats)
     ui->peerSubversion->setText(QString::fromStdString(stats->nodeStats.cleanSubVer));
     ui->peerDirection->setText(stats->nodeStats.fInbound ? tr("Inbound") : tr("Outbound"));
     ui->peerHeight->setText(QString("%1").arg(QString::number(stats->nodeStats.nStartingHeight)));
-    ui->peerWhitelisted->setText(stats->nodeStats.fWhitelisted ? tr("Yes") : tr("No"));
+    ui->peerWhitelisted->setText(stats->nodeStats.m_legacyWhitelisted ? tr("Yes") : tr("No"));
 
     // This check fails for example if the lock was busy and
     // nodeStateStats couldn't be fetched.
@@ -1252,11 +1267,6 @@ void RPCConsole::showOrHideBanTableIfRequired()
     ui->banHeading->setVisible(visible);
 }
 
-RPCConsole::TabTypes RPCConsole::tabFocus() const
-{
-    return (TabTypes) ui->tabWidget->currentIndex();
-}
-
 void RPCConsole::setTabFocus(enum TabTypes tabType)
 {
     ui->tabWidget->setCurrentIndex(tabType);
@@ -1265,4 +1275,10 @@ void RPCConsole::setTabFocus(enum TabTypes tabType)
 QString RPCConsole::tabTitle(TabTypes tab_type) const
 {
     return ui->tabWidget->tabText(tab_type);
+}
+
+void RPCConsole::updateAlerts(const QString& warnings)
+{
+//    this->ui->label_alerts->setVisible(!warnings.isEmpty());
+//    this->ui->label_alerts->setText(warnings);
 }

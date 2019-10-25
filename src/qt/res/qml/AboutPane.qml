@@ -18,7 +18,7 @@ Pane {
 
                 anchors.horizontalCenter: parent.horizontalCenter
 
-                text: "Bitcointalkcoin<b>Core</b>"
+                text: "Talkcoin<b>Core</b>"
                 font.family: robotoThin.name
                 font.styleName: "Thin"
                 font.pointSize: 30

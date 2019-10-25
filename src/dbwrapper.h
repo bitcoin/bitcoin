@@ -1,9 +1,9 @@
-// Copyright (c) 2012-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2012-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_DBWRAPPER_H
-#define BITCOINTALKCOIN_DBWRAPPER_H
+#ifndef TALKCOIN_DBWRAPPER_H
+#define TALKCOIN_DBWRAPPER_H
 
 #include <clientversion.h>
 #include <fs.h>
@@ -349,4 +349,4 @@ public:
 
 };
 
-#endif // BITCOINTALKCOIN_DBWRAPPER_H
+#endif // TALKCOIN_DBWRAPPER_H

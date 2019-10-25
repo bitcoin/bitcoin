@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2019 The Bitcointalkcoin Core developers
+# Copyright (c) 2015-2019 The Talkcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test decoding scripts via decodescript RPC command."""
 
 from test_framework.messages import CTransaction, sha256
-from test_framework.test_framework import BitcointalkcoinTestFramework
+from test_framework.test_framework import TalkcoinTestFramework
 from test_framework.util import assert_equal, hex_str_to_bytes
 
 from io import BytesIO
 
-class DecodeScriptTest(BitcointalkcoinTestFramework):
+class DecodeScriptTest(TalkcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1

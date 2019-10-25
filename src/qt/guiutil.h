@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2011-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_QT_GUIUTIL_H
-#define BITCOINTALKCOIN_QT_GUIUTIL_H
+#ifndef TALKCOIN_QT_GUIUTIL_H
+#define TALKCOIN_QT_GUIUTIL_H
 
 #include <amount.h>
 #include <fs.h>
@@ -36,7 +36,7 @@ class QUrl;
 class QWidget;
 QT_END_NAMESPACE
 
-/** Utility functions used by the Bitcointalkcoin Qt UI.
+/** Utility functions used by the Talkcoin Qt UI.
  */
 namespace GUIUtil
 {
@@ -52,10 +52,10 @@ namespace GUIUtil
     // Set up widget for address
     void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent);
 
-    // Parse "bitcointalkcoin:" URI into recipient object, return true on successful parsing
-    bool parseBitcointalkcoinURI(const QUrl &uri, SendCoinsRecipient *out);
-    bool parseBitcointalkcoinURI(QString uri, SendCoinsRecipient *out);
-    QString formatBitcointalkcoinURI(const SendCoinsRecipient &info);
+    // Parse "talkcoin:" URI into recipient object, return true on successful parsing
+    bool parseTalkcoinURI(const QUrl &uri, SendCoinsRecipient *out);
+    bool parseTalkcoinURI(QString uri, SendCoinsRecipient *out);
+    QString formatTalkcoinURI(const SendCoinsRecipient &info);
 
     // Returns true if given address+amount meets "dust" definition
     bool isDust(interfaces::Node& node, const QString& address, const CAmount& amount);
@@ -130,7 +130,7 @@ namespace GUIUtil
     void openDebugLogfile();
 
     // Open the config file
-    bool openBitcointalkcoinConf();
+    bool openTalkcoinConf();
 
     /** Qt event filter that intercepts ToolTipChange events, and replaces the tooltip with a rich text
       representation if needed. This assures that Qt can word-wrap long tooltip messages.
@@ -269,4 +269,4 @@ namespace GUIUtil
     int TextWidth(const QFontMetrics& fm, const QString& text);
 } // namespace GUIUtil
 
-#endif // BITCOINTALKCOIN_QT_GUIUTIL_H
+#endif // TALKCOIN_QT_GUIUTIL_H

@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2009-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_CHAINPARAMS_H
-#define BITCOINTALKCOIN_CHAINPARAMS_H
+#ifndef TALKCOIN_CHAINPARAMS_H
+#define TALKCOIN_CHAINPARAMS_H
 
 #include <chainparamsbase.h>
 #include <consensus/params.h>
@@ -39,7 +39,7 @@ struct ChainTxData {
 
 /**
  * CChainParams defines various tweakable parameters of a given instance of the
- * Bitcointalkcoin system. There are three: the main network on which people trade goods
+ * Talkcoin system. There are three: the main network on which people trade goods
  * and services, the public test network which gets reset from time to time and
  * a regression test mode which is intended for private networks only. It has
  * minimal difficulty to ensure that blocks can be found instantly.
@@ -66,13 +66,15 @@ public:
     bool DefaultConsistencyChecks() const { return fDefaultConsistencyChecks; }
     /** Policy: Filter transactions that do not match well-defined patterns */
     bool RequireStandard() const { return fRequireStandard; }
+    /** If this chain is exclusively used for testing */
+    bool IsTestChain() const { return m_is_test_chain; }
     uint64_t PruneAfterHeight() const { return nPruneAfterHeight; }
     /** Minimum free space (in GB) needed for data directory */
     uint64_t AssumedBlockchainSize() const { return m_assumed_blockchain_size; }
     /** Minimum free space (in GB) needed for data directory when pruned; Does not include prune target*/
     uint64_t AssumedChainStateSize() const { return m_assumed_chain_state_size; }
     /** Make miner stop after a block is found. In RPC, don't return until nGenProcLimit blocks are generated */
-    bool MineBlocksOnDemand() const { return fMineBlocksOnDemand; }
+    bool MineBlocksOnDemand() const { return consensus.fPowNoRetargeting; }
     /** Return the BIP70 network string (main, test or regtest) */
     std::string NetworkIDString() const { return strNetworkID; }
     /** Return true if the fallback fee is by default enabled for this network */
@@ -101,7 +103,7 @@ protected:
     std::vector<SeedSpec6> vFixedSeeds;
     bool fDefaultConsistencyChecks;
     bool fRequireStandard;
-    bool fMineBlocksOnDemand;
+    bool m_is_test_chain;
     CCheckpointData checkpointData;
     ChainTxData chainTxData;
     bool m_fallback_fee_enabled;
@@ -125,4 +127,4 @@ const CChainParams &Params();
  * @throws std::runtime_error when the chain is not supported.
  */
 void SelectParams(const std::string& chain);
-#endif // BITCOINTALKCOIN_CHAINPARAMS_H
+#endif // TALKCOIN_CHAINPARAMS_H

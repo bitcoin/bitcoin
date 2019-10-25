@@ -10,7 +10,7 @@
 #include <logging.h>
 #include <validation.h>
 
-using namespace std;
+
 
 // Stake Modifier (hash modifier of proof-of-stake):
 // The purpose of stake modifier is to prevent a txout (coin) owner from
@@ -58,7 +58,7 @@ bool CheckStakeKernelHash(CBlockIndex* pindexPrev, unsigned int nBits, uint32_t 
     arith_uint256 bnWeight = arith_uint256(prevoutValue);
     bnTarget *= bnWeight;
 
-    targetProofOfStake = ArithToUint256(bnTarget);    
+    targetProofOfStake = ArithToUint256(bnTarget);
 
     // Calculate hash
     //CDataStream ss(SER_GETHASH, 0);
@@ -135,8 +135,11 @@ bool CheckCoinStakeTimestamp(uint32_t nTimeBlock)
 
 bool CheckBlockInputPubKeyMatchesOutputPubKey(const CBlock& block, CCoinsViewCache& view) {
     Coin coinIn;
-    if(!view.GetCoin(block.prevoutStake, coinIn)) {
-        return error("%s: Could not fetch prevoutStake from UTXO set", __func__);
+    {
+		LOCK(cs_main);
+        if(!view.GetCoin(block.prevoutStake, coinIn)) {
+            return error("%s: Could not fetch prevoutStake from UTXO set", __func__);
+        }
     }
 
     CTransactionRef coinstakeTx = block.vtx[1];
@@ -180,9 +183,12 @@ bool CheckBlockInputPubKeyMatchesOutputPubKey(const CBlock& block, CCoinsViewCac
 
 bool CheckRecoveredPubKeyFromBlockSignature(CBlockIndex* pindexPrev, const CBlockHeader& block, CCoinsViewCache& view) {
     Coin coinPrev;
-    if(!view.GetCoin(block.prevoutStake, coinPrev)){
-        if(!GetSpentCoinFromMainChain(pindexPrev, block.prevoutStake, &coinPrev)) {
-            return error("CheckRecoveredPubKeyFromBlockSignature(): Could not find %s and it was not at the tip", block.prevoutStake.hash.GetHex());
+    {
+		LOCK(cs_main);
+        if(!view.GetCoin(block.prevoutStake, coinPrev)){
+            if(!GetSpentCoinFromMainChain(pindexPrev, block.prevoutStake, &coinPrev)) {
+                return error("CheckRecoveredPubKeyFromBlockSignature(): Could not find %s and it was not at the tip", block.prevoutStake.hash.GetHex());
+            }
         }
     }
     uint256 hash = block.GetHashWithoutSign();
@@ -239,9 +245,12 @@ bool CheckKernel(unsigned int nBits, uint32_t nTimeBlock, const COutPoint& prevo
     if(it == cache.end()) {
         //not found in cache (shouldn't happen during staking, only during verification which does not use cache)
         Coin coinPrev;
-        if(!view.GetCoin(prevout, coinPrev)){
-            if(!GetSpentCoinFromMainChain(pindexPrev, prevout, &coinPrev)) {
-                return error("CheckKernel(): Could not find coin and it was not at the tip");
+        {
+		    LOCK(cs_main);
+            if(!view.GetCoin(prevout, coinPrev)){
+                if(!GetSpentCoinFromMainChain(pindexPrev, prevout, &coinPrev)) {
+                    return error("CheckKernel(): Could not find coin and it was not at the tip");
+                }
             }
         }
         if(pindexPrev->nHeight + 1 - coinPrev.nHeight < COINBASE_MATURITY){
@@ -278,8 +287,11 @@ void CacheKernel(std::map<COutPoint, CStakeCache>& cache, const COutPoint& prevo
     }
 
     Coin coinPrev;
-    if(!view.GetCoin(prevout, coinPrev)){
-        return;
+    {
+		LOCK(cs_main);
+        if(!view.GetCoin(prevout, coinPrev)){
+            return;
+        }
     }
 
     if(pindexPrev->nHeight + 1 - coinPrev.nHeight < COINBASE_MATURITY){

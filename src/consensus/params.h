@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2009-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_CONSENSUS_PARAMS_H
-#define BITCOINTALKCOIN_CONSENSUS_PARAMS_H
+#ifndef TALKCOIN_CONSENSUS_PARAMS_H
+#define TALKCOIN_CONSENSUS_PARAMS_H
 
 #include <uint256.h>
 #include <limits>
@@ -75,16 +75,12 @@ struct Params {
     int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
     uint256 nMinimumChainWork;
     uint256 defaultAssumeValid;
-
-#ifdef ENABLE_PROOF_OF_STAKE
     uint256 posLimit;
     bool fPoSNoRetargeting;
     int nStakeTimestampMask;
     int nLastPOWBlock;
     unsigned int nStakeMinAge;
-#endif
-
 };
 } // namespace Consensus
 
-#endif // BITCOINTALKCOIN_CONSENSUS_PARAMS_H
+#endif // TALKCOIN_CONSENSUS_PARAMS_H

@@ -1,9 +1,9 @@
-// Copyright (c) 2015-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2015-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_BENCH_BENCH_H
-#define BITCOINTALKCOIN_BENCH_BENCH_H
+#ifndef TALKCOIN_BENCH_BENCH_H
+#define TALKCOIN_BENCH_BENCH_H
 
 #include <functional>
 #include <limits>
@@ -139,4 +139,4 @@ private:
 #define BENCHMARK(n, num_iters_for_one_second) \
     benchmark::BenchRunner BOOST_PP_CAT(bench_, BOOST_PP_CAT(__LINE__, n))(BOOST_PP_STRINGIZE(n), n, (num_iters_for_one_second));
 
-#endif // BITCOINTALKCOIN_BENCH_BENCH_H
+#endif // TALKCOIN_BENCH_BENCH_H

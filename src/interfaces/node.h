@@ -1,9 +1,9 @@
-// Copyright (c) 2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_INTERFACES_NODE_H
-#define BITCOINTALKCOIN_INTERFACES_NODE_H
+#ifndef TALKCOIN_INTERFACES_NODE_H
+#define TALKCOIN_INTERFACES_NODE_H
 
 #include <addrdb.h>     // For banmap_t
 #include <amount.h>     // For CAmount
@@ -32,7 +32,7 @@ namespace interfaces {
 class Handler;
 class Wallet;
 
-//! Top-level interface for a bitcointalkcoin node (bitcointalkcoind process).
+//! Top-level interface for a talkcoin node (talkcoind process).
 class Node
 {
 public:
@@ -160,6 +160,9 @@ public:
     virtual bool isInitialBlockDownload() = 0;
 
     //! Get reindex.
+    virtual bool isAddressTypeSet() = 0;
+
+    //! Get reindex.
     virtual bool getReindex() = 0;
 
     //! Get importing.
@@ -262,4 +265,4 @@ std::unique_ptr<Node> MakeNode();
 
 } // namespace interfaces
 
-#endif // BITCOINTALKCOIN_INTERFACES_NODE_H
+#endif // TALKCOIN_INTERFACES_NODE_H

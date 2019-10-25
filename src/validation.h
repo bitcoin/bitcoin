@@ -1,13 +1,13 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcointalkcoin Core developers
+// Copyright (c) 2009-2019 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_VALIDATION_H
-#define BITCOINTALKCOIN_VALIDATION_H
+#ifndef TALKCOIN_VALIDATION_H
+#define TALKCOIN_VALIDATION_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcointalkcoin-config.h>
+#include <config/talkcoin-config.h>
 #endif
 
 #include <amount.h>
@@ -18,6 +18,8 @@
 #include <protocol.h> // For CMessageHeader::MessageStartChars
 #include <script/script_error.h>
 #include <sync.h>
+#include <txmempool.h> // For CTxMemPool::cs
+#include <txdb.h>
 #include <versionbits.h>
 
 #include <algorithm>
@@ -52,10 +54,6 @@ struct DisconnectedBlockTransactions;
 struct PrecomputedTransactionData;
 struct LockPoints;
 
-/** Default for -whitelistrelay. */
-static const bool DEFAULT_WHITELISTRELAY = true;
-/** Default for -whitelistforcerelay. */
-static const bool DEFAULT_WHITELISTFORCERELAY = false;
 /** Default for -minrelaytxfee, minimum relay fee for transactions */
 static const unsigned int DEFAULT_MIN_RELAY_TX_FEE = 1000;
 /** Default for -limitancestorcount, max number of in-mempool ancestors */
@@ -128,8 +126,6 @@ static const unsigned int MAX_BLOCKS_TO_ANNOUNCE = 8;
 /** Maximum number of unconnecting headers announcements before DoS score */
 static const int MAX_UNCONNECTING_HEADERS = 10;
 
-static const bool DEFAULT_PEERBLOOMFILTERS = true;
-
 /** Default for -stopatheight */
 static const int DEFAULT_STOPATHEIGHT = 0;
 
@@ -147,9 +143,7 @@ extern CBlockPolicyEstimator feeEstimator;
 extern CTxMemPool mempool;
 typedef std::unordered_map<uint256, CBlockIndex*, BlockHasher> BlockMap;
 extern BlockMap& mapBlockIndex GUARDED_BY(cs_main);
-#ifdef ENABLE_PROOF_OF_STAKE
 extern std::set<std::pair<COutPoint, unsigned int>>& setStakeSeen;
-#endif
 extern Mutex g_best_block_mutex;
 extern std::condition_variable g_best_block_cv;
 extern uint256 g_best_block;
@@ -199,9 +193,8 @@ static const unsigned int DEFAULT_CHECKLEVEL = 3;
 // Setting the target to >= 550 MiB will make it likely we can respect the target.
 static const uint64_t MIN_DISK_SPACE_FOR_BLOCK_FILES = 550 * 1024 * 1024;
 
-#ifdef ENABLE_PROOF_OF_STAKE
 inline int64_t FutureDrift(uint32_t nTime) { return nTime + 15; }
-#endif
+
 /**
  * Process an incoming block. This only returns after the best known valid
  * block is made active. Note that it does not, however, guarantee that the
@@ -236,11 +229,7 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
  * @param[out] ppindex If set, the pointer will be set to point to the last new block index object for the given headers
  * @param[out] first_invalid First header that fails validation, if one exists
  */
-#ifdef ENABLE_PROOF_OF_STAKE
 bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& block, CValidationState& state, const CChainParams& chainparams, const CBlockIndex** ppindex = nullptr, CBlockHeader* first_invalid = nullptr,  const CBlockIndex** pindexFirst=nullptr) LOCKS_EXCLUDED(cs_main);
-#else
-bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& block, CValidationState& state, const CChainParams& chainparams, const CBlockIndex** ppindex = nullptr, CBlockHeader* first_invalid = nullptr) LOCKS_EXCLUDED(cs_main);
-#endif
 
 /** Open a block file (blk?????.dat) */
 FILE* OpenBlockFile(const FlatFilePos &pos, bool fReadOnly = false);
@@ -298,7 +287,6 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 /** Get the BIP9 state for a given deployment at the current tip. */
 ThresholdState VersionBitsTipState(const Consensus::Params& params, Consensus::DeploymentPos pos);
 
-#ifdef ENABLE_PROOF_OF_STAKE
 struct CHeightTxIndexIteratorKey {
     unsigned int height;
 
@@ -361,7 +349,7 @@ struct CHeightTxIndexKey {
         address.SetNull();
     }
 };
-#endif
+
 /** Get the numerical statistics for the BIP9 state for a given deployment at the current tip. */
 BIP9Stats VersionBitsTipStatistics(const Consensus::Params& params, Consensus::DeploymentPos pos);
 
@@ -441,30 +429,23 @@ void InitScriptExecutionCache();
 
 
 /** Functions for disk access for blocks */
-bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::Params& consensusParams);
+bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::Params& consensusParams)EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams);
 bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const FlatFilePos& pos, const CMessageHeader::MessageStartChars& message_start);
 bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const CBlockIndex* pindex, const CMessageHeader::MessageStartChars& message_start);
-#ifdef ENABLE_PROOF_OF_STAKE
 bool CheckIndexProof(const CBlockIndex& block, const Consensus::Params& consensusParams);
-#endif
 
 bool UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex* pindex);
-
 /** Functions for validating blocks and updating the block tree */
 
 /** Context-independent validity checks */
-#ifdef ENABLE_PROOF_OF_STAKE
-bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true, bool fCheckMerkleRoot = true, bool fCheckSig=true);
-#else
-bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
-#endif
 
-#ifdef ENABLE_PROOF_OF_STAKE
+bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true, bool fCheckMerkleRoot = true, bool fCheckSig=true);
+
 bool GetBlockPublicKey(const CBlock& block, std::vector<unsigned char>& vchPubKey);
 bool SignBlock(std::shared_ptr<CBlock> pblock, CWallet& wallet, const CAmount& nTotalFees, uint32_t nTime);
 bool CheckCanonicalBlockSignature(const CBlockHeader* pblock);
-#endif
+
 /** Check a block is completely valid from start to finish (only works on top of our current best block) */
 bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams, const CBlock& block, CBlockIndex* pindexPrev, bool fCheckPOW = true, bool fCheckMerkleRoot = true) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -481,11 +462,10 @@ bool RewindBlockIndex(const CChainParams& params) LOCKS_EXCLUDED(cs_main);
 void UpdateUncommittedBlockStructures(CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams);
 
 /** Produce the necessary coinbase commitment for a block (modifies the hash, don't call for mined blocks). */
-#ifdef ENABLE_PROOF_OF_STAKE
 std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams, bool fProofOfStake=false);
-#else
-std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams);
-#endif
+
+int GetWitnessCommitmentIndex(const CBlock& block);
+bool CheckHeaderPoS(const CBlockHeader& block, const Consensus::Params& consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 /** RAII wrapper for VerifyDB: Verify consistency of the block and coin databases */
 class CVerifyDB {
@@ -498,12 +478,7 @@ public:
 /** Replay blocks that aren't fully applied to the database. */
 bool ReplayBlocks(const CChainParams& params, CCoinsView* view);
 
-inline CBlockIndex* LookupBlockIndex(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
-{
-    AssertLockHeld(cs_main);
-    BlockMap::const_iterator it = mapBlockIndex.find(hash);
-    return it == mapBlockIndex.end() ? nullptr : it->second;
-}
+CBlockIndex* LookupBlockIndex(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 /** Find the last common block between the parameter chain and a locator. */
 CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& locator) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
@@ -604,9 +579,8 @@ public:
     //! @see CChain, CBlockIndex.
     CChain m_chain;
     BlockMap mapBlockIndex GUARDED_BY(cs_main);
-#ifdef ENABLE_PROOF_OF_STAKE
     std::set<std::pair<COutPoint, unsigned int>> setStakeSeen;
-#endif
+
     std::multimap<CBlockIndex*, CBlockIndex*> mapBlocksUnlinked;
     CBlockIndex *pindexBestInvalid = nullptr;
 
@@ -648,11 +622,11 @@ public:
     bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pindex,
                       CCoinsViewCache& view, const CChainParams& chainparams, bool fJustCheck = false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-#ifdef ENABLE_PROOF_OF_STAKE
+
     bool UpdateHashProof(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, CBlockIndex* pindex, CCoinsViewCache& view);
-#endif
+
     // Block disconnection on our pcoinsTip:
-    bool DisconnectTip(CValidationState& state, const CChainParams& chainparams, DisconnectedBlockTransactions* disconnectpool) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool DisconnectTip(CValidationState& state, const CChainParams& chainparams, DisconnectedBlockTransactions* disconnectpool) EXCLUSIVE_LOCKS_REQUIRED(cs_main, ::mempool.cs);
 
     // Manual block validity manipulation:
     bool PreciousBlock(CValidationState& state, const CChainParams& params, CBlockIndex* pindex) LOCKS_EXCLUDED(cs_main);
@@ -670,19 +644,20 @@ public:
     /** Check whether we are doing an initial block download (synchronizing from disk or network) */
     bool IsInitialBlockDownload() const;
 
-private:
-    bool ActivateBestChainStep(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexMostWork, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, ConnectTrace& connectTrace) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-    bool ConnectTip(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexNew, const std::shared_ptr<const CBlock>& pblock, ConnectTrace& connectTrace, DisconnectedBlockTransactions &disconnectpool) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-
-    CBlockIndex* AddToBlockIndex(const CBlockHeader& block) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-    /** Create a new block index entry for a given block hash */
-    CBlockIndex* InsertBlockIndex(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     /**
      * Make various assertions about the state of the block index.
      *
      * By default this only executes fully when using the Regtest chain; see: fCheckBlockIndex.
      */
     void CheckBlockIndex(const Consensus::Params& consensusParams);
+
+private:
+    bool ActivateBestChainStep(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexMostWork, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, ConnectTrace& connectTrace) EXCLUSIVE_LOCKS_REQUIRED(cs_main, ::mempool.cs);
+    bool ConnectTip(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexNew, const std::shared_ptr<const CBlock>& pblock, ConnectTrace& connectTrace, DisconnectedBlockTransactions& disconnectpool) EXCLUSIVE_LOCKS_REQUIRED(cs_main, ::mempool.cs);
+
+    CBlockIndex* AddToBlockIndex(const CBlockHeader& block) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    /** Create a new block index entry for a given block hash */
+    CBlockIndex* InsertBlockIndex(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     void InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     CBlockIndex* FindMostWorkChain() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
@@ -758,12 +733,8 @@ inline bool IsBlockPruned(const CBlockIndex* pblockindex)
 {
     return (fHavePruned && !(pblockindex->nStatus & BLOCK_HAVE_DATA) && pblockindex->nTx > 0);
 }
-
-#ifdef ENABLE_PROOF_OF_STAKE
-
 bool GetSpentCoinFromBlock(const CBlockIndex* pindex, COutPoint prevout, Coin* coin);
 
 bool GetSpentCoinFromMainChain(const CBlockIndex* pforkPrev, COutPoint prevoutStake, Coin* coin);
-#endif
 
-#endif // BITCOINTALKCOIN_VALIDATION_H
+#endif // TALKCOIN_VALIDATION_H

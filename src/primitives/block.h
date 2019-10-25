@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2009-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_PRIMITIVES_BLOCK_H
-#define BITCOINTALKCOIN_PRIMITIVES_BLOCK_H
+#ifndef TALKCOIN_PRIMITIVES_BLOCK_H
+#define TALKCOIN_PRIMITIVES_BLOCK_H
 
 #include <primitives/transaction.h>
 #include <serialize.h>
@@ -36,6 +36,8 @@ public:
     COutPoint prevoutStake;
     std::vector<unsigned char> vchBlockSig;
 
+    virtual ~CBlockHeader() = default;
+
     CBlockHeader()
     {
         SetNull();
@@ -46,7 +48,6 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(this->nVersion);
-        nVersion = this->nVersion;
         READWRITE(hashPrevBlock);
         READWRITE(hashMerkleRoot);
         READWRITE(nTime);
@@ -239,4 +240,4 @@ struct CBlockLocator
     }
 };
 
-#endif // BITCOINTALKCOIN_PRIMITIVES_BLOCK_H
+#endif // TALKCOIN_PRIMITIVES_BLOCK_H

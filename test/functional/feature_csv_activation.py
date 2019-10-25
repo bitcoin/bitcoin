@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2019 The Bitcointalkcoin Core developers
+# Copyright (c) 2015-2019 The Talkcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test activation of the first version bits soft fork.
@@ -55,7 +55,7 @@ from test_framework.script import (
     OP_CHECKSEQUENCEVERIFY,
     OP_DROP,
 )
-from test_framework.test_framework import BitcointalkcoinTestFramework
+from test_framework.test_framework import TalkcoinTestFramework
 from test_framework.util import (
     assert_equal,
     get_bip9_status,
@@ -139,7 +139,7 @@ def create_bip112txs(node, bip112inputs, varyOP_CSV, txversion, address, locktim
         txs.append({'tx': signtx, 'sdf': sdf, 'stf': stf})
     return txs
 
-class BIP68_112_113Test(BitcointalkcoinTestFramework):
+class BIP68_112_113Test(TalkcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True

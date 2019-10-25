@@ -23,13 +23,13 @@ don't have test cases for.
 - The oldest supported Python version is specified in [doc/dependencies.md](/doc/dependencies.md).
   Consider using [pyenv](https://github.com/pyenv/pyenv), which checks [.python-version](/.python-version),
   to prevent accidentally introducing modern syntax from an unsupported Python version.
-  The Travis linter also checks this, but [possibly not in all cases](https://github.com/bitcointalkcoin/bitcointalkcoin/pull/14884#discussion_r239585126).
+  The Travis linter also checks this, but [possibly not in all cases](https://github.com/talkcoin/talkcoin/pull/14884#discussion_r239585126).
 - See [the python lint script](/test/lint/lint-python.sh) that checks for violations that
   could lead to bugs and issues in the test code.
 - Avoid wildcard imports
 - Use a module-level docstring to describe what the test is testing, and how it
   is testing it.
-- When subclassing the BitcointalkcoinTestFramwork, place overrides for the
+- When subclassing the TalkcoinTestFramwork, place overrides for the
   `set_test_params()`, `add_options()` and `setup_xxxx()` methods at the top of
   the subclass, then locally-defined helper methods, then the `run_test()` method.
 - Use `'{}'.format(x)` for string formatting, not `'%s' % x`.
@@ -87,12 +87,12 @@ over the network (`CBlock`, `CTransaction`, etc, along with the network-level
 wrappers for them, `msg_block`, `msg_tx`, etc).
 
 - P2P tests have two threads. One thread handles all network communication
-with the bitcointalkcoind(s) being tested in a callback-based event loop; the other
+with the talkcoind(s) being tested in a callback-based event loop; the other
 implements the test logic.
 
-- `P2PConnection` is the class used to connect to a bitcointalkcoind.  `P2PInterface`
+- `P2PConnection` is the class used to connect to a talkcoind.  `P2PInterface`
 contains the higher level logic for processing P2P payloads and connecting to
-the Bitcointalkcoin Core node application logic. For custom behaviour, subclass the
+the Talkcoin Core node application logic. For custom behaviour, subclass the
 P2PInterface object and override the callback methods.
 
 - Can be used to write tests where specific P2P protocol behavior is tested.
@@ -101,7 +101,7 @@ Examples tests are `p2p_unrequested_blocks.py`, `p2p_compactblocks.py`.
 ### test-framework modules
 
 #### [test_framework/authproxy.py](test_framework/authproxy.py)
-Taken from the [python-bitcointalkcoinrpc repository](https://github.com/jgarzik/python-bitcointalkcoinrpc).
+Taken from the [python-talkcoinrpc repository](https://github.com/jgarzik/python-talkcoinrpc).
 
 #### [test_framework/test_framework.py](test_framework/test_framework.py)
 Base class for functional tests.
@@ -110,13 +110,13 @@ Base class for functional tests.
 Generally useful functions.
 
 #### [test_framework/mininode.py](test_framework/mininode.py)
-Basic code to support P2P connectivity to a bitcointalkcoind.
+Basic code to support P2P connectivity to a talkcoind.
 
 #### [test_framework/script.py](test_framework/script.py)
-Utilities for manipulating transaction scripts (originally from python-bitcointalkcoinlib)
+Utilities for manipulating transaction scripts (originally from python-talkcoinlib)
 
 #### [test_framework/key.py](test_framework/key.py)
-Wrapper around OpenSSL EC_Key (originally from python-bitcointalkcoinlib)
+Wrapper around OpenSSL EC_Key (originally from python-talkcoinlib)
 
 #### [test_framework/bignum.py](test_framework/bignum.py)
 Helpers for script.py

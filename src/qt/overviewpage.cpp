@@ -1,11 +1,11 @@
-// Copyright (c) 2011-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2011-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <qt/overviewpage.h>
 #include <qt/forms/ui_overviewpage.h>
 
-#include <qt/bitcointalkcoinunits.h>
+#include <qt/talkcoinunits.h>
 #include <qt/clientmodel.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
@@ -28,7 +28,7 @@ class TxViewDelegate : public QAbstractItemDelegate
     Q_OBJECT
 public:
     explicit TxViewDelegate(const PlatformStyle *_platformStyle, QObject *parent=nullptr):
-        QAbstractItemDelegate(parent), unit(BitcointalkcoinUnits::TALK),
+        QAbstractItemDelegate(parent), unit(TalkcoinUnits::TALK),
         platformStyle(_platformStyle)
     {
 
@@ -86,7 +86,7 @@ public:
             foreground = option.palette.color(QPalette::Text);
         }
         painter->setPen(foreground);
-        QString amountText = BitcointalkcoinUnits::formatWithUnit(unit, amount, true, BitcointalkcoinUnits::separatorAlways);
+        QString amountText = TalkcoinUnits::formatWithUnit(unit, amount, true, TalkcoinUnits::separatorAlways);
         if(!confirmed)
         {
             amountText = QString("[") + amountText + QString("]");
@@ -162,18 +162,18 @@ void OverviewPage::setBalance(const interfaces::WalletBalances& balances)
     int unit = walletModel->getOptionsModel()->getDisplayUnit();
     m_balances = balances;
     if (walletModel->privateKeysDisabled()) {
-        ui->labelBalance->setText(BitcointalkcoinUnits::formatWithUnit(unit, balances.watch_only_balance, false, BitcointalkcoinUnits::separatorAlways));
-        ui->labelUnconfirmed->setText(BitcointalkcoinUnits::formatWithUnit(unit, balances.unconfirmed_watch_only_balance, false, BitcointalkcoinUnits::separatorAlways));
-        ui->labelImmature->setText(BitcointalkcoinUnits::formatWithUnit(unit, balances.immature_watch_only_balance, false, BitcointalkcoinUnits::separatorAlways));
-        ui->labelStake->setText(BitcointalkcoinUnits::formatWithUnit(unit, balances.stake, false, BitcointalkcoinUnits::separatorAlways));
+        ui->labelBalance->setText(TalkcoinUnits::formatWithUnit(unit, balances.watch_only_balance, false, TalkcoinUnits::separatorAlways));
+        ui->labelUnconfirmed->setText(TalkcoinUnits::formatWithUnit(unit, balances.unconfirmed_watch_only_balance, false, TalkcoinUnits::separatorAlways));
+        ui->labelImmature->setText(TalkcoinUnits::formatWithUnit(unit, balances.immature_watch_only_balance, false, TalkcoinUnits::separatorAlways));
+        ui->labelStake->setText(TalkcoinUnits::formatWithUnit(unit, balances.stake, false, TalkcoinUnits::separatorAlways));
 
-        ui->labelTotal->setText(BitcointalkcoinUnits::formatWithUnit(unit, balances.watch_only_balance + balances.unconfirmed_watch_only_balance + balances.immature_watch_only_balance + balances.stake, false, BitcointalkcoinUnits::separatorAlways));
+        ui->labelTotal->setText(TalkcoinUnits::formatWithUnit(unit, balances.watch_only_balance + balances.unconfirmed_watch_only_balance + balances.immature_watch_only_balance + balances.stake, false, TalkcoinUnits::separatorAlways));
     } else {
-        ui->labelBalance->setText(BitcointalkcoinUnits::formatWithUnit(unit, balances.balance, false, BitcointalkcoinUnits::separatorAlways));
-        ui->labelUnconfirmed->setText(BitcointalkcoinUnits::formatWithUnit(unit, balances.unconfirmed_balance, false, BitcointalkcoinUnits::separatorAlways));
-        ui->labelImmature->setText(BitcointalkcoinUnits::formatWithUnit(unit, balances.immature_balance, false, BitcointalkcoinUnits::separatorAlways));
-        ui->labelStake->setText(BitcointalkcoinUnits::formatWithUnit(unit, balances.stake, false, BitcointalkcoinUnits::separatorAlways));
-        ui->labelTotal->setText(BitcointalkcoinUnits::formatWithUnit(unit, balances.balance + balances.unconfirmed_balance + balances.immature_balance + balances.stake, false, BitcointalkcoinUnits::separatorAlways));
+        ui->labelBalance->setText(TalkcoinUnits::formatWithUnit(unit, balances.balance, false, TalkcoinUnits::separatorAlways));
+        ui->labelUnconfirmed->setText(TalkcoinUnits::formatWithUnit(unit, balances.unconfirmed_balance, false, TalkcoinUnits::separatorAlways));
+        ui->labelImmature->setText(TalkcoinUnits::formatWithUnit(unit, balances.immature_balance, false, TalkcoinUnits::separatorAlways));
+        ui->labelStake->setText(TalkcoinUnits::formatWithUnit(unit, balances.stake, false, TalkcoinUnits::separatorAlways));
+        ui->labelTotal->setText(TalkcoinUnits::formatWithUnit(unit, balances.balance + balances.unconfirmed_balance + balances.immature_balance + balances.stake, false, TalkcoinUnits::separatorAlways));
 
     }
     // only show immature (newly mined) balance if it's non-zero, so as not to complicate things

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2019 The Bitcointalkcoin Core developers
+# Copyright (c) 2017-2019 The Talkcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test mempool acceptance of raw transactions."""
@@ -7,7 +7,7 @@
 from io import BytesIO
 import math
 
-from test_framework.test_framework import BitcointalkcoinTestFramework
+from test_framework.test_framework import TalkcoinTestFramework
 from test_framework.messages import (
     BIP125_SEQUENCE_NUMBER,
     COIN,
@@ -31,7 +31,7 @@ from test_framework.util import (
 )
 
 
-class MempoolAcceptanceTest(BitcointalkcoinTestFramework):
+class MempoolAcceptanceTest(TalkcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [[

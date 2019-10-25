@@ -37,7 +37,7 @@
         <item>
          <widget class="QValidatedLineEdit" name="payTo">
           <property name="toolTip">
-           <string>The Bitcointalkcoin address to send the payment to</string>
+           <string>The Talkcoin address to send the payment to</string>
           </property>
          </widget>
         </item>
@@ -50,7 +50,7 @@
            <string/>
           </property>
           <property name="icon">
-           <iconset resource="../bitcointalkcoin.qrc">
+           <iconset resource="../talkcoin.qrc">
             <normaloff>:/icons/address-book</normaloff>:/icons/address-book</iconset>
           </property>
           <property name="iconSize">
@@ -73,7 +73,7 @@
            <string/>
           </property>
           <property name="icon">
-           <iconset resource="../bitcointalkcoin.qrc">
+           <iconset resource="../talkcoin.qrc">
             <normaloff>:/icons/editpaste</normaloff>:/icons/editpaste</iconset>
           </property>
           <property name="iconSize">
@@ -96,7 +96,7 @@
            <string/>
           </property>
           <property name="icon">
-           <iconset resource="../bitcointalkcoin.qrc">
+           <iconset resource="../talkcoin.qrc">
             <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
           </property>
           <property name="iconSize">
@@ -112,7 +112,7 @@
       <item row="4" column="0">
        <widget class="QCheckBox" name="checkboxSubtractFeeFromAmount">
         <property name="toolTip">
-         <string>The fee will be deducted from the amount being sent. The recipient will receive less bitcointalkcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</string>
+         <string>The fee will be deducted from the amount being sent. The recipient will receive less talkcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</string>
         </property>
         <property name="text">
          <string>&amp;Fee from amount</string>
@@ -129,7 +129,7 @@
       <item row="7" column="0">
        <widget class="QLabel" name="messageTextLabel">
         <property name="toolTip">
-         <string>A message that was attached to the bitcointalkcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcointalkcoin network.</string>
+         <string>A message that was attached to the talkcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Talkcoin network.</string>
         </property>
         <property name="textFormat">
          <enum>Qt::PlainText</enum>
@@ -137,7 +137,7 @@
        </widget>
       </item>
       <item row="2" column="0">
-       <widget class="BitcointalkcoinAmountField" name="payAmount"/>
+       <widget class="TalkcoinAmountField" name="payAmount"/>
       </item>
       <item row="3" column="0">
        <widget class="QPushButton" name="useAvailableBalanceButton">
@@ -613,7 +613,7 @@
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="../bitcointalkcoin.qrc">
+         <iconset resource="../talkcoin.qrc">
           <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
         </property>
        </widget>
@@ -651,7 +651,7 @@
      </widget>
     </item>
     <item row="2" column="1">
-     <widget class="BitcointalkcoinAmountField" name="payAmount_is">
+     <widget class="TalkcoinAmountField" name="payAmount_is">
       <property name="acceptDrops">
        <bool>false</bool>
       </property>
@@ -1146,7 +1146,7 @@
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="../bitcointalkcoin.qrc">
+         <iconset resource="../talkcoin.qrc">
           <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
         </property>
        </widget>
@@ -1184,7 +1184,7 @@
      </widget>
     </item>
     <item row="2" column="1">
-     <widget class="BitcointalkcoinAmountField" name="payAmount_s">
+     <widget class="TalkcoinAmountField" name="payAmount_s">
       <property name="acceptDrops">
        <bool>false</bool>
       </property>
@@ -1200,9 +1200,9 @@
    <header>qt/qvalidatedlineedit.h</header>
   </customwidget>
   <customwidget>
-   <class>BitcointalkcoinAmountField</class>
+   <class>TalkcoinAmountField</class>
    <extends>QLineEdit</extends>
-   <header>qt/bitcointalkcoinamountfield.h</header>
+   <header>qt/talkcoinamountfield.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>
@@ -1217,7 +1217,7 @@
   <tabstop>deleteButton_s</tabstop>
  </tabstops>
  <resources>
-  <include location="../bitcointalkcoin.qrc"/>
+  <include location="../talkcoin.qrc"/>
  </resources>
  <connections/>
 </ui>

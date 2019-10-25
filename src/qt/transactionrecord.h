@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2011-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_QT_TRANSACTIONRECORD_H
-#define BITCOINTALKCOIN_QT_TRANSACTIONRECORD_H
+#ifndef TALKCOIN_QT_TRANSACTIONRECORD_H
+#define TALKCOIN_QT_TRANSACTIONRECORD_H
 
 #include <amount.h>
 #include <uint256.h>
@@ -63,6 +63,12 @@ public:
 
     /** Current number of blocks (to know whether cached status is still valid) */
     int cur_num_blocks;
+
+    /** Current number of blocks based on the headers chain */
+    int cur_num_blocks_headers_chain;
+
+    /** true if transaction has been validated (false == spv) */
+    bool fValidated;
 
     bool needsUpdate;
 };
@@ -146,4 +152,4 @@ public:
     bool statusUpdateNeeded(int numBlocks) const;
 };
 
-#endif // BITCOINTALKCOIN_QT_TRANSACTIONRECORD_H
+#endif // TALKCOIN_QT_TRANSACTIONRECORD_H

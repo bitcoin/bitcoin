@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2009-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -665,6 +665,11 @@ bool g_mock_deterministic_tests{false};
 uint64_t GetRand(uint64_t nMax) noexcept
 {
     return FastRandomContext(g_mock_deterministic_tests).randrange(nMax);
+}
+
+std::chrono::microseconds GetRandMicros(std::chrono::microseconds duration_max) noexcept
+{
+    return std::chrono::microseconds{GetRand(duration_max.count())};
 }
 
 int GetRandInt(int nMax) noexcept

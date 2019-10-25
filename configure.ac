@@ -8,18 +8,18 @@ define(_CLIENT_VERSION_RC, 0)
 define(_CLIENT_VERSION_IS_RELEASE, true)
 define(_COPYRIGHT_YEAR, 2019)
 define(_COPYRIGHT_HOLDERS,[The %s developers])
-define(_COPYRIGHT_HOLDERS_SUBSTITUTION,[[Bitcointalkcoin Core]])
-AC_INIT([Bitcointalkcoin Core],m4_join([.], _CLIENT_VERSION_MAJOR, _CLIENT_VERSION_MINOR, _CLIENT_VERSION_REVISION, m4_if(_CLIENT_VERSION_BUILD, [0], [], _CLIENT_VERSION_BUILD))m4_if(_CLIENT_VERSION_RC, [0], [], [rc]_CLIENT_VERSION_RC),[https://github.com/bitcointalkcoin/bitcointalkcoin/issues],[bitcointalkcoin],[https://bitcointalkcoincore.org/])
+define(_COPYRIGHT_HOLDERS_SUBSTITUTION,[[Talkcoin Core]])
+AC_INIT([Talkcoin Core],m4_join([.], _CLIENT_VERSION_MAJOR, _CLIENT_VERSION_MINOR, _CLIENT_VERSION_REVISION, m4_if(_CLIENT_VERSION_BUILD, [0], [], _CLIENT_VERSION_BUILD))m4_if(_CLIENT_VERSION_RC, [0], [], [rc]_CLIENT_VERSION_RC),[https://github.com/talkcoin/talkcoin/issues],[talkcoin],[https://talkcoincore.org/])
 AC_CONFIG_SRCDIR([src/validation.cpp])
-AC_CONFIG_HEADERS([src/config/bitcointalkcoin-config.h])
+AC_CONFIG_HEADERS([src/config/talkcoin-config.h])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
 
-BITCOINTALKCOIN_DAEMON_NAME=bitcointalkcoind
-BITCOINTALKCOIN_GUI_NAME=bitcointalkcoin-qt
-BITCOINTALKCOIN_CLI_NAME=bitcointalkcoin-cli
-BITCOINTALKCOIN_TX_NAME=bitcointalkcoin-tx
-BITCOINTALKCOIN_WALLET_TOOL_NAME=bitcointalkcoin-wallet
+TALKCOIN_DAEMON_NAME=talkcoind
+TALKCOIN_GUI_NAME=talkcoin-qt
+TALKCOIN_CLI_NAME=talkcoin-cli
+TALKCOIN_TX_NAME=talkcoin-tx
+TALKCOIN_WALLET_TOOL_NAME=talkcoin-wallet
 
 dnl Unless the user specified ARFLAGS, force it to be cr
 AC_ARG_VAR(ARFLAGS, [Flags for the archiver, defaults to <cr> if not set])
@@ -29,9 +29,9 @@ fi
 
 AC_CANONICAL_HOST
 
-AH_TOP([#ifndef BITCOINTALKCOIN_CONFIG_H])
-AH_TOP([#define BITCOINTALKCOIN_CONFIG_H])
-AH_BOTTOM([#endif //BITCOINTALKCOIN_CONFIG_H])
+AH_TOP([#ifndef TALKCOIN_CONFIG_H])
+AH_TOP([#define TALKCOIN_CONFIG_H])
+AH_BOTTOM([#endif //TALKCOIN_CONFIG_H])
 
 dnl faketime breaks configure and is only needed for make. Disable it here.
 unset FAKETIME
@@ -104,7 +104,7 @@ AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
 AC_ARG_VAR(PYTHONPATH, Augments the default search path for python module files)
 
 AC_ARG_ENABLE([momentum-hash-algo],
-  [AS_HELP_STRING([--disable-momentum-algo],
+  [AS_HELP_STRING([--enable-momentum-algo],
   [select algorithm(s) (enable by default)])],
   [momentum_algo=$enableval],
   [momentum_algo=yes])
@@ -128,19 +128,19 @@ AC_ARG_ENABLE([axiom-hash-algo],
   [axiom_algo=no])
 
 AC_ARG_ENABLE([proof-of-stake],
-  [AS_HELP_STRING([--disable-pos],
+  [AS_HELP_STRING([--enable-pos],
   [select algorithm(s) (enabled by default)])],
   [enable_pos=$enableval],
   [enable_pos=yes])
 
 AC_ARG_ENABLE([interblochain-protocol],
-  [AS_HELP_STRING([--disable-ibtp],
+  [AS_HELP_STRING([--enable-ibtp],
   [disallow interblockhain communication (enabled by default)])],
   [enable_ibtp=$enableval],
   [enable_ibtp=yes])
 
 AC_ARG_ENABLE([secure-messaging],
-  [AS_HELP_STRING([--disable-smsg],
+  [AS_HELP_STRING([--enable-smsg],
   [disallow secure messaging (enabled by default)])],
   [enable_smsg=$enableval],
   [enable_smsg=yes])
@@ -162,6 +162,12 @@ AC_ARG_ENABLE([mobile-gui],
   [enable mobile GUI (disabled by default)])],
   [use_mobile_gui=$enableval],
   [use_mobile_gui=no])
+
+AC_ARG_ENABLE([spv],
+  [AS_HELP_STRING([--enable-spv],
+  [enable SPV (disabled by default)])],
+  [enable_spv=$enableval],
+  [enable_spv=no])
 
 AC_ARG_WITH([miniupnpc],
   [AS_HELP_STRING([--with-miniupnpc],
@@ -482,39 +488,39 @@ CPPFLAGS="$CPPFLAGS -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS"
 
 AC_ARG_WITH([utils],
   [AS_HELP_STRING([--with-utils],
-  [build bitcointalkcoin-cli bitcointalkcoin-tx bitcointalkcoin-wallet (default=yes)])],
-  [build_bitcointalkcoin_utils=$withval],
-  [build_bitcointalkcoin_utils=yes])
+  [build talkcoin-cli talkcoin-tx talkcoin-wallet (default=yes)])],
+  [build_talkcoin_utils=$withval],
+  [build_talkcoin_utils=yes])
 
 AC_ARG_ENABLE([util-cli],
   [AS_HELP_STRING([--enable-util-cli],
-  [build bitcointalkcoin-cli])],
-  [build_bitcointalkcoin_cli=$enableval],
-  [build_bitcointalkcoin_cli=$build_bitcointalkcoin_utils])
+  [build talkcoin-cli])],
+  [build_talkcoin_cli=$enableval],
+  [build_talkcoin_cli=$build_talkcoin_utils])
 
 AC_ARG_ENABLE([util-tx],
   [AS_HELP_STRING([--enable-util-tx],
-  [build bitcointalkcoin-tx])],
-  [build_bitcointalkcoin_tx=$enableval],
-  [build_bitcointalkcoin_tx=$build_bitcointalkcoin_utils])
+  [build talkcoin-tx])],
+  [build_talkcoin_tx=$enableval],
+  [build_talkcoin_tx=$build_talkcoin_utils])
 
 AC_ARG_ENABLE([util-wallet],
   [AS_HELP_STRING([--enable-util-wallet],
-  [build bitcointalkcoin-wallet])],
-  [build_bitcointalkcoin_wallet=$enableval],
-  [build_bitcointalkcoin_wallet=$build_bitcointalkcoin_utils])
+  [build talkcoin-wallet])],
+  [build_talkcoin_wallet=$enableval],
+  [build_talkcoin_wallet=$build_talkcoin_utils])
 
 AC_ARG_WITH([libs],
   [AS_HELP_STRING([--with-libs],
   [build libraries (default=yes)])],
-  [build_bitcointalkcoin_libs=$withval],
-  [build_bitcointalkcoin_libs=yes])
+  [build_talkcoin_libs=$withval],
+  [build_talkcoin_libs=yes])
 
 AC_ARG_WITH([daemon],
   [AS_HELP_STRING([--with-daemon],
-  [build bitcointalkcoind daemon (default=yes)])],
-  [build_bitcointalkcoind=$withval],
-  [build_bitcointalkcoind=yes])
+  [build talkcoind daemon (default=yes)])],
+  [build_talkcoind=$withval],
+  [build_talkcoind=yes])
 
 use_pkgconfig=yes
 case $host in
@@ -632,13 +638,28 @@ case $host in
      fi
 
      AX_CHECK_LINK_FLAG([[-Wl,-headerpad_max_install_names]], [LDFLAGS="$LDFLAGS -Wl,-headerpad_max_install_names"])
-     CPPFLAGS="$CPPFLAGS -DMAC_OSX"
+     CPPFLAGS="$CPPFLAGS -DMAC_OSX -DOBJC_OLD_DISPATCH_PROTOTYPES=0"
      OBJCXXFLAGS="$CXXFLAGS"
      ;;
    *android*)
      dnl make sure android stays above linux for hosts like *linux-android*
      TARGET_OS=android
      LEVELDB_TARGET_FLAGS="-DOS_ANDROID"
+     case $host in
+       *x86_64*)
+          ANDROID_ARCH=x86_64
+          ;;
+        *aarch64*)
+          ANDROID_ARCH=arm64-v8a
+          ;;
+        *armv7a*)
+          ANDROID_ARCH=armeabi-v7a
+          ;;
+        *i686*)
+          ANDROID_ARCH=i686
+          ;;
+        *) AC_MSG_ERROR("Could not determine Android arch") ;;
+      esac
      ;;
    *linux*)
      TARGET_OS=linux
@@ -716,7 +737,7 @@ AC_C_BIGENDIAN
 dnl Check for pthread compile/link requirements
 AX_PTHREAD
 
-# The following macro will add the necessary defines to bitcointalkcoin-config.h, but
+# The following macro will add the necessary defines to talkcoin-config.h, but
 # they also need to be passed down to any subprojects. Pull the results out of
 # the cache and add them to CPPFLAGS.
 AC_SYS_LARGEFILE
@@ -983,7 +1004,7 @@ AC_SUBST(LIBMEMENV)
 
 if test x$enable_wallet != xno; then
     dnl Check for libdb_cxx only if wallet enabled
-    BITCOINTALKCOIN_FIND_BDB48
+    TALKCOIN_FIND_BDB48
 fi
 
 dnl Check for libminiupnpc (optional)
@@ -995,12 +1016,12 @@ if test x$use_upnp != xno; then
   )
 fi
 
-BITCOINTALKCOIN_QT_INIT
+TALKCOIN_QT_INIT
 
-dnl sets $bitcointalkcoin_enable_qt, $bitcointalkcoin_enable_qt_test, $bitcointalkcoin_enable_qt_dbus
-BITCOINTALKCOIN_QT_CONFIGURE([$use_pkgconfig])
+dnl sets $talkcoin_enable_qt, $talkcoin_enable_qt_test, $talkcoin_enable_qt_dbus
+TALKCOIN_QT_CONFIGURE([$use_pkgconfig])
 
-if test x$build_bitcointalkcoin_wallet$build_bitcointalkcoin_cli$build_bitcointalkcoin_tx$build_bitcointalkcoind$bitcointalkcoin_enable_qt$use_tests$use_bench = xnonononononono; then
+if test x$build_talkcoin_wallet$build_talkcoin_cli$build_talkcoin_tx$build_talkcoind$talkcoin_enable_qt$use_tests$use_bench = xnonononononono; then
     use_boost=no
 else
     use_boost=yes
@@ -1014,7 +1035,7 @@ define(MINIMUM_REQUIRED_BOOST, 1.47.0)
 dnl Check for boost libs
 AX_BOOST_BASE([MINIMUM_REQUIRED_BOOST])
 if test x$want_boost = xno; then
-    AC_MSG_ERROR([[only libbitcointalkcoinconsensus can be built without boost]])
+    AC_MSG_ERROR([[only libtalkcoinconsensus can be built without boost]])
 fi
 AX_BOOST_SYSTEM
 AX_BOOST_FILESYSTEM
@@ -1185,9 +1206,9 @@ if test x$use_pkgconfig = xyes; then
       PKG_CHECK_MODULES([SSL], [libssl],, [AC_MSG_ERROR(openssl not found.)])
       PKG_CHECK_MODULES([CRYPTO], [libcrypto],,[AC_MSG_ERROR(libcrypto not found.)])
       if test x$use_qr != xno; then
-        BITCOINTALKCOIN_QT_CHECK([PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])])
+        TALKCOIN_QT_CHECK([PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])])
       fi
-      if test x$build_bitcointalkcoin_cli$build_bitcointalkcoind$bitcointalkcoin_enable_qt$use_tests != xnononono; then
+      if test x$build_talkcoin_cli$build_talkcoind$talkcoin_enable_qt$use_tests != xnononono; then
         PKG_CHECK_MODULES([EVENT], [libevent],, [AC_MSG_ERROR(libevent not found.)])
         if test x$TARGET_OS != xwindows; then
           PKG_CHECK_MODULES([EVENT_PTHREADS], [libevent_pthreads],, [AC_MSG_ERROR(libevent_pthreads not found.)])
@@ -1212,7 +1233,7 @@ else
   AC_CHECK_HEADER([openssl/ssl.h],, AC_MSG_ERROR(libssl headers missing),)
   AC_CHECK_LIB([ssl],         [main],SSL_LIBS=-lssl, AC_MSG_ERROR(libssl missing))
 
-  if test x$build_bitcointalkcoin_cli$build_bitcointalkcoind$bitcointalkcoin_enable_qt$use_tests != xnononono; then
+  if test x$build_talkcoin_cli$build_talkcoind$talkcoin_enable_qt$use_tests != xnononono; then
     AC_CHECK_HEADER([event2/event.h],, AC_MSG_ERROR(libevent headers missing),)
     AC_CHECK_LIB([event],[main],EVENT_LIBS=-levent,AC_MSG_ERROR(libevent missing))
     if test x$TARGET_OS != xwindows; then
@@ -1244,8 +1265,8 @@ else
   fi
 
   if test x$use_qr != xno; then
-    BITCOINTALKCOIN_QT_CHECK([AC_CHECK_LIB([qrencode], [main],[QR_LIBS=-lqrencode], [have_qrencode=no])])
-    BITCOINTALKCOIN_QT_CHECK([AC_CHECK_HEADER([qrencode.h],, have_qrencode=no)])
+    TALKCOIN_QT_CHECK([AC_CHECK_LIB([qrencode], [main],[QR_LIBS=-lqrencode], [have_qrencode=no])])
+    TALKCOIN_QT_CHECK([AC_CHECK_HEADER([qrencode.h],, have_qrencode=no)])
   fi
 fi
 
@@ -1276,7 +1297,7 @@ dnl univalue check
 
 need_bundled_univalue=yes
 
-if test x$build_bitcointalkcoin_wallet$build_bitcointalkcoin_cli$build_bitcointalkcoin_tx$build_bitcointalkcoind$bitcointalkcoin_enable_qt$use_tests$use_bench = xnonononononono; then
+if test x$build_talkcoin_wallet$build_talkcoin_cli$build_talkcoin_tx$build_talkcoind$talkcoin_enable_qt$use_tests$use_bench = xnonononononono; then
   need_bundled_univalue=no
 else
 
@@ -1321,29 +1342,29 @@ AC_SUBST(UNIVALUE_CFLAGS)
 AC_SUBST(UNIVALUE_LIBS)
 
 
-AC_MSG_CHECKING([whether to build bitcointalkcoind])
-AM_CONDITIONAL([BUILD_BITCOINTALKCOIND], [test x$build_bitcointalkcoind = xyes])
-AC_MSG_RESULT($build_bitcointalkcoind)
+AC_MSG_CHECKING([whether to build talkcoind])
+AM_CONDITIONAL([BUILD_TALKCOIND], [test x$build_talkcoind = xyes])
+AC_MSG_RESULT($build_talkcoind)
 
-AC_MSG_CHECKING([whether to build bitcointalkcoin-cli])
-AM_CONDITIONAL([BUILD_BITCOINTALKCOIN_CLI], [test x$build_bitcointalkcoin_cli = xyes])
-AC_MSG_RESULT($build_bitcointalkcoin_cli)
+AC_MSG_CHECKING([whether to build talkcoin-cli])
+AM_CONDITIONAL([BUILD_TALKCOIN_CLI], [test x$build_talkcoin_cli = xyes])
+AC_MSG_RESULT($build_talkcoin_cli)
 
-AC_MSG_CHECKING([whether to build bitcointalkcoin-tx])
-AM_CONDITIONAL([BUILD_BITCOINTALKCOIN_TX], [test x$build_bitcointalkcoin_tx = xyes])
-AC_MSG_RESULT($build_bitcointalkcoin_tx)
+AC_MSG_CHECKING([whether to build talkcoin-tx])
+AM_CONDITIONAL([BUILD_TALKCOIN_TX], [test x$build_talkcoin_tx = xyes])
+AC_MSG_RESULT($build_talkcoin_tx)
 
-AC_MSG_CHECKING([whether to build bitcointalkcoin-wallet])
-AM_CONDITIONAL([BUILD_BITCOINTALKCOIN_WALLET], [test x$build_bitcointalkcoin_wallet = xyes])
-AC_MSG_RESULT($build_bitcointalkcoin_wallet)
+AC_MSG_CHECKING([whether to build talkcoin-wallet])
+AM_CONDITIONAL([BUILD_TALKCOIN_WALLET], [test x$build_talkcoin_wallet = xyes])
+AC_MSG_RESULT($build_talkcoin_wallet)
 
 AC_MSG_CHECKING([whether to build libraries])
-AM_CONDITIONAL([BUILD_BITCOINTALKCOIN_LIBS], [test x$build_bitcointalkcoin_libs = xyes])
-if test x$build_bitcointalkcoin_libs = xyes; then
+AM_CONDITIONAL([BUILD_TALKCOIN_LIBS], [test x$build_talkcoin_libs = xyes])
+if test x$build_talkcoin_libs = xyes; then
   AC_DEFINE(HAVE_CONSENSUS_LIB, 1, [Define this symbol if the consensus lib has been built])
-  AC_CONFIG_FILES([libbitcointalkcoinconsensus.pc:libbitcointalkcoinconsensus.pc.in])
+  AC_CONFIG_FILES([libtalkcoinconsensus.pc:libtalkcoinconsensus.pc.in])
 fi
-AC_MSG_RESULT($build_bitcointalkcoin_libs)
+AC_MSG_RESULT($build_talkcoin_libs)
 
 AC_LANG_POP
 
@@ -1378,9 +1399,100 @@ fi
 
 dnl enable mobile gui
 AC_MSG_CHECKING([if mobile GUI should be enabled])
-if test x$use_mobile_gui != xno; then
+if test x$use_mobile_gui = xyes; then
   AC_MSG_RESULT(yes)
   AC_DEFINE_UNQUOTED([MOBILE_GUI],[1],[Define to 1 to enable mobile GUI])
+
+else
+  AC_MSG_RESULT(no)
+fi
+
+dnl enable spv
+AC_MSG_CHECKING([if SPV should be enabled])
+if test x$enable_spv = xyes; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE_UNQUOTED([ENABLE_SPV],[1],[Define to 1 to enable spv])
+
+else
+  AC_MSG_RESULT(no)
+fi
+
+
+dnl enable momentum hash
+AC_MSG_CHECKING([if momentum should be enabled])
+if test x$momentum_algo = xyes; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE_UNQUOTED([ENABLE_MOMENTUM_HASH_ALGO],[1],[Define to 1 to enable momentum hash])
+
+else
+  AC_MSG_RESULT(no)
+fi
+
+dnl enable sha256 hash
+AC_MSG_CHECKING([if sha256 should be enabled])
+if test x$sha_algo = xyes; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE_UNQUOTED([ENABLE_SHA_HASH_ALGO],[1],[Define to 1 to enable sha256 hash])
+
+else
+  AC_MSG_RESULT(no)
+fi
+
+dnl enable groestl hash
+AC_MSG_CHECKING([if groestl should be enabled])
+if test x$groestl_algo = xyes; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE_UNQUOTED([ENABLE_GROESTL_HASH_ALGO],[1],[Define to 1 to enable groestl hash])
+
+else
+  AC_MSG_RESULT(no)
+fi
+
+dnl enable axiom hash
+AC_MSG_CHECKING([if axiom should be enabled])
+if test x$axiom_algo = xyes; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE_UNQUOTED([ENABLE_MEM_HASH_ALGO],[1],[Define to 1 to enable axiom hash])
+
+else
+  AC_MSG_RESULT(no)
+fi
+
+dnl enable proof of stake
+AC_MSG_CHECKING([if proof of stake should be enabled])
+if test x$enable_pos = xyes; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE_UNQUOTED([ENABLE_PROOF_OF_STAKE],[1],[Define to 1 to enable proof of stake])
+
+else
+  AC_MSG_RESULT(no)
+fi
+
+dnl enable ibtp
+AC_MSG_CHECKING([if ibtp should be enabled])
+if test x$enable_ibtp = xyes; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE_UNQUOTED([ENABLE_IBTP],[1],[Define to 1 to enable ibtp])
+
+else
+  AC_MSG_RESULT(no)
+fi
+
+dnl enable secure messaging 
+AC_MSG_CHECKING([if secure messaging should be enabled])
+if test x$enable_smsg = xyes; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE_UNQUOTED([ENABLE_SECURE_MESSAGING],[1],[Define to 1 to enable secure messaging])
+
+else
+  AC_MSG_RESULT(no)
+fi
+
+dnl enable genesis tx spend 
+AC_MSG_CHECKING([if genesis tx spend should be enabled])
+if test x$spend_genesis = xyes; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE_UNQUOTED([ENABLE_GENESIS_TX_SPEND],[1],[Define to 1 to enable genesis tx spend])
 
 else
   AC_MSG_RESULT(no)
@@ -1415,13 +1527,13 @@ fi
 
 dnl these are only used when qt is enabled
 BUILD_TEST_QT=""
-if test x$bitcointalkcoin_enable_qt != xno; then
+if test x$talkcoin_enable_qt != xno; then
   dnl enable dbus support
   AC_MSG_CHECKING([whether to build GUI with support for D-Bus])
-  if test x$bitcointalkcoin_enable_qt_dbus != xno; then
+  if test x$talkcoin_enable_qt_dbus != xno; then
     AC_DEFINE([USE_DBUS],[1],[Define if dbus support should be compiled in])
   fi
-  AC_MSG_RESULT($bitcointalkcoin_enable_qt_dbus)
+  AC_MSG_RESULT($talkcoin_enable_qt_dbus)
 
   dnl enable qr support
   AC_MSG_CHECKING([whether to build GUI with support for QR codes])
@@ -1444,8 +1556,8 @@ if test x$bitcointalkcoin_enable_qt != xno; then
     AC_MSG_WARN("xgettext is required to update qt translations")
   fi
 
-  AC_MSG_CHECKING([whether to build test_bitcointalkcoin-qt])
-  if test x$use_gui_tests$bitcointalkcoin_enable_qt_test = xyesyes; then
+  AC_MSG_CHECKING([whether to build test_talkcoin-qt])
+  if test x$use_gui_tests$talkcoin_enable_qt_test = xyesyes; then
     AC_MSG_RESULT([yes])
     BUILD_TEST_QT="yes"
   else
@@ -1455,7 +1567,7 @@ fi
 
 AM_CONDITIONAL([ENABLE_ZMQ], [test "x$use_zmq" = "xyes"])
 
-AC_MSG_CHECKING([whether to build test_bitcointalkcoin])
+AC_MSG_CHECKING([whether to build test_talkcoin])
 if test x$use_tests = xyes; then
   AC_MSG_RESULT([yes])
   BUILD_TEST="yes"
@@ -1471,7 +1583,7 @@ else
   AC_MSG_RESULT([no])
 fi
 
-if test x$build_bitcointalkcoin_wallet$build_bitcointalkcoin_cli$build_bitcointalkcoin_tx$build_bitcointalkcoin_libs$build_bitcointalkcoind$bitcointalkcoin_enable_qt$use_bench$use_tests = xnononononononono; then
+if test x$build_talkcoin_wallet$build_talkcoin_cli$build_talkcoin_tx$build_talkcoin_libs$build_talkcoind$talkcoin_enable_qt$use_bench$use_tests = xnononononononono; then
   AC_MSG_ERROR([No targets! Please specify at least one of: --with-utils --with-libs --with-daemon --with-gui --enable-bench or --enable-tests])
 fi
 
@@ -1489,9 +1601,10 @@ AM_CONDITIONAL([ENABLE_MEM_HASH_ALGO],[test x$axiom_algo = xyes])
 AM_CONDITIONAL([ENABLE_GROESTL_HASH_ALGO],[test x$groestl_algo = xyes])
 AM_CONDITIONAL([ENABLE_SHA_HASH_ALGO],[test x$sha_algo = xyes])
 AM_CONDITIONAL([MOBILE_GUI],[test x$use_mobile_gui = xyes])
+AM_CONDITIONAL([ENABLE_SPV],[test x$enable_spv = xyes])
 AM_CONDITIONAL([ENABLE_TESTS],[test x$BUILD_TEST = xyes])
 AM_CONDITIONAL([ENABLE_FUZZ],[test x$enable_fuzz = xyes])
-AM_CONDITIONAL([ENABLE_QT],[test x$bitcointalkcoin_enable_qt = xyes])
+AM_CONDITIONAL([ENABLE_QT],[test x$talkcoin_enable_qt = xyes])
 AM_CONDITIONAL([ENABLE_QT_TESTS],[test x$BUILD_TEST_QT = xyes])
 AM_CONDITIONAL([ENABLE_BENCH],[test x$use_bench = xyes])
 AM_CONDITIONAL([USE_QRCODE], [test x$use_qr = xyes])
@@ -1523,11 +1636,11 @@ AC_SUBST(COPYRIGHT_YEAR, _COPYRIGHT_YEAR)
 AC_SUBST(COPYRIGHT_HOLDERS, "_COPYRIGHT_HOLDERS")
 AC_SUBST(COPYRIGHT_HOLDERS_SUBSTITUTION, "_COPYRIGHT_HOLDERS_SUBSTITUTION")
 AC_SUBST(COPYRIGHT_HOLDERS_FINAL, "_COPYRIGHT_HOLDERS_FINAL")
-AC_SUBST(BITCOINTALKCOIN_DAEMON_NAME)
-AC_SUBST(BITCOINTALKCOIN_GUI_NAME)
-AC_SUBST(BITCOINTALKCOIN_CLI_NAME)
-AC_SUBST(BITCOINTALKCOIN_TX_NAME)
-AC_SUBST(BITCOINTALKCOIN_WALLET_TOOL_NAME)
+AC_SUBST(TALKCOIN_DAEMON_NAME)
+AC_SUBST(TALKCOIN_GUI_NAME)
+AC_SUBST(TALKCOIN_CLI_NAME)
+AC_SUBST(TALKCOIN_TX_NAME)
+AC_SUBST(TALKCOIN_WALLET_TOOL_NAME)
 
 AC_SUBST(RELDFLAGS)
 AC_SUBST(DEBUG_CPPFLAGS)
@@ -1563,12 +1676,13 @@ AC_SUBST(EVENT_LIBS)
 AC_SUBST(EVENT_PTHREADS_LIBS)
 AC_SUBST(ZMQ_LIBS)
 AC_SUBST(QR_LIBS)
+AC_SUBST(ANDROID_ARCH)
 AC_CONFIG_FILES([Makefile src/Makefile doc/man/Makefile share/setup.nsi share/qt/Info.plist test/config.ini])
 AC_CONFIG_FILES([contrib/devtools/split-debug.sh],[chmod +x contrib/devtools/split-debug.sh])
 AM_COND_IF([HAVE_DOXYGEN], [AC_CONFIG_FILES([doc/Doxyfile])])
 AC_CONFIG_LINKS([contrib/filter-lcov.py:contrib/filter-lcov.py])
 AC_CONFIG_LINKS([test/functional/test_runner.py:test/functional/test_runner.py])
-AC_CONFIG_LINKS([test/util/bitcointalkcoin-util-test.py:test/util/bitcointalkcoin-util-test.py])
+AC_CONFIG_LINKS([test/util/talkcoin-util-test.py:test/util/talkcoin-util-test.py])
 AC_CONFIG_LINKS([test/util/rpcauth-test.py:test/util/rpcauth-test.py])
 
 dnl boost's m4 checks do something really nasty: they export these vars. As a
@@ -1633,8 +1747,9 @@ echo "  momentum hash algorithm    = $momentum_algo"
 echo "  axiom hash algorithm   = $axiom_algo"
 echo "  sha256 hash algorithm   = $sha_algo"
 echo "  groestl hash algorithm   = $groestl_algo"
-echo "  with gui / qt = $bitcointalkcoin_enable_qt"
-if test x$bitcointalkcoin_enable_qt != xno; then
+echo "  with gui / qt = $talkcoin_enable_qt"
+echo "  with spv   = $enable_spv"
+if test x$talkcoin_enable_qt != xno; then
     echo "    with qr     = $use_qr"
     echo "    mobile gui  = $use_mobile_gui"
 fi

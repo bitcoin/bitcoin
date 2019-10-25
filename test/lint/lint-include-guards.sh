@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2018 The Bitcointalkcoin Core developers
+# Copyright (c) 2018 The Talkcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
 # Check include guards.
 
 export LC_ALL=C
-HEADER_ID_PREFIX="BITCOINTALKCOIN_"
+HEADER_ID_PREFIX="TALKCOIN_"
 HEADER_ID_SUFFIX="_H"
 
 REGEXP_EXCLUDE_FILES_WITH_PREFIX="src/(crypto/ctaes/|leveldb/|secp256k1/|tinyformat.h|univalue/)"

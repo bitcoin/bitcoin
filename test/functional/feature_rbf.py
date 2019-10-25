@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2019 The Bitcointalkcoin Core developers
+# Copyright (c) 2014-2019 The Talkcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the RBF code."""
@@ -8,7 +8,7 @@ from decimal import Decimal
 
 from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut
 from test_framework.script import CScript, OP_DROP
-from test_framework.test_framework import BitcointalkcoinTestFramework
+from test_framework.test_framework import TalkcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error, satoshi_round
 
 MAX_REPLACEMENT_LIMIT = 100
@@ -62,7 +62,7 @@ def make_utxo(node, amount, confirmed=True, scriptPubKey=CScript([1])):
     return COutPoint(int(txid, 16), 0)
 
 
-class ReplaceByFeeTest(BitcointalkcoinTestFramework):
+class ReplaceByFeeTest(TalkcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [

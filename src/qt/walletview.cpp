@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2011-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,7 +6,7 @@
 
 #include <qt/addressbookpage.h>
 #include <qt/askpassphrasedialog.h>
-#include <qt/bitcointalkcoingui.h>
+#include <qt/talkcoingui.h>
 #include <qt/clientmodel.h>
 #include <qt/guiutil.h>
 #include <qt/messagemodel.h>
@@ -65,7 +65,7 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
     usedSendingAddressesPage = new AddressBookPage(platformStyle, AddressBookPage::ForEditing, AddressBookPage::SendingTab, this);
     usedReceivingAddressesPage = new AddressBookPage(platformStyle, AddressBookPage::ForEditing, AddressBookPage::ReceivingTab, this);
     
-//    rpcConsole = new RPCConsole(platformStyle, this);
+    rpcConsole = new RPCConsole(platformStyle, this);
         
 #ifdef ENABLE_SECURE_MESSAGING
     sendMessagesPage = new SendMessagesPage(platformStyle, this);
@@ -79,7 +79,7 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
 	addWidget(sendMessagesPage);
     addWidget(messagePage);
 #endif
-//    addWidget(rpcConsole);
+    addWidget(rpcConsole);
     
     // Clicking on a transaction on the overview pre-selects the transaction on the transaction history page
     connect(overviewPage, &OverviewPage::transactionClicked, transactionView, static_cast<void (TransactionView::*)(const QModelIndex&)>(&TransactionView::focusTransaction));
@@ -100,17 +100,18 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
 
 WalletView::~WalletView()
 {
+    delete rpcConsole;
 }
 
-void WalletView::setBitcointalkcoinGUI(BitcointalkcoinGUI *gui)
+void WalletView::setTalkcoinGUI(TalkcoinGUI *gui)
 {
     if (gui)
     {
         // Clicking on a transaction on the overview page simply sends you to transaction history page
-        connect(overviewPage, &OverviewPage::transactionClicked, gui, &BitcointalkcoinGUI::gotoHistoryPage);
+        connect(overviewPage, &OverviewPage::transactionClicked, gui, &TalkcoinGUI::gotoHistoryPage);
 
         // Navigate to transaction history page after send
-        connect(sendCoinsPage, &SendCoinsDialog::coinsSent, gui, &BitcointalkcoinGUI::gotoHistoryPage);
+        connect(sendCoinsPage, &SendCoinsDialog::coinsSent, gui, &TalkcoinGUI::gotoHistoryPage);
 
         // Receive and report messages
         connect(this, &WalletView::message, [gui](const QString &title, const QString &message, unsigned int style) {
@@ -118,15 +119,18 @@ void WalletView::setBitcointalkcoinGUI(BitcointalkcoinGUI *gui)
         });
 
         // Pass through encryption status changed signals
-        connect(this, &WalletView::encryptionStatusChanged, gui, &BitcointalkcoinGUI::updateWalletStatus);
+        connect(this, &WalletView::encryptionStatusChanged, gui, &TalkcoinGUI::updateWalletStatus);
 
         // Pass through transaction notifications
-        connect(this, &WalletView::incomingTransaction, gui, &BitcointalkcoinGUI::incomingTransaction);
+        connect(this, &WalletView::incomingTransaction, gui, &TalkcoinGUI::incomingTransaction);
 
-        connect(this, &WalletView::incomingMessage, gui, &BitcointalkcoinGUI::incomingMessage);
+        connect(this, &WalletView::incomingMessage, gui, &TalkcoinGUI::incomingMessage);
 
         // Connect HD enabled state signal
-        connect(this, &WalletView::hdEnabledStatusChanged, gui, &BitcointalkcoinGUI::updateWalletStatus);
+        connect(this, &WalletView::hdEnabledStatusChanged, gui, &TalkcoinGUI::updateWalletStatus);
+
+        // Connect SPV enabled state signal
+        connect(this, &WalletView::spvEnabledStatusChanged, gui, &TalkcoinGUI::updateWalletStatus);
     }
 }
 
@@ -136,7 +140,7 @@ void WalletView::setClientModel(ClientModel *_clientModel)
 
     overviewPage->setClientModel(_clientModel);
     sendCoinsPage->setClientModel(_clientModel);
-//    rpcConsole->setClientModel(_clientModel);
+    rpcConsole->setClientModel(_clientModel);
 }
 
 void WalletView::setWalletModel(WalletModel *_walletModel)
@@ -165,6 +169,10 @@ void WalletView::setWalletModel(WalletModel *_walletModel)
 
         // update HD status
         Q_EMIT hdEnabledStatusChanged();
+
+        // update SPV status
+        connect(_walletModel, SIGNAL(spvEnabledStatusChanged(int)), this, SLOT(updateSPVStatus()));
+        updateSPVStatus();
 
         // Balloon pop-up for new transaction
         connect(_walletModel->getTransactionTableModel(), &TransactionTableModel::rowsInserted, this, &WalletView::processNewTransaction);
@@ -416,4 +424,25 @@ void WalletView::showProgress(const QString &title, int nProgress)
 void WalletView::requestedSyncWarningInfo()
 {
     Q_EMIT outOfSyncWarningClicked();
+}
+
+void WalletView::setSPVMode(bool state)
+{
+    if(!walletModel)
+        return;
+
+    walletModel->setSpvEnabled(state);
+}
+
+bool WalletView::getSPVMode()
+{
+    if(!walletModel)
+        return false;
+
+    return walletModel->spvEnabled();
+}
+
+void WalletView::updateSPVStatus()
+{
+    Q_EMIT spvEnabledStatusChanged(walletModel->spvEnabled());
 }

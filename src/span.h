@@ -1,9 +1,9 @@
-// Copyright (c) 2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_SPAN_H
-#define BITCOINTALKCOIN_SPAN_H
+#ifndef TALKCOIN_SPAN_H
+#define TALKCOIN_SPAN_H
 
 #include <type_traits>
 #include <cstddef>

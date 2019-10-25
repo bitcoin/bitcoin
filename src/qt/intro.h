@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_QT_INTRO_H
-#define BITCOINTALKCOIN_QT_INTRO_H
+#ifndef TALKCOIN_QT_INTRO_H
+#define TALKCOIN_QT_INTRO_H
 
 #include <QDialog>
 #include <QMutex>
@@ -39,6 +39,7 @@ public:
 
     /**
      * Determine data directory. Let the user choose if the current one doesn't exist.
+     * Let the user configure additional preferences such as pruning.
      *
      * @returns true if a data directory was selected, false if the user cancelled the selection
      * dialog.

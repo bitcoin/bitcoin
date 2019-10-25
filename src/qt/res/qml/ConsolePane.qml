@@ -32,7 +32,7 @@ Pane {
 
                 width: parent.parent.width
 
-                text: bitcointalkcoinTr("RPCConsole", "WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.")
+                text: talkcoinTr("RPCConsole", "WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.")
 
                 font.family: robotoThin.name
                 font.styleName: "Thin"

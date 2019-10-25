@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2009-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_SERIALIZE_H
-#define BITCOINTALKCOIN_SERIALIZE_H
+#ifndef TALKCOIN_SERIALIZE_H
+#define TALKCOIN_SERIALIZE_H
 
 #include <compat/endian.h>
 
@@ -912,16 +912,11 @@ class CSizeComputer
 protected:
     size_t nSize;
 
-#ifdef ENABLE_PROOF_OF_STAKE
     const int nType;
-#endif
+
     const int nVersion;
 public:
-#ifdef ENABLE_PROOF_OF_STAKE
-    CSizeComputer(int nTypeIn, int nVersionIn) : nSize(0), nType(nTypeIn), nVersion(nVersionIn) {}
-#else
-    explicit CSizeComputer(int nVersionIn) : nSize(0), nVersion(nVersionIn) {}
-#endif
+    explicit CSizeComputer(int nTypeIn, int nVersionIn) : nSize(0), nType(nTypeIn), nVersion(nVersionIn) {}
 
     void write(const char *psz, size_t _nSize)
     {
@@ -946,9 +941,7 @@ public:
     }
 
     int GetVersion() const { return nVersion; }
-#ifdef ENABLE_PROOF_OF_STAKE
     int GetType() const { return nType; }
-#endif
 };
 
 template<typename Stream>
@@ -998,7 +991,6 @@ inline void WriteCompactSize(CSizeComputer &s, uint64_t nSize)
     s.seek(GetSizeOfCompactSize(nSize));
 }
 
-#ifdef ENABLE_PROOF_OF_STAKE
 template <typename T>
 size_t GetSerializeSize(const T& t, int nType, int nVersion = 0)
 {
@@ -1018,21 +1010,5 @@ size_t GetSerializeSizeMany(const S& s, const T&... t)
     SerializeMany(sc, t...);
     return sc.size();
 }
-#else
-template <typename T>
-size_t GetSerializeSize(const T& t, int nVersion = 0)
-{
-    return (CSizeComputer(nVersion) << t).size();
-}
 
-template <typename... T>
-size_t GetSerializeSizeMany(int nVersion, const T&... t)
-{
-    CSizeComputer sc(nVersion);
-    SerializeMany(sc, t...);
-    return sc.size();
-}
-
-#endif
-
-#endif // BITCOINTALKCOIN_SERIALIZE_H
+#endif // TALKCOIN_SERIALIZE_H

@@ -17,7 +17,7 @@ Pane {
             Image {
                 id: qrImage
 
-                source: "image://qr/bitcointalkcoin:" + address
+                source: "image://qr/talkcoin:" + address
 
                 anchors.horizontalCenter: parent.horizontalCenter
                 Layout.preferredWidth: parent.parent.width / 6 * 5

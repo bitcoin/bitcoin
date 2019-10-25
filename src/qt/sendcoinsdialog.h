@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2011-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_QT_SENDCOINSDIALOG_H
-#define BITCOINTALKCOIN_QT_SENDCOINSDIALOG_H
+#ifndef TALKCOIN_QT_SENDCOINSDIALOG_H
+#define TALKCOIN_QT_SENDCOINSDIALOG_H
 
 #include <qt/walletmodel.h>
 
@@ -25,7 +25,7 @@ QT_BEGIN_NAMESPACE
 class QUrl;
 QT_END_NAMESPACE
 
-/** Dialog for sending bitcointalkcoins */
+/** Dialog for sending talkcoins */
 class SendCoinsDialog : public QDialog
 {
     Q_OBJECT
@@ -121,4 +121,4 @@ private:
     int secDelay;
 };
 
-#endif // BITCOINTALKCOIN_QT_SENDCOINSDIALOG_H
+#endif // TALKCOIN_QT_SENDCOINSDIALOG_H

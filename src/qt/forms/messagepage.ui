@@ -162,13 +162,13 @@
           </sizepolicy>
          </property>
          <property name="toolTip">
-          <string>Sign a message to prove you own a Bitcointalkcoin address</string>
+          <string>Sign a message to prove you own a Talkcoin address</string>
          </property>
          <property name="text">
           <string>&amp;Reply</string>
          </property>
          <property name="icon">
-          <iconset resource="../bitcointalkcoin.qrc">
+          <iconset resource="../talkcoin.qrc">
            <normaloff>:/icons/send</normaloff>:/icons/send</iconset>
          </property>
         </widget>
@@ -188,7 +188,7 @@
           <string>&amp;Copy From Address</string>
          </property>
          <property name="icon">
-          <iconset resource="../bitcointalkcoin.qrc">
+          <iconset resource="../talkcoin.qrc">
            <normaloff>:/icons/editcopy</normaloff>:/icons/editcopy</iconset>
          </property>
         </widget>
@@ -208,7 +208,7 @@
           <string>Copy To &amp;Address</string>
          </property>
          <property name="icon">
-          <iconset resource="../bitcointalkcoin.qrc">
+          <iconset resource="../talkcoin.qrc">
            <normaloff>:/icons/editcopy</normaloff>:/icons/editcopy</iconset>
          </property>
         </widget>
@@ -228,7 +228,7 @@
           <string>&amp;Delete</string>
          </property>
          <property name="icon">
-          <iconset resource="../bitcointalkcoin.qrc">
+          <iconset resource="../talkcoin.qrc">
            <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
          </property>
         </widget>
@@ -240,7 +240,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="../bitcointalkcoin.qrc"/>
+  <include location="../talkcoin.qrc"/>
  </resources>
  <connections/>
 </ui>

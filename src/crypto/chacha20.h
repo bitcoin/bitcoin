@@ -1,9 +1,9 @@
-// Copyright (c) 2017 The Bitcointalkcoin Core developers
+// Copyright (c) 2017 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_CRYPTO_CHACHA20_H
-#define BITCOINTALKCOIN_CRYPTO_CHACHA20_H
+#ifndef TALKCOIN_CRYPTO_CHACHA20_H
+#define TALKCOIN_CRYPTO_CHACHA20_H
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -31,4 +31,4 @@ public:
     void Crypt(const unsigned char* input, unsigned char* output, size_t bytes);
 };
 
-#endif // BITCOINTALKCOIN_CRYPTO_CHACHA20_H
+#endif // TALKCOIN_CRYPTO_CHACHA20_H

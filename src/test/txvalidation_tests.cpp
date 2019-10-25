@@ -1,10 +1,8 @@
-// Copyright (c) 2017-2019 The Bitcointalkcoin Core developers
+// Copyright (c) 2017-2019 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <validation.h>
-#include <txmempool.h>
-#include <amount.h>
 #include <consensus/validation.h>
 #include <primitives/transaction.h>
 #include <script/script.h>

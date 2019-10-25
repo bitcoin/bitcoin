@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2009-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,7 +14,6 @@ std::string COutPoint::ToString() const
     return strprintf("COutPoint(%s, %u)", hash.ToString().substr(0,10), n);
 }
 
-#ifdef ENABLE_PROOF_OF_STAKE
 std::string COutPoint::ToStringShort() const
 {
     return strprintf("%s-%u", hash.ToString().substr(0,64), n);
@@ -25,7 +24,7 @@ uint256 COutPoint::GetHash()
     return SerializeHash(*this);
 //    return Hash(BEGIN(hash), END(hash), BEGIN(n), END(n));
 }
-#endif
+
 CTxIn::CTxIn(COutPoint prevoutIn, CScript scriptSigIn, uint32_t nSequenceIn)
 {
     prevout = prevoutIn;
@@ -61,18 +60,14 @@ CTxOut::CTxOut(const CAmount& nValueIn, CScript scriptPubKeyIn)
     scriptPubKey = scriptPubKeyIn;
 }
 
-#ifdef ENABLE_PROOF_OF_STAKE
 uint256 CTxOut::GetHash() const
 {
     return SerializeHash(*this);
 }
-#endif
 
 std::string CTxOut::ToString() const
 {
-#ifdef ENABLE_PROOF_OF_STAKE
     if (IsEmpty()) return "CTxOut(empty)";
-#endif
     return strprintf("CTxOut(nValue=%d.%08d, scriptPubKey=%s)", nValue / COIN, nValue % COIN, HexStr(scriptPubKey));
 }
 

@@ -1,9 +1,9 @@
-// Copyright (c) 2009-2019 The Bitcointalkcoin Core developers
+// Copyright (c) 2009-2019 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_PSBT_H
-#define BITCOINTALKCOIN_PSBT_H
+#ifndef TALKCOIN_PSBT_H
+#define TALKCOIN_PSBT_H
 
 #include <attributes.h>
 #include <node/transaction.h>
@@ -12,6 +12,7 @@
 #include <primitives/transaction.h>
 #include <pubkey.h>
 #include <script/sign.h>
+#include <script/signingprovider.h>
 
 // Magic bytes
 static constexpr uint8_t PSBT_MAGIC_BYTES[5] = {'p', 's', 'b', 't', 0xff};
@@ -388,7 +389,7 @@ struct PartiallySignedTransaction
     bool IsNull() const;
 
     /** Merge psbt into this. The two psbts must have the same underlying CTransaction (i.e. the
-      * same actual Bitcointalkcoin transaction.) Returns true if the merge succeeded, false otherwise. */
+      * same actual Talkcoin transaction.) Returns true if the merge succeeded, false otherwise. */
     NODISCARD bool Merge(const PartiallySignedTransaction& psbt);
     bool IsSane() const;
     bool AddInput(const CTxIn& txin, PSBTInput& psbtin);
@@ -565,6 +566,12 @@ bool PSBTInputSigned(const PSBTInput& input);
 /** Signs a PSBTInput, verifying that all provided data matches what is being signed. */
 bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, int sighash = SIGHASH_ALL, SignatureData* out_sigdata = nullptr, bool use_dummy = false);
 
+/** Updates a PSBTOutput with information from provider.
+ *
+ * This fills in the redeem_script, witness_script, and hd_keypaths where possible.
+ */
+void UpdatePSBTOutput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index);
+
 /**
  * Finalizes a PSBT if possible, combining partial signatures.
  *
@@ -596,4 +603,4 @@ NODISCARD bool DecodeBase64PSBT(PartiallySignedTransaction& decoded_psbt, const 
 //! Decode a raw (binary blob) PSBT into a PartiallySignedTransaction
 NODISCARD bool DecodeRawPSBT(PartiallySignedTransaction& decoded_psbt, const std::string& raw_psbt, std::string& error);
 
-#endif // BITCOINTALKCOIN_PSBT_H
+#endif // TALKCOIN_PSBT_H

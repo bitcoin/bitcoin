@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2009-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_PRIMITIVES_TRANSACTION_H
-#define BITCOINTALKCOIN_PRIMITIVES_TRANSACTION_H
+#ifndef TALKCOIN_PRIMITIVES_TRANSACTION_H
+#define TALKCOIN_PRIMITIVES_TRANSACTION_H
 
 #include <stdint.h>
 #include <amount.h>
@@ -54,11 +54,9 @@ public:
     }
 
     std::string ToString() const;
-#ifdef ENABLE_PROOF_OF_STAKE
     std::string ToStringShort() const;
 
     uint256 GetHash();
-#endif
 };
 
 /** An input of a transaction.  It contains the location of the previous
@@ -167,7 +165,6 @@ public:
         return (nValue == -1);
     }
 
-#ifdef ENABLE_PROOF_OF_STAKE
     void SetEmpty()
     {
         nValue = 0;
@@ -178,7 +175,6 @@ public:
     {
         return (nValue == 0 && scriptPubKey.empty());
     }
-#endif
 
     friend bool operator==(const CTxOut& a, const CTxOut& b)
     {
@@ -191,9 +187,7 @@ public:
         return !(a == b);
     }
 
-#ifdef ENABLE_PROOF_OF_STAKE
     uint256 GetHash() const;
-#endif
 
     std::string ToString() const;
 };
@@ -356,7 +350,6 @@ public:
      */
     unsigned int GetTotalSize() const;
 
-#ifdef ENABLE_PROOF_OF_STAKE
     bool IsCoinBase() const
     {
         return (vin.size() == 1 && vin[0].prevout.IsNull() && vout.size() >= 1);
@@ -373,14 +366,7 @@ public:
         // not coin base or coin stake transaction
         return !IsCoinBase() && !IsCoinStake();
     }
-#else
 
-    bool IsCoinBase() const
-    {
-        return (vin.size() == 1 && vin[0].prevout.IsNull());
-    }
-
-#endif
     friend bool operator==(const CTransaction& a, const CTransaction& b)
     {
         return a.hash == b.hash;
@@ -451,4 +437,4 @@ typedef std::shared_ptr<const CTransaction> CTransactionRef;
 static inline CTransactionRef MakeTransactionRef() { return std::make_shared<const CTransaction>(); }
 template <typename Tx> static inline CTransactionRef MakeTransactionRef(Tx&& txIn) { return std::make_shared<const CTransaction>(std::forward<Tx>(txIn)); }
 
-#endif // BITCOINTALKCOIN_PRIMITIVES_TRANSACTION_H
+#endif // TALKCOIN_PRIMITIVES_TRANSACTION_H

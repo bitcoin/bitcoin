@@ -1,9 +1,9 @@
-// Copyright (c) 2019 The Bitcointalkcoin Core developers
+// Copyright (c) 2019 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_NODE_COIN_H
-#define BITCOINTALKCOIN_NODE_COIN_H
+#ifndef TALKCOIN_NODE_COIN_H
+#define TALKCOIN_NODE_COIN_H
 
 #include <map>
 
@@ -19,4 +19,4 @@ class Coin;
  */
 void FindCoins(std::map<COutPoint, Coin>& coins);
 
-#endif // BITCOINTALKCOIN_NODE_COIN_H
+#endif // TALKCOIN_NODE_COIN_H

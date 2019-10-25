@@ -1,9 +1,9 @@
-// Copyright (c) 2012-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2012-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_LIMITEDMAP_H
-#define BITCOINTALKCOIN_LIMITEDMAP_H
+#ifndef TALKCOIN_LIMITEDMAP_H
+#define TALKCOIN_LIMITEDMAP_H
 
 #include <assert.h>
 #include <map>
@@ -97,4 +97,4 @@ public:
     }
 };
 
-#endif // BITCOINTALKCOIN_LIMITEDMAP_H
+#endif // TALKCOIN_LIMITEDMAP_H

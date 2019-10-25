@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2018 The Bitcointalkcoin Core developers
+# Copyright (c) 2018 The Talkcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 export LC_ALL=C.UTF-8
 
-cd "build/bitcointalkcoin-$HOST" || (echo "could not enter distdir build/bitcointalkcoin-$HOST"; exit 1)
+cd "build/talkcoin-$HOST" || (echo "could not enter distdir build/talkcoin-$HOST"; exit 1)
 
 if [ "$RUN_UNIT_TESTS" = "true" ]; then
   BEGIN_FOLD unit-tests

@@ -1,8 +1,8 @@
-<!-- This issue tracker is only for technical issues related to Bitcointalkcoin Core.
+<!-- This issue tracker is only for technical issues related to Talkcoin Core.
 
-General bitcointalkcoin questions and/or support requests are best directed to the Bitcointalkcoin StackExchange at https://bitcointalkcoin.stackexchange.com.
+General talkcoin questions and/or support requests are best directed to the Talkcoin StackExchange at https://talkcoin.stackexchange.com.
 
-For reporting security issues, please read instructions at https://bitcointalkcoincore.org/en/contact/.
+For reporting security issues, please read instructions at https://talkcoincore.org/en/contact/.
 
 If the node is "stuck" during sync or giving "block checksum mismatch" errors, please ensure your hardware is stable by running memtest and observe CPU temperature with a load-test tool such as linpack before creating an issue! -->
 
@@ -13,7 +13,7 @@ If the node is "stuck" during sync or giving "block checksum mismatch" errors, p
 
 <!--- How reliably can you reproduce the issue, what are the steps to do so? -->
 
-<!-- What version of Bitcointalkcoin Core are you using, where did you get it (website, self-compiled, etc)? -->
+<!-- What version of Talkcoin Core are you using, where did you get it (website, self-compiled, etc)? -->
 
 <!-- What type of machine are you observing the error on (OS/CPU and disk type)? -->
 

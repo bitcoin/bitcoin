@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2011-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,6 +16,8 @@
 #include <core_io.h>
 #include <interfaces/handler.h>
 #include <uint256.h>
+
+#include <algorithm>
 
 #include <QColor>
 #include <QDateTime>
@@ -93,9 +95,9 @@ public:
         qDebug() << "TransactionTablePriv::updateWallet: " + QString::fromStdString(hash.ToString()) + " " + QString::number(status);
 
         // Find bounds of this transaction in model
-        QList<TransactionRecord>::iterator lower = qLowerBound(
+        QList<TransactionRecord>::iterator lower = std::lower_bound(
             cachedWallet.begin(), cachedWallet.end(), hash, TxLessThan());
-        QList<TransactionRecord>::iterator upper = qUpperBound(
+        QList<TransactionRecord>::iterator upper = std::upper_bound(
             cachedWallet.begin(), cachedWallet.end(), hash, TxLessThan());
         int lowerIndex = (lower - cachedWallet.begin());
         int upperIndex = (upper - cachedWallet.begin());
@@ -189,9 +191,10 @@ public:
             interfaces::WalletTxStatus wtx;
             int numBlocks;
             int64_t block_time;
-            if (wallet.tryGetTxStatus(rec->hash, wtx, numBlocks, block_time) && rec->statusUpdateNeeded(numBlocks)) {
-                rec->updateStatus(wtx, numBlocks, block_time);
-            }
+            if (wallet.tryGetTxStatus(rec->hash, wtx, numBlocks, block_time))
+				if (rec->statusUpdateNeeded(numBlocks)) {
+					rec->updateStatus(wtx, numBlocks, block_time);
+				}
             return rec;
         }
         return nullptr;
@@ -220,7 +223,7 @@ TransactionTableModel::TransactionTableModel(const PlatformStyle *_platformStyle
         fProcessingQueuedTransactions(false),
         platformStyle(_platformStyle)
 {
-    columns << QString() << QString() << tr("Date") << tr("Type") << tr("Label") << BitcointalkcoinUnits::getAmountColumnTitle(walletModel->getOptionsModel()->getDisplayUnit());
+    columns << QString() << QString() << tr("Date") << tr("Type") << tr("Label") << TalkcoinUnits::getAmountColumnTitle(walletModel->getOptionsModel()->getDisplayUnit());
     priv->refreshWallet(walletModel->wallet());
 
     connect(walletModel->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &TransactionTableModel::updateDisplayUnit);
@@ -237,7 +240,7 @@ TransactionTableModel::~TransactionTableModel()
 /** Updates the column title to "Amount (DisplayUnit)" and emits headerDataChanged() signal for table headers to react. */
 void TransactionTableModel::updateAmountColumnTitle()
 {
-    columns[Amount] = BitcointalkcoinUnits::getAmountColumnTitle(walletModel->getOptionsModel()->getDisplayUnit());
+    columns[Amount] = TalkcoinUnits::getAmountColumnTitle(walletModel->getOptionsModel()->getDisplayUnit());
     Q_EMIT headerDataChanged(Qt::Horizontal,Amount,Amount);
 }
 
@@ -338,21 +341,24 @@ QString TransactionTableModel::lookupAddress(const std::string &address, bool to
 
 QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
 {
+    QString prefix;
+    if (!wtx->status.fValidated)
+        prefix = "SPV/";
     switch(wtx->type)
     {
     case TransactionRecord::RecvWithAddress:
-        return tr("Received with");
+        return prefix+tr("Received with");
     case TransactionRecord::RecvFromOther:
-        return tr("Received from");
+        return prefix+tr("Received from");
     case TransactionRecord::SendToAddress:
     case TransactionRecord::SendToOther:
-        return tr("Sent to");
+        return prefix+tr("Sent to");
     case TransactionRecord::SendToSelf:
-        return tr("Payment to yourself");
+        return prefix+tr("Payment to yourself");
     case TransactionRecord::Generated:
-        return tr("Mined");
+        return prefix+tr("Mined");
     case TransactionRecord::Staked:
-        return tr("Staked");
+        return prefix+tr("Staked");
     default:
         return QString();
     }
@@ -374,6 +380,13 @@ QVariant TransactionTableModel::txAddressDecoration(const TransactionRecord *wtx
     default:
         return QIcon(":/icons/tx_inout");
     }
+}
+
+QVariant TransactionTableModel::typeDecoration(const TransactionRecord *wtx) const
+{
+    if(!wtx->status.fValidated)
+        return QIcon(":/icons/tx_spv");
+    return QVariant();
 }
 
 QString TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, bool tooltip) const
@@ -423,9 +436,9 @@ QVariant TransactionTableModel::addressColor(const TransactionRecord *wtx) const
     return QVariant();
 }
 
-QString TransactionTableModel::formatTxAmount(const TransactionRecord *wtx, bool showUnconfirmed, BitcointalkcoinUnits::SeparatorStyle separators) const
+QString TransactionTableModel::formatTxAmount(const TransactionRecord *wtx, bool showUnconfirmed, TalkcoinUnits::SeparatorStyle separators) const
 {
-    QString str = BitcointalkcoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), wtx->credit + wtx->debit, false, separators);
+    QString str = TalkcoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), wtx->credit + wtx->debit, false, separators);
     if(showUnconfirmed)
     {
         if(!wtx->status.countsForBalance)
@@ -506,6 +519,8 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
             return txStatusDecoration(rec);
         case Watchonly:
             return txWatchonlyDecoration(rec);
+        case Type:
+            return typeDecoration(rec);
         case ToAddress:
             return txAddressDecoration(rec);
         }
@@ -525,7 +540,7 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         case ToAddress:
             return formatTxToAddress(rec, false);
         case Amount:
-            return formatTxAmount(rec, true, BitcointalkcoinUnits::separatorAlways);
+            return formatTxAmount(rec, true, TalkcoinUnits::separatorAlways);
         }
         break;
     case Qt::EditRole:
@@ -550,6 +565,11 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         return formatTooltip(rec);
     case Qt::TextAlignmentRole:
         return column_alignments[index.column()];
+    case Qt::BackgroundRole:
+        if(!rec->status.fValidated)
+            return COLOR_TX_STATUS_SPV_BACKGROUND;
+        else
+            return QColor(255,255,255,255);
     case Qt::ForegroundRole:
         // Use the "danger" color for abandoned transactions
         if(rec->status.status == TransactionStatus::Abandoned)
@@ -615,14 +635,14 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
                 details.append(QString::fromStdString(rec->address));
                 details.append(" ");
             }
-            details.append(formatTxAmount(rec, false, BitcointalkcoinUnits::separatorNever));
+            details.append(formatTxAmount(rec, false, TalkcoinUnits::separatorNever));
             return details;
         }
     case ConfirmedRole:
         return rec->status.countsForBalance;
     case FormattedAmountRole:
         // Used for copy/export, so don't include separators
-        return formatTxAmount(rec, false, BitcointalkcoinUnits::separatorNever);
+        return formatTxAmount(rec, false, TalkcoinUnits::separatorNever);
     case StatusRole:
         return rec->status.status;
     }
@@ -692,10 +712,11 @@ public:
     {
         QString strHash = QString::fromStdString(hash.GetHex());
         qDebug() << "NotifyTransactionChanged: " + strHash + " status= " + QString::number(status);
-        QMetaObject::invokeMethod(ttm, "updateTransaction", Qt::QueuedConnection,
+        bool invoked = QMetaObject::invokeMethod(ttm, "updateTransaction", Qt::QueuedConnection,
                                   Q_ARG(QString, strHash),
                                   Q_ARG(int, status),
                                   Q_ARG(bool, showTransaction));
+        assert(invoked);
     }
 private:
     uint256 hash;
@@ -730,12 +751,16 @@ static void ShowProgress(TransactionTableModel *ttm, const std::string &title, i
     if (nProgress == 100)
     {
         fQueueNotifications = false;
-        if (vQueueNotifications.size() > 10) // prevent balloon spam, show maximum 10 balloons
-            QMetaObject::invokeMethod(ttm, "setProcessingQueuedTransactions", Qt::QueuedConnection, Q_ARG(bool, true));
+        if (vQueueNotifications.size() > 10) { // prevent balloon spam, show maximum 10 balloons
+            bool invoked = QMetaObject::invokeMethod(ttm, "setProcessingQueuedTransactions", Qt::QueuedConnection, Q_ARG(bool, true));
+            assert(invoked);
+        }
         for (unsigned int i = 0; i < vQueueNotifications.size(); ++i)
         {
-            if (vQueueNotifications.size() - i <= 10)
-                QMetaObject::invokeMethod(ttm, "setProcessingQueuedTransactions", Qt::QueuedConnection, Q_ARG(bool, false));
+            if (vQueueNotifications.size() - i <= 10) {
+                bool invoked = QMetaObject::invokeMethod(ttm, "setProcessingQueuedTransactions", Qt::QueuedConnection, Q_ARG(bool, false));
+                assert(invoked);
+            }
 
             vQueueNotifications[i].invoke(ttm);
         }

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2019 The Bitcointalkcoin Core developers
+# Copyright (c) 2014-2019 The Talkcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet accounts properly when there are cloned transactions with malleated scriptsigs."""
 
 import io
-from test_framework.test_framework import BitcointalkcoinTestFramework
+from test_framework.test_framework import TalkcoinTestFramework
 from test_framework.util import (
     assert_equal,
     connect_nodes,
@@ -13,7 +13,7 @@ from test_framework.util import (
 )
 from test_framework.messages import CTransaction, COIN
 
-class TxnMallTest(BitcointalkcoinTestFramework):
+class TxnMallTest(TalkcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2019 The Bitcointalkcoin Core developers
+// Copyright (c) 2016-2019 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,8 +13,6 @@
 #include <support/events.h>
 
 #include <test/setup_common.h>
-
-#include <vector>
 
 #include <boost/test/unit_test.hpp>
 

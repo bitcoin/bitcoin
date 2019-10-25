@@ -206,7 +206,7 @@ Pane {
                     font: theme.thinFont
                 }
                 ToolButton {
-                    text: bitcointalkcoinTr("BitcointalkcoinGUI", "&Send")
+                    text: talkcoinTr("TalkcoinGUI", "&Send")
                     Layout.alignment: Qt.AlignHCenter
                     onClicked: {
                         confirmationDialog.open()

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2019 The Bitcointalkcoin Core developers
+# Copyright (c) 2017-2019 The Talkcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Class for bitcointalkcoind node under test"""
+"""Class for talkcoind node under test"""
 
 import contextlib
 import decimal
@@ -32,7 +32,7 @@ from .util import (
     p2p_port,
 )
 
-BITCOINTALKCOIND_PROC_WAIT_TIMEOUT = 60
+TALKCOIND_PROC_WAIT_TIMEOUT = 60
 
 
 class FailedToStartError(Exception):
@@ -46,7 +46,7 @@ class ErrorMatch(Enum):
 
 
 class TestNode():
-    """A class for representing a bitcointalkcoind node under test.
+    """A class for representing a talkcoind node under test.
 
     This class contains:
 
@@ -59,7 +59,7 @@ class TestNode():
     To make things easier for the test writer, any unrecognised messages will
     be dispatched to the RPC connection."""
 
-    def __init__(self, i, datadir, *, rpchost, timewait, bitcointalkcoind, bitcointalkcoin_cli, coverage_dir, cwd, extra_conf=None, extra_args=None, use_cli=False, start_perf=False):
+    def __init__(self, i, datadir, *, rpchost, timewait, talkcoind, talkcoin_cli, coverage_dir, cwd, extra_conf=None, extra_args=None, use_cli=False, start_perf=False):
         """
         Kwargs:
             start_perf (bool): If True, begin profiling the node with `perf` as soon as
@@ -72,7 +72,7 @@ class TestNode():
         self.stderr_dir = os.path.join(self.datadir, "stderr")
         self.rpchost = rpchost
         self.rpc_timeout = timewait
-        self.binary = bitcointalkcoind
+        self.binary = talkcoind
         self.coverage_dir = coverage_dir
         self.cwd = cwd
         if extra_conf is not None:
@@ -81,8 +81,8 @@ class TestNode():
         # For those callers that need more flexibility, they can just set the args property directly.
         # Note that common args are set in the config file (see initialize_datadir)
         self.extra_args = extra_args
-        # Configuration for logging is set as command-line args rather than in the bitcointalkcoin.conf file.
-        # This means that starting a bitcointalkcoind using the temp dir to debug a failed test won't
+        # Configuration for logging is set as command-line args rather than in the talkcoin.conf file.
+        # This means that starting a talkcoind using the temp dir to debug a failed test won't
         # spam debug.log.
         self.args = [
             self.binary,
@@ -95,7 +95,7 @@ class TestNode():
             "-uacomment=testnode%d" % i,
         ]
 
-        self.cli = TestNodeCLI(bitcointalkcoin_cli, self.datadir)
+        self.cli = TestNodeCLI(talkcoin_cli, self.datadir)
         self.use_cli = use_cli
         self.start_perf = start_perf
 
@@ -161,7 +161,7 @@ class TestNode():
         raise AssertionError(self._node_msg(msg))
 
     def __del__(self):
-        # Ensure that we don't leave any bitcointalkcoind processes lying around after
+        # Ensure that we don't leave any talkcoind processes lying around after
         # the test ends
         if self.process and self.cleanup_on_exit:
             # Should only happen on test failure
@@ -183,7 +183,7 @@ class TestNode():
         if extra_args is None:
             extra_args = self.extra_args
 
-        # Add a new stdout and stderr file each time bitcointalkcoind is started
+        # Add a new stdout and stderr file each time talkcoind is started
         if stderr is None:
             stderr = tempfile.NamedTemporaryFile(dir=self.stderr_dir, delete=False)
         if stdout is None:
@@ -195,7 +195,7 @@ class TestNode():
             cwd = self.cwd
 
         # Delete any existing cookie file -- if such a file exists (eg due to
-        # unclean shutdown), it will get overwritten anyway by bitcointalkcoind, and
+        # unclean shutdown), it will get overwritten anyway by talkcoind, and
         # potentially interfere with our attempt to authenticate
         delete_cookie_file(self.datadir)
 
@@ -205,19 +205,19 @@ class TestNode():
         self.process = subprocess.Popen(self.args + extra_args, env=subp_env, stdout=stdout, stderr=stderr, cwd=cwd, **kwargs)
 
         self.running = True
-        self.log.debug("bitcointalkcoind started, waiting for RPC to come up")
+        self.log.debug("talkcoind started, waiting for RPC to come up")
 
         if self.start_perf:
             self._start_perf()
 
     def wait_for_rpc_connection(self):
-        """Sets up an RPC connection to the bitcointalkcoind process. Returns False if unable to connect."""
+        """Sets up an RPC connection to the talkcoind process. Returns False if unable to connect."""
         # Poll at a rate of four times per second
         poll_per_s = 4
         for _ in range(poll_per_s * self.rpc_timeout):
             if self.process.poll() is not None:
                 raise FailedToStartError(self._node_msg(
-                    'bitcointalkcoind exited with status {} during initialization'.format(self.process.returncode)))
+                    'talkcoind exited with status {} during initialization'.format(self.process.returncode)))
             try:
                 rpc = get_rpc_proxy(rpc_url(self.datadir, self.index, self.rpchost), self.index, timeout=self.rpc_timeout, coveragedir=self.coverage_dir)
                 rpc.getblockcount()
@@ -237,11 +237,11 @@ class TestNode():
                 # -342 Service unavailable, RPC server started but is shutting down due to error
                 if e.error['code'] != -28 and e.error['code'] != -342:
                     raise  # unknown JSON RPC exception
-            except ValueError as e:  # cookie file not found and no rpcuser or rpcassword. bitcointalkcoind still starting
+            except ValueError as e:  # cookie file not found and no rpcuser or rpcassword. talkcoind still starting
                 if "No RPC credentials" not in str(e):
                     raise
             time.sleep(1.0 / poll_per_s)
-        self._raise_assertion_error("Unable to connect to bitcointalkcoind")
+        self._raise_assertion_error("Unable to connect to talkcoind")
 
     def generate(self, nblocks, maxtries=1000000):
         self.log.debug("TestNode.generate() dispatches `generate` call to `generatetoaddress`")
@@ -301,7 +301,7 @@ class TestNode():
         self.log.debug("Node stopped")
         return True
 
-    def wait_until_stopped(self, timeout=BITCOINTALKCOIND_PROC_WAIT_TIMEOUT):
+    def wait_until_stopped(self, timeout=TALKCOIND_PROC_WAIT_TIMEOUT):
         wait_until(self.is_node_stopped, timeout=timeout)
 
     @contextlib.contextmanager
@@ -388,7 +388,7 @@ class TestNode():
 
         if not test_success('readelf -S {} | grep .debug_str'.format(shlex.quote(self.binary))):
             self.log.warning(
-                "perf output won't be very useful without debug symbols compiled into bitcointalkcoind")
+                "perf output won't be very useful without debug symbols compiled into talkcoind")
 
         output_path = tempfile.NamedTemporaryFile(
             dir=self.datadir,
@@ -429,11 +429,11 @@ class TestNode():
     def assert_start_raises_init_error(self, extra_args=None, expected_msg=None, match=ErrorMatch.FULL_TEXT, *args, **kwargs):
         """Attempt to start the node and expect it to raise an error.
 
-        extra_args: extra arguments to pass through to bitcointalkcoind
-        expected_msg: regex that stderr should match when bitcointalkcoind fails
+        extra_args: extra arguments to pass through to talkcoind
+        expected_msg: regex that stderr should match when talkcoind fails
 
-        Will throw if bitcointalkcoind starts without an error.
-        Will throw if an expected_msg is provided and it does not match bitcointalkcoind's stdout."""
+        Will throw if talkcoind starts without an error.
+        Will throw if an expected_msg is provided and it does not match talkcoind's stdout."""
         with tempfile.NamedTemporaryFile(dir=self.stderr_dir, delete=False) as log_stderr, \
              tempfile.NamedTemporaryFile(dir=self.stdout_dir, delete=False) as log_stdout:
             try:
@@ -442,7 +442,7 @@ class TestNode():
                 self.stop_node()
                 self.wait_until_stopped()
             except FailedToStartError as e:
-                self.log.debug('bitcointalkcoind failed to start: %s', e)
+                self.log.debug('talkcoind failed to start: %s', e)
                 self.running = False
                 self.process = None
                 # Check stderr for expected message
@@ -463,9 +463,9 @@ class TestNode():
                                 'Expected message "{}" does not fully match stderr:\n"{}"'.format(expected_msg, stderr))
             else:
                 if expected_msg is None:
-                    assert_msg = "bitcointalkcoind should have exited with an error"
+                    assert_msg = "talkcoind should have exited with an error"
                 else:
-                    assert_msg = "bitcointalkcoind should have exited with expected error " + expected_msg
+                    assert_msg = "talkcoind should have exited with expected error " + expected_msg
                 self._raise_assertion_error(assert_msg)
 
     def add_p2p_connection(self, p2p_conn, *, wait_for_verack=True, **kwargs):
@@ -520,17 +520,17 @@ def arg_to_cli(arg):
         return str(arg)
 
 class TestNodeCLI():
-    """Interface to bitcointalkcoin-cli for an individual node"""
+    """Interface to talkcoin-cli for an individual node"""
 
     def __init__(self, binary, datadir):
         self.options = []
         self.binary = binary
         self.datadir = datadir
         self.input = None
-        self.log = logging.getLogger('TestFramework.bitcointalkcoincli')
+        self.log = logging.getLogger('TestFramework.talkcoincli')
 
     def __call__(self, *options, input=None):
-        # TestNodeCLI is callable with bitcointalkcoin-cli command-line options
+        # TestNodeCLI is callable with talkcoin-cli command-line options
         cli = TestNodeCLI(self.binary, self.datadir)
         cli.options = [str(o) for o in options]
         cli.input = input
@@ -549,17 +549,17 @@ class TestNodeCLI():
         return results
 
     def send_cli(self, command=None, *args, **kwargs):
-        """Run bitcointalkcoin-cli command. Deserializes returned string as python object."""
+        """Run talkcoin-cli command. Deserializes returned string as python object."""
         pos_args = [arg_to_cli(arg) for arg in args]
         named_args = [str(key) + "=" + arg_to_cli(value) for (key, value) in kwargs.items()]
-        assert not (pos_args and named_args), "Cannot use positional arguments and named arguments in the same bitcointalkcoin-cli call"
+        assert not (pos_args and named_args), "Cannot use positional arguments and named arguments in the same talkcoin-cli call"
         p_args = [self.binary, "-datadir=" + self.datadir] + self.options
         if named_args:
             p_args += ["-named"]
         if command is not None:
             p_args += [command]
         p_args += pos_args + named_args
-        self.log.debug("Running bitcointalkcoin-cli command: %s" % command)
+        self.log.debug("Running talkcoin-cli command: %s" % command)
         process = subprocess.Popen(p_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         cli_stdout, cli_stderr = process.communicate(input=self.input)
         returncode = process.poll()

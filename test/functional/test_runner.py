@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2019 The Bitcointalkcoin Core developers
+# Copyright (c) 2014-2019 The Talkcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Run regression test suite.
@@ -8,7 +8,7 @@ This module calls down into individual test cases via subprocess. It will
 forward all unrecognized arguments onto the individual test scripts.
 
 For a description of arguments recognized by test scripts, see
-`test/functional/test_framework/test_framework.py:BitcointalkcoinTestFramework.main`.
+`test/functional/test_framework/test_framework.py:TalkcoinTestFramework.main`.
 
 """
 
@@ -110,7 +110,7 @@ BASE_SCRIPTS = [
     # vv Tests less than 30s vv
     'wallet_keypool_topup.py',
     'interface_zmq.py',
-    'interface_bitcointalkcoin_cli.py',
+    'interface_talkcoin_cli.py',
     'mempool_resurrect.py',
     'wallet_txn_doublespend.py --mineblock',
     'tool_wallet.py',
@@ -258,9 +258,9 @@ def main():
 
     logging.debug("Temporary test directory at %s" % tmpdir)
 
-    enable_bitcointalkcoind = config["components"].getboolean("ENABLE_BITCOINTALKCOIND")
+    enable_talkcoind = config["components"].getboolean("ENABLE_TALKCOIND")
 
-    if not enable_bitcointalkcoind:
+    if not enable_talkcoind:
         print("No functional tests to run.")
         print("Rerun ./configure with --with-daemon and then make")
         sys.exit(0)
@@ -327,10 +327,10 @@ def main():
 def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=False, args=None, combined_logs_len=0, failfast=False, runs_ci):
     args = args or []
 
-    # Warn if bitcointalkcoind is already running (unix only)
+    # Warn if talkcoind is already running (unix only)
     try:
-        if subprocess.check_output(["pidof", "bitcointalkcoind"]) is not None:
-            print("%sWARNING!%s There is already a bitcointalkcoind process running on this system. Tests may fail unexpectedly due to resource contention!" % (BOLD[1], BOLD[0]))
+        if subprocess.check_output(["pidof", "talkcoind"]) is not None:
+            print("%sWARNING!%s There is already a talkcoind process running on this system. Tests may fail unexpectedly due to resource contention!" % (BOLD[1], BOLD[0]))
     except (OSError, subprocess.SubprocessError):
         pass
 
@@ -595,7 +595,7 @@ class RPCCoverage():
     Coverage calculation works by having each test script subprocess write
     coverage files into a particular directory. These files contain the RPC
     commands invoked during testing, as well as a complete listing of RPC
-    commands per `bitcointalkcoin-cli help` (`rpc_interface.txt`).
+    commands per `talkcoin-cli help` (`rpc_interface.txt`).
 
     After all tests complete, the commands run are combined and diff'd against
     the complete list to calculate uncovered RPC commands.

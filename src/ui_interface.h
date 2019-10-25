@@ -1,10 +1,10 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2012-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2012-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_UI_INTERFACE_H
-#define BITCOINTALKCOIN_UI_INTERFACE_H
+#ifndef TALKCOIN_UI_INTERFACE_H
+#define TALKCOIN_UI_INTERFACE_H
 
 #include <functional>
 #include <memory>
@@ -70,6 +70,9 @@ public:
         MODAL               = 0x10000000U,
 
         /** Do not print contents of message to debug log */
+        MSG_NOPREFIX        = 0x20000000U,
+
+        /** Do not print contents of message to debug log */
         SECURE              = 0x40000000U,
 
         /** Predefined combinations for certain default usage cases */
@@ -130,4 +133,4 @@ bool InitError(const std::string& str);
 
 extern CClientUIInterface uiInterface;
 
-#endif // BITCOINTALKCOIN_UI_INTERFACE_H
+#endif // TALKCOIN_UI_INTERFACE_H

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Bitcointalkcoin Core developers
+// Copyright (c) 2011-2013 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,7 +13,7 @@
 - (NSString *)__bundleIdentifier
 {
     if (self == [NSBundle mainBundle]) {
-        return @"org.bitcointalkcoinfoundation.Bitcointalkcoin-Qt";
+        return @"org.talkcoinfoundation.Talkcoin-Qt";
     } else {
         return [self __bundleIdentifier];
     }

@@ -1,9 +1,9 @@
-// Copyright (c) 2017 The Bitcointalkcoin Core developers
+// Copyright (c) 2017 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_OPTIONAL_H
-#define BITCOINTALKCOIN_OPTIONAL_H
+#ifndef TALKCOIN_OPTIONAL_H
+#define TALKCOIN_OPTIONAL_H
 
 #include <utility>
 
@@ -23,4 +23,4 @@ Optional<T> MakeOptional(bool condition, T&& value)
 //! Substitute for C++17 std::nullopt
 static auto& nullopt = boost::none;
 
-#endif // BITCOINTALKCOIN_OPTIONAL_H
+#endif // TALKCOIN_OPTIONAL_H

@@ -1,16 +1,16 @@
-// Copyright (c) 2011-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2011-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcointalkcoin-config.h>
+#include <config/talkcoin-config.h>
 #endif
 
 #include <qt/coincontroldialog.h>
 #include <qt/forms/ui_coincontroldialog.h>
 
 #include <qt/addresstablemodel.h>
-#include <qt/bitcointalkcoinunits.h>
+#include <qt/talkcoinunits.h>
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
 #include <qt/platformstyle.h>
@@ -226,7 +226,7 @@ void CoinControlDialog::showMenu(const QPoint &point)
 // context menu action: copy amount
 void CoinControlDialog::copyAmount()
 {
-    GUIUtil::setClipboard(BitcointalkcoinUnits::removeSpaces(contextMenuItem->text(COLUMN_AMOUNT)));
+    GUIUtil::setClipboard(TalkcoinUnits::removeSpaces(contextMenuItem->text(COLUMN_AMOUNT)));
 }
 
 // context menu action: copy label
@@ -418,7 +418,8 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
 
         if (amount > 0)
         {
-            CTxOut txout(amount, static_cast<CScript>(std::vector<unsigned char>(24, 0)));
+            // Assumes a p2pkh script size
+            CTxOut txout(amount, CScript() << std::vector<unsigned char>(24, 0));
             txDummy.vout.push_back(txout);
             fDust |= IsDust(txout, model->node().getDustRelayFee());
         }
@@ -509,7 +510,8 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
             // Never create dust outputs; if we would, just add the dust to the fee.
             if (nChange > 0 && nChange < MIN_CHANGE)
             {
-                CTxOut txout(nChange, static_cast<CScript>(std::vector<unsigned char>(24, 0)));
+                // Assumes a p2pkh script size
+                CTxOut txout(nChange, CScript() << std::vector<unsigned char>(24, 0));
                 if (IsDust(txout, model->node().getDustRelayFee()))
                 {
                     nPayFee += nChange;
@@ -528,7 +530,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     }
 
     // actually update labels
-    int nDisplayUnit = BitcointalkcoinUnits::TALK;
+    int nDisplayUnit = TalkcoinUnits::TALK;
     if (model && model->getOptionsModel())
         nDisplayUnit = model->getOptionsModel()->getDisplayUnit();
 
@@ -548,12 +550,12 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
 
     // stats
     l1->setText(QString::number(nQuantity));                                 // Quantity
-    l2->setText(BitcointalkcoinUnits::formatWithUnit(nDisplayUnit, nAmount));        // Amount
-    l3->setText(BitcointalkcoinUnits::formatWithUnit(nDisplayUnit, nPayFee));        // Fee
-    l4->setText(BitcointalkcoinUnits::formatWithUnit(nDisplayUnit, nAfterFee));      // After Fee
+    l2->setText(TalkcoinUnits::formatWithUnit(nDisplayUnit, nAmount));        // Amount
+    l3->setText(TalkcoinUnits::formatWithUnit(nDisplayUnit, nPayFee));        // Fee
+    l4->setText(TalkcoinUnits::formatWithUnit(nDisplayUnit, nAfterFee));      // After Fee
     l5->setText(((nBytes > 0) ? ASYMP_UTF8 : "") + QString::number(nBytes));        // Bytes
     l7->setText(fDust ? tr("yes") : tr("no"));                               // Dust
-    l8->setText(BitcointalkcoinUnits::formatWithUnit(nDisplayUnit, nChange));        // Change
+    l8->setText(TalkcoinUnits::formatWithUnit(nDisplayUnit, nChange));        // Change
     if (nPayFee > 0)
     {
         l3->setText(ASYMP_UTF8 + l3->text());
@@ -654,7 +656,7 @@ void CoinControlDialog::updateView()
             {
                 sAddress = QString::fromStdString(EncodeDestination(outputAddress));
 
-                // if listMode or change => show bitcointalkcoin address. In tree mode, address is not shown again for direct wallet address outputs
+                // if listMode or change => show talkcoin address. In tree mode, address is not shown again for direct wallet address outputs
                 if (!treeMode || (!(sAddress == sWalletAddress)))
                     itemOutput->setText(COLUMN_ADDRESS, sAddress);
             }
@@ -675,7 +677,7 @@ void CoinControlDialog::updateView()
             }
 
             // amount
-            itemOutput->setText(COLUMN_AMOUNT, BitcointalkcoinUnits::format(nDisplayUnit, out.txout.nValue));
+            itemOutput->setText(COLUMN_AMOUNT, TalkcoinUnits::format(nDisplayUnit, out.txout.nValue));
             itemOutput->setData(COLUMN_AMOUNT, Qt::UserRole, QVariant((qlonglong)out.txout.nValue)); // padding so that sorting works correctly
 
             // date
@@ -709,7 +711,7 @@ void CoinControlDialog::updateView()
         if (treeMode)
         {
             itemWalletAddress->setText(COLUMN_CHECKBOX, "(" + QString::number(nChildren) + ")");
-            itemWalletAddress->setText(COLUMN_AMOUNT, BitcointalkcoinUnits::format(nDisplayUnit, nSum));
+            itemWalletAddress->setText(COLUMN_AMOUNT, TalkcoinUnits::format(nDisplayUnit, nSum));
             itemWalletAddress->setData(COLUMN_AMOUNT, Qt::UserRole, QVariant((qlonglong)nSum));
         }
     }

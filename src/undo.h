@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2009-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_UNDO_H
-#define BITCOINTALKCOIN_UNDO_H
+#ifndef TALKCOIN_UNDO_H
+#define TALKCOIN_UNDO_H
 
 #include <coins.h>
 #include <compressor.h>
@@ -27,11 +27,7 @@ class TxInUndoSerializer
 public:
     template<typename Stream>
     void Serialize(Stream &s) const {
-#ifdef ENABLE_PROOF_OF_STAKE
         ::Serialize(s, VARINT((txout->nHeight << 2) + (txout->fCoinStake ? 2u : 0u) + (txout->fCoinBase ? 1u : 0u)));
-#else
-        ::Serialize(s, VARINT(txout->nHeight << 2 + (txout->fCoinBase ? 1u : 0u)));
-#endif
         if (txout->nHeight > 0) {
             // Required to maintain compatibility with older undo format.
             ::Serialize(s, (unsigned char)0);
@@ -53,9 +49,7 @@ public:
         ::Unserialize(s, VARINT(nCode));
         txout->nHeight = nCode >> 2;
         txout->fCoinBase = nCode & 1;
-#ifdef ENABLE_PROOF_OF_STAKE
         txout->fCoinStake = (nCode >> 1) & 1;
-#endif
         if (txout->nHeight > 0) {
             // Old versions stored the version number for the last spend of
             // a transaction's outputs. Non-final spends were indicated with
@@ -118,4 +112,4 @@ public:
     }
 };
 
-#endif // BITCOINTALKCOIN_UNDO_H
+#endif // TALKCOIN_UNDO_H

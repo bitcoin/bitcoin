@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2011-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_QT_RECEIVECOINSDIALOG_H
-#define BITCOINTALKCOIN_QT_RECEIVECOINSDIALOG_H
+#ifndef TALKCOIN_QT_RECEIVECOINSDIALOG_H
+#define TALKCOIN_QT_RECEIVECOINSDIALOG_H
 
 #include <qt/guiutil.h>
 
@@ -26,7 +26,7 @@ QT_BEGIN_NAMESPACE
 class QModelIndex;
 QT_END_NAMESPACE
 
-/** Dialog for requesting payment of bitcointalkcoins */
+/** Dialog for requesting payment of talkcoins */
 class ReceiveCoinsDialog : public QDialog
 {
     Q_OBJECT
@@ -34,8 +34,8 @@ class ReceiveCoinsDialog : public QDialog
 public:
     enum ColumnWidths {
         DATE_COLUMN_WIDTH = 130,
-        LABEL_COLUMN_WIDTH = 120,
-        AMOUNT_MINIMUM_COLUMN_WIDTH = 180,
+        LABEL_COLUMN_WIDTH = 300,
+        AMOUNT_MINIMUM_COLUMN_WIDTH = 150,
         MINIMUM_COLUMN_WIDTH = 130
     };
 
@@ -77,4 +77,4 @@ private Q_SLOTS:
     void copyAmount();
 };
 
-#endif // BITCOINTALKCOIN_QT_RECEIVECOINSDIALOG_H
+#endif // TALKCOIN_QT_RECEIVECOINSDIALOG_H

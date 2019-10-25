@@ -1,4 +1,4 @@
-// Copyright (c) 2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,7 +11,7 @@
 #include <mutex>
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcointalkcoin-config.h>
+#include <config/talkcoin-config.h>
 #endif
 
 #include <boost/test/unit_test.hpp>

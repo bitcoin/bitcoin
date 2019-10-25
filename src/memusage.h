@@ -1,9 +1,9 @@
-// Copyright (c) 2015-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2015-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_MEMUSAGE_H
-#define BITCOINTALKCOIN_MEMUSAGE_H
+#ifndef TALKCOIN_MEMUSAGE_H
+#define TALKCOIN_MEMUSAGE_H
 
 #include <indirectmap.h>
 
@@ -167,4 +167,4 @@ static inline size_t DynamicUsage(const std::unordered_map<X, Y, Z>& m)
 
 }
 
-#endif // BITCOINTALKCOIN_MEMUSAGE_H
+#endif // TALKCOIN_MEMUSAGE_H

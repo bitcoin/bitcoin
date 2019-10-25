@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2009-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -94,12 +94,10 @@ uint256 CBlockHeader::GetHash() const
 #endif
 }
 
-#ifdef ENABLE_PROOF_OF_STAKE
 uint256 CBlockHeader::GetHashWithoutSign() const
 {
     return SerializeHash(*this, SER_GETHASH | SER_WITHOUT_SIGNATURE);
 }
-#endif
 
 std::string CBlockHeader::ToString() const
 {
@@ -124,13 +122,11 @@ std::string CBlock::ToString() const
 #endif
         s << strprintf(" vtx=%u, \n)", vtx.size());
 
-#ifdef ENABLE_PROOF_OF_STAKE
         std::string type = "Proof-of-work";
         if (IsProofOfStake())
             type="Proof-of-stake";
 
         s << strprintf("( prevoutStake.ToString(), vchBlockSig=%s, proof=%s, prevoutStake=%s \n)", HexStr(vchBlockSig), type,prevoutStake.ToString());
-#endif
     for (const auto& tx : vtx) {
         s << "  " << tx->ToString() << "\n";
     }

@@ -1,9 +1,9 @@
-// Copyright (c) 2014 The Bitcointalkcoin Core developers
+// Copyright (c) 2014 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_QT_NETWORKSTYLE_H
-#define BITCOINTALKCOIN_QT_NETWORKSTYLE_H
+#ifndef TALKCOIN_QT_NETWORKSTYLE_H
+#define TALKCOIN_QT_NETWORKSTYLE_H
 
 #include <QIcon>
 #include <QPixmap>
@@ -30,4 +30,4 @@ private:
     QString titleAddText;
 };
 
-#endif // BITCOINTALKCOIN_QT_NETWORKSTYLE_H
+#endif // TALKCOIN_QT_NETWORKSTYLE_H

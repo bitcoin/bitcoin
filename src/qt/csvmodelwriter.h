@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2014 The Bitcointalkcoin Core developers
+// Copyright (c) 2011-2014 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_QT_CSVMODELWRITER_H
-#define BITCOINTALKCOIN_QT_CSVMODELWRITER_H
+#ifndef TALKCOIN_QT_CSVMODELWRITER_H
+#define TALKCOIN_QT_CSVMODELWRITER_H
 
 #include <QList>
 #include <QObject>
@@ -43,4 +43,4 @@ private:
     QList<Column> columns;
 };
 
-#endif // BITCOINTALKCOIN_QT_CSVMODELWRITER_H
+#endif // TALKCOIN_QT_CSVMODELWRITER_H

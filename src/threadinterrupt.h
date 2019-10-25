@@ -1,9 +1,9 @@
-// Copyright (c) 2016-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2016-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_THREADINTERRUPT_H
-#define BITCOINTALKCOIN_THREADINTERRUPT_H
+#ifndef TALKCOIN_THREADINTERRUPT_H
+#define TALKCOIN_THREADINTERRUPT_H
 
 #include <sync.h>
 
@@ -34,4 +34,4 @@ private:
     std::atomic<bool> flag;
 };
 
-#endif //BITCOINTALKCOIN_THREADINTERRUPT_H
+#endif //TALKCOIN_THREADINTERRUPT_H

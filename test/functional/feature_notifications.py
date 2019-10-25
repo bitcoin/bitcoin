@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2019 The Bitcointalkcoin Core developers
+# Copyright (c) 2014-2019 The Talkcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the -alertnotify, -blocknotify and -walletnotify options."""
 import os
 
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
-from test_framework.test_framework import BitcointalkcoinTestFramework
+from test_framework.test_framework import TalkcoinTestFramework
 from test_framework.util import assert_equal, wait_until, connect_nodes_bi
 
 
-class NotificationsTest(BitcointalkcoinTestFramework):
+class NotificationsTest(TalkcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True

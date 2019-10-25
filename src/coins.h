@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2009-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_COINS_H
-#define BITCOINTALKCOIN_COINS_H
+#ifndef TALKCOIN_COINS_H
+#define TALKCOIN_COINS_H
 
 #include <primitives/transaction.h>
 #include <compressor.h>
@@ -17,6 +17,7 @@
 #include <assert.h>
 #include <stdint.h>
 
+#include <functional>
 #include <unordered_map>
 
 /**
@@ -35,46 +36,31 @@ public:
 
     //! whether containing transaction was a coinbase
     unsigned int fCoinBase : 1;
-#ifdef ENABLE_PROOF_OF_STAKE
     unsigned int fCoinStake : 1;
-#endif
+
     //! at which height this containing transaction was included in the active block chain
     uint32_t nHeight : 30;
 
-#ifdef ENABLE_PROOF_OF_STAKE
     //! construct a Coin from a CTxOut and height/coinbase information.
     Coin(CTxOut&& outIn, int nHeightIn, bool fCoinBaseIn, bool fCoinStakeIn) : out(std::move(outIn)), fCoinBase(fCoinBaseIn), fCoinStake(fCoinStakeIn), nHeight(nHeightIn) {}
     Coin(const CTxOut& outIn, int nHeightIn, bool fCoinBaseIn, bool fCoinStakeIn) : out(outIn), fCoinBase(fCoinBaseIn), fCoinStake(fCoinStakeIn), nHeight(nHeightIn) {}
-#else
-    Coin(CTxOut&& outIn, int nHeightIn, bool fCoinBaseIn) : out(std::move(outIn)), fCoinBase(fCoinBaseIn), nHeight(nHeightIn) {}
-    Coin(const CTxOut& outIn, int nHeightIn, bool fCoinBaseIn) : out(outIn), fCoinBase(fCoinBaseIn),nHeight(nHeightIn) {}
-
-#endif
 
     void Clear() {
         out.SetNull();
         fCoinBase = false;
-#ifdef ENABLE_PROOF_OF_STAKE
         fCoinStake = false;
-#endif
         nHeight = 0;
     }
 
-#ifdef ENABLE_PROOF_OF_STAKE
     //! empty constructor
     Coin() : fCoinBase(false), fCoinStake(false), nHeight(0) { }
-#else
-    Coin() : fCoinBase(false), nHeight(0) { }
-#endif
 
     bool IsCoinBase() const {
         return fCoinBase;
     }
-#ifdef ENABLE_PROOF_OF_STAKE
     bool IsCoinStake() const {
         return fCoinStake;
     }
-#endif
 
     template<typename Stream>
     void Serialize(Stream &s) const {
@@ -94,9 +80,7 @@ public:
         ::Unserialize(s, VARINT(code));
         nHeight = code >> 2;
         fCoinBase = code & 1;
-#ifdef ENABLE_PROOF_OF_STAKE
         fCoinStake = (code >> 1) & 1;
-#endif
         ::Unserialize(s, CTxOutCompressor(out));
     }
 
@@ -309,7 +293,7 @@ public:
     size_t DynamicMemoryUsage() const;
 
     /**
-     * Amount of bitcointalkcoins coming in to a transaction
+     * Amount of talkcoins coming in to a transaction
      * Note that lightweight clients may not know anything besides the hash of previous transactions,
      * so may not be able to calculate this.
      *
@@ -343,4 +327,28 @@ void AddCoins(CCoinsViewCache& cache, const CTransaction& tx, int nHeight, bool 
 //! lookups to database, so it should be used with care.
 const Coin& AccessByTxid(const CCoinsViewCache& cache, const uint256& txid);
 
-#endif // BITCOINTALKCOIN_COINS_H
+/**
+ * This is a minimally invasive approach to shutdown on LevelDB read errors from the
+ * chainstate, while keeping user interface out of the common library, which is shared
+ * between talkcoind, and talkcoin-qt and non-server tools.
+ *
+ * Writes do not need similar protection, as failure to write is handled by the caller.
+*/
+class CCoinsViewErrorCatcher final : public CCoinsViewBacked
+{
+public:
+    explicit CCoinsViewErrorCatcher(CCoinsView* view) : CCoinsViewBacked(view) {}
+
+    void AddReadErrCallback(std::function<void()> f) {
+        m_err_callbacks.emplace_back(std::move(f));
+    }
+
+    bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
+
+private:
+    /** A list of callbacks to execute upon leveldb read error. */
+    std::vector<std::function<void()>> m_err_callbacks;
+
+};
+
+#endif // TALKCOIN_COINS_H

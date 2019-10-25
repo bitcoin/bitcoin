@@ -125,7 +125,7 @@ Pane {
                 anchors.fill: parent
                 ToolButton {
                     Layout.alignment: Qt.AlignHCenter
-                    text: bitcointalkcoinTr("BitcointalkcoinGUI","&Send")
+                    text: talkcoinTr("TalkcoinGUI","&Send")
                     onClicked: {
                         sendPane.camera.start()
                         stackView.push(sendPane)
@@ -133,7 +133,7 @@ Pane {
                     font: theme.thinFont
                 }
                 ToolButton {
-                    text: bitcointalkcoinTr("BitcointalkcoinGUI","&Receive")
+                    text: talkcoinTr("TalkcoinGUI","&Receive")
                     Layout.alignment: Qt.AlignHCenter
                     onClicked: request()
                     font: theme.thinFont
@@ -154,7 +154,7 @@ Pane {
                         transformOrigin: Menu.TopRight
 
                         MenuItem {
-                            text: bitcointalkcoinTr("BitcointalkcoinGUI", "&Settings")
+                            text: talkcoinTr("TalkcoinGUI", "&Settings")
                             font: theme.thinFont
                             onTriggered: {
                                 stackView.push(settingsPane)
@@ -162,7 +162,7 @@ Pane {
                         }
 
                         MenuItem {
-                            text: bitcointalkcoinTr("BitcointalkcoinGUI", "&About %1")
+                            text: talkcoinTr("TalkcoinGUI", "&About %1")
                             font: theme.thinFont
                             onTriggered: {
                                 stackView.push(aboutPane)
@@ -170,7 +170,7 @@ Pane {
                         }
 
                         MenuItem {
-                            text: bitcointalkcoinTr("RPCConsole", "&Console")
+                            text: talkcoinTr("RPCConsole", "&Console")
                             font: theme.thinFont
                             onTriggered: {
                                 stackView.push(consolePane)

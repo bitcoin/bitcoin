@@ -1,4 +1,4 @@
-// Copyright (c) 2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -32,7 +32,7 @@
 #include <warnings.h>
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcointalkcoin-config.h>
+#include <config/talkcoin-config.h>
 #endif
 
 #include <atomic>
@@ -213,6 +213,7 @@ public:
         return GuessVerificationProgress(Params().TxData(), tip);
     }
     bool isInitialBlockDownload() override { return ::ChainstateActive().IsInitialBlockDownload(); }
+    bool isAddressTypeSet() override { return !::gArgs.GetArg("-addresstype", "").empty(); }
     bool getReindex() override { return ::fReindex; }
     bool getImporting() override { return ::fImporting; }
     void setNetworkActive(bool active) override

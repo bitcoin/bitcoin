@@ -59,7 +59,7 @@
           <string/>
          </property>
          <property name="icon">
-          <iconset resource="../bitcointalkcoin.qrc">
+          <iconset resource="../talkcoin.qrc">
            <normaloff>:/icons/address-book</normaloff>:/icons/address-book</iconset>
          </property>
          <property name="shortcut">
@@ -76,7 +76,7 @@
           <string/>
          </property>
          <property name="icon">
-          <iconset resource="../bitcointalkcoin.qrc">
+          <iconset resource="../talkcoin.qrc">
            <normaloff>:/icons/editpaste</normaloff>:/icons/editpaste</iconset>
          </property>
          <property name="shortcut">
@@ -93,7 +93,7 @@
           <string/>
          </property>
          <property name="icon">
-          <iconset resource="../bitcointalkcoin.qrc">
+          <iconset resource="../talkcoin.qrc">
            <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
          </property>
         </widget>
@@ -187,7 +187,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../bitcointalkcoin.qrc"/>
+  <include location="../talkcoin.qrc"/>
  </resources>
  <connections/>
 </ui>

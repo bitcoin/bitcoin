@@ -19,7 +19,7 @@ StackView {
 
     // Use this function to reuse translations from QtWidget contexts
     // For mobile-specific strings use the standard qsTr()
-    function bitcointalkcoinTr(context, sourceText) {
+    function talkcoinTr(context, sourceText) {
         var translated = qsTranslate(context, sourceText)
         return translated
                //.replace(translated.match("\((.*?)\)"), "") // Remove text in brackets
@@ -91,8 +91,8 @@ StackView {
         id: pane
 
         Text {
-            id: bitcointalkcoinCoreText
-            text: "Bitcointalkcoin<b>Core</b>"
+            id: talkcoinCoreText
+            text: "Talkcoin<b>Core</b>"
             anchors.top: parent.top
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.margins: 20
@@ -103,7 +103,7 @@ StackView {
         }
 
         Image {
-            id: bitcointalkcoinLogo
+            id: talkcoinLogo
             width: 100
             height: 100
             anchors.centerIn: parent
@@ -112,8 +112,8 @@ StackView {
         }
 
         Colorize {
-            anchors.fill: bitcointalkcoinLogo
-            source: bitcointalkcoinLogo
+            anchors.fill: talkcoinLogo
+            source: talkcoinLogo
             saturation: 0.0
         }
 

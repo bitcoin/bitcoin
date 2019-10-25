@@ -95,7 +95,7 @@ QLabel { color: rgb(40,40,40);  }</string>
                 <string/>
                </property>
                <property name="icon">
-                <iconset resource="../bitcointalkcoin.qrc">
+                <iconset resource="../talkcoin.qrc">
                  <normaloff>:/icons/warning</normaloff>
                  <disabledoff>:/icons/warning</disabledoff>:/icons/warning</iconset>
                </property>
@@ -119,7 +119,7 @@ QLabel { color: rgb(40,40,40);  }</string>
                 </font>
                </property>
                <property name="text">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Attempting to spend bitcointalkcoins that are affected by not-yet-displayed transactions will not be accepted by the network.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Attempting to spend talkcoins that are affected by not-yet-displayed transactions will not be accepted by the network.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="textFormat">
                 <enum>Qt::RichText</enum>
@@ -322,7 +322,7 @@ QLabel { color: rgb(40,40,40);  }</string>
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../bitcointalkcoin.qrc"/>
+  <include location="../talkcoin.qrc"/>
  </resources>
  <connections/>
 </ui>

@@ -1,45 +1,45 @@
-Bitcointalkcoin version 0.5.0 is now available for download at:
-http://sourceforge.net/projects/bitcointalkcoin/files/Bitcointalkcoin/bitcointalkcoin-0.5.0/
+Talkcoin version 0.5.0 is now available for download at:
+http://sourceforge.net/projects/talkcoin/files/Talkcoin/talkcoin-0.5.0/
 
 The major change for this release is a completely new graphical interface that uses the Qt user interface toolkit.
 
 This release include German, Spanish, Spanish-Castilian, Norwegian and Dutch translations. More translations are welcome; join the project at Transifex if you can help:
-https://www.transifex.net/projects/p/bitcointalkcoin/
+https://www.transifex.net/projects/p/talkcoin/
 
 Please report bugs using the issue tracker at github:
-https://github.com/bitcointalkcoin/bitcointalkcoin/issues
+https://github.com/talkcoin/talkcoin/issues
 
-For Ubuntu users, there is a new ppa maintained by Matt Corallo which you can add to your system so that it will automatically keep bitcointalkcoin up-to-date.  Just type "sudo apt-add-repository ppa:bitcointalkcoin/bitcointalkcoin" in your terminal, then install the bitcointalkcoin-qt package.
+For Ubuntu users, there is a new ppa maintained by Matt Corallo which you can add to your system so that it will automatically keep talkcoin up-to-date.  Just type "sudo apt-add-repository ppa:talkcoin/talkcoin" in your terminal, then install the talkcoin-qt package.
 
 MAJOR BUG FIX  (CVE-2011-4447)
 
-The wallet encryption feature introduced in Bitcointalkcoin version 0.4.0 did not sufficiently secure the private keys. An attacker who
+The wallet encryption feature introduced in Talkcoin version 0.4.0 did not sufficiently secure the private keys. An attacker who
 managed to get a copy of your encrypted wallet.dat file might be able to recover some or all of the unencrypted keys and steal the
 associated coins.
 
-If you have a previously encrypted wallet.dat, the first time you run bitcointalkcoin-qt or bitcointalkcoind the wallet will be rewritten, Bitcointalkcoin will
+If you have a previously encrypted wallet.dat, the first time you run talkcoin-qt or talkcoind the wallet will be rewritten, Talkcoin will
 shut down, and you will be prompted to restart it to run with the new, properly encrypted file.
 
 If you had a previously encrypted wallet.dat that might have been copied or stolen (for example, you backed it up to a public
-location) you should send all of your bitcointalkcoins to yourself using a new bitcointalkcoin address and stop using any previously generated addresses.
+location) you should send all of your talkcoins to yourself using a new talkcoin address and stop using any previously generated addresses.
 
-Wallets encrypted with this version of Bitcointalkcoin are written properly.
+Wallets encrypted with this version of Talkcoin are written properly.
 
-Technical note: the encrypted wallet's 'keypool' will be regenerated the first time you request a new bitcointalkcoin address; to be certain that the
+Technical note: the encrypted wallet's 'keypool' will be regenerated the first time you request a new talkcoin address; to be certain that the
 new private keys are properly backed up you should:
 
-1. Run Bitcointalkcoin and let it rewrite the wallet.dat file
+1. Run Talkcoin and let it rewrite the wallet.dat file
 
-2. Run it again, then ask it for a new bitcointalkcoin address.
-Bitcointalkcoin-Qt: Address Book, then New Address...
-bitcointalkcoind: run the 'walletpassphrase' RPC command to unlock the wallet,  then run the 'getnewaddress' RPC command.
+2. Run it again, then ask it for a new talkcoin address.
+Talkcoin-Qt: Address Book, then New Address...
+talkcoind: run the 'walletpassphrase' RPC command to unlock the wallet,  then run the 'getnewaddress' RPC command.
 
-3. If your encrypted wallet.dat may have been copied or stolen, send  all of your bitcointalkcoins to the new bitcointalkcoin address.
+3. If your encrypted wallet.dat may have been copied or stolen, send  all of your talkcoins to the new talkcoin address.
 
-4. Shut down Bitcointalkcoin, then backup the wallet.dat file.
-IMPORTANT: be sure to request a new bitcointalkcoin address before backing up, so that the 'keypool' is regenerated and backed up.
+4. Shut down Talkcoin, then backup the wallet.dat file.
+IMPORTANT: be sure to request a new talkcoin address before backing up, so that the 'keypool' is regenerated and backed up.
 
-"Security in depth" is always a good idea, so choosing a secure location for the backup and/or encrypting the backup before uploading it is recommended. And as in previous releases, if your machine is infected by malware there are several ways an attacker might steal your bitcointalkcoins.
+"Security in depth" is always a good idea, so choosing a secure location for the backup and/or encrypting the backup before uploading it is recommended. And as in previous releases, if your machine is infected by malware there are several ways an attacker might steal your talkcoins.
 
 Thanks to Alan Reiner (etotheipi) for finding and reporting this bug.
 
@@ -51,7 +51,7 @@ MAJOR GUI CHANGES
 
 Icons at the bottom of the window that show how well connected you are to the network, with tooltips to display details.
 
-Drag and drop support for bitcointalkcoin: URIs on web pages.
+Drag and drop support for talkcoin: URIs on web pages.
 
 Export transactions as a .csv file.
 
@@ -63,7 +63,7 @@ getmemorypool : new RPC command, provides everything needed to construct a block
 
 listsinceblock : new RPC command, list transactions since given block
 
-signmessage/verifymessage : new RPC commands to sign a message with one of your private keys or verify that a message signed by the private key associated with a bitcointalkcoin address.
+signmessage/verifymessage : new RPC commands to sign a message with one of your private keys or verify that a message signed by the private key associated with a talkcoin address.
 
 GENERAL CHANGES
 

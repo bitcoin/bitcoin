@@ -1,9 +1,9 @@
-// Copyright (c) 2016-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2016-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_QT_MODALOVERLAY_H
-#define BITCOINTALKCOIN_QT_MODALOVERLAY_H
+#ifndef TALKCOIN_QT_MODALOVERLAY_H
+#define TALKCOIN_QT_MODALOVERLAY_H
 
 #include <QDateTime>
 #include <QWidget>
@@ -48,4 +48,4 @@ private:
     void UpdateHeaderSyncLabel();
 };
 
-#endif // BITCOINTALKCOIN_QT_MODALOVERLAY_H
+#endif // TALKCOIN_QT_MODALOVERLAY_H

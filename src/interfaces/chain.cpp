@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019 The Bitcointalkcoin Core developers
+// Copyright (c) 2018-2019 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,7 +10,9 @@
 #include <interfaces/wallet.h>
 #include <miner.h>
 #include <net.h>
+#include <net_processing.h>
 #include <node/coin.h>
+#include <node/transaction.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
@@ -26,6 +28,7 @@
 #include <threadsafety.h>
 #include <timedata.h>
 #include <txmempool.h>
+#include <ui_interface.h>
 #include <uint256.h>
 #include <univalue.h>
 #include <util/system.h>
@@ -92,7 +95,6 @@ class LockImpl : public Chain::Lock, public UniqueLock<CCriticalSection>
         CBlockIndex* block = ::ChainActive()[height];
         return block && ((block->nStatus & BLOCK_HAVE_DATA) != 0) && block->nTx > 0;
     }
-#ifdef ENABLE_PROOF_OF_STAKE
     bool IsProofOfStake(int height) override
     {
         LockAssertion lock(::cs_main);
@@ -109,7 +111,7 @@ class LockImpl : public Chain::Lock, public UniqueLock<CCriticalSection>
 		}
         return stakeAddress;
     }
-    bool startStake(bool fStake, CWallet *pwallet, boost::thread_group*& stakeThread){
+    bool startStake(bool fStake, CWallet *pwallet, boost::thread_group*& stakeThread)override{
 		
 		::Stake(fStake, pwallet, stakeThread);
 		return true;
@@ -121,16 +123,16 @@ class LockImpl : public Chain::Lock, public UniqueLock<CCriticalSection>
 	bool checkKernel(unsigned int nBits, uint32_t nTimeBlock, const COutPoint& prevout, const std::map<COutPoint, CStakeCache>& cache) override {
 		return CheckKernel(nBits,nTimeBlock,prevout, *pcoinsTip,cache);		
 	}
-#endif
+
 #ifdef ENABLE_SECURE_MESSAGING
-    bool smsgStart(){
+    bool smsgStart() override{
         SecureMsgStart(true, true);
         return true;
     }
-    void secureMsgWalletUnlocked(){
+    void secureMsgWalletUnlocked()override{
 		SecureMsgWalletUnlocked();
 	}
-    void secureMsgWalletKeyChanged(std::string sAddress, std::string sLabel, ChangeType mode){
+    void secureMsgWalletKeyChanged(std::string sAddress, std::string sLabel, ChangeType mode) override{
 		SecureMsgWalletKeyChanged(sAddress, sLabel, mode);
 	}
 #endif
@@ -193,12 +195,6 @@ class LockImpl : public Chain::Lock, public UniqueLock<CCriticalSection>
         LockAssertion lock(::cs_main);
         return CheckFinalTx(tx);
     }
-    bool submitToMemoryPool(const CTransactionRef& tx, CAmount absurd_fee, CValidationState& state) override
-    {
-        LockAssertion lock(::cs_main);
-        return AcceptToMemoryPool(::mempool, state, tx, nullptr /* missing inputs */, nullptr /* txn replaced */,
-            false /* bypass limits */, absurd_fee);
-    }
 
     using UniqueLock::UniqueLock;
 };
@@ -249,7 +245,7 @@ public:
 class RpcHandlerImpl : public Handler
 {
 public:
-    RpcHandlerImpl(const CRPCCommand& command) : m_command(command), m_wrapped_command(&command)
+    explicit RpcHandlerImpl(const CRPCCommand& command) : m_command(command), m_wrapped_command(&command)
     {
         m_command.actor = [this](const JSONRPCRequest& request, UniValue& result, bool last_handler) {
             if (!m_wrapped_command) return false;
@@ -334,10 +330,13 @@ public:
         auto it = ::mempool.GetIter(txid);
         return it && (*it)->GetCountWithDescendants() > 1;
     }
-    void relayTransaction(const uint256& txid) override
+    bool broadcastTransaction(const CTransactionRef& tx, std::string& err_string, const CAmount& max_tx_fee, bool relay) override
     {
-        CInv inv(MSG_TX, txid);
-        g_connman->ForEachNode([&inv](CNode* node) { node->PushInventory(inv); });
+        const TransactionError err = BroadcastTransaction(tx, err_string, max_tx_fee, relay, /*wait_callback*/ false);
+        // Chain clients only care about failures to accept the tx to the mempool. Disregard non-mempool related failures.
+        // Note: this will need to be updated if BroadcastTransactions() is updated to return other non-mempool failures
+        // that Chain clients do not need to know about.
+        return TransactionError::OK == err;
     }
     void getTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) override
     {
@@ -386,6 +385,79 @@ public:
     void initWarning(const std::string& message) override { InitWarning(message); }
     void initError(const std::string& message) override { InitError(message); }
     void loadWallet(std::unique_ptr<Wallet> wallet) override { ::uiInterface.LoadWallet(wallet); }
+    bool checkSPVScan() override {
+    /* return CAuxiliaryBlockRequest::GetCurrentRequest() && !CAuxiliaryBlockRequest::GetCurrentRequest()->isCompleted();
+    */
+       return false;
+    }
+    void getSPVTips(CBlockIndex *pIndex,CBlockIndex *chainActiveTip) override {
+
+    chainActiveTip = ::ChainActive().Tip();	
+    //pIndex = ::HeadersChainActive().Tip();
+    }
+
+
+    int64_t getheaders() override {
+//        return ::HeadersChainActive().Height();
+    return 0;
+    }
+    CBlockIndex * setpNVSBestBlock(bool genesis, CBlockLocator &locator) override
+    {
+	/*	if(!genesis){
+			LOCK(::cs_main);
+		    return FindForkInGlobalIndex(::HeadersChainActive(), locator);
+		}
+		else{
+		    return ::ChainActive().Genesis();
+		}*/
+        return ::ChainActive().Genesis();
+	}
+
+	bool checkpNVSLastKnownBestHeader(CBlockIndex *block) override {     
+    //return ::HeadersChainActive().Contains(block);
+    return false;
+    }
+
+	const CBlockIndex * setpNVSLastKnownBestHeader(CBlockIndex *block) override {
+
+//     return ::HeadersChainActive().FindFork(block);
+     return nullptr;
+
+    }
+
+    bool checkActiveHeader(const CBlockIndex *pindexFork) override {
+    //    return ::HeadersChainActive().Tip() && (::HeadersChainActive().Tip() != pindexFork); 
+    return false;
+    }
+
+	void addPriorityDownload(const std::vector<const CBlockIndex*>& blocksToDownload) override {
+		AddPriorityDownload(blocksToDownload);
+		/*std::shared_ptr<CAuxiliaryBlockRequest> auxiliaryRequest(new CAuxiliaryBlockRequest(blocksToDownload, chain().getAdjustedTime(), true, [this](std::shared_ptr<CAuxiliaryBlockRequest> cb_AuxiliaryBlockRequest, const CBlockIndex *pindex) -> bool {
+			LOCK(cs_wallet);
+			if (pindex && (!pNVSBestBlock || pindex->nHeight > pNVSBestBlock->nHeight))
+			{
+				// write non validation best block
+				pNVSBestBlock = const_cast<CBlockIndex *>(pindex);
+				CBlockLocator locator = ::HeadersChainActive().GetLocator(pNVSBestBlock);
+				if (!locator.IsNull())
+				{
+					//CWalletDB walletdb(strWalletFile);
+					WalletBatch walletdb(*database);
+					walletdb.WriteNonValidationBestBlock(locator);
+				}
+			}
+			// try to download more blocks if this on has been completed
+			if (cb_AuxiliaryBlockRequest->isCompleted())
+				RequestSPVScan();
+			// continue with the request
+			return true;
+		}));*/
+
+        // set the global Auxiliarry Block Request
+        // auxiliaryRequest->setAsCurrentRequest();
+
+	}
+
     void showProgress(const std::string& title, int progress, bool resume_possible) override
     {
         ::uiInterface.ShowProgress(title, progress, resume_possible);

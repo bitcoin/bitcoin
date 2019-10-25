@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2019 The Bitcointalkcoin Core developers
+# Copyright (c) 2015-2019 The Talkcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test transaction signing using the signrawtransaction* RPCs."""
 
-from test_framework.test_framework import BitcointalkcoinTestFramework
+from test_framework.test_framework import TalkcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error, hex_str_to_bytes
 from test_framework.messages import sha256
 from test_framework.script import CScript, OP_0
 
 from decimal import Decimal
 
-class SignRawTransactionsTest(BitcointalkcoinTestFramework):
+class SignRawTransactionsTest(TalkcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2

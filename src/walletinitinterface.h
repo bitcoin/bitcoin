@@ -1,14 +1,10 @@
-// Copyright (c) 2017-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2017-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_WALLETINITINTERFACE_H
-#define BITCOINTALKCOIN_WALLETINITINTERFACE_H
+#ifndef TALKCOIN_WALLETINITINTERFACE_H
+#define TALKCOIN_WALLETINITINTERFACE_H
 
-#include <string>
-
-class CScheduler;
-class CRPCTable;
 struct InitInterfaces;
 
 class WalletInitInterface {
@@ -27,4 +23,4 @@ public:
 
 extern const WalletInitInterface& g_wallet_init_interface;
 
-#endif // BITCOINTALKCOIN_WALLETINITINTERFACE_H
+#endif // TALKCOIN_WALLETINITINTERFACE_H

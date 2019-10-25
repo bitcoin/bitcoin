@@ -848,7 +848,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 satos
            </widget>
           </item>
           <item>
-           <widget class="BitcointalkcoinAmountField" name="customFee" native="true"/>
+           <widget class="TalkcoinAmountField" name="customFee" native="true"/>
           </item>
          </layout>
         </item>
@@ -922,7 +922,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 satos
         <string>S&amp;end</string>
        </property>
        <property name="icon">
-        <iconset resource="../bitcointalkcoin.qrc">
+        <iconset resource="../talkcoin.qrc">
          <normaloff>:/icons/send</normaloff>:/icons/send</iconset>
        </property>
        <property name="autoDefault">
@@ -954,7 +954,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 satos
         <string/>
        </property>
        <property name="icon">
-        <iconset resource="../bitcointalkcoin.qrc">
+        <iconset resource="../talkcoin.qrc">
          <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
        </property>
        <property name="autoDefault">
@@ -983,7 +983,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 satos
         <string/>
        </property>
        <property name="icon">
-        <iconset resource="../bitcointalkcoin.qrc">
+        <iconset resource="../talkcoin.qrc">
          <normaloff>:/icons/add</normaloff>:/icons/add</iconset>
        </property>
        <property name="autoDefault">
@@ -1028,14 +1028,14 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 satos
    <header>qt/qvalidatedlineedit.h</header>
   </customwidget>
   <customwidget>
-   <class>BitcointalkcoinAmountField</class>
+   <class>TalkcoinAmountField</class>
    <extends>QWidget</extends>
-   <header>qt/bitcointalkcoinamountfield.h</header>
+   <header>qt/talkcoinamountfield.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../bitcointalkcoin.qrc"/>
+  <include location="../talkcoin.qrc"/>
  </resources>
  <connections/>
  <buttongroups>

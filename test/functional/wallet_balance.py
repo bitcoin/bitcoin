@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2019 The Bitcointalkcoin Core developers
+# Copyright (c) 2018-2019 The Talkcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet balance RPC methods."""
@@ -7,7 +7,7 @@ from decimal import Decimal
 import struct
 
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE as ADDRESS_WATCHONLY
-from test_framework.test_framework import BitcointalkcoinTestFramework
+from test_framework.test_framework import TalkcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
@@ -46,7 +46,7 @@ def create_transactions(node, address, amt, fees):
 
     return txs
 
-class WalletTest(BitcointalkcoinTestFramework):
+class WalletTest(TalkcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True

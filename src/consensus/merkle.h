@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_CONSENSUS_MERKLE_H
-#define BITCOINTALKCOIN_CONSENSUS_MERKLE_H
+#ifndef TALKCOIN_CONSENSUS_MERKLE_H
+#define TALKCOIN_CONSENSUS_MERKLE_H
 
 #include <stdint.h>
 #include <vector>
@@ -24,10 +24,6 @@ uint256 BlockMerkleRoot(const CBlock& block, bool* mutated = nullptr);
  * Compute the Merkle root of the witness transactions in a block.
  * *mutated is set to true if a duplicated subtree was found.
  */
-#ifdef ENABLE_PROOF_OF_STAKE
 uint256 BlockWitnessMerkleRoot(const CBlock& block, bool* mutated = nullptr, bool* pfProofOfStake = nullptr);
-#else
-uint256 BlockWitnessMerkleRoot(const CBlock& block, bool* mutated = nullptr);
-#endif
 
 #endif // BITCOINTALKCOIN_CONSENSUS_MERKLE_H
