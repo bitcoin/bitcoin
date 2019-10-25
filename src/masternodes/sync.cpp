@@ -4,8 +4,12 @@
 
 #include <masternodes/activemasternode.h>
 #include <init.h>
+#include <net.h>
 #include <validation.h>
 #include <masternodes/sync.h>
+#include <masternodes/payments.h>
+#include <governance/governance.h>
+#include <governance/governance-object.h>
 #include <netfulfilledman.h>
 #include <netmessagemaker.h>
 #include <shutdown.h>
@@ -64,12 +68,11 @@ void CMasternodeSync::SwitchToNextAsset(CConnman& connman)
             LogPrintf("CMasternodeSync::SwitchToNextAsset -- Starting %s\n", GetAssetName());
             break;
         case(MASTERNODE_SYNC_WAITING):
-        // TODO: BitGreen - Sync governance
-        //     LogPrintf("CMasternodeSync::SwitchToNextAsset -- Completed %s in %llds\n", GetAssetName(), GetTime() - nTimeAssetSyncStarted);
-        //     nCurrentAsset = MASTERNODE_SYNC_GOVERNANCE;
-        //     LogPrintf("CMasternodeSync::SwitchToNextAsset -- Starting %s\n", GetAssetName());
-        //     break;
-        // case(MASTERNODE_SYNC_GOVERNANCE):
+            LogPrintf("CMasternodeSync::SwitchToNextAsset -- Completed %s in %llds\n", GetAssetName(), GetTime() - nTimeAssetSyncStarted);
+            nCurrentAsset = MASTERNODE_SYNC_GOVERNANCE;
+            LogPrintf("CMasternodeSync::SwitchToNextAsset -- Starting %s\n", GetAssetName());
+            break;
+        case(MASTERNODE_SYNC_GOVERNANCE):
             LogPrintf("CMasternodeSync::SwitchToNextAsset -- Completed %s in %llds\n", GetAssetName(), GetTime() - nTimeAssetSyncStarted);
             nCurrentAsset = MASTERNODE_SYNC_FINISHED;
             uiInterface.NotifyAdditionalDataSyncProgressChanged(1);
@@ -91,7 +94,7 @@ std::string CMasternodeSync::GetSyncStatus()
     switch (masternodeSync.nCurrentAsset) {
         case MASTERNODE_SYNC_INITIAL:       return _("Synchronizing blockchain...").translated;
         case MASTERNODE_SYNC_WAITING:       return _("Synchronization pending...").translated;
-        //case MASTERNODE_SYNC_GOVERNANCE:  return _("Synchronizing governance objects...").translated;
+        case MASTERNODE_SYNC_GOVERNANCE:  return _("Synchronizing governance objects...").translated;
         case MASTERNODE_SYNC_FAILED:        return _("Synchronization failed").translated;
         case MASTERNODE_SYNC_FINISHED:      return _("Synchronization finished").translated;
         default:                            return "";
@@ -145,12 +148,11 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
         return;
     }
 
-    // TODO: BitGreen
     // gradually request the rest of the votes after sync finished
-    if (IsSynced()) {
-    //     std::vector<CNode*> vNodesCopy = connman.CopyNodeVector(CConnman::FullyConnectedOnly);
-    //     governance.RequestGovernanceObjectVotes(vNodesCopy, connman);
-    //     connman.ReleaseNodeVector(vNodesCopy);
+    if(IsSynced()) {
+        std::vector<CNode*> vNodesCopy = connman.CopyNodeVector(CConnman::FullyConnectedOnly);
+        governance.RequestGovernanceObjectVotes(vNodesCopy, connman);
+        connman.ReleaseNodeVector(vNodesCopy);
         return;
     }
 
@@ -159,7 +161,10 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
     LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nCurrentAsset %d nTriedPeerCount %d nSyncProgress %f\n", nTick, nCurrentAsset, nTriedPeerCount, nSyncProgress);
     uiInterface.NotifyAdditionalDataSyncProgressChanged(nSyncProgress);
 
-    connman.ForEachNode([this, &connman](CNode* pnode) {
+    std::vector<CNode*> vNodesCopy = connman.CopyNodeVector(CConnman::FullyConnectedOnly);
+
+    for (auto& pnode : vNodesCopy)
+    {
         CNetMsgMaker msgMaker(pnode->GetSendVersion());
 
         // Don't try to sync any data from outbound "masternode" connections -
@@ -168,22 +173,6 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
         // initiated from another node, so skip it too.
         if (pnode->fMasternode || (fMasternodeMode && pnode->fInbound)) return;
 
-        // QUICK MODE (REGTEST ONLY!)
-        /*
-        if (Params().NetworkIDString() == CBaseChainParams::REGTEST)
-        {
-            // TODO: BitGreen
-            if (nCurrentAsset == MASTERNODE_SYNC_WAITING) {
-                g_connman->PushMessage(pnode, msgMaker.Make(NetMsgType::GETSPORKS)); //get current network sporks
-                SwitchToNextAsset(connman);
-            } else if (nCurrentAsset == MASTERNODE_SYNC_GOVERNANCE) {
-                SendGovernanceSyncRequest(pnode, connman);
-                SwitchToNextAsset(connman);
-            }
-            return;
-        }
-        */
-
         // NORMAL NETWORK MODE - TESTNET/MAINNET
         {
             if (netfulfilledman.HasFulfilledRequest(pnode->addr, "full-sync")) {
@@ -191,7 +180,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
                 // disconnect to free this connection slot for another peer.
                 pnode->fDisconnect = true;
                 LogPrintf("CMasternodeSync::ProcessTick -- disconnecting from recently synced peer=%d\n", pnode->GetId());
-                return;
+                continue;
             }
 
             // SPORK : ALWAYS ASK FOR SPORKS AS WE SYNC
@@ -220,10 +209,9 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
             }
 
             // GOVOBJ : SYNC GOVERNANCE ITEMS FROM OUR PEERS
-            // TODO: BitGreen
-            /*
-            if (nCurrentAsset == MASTERNODE_SYNC_GOVERNANCE) {
-                LogPrint("gobject", "CMasternodeSync::ProcessTick -- nTick %d nCurrentAsset %d nTimeLastBumped %lld GetTime() %lld diff %lld\n", nTick, nCurrentAsset, nTimeLastBumped, GetTime(), GetTime() - nTimeLastBumped);
+
+            if(nCurrentAsset == MASTERNODE_SYNC_GOVERNANCE) {
+                LogPrint(BCLog::GOBJECT, "CMasternodeSync::ProcessTick -- nTick %d nCurrentAsset %d nTimeLastBumped %lld GetTime() %lld diff %lld\n", nTick, nCurrentAsset, nTimeLastBumped, GetTime(), GetTime() - nTimeLastBumped);
 
                 // check for timeout first
                 if(GetTime() - nTimeLastBumped > MASTERNODE_SYNC_TIMEOUT_SECONDS) {
@@ -280,25 +268,26 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
                 connman.ReleaseNodeVector(vNodesCopy);
                 return; //this will cause each peer to get one request each six seconds for the various assets we need
             }
-            */
         }
-    });
+    }
+    // looped through all nodes, release them
+    connman.ReleaseNodeVector(vNodesCopy);
 }
 
-// void CMasternodeSync::SendGovernanceSyncRequest(CNode* pnode, CConnman& connman)
-// {
-//     CNetMsgMaker msgMaker(pnode->GetSendVersion());
+void CMasternodeSync::SendGovernanceSyncRequest(CNode* pnode, CConnman& connman)
+{
+    CNetMsgMaker msgMaker(pnode->GetSendVersion());
 
-//     if(pnode->nVersion >= GOVERNANCE_FILTER_PROTO_VERSION) {
-//         CBloomFilter filter;
-//         filter.clear();
+    if(pnode->nVersion >= GOVERNANCE_FILTER_PROTO_VERSION) {
+        CBloomFilter filter;
+        filter.clear();
 
-//         connman.PushMessage(pnode, msgMaker.Make(NetMsgType::MNGOVERNANCESYNC, uint256(), filter));
-//     }
-//     else {
-//         connman.PushMessage(pnode, msgMaker.Make(NetMsgType::MNGOVERNANCESYNC, uint256()));
-//     }
-// }
+        connman.PushMessage(pnode, msgMaker.Make(NetMsgType::MNGOVERNANCESYNC, uint256(), filter));
+    }
+    else {
+        connman.PushMessage(pnode, msgMaker.Make(NetMsgType::MNGOVERNANCESYNC, uint256()));
+    }
+}
 
 void CMasternodeSync::AcceptedBlockHeader(const CBlockIndex *pindexNew)
 {

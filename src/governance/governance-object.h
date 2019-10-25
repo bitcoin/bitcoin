@@ -5,16 +5,16 @@
 #ifndef GOVERNANCE_OBJECT_H
 #define GOVERNANCE_OBJECT_H
 
-#include "cachemultimap.h"
-#include "governance-exceptions.h"
-#include "governance-vote.h"
-#include "governance-votedb.h"
-#include "key.h"
-#include "net.h"
-#include "sync.h"
-#include "util.h"
-#include "utilstrencodings.h"
-#include "bls/bls.h"
+#include <cachemultimap.h>
+#include <governance/governance-exceptions.h>
+#include <governance/governance-vote.h>
+#include <governance/governance-votedb.h>
+#include <key.h>
+#include <net.h>
+#include <sync.h>
+#include <util/system.h>
+#include <util/strencodings.h>
+#include <bls/bls.h>
 
 #include <univalue.h>
 
@@ -298,6 +298,8 @@ public:
 
     // FUNCTIONS FOR DEALING WITH DATA STRING
 
+    std::string GetDataAsHex() const;
+    std::string GetDataAsString() const;
     std::string GetDataAsHexString() const;
     std::string GetDataAsPlainString() const;
 
@@ -321,12 +323,12 @@ public:
         }
         if (s.GetType() & SER_DISK) {
             // Only include these for the disk file format
-            LogPrint("gobject", "CGovernanceObject::SerializationOp Reading/writing votes from/to disk\n");
+            LogPrint(BCLog::GOBJECT, "CGovernanceObject::SerializationOp Reading/writing votes from/to disk\n");
             READWRITE(nDeletionTime);
             READWRITE(fExpired);
             READWRITE(mapCurrentMNVotes);
             READWRITE(fileVotes);
-            LogPrint("gobject", "CGovernanceObject::SerializationOp hash = %s, vote count = %d\n", GetHash().ToString(), fileVotes.GetVoteCount());
+            LogPrint(BCLog::GOBJECT, "CGovernanceObject::SerializationOp hash = %s, vote count = %d\n", GetHash().ToString(), fileVotes.GetVoteCount());
         }
 
         // AFTER DESERIALIZATION OCCURS, CACHED VARIABLES MUST BE CALCULATED MANUALLY

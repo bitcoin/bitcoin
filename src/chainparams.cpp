@@ -142,6 +142,9 @@ public:
     {
         strNetworkID = "main";
         consensus.nSubsidyHalvingInterval = 210000;
+        consensus.nSuperblockCycle = 16616;
+        consensus.nGovernanceMinQuorum = 10;
+        consensus.nGovernanceFilterElements = 20000;
         consensus.BIP16Exception = uint256();
         consensus.BIP34Height = 200;
         consensus.BIP34Hash = uint256();
@@ -257,6 +260,13 @@ public:
     {
         strNetworkID = "test";
         consensus.nSubsidyHalvingInterval = 210000;
+        consensus.nBudgetPaymentsStartBlock = 1300;
+        consensus.nBudgetPaymentsCycleBlocks = 16616;
+        consensus.nBudgetPaymentsWindowBlocks = 100;
+        consensus.nSuperblockStartBlock = 1250;
+        consensus.nSuperblockCycle = 16616;
+        consensus.nGovernanceMinQuorum = 10;
+        consensus.nGovernanceFilterElements = 20000;
         consensus.BIP16Exception = uint256();
         consensus.BIP34Height = 200;
         consensus.BIP34Hash = uint256();
@@ -362,6 +372,9 @@ public:
     {
         strNetworkID = "regtest";
         consensus.nSubsidyHalvingInterval = 150;
+        consensus.nSuperblockCycle = 16616;
+        consensus.nGovernanceMinQuorum = 10;
+        consensus.nGovernanceFilterElements = 20000;
         consensus.BIP16Exception = uint256();
         consensus.BIP34Height = consensus.nLastPoWBlock; // BIP34 activated on regtest (Used in functional tests)
         consensus.BIP34Hash = uint256();

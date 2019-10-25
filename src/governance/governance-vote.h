@@ -5,9 +5,9 @@
 #ifndef GOVERNANCE_VOTE_H
 #define GOVERNANCE_VOTE_H
 
-#include "key.h"
-#include "primitives/transaction.h"
-#include "bls/bls.h"
+#include <key.h>
+#include <primitives/transaction.h>
+#include <bls/bls.h>
 
 class CGovernanceVote;
 class CConnman;
@@ -96,6 +96,7 @@ public:
     void SetSignature(const std::vector<unsigned char>& vchSigIn) { vchSig = vchSigIn; }
 
     bool Sign(const CKey& key, const CKeyID& keyID);
+    bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
     bool CheckSignature(const CKeyID& keyID) const;
     bool Sign(const CBLSSecretKey& key);
     bool CheckSignature(const CBLSPublicKey& pubKey) const;

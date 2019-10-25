@@ -11,6 +11,7 @@
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <rpc/request.h>
+#include <rpc/server.h>
 #include <rpc/util.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>

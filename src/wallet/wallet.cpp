@@ -2863,13 +2863,17 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
     auto locked_chain = chain().lock();
     LOCK(cs_wallet);
 
+    CReserveKey reservekey(this);
     CTransactionRef tx_new;
-    if (!CreateTransaction(*locked_chain, vecSend, tx_new, nFeeRet, nChangePosInOut, strFailReason, coinControl, false)) {
+    if (!CreateTransaction(*locked_chain, vecSend, tx_new, reservekey, nFeeRet, nChangePosInOut, strFailReason, coinControl, false)) {
         return false;
     }
 
     if (nChangePosInOut != -1) {
         tx.vout.insert(tx.vout.begin() + nChangePosInOut, tx_new->vout[nChangePosInOut]);
+        // We don't have the normal Create/Commit cycle, and don't want to risk
+        // reusing change, so just remove the key from the keypool here.
+        reservekey.KeepKey();
     }
 
     // Copy output sizes from new transaction; they may have had the fee
@@ -2980,7 +2984,7 @@ OutputType CWallet::TransactionChangeType(OutputType change_type, const std::vec
     return m_default_address_type;
 }
 
-bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CAmount& nFeeRet,
+bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CReserveKey& reservekey, CAmount& nFeeRet,
                          int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign)
 {
     CAmount nValue = 0;
@@ -3344,7 +3348,7 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
 /**
  * Call after CreateTransaction unless you want to abort
  */
-bool CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::vector<std::pair<std::string, std::string>> orderForm, CValidationState& state)
+bool CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::vector<std::pair<std::string, std::string>> orderForm, CReserveKey& reservekey, CValidationState& state)
 {
     {
         auto locked_chain = chain().lock();
@@ -3358,6 +3362,8 @@ bool CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
 
         WalletLogPrintf("CommitTransaction:\n%s", wtxNew.tx->ToString()); /* Continued */
         {
+            // Take key pair from key pool so it won't be used again
+            reservekey.KeepKey();
 
             // Add tx to wallet, because if it has change it's also ours,
             // otherwise just for transaction history.
@@ -4019,6 +4025,25 @@ void ReserveDestination::ReturnDestination()
     nIndex = -1;
     vchPubKey = CPubKey();
     address = CNoDestination();
+}
+
+// TODO: Clean this up to use the routines above
+void CReserveKey::KeepKey()
+{
+    if (nIndex != -1)
+        pwallet->KeepKey(nIndex);
+    nIndex = -1;
+    vchPubKey = CPubKey();
+}
+
+void CReserveKey::ReturnKey()
+{
+    CPubKey vchPubKey;
+    if (nIndex != -1) {
+        pwallet->ReturnKey(nIndex, fInternal, vchPubKey);
+    }
+    nIndex = -1;
+    vchPubKey = CPubKey();
 }
 
 void CWallet::MarkReserveKeysAsUsed(int64_t keypool_id)
@@ -4698,6 +4723,29 @@ void CWallet::handleNotifications()
     m_chain_notifications_handler = m_chain->handleNotifications(*this);
 }
 
+bool CWallet::GetBudgetSystemCollateralTX(CReserveKey &reservekey, CTransactionRef& tx, uint256 hash, CAmount amount)
+{
+    auto locked_chain = chain().lock();
+    LOCK(cs_wallet);
+    CScript scriptChange;
+    scriptChange << OP_RETURN << ToByteVector(hash);
+
+    CAmount nFeeRet = 0;
+    int nChangePosRet = -1;
+    std::string strFail = "";
+    std::vector< CRecipient > vecSend;
+    vecSend.push_back((CRecipient){scriptChange, amount, false});
+
+    CCoinControl coinControl;
+    bool success = CreateTransaction(*locked_chain, vecSend, tx, reservekey, nFeeRet, nChangePosRet, strFail, coinControl, true);
+    if(!success){
+        LogPrintf("CWallet::GetBudgetSystemCollateralTX -- Error: %s\n", strFail);
+        return false;
+    }
+
+    return true;
+}
+
 void CWallet::postInitProcess()
 {
     auto locked_chain = chain().lock();
@@ -5323,5 +5371,5 @@ bool CWallet::MintableCoins()
 
 void CWallet::NotifyChainLock(const CBlockIndex* pindexChainLock)
 {
-    NotifyChainLockReceived(pindexChainLock->nHeight);
+    NotifyChainLockReceived(pindexChainLock);
 }

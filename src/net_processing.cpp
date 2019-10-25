@@ -5,6 +5,7 @@
 
 #include <net_processing.h>
 
+#include <masternodes/activemasternode.h>
 #include <addrman.h>
 #include <banman.h>
 #include <arith_uint256.h>
@@ -31,6 +32,7 @@
 #include <util/validation.h>
 
 #include <spork.h>
+#include <governance/governance.h>
 #include <masternodes/payments.h>
 #include <masternodes/sync.h>
 #include <masternodes/meta.h>
@@ -1489,6 +1491,9 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
             CSporkMessage spork;
             return sporkManager.GetSporkByHash(inv.hash, spork);
         }
+    case MSG_GOVERNANCE_OBJECT:
+    case MSG_GOVERNANCE_OBJECT_VOTE:
+        return ! governance.ConfirmInventoryRequest(inv);
     case MSG_QUORUM_FINAL_COMMITMENT:
         return llmq::quorumBlockProcessor->HasMinableCommitment(inv.hash);
     case MSG_QUORUM_CONTRIB:
@@ -1758,6 +1763,43 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
                 CSporkMessage spork;
                 if(sporkManager.GetSporkByHash(inv.hash, spork)) {
                     connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::SPORK, spork));
+                    push = true;
+                }
+            }
+
+            if (!push && inv.type == MSG_GOVERNANCE_OBJECT) {
+                LogPrint(BCLog::NET, "ProcessGetData -- MSG_GOVERNANCE_OBJECT: inv = %s\n", inv.ToString());
+                CDataStream ss(SER_NETWORK, pfrom->GetSendVersion());
+                bool topush = false;
+                {
+                    if(governance.HaveObjectForHash(inv.hash)) {
+                        ss.reserve(1000);
+                        if(governance.SerializeObjectForHash(inv.hash, ss)) {
+                            topush = true;
+                        }
+                    }
+                }
+                LogPrint(BCLog::NET, "ProcessGetData -- MSG_GOVERNANCE_OBJECT: topush = %d, inv = %s\n", topush, inv.ToString());
+                if(topush) {
+                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECT, ss));
+                    push = true;
+                }
+            }
+
+            if (!push && inv.type == MSG_GOVERNANCE_OBJECT_VOTE) {
+                CDataStream ss(SER_NETWORK, pfrom->GetSendVersion());
+                bool topush = false;
+                {
+                    if(governance.HaveVoteForHash(inv.hash)) {
+                        ss.reserve(1000);
+                        if(governance.SerializeVoteForHash(inv.hash, ss)) {
+                            topush = true;
+                        }
+                    }
+                }
+                if(topush) {
+                    LogPrint(BCLog::NET, "ProcessGetData -- pushing: inv = %s\n", inv.ToString());
+                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECTVOTE, ss));
                     push = true;
                 }
             }
@@ -3555,6 +3597,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         {
             sporkManager.ProcessSpork(pfrom, strCommand, vRecv, *connman);
             masternodeSync.ProcessMessage(pfrom, strCommand, vRecv);
+            governance.ProcessMessage(pfrom, strCommand, vRecv, *connman);
             CMNAuth::ProcessMessage(pfrom, strCommand, vRecv, connman);
             llmq::quorumBlockProcessor->ProcessMessage(pfrom, strCommand, vRecv, connman);
             llmq::quorumDKGSessionManager->ProcessMessage(pfrom, strCommand, vRecv, connman);

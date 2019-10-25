@@ -4,11 +4,12 @@
 #ifndef GOVERNANCE_CLASSES_H
 #define GOVERNANCE_CLASSES_H
 
-#include "base58.h"
-#include "governance.h"
-#include "key.h"
-#include "script/standard.h"
-#include "util.h"
+#include <base58.h>
+#include <governance/governance.h>
+#include <key.h>
+#include <key_io.h>
+#include <script/standard.h>
+#include <util/system.h>
 
 class CSuperblock;
 class CGovernanceTriggerManager;
@@ -88,22 +89,27 @@ public:
     {
     }
 
-    CGovernancePayment(CBitcoinAddress addrIn, CAmount nAmountIn) :
-        fValid(false),
-        script(),
-        nAmount(0)
+    CGovernancePayment(CTxDestination addrIn, CAmount nAmountIn)
+        :fValid(false),
+         script(),
+         nAmount(0)
     {
-        try {
-            CTxDestination dest = addrIn.Get();
+        try
+        {
+            CTxDestination dest = addrIn;
             script = GetScriptForDestination(dest);
             nAmount = nAmountIn;
             fValid = true;
-        } catch (std::exception& e) {
-            LogPrintf("CGovernancePayment Payment not valid: addrIn = %s, nAmountIn = %d, what = %s\n",
-                addrIn.ToString(), nAmountIn, e.what());
-        } catch (...) {
-            LogPrintf("CGovernancePayment Payment not valid: addrIn = %s, nAmountIn = %d\n",
-                addrIn.ToString(), nAmountIn);
+        }
+        catch(std::exception& e)
+        {
+            LogPrint(BCLog::GOBJECT, "CGovernancePayment Payment not valid: addrIn = %s, nAmountIn = %d, what = %s\n",
+                     EncodeDestination(addrIn), nAmountIn, e.what());
+        }
+        catch(...)
+        {
+            LogPrint(BCLog::GOBJECT, "CGovernancePayment Payment not valid: addrIn = %s, nAmountIn = %d\n",
+                     EncodeDestination(addrIn), nAmountIn);
         }
     }
 

@@ -123,6 +123,14 @@ struct LLMQParams {
 struct Params {
     uint256 hashGenesisBlock;
     int nSubsidyHalvingInterval;
+    int nSuperblockCycle;
+    int nGovernanceMinQuorum;
+    int nGovernanceFilterElements;
+    int nBudgetPaymentsStartBlock;
+    int nBudgetPaymentsCycleBlocks;
+    int nBudgetPaymentsWindowBlocks;
+    int nBudgetProposalEstablishingTime;
+    int nSuperblockStartBlock;
     /* Block hash that is excepted from BIP16 enforcement */
     uint256 BIP16Exception;
     /** Block height and hash at which BIP34 becomes active */

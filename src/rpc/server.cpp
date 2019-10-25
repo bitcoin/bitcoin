@@ -75,6 +75,57 @@ void RPCServer::OnStopped(std::function<void ()> slot)
     g_rpcSignals.Stopped.connect(slot);
 }
 
+CAmount AmountFromValue(const UniValue& value)
+{
+    if (!value.isNum() && !value.isStr())
+        throw JSONRPCError(RPC_TYPE_ERROR, "Amount is not a number or string");
+    CAmount amount;
+    if (!ParseFixedPoint(value.getValStr(), 8, &amount))
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
+    if (!MoneyRange(amount))
+        throw JSONRPCError(RPC_TYPE_ERROR, "Amount out of range");
+    return amount;
+}
+
+std::vector<unsigned char> ParseHexV(const UniValue& v, std::string strName)
+{
+    std::string strHex;
+    if (v.isStr())
+        strHex = v.get_str();
+    if (!IsHex(strHex))
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" must be hexadecimal string (not '"+strHex+"')");
+    return ParseHex(strHex);
+}
+
+uint256 ParseHashV(const UniValue& v, std::string strName)
+{
+    std::string strHex(v.get_str());
+    if (64 != strHex.length())
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be of length %d (not %d, for '%s')", strName, 64, strHex.length(), strHex));
+    if (!IsHex(strHex)) // Note: IsHex("") is false
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" must be hexadecimal string (not '"+strHex+"')");
+    return uint256S(strHex);
+}
+
+int32_t ParseInt32V(const UniValue& v, const std::string &strName)
+{
+    std::string strNum = v.getValStr();
+    int32_t num;
+    if (!ParseInt32(strNum, &num))
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" must be a 32bit integer (not '"+strNum+"')");
+    return num;
+}
+
+uint256 ParseHashO(const UniValue& o, std::string strKey)
+{
+    return ParseHashV(find_value(o, strKey), strKey);
+}
+
+std::vector<unsigned char> ParseHexO(const UniValue& o, std::string strKey)
+{
+    return ParseHexV(find_value(o, strKey), strKey);
+}
+
 std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest& helpreq) const
 {
     std::string strRet;

@@ -2,6 +2,7 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <governance/governance-classes.h>
 #include <consensus/validation.h>
 #include <init.h>
 #include <key_io.h>

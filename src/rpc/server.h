@@ -158,8 +158,14 @@ public:
 };
 
 bool IsDeprecatedRPCEnabled(const std::string& method);
+CAmount AmountFromValue(const UniValue& value);
+uint256 ParseHashV(const UniValue& v, std::string strName);
+uint256 ParseHashO(const UniValue& o, std::string strKey);
+std::vector<unsigned char> ParseHexO(const UniValue& o, std::string strKey);
+std::vector<unsigned char> ParseHexV(const UniValue& v, std::string strName);
 
 extern CRPCTable tableRPC;
+extern int32_t ParseInt32V(const UniValue& v, const std::string &strName);
 
 void StartRPC();
 void InterruptRPC();
