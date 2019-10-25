@@ -896,7 +896,18 @@ bool CCoinsViewMemPool::GetCoin(const COutPoint &outpoint, Coin &coin) const {
     CTransactionRef ptx = mempool.get(outpoint.hash);
     if (ptx) {
         if (outpoint.n < ptx->vout.size()) {
+            CDatacarrierPayloadRef payload;
+            if (ptx->IsUniform()) {
+                // parse uniform coin
+                payload = ExtractTransactionDatacarrier(*ptx, chainActive.Height() + 1);
+                if (!payload) {
+                    // BHDIP007 always active
+                    return false;
+                }
+            }
+
             coin = Coin(ptx->vout[outpoint.n], MEMPOOL_HEIGHT, false);
+            coin.extraData = std::move(payload);
             return true;
         } else {
             return false;
