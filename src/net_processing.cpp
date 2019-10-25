@@ -1622,8 +1622,9 @@ CTransactionRef static FindTxForGetData(const uint256& txid, const std::chrono::
     if (txinfo.tx) {
         // To protect privacy, do not answer getdata using the mempool when
         // that TX couldn't have been INVed in reply to a MEMPOOL request,
-        // or when it's too recent to have expired from mapRelay.
-        if ((mempool_req.count() && txinfo.m_time <= mempool_req) || txinfo.m_time <= longlived_mempool_time) {
+        // and when it's not marked for relay,
+        // and when it's too recent to have expired from mapRelay.
+        if ((mempool_req.count() && txinfo.m_time <= mempool_req) || (mapRelay.find(inv.hash) != mapRelay.end() || txinfo.m_time <= longlived_mempool_time) {
             return txinfo.tx;
         }
     }
