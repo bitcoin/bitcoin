@@ -781,7 +781,7 @@ UniValue assetinfo(const JSONRPCRequest& request) {
             "  \"asset_guid\":          (numeric) The asset guid\n"
             "  \"txid\":         (string) The transaction id that created this asset\n"
             "  \"public_value\":  (string) The public value attached to this asset\n"
-            "  \"address\":      (string) The address that controls this address\n"
+            "  \"address\":      (string) The address that controls this asset\n"
             "  \"contract\":     (string) The ethereum contract address\n"
             "  \"balance\":      (numeric) The current balance\n"
             "  \"total_supply\": (numeric) The total supply of this asset\n"
@@ -834,7 +834,7 @@ UniValue listassets(const JSONRPCRequest& request) {
             "    \"symbol\":       (string) The asset symbol\n"
             "    \"txid\":         (string) The transaction id that created this asset\n"
             "    \"public_value\":  (string) The public value attached to this asset\n"
-            "    \"address\":      (string) The address that controls this address\n"
+            "    \"address\":      (string) The address that controls this asset\n"
             "    \"contract\":     (string) The ethereum contract address\n"
             "    \"balance\":      (numeric) The current balance\n"
             "    \"total_supply\": (numeric) The total supply of this asset\n"
@@ -976,7 +976,7 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request)
 UniValue listassetindex(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     RPCHelpMan{"listassetindex",
-    "\nScan through all asset index and return paged results based on page number passed in. Requires assetindex config parameter enabled and optional assetindexpagesize which is 25 by default.\n",
+    "\nScan through asset index and return paged results of historical asset transactions. Requires assetindex config parameter enabled and optional assetindexpagesize which is 25 by default.\n",
     {
         {"page", RPCArg::Type::NUM, "0", "Return specific page number of transactions. Lower page number means more recent transactions."},
         {"options", RPCArg::Type::ARR, RPCArg::Optional::NO, "A json object with options to filter results", 
@@ -985,24 +985,55 @@ UniValue listassetindex(const JSONRPCRequest& request) {
                 {"address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Address to filter.  Leave empty to scan globally through asset"}
             }
         }
-    },
-    RPCResult{
+    }, 
+
+    	
+    RPCResult{        
+            "If address option was omitted and transactions for asset is requested"
             "[\n"
             "  {\n"
+            "    \"txtype\":       (string) The asset transaction type. One of 'assetactivate', 'assetupdate', or 'assettransfer'\n"
             "    \"asset_guid\":   (numeric) The asset guid\n"
             "    \"symbol\":       (string) The asset symbol\n"
             "    \"txid\":         (string) The transaction id that created this asset\n"
-            "    \"public_value\":  (string) The public value attached to this asset\n"
-            "    \"address\":      (string) The address that controls this address\n"
-            "    \"contract\":     (string) The ethereum contract address\n"
-            "    \"balance\":      (numeric) The current balance\n"
-            "    \"total_supply\": (numeric) The total supply of this asset\n"
-            "    \"max_supply\":   (numeric) The maximum supply of this asset\n"
-            "    \"update_flag\":  (numeric) The flag in decimal \n"
-            "    \"precision\":    (numeric) The precision of this asset \n"   
+            "    \"height\":       (numeric) The height at which the transaction was confirmed\n"
+            "    \"public_value\":  (string) The public value attached to this asset. Only returned value was changed.\n"
+            "    \"sender\":        (string) The address that controls this asset\n"
+            "    \"contract\":     (string) The ethereum contract address. Only returned if value was changed.\n"
+            "    \"balance\":      (numeric) The current balance. Only exists if supply was changed.\n"
+            "    \"update_flag\":  (numeric) The flag in decimal. Only exists if value was changed.\n"
+            "    \"total_supply\": (numeric) The total supply of this asset. Only exists for 'assetactivate' txtype.\n"
+            "    \"max_supply\":   (numeric) The maximum supply of this asset. Only exists for 'assetactivate' txtype.\n"
+            "    \"precision\":    (numeric) The precision of this asset. Only exists for 'assetactivate' txtype.\n"
+            "    \"blockhash\":    (string) Block hash that confirmed this transaction. Empty if not confirmed.\n"   
             "  },\n"
             "  ...\n"
             "]\n"
+            "If address is included and transactions for asset allocation is requested"
+            "[\n"
+            "  {\n"
+            "    \"txtype\":            (string) The asset allocation transaction type. One of 'assetsend', 'assetallocationsend', 'assetallocationburntoethereum', 'assetallocationburntoethereum', 'assetallocationburntosyscoin', 'assetallocationmint', or 'assetallocationlock'\n"
+            "    \"asset_allocation\":  (string) The unique key for this allocation\n"
+            "    \"asset_guid\":        (numeric) The asset guid\n"
+            "    \"symbol\":            (string) The asset symbol\n"
+            "    \"txid\":              (string) The transaction id that created this asset\n"
+            "    \"height\":            (numeric) The height at which the transaction was confirmed\n"
+            "    \"sender\":            (string) The address that controls this asset allocation\n"
+            "    \"allocations\" : [    (array of json objects)\n"
+            "      {\n"
+            "        \"address\": \"address\",    (string) The address of the receiver\n"
+            "        \"amount\" : n,              (numeric) The amount of the transaction\n"
+            "      },\n"
+            "      ...\n"
+            "    ]\n"           
+            "    \"total\":             (numeric) The total amount of asset sent.\n"
+            "    \"blockhash\":         (string) Block hash that confirmed this transaction. Empty if not confirmed.\n"
+            "    \"ethereum_destination\":   (string) Destination ethereum address for moving over the bridge from sys to eth. Only exists for 'assetallocationburntoethereum' txtype.\n"
+            "    \"ethereum_contract\":      (string) Destination ethereum smart contract for moving over the bridge from sys to eth. Only exists for 'assetallocationburntoethereum' txtype.\n"
+            "    \"locked_outpoint\":        (string) The txid+output index pair locking this asset allocation to an outpoint for future transactions. Only exists for 'assetallocationlock' txtype.\n"  
+            "  },\n"
+            "  ...\n"
+            "]\n"            
     },
     RPCExamples{
         HelpExampleCli("listassetindex", "0 '{\"asset_guid\":92922}'")
@@ -1042,7 +1073,7 @@ UniValue listassetindexassets(const JSONRPCRequest& request) {
             "    \"symbol\":       (string) The asset symbol\n"
             "    \"txid\":         (string) The transaction id that created this asset\n"
             "    \"public_value\":  (string) The public value attached to this asset\n"
-            "    \"address\":      (string) The address that controls this address\n"
+            "    \"address\":      (string) The address that controls this asset\n"
             "    \"contract\":     (string) The ethereum contract address\n"
             "    \"balance\":      (numeric) The current balance\n"
             "    \"total_supply\": (numeric) The total supply of this asset\n"
