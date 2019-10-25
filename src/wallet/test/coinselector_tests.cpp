@@ -53,7 +53,7 @@ static void add_coin(const CAmount& nValue, int nInput, CoinSet& set)
     set.emplace(MakeTransactionRef(tx), nInput);
 }
 
-static void add_coin(const CAmount& nValue, int nAge = 6*24, bool fIsFromMe = false, int nInput=0)
+static void add_coin(CWallet& wallet, const CAmount& nValue, int nAge = 6*24, bool fIsFromMe = false, int nInput=0, bool spendable = false)
 {
     balance += nValue;
     static int nextLockTime = 0;
@@ -61,20 +61,30 @@ static void add_coin(const CAmount& nValue, int nAge = 6*24, bool fIsFromMe = fa
     tx.nLockTime = nextLockTime++;        // so all transactions get different hashes
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
+    if (spendable) {
+        CTxDestination dest;
+        std::string error;
+        assert(wallet.GetNewDestination(OutputType::BECH32, "", dest, error));
+        tx.vout[nInput].scriptPubKey = GetScriptForDestination(dest);
+    }
     if (fIsFromMe) {
         // IsFromMe() returns (GetDebit() > 0), and GetDebit() is 0 if vin.empty(),
         // so stop vin being empty, and cache a non-zero Debit to fake out IsFromMe()
         tx.vin.resize(1);
     }
-    std::unique_ptr<CWalletTx> wtx = MakeUnique<CWalletTx>(&testWallet, MakeTransactionRef(std::move(tx)));
+    std::unique_ptr<CWalletTx> wtx = MakeUnique<CWalletTx>(&wallet, MakeTransactionRef(std::move(tx)));
     if (fIsFromMe)
     {
         wtx->m_amounts[CWalletTx::DEBIT].Set(ISMINE_SPENDABLE, 1);
     }
     COutput output(wtx.get(), nInput, nAge, true /* spendable */, true /* solvable */, true /* safe */);
     vCoins.push_back(output);
-    testWallet.AddToWallet(*wtx.get());
+    wallet.AddToWallet(*wtx.get());
     wtxn.emplace_back(std::move(wtx));
+}
+static void add_coin(const CAmount& nValue, int nAge = 6*24, bool fIsFromMe = false, int nInput=0, bool spendable = false)
+{
+    add_coin(testWallet, nValue, nAge, fIsFromMe, nInput, spendable);
 }
 
 static void empty_wallet(void)
@@ -250,17 +260,24 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     vCoins.at(0).nInputBytes = 40; // Make sure that it has a negative effective value. The next check should assert if this somehow got through. Otherwise it will fail
     BOOST_CHECK(!testWallet.SelectCoinsMinConf( 1 * CENT, filter_standard, GroupCoins(vCoins), setCoinsRet, nValueRet, coin_selection_params_bnb, bnb_used));
 
-    // Make sure that we aren't using BnB when there are preset inputs
+    // Make sure that can use BnB when there are preset inputs
     empty_wallet();
-    add_coin(5 * CENT);
-    add_coin(3 * CENT);
-    add_coin(2 * CENT);
-    CCoinControl coin_control;
-    coin_control.fAllowOtherInputs = true;
-    coin_control.Select(COutPoint(vCoins.at(0).tx->GetHash(), vCoins.at(0).i));
-    BOOST_CHECK(testWallet.SelectCoins(vCoins, 10 * CENT, setCoinsRet, nValueRet, coin_control, coin_selection_params_bnb, bnb_used));
-    BOOST_CHECK(!bnb_used);
-    BOOST_CHECK(!coin_selection_params_bnb.use_bnb);
+    {
+        std::unique_ptr<CWallet> wallet = MakeUnique<CWallet>(m_chain.get(), WalletLocation(), WalletDatabase::CreateMock());
+        bool firstRun;
+        wallet->LoadWallet(firstRun);
+        LOCK(wallet->cs_wallet);
+        add_coin(*wallet, 5 * CENT, 6 * 24, false, 0, true);
+        add_coin(*wallet, 3 * CENT, 6 * 24, false, 0, true);
+        add_coin(*wallet, 2 * CENT, 6 * 24, false, 0, true);
+        CCoinControl coin_control;
+        coin_control.fAllowOtherInputs = true;
+        coin_control.Select(COutPoint(vCoins.at(0).tx->GetHash(), vCoins.at(0).i));
+        coin_selection_params_bnb.effective_fee = CFeeRate(0);
+        BOOST_CHECK(wallet->SelectCoins(vCoins, 10 * CENT, setCoinsRet, nValueRet, coin_control, coin_selection_params_bnb, bnb_used));
+        BOOST_CHECK(bnb_used);
+        BOOST_CHECK(coin_selection_params_bnb.use_bnb);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(knapsack_solver_test)
