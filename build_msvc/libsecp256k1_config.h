@@ -4,8 +4,8 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
-#ifndef BITCOINTALKCOIN_LIBSECP256K1_CONFIG_H
-#define BITCOINTALKCOIN_LIBSECP256K1_CONFIG_H
+#ifndef TALKCOIN_LIBSECP256K1_CONFIG_H
+#define TALKCOIN_LIBSECP256K1_CONFIG_H
 
 #undef USE_ASM_X86_64
 #undef USE_ENDOMORPHISM
@@ -26,4 +26,4 @@
 #define USE_FIELD_10X26 1
 #define USE_SCALAR_8X32 1
 
-#endif /* BITCOINTALKCOIN_LIBSECP256K1_CONFIG_H */
+#endif /* TALKCOIN_LIBSECP256K1_CONFIG_H */
