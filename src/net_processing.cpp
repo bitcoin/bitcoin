@@ -3561,6 +3561,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
             pto->nNextAddrSend = PoissonNextSend(nNow, AVG_ADDRESS_BROADCAST_INTERVAL);
             std::vector<CAddress> vAddr;
             vAddr.reserve(pto->vAddrToSend.size());
+            assert(pto->m_addr_known);
             for (const CAddress& addr : pto->vAddrToSend)
             {
                 if (!pto->m_addr_known->contains(addr.GetKey()))
