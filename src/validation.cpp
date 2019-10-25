@@ -671,7 +671,8 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
             return state.DoS(0, false, REJECT_NONSTANDARD, "non-BIP68-final");
 
         CAmount nFees = 0;
-        if (!Consensus::CheckTxInputs(tx, state, view, *pcoinsTip, GetSpendHeight(view), nFees, CAccountID(), true, chainparams.GetConsensus())) {
+        if (!Consensus::CheckTxInputs(tx, state, view, *pcoinsTip, GetSpendHeight(view), nFees, CAccountID(),
+                Consensus::CheckTxLevel::AcceptToMempool, chainparams.GetConsensus())) {
             return error("%s: Consensus::CheckTxInputs: %s, %s", __func__, tx.GetHash().ToString(), FormatStateMessage(state));
         }
 
@@ -2083,7 +2084,8 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
         if (!tx.IsCoinBase())
         {
             CAmount txfee = 0;
-            if (!Consensus::CheckTxInputs(tx, state, mutableView, view, pindex->nHeight, txfee, pindex->generatorAccountID, false, chainparams.GetConsensus())) {
+            if (!Consensus::CheckTxInputs(tx, state, mutableView, view, pindex->nHeight, txfee, pindex->generatorAccountID,
+                    Consensus::CheckTxLevel::Consensus, chainparams.GetConsensus())) {
                 return error("%s: Consensus::CheckTxInputs: %s, %s", __func__, tx.GetHash().ToString(), FormatStateMessage(state));
             }
             nFees += txfee;

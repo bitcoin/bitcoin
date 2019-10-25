@@ -612,7 +612,10 @@ static void CheckInputsAndUpdateCoins(const CTransaction& tx, CCoinsViewCache& m
 {
     CValidationState state;
     CAmount txfee = 0;
-    bool fCheckResult = tx.IsCoinBase() || Consensus::CheckTxInputs(tx, state, mempoolDuplicate, prevTipView, spendheight, txfee, CAccountID(), false, Params().GetConsensus());
+    bool fCheckResult = tx.IsCoinBase() || Consensus::CheckTxInputs(tx, state, mempoolDuplicate, prevTipView, spendheight, txfee, CAccountID(),
+        Consensus::CheckTxLevel::CheckMempool, Params().GetConsensus());
+    if (!fCheckResult)
+        LogPrintf("%s: Check txmempool fail: %s\n%s\n", __func__, FormatStateMessage(state), tx.ToString());
     assert(fCheckResult);
     UpdateCoins(tx, mempoolDuplicate, 1000000);
 }
