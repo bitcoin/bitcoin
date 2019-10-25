@@ -1849,7 +1849,7 @@ size_t CConnman::SocketRecvData(CNode *pnode)
     {
         // socket closed gracefully
         if (!pnode->fDisconnect) {
-            LogPrint(BCLog::NET, "socket closed\n");
+            LogPrint(BCLog::NET, "socket closed for peer=%d\n", pnode->GetId());
         }
         LOCK(cs_vNodes);
         pnode->fOtherSideDisconnected = true; // avoid lingering
@@ -1861,8 +1861,9 @@ size_t CConnman::SocketRecvData(CNode *pnode)
         int nErr = WSAGetLastError();
         if (nErr != WSAEWOULDBLOCK && nErr != WSAEMSGSIZE && nErr != WSAEINTR && nErr != WSAEINPROGRESS)
         {
-            if (!pnode->fDisconnect)
-                LogPrintf("socket recv error %s\n", NetworkErrorString(nErr));
+            if (!pnode->fDisconnect){
+                LogPrint(BCLog::NET, "socket recv error for peer=%d: %s\n", pnode->GetId(), NetworkErrorString(nErr));
+            }
             LOCK(cs_vNodes);
             pnode->fOtherSideDisconnected = true; // avoid lingering
             pnode->CloseSocketDisconnect(this);
