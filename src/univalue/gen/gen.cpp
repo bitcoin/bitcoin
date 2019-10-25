@@ -39,8 +39,8 @@ static void initJsonEscape()
 static void outputEscape()
 {
 	printf(	"// Automatically generated file. Do not modify.\n"
-		"#ifndef BITCOINTALKCOIN_UNIVALUE_UNIVALUE_ESCAPES_H\n"
-		"#define BITCOINTALKCOIN_UNIVALUE_UNIVALUE_ESCAPES_H\n"
+		"#ifndef TALKCOIN_UNIVALUE_UNIVALUE_ESCAPES_H\n"
+		"#define TALKCOIN_UNIVALUE_UNIVALUE_ESCAPES_H\n"
 		"static const char *escapes[256] = {\n");
 
 	for (unsigned int i = 0; i < 256; i++) {
@@ -70,7 +70,7 @@ static void outputEscape()
 	}
 
 	printf(	"};\n"
-		"#endif // BITCOINTALKCOIN_UNIVALUE_UNIVALUE_ESCAPES_H\n");
+		"#endif // TALKCOIN_UNIVALUE_UNIVALUE_ESCAPES_H\n");
 }
 
 int main (int argc, char *argv[])

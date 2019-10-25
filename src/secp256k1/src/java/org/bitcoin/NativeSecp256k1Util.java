@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.bitcointalkcoin;
+package org.talkcoin;
 
 public class NativeSecp256k1Util{
 

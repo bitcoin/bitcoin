@@ -1,9 +1,9 @@
-// Copyright (c) 2017-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2017-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_WALLET_COINSELECTION_H
-#define BITCOINTALKCOIN_WALLET_COINSELECTION_H
+#ifndef TALKCOIN_WALLET_COINSELECTION_H
+#define TALKCOIN_WALLET_COINSELECTION_H
 
 #include <amount.h>
 #include <primitives/transaction.h>
@@ -98,4 +98,4 @@ bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& target_v
 // Original coin selection algorithm as a fallback
 bool KnapsackSolver(const CAmount& nTargetValue, std::vector<OutputGroup>& groups, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet);
 
-#endif // BITCOINTALKCOIN_WALLET_COINSELECTION_H
+#endif // TALKCOIN_WALLET_COINSELECTION_H

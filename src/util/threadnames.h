@@ -1,9 +1,9 @@
-// Copyright (c) 2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_UTIL_THREADNAMES_H
-#define BITCOINTALKCOIN_UTIL_THREADNAMES_H
+#ifndef TALKCOIN_UTIL_THREADNAMES_H
+#define TALKCOIN_UTIL_THREADNAMES_H
 
 #include <string>
 
@@ -18,4 +18,4 @@ const std::string& ThreadGetInternalName();
 
 } // namespace util
 
-#endif // BITCOINTALKCOIN_UTIL_THREADNAMES_H
+#endif // TALKCOIN_UTIL_THREADNAMES_H

@@ -1,18 +1,19 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2009-2019 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <rpc/protocol.h>
+#include <rpc/request.h>
+
+#include <fs.h>
 
 #include <random.h>
-#include <tinyformat.h>
+#include <rpc/protocol.h>
 #include <util/system.h>
 #include <util/strencodings.h>
-#include <util/time.h>
 
 /**
- * JSON-RPC protocol.  Bitcointalkcoin speaks version 1.0 for maximum compatibility,
+ * JSON-RPC protocol.  Talkcoin speaks version 1.0 for maximum compatibility,
  * but uses JSON-RPC 1.1/2.0 standards for parts of the 1.0 standard that were
  * unspecified (HTTP errors and contents of 'error').
  *
@@ -147,4 +148,37 @@ std::vector<UniValue> JSONRPCProcessBatchReply(const UniValue &in, size_t num)
         batch[id] = rec;
     }
     return batch;
+}
+
+void JSONRPCRequest::parse(const UniValue& valRequest)
+{
+    // Parse request
+    if (!valRequest.isObject())
+        throw JSONRPCError(RPC_INVALID_REQUEST, "Invalid Request object");
+    const UniValue& request = valRequest.get_obj();
+
+    // Parse id now so errors from here on will have the id
+    id = find_value(request, "id");
+
+    // Parse method
+    UniValue valMethod = find_value(request, "method");
+    if (valMethod.isNull())
+        throw JSONRPCError(RPC_INVALID_REQUEST, "Missing method");
+    if (!valMethod.isStr())
+        throw JSONRPCError(RPC_INVALID_REQUEST, "Method must be a string");
+    strMethod = valMethod.get_str();
+    if (fLogIPs)
+        LogPrint(BCLog::RPC, "ThreadRPCServer method=%s user=%s peeraddr=%s\n", SanitizeString(strMethod),
+            this->authUser, this->peerAddr);
+    else
+        LogPrint(BCLog::RPC, "ThreadRPCServer method=%s user=%s\n", SanitizeString(strMethod), this->authUser);
+
+    // Parse params
+    UniValue valParams = find_value(request, "params");
+    if (valParams.isArray() || valParams.isObject())
+        params = valParams;
+    else if (valParams.isNull())
+        params = UniValue(UniValue::VARR);
+    else
+        throw JSONRPCError(RPC_INVALID_REQUEST, "Params must be an array or object");
 }

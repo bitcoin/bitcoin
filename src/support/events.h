@@ -1,9 +1,9 @@
-// Copyright (c) 2016-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2016-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_SUPPORT_EVENTS_H
-#define BITCOINTALKCOIN_SUPPORT_EVENTS_H
+#ifndef TALKCOIN_SUPPORT_EVENTS_H
+#define TALKCOIN_SUPPORT_EVENTS_H
 
 #include <ios>
 #include <memory>
@@ -53,4 +53,4 @@ inline raii_evhttp_connection obtain_evhttp_connection_base(struct event_base* b
     return result;
 }
 
-#endif // BITCOINTALKCOIN_SUPPORT_EVENTS_H
+#endif // TALKCOIN_SUPPORT_EVENTS_H

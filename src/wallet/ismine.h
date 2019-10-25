@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcointalkcoin Core developers
+// Copyright (c) 2009-2018 The Talkcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINTALKCOIN_WALLET_ISMINE_H
-#define BITCOINTALKCOIN_WALLET_ISMINE_H
+#ifndef TALKCOIN_WALLET_ISMINE_H
+#define TALKCOIN_WALLET_ISMINE_H
 
 #include <script/standard.h>
 
@@ -50,4 +50,4 @@ struct CachableAmount
     }
 };
 
-#endif // BITCOINTALKCOIN_WALLET_ISMINE_H
+#endif // TALKCOIN_WALLET_ISMINE_H
