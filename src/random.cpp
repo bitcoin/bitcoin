@@ -18,6 +18,8 @@
 #include <stdlib.h>
 #include <thread>
 
+#include <randomenv.h>
+
 #include <support/allocators/secure.h>
 
 #ifndef WIN32
@@ -261,44 +263,6 @@ static void Strengthen(const unsigned char (&seed)[32], int microseconds, CSHA51
     // Try to clean up.
     inner_hasher.Reset();
     memory_cleanse(buffer, sizeof(buffer));
-}
-
-static void RandAddSeedPerfmon(CSHA512& hasher)
-{
-#ifdef WIN32
-    // Don't need this on Linux, OpenSSL automatically uses /dev/urandom
-    // Seed with the entire set of perfmon data
-
-    // This can take up to 2 seconds, so only do it every 10 minutes
-    static int64_t nLastPerfmon;
-    if (GetTime() < nLastPerfmon + 10 * 60)
-        return;
-    nLastPerfmon = GetTime();
-
-    std::vector<unsigned char> vData(250000, 0);
-    long ret = 0;
-    unsigned long nSize = 0;
-    const size_t nMaxSize = 10000000; // Bail out at more than 10MB of performance data
-    while (true) {
-        nSize = vData.size();
-        ret = RegQueryValueExA(HKEY_PERFORMANCE_DATA, "Global", nullptr, nullptr, vData.data(), &nSize);
-        if (ret != ERROR_MORE_DATA || vData.size() >= nMaxSize)
-            break;
-        vData.resize(std::max((vData.size() * 3) / 2, nMaxSize)); // Grow size of buffer exponentially
-    }
-    RegCloseKey(HKEY_PERFORMANCE_DATA);
-    if (ret == ERROR_SUCCESS) {
-        hasher.Write(vData.data(), nSize);
-        memory_cleanse(vData.data(), nSize);
-    } else {
-        // Performance data is only a best-effort attempt at improving the
-        // situation when the OS randomness (and other sources) aren't
-        // adequate. As a result, failure to read it is isn't considered critical,
-        // so we don't call RandFailure().
-        // TODO: Add logging when the logger is made functional before global
-        // constructors have been invoked.
-    }
-#endif
 }
 
 #ifndef WIN32
@@ -585,8 +549,8 @@ static void SeedSleep(CSHA512& hasher, RNGState& rng)
     // High-precision timestamp after sleeping (as we commit to both the time before and after, this measures the delay)
     SeedTimestamp(hasher);
 
-    // Windows performance monitor data (once every 10 minutes)
-    RandAddSeedPerfmon(hasher);
+    // Dynamic environment data (performance monitoring, ...; once every 10 minutes)
+    RandAddDynamicEnv(hasher);
 
     // Strengthen every minute
     SeedStrengthen(hasher, rng);
@@ -600,8 +564,11 @@ static void SeedStartup(CSHA512& hasher, RNGState& rng) noexcept
     // Everything that the 'slow' seeder includes.
     SeedSlow(hasher);
 
-    // Windows performance monitor data.
-    RandAddSeedPerfmon(hasher);
+    // Dynamic environment data
+    RandAddDynamicEnv(hasher);
+
+    // Static environment data
+    RandAddStaticEnv(hasher);
 
     // Strengthen
     SeedStrengthen(hasher, rng);
