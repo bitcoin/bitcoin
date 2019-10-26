@@ -280,6 +280,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             rpc_logger.removeHandler(h)
         if cleanup_tree_on_exit:
             shutil.rmtree(self.options.tmpdir)
+
+        self.nodes.clear()
         return exit_code
 
     # Methods to override in subclass test scripts.
