@@ -495,10 +495,6 @@ static void SeedSlow(CSHA512& hasher) noexcept
     GetOSRand(buffer);
     hasher.Write(buffer, sizeof(buffer));
 
-    // OpenSSL RNG (for now)
-    RAND_bytes(buffer, sizeof(buffer));
-    hasher.Write(buffer, sizeof(buffer));
-
     // High-precision timestamp.
     //
     // Note that we also commit to a timestamp in the Fast seeder, so we indirectly commit to a
