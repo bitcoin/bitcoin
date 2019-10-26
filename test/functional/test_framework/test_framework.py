@@ -105,6 +105,34 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def main(self):
         """Main function. This should not be overridden by the subclass test scripts."""
 
+        self.parse_args()
+
+        try:
+            self.setup()
+            self.run_test()
+        except JSONRPCException:
+            self.log.exception("JSONRPC error")
+            self.success = TestStatus.FAILED
+        except SkipTest as e:
+            self.log.warning("Test Skipped: %s" % e.message)
+            self.success = TestStatus.SKIPPED
+        except AssertionError:
+            self.log.exception("Assertion failed")
+            self.success = TestStatus.FAILED
+        except KeyError:
+            self.log.exception("Key error")
+            self.success = TestStatus.FAILED
+        except Exception:
+            self.log.exception("Unexpected exception caught during testing")
+            self.success = TestStatus.FAILED
+        except KeyboardInterrupt:
+            self.log.warning("Exiting after keyboard interrupt")
+            self.success = TestStatus.FAILED
+        finally:
+            exit_code = self.shutdown()
+            sys.exit(exit_code)
+
+    def parse_args(self):
         parser = argparse.ArgumentParser(usage="%(prog)s [options]")
         parser.add_argument("--nocleanup", dest="nocleanup", default=False, action="store_true",
                             help="Leave bitcoinds and test.* datadir on exit or error")
@@ -134,6 +162,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                             help="set a random seed for deterministically reproducing a previous test run")
         self.add_options(parser)
         self.options = parser.parse_args()
+
+    def setup(self):
+        """Call this method to start up the test framework object with options set."""
 
         PortSeed.n = self.options.port_seed
 
@@ -181,33 +212,20 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.network_thread = NetworkThread()
         self.network_thread.start()
 
-        success = TestStatus.FAILED
+        if self.options.usecli:
+            if not self.supports_cli:
+                raise SkipTest("--usecli specified but test does not support using CLI")
+            self.skip_if_no_cli()
+        self.skip_test_if_missing_module()
+        self.setup_chain()
+        self.setup_network()
 
-        try:
-            if self.options.usecli:
-                if not self.supports_cli:
-                    raise SkipTest("--usecli specified but test does not support using CLI")
-                self.skip_if_no_cli()
-            self.skip_test_if_missing_module()
-            self.setup_chain()
-            self.setup_network()
-            self.run_test()
-            success = TestStatus.PASSED
-        except JSONRPCException:
-            self.log.exception("JSONRPC error")
-        except SkipTest as e:
-            self.log.warning("Test Skipped: %s" % e.message)
-            success = TestStatus.SKIPPED
-        except AssertionError:
-            self.log.exception("Assertion failed")
-        except KeyError:
-            self.log.exception("Key error")
-        except Exception:
-            self.log.exception("Unexpected exception caught during testing")
-        except KeyboardInterrupt:
-            self.log.warning("Exiting after keyboard interrupt")
+        self.success = TestStatus.PASSED
 
-        if success == TestStatus.FAILED and self.options.pdbonfailure:
+    def shutdown(self):
+        """Call this method to shut down the test framework object."""
+
+        if self.success == TestStatus.FAILED and self.options.pdbonfailure:
             print("Testcase failed. Attaching python debugger. Enter ? for help")
             pdb.set_trace()
 
@@ -225,7 +243,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         should_clean_up = (
             not self.options.nocleanup and
             not self.options.noshutdown and
-            success != TestStatus.FAILED and
+            self.success != TestStatus.FAILED and
             not self.options.perf
         )
         if should_clean_up:
@@ -238,10 +256,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             self.log.warning("Not cleaning up dir {}".format(self.options.tmpdir))
             cleanup_tree_on_exit = False
 
-        if success == TestStatus.PASSED:
+        if self.success == TestStatus.PASSED:
             self.log.info("Tests successful")
             exit_code = TEST_EXIT_PASSED
-        elif success == TestStatus.SKIPPED:
+        elif self.success == TestStatus.SKIPPED:
             self.log.info("Test skipped")
             exit_code = TEST_EXIT_SKIPPED
         else:
@@ -251,7 +269,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         logging.shutdown()
         if cleanup_tree_on_exit:
             shutil.rmtree(self.options.tmpdir)
-        sys.exit(exit_code)
+        return exit_code
 
     # Methods to override in subclass test scripts.
     def set_test_params(self):
