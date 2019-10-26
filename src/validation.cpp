@@ -675,7 +675,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                     if(!args.m_test_accept && IsAssetAllocation){
                         CAssetAllocation theAssetAlloction(tx);
                         if(theAssetAlloction.assetAllocationTuple.IsNull()){
-                            return state.Invalid(ValidationInvalidReason::TX_MEMPOOL_POLICY, false, REJECT_DUPLICATE, "txn-mempool-conflict");
+                            return state.Invalid(ValidationInvalidReason::TX_MEMPOOL_POLICY, false, "txn-mempool-conflict");
                         }
                         ActorSet actorSet;
                         GetActorsFromAssetAllocationTx(theAssetAlloction, tx.nVersion, true, false, actorSet);
@@ -1052,7 +1052,7 @@ bool MemPoolAccept::ConsensusScriptChecks(ATMPArgs& args, Workspace& ws, Precomp
         else
             return false;
     }else if(args.m_duplicate){
-        return state.Invalid(ValidationInvalidReason::TX_MEMPOOL_POLICY, false, REJECT_DUPLICATE, "txn-mempool-conflict");
+        return state.Invalid(ValidationInvalidReason::TX_MEMPOOL_POLICY, false, "txn-mempool-conflict");
     }
     return true;
 }
@@ -2344,7 +2344,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
         
             mapRejectedBlocks.insert(std::make_pair(block.GetHash(), GetTime()));
         }
-        return state.Invalid(ValidationInvalidReason::CONSENSUS, error("%s: couldn't find masternode or superblock payments", __func__), REJECT_INVALID, "bad-cb-payee");
+        return state.Invalid(ValidationInvalidReason::CONSENSUS, error("%s: couldn't find masternode or superblock payments", __func__), "bad-cb-payee");
     }
 
     std::string strError = "";
@@ -3684,7 +3684,7 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
      if (!consensusParams.AllowLegacyBlocks(nHeight) && block.IsLegacy())
         return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, error("%s : legacy block after auxpow start",
                                     __func__),
-                         REJECT_INVALID, "late-legacy-block");
+                          "late-legacy-block");
 
      // Check proof of work
     if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
