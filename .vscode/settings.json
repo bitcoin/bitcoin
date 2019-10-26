@@ -78,6 +78,12 @@
         "variant": "cpp",
         "vector": "cpp",
         "cfenv": "cpp",
-        "hashtable": "cpp"
+        "hashtable": "cpp",
+        "clocale": "cpp",
+        "regex": "cpp",
+        "*.tcc": "cpp",
+        "hash_map": "cpp",
+        "hash_set": "cpp",
+        "cinttypes": "cpp"
     }
 }
