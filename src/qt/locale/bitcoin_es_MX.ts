@@ -306,8 +306,16 @@
         <translation>Actividad de red deshabilitada.</translation>
     </message>
     <message>
+        <source>Syncing Headers (%1%)...</source>
+        <translation>Sincronizar encabezados (%1%) ...</translation>
+    </message>
+    <message>
         <source>Reindexing blocks on disk...</source>
         <translation>Reindexando bloques en el disco...</translation>
+    </message>
+    <message>
+        <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
+        <translation>El proxy está &lt;b&gt;habilitado&lt;/b&gt;: %1</translation>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>

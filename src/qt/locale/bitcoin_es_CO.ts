@@ -121,7 +121,7 @@
     </message>
     <message>
         <source>Enter passphrase</source>
-        <translation>Introduce contraseña actual      </translation>
+        <translation>Introduce contraseña actual</translation>
     </message>
     <message>
         <source>New passphrase</source>
@@ -1198,7 +1198,7 @@
     </message>
     <message>
         <source>The supplied proxy address is invalid.</source>
-        <translation>El proxy ingresado es inválido. </translation>
+        <translation>El proxy ingresado es inválido.</translation>
     </message>
 </context>
 <context>
@@ -1883,7 +1883,7 @@
     <name>ReceiveRequestDialog</name>
     <message>
         <source>QR Code</source>
-        <translation>Código QR </translation>
+        <translation>Código QR</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>

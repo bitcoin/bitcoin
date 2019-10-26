@@ -83,7 +83,7 @@
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation>Zarezom odvojena datoteka (*.csv) </translation>
+        <translation>Zarezom odvojena datoteka (*.csv)</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -659,7 +659,7 @@
     <name>TransactionView</name>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation>Zarezom odvojena datoteka (*.csv) </translation>
+        <translation>Zarezom odvojena datoteka (*.csv)</translation>
     </message>
     <message>
         <source>Date</source>

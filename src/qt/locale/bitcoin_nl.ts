@@ -180,6 +180,14 @@
         <translation>Portemonnee versleuteld</translation>
     </message>
     <message>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Voer de neuwe wachtwoordzin in voor de portemonnee.&lt;br/&gt;Gebruik a.u.b. een wachtwoordzin van &lt;b&gt;tien of meer willekeurige karakters&lt;/b&gt;, of &lt;b&gt;acht of meer woorden&lt;/b&gt;.</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation>Voer de oude wachtwoordzin en de nieuwe wachtwoordzin in voor de portemonnee.</translation>
+    </message>
+    <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
         <translation>Onthoud dat het versleutelen van uw portemonnee uw bitcoins niet volledig kan beschermen tegen diefstal, bijvoorbeeld door malware die uw computer infecteert.</translation>
     </message>
@@ -319,11 +327,11 @@
     </message>
     <message>
         <source>Create Wallet...</source>
-        <translation>Wallet creëren </translation>
+        <translation>Wallet creëren</translation>
     </message>
     <message>
         <source>Create a new wallet</source>
-        <translation>Nieuwe wallet creëren </translation>
+        <translation>Nieuwe wallet creëren</translation>
     </message>
     <message>
         <source>Wallet:</source>
@@ -796,7 +804,7 @@
     <name>CreateWalletDialog</name>
     <message>
         <source>Create Wallet</source>
-        <translation>Creëer wallet </translation>
+        <translation>Creëer wallet</translation>
     </message>
     <message>
         <source>Wallet Name</source>
@@ -815,8 +823,12 @@
         <translation>Schakel privésleutels uit</translation>
     </message>
     <message>
+        <source>Make Blank Wallet</source>
+        <translation>Maak een lege portemonnee</translation>
+    </message>
+    <message>
         <source>Create</source>
-        <translation>Creëer </translation>
+        <translation>Creëer</translation>
     </message>
 </context>
 <context>
@@ -986,7 +998,11 @@
         <source>(of %n GB needed)</source>
         <translation><numerusform>(van %n GB nodig)</numerusform><numerusform>(van %n GB nodig)</numerusform></translation>
     </message>
-    </context>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation><numerusform>(%n GB nodig voor volledige keten)</numerusform><numerusform>(%n GB nodig voor volledige keten)</numerusform></translation>
+    </message>
+</context>
 <context>
     <name>ModalOverlay</name>
     <message>
@@ -1132,7 +1148,7 @@
     </message>
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation>URL's van derden (bijvoorbeeld blokexplorer) die in de transacties tab verschijnen als contextmenuelementen. %s in de URL is vervangen door transactiehash. Verscheidene URL's zijn gescheiden door een verticale streep |.  </translation>
+        <translation>URL's van derden (bijvoorbeeld blokexplorer) die in de transacties tab verschijnen als contextmenuelementen. %s in de URL is vervangen door transactiehash. Verscheidene URL's zijn gescheiden door een verticale streep |.</translation>
     </message>
     <message>
         <source>Open the %1 configuration file from the working directory.</source>
@@ -2044,6 +2060,10 @@
         <translation>Een optioneel te verzoeken bedrag. Laat dit leeg, of nul, om geen specifiek bedrag aan te vragen.</translation>
     </message>
     <message>
+        <source>&amp;Create new receiving address</source>
+        <translation>&amp;Creëer een nieuw ontvangstadres</translation>
+    </message>
+    <message>
         <source>Clear all fields of the form.</source>
         <translation>Wis alle velden op het formulier.</translation>
     </message>
@@ -2366,7 +2386,7 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
     </message>
     <message>
         <source> from wallet '%1'</source>
-        <translation> van portemonnee '%1'</translation>
+        <translation>van portemonnee '%1'</translation>
     </message>
     <message>
         <source>%1 to '%2'</source>
@@ -3179,7 +3199,7 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
     </message>
     <message>
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
-        <translation>De portemonee te lang gesloten houden kan leiden tot het moeten hersynchroniseren van de hele keten als snoeien aktief is. </translation>
+        <translation>De portemonee te lang gesloten houden kan leiden tot het moeten hersynchroniseren van de hele keten als snoeien aktief is.</translation>
     </message>
 </context>
 <context>
@@ -3311,7 +3331,7 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
     </message>
     <message>
         <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
-        <translation>Kan geen rest-adres sleutel genereren. Er zijn geen sleutels in de interne sleutelverzameling en ik kan geen sleutels genereren. </translation>
+        <translation>Kan geen rest-adres sleutel genereren. Er zijn geen sleutels in de interne sleutelverzameling en ik kan geen sleutels genereren.</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
@@ -3567,7 +3587,7 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
-        <translation>Fout bij het lezen van de database, afsluiten. </translation>
+        <translation>Fout bij het lezen van de database, afsluiten.</translation>
     </message>
     <message>
         <source>Error upgrading chainstate database</source>
@@ -3649,11 +3669,15 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
     </message>
     <message>
         <source>Unable to create the PID file '%s': %s</source>
-        <translation>Kan de PID file niet creëren. '%s': %s </translation>
+        <translation>Kan de PID file niet creëren. '%s': %s</translation>
     </message>
     <message>
         <source>Unable to generate initial keys</source>
         <translation>Niet mogelijk initiële sleutels te genereren</translation>
+    </message>
+    <message>
+        <source>Unknown -blockfilterindex value %s.</source>
+        <translation>Onbekende -blokfilterindexwaarde %s.</translation>
     </message>
     <message>
         <source>Verifying wallet(s)...</source>

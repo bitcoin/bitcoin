@@ -1032,7 +1032,7 @@
     </message>
     <message>
         <source>Prune &amp;block storage to</source>
-        <translation>Reductie &amp;block storage la  </translation>
+        <translation>Reductie &amp;block storage la</translation>
     </message>
     <message>
         <source>GB</source>
@@ -1040,7 +1040,7 @@
     </message>
     <message>
         <source>Reverting this setting requires re-downloading the entire blockchain.</source>
-        <translation> Inversarea acestei setari necesita re-descarcarea intregului blockchain.</translation>
+        <translation>Inversarea acestei setari necesita re-descarcarea intregului blockchain.</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
@@ -1200,7 +1200,7 @@
     </message>
     <message>
         <source>The configuration file is used to specify advanced user options which override GUI settings. Additionally, any command-line options will override this configuration file.</source>
-        <translation>Fisierul de configurare e folosit pentru a specifica optiuni utilizator avansate care modifica setarile din GUI. In plus orice optiune din linia de comanda va modifica acest fisier de configurare. </translation>
+        <translation>Fisierul de configurare e folosit pentru a specifica optiuni utilizator avansate care modifica setarile din GUI. In plus orice optiune din linia de comanda va modifica acest fisier de configurare.</translation>
     </message>
     <message>
         <source>Error</source>
@@ -2262,7 +2262,7 @@ Nota: Cum taxa este calculata per byte, o taxa de "100 satoshi per kB" pentru o 
     </message>
     <message>
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
-        <translation> O taxă mai mare de %1 este considerată o taxă absurd de mare </translation>
+        <translation>O taxă mai mare de %1 este considerată o taxă absurd de mare</translation>
     </message>
     <message>
         <source>Payment request expired.</source>
@@ -2534,7 +2534,7 @@ Nota: Cum taxa este calculata per byte, o taxa de "100 satoshi per kB" pentru o 
     </message>
     <message>
         <source>Message verified.</source>
-        <translation>Mesaj verificat. </translation>
+        <translation>Mesaj verificat.</translation>
     </message>
 </context>
 <context>
@@ -3451,11 +3451,11 @@ Nota: Cum taxa este calculata per byte, o taxa de "100 satoshi per kB" pentru o 
     </message>
     <message>
         <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit %s and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
-        <translation>Acest produs include software dezvoltat de OpenSSL Project pentru a fi folosit in Toolkitul OpenSSL %s, software criptografic scris de Eric Young si software UPnP scris de Thomas Bernard. </translation>
+        <translation>Acest produs include software dezvoltat de OpenSSL Project pentru a fi folosit in Toolkitul OpenSSL %s, software criptografic scris de Eric Young si software UPnP scris de Thomas Bernard.</translation>
     </message>
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
-        <translation>Lungimea totala a sirului versiunii retelei (%i) depaseste lungimea maxima (%i). Reduceti numarul sa dimensiunea uacomments. </translation>
+        <translation>Lungimea totala a sirului versiunii retelei (%i) depaseste lungimea maxima (%i). Reduceti numarul sa dimensiunea uacomments.</translation>
     </message>
     <message>
         <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>

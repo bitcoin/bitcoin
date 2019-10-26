@@ -467,7 +467,7 @@
     </message>
     <message>
         <source>%1 behind</source>
-        <translation>落后 %1 </translation>
+        <translation>落后 %1</translation>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
@@ -1000,7 +1000,7 @@
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
-        <translation>错误:无法创建指定的数据目录 "%1" </translation>
+        <translation>错误:无法创建指定的数据目录 "%1"</translation>
     </message>
     <message>
         <source>Error</source>
@@ -1086,7 +1086,7 @@
     </message>
     <message>
         <source>Select payment request file</source>
-        <translation>选择支付请求文件 </translation>
+        <translation>选择支付请求文件</translation>
     </message>
     <message>
         <source>Select payment request file to open</source>
@@ -1439,7 +1439,7 @@
     </message>
     <message>
         <source>Your current balance in watch-only addresses</source>
-        <translation>您当前在仅观察观察地址中的余额 </translation>
+        <translation>您当前在仅观察观察地址中的余额</translation>
     </message>
     <message>
         <source>Spendable:</source>
@@ -1459,7 +1459,7 @@
     </message>
     <message>
         <source>Current total balance in watch-only addresses</source>
-        <translation>仅观察地址中的当前总余额 </translation>
+        <translation>仅观察地址中的当前总余额</translation>
     </message>
 </context>
 <context>
@@ -2282,7 +2282,7 @@
     </message>
     <message>
         <source>Choose...</source>
-        <translation>选择... </translation>
+        <translation>选择...</translation>
     </message>
     <message>
         <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</source>
@@ -2638,7 +2638,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>The Bitcoin address to sign the message with</source>
-        <translation>用来对消息签名的地址 </translation>
+        <translation>用来对消息签名的地址</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -3603,7 +3603,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
-        <translation>错误：监听外部连接失败 (listen函数返回了错误 %s) </translation>
+        <translation>错误：监听外部连接失败 (listen函数返回了错误 %s)</translation>
     </message>
     <message>
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>

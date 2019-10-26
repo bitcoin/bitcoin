@@ -952,7 +952,7 @@
     </message>
     <message>
         <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
-        <translation>Gdy naciśniesz OK, %1 zacznie się pobieranie i przetwarzanie całego %4 łańcucha bloków (%2GB) zaczynając od najwcześniejszych transakcji w %3 gdy %4 został uruchomiony. </translation>
+        <translation>Gdy naciśniesz OK, %1 zacznie się pobieranie i przetwarzanie całego %4 łańcucha bloków (%2GB) zaczynając od najwcześniejszych transakcji w %3 gdy %4 został uruchomiony.</translation>
     </message>
     <message>
         <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
@@ -1031,7 +1031,7 @@
     </message>
     <message>
         <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation>Próba wydania bitcoinów które nie są jeszcze wyświetlone jako transakcja zostanie odrzucona przez sieć. </translation>
+        <translation>Próba wydania bitcoinów które nie są jeszcze wyświetlone jako transakcja zostanie odrzucona przez sieć.</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -1256,7 +1256,7 @@
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
-        <translation>&amp;IP proxy: </translation>
+        <translation>&amp;IP proxy:</translation>
     </message>
     <message>
         <source>&amp;Port:</source>
@@ -1419,7 +1419,7 @@
     </message>
     <message>
         <source>Immature:</source>
-        <translation>Niedojrzały: </translation>
+        <translation>Niedojrzały:</translation>
     </message>
     <message>
         <source>Mined balance that has not yet matured</source>
@@ -1439,7 +1439,7 @@
     </message>
     <message>
         <source>Your current balance in watch-only addresses</source>
-        <translation>Twoje obecne saldo na podglądanym adresie </translation>
+        <translation>Twoje obecne saldo na podglądanym adresie</translation>
     </message>
     <message>
         <source>Spendable:</source>
@@ -1490,7 +1490,7 @@
     </message>
     <message>
         <source>Cannot process payment request because BIP70 support was not compiled in.</source>
-        <translation>Nie mogę obsłużyć żądania zapłaty ponieważ wsparcie dla BIP70 nie zostało skompilowane. </translation>
+        <translation>Nie mogę obsłużyć żądania zapłaty ponieważ wsparcie dla BIP70 nie zostało skompilowane.</translation>
     </message>
     <message>
         <source>Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.</source>
@@ -1758,7 +1758,7 @@
     </message>
     <message>
         <source>Using BerkeleyDB version</source>
-        <translation>Używana wersja BerkeleyDB </translation>
+        <translation>Używana wersja BerkeleyDB</translation>
     </message>
     <message>
         <source>Datadir</source>
@@ -2270,7 +2270,7 @@
     </message>
     <message>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
-        <translation>Kiedy ta opcja jest wybrana, to jeżeli adres reszty jest pusty lub nieprawidłowy, to reszta będzie wysyłana na nowo wygenerowany adres, </translation>
+        <translation>Kiedy ta opcja jest wybrana, to jeżeli adres reszty jest pusty lub nieprawidłowy, to reszta będzie wysyłana na nowo wygenerowany adres,</translation>
     </message>
     <message>
         <source>Custom change address</source>
@@ -2692,7 +2692,7 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
     <message>
         <source>Enter the receiver's address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</source>
         <translation>Wpisz adres, wiadomość oraz sygnaturę (podpis) odbiorcy (upewnij się, że dokładnie skopiujesz wszystkie zakończenia linii, spacje, tabulacje itp.).  Uważaj by nie dodać więcej do podpisu niż do samej podpisywanej wiadomości by uniknąć ataku man-in-the-middle. 
-Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadawca posiada klucz do adresu, natomiast nie potwierdza to, że poprawne wysłanie jakiejkolwiek transakcji! </translation>
+Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadawca posiada klucz do adresu, natomiast nie potwierdza to, że poprawne wysłanie jakiejkolwiek transakcji!</translation>
     </message>
     <message>
         <source>The Bitcoin address the message was signed with</source>
@@ -3550,7 +3550,7 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
-        <translation>Brak wystarczającej liczby deskryptorów plików. </translation>
+        <translation>Brak wystarczającej liczby deskryptorów plików.</translation>
     </message>
     <message>
         <source>Prune cannot be configured with a negative value.</source>
@@ -3696,7 +3696,7 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     </message>
     <message>
         <source>Transaction amount too small</source>
-        <translation>Zbyt niska kwota transakcji </translation>
+        <translation>Zbyt niska kwota transakcji</translation>
     </message>
     <message>
         <source>Transaction too large</source>
@@ -3772,7 +3772,7 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     </message>
     <message>
         <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>To jest opłata transakcyjna którą zapłacisz jeśli wyślesz transakcję. </translation>
+        <translation>To jest opłata transakcyjna którą zapłacisz jeśli wyślesz transakcję.</translation>
     </message>
     <message>
         <source>Transaction amounts must not be negative</source>

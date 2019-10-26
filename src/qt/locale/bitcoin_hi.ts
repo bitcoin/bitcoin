@@ -19,11 +19,11 @@
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation>&amp;कॉपी </translation>
+        <translation>&amp;कॉपी</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation>सी&amp;लूज़ </translation>
+        <translation>सी&amp;लूज़</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -71,7 +71,7 @@
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation>प्रतिलिप करे और चिन्हित करें </translation>
+        <translation>प्रतिलिप करे और चिन्हित करें</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
@@ -102,7 +102,7 @@
     </message>
     <message>
         <source>Address</source>
-        <translation>पता </translation>
+        <translation>पता</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -133,7 +133,7 @@
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>इस संचालान हेतु कृपया अपने वॉलेट के सुरक्षा संवाद को दर्ज करें </translation>
+        <translation>इस संचालान हेतु कृपया अपने वॉलेट के सुरक्षा संवाद को दर्ज करें</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
@@ -141,7 +141,7 @@
     </message>
     <message>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>आपके वॉलेट को गोपनीय बनाने हेतु आपके वॉलेट का सुरक्षा संवाद अनिवार्य है </translation>
+        <translation>आपके वॉलेट को गोपनीय बनाने हेतु आपके वॉलेट का सुरक्षा संवाद अनिवार्य है</translation>
     </message>
     <message>
         <source>Decrypt wallet</source>
@@ -216,7 +216,7 @@
     </message>
     <message>
         <source>Wallet:</source>
-        <translation>तिजोरी </translation>
+        <translation>तिजोरी</translation>
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
@@ -439,7 +439,7 @@
     </message>
     <message>
         <source>Address</source>
-        <translation>पता </translation>
+        <translation>पता</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -574,7 +574,7 @@
     <name>TransactionDescDialog</name>
     <message>
         <source>This pane shows a detailed description of the transaction</source>
-        <translation> ये खिड़की आपको लेन-देन का विस्तृत विवरण देगी !</translation>
+        <translation>ये खिड़की आपको लेन-देन का विस्तृत विवरण देगी !</translation>
     </message>
     </context>
 <context>
@@ -612,7 +612,7 @@
     </message>
     <message>
         <source>Address</source>
-        <translation>पता </translation>
+        <translation>पता</translation>
     </message>
     <message>
         <source>Exporting Failed</source>

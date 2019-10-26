@@ -2511,7 +2511,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
-        <translation> 在這個視窗不見以前，請不要關掉電腦。</translation>
+        <translation>在這個視窗不見以前，請不要關掉電腦。</translation>
     </message>
 </context>
 <context>

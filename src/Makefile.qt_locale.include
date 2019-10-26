@@ -17,6 +17,7 @@ QT_TS = \
   qt/locale/bitcoin_et.ts \
   qt/locale/bitcoin_eu.ts \
   qt/locale/bitcoin_fa.ts \
+  qt/locale/bitcoin_fa_IR.ts \
   qt/locale/bitcoin_fi.ts \
   qt/locale/bitcoin_fil.ts \
   qt/locale/bitcoin_fr.ts \

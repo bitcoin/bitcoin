@@ -820,7 +820,7 @@
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
-        <translation>Désactiver les clés privées pour ce porte-monnaie. Les portes-monnaie avec des clés privées désactivées n'auront pas de clés privées et ne peuvent pas avoir une graine HD ou des clés privées importées. Ceci est idéal pour un porte-monnaie </translation>
+        <translation>Désactiver les clés privées pour ce porte-monnaie. Les portes-monnaie avec des clés privées désactivées n'auront pas de clés privées et ne peuvent pas avoir une graine HD ou des clés privées importées. Ceci est idéal pour un porte-monnaie</translation>
     </message>
     <message>
         <source>Disable Private Keys</source>

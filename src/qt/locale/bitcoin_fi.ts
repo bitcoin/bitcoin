@@ -200,6 +200,10 @@
         <translation>Lompakkosi tulee kohta salatuksi.</translation>
     </message>
     <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>Lompakkosi on nyt salattu.</translation>
+    </message>
+    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>TÄRKEÄÄ: Kaikki tekemäsi vanhan lompakon varmuuskopiot pitäisi korvata uusilla suojatuilla varmuuskopioilla. Turvallisuussyistä edelliset varmuuskopiot muuttuvat turhiksi, kun aloitat uuden suojatun lompakon käytön.</translation>
     </message>
@@ -320,6 +324,14 @@
     <message>
         <source>Open &amp;URI...</source>
         <translation>Avaa &amp;URI...</translation>
+    </message>
+    <message>
+        <source>Create Wallet...</source>
+        <translation>Luo lompakko...</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>Luo uusi lompakko</translation>
     </message>
     <message>
         <source>Wallet:</source>
@@ -482,12 +494,28 @@
         <translation>Rahansiirtohistoria on ajan tasalla</translation>
     </message>
     <message>
+        <source>&amp;Sending addresses</source>
+        <translation>&amp;Lähetysosoitteet</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses</source>
+        <translation>&amp;Vastaanotto-osoitteet</translation>
+    </message>
+    <message>
+        <source>Open Wallet</source>
+        <translation>Avaa lompakko</translation>
+    </message>
+    <message>
         <source>Open a wallet</source>
         <translation>Avaa lompakko</translation>
     </message>
     <message>
         <source>Close Wallet...</source>
         <translation>Sulje lompakko...</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>Sulje lompakko</translation>
     </message>
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
@@ -532,6 +560,10 @@
     <message>
         <source>Error: %1</source>
         <translation>Virhe: %1</translation>
+    </message>
+    <message>
+        <source>Warning: %1</source>
+        <translation>Varoitus: %1</translation>
     </message>
     <message>
         <source>Date: %1
@@ -755,10 +787,38 @@
 </context>
 <context>
     <name>CreateWalletActivity</name>
+    <message>
+        <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Luodaan lompakkoa &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
     </context>
 <context>
     <name>CreateWalletDialog</name>
-    </context>
+    <message>
+        <source>Create Wallet</source>
+        <translation>Luo lompakko</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <translation>Lompakon nimi</translation>
+    </message>
+    <message>
+        <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
+        <translation>Salaa lompakko. Lompakko salataan valitsemallasa salasanalla.</translation>
+    </message>
+    <message>
+        <source>Encrypt Wallet</source>
+        <translation>Salaa lompakko</translation>
+    </message>
+    <message>
+        <source>Make Blank Wallet</source>
+        <translation>Luo tyhjä lompakko</translation>
+    </message>
+    <message>
+        <source>Create</source>
+        <translation>Luo</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -1004,6 +1064,10 @@
 <context>
     <name>OpenWalletActivity</name>
     <message>
+        <source>Open wallet failed</source>
+        <translation>Lompakon avaaminen epäonnistui</translation>
+    </message>
+    <message>
         <source>default wallet</source>
         <translation>oletuslompakko</translation>
     </message>
@@ -1101,6 +1165,10 @@
     <message>
         <source>Reverting this setting requires re-downloading the entire blockchain.</source>
         <translation>Tämän asetuksen muuttaminen vaatii koko lohkoketjun uudelleenlataamista.</translation>
+    </message>
+    <message>
+        <source>MiB</source>
+        <translation>MiB</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
@@ -1653,6 +1721,10 @@
         <translation>Käytä '%1' -valitsinta määritelläksesi muun kuin oletuksen data-hakemistolle.</translation>
     </message>
     <message>
+        <source>Blocksdir</source>
+        <translation>Blocksdir</translation>
+    </message>
+    <message>
         <source>To specify a non-default location of the blocks directory use the '%1' option.</source>
         <translation>Käytä '%1' -valitsinta määritelläksesi muun kuin oletuksen lohkohakemistolle.</translation>
     </message>
@@ -1862,7 +1934,7 @@
     </message>
     <message>
         <source>Ban for</source>
-        <translation>Estä </translation>
+        <translation>Estä</translation>
     </message>
     <message>
         <source>&amp;Unban</source>
@@ -2358,7 +2430,7 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
-        <translation>Varoitus: Virheellinen Bitcoin-osoite </translation>
+        <translation>Varoitus: Virheellinen Bitcoin-osoite</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -3077,6 +3149,10 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
 </context>
 <context>
     <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation>Sulje lompakko</translation>
+    </message>
     <message>
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation>Lompakon sulkeminen liian pitkäksi aikaa saattaa johtaa tarpeeseen synkronoida koko ketju uudelleen, mikäli karsinta on käytössä.</translation>

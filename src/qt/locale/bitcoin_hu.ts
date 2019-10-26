@@ -323,7 +323,7 @@
     </message>
     <message>
         <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
-        <translation>Proxy  &lt;b&gt;aktív&lt;/b&gt;: %1 </translation>
+        <translation>Proxy  &lt;b&gt;aktív&lt;/b&gt;: %1</translation>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
@@ -439,7 +439,7 @@
     </message>
     <message>
         <source>Transactions after this will not yet be visible.</source>
-        <translation>Ez utáni tranzakciók még nem lesznek láthatóak. </translation>
+        <translation>Ez utáni tranzakciók még nem lesznek láthatóak.</translation>
     </message>
     <message>
         <source>Error</source>
@@ -540,7 +540,7 @@
     <message>
         <source>Wallet: %1
 </source>
-        <translation>Tárca: %1 </translation>
+        <translation>Tárca: %1</translation>
     </message>
     <message>
         <source>Type: %1
@@ -701,7 +701,7 @@
     </message>
     <message>
         <source>Copy bytes</source>
-        <translation>Byte-ok másolása </translation>
+        <translation>Byte-ok másolása</translation>
     </message>
     <message>
         <source>Copy dust</source>
@@ -762,7 +762,7 @@
     </message>
     <message>
         <source>The label associated with this address list entry</source>
-        <translation>Ehhez a listaelemhez rendelt címke </translation>
+        <translation>Ehhez a listaelemhez rendelt címke</translation>
     </message>
     <message>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
@@ -895,7 +895,7 @@
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
-        <translation>Hiba: A megadott "%1" adatkönyvtár nem hozható létre. </translation>
+        <translation>Hiba: A megadott "%1" adatkönyvtár nem hozható létre.</translation>
     </message>
     <message>
         <source>Error</source>
@@ -984,7 +984,7 @@
     </message>
     <message>
         <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
-        <translation>Tárca megnyitása &lt;b&gt;%1&lt;/b&gt;... </translation>
+        <translation>Tárca megnyitása &lt;b&gt;%1&lt;/b&gt;...</translation>
     </message>
 </context>
 <context>
@@ -1511,7 +1511,7 @@
     </message>
     <message>
         <source>Error: Specified data directory "%1" does not exist.</source>
-        <translation>Hiba: A megadott "%1" adatkönyvtár nem létezik. </translation>
+        <translation>Hiba: A megadott "%1" adatkönyvtár nem létezik.</translation>
     </message>
     <message>
         <source>Error: Cannot parse configuration file: %1.</source>
@@ -1868,7 +1868,7 @@
     </message>
     <message>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
-        <translation>Használja ezt az űrlapot fizetési kérelmekhez. Minden mező &lt;b&gt;opcionális&lt;/b&gt; </translation>
+        <translation>Használja ezt az űrlapot fizetési kérelmekhez. Minden mező &lt;b&gt;opcionális&lt;/b&gt;</translation>
     </message>
     <message>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
@@ -2157,7 +2157,7 @@
     </message>
     <message>
         <source>Copy bytes</source>
-        <translation>Byte-ok másolása </translation>
+        <translation>Byte-ok másolása</translation>
     </message>
     <message>
         <source>Copy dust</source>
@@ -2385,7 +2385,7 @@
     </message>
     <message>
         <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation>Üzenet </translation>
+        <translation>Üzenet</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
@@ -2511,7 +2511,7 @@
     </message>
     <message>
         <source>From</source>
-        <translation>Küldő: </translation>
+        <translation>Küldő:</translation>
     </message>
     <message>
         <source>unknown</source>
@@ -2844,7 +2844,7 @@
     </message>
     <message>
         <source>There was an error trying to save the transaction history to %1.</source>
-        <translation>Hiba történt a tranzakciós előzmények %1 helyre való mentésekor. </translation>
+        <translation>Hiba történt a tranzakciós előzmények %1 helyre való mentésekor.</translation>
     </message>
     <message>
         <source>Exporting Successful</source>
@@ -3046,7 +3046,7 @@
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
-        <translation>Nincs elég fájlleíró. </translation>
+        <translation>Nincs elég fájlleíró.</translation>
     </message>
     <message>
         <source>Replaying blocks...</source>

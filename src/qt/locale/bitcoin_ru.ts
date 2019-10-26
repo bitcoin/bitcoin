@@ -1005,7 +1005,7 @@
     </message>
     <message>
         <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
-        <translation>Кошелек открывается &lt;b&gt;%1&lt;/b&gt;... </translation>
+        <translation>Кошелек открывается &lt;b&gt;%1&lt;/b&gt;...</translation>
     </message>
 </context>
 <context>
@@ -1989,7 +1989,7 @@
     </message>
     <message>
         <source>Generate native segwit (Bech32) address</source>
-        <translation>Создать "родной" segwit (Bech32) адрес </translation>
+        <translation>Создать "родной" segwit (Bech32) адрес</translation>
     </message>
     <message>
         <source>Requested payments history</source>
@@ -3447,7 +3447,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Transaction fee and change calculation failed</source>
-        <translation>Не удалось рассчитать комиссию и сдачу для транзакции </translation>
+        <translation>Не удалось рассчитать комиссию и сдачу для транзакции</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer. %s is probably already running.</source>
@@ -3645,7 +3645,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Это размер комиссии, которую вы заплатите при отправке транзакции </translation>
+        <translation>Это размер комиссии, которую вы заплатите при отправке транзакции</translation>
     </message>
     <message>
         <source>Transaction amounts must not be negative</source>

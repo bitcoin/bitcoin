@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>  បង្កើតអាស្រយដ្ឋានថ្មីមួយ</translation>
+        <translation>បង្កើតអាស្រយដ្ឋានថ្មីមួយ</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -118,7 +118,7 @@
     </message>
     <message>
         <source>Decrypt wallet</source>
-        <translation>កាបូប​​ ឌីក្រីព </translation>
+        <translation>កាបូប​​ ឌីក្រីព</translation>
     </message>
     <message>
         <source>Change passphrase</source>

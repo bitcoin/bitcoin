@@ -245,7 +245,7 @@ Alihkan fail data ke dalam tab semasa</translation>
     </message>
     <message>
         <source>Browse transaction history</source>
-        <translation>Menyemak imbas sejarah transaksi </translation>
+        <translation>Menyemak imbas sejarah transaksi</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
@@ -361,7 +361,7 @@ Alihkan fail data ke dalam tab semasa</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>sulitkan kata laluan milik peribadi anda </translation>
+        <translation>sulitkan kata laluan milik peribadi anda</translation>
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>

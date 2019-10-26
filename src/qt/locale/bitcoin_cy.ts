@@ -43,7 +43,7 @@
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation>Dewis y cyfeiriad i yrru'r arian </translation>
+        <translation>Dewis y cyfeiriad i yrru'r arian</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
@@ -193,7 +193,7 @@
     </message>
     <message>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation>Newid cyfrinair waled yn llwyddiannus. </translation>
+        <translation>Newid cyfrinair waled yn llwyddiannus.</translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>

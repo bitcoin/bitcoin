@@ -71,7 +71,7 @@
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
-        <translation>Disse er dine Bitcoin adresser til at modtage betalinger. Benyt 'Opret ny modtager adresse' knappen i modtag fanen for at oprette nye adresser. </translation>
+        <translation>Disse er dine Bitcoin adresser til at modtage betalinger. Benyt 'Opret ny modtager adresse' knappen i modtag fanen for at oprette nye adresser.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -1478,7 +1478,7 @@
     </message>
     <message>
         <source>'bitcoin://' is not a valid URI. Use 'bitcoin:' instead.</source>
-        <translation>'bitcoin://' er ikke et gyldigt URI. Brug 'bitcoin:' istedet. </translation>
+        <translation>'bitcoin://' er ikke et gyldigt URI. Brug 'bitcoin:' istedet.</translation>
     </message>
     <message>
         <source>You are using a BIP70 URL which will be unsupported in the future.</source>
@@ -3363,7 +3363,7 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
     </message>
     <message>
         <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
-        <translation>Kan ikke generere en bytte-adresse nøgle. Ingen nøgler i den interne nøglepulje og kan ikke generere nogle nøgler. </translation>
+        <translation>Kan ikke generere en bytte-adresse nøgle. Ingen nøgler i den interne nøglepulje og kan ikke generere nogle nøgler.</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
@@ -3539,7 +3539,7 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
     </message>
     <message>
         <source>Error: Disk space is too low!</source>
-        <translation>Fejl: Disk pladsen er for lav! </translation>
+        <translation>Fejl: Disk pladsen er for lav!</translation>
     </message>
     <message>
         <source>Loading banlist...</source>

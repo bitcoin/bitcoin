@@ -483,7 +483,7 @@
     </message>
     <message>
         <source>&amp;Window</source>
-        <translation>Window </translation>
+        <translation>Window</translation>
     </message>
     <message>
         <source>Minimize</source>
@@ -594,7 +594,7 @@
     </message>
     <message>
         <source>Bytes:</source>
-        <translation>Bytes: </translation>
+        <translation>Bytes:</translation>
     </message>
     <message>
         <source>Amount:</source>
@@ -718,7 +718,7 @@
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
-        <translation>Maaaring magbago ng +/- %1 satoshi(s) kada input. </translation>
+        <translation>Maaaring magbago ng +/- %1 satoshi(s) kada input.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -1160,7 +1160,7 @@
     </message>
     <message>
         <source>&amp;Window</source>
-        <translation>Window </translation>
+        <translation>Window</translation>
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>
@@ -1945,7 +1945,7 @@
     </message>
     <message>
         <source>Clear all fields of the form.</source>
-        <translation>Burahin ang laman ng lahat ng patlang ng form. </translation>
+        <translation>Burahin ang laman ng lahat ng patlang ng form.</translation>
     </message>
     <message>
         <source>Clear</source>
@@ -1953,7 +1953,7 @@
     </message>
     <message>
         <source>Native segwit addresses (aka Bech32 or BIP-173) reduce your transaction fees later on and offer better protection against typos, but old wallets don't support them. When unchecked, an address compatible with older wallets will be created instead.</source>
-        <translation>Ang mga native segwit address (aka Bech32 o BIP-173) ay makakabawas ng iyong mga bayad sa transaksyon at nagaalok ng mas mahusay na proteksyon laban sa mga typo, ngunit ang mga lumang walet ay hindi sumusuporta nito. Kapag hindi ch-in-eck, gagawa ng mga address na katugma sa mga lumang walet sa halip. </translation>
+        <translation>Ang mga native segwit address (aka Bech32 o BIP-173) ay makakabawas ng iyong mga bayad sa transaksyon at nagaalok ng mas mahusay na proteksyon laban sa mga typo, ngunit ang mga lumang walet ay hindi sumusuporta nito. Kapag hindi ch-in-eck, gagawa ng mga address na katugma sa mga lumang walet sa halip.</translation>
     </message>
     <message>
         <source>Generate native segwit (Bech32) address</source>
@@ -2106,7 +2106,7 @@
     </message>
     <message>
         <source>Bytes:</source>
-        <translation>Bytes: </translation>
+        <translation>Bytes:</translation>
     </message>
     <message>
         <source>Amount:</source>
@@ -2190,7 +2190,7 @@ Tandaan: Dahil ang bayad  ay kinakalkula sa bawat-byte na batayan, ang bayad ng 
     </message>
     <message>
         <source>Clear all fields of the form.</source>
-        <translation>Limasin ang lahat ng mga patlang ng form. </translation>
+        <translation>Limasin ang lahat ng mga patlang ng form.</translation>
     </message>
     <message>
         <source>Dust:</source>
@@ -2314,7 +2314,7 @@ Tandaan: Dahil ang bayad  ay kinakalkula sa bawat-byte na batayan, ang bayad ng 
     </message>
     <message>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation>Ang kabuuan ay lumampas sa iyong balanse kapag kasama ang %1 na bayad sa transaksyon. </translation>
+        <translation>Ang kabuuan ay lumampas sa iyong balanse kapag kasama ang %1 na bayad sa transaksyon.</translation>
     </message>
     <message>
         <source>Duplicate address found: addresses should only be used once each.</source>
@@ -2385,7 +2385,7 @@ Tandaan: Dahil ang bayad  ay kinakalkula sa bawat-byte na batayan, ang bayad ng 
     </message>
     <message>
         <source>The Bitcoin address to send the payment to</source>
-        <translation>Ang Bitcoin address kung saan ipapadala and bayad </translation>
+        <translation>Ang Bitcoin address kung saan ipapadala and bayad</translation>
     </message>
     <message>
         <source>Alt+A</source>
@@ -2514,7 +2514,7 @@ Tandaan: Dahil ang bayad  ay kinakalkula sa bawat-byte na batayan, ang bayad ng 
     </message>
     <message>
         <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation>Pirmahan ang mensahe upang mapatunayan na pagmamay-ari mo ang Bitcoin address na ito </translation>
+        <translation>Pirmahan ang mensahe upang mapatunayan na pagmamay-ari mo ang Bitcoin address na ito</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
@@ -2752,7 +2752,7 @@ Tandaan: Dahil ang bayad  ay kinakalkula sa bawat-byte na batayan, ang bayad ng 
     </message>
     <message>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>Ang mga nabuong coins ay dapat mayroong %1 blocks sa ibabaw bago sila gastusin. Kapag nabuo mo ang block na ito, nai-broadcast ito sa network na idadagdag sa block chain. Kung nabigo itong makapasok sa chain, magbabago ang katayuan nito sa "hindi tinanggap" at hindi it magagastos. Maaaring mangyari ito paminsan-minsan kung may isang node na bumuo ng isang block sa loob ng ilang segundo sa iyo. </translation>
+        <translation>Ang mga nabuong coins ay dapat mayroong %1 blocks sa ibabaw bago sila gastusin. Kapag nabuo mo ang block na ito, nai-broadcast ito sa network na idadagdag sa block chain. Kung nabigo itong makapasok sa chain, magbabago ang katayuan nito sa "hindi tinanggap" at hindi it magagastos. Maaaring mangyari ito paminsan-minsan kung may isang node na bumuo ng isang block sa loob ng ilang segundo sa iyo.</translation>
     </message>
     <message>
         <source>Debug information</source>
@@ -3060,7 +3060,7 @@ Tandaan: Dahil ang bayad  ay kinakalkula sa bawat-byte na batayan, ang bayad ng 
     <name>UnitDisplayStatusBarControl</name>
     <message>
         <source>Unit to show amounts in. Click to select another unit.</source>
-        <translation>Unit na gamit upang ipakita ang mga halaga. I-klik upang pumili ng isa pang yunit. </translation>
+        <translation>Unit na gamit upang ipakita ang mga halaga. I-klik upang pumili ng isa pang yunit.</translation>
     </message>
 </context>
 <context>

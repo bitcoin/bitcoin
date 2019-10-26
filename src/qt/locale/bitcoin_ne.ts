@@ -31,7 +31,7 @@
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>वर्तमान ट्याबको डाटालाई फाइलमा निर्यात गर्नुहोस् </translation>
+        <translation>वर्तमान ट्याबको डाटालाई फाइलमा निर्यात गर्नुहोस्</translation>
     </message>
     <message>
         <source>&amp;Export</source>

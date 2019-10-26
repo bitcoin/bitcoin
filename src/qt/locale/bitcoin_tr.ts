@@ -899,7 +899,7 @@
     </message>
     <message>
         <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
-        <translation>Son işlemler henüz görünmeyebilir ve bu nedenle cüzdanınızın bakiyesi yanlış olabilir. Bu bilgiler, aşağıda detaylandırıldığı gibi, cüzdanınız bitcoin ağı ile senkronizasyonunu tamamladığında doğru olacaktır. </translation>
+        <translation>Son işlemler henüz görünmeyebilir ve bu nedenle cüzdanınızın bakiyesi yanlış olabilir. Bu bilgiler, aşağıda detaylandırıldığı gibi, cüzdanınız bitcoin ağı ile senkronizasyonunu tamamladığında doğru olacaktır.</translation>
     </message>
     <message>
         <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
@@ -1520,7 +1520,7 @@
     </message>
     <message>
         <source>Error: Cannot parse configuration file: %1.</source>
-        <translation>Hata: %1 yapılandırma dosyası ayrıştırılamadı. </translation>
+        <translation>Hata: %1 yapılandırma dosyası ayrıştırılamadı.</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -3236,7 +3236,7 @@
     </message>
     <message>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
-        <translation> -fallbackfee=&lt;tutar&gt; için geçersiz tutar: '%s'</translation>
+        <translation>-fallbackfee=&lt;tutar&gt; için geçersiz tutar: '%s'</translation>
     </message>
     <message>
         <source>Unknown address type '%s'</source>

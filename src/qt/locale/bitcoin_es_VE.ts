@@ -83,7 +83,7 @@
     </message>
     <message>
         <source>Export Address List</source>
-        <translation>Exportar la Lista de Direcciones </translation>
+        <translation>Exportar la Lista de Direcciones</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
@@ -1395,7 +1395,7 @@
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
-        <translation>No hay suficientes descriptores de archivo disponibles. </translation>
+        <translation>No hay suficientes descriptores de archivo disponibles.</translation>
     </message>
     <message>
         <source>Verifying blocks...</source>

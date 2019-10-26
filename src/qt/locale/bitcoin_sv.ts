@@ -932,7 +932,7 @@ Försök igen.</translation>
     </message>
     <message>
         <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation>Att försöka spendera bitcoin som påverkas av transaktioner som ännu inte visas kommer inte accepteras av nätverket. </translation>
+        <translation>Att försöka spendera bitcoin som påverkas av transaktioner som ännu inte visas kommer inte accepteras av nätverket.</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -1149,11 +1149,11 @@ Försök igen.</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
-        <translation>Proxy-&amp;IP: </translation>
+        <translation>Proxy-&amp;IP:</translation>
     </message>
     <message>
         <source>&amp;Port:</source>
-        <translation>&amp;Port: </translation>
+        <translation>&amp;Port:</translation>
     </message>
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
@@ -1201,7 +1201,7 @@ Försök igen.</translation>
     </message>
     <message>
         <source>User Interface &amp;language:</source>
-        <translation>Användargränssnittets &amp;språk: </translation>
+        <translation>Användargränssnittets &amp;språk:</translation>
     </message>
     <message>
         <source>The user interface language can be set here. This setting will take effect after restarting %1.</source>
@@ -1209,7 +1209,7 @@ Försök igen.</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
-        <translation>&amp;Måttenhet att visa belopp i: </translation>
+        <translation>&amp;Måttenhet att visa belopp i:</translation>
     </message>
     <message>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
@@ -3602,11 +3602,11 @@ Notera: Då avgiften beräknas per byte kommer en avgift på 50 satoshi tas ut f
     </message>
     <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
-        <translation>Det här är minimiavgiften du kommer betala för varje transaktion. </translation>
+        <translation>Det här är minimiavgiften du kommer betala för varje transaktion.</translation>
     </message>
     <message>
         <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Det här är transaktionsavgiften du kommer betala om du skickar en transaktion. </translation>
+        <translation>Det här är transaktionsavgiften du kommer betala om du skickar en transaktion.</translation>
     </message>
     <message>
         <source>Transaction amounts must not be negative</source>

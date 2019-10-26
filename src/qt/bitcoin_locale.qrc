@@ -18,6 +18,7 @@
         <file alias="et">locale/bitcoin_et.qm</file>
         <file alias="eu">locale/bitcoin_eu.qm</file>
         <file alias="fa">locale/bitcoin_fa.qm</file>
+        <file alias="fa_IR">locale/bitcoin_fa_IR.qm</file>
         <file alias="fi">locale/bitcoin_fi.qm</file>
         <file alias="fil">locale/bitcoin_fil.qm</file>
         <file alias="fr">locale/bitcoin_fr.qm</file>

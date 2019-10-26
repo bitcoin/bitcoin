@@ -48,11 +48,11 @@ Exportar los datos en la pestaña actual a un archivo</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation>Elija la dirección para enviar las monedas </translation>
+        <translation>Elija la dirección para enviar las monedas</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation>Elige la dirección para recibir las monedas </translation>
+        <translation>Elige la dirección para recibir las monedas</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
@@ -1137,7 +1137,7 @@ Exportar los datos en la pestaña actual a un archivo</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
-        <translation> Unidad para mostrar montos en:</translation>
+        <translation>Unidad para mostrar montos en:</translation>
     </message>
     <message>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
@@ -1165,7 +1165,7 @@ Exportar los datos en la pestaña actual a un archivo</translation>
     </message>
     <message>
         <source>none</source>
-        <translation>ninguno </translation>
+        <translation>ninguno</translation>
     </message>
     <message>
         <source>Confirm options reset</source>
@@ -1563,7 +1563,7 @@ Exportar los datos en la pestaña actual a un archivo</translation>
     </message>
     <message>
         <source>Number of connections</source>
-        <translation>Número de conexiones </translation>
+        <translation>Número de conexiones</translation>
     </message>
     <message>
         <source>Block chain</source>
@@ -1703,7 +1703,7 @@ Exportar los datos en la pestaña actual a un archivo</translation>
     </message>
     <message>
         <source>Totals</source>
-        <translation>Totales </translation>
+        <translation>Totales</translation>
     </message>
     <message>
         <source>In:</source>
@@ -1783,7 +1783,7 @@ Exportar los datos en la pestaña actual a un archivo</translation>
     </message>
     <message>
         <source>never</source>
-        <translation>nunca </translation>
+        <translation>nunca</translation>
     </message>
     <message>
         <source>Inbound</source>
@@ -1795,7 +1795,7 @@ Exportar los datos en la pestaña actual a un archivo</translation>
     </message>
     <message>
         <source>Yes</source>
-        <translation>Si </translation>
+        <translation>Si</translation>
     </message>
     <message>
         <source>No</source>
@@ -2266,7 +2266,7 @@ Tarifa de copia</translation>
     <name>SendConfirmationDialog</name>
     <message>
         <source>Yes</source>
-        <translation>Si </translation>
+        <translation>Si</translation>
     </message>
 </context>
 <context>

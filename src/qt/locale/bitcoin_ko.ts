@@ -682,7 +682,7 @@
     </message>
     <message>
         <source>Unlock unspent</source>
-        <translation>사용되지 않은 주소를 잠금 해제합니다. </translation>
+        <translation>사용되지 않은 주소를 잠금 해제합니다.</translation>
     </message>
     <message>
         <source>Copy quantity</source>
@@ -759,7 +759,7 @@
     </message>
     <message>
         <source>The label associated with this address list entry</source>
-        <translation>현재 선택된 주소 필드의 제목입니다. </translation>
+        <translation>현재 선택된 주소 필드의 제목입니다.</translation>
     </message>
     <message>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
@@ -814,7 +814,7 @@
     </message>
     <message>
         <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
-        <translation>폴더가 이미 존재합니다. 새로운 폴더 생성을 원한다면 %1 명령어를 추가하세요. </translation>
+        <translation>폴더가 이미 존재합니다. 새로운 폴더 생성을 원한다면 %1 명령어를 추가하세요.</translation>
     </message>
     <message>
         <source>Path already exists, and is not a directory.</source>
@@ -856,7 +856,7 @@
     </message>
     <message>
         <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
-        <translation>프로그램이 처음으로 실행되고 있습니다. %1가 어디에 데이터를 저장할지 선택할 수 있습니다. </translation>
+        <translation>프로그램이 처음으로 실행되고 있습니다. %1가 어디에 데이터를 저장할지 선택할 수 있습니다.</translation>
     </message>
     <message>
         <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
@@ -1080,7 +1080,7 @@
     </message>
     <message>
         <source>Prune &amp;block storage to</source>
-        <translation>블록 데이터를 지정된 크기로 축소합니다: </translation>
+        <translation>블록 데이터를 지정된 크기로 축소합니다:</translation>
     </message>
     <message>
         <source>GB</source>
@@ -1268,7 +1268,7 @@
     </message>
     <message>
         <source>This change would require a client restart.</source>
-        <translation>이 변경 사항 적용을 위해 프로그램 재시작이 필요합니다. </translation>
+        <translation>이 변경 사항 적용을 위해 프로그램 재시작이 필요합니다.</translation>
     </message>
     <message>
         <source>The supplied proxy address is invalid.</source>
@@ -1957,7 +1957,7 @@
     </message>
     <message>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
-        <translation>요청할 금액 입력칸으로 선택 사항입니다. 빈 칸으로 두거나 특정 금액이 필요하지 않는 경우 0을 입력하세요. </translation>
+        <translation>요청할 금액 입력칸으로 선택 사항입니다. 빈 칸으로 두거나 특정 금액이 필요하지 않는 경우 0을 입력하세요.</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
@@ -2768,7 +2768,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>신규 채굴된 코인이 사용되기 위해서는 %1 개의 블록이 경과되어야 합니다. 블록을 생성할 때 블록체인에 추가되도록 네트워크에 전파되는 과정을 거치는데, 블록체인에 포함되지 못하고 실패한다면 해당 블록의 상태는 '미승인'으로 표현되고 비트코인 또한 사용될 수 없습니다. 이 현상은 다른 노드가 비슷한 시간대에 동시에 블록을 생성할 때 종종 발생할 수 있습니다. </translation>
+        <translation>신규 채굴된 코인이 사용되기 위해서는 %1 개의 블록이 경과되어야 합니다. 블록을 생성할 때 블록체인에 추가되도록 네트워크에 전파되는 과정을 거치는데, 블록체인에 포함되지 못하고 실패한다면 해당 블록의 상태는 '미승인'으로 표현되고 비트코인 또한 사용될 수 없습니다. 이 현상은 다른 노드가 비슷한 시간대에 동시에 블록을 생성할 때 종종 발생할 수 있습니다.</translation>
     </message>
     <message>
         <source>Debug information</source>
@@ -3168,7 +3168,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>There was an error trying to save the wallet data to %1.</source>
-        <translation>지갑 데이터를 %1 폴더에 저장하는 동안 오류가 발생했습니다. </translation>
+        <translation>지갑 데이터를 %1 폴더에 저장하는 동안 오류가 발생했습니다.</translation>
     </message>
     <message>
         <source>Backup Successful</source>
@@ -3263,7 +3263,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation>경고 : 모든 네트워크가 동의해야 하나, 일부 채굴자들에게 문제가 있는 것으로 보입니다. </translation>
+        <translation>경고 : 모든 네트워크가 동의해야 하나, 일부 채굴자들에게 문제가 있는 것으로 보입니다.</translation>
     </message>
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
@@ -3387,7 +3387,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
-        <translation>파일 디스크립터가 부족합니다. </translation>
+        <translation>파일 디스크립터가 부족합니다.</translation>
     </message>
     <message>
         <source>Prune cannot be configured with a negative value.</source>
@@ -3577,7 +3577,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>경고 : 지갑파일이 손상되어 데이터가 복구되었습니다. 원래의 %s 파일은 %s 후에 %s 이름으로 저장됩니다. 잔액과 거래 내역이 정확하지 않다면 백업 파일로 부터 복원해야 합니다. </translation>
+        <translation>경고 : 지갑파일이 손상되어 데이터가 복구되었습니다. 원래의 %s 파일은 %s 후에 %s 이름으로 저장됩니다. 잔액과 거래 내역이 정확하지 않다면 백업 파일로 부터 복원해야 합니다.</translation>
     </message>
     <message>
         <source>%s is set very high!</source>

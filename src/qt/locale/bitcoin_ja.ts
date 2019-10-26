@@ -2158,7 +2158,7 @@
     </message>
     <message>
         <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</source>
-        <translation> 代替料金を利用することで、承認されるまでに数時間または数日 (ないし一生承認されない) トランザクションを送信してしまう可能性があります。手動にて手数料を選択するか、完全なブロックチェーンの検証が終わるまで待つことを検討しましょう</translation>
+        <translation>代替料金を利用することで、承認されるまでに数時間または数日 (ないし一生承認されない) トランザクションを送信してしまう可能性があります。手動にて手数料を選択するか、完全なブロックチェーンの検証が終わるまで待つことを検討しましょう</translation>
     </message>
     <message>
         <source>Warning: Fee estimation is currently not possible.</source>

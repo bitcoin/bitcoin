@@ -819,8 +819,16 @@
         <translation>Wallet verschlüsseln</translation>
     </message>
     <message>
+        <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
+        <translation>Deaktiviert private Schlüssel für dieses Wallet. Wallets mit deaktivierten privaten Schlüsseln werden keine privaten Schlüssel haben und können keinen HD Seed oder private Schlüssel importieren. Das ist ideal für Wallets, die nur beobachten.</translation>
+    </message>
+    <message>
         <source>Disable Private Keys</source>
         <translation>Private Keys deaktivieren</translation>
+    </message>
+    <message>
+        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
+        <translation>Erzeugt ein leeres Wallet. Leere Wallets haben zu Anfang keine privaten Schlüssel oder Scripte. Private Schlüssel oder Adressen können importiert werden, ebenso können jetzt oder später HD-Seeds gesetzt werden.</translation>
     </message>
     <message>
         <source>Make Blank Wallet</source>
@@ -947,6 +955,10 @@
         <translation>Wenn Sie auf OK klicken, beginnt %1 mit dem Herunterladen und Verarbeiten der gesamten %4-Blockchain (%2GB), beginnend mit den frühesten Transaktionen in %3 beim ersten Start von %4.</translation>
     </message>
     <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
+        <translation>Um diese Einstellung wiederherzustellen, muss die gesamte Blockchain neu heruntergeladen werden. Es ist schneller, die gesamte Chain zuerst herunterzuladen und später zu bearbeiten. Deaktiviert einige erweiterte Funktionen.</translation>
+    </message>
+    <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
         <translation>Diese initiale Synchronisation führt zur hohen Last und kann Harewareprobleme, die bisher nicht aufgetreten sind, mit ihrem Computer verursachen. Jedes Mal, wenn Sie %1 ausführen, wird der Download zum letzten Synchronisationspunkt fortgesetzt.</translation>
     </message>
@@ -965,6 +977,10 @@
     <message>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
+    </message>
+    <message>
+        <source>Discard blocks after verification, except most recent %1 GB (prune)</source>
+        <translation>Verwerfe Blöcke nachdem sie verifiziert worden sind, ausser die %1 GB (prune)</translation>
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
@@ -1475,6 +1491,14 @@
     <message>
         <source>Cannot process payment request because BIP70 support was not compiled in.</source>
         <translation>Zahlungsanfrage kann nicht verarbeitet werden, da die Unterstützung für BIP70 nicht mitkompiliert wurde.</translation>
+    </message>
+    <message>
+        <source>Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.</source>
+        <translation>Aufgrund der weit verbreiteten Sicherheitsmängel in BIP70 wird dringend empfohlen, dass alle Anweisungen des Händlers zum Wechseln von Wallets ignoriert werden.</translation>
+    </message>
+    <message>
+        <source>If you are receiving this error you should request the merchant provide a BIP21 compatible URI.</source>
+        <translation>Wenn du diese Fehlermeldung erhälst, solltest du Kontakt mit dem Händler aufnehmen und eine mit BIP21 kompatible URL zur Verwendung nachfragen.</translation>
     </message>
     <message>
         <source>Invalid payment address %1</source>
@@ -2410,7 +2434,7 @@ Hinweis: Eine Gebühr von "100 Satoshis pro kB" bei einer Größe der Transaktio
     </message>
     <message>
         <source>Please, review your transaction.</source>
-        <translation>Bitte überprüfen sie ihre Transaktion. </translation>
+        <translation>Bitte überprüfen sie ihre Transaktion.</translation>
     </message>
     <message>
         <source>Transaction fee</source>
@@ -3376,7 +3400,7 @@ Hinweis: Eine Gebühr von "100 Satoshis pro kB" bei einer Größe der Transaktio
     </message>
     <message>
         <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
-        <translation>Fehler beim Verarbeiten von Blöcken. Sie müssen die Datenbank mit Hilfe des Arguments '-reindex-chainstate' neu aufbauen. </translation>
+        <translation>Fehler beim Verarbeiten von Blöcken. Sie müssen die Datenbank mit Hilfe des Arguments '-reindex-chainstate' neu aufbauen.</translation>
     </message>
     <message>
         <source>Unable to rewind the database to a pre-fork state. You will need to redownload the blockchain</source>
@@ -3783,7 +3807,7 @@ Hinweis: Eine Gebühr von "100 Satoshis pro kB" bei einer Größe der Transaktio
     </message>
     <message>
         <source>Cannot write to data directory '%s'; check permissions.</source>
-        <translation>Es konnte nicht in das Datenverzeichnis '%s' geschrieben werden; Überprüfen Sie die Berechtigungen. </translation>
+        <translation>Es konnte nicht in das Datenverzeichnis '%s' geschrieben werden; Überprüfen Sie die Berechtigungen.</translation>
     </message>
     <message>
         <source>Loading block index...</source>

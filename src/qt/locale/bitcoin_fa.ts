@@ -174,7 +174,7 @@
     <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
         <translation>والت رمز بندی شد . 
-یاد داشته باشید که پنجره رمز شده نمی تواند کلا از سرقت نرم افزارهای مخرب محافظ کند </translation>
+یاد داشته باشید که پنجره رمز شده نمی تواند کلا از سرقت نرم افزارهای مخرب محافظ کند</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -627,7 +627,7 @@
     </message>
     <message>
         <source>Confirmations</source>
-        <translation>تاییدیه </translation>
+        <translation>تاییدیه</translation>
     </message>
     <message>
         <source>Confirmed</source>
@@ -794,7 +794,7 @@
     </message>
     <message>
         <source>Command-line options</source>
-        <translation>گزینه های خط-فرمان </translation>
+        <translation>گزینه های خط-فرمان</translation>
     </message>
 </context>
 <context>
@@ -937,7 +937,7 @@
     </message>
     <message>
         <source>&amp;Hide tray icon</source>
-        <translation> مخفی کردن ایکون
+        <translation>مخفی کردن ایکون
 </translation>
     </message>
     <message>
@@ -1153,7 +1153,7 @@
     </message>
     <message>
         <source>Your current balance in watch-only addresses</source>
-        <translation>موجودی شما در همین لحظه در آدرس های Watch only Addresses </translation>
+        <translation>موجودی شما در همین لحظه در آدرس های Watch only Addresses</translation>
     </message>
     <message>
         <source>Spendable:</source>
@@ -1828,7 +1828,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
-        <translation>(مقداردهی کارمزد هوشمند هنوز مشخص نشده است.این کارمزد معمولا به اندازه چند بلاک طول میکشد...) </translation>
+        <translation>(مقداردهی کارمزد هوشمند هنوز مشخص نشده است.این کارمزد معمولا به اندازه چند بلاک طول میکشد...)</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -1864,7 +1864,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Confirm the send action</source>
-        <translation>تایید عملیات ارسال </translation>
+        <translation>تایید عملیات ارسال</translation>
     </message>
     <message>
         <source>S&amp;end</source>
@@ -2084,7 +2084,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>&amp;Sign Message</source>
-        <translation>&amp;ثبت پیام </translation>
+        <translation>&amp;ثبت پیام</translation>
     </message>
     <message>
         <source>The Bitcoin address to sign the message with</source>
@@ -2373,7 +2373,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>
-        <translation> میزان وجه کم شده یا اضافه شده به حساب</translation>
+        <translation>میزان وجه کم شده یا اضافه شده به حساب</translation>
     </message>
 </context>
 <context>

@@ -71,7 +71,7 @@
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
-        <translation>Questi sono i tuoi indirizzi Bitcoin per ricevere pagamenti. Usa il tasto "Crea nuovo indirizzo ricevente" nella schermata "Ricevi" per creare nuovi indirizzi. </translation>
+        <translation>Questi sono i tuoi indirizzi Bitcoin per ricevere pagamenti. Usa il tasto "Crea nuovo indirizzo ricevente" nella schermata "Ricevi" per creare nuovi indirizzi.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -197,11 +197,11 @@
     </message>
     <message>
         <source>Your wallet is about to be encrypted. </source>
-        <translation>Il tuo portafoglio sta per essere criptato. </translation>
+        <translation>Il tuo portafoglio sta per essere criptato.</translation>
     </message>
     <message>
         <source>Your wallet is now encrypted. </source>
-        <translation>Il tuo portafoglio è ora criptato. </translation>
+        <translation>Il tuo portafoglio è ora criptato.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -519,7 +519,7 @@
     </message>
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation>Mostra il messaggio di aiuto di %1 per ottenere una lista di opzioni di comando per Bitcoin </translation>
+        <translation>Mostra il messaggio di aiuto di %1 per ottenere una lista di opzioni di comando per Bitcoin</translation>
     </message>
     <message>
         <source>default wallet</source>
@@ -812,7 +812,7 @@
     </message>
     <message>
         <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
-        <translation>Cripta il portafoglio. Il portafoglio sarà criptato con una passphrase a tua scelta. </translation>
+        <translation>Cripta il portafoglio. Il portafoglio sarà criptato con una passphrase a tua scelta.</translation>
     </message>
     <message>
         <source>Encrypt Wallet</source>
@@ -828,7 +828,7 @@
     </message>
     <message>
         <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
-        <translation>Crea un portafoglio vuoto. I portafogli vuoti non hanno inizialmente nessuna chiave privata o script. Chiavi private e indirizzi possono essere importati, o un HD seed può essere impostato, in seguito. </translation>
+        <translation>Crea un portafoglio vuoto. I portafogli vuoti non hanno inizialmente nessuna chiave privata o script. Chiavi private e indirizzi possono essere importati, o un HD seed può essere impostato, in seguito.</translation>
     </message>
     <message>
         <source>Make Blank Wallet</source>
@@ -956,7 +956,7 @@
     </message>
     <message>
         <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
-        <translation>Cambiare questa impostazione richiede di riscaricare l'intera blockchain. E' più veloce scaricare prima tutta la chain e poi fare prune. Disabilita alcune impostazioni avanzate. </translation>
+        <translation>Cambiare questa impostazione richiede di riscaricare l'intera blockchain. E' più veloce scaricare prima tutta la chain e poi fare prune. Disabilita alcune impostazioni avanzate.</translation>
     </message>
     <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
@@ -1136,7 +1136,7 @@
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
-        <translation>Numero di thread di &amp;verifica degli script </translation>
+        <translation>Numero di thread di &amp;verifica degli script</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
@@ -1563,11 +1563,11 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     </message>
     <message>
         <source>Bad response from server %1</source>
-        <translation> Risposta errata da parte del server %1 </translation>
+        <translation>Risposta errata da parte del server %1</translation>
     </message>
     <message>
         <source>Network request error</source>
-        <translation> Errore di richiesta di rete</translation>
+        <translation>Errore di richiesta di rete</translation>
     </message>
     <message>
         <source>Payment acknowledged</source>
@@ -1716,11 +1716,11 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     </message>
     <message>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation> L'URI risultante è troppo lungo, prova a ridurre il testo nell'etichetta / messaggio.</translation>
+        <translation>L'URI risultante è troppo lungo, prova a ridurre il testo nell'etichetta / messaggio.</translation>
     </message>
     <message>
         <source>Error encoding URI into QR Code.</source>
-        <translation> Errore nella codifica dell'URI nel codice QR.</translation>
+        <translation>Errore nella codifica dell'URI nel codice QR.</translation>
     </message>
     <message>
         <source>QR code support not available.</source>
@@ -2086,7 +2086,7 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     </message>
     <message>
         <source>&amp;Create new receiving address</source>
-        <translation>Crea nuovo indirizzo ricevente. </translation>
+        <translation>Crea nuovo indirizzo ricevente.</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
@@ -2423,7 +2423,7 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     </message>
     <message>
         <source>Are you sure you want to send?</source>
-        <translation> Sei sicuro di voler inviare?</translation>
+        <translation>Sei sicuro di voler inviare?</translation>
     </message>
     <message>
         <source>or</source>
@@ -2459,11 +2459,11 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
-        <translation> L'indirizzo del destinatario non è valido. Si prega di ricontrollare.</translation>
+        <translation>L'indirizzo del destinatario non è valido. Si prega di ricontrollare.</translation>
     </message>
     <message>
         <source>The amount to pay must be larger than 0.</source>
-        <translation> L'importo da pagare deve essere maggiore di 0.</translation>
+        <translation>L'importo da pagare deve essere maggiore di 0.</translation>
     </message>
     <message>
         <source>The amount exceeds your balance.</source>
@@ -2471,11 +2471,11 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     </message>
     <message>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation> Il totale è superiore al tuo saldo attuale includendo la commissione di %1. </translation>
+        <translation>Il totale è superiore al tuo saldo attuale includendo la commissione di %1.</translation>
     </message>
     <message>
         <source>Duplicate address found: addresses should only be used once each.</source>
-        <translation> Rilevato un indirizzo duplicato Ciascun indirizzo dovrebbe essere utilizzato una sola volta.</translation>
+        <translation>Rilevato un indirizzo duplicato Ciascun indirizzo dovrebbe essere utilizzato una sola volta.</translation>
     </message>
     <message>
         <source>Transaction creation failed!</source>
@@ -2487,7 +2487,7 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     </message>
     <message>
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
-        <translation> Una commissione maggiore di %1 è considerata irragionevolmente elevata.</translation>
+        <translation>Una commissione maggiore di %1 è considerata irragionevolmente elevata.</translation>
     </message>
     <message>
         <source>Payment request expired.</source>
@@ -3114,7 +3114,7 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     </message>
     <message>
         <source>Abandon transaction</source>
-        <translation>Abbandona transazione </translation>
+        <translation>Abbandona transazione</translation>
     </message>
     <message>
         <source>Increase transaction fee</source>
@@ -3372,7 +3372,7 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     </message>
     <message>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
-        <translation>Non è possibile fornire connessioni specifiche e contemporaneamente usare addrman per trovare connessioni uscenti.  </translation>
+        <translation>Non è possibile fornire connessioni specifiche e contemporaneamente usare addrman per trovare connessioni uscenti.</translation>
     </message>
     <message>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>

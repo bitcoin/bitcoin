@@ -1088,7 +1088,7 @@
     </message>
     <message>
         <source>Reverting this setting requires re-downloading the entire blockchain.</source>
-        <translation>Mengembalikan pengaturan ini membutuhkan pengunduhan seluruh blockchain lagi. </translation>
+        <translation>Mengembalikan pengaturan ini membutuhkan pengunduhan seluruh blockchain lagi.</translation>
     </message>
     <message>
         <source>MiB</source>
@@ -1370,7 +1370,7 @@
     </message>
     <message>
         <source>You are using a BIP70 URL which will be unsupported in the future.</source>
-        <translation>Anda menggunakan URL BIP70 yang akan tidak lagi didukung di masa mendatang. </translation>
+        <translation>Anda menggunakan URL BIP70 yang akan tidak lagi didukung di masa mendatang.</translation>
     </message>
     <message>
         <source>Payment request fetch URL is invalid: %1</source>
@@ -1633,8 +1633,16 @@
         <translation>Datadir</translation>
     </message>
     <message>
+        <source>To specify a non-default location of the data directory use the '%1' option.</source>
+        <translation>Untuk menentukan lokasi direktori data yang tidak standar gunakan opsi '%1'.</translation>
+    </message>
+    <message>
         <source>Blocksdir</source>
         <translation>Blocksdir</translation>
+    </message>
+    <message>
+        <source>To specify a non-default location of the blocks directory use the '%1' option.</source>
+        <translation>Untuk menentukan lokasi direktori block non-default, gunakan opsi '%1'.</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -1674,7 +1682,7 @@
     </message>
     <message>
         <source>Wallet: </source>
-        <translation>Wallet: </translation>
+        <translation>Wallet:</translation>
     </message>
     <message>
         <source>(none)</source>
@@ -1733,6 +1741,10 @@
         <translation>Agen Pengguna
 
 </translation>
+    </message>
+    <message>
+        <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
+        <translation>Buka file log debug %1 dari direktori data saat ini. Dapat memakan waktu beberapa detik untuk file log besar.</translation>
     </message>
     <message>
         <source>Decrease font size</source>
@@ -1796,7 +1808,7 @@
     </message>
     <message>
         <source>&amp;Network Traffic</source>
-        <translation>Kemacetan &amp;Jaringan </translation>
+        <translation>Kemacetan &amp;Jaringan</translation>
     </message>
     <message>
         <source>Totals</source>
@@ -2393,7 +2405,7 @@
     <name>bitcoin-core</name>
     <message>
         <source>Corrupted block database detected</source>
-        <translation>Menemukan database blok yang rusak </translation>
+        <translation>Menemukan database blok yang rusak</translation>
     </message>
     <message>
         <source>Do you want to rebuild the block database now?</source>

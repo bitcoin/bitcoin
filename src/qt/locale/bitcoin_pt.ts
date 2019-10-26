@@ -864,7 +864,7 @@
     </message>
     <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
-        <translation>Esta sincronização inicial é muito exigente, e pode expor problemas com o seu computador que previamente podem ter passado despercebidos. Cada vez que corre %1, este vai continuar a descarregar de onde deixou. </translation>
+        <translation>Esta sincronização inicial é muito exigente, e pode expor problemas com o seu computador que previamente podem ter passado despercebidos. Cada vez que corre %1, este vai continuar a descarregar de onde deixou.</translation>
     </message>
     <message>
         <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
@@ -884,11 +884,11 @@
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
-        <translation>No mínimo %1 GB de dados irão ser armazenados nesta pasta. </translation>
+        <translation>No mínimo %1 GB de dados irão ser armazenados nesta pasta.</translation>
     </message>
     <message>
         <source>Approximately %1 GB of data will be stored in this directory.</source>
-        <translation>Aproximadamente %1 GB de dados irão ser guardados nesta pasta. </translation>
+        <translation>Aproximadamente %1 GB de dados irão ser guardados nesta pasta.</translation>
     </message>
     <message>
         <source>%1 will download and store a copy of the Bitcoin block chain.</source>
@@ -1032,7 +1032,7 @@
     </message>
     <message>
         <source>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
-        <translation>Mostra se o padrão fornecido SOCKS5 proxy, está a ser utilizado para alcançar utilizadores participantes através deste tipo de rede. </translation>
+        <translation>Mostra se o padrão fornecido SOCKS5 proxy, está a ser utilizado para alcançar utilizadores participantes através deste tipo de rede.</translation>
     </message>
     <message>
         <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
@@ -1105,7 +1105,7 @@
     </message>
     <message>
         <source>Expert</source>
-        <translation> Técnicos</translation>
+        <translation>Técnicos</translation>
     </message>
     <message>
         <source>Enable coin &amp;control features</source>
@@ -1257,7 +1257,7 @@
     </message>
     <message>
         <source>The configuration file is used to specify advanced user options which override GUI settings. Additionally, any command-line options will override this configuration file.</source>
-        <translation>O ficheiro de configuração é usado para especificar opções de utilizador avançado, que sobrescrevem as configurações do interface gráfico. Adicionalmente, qualquer opção da linha de comandos vai sobrescrever este ficheiro de configuração. </translation>
+        <translation>O ficheiro de configuração é usado para especificar opções de utilizador avançado, que sobrescrevem as configurações do interface gráfico. Adicionalmente, qualquer opção da linha de comandos vai sobrescrever este ficheiro de configuração.</translation>
     </message>
     <message>
         <source>Error</source>
@@ -1273,7 +1273,7 @@
     </message>
     <message>
         <source>The supplied proxy address is invalid.</source>
-        <translation>O endereço de proxy introduzido é inválido. </translation>
+        <translation>O endereço de proxy introduzido é inválido.</translation>
     </message>
 </context>
 <context>
@@ -2076,7 +2076,7 @@
     </message>
     <message>
         <source>Message</source>
-        <translation>Mensagem </translation>
+        <translation>Mensagem</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -3261,7 +3261,7 @@ Nota: como a taxa é calculada por byte, uma taxa de "100 satoshis por kB" por u
     </message>
     <message>
         <source>Unable to rewind the database to a pre-fork state. You will need to redownload the blockchain</source>
-        <translation>Não é possível rebobinar  a base de dados para um estado antes da divisão da cadeia de blocos. Necessita descarregar novamente a cadeia de blocos </translation>
+        <translation>Não é possível rebobinar  a base de dados para um estado antes da divisão da cadeia de blocos. Necessita descarregar novamente a cadeia de blocos</translation>
     </message>
     <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>

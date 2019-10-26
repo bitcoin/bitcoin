@@ -411,7 +411,7 @@
     </message>
     <message>
         <source>&amp;Command-line options</source>
-        <translation>&amp;Tùy chỉnh Command-line </translation>
+        <translation>&amp;Tùy chỉnh Command-line</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
@@ -491,7 +491,7 @@
     </message>
     <message>
         <source>No wallets available</source>
-        <translation>Không có ví nào </translation>
+        <translation>Không có ví nào</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -969,7 +969,11 @@
         <source>Hide</source>
         <translation>Ẩn</translation>
     </message>
-    </context>
+    <message>
+        <source>Unknown. Syncing Headers (%1, %2%)...</source>
+        <translation>Không biết. Đang đồng bộ Headers (%1, %2%)...</translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -1650,7 +1654,7 @@
     </message>
     <message>
         <source>To specify a non-default location of the data directory use the '%1' option.</source>
-        <translation>Để chỉ ra một nơi không mặt định của thư mục dữ liệu hãy dùng tùy chọn '%1' </translation>
+        <translation>Để chỉ ra một nơi không mặt định của thư mục dữ liệu hãy dùng tùy chọn '%1'</translation>
     </message>
     <message>
         <source>Blocksdir</source>
@@ -1658,7 +1662,7 @@
     </message>
     <message>
         <source>To specify a non-default location of the blocks directory use the '%1' option.</source>
-        <translation>Để chỉ ra một nơi không mặt định của thư mục các khối hãy dùng tùy chọn '%1' </translation>
+        <translation>Để chỉ ra một nơi không mặt định của thư mục các khối hãy dùng tùy chọn '%1'</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -1879,6 +1883,14 @@
     <message>
         <source>Use up and down arrows to navigate history, and %1 to clear screen.</source>
         <translation>Use up and down arrows to navigate history, and %1 to clear screen.</translation>
+    </message>
+    <message>
+        <source>Type %1 for an overview of available commands.</source>
+        <translation>Nhậ p %1 để biết tổng quan về các lệnh có sẵn.</translation>
+    </message>
+    <message>
+        <source>For more information on using this console type %1.</source>
+        <translation>Để biết thêm thông tin về việc sử dụng bảng điều khiển này, hãy nhập %1.</translation>
     </message>
     <message>
         <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</source>
@@ -2314,7 +2326,7 @@ Lưu ý: Vì phí được tính trên cơ sở mỗi byte, nên phí "100 satos
     </message>
     <message>
         <source>Total Amount</source>
-        <translation>Tổng số </translation>
+        <translation>Tổng số</translation>
     </message>
     <message>
         <source>To review recipient list click "Show Details..."</source>
@@ -3366,6 +3378,10 @@ Lưu ý: Vì phí được tính trên cơ sở mỗi byte, nên phí "100 satos
         <translation>Initialization sanity check failed. %s is shutting down.</translation>
     </message>
     <message>
+        <source>Invalid P2P permission: '%s'</source>
+        <translation>Quyền P2P không hợp lệ: '%s'</translation>
+    </message>
+    <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
         <translation>Invalid amount for -%s=&lt;amount&gt;: '%s'</translation>
     </message>
@@ -3510,8 +3526,24 @@ Lưu ý: Vì phí được tính trên cơ sở mỗi byte, nên phí "100 satos
         <translation>Reducing -maxconnections from %d to %d, because of system limitations.</translation>
     </message>
     <message>
+        <source>Section [%s] is not recognized.</source>
+        <translation>Mục [%s] không được nhìn nhận.</translation>
+    </message>
+    <message>
         <source>Signing transaction failed</source>
         <translation>Signing transaction failed</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" does not exist</source>
+        <translation>Thư mục ví được nêu  -walletdir "%s" không tồn tại</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is a relative path</source>
+        <translation>Chỉ định -walletdir "%s" là đường dẫn tương đối</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is not a directory</source>
+        <translation>Chỉ định -walletdir "%s" không phải là một thư mục</translation>
     </message>
     <message>
         <source>The specified config file %s does not exist

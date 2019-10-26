@@ -155,7 +155,7 @@
     </message>
     <message>
         <source>&amp;Address</source>
-        <translation> پتہ</translation>
+        <translation>پتہ</translation>
     </message>
     </context>
 <context>

@@ -1064,7 +1064,7 @@
     </message>
     <message>
         <source>Open Configuration File</source>
-        <translation>Otvoriť konfiguračný súbor </translation>
+        <translation>Otvoriť konfiguračný súbor</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
@@ -1438,7 +1438,7 @@
     </message>
     <message>
         <source>Error communicating with %1: %2</source>
-        <translation>Chyba komunikácie s %1: %2 </translation>
+        <translation>Chyba komunikácie s %1: %2</translation>
     </message>
     <message>
         <source>Payment request cannot be parsed!</source>
@@ -1544,7 +1544,7 @@
     </message>
     <message>
         <source>%1 and %2</source>
-        <translation> %1 a  %2</translation>
+        <translation>%1 a  %2</translation>
     </message>
     <message numerus="yes">
         <source>%n year(s)</source>
@@ -3096,7 +3096,7 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
     </message>
     <message>
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
-        <translation>Zatvorenie peňaženky na príliš dlhú dobu môže mať za následok potrebu znova synchronizovať celý blockchain v prípade, že je aktivované redukovanie blockchainu. </translation>
+        <translation>Zatvorenie peňaženky na príliš dlhú dobu môže mať za následok potrebu znova synchronizovať celý blockchain v prípade, že je aktivované redukovanie blockchainu.</translation>
     </message>
 </context>
 <context>

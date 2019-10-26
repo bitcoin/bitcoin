@@ -117,7 +117,7 @@
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
-        <translation>Φράση πρόσβασης </translation>
+        <translation>Φράση πρόσβασης</translation>
     </message>
     <message>
         <source>Enter passphrase</source>
@@ -173,7 +173,7 @@
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>ΣΗΜΑΝΤΙΚΟ: Τα προηγούμενα αντίγραφα ασφαλείας που έχετε κάνει από το αρχείο του πορτοφόλιου σας θα πρέπει να αντικατασταθουν με το νέο που δημιουργείται, κρυπτογραφημένο αρχείο πορτοφόλιου. Για λόγους ασφαλείας, τα προηγούμενα αντίγραφα ασφαλείας του μη κρυπτογραφημένου αρχείου πορτοφόλιου θα καταστουν άχρηστα μόλις αρχίσετε να χρησιμοποιείτε το νέο κρυπτογραφημένο πορτοφόλι. </translation>
+        <translation>ΣΗΜΑΝΤΙΚΟ: Τα προηγούμενα αντίγραφα ασφαλείας που έχετε κάνει από το αρχείο του πορτοφόλιου σας θα πρέπει να αντικατασταθουν με το νέο που δημιουργείται, κρυπτογραφημένο αρχείο πορτοφόλιου. Για λόγους ασφαλείας, τα προηγούμενα αντίγραφα ασφαλείας του μη κρυπτογραφημένου αρχείου πορτοφόλιου θα καταστουν άχρηστα μόλις αρχίσετε να χρησιμοποιείτε το νέο κρυπτογραφημένο πορτοφόλι.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -197,7 +197,7 @@
     </message>
     <message>
         <source>Wallet decryption failed</source>
-        <translation> Η αποκρυπτογράφηση του πορτοφολιού απέτυχε </translation>
+        <translation>Η αποκρυπτογράφηση του πορτοφολιού απέτυχε</translation>
     </message>
     <message>
         <source>Wallet passphrase was successfully changed.</source>
@@ -347,7 +347,7 @@
     </message>
     <message>
         <source>&amp;Receive</source>
-        <translation>&amp;Παραλαβή </translation>
+        <translation>&amp;Παραλαβή</translation>
     </message>
     <message>
         <source>&amp;Show / Hide</source>
@@ -359,7 +359,7 @@
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>Κρυπτογραφήστε τα ιδιωτικά κλειδιά που ανήκουν στο πορτοφόλι σας </translation>
+        <translation>Κρυπτογραφήστε τα ιδιωτικά κλειδιά που ανήκουν στο πορτοφόλι σας</translation>
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
@@ -659,7 +659,7 @@
     </message>
     <message>
         <source>Edit sending address</source>
-        <translation> Επεξεργασία διεύθυνσης αποστολής</translation>
+        <translation>Επεξεργασία διεύθυνσης αποστολής</translation>
     </message>
     <message>
         <source>The entered address "%1" is not a valid Bitcoin address.</source>
@@ -740,7 +740,7 @@
     </message>
     <message>
         <source>Use a custom data directory:</source>
-        <translation>Προσαρμογή του φακέλου δεδομένων: </translation>
+        <translation>Προσαρμογή του φακέλου δεδομένων:</translation>
     </message>
     <message>
         <source>Bitcoin</source>
@@ -824,7 +824,7 @@
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
-        <translation>Αριθμός script και γραμμές επαλήθευσης </translation>
+        <translation>Αριθμός script και γραμμές επαλήθευσης</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
@@ -1003,7 +1003,7 @@
     </message>
     <message>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>Οι πληροφορίες που εμφανίζονται μπορεί να είναι ξεπερασμένες. Το πορτοφόλι σας συγχρονίζεται αυτόματα με το δίκτυο Bitcoin μετά από μια σύνδεση, αλλά αυτή η διαδικασία δεν έχει ακόμη ολοκληρωθεί. </translation>
+        <translation>Οι πληροφορίες που εμφανίζονται μπορεί να είναι ξεπερασμένες. Το πορτοφόλι σας συγχρονίζεται αυτόματα με το δίκτυο Bitcoin μετά από μια σύνδεση, αλλά αυτή η διαδικασία δεν έχει ακόμη ολοκληρωθεί.</translation>
     </message>
     <message>
         <source>Watch-only:</source>
@@ -1314,7 +1314,7 @@
     </message>
     <message>
         <source>Debug log file</source>
-        <translation>Αρχείο καταγραφής εντοπισμού σφαλμάτων </translation>
+        <translation>Αρχείο καταγραφής εντοπισμού σφαλμάτων</translation>
     </message>
     <message>
         <source>Clear console</source>
@@ -1550,7 +1550,7 @@
     </message>
     <message>
         <source>Recommended:</source>
-        <translation>Προτεινόμενο: </translation>
+        <translation>Προτεινόμενο:</translation>
     </message>
     <message>
         <source>Custom:</source>
@@ -1690,7 +1690,7 @@
     <name>SignVerifyMessageDialog</name>
     <message>
         <source>Signatures - Sign / Verify a Message</source>
-        <translation>Υπογραφές - Είσοδος / Επαλήθευση Mηνύματος </translation>
+        <translation>Υπογραφές - Είσοδος / Επαλήθευση Mηνύματος</translation>
     </message>
     <message>
         <source>&amp;Sign Message</source>
@@ -2015,7 +2015,7 @@
     </message>
     <message>
         <source>Signing transaction failed</source>
-        <translation>Η υπογραφή συναλλαγής απέτυχε </translation>
+        <translation>Η υπογραφή συναλλαγής απέτυχε</translation>
     </message>
     <message>
         <source>This is experimental software.</source>

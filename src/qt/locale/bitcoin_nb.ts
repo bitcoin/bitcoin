@@ -833,7 +833,7 @@
     </message>
     <message>
         <source>(%1-bit)</source>
-        <translation> (%1-bit)</translation>
+        <translation>(%1-bit)</translation>
     </message>
     <message>
         <source>About %1</source>
@@ -864,11 +864,11 @@
     </message>
     <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
-        <translation>Den initielle synkroniseringen er svært krevende, og kan forårsake problemer med maskinvaren i datamaskinen din som du tidligere ikke merket. Hver gang du kjører %1 vil den fortsette nedlastingen der den sluttet. </translation>
+        <translation>Den initielle synkroniseringen er svært krevende, og kan forårsake problemer med maskinvaren i datamaskinen din som du tidligere ikke merket. Hver gang du kjører %1 vil den fortsette nedlastingen der den sluttet.</translation>
     </message>
     <message>
         <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
-        <translation>Hvis du har valgt å begrense blokkjedelagring (beskjæring), må historiske data fortsatt lastes ned og behandles, men de vil bli slettet etterpå for å holde bruken av lagringsplass lav. </translation>
+        <translation>Hvis du har valgt å begrense blokkjedelagring (beskjæring), må historiske data fortsatt lastes ned og behandles, men de vil bli slettet etterpå for å holde bruken av lagringsplass lav.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -2150,7 +2150,7 @@
     </message>
     <message>
         <source>With Replace-By-Fee (BIP-125) you can increase a transaction's fee after it is sent. Without this, a higher fee may be recommended to compensate for increased transaction delay risk.</source>
-        <translation>Med Replace-By-Fee (BIP-125) kan du øke transaksjonens gebyr etter at den er sendt. Uten dette aktivert anbefales et høyere gebyr for å kompensere for risikoen for at transaksjonen blir forsinket. </translation>
+        <translation>Med Replace-By-Fee (BIP-125) kan du øke transaksjonens gebyr etter at den er sendt. Uten dette aktivert anbefales et høyere gebyr for å kompensere for risikoen for at transaksjonen blir forsinket.</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
@@ -3139,7 +3139,7 @@
     </message>
     <message>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
-        <translation>Kan ikke angi spesifikke tilkoblinger og ha addrman til å finne utgående tilkoblinger samtidig. </translation>
+        <translation>Kan ikke angi spesifikke tilkoblinger og ha addrman til å finne utgående tilkoblinger samtidig.</translation>
     </message>
     <message>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>

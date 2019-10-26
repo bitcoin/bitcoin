@@ -1338,7 +1338,7 @@
     </message>
     <message>
         <source>Wallet: </source>
-        <translation>Portmanyj: </translation>
+        <translation>Portmanyj:</translation>
     </message>
     <message>
         <source>Received</source>

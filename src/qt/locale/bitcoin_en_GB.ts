@@ -70,6 +70,10 @@
         <translation>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</translation>
     </message>
     <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
+        <translation>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</translation>
+    </message>
+    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;Copy Address</translation>
     </message>
@@ -132,6 +136,10 @@
         <translation>Repeat new passphrase</translation>
     </message>
     <message>
+        <source>Show passphrase</source>
+        <translation>Show passphrase</translation>
+    </message>
+    <message>
         <source>Encrypt wallet</source>
         <translation>Encrypt wallet</translation>
     </message>
@@ -170,6 +178,30 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>Wallet encrypted</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation>Enter the old passphrase and new passphrase for the wallet.</translation>
+    </message>
+    <message>
+        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>Remember that encrypting your wallet cannot fully protect your Bitcoins from being stolen by malware infecting your computer.</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation>Wallet to be encrypted</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation>Your wallet is about to be encrypted. </translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>Your wallet is now encrypted. </translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -292,6 +324,14 @@
     <message>
         <source>Open &amp;URI...</source>
         <translation>Open &amp;URI ...</translation>
+    </message>
+    <message>
+        <source>Create Wallet...</source>
+        <translation>Create Wallet...</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>Create a new wallet</translation>
     </message>
     <message>
         <source>Wallet:</source>
@@ -522,6 +562,10 @@
         <translation>Error: %1</translation>
     </message>
     <message>
+        <source>Warning: %1</source>
+        <translation>Warning: %1</translation>
+    </message>
+    <message>
         <source>Date: %1
 </source>
         <translation>Date: %1
@@ -743,10 +787,58 @@
 </context>
 <context>
     <name>CreateWalletActivity</name>
-    </context>
+    <message>
+        <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Creating Wallet &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+    <message>
+        <source>Create wallet failed</source>
+        <translation>Create wallet failed</translation>
+    </message>
+    <message>
+        <source>Create wallet warning</source>
+        <translation>Create wallet warning</translation>
+    </message>
+</context>
 <context>
     <name>CreateWalletDialog</name>
-    </context>
+    <message>
+        <source>Create Wallet</source>
+        <translation>Create Wallet</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <translation>Wallet Name</translation>
+    </message>
+    <message>
+        <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
+        <translation>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</translation>
+    </message>
+    <message>
+        <source>Encrypt Wallet</source>
+        <translation>Encrypt Wallet</translation>
+    </message>
+    <message>
+        <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
+        <translation>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</translation>
+    </message>
+    <message>
+        <source>Disable Private Keys</source>
+        <translation>Disable Private Keys</translation>
+    </message>
+    <message>
+        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
+        <translation>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</translation>
+    </message>
+    <message>
+        <source>Make Blank Wallet</source>
+        <translation>Make Blank Wallet</translation>
+    </message>
+    <message>
+        <source>Create</source>
+        <translation>Create</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -863,6 +955,10 @@
         <translation>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</translation>
     </message>
     <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
+        <translation>Reverting this setting requires re-downloading the entire Blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</translation>
+    </message>
+    <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
         <translation>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</translation>
     </message>
@@ -881,6 +977,10 @@
     <message>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
+    </message>
+    <message>
+        <source>Discard blocks after verification, except most recent %1 GB (prune)</source>
+        <translation>Discard blocks after verification, except most recent %1 GB (prune)</translation>
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
@@ -914,7 +1014,11 @@
         <source>(of %n GB needed)</source>
         <translation><numerusform>(of %n GB needed)</numerusform><numerusform>(of %n GB needed)</numerusform></translation>
     </message>
-    </context>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation><numerusform>(%n GB needed for full chain)</numerusform><numerusform>(%n GB needed for full chain)</numerusform></translation>
+    </message>
+</context>
 <context>
     <name>ModalOverlay</name>
     <message>
@@ -991,6 +1095,14 @@
 </context>
 <context>
     <name>OpenWalletActivity</name>
+    <message>
+        <source>Open wallet failed</source>
+        <translation>Open wallet failed</translation>
+    </message>
+    <message>
+        <source>Open wallet warning</source>
+        <translation>Open wallet warning</translation>
+    </message>
     <message>
         <source>default wallet</source>
         <translation>default wallet</translation>
@@ -1381,6 +1493,14 @@
         <translation>Cannot process payment request because BIP70 support was not compiled in.</translation>
     </message>
     <message>
+        <source>Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.</source>
+        <translation>Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.</translation>
+    </message>
+    <message>
+        <source>If you are receiving this error you should request the merchant provide a BIP21 compatible URI.</source>
+        <translation>If you are receiving this error you should request the merchant provide a BIP21 compatible URI.</translation>
+    </message>
+    <message>
         <source>Invalid payment address %1</source>
         <translation>Invalid payment address %1</translation>
     </message>
@@ -1600,6 +1720,10 @@
     <message>
         <source>Error encoding URI into QR Code.</source>
         <translation>Error encoding URI into QR Code.</translation>
+    </message>
+    <message>
+        <source>QR code support not available.</source>
+        <translation>QR code support not available.</translation>
     </message>
     <message>
         <source>Save QR Code</source>
@@ -1960,6 +2084,10 @@
         <translation>An optional amount to request. Leave this empty or zero to not request a specific amount.</translation>
     </message>
     <message>
+        <source>&amp;Create new receiving address</source>
+        <translation>&amp;Create new receiving address</translation>
+    </message>
+    <message>
         <source>Clear all fields of the form.</source>
         <translation>Clear all fields of the form.</translation>
     </message>
@@ -2281,6 +2409,14 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>%1 (%2 blocks)</translation>
     </message>
     <message>
+        <source> from wallet '%1'</source>
+        <translation> from wallet '%1'</translation>
+    </message>
+    <message>
+        <source>%1 to '%2'</source>
+        <translation>%1 to '%2'</translation>
+    </message>
+    <message>
         <source>%1 to %2</source>
         <translation>%1 to %2</translation>
     </message>
@@ -2311,6 +2447,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Total Amount</source>
         <translation>Total Amount</translation>
+    </message>
+    <message>
+        <source>To review recipient list click "Show Details..."</source>
+        <translation>To review recipient list click "Show Details..."</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -3086,6 +3226,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Close wallet</translation>
     </message>
     <message>
+        <source>Are you sure you wish to close the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation>Are you sure you wish to close the wallet &lt;i&gt;%1&lt;/i&gt;?</translation>
+    </message>
+    <message>
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</translation>
     </message>
@@ -3358,6 +3502,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Initialisation sanity check failed. %s is shutting down.</translation>
     </message>
     <message>
+        <source>Invalid P2P permission: '%s'</source>
+        <translation>Invalid P2P permission: '%s'</translation>
+    </message>
+    <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
         <translation>Invalid amount for -%s=&lt;amount&gt;: '%s'</translation>
     </message>
@@ -3388,6 +3536,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Loading P2P addresses...</source>
         <translation>Loading P2P addresses ...</translation>
+    </message>
+    <message>
+        <source>Error: Disk space is too low!</source>
+        <translation>Error: Disk space is too low!</translation>
     </message>
     <message>
         <source>Loading banlist...</source>
@@ -3498,6 +3650,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Need to specify a port with -whitebind: '%s'</translation>
     </message>
     <message>
+        <source>Prune mode is incompatible with -blockfilterindex.</source>
+        <translation>Prune mode is incompatible with -blockfilterindex.</translation>
+    </message>
+    <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
         <translation>Reducing -maxconnections from %d to %d, because of system limitations.</translation>
     </message>
@@ -3554,6 +3710,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Unable to generate initial keys</source>
         <translation>Unable to generate initial keys.</translation>
+    </message>
+    <message>
+        <source>Unknown -blockfilterindex value %s.</source>
+        <translation>Unknown -blockfilterindex value %s.</translation>
     </message>
     <message>
         <source>Verifying wallet(s)...</source>

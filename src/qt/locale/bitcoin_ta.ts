@@ -2,6 +2,10 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+        <source>Right-click to edit address or label</source>
+        <translation>முகவரியை மாற்ற ரைட் கிளிக் செய்யவும்</translation>
+    </message>
+    <message>
         <source>Create a new address</source>
         <translation>புதிய முகவரியை உருவாக்கவும்</translation>
     </message>
@@ -60,6 +64,10 @@
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>இவை பணம் அனுப்புவதற்கு உங்கள் பிட்கின் முகவரிகள். நாணயங்களை அனுப்புவதற்கு முன் எப்பொழுதும் தொகையும் பெறுதலையும் சரிபார்க்கவும்.</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
+        <translation>பிட்காயின் பெறுவதற்காக உங்கள் முகவரி இவை. புதிய முகவரிகளை உருவாக்க 'புதிய முகவரியை உருவாக்கு' என்ற பட்டனை கிளிக் செய்யவும்.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -124,6 +132,10 @@
         <translation>புதிய கடவுச்சொற்றொடரைக் கோருக</translation>
     </message>
     <message>
+        <source>Show passphrase</source>
+        <translation>கடவுச்சொல்லை காட்டு</translation>
+    </message>
+    <message>
         <source>Encrypt wallet</source>
         <translation>குறியாக்க பணப்பையை</translation>
     </message>
@@ -162,6 +174,10 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>கைப்பை குறியாக்கம் செய்யப்பட்டது</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>வாலட்டை பாதுகாக்க புதிய கடவுச்சொல்லை உல்லிடவும். பத்து அல்லது அதற்கு மேற்பட்ட எழுத்துகள் அல்லது எட்டு அல்லது அதற்கு மேற்பட்ட எழுத்துக்களை கடவுச்சொல்லாக பயன்படுத்தவும்.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
