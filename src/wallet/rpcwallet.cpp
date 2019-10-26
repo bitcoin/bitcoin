@@ -3984,7 +3984,7 @@ UniValue walletprocesspsbt(const JSONRPCRequest& request)
             "       \"ALL|ANYONECANPAY\"\n"
             "       \"NONE|ANYONECANPAY\"\n"
             "       \"SINGLE|ANYONECANPAY\""},
-                    {"bip32derivs", RPCArg::Type::BOOL, /* default */ "false", "If true, includes the BIP 32 derivation paths for public keys if we know them"},
+                    {"bip32derivs", RPCArg::Type::BOOL, /* default */ "true", "Include BIP 32 derivation paths for public keys if we know them"},
                 },
                 RPCResult{
             "{\n"
@@ -4012,7 +4012,7 @@ UniValue walletprocesspsbt(const JSONRPCRequest& request)
 
     // Fill transaction with our data and also sign
     bool sign = request.params[1].isNull() ? true : request.params[1].get_bool();
-    bool bip32derivs = request.params[3].isNull() ? false : request.params[3].get_bool();
+    bool bip32derivs = request.params[3].isNull() ? true : request.params[3].get_bool();
     bool complete = true;
     const TransactionError err = FillPSBT(pwallet, psbtx, complete, nHashType, sign, bip32derivs);
     if (err != TransactionError::OK) {
@@ -4095,7 +4095,7 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
                             "         \"CONSERVATIVE\""},
                         },
                         "options"},
-                    {"bip32derivs", RPCArg::Type::BOOL, /* default */ "false", "If true, includes the BIP 32 derivation paths for public keys if we know them"},
+                    {"bip32derivs", RPCArg::Type::BOOL, /* default */ "true", "Include BIP 32 derivation paths for public keys if we know them"},
                 },
                 RPCResult{
                             "{\n"
@@ -4134,7 +4134,7 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
     PartiallySignedTransaction psbtx(rawTx);
 
     // Fill transaction with out data but don't sign
-    bool bip32derivs = request.params[4].isNull() ? false : request.params[4].get_bool();
+    bool bip32derivs = request.params[4].isNull() ? true : request.params[4].get_bool();
     bool complete = true;
     const TransactionError err = FillPSBT(pwallet, psbtx, complete, 1, false, bip32derivs);
     if (err != TransactionError::OK) {
