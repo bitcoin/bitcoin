@@ -70,7 +70,6 @@ namespace {
 void RandAddSeedPerfmon(CSHA512& hasher)
 {
 #ifdef WIN32
-    // Don't need this on Linux, OpenSSL automatically uses /dev/urandom
     // Seed with the entire set of perfmon data
 
     // This can take up to 2 seconds, so only do it every 10 minutes
