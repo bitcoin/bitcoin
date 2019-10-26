@@ -215,9 +215,7 @@ UniValue gobject(const JSONRPCRequest& request)
         // -- send the tx to the network
         CValidationState state;
         mapValue_t mapValue;
-        if (!pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */)) {
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "CommitTransaction failed!");
-        }
+        pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
 
         /*DBG( std::cout << "gobject: prepare "
              << " GetDataAsPlainString = " << govobj.GetDataAsPlainString()
