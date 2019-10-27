@@ -3778,23 +3778,39 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
 
     CScript scriptPubKey = GetScriptForDestination(dest);
     ret.pushKV("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end()));
+
     const SigningProvider* provider = pwallet->GetSigningProvider(scriptPubKey);
 
     isminetype mine = pwallet->IsMine(dest);
     ret.pushKV("ismine", bool(mine & ISMINE_SPENDABLE));
+
     bool solvable = provider && IsSolvable(*provider, scriptPubKey);
     ret.pushKV("solvable", solvable);
+
     if (solvable) {
        ret.pushKV("desc", InferDescriptor(scriptPubKey, *provider)->ToString());
     }
+
     ret.pushKV("iswatchonly", bool(mine & ISMINE_WATCH_ONLY));
+
+    // Return DescribeWalletAddress fields.
+    // Always returned: isscript, ischange, iswitness.
+    // Optional: witness_version, witness_program, script, hex, pubkeys (array),
+    // sigsrequired, pubkey, embedded, iscompressed.
     UniValue detail = DescribeWalletAddress(pwallet, dest);
     ret.pushKVs(detail);
+
+    // Return label field if existing. Currently only one label can be
+    // associated with an address, so the label should be equivalent to the
+    // value of the name key/value pair in the labels hash array below.
     if (pwallet->mapAddressBook.count(dest)) {
         ret.pushKV("label", pwallet->mapAddressBook[dest].name);
     }
+
     ret.pushKV("ischange", pwallet->IsChange(scriptPubKey));
 
+    // Fetch KeyMetadata, if present, for the timestamp, hdkeypath, hdseedid,
+    // and hdmasterfingerprint fields.
     ScriptPubKeyMan* spk_man = pwallet->GetScriptPubKeyMan(scriptPubKey);
     if (spk_man) {
         if (const CKeyMetadata* meta = spk_man->GetMetadata(dest)) {
@@ -3807,9 +3823,11 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
         }
     }
 
-    // Currently only one label can be associated with an address, return an array
-    // so the API remains stable if we allow multiple labels to be associated with
-    // an address.
+    // Return a labels array containing a hash of key/value pairs for the label
+    // name and address purpose. The name value is equivalent to the label field
+    // above. Currently only one label can be associated with an address, but we
+    // return an array so the API remains stable if we allow multiple labels to
+    // be associated with an address in the future.
     UniValue labels(UniValue::VARR);
     std::map<CTxDestination, CAddressBookData>::iterator mi = pwallet->mapAddressBook.find(dest);
     if (mi != pwallet->mapAddressBook.end()) {
