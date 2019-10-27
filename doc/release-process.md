@@ -38,7 +38,7 @@ Check out the source code in the following directory hierarchy.
     git clone https://github.com/devrandom/gitian-builder.git
     git clone https://github.com/bitcoin/bitcoin.git
 
-### Bitcoin maintainers/release engineers, suggestion for writing release notes
+### Peercoin maintainers/release engineers, suggestion for writing release notes
 
 Write release notes. git shortlog helps a lot, for example:
 
@@ -108,7 +108,7 @@ NOTE: Offline builds must use the --url flag to ensure Gitian fetches only from 
 
 The gbuild invocations below <b>DO NOT DO THIS</b> by default.
 
-### Build and sign Bitcoin Core for Linux, Windows, and OS X:
+### Build and sign Bitcoin for Linux, Windows, and OS X:
 
     pushd ./gitian-builder
     ./bin/gbuild --num-make 2 --memory 3000 --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
@@ -292,18 +292,18 @@ bitcoin.org (see below for bitcoin.org update instructions).
 
   - bitcoin-dev and bitcoin-core-dev mailing list
 
-  - Bitcoin Core announcements list https://bitcoincore.org/en/list/announcements/join/
+  - Bitcoin announcements list https://bitcoincore.org/en/list/announcements/join/
 
   - bitcoincore.org blog post
 
-  - Update title of #bitcoin on Freenode IRC
+  - Update title of #peercoin on Freenode IRC
 
-  - Optionally twitter, reddit /r/Bitcoin, ... but this will usually sort out itself
+  - Optionally twitter, reddit /r/Peercoin, ... but this will usually sort out itself
 
   - Notify BlueMatt so that he can start building [the PPAs](https://launchpad.net/~bitcoin/+archive/ubuntu/bitcoin)
 
   - Archive release notes for the new version to `doc/release-notes/` (branch `master` and branch of the release)
 
-  - Create a [new GitHub release](https://github.com/bitcoin/bitcoin/releases/new) with a link to the archived release notes.
+  - Create a [new GitHub release](https://github.com/peercoin/peercoin/releases/new) with a link to the archived release notes.
 
   - Celebrate

@@ -1,6 +1,6 @@
 UNIX BUILD NOTES
 ====================
-Some notes on how to build Peercoin Core in Unix.
+Some notes on how to build Peercoin in Unix.
 
 (for OpenBSD specific instructions, see [build-openbsd.md](build-openbsd.md))
 
@@ -55,7 +55,7 @@ Memory Requirements
 --------------------
 
 C++ compilers are memory-hungry. It is recommended to have at least 1.5 GB of
-memory available when compiling Peercoin Core. On systems with less, gcc can be
+memory available when compiling Peercoin. On systems with less, gcc can be
 tuned to conserve memory with additional CXXFLAGS:
 
 
@@ -80,7 +80,7 @@ install necessary parts of boost:
         sudo apt-get install libboost-all-dev
 	
 BerkeleyDB is required for the wallet functionality.
-Historically Bitcoin was first deployed with now deprecated BerkeleyDB-4.8, which has resulted in the need to upkeep the compatibility with those ancient deployments to this day. BerkeleyDB-4.8 is not compatible with more modern BerkeleyDB-5.1 and BerkeleyDB-5.3. Peercoin has inherited this in the first versions and this is why Peercoin is still officially shipped out with BerkeleyDB-4.8.
+Historically Peercoin was first deployed with now deprecated BerkeleyDB-4.8, which has resulted in the need to upkeep the compatibility with those ancient deployments to this day. BerkeleyDB-4.8 is not compatible with more modern BerkeleyDB-5.1 and BerkeleyDB-5.3. Peercoin has inherited this in the first versions and this is why Peercoin is still officially shipped out with BerkeleyDB-4.8.
 However if you running a new wallet on a new installation there is absolutely no need to run old and deprecated BerkeleyDB-4.8. Just use the one avaliable in the repository of your distribution.
 
 **For Ubuntu only:** db4.8 packages are available [here](https://launchpad.net/~bitcoin/+archive/bitcoin).
