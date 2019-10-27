@@ -2,7 +2,7 @@ Peercoin 0.8.4 BETA
 
 Setup
 ---------------------
-Peercoin Core is the original Peercoin client and it builds the backbone of the network. It downloads and, by default, stores the entire history of Peercoin transactions (which is currently more than 100 GBs); depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more.
+Peercoin is the original Peercoin client and it builds the backbone of the network. It downloads and, by default, stores the entire history of Peercoin transactions (which is currently more than 100 GBs); depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more.
 
 To download Peercoin, visit [peercoin.net](https://peercoin.net/download).
 
@@ -23,7 +23,7 @@ Unpack the files into a directory, and then run peercoin-qt.exe.
 
 ### OS X
 
-Drag Peercoin-Core to your applications folder, and then run Peercoin-Core.
+Drag Peercoin to your applications folder, and then run Peercoin.
 
 ### Need Help?
 
