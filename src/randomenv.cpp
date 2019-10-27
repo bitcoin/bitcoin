@@ -10,6 +10,7 @@
 #include <randomenv.h>
 
 #include <clientversion.h>
+#include <compat/cpuid.h>
 #include <crypto/sha512.h>
 #include <support/cleanse.h>
 #include <util/time.h> // for GetTime()
@@ -179,6 +180,36 @@ void AddSysctl(CSHA512& hasher)
 }
 #endif
 
+#ifdef HAVE_GETCPUID
+void inline AddCPUID(CSHA512& hasher, uint32_t leaf, uint32_t subleaf, uint32_t& ax, uint32_t& bx, uint32_t& cx, uint32_t& dx)
+{
+    GetCPUID(leaf, subleaf, ax, bx, cx, dx);
+    hasher << leaf << subleaf << ax << bx << cx << dx;
+}
+
+void AddAllCPUID(CSHA512& hasher)
+{
+    uint32_t ax, bx, cx, dx;
+    // Iterate over all standard leaves
+    AddCPUID(hasher, 0, 0, ax, bx, cx, dx); // Returns max leaf in ax
+    uint32_t max = ax;
+    for (uint32_t leaf = 1; leaf <= max; ++leaf) {
+        for (uint32_t subleaf = 0;; ++subleaf) {
+            AddCPUID(hasher, leaf, subleaf, ax, bx, cx, dx);
+            // Iterate over subleaves for leaf 4, 11, 13
+            if (leaf != 4 && leaf != 11 && leaf != 13) break;
+            if ((leaf == 4 || leaf == 13) && ax == 0) break;
+            if (leaf == 11 && (cx & 0xFF00) == 0) break;
+        }
+    }
+    // Iterate over all extended leaves
+    AddCPUID(hasher, 0x80000000, 0, ax, bx, cx, dx); // Returns max extended leaf in ax
+    uint32_t ext_max = ax;
+    for (uint32_t leaf = 0x80000001; leaf <= ext_max; ++leaf) {
+        AddCPUID(hasher, leaf, 0, ax, bx, cx, dx);
+    }
+}
+#endif
 } // namespace
 
 void RandAddDynamicEnv(CSHA512& hasher)
@@ -297,6 +328,10 @@ void RandAddStaticEnv(CSHA512& hasher)
 
     // Bitcoin client version
     hasher << CLIENT_VERSION;
+
+#ifdef HAVE_GETCPUID
+    AddAllCPUID(hasher);
+#endif
 
     // Memory locations
     hasher << &hasher << &RandAddStaticEnv << &malloc << &errno << &environ;
