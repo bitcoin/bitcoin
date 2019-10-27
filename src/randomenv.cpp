@@ -13,9 +13,22 @@
 #endif
 
 #include <algorithm>
+#include <chrono>
+#include <thread>
 #include <vector>
 
 #include <stdint.h>
+#include <string.h>
+#ifndef WIN32
+#include <sys/time.h>
+#include <sys/types.h>
+#include <unistd.h>
+#endif
+#ifdef __MACH__
+#include <mach/clock.h>
+#include <mach/mach.h>
+#include <mach/mach_time.h>
+#endif
 
 namespace {
 
@@ -57,13 +70,77 @@ void RandAddSeedPerfmon(CSHA512& hasher)
 #endif
 }
 
+/** Helper to easily feed data into a CSHA512.
+ *
+ * Note that this does not serialize the passed object (like stream.h's << operators do).
+ * Its raw memory representation is used directly.
+ */
+template<typename T>
+CSHA512& operator<<(CSHA512& hasher, const T& data) {
+    static_assert(!std::is_same<typename std::decay<T>::type, char*>::value, "Calling operator<<(CSHA512, char*) is probably not what you want");
+    static_assert(!std::is_same<typename std::decay<T>::type, unsigned char*>::value, "Calling operator<<(CSHA512, unsigned char*) is probably not what you want");
+    static_assert(!std::is_same<typename std::decay<T>::type, const char*>::value, "Calling operator<<(CSHA512, const char*) is probably not what you want");
+    static_assert(!std::is_same<typename std::decay<T>::type, const unsigned char*>::value, "Calling operator<<(CSHA512, const unsigned char*) is probably not what you want");
+    hasher.Write((const unsigned char*)&data, sizeof(data));
+    return hasher;
+}
+
 } // namespace
 
 void RandAddDynamicEnv(CSHA512& hasher)
 {
     RandAddSeedPerfmon(hasher);
+
+    // Various clocks
+#ifdef WIN32
+    FILETIME ftime;
+    GetSystemTimeAsFileTime(&ftime);
+    hasher << ftime;
+#else
+#  ifndef __MACH__
+    // On non-MacOS systems, use various clock_gettime() calls.
+    struct timespec ts;
+#    ifdef CLOCK_MONOTONIC
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    hasher << ts.tv_sec << ts.tv_nsec;
+#    endif
+#    ifdef CLOCK_REALTIME
+    clock_gettime(CLOCK_REALTIME, &ts);
+    hasher << ts.tv_sec << ts.tv_nsec;
+#    endif
+#    ifdef CLOCK_BOOTTIME
+    clock_gettime(CLOCK_BOOTTIME, &ts);
+    hasher << ts.tv_sec << ts.tv_nsec;
+#    endif
+#  else
+    // On MacOS use mach_absolute_time (number of CPU ticks since boot) as a replacement for CLOCK_MONOTONIC,
+    // and clock_get_time for CALENDAR_CLOCK as a replacement for CLOCK_REALTIME.
+    hasher << mach_absolute_time();
+    // From https://gist.github.com/jbenet/1087739
+    clock_serv_t cclock;
+    mach_timespec_t mts;
+    if (host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock) == KERN_SUCCESS && clock_get_time(cclock, &mts) == KERN_SUCCESS) {
+        hasher << mts.tv_sec << mts.tv_nsec;
+        mach_port_deallocate(mach_task_self(), cclock);
+    }
+#  endif
+    // gettimeofday is available on all UNIX systems, but only has microsecond precision.
+    struct timeval tv;
+    gettimeofday(&tv, nullptr);
+    hasher << tv.tv_sec << tv.tv_usec;
+#endif
+    // Probably redundant, but also use all the clocks C++11 provides:
+    hasher << std::chrono::system_clock::now().time_since_epoch().count();
+    hasher << std::chrono::steady_clock::now().time_since_epoch().count();
+    hasher << std::chrono::high_resolution_clock::now().time_since_epoch().count();
 }
 
 void RandAddStaticEnv(CSHA512& hasher)
 {
+#ifdef WIN32
+    hasher << GetCurrentProcessId() << GetCurrentThreadId();
+#else
+    hasher << getpid();
+#endif
+    hasher << std::this_thread::get_id();
 }
