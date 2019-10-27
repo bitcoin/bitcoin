@@ -5,6 +5,7 @@
 
 #include <random.h>
 
+#include <compat/cpuid.h>
 #include <crypto/sha512.h>
 #include <support/cleanse.h>
 #ifdef WIN32
@@ -42,11 +43,6 @@
 #include <sys/sysctl.h>
 #endif
 
-
-#if defined(__x86_64__) || defined(__amd64__) || defined(__i386__)
-#include <cpuid.h>
-#endif
-
 #include <openssl/err.h>
 #include <openssl/rand.h>
 #include <openssl/conf.h>
@@ -77,7 +73,7 @@ static inline int64_t GetPerformanceCounter() noexcept
 #endif
 }
 
-#if defined(__x86_64__) || defined(__amd64__) || defined(__i386__)
+#ifdef HAVE_GETCPUID
 static bool g_rdrand_supported = false;
 static bool g_rdseed_supported = false;
 static constexpr uint32_t CPUID_F1_ECX_RDRAND = 0x40000000;
@@ -88,15 +84,6 @@ static_assert(CPUID_F1_ECX_RDRAND == bit_RDRND, "Unexpected value for bit_RDRND"
 #ifdef bit_RDSEED
 static_assert(CPUID_F7_EBX_RDSEED == bit_RDSEED, "Unexpected value for bit_RDSEED");
 #endif
-static void inline GetCPUID(uint32_t leaf, uint32_t subleaf, uint32_t& a, uint32_t& b, uint32_t& c, uint32_t& d)
-{
-    // We can't use __get_cpuid as it doesn't support subleafs.
-#ifdef __GNUC__
-    __cpuid_count(leaf, subleaf, a, b, c, d);
-#else
-    __asm__ ("cpuid" : "=a"(a), "=b"(b), "=c"(c), "=d"(d) : "0"(leaf), "2"(subleaf));
-#endif
-}
 
 static void InitHardwareRand()
 {
