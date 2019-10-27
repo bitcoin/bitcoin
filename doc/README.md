@@ -4,7 +4,7 @@ Setup
 ---------------------
 Peercoin Core is the original Peercoin client and it builds the backbone of the network. It downloads and, by default, stores the entire history of Peercoin transactions (which is currently more than 100 GBs); depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more.
 
-To download Peercoin Core, visit [peercoin.net](https://peercoin.net/download).
+To download Peercoin, visit [peercoin.net](https://peercoin.net/download).
 
 Running
 ---------------------
@@ -27,8 +27,9 @@ Drag Peercoin-Core to your applications folder, and then run Peercoin-Core.
 
 ### Need Help?
 
-* See the documentation at the [Bitcoin Wiki](https://en.bitcoin.it/wiki/Main_Page)
-for help and more information. Peercoin is very similar to bitcoin, so you can use their wiki.
+* See the documentation at the [Peercoin Wiki](https://docs.peercoin.net/)
+for help and more information.
+* Peercoin is very similar to bitcoin, so you can use their wiki [Bitcoin Wiki](https://en.bitcoin.it/wiki/Main_Page).
 * Ask for help on [#general](https://peercoin.chat/) on peercoin.chat.
 
 Building
