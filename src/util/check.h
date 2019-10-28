@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UTIL_CHECK_H
-#define BITCOIN_UTIL_CHECK_H
+#ifndef SYSCOIN_UTIL_CHECK_H
+#define SYSCOIN_UTIL_CHECK_H
 
 #include <tinyformat.h>
 
@@ -38,4 +38,4 @@ class NonFatalCheckError : public std::runtime_error
         }                                                         \
     } while (false)
 
-#endif // BITCOIN_UTIL_CHECK_H
+#endif // SYSCOIN_UTIL_CHECK_H
