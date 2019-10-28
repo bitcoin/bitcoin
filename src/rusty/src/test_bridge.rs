@@ -113,3 +113,18 @@ impl BlockProviderState {
 pub fn log_line(_line: &str, _debug: bool) {
     unimplemented!();
 }
+
+pub struct RandomContext { }
+impl RandomContext {
+    pub fn new() -> Self {
+        unimplemented!();
+    }
+
+    pub fn get_rand_u64(&mut self) -> u64 {
+        unimplemented!();
+    }
+
+    pub fn randrange(&mut self, _range: u64) -> u64 {
+        unimplemented!();
+    }
+}
