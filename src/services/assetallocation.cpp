@@ -888,14 +888,13 @@ void CAssetAllocation::SerializationOp(Stream& s, Operation ser_action) {
 template <typename Stream, typename Operation>
 void CAssetAllocationDBEntry::SerializationOp(Stream& s, Operation ser_action) {
     READWRITE(assetAllocationTuple);
+    READWRITE(nBalance);
     if(::ChainActive().Tip()->nHeight <= Params().GetConsensus().nBridgeStartBlock){
-        READWRITE(nBalance);
         RangeAmountTuples listSendingAllocationAmounts;
         READWRITE(listSendingAllocationAmounts);
         READWRITE(lockedOutpoint);
     }
     else{
-        READWRITE(nBalance);
         if(!ser_action.ForRead())
             lockedOutpointSet = lockedOutpoint.n == COutPoint::NULL_INDEX? 0: 1;
         READWRITE(lockedOutpointSet);
