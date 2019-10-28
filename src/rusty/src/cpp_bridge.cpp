@@ -1,4 +1,5 @@
 #include <chainparams.h>
+#include <net.h>
 #include <net_processing.h>
 #include <validation.h>
 #include <shutdown.h>
@@ -263,6 +264,28 @@ void rusty_LogLine(const unsigned char* str, bool debug) {
     } else {
         LogPrintf("%s\n", str);
     }
+}
+
+void rusty_AddOutboundP2PNonce(void* pconnmanvoid, uint64_t nonce) {
+    CConnman* g_rusty_connman = (CConnman*) pconnmanvoid;
+    if (g_rusty_connman) {
+        g_rusty_connman->AddOutboundNonce(nonce);
+    }
+}
+
+void rusty_DropOutboundP2PNonce(void* pconnmanvoid, uint64_t nonce) {
+    CConnman* g_rusty_connman = (CConnman*) pconnmanvoid;
+    if (g_rusty_connman) {
+        g_rusty_connman->DropOutboundNonce(nonce);
+    }
+}
+
+bool rusty_CheckInboundP2PNonce(void* pconnmanvoid, uint64_t nonce) {
+    CConnman* g_rusty_connman = (CConnman*) pconnmanvoid;
+    if (g_rusty_connman) {
+        return g_rusty_connman->CheckIncomingNonce(nonce);
+    }
+    return false;
 }
 
 }
