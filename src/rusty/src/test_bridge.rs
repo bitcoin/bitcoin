@@ -1,5 +1,7 @@
 ///! "bridge" to C++ code without any backing C++ code. Used for shimming in dummies for testing.
 
+use std::ffi::c_void;
+
 use bitcoin::blockdata::block::BlockHeader;
 use bitcoin::util::uint::Uint256;
 
@@ -127,4 +129,23 @@ impl RandomContext {
     pub fn randrange(&mut self, _range: u64) -> u64 {
         unimplemented!();
     }
+}
+
+#[derive(Copy, Clone)]
+pub struct Connman(pub *mut c_void);
+// As long as we exit when required to, sending around pointers to Connman is fine:
+unsafe impl Send for Connman {}
+
+pub struct OutboundP2PNonce { }
+impl OutboundP2PNonce {
+    pub fn new(_connman: Connman, _rand_ctx: &mut RandomContext) -> Self {
+        unimplemented!();
+    }
+    pub fn nonce(&self) -> u64 {
+        unimplemented!();
+    }
+}
+
+pub fn should_disconnect_by_inbound_nonce(_connman: Connman, _nonce: u64) -> bool {
+    unimplemented!();
 }

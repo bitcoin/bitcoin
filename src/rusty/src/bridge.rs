@@ -406,3 +406,47 @@ impl Drop for RandomContext {
         unsafe { rusty_FreeRandContext(self.index) }
     }
 }
+
+extern "C" {
+    // P2P-specific utilities.
+
+    /// Begins tracking the given nonce to reject any incoming connections with the same
+    /// in their VERSION message, preventing us from connecting to ourselves.
+    /// nonce must be random, and you MUST call rusty_DropOutboundP2PNonce afterwards.
+    fn rusty_AddOutboundP2PNonce(connman: *mut c_void, nonce: u64);
+
+    /// Stops tracking the given connection nonce, provided to rusty_AddOutboundP2PNonce.
+    fn rusty_DropOutboundP2PNonce(connman: *mut c_void, nonce: u64);
+
+    /// Returns false if the given nonce has been used on any of our outbound connections
+    /// (including those made by the C++ P2P client and those added via
+    /// rusty_AddOutboundP2PNonce).
+    fn rusty_CheckInboundP2PNonce(connman: *mut c_void, nonce: u64) -> bool;
+}
+
+#[derive(Copy, Clone)]
+pub struct Connman(pub *mut c_void);
+// As long as we exit when required to, sending around pointers to Connman is fine:
+unsafe impl Send for Connman {}
+
+pub struct OutboundP2PNonce {
+    connman: Connman,
+    nonce: u64,
+}
+impl OutboundP2PNonce {
+    pub fn new(connman: Connman, rand_ctx: &mut RandomContext) -> Self {
+        let nonce = rand_ctx.get_rand_u64();
+        unsafe { rusty_AddOutboundP2PNonce(connman.0, nonce) }
+        Self { connman, nonce }
+    }
+    pub fn nonce(&self) -> u64 { self.nonce }
+}
+impl Drop for OutboundP2PNonce  {
+    fn drop(&mut self) {
+        unsafe { rusty_DropOutboundP2PNonce(self.connman.0, self.nonce) }
+    }
+}
+
+pub fn should_disconnect_by_inbound_nonce(connman: Connman, nonce: u64) -> bool {
+    ! unsafe { rusty_CheckInboundP2PNonce(connman.0, nonce) }
+}

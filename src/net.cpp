@@ -326,8 +326,26 @@ CNode* CConnman::FindNode(const CService& addr)
     return nullptr;
 }
 
+void CConnman::AddOutboundNonce(uint64_t nonce)
+{
+    LOCK(m_cs_other_nonces);
+    m_other_nonces.insert(nonce);
+}
+
+void CConnman::DropOutboundNonce(uint64_t nonce)
+{
+    LOCK(m_cs_other_nonces);
+    m_other_nonces.erase(nonce);
+}
+
 bool CConnman::CheckIncomingNonce(uint64_t nonce)
 {
+    {
+        LOCK(m_cs_other_nonces);
+        for (uint64_t other_nonce : m_other_nonces) {
+            if (nonce == other_nonce) { return false; }
+        }
+    }
     LOCK(cs_vNodes);
     for (const CNode* pnode : vNodes) {
         if (!pnode->fSuccessfullyConnected && !pnode->fInbound && pnode->GetLocalNonce() == nonce)

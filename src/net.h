@@ -30,6 +30,7 @@
 #include <thread>
 #include <memory>
 #include <condition_variable>
+#include <unordered_set>
 
 #ifndef WIN32
 #include <arpa/inet.h>
@@ -330,6 +331,20 @@ public:
     */
     int64_t PoissonNextSendInbound(int64_t now, int average_interval_seconds);
 
+    /** Adds a nonce which is being used for an outbound connection to the set
+     *  of nonces which we check against when we receive a version message.
+     *  This allows any parallel P2P connection logic to ensure we don't connect
+     *  back to ourselves.
+     */
+    void AddOutboundNonce(uint64_t nonce);
+
+    /** Drops a nonce which was used for an outbound connection from the set of
+     *  nonces which we check against when we receive a version message.
+     *  This MUST be called after completing the version/verack handshake for
+     *  any peer for which AddOutboundNonce was called.
+     */
+    void DropOutboundNonce(uint64_t nonce);
+
 private:
     struct ListenSocket {
     public:
@@ -418,6 +433,9 @@ private:
     mutable CCriticalSection cs_vNodes;
     std::atomic<NodeId> nLastNodeId{0};
     unsigned int nPrevNodeCount{0};
+
+    mutable CCriticalSection m_cs_other_nonces;
+    std::unordered_set<uint64_t> m_other_nonces GUARDED_BY(m_cs_other_nonces);
 
     /**
      * Services this instance offers.
