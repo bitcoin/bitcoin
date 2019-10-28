@@ -640,6 +640,28 @@ Strings and formatting
 
   - *Rationale*: Bitcoin Core uses tinyformat, which is type safe. Leave them out to avoid confusion.
 
+- Use `.c_str()` sparingly. Its only valid use is to pass C++ strings to C functions that take NULL-terminated
+  strings.
+
+  - Do not use it when passing a sized array (so along with `.size()`). Use `.data()` instead to get a pointer
+    to the raw data.
+
+    - *Rationale*: Although this is guaranteed to be safe starting with C++11, `.data()` communicates the intent better.
+
+  - Do not use it when passing strings to `tfm::format`, `strprintf`, `LogPrint[f]`.
+
+    - *Rationale*: This is redundant. Tinyformat handles strings.
+
+  - Do not use it to convert to `QString`. Use `QString::fromStdString()`.
+
+    - *Rationale*: Qt has build-in functionality for converting their string
+      type from/to C++. No need to roll your own.
+
+  - In cases where do you call `.c_str()`, you might want to additionally check that the string does not contain embedded '\0' characters, because
+    it will (necessarily) truncate the string. This might be used to hide parts of the string from logging or to circumvent
+    checks. If a use of strings is sensitive to this, take care to check the string for embedded NULL characters first
+    and reject it if there are any (see `ParsePrechecks` in `strencodings.cpp` for an example).
+
 Shadowing
 --------------
 
