@@ -3758,8 +3758,8 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
             "}\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("getaddressinfo", "\"1PSSGeFHDnKNxiEyFrD1wcEaHr9hrQDDWc\"")
-            + HelpExampleRpc("getaddressinfo", "\"1PSSGeFHDnKNxiEyFrD1wcEaHr9hrQDDWc\"")
+                    HelpExampleCli("getaddressinfo", "\"bc1q09vm5lfy0j5reeulh4x5752q25uqqvz34hufdl\"") +
+                    HelpExampleRpc("getaddressinfo", "\"bc1q09vm5lfy0j5reeulh4x5752q25uqqvz34hufdl\"")
                 },
             }.Check(request);
 
