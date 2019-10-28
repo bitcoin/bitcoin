@@ -609,56 +609,105 @@ public:
 
 
 
-
+/** Transport protocol agnostic message container.
+ * Ideally it should only contain receive time, payload,
+ * command and size.
+ */
 class CNetMessage {
+public:
+    CDataStream m_recv;                  // received message data
+    int64_t m_time = 0;                  // time (in microseconds) of message receipt.
+    bool m_valid_netmagic = false;
+    bool m_valid_header = false;
+    bool m_valid_checksum = false;
+    uint32_t m_message_size = 0;         // size of the payload
+    uint32_t m_raw_message_size = 0;     // used wire size of the message (including header/checksum)
+    std::string m_command;
+
+    CNetMessage(CDataStream&& recv_in) : m_recv(std::move(recv_in)) {}
+
+    void SetVersion(int nVersionIn)
+    {
+        m_recv.SetVersion(nVersionIn);
+    }
+};
+
+/** The TransportDeserializer takes care of holding and deserializing the
+ * network receive buffer. It can deserialize the network buffer into a
+ * transport protocol agnostic CNetMessage (command & payload)
+ */
+class TransportDeserializer {
+public:
+    // returns true if the current deserialization is complete
+    virtual bool Complete() const = 0;
+    // set the serialization context version
+    virtual void SetVersion(int version) = 0;
+    // read and deserialize data
+    virtual int Read(const char *data, unsigned int bytes) = 0;
+    // decomposes a message from the context
+    virtual CNetMessage GetMessage(const CMessageHeader::MessageStartChars& message_start, int64_t time) = 0;
+    virtual ~TransportDeserializer() {}
+};
+
+class V1TransportDeserializer final : public TransportDeserializer
+{
 private:
     mutable CHash256 hasher;
     mutable uint256 data_hash;
-public:
     bool in_data;                   // parsing header (false) or data (true)
-
     CDataStream hdrbuf;             // partially received header
     CMessageHeader hdr;             // complete header
-    unsigned int nHdrPos;
-
     CDataStream vRecv;              // received message data
+    unsigned int nHdrPos;
     unsigned int nDataPos;
 
-    int64_t nTime;                  // time (in microseconds) of message receipt.
+    const uint256& GetMessageHash() const;
+    int readHeader(const char *pch, unsigned int nBytes);
+    int readData(const char *pch, unsigned int nBytes);
 
-    CNetMessage(const CMessageHeader::MessageStartChars& pchMessageStartIn, int nTypeIn, int nVersionIn) : hdrbuf(nTypeIn, nVersionIn), hdr(pchMessageStartIn), vRecv(nTypeIn, nVersionIn) {
+    void Reset() {
+        vRecv.clear();
+        hdrbuf.clear();
         hdrbuf.resize(24);
         in_data = false;
         nHdrPos = 0;
         nDataPos = 0;
-        nTime = 0;
+        data_hash.SetNull();
+        hasher.Reset();
     }
 
-    bool complete() const
+public:
+
+    V1TransportDeserializer(const CMessageHeader::MessageStartChars& pchMessageStartIn, int nTypeIn, int nVersionIn) : hdrbuf(nTypeIn, nVersionIn), hdr(pchMessageStartIn), vRecv(nTypeIn, nVersionIn) {
+        Reset();
+    }
+
+    bool Complete() const override
     {
         if (!in_data)
             return false;
         return (hdr.nMessageSize == nDataPos);
     }
-
-    const uint256& GetMessageHash() const;
-
-    void SetVersion(int nVersionIn)
+    void SetVersion(int nVersionIn) override
     {
         hdrbuf.SetVersion(nVersionIn);
         vRecv.SetVersion(nVersionIn);
     }
-
-    int readHeader(const char *pch, unsigned int nBytes);
-    int readData(const char *pch, unsigned int nBytes);
+    int Read(const char *pch, unsigned int nBytes) override {
+        int ret = in_data ? readData(pch, nBytes) : readHeader(pch, nBytes);
+        if (ret < 0) Reset();
+        return ret;
+    }
+    CNetMessage GetMessage(const CMessageHeader::MessageStartChars& message_start, int64_t time) override;
 };
-
 
 /** Information about a peer */
 class CNode
 {
     friend class CConnman;
 public:
+    std::unique_ptr<TransportDeserializer> m_deserializer;
+
     // socket
     std::atomic<ServiceFlags> nServices{NODE_NONE};
     SOCKET hSocket GUARDED_BY(cs_hSocket);
