@@ -455,7 +455,7 @@ public:
         return MakeHandler(
             ::uiInterface.NotifyHeaderTip_connect([fn](bool initial_download, const CBlockIndex* block) {
                 fn(initial_download, block->nHeight, block->GetBlockTime(), block->GetBlockHash().ToString(),
-                    GuessVerificationProgress(Params().TxData(), block));
+                    /* verification progress is unused when a header was received */ 0);
             }));
     }
     std::unique_ptr<Handler> handleNotifyMasternodeListChanged(NotifyMasternodeListChangedFn fn) override
