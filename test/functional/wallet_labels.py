@@ -152,14 +152,13 @@ class Label:
     def verify(self, node):
         if self.receive_address is not None:
             assert self.receive_address in self.addresses
-
         for address in self.addresses:
             assert_equal(
                 node.getaddressinfo(address)['labels'][0],
                 {"name": self.name,
                  "purpose": self.purpose[address]})
             assert_equal(node.getaddressinfo(address)['label'], self.name)
-
+        assert self.name in node.listlabels()
         assert_equal(
             node.getaddressesbylabel(self.name),
             {address: {"purpose": self.purpose[address]} for address in self.addresses})
