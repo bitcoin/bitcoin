@@ -101,11 +101,10 @@ class InvalidMessagesTest(BitcoinTestFramework):
             msg_over_size = msg_unrecognized(str_data="b" * (valid_data_limit + 1))
             assert len(msg_over_size.serialize()) == (msg_limit + 1)
 
-            with node.assert_debug_log(["Oversized message from peer=4, disconnecting"]):
-                # An unknown message type (or *any* message type) over
-                # MAX_PROTOCOL_MESSAGE_LENGTH should result in a disconnect.
-                node.p2p.send_message(msg_over_size)
-                node.p2p.wait_for_disconnect(timeout=4)
+            # An unknown message type (or *any* message type) over
+            # MAX_PROTOCOL_MESSAGE_LENGTH should result in a disconnect.
+            node.p2p.send_message(msg_over_size)
+            node.p2p.wait_for_disconnect(timeout=4)
 
             node.disconnect_p2ps()
             conn = node.add_p2p_connection(P2PDataStore())
@@ -168,7 +167,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
 
     def test_checksum(self):
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
-        with self.nodes[0].assert_debug_log(['ProcessMessages(badmsg, 2 bytes): CHECKSUM ERROR expected 78df0a04 was ffffffff']):
+        with self.nodes[0].assert_debug_log(['CHECKSUM ERROR (badmsg, 2 bytes), expected 78df0a04 was ffffffff']):
             msg = conn.build_message(msg_unrecognized(str_data="d"))
             cut_len = (
                 4 +  # magic
