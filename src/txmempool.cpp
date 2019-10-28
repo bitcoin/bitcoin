@@ -900,7 +900,7 @@ bool CCoinsViewMemPool::GetCoin(const COutPoint &outpoint, Coin &coin) const {
     if (ptx) {
         if (outpoint.n < ptx->vout.size()) {
             CDatacarrierPayloadRef payload;
-            if (ptx->IsUniform()) {
+            if (outpoint.n == 0 && ptx->IsUniform()) {
                 // parse uniform coin
                 payload = ExtractTransactionDatacarrier(*ptx, chainActive.Height() + 1);
                 if (!payload) {
