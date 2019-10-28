@@ -13,6 +13,10 @@ from collections import defaultdict
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
+from test_framework.wallet_util import (
+    labels_value,
+    test_address,
+)
 
 class WalletLabelsTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -153,11 +157,12 @@ class Label:
         if self.receive_address is not None:
             assert self.receive_address in self.addresses
         for address in self.addresses:
-            assert_equal(
-                node.getaddressinfo(address)['labels'][0],
-                {"name": self.name,
-                 "purpose": self.purpose[address]})
-            assert_equal(node.getaddressinfo(address)['label'], self.name)
+            test_address(
+                node,
+                address,
+                label=self.name,
+                labels=labels_value(name=self.name, purpose=self.purpose[address])
+             )
         assert self.name in node.listlabels()
         assert_equal(
             node.getaddressesbylabel(self.name),
