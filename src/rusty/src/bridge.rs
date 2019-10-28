@@ -363,3 +363,46 @@ pub fn log_line(line: &str, debug: bool) {
     let ptr = cstr.as_bytes_with_nul();
     unsafe { rusty_LogLine(ptr.as_ptr(), debug); }
 }
+
+extern "C" {
+    // Utilities to wrap the C++ FastRandomContext (essentially a ChaCha stream)
+
+    /// Creates and returns a FastRandomContext*. Should be called after we're up so that
+    /// it had reandom data to pull from.
+    fn rusty_InitRandContext() -> *mut c_void;
+
+    /// Frees a FastRandomContext* generated with rusty_InitRandContext().
+    fn rusty_FreeRandContext(rand_context: *mut c_void);
+
+    /// Gets a u64 out of a Random Context generated with rusty_InitRandContext()
+    fn rusty_GetRandU64(rand_context: *mut c_void) -> u64;
+
+    /// Gets a u64 less than the given max out of a Random Context generated with rusty_InitRandContext()
+    fn rusty_GetRandRange(rand_context: *mut c_void, range: u64) -> u64;
+}
+
+pub struct RandomContext {
+    index: *mut c_void,
+}
+impl RandomContext {
+    pub fn new() -> Self {
+        let index = unsafe { rusty_InitRandContext() };
+        assert!(!index.is_null());
+        Self { index }
+    }
+
+    pub fn get_rand_u64(&mut self) -> u64 {
+        unsafe { rusty_GetRandU64(self.index) }
+    }
+
+    /// Gets a random number in the range [0..range)
+    pub fn randrange(&mut self, range: u64) -> u64 {
+        assert!(range > 0);
+        unsafe { rusty_GetRandRange(self.index, range) }
+    }
+}
+impl Drop for RandomContext {
+    fn drop(&mut self) {
+        unsafe { rusty_FreeRandContext(self.index) }
+    }
+}

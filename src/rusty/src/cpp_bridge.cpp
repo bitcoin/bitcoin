@@ -238,6 +238,25 @@ const void* rusty_ProviderStateGetNextDownloads(void* providerindexvoid, bool ha
     return blocks.empty() ? nullptr : blocks[0];
 }
 
+void* rusty_InitRandContext() {
+    return (void*) new FastRandomContext();
+}
+
+void rusty_FreeRandContext(void* contextvoid) {
+    FastRandomContext* ctx = (FastRandomContext*) contextvoid;
+    delete ctx;
+}
+
+uint64_t rusty_GetRandU64(void* contextvoid) {
+    FastRandomContext* ctx = (FastRandomContext*) contextvoid;
+    return ctx->rand64();
+}
+
+uint64_t rusty_GetRandRange(void* contextvoid, uint64_t range) {
+    FastRandomContext* ctx = (FastRandomContext*) contextvoid;
+    return ctx->randrange(range);
+}
+
 void rusty_LogLine(const unsigned char* str, bool debug) {
     if (debug) {
         LogPrint(BCLog::RUST, "%s\n", str);
