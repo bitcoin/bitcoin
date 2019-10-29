@@ -115,7 +115,7 @@ void RequireMatchingDExOffer(const std::string& address, uint32_t propertyId)
     }
 }
 
-void RequireNoOtherDExOffer(const std::string& address, uint32_t propertyId)
+void RequireNoOtherDExOffer(const std::string& address)
 {
     LOCK(cs_tally);
     if (mastercore::DEx_hasOffer(address)) {
