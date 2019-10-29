@@ -40,9 +40,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libsecp256k1", "libsecp256k
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libleveldb", "libleveldb\libleveldb.vcxproj", "{18430FEF-6B61-4C53-B396-718E02850F1B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbitcoin_qt", "libbitcoin_qt\libbitcoin_qt.vcxproj", "{2B4ABFF8-D1FD-4845-88C9-1F3C0A6512BF}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libsyscoin_qt", "libsyscoin_qt\libsyscoin_qt.vcxproj", "{2B4ABFF8-D1FD-4845-88C9-1F3C0A6512BF}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bitcoin-qt", "bitcoin-qt\bitcoin-qt.vcxproj", "{7E99172D-7FF2-4CB6-B736-AC9B76ED412A}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "syscoin-qt", "syscoin-qt\syscoin-qt.vcxproj", "{7E99172D-7FF2-4CB6-B736-AC9B76ED412A}"
 EndProject
 Global
     GlobalSection(SolutionConfigurationPlatforms) = preSolution
