@@ -49,7 +49,12 @@ class P2PLeakTxTest(BitcoinTestFramework):
                 break
             else:
                 self.log.debug('tx {} was already announced to us. Try test again.'.format(txid))
-                assert int(txid, 16) in [inv.hash for inv in inbound_peer.last_message['inv'].inv]
+                if 'inv' in inbound_peer.last_message:
+                    assert int(txid, 16) in [inv.hash for inv in inbound_peer.last_message['inv'].inv]
+                    inbound_peer.last_message.pop('inv')
+                if 'tx' in inbound_peer.last_message:
+                    assert_equal(txid, inbound_peer.last_message['tx'].tx.rehash())
+                    inbound_peer.last_message.pop('tx')
 
 
 if __name__ == '__main__':

@@ -823,7 +823,10 @@ public:
         bool fSendMempool GUARDED_BY(cs_tx_inventory){false};
         // Last time a "MEMPOOL" request was serviced.
         std::atomic<std::chrono::seconds> m_last_mempool_req{std::chrono::seconds{0}};
+        /** When to send the next batch of invs to this peer */
         std::chrono::microseconds nNextInvSend{0};
+        /** When the last batch of invs was sent to this peer */
+        std::chrono::microseconds m_last_inv_sent{0};
 
         RecursiveMutex cs_feeFilter;
         // Minimum fee rate with which to filter inv's to this node

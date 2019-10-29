@@ -40,8 +40,6 @@
 static constexpr int64_t ORPHAN_TX_EXPIRE_TIME = 20 * 60;
 /** Minimum time between orphan transactions expire time checks in seconds */
 static constexpr int64_t ORPHAN_TX_EXPIRE_INTERVAL = 5 * 60;
-/** How long to cache transactions in mapRelay for normal relay */
-static constexpr std::chrono::seconds RELAY_TX_CACHE_TIME{15 * 60};
 /** Headers download timeout expressed in microseconds
  *  Timeout = base + per_header * (expected number of headers) */
 static constexpr int64_t HEADERS_DOWNLOAD_TIMEOUT_BASE = 15 * 60 * 1000000; // 15 minutes
@@ -213,12 +211,6 @@ namespace {
 
     /** When our tip was last updated. */
     std::atomic<int64_t> g_last_tip_update(0);
-
-    /** Relay map */
-    typedef std::map<uint256, CTransactionRef> MapRelay;
-    MapRelay mapRelay GUARDED_BY(cs_main);
-    /** Expiration-time ordered list of (expire time, relay map entry) pairs. */
-    std::deque<std::pair<int64_t, MapRelay::iterator>> vRelayExpiration GUARDED_BY(cs_main);
 
     struct IteratorComparator
     {
@@ -1609,7 +1601,7 @@ void static ProcessGetBlockData(CNode* pfrom, const CChainParams& chainparams, c
 }
 
 //! Determine whether or not a peer can request a transaction, and return it (or nullptr if not found or not allowed).
-CTransactionRef static FindTxForGetData(const uint256& txid, const std::chrono::seconds mempool_req, const std::chrono::seconds longlived_mempool_time) LOCKS_EXCLUDED(cs_main)
+CTransactionRef static FindTxForGetData(const uint256& txid, const std::chrono::seconds mempool_req) LOCKS_EXCLUDED(cs_main)
 {
     {
         LOCK(cs_main);
@@ -1622,9 +1614,8 @@ CTransactionRef static FindTxForGetData(const uint256& txid, const std::chrono::
     if (txinfo.tx) {
         // To protect privacy, do not answer getdata using the mempool when
         // that TX couldn't have been INVed in reply to a MEMPOOL request,
-        // and when it's not marked for relay,
-        // and when it's too recent to have expired from mapRelay.
-        if ((mempool_req.count() && txinfo.m_time <= mempool_req) || (mapRelay.find(inv.hash) != mapRelay.end() || txinfo.m_time <= longlived_mempool_time) {
+        // or INVed in normal poisson relay.
+        if ((mempool_req.count() && txinfo.m_time <= mempool_req) || (txinfo.m_time <= pfrom->m_tx_relay->m_last_inv_sent)) {
             return txinfo.tx;
         }
     }
@@ -1640,8 +1631,6 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
     std::vector<CInv> vNotFound;
     const CNetMsgMaker msgMaker(pfrom->GetSendVersion());
 
-    // mempool entries added before this time have likely expired from mapRelay
-    const std::chrono::seconds longlived_mempool_time = GetTime<std::chrono::seconds>() - RELAY_TX_CACHE_TIME;
     // Get last mempool request time
     const std::chrono::seconds mempool_req = pfrom->m_tx_relay != nullptr ? pfrom->m_tx_relay->m_last_mempool_req.load()
                                                                           : std::chrono::seconds::min();
@@ -1662,7 +1651,7 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
             continue;
         }
 
-        CTransactionRef tx = FindTxForGetData(inv.hash, mempool_req, longlived_mempool_time);
+        CTransactionRef tx = FindTxForGetData(inv.hash, mempool_req);
         if (tx) {
             int nSendFlags = (inv.type == MSG_TX ? SERIALIZE_TRANSACTION_NO_WITNESS : 0);
             connman->PushMessage(pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *tx));
@@ -3978,6 +3967,12 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                     }
                 }
 
+                // Assume that this peer received all txs in the mempool at the current time, even if they are too many
+                // to fit in one inv message or were filtered out later on
+                if (fSendTrickle) {
+                    pto->m_tx_relay->m_last_inv_sent = current_time;
+                }
+
                 // Time to send but the peer has requested we not relay transactions.
                 if (fSendTrickle) {
                     LOCK(pto->m_tx_relay->cs_filter);
@@ -4063,19 +4058,6 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                         // Send
                         vInv.push_back(CInv(MSG_TX, hash));
                         nRelayedTransactions++;
-                        {
-                            // Expire old relay messages
-                            while (!vRelayExpiration.empty() && vRelayExpiration.front().first < nNow)
-                            {
-                                mapRelay.erase(vRelayExpiration.front().second);
-                                vRelayExpiration.pop_front();
-                            }
-
-                            auto ret = mapRelay.insert(std::make_pair(hash, std::move(txinfo.tx)));
-                            if (ret.second) {
-                                vRelayExpiration.push_back(std::make_pair(nNow + std::chrono::microseconds{RELAY_TX_CACHE_TIME}.count(), ret.first));
-                            }
-                        }
                         if (vInv.size() == MAX_INV_SZ) {
                             connman->PushMessage(pto, msgMaker.Make(NetMsgType::INV, vInv));
                             vInv.clear();
