@@ -1275,9 +1275,12 @@ int CMPTransaction::logicMath_TradeOffer()
         return (PKT_ERROR_TRADEOFFER -23);
     }
 
-    if (OMNI_PROPERTY_TMSC != property && OMNI_PROPERTY_MSC != property) {
-        PrintToLog("%s(): rejected: property for sale %d must be OMN or TOMN\n", __func__, property);
-        return (PKT_ERROR_TRADEOFFER -47);
+    // Ensure only OMNI and TOMNI are allowed, when the DEx is not yet free
+    if (!IsFeatureActivated(FEATURE_FREEDEX, block)) {
+        if (OMNI_PROPERTY_TMSC != property && OMNI_PROPERTY_MSC != property) {
+            PrintToLog("%s(): rejected: property for sale %d must be OMN or TOMN\n", __func__, property);
+            return (PKT_ERROR_TRADEOFFER -47);
+        }
     }
 
     // ------------------------------------------
