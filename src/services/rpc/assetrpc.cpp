@@ -1048,10 +1048,6 @@ UniValue listassetindex(const JSONRPCRequest& request) {
     UniValue options;
     uint32_t page = params[0].get_uint();
    
-    if (page < 0) {
-        throw JSONRPCError(RPC_INVALID_PARAMS, "'page' must be 0 or greater");
-    }
-
     options = params[1];
     
     UniValue oRes(UniValue::VARR);

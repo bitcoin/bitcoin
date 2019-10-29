@@ -84,9 +84,9 @@ bool GetSyscoinData(const CScript &scriptPubKey, vector<unsigned char> &vchData)
 		return false;
 	if (!scriptPubKey.GetOp(pc, opcode, vchData))
 		return false;
-    const int & nSize = scriptPubKey.size();
+    const unsigned int & nSize = scriptPubKey.size();
     // allow up to 80 bytes of data after our stack on standard asset transactions
-    int nDifferenceAllowed = 83;
+    unsigned int nDifferenceAllowed = 83;
     // if data is more than 1 byte we used 2 bytes to store the varint (good enough for 64kb which is within limit of opreturn data on sys tx's)
     if(nSize >= 0xff){
         nDifferenceAllowed++;
