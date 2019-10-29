@@ -437,8 +437,13 @@ bool GetOutpointAndKeysFromOutput(CWallet* const pwallet, const Coin& coin, CPub
         LogPrintf("GetOutpointAndKeysFromOutput -- Address does not refer to a key\n");
         return false;
     }
+    LegacyScriptPubKeyMan* spk_man = pwallet->GetLegacyScriptPubKeyMan();
+    if (!spk_man) {
+        LogPrintf ("GetOutpointAndKeysFromOutput -- This type of wallet does not support this command\n");
+        return false;
+    }
     CKeyID keyID(*pkhash);
-    if (!pwallet->GetKey(keyID, keyRet)) {
+    if (!spk_man->GetKey(keyID, keyRet)) {
         LogPrintf ("GetOutpointAndKeysFromOutput -- Private key for address is not known\n");
         return false;
     }
