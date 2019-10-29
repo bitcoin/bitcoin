@@ -249,8 +249,8 @@ const CWalletTx* CWallet::GetWalletTx(const uint256& hash) const
 
 void CWallet::UpgradeKeyMetadata()
 {
-    AssertLockHeld(m_spk_man->cs_wallet);
     if (m_spk_man) {
+        AssertLockHeld(m_spk_man->cs_wallet);
         m_spk_man->UpgradeKeyMetadata();
     }
 }
