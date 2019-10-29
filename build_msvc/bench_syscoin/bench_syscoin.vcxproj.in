@@ -12,25 +12,25 @@
 @SOURCE_FILES@
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\libbitcoinconsensus\libbitcoinconsensus.vcxproj">
+    <ProjectReference Include="..\libsyscoinconsensus\libsyscoinconsensus.vcxproj">
       <Project>{2b384fa8-9ee1-4544-93cb-0d733c25e8ce}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\libbitcoin_common\libbitcoin_common.vcxproj">
+    <ProjectReference Include="..\libsyscoin_common\libsyscoin_common.vcxproj">
       <Project>{7c87e378-df58-482e-aa2f-1bc129bc19ce}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\libbitcoin_crypto\libbitcoin_crypto.vcxproj">
+    <ProjectReference Include="..\libsyscoin_crypto\libsyscoin_crypto.vcxproj">
       <Project>{6190199c-6cf4-4dad-bfbd-93fa72a760c1}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\libbitcoin_server\libbitcoin_server.vcxproj">
+    <ProjectReference Include="..\libsyscoin_server\libsyscoin_server.vcxproj">
       <Project>{460fee33-1fe1-483f-b3bf-931ff8e969a5}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\libbitcoin_util\libbitcoin_util.vcxproj">
+    <ProjectReference Include="..\libsyscoin_util\libsyscoin_util.vcxproj">
       <Project>{b53a5535-ee9d-4c6f-9a26-f79ee3bc3754}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\libbitcoin_wallet\libbitcoin_wallet.vcxproj">
+    <ProjectReference Include="..\libsyscoin_wallet\libsyscoin_wallet.vcxproj">
       <Project>{93b86837-b543-48a5-a89b-7c87abb77df2}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\libbitcoin_zmq\libbitcoin_zmq.vcxproj">
+    <ProjectReference Include="..\libsyscoin_zmq\libsyscoin_zmq.vcxproj">
       <Project>{792d487f-f14c-49fc-a9de-3fc150f31c3f}</Project>
     </ProjectReference>
     <ProjectReference Include="..\libunivalue\libunivalue.vcxproj">
