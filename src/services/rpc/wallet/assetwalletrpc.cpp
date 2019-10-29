@@ -75,11 +75,11 @@ UniValue syscointxfund_helper(CWallet* const pwallet, const string& strAddress, 
 
 class CCountSigsVisitor : public boost::static_visitor<void> {
 private:
-    const SigningProvider &keystore;
+    const SigningProvider * const provider;
     int &nNumSigs;
 
 public:
-    CCountSigsVisitor(const SigningProvider &keystoreIn, int &numSigs) : keystore(keystoreIn), nNumSigs(numSigs) {}
+    CCountSigsVisitor(const SigningProvider* _provider, int &numSigs) : provider(_provider), nNumSigs(numSigs) { }
 
     void Process(const CScript &script) {
         txnouttype type;
@@ -96,7 +96,7 @@ public:
 
     void operator()(const CScriptID &scriptId) {
         CScript script;
-        if (keystore.GetCScript(scriptId, script))
+        if (provider && provider->GetCScript(scriptId, script))
             Process(script);
     }
     void operator()(const WitnessV0ScriptHash& scriptID)
@@ -104,7 +104,7 @@ public:
         CScriptID id;
         CRIPEMD160().Write(scriptID.begin(), 32).Finalize(id.begin());
         CScript script;
-        if (keystore.GetCScript(id, script)) {
+        if (provider && provider->GetCScript(id, script)) {
             Process(script);
         }
     }
@@ -189,6 +189,7 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
     }
     // # vin (with IX)*FEE + # vout*FEE + (10 + # vin)*FEE + 34*FEE (for change output)
     CAmount nFees =  GetMinimumFee(*pwallet, 10+34, coin_control,  &fee_calc);
+    const SigningProvider* provider = pwallet->GetSigningProvider();
     for (auto& vin : txIn.vin) {
         const Coin& coin = view.AccessCoin(vin.prevout);
         if(coin.IsSpent()){
@@ -213,7 +214,7 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
             vin.nSequence = CTxIn::SEQUENCE_FINAL - 1;
         tx.vin.emplace_back(vin);
         int numSigs = 0;
-        CCountSigsVisitor(*pwallet, numSigs).Process(coin.out.scriptPubKey);
+        CCountSigsVisitor(provider, numSigs).Process(coin.out.scriptPubKey);
         if(isSyscoinTx)
             numSigs *= 2;
         nFees += GetMinimumFee(*pwallet, numSigs * 200, coin_control, &fee_calc);
@@ -293,7 +294,7 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
                 }
             }
             int numSigs = 0;
-            CCountSigsVisitor(*pwallet, numSigs).Process(scriptPubKey);
+            CCountSigsVisitor(provider, numSigs).Process(scriptPubKey);
             if(isSyscoinTx){
                  // double relay fee for zdag tx to account for dbl bandwidth on dbl spend relays
                 numSigs *= 2;
@@ -1356,7 +1357,7 @@ UniValue convertaddresswallet(const JSONRPCRequest& request)
     } 
     else
         strLabel = "";
-    isminetype mine = IsMine(*pwallet, v4Dest);
+    isminetype mine = pwallet->IsMine(v4Dest);
     if(!(mine & ISMINE_SPENDABLE)){
         throw JSONRPCError(RPC_MISC_ERROR, "The V4 Public key or redeemscript not known to wallet, or the key is uncompressed.");
     }
@@ -1365,7 +1366,9 @@ UniValue convertaddresswallet(const JSONRPCRequest& request)
         auto locked_chain = pwallet->chain().lock();
         LOCK(pwallet->cs_wallet);   
         CScript witprog = GetScriptForDestination(v4Dest);
-        pwallet->AddCScript(witprog); // Implicit for single-key now, but necessary for multisig and for compatibility
+        LegacyScriptPubKeyMan* spk_man = pwallet->GetLegacyScriptPubKeyMan();
+        if(spk_man)
+            spk_man->AddCScript(witprog); // Implicit for single-key now, but necessary for multisig and for compatibility
         pwallet->SetAddressBook(v4Dest, strLabel, "receive");
         WalletRescanReserver reserver(pwallet);                   
         if (fRescan) {

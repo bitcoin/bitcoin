@@ -39,12 +39,12 @@ TransactionError FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& ps
             return TransactionError::SIGHASH_MISMATCH;
         }
 
-        complete &= SignPSBTInput(HidingSigningProvider(pwallet, !sign, !bip32derivs), psbtx, i, sighash_type);
+        complete &= SignPSBTInput(HidingSigningProvider(pwallet->GetSigningProvider(), !sign, !bip32derivs), psbtx, i, sighash_type);
     }
 
     // Fill in the bip32 keypaths and redeemscripts for the outputs so that hardware wallets can identify change
     for (unsigned int i = 0; i < psbtx.tx->vout.size(); ++i) {
-        UpdatePSBTOutput(HidingSigningProvider(pwallet, true, !bip32derivs), psbtx, i);
+        UpdatePSBTOutput(HidingSigningProvider(pwallet->GetSigningProvider(), true, !bip32derivs), psbtx, i);
     }
 
     return TransactionError::OK;
