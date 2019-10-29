@@ -25,7 +25,7 @@ struct Available {
     Available(CTransactionRef& ref, size_t tx_count) : ref(ref), tx_count(tx_count){}
 };
 
-static void ComplexMemPool(benchmark::State& state)
+static void ComplexMemPool(benchmark::Bench& bench)
 {
     FastRandomContext det_rand{true};
     std::vector<Available> available_coins;
@@ -75,13 +75,13 @@ static void ComplexMemPool(benchmark::State& state)
     }
     CTxMemPool pool;
     LOCK2(cs_main, pool.cs);
-    while (state.KeepRunning()) {
+    bench.run([&]() NO_THREAD_SAFETY_ANALYSIS {
         for (auto& tx : ordered_coins) {
             AddTx(tx, pool);
         }
         pool.TrimToSize(pool.DynamicMemoryUsage() * 3 / 4);
         pool.TrimToSize(GetVirtualTransactionSize(*ordered_coins.front()));
-    }
+    });
 }
 
-BENCHMARK(ComplexMemPool, 1);
+BENCHMARK(ComplexMemPool);

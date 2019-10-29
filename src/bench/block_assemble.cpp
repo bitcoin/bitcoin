@@ -14,7 +14,7 @@
 
 #include <vector>
 
-static void AssembleBlock(benchmark::State& state)
+static void AssembleBlock(benchmark::Bench& bench)
 {
     const std::vector<unsigned char> op_true{OP_TRUE};
     CScriptWitness witness;
@@ -46,9 +46,9 @@ static void AssembleBlock(benchmark::State& state)
         }
     }
 
-    while (state.KeepRunning()) {
+    bench.run([&] {
         PrepareBlock(g_testing_setup->m_node, SCRIPT_PUB);
-    }
+    });
 }
 
-BENCHMARK(AssembleBlock, 700);
+BENCHMARK(AssembleBlock);
