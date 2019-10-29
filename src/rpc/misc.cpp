@@ -11,9 +11,12 @@
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
+#include <spork.h>
 #include <util/system.h>
 #include <util/strencodings.h>
 #include <util/validation.h>
+
+#include <masternodes/sync.h>
 
 #include <stdint.h>
 #include <tuple>
@@ -22,6 +25,95 @@
 #endif
 
 #include <univalue.h>
+
+UniValue mnsync(const JSONRPCRequest& request);
+UniValue spork(const JSONRPCRequest& request);
+
+/*
+    Used for updating/reading spork settings on the network
+*/
+UniValue spork(const JSONRPCRequest& request)
+{
+    if (request.params.size() == 1) {
+        // basic mode, show info
+        std:: string strCommand = request.params[0].get_str();
+        if (strCommand == "show") {
+            UniValue ret(UniValue::VOBJ);
+            for(int nSporkID = SPORK_START; nSporkID <= SPORK_END; nSporkID++){
+                if(sporkManager.GetSporkNameByID(nSporkID) != "Unknown")
+                    ret.pushKV(sporkManager.GetSporkNameByID(nSporkID), sporkManager.GetSporkValue(nSporkID));
+            }
+            return ret;
+        } else if(strCommand == "active"){
+            UniValue ret(UniValue::VOBJ);
+            for(int nSporkID = SPORK_START; nSporkID <= SPORK_END; nSporkID++){
+                if(sporkManager.GetSporkNameByID(nSporkID) != "Unknown")
+                    ret.pushKV(sporkManager.GetSporkNameByID(nSporkID), sporkManager.IsSporkActive(nSporkID));
+            }
+            return ret;
+        }
+    }
+
+    if (request.fHelp || request.params.size() != 2) {
+        // default help, for basic mode
+        throw std::runtime_error(
+            RPCHelpMan{"spork",
+                "\nShows information about current state of sporks\n",
+                {
+                    {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "\"show\" to show all current spork values, \"active\" to show which sporks are active"}
+                },
+                {
+                    RPCResult{"for command = \"show\"",
+                        "{\n"
+                        "  \"SPORK_NAME\" : spork_value,    (number) The value of the specific spork with the name SPORK_NAME\n"
+                        "  ...\n"
+                        "}\n"
+                    },
+                    RPCResult{"for command = \"active\"",
+                        "{\n"
+                        "  \"SPORK_NAME\" : true|false,     (boolean) 'true' for time-based sporks if spork is active and 'false' otherwise\n"
+                        "  ...\n"
+                        "}\n"
+                    }
+                },
+                RPCExamples{
+                    HelpExampleCli("spork", "show")
+                    + HelpExampleRpc("spork", "\"show\"")
+                }
+            }.ToString());
+
+    } else {
+        // advanced mode, update spork values
+        int nSporkID = sporkManager.GetSporkIDByName(request.params[0].get_str());
+        if(nSporkID == -1)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid spork name");
+
+        if (!g_connman)
+            throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+
+        // SPORK VALUE
+        int64_t nValue = UniValue(UniValue::VNUM, request.params[1].getValStr()).get_int64();
+
+        //broadcast new spork
+        if(sporkManager.UpdateSpork(nSporkID, nValue)){
+            sporkManager.ExecuteSpork(nSporkID, nValue);
+            return "success";
+        } else {
+            throw std::runtime_error(
+                "spork \"name\" value\n"
+                "\nUpdate the value of the specific spork. Requires \"-sporkkey\" to be set to sign the message.\n"
+                "\nArguments:\n"
+                "1. \"name\"              (string, required) The name of the spork to update\n"
+                "2. value               (number, required) The new desired value of the spork\n"
+                "\nResult:\n"
+                "  result               (string) \"success\" if spork value was updated or this help otherwise\n"
+                "\nExamples:\n"
+                + HelpExampleCli("spork", "SPORK_2_INSTANTSEND_ENABLED 4070908800")
+                + HelpExampleRpc("spork", "\"SPORK_2_INSTANTSEND_ENABLED\", 4070908800"));
+        }
+    }
+
+}
 
 static UniValue validateaddress(const JSONRPCRequest& request)
 {
@@ -334,6 +426,43 @@ static UniValue signmessagewithprivkey(const JSONRPCRequest& request)
     return EncodeBase64(vchSig.data(), vchSig.size());
 }
 
+UniValue mnsync(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 1)
+        throw std::runtime_error(
+            "mnsync [status|next|reset]\n"
+            "Returns the sync status, updates to the next step or resets it entirely.\n"
+        );
+
+    std::string strMode = request.params[0].get_str();
+
+    if(strMode == "status") {
+        UniValue objStatus(UniValue::VOBJ);
+        objStatus.pushKV("AssetID", masternodeSync.GetAssetID());
+        objStatus.pushKV("AssetName", masternodeSync.GetAssetName());
+        objStatus.pushKV("AssetStartTime", masternodeSync.GetAssetStartTime());
+        objStatus.pushKV("Attempt", masternodeSync.GetAttempt());
+        objStatus.pushKV("IsBlockchainSynced", masternodeSync.IsBlockchainSynced());
+        objStatus.pushKV("IsSynced", masternodeSync.IsSynced());
+        objStatus.pushKV("IsFailed", masternodeSync.IsFailed());
+        return objStatus;
+    }
+
+    if(strMode == "next")
+    {
+        masternodeSync.SwitchToNextAsset(*g_connman);
+        return "sync updated to " + masternodeSync.GetAssetName();
+    }
+
+    if(strMode == "reset")
+    {
+        masternodeSync.Reset();
+        masternodeSync.SwitchToNextAsset(*g_connman);
+        return "success";
+    }
+    return "failure";
+}
+
 static UniValue setmocktime(const JSONRPCRequest& request)
 {
             RPCHelpMan{"setmocktime",
@@ -560,6 +689,10 @@ static const CRPCCommand commands[] =
     { "util",               "getdescriptorinfo",      &getdescriptorinfo,      {"descriptor"} },
     { "util",               "verifymessage",          &verifymessage,          {"address","signature","message"} },
     { "util",               "signmessagewithprivkey", &signmessagewithprivkey, {"privkey","message"} },
+
+    /* BitGreen features */
+    { "bitgreen",           "mnsync",                 &mnsync,                 {} },
+    { "bitgreen",           "spork",                  &spork,                  {"mode"} },
 
     /* Not shown in help */
     { "hidden",             "setmocktime",            &setmocktime,            {"timestamp"}},

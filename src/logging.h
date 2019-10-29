@@ -37,7 +37,7 @@ namespace BCLog {
         TOR         = (1 <<  1),
         MEMPOOL     = (1 <<  2),
         HTTP        = (1 <<  3),
-        BENCH       = (1 <<  4),
+        BENCHMARK   = (1 <<  4),
         ZMQ         = (1 <<  5),
         DB          = (1 <<  6),
         RPC         = (1 <<  7),
@@ -46,7 +46,7 @@ namespace BCLog {
         SELECTCOINS = (1 << 10),
         REINDEX     = (1 << 11),
         CMPCTBLOCK  = (1 << 12),
-        RAND        = (1 << 13),
+        RANDOM      = (1 << 13),
         PRUNE       = (1 << 14),
         PROXY       = (1 << 15),
         MEMPOOLREJ  = (1 << 16),
@@ -55,7 +55,14 @@ namespace BCLog {
         QT          = (1 << 19),
         LEVELDB     = (1 << 20),
         KERNEL      = (1 << 21),
-        ALL         = ~(uint32_t)0,
+        MNSYNC      = (1 << 22),
+        LLMQ        = (1 << 23),
+        LLMQDKG     = (1 << 24),
+        LLMQSIGS    = (1 << 25),
+        CHAINLOCKS  = (1 << 26),
+        MASTERNODE  = (1 << 27),
+        SPORK       = (1 << 28),
+        ALL         = ~(uint32_t)0
     };
 
     class Logger

@@ -115,6 +115,7 @@ enum class OptionsCategory {
     GUI,
     COMMANDS,
     REGISTER_COMMANDS,
+    MASTERNODES,
 
     HIDDEN // Always the last option to avoid printing these in the help
 };

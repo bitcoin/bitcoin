@@ -16,6 +16,8 @@
 #include <netbase.h>
 #include <util/system.h>
 
+#include <masternodes/sync.h>
+
 #include <stdint.h>
 
 #include <QDebug>
@@ -248,6 +250,11 @@ static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, int heig
     }
 }
 
+static void NotifyMasternodeListChanged(ClientModel *clientmodel, const CDeterministicMNList& newList)
+{
+    clientmodel->setMasternodeList(newList);
+}
+
 void ClientModel::subscribeToCoreSignals()
 {
     // Connect signals to client
@@ -258,6 +265,7 @@ void ClientModel::subscribeToCoreSignals()
     m_handler_banned_list_changed = m_node.handleBannedListChanged(std::bind(BannedListChanged, this));
     m_handler_notify_block_tip = m_node.handleNotifyBlockTip(std::bind(BlockTipChanged, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, false));
     m_handler_notify_header_tip = m_node.handleNotifyHeaderTip(std::bind(BlockTipChanged, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, true));
+    m_handler_notify_masternode_list_changed = m_node.handleNotifyMasternodeListChanged(std::bind(NotifyMasternodeListChanged, this, std::placeholders::_1));
 }
 
 void ClientModel::unsubscribeFromCoreSignals()
@@ -270,6 +278,7 @@ void ClientModel::unsubscribeFromCoreSignals()
     m_handler_banned_list_changed->disconnect();
     m_handler_notify_block_tip->disconnect();
     m_handler_notify_header_tip->disconnect();
+    m_handler_notify_masternode_list_changed->disconnect();
 }
 
 bool ClientModel::getProxyInfo(std::string& ip_port) const
@@ -280,4 +289,26 @@ bool ClientModel::getProxyInfo(std::string& ip_port) const
       return true;
     }
     return false;
+}
+
+void ClientModel::setMasternodeList(const CDeterministicMNList& mnList)
+{
+    LOCK(cs_mnlist);
+    if (mnListCached.GetBlockHash() == mnList.GetBlockHash()) {
+        return;
+    }
+    mnListCached = mnList;
+    Q_EMIT masternodeListChanged();
+}
+
+CDeterministicMNList ClientModel::getMasternodeList() const
+{
+    LOCK(cs_mnlist);
+    return mnListCached;
+}
+
+void ClientModel::refreshMasternodeList()
+{
+    LOCK(cs_mnlist);
+    setMasternodeList(deterministicMNManager->GetListAtChainTip());
 }

@@ -147,7 +147,12 @@ public:
 // weight = (stripped_size * 3) + total_size.
 static inline int64_t GetTransactionWeight(const CTransaction& tx)
 {
-    return ::GetSerializeSize(tx, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * (WITNESS_SCALE_FACTOR - 1) + ::GetSerializeSize(tx, PROTOCOL_VERSION);
+    int nExtraPayloadWeight = 0;
+    if (tx.nVersion >= 2 && tx.nType != TRANSACTION_NORMAL && tx.nType != TRANSACTION_COINBASE) {
+        int nExtraPayloadSize = (int)tx.vExtraPayload.size();
+        nExtraPayloadWeight = GetSizeOfCompactSize(nExtraPayloadSize) + nExtraPayloadSize;
+    }
+    return ::GetSerializeSize(tx, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * (WITNESS_SCALE_FACTOR - 1) + ::GetSerializeSize(tx, PROTOCOL_VERSION) + nExtraPayloadWeight;
 }
 static inline int64_t GetBlockWeight(const CBlock& block)
 {

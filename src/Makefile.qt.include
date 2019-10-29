@@ -102,6 +102,7 @@ QT_FORMS_UI = \
   qt/forms/helpmessagedialog.ui \
   qt/forms/intro.ui \
   qt/forms/modaloverlay.ui \
+  qt/forms/masternodelist.ui \
   qt/forms/openuridialog.ui \
   qt/forms/optionsdialog.ui \
   qt/forms/overviewpage.ui \
@@ -133,6 +134,7 @@ QT_MOC_CPP = \
   qt/moc_macdockiconhandler.cpp \
   qt/moc_macnotificationhandler.cpp \
   qt/moc_modaloverlay.cpp \
+  qt/moc_masternodelist.cpp \
   qt/moc_notificator.cpp \
   qt/moc_openuridialog.cpp \
   qt/moc_optionsdialog.cpp \
@@ -163,7 +165,7 @@ QT_MOC_CPP = \
   qt/moc_walletmodel.cpp \
   qt/moc_walletview.cpp
 
-BITGREEN_MM = \
+BITCOIN_MM = \
   qt/macdockiconhandler.mm \
   qt/macnotificationhandler.mm \
   qt/macos_appnap.mm
@@ -189,7 +191,7 @@ PROTOBUF_H =
 PROTOBUF_PROTO =
 endif
 
-BITGREEN_QT_H = \
+BITCOIN_QT_H = \
   qt/addressbookpage.h \
   qt/addresstablemodel.h \
   qt/askpassphrasedialog.h \
@@ -211,6 +213,7 @@ BITGREEN_QT_H = \
   qt/macnotificationhandler.h \
   qt/macos_appnap.h \
   qt/modaloverlay.h \
+  qt/masternodelist.h \
   qt/networkstyle.h \
   qt/notificator.h \
   qt/openuridialog.h \
@@ -285,6 +288,7 @@ RES_ICONS = \
   qt/res/icons/key.png \
   qt/res/icons/lock_closed.png \
   qt/res/icons/lock_open.png \
+  qt/res/icons/masternodes.png \
   qt/res/icons/network_disabled.png \
   qt/res/icons/open.png \
   qt/res/icons/overview.png \
@@ -307,7 +311,7 @@ RES_ICONS = \
   qt/res/icons/warning.png \
   qt/res/icons/verify.png
 
-BITGREEN_QT_BASE_CPP = \
+BITCOIN_QT_BASE_CPP = \
   qt/bantablemodel.cpp \
   qt/bitcoin.cpp \
   qt/bitcoinaddressvalidator.cpp \
@@ -332,15 +336,16 @@ BITGREEN_QT_BASE_CPP = \
   qt/trafficgraphwidget.cpp \
   qt/utilitydialog.cpp
 
-BITGREEN_QT_WINDOWS_CPP = qt/winshutdownmonitor.cpp
+BITCOIN_QT_WINDOWS_CPP = qt/winshutdownmonitor.cpp
 
-BITGREEN_QT_WALLET_CPP = \
+BITCOIN_QT_WALLET_CPP = \
   qt/addressbookpage.cpp \
   qt/addresstablemodel.cpp \
   qt/askpassphrasedialog.cpp \
   qt/coincontroldialog.cpp \
   qt/coincontroltreewidget.cpp \
   qt/editaddressdialog.cpp \
+  qt/masternodelist.cpp \
   qt/openuridialog.cpp \
   qt/overviewpage.cpp \
   qt/paymentserver.cpp \
@@ -363,17 +368,17 @@ BITGREEN_QT_WALLET_CPP = \
   qt/walletmodeltransaction.cpp \
   qt/walletview.cpp
 
-BITGREEN_QT_WALLET_BIP70_CPP = \
+BITCOIN_QT_WALLET_BIP70_CPP = \
   qt/paymentrequestplus.cpp
 
-BITGREEN_QT_CPP = $(BITGREEN_QT_BASE_CPP)
+BITCOIN_QT_CPP = $(BITCOIN_QT_BASE_CPP)
 if TARGET_WINDOWS
-BITGREEN_QT_CPP += $(BITGREEN_QT_WINDOWS_CPP)
+BITCOIN_QT_CPP += $(BITCOIN_QT_WINDOWS_CPP)
 endif
 if ENABLE_WALLET
-BITGREEN_QT_CPP += $(BITGREEN_QT_WALLET_CPP)
+BITCOIN_QT_CPP += $(BITCOIN_QT_WALLET_CPP)
 if ENABLE_BIP70
-BITGREEN_QT_CPP += $(BITGREEN_QT_WALLET_BIP70_CPP)
+BITCOIN_QT_CPP += $(BITCOIN_QT_WALLET_BIP70_CPP)
 endif # ENABLE_BIP70
 endif # ENABLE_WALLET
 
@@ -391,11 +396,11 @@ RES_CSS = \
 
 RES_MOVIES = $(wildcard $(srcdir)/qt/res/movies/spinner-*.png)
 
-BITGREEN_RC = qt/res/bitgreen-qt-res.rc
+BITCOIN_RC = qt/res/bitgreen-qt-res.rc
 
-BITGREEN_QT_INCLUDES = -DQT_NO_KEYWORDS
+BITCOIN_QT_INCLUDES = -DQT_NO_KEYWORDS
 
-qt_libbitgreenqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITGREEN_INCLUDES) $(BITGREEN_QT_INCLUDES) \
+qt_libbitgreenqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BITCOIN_QT_INCLUDES) \
   $(QT_INCLUDES) $(QT_DBUS_INCLUDES) $(PROTOBUF_CFLAGS) $(QR_CFLAGS)
 qt_libbitgreenqt_a_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
 qt_libbitgreenqt_a_OBJCXXFLAGS = $(AM_OBJCXXFLAGS) $(QT_PIE_FLAGS)
@@ -403,7 +408,7 @@ qt_libbitgreenqt_a_OBJCXXFLAGS = $(AM_OBJCXXFLAGS) $(QT_PIE_FLAGS)
 qt_libbitgreenqt_a_SOURCES = $(BITGREEN_QT_CPP) $(BITGREEN_QT_H) $(QT_FORMS_UI) \
   $(QT_QRC) $(QT_QRC_LOCALE) $(QT_TS) $(PROTOBUF_PROTO) $(RES_ICONS) $(RES_IMAGES) $(RES_CSS) $(RES_MOVIES)
 if TARGET_DARWIN
-  qt_libbitgreenqt_a_SOURCES += $(BITGREEN_MM)
+  qt_libbitgreenqt_a_SOURCES += $(BITCOIN_MM)
 endif
 
 nodist_qt_libbitgreenqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(PROTOBUF_CC) \
@@ -423,24 +428,24 @@ $(QT_MOC): $(PROTOBUF_H)
 $(QT_MOC_CPP): $(PROTOBUF_H)
 
 # bitgreen-qt binary #
-qt_bitgreen_qt_CPPFLAGS = $(AM_CPPFLAGS) $(BITGREEN_INCLUDES) $(BITGREEN_QT_INCLUDES) \
+qt_bitgreen_qt_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BITCOIN_QT_INCLUDES) \
   $(QT_INCLUDES) $(PROTOBUF_CFLAGS) $(QR_CFLAGS)
 qt_bitgreen_qt_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
 
 qt_bitgreen_qt_SOURCES = qt/main.cpp
 if TARGET_WINDOWS
-  qt_bitgreen_qt_SOURCES += $(BITGREEN_RC)
+  qt_bitgreen_qt_SOURCES += $(BITCOIN_RC)
 endif
-qt_bitgreen_qt_LDADD = qt/libbitgreenqt.a $(LIBBITGREEN_SERVER)
+qt_bitgreen_qt_LDADD = qt/libbitgreenqt.a $(LIBBITCOIN_SERVER)
 if ENABLE_WALLET
-qt_bitgreen_qt_LDADD += $(LIBBITGREEN_UTIL) $(LIBBITGREEN_WALLET)
+qt_bitgreen_qt_LDADD += $(LIBBITCOIN_UTIL) $(LIBBITCOIN_WALLET)
 endif
 if ENABLE_ZMQ
-qt_bitgreen_qt_LDADD += $(LIBBITGREEN_ZMQ) $(ZMQ_LIBS)
+qt_bitgreen_qt_LDADD += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)
 endif
-qt_bitgreen_qt_LDADD += $(LIBBITGREEN_CLI) $(LIBBITGREEN_COMMON) $(LIBBITGREEN_UTIL) $(LIBBITGREEN_CONSENSUS) $(LIBBITGREEN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) \
+qt_bitgreen_qt_LDADD += $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CONSENSUS) $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) \
   $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QR_LIBS) $(PROTOBUF_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(LIBSECP256K1) \
-  $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
+  $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(BLS_LIBS)
 if ENABLE_BIP70
 qt_bitgreen_qt_LDADD += $(SSL_LIBS)
 else
@@ -461,7 +466,7 @@ $(srcdir)/qt/bitgreenstrings.cpp: $(libbitgreen_server_a_SOURCES) $(libbitgreen_
 	@test -n $(XGETTEXT) || echo "xgettext is required for updating translations"
 	$(AM_V_GEN) cd $(srcdir); XGETTEXT=$(XGETTEXT) COPYRIGHT_HOLDERS="$(COPYRIGHT_HOLDERS)" $(PYTHON) ../share/qt/extract_strings_qt.py $^
 
-translate: $(srcdir)/qt/bitgreenstrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(BITGREEN_QT_BASE_CPP) qt/bitgreen.cpp $(BITGREEN_QT_WINDOWS_CPP) $(BITGREEN_QT_WALLET_CPP) $(BITGREEN_QT_H) $(BITGREEN_MM)
+translate: $(srcdir)/qt/bitgreenstrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(BITCOIN_QT_BASE_CPP) qt/bitgreen.cpp $(BITCOIN_QT_WINDOWS_CPP) $(BITCOIN_QT_WALLET_CPP) $(BITCOIN_QT_H) $(BITCOIN_MM)
 	@test -n $(LUPDATE) || echo "lupdate is required for updating translations"
 	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(LUPDATE) $^ -locations relative -no-obsolete -ts $(srcdir)/qt/locale/bitcoin_en.ts
 
@@ -482,7 +487,7 @@ CLEAN_QT = $(nodist_qt_libbitgreenqt_a_SOURCES) $(QT_QM) $(QT_FORMS_H) qt/*.gcda
 CLEANFILES += $(CLEAN_QT)
 
 bitgreen_qt_clean: FORCE
-	rm -f $(CLEAN_QT) $(qt_libbitgreenqt_a_OBJECTS) $(qt_bitgreen_qt_OBJECTS) qt/bitgreen-qt$(EXEEXT) $(LIBBITGREENQT)
+	rm -f $(CLEAN_QT) $(qt_libbitgreenqt_a_OBJECTS) $(qt_bitgreen_qt_OBJECTS) qt/bitgreen-qt$(EXEEXT) $(LIBBITCOINQT)
 
 bitgreen_qt : qt/bitgreen-qt$(EXEEXT)
 

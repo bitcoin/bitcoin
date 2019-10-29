@@ -56,6 +56,7 @@
         <file alias="proxy">res/icons/proxy.png</file>
         <file alias="staking_active">res/icons/staking_active.png</file>
         <file alias="staking_inactive">res/icons/staking_inactive.png</file>
+        <file alias="masternodes">res/icons/masternodes.png</file>
     </qresource>
     <qresource prefix="/images">
         <file alias="walletFrame">res/images/walletFrame.png</file>

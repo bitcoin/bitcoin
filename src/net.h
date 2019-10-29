@@ -11,6 +11,7 @@
 #include <amount.h>
 #include <bloom.h>
 #include <compat.h>
+#include <consensus/params.h>
 #include <crypto/siphash.h>
 #include <hash.h>
 #include <limitedmap.h>
@@ -59,6 +60,11 @@ static const unsigned int MAX_SUBVERSION_LENGTH = 256;
 static const int MAX_OUTBOUND_CONNECTIONS = 8;
 /** Maximum number of addnode outgoing nodes */
 static const int MAX_ADDNODE_CONNECTIONS = 8;
+/** Maximum number if outgoing masternodes */
+static const int MAX_OUTBOUND_MASTERNODE_CONNECTIONS = 30;
+static const int MAX_OUTBOUND_MASTERNODE_CONNECTIONS_ON_MN = 250;
+/** Eviction protection time for incoming connections  */
+static const int INBOUND_EVICTION_PROTECTION_TIME = 1;
 /** -listen default */
 static const bool DEFAULT_LISTEN = true;
 /** -upnp default */
@@ -190,10 +196,14 @@ public:
     bool GetNetworkActive() const { return fNetworkActive; };
     bool GetUseAddrmanOutgoing() const { return m_use_addrman_outgoing; };
     void SetNetworkActive(bool active);
-    void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = nullptr, const char *strDest = nullptr, bool fOneShot = false, bool fFeeler = false, bool manual_connection = false);
+    void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = nullptr, const char *strDest = nullptr, bool fOneShot = false, bool fFeeler = false, bool manual_connection = false, bool fConnectToMasternode = false);
+    void OpenMasternodeConnection(const CAddress& addrConnect);
     bool CheckIncomingNonce(uint64_t nonce);
 
     bool ForNode(NodeId id, std::function<bool(CNode* pnode)> func);
+    bool ForNode(const CService& addr, std::function<bool(CNode* pnode)> func);
+
+    bool IsMasternodeOrDisconnectRequested(const CService& addr);
 
     void PushMessage(CNode* pnode, CSerializedNetMsg&& msg);
 
@@ -312,6 +322,24 @@ public:
     */
     int64_t PoissonNextSendInbound(int64_t now, int average_interval_seconds);
 
+    bool AddMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes);
+    bool HasMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash);
+    std::set<uint256> GetMasternodeQuorums(Consensus::LLMQType llmqType);
+    // also returns QWATCH nodes
+    std::set<NodeId> GetMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash) const;
+    void RemoveMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash);
+    bool IsMasternodeQuorumNode(const CNode* pnode);
+
+    //! Relay message only to minProtoVersion peers.
+    void RelayInv(CInv &inv, const int minProtoVersion = MIN_PEER_PROTO_VERSION);
+
+    //! Relay message based to minProtoVersion peers filtered by relatedTx.
+    void RelayInvFiltered(CInv &inv, const CTransaction &relatedTx, const int minProtoVersion = MIN_PEER_PROTO_VERSION);
+
+    //! Relay message based to minProtoVersion peers filtered by relatedTxHash.
+    void RelayInvFiltered(CInv &inv, const uint256 &relatedTxHash, const int minProtoVersion = MIN_PEER_PROTO_VERSION);
+
+
 private:
     struct ListenSocket {
         SOCKET socket;
@@ -337,6 +365,7 @@ private:
     void SocketHandler();
     void ThreadSocketHandler();
     void ThreadDNSAddressSeed();
+    void ThreadOpenMasternodeConnections();
 
     uint64_t CalculateKeyedNetGroup(const CAddress& ad) const;
 
@@ -398,12 +427,16 @@ private:
     mutable CCriticalSection cs_vNodes;
     std::atomic<NodeId> nLastNodeId{0};
     unsigned int nPrevNodeCount{0};
+    std::vector<CService> vPendingMasternodes;
+    std::map<std::pair<Consensus::LLMQType, uint256>, std::set<uint256>> masternodeQuorumNodes GUARDED_BY(cs_vPendingMasternodes);
+    mutable CCriticalSection cs_vPendingMasternodes;
 
     /** Services this instance offers */
     ServiceFlags nLocalServices;
 
     std::unique_ptr<CSemaphore> semOutbound;
     std::unique_ptr<CSemaphore> semAddnode;
+    std::unique_ptr<CSemaphore> semMasternodeOutbound;
     int nMaxConnections;
     int nMaxOutbound;
     int nMaxAddnode;
@@ -430,6 +463,7 @@ private:
     std::thread threadSocketHandler;
     std::thread threadOpenAddedConnections;
     std::thread threadOpenConnections;
+    std::thread threadOpenMasternodeConnections;
     std::thread threadMessageHandler;
 
     /** flag for deciding to connect to an extra outbound peer,
@@ -645,6 +679,8 @@ public:
     std::atomic<int64_t> nLastRecv{0};
     const int64_t nTimeConnected;
     std::atomic<int64_t> nTimeOffset{0};
+    std::atomic<int64_t> nTimeFirstMessageReceived{0};
+    std::atomic<bool> fFirstMessageIsMNAUTH;
     // Address of this peer
     const CAddress addr;
     // Bind address of our side of the connection
@@ -674,7 +710,10 @@ public:
     //    unless it loads a bloom filter.
     bool fRelayTxes GUARDED_BY(cs_filter){false};
     bool fSentAddr{false};
+    // If 'true' this node will be disconnected on CMasternodeMan::ProcessMasternodeConnections()
+    bool fMasternode{false};
     CSemaphoreGrant grantOutbound;
+    CSemaphoreGrant grantMasternodeOutbound;
     mutable CCriticalSection cs_filter;
     std::unique_ptr<CBloomFilter> pfilter PT_GUARDED_BY(cs_filter);
     std::atomic<int> nRefCount{0};
@@ -708,6 +747,8 @@ public:
     // There is no final sorting before sending, as they are always sent immediately
     // and in the order requested.
     std::vector<uint256> vInventoryBlockToSend GUARDED_BY(cs_inventory);
+    // List of non-tx/non-block inventory items
+    std::vector<CInv> vInventoryOtherToSend GUARDED_BY(cs_inventory);
     CCriticalSection cs_inventory;
     int64_t nNextInvSend{0};
     // Used for headers announcements - unfiltered blocks to relay
@@ -733,6 +774,10 @@ public:
     std::atomic<int64_t> nMinPingUsecTime{std::numeric_limits<int64_t>::max()};
     // Whether a ping is requested.
     std::atomic<bool> fPingQueued{false};
+    // announce/send plain recovered sigs (true for full nodes)
+    std::atomic<bool> fSendRecSigs{false};
+    // If true, will send all quorum related messages, even if its not a member of our quorums
+    std::atomic<bool> qwatch{false};
     // Minimum fee rate with which to filter inv's to this node
     CAmount minFeeFilter GUARDED_BY(cs_feeFilter){0};
     CCriticalSection cs_feeFilter;
@@ -740,6 +785,13 @@ public:
     int64_t nextSendTimeFeeFilter{0};
 
     std::set<uint256> orphan_work_set;
+
+    // Challenge sent in VERSION to be answered with MNAUTH (only happens between MNs)
+    mutable CCriticalSection cs_mnauth;
+    uint256 sentMNAuthChallenge;
+    uint256 receivedMNAuthChallenge;
+    uint256 verifiedProRegTxHash;
+    uint256 verifiedPubKeyHash;
 
     CNode(NodeId id, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn, SOCKET hSocketIn, const CAddress &addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const CAddress &addrBindIn, const std::string &addrNameIn = "", bool fInboundIn = false);
     ~CNode();
@@ -848,6 +900,10 @@ public:
             }
         } else if (inv.type == MSG_BLOCK) {
             vInventoryBlockToSend.push_back(inv.hash);
+        } else {
+            if (!filterInventoryKnown.contains(inv.hash)) {
+                vInventoryOtherToSend.push_back(inv);
+            }
         }
     }
 

@@ -13,7 +13,10 @@ debug.log           | contains debug information and general logging generated b
 fee_estimates.dat   | stores statistics used to estimate minimum transaction fees and priorities required for confirmation; since 0.10.0
 indexes/txindex/*   | optional transaction index database (LevelDB); since 0.17.0
 mempool.dat         | dump of the mempool's transactions; since 0.14.0
+mncache.dat         | stores data for masternode list
+netfulfilled.dat    | stores data about recently made network requests
 peers.dat           | peer IP address database (custom format); since 0.7.0
+special/*           | special txes and quorums database
 wallet.dat          | personal wallet (BDB) with keys and transactions; moved to wallets/ directory on new installs since 0.16.0
 wallets/database/*  | BDB database environment; used for wallets since 0.16.0
 wallets/db.log      | wallet database log file; since 0.16.0

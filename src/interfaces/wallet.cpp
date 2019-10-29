@@ -487,6 +487,10 @@ public:
     {
         return MakeHandler(m_wallet->NotifyCanGetAddressesChanged.connect(fn));
     }
+    std::unique_ptr<Handler> handleChainLockReceived(ChainLockReceivedFn fn) override
+    {
+        return MakeHandler(m_wallet->NotifyChainLockReceived.connect(fn));
+    }
 
     std::shared_ptr<CWallet> m_wallet;
 };

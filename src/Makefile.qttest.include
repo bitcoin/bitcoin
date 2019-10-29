@@ -32,13 +32,13 @@ TEST_QT_H = \
   qt/test/paymentservertests.h \
   qt/test/wallettests.h
 
-TEST_BITGREEN_CPP = \
+TEST_BITCOIN_CPP = \
   test/setup_common.cpp
 
-TEST_BITGREEN_H = \
+TEST_BITCOIN_H = \
   test/setup_common.h
 
-qt_test_test_bitgreen_qt_CPPFLAGS = $(AM_CPPFLAGS) $(BITGREEN_INCLUDES) $(BITGREEN_QT_INCLUDES) \
+qt_test_test_bitgreen_qt_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BITCOIN_QT_INCLUDES) \
   $(QT_INCLUDES) $(QT_TEST_INCLUDES) $(PROTOBUF_CFLAGS)
 
 qt_test_test_bitgreen_qt_SOURCES = \
@@ -49,8 +49,8 @@ qt_test_test_bitgreen_qt_SOURCES = \
   qt/test/uritests.cpp \
   qt/test/util.cpp \
   $(TEST_QT_H) \
-  $(TEST_BITGREEN_CPP) \
-  $(TEST_BITGREEN_H)
+  $(TEST_BITCOIN_CPP) \
+  $(TEST_BITCOIN_H)
 if ENABLE_WALLET
 qt_test_test_bitgreen_qt_SOURCES += \
   qt/test/addressbooktests.cpp \
@@ -64,23 +64,23 @@ endif # ENABLE_WALLET
 
 nodist_qt_test_test_bitgreen_qt_SOURCES = $(TEST_QT_MOC_CPP)
 
-qt_test_test_bitgreen_qt_LDADD = $(LIBBITGREENQT) $(LIBBITGREEN_SERVER)
+qt_test_test_bitgreen_qt_LDADD = $(LIBBITCOINQT) $(LIBBITCOIN_SERVER)
 if ENABLE_WALLET
-qt_test_test_bitgreen_qt_LDADD += $(LIBBITGREEN_UTIL) $(LIBBITGREEN_WALLET)
+qt_test_test_bitgreen_qt_LDADD += $(LIBBITCOIN_UTIL) $(LIBBITCOIN_WALLET)
 endif
 if ENABLE_ZMQ
-qt_test_test_bitgreen_qt_LDADD += $(LIBBITGREEN_ZMQ) $(ZMQ_LIBS)
+qt_test_test_bitgreen_qt_LDADD += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)
 endif
-qt_test_test_bitgreen_qt_LDADD += $(LIBBITGREEN_CLI) $(LIBBITGREEN_COMMON) $(LIBBITGREEN_UTIL) $(LIBBITGREEN_CONSENSUS) $(LIBBITGREEN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) \
+qt_test_test_bitgreen_qt_LDADD += $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CONSENSUS) $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) \
   $(LIBLEVELDB_SSE42) $(LIBMEMENV) $(BOOST_LIBS) $(QT_DBUS_LIBS) $(QT_TEST_LIBS) $(QT_LIBS) \
   $(QR_LIBS) $(PROTOBUF_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(LIBSECP256K1) \
-  $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
+  $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(BLS_LIBS)
 qt_test_test_bitgreen_qt_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 qt_test_test_bitgreen_qt_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
 
-CLEAN_BITGREEN_QT_TEST = $(TEST_QT_MOC_CPP) qt/test/*.gcda qt/test/*.gcno
+CLEAN_BITCOIN_QT_TEST = $(TEST_QT_MOC_CPP) qt/test/*.gcda qt/test/*.gcno
 
-CLEANFILES += $(CLEAN_BITGREEN_QT_TEST)
+CLEANFILES += $(CLEAN_BITCOIN_QT_TEST)
 
 test_bitgreen_qt : qt/test/test_bitgreen-qt$(EXEEXT)
 
@@ -88,4 +88,4 @@ test_bitgreen_qt_check : qt/test/test_bitgreen-qt$(EXEEXT) FORCE
 	$(MAKE) check-TESTS TESTS=$^
 
 test_bitgreen_qt_clean: FORCE
-	rm -f $(CLEAN_BITGREEN_QT_TEST) $(qt_test_test_bitgreen_qt_OBJECTS)
+	rm -f $(CLEAN_BITCOIN_QT_TEST) $(qt_test_test_bitgreen_qt_OBJECTS)

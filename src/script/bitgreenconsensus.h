@@ -8,7 +8,7 @@
 
 #include <stdint.h>
 
-#if defined(BUILD_BITGREEN_INTERNAL) && defined(HAVE_CONFIG_H)
+#if defined(BUILD_COIN_INTERNAL) && defined(HAVE_CONFIG_H)
 #include <config/bitgreen-config.h>
   #if defined(_WIN32)
     #if defined(DLL_EXPORT)

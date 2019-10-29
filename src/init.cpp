@@ -13,11 +13,13 @@
 #include <amount.h>
 #include <banman.h>
 #include <blockfilter.h>
+#include <bls/bls.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <coins.h>
 #include <compat/sanity.h>
 #include <consensus/validation.h>
+#include <flat-database.h>
 #include <fs.h>
 #include <httprpc.h>
 #include <httpserver.h>
@@ -25,8 +27,15 @@
 #include <index/txindex.h>
 #include <interfaces/chain.h>
 #include <key.h>
+#include <llmq/quorums_init.h>
+#include <masternodes/activemasternode.h>
+#include <masternodes/notificationinterface.h>
+#include <masternodes/meta.h>
+#include <masternodes/sync.h>
+#include <masternodes/utils.h>
 #include <miner.h>
 #include <net.h>
+#include <netfulfilledman.h>
 #include <net_processing.h>
 #include <netbase.h>
 #include <policy/feerate.h>
@@ -41,11 +50,14 @@
 #include <script/sigcache.h>
 #include <script/standard.h>
 #include <shutdown.h>
+#include <special/specialdb.h>
+#include <spork.h>
 #include <timedata.h>
 #include <torcontrol.h>
 #include <txdb.h>
 #include <txmempool.h>
 #include <ui_interface.h>
+#include <util/init.h>
 #include <util/moneystr.h>
 #include <util/system.h>
 #include <util/threadnames.h>
@@ -168,6 +180,7 @@ void Interrupt()
     InterruptREST();
     InterruptTorControl();
     InterruptMapPort();
+    llmq::InterruptLLMQSystem();
     if (g_connman)
         g_connman->Interrupt();
     if (g_txindex) {
@@ -199,6 +212,12 @@ void Shutdown(InitInterfaces& interfaces)
         client->flush();
     }
     StopMapPort();
+    llmq::StopLLMQSystem();
+
+    // fRPCInWarmup should be `false` if we completed the loading sequence
+    // before a shutdown request was received
+    std::string statusmessage;
+    bool fRPCInWarmup = RPCIsInWarmup(&statusmessage);
 
     // Because these depend on each-other, we make sure that neither can be
     // using the other before destroying them.
@@ -221,6 +240,13 @@ void Shutdown(InitInterfaces& interfaces)
     g_banman.reset();
     g_txindex.reset();
     DestroyAllBlockFilterIndexes();
+
+    if (!fLiteMode && !fRPCInWarmup) {
+        CFlatDB<CNetFulfilledRequestManager> flatdb4("netfulfilled.dat", "magicFulfilledCache");
+        flatdb4.Dump(netfulfilledman);
+        CFlatDB<CSporkManager> flatdb6("sporks.dat", "magicSporkCache");
+        flatdb6.Dump(sporkManager);
+    }
 
     if (::mempool.IsLoaded() && gArgs.GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
         DumpMempool(::mempool);
@@ -262,6 +288,9 @@ void Shutdown(InitInterfaces& interfaces)
         pcoinscatcher.reset();
         pcoinsdbview.reset();
         pblocktree.reset();
+        llmq::DestroyLLMQSystem();
+        deterministicMNManager.reset();
+        pspecialdb.reset();
     }
     for (const auto& client : interfaces.chain_clients) {
         client->stop();
@@ -274,6 +303,16 @@ void Shutdown(InitInterfaces& interfaces)
         g_zmq_notification_interface = nullptr;
     }
 #endif
+
+    if (g_mn_notification_interface) {
+        UnregisterValidationInterface(g_mn_notification_interface);
+        delete g_mn_notification_interface;
+        g_mn_notification_interface = nullptr;
+    }
+
+    // Unregister masternode
+    if (fMasternodeMode)
+        UnregisterValidationInterface(activeMasternodeManager);
 
     try {
         if (!fs::remove(GetPidFile())) {
@@ -541,6 +580,14 @@ void SetupServerArgs()
 #endif
 
     gArgs.AddArg("-staking", "Enable staking while working with wallet, default is 1", false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-litemode", strprintf("Disable all BitGreen specific functionality (Masternodes, Governance) (default: %u)", false), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-sporkaddr=<bitgreenaddress>", "Override spork address. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.", false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-minsporkkeys=<n>", "Overrides minimum spork signers to change spork value. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.", false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-sporkkey", "Private key to send spork messages", false, OptionsCategory::OPTIONS);
+
+    gArgs.AddArg("-masternode", strprintf("Enable the client to act as a masternode (default: %u)", false), false, OptionsCategory::MASTERNODES);
+    gArgs.AddArg("-masternodeblsprivkey=<hex>", "Set the masternode BLS private key", false, OptionsCategory::MASTERNODES);
+    gArgs.AddArg("-watchquorums=<n>", strprintf("Watch and validate quorum communication (default: %u)", llmq::DEFAULT_WATCH_QUORUMS), false, OptionsCategory::MASTERNODES);
 
     // Add the hidden options
     gArgs.AddHiddenArgs(hidden_args);
@@ -722,6 +769,22 @@ static void ThreadImport(std::vector<fs::path> vImportFiles)
         return;
     }
     } // End scope of CImportingNow
+
+    // TODO: BitGreen
+    // force UpdatedBlockTip to initialize nCachedBlockHeight for DS, MN payments and budgets
+    // but don't call it directly to prevent triggering of other listeners like zmq etc.
+    g_mn_notification_interface->InitializeCurrentBlockTip();
+
+    if (fMasternodeMode) {
+        assert(activeMasternodeManager);
+        activeMasternodeManager->Init();
+    }
+
+#ifdef ENABLE_WALLET
+    if (GetWallets().front())
+        GetWallets().front()->AutoLockMasternodeCollaterals();
+#endif
+
     if (gArgs.GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
         LoadMempool(::mempool);
     }
@@ -740,6 +803,9 @@ static bool InitSanityCheck()
     }
 
     if (!glibc_sanity_test() || !glibcxx_sanity_test())
+        return false;
+
+    if (!BLSInit())
         return false;
 
     if (!Random_SanityCheck()) {
@@ -1266,6 +1332,32 @@ bool AppInitMain(InitInterfaces& interfaces)
             threadGroup.create_thread([i]() { return ThreadScriptCheck(i); });
     }
 
+    std::vector<std::string> vSporkAddresses;
+    if (!gArgs.GetArgs("-sporkaddr").empty())
+        vSporkAddresses = gArgs.GetArgs("-sporkaddr");
+    else
+        vSporkAddresses = Params().SporkAddresses();
+
+    for (const auto& address: vSporkAddresses) {
+        if (!sporkManager.SetSporkAddress(address)) {
+            LogPrintf("Invalid spork address specified with -sporkaddr\n");
+            return false;
+        }
+    }
+
+    int minsporkkeys = gArgs.GetArg("-minsporkkeys", Params().MinSporkKeys());
+    if (!sporkManager.SetMinSporkKeys(minsporkkeys)) {
+        LogPrintf("Invalid minimum number of spork signers specified with -minsporkkeys\n");
+        return false;
+    }
+
+    if (gArgs.IsArgSet("-sporkkey")) {
+        if (!sporkManager.SetPrivKey(gArgs.GetArg("-sporkkey", ""))) {
+            LogPrintf("Unable to sign spork message, wrong key?\n");
+            return false;
+        }
+    }
+
     // Start the lightweight task scheduler thread
     CScheduler::Function serviceLoop = std::bind(&CScheduler::serviceQueue, &scheduler);
     threadGroup.create_thread(std::bind(&TraceThread<CScheduler::Function>, "scheduler", serviceLoop));
@@ -1417,6 +1509,10 @@ bool AppInitMain(InitInterfaces& interfaces)
         RegisterValidationInterface(g_zmq_notification_interface);
     }
 #endif
+
+    g_mn_notification_interface = new CMNNotificationInterface(*g_connman.get());
+    RegisterValidationInterface(g_mn_notification_interface);
+
     uint64_t nMaxOutboundLimit = 0; //unlimited unless -maxuploadtarget is set
     uint64_t nMaxOutboundTimeframe = MAX_UPLOAD_TIMEFRAME;
 
@@ -1449,6 +1545,7 @@ bool AppInitMain(InitInterfaces& interfaces)
     nTotalCache -= nCoinDBCache;
     nCoinCacheUsage = nTotalCache; // the rest goes to in-memory cache
     int64_t nMempoolSizeMax = gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
+    int64_t nSpecialDbCache = 1024 * 1024 * 16; // TODO
     LogPrintf("Cache configuration:\n");
     LogPrintf("* Using %.1f MiB for block index database\n", nBlockTreeDBCache * (1.0 / 1024 / 1024));
     if (gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
@@ -1488,6 +1585,13 @@ bool AppInitMain(InitInterfaces& interfaces)
                     if (fPruneMode)
                         CleanupBlockRevFiles();
                 }
+
+                llmq::DestroyLLMQSystem();
+                deterministicMNManager.reset();
+                pspecialdb.reset();
+                pspecialdb.reset(new CSpecialDB(nSpecialDbCache, false, fReindex || fReindexChainState));
+                deterministicMNManager.reset(new CDeterministicMNManager(*pspecialdb));
+                llmq::InitLLMQSystem(*pspecialdb, &scheduler, false, fReindex || fReindexChainState);
 
                 if (ShutdownRequested()) break;
 
@@ -1646,7 +1750,7 @@ bool AppInitMain(InitInterfaces& interfaces)
         ::feeEstimator.Read(est_filein);
     fFeeEstimatesInitialized = true;
 
-    // ********************************************************* Step 8: start indexers
+    // ********************************************************* Step 8-A: start indexers
     if (gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
         g_txindex = MakeUnique<TxIndex>(nTxIndexCache, false, fReindex);
         g_txindex->Start();
@@ -1655,6 +1759,28 @@ bool AppInitMain(InitInterfaces& interfaces)
     for (const auto& filter_type : g_enabled_filter_types) {
         InitBlockFilterIndex(filter_type, filter_index_cache, false, fReindex);
         GetBlockFilterIndex(filter_type)->Start();
+    }
+
+    // ********************************************************* Step 8-B: check lite mode and load sporks
+
+    // lite mode disables all Dash-specific functionality
+    fLiteMode = gArgs.GetBoolArg("-litemode", false);
+    LogPrintf("fLiteMode %d\n", fLiteMode);
+
+    if (fLiteMode)
+        InitWarning(_("You are starting in lite mode, all BitGreen-specific functionality is disabled.").translated);
+
+    if ((!fLiteMode && !g_txindex)
+       && chainparams.NetworkIDString() != CBaseChainParams::REGTEST) {
+        return InitError(_("Transaction index can't be disabled in full mode. Either start with -litemode command line switch or enable transaction index.").translated);
+    }
+
+    if (!fLiteMode) {
+        uiInterface.InitMessage(_("Loading sporks cache...").translated);
+        CFlatDB<CSporkManager> flatdb6("sporks.dat", "magicSporkCache");
+        if (!flatdb6.Load(sporkManager)) {
+            return InitError(_("Failed to load sporks cache from").translated + "\n" + (GetDataDir() / "sporks.dat").string());
+        }
     }
 
     // ********************************************************* Step 9: load wallet
@@ -1685,6 +1811,71 @@ bool AppInitMain(InitInterfaces& interfaces)
         // doing so is that after activation, no upgraded nodes will fetch from you.
         nLocalServices = ServiceFlags(nLocalServices | NODE_WITNESS);
     }
+
+    // ********************************************************* Step 10-A: Prepare Masternode related stuff
+
+    fMasternodeMode = gArgs.GetBoolArg("-masternode", false);
+
+    if (fLiteMode && fMasternodeMode)
+        return InitError(_("You can not start a masternode in lite mode.").translated);
+
+    if(fMasternodeMode) {
+        LogPrintf("MASTERNODE MODE:\n");
+
+        std::string strMasterNodeBLSPrivKey = gArgs.GetArg("-masternodeblsprivkey", "");
+        if (!strMasterNodeBLSPrivKey.empty()) {
+            auto binKey = ParseHex(strMasterNodeBLSPrivKey);
+            CBLSSecretKey keyOperator;
+            keyOperator.SetBuf(binKey);
+            if (keyOperator.IsValid()) {
+                activeMasternodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>(keyOperator);
+                activeMasternodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>(activeMasternodeInfo.blsKeyOperator->GetPublicKey());
+                LogPrintf("  blsPubKeyOperator: %s\n", keyOperator.GetPublicKey().ToString());
+            } else {
+                return InitError(_("Invalid masternodeblsprivkey. Please see documentation.").translated);
+            }
+        } else {
+            return InitError(_("You must specify a masternodeblsprivkey in the configuration. Please see documentation for help.").translated);
+        }
+
+        // Create and register activeMasternodeManager, will init later in ThreadImport
+        activeMasternodeManager = new CActiveMasternodeManager();
+        RegisterValidationInterface(activeMasternodeManager);
+    }
+
+    if (activeMasternodeInfo.blsKeyOperator == nullptr)
+        activeMasternodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>();
+    if (activeMasternodeInfo.blsPubKeyOperator == nullptr)
+        activeMasternodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>();
+
+    // ********************************************************* Step 10-B: Load cache data
+
+    // LOAD SERIALIZED DAT FILES INTO DATA CACHES FOR INTERNAL USE
+    bool fIgnoreCacheFiles = fLiteMode || fReindex || fReindexChainState;
+    if (!fIgnoreCacheFiles) {
+        boost::filesystem::path pathDB = GetDataDir();
+        std::string strDBName;
+
+        // TODO: BitGreen - load mncache / governance
+
+        strDBName = "netfulfilled.dat";
+        uiInterface.InitMessage(_("Loading fulfilled requests cache...").translated);
+        CFlatDB<CNetFulfilledRequestManager> flatdb4(strDBName, "magicFulfilledCache");
+        if(!flatdb4.Load(netfulfilledman)) {
+            return InitError(_("Failed to load fulfilled requests cache from").translated + "\n" + (pathDB / strDBName).string());
+        }
+    }
+
+    // ********************************************************* Step 10-C: schedule BitGreen-specific tasks
+
+    if (!fLiteMode) {
+        scheduler.scheduleEvery(boost::bind(&CNetFulfilledRequestManager::DoMaintenance, boost::ref(netfulfilledman)), 60 * 1000);
+        scheduler.scheduleEvery(boost::bind(&CMasternodeSync::DoMaintenance, boost::ref(masternodeSync), boost::ref(*g_connman)), 1 * 1000);
+        scheduler.scheduleEvery(boost::bind(&CMasternodeUtils::DoMaintenance, boost::ref(*g_connman)), 1 * 1000);
+        // TODO: BitGreen - governance scheduler
+    }
+
+    llmq::StartLLMQSystem();
 
     // ********************************************************* Step 11: import blocks
 

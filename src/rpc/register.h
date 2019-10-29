@@ -19,6 +19,12 @@ void RegisterMiscRPCCommands(CRPCTable &tableRPC);
 void RegisterMiningRPCCommands(CRPCTable &tableRPC);
 /** Register raw transaction RPC commands */
 void RegisterRawTransactionRPCCommands(CRPCTable &tableRPC);
+/** Register Special Transactions RPC commands */
+void RegisterSpecialRPCCommands(CRPCTable &tableRPC);
+/** Register Masternode RPC commands */
+void RegisterMasternodeRPCCommands(CRPCTable &tableRPC);
+/** Register quorums/LLMQ RPC commands */
+void RegisterQuorumsRPCCommands(CRPCTable &tableRPC);
 
 static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
 {
@@ -27,6 +33,9 @@ static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
     RegisterMiscRPCCommands(t);
     RegisterMiningRPCCommands(t);
     RegisterRawTransactionRPCCommands(t);
+    RegisterSpecialRPCCommands(t);
+    RegisterMasternodeRPCCommands(t);
+    RegisterQuorumsRPCCommands(t);
 }
 
 #endif // BITGREEN_RPC_REGISTER_H

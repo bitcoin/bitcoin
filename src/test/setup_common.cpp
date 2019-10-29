@@ -18,6 +18,7 @@
 #include <rpc/register.h>
 #include <rpc/server.h>
 #include <script/sigcache.h>
+#include <special/specialdb.h>
 #include <streams.h>
 #include <txdb.h>
 #include <util/memory.h>
@@ -102,6 +103,8 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
 
     g_banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     g_connman = MakeUnique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
+
+    pspecialdb.reset(new CSpecialDB(1 << 20, true, true));
 }
 
 TestingSetup::~TestingSetup()
@@ -116,6 +119,7 @@ TestingSetup::~TestingSetup()
     pcoinsTip.reset();
     pcoinsdbview.reset();
     pblocktree.reset();
+    pspecialdb.reset();
 }
 
 TestChain100Setup::TestChain100Setup() : TestingSetup(CBaseChainParams::REGTEST)

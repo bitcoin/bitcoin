@@ -38,6 +38,9 @@
 
 #include <boost/signals2/signal.hpp>
 
+//! Obtain wallet for use with legacy commands.
+std::shared_ptr<CWallet> GetMainWallet();
+
 //! Explicitly unload and delete the wallet.
 //! Blocks the current thread after signaling the unload intent so that all
 //! wallet clients release the wallet.
@@ -430,6 +433,7 @@ public:
      */
     int GetDepthInMainChain(interfaces::Chain::Lock& locked_chain) const;
     bool IsInMainChain(interfaces::Chain::Lock& locked_chain) const { return GetDepthInMainChain(locked_chain) > 0; }
+    bool IsChainLocked() const;
 
     /**
      * @return number of blocks to maturity for this transaction:
@@ -956,6 +960,7 @@ public:
 
     std::map<CTxDestination, CAddressBookData> mapAddressBook GUARDED_BY(cs_wallet);
 
+    std::set<COutPoint> setWalletUTXO;
     std::set<COutPoint> setLockedCoins GUARDED_BY(cs_wallet);
 
     /** Registered interfaces::Chain::Notifications handler. */
@@ -1010,6 +1015,9 @@ public:
     void UnlockCoin(const COutPoint& output) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void UnlockAllCoins() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void ListLockedCoins(std::vector<COutPoint>& vOutpts) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void ListProTxCoins(std::vector<COutPoint>& vOutpts);
+
+    void AutoLockMasternodeCollaterals() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /*
      * Rescan abort properties
@@ -1303,6 +1311,9 @@ public:
      */
     boost::signals2::signal<void (CWallet* wallet)> NotifyStatusChanged;
 
+    /** ChainLock received */
+    boost::signals2::signal<void (int height)> NotifyChainLockReceived;
+
     /** Inquire whether this wallet broadcasts transactions. */
     bool GetBroadcastTransactions() const { return fBroadcastTransactions; }
     /** Set whether this wallet broadcasts transactions. */
@@ -1415,6 +1426,8 @@ public:
     bool SelectStakeCoins(StakeCoinsSet& setCoins, CAmount nTargetAmount) const;
     bool CreateCoinStake(unsigned int nBits, int64_t nSearchInterval, CMutableTransaction& txNew, uint32_t& nTxNewTime, CAmount nFees);
     void GetScriptForMining(CScript& script);
+
+    void NotifyChainLock(const CBlockIndex* pindexChainLock);
 };
 
 /**

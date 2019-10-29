@@ -41,6 +41,27 @@ const char *SENDCMPCT="sendcmpct";
 const char *CMPCTBLOCK="cmpctblock";
 const char *GETBLOCKTXN="getblocktxn";
 const char *BLOCKTXN="blocktxn";
+// Dash message types
+const char *SPORK="spork";
+const char *GETSPORKS="getsporks";
+const char *SYNCSTATUSCOUNT="ssc";
+const char *GETMNLISTDIFF="getmnlistd";
+const char *MNLISTDIFF="mnlistdiff";
+const char *QSENDRECSIGS="qsendrecsigs";
+const char *QFCOMMITMENT="qfcommit";
+const char *QCONTRIB="qcontrib";
+const char *QCOMPLAINT="qcomplaint";
+const char *QJUSTIFICATION="qjustify";
+const char *QPCOMMITMENT="qpcommit";
+const char *QWATCH="qwatch";
+const char *QSIGSESANN="qsigsesann";
+const char *QSIGSHARESINV="qsigsinv";
+const char *QGETSIGSHARES="qgetsigs";
+const char *QBSIGSHARES="qbsigs";
+const char *QSIGREC="qsigrec";
+const char *CLSIG="clsig";
+const char *ISLOCK="islock";
+const char *MNAUTH="mnauth";
 } // namespace NetMsgType
 
 /** All known message types. Keep this in the same order as the list of
@@ -73,6 +94,25 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::CMPCTBLOCK,
     NetMsgType::GETBLOCKTXN,
     NetMsgType::BLOCKTXN,
+    NetMsgType::SPORK,
+    NetMsgType::GETSPORKS,
+    NetMsgType::SYNCSTATUSCOUNT,
+    NetMsgType::GETMNLISTDIFF,
+    NetMsgType::MNLISTDIFF,
+    NetMsgType::QSENDRECSIGS,
+    NetMsgType::QFCOMMITMENT,
+    NetMsgType::QCONTRIB,
+    NetMsgType::QCOMPLAINT,
+    NetMsgType::QJUSTIFICATION,
+    NetMsgType::QPCOMMITMENT,
+    NetMsgType::QWATCH,
+    NetMsgType::QSIGSESANN,
+    NetMsgType::QSIGSHARESINV,
+    NetMsgType::QGETSIGSHARES,
+    NetMsgType::QBSIGSHARES,
+    NetMsgType::QSIGREC,
+    NetMsgType::CLSIG,
+    NetMsgType::MNAUTH,
 };
 const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));
 
@@ -186,6 +226,15 @@ std::string CInv::GetCommand() const
     default:
         throw std::out_of_range(strprintf("CInv::GetCommand(): type=%d unknown type", type));
     }
+}
+
+bool CInv::IsKnownType() const
+{
+    return (type == MSG_TX || type == MSG_WITNESS_TX ||
+        type == MSG_QUORUM_FINAL_COMMITMENT || type == MSG_QUORUM_CONTRIB ||
+        type == MSG_QUORUM_COMPLAINT || type == MSG_QUORUM_JUSTIFICATION ||
+        type == MSG_QUORUM_PREMATURE_COMMITMENT || type == MSG_QUORUM_RECOVERED_SIG ||
+        type == MSG_CLSIG || type == MSG_SPORK);
 }
 
 std::string CInv::ToString() const

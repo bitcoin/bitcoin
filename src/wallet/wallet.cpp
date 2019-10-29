@@ -14,6 +14,8 @@
 #include <interfaces/wallet.h>
 #include <key.h>
 #include <key_io.h>
+#include <llmq/quorums_chainlocks.h>
+#include <masternodes/payments.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <pos/kernel.h>
@@ -52,6 +54,14 @@ static const size_t OUTPUT_GROUP_MAX_ENTRIES = 10;
 
 static CCriticalSection cs_wallets;
 static std::vector<std::shared_ptr<CWallet>> vpwallets GUARDED_BY(cs_wallets);
+
+std::shared_ptr<CWallet> GetMainWallet()
+{
+    LOCK(cs_wallets);
+    if (!vpwallets.empty())
+        return vpwallets.at(0);
+    return nullptr;
+}
 
 // proof-of-stake: optional setting to unlock wallet only for staking;
 //         prevent sendmoney if OS account is compromised
@@ -837,7 +847,7 @@ bool CWallet::IsSpent(interfaces::Chain::Lock& locked_chain, const uint256& hash
 void CWallet::AddToSpends(const COutPoint& outpoint, const uint256& wtxid)
 {
     mapTxSpends.insert(std::make_pair(outpoint, wtxid));
-
+    setWalletUTXO.erase(outpoint);
     setLockedCoins.erase(outpoint);
 
     std::pair<TxSpends::iterator, TxSpends::iterator> range;
@@ -1119,6 +1129,17 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
         wtx.m_it_wtxOrdered = wtxOrdered.insert(std::make_pair(wtx.nOrderPos, &wtx));
         wtx.nTimeSmart = ComputeTimeSmart(wtx);
         AddToSpends(hash);
+
+        auto locked_chain = chain().lock();
+        auto mnList = deterministicMNManager->GetListAtChainTip();
+        for(unsigned int i = 0; i < wtx.tx->vout.size(); ++i) {
+            if (IsMine(wtx.tx->vout[i]) && !IsSpent(*locked_chain, hash, i)) {
+                setWalletUTXO.insert(COutPoint(hash, i));
+                if (deterministicMNManager->IsProTxWithCollateral(wtx.tx, i) || mnList.HasMNByCollateral(COutPoint(hash, i))) {
+                    LockCoin(COutPoint(hash, i));
+                }
+            }
+        }
     }
 
     bool fUpdated = false;
@@ -3371,6 +3392,7 @@ bool CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
 
 DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
 {
+    auto locked_chain = chain().lock();
     LOCK(cs_wallet);
 
     fFirstRunRet = false;
@@ -3385,6 +3407,14 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
             // Note: can't top-up keypool here, because wallet is locked.
             // User will be prompted to unlock wallet the next operation
             // that requires a new key.
+        }
+    }
+
+    for (auto& pair : mapWallet) {
+        for(size_t i = 0; i < pair.second.tx->vout.size(); ++i) {
+            if (IsMine(pair.second.tx->vout[i]) && !IsSpent(*locked_chain, pair.first, i)) {
+                setWalletUTXO.insert(COutPoint(pair.first, i));
+            }
         }
     }
 
@@ -4051,6 +4081,42 @@ void CWallet::ListLockedCoins(std::vector<COutPoint>& vOutpts) const
     }
 }
 
+void CWallet::ListProTxCoins(std::vector<COutPoint>& vOutpts)
+{
+    auto mnList = deterministicMNManager->GetListAtChainTip();
+
+    AssertLockHeld(cs_wallet);
+    for (const auto &o : setWalletUTXO) {
+        if (mapWallet.count(o.hash)) {
+            std::map<uint256, CWalletTx>::const_iterator it = mapWallet.find(o.hash);
+            if (it == mapWallet.end())
+                continue;
+
+            if (deterministicMNManager->IsProTxWithCollateral(it->second.tx, o.n) || mnList.HasMNByCollateral(o))
+                vOutpts.emplace_back(o);
+        }
+    }
+}
+
+// Goes through all wallet transactions and checks if they are masternode collaterals, in which case these are locked
+// This avoids accidential spending of collaterals. They can still be unlocked manually if a spend is really intended.
+void CWallet::AutoLockMasternodeCollaterals()
+{
+    auto mnList = deterministicMNManager->GetListAtChainTip();
+
+    auto locked_chain = chain().lock();
+    LOCK2(cs_main, cs_wallet);
+    for (const auto& pair : mapWallet) {
+        for (unsigned int i = 0; i < pair.second.tx->vout.size(); ++i) {
+            if (IsMine(pair.second.tx->vout[i]) && !IsSpent(*locked_chain, pair.first, i)) {
+                if (deterministicMNManager->IsProTxWithCollateral(pair.second.tx, i) || mnList.HasMNByCollateral(COutPoint(pair.first, i))) {
+                    LockCoin(COutPoint(pair.first, i));
+                }
+            }
+        }
+    }
+}
+
 /** @} */ // end of Actions
 
 void CWallet::GetKeyBirthTimes(interfaces::Chain::Lock& locked_chain, std::map<CKeyID, int64_t>& mapKeyBirth) const {
@@ -4417,7 +4483,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
     } else if (wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS) {
         // Make it impossible to disable private keys after creation
         chain.initError(strprintf(_("Error loading %s: Private keys can only be disabled during creation").translated, walletFile));
-        return NULL;
+        return nullptr;
     } else if (walletInstance->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
         LOCK(walletInstance->cs_KeyStore);
         if (!walletInstance->mapKeys.empty() || !walletInstance->mapCryptedKeys.empty()) {
@@ -4690,7 +4756,7 @@ int CMerkleTx::GetDepthInMainChain(interfaces::Chain::Lock& locked_chain) const
 
 int CMerkleTx::GetBlocksToMaturity(interfaces::Chain::Lock& locked_chain) const
 {
-    if (!IsCoinBase() && !IsCoinStake())
+    if (!IsCoinBase())
         return 0;
     int chain_depth = GetDepthInMainChain(locked_chain);
     assert(chain_depth >= 0); // coinbase tx should not be conflicted
@@ -4701,6 +4767,15 @@ bool CMerkleTx::IsImmatureCoinBase(interfaces::Chain::Lock& locked_chain) const
 {
     // note GetBlocksToMaturity is 0 for non-coinbase tx
     return GetBlocksToMaturity(locked_chain) > 0;
+}
+
+bool CMerkleTx::IsChainLocked() const
+{
+    AssertLockHeld(cs_main);
+    BlockMap::iterator mi = ::BlockIndex().find(hashBlock);
+    if (mi != ::BlockIndex().end() && mi->second != nullptr)
+        return llmq::chainLocksHandler->HasChainLock(mi->second->nHeight, hashBlock);
+    return false;
 }
 
 bool CWalletTx::AcceptToMemoryPool(interfaces::Chain::Lock& locked_chain, CValidationState& state)
@@ -5034,9 +5109,11 @@ bool CWallet::CreateCoinStake(unsigned int nBits,
     if (!g_txindex)
         return error("%s: transaction index unavailable", __func__);
 
-    LOCK2(cs_main, cs_wallet);
+//    LOCK2(cs_main, cs_wallet);
     txNew.vin.clear();
     txNew.vout.clear();
+
+    txNew.nType = TRANSACTION_STAKE;
 
     // Mark coin stake transaction
     CScript scriptEmpty;
@@ -5071,7 +5148,7 @@ bool CWallet::CreateCoinStake(unsigned int nBits,
 
     for (const auto& pcoin : setStakeCoins) {
         //make sure that enough time has elapsed between
-        CBlockIndex* pindex = NULL;
+        CBlockIndex* pindex = nullptr;
         BlockMap::iterator it = ::BlockIndex().find(pcoin.first->hashBlock);
         if (it != ::BlockIndex().end())
             pindex = it->second;
@@ -5141,7 +5218,8 @@ bool CWallet::CreateCoinStake(unsigned int nBits,
                 uint64_t nTotalSize = pcoin.first->tx->vout[pcoin.second].nValue + nFees + GetBlockSubsidy(pIndex0->nHeight, Params().GetConsensus());
 
                 //presstab HyperStake - if MultiSend is set to send in coinstake we will add our outputs here (values asigned further down)
-                if (nTotalSize / 2 > nStakeSplitThreshold * COIN)
+                // TODO: BitGreen - check if threshold split conflicts with masternode payment.
+                if (nStakeSplitThreshold >= 100 && nTotalSize / 2 > nStakeSplitThreshold * COIN)
                     txNew.vout.push_back(CTxOut(0, scriptPubKeyOut)); //split stake
 
                 LogPrint(BCLog::KERNEL, "%s: added kernel type=%d\n", __func__, whichType);
@@ -5188,6 +5266,15 @@ bool CWallet::CreateCoinStake(unsigned int nBits,
         }
     }
 
+    std::vector<CTxOut> voutMasternodePayments; // masternode payment
+    std::vector<CTxOut> voutSuperblockPayments; // superblock payment
+
+    // Update coinbase transaction with additional info about masternode and governance payments,
+    // get some info back to pass to getblocktemplate
+    FillBlockPayments(txNew, pIndex0->nHeight+1, nReward, voutMasternodePayments, voutSuperblockPayments);
+    LogPrintf("CreateNewBlock -- nBlockHeight %d blockReward %lld coinbaseTx %s",
+                pIndex0->nHeight+1, nReward, CTransaction(txNew).ToString());
+
     // Sign
     int nIn = 0;
     for (const CWalletTx* pcoin : vwtxPrev) {
@@ -5232,4 +5319,9 @@ bool CWallet::MintableCoins()
             return true;
 
     return false;
+}
+
+void CWallet::NotifyChainLock(const CBlockIndex* pindexChainLock)
+{
+    NotifyChainLockReceived(pindexChainLock->nHeight);
 }

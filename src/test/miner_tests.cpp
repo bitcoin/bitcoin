@@ -51,34 +51,34 @@ struct {
     unsigned char extranonce;
     unsigned int nonce;
 } blockinfo[] = {
-    {4, 0xa4a3e223}, {2, 0x15c32f9e}, {1, 0x0375b547}, {1, 0x7004a8a5},
-    {2, 0xce440296}, {2, 0x52cfe198}, {1, 0x77a72cd0}, {2, 0xbb5d6f84},
-    {2, 0x83f30c2c}, {1, 0x48a73d5b}, {1, 0xef7dcd01}, {2, 0x6809c6c4},
-    {2, 0x0883ab3c}, {1, 0x087bbbe2}, {2, 0x2104a814}, {2, 0xdffb6daa},
-    {1, 0xee8a0a08}, {2, 0xba4237c1}, {1, 0xa70349dc}, {1, 0x344722bb},
-    {3, 0xd6294733}, {2, 0xec9f5c94}, {2, 0xca2fbc28}, {1, 0x6ba4f406},
-    {2, 0x015d4532}, {1, 0x6e119b7c}, {2, 0x43e8f314}, {2, 0x27962f38},
-    {2, 0xb571b51b}, {2, 0xb36bee23}, {2, 0xd17924a8}, {2, 0x6bc212d9},
-    {1, 0x630d4948}, {2, 0x9a4c4ebb}, {2, 0x554be537}, {1, 0xd63ddfc7},
-    {2, 0xa10acc11}, {1, 0x759a8363}, {2, 0xfb73090d}, {1, 0xe82c6a34},
-    {1, 0xe33e92d7}, {3, 0x658ef5cb}, {2, 0xba32ff22}, {5, 0x0227a10c},
-    {1, 0xa9a70155}, {5, 0xd096d809}, {1, 0x37176174}, {1, 0x830b8d0f},
-    {1, 0xc6e3910e}, {2, 0x823f3ca8}, {1, 0x99850849}, {1, 0x7521fb81},
-    {1, 0xaacaabab}, {1, 0xd645a2eb}, {5, 0x7aea1781}, {5, 0x9d6e4b78},
-    {1, 0x4ce90fd8}, {1, 0xabdc832d}, {6, 0x4a34f32a}, {2, 0xf2524c1c},
-    {2, 0x1bbeb08a}, {1, 0xad47f480}, {1, 0x9f026aeb}, {1, 0x15a95049},
-    {2, 0xd1cb95b2}, {2, 0xf84bbda5}, {1, 0x0fa62cd1}, {1, 0xe05f9169},
-    {1, 0x78d194a9}, {5, 0x3e38147b}, {5, 0x737ba0d4}, {1, 0x63378e10},
-    {1, 0x6d5f91cf}, {2, 0x88612eb8}, {2, 0xe9639484}, {1, 0xb7fabc9d},
-    {2, 0x19b01592}, {1, 0x5a90dd31}, {2, 0x5bd7e028}, {2, 0x94d00323},
-    {1, 0xa9b9c01a}, {1, 0x3a40de61}, {1, 0x56e7eec7}, {5, 0x859f7ef6},
-    {1, 0xfd8e5630}, {1, 0x2b0c9f7f}, {1, 0xba700e26}, {1, 0x7170a408},
-    {1, 0x70de86a8}, {1, 0x74d64cd5}, {1, 0x49e738a1}, {2, 0x6910b602},
-    {0, 0x643c565f}, {1, 0x54264b3f}, {2, 0x97ea6396}, {2, 0x55174459},
-    {2, 0x03e8779a}, {1, 0x98f34d8f}, {1, 0xc07b2b07}, {1, 0xdfe29668},
-    {1, 0x3141c7c1}, {1, 0xb3b595f4}, {1, 0x735abf08}, {5, 0x623bfbce},
-    {2, 0xd351e722}, {1, 0xf4ca48c9}, {1, 0x5b19c670}, {1, 0xa164bf0e},
-    {2, 0xbbbeb305}, {2, 0xfe1c810a},
+    {0, 0xa4dab25c}, {0, 0x15ff07bc}, {0, 0x03b332d2}, {0, 0x700ab5b4},
+    {0, 0xce459902}, {0, 0x53013eb8}, {0, 0x77b2254c}, {0, 0xbb73079d},
+    {0, 0x8408ac08}, {0, 0x48b3443b}, {0, 0xef8e8f4f}, {0, 0x681e7307},
+    {0, 0x0897dfd8}, {0, 0x08885dca}, {0, 0x210c91f2}, {0, 0xe001579b},
+    {0, 0xee955af8}, {0, 0xba6f3821}, {0, 0xa7043ced}, {0, 0x3464b182},
+    {0, 0xd63236c0}, {0, 0xeca3f4c2}, {0, 0xca356734}, {0, 0x6bbf5324},
+    {0, 0x01611cf8}, {0, 0x6e372885}, {0, 0x43eade2d}, {0, 0x27997d00},
+    {0, 0xb5723924}, {0, 0xb37808cd}, {0, 0xd1799d7c}, {0, 0x6bc3508a},
+    {0, 0x63123d80}, {0, 0x9a5349a5}, {0, 0x5556a12c}, {0, 0xd67c7434},
+    {0, 0xa12e3d2e}, {0, 0x759e076f}, {0, 0xfb7f24b5}, {0, 0xe83856c7},
+    {0, 0xe3426de2}, {0, 0x65a175d1}, {0, 0xba430362}, {0, 0x024dd4a6},
+    {0, 0xa9c46c30}, {0, 0xd0a9f63a}, {0, 0x371b11ec}, {0, 0x830e2465},
+    {0, 0xc6eec040}, {0, 0x82421cab}, {0, 0x998ecc66}, {0, 0x755f8612},
+    {0, 0xaad1a533}, {0, 0xd64da7a0}, {0, 0x7af604f8}, {0, 0x9d72b099},
+    {0, 0x4cf43d60}, {0, 0xabf22393}, {0, 0x4a3b539b}, {0, 0xf25f9f8a},
+    {0, 0x1bcf264d}, {0, 0xad585106}, {0, 0x9f0ce056}, {0, 0x15e7d382},
+    {0, 0xd1cdc530}, {0, 0xf857348c}, {0, 0x0fba9080}, {0, 0xe0895957},
+    {0, 0x78e60400}, {0, 0x3e57fe7a}, {0, 0x7387cdc4}, {0, 0x635f650f},
+    {0, 0x6d5ffe1c}, {0, 0x8871ed80}, {0, 0xe96e97f8}, {0, 0xb803289c},
+    {0, 0x19b2e6e5}, {0, 0x5ab929dd}, {0, 0x5be1972d}, {0, 0x94d471eb},
+    {0, 0xa9d1c575}, {0, 0x3a44002e}, {0, 0x56f1700c}, {0, 0x85a55e0f},
+    {0, 0xfda4b2ee}, {0, 0x2b13db5a}, {0, 0xba79efea}, {0, 0x718debdc},
+    {0, 0x70edb258}, {0, 0x74d95e3a}, {0, 0x4a04b880}, {0, 0x691cbdff},
+    {0, 0x6441db5b}, {0, 0x543545ac}, {0, 0x98023bb6}, {0, 0x551ac38d},
+    {0, 0x03ed38bb}, {0, 0x994732de}, {0, 0xc07def32}, {0, 0xe002da91},
+    {0, 0x314ff28e}, {0, 0xb3c9fdcf}, {0, 0x7374d049}, {0, 0x624a1479},
+    {0, 0xd35d2d68}, {0, 0xf4ce0bb1}, {0, 0x5b210312}, {0, 0xa176e7bf},
+    {0, 0xbbccb60b}, {0, 0xfe2aa49d},
 };
 
 static CBlockIndex CreateBlockIndex(int nHeight) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
@@ -367,8 +367,8 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 
     // subsidy changing
     int nHeight = ::ChainActive().Height();
-    // Create an actual 209999-long block chain (without valid blocks).
-    while (::ChainActive().Tip()->nHeight < 209999) {
+    // Create an actual 150-long block chain (without valid blocks).
+    while (::ChainActive().Tip()->nHeight < 149) {
         CBlockIndex* prev = ::ChainActive().Tip();
         CBlockIndex* next = new CBlockIndex();
         next->phashBlock = new uint256(InsecureRand256());
@@ -379,8 +379,8 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         ::ChainActive().SetTip(next);
     }
     BOOST_CHECK(pblocktemplate = AssemblerForTest(chainparams).CreateNewBlock(scriptPubKey));
-    // Extend to a 210000-long block chain.
-    while (::ChainActive().Tip()->nHeight < 210000) {
+    // Extend to a 180-long block chain.
+    while (::ChainActive().Tip()->nHeight < 180) {
         CBlockIndex* prev = ::ChainActive().Tip();
         CBlockIndex* next = new CBlockIndex();
         next->phashBlock = new uint256(InsecureRand256());

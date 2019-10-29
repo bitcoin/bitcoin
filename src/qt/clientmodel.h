@@ -5,6 +5,9 @@
 #ifndef BITGREEN_QT_CLIENTMODEL_H
 #define BITGREEN_QT_CLIENTMODEL_H
 
+#include <special/deterministicmns.h>
+#include <sync.h>
+
 #include <QObject>
 #include <QDateTime>
 
@@ -73,6 +76,10 @@ public:
 
     bool getProxyInfo(std::string& ip_port) const;
 
+    void setMasternodeList(const CDeterministicMNList& mnList);
+    CDeterministicMNList getMasternodeList() const;
+    void refreshMasternodeList();
+
     // caches for the best header
     mutable std::atomic<int> cachedBestHeaderHeight;
     mutable std::atomic<int64_t> cachedBestHeaderTime;
@@ -86,11 +93,18 @@ private:
     std::unique_ptr<interfaces::Handler> m_handler_banned_list_changed;
     std::unique_ptr<interfaces::Handler> m_handler_notify_block_tip;
     std::unique_ptr<interfaces::Handler> m_handler_notify_header_tip;
+    std::unique_ptr<interfaces::Handler> m_handler_notify_masternode_list_changed;
     OptionsModel *optionsModel;
     PeerTableModel *peerTableModel;
     BanTableModel *banTableModel;
 
     QTimer *pollTimer;
+
+    // The cache for mn list is not technically needed because CDeterministicMNManager
+    // caches it internally for recent blocks but it's not enough to get consistent
+    // representation of the list in UI during initial sync/reindex, so we cache it here too.
+    mutable CCriticalSection cs_mnlist; // protects mnListCached
+    CDeterministicMNList mnListCached GUARDED_BY(cs_mnlist);
 
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
@@ -102,6 +116,7 @@ Q_SIGNALS:
     void networkActiveChanged(bool networkActive);
     void alertsChanged(const QString &warnings);
     void bytesChanged(quint64 totalBytesIn, quint64 totalBytesOut);
+    void masternodeListChanged() const;
 
     //! Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);

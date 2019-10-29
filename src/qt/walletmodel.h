@@ -41,6 +41,7 @@ class CKeyID;
 class COutPoint;
 class COutput;
 class CPubKey;
+class CWallet;
 class uint256;
 
 namespace interfaces {
@@ -211,6 +212,12 @@ public:
 
     UnlockContext requestUnlock();
 
+    bool getPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
+    bool havePrivKey(const CKeyID &address) const;
+    bool havePrivKey(const CScript& script) const;
+    bool getPrivKey(const CKeyID &address, CKey& vchPrivKeyOut) const;
+    void listProTxCoins(std::vector<COutPoint>& vOutpts);
+
     void loadReceiveRequests(std::vector<std::string>& vReceiveRequests);
     bool saveReceiveRequest(const std::string &sAddress, const int64_t nId, const std::string &sRequest);
 
@@ -238,6 +245,7 @@ private:
     std::unique_ptr<interfaces::Handler> m_handler_show_progress;
     std::unique_ptr<interfaces::Handler> m_handler_watch_only_changed;
     std::unique_ptr<interfaces::Handler> m_handler_can_get_addrs_changed;
+    std::unique_ptr<interfaces::Handler> m_handler_notify_lock_received;
     interfaces::Node& m_node;
 
     bool fHaveWatchOnly;

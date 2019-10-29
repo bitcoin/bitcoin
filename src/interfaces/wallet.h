@@ -10,7 +10,9 @@
 #include <script/standard.h>           // For CTxDestination
 #include <support/allocators/secure.h> // For SecureString
 #include <ui_interface.h>              // For ChangeType
-
+#ifdef ENABLE_WALLET
+#include <wallet/wallet.h>
+#endif
 #include <functional>
 #include <map>
 #include <memory>
@@ -291,6 +293,10 @@ public:
     //! Register handler for keypool changed messages.
     using CanGetAddressesChangedFn = std::function<void()>;
     virtual std::unique_ptr<Handler> handleCanGetAddressesChanged(CanGetAddressesChangedFn fn) = 0;
+
+    //! Register handler for chain lock received.
+    using ChainLockReceivedFn = std::function<void(int height)>;
+    virtual std::unique_ptr<Handler> handleChainLockReceived(ChainLockReceivedFn fn) = 0;
 };
 
 //! Information about one wallet address.

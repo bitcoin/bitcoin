@@ -105,13 +105,13 @@ BOOST_AUTO_TEST_CASE(rpc_rawsign)
     // input is a 1-of-2 multisig (so is output):
     std::string prevout =
       "[{\"txid\":\"b4cc287e58f87cdae59417329f710f3ecd75a4ee1d2872b7248f50977c8493f3\","
-      "\"vout\":1,\"scriptPubKey\":\"a914b10c9df5f7edf436c697f02f1efdba4cf399615187\","
-      "\"redeemScript\":\"512103debedc17b3df2badbcdd86d5feb4562b86fe182e5998abd8bcd4f122c6155b1b21027e940bb73ab8732bfdf7f9216ecefca5b94d6df834e77e108f68e66f126044c052ae\"}]";
+      "\"vout\":1,\"scriptPubKey\":\"a914312520cea5b9d3e56e1de0d379e7513e331b570487\","
+      "\"redeemScript\":\"512103acb2c7783fd6c27b635ff3f182b9bceda07c1c8c6da7c71b70a6583f1b4b08592102189afba2713a6effd9713eca50a55f41e40faba1e4e360a0390a42b8749a94b152ae\"}]";
     r = CallRPC(std::string("createrawtransaction ")+prevout+" "+
-      "{\"3HqAe9LtNBjnsfM4CyYaWTnvCaUYT7v4oZ\":11}");
+      "{\"GPbEQ1hJxpJkWBDKMpc4y2KkugwuUaRUTY\":11}");
     std::string notsigned = r.get_str();
-    std::string privkey1 = "\"KzsXybp9jX64P5ekX1KUxRQ79Jht9uzW7LorgwE65i5rWACL6LQe\"";
-    std::string privkey2 = "\"Kyhdf5LuKTRx4ge69ybABsiUAWjVRK4XGxAKk2FQLp2HjGMy87Z4\"";
+    std::string privkey1 = "\"7umPveWmiQadGQ2fjXjWLdCsafm2cxZgCXdHno28fZQJdxg3C118\"";
+    std::string privkey2 = "\"7tj2WZdB4vwuSuCgrPVvJ6T7eP1sXnGB3ZcrpfxweLswUZdbHWo6\"";
     InitInterfaces interfaces;
     interfaces.chain = interfaces::MakeChain();
     g_rpc_interfaces = &interfaces;

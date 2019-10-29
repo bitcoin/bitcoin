@@ -29,7 +29,7 @@ static bool GetLastStakeModifier(const CBlockIndex* pindex, uint64_t& nStakeModi
             nModifierTime = pindex->GetBlockTime();
             return true;
         }
-    } while ((pindex = pindex->pprev) != NULL);
+    } while ((pindex = pindex->pprev) != nullptr);
     return error("%s: no generation at genesis block", __func__);
 }
 
@@ -242,7 +242,7 @@ static bool GetKernelStakeModifierV03(CBlockIndex* pindexPrev, uint256 hashBlock
     {
         const CBlockIndex* old_pindex = pindex;
         pindex = (!tmpChain.empty() && pindex->nHeight >= tmpChain[0]->nHeight - 1)? tmpChain[n++] : ChainActive().Next(pindex);
-        if (n > tmpChain.size() || pindex == NULL) // check if tmpChain[n+1] exists
+        if (n > tmpChain.size() || pindex == nullptr) // check if tmpChain[n+1] exists
         {   // reached best block; may happen if node is behind on block chain
             if (fPrintProofOfStake || (old_pindex->GetBlockTime() + params.nStakeMinAge - nStakeModifierSelectionInterval > GetAdjustedTime()))
                 return error("GetKernelStakeModifier() : reached best block %s at height %d from block %s",

@@ -15,11 +15,11 @@ AC_CONFIG_HEADERS([src/config/bitgreen-config.h])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
 
-BITGREEN_DAEMON_NAME=bitgreend
-BITGREEN_GUI_NAME=bitgreen-qt
-BITGREEN_CLI_NAME=bitgreen-cli
-BITGREEN_TX_NAME=bitgreen-tx
-BITGREEN_WALLET_TOOL_NAME=bitgreen-wallet
+BITCOIN_DAEMON_NAME=bitgreend
+BITCOIN_GUI_NAME=bitgreen-qt
+BITCOIN_CLI_NAME=bitgreen-cli
+BITCOIN_TX_NAME=bitgreen-tx
+BITCOIN_WALLET_TOOL_NAME=bitgreen-wallet
 
 dnl Unless the user specified ARFLAGS, force it to be cr
 AC_ARG_VAR(ARFLAGS, [Flags for the archiver, defaults to <cr> if not set])
@@ -62,8 +62,8 @@ case $host in
      lt_cv_deplibs_check_method="pass_all"
   ;;
 esac
-dnl Require C++11 compiler (no GNU extensions)
-AX_CXX_COMPILE_STDCXX([11], [noext], [mandatory], [nodefault])
+dnl Require C++14 compiler (no GNU extensions)
+AX_CXX_COMPILE_STDCXX([14], [noext], [mandatory], [nodefault])
 dnl Check if -latomic is required for <std::atomic>
 CHECK_ATOMIC
 
@@ -974,15 +974,15 @@ if test "x$enable_fuzz" = "xyes"; then
   use_upnp=no
   use_zmq=no
 else
-  BITGREEN_QT_INIT
+  BITCOIN_QT_INIT
 
   dnl sets $bitgreen_enable_qt, $bitgreen_enable_qt_test, $bitgreen_enable_qt_dbus
-  BITGREEN_QT_CONFIGURE([$use_pkgconfig])
+  BITCOIN_QT_CONFIGURE([$use_pkgconfig])
 fi
 
 if test x$enable_wallet != xno; then
     dnl Check for libdb_cxx only if wallet enabled
-    BITGREEN_FIND_BDB48
+    BITCOIN_FIND_BDB48
 fi
 
 dnl Check for libminiupnpc (optional)
@@ -992,6 +992,26 @@ if test x$use_upnp != xno; then
     [AC_CHECK_LIB([miniupnpc], [upnpDiscover], [MINIUPNPC_LIBS=-lminiupnpc], [have_miniupnpc=no])],
     [have_miniupnpc=no]
   )
+dnl The minimum supported miniUPnPc API version is set to 10. This keeps compatibility
+dnl with Ubuntu 16.04 LTS and Debian 8 libminiupnpc-dev packages.
+if test x$have_miniupnpc != xno; then
+  AC_MSG_CHECKING([whether miniUPnPc API version is supported])
+  AC_PREPROC_IFELSE([AC_LANG_PROGRAM([[
+      @%:@include <miniupnpc/miniupnpc.h>
+    ]], [[
+      #if MINIUPNPC_API_VERSION >= 10
+      // Everything is okay
+      #else
+      #  error miniUPnPc API version is too old
+      #endif
+    ]])],[
+      AC_MSG_RESULT(yes)
+    ],[
+    AC_MSG_RESULT(no)
+    AC_MSG_WARN([miniUPnPc API version < 10 is unsupported, disabling UPnP support.])
+    have_miniupnpc=no
+  ])
+fi
 fi
 
 if test x$build_bitgreen_wallet$build_bitgreen_cli$build_bitgreen_tx$build_bitgreend$bitgreen_enable_qt$use_tests$use_bench = xnonononononono; then
@@ -1179,10 +1199,10 @@ if test x$use_pkgconfig = xyes; then
       PKG_CHECK_MODULES([SSL], [libssl],, [AC_MSG_ERROR(openssl not found.)])
       PKG_CHECK_MODULES([CRYPTO], [libcrypto],,[AC_MSG_ERROR(libcrypto not found.)])
       if test x$enable_bip70 != xno; then
-        BITGREEN_QT_CHECK([PKG_CHECK_MODULES([PROTOBUF], [protobuf], [have_protobuf=yes], [have_protobuf=no])])
+        BITCOIN_QT_CHECK([PKG_CHECK_MODULES([PROTOBUF], [protobuf], [have_protobuf=yes], [have_protobuf=no])])
       fi
       if test x$use_qr != xno; then
-        BITGREEN_QT_CHECK([PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])])
+        BITCOIN_QT_CHECK([PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])])
       fi
       if test x$build_bitgreen_cli$build_bitgreend$bitgreen_enable_qt$use_tests != xnononono; then
         PKG_CHECK_MODULES([EVENT], [libevent],, [AC_MSG_ERROR(libevent not found.)])
@@ -1241,11 +1261,11 @@ else
   fi
 
   if test x$enable_bip70 != xno; then
-    BITGREEN_QT_CHECK(AC_CHECK_LIB([protobuf] ,[main],[PROTOBUF_LIBS=-lprotobuf], [have_protobuf=no]))
+    BITCOIN_QT_CHECK(AC_CHECK_LIB([protobuf] ,[main],[PROTOBUF_LIBS=-lprotobuf], [have_protobuf=no]))
   fi
   if test x$use_qr != xno; then
-    BITGREEN_QT_CHECK([AC_CHECK_LIB([qrencode], [main],[QR_LIBS=-lqrencode], [have_qrencode=no])])
-    BITGREEN_QT_CHECK([AC_CHECK_HEADER([qrencode.h],, have_qrencode=no)])
+    BITCOIN_QT_CHECK([AC_CHECK_LIB([qrencode], [main],[QR_LIBS=-lqrencode], [have_qrencode=no])])
+    BITCOIN_QT_CHECK([AC_CHECK_HEADER([qrencode.h],, have_qrencode=no)])
   fi
 fi
 
@@ -1323,27 +1343,27 @@ AC_SUBST(UNIVALUE_LIBS)
 
 if test x$have_protobuf != xno &&
    test x$enable_bip70 != xno; then
-  BITGREEN_QT_PATH_PROGS([PROTOC], [protoc],$protoc_bin_path)
+  BITCOIN_QT_PATH_PROGS([PROTOC], [protoc],$protoc_bin_path)
 fi
 
 AC_MSG_CHECKING([whether to build bitgreend])
-AM_CONDITIONAL([BUILD_BITGREEND], [test x$build_bitgreend = xyes])
+AM_CONDITIONAL([BUILD_BITCOIND], [test x$build_bitgreend = xyes])
 AC_MSG_RESULT($build_bitgreend)
 
 AC_MSG_CHECKING([whether to build bitgreen-cli])
-AM_CONDITIONAL([BUILD_BITGREEN_CLI], [test x$build_bitgreen_cli = xyes])
+AM_CONDITIONAL([BUILD_BITCOIN_CLI], [test x$build_bitgreen_cli = xyes])
 AC_MSG_RESULT($build_bitgreen_cli)
 
 AC_MSG_CHECKING([whether to build bitgreen-tx])
-AM_CONDITIONAL([BUILD_BITGREEN_TX], [test x$build_bitgreen_tx = xyes])
+AM_CONDITIONAL([BUILD_BITCOIN_TX], [test x$build_bitgreen_tx = xyes])
 AC_MSG_RESULT($build_bitgreen_tx)
 
 AC_MSG_CHECKING([whether to build bitgreen-wallet])
-AM_CONDITIONAL([BUILD_BITGREEN_WALLET], [test x$build_bitgreen_wallet = xyes])
+AM_CONDITIONAL([BUILD_BITCOIN_WALLET], [test x$build_bitgreen_wallet = xyes])
 AC_MSG_RESULT($build_bitgreen_wallet)
 
 AC_MSG_CHECKING([whether to build libraries])
-AM_CONDITIONAL([BUILD_BITGREEN_LIBS], [test x$build_bitgreen_libs = xyes])
+AM_CONDITIONAL([BUILD_BITCOIN_LIBS], [test x$build_bitgreen_libs = xyes])
 if test x$build_bitgreen_libs = xyes; then
   AC_DEFINE(HAVE_CONSENSUS_LIB, 1, [Define this symbol if the consensus lib has been built])
   AC_CONFIG_FILES([libbitgreenconsensus.pc:libbitgreenconsensus.pc.in])
@@ -1385,9 +1405,10 @@ dnl enable upnp support
 AC_MSG_CHECKING([whether to build with support for UPnP])
 if test x$have_miniupnpc = xno; then
   if test x$use_upnp = xyes; then
-     AC_MSG_ERROR("UPnP requested but cannot be built. use --without-miniupnpc")
+     AC_MSG_ERROR("UPnP requested but cannot be built. Use --without-miniupnpc.")
   fi
   AC_MSG_RESULT(no)
+  use_upnp=no
 else
   if test x$use_upnp != xno; then
     AC_MSG_RESULT(yes)
@@ -1526,11 +1547,11 @@ AC_SUBST(COPYRIGHT_YEAR, _COPYRIGHT_YEAR)
 AC_SUBST(COPYRIGHT_HOLDERS, "_COPYRIGHT_HOLDERS")
 AC_SUBST(COPYRIGHT_HOLDERS_SUBSTITUTION, "_COPYRIGHT_HOLDERS_SUBSTITUTION")
 AC_SUBST(COPYRIGHT_HOLDERS_FINAL, "_COPYRIGHT_HOLDERS_FINAL")
-AC_SUBST(BITGREEN_DAEMON_NAME)
-AC_SUBST(BITGREEN_GUI_NAME)
-AC_SUBST(BITGREEN_CLI_NAME)
-AC_SUBST(BITGREEN_TX_NAME)
-AC_SUBST(BITGREEN_WALLET_TOOL_NAME)
+AC_SUBST(BITCOIN_DAEMON_NAME)
+AC_SUBST(BITCOIN_GUI_NAME)
+AC_SUBST(BITCOIN_CLI_NAME)
+AC_SUBST(BITCOIN_TX_NAME)
+AC_SUBST(BITCOIN_WALLET_TOOL_NAME)
 
 AC_SUBST(RELDFLAGS)
 AC_SUBST(DEBUG_CPPFLAGS)
