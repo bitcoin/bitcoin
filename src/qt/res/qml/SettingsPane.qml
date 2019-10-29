@@ -40,6 +40,7 @@ Pane {
 
                 Switch {
                     text: qsTr("Dark Mode")
+                    enabled: false
                     font: theme.thinFont
                     onToggled: {
                         if (checked) {
