@@ -217,7 +217,7 @@ static UniValue createmultisig(const JSONRPCRequest& request)
                         {
                             {"key", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "The hex-encoded public key"},
                         }},
-                    {"address_type", RPCArg::Type::STR, /* default */ "legacy", "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
+                    {"address_type", RPCArg::Type::STR, /* default */ "bech32", "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
                 },
                 RPCResult{
             "{\n"
@@ -247,7 +247,7 @@ static UniValue createmultisig(const JSONRPCRequest& request)
     }
 
     // Get the output type
-    OutputType output_type = OutputType::LEGACY;
+    OutputType output_type = OutputType::BECH32;
     if (!request.params[2].isNull()) {
         if (!ParseOutputType(request.params[2].get_str(), output_type)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", request.params[2].get_str()));
