@@ -365,24 +365,25 @@ static UniValue omni_senddexsell(const JSONRPCRequest& request)
     }
 
     // perform checks
+    if (!IsFeatureActivated(FEATURE_FREEDEX, GetHeight())) {
+        RequirePrimaryToken(propertyIdForSale);
+    }
+
     switch (action) {
         case CMPTransaction::NEW:
         {
-            RequirePrimaryToken(propertyIdForSale);
             RequireBalance(fromAddress, propertyIdForSale, amountForSale);
             RequireNoOtherDExOffer(fromAddress);
             break;
         }
         case CMPTransaction::UPDATE:
         {
-            RequirePrimaryToken(propertyIdForSale);
             RequireBalance(fromAddress, propertyIdForSale, amountForSale);
             RequireMatchingDExOffer(fromAddress, propertyIdForSale);
             break;
         }
         case CMPTransaction::CANCEL:
         {
-            RequirePrimaryToken(propertyIdForSale);
             RequireMatchingDExOffer(fromAddress, propertyIdForSale);
             break;
         }
