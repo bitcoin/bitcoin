@@ -512,7 +512,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
         // Need to update only after we know CreateNewBlock succeeded
         pindexPrev = pindexPrevNew;
     }
-    assert(pindexPrev);
+    CHECK_NONFATAL(pindexPrev);
     CBlock* pblock = &pblocktemplate->block; // pointer for convenience
     const Consensus::Params& consensusParams = Params().GetConsensus();
 
@@ -554,7 +554,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
         entry.pushKV("fee", pblocktemplate->vTxFees[index_in_template]);
         int64_t nTxSigOps = pblocktemplate->vTxSigOpsCost[index_in_template];
         if (fPreSegWit) {
-            assert(nTxSigOps % WITNESS_SCALE_FACTOR == 0);
+            CHECK_NONFATAL(nTxSigOps % WITNESS_SCALE_FACTOR == 0);
             nTxSigOps /= WITNESS_SCALE_FACTOR;
         }
         entry.pushKV("sigops", nTxSigOps);
@@ -643,9 +643,9 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     int64_t nSigOpLimit = MAX_BLOCK_SIGOPS_COST;
     int64_t nSizeLimit = MAX_BLOCK_SERIALIZED_SIZE;
     if (fPreSegWit) {
-        assert(nSigOpLimit % WITNESS_SCALE_FACTOR == 0);
+        CHECK_NONFATAL(nSigOpLimit % WITNESS_SCALE_FACTOR == 0);
         nSigOpLimit /= WITNESS_SCALE_FACTOR;
-        assert(nSizeLimit % WITNESS_SCALE_FACTOR == 0);
+        CHECK_NONFATAL(nSizeLimit % WITNESS_SCALE_FACTOR == 0);
         nSizeLimit /= WITNESS_SCALE_FACTOR;
     }
     result.pushKV("sigoplimit", nSigOpLimit);
