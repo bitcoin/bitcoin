@@ -258,6 +258,8 @@ public:
         result.pushKV("version", batch[ID_NETWORKINFO]["result"]["version"]);
         result.pushKV("protocolversion", batch[ID_NETWORKINFO]["result"]["protocolversion"]);
         result.pushKV("blocks", batch[ID_BLOCKCHAININFO]["result"]["blocks"]);
+        result.pushKV("headers", batch[ID_BLOCKCHAININFO]["result"]["headers"]);
+        result.pushKV("verificationprogress", batch[ID_BLOCKCHAININFO]["result"]["verificationprogress"]);
         result.pushKV("timeoffset", batch[ID_NETWORKINFO]["result"]["timeoffset"]);
         result.pushKV("connections", batch[ID_NETWORKINFO]["result"]["connections"]);
         result.pushKV("proxy", batch[ID_NETWORKINFO]["result"]["networks"][0]["proxy"]);
