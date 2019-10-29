@@ -179,7 +179,7 @@ Pane {
                         }
 
                         MenuItem {
-                            text: bitcoinTr("BitcoinGUI", "&About %1")
+                            text: qsTr("About")
                             font: theme.thinFont
                             onTriggered: {
                                 stackView.push(aboutPane)
