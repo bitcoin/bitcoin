@@ -22,13 +22,15 @@ Pane {
                     spacing: 10
 
                     Label {
-                        text: bitcoinTr("OptionsDialog", "&Unit to show amounts in:")
+                        text: qsTr("Show amounts in:")
                         font: theme.thinFont
                     }
 
                     ComboBox {
                         Material.foreground: primaryColor
                         model: availableUnits
+
+                        currentIndex: displayUnit
 
                         onActivated: {
                             changeUnit(index)
