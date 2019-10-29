@@ -105,15 +105,32 @@ Pane {
             x: (parent.width - width) / 2
             y: parent.height / 15
             width: Math.min(parent.width, parent.height) / 8 * 7
-            contentHeight: transactionInfoText.height
+            height: parent.height / 3 * 2
+            contentItem: transactionInfoFlickable
 
-            Text {
-                id: transactionInfoText
-                width: transactionInfoDialog.availableWidth
-                text: transactionInfoDialog.transactionInfoString.slice(0, -18) // Get rid of the last newline
-                wrapMode: Text.Wrap
-                font: theme.thinFont
-                color: primaryColor
+            Flickable {
+                id: transactionInfoFlickable
+
+                contentWidth: transactionInfoText.width
+                contentHeight: transactionInfoText.height
+
+                clip: true
+
+                ScrollBar.vertical: ScrollBar {
+                    parent: transactionInfoFlickable.parent
+                    anchors.top: transactionInfoFlickable.top
+                    anchors.left: transactionInfoFlickable.right
+                    anchors.bottom: transactionInfoFlickable.bottom
+                }
+
+                Text {
+                    id: transactionInfoText
+                    width: transactionInfoDialog.availableWidth
+                    text: transactionInfoDialog.transactionInfoString.slice(0, -18) // Get rid of the last newline
+                    wrapMode: Text.Wrap
+                    font: theme.thinFont
+                    color: primaryColor
+                }
             }
         }
 
