@@ -580,8 +580,10 @@ int GuiMain(int argc, char* argv[])
         app.SetPrune(prune, true);
     }
 
+#ifndef MOBILE_GUI
     if (gArgs.GetBoolArg("-splash", DEFAULT_SPLASHSCREEN) && !gArgs.GetBoolArg("-min", false))
         app.createSplashScreen(networkStyle.data());
+#endif
 
     int rv = EXIT_SUCCESS;
     try
