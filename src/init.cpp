@@ -1294,7 +1294,7 @@ bool AppInitMain(InitInterfaces& interfaces)
      * that the server is there and will be ready later).  Warmup mode will
      * be disabled when initialisation is finished.
      */
-    if (gArgs.GetBoolArg("-server", false))
+    if (gArgs.GetBoolArg("-server", true))
     {
         uiInterface.InitMessage_connect(SetRPCWarmupStatus);
         if (!AppInitServers())

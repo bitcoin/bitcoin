@@ -96,8 +96,6 @@ static bool AppInit(int argc, char* argv[])
             }
         }
 
-        // -server defaults to true for bitcoind but not for the GUI so do this here
-        gArgs.SoftSetBoolArg("-server", true);
         // Set this early so that parameter interactions go to console
         InitLogging();
         InitParameterInteraction();
