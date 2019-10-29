@@ -1,5 +1,5 @@
 Dash Core staging tree 0.14.1
-===============================
+=============================
 
 `master:` [![Build Status](https://travis-ci.org/dashpay/dash.svg?branch=master)](https://travis-ci.org/dashpay/dash) `develop:` [![Build Status](https://travis-ci.org/dashpay/dash.svg?branch=develop)](https://travis-ci.org/dashpay/dash/branches)
 
@@ -7,7 +7,7 @@ https://www.dash.org
 
 
 What is Dash?
-----------------
+-------------
 
 Dash is an experimental digital currency that enables anonymous, instant
 payments to anyone, anywhere in the world. Dash uses peer-to-peer technology
