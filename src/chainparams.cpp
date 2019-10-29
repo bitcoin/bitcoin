@@ -230,7 +230,7 @@ public:
         fRequireStandard = true;
         m_is_test_chain = false;
         fMiningRequiresPeers = true;
-        fAllowMultiplePorts = false;
+        fAllowMultiplePorts = true;
         nFulfilledRequestExpireTime = 60*60; // fulfilled requests expire in 1 hour
 
         vSporkAddresses = {"GTKdD1S9HrSbT8Puvsh7nTdXEokictDXE2"};
