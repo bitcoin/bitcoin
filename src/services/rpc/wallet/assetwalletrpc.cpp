@@ -335,10 +335,10 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     CWallet* const pwallet = wallet.get();
     const UniValue &params = request.params;
     RPCHelpMan{"syscoinburntoassetallocation",
-        "\nBurns Syscoin to an Asset Allocation\n",
+        "\nBurns Syscoin to the SYSX asset\n",
         {
             {"funding_address", RPCArg::Type::STR, RPCArg::Optional::NO, "Funding address to burn SYS from"},
-            {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
+            {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid of SYSX"},
             {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of SYS to burn."},
         },
         RPCResult{
