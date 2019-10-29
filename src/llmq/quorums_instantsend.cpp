@@ -1052,7 +1052,7 @@ void CInstantSendManager::AddNonLockedTx(const CTransactionRef& tx, const CBlock
 
     if (res.second) {
         for (auto& in : tx->vin) {
-            nonLockedTxsByInputs.emplace(in.prevout.hash, std::make_pair(in.prevout.n, tx->GetHash()));
+            nonLockedTxsByOutpoints.emplace(in.prevout, tx->GetHash());
         }
     }
 
@@ -1088,16 +1088,7 @@ void CInstantSendManager::RemoveNonLockedTx(const uint256& txid, bool retryChild
                     nonLockedTxs.erase(jt);
                 }
             }
-
-            auto its = nonLockedTxsByInputs.equal_range(in.prevout.hash);
-            for (auto kt = its.first; kt != its.second; ) {
-                if (kt->second.first != in.prevout.n) {
-                    ++kt;
-                    continue;
-                } else {
-                    kt = nonLockedTxsByInputs.erase(kt);
-                }
-            }
+            nonLockedTxsByOutpoints.erase(in.prevout);
         }
     }
 
@@ -1237,12 +1228,9 @@ void CInstantSendManager::ResolveBlockConflicts(const uint256& islockHash, const
     {
         LOCK(cs);
         for (auto& in : islock.inputs) {
-            auto its = nonLockedTxsByInputs.equal_range(in.hash);
-            for (auto it = its.first; it != its.second; ++it) {
-                if (it->second.first != in.n) {
-                    continue;
-                }
-                auto& conflictTxid = it->second.second;
+            auto it = nonLockedTxsByOutpoints.find(in);
+            if (it != nonLockedTxsByOutpoints.end()) {
+                auto& conflictTxid = it->second;
                 if (conflictTxid == islock.txid) {
                     continue;
                 }

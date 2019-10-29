@@ -107,7 +107,7 @@ private:
         std::unordered_set<uint256, StaticSaltedHasher> children;
     };
     std::unordered_map<uint256, NonLockedTxInfo, StaticSaltedHasher> nonLockedTxs;
-    std::unordered_multimap<uint256, std::pair<uint32_t, uint256>> nonLockedTxsByInputs;
+    std::unordered_map<COutPoint, uint256, SaltedOutpointHasher> nonLockedTxsByOutpoints;
 
     std::unordered_set<uint256, StaticSaltedHasher> pendingRetryTxs;
 
