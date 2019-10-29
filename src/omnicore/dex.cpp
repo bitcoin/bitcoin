@@ -43,6 +43,20 @@ bool DEx_offerExists(const std::string& addressSeller, uint32_t propertyId)
 }
 
 /**
+ * Checks, if the seller has any open offer.
+ */
+bool DEx_hasOffer(const std::string& addressSeller)
+{
+    for (auto const& offer : my_offers) {
+        if (offer.first.find(addressSeller) == 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/**
  * Retrieves a sell offer.
  *
  * @return The sell offer, or NULL, if no match was found

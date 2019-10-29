@@ -231,6 +231,7 @@ extern AcceptMap my_accepts;
 int64_t calculateDesiredBTC(const int64_t amountOffered, const int64_t amountDesired, const int64_t amountAvailable);
 
 bool DEx_offerExists(const std::string& addressSeller, uint32_t propertyId);
+bool DEx_hasOffer(const std::string& addressSeller);
 CMPOffer* DEx_getOffer(const std::string& addressSeller, uint32_t propertyId);
 bool DEx_acceptExists(const std::string& addressSeller, uint32_t propertyId, const std::string& addressBuyer);
 CMPAccept* DEx_getAccept(const std::string& addressSeller, uint32_t propertyId, const std::string& addressBuyer);
