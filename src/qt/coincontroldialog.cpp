@@ -1,4 +1,5 @@
 // Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2018-2019 The BitGreen Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -49,6 +50,8 @@ CoinControlDialog::CoinControlDialog(const PlatformStyle *_platformStyle, QWidge
     platformStyle(_platformStyle)
 {
     ui->setupUi(this);
+
+    this->setStyleSheet(GUIUtil::loadStyleSheet());
 
     // context menu actions
     QAction *copyAddressAction = new QAction(tr("Copy address"), this);

@@ -1,4 +1,5 @@
 // Copyright (c) 2011-2019 The Bitcoin Core developers
+// Copyright (c) 2018-2019 The BitGreen Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -922,6 +923,19 @@ qreal calculateIdealFontSize(int width, const QString& text, QFont font, qreal m
         font_size -= 0.5;
     }
     return font_size;
+}
+
+QString loadStyleSheet()
+{
+    QFile file;
+    file.setFileName(":/css/style.css");
+
+    QString stylesheet;
+    if(file.open(QFile::ReadOnly))
+    {
+        stylesheet = QLatin1String(file.readAll());
+    }
+    return stylesheet;
 }
 
 void ClickableLabel::mouseReleaseEvent(QMouseEvent *event)
