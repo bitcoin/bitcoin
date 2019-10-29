@@ -96,7 +96,7 @@ void CChainParams::SetSYSXAssetForUnitTests (uint32_t asset)
 class CMainParams : public CChainParams {
 public:
     CMainParams() {
-        strNetworkID = "main";
+        strNetworkID = CBaseChainParams::MAIN;
         consensus.nSubsidyHalvingInterval = 525600; 
         // 35% increase after 1 year, 100% increase after 2.5 years
         consensus.nSeniorityHeight1 = 525600; 
@@ -210,7 +210,7 @@ public:
 class CTestNetParams : public CChainParams {
 public:
     CTestNetParams() {
-        strNetworkID = "test";
+        strNetworkID = CBaseChainParams::TESTNET;
         consensus.nSubsidyHalvingInterval = 525600;
         // 35% increase after 1 hr, 100% increase after 2.5 hr
         consensus.nSeniorityHeight1 = 60;
@@ -321,7 +321,7 @@ public:
 class CRegTestParams : public CChainParams {
 public:
     explicit CRegTestParams(const ArgsManager& args) {
-        strNetworkID = "regtest";
+        strNetworkID =  CBaseChainParams::REGTEST;
         //consensus.BIP16Exception = uint256();
         consensus.BIP16Height = 1;
         consensus.BIP34Height = 500; // BIP34 activated on regtest (Used in functional tests)
