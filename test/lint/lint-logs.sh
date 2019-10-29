@@ -15,6 +15,7 @@
 export LC_ALL=C
 UNTERMINATED_LOGS=$(git grep --extended-regexp "LogPrintf?\(" -- "*.cpp" | \
     grep -v '\\n"' | \
+    grep -v '\.\.\.' | \
     grep -v "/\* Continued \*/" | \
     grep -v "LogPrint()" | \
     grep -v "LogPrintf()")

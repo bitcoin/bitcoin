@@ -27,8 +27,10 @@ BOOST_FIXTURE_TEST_SUITE(wallet_tests, WalletTestingSetup)
 
 static void AddKey(CWallet& wallet, const CKey& key)
 {
+    auto spk_man = wallet.GetLegacyScriptPubKeyMan();
     LOCK(wallet.cs_wallet);
-    wallet.AddKeyPubKey(key, key.GetPubKey());
+    AssertLockHeld(spk_man->cs_wallet);
+    spk_man->AddKeyPubKey(key, key.GetPubKey());
 }
 
 BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
@@ -194,9 +196,11 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
     // Import key into wallet and call dumpwallet to create backup file.
     {
         std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
+        auto spk_man = wallet->GetLegacyScriptPubKeyMan();
         LOCK(wallet->cs_wallet);
-        wallet->mapKeyMetadata[coinbaseKey.GetPubKey().GetID()].nCreateTime = KEY_TIME;
-        wallet->AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
+        AssertLockHeld(spk_man->cs_wallet);
+        spk_man->mapKeyMetadata[coinbaseKey.GetPubKey().GetID()].nCreateTime = KEY_TIME;
+        spk_man->AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
 
         JSONRPCRequest request;
         request.params.setArray();
@@ -242,11 +246,13 @@ BOOST_FIXTURE_TEST_CASE(coin_mark_dirty_immature_credit, TestChain100Setup)
     auto chain = interfaces::MakeChain();
 
     CWallet wallet(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
+    auto spk_man = wallet.GetLegacyScriptPubKeyMan();
     CWalletTx wtx(&wallet, m_coinbase_txns.back());
 
     auto locked_chain = chain->lock();
     LockAssertion lock(::cs_main);
     LOCK(wallet.cs_wallet);
+    AssertLockHeld(spk_man->cs_wallet);
 
     wtx.SetConf(CWalletTx::Status::CONFIRMED, ::ChainActive().Tip()->GetBlockHash(), 0);
 
@@ -254,10 +260,10 @@ BOOST_FIXTURE_TEST_CASE(coin_mark_dirty_immature_credit, TestChain100Setup)
     // cache the current immature credit amount, which is 0.
     BOOST_CHECK_EQUAL(wtx.GetImmatureCredit(*locked_chain), 0);
 
-    // Invalidate the cached value, add the key, and make sure a new immature
+    // Invalidate the cached vanue, add the key, and make sure a new immature
     // credit amount is calculated.
     wtx.MarkDirty();
-    wallet.AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
+    BOOST_CHECK(spk_man->AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey()));
     BOOST_CHECK_EQUAL(wtx.GetImmatureCredit(*locked_chain), 50*COIN);
 }
 
@@ -337,37 +343,38 @@ BOOST_AUTO_TEST_CASE(LoadReceiveRequests)
     BOOST_CHECK_EQUAL(values[1], "val_rr1");
 }
 
-// Test some watch-only wallet methods by the procedure of loading (LoadWatchOnly),
+// Test some watch-only LegacyScriptPubKeyMan methods by the procedure of loading (LoadWatchOnly),
 // checking (HaveWatchOnly), getting (GetWatchPubKey) and removing (RemoveWatchOnly) a
 // given PubKey, resp. its corresponding P2PK Script. Results of the the impact on
 // the address -> PubKey map is dependent on whether the PubKey is a point on the curve
-static void TestWatchOnlyPubKey(CWallet& wallet, const CPubKey& add_pubkey)
+static void TestWatchOnlyPubKey(LegacyScriptPubKeyMan* spk_man, const CPubKey& add_pubkey)
 {
     CScript p2pk = GetScriptForRawPubKey(add_pubkey);
     CKeyID add_address = add_pubkey.GetID();
     CPubKey found_pubkey;
-    LOCK(wallet.cs_wallet);
+    LOCK(spk_man->cs_wallet);
 
     // all Scripts (i.e. also all PubKeys) are added to the general watch-only set
-    BOOST_CHECK(!wallet.HaveWatchOnly(p2pk));
-    wallet.LoadWatchOnly(p2pk);
-    BOOST_CHECK(wallet.HaveWatchOnly(p2pk));
+    BOOST_CHECK(!spk_man->HaveWatchOnly(p2pk));
+    spk_man->LoadWatchOnly(p2pk);
+    BOOST_CHECK(spk_man->HaveWatchOnly(p2pk));
 
     // only PubKeys on the curve shall be added to the watch-only address -> PubKey map
     bool is_pubkey_fully_valid = add_pubkey.IsFullyValid();
     if (is_pubkey_fully_valid) {
-        BOOST_CHECK(wallet.GetWatchPubKey(add_address, found_pubkey));
+        BOOST_CHECK(spk_man->GetWatchPubKey(add_address, found_pubkey));
         BOOST_CHECK(found_pubkey == add_pubkey);
     } else {
-        BOOST_CHECK(!wallet.GetWatchPubKey(add_address, found_pubkey));
+        BOOST_CHECK(!spk_man->GetWatchPubKey(add_address, found_pubkey));
         BOOST_CHECK(found_pubkey == CPubKey()); // passed key is unchanged
     }
 
-    wallet.RemoveWatchOnly(p2pk);
-    BOOST_CHECK(!wallet.HaveWatchOnly(p2pk));
+    AssertLockHeld(spk_man->cs_wallet);
+    spk_man->RemoveWatchOnly(p2pk);
+    BOOST_CHECK(!spk_man->HaveWatchOnly(p2pk));
 
     if (is_pubkey_fully_valid) {
-        BOOST_CHECK(!wallet.GetWatchPubKey(add_address, found_pubkey));
+        BOOST_CHECK(!spk_man->GetWatchPubKey(add_address, found_pubkey));
         BOOST_CHECK(found_pubkey == add_pubkey); // passed key is unchanged
     }
 }
@@ -382,37 +389,38 @@ static void PollutePubKey(CPubKey& pubkey)
     assert(pubkey.IsValid());
 }
 
-// Test watch-only wallet logic for PubKeys
+// Test watch-only logic for PubKeys
 BOOST_AUTO_TEST_CASE(WatchOnlyPubKeys)
 {
     CKey key;
     CPubKey pubkey;
+    LegacyScriptPubKeyMan* spk_man = m_wallet.GetLegacyScriptPubKeyMan();
 
-    BOOST_CHECK(!m_wallet.HaveWatchOnly());
+    BOOST_CHECK(!spk_man->HaveWatchOnly());
 
     // uncompressed valid PubKey
     key.MakeNewKey(false);
     pubkey = key.GetPubKey();
     assert(!pubkey.IsCompressed());
-    TestWatchOnlyPubKey(m_wallet, pubkey);
+    TestWatchOnlyPubKey(spk_man, pubkey);
 
     // uncompressed cryptographically invalid PubKey
     PollutePubKey(pubkey);
-    TestWatchOnlyPubKey(m_wallet, pubkey);
+    TestWatchOnlyPubKey(spk_man, pubkey);
 
     // compressed valid PubKey
     key.MakeNewKey(true);
     pubkey = key.GetPubKey();
     assert(pubkey.IsCompressed());
-    TestWatchOnlyPubKey(m_wallet, pubkey);
+    TestWatchOnlyPubKey(spk_man, pubkey);
 
     // compressed cryptographically invalid PubKey
     PollutePubKey(pubkey);
-    TestWatchOnlyPubKey(m_wallet, pubkey);
+    TestWatchOnlyPubKey(spk_man, pubkey);
 
     // invalid empty PubKey
     pubkey = CPubKey();
-    TestWatchOnlyPubKey(m_wallet, pubkey);
+    TestWatchOnlyPubKey(spk_man, pubkey);
 }
 
 class ListCoinsTestingSetup : public TestChain100Setup
