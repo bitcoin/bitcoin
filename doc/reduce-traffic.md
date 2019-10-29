@@ -48,3 +48,5 @@ Be reminded of the effects of this setting.
   wallet is loaded or if you use the node to broadcast transactions.
 - It makes block propagation slower because compact block relay can only be
   used when transaction relay is enabled.
+- Transactions from the wallet, RPC and relay whitelisted inbound peers 
+  might be affected depending on the parameter interaction.
