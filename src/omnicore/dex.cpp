@@ -18,6 +18,7 @@
 #include <uint256.h>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <openssl/sha.h>
 
@@ -50,6 +51,43 @@ bool DEx_hasOffer(const std::string& addressSeller)
     for (auto const& offer : my_offers) {
         if (offer.first.find(addressSeller) == 0) {
             return true;
+        }
+    }
+
+    return false;
+}
+
+/**
+ * Retrieves the identifier of the token for sale.
+ *
+ * NOTE: special care, if there are multiple open offers!
+ * NOTE: the assumption is there can only be one active offer per seller!
+ *
+ * @param addressSeller The address of the seller with an open offer
+ * @param retTokenId    The token identifier for sale
+ * @return True, if there is an open offer
+ */
+bool DEx_getTokenForSale(const std::string& addressSeller, uint32_t& retTokenId)
+{
+    for (auto const& offer : my_offers) {
+        if (offer.first.find(addressSeller) == 0) {
+
+            // Format is: "address-tokenid"
+            std::vector<std::string> vstr;
+            boost::split(vstr, offer.first, boost::is_any_of("-"), boost::token_compress_on);
+
+            if (vstr.size() != 2) {
+                PrintToLog("ERROR: failed to parse token for sale: %s\n", __func__, offer.first);
+                return false;
+            }
+
+            try {
+                retTokenId = boost::lexical_cast<uint32_t>(vstr[1]);
+                return true;
+            }
+            catch (boost::bad_lexical_cast const& e) {
+                PrintToLog("ERROR: failed to parse token for sale: %s (%s)\n", __func__, offer.first, e.what());
+            }
         }
     }
 
@@ -457,12 +495,30 @@ int DEx_payment(const uint256& txid, unsigned int vout, const std::string& addre
 
     int rc = DEX_ERROR_PAYMENT;
 
-    uint32_t propertyId = OMNI_PROPERTY_MSC; // test for MSC accept first
-    CMPAccept* p_accept = DEx_getAccept(addressSeller, propertyId, addressBuyer);
+    uint32_t propertyId = OMNI_PROPERTY_MSC;
+    CMPAccept* p_accept = NULL;
 
-    if (!p_accept) {
-        propertyId = OMNI_PROPERTY_TMSC; // test for TMSC accept second
+    /**
+     * When the feature is not activated, first check, if there is an open offer
+     * for OMNI, and if not, check if there is an open offer for TOMNI.
+     *
+     * If the feature is activated, simply retrieve the token identifier of the
+     * token for sale.
+     */
+    if (!IsFeatureActivated(FEATURE_FREEDEX, block)) {
+        propertyId = OMNI_PROPERTY_MSC;  // test for OMNI accept first
         p_accept = DEx_getAccept(addressSeller, propertyId, addressBuyer);
+
+        if (!p_accept) {
+            propertyId = OMNI_PROPERTY_TMSC; // test for TOMNI accept second
+            p_accept = DEx_getAccept(addressSeller, propertyId, addressBuyer);
+        }
+    } else {
+        // Retrieve and get the token for sale for that seller
+
+        if (DEx_getTokenForSale(addressSeller, propertyId)) {
+            p_accept = DEx_getAccept(addressSeller, propertyId, addressBuyer);
+        }
     }
 
     if (!p_accept) {
