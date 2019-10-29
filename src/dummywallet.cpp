@@ -92,6 +92,12 @@ std::unique_ptr<interfaces::Handler> HandleLoadWallet(LoadWalletFn load_wallet)
     throw std::logic_error("Wallet function called in non-wallet build.");
 }
 
+typedef std::vector<std::pair<std::string, std::string>> ExternalSignerList; // TODO: figure out where to define this
+ExternalSignerList ListExternalSigners()
+{
+    throw std::logic_error("Wallet function called in non-wallet build.");
+}
+
 namespace interfaces {
 
 std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet)

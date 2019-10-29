@@ -4,6 +4,7 @@
 
 #include <wallet/walletutil.h>
 
+#include <chainparams.h>
 #include <logging.h>
 #include <util/system.h>
 
@@ -90,6 +91,24 @@ std::vector<fs::path> ListWalletDir()
     }
 
     return paths;
+}
+
+ExternalSignerList ListExternalSigners()
+{
+    ExternalSignerList result = {};
+#ifdef ENABLE_EXTERNAL_SIGNER
+    const std::string command = gArgs.GetArg("-signer", DEFAULT_EXTERNAL_SIGNER);
+    if (command == "") return result;
+    std::string chain = gArgs.GetChainName();
+    const bool mainnet = chain == CBaseChainParams::MAIN;
+    std::vector<ExternalSigner> signers;
+    ExternalSigner::Enumerate(command, signers, mainnet, /* ignore_errors */ false);
+    if (signers.empty()) return {};
+    for (ExternalSigner signer : signers) {
+        result.push_back(make_pair(signer.m_fingerprint, signer.m_name));
+    }
+#endif
+    return result;
 }
 
 WalletLocation::WalletLocation(const std::string& name)

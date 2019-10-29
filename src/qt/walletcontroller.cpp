@@ -278,6 +278,9 @@ void CreateWalletActivity::finish()
 
 void CreateWalletActivity::create()
 {
+    // Check for external signers
+
+
     m_create_wallet_dialog = new CreateWalletDialog(m_parent_widget);
     m_create_wallet_dialog->setWindowModality(Qt::ApplicationModal);
     m_create_wallet_dialog->show();

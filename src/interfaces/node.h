@@ -34,6 +34,8 @@ struct CNodeStateStats;
 struct NodeContext;
 struct bilingual_str;
 
+typedef std::vector<std::pair<std::string, std::string>> ExternalSignerList; // TODO: figure out where to define this
+
 namespace interfaces {
 class Handler;
 class Wallet;
@@ -212,6 +214,9 @@ public:
 
     //! Create a wallet from file
     virtual std::unique_ptr<Wallet> createWallet(const SecureString& passphrase, uint64_t wallet_creation_flags, const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings, WalletCreationStatus& status) = 0;
+
+    //! List external signers
+    virtual ExternalSignerList ExternalSigners() = 0;
 
     //! Register handler for init messages.
     using InitMessageFn = std::function<void(const std::string& message)>;

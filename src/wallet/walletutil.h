@@ -7,8 +7,12 @@
 
 #include <fs.h>
 #include <script/descriptor.h>
+#include <wallet/externalsigner.h>
 
 #include <vector>
+
+//! -signer default
+static const std::string DEFAULT_EXTERNAL_SIGNER = "";
 
 /** (client) version numbers for particular wallet features */
 enum WalletFeature
@@ -69,6 +73,13 @@ fs::path GetWalletDir();
 
 //! Get wallets in wallet directory.
 std::vector<fs::path> ListWalletDir();
+
+typedef std::vector<std::pair<std::string, std::string>> ExternalSignerList; // TODO: figure out where to define this
+/**
+ * Calls enumerate if -signer is configured and returns a list of signer
+ * fingerpints and names. Otherwise returns an empty list.
+ */
+ExternalSignerList ListExternalSigners();
 
 //! The WalletLocation class provides wallet information.
 class WalletLocation final
