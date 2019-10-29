@@ -152,6 +152,7 @@ BITCOIN_CORE_H = \
   net.h \
   net_permissions.h \
   net_processing.h \
+  net_types.h \
   netaddress.h \
   netbase.h \
   netmessagemaker.h \
