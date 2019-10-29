@@ -84,11 +84,11 @@ uint256 GetRandHash() noexcept;
 void GetStrongRandBytes(unsigned char* buf, int num) noexcept;
 
 /**
- * Sleep for 1ms, gather entropy from various sources, and feed them to the PRNG state.
+ * Gather entropy from various expensive sources, and feed them to the PRNG state.
  *
  * Thread-safe.
  */
-void RandAddSeedSleep();
+void RandAddPeriodic();
 
 /**
  * Fast randomness source. This is seeded once with secure random data, but
