@@ -4,6 +4,7 @@
 
 #include <bench/bench.h>
 #include <interfaces/chain.h>
+#include <node/context.h>
 #include <optional.h>
 #include <test/util.h>
 #include <validationinterface.h>
@@ -13,7 +14,8 @@ static void WalletBalance(benchmark::State& state, const bool set_dirty, const b
 {
     const auto& ADDRESS_WATCHONLY = ADDRESS_BCRT1_UNSPENDABLE;
 
-    std::unique_ptr<interfaces::Chain> chain = interfaces::MakeChain();
+    NodeContext node;
+    std::unique_ptr<interfaces::Chain> chain = interfaces::MakeChain(node);
     CWallet wallet{chain.get(), WalletLocation(), WalletDatabase::CreateMock()};
     {
         bool first_run;
