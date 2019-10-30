@@ -124,6 +124,11 @@ AC_ARG_ENABLE([upnp-default],
   [use_upnp_default=$enableval],
   [use_upnp_default=no])
 
+AC_ARG_ENABLE([external-signer],
+    [AS_HELP_STRING([--disable-external-signer],[do not compile external signer support (default is to compile if Boost::Process is found)])],
+    [use_external_signer=$enableval],
+    [use_external_signer=auto])
+
 AC_ARG_ENABLE(tests,
     AS_HELP_STRING([--disable-tests],[do not compile tests (default is to compile)]),
     [use_tests=$enableval],
@@ -1012,6 +1017,7 @@ if test "x$enable_fuzz" = "xyes"; then
   bitcoin_enable_qt_dbus=no
   enable_wallet=no
   use_bench=no
+  use_external_signer=no
   use_upnp=no
   use_zmq=no
 else
@@ -1445,6 +1451,32 @@ else
   fi
 fi
 
+dnl External signer support is optional. It requires Boost.Process which is only present in newer boost versions (>=1.64)
+AC_MSG_CHECKING([whether to build with external signer support])
+if test x$want_boost_process = xno; then
+  if test x$use_external_signer = xyes; then
+    AC_MSG_ERROR("External signer support requested but requires Boost.Pocess")
+  fi
+  AC_MSG_RESULT(no)
+  use_external_signer=no
+elif test x$ax_cv_boost_process = xno; then
+  if test x$use_external_signer = xyes; then
+     AC_MSG_ERROR("External signer support requested but requires Boost.Pocess")
+  fi
+  AC_MSG_RESULT(no)
+  use_external_signer=no
+else
+  if test x$use_external_signer != xno; then
+    AC_MSG_RESULT(yes)
+    use_external_signer=yes
+    AC_DEFINE_UNQUOTED([ENABLE_EXTERNAL_SIGNER],[$use_external_signer],[External signer support not compiled if undefined, otherwise value (0 or 1) determines default state])
+  else
+    AC_MSG_RESULT(no)
+  fi
+fi
+
+AM_CONDITIONAL([ENABLE_EXTERNAL_SIGNER], [test "x$use_external_signer" = "xyes"])
+
 dnl these are only used when qt is enabled
 BUILD_TEST_QT=""
 if test x$bitcoin_enable_qt != xno; then
@@ -1570,6 +1602,7 @@ AC_SUBST(SSE41_CXXFLAGS)
 AC_SUBST(AVX2_CXXFLAGS)
 AC_SUBST(SHANI_CXXFLAGS)
 AC_SUBST(LIBTOOL_APP_LDFLAGS)
+AC_SUBST(ENABLE_EXTERNAL_SIGNER)
 AC_SUBST(USE_UPNP)
 AC_SUBST(USE_QRCODE)
 AC_SUBST(BOOST_LIBS)
@@ -1631,33 +1664,34 @@ esac
 
 echo
 echo "Options used to compile and link:"
-echo "  with wallet   = $enable_wallet"
-echo "  with gui / qt = $bitcoin_enable_qt"
+echo "  with wallet     = $enable_wallet"
+echo "  with gui / qt   = $bitcoin_enable_qt"
 if test x$bitcoin_enable_qt != xno; then
-    echo "    with qr     = $use_qr"
+    echo "    with qr       = $use_qr"
 fi
-echo "  with zmq      = $use_zmq"
-echo "  with test     = $use_tests"
+echo "  external signer = $use_external_signer"
+echo "  with zmq        = $use_zmq"
+echo "  with test       = $use_tests"
 if test x$use_tests != xno; then
-    echo "    with prop   = $enable_property_tests"
-    echo "    with fuzz   = $enable_fuzz"
+    echo "    with prop     = $enable_property_tests"
+    echo "    with fuzz     = $enable_fuzz"
 fi
-echo "  with bench    = $use_bench"
-echo "  with upnp     = $use_upnp"
-echo "  use asm       = $use_asm"
-echo "  sanitizers    = $use_sanitizers"
-echo "  debug enabled = $enable_debug"
-echo "  gprof enabled = $enable_gprof"
-echo "  werror        = $enable_werror"
+echo "  with bench      = $use_bench"
+echo "  with upnp       = $use_upnp"
+echo "  use asm         = $use_asm"
+echo "  sanitizers      = $use_sanitizers"
+echo "  debug enabled   = $enable_debug"
+echo "  gprof enabled   = $enable_gprof"
+echo "  werror          = $enable_werror"
 echo
-echo "  target os     = $TARGET_OS"
-echo "  build os      = $BUILD_OS"
+echo "  target os       = $TARGET_OS"
+echo "  build os        = $BUILD_OS"
 echo
-echo "  CC            = $CC"
-echo "  CFLAGS        = $CFLAGS"
-echo "  CPPFLAGS      = $DEBUG_CPPFLAGS $HARDENED_CPPFLAGS $CPPFLAGS"
-echo "  CXX           = $CXX"
-echo "  CXXFLAGS      = $DEBUG_CXXFLAGS $HARDENED_CXXFLAGS $WARN_CXXFLAGS $NOWARN_CXXFLAGS $ERROR_CXXFLAGS $GPROF_CXXFLAGS $CXXFLAGS"
-echo "  LDFLAGS       = $PTHREAD_CFLAGS $HARDENED_LDFLAGS $GPROF_LDFLAGS $LDFLAGS"
-echo "  ARFLAGS       = $ARFLAGS"
+echo "  CC              = $CC"
+echo "  CFLAGS          = $CFLAGS"
+echo "  CPPFLAGS        = $DEBUG_CPPFLAGS $HARDENED_CPPFLAGS $CPPFLAGS"
+echo "  CXX             = $CXX"
+echo "  CXXFLAGS        = $DEBUG_CXXFLAGS $HARDENED_CXXFLAGS $WARN_CXXFLAGS $NOWARN_CXXFLAGS $ERROR_CXXFLAGS $GPROF_CXXFLAGS $CXXFLAGS"
+echo "  LDFLAGS         = $PTHREAD_CFLAGS $HARDENED_LDFLAGS $GPROF_LDFLAGS $LDFLAGS"
+echo "  ARFLAGS         = $ARFLAGS"
 echo
