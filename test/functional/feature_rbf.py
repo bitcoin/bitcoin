@@ -704,8 +704,8 @@ class ReplaceByFeeTest(BitcoinTestFramework):
     def test_fullrbf(self):
 
         confirmed_utxo = self.make_utxo(self.nodes[0], int(2 * COIN))
-        self.restart_node(0, extra_args=["-mempoolfullrbf=1"])
-        assert self.nodes[0].getmempoolinfo()["fullrbf"]
+        self.restart_node(0, extra_args=["-mempoolreplacement=fee,-optin"])
+        assert_equal(self.nodes[0].getmempoolinfo()["replacement_policy"], 'fee,-optin')
 
         # Create an explicitly opt-out transaction
         optout_tx = self.wallet.send_self_transfer(

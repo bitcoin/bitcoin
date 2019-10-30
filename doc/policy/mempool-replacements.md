@@ -15,7 +15,7 @@ other consensus and policy rules, each of the following conditions are met:
 
    *Rationale*: See [BIP125
    explanation](https://github.com/bitcoin/bips/blob/master/bip-0125.mediawiki#motivation).
-   Use the (`-mempoolfullrbf`) configuration option to allow transaction replacement without enforcement of the
+   Use the (`-mempoolreplacement=fee,-optin`) configuration option to allow transaction replacement without enforcement of the
    opt-in signaling rule.
 
 2. The replacement transaction only include an unconfirmed input if that input was included in

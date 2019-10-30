@@ -16,7 +16,7 @@ struct MemPoolOptions;
  * @param[in]  argsman The ArgsManager in which to check set options.
  * @param[in,out] mempool_opts The MemPoolOptions to modify according to \p argsman.
  */
-void ApplyArgsManOptions(const ArgsManager& argsman, kernel::MemPoolOptions& mempool_opts);
+bool ApplyArgsManOptions(const ArgsManager& argsman, kernel::MemPoolOptions& mempool_opts);
 
 
 #endif // BITCOIN_MEMPOOL_ARGS_H
