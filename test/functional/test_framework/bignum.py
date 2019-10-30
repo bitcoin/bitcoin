@@ -44,10 +44,6 @@ def bn2mpi(v):
             v_bin[0] |= 0x80
     return ext + v_bin
 
-def mpi2vch(s):
-    """Convert MPI format to bitcoin-specific little endian format."""
-    return s[::-1]  # reverse string, converting BE->LE
-
 def bn2vch(v):
     """Convert number to bitcoin-specific little endian format."""
-    return bytes(mpi2vch(bn2mpi(v)))
+    return bytes(reversed(bn2mpi(v)))
