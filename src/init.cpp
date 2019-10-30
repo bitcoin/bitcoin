@@ -1256,7 +1256,7 @@ bool AppInitMain(NodeContext& node)
     InitSignatureCache();
     InitScriptExecutionCache();
 
-    LogPrintf("Using %u threads for script verification\n", nScriptCheckThreads);
+    LogPrintf("Script verification uses %d additional threads\n", std::max(nScriptCheckThreads - 1, 0));
     if (nScriptCheckThreads) {
         for (int i=0; i<nScriptCheckThreads-1; i++)
             threadGroup.create_thread([i]() { return ThreadScriptCheck(i); });
