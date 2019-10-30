@@ -1,0 +1,29 @@
+#include<iostream.h>
+#include<conio.h>
+
+main()
+{float rupiah, poundsterling, yen, dollar; int pilihan;
+cout<<"Konversi Mata Uang"<<endl;
+cout<<"1. Rupiah - Dollar "<<endl;
+cout<<"2. Rupiah - Poundsterling "<<endl;
+cout<<"3. Rupiah - Yen "<<endl;
+cout<<"\nMasukkan pilihan anda = ";cin>>pilihan;
+if (pilihan==1)
+{cout<<"\n1. Rupiah - Dollar "<<endl;
+ cout<<"Masukkan nilai rupiah = ";cin>>rupiah;
+ dollar = rupiah/8000;
+ cout<<"Nilai dollar = "<<dollar<<endl;}
+
+else if(pilihan==2)
+{cout<<"\n2. Rupiah - Poundsterling "<<endl;
+ cout<<"Masukkan nilai rupiah = ";cin>>rupiah;
+ poundsterling = rupiah/10000;
+ cout<<"Nilai poundsterling = "<<poundsterling<<endl;}
+
+else if(pilihan==3)
+ {cout<<"\n3. Rupiah - Yen "<<endl;
+ cout<<"Masukkan nilai rupiah = ";cin>>rupiah;
+ yen = rupiah/2000;
+ cout<<"Nilai yen = "<<yen<<endl;}
+else {cout<<"\nPilihan Tidak Tersedia";}
+}
