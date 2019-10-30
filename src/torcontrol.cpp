@@ -752,7 +752,7 @@ void StartTorControl()
         return;
     }
 
-    torControlThread = std::thread(std::bind(&TraceThread<void (*)()>, "torcontrol", &TorControlThread));
+    torControlThread = std::thread(TracedThread("torcontrol", TorControlThread));
 }
 
 void InterruptTorControl()

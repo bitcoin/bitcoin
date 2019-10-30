@@ -335,31 +335,10 @@ std::string HelpMessageOpt(const std::string& option, const std::string& message
 int GetNumCores();
 
 /**
- * .. and a wrapper that just calls func once
+ * Create a wrapper around a thread function that sets the thread name and logs
+ * start and exit. It also catches and logs exceptions on the way out.
  */
-template <typename Callable> void TraceThread(const char* name,  Callable func)
-{
-    util::ThreadRename(name);
-    try
-    {
-        LogPrintf("%s thread start\n", name);
-        func();
-        LogPrintf("%s thread exit\n", name);
-    }
-    catch (const boost::thread_interrupted&)
-    {
-        LogPrintf("%s thread interrupt\n", name);
-        throw;
-    }
-    catch (const std::exception& e) {
-        PrintExceptionContinue(&e, name);
-        throw;
-    }
-    catch (...) {
-        PrintExceptionContinue(nullptr, name);
-        throw;
-    }
-}
+std::function<void()> TracedThread(const std::string name, std::function<void()> func);
 
 std::string CopyrightHolders(const std::string& strPrefix);
 
