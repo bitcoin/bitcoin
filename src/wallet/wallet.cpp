@@ -2406,19 +2406,18 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
         effective_feerate = coin_selection_params.m_effective_feerate;
     }
 
-    if (coin_selection_params.use_bnb) {
-        std::vector<OutputGroup> positive_groups = GroupOutputs(coins, !coin_selection_params.m_avoid_partial_spends, effective_feerate, coin_selection_params.m_long_term_feerate, eligibility_filter, true /* positive_only */);
+    std::vector<OutputGroup> positive_groups = GroupOutputs(coins, !coin_selection_params.m_avoid_partial_spends, effective_feerate, coin_selection_params.m_long_term_feerate, eligibility_filter, true /* positive_only */);
+    // Note that unlike KnapsackSolver, we do not include the fee for creating a change output as BnB will not create a change output.
+    if (SelectCoinsBnB(positive_groups, nTargetValue, coin_selection_params.m_cost_of_change, setCoinsRet, nValueRet)) {
         bnb_used = true;
-        // Note that unlike KnapsackSolver, we do not include the fee for creating a change output as BnB will not create a change output.
-        return SelectCoinsBnB(positive_groups, nTargetValue, coin_selection_params.m_cost_of_change, setCoinsRet, nValueRet);
-    } else {
-        // The knapsack solver has some legacy behavior where it will spend dust outputs. We retain this behavior, so don't filter for positive only here.
-        std::vector<OutputGroup> all_groups = GroupOutputs(coins, !coin_selection_params.m_avoid_partial_spends, effective_feerate, coin_selection_params.m_long_term_feerate, eligibility_filter, false /* positive_only */);
-        bnb_used = false;
-        // While nTargetValue includes the transaction fees for non-input things, it does not include the fee for creating a change output.
-        // So we need to include that for KnapsackSolver as well, as we are expecting to create a change output.
-        return KnapsackSolver(nTargetValue + coin_selection_params.m_change_fee, all_groups, setCoinsRet, nValueRet);
+        return true;
     }
+    // The knapsack solver has some legacy behavior where it will spend dust outputs. We retain this behavior, so don't filter for positive only here.
+    std::vector<OutputGroup> all_groups = GroupOutputs(coins, !coin_selection_params.m_avoid_partial_spends, effective_feerate, coin_selection_params.m_long_term_feerate, eligibility_filter, false /* positive_only */);
+    bnb_used = false;
+    // While nTargetValue includes the transaction fees for non-input things, it does not include the fee for creating a change output.
+    // So we need to include that for KnapsackSolver as well, as we are expecting to create a change output.
+    return KnapsackSolver(nTargetValue + coin_selection_params.m_change_fee, all_groups, setCoinsRet, nValueRet);
 }
 
 bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CCoinControl& coin_control, CoinSelectionParams& coin_selection_params, bool& bnb_used) const
