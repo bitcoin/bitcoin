@@ -2399,9 +2399,6 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
     setCoinsRet.clear();
     nValueRet = 0;
 
-    // Calculate the fees for things that aren't inputs, excluding the change output
-    const CAmount not_input_fees = coin_selection_params.m_effective_feerate.GetFee(coin_selection_params.tx_noinputs_size);
-
     // Get the feerate for effective value.
     // When subtracting the fee from the outputs, we want the effective feerate to be 0
     CFeeRate effective_feerate{0};
@@ -2412,14 +2409,17 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
     if (coin_selection_params.use_bnb) {
         std::vector<OutputGroup> positive_groups = GroupOutputs(coins, !coin_selection_params.m_avoid_partial_spends, effective_feerate, coin_selection_params.m_long_term_feerate, eligibility_filter, true /* positive_only */);
         bnb_used = true;
-        return SelectCoinsBnB(positive_groups, nTargetValue, coin_selection_params.m_cost_of_change, setCoinsRet, nValueRet, not_input_fees);
+        // Note that unlike KnapsackSolver, we do not include the fee for creating a change output as BnB will not create a change output.
+        return SelectCoinsBnB(positive_groups, nTargetValue, coin_selection_params.m_cost_of_change, setCoinsRet, nValueRet);
     } else {
         // The knapsack solver has some legacy behavior where it will spend dust outputs. We retain this behavior, so don't filter for positive only here.
         // The knapsack solver currently does not use effective values, so we give GroupOutputs feerates of 0 so it sets the effective values to be the same as the real value.
         std::vector<OutputGroup> groups = GroupOutputs(coins, !coin_selection_params.m_avoid_partial_spends, CFeeRate(0), CFeeRate(0), eligibility_filter, false /* positive_only */);
 
         bnb_used = false;
-        return KnapsackSolver(nTargetValue, groups, setCoinsRet, nValueRet);
+        // While nTargetValue includes the transaction fees for non-input things, it does not include the fee for creating a change output.
+        // So we need to include that for KnapsackSolver as well, as we are expecting to create a change output.
+        return KnapsackSolver(nTargetValue + coin_selection_params.m_change_fee, groups, setCoinsRet, nValueRet);
     }
 }
 
@@ -2931,10 +2931,6 @@ bool CWallet::CreateTransactionInternal(
                 txNew.vin.clear();
                 txNew.vout.clear();
 
-                CAmount nValueToSelect = nValue;
-                if (nSubtractFeeFromAmount == 0)
-                    nValueToSelect += nFeeRet;
-
                 // vouts to the payees
                 if (!coin_selection_params.m_subtract_fee_outputs) {
                     coin_selection_params.tx_noinputs_size = 11; // Static vsize overhead + outputs vsize. 4 nVersion, 4 nLocktime, 1 input count, 1 output count, 1 witness overhead (dummy, flag, stack size)
@@ -2956,11 +2952,21 @@ bool CWallet::CreateTransactionInternal(
                     txNew.vout.push_back(txout);
                 }
 
+                // Include the fees for things that aren't inputs, excluding the change output
+                const CAmount not_input_fees = coin_selection_params.m_effective_feerate.GetFee(coin_selection_params.tx_noinputs_size);
+                CAmount nValueToSelect = nValue + not_input_fees;
+
+                // For KnapsackSolver, when we are not subtracting the fee from the recipients, we also want to include the fees for the
+                // inputs that we found in the previous iteration.
+                if (!coin_selection_params.use_bnb && nSubtractFeeFromAmount == 0) {
+                    nValueToSelect += std::max(CAmount(0), nFeeRet - not_input_fees);
+                }
+
                 // Choose coins to use
                 bool bnb_used = false;
                 nValueIn = 0;
                 setCoins.clear();
-                if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, coin_control, coin_selection_params, bnb_used))
+                if (!SelectCoins(vAvailableCoins, /* nTargetValue */ nValueToSelect, setCoins, nValueIn, coin_control, coin_selection_params, bnb_used))
                 {
                     // If BnB was used, it was the first pass. No longer the first pass and continue loop with knapsack.
                     if (bnb_used) {

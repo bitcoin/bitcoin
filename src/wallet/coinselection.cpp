@@ -49,28 +49,25 @@ struct {
  * @param const std::vector<CInputCoin>& utxo_pool The set of UTXOs that we are choosing from.
  *        These UTXOs will be sorted in descending order by effective value and the CInputCoins'
  *        values are their effective values.
- * @param const CAmount& target_value This is the value that we want to select. It is the lower
+ * @param const CAmount& selection_target This is the value that we want to select. It is the lower
  *        bound of the range.
  * @param const CAmount& cost_of_change This is the cost of creating and spending a change output.
- *        This plus target_value is the upper bound of the range.
+ *        This plus selection_target is the upper bound of the range.
  * @param std::set<CInputCoin>& out_set -> This is an output parameter for the set of CInputCoins
  *        that have been selected.
  * @param CAmount& value_ret -> This is an output parameter for the total value of the CInputCoins
  *        that were selected.
- * @param CAmount not_input_fees -> The fees that need to be paid for the outputs and fixed size
- *        overhead (version, locktime, marker and flag)
  */
 
 static const size_t TOTAL_TRIES = 100000;
 
-bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& target_value, const CAmount& cost_of_change, std::set<CInputCoin>& out_set, CAmount& value_ret, CAmount not_input_fees)
+bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change, std::set<CInputCoin>& out_set, CAmount& value_ret)
 {
     out_set.clear();
     CAmount curr_value = 0;
 
     std::vector<bool> curr_selection; // select the utxo at this index
     curr_selection.reserve(utxo_pool.size());
-    CAmount selection_target = not_input_fees + target_value;
 
     // Calculate curr_available_value
     CAmount curr_available_value = 0;
