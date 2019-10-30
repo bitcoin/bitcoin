@@ -67,7 +67,7 @@ def make_utxo(node, amount, confirmed=True, scriptPubKey=DUMMY_P2WPKH_SCRIPT):
 
 class ReplaceByFeeTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.num_nodes = 1
+        self.num_nodes = 2
         self.extra_args = [
             [
                 "-acceptnonstdtxn=1",
@@ -76,6 +76,10 @@ class ReplaceByFeeTest(BitcoinTestFramework):
                 "-limitancestorsize=101",
                 "-limitdescendantcount=200",
                 "-limitdescendantsize=101",
+            ],
+            [
+                "-acceptnonstdtxn=1",
+                "-mempoolreplacement=0",
             ],
         ]
         self.supports_cli = False
@@ -152,12 +156,16 @@ class ReplaceByFeeTest(BitcoinTestFramework):
 
         # This will raise an exception due to insufficient fee
         assert_raises_rpc_error(-26, "insufficient fee", self.nodes[0].sendrawtransaction, tx1b_hex, 0)
+        # This will raise an exception due to transaction replacement being disabled
+        assert_raises_rpc_error(-26, "txn-mempool-conflict", self.nodes[1].sendrawtransaction, tx1b_hex, 0)
 
         # Extra 0.1 BTC fee
         tx1b = CTransaction()
         tx1b.vin = [CTxIn(tx0_outpoint, nSequence=0)]
         tx1b.vout = [CTxOut(int(0.9 * COIN), DUMMY_P2WPKH_SCRIPT)]
         tx1b_hex = tx1b.serialize().hex()
+        # Replacement still disabled even with "enough fee"
+        assert_raises_rpc_error(-26, "txn-mempool-conflict", self.nodes[1].sendrawtransaction, tx1b_hex, 0)
         # Works when enabled
         tx1b_txid = self.nodes[0].sendrawtransaction(tx1b_hex, 0)
 
@@ -167,6 +175,11 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         assert tx1b_txid in mempool
 
         assert_equal(tx1b_hex, self.nodes[0].getrawtransaction(tx1b_txid))
+
+        # Second node is running mempoolreplacement=0, will not replace originally-seen txn
+        mempool = self.nodes[1].getrawmempool()
+        assert tx1a_txid in mempool
+        assert tx1b_txid not in mempool
 
     def test_doublespend_chain(self):
         """Doublespend of a long chain"""
