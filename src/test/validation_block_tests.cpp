@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
     }
 
     bool ignored;
-    CValidationState state;
+    BlockValidationState state;
     std::vector<CBlockHeader> headers;
     std::transform(blocks.begin(), blocks.end(), std::back_inserter(headers), [](std::shared_ptr<const CBlock> b) { return b->GetBlockHeader(); });
 
@@ -296,14 +296,13 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
         // Add the txs to the tx pool
         {
             LOCK(cs_main);
-            CValidationState state;
+            TxValidationState state;
             for (const auto& tx : txs) {
                 BOOST_REQUIRE(AcceptToMemoryPool(
                     ::ChainstateActive(),
                     *m_node.mempool,
                     state,
                     tx,
-                    /* pfMissingInputs */ &ignored,
                     /* bypass_limits */ false,
                     /* nAbsurdFee */ 0));
             }

@@ -928,7 +928,7 @@ static void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImp
     // the chainman unique_ptrs since ABC requires us not to be holding cs_main, so retrieve
     // the relevant pointers before the ABC call.
     for (CChainState* chainstate : WITH_LOCK(::cs_main, return chainman.GetAll())) {
-        CValidationState state;
+        BlockValidationState state;
         if (!chainstate->ActivateBestChain(state, chainparams, nullptr)) {
             LogPrintf("Failed to connect best block (%s)\n", FormatStateMessage(state));
             StartShutdown();

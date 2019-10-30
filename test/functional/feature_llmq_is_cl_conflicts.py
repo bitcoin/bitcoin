@@ -232,7 +232,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
 
         # Assert that the conflicting tx got mined and the locked TX is not valid
         assert self.nodes[0].getrawtransaction(rawtx1_txid, True)['confirmations'] > 0
-        assert_raises_rpc_error(-25, "Missing inputs", self.nodes[0].sendrawtransaction, rawtx2)
+        assert_raises_rpc_error(-25, "bad-txns-inputs-missingorspent", self.nodes[0].sendrawtransaction, rawtx2)
 
         # Create the block and the corresponding clsig but do not relay clsig yet
         cl_block = self.create_block(self.nodes[0])

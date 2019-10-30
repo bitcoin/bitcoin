@@ -17,11 +17,11 @@
 
 struct maybe_error {
     bool did_err{false};
-    ValidationInvalidReason reason{ValidationInvalidReason::CONSENSUS};
+    TxValidationResult reason{TxValidationResult::TX_CONSENSUS};
     std::string_view error_str;
 
     constexpr maybe_error() = default;
-    constexpr maybe_error(ValidationInvalidReason reasonIn, std::string_view err): did_err(true), reason(reasonIn), error_str(err) {};
+    constexpr maybe_error(TxValidationResult reasonIn, std::string_view err): did_err(true), reason(reasonIn), error_str(err) {};
 };
 
 template <typename T>

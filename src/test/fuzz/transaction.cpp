@@ -60,7 +60,7 @@ FUZZ_TARGET_INIT(transaction, initialize_transaction)
         return;
     }
 
-    CValidationState state_with_dupe_check;
+    TxValidationState state_with_dupe_check;
     (void)CheckTransaction(tx, state_with_dupe_check);
 
     std::string reason;

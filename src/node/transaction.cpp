@@ -39,18 +39,16 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
     }
     if (!node.mempool->exists(hashTx)) {
         // Transaction is not already in the mempool. Submit it.
-        CValidationState state;
-        bool fMissingInputs;
-        if (!AcceptToMemoryPool(::ChainstateActive(), *node.mempool, state, std::move(tx), &fMissingInputs,
+        TxValidationState state;
+        if (!AcceptToMemoryPool(::ChainstateActive(), *node.mempool, state, std::move(tx),
                                 bypass_limits, max_tx_fee)) {
+            err_string = FormatStateMessage(state);
             if (state.IsInvalid()) {
-                err_string = FormatStateMessage(state);
-                return TransactionError::MEMPOOL_REJECTED;
-            } else {
-                if (fMissingInputs) {
+                if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS) {
                     return TransactionError::MISSING_INPUTS;
                 }
-                err_string = FormatStateMessage(state);
+                return TransactionError::MEMPOOL_REJECTED;
+            } else {
                 return TransactionError::MEMPOOL_ERROR;
             }
         }

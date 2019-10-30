@@ -176,18 +176,18 @@ bool CFinalCommitment::VerifySizes(const Consensus::LLMQParams& params) const
     return true;
 }
 
-bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
+bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state)
 {
     CFinalCommitmentTxPayload qcTx;
     if (!GetTxPayload(tx, qcTx)) {
         LogPrintfFinalCommitment("h[%d] GetTxPayload failed\n", pindexPrev->nHeight);
-        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, "bad-qc-payload");
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-qc-payload");
     }
 
     const auto& llmq_params_opt = GetLLMQParams(qcTx.commitment.llmqType);
     if (!llmq_params_opt.has_value()) {
         LogPrintfFinalCommitment("h[%d] GetLLMQParams failed for llmqType[%d]\n", pindexPrev->nHeight, ToUnderlying(qcTx.commitment.llmqType));
-        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, "bad-qc-commitment-type");
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-qc-commitment-type");
     }
 
     if (LogAcceptCategory(BCLog::LLMQ)) {
@@ -201,36 +201,36 @@ bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, 
 
     if (qcTx.nVersion == 0 || qcTx.nVersion > CFinalCommitmentTxPayload::CURRENT_VERSION) {
         LogPrintfFinalCommitment("h[%d] invalid qcTx.nVersion[%d]\n", pindexPrev->nHeight, qcTx.nVersion);
-        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, "bad-qc-version");
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-qc-version");
     }
 
     if (qcTx.nHeight != uint32_t(pindexPrev->nHeight + 1)) {
         LogPrintfFinalCommitment("h[%d] invalid qcTx.nHeight[%d]\n", pindexPrev->nHeight, qcTx.nHeight);
-        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, "bad-qc-height");
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-qc-height");
     }
 
     const CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return g_chainman.m_blockman.LookupBlockIndex(qcTx.commitment.quorumHash));
     if (pQuorumBaseBlockIndex == nullptr) {
-        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, "bad-qc-quorum-hash");
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-qc-quorum-hash");
     }
 
 
     if (pQuorumBaseBlockIndex != pindexPrev->GetAncestor(pQuorumBaseBlockIndex->nHeight)) {
         // not part of active chain
-        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, "bad-qc-quorum-hash");
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-qc-quorum-hash");
     }
 
     if (qcTx.commitment.IsNull()) {
         if (!qcTx.commitment.VerifyNull()) {
             LogPrintfFinalCommitment("h[%d] invalid qcTx.commitment[%s] VerifyNull failed\n", pindexPrev->nHeight, qcTx.commitment.quorumHash.ToString());
-            return state.Invalid(ValidationInvalidReason::CONSENSUS, false, "bad-qc-invalid-null");
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-qc-invalid-null");
         }
         return true;
     }
 
     if (!qcTx.commitment.Verify(pQuorumBaseBlockIndex, false)) {
         LogPrintfFinalCommitment("h[%d] invalid qcTx.commitment[%s] Verify failed\n", pindexPrev->nHeight, qcTx.commitment.quorumHash.ToString());
-        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, "bad-qc-invalid");
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-qc-invalid");
     }
 
     LogPrintfFinalCommitment("h[%d] CheckLLMQCommitment VALID\n", pindexPrev->nHeight);

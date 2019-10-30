@@ -8,9 +8,9 @@
 
 #include <string>
 
-class CValidationState;
+class ValidationState;
 
-/** Convert CValidationState to a human-readable message for logging */
-std::string FormatStateMessage(const CValidationState &state);
+/** Convert ValidationState to a human-readable message for logging */
+std::string FormatStateMessage(const ValidationState &state);
 
 #endif // BITCOIN_UTIL_VALIDATION_H

@@ -351,8 +351,8 @@ bool CCoinJoin::IsCollateralValid(CTxMemPool& mempool, const CTransaction& txCol
 
     {
         LOCK(cs_main);
-        CValidationState validationState;
-        if (!AcceptToMemoryPool(::ChainstateActive(), mempool, validationState, MakeTransactionRef(txCollateral), /*pfMissingInputs=*/nullptr, /*bypass_limits=*/false, /*nAbsurdFee=*/DEFAULT_MAX_RAW_TX_FEE, /*test_accept=*/true)) {
+        TxValidationState validationState;
+        if (!AcceptToMemoryPool(::ChainstateActive(), mempool, validationState, MakeTransactionRef(txCollateral), /*bypass_limits=*/false, /*nAbsurdFee=*/DEFAULT_MAX_RAW_TX_FEE, /*test_accept=*/true)) {
             LogPrint(BCLog::COINJOIN, "CCoinJoin::IsCollateralValid -- didn't pass AcceptToMemoryPool()\n");
             return false;
         }

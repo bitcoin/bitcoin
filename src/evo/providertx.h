@@ -20,7 +20,7 @@
 
 class CBlockIndex;
 class CCoinsViewCache;
-class CValidationState;
+class TxValidationState;
 
 class CProRegTx
 {
@@ -329,7 +329,7 @@ template <typename ProTx>
 static maybe_error CheckInputsHash(const CTransaction& tx, const ProTx& proTx)
 {
     if (uint256 inputsHash = CalcTxInputsHash(tx); inputsHash != proTx.inputsHash) {
-        return {ValidationInvalidReason::CONSENSUS, "bad-protx-inputs-hash"};
+        return {TxValidationResult::TX_CONSENSUS, "bad-protx-inputs-hash"};
     }
 
     return {};

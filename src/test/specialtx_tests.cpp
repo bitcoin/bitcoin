@@ -18,15 +18,15 @@
 #include <vector>
 
 
-bool VerifyMNHFTx(const CTransaction& tx, CValidationState& state)
+bool VerifyMNHFTx(const CTransaction& tx, TxValidationState& state)
 {
     MNHFTxPayload mnhfTx;
     if (!GetTxPayload(tx, mnhfTx)) {
-        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, "bad-mnhf-payload");
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-mnhf-payload");
     }
 
     if (mnhfTx.nVersion == 0 || mnhfTx.nVersion > MNHFTxPayload::CURRENT_VERSION) {
-        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, "bad-mnhf-version");
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-mnhf-version");
     }
 
     return true;
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(verify_mnhf_specialtx_tests)
     BOOST_CHECK(sig.VerifyInsecure(ag_pk, verHash));
 
     const CMutableTransaction tx = CreateMNHFTx(hash, sig, ver);
-    CValidationState state;
+    TxValidationState state;
     BOOST_CHECK(VerifyMNHFTx(CTransaction(tx), state));
 }
 

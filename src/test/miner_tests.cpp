@@ -536,7 +536,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 5U);
     } // unlock cs_main while calling InvalidateBlock
 
-    CValidationState state;
+    BlockValidationState state;
     ::ChainstateActive().InvalidateBlock(state, chainparams, WITH_LOCK(cs_main, return ::ChainActive().Tip()));
 
     SetMockTime(0);

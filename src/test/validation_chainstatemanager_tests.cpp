@@ -67,8 +67,8 @@ BOOST_AUTO_TEST_CASE(chainstatemanager)
     WITH_LOCK(::cs_main, c2.InitCoinsCache(1 << 23));
     // Unlike c1, which doesn't have any blocks. Gets us different tip, height.
     c2.LoadGenesisBlock(chainparams);
-    CValidationState _;
-    BOOST_CHECK(c2.ActivateBestChain(_, chainparams, nullptr));
+    BlockValidationState dummy_state;
+    BOOST_CHECK(c2.ActivateBestChain(dummy_state, chainparams, nullptr));
 
     BOOST_CHECK(manager.IsSnapshotActive());
     BOOST_CHECK(!manager.IsSnapshotValidated());

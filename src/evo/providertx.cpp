@@ -14,34 +14,34 @@
 maybe_error CProRegTx::IsTriviallyValid(bool is_bls_legacy_scheme) const
 {
     if (nVersion == 0 || nVersion > GetVersion(is_bls_legacy_scheme)) {
-        return {ValidationInvalidReason::CONSENSUS, "bad-protx-version"};
+        return {TxValidationResult::TX_CONSENSUS, "bad-protx-version"};
     }
     if (!IsValidMnType(nType)) {
-        return {ValidationInvalidReason::CONSENSUS, "bad-protx-type"};
+        return {TxValidationResult::TX_CONSENSUS, "bad-protx-type"};
     }
     if (nMode != 0) {
-        return {ValidationInvalidReason::CONSENSUS, "bad-protx-mode"};
+        return {TxValidationResult::TX_CONSENSUS, "bad-protx-mode"};
     }
 
     if (keyIDOwner.IsNull() || !pubKeyOperator.IsValid() || keyIDVoting.IsNull()) {
-        return {ValidationInvalidReason::TX_BAD_SPECIAL, "bad-protx-key-null"};
+        return {TxValidationResult::TX_BAD_SPECIAL, "bad-protx-key-null"};
     }
     if (!scriptPayout.IsPayToPublicKeyHash() && !scriptPayout.IsPayToScriptHash()) {
-        return {ValidationInvalidReason::TX_BAD_SPECIAL, "bad-protx-payee"};
+        return {TxValidationResult::TX_BAD_SPECIAL, "bad-protx-payee"};
     }
 
     CTxDestination payoutDest;
     if (!ExtractDestination(scriptPayout, payoutDest)) {
         // should not happen as we checked script types before
-        return {ValidationInvalidReason::TX_BAD_SPECIAL, "bad-protx-payee-dest"};
+        return {TxValidationResult::TX_BAD_SPECIAL, "bad-protx-payee-dest"};
     }
     // don't allow reuse of payout key for other keys (don't allow people to put the payee key onto an online server)
     if (payoutDest == CTxDestination(PKHash(keyIDOwner)) || payoutDest == CTxDestination(PKHash(keyIDVoting))) {
-        return {ValidationInvalidReason::TX_BAD_SPECIAL, "bad-protx-payee-reuse"};
+        return {TxValidationResult::TX_BAD_SPECIAL, "bad-protx-payee-reuse"};
     }
 
     if (nOperatorReward > 10000) {
-        return {ValidationInvalidReason::TX_BAD_SPECIAL, "bad-protx-operator-reward"};
+        return {TxValidationResult::TX_BAD_SPECIAL, "bad-protx-operator-reward"};
     }
 
     return {};
@@ -87,7 +87,7 @@ std::string CProRegTx::ToString() const
 maybe_error CProUpServTx::IsTriviallyValid(bool is_bls_legacy_scheme) const
 {
     if (nVersion == 0 || nVersion > GetVersion(is_bls_legacy_scheme)) {
-        return {ValidationInvalidReason::CONSENSUS, "bad-protx-version"};
+        return {TxValidationResult::TX_CONSENSUS, "bad-protx-version"};
     }
 
     return {};
@@ -108,17 +108,17 @@ std::string CProUpServTx::ToString() const
 maybe_error CProUpRegTx::IsTriviallyValid(bool is_bls_legacy_scheme) const
 {
     if (nVersion == 0 || nVersion > GetVersion(is_bls_legacy_scheme)) {
-        return {ValidationInvalidReason::CONSENSUS, "bad-protx-version"};
+        return {TxValidationResult::TX_CONSENSUS, "bad-protx-version"};
     }
     if (nMode != 0) {
-        return {ValidationInvalidReason::CONSENSUS, "bad-protx-mode"};
+        return {TxValidationResult::TX_CONSENSUS, "bad-protx-mode"};
     }
 
     if (!pubKeyOperator.IsValid() || keyIDVoting.IsNull()) {
-        return {ValidationInvalidReason::TX_BAD_SPECIAL, "bad-protx-key-null"};
+        return {TxValidationResult::TX_BAD_SPECIAL, "bad-protx-key-null"};
     }
     if (!scriptPayout.IsPayToPublicKeyHash() && !scriptPayout.IsPayToScriptHash()) {
-        return {ValidationInvalidReason::TX_BAD_SPECIAL, "bad-protx-payee"};
+        return {TxValidationResult::TX_BAD_SPECIAL, "bad-protx-payee"};
     }
     return {};
 }
@@ -138,13 +138,13 @@ std::string CProUpRegTx::ToString() const
 maybe_error CProUpRevTx::IsTriviallyValid(bool is_bls_legacy_scheme) const
 {
     if (nVersion == 0 || nVersion > GetVersion(is_bls_legacy_scheme)) {
-        return {ValidationInvalidReason::CONSENSUS, "bad-protx-version"};
+        return {TxValidationResult::TX_CONSENSUS, "bad-protx-version"};
     }
 
     // nReason < CProUpRevTx::REASON_NOT_SPECIFIED is always `false` since
     // nReason is unsigned and CProUpRevTx::REASON_NOT_SPECIFIED == 0
     if (nReason > CProUpRevTx::REASON_LAST) {
-        return {ValidationInvalidReason::CONSENSUS, "bad-protx-reason"};
+        return {TxValidationResult::TX_CONSENSUS, "bad-protx-reason"};
     }
     return {};
 }
