@@ -2804,7 +2804,6 @@ bool CWallet::CreateTransactionInternal(
     CAmount nValue = 0;
     const OutputType change_type = TransactionChangeType(coin_control.m_change_type ? *coin_control.m_change_type : m_default_change_type, vecSend);
     ReserveDestination reservedest(this, change_type);
-    int nChangePosRequest = nChangePosInOut;
     unsigned int nSubtractFeeFromAmount = 0;
     for (const auto& recipient : vecSend)
     {
@@ -2909,151 +2908,139 @@ bool CWallet::CreateTransactionInternal(
             coin_selection_params.m_change_fee = coin_selection_params.m_effective_feerate.GetFee(coin_selection_params.change_output_size);
             coin_selection_params.m_cost_of_change = coin_selection_params.m_discard_feerate.GetFee(coin_selection_params.change_spend_size) + coin_selection_params.m_change_fee;
 
-            nFeeRet = 0;
-            CAmount nValueIn = 0;
-
             coin_selection_params.m_subtract_fee_outputs = nSubtractFeeFromAmount != 0; // If we are doing subtract fee from recipient, don't use effective values
-            // Start with no fee and loop until there is enough fee
-            while (true)
+
+            // vouts to the payees
+            if (!coin_selection_params.m_subtract_fee_outputs) {
+                coin_selection_params.tx_noinputs_size = 11; // Static vsize overhead + outputs vsize. 4 nVersion, 4 nLocktime, 1 input count, 1 output count, 1 witness overhead (dummy, flag, stack size)
+            }
+            for (const auto& recipient : vecSend)
             {
-                nChangePosInOut = nChangePosRequest;
-                txNew.vin.clear();
-                txNew.vout.clear();
+                CTxOut txout(recipient.nAmount, recipient.scriptPubKey);
 
-                // vouts to the payees
+                // Include the fee cost for outputs.
                 if (!coin_selection_params.m_subtract_fee_outputs) {
-                    coin_selection_params.tx_noinputs_size = 11; // Static vsize overhead + outputs vsize. 4 nVersion, 4 nLocktime, 1 input count, 1 output count, 1 witness overhead (dummy, flag, stack size)
-                }
-                for (const auto& recipient : vecSend)
-                {
-                    CTxOut txout(recipient.nAmount, recipient.scriptPubKey);
-
-                    // Include the fee cost for outputs.
-                    if (!coin_selection_params.m_subtract_fee_outputs) {
-                        coin_selection_params.tx_noinputs_size += ::GetSerializeSize(txout, PROTOCOL_VERSION);
-                    }
-
-                    if (IsDust(txout, chain().relayDustFee()))
-                    {
-                        error = _("Transaction amount too small");
-                        return false;
-                    }
-                    txNew.vout.push_back(txout);
+                    coin_selection_params.tx_noinputs_size += ::GetSerializeSize(txout, PROTOCOL_VERSION);
                 }
 
-                // Include the fees for things that aren't inputs, excluding the change output
-                const CAmount not_input_fees = coin_selection_params.m_effective_feerate.GetFee(coin_selection_params.tx_noinputs_size);
-                CAmount nValueToSelect = nValue + not_input_fees;
-
-                // Choose coins to use
-                nValueIn = 0;
-                setCoins.clear();
-                if (!SelectCoins(vAvailableCoins, /* nTargetValue */ nValueToSelect, setCoins, nValueIn, coin_control, coin_selection_params))
+                if (IsDust(txout, chain().relayDustFee()))
                 {
-                    error = _("Insufficient funds");
+                    error = _("Transaction amount too small");
                     return false;
                 }
+                txNew.vout.push_back(txout);
+            }
 
-                // Always make a change output
-                // We will reduce the fee from this change output later, and remove the output if it is too small.
-                const CAmount change_and_fee = nValueIn - nValue;
-                assert(change_and_fee >= 0);
-                CTxOut newTxOut(change_and_fee, scriptChange);
+            // Include the fees for things that aren't inputs, excluding the change output
+            const CAmount not_input_fees = coin_selection_params.m_effective_feerate.GetFee(coin_selection_params.tx_noinputs_size);
+            CAmount nValueToSelect = nValue + not_input_fees;
 
-                if (nChangePosInOut == -1)
-                {
-                    // Insert change txn at random position:
-                    nChangePosInOut = GetRandInt(txNew.vout.size()+1);
-                }
-                else if ((unsigned int)nChangePosInOut > txNew.vout.size())
-                {
-                    error = _("Change index out of range");
-                    return false;
-                }
+            // Choose coins to use
+            CAmount inputs_sum = 0;
+            setCoins.clear();
+            if (!SelectCoins(vAvailableCoins, /* nTargetValue */ nValueToSelect, setCoins, inputs_sum, coin_control, coin_selection_params))
+            {
+                error = _("Insufficient funds");
+                return false;
+            }
 
-                assert(nChangePosInOut != -1);
-                auto change_position = txNew.vout.insert(txNew.vout.begin() + nChangePosInOut, newTxOut);
+            // Always make a change output
+            // We will reduce the fee from this change output later, and remove the output if it is too small.
+            const CAmount change_and_fee = inputs_sum - nValue;
+            assert(change_and_fee >= 0);
+            CTxOut newTxOut(change_and_fee, scriptChange);
 
-                // Dummy fill vin for maximum size estimation
-                //
-                for (const auto& coin : setCoins) {
-                    txNew.vin.push_back(CTxIn(coin.outpoint,CScript()));
-                }
+            if (nChangePosInOut == -1)
+            {
+                // Insert change txn at random position:
+                nChangePosInOut = GetRandInt(txNew.vout.size()+1);
+            }
+            else if ((unsigned int)nChangePosInOut > txNew.vout.size())
+            {
+                error = _("Change index out of range");
+                return false;
+            }
 
-                // Calculate the transaction fee
+            assert(nChangePosInOut != -1);
+            auto change_position = txNew.vout.insert(txNew.vout.begin() + nChangePosInOut, newTxOut);
+
+            // Dummy fill vin for maximum size estimation
+            //
+            for (const auto& coin : setCoins) {
+                txNew.vin.push_back(CTxIn(coin.outpoint,CScript()));
+            }
+
+            // Calculate the transaction fee
+            tx_sizes = CalculateMaximumSignedTxSize(CTransaction(txNew), this, coin_control.fAllowWatchOnly);
+            nBytes = tx_sizes.first;
+            if (nBytes < 0) {
+                error = _("Signing transaction failed");
+                return false;
+            }
+            nFeeRet = coin_selection_params.m_effective_feerate.GetFee(nBytes);
+
+            // Subtract fee from the change output if not subtrating it from recipient outputs
+            CAmount fee_needed = nFeeRet;
+            if (nSubtractFeeFromAmount == 0) {
+                change_position->nValue -= fee_needed;
+            }
+
+            // We want to drop the change to fees if:
+            // 1. The change output would be dust
+            // 2. The change is within the (almost) exact match window, i.e. it is less than or equal to the cost of the change output (cost_of_change)
+            CAmount change_amount = change_position->nValue;
+            if (IsDust(*change_position, coin_selection_params.m_discard_feerate) || change_amount <= coin_selection_params.m_cost_of_change)
+            {
+                nChangePosInOut = -1;
+                change_amount = 0;
+                txNew.vout.erase(change_position);
+
+                // Because we have dropped this change, the tx size and required fee will be different, so let's recalculate those
                 tx_sizes = CalculateMaximumSignedTxSize(CTransaction(txNew), this, coin_control.fAllowWatchOnly);
                 nBytes = tx_sizes.first;
-                if (nBytes < 0) {
-                    error = _("Signing transaction failed");
-                    return false;
-                }
-                nFeeRet = coin_selection_params.m_effective_feerate.GetFee(nBytes);
+                fee_needed = coin_selection_params.m_effective_feerate.GetFee(nBytes);
+            }
 
-                // Subtract fee from the change output if not subtrating it from recipient outputs
-                CAmount fee_needed = nFeeRet;
-                if (nSubtractFeeFromAmount == 0) {
-                    change_position->nValue -= fee_needed;
-                }
+            // Update nFeeRet in case fee_needed changed due to dropping the change output
+            if (fee_needed <= change_and_fee - change_amount) {
+                nFeeRet = change_and_fee - change_amount;
+            }
 
-                // We want to drop the change to fees if:
-                // 1. The change output would be dust
-                // 2. The change is within the (almost) exact match window, i.e. it is less than or equal to the cost of the change output (cost_of_change)
-                CAmount change_amount = change_position->nValue;
-                if (IsDust(*change_position, coin_selection_params.m_discard_feerate) || change_amount <= coin_selection_params.m_cost_of_change)
+            // Reduce output values for subtractFeeFromAmount
+            if (nSubtractFeeFromAmount != 0) {
+                CAmount to_reduce = fee_needed + change_amount - change_and_fee;
+                int i = 0;
+                bool fFirst = true;
+                for (const auto& recipient : vecSend)
                 {
-                    nChangePosInOut = -1;
-                    change_amount = 0;
-                    txNew.vout.erase(change_position);
-
-                    // Because we have dropped this change, the tx size and required fee will be different, so let's recalculate those
-                    tx_sizes = CalculateMaximumSignedTxSize(CTransaction(txNew), this, coin_control.fAllowWatchOnly);
-                    nBytes = tx_sizes.first;
-                    fee_needed = coin_selection_params.m_effective_feerate.GetFee(nBytes);
-                }
-
-                // If the fee is covered, there's no need to loop or subtract from recipients
-                if (fee_needed <= change_and_fee - change_amount) {
-                    nFeeRet = change_and_fee - change_amount;
-                    break;
-                }
-
-                // Reduce output values for subtractFeeFromAmount
-                if (nSubtractFeeFromAmount != 0) {
-                    CAmount to_reduce = fee_needed + change_amount - change_and_fee;
-                    int i = 0;
-                    bool fFirst = true;
-                    for (const auto& recipient : vecSend)
-                    {
-                        if (i == nChangePosInOut) {
-                            ++i;
-                        }
-                        CTxOut& txout = txNew.vout[i];
-
-                        if (recipient.fSubtractFeeFromAmount)
-                        {
-                            txout.nValue -= to_reduce / nSubtractFeeFromAmount; // Subtract fee equally from each selected recipient
-
-                            if (fFirst) // first receiver pays the remainder not divisible by output count
-                            {
-                                fFirst = false;
-                                txout.nValue -= to_reduce % nSubtractFeeFromAmount;
-                            }
-
-                            // Error if this output is reduced to be below dust
-                            if (IsDust(txout, chain().relayDustFee())) {
-                                if (txout.nValue < 0) {
-                                    error = _("The transaction amount is too small to pay the fee");
-                                } else {
-                                    error = _("The transaction amount is too small to send after the fee has been deducted");
-                                }
-                                return false;
-                            }
-                        }
+                    if (i == nChangePosInOut) {
                         ++i;
                     }
-                    nFeeRet = fee_needed;
-                    break; // The fee has been deducted from the recipients, nothing left to do here
+                    CTxOut& txout = txNew.vout[i];
+
+                    if (recipient.fSubtractFeeFromAmount)
+                    {
+                        txout.nValue -= to_reduce / nSubtractFeeFromAmount; // Subtract fee equally from each selected recipient
+
+                        if (fFirst) // first receiver pays the remainder not divisible by output count
+                        {
+                            fFirst = false;
+                            txout.nValue -= to_reduce % nSubtractFeeFromAmount;
+                        }
+
+                        // Error if this output is reduced to be below dust
+                        if (IsDust(txout, chain().relayDustFee())) {
+                            if (txout.nValue < 0) {
+                                error = _("The transaction amount is too small to pay the fee");
+                            } else {
+                                error = _("The transaction amount is too small to send after the fee has been deducted");
+                            }
+                            return false;
+                        }
+                    }
+                    ++i;
                 }
+                nFeeRet = fee_needed;
             }
 
             // Give up if change keypool ran out and change is required
