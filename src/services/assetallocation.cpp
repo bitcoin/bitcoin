@@ -239,7 +239,7 @@ bool WriteAssetIndexForAllocation(const CAssetAllocation& assetallocation, const
     
 }
 bool WriteAssetIndexForAllocation(const CMintSyscoin& mintSyscoin, const uint256& txid, const UniValue& oName){
-    const CAssetAllocationTuple senderAllocationTuple(mintSyscoin.assetAllocationTuple.nAsset, CWitnessAddress(0, vchFromString("burn")));
+    const CAssetAllocationTuple senderAllocationTuple(mintSyscoin.assetAllocationTuple.nAsset, burnWitness);
     if(!fAssetIndexGuids.empty() && std::find(fAssetIndexGuids.begin(),fAssetIndexGuids.end(), senderAllocationTuple.nAsset) == fAssetIndexGuids.end()){
         LogPrint(BCLog::SYS, "Mint Asset allocation cannot be indexed because asset is not set in -assetindexguids list\n");
         return true;
@@ -524,7 +524,7 @@ bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, UniValue &
         GetAsset(mintsyscoin.assetAllocationTuple.nAsset, dbAsset);
         entry.__pushKV("asset_guid", mintsyscoin.assetAllocationTuple.nAsset);
         entry.__pushKV("symbol", dbAsset.strSymbol);
-        entry.__pushKV("sender", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
+        entry.__pushKV("sender", burnWitnessStr);
         UniValue oAssetAllocationReceiversArray(UniValue::VARR);
         UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
         oAssetAllocationReceiversObj.__pushKV("address", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
@@ -559,7 +559,7 @@ bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, const CMin
         GetAsset(mintsyscoin.assetAllocationTuple.nAsset, dbAsset);
         entry.__pushKV("asset_guid", mintsyscoin.assetAllocationTuple.nAsset);
         entry.__pushKV("symbol", dbAsset.strSymbol);
-        entry.__pushKV("sender", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
+        entry.__pushKV("sender", burnWitnessStr);
         UniValue oAssetAllocationReceiversArray(UniValue::VARR);
         UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
         oAssetAllocationReceiversObj.__pushKV("address", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
@@ -848,7 +848,7 @@ void GetActorsFromAssetAllocationTx(const CAssetAllocation &theAssetAllocation, 
         case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN:
             // if getting address, this is empty because "burn" is not an address
             if(!bJustSender && !bGetAddress){
-                receiverAllocationTuple = CAssetAllocationTuple(theAssetAllocation.assetAllocationTuple.nAsset,  CWitnessAddress(0, vchFromString("burn")));
+                receiverAllocationTuple = CAssetAllocationTuple(theAssetAllocation.assetAllocationTuple.nAsset, burnWitness);
                 actorSet.insert(receiverAllocationTuple.ToString());
             }
             break;

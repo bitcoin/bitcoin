@@ -367,7 +367,7 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     theAssetAllocation.SetNull();
     // from burn to allocation
     theAssetAllocation.assetAllocationTuple.nAsset = nAsset;
-    theAssetAllocation.assetAllocationTuple.witnessAddress = CWitnessAddress(0, vchFromString("burn"));   
+    theAssetAllocation.assetAllocationTuple.witnessAddress = burnWitness;   
     theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(witnessAddress.nVersion, witnessAddress.vchWitnessProgram), nAmount));
     vector<unsigned char> data;
     theAssetAllocation.Serialize(data); 
@@ -989,7 +989,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
         theAssetAllocation.assetAllocationTuple.nAsset = assetAllocationTuple.nAsset;
         theAssetAllocation.assetAllocationTuple.witnessAddress = assetAllocationTuple.witnessAddress; 
 
-        theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(0, vchFromString("burn")), amount));      
+        theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(burnWitness.nVersion, burnWitness.vchWitnessProgram), amount));      
       
         vector<unsigned char> data;
         theAssetAllocation.Serialize(data);  

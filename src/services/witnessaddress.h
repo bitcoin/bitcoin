@@ -63,5 +63,5 @@ public:
     inline bool IsNull() const {
         return (nVersion == 0 && vchWitnessProgram.empty());
     }
-};  
+};
 #endif // SYSCOIN_SERVICES_WITNESSADDRESS_H
