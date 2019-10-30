@@ -98,7 +98,7 @@ static UniValue omni_createpayload_dexsell(const JSONRPCRequest& request)
     int64_t minAcceptFee = 0;  // depending on action
 
     if (action <= CMPTransaction::UPDATE) { // actions 3 permit zero values, skip check
-        amountForSale = ParseAmount(request.params[1], true); // TMSC/MSC is divisible
+        amountForSale = ParseAmount(request.params[1], isPropertyDivisible(propertyIdForSale));
         amountDesired = ParseAmount(request.params[2], true); // BTC is divisible
         paymentWindow = ParseDExPaymentWindow(request.params[3]);
         minAcceptFee = ParseDExFee(request.params[4]);
