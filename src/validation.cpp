@@ -604,6 +604,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
             vecTPSTestReceivedTimesMempool.emplace_back(hash, currentTime);
     }
     if (!CheckTransaction(tx, state))
+        return false; // state filled in by CheckTransaction
+        
     // Coinbase is only valid in a block, not as a loose transaction
     if (tx.IsCoinBase())
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "coinbase");
