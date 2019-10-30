@@ -402,7 +402,7 @@ UniValue masternode_status(const JSONRPCRequest& request)
     mnObj.push_back(Pair("outpoint", activeMasternodeInfo.outpoint.ToStringShort()));
     mnObj.push_back(Pair("service", activeMasternodeInfo.service.ToString()));
 
-    auto dmn = activeMasternodeManager->GetDMN();
+    auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(activeMasternodeInfo.proTxHash);
     if (dmn) {
         mnObj.push_back(Pair("proTxHash", dmn->proTxHash.ToString()));
         mnObj.push_back(Pair("collateralHash", dmn->collateralOutpoint.hash.ToString()));

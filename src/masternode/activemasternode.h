@@ -40,12 +40,12 @@ public:
         MASTERNODE_POSE_BANNED,
         MASTERNODE_REMOVED,
         MASTERNODE_OPERATOR_KEY_CHANGED,
+        MASTERNODE_PROTX_IP_CHANGED,
         MASTERNODE_READY,
         MASTERNODE_ERROR,
     };
 
 private:
-    CDeterministicMNCPtr mnListEntry;
     masternode_state_t state{MASTERNODE_WAITING_FOR_PROTX};
     std::string strError;
 
@@ -53,8 +53,6 @@ public:
     virtual void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload);
 
     void Init();
-
-    CDeterministicMNCPtr GetDMN() const { return mnListEntry; }
 
     std::string GetStateString() const;
     std::string GetStatus() const;
