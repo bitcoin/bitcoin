@@ -615,8 +615,6 @@ public:
 /** Parameters for one iteration of Coin Selection. */
 struct CoinSelectionParams
 {
-    /** Toggles use of Branch and Bound instead of Knapsack solver. */
-    bool use_bnb = true;
     /** Size of a change output in bytes, determined by the output type. */
     size_t change_output_size = 0;
     /** Size of the input to spend a change output in virtual bytes. */
@@ -642,9 +640,8 @@ struct CoinSelectionParams
      * reuse. Dust outputs are not eligible to be added to output groups and thus not considered. */
     bool m_avoid_partial_spends = false;
 
-    CoinSelectionParams(bool use_bnb, size_t change_output_size, size_t change_spend_size, CFeeRate effective_feerate,
+    CoinSelectionParams(size_t change_output_size, size_t change_spend_size, CFeeRate effective_feerate,
                         CFeeRate long_term_feerate, CFeeRate discard_feerate, size_t tx_noinputs_size, bool avoid_partial) :
-        use_bnb(use_bnb),
         change_output_size(change_output_size),
         change_spend_size(change_spend_size),
         m_effective_feerate(effective_feerate),
@@ -789,7 +786,7 @@ public:
      *                                  from coin_control and Coin Selection if successful.
      */
     bool SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet,
-                    const CCoinControl& coin_control, CoinSelectionParams& coin_selection_params, bool& bnb_used) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+                    const CCoinControl& coin_control, CoinSelectionParams& coin_selection_params) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /** Get a name for this wallet for logging/debugging purposes.
      */
@@ -878,7 +875,7 @@ public:
      * param@[out]  nValueRet       Used to return the total value of selected coins.
      */
     bool SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibilityFilter& eligibility_filter, std::vector<COutput> coins,
-        std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CoinSelectionParams& coin_selection_params, bool& bnb_used) const;
+        std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CoinSelectionParams& coin_selection_params) const;
 
     bool IsSpent(const uint256& hash, unsigned int n) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
