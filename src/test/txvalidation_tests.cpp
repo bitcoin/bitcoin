@@ -30,7 +30,7 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_reject_coinbase, TestChain100Setup)
 
     BOOST_CHECK(CTransaction(coinbaseTx).IsCoinBase());
 
-    CValidationState state;
+    TxValidationState state;
 
     LOCK(cs_main);
 
@@ -39,7 +39,6 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_reject_coinbase, TestChain100Setup)
     BOOST_CHECK_EQUAL(
             false,
             AcceptToMemoryPool(mempool, state, MakeTransactionRef(coinbaseTx),
-                nullptr /* pfMissingInputs */,
                 nullptr /* plTxnReplaced */,
                 true /* bypass_limits */,
                 0 /* nAbsurdFee */));
@@ -50,7 +49,7 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_reject_coinbase, TestChain100Setup)
     // Check that the validation state reflects the unsuccessful attempt.
     BOOST_CHECK(state.IsInvalid());
     BOOST_CHECK_EQUAL(state.GetRejectReason(), "coinbase");
-    BOOST_CHECK(state.GetReason() == ValidationInvalidReason::CONSENSUS);
+    BOOST_CHECK(state.GetResult() == TxValidationResult::TX_CONSENSUS);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
