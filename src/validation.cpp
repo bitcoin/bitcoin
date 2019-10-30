@@ -2289,11 +2289,12 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
             // SYSCOIN
             if(IsSyscoinTx(tx.nVersion)){
                 TxValidationState tx_state;
-                if (!CheckSyscoinInputs(ibd, tx, txHash, tx_state, view, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, fJustCheck, false, actorSet, mapAssetAllocations, mapAssets, vecMintKeys, vecLockedOutpoints))
+                if (!CheckSyscoinInputs(ibd, tx, txHash, tx_state, view, false, pindex->nHeight, ::ChainActive().Tip()->GetMedianTimePast(), blockHash, fJustCheck, false, actorSet, mapAssetAllocations, mapAssets, vecMintKeys, vecLockedOutpoints)){
                     // Any transaction validation failure in ConnectBlock is a block consensus failure
                     state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
                                 tx_state.GetRejectReason(), tx_state.GetDebugMessage());
-                    return error("%s: Consensus::CheckSyscoinInputs: %s, %s", __func__, tx.GetHash().ToString(), FormatStateMessage(state));       
+                    return error("%s: Consensus::CheckSyscoinInputs: %s, %s", __func__, tx.GetHash().ToString(), FormatStateMessage(state));
+                }
             }
         }
         if(!fJustCheck){
