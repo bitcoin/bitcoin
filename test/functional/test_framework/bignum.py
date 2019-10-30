@@ -9,14 +9,9 @@ endian format.
 
 This file is copied from python-bitcoinlib.
 """
-import struct
-
-def bn_bytes(v, have_ext=False):
+def bn_bytes(v):
     """Return number of bytes in integer representation of v."""
-    ext = 0
-    if have_ext:
-        ext = 1
-    return (v.bit_length() + 7) // 8 + ext
+    return (v.bit_length() + 7) // 8
 
 def bn2bin(v):
     """Convert a number to a byte array."""
@@ -28,7 +23,7 @@ def bn2bin(v):
     return s
 
 def bn2mpi(v):
-    """Convert number to MPI format."""
+    """Convert number to MPI format, without the sign byte."""
     have_ext = False
     if v.bit_length() > 0:
         have_ext = (v.bit_length() & 0x07) == 0
@@ -38,7 +33,6 @@ def bn2mpi(v):
         neg = True
         v = -v
 
-    s = struct.pack(b">I", bn_bytes(v, have_ext))
     ext = bytearray()
     if have_ext:
         ext.append(0)
@@ -48,13 +42,11 @@ def bn2mpi(v):
             ext[0] |= 0x80
         else:
             v_bin[0] |= 0x80
-    return s + ext + v_bin
+    return ext + v_bin
 
 def mpi2vch(s):
-    """Convert MPI format to bitcoin-specific little endian format, with implicit size."""
-    r = s[4:]           # strip size
-    r = r[::-1]         # reverse string, converting BE->LE
-    return r
+    """Convert MPI format to bitcoin-specific little endian format."""
+    return s[::-1]  # reverse string, converting BE->LE
 
 def bn2vch(v):
     """Convert number to bitcoin-specific little endian format."""
