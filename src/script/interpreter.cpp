@@ -227,7 +227,8 @@ bool static CheckPubKeyEncoding(const valtype &vchPubKey, unsigned int flags, co
 
 bool static CheckMinimalPush(const valtype& data, opcodetype opcode) {
     // Excludes OP_1NEGATE, OP_1-16 since they are by definition minimal
-    assert(0 <= opcode && opcode <= OP_PUSHDATA4);
+    static_assert(std::numeric_limits<decltype(opcode)>::min() >= 0, "Assumption: 0 <= opcode");
+    assert(opcode <= OP_PUSHDATA4);
     if (data.size() == 0) {
         // Should have used OP_0.
         return opcode == OP_0;
@@ -340,7 +341,8 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
             if (opcode == OP_CODESEPARATOR && sigversion == SigVersion::BASE && (flags & SCRIPT_VERIFY_CONST_SCRIPTCODE))
                 return set_error(serror, SCRIPT_ERR_OP_CODESEPARATOR);
 
-            if (fExec && 0 <= opcode && opcode <= OP_PUSHDATA4) {
+            static_assert(std::numeric_limits<decltype(opcode)>::min() >= 0, "Assumption: 0 <= opcode");
+            if (fExec && opcode <= OP_PUSHDATA4) {
                 if (fRequireMinimal && !CheckMinimalPush(vchPushValue, opcode)) {
                     return set_error(serror, SCRIPT_ERR_MINIMALDATA);
                 }

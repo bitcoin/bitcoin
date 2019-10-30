@@ -300,9 +300,9 @@ bool ParseInt64(const std::string& str, int64_t *out)
     if(out) *out = (int64_t)n;
     // Note that strtoll returns a *long long int*, so even if strtol doesn't report an over/underflow
     // we still have to check that the returned value is within the range of an *int64_t*.
-    return endp && *endp == 0 && !errno &&
-        n >= std::numeric_limits<int64_t>::min() &&
-        n <= std::numeric_limits<int64_t>::max();
+    static_assert(std::numeric_limits<decltype(n)>::min() >= std::numeric_limits<int64_t>::min(), "Assumption: n >= std::numeric_limits<int64_t>::min()");
+    static_assert(std::numeric_limits<decltype(n)>::max() <= std::numeric_limits<int64_t>::max(), "Assumption: n <= std::numeric_limits<int64_t>::max()");
+    return endp && *endp == 0 && !errno;
 }
 
 bool ParseUInt32(const std::string& str, uint32_t *out)
@@ -334,8 +334,8 @@ bool ParseUInt64(const std::string& str, uint64_t *out)
     if(out) *out = (uint64_t)n;
     // Note that strtoull returns a *unsigned long long int*, so even if it doesn't report an over/underflow
     // we still have to check that the returned value is within the range of an *uint64_t*.
-    return endp && *endp == 0 && !errno &&
-        n <= std::numeric_limits<uint64_t>::max();
+    static_assert(std::numeric_limits<decltype(n)>::max() <= std::numeric_limits<uint64_t>::max(), "Assumption: n <= std::numeric_limits<uint64_t>::max()");
+    return endp && *endp == 0 && !errno;
 }
 
 

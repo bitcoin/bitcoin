@@ -446,8 +446,7 @@ public:
 
     CScript& operator<<(opcodetype opcode)
     {
-        if (opcode < 0 || opcode > 0xff)
-            throw std::runtime_error("CScript::operator<<(): invalid opcode");
+        static_assert(std::numeric_limits<decltype(opcode)>::min() >= 0 && std::numeric_limits<decltype(opcode)>::max() <= 0xff, "Assumption: !(opcode < 0 || opcode > 0xff)");
         insert(end(), (unsigned char)opcode);
         return *this;
     }
