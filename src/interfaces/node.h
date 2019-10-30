@@ -28,6 +28,7 @@ class RPCTimerInterface;
 class UniValue;
 class proxyType;
 struct CNodeStateStats;
+struct NodeContext;
 enum class WalletCreationStatus;
 
 namespace interfaces {
@@ -254,6 +255,9 @@ public:
     using NotifyHeaderTipFn =
         std::function<void(bool initial_download, int height, int64_t block_time, double verification_progress)>;
     virtual std::unique_ptr<Handler> handleNotifyHeaderTip(NotifyHeaderTipFn fn) = 0;
+
+    //! Return pointer to internal chain interface, useful for testing.
+    virtual NodeContext* context() { return nullptr; }
 };
 
 //! Return implementation of Node interface.

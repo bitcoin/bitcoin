@@ -24,6 +24,7 @@ class uint256;
 enum class RBFTransactionState;
 struct CBlockLocator;
 struct FeeCalculation;
+struct NodeContext;
 
 namespace interfaces {
 
@@ -291,7 +292,7 @@ public:
 };
 
 //! Return implementation of Chain interface.
-std::unique_ptr<Chain> MakeChain();
+std::unique_ptr<Chain> MakeChain(NodeContext& node);
 
 //! Return implementation of ChainClient interface for a wallet client. This
 //! function will be undefined in builds where ENABLE_WALLET is false.
