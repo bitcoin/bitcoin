@@ -2384,6 +2384,23 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
     return true;
 }
 
+void CWallet::CompactDatabase() {
+    WalletDatabase& dbh = *database;
+
+    unsigned int nUpdateCounter = dbh.nUpdateCounter;
+
+    if (dbh.nLastSeen != nUpdateCounter) {
+        dbh.nLastSeen = nUpdateCounter;
+        dbh.nLastWalletUpdate = GetTime();
+    }
+
+    if (dbh.nLastFlushed != nUpdateCounter && GetTime() - dbh.nLastWalletUpdate >= 2) {
+        if (BerkeleyBatch::PeriodicFlush(dbh)) {
+            dbh.nLastFlushed = nUpdateCounter;
+        }
+    }
+}
+
 static bool IsCurrentForAntiFeeSniping(interfaces::Chain& chain, interfaces::Chain::Lock& locked_chain)
 {
     if (chain.isInitialBlockDownload()) {

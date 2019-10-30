@@ -688,13 +688,12 @@ public:
      */
     mutable CCriticalSection cs_wallet;
 
+    /** Compact the wallet database */
+    void CompactDatabase();
+
     /** Get database handle used by this wallet. Ideally this function would
      * not be necessary.
      */
-    WalletDatabase& GetDBHandle()
-    {
-        return *database;
-    }
     WalletDatabase& GetDatabase() override { return *database; }
 
     /**
