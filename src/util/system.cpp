@@ -668,7 +668,7 @@ std::string HelpMessageOpt(const std::string &option, const std::string &message
            std::string("\n\n");
 }
 
-static std::string FormatException(const std::exception* pex, const char* pszThread)
+static std::string FormatException(const std::exception* pex, const std::string& pszThread)
 {
 #ifdef WIN32
     char pszModule[MAX_PATH] = "";
@@ -684,7 +684,7 @@ static std::string FormatException(const std::exception* pex, const char* pszThr
             "UNKNOWN EXCEPTION       \n%s in %s       \n", pszModule, pszThread);
 }
 
-void PrintExceptionContinue(const std::exception* pex, const char* pszThread)
+void PrintExceptionContinue(const std::exception* pex, const std::string& pszThread)
 {
     std::string message = FormatException(pex, pszThread);
     LogPrintf("\n\n************************\n%s\n", message);
@@ -1258,11 +1258,11 @@ std::function<void()> TracedThread(const std::string name, std::function<void()>
             throw;
         }
         catch (const std::exception& e) {
-            PrintExceptionContinue(&e, name.c_str());
+            PrintExceptionContinue(&e, name);
             throw;
         }
         catch (...) {
-            PrintExceptionContinue(nullptr, name.c_str());
+            PrintExceptionContinue(nullptr, name);
             throw;
         }
     };
