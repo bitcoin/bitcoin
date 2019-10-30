@@ -22,6 +22,7 @@ FUZZ_TARGETS = \
   test/fuzz/inv_deserialize \
   test/fuzz/messageheader_deserialize \
   test/fuzz/netaddr_deserialize \
+  test/fuzz/parse_iso8601 \
   test/fuzz/script \
   test/fuzz/script_flags \
   test/fuzz/service_deserialize \
@@ -268,6 +269,12 @@ test_fuzz_netaddr_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DNE
 test_fuzz_netaddr_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_netaddr_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_netaddr_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
+
+test_fuzz_parse_iso8601_SOURCES = $(FUZZ_SUITE) test/fuzz/parse_iso8601.cpp
+test_fuzz_parse_iso8601_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_parse_iso8601_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_parse_iso8601_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_parse_iso8601_LDADD = $(FUZZ_SUITE_LD_COMMON)
 
 test_fuzz_script_SOURCES = $(FUZZ_SUITE) test/fuzz/script.cpp
 test_fuzz_script_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
