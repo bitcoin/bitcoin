@@ -336,6 +336,8 @@ public:
     bool FlushErase(const std::vector<uint256> &vecTXIDs);
 };
 static CAsset emptyAsset;
+static CWitnessAddress burnWitness(0, vchFromString("burn"));
+static std::string burnWitnessStr(burnWitness.ToString());
 bool GetAsset(const uint32_t &nAsset,CAsset& txPos);
 bool BuildAssetJson(const CAsset& asset, UniValue& oName);
 #ifdef ENABLE_WALLET

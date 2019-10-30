@@ -110,7 +110,7 @@ bool GetSyscoinBurnData(const CTransaction &tx, CAssetAllocation* theAssetAlloca
     theAssetAllocation->SetNull();
     theAssetAllocation->assetAllocationTuple.nAsset = nAssetFromScript;
     theAssetAllocation->assetAllocationTuple.witnessAddress = burnWitnessAddress;
-    theAssetAllocation->listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(0, vchFromString("burn")), nAmountFromScript));
+    theAssetAllocation->listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(burnWitness.nVersion, burnWitness.vchWitnessProgram), nAmountFromScript));
     return true;
 
 } 
