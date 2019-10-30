@@ -22,7 +22,6 @@ from test_framework.script import (
     OP_0,
     OP_EQUAL,
     OP_HASH160,
-    OP_RETURN,
 )
 from test_framework.util import (
     assert_equal,
@@ -279,13 +278,6 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         tx.vout[0].nValue -= 1  # Make output smaller, such that it is dust for our policy
         self.check_mempool_result(
             result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'dust'}],
-            rawtxs=[tx.serialize().hex()],
-        )
-        tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_reference)))
-        tx.vout[0].scriptPubKey = CScript([OP_RETURN, b'\xff'])
-        tx.vout = [tx.vout[0]] * 2
-        self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'multi-op-return'}],
             rawtxs=[tx.serialize().hex()],
         )
 
