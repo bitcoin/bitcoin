@@ -21,6 +21,7 @@ extern CFeeRate dustRelayFee;
 extern CFeeRate minRelayTxFee;
 extern unsigned int nBytesPerSigOp;
 extern bool fIsBareMultisigStd;
+extern bool gEnableReplacement;
 
 static inline bool IsStandardTx(const CTransaction& tx, std::string& reason)
 {
