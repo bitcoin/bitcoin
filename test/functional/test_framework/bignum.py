@@ -12,12 +12,14 @@ This file is copied from python-bitcoinlib.
 import struct
 
 def bn_bytes(v, have_ext=False):
+    """Return number of bytes in integer representation of v."""
     ext = 0
     if have_ext:
         ext = 1
     return (v.bit_length() + 7) // 8 + ext
 
 def bn2bin(v):
+    """Convert a number to a byte array."""
     s = bytearray()
     i = bn_bytes(v)
     while i > 0:
@@ -26,6 +28,7 @@ def bn2bin(v):
     return s
 
 def bn2mpi(v):
+    """Convert number to MPI format."""
     have_ext = False
     if v.bit_length() > 0:
         have_ext = (v.bit_length() & 0x07) == 0
@@ -47,11 +50,12 @@ def bn2mpi(v):
             v_bin[0] |= 0x80
     return s + ext + v_bin
 
-# bitcoin-specific little endian format, with implicit size
 def mpi2vch(s):
+    """Convert MPI format to bitcoin-specific little endian format, with implicit size."""
     r = s[4:]           # strip size
     r = r[::-1]         # reverse string, converting BE->LE
     return r
 
 def bn2vch(v):
+    """Convert number to bitcoin-specific little endian format."""
     return bytes(mpi2vch(bn2mpi(v)))
