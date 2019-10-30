@@ -27,7 +27,6 @@ extern std::vector<std::pair<uint256, uint32_t> >  vecToRemoveFromMempool;
 extern CCriticalSection cs_assetallocationmempoolremovetx;
 
 std::unique_ptr<CAssetDB> passetdb;
-std::unique_ptr<CAssetSupplyStatsDB> passetsupplystatsdb;
 std::unique_ptr<CAssetAllocationDB> passetallocationdb;
 std::unique_ptr<CAssetAllocationMempoolDB> passetallocationmempooldb;
 std::unique_ptr<CAssetIndexDB> passetindexdb;
@@ -569,13 +568,6 @@ bool BuildAssetJson(const CAsset& asset,UniValue& oAsset)
 	oAsset.__pushKV("max_supply", ValueFromAssetAmount(asset.nMaxSupply, asset.nPrecision));
 	oAsset.__pushKV("update_flags", asset.nUpdateFlags);
 	oAsset.__pushKV("precision", asset.nPrecision);
-    CAssetSupplyStats dbAssetSupplyStats;
-    if (fAssetSupplyStatsIndex && passetsupplystatsdb->ExistStats(asset.nAsset) && passetsupplystatsdb->ReadStats(asset.nAsset, dbAssetSupplyStats)) {
-        passetsupplystatsdb->ReadStats(asset.nAsset, dbAssetSupplyStats);    
-    } 
-    oAsset.__pushKV("total_supply_bridge", ValueFromAssetAmount(dbAssetSupplyStats.nBalanceBridge, asset.nPrecision));
-    if(asset.nAsset == Params().GetConsensus().nSYSXAsset)
-        oAsset.__pushKV("total_supply_spt", ValueFromAssetAmount(dbAssetSupplyStats.nBalanceSPT, asset.nPrecision));
 	return true;
 }
 bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
@@ -809,23 +801,6 @@ bool CAssetDB::ScanAssets(const uint32_t count, const uint32_t from, const UniVa
 		}
 	}
 	return true;
-}
-bool CAssetSupplyStatsDB::Flush(const AssetSupplyStatsMap &mapAssetSupplyStats){
-    if(mapAssetSupplyStats.empty())
-        return true;
-    CDBBatch batch(*this);
-    std::map<std::string, std::vector<uint32_t> > mapGuids;
-    std::vector<uint32_t> emptyVec;
-    if(fAssetIndex){
-        for (const auto &key : mapAssetSupplyStats) {
-            if(key.second.IsNull())
-                batch.Erase(key.first);
-            else
-                batch.Write(key.first, key.second);
-        }
-    }
-    LogPrint(BCLog::SYS, "Flushing %d asset supply stats\n", mapAssetSupplyStats.size());
-    return WriteBatch(batch);
 }
 bool CAssetIndexDB::ScanAssetIndex(uint32_t page, const UniValue& oOptions, UniValue& oRes) {
     CAssetAllocationTuple assetTuple;

@@ -38,7 +38,7 @@ bool FormatSyscoinErrorMessage(CValidationState& state, const std::string errorM
             return state.Invalid(bConsensus? ValidationInvalidReason::CONSENSUS: ValidationInvalidReason::TX_CONFLICT, false, errorMessage);
         }  
 }
-bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& txHash, CValidationState& state, const bool &fJustCheck, const bool& bSanity, const bool& bMiner, const int& nHeight, const int64_t& nTime, const uint256& blockhash, AssetMap& mapAssets, AssetSupplyStatsMap &mapAssetSupplyStats, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys)
+bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& txHash, CValidationState& state, const bool &fJustCheck, const bool& bSanity, const bool& bMiner, const int& nHeight, const int64_t& nTime, const uint256& blockhash, AssetMap& mapAssets, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys)
 {
     // unserialize mint object from txn, check for valid
     CMintSyscoin mintSyscoin(tx);
@@ -211,26 +211,6 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
         {
             return FormatSyscoinErrorMessage(state, "new-balance-out-of-range", bMiner);
         }
-            // update supply stats if index enabled
-        if(fAssetSupplyStatsIndex){
-            #if __cplusplus > 201402 
-            auto result = mapAssetSupplyStats.try_emplace(nAsset,  std::move(emptyAssetSupplyStats));
-            #else
-            auto result  = mapAssetSupplyStats.emplace(std::piecewise_construct,  std::forward_as_tuple(nAsset),  std::forward_as_tuple(std::move(emptyAssetSupplyStats)));
-            #endif  
-            auto mapAssetSupplyStat = result.first;
-            const bool &mapAssetSupplyStatsNotFound = result.second;
-            if(mapAssetSupplyStatsNotFound && passetsupplystatsdb->ExistStats(nAsset)){
-                CAssetSupplyStats dbAssetSupplyStats;
-                if (!passetsupplystatsdb->ReadStats(nAsset, dbAssetSupplyStats)) {
-                    return FormatSyscoinErrorMessage(state, "mint-read-supplystats", bMiner);         
-                } 
-                mapAssetSupplyStat->second = std::move(dbAssetSupplyStats);      
-            }
-            mapAssetSupplyStat->second.nBalanceBridge -= outputAmount;
-            if(nAsset == Params().GetConsensus().nSYSXAsset)
-                mapAssetSupplyStat->second.nBalanceSPT += outputAmount;
-        }
     }
     if (!AssetRange(mintSyscoin.nValueAsset))
     {
@@ -246,11 +226,10 @@ bool CheckSyscoinInputs(const CTransaction& tx, const uint256& txHash, CValidati
 {
     AssetAllocationMap mapAssetAllocations;
     AssetMap mapAssets;
-    AssetSupplyStatsMap mapAssetSupplyStats;
     EthereumMintTxVec vecMintKeys;
     std::vector<COutPoint> vecLockedOutpoints;
     ActorSet actorSet;
-    const bool &ret = CheckSyscoinInputs(false, tx, txHash, state, inputs, fJustCheck, nHeight, nTime, uint256(), bSanity, false, actorSet, mapAssetAllocations, mapAssets, mapAssetSupplyStats, vecMintKeys, vecLockedOutpoints);
+    const bool &ret = CheckSyscoinInputs(false, tx, txHash, state, inputs, fJustCheck, nHeight, nTime, uint256(), bSanity, false, actorSet, mapAssetAllocations, mapAssets, vecMintKeys, vecLockedOutpoints);
     if(fJustCheck){
         LOCK(cs_assetallocationarrival);
         for (const std::string& actor: actorSet){
@@ -269,7 +248,7 @@ void RemoveDoubleSpendFromMempool(const CTransactionRef & txRef) EXCLUSIVE_LOCKS
         GetMainSignals().TransactionRemovedFromMempool(txRef);
     }
 }
-bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& txHash, CValidationState& state, const CCoinsViewCache &inputs,  const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanity, const bool &bMiner, ActorSet &actorSet, AssetAllocationMap &mapAssetAllocations, AssetMap &mapAssets, AssetSupplyStatsMap &mapAssetSupplyStats, EthereumMintTxVec &vecMintKeys, std::vector<COutPoint> &vecLockedOutpoints)
+bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& txHash, CValidationState& state, const CCoinsViewCache &inputs,  const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanity, const bool &bMiner, ActorSet &actorSet, AssetAllocationMap &mapAssetAllocations, AssetMap &mapAssets, EthereumMintTxVec &vecMintKeys, std::vector<COutPoint> &vecLockedOutpoints)
 {
     bool good = true;
     const bool &isBlock = !blockHash.IsNull();  
@@ -293,7 +272,7 @@ bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& 
             }
             if(nHeight > 0)
                 GetActorsFromAssetAllocationTx(theAssetAllocation, tx.nVersion, false, false, actorSet);
-            good = CheckAssetAllocationInputs(tx, txHash, theAssetAllocation, state, inputs, bJustCheckInternal, nHeight, blockHash, mapAssetSupplyStats, mapAssetAllocations, vecLockedOutpoints, bSanityInternal, bMiner);
+            good = CheckAssetAllocationInputs(tx, txHash, theAssetAllocation, state, inputs, bJustCheckInternal, nHeight, blockHash, mapAssetAllocations, vecLockedOutpoints, bSanityInternal, bMiner);
         }
         else if (IsAssetTx(tx.nVersion))
         {
@@ -306,7 +285,7 @@ bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& 
                 good = false;
             }
             else{
-                good = CheckSyscoinMint(ibd, tx, txHash, state, bJustCheckInternal, bSanityInternal, bMiner, nHeight, nTime, blockHash, mapAssets, mapAssetSupplyStats, mapAssetAllocations, vecMintKeys);
+                good = CheckSyscoinMint(ibd, tx, txHash, state, bJustCheckInternal, bSanityInternal, bMiner, nHeight, nTime, blockHash, mapAssets, mapAssetAllocations, vecMintKeys);
             }
         }
     } catch (...) {
@@ -397,7 +376,7 @@ int ResetAssetAllocation(const std::string &senderStr) {
     return count;
     
 }
-bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, AssetSupplyStatsMap &mapAssetSupplyStats, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys){
+bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys){
     CMintSyscoin mintSyscoin(tx);
     if(mintSyscoin.IsNull())
     {
@@ -455,31 +434,9 @@ bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, AssetSup
             }
         }      
     }
-    // update supply stats if index enabled
-    if(fAssetSupplyStatsIndex){
-        #if __cplusplus > 201402 
-        auto result = mapAssetSupplyStats.try_emplace(mintSyscoin.assetAllocationTuple.nAsset,  std::move(emptyAssetSupplyStats));
-        #else
-        auto result  = mapAssetSupplyStats.emplace(std::piecewise_construct,  std::forward_as_tuple(mintSyscoin.assetAllocationTuple.nAsset),  std::forward_as_tuple(std::move(emptyAssetSupplyStats)));
-        #endif  
-        auto mapAssetSupplyStat = result.first;
-        const bool &mapAssetSupplyStatsNotFound = result.second;
-        if(mapAssetSupplyStatsNotFound && passetsupplystatsdb->ExistStats(mintSyscoin.assetAllocationTuple.nAsset)){
-            CAssetSupplyStats dbAssetSupplyStats;
-            if (!passetsupplystatsdb->ReadStats(mintSyscoin.assetAllocationTuple.nAsset, dbAssetSupplyStats)) {
-                LogPrint(BCLog::SYS,"DisconnectMintAsset: Could not get asset supply stats %d\n",mintSyscoin.assetAllocationTuple.nAsset);
-                return false;               
-            } 
-            mapAssetSupplyStat->second = std::move(dbAssetSupplyStats);      
-        } 
-        mapAssetSupplyStat->second.nBalanceBridge += mintSyscoin.nValueAsset;
-        if(mintSyscoin.assetAllocationTuple.nAsset == Params().GetConsensus().nSYSXAsset)
-            mapAssetSupplyStat->second.nBalanceSPT -= mintSyscoin.nValueAsset;
-        
-    } 
     return true; 
 }
-bool DisconnectAssetAllocation(const CTransaction &tx, const uint256& txid, const CAssetAllocation &theAssetAllocation, CCoinsViewCache& view, AssetSupplyStatsMap &mapAssetSupplyStats, AssetAllocationMap &mapAssetAllocations){
+bool DisconnectAssetAllocation(const CTransaction &tx, const uint256& txid, const CAssetAllocation &theAssetAllocation, CCoinsViewCache& view, AssetAllocationMap &mapAssetAllocations){
 
     const std::string &senderTupleStr = theAssetAllocation.assetAllocationTuple.ToString();
 
@@ -565,42 +522,15 @@ bool DisconnectAssetAllocation(const CTransaction &tx, const uint256& txid, cons
             }
         }     
     }
-    // update supply stats if index enabled
-    if(fAssetSupplyStatsIndex && 
-    (tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM ||
-    tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN ||
-    tx.nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION)){
-        #if __cplusplus > 201402 
-        auto result = mapAssetSupplyStats.try_emplace(theAssetAllocation.assetAllocationTuple.nAsset,  std::move(emptyAssetSupplyStats));
-        #else
-        auto result  = mapAssetSupplyStats.emplace(std::piecewise_construct,  std::forward_as_tuple(theAssetAllocation.assetAllocationTuple.nAsset),  std::forward_as_tuple(std::move(emptyAssetSupplyStats)));
-        #endif  
-        auto mapAssetSupplyStat = result.first;
-        const bool &mapAssetSupplyStatsNotFound = result.second;
-        if(mapAssetSupplyStatsNotFound && passetsupplystatsdb->ExistStats(theAssetAllocation.assetAllocationTuple.nAsset)){
-            CAssetSupplyStats dbAssetSupplyStats;
-            if (!passetsupplystatsdb->ReadStats(theAssetAllocation.assetAllocationTuple.nAsset, dbAssetSupplyStats)) {
-                LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Could not get asset supply stats %d\n",theAssetAllocation.assetAllocationTuple.nAsset);
-                return false;               
-            } 
-            mapAssetSupplyStat->second = std::move(dbAssetSupplyStats);
-        }
-        if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
-            mapAssetSupplyStat->second.nBalanceBridge -= nTotal;
-        }
-        if(theAssetAllocation.assetAllocationTuple.nAsset == Params().GetConsensus().nSYSXAsset)
-            mapAssetSupplyStat->second.nBalanceSPT -= nTotal;
-            
-    }
     return true; 
 }
-bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, AssetSupplyStatsMap &mapAssetSupplyStats, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys, ActorSet &actorSet)
+bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys, ActorSet &actorSet)
 {
     if(tx.IsCoinBase())
         return true;
  
     if(IsSyscoinMintTx(tx.nVersion)){
-        if(!DisconnectMintAsset(tx, txHash, mapAssetSupplyStats, mapAssetAllocations, vecMintKeys))
+        if(!DisconnectMintAsset(tx, txHash, mapAssetAllocations, vecMintKeys))
             return false;       
     }  
     else{
@@ -612,7 +542,7 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash,
                 return false;
             }
             GetActorsFromAssetAllocationTx(theAssetAllocation, tx.nVersion, false, false, actorSet);
-            if(!DisconnectAssetAllocation(tx, txHash, theAssetAllocation, view, mapAssetSupplyStats, mapAssetAllocations))
+            if(!DisconnectAssetAllocation(tx, txHash, theAssetAllocation, view, mapAssetAllocations))
                 return false;       
         }
         else if (IsAssetTx(tx.nVersion))
@@ -629,7 +559,7 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash,
                     return false;
             }
             else if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
-                if(!DisconnectAssetActivate(tx, txHash, mapAssets, mapAssetSupplyStats))
+                if(!DisconnectAssetActivate(tx, txHash, mapAssets))
                     return false;
             }     
         }
@@ -644,7 +574,7 @@ CAmount FindBurnAmountFromTx(const CTransaction& tx){
     return 0;
 }
 bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, const CAssetAllocation &theAssetAllocation, CValidationState &state, const CCoinsViewCache &inputs,
-        const bool &fJustCheck, const int &nHeight, const uint256& blockhash, AssetSupplyStatsMap &mapAssetSupplyStats, AssetAllocationMap &mapAssetAllocations, std::vector<COutPoint> &vecLockedOutpoints, const bool &bSanityCheck, const bool &bMiner) {
+        const bool &fJustCheck, const int &nHeight, const uint256& blockhash, AssetAllocationMap &mapAssetAllocations, std::vector<COutPoint> &vecLockedOutpoints, const bool &bSanityCheck, const bool &bMiner) {
     if (passetallocationdb == nullptr)
         return false;
     if (!bSanityCheck)
@@ -827,26 +757,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
             if (!AssetRange(mapAssetAllocationReceiver->second.nBalance))
             {
                 return FormatSyscoinErrorMessage(state, "new-balance-out-of-range", bMiner);
-            }
-            // update supply stats if index enabled
-            if(fAssetSupplyStatsIndex){
-                #if __cplusplus > 201402 
-                auto result = mapAssetSupplyStats.try_emplace(nBurnAsset,  std::move(emptyAssetSupplyStats));
-                #else
-                auto result  = mapAssetSupplyStats.emplace(std::piecewise_construct,  std::forward_as_tuple(nBurnAsset),  std::forward_as_tuple(std::move(emptyAssetSupplyStats)));
-                #endif  
-                auto mapAssetSupplyStat = result.first;
-                const bool &mapAssetSupplyStatsNotFound = result.second;
-                if(mapAssetSupplyStatsNotFound && passetsupplystatsdb->ExistStats(nBurnAsset)){
-                    CAssetSupplyStats dbAssetSupplyStats;
-                    if (!passetsupplystatsdb->ReadStats(nBurnAsset, dbAssetSupplyStats)) {
-                        return FormatSyscoinErrorMessage(state, "assetallocation-read-supplystats", bMiner);          
-                    } 
-                    mapAssetSupplyStat->second = std::move(dbAssetSupplyStats);      
-                }
-                if(nBurnAsset == Params().GetConsensus().nSYSXAsset)
-                    mapAssetSupplyStat->second.nBalanceSPT += nBurnAmount; 
-            }                          
+            }             
         } 
     }          
     if (tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM || tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN)
@@ -941,29 +852,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, c
             if (!AssetRange(mapAssetAllocationReceiver->second.nBalance))
             {
                 return FormatSyscoinErrorMessage(state, "new-balance-out-of-range", bMiner);
-            }
-            // update supply stats if index enabled
-            if(fAssetSupplyStatsIndex){
-                #if __cplusplus > 201402 
-                auto result = mapAssetSupplyStats.try_emplace(nBurnAsset,  std::move(emptyAssetSupplyStats));
-                #else
-                auto result  = mapAssetSupplyStats.emplace(std::piecewise_construct,  std::forward_as_tuple(nBurnAsset),  std::forward_as_tuple(std::move(emptyAssetSupplyStats)));
-                #endif  
-                auto mapAssetSupplyStat = result.first;
-                const bool &mapAssetSupplyStatsNotFound = result.second;
-                if(mapAssetSupplyStatsNotFound && passetsupplystatsdb->ExistStats(nBurnAsset)){
-                    CAssetSupplyStats dbAssetSupplyStats;
-                    if (!passetsupplystatsdb->ReadStats(nBurnAsset, dbAssetSupplyStats)) {
-                        return FormatSyscoinErrorMessage(state, "assetallocation-read-supplystats", bMiner);                   
-                    } 
-                    mapAssetSupplyStat->second = std::move(dbAssetSupplyStats);      
-                }
-                if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
-                    mapAssetSupplyStat->second.nBalanceBridge += nBurnAmount;
-                }
-                if(nBurnAsset == Params().GetConsensus().nSYSXAsset)
-                    mapAssetSupplyStat->second.nBalanceSPT -= nBurnAmount;
-            }                                   
+            }                                 
         }
     }
 	else if (tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_LOCK)
@@ -1282,7 +1171,7 @@ bool DisconnectAssetTransfer(const CTransaction &tx, const uint256& txid, AssetM
     }         
     return true;  
 }
-bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txid, AssetMap &mapAssets, AssetSupplyStatsMap &mapAssetSupplyStats){
+bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txid, AssetMap &mapAssets){
     
     CAsset theAsset(tx);
     
@@ -1313,17 +1202,7 @@ bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txid, AssetM
                 return false;
             }
         }    
-    } 
-    // remove supply stats if index enabled
-    if(fAssetSupplyStatsIndex){
-        #if __cplusplus > 201402 
-        auto result = mapAssetSupplyStats.try_emplace(theAsset.nAsset,  std::move(emptyAssetSupplyStats));
-        #else
-        auto result  = mapAssetSupplyStats.emplace(std::piecewise_construct,  std::forward_as_tuple(theAsset.nAsset),  std::forward_as_tuple(std::move(emptyAssetSupplyStats)));
-        #endif  
-        auto mapAssetSupplyStat = result.first;
-        mapAssetSupplyStat->second.SetNull();
-    }      
+    }     
     return true;  
 }
 bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, CValidationState &state, const CCoinsViewCache &inputs,

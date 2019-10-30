@@ -134,7 +134,7 @@ void StartNode(const string &dataDirIn, bool regTest, const string& extraArgs, b
 {
 	string dataDir = LookupURLLocal(dataDirIn);
 	boost::filesystem::path fpath = boost::filesystem::system_complete("./syscoind");
-	string nodePath = fpath.string() + string(" -server -rpcuser=u -rpcpassword=p -unittest -tpstest -assetindex -assetsupplystatsindex -daemon -server -debug=0");
+	string nodePath = fpath.string() + string(" -server -rpcuser=u -rpcpassword=p -unittest -tpstest -assetindex -daemon -server -debug=0");
 	nodePath += string(" -datadir=") + dataDir;
 	if (regTest)
 		nodePath += string(" -regtest");

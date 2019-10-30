@@ -335,36 +335,7 @@ public:
     bool ScanAssetIndex(uint32_t page, const UniValue& oOptions, UniValue& oRes);
     bool FlushErase(const std::vector<uint256> &vecTXIDs);
 };
-class CAssetSupplyStats {
-public: 
-    CAmount nBalanceSPT;
-    CAmount nBalanceBridge;
-    CAssetSupplyStats() {
-        SetNull();
-    }
-    ADD_SERIALIZE_METHODS;
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {      
-        READWRITE(nBalanceSPT);
-        READWRITE(nBalanceBridge);
-    }
-    inline void SetNull() {  nBalanceSPT = nBalanceBridge = 0;  }
-    inline bool IsNull() const {  return (nBalanceSPT == 0 && nBalanceBridge == 0);  }
-};
-typedef std::unordered_map<uint32_t, CAssetSupplyStats > AssetSupplyStatsMap;
-class CAssetSupplyStatsDB : public CDBWrapper {
-public:
-    CAssetSupplyStatsDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetsupplystats", nCacheSize, fMemory, fWipe) {}
-    bool ReadStats(const uint32_t& nAsset, CAssetSupplyStats& assetstats) {
-        return Read(nAsset, assetstats);
-    } 
-    bool ExistStats(const uint32_t &nAsset){
-        return Exists(nAsset);
-    }   
-    bool Flush(const AssetSupplyStatsMap &mapAssetSupplyStats);
-};
 static CAsset emptyAsset;
-static CAssetSupplyStats emptyAssetSupplyStats;
 bool GetAsset(const uint32_t &nAsset,CAsset& txPos);
 bool BuildAssetJson(const CAsset& asset, UniValue& oName);
 #ifdef ENABLE_WALLET
@@ -373,7 +344,6 @@ bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output, CW
 bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output);
 bool WriteAssetIndexTXID(const uint32_t& nAsset, const uint256& txid);
 extern std::unique_ptr<CAssetDB> passetdb;
-extern std::unique_ptr<CAssetSupplyStatsDB> passetsupplystatsdb;
 extern std::unique_ptr<CAssetAllocationDB> passetallocationdb;
 extern std::unique_ptr<CAssetAllocationMempoolDB> passetallocationmempooldb;
 extern std::unique_ptr<CAssetIndexDB> passetindexdb;
