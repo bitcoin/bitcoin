@@ -80,7 +80,6 @@ bool fZMQNetworkStatus = false;
 bool fZMQEthStatus = false;
 bool fZMQWalletRawTx = false;
 bool fAssetIndex = false;
-bool fAssetSupplyStatsIndex = false;
 int fAssetIndexPageSize = 25;
 std::vector<uint32_t> fAssetIndexGuids; 
 uint32_t fGethSyncHeight = 0;

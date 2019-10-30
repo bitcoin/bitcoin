@@ -57,7 +57,6 @@ extern bool bb;
 extern pid_t gethPID;
 extern pid_t relayerPID;
 extern bool fAssetIndex;
-extern bool fAssetSupplyStatsIndex;
 extern int fAssetIndexPageSize;
 extern std::vector<uint32_t> fAssetIndexGuids; 
 extern std::vector<JSONRPCRequest> vecTPSRawTransactions;

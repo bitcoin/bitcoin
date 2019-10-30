@@ -214,14 +214,13 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     bool bSenderConflicted = false;
     AssetAllocationMap mapAssetAllocations;
     AssetMap mapAssets;
-    AssetSupplyStatsMap mapAssetSupplyStats;
     EthereumMintTxVec vecMintKeys;
     std::vector<COutPoint> vecLockedOutpoints;
     ActorSet actorSet;
     bool bFoundError = false;
     for(const CTransactionRef& tx: pblock->vtx){
         const uint256& txHash = tx->GetHash();
-        if(!CheckSyscoinInputs(false, *tx, txHash, stateInputs, view, false, nHeight, ::ChainActive().Tip()->GetMedianTimePast(), pblock->GetHash(), false, true, actorSet, mapAssetAllocations, mapAssets, mapAssetSupplyStats, vecMintKeys, vecLockedOutpoints)){
+        if(!CheckSyscoinInputs(false, *tx, txHash, stateInputs, view, false, nHeight, ::ChainActive().Tip()->GetMedianTimePast(), pblock->GetHash(), false, true, actorSet, mapAssetAllocations, mapAssets, vecMintKeys, vecLockedOutpoints)){
             txsToRemove.emplace_back(std::move(txHash));
             stateConflict = stateInputs;
             bFoundError = true;
