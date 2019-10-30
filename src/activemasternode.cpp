@@ -26,6 +26,8 @@ std::string CActiveMasternodeManager::GetStateString() const
         return "REMOVED";
     case MASTERNODE_OPERATOR_KEY_CHANGED:
         return "OPERATOR_KEY_CHANGED";
+    case MASTERNODE_PROTX_IP_CHANGED:
+        return "PROTX_IP_CHANGED";
     case MASTERNODE_READY:
         return "READY";
     case MASTERNODE_ERROR:
@@ -46,6 +48,8 @@ std::string CActiveMasternodeManager::GetStatus() const
         return "Masternode removed from list";
     case MASTERNODE_OPERATOR_KEY_CHANGED:
         return "Operator key changed or revoked";
+    case MASTERNODE_PROTX_IP_CHANGED:
+        return "IP address specified in ProTx changed";
     case MASTERNODE_READY:
         return "Ready";
     case MASTERNODE_ERROR:
@@ -94,11 +98,9 @@ void CActiveMasternodeManager::Init()
         return;
     }
 
-    mnListEntry = dmn;
+    LogPrintf("CActiveMasternodeManager::Init -- proTxHash=%s, proTx=%s\n", dmn->proTxHash.ToString(), dmn->ToString());
 
-    LogPrintf("CActiveMasternodeManager::Init -- proTxHash=%s, proTx=%s\n", mnListEntry->proTxHash.ToString(), mnListEntry->ToString());
-
-    if (activeMasternodeInfo.service != mnListEntry->pdmnState->addr) {
+    if (activeMasternodeInfo.service != dmn->pdmnState->addr) {
         state = MASTERNODE_ERROR;
         strError = "Local address does not match the address from ProTx";
         LogPrintf("CActiveMasternodeManager::Init -- ERROR: %s", strError);
@@ -120,8 +122,8 @@ void CActiveMasternodeManager::Init()
         }
     }
 
-    activeMasternodeInfo.proTxHash = mnListEntry->proTxHash;
-    activeMasternodeInfo.outpoint = mnListEntry->collateralOutpoint;
+    activeMasternodeInfo.proTxHash = dmn->proTxHash;
+    activeMasternodeInfo.outpoint = dmn->collateralOutpoint;
     state = MASTERNODE_READY;
 }
 
@@ -134,24 +136,41 @@ void CActiveMasternodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, con
     if (!deterministicMNManager->IsDIP3Enforced(pindexNew->nHeight)) return;
 
     if (state == MASTERNODE_READY) {
-        auto mnList = deterministicMNManager->GetListForBlock(pindexNew);
-        if (!mnList.IsMNValid(mnListEntry->proTxHash)) {
+        auto oldMNList = deterministicMNManager->GetListForBlock(pindexNew->pprev);
+        auto newMNList = deterministicMNManager->GetListForBlock(pindexNew);
+        if (!newMNList.IsMNValid(activeMasternodeInfo.proTxHash)) {
             // MN disappeared from MN list
             state = MASTERNODE_REMOVED;
             activeMasternodeInfo.proTxHash = uint256();
             activeMasternodeInfo.outpoint.SetNull();
             // MN might have reappeared in same block with a new ProTx
             Init();
-        } else if (mnList.GetMN(mnListEntry->proTxHash)->pdmnState->pubKeyOperator != mnListEntry->pdmnState->pubKeyOperator) {
+            return;
+        }
+
+        auto oldDmn = oldMNList.GetMN(activeMasternodeInfo.proTxHash);
+        auto newDmn = newMNList.GetMN(activeMasternodeInfo.proTxHash);
+        if (newDmn->pdmnState->pubKeyOperator != oldDmn->pdmnState->pubKeyOperator) {
             // MN operator key changed or revoked
             state = MASTERNODE_OPERATOR_KEY_CHANGED;
             activeMasternodeInfo.proTxHash = uint256();
             activeMasternodeInfo.outpoint.SetNull();
             // MN might have reappeared in same block with a new ProTx
             Init();
+            return;
+        }
+
+        if (newDmn->pdmnState->addr != oldDmn->pdmnState->addr) {
+            // MN IP changed
+            state = MASTERNODE_PROTX_IP_CHANGED;
+            activeMasternodeInfo.proTxHash = uint256();
+            activeMasternodeInfo.outpoint.SetNull();
+            Init();
+            return;
         }
     } else {
-        // MN might have (re)appeared with a new ProTx or we've found some peers and figured out our local address
+        // MN might have (re)appeared with a new ProTx or we've found some peers
+        // and figured out our local address
         Init();
     }
 }

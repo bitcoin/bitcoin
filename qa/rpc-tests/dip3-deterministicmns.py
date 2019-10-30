@@ -194,6 +194,23 @@ class DIP3Test(BitcoinTestFramework):
         self.log.info("testing instant send with replaced MNs")
         self.test_instantsend(10, 3, timeout=20)
 
+        self.log.info("testing masternode status updates")
+        # change voting address and see if changes are reflected in `masternode status` rpc output
+        mn = mns[0]
+        node = self.nodes[0]
+        old_dmnState = mn.node.masternode("status")["dmnState"]
+        old_voting_address = old_dmnState["votingAddress"]
+        new_voting_address = node.getnewaddress()
+        assert(old_voting_address != new_voting_address)
+        # also check if funds from payout address are used when no fee source address is specified
+        node.sendtoaddress(mn.rewards_address, 0.001)
+        node.protx('update_registrar', mn.protx_hash, "", new_voting_address, mn.rewards_address)
+        node.generate(1)
+        self.sync_all()
+        new_dmnState = mn.node.masternode("status")["dmnState"]
+        new_voting_address_from_rpc = new_dmnState["votingAddress"]
+        assert(new_voting_address_from_rpc == new_voting_address)
+
     def prepare_mn(self, node, idx, alias):
         mn = Masternode()
         mn.idx = idx
