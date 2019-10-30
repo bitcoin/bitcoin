@@ -762,7 +762,7 @@ public:
         bool fSendMempool GUARDED_BY(cs_tx_inventory){false};
         // Last time a "MEMPOOL" request was serviced.
         std::atomic<std::chrono::seconds> m_last_mempool_req{std::chrono::seconds{0}};
-        int64_t nNextInvSend{0};
+        std::chrono::microseconds nNextInvSend{0};
 
         CCriticalSection cs_feeFilter;
         // Minimum fee rate with which to filter inv's to this node
