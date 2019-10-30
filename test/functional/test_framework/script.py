@@ -9,7 +9,6 @@ This file is modified from python-bitcoinlib.
 import hashlib
 import struct
 
-from .bignum import bn2vch
 from .messages import (
     CTransaction,
     CTxOut,
@@ -26,6 +25,40 @@ OPCODE_NAMES = {}
 def hash160(s):
     return hashlib.new('ripemd160', sha256(s)).digest()
 
+def bn2vch(v):
+    """Convert number to bitcoin-specific little endian format."""
+    # The top bit is used to indicate the sign of the number. If there
+    # isn't a spare bit in the bit length, add an extension byte.
+    have_ext = False
+    ext = bytearray()
+    if v.bit_length() > 0:
+        have_ext = (v.bit_length() & 0x07) == 0
+        ext.append(0)
+
+    # Is the number negative?
+    neg = False
+    if v < 0:
+        neg = True
+        v = -v
+
+    # Convert the int to bytes
+    v_bin = bytearray()
+    bytes_len = (v.bit_length() + 7) // 8
+    for i in range(bytes_len, 0, -1):
+        v_bin.append((v >> ((i - 1) * 8)) & 0xff)
+
+    # Add the sign bit if necessary
+    if neg:
+        if have_ext:
+            ext[0] |= 0x80
+        else:
+            v_bin[0] |= 0x80
+
+    v_bytes = ext + v_bin
+    # Reverse bytes ordering for LE
+    v_bytes.reverse()
+
+    return bytes(v_bytes)
 
 _opcode_instances = []
 class CScriptOp(int):
