@@ -211,15 +211,15 @@ def test_small_output_with_feerate_succeeds(rbf_node, dest_address):
     # Make sure additional inputs exist
     rbf_node.generatetoaddress(101, rbf_node.getnewaddress())
     rbfid = spend_one_input(rbf_node, dest_address)
-    original_input_list = rbf_node.getrawtransaction(rbfid, 1)["vin"]
-    assert_equal(len(original_input_list), 1)
-    original_txin = original_input_list[0]
+    input_list = rbf_node.getrawtransaction(rbfid, 1)["vin"]
+    assert_equal(len(input_list), 1)
+    original_txin = input_list[0]
     # Keep bumping until we out-spend change output
     tx_fee = 0
     while tx_fee < Decimal("0.0005"):
-        new_input_list = rbf_node.getrawtransaction(rbfid, 1)["vin"]
-        new_item = list(new_input_list)[0]
-        assert_equal(len(original_input_list), 1)
+        input_list = rbf_node.getrawtransaction(rbfid, 1)["vin"]
+        new_item = list(input_list)[0]
+        assert_equal(len(input_list), 1)
         assert_equal(original_txin["txid"], new_item["txid"])
         assert_equal(original_txin["vout"], new_item["vout"])
         rbfid_new_details = rbf_node.bumpfee(rbfid)
