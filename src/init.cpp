@@ -657,7 +657,6 @@ static void CleanupBlockRevFiles()
 static void ThreadImport(std::vector<fs::path> vImportFiles)
 {
     const CChainParams& chainparams = Params();
-    util::ThreadRename("loadblk");
     ScheduleBatchPriority();
 
     {
@@ -1713,7 +1712,7 @@ bool AppInitMain(NodeContext& node)
         vImportFiles.push_back(strFile);
     }
 
-    threadGroup.create_thread(std::bind(&ThreadImport, vImportFiles));
+    threadGroup.create_thread(TracedThread("loadblk", [vImportFiles] { ThreadImport(vImportFiles); }));
 
     // Wait for genesis block to be processed
     {
