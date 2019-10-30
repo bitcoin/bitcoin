@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_NODE_CONTEXT_H
-#define BITCOIN_NODE_CONTEXT_H
+#ifndef SYSCOIN_NODE_CONTEXT_H
+#define SYSCOIN_NODE_CONTEXT_H
 
 #include <memory>
 #include <vector>
@@ -20,4 +20,4 @@ struct NodeContext
     std::vector<std::unique_ptr<interfaces::ChainClient>> chain_clients;
 };
 
-#endif // BITCOIN_NODE_CONTEXT_H
+#endif // SYSCOIN_NODE_CONTEXT_H
