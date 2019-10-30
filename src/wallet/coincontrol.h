@@ -6,12 +6,11 @@
 #define BITCOIN_WALLET_COINCONTROL_H
 
 #include <key.h>
+#include <optional.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <primitives/transaction.h>
 #include <script/standard.h>
-
-#include <boost/optional.hpp>
 
 enum class CoinType
 {
@@ -40,11 +39,11 @@ public:
     //! Override automatic min/max checks on fee, m_feerate must be set if true
     bool fOverrideFeeRate;
     //! Override the wallet's m_pay_tx_fee if set
-    boost::optional<CFeeRate> m_feerate;
+    Optional<CFeeRate> m_feerate;
     //! Override the discard feerate estimation with m_discard_feerate in CreateTransaction if set
-    boost::optional<CFeeRate> m_discard_feerate;
+    Optional<CFeeRate> m_discard_feerate;
     //! Override the default confirmation target if set
-    boost::optional<unsigned int> m_confirm_target;
+    Optional<unsigned int> m_confirm_target;
     //! Avoid partial use of funds sent to a given address
     bool m_avoid_partial_spends;
     //! Fee estimation mode to control arguments to estimateSmartFee
