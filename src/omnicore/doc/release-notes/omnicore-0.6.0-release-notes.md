@@ -1,13 +1,13 @@
-Omni Core v0.7.0
+Omni Core v0.6.0
 ================
 
-v0.7.0 is a major release and changes the code base of Omni Core from Bitcoin Core 0.13.2 to Bitcoin Core 0.18.1. Once consensus affecting features are enabled, this version is no longer compatible with previous versions and an upgrade is required. 
-
-Compared to Omni Core v0.6.0 and previous versions, v0.7.0 enhances it's distributed exchange nad supports trading of any asset or token for Bitcoin. This version also fixes locking issues and the RPCs for funding transactions as well as omni_listtransactions.
+v0.6.0 is a major release and changes the code base of Omni Core from Bitcoin Core 0.13.2 to Bitcoin Core 0.18.1. No Omni Layer consensus rules were changed and the consensus behavior of this version is identidcal with Omni Core v0.5.0. An upgrade is **not required**, but recommended in an experimental environment.
 
 **Due to the upgrade from Bitcoin Core 0.13.2 to 0.18.1, this version incooperates many changes, so please take your time to read through all release notes carefully. The first time you run this version, all the database is reconstructed, which can easily consume several hours.**
 
-To avoid downtime of your system, running both versions on two instances is recommended and once v0.6.1 is up-to-date and it's behavior was confirmed to work, a hot swap may be done.
+To avoid downtime of your system, running both versions on two instances is recommended and once v0.6.0 is up-to-date and it's behavior was confirmed to work, a hot swap may be done.
+
+**There is no harm in skipping this version, as it's consensus behavior is identical to Omni Core v0.5.0. If you are running v0.5.0, there is no need for an update.**
 
 Please report bugs using the issue tracker on GitHub:
 
@@ -17,15 +17,13 @@ Please report bugs using the issue tracker on GitHub:
 Table of contents
 =================
 
-- [Omni Core v0.7.0](#omni-core-v070)
+- [Omni Core v0.6.0](#omni-core-v050)
 - [Upgrading and downgrading](#upgrading-and-downgrading)
   - [How to upgrade](#how-to-upgrade)
   - [Downgrading](#downgrading)
   - [Compatibility with Bitcoin Core](#compatibility-with-bitcoin-core)
 - [Imported changes and notes](#imported-changes-and-notes)
-  - [Upgrade to Bitcoin Core 0.18.1](#upgrade-to-bitcoin-core-0181)
-  - [Allow any token to be traded for Bitcoin](#allow-any-token-to-be-traded-for-bitcoin)
-  - [Omni specific user-agent](#omni-specific-user-agent)
+  - [Upgrade to Bitcoin Core 0.18.2](#upgrade-to-bitcoin-core-0182)
   - [getinfo deprecated](#getinfo-deprecated)
   - [Fee estimation improvements](#fee-estimation-improvements)
   - [Transaction index changes](#transaction-index-changes)
@@ -50,12 +48,12 @@ During the first startup historical Omni transactions are reprocessed and Omni C
 Downgrading
 -----------
 
-Downgrading to an Omni Core version prior to 0.7.0 is not supported.
+Downgrading to an Omni Core version prior to 0.6.0 is not supported.
 
 Compatibility with Bitcoin Core
 -------------------------------
 
-Omni Core is based on Bitcoin Core 0.18.1 and can be used as replacement for Bitcoin Core. Switching between Omni Core and Bitcoin Core may be supported.
+Omni Core is based on Bitcoin Core 0.18.2 and can be used as replacement for Bitcoin Core. Switching between Omni Core and Bitcoin Core may be supported.
 
 However, it is not advised to upgrade or downgrade to versions other than Bitcoin Core 0.18. When switching to Omni Core, it may be necessary to reprocess Omni Layer transactions.
 
@@ -63,10 +61,10 @@ However, it is not advised to upgrade or downgrade to versions other than Bitcoi
 Imported changes and notes
 ==========================
 
-Upgrade to Bitcoin Core 0.18.1
+Upgrade to Bitcoin Core 0.18.2
 ------------------------------
 
-The underlying base of Omni Core was upgraded from Bitcoin Core 0.13.2 to Bitcoin Core 0.18.1.
+The underlying base of Omni Core was upgraded from Bitcoin Core 0.13.2 to Bitcoin Core 0.18.2.
 
 Please read the following release notes for further details very carefully:
 
@@ -87,24 +85,6 @@ Please read the following release notes for further details very carefully:
 - [Release notes for Bitcoin Core 0.17.1](https://github.com/bitcoin/bitcoin/blob/v0.18.1/doc/release-notes/release-notes-0.17.1.md)
 - [Release notes for Bitcoin Core 0.18.0](https://github.com/bitcoin/bitcoin/blob/v0.18.0/doc/release-notes.md)
 - [Release notes for Bitcoin Core 0.18.1](https://github.com/bitcoin/bitcoin/blob/v0.18.1/doc/release-notes.md)
-
-
-Allow any token to be traded for Bitcoin
-----------------------------------------
-
-Right now the native distributed exchange of the Omni Layer protocol supports trading Omni and Test Omni for Bitcoin.
-
-With this version, any token can be traded and there are no longer any trading restrictions.
-
-Please note: this consensus change is not yet activated, but included in this release. An announcement will be made, when this feature is activated.
-
-
-Omni specific user-agent
-------------------------
-
-As per default, starting with this version, Omni Core will identify itself as `/Satoshi:0.18.1 (Omni:0.7.0)/`.
-
-With the configuration option `-omniuseragent=0` will hide the client as regular Bitcoin Core node.
 
 
 `getinfo` deprecated
@@ -239,17 +219,6 @@ The following list includes relevant pull requests merged into this release:
 - #997 Bump version to Omni Core 0.6.0
 - #1004 Run lint tests as close as possible to defaults and refactor as required
 - #998 Add release notes for Omni Core 0.6.0
-- #1010 Fix rescan minutes
-- #1019 Set fSuccess true on valid wtxNew
-- #1020 Updates to omni_funded_send
-- #1022 Fix #1011: different transactions getting the same sortKey in FetchWalletOmniTransactions
-- #1023 Remove lint white space check
-- #1024 Lock cs_main and cs_tally when calling LoadAlerts
-- #1026 Lock cs_main before calling AcceptToMemoryPool
-- #1027 Fail funded send TXs with more outputs than expected
-- #1035 Set Omni bespoke user agent string
-- #1038 Allow any token to be traded for Bitcoin
-- #1034 Prepare release of Omni Core v0.7.0
 ```
 
 
