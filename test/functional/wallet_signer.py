@@ -91,5 +91,37 @@ class SignerTest(BitcoinTestFramework):
         not_hww = self.nodes[1].get_wallet_rpc('not_hww')
         assert_raises_rpc_error(-8, "Wallet flag is immutable: external_signer", not_hww.setwalletflag, "external_signer", True)
 
+        # assert_raises_rpc_error(-4, "Multiple signers found, please specify which to use", wallet_name='not_hww', disable_private_keys=True, descriptors=True, external_signer=True)
+
+        # TODO: Handle error thrown by script
+        # self.set_mock_result(self.nodes[1], "2")
+        # assert_raises_rpc_error(-1, 'Unable to parse JSON',
+        #     self.nodes[1].createwallet, wallet_name='not_hww2', disable_private_keys=True, descriptors=True, external_signer=False
+        # )
+        # self.clear_mock_result(self.nodes[1])
+
+        assert_equal(hww.getwalletinfo()["keypoolsize"], 3)
+
+        address1 = hww.getnewaddress(address_type="bech32")
+        assert_equal(address1, "bcrt1qm90ugl4d48jv8n6e5t9ln6t9zlpm5th68x4f8g")
+        address_info = hww.getaddressinfo(address1)
+        assert_equal(address_info['solvable'], True)
+        assert_equal(address_info['ismine'], True)
+        assert_equal(address_info['hdkeypath'], "m/84'/1'/0'/0/0")
+
+        address2 = hww.getnewaddress(address_type="p2sh-segwit")
+        assert_equal(address2, "2N2gQKzjUe47gM8p1JZxaAkTcoHPXV6YyVp")
+        address_info = hww.getaddressinfo(address2)
+        assert_equal(address_info['solvable'], True)
+        assert_equal(address_info['ismine'], True)
+        assert_equal(address_info['hdkeypath'], "m/49'/1'/0'/0/0")
+
+        address3 = hww.getnewaddress(address_type="legacy")
+        assert_equal(address3, "n1LKejAadN6hg2FrBXoU1KrwX4uK16mco9")
+        address_info = hww.getaddressinfo(address3)
+        assert_equal(address_info['solvable'], True)
+        assert_equal(address_info['ismine'], True)
+        assert_equal(address_info['hdkeypath'], "m/44'/1'/0'/0/0")
+
 if __name__ == '__main__':
     SignerTest().main()

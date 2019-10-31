@@ -49,6 +49,12 @@ public:
     //! @param[out] success     Boolean
     static bool Enumerate(const std::string& command, std::vector<ExternalSigner>& signers, std::string chain, bool ignore_errors = false);
 
+    //! Get receive and change Descriptor(s) from device for a given account.
+    //! Calls `<command> getdescriptors --account <account>`
+    //! @param[in] account  which BIP32 account to use (e.g. `m/44'/0'/account'`)
+    //! @param[out] UniValue see doc/external-signer.md
+    UniValue GetDescriptors(int account);
+
 #endif
 };
 
