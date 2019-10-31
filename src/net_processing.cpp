@@ -879,8 +879,12 @@ int64_t CalculateDataGetDataTime(const CInv& inv, int64_t current_time, bool use
     return process_time;
 }
 
-void RequestData(CNodeState* state, const CInv& inv, int64_t nNow) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+} // namespace
+
+void RequestData(const NodeId id, const CInv& inv)
 {
+    CNodeState* state = State(id);
+    int64_t nNow = GetTimeMicros();
     CNodeState::InventoryDownloadState& peer_download_state = state->m_inv_download;
     if (peer_download_state.m_inv_announced.size() >= MAX_PEER_INV_ANNOUNCEMENTS ||
             peer_download_state.m_inv_process_time.size() >= MAX_PEER_INV_ANNOUNCEMENTS ||
@@ -897,8 +901,6 @@ void RequestData(CNodeState* state, const CInv& inv, int64_t nNow) EXCLUSIVE_LOC
 
     peer_download_state.m_inv_process_time.emplace(process_time, inv);
 }
-
-} // namespace
 
 void RemoveDataRequest(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main){
     g_connman->ForEachNode([&inv](CNode* node) {
@@ -2558,7 +2560,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                     if (inv.type == MSG_TX || inv.type == MSG_WITNESS_TX)
                         RequestTx(State(pfrom->GetId()), inv.hash, nNow);
                     else
-                        RequestData(State(pfrom->GetId()), inv, nNow);
+                        RequestData(pfrom->GetId(), inv);
                 }
             }
         }
