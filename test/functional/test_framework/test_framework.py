@@ -99,13 +99,12 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.supports_cli = False
         self.bind_to_localhost_only = True
         self.set_test_params()
+        self.parse_args()
 
     def main(self):
         """Main function. This should not be overridden by the subclass test scripts."""
 
         assert hasattr(self, "num_nodes"), "Test must set self.num_nodes in set_test_params()"
-
-        self.parse_args()
 
         try:
             self.setup()
