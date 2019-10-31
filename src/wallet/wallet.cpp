@@ -3573,6 +3573,19 @@ void ReserveDestination::ReturnDestination()
     address = CNoDestination();
 }
 
+#ifdef ENABLE_EXTERNAL_SIGNER
+ExternalSigner CWallet::GetExternalSigner()
+{
+    const std::string command = gArgs.GetArg("-signer", "");
+    if (command == "") throw std::runtime_error(std::string(__func__) + ": restart bitcoind with -signer=<cmd>");
+    std::vector<ExternalSigner> signers;
+    ExternalSigner::Enumerate(command, signers, Params().NetworkIDString());
+    if (signers.empty()) throw std::runtime_error(std::string(__func__) + ": No external signers found");
+    // TODO: add fingerprint argument in case of multiple signers
+    return signers[0];
+}
+#endif
+
 void CWallet::LockCoin(const COutPoint& output)
 {
     AssertLockHeld(cs_wallet);
