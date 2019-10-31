@@ -45,7 +45,6 @@ const char *SPORK="spork";
 const char *GETSPORKS="getsporks";
 const char *MASTERNODEPAYMENTVOTE="mnw";
 const char *MASTERNODEPAYMENTSYNC="mnget";
-const char *MNQUORUM="mn quorum"; // not implemented
 const char *MNANNOUNCE="mnb";
 const char *MNPING="mnp";
 const char *DSEG="dseg";
