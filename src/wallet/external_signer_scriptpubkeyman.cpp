@@ -30,3 +30,21 @@ bool ExternalSignerScriptPubKeyMan::SetupDescriptor(std::unique_ptr<Descriptor> 
     m_storage.UnsetBlankWalletFlag(batch);
     return true;
 }
+
+ExternalSigner ExternalSignerScriptPubKeyMan::GetExternalSigner() {
+#ifdef ENABLE_EXTERNAL_SIGNER
+    const std::string command = gArgs.GetArg("-signer", ""); // DEFAULT_EXTERNAL_SIGNER);
+    if (command == "") throw std::runtime_error(std::string(__func__) + ": restart bitcoind with -signer=<cmd>");
+
+    std::string chain = gArgs.GetChainName();
+    const bool mainnet = chain == CBaseChainParams::MAIN;
+    std::vector<ExternalSigner> signers;
+    ExternalSigner::Enumerate(command, signers, mainnet);
+    if (signers.empty()) throw std::runtime_error(std::string(__func__) + ": No external signers found");
+    // TODO: add fingerprint argument in case of multiple signers
+    return signers[0];
+#else
+    throw std::runtime_error(std::string(__func__) + ": Wallets with external signers require Boost::System library.");
+#endif
+
+}

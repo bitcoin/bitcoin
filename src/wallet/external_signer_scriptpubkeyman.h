@@ -21,6 +21,9 @@ class ExternalSignerScriptPubKeyMan : public DescriptorScriptPubKeyMan
   * Returns false if already setup or setup fails, true if setup is successful
   */
   bool SetupDescriptor(std::unique_ptr<Descriptor>desc);
+
+  static ExternalSigner GetExternalSigner();
+
 };
 
 #endif // BITCOIN_WALLET_EXTERNAL_SIGNER_SCRIPTPUBKEYMAN_H
