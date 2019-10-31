@@ -93,6 +93,9 @@ public:
     void operator()(const CKeyID &keyId) {
         nNumSigs++;
     }
+    void operator()(const PKHash &pkhash) {
+        nNumSigs++;
+    }
 
     void operator()(const CScriptID &scriptId) {
         CScript script;
@@ -101,11 +104,21 @@ public:
     }
     void operator()(const WitnessV0ScriptHash& scriptID)
     {
-        CScriptID id;
-        CRIPEMD160().Write(scriptID.begin(), 32).Finalize(id.begin());
         CScript script;
-        if (provider && provider->GetCScript(id, script)) {
+        CRIPEMD160 hasher;
+        uint160 hash;
+        hasher.Write(scriptID.begin(), 32).Finalize(hash.begin());
+        if (provider && provider->GetCScript(CScriptID(hash), script)) {
             Process(script);
+        }
+    }
+    void operator()(const ScriptHash& scripthash)
+    {
+        CScriptID scriptID(scripthash);
+        UniValue obj(UniValue::VOBJ);
+        CScript subscript;
+        if (provider && provider->GetCScript(scriptID, subscript)) {
+            Process(subscript);
         }
     }
 

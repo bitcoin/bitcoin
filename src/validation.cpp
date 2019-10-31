@@ -555,7 +555,7 @@ private:
         }
         // SYSCOIN
         if (package_fee < ::minRelayTxFee.GetFee(IsAssetAllocation? package_size*2: package_size)) {
-            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "min relay fee not met", strprintf("%d < %d", package_fee, ::minRelayTxFee.GetFee(package_size)));
+            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "min relay fee not met", strprintf("%d < %d", package_fee, ::minRelayTxFee.GetFee(IsAssetAllocation? package_size*2: package_size)));
         }
         return true;
     }
