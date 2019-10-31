@@ -2968,7 +2968,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         // If we end up treating this as a plain headers message, call that as well
         // without cs_main.
         bool fRevertToHeaderProcessing = false;
-        CDataStream vHeadersMsg(SER_NETWORK, PROTOCOL_VERSION);
 
         // Keep a CBlock for "optimistic" compactblock reconstructions (see
         // below)
@@ -3090,10 +3089,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 return true;
             } else {
                 // If this was an announce-cmpctblock, we want the same treatment as a header message
-                // Dirty hack to process as if it were just a headers message (TODO: move message handling into their own functions)
-                std::vector<CBlock> headers;
-                headers.push_back(cmpctblock.header);
-                vHeadersMsg << headers;
                 fRevertToHeaderProcessing = true;
             }
         }
