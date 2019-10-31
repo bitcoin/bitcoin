@@ -388,14 +388,13 @@ std::string JSONRPCExecBatch(const JSONRPCRequest& jreq, const UniValue& vReq)
  * Process named arguments into a vector of positional arguments, based on the
  * passed-in specification for the RPC call's arguments.
  */
-static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, const std::vector<std::string>& argNames)
+static inline UniValue transformNamedArguments(const UniValue& in, const std::vector<std::string>& argNames)
 {
-    JSONRPCRequest out = in;
-    out.params = UniValue(UniValue::VARR);
+    UniValue out(UniValue::VARR);
     // Build a map of parameters, and remove ones that have been processed, so that we can throw a focused error if
     // there is an unknown one.
-    const std::vector<std::string>& keys = in.params.getKeys();
-    const std::vector<UniValue>& values = in.params.getValues();
+    const std::vector<std::string>& keys = in.getKeys();
+    const std::vector<UniValue>& values = in.getValues();
     std::unordered_map<std::string, const UniValue*> argsIn;
     for (size_t i=0; i<keys.size(); ++i) {
         argsIn[keys[i]] = &values[i];
@@ -417,10 +416,10 @@ static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, c
                 // Fill hole between specified parameters with JSON nulls,
                 // but not at the end (for backwards compatibility with calls
                 // that act based on number of specified parameters).
-                out.params.push_back(UniValue());
+                out.push_back(UniValue());
             }
             hole = 0;
-            out.params.push_back(*fr->second);
+            out.push_back(*fr->second);
             argsIn.erase(fr);
         } else {
             hole += 1;
@@ -431,6 +430,13 @@ static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, c
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown named parameter " + argsIn.begin()->first);
     }
     // Return request with named arguments transformed to positional arguments
+    return out;
+}
+
+static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, const std::vector<std::string>& argNames)
+{
+    JSONRPCRequest out = in;
+    out.params = transformNamedArguments(in.params, argNames);
     return out;
 }
 
