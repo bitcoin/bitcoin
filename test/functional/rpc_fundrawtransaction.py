@@ -91,7 +91,11 @@ class RawTransactionsTest(SyscoinTestFramework):
         self.test_option_subtract_fee_from_outputs()
 
     def test_change_position(self):
+<<<<<<< HEAD
         """Ensure setting changePosition in fundraw with an exact match is handled properly."""
+=======
+        # ensure that setting changePosition in fundraw with an exact match is handled properly
+>>>>>>> 94fcc0854... test: add rpc_fundrawtransaction logging
         self.log.info("Test fundrawtxn changePosition option")
         rawmatch = self.nodes[2].createrawtransaction([], {self.nodes[2].getnewaddress():50})
         rawmatch = self.nodes[2].fundrawtransaction(rawmatch, {"changePosition":1, "subtractFeeFromOutputs":[0]})
@@ -117,6 +121,12 @@ class RawTransactionsTest(SyscoinTestFramework):
         self.sync_all()
 
     def test_simple(self):
+<<<<<<< HEAD
+=======
+        ###############
+        # simple test #
+        ###############
+>>>>>>> 94fcc0854... test: add rpc_fundrawtransaction logging
         self.log.info("Test fundrawtxn")
         inputs  = [ ]
         outputs = { self.nodes[0].getnewaddress() : 1.0 }
@@ -127,6 +137,12 @@ class RawTransactionsTest(SyscoinTestFramework):
         assert len(dec_tx['vin']) > 0  #test that we have enough inputs
 
     def test_simple_two_coins(self):
+<<<<<<< HEAD
+=======
+        ##############################
+        # simple test with two coins #
+        ##############################
+>>>>>>> 94fcc0854... test: add rpc_fundrawtransaction logging
         self.log.info("Test fundrawtxn with 2 coins")
         inputs  = [ ]
         outputs = { self.nodes[0].getnewaddress() : 2.2 }
@@ -139,6 +155,12 @@ class RawTransactionsTest(SyscoinTestFramework):
         assert_equal(dec_tx['vin'][0]['scriptSig']['hex'], '')
 
     def test_simple_two_outputs(self):
+<<<<<<< HEAD
+=======
+        ################################
+        # simple test with two outputs #
+        ################################
+>>>>>>> 94fcc0854... test: add rpc_fundrawtransaction logging
         self.log.info("Test fundrawtxn with 2 outputs")
 
         inputs  = [ ]
@@ -156,6 +178,12 @@ class RawTransactionsTest(SyscoinTestFramework):
         assert_equal(dec_tx['vin'][0]['scriptSig']['hex'], '')
 
     def test_change(self):
+<<<<<<< HEAD
+=======
+        #########################################################################
+        # test a fundrawtransaction with a VIN greater than the required amount #
+        #########################################################################
+>>>>>>> 94fcc0854... test: add rpc_fundrawtransaction logging
         self.log.info("Test fundrawtxn with a vin > required amount")
         utx = get_unspent(self.nodes[2].listunspent(), 5)
 
@@ -176,6 +204,12 @@ class RawTransactionsTest(SyscoinTestFramework):
         assert_equal(fee + totalOut, utx['amount']) #compare vin total and totalout+fee
 
     def test_no_change(self):
+<<<<<<< HEAD
+=======
+        #####################################################################
+        # test a fundrawtransaction with which will not get a change output #
+        #####################################################################
+>>>>>>> 94fcc0854... test: add rpc_fundrawtransaction logging
         self.log.info("Test fundrawtxn not having a change output")
         utx = get_unspent(self.nodes[2].listunspent(), 5)
 
@@ -196,6 +230,12 @@ class RawTransactionsTest(SyscoinTestFramework):
         assert_equal(fee + totalOut, utx['amount']) #compare vin total and totalout+fee
 
     def test_invalid_option(self):
+<<<<<<< HEAD
+=======
+        ####################################################
+        # test a fundrawtransaction with an invalid option #
+        ####################################################
+>>>>>>> 94fcc0854... test: add rpc_fundrawtransaction logging
         self.log.info("Test fundrawtxn with an invalid option")
         utx = get_unspent(self.nodes[2].listunspent(), 5)
 
@@ -211,6 +251,12 @@ class RawTransactionsTest(SyscoinTestFramework):
         assert_raises_rpc_error(-3, "Unexpected key reserveChangeKey", lambda: self.nodes[2].fundrawtransaction(hexstring=rawtx, options={'reserveChangeKey': True}))
 
     def test_invalid_change_address(self):
+<<<<<<< HEAD
+=======
+        ############################################################
+        # test a fundrawtransaction with an invalid change address #
+        ############################################################
+>>>>>>> 94fcc0854... test: add rpc_fundrawtransaction logging
         self.log.info("Test fundrawtxn with an invalid change address")
         utx = get_unspent(self.nodes[2].listunspent(), 5)
 
@@ -223,6 +269,12 @@ class RawTransactionsTest(SyscoinTestFramework):
         assert_raises_rpc_error(-5, "changeAddress must be a valid syscoin address", self.nodes[2].fundrawtransaction, rawtx, {'changeAddress':'foobar'})
 
     def test_valid_change_address(self):
+<<<<<<< HEAD
+=======
+        ############################################################
+        # test a fundrawtransaction with a provided change address #
+        ############################################################
+>>>>>>> 94fcc0854... test: add rpc_fundrawtransaction logging
         self.log.info("Test fundrawtxn with a provided change address")
         utx = get_unspent(self.nodes[2].listunspent(), 5)
 
@@ -240,6 +292,12 @@ class RawTransactionsTest(SyscoinTestFramework):
         assert_equal(change, out['scriptPubKey']['addresses'][0])
 
     def test_change_type(self):
+<<<<<<< HEAD
+=======
+        #########################################################
+        # test a fundrawtransaction with a provided change type #
+        #########################################################
+>>>>>>> 94fcc0854... test: add rpc_fundrawtransaction logging
         self.log.info("Test fundrawtxn with a provided change type")
         utx = get_unspent(self.nodes[2].listunspent(), 5)
 
@@ -253,6 +311,12 @@ class RawTransactionsTest(SyscoinTestFramework):
         assert_equal('witness_v0_keyhash', dec_tx['vout'][rawtx['changepos']]['scriptPubKey']['type'])
 
     def test_coin_selection(self):
+<<<<<<< HEAD
+=======
+        #########################################################################
+        # test a fundrawtransaction with a VIN smaller than the required amount #
+        #########################################################################
+>>>>>>> 94fcc0854... test: add rpc_fundrawtransaction logging
         self.log.info("Test fundrawtxn with a vin < required amount")
         utx = get_unspent(self.nodes[2].listunspent(), 1)
 
@@ -285,6 +349,12 @@ class RawTransactionsTest(SyscoinTestFramework):
         assert_equal(len(dec_tx['vout']), 2)
 
     def test_two_vin(self):
+<<<<<<< HEAD
+=======
+        ###########################################
+        # test a fundrawtransaction with two VINs #
+        ###########################################
+>>>>>>> 94fcc0854... test: add rpc_fundrawtransaction logging
         self.log.info("Test fundrawtxn with 2 vins")
         utx = get_unspent(self.nodes[2].listunspent(), 1)
         utx2 = get_unspent(self.nodes[2].listunspent(), 5)
@@ -316,6 +386,12 @@ class RawTransactionsTest(SyscoinTestFramework):
         assert_equal(matchingIns, 2) #we now must see two vins identical to vins given as params
 
     def test_two_vin_two_vout(self):
+<<<<<<< HEAD
+=======
+        #########################################################
+        # test a fundrawtransaction with two VINs and two vOUTs #
+        #########################################################
+>>>>>>> 94fcc0854... test: add rpc_fundrawtransaction logging
         self.log.info("Test fundrawtxn with 2 vins and 2 vouts")
         utx = get_unspent(self.nodes[2].listunspent(), 1)
         utx2 = get_unspent(self.nodes[2].listunspent(), 5)
@@ -339,6 +415,12 @@ class RawTransactionsTest(SyscoinTestFramework):
         assert_equal(len(dec_tx['vout']), 3)
 
     def test_invalid_input(self):
+<<<<<<< HEAD
+=======
+        ##############################################
+        # test a fundrawtransaction with invalid vin #
+        ##############################################
+>>>>>>> 94fcc0854... test: add rpc_fundrawtransaction logging
         self.log.info("Test fundrawtxn with an invalid vin")
         inputs  = [ {'txid' : "1c7f966dab21119bac53213a2bc7532bff1fa844c124fd750a7d0b1332440bd1", 'vout' : 0} ] #invalid vin!
         outputs = { self.nodes[0].getnewaddress() : 1.0}
@@ -346,7 +428,12 @@ class RawTransactionsTest(SyscoinTestFramework):
         assert_raises_rpc_error(-4, "Insufficient funds", self.nodes[2].fundrawtransaction, rawtx)
 
     def test_fee_p2pkh(self):
+<<<<<<< HEAD
         """Compare fee of a standard pubkeyhash transaction."""
+=======
+        ############################################################
+        #compare fee of a standard pubkeyhash transaction
+>>>>>>> 94fcc0854... test: add rpc_fundrawtransaction logging
         self.log.info("Test fundrawtxn p2pkh fee")
         inputs = []
         outputs = {self.nodes[1].getnewaddress():1.1}
@@ -362,7 +449,12 @@ class RawTransactionsTest(SyscoinTestFramework):
         assert feeDelta >= 0 and feeDelta <= self.fee_tolerance
 
     def test_fee_p2pkh_multi_out(self):
+<<<<<<< HEAD
         """Compare fee of a standard pubkeyhash transaction with multiple outputs."""
+=======
+        ############################################################
+        #compare fee of a standard pubkeyhash transaction with multiple outputs
+>>>>>>> 94fcc0854... test: add rpc_fundrawtransaction logging
         self.log.info("Test fundrawtxn p2pkh fee with multiple outputs")
         inputs = []
         outputs = {
@@ -409,7 +501,12 @@ class RawTransactionsTest(SyscoinTestFramework):
         assert feeDelta >= 0 and feeDelta <= self.fee_tolerance
 
     def test_fee_4of5(self):
+<<<<<<< HEAD
         """Compare fee of a standard pubkeyhash transaction."""
+=======
+        ############################################################
+        #compare fee of a standard pubkeyhash transaction
+>>>>>>> 94fcc0854... test: add rpc_fundrawtransaction logging
         self.log.info("Test fundrawtxn fee with 4-of-5 addresses")
 
         # Create 4-of-5 addr.
@@ -450,7 +547,12 @@ class RawTransactionsTest(SyscoinTestFramework):
         assert feeDelta >= 0 and feeDelta <= self.fee_tolerance
 
     def test_spend_2of2(self):
+<<<<<<< HEAD
         """Spend a 2-of-2 multisig transaction over fundraw."""
+=======
+        ############################################################
+        # spend a 2of2 multisig transaction over fundraw
+>>>>>>> 94fcc0854... test: add rpc_fundrawtransaction logging
         self.log.info("Test fundrawtxn spending 2-of-2 multisig")
 
         # Create 2-of-2 addr.
@@ -468,7 +570,11 @@ class RawTransactionsTest(SyscoinTestFramework):
             ]
         )['address']
 
+<<<<<<< HEAD
         # Send 1.2 SYS to msig addr.
+=======
+        # send 1.2 BTC to msig addr
+>>>>>>> 94fcc0854... test: add rpc_fundrawtransaction logging
         self.nodes[0].sendtoaddress(mSigObj, 1.2)
         self.sync_all()
         self.nodes[1].generate(1)
@@ -490,6 +596,11 @@ class RawTransactionsTest(SyscoinTestFramework):
         assert_equal(oldBalance+Decimal('1.10000000'), self.nodes[1].getbalance())
 
     def test_locked_wallet(self):
+<<<<<<< HEAD
+=======
+        ############################################################
+        # locked wallet test
+>>>>>>> 94fcc0854... test: add rpc_fundrawtransaction logging
         self.log.info("Test fundrawtxn with locked wallet")
 
         self.nodes[1].encryptwallet("test")
@@ -545,7 +656,13 @@ class RawTransactionsTest(SyscoinTestFramework):
         assert_equal(oldBalance+Decimal('51.10000000'), self.nodes[0].getbalance())
 
     def test_many_inputs_fee(self):
+<<<<<<< HEAD
         """Multiple (~19) inputs tx test | Compare fee."""
+=======
+        ###############################################
+        # multiple (~19) inputs tx test | Compare fee #
+        ###############################################
+>>>>>>> 94fcc0854... test: add rpc_fundrawtransaction logging
         self.log.info("Test fundrawtxn fee with many inputs")
 
         # Empty node1, send some small coins from node0 to node1.
@@ -574,7 +691,13 @@ class RawTransactionsTest(SyscoinTestFramework):
         assert feeDelta >= 0 and feeDelta <= self.fee_tolerance * 19  #~19 inputs
 
     def test_many_inputs_send(self):
+<<<<<<< HEAD
         """Multiple (~19) inputs tx test | sign/send."""
+=======
+        #############################################
+        # multiple (~19) inputs tx test | sign/send #
+        #############################################
+>>>>>>> 94fcc0854... test: add rpc_fundrawtransaction logging
         self.log.info("Test fundrawtxn sign+send with many inputs")
 
         # Again, empty node1, send some small coins from node0 to node1.
@@ -603,6 +726,12 @@ class RawTransactionsTest(SyscoinTestFramework):
         assert_equal(oldBalance+Decimal('50.19000000'), self.nodes[0].getbalance()) #0.19+block reward
 
     def test_op_return(self):
+<<<<<<< HEAD
+=======
+        #####################################################
+        # test fundrawtransaction with OP_RETURN and no vin #
+        #####################################################
+>>>>>>> 94fcc0854... test: add rpc_fundrawtransaction logging
         self.log.info("Test fundrawtxn with OP_RETURN and no vin")
 
         rawtx   = "0100000000010000000000000000066a047465737400000000"
@@ -618,6 +747,12 @@ class RawTransactionsTest(SyscoinTestFramework):
         assert_equal(len(dec_tx['vout']), 2) # one change output added
 
     def test_watchonly(self):
+<<<<<<< HEAD
+=======
+        ##################################################
+        # test a fundrawtransaction using only watchonly #
+        ##################################################
+>>>>>>> 94fcc0854... test: add rpc_fundrawtransaction logging
         self.log.info("Test fundrawtxn using only watchonly")
 
         inputs = []
@@ -633,6 +768,12 @@ class RawTransactionsTest(SyscoinTestFramework):
         assert_greater_than(result["changepos"], -1)
 
     def test_all_watched_funds(self):
+<<<<<<< HEAD
+=======
+        ###############################################################
+        # test fundrawtransaction using the entirety of watched funds #
+        ###############################################################
+>>>>>>> 94fcc0854... test: add rpc_fundrawtransaction logging
         self.log.info("Test fundrawtxn using entirety of watched funds")
 
         inputs = []
@@ -658,6 +799,12 @@ class RawTransactionsTest(SyscoinTestFramework):
         self.sync_all()
 
     def test_option_feerate(self):
+<<<<<<< HEAD
+=======
+        #######################
+        # Test feeRate option #
+        #######################
+>>>>>>> 94fcc0854... test: add rpc_fundrawtransaction logging
         self.log.info("Test fundrawtxn feeRate option")
 
         # Make sure there is exactly one input so coin selection can't skew the result.
@@ -675,7 +822,13 @@ class RawTransactionsTest(SyscoinTestFramework):
         assert_fee_amount(result3['fee'], count_bytes(result3['hex']), 10 * result_fee_rate)
 
     def test_address_reuse(self):
+<<<<<<< HEAD
         """Test no address reuse occurs."""
+=======
+        ################################
+        # Test no address reuse occurs #
+        ################################
+>>>>>>> 94fcc0854... test: add rpc_fundrawtransaction logging
         self.log.info("Test fundrawtxn does not reuse addresses")
 
         rawtx = self.nodes[3].createrawtransaction(inputs=[], outputs={self.nodes[3].getnewaddress(): 1})
@@ -691,6 +844,12 @@ class RawTransactionsTest(SyscoinTestFramework):
         assert changeaddress != nextaddr
 
     def test_option_subtract_fee_from_outputs(self):
+<<<<<<< HEAD
+=======
+        ######################################
+        # Test subtractFeeFromOutputs option #
+        ######################################
+>>>>>>> 94fcc0854... test: add rpc_fundrawtransaction logging
         self.log.info("Test fundrawtxn subtractFeeFromOutputs option")
 
         # Make sure there is exactly one input so coin selection can't skew the result.
