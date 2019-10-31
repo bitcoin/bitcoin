@@ -8,18 +8,18 @@ The options known to work for building Bitcoin Core on Windows are:
 * On Linux, using the [Mingw-w64](https://mingw-w64.org/doku.php) cross compiler tool chain. Ubuntu Bionic 18.04 is required
 and is the platform used to build the Bitcoin Core Windows release binaries.
 * On Windows, using [Windows
-Subsystem for Linux (WSL)](https://msdn.microsoft.com/commandline/wsl/about) and the Mingw-w64 cross compiler tool chain.
+Subsystem for Linux (WSL)](https://docs.microsoft.com/windows/wsl/about) and the Mingw-w64 cross compiler tool chain.
+* On Windows, using a native compiler tool chain such as [Visual Studio](https://www.visualstudio.com).
 
 Other options which may work, but which have not been extensively tested are (please contribute instructions):
 
-* On Windows, using a POSIX compatibility layer application such as [cygwin](http://www.cygwin.com/) or [msys2](http://www.msys2.org/).
-* On Windows, using a native compiler tool chain such as [Visual Studio](https://www.visualstudio.com).
+* On Windows, using a POSIX compatibility layer application such as [cygwin](https://www.cygwin.com/) or [msys2](https://www.msys2.org/).
 
 Installing Windows Subsystem for Linux
 ---------------------------------------
 
 With Windows 10, Microsoft has released a new feature named the [Windows
-Subsystem for Linux (WSL)](https://msdn.microsoft.com/commandline/wsl/about). This
+Subsystem for Linux (WSL)](https://docs.microsoft.com/windows/wsl/about). This
 feature allows you to run a bash shell directly on Windows in an Ubuntu-based
 environment. Within this environment you can cross compile for Windows without
 the need for a separate Linux VM or server. Note that while WSL can be installed with
@@ -28,7 +28,7 @@ tested with Ubuntu.
 
 This feature is not supported in versions of Windows prior to Windows 10 or on
 Windows Server SKUs. In addition, it is available [only for 64-bit versions of
-Windows](https://msdn.microsoft.com/en-us/commandline/wsl/install_guide).
+Windows](https://docs.microsoft.com/windows/wsl/install-win10).
 
 Full instructions to install WSL are available on the above link.
 To install WSL on Windows 10 with Fall Creators Update installed (version >= 16215.0) do the following:
