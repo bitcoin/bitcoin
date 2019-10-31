@@ -29,9 +29,7 @@ git = 'git'
 folders = [
     "src/qt/res/movies",
     "src/qt/res/icons",
-    "src/qt/res/icons/light",
     "src/qt/res/images",
-    "src/qt/res/images/light",
     "share/pixmaps"
 ]
 basePath = subprocess.check_output([git, 'rev-parse', '--show-toplevel'], universal_newlines=True).rstrip('\n')

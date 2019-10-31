@@ -130,7 +130,6 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, HelpMode helpMode) :
 
         ui->helpMessage->moveCursor(QTextCursor::Start);
         ui->scrollArea->setVisible(false);
-        ui->aboutLogo->setVisible(false);
     } else if (helpMode == pshelp) {
         setWindowTitle(tr("PrivateSend information"));
 
@@ -165,11 +164,7 @@ For more information, see the <a href=\"https://docs.dash.org/en/stable/wallets/
         ));
         ui->aboutMessage->setWordWrap(true);
         ui->helpMessage->setVisible(false);
-        ui->aboutLogo->setVisible(false);
     }
-    QString helpMessageGfx = ":/images/about";
-    QPixmap pixmap = QPixmap(helpMessageGfx);
-    ui->aboutLogo->setPixmap(pixmap);
 }
 
 HelpMessageDialog::~HelpMessageDialog()

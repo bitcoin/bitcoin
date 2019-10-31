@@ -452,7 +452,7 @@ RPCConsole::RPCConsole(const PlatformStyle *_platformStyle, QWidget *parent) :
         ui->openDebugLogfileButton->setIcon(QIcon(":/icons/export"));
     }
     // Needed on Mac also
-    ui->clearButton->setIcon(QIcon(":/icons/remove"));
+    ui->clearButton->setIcon(QIcon(":/icons/console_remove"));
     ui->fontBiggerButton->setIcon(QIcon(":/icons/fontbigger"));
     ui->fontSmallerButton->setIcon(QIcon(":/icons/fontsmaller"));
 

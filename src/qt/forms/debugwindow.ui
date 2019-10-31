@@ -554,7 +554,7 @@
            </property>
            <property name="icon">
             <iconset resource="../bitcoin.qrc">
-             <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
+             <normaloff>:/icons/console_remove</normaloff>:/icons/console_remove</iconset>
            </property>
            <property name="shortcut">
             <string notr="true">Ctrl+L</string>

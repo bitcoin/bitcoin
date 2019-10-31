@@ -202,6 +202,7 @@ RES_ICONS = \
   qt/res/icons/connect2_16.png \
   qt/res/icons/connect3_16.png \
   qt/res/icons/connect4_16.png \
+  qt/res/icons/console_remove.png \
   qt/res/icons/debugwindow.png \
   qt/res/icons/edit.png \
   qt/res/icons/editcopy.png \
@@ -213,12 +214,9 @@ RES_ICONS = \
   qt/res/icons/filesave.png \
   qt/res/icons/hd_disabled.png \
   qt/res/icons/hd_enabled.png \
-  qt/res/icons/history.png \
   qt/res/icons/key.png \
   qt/res/icons/lock_closed.png \
   qt/res/icons/lock_open.png \
-  qt/res/icons/masternodes.png \
-  qt/res/icons/overview.png \
   qt/res/icons/quit.png \
   qt/res/icons/receive.png \
   qt/res/icons/remove.png \
@@ -231,7 +229,6 @@ RES_ICONS = \
   qt/res/icons/tx_input.png \
   qt/res/icons/tx_output.png \
   qt/res/icons/tx_mined.png \
-  qt/res/icons/about.png \
   qt/res/icons/about_qt.png \
   qt/res/icons/verify.png \
   qt/res/icons/fontbigger.png \
@@ -305,7 +302,6 @@ BITCOIN_QT_CPP += $(BITCOIN_QT_WALLET_CPP)
 endif
 
 RES_IMAGES = \
-  qt/res/images/about.png \
   qt/res/images/arrow_down.png \
   qt/res/images/arrow_down_small.png \
   qt/res/images/arrow_left_small.png \
@@ -313,6 +309,7 @@ RES_IMAGES = \
   qt/res/images/arrow_up_small.png \
   qt/res/images/checked.png \
   qt/res/images/dash_logo_horizontal.png \
+  qt/res/images/dash_logo_toolbar.png \
   qt/res/images/qtreeview_selected.png \
   qt/res/images/splash.png \
   qt/res/images/unchecked.png \
