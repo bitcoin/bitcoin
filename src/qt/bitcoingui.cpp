@@ -247,6 +247,19 @@ BitcoinGUI::BitcoinGUI(const PlatformStyle *_platformStyle, const NetworkStyle *
         progressBar->setStyleSheet("QProgressBar { background-color: #F8F8F8; border: 1px solid grey; border-radius: 7px; padding: 1px; text-align: center; } QProgressBar::chunk { background: QLinearGradient(x1: 0, y1: 0, x2: 1, y2: 0, stop: 0 #00CCFF, stop: 1 #33CCFF); border-radius: 7px; margin: 0px; }");
     }
 
+#ifndef Q_OS_MAC
+    // Apply some styling to scrollbars
+    QString theme = settings.value("theme", "").toString();
+    if (theme != "trad") { // No scrollbar styling for the traditional theme
+        QFile qFile(QString(":/css/scrollbars"));
+        QString styleSheet;
+        if (qFile.open(QFile::ReadOnly)) {
+            styleSheet = QLatin1String(qFile.readAll());
+        }
+        this->setStyleSheet(styleSheet);
+    }
+#endif
+
     statusBar()->addWidget(progressBarLabel);
     statusBar()->addWidget(progressBar);
     statusBar()->addPermanentWidget(frameBlocks);

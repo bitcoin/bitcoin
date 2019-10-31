@@ -153,6 +153,7 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     vlayout->addWidget(createDateRangeWidget());
     vlayout->addWidget(view);
     vlayout->setSpacing(0);
+#ifndef Q_OS_MAC
     int width = view->verticalScrollBar()->sizeHint().width();
     // Cover scroll bar width with spacing
     if (platformStyle->getUseExtraSpacing()) {
@@ -162,6 +163,7 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     }
     // Always show scroll bar
     view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+#endif
     view->setTabKeyNavigation(false);
     view->setContextMenuPolicy(Qt::CustomContextMenu);
 

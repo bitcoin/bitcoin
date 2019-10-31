@@ -1,0 +1,87 @@
+QScrollBar:vertical { /* Vertical Scroll Bar Attributes */
+    border:0;
+    background:#ffffff;
+    width:18px;
+    margin: 18px 0px 18px 0px;
+}
+
+QScrollBar:horizontal { /* Horizontal Scroll Bar Attributes */
+    border:0;
+    background:#ffffff;
+    height:18px;
+    margin: 0px 18px 0px 18px;
+}
+
+QScrollBar::handle:vertical { /* Scroll Bar Slider - vertical */
+    background:#e0e0e0;
+    min-height:10px;
+}
+
+QScrollBar::handle:horizontal { /* Scroll Bar Slider - horizontal */
+    background:#e0e0e0;
+    min-width:10px;
+}
+
+QScrollBar::add-page, QScrollBar::sub-page { /* Scroll Bar Background */
+    background:#F8F6F6;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical, QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal { /* Define Arrow Button Dimensions */
+    background-color:#F8F6F6;
+    border: 1px solid #f2f0f0;
+    width:16px;
+    height:16px;
+}
+
+QScrollBar::add-line:vertical:pressed, QScrollBar::sub-line:vertical:pressed, QScrollBar::add-line:horizontal:pressed, QScrollBar::sub-line:horizontal:pressed {
+    background-color:#e0e0e0;
+}
+
+QScrollBar::sub-line:vertical { /* Vertical - top button position */
+    subcontrol-position:top;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::add-line:vertical { /* Vertical - bottom button position */
+    subcontrol-position:bottom;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::sub-line:horizontal { /* Vertical - left button position */
+    subcontrol-position:left;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::add-line:horizontal { /* Vertical - right button position */
+    subcontrol-position:right;
+    subcontrol-origin: margin;
+}
+
+QScrollBar:up-arrow, QScrollBar:down-arrow, QScrollBar:left-arrow, QScrollBar:right-arrow { /* Arrows Icon */
+    width:10px;
+    height:10px;
+}
+
+QScrollBar:up-arrow {
+    background-image: url(':/images/arrow_up_small');
+}
+
+QScrollBar:down-arrow {
+    background-image: url(':/images/arrow_down_small');
+}
+
+QScrollBar:left-arrow {
+    background-image: url(':/images/arrow_left_small');
+}
+
+QScrollBar:right-arrow {
+    background-image: url(':/images/arrow_right_small');
+}
+
+QDialog#HelpMessageDialog QScrollBar:vertical, QDialog#HelpMessageDialog QScrollBar:horizontal {
+   border:0;
+}
+
+.QTableView { /* Table - has to be selected as a class otherwise it throws off QCalendarWidget */
+   background:transparent;
+}
