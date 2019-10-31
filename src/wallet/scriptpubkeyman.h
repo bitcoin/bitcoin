@@ -522,6 +522,11 @@ public:
 
     bool SetupGeneration(bool force = false) override;
 
+    /** Provide a descriptor at setup time
+    * Returns false if already setup or setup fails, true if setup is successful
+    */
+    bool SetupDescriptor(std::unique_ptr<Descriptor>desc);
+
     bool HavePrivateKeys() const override;
 
     int64_t GetOldestKeyPoolTime() override;

@@ -1715,6 +1715,31 @@ bool DescriptorScriptPubKeyMan::AddDescriptorKeyWithDB(WalletBatch& batch, const
     }
 }
 
+bool DescriptorScriptPubKeyMan::SetupDescriptor(std::unique_ptr<Descriptor> desc)
+{
+    LOCK(cs_desc_man);
+    assert(m_storage.IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
+    assert(m_storage.IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER));
+
+    int64_t creation_time = GetTime();
+
+    // Make the descriptor
+    WalletDescriptor w_desc(std::move(desc), creation_time, 0, 0, 0);
+    descriptor = w_desc;
+
+    // Store the descriptor
+    WalletBatch batch(m_storage.GetDatabase());
+    if (!batch.WriteDescriptor(GetID(), descriptor)) {
+        throw std::runtime_error(std::string(__func__) + ": writing descriptor failed");
+    }
+
+    // TopUp
+    TopUp();
+
+    m_storage.UnsetBlankWalletFlag(batch);
+    return true;
+}
+
 bool DescriptorScriptPubKeyMan::SetupGeneration(bool force)
 {
     LOCK(cs_desc_man);
