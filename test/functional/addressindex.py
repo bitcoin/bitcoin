@@ -35,6 +35,18 @@ class AddressIndexTest(BitcoinTestFramework):
         self.sync_all()
 
     def run_test(self):
+        self.log.info("Test that settings can't be changed without -reindex...")
+        self.stop_node(1)
+        self.assert_start_raises_init_error(1, ["-addressindex=0"], 'You need to rebuild the database using -reindex to change -addressindex')
+        self.start_node(1, ["-addressindex=0", "-reindex"])
+        connect_nodes(self.nodes[0], 1)
+        self.sync_all()
+        self.stop_node(1)
+        self.assert_start_raises_init_error(1, ["-addressindex"], 'You need to rebuild the database using -reindex to change -addressindex')
+        self.start_node(1, ["-addressindex", "-reindex"])
+        connect_nodes(self.nodes[0], 1)
+        self.sync_all()
+
         self.log.info("Mining blocks...")
         self.nodes[0].generate(105)
         self.sync_all()

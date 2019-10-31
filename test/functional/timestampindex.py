@@ -33,6 +33,18 @@ class TimestampIndexTest(BitcoinTestFramework):
         self.sync_all()
 
     def run_test(self):
+        self.log.info("Test that settings can't be changed without -reindex...")
+        self.stop_node(1)
+        self.assert_start_raises_init_error(1, ["-timestampindex=0"], 'You need to rebuild the database using -reindex to change -timestampindex')
+        self.start_node(1, ["-timestampindex=0", "-reindex"])
+        connect_nodes(self.nodes[0], 1)
+        self.sync_all()
+        self.stop_node(1)
+        self.assert_start_raises_init_error(1, ["-timestampindex"], 'You need to rebuild the database using -reindex to change -timestampindex')
+        self.start_node(1, ["-timestampindex", "-reindex"])
+        connect_nodes(self.nodes[0], 1)
+        self.sync_all()
+
         self.log.info("Mining 5 blocks...")
         blockhashes = self.nodes[0].generate(5)
         low = self.nodes[0].getblock(blockhashes[0])["time"]
