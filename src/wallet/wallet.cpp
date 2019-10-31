@@ -350,8 +350,8 @@ const CWalletTx* CWallet::GetWalletTx(const uint256& hash) const
 
 void CWallet::UpgradeKeyMetadata()
 {
-    AssertLockHeld(m_spk_man->cs_wallet);
     if (m_spk_man) {
+        AssertLockHeld(m_spk_man->cs_wallet);
         m_spk_man->UpgradeKeyMetadata();
     }
 }
@@ -3479,11 +3479,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                 SignatureData sigdata;
 
                 const SigningProvider* provider = GetSigningProvider();
-                if (!provider) {
-                    return false;
-                }
-
-                if (!ProduceSignature(*provider, MutableTransactionSignatureCreator(&txNew, nIn, coin.txout.nValue, SIGHASH_ALL), scriptPubKey, sigdata))
+                if (!provider || !ProduceSignature(*provider, MutableTransactionSignatureCreator(&txNew, nIn, coin.txout.nValue, SIGHASH_ALL), scriptPubKey, sigdata))
                 {
                     error = _("Signing transaction failed");
                     return false;

@@ -68,6 +68,15 @@ static void RescanWallet(CWallet& wallet, const WalletRescanReserver& reserver, 
     }
 }
 
+static LegacyScriptPubKeyMan& GetLegacyScriptPubKeyMan(CWallet& wallet)
+{
+    LegacyScriptPubKeyMan* spk_man = wallet.GetLegacyScriptPubKeyMan();
+    if (!spk_man) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "This type of wallet does not support this command");
+    }
+    return *spk_man;
+}
+
 UniValue importprivkey(const JSONRPCRequest& request)
 {
     RPCHelpMan{"importprivkey",
@@ -103,17 +112,14 @@ UniValue importprivkey(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_WALLET_ERROR, "Cannot import private keys to a wallet with private keys disabled");
     }
 
-    LegacyScriptPubKeyMan* spk_man = pwallet->GetLegacyScriptPubKeyMan();
-    if (!spk_man) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "This type of wallet does not support this command");
-    }
+    LegacyScriptPubKeyMan& spk_man = GetLegacyScriptPubKeyMan(*wallet);
 
     WalletBatch batch(pwallet->GetDBHandle());
     WalletRescanReserver reserver(pwallet);
     bool fRescan = true;
     {
         LOCK(pwallet->cs_wallet);
-        AssertLockHeld(spk_man->cs_wallet);
+        AssertLockHeld(spk_man.cs_wallet);
 
         EnsureWalletIsUnlocked(pwallet);
 
@@ -151,14 +157,14 @@ UniValue importprivkey(const JSONRPCRequest& request)
             }
 
             // Don't throw error in case a key is already there
-            if (spk_man->HaveKey(vchAddress)) {
+            if (spk_man.HaveKey(vchAddress)) {
                 return NullUniValue;
             }
 
             // whenever a key is imported, we need to scan the whole chain
-            spk_man->UpdateTimeFirstKey(1);
-            spk_man->mapKeyMetadata[vchAddress].nCreateTime = 1;
-            if (!spk_man->AddKeyPubKeyWithDB(batch, key, pubkey)) {
+            spk_man.UpdateTimeFirstKey(1);
+            spk_man.mapKeyMetadata[vchAddress].nCreateTime = 1;
+            if (!spk_man.AddKeyPubKeyWithDB(batch, key, pubkey)) {
                 throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
             }
 
@@ -206,20 +212,17 @@ static void ImportScript(CWallet * const pwallet, const CScript& script, const s
 
     pwallet->MarkDirty();
 
-    LegacyScriptPubKeyMan* spk_man = pwallet->GetLegacyScriptPubKeyMan();
-    if (!spk_man) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "This type of wallet does not support this command");
-    }
+    LegacyScriptPubKeyMan& spk_man = GetLegacyScriptPubKeyMan(*pwallet);
 
-    AssertLockHeld(spk_man->cs_wallet);
+    AssertLockHeld(spk_man.cs_wallet);
 
-    if (!spk_man->HaveWatchOnly(script) && !spk_man->AddWatchOnlyWithDB(batch, script, 0 /* nCreateTime */)) {
+    if (!spk_man.HaveWatchOnly(script) && !spk_man.AddWatchOnlyWithDB(batch, script, 0 /* nCreateTime */)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Error adding address to wallet");
     }
 
     if (isRedeemScript) {
         const CScriptID id(script);
-        if (!spk_man->HaveCScript(id) && !spk_man->AddCScriptWithDB(batch, script)) {
+        if (!spk_man.HaveCScript(id) && !spk_man.AddCScriptWithDB(batch, script)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Error adding p2sh redeemScript to wallet");
         }
         ImportAddress(pwallet, id, strLabel);
@@ -694,13 +697,10 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: Private keys are disabled for this wallet");
     }
 
-    LegacyScriptPubKeyMan* spk_man = pwallet->GetLegacyScriptPubKeyMan();
-    if (!spk_man) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "This type of wallet does not support this command");
-    }
+    LegacyScriptPubKeyMan& spk_man = GetLegacyScriptPubKeyMan(*wallet);
 
     LOCK(pwallet->cs_wallet);
-    AssertLockHeld(spk_man->cs_wallet);
+    AssertLockHeld(spk_man.cs_wallet);
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -745,12 +745,12 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
             CPubKey pubkey = key.GetPubKey();
             CHECK_NONFATAL(key.VerifyPubKey(pubkey));
             CKeyID keyid = pubkey.GetID();
-            if (spk_man->HaveKey(keyid)) {
+            if (spk_man.HaveKey(keyid)) {
                 pwallet->WalletLogPrintf("Skipping import of %s (key already present)\n", EncodeDestination(keyid));
                 continue;
             }
             pwallet->WalletLogPrintf("Importing %s...\n", EncodeDestination(keyid));
-            if (!spk_man->AddKeyPubKeyWithDB(batch, key, pubkey)) {
+            if (!spk_man.AddKeyPubKeyWithDB(batch, key, pubkey)) {
                 fGood = false;
                 continue;
             }
@@ -778,12 +778,12 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
             CPubKey pubkey = key.GetPubKey();
             CHECK_NONFATAL(key.VerifyPubKey(pubkey));
             CKeyID keyid = pubkey.GetID();
-            if (spk_man->HaveKey(keyid)) {
+            if (spk_man.HaveKey(keyid)) {
                 pwallet->WalletLogPrintf("Skipping import of %s (key already present)\n", EncodeDestination(keyid));
                 continue;
             }
             pwallet->WalletLogPrintf("Importing %s...\n", EncodeDestination(keyid));
-            if (!spk_man->AddKeyPubKeyWithDB(batch, key, pubkey)) {
+            if (!spk_man.AddKeyPubKeyWithDB(batch, key, pubkey)) {
                 fGood = false;
                 continue;
             }
@@ -803,7 +803,7 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
 
     // Assume that electrum wallet was created at that block
     int nTimeBegin = pwallet->chain().getBlockTime(nStartHeight);
-    spk_man->UpdateTimeFirstKey(nTimeBegin);
+    spk_man.UpdateTimeFirstKey(nTimeBegin);
 
     pwallet->WalletLogPrintf("Rescanning %i blocks\n", tip_height - nStartHeight + 1);
     WalletRescanReserver reserver(pwallet);
@@ -840,10 +840,7 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
 
-    LegacyScriptPubKeyMan* spk_man = pwallet->GetLegacyScriptPubKeyMan();
-    if (!spk_man) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "This type of wallet does not support this command");
-    }
+    LegacyScriptPubKeyMan& spk_man = GetLegacyScriptPubKeyMan(*wallet);
 
     LOCK(pwallet->cs_wallet);
 
@@ -859,7 +856,7 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to a key");
     }
     CKey vchSecret;
-    if (!spk_man->GetKey(*keyID, vchSecret)) {
+    if (!spk_man.GetKey(*keyID, vchSecret)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + strAddress + " is not known");
     }
     return EncodeSecret(vchSecret);
@@ -892,15 +889,12 @@ UniValue dumphdinfo(const JSONRPCRequest& request)
 
     EnsureWalletIsUnlocked(pwallet);
 
-    LegacyScriptPubKeyMan* spk_man = pwallet->GetLegacyScriptPubKeyMan();
-    if (!spk_man) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "This type of wallet does not support this command");
-    }
+    LegacyScriptPubKeyMan& spk_man = GetLegacyScriptPubKeyMan(*wallet);
     CHDChain hdChainCurrent;
-    if (!spk_man->GetHDChain(hdChainCurrent))
+    if (!spk_man.GetHDChain(hdChainCurrent))
         throw JSONRPCError(RPC_WALLET_ERROR, "This wallet is not a HD wallet.");
 
-    if (!spk_man->GetDecryptedHDChain(hdChainCurrent))
+    if (!spk_man.GetDecryptedHDChain(hdChainCurrent))
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Cannot decrypt HD seed");
 
     SecureString ssMnemonic;
@@ -943,13 +937,10 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
 
-    LegacyScriptPubKeyMan* spk_man = pwallet->GetLegacyScriptPubKeyMan();
-    if (!spk_man) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "This type of wallet does not support this command");
-    }
+    LegacyScriptPubKeyMan& spk_man = GetLegacyScriptPubKeyMan(*wallet);
 
     LOCK(pwallet->cs_wallet);
-    AssertLockHeld(spk_man->cs_wallet);
+    AssertLockHeld(spk_man.cs_wallet);
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -971,10 +962,10 @@ UniValue dumpwallet(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
 
     std::map<CTxDestination, int64_t> mapKeyBirth;
-    const std::map<CKeyID, int64_t>& mapKeyPool = spk_man->GetAllReserveKeys();
+    const std::map<CKeyID, int64_t>& mapKeyPool = spk_man.GetAllReserveKeys();
     pwallet->GetKeyBirthTimes(mapKeyBirth);
 
-    std::set<CScriptID> scripts = spk_man->GetCScripts();
+    std::set<CScriptID> scripts = spk_man.GetCScripts();
     // TODO: include scripts in GetKeyBirthTimes() output instead of separate
 
     // sort time/key pairs
@@ -1003,10 +994,10 @@ UniValue dumpwallet(const JSONRPCRequest& request)
 
     // add the base58check encoded extended master if the wallet uses HD
     CHDChain hdChainCurrent;
-    if (spk_man->GetHDChain(hdChainCurrent))
+    if (spk_man.GetHDChain(hdChainCurrent))
     {
 
-        if (!spk_man->GetDecryptedHDChain(hdChainCurrent))
+        if (!spk_man.GetDecryptedHDChain(hdChainCurrent))
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Cannot decrypt HD chain");
 
         SecureString ssMnemonic;
@@ -1046,7 +1037,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
         std::string strTime = FormatISO8601DateTime(it->first);
         std::string strAddr = EncodeDestination(keyid);
         CKey key;
-        if (spk_man->GetKey(keyid, key)) {
+        if (spk_man.GetKey(keyid, key)) {
             file << strprintf("%s %s ", EncodeSecret(key), strTime);
             if (pwallet->mapAddressBook.count(keyid)) {
                 file << strprintf("label=%s", EncodeDumpString(pwallet->mapAddressBook[keyid].name));
@@ -1055,7 +1046,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
             } else {
                 file << "change=1";
             }
-            file << strprintf(" # addr=%s%s\n", strAddr, (spk_man->mapKeyMetadata[keyid].has_key_origin ? " hdkeypath="+WriteHDKeypath(spk_man->mapKeyMetadata[keyid].key_origin.path) : ""));
+            file << strprintf(" # addr=%s%s\n", strAddr, (spk_man.mapKeyMetadata[keyid].has_key_origin ? " hdkeypath="+WriteHDKeypath(spk_man.mapKeyMetadata[keyid].key_origin.path) : ""));
         }
     }
     file << "\n";
@@ -1064,11 +1055,11 @@ UniValue dumpwallet(const JSONRPCRequest& request)
         std::string create_time = "0";
         std::string address = EncodeDestination(scriptid);
         // get birth times for scripts with metadata
-        auto it = spk_man->m_script_metadata.find(scriptid);
-        if (it != spk_man->m_script_metadata.end()) {
+        auto it = spk_man.m_script_metadata.find(scriptid);
+        if (it != spk_man.m_script_metadata.end()) {
             create_time = FormatISO8601DateTime(it->second.nCreateTime);
         }
-        if(spk_man->GetCScript(scriptid, script)) {
+        if(spk_man.GetCScript(scriptid, script)) {
             file << strprintf("%s %s script=1", HexStr(script), create_time);
             file << strprintf(" # addr=%s\n", address);
         }
@@ -1539,11 +1530,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(mainRequest);
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
-    LegacyScriptPubKeyMan* spk_man = pwallet->GetLegacyScriptPubKeyMan();
-    if (!spk_man) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "This type of wallet does not support this command");
-    }
-
+    LegacyScriptPubKeyMan& spk_man = GetLegacyScriptPubKeyMan(*wallet);
 
     //Default options
     bool fRescan = true;
