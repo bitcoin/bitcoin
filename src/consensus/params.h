@@ -161,9 +161,12 @@ struct Params {
 
     std::map<LLMQType, LLMQParams> llmqs;
     LLMQType llmqChainLocks;
+    LLMQType llmqForInstantSend{LLMQ_NONE};
     int nLLMQActivationHeight;
 
     int nMasternodeMinimumConfirmations;
+    int nInstantSendConfirmationsRequired; // in blocks
+    int nInstantSendKeepLock; // in blocks
 };
 } // namespace Consensus
 
