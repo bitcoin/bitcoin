@@ -28,6 +28,7 @@
 static int column_alignments[] = {
         Qt::AlignLeft|Qt::AlignVCenter, /* status */
         Qt::AlignLeft|Qt::AlignVCenter, /* watchonly */
+        Qt::AlignLeft|Qt::AlignVCenter, /* instantsend */
         Qt::AlignLeft|Qt::AlignVCenter, /* date */
         Qt::AlignLeft|Qt::AlignVCenter, /* type */
         Qt::AlignLeft|Qt::AlignVCenter, /* address */
@@ -189,8 +190,8 @@ public:
             interfaces::WalletTxStatus wtx;
             int numBlocks;
             int64_t block_time;
-            if (wallet.tryGetTxStatus(rec->hash, wtx, numBlocks, block_time) && rec->statusUpdateNeeded(numBlocks)) {
-                rec->updateStatus(wtx, numBlocks, block_time);
+            if (wallet.tryGetTxStatus(rec->hash, wtx, numBlocks, block_time) && rec->statusUpdateNeeded(numBlocks, parent->getNumISLocks(), parent->getChainLockHeight())) {
+                rec->updateStatus(wtx, numBlocks, block_time, parent->getNumISLocks(), parent->getChainLockHeight());
             }
             return rec;
         }
@@ -257,6 +258,27 @@ void TransactionTableModel::updateConfirmations()
     //  visible rows.
     Q_EMIT dataChanged(index(0, Status), index(priv->size()-1, Status));
     Q_EMIT dataChanged(index(0, ToAddress), index(priv->size()-1, ToAddress));
+}
+
+void TransactionTableModel::updateNumISLocks(int numISLocks)
+{
+    cachedNumISLocks = numISLocks;
+}
+
+void TransactionTableModel::updateChainLockHeight(int chainLockHeight)
+{
+    cachedChainLockHeight = chainLockHeight;
+    updateConfirmations();
+}
+
+int TransactionTableModel::getNumISLocks() const
+{
+    return cachedNumISLocks;
+}
+
+int TransactionTableModel::getChainLockHeight() const
+{
+    return cachedChainLockHeight;
 }
 
 int TransactionTableModel::rowCount(const QModelIndex &parent) const
@@ -479,6 +501,14 @@ QVariant TransactionTableModel::txWatchonlyDecoration(const TransactionRecord *w
         return QVariant();
 }
 
+QVariant TransactionTableModel::txInstantSendDecoration(const TransactionRecord *wtx) const
+{
+    if (wtx->status.lockedByInstantSend)
+        return QIcon(":/icons/verify");
+    else
+        return QVariant();
+}
+
 QString TransactionTableModel::formatTooltip(const TransactionRecord *rec) const
 {
     QString tooltip = formatTxStatus(rec) + QString("\n") + formatTxType(rec);
@@ -505,6 +535,8 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
             return txStatusDecoration(rec);
         case Watchonly:
             return txWatchonlyDecoration(rec);
+        case InstantSend:
+            return txInstantSendDecoration(rec);
         case ToAddress:
             return txAddressDecoration(rec);
         }
@@ -577,6 +609,10 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         return rec->involvesWatchAddress;
     case WatchonlyDecorationRole:
         return txWatchonlyDecoration(rec);
+    case InstantSendRole:
+        return rec->status.lockedByInstantSend;
+    case InstantSendDecorationRole:
+        return txInstantSendDecoration(rec);
     case LongDescriptionRole:
         return priv->describe(walletModel->node(), walletModel->wallet(), rec, walletModel->getOptionsModel()->getDisplayUnit());
     case AddressRole:

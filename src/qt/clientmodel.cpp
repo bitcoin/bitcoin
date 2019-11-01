@@ -17,6 +17,7 @@
 #include <util/system.h>
 
 #include <masternodes/sync.h>
+#include <llmq/quorums_instantsend.h>
 
 #include <stdint.h>
 
@@ -92,12 +93,21 @@ int64_t ClientModel::getHeaderTipTime() const
     return cachedBestHeaderTime;
 }
 
+size_t ClientModel::getInstantSentLockCount() const
+{
+    if (!llmq::quorumInstantSendManager) {
+        return 0;
+    }
+    return llmq::quorumInstantSendManager->GetInstantSendLockCount();
+}
+
 void ClientModel::updateTimer()
 {
     // no locking required at this point
     // the following calls will acquire the required lock
     Q_EMIT mempoolSizeChanged(m_node.getMempoolSize(), m_node.getMempoolDynamicUsage());
     Q_EMIT bytesChanged(m_node.getTotalBytesRecv(), m_node.getTotalBytesSent());
+    Q_EMIT islockCountChanged(getInstantSentLockCount());
 }
 
 void ClientModel::updateNumConnections(int numConnections)

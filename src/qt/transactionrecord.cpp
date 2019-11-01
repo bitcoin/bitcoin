@@ -173,7 +173,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
     return parts;
 }
 
-void TransactionRecord::updateStatus(const interfaces::WalletTxStatus& wtx, int numBlocks, int64_t block_time)
+void TransactionRecord::updateStatus(const interfaces::WalletTxStatus& wtx, int numBlocks, int64_t block_time, int numISLocks, int chainLockHeight)
 {
     // Determine transaction status
 
@@ -186,6 +186,8 @@ void TransactionRecord::updateStatus(const interfaces::WalletTxStatus& wtx, int 
     status.countsForBalance = wtx.is_trusted && !(wtx.blocks_to_maturity > 0);
     status.depth = wtx.depth_in_main_chain;
     status.cur_num_blocks = numBlocks;
+    status.cachedNumISLocks = numISLocks;
+    status.cachedChainLockHeight = chainLockHeight;
 
     const bool up_to_date = ((int64_t)QDateTime::currentMSecsSinceEpoch() / 1000 - block_time < MAX_BLOCK_TIME_GAP);
     if (up_to_date && !wtx.is_final) {
@@ -222,6 +224,7 @@ void TransactionRecord::updateStatus(const interfaces::WalletTxStatus& wtx, int 
     }
     else
     {
+        status.lockedByInstantSend = wtx.is_locked_instantsend;
         if (status.depth < 0)
         {
             status.status = TransactionStatus::Conflicted;
@@ -232,7 +235,7 @@ void TransactionRecord::updateStatus(const interfaces::WalletTxStatus& wtx, int 
             if (wtx.is_abandoned)
                 status.status = TransactionStatus::Abandoned;
         }
-        else if (status.depth < RecommendedNumConfirmations)
+        else if (status.depth < RecommendedNumConfirmations && !wtx.is_chain_locked)
         {
             status.status = TransactionStatus::Confirming;
         }
@@ -244,9 +247,11 @@ void TransactionRecord::updateStatus(const interfaces::WalletTxStatus& wtx, int 
     status.needsUpdate = false;
 }
 
-bool TransactionRecord::statusUpdateNeeded(int numBlocks) const
+bool TransactionRecord::statusUpdateNeeded(int numBlocks, int numISLocks, int chainLockHeight) const
 {
-    return status.cur_num_blocks != numBlocks || status.needsUpdate;
+    return status.cur_num_blocks != numBlocks || status.needsUpdate ||
+        status.cachedNumISLocks != numISLocks ||
+        status.cachedChainLockHeight != chainLockHeight;
 }
 
 QString TransactionRecord::getTxHash() const

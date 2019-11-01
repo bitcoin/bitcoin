@@ -62,6 +62,9 @@ public:
     int getHeaderTipHeight() const;
     int64_t getHeaderTipTime() const;
 
+    //! Return number of ISLOCKs
+    size_t getInstantSentLockCount() const;
+
     //! Returns enum BlockSource of the current importing/syncing state
     enum BlockSource getBlockSource() const;
     //! Return warnings to be displayed in status bar
@@ -117,6 +120,7 @@ Q_SIGNALS:
     void alertsChanged(const QString &warnings);
     void bytesChanged(quint64 totalBytesIn, quint64 totalBytesOut);
     void masternodeListChanged() const;
+    void islockCountChanged(size_t count);
 
     //! Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);

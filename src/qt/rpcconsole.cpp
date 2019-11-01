@@ -575,6 +575,7 @@ void RPCConsole::setClientModel(ClientModel *model)
         connect(model, &ClientModel::bytesChanged, this, &RPCConsole::updateTrafficStats);
 
         connect(model, &ClientModel::mempoolSizeChanged, this, &RPCConsole::setMempoolSize);
+        connect(model, &ClientModel::islockCountChanged, this, &RPCConsole::setInstantSendLockCount);
 
         // set up peer table
         ui->peerWidget->setModel(model->getPeerTableModel());
@@ -880,6 +881,11 @@ void RPCConsole::setMempoolSize(long numberOfTxs, size_t dynUsage)
         ui->mempoolSize->setText(QString::number(dynUsage/1000.0, 'f', 2) + " KB");
     else
         ui->mempoolSize->setText(QString::number(dynUsage/1000000.0, 'f', 2) + " MB");
+}
+
+void RPCConsole::setInstantSendLockCount(size_t count)
+{
+    ui->instantSendLockCount->setText(QString::number(count));
 }
 
 void RPCConsole::on_lineEdit_returnPressed()

@@ -61,6 +61,13 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     watchOnlyWidget->addItem(platformStyle->SingleColorIcon(":/icons/eye_minus"), "", TransactionFilterProxy::WatchOnlyFilter_No);
     hlayout->addWidget(watchOnlyWidget);
 
+    instantsendWidget = new QComboBox(this);
+    instantsendWidget->setFixedWidth(24);
+    instantsendWidget->addItem(tr("All"), TransactionFilterProxy::InstantSendFilter_All);
+    instantsendWidget->addItem(tr("Locked by InstantSend"), TransactionFilterProxy::InstantSendFilter_Yes);
+    instantsendWidget->addItem(tr("Not locked by InstantSend"), TransactionFilterProxy::InstantSendFilter_No);
+    hlayout->addWidget(instantsendWidget);
+
     dateWidget = new QComboBox(this);
     if (platformStyle->getUseExtraSpacing()) {
         dateWidget->setFixedWidth(121);
@@ -185,6 +192,7 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     connect(dateWidget, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &TransactionView::chooseDate);
     connect(typeWidget, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &TransactionView::chooseType);
     connect(watchOnlyWidget, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &TransactionView::chooseWatchonly);
+    connect(instantsendWidget, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &TransactionView::chooseInstantSend);
     connect(amountWidget, &QLineEdit::textChanged, amount_typing_delay, static_cast<void (QTimer::*)()>(&QTimer::start));
     connect(amount_typing_delay, &QTimer::timeout, this, &TransactionView::changedAmount);
     connect(search_widget, &QLineEdit::textChanged, prefix_typing_delay, static_cast<void (QTimer::*)()>(&QTimer::start));
@@ -235,6 +243,7 @@ void TransactionView::setModel(WalletModel *_model)
 
         transactionView->setColumnWidth(TransactionTableModel::Status, STATUS_COLUMN_WIDTH);
         transactionView->setColumnWidth(TransactionTableModel::Watchonly, WATCHONLY_COLUMN_WIDTH);
+        transactionView->setColumnWidth(TransactionTableModel::InstantSend, INSTANTSEND_COLUMN_WIDTH);
         transactionView->setColumnWidth(TransactionTableModel::Date, DATE_COLUMN_WIDTH);
         transactionView->setColumnWidth(TransactionTableModel::Type, TYPE_COLUMN_WIDTH);
         transactionView->setColumnWidth(TransactionTableModel::Amount, AMOUNT_MINIMUM_COLUMN_WIDTH);
@@ -329,6 +338,14 @@ void TransactionView::chooseWatchonly(int idx)
         return;
     transactionProxyModel->setWatchOnlyFilter(
         static_cast<TransactionFilterProxy::WatchOnlyFilter>(watchOnlyWidget->itemData(idx).toInt()));
+}
+
+void TransactionView::chooseInstantSend(int idx)
+{
+    if(!transactionProxyModel)
+        return;
+    transactionProxyModel->setInstantSendFilter(
+        (TransactionFilterProxy::InstantSendFilter)instantsendWidget->itemData(idx).toInt());
 }
 
 void TransactionView::changedSearch()
