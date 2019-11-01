@@ -494,22 +494,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.log.info("Test fundrawtxn with locked wallet")
 
         self.nodes[1].encryptwallet("test")
-        self.stop_nodes()
-
-        self.start_nodes()
-        # This test is not meant to test fee estimation and we'd like
-        # to be sure all txns are sent at a consistent desired feerate.
-        for node in self.nodes:
-            node.settxfee(self.min_relay_tx_fee)
-
-        connect_nodes(self.nodes[0], 1)
-        connect_nodes(self.nodes[1], 2)
-        connect_nodes(self.nodes[0], 2)
-        connect_nodes(self.nodes[0], 3)
-        # Again lock the watchonly UTXO or nodes[0] may spend it, because
-        # lockunspent is memory-only and thus lost on restart.
-        self.nodes[0].lockunspent(False, [{"txid": self.watchonly_txid, "vout": self.watchonly_vout}])
-        self.sync_all()
 
         # Drain the keypool.
         self.nodes[1].getnewaddress()
