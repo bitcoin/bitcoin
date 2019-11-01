@@ -13,3 +13,4 @@ errorstring
 keyserver
 homogenous
 setban
+hist
