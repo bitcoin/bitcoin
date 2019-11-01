@@ -25,9 +25,7 @@ std::map<int, int64_t> mapSporkDefaults = {
     {SPORK_4_CHAINLOCKS_ENABLED,            4070908800ULL}, // OFF
     {SPORK_5_INSTANTSEND_ENABLED,           0},             // ON
     {SPORK_6_INSTANTSEND_BLOCK_FILTERING,   0},             // ON
-    {SPORK_7_INSTANTSEND_MAX_VALUE,         1000},          // 1000 BITG
-    {SPORK_8_INSTANTSEND_AUTOLOCKS,         4070908800ULL}, // OFF
-    {SPORK_9_INSTANTSEND_LLMQ_BASED,        4070908800ULL}, // OFF
+    {SPORK_7_INSTANTSEND_AUTOLOCKS,         4070908800ULL}, // OFF
 
 };
 
@@ -276,9 +274,7 @@ int CSporkManager::GetSporkIDByName(const std::string& strName)
     if (strName == "SPORK_4_CHAINLOCKS_ENABLED")                return SPORK_4_CHAINLOCKS_ENABLED;
     if (strName == "SPORK_5_INSTANTSEND_ENABLED")               return SPORK_5_INSTANTSEND_ENABLED;
     if (strName == "SPORK_6_INSTANTSEND_BLOCK_FILTERING")       return SPORK_6_INSTANTSEND_BLOCK_FILTERING;
-    if (strName == "SPORK_7_INSTANTSEND_MAX_VALUE")             return SPORK_7_INSTANTSEND_MAX_VALUE;
-    if (strName == "SPORK_8_INSTANTSEND_AUTOLOCKS")             return SPORK_8_INSTANTSEND_AUTOLOCKS;
-    if (strName == "SPORK_9_INSTANTSEND_LLMQ_BASED")            return SPORK_9_INSTANTSEND_LLMQ_BASED;
+    if (strName == "SPORK_7_INSTANTSEND_AUTOLOCKS")             return SPORK_7_INSTANTSEND_AUTOLOCKS;
 
     LogPrint(BCLog::SPORK, "CSporkManager::GetSporkIDByName -- Unknown Spork name '%s'\n", strName);
     return -1;
@@ -293,9 +289,7 @@ std::string CSporkManager::GetSporkNameByID(int nSporkID)
         case SPORK_4_CHAINLOCKS_ENABLED:                return "SPORK_4_CHAINLOCKS_ENABLED";
         case SPORK_5_INSTANTSEND_ENABLED:               return "SPORK_5_INSTANTSEND_ENABLED";
         case SPORK_6_INSTANTSEND_BLOCK_FILTERING:       return "SPORK_6_INSTANTSEND_BLOCK_FILTERING";
-        case SPORK_7_INSTANTSEND_MAX_VALUE:             return "SPORK_7_INSTANTSEND_MAX_VALUE";
-        case SPORK_8_INSTANTSEND_AUTOLOCKS:             return "SPORK_8_INSTANTSEND_AUTOLOCKS";
-        case SPORK_9_INSTANTSEND_LLMQ_BASED:            return "SPORK_9_INSTANTSEND_LLMQ_BASED";
+        case SPORK_7_INSTANTSEND_AUTOLOCKS:             return "SPORK_7_INSTANTSEND_AUTOLOCKS";
         default:
             LogPrint(BCLog::SPORK, "CSporkManager::GetSporkNameByID -- Unknown Spork ID %d\n", nSporkID);
             return "Unknown";
