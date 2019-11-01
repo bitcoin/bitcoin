@@ -128,9 +128,8 @@ BOOST_AUTO_TEST_CASE(caddrdb_read)
     CDataStream ssPeers2 = AddrmanToStream(addrmanUncorrupted);
 
     CAddrMan addrman2;
-    CAddrDB adb;
     BOOST_CHECK(addrman2.size() == 0);
-    BOOST_CHECK(adb.Read(addrman2, ssPeers2));
+    BOOST_CHECK(CAddrDB::Read(addrman2, ssPeers2));
     BOOST_CHECK(addrman2.size() == 3);
 }
 
@@ -160,9 +159,8 @@ BOOST_AUTO_TEST_CASE(caddrdb_read_corrupted)
     CDataStream ssPeers2 = AddrmanToStream(addrmanCorrupted);
 
     CAddrMan addrman2;
-    CAddrDB adb;
     BOOST_CHECK(addrman2.size() == 0);
-    BOOST_CHECK(!adb.Read(addrman2, ssPeers2));
+    BOOST_CHECK(!CAddrDB::Read(addrman2, ssPeers2));
     BOOST_CHECK(addrman2.size() == 0);
 }
 
