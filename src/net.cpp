@@ -2991,7 +2991,10 @@ bool CConnman::IsMasternodeQuorumNode(const CNode* pnode)
 
 void CConnman::RelayInv(CInv &inv, const int minProtoVersion)
 {
-    g_connman->ForEachNode([&inv](CNode* node) { node->PushInventory(inv); });
+    g_connman->ForEachNode([&inv, minProtoVersion](CNode* node) {
+        if (node->nVersion < minProtoVersion) return;
+        node->PushInventory(inv);
+    });
 }
 
 void CConnman::RelayInvFiltered(CInv &inv, const CTransaction &relatedTx, const int minProtoVersion)
