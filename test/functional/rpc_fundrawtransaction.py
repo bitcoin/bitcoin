@@ -28,6 +28,9 @@ class RawTransactionsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
         self.setup_clean_chain = True
+        # This test isn't testing tx relay. Set whitelist on the peers for
+        # instant tx relay.
+        self.extra_args = [['-whitelist=127.0.0.1']] * self.num_nodes
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
