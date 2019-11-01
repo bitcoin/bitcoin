@@ -23,6 +23,7 @@ Implementation details
   * Extensive testing infrastructure.
   * Structured to facilitate review and analysis.
   * Intended to be portable to any system with a C89 compiler and uint64_t support.
+  * No use of floating types, except in benchmarks.
   * Expose only higher level interfaces to minimize the API surface and improve application security. ("Be difficult to use insecurely.")
 * Field operations
   * Optimized implementation of arithmetic modulo the curve's field size (2^256 - 0x1000003D1).
@@ -45,8 +46,10 @@ Implementation details
   * Optionally (off by default) use secp256k1's efficiently-computable endomorphism to split the P multiplicand into 2 half-sized ones.
 * Point multiplication for signing
   * Use a precomputed table of multiples of powers of 16 multiplied with the generator, so general multiplication becomes a series of additions.
-  * Access the table with branch-free conditional moves so memory access is uniform.
-  * No data-dependent branches
+  * Intended to be completely free of timing sidechannels for secret-key operations (on reasonable hardware/toolchains)
+    * Access the table with branch-free conditional moves so memory access is uniform.
+    * No data-dependent branches
+  * Optional runtime blinding which attempts to frustrate differential power analysis.
   * The precomputed tables add and eventually subtract points for which no known scalar (private key) is known, preventing even an attacker with control over the private key used to control the data internally.
 
 Build steps
@@ -57,5 +60,14 @@ libsecp256k1 is built using autotools:
     $ ./autogen.sh
     $ ./configure
     $ make
-    $ ./tests
+    $ make check
     $ sudo make install  # optional
+
+Exhaustive tests
+-----------
+
+    $ ./exhaustive_tests
+
+With valgrind, you might need to increase the max stack size:
+
+    $ valgrind --max-stackframe=2500000 ./exhaustive_tests

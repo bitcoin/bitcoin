@@ -8,6 +8,7 @@ else
 JNI_LIB =
 endif
 include_HEADERS = include/secp256k1.h
+include_HEADERS += include/secp256k1_preallocated.h
 noinst_HEADERS =
 noinst_HEADERS += src/scalar.h
 noinst_HEADERS += src/scalar_4x64.h
@@ -150,11 +151,11 @@ endif
 endif
 
 if USE_ECMULT_STATIC_PRECOMPUTATION
-CPPFLAGS_FOR_BUILD +=-I$(top_srcdir)
+CPPFLAGS_FOR_BUILD +=-I$(top_srcdir) -I$(builddir)/src
 
 gen_context_OBJECTS = gen_context.o
 gen_context_BIN = gen_context$(BUILD_EXEEXT)
-gen_%.o: src/gen_%.c
+gen_%.o: src/gen_%.c src/libsecp256k1-config.h
 	$(CC_FOR_BUILD) $(CPPFLAGS_FOR_BUILD) $(CFLAGS_FOR_BUILD) -c $< -o $@
 
 $(gen_context_BIN): $(gen_context_OBJECTS)

@@ -33,9 +33,10 @@ extern "C" {
  *  verification).
  *
  *  A constructed context can safely be used from multiple threads
- *  simultaneously, but API call that take a non-const pointer to a context
+ *  simultaneously, but API calls that take a non-const pointer to a context
  *  need exclusive access to it. In particular this is the case for
- *  secp256k1_context_destroy and secp256k1_context_randomize.
+ *  secp256k1_context_destroy, secp256k1_context_preallocated_destroy,
+ *  and secp256k1_context_randomize.
  *
  *  Regarding randomization, either do it once at creation time (in which case
  *  you do not need any locking for the other calls), or use a read-write lock.
@@ -163,12 +164,13 @@ typedef int (*secp256k1_nonce_function)(
 #define SECP256K1_FLAGS_BIT_CONTEXT_SIGN (1 << 9)
 #define SECP256K1_FLAGS_BIT_COMPRESSION (1 << 8)
 
-/** Flags to pass to secp256k1_context_create. */
+/** Flags to pass to secp256k1_context_create, secp256k1_context_preallocated_size, and
+ *  secp256k1_context_preallocated_create. */
 #define SECP256K1_CONTEXT_VERIFY (SECP256K1_FLAGS_TYPE_CONTEXT | SECP256K1_FLAGS_BIT_CONTEXT_VERIFY)
 #define SECP256K1_CONTEXT_SIGN (SECP256K1_FLAGS_TYPE_CONTEXT | SECP256K1_FLAGS_BIT_CONTEXT_SIGN)
 #define SECP256K1_CONTEXT_NONE (SECP256K1_FLAGS_TYPE_CONTEXT)
 
-/** Flag to pass to secp256k1_ec_pubkey_serialize and secp256k1_ec_privkey_export. */
+/** Flag to pass to secp256k1_ec_pubkey_serialize. */
 #define SECP256K1_EC_COMPRESSED (SECP256K1_FLAGS_TYPE_COMPRESSION | SECP256K1_FLAGS_BIT_COMPRESSION)
 #define SECP256K1_EC_UNCOMPRESSED (SECP256K1_FLAGS_TYPE_COMPRESSION)
 
@@ -186,7 +188,11 @@ typedef int (*secp256k1_nonce_function)(
  */
 SECP256K1_API extern const secp256k1_context *secp256k1_context_no_precomp;
 
-/** Create a secp256k1 context object.
+/** Create a secp256k1 context object (in dynamically allocated memory).
+ *
+ *  This function uses malloc to allocate memory. It is guaranteed that malloc is
+ *  called at most once for every call of this function. If you need to avoid dynamic
+ *  memory allocation entirely, see the functions in secp256k1_preallocated.h.
  *
  *  Returns: a newly created context object.
  *  In:      flags: which parts of the context to initialize.
@@ -197,7 +203,11 @@ SECP256K1_API secp256k1_context* secp256k1_context_create(
     unsigned int flags
 ) SECP256K1_WARN_UNUSED_RESULT;
 
-/** Copies a secp256k1 context object.
+/** Copy a secp256k1 context object (into dynamically allocated memory).
+ *
+ *  This function uses malloc to allocate memory. It is guaranteed that malloc is
+ *  called at most once for every call of this function. If you need to avoid dynamic
+ *  memory allocation entirely, see the functions in secp256k1_preallocated.h.
  *
  *  Returns: a newly created context object.
  *  Args:    ctx: an existing context to copy (cannot be NULL)
@@ -206,10 +216,18 @@ SECP256K1_API secp256k1_context* secp256k1_context_clone(
     const secp256k1_context* ctx
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_WARN_UNUSED_RESULT;
 
-/** Destroy a secp256k1 context object.
+/** Destroy a secp256k1 context object (created in dynamically allocated memory).
  *
  *  The context pointer may not be used afterwards.
- *  Args:   ctx: an existing context to destroy (cannot be NULL)
+ *
+ *  The context to destroy must have been created using secp256k1_context_create
+ *  or secp256k1_context_clone. If the context has instead been created using
+ *  secp256k1_context_preallocated_create or secp256k1_context_preallocated_clone, the
+ *  behaviour is undefined. In that case, secp256k1_context_preallocated_destroy must
+ *  be used instead.
+ *
+ *  Args:   ctx: an existing context to destroy, constructed using
+ *               secp256k1_context_create or secp256k1_context_clone
  */
 SECP256K1_API void secp256k1_context_destroy(
     secp256k1_context* ctx
@@ -229,11 +247,28 @@ SECP256K1_API void secp256k1_context_destroy(
  *  to cause a crash, though its return value and output arguments are
  *  undefined.
  *
+ *  When this function has not been called (or called with fn==NULL), then the
+ *  default handler will be used. The library provides a default handler which
+ *  writes the message to stderr and calls abort. This default handler can be
+ *  replaced at link time if the preprocessor macro
+ *  USE_EXTERNAL_DEFAULT_CALLBACKS is defined, which is the case if the build
+ *  has been configured with --enable-external-default-callbacks. Then the
+ *  following two symbols must be provided to link against:
+ *   - void secp256k1_default_illegal_callback_fn(const char* message, void* data);
+ *   - void secp256k1_default_error_callback_fn(const char* message, void* data);
+ *  The library can call these default handlers even before a proper callback data
+ *  pointer could have been set using secp256k1_context_set_illegal_callback or
+ *  secp256k1_context_set_error_callback, e.g., when the creation of a context
+ *  fails. In this case, the corresponding default handler will be called with
+ *  the data pointer argument set to NULL.
+ *
  *  Args: ctx:  an existing context object (cannot be NULL)
  *  In:   fun:  a pointer to a function to call when an illegal argument is
- *              passed to the API, taking a message and an opaque pointer
- *              (NULL restores a default handler that calls abort).
+ *              passed to the API, taking a message and an opaque pointer.
+ *              (NULL restores the default handler.)
  *        data: the opaque pointer to pass to fun above.
+ *
+ *  See also secp256k1_context_set_error_callback.
  */
 SECP256K1_API void secp256k1_context_set_illegal_callback(
     secp256k1_context* ctx,
@@ -253,9 +288,12 @@ SECP256K1_API void secp256k1_context_set_illegal_callback(
  *
  *  Args: ctx:  an existing context object (cannot be NULL)
  *  In:   fun:  a pointer to a function to call when an internal error occurs,
- *              taking a message and an opaque pointer (NULL restores a default
- *              handler that calls abort).
+ *              taking a message and an opaque pointer (NULL restores the
+ *              default handler, see secp256k1_context_set_illegal_callback
+ *              for details).
  *        data: the opaque pointer to pass to fun above.
+ *
+ *  See also secp256k1_context_set_illegal_callback.
  */
 SECP256K1_API void secp256k1_context_set_error_callback(
     secp256k1_context* ctx,
@@ -267,21 +305,24 @@ SECP256K1_API void secp256k1_context_set_error_callback(
  *
  *  Returns: a newly created scratch space.
  *  Args: ctx:  an existing context object (cannot be NULL)
- *  In:   max_size: maximum amount of memory to allocate
+ *  In:   size: amount of memory to be available as scratch space. Some extra
+ *              (<100 bytes) will be allocated for extra accounting.
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT secp256k1_scratch_space* secp256k1_scratch_space_create(
     const secp256k1_context* ctx,
-    size_t max_size
+    size_t size
 ) SECP256K1_ARG_NONNULL(1);
 
 /** Destroy a secp256k1 scratch space.
  *
  *  The pointer may not be used afterwards.
- *  Args:   scratch: space to destroy
+ *  Args:       ctx: a secp256k1 context object.
+ *          scratch: space to destroy
  */
 SECP256K1_API void secp256k1_scratch_space_destroy(
+    const secp256k1_context* ctx,
     secp256k1_scratch_space* scratch
-);
+) SECP256K1_ARG_NONNULL(1);
 
 /** Parse a variable-length public key into the pubkey object.
  *
@@ -605,7 +646,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_tweak_mul(
  *          uniformly random 32-byte arrays, or equal to zero. 1 otherwise.
  * Args:    ctx:    pointer to a context object initialized for validation
  *                 (cannot be NULL).
- * In/Out:  pubkey: pointer to a public key obkect.
+ * In/Out:  pubkey: pointer to a public key object.
  * In:      tweak:  pointer to a 32-byte tweak.
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_tweak_mul(
@@ -636,7 +677,8 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_tweak_mul(
  * contexts not initialized for signing; then it will have no effect and return 1.
  *
  * You should call this after secp256k1_context_create or
- * secp256k1_context_clone, and may call this repeatedly afterwards.
+ * secp256k1_context_clone (and secp256k1_context_preallocated_create or
+ * secp256k1_context_clone, resp.), and you may call this repeatedly afterwards.
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_context_randomize(
     secp256k1_context* ctx,

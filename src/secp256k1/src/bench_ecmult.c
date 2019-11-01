@@ -64,7 +64,7 @@ static void bench_ecmult(void* arg) {
     size_t iter;
 
     for (iter = 0; iter < iters; ++iter) {
-        data->ecmult_multi(&data->ctx->ecmult_ctx, data->scratch, &data->output[iter], data->includes_g ? &data->scalars[data->offset1] : NULL, bench_callback, arg, count - includes_g);
+        data->ecmult_multi(&data->ctx->error_callback, &data->ctx->ecmult_ctx, data->scratch, &data->output[iter], data->includes_g ? &data->scalars[data->offset1] : NULL, bench_callback, arg, count - includes_g);
         data->offset1 = (data->offset1 + count) % POINTS;
         data->offset2 = (data->offset2 + count - 1) % POINTS;
     }
@@ -154,7 +154,7 @@ int main(int argc, char **argv) {
         } else if(have_flag(argc, argv, "simple")) {
             printf("Using simple algorithm:\n");
             data.ecmult_multi = secp256k1_ecmult_multi_var;
-            secp256k1_scratch_space_destroy(data.scratch);
+            secp256k1_scratch_space_destroy(data.ctx, data.scratch);
             data.scratch = NULL;
         } else {
             fprintf(stderr, "%s: unrecognized argument '%s'.\n", argv[0], argv[1]);
@@ -193,10 +193,10 @@ int main(int argc, char **argv) {
             run_test(&data, i << p, 1);
         }
     }
-    secp256k1_context_destroy(data.ctx);
     if (data.scratch != NULL) {
-        secp256k1_scratch_space_destroy(data.scratch);
+        secp256k1_scratch_space_destroy(data.ctx, data.scratch);
     }
+    secp256k1_context_destroy(data.ctx);
     free(data.scalars);
     free(data.pubkeys);
     free(data.seckeys);
