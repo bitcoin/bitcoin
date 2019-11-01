@@ -10,6 +10,7 @@
 #include <interfaces/chain.h>
 #include <key_io.h>
 #include <llmq/quorums_chainlocks.h>
+#include <llmq/quorums_instantsend.h>
 #include <node/transaction.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
@@ -119,9 +120,13 @@ static void WalletTxToJSON(interfaces::Chain& chain, interfaces::Chain::Lock& lo
     int confirms = wtx.GetDepthInMainChain(locked_chain);
     entry.pushKV("confirmations", confirms);
 
+    bool fLLMQLocked = llmq::quorumInstantSendManager->IsLocked(wtx.GetHash());
     bool chainlock = false;
-    if (confirms > 0)
+    if (confirms > 0) {
         chainlock = llmq::chainLocksHandler->HasChainLock(::BlockIndex()[wtx.hashBlock]->nHeight, wtx.hashBlock);
+    }
+    entry.pushKV("instantlock", fLLMQLocked || chainlock);
+    entry.pushKV("instantlock_internal", fLLMQLocked);
     entry.pushKV("chainlock", chainlock);
 
     if (wtx.IsCoinBase())
@@ -588,6 +593,7 @@ static UniValue getreceivedbyaddress(const JSONRPCRequest& request)
                 {
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The bitgreen address for transactions."},
                     {"minconf", RPCArg::Type::NUM, /* default */ "1", "Only include transactions confirmed at least this many times."},
+                    {"addlocked", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Whether to include transactions locked via InstantSend."},
                 },
                 RPCResult{
             "amount   (numeric) The total amount in " + CURRENCY_UNIT + " received at this address.\n"
@@ -625,6 +631,7 @@ static UniValue getreceivedbyaddress(const JSONRPCRequest& request)
     int nMinDepth = 1;
     if (!request.params[1].isNull())
         nMinDepth = request.params[1].get_int();
+    bool fAddLocked = (request.params.size() > 2 && request.params[2].get_bool());
 
     // Tally
     CAmount nAmount = 0;
@@ -637,8 +644,8 @@ static UniValue getreceivedbyaddress(const JSONRPCRequest& request)
         for (const CTxOut& txout : wtx.tx->vout) {
             CTxDestination address;
             if (ExtractDestination(txout.scriptPubKey, address) &&
-                GetScriptForDestination(address) == scriptPubKey &&
-                wtx.GetDepthInMainChain(*locked_chain) >= nMinDepth)
+                GetScriptForDestination(address) == scriptPubKey)
+                if (wtx.GetDepthInMainChain(*locked_chain) >= nMinDepth || (fAddLocked && wtx.IsLockedByInstantSend()))
                     nAmount += txout.nValue;
         }
     }
@@ -731,6 +738,7 @@ static UniValue getbalance(const JSONRPCRequest& request)
                 {
                     {"dummy", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "Remains for backward compatibility. Must be excluded or set to \"*\"."},
                     {"minconf", RPCArg::Type::NUM, /* default */ "0", "Only include transactions confirmed at least this many times."},
+                    {"addlocked", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Whether to include the value of transactions locked via InstantSend in the wallet's balance."},
                     {"include_watchonly", RPCArg::Type::BOOL, /* default */ "false", "Also include balance in watch-only addresses (see 'importaddress')"},
                     {"avoid_reuse", RPCArg::Type::BOOL, /* default */ "true", "(only available if avoid_reuse wallet flag is set) Do not include balance in dirty outputs; addresses are considered dirty if they have previously been used in a transaction."},
                 },
@@ -763,15 +771,16 @@ static UniValue getbalance(const JSONRPCRequest& request)
     if (!request.params[1].isNull()) {
         min_depth = request.params[1].get_int();
     }
+    bool add_locked = (request.params.size() > 2 && request.params[2].get_bool());
 
     bool include_watchonly = false;
-    if (!request.params[2].isNull() && request.params[2].get_bool()) {
+    if (!request.params[3].isNull() && request.params[3].get_bool()) {
         include_watchonly = true;
     }
 
-    bool avoid_reuse = GetAvoidReuseFlag(pwallet, request.params[3]);
+    bool avoid_reuse = GetAvoidReuseFlag(pwallet, request.params[4]);
 
-    const auto bal = pwallet->GetBalance(min_depth, avoid_reuse);
+    const auto bal = pwallet->GetBalance(min_depth, avoid_reuse, add_locked);
 
     return ValueFromAmount(bal.m_mine_trusted + (include_watchonly ? bal.m_watchonly_trusted : 0));
 }
@@ -1042,23 +1051,25 @@ static UniValue ListReceived(interfaces::Chain::Lock& locked_chain, CWallet * co
     if (!params[0].isNull())
         nMinDepth = params[0].get_int();
 
+    bool fAddLocked = (params.size() > 1 && params[1].get_bool());
+
     // Whether to include empty labels
     bool fIncludeEmpty = false;
-    if (!params[1].isNull())
-        fIncludeEmpty = params[1].get_bool();
+    if (!params[2].isNull())
+        fIncludeEmpty = params[2].get_bool();
 
     isminefilter filter = ISMINE_SPENDABLE;
-    if(!params[2].isNull())
-        if(params[2].get_bool())
+    if(!params[3].isNull())
+        if(params[3].get_bool())
             filter = filter | ISMINE_WATCH_ONLY;
 
     bool has_filtered_address = false;
     CTxDestination filtered_address = CNoDestination();
-    if (!by_label && params.size() > 3) {
-        if (!IsValidDestinationString(params[3].get_str())) {
+    if (!by_label && params.size() > 4) {
+        if (!IsValidDestinationString(params[4].get_str())) {
             throw JSONRPCError(RPC_WALLET_ERROR, "address_filter parameter was invalid");
         }
-        filtered_address = DecodeDestination(params[3].get_str());
+        filtered_address = DecodeDestination(params[4].get_str());
         has_filtered_address = true;
     }
 
@@ -1072,7 +1083,7 @@ static UniValue ListReceived(interfaces::Chain::Lock& locked_chain, CWallet * co
         }
 
         int nDepth = wtx.GetDepthInMainChain(locked_chain);
-        if (nDepth < nMinDepth)
+        if ((nDepth < nMinDepth) && !(fAddLocked && wtx.IsLockedByInstantSend()))
             continue;
 
         for (const CTxOut& txout : wtx.tx->vout)
@@ -1193,6 +1204,7 @@ static UniValue listreceivedbyaddress(const JSONRPCRequest& request)
                 "\nList balances by receiving address.\n",
                 {
                     {"minconf", RPCArg::Type::NUM, /* default */ "1", "The minimum number of confirmations before payments are included."},
+                    {"addlocked", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Whether to include transactions locked via InstantSend."},
                     {"include_empty", RPCArg::Type::BOOL, /* default */ "false", "Whether to include addresses that haven't received any payments."},
                     {"include_watchonly", RPCArg::Type::BOOL, /* default */ "false", "Whether to include watch-only addresses (see 'importaddress')."},
                     {"address_filter", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "If present, only return information on this address."},
@@ -1215,9 +1227,9 @@ static UniValue listreceivedbyaddress(const JSONRPCRequest& request)
                 },
                 RPCExamples{
                     HelpExampleCli("listreceivedbyaddress", "")
-            + HelpExampleCli("listreceivedbyaddress", "6 true")
-            + HelpExampleRpc("listreceivedbyaddress", "6, true, true")
-            + HelpExampleRpc("listreceivedbyaddress", "6, true, true, \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\"")
+            + HelpExampleCli("listreceivedbyaddress", "6 false true")
+            + HelpExampleRpc("listreceivedbyaddress", "6, false, true, true")
+            + HelpExampleRpc("listreceivedbyaddress", "6, false, true, true, \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\"")
                 },
             }.Check(request);
 
@@ -1244,6 +1256,7 @@ static UniValue listreceivedbylabel(const JSONRPCRequest& request)
                 "\nList received transactions by label.\n",
                 {
                     {"minconf", RPCArg::Type::NUM, /* default */ "1", "The minimum number of confirmations before payments are included."},
+                    {"addlocked", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Whether to include transactions locked via InstantSend."},
                     {"include_empty", RPCArg::Type::BOOL, /* default */ "false", "Whether to include labels that haven't received any payments."},
                     {"include_watchonly", RPCArg::Type::BOOL, /* default */ "false", "Whether to include watch-only addresses (see 'importaddress')."},
                 },
@@ -1260,8 +1273,8 @@ static UniValue listreceivedbylabel(const JSONRPCRequest& request)
                 },
                 RPCExamples{
                     HelpExampleCli("listreceivedbylabel", "")
-            + HelpExampleCli("listreceivedbylabel", "6 true")
-            + HelpExampleRpc("listreceivedbylabel", "6, true, true")
+            + HelpExampleCli("listreceivedbylabel", "6 false true")
+            + HelpExampleRpc("listreceivedbylabel", "6, false, true, true")
                 },
             }.Check(request);
 
@@ -1328,7 +1341,7 @@ static void ListTransactions(interfaces::Chain::Lock& locked_chain, CWallet* con
     }
 
     // Received
-    if (listReceived.size() > 0 && wtx.GetDepthInMainChain(locked_chain) >= nMinDepth)
+    if (listReceived.size() > 0 && (wtx.GetDepthInMainChain(locked_chain) >= nMinDepth || wtx.IsLockedByInstantSend()))
     {
         for (const COutputEntry& r : listReceived)
         {
@@ -1406,6 +1419,9 @@ UniValue listtransactions(const JSONRPCRequest& request)
             "                                         'send' category of transactions.\n"
             "    \"confirmations\": n,       (numeric) The number of confirmations for the transaction. Negative confirmations indicate the\n"
             "                                         transaction conflicts with the block chain\n"
+            "    \"instantlock\" :           (bool) Current transaction lock state. Available for 'send' and 'receive' category of transactions.\n"
+            "    \"instantlock_internal\" :  (bool) Current internal transaction lock state. Available for 'send' and 'receive' category of transactions.\n"
+            "    \"chainlock\" :             (bool) The state of the corresponding block chainlock\n"
             "    \"trusted\": xxx,           (bool) Whether we consider the outputs of this unconfirmed transaction safe to spend.\n"
             "    \"blockhash\": \"hashvalue\", (string) The block hash containing the transaction.\n"
             "    \"blockindex\": n,          (numeric) The index of the transaction in the block that includes it.\n"
@@ -1537,6 +1553,9 @@ static UniValue listsinceblock(const JSONRPCRequest& request)
             "    \"fee\": x.xxx,             (numeric) The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the 'send' category of transactions.\n"
             "    \"confirmations\": n,       (numeric) The number of confirmations for the transaction.\n"
             "                                          When it's < 0, it means the transaction conflicted that many blocks ago.\n"
+            "    \"instantlock\" :           (bool) Current transaction lock state. Available for 'send' and 'receive' category of transactions.\n"
+            "    \"instantlock_internal\" :  (bool) Current internal transaction lock state. Available for 'send' and 'receive' category of transactions.\n"
+            "    \"chainlock\" :             (bool) The state of the corresponding block chainlock\n"
             "    \"blockhash\": \"hashvalue\",     (string) The block hash containing the transaction.\n"
             "    \"blockindex\": n,          (numeric) The index of the transaction in the block that includes it.\n"
             "    \"blocktime\": xxx,         (numeric) The block time in seconds since epoch (1 Jan 1970 GMT).\n"
@@ -1664,6 +1683,9 @@ static UniValue gettransaction(const JSONRPCRequest& request)
             "  \"amount\" : x.xxx,        (numeric) The transaction amount in " + CURRENCY_UNIT + "\n"
             "  \"fee\": x.xxx,            (numeric) The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the \n"
             "                              'send' category of transactions.\n"
+            "  \"instantlock\" :          (bool) Current transaction lock state\n"
+            "  \"instantlock_internal\" : (bool) Current internal transaction lock state\n"
+            "  \"chainlock\" :            (bool) The state of the corresponding block chainlock\n"
             "  \"confirmations\" : n,     (numeric) The number of confirmations\n"
             "  \"blockhash\" : \"hash\",  (string) The block hash\n"
             "  \"blockindex\" : xx,       (numeric) The index of the transaction in the block that includes it\n"
