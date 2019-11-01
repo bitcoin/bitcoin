@@ -21,6 +21,11 @@ bool CZMQAbstractNotifier::NotifyTransaction(const CTransaction &/*transaction*/
     return true;
 }
 
+bool CZMQAbstractNotifier::NotifyTransactionLock(const CTransaction &/*transaction*/)
+{
+    return true;
+}
+
 bool CZMQAbstractNotifier::NotifyChainLock(const CBlockIndex * /*CBlockIndex*/)
 {
     return true;
