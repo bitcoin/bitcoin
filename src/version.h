@@ -42,4 +42,7 @@ static const int SHORT_IDS_BLOCKS_VERSION = 70014;
 //! not banning for invalid compact blocks starts with this version
 static const int INVALID_CB_NO_BAN_VERSION = 70015;
 
+//! introduction of LLMQs
+static const int LLMQS_PROTO_VERSION = 70015;
+
 #endif // BITGREEN_VERSION_H

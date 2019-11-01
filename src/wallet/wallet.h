@@ -434,6 +434,7 @@ public:
     int GetDepthInMainChain(interfaces::Chain::Lock& locked_chain) const;
     bool IsInMainChain(interfaces::Chain::Lock& locked_chain) const { return GetDepthInMainChain(locked_chain) > 0; }
     bool IsChainLocked() const;
+    bool IsLockedByInstantSend() const;
 
     /**
      * @return number of blocks to maturity for this transaction:
@@ -980,7 +981,7 @@ public:
     /**
      * populate vCoins with vector of available COutputs.
      */
-    void AvailableCoins(interfaces::Chain::Lock& locked_chain, std::vector<COutput>& vCoins, bool fOnlySafe=true, const CCoinControl *coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t nMaximumCount = 0, const int nMinDepth = 0, const int nMaxDepth = 9999999) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void AvailableCoins(interfaces::Chain::Lock& locked_chain, std::vector<COutput>& vCoins, bool fOnlySafe=true, const CCoinControl *coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t nMaximumCount = 0, const int nMinDepth = 0, const int nMaxDepth = 9999999, bool fUseInstantSend = false) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /**
      * Return list of available coins and locked coins grouped by non-change output address.
@@ -1133,7 +1134,7 @@ public:
         CAmount m_watchonly_untrusted_pending{0};
         CAmount m_watchonly_immature{0};
     };
-    Balance GetBalance(int min_depth = 0, bool avoid_reuse = true) const;
+    Balance GetBalance(int min_depth = 0, bool avoid_reuse = true, bool add_locked = false) const;
     CAmount GetAvailableBalance(const CCoinControl* coinControl = nullptr) const;
 
     OutputType TransactionChangeType(OutputType change_type, const std::vector<CRecipient>& vecSend);
@@ -1251,6 +1252,8 @@ public:
 
     bool DelAddressBook(const CTxDestination& address);
 
+    bool UpdatedTransaction(const uint256 &hashTx);
+
     const std::string& GetLabelName(const CScript& scriptPubKey) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     unsigned int GetKeyPoolSize() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
@@ -1310,6 +1313,9 @@ public:
      * Note: Called without locks held.
      */
     boost::signals2::signal<void (CWallet* wallet)> NotifyStatusChanged;
+
+    /** IS-lock received */
+    boost::signals2::signal<void ()> NotifyISLockReceived;
 
     /** ChainLock received */
     boost::signals2::signal<void (int height)> NotifyChainLockReceived;
@@ -1427,6 +1433,7 @@ public:
     bool CreateCoinStake(unsigned int nBits, int64_t nSearchInterval, CMutableTransaction& txNew, uint32_t& nTxNewTime, CAmount nFees);
     void GetScriptForMining(CScript& script);
 
+    void NotifyTransactionLock(const CTransaction &tx);
     void NotifyChainLock(const CBlockIndex* pindexChainLock);
 };
 

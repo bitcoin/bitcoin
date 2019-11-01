@@ -5,6 +5,7 @@
 
 #include <llmq/quorums.h>
 #include <llmq/quorums_chainlocks.h>
+#include <llmq/quorums_instantsend.h>
 #include <llmq/quorums_signing.h>
 #include <llmq/quorums_utils.h>
 
@@ -272,6 +273,52 @@ void CChainLocksHandler::TrySignChainTip()
 
     LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- trying to sign %s, height=%d\n", __func__, pindex->GetBlockHash().ToString(), pindex->nHeight);
 
+    // When the new IX system is activated, we only try to ChainLock blocks which include safe transactions. A TX is
+    // considered safe when it is ixlocked or at least known since 10 minutes (from mempool or block). These checks are
+    // performed for the tip (which we try to sign) and the previous 5 blocks. If a ChainLocked block is found on the
+    // way down, we consider all TXs to be safe.
+    if (IsInstantSendEnabled() && sporkManager.IsSporkActive(SPORK_6_INSTANTSEND_BLOCK_FILTERING)) {
+        auto pindexWalk = pindex;
+        while (pindexWalk) {
+            if (pindex->nHeight - pindexWalk->nHeight > 5) {
+                // no need to check further down, 6 confs is safe to assume that TXs below this height won't be
+                // ixlocked anymore if they aren't already
+                LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- tip and previous 5 blocks all safe\n", __func__);
+                break;
+            }
+            if (HasChainLock(pindexWalk->nHeight, pindexWalk->GetBlockHash())) {
+                // we don't care about ixlocks for TXs that are ChainLocked already
+                LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- chainlock at height %d \n", __func__, pindexWalk->nHeight);
+                break;
+            }
+
+            auto txids = GetBlockTxs(pindexWalk->GetBlockHash());
+            if (!txids) {
+                pindexWalk = pindexWalk->pprev;
+                continue;
+            }
+
+            for (auto& txid : *txids) {
+                int64_t txAge = 0;
+                {
+                    LOCK(cs);
+                    auto it = txFirstSeenTime.find(txid);
+                    if (it != txFirstSeenTime.end()) {
+                        txAge = GetAdjustedTime() - it->second;
+                    }
+                }
+
+                if (txAge < WAIT_FOR_ISLOCK_TIMEOUT && !quorumInstantSendManager->IsLocked(txid)) {
+                    LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- not signing block %s due to TX %s not being ixlocked and not old enough. age=%d\n", __func__,
+                              pindexWalk->GetBlockHash().ToString(), txid.ToString(), txAge);
+                    return;
+                }
+            }
+
+            pindexWalk = pindexWalk->pprev;
+        }
+    }
+
     uint256 requestId = ::SerializeHash(std::make_pair(CLSIG_REQUESTID_PREFIX, pindex->nHeight));
     uint256 msgHash = pindex->GetBlockHash();
 
@@ -374,6 +421,13 @@ CChainLocksHandler::BlockTxs::mapped_type CChainLocksHandler::GetBlockTxs(const 
 
 bool CChainLocksHandler::IsTxSafeForMining(const uint256& txid)
 {
+    if (!sporkManager.IsSporkActive(SPORK_6_INSTANTSEND_BLOCK_FILTERING)) {
+        return true;
+    }
+    if (!IsInstantSendEnabled()) {
+        return true;
+    }
+
     int64_t txAge = 0;
     {
         LOCK(cs);
@@ -386,7 +440,7 @@ bool CChainLocksHandler::IsTxSafeForMining(const uint256& txid)
         }
     }
 
-    if (txAge < WAIT_FOR_ISLOCK_TIMEOUT)
+    if (txAge < WAIT_FOR_ISLOCK_TIMEOUT && !quorumInstantSendManager->IsLocked(txid))
         return false;
 
     return true;

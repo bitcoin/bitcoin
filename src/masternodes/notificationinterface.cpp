@@ -14,6 +14,7 @@
 
 #include <llmq/quorums.h>
 #include <llmq/quorums_chainlocks.h>
+#include <llmq/quorums_instantsend.h>
 #include <llmq/quorums_dkgsessionmgr.h>
 
 #include <util/init.h>
@@ -50,6 +51,7 @@ void CMNNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     if (fLiteMode)
         return;
 
+    llmq::quorumInstantSendManager->UpdatedBlockTip(pindexNew);
     llmq::chainLocksHandler->UpdatedBlockTip(pindexNew);
 
     // governance.UpdatedBlockTip(pindexNew, connman);
@@ -59,6 +61,7 @@ void CMNNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
 
 void CMNNotificationInterface::SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock)
 {
+    llmq::quorumInstantSendManager->SyncTransaction(tx, pindex, posInBlock);
     llmq::chainLocksHandler->SyncTransaction(tx, pindex, posInBlock);
 }
 
@@ -72,7 +75,7 @@ void CMNNotificationInterface::NotifyMasternodeListChanged(bool undo, const CDet
 
 void CMNNotificationInterface::NotifyChainLock(const CBlockIndex* pindex)
 {
-    // llmq::quorumInstantSendManager->NotifyChainLock(pindex);
+    llmq::quorumInstantSendManager->NotifyChainLock(pindex);
 }
 
 CMNNotificationInterface* g_mn_notification_interface = nullptr;

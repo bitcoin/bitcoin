@@ -161,6 +161,9 @@ protected:
      * disconnected block.*/
     virtual void SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock) {}
     virtual void AcceptedBlockHeader(const CBlockIndex *pindexNew) {}
+
+    virtual void NotifyTransactionLock(const CTransaction &tx) {}
+    virtual void NotifyInstantSendDoubleSpendAttempt(const CTransaction &currentTx, const CTransaction &previousTx) {}
 };
 
 struct MainSignalsInstance;
@@ -209,6 +212,10 @@ public:
     void NotifyMasternodeListChanged(bool, const CDeterministicMNList&, const CDeterministicMNListDiff&);
     void SyncTransaction(const CTransaction &, const CBlockIndex *, int);
     void AcceptedBlockHeader(const CBlockIndex *);
+
+    /** Notifies listeners of an updated transaction lock without new data. */
+    void NotifyTransactionLock(const CTransaction &);
+    void NotifyInstantSendDoubleSpendAttempt(const CTransaction &, const CTransaction &);
 };
 
 CMainSignals& GetMainSignals();

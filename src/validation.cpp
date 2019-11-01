@@ -19,6 +19,7 @@
 #include <hash.h>
 #include <index/txindex.h>
 #include <llmq/quorums_chainlocks.h>
+#include <llmq/quorums_instantsend.h>
 #include <masternodes/payments.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
@@ -34,6 +35,7 @@
 #include <script/sigcache.h>
 #include <script/standard.h>
 #include <shutdown.h>
+#include <spork.h>
 #include <special/specialdb.h>
 #include <special/specialtx.h>
 #include <timedata.h>
@@ -482,6 +484,17 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
     // is it already in the memory pool?
     if (pool.exists(hash)) {
         return state.Invalid(ValidationInvalidReason::TX_CONFLICT, false, REJECT_DUPLICATE, "txn-already-in-mempool");
+    }
+
+    // Check for conflicts with a completed Transaction Lock
+    llmq::CInstantSendLockPtr conflictLock = llmq::quorumInstantSendManager->GetConflictingLock(tx);
+    if (conflictLock) {
+        CTransactionRef txConflict;
+        uint256 hashBlock;
+        if (GetTransaction(conflictLock->txid, txConflict, Params().GetConsensus(), hashBlock))
+            GetMainSignals().NotifyInstantSendDoubleSpendAttempt(tx, *txConflict);
+
+        return state.Invalid(ValidationInvalidReason::TX_CONFLICT, error("%s: Transaction %s conflicts with locked TX %s", __func__, hash.ToString(), conflictLock->txid.ToString()), REJECT_INVALID, "tx-txlock-conflict");
     }
 
     // Check for conflicts with in-memory transactions
@@ -2097,6 +2110,32 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
         return state.Invalid(ValidationInvalidReason::CONSENSUS, error("%s: CheckQueue failed", __func__), REJECT_INVALID, "block-validation-failed");
     int64_t nTime4 = GetTimeMicros(); nTimeVerify += nTime4 - nTime2;
     LogPrint(BCLog::BENCHMARK, "    - Verify %u txins: %.2fms (%.3fms/txin) [%.2fs (%.2fms/blk)]\n", nInputs - 1, MILLI * (nTime4 - nTime2), nInputs <= 1 ? 0 : MILLI * (nTime4 - nTime2) / (nInputs-1), nTimeVerify * MICRO, nTimeVerify * MILLI / nBlocksTotal);
+
+    // Check transaction InstantSend
+    if (sporkManager.IsSporkActive(SPORK_6_INSTANTSEND_BLOCK_FILTERING)) {
+        // Require other nodes to comply, send them some data in case they are missing it.
+        for (const auto& tx : block.vtx) {
+            // skip txes that have no inputs
+            if (tx->vin.empty()) continue;
+            llmq::CInstantSendLockPtr conflictLock = llmq::quorumInstantSendManager->GetConflictingLock(*tx);
+            if (!conflictLock) {
+                continue;
+            }
+            if (llmq::chainLocksHandler->HasChainLock(pindex->nHeight, pindex->GetBlockHash())) {
+                llmq::quorumInstantSendManager->RemoveChainLockConflictingLock(::SerializeHash(*conflictLock), *conflictLock);
+                assert(llmq::quorumInstantSendManager->GetConflictingLock(*tx) == nullptr);
+            } else {
+                // The node which relayed this should switch to correct chain.
+                // TODO: relay instantsend data/proof.
+                LOCK(cs_main);
+                mapRejectedBlocks.insert(std::make_pair(block.GetHash(), GetTime()));
+                return state.Invalid(ValidationInvalidReason::CONSENSUS, error("%s: transaction %s conflicts with transaction lock %s", __func__, tx->GetHash().ToString(), conflictLock->txid.ToString()),
+                                    REJECT_INVALID, "conflict-tx-lock");
+            }
+        }
+    } else {
+        LogPrintf("%s: spork is off, skipping transaction locking checks\n", __func__);
+    }
 
     // BITGREEN: Check Proof-of-Stake, masternode payments and superblocks
 

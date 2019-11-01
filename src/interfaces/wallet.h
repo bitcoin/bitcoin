@@ -294,6 +294,10 @@ public:
     using CanGetAddressesChangedFn = std::function<void()>;
     virtual std::unique_ptr<Handler> handleCanGetAddressesChanged(CanGetAddressesChangedFn fn) = 0;
 
+    //! Register handler for transaction locks.
+    using NotifyISLockReceivedFn = std::function<void()>;
+    virtual std::unique_ptr<Handler> handleNotifyISLockReceived(NotifyISLockReceivedFn fn) = 0;
+
     //! Register handler for chain lock received.
     using ChainLockReceivedFn = std::function<void(int height)>;
     virtual std::unique_ptr<Handler> handleChainLockReceived(ChainLockReceivedFn fn) = 0;
@@ -362,6 +366,8 @@ struct WalletTxStatus
     bool is_abandoned;
     bool is_coinbase;
     bool is_in_main_chain;
+    bool is_chain_locked;
+    bool is_locked_instantsend;
 };
 
 //! Wallet transaction output.

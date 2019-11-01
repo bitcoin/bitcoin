@@ -589,6 +589,9 @@ void SetupServerArgs()
     gArgs.AddArg("-masternodeblsprivkey=<hex>", "Set the masternode BLS private key", false, OptionsCategory::MASTERNODES);
     gArgs.AddArg("-watchquorums=<n>", strprintf("Watch and validate quorum communication (default: %u)", llmq::DEFAULT_WATCH_QUORUMS), false, OptionsCategory::MASTERNODES);
 
+    // InstantSend
+    gArgs.AddArg("-instantsendnotify=<cmd>", "Execute command when a wallet InstantSend transaction is successfully locked (%s in cmd is replaced by TxID)", false, OptionsCategory::INSTANTSEND);
+
     // Add the hidden options
     gArgs.AddHiddenArgs(hidden_args);
 }
