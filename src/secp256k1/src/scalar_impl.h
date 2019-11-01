@@ -7,8 +7,8 @@
 #ifndef SECP256K1_SCALAR_IMPL_H
 #define SECP256K1_SCALAR_IMPL_H
 
-#include "group.h"
 #include "scalar.h"
+#include "util.h"
 
 #if defined HAVE_CONFIG_H
 #include "libsecp256k1-config.h"

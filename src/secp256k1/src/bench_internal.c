@@ -253,7 +253,7 @@ void bench_wnaf_const(void* arg) {
     bench_inv *data = (bench_inv*)arg;
 
     for (i = 0; i < 20000; i++) {
-        secp256k1_wnaf_const(data->wnaf, data->scalar_x, WINDOW_A, 256);
+        secp256k1_wnaf_const(data->wnaf, &data->scalar_x, WINDOW_A, 256);
         secp256k1_scalar_add(&data->scalar_x, &data->scalar_x, &data->scalar_y);
     }
 }

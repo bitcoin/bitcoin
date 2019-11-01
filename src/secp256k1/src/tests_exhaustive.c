@@ -212,14 +212,14 @@ void test_exhaustive_ecmult_multi(const secp256k1_context *ctx, const secp256k1_
                         data.pt[0] = group[x];
                         data.pt[1] = group[y];
 
-                        secp256k1_ecmult_multi_var(&ctx->ecmult_ctx, scratch, &tmp, &g_sc, ecmult_multi_callback, &data, 2);
+                        secp256k1_ecmult_multi_var(&ctx->error_callback, &ctx->ecmult_ctx, scratch, &tmp, &g_sc, ecmult_multi_callback, &data, 2);
                         ge_equals_gej(&group[(i * x + j * y + k) % order], &tmp);
                     }
                 }
             }
         }
     }
-    secp256k1_scratch_destroy(scratch);
+    secp256k1_scratch_destroy(&ctx->error_callback, scratch);
 }
 
 void r_from_k(secp256k1_scalar *r, const secp256k1_ge *group, int k) {

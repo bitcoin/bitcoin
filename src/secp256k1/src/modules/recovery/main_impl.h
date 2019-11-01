@@ -147,7 +147,7 @@ int secp256k1_ecdsa_sign_recoverable(const secp256k1_context* ctx, secp256k1_ecd
                 break;
             }
             secp256k1_scalar_set_b32(&non, nonce32, &overflow);
-            if (!secp256k1_scalar_is_zero(&non) && !overflow) {
+            if (!overflow && !secp256k1_scalar_is_zero(&non)) {
                 if (secp256k1_ecdsa_sig_sign(&ctx->ecmult_gen_ctx, &r, &s, &sec, &msg, &non, &recid)) {
                     break;
                 }
