@@ -574,8 +574,9 @@ static UniValue setban(const JSONRPCRequest& request)
                 },
     };
     std::string strCommand;
-    if (!request.params[1].isNull())
-        strCommand = request.params[1].get_str();
+    if (!request.m_params["command"].isNull()) {
+        strCommand = request.m_params["command"].get_str();
+    }
     if (request.fHelp || !help.IsValidNumArgs(request.params.size()) || (strCommand != "add" && strCommand != "remove")) {
         throw std::runtime_error(help.ToString());
     }
@@ -588,16 +589,17 @@ static UniValue setban(const JSONRPCRequest& request)
     CNetAddr netAddr;
     bool isSubnet = false;
 
-    if (request.params[0].get_str().find('/') != std::string::npos)
+    if (request.m_params["subnet"].get_str().find('/') != std::string::npos) {
         isSubnet = true;
+    }
 
     if (!isSubnet) {
         CNetAddr resolved;
-        LookupHost(request.params[0].get_str(), resolved, false);
+        LookupHost(request.m_params["subnet"].get_str(), resolved, false);
         netAddr = resolved;
     }
     else
-        LookupSubNet(request.params[0].get_str(), subNet);
+        LookupSubNet(request.m_params["subnet"].get_str(), subNet);
 
     if (! (isSubnet ? subNet.IsValid() : netAddr.IsValid()) )
         throw JSONRPCError(RPC_CLIENT_INVALID_IP_OR_SUBNET, "Error: Invalid IP/Subnet");
@@ -609,12 +611,14 @@ static UniValue setban(const JSONRPCRequest& request)
         }
 
         int64_t banTime = 0; //use standard bantime if not specified
-        if (!request.params[2].isNull())
-            banTime = request.params[2].get_int64();
+        if (!request.m_params["bantime"].isNull()) {
+            banTime = request.m_params["bantime"].get_int64();
+        }
 
         bool absolute = false;
-        if (request.params[3].isTrue())
+        if (request.m_params["absolute"].isTrue()) {
             absolute = true;
+        }
 
         if (isSubnet) {
             node.banman->Ban(subNet, banTime, absolute);
