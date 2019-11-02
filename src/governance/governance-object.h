@@ -298,8 +298,6 @@ public:
 
     // FUNCTIONS FOR DEALING WITH DATA STRING
 
-    std::string GetDataAsHex() const;
-    std::string GetDataAsString() const;
     std::string GetDataAsHexString() const;
     std::string GetDataAsPlainString() const;
 

@@ -183,56 +183,20 @@ bool CGovernanceVote::CheckSignature(const CKeyID& keyID) const
 {
     std::string strError;
 
-      uint256 hash = GetSignatureHash();
+    uint256 hash = GetSignatureHash();
 
-      if (!CHashSigner::VerifyHash(hash, keyID, vchSig, strError)) {
-          // could be a signature in old format
-          std::string strMessage = masternodeOutpoint.ToStringShort() + "|" + nParentHash.ToString() + "|" +
-                                   std::to_string(nVoteSignal) + "|" +
-                                   std::to_string(nVoteOutcome) + "|" +
-                                   std::to_string(nTime);
+    if (!CHashSigner::VerifyHash(hash, keyID, vchSig, strError)) {
+        // could be a signature in old format
+        std::string strMessage = masternodeOutpoint.ToStringShort() + "|" + nParentHash.ToString() + "|" +
+                                    std::to_string(nVoteSignal) + "|" +
+                                    std::to_string(nVoteOutcome) + "|" +
+                                    std::to_string(nTime);
 
-          if (!CMessageSigner::VerifyMessage(keyID, vchSig, strMessage, strError)) {
-              // nope, not in old format either
-              LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- VerifyMessage() failed, error: %s\n", strError);
-              return false;
-          }
-  } else {
-      std::string strMessage = masternodeOutpoint.ToStringShort() + "|" + nParentHash.ToString() + "|" +
-                               std::to_string(nVoteSignal) + "|" +
-                               std::to_string(nVoteOutcome) + "|" +
-                               std::to_string(nTime);
-
-      if (!CMessageSigner::VerifyMessage(keyID, vchSig, strMessage, strError)) {
-          LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- VerifyMessage() failed, error: %s\n", strError);
-          return false;
-      }
-    }
-
-    return true;
-}
-
-bool CGovernanceVote::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
-{
-    // Choose coins to use
-    CPubKey pubKeyCollateralAddress;
-    CKey keyCollateralAddress;
-
-    std::string strError;
-    std::string strMessage = masternodeOutpoint.ToStringShort() + "|" + nParentHash.ToString() + "|" +
-                                     std::to_string(nVoteSignal) + "|" +
-                                     std::to_string(nVoteOutcome) + "|" +
-                                     std::to_string(nTime);
-
-
-    if(!CMessageSigner::SignMessage(strMessage, vchSig, keyMasternode)) {
-        LogPrintf("CGovernanceVote::Sign -- SignMessage() failed\n");
-        return false;
-    }
-
-    if(!CMessageSigner::VerifyMessage(pubKeyMasternode.GetID(), vchSig, strMessage, strError)) {
-        LogPrintf("CGovernanceVote::Sign -- VerifyMessage() failed, error: %s\n", strError);
-        return false;
+        if (!CMessageSigner::VerifyMessage(keyID, vchSig, strMessage, strError)) {
+            // nope, not in old format either
+            LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- VerifyMessage() failed, error: %s\n", strError);
+            return false;
+        }
     }
 
     return true;

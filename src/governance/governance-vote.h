@@ -96,7 +96,6 @@ public:
     void SetSignature(const std::vector<unsigned char>& vchSigIn) { vchSig = vchSigIn; }
 
     bool Sign(const CKey& key, const CKeyID& keyID);
-    bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
     bool CheckSignature(const CKeyID& keyID) const;
     bool Sign(const CBLSSecretKey& key);
     bool CheckSignature(const CBLSPublicKey& pubKey) const;

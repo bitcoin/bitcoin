@@ -429,16 +429,6 @@ void CGovernanceObject::GetData(UniValue& objResult)
 *
 */
 
-std::string CGovernanceObject::GetDataAsHex() const
-{
-    return HexStr(vchData);
-}
-
-std::string CGovernanceObject::GetDataAsString() const
-{
-    return std::string(vchData.begin(), vchData.end());
-}
-
 std::string CGovernanceObject::GetDataAsHexString() const
 {
     return HexStr(vchData);
