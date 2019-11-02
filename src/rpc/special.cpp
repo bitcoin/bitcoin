@@ -217,12 +217,11 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
         throw JSONRPCError(RPC_INTERNAL_ERROR, "No funds at specified address");
 
     CTransactionRef wtx;
-    CReserveKey reservekey(pwallet);
     CAmount nFeeRequired;
     int nChangePosRet = -1;
     std::string strError;
 
-    if (!pwallet->CreateTransaction(*locked_chain, vecSend, wtx, reservekey, nFeeRequired, nChangePosRet, strError, coin_control, false))
+    if (!pwallet->CreateTransaction(*locked_chain, vecSend, wtx, nFeeRequired, nChangePosRet, strError, coin_control, false))
         throw JSONRPCError(RPC_INTERNAL_ERROR, strError);
 
     tx.vin = wtx->vin;

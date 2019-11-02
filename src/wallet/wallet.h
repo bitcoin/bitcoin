@@ -102,7 +102,6 @@ extern bool fWalletUnlockStakingOnly;
 
 class CCoinControl;
 class COutput;
-class CReserveKey;
 class CScript;
 class CWalletTx;
 struct FeeCalculation;
@@ -332,57 +331,6 @@ public:
     void ReturnDestination();
     //! Keep the address. Do not return it's key to the keypool when this object goes out of scope
     void KeepDestination();
-};
-
-/** A wrapper to reserve a key from a wallet keypool
- *
- * CReserveKey is used to reserve a key from the keypool. It is passed around
- * during the CreateTransaction/CommitTransaction procedure.
- *
- * Instantiating a CReserveKey does not reserve a keypool key. To do so,
- * GetReservedKey() needs to be called on the object. Once a key has been
- * reserved, call KeepKey() on the CReserveKey object to make sure it is not
- * returned to the keypool. Call ReturnKey() to return the key to the keypool
- * so it can be re-used (for example, if the key was used in a new transaction
- * and that transaction was not completed and needed to be aborted).
- *
- * If a key is reserved and KeepKey() is not called, then the key will be
- * returned to the keypool when the CReserveObject goes out of scope.
- */
-class CReserveKey
-{
-protected:
-    //! The wallet to reserve the keypool key from
-    CWallet* pwallet;
-    //! The index of the key in the keypool
-    int64_t nIndex{-1};
-    //! The public key
-    CPubKey vchPubKey;
-    //! Whether this is from the internal (change output) keypool
-    bool fInternal{false};
-
-public:
-    //! Construct a CReserveKey object. This does NOT reserve a key from the keypool yet
-    explicit CReserveKey(CWallet* pwalletIn)
-    {
-        pwallet = pwalletIn;
-    }
-
-    CReserveKey(const CReserveKey&) = delete;
-    CReserveKey& operator=(const CReserveKey&) = delete;
-
-    //! Destructor. If a key has been reserved and not KeepKey'ed, it will be returned to the keypool
-    ~CReserveKey()
-    {
-        ReturnKey();
-    }
-
-    //! Reserve a key from the keypool
-    bool GetReservedKey(CPubKey &pubkey, bool internal = false);
-    //! Return a key to the keypool
-    void ReturnKey();
-    //! Keep the key. Do not return it to the keypool when this object goes out of scope
-    void KeepKey();
 };
 
 /** Address book data */
@@ -1217,9 +1165,10 @@ public:
      * selected by SelectCoins(); Also create the change output, when needed
      * @note passing nChangePosInOut as -1 will result in setting a random position
      */
-    bool CreateTransaction(interfaces::Chain::Lock& locked_chain, const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CReserveKey& reservekey, CAmount& nFeeRet,
+    bool CreateTransaction(interfaces::Chain::Lock& locked_chain, const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CAmount& nFeeRet,
                          int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign = true);
-    bool CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::vector<std::pair<std::string, std::string>> orderForm, CReserveKey& reservekey, CValidationState& state);
+    bool CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::vector<std::pair<std::string, std::string>> orderForm, CValidationState& state);
+
     bool DummySignTx(CMutableTransaction &txNew, const std::set<CTxOut> &txouts, bool use_max_sig = false) const
     {
         std::vector<CTxOut> v_txouts(txouts.size());
@@ -1405,7 +1354,7 @@ public:
      * Gives the wallet a chance to register repetitive tasks and complete post-init tasks
      */
     void postInitProcess();
-    bool GetBudgetSystemCollateralTX(CReserveKey &reservekey, CTransactionRef& tx, uint256 hash, CAmount amount);
+    bool GetBudgetSystemCollateralTX(CTransactionRef& tx, uint256 hash, CAmount amount);
     bool BackupWallet(const std::string& strDest);
 
     /* Set the HD chain model (chain child index counters) */
