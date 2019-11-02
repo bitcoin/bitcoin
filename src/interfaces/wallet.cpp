@@ -33,32 +33,6 @@
 namespace interfaces {
 namespace {
 
-class PendingWalletTxImpl : public PendingWalletTx
-{
-public:
-    explicit PendingWalletTxImpl(CWallet& wallet) : m_wallet(wallet), m_key(&wallet) {}
-
-    const CTransaction& get() override { return *m_tx; }
-
-    bool commit(WalletValueMap value_map,
-        WalletOrderForm order_form,
-        std::string& reject_reason) override
-    {
-        auto locked_chain = m_wallet.chain().lock();
-        LOCK(m_wallet.cs_wallet);
-        CValidationState state;
-        if (!m_wallet.CommitTransaction(std::move(m_tx), std::move(value_map), std::move(order_form), m_key, state)) {
-            reject_reason = state.GetRejectReason();
-            return false;
-        }
-        return true;
-    }
-
-    CTransactionRef m_tx;
-    CWallet& m_wallet;
-    CReserveKey m_key;
-};
-
 //! Construct wallet tx struct.
 WalletTx MakeWalletTx(interfaces::Chain::Lock& locked_chain, CWallet& wallet, const CWalletTx& wtx)
 {
@@ -228,7 +202,7 @@ public:
         LOCK(m_wallet->cs_wallet);
         return m_wallet->ListLockedCoins(outputs);
     }
-    std::unique_ptr<PendingWalletTx> createTransaction(const std::vector<CRecipient>& recipients,
+    CTransactionRef createTransaction(const std::vector<CRecipient>& recipients,
         const CCoinControl& coin_control,
         bool sign,
         int& change_pos,
@@ -514,6 +488,10 @@ public:
     std::unique_ptr<Handler> handleCanGetAddressesChanged(CanGetAddressesChangedFn fn) override
     {
         return MakeHandler(m_wallet->NotifyCanGetAddressesChanged.connect(fn));
+    }
+    std::unique_ptr<Handler> handleChainLockReceived(ChainLockReceivedFn fn) override
+    {
+        return MakeHandler(m_wallet->NotifyChainLockReceived.connect(fn));
     }
     std::shared_ptr<CWallet> m_wallet;
 };

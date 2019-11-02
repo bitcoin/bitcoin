@@ -531,11 +531,6 @@ public:
     mutable bool fInMempool;
     mutable CAmount nChangeCached;
 
-    CWalletTx()
-    {
-        Init(NULL);
-    }
-
     CWalletTx(const CWallet* pwalletIn, CTransactionRef arg) : CMerkleTx(std::move(arg))
     {
         Init(pwalletIn);
@@ -1327,7 +1322,7 @@ public:
     boost::signals2::signal<void (CWallet* wallet)> NotifyStatusChanged;
 
     /** ChainLock received */
-    boost::signals2::signal<void (const CBlockIndex* )> NotifyChainLockReceived;
+    boost::signals2::signal<void (int height)> NotifyChainLockReceived;
 
     /** Inquire whether this wallet broadcasts transactions. */
     bool GetBroadcastTransactions() const { return fBroadcastTransactions; }

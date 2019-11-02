@@ -5353,5 +5353,5 @@ bool CWallet::MintableCoins()
 
 void CWallet::NotifyChainLock(const CBlockIndex* pindexChainLock)
 {
-    NotifyChainLockReceived(pindexChainLock);
+    NotifyChainLockReceived(pindexChainLock->nHeight);
 }
