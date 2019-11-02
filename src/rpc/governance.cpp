@@ -204,7 +204,7 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
     outpoint.SetNull();
     if (request.params.size() == 8) {
         uint256 collateralHash = ParseHashV(request.params[6], "outputHash");
-        int32_t collateralIndex = ParseInt32V(request.params[7], "outputIndex");
+        int32_t collateralIndex = UniValue(UniValue::VNUM, request.params[7].getValStr()).get_int();
         if (collateralHash.IsNull() || collateralIndex < 0) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid hash or index: %s-%d", collateralHash.ToString(), collateralIndex));
         }

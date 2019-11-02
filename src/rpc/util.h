@@ -7,8 +7,8 @@
 
 #include <node/transaction.h>
 #include <outputtype.h>
-#include <pubkey.h>
 #include <protocol.h>
+#include <pubkey.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
 #include <script/script.h>
@@ -64,6 +64,12 @@ void RPCTypeCheckObj(const UniValue& o,
  * Utilities: convert hex-encoded Values
  * (throws error if not hex).
  */
+extern uint256 ParseHashV(const UniValue& v, std::string strName);
+extern uint256 ParseHashO(const UniValue& o, std::string strKey);
+extern std::vector<unsigned char> ParseHexV(const UniValue& v, std::string strName);
+extern std::vector<unsigned char> ParseHexO(const UniValue& o, std::string strKey);
+
+extern CAmount AmountFromValue(const UniValue& value);
 extern std::string HelpExampleCli(const std::string& methodname, const std::string& args);
 extern std::string HelpExampleRpc(const std::string& methodname, const std::string& args);
 
