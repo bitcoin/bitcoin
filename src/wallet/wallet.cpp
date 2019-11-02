@@ -1130,6 +1130,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
         wtx.nTimeSmart = ComputeTimeSmart(wtx);
         AddToSpends(hash);
 
+        // Lock masternode collateral
         auto locked_chain = chain().lock();
         auto mnList = deterministicMNManager->GetListAtChainTip();
         for(unsigned int i = 0; i < wtx.tx->vout.size(); ++i) {

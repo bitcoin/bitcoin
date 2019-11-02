@@ -89,27 +89,22 @@ public:
     {
     }
 
-    CGovernancePayment(CTxDestination addrIn, CAmount nAmountIn)
-        :fValid(false),
-         script(),
-         nAmount(0)
+    CGovernancePayment(CTxDestination addrIn, CAmount nAmountIn) :
+        fValid(false),
+        script(),
+        nAmount(0)
     {
-        try
-        {
+        try {
             CTxDestination dest = addrIn;
             script = GetScriptForDestination(dest);
             nAmount = nAmountIn;
             fValid = true;
-        }
-        catch(std::exception& e)
-        {
+        } catch(std::exception& e) {
             LogPrint(BCLog::GOBJECT, "CGovernancePayment Payment not valid: addrIn = %s, nAmountIn = %d, what = %s\n",
-                     EncodeDestination(addrIn), nAmountIn, e.what());
-        }
-        catch(...)
-        {
+                EncodeDestination(addrIn), nAmountIn, e.what());
+        } catch(...) {
             LogPrint(BCLog::GOBJECT, "CGovernancePayment Payment not valid: addrIn = %s, nAmountIn = %d\n",
-                     EncodeDestination(addrIn), nAmountIn);
+                EncodeDestination(addrIn), nAmountIn);
         }
     }
 

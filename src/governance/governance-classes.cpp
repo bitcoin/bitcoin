@@ -347,8 +347,7 @@ bool CSuperblockManager::GetSuperblockPayments(int nBlockHeight, std::vector<CTx
             CTxDestination address1;
             ExtractDestination(payment.script, address1);
 
-
-            LogPrint(BCLog::GOBJECT, "NEW Superblock : output %d (addr %s, amount %d)\n", i, EncodeDestination(address1), payment.nAmount);
+            LogPrint(BCLog::GOBJECT, "CSuperblockManager::GetSuperblockPayments -- NEW Superblock: output %d (addr %s, amount %d)\n", i, EncodeDestination(address1), payment.nAmount);
         } else {
             LogPrint(BCLog::GOBJECT, "CSuperblockManager::GetSuperblockPayments -- Payment not found\n");
         }
@@ -508,23 +507,19 @@ void CSuperblock::ParsePaymentSchedule(const std::string& strPaymentAddresses, c
         const CTxDestination &address = DecodeDestination(vecParsed1[i]);
         if (!IsValidDestination(address)) {
             std::ostringstream ostr;
-            ostr << "CSuperblock::ParsePaymentSchedule -- Invalid Syscoin Address : " <<  vecParsed1[i];
+            ostr << "CSuperblock::ParsePaymentSchedule -- Invalid BitGreen Address : " << vecParsed1[i];
             LogPrint(BCLog::GOBJECT, "%s\n", ostr.str());
             throw std::runtime_error(ostr.str());
         }
 
         CAmount nAmount = ParsePaymentAmount(vecParsed2[i]);
 
-        /*DBG( std::cout << "CSuperblock::ParsePaymentSchedule: "
-             << "amount string = " << vecParsed2[i]
-             << ", nAmount = " << nAmount
-             << std::endl; );*/
+        LogPrint(BCLog::GOBJECT, "CSuperblock::ParsePaymentSchedule -- i = %d, amount string = %s, nAmount = %lld\n", i, vecParsed2[i], nAmount);
 
         CGovernancePayment payment(address, nAmount);
-        if(payment.IsValid()) {
+        if (payment.IsValid()) {
             vecPayments.push_back(payment);
-        }
-        else {
+        } else {
             vecPayments.clear();
             std::ostringstream ostr;
             ostr << "CSuperblock::ParsePaymentSchedule -- Invalid payment found: address = " << EncodeDestination(address)
@@ -711,14 +706,13 @@ std::string CSuperblockManager::GetRequiredPaymentsString(int nBlockHeight)
             // PRINT NICE LOG OUTPUT FOR SUPERBLOCK PAYMENT
 
             CTxDestination address1;
-            ExtractDestination(payment.script, address1);         
+            ExtractDestination(payment.script, address1);
 
             // RETURN NICE OUTPUT FOR CONSOLE
 
             if(ret != "Unknown") {
                 ret += ", " + EncodeDestination(address1);
-            }
-            else {
+            } else {
                 ret = EncodeDestination(address1);
             }
         }
