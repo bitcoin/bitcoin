@@ -693,13 +693,13 @@ bool CWallet::MarkReplaced(const uint256& originalHash, const uint256& newHash)
 
 void CWallet::SetUsedDestinationState(const uint256& hash, unsigned int n, bool used)
 {
+    AssertLockHeld(cs_wallet);
     const CWalletTx* srctx = GetWalletTx(hash);
     if (!srctx) return;
 
     CTxDestination dst;
     if (ExtractDestination(srctx->tx->vout[n].scriptPubKey, dst)) {
         if (IsMine(dst)) {
-            LOCK(cs_wallet);
             if (used && !GetDestData(dst, "used", nullptr)) {
                 AddDestData(dst, "used", "p"); // p for "present", opposite of absent (null)
             } else if (!used && GetDestData(dst, "used", nullptr)) {

@@ -795,7 +795,7 @@ public:
     // Whether this or any UTXO with the same CTxDestination has been spent.
     bool IsUsedDestination(const CTxDestination& dst) const;
     bool IsUsedDestination(const uint256& hash, unsigned int n) const;
-    void SetUsedDestinationState(const uint256& hash, unsigned int n, bool used);
+    void SetUsedDestinationState(const uint256& hash, unsigned int n, bool used) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     std::vector<OutputGroup> GroupOutputs(const std::vector<COutput>& outputs, bool single_coin) const;
 
