@@ -19,7 +19,7 @@ files:
 script: |
   set -e -o pipefail
 
-  BUILD_DIR=`pwd`
+  BUILD_DIR=$(pwd)
   SIGDIR=${BUILD_DIR}/signature/win
   UNSIGNED_DIR=${BUILD_DIR}/unsigned
 
@@ -36,7 +36,7 @@ script: |
   ./configure --without-gsf --without-curl --disable-dependency-tracking
   make
   find ${UNSIGNED_DIR} -name "*-unsigned.exe" | while read i; do
-    INFILE="`basename "${i}"`"
-    OUTFILE="`echo "${INFILE}" | sed s/-unsigned//`"
+    INFILE="$(basename "${i}")"
+    OUTFILE="$(echo "${INFILE}" | sed s/-unsigned//)"
     ./osslsigncode attach-signature -in "${i}" -out "${OUTDIR}/${OUTFILE}" -sigin "${SIGDIR}/${INFILE}.pem"
   done
