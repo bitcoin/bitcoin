@@ -157,6 +157,74 @@ fn generate_locator_response<T: Clone, Conv: Fn(BlockIndex) -> T, Dummy: Fn() ->
     res
 }
 
+#[cfg(test)]
+#[test]
+fn test_locator_lookup() {
+    // Build a block tree that we can look up against
+    // G -> 2k blocks -> 2001 A -> 2k blocks -> 4002 C -> 2k blocks -> 6003 E
+    //               \-> 2001 B             \-> 4002 D
+    let mut block = BlockIndex::genesis();
+    let mut best_chain = Vec::new();
+    best_chain.push(block);
+    for _ in 0..2000 {
+        block = build_on(block);
+        best_chain.push(block);
+    }
+    let b = build_on(block);
+    block = build_on(block);
+    best_chain.push(block);
+    let a = block;
+    assert_eq!(a.height(), 2001);
+    for _ in 0..2000 {
+        block = build_on(block);
+        best_chain.push(block);
+    }
+    let d = build_on(block);
+    block = build_on(block);
+    best_chain.push(block);
+    let c = block;
+    assert_eq!(c.height(), 4002);
+    for _ in 0..2000 {
+        block = build_on(block);
+        best_chain.push(block);
+    }
+    let e = build_on(block);
+    best_chain.push(e);
+    assert_eq!(e.height(), 6003);
+    set_bests(e, e);
+
+    // Basic test just asking for D and getting the main fork back
+    let d_to_e_minus_two = generate_locator_response(e, &vec![Hash::from_inner(d.hash())], &Hash::from_inner([0; 32]),
+            |index| index, || BlockIndex::genesis());
+    assert_eq!(d_to_e_minus_two.len(), 2000);
+    assert_eq!(d_to_e_minus_two[0], c);
+    assert_eq!(d_to_e_minus_two[..], best_chain[4002..6002]);
+
+    // Basic test just asking for E minus a few gets to E
+    let near_tip_index = e.get_prev().unwrap().get_prev().unwrap().get_prev().unwrap();
+    let near_to_e = generate_locator_response(e,
+            &vec![Hash::from_inner(near_tip_index.get_prev().unwrap().hash())], &Hash::from_inner([0; 32]),
+            |index| index, || BlockIndex::genesis());
+    assert_eq!(near_to_e.len(), 4);
+    assert_eq!(near_to_e[0], near_tip_index);
+    assert_eq!(near_to_e[3], e);
+    assert_eq!(near_to_e[..], best_chain[6000..]);
+
+    // Asking for just one header...gets just one header
+    assert_eq!(generate_locator_response(e, &Vec::new(), &Hash::from_inner(a.hash()),
+            |index| index, || BlockIndex::genesis()), vec![a]);
+
+    // Asking for something not on the best chain should get no response...
+    assert_eq!(generate_locator_response(e, &Vec::new(), &Hash::from_inner(b.hash()),
+            |index| index, || BlockIndex::genesis()), Vec::new());
+
+    // Asking for something that forks off the main chain long ago should be treated as genesis...
+    let from_genesis = generate_locator_response(e, &vec![Hash::from_inner(b.hash())], &Hash::from_inner([0; 32]),
+            |index| index, || BlockIndex::genesis());
+    assert_eq!(from_genesis.len(), 2000);
+    assert_eq!(from_genesis[..], best_chain[1..2001]);
+}
+
 /// Finds the first ancestor from candidate_tip going back to the fork block from our_tip that
 /// doesn't have data. This is gratuitously expensive, so we should prefer to avoid it, in general.
 fn find_missing_data_fork_point(mut our_tip: BlockIndex, mut candidate_tip: BlockIndex) -> Option<BlockIndex> {
