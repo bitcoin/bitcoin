@@ -107,7 +107,7 @@ script: |
   CONFIG_SITE=${BASEPREFIX}/$(echo "${HOSTS}" | awk '{print $1;}')/share/config.site ./configure --prefix=/
   make dist
   SOURCEDIST=$(echo bitcoin-*.tar.gz)
-  DISTNAME=$(echo ${SOURCEDIST} | sed 's/.tar.*//')
+  DISTNAME=${SOURCEDIST/%.tar.gz}
 
   # Correct tar file order
   mkdir -p temp

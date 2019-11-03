@@ -23,7 +23,6 @@ disabled=(
     SC2162 # read without -r will mangle backslashes.
 )
 disabled_gitian=(
-    SC2001 # See if you can use ${variable//search/replace} instead.
     SC2094 # Make sure not to read and write the same file in the same pipeline.
     SC2129 # Consider using { cmd1; cmd2; } >> file instead of individual redirects.
     SC2230 # which is non-standard. Use builtin 'command -v' instead.
