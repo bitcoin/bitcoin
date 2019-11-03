@@ -19,7 +19,7 @@ files:
 script: |
   set -e -o pipefail
 
-  BUILD_DIR=$(pwd)
+  BUILD_DIR="$PWD"
   SIGDIR=${BUILD_DIR}/signature/win
   UNSIGNED_DIR=${BUILD_DIR}/unsigned
 
