@@ -4,9 +4,9 @@
 
 #include <key_io.h>
 #include <outputtype.h>
-#include <script/signingprovider.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
+#include <script/signingprovider.h>
 #include <tinyformat.h>
 #include <util/strencodings.h>
 

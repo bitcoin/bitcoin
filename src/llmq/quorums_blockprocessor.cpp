@@ -34,12 +34,10 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
         CFinalCommitment qc;
         vRecv >> qc;
 
-        //TODO: BitGreen
-        // auto hash = ::SerializeHash(qc);
+        auto hash = ::SerializeHash(qc);
         {
             LOCK(cs_main);
-            // TODO: BitGreen
-            // connman.RemoveAskFor(hash);
+            RemoveDataRequest(-1, CInv(MSG_QUORUM_FINAL_COMMITMENT, hash));
         }
 
         if (qc.IsNull()) {

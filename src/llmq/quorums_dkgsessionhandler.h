@@ -49,7 +49,7 @@ private:
 public:
     CDKGPendingMessages(size_t _maxMessagesPerNode);
 
-    void PushPendingMessage(NodeId from, CDataStream& vRecv);
+    void PushPendingMessage(NodeId from, const int nMsgType, CDataStream& vRecv);
     std::list<BinaryMessage> PopPendingMessages(size_t maxCount);
     bool HasSeen(const uint256& hash) const;
     void Clear();
@@ -59,7 +59,7 @@ public:
     {
         CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
         ds << msg;
-        PushPendingMessage(from, ds);
+        PushPendingMessage(from, -1, ds);
     }
 
     // Might return nullptr messages, which indicates that deserialization failed for some reason

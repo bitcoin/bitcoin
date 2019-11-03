@@ -243,6 +243,9 @@ extern const char *BLOCKTXN;
 extern const char *SPORK;
 extern const char *GETSPORKS;
 extern const char *SYNCSTATUSCOUNT;
+extern const char *MNGOVERNANCESYNC;
+extern const char *MNGOVERNANCEOBJECT;
+extern const char *MNGOVERNANCEOBJECTVOTE;
 extern const char *GETMNLISTDIFF;
 extern const char *MNLISTDIFF;
 extern const char *QSENDRECSIGS;
@@ -399,6 +402,8 @@ enum GetDataMsg
     MSG_WITNESS_BLOCK = MSG_BLOCK | MSG_WITNESS_FLAG, //!< Defined in BIP144
     MSG_WITNESS_TX = MSG_TX | MSG_WITNESS_FLAG,       //!< Defined in BIP144
     MSG_FILTERED_WITNESS_BLOCK = MSG_FILTERED_BLOCK | MSG_WITNESS_FLAG,
+    MSG_GOVERNANCE_OBJECT = 17,
+    MSG_GOVERNANCE_OBJECT_VOTE = 18,
     MSG_CMPCT_BLOCK = 20, //!< Defined in BIP152
     MSG_QUORUM_FINAL_COMMITMENT = 21,
     MSG_QUORUM_CONTRIB = 23,

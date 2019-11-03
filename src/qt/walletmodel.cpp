@@ -16,6 +16,7 @@
 #include <qt/sendcoinsdialog.h>
 #include <qt/transactiontablemodel.h>
 
+#include <consensus/validation.h>
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 #include <key_io.h>

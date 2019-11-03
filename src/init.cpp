@@ -21,6 +21,7 @@
 #include <consensus/validation.h>
 #include <flat-database.h>
 #include <fs.h>
+#include <governance/governance.h>
 #include <httprpc.h>
 #include <httpserver.h>
 #include <index/blockfilterindex.h>
@@ -242,6 +243,11 @@ void Shutdown(InitInterfaces& interfaces)
     DestroyAllBlockFilterIndexes();
 
     if (!fLiteMode && !fRPCInWarmup) {
+        // STORE DATA CACHES INTO SERIALIZED DAT FILES
+        CFlatDB<CMasternodeMetaMan> flatdb1("mncache.dat", "magicMasternodeCache");
+        flatdb1.Dump(mmetaman);
+        CFlatDB<CGovernanceManager> flatdb3("governance.dat", "magicGovernanceCache");
+        flatdb3.Dump(governance);
         CFlatDB<CNetFulfilledRequestManager> flatdb4("netfulfilled.dat", "magicFulfilledCache");
         flatdb4.Dump(netfulfilledman);
         CFlatDB<CSporkManager> flatdb6("sporks.dat", "magicSporkCache");
@@ -1856,10 +1862,20 @@ bool AppInitMain(InitInterfaces& interfaces)
         boost::filesystem::path pathDB = GetDataDir();
         std::string strDBName;
 
-        // TODO: BitGreen - load mncache / governance
+        strDBName = "mncache.dat";
+        CFlatDB<CMasternodeMetaMan> flatdb1(strDBName, "magicMasternodeCache");
+        if(!flatdb1.Load(mmetaman)) {
+            return InitError(_("Failed to load masternode cache.").translated);
+        }
+
+        strDBName = "governance.dat";
+        CFlatDB<CGovernanceManager> flatdb3(strDBName, "magicGovernanceCache");
+        if(!flatdb3.Load(governance)) {
+            return InitError(_("Failed to load governance cache.").translated);
+        }
+        governance.InitOnLoad();
 
         strDBName = "netfulfilled.dat";
-        uiInterface.InitMessage(_("Loading fulfilled requests cache...").translated);
         CFlatDB<CNetFulfilledRequestManager> flatdb4(strDBName, "magicFulfilledCache");
         if(!flatdb4.Load(netfulfilledman)) {
             return InitError(_("Failed to load fulfilled requests cache from").translated + "\n" + (pathDB / strDBName).string());
@@ -1872,7 +1888,7 @@ bool AppInitMain(InitInterfaces& interfaces)
         scheduler.scheduleEvery(boost::bind(&CNetFulfilledRequestManager::DoMaintenance, boost::ref(netfulfilledman)), 60 * 1000);
         scheduler.scheduleEvery(boost::bind(&CMasternodeSync::DoMaintenance, boost::ref(masternodeSync), boost::ref(*g_connman)), 1 * 1000);
         scheduler.scheduleEvery(boost::bind(&CMasternodeUtils::DoMaintenance, boost::ref(*g_connman)), 1 * 1000);
-        // TODO: BitGreen - governance scheduler
+        scheduler.scheduleEvery(boost::bind(&CGovernanceManager::DoMaintenance, boost::ref(governance)), 60 * 5 * 1000);
     }
 
     llmq::StartLLMQSystem();

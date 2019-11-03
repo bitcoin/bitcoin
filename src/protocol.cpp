@@ -45,6 +45,9 @@ const char *BLOCKTXN="blocktxn";
 const char *SPORK="spork";
 const char *GETSPORKS="getsporks";
 const char *SYNCSTATUSCOUNT="ssc";
+const char *MNGOVERNANCESYNC="govsync";
+const char *MNGOVERNANCEOBJECT="govobj";
+const char *MNGOVERNANCEOBJECTVOTE="govobjvote";
 const char *GETMNLISTDIFF="getmnlistd";
 const char *MNLISTDIFF="mnlistdiff";
 const char *QSENDRECSIGS="qsendrecsigs";
@@ -97,6 +100,9 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::SPORK,
     NetMsgType::GETSPORKS,
     NetMsgType::SYNCSTATUSCOUNT,
+    NetMsgType::MNGOVERNANCESYNC,
+    NetMsgType::MNGOVERNANCEOBJECT,
+    NetMsgType::MNGOVERNANCEOBJECTVOTE,
     NetMsgType::GETMNLISTDIFF,
     NetMsgType::MNLISTDIFF,
     NetMsgType::QSENDRECSIGS,
