@@ -56,6 +56,9 @@
 /* define if the Boost::Process library is available */
 #define HAVE_BOOST_PROCESS /**/
 
+/* define if external signer support is enabled (requires Boost::Process) */
+#define ENABLE_EXTERNAL_SIGNER 1 /**/
+
 /* define if the Boost::System library is available */
 #define HAVE_BOOST_SYSTEM /**/
 
