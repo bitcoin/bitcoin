@@ -651,8 +651,7 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& re
 
     {
         LOCK(cs_main);
-        // TODO: BitGreen
-        // connman.RemoveAskFor(recoveredSig.GetHash());
+        RemoveDataRequest(-1, CInv(MSG_QUORUM_RECOVERED_SIG, recoveredSig.GetHash()));
     }
 
     std::vector<CRecoveredSigsListener*> listeners;

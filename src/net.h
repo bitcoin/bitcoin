@@ -19,7 +19,6 @@
 #include <policy/feerate.h>
 #include <protocol.h>
 #include <random.h>
-#include <saltedhasher.h>
 #include <streams.h>
 #include <sync.h>
 #include <uint256.h>
@@ -31,7 +30,6 @@
 #include <thread>
 #include <memory>
 #include <condition_variable>
-#include <unordered_set>
 
 #ifndef WIN32
 #include <arpa/inet.h>
@@ -77,10 +75,6 @@ static const bool DEFAULT_UPNP = USE_UPNP;
 #else
 static const bool DEFAULT_UPNP = false;
 #endif
-/** The maximum number of entries in mapAskFor */
-static const size_t MAPASKFOR_MAX_SZ = MAX_INV_SZ;
-/** The maximum number of entries in setAskFor (larger due to getdata latency)*/
-static const size_t SETASKFOR_MAX_SZ = 2 * MAX_INV_SZ;
 /** The maximum number of peer connections to maintain. */
 static const unsigned int DEFAULT_MAX_PEER_CONNECTIONS = 125;
 /** The default for -maxuploadtarget. 0 = Unlimited */
@@ -208,22 +202,8 @@ public:
     void OpenMasternodeConnection(const CAddress& addrConnect);
     bool CheckIncomingNonce(uint64_t nonce);
 
-    struct CFullyConnectedOnly {
-        bool operator() (const CNode* pnode) const {
-            return NodeFullyConnected(pnode);
-        }
-    };
-
-    struct CAllNodes {
-        bool operator() (const CNode*) const {return true;}
-    };
-
-    constexpr static const CAllNodes AllNodes{};
-    constexpr static const CFullyConnectedOnly FullyConnectedOnly{};
-
     bool ForNode(NodeId id, std::function<bool(CNode* pnode)> func);
     bool ForNode(const CService& addr, std::function<bool(CNode* pnode)> func);
-    void RemoveAskFor(const uint256& hash);
     bool IsMasternodeOrDisconnectRequested(const CService& addr);
 
     void PushMessage(CNode* pnode, CSerializedNetMsg&& msg);
@@ -269,10 +249,6 @@ public:
         }
         post();
     };
-
-    std::vector<CNode*> CopyNodeVector();
-    std::vector<CNode*> CopyNodeVector(std::function<bool(const CNode* pnode)> cond);
-    void ReleaseNodeVector(const std::vector<CNode*>& vecNodes);
 
     // Addrman functions
     size_t GetAddressCount() const;
@@ -580,8 +556,6 @@ extern bool fDiscover;
 extern bool fListen;
 extern bool g_relay_txes;
 
-extern unordered_limitedmap<uint256, int64_t, StaticSaltedHasher> mapAlreadyAskedFor;
-
 /** Subversion as sent to the P2P network in `version` messages */
 extern std::string strSubVersion;
 
@@ -706,12 +680,11 @@ public:
     std::atomic<int64_t> nLastRecv{0};
     const int64_t nTimeConnected;
     std::atomic<int64_t> nTimeOffset{0};
-    std::atomic<int64_t> nLastWarningTime;
     std::atomic<int64_t> nTimeFirstMessageReceived{0};
     std::atomic<bool> fFirstMessageIsMNAUTH;
     // Address of this peer
     const CAddress addr;
-    std::atomic<int> nNumWarningsSkipped;
+    // Bind address of our side of the connection
     const CAddress addrBind;
     std::atomic<int> nVersion{0};
     RecursiveMutex cs_SubVer;
@@ -745,7 +718,6 @@ public:
     mutable CCriticalSection cs_filter;
     std::unique_ptr<CBloomFilter> pfilter PT_GUARDED_BY(cs_filter);
     std::atomic<int> nRefCount{0};
-    void AskFor(const CInv& inv, int64_t doubleRequestDelay = 2 * 60 * 1000000);
 
     const uint64_t nKeyedNetGroup;
     std::atomic_bool fPauseRecv{false};
@@ -779,9 +751,6 @@ public:
     // List of non-tx/non-block inventory items
     std::vector<CInv> vInventoryOtherToSend GUARDED_BY(cs_inventory);
     CCriticalSection cs_inventory;
-    std::unordered_set<uint256, StaticSaltedHasher> setAskFor;
-    std::vector<std::pair<int64_t, CInv>> vecAskFor;
-    std::multimap<int64_t, CInv> mapAskFor;
     int64_t nNextInvSend{0};
     // Used for headers announcements - unfiltered blocks to relay
     std::vector<uint256> vBlockHashesToAnnounce GUARDED_BY(cs_inventory);
@@ -945,7 +914,6 @@ public:
         vBlockHashesToAnnounce.push_back(hash);
     }
 
-    void RemoveAskFor(const uint256& hash);
     void CloseSocketDisconnect();
 
     void copyStats(CNodeStats &stats);
