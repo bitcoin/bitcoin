@@ -209,7 +209,9 @@ public:
         bool sign,
         int& change_pos,
         CAmount& fee,
-        std::string& fail_reason) override
+        std::string& fail_reason,
+        AvailableCoinsType nCoinType,
+        bool fUseInstantSend = false) override
     {
         auto locked_chain = m_wallet->chain().lock();
         LOCK(m_wallet->cs_wallet);
@@ -497,7 +499,6 @@ public:
     {
         return MakeHandler(m_wallet->NotifyChainLockReceived.connect(fn));
     }
-
     std::shared_ptr<CWallet> m_wallet;
 };
 

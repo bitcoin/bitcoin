@@ -96,8 +96,7 @@ void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLock
 {
     {
         LOCK(cs_main);
-        // TODO: BitGreen
-        // g_connman->RemoveAskFor(hash);
+        RemoveDataRequest(-1, CInv(MSG_CLSIG, hash));
     }
 
     {

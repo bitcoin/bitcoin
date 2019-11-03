@@ -24,7 +24,7 @@ CDKGPendingMessages::CDKGPendingMessages(size_t _maxMessagesPerNode) :
 {
 }
 
-void CDKGPendingMessages::PushPendingMessage(NodeId from, CDataStream& vRecv)
+void CDKGPendingMessages::PushPendingMessage(NodeId from, const int nMsgType, CDataStream& vRecv)
 {
     // this will also consume the data, even if we bail out early
     auto pm = std::make_shared<CDataStream>(std::move(vRecv));
@@ -51,8 +51,9 @@ void CDKGPendingMessages::PushPendingMessage(NodeId from, CDataStream& vRecv)
         return;
     }
 
-    // TODO: BitGreen
-    // g_connman->RemoveAskFor(hash);
+    if (from > -1 && nMsgType > -1) {
+        RemoveDataRequest(-1, CInv(nMsgType, hash));
+    }
 
     pendingMessages.emplace_back(std::make_pair(from, std::move(pm)));
 }
@@ -131,13 +132,13 @@ void CDKGSessionHandler::ProcessMessage(CNode* pfrom, const std::string& strComm
 {
     // We don't handle messages in the calling thread as deserialization/processing of these would block everything
     if (strCommand == NetMsgType::QCONTRIB) {
-        pendingContributions.PushPendingMessage(pfrom->GetId(), vRecv);
+        pendingContributions.PushPendingMessage(pfrom->GetId(), MSG_QUORUM_CONTRIB, vRecv);
     } else if (strCommand == NetMsgType::QCOMPLAINT) {
-        pendingComplaints.PushPendingMessage(pfrom->GetId(), vRecv);
+        pendingComplaints.PushPendingMessage(pfrom->GetId(), MSG_QUORUM_COMPLAINT, vRecv);
     } else if (strCommand == NetMsgType::QJUSTIFICATION) {
-        pendingJustifications.PushPendingMessage(pfrom->GetId(), vRecv);
+        pendingJustifications.PushPendingMessage(pfrom->GetId(), MSG_QUORUM_JUSTIFICATION, vRecv);
     } else if (strCommand == NetMsgType::QPCOMMITMENT) {
-        pendingPrematureCommitments.PushPendingMessage(pfrom->GetId(), vRecv);
+        pendingPrematureCommitments.PushPendingMessage(pfrom->GetId(), MSG_QUORUM_PREMATURE_COMMITMENT, vRecv);
     }
 }
 
@@ -363,7 +364,7 @@ std::set<NodeId> BatchVerifyMessageSigs(CDKGSession& session, const std::vector<
 }
 
 template<typename Message>
-bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendingMessages, size_t maxCount)
+bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendingMessages, int nMsgType, size_t maxCount)
 {
     auto msgs = pendingMessages.PopAndDeserializeMessages<Message>(maxCount);
     if (msgs.empty()) {
@@ -389,8 +390,7 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
         auto hash = ::SerializeHash(msg);
         {
             LOCK(cs_main);
-            // TODO: BitGreen
-            // g_connman->RemoveAskFor(hash);
+            RemoveDataRequest(-1, CInv(nMsgType, hash));
         }
 
         bool ban = false;
@@ -510,7 +510,7 @@ void CDKGSessionHandler::HandleDKGRound()
         curSession->Contribute(pendingContributions);
     };
     auto fContributeWait = [this] {
-        return ProcessPendingMessageBatch<CDKGContribution>(*curSession, pendingContributions, 8);
+        return ProcessPendingMessageBatch<CDKGContribution>(*curSession, pendingContributions, MSG_QUORUM_CONTRIB, 8);
     };
     HandlePhase(QuorumPhase_Contribute, QuorumPhase_Complain, curQuorumHash, 0.05, fContributeStart, fContributeWait);
 
@@ -519,7 +519,7 @@ void CDKGSessionHandler::HandleDKGRound()
         curSession->VerifyAndComplain(pendingComplaints);
     };
     auto fComplainWait = [this] {
-        return ProcessPendingMessageBatch<CDKGComplaint>(*curSession, pendingComplaints, 8);
+        return ProcessPendingMessageBatch<CDKGComplaint>(*curSession, pendingComplaints, MSG_QUORUM_COMPLAINT, 8);
     };
     HandlePhase(QuorumPhase_Complain, QuorumPhase_Justify, curQuorumHash, 0.05, fComplainStart, fComplainWait);
 
@@ -528,7 +528,7 @@ void CDKGSessionHandler::HandleDKGRound()
         curSession->VerifyAndJustify(pendingJustifications);
     };
     auto fJustifyWait = [this] {
-        return ProcessPendingMessageBatch<CDKGJustification>(*curSession, pendingJustifications, 8);
+        return ProcessPendingMessageBatch<CDKGJustification>(*curSession, pendingJustifications, MSG_QUORUM_JUSTIFICATION, 8);
     };
     HandlePhase(QuorumPhase_Justify, QuorumPhase_Commit, curQuorumHash, 0.05, fJustifyStart, fJustifyWait);
 
@@ -537,7 +537,7 @@ void CDKGSessionHandler::HandleDKGRound()
         curSession->VerifyAndCommit(pendingPrematureCommitments);
     };
     auto fCommitWait = [this] {
-        return ProcessPendingMessageBatch<CDKGPrematureCommitment>(*curSession, pendingPrematureCommitments, 8);
+        return ProcessPendingMessageBatch<CDKGPrematureCommitment>(*curSession, pendingPrematureCommitments, MSG_QUORUM_PREMATURE_COMMITMENT, 8);
     };
     HandlePhase(QuorumPhase_Commit, QuorumPhase_Finalize, curQuorumHash, 0.1, fCommitStart, fCommitWait);
 

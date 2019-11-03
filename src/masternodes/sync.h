@@ -47,7 +47,7 @@ public:
     CMasternodeSync() { Reset(); }
 
 
-    void SendGovernanceSyncRequest(CNode* pnode, CConnman& connman);
+    void SendGovernanceSyncRequest(CNode* pnode);
 
     bool IsFailed() { return nCurrentAsset == MASTERNODE_SYNC_FAILED; }
     bool IsBlockchainSynced() { return nCurrentAsset > MASTERNODE_SYNC_WAITING; }

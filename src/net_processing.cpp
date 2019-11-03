@@ -5,6 +5,7 @@
 
 #include <net_processing.h>
 
+#include <masternodes/activemasternode.h>
 #include <addrman.h>
 #include <banman.h>
 #include <arith_uint256.h>
@@ -31,6 +32,7 @@
 #include <util/validation.h>
 
 #include <spork.h>
+#include <governance/governance.h>
 #include <masternodes/payments.h>
 #include <masternodes/sync.h>
 #include <masternodes/meta.h>
@@ -903,13 +905,25 @@ void RequestData(const NodeId id, const CInv& inv)
     peer_download_state.m_inv_process_time.emplace(process_time, inv);
 }
 
-void RemoveDataRequest(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main){
-    g_connman->ForEachNode([&inv](CNode* node) {
-        CNodeState* nodestate = State(node->GetId());
-        nodestate->m_inv_download.m_inv_announced.erase(inv);
-        nodestate->m_inv_download.m_inv_in_flight.erase(inv);
-        EraseDataRequest(inv);
+bool RequestDataAvailable(const NodeId id, size_t nNewDataSize)
+{
+    CNodeState* nodestate = State(id);
+    size_t nProjectedSize = nodestate->m_inv_download.m_inv_announced.size() + nNewDataSize;
+    if (nProjectedSize > MAX_PEER_INV_ANNOUNCEMENTS / 2) return false;
+    return true;
+}
+
+void RemoveDataRequest(const NodeId id, const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    g_connman->ForEachNode([&id, &inv](CNode* pnode) {
+        if (id > -1 && pnode->GetId() != id) return;
+
+        CNodeState* nodestate = State(pnode->GetId());
+        CNodeState::InventoryDownloadState& peer_download_state = nodestate->m_inv_download;
+        peer_download_state.m_inv_announced.erase(inv);
+        peer_download_state.m_inv_in_flight.erase(inv);
     });
+    EraseDataRequest(inv);
 }
 
 // This function is used for testing the stale tip eviction logic, see
@@ -1492,6 +1506,9 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
             CSporkMessage spork;
             return sporkManager.GetSporkByHash(inv.hash, spork);
         }
+    case MSG_GOVERNANCE_OBJECT:
+    case MSG_GOVERNANCE_OBJECT_VOTE:
+        return ! governance.ConfirmInventoryRequest(inv);
     case MSG_QUORUM_FINAL_COMMITMENT:
         return llmq::quorumBlockProcessor->HasMinableCommitment(inv.hash);
     case MSG_QUORUM_CONTRIB:
@@ -1763,6 +1780,43 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
                 CSporkMessage spork;
                 if(sporkManager.GetSporkByHash(inv.hash, spork)) {
                     connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::SPORK, spork));
+                    push = true;
+                }
+            }
+
+            if (!push && inv.type == MSG_GOVERNANCE_OBJECT) {
+                LogPrint(BCLog::NET, "ProcessGetData -- MSG_GOVERNANCE_OBJECT: inv = %s\n", inv.ToString());
+                CDataStream ss(SER_NETWORK, pfrom->GetSendVersion());
+                bool topush = false;
+                {
+                    if(governance.HaveObjectForHash(inv.hash)) {
+                        ss.reserve(1000);
+                        if(governance.SerializeObjectForHash(inv.hash, ss)) {
+                            topush = true;
+                        }
+                    }
+                }
+                LogPrint(BCLog::NET, "ProcessGetData -- MSG_GOVERNANCE_OBJECT: topush = %d, inv = %s\n", topush, inv.ToString());
+                if(topush) {
+                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECT, ss));
+                    push = true;
+                }
+            }
+
+            if (!push && inv.type == MSG_GOVERNANCE_OBJECT_VOTE) {
+                CDataStream ss(SER_NETWORK, pfrom->GetSendVersion());
+                bool topush = false;
+                {
+                    if(governance.HaveVoteForHash(inv.hash)) {
+                        ss.reserve(1000);
+                        if(governance.SerializeVoteForHash(inv.hash, ss)) {
+                            topush = true;
+                        }
+                    }
+                }
+                if(topush) {
+                    LogPrint(BCLog::NET, "ProcessGetData -- pushing: inv = %s\n", inv.ToString());
+                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECTVOTE, ss));
                     push = true;
                 }
             }
@@ -3563,6 +3617,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         {
             sporkManager.ProcessSpork(pfrom, strCommand, vRecv, *connman);
             masternodeSync.ProcessMessage(pfrom, strCommand, vRecv);
+            governance.ProcessMessage(pfrom, strCommand, vRecv, *connman);
             CMNAuth::ProcessMessage(pfrom, strCommand, vRecv, connman);
             llmq::quorumBlockProcessor->ProcessMessage(pfrom, strCommand, vRecv, connman);
             llmq::quorumDKGSessionManager->ProcessMessage(pfrom, strCommand, vRecv, connman);

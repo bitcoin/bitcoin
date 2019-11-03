@@ -22,6 +22,8 @@ class CValidationState;
 class uint256;
 class CScheduler;
 class CTxMemPool;
+class CGovernanceVote;
+class CGovernanceObject;
 class CDeterministicMNList;
 class CDeterministicMNListDiff;
 enum class MemPoolRemovalReason;
@@ -153,6 +155,8 @@ protected:
     virtual void NotifyChainLock(const CBlockIndex* pindex) {}
     /** Notifies masternode list changes */
     virtual void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff) {}
+    virtual void NotifyGovernanceVote(const CGovernanceVote &vote) {}
+    virtual void NotifyGovernanceObject(const CGovernanceObject &object) {}
     /** Notifies listeners of updated transaction data (transaction, and
      * optionally the block it is found in). Called with block data when
      * transaction is included in a connected block, and without block data when
@@ -211,6 +215,8 @@ public:
     /** Notifies masternode list changes */
     void NotifyMasternodeListChanged(bool, const CDeterministicMNList&, const CDeterministicMNListDiff&);
     void SyncTransaction(const CTransaction &, const CBlockIndex *, int);
+    void NotifyGovernanceVote(const CGovernanceVote&);
+    void NotifyGovernanceObject(const CGovernanceObject&);
     void AcceptedBlockHeader(const CBlockIndex *);
 
     /** Notifies listeners of an updated transaction lock without new data. */

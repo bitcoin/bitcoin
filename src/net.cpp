@@ -596,7 +596,8 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
                         return false;
                     }
                 }
-            }        }
+            }
+        }
         else
             handled = msg.readData(pch, nBytes);
 

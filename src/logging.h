@@ -62,8 +62,10 @@ namespace BCLog {
         CHAINLOCKS  = (1 << 26),
         MASTERNODE  = (1 << 27),
         SPORK       = (1 << 28),
+        GOVERNANCE  = (1 << 29),
+        GOBJECT     = (1 << 30),
         INSTANTSEND = (1 << 31),
-        ALL         = ~(int64_t)0
+        ALL         = ~(uint32_t)0
     };
 
     class Logger

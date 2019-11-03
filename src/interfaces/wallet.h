@@ -140,7 +140,9 @@ public:
         bool sign,
         int& change_pos,
         CAmount& fee,
-        std::string& fail_reason) = 0;
+        std::string& fail_reason,
+        AvailableCoinsType nCoinType = ALL_COINS,
+        bool fUseInstantSend = false) = 0;
 
     //! Commit transaction.
     virtual bool commitTransaction(CTransactionRef tx,

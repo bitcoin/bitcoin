@@ -199,7 +199,7 @@ UniValue masternode_outputs(const JSONRPCRequest& request)
     auto locked_chain = pwallet->chain().lock();
     std::vector<COutput> vPossibleCoins;
     // TODO: BitGreen - extract only UTXOs with 2500 BITGs
-    pwallet->AvailableCoins(*locked_chain, vPossibleCoins, true); // , NULL, false, ONLY_1000
+    pwallet->AvailableCoins(*locked_chain, vPossibleCoins, true); // , NULL, false, ONLY_COLLATERAL
 
     UniValue obj(UniValue::VOBJ);
     for (const auto& out : vPossibleCoins) {

@@ -93,5 +93,6 @@ bool IsBanned(NodeId nodeid);
 /** Increase a node's misbehavior score. */
 void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="") EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 void RequestData(const NodeId id, const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-extern void RemoveDataRequest(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+bool RequestDataAvailable(const NodeId id, size_t nNewDataSize);
+extern void RemoveDataRequest(const NodeId id, const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 #endif // BITGREEN_NET_PROCESSING_H

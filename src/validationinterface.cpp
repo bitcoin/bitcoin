@@ -25,6 +25,8 @@ struct ValidationInterfaceConnections {
     boost::signals2::scoped_connection ChainStateFlushed;
     boost::signals2::scoped_connection BlockChecked;
     boost::signals2::scoped_connection NewPoWValidBlock;
+    boost::signals2::scoped_connection NotifyGovernanceVote;
+    boost::signals2::scoped_connection NotifyGovernanceObject;
     boost::signals2::scoped_connection NotifyChainLock;
     boost::signals2::scoped_connection NotifyMasternodeListChanged;
     boost::signals2::scoped_connection SyncTransaction;
@@ -42,6 +44,8 @@ struct MainSignalsInstance {
     boost::signals2::signal<void (const CBlockLocator &)> ChainStateFlushed;
     boost::signals2::signal<void (const CBlock&, const CValidationState&)> BlockChecked;
     boost::signals2::signal<void (const CBlockIndex *, const std::shared_ptr<const CBlock>&)> NewPoWValidBlock;
+    boost::signals2::signal<void (const CGovernanceVote &)> NotifyGovernanceVote;
+    boost::signals2::signal<void (const CGovernanceObject &)> NotifyGovernanceObject;
     boost::signals2::signal<void (const CBlockIndex *)> NotifyChainLock;
     boost::signals2::signal<void (bool, const CDeterministicMNList&, const CDeterministicMNListDiff&)> NotifyMasternodeListChanged;
     boost::signals2::signal<void (const CTransaction, const CBlockIndex *, int)> SyncTransaction;
@@ -114,6 +118,8 @@ void RegisterValidationInterface(CValidationInterface* pwalletIn) {
     conns.NotifyChainLock = g_signals.m_internals->NotifyChainLock.connect(std::bind(&CValidationInterface::NotifyChainLock, pwalletIn, std::placeholders::_1));
     conns.NotifyMasternodeListChanged = g_signals.m_internals->NotifyMasternodeListChanged.connect(std::bind(&CValidationInterface::NotifyMasternodeListChanged, pwalletIn, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
     conns.SyncTransaction = g_signals.m_internals->SyncTransaction.connect(std::bind(&CValidationInterface::SyncTransaction, pwalletIn, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+    conns.NotifyGovernanceObject = g_signals.m_internals->NotifyGovernanceObject.connect(std::bind(&CValidationInterface::NotifyGovernanceObject, pwalletIn, std::placeholders::_1));
+    conns.NotifyGovernanceVote = g_signals.m_internals->NotifyGovernanceVote.connect(std::bind(&CValidationInterface::NotifyGovernanceVote, pwalletIn, std::placeholders::_1));
     conns.AcceptedBlockHeader = g_signals.m_internals->AcceptedBlockHeader.connect(std::bind(&CValidationInterface::AcceptedBlockHeader, pwalletIn, std::placeholders::_1));
     conns.NotifyTransactionLock = g_signals.m_internals->NotifyTransactionLock.connect(std::bind(&CValidationInterface::NotifyTransactionLock, pwalletIn, std::placeholders::_1));
     conns.NotifyInstantSendDoubleSpendAttempt = g_signals.m_internals->NotifyInstantSendDoubleSpendAttempt.connect(std::bind(&CValidationInterface::NotifyInstantSendDoubleSpendAttempt, pwalletIn, std::placeholders::_1, std::placeholders::_2));
@@ -196,9 +202,9 @@ void CMainSignals::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared
     m_internals->NewPoWValidBlock(pindex, block);
 }
 
-void CMainSignals::NotifyChainLock(const CBlockIndex* pindex)
+void CMainSignals::NotifyChainLock(const CBlockIndex* pindexChainLock)
 {
-    m_internals->NotifyChainLock(pindex);
+    m_internals->NotifyChainLock(pindexChainLock);
 }
 
 void CMainSignals::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff)
@@ -223,4 +229,14 @@ void CMainSignals::NotifyTransactionLock(const CTransaction &tx)
 void CMainSignals::NotifyInstantSendDoubleSpendAttempt(const CTransaction &currentTx, const CTransaction &previousTx)
 {
     m_internals->NotifyInstantSendDoubleSpendAttempt(currentTx, previousTx);
+}
+
+void CMainSignals::NotifyGovernanceVote(const CGovernanceVote &vote)
+{
+    m_internals->NotifyGovernanceVote(vote);
+}
+
+void CMainSignals::NotifyGovernanceObject(const CGovernanceObject &object)
+{
+    m_internals->NotifyGovernanceObject(object);
 }

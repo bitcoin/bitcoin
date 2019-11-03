@@ -1,15 +1,15 @@
 // Copyright (c) 2014-2018 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-#ifndef BITGREEN_GOVERNANCE_CLASSES_H
-#define BITGREEN_GOVERNANCE_CLASSES_H
+#ifndef GOVERNANCE_CLASSES_H
+#define GOVERNANCE_CLASSES_H
 
 #include <base58.h>
 #include <governance/governance.h>
 #include <key.h>
+#include <key_io.h>
 #include <script/standard.h>
-#include <util.h>
+#include <util/system.h>
 
 class CSuperblock;
 class CGovernanceTriggerManager;
@@ -89,22 +89,22 @@ public:
     {
     }
 
-    CGovernancePayment(CBitcoinAddress addrIn, CAmount nAmountIn) :
+    CGovernancePayment(CTxDestination addrIn, CAmount nAmountIn) :
         fValid(false),
         script(),
         nAmount(0)
     {
         try {
-            CTxDestination dest = addrIn.Get();
+            CTxDestination dest = addrIn;
             script = GetScriptForDestination(dest);
             nAmount = nAmountIn;
             fValid = true;
-        } catch (std::exception& e) {
-            LogPrintf("CGovernancePayment Payment not valid: addrIn = %s, nAmountIn = %d, what = %s\n",
-                addrIn.ToString(), nAmountIn, e.what());
-        } catch (...) {
-            LogPrintf("CGovernancePayment Payment not valid: addrIn = %s, nAmountIn = %d\n",
-                addrIn.ToString(), nAmountIn);
+        } catch(std::exception& e) {
+            LogPrint(BCLog::GOBJECT, "CGovernancePayment Payment not valid: addrIn = %s, nAmountIn = %d, what = %s\n",
+                EncodeDestination(addrIn), nAmountIn, e.what());
+        } catch(...) {
+            LogPrint(BCLog::GOBJECT, "CGovernancePayment Payment not valid: addrIn = %s, nAmountIn = %d\n",
+                EncodeDestination(addrIn), nAmountIn);
         }
     }
 
@@ -176,4 +176,4 @@ public:
     bool IsExpired();
 };
 
-#endif // BITGREEN_GOVERNANCE_CLASSES_H
+#endif
