@@ -25,10 +25,11 @@ static const int SPORK_4_CHAINLOCKS_ENABLED                            = 10004;
 static const int SPORK_5_INSTANTSEND_ENABLED                           = 10005;
 static const int SPORK_6_INSTANTSEND_BLOCK_FILTERING                   = 10006;
 static const int SPORK_7_INSTANTSEND_AUTOLOCKS                         = 10007;
+static const int SPORK_8_SUPERBLOCKS_ENABLED                           = 10008;
 
 
 static const int SPORK_START                                           = SPORK_1_SUPERBLOCKS_ENABLED;
-static const int SPORK_END                                             = SPORK_7_INSTANTSEND_AUTOLOCKS;
+static const int SPORK_END                                             = SPORK_8_SUPERBLOCKS_ENABLED;
 
 extern std::map<int, int64_t> mapSporkDefaults;
 extern CSporkManager sporkManager;
