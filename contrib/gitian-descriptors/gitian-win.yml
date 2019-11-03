@@ -40,7 +40,7 @@ script: |
   export QT_RCC_TEST=1
   export QT_RCC_SOURCE_DATE_OVERRIDE=1
   export TZ="UTC"
-  export BUILD_DIR=$(pwd)
+  export BUILD_DIR="$PWD"
   mkdir -p ${WRAP_DIR}
   if test -n "$GBUILD_CACHE_ENABLED"; then
     export SOURCES_PATH=${GBUILD_COMMON_CACHE}
@@ -96,7 +96,7 @@ script: |
   export PATH=${WRAP_DIR}:${PATH}
 
   cd bitcoin
-  BASEPREFIX=$(pwd)/depends
+  BASEPREFIX="${PWD}/depends"
   # Build dependencies for each host
   for i in $HOSTS; do
     make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}"
@@ -131,7 +131,7 @@ script: |
     export PATH=${BASEPREFIX}/${i}/native/bin:${ORIGPATH}
     mkdir -p distsrc-${i}
     cd distsrc-${i}
-    INSTALLPATH=$(pwd)/installed/${DISTNAME}
+    INSTALLPATH="${PWD}/installed/${DISTNAME}"
     mkdir -p ${INSTALLPATH}
     tar --strip-components=1 -xf ../$SOURCEDIST
 
