@@ -90,7 +90,6 @@ public:
     void updateNumISLocks(int numISLocks);
     void updateChainLockHeight(int chainLockHeight);
     int getNumISLocks() const;
-    void updateChainLockHeight(int chainLockHeight);
     int getChainLockHeight() const;
 
 private:
