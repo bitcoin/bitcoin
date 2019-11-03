@@ -129,7 +129,6 @@ struct Params {
     int nBudgetPaymentsStartBlock;
     int nBudgetPaymentsCycleBlocks;
     int nBudgetPaymentsWindowBlocks;
-    int nBudgetProposalEstablishingTime;
     int nSuperblockStartBlock;
     /* Block hash that is excepted from BIP16 enforcement */
     uint256 BIP16Exception;
