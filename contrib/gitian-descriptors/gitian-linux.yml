@@ -51,7 +51,7 @@ script: |
   export QT_RCC_TEST=1
   export QT_RCC_SOURCE_DATE_OVERRIDE=1
   export TZ="UTC"
-  export BUILD_DIR=`pwd`
+  export BUILD_DIR=$(pwd)
   mkdir -p ${WRAP_DIR}
   if test -n "$GBUILD_CACHE_ENABLED"; then
     export SOURCES_PATH=${GBUILD_COMMON_CACHE}
@@ -107,7 +107,7 @@ script: |
   rm -f ${WRAP_DIR}/${prog}
   cat << EOF > ${WRAP_DIR}/${prog}
   #!/usr/bin/env bash
-  REAL="`which -a ${prog}-8 | grep -v ${WRAP_DIR}/${prog} | head -1`"
+  REAL="$(which -a ${prog}-8 | grep -v ${WRAP_DIR}/${prog} | head -1)"
   for var in "\$@"
   do
     if [ "\$var" = "-m32" ]; then
@@ -122,7 +122,7 @@ script: |
   done
 
   cd bitcoin
-  BASEPREFIX=`pwd`/depends
+  BASEPREFIX=$(pwd)/depends
   # Build dependencies for each host
   for i in $HOSTS; do
     EXTRA_INCLUDES="$EXTRA_INCLUDES_BASE/$i"
@@ -141,10 +141,10 @@ script: |
 
   # Create the release tarball using (arbitrarily) the first host
   ./autogen.sh
-  CONFIG_SITE=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`/share/config.site ./configure --prefix=/
+  CONFIG_SITE=${BASEPREFIX}/$(echo "${HOSTS}" | awk '{print $1;}')/share/config.site ./configure --prefix=/
   make dist
-  SOURCEDIST=`echo bitcoin-*.tar.gz`
-  DISTNAME=`echo ${SOURCEDIST} | sed 's/.tar.*//'`
+  SOURCEDIST=$(echo bitcoin-*.tar.gz)
+  DISTNAME=$(echo ${SOURCEDIST} | sed 's/.tar.*//')
   # Correct tar file order
   mkdir -p temp
   pushd temp
@@ -161,7 +161,7 @@ script: |
     export PATH=${BASEPREFIX}/${i}/native/bin:${ORIGPATH}
     mkdir -p distsrc-${i}
     cd distsrc-${i}
-    INSTALLPATH=`pwd`/installed/${DISTNAME}
+    INSTALLPATH=$(pwd)/installed/${DISTNAME}
     mkdir -p ${INSTALLPATH}
     tar --strip-components=1 -xf ../$SOURCEDIST
 
