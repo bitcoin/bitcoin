@@ -917,9 +917,10 @@ void RemoveDataRequest(const NodeId id, const CInv& inv) EXCLUSIVE_LOCKS_REQUIRE
     g_connman->ForEachNode([&id, &inv](CNode* pnode) {
         if (id > -1 && pnode->GetId() != id) return;
 
-        CNodeState* nodestate = State(id);
-        nodestate->m_inv_download.m_inv_announced.erase(inv);
-        nodestate->m_inv_download.m_inv_in_flight.erase(inv);
+        CNodeState* nodestate = State(pnode->GetId());
+        CNodeState::InventoryDownloadState& peer_download_state = nodestate->m_inv_download;
+        peer_download_state.m_inv_announced.erase(inv);
+        peer_download_state.m_inv_in_flight.erase(inv);
     });
     EraseDataRequest(inv);
 }
