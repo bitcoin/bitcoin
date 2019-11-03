@@ -797,7 +797,7 @@
           <item>
            <widget class="QPushButton" name="buttonMinimizeFee">
             <property name="toolTip">
-             <string>collapse fee-settings</string>
+             <string>Hide transaction fee settings</string>
             </property>
             <property name="text">
              <string>Hide</string>
