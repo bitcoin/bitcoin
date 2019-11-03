@@ -32,6 +32,7 @@
 #include <validationinterface.h>
 
 #include <llmq/quorums_chainlocks.h>
+#include <llmq/quorums_instantsend.h>
 #include <special/cbtx.h>
 #include <special/providertx.h>
 #include <special/specialtx.h>
@@ -55,6 +56,8 @@ static void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& 
     // available to code in bitgreen-common, so we query them here and push the
     // data into the returned UniValue.
     TxToUniv(tx, uint256(), entry, true, RPCSerializationFlags());
+
+    uint256 txid = tx.GetHash();
 
     if (!tx.vExtraPayload.empty()) {
         entry.pushKV("extraPayloadSize", (uint64_t)tx.vExtraPayload.size());
@@ -122,6 +125,9 @@ static void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& 
                 entry.pushKV("confirmations", 0);
         }
     }
+    bool fLLMQLocked = llmq::quorumInstantSendManager->IsLocked(txid);
+    entry.pushKV("instantlock", fLLMQLocked || chainLock);
+    entry.pushKV("instantlock_internal", fLLMQLocked);
     entry.pushKV("chainlock", chainLock);
 }
 
@@ -197,6 +203,9 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
             "  \"confirmations\" : n,      (numeric) The confirmations\n"
             "  \"blocktime\" : ttt         (numeric) The block time in seconds since epoch (Jan 1 1970 GMT)\n"
             "  \"time\" : ttt,             (numeric) Same as \"blocktime\"\n"
+            "  \"instantlock\" :           (bool) Current transaction lock state\n"
+            "  \"instantlock_internal\" :  (bool) Current internal transaction lock state\n"
+            "  \"chainlock\" :             (bool) The state of the corresponding block chainlock\n"
             "}\n"
                     },
                 },

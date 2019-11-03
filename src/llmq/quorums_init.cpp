@@ -11,6 +11,7 @@
 #include <llmq/quorums_chainlocks.h>
 #include <llmq/quorums_debug.h>
 #include <llmq/quorums_dkgsessionmgr.h>
+#include <llmq/quorums_instantsend.h>
 #include <llmq/quorums_signing.h>
 #include <llmq/quorums_signing_shares.h>
 
@@ -36,10 +37,13 @@ void InitLLMQSystem(CSpecialDB& specialDb, CScheduler* scheduler, bool unitTests
     quorumSigSharesManager = new CSigSharesManager();
     quorumSigningManager = new CSigningManager(*llmqDb, unitTests);
     chainLocksHandler = new CChainLocksHandler(scheduler);
+    quorumInstantSendManager = new CInstantSendManager(*llmqDb);
 }
 
 void DestroyLLMQSystem()
 {
+    delete quorumInstantSendManager;
+    quorumInstantSendManager = nullptr;
     delete chainLocksHandler;
     chainLocksHandler = nullptr;
     delete quorumSigningManager;
@@ -75,10 +79,16 @@ void StartLLMQSystem()
     if (chainLocksHandler) {
         chainLocksHandler->Start();
     }
+    if (quorumInstantSendManager) {
+        quorumInstantSendManager->Start();
+    }
 }
 
 void StopLLMQSystem()
 {
+    if (quorumInstantSendManager) {
+        quorumInstantSendManager->Stop();
+    }
     if (chainLocksHandler) {
         chainLocksHandler->Stop();
     }
@@ -98,6 +108,9 @@ void InterruptLLMQSystem()
 {
     if (quorumSigSharesManager) {
         quorumSigSharesManager->InterruptWorkerThread();
+    }
+    if (quorumInstantSendManager) {
+        quorumInstantSendManager->InterruptWorkerThread();
     }
 }
 

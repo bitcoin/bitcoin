@@ -22,9 +22,13 @@ static const int SPORK_1_SUPERBLOCKS_ENABLED                           = 10001;
 static const int SPORK_2_RECONSIDER_BLOCKS                             = 10002;
 static const int SPORK_3_QUORUM_DKG_ENABLED                            = 10003;
 static const int SPORK_4_CHAINLOCKS_ENABLED                            = 10004;
+static const int SPORK_5_INSTANTSEND_ENABLED                           = 10005;
+static const int SPORK_6_INSTANTSEND_BLOCK_FILTERING                   = 10006;
+static const int SPORK_7_INSTANTSEND_AUTOLOCKS                         = 10007;
+
 
 static const int SPORK_START                                           = SPORK_1_SUPERBLOCKS_ENABLED;
-static const int SPORK_END                                             = SPORK_4_CHAINLOCKS_ENABLED;
+static const int SPORK_END                                             = SPORK_7_INSTANTSEND_AUTOLOCKS;
 
 extern std::map<int, int64_t> mapSporkDefaults;
 extern CSporkManager sporkManager;
@@ -211,11 +215,6 @@ public:
     /**
      * IsSporkActive returns a bool for time-based sporks, and should be used
      * to determine whether the spork can be considered active or not.
-     *
-     * For value-based sporks such as SPORK_5_INSTANTSEND_MAX_VALUE, the spork
-     * value should not be considered a timestamp, but an integer value
-     * instead, and therefore this method doesn't make sense and should not be
-     * used.
      */
     bool IsSporkActive(int nSporkID);
 

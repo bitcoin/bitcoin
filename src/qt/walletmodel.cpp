@@ -26,6 +26,9 @@
 #include <wallet/coincontrol.h>
 #include <wallet/wallet.h>
 
+#include <spork.h>
+#include <llmq/quorums_instantsend.h>
+
 #include <stdint.h>
 
 #include <QDebug>
@@ -39,7 +42,8 @@ WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, interfaces:
     transactionTableModel(nullptr),
     recentRequestsTableModel(nullptr),
     cachedEncryptionStatus(Unencrypted),
-    cachedNumBlocks(0)
+    cachedNumBlocks(0),
+    cachedNumISLocks(0)
 {
     fHaveWatchOnly = m_wallet->haveWatchOnly();
     addressTableModel = new AddressTableModel(this);
@@ -105,6 +109,25 @@ void WalletModel::updateTransaction()
 {
     // Balance and number of transactions might have changed
     fForceCheckBalanceChanged = true;
+}
+
+void WalletModel::updateNumISLocks()
+{
+    fForceCheckBalanceChanged = true;
+    cachedNumISLocks++;
+    if (transactionTableModel)
+        transactionTableModel->updateNumISLocks(cachedNumISLocks);
+}
+
+void WalletModel::updateChainLockHeight(int chainLockHeight)
+{
+    if (transactionTableModel)
+        transactionTableModel->updateChainLockHeight(chainLockHeight);
+}
+
+int WalletModel::getNumISLocks() const
+{
+    return cachedNumISLocks;
 }
 
 void WalletModel::updateAddressBook(const QString &address, const QString &label,
@@ -416,6 +439,11 @@ static void NotifyTransactionChanged(WalletModel *walletmodel, const uint256 &ha
     assert(invoked);
 }
 
+static void NotifyISLockReceived(WalletModel *walletmodel)
+{
+    QMetaObject::invokeMethod(walletmodel, "updateNumISLocks", Qt::QueuedConnection);
+}
+
 static void NotifyChainLockReceived(WalletModel *walletmodel, int chainLockHeight)
 {
     QMetaObject::invokeMethod(walletmodel, "updateChainLockHeight", Qt::QueuedConnection,
@@ -454,6 +482,7 @@ void WalletModel::subscribeToCoreSignals()
     m_handler_show_progress = m_wallet->handleShowProgress(std::bind(ShowProgress, this, std::placeholders::_1, std::placeholders::_2));
     m_handler_watch_only_changed = m_wallet->handleWatchOnlyChanged(std::bind(NotifyWatchonlyChanged, this, std::placeholders::_1));
     m_handler_can_get_addrs_changed = m_wallet->handleCanGetAddressesChanged(boost::bind(NotifyCanGetAddressesChanged, this));
+    m_handler_notify_is_lock_received = m_wallet->handleNotifyISLockReceived(boost::bind(NotifyISLockReceived, this));
     m_handler_notify_lock_received = m_wallet->handleChainLockReceived(std::bind(NotifyChainLockReceived, this, std::placeholders::_1));
 }
 
@@ -467,6 +496,7 @@ void WalletModel::unsubscribeFromCoreSignals()
     m_handler_show_progress->disconnect();
     m_handler_watch_only_changed->disconnect();
     m_handler_can_get_addrs_changed->disconnect();
+    m_handler_notify_is_lock_received->disconnect();
     m_handler_notify_lock_received->disconnect();
 }
 

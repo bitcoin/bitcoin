@@ -108,8 +108,8 @@ UniValue spork(const JSONRPCRequest& request)
                 "\nResult:\n"
                 "  result               (string) \"success\" if spork value was updated or this help otherwise\n"
                 "\nExamples:\n"
-                + HelpExampleCli("spork", "SPORK_2_INSTANTSEND_ENABLED 4070908800")
-                + HelpExampleRpc("spork", "\"SPORK_2_INSTANTSEND_ENABLED\", 4070908800"));
+                + HelpExampleCli("spork", "SPORK_5_INSTANTSEND_ENABLED 4070908800")
+                + HelpExampleRpc("spork", "\"SPORK_5_INSTANTSEND_ENABLED\", 4070908800"));
         }
     }
 

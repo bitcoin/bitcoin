@@ -23,6 +23,10 @@ std::map<int, int64_t> mapSporkDefaults = {
     {SPORK_2_RECONSIDER_BLOCKS,             4070908800ULL}, // OFF
     {SPORK_3_QUORUM_DKG_ENABLED,            4070908800ULL}, // OFF
     {SPORK_4_CHAINLOCKS_ENABLED,            4070908800ULL}, // OFF
+    {SPORK_5_INSTANTSEND_ENABLED,           0},             // ON
+    {SPORK_6_INSTANTSEND_BLOCK_FILTERING,   0},             // ON
+    {SPORK_7_INSTANTSEND_AUTOLOCKS,         4070908800ULL}, // OFF
+
 };
 
 bool CSporkManager::SporkValueIsActive(int nSporkID, int64_t &nActiveValueRet) const
@@ -268,6 +272,9 @@ int CSporkManager::GetSporkIDByName(const std::string& strName)
     if (strName == "SPORK_2_RECONSIDER_BLOCKS")                 return SPORK_2_RECONSIDER_BLOCKS;
     if (strName == "SPORK_3_QUORUM_DKG_ENABLED")                return SPORK_3_QUORUM_DKG_ENABLED;
     if (strName == "SPORK_4_CHAINLOCKS_ENABLED")                return SPORK_4_CHAINLOCKS_ENABLED;
+    if (strName == "SPORK_5_INSTANTSEND_ENABLED")               return SPORK_5_INSTANTSEND_ENABLED;
+    if (strName == "SPORK_6_INSTANTSEND_BLOCK_FILTERING")       return SPORK_6_INSTANTSEND_BLOCK_FILTERING;
+    if (strName == "SPORK_7_INSTANTSEND_AUTOLOCKS")             return SPORK_7_INSTANTSEND_AUTOLOCKS;
 
     LogPrint(BCLog::SPORK, "CSporkManager::GetSporkIDByName -- Unknown Spork name '%s'\n", strName);
     return -1;
@@ -280,6 +287,9 @@ std::string CSporkManager::GetSporkNameByID(int nSporkID)
         case SPORK_2_RECONSIDER_BLOCKS:                 return "SPORK_2_RECONSIDER_BLOCKS";
         case SPORK_3_QUORUM_DKG_ENABLED:                return "SPORK_3_QUORUM_DKG_ENABLED";
         case SPORK_4_CHAINLOCKS_ENABLED:                return "SPORK_4_CHAINLOCKS_ENABLED";
+        case SPORK_5_INSTANTSEND_ENABLED:               return "SPORK_5_INSTANTSEND_ENABLED";
+        case SPORK_6_INSTANTSEND_BLOCK_FILTERING:       return "SPORK_6_INSTANTSEND_BLOCK_FILTERING";
+        case SPORK_7_INSTANTSEND_AUTOLOCKS:             return "SPORK_7_INSTANTSEND_AUTOLOCKS";
         default:
             LogPrint(BCLog::SPORK, "CSporkManager::GetSporkNameByID -- Unknown Spork ID %d\n", nSporkID);
             return "Unknown";

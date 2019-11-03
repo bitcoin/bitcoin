@@ -15,6 +15,7 @@
 #include <key.h>
 #include <key_io.h>
 #include <llmq/quorums_chainlocks.h>
+#include <llmq/quorums_instantsend.h>
 #include <masternodes/payments.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
@@ -1318,7 +1319,7 @@ bool CWallet::AbandonTransaction(interfaces::Chain::Lock& locked_chain, const ui
     auto it = mapWallet.find(hashTx);
     assert(it != mapWallet.end());
     CWalletTx& origtx = it->second;
-    if (origtx.GetDepthInMainChain(locked_chain) != 0 || origtx.InMempool()) {
+    if (origtx.GetDepthInMainChain(locked_chain) != 0 || origtx.InMempool() || origtx.IsLockedByInstantSend()) {
         return false;
     }
 
@@ -2199,7 +2200,7 @@ void CWallet::ReacceptWalletTransactions(interfaces::Chain::Lock& locked_chain)
 
         int nDepth = wtx.GetDepthInMainChain(locked_chain);
 
-        if (nDepth == 0 && !wtx.isAbandoned()) {
+        if (nDepth == 0 && !wtx.isAbandoned() && !wtx.IsLockedByInstantSend()) {
             if (wtx.IsCoinBase() || wtx.IsCoinStake())
                 AbandonTransaction(locked_chain, wtxid);
             else
@@ -2370,6 +2371,8 @@ bool CWalletTx::IsTrusted(interfaces::Chain::Lock& locked_chain) const
         return true;
     if (nDepth < 0)
         return false;
+    if (IsLockedByInstantSend())
+        return true;
     if (!pwallet->m_spend_zero_conf_change || !IsFromMe(ISMINE_ALL)) // using wtx's cached debit
         return false;
 
@@ -2463,7 +2466,7 @@ void MaybeResendWalletTxs()
  */
 
 
-CWallet::Balance CWallet::GetBalance(const int min_depth, bool avoid_reuse) const
+CWallet::Balance CWallet::GetBalance(const int min_depth, bool avoid_reuse, bool add_locked) const
 {
     Balance ret;
     isminefilter reuse_filter = avoid_reuse ? ISMINE_NO : ISMINE_USED;
@@ -2477,7 +2480,7 @@ CWallet::Balance CWallet::GetBalance(const int min_depth, bool avoid_reuse) cons
             const int tx_depth{wtx.GetDepthInMainChain(*locked_chain)};
             const CAmount tx_credit_mine{wtx.GetAvailableCredit(*locked_chain, /* fUseCache */ true, ISMINE_SPENDABLE | reuse_filter)};
             const CAmount tx_credit_watchonly{wtx.GetAvailableCredit(*locked_chain, /* fUseCache */ true, ISMINE_WATCH_ONLY | reuse_filter)};
-            if (is_trusted && tx_depth >= min_depth) {
+            if (is_trusted && (tx_depth >= min_depth || (add_locked && wtx.IsLockedByInstantSend()))) {
                 ret.m_mine_trusted += tx_credit_mine;
                 ret.m_watchonly_trusted += tx_credit_watchonly;
             }
@@ -2508,7 +2511,7 @@ CAmount CWallet::GetAvailableBalance(const CCoinControl* coinControl) const
     return balance;
 }
 
-void CWallet::AvailableCoins(interfaces::Chain::Lock& locked_chain, std::vector<COutput> &vCoins, bool fOnlySafe, const CCoinControl *coinControl, const CAmount &nMinimumAmount, const CAmount &nMaximumAmount, const CAmount &nMinimumSumAmount, const uint64_t nMaximumCount, const int nMinDepth, const int nMaxDepth) const
+void CWallet::AvailableCoins(interfaces::Chain::Lock& locked_chain, std::vector<COutput> &vCoins, bool fOnlySafe, const CCoinControl *coinControl, const CAmount &nMinimumAmount, const CAmount &nMaximumAmount, const CAmount &nMinimumSumAmount, const uint64_t nMaximumCount, const int nMinDepth, const int nMaxDepth, bool fUseInstantSend) const
 {
     AssertLockHeld(cs_wallet);
 
@@ -2517,6 +2520,7 @@ void CWallet::AvailableCoins(interfaces::Chain::Lock& locked_chain, std::vector<
     // Either the WALLET_FLAG_AVOID_REUSE flag is not set (in which case we always allow), or we default to avoiding, and only in the case where
     // a coin control object is provided, and has the avoid address reuse flag set to false, do we allow already used addresses
     bool allow_used_addresses = !IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE) || (coinControl && !coinControl->m_avoid_address_reuse);
+    int nInstantSendConfirmationsRequired = Params().GetConsensus().nInstantSendConfirmationsRequired;
 
     for (const auto& entry : mapWallet)
     {
@@ -2531,6 +2535,10 @@ void CWallet::AvailableCoins(interfaces::Chain::Lock& locked_chain, std::vector<
             continue;
 
         int nDepth = wtx.GetDepthInMainChain(locked_chain);
+        // do not use IX for inputs that have less then nInstantSendConfirmationsRequired blockchain confirmations
+        if (fUseInstantSend && nDepth < nInstantSendConfirmationsRequired)
+            continue;
+
         if (nDepth < 0)
             continue;
 
@@ -3537,6 +3545,20 @@ bool CWallet::DelAddressBook(const CTxDestination& address)
     return WalletBatch(*database).EraseName(EncodeDestination(address));
 }
 
+bool CWallet::UpdatedTransaction(const uint256 &hashTx)
+{
+    {
+        LOCK(cs_wallet);
+        // Only notify UI if this transaction is in this wallet
+        std::map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(hashTx);
+        if (mi != mapWallet.end()){
+            NotifyTransactionChanged(this, hashTx, CT_UPDATED);
+            return true;
+        }
+    }
+    return false;
+}
+
 const std::string& CWallet::GetLabelName(const CScript& scriptPubKey) const
 {
     CTxDestination address;
@@ -3858,7 +3880,7 @@ std::map<CTxDestination, CAmount> CWallet::GetAddressBalances(interfaces::Chain:
                 continue;
 
             int nDepth = wtx.GetDepthInMainChain(locked_chain);
-            if (nDepth < (wtx.IsFromMe(ISMINE_ALL) ? 0 : 1))
+            if (nDepth < (wtx.IsFromMe(ISMINE_ALL) ? 0 : 1) && !wtx.IsLockedByInstantSend())
                 continue;
 
             for (unsigned int i = 0; i < wtx.tx->vout.size(); i++)
@@ -4809,6 +4831,11 @@ bool CMerkleTx::IsChainLocked() const
     return false;
 }
 
+bool CMerkleTx::IsLockedByInstantSend() const
+{
+    return llmq::quorumInstantSendManager->IsLocked(GetHash());
+}
+
 bool CWalletTx::AcceptToMemoryPool(interfaces::Chain::Lock& locked_chain, CValidationState& state)
 {
     // We must set fInMempool here - while it will be re-set to true by the
@@ -5350,6 +5377,16 @@ bool CWallet::MintableCoins()
             return true;
 
     return false;
+}
+
+void CWallet::NotifyTransactionLock(const CTransaction &tx)
+{
+    LOCK(cs_wallet);
+    // Only notify UI if this transaction is in this wallet
+    std::map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(tx.GetHash());
+    if (mi != mapWallet.end()){
+        NotifyISLockReceived();
+    }
 }
 
 void CWallet::NotifyChainLock(const CBlockIndex* pindexChainLock)

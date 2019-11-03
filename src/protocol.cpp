@@ -63,8 +63,8 @@ const char *QGETSIGSHARES="qgetsigs";
 const char *QBSIGSHARES="qbsigs";
 const char *QSIGREC="qsigrec";
 const char *CLSIG="clsig";
-const char *ISLOCK="islock";
 const char *MNAUTH="mnauth";
+const char *ISLOCK="islock";
 } // namespace NetMsgType
 
 /** All known message types. Keep this in the same order as the list of
@@ -119,6 +119,7 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::QSIGREC,
     NetMsgType::CLSIG,
     NetMsgType::MNAUTH,
+    NetMsgType::ISLOCK,
 };
 const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));
 
@@ -240,7 +241,7 @@ bool CInv::IsKnownType() const
         type == MSG_QUORUM_FINAL_COMMITMENT || type == MSG_QUORUM_CONTRIB ||
         type == MSG_QUORUM_COMPLAINT || type == MSG_QUORUM_JUSTIFICATION ||
         type == MSG_QUORUM_PREMATURE_COMMITMENT || type == MSG_QUORUM_RECOVERED_SIG ||
-        type == MSG_CLSIG || type == MSG_SPORK);
+        type == MSG_CLSIG || type == MSG_SPORK || type == MSG_ISLOCK);
 }
 
 std::string CInv::ToString() const

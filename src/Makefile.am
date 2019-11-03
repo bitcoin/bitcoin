@@ -168,6 +168,7 @@ BITCOIN_CORE_H = \
   llmq/quorums_dkgsessionmgr.h \
   llmq/quorums_dkgsession.h \
   llmq/quorums_init.h \
+  llmq/quorums_instantsend.h \
   llmq/quorums_signing.h \
   llmq/quorums_signing_shares.h \
   llmq/quorums_utils.h \
@@ -338,6 +339,7 @@ libbitgreen_server_a_SOURCES = \
   llmq/quorums_dkgsessionmgr.cpp \
   llmq/quorums_dkgsession.cpp \
   llmq/quorums_init.cpp \
+  llmq/quorums_instantsend.cpp \
   llmq/quorums_signing.cpp \
   llmq/quorums_signing_shares.cpp \
   llmq/quorums_utils.cpp \
@@ -445,6 +447,7 @@ libbitgreen_wallet_a_SOURCES = \
   llmq/quorums_dkgsessionmgr.cpp \
   llmq/quorums_dkgsession.cpp \
   llmq/quorums_init.cpp \
+  llmq/quorums_instantsend.cpp \
   llmq/quorums_signing.cpp \
   llmq/quorums_signing_shares.cpp \
   llmq/quorums_utils.cpp \

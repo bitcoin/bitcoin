@@ -157,6 +157,7 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::LLMQDKG, "llmq-dkg"},
     {BCLog::LLMQSIGS, "llmq-sigs"},
     {BCLog::CHAINLOCKS, "chainlocks"},
+    {BCLog::INSTANTSEND, "instantsend"},
     {BCLog::ALL, "1"},
     {BCLog::ALL, "all"}
 };
