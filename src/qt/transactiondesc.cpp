@@ -18,6 +18,7 @@
 #include <key_io.h>
 #include <validation.h>
 #include <script/script.h>
+#include <sync.h>
 #include <timedata.h>
 #include <util/system.h>
 #include <policy/policy.h>
@@ -29,6 +30,7 @@
 
 QString TransactionDesc::FormatTxStatus(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& status, bool inMempool, int numBlocks)
 {
+    AssertLockHeld(cs_main);
     if (!status.is_final)
     {
         if (wtx.tx->nLockTime < LOCKTIME_THRESHOLD)
@@ -70,6 +72,8 @@ QString TransactionDesc::FormatTxStatus(const interfaces::WalletTx& wtx, const i
 
 QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wallet, TransactionRecord *rec, int unit)
 {
+    LOCK(cs_main);
+
     int numBlocks;
     interfaces::WalletTxStatus status;
     interfaces::WalletOrderForm orderForm;
