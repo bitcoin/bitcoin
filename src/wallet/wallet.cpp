@@ -2570,6 +2570,7 @@ static void ApproximateBestSubset(std::vector<std::pair<CAmount, std::pair<const
 
     vfBest.assign(vValue.size(), true);
     nBest = nTotalLower;
+    int nBestInputCount = 0;
 
     if (!llmq::IsOldInstantSendEnabled()) {
         // The new system does not require special handling for InstantSend as this is all done in CInstantSendManager.
@@ -2583,6 +2584,7 @@ static void ApproximateBestSubset(std::vector<std::pair<CAmount, std::pair<const
     {
         vfIncluded.assign(vValue.size(), false);
         CAmount nTotal = 0;
+        int nTotalInputCount = 0;
         bool fReachedTarget = false;
         for (int nPass = 0; nPass < 2 && !fReachedTarget; nPass++)
         {
@@ -2600,16 +2602,19 @@ static void ApproximateBestSubset(std::vector<std::pair<CAmount, std::pair<const
                 if (nPass == 0 ? insecure_rand.rand32()&1 : !vfIncluded[i])
                 {
                     nTotal += vValue[i].first;
+                    ++nTotalInputCount;
                     vfIncluded[i] = true;
                     if (nTotal >= nTargetValue)
                     {
                         fReachedTarget = true;
-                        if (nTotal < nBest)
+                        if (nTotal < nBest || (nTotal == nBest && nTotalInputCount < nBestInputCount))
                         {
                             nBest = nTotal;
+                            nBestInputCount = nTotalInputCount;
                             vfBest = vfIncluded;
                         }
                         nTotal -= vValue[i].first;
+                        --nTotalInputCount;
                         vfIncluded[i] = false;
                     }
                 }
@@ -2774,7 +2779,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
     CAmount nBest;
 
     ApproximateBestSubset(vValue, nTotalLower, nTargetValue, vfBest, nBest, fUseInstantSend);
-    if (nBest != nTargetValue && nTotalLower >= nTargetValue + nMinChange)
+    if (nBest != nTargetValue && nMinChange != 0 && nTotalLower >= nTargetValue + nMinChange)
         ApproximateBestSubset(vValue, nTotalLower, nTargetValue + nMinChange, vfBest, nBest, fUseInstantSend);
 
     // If we have a bigger coin and (either the stochastic approximation didn't find a good solution,
