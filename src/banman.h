@@ -10,6 +10,7 @@
 
 #include <addrdb.h>
 #include <fs.h>
+#include <net_types.h> // For banmap_t
 #include <sync.h>
 
 // NOTE: When adjusting this, update rpcnet:setban's help ("24h")
