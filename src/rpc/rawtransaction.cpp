@@ -1620,7 +1620,7 @@ UniValue joinpsbts(const JSONRPCRequest& request)
     std::vector<int> output_indices(merged_psbt.outputs.size());
     std::iota(output_indices.begin(), output_indices.end(), 0);
 
-    // Shuffle input and output indicies lists
+    // Shuffle input and output indices lists
     Shuffle(input_indices.begin(), input_indices.end(), FastRandomContext());
     Shuffle(output_indices.begin(), output_indices.end(), FastRandomContext());
 

@@ -309,7 +309,7 @@ void BitcoinApplication::requestShutdown()
     // rescanning a wallet.
     m_node.startShutdown();
     // Unsetting the client model can cause the current thread to wait for node
-    // to complete an operation, like wait for a RPC execution to complate.
+    // to complete an operation, like wait for a RPC execution to complete.
     window->setClientModel(nullptr);
     pollShutdownTimer->stop();
 
