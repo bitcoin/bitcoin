@@ -4,9 +4,9 @@
 
 #include <qt/bantablemodel.h>
 
-#include <qt/clientmodel.h>
-
 #include <interfaces/node.h>
+#include <net_types.h> // For banmap_t
+#include <qt/clientmodel.h>
 
 #include <algorithm>
 
