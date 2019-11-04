@@ -122,12 +122,39 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.bind_to_localhost_only = True
         self.extra_args_from_options = []
         self.set_test_params()
-
-        assert hasattr(self, "num_nodes"), "Test must set self.num_nodes in set_test_params()"
+        self.parse_args()
 
     def main(self):
         """Main function. This should not be overridden by the subclass test scripts."""
 
+        assert hasattr(self, "num_nodes"), "Test must set self.num_nodes in set_test_params()"
+
+        try:
+            self.setup()
+            self.run_test()
+        except JSONRPCException:
+            self.log.exception("JSONRPC error")
+            self.success = TestStatus.FAILED
+        except SkipTest as e:
+            self.log.warning("Test Skipped: %s" % e.message)
+            self.success = TestStatus.SKIPPED
+        except AssertionError:
+            self.log.exception("Assertion failed")
+            self.success = TestStatus.FAILED
+        except KeyError:
+            self.log.exception("Key error")
+            self.success = TestStatus.FAILED
+        except Exception:
+            self.log.exception("Unexpected exception caught during testing")
+            self.success = TestStatus.FAILED
+        except KeyboardInterrupt:
+            self.log.warning("Exiting after keyboard interrupt")
+            self.success = TestStatus.FAILED
+        finally:
+            exit_code = self.shutdown()
+            sys.exit(exit_code)
+
+    def parse_args(self):
         parser = argparse.ArgumentParser(usage="%(prog)s [options]")
         parser.add_argument("--nocleanup", dest="nocleanup", default=False, action="store_true",
                             help="Leave dashds and test.* datadir on exit or error")
@@ -167,6 +194,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         # source: https://stackoverflow.com/questions/48796169/how-to-fix-ipykernel-launcher-py-error-unrecognized-arguments-in-jupyter/56349168#56349168
         parser.add_argument("-f", "--fff", help="a dummy argument to fool ipython", default="1")
         self.options = parser.parse_args()
+
+    def setup(self):
+        """Call this method to start up the test framework object with options set."""
 
         if self.options.timeout_scale < 1:
             raise RuntimeError("--timeoutscale can't be less than 1")
@@ -221,33 +251,20 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.network_thread = NetworkThread()
         self.network_thread.start()
 
-        success = TestStatus.FAILED
+        if self.options.usecli:
+            if not self.supports_cli:
+                raise SkipTest("--usecli specified but test does not support using CLI")
+            self.skip_if_no_cli()
+        self.skip_test_if_missing_module()
+        self.setup_chain()
+        self.setup_network()
 
-        try:
-            if self.options.usecli:
-                if not self.supports_cli:
-                    raise SkipTest("--usecli specified but test does not support using CLI")
-                self.skip_if_no_cli()
-            self.skip_test_if_missing_module()
-            self.setup_chain()
-            self.setup_network()
-            self.run_test()
-            success = TestStatus.PASSED
-        except JSONRPCException:
-            self.log.exception("JSONRPC error")
-        except SkipTest as e:
-            self.log.warning("Test Skipped: %s" % e.message)
-            success = TestStatus.SKIPPED
-        except AssertionError:
-            self.log.exception("Assertion failed")
-        except KeyError:
-            self.log.exception("Key error")
-        except Exception:
-            self.log.exception("Unexpected exception caught during testing")
-        except KeyboardInterrupt:
-            self.log.warning("Exiting after keyboard interrupt")
+        self.success = TestStatus.PASSED
 
-        if success == TestStatus.FAILED and self.options.pdbonfailure:
+    def shutdown(self):
+        """Call this method to shut down the test framework object."""
+
+        if self.success == TestStatus.FAILED and self.options.pdbonfailure:
             print("Testcase failed. Attaching python debugger. Enter ? for help")
             pdb.set_trace()
 
@@ -259,7 +276,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 if self.nodes:
                     self.stop_nodes()
             except BaseException:
-                success = False
+                self.success = TestStatus.FAILED
                 self.log.exception("Unexpected exception caught during shutdown")
         else:
             for node in self.nodes:
@@ -269,7 +286,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         should_clean_up = (
             not self.options.nocleanup and
             not self.options.noshutdown and
-            success != TestStatus.FAILED and
+            self.success != TestStatus.FAILED and
             not self.options.perf
         )
         if should_clean_up:
@@ -282,10 +299,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             self.log.warning("Not cleaning up dir {}".format(self.options.tmpdir))
             cleanup_tree_on_exit = False
 
-        if success == TestStatus.PASSED:
+        if self.success == TestStatus.PASSED:
             self.log.info("Tests successful")
             exit_code = TEST_EXIT_PASSED
-        elif success == TestStatus.SKIPPED:
+        elif self.success == TestStatus.SKIPPED:
             self.log.info("Test skipped")
             exit_code = TEST_EXIT_SKIPPED
         else:
@@ -297,10 +314,23 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             self.log.error(self.config['environment']['PACKAGE_BUGREPORT'])
             self.log.error("")
             exit_code = TEST_EXIT_FAILED
-        logging.shutdown()
+        # Logging.shutdown will not remove stream- and filehandlers, so we must
+        # do it explicitly. Handlers are removed so the next test run can apply
+        # different log handler settings.
+        # See: https://docs.python.org/3/library/logging.html#logging.shutdown
+        for h in list(self.log.handlers):
+            h.flush()
+            h.close()
+            self.log.removeHandler(h)
+        rpc_logger = logging.getLogger("BitcoinRPC")
+        for h in list(rpc_logger.handlers):
+            h.flush()
+            rpc_logger.removeHandler(h)
         if cleanup_tree_on_exit:
             shutil.rmtree(self.options.tmpdir)
-        sys.exit(exit_code)
+
+        self.nodes.clear()
+        return exit_code
 
     # Methods to override in subclass test scripts.
     def set_test_params(self):
