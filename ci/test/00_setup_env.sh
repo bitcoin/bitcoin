@@ -21,6 +21,9 @@ echo "Fallback to default values in env (if not yet set)"
 export MAKEJOBS=${MAKEJOBS:--j4}
 # A folder for the ci system to put temporary files (ccache, datadirs for tests, ...)
 export BASE_SCRATCH_DIR=${BASE_SCRATCH_DIR:-$BASE_ROOT_DIR/ci/scratch/}
+# What host to compile for. See also ./depends/README.md
+# Tests that need cross-compilation export the appropriate HOST.
+# Tests that run natively, do not set a HOST, but we assume x86_64 here if the calling environment did not set a HOST
 export HOST=${HOST:-x86_64-unknown-linux-gnu}
 # Whether to prefer BusyBox over GNU utilities
 export USE_BUSY_BOX=${USE_BUSY_BOX:-false}
