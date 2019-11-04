@@ -25,6 +25,8 @@ void RegisterSpecialRPCCommands(CRPCTable &tableRPC);
 void RegisterMasternodeRPCCommands(CRPCTable &tableRPC);
 /** Register quorums/LLMQ RPC commands */
 void RegisterQuorumsRPCCommands(CRPCTable &tableRPC);
+/** Register Governance RPC commands */
+void RegisterGovernanceRPCCommands(CRPCTable &tableRPC);
 
 static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
 {
@@ -36,6 +38,7 @@ static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
     RegisterSpecialRPCCommands(t);
     RegisterMasternodeRPCCommands(t);
     RegisterQuorumsRPCCommands(t);
+    RegisterGovernanceRPCCommands(t);
 }
 
 #endif // BITGREEN_RPC_REGISTER_H
