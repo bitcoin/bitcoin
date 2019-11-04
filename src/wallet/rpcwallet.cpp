@@ -136,7 +136,7 @@ static void WalletTxToJSON(interfaces::Chain& chain, interfaces::Chain::Lock& lo
         entry.pushKV("blockindex", wtx.m_confirm.nIndex);
         int64_t block_time;
         bool found_block = chain.findBlock(wtx.m_confirm.hashBlock, nullptr /* block */, &block_time);
-        assert(found_block);
+        CHECK_NONFATAL(found_block);
         entry.pushKV("blocktime", block_time);
     } else {
         entry.pushKV("trusted", wtx.IsTrusted(locked_chain));
@@ -2943,7 +2943,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
                     CTxDestination witness_destination;
                     if (redeemScript.IsPayToWitnessScriptHash()) {
                         bool extracted = ExtractDestination(redeemScript, witness_destination);
-                        assert(extracted);
+                        CHECK_NONFATAL(extracted);
                         // Also return the witness script
                         const WitnessV0ScriptHash& whash = boost::get<WitnessV0ScriptHash>(witness_destination);
                         CScriptID id;
@@ -3831,7 +3831,7 @@ static UniValue getaddressesbylabel(const JSONRPCRequest& request)
             // address strings, but build a separate set as a precaution just in
             // case it does.
             bool unique = addresses.emplace(address).second;
-            assert(unique);
+            CHECK_NONFATAL(unique);
             // UniValue::pushKV checks if the key exists in O(N)
             // and since duplicate addresses are unexpected (checked with
             // std::set in O(log(N))), UniValue::__pushKV is used instead,
