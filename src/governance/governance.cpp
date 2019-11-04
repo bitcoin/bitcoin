@@ -1036,7 +1036,8 @@ int CGovernanceManager::RequestGovernanceObjectVotes(NodeId id) // const std::ve
     }
 
     {
-        LOCK2(cs_main, cs);
+        // LOCK2(cs_main, cs);
+        LOCK(cs);
 
         if (mapObjects.empty()) return -2;
 
