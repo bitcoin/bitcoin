@@ -2863,6 +2863,7 @@ static void ApproximateBestSubset(const std::vector<CInputCoin>& vValue, const C
 
     vfBest.assign(vValue.size(), true);
     nBest = nTotalLower;
+    int nBestInputCount = 0;
 
     FastRandomContext insecure_rand;
 
@@ -2870,6 +2871,7 @@ static void ApproximateBestSubset(const std::vector<CInputCoin>& vValue, const C
     {
         vfIncluded.assign(vValue.size(), false);
         CAmount nTotal = 0;
+        int nTotalInputCount = 0;
         bool fReachedTarget = false;
         for (int nPass = 0; nPass < 2 && !fReachedTarget; nPass++)
         {
@@ -2884,16 +2886,19 @@ static void ApproximateBestSubset(const std::vector<CInputCoin>& vValue, const C
                 if (nPass == 0 ? insecure_rand.randbool() : !vfIncluded[i])
                 {
                     nTotal += vValue[i].txout.nValue;
+                    ++nTotalInputCount;
                     vfIncluded[i] = true;
                     if (nTotal >= nTargetValue)
                     {
                         fReachedTarget = true;
-                        if (nTotal < nBest)
+                        if (nTotal < nBest || (nTotal == nBest && nTotalInputCount < nBestInputCount))
                         {
                             nBest = nTotal;
+                            nBestInputCount = nTotalInputCount;
                             vfBest = vfIncluded;
                         }
                         nTotal -= vValue[i].txout.nValue;
+                        --nTotalInputCount;
                         vfIncluded[i] = false;
                     }
                 }
@@ -3047,7 +3052,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
     CAmount nBest;
 
     ApproximateBestSubset(vValue, nTotalLower, nTargetValue, vfBest, nBest);
-    if (nBest != nTargetValue && nTotalLower >= nTargetValue + nMinChange)
+    if (nBest != nTargetValue && nMinChange != 0 && nTotalLower >= nTargetValue + nMinChange)
         ApproximateBestSubset(vValue, nTotalLower, nTargetValue + nMinChange, vfBest, nBest);
 
     // If we have a bigger coin and (either the stochastic approximation didn't find a good solution,
