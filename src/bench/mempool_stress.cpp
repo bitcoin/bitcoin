@@ -24,12 +24,6 @@ struct Available {
     size_t vin_left{0};
     size_t tx_count;
     Available(CTransactionRef& ref, size_t tx_count) : ref(ref), tx_count(tx_count){}
-    Available& operator=(Available other) {
-        ref = other.ref;
-        vin_left = other.vin_left;
-        tx_count = other.tx_count;
-        return *this;
-    }
 };
 
 static void ComplexMemPool(benchmark::Bench& bench)
