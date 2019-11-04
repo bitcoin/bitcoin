@@ -733,7 +733,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         // To check these we first check if we meet the RBF criteria, above, and increment the descendant
         // limits by the direct conflict and its descendants (as these are recalculated in
         // CalculateMempoolAncestors by assuming the new transaction being added is a new descendant, with no
-        // removals, of each parent's existing dependant set). The ancestor count limits are unmodified (as
+        // removals, of each parent's existing dependent set). The ancestor count limits are unmodified (as
         // the ancestor limits should be the same for both our new transaction and any conflicts).
         // We don't bother incrementing m_limit_descendants by the full removal count as that limit never comes
         // into force here (as we're only adding a single transaction).

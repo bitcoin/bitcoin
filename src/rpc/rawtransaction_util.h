@@ -29,7 +29,7 @@ UniValue SignTransaction(CMutableTransaction& mtx, const SigningProvider* keysto
   * Parse a prevtxs UniValue array and get the map of coins from it
   *
   * @param  prevTxs       Array of previous txns outputs that tx depends on but may not yet be in the block chain
-  * @param  keystore      A pointer to the temprorary keystore if there is one
+  * @param  keystore      A pointer to the temporary keystore if there is one
   * @param  coins         Map of unspent outputs - coins in mempool and current chain UTXO set, may be extended by previous txns outputs after call
   */
 void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keystore, std::map<COutPoint, Coin>& coins);
