@@ -428,7 +428,7 @@ RPCHelpMan::RPCHelpMan(std::string name, std::string description, std::vector<RP
     std::set<std::string> named_args;
     for (const auto& arg : m_args) {
         // Should have unique named arguments
-        assert(named_args.insert(arg.m_name).second);
+        CHECK_NONFATAL(named_args.insert(arg.m_name).second);
     }
 }
 
@@ -620,11 +620,11 @@ std::string RPCArg::ToStringObj(const bool oneline) const
     case Type::OBJ:
     case Type::OBJ_USER_KEYS:
         // Currently unused, so avoid writing dead code
-        assert(false);
+        CHECK_NONFATAL(false);
 
         // no default case, so the compiler can warn about missing cases
     }
-    assert(false);
+    CHECK_NONFATAL(false);
 }
 
 std::string RPCArg::ToString(const bool oneline) const
@@ -661,7 +661,7 @@ std::string RPCArg::ToString(const bool oneline) const
 
         // no default case, so the compiler can warn about missing cases
     }
-    assert(false);
+    CHECK_NONFATAL(false);
 }
 
 static std::pair<int64_t, int64_t> ParseRange(const UniValue& value)
