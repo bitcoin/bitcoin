@@ -124,7 +124,7 @@ TestingSetup::~TestingSetup()
     pblocktree.reset();
 }
 
-TestChain100Setup::TestChain100Setup() : TestingSetup(CBaseChainParams::REGTEST)
+TestChain100Setup::TestChain100Setup()
 {
     // CreateAndProcessBlock() does not support building SegWit blocks, so don't activate in these tests.
     // TODO: fix the code to support SegWit blocks.
