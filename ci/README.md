@@ -12,7 +12,7 @@ To allow for a wide range of tested environments, but also ensure reproducibilit
 requires `docker` to be installed. To install all requirements on Ubuntu, run
 
 ```
-sudo apt install docker.io ccache bash git
+sudo apt install docker.io bash git
 ```
 
 To run the default test stage,
