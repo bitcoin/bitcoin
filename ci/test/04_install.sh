@@ -33,7 +33,7 @@ if [ "$TRAVIS_OS_NAME" == "osx" ]; then
 fi
 
 mkdir -p "${BASE_SCRATCH_DIR}"
-ccache echo "Creating ccache dir if it didn't already exist"
+mkdir -p "${CCACHE_DIR}"
 
 if [ ! -d ${DIR_QA_ASSETS} ]; then
   git clone https://github.com/bitcoin-core/qa-assets ${DIR_QA_ASSETS}
@@ -76,6 +76,9 @@ else
   DOCKER_EXEC echo "Number of CPUs \(nproc\):" \$\(nproc\)
 fi
 
+if [ -n "$DPKG_ADD_ARCH" ]; then
+  DOCKER_EXEC dpkg --add-architecture "$DPKG_ADD_ARCH"
+fi
 
 if [ "$TRAVIS_OS_NAME" != "osx" ]; then
   ${CI_RETRY_EXE} DOCKER_EXEC apt-get update
