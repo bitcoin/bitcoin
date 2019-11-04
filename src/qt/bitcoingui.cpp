@@ -256,7 +256,7 @@ BitcoinGUI::BitcoinGUI(const PlatformStyle *_platformStyle, const NetworkStyle *
         if (qFile.open(QFile::ReadOnly)) {
             styleSheet = QLatin1String(qFile.readAll());
         }
-        this->setStyleSheet(styleSheet);
+        this->setStyleSheet(this->styleSheet().append(styleSheet));
     }
 #endif
 
