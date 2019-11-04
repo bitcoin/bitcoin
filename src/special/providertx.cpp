@@ -31,10 +31,10 @@ static bool CheckService(const uint256& proTxHash, const ProTx& proTx, CValidati
 
     int mainnetDefaultPort = Params().GetDefaultPort();
     if (Params().NetworkIDString() == CBaseChainParams::MAIN) {
-        if (proTx.addr.GetPort() != mainnetDefaultPort) {
+        if (proTx.addr.GetPort() != mainnetDefaultPort && !Params().AllowMultiplePorts()) {
             return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-protx-addr-port");
         }
-    } else if (proTx.addr.GetPort() == mainnetDefaultPort) {
+    } else if (proTx.addr.GetPort() == mainnetDefaultPort && !Params().AllowMultiplePorts()) {
         return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-protx-addr-port");
     }
 
