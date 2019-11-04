@@ -16,7 +16,7 @@ if [ "$PULL_REQUEST" != "false" ]; then contrib/devtools/commit-script-check.sh 
 
 #if [ "$CHECK_DOC" = 1 ]; then contrib/devtools/check-doc.py; fi TODO reenable after all Bitcoin PRs have been merged and docs fully fixed
 
-depends/$HOST/native/bin/ccache --max-size=$CCACHE_SIZE
+ccache --max-size=$CCACHE_SIZE
 
 if [ -n "$USE_SHELL" ]; then
   export CONFIG_SHELL="$USE_SHELL"
