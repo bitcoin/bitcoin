@@ -3771,7 +3771,7 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     addrBind(addrBindIn),
     fInbound(fInboundIn),
     nKeyedNetGroup(nKeyedNetGroupIn),
-    addrKnown(5000, 0.001),
+    m_addr_known{block_relay_only ? nullptr : std::make_unique<CRollingBloomFilter>(5000, 0.001)},
     m_block_relay_only_peer(block_relay_only),
     id(idIn),
     nLocalHostNonce(nLocalHostNonceIn),

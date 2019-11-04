@@ -85,9 +85,9 @@ FUZZ_TARGET_INIT(net, initialize_net)
                 }
             },
             [&] {
-                // if (node.m_addr_known == nullptr) {
-                //     return;
-                // }
+                if (node.m_addr_known == nullptr) {
+                    return;
+                }
                 const std::optional<CAddress> addr_opt = ConsumeDeserializable<CAddress>(fuzzed_data_provider);
                 if (!addr_opt) {
                     return;
@@ -95,9 +95,9 @@ FUZZ_TARGET_INIT(net, initialize_net)
                 node.AddAddressKnown(*addr_opt);
             },
             [&] {
-                // if (node.m_addr_known == nullptr) {
-                //     return;
-                // }
+                if (node.m_addr_known == nullptr) {
+                    return;
+                }
                 const std::optional<CAddress> addr_opt = ConsumeDeserializable<CAddress>(fuzzed_data_provider);
                 if (!addr_opt) {
                     return;
