@@ -8,8 +8,9 @@
 #include <clientversion.h>
 #include <core_io.h>
 #include <net.h>
-#include <net_processing.h>
 #include <net_permissions.h>
+#include <net_processing.h>
+#include <net_types.h> // For banmap_t
 #include <netbase.h>
 #include <node/context.h>
 #include <policy/settings.h>
