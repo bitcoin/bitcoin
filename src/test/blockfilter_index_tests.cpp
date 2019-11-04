@@ -8,31 +8,15 @@
 #include <index/blockfilterindex.h>
 #include <miner.h>
 #include <pow.h>
-#include <test/setup_common.h>
 #include <script/standard.h>
+#include <test/lib/blockfilter.h>
+#include <test/setup_common.h>
 #include <util/time.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
 
 BOOST_AUTO_TEST_SUITE(blockfilter_index_tests)
-
-static bool ComputeFilter(BlockFilterType filter_type, const CBlockIndex* block_index,
-                          BlockFilter& filter)
-{
-    CBlock block;
-    if (!ReadBlockFromDisk(block, block_index->GetBlockPos(), Params().GetConsensus())) {
-        return false;
-    }
-
-    CBlockUndo block_undo;
-    if (block_index->nHeight > 0 && !UndoReadFromDisk(block_undo, block_index)) {
-        return false;
-    }
-
-    filter = BlockFilter(filter_type, block, block_undo);
-    return true;
-}
 
 static bool CheckFilterLookups(BlockFilterIndex& filter_index, const CBlockIndex* block_index,
                                uint256& last_header)
