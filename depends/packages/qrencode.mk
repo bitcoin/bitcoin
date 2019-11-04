@@ -9,6 +9,7 @@ $(package)_config_opts=--disable-shared --without-tools --without-tests --disabl
 $(package)_config_opts += --disable-gprof --disable-gcov --disable-mudflap
 $(package)_config_opts += --disable-dependency-tracking --enable-option-checking
 $(package)_config_opts_linux=--with-pic
+$(package)_config_opts_android=--with-pic
 endef
 
 define $(package)_preprocess_cmds

@@ -597,6 +597,7 @@ case $host in
      ;;
    *android*)
      dnl make sure android stays above linux for hosts like *linux-android*
+     TARGET_OS=android
      LEVELDB_TARGET_FLAGS="-DOS_ANDROID"
      ;;
    *linux*)
