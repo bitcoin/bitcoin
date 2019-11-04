@@ -15,12 +15,17 @@ $(package)_config_opts_mingw32=binary-format=pe target-os=windows threadapi=win3
 $(package)_config_opts_x86_64_mingw32=address-model=64
 $(package)_config_opts_i686_mingw32=address-model=32
 $(package)_config_opts_i686_linux=address-model=32 architecture=x86
+$(package)_config_opts_i686_android=address-model=32
+$(package)_config_opts_aarch64_android=address-model=64
+$(package)_config_opts_x86_64_android=address-model=64
+$(package)_config_opts_armv7a_android=address-model=32
 $(package)_toolset_$(host_os)=gcc
 $(package)_archiver_$(host_os)=$($(package)_ar)
 $(package)_toolset_darwin=clang-darwin
 $(package)_config_libraries=chrono,filesystem,system,thread,test
 $(package)_cxxflags=-std=c++11 -fvisibility=hidden
 $(package)_cxxflags_linux=-fPIC
+$(package)_cxxflags_android=-fPIC
 endef
 
 define $(package)_preprocess_cmds
