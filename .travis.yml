@@ -46,6 +46,7 @@ stages:
 env:
   global:
     - CI_RETRY_EXE="travis_retry"
+    - CI_WAIT="while sleep 500; do echo .; done"
     - CACHE_ERR_MSG="Error! Initial build successful, but not enough time remains to run later build stages and tests. Please manually re-run this job by using the travis restart button or asking a bitcoin maintainer to restart. The next run should not time out because the build cache has been saved."
 before_install:
   - set -o errexit; source ./ci/test/00_setup_env.sh
