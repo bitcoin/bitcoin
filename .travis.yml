@@ -94,9 +94,11 @@ jobs:
         - set -o errexit; source ./ci/extended_lint/06_script.sh
 
     - stage: test
-      name: 'ARM  [GOAL: install]  [unit tests, no functional tests]'
+      name: 'ARM  [GOAL: install]  [unit tests, functional tests]'
+      arch: arm64
       env: >-
         FILE_ENV="./ci/test/00_setup_env_arm.sh"
+        QEMU_USER_CMD=""  # Can run the tests natively without qemu
 
     - stage: test
       name: 'Win64  [GOAL: deploy]  [unit tests, no gui, no functional tests]'
