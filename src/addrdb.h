@@ -7,6 +7,7 @@
 #define BITCOIN_ADDRDB_H
 
 #include <fs.h>
+#include <net_types.h> // For banmap_t
 #include <serialize.h>
 
 #include <string>
@@ -78,8 +79,6 @@ public:
         }
     }
 };
-
-typedef std::map<CSubNet, CBanEntry> banmap_t;
 
 /** Access to the (IP) address database (peers.dat) */
 class CAddrDB

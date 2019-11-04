@@ -5,9 +5,9 @@
 #ifndef BITCOIN_INTERFACES_NODE_H
 #define BITCOIN_INTERFACES_NODE_H
 
-#include <addrdb.h>     // For banmap_t
 #include <amount.h>     // For CAmount
 #include <net.h>        // For CConnman::NumConnections
+#include <net_types.h>  // For banmap_t
 #include <netaddress.h> // For Network
 #include <support/allocators/secure.h> // For SecureString
 
