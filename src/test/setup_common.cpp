@@ -128,7 +128,9 @@ TestChain100Setup::TestChain100Setup()
 {
     // CreateAndProcessBlock() does not support building SegWit blocks, so don't activate in these tests.
     // TODO: fix the code to support SegWit blocks.
-    TurnOffSegwitForUnitTests();
+    gArgs.ForceSetArg("-segwitheight", "432");
+    // Need to recreate chainparams
+    SelectParams(CBaseChainParams::REGTEST);
 
     // Generate a 100-block chain:
     coinbaseKey.MakeNewKey(true);
@@ -141,12 +143,9 @@ TestChain100Setup::TestChain100Setup()
     }
 }
 
-//
 // Create a new block with just given transactions, coinbase paying to
 // scriptPubKey, and try to add it to the current chain.
-//
-CBlock
-TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey)
+CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey)
 {
     const CChainParams& chainparams = Params();
     std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey);
@@ -174,6 +173,7 @@ TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransaction>&
 
 TestChain100Setup::~TestChain100Setup()
 {
+    gArgs.ForceSetArg("-segwitheight", "0");
 }
 
 
