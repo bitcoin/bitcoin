@@ -265,9 +265,12 @@ void CWallet::UpgradeKeyMetadata()
         return;
     }
 
-    if (m_spk_man) {
-        m_spk_man->UpgradeKeyMetadata();
+    auto spk_man = GetLegacyScriptPubKeyMan();
+    if (!spk_man) {
+        return;
     }
+
+    spk_man->UpgradeKeyMetadata();
     SetWalletFlag(WALLET_FLAG_KEY_ORIGIN_METADATA);
 }
 
