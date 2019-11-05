@@ -492,7 +492,11 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
             std::string lpstr = lpval.get_str();
 
             hashWatchedChain = ParseHashV(lpstr.substr(0, 64), "longpollid");
-            nTransactionsUpdatedLastLP = atoi64(lpstr.substr(64));
+            uint32_t temp;
+            if (!ParseUInt32(lpstr.substr(64), &temp)) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "could not parse lpval");
+            }
+            nTransactionsUpdatedLastLP = temp;
         }
         else
         {
