@@ -53,7 +53,7 @@ class TestShell:
 
         def reset(self):
             if self.running:
-                print("Shutdown TestWrapper before resetting!")
+                print("Shutdown TestShell before resetting!")
             else:
                 self.num_nodes = None
                 super().__init__()
