@@ -31,7 +31,7 @@ importing the `TestShell` class from the `test_shell` sub-package.
 ```
 >>> import sys
 >>> sys.path.insert(0, "/path/to/bitcoin/test/functional")
->>> from test_framework.test_shell import `TestShell`
+>>> from test_framework.test_shell import TestShell
 ```
 
 The following `TestShell` methods manage the lifetime of the underlying bitcoind
