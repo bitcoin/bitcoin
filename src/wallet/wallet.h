@@ -200,12 +200,10 @@ typedef std::map<std::string, std::string> mapValue_t;
 
 static inline void ReadOrderPos(int64_t& nOrderPos, mapValue_t& mapValue)
 {
-    if (!mapValue.count("n"))
+    if (!mapValue.count("n") || !ParseInt64(mapValue["n"], &nOrderPos))
     {
         nOrderPos = -1; // TODO: calculate elsewhere
-        return;
     }
-    nOrderPos = atoi64(mapValue["n"].c_str());
 }
 
 
