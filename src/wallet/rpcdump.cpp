@@ -96,6 +96,12 @@ static LegacyScriptPubKeyMan& GetLegacyScriptPubKeyMan(CWallet& wallet)
     return *spk_man;
 }
 
+// Only check the presence of a LegacyScriptPubKeyMan, throw an error if it doesn't
+static void RequireLegacyScriptPubKeyMan(CWallet& wallet)
+{
+    (void)GetLegacyScriptPubKeyMan(wallet);
+}
+
 UniValue importprivkey(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -134,7 +140,7 @@ UniValue importprivkey(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_WALLET_ERROR, "Cannot import private keys to a wallet with private keys disabled");
     }
 
-    LegacyScriptPubKeyMan& spk_man = GetLegacyScriptPubKeyMan(*wallet);
+    RequireLegacyScriptPubKeyMan(*wallet);
 
     WalletRescanReserver reserver(pwallet);
     bool fRescan = true;
@@ -262,7 +268,7 @@ UniValue importaddress(const JSONRPCRequest& request)
                 },
             }.Check(request);
 
-    LegacyScriptPubKeyMan& spk_man = GetLegacyScriptPubKeyMan(*pwallet);
+    RequireLegacyScriptPubKeyMan(*pwallet);
 
     std::string strLabel;
     if (!request.params[1].isNull())
@@ -465,7 +471,7 @@ UniValue importpubkey(const JSONRPCRequest& request)
                 },
             }.Check(request);
 
-    LegacyScriptPubKeyMan& spk_man = GetLegacyScriptPubKeyMan(*wallet);
+    RequireLegacyScriptPubKeyMan(*wallet);
 
     std::string strLabel;
     if (!request.params[1].isNull())
@@ -549,7 +555,7 @@ UniValue importwallet(const JSONRPCRequest& request)
                 },
             }.Check(request);
 
-    LegacyScriptPubKeyMan& spk_man = GetLegacyScriptPubKeyMan(*wallet);
+    RequireLegacyScriptPubKeyMan(*wallet);
 
     if (pwallet->chain().havePruned()) {
         // Exit early and print an error.
@@ -1346,7 +1352,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
 
     RPCTypeCheck(mainRequest.params, {UniValue::VARR, UniValue::VOBJ});
 
-    LegacyScriptPubKeyMan& spk_man = GetLegacyScriptPubKeyMan(*wallet);
+    RequireLegacyScriptPubKeyMan(*wallet);
 
     const UniValue& requests = mainRequest.params[0];
 
