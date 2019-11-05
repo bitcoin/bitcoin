@@ -943,11 +943,13 @@ public:
     void MaybeSetAddrName(const std::string& addrNameIn);
 };
 
-
-
-
-
 /** Return a timestamp in the future (in microseconds) for exponentially distributed events. */
 int64_t PoissonNextSend(int64_t now, int average_interval_seconds);
+
+/** Wrapper to return mockable type */
+inline std::chrono::microseconds PoissonNextSend(std::chrono::microseconds now, std::chrono::seconds average_interval)
+{
+    return std::chrono::microseconds{PoissonNextSend(now.count(), average_interval.count())};
+}
 
 #endif // BITCOIN_NET_H
