@@ -148,6 +148,7 @@ static bool InterpretBool(const std::string& strValue)
 {
     if (strValue.empty())
         return true;
+    // TODO: add a way to return a parse error
     int64_t value;
     return ParseInt64(strValue, &value) && value != 0;
 }
