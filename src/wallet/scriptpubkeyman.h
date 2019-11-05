@@ -356,7 +356,6 @@ public:
 
     //! Load a keypool entry
     void LoadKeyPool(int64_t nIndex, const CKeyPool &keypool) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    bool TopUpKeyPool(unsigned int kpSize = 0);
     bool NewKeyPool();
     void MarkPreSplitKeys() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 

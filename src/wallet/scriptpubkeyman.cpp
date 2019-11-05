@@ -14,7 +14,7 @@
 bool LegacyScriptPubKeyMan::GetNewDestination(const OutputType type, CTxDestination& dest, std::string& error)
 {
     error.clear();
-    TopUpKeyPool();
+    TopUp();
 
     // Generate a new key that is added to wallet
     CPubKey new_key;
@@ -282,11 +282,6 @@ void LegacyScriptPubKeyMan::ReturnDestination(int64_t index, bool internal, cons
     ReturnKey(index, internal, pubkey);
 }
 
-bool LegacyScriptPubKeyMan::TopUp(unsigned int size)
-{
-    return TopUpKeyPool(size);
-}
-
 void LegacyScriptPubKeyMan::MarkUnusedAddresses(const CScript& script)
 {
     AssertLockHeld(cs_wallet);
@@ -297,7 +292,7 @@ void LegacyScriptPubKeyMan::MarkUnusedAddresses(const CScript& script)
             WalletLogPrintf("%s: Detected a used keypool key, mark all keypool key up to this key as used\n", __func__);
             MarkReserveKeysAsUsed(mi->second);
 
-            if (!TopUpKeyPool()) {
+            if (!TopUp()) {
                 WalletLogPrintf("%s: Topping up keypool failed (locked wallet)\n", __func__);
             }
         }
@@ -401,7 +396,7 @@ bool LegacyScriptPubKeyMan::Upgrade(int prev_version, std::string& error)
     }
     // Regenerate the keypool if upgraded to HD
     if (hd_upgrade) {
-        if (!TopUpKeyPool()) {
+        if (!TopUp()) {
             error = _("Unable to generate keys").translated;
             return false;
         }
@@ -1029,7 +1024,7 @@ bool LegacyScriptPubKeyMan::NewKeyPool()
 
         m_pool_key_to_index.clear();
 
-        if (!TopUpKeyPool()) {
+        if (!TopUp()) {
             return false;
         }
         WalletLogPrintf("LegacyScriptPubKeyMan::NewKeyPool rewrote keypool\n");
@@ -1037,7 +1032,7 @@ bool LegacyScriptPubKeyMan::NewKeyPool()
     return true;
 }
 
-bool LegacyScriptPubKeyMan::TopUpKeyPool(unsigned int kpSize)
+bool LegacyScriptPubKeyMan::TopUp(unsigned int kpSize)
 {
     if (!CanGenerateKeys()) {
         return false;
@@ -1154,7 +1149,7 @@ bool LegacyScriptPubKeyMan::ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& key
     {
         LOCK(cs_wallet);
 
-        TopUpKeyPool();
+        TopUp();
 
         bool fReturningInternal = fRequestedInternal;
         fReturningInternal &= (IsHDEnabled() && m_storage.CanSupportFeature(FEATURE_HD_SPLIT)) || m_storage.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
