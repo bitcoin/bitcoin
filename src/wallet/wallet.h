@@ -414,7 +414,12 @@ public:
         }
 
         ReadOrderPos(nOrderPos, mapValue);
-        nTimeSmart = mapValue.count("timesmart") ? (unsigned int)atoi64(mapValue["timesmart"]) : 0;
+        uint64_t temp;
+        if (mapValue.count("timesmart") && ParseUInt64(mapValue["timesmart"], &temp)) {
+            nTimeSmart = temp;
+        } else {
+            nTimeSmart = 0;
+        }
 
         mapValue.erase("fromaccount");
         mapValue.erase("spent");
