@@ -71,7 +71,9 @@ SYSCOIN_TEST_SUITE = \
   test/lib/transaction_utils.h \
   test/main.cpp \
   test/setup_common.h \
-  test/setup_common.cpp
+  test/setup_common.cpp \
+  test/util/str.h \
+  test/util/str.cpp
 
 FUZZ_SUITE = \
   test/setup_common.h \
