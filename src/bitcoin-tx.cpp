@@ -255,8 +255,11 @@ static void MutateTxAddInput(CMutableTransaction& tx, const std::string& strInpu
 
     // extract the optional sequence number
     uint32_t nSequenceIn = CTxIn::SEQUENCE_FINAL;
-    if (vStrInputParts.size() > 2)
-        nSequenceIn = std::stoul(vStrInputParts[2]);
+    if (vStrInputParts.size() > 2) {
+        if (!ParseUInt32(vStrInputParts[2], &nSequenceIn)) {
+            throw std::runtime_error("invalid sequence id '" + vStrInputParts[2] + "'");
+        }
+    }
 
     // append to transaction input list
     CTxIn txin(txid, vout, CScript(), nSequenceIn);
