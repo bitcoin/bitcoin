@@ -51,8 +51,7 @@ The following sections demonstrate how to initialize, run, and shut down a
 ## 3. Initializing a `TestShell` object
 
 ```
->>> test = TestShell()
->>> test.setup(num_nodes=2, setup_clean_chain=True)
+>>> test = TestShell().setup(num_nodes=2, setup_clean_chain=True)
 20XX-XX-XXTXX:XX:XX.XXXXXXX TestFramework (INFO): Initializing test directory /path/to/bitcoin_func_test_XXXXXXX
 ```
 The `TestShell` forwards all functional test parameters of the parent
@@ -66,8 +65,7 @@ temporary folder. If you need more bitcoind nodes than set by default (1),
 simply increase the `num_nodes` parameter during setup.
 
 ```
->>> test2 = TestShell()
->>> test2.setup()
+>>> test2 = TestShell().setup()
 TestShell is already running!
 ```
 

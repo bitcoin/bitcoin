@@ -42,6 +42,7 @@ class TestShell:
 
             super().setup()
             self.running = True
+            return self
 
         def shutdown(self):
             if not self.running:
