@@ -644,9 +644,10 @@ static void CleanupBlockRevFiles()
     // zero by walking the ordered map (keys are block file indices) by
     // keeping a separate counter.  Once we hit a gap (or if 0 doesn't exist)
     // start removing block files.
-    int nContigCounter = 0;
+    uint32_t nContigCounter = 0;
     for (const std::pair<const std::string, fs::path>& item : mapBlockFiles) {
-        if (atoi(item.first) == nContigCounter) {
+        uint32_t value;
+        if (ParseUInt32(item.first, &value) && value == nContigCounter) {
             nContigCounter++;
             continue;
         }
