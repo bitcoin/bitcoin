@@ -66,28 +66,31 @@ void noui_connect()
     noui_InitMessageConn = uiInterface.InitMessage_connect(noui_InitMessage);
 }
 
-bool noui_ThreadSafeMessageBoxSuppressed(const std::string& message, const std::string& caption, unsigned int style)
+bool noui_ThreadSafeMessageBoxRedirect(const std::string& message, const std::string& caption, unsigned int style)
 {
+    LogPrintf("%s: %s\n", caption, message);
     return false;
 }
 
-bool noui_ThreadSafeQuestionSuppressed(const std::string& /* ignored interactive message */, const std::string& message, const std::string& caption, unsigned int style)
+bool noui_ThreadSafeQuestionRedirect(const std::string& /* ignored interactive message */, const std::string& message, const std::string& caption, unsigned int style)
 {
+    LogPrintf("%s: %s\n", caption, message);
     return false;
 }
 
-void noui_InitMessageSuppressed(const std::string& message)
+void noui_InitMessageRedirect(const std::string& message)
 {
+    LogPrintf("init message: %s\n", message);
 }
 
-void noui_suppress()
+void noui_test_redirect()
 {
     noui_ThreadSafeMessageBoxConn.disconnect();
     noui_ThreadSafeQuestionConn.disconnect();
     noui_InitMessageConn.disconnect();
-    noui_ThreadSafeMessageBoxConn = uiInterface.ThreadSafeMessageBox_connect(noui_ThreadSafeMessageBoxSuppressed);
-    noui_ThreadSafeQuestionConn = uiInterface.ThreadSafeQuestion_connect(noui_ThreadSafeQuestionSuppressed);
-    noui_InitMessageConn = uiInterface.InitMessage_connect(noui_InitMessageSuppressed);
+    noui_ThreadSafeMessageBoxConn = uiInterface.ThreadSafeMessageBox_connect(noui_ThreadSafeMessageBoxRedirect);
+    noui_ThreadSafeQuestionConn = uiInterface.ThreadSafeQuestion_connect(noui_ThreadSafeQuestionRedirect);
+    noui_InitMessageConn = uiInterface.InitMessage_connect(noui_InitMessageRedirect);
 }
 
 void noui_reconnect()
