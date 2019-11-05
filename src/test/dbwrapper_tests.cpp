@@ -355,14 +355,11 @@ struct StringContentsSerializer {
 
 BOOST_AUTO_TEST_CASE(iterator_string_ordering)
 {
-    char buf[10];
-
     fs::path ph = GetDataDir() / "iterator_string_ordering";
     CDBWrapper dbw(ph, (1 << 20), true, false, false);
     for (int x=0x00; x<10; ++x) {
         for (int y = 0; y < 10; y++) {
-            snprintf(buf, sizeof(buf), "%d", x);
-            StringContentsSerializer key(buf);
+            StringContentsSerializer key(strprintf("%d", x));
             for (int z = 0; z < y; z++)
                 key += key;
             uint32_t value = x*x;
@@ -372,13 +369,11 @@ BOOST_AUTO_TEST_CASE(iterator_string_ordering)
 
     std::unique_ptr<CDBIterator> it(const_cast<CDBWrapper&>(dbw).NewIterator());
     for (const int seek_start : {0, 5}) {
-        snprintf(buf, sizeof(buf), "%d", seek_start);
-        StringContentsSerializer seek_key(buf);
+        StringContentsSerializer seek_key(strprintf("%d", seek_start));
         it->Seek(seek_key);
         for (unsigned int x=seek_start; x<10; ++x) {
             for (int y = 0; y < 10; y++) {
-                snprintf(buf, sizeof(buf), "%d", x);
-                std::string exp_key(buf);
+                std::string exp_key = strprintf("%d", x);
                 for (int z = 0; z < y; z++)
                     exp_key += exp_key;
                 StringContentsSerializer key;
