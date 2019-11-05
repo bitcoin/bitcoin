@@ -6,10 +6,8 @@ KNOWN_VIOLATIONS=(
     "src/dbwrapper.cpp:.*vsnprintf"
     "src/httprpc.cpp.*trim"
     "src/torcontrol.cpp:.*strtol"
-    "src/util/strencodings.cpp:.*atoi"
     "src/util/strencodings.cpp:.*strtol"
     "src/util/strencodings.cpp:.*strtoul"
-    "src/util/strencodings.h:.*atoi"
 )
 
 REGEXP_IGNORE_EXTERNAL_DEPENDENCIES="^src/(crypto/ctaes/|leveldb/|secp256k1/|tinyformat.h|univalue/)"

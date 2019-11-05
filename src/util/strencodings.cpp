@@ -422,11 +422,6 @@ int64_t atoi64(const std::string& str)
 #endif
 }
 
-int atoi(const std::string& str)
-{
-    return atoi(str.c_str());
-}
-
 /** Upper bound for mantissa.
  * 10^18-1 is the largest arbitrary decimal that will fit in a signed 64-bit integer.
  * Larger integers cannot consist of arbitrary combinations of 0-9:

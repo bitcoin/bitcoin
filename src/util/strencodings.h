@@ -59,7 +59,6 @@ std::string i64tostr(int64_t n);
 std::string itostr(int n);
 int64_t atoi64(const char* psz);
 int64_t atoi64(const std::string& str);
-int atoi(const std::string& str);
 
 /**
  * Tests if the given character is a decimal digit.
