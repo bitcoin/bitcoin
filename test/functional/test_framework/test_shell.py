@@ -29,8 +29,7 @@ class TestShell:
 
             # Num_nodes parameter must be set
             # by BitcoinTestFramework child class.
-            self.num_nodes = kwargs.get('num_nodes', 1)
-            kwargs.pop('num_nodes', None)
+            self.num_nodes = 1
 
             # User parameters override default values.
             for key, value in kwargs.items():
