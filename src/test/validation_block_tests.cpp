@@ -28,7 +28,7 @@ struct RegtestingSetup : public TestingSetup {
 
 static const std::vector<unsigned char> V_OP_TRUE{OP_TRUE};
 
-BOOST_FIXTURE_TEST_SUITE(validation_block_tests, RegTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(validation_block_tests, RegtestingSetup)
 
 struct TestSubscriber : public CValidationInterface {
     uint256 m_expected_tip;
