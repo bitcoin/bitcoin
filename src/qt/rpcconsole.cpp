@@ -222,10 +222,12 @@ bool RPCConsole::RPCParseCommandLine(interfaces::Node* node, std::string &strRes
                                 UniValue subelement;
                                 if (lastResult.isArray())
                                 {
-                                    for(char argch: curarg)
-                                        if (!IsDigit(argch))
-                                            throw std::runtime_error("Invalid result query");
-                                    subelement = lastResult[atoi(curarg.c_str())];
+                                    uint32_t index;
+                                    if (ParseUInt32(curarg, &index)) {
+                                        subelement = lastResult[index];
+                                    } else {
+                                        throw std::runtime_error("Invalid result query");
+                                    }
                                 }
                                 else if (lastResult.isObject())
                                     subelement = find_value(lastResult, curarg);
