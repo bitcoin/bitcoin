@@ -16,8 +16,6 @@
 
 #include <map>
 
-#include <boost/thread.hpp>
-
 static uint64_t GetBogoSize(const CScript& scriptPubKey)
 {
     return 32 /* txid */ +
