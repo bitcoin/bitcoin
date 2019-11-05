@@ -127,8 +127,8 @@ static bool rest_headers(HTTPRequest* req,
     if (path.size() != 2)
         return RESTERR(req, HTTP_BAD_REQUEST, "No header count specified. Use /rest/headers/<count>/<hash>.<ext>.");
 
-    long count = strtol(path[0].c_str(), nullptr, 10);
-    if (count < 1 || count > 2000)
+    uint32_t count;
+    if (!ParseUInt32(path[0], &count) || count < 1 || count > 2000)
         return RESTERR(req, HTTP_BAD_REQUEST, "Header count out of range: " + path[0]);
 
     std::string hashStr = path[1];

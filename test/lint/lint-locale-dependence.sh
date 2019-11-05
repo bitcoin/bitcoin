@@ -5,7 +5,6 @@ KNOWN_VIOLATIONS=(
     "src/bitcoin-tx.cpp.*trim_right"
     "src/dbwrapper.cpp:.*vsnprintf"
     "src/httprpc.cpp.*trim"
-    "src/rest.cpp:.*strtol"
     "src/torcontrol.cpp:.*atoi"
     "src/torcontrol.cpp:.*strtol"
     "src/util/strencodings.cpp:.*atoi"
