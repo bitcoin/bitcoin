@@ -25,19 +25,31 @@ struct Available {
     Available(CTransactionRef& ref, size_t tx_count) : ref(ref), tx_count(tx_count){}
 };
 
-static void ComplexMemPool(benchmark::State& state)
+static void ComplexMemPoolAsymptotic(benchmark::State& state, const std::vector<size_t>* asymptotic_factors)
 {
+    const std::vector<size_t> DEFAULTS {};
+    const std::vector<size_t> scaling_factors = asymptotic_factors ? *asymptotic_factors : DEFAULTS;
+    size_t CHILD_TXS = 800;
+    size_t STARTING_TXS = 100;
+    size_t DESCENDANTS_COUNT_MAX = 10;
+    size_t ANCESTORS_COUNT_MAX = 10;
+    if (scaling_factors.size() > 0) CHILD_TXS = scaling_factors[0];
+    if (scaling_factors.size() > 1) STARTING_TXS = scaling_factors[1];
+    if (scaling_factors.size() > 2) DESCENDANTS_COUNT_MAX = scaling_factors[2];
+    if (scaling_factors.size() > 3) ANCESTORS_COUNT_MAX = scaling_factors[3];
+
+
     FastRandomContext det_rand{true};
     std::vector<Available> available_coins;
     std::vector<CTransactionRef> ordered_coins;
     // Create some base transactions
     size_t tx_counter = 1;
-    for (auto x = 0; x < 100; ++x) {
+    for (size_t x = 0; x < STARTING_TXS; ++x) {
         CMutableTransaction tx = CMutableTransaction();
         tx.vin.resize(1);
         tx.vin[0].scriptSig = CScript() << CScriptNum(tx_counter);
         tx.vin[0].scriptWitness.stack.push_back(CScriptNum(x).getvch());
-        tx.vout.resize(det_rand.randrange(10)+2);
+        tx.vout.resize(det_rand.randrange(DESCENDANTS_COUNT_MAX)+2);
         for (auto& out : tx.vout) {
             out.scriptPubKey = CScript() << CScriptNum(tx_counter) << OP_EQUAL;
             out.nValue = 10 * COIN;
@@ -45,9 +57,9 @@ static void ComplexMemPool(benchmark::State& state)
         ordered_coins.emplace_back(MakeTransactionRef(tx));
         available_coins.emplace_back(ordered_coins.back(), tx_counter++);
     }
-    for (auto x = 0; x < 800 && !available_coins.empty(); ++x) {
+    for (size_t x = 0; x < CHILD_TXS && !available_coins.empty(); ++x) {
         CMutableTransaction tx = CMutableTransaction();
-        size_t n_ancestors = det_rand.randrange(10)+1;
+        size_t n_ancestors = det_rand.randrange(ANCESTORS_COUNT_MAX)+1;
         for (size_t ancestor = 0; ancestor < n_ancestors && !available_coins.empty(); ++ancestor){
             size_t idx = det_rand.randrange(available_coins.size());
             Available coin = available_coins[idx];
@@ -64,7 +76,7 @@ static void ComplexMemPool(benchmark::State& state)
                 coin = available_coins.back();
                 available_coins.pop_back();
             }
-            tx.vout.resize(det_rand.randrange(10)+2);
+            tx.vout.resize(det_rand.randrange(DESCENDANTS_COUNT_MAX)+2);
             for (auto& out : tx.vout) {
                 out.scriptPubKey = CScript() << CScriptNum(tx_counter) << OP_EQUAL;
                 out.nValue = 10 * COIN;
@@ -83,5 +95,9 @@ static void ComplexMemPool(benchmark::State& state)
         pool.TrimToSize(GetVirtualTransactionSize(*ordered_coins.front()));
     }
 }
+static void ComplexMemPool(benchmark::State& state) {
+    ComplexMemPoolAsymptotic(state, nullptr);
+}
 
 BENCHMARK(ComplexMemPool, 1);
+BENCHMARK_ASYMPTOTE(ComplexMemPoolAsymptotic);

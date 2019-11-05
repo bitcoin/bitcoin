@@ -92,12 +92,23 @@ benchmark::BenchRunner::BenchmarkMap& benchmark::BenchRunner::benchmarks()
     return benchmarks_map;
 }
 
+benchmark::BenchRunner::BenchmarkAsymptoteMap& benchmark::BenchRunner::asymptotic_benchmarks()
+{
+    static std::map<std::string, BenchAsymptote> benchmarks_map;
+    return benchmarks_map;
+}
+
 benchmark::BenchRunner::BenchRunner(std::string name, benchmark::BenchFunction func, uint64_t num_iters_for_one_second)
 {
     benchmarks().insert(std::make_pair(name, Bench{func, num_iters_for_one_second}));
 }
 
-void benchmark::BenchRunner::RunAll(Printer& printer, uint64_t num_evals, double scaling, const std::string& filter, bool is_list_only)
+benchmark::BenchRunner::BenchRunner(std::string name, benchmark::BenchAsymptoteFunction func)
+{
+    asymptotic_benchmarks().insert(std::make_pair(name, BenchAsymptote{func}));
+}
+
+void benchmark::BenchRunner::RunAll(Printer& printer, uint64_t num_evals, double scaling, const std::string& filter, bool is_list_only, const std::vector<size_t>& asymptotic_factors)
 {
     if (!std::ratio_less_equal<benchmark::clock::period, std::micro>::value) {
         std::cerr << "WARNING: Clock precision is worse than microsecond - benchmarks may be less accurate!\n";
@@ -111,28 +122,50 @@ void benchmark::BenchRunner::RunAll(Printer& printer, uint64_t num_evals, double
 
     printer.header();
 
-    for (const auto& p : benchmarks()) {
-        RegTestingSetup test{};
-        {
-            LOCK(cs_main);
-            assert(::ChainActive().Height() == 0);
-            const bool witness_enabled{IsWitnessEnabled(::ChainActive().Tip(), Params().GetConsensus())};
-            assert(witness_enabled);
-        }
+    if (asymptotic_factors.empty()) {
+        for (const auto& p : benchmarks()) {
+            RegTestingSetup test{};
+            {
+                LOCK(cs_main);
+                assert(::ChainActive().Height() == 0);
+                const bool witness_enabled{IsWitnessEnabled(::ChainActive().Tip(), Params().GetConsensus())};
+                assert(witness_enabled);
+            }
 
-        if (!std::regex_match(p.first, baseMatch, reFilter)) {
-            continue;
-        }
+            if (!std::regex_match(p.first, baseMatch, reFilter)) {
+                continue;
+            }
 
-        uint64_t num_iters = static_cast<uint64_t>(p.second.num_iters_for_one_second * scaling);
-        if (0 == num_iters) {
-            num_iters = 1;
+            uint64_t num_iters = static_cast<uint64_t>(p.second.num_iters_for_one_second * scaling);
+            if (0 == num_iters) {
+                num_iters = 1;
+            }
+            State state(p.first, num_evals, num_iters, printer);
+            if (!is_list_only) {
+                p.second.func(state);
+            }
+            printer.result(state);
         }
-        State state(p.first, num_evals, num_iters, printer);
-        if (!is_list_only) {
-            p.second.func(state);
+    } else {
+        for (const auto& p : asymptotic_benchmarks()) {
+            RegTestingSetup test{};
+            {
+                LOCK(cs_main);
+                assert(::ChainActive().Height() == 0);
+                const bool witness_enabled{IsWitnessEnabled(::ChainActive().Tip(), Params().GetConsensus())};
+                assert(witness_enabled);
+            }
+
+            if (!std::regex_match(p.first, baseMatch, reFilter)) {
+                continue;
+            }
+
+            State state(p.first, num_evals, 1, printer);
+            if (!is_list_only) {
+                p.second.func(state, &asymptotic_factors);
+            }
+            printer.result(state);
         }
-        printer.result(state);
     }
 
     printer.footer();

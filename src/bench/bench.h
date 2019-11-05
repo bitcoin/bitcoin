@@ -80,6 +80,7 @@ public:
 };
 
 typedef std::function<void(State&)> BenchFunction;
+typedef std::function<void(State&, const std::vector<size_t>*)> BenchAsymptoteFunction;
 
 class BenchRunner
 {
@@ -87,13 +88,19 @@ class BenchRunner
         BenchFunction func;
         uint64_t num_iters_for_one_second;
     };
+    struct BenchAsymptote {
+        BenchAsymptoteFunction func;
+    };
     typedef std::map<std::string, Bench> BenchmarkMap;
     static BenchmarkMap& benchmarks();
+    typedef std::map<std::string, BenchAsymptote> BenchmarkAsymptoteMap;
+    static BenchmarkAsymptoteMap& asymptotic_benchmarks();
 
 public:
     BenchRunner(std::string name, BenchFunction func, uint64_t num_iters_for_one_second);
+    BenchRunner(std::string name, BenchAsymptoteFunction func);
 
-    static void RunAll(Printer& printer, uint64_t num_evals, double scaling, const std::string& filter, bool is_list_only);
+    static void RunAll(Printer& printer, uint64_t num_evals, double scaling, const std::string& filter, bool is_list_only, const std::vector<size_t>& asymptotic_factors);
 };
 
 // interface to output benchmark results.
@@ -137,5 +144,9 @@ private:
 // the same time, and scaling factor can be used that the total time is appropriate for your system.
 #define BENCHMARK(n, num_iters_for_one_second) \
     benchmark::BenchRunner BOOST_PP_CAT(bench_, BOOST_PP_CAT(__LINE__, n))(BOOST_PP_STRINGIZE(n), n, (num_iters_for_one_second));
+
+#define BENCHMARK_ASYMPTOTE(n) \
+    benchmark::BenchRunner BOOST_PP_CAT(asymptote_bench_, BOOST_PP_CAT(__LINE__, n))(BOOST_PP_STRINGIZE(n), n);
+
 
 #endif // BITCOIN_BENCH_BENCH_H
