@@ -50,15 +50,14 @@ CScript ParseScript(const std::string& s)
 
     for (std::vector<std::string>::const_iterator w = words.begin(); w != words.end(); ++w)
     {
+        int64_t n;
         if (w->empty())
         {
             // Empty string, ignore. (boost::split given '' will return one word)
         }
-        else if (std::all_of(w->begin(), w->end(), ::IsDigit) ||
-            (w->front() == '-' && w->size() > 1 && std::all_of(w->begin()+1, w->end(), ::IsDigit)))
+        else if (ParseInt64(*w, &n))
         {
             // Number
-            int64_t n = atoi64(*w);
             result << n;
         }
         else if (w->substr(0,2) == "0x" && w->size() > 2 && IsHex(std::string(w->begin()+2, w->end())))
