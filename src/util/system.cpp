@@ -504,7 +504,15 @@ int64_t ArgsManager::GetArg(const std::string& strArg, int64_t nDefault) const
 {
     if (IsArgNegated(strArg)) return 0;
     std::pair<bool,std::string> found_res = ArgsManagerHelper::GetArg(*this, strArg);
-    if (found_res.first) return atoi64(found_res.second);
+    int64_t res;
+    // TODO: add a way to return a parse error
+    if (found_res.first) {
+        if (ParseInt64(found_res.second, &res)) {
+            return res;
+        } else {
+            return 0;
+        }
+    }
     return nDefault;
 }
 
