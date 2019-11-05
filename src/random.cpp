@@ -525,7 +525,9 @@ static void SeedPeriodic(CSHA512& hasher, RNGState& rng)
     SeedTimestamp(hasher);
 
     // Dynamic environment data (performance monitoring, ...)
+    auto old_size = hasher.Size();
     RandAddDynamicEnv(hasher);
+    LogPrintf("Feeding %i bytes of dynamic environment data into RNG\n", hasher.Size() - old_size);
 
     // Strengthen for 10 ms
     SeedStrengthen(hasher, rng, 10000);
@@ -540,10 +542,12 @@ static void SeedStartup(CSHA512& hasher, RNGState& rng) noexcept
     SeedSlow(hasher);
 
     // Dynamic environment data (performance monitoring, ...)
+    auto old_size = hasher.Size();
     RandAddDynamicEnv(hasher);
 
     // Static environment data
     RandAddStaticEnv(hasher);
+    LogPrintf("Feeding %i bytes of environment data into RNG\n", hasher.Size() - old_size);
 
     // Strengthen for 100 ms
     SeedStrengthen(hasher, rng, 100000);
