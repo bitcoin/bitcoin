@@ -4,7 +4,7 @@
 
 #include <logging.h>
 #include <logging/timer.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 
 #include <chrono>
 

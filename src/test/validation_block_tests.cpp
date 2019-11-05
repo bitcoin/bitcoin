@@ -11,7 +11,7 @@
 #include <pow.h>
 #include <random.h>
 #include <script/standard.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 #include <util/time.h>
 #include <validation.h>
 #include <validationinterface.h>
