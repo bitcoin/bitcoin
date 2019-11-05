@@ -101,7 +101,7 @@ Examples tests are [p2p_unrequested_blocks.py](p2p_unrequested_blocks.py),
 
 #### Prototyping tests
 
-The [`TestShell`](test-shell.md) class exposes the BitcoinTestFramework
+The [`TestShell`](test-shell.md) class exposes the SyscoinTestFramework
 functionality to interactive Python3 environments and can be used to prototype
 tests. This may be especially useful in a REPL environment with session logging
 utilities, such as
