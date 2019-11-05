@@ -68,7 +68,10 @@ bool ParseMoney(const char* pszIn, CAmount& nRet)
         return false;
     if (nUnits < 0 || nUnits > COIN)
         return false;
-    int64_t nWhole = atoi64(strWhole);
+    int64_t nWhole;
+    if (!ParseInt64(strWhole, &nWhole)) {
+        return false;
+    }
     CAmount nValue = nWhole*COIN + nUnits;
 
     nRet = nValue;
