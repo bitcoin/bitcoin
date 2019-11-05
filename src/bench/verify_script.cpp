@@ -10,7 +10,7 @@
 #include <script/script.h>
 #include <script/standard.h>
 #include <streams.h>
-#include <test/lib/transaction_utils.h>
+#include <test/util/transaction_utils.h>
 
 #include <array>
 

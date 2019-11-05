@@ -11,7 +11,7 @@
 #include <policy/settings.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 
 #include <vector>
 

@@ -5,7 +5,7 @@
 #include <clientversion.h>
 #include <flatfile.h>
 #include <streams.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 #include <util/system.h>
 
 #include <boost/test/unit_test.hpp>

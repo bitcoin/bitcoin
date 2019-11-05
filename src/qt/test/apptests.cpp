@@ -11,7 +11,7 @@
 #include <qt/networkstyle.h>
 #include <qt/rpcconsole.h>
 #include <shutdown.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 #include <univalue.h>
 #include <validation.h>
 
