@@ -85,6 +85,7 @@ Wallet
 ------
 
 - The wallet now by default uses bech32 addresses when using RPC, and creates native segwit change outputs.
+- The way that output trust was computed has been fixed in #16766, which impacts confirmed/unconfirmed balance status and coin selection.
 
 Low-level changes
 =================

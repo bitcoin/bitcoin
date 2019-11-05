@@ -1850,32 +1850,37 @@ bool CWalletTx::InMempool() const
 
 bool CWalletTx::IsTrusted(interfaces::Chain::Lock& locked_chain) const
 {
+    std::set<uint256> s;
+    return IsTrusted(locked_chain, s);
+}
+
+bool CWalletTx::IsTrusted(interfaces::Chain::Lock& locked_chain, std::set<uint256>& trusted_parents) const
+{
     // Quick answer in most cases
-    if (!locked_chain.checkFinalTx(*tx)) {
-        return false;
-    }
+    if (!locked_chain.checkFinalTx(*tx)) return false;
     int nDepth = GetDepthInMainChain(locked_chain);
-    if (nDepth >= 1)
-        return true;
-    if (nDepth < 0)
-        return false;
-    if (!pwallet->m_spend_zero_conf_change || !IsFromMe(ISMINE_ALL)) // using wtx's cached debit
-        return false;
+    if (nDepth >= 1) return true;
+    if (nDepth < 0) return false;
+    // using wtx's cached debit
+    if (!pwallet->m_spend_zero_conf_change || !IsFromMe(ISMINE_ALL)) return false;
 
     // Don't trust unconfirmed transactions from us unless they are in the mempool.
-    if (!InMempool())
-        return false;
+    if (!InMempool()) return false;
 
     // Trusted if all inputs are from us and are in the mempool:
     for (const CTxIn& txin : tx->vin)
     {
         // Transactions not sent by us: not trusted
         const CWalletTx* parent = pwallet->GetWalletTx(txin.prevout.hash);
-        if (parent == nullptr)
-            return false;
+        if (parent == nullptr) return false;
         const CTxOut& parentOut = parent->tx->vout[txin.prevout.n];
-        if (pwallet->IsMine(parentOut) != ISMINE_SPENDABLE)
-            return false;
+        // Check that this specific input being spent is trusted
+        if (pwallet->IsMine(parentOut) != ISMINE_SPENDABLE) return false;
+        // If we've already trusted this parent, continue
+        if (trusted_parents.count(parent->GetHash())) continue;
+        // Recurse to check that the parent is also trusted
+        if (!parent->IsTrusted(locked_chain, trusted_parents)) return false;
+        trusted_parents.insert(parent->GetHash());
     }
     return true;
 }
@@ -1961,10 +1966,11 @@ CWallet::Balance CWallet::GetBalance(const int min_depth, bool avoid_reuse) cons
     {
         auto locked_chain = chain().lock();
         LOCK(cs_wallet);
+        std::set<uint256> trusted_parents;
         for (const auto& entry : mapWallet)
         {
             const CWalletTx& wtx = entry.second;
-            const bool is_trusted{wtx.IsTrusted(*locked_chain)};
+            const bool is_trusted{wtx.IsTrusted(*locked_chain, trusted_parents)};
             const int tx_depth{wtx.GetDepthInMainChain(*locked_chain)};
             const CAmount tx_credit_mine{wtx.GetAvailableCredit(*locked_chain, /* fUseCache */ true, ISMINE_SPENDABLE | reuse_filter)};
             const CAmount tx_credit_watchonly{wtx.GetAvailableCredit(*locked_chain, /* fUseCache */ true, ISMINE_WATCH_ONLY | reuse_filter)};
@@ -2011,6 +2017,7 @@ void CWallet::AvailableCoins(interfaces::Chain::Lock& locked_chain, std::vector<
     const int min_depth = {coinControl ? coinControl->m_min_depth : DEFAULT_MIN_DEPTH};
     const int max_depth = {coinControl ? coinControl->m_max_depth : DEFAULT_MAX_DEPTH};
 
+    std::set<uint256> trusted_parents;
     for (const auto& entry : mapWallet)
     {
         const uint256& wtxid = entry.first;
@@ -2032,7 +2039,7 @@ void CWallet::AvailableCoins(interfaces::Chain::Lock& locked_chain, std::vector<
         if (nDepth == 0 && !wtx.InMempool())
             continue;
 
-        bool safeTx = wtx.IsTrusted(locked_chain);
+        bool safeTx = wtx.IsTrusted(locked_chain, trusted_parents);
 
         // We should not consider coins from transactions that are replacing
         // other transactions.
@@ -3094,11 +3101,12 @@ std::map<CTxDestination, CAmount> CWallet::GetAddressBalances(interfaces::Chain:
 
     {
         LOCK(cs_wallet);
+        std::set<uint256> trusted_parents;
         for (const auto& walletEntry : mapWallet)
         {
             const CWalletTx& wtx = walletEntry.second;
 
-            if (!wtx.IsTrusted(locked_chain))
+            if (!wtx.IsTrusted(locked_chain, trusted_parents))
                 continue;
 
             if (wtx.IsImmatureCoinBase(locked_chain))
