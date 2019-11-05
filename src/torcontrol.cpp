@@ -55,7 +55,7 @@ class TorControlReply
 public:
     TorControlReply() { Clear(); }
 
-    int code;
+    uint32_t code;
     std::vector<std::string> lines;
 
     void Clear()
@@ -146,7 +146,10 @@ void TorControlConnection::readcb(struct bufferevent *bev, void *ctx)
         if (s.size() < 4) // Short line
             continue;
         // <status>(-|+| )<data><CRLF>
-        self->message.code = atoi(s.substr(0,3));
+        if (!ParseUInt32(s.substr(0,3), &self->message.code)) {
+            // Could not parse reply code
+            continue;
+        }
         self->message.lines.push_back(s.substr(4));
         char ch = s[3]; // '-','+' or ' '
         if (ch == ' ') {
