@@ -11,7 +11,6 @@ KNOWN_VIOLATIONS=(
     "src/util/strencodings.cpp:.*strtol"
     "src/util/strencodings.cpp:.*strtoul"
     "src/util/strencodings.h:.*atoi"
-    "src/util/system.cpp:.*atoi"
 )
 
 REGEXP_IGNORE_EXTERNAL_DEPENDENCIES="^src/(crypto/ctaes/|leveldb/|secp256k1/|tinyformat.h|univalue/)"

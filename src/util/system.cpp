@@ -140,25 +140,16 @@ bool CheckDiskSpace(const fs::path& dir, uint64_t additional_bytes)
 /**
  * Interpret a string argument as a boolean.
  *
- * The definition of atoi() requires that non-numeric string values like "foo",
- * return 0. This means that if a user unintentionally supplies a non-integer
- * argument here, the return value is always false. This means that -foo=false
- * does what the user probably expects, but -foo=true is well defined but does
- * not do what they probably expected.
- *
- * The return value of atoi() is undefined when given input not representable as
- * an int. On most systems this means string value between "-2147483648" and
- * "2147483647" are well defined (this method will return true). Setting
- * -txindex=2147483648 on most systems, however, is probably undefined.
- *
- * For a more extensive discussion of this topic (and a wide range of opinions
- * on the Right Way to change this code), see PR12713.
+ * - If the value is empty, this returns true.
+ * - If the value could not be parsed as a 64-bit integer, return false.
+ * - If the value could be parsed as a 64-bit integer, and is not 0, return true.
  */
 static bool InterpretBool(const std::string& strValue)
 {
     if (strValue.empty())
         return true;
-    return (atoi(strValue) != 0);
+    int64_t value;
+    return ParseInt64(strValue, &value) && value != 0;
 }
 
 /** Internal helper functions for ArgsManager */
