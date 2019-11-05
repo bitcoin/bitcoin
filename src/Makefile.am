@@ -192,6 +192,7 @@ SYSCOIN_CORE_H = \
   node/context.h \
   node/psbt.h \
   node/transaction.h \
+  node/utxo_snapshot.h \
   noui.h \
   optional.h \
   outputtype.h \
