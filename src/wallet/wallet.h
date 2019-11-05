@@ -509,6 +509,7 @@ public:
 
     bool InMempool() const;
     bool IsTrusted() const;
+    bool IsTrusted(std::set<uint256>& trusted_parents) const;
 
     int64_t GetTxTime() const;
 
