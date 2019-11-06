@@ -473,8 +473,7 @@ class RawTransactionsTest(SyscoinTestFramework):
 
         # Send 1.2 SYS to msig addr.
         self.nodes[0].sendtoaddress(mSigObj, 1.2)
-        self.sync_all()
-        self.nodes[1].generate(1)
+        self.nodes[0].generate(1)
         self.sync_all()
 
         oldBalance = self.nodes[1].getbalance()
@@ -485,8 +484,7 @@ class RawTransactionsTest(SyscoinTestFramework):
 
         signedTx = self.nodes[2].signrawtransactionwithwallet(fundedTx['hex'])
         self.nodes[2].sendrawtransaction(signedTx['hex'])
-        self.sync_all()
-        self.nodes[1].generate(1)
+        self.nodes[2].generate(1)
         self.sync_all()
 
         # Make sure funds are received at node1.
@@ -537,8 +535,7 @@ class RawTransactionsTest(SyscoinTestFramework):
 
         # Empty node1, send some small coins from node0 to node1.
         self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), self.nodes[1].getbalance(), "", "", True)
-        self.sync_all()
-        self.nodes[0].generate(1)
+        self.nodes[1].generate(1)
         self.sync_all()
 
         for i in range(0,20):
@@ -566,8 +563,7 @@ class RawTransactionsTest(SyscoinTestFramework):
 
         # Again, empty node1, send some small coins from node0 to node1.
         self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), self.nodes[1].getbalance(), "", "", True)
-        self.sync_all()
-        self.nodes[0].generate(1)
+        self.nodes[1].generate(1)
         self.sync_all()
 
         for i in range(0,20):
@@ -584,8 +580,7 @@ class RawTransactionsTest(SyscoinTestFramework):
         fundedTx = self.nodes[1].fundrawtransaction(rawtx)
         fundedAndSignedTx = self.nodes[1].signrawtransactionwithwallet(fundedTx['hex'])
         self.nodes[1].sendrawtransaction(fundedAndSignedTx['hex'])
-        self.sync_all()
-        self.nodes[0].generate(1)
+        self.nodes[1].generate(1)
         self.sync_all()
         assert_equal(oldBalance+Decimal('50.19000000'), self.nodes[0].getbalance()) #0.19+block reward
 
