@@ -254,7 +254,13 @@ Use the `-v` option for verbose output.
 
 #### Dependencies
 
-The lint tests require codespell and flake8. To install: `pip3 install codespell flake8`.
+| Lint test | Dependency | Version [used by CI](../ci/lint/04_install.sh) | Installation
+|-----------|:----------:|:-------------------------------------------:|--------------
+| [`lint-python.sh`](lint/lint-python.sh) | [flake8](https://gitlab.com/pycqa/flake8) | [3.7.8](https://github.com/bitcoin/bitcoin/pull/15257) | `pip3 install flake8==3.7.8`
+| [`lint-shell.sh`](lint/lint-shell.sh) | [ShellCheck](https://github.com/koalaman/shellcheck) | [0.6.0](https://github.com/bitcoin/bitcoin/pull/15166) | [details...](https://github.com/koalaman/shellcheck#installing)
+| [`lint-spelling.sh`](lint/lint-spelling.sh) | [codespell](https://github.com/codespell-project/codespell) | [1.15.0](https://github.com/bitcoin/bitcoin/pull/16186) | `pip3 install codespell==1.15.0`
+
+Please be aware that on Linux distributions all dependencies are usually available as packages, but could be outdated.
 
 #### Running the tests
 
