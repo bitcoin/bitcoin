@@ -383,6 +383,7 @@ endif # ENABLE_BIP70
 endif # ENABLE_WALLET
 
 RES_IMAGES = \
+  qt/res/images/about.png \
   qt/res/images/walletFrame.png \
   qt/res/images/downArrow_small_dark.png \
   qt/res/images/downArrow_small.png \
@@ -390,7 +391,7 @@ RES_IMAGES = \
   qt/res/images/upArrow_small.png \
   qt/res/images/leftArrow_small_dark.png \
   qt/res/images/rightArrow_small_dark.png
-  
+
 RES_CSS = \
   qt/res/css/style.css
 
