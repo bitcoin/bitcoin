@@ -197,16 +197,21 @@ UniValue masternode_outputs(const JSONRPCRequest& request)
 
     // Find possible candidates
     auto locked_chain = pwallet->chain().lock();
+    LOCK(pwallet->cs_wallet);
+
     std::vector<COutput> vPossibleCoins;
-    // TODO: BitGreen - extract only UTXOs with 2500 BITGs
-    pwallet->AvailableCoins(*locked_chain, vPossibleCoins, true); // , NULL, false, ONLY_COLLATERAL
+    pwallet->AvailableCoins(*locked_chain, vPossibleCoins, true, nullptr, 1, MAX_MONEY, MAX_MONEY, 0, 0, 9999999, ONLY_COLLATERALS);
 
     UniValue obj(UniValue::VOBJ);
+    UniValue result(UniValue::VARR);
     for (const auto& out : vPossibleCoins) {
-        obj.pushKV(out.tx->GetHash().ToString(), strprintf("%d", out.i));
+        UniValue obj(UniValue::VOBJ);
+        obj.pushKV("txid", out.tx->GetHash().ToString());
+        obj.pushKV("n", out.i);
+        result.push_back(obj);
     }
 
-    return obj;
+    return result;
 }
 
 #endif // ENABLE_WALLET
