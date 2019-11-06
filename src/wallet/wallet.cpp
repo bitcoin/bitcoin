@@ -672,7 +672,9 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
 
         // if we are not using HD, generate new keypool
         if(m_spk_man->IsHDEnabled()) {
-            m_spk_man->TopUpKeyPool();
+            if (!m_spk_man->TopUp()) {
+                return false;
+            }
         }
         else {
             m_spk_man->NewKeyPool();
