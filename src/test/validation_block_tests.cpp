@@ -19,6 +19,13 @@
 
 #include <thread>
 
+struct RegtestingSetup : public TestingSetup {
+    RegtestingSetup() : TestingSetup(CBaseChainParams::REGTEST) {
+        // SYSCOIN
+        TurnOffSegwitForUnitTests();
+    }
+};
+
 static const std::vector<unsigned char> V_OP_TRUE{OP_TRUE};
 
 BOOST_FIXTURE_TEST_SUITE(validation_block_tests, RegTestingSetup)
