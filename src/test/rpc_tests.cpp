@@ -9,7 +9,7 @@
 #include <core_io.h>
 #include <interfaces/chain.h>
 #include <node/context.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 #include <util/time.h>
 
 #include <boost/algorithm/string.hpp>
