@@ -461,7 +461,7 @@ static std::vector<unsigned char> RandomData()
 
 BOOST_AUTO_TEST_CASE(rolling_bloom)
 {
-    SeedInsecureRand(/* deterministic */ true);
+    SeedInsecureRand(SeedRand::ZEROS);
     g_mock_deterministic_tests = true;
 
     // last-100-entry, 1% false positive:
