@@ -9,15 +9,13 @@
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\test\*_tests.cpp" />
     <ClCompile Include="..\..\src\test\*_properties.cpp" />
+    <ClCompile Include="..\..\src\test\*_tests.cpp" />
     <ClCompile Include="..\..\src\test\gen\*_gen.cpp" />
-    <ClCompile Include="..\..\src\wallet\test\*_tests.cpp" />
-    <ClCompile Include="..\..\src\test\util\*.cpp" />
-    <ClCompile Include="..\..\src\test\util\setup_common.cpp" />
     <ClCompile Include="..\..\src\test\main.cpp" />
-    <ClCompile Include="..\..\src\wallet\test\*_fixture.cpp" />
     <ClCompile Include="..\..\src\test\util\*.cpp" />
+    <ClCompile Include="..\..\src\wallet\test\*_fixture.cpp" />
+    <ClCompile Include="..\..\src\wallet\test\*_tests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\libbitcoinconsensus\libbitcoinconsensus.vcxproj">
