@@ -34,6 +34,27 @@
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
 FastRandomContext g_insecure_rand_ctx;
+/** Random context to get unique temp data dirs. Separate from g_insecure_rand_ctx, which can be seeded from a const env var */
+static FastRandomContext g_insecure_rand_ctx_temp_path;
+
+/** Return the unsigned from the environment var if available, otherwise 0 */
+static uint256 GetUintFromEnv(const std::string& env_name)
+{
+    const char* num = std::getenv(env_name.c_str());
+    if (!num) return {};
+    return uint256S(num);
+}
+
+void Seed(FastRandomContext& ctx)
+{
+    // Should be enough to get the seed once for the process
+    static uint256 seed{};
+    static const std::string RANDOM_CTX_SEED{"RANDOM_CTX_SEED"};
+    if (seed.IsNull()) seed = GetUintFromEnv(RANDOM_CTX_SEED);
+    if (seed.IsNull()) seed = GetRandHash();
+    LogPrintf("%s: Setting random seed for current tests to %s=%s\n", __func__, RANDOM_CTX_SEED, seed.GetHex());
+    ctx = FastRandomContext(seed);
+}
 
 std::ostream& operator<<(std::ostream& os, const uint256& num)
 {
@@ -42,12 +63,13 @@ std::ostream& operator<<(std::ostream& os, const uint256& num)
 }
 
 BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
-    : m_path_root(fs::temp_directory_path() / "test_common_" PACKAGE_NAME / strprintf("%lu_%i", (unsigned long)GetTime(), (int)(InsecureRandRange(1 << 30))))
+    : m_path_root{fs::temp_directory_path() / "test_common_" PACKAGE_NAME / std::to_string(g_insecure_rand_ctx_temp_path.rand32())}
 {
     fs::create_directories(m_path_root);
     gArgs.ForceSetArg("-datadir", m_path_root.string());
     ClearDatadirCache();
     SelectParams(chainName);
+    SeedInsecureRand();
     gArgs.ForceSetArg("-printtoconsole", "0");
     InitLogging();
     LogInstance().StartLogging();
