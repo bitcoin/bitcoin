@@ -102,9 +102,12 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", FormatStateMessage(state)));
     }
 
-    nScriptCheckThreads = 3;
-    for (int i = 0; i < nScriptCheckThreads - 1; i++)
+    // Start script-checking threads. Set g_parallel_script_checks to true so they are used.
+    constexpr int script_check_threads = 2;
+    for (int i = 0; i < script_check_threads; ++i) {
         threadGroup.create_thread([i]() { return ThreadScriptCheck(i); });
+    }
+    g_parallel_script_checks = true;
 
     m_node.banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     m_node.connman = MakeUnique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
