@@ -6,6 +6,7 @@
 #include <config/bitcoin-config.h>
 #endif
 
+#include <external_signer.h>
 #include <qt/createwalletdialog.h>
 #include <qt/forms/ui_createwalletdialog.h>
 
@@ -110,6 +111,28 @@ CreateWalletDialog::~CreateWalletDialog()
 {
     delete ui;
 }
+
+#ifdef ENABLE_EXTERNAL_SIGNER
+void CreateWalletDialog::setSigners(std::vector<ExternalSigner>& signers)
+{
+    if (!signers.empty()) {
+        ui->external_signer_checkbox->setEnabled(true);
+        ui->external_signer_checkbox->setChecked(true);
+        ui->encrypt_wallet_checkbox->setEnabled(false);
+        ui->encrypt_wallet_checkbox->setChecked(false);
+        // The order matters, because connect() is called when toggling a checkbox:
+        ui->blank_wallet_checkbox->setEnabled(false);
+        ui->blank_wallet_checkbox->setChecked(false);
+        ui->disable_privkeys_checkbox->setEnabled(false);
+        ui->disable_privkeys_checkbox->setChecked(true);
+        const std::string label = signers[0].m_name;
+        ui->wallet_name_line_edit->setText(QString::fromStdString(label));
+        ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(true);
+    } else {
+        ui->external_signer_checkbox->setEnabled(false);
+    }
+}
+#endif
 
 QString CreateWalletDialog::walletName() const
 {
