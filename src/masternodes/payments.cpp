@@ -36,22 +36,32 @@ CMasternodePayments mnpayments;
 
 bool IsBlockValueValid(const CBlock& block, int nBlockHeight, CAmount blockReward, std::string& strErrorRet)
 {
-    bool isBlockRewardValueMet = (block.vtx[0]->GetValueOut() <= blockReward);
+    int n = block.IsProofOfStake() ? 1 : 0;
+    CAmount nValueIn;
+    if (block.IsProofOfStake()) {
+        CCoinsViewCache view(pcoinsTip.get());
+        nValueIn += view.GetValueIn(*block.vtx[1]);
+    }
+
+    CAmount blockValue = block.vtx[n]->GetValueOut() - nValueIn;
+    LogPrintf("%s: out=%s in=%s blockValue=%s\n", __func__, FormatMoney(block.vtx[n]->GetValueOut()), FormatMoney(nValueIn), FormatMoney(blockValue));
+
+    bool isBlockRewardValueMet = (blockValue <= blockReward);
 
     strErrorRet = "";
 
-    LogPrint(BCLog::MASTERNODE, "%s: block.vtx[0]->GetValueOut() %lld <= blockReward %lld\n", __func__, block.vtx[0]->GetValueOut(), blockReward);
+    LogPrint(BCLog::MASTERNODE, "%s: blockValue %lld <= blockReward %lld\n", __func__, blockValue, blockReward);
 
     CAmount nSuperblockMaxValue = blockReward + CSuperblock::GetPaymentsLimit(nBlockHeight);
-    bool isSuperblockMaxValueMet = (block.vtx[0]->GetValueOut() <= nSuperblockMaxValue);
+    bool isSuperblockMaxValueMet = (blockValue <= nSuperblockMaxValue);
 
-    LogPrint(BCLog::GOBJECT, "block.vtx[0]->GetValueOut() %lld <= nSuperblockMaxValue %lld\n", block.vtx[0]->GetValueOut(), nSuperblockMaxValue);
+    LogPrint(BCLog::GOBJECT, "blockValue %lld <= nSuperblockMaxValue %lld\n", blockValue, nSuperblockMaxValue);
 
     if (!CSuperblock::IsValidBlockHeight(nBlockHeight)) {
         // can't possibly be a superblock, so lets just check for block reward limits
         if (!isBlockRewardValueMet) {
             strErrorRet = strprintf("coinbase pays too much at height %d (actual=%d vs limit=%d), exceeded block reward, only regular blocks are allowed at this height",
-                nBlockHeight, block.vtx[0]->GetValueOut(), blockReward);
+                nBlockHeight, blockValue, blockReward);
         }
         return isBlockRewardValueMet;
     }
@@ -59,7 +69,7 @@ bool IsBlockValueValid(const CBlock& block, int nBlockHeight, CAmount blockRewar
     // bail out in case superblock limits were exceeded
     if (!isSuperblockMaxValueMet) {
         strErrorRet = strprintf("coinbase pays too much at height %d (actual=%d vs limit=%d), exceeded superblock max value",
-            nBlockHeight, block.vtx[0]->GetValueOut(), nSuperblockMaxValue);
+            nBlockHeight, blockValue, nSuperblockMaxValue);
         return false;
     }
 
@@ -77,7 +87,7 @@ bool IsBlockValueValid(const CBlock& block, int nBlockHeight, CAmount blockRewar
         LogPrint(BCLog::GOBJECT, "%s -- Superblocks are disabled, no superblocks allowed\n", __func__);
         if (!isBlockRewardValueMet) {
             strErrorRet = strprintf("coinbase pays too much at height %d (actual=%d vs limit=%d), exceeded block reward, superblocks are disabled",
-                nBlockHeight, block.vtx[0]->GetValueOut(), blockReward);
+                nBlockHeight, blockValue, blockReward);
         }
         return isBlockRewardValueMet;
     }
@@ -87,15 +97,15 @@ bool IsBlockValueValid(const CBlock& block, int nBlockHeight, CAmount blockRewar
         // revert to block reward limits in this case
         if (!isBlockRewardValueMet) {
             strErrorRet = strprintf("coinbase pays too much at height %d (actual=%d vs limit=%d), exceeded block reward, no triggered superblock detected",
-                nBlockHeight, block.vtx[0]->GetValueOut(), blockReward);
+                nBlockHeight, blockValue, blockReward);
         }
         return isBlockRewardValueMet;
     }
 
     // this actually also checks for correct payees and not only amount
-    if (!CSuperblockManager::IsValid(*block.vtx[0], nBlockHeight, blockReward)) {
+    if (!CSuperblockManager::IsValid(*block.vtx[n], nBlockHeight, blockReward)) {
         // triggered but invalid? that's weird
-        LogPrintf("%s -- ERROR: Invalid superblock detected at height %d: %s", __func__, nBlockHeight, block.vtx[0]->ToString());
+        LogPrintf("%s -- ERROR: Invalid superblock detected at height %d: %s", __func__, nBlockHeight, block.vtx[n]->ToString());
         // should NOT allow invalid superblocks, when superblocks are enabled
         strErrorRet = strprintf("invalid superblock detected at height %d", nBlockHeight);
         return false;

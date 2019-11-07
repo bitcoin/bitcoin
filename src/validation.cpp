@@ -2148,12 +2148,12 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     pindex->nMoneySupply = nMoneySupplyPrev + (nValueOut - nValueIn) - nFees;
     pindex->nMint = nValueOut - nValueIn;
 
-    // Check PoS expected mint
-    if (block.IsProofOfStake() && pindex->nMint > blockReward)
-        return state.Invalid(ValidationInvalidReason::CONSENSUS,
-                         error("ConnectBlock(): PoS reward pays too much (actual=%d vs limit=%d)",
-                               FormatMoney(pindex->nMint), blockReward),
-                               REJECT_INVALID, "bad-cb-amount");
+    // // Check PoS expected mint
+    // if (block.IsProofOfStake() && pindex->nMint > blockReward)
+    //     return state.Invalid(ValidationInvalidReason::CONSENSUS,
+    //                      error("ConnectBlock(): PoS reward pays too much (actual=%d vs limit=%d)",
+    //                            FormatMoney(pindex->nMint), blockReward),
+    //                            REJECT_INVALID, "bad-cb-amount");
 
     std::string strError = "";
 
