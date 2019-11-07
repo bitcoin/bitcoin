@@ -68,6 +68,9 @@ class AvoidReuseTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = False
         self.num_nodes = 2
+        # This test isn't testing txn relay/timing, so set whitelist on the
+        # peers for instant txn relay. This speeds up the test run time 2-3x.
+        self.extra_args = [["-whitelist=127.0.0.1"]] * self.num_nodes
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -87,6 +90,8 @@ class AvoidReuseTest(BitcoinTestFramework):
 
     def test_persistence(self):
         '''Test that wallet files persist the avoid_reuse flag.'''
+        self.log.info("Test wallet files persist avoid_reuse flag")
+
         # Configure node 1 to use avoid_reuse
         self.nodes[1].setwalletflag('avoid_reuse')
 
@@ -109,6 +114,8 @@ class AvoidReuseTest(BitcoinTestFramework):
 
     def test_immutable(self):
         '''Test immutable wallet flags'''
+        self.log.info("Test immutable wallet flags")
+
         # Attempt to set the disable_private_keys flag; this should not work
         assert_raises_rpc_error(-8, "Wallet flag is immutable", self.nodes[1].setwalletflag, 'disable_private_keys')
 
@@ -130,6 +137,7 @@ class AvoidReuseTest(BitcoinTestFramework):
         the avoid_reuse flag set to false. This means the 10 BTC send should succeed,
         where it fails in test_fund_send_fund_send.
         '''
+        self.log.info("Test fund send fund send dirty")
 
         fundaddr = self.nodes[1].getnewaddress()
         retaddr = self.nodes[0].getnewaddress()
@@ -183,6 +191,7 @@ class AvoidReuseTest(BitcoinTestFramework):
         [1] tries to spend 10 BTC (fails; dirty).
         [1] tries to spend 4 BTC (succeeds; change address sufficient)
         '''
+        self.log.info("Test fund send fund send")
 
         fundaddr = self.nodes[1].getnewaddress()
         retaddr = self.nodes[0].getnewaddress()
