@@ -11,7 +11,7 @@
 
 #include <QPushButton>
 
-CreateWalletDialog::CreateWalletDialog(QWidget* parent) :
+CreateWalletDialog::CreateWalletDialog(ExternalSignerList signers, QWidget* parent) :
     QDialog(parent),
     ui(new Ui::CreateWalletDialog)
 {
@@ -55,6 +55,20 @@ CreateWalletDialog::CreateWalletDialog(QWidget* parent) :
         ui->disable_privkeys_checkbox->setEnabled(!checked);
         ui->descriptor_checkbox->setEnabled(!checked);
     });
+
+    if (!signers.empty()) {
+        ui->external_signer_checkbox->setEnabled(true);
+        ui->external_signer_checkbox->setChecked(true);
+        ui->encrypt_wallet_checkbox->setEnabled(false);
+        ui->encrypt_wallet_checkbox->setChecked(false);
+        ui->disable_privkeys_checkbox->setEnabled(false);
+        ui->disable_privkeys_checkbox->setChecked(true);
+        ui->blank_wallet_checkbox->setEnabled(false);
+        ui->blank_wallet_checkbox->setChecked(false);
+        const std::string label = signers[0].second;
+        ui->wallet_name_line_edit->setText(QString::fromStdString(label));
+        ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(true);
+    }
 
 }
 

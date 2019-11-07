@@ -279,9 +279,14 @@ void CreateWalletActivity::finish()
 void CreateWalletActivity::create()
 {
     // Check for external signers
+    ExternalSignerList signers;
+    try {
+        signers = node().ExternalSigners();
+    } catch (const ExternalSignerException& e) {
+        QMessageBox::critical(nullptr, tr("Can't list signers"), e.what());
+    }
 
-
-    m_create_wallet_dialog = new CreateWalletDialog(m_parent_widget);
+    m_create_wallet_dialog = new CreateWalletDialog(signers, m_parent_widget);
     m_create_wallet_dialog->setWindowModality(Qt::ApplicationModal);
     m_create_wallet_dialog->show();
 

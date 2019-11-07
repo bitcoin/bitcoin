@@ -13,6 +13,8 @@ namespace Ui {
     class CreateWalletDialog;
 }
 
+typedef std::vector<std::pair<std::string, std::string>> ExternalSignerList; // TODO: figure out where to define this
+
 /** Dialog for creating wallets
  */
 class CreateWalletDialog : public QDialog
@@ -20,7 +22,7 @@ class CreateWalletDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit CreateWalletDialog(QWidget* parent);
+    explicit CreateWalletDialog(ExternalSignerList signers, QWidget* parent);
     virtual ~CreateWalletDialog();
 
     QString walletName() const;
