@@ -15,7 +15,9 @@ fi
 
 BASE_ROOT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )"/../../ >/dev/null 2>&1 && pwd )
 export BASE_ROOT_DIR
-
+REPO_SLUG=$(git config user.name)/$(basename $(git rev-parse --show-toplevel))
+echo "REPO_SLUG=$REPO_SLUG"
+export REPO_SLUG
 echo "Fallback to default values in env (if not yet set)"
 # The number of parallel jobs to pass down to make and test_runner.py
 export MAKEJOBS=${MAKEJOBS:--j4}
