@@ -314,7 +314,7 @@ void SetRPCWarmupStatus(const std::string& newStatus)
 void SetRPCWarmupFinished()
 {
     LOCK(cs_rpcWarmup);
-    assert(fRPCInWarmup);
+    ASSERT(fRPCInWarmup);
     fRPCInWarmup = false;
 }
 
