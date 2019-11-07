@@ -931,3 +931,13 @@ void InterruptSocks5(bool interrupt)
 {
     interruptSocks5Recv = interrupt;
 }
+
+bool SetListenSocketDeferred(const SOCKET& sock)
+{
+    bool ret = false;
+#ifdef TCP_DEFER_ACCEPT
+    static constexpr int set = 1;
+    ret = setsockopt(sock, IPPROTO_TCP, TCP_DEFER_ACCEPT, &set, sizeof(set)) == 0;
+#endif
+    return ret;
+}
