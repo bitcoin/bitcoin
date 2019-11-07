@@ -27,10 +27,10 @@ TEST_QT_H = \
   qt/test/wallettests.h
 
 TEST_SYSCOIN_CPP = \
-  test/setup_common.cpp
+  test/util/setup_common.cpp
 
 TEST_SYSCOIN_H = \
-  test/setup_common.h
+  test/util/setup_common.h
 
 qt_test_test_syscoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(SYSCOIN_QT_INCLUDES) \
   $(QT_INCLUDES) $(QT_TEST_INCLUDES)

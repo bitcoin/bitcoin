@@ -4,7 +4,7 @@
 
 #include <netbase.h>
 #include <net_permissions.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 #include <util/strencodings.h>
 
 #include <string>

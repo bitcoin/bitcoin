@@ -5,8 +5,8 @@
 
 #include <netaddress.h>
 #include <noui.h>
-#include <test/lib/logging.h>
-#include <test/setup_common.h>
+#include <test/util/logging.h>
+#include <test/util/setup_common.h>
 #include <timedata.h>
 #include <warnings.h>
 
