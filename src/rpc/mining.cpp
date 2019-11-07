@@ -831,9 +831,9 @@ static UniValue submitheader(const JSONRPCRequest& request)
 static UniValue estimatesmartfee(const JSONRPCRequest& request)
 {
             RPCHelpMan{"estimatesmartfee",
-                "\nEstimates the approximate fee per kilobyte needed for a transaction to begin\n"
+                "\nEstimates the approximate fee per kilobyte or kiloweightunit needed for a transaction to begin\n"
                 "confirmation within conf_target blocks if possible and return the number of blocks\n"
-                "for which the estimate is valid. Uses virtual transaction size as defined\n"
+                "for which the estimate is valid. If enabled, uses virtual transaction size as defined\n"
                 "in BIP 141 (witness data is discounted).\n",
                 {
                     {"conf_target", RPCArg::Type::NUM, RPCArg::Optional::NO, "Confirmation target in blocks (1 - 1008)"},
@@ -846,10 +846,11 @@ static UniValue estimatesmartfee(const JSONRPCRequest& request)
             "       \"UNSET\"\n"
             "       \"ECONOMICAL\"\n"
             "       \"CONSERVATIVE\""},
+                    {"feerate_kwu", RPCArg::Type::BOOL, /* default */ "false", "Return fees in " + CURRENCY_UNIT + "/kWU (Weight Unit) instead of kilo virtual bytes."},
                 },
                 RPCResult{
             "{\n"
-            "  \"feerate\" : x.x,     (numeric, optional) estimate fee rate in " + CURRENCY_UNIT + "/kB\n"
+            "  \"feerate\" : x.x,     (numeric, optional) estimate fee rate in " + CURRENCY_UNIT + "/kB or " + CURRENCY_UNIT + "/kWU\n"
             "  \"errors\": [ str... ] (json array of strings, optional) Errors encountered during processing\n"
             "  \"blocks\" : n         (numeric) block number where estimate was found\n"
             "}\n"
@@ -882,7 +883,9 @@ static UniValue estimatesmartfee(const JSONRPCRequest& request)
     FeeCalculation feeCalc;
     CFeeRate feeRate = ::feeEstimator.estimateSmartFee(conf_target, &feeCalc, conservative);
     if (feeRate != CFeeRate(0)) {
-        result.pushKV("feerate", ValueFromAmount(feeRate.GetFeePerK()));
+        CAmount feerate = feeRate.GetFeePerK();
+        if (request.params[2].isNull() || !request.params[2].get_bool()) feerate *= WITNESS_SCALE_FACTOR;
+        result.pushKV("feerate", ValueFromAmount(feerate));
     } else {
         errors.push_back("Insufficient data or no feerate found");
         result.pushKV("errors", errors);
@@ -1010,7 +1013,7 @@ static const CRPCCommand commands[] =
     { "generating",         "generatetoaddress",      &generatetoaddress,      {"nblocks","address","maxtries"} },
     { "generating",         "generatetodescriptor",   &generatetodescriptor,   {"num_blocks","descriptor","maxtries"} },
 
-    { "util",               "estimatesmartfee",       &estimatesmartfee,       {"conf_target", "estimate_mode"} },
+    { "util",               "estimatesmartfee",       &estimatesmartfee,       {"conf_target", "estimate_mode", "feerate_kwu"} },
 
     { "hidden",             "estimaterawfee",         &estimaterawfee,         {"conf_target", "threshold"} },
 };

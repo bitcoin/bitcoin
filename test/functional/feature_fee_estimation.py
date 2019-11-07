@@ -100,30 +100,6 @@ def split_inputs(from_node, txins, txouts, initial_split=False):
     txouts.append({"txid": txid, "vout": 1, "amount": rem_change})
 
 
-def check_estimates(node, fees_seen):
-    """Call estimatesmartfee and verify that the estimates meet certain invariants."""
-
-    delta = 1.0e-6  # account for rounding error
-    last_feerate = float(max(fees_seen))
-    all_smart_estimates = [node.estimatesmartfee(i) for i in range(1, 26)]
-    for i, e in enumerate(all_smart_estimates):  # estimate is for i+1
-        feerate = float(e["feerate"])
-        assert_greater_than(feerate, 0)
-
-        if feerate + delta < min(fees_seen) or feerate - delta > max(fees_seen):
-            raise AssertionError("Estimated fee (%f) out of range (%f,%f)"
-                                 % (feerate, min(fees_seen), max(fees_seen)))
-        if feerate - delta > last_feerate:
-            raise AssertionError("Estimated fee (%f) larger than last fee (%f) for lower number of confirms"
-                                 % (feerate, last_feerate))
-        last_feerate = feerate
-
-        if i == 0:
-            assert_equal(e["blocks"], 2)
-        else:
-            assert_greater_than_or_equal(i + 1, e["blocks"])
-
-
 class EstimateFeeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
@@ -169,6 +145,8 @@ class EstimateFeeTest(BitcoinTestFramework):
                                                       self.memutxo, Decimal("0.005"), min_fee, min_fee)
                 tx_kbytes = (len(txhex) // 2) / 1000.0
                 self.fees_per_kb.append(float(fee) / tx_kbytes)
+                # No witness discount for these scripts without witness data
+                self.fees_per_kwu.append(float(fee) / (tx_kbytes * 4))
             self.sync_mempools(wait=.1)
             mined = mining_node.getblock(mining_node.generate(1)[0], True)["tx"]
             self.sync_blocks(wait=.1)
@@ -180,6 +158,49 @@ class EstimateFeeTest(BitcoinTestFramework):
                 else:
                     newmem.append(utx)
             self.memutxo = newmem
+
+    def check_estimates(self):
+        """Call estimatesmartfee and verify that the estimates meet certain invariants."""
+
+        delta = 1.0e-6  # account for rounding error
+        last_feerate = float(max(self.fees_per_kwu))
+        smart_estimates = [self.nodes[1].estimatesmartfee(i, "CONSERVATIVE",
+                                                          True) for i in range(1, 26)]
+        for i, e in enumerate(smart_estimates):  # estimate is for i+1
+            feerate = float(e["feerate"])
+            assert_greater_than(feerate, 0)
+
+            if feerate + delta < min(self.fees_per_kwu) or feerate - delta > max(self.fees_per_kwu):
+                raise AssertionError("Estimated fee (%f) out of range (%f,%f)" % (feerate, min(self.fees_per_kwu), max(self.fees_per_kwu)))
+            if feerate - delta > last_feerate:
+                raise AssertionError("Estimated fee (%f) larger than last fee (%f) for lower number of confirms" % (feerate, last_feerate))
+            last_feerate = feerate
+
+            if i == 0:
+                assert_equal(e["blocks"], 2)
+            else:
+                assert_greater_than_or_equal(i + 1, e["blocks"])
+        # Test the legacy fee estimation, in btc / (virtual)kb
+        last_feerate = float(max(self.fees_per_kb))
+        smart_estimates = [self.nodes[1].estimatesmartfee(i) for i in range(1, 26)]
+        for i, e in enumerate(smart_estimates):  # estimate is for i+1
+            feerate = float(e["feerate"])
+            assert_greater_than(feerate, 0)
+
+            if feerate + delta < min(self.fees_per_kb) or feerate - delta > max(self.fees_per_kb):
+                raise AssertionError("Estimated fee (%f) out of range (%f,%f)"
+                                     % (feerate, min(self.fees_per_kb), max(self.fees_per_kb)))
+            if feerate - delta > last_feerate:
+                raise AssertionError("Estimated fee (%f) larger than last fee (%f) for lower number of confirms"
+                                     % (feerate, last_feerate))
+            last_feerate = feerate
+
+            if i == 0:
+                assert_equal(e["blocks"], 2)
+            else:
+                assert_greater_than_or_equal(i + 1, e["blocks"])
+
+
 
     def run_test(self):
         self.log.info("This test is time consuming, please be patient")
@@ -224,6 +245,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.sync_all()
 
         self.fees_per_kb = []
+        self.fees_per_kwu = []
         self.memutxo = []
         self.confutxo = self.txouts  # Start with the set of confirmed txouts after splitting
         self.log.info("Will output estimates for 1/2/3/6/15/25 blocks")
@@ -232,13 +254,13 @@ class EstimateFeeTest(BitcoinTestFramework):
             self.log.info("Creating transactions and mining them with a block size that can't keep up")
             # Create transactions and mine 10 small blocks with node 2, but create txs faster than we can mine
             self.transact_and_mine(10, self.nodes[2])
-            check_estimates(self.nodes[1], self.fees_per_kb)
+            self.check_estimates()
 
             self.log.info("Creating transactions and mining them at a block size that is just big enough")
             # Generate transactions while mining 10 more blocks, this time with node1
             # which mines blocks with capacity just above the rate that transactions are being created
             self.transact_and_mine(10, self.nodes[1])
-            check_estimates(self.nodes[1], self.fees_per_kb)
+            self.check_estimates()
 
         # Finish by mining a normal-sized block:
         while len(self.nodes[1].getrawmempool()) > 0:
@@ -246,7 +268,7 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         self.sync_blocks(self.nodes[0:3], wait=.1)
         self.log.info("Final estimates after emptying mempools")
-        check_estimates(self.nodes[1], self.fees_per_kb)
+        self.check_estimates()
 
 
 if __name__ == '__main__':
