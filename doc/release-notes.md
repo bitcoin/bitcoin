@@ -43,6 +43,10 @@ built using Qt 5.9.x, which doesn't support versions of macOS older than
 10.10. Additionally, Bitcoin Core does not yet change appearance when
 macOS "dark mode" is activated.
 
+Users running macOS Catalina may need to "right-click" and then choose "Open"
+to open the Bitcoin Core .dmg. This is due to new signing requirements
+imposed by Apple, which the Bitcoin Core project does not yet adhere too.
+
 Notable changes
 ===============
 
