@@ -901,9 +901,8 @@ static UniValue estimaterawfee(const JSONRPCRequest& request)
                 "\nWARNING: This is an advanced API call that is tightly coupled to the specific\n"
                 "         implementation of fee estimation. The parameters it can be called with\n"
                 "         and the results it returns will change if the internal implementation changes.\n"
-                "\nEstimates the approximate fee per kilobyte needed for a transaction to begin\n"
-                "confirmation within conf_target blocks if possible. Uses virtual transaction size as\n"
-                "defined in BIP 141 (witness data is discounted).\n",
+                "\nEstimates the approximate fee per kilo weight unit needed for a transaction to begin\n"
+                "confirmation within conf_target blocks if possible.\n",
                 {
                     {"conf_target", RPCArg::Type::NUM, RPCArg::Optional::NO, "Confirmation target in blocks (1 - 1008)"},
                     {"threshold", RPCArg::Type::NUM, /* default */ "0.95", "The proportion of transactions in a given feerate range that must have been\n"
@@ -913,7 +912,7 @@ static UniValue estimaterawfee(const JSONRPCRequest& request)
                 RPCResult{
             "{\n"
             "  \"short\" : {            (json object, optional) estimate for short time horizon\n"
-            "      \"feerate\" : x.x,        (numeric, optional) estimate fee rate in " + CURRENCY_UNIT + "/kB\n"
+            "      \"feerate\" : x.x,        (numeric, optional) estimate fee rate in " + CURRENCY_UNIT + "/kWU\n"
             "      \"decay\" : x.x,          (numeric) exponential decay (per block) for historical moving average of confirmation data\n"
             "      \"scale\" : x,            (numeric) The resolution of confirmation targets at this time horizon\n"
             "      \"pass\" : {              (json object, optional) information about the lowest range of feerates to succeed in meeting the threshold\n"
