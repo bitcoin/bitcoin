@@ -7,7 +7,7 @@
 #include <test/data/proposals_valid.json.h>
 #include <test/data/proposals_invalid.json.h>
 
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 
 #include <iostream>
 #include <fstream>

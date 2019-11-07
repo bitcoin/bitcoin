@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SYSCOIN_TEST_LIB_TRANSACTION_UTILS_H
-#define SYSCOIN_TEST_LIB_TRANSACTION_UTILS_H
+#ifndef SYSCOIN_TEST_UTIL_TRANSACTION_UTILS_H
+#define SYSCOIN_TEST_UTIL_TRANSACTION_UTILS_H
 
 #include <primitives/transaction.h>
 
@@ -16,4 +16,4 @@ CMutableTransaction BuildCreditingTransaction(const CScript& scriptPubKey, int n
 //  1 output with empty scriptPubKey, full value of referenced transaction]
 CMutableTransaction BuildSpendingTransaction(const CScript& scriptSig, const CScriptWitness& scriptWitness, const CTransaction& txCredit);
 
-#endif // SYSCOIN_TEST_LIB_TRANSACTION_UTILS_H
+#endif // SYSCOIN_TEST_UTIL_TRANSACTION_UTILS_H

@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SYSCOIN_TEST_LIB_LOGGING_H
-#define SYSCOIN_TEST_LIB_LOGGING_H
+#ifndef SYSCOIN_TEST_UTIL_LOGGING_H
+#define SYSCOIN_TEST_UTIL_LOGGING_H
 
 #include <util/macros.h>
 
@@ -26,4 +26,4 @@ public:
 
 #define ASSERT_DEBUG_LOG(message) DebugLogHelper PASTE2(debugloghelper, __COUNTER__)(message)
 
-#endif // SYSCOIN_TEST_LIB_LOGGING_H
+#endif // SYSCOIN_TEST_UTIL_LOGGING_H

@@ -5,7 +5,7 @@
 #ifndef SYSCOIN_WALLET_TEST_WALLET_TEST_FIXTURE_H
 #define SYSCOIN_WALLET_TEST_WALLET_TEST_FIXTURE_H
 
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 
 #include <interfaces/chain.h>
 #include <interfaces/wallet.h>

@@ -7,7 +7,7 @@
 
 #include <interfaces/chain.h>
 #include <node/context.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 
 
 struct InitWalletDirTestingSetup: public BasicTestingSetup {
