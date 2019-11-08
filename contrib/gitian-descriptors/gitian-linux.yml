@@ -5,7 +5,7 @@ distro: "ubuntu"
 suites:
 - "bionic"
 architectures:
-- "amd64"
+- "linux64"
 packages:
 - "curl"
 - "g++-aarch64-linux-gnu"
@@ -63,7 +63,7 @@ script: |
   for prog in ${FAKETIME_PROGS}; do
     echo '#!/usr/bin/env bash' > ${WRAP_DIR}/${prog}
     echo "REAL=\`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1\`" >> ${WRAP_DIR}/${prog}
-    echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${prog}
+    echo "export LD_PRELOAD='/usr/\$LIB/faketime/libfaketime.so.1'" >> ${WRAP_DIR}/${prog}
     echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${prog}
     echo "\$REAL \$@" >> $WRAP_DIR/${prog}
     chmod +x ${WRAP_DIR}/${prog}
@@ -77,7 +77,7 @@ script: |
         then
             echo '#!/usr/bin/env bash' > ${WRAP_DIR}/${i}-${prog}
             echo "REAL=\`which -a ${i}-${prog}-8 | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
-            echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
+            echo "export LD_PRELOAD='/usr/\$LIB/faketime/libfaketime.so.1'" >> ${WRAP_DIR}/${i}-${prog}
             echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${i}-${prog}
             echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
             chmod +x ${WRAP_DIR}/${i}-${prog}
