@@ -5,15 +5,4 @@
 
 #include <util/validation.h>
 
-#include <consensus/validation.h>
-#include <tinyformat.h>
-
-/** Convert ValidationState to a human-readable message for logging */
-std::string FormatStateMessage(const ValidationState &state)
-{
-    return strprintf("%s%s",
-        state.GetRejectReason(),
-        state.GetDebugMessage().empty() ? "" : ", "+state.GetDebugMessage());
-}
-
 const std::string strMessageMagic = "Bitcoin Signed Message:\n";
