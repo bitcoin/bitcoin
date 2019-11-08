@@ -17,16 +17,6 @@ bool CheckInputs(const CTransaction& tx, TxValidationState &state, const CCoinsV
 
 BOOST_AUTO_TEST_SUITE(tx_validationcache_tests)
 
-static bool
-ToMemPool(const CMutableTransaction& tx)
-{
-    LOCK(cs_main);
-
-    TxValidationState state;
-    return AcceptToMemoryPool(mempool, state, MakeTransactionRef(tx),
-                              nullptr /* plTxnReplaced */, true /* bypass_limits */, 0 /* nAbsurdFee */);
-}
-
 BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, TestChain100Setup)
 {
     // Make sure skipping validation of transactions that were
@@ -34,6 +24,14 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, TestChain100Setup)
     // double-spends in blocks to pass validation when they should not.
 
     CScript scriptPubKey = CScript() <<  ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
+
+    const auto ToMemPool = [this](const CMutableTransaction& tx) {
+        LOCK(cs_main);
+
+        TxValidationState state;
+        return AcceptToMemoryPool(*m_node.mempool, state, MakeTransactionRef(tx),
+            nullptr /* plTxnReplaced */, true /* bypass_limits */, 0 /* nAbsurdFee */);
+    };
 
     // Create a double-spend of mature coinbase txn:
     std::vector<CMutableTransaction> spends;
