@@ -701,19 +701,19 @@ bool CWallet::MarkReplaced(const uint256& originalHash, const uint256& newHash)
     return success;
 }
 
-void CWallet::SetUsedDestinationState(const uint256& hash, unsigned int n, bool used)
+void CWallet::SetUsedDestinationState(WalletBatch& batch, const uint256& hash, unsigned int n, bool used)
 {
+    AssertLockHeld(cs_wallet);
     const CWalletTx* srctx = GetWalletTx(hash);
     if (!srctx) return;
 
     CTxDestination dst;
     if (ExtractDestination(srctx->tx->vout[n].scriptPubKey, dst)) {
         if (IsMine(dst)) {
-            LOCK(cs_wallet);
             if (used && !GetDestData(dst, "used", nullptr)) {
-                AddDestData(dst, "used", "p"); // p for "present", opposite of absent (null)
+                AddDestData(batch, dst, "used", "p"); // p for "present", opposite of absent (null)
             } else if (!used && GetDestData(dst, "used", nullptr)) {
-                EraseDestData(dst, "used");
+                EraseDestData(batch, dst, "used");
             }
         }
     }
@@ -744,7 +744,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
         // Mark used destinations
         for (const CTxIn& txin : wtxIn.tx->vin) {
             const COutPoint& op = txin.prevout;
-            SetUsedDestinationState(op.hash, op.n, true);
+            SetUsedDestinationState(batch, op.hash, op.n, true);
         }
     }
 
@@ -3460,20 +3460,20 @@ unsigned int CWallet::ComputeTimeSmart(const CWalletTx& wtx) const
     return nTimeSmart;
 }
 
-bool CWallet::AddDestData(const CTxDestination &dest, const std::string &key, const std::string &value)
+bool CWallet::AddDestData(WalletBatch& batch, const CTxDestination &dest, const std::string &key, const std::string &value)
 {
     if (boost::get<CNoDestination>(&dest))
         return false;
 
     mapAddressBook[dest].destdata.insert(std::make_pair(key, value));
-    return WalletBatch(*database).WriteDestData(EncodeDestination(dest), key, value);
+    return batch.WriteDestData(EncodeDestination(dest), key, value);
 }
 
-bool CWallet::EraseDestData(const CTxDestination &dest, const std::string &key)
+bool CWallet::EraseDestData(WalletBatch& batch, const CTxDestination &dest, const std::string &key)
 {
     if (!mapAddressBook[dest].destdata.erase(key))
         return false;
-    return WalletBatch(*database).EraseDestData(EncodeDestination(dest), key);
+    return batch.EraseDestData(EncodeDestination(dest), key);
 }
 
 void CWallet::LoadDestData(const CTxDestination &dest, const std::string &key, const std::string &value)

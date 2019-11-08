@@ -169,12 +169,14 @@ public:
     bool addDestData(const CTxDestination& dest, const std::string& key, const std::string& value) override
     {
         LOCK(m_wallet->cs_wallet);
-        return m_wallet->AddDestData(dest, key, value);
+        WalletBatch batch{m_wallet->GetDatabase()};
+        return m_wallet->AddDestData(batch, dest, key, value);
     }
     bool eraseDestData(const CTxDestination& dest, const std::string& key) override
     {
         LOCK(m_wallet->cs_wallet);
-        return m_wallet->EraseDestData(dest, key);
+        WalletBatch batch{m_wallet->GetDatabase()};
+        return m_wallet->EraseDestData(batch, dest, key);
     }
     std::vector<std::string> getDestValues(const std::string& prefix) override
     {
