@@ -894,14 +894,19 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
         if (!ReadConfigStream(stream, confPath, error, ignore_invalid_keys)) {
             return false;
         }
-        // if there is an -includeconf in the override args, but it is empty, that means the user
-        // passed '-noincludeconf' on the command line, in which case we should not include anything
-        bool emptyIncludeConf;
+        // `-includeconf` cannot be included in the command line arguments except
+        // as `-noincludeconf` (which indicates that no conf file should be used).
+        bool use_conf_file{true};
         {
             LOCK(cs_args);
-            emptyIncludeConf = m_override_args.count("-includeconf") == 0;
+            auto it = m_override_args.find("-includeconf");
+            if (it != m_override_args.end()) {
+                // ParseParameters() fails if a non-negated -includeconf is passed on the command-line
+                assert(it->second.empty());
+                use_conf_file = false;
+            }
         }
-        if (emptyIncludeConf) {
+        if (use_conf_file) {
             std::string chain_id = GetChainName();
             std::vector<std::string> includeconf(GetArgs("-includeconf"));
             {
