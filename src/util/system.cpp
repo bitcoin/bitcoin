@@ -939,15 +939,13 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
 
             // Warn about recursive -includeconf
             conf_file_names = GetArgs("-includeconf");
-            {
-                std::vector<std::string> includeconf_net(GetArgs(std::string("-") + chain_id + ".includeconf"));
+            std::vector<std::string> includeconf_net(GetArgs(std::string("-") + chain_id + ".includeconf"));
+            conf_file_names.insert(conf_file_names.end(), includeconf_net.begin(), includeconf_net.end());
+            std::string chain_id_final = GetChainName();
+            if (chain_id_final != chain_id) {
+                // Also warn about recursive includeconf for the chain that was specified in one of the includeconfs
+                includeconf_net = GetArgs(std::string("-") + chain_id_final + ".includeconf");
                 conf_file_names.insert(conf_file_names.end(), includeconf_net.begin(), includeconf_net.end());
-                std::string chain_id_final = GetChainName();
-                if (chain_id_final != chain_id) {
-                    // Also warn about recursive includeconf for the chain that was specified in one of the includeconfs
-                    includeconf_net = GetArgs(std::string("-") + chain_id_final + ".includeconf");
-                    conf_file_names.insert(conf_file_names.end(), includeconf_net.begin(), includeconf_net.end());
-                }
             }
             for (const std::string& conf_file_name : conf_file_names) {
                 tfm::format(std::cerr, "warning: -includeconf cannot be used from included files; ignoring -includeconf=%s\n", conf_file_name);
