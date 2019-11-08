@@ -99,7 +99,7 @@ bool BCLog::Logger::EnableCategory(const std::string& str)
         if (str == "db") {
             // DEPRECATION: Added in 0.20, should start returning an error in 0.21
             LogPrintf("Warning: logging category 'db' is deprecated, use 'walletdb' instead\n");
-            EnableCategory(BCLog::DB);
+            EnableCategory(BCLog::WALLETDB);
             return true;
         }
         return false;
@@ -147,7 +147,7 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::HTTP, "http"},
     {BCLog::BENCH, "bench"},
     {BCLog::ZMQ, "zmq"},
-    {BCLog::DB, "walletdb"},
+    {BCLog::WALLETDB, "walletdb"},
     {BCLog::RPC, "rpc"},
     {BCLog::ESTIMATEFEE, "estimatefee"},
     {BCLog::ADDRMAN, "addrman"},
