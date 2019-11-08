@@ -12,7 +12,7 @@ Peercoin Official Development Repo
 [Client Binaries](https://peercoin.net/wallet),
 [Source Code](https://github.com/peercoin/peercoin)
 * Documentation: [Peercoin Whitepaper](https://peercoin.net/resources#whitepaper),
-[Peercoin Wiki](https://github.com/peercoin/peercoin/wiki)
+[Peercoin Docs](https://docs.peercoin.net)
 * Help: 
 [Forum](https://talk.peercoin.net),
 [Intro & Important Links](https://talk.peercoin.net/t/what-is-peercoin-intro-important-links/2889)
