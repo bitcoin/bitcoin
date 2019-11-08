@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UTIL_SETTINGS_H
-#define BITCOIN_UTIL_SETTINGS_H
+#ifndef SYSCOIN_UTIL_SETTINGS_H
+#define SYSCOIN_UTIL_SETTINGS_H
 
 #include <map>
 #include <string>
@@ -84,4 +84,4 @@ auto FindKey(Map&& map, Key&& key) -> decltype(&map.at(key))
 
 } // namespace util
 
-#endif // BITCOIN_UTIL_SETTINGS_H
+#endif // SYSCOIN_UTIL_SETTINGS_H
