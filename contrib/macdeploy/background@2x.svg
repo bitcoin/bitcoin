@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (c) 2013-2020 The Bitcoin Core developers -->
+<!-- Distributed under the MIT software license -->
+<!-- Reference http://www.opensource.org/licenses/mit-license.php -->
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 1000 640" style="enable-background:new 0 0 1000 640;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:url(#SVGID_1_);}
+	.st1{fill:#808080;}
+	.st2{font-family:'Tuffy-Bold';}
+	.st3{font-size:20px;}
+	.st4{font-size:80px;}
+	.st5{font-size:20px;}
+</style>
+<linearGradient id="SVGID_1_" gradientUnits="userSpaceOnUse" x1="-1493.42" y1="323.7594" x2="-1492.42" y2="323.7594" gradientTransform="matrix(1000 0 0 640 1493420 -206886)">
+	<stop  offset="0" style="stop-color:#EFEFEF"/>
+	<stop  offset="0.5" style="stop-color:#EFEFEF"/>
+	<stop  offset="1" style="stop-color:#CDCDCD"/>
+	<stop  offset="1" style="stop-color:#CCCCCC"/>
+</linearGradient>
+<rect class="st0" width="1000" height="640"/>
+<path class="st1" d="M502.4,272.4c-2.4,2.2-2.4,2.8-2.4,16.4v14h-29.6h-29.8l-2.8,2.8c-2.8,2.8-2.8,3.2-2.8,14.2s0,11.2,2.8,14.2
+	l2.8,2.8h29.6H500v14c0,13.6,0.2,14.2,2.4,16.4c1.6,1.8,3.4,2.4,5.6,2.4c2.8,0,7-3.2,29.8-22.6c17.4-14.8,26.6-23.2,27-25
+	c1.2-5.2-0.2-7-27-29.8C515,272.8,511,269.8,508,269.8C505.8,270,504,270.8,502.4,272.4z"/>
+<g>
+	<text transform="matrix(1 0 0 1 260 100)" class="st1 st2 st4">PACKAGE_NAME</text>
+	<text transform="matrix(1 0 0 1 600 120)" class="st1 st2 st5">vPACKAGE_VERSION</text>
+	<text transform="matrix(1 0 0 1 300 580)" class="st1 st2 st3">Copyright &#169; COPYRIGHT_YEAR COPYRIGHT_HOLDERS_FINAL</text>
+</g>
+</svg>

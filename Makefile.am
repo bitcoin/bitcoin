@@ -34,7 +34,10 @@ OSX_APP=Bitcoin-Qt.app
 OSX_VOLNAME = $(subst $(space),-,$(PACKAGE_NAME))
 OSX_DMG = $(OSX_VOLNAME).dmg
 OSX_BACKGROUND_SVG=background.svg
+OSX_BACKGROUND_2X_SVG=background@2x.svg
 OSX_BACKGROUND_IMAGE=background.tiff
+OSX_BACKGROUND_IMAGE_PNG=background.tiff.png
+OSX_BACKGROUND_IMAGE_2X_PNG=background.tiff@2x.png
 OSX_BACKGROUND_IMAGE_DPIS=36 72
 OSX_DSSTORE_GEN=$(top_srcdir)/contrib/macdeploy/custom_dsstore.py
 OSX_DEPLOY_SCRIPT=$(top_srcdir)/contrib/macdeploy/macdeployqtplus
@@ -119,11 +122,21 @@ if BUILD_DARWIN
 $(OSX_DMG): $(OSX_APP_BUILT) $(OSX_PACKAGING) $(OSX_BACKGROUND_IMAGE)
 	$(PYTHON) $(OSX_DEPLOY_SCRIPT) $(OSX_APP) -add-qt-tr $(OSX_QT_TRANSLATIONS) -translations-dir=$(QT_TRANSLATION_DIR) -dmg -fancy $(OSX_FANCY_PLIST) -verbose 2 -volname $(OSX_VOLNAME)
 
-$(OSX_BACKGROUND_IMAGE).png: contrib/macdeploy/$(OSX_BACKGROUND_SVG)
-	sed 's/PACKAGE_NAME/$(PACKAGE_NAME)/' < "$<" | $(RSVG_CONVERT) -f png -d 36 -p 36 -o $@
-$(OSX_BACKGROUND_IMAGE)@2x.png: contrib/macdeploy/$(OSX_BACKGROUND_SVG)
-	sed 's/PACKAGE_NAME/$(PACKAGE_NAME)/' < "$<" | $(RSVG_CONVERT) -f png -d 72 -p 72 -o $@
-$(OSX_BACKGROUND_IMAGE): $(OSX_BACKGROUND_IMAGE).png $(OSX_BACKGROUND_IMAGE)@2x.png
+$(OSX_BACKGROUND_IMAGE_PNG): contrib/macdeploy/$(OSX_BACKGROUND_SVG)
+	sed -e 's/PACKAGE_NAME/$(PACKAGE_NAME)/' \
+		-e 's/PACKAGE_VERSION/$(PACKAGE_VERSION)/' \
+		-e 's/COPYRIGHT_YEAR/$(COPYRIGHT_YEAR)/' \
+		-e 's/COPYRIGHT_HOLDERS_FINAL/$(COPYRIGHT_HOLDERS_FINAL)/' \
+		contrib/macdeploy/$(OSX_BACKGROUND_SVG) < "$<" | $(RSVG_CONVERT) -f png -h 320 -w 500 -d 144 -p 144 -o $@
+
+$(OSX_BACKGROUND_IMAGE_2X_PNG): contrib/macdeploy/$(OSX_BACKGROUND_2X_SVG)
+	sed -e 's/PACKAGE_NAME/$(PACKAGE_NAME)/' \
+		-e 's/PACKAGE_VERSION/$(PACKAGE_VERSION)/' \
+		-e 's/COPYRIGHT_YEAR/$(COPYRIGHT_YEAR)/' \
+		-e 's/COPYRIGHT_HOLDERS_FINAL/$(COPYRIGHT_HOLDERS_FINAL)/' \
+		contrib/macdeploy/$(OSX_BACKGROUND_2X_SVG) < "$<" | $(RSVG_CONVERT) -f png -h 640 -w 1000 -d 144 -p 144 -o $@
+
+$(OSX_BACKGROUND_IMAGE): $(OSX_BACKGROUND_IMAGE_PNG) $(OSX_BACKGROUND_IMAGE_2X_PNG)
 	tiffutil -cathidpicheck $^ -out $@
 
 deploydir: $(OSX_DMG)
