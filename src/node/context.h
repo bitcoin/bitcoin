@@ -10,6 +10,7 @@
 
 class BanMan;
 class CConnman;
+class CTxMemPool;
 class PeerLogicValidation;
 namespace interfaces {
 class Chain;
@@ -22,13 +23,13 @@ class ChainClient;
 //! This is used by init, rpc, and test code to pass object references around
 //! without needing to declare the same variables and parameters repeatedly, or
 //! to use globals. More variables could be added to this struct (particularly
-//! references to validation and mempool objects) to eliminate use of globals
+//! references to validation objects) to eliminate use of globals
 //! and make code more modular and testable. The struct isn't intended to have
 //! any member functions. It should just be a collection of references that can
 //! be used without pulling in unwanted dependencies or functionality.
-struct NodeContext
-{
+struct NodeContext {
     std::unique_ptr<CConnman> connman;
+    CTxMemPool* mempool{nullptr}; // Currently a raw pointer because the memory is not managed by this struct
     std::unique_ptr<PeerLogicValidation> peer_logic;
     std::unique_ptr<BanMan> banman;
     std::unique_ptr<interfaces::Chain> chain;
