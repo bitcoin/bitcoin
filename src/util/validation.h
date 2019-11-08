@@ -8,11 +8,6 @@
 
 #include <string>
 
-class ValidationState;
-
-/** Convert ValidationState to a human-readable message for logging */
-std::string FormatStateMessage(const ValidationState &state);
-
 extern const std::string strMessageMagic;
 
 #endif // BITCOIN_UTIL_VALIDATION_H

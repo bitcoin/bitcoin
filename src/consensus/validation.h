@@ -108,6 +108,7 @@ public:
     bool IsError() const { return m_mode == MODE_ERROR; }
     std::string GetRejectReason() const { return m_reject_reason; }
     std::string GetDebugMessage() const { return m_debug_message; }
+    std::string ToString() const { return m_reject_reason + (m_debug_message.empty() ? "" : ", " + m_debug_message); }
 };
 
 inline ValidationState::~ValidationState() {};
