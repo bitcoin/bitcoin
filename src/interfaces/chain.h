@@ -76,10 +76,6 @@ public:
         //! included in the current chain.
         virtual Optional<int> getBlockHeight(const uint256& hash) = 0;
 
-        //! Get block depth. Returns 1 for chain tip, 2 for preceding block, and
-        //! so on. Returns 0 for a block not included in the current chain.
-        virtual int getBlockDepth(const uint256& hash) = 0;
-
         //! Get block hash. Height must be valid or this function will abort.
         virtual uint256 getBlockHash(int height) = 0;
 
@@ -226,8 +222,8 @@ public:
         virtual ~Notifications() {}
         virtual void TransactionAddedToMempool(const CTransactionRef& tx) {}
         virtual void TransactionRemovedFromMempool(const CTransactionRef& ptx) {}
-        virtual void BlockConnected(const CBlock& block, const std::vector<CTransactionRef>& tx_conflicted) {}
-        virtual void BlockDisconnected(const CBlock& block) {}
+        virtual void BlockConnected(const CBlock& block, const std::vector<CTransactionRef>& tx_conflicted, int height) {}
+        virtual void BlockDisconnected(const CBlock& block, int height) {}
         virtual void UpdatedBlockTip() {}
         virtual void ChainStateFlushed(const CBlockLocator& locator) {}
     };
@@ -236,9 +232,8 @@ public:
     virtual std::unique_ptr<Handler> handleNotifications(Notifications& notifications) = 0;
 
     //! Wait for pending notifications to be processed unless block hash points to the current
-    //! chain tip, or to a possible descendant of the current chain tip that isn't currently
-    //! connected.
-    virtual void waitForNotificationsIfNewBlocksConnected(const uint256& old_tip) = 0;
+    //! chain tip.
+    virtual void waitForNotificationsIfTipChanged(const uint256& old_tip) = 0;
 
     //! Register handler for RPC. Command is not copied, so reference
     //! needs to remain valid until Handler is disconnected.
