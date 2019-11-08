@@ -37,15 +37,13 @@ CMasternodePayments mnpayments;
 bool IsBlockValueValid(const CBlock& block, int nBlockHeight, CAmount blockReward, std::string& strErrorRet)
 {
     int n = block.IsProofOfStake() ? 1 : 0;
-    CAmount nValueIn;
+    CAmount nValueIn = 0;
     if (block.IsProofOfStake()) {
         CCoinsViewCache view(pcoinsTip.get());
         nValueIn += view.GetValueIn(*block.vtx[1]);
     }
 
     CAmount blockValue = block.vtx[n]->GetValueOut() - nValueIn;
-    LogPrintf("%s: out=%s in=%s blockValue=%s\n", __func__, FormatMoney(block.vtx[n]->GetValueOut()), FormatMoney(nValueIn), FormatMoney(blockValue));
-
     bool isBlockRewardValueMet = (blockValue <= blockReward);
 
     strErrorRet = "";
