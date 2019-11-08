@@ -104,6 +104,58 @@ static void MuHash(benchmark::State& state)
     }
 }
 
+static void MuHashPrecompute(benchmark::State& state)
+{
+    FastRandomContext rng(true);
+    MuHash3072 acc;
+    unsigned char key[32];
+    std::vector<unsigned char> randkey = rng.randbytes(32);
+    for (size_t i = 0; i < randkey.size(); i++) {
+        key[i] = randkey[i];
+    }
+
+    while (state.KeepRunning()) {
+        MuHash3072{key};
+    }
+}
+
+static void MuHashAdd(benchmark::State& state)
+{
+    FastRandomContext rng(true);
+    MuHash3072 acc;
+    unsigned char key[32];
+    std::vector<unsigned char> randkey = rng.randbytes(32);
+    for (size_t i = 0; i < randkey.size(); i++) {
+        key[i] = randkey[i];
+    }
+
+    MuHash3072 muhash = MuHash3072(key);
+    while (state.KeepRunning()) {
+        acc *= muhash;
+    }
+}
+
+static void MuHashDiv(benchmark::State& state)
+{
+    FastRandomContext rng(true);
+    MuHash3072 acc;
+    unsigned char key[32];
+    std::vector<unsigned char> randkey = rng.randbytes(32);
+    for (size_t i = 0; i < randkey.size(); i++) {
+        key[i] = randkey[i];
+    }
+
+    MuHash3072 muhash = MuHash3072(key);
+
+    for (size_t i = 0; i < state.m_num_iters; i++) {
+        acc *= muhash;
+    }
+
+    while (state.KeepRunning()) {
+        acc /= muhash;
+    }
+}
+
 BENCHMARK(RIPEMD160, 440);
 BENCHMARK(SHA1, 570);
 BENCHMARK(SHA256, 340);
@@ -116,3 +168,6 @@ BENCHMARK(FastRandom_32bit, 110 * 1000 * 1000);
 BENCHMARK(FastRandom_1bit, 440 * 1000 * 1000);
 
 BENCHMARK(MuHash, 5000);
+BENCHMARK(MuHashPrecompute, 5000);
+BENCHMARK(MuHashAdd, 5000);
+BENCHMARK(MuHashDiv, 100);
