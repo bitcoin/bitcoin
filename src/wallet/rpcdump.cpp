@@ -316,7 +316,7 @@ UniValue importaddress(const JSONRPCRequest& request)
         {
             auto locked_chain = pwallet->chain().lock();
             LOCK(pwallet->cs_wallet);
-            pwallet->ReacceptWalletTransactions(*locked_chain);
+            pwallet->ReacceptWalletTransactions();
         }
     }
 
@@ -354,28 +354,26 @@ UniValue importprunedfunds(const JSONRPCRequest& request)
     //Search partial merkle tree in proof for our transaction and index in valid block
     std::vector<uint256> vMatch;
     std::vector<unsigned int> vIndex;
-    unsigned int txnIndex = 0;
-    if (merkleBlock.txn.ExtractMatches(vMatch, vIndex) == merkleBlock.header.hashMerkleRoot) {
-
-        auto locked_chain = pwallet->chain().lock();
-        if (locked_chain->getBlockHeight(merkleBlock.header.GetHash()) == nullopt) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found in chain");
-        }
-
-        std::vector<uint256>::const_iterator it;
-        if ((it = std::find(vMatch.begin(), vMatch.end(), hashTx))==vMatch.end()) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction given doesn't exist in proof");
-        }
-
-        txnIndex = vIndex[it - vMatch.begin()];
-    }
-    else {
+    if (merkleBlock.txn.ExtractMatches(vMatch, vIndex) != merkleBlock.header.hashMerkleRoot) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Something wrong with merkleblock");
     }
 
-    wtx.SetConf(CWalletTx::Status::CONFIRMED, merkleBlock.header.GetHash(), txnIndex);
-
     auto locked_chain = pwallet->chain().lock();
+    Optional<int> height = locked_chain->getBlockHeight(merkleBlock.header.GetHash());
+    if (height == nullopt) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found in chain");
+    }
+
+    std::vector<uint256>::const_iterator it;
+    if ((it = std::find(vMatch.begin(), vMatch.end(), hashTx)) == vMatch.end()) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction given doesn't exist in proof");
+    }
+
+    unsigned int txnIndex = vIndex[it - vMatch.begin()];
+
+    CWalletTx::Confirmation confirm(CWalletTx::Status::CONFIRMED, *height, merkleBlock.header.GetHash(), txnIndex);
+    wtx.m_confirm = confirm;
+
     LOCK(pwallet->cs_wallet);
 
     if (pwallet->IsMine(*wtx.tx)) {
@@ -507,7 +505,7 @@ UniValue importpubkey(const JSONRPCRequest& request)
         {
             auto locked_chain = pwallet->chain().lock();
             LOCK(pwallet->cs_wallet);
-            pwallet->ReacceptWalletTransactions(*locked_chain);
+            pwallet->ReacceptWalletTransactions();
         }
     }
 
@@ -1406,7 +1404,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
         {
             auto locked_chain = pwallet->chain().lock();
             LOCK(pwallet->cs_wallet);
-            pwallet->ReacceptWalletTransactions(*locked_chain);
+            pwallet->ReacceptWalletTransactions();
         }
 
         if (pwallet->IsAbortingRescan()) {
