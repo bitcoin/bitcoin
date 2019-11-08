@@ -32,7 +32,7 @@ fi
 
 if [ "$RUN_UNIT_TESTS" = "true" ]; then
   BEGIN_FOLD unit-tests
-  bash -c "while sleep 500; do echo .; done" &  # Print dots in case the unit tests take a long time to run
+  bash -c "${CI_WAIT}" &  # Print dots in case the unit tests take a long time to run
   DOCKER_EXEC LD_LIBRARY_PATH=$BASE_BUILD_DIR/depends/$HOST/lib make $MAKEJOBS check VERBOSE=1
   END_FOLD
 fi
