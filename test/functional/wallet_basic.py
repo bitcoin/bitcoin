@@ -541,6 +541,13 @@ class WalletTest(BitcoinTestFramework):
         assert_array_result(tx["details"], {"category": "receive"}, expected_receive_vout)
         assert_equal(tx[verbose_field], self.nodes[0].decoderawtransaction(tx["hex"]))
 
+        # Sanity check for 'settxfee' second parameter
+        feerate_set_wu = Decimal("0.0000025")
+        self.nodes[0].settxfee(feerate_set_wu * Decimal(4))
+        feerate = self.nodes[0].getwalletinfo()["paytxfee"]
+        self.nodes[0].settxfee(feerate_set_wu, True)
+        assert_equal(self.nodes[0].getwalletinfo()["paytxfee"], feerate)
+
 
 if __name__ == '__main__':
     WalletTest().main()

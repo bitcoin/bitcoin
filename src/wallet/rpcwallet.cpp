@@ -2312,16 +2312,19 @@ static UniValue settxfee(const JSONRPCRequest& request)
     }
 
             RPCHelpMan{"settxfee",
-                "\nSet the transaction fee per kB for this wallet. Overrides the global -paytxfee command line parameter.\n",
+                "\nSet the transaction feerate for this wallet. Overrides the global -paytxfee command line parameter.\n",
                 {
-                    {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The transaction fee in " + CURRENCY_UNIT + "/kB"},
+                    {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The transaction feerate in " + CURRENCY_UNIT + "/kB"},
+                    {"feerate_kwu", RPCArg::Type::BOOL, /* default */ "false", "Set the transaction feerate in " + CURRENCY_UNIT + "/kWU (kilo Weight Unit)"},
                 },
                 RPCResult{
             "true|false        (boolean) Returns true if successful\n"
                 },
                 RPCExamples{
                     HelpExampleCli("settxfee", "0.00001")
-            + HelpExampleRpc("settxfee", "0.00001")
+                    + HelpExampleCli("settxfee", "0.00001 true")
+                    + HelpExampleRpc("settxfee", "0.00001")
+                    + HelpExampleRpc("settxfee", "0.00001 true")
                 },
             }.Check(request);
 
@@ -2329,7 +2332,8 @@ static UniValue settxfee(const JSONRPCRequest& request)
     LOCK(pwallet->cs_wallet);
 
     CAmount nAmount = AmountFromValue(request.params[0]);
-    CFeeRate tx_fee_rate(nAmount / WITNESS_SCALE_FACTOR, 1000);
+    if (request.params[1].isNull() || !request.params[1].get_bool()) nAmount /= WITNESS_SCALE_FACTOR;
+    CFeeRate tx_fee_rate(nAmount, 1000);
     if (tx_fee_rate == CFeeRate(0)) {
         // automatic selection
     } else if (tx_fee_rate < pwallet->chain().relayMinFee()) {
@@ -4302,7 +4306,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "sendtoaddress",                    &sendtoaddress,                 {"address","amount","comment","comment_to","subtractfeefromamount","replaceable","conf_target","estimate_mode","avoid_reuse"} },
     { "wallet",             "sethdseed",                        &sethdseed,                     {"newkeypool","seed"} },
     { "wallet",             "setlabel",                         &setlabel,                      {"address","label"} },
-    { "wallet",             "settxfee",                         &settxfee,                      {"amount"} },
+    { "wallet",             "settxfee",                         &settxfee,                      {"amount", "feerate_kwu"} },
     { "wallet",             "setwalletflag",                    &setwalletflag,                 {"flag","value"} },
     { "wallet",             "signmessage",                      &signmessage,                   {"address","message"} },
     { "wallet",             "signrawtransactionwithwallet",     &signrawtransactionwithwallet,  {"hexstring","prevtxs","sighashtype"} },
