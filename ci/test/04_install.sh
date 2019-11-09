@@ -35,11 +35,6 @@ fi
 mkdir -p "${BASE_SCRATCH_DIR}"
 mkdir -p "${CCACHE_DIR}"
 
-if [ ! -d ${DIR_QA_ASSETS} ]; then
-  git clone https://github.com/bitcoin-core/qa-assets ${DIR_QA_ASSETS}
-fi
-export DIR_FUZZ_IN=${DIR_QA_ASSETS}/fuzz_seed_corpus/
-
 export ASAN_OPTIONS="detect_stack_use_after_return=1"
 export LSAN_OPTIONS="suppressions=${BASE_BUILD_DIR}/test/sanitizer_suppressions/lsan"
 export TSAN_OPTIONS="suppressions=${BASE_BUILD_DIR}/test/sanitizer_suppressions/tsan:log_path=${BASE_BUILD_DIR}/sanitizer-output/tsan"
@@ -83,6 +78,11 @@ if [ "$TRAVIS_OS_NAME" != "osx" ]; then
   ${CI_RETRY_EXE} DOCKER_EXEC apt-get update
   ${CI_RETRY_EXE} DOCKER_EXEC apt-get install --no-install-recommends --no-upgrade -y $PACKAGES $DOCKER_PACKAGES
 fi
+
+if [ ! -d ${DIR_QA_ASSETS} ]; then
+  DOCKER_EXEC git clone https://github.com/bitcoin-core/qa-assets ${DIR_QA_ASSETS}
+fi
+export DIR_FUZZ_IN=${DIR_QA_ASSETS}/fuzz_seed_corpus/
 
 DOCKER_EXEC mkdir -p "${BASE_BUILD_DIR}/sanitizer-output/"
 
