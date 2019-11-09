@@ -16,6 +16,7 @@
 #include <cassert>
 #include <node/context.h>
 #include <rpc/blockchain.h>
+#include <util/check.h>
 namespace
 {
 
