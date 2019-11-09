@@ -191,7 +191,7 @@ static UniValue getpeerinfo(const JSONRPCRequest& request)
             permissions.push_back(permission);
         }
         obj.pushKV("permissions", permissions);
-        obj.pushKV("minfeefilter", ValueFromAmount(stats.minFeeFilter));
+        obj.pushKV("minfeefilter", ValueFromAmount(stats.minFeeFilter * WITNESS_SCALE_FACTOR));
 
         UniValue sendPerMsgCmd(UniValue::VOBJ);
         for (const auto& i : stats.mapSendBytesPerMsgCmd) {
@@ -507,8 +507,8 @@ static UniValue getnetworkinfo(const JSONRPCRequest& request)
         obj.pushKV("connections",   (int)g_rpc_node->connman->GetNodeCount(CConnman::CONNECTIONS_ALL));
     }
     obj.pushKV("networks",      GetNetworksInfo());
-    obj.pushKV("relayfee",      ValueFromAmount(::minRelayTxFee.GetFeePerK()));
-    obj.pushKV("incrementalfee", ValueFromAmount(::incrementalRelayFee.GetFeePerK()));
+    obj.pushKV("relayfee",      ValueFromAmount(::minRelayTxFee.GetFee(1000 * WITNESS_SCALE_FACTOR)));
+    obj.pushKV("incrementalfee", ValueFromAmount(::incrementalRelayFee.GetFee(1000 * WITNESS_SCALE_FACTOR)));
     UniValue localAddresses(UniValue::VARR);
     {
         LOCK(cs_mapLocalHost);
