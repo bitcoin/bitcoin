@@ -1673,7 +1673,8 @@ UniValue analyzepsbt(const JSONRPCRequest& request)
                 "    }\n"
                 "    ,...\n"
                 "  ]\n"
-                "  \"estimated_vsize\" : vsize       (numeric, optional) Estimated vsize of the final signed transaction\n"
+                "  \"estimated_vsize\" : vsize       (numeric, optional) Estimated size in virtual bytes of the final signed transaction\n"
+                "  \"estimated_weight\" : weight       (numeric, optional) Estimated size in weight units of the final signed transaction\n"
                 "  \"estimated_feerate\" : feerate   (numeric, optional) Estimated feerate of the final signed transaction in " + CURRENCY_UNIT + "/kB. Shown only if all UTXO slots in the PSBT have been filled.\n"
                 "  \"fee\" : fee                     (numeric, optional) The transaction fee paid. Shown only if all UTXO slots in the PSBT have been filled.\n"
                 "  \"next\" : \"role\"                 (string) Role of the next person that this psbt needs to go to\n"
@@ -1734,6 +1735,9 @@ UniValue analyzepsbt(const JSONRPCRequest& request)
 
     if (psbta.estimated_vsize != nullopt) {
         result.pushKV("estimated_vsize", (int)*psbta.estimated_vsize);
+    }
+    if (psbta.estimated_weight != nullopt) {
+        result.pushKV("estimated_weight", (int)*psbta.estimated_weight);
     }
     if (psbta.estimated_feerate != nullopt) {
         result.pushKV("estimated_feerate", ValueFromAmount(psbta.estimated_feerate->GetFeePerK()));
