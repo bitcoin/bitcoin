@@ -4353,7 +4353,7 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
         return g_auxpow_miner->createAuxBlock(coinbaseScript->reserveScript);
 
      /* Submit a block instead.  */
-    assert(request.params.size() == 2);
+    CHECK_NONFATAL(request.params.size() == 2);
     bool fAccepted
         = g_auxpow_miner->submitAuxBlock(request.params[0].get_str(),
                                          request.params[1].get_str());
