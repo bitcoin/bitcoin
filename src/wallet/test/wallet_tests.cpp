@@ -290,7 +290,7 @@ BOOST_FIXTURE_TEST_CASE(coin_mark_dirty_immature_credit, TestChain100Setup)
     wtx.MarkDirty();
     BOOST_CHECK(spk_man->AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey()));
     // SYSCOIN
-    BOOST_CHECK_EQUAL(wtx.GetImmatureCredit(*locked_chain), 34.65*COIN);
+    BOOST_CHECK_EQUAL(wtx.GetImmatureCredit(), 34.65*COIN);
 }
 
 static int64_t AddTx(CWallet& wallet, uint32_t lockTime, int64_t mockTime, int64_t blockTime)
