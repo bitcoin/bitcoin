@@ -40,7 +40,6 @@ if [ ! -d ${DIR_QA_ASSETS} ]; then
 fi
 export DIR_FUZZ_IN=${DIR_QA_ASSETS}/fuzz_seed_corpus/
 
-mkdir -p "${BASE_BUILD_DIR}/sanitizer-output/"
 export ASAN_OPTIONS="detect_stack_use_after_return=1"
 export LSAN_OPTIONS="suppressions=${BASE_BUILD_DIR}/test/sanitizer_suppressions/lsan"
 export TSAN_OPTIONS="suppressions=${BASE_BUILD_DIR}/test/sanitizer_suppressions/tsan:log_path=${BASE_BUILD_DIR}/sanitizer-output/tsan"
@@ -84,6 +83,8 @@ if [ "$TRAVIS_OS_NAME" != "osx" ]; then
   ${CI_RETRY_EXE} DOCKER_EXEC apt-get update
   ${CI_RETRY_EXE} DOCKER_EXEC apt-get install --no-install-recommends --no-upgrade -y $PACKAGES $DOCKER_PACKAGES
 fi
+
+DOCKER_EXEC mkdir -p "${BASE_BUILD_DIR}/sanitizer-output/"
 
 if [ "$USE_BUSY_BOX" = "true" ]; then
   echo "Setup to use BusyBox utils"
