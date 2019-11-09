@@ -130,6 +130,20 @@ class GetblockstatsTest(BitcoinTestFramework):
         stats = self.nodes[0].getblockstats(hash_or_height=1, stats=list(some_stats))
         assert_equal(set(stats.keys()), some_stats)
 
+        # Sanity check for the 'feerate_kwu' parameter
+        feerate_vbyte = self.nodes[0].getblockstats(hash_or_height=103,
+                                                    stats=["minfeerate",
+                                                           "avgfeerate"])
+        feerate_weight = self.nodes[0].getblockstats(hash_or_height=103,
+                                                     stats=["minfeerate",
+                                                            "avgfeerate"],
+                                                     feerate_kwu=True)
+        # For getblockstats, we don't round up for vbyte computation !
+        assert_equal(feerate_weight["avgfeerate"],
+                     feerate_vbyte["avgfeerate"] // 4)
+        assert_equal(feerate_weight["minfeerate"],
+                     feerate_vbyte["minfeerate"] // 4)
+
         # Test invalid parameters raise the proper json exceptions
         tip = self.start_height + self.max_stat_pos
         assert_raises_rpc_error(-8, 'Target block height %d after current tip %d' % (tip+1, tip),
@@ -157,8 +171,10 @@ class GetblockstatsTest(BitcoinTestFramework):
                                 hash_or_height='000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f')
 
         # Invalid number of args
-        assert_raises_rpc_error(-1, 'getblockstats hash_or_height ( stats )', self.nodes[0].getblockstats, '00', 1, 2)
-        assert_raises_rpc_error(-1, 'getblockstats hash_or_height ( stats )', self.nodes[0].getblockstats)
+        assert_raises_rpc_error(-1, 'getblockstats hash_or_height ( stats feerate_kwu )',
+                                self.nodes[0].getblockstats, '00', 1, True, 2)
+        assert_raises_rpc_error(-1, 'getblockstats hash_or_height ( stats feerate_kwu )',
+                                self.nodes[0].getblockstats)
 
 
 if __name__ == '__main__':
