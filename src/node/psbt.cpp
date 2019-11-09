@@ -122,7 +122,7 @@ PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx)
             size_t weight = GetTransactionWeight(ctx);
             result.estimated_weight = weight;
             // Estimate fee rate
-            CFeeRate feerate(fee, size);
+            CFeeRate feerate(fee, weight);
             result.estimated_feerate = feerate;
         }
 

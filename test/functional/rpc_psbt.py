@@ -5,7 +5,7 @@
 """Test the Partially Signed Transaction RPCs.
 """
 
-from decimal import Decimal
+from decimal import Decimal, getcontext
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -77,6 +77,7 @@ class PSBTTest(BitcoinTestFramework):
         connect_nodes(self.nodes[0], 2)
 
     def run_test(self):
+        getcontext().prec = 6
         # Create and fund a raw tx for sending 10 BTC
         psbtx1 = self.nodes[0].walletcreatefundedpsbt([], {self.nodes[2].getnewaddress():10})['psbt']
 
@@ -413,6 +414,11 @@ class PSBTTest(BitcoinTestFramework):
         assert analyzed['fee'] == Decimal('0.001') and analyzed['estimated_vsize'] == 134 and analyzed['estimated_feerate'] == Decimal('0.00746268')
         # vsize = (weight + 3) // 4
         assert analyzed['estimated_weight'] == 533
+        analyzed_kwu = self.nodes[0].analyzepsbt(psbt=updated,
+                                                 feerate_kwu=True)
+        feerate = Decimal(analyzed_kwu['fee'] * 1000 /
+                          analyzed_kwu['estimated_weight'])
+        assert_equal(feerate, Decimal(analyzed_kwu['estimated_feerate']))
 
         # After signing and finalizing, needs extracting
         signed = self.nodes[1].walletprocesspsbt(updated)['psbt']
