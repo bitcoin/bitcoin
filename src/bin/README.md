@@ -5,18 +5,18 @@ Geth
 ----
 
 This folder contains the binaries for geth for different platforms
-The current version is Elasar (v1.9.6)
+The current version is Quad Kicker (v1.9.7)
 Downloaded from [Go Ethereum](https://geth.ethereum.org/downloads/)
 
 MD5 of the BIN are as the following:
 Linux (64-bit)
-`f380184012be22ed06ae861e8312a35f`
+`1d699d7b4450b4fc82c5ebf3a6c2936f`
 
 MacOS
-`d689e8e9f859b7eb4b13ccc2f71cc695`
+`db6a00940e8f48f90c4770ef89834bb1`
 
 Windows (64-bit)
-`7c83560caf1a25680a9ec6a5749142df`
+`2c85d9be3e26619caa708590605c749c`
 
 
 Relayer
