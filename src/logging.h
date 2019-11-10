@@ -39,7 +39,7 @@ namespace BCLog {
         HTTP        = (1 <<  3),
         BENCH       = (1 <<  4),
         ZMQ         = (1 <<  5),
-        DB          = (1 <<  6),
+        WALLETDB    = (1 <<  6),
         RPC         = (1 <<  7),
         ESTIMATEFEE = (1 <<  8),
         ADDRMAN     = (1 <<  9),
