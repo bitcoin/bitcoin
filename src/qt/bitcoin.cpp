@@ -447,6 +447,7 @@ int GuiMain(int argc, char* argv[])
     //   Need to pass name here as CAmount is a typedef (see http://qt-project.org/doc/qt-5/qmetatype.html#qRegisterMetaType)
     //   IMPORTANT if it is no longer a typedef use the normal variant above
     qRegisterMetaType< CAmount >("CAmount");
+    qRegisterMetaType<size_t>("size_t");
     qRegisterMetaType< std::function<void()> >("std::function<void()>");
     qRegisterMetaType<QMessageBox::Icon>("QMessageBox::Icon");
     /// 2. Parse command-line options. We do this after qt in order to show an error if there are problems parsing these
