@@ -207,12 +207,9 @@ bool CheckFinalTx(const CTransaction &tx, int flags)
 {
     AssertLockHeld(cs_main);
 
-    // By convention a negative value for flags indicates that the
-    // current network-enforced consensus rules should be used. In
-    // a future soft-fork scenario that would mean checking which
-    // rules would be enforced for the next block and setting the
-    // appropriate flags. At the present time no soft-forks are
-    // scheduled, so no flags are set.
+    // By convention a negative value for flags indicates that no
+    // soft-forked consensus rules should be used. Setting appropriate
+    // flags selects which rules will be enforced for the next block.
     flags = std::max(flags, 0);
 
     // CheckFinalTx() uses ::ChainActive().Height()+1 to evaluate
