@@ -408,7 +408,11 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
 {
     CTransactionRef ptx = it->GetSharedTx();
     NotifyEntryRemoved(ptx, reason);
-    if (reason != MemPoolRemovalReason::BLOCK && reason != MemPoolRemovalReason::CONFLICT) {
+    if (reason != MemPoolRemovalReason::BLOCK) {
+        // Notify clients that a transaction has been removed from the mempool
+        // for any reason except being included in a block. Clients interested
+        // in transactions included in blocks can subscribe to the BlockConnected
+        // notification.
         GetMainSignals().TransactionRemovedFromMempool(ptx);
     }
 
