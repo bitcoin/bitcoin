@@ -345,8 +345,8 @@ BOOST_AUTO_TEST_CASE(merkle_test_BlockWitness)
     hashes[0].SetNull();
     hashes[1] = block.vtx[1]->GetHash();
 
-    uint256 merkelRootofHashes = ComputeMerkleRoot(hashes);
+    uint256 merkleRootofHashes = ComputeMerkleRoot(hashes);
 
-    BOOST_CHECK_EQUAL(merkelRootofHashes, blockWitness);
+    BOOST_CHECK_EQUAL(merkleRootofHashes, blockWitness);
 }
 BOOST_AUTO_TEST_SUITE_END()
