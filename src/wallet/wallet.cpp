@@ -3651,9 +3651,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
         }
 
         if (auto spk_man = walletInstance->m_spk_man.get()) {
-            std::string error;
             if (!spk_man->Upgrade(prev_version, error)) {
-                chain.initError(error);
                 return nullptr;
             }
         }
