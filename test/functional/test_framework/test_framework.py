@@ -574,8 +574,7 @@ class DashTestFramework(BitcoinTestFramework):
         executor = ThreadPoolExecutor(max_workers=20)
 
         def do_start(idx):
-            args = ['-masternode=1',
-                    '-masternodeblsprivkey=%s' % self.mninfo[idx].keyOperator] + self.extra_args
+            args = ['-masternodeblsprivkey=%s' % self.mninfo[idx].keyOperator] + self.extra_args
             self.start_node(idx + start_idx, extra_args=args)
             self.mninfo[idx].nodeIdx = idx + start_idx
             self.mninfo[idx].node = self.nodes[idx + start_idx]

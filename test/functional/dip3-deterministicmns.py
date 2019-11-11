@@ -260,7 +260,7 @@ class DIP3Test(BitcoinTestFramework):
     def start_mn(self, mn):
         while len(self.nodes) <= mn.idx:
             self.add_nodes(1)
-        extra_args = ['-masternode=1', '-masternodeblsprivkey=%s' % mn.blsMnkey]
+        extra_args = ['-masternodeblsprivkey=%s' % mn.blsMnkey]
         self.start_node(mn.idx, extra_args = self.extra_args + extra_args)
         force_finish_mnsync(self.nodes[mn.idx])
         for i in range(0, len(self.nodes)):
