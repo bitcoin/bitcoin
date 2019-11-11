@@ -40,6 +40,7 @@ class ListSinceBlockTest(BitcoinTestFramework):
     def test_no_blockhash(self):
         txid = self.nodes[2].sendtoaddress(self.nodes[0].getnewaddress(), 1)
         blockhash, = self.nodes[2].generate(1)
+        blockheight = self.nodes[2].getblockheader(blockhash)['height']
         self.sync_all()
 
         txs = self.nodes[0].listtransactions()
@@ -47,6 +48,7 @@ class ListSinceBlockTest(BitcoinTestFramework):
             "category": "receive",
             "amount": 1,
             "blockhash": blockhash,
+            "blockheight": blockheight,
             "confirmations": 1,
         })
         assert_equal(
@@ -276,7 +278,8 @@ class ListSinceBlockTest(BitcoinTestFramework):
         self.sync_all()
 
         # gettransaction should work for txid1
-        self.nodes[0].gettransaction(txid1)
+        tx1 = self.nodes[0].gettransaction(txid1)
+        assert_equal(tx1['blockheight'], self.nodes[0].getblockheader(tx1['blockhash'])['height'])
 
         # listsinceblock(lastblockhash) should now include txid1 in transactions
         # as well as in removed
