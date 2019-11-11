@@ -227,7 +227,7 @@ class CompactFiltersTest(BitcoinTestFramework):
             # Requesting too many filters results in disconnection.
             msg_getcfilters(
                 filter_type=FILTER_TYPE_BASIC,
-                start_height=900,
+                start_height=0,
                 stop_hash=int(main_block_hash, 16)
             ),
             # Requesting too many filter headers results in disconnection.
