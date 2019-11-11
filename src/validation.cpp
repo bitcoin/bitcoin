@@ -2518,12 +2518,9 @@ class ConnectTrace {
 private:
     std::vector<PerBlockConnectTrace> blocksConnected;
     CTxMemPool &pool;
-    boost::signals2::scoped_connection m_connNotifyEntryRemoved;
 
 public:
-    explicit ConnectTrace(CTxMemPool &_pool) : blocksConnected(1), pool(_pool) {
-        m_connNotifyEntryRemoved = pool.NotifyEntryRemoved.connect(std::bind(&ConnectTrace::NotifyEntryRemoved, this, std::placeholders::_1, std::placeholders::_2));
-    }
+    explicit ConnectTrace(CTxMemPool &_pool) : blocksConnected(1), pool(_pool) {}
 
     void BlockConnected(CBlockIndex* pindex, std::shared_ptr<const CBlock> pblock) {
         assert(!blocksConnected.back().pindex);
@@ -2543,10 +2540,6 @@ public:
         assert(!blocksConnected.back().pindex);
         blocksConnected.pop_back();
         return blocksConnected;
-    }
-
-    void NotifyEntryRemoved(CTransactionRef txRemoved, MemPoolRemovalReason reason) {
-        assert(!blocksConnected.back().pindex);
     }
 };
 
