@@ -645,17 +645,24 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # Make sure there is exactly one input so coin selection can't skew the result.
         assert_equal(len(self.nodes[3].listunspent(1)), 1)
+        # Use a feerate that won't make GetFees() truncate (and thus make us
+        # round up fee result in GetMinimumFees())
+        feerate = Decimal("0.00001012")
+        self.nodes[3].settxfee(feerate)
 
         inputs = []
         outputs = {self.nodes[3].getnewaddress() : 1}
         rawtx = self.nodes[3].createrawtransaction(inputs, outputs)
         result = self.nodes[3].fundrawtransaction(rawtx)  # uses self.min_relay_tx_fee (set by settxfee)
-        result2 = self.nodes[3].fundrawtransaction(rawtx, {"feeRate": 2 * self.min_relay_tx_fee})
-        result3 = self.nodes[3].fundrawtransaction(rawtx, {"feeRate": 10 * self.min_relay_tx_fee})
+        result2 = self.nodes[3].fundrawtransaction(rawtx, {"feeRate": 2 * feerate})
+        result3 = self.nodes[3].fundrawtransaction(rawtx, {"feeRate": 10 * feerate})
         assert_raises_rpc_error(-4, "Fee exceeds maximum configured by -maxtxfee", self.nodes[3].fundrawtransaction, rawtx, {"feeRate": 1})
         result_fee_rate = result['fee'] * 1000 / count_bytes(result['hex'])
         assert_fee_amount(result2['fee'], count_bytes(result2['hex']), 2 * result_fee_rate)
         assert_fee_amount(result3['fee'], count_bytes(result3['hex']), 10 * result_fee_rate)
+
+        # Reset feerate
+        self.nodes[3].settxfee(self.min_relay_tx_fee)
 
     def test_address_reuse(self):
         """Test no address reuse occurs."""

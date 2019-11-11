@@ -15,9 +15,15 @@ CAmount GetRequiredFee(const CWallet& wallet, unsigned int nTxBytes)
 }
 
 
-CAmount GetMinimumFee(const CWallet& wallet, unsigned int nTxBytes, const CCoinControl& coin_control, FeeCalculation* feeCalc)
+CAmount GetMinimumFee(const CWallet& wallet, unsigned int nTxWeight, const CCoinControl& coin_control, FeeCalculation* feeCalc)
 {
-    return GetMinimumFeeRate(wallet, coin_control, feeCalc).GetFee(nTxBytes);
+    CFeeRate min_feerate = GetMinimumFeeRate(wallet, coin_control, feeCalc);
+    CAmount fees = min_feerate.GetFee(nTxWeight);
+    // Avoid fees below minimum treshold because of truncation
+    if (fees * 1000 / nTxWeight < min_feerate.GetFee(1000)) {
+        fees++;
+    }
+    return fees;
 }
 
 CFeeRate GetRequiredFeeRate(const CWallet& wallet)

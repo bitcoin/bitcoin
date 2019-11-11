@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <consensus/validation.h>
 #include <interfaces/chain.h>
 #include <wallet/coincontrol.h>
 #include <wallet/feebumper.h>
@@ -81,7 +82,7 @@ static feebumper::Result CheckFeeRate(const CWallet& wallet, const CWalletTx& wt
     // Given old total fee and transaction size, calculate the old feeRate
     isminefilter filter = wallet.GetLegacyScriptPubKeyMan() && wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) ? ISMINE_WATCH_ONLY : ISMINE_SPENDABLE;
     CAmount old_fee = wtx.GetDebit(filter) - wtx.tx->GetValueOut();
-    const int64_t txSize = GetVirtualTransactionSize(*(wtx.tx));
+    const int64_t txSize = GetTransactionWeight(*(wtx.tx));
     CFeeRate nOldFeeRate(old_fee, txSize);
     // Min total fee is old fee + relay fee
     CAmount minTotalFee = nOldFeeRate.GetFee(maxTxSize) + incrementalRelayFee.GetFee(maxTxSize);
@@ -112,12 +113,9 @@ static feebumper::Result CheckFeeRate(const CWallet& wallet, const CWalletTx& wt
 
 static CFeeRate EstimateFeeRate(const CWallet& wallet, const CWalletTx& wtx, const CAmount old_fee, CCoinControl& coin_control)
 {
-    // Get the fee rate of the original transaction. This is calculated from
-    // the tx fee/vsize, so it may have been rounded down. Add 1 satoshi to the
-    // result.
-    int64_t txSize = GetVirtualTransactionSize(*(wtx.tx));
+    // Get the fee rate of the original transaction.
+    int64_t txSize = GetTransactionWeight(*(wtx.tx));
     CFeeRate feerate(old_fee, txSize);
-    feerate += CFeeRate(1);
 
     // The node has a configurable incremental relay fee. Increment the fee by
     // the minimum of that and the wallet's conservative
@@ -189,7 +187,7 @@ Result CreateTotalBumpTransaction(const CWallet* wallet, const uint256& txid, co
     }
 
     // Calculate the expected size of the new transaction.
-    int64_t txSize = GetVirtualTransactionSize(*(wtx.tx));
+    int64_t txSize = GetTransactionWeight(*(wtx.tx));
     const int64_t maxNewTxSize = CalculateMaximumSignedTxSize(*wtx.tx, wallet);
     if (maxNewTxSize < 0) {
         errors.push_back("Transaction contains inputs that cannot be signed");

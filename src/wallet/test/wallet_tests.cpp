@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <vector>
 
+#include <consensus/validation.h>
 #include <interfaces/chain.h>
 #include <node/context.h>
 #include <policy/policy.h>
@@ -623,12 +624,12 @@ static size_t CalculateNestedKeyhashInputSize(bool use_max_sig)
 
     CTxIn tx_in;
     UpdateInput(tx_in, sig_data);
-    return (size_t)GetVirtualTransactionInputSize(tx_in);
+    return (size_t)GetTransactionInputWeight(tx_in);
 }
 
 BOOST_FIXTURE_TEST_CASE(dummy_input_size_test, TestChain100Setup)
 {
-    BOOST_CHECK_EQUAL(CalculateNestedKeyhashInputSize(false), DUMMY_NESTED_P2WPKH_INPUT_SIZE);
+    BOOST_CHECK_EQUAL(CalculateNestedKeyhashInputSize(false), DUMMY_NESTED_P2WPKH_INPUT_SIZE - 1);
     BOOST_CHECK_EQUAL(CalculateNestedKeyhashInputSize(true), DUMMY_NESTED_P2WPKH_INPUT_SIZE);
 }
 
