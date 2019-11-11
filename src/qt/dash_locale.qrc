@@ -13,6 +13,7 @@
         <file alias="nl">locale/dash_nl.qm</file>
         <file alias="pl">locale/dash_pl.qm</file>
         <file alias="pt">locale/dash_pt.qm</file>
+        <file alias="ro">locale/dash_ro.qm</file>
         <file alias="ru">locale/dash_ru.qm</file>
         <file alias="sk">locale/dash_sk.qm</file>
         <file alias="sv">locale/dash_sv.qm</file>

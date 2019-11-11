@@ -657,13 +657,6 @@
     </message>
 </context>
 <context>
-    <name>ClientModel</name>
-    <message>
-        <source>Network Alert</source>
-        <translation>Verkkohälytys</translation>
-    </message>
-</context>
-<context>
     <name>CoinControlDialog</name>
     <message>
         <source>Quantity:</source>
@@ -968,15 +961,15 @@
     </message>
     <message>
         <source>Reset all settings changed in the GUI</source>
-        <translation>Nollaa kaikki muokatut käyttöliittymän asetukset</translation>
+        <translation>Palauta kaikki muokatut käyttöliittymän asetukset</translation>
     </message>
     <message>
         <source>PrivateSend information</source>
         <translation>PrivateSend tietoja</translation>
     </message>
     <message>
-        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be anonymized. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more information, see the &lt;a href="https://docs.dash.org/en/latest/wallets/dashcore/privatesend-instantsend.html"&gt;PrivateSend documentation&lt;/a&gt;.</source>
-        <translation>&lt;h3&gt;PrivateSend perusteet&lt;/h3&gt; PrivateSend tarjoaa yksityisyyden hämärtämällä varojesi alkuperäisen osoitteen. Kaikki Dash:it lompakossasi muodostuvat erillisistä "syötteistä", joita voit ajatella erillisinä kolikkoina.&lt;br&gt; PrivateSend käyttää innovatiivista prosessia sekoittaakseen lompakkosi syötteet kahden muun ihmisen syötteisiin, siirtämättä varoja pois lompakostasi. Varojesi kontrolli pysyy aina sinulla.&lt;hr&gt; &lt;b&gt; PrivateSend prosessi toimii seuraavasti:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend aloittaa pilkkomalla siirtotapahtumiesi syötteet pienemmiksi standardi arvoiksi. Nämä arvot ovat 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH ja 10 DASH.&lt;/li&gt; &lt;li&gt;Sitten lompakkosi lähettää pyynnön verkon palvelimille, joita kutsutaan "masternode:iksi". Masternodet saavat tiedon että haluat sekoittaa pilkottuja standardi arvoja. Mitään tunnistetietoja ei lähetetä masternode:ille, ne eivät koskaan tiedä "kuka" olet.&lt;/li&gt; &lt;li&gt;Kun 2 muuta käyttäjää ilmoittaa että he haluavat myös sekoittaa varoja, alkaa sekoitus-sessio. Masternodet sekoittavat standardi arvot ja ilmoittavat kaikille 3:lle käyttäjän lompakoille että maksavat sekoitetut arvot takaisin itselleen. Lompakkosi maksaa nuo sekoitetut arvot suoraan itselleen, mutta eri osoitteeseen (vaihto-osoite).&lt;/li&gt; &lt;li&gt;Jotta varojesi alkuperäinen lähde hämärretään, lompakkosi suorittaa tämän prosessin useita kertoja kaikilla standardi arvoilla. Aina kun prosessi on valmis, sitä kutsutaan "kierrokseksi". Jokainen PrivateSend kierros tekee eksponentiaalisesti vaikeammaksi löytää varojesi alkuperäisen osoitteen.&lt;/li&gt; &lt;li&gt;Tämä sekoitusprosessi tapahtuu taustalla ilman käyttäjän toimenpiteitä. Kun haluat myöhemmin tehdä anonyymin varojen siirron, on varasi valmiiksi sekoitettu eli anonymisoitu. Erillistä sekoitusta/odotusta ei tarvita.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;TÄRKEÄÄ:&lt;/b&gt; Lompakkosi sisältää vain 1000 "vaihto-osoitetta". Aina kun sekoitustapahtuma tehdään, max 9 osoitetta käytetään. Tämä tarkoittaa sitä että nuo 1000 osoitetta kestää noin 100 sekoitustapahtumaa. Kun 900 osoitetta on käytetty, lompakkosi täytyy tehdä lisää osoitteita. Se voi tehdä niitä vain jos automaattinen varmistus on käytössä.&lt;br&gt; Tästä seuraa että jos varmistus ei ole käytössä, myös PrivateSend on pois käytöstä. &lt;hr&gt;Katso lisätietoja &lt;a href="https://docs.dash.org/en/latest/wallets/dashcore/privatesend-instantsend.html"&gt;PrivateSend dokumentaatiosta&lt;/a&gt;.</translation>
+        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be anonymized. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more information, see the &lt;a href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;PrivateSend documentation&lt;/a&gt;.</source>
+        <translation>&lt;h3&gt;PrivateSend perusteet&lt;/h3&gt; PrivateSend tarjoaa yksityisyyden hämärtämällä varojesi alkuperäisen osoitteen. Kaikki Dash:it lompakossasi muodostuvat erillisistä "syötteistä", joita voit ajatella erillisinä kolikkoina.&lt;br&gt; PrivateSend käyttää innovatiivista prosessia sekoittaakseen lompakkosi syötteet kahden muun ihmisen syötteisiin, siirtämättä varoja pois lompakostasi. Varojesi kontrolli pysyy aina sinulla.&lt;hr&gt; &lt;b&gt; PrivateSend prosessi toimii seuraavasti:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend aloittaa pilkkomalla siirtotapahtumiesi syötteet pienemmiksi standardi arvoiksi. Nämä arvot ovat 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH ja 10 DASH.&lt;/li&gt; &lt;li&gt;Sitten lompakkosi lähettää pyynnön verkon palvelimille, joita kutsutaan "masternode:iksi". Masternodet saavat tiedon että haluat sekoittaa pilkottuja standardi arvoja. Mitään tunnistetietoja ei lähetetä masternode:ille, ne eivät koskaan tiedä "kuka" olet.&lt;/li&gt; &lt;li&gt;Kun 2 muuta käyttäjää ilmoittaa että he haluavat myös sekoittaa varoja, alkaa sekoitus-sessio. Masternodet sekoittavat standardi arvot ja ilmoittavat kaikille 3:lle käyttäjän lompakoille että maksavat sekoitetut arvot takaisin itselleen. Lompakkosi maksaa nuo sekoitetut arvot suoraan itselleen, mutta eri osoitteeseen (vaihto-osoite).&lt;/li&gt; &lt;li&gt;Jotta varojesi alkuperäinen lähde hämärretään, lompakkosi suorittaa tämän prosessin useita kertoja kaikilla standardi arvoilla. Aina kun prosessi on valmis, sitä kutsutaan "kierrokseksi". Jokainen PrivateSend kierros tekee eksponentiaalisesti vaikeammaksi löytää varojesi alkuperäisen osoitteen.&lt;/li&gt; &lt;li&gt;Tämä sekoitusprosessi tapahtuu taustalla ilman käyttäjän toimenpiteitä. Kun haluat myöhemmin tehdä anonyymin varojen siirron, on varasi valmiiksi sekoitettu eli anonymisoitu. Erillistä sekoitusta/odotusta ei tarvita.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;TÄRKEÄÄ:&lt;/b&gt; Lompakkosi sisältää vain 1000 "vaihto-osoitetta". Aina kun sekoitustapahtuma tehdään, max 9 osoitetta käytetään. Tämä tarkoittaa sitä että nuo 1000 osoitetta kestää noin 100 sekoitustapahtumaa. Kun 900 osoitetta on käytetty, lompakkosi täytyy tehdä lisää osoitteita. Se voi tehdä niitä vain jos automaattinen varmistus on käytössä.&lt;br&gt; Tästä seuraa että jos varmistus ei ole käytössä, myös PrivateSend on pois käytöstä. &lt;hr&gt;Katso lisätietoja &lt;a href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;PrivateSend dokumentaatiosta&lt;/a&gt;.</translation>
     </message>
 </context>
 <context>
@@ -1326,6 +1319,10 @@
         <translation>&amp;Yhdistä SOCKS5 proxyn kautta (oletus: proxy):</translation>
     </message>
     <message>
+        <source>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
+        <translation>Näyttää onko oletus SOCKS5 proxy käytössä peers:ien tavoittamiseen tämän verkkotyypin kautta.</translation>
+    </message>
+    <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
         <translation>Ikkunaa suljettaessa pienennä ohjelman ikkuna lopettamatta itse ohjelmaa. Kun tämä asetus on valittuna, ohjelman voi sulkea vain valitsemalla Lopeta ohjelman valikosta.</translation>
     </message>
@@ -1396,10 +1393,6 @@
     <message>
         <source>Used for reaching peers via:</source>
         <translation>Käytetään peers tavoittamiseen:</translation>
-    </message>
-    <message>
-        <source>Shows, if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
-        <translation>Näyttää onko oletus SOCKS5 proxy käytössä peers:ien tavoittamiseen tämän verkkotyypin kautta.</translation>
     </message>
     <message>
         <source>IPv4</source>
@@ -2145,10 +2138,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&amp;Verkkoliikenne</translation>
     </message>
     <message>
-        <source>&amp;Clear</source>
-        <translation>&amp;Tyhjennä</translation>
-    </message>
-    <message>
         <source>Totals</source>
         <translation>Yhteensä</translation>
     </message>
@@ -2213,12 +2202,20 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Avaa %1 -debug-loki tämänhetkisestä datahakemistosta. Tämä voi viedä muutaman sekunnin suurille lokitiedostoille.</translation>
     </message>
     <message>
+        <source>InstantSend locks</source>
+        <translation>InstantSend lukitukset</translation>
+    </message>
+    <message>
         <source>Decrease font size</source>
         <translation>Pienennä fontin kokoa</translation>
     </message>
     <message>
         <source>Increase font size</source>
         <translation>Suurenna fontin kokoa</translation>
+    </message>
+    <message>
+        <source>&amp;Reset</source>
+        <translation>&amp;Nollaa</translation>
     </message>
     <message>
         <source>Services</source>
@@ -2357,15 +2354,15 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <translation>Tervetuloa %1 RPC konsoliin.</translation>
     </message>
     <message>
-        <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
-        <translation>Ylös- ja alas-nuolet selaavat historiaa ja &lt;b&gt;Ctrl-L&lt;/b&gt; tyhjentää ruudun.</translation>
-    </message>
-    <message>
         <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
         <translation>Kirjoita &lt;b&gt;help&lt;/b&gt; nähdäksesi käytettävissä olevat komennot.</translation>
     </message>
     <message>
-        <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramification of a command.</source>
+        <source>Use up and down arrows to navigate history, and %1 to clear screen.</source>
+        <translation>Ylös- ja alas-nuolet selaavat historiaa ja %1 tyhjentää ruudun.</translation>
+    </message>
+    <message>
+        <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</source>
         <translation>VAROITUS: Huijarit ovat olleet aktiivisia, kertoen käyttäjille komentoja tänne varastaen lompakon sisällön. Älä käytä tätä konsolia ymmärtämättä täysin komennon vaikutuksia.</translation>
     </message>
     <message>
@@ -2488,10 +2485,6 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <translation>Tyhjennä</translation>
     </message>
     <message>
-        <source>Request InstantSend</source>
-        <translation>Pyydä InstantSend</translation>
-    </message>
-    <message>
         <source>Requested payments history</source>
         <translation>Pyydettyjen maksujen historia</translation>
     </message>
@@ -2573,18 +2566,6 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
     <message>
         <source>Message</source>
         <translation>Viesti</translation>
-    </message>
-    <message>
-        <source>InstantSend</source>
-        <translation>InstantSend</translation>
-    </message>
-    <message>
-        <source>Yes</source>
-        <translation>Kyllä</translation>
-    </message>
-    <message>
-        <source>No</source>
-        <translation>Ei</translation>
     </message>
     <message>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
@@ -2693,14 +2674,6 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <translation>Valitse...</translation>
     </message>
     <message>
-        <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until your have validated the complete chain.</source>
-        <translation>Fallbackfee:n käyttö saattaa aiheuttaa että maksutapahtuman vahvistus kestää useita tunteja tai päiviä (tai ei koskaan). Harkitse että valitset siirtomaksun manuaalisesti tai odota että lohkoketju on täysin vahvistettu.</translation>
-    </message>
-    <message>
-        <source>Warning: Fee estimation is currently not possible.</source>
-        <translation>Varoitus: Kulujen arviointi ei ole juuri nyt mahdollista.</translation>
-    </message>
-    <message>
         <source>collapse fee-settings</source>
         <translation>pienennä siirtomaksu asetukset</translation>
     </message>
@@ -2713,16 +2686,8 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <translation>PrivateSend</translation>
     </message>
     <message>
-        <source>InstantSend</source>
-        <translation>InstantSend</translation>
-    </message>
-    <message>
         <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then "per kilobyte" only pays 250 duffs in fee,&lt;br /&gt;while "at least" pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
         <translation>Jos mukautettu siirtomaksu on asetettu 1000 duff ja siirtotapahtuma on vain 250 tavua,&lt;br /&gt;tällöin "per kilotavu" maksaa vain 250 duffs siirtomaksun, kun taas "vähintään" maksaa 1000 duffs.&lt;br /&gt;Siirtotapahtumat jotka ovat isompia kuin kilotavu, molemmat maksaa "per kilotavu".</translation>
-    </message>
-    <message>
-        <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then "per kilobyte" only pays 250 duffs in fee,&lt;br /&gt;while "total at least" pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation>Jos mukautettu siirtomaksu on asetettu 1000 duff ja siirtotapahtuma on vain 250 tavua,&lt;br /&gt;tällöin "per kilotavu" maksaa vain 250 duffs siirtomaksun, kun taas "yhteensä vähintään" maksaa 1000 duffs.&lt;br /&gt;Siirtotapahtumat jotka ovat isompia kuin kilotavu, molemmat maksaa "per kilotavu".</translation>
     </message>
     <message>
         <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for dash transactions than the network can process.</source>
@@ -2733,12 +2698,16 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <translation>per kilotavu</translation>
     </message>
     <message>
-        <source>Hide</source>
-        <translation>Piilota</translation>
+        <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</source>
+        <translation>Fallbackfee:n käyttö saattaa aiheuttaa että maksutapahtuman vahvistus kestää useita tunteja tai päiviä (tai ei koskaan). Harkitse että valitset siirtomaksun manuaalisesti tai odota että lohkoketju on täysin vahvistettu.</translation>
     </message>
     <message>
-        <source>total at least</source>
-        <translation>yhteensä vähintään</translation>
+        <source>Note: Not enough data for fee estimation, using the fallback fee instead.</source>
+        <translation>Huomio: Ei tarpeeksi tietoja siirtomaksun määrän arviointiin, käytetään oletus siirtomaksua.</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation>Piilota</translation>
     </message>
     <message>
         <source>(read the tooltip)</source>
@@ -2755,14 +2724,6 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
     <message>
         <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
         <translation>(Älykästä siirtomaksua ei ole alustettu vielä. Tämä kestää yleensä muutaman lohkon...)</translation>
-    </message>
-    <message>
-        <source>normal</source>
-        <translation>normaali</translation>
-    </message>
-    <message>
-        <source>fast</source>
-        <translation>nopea</translation>
     </message>
     <message>
         <source>Confirm the send action</source>
@@ -2821,6 +2782,10 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <translation>Kopioi vaihtoraha</translation>
     </message>
     <message>
+        <source>%1 (%2 blocks)</source>
+        <translation>%1 (%2 lohkoa)</translation>
+    </message>
+    <message>
         <source>using</source>
         <translation>käyttäen</translation>
     </message>
@@ -2835,10 +2800,6 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
     <message>
         <source>any available funds (not anonymous)</source>
         <translation>kaikkia käytössä olevia varoja (ei anonymisoituja)</translation>
-    </message>
-    <message>
-        <source>and InstantSend</source>
-        <translation>ja InstantSend</translation>
     </message>
     <message>
         <source>%1 to %2</source>
@@ -2899,10 +2860,6 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
     <message>
         <source>Payment request expired.</source>
         <translation>Maksupyyntö vanhentunut.</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n block(s)</source>
-        <translation><numerusform>%n lohko</numerusform><numerusform>%n lohkot</numerusform></translation>
     </message>
     <message>
         <source>Pay only the required fee of %1</source>
@@ -3240,18 +3197,6 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
     <message>
         <source>verified via LLMQ based InstantSend</source>
         <translation>vahvistettu LLMQ-pohjaisella InstantSend:illä</translation>
-    </message>
-    <message>
-        <source>verified via InstantSend</source>
-        <translation>vahvistettu InstanSend:illä</translation>
-    </message>
-    <message>
-        <source>InstantSend verification in progress - %1 of %2 signatures</source>
-        <translation>InstantSend vahvistus käynnissä - %1 / %2 allekirjoitusta</translation>
-    </message>
-    <message>
-        <source>InstantSend verification failed</source>
-        <translation>InstantSend vahvistus epäonnistui</translation>
     </message>
     <message>
         <source>Status</source>
@@ -3755,14 +3700,6 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <source>Send Coins</source>
         <translation>Lähetä Dasheja</translation>
     </message>
-    <message>
-        <source>InstantSend doesn't support sending values that high yet. Transactions are currently limited to %1 DASH.</source>
-        <translation>InstantSend ei tue näin korkeaa lähetysmäärää vielä. Siirtotapahtumat on tällä hetkellä rajoitettu %1 DASH.</translation>
-    </message>
-    <message>
-        <source>Used way too many inputs (&gt;%1) for this InstantSend transaction, fees could be huge.</source>
-        <translation>Käytetty liian monia syötteitä (&gt;%1) tähän InstantSend siirtotapahtumaan, siirtokulut voivat olla todella isot.</translation>
-    </message>
 </context>
 <context>
     <name>WalletView</name>
@@ -3828,10 +3765,6 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
     <message>
         <source>Name to construct url for KeePass entry that stores the wallet passphrase</source>
         <translation>Rakenne url nimi KeePass merkinnälle joka tallentaa lompakon salasanan</translation>
-    </message>
-    <message>
-        <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
-        <translation>Aseta maksimikoko korkea prioriteetti/pienen siirtomaksun siirtotapahtumiin tavuissa (oletus: %d)</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
@@ -3970,6 +3903,10 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <translation>Kytkeydy annettuun osoitteeseen ja merkitse siihen kytkeytyvät peers:it luotettaviksi. Käytä [host]:port merkintätapaa IPv6:lle.</translation>
     </message>
     <message>
+        <source>Connect only to the specified node(s); -connect=0 disables automatic connections</source>
+        <translation>Kytkeydy vain määriteltyyn solmu(un); -connect=0 poistaaksesi automaattiset kytkeytymiset käytöstä</translation>
+    </message>
+    <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
         <translation>Luo uudet tiedostot järjestelmän oletus oikeuksilla, paitsi umask 077 (voimassa vain käytöstä poistettujen lompakon toimintojen kanssa)</translation>
     </message>
@@ -3984,10 +3921,6 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
     <message>
         <source>Enable publish transaction hashes of attempted InstantSend double spend in &lt;address&gt;</source>
         <translation>Ota käyttöön julkaise siirtotapahtuman tarkisteet kaksoiskäytön yrityksessä InstantSend osoitteessa &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Error loading %s: You can't enable HD on a already existing non-HD wallet</source>
-        <translation>Virhe latauksessa %s: Et voi ottaa käyttöön HD:tä jo olemassa olevassa ei-HD lompakossa</translation>
     </message>
     <message>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
@@ -4054,20 +3987,8 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <translation>Luotettaviksi merkittyjä peers:jä ei voida DoS estää, ja niiden siirtotapahtumat välitetään aina, vaikka ne olisvatkin jo muistivarannossa, käyttökelpoinen esim. yhdyskäytävään</translation>
     </message>
     <message>
-        <source>You need to rebuild the database using -reindex-chainstate to change -txindex</source>
-        <translation>Sinun tulee uudelleen rakentaa tietokanta käyttäen -reindex-chainstate vaihtaen -txindex</translation>
-    </message>
-    <message>
-        <source>You should specify a masternodeblsprivkey in the configuration. Please see documentation for help.</source>
-        <translation>Sinun täytyy määritellä masternodeblsprivkey asetustiedostoon. Katso lisätietoja dokumentaatiosta.</translation>
-    </message>
-    <message>
         <source>(default: %s)</source>
         <translation>(oletus: %s)</translation>
-    </message>
-    <message>
-        <source>-wallet parameter must only specify a filename (not a path)</source>
-        <translation>-wallet parametrin täytyy määrittää vain tiedostonimi (ei polkua)</translation>
     </message>
     <message>
         <source>Accept public REST requests (default: %u)</source>
@@ -4100,10 +4021,6 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
     <message>
         <source>Entry exceeds maximum size.</source>
         <translation>Merkintä ylittää maksimin.</translation>
-    </message>
-    <message>
-        <source>Error loading %s: You can't disable HD on a already existing HD wallet</source>
-        <translation>Virhe latauksessa %s: Et voi poistaa käytöstä HD:tä jo olemassa olevassa HD lompakossa</translation>
     </message>
     <message>
         <source>Failed to load fulfilled requests cache from</source>
@@ -4162,12 +4079,12 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <translation>Saldo ei riitä.</translation>
     </message>
     <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
-        <translation>Virheellinen määrä -maxtxfee=&lt;amount&gt;: '%s' (oltava vähintään %s)</translation>
+        <source>Invalid amount for -discardfee=&lt;amount&gt;: '%s'</source>
+        <translation>Virheellinen määrä -discardfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
-        <source>Invalid masternodeblsprivkey. Please see documenation.</source>
-        <translation>Virheellinen masternodeblsprivkey. Katso lisätietoja dokumentaatiosta.</translation>
+        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
+        <translation>Virheellinen määrä -paytxfee=&lt;amount&gt;: '%s' (oltava vähintään %s)</translation>
     </message>
     <message>
         <source>Invalid minimum number of spork signers specified with -minsporkkeys</source>
@@ -4254,10 +4171,6 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <translation>Lähetä jäljitys/debug tiedot debug.log tiedostoon (default: %u)</translation>
     </message>
     <message>
-        <source>Send transactions as zero-fee transactions if possible (default: %u)</source>
-        <translation>Lähetä siirtotapahtumat nolla siirtomaksulla jos mahdollista (oletus: %u)</translation>
-    </message>
-    <message>
         <source>Set key pool size to &lt;n&gt; (default: %u)</source>
         <translation>Aseta avainvarannon koko &lt;n&gt; (oletus: %u)</translation>
     </message>
@@ -4296,10 +4209,6 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
     <message>
         <source>Synchronization finished</source>
         <translation>Synkronointi valmis</translation>
-    </message>
-    <message>
-        <source>This is not a Masternode.</source>
-        <translation>Tämä ei ole Masternode.</translation>
     </message>
     <message>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
@@ -4362,6 +4271,10 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <translation>Käyttäjä toimijan kommentti (%s) sisältää ei suositeltuja merkkejä.</translation>
     </message>
     <message>
+        <source>Verifying wallet(s)...</source>
+        <translation>Tarkistetaan lompakko(ja)...</translation>
+    </message>
+    <message>
         <source>Will retry...</source>
         <translation>Yritetään uudelleen...</translation>
     </message>
@@ -4414,16 +4327,8 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <translation>Älä pidä siirtotapahtumia muistivarannossa pidempään kuin &lt;n&gt; tuntia (oletus: %u)</translation>
     </message>
     <message>
-        <source>Enable InstantSend, show confirmations for locked transactions (0-1, default: %u)</source>
-        <translation>Ota InstantSend käyttöön, näytä lukittujen siirtojen vahvistukset (0-1, oletus: %u)</translation>
-    </message>
-    <message>
         <source>Enable multiple PrivateSend mixing sessions per block, experimental (0-1, default: %u)</source>
         <translation>Käytä useita PrivateSend sekoitus sessioita per lohko, kokeellinen (0-1, oletus: %u)</translation>
-    </message>
-    <message>
-        <source>Enable use of automated PrivateSend for funds stored in this wallet (0-1, default: %u)</source>
-        <translation>Ota käyttöön automaattinen PrivateSend rahavaroille tässä lompakossa  (0-1, oletus: %u)</translation>
     </message>
     <message>
         <source>Execute command when a wallet InstantSend transaction is successfully locked (%s in cmd is replaced by TxID)</source>
@@ -4448,14 +4353,6 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
     <message>
         <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
         <translation>Jos &lt;category&gt; ei ole toimitettu, tai &lt;category&gt; = 1, tulosta kaikki debug tiedot.</translation>
-    </message>
-    <message>
-        <source>InstantSend doesn't support sending values that high yet. Transactions are currently limited to %1 DASH.</source>
-        <translation>InstantSend ei tue näin korkeaa lähetysmäärää vielä. Siirtotapahtumat on tällä hetkellä rajoitettu %1 DASH.</translation>
-    </message>
-    <message>
-        <source>InstantSend requires inputs with at least %d confirmations, you might need to wait a few minutes and try again.</source>
-        <translation>InstantSend vaatii syötteille vähintään %d vahvistusta, odota muutama minuutti ja yritä uudelleen.</translation>
     </message>
     <message>
         <source>Maintain a full address index, used to query for the balance, txids and unspent outputs for addresses (default: %u)</source>
@@ -4484,6 +4381,10 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
     <message>
         <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
         <translation>Karsinta: viimeinen lompakon synkronointi menee yli karsitun datan. Sinun täytyy tehdä -reindex (lataa koko lohkoketju uudelleen)</translation>
+    </message>
+    <message>
+        <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect used)</source>
+        <translation>Tiedustele vertaisverkon osoitteita DNS hakua käyttäen, jos osoitteita ei ole riittävästi (oletus: 1 paitsi jos -connect on käytössä)</translation>
     </message>
     <message>
         <source>Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)</source>
@@ -4549,10 +4450,6 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
     <message>
         <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
         <translation>Varoitus: Tuntemattomia lohkoversioita louhitaan! On mahdollista että tuntemattomia sääntöjä on käytössä</translation>
-    </message>
-    <message>
-        <source>You are starting in lite mode, all Dash-specific functionality is disabled.</source>
-        <translation>Olet käynnistämässä lite tilassa, kaikki Dash-toiminnot ovat pois käytöstä.</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
@@ -4635,10 +4532,6 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>Varmistuksen poisto epäonnistui, virhe: %s</translation>
     </message>
     <message>
-        <source>Failed to load InstantSend data cache from</source>
-        <translation>InstantSend välimuistin lataaminen epäonnistui</translation>
-    </message>
-    <message>
         <source>Failed to load sporks cache from</source>
         <translation>Spork välimuistin lataaminen epäonnistui</translation>
     </message>
@@ -4659,6 +4552,10 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>Virheellinen määrä -fallbackfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
+        <source>Invalid masternodeblsprivkey. Please see documentation.</source>
+        <translation>Virheellinen masternodeblsprivkey. Katso lisätietoja dokumentaatiosta.</translation>
+    </message>
+    <message>
         <source>Keep the transaction memory pool below &lt;n&gt; megabytes (default: %u)</source>
         <translation>Pidä siirtotapahtuma muistivaranto alle &lt;n&gt; megatavun (oletus: %u)</translation>
     </message>
@@ -4669,10 +4566,6 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
     <message>
         <source>Last successful PrivateSend action was too recent.</source>
         <translation>Viimeisin onnistunut PrivateSend tapahtuma oli liian äskettäin.</translation>
-    </message>
-    <message>
-        <source>Loading InstantSend data cache...</source>
-        <translation>Ladataan InstantSend välimuistia...</translation>
     </message>
     <message>
         <source>Loading block index...</source>
@@ -4799,14 +4692,6 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>Skannaa lohkoketju uudelleen lompakon puuttuvien siirtotapahtumien vuoksi käynnistyksessä</translation>
     </message>
     <message>
-        <source>Submitted following entries to masternode: %u</source>
-        <translation>Lähetettiin seuraavia merkintöjä masternodelle: %u</translation>
-    </message>
-    <message>
-        <source>Submitted to masternode, waiting for more entries ( %u ) %s</source>
-        <translation>Lähetetty masternodelle, odotetaan lisää merkintöjä ( %u ) %s</translation>
-    </message>
-    <message>
         <source>Synchronizing blockchain...</source>
         <translation>Synkronoidaan lohkoketju...</translation>
     </message>
@@ -4859,10 +4744,6 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>Lompakon debug ja testausvalinnat:</translation>
     </message>
     <message>
-        <source>Wallet is not initialized</source>
-        <translation>Lompakko ei ole alustettu</translation>
-    </message>
-    <message>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
         <translation>Lompakko tarvitsee uudelleenkirjoittaa: käynnistä %s uudelleen</translation>
     </message>
@@ -4881,6 +4762,14 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
     <message>
         <source>You can not start a masternode in lite mode.</source>
         <translation>Et voi käynnistää masternodea lite tilassa.</translation>
+    </message>
+    <message>
+        <source>You can not start a masternode with wallet enabled.</source>
+        <translation>Et voi käynnistää masternodea kun lompakko on käytössä.</translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to change -txindex</source>
+        <translation>Sinun tulee uudelleen rakentaa tietokanta käyttäen -reindex vaihtaen -txindex</translation>
     </message>
     <message>
         <source>ZeroMQ notification options:</source>
@@ -4907,24 +4796,32 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>%s kehittäjät</translation>
     </message>
     <message>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect/-noconnect)</source>
-        <translation>Hyväksy yhteyksiä ulkopuolelta (oletus: 1 jos ei -proxy tai -connect/-noconnect)</translation>
-    </message>
-    <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
         <translation>Ei voida lukita datahakemistoa %s. %s on luultavasti jo käynnissä.</translation>
-    </message>
-    <message>
-        <source>Connect only to the specified node(s); -noconnect or -connect=0 alone to disable automatic connections</source>
-        <translation>Kytkeydy vain määriteltyyn solmu(un); -noconnect tai connect=0 yksin poistaaksesi automaattiset yhteydet</translation>
     </message>
     <message>
         <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
         <translation>Jaettu MIT ohjelmistolisenssin alaisuudessa, katso mukana tuleva %s tiedosto tai %s</translation>
     </message>
     <message>
+        <source>Enable use of PrivateSend for funds stored in this wallet (0-1, default: %u)</source>
+        <translation>Ota käyttöön PrivateSend rahavaroille tässä lompakossa (0-1, oletus: %u)</translation>
+    </message>
+    <message>
+        <source>Error loading %s: You can't enable HD on an already existing non-HD wallet</source>
+        <translation>Virhe ladatessa %s: Et voi ottaa käyttöön HD:tä jo olemassa olevassa ei-HD lompakossa</translation>
+    </message>
+    <message>
+        <source>Error loading wallet %s. -wallet parameter must only specify a filename (not a path).</source>
+        <translation>Virhe ladatessa lompakkoa %s. -wallet parametrin täytyy määrittää vain tiedostonimi (ei polkua).</translation>
+    </message>
+    <message>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
         <translation>Virhe luettaessa %s! Avaimet luetttiin oikein, mutta rahansiirtotiedot tai osoitekirjan sisältö saattavat olla puutteellisia tai vääriä.</translation>
+    </message>
+    <message>
+        <source>Exclude debugging information for a category. Can be used in conjunction with -debug=1 to output debug logs for all categories except one or more specified categories.</source>
+        <translation>Sulje luokan virheenkorjaustiedot pois. Voidaan käyttää yhdessä -debug=1 kanssa vikalokien talletukseen kaikkiin kategoriohin paitsi yhteen tai enempiin määriteltyihin kategorioihin.</translation>
     </message>
     <message>
         <source>Force relay of transactions from whitelisted peers even if they violate local relay policy (default: %d)</source>
@@ -4955,20 +4852,20 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>Ole hyvä ja avusta, jos %s on mielestäsi hyödyllinen. Vieraile %s saadaksesi lisää tietoa ohjelmistosta.</translation>
     </message>
     <message>
-        <source>Provide liquidity to PrivateSend by infrequently mixing coins on a continual basis (%u-%u, default: %u, 1=very frequent, high fees, %u=very infrequent, low fees)</source>
-        <translation>Tarjoa PrivateSend:ille likviditeettiä jatkuvaa kolikoiden sekoitusta varten (%u-%u, oletus: %u, 1=usein, isot maksukulut, %u=harvoin, pienet maksukulut)</translation>
-    </message>
-    <message>
-        <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect/-noconnect)</source>
-        <translation>Tiedustele vertaisverkon osoitteita DNS hakua käyttäen jos osoitteita ei ole riittävästi (oletus: 1 paitsi jos -connect/-noconnect)</translation>
-    </message>
-    <message>
         <source>Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, &gt;%u = automatically prune block files to stay under the specified target size in MiB)</source>
         <translation>Pienennä tilan tarvetta karsimalla (poistamalla) vanhoja lohkoja. Tämä mahdollistaa pruneblockchain RPC kutsun joka poistaa tietyt lohkot ja ottaa käyttöön automaattisen vanhojen lohkojen puhdistuksen jos tavoitekoko on annettu yksikkö MiB. Tämä tila on epäyhteensopiva -txindex ja -rescan kanssa. Varoitus: Tämän asetuksen peruminen vaatii koko lohkoketjun uudelleen lataamisen. (oletus: 0 = lohkojen karsinta ei käytössä, 1 =  salli manuaalinen puhdistus RPC:tä käyttäen, &gt;%u = automaattisesti puhdista lohkotiedostot että pysytään alle tavoitetilan MiB)</translation>
     </message>
     <message>
         <source>Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)</source>
         <translation>Aseta lohkon luonnissa lisättävien siirtojen vähimmäispalkkion suhde (%s/kt) (oletus: %s)</translation>
+    </message>
+    <message>
+        <source>The fee rate (in %s/kB) that indicates your tolerance for discarding change by adding it to the fee (default: %s). Note: An output is discarded if it is dust at this rate, but we will always discard up to the dust relay fee and a discard fee above that is limited by the fee estimate for the longest target</source>
+        <translation>Maksutaso (%s/kB) joka ilmaisee toleranssisi vaihtorahan hylkäämisessä lisäämällä se siirtomaksuun (default: %s). Huomio: Lähtö hylätään jos se on tomua tällä maksutasolla, mutta hylkäämme aina tomun välitysmaksun ja korkeamman välitysmaksun joka on rajoitettu välitysmaksun arvion pisimpään kohteeseen</translation>
+    </message>
+    <message>
+        <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
+        <translation>Tämä on siirtomaksun määrä jonka saatat hylätä jos vaihtoraha on pienempi kuin tomu tällä tasolla</translation>
     </message>
     <message>
         <source>This is the transaction fee you may pay when fee estimates are not available.</source>
@@ -4981,6 +4878,10 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
     <message>
         <source>Unable to locate enough PrivateSend non-denominated funds for this transaction.</source>
         <translation>Ei tarpeeksi PrivateSend ei-denominoituja varoja tälle siirtotapahtumalle.</translation>
+    </message>
+    <message>
+        <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
+        <translation>Ei voitu toistaa lohkoja. Sinun tulee uudelleen rakentaa tietokanta käyttäen -reindex-chainstate.</translation>
     </message>
     <message>
         <source>Use N separate masternodes for each denominated input to mix funds (%u-%u, default: %u)</source>
@@ -5007,8 +4908,24 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>Varoitus: Lompakkotiedosto on vioittunut, tiedot pelastettu. Alkuperäinen %s on tallennettu nimellä %s tänne %s, jos saldosi tai siirtohistoria on virheellinen, sinun tulisi palauttaa lompakkotiedosto varmuuskopiosta.</translation>
     </message>
     <message>
+        <source>Whether to save the mempool on shutdown and load on restart (default: %u)</source>
+        <translation>Tallenetaanko muistivaranto suljettaessa ja ladataaan käynnistyksessä (oletus: %u)</translation>
+    </message>
+    <message>
         <source>Whitelist peers connecting from the given IP address (e.g. 1.2.3.4) or CIDR notated network (e.g. 1.2.3.0/24). Can be specified multiple times.</source>
         <translation>Merkitse solmut luotettaviksi jotka kytkeytyvät annetusta verkkomaskista tai IP osoitteesta (esim. 1.2.3.4) tai CIDR merkitty verkosta (esim. 1.2.3.4/24). Voidaan määrittää useita kertoja.</translation>
+    </message>
+    <message>
+        <source>You are starting in lite mode, most Dash-specific functionality is disabled.</source>
+        <translation>Olet käynnistämässä lite tilassa, suurin osa Dash-toiminnoista ovat pois käytöstä.</translation>
+    </message>
+    <message>
+        <source>You must specify a masternodeblsprivkey in the configuration. Please see documentation for help.</source>
+        <translation>Sinun täytyy määritellä masternodeblsprivkey asetustiedostoon. Katso lisätietoja dokumentaatiosta.</translation>
+    </message>
+    <message>
+        <source>%d of last 100 blocks have unexpected version</source>
+        <translation>%d viimeisintä lohkoa 100:sta sisältää odottamattoman version</translation>
     </message>
     <message>
         <source>%s corrupt, salvage failed</source>
@@ -5039,6 +4956,10 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>-rpcport täytyy määritellä kun -devnet ja -server on määritelty</translation>
     </message>
     <message>
+        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
+        <translation>Hyväksy yhteyksiä ulkopuolelta (oletus: 1 jos ei -proxy tai -connect)</translation>
+    </message>
+    <message>
         <source>Allow RFC1918 addresses to be relayed and connected to (default: %u)</source>
         <translation>Salli RFC1918 osoitteiden tulla välitetyksi ja kytketyksi (oletus: %u)</translation>
     </message>
@@ -5059,6 +4980,10 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>Tekijänoikeus (C)</translation>
     </message>
     <message>
+        <source>Create up to N inputs of each denominated amount (%u-%u, default: %u)</source>
+        <translation>Luo maksimissaan N syötettä jokaiseen denominoituun määrään (%u-%u, oletus: %u)</translation>
+    </message>
+    <message>
         <source>Error loading %s</source>
         <translation>Virhe ladattaessa %s</translation>
     </message>
@@ -5069,6 +4994,22 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
     <message>
         <source>Error loading %s: Wallet requires newer version of %s</source>
         <translation>Virhe ladattaessa %s: Tarvitset uudemman %s version</translation>
+    </message>
+    <message>
+        <source>Error loading %s: You can't disable HD on an already existing HD wallet</source>
+        <translation>Virhe ladatessa %s: Et voi poistaa käytöstä HD:tä jo olemassa olevassa HD lompakossa</translation>
+    </message>
+    <message>
+        <source>Error loading wallet %s. -wallet filename must be a regular file.</source>
+        <translation>Virhe ladatessa lompakkoa %s. -wallet tiedostonimi täytyy olla tavallinen tiedosto.</translation>
+    </message>
+    <message>
+        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
+        <translation>Virhe ladatessa lompakkoa %s. -wallet tiedostonimi on jo olemassa.</translation>
+    </message>
+    <message>
+        <source>Error loading wallet %s. Invalid characters in -wallet filename.</source>
+        <translation>Virhe ladatessa lompakkoa %s. -wallet tiedostonimessä virheellisiä merkkejä.</translation>
     </message>
     <message>
         <source>Error upgrading chainstate database</source>
@@ -5087,6 +5028,10 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>Alustava järkevyyden tarkistus epäonnistui. %s sulkeutuu.</translation>
     </message>
     <message>
+        <source>Inputs vs outputs size mismatch.</source>
+        <translation>Syötteet vs lähdöt koko ei täsmää.</translation>
+    </message>
+    <message>
         <source>Invalid -onion address or hostname: '%s'</source>
         <translation>Virheellinen -onion osoite tai isäntänimi: '%s'</translation>
     </message>
@@ -5097,10 +5042,6 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
     <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
         <translation>Virheellinen määrä -%s=&lt;amount&gt;: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid characters in -wallet filename</source>
-        <translation>Virheellisiä merkkejä -wallet tiedostonimessä</translation>
     </message>
     <message>
         <source>Invalid spork address specified with -sporkaddr</source>
@@ -5119,10 +5060,6 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>Näytä tämä ohjeviesti ja poistu</translation>
     </message>
     <message>
-        <source>Receive and display P2P network alerts (default: %u)</source>
-        <translation>Vastaanota ja näytä P2P verkon hälytykset (oletus: %u)</translation>
-    </message>
-    <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
         <translation>Vähennetään -maxconnections %d -&gt; %d, järjestelmän rajoituksien takia.</translation>
     </message>
@@ -5133,6 +5070,10 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
     <message>
         <source>Relay non-P2SH multisig (default: %u)</source>
         <translation>Välitä non-P2SH multisig (oletus: %u)</translation>
+    </message>
+    <message>
+        <source>Replaying blocks...</source>
+        <translation>Toistetaan lohkoja...</translation>
     </message>
     <message>
         <source>Rescanning...</source>
@@ -5187,6 +5128,10 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>Määritä julkinen osoitteesi</translation>
     </message>
     <message>
+        <source>Start PrivateSend automatically (0-1, default: %u)</source>
+        <translation>Käynnistä PrivateSend automaattisesti (0-1, oletus: %u)</translation>
+    </message>
+    <message>
         <source>Starting network threads...</source>
         <translation>Käynnistetään verkkoa...</translation>
     </message>
@@ -5219,6 +5164,10 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>Siirtotapahtuma luotu onnistuneesti.</translation>
     </message>
     <message>
+        <source>Transaction fee and change calculation failed</source>
+        <translation>Siirtotapahtuman siirtomaksun ja vaihtorahan laskenta epäonnistui</translation>
+    </message>
+    <message>
         <source>Transaction fees are too high.</source>
         <translation>Siirtotapahtuman siirtomaksu on liian iso.</translation>
     </message>
@@ -5247,16 +5196,16 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>Tuntematon tila: id = %u</translation>
     </message>
     <message>
+        <source>Unsupported logging category %s=%s.</source>
+        <translation>Ei tuettu lokikategoria %s=%s.</translation>
+    </message>
+    <message>
         <source>Username for JSON-RPC connections</source>
         <translation>Käyttäjätunnus JSON-RPC yhteyksille</translation>
     </message>
     <message>
         <source>Verifying blocks...</source>
         <translation>Tarkistetaan lohkoja...</translation>
-    </message>
-    <message>
-        <source>Verifying wallet...</source>
-        <translation>Tarkistetaan lompakko...</translation>
     </message>
     <message>
         <source>Very low number of keys left: %d</source>
@@ -5285,10 +5234,6 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
     <message>
         <source>Your entries added successfully.</source>
         <translation>Merkinnnät lisätty onnistuneesti.</translation>
-    </message>
-    <message>
-        <source>Your transaction was accepted into the pool!</source>
-        <translation>Siirtotapahtuma hyväksytty varantoon!</translation>
     </message>
     <message>
         <source>Zapping all transactions from wallet...</source>
