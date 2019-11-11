@@ -410,7 +410,7 @@ static bool WriteBinaryFile(const fs::path &filename, const std::string &data)
 class TorController
 {
 public:
-    TorController(struct event_base* base, const std::string& target, bool fDiscover);
+    TorController(struct event_base* base, const std::string& target, bool f_discover);
     ~TorController();
 
     /** Get name of file to store private key in */
@@ -428,7 +428,7 @@ private:
     struct event *reconnect_ev;
     float reconnect_timeout;
     CService service;
-    const bool fDiscover;
+    const bool m_f_discover;
     /** Cookie for SAFECOOKIE auth */
     std::vector<uint8_t> cookie;
     /** ClientNonce for SAFECOOKIE auth */
@@ -451,9 +451,9 @@ private:
     static void reconnect_cb(evutil_socket_t fd, short what, void *arg);
 };
 
-TorController::TorController(struct event_base* _base, const std::string& _target, bool _fDiscover) :
+TorController::TorController(struct event_base* _base, const std::string& _target, bool f_discover) :
     base(_base),target(_target), conn(base), reconnect(true), reconnect_ev(0),
-    reconnect_timeout(RECONNECT_TIMEOUT_START), fDiscover(_fDiscover)
+    reconnect_timeout(RECONNECT_TIMEOUT_START), m_f_discover(f_discover)
 {
     reconnect_ev = event_new(base, -1, 0, reconnect_cb, this);
     if (!reconnect_ev)
@@ -508,7 +508,7 @@ void TorController::add_onion_cb(TorControlConnection& _conn, const TorControlRe
         } else {
             LogPrintf("tor: Error writing service private key to %s\n", GetPrivateKeyFile().string());
         }
-        AddLocal(service, fDiscover, LOCAL_MANUAL);
+        AddLocal(service, m_f_discover, LOCAL_MANUAL);
         // ... onion requested - keep connection open
     } else if (reply.code == 510) { // 510 Unrecognized command
         LogPrintf("tor: Add onion failed with unrecognized command (You probably need to upgrade Tor)\n");

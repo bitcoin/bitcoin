@@ -169,21 +169,19 @@ static int GetnScore(const CService& addr)
 }
 
 // Is our peer's addrLocal potentially useful as an external IP source?
-bool IsPeerAddrLocalGood(CNode* pnode, bool fDiscover)
+bool IsPeerAddrLocalGood(CNode* pnode, bool f_discover)
 {
     CService addrLocal = pnode->GetAddrLocal();
-    return fDiscover && pnode->addr.IsRoutable() && addrLocal.IsRoutable() &&
+    return f_discover && pnode->addr.IsRoutable() && addrLocal.IsRoutable() &&
            IsReachable(addrLocal.GetNetwork());
 }
 
 // pushes our own address to a peer
-void AdvertiseLocal(CNode* pnode, bool fDiscover)
+void AdvertiseLocal(CNode* pnode, bool f_discover)
 {
-    if (fListen && pnode->fSuccessfullyConnected)
-    {
+    if (fListen && pnode->fSuccessfullyConnected) {
         CAddress addrLocal = GetLocalAddress(&pnode->addr, pnode->GetLocalServices());
-        if (gArgs.GetBoolArg("-addrmantest", false))
-        {
+        if (gArgs.GetBoolArg("-addrmantest", false)) {
             // use IPv4 loopback during addrmantest
             addrLocal = CAddress(CService(LookupNumeric("127.0.0.1", GetListenPort())), pnode->GetLocalServices());
         }
@@ -191,13 +189,11 @@ void AdvertiseLocal(CNode* pnode, bool fDiscover)
         // tells us that it sees us as in case it has a better idea of our
         // address than we do.
         FastRandomContext rng;
-        if (IsPeerAddrLocalGood(pnode, fDiscover) && (!addrLocal.IsRoutable() ||
-            rng.randbits((GetnScore(addrLocal) > LOCAL_MANUAL) ? 3 : 1) == 0))
-        {
+        if (IsPeerAddrLocalGood(pnode, f_discover) && (!addrLocal.IsRoutable() ||
+            rng.randbits((GetnScore(addrLocal) > LOCAL_MANUAL) ? 3 : 1) == 0)) {
             addrLocal.SetIP(pnode->GetAddrLocal());
         }
-        if (addrLocal.IsRoutable() || gArgs.GetBoolArg("-addrmantest", false))
-        {
+        if (addrLocal.IsRoutable() || gArgs.GetBoolArg("-addrmantest", false)) {
             LogPrint(BCLog::NET, "AdvertiseLocal: advertising address %s\n", addrLocal.ToString());
             pnode->PushAddress(addrLocal, rng);
         }
@@ -205,18 +201,18 @@ void AdvertiseLocal(CNode* pnode, bool fDiscover)
 }
 
 // learn a new local address
-bool AddLocal(const CService& addr, bool fDiscover, int nScore)
+bool AddLocal(const CService& addr, bool f_discover, int nScore)
 {
     if (!addr.IsRoutable())
         return false;
 
-    if (!fDiscover && nScore < LOCAL_MANUAL)
+    if (!f_discover && nScore < LOCAL_MANUAL)
         return false;
 
     if (!IsReachable(addr))
         return false;
 
-    LogPrintf("AddLocal(%s,%i,%d)\n", addr.ToString(), nScore, fDiscover);
+    LogPrintf("AddLocal(%s,%i,%d)\n", addr.ToString(), nScore, f_discover);
 
     {
         LOCK(cs_mapLocalHost);
@@ -231,9 +227,9 @@ bool AddLocal(const CService& addr, bool fDiscover, int nScore)
     return true;
 }
 
-bool AddLocal(const CNetAddr& addr, bool fDiscover, int nScore)
+bool AddLocal(const CNetAddr& addr, bool f_discover, int nScore)
 {
-    return AddLocal(CService(addr, GetListenPort()), fDiscover, nScore);
+    return AddLocal(CService(addr, GetListenPort()), f_discover, nScore);
 }
 
 void RemoveLocal(const CService& addr)
@@ -1421,9 +1417,9 @@ static void ThreadMapPort()
     r = UPNP_GetValidIGD(devlist, &urls, &data, lanaddr, sizeof(lanaddr));
     if (r == 1)
     {
-        bool fDiscover = gArgs.GetBoolArg("-discover", true);
+        bool f_discover = gArgs.GetBoolArg("-discover", true);
 
-        if (fDiscover) {
+        if (f_discover) {
             char externalIPAddress[40];
             r = UPNP_GetExternalIPAddress(urls.controlURL, data.first.servicetype, externalIPAddress);
             if (r != UPNPCOMMAND_SUCCESS) {
@@ -1433,7 +1429,7 @@ static void ThreadMapPort()
                     CNetAddr resolved;
                     if (LookupHost(externalIPAddress, resolved, false)) {
                         LogPrintf("UPnP: ExternalIPAddress = %s\n", resolved.ToString().c_str());
-                        AddLocal(resolved, fDiscover, LOCAL_UPNP);
+                        AddLocal(resolved, f_discover, LOCAL_UPNP);
                     }
                 } else {
                     LogPrintf("UPnP: GetExternalIPAddress failed.\n");
@@ -2048,17 +2044,17 @@ bool CConnman::BindListenPort(const CService &addrBind, std::string& strError, b
 
     vhListenSocket.push_back(ListenSocket(hListenSocket, fWhitelisted));
 
-    if (addrBind.IsRoutable() && fDiscover && !fWhitelisted)
-        AddLocal(addrBind, fDiscover, LOCAL_BIND);
+    if (addrBind.IsRoutable() && m_f_discover && !fWhitelisted)
+        AddLocal(addrBind, m_f_discover, LOCAL_BIND);
 
     return true;
 }
 
 void Discover()
 {
-    bool fDiscover = gArgs.GetBoolArg("-discover", true);
+    bool f_discover = gArgs.GetBoolArg("-discover", true);
 
-    if (!fDiscover)
+    if (!f_discover)
         return;
 
 #ifdef WIN32
@@ -2071,7 +2067,7 @@ void Discover()
         {
             for (const CNetAddr &addr : vaddr)
             {
-                if (AddLocal(addr, fDiscover, LOCAL_IF))
+                if (AddLocal(addr, f_discover, LOCAL_IF))
                     LogPrintf("%s: %s - %s\n", __func__, pszHostName, addr.ToString());
             }
         }
@@ -2091,14 +2087,14 @@ void Discover()
             {
                 struct sockaddr_in* s4 = (struct sockaddr_in*)(ifa->ifa_addr);
                 CNetAddr addr(s4->sin_addr);
-                if (AddLocal(addr, fDiscover, LOCAL_IF))
+                if (AddLocal(addr, f_discover, LOCAL_IF))
                     LogPrintf("%s: IPv4 %s: %s\n", __func__, ifa->ifa_name, addr.ToString());
             }
             else if (ifa->ifa_addr->sa_family == AF_INET6)
             {
                 struct sockaddr_in6* s6 = (struct sockaddr_in6*)(ifa->ifa_addr);
                 CNetAddr addr(s6->sin6_addr);
-                if (AddLocal(addr, fDiscover, LOCAL_IF))
+                if (AddLocal(addr, f_discover, LOCAL_IF))
                     LogPrintf("%s: IPv6 %s: %s\n", __func__, ifa->ifa_name, addr.ToString());
             }
         }

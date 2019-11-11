@@ -143,7 +143,7 @@ public:
         bool m_use_addrman_outgoing = true;
         std::vector<std::string> m_specified_outgoing;
         std::vector<std::string> m_added_nodes;
-        bool fDiscover = true;
+        bool m_f_discover = true;
     };
 
     void Init(const Options& connOptions) {
@@ -170,7 +170,7 @@ public:
             LOCK(cs_vAddedNodes);
             vAddedNodes = connOptions.m_added_nodes;
         }
-        fDiscover = connOptions.fDiscover;
+        m_f_discover = connOptions.m_f_discover;
     }
 
     CConnman(uint64_t seed0, uint64_t seed1);
@@ -195,7 +195,7 @@ public:
     void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant* grantOutbound = nullptr, const char* strDest = nullptr, bool fOneShot = false, bool fFeeler = false, bool manual_connection = false);
     bool CheckIncomingNonce(uint64_t nonce);
 
-    bool isDiscover() const { return fDiscover; };
+    bool isDiscover() const { return m_f_discover; };
 
     bool ForNode(NodeId id, std::function<bool(CNode* pnode)> func);
 
@@ -417,7 +417,7 @@ private:
     CClientUIInterface* clientInterface;
     NetEventsInterface* m_msgproc;
     BanMan* m_banman;
-    bool fDiscover;
+    bool m_f_discover;
 
     /** SipHasher seeds for deterministic randomness */
     const uint64_t nSeed0, nSeed1;
@@ -500,8 +500,8 @@ enum
     LOCAL_MAX
 };
 
-bool IsPeerAddrLocalGood(CNode* pnode, bool fDiscover);
-void AdvertiseLocal(CNode* pnode, bool fDiscover);
+bool IsPeerAddrLocalGood(CNode* pnode, bool f_discover);
+void AdvertiseLocal(CNode* pnode, bool f_discover);
 
 /**
  * Mark a network as reachable or unreachable (no automatic connects to it)
@@ -513,8 +513,8 @@ bool IsReachable(enum Network net);
 /** @returns true if the address is in a reachable network, false otherwise */
 bool IsReachable(const CNetAddr& addr);
 
-bool AddLocal(const CService& addr, bool fDiscover, int nScore = LOCAL_NONE);
-bool AddLocal(const CNetAddr& addr, bool fDiscover, int nScore = LOCAL_NONE);
+bool AddLocal(const CService& addr, bool f_discover, int nScore = LOCAL_NONE);
+bool AddLocal(const CNetAddr& addr, bool f_discover, int nScore = LOCAL_NONE);
 void RemoveLocal(const CService& addr);
 bool SeenLocal(const CService& addr);
 bool IsLocal(const CService& addr);
