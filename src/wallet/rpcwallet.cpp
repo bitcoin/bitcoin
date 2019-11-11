@@ -2329,7 +2329,7 @@ static UniValue settxfee(const JSONRPCRequest& request)
     LOCK(pwallet->cs_wallet);
 
     CAmount nAmount = AmountFromValue(request.params[0]);
-    CFeeRate tx_fee_rate(nAmount, 1000);
+    CFeeRate tx_fee_rate(nAmount / WITNESS_SCALE_FACTOR, 1000);
     if (tx_fee_rate == CFeeRate(0)) {
         // automatic selection
     } else if (tx_fee_rate < pwallet->chain().relayMinFee()) {
@@ -2483,7 +2483,7 @@ static UniValue getwalletinfo(const JSONRPCRequest& request)
     if (pwallet->IsCrypted()) {
         obj.pushKV("unlocked_until", pwallet->nRelockTime);
     }
-    obj.pushKV("paytxfee", ValueFromAmount(pwallet->m_pay_tx_fee.GetFeePerK()));
+    obj.pushKV("paytxfee", ValueFromAmount(pwallet->m_pay_tx_fee.GetFee(1000 * WITNESS_SCALE_FACTOR)));
     obj.pushKV("private_keys_enabled", !pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS));
     obj.pushKV("avoid_reuse", pwallet->IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE));
     if (pwallet->IsScanning()) {
@@ -3062,7 +3062,7 @@ void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& f
 
         if (options.exists("feeRate"))
         {
-            coinControl.m_feerate = CFeeRate(AmountFromValue(options["feeRate"]));
+            coinControl.m_feerate = CFeeRate(AmountFromValue(options["feeRate"]) / WITNESS_SCALE_FACTOR);
             coinControl.fOverrideFeeRate = true;
         }
 
@@ -3413,7 +3413,7 @@ static UniValue bumpfee(const JSONRPCRequest& request)
                 throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid totalFee %s (must be greater than 0)", FormatMoney(totalFee)));
             }
         } else if (options.exists("fee_rate")) {
-            CFeeRate fee_rate(AmountFromValue(options["fee_rate"]));
+            CFeeRate fee_rate(AmountFromValue(options["fee_rate"]) / WITNESS_SCALE_FACTOR);
             if (fee_rate <= CFeeRate(0)) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid fee_rate %s (must be greater than 0)", fee_rate.ToString()));
             }
