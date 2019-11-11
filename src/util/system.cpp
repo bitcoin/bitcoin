@@ -344,7 +344,7 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
         }
     }
 
-    // we do not allow -includeconf from command line, so we clear it here
+    // we do not allow -includeconf from command line
     bool success = true;
     if (auto* includes = util::FindKey(m_settings.command_line_options, "includeconf")) {
         for (const auto& include : util::SettingsSpan(*includes)) {
@@ -780,7 +780,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
             return false;
         }
         // `-includeconf` cannot be included in the command line arguments except
-        // as `-noincludeconf` (which indicates that no conf file should be used).
+        // as `-noincludeconf` (which indicates that no included conf file should be used).
         bool use_conf_file{true};
         {
             LOCK(cs_args);
