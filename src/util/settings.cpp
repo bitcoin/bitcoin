@@ -68,7 +68,9 @@ SettingsValue GetSetting(const Settings& settings,
         // precedence over early settings, but for backwards compatibility in
         // the config file the precedence is reversed for all settings except
         // chain name settings.
-        const bool reverse_precedence = (source == Source::CONFIG_FILE_NETWORK_SECTION || source == Source::CONFIG_FILE_DEFAULT_SECTION) && !get_chain_name;
+        const bool reverse_precedence =
+            (source == Source::CONFIG_FILE_NETWORK_SECTION || source == Source::CONFIG_FILE_DEFAULT_SECTION) &&
+            !get_chain_name;
 
         // Weird behavior preserved for backwards compatibility: Negated
         // -regtest and -testnet arguments which you would expect to override
@@ -78,7 +80,10 @@ SettingsValue GetSetting(const Settings& settings,
         const bool skip_negated_command_line = get_chain_name;
 
         // Ignore settings in default config section if requested.
-        if (ignore_default_section_config && source == Source::CONFIG_FILE_DEFAULT_SECTION && !never_ignore_negated_setting) return;
+        if (ignore_default_section_config && source == Source::CONFIG_FILE_DEFAULT_SECTION &&
+            !never_ignore_negated_setting) {
+            return;
+        }
 
         // Skip negated command line settings.
         if (skip_negated_command_line && span.last_negated()) return;
@@ -111,7 +116,9 @@ std::vector<SettingsValue> GetSettingsList(const Settings& settings,
         // value is followed by non-negated value, in which case config file
         // settings will be brought back from the dead (but earlier command
         // line settings will still be ignored).
-        const bool add_zombie_config_values = (source == Source::CONFIG_FILE_NETWORK_SECTION || source == Source::CONFIG_FILE_DEFAULT_SECTION) && !prev_negated_empty;
+        const bool add_zombie_config_values =
+            (source == Source::CONFIG_FILE_NETWORK_SECTION || source == Source::CONFIG_FILE_DEFAULT_SECTION) &&
+            !prev_negated_empty;
 
         // Ignore settings in default config section if requested.
         if (ignore_default_section_config && source == Source::CONFIG_FILE_DEFAULT_SECTION) return;
