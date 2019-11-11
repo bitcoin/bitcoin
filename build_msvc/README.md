@@ -51,10 +51,10 @@ Building
 The instructions below use `vcpkg` to install the dependencies.
 
 - Install [`vcpkg`](https://github.com/Microsoft/vcpkg).
-- Install the required packages (replace x64 with x86 as required):
+- Install the required packages (replace x64 with x86 as required). The list of required packages can be found in the `build_msvc\vcpkg-packages.txt` file. The PowerShell command below will work if run from the repository root directory and `vcpkg` is in the path. Alternatively the contents of the packages text file can be pasted in place of the `Get-Content` cmdlet.
 
 ```
-PS >.\vcpkg install --triplet x64-windows-static boost-filesystem boost-multi-index boost-signals2 boost-test boost-thread libevent openssl zeromq berkeleydb rapidcheck double-conversion
+PS >.\vcpkg install --triplet x64-windows-static $(Get-Content -Path build_msvc\vcpkg-packages.txt).split()
 ```
 
 - Use Python to generate `*.vcxproj` from Makefile
@@ -68,13 +68,13 @@ PS >py -3 msvc-autogen.py
 - Build with Visual Studio 2017 or msbuild.
 
 ```
-msbuild /m bitcoin.sln /p:Platform=x64 /p:Configuration=Release /t:build
+msbuild /m bitcoin.sln /p:Platform=x64 /p:Configuration=Release /p:PlatformToolset=v141 /t:build
 ```
 
 - Build with Visual Studio 2019 or msbuild.
 
 ```
-msbuild /m bitcoin.sln /p:Platform=x64 /p:Configuration=Release /p:PlatformToolset=v142 /t:build
+msbuild /m bitcoin.sln /p:Platform=x64 /p:Configuration=Release /t:build
 ```
 
 AppVeyor
