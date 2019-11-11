@@ -166,7 +166,7 @@ public:
         consensus.nSuperblockCycle = 24; // ~(60*24*30)/2.6, actual number of blocks per month is 200700 / 12 = 16725
         consensus.nGovernanceMinQuorum = 1;
         consensus.nGovernanceFilterElements = 500;
-        consensus.nBudgetPaymentsStartBlock = 500;
+        consensus.nBudgetPaymentsStartBlock = 501;
         consensus.nBudgetPaymentsCycleBlocks = 50;
         consensus.nBudgetPaymentsWindowBlocks = 10;
         consensus.nSuperblockStartBlock = 600; // NOTE: Should satisfy nSuperblockStartBlock > nBudgetPaymentsStartBlock
