@@ -172,11 +172,9 @@ public:
     {
         m_notifications->TransactionRemovedFromMempool(tx);
     }
-    void BlockConnected(const std::shared_ptr<const CBlock>& block,
-        const CBlockIndex* index,
-        const std::vector<CTransactionRef>& tx_conflicted) override
+    void BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* index) override
     {
-        m_notifications->BlockConnected(*block, tx_conflicted, index->nHeight);
+        m_notifications->BlockConnected(*block, index->nHeight);
     }
     void BlockDisconnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* index) override
     {

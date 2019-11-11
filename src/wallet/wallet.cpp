@@ -1110,7 +1110,7 @@ void CWallet::TransactionRemovedFromMempool(const CTransactionRef &ptx) {
     }
 }
 
-void CWallet::BlockConnected(const CBlock& block, const std::vector<CTransactionRef>& vtxConflicted, int height)
+void CWallet::BlockConnected(const CBlock& block, int height)
 {
     const uint256& block_hash = block.GetHash();
     auto locked_chain = chain().lock();
