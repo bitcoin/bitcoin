@@ -953,13 +953,13 @@ UniValue voteraw(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 7)
         throw std::runtime_error(
-                "voteraw <masternode-tx-hash> <masternode-tx-index> <governance-hash> <vote-signal> [yes|no|abstain] <time> <vote-sig>\n"
+                "voteraw <mn-collateral-tx-hash> <mn-collateral-tx-index> <governance-hash> <vote-signal> [yes|no|abstain] <time> <vote-sig>\n"
                 "Compile and relay a governance vote with provided external signature instead of signing vote internally\n"
                 );
 
-    uint256 hashMnTx = ParseHashV(request.params[0], "mn tx hash");
-    int nMnTxIndex = request.params[1].get_int();
-    COutPoint outpoint = COutPoint(hashMnTx, nMnTxIndex);
+    uint256 hashMnCollateralTx = ParseHashV(request.params[0], "mn collateral tx hash");
+    int nMnCollateralTxIndex = request.params[1].get_int();
+    COutPoint outpoint = COutPoint(hashMnCollateralTx, nMnCollateralTxIndex);
 
     uint256 hashGovObj = ParseHashV(request.params[2], "Governance hash");
     std::string strVoteSignal = request.params[3].get_str();
