@@ -68,6 +68,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
     fs::create_directories(m_path_root);
     gArgs.ForceSetArg("-datadir", m_path_root.string());
     ClearDatadirCache();
+    gArgs.ForceSetArg("-checkblockindex", "1");
     SelectParams(chainName);
     SeedInsecureRand();
     gArgs.ForceSetArg("-printtoconsole", "0");
@@ -79,7 +80,6 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
     SetupNetworking();
     InitSignatureCache();
     InitScriptExecutionCache();
-    fCheckBlockIndex = true;
     static bool noui_connected = false;
     if (!noui_connected) {
         noui_connect();
