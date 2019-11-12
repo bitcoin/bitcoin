@@ -5,6 +5,7 @@
 #include <wallet/coinselection.h>
 
 #include <optional.h>
+#include <policy/feerate.h>
 #include <util/system.h>
 #include <util/moneystr.h>
 
@@ -311,7 +312,9 @@ void OutputGroup::Insert(const CInputCoin& output, int depth, bool from_me, size
     // descendants is the count as seen from the top ancestor, not the descendants as seen from the
     // coin itself; thus, this value is counted as the max, not the sum
     m_descendants = std::max(m_descendants, descendants);
-    effective_value = m_value;
+    effective_value += output.effective_value;
+    fee += output.m_fee;
+    long_term_fee += output.m_long_term_fee;
 }
 
 std::vector<CInputCoin>::iterator OutputGroup::Discard(const CInputCoin& output) {
@@ -320,6 +323,8 @@ std::vector<CInputCoin>::iterator OutputGroup::Discard(const CInputCoin& output)
     if (it == m_outputs.end()) return it;
     m_value -= output.txout.nValue;
     effective_value -= output.effective_value;
+    fee -= output.m_fee;
+    long_term_fee -= output.m_long_term_fee;
     return m_outputs.erase(it);
 }
 
@@ -328,4 +333,36 @@ bool OutputGroup::EligibleForSpending(const CoinEligibilityFilter& eligibility_f
     return m_depth >= (m_from_me ? eligibility_filter.conf_mine : eligibility_filter.conf_theirs)
         && m_ancestors <= eligibility_filter.max_ancestors
         && m_descendants <= eligibility_filter.max_descendants;
+}
+
+void OutputGroup::SetFees(const CFeeRate effective_feerate, const CFeeRate long_term_feerate)
+{
+    fee = 0;
+    long_term_fee = 0;
+    effective_value = 0;
+    for (CInputCoin& coin : m_outputs) {
+        coin.m_fee = coin.m_input_bytes < 0 ? 0 : effective_feerate.GetFee(coin.m_input_bytes);
+        fee += coin.m_fee;
+
+        coin.m_long_term_fee = coin.m_input_bytes < 0 ? 0 : long_term_feerate.GetFee(coin.m_input_bytes);
+        long_term_fee += coin.m_long_term_fee;
+
+        coin.effective_value = coin.txout.nValue - coin.m_fee;
+        effective_value += coin.effective_value;
+    }
+}
+
+OutputGroup OutputGroup::GetPositiveOnlyGroup()
+{
+    OutputGroup group(*this);
+    for (auto it = group.m_outputs.begin(); it != group.m_outputs.end(); ) {
+        const CInputCoin& coin = *it;
+        // Only include outputs that are positive effective value (i.e. not dust)
+        if (coin.effective_value <= 0) {
+            it = group.Discard(coin);
+        } else {
+            ++it;
+        }
+    }
+    return group;
 }
