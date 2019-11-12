@@ -10,8 +10,9 @@ src/dash
 src/dashd
 src/dash-cli
 src/dash-tx
+src/test/fuzz
+!src/test/fuzz/*.*
 src/test/test_dash
-src/test/test_dash_fuzzy
 src/qt/test/test_dash-qt
 src/qt/res/css/colors/*
 src/bench/bench_dash
