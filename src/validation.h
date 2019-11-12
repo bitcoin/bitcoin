@@ -64,7 +64,7 @@ static const unsigned int DEFAULT_DESCENDANT_SIZE_LIMIT = 101;
  * ancestor and is no larger than this. Not really any reason to make this
  * configurable as it doesn't materially change DoS parameters.
  */
-static const unsigned int EXTRA_DESCENDANT_TX_SIZE_LIMIT = 10000;
+static const unsigned int EXTRA_DESCENDANT_TX_SIZE_LIMIT = 40000;
 /** Default for -mempoolexpiry, expiration time for mempool transactions in hours */
 static const unsigned int DEFAULT_MEMPOOL_EXPIRY = 336;
 /** Maximum kilobytes for transactions to store for processing during reorg */

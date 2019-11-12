@@ -177,16 +177,16 @@ bool CTxMemPool::CalculateMemPoolAncestors(const CTxMemPoolEntry &entry, setEntr
         parentHashes = GetMemPoolParents(it);
     }
 
-    size_t totalSizeWithAncestors = entry.GetTxSize();
+    size_t totalSizeWithAncestors = entry.GetTxWeight();
 
     while (!parentHashes.empty()) {
         txiter stageit = *parentHashes.begin();
 
         setAncestors.insert(stageit);
         parentHashes.erase(stageit);
-        totalSizeWithAncestors += stageit->GetTxSize();
+        totalSizeWithAncestors += stageit->GetTxWeight();
 
-        if (stageit->GetSizeWithDescendants() + entry.GetTxSize() > limitDescendantSize) {
+        if (stageit->GetWeightWithDescendants() + entry.GetTxWeight() > limitDescendantSize) {
             errString = strprintf("exceeds descendant size limit for tx %s [limit: %u]", stageit->GetTx().GetHash().ToString(), limitDescendantSize);
             return false;
         } else if (stageit->GetCountWithDescendants() + 1 > limitDescendantCount) {
@@ -1017,9 +1017,10 @@ CFeeRate CTxMemPool::GetMinFee(size_t sizelimit) const {
     int64_t time = GetTime();
     if (time > lastRollingFeeUpdate + 10) {
         double halflife = ROLLING_FEE_HALFLIFE;
-        if (DynamicMemoryUsage() < sizelimit / 4)
+        // The memory usage is in (real) bytes, though the size is in weight units.
+        if (DynamicMemoryUsage() * WITNESS_SCALE_FACTOR < sizelimit / 4)
             halflife /= 4;
-        else if (DynamicMemoryUsage() < sizelimit / 2)
+        else if (DynamicMemoryUsage() * WITNESS_SCALE_FACTOR < sizelimit / 2)
             halflife /= 2;
 
         rollingMinimumFeeRate = rollingMinimumFeeRate / pow(2.0, (time - lastRollingFeeUpdate) / halflife);
@@ -1046,14 +1047,15 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpends
 
     unsigned nTxnRemoved = 0;
     CFeeRate maxFeeRateRemoved(0);
-    while (!mapTx.empty() && DynamicMemoryUsage() > sizelimit) {
+    // The DynamicMemoryUsage is in (real) bytes, but our size in weight units.
+    while (!mapTx.empty() && DynamicMemoryUsage() * WITNESS_SCALE_FACTOR > sizelimit) {
         indexed_transaction_set::index<descendant_score>::type::iterator it = mapTx.get<descendant_score>().begin();
 
         // We set the new mempool min fee to the feerate of the removed set, plus the
         // "minimum reasonable fee rate" (ie some value under which we consider txn
         // to have 0 fee). This way, we don't allow txn to enter mempool with feerate
         // equal to txn which were removed with no block in between.
-        CFeeRate removed(it->GetModFeesWithDescendants(), it->GetSizeWithDescendants());
+        CFeeRate removed(it->GetModFeesWithDescendants(), it->GetWeightWithDescendants());
         removed += incrementalRelayFee;
         trackPackageRemoved(removed);
         maxFeeRateRemoved = std::max(maxFeeRateRemoved, removed);

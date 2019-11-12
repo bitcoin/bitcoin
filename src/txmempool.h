@@ -233,15 +233,15 @@ public:
     {
         // Compare feerate with descendants to feerate of the transaction, and
         // return the fee/size for the max.
-        double f1 = (double)a.GetModifiedFee() * a.GetSizeWithDescendants();
-        double f2 = (double)a.GetModFeesWithDescendants() * a.GetTxSize();
+        double f1 = (double)a.GetModifiedFee() * a.GetWeightWithDescendants();
+        double f2 = (double)a.GetModFeesWithDescendants() * a.GetTxWeight();
 
         if (f2 > f1) {
             mod_fee = a.GetModFeesWithDescendants();
-            size = a.GetSizeWithDescendants();
+            size = a.GetWeightWithDescendants();
         } else {
             mod_fee = a.GetModifiedFee();
-            size = a.GetTxSize();
+            size = a.GetTxWeight();
         }
     }
 };
@@ -258,8 +258,8 @@ class CompareTxMemPoolEntryByScore
 public:
     bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b) const
     {
-        double f1 = (double)a.GetFee() * b.GetTxSize();
-        double f2 = (double)b.GetFee() * a.GetTxSize();
+        double f1 = (double)a.GetFee() * b.GetTxWeight();
+        double f2 = (double)b.GetFee() * a.GetTxWeight();
         if (f1 == f2) {
             return b.GetTx().GetHash() < a.GetTx().GetHash();
         }
@@ -307,15 +307,15 @@ public:
     {
         // Compare feerate with ancestors to feerate of the transaction, and
         // return the fee/size for the min.
-        double f1 = (double)a.GetModifiedFee() * a.GetSizeWithAncestors();
-        double f2 = (double)a.GetModFeesWithAncestors() * a.GetTxSize();
+        double f1 = (double)a.GetModifiedFee() * a.GetWeightWithAncestors();
+        double f2 = (double)a.GetModFeesWithAncestors() * a.GetTxWeight();
 
         if (f1 > f2) {
             mod_fee = a.GetModFeesWithAncestors();
-            size = a.GetSizeWithAncestors();
+            size = a.GetWeightWithAncestors();
         } else {
             mod_fee = a.GetModifiedFee();
-            size = a.GetTxSize();
+            size = a.GetTxWeight();
         }
     }
 };
