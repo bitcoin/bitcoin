@@ -63,6 +63,8 @@ int main(int argc, char *argv[])
         setenv("QT_QPA_PLATFORM", "minimal", /* overwrite */ 0);
     #endif
 
+    qRegisterMetaType<size_t>("size_t");
+
     // Don't remove this, it's needed to access
     // QApplication:: and QCoreApplication:: in the tests
     BitcoinApplication app(*node);
