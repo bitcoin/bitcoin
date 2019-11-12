@@ -65,6 +65,23 @@ Q_DECLARE_METATYPE(CAmount)
 Q_DECLARE_METATYPE(SynchronizationState)
 Q_DECLARE_METATYPE(uint256)
 
+static void RegisterMetaTypes()
+{
+    // Register meta types used for QMetaObject::invokeMethod and Qt::QueuedConnection
+    qRegisterMetaType<bool*>();
+    qRegisterMetaType<SynchronizationState>();
+  #ifdef ENABLE_WALLET
+    qRegisterMetaType<WalletModel*>();
+  #endif
+    // Register typedefs (see http://qt-project.org/doc/qt-5/qmetatype.html#qRegisterMetaType)
+    // IMPORTANT: if CAmount is no longer a typedef use the normal variant above (see https://doc.qt.io/qt-5/qmetatype.html#qRegisterMetaType-1)
+    qRegisterMetaType<CAmount>("CAmount");
+    qRegisterMetaType<size_t>("size_t");
+
+    qRegisterMetaType<std::function<void()>>("std::function<void()>");
+    qRegisterMetaType<QMessageBox::Icon>("QMessageBox::Icon");
+}
+
 static QString GetLangTerritory()
 {
     QSettings settings;
@@ -184,6 +201,7 @@ BitcoinApplication::BitcoinApplication(interfaces::Node& node):
     returnValue(0),
     platformStyle(nullptr)
 {
+    RegisterMetaTypes();
     setQuitOnLastWindowClosed(false);
 }
 
@@ -434,20 +452,6 @@ int GuiMain(int argc, char* argv[])
 #endif
 
     BitcoinApplication app(*node);
-
-    // Register meta types used for QMetaObject::invokeMethod and Qt::QueuedConnection
-    qRegisterMetaType<bool*>();
-    qRegisterMetaType<SynchronizationState>();
-#ifdef ENABLE_WALLET
-    qRegisterMetaType<WalletModel*>();
-#endif
-    // Register typedefs (see http://qt-project.org/doc/qt-5/qmetatype.html#qRegisterMetaType)
-    // IMPORTANT: if CAmount is no longer a typedef use the normal variant above (see https://doc.qt.io/qt-5/qmetatype.html#qRegisterMetaType-1)
-    qRegisterMetaType<CAmount>("CAmount");
-    qRegisterMetaType<size_t>("size_t");
-
-    qRegisterMetaType<std::function<void()>>("std::function<void()>");
-    qRegisterMetaType<QMessageBox::Icon>("QMessageBox::Icon");
 
     /// 2. Parse command-line options. We do this after qt in order to show an error if there are problems parsing these
     // Command-line options take precedence:
