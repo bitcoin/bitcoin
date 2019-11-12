@@ -1223,21 +1223,10 @@ bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txid, AssetM
         return false;
     }
     #if __cplusplus > 201402 
-    auto result = mapAssets.try_emplace(theAsset.nAsset,  std::move(emptyAsset));
+    mapAssets.try_emplace(theAsset.nAsset,  std::move(emptyAsset));
     #else
-    auto result  = mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(theAsset.nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
-    #endif  
-    auto mapAsset = result.first;
-    const bool &mapAssetNotFound = result.second;
-    if(mapAssetNotFound){
-        CAsset dbAsset;
-        if (!GetAsset(theAsset.nAsset, dbAsset)) {
-            LogPrint(BCLog::SYS,"DisconnectAssetActivate: Could not get asset %d\n",theAsset.nAsset);
-            return false;               
-        } 
-        mapAsset->second = std::move(dbAsset);      
-    }
-    mapAsset->second.SetNull();  
+    mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(theAsset.nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
+    #endif
     if(fAssetIndex){
         if(fAssetIndexGuids.empty() || std::find(fAssetIndexGuids.begin(), fAssetIndexGuids.end(), theAsset.nAsset) != fAssetIndexGuids.end()){
             if(passetindexdb->Exists(std::make_pair(false, theAsset.nAsset)) && !passetindexdb->EraseIndexTXID(theAsset.nAsset, txid)){

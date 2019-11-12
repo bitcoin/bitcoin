@@ -1886,7 +1886,8 @@ BOOST_AUTO_TEST_CASE(generate_asset_consistency_check)
 	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "getblockcount"));
     string strAfterBlockCount = itostr(r.get_int());
 	BOOST_CHECK_EQUAL(strAfterBlockCount, "9");
-
+    // sysx asset shouldn't exist
+    BOOST_CHECK_THROW(CallExtRPC("node1", "assetinfo" , strSYSXAsset), runtime_error);
 	UniValue emptyResult(UniValue::VARR);
 	BOOST_CHECK_NO_THROW(assetInvalidatedResults = CallExtRPC("node1", "listassets" , itostr(INT_MAX) + ",0"));
 	BOOST_CHECK_EQUAL(assetInvalidatedResults.write(), emptyResult.write());
