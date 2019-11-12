@@ -167,23 +167,6 @@ static std::string SettingName(const std::string& arg)
     return arg.size() > 0 && arg[0] == '-' ? arg.substr(1) : arg;
 }
 
-/** Internal helper functions for ArgsManager */
-class ArgsManagerHelper {
-public:
-    /** Determine whether to use config settings in the default section,
-     *  See also comments around ArgsManager::ArgsManager() below. */
-    static inline bool UseDefaultSection(const ArgsManager& am, const std::string& arg) EXCLUSIVE_LOCKS_REQUIRED(am.cs_args)
-    {
-        return (am.m_network == CBaseChainParams::MAIN || am.m_network_only_args.count(arg) == 0);
-    }
-
-    static util::SettingsValue Get(const ArgsManager& am, const std::string& arg)
-    {
-        LOCK(am.cs_args);
-        return GetSetting(am.m_settings, am.m_network, SettingName(arg), !UseDefaultSection(am, arg), /* get_chain_name= */ false);
-    }
-};
-
 /**
  * Interpret -nofoo as if the user supplied -foo=0.
  *
@@ -370,7 +353,7 @@ Optional<unsigned int> ArgsManager::GetArgFlags(const std::string& name) const
 std::vector<std::string> ArgsManager::GetArgs(const std::string& strArg) const
 {
     LOCK(cs_args);
-    bool ignore_default_section_config = !ArgsManagerHelper::UseDefaultSection(*this, strArg);
+    bool ignore_default_section_config = !UseDefaultSection(strArg);
     std::vector<std::string> result;
     for (const util::SettingsValue& value :
         util::GetSettingsList(m_settings, m_network, SettingName(strArg), ignore_default_section_config)) {
@@ -381,29 +364,29 @@ std::vector<std::string> ArgsManager::GetArgs(const std::string& strArg) const
 
 bool ArgsManager::IsArgSet(const std::string& strArg) const
 {
-    return !ArgsManagerHelper::Get(*this, strArg).isNull();
+    return !GetSetting(strArg).isNull();
 }
 
 bool ArgsManager::IsArgNegated(const std::string& strArg) const
 {
-    return ArgsManagerHelper::Get(*this, strArg).isFalse();
+    return GetSetting(strArg).isFalse();
 }
 
 std::string ArgsManager::GetArg(const std::string& strArg, const std::string& strDefault) const
 {
-    const util::SettingsValue value = ArgsManagerHelper::Get(*this, strArg);
+    const util::SettingsValue value = GetSetting(strArg);
     return value.isNull() ? strDefault : value.isFalse() ? "0" : value.isTrue() ? "1" : value.get_str();
 }
 
 int64_t ArgsManager::GetArg(const std::string& strArg, int64_t nDefault) const
 {
-    const util::SettingsValue value = ArgsManagerHelper::Get(*this, strArg);
+    const util::SettingsValue value = GetSetting(strArg);
     return value.isNull() ? nDefault : value.isFalse() ? 0 : value.isTrue() ? 1 : value.isNum() ? value.get_int64() : atoi64(value.get_str());
 }
 
 bool ArgsManager::GetBoolArg(const std::string& strArg, bool fDefault) const
 {
-    const util::SettingsValue value = ArgsManagerHelper::Get(*this, strArg);
+    const util::SettingsValue value = GetSetting(strArg);
     return value.isNull() ? fDefault : value.isBool() ? value.get_bool() : InterpretBool(value.get_str());
 }
 
@@ -854,9 +837,9 @@ std::string ArgsManager::GetChainName() const
 {
     auto get_net = [&](const std::string& arg) {
         LOCK(cs_args);
-        util::SettingsValue value = GetSetting(m_settings, /* section= */ "", SettingName(arg),
-                                               /* ignore_default_section_config= */ false,
-                                               /* get_chain_name= */ true);
+        util::SettingsValue value = util::GetSetting(m_settings, /* section= */ "", SettingName(arg),
+            /* ignore_default_section_config= */ false,
+            /* get_chain_name= */ true);
         return value.isNull() ? false : value.isBool() ? value.get_bool() : InterpretBool(value.get_str());
     };
 
@@ -872,6 +855,18 @@ std::string ArgsManager::GetChainName() const
     if (fTestNet)
         return CBaseChainParams::TESTNET;
     return GetArg("-chain", CBaseChainParams::MAIN);
+}
+
+bool ArgsManager::UseDefaultSection(const std::string& arg) const
+{
+    return m_network == CBaseChainParams::MAIN || m_network_only_args.count(arg) == 0;
+}
+
+util::SettingsValue ArgsManager::GetSetting(const std::string& arg) const
+{
+    LOCK(cs_args);
+    return util::GetSetting(
+        m_settings, m_network, SettingName(arg), !UseDefaultSection(arg), /* get_chain_name= */ false);
 }
 
 bool RenameOver(fs::path src, fs::path dest)
