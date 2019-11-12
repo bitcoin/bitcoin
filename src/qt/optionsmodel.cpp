@@ -92,7 +92,7 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("bPrune", false);
     if (!settings.contains("nPruneSize"))
         settings.setValue("nPruneSize", DEFAULT_PRUNE_TARGET_GB);
-    SetPrune(settings.value("bPrune").toBool());
+    SetPruneEnabled(settings.value("bPrune").toBool());
 
     if (!settings.contains("nDatabaseCache"))
         settings.setValue("nDatabaseCache", (qint64)nDefaultDbCache);
@@ -236,7 +236,7 @@ static const QString GetDefaultProxyAddress()
     return QString("%1:%2").arg(DEFAULT_GUI_PROXY_HOST).arg(DEFAULT_GUI_PROXY_PORT);
 }
 
-void OptionsModel::SetPrune(bool prune, bool force)
+void OptionsModel::SetPruneEnabled(bool prune, bool force)
 {
     QSettings settings;
     settings.setValue("bPrune", prune);
@@ -250,6 +250,16 @@ void OptionsModel::SetPrune(bool prune, bool force)
     if (!m_node.softSetArg("-prune", prune_val)) {
         addOverriddenOption("-prune");
     }
+}
+
+void OptionsModel::SetPruneTargetGB(int prune_target_gb, bool force)
+{
+    const bool prune = prune_target_gb > 0;
+    if (prune) {
+        QSettings settings;
+        settings.setValue("nPruneSize", prune_target_gb);
+    }
+    SetPruneEnabled(prune, force);
 }
 
 // read QSettings values and return them
