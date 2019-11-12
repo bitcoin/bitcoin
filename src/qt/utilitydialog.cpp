@@ -11,9 +11,6 @@
 #include <qt/forms/ui_helpmessagedialog.h>
 
 #include <qt/bitcoingui.h>
-#ifdef ENABLE_BIP70
-#include <qt/paymentrequestplus.h>
-#endif
 
 #include <clientversion.h>
 #include <init.h>

@@ -37,8 +37,8 @@ bool fNameLookup = DEFAULT_NAME_LOOKUP;
 static const int SOCKS5_RECV_TIMEOUT = 20 * 1000;
 static std::atomic<bool> interruptSocks5Recv(false);
 
-enum Network ParseNetwork(std::string net) {
-    Downcase(net);
+enum Network ParseNetwork(const std::string& net_in) {
+    std::string net = ToLower(net_in);
     if (net == "ipv4") return NET_IPV4;
     if (net == "ipv6") return NET_IPV6;
     if (net == "onion") return NET_ONION;
@@ -605,7 +605,7 @@ static void LogConnectFailure(bool manual_connection, const char* fmt, const Arg
  * @param nTimeout Wait this many milliseconds for the connection to be
  *                 established.
  * @param manual_connection Whether or not the connection was manually requested
- *                          (e.g. thru the addnode RPC)
+ *                          (e.g. through the addnode RPC)
  *
  * @returns Whether or not a connection was successfully made.
  */
@@ -709,7 +709,7 @@ bool GetProxy(enum Network net, proxyType &proxyInfoOut) {
 
 /**
  * Set the name proxy to use for all connections to nodes specified by a
- * hostname. After setting this proxy, connecting to a node sepcified by a
+ * hostname. After setting this proxy, connecting to a node specified by a
  * hostname won't result in a local lookup of said hostname, rather, connect to
  * the node by asking the name proxy for a proxy connection to the hostname,
  * effectively delegating the hostname lookup to the specified proxy.

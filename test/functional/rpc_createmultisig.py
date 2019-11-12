@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test multisig RPCs"""
 
+from test_framework.descriptors import descsum_create
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_raises_rpc_error,
@@ -14,6 +15,8 @@ from test_framework.key import ECPubKey
 import binascii
 import decimal
 import itertools
+import json
+import os
 
 class RpcCreateMultiSigTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -71,6 +74,18 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
             assert_equal(legacy_addr, node0.createmultisig(2, keys, 'p2sh-segwit')['address'])
             assert_equal(legacy_addr, node0.addmultisigaddress(2, keys, '', 'bech32')['address'])
             assert_equal(legacy_addr, node0.addmultisigaddress(2, keys, '', 'p2sh-segwit')['address'])
+
+        self.log.info('Testing sortedmulti descriptors with BIP 67 test vectors')
+        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data/rpc_bip67.json'), encoding='utf-8') as f:
+            vectors = json.load(f)
+
+        for t in vectors:
+            key_str = ','.join(t['keys'])
+            desc = descsum_create('sh(sortedmulti(2,{}))'.format(key_str))
+            assert_equal(self.nodes[0].deriveaddresses(desc)[0], t['address'])
+            sorted_key_str = ','.join(t['sorted_keys'])
+            sorted_key_desc = descsum_create('sh(multi(2,{}))'.format(sorted_key_str))
+            assert_equal(self.nodes[0].deriveaddresses(sorted_key_desc)[0], t['address'])
 
     def check_addmultisigaddress_errors(self):
         self.log.info('Check that addmultisigaddress fails when the private keys are missing')
@@ -133,6 +148,27 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         del prevtx_err["redeemScript"]
 
         assert_raises_rpc_error(-8, "Missing redeemScript/witnessScript", node2.signrawtransactionwithkey, rawtx, self.priv[0:self.nsigs-1], [prevtx_err])
+
+        # if witnessScript specified, all ok
+        prevtx_err["witnessScript"] = prevtxs[0]["redeemScript"]
+        node2.signrawtransactionwithkey(rawtx, self.priv[0:self.nsigs-1], [prevtx_err])
+
+        # both specified, also ok
+        prevtx_err["redeemScript"] = prevtxs[0]["redeemScript"]
+        node2.signrawtransactionwithkey(rawtx, self.priv[0:self.nsigs-1], [prevtx_err])
+
+        # redeemScript mismatch to witnessScript
+        prevtx_err["redeemScript"] = "6a" # OP_RETURN
+        assert_raises_rpc_error(-8, "redeemScript does not correspond to witnessScript", node2.signrawtransactionwithkey, rawtx, self.priv[0:self.nsigs-1], [prevtx_err])
+
+        # redeemScript does not match scriptPubKey
+        del prevtx_err["witnessScript"]
+        assert_raises_rpc_error(-8, "redeemScript/witnessScript does not match scriptPubKey", node2.signrawtransactionwithkey, rawtx, self.priv[0:self.nsigs-1], [prevtx_err])
+
+        # witnessScript does not match scriptPubKey
+        prevtx_err["witnessScript"] = prevtx_err["redeemScript"]
+        del prevtx_err["redeemScript"]
+        assert_raises_rpc_error(-8, "redeemScript/witnessScript does not match scriptPubKey", node2.signrawtransactionwithkey, rawtx, self.priv[0:self.nsigs-1], [prevtx_err])
 
         rawtx2 = node2.signrawtransactionwithkey(rawtx, self.priv[0:self.nsigs - 1], prevtxs)
         rawtx3 = node2.signrawtransactionwithkey(rawtx2["hex"], [self.priv[-1]], prevtxs)

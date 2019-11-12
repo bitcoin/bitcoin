@@ -6,7 +6,7 @@
 #include <consensus/validation.h>
 #include <net.h>
 #include <net_processing.h>
-#include <txmempool.h>
+#include <node/context.h>
 #include <util/validation.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -14,9 +14,12 @@
 
 #include <future>
 
-TransactionError BroadcastTransaction(const CTransactionRef tx, std::string& err_string, const CAmount& max_tx_fee, bool relay, bool wait_callback)
+TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef tx, std::string& err_string, const CAmount& max_tx_fee, bool relay, bool wait_callback)
 {
-    assert(g_connman);
+    // BroadcastTransaction can be called by either sendrawtransaction RPC or wallet RPCs.
+    // node.connman is assigned both before chain clients and before RPC server is accepting calls,
+    // and reset after chain clients and RPC sever are stopped. node.connman should never be null here.
+    assert(node.connman);
     std::promise<void> promise;
     uint256 hashTx = tx->GetHash();
     bool callback_set = false;
@@ -25,27 +28,25 @@ TransactionError BroadcastTransaction(const CTransactionRef tx, std::string& err
     LOCK(cs_main);
     // If the transaction is already confirmed in the chain, don't do anything
     // and return early.
-    CCoinsViewCache &view = *pcoinsTip;
+    CCoinsViewCache &view = ::ChainstateActive().CoinsTip();
     for (size_t o = 0; o < tx->vout.size(); o++) {
         const Coin& existingCoin = view.AccessCoin(COutPoint(hashTx, o));
-        // IsSpent doesnt mean the coin is spent, it means the output doesnt' exist.
+        // IsSpent doesn't mean the coin is spent, it means the output doesn't exist.
         // So if the output does exist, then this transaction exists in the chain.
         if (!existingCoin.IsSpent()) return TransactionError::ALREADY_IN_CHAIN;
     }
     if (!mempool.exists(hashTx)) {
         // Transaction is not already in the mempool. Submit it.
-        CValidationState state;
-        bool fMissingInputs;
-        if (!AcceptToMemoryPool(mempool, state, std::move(tx), &fMissingInputs,
+        TxValidationState state;
+        if (!AcceptToMemoryPool(mempool, state, std::move(tx),
                 nullptr /* plTxnReplaced */, false /* bypass_limits */, max_tx_fee)) {
+            err_string = FormatStateMessage(state);
             if (state.IsInvalid()) {
-                err_string = FormatStateMessage(state);
-                return TransactionError::MEMPOOL_REJECTED;
-            } else {
-                if (fMissingInputs) {
+                if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS) {
                     return TransactionError::MISSING_INPUTS;
                 }
-                err_string = FormatStateMessage(state);
+                return TransactionError::MEMPOOL_REJECTED;
+            } else {
                 return TransactionError::MEMPOOL_ERROR;
             }
         }
@@ -77,7 +78,7 @@ TransactionError BroadcastTransaction(const CTransactionRef tx, std::string& err
     }
 
     if (relay) {
-        RelayTransaction(hashTx, *g_connman);
+        RelayTransaction(hashTx, *node.connman);
     }
 
     return TransactionError::OK;

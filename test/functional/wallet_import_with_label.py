@@ -100,8 +100,8 @@ class ImportWithLabel(BitcoinTestFramework):
             "Test importprivkey won't label new dests with the same "
             "label as others labeled dests for the same key."
         )
-        self.log.info("Import a watch-only legacy address with a label.")
-        address4 = self.nodes[0].getnewaddress()
+        self.log.info("Import a watch-only p2sh-segwit address with a label.")
+        address4 = self.nodes[0].getnewaddress("", "p2sh-segwit")
         label4_addr = "Test Label 4 for importaddress"
         self.nodes[1].importaddress(address4, label4_addr)
         test_address(self.nodes[1],

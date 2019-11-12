@@ -30,7 +30,7 @@
 
   <key>CFBundleExecutable</key>
   <string>Bitcoin-Qt</string>
-  
+
   <key>CFBundleName</key>
   <string>Bitcoin-Qt</string>
 
@@ -54,43 +54,6 @@
     </dict>
   </array>
 
-  <key>UTExportedTypeDeclarations</key>
-  <array>
-    <dict>
-      <key>UTTypeIdentifier</key>
-      <string>org.bitcoin.paymentrequest</string>
-      <key>UTTypeDescription</key>
-      <string>Bitcoin payment request</string>
-      <key>UTTypeConformsTo</key>
-      <array>
-        <string>public.data</string>
-      </array>
-      <key>UTTypeTagSpecification</key>
-      <dict>
-        <key>public.mime-type</key>
-        <string>application/x-bitcoin-payment-request</string>
-        <key>public.filename-extension</key>
-        <array>
-          <string>bitcoinpaymentrequest</string>
-        </array>
-      </dict>
-    </dict>
-  </array>
-
-  <key>CFBundleDocumentTypes</key>
-  <array>
-    <dict>
-      <key>CFBundleTypeRole</key>
-      <string>Editor</string>
-      <key>LSItemContentTypes</key>
-      <array>
-        <string>org.bitcoin.paymentrequest</string>
-      </array>
-      <key>LSHandlerRank</key>
-      <string>Owner</string>
-    </dict>
-  </array>
-
   <key>NSPrincipalClass</key>
     <string>NSApplication</string>
 
@@ -99,7 +62,7 @@
 
   <key>NSRequiresAquaSystemAppearance</key>
     <string>True</string>
-  
+
   <key>LSApplicationCategoryType</key>
     <string>public.app-category.finance</string>
 </dict>

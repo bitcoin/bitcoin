@@ -10,7 +10,8 @@
 #include <crypto/common.h>
 #include <uint256.h>
 
-#include <stdint.h>
+#include <chrono> // For std::chrono::microseconds
+#include <cstdint>
 #include <limits>
 
 /**
@@ -69,6 +70,7 @@
  */
 void GetRandBytes(unsigned char* buf, int num) noexcept;
 uint64_t GetRand(uint64_t nMax) noexcept;
+std::chrono::microseconds GetRandMicros(std::chrono::microseconds duration_max) noexcept;
 int GetRandInt(int nMax) noexcept;
 uint256 GetRandHash() noexcept;
 
@@ -164,6 +166,7 @@ public:
     /** Generate a random integer in the range [0..range). */
     uint64_t randrange(uint64_t range) noexcept
     {
+        assert(range);
         --range;
         int bits = CountBits(range);
         while (true) {

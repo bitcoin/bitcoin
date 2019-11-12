@@ -6,6 +6,9 @@
 
 #include <qt/guiconstants.h>
 
+#include <chainparamsbase.h>
+#include <tinyformat.h>
+
 #include <QApplication>
 
 static const struct {
@@ -13,11 +16,10 @@ static const struct {
     const char *appName;
     const int iconColorHueShift;
     const int iconColorSaturationReduction;
-    const char *titleAddText;
 } network_styles[] = {
-    {"main", QAPP_APP_NAME_DEFAULT, 0, 0, ""},
-    {"test", QAPP_APP_NAME_TESTNET, 70, 30, QT_TRANSLATE_NOOP("SplashScreen", "[testnet]")},
-    {"regtest", QAPP_APP_NAME_REGTEST, 160, 30, "[regtest]"}
+    {"main", QAPP_APP_NAME_DEFAULT, 0, 0},
+    {"test", QAPP_APP_NAME_TESTNET, 70, 30},
+    {"regtest", QAPP_APP_NAME_REGTEST, 160, 30}
 };
 static const unsigned network_styles_count = sizeof(network_styles)/sizeof(*network_styles);
 
@@ -75,8 +77,9 @@ NetworkStyle::NetworkStyle(const QString &_appName, const int iconColorHueShift,
     trayAndWindowIcon   = QIcon(pixmap.scaled(QSize(256,256)));
 }
 
-const NetworkStyle *NetworkStyle::instantiate(const QString &networkId)
+const NetworkStyle* NetworkStyle::instantiate(const std::string& networkId)
 {
+    std::string titleAddText = networkId == CBaseChainParams::MAIN ? "" : strprintf("[%s]", networkId);
     for (unsigned x=0; x<network_styles_count; ++x)
     {
         if (networkId == network_styles[x].networkId)
@@ -85,7 +88,7 @@ const NetworkStyle *NetworkStyle::instantiate(const QString &networkId)
                     network_styles[x].appName,
                     network_styles[x].iconColorHueShift,
                     network_styles[x].iconColorSaturationReduction,
-                    network_styles[x].titleAddText);
+                    titleAddText.c_str());
         }
     }
     return nullptr;

@@ -38,14 +38,6 @@
         <translation>Билдирүүнү &amp;текшерүү...</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Капчык</translation>
-    </message>
-    <message>
         <source>&amp;File</source>
         <translation>&amp;Файл</translation>
     </message>
@@ -69,6 +61,10 @@
         <source>Up to date</source>
         <translation>Жаңыланган</translation>
     </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>&amp;Терезе</translation>
+    </message>
     </context>
 <context>
     <name>CoinControlDialog</name>
@@ -80,6 +76,12 @@
         <source>(no label)</source>
         <translation>(аты жок)</translation>
     </message>
+    </context>
+<context>
+    <name>CreateWalletActivity</name>
+    </context>
+<context>
+    <name>CreateWalletDialog</name>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -116,11 +118,10 @@
     <name>OpenURIDialog</name>
     </context>
 <context>
+    <name>OpenWalletActivity</name>
+    </context>
+<context>
     <name>OptionsDialog</name>
-    <message>
-        <source>MB</source>
-        <translation>МБ</translation>
-    </message>
     <message>
         <source>&amp;Network</source>
         <translation>&amp;Тармак</translation>
@@ -169,9 +170,6 @@
     </context>
 <context>
     <name>QObject</name>
-    </context>
-<context>
-    <name>QObject::QObject</name>
     </context>
 <context>
     <name>QRImageWidget</name>
@@ -228,7 +226,7 @@
         <source>Wallet</source>
         <translation>Капчык</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
@@ -288,9 +286,6 @@
     </message>
     </context>
 <context>
-    <name>SplashScreen</name>
-    </context>
-<context>
     <name>TrafficGraphWidget</name>
     </context>
 <context>
@@ -333,6 +328,9 @@
     <name>UnitDisplayStatusBarControl</name>
     </context>
 <context>
+    <name>WalletController</name>
+    </context>
+<context>
     <name>WalletFrame</name>
     </context>
 <context>
@@ -343,17 +341,5 @@
     </context>
 <context>
     <name>bitcoin-core</name>
-    <message>
-        <source>Information</source>
-        <translation>Маалымат</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Эскертүү</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Ката</translation>
-    </message>
-</context>
+    </context>
 </TS>

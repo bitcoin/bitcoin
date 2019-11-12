@@ -122,10 +122,6 @@
         <translation>&amp;Alilan ing Passphrase...</translation>
     </message>
     <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>Address king pamag-Tanggap</translation>
-    </message>
-    <message>
         <source>Send coins to a Bitcoin address</source>
         <translation>Magpadalang barya king Bitcoin address</translation>
     </message>
@@ -148,14 +144,6 @@
     <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;Beripikan ing message...</translation>
-    </message>
-    <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Wallet</translation>
     </message>
     <message>
         <source>&amp;Show / Hide</source>
@@ -183,7 +171,7 @@
     </message>
     <message>
         <source>&amp;Command-line options</source>
-        <translation>Pipamilian command-line</translation>
+        <translation>Pipamilian &amp;command-line</translation>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
@@ -208,6 +196,10 @@
     <message>
         <source>Up to date</source>
         <translation>Makatuki ya king aldo</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>&amp;Awang</translation>
     </message>
     <message>
         <source>Catching up...</source>
@@ -248,6 +240,12 @@
         <source>Confirmed</source>
         <translation>Me-kumpirma</translation>
     </message>
+    </context>
+<context>
+    <name>CreateWalletActivity</name>
+    </context>
+<context>
+    <name>CreateWalletDialog</name>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -306,6 +304,9 @@
     </context>
 <context>
     <name>OpenURIDialog</name>
+    </context>
+<context>
+    <name>OpenWalletActivity</name>
     </context>
 <context>
     <name>OptionsDialog</name>
@@ -451,9 +452,6 @@
     </message>
 </context>
 <context>
-    <name>QObject::QObject</name>
-    </context>
-<context>
     <name>QRImageWidget</name>
     </context>
 <context>
@@ -533,12 +531,20 @@
         <translation>&amp;Kopyan ing address</translation>
     </message>
     <message>
+        <source>Amount</source>
+        <translation>Alaga</translation>
+    </message>
+    <message>
         <source>Wallet</source>
         <translation>Wallet</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation>Kaaldauan</translation>
+    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -580,7 +586,7 @@
     </message>
     <message>
         <source>S&amp;end</source>
-        <translation>Ipadala</translation>
+        <translation>&amp;Ipadala</translation>
     </message>
     <message>
         <source>Transaction fee</source>
@@ -696,17 +702,26 @@
     </message>
     </context>
 <context>
-    <name>SplashScreen</name>
-    <message>
-        <source>[testnet]</source>
-        <translation>[testnet]</translation>
-    </message>
-</context>
-<context>
     <name>TrafficGraphWidget</name>
     </context>
 <context>
     <name>TransactionDesc</name>
+    <message>
+        <source>Date</source>
+        <translation>Kaaldauan</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>e miya balu</translation>
+    </message>
+    <message>
+        <source>Transaction fee</source>
+        <translation>Bayad king Transaksion</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>Alaga</translation>
+    </message>
     </context>
 <context>
     <name>TransactionDescDialog</name>
@@ -717,28 +732,43 @@
     </context>
 <context>
     <name>TransactionTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation>Kaaldauan</translation>
+    </message>
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>Confirmed</source>
+        <translation>Me-kumpirma</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation>Kaaldauan</translation>
+    </message>
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
+    </context>
+<context>
+    <name>WalletController</name>
     </context>
 <context>
     <name>WalletFrame</name>
     </context>
 <context>
     <name>WalletModel</name>
+    <message>
+        <source>Send Coins</source>
+        <translation>Magpadalang Barya</translation>
+    </message>
     </context>
 <context>
     <name>WalletView</name>
     </context>
 <context>
     <name>bitcoin-core</name>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>Kapilubluban ning Bitcoin</translation>
-    </message>
     <message>
         <source>Corrupted block database detected</source>
         <translation>Mekapansin lang me-corrupt a block database</translation>
@@ -756,24 +786,12 @@
         <translation>Kamalian king pamag buklat king block database</translation>
     </message>
     <message>
-        <source>Error: Disk space is low!</source>
-        <translation>Kamalian: Mababa ne ing espasyu king disk!</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Memali ya ing pamakiramdam kareng gang nanung port. Gamita me ini -listen=0 nung buri me ini.</translation>
     </message>
     <message>
-        <source>Information</source>
-        <translation>&amp;Impormasion</translation>
-    </message>
-    <message>
         <source>Transaction too large</source>
         <translation>Maragul yang masiadu ing transaksion</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Kapabaluan</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>
@@ -802,10 +820,6 @@
     <message>
         <source>Done loading</source>
         <translation>Yari ne ing pamag-load</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Mali</translation>
     </message>
 </context>
 </TS>

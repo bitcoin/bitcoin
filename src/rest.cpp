@@ -3,7 +3,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <attributes.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <core_io.h>
@@ -503,12 +502,12 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
         if (fCheckMemPool) {
             // use db+mempool as cache backend in case user likes to query mempool
             LOCK2(cs_main, mempool.cs);
-            CCoinsViewCache& viewChain = *pcoinsTip;
+            CCoinsViewCache& viewChain = ::ChainstateActive().CoinsTip();
             CCoinsViewMemPool viewMempool(&viewChain, mempool);
             process_utxos(viewMempool, mempool);
         } else {
             LOCK(cs_main);  // no need to lock mempool!
-            process_utxos(*pcoinsTip, CTxMemPool());
+            process_utxos(::ChainstateActive().CoinsTip(), CTxMemPool());
         }
 
         for (size_t i = 0; i < hits.size(); ++i) {

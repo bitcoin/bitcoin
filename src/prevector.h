@@ -12,7 +12,6 @@
 
 #include <algorithm>
 #include <cstddef>
-#include <iterator>
 #include <type_traits>
 
 #pragma pack(push, 1)

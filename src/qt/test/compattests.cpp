@@ -6,10 +6,6 @@
 #include <config/bitcoin-config.h>
 #endif
 
-#if defined(ENABLE_WALLET) && defined(ENABLE_BIP70)
-#include <qt/paymentrequestplus.h> // this includes protobuf's port.h which defines its own bswap macos
-#endif
-
 #include <qt/test/compattests.h>
 
 #include <compat/byteswap.h>

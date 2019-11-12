@@ -12,21 +12,16 @@
 #include <qt/test/rpcnestedtests.h>
 #include <qt/test/uritests.h>
 #include <qt/test/compattests.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 
 #ifdef ENABLE_WALLET
 #include <qt/test/addressbooktests.h>
-#ifdef ENABLE_BIP70
-#include <qt/test/paymentservertests.h>
-#endif // ENABLE_BIP70
 #include <qt/test/wallettests.h>
 #endif // ENABLE_WALLET
 
 #include <QApplication>
 #include <QObject>
 #include <QTest>
-
-#include <openssl/ssl.h>
 
 #if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
@@ -55,7 +50,7 @@ int main(int argc, char *argv[])
         BasicTestingSetup dummy{CBaseChainParams::REGTEST};
     }
 
-    auto node = interfaces::MakeNode();
+    std::unique_ptr<interfaces::Node> node = interfaces::MakeNode();
 
     bool fInvalid = false;
 
@@ -63,17 +58,15 @@ int main(int argc, char *argv[])
     // platform ("xcb", "windows", or "cocoa") so tests can't unintentionally
     // interfere with any background GUIs and don't require extra resources.
     #if defined(WIN32)
-        _putenv_s("QT_QPA_PLATFORM", "minimal");
+        if (getenv("QT_QPA_PLATFORM") == nullptr) _putenv_s("QT_QPA_PLATFORM", "minimal");
     #else
-        setenv("QT_QPA_PLATFORM", "minimal", 0);
+        setenv("QT_QPA_PLATFORM", "minimal", /* overwrite */ 0);
     #endif
 
     // Don't remove this, it's needed to access
     // QApplication:: and QCoreApplication:: in the tests
-    BitcoinApplication app(*node, argc, argv);
+    BitcoinApplication app(*node);
     app.setApplicationName("Bitcoin-Qt-test");
-
-    SSL_library_init();
 
     AppTests app_tests(app);
     if (QTest::qExec(&app_tests) != 0) {
@@ -83,13 +76,7 @@ int main(int argc, char *argv[])
     if (QTest::qExec(&test1) != 0) {
         fInvalid = true;
     }
-#if defined(ENABLE_WALLET) && defined(ENABLE_BIP70)
-    PaymentServerTests test2;
-    if (QTest::qExec(&test2) != 0) {
-        fInvalid = true;
-    }
-#endif
-    RPCNestedTests test3;
+    RPCNestedTests test3(*node);
     if (QTest::qExec(&test3) != 0) {
         fInvalid = true;
     }
@@ -98,11 +85,11 @@ int main(int argc, char *argv[])
         fInvalid = true;
     }
 #ifdef ENABLE_WALLET
-    WalletTests test5;
+    WalletTests test5(*node);
     if (QTest::qExec(&test5) != 0) {
         fInvalid = true;
     }
-    AddressBookTests test6;
+    AddressBookTests test6(*node);
     if (QTest::qExec(&test6) != 0) {
         fInvalid = true;
     }

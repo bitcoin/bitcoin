@@ -4,7 +4,6 @@
 
 #include <crypto/chacha_poly_aead.h>
 
-#include <crypto/common.h>
 #include <crypto/poly1305.h>
 #include <support/cleanse.h>
 

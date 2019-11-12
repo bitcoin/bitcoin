@@ -65,23 +65,17 @@ username = USERNAME
 The Transifex Bitcoin project config file is included as part of the repo. It can be found at `.tx/config`, however you shouldn’t need to change anything.
 
 ### Synchronising translations
-To assist in updating translations, we have created a script to help.
+To assist in updating translations, a helper script is available in the [maintainer-tools repo](https://github.com/bitcoin-core/bitcoin-maintainer-tools).
 
-1. `python contrib/devtools/update-translations.py`
+1. `python3 ../bitcoin-maintainer-tools/update-translations.py`
 2. `git add` new translations from `src/qt/locale/`
 3. Update `src/qt/bitcoin_locale.qrc` manually or via
 ```bash
-git ls-files src/qt/locale/*ts|xargs -n1 basename|sed 's/\(bitcoin_\(.*\)\).ts/<file alias="\2">locale\/\1.qm<\/file>/'
+git ls-files src/qt/locale/*ts|xargs -n1 basename|sed 's/\(bitcoin_\(.*\)\).ts/        <file alias="\2">locale\/\1.qm<\/file>/'
 ```
-4. Update `src/Makefile.qt.include` manually or via
+4. Update `src/Makefile.qt_locale.include` manually or via
 ```bash
 git ls-files src/qt/locale/*ts|xargs -n1 basename|sed 's/\(bitcoin_\(.*\)\).ts/  qt\/locale\/\1.ts \\/'
-```
-5. Update `build_msvc/libbitcoin_qt/libbitcoin_qt.vcxproj` or via
-```bash
-git ls-files src/qt/locale/*ts|xargs -n1 basename |
-  sed 's/@/%40/' |
-  sed 's/\(bitcoin_\(.*\)\).ts/    <None Include="..\\..\\src\\qt\\locale\\\1.ts">\n      <DeploymentContent>true<\/DeploymentContent>\n    <\/None>/'
 ```
 
 **Do not directly download translations** one by one from the Transifex website, as we do a few post-processing steps before committing the translations.

@@ -10,7 +10,7 @@
 #include <script/script.h>
 #include <serialize.h>
 #include <streams.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 #include <util/system.h>
 #include <util/strencodings.h>
 #include <version.h>
@@ -119,8 +119,6 @@ BOOST_FIXTURE_TEST_SUITE(sighash_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(sighash_test)
 {
-    SeedInsecureRand(false);
-
     #if defined(PRINT_SIGHASH_JSON)
     std::cout << "[\n";
     std::cout << "\t[\"raw_transaction, script, input_index, hashType, signature_hash (result)\"],\n";
@@ -193,7 +191,7 @@ BOOST_AUTO_TEST_CASE(sighash_from_data)
           CDataStream stream(ParseHex(raw_tx), SER_NETWORK, PROTOCOL_VERSION);
           stream >> tx;
 
-          CValidationState state;
+          TxValidationState state;
           BOOST_CHECK_MESSAGE(CheckTransaction(*tx, state), strTest);
           BOOST_CHECK(state.IsValid());
 

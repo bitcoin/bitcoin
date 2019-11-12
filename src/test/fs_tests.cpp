@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
 #include <fs.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 #include <util/system.h>
 
 #include <boost/test/unit_test.hpp>
@@ -15,7 +15,7 @@ BOOST_AUTO_TEST_CASE(fsbridge_fstream)
     fs::path tmpfolder = GetDataDir();
     // tmpfile1 should be the same as tmpfile2
     fs::path tmpfile1 = tmpfolder / "fs_tests_₿_🏃";
-    fs::path tmpfile2 = tmpfolder / L"fs_tests_₿_🏃";
+    fs::path tmpfile2 = tmpfolder / "fs_tests_₿_🏃";
     {
         fsbridge::ofstream file(tmpfile1);
         file << "bitcoin";

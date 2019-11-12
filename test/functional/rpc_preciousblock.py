@@ -7,7 +7,7 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    connect_nodes_bi,
+    connect_nodes,
 )
 
 def unidirectional_node_sync_via_rpc(node_src, node_dest):
@@ -60,7 +60,7 @@ class PreciousTest(BitcoinTestFramework):
         self.log.info("Connect nodes and check no reorg occurs")
         # Submit competing blocks via RPC so any reorg should occur before we proceed (no way to wait on inaction for p2p sync)
         node_sync_via_rpc(self.nodes[0:2])
-        connect_nodes_bi(self.nodes,0,1)
+        connect_nodes(self.nodes[0], 1)
         assert_equal(self.nodes[0].getbestblockhash(), hashC)
         assert_equal(self.nodes[1].getbestblockhash(), hashG)
         self.log.info("Make Node0 prefer block G")
@@ -97,8 +97,8 @@ class PreciousTest(BitcoinTestFramework):
         hashL = self.nodes[2].getbestblockhash()
         self.log.info("Connect nodes and check no reorg occurs")
         node_sync_via_rpc(self.nodes[1:3])
-        connect_nodes_bi(self.nodes,1,2)
-        connect_nodes_bi(self.nodes,0,2)
+        connect_nodes(self.nodes[1], 2)
+        connect_nodes(self.nodes[0], 2)
         assert_equal(self.nodes[0].getbestblockhash(), hashH)
         assert_equal(self.nodes[1].getbestblockhash(), hashH)
         assert_equal(self.nodes[2].getbestblockhash(), hashL)

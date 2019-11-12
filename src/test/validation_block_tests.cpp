@@ -11,20 +11,16 @@
 #include <pow.h>
 #include <random.h>
 #include <script/standard.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 #include <util/time.h>
 #include <validation.h>
 #include <validationinterface.h>
 
 #include <thread>
 
-struct RegtestingSetup : public TestingSetup {
-    RegtestingSetup() : TestingSetup(CBaseChainParams::REGTEST) {}
-};
-
 static const std::vector<unsigned char> V_OP_TRUE{OP_TRUE};
 
-BOOST_FIXTURE_TEST_SUITE(validation_block_tests, RegtestingSetup)
+BOOST_FIXTURE_TEST_SUITE(validation_block_tests, RegTestingSetup)
 
 struct TestSubscriber : public CValidationInterface {
     uint256 m_expected_tip;
@@ -44,9 +40,10 @@ struct TestSubscriber : public CValidationInterface {
         m_expected_tip = block->GetHash();
     }
 
-    void BlockDisconnected(const std::shared_ptr<const CBlock>& block) override
+    void BlockDisconnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex) override
     {
         BOOST_CHECK_EQUAL(m_expected_tip, block->GetHash());
+        BOOST_CHECK_EQUAL(m_expected_tip, pindex->GetBlockHash());
 
         m_expected_tip = block->hashPrevBlock;
     }
@@ -151,7 +148,7 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
     }
 
     bool ignored;
-    CValidationState state;
+    BlockValidationState state;
     std::vector<CBlockHeader> headers;
     std::transform(blocks.begin(), blocks.end(), std::back_inserter(headers), [](std::shared_ptr<const CBlock> b) { return b->GetBlockHeader(); });
 
@@ -278,14 +275,13 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
         // Add the txs to the tx pool
         {
             LOCK(cs_main);
-            CValidationState state;
+            TxValidationState state;
             std::list<CTransactionRef> plTxnReplaced;
             for (const auto& tx : txs) {
                 BOOST_REQUIRE(AcceptToMemoryPool(
                     ::mempool,
                     state,
                     tx,
-                    /* pfMissingInputs */ &ignored,
                     &plTxnReplaced,
                     /* bypass_limits */ false,
                     /* nAbsurdFee */ 0));

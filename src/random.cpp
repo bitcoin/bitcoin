@@ -16,7 +16,6 @@
 #include <util/time.h> // for GetTime()
 
 #include <stdlib.h>
-#include <chrono>
 #include <thread>
 
 #include <support/allocators/secure.h>
@@ -41,7 +40,6 @@
 #include <sys/sysctl.h>
 #endif
 
-#include <mutex>
 
 #if defined(__x86_64__) || defined(__amd64__) || defined(__i386__)
 #include <cpuid.h>
@@ -113,7 +111,7 @@ static void InitHardwareRand()
 
 static void ReportHardwareRand()
 {
-    // This must be done in a separate function, as HWRandInit() may be indirectly called
+    // This must be done in a separate function, as InitHardwareRand() may be indirectly called
     // from global constructors, before logging is initialized.
     if (g_rdseed_supported) {
         LogPrintf("Using RdSeed as additional entropy source\n");
@@ -596,10 +594,6 @@ static void SeedSleep(CSHA512& hasher, RNGState& rng)
 
 static void SeedStartup(CSHA512& hasher, RNGState& rng) noexcept
 {
-#ifdef WIN32
-    RAND_screen();
-#endif
-
     // Gather 256 bits of hardware randomness, if available
     SeedHardwareSlow(hasher);
 
@@ -665,6 +659,11 @@ bool g_mock_deterministic_tests{false};
 uint64_t GetRand(uint64_t nMax) noexcept
 {
     return FastRandomContext(g_mock_deterministic_tests).randrange(nMax);
+}
+
+std::chrono::microseconds GetRandMicros(std::chrono::microseconds duration_max) noexcept
+{
+    return std::chrono::microseconds{GetRand(duration_max.count())};
 }
 
 int GetRandInt(int nMax) noexcept

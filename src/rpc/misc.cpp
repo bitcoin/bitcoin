@@ -3,16 +3,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <crypto/ripemd160.h>
-#include <key_io.h>
 #include <httpserver.h>
+#include <key_io.h>
 #include <outputtype.h>
 #include <rpc/blockchain.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
-#include <util/system.h>
+#include <util/check.h>
 #include <util/strencodings.h>
+#include <util/system.h>
 #include <util/validation.h>
 
 #include <stdint.h>
@@ -136,6 +136,7 @@ UniValue getdescriptorinfo(const JSONRPCRequest& request)
             RPCResult{
             "{\n"
             "  \"descriptor\" : \"desc\",         (string) The descriptor in canonical form, without private keys\n"
+            "  \"checksum\" : \"chksum\",         (string) The checksum for the input descriptor\n"
             "  \"isrange\" : true|false,        (boolean) Whether the descriptor is ranged\n"
             "  \"issolvable\" : true|false,     (boolean) Whether the descriptor is solvable\n"
             "  \"hasprivatekeys\" : true|false, (boolean) Whether the input descriptor contained at least one private key\n"
@@ -149,13 +150,15 @@ UniValue getdescriptorinfo(const JSONRPCRequest& request)
     RPCTypeCheck(request.params, {UniValue::VSTR});
 
     FlatSigningProvider provider;
-    auto desc = Parse(request.params[0].get_str(), provider);
+    std::string error;
+    auto desc = Parse(request.params[0].get_str(), provider, error);
     if (!desc) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Invalid descriptor"));
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
     }
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("descriptor", desc->ToString());
+    result.pushKV("checksum", GetDescriptorChecksum(request.params[0].get_str()));
     result.pushKV("isrange", desc->IsRange());
     result.pushKV("issolvable", desc->IsSolvable());
     result.pushKV("hasprivatekeys", provider.keys.size() > 0);
@@ -197,9 +200,10 @@ UniValue deriveaddresses(const JSONRPCRequest& request)
     }
 
     FlatSigningProvider key_provider;
-    auto desc = Parse(desc_str, key_provider, /* require_checksum = */ true);
+    std::string error;
+    auto desc = Parse(desc_str, key_provider, error, /* require_checksum = */ true);
     if (!desc) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Invalid descriptor"));
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
     }
 
     if (!desc->IsRange() && request.params.size() > 1) {
@@ -537,6 +541,7 @@ static UniValue echo(const JSONRPCRequest& request)
         throw std::runtime_error(
             RPCHelpMan{"echo|echojson ...",
                 "\nSimply echo back the input arguments. This command is for testing.\n"
+                "\nIt will return an internal bug report when exactly 100 arguments are passed.\n"
                 "\nThe difference between echo and echojson is that echojson has argument conversion enabled in the client-side table in "
                 "bitcoin-cli and the GUI. There is no server-side difference.",
                 {},
@@ -544,6 +549,8 @@ static UniValue echo(const JSONRPCRequest& request)
                 RPCExamples{""},
             }.ToString()
         );
+
+    CHECK_NONFATAL(request.params.size() != 100);
 
     return request.params;
 }

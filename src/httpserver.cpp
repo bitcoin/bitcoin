@@ -15,6 +15,7 @@
 #include <sync.h>
 #include <ui_interface.h>
 
+#include <deque>
 #include <memory>
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,7 +23,6 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <signal.h>
 
 #include <event2/thread.h>
 #include <event2/buffer.h>

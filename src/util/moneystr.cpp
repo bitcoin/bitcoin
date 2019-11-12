@@ -5,7 +5,6 @@
 
 #include <util/moneystr.h>
 
-#include <primitives/transaction.h>
 #include <tinyformat.h>
 #include <util/strencodings.h>
 

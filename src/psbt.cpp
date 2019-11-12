@@ -5,7 +5,6 @@
 #include <psbt.h>
 #include <util/strencodings.h>
 
-#include <numeric>
 
 PartiallySignedTransaction::PartiallySignedTransaction(const CMutableTransaction& tx) : tx(tx)
 {

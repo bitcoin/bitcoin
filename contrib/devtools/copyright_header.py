@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2018 The Bitcoin Core developers
+# Copyright (c) 2016-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -34,7 +34,7 @@ EXCLUDE_DIRS = [
     "src/univalue/",
 ]
 
-INCLUDE = ['*.h', '*.cpp', '*.cc', '*.c', '*.mm', '*.py']
+INCLUDE = ['*.h', '*.cpp', '*.cc', '*.c', '*.mm', '*.py', '*.sh', '*.bash-completion']
 INCLUDE_COMPILED = re.compile('|'.join([fnmatch.translate(m) for m in INCLUDE]))
 
 def applies_to_file(filename):
@@ -71,7 +71,7 @@ def get_filenames_to_examine(base_directory):
 ################################################################################
 
 
-COPYRIGHT_WITH_C = 'Copyright \(c\)'
+COPYRIGHT_WITH_C = r'Copyright \(c\)'
 COPYRIGHT_WITHOUT_C = 'Copyright'
 ANY_COPYRIGHT_STYLE = '(%s|%s)' % (COPYRIGHT_WITH_C, COPYRIGHT_WITHOUT_C)
 
@@ -85,21 +85,21 @@ ANY_COPYRIGHT_STYLE_OR_YEAR_STYLE = ("%s %s" % (ANY_COPYRIGHT_STYLE,
 ANY_COPYRIGHT_COMPILED = re.compile(ANY_COPYRIGHT_STYLE_OR_YEAR_STYLE)
 
 def compile_copyright_regex(copyright_style, year_style, name):
-    return re.compile('%s %s,? %s' % (copyright_style, year_style, name))
+    return re.compile(r'%s %s,? %s( +\*)?\n' % (copyright_style, year_style, name))
 
 EXPECTED_HOLDER_NAMES = [
-    "Satoshi Nakamoto\n",
-    "The Bitcoin Core developers\n",
-    "BitPay Inc\.\n",
-    "University of Illinois at Urbana-Champaign\.\n",
-    "Pieter Wuille\n",
-    "Wladimir J. van der Laan\n",
-    "Jeff Garzik\n",
-    "Jan-Klaas Kollhof\n",
-    "ArtForz -- public domain half-a-node\n",
-    "Intel Corporation",
-    "The Zcash developers",
-    "Jeremy Rubin",
+    r"Satoshi Nakamoto",
+    r"The Bitcoin Core developers",
+    r"BitPay Inc\.",
+    r"University of Illinois at Urbana-Champaign\.",
+    r"Pieter Wuille",
+    r"Wladimir J\. van der Laan",
+    r"Jeff Garzik",
+    r"Jan-Klaas Kollhof",
+    r"ArtForz -- public domain half-a-node",
+    r"Intel Corporation ?",
+    r"The Zcash developers",
+    r"Jeremy Rubin",
 ]
 
 DOMINANT_STYLE_COMPILED = {}
@@ -329,7 +329,7 @@ def write_file_lines(filename, file_lines):
 # update header years execution
 ################################################################################
 
-COPYRIGHT = 'Copyright \(c\)'
+COPYRIGHT = r'Copyright \(c\)'
 YEAR = "20[0-9][0-9]"
 YEAR_RANGE = '(%s)(-%s)?' % (YEAR, YEAR)
 HOLDER = 'The Bitcoin Core developers'

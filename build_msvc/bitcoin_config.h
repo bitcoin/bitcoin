@@ -14,7 +14,7 @@
 #define CLIENT_VERSION_MAJOR 0
 
 /* Minor version */
-#define CLIENT_VERSION_MINOR 18
+#define CLIENT_VERSION_MINOR 19
 
 /* Build revision */
 #define CLIENT_VERSION_REVISION 99
@@ -97,10 +97,6 @@
 /* Define to 1 if you have the declaration of `daemon', and to 0 if you don't.
    */
 #define HAVE_DECL_DAEMON 0
-
-/* Define to 1 if you have the declaration of `EVP_MD_CTX_new', and to 0 if
-   you don't. */
-//#define HAVE_DECL_EVP_MD_CTX_NEW 1
 
 /* Define to 1 if you have the declaration of `htobe16', and to 0 if you
    don't. */
@@ -346,7 +342,7 @@
 #define PACKAGE_NAME "Bitcoin Core"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "Bitcoin Core 0.18.99"
+#define PACKAGE_STRING "Bitcoin Core 0.19.99"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "bitcoin"
@@ -355,7 +351,7 @@
 #define PACKAGE_URL "https://bitcoincore.org/"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.18.99"
+#define PACKAGE_VERSION "0.19.99"
 
 /* Define to necessary symbol if this constant uses a non-standard name on
    your system. */

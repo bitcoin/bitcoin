@@ -6,7 +6,6 @@
 #define BITCOIN_SCRIPT_KEYORIGIN_H
 
 #include <serialize.h>
-#include <streams.h>
 #include <vector>
 
 struct KeyOriginInfo

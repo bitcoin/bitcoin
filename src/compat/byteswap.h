@@ -17,20 +17,13 @@
 
 #if defined(MAC_OSX)
 
-#if !defined(bswap_16)
-
-// Mac OS X / Darwin features; we include a check for bswap_16 because if it is already defined, protobuf has
-// defined these macros for us already; if it isn't, we do it ourselves. In either case, we get the exact same
-// result regardless which path was taken
 #include <libkern/OSByteOrder.h>
 #define bswap_16(x) OSSwapInt16(x)
 #define bswap_32(x) OSSwapInt32(x)
 #define bswap_64(x) OSSwapInt64(x)
 
-#endif // !defined(bswap_16)
-
 #else
-// Non-Mac OS X / non-Darwin
+// Non-MacOS / non-Darwin
 
 #if HAVE_DECL_BSWAP_16 == 0
 inline uint16_t bswap_16(uint16_t x)

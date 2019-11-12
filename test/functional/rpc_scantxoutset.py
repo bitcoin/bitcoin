@@ -58,6 +58,13 @@ class ScantxoutsetTest(BitcoinTestFramework):
         self.start_node(0)
         self.nodes[0].generate(110)
 
+        scan = self.nodes[0].scantxoutset("start", [])
+        info = self.nodes[0].gettxoutsetinfo()
+        assert_equal(scan['success'], True)
+        assert_equal(scan['height'], info['height'])
+        assert_equal(scan['txouts'], info['txouts'])
+        assert_equal(scan['bestblock'], info['bestblock'])
+
         self.restart_node(0, ['-nowallet'])
         self.log.info("Test if we have found the non HD unspent outputs.")
         assert_equal(self.nodes[0].scantxoutset("start", [ "pkh(" + pubk1 + ")", "pkh(" + pubk2 + ")", "pkh(" + pubk3 + ")"])['total_amount'], Decimal("0.002"))

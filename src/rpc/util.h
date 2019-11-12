@@ -7,6 +7,7 @@
 
 #include <node/transaction.h>
 #include <outputtype.h>
+#include <protocol.h>
 #include <pubkey.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
@@ -14,6 +15,7 @@
 #include <script/sign.h>
 #include <script/standard.h>
 #include <univalue.h>
+#include <util/check.h>
 
 #include <string>
 #include <vector>
@@ -23,12 +25,6 @@
 class FillableSigningProvider;
 class CPubKey;
 class CScript;
-struct InitInterfaces;
-
-//! Pointers to interfaces that need to be accessible from RPC methods. Due to
-//! limitations of the RPC framework, there's currently no direct way to pass in
-//! state to RPC method implementations.
-extern InitInterfaces* g_rpc_interfaces;
 
 /** Wrapper for UniValue::VType, which includes typeAny:
  * Used to denote don't care type. */
@@ -90,6 +86,9 @@ std::pair<int64_t, int64_t> ParseDescriptorRange(const UniValue& value);
 /** Evaluate a descriptor given as a string, or as a {"desc":...,"range":...} object, with default range of 1000. */
 std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, FlatSigningProvider& provider);
 
+/** Returns, given services flags, a list of humanly readable (known) network services */
+UniValue GetServicesNames(ServiceFlags services);
+
 struct RPCArg {
     enum class Type {
         OBJ,
@@ -142,7 +141,7 @@ struct RPCArg {
           m_oneline_description{oneline_description},
           m_type_str{type_str}
     {
-        assert(type != Type::ARR && type != Type::OBJ);
+        CHECK_NONFATAL(type != Type::ARR && type != Type::OBJ);
     }
 
     RPCArg(
@@ -161,7 +160,7 @@ struct RPCArg {
           m_oneline_description{oneline_description},
           m_type_str{type_str}
     {
-        assert(type == Type::ARR || type == Type::OBJ);
+        CHECK_NONFATAL(type == Type::ARR || type == Type::OBJ);
     }
 
     bool IsOptional() const;
@@ -190,14 +189,14 @@ struct RPCResult {
     explicit RPCResult(std::string result)
         : m_cond{}, m_result{std::move(result)}
     {
-        assert(!m_result.empty());
+        CHECK_NONFATAL(!m_result.empty());
     }
 
     RPCResult(std::string cond, std::string result)
         : m_cond{std::move(cond)}, m_result{std::move(result)}
     {
-        assert(!m_cond.empty());
-        assert(!m_result.empty());
+        CHECK_NONFATAL(!m_cond.empty());
+        CHECK_NONFATAL(!m_result.empty());
     }
 };
 

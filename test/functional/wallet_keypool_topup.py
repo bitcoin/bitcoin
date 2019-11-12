@@ -16,7 +16,7 @@ import shutil
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    connect_nodes_bi,
+    connect_nodes,
 )
 
 
@@ -38,9 +38,9 @@ class KeypoolRestoreTest(BitcoinTestFramework):
         self.stop_node(1)
         shutil.copyfile(wallet_path, wallet_backup_path)
         self.start_node(1, self.extra_args[1])
-        connect_nodes_bi(self.nodes, 0, 1)
-        connect_nodes_bi(self.nodes, 0, 2)
-        connect_nodes_bi(self.nodes, 0, 3)
+        connect_nodes(self.nodes[0], 1)
+        connect_nodes(self.nodes[0], 2)
+        connect_nodes(self.nodes[0], 3)
 
         for i, output_type in enumerate(["legacy", "p2sh-segwit", "bech32"]):
 
@@ -72,7 +72,7 @@ class KeypoolRestoreTest(BitcoinTestFramework):
             self.stop_node(idx)
             shutil.copyfile(wallet_backup_path, wallet_path)
             self.start_node(idx, self.extra_args[idx])
-            connect_nodes_bi(self.nodes, 0, idx)
+            connect_nodes(self.nodes[0], idx)
             self.sync_all()
 
             self.log.info("Verify keypool is restored and balance is correct")

@@ -63,8 +63,6 @@ FlatSigningProvider Merge(const FlatSigningProvider& a, const FlatSigningProvide
 class FillableSigningProvider : public SigningProvider
 {
 protected:
-    mutable CCriticalSection cs_KeyStore;
-
     using KeyMap = std::map<CKeyID, CKey>;
     using ScriptMap = std::map<CScriptID, CScript>;
 
@@ -74,6 +72,8 @@ protected:
     void ImplicitlyLearnRelatedKeyScripts(const CPubKey& pubkey) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
 
 public:
+    mutable CCriticalSection cs_KeyStore;
+
     virtual bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey);
     virtual bool AddKey(const CKey &key) { return AddKeyPubKey(key, key.GetPubKey()); }
     virtual bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const override;

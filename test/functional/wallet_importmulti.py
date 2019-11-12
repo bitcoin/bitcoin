@@ -44,8 +44,10 @@ class ImportMultiTest(BitcoinTestFramework):
     def setup_network(self):
         self.setup_nodes()
 
-    def test_importmulti(self, req, success, error_code=None, error_message=None, warnings=[]):
+    def test_importmulti(self, req, success, error_code=None, error_message=None, warnings=None):
         """Run importmulti and assert success"""
+        if warnings is None:
+            warnings = []
         result = self.nodes[1].importmulti([req])
         observed_warnings = []
         if 'warnings' in result[0]:
@@ -552,7 +554,7 @@ class ImportMultiTest(BitcoinTestFramework):
                                "keys": [key.privkey]},
                               success=False,
                               error_code=-5,
-                              error_message="Descriptor is invalid")
+                              error_message="Missing checksum")
 
         # Test importing of a P2SH-P2WPKH address via descriptor + private key
         key = get_key(self.nodes[0])

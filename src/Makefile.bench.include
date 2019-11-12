@@ -30,6 +30,7 @@ bench_bench_bitcoin_SOURCES = \
   bench/gcs_filter.cpp \
   bench/merkle_root.cpp \
   bench/mempool_eviction.cpp \
+  bench/mempool_stress.cpp \
   bench/rpc_blockchain.cpp \
   bench/rpc_mempool.cpp \
   bench/util_time.cpp \
@@ -39,8 +40,10 @@ bench_bench_bitcoin_SOURCES = \
   bench/lockedpool.cpp \
   bench/poly1305.cpp \
   bench/prevector.cpp \
-  test/setup_common.h \
-  test/setup_common.cpp \
+  test/util/transaction_utils.h \
+  test/util/transaction_utils.cpp \
+  test/util/setup_common.h \
+  test/util/setup_common.cpp \
   test/util.h \
   test/util.cpp
 

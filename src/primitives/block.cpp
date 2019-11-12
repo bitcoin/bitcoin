@@ -7,7 +7,6 @@
 
 #include <hash.h>
 #include <tinyformat.h>
-#include <crypto/common.h>
 
 uint256 CBlockHeader::GetHash() const
 {

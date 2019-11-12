@@ -6,17 +6,11 @@
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_approx,
     assert_equal,
     assert_raises_rpc_error,
-    connect_nodes_bi,
+    connect_nodes,
 )
-
-# TODO: Copied from wallet_groups.py -- should perhaps move into util.py
-def assert_approx(v, vexp, vspan=0.00001):
-    if v < vexp - vspan:
-        raise AssertionError("%s < [%s..%s]" % (str(v), str(vexp - vspan), str(vexp + vspan)))
-    if v > vexp + vspan:
-        raise AssertionError("%s > [%s..%s]" % (str(v), str(vexp - vspan), str(vexp + vspan)))
 
 def reset_balance(node, discardaddr):
     '''Throw away all owned coins by the node so it gets a balance of 0.'''
@@ -74,6 +68,9 @@ class AvoidReuseTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = False
         self.num_nodes = 2
+        # This test isn't testing txn relay/timing, so set whitelist on the
+        # peers for instant txn relay. This speeds up the test run time 2-3x.
+        self.extra_args = [["-whitelist=127.0.0.1"]] * self.num_nodes
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -93,6 +90,8 @@ class AvoidReuseTest(BitcoinTestFramework):
 
     def test_persistence(self):
         '''Test that wallet files persist the avoid_reuse flag.'''
+        self.log.info("Test wallet files persist avoid_reuse flag")
+
         # Configure node 1 to use avoid_reuse
         self.nodes[1].setwalletflag('avoid_reuse')
 
@@ -103,7 +102,7 @@ class AvoidReuseTest(BitcoinTestFramework):
         # Stop and restart node 1
         self.stop_node(1)
         self.start_node(1)
-        connect_nodes_bi(self.nodes, 0, 1)
+        connect_nodes(self.nodes[0], 1)
 
         # Flags should still be node1.avoid_reuse=false, node2.avoid_reuse=true
         assert_equal(self.nodes[0].getwalletinfo()["avoid_reuse"], False)
@@ -115,6 +114,8 @@ class AvoidReuseTest(BitcoinTestFramework):
 
     def test_immutable(self):
         '''Test immutable wallet flags'''
+        self.log.info("Test immutable wallet flags")
+
         # Attempt to set the disable_private_keys flag; this should not work
         assert_raises_rpc_error(-8, "Wallet flag is immutable", self.nodes[1].setwalletflag, 'disable_private_keys')
 
@@ -136,6 +137,7 @@ class AvoidReuseTest(BitcoinTestFramework):
         the avoid_reuse flag set to false. This means the 10 BTC send should succeed,
         where it fails in test_fund_send_fund_send.
         '''
+        self.log.info("Test fund send fund send dirty")
 
         fundaddr = self.nodes[1].getnewaddress()
         retaddr = self.nodes[0].getnewaddress()
@@ -189,6 +191,7 @@ class AvoidReuseTest(BitcoinTestFramework):
         [1] tries to spend 10 BTC (fails; dirty).
         [1] tries to spend 4 BTC (succeeds; change address sufficient)
         '''
+        self.log.info("Test fund send fund send")
 
         fundaddr = self.nodes[1].getnewaddress()
         retaddr = self.nodes[0].getnewaddress()
