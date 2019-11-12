@@ -13,6 +13,7 @@
 #include <QTimer>
 
 class ClientModel;
+class CoinControlDialog;
 class PlatformStyle;
 class SendCoinsEntry;
 class SendCoinsRecipient;
@@ -60,6 +61,7 @@ private:
     Ui::SendCoinsDialog *ui;
     ClientModel *clientModel;
     WalletModel *model;
+    CoinControlDialog* m_coin_control_dialog{nullptr};
     bool fNewRecipientAllowed;
     bool fFeeMinimized;
     const PlatformStyle *platformStyle;
@@ -70,6 +72,8 @@ private:
     void processSendCoinsReturn(const WalletModel::SendCoinsReturn &sendCoinsReturn, const QString &msgArg = QString());
     void minimizeFeeSection(bool fMinimize);
     void updateFeeMinimizedLabel();
+    // Returns the coin control dialog, creating it on first call.
+    CoinControlDialog* coinControlDialog();
     // Update the passed in CCoinControl with state from the GUI
     void updateCoinControlState(CCoinControl& ctrl);
 

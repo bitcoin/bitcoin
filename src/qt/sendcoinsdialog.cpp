@@ -691,6 +691,16 @@ void SendCoinsDialog::updateFeeMinimizedLabel()
     }
 }
 
+CoinControlDialog* SendCoinsDialog::coinControlDialog()
+{
+    if (!m_coin_control_dialog) {
+        m_coin_control_dialog = new CoinControlDialog(platformStyle, this);
+        m_coin_control_dialog->setModel(model);
+        connect(m_coin_control_dialog, &QDialog::finished, this, &SendCoinsDialog::coinControlUpdateLabels);
+    }
+    return m_coin_control_dialog;
+}
+
 void SendCoinsDialog::updateCoinControlState(CCoinControl& ctrl)
 {
     if (ui->radioCustomFee->isChecked()) {
@@ -794,10 +804,7 @@ void SendCoinsDialog::coinControlFeatureChanged(bool checked)
 // Coin Control: button inputs -> show actual coin control dialog
 void SendCoinsDialog::coinControlButtonClicked()
 {
-    CoinControlDialog dlg(platformStyle);
-    dlg.setModel(model);
-    dlg.exec();
-    coinControlUpdateLabels();
+    coinControlDialog()->open();
 }
 
 // Coin Control: checkbox custom change address
