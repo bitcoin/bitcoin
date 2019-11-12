@@ -75,6 +75,7 @@ private:
     void startThread();
     void checkPath(const QString &dataDir);
     QString getPathToCheck();
+    void UpdatePruneLabels(int64_t prune_target_gb);
 
     friend class FreespaceChecker;
 };

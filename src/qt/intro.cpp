@@ -135,19 +135,7 @@ Intro::Intro(QWidget *parent, int64_t blockchain_size_gb, int64_t chain_state_si
     }
     const int prune_target_gb = PruneMiBtoGB(prune_target_mib);
     ui->prune->setText(tr("Discard blocks after verification, except most recent %1 GB (prune)").arg(prune_target_gb ? prune_target_gb : DEFAULT_PRUNE_TARGET_GB));
-    m_required_space_gb = m_blockchain_size_gb + m_chain_state_size_gb;
-    QString storageRequiresMsg = tr("At least %1 GB of data will be stored in this directory, and it will grow over time.");
-    if (0 < prune_target_gb && prune_target_gb <= m_blockchain_size_gb) {
-        m_required_space_gb = prune_target_gb + m_chain_state_size_gb;
-        storageRequiresMsg = tr("Approximately %1 GB of data will be stored in this directory.");
-    }
-    ui->lblExplanation3->setVisible(prune_target_gb > 0);
-    ui->sizeWarningLabel->setText(
-        tr("%1 will download and store a copy of the Bitcoin block chain.").arg(PACKAGE_NAME) + " " +
-        storageRequiresMsg.arg(m_required_space_gb) + " " +
-        tr("The wallet will also be stored in this directory.")
-    );
-    this->adjustSize();
+    UpdatePruneLabels(prune_target_gb);
     startThread();
 }
 
@@ -340,4 +328,21 @@ QString Intro::getPathToCheck()
     signalled = false; /* new request can be queued now */
     mutex.unlock();
     return retval;
+}
+
+void Intro::UpdatePruneLabels(int64_t prune_target_gb)
+{
+    m_required_space_gb = m_blockchain_size_gb + m_chain_state_size_gb;
+    QString storageRequiresMsg = tr("At least %1 GB of data will be stored in this directory, and it will grow over time.");
+    if (0 < prune_target_gb && prune_target_gb <= m_blockchain_size_gb) {
+        m_required_space_gb = prune_target_gb + m_chain_state_size_gb;
+        storageRequiresMsg = tr("Approximately %1 GB of data will be stored in this directory.");
+    }
+    ui->lblExplanation3->setVisible(prune_target_gb > 0);
+    ui->sizeWarningLabel->setText(
+        tr("%1 will download and store a copy of the Bitcoin block chain.").arg(PACKAGE_NAME) + " " +
+        storageRequiresMsg.arg(m_required_space_gb) + " " +
+        tr("The wallet will also be stored in this directory.")
+    );
+    this->adjustSize();
 }
