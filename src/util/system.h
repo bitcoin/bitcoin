@@ -148,8 +148,6 @@ public:
     };
 
 protected:
-    friend class ArgsManagerHelper;
-
     struct Arg
     {
         std::string m_help_param;
@@ -165,6 +163,22 @@ protected:
     std::list<SectionInfo> m_config_sections GUARDED_BY(cs_args);
 
     NODISCARD bool ReadConfigStream(std::istream& stream, const std::string& filepath, std::string& error, bool ignore_invalid_keys = false);
+
+    /**
+     * Returns true if settings values from the default section should be used,
+     * depending on the current network and whether the setting is
+     * network-specific.
+     */
+    bool UseDefaultSection(const std::string& arg) const EXCLUSIVE_LOCKS_REQUIRED(cs_args);
+
+    /**
+     * Get setting value.
+     *
+     * Result will be null if setting was unset, true if "-setting" argument was passed
+     * false if "-nosetting" argument was passed, and a string if a "-setting=value"
+     * argument was passed.
+     */
+    util::SettingsValue GetSetting(const std::string& arg) const;
 
 public:
     ArgsManager();
