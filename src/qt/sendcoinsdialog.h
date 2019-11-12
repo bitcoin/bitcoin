@@ -74,6 +74,7 @@ private:
     void updateFeeMinimizedLabel();
     // Returns the coin control dialog, creating it on first call.
     CoinControlDialog* coinControlDialog();
+    void updateLabels();
     // Update the passed in CCoinControl with state from the GUI
     void updateCoinControlState(CCoinControl& ctrl);
 

@@ -48,15 +48,15 @@ public:
 
     void setModel(WalletModel *model);
 
-    // static because also called from sendcoinsdialog
-    static void updateLabels(WalletModel*, QDialog*);
+    void updateLabels();
 
-    static QList<CAmount> payAmounts;
-    static CCoinControl *coinControl();
-    static bool fSubtractFeeFromAmount;
+    QList<CAmount> payAmounts;
+    CCoinControl* coinControl();
+    bool fSubtractFeeFromAmount{false};
 
 private:
     Ui::CoinControlDialog *ui;
+    CCoinControl* m_coin_control{nullptr};
     WalletModel *model;
     int sortColumn;
     Qt::SortOrder sortOrder;

@@ -22,6 +22,7 @@
 #include <interfaces/node.h>
 #include <key_io.h>
 #include <policy/fees.h>
+#include <policy/policy.h>
 #include <txmempool.h>
 #include <ui_interface.h>
 #include <wallet/coincontrol.h>
@@ -266,7 +267,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     // Always use a CCoinControl instance, use the CoinControlDialog instance if CoinControl has been enabled
     CCoinControl ctrl;
     if (model->getOptionsModel()->getCoinControlFeatures())
-        ctrl = *CoinControlDialog::coinControl();
+        ctrl = *coinControlDialog()->coinControl();
 
     updateCoinControlState(ctrl);
 
@@ -414,7 +415,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     }
     if (!send_failure) {
         accept();
-        CoinControlDialog::coinControl()->UnSelectAll();
+        coinControlDialog()->coinControl()->UnSelectAll();
         coinControlUpdateLabels();
     }
     fNewRecipientAllowed = true;
@@ -423,7 +424,7 @@ void SendCoinsDialog::on_sendButton_clicked()
 void SendCoinsDialog::clear()
 {
     // Clear coin control settings
-    CoinControlDialog::coinControl()->UnSelectAll();
+    coinControlDialog()->coinControl()->UnSelectAll();
     ui->checkBoxCoinControlChange->setChecked(false);
     ui->lineEditCoinControlChange->clear();
     coinControlUpdateLabels();
@@ -644,7 +645,7 @@ void SendCoinsDialog::useAvailableBalance(SendCoinsEntry* entry)
     // Get CCoinControl instance if CoinControl is enabled or create a new one.
     CCoinControl coin_control;
     if (model->getOptionsModel()->getCoinControlFeatures()) {
-        coin_control = *CoinControlDialog::coinControl();
+        coin_control = *coinControlDialog()->coinControl();
     }
 
     // Include watch-only for wallets without private key
@@ -796,7 +797,7 @@ void SendCoinsDialog::coinControlFeatureChanged(bool checked)
     ui->frameCoinControl->setVisible(checked);
 
     if (!checked && model) // coin control features disabled
-        CoinControlDialog::coinControl()->SetNull();
+        coinControlDialog()->coinControl()->SetNull();
 
     coinControlUpdateLabels();
 }
@@ -812,7 +813,7 @@ void SendCoinsDialog::coinControlChangeChecked(int state)
 {
     if (state == Qt::Unchecked)
     {
-        CoinControlDialog::coinControl()->destChange = CNoDestination();
+        coinControlDialog()->coinControl()->destChange = CNoDestination();
         ui->labelCoinControlChangeLabel->clear();
     }
     else
@@ -828,7 +829,7 @@ void SendCoinsDialog::coinControlChangeEdited(const QString& text)
     if (model && model->getAddressTableModel())
     {
         // Default to no change address until verified
-        CoinControlDialog::coinControl()->destChange = CNoDestination();
+        coinControlDialog()->coinControl()->destChange = CNoDestination();
         ui->labelCoinControlChangeLabel->setStyleSheet("QLabel{color:red;}");
 
         const CTxDestination dest = DecodeDestination(text.toStdString());
@@ -851,7 +852,7 @@ void SendCoinsDialog::coinControlChangeEdited(const QString& text)
                     QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
 
                 if(btnRetVal == QMessageBox::Yes)
-                    CoinControlDialog::coinControl()->destChange = dest;
+                    coinControlDialog()->coinControl()->destChange = dest;
                 else
                 {
                     ui->lineEditCoinControlChange->setText("");
@@ -870,7 +871,7 @@ void SendCoinsDialog::coinControlChangeEdited(const QString& text)
                 else
                     ui->labelCoinControlChangeLabel->setText(tr("(no label)"));
 
-                CoinControlDialog::coinControl()->destChange = dest;
+                coinControlDialog()->coinControl()->destChange = dest;
             }
         }
     }
@@ -882,11 +883,11 @@ void SendCoinsDialog::coinControlUpdateLabels()
     if (!model || !model->getOptionsModel())
         return;
 
-    updateCoinControlState(*CoinControlDialog::coinControl());
+    updateCoinControlState(*coinControlDialog()->coinControl());
 
     // set pay amounts
-    CoinControlDialog::payAmounts.clear();
-    CoinControlDialog::fSubtractFeeFromAmount = false;
+    coinControlDialog()->payAmounts.clear();
+    coinControlDialog()->fSubtractFeeFromAmount = false;
 
     for(int i = 0; i < ui->entries->count(); ++i)
     {
@@ -894,16 +895,16 @@ void SendCoinsDialog::coinControlUpdateLabels()
         if(entry && !entry->isHidden())
         {
             SendCoinsRecipient rcp = entry->getValue();
-            CoinControlDialog::payAmounts.append(rcp.amount);
+            coinControlDialog()->payAmounts.append(rcp.amount);
             if (rcp.fSubtractFeeFromAmount)
-                CoinControlDialog::fSubtractFeeFromAmount = true;
+                coinControlDialog()->fSubtractFeeFromAmount = true;
         }
     }
 
-    if (CoinControlDialog::coinControl()->HasSelected())
+    if (coinControlDialog()->coinControl()->HasSelected())
     {
         // actual coin control calculation
-        CoinControlDialog::updateLabels(model, this);
+        updateLabels();
 
         // show coin control stats
         ui->labelCoinControlAutomaticallySelected->hide();
@@ -916,6 +917,193 @@ void SendCoinsDialog::coinControlUpdateLabels()
         ui->widgetCoinControl->hide();
         ui->labelCoinControlInsuffFunds->hide();
     }
+}
+
+void SendCoinsDialog::updateLabels()
+{
+    if (!model)
+        return;
+
+    // nPayAmount
+    CAmount nPayAmount = 0;
+    bool fDust = false;
+    CMutableTransaction txDummy;
+    for (const CAmount &amount : coinControlDialog()->payAmounts)
+    {
+        nPayAmount += amount;
+
+        if (amount > 0)
+        {
+            // Assumes a p2pkh script size
+            CTxOut txout(amount, CScript() << std::vector<unsigned char>(24, 0));
+            txDummy.vout.push_back(txout);
+            fDust |= IsDust(txout, model->node().getDustRelayFee());
+        }
+    }
+
+    CAmount nAmount             = 0;
+    CAmount nPayFee             = 0;
+    CAmount nAfterFee           = 0;
+    CAmount nChange             = 0;
+    unsigned int nBytes         = 0;
+    unsigned int nBytesInputs   = 0;
+    unsigned int nQuantity      = 0;
+    bool fWitness               = false;
+
+    std::vector<COutPoint> vCoinControl;
+    coinControlDialog()->coinControl()->ListSelected(vCoinControl);
+
+    size_t i = 0;
+    for (const auto& out : model->wallet().getCoins(vCoinControl)) {
+        if (out.depth_in_main_chain < 0) continue;
+
+        // unselect already spent, very unlikely scenario, this could happen
+        // when selected are spent elsewhere, like rpc or another computer
+        const COutPoint& outpt = vCoinControl[i++];
+        if (out.is_spent)
+        {
+            coinControlDialog()->coinControl()->UnSelect(outpt);
+            continue;
+        }
+
+        // Quantity
+        nQuantity++;
+
+        // Amount
+        nAmount += out.txout.nValue;
+
+        // Bytes
+        CTxDestination address;
+        int witnessversion = 0;
+        std::vector<unsigned char> witnessprogram;
+        if (out.txout.scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram))
+        {
+            nBytesInputs += (32 + 4 + 1 + (107 / WITNESS_SCALE_FACTOR) + 4);
+            fWitness = true;
+        }
+        else if(ExtractDestination(out.txout.scriptPubKey, address))
+        {
+            CPubKey pubkey;
+            PKHash *pkhash = boost::get<PKHash>(&address);
+            if (pkhash && model->wallet().getPubKey(CKeyID(*pkhash), pubkey))
+            {
+                nBytesInputs += (pubkey.IsCompressed() ? 148 : 180);
+            }
+            else
+                nBytesInputs += 148; // in all error cases, simply assume 148 here
+        }
+        else nBytesInputs += 148;
+    }
+
+    // calculation
+    if (nQuantity > 0)
+    {
+        // Bytes
+        nBytes = nBytesInputs + ((coinControlDialog()->payAmounts.size() > 0 ? coinControlDialog()->payAmounts.size() + 1 : 2) * 34) + 10; // always assume +1 output for change here
+        if (fWitness)
+        {
+            // there is some fudging in these numbers related to the actual virtual transaction size calculation that will keep this estimate from being exact.
+            // usually, the result will be an overestimate within a couple of satoshis so that the confirmation dialog ends up displaying a slightly smaller fee.
+            // also, the witness stack size value is a variable sized integer. usually, the number of stack items will be well under the single byte var int limit.
+            nBytes += 2; // account for the serialized marker and flag bytes
+            nBytes += nQuantity; // account for the witness byte that holds the number of stack items for each input.
+        }
+
+        // in the subtract fee from amount case, we can tell if zero change already and subtract the bytes, so that fee calculation afterwards is accurate
+        if (coinControlDialog()->fSubtractFeeFromAmount)
+            if (nAmount - nPayAmount == 0)
+                nBytes -= 34;
+
+        // Fee
+        nPayFee = model->wallet().getMinimumFee(nBytes, *coinControlDialog()->coinControl(), nullptr /* returned_target */, nullptr /* reason */);
+
+        if (nPayAmount > 0)
+        {
+            nChange = nAmount - nPayAmount;
+            if (!coinControlDialog()->fSubtractFeeFromAmount)
+                nChange -= nPayFee;
+
+            // Never create dust outputs; if we would, just add the dust to the fee.
+            if (nChange > 0 && nChange < MIN_CHANGE)
+            {
+                // Assumes a p2pkh script size
+                CTxOut txout(nChange, CScript() << std::vector<unsigned char>(24, 0));
+                if (IsDust(txout, model->node().getDustRelayFee()))
+                {
+                    nPayFee += nChange;
+                    nChange = 0;
+                    if (coinControlDialog()->fSubtractFeeFromAmount)
+                        nBytes -= 34; // we didn't detect lack of change above
+                }
+            }
+
+            if (nChange == 0 && !coinControlDialog()->fSubtractFeeFromAmount)
+                nBytes -= 34;
+        }
+
+        // after fee
+        nAfterFee = std::max<CAmount>(nAmount - nPayFee, 0);
+    }
+
+    // actually update labels
+    int nDisplayUnit = BitcoinUnits::BTC;
+    if (model && model->getOptionsModel())
+        nDisplayUnit = model->getOptionsModel()->getDisplayUnit();
+
+
+    QLabel *l1 = ui->labelCoinControlQuantity;
+    QLabel *l2 = ui->labelCoinControlAmount;
+    QLabel *l3 = ui->labelCoinControlFee;
+    QLabel *l4 = ui->labelCoinControlAfterFee;
+    QLabel *l5 = ui->labelCoinControlBytes;
+    QLabel *l7 = ui->labelCoinControlLowOutput;
+    QLabel *l8 = ui->labelCoinControlChange;
+
+    // enable/disable "dust" and "change"
+    ui->labelCoinControlLowOutputText->setEnabled(nPayAmount > 0);
+    ui->labelCoinControlLowOutput    ->setEnabled(nPayAmount > 0);
+    ui->labelCoinControlChangeText   ->setEnabled(nPayAmount > 0);
+    ui->labelCoinControlChange       ->setEnabled(nPayAmount > 0);
+
+    // stats
+    l1->setText(QString::number(nQuantity));                                 // Quantity
+    l2->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, nAmount));        // Amount
+    l3->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, nPayFee));        // Fee
+    l4->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, nAfterFee));      // After Fee
+    l5->setText(((nBytes > 0) ? ASYMP_UTF8 : "") + QString::number(nBytes));        // Bytes
+    l7->setText(fDust ? tr("yes") : tr("no"));                               // Dust
+    l8->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, nChange));        // Change
+    if (nPayFee > 0)
+    {
+        l3->setText(ASYMP_UTF8 + l3->text());
+        l4->setText(ASYMP_UTF8 + l4->text());
+        if (nChange > 0 && !coinControlDialog()->fSubtractFeeFromAmount)
+            l8->setText(ASYMP_UTF8 + l8->text());
+    }
+
+    // turn label red when dust
+    l7->setStyleSheet((fDust) ? "color:red;" : "");
+
+    // tool tips
+    QString toolTipDust = tr("This label turns red if any recipient receives an amount smaller than the current dust threshold.");
+
+    // how many satoshis the estimated fee can vary per byte we guess wrong
+    double dFeeVary = (nBytes != 0) ? (double)nPayFee / nBytes : 0;
+
+    QString toolTip4 = tr("Can vary +/- %1 satoshi(s) per input.").arg(dFeeVary);
+
+    l3->setToolTip(toolTip4);
+    l4->setToolTip(toolTip4);
+    l7->setToolTip(toolTipDust);
+    l8->setToolTip(toolTip4);
+    ui->labelCoinControlFeeText      ->setToolTip(l3->toolTip());
+    ui->labelCoinControlAfterFeeText ->setToolTip(l4->toolTip());
+    ui->labelCoinControlBytesText    ->setToolTip(l5->toolTip());
+    ui->labelCoinControlLowOutputText->setToolTip(l7->toolTip());
+    ui->labelCoinControlChangeText   ->setToolTip(l8->toolTip());
+
+    // Insufficient funds
+    ui->labelCoinControlInsuffFunds->setVisible(nChange < 0);
 }
 
 SendConfirmationDialog::SendConfirmationDialog(const QString& title, const QString& text, const QString& informative_text, const QString& detailed_text, int _secDelay, const QString& _confirmButtonText, QWidget* parent)

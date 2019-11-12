@@ -31,9 +31,6 @@
 #include <QSettings>
 #include <QTreeWidget>
 
-QList<CAmount> CoinControlDialog::payAmounts;
-bool CoinControlDialog::fSubtractFeeFromAmount = false;
-
 bool CCoinControlWidgetItem::operator<(const QTreeWidgetItem &other) const {
     int column = treeWidget()->sortColumn();
     if (column == CoinControlDialog::COLUMN_AMOUNT || column == CoinControlDialog::COLUMN_DATE || column == CoinControlDialog::COLUMN_CONFIRMATIONS)
@@ -44,6 +41,7 @@ bool CCoinControlWidgetItem::operator<(const QTreeWidgetItem &other) const {
 CoinControlDialog::CoinControlDialog(const PlatformStyle *_platformStyle, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::CoinControlDialog),
+    m_coin_control(new CCoinControl()),
     model(nullptr),
     platformStyle(_platformStyle)
 {
@@ -143,6 +141,7 @@ CoinControlDialog::~CoinControlDialog()
     settings.setValue("nCoinControlSortColumn", sortColumn);
     settings.setValue("nCoinControlSortOrder", (int)sortOrder);
 
+    delete m_coin_control;
     delete ui;
 }
 
@@ -154,7 +153,7 @@ void CoinControlDialog::setModel(WalletModel *_model)
     {
         updateView();
         updateLabelLocked();
-        CoinControlDialog::updateLabels(_model, this);
+        updateLabels();
     }
 }
 
@@ -184,7 +183,7 @@ void CoinControlDialog::buttonSelectAllClicked()
     ui->treeWidget->setEnabled(true);
     if (state == Qt::Unchecked)
         coinControl()->UnSelectAll(); // just to be sure
-    CoinControlDialog::updateLabels(model, this);
+    updateLabels();
 }
 
 // context menu
@@ -377,7 +376,7 @@ void CoinControlDialog::viewItemChanged(QTreeWidgetItem* item, int column)
 
         // selection changed -> update labels
         if (ui->treeWidget->isEnabled()) // do not update on every click for (un)select all
-            CoinControlDialog::updateLabels(model, this);
+            updateLabels();
     }
 
     // TODO: Remove this temporary qt5 fix after Qt5.3 and Qt5.4 are no longer used.
@@ -402,7 +401,7 @@ void CoinControlDialog::updateLabelLocked()
     else ui->labelLocked->setVisible(false);
 }
 
-void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
+void CoinControlDialog::updateLabels()
 {
     if (!model)
         return;
@@ -411,7 +410,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     CAmount nPayAmount = 0;
     bool fDust = false;
     CMutableTransaction txDummy;
-    for (const CAmount &amount : CoinControlDialog::payAmounts)
+    for (const CAmount &amount : payAmounts)
     {
         nPayAmount += amount;
 
@@ -482,7 +481,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     if (nQuantity > 0)
     {
         // Bytes
-        nBytes = nBytesInputs + ((CoinControlDialog::payAmounts.size() > 0 ? CoinControlDialog::payAmounts.size() + 1 : 2) * 34) + 10; // always assume +1 output for change here
+        nBytes = nBytesInputs + ((payAmounts.size() > 0 ? payAmounts.size() + 1 : 2) * 34) + 10; // always assume +1 output for change here
         if (fWitness)
         {
             // there is some fudging in these numbers related to the actual virtual transaction size calculation that will keep this estimate from being exact.
@@ -493,7 +492,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         }
 
         // in the subtract fee from amount case, we can tell if zero change already and subtract the bytes, so that fee calculation afterwards is accurate
-        if (CoinControlDialog::fSubtractFeeFromAmount)
+        if (fSubtractFeeFromAmount)
             if (nAmount - nPayAmount == 0)
                 nBytes -= 34;
 
@@ -503,7 +502,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         if (nPayAmount > 0)
         {
             nChange = nAmount - nPayAmount;
-            if (!CoinControlDialog::fSubtractFeeFromAmount)
+            if (!fSubtractFeeFromAmount)
                 nChange -= nPayFee;
 
             // Never create dust outputs; if we would, just add the dust to the fee.
@@ -515,12 +514,12 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
                 {
                     nPayFee += nChange;
                     nChange = 0;
-                    if (CoinControlDialog::fSubtractFeeFromAmount)
+                    if (fSubtractFeeFromAmount)
                         nBytes -= 34; // we didn't detect lack of change above
                 }
             }
 
-            if (nChange == 0 && !CoinControlDialog::fSubtractFeeFromAmount)
+            if (nChange == 0 && !fSubtractFeeFromAmount)
                 nBytes -= 34;
         }
 
@@ -533,19 +532,20 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     if (model && model->getOptionsModel())
         nDisplayUnit = model->getOptionsModel()->getDisplayUnit();
 
-    QLabel *l1 = dialog->findChild<QLabel *>("labelCoinControlQuantity");
-    QLabel *l2 = dialog->findChild<QLabel *>("labelCoinControlAmount");
-    QLabel *l3 = dialog->findChild<QLabel *>("labelCoinControlFee");
-    QLabel *l4 = dialog->findChild<QLabel *>("labelCoinControlAfterFee");
-    QLabel *l5 = dialog->findChild<QLabel *>("labelCoinControlBytes");
-    QLabel *l7 = dialog->findChild<QLabel *>("labelCoinControlLowOutput");
-    QLabel *l8 = dialog->findChild<QLabel *>("labelCoinControlChange");
+
+    QLabel *l1 = ui->labelCoinControlQuantity;
+    QLabel *l2 = ui->labelCoinControlAmount;
+    QLabel *l3 = ui->labelCoinControlFee;
+    QLabel *l4 = ui->labelCoinControlAfterFee;
+    QLabel *l5 = ui->labelCoinControlBytes;
+    QLabel *l7 = ui->labelCoinControlLowOutput;
+    QLabel *l8 = ui->labelCoinControlChange;
 
     // enable/disable "dust" and "change"
-    dialog->findChild<QLabel *>("labelCoinControlLowOutputText")->setEnabled(nPayAmount > 0);
-    dialog->findChild<QLabel *>("labelCoinControlLowOutput")    ->setEnabled(nPayAmount > 0);
-    dialog->findChild<QLabel *>("labelCoinControlChangeText")   ->setEnabled(nPayAmount > 0);
-    dialog->findChild<QLabel *>("labelCoinControlChange")       ->setEnabled(nPayAmount > 0);
+    ui->labelCoinControlLowOutputText->setEnabled(nPayAmount > 0);
+    ui->labelCoinControlLowOutput    ->setEnabled(nPayAmount > 0);
+    ui->labelCoinControlChangeText   ->setEnabled(nPayAmount > 0);
+    ui->labelCoinControlChange       ->setEnabled(nPayAmount > 0);
 
     // stats
     l1->setText(QString::number(nQuantity));                                 // Quantity
@@ -559,7 +559,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     {
         l3->setText(ASYMP_UTF8 + l3->text());
         l4->setText(ASYMP_UTF8 + l4->text());
-        if (nChange > 0 && !CoinControlDialog::fSubtractFeeFromAmount)
+        if (nChange > 0 && !fSubtractFeeFromAmount)
             l8->setText(ASYMP_UTF8 + l8->text());
     }
 
@@ -578,22 +578,16 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     l4->setToolTip(toolTip4);
     l7->setToolTip(toolTipDust);
     l8->setToolTip(toolTip4);
-    dialog->findChild<QLabel *>("labelCoinControlFeeText")      ->setToolTip(l3->toolTip());
-    dialog->findChild<QLabel *>("labelCoinControlAfterFeeText") ->setToolTip(l4->toolTip());
-    dialog->findChild<QLabel *>("labelCoinControlBytesText")    ->setToolTip(l5->toolTip());
-    dialog->findChild<QLabel *>("labelCoinControlLowOutputText")->setToolTip(l7->toolTip());
-    dialog->findChild<QLabel *>("labelCoinControlChangeText")   ->setToolTip(l8->toolTip());
-
-    // Insufficient funds
-    QLabel *label = dialog->findChild<QLabel *>("labelCoinControlInsuffFunds");
-    if (label)
-        label->setVisible(nChange < 0);
+    ui->labelCoinControlFeeText      ->setToolTip(l3->toolTip());
+    ui->labelCoinControlAfterFeeText ->setToolTip(l4->toolTip());
+    ui->labelCoinControlBytesText    ->setToolTip(l5->toolTip());
+    ui->labelCoinControlLowOutputText->setToolTip(l7->toolTip());
+    ui->labelCoinControlChangeText   ->setToolTip(l8->toolTip());
 }
 
 CCoinControl* CoinControlDialog::coinControl()
 {
-    static CCoinControl coin_control;
-    return &coin_control;
+    return m_coin_control;
 }
 
 void CoinControlDialog::updateView()
