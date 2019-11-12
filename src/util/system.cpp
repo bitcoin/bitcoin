@@ -352,11 +352,8 @@ Optional<unsigned int> ArgsManager::GetArgFlags(const std::string& name) const
 
 std::vector<std::string> ArgsManager::GetArgs(const std::string& strArg) const
 {
-    LOCK(cs_args);
-    bool ignore_default_section_config = !UseDefaultSection(strArg);
     std::vector<std::string> result;
-    for (const util::SettingsValue& value :
-        util::GetSettingsList(m_settings, m_network, SettingName(strArg), ignore_default_section_config)) {
+    for (const util::SettingsValue& value : GetSettingsList(strArg)) {
         result.push_back(value.isFalse() ? "0" : value.isTrue() ? "1" : value.get_str());
     }
     return result;
@@ -867,6 +864,12 @@ util::SettingsValue ArgsManager::GetSetting(const std::string& arg) const
     LOCK(cs_args);
     return util::GetSetting(
         m_settings, m_network, SettingName(arg), !UseDefaultSection(arg), /* get_chain_name= */ false);
+}
+
+std::vector<util::SettingsValue> ArgsManager::GetSettingsList(const std::string& arg) const
+{
+    LOCK(cs_args);
+    return util::GetSettingsList(m_settings, m_network, SettingName(arg), !UseDefaultSection(arg));
 }
 
 bool RenameOver(fs::path src, fs::path dest)
