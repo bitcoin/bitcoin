@@ -91,7 +91,7 @@ void OptionsModel::Init(bool resetSettings)
     if (!settings.contains("bPrune"))
         settings.setValue("bPrune", false);
     if (!settings.contains("nPruneSize"))
-        settings.setValue("nPruneSize", 2);
+        settings.setValue("nPruneSize", DEFAULT_PRUNE_TARGET_GB);
     SetPrune(settings.value("bPrune").toBool());
 
     if (!settings.contains("nDatabaseCache"))
