@@ -326,9 +326,9 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
         key.erase(0, 1);
         std::string section;
         util::SettingsValue value = InterpretOption(section, key, val);
-        const unsigned int flags = FlagsOfKnownArg(key);
+        Optional<unsigned int> flags = GetArgFlags('-' + key);
         if (flags) {
-            if (!CheckValid(key, value, flags, error)) {
+            if (!CheckValid(key, value, *flags, error)) {
                 return false;
             }
             // Weird behavior preserved for backwards compatibility: command
@@ -355,16 +355,16 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
     return success;
 }
 
-unsigned int ArgsManager::FlagsOfKnownArg(const std::string& key) const
+Optional<unsigned int> ArgsManager::GetArgFlags(const std::string& name) const
 {
     LOCK(cs_args);
     for (const auto& arg_map : m_available_args) {
-        const auto search = arg_map.second.find('-' + key);
+        const auto search = arg_map.second.find(name);
         if (search != arg_map.second.end()) {
             return search->second.m_flags;
         }
     }
-    return ArgsManager::NONE;
+    return nullopt;
 }
 
 std::vector<std::string> ArgsManager::GetArgs(const std::string& strArg) const
@@ -745,9 +745,9 @@ bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& file
         std::string section;
         std::string key = option.first;
         util::SettingsValue value = InterpretOption(section, key, option.second);
-        const unsigned int flags = FlagsOfKnownArg(key);
+        Optional<unsigned int> flags = GetArgFlags('-' + key);
         if (flags) {
-            if (!CheckValid(key, value, flags, error)) {
+            if (!CheckValid(key, value, *flags, error)) {
                 return false;
             }
             m_settings.ro_config[section][key].push_back(value);
