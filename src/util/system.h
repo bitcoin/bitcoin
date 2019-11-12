@@ -20,6 +20,7 @@
 #include <compat/assumptions.h>
 #include <fs.h>
 #include <logging.h>
+#include <optional.h>
 #include <sync.h>
 #include <tinyformat.h>
 #include <util/memory.h>
@@ -159,7 +160,6 @@ class ArgsManager
 {
 public:
     enum Flags {
-        NONE = 0x00,
         // Boolean options can accept negation syntax -noOPTION or -noOPTION=1
         ALLOW_BOOL = 0x01,
         ALLOW_INT = 0x02,
@@ -337,9 +337,9 @@ public:
 
     /**
      * Return Flags for known arg.
-     * Return ArgsManager::NONE for unknown arg.
+     * Return nullopt for unknown arg.
      */
-    unsigned int FlagsOfKnownArg(const std::string& key) const;
+    Optional<unsigned int> GetArgFlags(const std::string& name) const;
 };
 
 extern ArgsManager gArgs;
