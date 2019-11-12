@@ -80,12 +80,14 @@ private:
     // mempool; if we remove this transaction we must remove all of these
     // descendants as well.
     uint64_t nCountWithDescendants;  //!< number of descendant transactions
-    uint64_t nSizeWithDescendants;   //!< ... and size
+    uint64_t nVirtualSizeWithDescendants;   //!< ... and virtual size
+    uint64_t nWeightWithDescendants;
     CAmount nModFeesWithDescendants; //!< ... and total fees (all including us)
 
     // Analogous statistics for ancestor transactions
     uint64_t nCountWithAncestors;
-    uint64_t nSizeWithAncestors;
+    uint64_t nVirtualSizeWithAncestors;
+    uint64_t nWeightWithAncestors;
     CAmount nModFeesWithAncestors;
     int64_t nSigOpCostWithAncestors;
 
@@ -108,9 +110,9 @@ public:
     const LockPoints& GetLockPoints() const { return lockPoints; }
 
     // Adjusts the descendant state.
-    void UpdateDescendantState(int64_t modifySize, CAmount modifyFee, int64_t modifyCount);
+    void UpdateDescendantState(int64_t modifySize, int64_t modifyWeight, CAmount modifyFee, int64_t modifyCount);
     // Adjusts the ancestor state
-    void UpdateAncestorState(int64_t modifySize, CAmount modifyFee, int64_t modifyCount, int64_t modifySigOps);
+    void UpdateAncestorState(int64_t modifySize, int64_t modifyWeight, CAmount modifyFee, int64_t modifyCount, int64_t modifySigOps);
     // Updates the fee delta used for mining priority score, and the
     // modified fees with descendants.
     void UpdateFeeDelta(int64_t feeDelta);
@@ -118,13 +120,15 @@ public:
     void UpdateLockPoints(const LockPoints& lp);
 
     uint64_t GetCountWithDescendants() const { return nCountWithDescendants; }
-    uint64_t GetSizeWithDescendants() const { return nSizeWithDescendants; }
+    uint64_t GetSizeWithDescendants() const { return nVirtualSizeWithDescendants; }
+    uint64_t GetWeightWithDescendants() const { return nWeightWithDescendants; }
     CAmount GetModFeesWithDescendants() const { return nModFeesWithDescendants; }
 
     bool GetSpendsCoinbase() const { return spendsCoinbase; }
 
     uint64_t GetCountWithAncestors() const { return nCountWithAncestors; }
-    uint64_t GetSizeWithAncestors() const { return nSizeWithAncestors; }
+    uint64_t GetSizeWithAncestors() const { return nVirtualSizeWithAncestors; }
+    uint64_t GetWeightWithAncestors() const { return nWeightWithAncestors; }
     CAmount GetModFeesWithAncestors() const { return nModFeesWithAncestors; }
     int64_t GetSigOpCostWithAncestors() const { return nSigOpCostWithAncestors; }
 
@@ -134,30 +138,32 @@ public:
 // Helpers for modifying CTxMemPool::mapTx, which is a boost multi_index.
 struct update_descendant_state
 {
-    update_descendant_state(int64_t _modifySize, CAmount _modifyFee, int64_t _modifyCount) :
-        modifySize(_modifySize), modifyFee(_modifyFee), modifyCount(_modifyCount)
+    update_descendant_state(int64_t _modifySize, int64_t _modifyWeight, CAmount _modifyFee, int64_t _modifyCount) :
+        modifySize(_modifySize), modifyWeight(_modifyWeight), modifyFee(_modifyFee), modifyCount(_modifyCount)
     {}
 
     void operator() (CTxMemPoolEntry &e)
-        { e.UpdateDescendantState(modifySize, modifyFee, modifyCount); }
+        { e.UpdateDescendantState(modifySize, modifyWeight, modifyFee, modifyCount); }
 
     private:
         int64_t modifySize;
+        int64_t modifyWeight;
         CAmount modifyFee;
         int64_t modifyCount;
 };
 
 struct update_ancestor_state
 {
-    update_ancestor_state(int64_t _modifySize, CAmount _modifyFee, int64_t _modifyCount, int64_t _modifySigOpsCost) :
-        modifySize(_modifySize), modifyFee(_modifyFee), modifyCount(_modifyCount), modifySigOpsCost(_modifySigOpsCost)
+    update_ancestor_state(int64_t _modifySize, int64_t _modifyWeight, CAmount _modifyFee, int64_t _modifyCount, int64_t _modifySigOpsCost) :
+        modifySize(_modifySize), modifyWeight(_modifyWeight), modifyFee(_modifyFee), modifyCount(_modifyCount), modifySigOpsCost(_modifySigOpsCost)
     {}
 
     void operator() (CTxMemPoolEntry &e)
-        { e.UpdateAncestorState(modifySize, modifyFee, modifyCount, modifySigOpsCost); }
+        { e.UpdateAncestorState(modifySize, modifyWeight, modifyFee, modifyCount, modifySigOpsCost); }
 
     private:
         int64_t modifySize;
+        int64_t modifyWeight;
         CAmount modifyFee;
         int64_t modifyCount;
         int64_t modifySigOpsCost;
@@ -336,6 +342,9 @@ struct TxMempoolInfo
     CAmount fee;
 
     /** Virtual size of the transaction. */
+    size_t weight;
+
+    /** Virtual size of the transaction. */
     size_t vsize;
 
     /** The fee delta. */
@@ -447,7 +456,8 @@ private:
     std::atomic<unsigned int> nTransactionsUpdated; //!< Used by getblocktemplate to trigger CreateNewBlock() invocation
     CBlockPolicyEstimator* minerPolicyEstimator;
 
-    uint64_t totalTxSize;      //!< sum of all mempool tx's virtual sizes. Differs from serialized tx size since witness data is discounted. Defined in BIP 141.
+    uint64_t totalTxWeight;
+    uint64_t totalTxVirtualSize;      //!< sum of all mempool tx's virtual sizes. Differs from serialized tx size since witness data is discounted. Defined in BIP 141.
     uint64_t cachedInnerUsage; //!< sum of dynamic memory usage of all the map elements (NOT the maps themselves)
 
     mutable int64_t lastRollingFeeUpdate;
@@ -681,7 +691,13 @@ public:
     uint64_t GetTotalTxSize() const
     {
         LOCK(cs);
-        return totalTxSize;
+        return totalTxVirtualSize;
+    }
+
+    uint64_t GetTotalTxWeight() const
+    {
+        LOCK(cs);
+        return totalTxWeight;
     }
 
     bool exists(const uint256& hash) const
