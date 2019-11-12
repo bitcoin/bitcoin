@@ -169,6 +169,7 @@ static void WalletTxToJSON(interfaces::Chain& chain, const CWalletTx& wtx, UniVa
     if (confirms > 0)
     {
         entry.pushKV("blockhash", wtx.m_confirm.hashBlock.GetHex());
+        entry.pushKV("blockheight", wtx.m_confirm.block_height);
         entry.pushKV("blockindex", wtx.m_confirm.nIndex);
         int64_t block_time;
         CHECK_NONFATAL(chain.findBlock(wtx.m_confirm.hashBlock, FoundBlock().time(block_time)));
@@ -1394,6 +1395,7 @@ static const std::vector<RPCResult> TransactionDescriptionString()
             {RPCResult::Type::BOOL, "trusted", "Whether we consider the outputs of this unconfirmed transaction safe to spend."},
             {RPCResult::Type::STR_HEX, "blockhash", "The block hash containing the transaction. Available for 'send' and 'receive'\n"
                                                    "category of transactions."},
+            {RPCResult::Type::STR_HEX, "blockheight", "The block height containing the transaction."},
             {RPCResult::Type::NUM, "blockindex", "The index of the transaction in the block that includes it. Available for 'send' and 'receive'\n"
                                                 "category of transactions."},
             {RPCResult::Type::NUM_TIME, "blocktime", "The block time expressed in " + UNIX_EPOCH_TIME + "."},
