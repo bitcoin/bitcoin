@@ -217,7 +217,7 @@ download_package() {
         # Download bootstrap if requested
         if [ -n "$bootstrap" ]; then
             echo "Downloading bootstrap"
-            wget "https://nextcloud.crownplatform.com/nextcloud/s/RiyWmDLckmcXS6n/download" -O $dir/bootstrap.zip
+            wget "https://nextcloud.crownplatform.com/index.php/s/Mb5G2xy4NcKbLrJ/download" -O $dir/bootstrap.zip
 	    if [ ! -e "$dir/bootstrap.zip" ]; then
 	        echo "Failed to download bootstrap. Continuing without it."
 	        bootstrap=
