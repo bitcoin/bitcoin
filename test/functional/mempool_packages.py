@@ -10,13 +10,19 @@ from test_framework.messages import COIN
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error, satoshi_round
 
+# default limits
 MAX_ANCESTORS = 25
 MAX_DESCENDANTS = 25
+# custom limits for node1
+MAX_ANCESTORS_CUSTOM = 5
 
 class MempoolPackagesTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        self.extra_args = [["-maxorphantxsize=1000"], ["-maxorphantxsize=1000", "-limitancestorcount=5"]]
+        self.extra_args = [
+            ["-maxorphantxsize=1000"],
+            ["-maxorphantxsize=1000", "-limitancestorcount={}".format(MAX_ANCESTORS_CUSTOM)],
+        ]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -184,7 +190,14 @@ class MempoolPackagesTest(BitcoinTestFramework):
             assert_equal(mempool[x]['descendantfees'], descendant_fees * COIN + 2000)
             assert_equal(mempool[x]['fees']['descendant'], descendant_fees+satoshi_round(0.00002))
 
-        # TODO: check that node1's mempool is as expected
+        # Check that node1's mempool is as expected (-> custom ancestor limit)
+        mempool0 = self.nodes[0].getrawmempool(False)
+        mempool1 = self.nodes[1].getrawmempool(False)
+        assert_equal(len(mempool1), MAX_ANCESTORS_CUSTOM)
+        assert set(mempool1).issubset(set(mempool0))
+        for tx in chain[:MAX_ANCESTORS_CUSTOM]:
+            assert tx in mempool1
+        # TODO: more detailed check of node1's mempool (fees etc.)
 
         # TODO: test ancestor size limits
 
