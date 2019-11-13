@@ -1472,13 +1472,8 @@ static void ThreadMapPort()
                 if (externalIPAddress[0]) {
                     CNetAddr resolved;
                     if (LookupHost(externalIPAddress, resolved, false)) {
-<<<<<<< HEAD
-                        LogPrintf("UPnP: ExternalIPAddress = %s\n", resolved.ToString().c_str());
-                        AddLocal(resolved, f_discover, LOCAL_UPNP);
-=======
                         LogPrintf("UPnP: ExternalIPAddress = %s\n", resolved.ToString());
-                        AddLocal(resolved, LOCAL_UPNP);
->>>>>>> 80fdb6fad132166b10fbeb8615e3c5c591209e0b
+                        AddLocal(resolved, f_discover, LOCAL_UPNP);
                     }
                 } else {
                     LogPrintf("UPnP: GetExternalIPAddress failed.\n");
