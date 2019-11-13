@@ -819,9 +819,8 @@ QString formatServicesStr(quint64 mask)
 {
     QStringList strList;
 
-    // Just scan the last 8 bits for now.
-    for (int i = 0; i < 8; i++) {
-        uint64_t check = 1 << i;
+    for (int i = 0; i < 64; i++) {
+        uint64_t check = 1LL << i;
         if (mask & check)
         {
             switch (check)
@@ -838,8 +837,15 @@ QString formatServicesStr(quint64 mask)
             case NODE_WITNESS:
                 strList.append("WITNESS");
                 break;
+            case NODE_NETWORK_LIMITED:
+                strList.append("NETWORK_LIMITED");
+                break;
             default:
-                strList.append(QString("%1[%2]").arg("UNKNOWN").arg(check));
+                if (i < 8) {
+                    strList.append(QString("%1[%2]").arg("UNKNOWN").arg(check));
+                } else {
+                    strList.append(QString("%1[2^%2]").arg("UNKNOWN").arg(i));
+                }
             }
         }
     }
