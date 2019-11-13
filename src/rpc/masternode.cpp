@@ -113,7 +113,7 @@ UniValue getprivatesendinfo(const JSONRPCRequest& request)
             "  \"multisession\": true|false,        (bool) Whether PrivateSend Multisession option is enabled\n"
             "  \"max_sessions\": xxx,               (numeric) How many parallel mixing sessions can there be at once\n"
             "  \"max_rounds\": xxx,                 (numeric) How many rounds to mix\n"
-            "  \"max_amount\": xxx,                 (numeric) How many " + CURRENCY_UNIT + " to keep anonimized\n"
+            "  \"max_amount\": xxx,                 (numeric) How many " + CURRENCY_UNIT + " to keep anonymized\n"
             "  \"max_denoms\": xxx,                 (numeric) How many inputs of each denominated amount to create\n"
             "  \"queue_size\": xxx,                 (numeric) How many queues there are currently on the network\n"
             "  \"sessions\":                        (array of json objects)\n"

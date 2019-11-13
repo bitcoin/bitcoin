@@ -16,6 +16,7 @@ void quorum_list_help()
 {
     throw std::runtime_error(
             "quorum list ( count )\n"
+            "List of on-chain quorums\n"
             "\nArguments:\n"
             "1. count           (number, optional) Number of quorums to list. Will list active quorums\n"
             "                   if \"count\" is not specified.\n"
@@ -69,6 +70,7 @@ void quorum_info_help()
 {
     throw std::runtime_error(
             "quorum info llmqType \"quorumHash\" ( includeSkShare )\n"
+            "Return information about a quorum\n"
             "\nArguments:\n"
             "1. llmqType              (int, required) LLMQ type.\n"
             "2. \"quorumHash\"          (string, required) Block hash of quorum.\n"
@@ -254,6 +256,7 @@ void quorum_sign_help()
 {
     throw std::runtime_error(
             "quorum sign llmqType \"id\" \"msgHash\"\n"
+            "Threshold-sign a message\n"
             "\nArguments:\n"
             "1. llmqType              (int, required) LLMQ type.\n"
             "2. \"id\"                  (string, required) Request id.\n"
@@ -265,6 +268,7 @@ void quorum_hasrecsig_help()
 {
     throw std::runtime_error(
             "quorum hasrecsig llmqType \"id\" \"msgHash\"\n"
+            "Test if a valid recovered signature is present\n"
             "\nArguments:\n"
             "1. llmqType              (int, required) LLMQ type.\n"
             "2. \"id\"                  (string, required) Request id.\n"
@@ -276,6 +280,7 @@ void quorum_getrecsig_help()
 {
     throw std::runtime_error(
             "quorum getrecsig llmqType \"id\" \"msgHash\"\n"
+            "Get a recovered signature\n"
             "\nArguments:\n"
             "1. llmqType              (int, required) LLMQ type.\n"
             "2. \"id\"                  (string, required) Request id.\n"
@@ -287,6 +292,7 @@ void quorum_isconflicting_help()
 {
     throw std::runtime_error(
             "quorum isconflicting llmqType \"id\" \"msgHash\"\n"
+            "Test if a conflict exists\n"
             "\nArguments:\n"
             "1. llmqType              (int, required) LLMQ type.\n"
             "2. \"id\"                  (string, required) Request id.\n"
@@ -384,7 +390,7 @@ UniValue quorum_dkgsimerror(const JSONRPCRequest& request)
             "\nAvailable commands:\n"
             "  list              - List of on-chain quorums\n"
             "  info              - Return information about a quorum\n"
-            "  dkgsimerror       - Simulates DKG errors and malicious behavior.\n"
+            "  dkgsimerror       - Simulates DKG errors and malicious behavior\n"
             "  dkgstatus         - Return the status of the current DKG process\n"
             "  memberof          - Checks which quorums the given masternode is a member of\n"
             "  sign              - Threshold-sign a message\n"
