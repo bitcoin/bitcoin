@@ -103,7 +103,7 @@ void CActiveMasternodeManager::Init()
     if (activeMasternodeInfo.service != dmn->pdmnState->addr) {
         state = MASTERNODE_ERROR;
         strError = "Local address does not match the address from ProTx";
-        LogPrintf("CActiveMasternodeManager::Init -- ERROR: %s", strError);
+        LogPrintf("CActiveMasternodeManager::Init -- ERROR: %s\n", strError);
         return;
     }
 
