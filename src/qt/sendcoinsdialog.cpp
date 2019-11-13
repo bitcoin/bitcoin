@@ -965,7 +965,7 @@ SendConfirmationDialog::SendConfirmationDialog(const QString& title, const QStri
     yesButton = button(yes_button);
     removeButton(yesButton);
     addButton(yesButton, QMessageBox::YesRole);
-    if (yes_button_text.isEmpty()) m_yes_button_text = tr("Send");
+    if (yes_button_text.isEmpty()) m_yes_button_text = tr("Yes");
     updateYesButton();
     connect(&countDownTimer, &QTimer::timeout, this, &SendConfirmationDialog::countDown);
 }
