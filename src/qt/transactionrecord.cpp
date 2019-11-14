@@ -25,7 +25,7 @@ bool TransactionRecord::showTransaction()
 /*
  * Decompose CWallet transaction to model transaction records.
  */
-QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interfaces::WalletTx& wtx)
+QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wallet &wallet, const interfaces::WalletTx& wtx)
 {
     QList<TransactionRecord> parts;
     int64_t nTime = wtx.time;
@@ -35,19 +35,36 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
     uint256 hash = wtx.tx->GetHash();
     std::map<std::string, std::string> mapValue = wtx.value_map;
 
-    if(wtx.tx->IsCoinStake())
+    if (wtx.tx->IsCoinStake())
     {
-        TransactionRecord sub(hash, nTime, TransactionRecord::StakeMint, "", -nDebit, wtx.tx->GetValueOut());
+        TransactionRecord sub(hash, nTime);
         CTxDestination address;
 
         if (!ExtractDestination(wtx.tx->vout[1].scriptPubKey, address) && wtx.txout_is_mine[1])
             return parts;
 
-        isminetype mine = wtx.txout_is_mine[1];
+        isminetype mine = wtx.txout_address_is_mine[1];
 
-        sub.type = TransactionRecord::StakeMint;
-        sub.address = EncodeDestination(address);
-        sub.involvesWatchAddress = mine & ISMINE_WATCH_ONLY;
+        if (mine == ISMINE_NO) {
+            //if the address is not yours then it means you have a tx sent to you in someone elses coinstake tx
+            for (unsigned int i = 1; i < wtx.tx->vout.size(); i++) {
+                CTxDestination outAddress;
+                if (ExtractDestination(wtx.tx->vout[i].scriptPubKey, outAddress)) {
+                    if (wallet.getAddress(outAddress, /* name= */ nullptr, &mine, /* purpose= */ nullptr)) {
+                        sub.involvesWatchAddress = mine & ISMINE_WATCH_ONLY;
+                        sub.type = TransactionRecord::MNReward;
+                        sub.address = EncodeDestination(outAddress);
+                        sub.credit = wtx.tx->vout[i].nValue;
+                    }
+                }
+            }
+        } else {
+            // stake reward
+            sub.type = TransactionRecord::StakeMint;
+            sub.address = EncodeDestination(address);
+            sub.involvesWatchAddress = mine & ISMINE_WATCH_ONLY;
+            sub.credit = nNet;
+        }
         parts.append(sub);
     }
     else if (nNet > 0 || wtx.is_coinbase)
@@ -202,7 +219,7 @@ void TransactionRecord::updateStatus(const interfaces::WalletTxStatus& wtx, int 
         }
     }
     // For generated transactions, determine maturity
-    else if(type == TransactionRecord::Generated || type == TransactionRecord::StakeMint)
+    else if(type == TransactionRecord::Generated || type == TransactionRecord::StakeMint || type == TransactionRecord::MNReward)
     {
         if (wtx.blocks_to_maturity > 0)
         {
