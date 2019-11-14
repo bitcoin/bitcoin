@@ -213,9 +213,6 @@ public:
     //! Check if the node is ready to broadcast transactions.
     virtual bool isReadyToBroadcast() = 0;
 
-    //! Check if in IBD.
-    virtual bool isInitialBlockDownload() = 0;
-
     //! Check if shutdown requested.
     virtual bool shutdownRequested() = 0;
 
