@@ -723,6 +723,12 @@ private:
     // ScriptPubKeyMan::GetID. In many cases it will be the hash of an internal structure
     std::map<uint256, std::unique_ptr<ScriptPubKeyMan>> m_spk_managers;
 
+    /* Flag to indicate chain is still in initial block download. Initialized to false,
+     * latched to updateBlockTip if node evaluates being out of IBD. This method MUST be
+     * called by rescanning code while boostraping the wallet.
+     */
+    bool m_is_ibd GUARDED_BY(cs_wallet) = false;
+
 public:
     /*
      * Main wallet lock.

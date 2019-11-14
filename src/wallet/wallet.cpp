@@ -1180,6 +1180,8 @@ void CWallet::blockDisconnected(const CBlock& block, int height)
 void CWallet::updatedBlockTip(bool is_ibd)
 {
     m_best_block_time = GetTime();
+    LOCK(cs_wallet);
+    m_is_ibd = is_ibd;
 }
 
 
@@ -2014,6 +2016,8 @@ void CWallet::ResendWalletTransactions()
     { // cs_wallet scope
         LOCK(cs_wallet);
 
+        if (m_is_ibd) return;
+
         // Relay transactions
         for (std::pair<const uint256, CWalletTx>& item : mapWallet) {
             CWalletTx& wtx = item.second;
@@ -2587,9 +2591,9 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
     return true;
 }
 
-static bool IsCurrentForAntiFeeSniping(interfaces::Chain& chain, const uint256& block_hash)
+static bool IsCurrentForAntiFeeSniping(interfaces::Chain& chain, bool is_ibd, const uint256& block_hash)
 {
-    if (chain.isInitialBlockDownload()) {
+    if (is_ibd) {
         return false;
     }
     constexpr int64_t MAX_ANTI_FEE_SNIPING_TIP_AGE = 8 * 60 * 60; // in seconds
@@ -2605,7 +2609,7 @@ static bool IsCurrentForAntiFeeSniping(interfaces::Chain& chain, const uint256& 
  * Return a height-based locktime for new transactions (uses the height of the
  * current chain tip unless we are not synced with the current chain
  */
-static uint32_t GetLocktimeForNewTransaction(interfaces::Chain& chain, const uint256& block_hash, int block_height)
+static uint32_t GetLocktimeForNewTransaction(interfaces::Chain& chain, bool is_ibd, const uint256& block_hash, int block_height)
 {
     uint32_t locktime;
     // Discourage fee sniping.
@@ -2628,7 +2632,7 @@ static uint32_t GetLocktimeForNewTransaction(interfaces::Chain& chain, const uin
     // enough, that fee sniping isn't a problem yet, but by implementing a fix
     // now we ensure code won't be written that makes assumptions about
     // nLockTime that preclude a fix later.
-    if (IsCurrentForAntiFeeSniping(chain, block_hash)) {
+    if (IsCurrentForAntiFeeSniping(chain, is_ibd, block_hash)) {
         locktime = block_height;
 
         // Secondly occasionally randomly pick a nLockTime even further back, so
@@ -2707,7 +2711,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
     {
         std::set<CInputCoin> setCoins;
         LOCK(cs_wallet);
-        txNew.nLockTime = GetLocktimeForNewTransaction(chain(), GetLastBlockHash(), GetLastBlockHeight());
+        txNew.nLockTime = GetLocktimeForNewTransaction(chain(), m_is_ibd, GetLastBlockHash(), GetLastBlockHeight());
         {
             std::vector<COutput> vAvailableCoins;
             AvailableCoins(vAvailableCoins, true, &coin_control, 1, MAX_MONEY, MAX_MONEY, 0);
