@@ -77,7 +77,7 @@ build_script:
 after_build:
 - ps:  fsutil behavior set disablelastaccess 1 # Disable Access time feature on Windows (better performance)
 - ps:  clcache -z
-#- 7z a bitcoin-%APPVEYOR_BUILD_VERSION%.zip %APPVEYOR_BUILD_FOLDER%\build_msvc\%platform%\%configuration%\*.exe
+#- 7z a syscoin-%APPVEYOR_BUILD_VERSION%.zip %APPVEYOR_BUILD_FOLDER%\build_msvc\%platform%\%configuration%\*.exe
 test_script:
 - cmd: src\test_syscoin.exe -k stdout -e stdout 2> NUL
 - cmd: src\bench_syscoin.exe -evals=1 -scaling=0 > NUL
@@ -86,5 +86,5 @@ test_script:
 # Fee estimation test failing on appveyor with: WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted.
 - cmd: python test\functional\test_runner.py --ci --quiet --combinedlogslen=4000 --failfast --exclude feature_fee_estimation
 artifacts:
-#- path: bitcoin-%APPVEYOR_BUILD_VERSION%.zip
+#- path: syscoin-%APPVEYOR_BUILD_VERSION%.zip
 deploy: off
