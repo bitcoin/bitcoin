@@ -430,8 +430,17 @@ static void PushNodeVersion(CNode *pnode, CConnman* connman, int64_t nTime)
     }
 }
 
-// Returns a bool indicating whether we requested this block.
-// Also used if a block was /not/ received and timed out or started with another peer
+/**
+ * Mark a block as no longer 'in flight' from any node. Called when the block
+ * has been received, if it's timed out, of if we're requesting it from another
+ * peer.
+ *
+ * Clear the block from the global mapBlocksInFlight map and any node's
+ * vBlocksInFlight vector.
+ *
+ * @param[in]      hash       The block hash
+ * @return         bool       Whether this block was already in flight from a peer.
+ */
 static bool MarkBlockAsReceived(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
     std::map<uint256, std::pair<NodeId, std::list<QueuedBlock>::iterator> >::iterator itInFlight = mapBlocksInFlight.find(hash);
     if (itInFlight != mapBlocksInFlight.end()) {
@@ -455,8 +464,23 @@ static bool MarkBlockAsReceived(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs
     return false;
 }
 
-// returns false, still setting pit, if the block was already in flight from the same peer
-// pit will only be valid as long as the same cs_main lock is being held
+/**
+ * Mark a blocks as 'in flight' from a specific peer. This can be called either when
+ * we send a GETDATA(BLOCK) or GETDATA(CMPCTBLOCK) to the peer, or when we receive
+ * a CMPCTBLOCK from a peer.
+ *
+ * Add the block to the global mapBlocksInFlight map and to the node's vBlocksInFlight vector
+ *
+ * @param[in]      nodeid     The node that we send the GETDATA to or received the CMPCTBLOCKFROM
+ * @param[in]      hash       The block hash
+ * @param[in]      pindex     The block's BlockIndex
+ * @param[in/out]  pit        Pointer to iterator to QueuedBlock. Only used when this function
+ *                            is called during compact block handling. pit is only valid for
+ *                            as long as cs_main is held.
+ * @return         bool       Only used when this function is called during compact block processing
+ *                            False indicates the block was already in flight from the same node.
+ *                            Returns true otherwise.
+ */
 static bool MarkBlockAsInFlight(NodeId nodeid, const uint256& hash, const CBlockIndex* pindex = nullptr, std::list<QueuedBlock>::iterator** pit = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
     CNodeState *state = State(nodeid);
     assert(state != nullptr);
