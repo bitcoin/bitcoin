@@ -5,7 +5,7 @@ distro: "ubuntu"
 suites:
 - "bionic"
 architectures:
-- "linux64"
+- "amd64"
 packages:
 - "curl"
 - "g++-aarch64-linux-gnu"
