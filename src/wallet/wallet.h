@@ -902,7 +902,7 @@ public:
     void transactionAddedToMempool(const CTransactionRef& tx) override;
     void blockConnected(const CBlock& block, int height) override;
     void blockDisconnected(const CBlock& block, int height) override;
-    void updatedBlockTip() override;
+    void updatedBlockTip(bool is_ibd) override;
     int64_t RescanFromTime(int64_t startTime, const WalletRescanReserver& reserver, bool update);
 
     struct ScanResult {

@@ -243,7 +243,7 @@ public:
         virtual void transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason) {}
         virtual void blockConnected(const CBlock& block, int height) {}
         virtual void blockDisconnected(const CBlock& block, int height) {}
-        virtual void updatedBlockTip() {}
+        virtual void updatedBlockTip(bool is_ibd) {}
         virtual void chainStateFlushed(const CBlockLocator& locator) {}
     };
 
