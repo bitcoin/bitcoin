@@ -21,6 +21,7 @@
 #include <interfaces/node.h>
 #include <key_io.h>
 #include <script/signingprovider.h>
+#include <sync.h>
 #include <ui_interface.h>
 #include <util/system.h> // for GetBoolArg
 #include <wallet/coincontrol.h>
@@ -558,8 +559,13 @@ bool WalletModel::havePrivKey(const CKeyID &address) const
 bool WalletModel::havePrivKey(const CScript& script) const
 {
     CTxDestination dest;
-    if (ExtractDestination(script, dest))
-        return true;
+    if (ExtractDestination(script, dest)) {
+        CKeyID keyId = GetKeyForDestination(*GetMainWallet(), dest);
+        if (keyId.IsNull())
+            return false;
+
+        return havePrivKey(keyId);
+    }
     return false;
 }
 
@@ -570,7 +576,9 @@ bool WalletModel::getPrivKey(const CKeyID &address, CKey& vchPrivKeyOut) const
 
 void WalletModel::listProTxCoins(std::vector<COutPoint>& vOutpts)
 {
-    GetMainWallet()->ListProTxCoins(vOutpts);
+    auto wallet = GetMainWallet();
+    LOCK2(cs_main, wallet->cs_wallet);
+    wallet->ListProTxCoins(vOutpts);
 }
 
 void WalletModel::loadReceiveRequests(std::vector<std::string>& vReceiveRequests)
