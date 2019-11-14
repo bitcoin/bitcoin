@@ -1974,6 +1974,19 @@ void static ProcessOrphanTx(CConnman* connman, CTxMemPool& mempool, std::set<uin
 }
 
 /**
+ *  A block has been processed. Do housekeeping.
+ */
+void static BlockProcessed(CNode* pfrom, std::shared_ptr<CBlock> pblock, bool new_block)
+{
+    if (new_block) {
+        pfrom->nLastBlockTime = GetTime();
+    } else {
+        LOCK(cs_main);
+        ::mapBlockSource.erase(pblock->GetHash());
+    }
+}
+
+/**
  * Validation logic for compact filters request handling.
  *
  * May disconnect from the peer in the case of a bad request.
@@ -3010,12 +3023,8 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
             // compact blocks with less work than our tip, it is safe to treat
             // reconstructed compact blocks as having been requested.
             ProcessNewBlock(chainparams, pblock, /*fForceProcessing=*/true, &fNewBlock);
-            if (fNewBlock) {
-                pfrom->nLastBlockTime = GetTime();
-            } else {
-                LOCK(cs_main);
-                mapBlockSource.erase(pblock->GetHash());
-            }
+            BlockProcessed(pfrom, pblock, fNewBlock);
+
             LOCK(cs_main); // hold cs_main for CBlockIndex::IsValid()
             if (pindex->IsValid(BLOCK_VALID_TRANSACTIONS)) {
                 // Clear download state for this block, which is in
@@ -3100,12 +3109,7 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
             // protections in the compact block handler -- see related comment
             // in compact block optimistic reconstruction handling.
             ProcessNewBlock(chainparams, pblock, /*fForceProcessing=*/true, &fNewBlock);
-            if (fNewBlock) {
-                pfrom->nLastBlockTime = GetTime();
-            } else {
-                LOCK(cs_main);
-                mapBlockSource.erase(pblock->GetHash());
-            }
+            BlockProcessed(pfrom, pblock, fNewBlock);
         }
         return true;
     }
@@ -3163,12 +3167,7 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
         }
         bool fNewBlock = false;
         ProcessNewBlock(chainparams, pblock, forceProcessing, &fNewBlock);
-        if (fNewBlock) {
-            pfrom->nLastBlockTime = GetTime();
-        } else {
-            LOCK(cs_main);
-            mapBlockSource.erase(pblock->GetHash());
-        }
+        BlockProcessed(pfrom, pblock, fNewBlock);
         return true;
     }
 
