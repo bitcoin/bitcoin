@@ -2874,12 +2874,15 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             ProcessNewBlock(chainparams, pblock, dos_state, /*fForceProcessing=*/true, &fNewBlock);
             BlockProcessed(pfrom, connman, pblock, dos_state, fNewBlock);
 
-            LOCK(cs_main); // hold cs_main for CBlockIndex::IsValid()
-            if (pindex->IsValid(BLOCK_VALID_TRANSACTIONS)) {
-                // Clear download state for this block, which is in
-                // process from some other peer.  We do this after calling
-                // ProcessNewBlock so that a malleated cmpctblock announcement
-                // can't be used to interfere with block relay.
+            if (dos_state.IsValid()) {
+                // This block has passed anti-dos / mutation checks in
+                // ProcessNewBlock(). Clear the download state for the block,
+                // which is in flight from some other peer.
+                //
+                // We do this after checking for mutation so that a mutated
+                // cmpctblock announcement can't be used to interfere with
+                // block relay.
+                LOCK(cs_main);
                 MarkBlockAsNotInFlight(pblock->GetHash());
             }
         }
