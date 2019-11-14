@@ -320,6 +320,10 @@ void Shutdown(InitInterfaces& interfaces)
     if (fMasternodeMode)
         UnregisterValidationInterface(activeMasternodeManager);
 
+    // make sure to clean up BLS keys before global destructors are called (they have allocated from the secure memory pool)
+    activeMasternodeInfo.blsKeyOperator.reset();
+    activeMasternodeInfo.blsPubKeyOperator.reset();
+
     try {
         if (!fs::remove(GetPidFile())) {
             LogPrintf("%s: Unable to remove PID file: File does not exist\n", __func__);
