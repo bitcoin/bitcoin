@@ -1044,7 +1044,7 @@ bool AppInitParameterInteraction()
         CAmount n = 0;
         if (!ParseMoney(gArgs.GetArg("-incrementalrelayfee", ""), n))
             return InitError(AmountErrMsg("incrementalrelayfee", gArgs.GetArg("-incrementalrelayfee", "")).translated);
-        incrementalRelayFee = CFeeRate(n);
+        incrementalRelayFee = CFeeRate(n / WITNESS_SCALE_FACTOR);
     }
 
     // block pruning; get the amount of disk space (in MiB) to allot for block & undo files
@@ -1081,7 +1081,7 @@ bool AppInitParameterInteraction()
             return InitError(AmountErrMsg("minrelaytxfee", gArgs.GetArg("-minrelaytxfee", "")).translated);
         }
         // High fee check is done afterward in CWallet::CreateWalletFromFile()
-        ::minRelayTxFee = CFeeRate(n);
+        ::minRelayTxFee = CFeeRate(n / WITNESS_SCALE_FACTOR);
     } else if (incrementalRelayFee > ::minRelayTxFee) {
         // Allow only setting incrementalRelayFee to control both
         ::minRelayTxFee = incrementalRelayFee;
@@ -1104,7 +1104,7 @@ bool AppInitParameterInteraction()
         CAmount n = 0;
         if (!ParseMoney(gArgs.GetArg("-dustrelayfee", ""), n))
             return InitError(AmountErrMsg("dustrelayfee", gArgs.GetArg("-dustrelayfee", "")).translated);
-        dustRelayFee = CFeeRate(n);
+        dustRelayFee = CFeeRate(n / WITNESS_SCALE_FACTOR);
     }
 
     fRequireStandard = !gArgs.GetBoolArg("-acceptnonstdtxn", !chainparams.RequireStandard());

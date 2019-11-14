@@ -3,16 +3,17 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <consensus/consensus.h>
 #include <policy/feerate.h>
 
 #include <tinyformat.h>
 
 const std::string CURRENCY_UNIT = "BTC";
 
-CFeeRate::CFeeRate(const CAmount& nFeePaid, size_t nBytes_)
+CFeeRate::CFeeRate(const CAmount& nFeePaid, size_t nWeight)
 {
-    assert(nBytes_ <= uint64_t(std::numeric_limits<int64_t>::max()));
-    int64_t nSize = int64_t(nBytes_);
+    assert(nWeight <= uint64_t(std::numeric_limits<int64_t>::max()));
+    int64_t nSize = int64_t(nWeight);
 
     if (nSize > 0)
         nSatoshisPerK = nFeePaid * 1000 / nSize;
@@ -20,10 +21,10 @@ CFeeRate::CFeeRate(const CAmount& nFeePaid, size_t nBytes_)
         nSatoshisPerK = 0;
 }
 
-CAmount CFeeRate::GetFee(size_t nBytes_) const
+CAmount CFeeRate::GetFee(size_t nWeight) const
 {
-    assert(nBytes_ <= uint64_t(std::numeric_limits<int64_t>::max()));
-    int64_t nSize = int64_t(nBytes_);
+    assert(nWeight <= uint64_t(std::numeric_limits<int64_t>::max()));
+    int64_t nSize = int64_t(nWeight);
 
     CAmount nFee = nSatoshisPerK * nSize / 1000;
 
@@ -39,5 +40,5 @@ CAmount CFeeRate::GetFee(size_t nBytes_) const
 
 std::string CFeeRate::ToString() const
 {
-    return strprintf("%d.%08d %s/kB", nSatoshisPerK / COIN, nSatoshisPerK % COIN, CURRENCY_UNIT);
+    return strprintf("%d.%08d %s/kB", nSatoshisPerK / COIN, nSatoshisPerK * WITNESS_SCALE_FACTOR % COIN, CURRENCY_UNIT);
 }

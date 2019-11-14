@@ -106,8 +106,9 @@ BOOST_AUTO_TEST_CASE(BinaryOperatorTest)
 BOOST_AUTO_TEST_CASE(ToStringTest)
 {
     CFeeRate feeRate;
+    // 1 sat/kWU
     feeRate = CFeeRate(1);
-    BOOST_CHECK_EQUAL(feeRate.ToString(), "0.00000001 BTC/kB");
+    BOOST_CHECK_EQUAL(feeRate.ToString(), "0.00000004 BTC/kB");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

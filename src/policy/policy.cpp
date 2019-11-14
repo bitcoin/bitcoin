@@ -14,32 +14,40 @@
 CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
 {
     // "Dust" is defined in terms of dustRelayFee,
-    // which has units satoshis-per-kilobyte.
+    // which has units satoshis-per-kiloweightunit.
     // If you'd pay more in fees than the value of the output
     // to spend something, then we consider it dust.
-    // A typical spendable non-segwit txout is 34 bytes big, and will
-    // need a CTxIn of at least 148 bytes to spend:
+    // A typical spendable non-segwit txout is 136 weight units big, and will
+    // need a CTxIn of at least 592 weight units to
+    // spend (if spent by a legacy transaction).
+    // So dust is a spendable txout less than
+    // 728*dustRelayFee/1000 (in satoshis).
+    // 546 satoshis at the default rate of 750 sat/WU.
+    // A typical spendable segwit txout is 124 weight units big, and will
+    // need a CTxIn of at least 268 weight units to spend:
     // so dust is a spendable txout less than
-    // 182*dustRelayFee/1000 (in satoshis).
-    // 546 satoshis at the default rate of 3000 sat/kB.
-    // A typical spendable segwit txout is 31 bytes big, and will
-    // need a CTxIn of at least 67 bytes to spend:
-    // so dust is a spendable txout less than
-    // 98*dustRelayFee/1000 (in satoshis).
-    // 294 satoshis at the default rate of 3000 sat/kB.
+    // 392*dustRelayFee/1000 (in satoshis).
+    // 294 satoshis at the default rate of 750 sat/WU.
     if (txout.scriptPubKey.IsUnspendable())
         return 0;
 
-    size_t nSize = GetSerializeSize(txout);
+    size_t nSize = GetTransactionOutputWeight(txout);
     int witnessversion = 0;
     std::vector<unsigned char> witnessprogram;
 
     if (txout.scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
         // sum the sizes of the parts of a transaction input
         // with 75% segwit discount applied to the script size.
-        nSize += (32 + 4 + 1 + (107 / WITNESS_SCALE_FACTOR) + 4);
+        nSize += 32 * WITNESS_SCALE_FACTOR; // txid
+        nSize += 4 * WITNESS_SCALE_FACTOR; // vout
+        nSize += 1 * WITNESS_SCALE_FACTOR; // Script size
+        nSize += 107; // Script
+        nSize += 4 * WITNESS_SCALE_FACTOR; // sequence
     } else {
-        nSize += (32 + 4 + 1 + 107 + 4); // the 148 mentioned above
+        nSize += 32 * WITNESS_SCALE_FACTOR; // txid
+        nSize += 4 * WITNESS_SCALE_FACTOR; // vout
+        nSize += 108 * WITNESS_SCALE_FACTOR; // Script
+        nSize += 4 * WITNESS_SCALE_FACTOR; // sequence
     }
 
     return dustRelayFeeIn.GetFee(nSize);
