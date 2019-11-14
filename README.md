@@ -18,7 +18,7 @@ Hybrid layer 2 PoW/PoS consensus with bonded validator system (masternodes) ZDAG
 
 Governance formula: We have implemented a % decline schedule — starting the first month with 1500000 SYS and ending on the 24th month with 196708 SYS. After that period, the superblock starts with 151767 SYS a month and will decline 5% every year. Read more about it here: https://medium.com/@syscoin/syscoin-4-0-rewards-specifications-a3dc01d85adf.
 
-Interoptibility through a trust-less, no custodian, no counterparty bridge to Ethereum. Existing ERC20 assets can move to and from Syscoin Platform Tokens at will. This is the first time a fractional supply, two-way bridge has been developed and brought to market. It will enable a scaling infrastructure for Ethereum as well as flexibility for existing Syscoin ecosystem. A sharing and collobrative approach to foster growth in the industry was the goal, this is the results of over 18 months of research and development by [Blockchain Foundry Inc](https://www.blockchainfoundry.co/).
+Interoptibility through a trust-less, no custodian, no counterparty bridge to Ethereum. Existing ERC20 assets can move to and from Syscoin Platform Tokens at will. This is the first time a fractional supply, two-way bridge has been developed and brought to market. It will enable a scaling infrastructure for Ethereum as well as flexibility for existing Syscoin ecosystem. A sharing and collobrative approach to foster growth in the industry was the goal, this is the results of over 18 months of research and development by [Blockchain Foundry Inc](https://www.blockchainfoundry.co/). Documentation can be found [here](https://github.com/syscoin/sysethereum-docs)
 
 License
 -------
