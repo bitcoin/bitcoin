@@ -131,10 +131,10 @@ public:
         // BIP147) are deployed together with P2SH.
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000000000000000000");
+        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000007184257f8428fd0189c9a8");
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0xe44257e8e027e8a67fd647c54e1bd6976988d75b416affabe3f82fd87a67f5ff");
+        consensus.defaultAssumeValid = uint256S("0xd467a893337ea1d042b8ec254efde8637b5957abb5bea63676486a7c1ffb56c7");
         consensus.nAuxpowChainId = 0x1000;
         consensus.nAuxpowStartHeight = 1;
         consensus.fStrictChainId = true;
@@ -142,7 +142,7 @@ public:
         consensus.nSYSXAsset = 101010;
         consensus.vchSYSXBurnMethodSignature = ParseHex("5f959b69");
         consensus.vchSYSXERC20Manager = ParseHex("9afFaffFF00b3285E1a3337122Bd2dF2c4c9D62d");
-        consensus.nBridgeStartBlock = 325000;
+        consensus.nBridgeStartBlock = 275000;
         /**
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
@@ -192,6 +192,11 @@ public:
                 { 250, uint256S("0x00000c9ec0f9d60ce297bf9f9cbe1f2eb39165a0d3f69c1c55fc3f6680fe45c8")},
                 { 5000, uint256S("0xeef3554a3f467bcdc7570f799cecdb262058cecf34d555827c99b5719b1df4f6")},
                 { 10000, uint256S("0xe44257e8e027e8a67fd647c54e1bd6976988d75b416affabe3f82fd87a67f5ff")},
+                { 40000, uint256S("0x4ad1ec207d62fa91485335feaf890150a0f4cf48c39b11e3dbfc22bdecc29dbc")},
+                { 100000, uint256S("0xa54904302fd6fd0ee561cb894f15ad8c21c2601b305ffa9e15ef00df1c50db16")},
+                { 150000, uint256S("0x73850eb99a6c32b4bfd67a26a7466ce3d0b4412d4174590c501e567c99f038fd")},
+                { 200000, uint256S("0xa28fe36c63acb38065dadf09d74de5fdc1dac6433c204b215b37bab312dfab0d")},
+                { 240000, uint256S("0x906918ba0cbfbd6e4e4e00d7d47d08bef3e409f47b59cb5bd3303f5276b88f0f")},
             }
         };
 
@@ -243,10 +248,10 @@ public:
         // BIP147) are deployed together with P2SH.
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000000016800168");
+        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000002b3bacc082");
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x000002afdda9c43ddeb2bc1bf31dba6d039307df65e2fd0111bdf5c201ec1d6f");
+        consensus.defaultAssumeValid = uint256S("0x000002206a10a5e251f85ee2529c985d54f98fceecbbf8a45e4441636a1136c0");
         consensus.nAuxpowStartHeight = 1;
         consensus.nAuxpowChainId = 0x1000;
         consensus.fStrictChainId = false;
@@ -302,7 +307,7 @@ public:
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
         checkpointData = {
             {
-                {364, uint256S("0x0000047674e00888c7bf9a6f58dd519330eafb45be8b9da76fe291d653d9e7f8")},
+                {40000, uint256S("0x000001032dae179a3e0e97b7a1c8a49f6a6a3313f964a105d38e074d3eb373d4")},
             }
         };
 
