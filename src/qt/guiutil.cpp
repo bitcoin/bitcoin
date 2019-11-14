@@ -815,6 +815,24 @@ QString formatDurationStr(int secs)
     return strList.join(" ");
 }
 
+QString serviceFlagToStr(const quint64 mask, const int bit)
+{
+    switch (ServiceFlags(mask)) {
+    case NODE_NONE: abort();  // impossible
+    case NODE_NETWORK:         return "NETWORK";
+    case NODE_GETUTXO:         return "GETUTXO";
+    case NODE_BLOOM:           return "BLOOM";
+    case NODE_WITNESS:         return "WITNESS";
+    case NODE_NETWORK_LIMITED: return "NETWORK_LIMITED";
+    // Not using default, so we get warned when a case is missing
+    }
+    if (bit < 8) {
+        return QString("%1[%2]").arg("UNKNOWN").arg(mask);
+    } else {
+        return QString("%1[2^%2]").arg("UNKNOWN").arg(bit);
+    }
+}
+
 QString formatServicesStr(quint64 mask)
 {
     QStringList strList;
@@ -823,30 +841,7 @@ QString formatServicesStr(quint64 mask)
         uint64_t check = 1LL << i;
         if (mask & check)
         {
-            switch (check)
-            {
-            case NODE_NETWORK:
-                strList.append("NETWORK");
-                break;
-            case NODE_GETUTXO:
-                strList.append("GETUTXO");
-                break;
-            case NODE_BLOOM:
-                strList.append("BLOOM");
-                break;
-            case NODE_WITNESS:
-                strList.append("WITNESS");
-                break;
-            case NODE_NETWORK_LIMITED:
-                strList.append("NETWORK_LIMITED");
-                break;
-            default:
-                if (i < 8) {
-                    strList.append(QString("%1[%2]").arg("UNKNOWN").arg(check));
-                } else {
-                    strList.append(QString("%1[2^%2]").arg("UNKNOWN").arg(i));
-                }
-            }
+            strList.append(serviceFlagToStr(check, i));
         }
     }
 
