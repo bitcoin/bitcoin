@@ -73,7 +73,7 @@ UniValue convertaddress(const JSONRPCRequest& request)
         currentV4Address =  EncodeDestination(v4Dest);
         currentV3Address =  currentV4Address;
     }
-    else if (auto script_id = boost::get<WitnessV0ScriptHash>(&dest)) {
+    else if (boost::get<WitnessV0ScriptHash>(&dest)) {
         v4Dest = dest;
         currentV4Address =  EncodeDestination(v4Dest);
         currentV3Address =  currentV4Address;
