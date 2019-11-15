@@ -110,7 +110,7 @@ jobs:
         FILE_ENV="./ci/test/00_setup_env_native_centos.sh"
 
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [uses qt5 dev package instead of depends Qt to speed up build and avoid timeout] [unsigned char]'
+      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [uses qt5 dev package and some depends packages] [unsigned char]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_qt5.sh"
 
@@ -124,6 +124,11 @@ jobs:
       name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no depends, only system libs, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_asan.sh"
+
+    - stage: test
+      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no depends, only system libs, valgrind]'
+      env: >-
+        FILE_ENV="./ci/test/00_setup_env_native_valgrind.sh"
 
     - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no depends, only system libs, sanitizers: fuzzer,address,undefined]'
