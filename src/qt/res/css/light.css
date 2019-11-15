@@ -1007,7 +1007,7 @@ min-height:30px;
 QWidget .QFrame#frame_2 .QLabel#labelTransactionsStatus { /* Recent Transactions Sync Status */
 qproperty-alignment: 'AlignBottom | AlignRight';
 min-width:93px;
-margin-top:83px;
+margin-top:0;
 margin-left:16px;
 margin-right:5px;
 min-height:16px;

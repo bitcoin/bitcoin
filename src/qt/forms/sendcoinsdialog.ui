@@ -745,6 +745,38 @@
              </layout>
             </item>
             <item>
+             <spacer name="verticalSpacer_7">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>1</width>
+                <height>10</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QLabel" name="fallbackFeeWarningLabel">
+              <property name="toolTip">
+               <string>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</string>
+              </property>
+              <property name="font">
+              <font>
+                  <weight>75</weight>
+                  <bold>true</bold>
+              </font>
+              </property>
+              <property name="text">
+               <string>Note: Not enough data for fee estimation, using the fallback fee instead.</string>
+              </property>
+              <property name="wordWrap">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
              <spacer name="verticalSpacer_5">
               <property name="orientation">
                <enum>Qt::Vertical</enum>
@@ -760,36 +792,14 @@
            </layout>
           </item>
           <item>
-           <widget class="QLabel" name="fallbackFeeWarningLabel">
-            <property name="toolTip">
-             <string>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</string>
-            </property>
-            <property name="font">
-            <font>
-                <weight>75</weight>
-                <bold>true</bold>
-            </font>
-            </property>
-            <property name="text">
-             <string>Note: Not enough data for fee estimation, using the fallback fee instead.</string>
-            </property>
-            <property name="wordWrap">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
            <spacer name="horizontalSpacer_4">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
-            <property name="sizeType">
-             <enum>QSizePolicy::MinimumExpanding</enum>
-            </property>
             <property name="sizeHint" stdset="0">
              <size>
-              <width>40</width>
-              <height>20</height>
+              <width>1</width>
+              <height>1</height>
              </size>
             </property>
            </spacer>
