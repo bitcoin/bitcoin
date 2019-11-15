@@ -2094,15 +2094,21 @@ void static ProcessOrphanTx(CConnman& connman, CTxMemPool& mempool, std::set<uin
 }
 
 /**
- *  A block has been processed. Do housekeeping.
+ *  A block has been processed. Handle potential peer punishment and housekeeping.
  */
-void static BlockProcessed(CNode& pfrom, CBlock& pblock, bool new_block)
+void static BlockProcessed(CNode& pfrom, CConnman& connman, CBlock& pblock, BlockValidationState& state, bool new_block)
 {
-    if (new_block) {
-        pfrom.nLastBlockTime = GetTime();
-    } else {
+    if (!state.IsValid()) {
+        // The block failed anti-dos / mutation checks. Call BlockChecked() callback here.
+        // This clears the block from mapBlockSource.
+        BlockChecked(pblock, state, connman);
+    } else if (!new_block) {
+        // Block was valid but we've seen it before. Clear it from mapBlockSource.
         LOCK(cs_main);
         ::mapBlockSource.erase(pblock.GetHash());
+    } else {
+        // Block is valid and we haven't seen it before. set nLastBlockTime for this peer.
+        pfrom.nLastBlockTime = GetTime();
     }
 }
 
@@ -3347,7 +3353,7 @@ void PeerLogicValidation::ProcessMessage(CNode& pfrom, const std::string& msg_ty
             // reconstructed compact blocks as having been requested.
             BlockValidationState dos_state;
             m_chainman.ProcessNewBlock(chainparams, pblock, dos_state, /*fForceProcessing=*/true, &fNewBlock);
-            BlockProcessed(pfrom, *pblock, fNewBlock);
+            BlockProcessed(pfrom, m_connman, *pblock, dos_state, fNewBlock);
 
             LOCK(cs_main); // hold cs_main for CBlockIndex::IsValid()
             if (pindex->IsValid(BLOCK_VALID_TRANSACTIONS)) {
@@ -3434,7 +3440,7 @@ void PeerLogicValidation::ProcessMessage(CNode& pfrom, const std::string& msg_ty
             // in compact block optimistic reconstruction handling.
             BlockValidationState dos_state;
             m_chainman.ProcessNewBlock(chainparams, pblock, dos_state, /*fForceProcessing=*/true, &fNewBlock);
-            BlockProcessed(pfrom, *pblock, fNewBlock);
+            BlockProcessed(pfrom, m_connman, *pblock, dos_state, fNewBlock);
         }
         return;
     }
@@ -3493,7 +3499,7 @@ void PeerLogicValidation::ProcessMessage(CNode& pfrom, const std::string& msg_ty
         bool fNewBlock = false;
         BlockValidationState dos_state;
         m_chainman.ProcessNewBlock(chainparams, pblock, dos_state, forceProcessing, &fNewBlock);
-        BlockProcessed(pfrom, *pblock, fNewBlock);
+        BlockProcessed(pfrom, m_connman, *pblock, dos_state, fNewBlock);
         return;
     }
 
