@@ -737,7 +737,7 @@ BOOST_FIXTURE_TEST_CASE(util_CheckBoolStringsNotSpecial, CheckValueTest)
 BOOST_AUTO_TEST_CASE(util_CheckSingleValue)
 {
     TestArgsManager test;
-    test.SetupArgs({{"-single", ArgsManager::ALLOW_INT}});
+    test.SetupArgs({{"-single", ArgsManager::ALLOW_ANY}});
     std::istringstream stream("single=1\nsingle=2\n");
     std::string error;
     BOOST_CHECK(!test.ReadConfigStream(stream, "file.conf", error));
@@ -1151,9 +1151,9 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
 
     // Test section only options
 
-    const auto ccc2 = std::make_pair("-ccc", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY);
+    const auto ccc2 = std::make_pair("-ccc", ArgsManager::ALLOW_ANY | ArgsManager::ALLOW_LIST | ArgsManager::NETWORK_ONLY);
     const auto d2 = std::make_pair("-d", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY);
-    const auto h2 = std::make_pair("-h", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY);
+    const auto h2 = std::make_pair("-h", ArgsManager::ALLOW_ANY | ArgsManager::ALLOW_LIST | ArgsManager::NETWORK_ONLY);
     test_args.ClearArgs();
     test_args.SetupArgs({a, b, ccc2, d2, e, fff, ggg, h2, i, iii});
     test_args.ReadConfigString(str_config);
