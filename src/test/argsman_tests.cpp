@@ -1067,7 +1067,7 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
 
     BOOST_CHECK_EQUAL(test_args.GetArg("-a", "xxx"), "");
     BOOST_CHECK_EQUAL(test_args.GetArg("-b", "xxx"), "1");
-    BOOST_CHECK_EQUAL(test_args.TestArgString("-ccc", "xxx"), "argument");
+    BOOST_CHECK_EQUAL(test_args.TestArgString("-ccc", "xxx"), "multiple");
     BOOST_CHECK_EQUAL(test_args.GetArg("-d", "xxx"), "e");
     BOOST_CHECK_EQUAL(test_args.GetArg("-fff", "xxx"), "0");
     BOOST_CHECK_EQUAL(test_args.GetArg("-ggg", "xxx"), "1");
@@ -1133,7 +1133,7 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
     // section-specific setting
     BOOST_CHECK(test_args.TestArgString("-h", "xxx") == "1");
     // section takes priority for multiple values
-    BOOST_CHECK(test_args.TestArgString("-ccc", "xxx") == "extend1");
+    BOOST_CHECK(test_args.TestArgString("-ccc", "xxx") == "extend2");
     // check multiple values works
     const std::vector<std::string> sec1_ccc_expected = {"extend1","extend2","argument","multiple"};
     const auto& sec1_ccc_res = test_args.GetArgs("-ccc");
@@ -1216,7 +1216,7 @@ BOOST_AUTO_TEST_CASE(util_GetArg)
     BOOST_CHECK_EQUAL(testArgs.GetBoolArg("booltest4", false), true);
 
     BOOST_CHECK_EQUAL(testArgs.GetArg("pritest1", "default"), "b");
-    BOOST_CHECK_EQUAL(testArgs.GetArg("pritest2", "default"), "a");
+    BOOST_CHECK_EQUAL(testArgs.GetArg("pritest2", "default"), "b");
     BOOST_CHECK_EQUAL(testArgs.GetArg("pritest3", "default"), "a");
     BOOST_CHECK_EQUAL(testArgs.GetArg("pritest4", "default"), "b");
 }
