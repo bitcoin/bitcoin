@@ -166,7 +166,8 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
     BOOST_CHECK(Assert(m_node.chainman)->ProcessNewBlockHeaders(headers, state, Params()));
 
     // Connect the genesis block and drain any outstanding events
-    BOOST_CHECK(Assert(m_node.chainman)->ProcessNewBlock(Params(), std::make_shared<CBlock>(Params().GenesisBlock()), true, &ignored));
+    BlockValidationState dos_state;
+    BOOST_CHECK(Assert(m_node.chainman)->ProcessNewBlock(Params(), std::make_shared<CBlock>(Params().GenesisBlock()), dos_state, true, &ignored));
     SyncWithValidationInterfaceQueue();
 
     // subscribe to events (this subscriber will validate event ordering)
@@ -188,13 +189,14 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
             FastRandomContext insecure;
             for (int i = 0; i < 1000; i++) {
                 auto block = blocks[insecure.randrange(blocks.size() - 1)];
-                Assert(m_node.chainman)->ProcessNewBlock(Params(), block, true, &ignored);
+                Assert(m_node.chainman)->ProcessNewBlock(Params(), block, dos_state, true, &ignored);
             }
 
             // to make sure that eventually we process the full chain - do it here
             for (auto block : blocks) {
                 if (block->vtx.size() == 1) {
-                    bool processed = Assert(m_node.chainman)->ProcessNewBlock(Params(), block, true, &ignored);
+                    BlockValidationState dos_state;
+                    bool processed = Assert(m_node.chainman)->ProcessNewBlock(Params(), block, dos_state, true, &ignored);
                     assert(processed);
                 }
             }
@@ -233,7 +235,8 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
 {
     bool ignored;
     auto ProcessBlock = [&](std::shared_ptr<const CBlock> block) -> bool {
-        return Assert(m_node.chainman)->ProcessNewBlock(Params(), block, /* fForceProcessing */ true, /* fNewBlock */ &ignored);
+        BlockValidationState dos_state;
+        return Assert(m_node.chainman)->ProcessNewBlock(Params(), block, dos_state, /* fForceProcessing */ true, /* fNewBlock */ &ignored);
     };
 
     // Process all mined blocks

@@ -126,7 +126,8 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock& block, uint64_t& 
     }
 
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
-    if (!chainman.ProcessNewBlock(chainparams, shared_pblock, true, nullptr)) {
+    BlockValidationState state;
+    if (!chainman.ProcessNewBlock(chainparams, shared_pblock, state, true, nullptr)) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
     }
 
@@ -960,7 +961,8 @@ static UniValue submitblock(const JSONRPCRequest& request)
     bool new_block;
     auto sc = std::make_shared<submitblock_StateCatcher>(block.GetHash());
     RegisterSharedValidationInterface(sc);
-    bool accepted = EnsureChainman(request.context).ProcessNewBlock(Params(), blockptr, /* fForceProcessing */ true, /* fNewBlock */ &new_block);
+    BlockValidationState dos_state;
+    bool accepted = EnsureChainman(request.context).ProcessNewBlock(Params(), blockptr, dos_state, /* fForceProcessing */ true, /* fNewBlock */ &new_block);
     UnregisterSharedValidationInterface(sc);
     if (!new_block && accepted) {
         return "duplicate";

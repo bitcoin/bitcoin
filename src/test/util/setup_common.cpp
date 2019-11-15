@@ -235,7 +235,8 @@ CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransa
     while (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus())) ++block.nNonce;
 
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
-    Assert(m_node.chainman)->ProcessNewBlock(chainparams, shared_pblock, true, nullptr);
+    BlockValidationState dos_state;
+    Assert(m_node.chainman)->ProcessNewBlock(chainparams, shared_pblock, dos_state, true, nullptr);
 
     CBlock result = block;
     return result;
