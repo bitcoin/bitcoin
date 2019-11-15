@@ -3854,9 +3854,9 @@ bool ChainstateManager::ProcessNewBlock(const CChainParams& chainparams, const s
 
     NotifyHeaderTip();
 
-    BlockValidationState state; // Only used to report errors, not invalidity - ignore it
-    if (!::ChainstateActive().ActivateBestChain(state, chainparams, pblock))
-        return error("%s: ActivateBestChain failed (%s)", __func__, state.ToString());
+    BlockValidationState dummy_state; // Only used to report errors, not invalidity - ignore it
+    if (!::ChainstateActive().ActivateBestChain(dummy_state, chainparams, pblock))
+        return error("%s: ActivateBestChain failed (%s)", __func__, dummy_state.ToString());
 
     return true;
 }
