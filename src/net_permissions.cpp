@@ -12,6 +12,7 @@ using common::ResolveErrMsg;
 
 const std::vector<std::string> NET_PERMISSIONS_DOC{
     "bloomfilter (allow requesting BIP37 filtered blocks and transactions)",
+    "blockfilters (serve compact block filters to peers per BIP157)",
     "noban (do not ban for misbehavior; implies download)",
     "forcerelay (relay transactions that are already in the mempool; implies relay)",
     "relay (relay even in -blocksonly mode, and unlimited transaction announcements)",
@@ -48,6 +49,7 @@ static bool TryParsePermissionFlags(const std::string& str, NetPermissionFlags& 
             if (commaSeparator != std::string::npos) readen++; // We read ","
 
             if (permission == "bloomfilter" || permission == "bloom") NetPermissions::AddFlag(flags, NetPermissionFlags::BloomFilter);
+            else if (permission == "blockfilters" || permission == "compactfilters" || permission == "cfilters") NetPermissions::AddFlag(flags, NetPermissionFlags::BlockFilters_Explicit);
             else if (permission == "noban") NetPermissions::AddFlag(flags, NetPermissionFlags::NoBan);
             else if (permission == "forcerelay") NetPermissions::AddFlag(flags, NetPermissionFlags::ForceRelay);
             else if (permission == "mempool") NetPermissions::AddFlag(flags, NetPermissionFlags::Mempool);
