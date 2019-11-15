@@ -189,6 +189,7 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
                     BlockValidationState dos_state;
                     bool processed = ProcessNewBlock(Params(), block, dos_state, true, &ignored);
                     assert(processed);
+                    assert(dos_state.IsValid());
                 }
             }
         });
@@ -229,7 +230,7 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
     bool ignored;
     auto ProcessBlock = [&ignored](std::shared_ptr<const CBlock> block) -> bool {
         BlockValidationState dos_state;
-        return ProcessNewBlock(Params(), block, dos_state, /* fForceProcessing */ true, /* fNewBlock */ &ignored);
+        return ProcessNewBlock(Params(), block, dos_state, /* fForceProcessing */ true, /* fNewBlock */ &ignored) && dos_state.IsValid();
     };
 
     // Process all mined blocks

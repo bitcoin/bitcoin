@@ -166,6 +166,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
         const auto& block = chainA[i];
         BlockValidationState dos_state;
         BOOST_REQUIRE(ProcessNewBlock(Params(), block, dos_state, true, nullptr));
+        BOOST_REQUIRE(dos_state.IsValid());
     }
     for (size_t i = 0; i < 2; i++) {
         const auto& block = chainA[i];
@@ -185,6 +186,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
         const auto& block = chainB[i];
         BlockValidationState dos_state;
         BOOST_REQUIRE(ProcessNewBlock(Params(), block, dos_state, true, nullptr));
+        BOOST_REQUIRE(dos_state.IsValid());
     }
     for (size_t i = 0; i < 3; i++) {
         const auto& block = chainB[i];
@@ -217,6 +219,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
         const auto& block = chainA[i];
         BlockValidationState dos_state;
         BOOST_REQUIRE(ProcessNewBlock(Params(), block, dos_state, true, nullptr));
+        BOOST_REQUIRE(dos_state.IsValid());
     }
 
      // Check that chain A and B blocks can be retrieved.

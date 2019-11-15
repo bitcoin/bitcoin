@@ -136,7 +136,7 @@ static UniValue generateBlocks(const CScript& coinbase_script, int nGenerate, ui
         }
         std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
         BlockValidationState state;
-        if (!ProcessNewBlock(Params(), shared_pblock, state, true, nullptr))
+        if (!ProcessNewBlock(Params(), shared_pblock, state, true, nullptr) || !state.IsValid())
             throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
         ++nHeight;
         blockHashes.push_back(pblock->GetHash().GetHex());
