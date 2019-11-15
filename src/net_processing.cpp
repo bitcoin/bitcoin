@@ -1385,8 +1385,11 @@ void PeerLogicValidation::UpdatedBlockTip(const CBlockIndex *pindexNew, const CB
 /**
  * Handle invalid block rejection and consequent peer discouragement, maintain which
  * peers announce compact blocks.
+ * Called both in case of cursory DoS checks failing (implying the peer is likely
+ * sending us bogus data) and after full validation of the block fails (which may
+ * be OK if it was sent over compact blocks).
  */
-void PeerLogicValidation::BlockChecked(const CBlock& block, const BlockValidationState& state) {
+static void BlockChecked(const CBlock& block, const BlockValidationState& state, CConnman& connman) {
     LOCK(cs_main);
 
     const uint256 hash(block.GetHash());
@@ -1409,11 +1412,15 @@ void PeerLogicValidation::BlockChecked(const CBlock& block, const BlockValidatio
              !::ChainstateActive().IsInitialBlockDownload() &&
              mapBlocksInFlight.count(hash) == mapBlocksInFlight.size()) {
         if (it != mapBlockSource.end()) {
-            MaybeSetPeerAsAnnouncingHeaderAndIDs(it->second.first, m_connman);
+            MaybeSetPeerAsAnnouncingHeaderAndIDs(it->second.first, connman);
         }
     }
     if (it != mapBlockSource.end())
         mapBlockSource.erase(it);
+}
+
+void PeerLogicValidation::BlockChecked(const CBlock& block, const BlockValidationState& state) {
+    ::BlockChecked(block, state, m_connman);
 }
 
 //////////////////////////////////////////////////////////////////////////////
