@@ -129,9 +129,6 @@ CFeeRate minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
 CBlockPolicyEstimator feeEstimator;
 CTxMemPool mempool(&feeEstimator);
 
-/** Constant stuff for coinbase transactions we create: */
-CScript COINBASE_FLAGS;
-
 // Internal stuff
 namespace {
     CBlockIndex* pindexBestInvalid = nullptr;
