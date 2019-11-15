@@ -850,13 +850,13 @@ Current subtrees include:
     merging upstream changes to the LevelDB subtree.
 
 - src/libsecp256k1
-  - Upstream at https://github.com/syscoin-core/secp256k1/ ; actively maintained by Core contributors.
+  - Upstream at https://github.com/bitcoin-core/secp256k1/ ; actively maintained by Core contributors.
 
 - src/crypto/ctaes
-  - Upstream at https://github.com/syscoin-core/ctaes ; actively maintained by Core contributors.
+  - Upstream at https://github.com/bitcoin-core/ctaes ; actively maintained by Core contributors.
 
 - src/univalue
-  - Upstream at https://github.com/syscoin-core/univalue ; actively maintained by Core contributors, deviates from upstream https://github.com/jgarzik/univalue
+  - Upstream at https://github.com/bitcoin-core/univalue ; actively maintained by Core contributors, deviates from upstream https://github.com/jgarzik/univalue
 
 Upgrading LevelDB
 ---------------------
