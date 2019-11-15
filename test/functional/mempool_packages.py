@@ -69,8 +69,10 @@ class MempoolPackagesTest(BitcoinTestFramework):
         descendant_count = 1
         descendant_fees = 0
         descendant_vsize = 0
+        descendant_weight = 0
 
         ancestor_vsize = sum([mempool[tx]['vsize'] for tx in mempool])
+        ancestor_weight = sum([mempool[tx]['weight'] for tx in mempool])
         ancestor_count = MAX_ANCESTORS
         ancestor_fees = sum([mempool[tx]['fee'] for tx in mempool])
 
@@ -90,14 +92,18 @@ class MempoolPackagesTest(BitcoinTestFramework):
             assert_equal(mempool[x]['descendantfees'], descendant_fees * COIN)
             assert_equal(mempool[x]['fees']['descendant'], descendant_fees)
             descendant_vsize += mempool[x]['vsize']
+            descendant_weight += mempool[x]['weight']
             assert_equal(mempool[x]['descendantsize'], descendant_vsize)
+            assert_equal(mempool[x]['descendantweight'], descendant_weight)
             descendant_count += 1
 
             # Check that ancestor calculations are correct
             assert_equal(mempool[x]['ancestorcount'], ancestor_count)
             assert_equal(mempool[x]['ancestorfees'], ancestor_fees * COIN)
             assert_equal(mempool[x]['ancestorsize'], ancestor_vsize)
+            assert_equal(mempool[x]['ancestorweight'], ancestor_weight)
             ancestor_vsize -= mempool[x]['vsize']
+            ancestor_weight -= mempool[x]['weight']
             ancestor_fees -= mempool[x]['fee']
             ancestor_count -= 1
 
