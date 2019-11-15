@@ -752,7 +752,7 @@ BOOST_FIXTURE_TEST_CASE(util_CheckBoolStringsNotSpecial, CheckValueTest)
 BOOST_AUTO_TEST_CASE(util_CheckSingleValue)
 {
     TestArgsManager test;
-    test.SetupArgs({{"-single", ArgsManager::ALLOW_INT}});
+    test.SetupArgs({{"-single", ArgsManager::ALLOW_ANY}});
     std::istringstream stream("single=1\nsingle=2\n");
     std::string error;
     BOOST_CHECK(!test.ReadConfigStream(stream, "file.conf", error));
