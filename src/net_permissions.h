@@ -89,6 +89,10 @@ class NetWhitelistPermissions : public NetPermissions
 {
 public:
     static bool TryParse(const std::string& str, NetWhitelistPermissions& output, ConnectionDirection& output_connection_direction, bilingual_str& error);
+    static inline bool TryParse(const std::string& str, NetWhitelistPermissions& output, bilingual_str& error) {
+        ConnectionDirection connection_direction_ignored;
+        return TryParse(str, output, connection_direction_ignored, error);
+    }
     CSubNet m_subnet;
 };
 
