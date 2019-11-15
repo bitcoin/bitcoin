@@ -6,6 +6,7 @@
 
 #include <chainparams.h>
 #include <consensus/merkle.h>
+#include <consensus/validation.h>
 #include <key_io.h>
 #include <miner.h>
 #include <node/context.h>
@@ -31,7 +32,8 @@ CTxIn MineBlock(const NodeContext& node, const CScript& coinbase_scriptPubKey)
         assert(block->nNonce);
     }
 
-    bool processed{ProcessNewBlock(Params(), block, true, nullptr)};
+    BlockValidationState dos_state;
+    bool processed{ProcessNewBlock(Params(), block, dos_state, true, nullptr)};
     assert(processed);
 
     return CTxIn{block->vtx[0]->GetHash(), 0};

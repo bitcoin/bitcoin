@@ -157,12 +157,13 @@ extern uint64_t nPruneTarget;
  * May not be called in a
  * validationinterface callback.
  *
- * @param[in]   pblock  The block we want to process.
- * @param[in]   fForceProcessing Process this block even if unrequested; used for non-network block sources and whitelisted peers.
- * @param[out]  fNewBlock A boolean which is set to indicate if the block was first received via this call
- * @returns     If the block was processed, independently of block validity
+ * @param[in]   pblock            The block we want to process.
+ * @param[out]  state             Currently unused.
+ * @param[in]   fForceProcessing  Process this block even if unrequested; used for non-network block sources and whitelisted peers.
+ * @param[out]  fNewBlock         A boolean which is set to indicate if the block was first received via this call
+ * @returns     bool              If the block was processed, independently of block validity
  */
-bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, bool fForceProcessing, bool* fNewBlock) LOCKS_EXCLUDED(cs_main);
+bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, BlockValidationState& state, bool fForceProcessing, bool* fNewBlock) LOCKS_EXCLUDED(cs_main);
 
 /**
  * Process incoming block headers.
