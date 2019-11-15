@@ -2832,7 +2832,8 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             // we have a chain with at least nMinimumChainWork), and we ignore
             // compact blocks with less work than our tip, it is safe to treat
             // reconstructed compact blocks as having been requested.
-            ProcessNewBlock(chainparams, pblock, /*fForceProcessing=*/true, &fNewBlock);
+            BlockValidationState dos_state;
+            ProcessNewBlock(chainparams, pblock, dos_state, /*fForceProcessing=*/true, &fNewBlock);
             BlockProcessed(pfrom, pblock, fNewBlock);
 
             LOCK(cs_main); // hold cs_main for CBlockIndex::IsValid()
@@ -2918,7 +2919,8 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             // disk-space attacks), but this should be safe due to the
             // protections in the compact block handler -- see related comment
             // in compact block optimistic reconstruction handling.
-            ProcessNewBlock(chainparams, pblock, /*fForceProcessing=*/true, &fNewBlock);
+            BlockValidationState dos_state;
+            ProcessNewBlock(chainparams, pblock, dos_state, /*fForceProcessing=*/true, &fNewBlock);
             BlockProcessed(pfrom, pblock, fNewBlock);
         }
         return true;
@@ -2976,7 +2978,8 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             mapBlockSource.emplace(hash, std::make_pair(pfrom->GetId(), true));
         }
         bool fNewBlock = false;
-        ProcessNewBlock(chainparams, pblock, forceProcessing, &fNewBlock);
+        BlockValidationState dos_state;
+        ProcessNewBlock(chainparams, pblock, dos_state, forceProcessing, &fNewBlock);
         BlockProcessed(pfrom, pblock, fNewBlock);
         return true;
     }

@@ -156,7 +156,8 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
     BOOST_CHECK(ProcessNewBlockHeaders(headers, state, Params()));
 
     // Connect the genesis block and drain any outstanding events
-    BOOST_CHECK(ProcessNewBlock(Params(), std::make_shared<CBlock>(Params().GenesisBlock()), true, &ignored));
+    BlockValidationState dos_state;
+    BOOST_CHECK(ProcessNewBlock(Params(), std::make_shared<CBlock>(Params().GenesisBlock()), dos_state, true, &ignored));
     SyncWithValidationInterfaceQueue();
 
     // subscribe to events (this subscriber will validate event ordering)
@@ -178,13 +179,15 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
             FastRandomContext insecure;
             for (int i = 0; i < 1000; i++) {
                 auto block = blocks[insecure.randrange(blocks.size() - 1)];
-                ProcessNewBlock(Params(), block, true, &ignored);
+                BlockValidationState dos_state;
+                ProcessNewBlock(Params(), block, dos_state, true, &ignored);
             }
 
             // to make sure that eventually we process the full chain - do it here
             for (auto block : blocks) {
                 if (block->vtx.size() == 1) {
-                    bool processed = ProcessNewBlock(Params(), block, true, &ignored);
+                    BlockValidationState dos_state;
+                    bool processed = ProcessNewBlock(Params(), block, dos_state, true, &ignored);
                     assert(processed);
                 }
             }
@@ -225,7 +228,8 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
 {
     bool ignored;
     auto ProcessBlock = [&ignored](std::shared_ptr<const CBlock> block) -> bool {
-        return ProcessNewBlock(Params(), block, /* fForceProcessing */ true, /* fNewBlock */ &ignored);
+        BlockValidationState dos_state;
+        return ProcessNewBlock(Params(), block, dos_state, /* fForceProcessing */ true, /* fNewBlock */ &ignored);
     };
 
     // Process all mined blocks
