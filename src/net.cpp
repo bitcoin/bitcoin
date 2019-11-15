@@ -1135,6 +1135,9 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     if (NetPermissions::HasFlag(permissionFlags, PF_BLOOMFILTER)) {
         nodeServices = static_cast<ServiceFlags>(nodeServices | NODE_BLOOM);
     }
+    if (NetPermissions::HasFlag(permissionFlags, PF_BLOCKFILTERS)) {
+        nodeServices = static_cast<ServiceFlags>(nodeServices | NODE_COMPACT_FILTERS);
+    }
 
     const bool inbound_onion = std::find(m_onion_binds.begin(), m_onion_binds.end(), addr_bind) != m_onion_binds.end();
     CNode* pnode = new CNode(id, nodeServices, GetBestHeight(), hSocket, addr, CalculateKeyedNetGroup(addr), nonce, addr_bind, "", ConnectionType::INBOUND, inbound_onion);

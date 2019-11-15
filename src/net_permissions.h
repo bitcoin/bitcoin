@@ -33,9 +33,14 @@ enum NetPermissionFlags {
     // Can request addrs without hitting a privacy-preserving cache
     PF_ADDR = (1U << 7),
 
+    // Can query compact filters even if -peerblockfilters is false
+    PF_BLOCKFILTERS = (1U << 8),
+    // Used to avoid an error when PF_ALL is used to set PF_CFILTERS
+    PF_BLOCKFILTERS_EXPLICIT = PF_BLOCKFILTERS | (1U << 9),
+
     // True if the user did not specifically set fine grained permissions
     PF_ISIMPLICIT = (1U << 31),
-    PF_ALL = PF_BLOOMFILTER | PF_FORCERELAY | PF_RELAY | PF_NOBAN | PF_MEMPOOL | PF_DOWNLOAD | PF_ADDR,
+    PF_ALL = PF_BLOOMFILTER | PF_FORCERELAY | PF_RELAY | PF_NOBAN | PF_MEMPOOL | PF_DOWNLOAD | PF_ADDR | PF_BLOCKFILTERS,
 };
 
 class NetPermissions

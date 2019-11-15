@@ -1977,18 +1977,30 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
         StartTorControl(bind_addr);
     }
 
-    for (const std::string& strBind : args.GetArgs("-whitebind")) {
-        NetWhitebindPermissions whitebind;
-        bilingual_str error;
-        if (!NetWhitebindPermissions::TryParse(strBind, whitebind, error)) return InitError(error);
-        connOptions.vWhiteBinds.push_back(whitebind);
-    }
+    {
+        NetPermissionFlags all_permission_flags = PF_NONE;
 
-    for (const auto& net : args.GetArgs("-whitelist")) {
-        NetWhitelistPermissions subnet;
-        bilingual_str error;
-        if (!NetWhitelistPermissions::TryParse(net, subnet, error)) return InitError(error);
-        connOptions.vWhitelistedRange.push_back(subnet);
+        for (const std::string& strBind : args.GetArgs("-whitebind")) {
+            NetWhitebindPermissions whitebind;
+            bilingual_str error;
+            if (!NetWhitebindPermissions::TryParse(strBind, whitebind, error)) return InitError(error);
+            NetPermissions::AddFlag(all_permission_flags, whitebind.m_flags);
+            connOptions.vWhiteBinds.push_back(whitebind);
+        }
+
+        for (const auto& net : args.GetArgs("-whitelist")) {
+            NetWhitelistPermissions subnet;
+            bilingual_str error;
+            if (!NetWhitelistPermissions::TryParse(net, subnet, error)) return InitError(error);
+            NetPermissions::AddFlag(all_permission_flags, subnet.m_flags);
+            connOptions.vWhitelistedRange.push_back(subnet);
+        }
+
+        if (NetPermissions::HasFlag(all_permission_flags, PF_BLOCKFILTERS_EXPLICIT)) {
+            if (g_enabled_filter_types.count(BlockFilterType::BASIC) != 1) {
+                return InitError(_("Cannot grant blockfilters permission without -blockfilterindex."));
+            }
+        }
     }
 
     connOptions.vSeedNodes = args.GetArgs("-seednode");
