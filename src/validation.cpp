@@ -3780,7 +3780,6 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
             ret = ::ChainstateActive().AcceptBlock(pblock, dos_state, chainparams, &pindex, fForceProcessing, nullptr, fNewBlock);
         }
         if (!ret) {
-            GetMainSignals().BlockChecked(*pblock, dos_state);
             return error("%s: AcceptBlock FAILED (%s)", __func__, FormatStateMessage(dos_state));
         }
     }

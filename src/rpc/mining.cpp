@@ -784,6 +784,9 @@ static UniValue submitblock(const JSONRPCRequest& request)
     if (!new_block && accepted) {
         return "duplicate";
     }
+    if (!dos_state.IsValid()) {
+        return BIP22ValidationResult(dos_state);
+    }
     if (!sc.found) {
         return "inconclusive";
     }
