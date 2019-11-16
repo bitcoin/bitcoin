@@ -141,7 +141,7 @@ Arena::Stats Arena::stats() const
 }
 
 #ifdef ARENA_DEBUG
-static void printchunk(char* base, size_t sz, bool used) {
+static void printchunk(void* base, size_t sz, bool used) {
     std::cout <<
         "0x" << std::hex << std::setw(16) << std::setfill('0') << base <<
         " 0x" << std::hex << std::setw(16) << std::setfill('0') << sz <<
