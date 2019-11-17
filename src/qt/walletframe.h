@@ -17,6 +17,7 @@ class WalletView;
 
 QT_BEGIN_NAMESPACE
 class QStackedWidget;
+class QWidget;
 QT_END_NAMESPACE
 
 /**
@@ -31,7 +32,7 @@ class WalletFrame : public QFrame
     Q_OBJECT
 
 public:
-    explicit WalletFrame(const PlatformStyle *platformStyle, BitcoinGUI *_gui = nullptr);
+    explicit WalletFrame(const PlatformStyle* platformStyle, BitcoinGUI* _gui, QWidget* parent);
     ~WalletFrame();
 
     void setClientModel(ClientModel *clientModel);
