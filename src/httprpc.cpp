@@ -13,12 +13,20 @@
 #include <util/strencodings.h>
 #include <util/system.h>
 #include <util/translation.h>
+#include <boost/algorithm/string.hpp>
 #include <walletinitinterface.h>
 
 #include <memory>
+#include <vector>
+#include <map>
+#include <string>
+#include <algorithm>
 #include <stdio.h>
 
 #include <boost/algorithm/string.hpp> // boost::trim
+
+std::map<std::string, std::vector<std::string>> rpcWhitelist;
+bool rpcWhitelistOn = false;
 
 /** WWW-Authenticate to present with 401 Unauthorized response */
 static const char* WWW_AUTH_HEADER_DATA = "Basic realm=\"jsonrpc\"";
@@ -186,6 +194,16 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
         // singleton request
         if (valRequest.isObject()) {
             jreq.parse(valRequest);
+            // Parse permissions
+            if(gArgs.GetBoolArg("-rpcwhitelistenable", false)) {
+                // Check if the user key is set
+                if (rpcWhitelist.count(jreq.authUser) == 0)
+                    throw JSONRPCError(RPC_MISC_ERROR, "User is not whitelisted for anything");
+                // Check if the method is in the permissions
+                if (std::find(rpcWhitelist[jreq.authUser].begin(), rpcWhitelist[jreq.authUser].end(), jreq.strMethod) == rpcWhitelist[jreq.authUser].end()) {
+                    throw JSONRPCError(RPC_MISC_ERROR, "User has insufficent permissions");
+                }
+            }
 
             UniValue result = tableRPC.execute(jreq);
 
@@ -228,6 +246,27 @@ static bool InitRPCAuthentication()
     if (gArgs.GetArg("-rpcauth","") != "")
     {
         LogPrintf("Using rpcauth authentication.\n");
+        // Load permissions
+        if(gArgs.GetBoolArg("-rpcwhitelistenable", false)) {
+            std::vector<std::string> permissions = gArgs.GetArgs("-rpcwhitelist");
+            for (unsigned int i = 0; i < permissions.size(); ++i) {
+                // Parse element, skip malformatted elements
+                if(permissions[i].find(':') == std::string::npos) {
+                    LogPrintf("Invalid -rpcwhitelist, skipping it\n");
+                    continue;
+                }
+                std::string username = permissions[i].substr(0, permissions[i].find(':'));
+                std::string userpermissions_str = permissions[i].substr(username.size() + 1);
+                std::vector<std::string> userpermissions;
+                // Get the actual permissions by splitting the ',' in the string
+                boost::split(userpermissions, userpermissions_str, [](char c){return c == ',';});
+                // Add it to the actual whitelist
+                rpcWhitelist[username] = userpermissions;
+                LogPrintf("RPC Whitelist: %s\n", permissions[i]);
+            }
+            // If there were no errors, turn it on
+            rpcWhitelistOn = true;
+        }
     }
     return true;
 }
