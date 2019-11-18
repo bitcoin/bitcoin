@@ -268,7 +268,7 @@ void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keyst
     }
 }
 
-UniValue SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, const std::map<COutPoint, Coin>& coins, const UniValue& hashType)
+void SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, const std::map<COutPoint, Coin>& coins, const UniValue& hashType, UniValue& result)
 {
     int nHashType = ParseSighashString(hashType);
 
@@ -319,12 +319,12 @@ UniValue SignTransaction(CMutableTransaction& mtx, const SigningProvider* keysto
     }
     bool fComplete = vErrors.empty();
 
-    UniValue result(UniValue::VOBJ);
     result.pushKV("hex", EncodeHexTx(CTransaction(mtx)));
     result.pushKV("complete", fComplete);
     if (!vErrors.empty()) {
+        if (result.exists("errors")) {
+            vErrors.push_backV(result["errors"].getValues());
+        }
         result.pushKV("errors", vErrors);
     }
-
-    return result;
 }
