@@ -249,10 +249,10 @@ public:
         // BIP147) are deployed together with P2SH.
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000002b3bacc082");
+        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000000000000000000");
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x000002206a10a5e251f85ee2529c985d54f98fceecbbf8a45e4441636a1136c0");
+        consensus.defaultAssumeValid = uint256S("0x000000000000000000000000000000000000000000000000000000000000000");
         consensus.nAuxpowStartHeight = 1;
         consensus.nAuxpowChainId = 0x1000;
         consensus.fStrictChainId = false;
@@ -270,13 +270,13 @@ public:
         m_assumed_blockchain_size = 30;
         m_assumed_chain_state_size = 2;
 
-        genesis = CreateGenesisBlock(1566533452, 102994, 0x1e0fffff, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1574100000, 683742, 0x1e0fffff, 1, 50 * COIN);
         
         /*uint256 hash;
         CBlockHeader genesisHeader = genesis.GetBlockHeader();
         GenerateGenesisBlock(genesisHeader, hash); */
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x00000bc2aa4429e2ac21bb35e7158e73af6947e06ad6c2380d3881c1f3879e08"));
+        assert(consensus.hashGenesisBlock == uint256S("0x00000f9699028b567867c6363cde3dce894235415aedb33b7a0f9e8d35630da9"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
 
         vFixedSeeds.clear();
