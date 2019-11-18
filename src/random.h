@@ -41,17 +41,17 @@
  *   These entropy sources are slower, but designed to make sure the RNG state contains
  *   fresh data that is unpredictable to attackers.
  *
- * - RandAddSeedSleep() seeds everything that fast seeding includes, but additionally:
- *   - A high-precision timestamp before and after sleeping 1ms.
- *   - (On Windows) Once every 10 minutes, performance monitoring data from the OS.
- -   - Once every minute, strengthen the entropy for 10 ms using repeated SHA512.
- *   These just exploit the fact the system is idle to improve the quality of the RNG
- *   slightly.
+ * - RandAddPeriodic() seeds everything that fast seeding includes, but additionally:
+ *   - A high-precision timestamp
+ *   - Dynamic environment data (performance monitoring, ...)
+ *   - Strengthen the entropy for 10 ms using repeated SHA512.
+ *   This is run once every minute.
  *
  * On first use of the RNG (regardless of what function is called first), all entropy
  * sources used in the 'slow' seeder are included, but also:
  * - 256 bits from the hardware RNG (rdseed or rdrand) when available.
- * - (On Windows) Performance monitoring data from the OS.
+ * - Dynamic environment data (performance monitoring, ...)
+ * - Static environment data
  * - Strengthen the entropy for 100 ms using repeated SHA512.
  *
  * When mixing in new entropy, H = SHA512(entropy || old_rng_state) is computed, and
