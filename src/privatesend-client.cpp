@@ -57,7 +57,7 @@ void CPrivateSendClientManager::ProcessMessage(CNode* pfrom, const std::string& 
                 }
                 if (q.fReady == dsq.fReady && q.masternodeOutpoint == dsq.masternodeOutpoint) {
                     // no way the same mn can send another dsq with the same readiness this soon
-                    LogPrint("privatesend", "DSQUEUE -- Peer %s is sending WAY too many dsq messages for a masternode with collateral %s\n", pfrom->GetLogString(), dsq.masternodeOutpoint.ToStringShort());
+                    LogPrint("privatesend", "DSQUEUE -- Peer %d is sending WAY too many dsq messages for a masternode with collateral %s\n", pfrom->id, dsq.masternodeOutpoint.ToStringShort());
                     return;
                 }
             }
