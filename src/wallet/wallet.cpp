@@ -1313,6 +1313,12 @@ void CWallet::SyncTransaction(const CTransaction& tx, const CBlockIndex *pindex,
 {
     LOCK2(cs_main, cs_wallet);
 
+    // v0.14.0.x: Simulates the behavior found in the develop branch when ::BlockConnected/BlockDisconnected are called
+    if (pindex != nullptr && (posInBlock == 0 || posInBlock == CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK)) {
+        fAnonymizableTallyCached = false;
+        fAnonymizableTallyCachedNonDenom = false;
+    }
+
     if (!AddToWalletIfInvolvingMe(tx, pindex, posInBlock, true))
         return; // Not one of ours
 
