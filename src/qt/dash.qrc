@@ -71,7 +71,6 @@
         <file alias="qtreeview_selected">res/images/qtreeview_selected.png</file>
         <file alias="splash">res/images/splash.png</file>
         <file alias="unchecked">res/images/unchecked.png</file>
-        <file alias="walletframe_background">res/images/walletframe_background.png</file>
     </qresource>
     <qresource prefix="/movies">
         <file alias="spinner-000">res/movies/spinner-000.png</file>

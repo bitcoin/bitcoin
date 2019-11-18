@@ -313,8 +313,7 @@ RES_IMAGES = \
   qt/res/images/dash_logo_toolbar.png \
   qt/res/images/qtreeview_selected.png \
   qt/res/images/splash.png \
-  qt/res/images/unchecked.png \
-  qt/res/images/walletframe_background.png
+  qt/res/images/unchecked.png
 
 RES_CSS = \
   qt/res/css/light.css \

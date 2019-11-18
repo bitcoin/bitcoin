@@ -1,5 +1,5 @@
 WalletFrame {
-border-image: url(':/images/walletframe_background') 0 0 0 0 stretch stretch;
+background-color: #fff;
 border-top:0px solid #000;
 margin:0;
 padding-top:20px;
@@ -93,9 +93,9 @@ background-color:transparent;
 .QValidatedLineEdit, .QLineEdit { /* Text Entry Fields */
 border: 1px solid #82C3E6;
 font-size:11px;
-min-height:25px;
+min-height:31px;
 outline:0;
-padding:3px;
+padding: 0px 3px 0px 3px;
 background-color:#fcfcfc;
 }
 
@@ -138,9 +138,9 @@ border:1px solid #333;
 
 QComboBox { /* Dropdown Menus */
 border:1px solid #82C3E6;
-padding: 3px 5px 3px 5px;
+padding: 0px 5px 0px 5px;
 background:#fcfcfc;
-min-height:25px;
+min-height:31px;
 color:#818181;
 }
 
@@ -165,9 +165,7 @@ border-image: url(':/images/arrow_down') 0 0 0 0 stretch stretch;
 
 QComboBox QListView {
 background:#fff;
-border:1px solid #333;
-padding-right:1px;
-padding-left:1px;
+padding: 3px;
 }
 
 QComboBox QAbstractItemView::item { margin:4px; }
@@ -194,9 +192,9 @@ selection-color:transparent;
 
 QAbstractSpinBox {
 border:1px solid #82C3E6;
-padding: 3px 5px 3px 5px;
+padding: 0px 5px 0px 5px;
 background:#fcfcfc;
-min-height:25px;
+min-height:31px;
 color:#818181;
 }
 
@@ -367,19 +365,15 @@ color:#333;
 }
 
 QDialog .QTabWidget .QWidget QAbstractSpinBox {
-min-height:15px;
 }
 
 QDialog .QTabWidget .QWidget QAbstractSpinBox::down-button {
-width:15px;
 }
 
 QDialog .QTabWidget .QWidget QAbstractSpinBox::up-button {
-width:15px;
 }
 
 QDialog .QTabWidget .QWidget QComboBox {
-min-height:15px;
 }
 
 QDialog QWidget { /* Remove Annoying Focus Rectangle */
@@ -587,17 +581,10 @@ background-color:#F8F6F6;
 }
 
 QDialog#OptionsDialog QValueComboBox, QDialog#OptionsDialog QSpinBox {
-margin-top:5px;
-margin-bottom:5px;
 }
 
 QDialog#OptionsDialog QValidatedLineEdit, QDialog#OptionsDialog QValidatedLineEdit:disabled, QDialog#OptionsDialog QLineEdit, QDialog#OptionsDialog QLineEdit:disabled {
 qproperty-alignment: 'AlignVCenter | AlignLeft';
-min-height:20px;
-margin-top:0px;
-margin-bottom:0px;
-padding-top:1px;
-padding-bottom:1px;
 }
 
 QDialog#OptionsDialog > QLabel {
@@ -606,8 +593,6 @@ min-height:20px;
 }
 
 QDialog#OptionsDialog QWidget#tabDisplay QValueComboBox {
-margin-top:0px;
-margin-bottom:0px;
 }
 
 QDialog#OptionsDialog QLabel#label_3 { /* Translations Missing? Label */
@@ -1038,7 +1023,7 @@ background-color:transparent;
 }
 
 QWidget#contentWidget { /* The actual content with the text/buttons/etc... */
-border-image: url(':/images/walletframe_background') 0 0 0 0 stretch stretch;
+background-color: #fff;
 border-top:0px solid #000;
 margin:0;
 padding-top:20px;
