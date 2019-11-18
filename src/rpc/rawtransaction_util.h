@@ -21,9 +21,9 @@ class SigningProvider;
  * @param  keystore      Temporary keystore containing signing keys
  * @param  coins         Map of unspent outputs
  * @param  hashType      The signature hash type
- * @returns JSON object with details of signed transaction
+ * @param result         JSON object where signed transaction results accumulate
  */
-UniValue SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, const std::map<COutPoint, Coin>& coins, const UniValue& hashType);
+void SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, const std::map<COutPoint, Coin>& coins, const UniValue& hashType, UniValue& result);
 
 /**
   * Parse a prevtxs UniValue array and get the map of coins from it

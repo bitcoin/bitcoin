@@ -3377,7 +3377,9 @@ UniValue signrawtransactionwithwallet(const JSONRPCRequest& request)
     // Parse the prevtxs array
     ParsePrevouts(request.params[1], nullptr, coins);
 
-    return SignTransaction(mtx, &*pwallet->GetLegacyScriptPubKeyMan(), coins, request.params[2]);
+    UniValue result(UniValue::VOBJ);
+    SignTransaction(mtx, &*pwallet->GetLegacyScriptPubKeyMan(), coins, request.params[2], result);
+    return result;
 }
 
 static UniValue rescanblockchain(const JSONRPCRequest& request)
