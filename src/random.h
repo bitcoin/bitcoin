@@ -88,7 +88,7 @@ void GetStrongRandBytes(unsigned char* buf, int num) noexcept;
  *
  * Thread-safe.
  */
-void RandAddPeriodic();
+void RandAddPeriodic() noexcept;
 
 /**
  * Fast randomness source. This is seeded once with secure random data, but
