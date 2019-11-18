@@ -146,7 +146,7 @@ script: |
     make ${MAKEOPTS} -C src check-security
     make deploy
     make install DESTDIR=${INSTALLPATH}
-    cp -f --target-directory="${OUTDIR}" ./bitcoin-*-setup-unsigned.exe
+    cp -f --target-directory="${OUTDIR}" ./syscoin-*-setup-unsigned.exe
     cd installed
     mv ${DISTNAME}/bin/*.dll ${DISTNAME}/lib/
     find . -name "lib*.la" -delete
