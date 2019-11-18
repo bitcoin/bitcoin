@@ -257,9 +257,9 @@ public:
         consensus.nAuxpowChainId = 0x1000;
         consensus.fStrictChainId = false;
         consensus.nLegacyBlocksBefore = 1;
-        consensus.nSYSXAsset = 1228137426;
+        consensus.nSYSXAsset = 71313072;
         consensus.vchSYSXBurnMethodSignature = ParseHex("5f959b69");
-        consensus.vchSYSXERC20Manager = ParseHex("460e8C8923881Cf37d7302dBEE3350DbFC19B0C4");
+        consensus.vchSYSXERC20Manager = ParseHex("9b708A16243936C9946C6789f3912cE5479B7634");
         consensus.nBridgeStartBlock = 1000;
         pchMessageStart[0] = 0xce;
         pchMessageStart[1] = 0xe2;
