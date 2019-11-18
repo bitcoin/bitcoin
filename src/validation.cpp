@@ -3711,7 +3711,7 @@ static FlatFilePos SaveBlockToDisk(const CBlock& block, int nHeight, const CChai
 }
 
 /** Store block on disk. If dbp is non-nullptr, the file is known to already reside on disk */
-bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, BlockValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex, bool fRequested, const FlatFilePos* dbp, bool* fNewBlock)
+bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, BlockValidationState& state, const CChainParams& chainparams, bool fRequested, const FlatFilePos* dbp, bool* fNewBlock)
 {
     const CBlock& block = *pblock;
 
@@ -3719,7 +3719,7 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
     AssertLockHeld(cs_main);
 
     CBlockIndex *pindexDummy = nullptr;
-    CBlockIndex *&pindex = ppindex ? *ppindex : pindexDummy;
+    CBlockIndex *&pindex = pindexDummy;
 
     bool accepted_header = m_blockman.AcceptBlockHeader(block, state, chainparams, &pindex);
     CheckBlockIndex(chainparams.GetConsensus());
@@ -3810,13 +3810,12 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
     AssertLockNotHeld(cs_main);
 
     {
-        CBlockIndex *pindex = nullptr;
         if (fNewBlock) *fNewBlock = false;
         BlockValidationState state;
 
         LOCK(cs_main);
 
-        if (!ChainstateActive().AcceptBlock(pblock, state, chainparams, &pindex, fForceProcessing, nullptr, fNewBlock)) {
+        if (!ChainstateActive().AcceptBlock(pblock, state, chainparams, fForceProcessing, nullptr, fNewBlock)) {
             GetMainSignals().BlockChecked(*pblock, state);
             return error("%s: AcceptBlock FAILED (%s)", __func__, state.ToString());
         }
@@ -4703,7 +4702,7 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, FlatFi
                     CBlockIndex* pindex = LookupBlockIndex(hash);
                     if (!pindex || (pindex->nStatus & BLOCK_HAVE_DATA) == 0) {
                       BlockValidationState state;
-                      if (::ChainstateActive().AcceptBlock(pblock, state, chainparams, nullptr, true, dbp, nullptr)) {
+                      if (::ChainstateActive().AcceptBlock(pblock, state, chainparams, true, dbp, nullptr)) {
                           nLoaded++;
                       }
                       if (state.IsError()) {
@@ -4740,7 +4739,7 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, FlatFi
                                     head.ToString());
                             LOCK(cs_main);
                             BlockValidationState dummy;
-                            if (::ChainstateActive().AcceptBlock(pblockrecursive, dummy, chainparams, nullptr, true, &it->second, nullptr))
+                            if (::ChainstateActive().AcceptBlock(pblockrecursive, dummy, chainparams, true, &it->second, nullptr))
                             {
                                 nLoaded++;
                                 queue.push_back(pblockrecursive->GetHash());
