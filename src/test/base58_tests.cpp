@@ -7,6 +7,7 @@
 #include <base58.h>
 #include <test/util/setup_common.h>
 #include <util/strencodings.h>
+#include <util/vector.h>
 
 #include <univalue.h>
 
@@ -64,6 +65,22 @@ BOOST_AUTO_TEST_CASE(base58_DecodeBase58)
     BOOST_CHECK( DecodeBase58(" \t\n\v\f\r skip \r\f\v\n\t ", result));
     std::vector<unsigned char> expected = ParseHex("971a55");
     BOOST_CHECK_EQUAL_COLLECTIONS(result.begin(), result.end(), expected.begin(), expected.end());
+}
+
+BOOST_AUTO_TEST_CASE(base58_random_encode_decode)
+{
+    for (int n = 0; n < 1000; ++n) {
+        unsigned int len = 1 + InsecureRandBits(8);
+        unsigned int zeroes = InsecureRandBool() ? InsecureRandRange(len + 1) : 0;
+        auto data = Cat(std::vector<unsigned char>(zeroes, '\000'), g_insecure_rand_ctx.randbytes(len - zeroes));
+        auto encoded = EncodeBase58Check(data);
+        std::vector<unsigned char> decoded;
+        auto ok_too_small = DecodeBase58Check(encoded, decoded, InsecureRandRange(len));
+        BOOST_CHECK(!ok_too_small);
+        auto ok = DecodeBase58Check(encoded, decoded, len + InsecureRandRange(257 - len));
+        BOOST_CHECK(ok);
+        BOOST_CHECK(data == decoded);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
