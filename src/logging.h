@@ -137,7 +137,7 @@ namespace BCLog {
 
 } // namespace BCLog
 
-BCLog::Logger& LogInstance();
+BCLog::Logger& LogInstance() noexcept;
 
 /** Return true if log accepts specified category */
 static inline bool LogAcceptCategory(BCLog::LogFlags category)

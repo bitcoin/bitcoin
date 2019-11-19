@@ -11,7 +11,7 @@
 
 const char * const DEFAULT_DEBUGLOGFILE = "debug.log";
 
-BCLog::Logger& LogInstance()
+BCLog::Logger& LogInstance() noexcept
 {
 /**
  * NOTE: the logger instances is leaked on exit. This is ugly, but will be
