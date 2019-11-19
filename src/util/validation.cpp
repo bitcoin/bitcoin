@@ -21,5 +21,3 @@ std::string FormatStateMessage(const ValidationState &state)
 
     return state.GetRejectReason();
 }
-
-const std::string strMessageMagic = "Bitcoin Signed Message:\n";
