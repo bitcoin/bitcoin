@@ -19,11 +19,11 @@
 #include <script/sign.h>
 #include <util/bip32.h>
 #include <util/fees.h>
+#include <util/message.h> // For strMessageMagic
 #include <util/moneystr.h>
 #include <util/string.h>
 #include <util/system.h>
 #include <util/url.h>
-#include <util/validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/feebumper.h>
 #include <wallet/psbtwallet.h>
