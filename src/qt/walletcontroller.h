@@ -5,6 +5,7 @@
 #ifndef BITCOIN_QT_WALLETCONTROLLER_H
 #define BITCOIN_QT_WALLETCONTROLLER_H
 
+#include <qt/sendcoinsrecipient.h>
 #include <qt/walletmodel.h>
 #include <support/allocators/secure.h>
 #include <sync.h>
