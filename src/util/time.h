@@ -46,8 +46,8 @@ T GetTime();
  * ISO 8601 formatting is preferred. Use the FormatISO8601{DateTime,Date}
  * helper functions if possible.
  */
-std::string FormatISO8601DateTime(int64_t nTime);
-std::string FormatISO8601Date(int64_t nTime);
+std::string FormatISO8601DateTime(int64_t nTime) noexcept;
+std::string FormatISO8601Date(int64_t nTime) noexcept;
 int64_t ParseISO8601DateTime(const std::string& str);
 
 #endif // BITCOIN_UTIL_TIME_H
