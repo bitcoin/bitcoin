@@ -1061,6 +1061,24 @@ std::string format(const std::string &fmt, const Args&... args)
     return oss.str();
 }
 
+/** Variant of tfm::format that aborts when an formatting exception happens instead
+ * of raising an exception.
+ *
+ * Use this function in no-except context, when you are 100% sure that the
+ * format string contains no errors. Only errors in the format string and inconsistencies
+ * between the format string and the type or number of arguments passed in cause tinyformat
+ * exceptions. It does not depend on the value of the arguments.
+ */
+template<typename... Args>
+std::string format_noexcept(const std::string &fmt, const Args&... args) noexcept
+{
+    // The C++ standard ensures that any exception raised here will call std::terminate,
+    // even if a terminate handler is set that does not abort.
+    std::ostringstream oss;
+    format(oss, fmt.c_str(), args...);
+    return oss.str();
+}
+
 } // namespace tinyformat
 
 /** Format arguments and return the string or write to given std::ostream (see tinyformat::format doc for details) */
