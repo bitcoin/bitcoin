@@ -92,7 +92,7 @@ namespace BCLog {
         std::atomic<bool> m_reopen_file{false};
 
         /** Send a string to the log output */
-        void LogPrintStr(const std::string& str);
+        void LogPrintStr(const std::string& str) noexcept;
 
         /** Returns whether logs will be written to any output */
         bool Enabled() const noexcept
@@ -159,7 +159,7 @@ bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str);
 // peer can fill up a user's disk with debug.log entries.
 
 template <typename... Args>
-static inline void LogPrintf(const char* fmt, const Args&... args)
+static inline void LogPrintf(const char* fmt, const Args&... args) noexcept
 {
     if (LogInstance().Enabled()) {
         std::string log_msg;

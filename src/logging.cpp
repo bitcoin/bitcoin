@@ -258,7 +258,7 @@ namespace BCLog {
     }
 }
 
-void BCLog::Logger::LogPrintStr(const std::string& str)
+void BCLog::Logger::LogPrintStr(const std::string& str) noexcept
 {
     std::lock_guard<std::mutex> scoped_lock(m_cs);
     std::string str_prefixed = LogEscapeMessage(str);
