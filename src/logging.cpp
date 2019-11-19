@@ -211,7 +211,7 @@ std::vector<CLogCategoryActive> ListActiveLogCategories()
     return ret;
 }
 
-std::string BCLog::Logger::LogTimestampStr(const std::string& str)
+std::string BCLog::Logger::LogTimestampStr(const std::string& str) noexcept
 {
     std::string strStamped;
 
@@ -223,7 +223,7 @@ std::string BCLog::Logger::LogTimestampStr(const std::string& str)
         strStamped = FormatISO8601DateTime(nTimeMicros/1000000);
         if (m_log_time_micros) {
             strStamped.pop_back();
-            strStamped += strprintf(".%06dZ", nTimeMicros%1000000);
+            strStamped += tfm::format_noexcept(".%06dZ", nTimeMicros%1000000);
         }
         int64_t mocktime = GetMockTime();
         if (mocktime) {
