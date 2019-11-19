@@ -8,4 +8,3 @@ Description: Library for the Bitcoin consensus protocol.
 Version: @PACKAGE_VERSION@
 Libs: -L${libdir} -lbitcoinconsensus
 Cflags: -I${includedir}
-Requires.private: libcrypto
