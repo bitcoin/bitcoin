@@ -25,8 +25,6 @@ if [ "$TRAVIS_OS_NAME" == "osx" ]; then
   done
 
   export PATH="/usr/local/opt/ccache/libexec:$PATH"
-  OPENSSL_PKG_CONFIG_PATH="/usr/local/opt/openssl@1.1/lib/pkgconfig"
-  export PKG_CONFIG_PATH=$OPENSSL_PKG_CONFIG_PATH:$PKG_CONFIG_PATH
 
   ${CI_RETRY_EXE} pip3 install $PIP_PACKAGES
 

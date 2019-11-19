@@ -77,7 +77,7 @@ bench_bench_syscoin_SOURCES += bench/coin_selection.cpp
 bench_bench_syscoin_SOURCES += bench/wallet_balance.cpp
 endif
 
-bench_bench_syscoin_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS)
+bench_bench_syscoin_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS)
 bench_bench_syscoin_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 CLEAN_SYSCOIN_BENCH = bench/*.gcda bench/*.gcno $(GENERATED_BENCH_FILES)
