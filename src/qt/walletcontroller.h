@@ -5,7 +5,7 @@
 #ifndef BITCOIN_QT_WALLETCONTROLLER_H
 #define BITCOIN_QT_WALLETCONTROLLER_H
 
-#include <qt/walletmodel.h>
+#include <qt/sendcoinsrecipient.h>
 #include <support/allocators/secure.h>
 #include <sync.h>
 #include <util/translation.h>
@@ -25,10 +25,12 @@
 class ClientModel;
 class OptionsModel;
 class PlatformStyle;
+class WalletModel;
 
 namespace interfaces {
 class Handler;
 class Node;
+class Wallet;
 } // namespace interfaces
 
 class AskPassphraseDialog;
