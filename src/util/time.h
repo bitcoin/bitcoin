@@ -34,7 +34,7 @@ int64_t GetSystemTimeInSeconds(); // Like GetTime(), but not mockable
 /** For testing. Set e.g. with the setmocktime rpc, or -mocktime argument */
 void SetMockTime(int64_t nMockTimeIn);
 /** For testing */
-int64_t GetMockTime();
+int64_t GetMockTime() noexcept;
 
 void MilliSleep(int64_t n);
 

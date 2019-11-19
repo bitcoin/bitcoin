@@ -46,7 +46,7 @@ void SetMockTime(int64_t nMockTimeIn)
     nMockTime.store(nMockTimeIn, std::memory_order_relaxed);
 }
 
-int64_t GetMockTime()
+int64_t GetMockTime() noexcept
 {
     return nMockTime.load(std::memory_order_relaxed);
 }
