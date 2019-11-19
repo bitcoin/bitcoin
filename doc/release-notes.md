@@ -63,6 +63,12 @@ distribution provides binaries for the RISC-V platform.
 Notable changes
 ===============
 
+Build System
+------------
+
+- OpenSSL is no longer used by Bitcoin Core. The last usage of the library
+was removed in #17265.
+
 New RPCs
 --------
 
