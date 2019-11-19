@@ -3,18 +3,25 @@
 // as distributed by their linux distribution, so in generally cannot "fix" the
 // warnings. Thus, we should disable such useless lints below.
 #![allow(deprecated)]
+#![feature(try_from)]
+#![feature(integer_atomics)]
 
 extern crate bitcoin;
 extern crate bitcoin_hashes;
 extern crate libc;
+extern crate lightning;
+extern crate lightning_invoice;
+extern crate bitcoin_bech32;
+extern crate core;
 
 #[cfg(not(test))] mod bridge;
 #[cfg(test)] pub mod test_bridge;
-#[cfg(test)] pub use test_bridge as bridge;
+//#[cfg(test)] pub use test_bridge as bridge;
 use bridge::*;
 
 mod dns_headers;
 mod rest_downloader;
+mod core_lightning;
 
 // Our P2P socket handler currently only supports poll(), so we stub out all the P2P client for
 // Windows with dumy init/stop functions.
@@ -46,30 +53,30 @@ use std::time::{Duration, Instant};
 // returns Results instead of raw pointers, or redefining the GlobalAlloc API to allow
 // panic!()s inside of alloc calls), we should switch to those, however these APIs are
 // currently unstable.
-const TOTAL_MEM_LIMIT_BYTES: usize = 128 * 1024 * 1024;
-static TOTAL_MEM_ALLOCD: AtomicUsize = AtomicUsize::new(0);
-struct MemoryLimitingAllocator;
-unsafe impl GlobalAlloc for MemoryLimitingAllocator {
-    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        let len = layout.size();
-        if len > TOTAL_MEM_LIMIT_BYTES {
-            return ptr::null_mut();
-        }
-        if TOTAL_MEM_ALLOCD.fetch_add(len, Ordering::AcqRel) + len > TOTAL_MEM_LIMIT_BYTES {
-            TOTAL_MEM_ALLOCD.fetch_sub(len, Ordering::AcqRel);
-            return ptr::null_mut();
-        }
-        System.alloc(layout)
-    }
-
-    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
-        System.dealloc(ptr, layout);
-        TOTAL_MEM_ALLOCD.fetch_sub(layout.size(), Ordering::AcqRel);
-    }
-}
-
-#[global_allocator]
-static ALLOC: MemoryLimitingAllocator = MemoryLimitingAllocator;
+//const TOTAL_MEM_LIMIT_BYTES: usize = 128 * 1024 * 1024;
+//static TOTAL_MEM_ALLOCD: AtomicUsize = AtomicUsize::new(0);
+//struct MemoryLimitingAllocator;
+//unsafe impl GlobalAlloc for MemoryLimitingAllocator {
+//    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
+//        let len = layout.size();
+//        if len > TOTAL_MEM_LIMIT_BYTES {
+//            return ptr::null_mut();
+//        }
+//        if TOTAL_MEM_ALLOCD.fetch_add(len, Ordering::AcqRel) + len > TOTAL_MEM_LIMIT_BYTES {
+//            TOTAL_MEM_ALLOCD.fetch_sub(len, Ordering::AcqRel);
+//            return ptr::null_mut();
+//        }
+//        System.alloc(layout)
+//    }
+//
+//    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
+//        System.dealloc(ptr, layout);
+//        TOTAL_MEM_ALLOCD.fetch_sub(layout.size(), Ordering::AcqRel);
+//    }
+//}
+//
+//#[global_allocator]
+//static ALLOC: MemoryLimitingAllocator = MemoryLimitingAllocator;
 
 /// Waits for IBD to complete, to get stuck, or shutdown to be initiated. This should be called
 /// prior to any background block fetchers initiating connections.

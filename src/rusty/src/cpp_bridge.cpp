@@ -6,6 +6,12 @@
 #include <serialize.h>
 #include <consensus/validation.h>
 #include <logging.h>
+#include <script/standard.h>
+#include <wallet/wallet.h>
+#include <wallet/coincontrol.h>
+#include <core_io.h>
+#include <node/transaction.h>
+#include <key_io.h>
 
 /** A class that deserializes a single thing one time. */
 class InputStream
@@ -190,6 +196,11 @@ void rusty_SerializeIndex(const void* pindexvoid, unsigned char* eighty_bytes_de
     memcpy(eighty_bytes_dest, ser.data(), 80);
 }
 
+const char* rusty_GetNetworkIDString() {
+    auto network = Params().NetworkIDString().c_str();
+    return network;
+}
+
 void* rusty_GetBlockData(const void* pindexvoid, const unsigned char **data, uint64_t *datalen) {
     const CBlockIndex *pindex = (const CBlockIndex*) pindexvoid;
     std::vector<uint8_t> *res = new std::vector<uint8_t>();
@@ -256,6 +267,109 @@ uint64_t rusty_GetRandU64(void* contextvoid) {
 uint64_t rusty_GetRandRange(void* contextvoid, uint64_t range) {
     FastRandomContext* ctx = (FastRandomContext*) contextvoid;
     return ctx->randrange(range);
+}
+
+ThirtyTwoBytes rusty_GetRandThirtyTwoBytes(void* contextvoid) {
+    FastRandomContext* ctx = (FastRandomContext*) contextvoid;
+    ThirtyTwoBytes ret;
+    uint256 work = ctx->rand256();
+    memcpy(ret.val, work.begin(), 32);
+    return ret;
+}
+
+const uint64_t rusty_GetBlockCount() {
+    LOCK(cs_main);
+    return ::ChainActive().Height();
+};
+
+void* rusty_GetSignedTx(unsigned char* script, unsigned int scriptlen, uint64_t amount, const unsigned char **data, uint64_t *datalen) {
+    CMutableTransaction mtx = CMutableTransaction();
+
+    std::vector<unsigned char> scriptvec(script, script + scriptlen);
+    std::string s(scriptvec.begin(), scriptvec.end());
+
+    CScript scriptPubKey = GetScriptForDestination(DecodeDestination(s));
+
+    CTxOut out(amount, scriptPubKey);
+
+    mtx.vout.push_back(out);
+
+    std::vector<std::shared_ptr<CWallet>> wallets = GetWallets();
+    std::shared_ptr<CWallet> pwallet = wallets[0];
+
+    CAmount fee;
+    int change_position = 0;
+
+    std::string strFailReason;
+    bool lockUnspents = false;
+    std::set<int> setSubtractFeeFromOutputs;
+    CCoinControl coinControl;
+
+    bool success = pwallet->FundTransaction(mtx, fee, change_position, strFailReason, lockUnspents, setSubtractFeeFromOutputs, coinControl);
+
+    if (!success) {
+        return nullptr;
+    }
+
+    auto locked_chain = pwallet->chain().lock();
+    LOCK(pwallet->cs_wallet);
+
+    pwallet->SignTransaction(mtx);
+
+    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+    ssTx << mtx;
+
+    std::string result_str = HexStr(ssTx.str());
+
+    std::vector<uint8_t> *res = new std::vector<uint8_t>(ssTx.begin(), ssTx.end());
+
+    *data = res->data();
+    *datalen = res->size();
+    return (void*)res;
+}
+
+bool rusty_BroadcastTx(const unsigned char* tx, unsigned int txlen) {
+    CMutableTransaction mtx;
+
+    std::vector<unsigned char> tx_data(tx, tx + txlen);
+    CDataStream ssData(tx_data, SER_NETWORK, PROTOCOL_VERSION);
+
+    try {
+        ssData >> mtx;
+    } catch (const std::exception&) {
+        // Fall through.
+    }
+
+    std::string result_str = HexStr(ssData.str());
+
+    std::vector<std::shared_ptr<CWallet>> wallets = GetWallets();
+    std::shared_ptr<CWallet> pwallet = wallets[0];
+    std::string strFailReason;
+
+    std::shared_ptr<const CTransaction> tx_ptr = std::make_shared<const CTransaction>(CTransaction(mtx));
+
+    bool ret = pwallet->chain().broadcastTransaction(tx_ptr, strFailReason, pwallet->m_default_max_tx_fee, true);
+    return ret;
+}
+
+size_t rusty_EstimateFee(unsigned int conftarget, bool conservative) {
+    FeeCalculation feeCalc;
+    CFeeRate feeRate = ::feeEstimator.estimateSmartFee(conftarget, &feeCalc, conservative);
+    return feeRate.GetFeePerK();
+}
+
+bool rusty_ImportKey(const unsigned char* key) {
+    std::vector<unsigned char> keyvec(key, key + 32);
+
+    CKey privkey = CKey();
+    privkey.Set(keyvec.begin(), keyvec.end(), true);
+
+    CPubKey pubkey = privkey.GetPubKey();
+    std::vector<std::shared_ptr<CWallet>> wallets = GetWallets();
+    std::shared_ptr<CWallet> pwallet = wallets[0];
+
+    LOCK(pwallet->cs_wallet);
+    return pwallet->ImportPrivKeys({{pubkey.GetID(), privkey}}, 1);
 }
 
 void rusty_LogLine(const unsigned char* str, bool debug) {

@@ -412,6 +412,8 @@ void SetupServerArgs()
     gArgs.AddArg("-headersfetchdns=<domain>", "A domain name from which to fetch headers. eg bitcoinheaders.net", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
     gArgs.AddArg("-parallelp2p", strprintf("Whether to run a parallel P2P client to provide redundancy in block fetch implementation (default: %u).", rust_block_fetch::DEFAULT_P2P), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
     gArgs.AddArg("-parallelp2pport=<port>", strprintf("Listen for connections on <port> with the parallel P2P client (default: %u, testnet: %u, regtest: %u). 0 indicates no listening, only outbound connections are made.", defaultChainParams->GetDefaultPort() + 1, testnetChainParams->GetDefaultPort() + 1, regtestChainParams->GetDefaultPort() + 1), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
+    gArgs.AddArg("-lightning", strprintf("Whether to run a Lightning client (default: %u).", rust_block_fetch::DEFAULT_P2P), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
+    gArgs.AddArg("-lightningport=<port>", strprintf("Listen for connections on <port> with the Lightning client (default: %u). 0 indicates no listening, only outbound connections are made.", lightning::DEFAULT_LIGHTNING_PORT), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
 #endif
     gArgs.AddArg("-addnode=<ip>", "Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info). This option can be specified multiple times to add multiple nodes.", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
     gArgs.AddArg("-banscore=<n>", strprintf("Threshold for disconnecting misbehaving peers (default: %u)", DEFAULT_BANSCORE_THRESHOLD), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
@@ -1221,6 +1223,15 @@ bool AppInitLockDataDirectory()
     return true;
 }
 
+void* lightning_node = nullptr;
+
+static void LightningBlockNotifyCallback(bool initialSync, const CBlockIndex *pBlockIndex) {
+    if (initialSync || !pBlockIndex || !lightning_node)
+        return;
+
+    lightning::notify_block(lightning_node);
+}
+
 bool AppInitMain(NodeContext& node)
 {
     const CChainParams& chainparams = Params();
@@ -1861,6 +1872,16 @@ bool AppInitMain(NodeContext& node)
         }
         unsigned short bind_port = (unsigned short)(gArgs.GetArg("-parallelp2pport", Params().GetDefaultPort() + 1));
         rust_block_fetch::init_p2p_client(node.connman.get(), GetDataDir().c_str(), rusty_sub_ver.c_str(), bind_port, dnsseeds.data(), dnsseeds.size());
+    }
+    if (gArgs.GetBoolArg("-lightning", lightning::DEFAULT_LIGHTNING)) {
+        unsigned short bind_port = (unsigned short)(gArgs.GetArg("-lightningport", lightning::DEFAULT_LIGHTNING_PORT));
+        lightning_node = lightning::init_node(GetDataDir().c_str());
+        if (bind_port) {
+            // TODO: this is supposed to return
+            //lightning::listen_incoming(lightning_node, bind_port);
+        }
+        uiInterface.NotifyBlockTip_connect(LightningBlockNotifyCallback);
+
     }
 #endif
 

@@ -21,6 +21,12 @@ const std::string CLIENT_NAME("Satoshi");
 const std::string RUSTY_CLIENT_NAME("RustySatoshi");
 
 /**
+ * Name of client reported when connected to the
+ * in-Rust Lightning client.
+ */
+const std::string RUSTY_LIGHTNING_CLIENT_NAME("CoreLightning");
+
+/**
  * Client version number
  */
 #define CLIENT_VERSION_SUFFIX ""

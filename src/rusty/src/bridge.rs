@@ -1,10 +1,11 @@
-use std::ffi::{c_void, CString};
+use std::ffi::{c_void, CString, CStr};
 use std::ptr;
 use std::io::Cursor;
 
 use bitcoin::blockdata::block::BlockHeader;
 use bitcoin::consensus::Encodable;
 use bitcoin::util::uint::Uint256;
+use std::os::raw::{c_char, c_uint};
 
 #[inline]
 pub fn slice_to_u64_le(slice: &[u8]) -> u64 {
@@ -89,6 +90,8 @@ extern "C" {
     /// Serializes the header pointed to by the CBlockIndex* into eighty_bytes_dest.
     fn rusty_SerializeIndex(index: *const c_void, eighty_bytes_dest: *mut u8);
 
+    fn rusty_GetNetworkIDString() -> *const c_char;
+
     /// Given a CBlockIndex* pointer, gets a pointer/length pair for the serialized block,
     /// returning an opaque resource pointer, which must be deallocated (invalidating the
     /// returned serialized data pointer) via rusty_FreeBlockData().
@@ -99,6 +102,16 @@ extern "C" {
 
     /// Returns true if we're allowed to expose knowledge of the given CBlockIndex* to peers.
     fn rusty_BlockRequestAllowed(pindexvoid: *const c_void) -> bool;
+
+    fn rusty_GetBlockCount() -> u64;
+
+    fn rusty_GetSignedTx(script: *const u8, scriptlen: c_uint, value: u64, resdata: *mut *const u8, reslen: *mut u64) -> *const c_void;
+
+    fn rusty_BroadcastTx(tx: *const u8, txlen: c_uint) -> bool;
+
+    fn rusty_EstimateFee(conftarget: u64, conservative: bool) -> usize;
+
+    fn rusty_ImportKey(key: *const u8) -> bool;
 }
 
 /// Connects the given array of (sorted, in chain order) headers (in serialized, 80-byte form).
@@ -129,6 +142,44 @@ pub fn connect_block(blockdata: &[u8], blockindex_requested_by_state: Option<Blo
     let blockindex = match blockindex_requested_by_state { Some(index) => index.index, None => std::ptr::null(), };
     unsafe {
         rusty_ProcessNewBlock(blockdata.as_ptr(), blockdata.len(), blockindex);
+    }
+}
+
+pub fn get_block_count() -> u64 {
+    unsafe {
+        rusty_GetBlockCount()
+    }
+}
+
+pub fn get_signed_tx(script: Vec<u8>, value: u64) -> Vec<u8> {
+    let mut len: u64 = 0;
+    let mut data: *const u8 = ptr::null();
+    let resource = unsafe { rusty_GetSignedTx(script.as_ptr(), script.len() as u32, value, &mut data, &mut len) };
+    // TODO: propagate errors down to RPC
+    assert!(!data.is_null());
+    let mut res = Vec::new();
+    res.resize(len as usize, 0);
+    unsafe { ptr::copy_nonoverlapping(data, res.as_mut_ptr(), len as usize); }
+    // TODO: make this generic
+    unsafe { rusty_FreeBlockData(resource) };
+    res
+}
+
+pub fn broadcast_tx(tx: Vec<u8>) -> bool {
+    unsafe {
+        rusty_BroadcastTx(tx.as_ptr(), tx.len() as u32)
+    }
+}
+
+pub fn estimate_fee(conftarget: u64, conservative: bool) -> usize {
+    unsafe {
+        rusty_EstimateFee(conftarget, conservative)
+    }
+}
+
+pub fn import_key(key: Vec<u8>) -> bool {
+    unsafe {
+        rusty_ImportKey(key.as_ptr())
     }
 }
 
@@ -249,6 +300,12 @@ impl BlockIndex {
         let mut ser = [0u8; 80];
         unsafe { rusty_SerializeIndex(self.index, (&mut ser).as_mut_ptr()); }
         ser
+    }
+
+    pub fn network_id() -> String {
+        unsafe {
+            CStr::from_ptr(rusty_GetNetworkIDString()).to_string_lossy().into_owned()
+        }
     }
 
     /// Gets the full, serialized, block, in witness form
@@ -379,6 +436,9 @@ extern "C" {
 
     /// Gets a u64 less than the given max out of a Random Context generated with rusty_InitRandContext()
     fn rusty_GetRandRange(rand_context: *mut c_void, range: u64) -> u64;
+
+    /// Gets len random bytes out of a Random Context generated with rusty_InitRandContext()
+    fn rusty_GetRandThirtyTwoBytes(rand_context: *mut c_void) -> ThirtyTwoBytes;
 }
 
 pub struct RandomContext {
@@ -399,6 +459,10 @@ impl RandomContext {
     pub fn randrange(&mut self, range: u64) -> u64 {
         assert!(range > 0);
         unsafe { rusty_GetRandRange(self.index, range) }
+    }
+
+    pub fn randthirtytwobytes(&mut self) -> Uint256 {
+        unsafe { rusty_GetRandThirtyTwoBytes(self.index) }.to_uint_le()
     }
 }
 impl Drop for RandomContext {
@@ -423,6 +487,12 @@ extern "C" {
     /// rusty_AddOutboundP2PNonce).
     fn rusty_CheckInboundP2PNonce(connman: *mut c_void, nonce: u64) -> bool;
 }
+
+#[derive(Copy, Clone)]
+pub struct NodeContext(pub *mut c_void);
+unsafe impl Send for NodeContext {}
+unsafe impl Sync for NodeContext {}
+
 
 #[derive(Copy, Clone)]
 pub struct Connman(pub *mut c_void);
