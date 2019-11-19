@@ -8,7 +8,11 @@
 
 #include <chainparams.h>
 #include <chainparamsbase.h>
+#include <clientversion.h>
+#include <key.h>
 #include <logging.h>
+#include <pubkey.h>
+#include <random.h>
 #include <util/system.h>
 #include <util/translation.h>
 #include <wallet/wallettool.h>

@@ -2,24 +2,26 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <wallet/wallettool.h>
+
 #include <fs.h>
 #include <util/system.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 
-namespace WalletTool {
+namespace {
 
 // The standard wallet deleter function blocks on the validation interface
 // queue, which doesn't exist for the bitcoin-wallet. Define our own
 // deleter here.
-static void WalletToolReleaseWallet(CWallet* wallet)
+void WalletToolReleaseWallet(CWallet* wallet)
 {
     wallet->WalletLogPrintf("Releasing wallet\n");
     wallet->Flush(true);
     delete wallet;
 }
 
-static std::shared_ptr<CWallet> CreateWallet(const std::string& name, const fs::path& path)
+std::shared_ptr<CWallet> CreateWallet(const std::string& name, const fs::path& path)
 {
     if (fs::exists(path)) {
         tfm::format(std::cerr, "Error: File exists already\n");
@@ -46,7 +48,7 @@ static std::shared_ptr<CWallet> CreateWallet(const std::string& name, const fs::
     return wallet_instance;
 }
 
-static std::shared_ptr<CWallet> LoadWallet(const std::string& name, const fs::path& path)
+std::shared_ptr<CWallet> LoadWallet(const std::string& name, const fs::path& path)
 {
     if (!fs::exists(path)) {
         tfm::format(std::cerr, "Error: Wallet files does not exist\n");
@@ -89,7 +91,7 @@ static std::shared_ptr<CWallet> LoadWallet(const std::string& name, const fs::pa
     return wallet_instance;
 }
 
-static void WalletShowInfo(CWallet* wallet_instance)
+void WalletShowInfo(CWallet* wallet_instance)
 {
     LOCK(wallet_instance->cs_wallet);
 
@@ -100,6 +102,9 @@ static void WalletShowInfo(CWallet* wallet_instance)
     tfm::format(std::cout, "Transactions: %zu\n", wallet_instance->mapWallet.size());
     tfm::format(std::cout, "Address Book: %zu\n", wallet_instance->mapAddressBook.size());
 }
+} // namespace
+
+namespace WalletTool {
 
 bool ExecuteWalletToolFunc(const std::string& command, const std::string& name)
 {
