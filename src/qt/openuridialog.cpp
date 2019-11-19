@@ -7,7 +7,6 @@
 
 #include <qt/guiutil.h>
 #include <qt/sendcoinsrecipient.h>
-#include <qt/walletmodel.h>
 
 #include <QUrl>
 
