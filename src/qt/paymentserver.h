@@ -37,12 +37,15 @@
 #endif
 
 #include <qt/sendcoinsrecipient.h>
-#include <qt/walletmodel.h>
 
 #include <QObject>
 #include <QString>
 
 class OptionsModel;
+
+namespace interfaces {
+class Node;
+} // namespace interfaces
 
 QT_BEGIN_NAMESPACE
 class QApplication;
