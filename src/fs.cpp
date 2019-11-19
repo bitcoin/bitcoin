@@ -12,7 +12,7 @@
 
 namespace fsbridge {
 
-FILE *fopen(const fs::path& p, const char *mode)
+FILE *fopen(const fs::path& p, const char *mode) noexcept
 {
 #ifndef WIN32
     return ::fopen(p.string().c_str(), mode);
