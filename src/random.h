@@ -35,7 +35,6 @@
  *   that fast seeding includes, but additionally:
  *   - OS entropy (/dev/urandom, getrandom(), ...). The application will terminate if
  *     this entropy source fails.
- *   - Bytes from OpenSSL's RNG (which itself may be seeded from various sources)
  *   - Another high-precision timestamp (indirectly committing to a benchmark of all the
  *     previous sources).
  *   These entropy sources are slower, but designed to make sure the RNG state contains
