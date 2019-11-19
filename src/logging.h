@@ -130,7 +130,7 @@ namespace BCLog {
         void DisableCategory(LogFlags flag);
         bool DisableCategory(const std::string& str);
 
-        bool WillLogCategory(LogFlags category) const;
+        bool WillLogCategory(LogFlags category) const noexcept;
 
         bool DefaultShrinkDebugFile() const;
     };
@@ -140,7 +140,7 @@ namespace BCLog {
 BCLog::Logger& LogInstance() noexcept;
 
 /** Return true if log accepts specified category */
-static inline bool LogAcceptCategory(BCLog::LogFlags category)
+static inline bool LogAcceptCategory(BCLog::LogFlags category) noexcept
 {
     return LogInstance().WillLogCategory(category);
 }

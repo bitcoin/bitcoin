@@ -121,7 +121,7 @@ bool BCLog::Logger::DisableCategory(const std::string& str)
     return true;
 }
 
-bool BCLog::Logger::WillLogCategory(BCLog::LogFlags category) const
+bool BCLog::Logger::WillLogCategory(BCLog::LogFlags category) const noexcept
 {
     return (m_categories.load(std::memory_order_relaxed) & category) != 0;
 }
