@@ -859,16 +859,27 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, CWalletTx::Co
     {
         AssertLockHeld(cs_wallet);
 
-        if (!confirm.hashBlock.IsNull()) {
-            for (const CTxIn& txin : tx.vin) {
-                std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range = mapTxSpends.equal_range(txin.prevout);
-                while (range.first != range.second) {
-                    if (range.first->second != tx.GetHash()) {
-                        WalletLogPrintf("Transaction %s (in block %s) conflicts with wallet transaction %s (both spend %s:%i)\n", tx.GetHash().ToString(), confirm.hashBlock.ToString(), range.first->second.ToString(), range.first->first.hash.ToString(), range.first->first.n);
-                        MarkConflicted(confirm.hashBlock, confirm.block_height, range.first->second);
+        for (const CTxIn& txin : tx.vin) {
+            std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range = mapTxSpends.equal_range(txin.prevout);
+            while (range.first != range.second) {
+                if (range.first->second != tx.GetHash()) {
+                    if (confirm.status == CWalletTx::CONFIRMED) {
+                        WalletLogPrintf("Mark conflict: transaction %s (in block %s) conflicts with wallet transaction %s (both spend %s:%i)\n", tx.GetHash().ToString(), confirm.hashBlock.ToString(), range.first->second.ToString(), range.first->first.hash.ToString(), range.first->first.n);
+                        UpdateConflicts(range.first->second, [&confirm](CWalletTx& wtx) -> bool {
+                            // Block is more conflicting than previous conflict or confirmation, so update.
+                            if (confirm.block_height < wtx.m_confirm.block_height || wtx.m_confirm.block_height == 0) {
+                                // Mark transaction as conflicted with this block.
+                                wtx.m_confirm.nIndex = 0;
+                                wtx.m_confirm.hashBlock = confirm.hashBlock;
+                                wtx.m_confirm.block_height = confirm.block_height;
+                                wtx.setConflicted();
+                                return true;
+                            }
+                            return false;
+                        });
                     }
-                    range.first++;
                 }
+                range.first++;
             }
         }
 
@@ -974,18 +985,11 @@ bool CWallet::AbandonTransaction(const uint256& hashTx)
     return true;
 }
 
-void CWallet::MarkConflicted(const uint256& hashBlock, int conflicting_height, const uint256& hashTx)
+template <typename Fn>
+void CWallet::UpdateConflicts(const uint256& hashTx, Fn&& change_status)
 {
     auto locked_chain = chain().lock();
     LOCK(cs_wallet);
-
-    int conflictconfirms = (m_last_block_processed_height - conflicting_height + 1) * -1;
-    // If number of conflict confirms cannot be determined, this means
-    // that the block is still unknown or not yet part of the main chain,
-    // for example when loading the wallet during a reindex. Do nothing in that
-    // case.
-    if (conflictconfirms >= 0)
-        return;
 
     // Do not flush the wallet here for performance reasons
     WalletBatch batch(*database, "r+", false);
@@ -1002,14 +1006,7 @@ void CWallet::MarkConflicted(const uint256& hashBlock, int conflicting_height, c
         auto it = mapWallet.find(now);
         assert(it != mapWallet.end());
         CWalletTx& wtx = it->second;
-        int currentconfirm = wtx.GetDepthInMainChain();
-        if (conflictconfirms < currentconfirm) {
-            // Block is 'more conflicted' than current confirm; update.
-            // Mark transaction as conflicted with this block.
-            wtx.m_confirm.nIndex = 0;
-            wtx.m_confirm.hashBlock = hashBlock;
-            wtx.m_confirm.block_height = conflicting_height;
-            wtx.setConflicted();
+        if (change_status(wtx)) {
             wtx.MarkDirty();
             batch.WriteTx(wtx);
             // Iterate over all its outputs, and mark transactions in the wallet that spend them conflicted too
