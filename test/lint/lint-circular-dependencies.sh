@@ -28,7 +28,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "wallet/fees -> wallet/wallet -> wallet/fees"
     "wallet/wallet -> wallet/walletdb -> wallet/wallet"
     "policy/fees -> txmempool -> validation -> policy/fees"
-    "qt/guiutil -> qt/walletmodel -> qt/optionsmodel -> qt/guiutil"
     "txmempool -> validation -> validationinterface -> txmempool"
     "wallet/scriptpubkeyman -> wallet/wallet -> wallet/scriptpubkeyman"
 )

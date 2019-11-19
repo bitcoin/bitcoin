@@ -8,7 +8,6 @@
 #include <qt/bitcoinunits.h>
 #include <qt/qvalidatedlineedit.h>
 #include <qt/sendcoinsrecipient.h>
-#include <qt/walletmodel.h>
 
 #include <base58.h>
 #include <chainparams.h>
