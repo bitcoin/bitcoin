@@ -41,7 +41,7 @@ static void SetThreadName(const char* name)
 #if defined(HAVE_THREAD_LOCAL)
 
 static thread_local std::string g_thread_name;
-const std::string& util::ThreadGetInternalName() { return g_thread_name; }
+const std::string& util::ThreadGetInternalName() noexcept { return g_thread_name; }
 //! Set the in-memory internal name for this thread. Does not affect the process
 //! name.
 static void SetInternalName(std::string name) { g_thread_name = std::move(name); }
@@ -50,7 +50,7 @@ static void SetInternalName(std::string name) { g_thread_name = std::move(name);
 #else
 
 static const std::string empty_string;
-const std::string& util::ThreadGetInternalName() { return empty_string; }
+const std::string& util::ThreadGetInternalName() noexcept { return empty_string; }
 static void SetInternalName(std::string name) { }
 #endif
 
