@@ -95,7 +95,7 @@ namespace BCLog {
         void LogPrintStr(const std::string& str);
 
         /** Returns whether logs will be written to any output */
-        bool Enabled() const
+        bool Enabled() const noexcept
         {
             std::lock_guard<std::mutex> scoped_lock(m_cs);
             return m_buffering || m_print_to_console || m_print_to_file || !m_print_callbacks.empty();
