@@ -596,6 +596,11 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         if not self.is_wallet_compiled():
             raise SkipTest("wallet has not been compiled.")
 
+    def skip_if_no_wallet_tool(self):
+        """Skip the running test if syscoin-wallet has not been compiled."""
+        if not self.is_wallet_tool_compiled():
+            raise SkipTest("syscoin-wallet has not been compiled")
+
     def skip_if_no_cli(self):
         """Skip the running test if syscoin-cli has not been compiled."""
         if not self.is_cli_compiled():
@@ -608,6 +613,10 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
     def is_wallet_compiled(self):
         """Checks whether the wallet module was compiled."""
         return self.config["components"].getboolean("ENABLE_WALLET")
+
+    def is_wallet_tool_compiled(self):
+        """Checks whether syscoin-wallet was compiled."""
+        return self.config["components"].getboolean("ENABLE_WALLET_TOOL")
 
     def is_zmq_compiled(self):
         """Checks whether the zmq module was compiled."""
