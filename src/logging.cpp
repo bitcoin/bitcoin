@@ -34,7 +34,7 @@ BCLog::Logger& LogInstance() noexcept
 
 bool fLogIPs = DEFAULT_LOGIPS;
 
-static int FileWriteStr(const std::string &str, FILE *fp)
+static int FileWriteStr(const std::string &str, FILE *fp) noexcept
 {
     return fwrite(str.data(), 1, str.size(), fp);
 }
