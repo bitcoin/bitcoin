@@ -274,16 +274,6 @@ bool LegacyScriptPubKeyMan::GetReservedDestination(const OutputType type, bool i
     return true;
 }
 
-void LegacyScriptPubKeyMan::KeepDestination(int64_t index)
-{
-    KeepKey(index);
-}
-
-void LegacyScriptPubKeyMan::ReturnDestination(int64_t index, bool internal, const CPubKey& pubkey)
-{
-    ReturnKey(index, internal, pubkey);
-}
-
 void LegacyScriptPubKeyMan::MarkUnusedAddresses(const CScript& script)
 {
     AssertLockHeld(cs_wallet);
@@ -1096,7 +1086,7 @@ void LegacyScriptPubKeyMan::AddKeypoolPubkeyWithDB(const CPubKey& pubkey, const 
     m_pool_key_to_index[pubkey.GetID()] = index;
 }
 
-void LegacyScriptPubKeyMan::KeepKey(int64_t nIndex)
+void LegacyScriptPubKeyMan::KeepDestination(int64_t nIndex)
 {
     // Remove from key pool
     WalletBatch batch(m_storage.GetDatabase());
@@ -1104,7 +1094,7 @@ void LegacyScriptPubKeyMan::KeepKey(int64_t nIndex)
     WalletLogPrintf("keypool keep %d\n", nIndex);
 }
 
-void LegacyScriptPubKeyMan::ReturnKey(int64_t nIndex, bool fInternal, const CPubKey& pubkey)
+void LegacyScriptPubKeyMan::ReturnDestination(int64_t nIndex, bool fInternal, const CPubKey& pubkey)
 {
     // Return to key pool
     {
@@ -1138,7 +1128,7 @@ bool LegacyScriptPubKeyMan::GetKeyFromPool(CPubKey& result, bool internal)
             result = GenerateNewKey(batch, internal);
             return true;
         }
-        KeepKey(nIndex);
+        KeepDestination(nIndex);
         result = keypool.vchPubKey;
     }
     return true;
