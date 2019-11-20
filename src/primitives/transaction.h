@@ -276,14 +276,14 @@ inline void SerializeTransaction(const TxType& tx, Stream& s) {
 /** The basic transaction that is broadcasted on the network and contained in
  * blocks.  A transaction can contain multiple inputs and outputs.
  */
-class CTransaction
+class PureTransaction
 {
 public:
     // Default transaction version.
     static const int32_t CURRENT_VERSION=2;
 
     // The local variables are made const to prevent unintended modification
-    // without updating the cached hash value. However, CTransaction is not
+    // without updating the cached hash value. However, PureTransaction is not
     // actually immutable; deserialization and assignment are implemented,
     // and bypass the constness. This is safe, as they update the entire
     // structure, including the hash.
@@ -292,6 +292,32 @@ public:
     const int32_t nVersion;
     const uint32_t nLockTime;
 
+    explicit PureTransaction(const CMutableTransaction& tx);
+    explicit PureTransaction(CMutableTransaction&& tx);
+
+    template <typename Stream>
+    inline void Serialize(Stream& s) const {
+        SerializeTransaction(*this, s);
+    }
+
+    /** This deserializing constructor is provided instead of an Unserialize method.
+     *  Unserialize is not possible, since it would require overwriting const fields. */
+    template <typename Stream>
+    PureTransaction(deserialize_type, Stream& s) 
+    : PureTransaction{CMutableTransaction{deserialize, s}} {}
+
+    bool HasWitness() const
+    {
+        for (size_t i = 0; i < vin.size(); i++) {
+            if (!vin[i].scriptWitness.IsNull()) {
+                return true;
+            }
+        }
+        return false;
+    }
+};
+
+class CTransaction : public PureTransaction{
 private:
     /** Memory only. */
     const uint256 hash;
@@ -303,17 +329,12 @@ private:
 public:
     /** Convert a CMutableTransaction into a CTransaction. */
     explicit CTransaction(const CMutableTransaction& tx);
-    CTransaction(CMutableTransaction&& tx);
-
-    template <typename Stream>
-    inline void Serialize(Stream& s) const {
-        SerializeTransaction(*this, s);
-    }
-
+    explicit CTransaction(CMutableTransaction&& tx);
     /** This deserializing constructor is provided instead of an Unserialize method.
      *  Unserialize is not possible, since it would require overwriting const fields. */
     template <typename Stream>
-    CTransaction(deserialize_type, Stream& s) : CTransaction(CMutableTransaction(deserialize, s)) {}
+    CTransaction(deserialize_type, Stream& s) 
+    : CTransaction{CMutableTransaction{deserialize, s}} {}
 
     bool IsNull() const {
         return vin.empty() && vout.empty();
@@ -348,16 +369,6 @@ public:
     }
 
     std::string ToString() const;
-
-    bool HasWitness() const
-    {
-        for (size_t i = 0; i < vin.size(); i++) {
-            if (!vin[i].scriptWitness.IsNull()) {
-                return true;
-            }
-        }
-        return false;
-    }
 };
 
 /** A mutable version of CTransaction. */
@@ -368,7 +379,7 @@ struct CMutableTransaction
     int32_t nVersion;
     uint32_t nLockTime;
 
-    CMutableTransaction();
+    explicit CMutableTransaction();
     explicit CMutableTransaction(const CTransaction& tx);
 
     template <typename Stream>
@@ -383,12 +394,16 @@ struct CMutableTransaction
     }
 
     template <typename Stream>
-    CMutableTransaction(deserialize_type, Stream& s) {
+    CMutableTransaction(deserialize_type, Stream& s)
+    {
         Unserialize(s);
     }
 
-    /** Compute the hash of this CMutableTransaction. This is computed on the
+    /** Compute the hash of this transaction. This is computed on the
      * fly, as opposed to GetHash() in CTransaction, which uses a cached result.
+     *
+     * The template parameter WithHash denotes whether a member function to
+     * calculate the hash is compiled.
      */
     uint256 GetHash() const;
 
@@ -403,7 +418,12 @@ struct CMutableTransaction
     }
 };
 
-typedef std::shared_ptr<const CTransaction> CTransactionRef;
+// Shared poiners to a transaction or the Block type are not defined for CMutableTransaction. They are only defined for
+// PureTransaction or CTransaction, so that the transaction hash is either not available or cached.
+using PureTransactionRef = std::shared_ptr<const PureTransaction>;
+using CTransactionRef = std::shared_ptr<const CTransaction>;
+
+template <typename Tx> static inline PureTransactionRef MakePureTransactionRef(Tx&& txIn) { return std::make_shared<const PureTransaction>(std::forward<Tx>(txIn)); }
 template <typename Tx> static inline CTransactionRef MakeTransactionRef(Tx&& txIn) { return std::make_shared<const CTransaction>(std::forward<Tx>(txIn)); }
 
 /** A generic txid reference (txid or wtxid). */

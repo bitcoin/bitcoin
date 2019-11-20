@@ -5,7 +5,8 @@
 #ifndef BITCOIN_KERNEL_CHAIN_H
 #define BITCOIN_KERNEL_CHAIN_H
 
-class CBlock;
+#include <primitives/types.h>
+
 class CBlockIndex;
 namespace interfaces {
 struct BlockInfo;

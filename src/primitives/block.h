@@ -59,27 +59,28 @@ public:
 };
 
 
-class CBlock : public CBlockHeader
+template <typename TxRef>
+class Block : public CBlockHeader
 {
 public:
     // network and disk
-    std::vector<CTransactionRef> vtx;
+    std::vector<TxRef> vtx;
 
     // memory only
     mutable bool fChecked;
 
-    CBlock()
+    Block()
     {
         SetNull();
     }
 
-    CBlock(const CBlockHeader &header)
+    Block(const CBlockHeader& header)
     {
         SetNull();
         *(static_cast<CBlockHeader*>(this)) = header;
     }
 
-    SERIALIZE_METHODS(CBlock, obj)
+    SERIALIZE_METHODS(Block, obj)
     {
         READWRITEAS(CBlockHeader, obj);
         READWRITE(obj.vtx);
@@ -106,6 +107,9 @@ public:
 
     std::string ToString() const;
 };
+
+using PureBlock = Block<PureTransactionRef>;
+using CBlock = Block<CTransactionRef>;
 
 /** Describes a place in the block chain to another node such that if the
  * other node doesn't have the same branch, it can find a recent common trunk.

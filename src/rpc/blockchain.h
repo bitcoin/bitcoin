@@ -11,6 +11,7 @@
 #include <streams.h>
 #include <sync.h>
 #include <validation.h>
+#include <primitives/types.h>
 
 #include <any>
 #include <stdint.h>
@@ -18,7 +19,6 @@
 
 extern RecursiveMutex cs_main;
 
-class CBlock;
 class CBlockIndex;
 class CChainState;
 class UniValue;

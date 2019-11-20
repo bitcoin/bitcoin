@@ -9,8 +9,8 @@
 #include <interfaces/chain.h>
 #include <threadinterrupt.h>
 #include <validationinterface.h>
+#include <primitives/types.h>
 
-class CBlock;
 class CBlockIndex;
 class CChainState;
 namespace interfaces {

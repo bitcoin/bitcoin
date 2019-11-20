@@ -13,6 +13,7 @@ uint256 CBlockHeader::GetHash() const
     return SerializeHash(*this);
 }
 
+template<>
 std::string CBlock::ToString() const
 {
     std::stringstream s;

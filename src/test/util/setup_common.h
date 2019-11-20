@@ -12,6 +12,7 @@
 #include <node/caches.h>
 #include <node/context.h>
 #include <pubkey.h>
+#include <primitives/types.h>
 #include <random.h>
 #include <stdexcept>
 #include <txmempool.h>
@@ -116,7 +117,6 @@ struct RegTestingSetup : public TestingSetup {
         : TestingSetup{CBaseChainParams::REGTEST} {}
 };
 
-class CBlock;
 struct CMutableTransaction;
 class CScript;
 

@@ -709,7 +709,8 @@ bool BlockManager::WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValid
     return true;
 }
 
-bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::Params& consensusParams)
+template <typename Block>
+bool ReadBlockFromDisk(Block& block, const FlatFilePos& pos, const Consensus::Params& consensusParams)
 {
     block.SetNull();
 
@@ -738,8 +739,11 @@ bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::P
 
     return true;
 }
+template bool ReadBlockFromDisk<PureBlock>(PureBlock& block, const FlatFilePos& pos, const Consensus::Params& consensusParams);
+template bool ReadBlockFromDisk<CBlock>(CBlock& block, const FlatFilePos& pos, const Consensus::Params& consensusParams);
 
-bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams)
+template <typename Block>
+bool ReadBlockFromDisk(Block& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams)
 {
     const FlatFilePos block_pos{WITH_LOCK(cs_main, return pindex->GetBlockPos())};
 
@@ -752,6 +756,8 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus
     }
     return true;
 }
+template bool ReadBlockFromDisk<PureBlock>(PureBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams);
+template bool ReadBlockFromDisk<CBlock>(CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams);
 
 bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const FlatFilePos& pos, const CMessageHeader::MessageStartChars& message_start)
 {

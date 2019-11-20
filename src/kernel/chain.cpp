@@ -6,8 +6,7 @@
 #include <interfaces/chain.h>
 #include <sync.h>
 #include <uint256.h>
-
-class CBlock;
+#include <primitives/types.h>
 
 namespace kernel {
 interfaces::BlockInfo MakeBlockInfo(const CBlockIndex* index, const CBlock* data)

@@ -7,6 +7,7 @@
 
 #include <primitives/transaction.h> // For CTransactionRef
 #include <util/settings.h>          // For util::SettingsValue
+#include <primitives/types.h>
 
 #include <functional>
 #include <memory>
@@ -17,7 +18,6 @@
 #include <vector>
 
 class ArgsManager;
-class CBlock;
 class CBlockUndo;
 class CFeeRate;
 class CRPCCommand;
