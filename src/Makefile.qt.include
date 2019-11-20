@@ -284,19 +284,24 @@ RES_ICONS = \
   qt/res/icons/hd_disabled.png \
   qt/res/icons/hd_enabled.png \
   qt/res/icons/history.png \
+  qt/res/icons/history_active.png \
   qt/res/icons/info.png \
   qt/res/icons/key.png \
   qt/res/icons/lock_closed.png \
   qt/res/icons/lock_open.png \
   qt/res/icons/masternodes.png \
+  qt/res/icons/masternodes_active.png \
   qt/res/icons/network_disabled.png \
   qt/res/icons/open.png \
   qt/res/icons/overview.png \
+  qt/res/icons/overview_active.png \
   qt/res/icons/proxy.png \
   qt/res/icons/quit.png \
   qt/res/icons/receive.png \
+  qt/res/icons/receive_active.png \
   qt/res/icons/remove.png \
   qt/res/icons/send.png \
+  qt/res/icons/send_active.png \
   qt/res/icons/staking_active.png \
   qt/res/icons/staking_inactive.png \
   qt/res/icons/synced.png \

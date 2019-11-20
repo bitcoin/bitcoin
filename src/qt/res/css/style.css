@@ -78,6 +78,11 @@ QToolBar>QToolButton {
     color: #fff;
 }
 
+QToolBar>QToolButton:hover {
+    background-color: #fff;
+    color: #333;
+}
+
 QToolBar>QToolButton:checked {
     background-color: #fff;
     color: #333;

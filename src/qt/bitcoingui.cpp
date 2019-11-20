@@ -249,14 +249,32 @@ void BitcoinGUI::createActions()
 {
     QActionGroup *tabGroup = new QActionGroup(this);
 
-    overviewAction = new QAction(platformStyle->SingleColorIcon(":/icons/overview"), tr("&Overview"), this);
+    QPixmap overviewIconInactive(":/icons/overview");
+    QPixmap overviewIconActive(":icons/overview_active");
+    QIcon overviewIcon(overviewIconInactive);
+
+    overviewIcon.addPixmap(overviewIconActive,QIcon::Selected,QIcon::On);
+    overviewIcon.addPixmap(overviewIconActive,QIcon::Selected,QIcon::Off);
+    overviewIcon.addPixmap(overviewIconActive,QIcon::Active,QIcon::On);
+    overviewIcon.addPixmap(overviewIconActive,QIcon::Active,QIcon::Off);
+
+    overviewAction = new QAction(overviewIcon, tr("&Overview"), this);
     overviewAction->setStatusTip(tr("Show general overview of wallet"));
     overviewAction->setToolTip(overviewAction->statusTip());
     overviewAction->setCheckable(true);
     overviewAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_1));
     tabGroup->addAction(overviewAction);
 
-    sendCoinsAction = new QAction(platformStyle->SingleColorIcon(":/icons/send"), tr("&Send"), this);
+    QPixmap sendIconInactive(":/icons/send");
+    QPixmap sendIconActive(":icons/send_active");
+    QIcon sendIcon(sendIconInactive);
+
+    sendIcon.addPixmap(sendIconActive,QIcon::Selected,QIcon::On);
+    sendIcon.addPixmap(sendIconActive,QIcon::Selected,QIcon::Off);
+    sendIcon.addPixmap(sendIconActive,QIcon::Active,QIcon::On);
+    sendIcon.addPixmap(sendIconActive,QIcon::Active,QIcon::Off);
+
+    sendCoinsAction = new QAction(sendIcon, tr("&Send"), this);
     sendCoinsAction->setStatusTip(tr("Send coins to a BitGreen address"));
     sendCoinsAction->setToolTip(sendCoinsAction->statusTip());
     sendCoinsAction->setCheckable(true);
@@ -267,7 +285,16 @@ void BitcoinGUI::createActions()
     sendCoinsMenuAction->setStatusTip(sendCoinsAction->statusTip());
     sendCoinsMenuAction->setToolTip(sendCoinsMenuAction->statusTip());
 
-    receiveCoinsAction = new QAction(platformStyle->SingleColorIcon(":/icons/receiving_addresses"), tr("&Receive"), this);
+    QPixmap receiveIconInactive(":/icons/receiving_addresses");
+    QPixmap receiveIconActive(":icons/receiving_addresses_active");
+    QIcon receiveIcon(receiveIconInactive);
+
+    receiveIcon.addPixmap(receiveIconActive,QIcon::Selected,QIcon::On);
+    receiveIcon.addPixmap(receiveIconActive,QIcon::Selected,QIcon::Off);
+    receiveIcon.addPixmap(receiveIconActive,QIcon::Active,QIcon::On);
+    receiveIcon.addPixmap(receiveIconActive,QIcon::Active,QIcon::Off);
+
+    receiveCoinsAction = new QAction(receiveIcon, tr("&Receive"), this);
     receiveCoinsAction->setStatusTip(tr("Request payments (generates QR codes and bitgreen: URIs)"));
     receiveCoinsAction->setToolTip(receiveCoinsAction->statusTip());
     receiveCoinsAction->setCheckable(true);
@@ -278,14 +305,32 @@ void BitcoinGUI::createActions()
     receiveCoinsMenuAction->setStatusTip(receiveCoinsAction->statusTip());
     receiveCoinsMenuAction->setToolTip(receiveCoinsMenuAction->statusTip());
 
-    historyAction = new QAction(platformStyle->SingleColorIcon(":/icons/history"), tr("&Transactions"), this);
+    QPixmap historyIconInactive(":/icons/history");
+    QPixmap historyIconActive(":icons/history_active");
+    QIcon historyIcon(historyIconInactive);
+
+    historyIcon.addPixmap(historyIconActive,QIcon::Selected,QIcon::On);
+    historyIcon.addPixmap(historyIconActive,QIcon::Selected,QIcon::Off);
+    historyIcon.addPixmap(historyIconActive,QIcon::Active,QIcon::On);
+    historyIcon.addPixmap(historyIconActive,QIcon::Active,QIcon::Off);
+
+    historyAction = new QAction(historyIcon, tr("&Transactions"), this);
     historyAction->setStatusTip(tr("Browse transaction history"));
     historyAction->setToolTip(historyAction->statusTip());
     historyAction->setCheckable(true);
     historyAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_4));
     tabGroup->addAction(historyAction);
 
-    masternodeAction = new QAction(platformStyle->SingleColorIcon(":/icons/masternodes"), tr("&Masternodes"), this);
+    QPixmap masternodesIconInactive(":/icons/masternodes");
+    QPixmap masternodesIconActive(":icons/masternodes_active");
+    QIcon masternodesIcon(masternodesIconInactive);
+
+    masternodesIcon.addPixmap(masternodesIconActive,QIcon::Selected,QIcon::On);
+    masternodesIcon.addPixmap(masternodesIconActive,QIcon::Selected,QIcon::Off);
+    masternodesIcon.addPixmap(masternodesIconActive,QIcon::Active,QIcon::On);
+    masternodesIcon.addPixmap(masternodesIconActive,QIcon::Active,QIcon::Off);
+
+    masternodeAction = new QAction(masternodesIcon, tr("&Masternodes"), this);
     masternodeAction->setStatusTip(tr("Browse masternodes"));
     masternodeAction->setToolTip(masternodeAction->statusTip());
     masternodeAction->setCheckable(true);
