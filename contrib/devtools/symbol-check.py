@@ -16,25 +16,30 @@ import re
 import sys
 import os
 
-# Debian 6.0.9 (Squeeze) has:
+# Debian 8 (Jessie) has:
 #
-# - g++ version 4.4.5 (https://packages.debian.org/search?suite=default&section=all&arch=any&searchon=names&keywords=g%2B%2B)
-# - libc version 2.11.3 (https://packages.debian.org/search?suite=default&section=all&arch=any&searchon=names&keywords=libc6)
+# - g++ version 4.9.2 (https://packages.debian.org/search?suite=jessie&arch=any&searchon=names&keywords=g%2B%2B)
+# - libc version 2.19 (https://packages.debian.org/search?suite=jessie&arch=any&searchon=names&keywords=libc6)
 #
-# Ubuntu 10.04.4 (Lucid Lynx) has:
+# Debian 9 (Stretch) has:
 #
-# - g++ version 4.4.3 (http://packages.ubuntu.com/search?keywords=g%2B%2B&searchon=names&suite=lucid&section=all)
-# - libc version 2.11.1 (http://packages.ubuntu.com/search?keywords=libc6&searchon=names&suite=lucid&section=all)
+# - g++ version 6.3.0 (https://packages.debian.org/search?suite=stretch&arch=any&searchon=names&keywords=g%2B%2B)
+# - libc version 2.24 (https://packages.debian.org/search?suite=stretch&arch=any&searchon=names&keywords=libc6)
+#
+# Ubuntu 16.04 (Xenial) has:
+#
+# - g++ version 5.3.1 (https://packages.ubuntu.com/search?keywords=g%2B%2B&searchon=names&suite=xenial&section=all)
+# - libc version 2.23.0 (https://packages.ubuntu.com/search?keywords=libc6&searchon=names&suite=xenial&section=all)
 #
 # Taking the minimum of these as our target.
 #
 # According to GNU ABI document (http://gcc.gnu.org/onlinedocs/libstdc++/manual/abi.html) this corresponds to:
-#   GCC 4.4.0: GCC_4.4.0
-#   (glibc)    GLIBC_2_11
+#   GCC 4.9.2: GCC_4.8.0
+#   (glibc)    GLIBC_2_19
 #
 MAX_VERSIONS = {
-'GCC':       (4,4,0),
-'GLIBC':     (2,11),
+'GCC':       (4,8,0),
+'GLIBC':     (2,19),
 'LIBATOMIC': (1,0)
 }
 # See here for a description of _IO_stdin_used:
