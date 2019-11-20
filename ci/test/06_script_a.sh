@@ -19,7 +19,9 @@ else
 fi
 END_FOLD
 
+# Create folder on host and docker, so that `cd` works
 mkdir -p build
+DOCKER_EXEC mkdir -p build
 
 # Temporarily disable errexit, because Travis macOS fails without error message
 set +o errexit
@@ -27,10 +29,12 @@ cd build || (echo "could not enter build directory"; exit 1)
 set -o errexit
 
 BEGIN_FOLD configure
-DOCKER_EXEC ../configure --cache-file=config.cache $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( cat config.log && false)
+DOCKER_EXEC ../configure --cache-file=config.cache $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( (DOCKER_EXEC cat config.log) && false)
 END_FOLD
 
 BEGIN_FOLD distdir
+# Create folder on host and docker, so that `cd` works
+mkdir -p "bitcoin-$HOST"
 DOCKER_EXEC make distdir VERSION=$HOST
 END_FOLD
 
@@ -39,7 +43,7 @@ cd "bitcoin-$HOST" || (echo "could not enter distdir bitcoin-$HOST"; exit 1)
 set -o errexit
 
 BEGIN_FOLD configure
-DOCKER_EXEC ./configure --cache-file=../config.cache $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( cat config.log && false)
+DOCKER_EXEC ./configure --cache-file=../config.cache $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( (DOCKER_EXEC cat config.log) && false)
 END_FOLD
 
 set -o errtrace

@@ -33,12 +33,6 @@ fi
 mkdir -p "${BASE_SCRATCH_DIR}"
 mkdir -p "${CCACHE_DIR}"
 
-if [ ! -d ${DIR_QA_ASSETS} ]; then
-  git clone https://github.com/bitcoin-core/qa-assets ${DIR_QA_ASSETS}
-fi
-export DIR_FUZZ_IN=${DIR_QA_ASSETS}/fuzz_seed_corpus/
-
-mkdir -p "${BASE_BUILD_DIR}/sanitizer-output/"
 export ASAN_OPTIONS="detect_stack_use_after_return=1"
 export LSAN_OPTIONS="suppressions=${BASE_BUILD_DIR}/test/sanitizer_suppressions/lsan"
 export TSAN_OPTIONS="suppressions=${BASE_BUILD_DIR}/test/sanitizer_suppressions/tsan:log_path=${BASE_BUILD_DIR}/sanitizer-output/tsan"
@@ -54,7 +48,13 @@ if [ -z "$RUN_CI_ON_HOST" ]; then
   echo "Creating $DOCKER_NAME_TAG container to run in"
   ${CI_RETRY_EXE} docker pull "$DOCKER_NAME_TAG"
 
-  DOCKER_ID=$(docker run $DOCKER_ADMIN -idt --mount type=bind,src=$BASE_BUILD_DIR,dst=$BASE_BUILD_DIR --mount type=bind,src=$CCACHE_DIR,dst=$CCACHE_DIR -w $BASE_BUILD_DIR --env-file /tmp/env $DOCKER_NAME_TAG)
+  DOCKER_ID=$(docker run $DOCKER_ADMIN -idt \
+                  --mount type=bind,src=$BASE_BUILD_DIR,dst=/ro_base,readonly \
+                  --mount type=bind,src=$CCACHE_DIR,dst=$CCACHE_DIR \
+                  --mount type=bind,src=$BASE_BUILD_DIR/depends,dst=$BASE_BUILD_DIR/depends \
+                  -w $BASE_BUILD_DIR \
+                  --env-file /tmp/env \
+                  $DOCKER_NAME_TAG)
 
   DOCKER_EXEC () {
     docker exec $DOCKER_ID bash -c "export PATH=$BASE_SCRATCH_DIR/bins/:\$PATH && cd $PWD && $*"
@@ -81,6 +81,18 @@ fi
 if [ "$TRAVIS_OS_NAME" != "osx" ]; then
   ${CI_RETRY_EXE} DOCKER_EXEC apt-get update
   ${CI_RETRY_EXE} DOCKER_EXEC apt-get install --no-install-recommends --no-upgrade -y $PACKAGES $DOCKER_PACKAGES
+fi
+
+if [ ! -d ${DIR_QA_ASSETS} ]; then
+  DOCKER_EXEC git clone https://github.com/bitcoin-core/qa-assets ${DIR_QA_ASSETS}
+fi
+export DIR_FUZZ_IN=${DIR_QA_ASSETS}/fuzz_seed_corpus/
+
+DOCKER_EXEC mkdir -p "${BASE_BUILD_DIR}/sanitizer-output/"
+
+if [ -z "$RUN_CI_ON_HOST" ]; then
+  echo "Create $BASE_BUILD_DIR"
+  DOCKER_EXEC rsync -a /ro_base/ $BASE_BUILD_DIR
 fi
 
 if [ "$USE_BUSY_BOX" = "true" ]; then
