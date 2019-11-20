@@ -10,7 +10,7 @@ DOCKER_EXEC echo \> \$HOME/.dashcore  # Make sure default datadir does not exist
 OSX_SDK_BASENAME="Xcode-${XCODE_VERSION}-${XCODE_BUILD_ID}-extracted-SDK-with-libcxx-headers.tar.gz"
 OSX_SDK_PATH="depends/sdk-sources/${OSX_SDK_BASENAME}"
 
-mkdir -p depends/SDKs depends/sdk-sources
+DOCKER_EXEC mkdir -p depends/SDKs depends/sdk-sources
 
 if [ -n "$XCODE_VERSION" ] && [ ! -f "$OSX_SDK_PATH" ]; then
   DOCKER_EXEC curl --location --fail "${SDK_URL}/${OSX_SDK_BASENAME}" -o "$OSX_SDK_PATH"
