@@ -571,10 +571,11 @@ static RPCHelpMan getblockheader()
     };
 }
 
-static CBlock GetBlockChecked(BlockManager& blockman, const CBlockIndex* pblockindex) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+template <typename Block>
+static Block GetBlockChecked(BlockManager& blockman, const CBlockIndex* pblockindex) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
     AssertLockHeld(::cs_main);
-    CBlock block;
+    Block block;
     if (blockman.IsBlockPruned(pblockindex)) {
         throw JSONRPCError(RPC_MISC_ERROR, "Block not available (pruned data)");
     }
@@ -707,8 +708,9 @@ static RPCHelpMan getblock()
             verbosity = request.params[1].getInt<int>();
         }
     }
+    const bool use_pure_block{verbosity <= 0};
 
-    CBlock block;
+    boost::variant<PureBlock, CBlock> block;
     const CBlockIndex* pblockindex;
     const CBlockIndex* tip;
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
@@ -721,13 +723,16 @@ static RPCHelpMan getblock()
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
 
-        block = GetBlockChecked(chainman.m_blockman, pblockindex);
+        if (use_pure_block) {
+            block = GetBlockChecked<PureBlock>(chainman.m_blockman, pblockindex);
+        } else {
+            block = GetBlockChecked<CBlock>(chainman.m_blockman, pblockindex);
+        }
     }
 
-    if (verbosity <= 0)
-    {
+    if (use_pure_block) {
         CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
-        ssBlock << block;
+        ssBlock << boost::get<PureBlock>(block);
         std::string strHex = HexStr(ssBlock);
         return strHex;
     }
@@ -741,7 +746,7 @@ static RPCHelpMan getblock()
         tx_verbosity = TxVerbosity::SHOW_DETAILS_AND_PREVOUT;
     }
 
-    return blockToJSON(chainman.m_blockman, block, tip, pblockindex, tx_verbosity);
+    return blockToJSON(chainman.m_blockman, boost::get<CBlock>(block), tip, pblockindex, tx_verbosity);
 },
     };
 }
@@ -1794,7 +1799,7 @@ static RPCHelpMan getblockstats()
         }
     }
 
-    const CBlock& block = GetBlockChecked(chainman.m_blockman, &pindex);
+    const CBlock& block = GetBlockChecked<CBlock>(chainman.m_blockman, &pindex);
     const CBlockUndo& blockUndo = GetUndoChecked(chainman.m_blockman, &pindex);
 
     const bool do_all = stats.size() == 0; // Calculate everything if nothing selected (default)
