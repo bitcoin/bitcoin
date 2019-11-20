@@ -1,19 +1,12 @@
 package=libevent
-$(package)_version=2.1.8-stable
+$(package)_version=2.1.11-stable
 $(package)_download_path=https://github.com/libevent/libevent/archive/
 $(package)_file_name=release-$($(package)_version).tar.gz
-$(package)_sha256_hash=316ddb401745ac5d222d7c529ef1eada12f58f6376a66c1118eee803cb70f83d
-$(package)_patches=fix_android_arc4random_addrandom.patch
+$(package)_sha256_hash=229393ab2bf0dc94694f21836846b424f3532585bac3468738b7bf752c03901e
 
-ifneq (,$(findstring android,$(host)))
-  define $(package)_preprocess_cmds
-    ./autogen.sh && patch -p1 < $($(package)_patch_dir)/fix_android_arc4random_addrandom.patch
-  endef
-else
-  define $(package)_preprocess_cmds
-    ./autogen.sh
-  endef
-endif
+define $(package)_preprocess_cmds
+  ./autogen.sh
+endef
 
 define $(package)_set_vars
   $(package)_config_opts=--disable-shared --disable-openssl --disable-libevent-regress --disable-samples
