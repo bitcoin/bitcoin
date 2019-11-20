@@ -3380,10 +3380,12 @@ static UniValue bumpfee(const JSONRPCRequest& request)
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VOBJ});
     uint256 hash(ParseHashV(request.params[0], "txid"));
 
+    CCoinControl coin_control;
+    coin_control.fAllowWatchOnly = pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
     // optional parameters
     CAmount totalFee = 0;
-    CCoinControl coin_control;
     coin_control.m_signal_bip125_rbf = true;
+
     if (!request.params[1].isNull()) {
         UniValue options = request.params[1];
         RPCTypeCheckObj(options,
