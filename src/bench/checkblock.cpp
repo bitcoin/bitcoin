@@ -15,6 +15,20 @@
 // a block off the wire, but before we can relay the block on to peers using
 // compact block relay.
 
+static void DeserializePureBlockTest(benchmark::Bench& state)
+{
+    CDataStream stream(benchmark::data::block413567, SER_NETWORK, PROTOCOL_VERSION);
+    char a = '\0';
+    stream.write(&a, 1); // Prevent compaction
+
+    while (state.KeepRunning()) {
+        PureBlock block;
+        stream >> block;
+        bool rewound = stream.Rewind(benchmark::data::block413567.size());
+        assert(rewound);
+    }
+}
+
 static void DeserializeBlockTest(benchmark::Bench& bench)
 {
     CDataStream stream(benchmark::data::block413567, SER_NETWORK, PROTOCOL_VERSION);
@@ -50,5 +64,6 @@ static void DeserializeAndCheckBlockTest(benchmark::Bench& bench)
     });
 }
 
+BENCHMARK(DeserializePureBlockTest);
 BENCHMARK(DeserializeBlockTest);
 BENCHMARK(DeserializeAndCheckBlockTest);
