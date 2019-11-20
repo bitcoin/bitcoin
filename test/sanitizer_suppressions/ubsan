@@ -1,7 +1,5 @@
 # -fsanitize=undefined suppressions
 # =================================
-alignment:move.h
-alignment:prevector.h
 float-divide-by-zero:policy/fees.cpp
 float-divide-by-zero:validation.cpp
 float-divide-by-zero:wallet/wallet.cpp
