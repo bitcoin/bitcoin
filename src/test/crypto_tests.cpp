@@ -186,14 +186,15 @@ static void TestHKDF_SHA256_32(const std::string &ikm_hex, const std::string &sa
     BOOST_CHECK(HexStr(out, out + 32) == okm_check_hex);
 }
 
-static std::string LongTestString() {
+static std::string LongTestString()
+{
     std::string ret;
-    for (int i=0; i<200000; i++) {
-        ret += (unsigned char)(i);
-        ret += (unsigned char)(i >> 4);
-        ret += (unsigned char)(i >> 8);
-        ret += (unsigned char)(i >> 12);
-        ret += (unsigned char)(i >> 16);
+    for (int i = 0; i < 200000; i++) {
+        ret += (char)(i);
+        ret += (char)(i >> 4);
+        ret += (char)(i >> 8);
+        ret += (char)(i >> 12);
+        ret += (char)(i >> 16);
     }
     return ret;
 }
