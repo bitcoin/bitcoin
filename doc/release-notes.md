@@ -81,8 +81,9 @@ Updated settings
 Updated RPCs
 ------------
 
-Note: some low-level RPC changes mainly useful for testing are described in the
-Low-level Changes section below.
+Please refer to the help of the relevant RPC for more details on an update
+below. Some low-level RPC changes mainly useful for testing are described
+in the "Low-level changes" section further down.
 
 GUI changes
 -----------
