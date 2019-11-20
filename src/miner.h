@@ -167,6 +167,9 @@ public:
     static Optional<int64_t> m_last_block_num_txs;
     static Optional<int64_t> m_last_block_weight;
 
+    /** Wrapper to addPackageTxs that returns the minimum fee rate of a package
+      * included in the block. Used for rebroadcast cache. */
+    CFeeRate minTxFeeRate();
 private:
     // utility functions
     /** Clear the block's state and prepare for assembling a new block */
@@ -177,9 +180,10 @@ private:
     // Methods for how to add transactions to a block.
     /** Add transactions based on feerate including unconfirmed ancestors
       * Increments nPackagesSelected / nDescendantsUpdated with corresponding
-      * statistics from the package selection (for logging statistics). */
-    void addPackageTxs(int& nPackagesSelected, int& nDescendantsUpdated) EXCLUSIVE_LOCKS_REQUIRED(m_mempool.cs);
-
+      * statistics from the package selection (for logging statistics).
+      * Populates minPackageFeeRate with the minimum fee rate of a package
+      * included in the block (used for rebroadcast cache). */
+    void addPackageTxs(int& nPackagesSelected, int& nDescendantsUpdated, CFeeRate &minPackageFeeRate) EXCLUSIVE_LOCKS_REQUIRED(m_mempool.cs);
     // helper functions for addPackageTxs()
     /** Remove confirmed (inBlock) entries from given set */
     void onlyUnconfirmed(CTxMemPool::setEntries& testSet);

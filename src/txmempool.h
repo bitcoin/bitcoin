@@ -43,6 +43,9 @@ static const std::chrono::seconds REBROADCAST_MIN_TX_AGE = std::chrono::seconds{
 // such as miners mining priority txns
 static const unsigned int MAX_REBROADCAST_WEIGHT = 0.75 * MAX_BLOCK_WEIGHT;
 
+// Frequency of updating the cache value applied as a filter on rebroadcast set.
+const std::chrono::microseconds REBROADCAST_FEE_RATE_CACHE_INTERVAL = std::chrono::minutes{20};
+
 struct LockPoints
 {
     // Will be set to the blockchain height and median time past
@@ -540,8 +543,11 @@ public:
     const setEntries & GetMemPoolChildren(txiter entry) const EXCLUSIVE_LOCKS_REQUIRED(cs);
     uint64_t CalculateDescendantMaximum(txiter entry) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    // track wallet transactions to ensure they are successfully broadcast
-    std::set<uint256> m_unbroadcast_txids;
+    // rebroadcast
+    std::set<uint256> m_unbroadcast_txids;             //!< track wallet transactions to ensure they are successfully broadcast
+    std::chrono::microseconds m_next_min_fee_cache{0}; //!< timer for updating fee rate cache
+    CBlockIndex* m_tip_at_cache_time;                  //!< block height at time of cache
+    CFeeRate m_cached_fee_rate;                        //!< min package fee rate for block inclusion
 
 private:
     typedef std::map<txiter, setEntries, CompareIteratorByHash> cacheMap;
@@ -628,9 +634,15 @@ public:
     void RemoveStaged(setEntries& stage, bool updateDescendants, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Use CreateNewBlock with specific rebroadcast parameters to identify a set
-     * of transaction candidates & populate them in rebroadcastTxs.
+     * of rebroadcast candidates, filter them by comparing their fee rates with
+     * the cached fee rate & populate rebroadcastTxs with remaining.
      */
     void GetRebroadcastTransactions(std::vector<uint256>& rebroadcastTxs);
+
+    /** Assemble a block from the local mempool and update a cache with the
+     *  minimum fee rate for a package to be included.
+     */
+    void CacheMinRebroadcastFee();
 
     /** When adding transactions from a disconnected block back to the mempool,
      *  new mempool entries may have children in the mempool (which is generally

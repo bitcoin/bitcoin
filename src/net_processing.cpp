@@ -3804,7 +3804,15 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                     bool fFirst = (pto->m_next_rebroadcast.count() == 0);
                     pto->m_next_rebroadcast = PoissonNextSend(current_time, TX_REBROADCAST_INTERVAL);
 
-                    if (!fFirst) {
+                    // if there hasn't been a block since last cache, don't rebroadcast yet
+                    bool fSkipRun = ::ChainActive().Tip() == mempool.m_tip_at_cache_time && false;
+                    if (fSkipRun) {
+                        LogPrint(BCLog::NET, "Bumping rebroadcast because no new blocks since last cache run\n");
+                        mempool.m_next_min_fee_cache += REBROADCAST_FEE_RATE_CACHE_INTERVAL;
+                        pto->m_next_rebroadcast = current_time + std::chrono::minutes{10};
+                    }
+
+                    if (!fFirst && !fSkipRun) {
                         std::vector<uint256> rebroadcastTxs;
                         mempool.GetRebroadcastTransactions(rebroadcastTxs);
 
@@ -3820,6 +3828,12 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                         // since set elements are unique, this will be a no-op if the txns are already in setInventoryTxToSend
                         pto->m_tx_relay->setInventoryTxToSend.insert(mempool.m_unbroadcast_txids.begin(), mempool.m_unbroadcast_txids.end());
                     }
+                }
+
+                // cache the min fee rate for a txn to be included in a block
+                // applied as rebroadcast filter above
+                if (mempool.m_next_min_fee_cache < current_time){
+                    mempool.CacheMinRebroadcastFee();
                 }
 
                 // Time to send but the peer has requested we not relay transactions.

@@ -116,10 +116,35 @@ void CTxMemPool::GetRebroadcastTransactions(std::vector<uint256>& rebroadcastTxs
     std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler(mempool, Params(), options).CreateNewBlock(dummy_script);
 
     LOCK(cs);
+    int count = 0;
     for (const CTransactionRef& tx : pblocktemplate->block.vtx) {
-        // add to rebroadcast set
-        rebroadcastTxs.push_back(tx->GetHash());
+        txiter it = mapTx.find(tx->GetHash());
+        if (it == mapTx.end()) { continue; }
+        CFeeRate fee_rate = CFeeRate(it->GetModifiedFee(), GetTransactionWeight(*tx));
+
+        // compare txn fee rate to cached value
+        if (fee_rate > m_cached_fee_rate) {
+            // add to rebroadcast set
+            rebroadcastTxs.push_back(tx->GetHash());
+            count += 1;
+        }
     }
+
+    LogPrint(BCLog::MEMPOOL, "%d transactions queued for rebroadcast, from %s candidates filtered with cached fee rate of %s. \n", count, pblocktemplate->block.vtx.size(), m_cached_fee_rate.ToString());
+}
+
+void CTxMemPool::CacheMinRebroadcastFee()
+{
+    // update time of next run
+    mempool.m_next_min_fee_cache = REBROADCAST_FEE_RATE_CACHE_INTERVAL + GetTime<std::chrono::microseconds>();
+
+    // update stamp of chain tip on cache run
+    m_tip_at_cache_time = ::ChainActive().Tip();
+
+    // update cache
+    m_cached_fee_rate = BlockAssembler(mempool, Params()).minTxFeeRate();
+
+    LogPrint(BCLog::MEMPOOL, "Rebroadcast cached_fee_rate has been updated to=%s \n", m_cached_fee_rate.ToString());
 }
 
 // vHashesToUpdate is the set of transaction hashes from a disconnected block
