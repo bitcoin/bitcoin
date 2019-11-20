@@ -321,29 +321,29 @@ syscoin.org (see below for syscoin.org update instructions).
 
   - syscoincore.org blog post
 
-  - bitcoincore.org maintained versions update:
-    [table](https://github.com/bitcoin-core/bitcoincore.org/commits/master/_includes/posts/maintenance-table.md)
+  - syscoincore.org maintained versions update:
+    [table](https://github.com/syscoin-core/syscoincore.org/commits/master/_includes/posts/maintenance-table.md)
 
-  - bitcoincore.org RPC documentation update
+  - syscoincore.org RPC documentation update
 
   - Update packaging repo
 
-      - Notify BlueMatt so that he can start building [the PPAs](https://launchpad.net/~syscoin/+archive/ubuntu/syscoin)
+      - Notify sidhujag so that he can start building [the PPAs](https://launchpad.net/~syscoin/+archive/ubuntu/syscoin)
 
-      - Create a new branch for the major release "0.xx" (used to build the snap package)
+      - Create a new branch for the major release "4.xx" (used to build the snap package)
 
-      - Notify MarcoFalke so that he can start building the snap package
+      - Notify sidhujag so that he can start building the snap package
 
         - https://code.launchpad.net/~syscoin-core/syscoin-core-snap/+git/packaging (Click "Import Now" to fetch the branch)
-        - https://code.launchpad.net/~syscoin-core/syscoin-core-snap/+git/packaging/+ref/0.xx (Click "Create snap package")
-        - Name it "syscoin-core-snap-0.xx"
+        - https://code.launchpad.net/~syscoin-core/syscoin-core-snap/+git/packaging/+ref/4.xx (Click "Create snap package")
+        - Name it "syscoin-core-snap-4.xx"
         - Leave owner and series as-is
         - Select architectures that are compiled via gitian
         - Leave "automatically build when branch changes" unticked
         - Tick "automatically upload to store"
         - Put "syscoin-core" in the registered store package name field
         - Tick the "edge" box
-        - Put "0.xx" in the track field
+        - Put "4.xx" in the track field
         - Click "create snap package"
         - Click "Request builds" for every new release on this branch (after updating the snapcraft.yml in the branch to reflect the latest gitian results)
         - Promote release on https://snapcraft.io/syscoin-core/releases if it passes sanity checks
