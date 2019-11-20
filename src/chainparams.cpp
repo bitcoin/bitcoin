@@ -140,9 +140,9 @@ public:
         consensus.nAuxpowStartHeight = 1;
         consensus.fStrictChainId = true;
         consensus.nLegacyBlocksBefore = 1;
-        consensus.nSYSXAsset = 101010;
+        consensus.nSYSXAsset = 1045909988;
         consensus.vchSYSXBurnMethodSignature = ParseHex("5f959b69");
-        consensus.vchSYSXERC20Manager = ParseHex("9afFaffFF00b3285E1a3337122Bd2dF2c4c9D62d");
+        consensus.vchSYSXERC20Manager = ParseHex("30929228931464ee18AF52b9f655F8176555b6e7");
         consensus.nBridgeStartBlock = 275000;
         /**
          * The message start string is designed to be unlikely to occur in normal data.
