@@ -14,7 +14,6 @@
 #include <cstddef>
 #include <type_traits>
 
-#pragma pack(push, 1)
 /** Implements a drop-in replacement for std::vector<T> which stores up to N
  *  elements directly (without heap allocation). The types Size and Diff are
  *  used to store element counts, and can be any unsigned + signed type.
@@ -522,6 +521,5 @@ public:
         return item_ptr(0);
     }
 };
-#pragma pack(pop)
 
 #endif // BITCOIN_PREVECTOR_H
