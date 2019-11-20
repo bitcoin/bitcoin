@@ -12,12 +12,13 @@ Developer Notes
     - [Development tips and tricks](#development-tips-and-tricks)
         - [Compiling for debugging](#compiling-for-debugging)
         - [Compiling for gprof profiling](#compiling-for-gprof-profiling)
-        - [debug.log](#debuglog)
+        - [`debug.log`](#debuglog)
         - [Testnet and Regtest modes](#testnet-and-regtest-modes)
         - [DEBUG_LOCKORDER](#debug_lockorder)
         - [Valgrind suppressions file](#valgrind-suppressions-file)
         - [Compiling for test coverage](#compiling-for-test-coverage)
         - [Performance profiling with perf](#performance-profiling-with-perf)
+        - [Sanitizers](#sanitizers)
     - [Locking/mutex usage notes](#lockingmutex-usage-notes)
     - [Threads](#threads)
     - [Ignoring IDE/editor files](#ignoring-ideeditor-files)
@@ -62,7 +63,7 @@ tool to clean up patches automatically before submission.
   - Braces on the same line for everything else.
   - 4 space indentation (no tabs) for every block except namespaces.
   - No indentation for `public`/`protected`/`private` or for `namespace`.
-  - No extra spaces inside parenthesis; don't do ( this ).
+  - No extra spaces inside parenthesis; don't do `( this )`.
   - No space after function names; one space after `if`, `for` and `while`.
   - If an `if` only has a single-statement `then`-clause, it can appear
     on the same line as the `if`, without braces. In every other case,
@@ -76,7 +77,7 @@ code.
     separate words (snake_case).
     - Class member variables have a `m_` prefix.
     - Global variables have a `g_` prefix.
-  - Constant names are all uppercase, and use `_` to separate words.
+  - Compile-time constant names are all uppercase, and use `_` to separate words.
   - Class names, function names, and method names are UpperCamelCase
     (PascalCase). Do not prefix class names with `C`.
   - Test suite naming convention: The Boost test suite in file
@@ -207,15 +208,15 @@ produce better debugging builds.
 
 Run configure with the `--enable-gprof` option, then make.
 
-### debug.log
+### `debug.log`
 
-If the code is behaving strangely, take a look in the debug.log file in the data directory;
+If the code is behaving strangely, take a look in the `debug.log` file in the data directory;
 error and debugging messages are written there.
 
 The `-debug=...` command-line option controls debugging; running with just `-debug` or `-debug=1` will turn
-on all categories (and give you a very large debug.log file).
+on all categories (and give you a very large `debug.log` file).
 
-The Qt code routes `qDebug()` output to debug.log under category "qt": run with `-debug=qt`
+The Qt code routes `qDebug()` output to `debug.log` under category "qt": run with `-debug=qt`
 to see it.
 
 ### Testnet and Regtest modes
@@ -233,7 +234,7 @@ Bitcoin Core is a multi-threaded application, and deadlocks or other
 multi-threading bugs can be very difficult to track down. The `--enable-debug`
 configure option adds `-DDEBUG_LOCKORDER` to the compiler flags. This inserts
 run-time checks to keep track of which locks are held and adds warnings to the
-debug.log file if inconsistencies are detected.
+`debug.log` file if inconsistencies are detected.
 
 ### Valgrind suppressions file
 
@@ -275,8 +276,7 @@ the functional test framework. Perf can observe a running process and sample
 (at some frequency) where its execution is.
 
 Perf installation is contingent on which kernel version you're running; see
-[this StackExchange
-thread](https://askubuntu.com/questions/50145/how-to-install-perf-monitoring-tool)
+[this thread](https://askubuntu.com/questions/50145/how-to-install-perf-monitoring-tool)
 for specific instructions.
 
 Certain kernel parameters may need to be set for perf to be able to inspect the
@@ -311,7 +311,7 @@ or using a graphical tool like [Hotspot](https://github.com/KDAB/hotspot).
 See the functional test documentation for how to invoke perf within tests.
 
 
-**Sanitizers**
+### Sanitizers
 
 Bitcoin Core can be compiled with various "sanitizers" enabled, which add
 instrumentation for issues regarding things like memory safety, thread race
@@ -372,7 +372,7 @@ Deadlocks due to inconsistent lock ordering (thread 1 locks `cs_main` and then
 `cs_wallet`, while thread 2 locks them in the opposite order: result, deadlock
 as each waits for the other to release its lock) are a problem. Compile with
 `-DDEBUG_LOCKORDER` (or use `--enable-debug`) to get lock order inconsistencies
-reported in the debug.log file.
+reported in the `debug.log` file.
 
 Re-architecting the core code so there are better-defined interfaces
 between the various components is a goal, with any necessary locking
@@ -386,8 +386,6 @@ Threads
 
 - ThreadImport : Loads blocks from `blk*.dat` files or `-loadblock=<file>`.
 
-- StartNode : Starts other threads.
-
 - ThreadDNSAddressSeed : Loads addresses of peers from the DNS.
 
 - ThreadMapPort : Universal plug-and-play startup/shutdown.
@@ -400,7 +398,7 @@ Threads
 
 - ThreadMessageHandler : Higher-level message handling (sending and receiving).
 
-- DumpAddresses : Dumps IP addresses of nodes to peers.dat.
+- DumpAddresses : Dumps IP addresses of nodes to `peers.dat`.
 
 - ThreadRPCServer : Remote procedure call handler, listens on port 8332 for connections and services them.
 
@@ -465,11 +463,6 @@ Wallet
 -------
 
 - Make sure that no crashes happen with run-time option `-disablewallet`.
-
-  - *Rationale*: In RPC code that conditionally uses the wallet (such as
-    `validateaddress`), it is easy to forget that global pointer `pwalletMain`
-    can be nullptr. See `test/functional/disablewallet.py` for functional tests
-    exercising the API with `-disablewallet`.
 
 - Include `db_cxx.h` (BerkeleyDB header) only when `ENABLE_WALLET` is set.
 
@@ -545,11 +538,10 @@ class A
 }
 ```
 
-- By default, declare single-argument constructors `explicit`.
+- By default, declare constructors `explicit`.
 
-  - *Rationale*: This is a precaution to avoid unintended conversions that might
-    arise when single-argument constructors are used as implicit conversion
-    functions.
+  - *Rationale*: This is a precaution to avoid unintended
+    [conversions](https://en.cppreference.com/w/cpp/language/converting_constructor).
 
 - Use explicitly signed or unsigned `char`s, or even better `uint8_t` and
   `int8_t`. Do not use bare `char` unless it is to pass to a third-party API.
