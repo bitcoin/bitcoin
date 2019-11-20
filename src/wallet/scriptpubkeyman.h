@@ -154,6 +154,10 @@ public:
     virtual void KeepDestination(int64_t index) {}
     virtual void ReturnDestination(int64_t index, bool internal, const CPubKey& pubkey) {}
 
+    /** Fills internal address pool. Use within ScriptPubKeyMan implementations should be used sparingly and only
+      * when something from the address pool is removed, excluding GetNewDestination and GetReservedDestination.
+      * External wallet code is primarily responsible for topping up prior to fetching new addresses
+      */
     virtual bool TopUp(unsigned int size = 0) { return false; }
 
     //! Mark unused addresses as being used
