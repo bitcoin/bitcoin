@@ -47,7 +47,7 @@
         <item row="4" column="2">
          <widget class="QLineEdit" name="reqLabel">
           <property name="toolTip">
-           <string>An optional label to associate with the new receiving address.</string>
+           <string>An optional label to associate with the new receiving address (used by you to identify an invoice).  It is also attached to the payment request.</string>
           </property>
           <property name="placeholderText">
            <string>Enter a label to associate with the new receiving address</string>
