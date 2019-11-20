@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Use the raw transactions API to spend crowns received on particular addresses,
 # and send any change back to that same address.
@@ -10,7 +10,7 @@
 # Assumes it will talk to a crownd or Crown-Qt running
 # on localhost.
 #
-# Depends on jsonrpc
+# Depends on bitcoinrpc
 #
 
 from decimal import *
@@ -21,7 +21,7 @@ import os.path
 import platform
 import sys
 import time
-from jsonrpc import ServiceProxy, json
+from bitcoinrpc.authproxy import AuthServiceProxy, json, JSONRPCException
 
 BASE_FEE=Decimal("0.001")
 
@@ -40,37 +40,21 @@ def determine_db_dir():
         return os.path.join(os.environ['APPDATA'], "Crown")
     return os.path.expanduser("~/.crown")
 
-def read_bitcoin_config(dbdir):
-    """Read the crown.conf file from dbdir, returns dictionary of settings"""
-    from ConfigParser import SafeConfigParser
-
-    class FakeSecHead(object):
-        def __init__(self, fp):
-            self.fp = fp
-            self.sechead = '[all]\n'
-        def readline(self):
-            if self.sechead:
-                try: return self.sechead
-                finally: self.sechead = None
-            else:
-                s = self.fp.readline()
-                if s.find('#') != -1:
-                    s = s[0:s.find('#')].strip() +"\n"
-                return s
-
-    config_parser = SafeConfigParser()
-    config_parser.readfp(FakeSecHead(open(os.path.join(dbdir, "crown.conf"))))
-    return dict(config_parser.items("all"))
+def read_bitcoin_config(dbdir, conffile):
+    """Read the crown config file from dbdir, returns dictionary of settings"""
+    with open(os.path.join(dbdir, conffile)) as stream:
+        config = dict(line.strip().split('=', 1) for line in stream if not line.startswith("#") and not len(line.strip()) == 0)
+    return config
 
 def connect_JSON(config):
     """Connect to a crown JSON-RPC server"""
     testnet = config.get('testnet', '0')
     testnet = (int(testnet) > 0)  # 0/1 in config file, convert to True/False
     if not 'rpcport' in config:
-        config['rpcport'] = 19998 if testnet else 9998
+        config['rpcport'] = 19341 if testnet else 9341
     connect = "http://%s:%s@127.0.0.1:%s"%(config['rpcuser'], config['rpcpassword'], config['rpcport'])
     try:
-        result = ServiceProxy(connect)
+        result = AuthServiceProxy(connect, timeout=600)
         # ServiceProxy is lazy-connect, so send an RPC command mostly to catch connection errors,
         # but also make sure the crownd we're talking to is/isn't testnet:
         if result.getmininginfo()['testnet'] != testnet:
@@ -193,7 +177,7 @@ def compute_amount_out(txinfo):
         result = result + vout['value']
     return result
 
-def sanity_test_fee(crownd, txdata_hex, max_fee):
+def sanity_test_fee(crownd, txdata_hex, max_fee, fee):
     class FeeError(RuntimeError):
         pass
     try:
@@ -229,7 +213,9 @@ def main():
     parser.add_option("--fee", dest="fee", default="0.0",
                       help="fee to include")
     parser.add_option("--datadir", dest="datadir", default=determine_db_dir(),
-                      help="location of crown.conf file with RPC username/password (default: %default)")
+                      help="location of crown config file with RPC username/password (default: %default)")
+    parser.add_option("--config", dest="conffile", default="crown.conf",
+                      help="name of crown config file (default: %default)")
     parser.add_option("--testnet", dest="testnet", default=False, action="store_true",
                       help="Use the test network")
     parser.add_option("--dry_run", dest="dry_run", default=False, action="store_true",
@@ -238,13 +224,13 @@ def main():
     (options, args) = parser.parse_args()
 
     check_json_precision()
-    config = read_bitcoin_config(options.datadir)
+    config = read_bitcoin_config(options.datadir, options.conffile)
     if options.testnet: config['testnet'] = True
     crownd = connect_JSON(config)
 
     if options.amount is None:
         address_summary = list_available(crownd)
-        for address,info in address_summary.iteritems():
+        for address,info in address_summary.items():
             n_transactions = len(info['outputs'])
             if n_transactions > 1:
                 print("%s %.8f %s (%d transactions)"%(address, info['total'], info['account'], n_transactions))
@@ -256,7 +242,7 @@ def main():
         while unlock_wallet(crownd) == False:
             pass # Keep asking for passphrase until they get it right
         txdata = create_tx(crownd, options.fromaddresses.split(","), options.to, amount, fee)
-        sanity_test_fee(crownd, txdata, amount*Decimal("0.01"))
+        sanity_test_fee(crownd, txdata, amount*Decimal("0.01"), fee)
         if options.dry_run:
             print(txdata)
         else:
