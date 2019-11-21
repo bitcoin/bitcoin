@@ -141,12 +141,12 @@ public:
     CMainParams()
     {
         strNetworkID = "main";
-        consensus.nSubsidyHalvingInterval = 210000;
+        consensus.nSubsidyHalvingInterval = 525600;
         consensus.BIP16Exception = uint256();
-        consensus.BIP34Height = 200;
+        consensus.BIP34Height = 1;
         consensus.BIP34Hash = uint256();
-        consensus.BIP65Height = 200;
-        consensus.BIP66Height = 200;
+        consensus.BIP65Height = 1;
+        consensus.BIP66Height = 1;
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~arith_uint256(0) >> 20;
         consensus.nPowTargetTimespan = 1 * 24 * 60 * 60; // 1 day
         consensus.nPowTargetSpacing = 1 * 60;
@@ -154,22 +154,22 @@ public:
         consensus.fPowNoRetargeting = false;
         consensus.nPosTargetSpacing = 2 * 60; // PoS: 2 minutes
         consensus.nPosTargetTimespan = 60 * 40;
-        consensus.nStakeMinAge = 60 * 60; // 1 hour
-        consensus.nStakeMaxAge = 60 * 60 * 24; // 24 hours
+        consensus.nStakeMinAge = 60 * 60 * 12; // 12 hours
+        consensus.nStakeMaxAge = 60 * 60 * 48; // 48 hours
         consensus.nModifierInterval = 60; // Modifier interval: time to elapse before new modifier is computed (60 seconds)
-        consensus.nLastPoWBlock = 100;
+        consensus.nLastPoWBlock = 1500;
         consensus.nRuleChangeActivationThreshold = 1916; // 95% of 2016
         consensus.nMinerConfirmationWindow = 2016;       // nPowTargetTimespan / nPowTargetSpacing
         consensus.nMasternodeMinimumConfirmations = 15;
 
         // Governance
-        consensus.nSuperblockCycle = 24; // ~(60*24*30)/2.6, actual number of blocks per month is 200700 / 12 = 16725
-        consensus.nGovernanceMinQuorum = 1;
-        consensus.nGovernanceFilterElements = 500;
-        consensus.nBudgetPaymentsStartBlock = 501;
-        consensus.nBudgetPaymentsCycleBlocks = 50;
-        consensus.nBudgetPaymentsWindowBlocks = 10;
-        consensus.nSuperblockStartBlock = 600; // NOTE: Should satisfy nSuperblockStartBlock > nBudgetPaymentsStartBlock
+        consensus.nSuperblockCycle = 20571; // ~(60*24*30)/2.1, actual number of blocks per month is 262800 / 12 = 21900
+        consensus.nGovernanceMinQuorum = 10;
+        consensus.nGovernanceFilterElements = 20000;
+        consensus.nBudgetPaymentsStartBlock = 10000;
+        consensus.nBudgetPaymentsCycleBlocks = 20571; // ~(60*24*30)/2.1, actual number of blocks per month is 262800 / 12 = 21900
+        consensus.nBudgetPaymentsWindowBlocks = 100;
+        consensus.nSuperblockStartBlock = 12000; // NOTE: Should satisfy nSuperblockStartBlock > nBudgetPaymentsStartBlock
 
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
@@ -230,14 +230,10 @@ public:
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
 
         // long living quorum params
-        // consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
-        // consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
-        // consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
-        // consensus.llmqChainLocks = Consensus::LLMQ_400_60;
-
-        consensus.llmqs[Consensus::LLMQ_5_60] = llmq5_60;
         consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
-        consensus.llmqChainLocks = Consensus::LLMQ_5_60;
+        consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
+        consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
+        consensus.llmqChainLocks = Consensus::LLMQ_400_60;
         consensus.llmqForInstantSend = Consensus::LLMQ_50_60;
         consensus.nLLMQActivationHeight = 50;
 
