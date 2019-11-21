@@ -76,7 +76,7 @@ namespace Platform
         bool Contains(uint64_t protocolId, int height);
 
         /// Retrieve a specified nf-token proto index by a protocol ID, may be null
-        NftProtoIndex GetNfTokenProtoIndex(uint64_t protocolId);
+        NftProtoIndex GetNftProtoIndex(uint64_t protocolId);
         /// Retrieve a specified nf-token proto index by a transaction ID, may be null
         /// NftProtoIndex GetNfTokenProtoIndex(const uint256 & regTxId);
 
@@ -84,10 +84,9 @@ namespace Platform
         CKeyID OwnerOf(uint64_t protocolId);
 
         using NftProtoIndexRange = boost::any_range<const NftProtoIndex &, boost::bidirectional_traversal_tag>;
-        using NftProtoIndexForwardRange = boost::any_range<const NftProtoIndex &, boost::forward_traversal_tag>;
 
-        void ProcessFullNftProtoIndexRange(std::function<bool(const NftProtoIndex &)> nftIndexHandler) const;
-        void ProcessNftProtoIndexRangeByHeight(std::function<bool(const NftProtoIndex &)> nftIndexHandler,
+        void ProcessFullNftProtoIndexRange(std::function<bool(const NftProtoIndex &)> protoIndexHandler) const;
+        void ProcessNftProtoIndexRangeByHeight(std::function<bool(const NftProtoIndex &)> protoIndexHandler,
                                           int height,
                                           int count,
                                           int startFrom) const;
@@ -102,14 +101,17 @@ namespace Platform
 
     private:
         NftProtocolsManager();
+        void UpdateTotalProtocolsCount(bool increase);
 
-        // NftProtoIndex GetNftProtoIndexFromDb(uint64_t protocolId);
+        NftProtoIndex GetNftProtoIndexFromDb(uint64_t protocolId);
 
     private:
         NftProtosIndexSet m_nftProtoIndexSet;
         int m_tipHeight{-1};
         uint256 m_tipBlockHash;
         mutable CCriticalSection m_cs;
+
+        std::size_t m_totalProtocolsCount{0};
 
         static std::unique_ptr<NftProtocolsManager> s_instance;
     };

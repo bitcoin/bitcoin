@@ -9,6 +9,9 @@
 #include "leveldbwrapper.h"
 #include "sync.h"
 #include "platform/nf-token/nf-token-index.h"
+#include "platform/nf-token/nf-token-protocol-index.h"
+
+class BlockIndex;
 
 namespace Platform
 {
@@ -43,13 +46,17 @@ namespace Platform
         }
 
         static NfTokenIndex NftDiskIndexToNftMemIndex(const NfTokenDiskIndex &nftDiskIndex);
+        static NftProtoIndex NftProtoDiskIndexToNftProtoMemIndex(const NftProtoDiskIndex &protoDiskIndex);
+        static BlockIndex * FindBlockIndex(const uint256 & blockHash);
 
         bool OptimizeRam() const { return m_optSetting == PlatformOpt::OptRam; }
         bool OptimizeSpeed() const { return m_optSetting == PlatformOpt::OptSpeed; }
 
         void ProcessPlatformDbGuts(std::function<bool(const leveldb::Iterator &)> processor);
         void ProcessNftIndexGutsOnly(std::function<bool(NfTokenIndex)> nftIndexHandler);
+        void ProcessNftProtoIndexGutsOnly(std::function<bool(NftProtoIndex)> protoIndexHandler);
         bool ProcessNftIndex(const leveldb::Iterator & dbIt, std::function<bool(NfTokenIndex)> nftIndexHandler);
+        bool ProcessNftProtoIndex(const leveldb::Iterator & dbIt, std::function<bool(NftProtoIndex)> protoIndexHandler);
         bool ProcessNftProtosSupply(const leveldb::Iterator & dbIt, std::function<bool(uint64_t, std::size_t)> protoSupplyHandler);
 
         bool IsNftIndexEmpty();
@@ -59,6 +66,13 @@ namespace Platform
 
         void WriteTotalSupply(std::size_t count, uint64_t nftProtocolId = NfToken::UNKNOWN_TOKEN_PROTOCOL);
         bool ReadTotalSupply(std::size_t & count, uint64_t nftProtocolId = NfToken::UNKNOWN_TOKEN_PROTOCOL);
+
+        void WriteNftProtoDiskIndex(const NftProtoDiskIndex & nftDiskIndex);
+        void EraseNftProtoDiskIndex(const uint64_t &protocolId);
+        NftProtoIndex ReadNftProtoIndex(const uint64_t &protocolId);
+
+        void WriteTotalProtocolCount(std::size_t count);
+        bool ReadTotalProtocolCount(std::size_t & count);
 
     private:
         explicit PlatformDb(
@@ -70,7 +84,9 @@ namespace Platform
 
     public:
         static const char DB_NFT;
-        static const char DB_PROTO_TOTAL;
+        static const char DB_NFT_TOTAL;
+        static const char DB_NFT_PROTO;
+        static const char DB_NFT_PROTO_TOTAL;
 
     private:
         PlatformOpt m_optSetting = PlatformOpt::OptSpeed;
