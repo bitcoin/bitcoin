@@ -5,11 +5,13 @@
 #ifndef SYSCOIN_QT_RECENTREQUESTSTABLEMODEL_H
 #define SYSCOIN_QT_RECENTREQUESTSTABLEMODEL_H
 
-#include <qt/walletmodel.h>
+#include <qt/sendcoinsrecipient.h>
 
 #include <QAbstractTableModel>
 #include <QStringList>
 #include <QDateTime>
+
+class WalletModel;
 
 class RecentRequestEntry
 {
