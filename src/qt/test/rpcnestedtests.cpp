@@ -32,7 +32,6 @@ void RPCNestedTests::rpcNestedTests()
     // do some test setup
     // could be moved to a more generic place when we add more tests on QT level
     tableRPC.appendCommand("rpcNestedTest", &vRPCCommands[0]);
-    //mempool.setSanityCheck(1.0);
 
     TestingSetup test;
 

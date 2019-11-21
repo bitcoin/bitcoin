@@ -63,6 +63,9 @@ enum RPCErrorCode
     RPC_CLIENT_INVALID_IP_OR_SUBNET = -30, //!< Invalid IP/Subnet
     RPC_CLIENT_P2P_DISABLED         = -31, //!< No valid connection manager instance found
 
+    //! Chain errors
+    RPC_CLIENT_MEMPOOL_DISABLED     = -33, //!< No mempool instance found
+
     //! Wallet errors
     RPC_WALLET_ERROR                = -4,  //!< Unspecified problem with wallet (key not found etc.)
     RPC_WALLET_INSUFFICIENT_FUNDS   = -6,  //!< Not enough funds in wallet or account
