@@ -670,9 +670,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         # Make sure there is exactly one input so coin selection can't skew the result
         assert_equal(len(self.nodes[3].listunspent(1)), 1)
 
-        # Disable BIP69 sorting of inputs and outputs
-        self.nodes[3].setbip69enabled(False)
-
         inputs = []
         outputs = {self.nodes[2].getnewaddress(): 1}
         rawtx = self.nodes[3].createrawtransaction(inputs, outputs)
@@ -701,9 +698,10 @@ class RawTransactionsTest(BitcoinTestFramework):
         keys = list(outputs.keys())
         rawtx = self.nodes[3].createrawtransaction(inputs, outputs)
 
-        result = [self.nodes[3].fundrawtransaction(rawtx),
+        # Add changePosition=4 to circumvent BIP69 input/output sorting
+        result = [self.nodes[3].fundrawtransaction(rawtx, {"changePosition": 4}),
                   # split the fee between outputs 0, 2, and 3, but not output 1
-                  self.nodes[3].fundrawtransaction(rawtx, {"subtractFeeFromOutputs": [0, 2, 3]})]
+                  self.nodes[3].fundrawtransaction(rawtx, {"subtractFeeFromOutputs": [0, 2, 3], "changePosition": 4})]
 
         dec_tx = [self.nodes[3].decoderawtransaction(result[0]['hex']),
                   self.nodes[3].decoderawtransaction(result[1]['hex'])]
@@ -735,9 +733,6 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # the total subtracted from the outputs is equal to the fee
         assert_equal(share[0] + share[2] + share[3], result[0]['fee'])
-
-        # Reenable BIP69 sorting of inputs and outputs
-        self.nodes[3].setbip69enabled(True)
 
 if __name__ == '__main__':
     RawTransactionsTest().main()

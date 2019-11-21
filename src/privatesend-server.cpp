@@ -93,9 +93,6 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
         }
 
     } else if (strCommand == NetMsgType::DSQUEUE) {
-        TRY_LOCK(cs_vecqueue, lockRecv);
-        if (!lockRecv) return;
-
         if (pfrom->nVersion < MIN_PRIVATESEND_PEER_PROTO_VERSION) {
             LogPrint("privatesend", "DSQUEUE -- peer=%d using obsolete version %i\n", pfrom->id, pfrom->nVersion);
             connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::REJECT, strCommand, REJECT_OBSOLETE, strprintf("Version must be %d or greater", MIN_PRIVATESEND_PEER_PROTO_VERSION)));
@@ -105,17 +102,27 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
         CPrivateSendQueue dsq;
         vRecv >> dsq;
 
-        // process every dsq only once
-        for (const auto& q : vecPrivateSendQueue) {
-            if (q == dsq) {
-                // LogPrint("privatesend", "DSQUEUE -- %s seen\n", dsq.ToString());
-                return;
+        {
+            TRY_LOCK(cs_vecqueue, lockRecv);
+            if (!lockRecv) return;
+
+            // process every dsq only once
+            for (const auto& q : vecPrivateSendQueue) {
+                if (q == dsq) {
+                    // LogPrint("privatesend", "DSQUEUE -- %s seen\n", dsq.ToString());
+                    return;
+                }
+                if (q.fReady == dsq.fReady && q.masternodeOutpoint == dsq.masternodeOutpoint) {
+                    // no way the same mn can send another dsq with the same readiness this soon
+                    LogPrint("privatesend", "DSQUEUE -- Peer %d is sending WAY too many dsq messages for a masternode with collateral %s\n", pfrom->id, dsq.masternodeOutpoint.ToStringShort());
+                    return;
+                }
             }
-        }
+        } // cs_vecqueue
 
         LogPrint("privatesend", "DSQUEUE -- %s new\n", dsq.ToString());
 
-        if (dsq.IsExpired()) return;
+        if (dsq.IsTimeOutOfBounds()) return;
 
         auto mnList = deterministicMNManager->GetListAtChainTip();
         auto dmn = mnList.GetValidMNByCollateral(dsq.masternodeOutpoint);
@@ -128,14 +135,6 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
         }
 
         if (!dsq.fReady) {
-            for (const auto& q : vecPrivateSendQueue) {
-                if (q.masternodeOutpoint == dsq.masternodeOutpoint) {
-                    // no way same mn can send another "not yet ready" dsq this soon
-                    LogPrint("privatesend", "DSQUEUE -- Masternode %s is sending WAY too many dsq messages\n", dmn->pdmnState->addr.ToString());
-                    return;
-                }
-            }
-
             int64_t nLastDsq = mmetaman.GetMetaInfo(dmn->proTxHash)->GetLastDsq();
             int nThreshold = nLastDsq + mnList.GetValidMNsCount() / 5;
             LogPrint("privatesend", "DSQUEUE -- nLastDsq: %d  threshold: %d  nDsqCount: %d\n", nLastDsq, nThreshold, mmetaman.GetDsqCount());
@@ -147,6 +146,9 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
             mmetaman.AllowMixing(dmn->proTxHash);
 
             LogPrint("privatesend", "DSQUEUE -- new PrivateSend queue (%s) from masternode %s\n", dsq.ToString(), dmn->pdmnState->addr.ToString());
+
+            TRY_LOCK(cs_vecqueue, lockRecv);
+            if (!lockRecv) return;
             vecPrivateSendQueue.push_back(dsq);
             dsq.Relay(connman);
         }
@@ -507,9 +509,10 @@ void CPrivateSendServer::ChargeRandomFees(CConnman& connman)
 void CPrivateSendServer::CheckTimeout(CConnman& connman)
 {
     if (!fMasternodeMode) return;
-    if (nState == POOL_STATE_IDLE) return;
 
     CheckQueue();
+
+    if (nState == POOL_STATE_IDLE) return;
 
     int nTimeout = (nState == POOL_STATE_SIGNING) ? PRIVATESEND_SIGNING_TIMEOUT : PRIVATESEND_QUEUE_TIMEOUT;
     bool fTimeout = GetTime() - nTimeLastSuccessfulStep >= nTimeout;
