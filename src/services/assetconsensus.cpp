@@ -267,7 +267,6 @@ void RemoveDoubleSpendFromMempool(const CTransactionRef & txRef) EXCLUSIVE_LOCKS
         mempool.removeConflicts(tx);
         mempool.removeRecursive(tx, MemPoolRemovalReason::SYSCOINCONSENSUS);
         mempool.ClearPrioritisation(tx.GetHash());
-        GetMainSignals().TransactionRemovedFromMempool(txRef);
     }
 }
 bool CheckSyscoinInputs(const bool &ibd, const CTransaction& tx, const uint256& txHash, TxValidationState& state, const CCoinsViewCache &inputs,  const bool &fJustCheck, const int &nHeight, const int64_t& nTime, const uint256 & blockHash, const bool &bSanity, const bool &bMiner, ActorSet &actorSet, AssetAllocationMap &mapAssetAllocations, AssetMap &mapAssets, EthereumMintTxVec &vecMintKeys, std::vector<COutPoint> &vecLockedOutpoints)
