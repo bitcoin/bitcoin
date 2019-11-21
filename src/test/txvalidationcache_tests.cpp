@@ -17,16 +17,6 @@ bool CheckInputs(const CTransaction& tx, TxValidationState &state, const CCoinsV
 
 BOOST_AUTO_TEST_SUITE(tx_validationcache_tests)
 
-static bool
-ToMemPool(const CMutableTransaction& tx)
-{
-    LOCK(cs_main);
-
-    TxValidationState state;
-    return AcceptToMemoryPool(mempool, state, MakeTransactionRef(tx),
-                              nullptr /* plTxnReplaced */, true /* bypass_limits */, 0 /* nAbsurdFee */);
-}
-
 BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, TestChain100Setup)
 {
     // Make sure skipping validation of transactions that were
@@ -34,6 +24,14 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, TestChain100Setup)
     // double-spends in blocks to pass validation when they should not.
 
     CScript scriptPubKey = CScript() <<  ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
+
+    const auto ToMemPool = [this](const CMutableTransaction& tx) {
+        LOCK(cs_main);
+
+        TxValidationState state;
+        return AcceptToMemoryPool(*m_node.mempool, state, MakeTransactionRef(tx),
+            nullptr /* plTxnReplaced */, true /* bypass_limits */, 0 /* nAbsurdFee */);
+    };
 
     // Create a double-spend of mature coinbase txn:
     std::vector<CMutableTransaction> spends;
@@ -72,7 +70,7 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, TestChain100Setup)
         LOCK(cs_main);
         BOOST_CHECK(::ChainActive().Tip()->GetBlockHash() != block.GetHash());
     }
-    mempool.clear();
+    m_node.mempool->clear();
 
     // Test 3: ... and should be rejected if spend2 is in the memory pool
     BOOST_CHECK(ToMemPool(spends[1]));
@@ -81,9 +79,9 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, TestChain100Setup)
         LOCK(cs_main);
         BOOST_CHECK(::ChainActive().Tip()->GetBlockHash() != block.GetHash());
     }
-    mempool.clear();
+    m_node.mempool->clear();
 
-    // Final sanity test: first spend in mempool, second in block, that's OK:
+    // Final sanity test: first spend in *m_node.mempool, second in block, that's OK:
     std::vector<CMutableTransaction> oneSpend;
     oneSpend.push_back(spends[0]);
     BOOST_CHECK(ToMemPool(spends[1]));
@@ -94,7 +92,7 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, TestChain100Setup)
     }
     // spends[1] should have been removed from the mempool when the
     // block with spends[0] is accepted:
-    BOOST_CHECK_EQUAL(mempool.size(), 0U);
+    BOOST_CHECK_EQUAL(m_node.mempool->size(), 0U);
 }
 
 // Run CheckInputs (using CoinsTip()) on the given transaction, for all script
