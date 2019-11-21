@@ -6,7 +6,7 @@
 
 export LC_ALL=C.UTF-8
 
-BITCOIN_CONFIG_ALL="--disable-dependency-tracking --prefix=$BASE_BUILD_DIR/depends/$HOST --bindir=$BASE_OUTDIR/bin --libdir=$BASE_OUTDIR/lib"
+BITCOIN_CONFIG_ALL="--disable-dependency-tracking --prefix=$DEPENDS_DIR/$HOST --bindir=$BASE_OUTDIR/bin --libdir=$BASE_OUTDIR/lib"
 if [ -z "$NO_DEPENDS" ]; then
   DOCKER_EXEC ccache --max-size=$CCACHE_SIZE
 fi
@@ -54,5 +54,5 @@ DOCKER_EXEC make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows
 END_FOLD
 
 set +o errexit
-cd ${BASE_BUILD_DIR} || (echo "could not enter base root dir $BASE_BUILD_DIR"; exit 1)
+cd ${BASE_ROOT_DIR} || (echo "could not enter base root dir $BASE_ROOT_DIR"; exit 1)
 set -o errexit
