@@ -272,11 +272,11 @@ void SendCoinsDialog::on_sendButton_clicked()
         return;
     }
 
-    QString strFunds = tr("using") + " <b>" + tr("anonymous funds") + "</b>";
+    QString strFunds = tr("using") + " <b>" + tr("mixed funds") + "</b>";
     QString strFee = "";
 
     if(ui->checkUsePrivateSend->isChecked()) {
-        strFunds = tr("using") + " <b>" + tr("anonymous funds") + "</b>";
+        strFunds = tr("using") + " <b>" + tr("mixed funds") + "</b>";
         QString strNearestAmount(
             BitcoinUnits::formatWithUnit(
                 model->getOptionsModel()->getDisplayUnit(), CPrivateSend::GetSmallestDenomination()));
@@ -284,7 +284,7 @@ void SendCoinsDialog::on_sendButton_clicked()
             "(privatesend requires this amount to be rounded up to the nearest %1)."
         ).arg(strNearestAmount));
     } else {
-        strFunds = tr("using") + " <b>" + tr("any available funds (not anonymous)") + "</b>";
+        strFunds = tr("using") + " <b>" + tr("any available funds (not mixed)") + "</b>";
     }
 
     fNewRecipientAllowed = false;

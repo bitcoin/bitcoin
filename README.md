@@ -9,7 +9,7 @@ https://www.dash.org
 What is Dash?
 -------------
 
-Dash is an experimental digital currency that enables anonymous, instant
+Dash is an experimental digital currency that enables instant, private
 payments to anyone, anywhere in the world. Dash uses peer-to-peer technology
 to operate with no central authority: managing transactions and issuing money
 are carried out collectively by the network. Dash Core is the name of the open

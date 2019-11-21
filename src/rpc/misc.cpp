@@ -64,7 +64,7 @@ UniValue getinfo(const JSONRPCRequest& request)
             "  \"protocolversion\": xxxxx,   (numeric) the protocol version\n"
             "  \"walletversion\": xxxxx,     (numeric) the wallet version\n"
             "  \"balance\": xxxxxxx,         (numeric) the total dash balance of the wallet\n"
-            "  \"privatesend_balance\": xxxxxx, (numeric) the anonymized dash balance of the wallet\n"
+            "  \"privatesend_balance\": xxxxxx, (numeric) the mixed dash balance of the wallet\n"
             "  \"blocks\": xxxxxx,           (numeric) the current number of blocks processed in the server\n"
             "  \"timeoffset\": xxxxx,        (numeric) the time offset\n"
             "  \"connections\": xxxxx,       (numeric) the number of connections\n"

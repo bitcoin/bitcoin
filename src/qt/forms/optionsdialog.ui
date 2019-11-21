@@ -221,7 +221,7 @@
          <item>
           <widget class="QLabel" name="label">
            <property name="toolTip">
-            <string>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</string>
+            <string>This setting determines the amount of individual masternodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</string>
            </property>
            <property name="text">
             <string>PrivateSend rounds to use</string>
@@ -263,7 +263,7 @@
             <string notr="true"/>
            </property>
            <property name="text">
-            <string>Amount of Dash to keep anonymized</string>
+            <string>Amount of Dash to keep mixed</string>
            </property>
           </widget>
          </item>

@@ -155,7 +155,7 @@ Your wallet pays that denomination directly to itself, but in a different addres
 <li>In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. \
 Each time the process is completed, it's called a \"round.\" Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.</li> \
 <li>This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, \
-your funds will already be anonymized. No additional waiting is required.</li> \
+your funds will already be mixed. No additional waiting is required.</li> \
 </ol> <hr>\
 <b>IMPORTANT:</b> Your wallet only contains 1000 of these \"change addresses.\" Every time a mixing event happens, up to 9 of your addresses are used up. \
 This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. \

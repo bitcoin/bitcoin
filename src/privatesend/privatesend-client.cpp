@@ -753,7 +753,7 @@ bool CPrivateSendClientManager::CheckAutomaticBackup()
 }
 
 //
-// Passively run mixing in the background to anonymize funds based on the given configuration.
+// Passively run mixing in the background to mix funds based on the given configuration.
 //
 bool CPrivateSendClientSession::DoAutomaticDenominating(CConnman& connman, bool fDryRun)
 {
@@ -815,10 +815,10 @@ bool CPrivateSendClientSession::DoAutomaticDenominating(CConnman& connman, bool 
         // including denoms but applying some restrictions
         CAmount nBalanceAnonymizable = vpwallets[0]->GetAnonymizableBalance();
 
-        // anonymizable balance is way too small
+        // mixable balance is way too small
         if (nBalanceAnonymizable < nValueMin) {
-            LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::DoAutomaticDenominating -- Not enough funds to anonymize\n");
-            strAutoDenomResult = _("Not enough funds to anonymize.");
+            LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::DoAutomaticDenominating -- Not enough funds to mix\n");
+            strAutoDenomResult = _("Not enough funds to mix.");
             return false;
         }
 
