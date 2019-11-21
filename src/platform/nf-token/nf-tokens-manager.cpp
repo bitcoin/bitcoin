@@ -478,7 +478,7 @@ namespace Platform
         else /// PlatformDb::Instance().OptimizeRam() is on
         {
             auto index = PlatformDb::Instance().ReadNftIndex(protocolId, tokenId);
-            if (!index.IsNull())
+            if (!index.IsNull() && index.BlockIndex()->nHeight <= height)
             {
                 PlatformDb::Instance().EraseNftDiskIndex(protocolId, tokenId);
                 this->UpdateTotalSupply(protocolId, false);
