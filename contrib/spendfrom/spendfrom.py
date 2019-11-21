@@ -24,6 +24,7 @@ import time
 from bitcoinrpc.authproxy import AuthServiceProxy, json, JSONRPCException
 
 BASE_FEE=Decimal("0.001")
+verbosity = 0
 
 def check_json_precision():
     """Make sure json library being used does not lose precision converting BTC values"""
@@ -112,18 +113,31 @@ def list_available(crownd):
 
     return address_summary
 
-def select_coins(needed, inputs):
-    # Feel free to improve this, this is good enough for my simple needs:
+def select_coins(needed, inputs, criteria):
+    # criteria will be used to prioritise the coins selected for this txn.
+    # Some alternative strategies are oldest|smallest|largest UTXO first.
+    # Using smallest first will combine the largest number of UTXOs but may 
+    # produce a transaction which is too large. The input set is an unordered
+    # list looking something like
+    # [{'vout': 1, 'address': 'tCRWTQhoMTQgyHZyrhZSnScJYuGXCHXPKdNwd', 'confirmations': 12086, 'spendable': True, 'amount': Decimal('0.92500000'), 'scriptPubKey': '76a9149e2b5779df2364dc833fd5167bc561ce65f3884b88ac', 'txid': 'ef4d44dc28b818eb09651f1e62f348aa66a81b6e2baf5242ba4f48ab68a78aca', 'account': 'XMN05'}, 
+    #  {'vout': 1, 'address': 'tCRWTQhoMTQgyHZyrhZSnScJYuGXCHXPKdNwd', 'confirmations': 5906, 'spendable': True, 'amount': Decimal('0.92500000'), 'scriptPubKey': '76a9149e2b5779df2364dc833fd5167bc561ce65f3884b88ac', 'txid': 'c1142434fa1fb3484bd54b42fd654fe86a7c2de9ec62f049b868db1439b591ca', 'account': 'XMN05'}, 
+    #  {'vout': 0, 'address': 'tCRWTQhoMTQgyHZyrhZSnScJYuGXCHXPKdNwd', 'confirmations': 1395, 'spendable': True, 'amount': Decimal('0.75000000'), 'scriptPubKey': '76a9149e2b5779df2364dc833fd5167bc561ce65f3884b88ac', 'txid': '74205c8acdfeffb57fba501676e7ae14fff4a6dc06843ad008eb841f7ae198ca', 'account': 'XMN05'}, 
+    #  {'vout': 0, 'address': 'tCRWTQhoMTQgyHZyrhZSnScJYuGXCHXPKdNwd', 'confirmations': 9531, 'spendable': True, 'amount': Decimal('0.75000000'), 'scriptPubKey': '76a9149e2b5779df2364dc833fd5167bc561ce65f3884b88ac', 'txid': 'f5c19fe103d72e9257a54e3562a85a6d6309d8a0d419aee7228a2c69e02e9cca', 'account': 'XMN05'}
+    #  ...
     outputs = []
     have = Decimal("0.0")
     n = 0
+    if verbosity > 0: print("Selecting coins from the set of %d inputs"%len(inputs))
+    if verbosity > 1: print(inputs)
     while have < needed and n < len(inputs):
         outputs.append({ "txid":inputs[n]["txid"], "vout":inputs[n]["vout"]})
         have += inputs[n]["amount"]
         n += 1
+    if verbosity > 0: print("Used %d UTXOs with total value %f requiring %f change"%(n, have, have-needed)) 
+    if verbosity > 2: print(outputs)   
     return (outputs, have-needed)
 
-def create_tx(crownd, fromaddresses, toaddress, amount, fee):
+def create_tx(crownd, fromaddresses, toaddress, amount, fee, criteria):
     all_coins = list_available(crownd)
 
     total_available = Decimal("0.0")
@@ -146,7 +160,7 @@ def create_tx(crownd, fromaddresses, toaddress, amount, fee):
     # Decimals, I'm casting amounts to float before sending them to crownd.
     #
     outputs = { toaddress : float(amount) }
-    (inputs, change_amount) = select_coins(needed, potential_inputs)
+    (inputs, change_amount) = select_coins(needed, potential_inputs, criteria)
     if change_amount > BASE_FEE:  # don't bother with zero or tiny change
         change_address = fromaddresses[-1]
         if change_address in outputs:
@@ -202,26 +216,35 @@ def sanity_test_fee(crownd, txdata_hex, max_fee, fee):
 
 def main():
     import optparse
+    global verbosity
 
     parser = optparse.OptionParser(usage="%prog [options]")
     parser.add_option("--from", dest="fromaddresses", default=None,
                       help="addresses to get crowns from")
-    parser.add_option("--to", dest="to", default=None,
+    parser.add_option("--to", dest="toaddress", default=None,
                       help="address to get send crowns to")
     parser.add_option("--amount", dest="amount", default=None,
                       help="amount to send")
     parser.add_option("--fee", dest="fee", default="0.0",
                       help="fee to include")
+    parser.add_option("--select", type='choice', 
+                      choices=['oldest', 'smallest', 'largest'],
+                      default=None,
+                      help="select the oldest|smallest|largest UTXOs first")
     parser.add_option("--datadir", dest="datadir", default=determine_db_dir(),
                       help="location of crown config file with RPC username/password (default: %default)")
     parser.add_option("--config", dest="conffile", default="crown.conf",
                       help="name of crown config file (default: %default)")
     parser.add_option("--testnet", dest="testnet", default=False, action="store_true",
-                      help="Use the test network")
+                      help="use the test network")
+    parser.add_option("-v", action="count", dest="verbosity", default=0,
+                      help="increase the verbosity level. Use more than one for extra verbosity")
     parser.add_option("--dry_run", dest="dry_run", default=False, action="store_true",
-                      help="Don't broadcast the transaction, just create and print the transaction data")
+                      help="don't broadcast the transaction, just create and print the transaction data")
 
     (options, args) = parser.parse_args()
+
+    verbosity = options.verbosity
 
     check_json_precision()
     config = read_bitcoin_config(options.datadir, options.conffile)
@@ -236,23 +259,25 @@ def main():
                 print("%s %.8f %s (%d transactions)"%(address, info['total'], info['account'], n_transactions))
             else:
                 print("%s %.8f %s"%(address, info['total'], info['account']))
-    else:
+    elif crownd.validateaddress(options.toaddress)['isvalid']:
         fee = Decimal(options.fee)
         amount = Decimal(options.amount)
         while unlock_wallet(crownd) == False:
             pass # Keep asking for passphrase until they get it right
-        txdata = create_tx(crownd, options.fromaddresses.split(","), options.to, amount, fee)
+        txdata = create_tx(crownd, options.fromaddresses.split(","), options.toaddress, amount, fee, options.select)
         sanity_test_fee(crownd, txdata, amount*Decimal("0.01"), fee)
         txlen = len(txdata)/2
-        print("Transaction size is %d bytes"%(txlen))
+        if verbosity > 0: print("Transaction size is %d bytes"%(txlen))
         if options.dry_run:
             print("Raw transaction data: %s"%(txdata))
-            print("Decoded transaction: %s"%(crownd.decoderawtransaction(txdata)))
+            if verbosity > 2: print("Decoded transaction: %s"%(crownd.decoderawtransaction(txdata)))
         elif txlen < 250000:
             txid = crownd.sendrawtransaction(txdata)
             print(txid)
         else:
             print("Transaction size is too large")
+    else:
+        print("To address is invalid")
 
 if __name__ == '__main__':
     main()
