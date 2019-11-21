@@ -310,9 +310,9 @@ after_success:
         BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
 
     - stage: test
-      name: 'macOS 10.10  [GOAL: deploy]'
+      name: 'macOS 10.12  [GOAL: deploy]'
       env: >-
-        HOST=x86_64-apple-darwin14
+        HOST=x86_64-apple-darwin16
         PACKAGES="cmake imagemagick libcap-dev librsvg2-bin libz-dev libbz2-dev libtiff-tools python-dev python3-setuptools-git"
         OSX_SDK=10.11
         RUN_UNIT_TESTS=false

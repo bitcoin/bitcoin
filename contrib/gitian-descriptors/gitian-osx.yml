@@ -38,7 +38,7 @@ script: |
   set -e -o pipefail
 
   WRAP_DIR=$HOME/wrapped
-  HOSTS="x86_64-apple-darwin14"
+  HOSTS="x86_64-apple-darwin16"
   CONFIGFLAGS="--enable-reduce-exports --disable-miner --disable-bench --disable-gui-tests GENISOIMAGE=$WRAP_DIR/genisoimage --enable-crash-hooks"
   FAKETIME_HOST_PROGS=""
   FAKETIME_PROGS="ar ranlib date dmg genisoimage"
@@ -188,8 +188,8 @@ script: |
   done
   mkdir -p $OUTDIR/src
   mv $SOURCEDIST $OUTDIR/src
-  mv ${OUTDIR}/${DISTNAME}-x86_64-apple-darwin14.tar.gz ${OUTDIR}/${DISTNAME}-osx64.tar.gz
-  mv ${OUTDIR}/${DISTNAME}-x86_64-apple-darwin14-debug.tar.gz ${OUTDIR}/${DISTNAME}-osx64-debug.tar.gz
+  mv ${OUTDIR}/${DISTNAME}-x86_64-apple-darwin16.tar.gz ${OUTDIR}/${DISTNAME}-osx64.tar.gz
+  mv ${OUTDIR}/${DISTNAME}-x86_64-apple-darwin16-debug.tar.gz ${OUTDIR}/${DISTNAME}-osx64-debug.tar.gz
 
   # Compress ccache (otherwise the assert file will get too huge)
   if [ "$CCACHE_DIR" != "" ]; then
