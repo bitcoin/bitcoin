@@ -1066,18 +1066,30 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, b
     if (Params().NetworkIDString() == "regtest")
         return 50 * COIN;
 
-    // TODO: BitGreen - Update with money supply
-    // premine 10M for testing
-    if (nHeight == 1)
-        return 10000000 * COIN;
+    /*
+    1 - old chain supply: 9,851,721
+    <= 7500 - zero rewards
+    <= 175000 - 10 BITG
+    > 175000 - halving every 525,600 blocks (~2 years)
+    */
 
-    int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
+    // Supply on old chain
+    if (nHeight == 1)
+        return 9851721 * COIN;
+
+    if (nHeight <= 7500)
+        return 0 * COIN;
+
+    CAmount nSubsidy = 10 * COIN;
+    if (nHeight >= 175000) nSubsidy = 5 * COIN;
+
+    int halvings = 0;
+    int halvings = (nHeight - 175000) / consensusParams.nSubsidyHalvingInterval;
     // Force block reward to zero when right shift is undefined.
     if (halvings >= 64)
         return 0;
 
-    CAmount nSubsidy = 50 * COIN;
-    // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
+    // Subsidy is cut in half every 525,600 blocks which will occur approximately every 2 years.
     nSubsidy >>= halvings;
 
     // Hard fork to reduce the block reward by 10 extra percent (allowing budget/superblocks)
@@ -1088,7 +1100,11 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, b
 
 CAmount GetMasternodePayment(int nHeight, CAmount blockValue)
 {
-    CAmount ret = blockValue/5; // start at 20%
+    // No rewards till masternode activation.
+    if (nHeight < Params().GetConsensus().nLastPoWBlock || blockValue == 0)
+        return 0;
+
+    CAmount ret = blockValue * 0.85; // 85% of block reward
     return ret;
 }
 
