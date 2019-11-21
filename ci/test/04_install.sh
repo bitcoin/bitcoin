@@ -34,9 +34,9 @@ mkdir -p "${BASE_SCRATCH_DIR}"
 mkdir -p "${CCACHE_DIR}"
 
 export ASAN_OPTIONS="detect_stack_use_after_return=1"
-export LSAN_OPTIONS="suppressions=${BASE_BUILD_DIR}/test/sanitizer_suppressions/lsan"
-export TSAN_OPTIONS="suppressions=${BASE_BUILD_DIR}/test/sanitizer_suppressions/tsan:log_path=${BASE_SCRATCH_DIR}/sanitizer-output/tsan"
-export UBSAN_OPTIONS="suppressions=${BASE_BUILD_DIR}/test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1"
+export LSAN_OPTIONS="suppressions=${BASE_ROOT_DIR}/test/sanitizer_suppressions/lsan"
+export TSAN_OPTIONS="suppressions=${BASE_ROOT_DIR}/test/sanitizer_suppressions/tsan:log_path=${BASE_SCRATCH_DIR}/sanitizer-output/tsan"
+export UBSAN_OPTIONS="suppressions=${BASE_ROOT_DIR}/test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1"
 env | grep -E '^(BITCOIN_CONFIG|CCACHE_|WINEDEBUG|LC_ALL|BOOST_TEST_RANDOM|CONFIG_SHELL|(ASAN|LSAN|TSAN|UBSAN)_OPTIONS)' | tee /tmp/env
 if [[ $HOST = *-mingw32 ]]; then
   DOCKER_ADMIN="--cap-add SYS_ADMIN"
@@ -49,10 +49,10 @@ if [ -z "$RUN_CI_ON_HOST" ]; then
   ${CI_RETRY_EXE} docker pull "$DOCKER_NAME_TAG"
 
   DOCKER_ID=$(docker run $DOCKER_ADMIN -idt \
-                  --mount type=bind,src=$BASE_BUILD_DIR,dst=/ro_base,readonly \
+                  --mount type=bind,src=$BASE_ROOT_DIR,dst=/ro_base,readonly \
                   --mount type=bind,src=$CCACHE_DIR,dst=$CCACHE_DIR \
-                  --mount type=bind,src=$BASE_BUILD_DIR/depends,dst=$BASE_BUILD_DIR/depends \
-                  -w $BASE_BUILD_DIR \
+                  --mount type=bind,src=$DEPENDS_DIR,dst=$DEPENDS_DIR \
+                  -w $BASE_ROOT_DIR \
                   --env-file /tmp/env \
                   $DOCKER_NAME_TAG)
 
@@ -91,8 +91,8 @@ export DIR_FUZZ_IN=${DIR_QA_ASSETS}/fuzz_seed_corpus/
 DOCKER_EXEC mkdir -p "${BASE_SCRATCH_DIR}/sanitizer-output/"
 
 if [ -z "$RUN_CI_ON_HOST" ]; then
-  echo "Create $BASE_BUILD_DIR"
-  DOCKER_EXEC rsync -a /ro_base/ $BASE_BUILD_DIR
+  echo "Create $BASE_ROOT_DIR"
+  DOCKER_EXEC rsync -a /ro_base/ $BASE_ROOT_DIR
 fi
 
 if [ "$USE_BUSY_BOX" = "true" ]; then
