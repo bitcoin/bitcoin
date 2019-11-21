@@ -1,39 +1,31 @@
-Bitcoin Core integration/staging tree
-=====================================
+# BitGreen Core integration/staging tree
 
-https://bitcoincore.org
+[![Build Status](https://travis-ci.org/bitgreen/bitgreen.svg?branch=master)](https://travis-ci.org/bitgreen/bitgreen) ![GitHub](https://img.shields.io/github/license/mashape/apistatus.svg)
 
-What is Bitcoin?
-----------------
+## What is BitGreen?
 
-Bitcoin is an experimental digital currency that enables instant payments to
-anyone, anywhere in the world. Bitcoin uses peer-to-peer technology to operate
-with no central authority: managing transactions and issuing money are carried
-out collectively by the network. Bitcoin Core is the name of open source
-software which enables the use of this currency.
+BitGreen is a sustainable cryptocurrency modeled after Satoshi Nakamoto’s vision for Bitcoin. It is a decentralized, peer-to-peer transactional currency designed to offer a solution to the problem posed by the exponential increase in energy consumed by Bitcoin and other proof-of-work currencies.
+Proof-of-work mining is environmentally unsustainable due to the electricity used by high-powered mining hardware. BitGreen utilizes the Green Protocol, an energy efficient proof-of-stake algorithm inspired by peercoin, can be mined on any computer, and will never require specialized mining equipment. The Green Protocol offers a simple solution to Bitcoin sustainability issues and provides a faster, more scalable blockchain that is better suited for daily transactional use.
 
-For more information, as well as an immediately useable, binary version of
-the Bitcoin Core software, see https://bitcoincore.org/en/download/, or read the
-[original whitepaper](https://bitcoincore.org/bitcoin.pdf).
+More information at [bitg.org](http://www.bitg.org)
 
-License
--------
+Please reach out at info@bitg.org
 
-Bitcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
+## License
+
+BitGreen Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
 information or see https://opensource.org/licenses/MIT.
 
-Development Process
--------------------
+## Development Process
 
 The `master` branch is regularly built and tested, but is not guaranteed to be
-completely stable. [Tags](https://github.com/bitcoin/bitcoin/tags) are created
-regularly to indicate new official, stable release versions of Bitcoin Core.
+completely stable. [Tags](https://github.com/bitgreen/bitgreen/tags) are created
+regularly to indicate new official, stable release versions of BitGreen Core.
 
 The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md)
 and useful hints for developers can be found in [doc/developer-notes.md](doc/developer-notes.md).
 
-Testing
--------
+## Testing
 
 Testing and code review is the bottleneck for development; we get more pull
 requests than we can review and test on short notice. Please be patient and help out by testing
@@ -59,17 +51,3 @@ Changes should be tested by somebody other than the developer who wrote the
 code. This is especially important for large or high-risk changes. It is useful
 to add a test plan to the pull request description if testing the changes is
 not straightforward.
-
-Translations
-------------
-
-Changes to translations as well as new translations can be submitted to
-[Bitcoin Core's Transifex page](https://www.transifex.com/bitcoin/bitcoin/).
-
-Translations are periodically pulled from Transifex and merged into the git repository. See the
-[translation process](doc/translation_process.md) for details on how this works.
-
-**Important**: We do not accept translation changes as GitHub pull requests because the next
-pull from Transifex would automatically overwrite them again.
-
-Translators should also subscribe to the [mailing list](https://groups.google.com/forum/#!forum/bitcoin-translators).
