@@ -96,7 +96,26 @@ in Bitcoin v0.15.1. This release of Dash Core includes a backport of this fix.
 
 See detailed [set of changes](https://github.com/dashpay/dash/compare/v0.14.0.3...dashpay:v0.14.0.4).
 
-TODO
+- [`5f98ed7a5`](https://github.com/dashpay/dash/commit/5f98ed7a5) [v0.14.0.x] Bump version to 0.14.0.4 and draft release notes (#3203)
+- [`c0dda38fe`](https://github.com/dashpay/dash/commit/c0dda38fe) Circumvent BIP69 sorting in fundrawtransaction.py test (#3100)
+- [`64ae6365f`](https://github.com/dashpay/dash/commit/64ae6365f) Fix compile issues
+- [`36473015b`](https://github.com/dashpay/dash/commit/36473015b) Merge #11397: net: Improve and document SOCKS code
+- [`66e298728`](https://github.com/dashpay/dash/commit/66e298728) Slightly optimize ApproximateBestSubset and its usage for PS txes (#3184)
+- [`16b6b6f7c`](https://github.com/dashpay/dash/commit/16b6b6f7c) Update activemn if protx info changed (#3176)
+- [`ce6687130`](https://github.com/dashpay/dash/commit/ce6687130) Actually update spent index on DisconnectBlock (#3167)
+- [`9b49bfda8`](https://github.com/dashpay/dash/commit/9b49bfda8) Only track last seen time instead of first and last seen time (#3165)
+- [`ad720eef1`](https://github.com/dashpay/dash/commit/ad720eef1) Merge #17118: build: depends macOS: point --sysroot to SDK (#3161)
+- [`909d6a4ba`](https://github.com/dashpay/dash/commit/909d6a4ba) Simulate BlockConnected/BlockDisconnected for PS caches
+- [`db7f471c7`](https://github.com/dashpay/dash/commit/db7f471c7) Few fixes related to SelectCoinsGroupedByAddresses (#3144)
+- [`1acd4742c`](https://github.com/dashpay/dash/commit/1acd4742c) Various fixes for mixing queues (#3138)
+- [`0031d6b04`](https://github.com/dashpay/dash/commit/0031d6b04) Also consider txindex for transactions in AlreadyHave() (#3126)
+- [`c4be5ac4d`](https://github.com/dashpay/dash/commit/c4be5ac4d) Ignore recent rejects filter for locked txes (#3124)
+- [`f2d401aa8`](https://github.com/dashpay/dash/commit/f2d401aa8) Make orphan TX map limiting dependent on total TX size instead of TX count (#3121)
+- [`87ff566a0`](https://github.com/dashpay/dash/commit/87ff566a0) Update/modernize macOS plist (#3074)
+- [`2141d5f9d`](https://github.com/dashpay/dash/commit/2141d5f9d) Fix bip69 vs change position issue (#3063)
+- [`75fddde67`](https://github.com/dashpay/dash/commit/75fddde67) Partially revert 3061 (#3150)
+- [`c74f2cd8b`](https://github.com/dashpay/dash/commit/c74f2cd8b) Fix SelectCoinsMinConf to allow instant respends (#3061)
+- [`2e7ec2369`](https://github.com/dashpay/dash/commit/2e7ec2369) [0.14.0.x] Remove check for mempool size in CInstantSendManager::CheckCanLock (#3119)
 
 Credits
 =======
