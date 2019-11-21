@@ -6,7 +6,7 @@
 #include <qt/forms/ui_openuridialog.h>
 
 #include <qt/guiutil.h>
-#include <qt/walletmodel.h>
+#include <qt/sendcoinsrecipient.h>
 
 #include <QUrl>
 
