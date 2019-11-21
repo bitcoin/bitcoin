@@ -279,7 +279,7 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
             std::list<CTransactionRef> plTxnReplaced;
             for (const auto& tx : txs) {
                 BOOST_REQUIRE(AcceptToMemoryPool(
-                    ::mempool,
+                    *m_node.mempool,
                     state,
                     tx,
                     &plTxnReplaced,
@@ -290,8 +290,8 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
 
         // Check that all txs are in the pool
         {
-            LOCK(::mempool.cs);
-            BOOST_CHECK_EQUAL(::mempool.mapTx.size(), txs.size());
+            LOCK(m_node.mempool->cs);
+            BOOST_CHECK_EQUAL(m_node.mempool->mapTx.size(), txs.size());
         }
 
         // Run a thread that simulates an RPC caller that is polling while
@@ -301,8 +301,8 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
             // the transactions invalidated by the reorg, or none of them, and
             // not some intermediate amount.
             while (true) {
-                LOCK(::mempool.cs);
-                if (::mempool.mapTx.size() == 0) {
+                LOCK(m_node.mempool->cs);
+                if (m_node.mempool->mapTx.size() == 0) {
                     // We are done with the reorg
                     break;
                 }
@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
                 // be atomic. So the caller assumes that the returned mempool
                 // is consistent. That is, it has all txs that were there
                 // before the reorg.
-                assert(::mempool.mapTx.size() == txs.size());
+                assert(m_node.mempool->mapTx.size() == txs.size());
                 continue;
             }
             LOCK(cs_main);

@@ -284,6 +284,7 @@ void Shutdown(NodeContext& node)
     GetMainSignals().UnregisterWithMempoolSignals(mempool);
     globalVerifyHandle.reset();
     ECC_Stop();
+    if (node.mempool) node.mempool = nullptr;
     LogPrintf("%s: done\n", __func__);
 }
 
@@ -1634,6 +1635,11 @@ bool AppInitMain(NodeContext& node)
         LogPrintf("Shutdown requested. Exiting.\n");
         return false;
     }
+
+    // Now that the chain state is loaded, make mempool generally available in the node context. For example the
+    // connection manager, wallet, or RPC threads, which are all started after this, may use it from the node context.
+    assert(!node.mempool);
+    node.mempool = &::mempool;
 
     fs::path est_path = GetDataDir() / FEE_ESTIMATES_FILENAME;
     CAutoFile est_filein(fsbridge::fopen(est_path, "rb"), SER_DISK, CLIENT_VERSION);
