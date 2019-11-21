@@ -136,6 +136,10 @@ QPushButton:pressed {
 border:1px solid #333;
 }
 
+QPushButton:disabled {
+background-color: #666;
+}
+
 QComboBox { /* Dropdown Menus */
 border:1px solid #82C3E6;
 padding: 0px 5px 0px 5px;
