@@ -40,10 +40,6 @@ bench_bench_bitcoin_SOURCES = \
   bench/lockedpool.cpp \
   bench/poly1305.cpp \
   bench/prevector.cpp \
-  test/util/transaction_utils.h \
-  test/util/transaction_utils.cpp \
-  test/util/setup_common.h \
-  test/util/setup_common.cpp \
   test/util.h \
   test/util.cpp
 
@@ -59,6 +55,7 @@ bench_bench_bitcoin_LDADD = \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_CRYPTO) \
+  $(LIBTEST_UTIL) \
   $(LIBLEVELDB) \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
