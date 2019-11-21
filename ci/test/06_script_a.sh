@@ -54,5 +54,5 @@ DOCKER_EXEC make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows
 END_FOLD
 
 set +o errexit
-cd ${BASE_BUILD_DIR} || (echo "could not enter travis build dir $BASE_BUILD_DIR"; exit 1)
+cd ${BASE_BUILD_DIR} || (echo "could not enter base root dir $BASE_BUILD_DIR"; exit 1)
 set -o errexit

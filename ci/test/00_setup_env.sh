@@ -13,6 +13,9 @@ if [ -n "${FILE_ENV}" ]; then
   source "${FILE_ENV}"
 fi
 
+# The root dir.
+# The ci system copies this folder.
+# This is where the build is done (depends and dist).
 BASE_ROOT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )"/../../ >/dev/null 2>&1 && pwd )
 export BASE_ROOT_DIR
 
@@ -20,6 +23,7 @@ echo "Fallback to default values in env (if not yet set)"
 # The number of parallel jobs to pass down to make and test_runner.py
 export MAKEJOBS=${MAKEJOBS:--j4}
 # A folder for the ci system to put temporary files (ccache, datadirs for tests, ...)
+# This folder only exists on the ci host.
 export BASE_SCRATCH_DIR=${BASE_SCRATCH_DIR:-$BASE_ROOT_DIR/ci/scratch/}
 # What host to compile for. See also ./depends/README.md
 # Tests that need cross-compilation export the appropriate HOST.
@@ -37,10 +41,13 @@ export BOOST_TEST_RANDOM=${BOOST_TEST_RANDOM:-1}
 export CCACHE_SIZE=${CCACHE_SIZE:-100M}
 export CCACHE_TEMPDIR=${CCACHE_TEMPDIR:-/tmp/.ccache-temp}
 export CCACHE_COMPRESS=${CCACHE_COMPRESS:-1}
+# The cache dir.
+# This folder exists on the ci host and ci guest. Changes are propagated back and forth.
 export CCACHE_DIR=${CCACHE_DIR:-$BASE_SCRATCH_DIR/.ccache}
-# Folder where the build is done (depends and dist). Can not be changed and is equal to the root of the git repo
-export BASE_BUILD_DIR=${BASE_BUILD_DIR:-$BASE_ROOT_DIR}
-# Folder where the build is done (bin and lib). Can not be changed.
+# The depends dir.
+# This folder exists on the ci host and ci guest. Changes are propagated back and forth.
+export DEPENDS_DIR=${DEPENDS_DIR:-$BASE_ROOT_DIR/depends}
+# Folder where the build is done (bin and lib).
 export BASE_OUTDIR=${BASE_OUTDIR:-$BASE_SCRATCH_DIR/out/$HOST}
 export SDK_URL=${SDK_URL:-https://bitcoincore.org/depends-sources/sdks}
 export WINEDEBUG=${WINEDEBUG:-fixme-all}
