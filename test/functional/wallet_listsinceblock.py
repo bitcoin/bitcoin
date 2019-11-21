@@ -15,6 +15,13 @@ from test_framework.util import (
 
 from decimal import Decimal
 
+LISTSINCEBLOCK_FIELDS = frozenset({
+    'address', 'amount', 'bip125-replaceable',
+    'blockhash', 'blockheight', 'blockindex', 'blocktime',
+    'category', 'confirmations', 'label', 'time', 'timereceived',
+    'txid', 'vout', 'walletconflicts'
+})
+
 class ListSinceBlockTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
@@ -52,16 +59,12 @@ class ListSinceBlockTest(BitcoinTestFramework):
             "blockheight": blockheight,
             "confirmations": 1,
         })
-        assert_equal(
-            self.nodes[0].listsinceblock(),
-            {"lastblock": blockhash,
-             "removed": [],
-             "transactions": txs})
-        assert_equal(
-            self.nodes[0].listsinceblock(""),
-            {"lastblock": blockhash,
-             "removed": [],
-             "transactions": txs})
+
+        expected_result = {"lastblock": blockhash, "removed": [], "transactions": txs}
+        for blockhash_arg in [None, ""]:
+            lsbres = self.nodes[0].listsinceblock(blockhash_arg)
+            assert_equal(lsbres, expected_result)
+            assert_equal(set(*lsbres['transactions']), LISTSINCEBLOCK_FIELDS)
 
     def test_invalid_blockhash(self):
         self.log.info("Test invalid blockhash")
@@ -122,11 +125,13 @@ class ListSinceBlockTest(BitcoinTestFramework):
         self.join_network()
 
         # listsinceblock(nodes1_last_blockhash) should now include tx as seen from nodes[0]
-        # and return the block height which listsinceblock now exposes since a5e7795.
+        # and return the block height which listsinceblock now exposes since a5e7795,
+        # as well as the expected fields.
         transactions = self.nodes[0].listsinceblock(nodes1_last_blockhash)['transactions']
         found = next(tx for tx in transactions if tx['txid'] == senttx)
         assert_equal(found['blockheight'],
                      self.nodes[0].getblockheader(nodes2_first_blockhash)['height'])
+        assert_equal(set([*found]), LISTSINCEBLOCK_FIELDS)
 
     def test_double_spend(self):
         '''
