@@ -136,7 +136,7 @@ def create_tx(crownd, fromaddresses, toaddress, amount, fee):
         total_available += all_coins[addr]["total"]
 
     if total_available < needed:
-        sys.stderr.write("Error, only %f BTC available, need %f\n"%(total_available, needed));
+        sys.stderr.write("Error, only %f CRW available, need %f\n"%(total_available, needed));
         sys.exit(1)
 
     #
@@ -243,11 +243,16 @@ def main():
             pass # Keep asking for passphrase until they get it right
         txdata = create_tx(crownd, options.fromaddresses.split(","), options.to, amount, fee)
         sanity_test_fee(crownd, txdata, amount*Decimal("0.01"), fee)
+        txlen = len(txdata)/2
+        print("Transaction size is %d bytes"%(txlen))
         if options.dry_run:
-            print(txdata)
-        else:
+            print("Raw transaction data: %s"%(txdata))
+            print("Decoded transaction: %s"%(crownd.decoderawtransaction(txdata)))
+        elif txlen < 250000:
             txid = crownd.sendrawtransaction(txdata)
             print(txid)
+        else:
+            print("Transaction size is too large")
 
 if __name__ == '__main__':
     main()
