@@ -12,6 +12,7 @@
 #include "governance-vote.h"
 #include "nf-token/nf-token-reg-tx.h" // TODO: refactoring - handlers registration in the tx impl. Special tx itself shouldn't know about handlers
 #include "nf-token/nf-tokens-manager.h"
+#include "nf-token/nft-protocols-manager.h"
 
 #include "governance.h"
 
@@ -97,6 +98,7 @@ namespace Platform
     void UpdateSpecialTxsBlockTip(const CBlockIndex* pindex)
     {
         NfTokensManager::Instance().UpdateBlockTip(pindex);
+        NftProtocolsManager::Instance().UpdateBlockTip(pindex);
     }
 
     uint256 CalcTxInputsHash(const CTransaction& tx)
