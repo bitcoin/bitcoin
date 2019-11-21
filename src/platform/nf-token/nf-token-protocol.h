@@ -11,11 +11,13 @@
 
 namespace Platform
 {
-    enum class NftRegSign : uint8_t
+    enum NftRegSign : uint8_t
     {
         SelfSign = 1,
         SignByCreator = 2,
-        SignAny = 3
+        SignAny = 3,
+        NftRegSignMin = SelfSign,
+        NftRegSignMax = SignAny
     };
 
     class NfTokenProtocol
@@ -34,24 +36,29 @@ namespace Platform
         std::string tokenMetadataSchemaUri;
 
         /// MIME type describing metadata content type
-        std::string tokenMetadataMimeType;
+        std::string tokenMetadataMimeType{"text/plain"};
 
         /// Defines if this NF token type can be transferred
-        bool isTokenTransferable;
+        bool isTokenTransferable{true};
 
         /// Defines if this NF token id can be changed during token lifetime
-        bool isTokenImmutable;
+        bool isTokenImmutable{true};
 
         /// Defines if metadata is embedded or contains a URI
         /// It's recommended to use embedded metadata only if it's shorter than URI
-        bool isMetadataEmbedded;
+        bool isMetadataEmbedded{false};
 
         /// Defines who must sign an NFT registration transaction
-        uint8_t nftRegSign;
+        uint8_t nftRegSign{static_cast<uint8_t>(NftRegSign::SignByCreator)};
 
         /// Owner of the NF token protocol
         CKeyID tokenProtocolOwnerId;
         //TODO: add admin key to the protocol structure. add option to use setup admin key rights including tranfering ownership
+
+        static const unsigned TOKEN_PROTOCOL_ID_MAX = 12;
+        static const unsigned TOKEN_PROTOCOL_NAME_MAX = 24;
+        static const unsigned TOKEN_METADATA_SCHEMA_URI_MAX = 128;
+        static const unsigned TOKEN_METADATA_MIMETYPE_MAX = 32;
 
     public:
         ADD_SERIALIZE_METHODS

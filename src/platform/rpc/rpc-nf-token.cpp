@@ -88,11 +88,11 @@ namespace Platform
             nfTokenRegTxBuilder.SetMetadata(params[5]);
 
         CKey keyToSign;
-        if (nftRegSign == NftRegSign::SelfSign && ownerKey.IsValid())
+        if (nftRegSign == SelfSign && ownerKey.IsValid())
             keyToSign = ownerKey;
-        else if (nftRegSign == NftRegSign::SignByCreator)
+        else if (nftRegSign == SignByCreator)
             ; //TODO: get NFT protocol key; privKeyToSign =
-        else if (nftRegSign == NftRegSign::SignAny && params.size() > 6)
+        else if (nftRegSign == SignAny && params.size() > 6)
             keyToSign = ParsePrivKeyOrAddress(params[6].get_str(), "nfTokenRegistrar");
         else
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Registrar address is missing or invalid");

@@ -2,7 +2,9 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <platform/nf-token/nf-token-protocol.h>
+#include "platform/nf-token/nf-token-protocol.h"
+#include "platform/nf-token/nft-protocol-reg-tx-builder.h"
+#include "primitives/transaction.h"
 #include "platform/specialtx.h"
 #include "platform/platform-utils.h"
 #include "specialtx-rpc-utils.h"
@@ -29,6 +31,36 @@ namespace Platform
     {
         if (params.size() < 4 || params.size() > 10)
             RegisterNftProtocolHelp();
+
+        CKey ownerKey;
+        NftProtocolRegTxBuilder txBuilder;
+        txBuilder.SetTokenProtocol(params[1]).SetTokenProtocolName(params[2]).SetTokenProtocolOwnerKey(params[3], ownerKey);
+
+        if (params.size() > 4)
+            txBuilder.SetNftRegSign(params[4]);
+        if (params.size() > 5)
+            txBuilder.SetMetadataMimeType(params[5]);
+        if (params.size() > 6)
+            txBuilder.SetMetadataSchemaUri(params[6]);
+        if (params.size() > 7)
+            txBuilder.SetIsTokenTransferable(params[7]);
+        if (params.size() > 8)
+            txBuilder.SetIsTokenImmutable(params[8]);
+        if (params.size() > 9)
+            txBuilder.SetIsMetadataEmbedded(params[9]);
+
+        auto nftProtoRegTx = txBuilder.BuildTx();
+
+        CMutableTransaction tx;
+        tx.nVersion = 3;
+        tx.nType = TRANSACTION_NF_TOKEN_PROTOCOL_REGISTER;
+
+        FundSpecialTx(tx, nftProtoRegTx);
+        SignSpecialTxPayload(tx, nftProtoRegTx, ownerKey);
+        SetTxPayload(tx, nftProtoRegTx);
+
+        std::string result = SignAndSendSpecialTx(tx);
+        return result;
     }
 
     void RegisterNftProtocolHelp()
@@ -45,14 +77,14 @@ Arguments:
 2. "tokenProtocolName"       (string, required) Full readable name for this NF token type/protocol.
                              Minimum length 3 symbols, maximum length 24 symbols
 3. "tokenProtocolOwnerAddr"  (string, required) The NFT protocol owner address, it can be used to generate new NFTs or update the protocol settings
-                             The private key belonging to this address may be or may be not known in your wallet.
+                             The private key belonging to this address MUST be known to your wallet.
 4. "nftRegSign"              (numeric, optional) Defines who must sign an NFT registration transaction.
                              1 (SelfSign): every transaction should be signed by the NFT owner
                              2 (SignByCreator): every transaction should be signed by the owner/creator of the NFT protocol
-                             3 (SignAny): every transaction can be signed any key
+                             3 (SignAny): every transaction can be signed by any key
                              Default: SignByCreator
 5. "tokenMetadataMimeType"   (string, optional) MIME type describing metadata content type
-                             Examples: text/json, text/plain, application/x-binary etc. Default: text/plain
+                             Examples: application/json, text/plain, application/octet-stream etc. Default: text/plain
 6. "tokenMetadataSchemaUri"  (string, optional) URI to schema (json/xml/binary) describing metadata format.
                              Default: "". Arbitrary data can be written by default.
 
@@ -63,9 +95,9 @@ Arguments:
 Examples:
 )"
 + HelpExampleCli("nftproto", R"(register "doc" "Doc Proof" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 3 "text/plain" "" true true false)")
-+ HelpExampleCli("nftproto", R"(register "crd" "Crown ID" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 1 "application/x-binary" "https://binary-schema" false true false)")
++ HelpExampleCli("nftproto", R"(register "crd" "Crown ID" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 1 "application/octet-stream" "https://binary-schema" false true false)")
 + HelpExampleRpc("nftproto", R"(register "doc" "Doc Proof" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 3 "text/plain" "" true true false)")
-+ HelpExampleRpc("nftproto", R"(register "crd" "Crown ID" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 1 "application/x-binary" "https://binary-schema" false true false)")
++ HelpExampleRpc("nftproto", R"(register "crd" "Crown ID" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 1 "application/octet-stream" "https://binary-schema" false true false)")
 + HelpExampleRpc("nftproto", R"(register "cks" "ERC721 CryptoKitties" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 2 "text/plain" "" true true false)");
 
         throw std::runtime_error(helpMessage);

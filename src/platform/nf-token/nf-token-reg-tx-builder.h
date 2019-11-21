@@ -30,7 +30,7 @@ namespace Platform
 
         NfTokenRegTxBuilder & SetTokenOwnerKey(const json_spirit::Value & tokenOwnerAddress, NftRegSign nftRegSign, CKey & ownerPrivKey)
         {
-            if (nftRegSign == NftRegSign::SelfSign)
+            if (nftRegSign == SelfSign)
             {
                 ownerPrivKey = PullPrivKeyFromWallet(tokenOwnerAddress.get_str(), "nfTokenOwnerAddr");
                 m_nfToken.tokenOwnerKeyId = ownerPrivKey.GetPubKey().GetID();
