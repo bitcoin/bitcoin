@@ -5,12 +5,16 @@
 #ifndef BITCOIN_QT_SENDCOINSENTRY_H
 #define BITCOIN_QT_SENDCOINSENTRY_H
 
-#include <qt/walletmodel.h>
+#include <qt/sendcoinsrecipient.h>
 
 #include <QStackedWidget>
 
 class WalletModel;
 class PlatformStyle;
+
+namespace interfaces {
+class Node;
+} // namespace interfaces
 
 namespace Ui {
     class SendCoinsEntry;

@@ -2,17 +2,18 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <qt/walletcontroller.h>
+
 #include <qt/askpassphrasedialog.h>
 #include <qt/createwalletdialog.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
-#include <qt/walletcontroller.h>
-
-#include <wallet/wallet.h>
+#include <qt/walletmodel.h>
 
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 #include <util/string.h>
+#include <wallet/wallet.h>
 
 #include <algorithm>
 
