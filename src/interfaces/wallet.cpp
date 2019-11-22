@@ -116,8 +116,22 @@ public:
         std::string error;
         return m_wallet->GetNewDestination(type, label, dest, error);
     }
-    bool getPubKey(const CKeyID& address, CPubKey& pub_key) override { return m_wallet->GetLegacyScriptPubKeyMan()->GetPubKey(address, pub_key); }
-    bool getPrivKey(const CKeyID& address, CKey& key) override { return m_wallet->GetLegacyScriptPubKeyMan()->GetKey(address, key); }
+    bool getPubKey(const CScript& script, const CKeyID& address, CPubKey& pub_key) override
+    {
+        const SigningProvider* provider = m_wallet->GetSigningProvider(script);
+        if (provider) {
+            return provider->GetPubKey(address, pub_key);
+        }
+        return false;
+    }
+    bool getPrivKey(const CScript& script, const CKeyID& address, CKey& key) override
+    {
+        const SigningProvider* provider = m_wallet->GetSigningProvider(script);
+        if (provider) {
+            return provider->GetKey(address, key);
+        }
+        return false;
+    }
     bool isSpendable(const CTxDestination& dest) override { return m_wallet->IsMine(dest) & ISMINE_SPENDABLE; }
     bool haveWatchOnly() override
     {
