@@ -831,6 +831,20 @@ void ThreadImport(std::vector<fs::path> vImportFiles)
     // GetMainSignals().UpdatedBlockTip(chainActive.Tip());
     pdsNotificationInterface->InitializeCurrentBlockTip();
 
+    {
+        // Get all UTXOs for each MN collateral in one go so that we can fill coin cache early
+        // and reduce further locking overhead for cs_main in other parts of code inclluding GUI
+        LogPrintf("Filling coin cache with masternode UTXOs...\n");
+        LOCK(cs_main);
+        int64_t nStart = GetTimeMillis();
+        auto mnList = deterministicMNManager->GetListAtChainTip();
+        mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
+            Coin coin;
+            GetUTXOCoin(dmn->collateralOutpoint, coin);
+        });
+        LogPrintf("Filling coin cache with masternode UTXOs: done in %dms\n", GetTimeMillis() - nStart);
+    }
+
     if (fMasternodeMode) {
         assert(activeMasternodeManager);
         activeMasternodeManager->Init();

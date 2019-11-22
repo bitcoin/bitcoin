@@ -4,11 +4,13 @@
 #include "masternode/activemasternode.h"
 #include "clientmodel.h"
 #include "clientversion.h"
+#include "coins.h"
 #include "guiutil.h"
 #include "init.h"
 #include "masternode/masternode-sync.h"
 #include "netbase.h"
 #include "sync.h"
+#include "validation.h"
 #include "wallet/wallet.h"
 #include "walletmodel.h"
 
@@ -49,6 +51,9 @@ MasternodeList::MasternodeList(const PlatformStyle* platformStyle, QWidget* pare
     int columnNextPaymentWidth = 100;
     int columnPayeeWidth = 130;
     int columnOperatorRewardWidth = 130;
+    int columnCollateralWidth = 130;
+    int columnOwnerWidth = 130;
+    int columnVotingWidth = 130;
 
     ui->tableWidgetMasternodesDIP3->setColumnWidth(0, columnAddressWidth);
     ui->tableWidgetMasternodesDIP3->setColumnWidth(1, columnStatusWidth);
@@ -58,11 +63,14 @@ MasternodeList::MasternodeList(const PlatformStyle* platformStyle, QWidget* pare
     ui->tableWidgetMasternodesDIP3->setColumnWidth(5, columnNextPaymentWidth);
     ui->tableWidgetMasternodesDIP3->setColumnWidth(6, columnPayeeWidth);
     ui->tableWidgetMasternodesDIP3->setColumnWidth(7, columnOperatorRewardWidth);
+    ui->tableWidgetMasternodesDIP3->setColumnWidth(8, columnCollateralWidth);
+    ui->tableWidgetMasternodesDIP3->setColumnWidth(9, columnOwnerWidth);
+    ui->tableWidgetMasternodesDIP3->setColumnWidth(10, columnVotingWidth);
 
     // dummy column for proTxHash
     // TODO use a proper table model for the MN list
-    ui->tableWidgetMasternodesDIP3->insertColumn(8);
-    ui->tableWidgetMasternodesDIP3->setColumnHidden(8, true);
+    ui->tableWidgetMasternodesDIP3->insertColumn(11);
+    ui->tableWidgetMasternodesDIP3->setColumnHidden(11, true);
 
     ui->tableWidgetMasternodesDIP3->setContextMenuPolicy(Qt::CustomContextMenu);
 
@@ -132,7 +140,8 @@ void MasternodeList::updateDIP3ListScheduled()
             fFilterUpdatedDIP3 = false;
         }
     } else if (mnListChanged) {
-        int64_t nSecondsToWait = nTimeUpdatedDIP3 - GetTime() + MASTERNODELIST_UPDATE_SECONDS;
+        int64_t nMnListUpdateSecods = masternodeSync.IsBlockchainSynced() ? MASTERNODELIST_UPDATE_SECONDS : MASTERNODELIST_UPDATE_SECONDS*10;
+        int64_t nSecondsToWait = nTimeUpdatedDIP3 - GetTime() + nMnListUpdateSecods;
 
         if (nSecondsToWait <= 0) {
             updateDIP3List();
@@ -147,6 +156,22 @@ void MasternodeList::updateDIP3List()
         return;
     }
 
+    auto mnList = clientModel->getMasternodeList();
+    std::map<uint256, CTxDestination> mapCollateralDests;
+
+    {
+        // Get all UTXOs for each MN collateral in one go so that we can reduce locking overhead for cs_main
+        // We also do this outside of the below Qt list update loop to reduce cs_main locking time to a minimum
+        LOCK(cs_main);
+        mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
+            CTxDestination collateralDest;
+            Coin coin;
+            if (GetUTXOCoin(dmn->collateralOutpoint, coin) && ExtractDestination(coin.out.scriptPubKey, collateralDest)) {
+                mapCollateralDests.emplace(dmn->proTxHash, collateralDest);
+            }
+        });
+    }
+
     LOCK(cs_dip3list);
 
     QString strToFilter;
@@ -155,7 +180,6 @@ void MasternodeList::updateDIP3List()
     ui->tableWidgetMasternodesDIP3->clearContents();
     ui->tableWidgetMasternodesDIP3->setRowCount(0);
 
-    auto mnList = clientModel->getMasternodeList();
     nTimeUpdatedDIP3 = GetTime();
 
     auto projectedPayees = mnList.GetProjectedMNPayees(mnList.GetValidMNsCount());
@@ -193,17 +217,15 @@ void MasternodeList::updateDIP3List()
         QTableWidgetItem* nextPaymentItem = new QTableWidgetItem(nextPayments.count(dmn->proTxHash) ? QString::number(nextPayments[dmn->proTxHash]) : tr("UNKNOWN"));
 
         CTxDestination payeeDest;
-        QString payeeStr;
+        QString payeeStr = tr("UNKNOWN");
         if (ExtractDestination(dmn->pdmnState->scriptPayout, payeeDest)) {
             payeeStr = QString::fromStdString(CBitcoinAddress(payeeDest).ToString());
-        } else {
-            payeeStr = tr("UNKNOWN");
         }
         QTableWidgetItem* payeeItem = new QTableWidgetItem(payeeStr);
 
-        QString operatorRewardStr;
+        QString operatorRewardStr = tr("NONE");
         if (dmn->nOperatorReward) {
-            operatorRewardStr += QString::number(dmn->nOperatorReward / 100.0, 'f', 2) + "% ";
+            operatorRewardStr = QString::number(dmn->nOperatorReward / 100.0, 'f', 2) + "% ";
 
             if (dmn->pdmnState->scriptOperatorPayout != CScript()) {
                 CTxDestination operatorDest;
@@ -215,10 +237,22 @@ void MasternodeList::updateDIP3List()
             } else {
                 operatorRewardStr += tr("but not claimed");
             }
-        } else {
-            operatorRewardStr = tr("NONE");
         }
         QTableWidgetItem* operatorRewardItem = new QTableWidgetItem(operatorRewardStr);
+
+        QString collateralStr = tr("UNKNOWN");
+        auto collateralDestIt = mapCollateralDests.find(dmn->proTxHash);
+        if (collateralDestIt != mapCollateralDests.end()) {
+            collateralStr = QString::fromStdString(CBitcoinAddress(collateralDestIt->second).ToString());
+        }
+        QTableWidgetItem* collateralItem = new QTableWidgetItem(collateralStr);
+
+        QString ownerStr = QString::fromStdString(CBitcoinAddress(dmn->pdmnState->keyIDOwner).ToString());
+        QTableWidgetItem* ownerItem = new QTableWidgetItem(ownerStr);
+
+        QString votingStr = QString::fromStdString(CBitcoinAddress(dmn->pdmnState->keyIDVoting).ToString());
+        QTableWidgetItem* votingItem = new QTableWidgetItem(votingStr);
+
         QTableWidgetItem* proTxHashItem = new QTableWidgetItem(QString::fromStdString(dmn->proTxHash.ToString()));
 
         if (strCurrentFilterDIP3 != "") {
@@ -230,6 +264,9 @@ void MasternodeList::updateDIP3List()
                           nextPaymentItem->text() + " " +
                           payeeItem->text() + " " +
                           operatorRewardItem->text() + " " +
+                          collateralItem->text() + " " +
+                          ownerItem->text() + " " +
+                          votingItem->text() + " " +
                           proTxHashItem->text();
             if (!strToFilter.contains(strCurrentFilterDIP3)) return;
         }
@@ -243,7 +280,10 @@ void MasternodeList::updateDIP3List()
         ui->tableWidgetMasternodesDIP3->setItem(0, 5, nextPaymentItem);
         ui->tableWidgetMasternodesDIP3->setItem(0, 6, payeeItem);
         ui->tableWidgetMasternodesDIP3->setItem(0, 7, operatorRewardItem);
-        ui->tableWidgetMasternodesDIP3->setItem(0, 8, proTxHashItem);
+        ui->tableWidgetMasternodesDIP3->setItem(0, 8, collateralItem);
+        ui->tableWidgetMasternodesDIP3->setItem(0, 9, ownerItem);
+        ui->tableWidgetMasternodesDIP3->setItem(0, 10, votingItem);
+        ui->tableWidgetMasternodesDIP3->setItem(0, 11, proTxHashItem);
     });
 
     ui->countLabelDIP3->setText(QString::number(ui->tableWidgetMasternodesDIP3->rowCount()));
@@ -282,7 +322,7 @@ CDeterministicMNCPtr MasternodeList::GetSelectedDIP3MN()
 
         QModelIndex index = selected.at(0);
         int nSelectedRow = index.row();
-        strProTxHash = ui->tableWidgetMasternodesDIP3->item(nSelectedRow, 8)->text().toStdString();
+        strProTxHash = ui->tableWidgetMasternodesDIP3->item(nSelectedRow, 11)->text().toStdString();
     }
 
     uint256 proTxHash;

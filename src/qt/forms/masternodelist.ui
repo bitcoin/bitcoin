@@ -126,7 +126,7 @@
          </attribute>
          <column>
           <property name="text">
-           <string>Address</string>
+           <string>Service</string>
           </property>
          </column>
          <column>
@@ -156,12 +156,27 @@
          </column>
          <column>
           <property name="text">
-           <string>Payee</string>
+           <string>Payout Address</string>
           </property>
          </column>
          <column>
           <property name="text">
            <string>Operator Reward</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>Collateral Address</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>Owner Address</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>Voting Address</string>
           </property>
          </column>
         </widget>
