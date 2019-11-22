@@ -7,11 +7,9 @@
 export LC_ALL=C.UTF-8
 
 if [ "$TRAVIS_OS_NAME" == "osx" ]; then
-  set +o errexit
   pushd /usr/local/Homebrew || exit 1
   git reset --hard origin/master
   popd || exit 1
-  set -o errexit
   ${CI_RETRY_EXE} brew update
   # brew upgrade returns an error if any of the packages is already up to date
   # Failure is safe to ignore, unless we really need an update.
