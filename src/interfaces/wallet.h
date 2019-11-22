@@ -14,6 +14,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <psbt.h>
 #include <stdint.h>
 #include <string>
 #include <tuple>
@@ -193,6 +194,13 @@ public:
         WalletOrderForm& order_form,
         bool& in_mempool,
         int& num_blocks) = 0;
+
+    //! Fill PSBT.
+    virtual TransactionError fillPSBT(PartiallySignedTransaction& psbtx,
+        bool& complete,
+        int sighash_type = 1 /* SIGHASH_ALL */,
+        bool sign = true,
+        bool bip32derivs = false) = 0;
 
     //! Get balances.
     virtual WalletBalances getBalances() = 0;
