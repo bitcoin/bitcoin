@@ -1,8 +1,8 @@
 # Crown Platform 0.13.4
 
-[![pipeline status](http://gitlab.crown.tech/crown/crown-core/badges/master/pipeline.svg)](http://gitlab.crown.tech/crown/crown-core/commits/master)
+[![pipeline status](http://gitlab.crownplatform.com/crown/crown-core/badges/master/pipeline.svg)](http://gitlab.crownplatform.com/crown/crown-core/commits/master)
 
-http://www.crown.tech
+http://www.crownplatform.com
 
 ## What is Crown?
 
@@ -16,16 +16,16 @@ CRW tokens are a type of cryptocurrency. Like bitcoins, CRW can be used to pay f
 
 The Crown Platform utilizes two additional tiers of nodes that offer different roles: Masternodes process instant transactions while Systemnodes will host applications via the CrownPlatform. Members of the Crown Community can set up their own incentivized nodes to earn CRW while helping to maintain the network.
 
-For more information, as well as an immediately usable, binary version Crown see https://crown.tech/wallet.
+For more information, as well as an immediately usable, binary version Crown see https://crownplatform.com/wallet.
 
 ## Community
 
 Crown is ultimately a community-driven platform. Its potential to bring social and technological growth is contingent on the ideas and support its users provide. We invite you to lend your voice and imagination to this burgeoning platform and share in its success. Together, there’s no limit to what we can accomplish.
 
-* Crown Forum: https://forum.crown.tech
+* Crown Forum: https://forum.crownplatform.com
 * Discord: https://discord.gg/Tcrkazc
 * Telegram: https://t.me/crownplatform
-* Guides & How-to: https://forum.crown.tech/index.php?board=5.0
+* Guides & How-to: https://forum.crownplatform.com/index.php?board=5.0
 
 ## Governance
 
@@ -33,8 +33,8 @@ Crown’s governance system has two core functions: choosing platform direction 
 
 Crown’s governance system also enables its community to vote on which changes (ranging from projects to network updates) will be implemented onto the blockchain. Any platform user can submit a proposal to grow or change the network. 
 
-* View [proposals](https://crown.today/proposals)
-* Learn [how to create a proposal](https://forum.crown.tech/index.php?topic=11.0)
+* View [proposals](https://crowncentral.net/proposals/overview)
+* Learn [how to create a proposal](https://forum.crownplatform.com/index.php?topic=11.0)
 
 ## Server Nodes
 
@@ -44,19 +44,19 @@ Crown uses two types of server nodes to build and protect its network — System
 
 Masternodes supply substantial computing power to the Crown Platform, and have copies of the ledger stored and ready to distribute to the network if needed. Think of Masternodes as the stabilizing force behind Crown; they help us keep the network secure and running smoothly by tracking the ledger and confirming transactions at lightning speed with Instant Send. A Masternode requires 10,000 CRW collateral to run.
 
-See also: [Masternode Setup Guide](https://forum.crown.tech/index.php?topic=1241.0).
+See also: [Masternode Setup Guide](https://forum.crownplatform.com/index.php?topic=1241.0).
 
 ### Systemnodes
 
 Systemnodes are empty-shell servers that are tasked with hosting specific services for the Crown network. The Crown Platform will use Systemnodes to host new economy applications created by members of the community, connecting them to the Crown Platform through an API. A Systemnode requires 500 CRW collateral to run. 
 
-See also: [Systemnode Setup Guide](https://forum.crown.tech/index.php?topic=1240.0).
+See also: [Systemnode Setup Guide](https://forum.crownplatform.com/index.php?topic=1240.0).
 
 ## Development
 
 ### Report a Bug
 
-Bugs can be reported via the Gitlab issues page: https://gitlab.crown.tech/crown/crown-core/issues, tech support channels in Discord or emailing [support@crown.tech](email:support@crown.tech)
+Bugs can be reported via the Gitlab issues page: https://gitlab.crownplatform.com/crown/crown-core/issues, tech support channels in Discord or emailing [support@crownplatform.com](email:support@crownplatform.com)
 
 When describing a bug please include following information:
 * **Issue summary** - an issue header which outlines the actual defect to be solved

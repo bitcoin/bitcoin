@@ -58,7 +58,7 @@ void ThreadSendAlert()
     //  Higher numbers mean higher priority
     alert.nPriority     = 5000;
     alert.strComment    = "";
-    alert.strStatusBar  = "URGENT: Upgrade required: see http://crown.tech/wallets";
+    alert.strStatusBar  = "URGENT: Upgrade required: see http://crownplatform.com/wallets";
 
     // Set specific client version/versions here. If setSubVer is empty, no filtering on subver is done:
     // alert.setSubVer.insert(std::string("/DarkSilk Core:1.0.0.0/"));
