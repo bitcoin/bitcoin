@@ -5,11 +5,12 @@
 #include <util/system.h>
 
 #include <clientversion.h>
+#include <key.h> // For CKey
 #include <optional.h>
 #include <sync.h>
 #include <test/util/setup_common.h>
 #include <test/util/str.h>
-#include <util/message.h> // For MessageVerify()
+#include <util/message.h> // For MessageSign(), MessageVerify()
 #include <util/moneystr.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -17,6 +18,7 @@
 #include <util/spanparsing.h>
 #include <util/vector.h>
 
+#include <array>
 #include <stdint.h>
 #include <thread>
 #include <univalue.h>
@@ -2024,6 +2026,42 @@ BOOST_AUTO_TEST_CASE(test_tracked_vector)
     BOOST_CHECK_EQUAL(v8[0].copies, 0);
     BOOST_CHECK_EQUAL(v8[1].copies, 1);
     BOOST_CHECK_EQUAL(v8[2].copies, 0);
+}
+
+BOOST_AUTO_TEST_CASE(message_sign)
+{
+    const std::array<unsigned char, 32> privkey_bytes = {
+        // just some random data
+        // derived address from this private key: 15CRxFdyRpGZLW9w8HnHvVduizdL5jKNbs
+        0xD9, 0x7F, 0x51, 0x08, 0xF1, 0x1C, 0xDA, 0x6E,
+        0xEE, 0xBA, 0xAA, 0x42, 0x0F, 0xEF, 0x07, 0x26,
+        0xB1, 0xF8, 0x98, 0x06, 0x0B, 0x98, 0x48, 0x9F,
+        0xA3, 0x09, 0x84, 0x63, 0xC0, 0x03, 0x28, 0x66
+    };
+
+    const std::string message = "Trust no one";
+
+    const std::string expected_signature =
+        "IPojfrX2dfPnH26UegfbGQQLrdK844DlHq5157/P6h57WyuS/Qsl+h/WSVGDF4MUi4rWSswW38oimDYfNNUBUOk=";
+
+    CKey privkey;
+    std::string generated_signature;
+
+    BOOST_REQUIRE_MESSAGE(!privkey.IsValid(),
+        "Confirm the private key is invalid");
+
+    BOOST_CHECK_MESSAGE(!MessageSign(privkey, message, generated_signature),
+        "Sign with an invalid private key");
+
+    privkey.Set(privkey_bytes.begin(), privkey_bytes.end(), true);
+
+    BOOST_REQUIRE_MESSAGE(privkey.IsValid(),
+        "Confirm the private key is valid");
+
+    BOOST_CHECK_MESSAGE(MessageSign(privkey, message, generated_signature),
+        "Sign with a valid private key");
+
+    BOOST_CHECK_EQUAL(expected_signature, generated_signature);
 }
 
 BOOST_AUTO_TEST_CASE(message_verify)

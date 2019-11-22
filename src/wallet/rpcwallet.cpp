@@ -19,7 +19,7 @@
 #include <script/sign.h>
 #include <util/bip32.h>
 #include <util/fees.h>
-#include <util/message.h> // For strMessageMagic
+#include <util/message.h> // For MessageSign()
 #include <util/moneystr.h>
 #include <util/string.h>
 #include <util/system.h>
@@ -576,15 +576,13 @@ static UniValue signmessage(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_WALLET_ERROR, "Private key not available");
     }
 
-    CHashWriter ss(SER_GETHASH, 0);
-    ss << strMessageMagic;
-    ss << strMessage;
+    std::string signature;
 
-    std::vector<unsigned char> vchSig;
-    if (!key.SignCompact(ss.GetHash(), vchSig))
+    if (!MessageSign(key, strMessage, signature)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Sign failed");
+    }
 
-    return EncodeBase64(vchSig.data(), vchSig.size());
+    return signature;
 }
 
 static UniValue getreceivedbyaddress(const JSONRPCRequest& request)

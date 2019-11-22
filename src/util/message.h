@@ -6,6 +6,8 @@
 #ifndef BITCOIN_UTIL_MESSAGE_H
 #define BITCOIN_UTIL_MESSAGE_H
 
+#include <key.h> // For CKey
+
 #include <string>
 
 extern const std::string strMessageMagic;
@@ -45,5 +47,15 @@ MessageVerificationResult MessageVerify(
     const std::string& address,
     const std::string& signature,
     const std::string& message);
+
+/** Sign a message.
+ * @param[in] privkey Private key to sign with.
+ * @param[in] message The message to sign.
+ * @param[out] signature Signature, base64 encoded, only set if true is returned.
+ * @return true if signing was successful. */
+bool MessageSign(
+    const CKey& privkey,
+    const std::string& message,
+    std::string& signature);
 
 #endif // BITCOIN_UTIL_MESSAGE_H
