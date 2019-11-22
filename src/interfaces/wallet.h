@@ -114,10 +114,10 @@ public:
     virtual bool getNewDestination(const std::string label, CTxDestination& dest) = 0;
 
     //! Get public key.
-    virtual bool getPubKey(const CKeyID& address, CPubKey& pub_key) = 0;
+    virtual bool getPubKey(const CScript& script, const CKeyID& address, CPubKey& pub_key) = 0;
 
     //! Get private key.
-    virtual bool getPrivKey(const CKeyID& address, CKey& key) = 0;
+    virtual bool getPrivKey(const CScript& script, const CKeyID& address, CKey& key) = 0;
 
     //! Return whether wallet has private key.
     virtual bool isSpendable(const CScript& script) = 0;

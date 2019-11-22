@@ -623,7 +623,7 @@ bool CCoinJoinClientSession::SignFinalTransaction(const CTransaction& finalTrans
 
             LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::%s -- Signing my input %i\n", __func__, nMyInputIndex);
             // TODO we're using amount=0 here but we should use the correct amount. This works because Dash ignores the amount while signing/verifying (only used in Bitcoin/Segwit)
-            if (!SignSignature(*mixingWallet.GetSigningProvider(), prevPubKey, finalMutableTransaction, nMyInputIndex, 0, int(SIGHASH_ALL | SIGHASH_ANYONECANPAY))) { // changes scriptSig
+            if (!SignSignature(*mixingWallet.GetSigningProvider(prevPubKey), prevPubKey, finalMutableTransaction, nMyInputIndex, 0, int(SIGHASH_ALL | SIGHASH_ANYONECANPAY))) { // changes scriptSig
                 LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::%s -- Unable to sign my own transaction!\n", __func__);
                 // not sure what to do here, it will time out...?
             }
@@ -1544,7 +1544,7 @@ bool CCoinJoinClientSession::CreateCollateralTransaction(CMutableTransaction& tx
         txCollateral.vout.emplace_back(0, CScript() << OP_RETURN);
     }
 
-    if (!SignSignature(*mixingWallet.GetSigningProvider(), txout.scriptPubKey, txCollateral, 0, txout.nValue, SIGHASH_ALL)) {
+    if (!SignSignature(*mixingWallet.GetSigningProvider(txout.scriptPubKey), txout.scriptPubKey, txCollateral, 0, txout.nValue, SIGHASH_ALL)) {
         strReason = "Unable to sign collateral transaction!";
         return false;
     }

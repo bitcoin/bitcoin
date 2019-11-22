@@ -189,19 +189,21 @@ public:
         std::string error;
         return m_wallet->GetNewDestination(label, dest, error);
     }
-    bool getPubKey(const CKeyID& address, CPubKey& pub_key) override {
-        auto spk_man = m_wallet->GetLegacyScriptPubKeyMan();
-        if (!spk_man) {
-            return false;
+    bool getPubKey(const CScript& script, const CKeyID& address, CPubKey& pub_key) override
+    {
+        const SigningProvider* provider = m_wallet->GetSigningProvider(script);
+        if (provider) {
+            return provider->GetPubKey(address, pub_key);
         }
-        return spk_man->GetPubKey(address, pub_key);
+        return false;
     }
-    bool getPrivKey(const CKeyID& address, CKey& key) override {
-        auto spk_man = m_wallet->GetLegacyScriptPubKeyMan();
-        if (!spk_man) {
-            return false;
+    bool getPrivKey(const CScript& script, const CKeyID& address, CKey& key) override
+    {
+        const SigningProvider* provider = m_wallet->GetSigningProvider(script);
+        if (provider) {
+            return provider->GetKey(address, key);
         }
-        return spk_man->GetKey(address, key);
+        return false;
     }
     bool isSpendable(const CScript& script) override { return m_wallet->IsMine(script) & ISMINE_SPENDABLE; }
     bool isSpendable(const CTxDestination& dest) override { return m_wallet->IsMine(dest) & ISMINE_SPENDABLE; }

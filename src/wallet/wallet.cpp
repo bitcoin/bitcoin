@@ -1630,7 +1630,11 @@ bool CWallet::DummySignInput(CTxIn &tx_in, const CTxOut &txout, bool use_max_sig
     const CScript& scriptPubKey = txout.scriptPubKey;
     SignatureData sigdata;
 
-    const SigningProvider* provider = GetSigningProvider();
+    const SigningProvider* provider = GetSigningProvider(scriptPubKey);
+    if (!provider) {
+        // We don't know about this scriptpbuKey;
+        return false;
+    }
 
     if (!ProduceSignature(*provider, use_max_sig ? DUMMY_MAXIMUM_SIGNATURE_CREATOR : DUMMY_SIGNATURE_CREATOR, scriptPubKey, sigdata)) {
         return false;
@@ -2551,7 +2555,7 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
                 continue;
             }
 
-            const SigningProvider* provider = GetSigningProvider();
+            const SigningProvider* provider = GetSigningProvider(pcoin->tx->vout[i].scriptPubKey);
 
             bool solvable = provider ? IsSolvable(*provider, pcoin->tx->vout[i].scriptPubKey) : false;
             bool spendable = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (((mine & ISMINE_WATCH_ONLY) != ISMINE_NO) && (coinControl && coinControl->fAllowWatchOnly && solvable));
@@ -3493,7 +3497,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                 const CScript& scriptPubKey = coin.txout.scriptPubKey;
                 SignatureData sigdata;
 
-                const SigningProvider* provider = GetSigningProvider();
+                const SigningProvider* provider = GetSigningProvider(scriptPubKey);
                 if (!provider || !ProduceSignature(*provider, MutableTransactionSignatureCreator(&txNew, nIn, coin.txout.nValue, SIGHASH_ALL), scriptPubKey, sigdata))
                 {
                     error = _("Signing transaction failed");
@@ -4980,12 +4984,17 @@ bool CWallet::Unlock(const SecureString& strWalletPassphrase, bool fForMixingOnl
     return false;
 }
 
-ScriptPubKeyMan* CWallet::GetScriptPubKeyMan() const
+ScriptPubKeyMan* CWallet::GetScriptPubKeyMan(const CScript& script) const
 {
     return m_spk_man.get();
 }
 
-const SigningProvider* CWallet::GetSigningProvider() const
+const SigningProvider* CWallet::GetSigningProvider(const CScript& script) const
+{
+    return m_spk_man.get();
+}
+
+const SigningProvider* CWallet::GetSigningProvider(const CScript& script, SignatureData& sigdata) const
 {
     return m_spk_man.get();
 }
