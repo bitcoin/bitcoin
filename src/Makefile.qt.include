@@ -318,7 +318,6 @@ RES_IMAGES = \
 RES_CSS = \
   qt/res/css/dark.css \
   qt/res/css/light.css \
-  qt/res/css/light-hires.css \
   qt/res/css/scrollbars.css \
   qt/res/css/trad.css
 
