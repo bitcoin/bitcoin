@@ -33,6 +33,47 @@ QT_END_NAMESPACE
  */
 namespace GUIUtil
 {
+    /* Enumeration of possible "colors" */
+    enum class ThemedColor {
+        /* Transaction list -- TX status decoration - default color */
+        DEFAULT,
+        /* Transaction list -- unconfirmed transaction */
+        UNCONFIRMED,
+        /* Transaction list -- negative amount */
+        NEGATIVE,
+        /* Transaction list -- bare address (without label) */
+        BAREADDRESS,
+        /* Transaction list -- TX status decoration - open until date */
+        TX_STATUS_OPENUNTILDATE,
+        /* Transaction list -- TX status decoration - offline */
+        TX_STATUS_OFFLINE,
+        /* Transaction list -- TX status decoration - danger, tx needs attention */
+        TX_STATUS_DANGER,
+        /* Transaction list -- TX status decoration - LockedByInstantSend color */
+        TX_STATUS_LOCKED,
+    };
+
+    /* Enumeration of possible "styles" */
+    enum class ThemedStyle {
+        /* Invalid field background style */
+        TS_INVALID,
+        /* Failed operation text style */
+        TS_ERROR,
+        /* Failed operation text style */
+        TS_SUCCESS,
+        /* Comand text style */
+        TS_COMMAND,
+        /* General text styles */
+        TS_PRIMARY,
+        TS_SECONDARY,
+    };
+
+    /** Helper to get colors for various themes which can't be applied via css for some reason */
+    QColor getThemedQColor(ThemedColor color);
+
+    /** Helper to get css style strings which are injected into rich text through qt */
+    QString getThemedStyleQString(ThemedStyle style);
+
     // Create human-readable string from date
     QString dateTimeStr(const QDateTime &datetime);
     QString dateTimeStr(qint64 nTime);

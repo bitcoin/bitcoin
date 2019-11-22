@@ -5,7 +5,6 @@
 #include "transactiontablemodel.h"
 
 #include "addresstablemodel.h"
-#include "guiconstants.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
 #include "platformstyle.h"
@@ -489,18 +488,18 @@ QVariant TransactionTableModel::addressColor(const TransactionRecord *wtx) const
         {
         QString label = walletModel->getAddressTableModel()->labelForDestination(wtx->txDest);
         if(label.isEmpty())
-            return COLOR_BAREADDRESS;
+            return GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BAREADDRESS);
         } break;
     case TransactionRecord::SendToSelf:
     case TransactionRecord::PrivateSendCreateDenominations:
     case TransactionRecord::PrivateSendDenominate:
     case TransactionRecord::PrivateSendMakeCollaterals:
     case TransactionRecord::PrivateSendCollateralPayment:
-        return COLOR_BAREADDRESS;
+        return GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BAREADDRESS);
     default:
         break;
     }
-    return QVariant();
+    return GUIUtil::getThemedQColor(GUIUtil::ThemedColor::DEFAULT);
 }
 
 QString TransactionTableModel::formatTxAmount(const TransactionRecord *wtx, bool showUnconfirmed, BitcoinUnits::SeparatorStyle separators) const
@@ -522,9 +521,9 @@ QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx)
     {
     case TransactionStatus::OpenUntilBlock:
     case TransactionStatus::OpenUntilDate:
-        return COLOR_TX_STATUS_OPENUNTILDATE;
+        return GUIUtil::getThemedQColor(GUIUtil::ThemedColor::TX_STATUS_OPENUNTILDATE);
     case TransactionStatus::Offline:
-        return COLOR_TX_STATUS_OFFLINE;
+        return GUIUtil::getThemedQColor(GUIUtil::ThemedColor::TX_STATUS_OFFLINE);
     case TransactionStatus::Unconfirmed:
         return QIcon(":/icons/transaction_0");
     case TransactionStatus::Abandoned:
@@ -551,7 +550,7 @@ QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx)
     case TransactionStatus::NotAccepted:
         return QIcon(":/icons/transaction_0");
     default:
-        return COLOR_BLACK;
+        return GUIUtil::getThemedQColor(GUIUtil::ThemedColor::DEFAULT);
     }
 }
 
@@ -648,26 +647,26 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         // Use the "danger" color for abandoned transactions
         if(rec->status.status == TransactionStatus::Abandoned)
         {
-            return COLOR_TX_STATUS_DANGER;
+            return GUIUtil::getThemedQColor(GUIUtil::ThemedColor::TX_STATUS_DANGER);
         }
         if(rec->status.lockedByInstantSend)
         {
-            return COLOR_TX_STATUS_LOCKED;
+            return GUIUtil::getThemedQColor(GUIUtil::ThemedColor::TX_STATUS_LOCKED);
         }
         // Non-confirmed (but not immature) as transactions are grey
         if(!rec->status.countsForBalance && rec->status.status != TransactionStatus::Immature)
         {
-            return COLOR_UNCONFIRMED;
+            return GUIUtil::getThemedQColor(GUIUtil::ThemedColor::UNCONFIRMED);
         }
         if(index.column() == Amount && (rec->credit+rec->debit) < 0)
         {
-            return COLOR_NEGATIVE;
+            return GUIUtil::getThemedQColor(GUIUtil::ThemedColor::NEGATIVE);
         }
         if(index.column() == ToAddress)
         {
             return addressColor(rec);
         }
-        break;
+        return GUIUtil::getThemedQColor(GUIUtil::ThemedColor::DEFAULT);
     case TypeRole:
         return rec->type;
     case DateRole:

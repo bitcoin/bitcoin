@@ -54,6 +54,7 @@
         <file alias="network_disabled">res/icons/network_disabled.png</file>
     </qresource>
     <qresource prefix="/css">
+        <file alias="dark">res/css/dark.css</file>
         <file alias="light">res/css/light.css</file>
         <file alias="light-hires">res/css/light-hires.css</file>
         <file alias="scrollbars">res/css/scrollbars.css</file>

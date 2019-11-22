@@ -72,9 +72,6 @@
               <property name="toolTip">
                <string>The displayed information may be out of date. Your wallet automatically synchronizes with the Dash network after a connection is established, but this process has not completed yet.</string>
               </property>
-              <property name="styleSheet">
-               <string notr="true">QLabel { color: red; }</string>
-              </property>
               <property name="text">
                <string notr="true">(out of sync)</string>
               </property>
@@ -427,9 +424,6 @@
               <property name="toolTip">
                <string>The displayed information may be out of date. Your wallet automatically synchronizes with the Dash network after a connection is established, but this process has not completed yet.</string>
               </property>
-              <property name="styleSheet">
-               <string notr="true">QLabel { color: red; }</string>
-              </property>
               <property name="text">
                <string notr="true">(out of sync)</string>
               </property>
@@ -629,9 +623,6 @@
              <widget class="QLabel" name="labelTransactionsStatus">
               <property name="toolTip">
                <string>The displayed information may be out of date. Your wallet automatically synchronizes with the Dash network after a connection is established, but this process has not completed yet.</string>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">QLabel { color: red; }</string>
               </property>
               <property name="text">
                <string notr="true">(out of sync)</string>

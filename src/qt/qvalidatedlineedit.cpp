@@ -5,7 +5,7 @@
 #include "qvalidatedlineedit.h"
 
 #include "bitcoinaddressvalidator.h"
-#include "guiconstants.h"
+#include "guiutil.h"
 
 QValidatedLineEdit::QValidatedLineEdit(QWidget *parent) :
     QLineEdit(parent),
@@ -28,7 +28,7 @@ void QValidatedLineEdit::setValid(bool _valid)
     }
     else
     {
-        setStyleSheet(STYLE_INVALID);
+        setStyleSheet(GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_INVALID));
     }
     this->valid = _valid;
 }
