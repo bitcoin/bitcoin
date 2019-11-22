@@ -381,7 +381,6 @@ void PrepareShutdown(NodeContext& node)
     node.chain_clients.clear();
     UnregisterAllValidationInterfaces();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
-    GetMainSignals().UnregisterWithMempoolSignals(mempool);
 }
 
 /**
@@ -1724,7 +1723,6 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     }, std::chrono::minutes{1});
 
     GetMainSignals().RegisterBackgroundSignalScheduler(*node.scheduler);
-    GetMainSignals().RegisterWithMempoolSignals(mempool);
 
     tableRPC.InitPlatformRestrictions();
 
