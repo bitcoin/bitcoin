@@ -180,8 +180,6 @@ public:
     void ChainStateFlushed(const CBlockLocator &);
     void BlockChecked(const CBlock&, const BlockValidationState&);
     void NewPoWValidBlock(const CBlockIndex *, const std::shared_ptr<const CBlock>&);
-    // SYSCOIN
-    void TransactionRemovedFromMempool(const CTransactionRef &);
     void NotifySyscoinUpdate(const char *value, const char *topic);
     /** Notifies listeners of accepted block header */
     void AcceptedBlockHeader(const CBlockIndex *);
