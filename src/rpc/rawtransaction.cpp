@@ -759,7 +759,7 @@ static UniValue signrawtransactionwithkey(const JSONRPCRequest& request)
     for (const CTxIn& txin : mtx.vin) {
         coins[txin.prevout]; // Create empty map entry keyed by prevout.
     }
-    FindCoins(coins);
+    FindCoins(*g_rpc_node, coins);
 
     // Parse the prevtxs array
     ParsePrevouts(request.params[2], &keystore, coins);
