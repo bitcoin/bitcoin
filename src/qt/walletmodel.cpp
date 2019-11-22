@@ -10,6 +10,7 @@
 
 #include <qt/addresstablemodel.h>
 #include <qt/guiconstants.h>
+#include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
 #include <qt/paymentserver.h>
 #include <qt/recentrequeststablemodel.h>
@@ -487,8 +488,10 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
          return false;
     }
 
+    const bool create_psbt = privateKeysDisabled();
+
     // allow a user based fee verification
-    QString questionString = tr("Do you want to increase the fee?");
+    QString questionString = create_psbt ? tr("Do you want to draft a transaction with fee increase?") : tr("Do you want to increase the fee?");
     questionString.append("<br />");
     questionString.append("<table style=\"text-align: left;\">");
     questionString.append("<tr><td>");
@@ -517,6 +520,21 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
     if(!ctx.isValid())
     {
         return false;
+    }
+
+    // Short-circuit if we are returning a bumped transaction PSBT to clipboard
+    if (create_psbt) {
+        PartiallySignedTransaction psbtx(mtx);
+        bool complete = false;
+        const TransactionError err = wallet().fillPSBT(psbtx, complete, SIGHASH_ALL, false /* sign */, true /* bip32derivs */);
+        assert(!complete);
+        assert(err == TransactionError::OK);
+        // Serialize the PSBT
+        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+        ssTx << psbtx;
+        GUIUtil::setClipboard(EncodeBase64(ssTx.str()).c_str());
+        Q_EMIT message(tr("PSBT copied"), "Copied to clipboard", CClientUIInterface::MSG_INFORMATION);
+        return true;
     }
 
     // sign bumped transaction
