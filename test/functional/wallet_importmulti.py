@@ -675,7 +675,7 @@ class ImportMultiTest(BitcoinTestFramework):
         # Import pubkeys with key origin info
         self.log.info("Addresses should have hd keypath and master key id after import with key origin")
         pub_addr = self.nodes[1].getnewaddress()
-        pub_addr = self.nodes[1].getnewaddress()
+        pub_addr = self.nodes[1].getnewaddress(address_type="bech32")
         info = self.nodes[1].getaddressinfo(pub_addr)
         pub = info['pubkey']
         pub_keypath = info['hdkeypath']
@@ -693,7 +693,7 @@ class ImportMultiTest(BitcoinTestFramework):
         assert_equal(pub_import_info['hdkeypath'], pub_keypath)
 
         # Import privkeys with key origin info
-        priv_addr = self.nodes[1].getnewaddress()
+        priv_addr = self.nodes[1].getnewaddress(address_type="bech32")
         info = self.nodes[1].getaddressinfo(priv_addr)
         priv = self.nodes[1].dumpprivkey(priv_addr)
         priv_keypath = info['hdkeypath']
@@ -742,8 +742,8 @@ class ImportMultiTest(BitcoinTestFramework):
         self.nodes[1].createwallet(wallet_name="noprivkeys", disable_private_keys=True)
         wrpc = self.nodes[1].get_wallet_rpc("noprivkeys")
 
-        addr1 = self.nodes[0].getnewaddress()
-        addr2 = self.nodes[0].getnewaddress()
+        addr1 = self.nodes[0].getnewaddress(address_type="bech32")
+        addr2 = self.nodes[0].getnewaddress(address_type="bech32")
         pub1 = self.nodes[0].getaddressinfo(addr1)['pubkey']
         pub2 = self.nodes[0].getaddressinfo(addr2)['pubkey']
         result = wrpc.importmulti(
@@ -761,15 +761,15 @@ class ImportMultiTest(BitcoinTestFramework):
         assert result[0]['success']
         assert result[1]['success']
         assert_equal(wrpc.getwalletinfo()["keypoolsize"], 2)
-        newaddr1 = wrpc.getnewaddress()
+        newaddr1 = wrpc.getnewaddress(address_type="bech32")
         assert_equal(addr1, newaddr1)
-        newaddr2 = wrpc.getnewaddress()
+        newaddr2 = wrpc.getnewaddress(address_type="bech32")
         assert_equal(addr2, newaddr2)
 
         # Import some public keys to the internal keypool of a no privkey wallet
         self.log.info("Adding pubkey to internal keypool of disableprivkey wallet")
-        addr1 = self.nodes[0].getnewaddress()
-        addr2 = self.nodes[0].getnewaddress()
+        addr1 = self.nodes[0].getnewaddress(address_type="bech32")
+        addr2 = self.nodes[0].getnewaddress(address_type="bech32")
         pub1 = self.nodes[0].getaddressinfo(addr1)['pubkey']
         pub2 = self.nodes[0].getaddressinfo(addr2)['pubkey']
         result = wrpc.importmulti(
@@ -789,15 +789,15 @@ class ImportMultiTest(BitcoinTestFramework):
         assert result[0]['success']
         assert result[1]['success']
         assert_equal(wrpc.getwalletinfo()["keypoolsize_hd_internal"], 2)
-        newaddr1 = wrpc.getrawchangeaddress()
+        newaddr1 = wrpc.getrawchangeaddress(address_type="bech32")
         assert_equal(addr1, newaddr1)
-        newaddr2 = wrpc.getrawchangeaddress()
+        newaddr2 = wrpc.getrawchangeaddress(address_type="bech32")
         assert_equal(addr2, newaddr2)
 
         # Import a multisig and make sure the keys don't go into the keypool
         self.log.info('Imported scripts with pubkeys should not have their pubkeys go into the keypool')
-        addr1 = self.nodes[0].getnewaddress()
-        addr2 = self.nodes[0].getnewaddress()
+        addr1 = self.nodes[0].getnewaddress(address_type="bech32")
+        addr2 = self.nodes[0].getnewaddress(address_type="bech32")
         pub1 = self.nodes[0].getaddressinfo(addr1)['pubkey']
         pub2 = self.nodes[0].getaddressinfo(addr2)['pubkey']
         result = wrpc.importmulti(
