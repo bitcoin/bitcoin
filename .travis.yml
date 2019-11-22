@@ -144,7 +144,7 @@ jobs:
         FILE_ENV="./ci/test/00_setup_env_native_nowallet.sh"
 
     - stage: test
-      name: 'macOS 10.10  [GOAL: deploy] [no functional tests]'
+      name: 'macOS 10.12  [GOAL: deploy] [no functional tests]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_mac.sh"
 
@@ -152,8 +152,8 @@ jobs:
       name: 'macOS 10.14 native [GOAL: install] [GUI] [no depends]'
       os: osx
       # Use the most recent version:
-      # Xcode 11, macOS 10.14, JDK 12.0.1
+      # Xcode 11.2.1, macOS 10.14, JDK 13.0.1, SDK 10.15
       # https://docs.travis-ci.com/user/reference/osx/#macos-version
-      osx_image: xcode11
+      osx_image: xcode11.2
       env: >-
         FILE_ENV="./ci/test/00_setup_env_mac_host.sh"
