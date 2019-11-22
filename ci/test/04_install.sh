@@ -44,6 +44,8 @@ elif [[ $BITCOIN_CONFIG = *--with-sanitizers=*address* ]]; then # If ran with (A
   DOCKER_ADMIN="--cap-add SYS_PTRACE"
 fi
 
+export P_CI_DIR="$PWD"
+
 if [ -z "$RUN_CI_ON_HOST" ]; then
   echo "Creating $DOCKER_NAME_TAG container to run in"
   ${CI_RETRY_EXE} docker pull "$DOCKER_NAME_TAG"
@@ -57,12 +59,12 @@ if [ -z "$RUN_CI_ON_HOST" ]; then
                   $DOCKER_NAME_TAG)
 
   DOCKER_EXEC () {
-    docker exec $DOCKER_ID bash -c "export PATH=$BASE_SCRATCH_DIR/bins/:\$PATH && cd $PWD && $*"
+    docker exec $DOCKER_ID bash -c "export PATH=$BASE_SCRATCH_DIR/bins/:\$PATH && cd $P_CI_DIR && $*"
   }
 else
   echo "Running on host system without docker wrapper"
   DOCKER_EXEC () {
-    bash -c "export PATH=$BASE_SCRATCH_DIR/bins/:\$PATH && cd $PWD && $*"
+    bash -c "export PATH=$BASE_SCRATCH_DIR/bins/:\$PATH && cd $P_CI_DIR && $*"
   }
 fi
 

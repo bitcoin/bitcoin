@@ -19,14 +19,8 @@ else
 fi
 END_FOLD
 
-# Create folder on host and docker, so that `cd` works
-mkdir -p build
 DOCKER_EXEC mkdir -p build
-
-# Temporarily disable errexit, because Travis macOS fails without error message
-set +o errexit
-cd build || (echo "could not enter build directory"; exit 1)
-set -o errexit
+export P_CI_DIR="$P_CI_DIR/build"
 
 BEGIN_FOLD configure
 DOCKER_EXEC ../configure --cache-file=config.cache $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( (DOCKER_EXEC cat config.log) && false)
@@ -38,9 +32,7 @@ mkdir -p "bitcoin-$HOST"
 DOCKER_EXEC make distdir VERSION=$HOST
 END_FOLD
 
-set +o errexit
-cd "bitcoin-$HOST" || (echo "could not enter distdir bitcoin-$HOST"; exit 1)
-set -o errexit
+export P_CI_DIR="$P_CI_DIR/bitcoin-$HOST"
 
 BEGIN_FOLD configure
 DOCKER_EXEC ./configure --cache-file=../config.cache $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( (DOCKER_EXEC cat config.log) && false)
@@ -52,7 +44,3 @@ trap 'DOCKER_EXEC "cat ${BASE_SCRATCH_DIR}/sanitizer-output/* 2> /dev/null"' ERR
 BEGIN_FOLD build
 DOCKER_EXEC make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows." && DOCKER_EXEC make $GOAL V=1 ; false )
 END_FOLD
-
-set +o errexit
-cd ${BASE_ROOT_DIR} || (echo "could not enter base root dir $BASE_ROOT_DIR"; exit 1)
-set -o errexit
