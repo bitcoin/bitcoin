@@ -15,6 +15,7 @@
 #include <net.h>
 #include <netbase.h>
 #include <util/system.h>
+#include <validation.h>
 
 #include <stdint.h>
 
@@ -243,7 +244,7 @@ static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, int heig
         clientmodel->cachedBestHeaderTime = blockTime;
     }
     // if we are in-sync or if we notify a header update, update the UI regardless of last update time
-    if (fHeader || !initialSync || now - nLastUpdateNotification > MODEL_UPDATE_DELAY) {
+    if ((fHeader && !fReindex) || !initialSync || now - nLastUpdateNotification > MODEL_UPDATE_DELAY) {
         //pass an async signal to the UI thread
         bool invoked = QMetaObject::invokeMethod(clientmodel, "numBlocksChanged", Qt::QueuedConnection,
                                   Q_ARG(int, height),
