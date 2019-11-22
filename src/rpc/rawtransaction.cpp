@@ -763,7 +763,9 @@ static UniValue signrawtransactionwithkey(const JSONRPCRequest& request)
     // Parse the prevtxs array
     ParsePrevouts(request.params[2], &keystore, coins);
 
-    return SignTransaction(mtx, &keystore, coins, request.params[3]);
+    UniValue result(UniValue::VOBJ);
+    SignTransaction(mtx, &keystore, coins, request.params[3], result);
+    return result;
 }
 
 static UniValue sendrawtransaction(const JSONRPCRequest& request)
