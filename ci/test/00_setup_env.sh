@@ -49,3 +49,6 @@ export GOAL=${GOAL:-install}
 export DIR_QA_ASSETS=${DIR_QA_ASSETS:-${BASE_BUILD_DIR}/qa-assets}
 export PATH=${BASE_ROOT_DIR}/ci/retry:$PATH
 export CI_RETRY_EXE=${CI_RETRY_EXE:retry}
+export PATH=${BASE_ROOT_DIR}/ci/apt-fast:$PATH
+export PATH=/ro_base/ci/apt-fast:$PATH  # Need to add the docker internal path as well, because BASE_ROOT_DIR might not have been set up yet
+export PATH=$BASE_SCRATCH_DIR/bins/:$PATH

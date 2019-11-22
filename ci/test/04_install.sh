@@ -57,12 +57,12 @@ if [ -z "$RUN_CI_ON_HOST" ]; then
                   $DOCKER_NAME_TAG)
 
   DOCKER_EXEC () {
-    docker exec $DOCKER_ID bash -c "export PATH=$BASE_SCRATCH_DIR/bins/:\$PATH && cd $PWD && $*"
+    docker exec $DOCKER_ID bash -c "export PATH=$PATH && cd $PWD && $*"
   }
 else
   echo "Running on host system without docker wrapper"
   DOCKER_EXEC () {
-    bash -c "export PATH=$BASE_SCRATCH_DIR/bins/:\$PATH && cd $PWD && $*"
+    bash -c "export PATH=$PATH && cd $PWD && $*"
   }
 fi
 
@@ -80,7 +80,8 @@ fi
 
 if [ "$TRAVIS_OS_NAME" != "osx" ]; then
   ${CI_RETRY_EXE} DOCKER_EXEC apt-get update
-  ${CI_RETRY_EXE} DOCKER_EXEC apt-get install --no-install-recommends --no-upgrade -y $PACKAGES $DOCKER_PACKAGES
+  ${CI_RETRY_EXE} DOCKER_EXEC apt-get install --no-install-recommends --no-upgrade -y aria2  # for apt-fast
+  ${CI_RETRY_EXE} DOCKER_EXEC apt-fast install --no-install-recommends --no-upgrade -y $PACKAGES $DOCKER_PACKAGES
 fi
 
 if [ ! -d ${DIR_QA_ASSETS} ]; then
