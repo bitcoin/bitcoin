@@ -1363,7 +1363,11 @@ bool CWallet::DummySignInput(CTxIn &tx_in, const CTxOut &txout, bool use_max_sig
     const CScript& scriptPubKey = txout.scriptPubKey;
     SignatureData sigdata;
 
-    const SigningProvider* provider = GetSigningProvider();
+    const SigningProvider* provider = GetSigningProvider(scriptPubKey);
+    if (!provider) {
+        // We don't know about this scriptpbuKey;
+        return false;
+    }
 
     if (!ProduceSignature(*provider, use_max_sig ? DUMMY_MAXIMUM_SIGNATURE_CREATOR : DUMMY_SIGNATURE_CREATOR, scriptPubKey, sigdata)) {
         return false;
@@ -2125,7 +2129,7 @@ void CWallet::AvailableCoins(interfaces::Chain::Lock& locked_chain, std::vector<
                 continue;
             }
 
-            const SigningProvider* provider = GetSigningProvider();
+            const SigningProvider* provider = GetSigningProvider(wtx.tx->vout[i].scriptPubKey);
 
             bool solvable = provider ? IsSolvable(*provider, wtx.tx->vout[i].scriptPubKey) : false;
             bool spendable = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (((mine & ISMINE_WATCH_ONLY) != ISMINE_NO) && (coinControl && coinControl->fAllowWatchOnly && solvable));
@@ -2378,8 +2382,9 @@ bool CWallet::SignTransaction(CMutableTransaction& tx)
         const CAmount& amount = mi->second.tx->vout[input.prevout.n].nValue;
         SignatureData sigdata;
 
-        const SigningProvider* provider = GetSigningProvider();
+        const SigningProvider* provider = GetSigningProvider(scriptPubKey);
         if (!provider) {
+            // We don't know about this scriptpbuKey;
             return false;
         }
 
@@ -2846,7 +2851,7 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                 const CScript& scriptPubKey = coin.txout.scriptPubKey;
                 SignatureData sigdata;
 
-                const SigningProvider* provider = GetSigningProvider();
+                const SigningProvider* provider = GetSigningProvider(scriptPubKey);
                 if (!provider || !ProduceSignature(*provider, MutableTransactionSignatureCreator(&txNew, nIn, coin.txout.nValue, SIGHASH_ALL), scriptPubKey, sigdata))
                 {
                     strFailReason = _("Signing transaction failed").translated;
@@ -4043,12 +4048,17 @@ bool CWallet::Lock()
     return true;
 }
 
-ScriptPubKeyMan* CWallet::GetScriptPubKeyMan() const
+ScriptPubKeyMan* CWallet::GetScriptPubKeyMan(const CScript& script) const
 {
     return m_spk_man.get();
 }
 
-const SigningProvider* CWallet::GetSigningProvider() const
+const SigningProvider* CWallet::GetSigningProvider(const CScript& script) const
+{
+    return m_spk_man.get();
+}
+
+const SigningProvider* CWallet::GetSigningProvider(const CScript& script, SignatureData& sigdata) const
 {
     return m_spk_man.get();
 }

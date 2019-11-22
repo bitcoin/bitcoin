@@ -1130,8 +1130,13 @@ public:
         LogPrintf(("%s " + fmt).c_str(), GetDisplayName(), parameters...);
     };
 
-    ScriptPubKeyMan* GetScriptPubKeyMan() const;
-    const SigningProvider* GetSigningProvider() const;
+    //! Get the ScriptPubKeyMan for a script
+    ScriptPubKeyMan* GetScriptPubKeyMan(const CScript& script) const;
+
+    //! Get the SigningProvider for a script
+    const SigningProvider* GetSigningProvider(const CScript& script) const;
+    const SigningProvider* GetSigningProvider(const CScript& script, SignatureData& sigdata) const;
+
     LegacyScriptPubKeyMan* GetLegacyScriptPubKeyMan() const;
 
     // Temporary LegacyScriptPubKeyMan accessors and aliases.
