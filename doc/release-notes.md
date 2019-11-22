@@ -46,16 +46,15 @@ Compatibility
 ==============
 
 Syscoin Core is supported and extensively tested on operating systems using
-the Linux kernel, macOS 10.10+, and Windows 7 and newer. It is not recommended
+the Linux kernel, macOS 10.12+, and Windows 7 and newer. It is not recommended
 to use Syscoin Core on unsupported systems.
 
 Syscoin Core should also work on most other Unix-like systems but is not
 as frequently tested on them.
 
-From 0.17.0 onwards, macOS <10.10 is no longer supported. 0.17.0 is
-built using Qt 5.9.x, which doesn't support versions of macOS older than
-10.10. Additionally, Syscoin Core does not yet change appearance when
-macOS "dark mode" is activated.
+From Syscoin Core 4.1.0 onwards, macOS versions earlier than 10.12 are no
+longer supported. Additionally, Syscoin Core does not yet change appearance
+when macOS "dark mode" is activated.
 
 In addition to previously supported CPU platforms, this release's pre-compiled
 distribution provides binaries for the RISC-V platform.
@@ -66,7 +65,7 @@ Notable changes
 Build System
 ------------
 
-- OpenSSL is no longer used by Bitcoin Core. The last usage of the library
+- OpenSSL is no longer used by Syscoin Core. The last usage of the library
 was removed in #17265.
 
 New RPCs
