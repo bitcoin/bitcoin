@@ -58,31 +58,19 @@ RAW_TEST_FILES =
 GENERATED_TEST_FILES = $(JSON_TEST_FILES:.json=.json.h) $(RAW_TEST_FILES:.raw=.raw.h)
 
 BITCOIN_TEST_SUITE = \
-  test/util/blockfilter.cpp \
-  test/util/blockfilter.h \
-  test/util/logging.cpp \
-  test/util/logging.h \
-  test/util/transaction_utils.cpp \
-  test/util/transaction_utils.h \
   test/main.cpp \
-  test/util/setup_common.h \
-  test/util/setup_common.cpp \
-  test/util/str.h \
-  test/util/str.cpp
+  $(TEST_UTIL_H)
 
 FUZZ_SUITE = \
   test/fuzz/fuzz.cpp \
   test/fuzz/fuzz.h \
-  test/fuzz/FuzzedDataProvider.h \
-  test/util/setup_common.cpp \
-  test/util/setup_common.h \
-  test/util/str.cpp \
-  test/util/str.h
+  test/fuzz/FuzzedDataProvider.h
 
 FUZZ_SUITE_LD_COMMON = \
  $(LIBBITCOIN_SERVER) \
  $(LIBBITCOIN_COMMON) \
  $(LIBBITCOIN_UTIL) \
+ $(LIBTEST_UTIL) \
  $(LIBBITCOIN_CONSENSUS) \
  $(LIBBITCOIN_CRYPTO) \
  $(LIBUNIVALUE) \
@@ -198,7 +186,7 @@ endif
 
 test_test_bitcoin_SOURCES = $(BITCOIN_TEST_SUITE) $(BITCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
 test_test_bitcoin_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(TESTDEFS) $(EVENT_CFLAGS)
-test_test_bitcoin_LDADD =
+test_test_bitcoin_LDADD = $(LIBTEST_UTIL)
 if ENABLE_WALLET
 test_test_bitcoin_LDADD += $(LIBBITCOIN_WALLET)
 endif
