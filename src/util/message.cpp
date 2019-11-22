@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <hash.h>            // For CHashWriter
+#include <key.h>             // For CKey
 #include <key_io.h>          // For DecodeDestination()
 #include <pubkey.h>          // For CPubKey
 #include <script/standard.h> // For CTxDestination, IsValidDestination(), PKHash
@@ -50,4 +51,24 @@ MessageVerificationResult MessageVerify(
     }
 
     return MessageVerificationResult::OK;
+}
+
+bool MessageSign(
+    const CKey& privkey,
+    const std::string& message,
+    std::string& signature)
+{
+    CHashWriter ss(SER_GETHASH, 0);
+    ss << strMessageMagic;
+    ss << message;
+
+    std::vector<unsigned char> signature_bytes;
+
+    if (!privkey.SignCompact(ss.GetHash(), signature_bytes)) {
+        return false;
+    }
+
+    signature = EncodeBase64(signature_bytes.data(), signature_bytes.size());
+
+    return true;
 }

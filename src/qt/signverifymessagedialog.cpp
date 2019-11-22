@@ -11,7 +11,7 @@
 #include <qt/walletmodel.h>
 
 #include <key_io.h>
-#include <util/message.h> // For strMessageMagic, MessageVerify()
+#include <util/message.h> // For MessageSign(), MessageVerify()
 #include <wallet/wallet.h>
 
 #include <vector>
@@ -141,13 +141,10 @@ void SignVerifyMessageDialog::on_signMessageButton_SM_clicked()
         return;
     }
 
-    CHashWriter ss(SER_GETHASH, 0);
-    ss << strMessageMagic;
-    ss << ui->messageIn_SM->document()->toPlainText().toStdString();
+    const std::string& message = ui->messageIn_SM->document()->toPlainText().toStdString();
+    std::string signature;
 
-    std::vector<unsigned char> vchSig;
-    if (!key.SignCompact(ss.GetHash(), vchSig))
-    {
+    if (!MessageSign(key, message, signature)) {
         ui->statusLabel_SM->setStyleSheet("QLabel { color: red; }");
         ui->statusLabel_SM->setText(QString("<nobr>") + tr("Message signing failed.") + QString("</nobr>"));
         return;
@@ -156,7 +153,7 @@ void SignVerifyMessageDialog::on_signMessageButton_SM_clicked()
     ui->statusLabel_SM->setStyleSheet("QLabel { color: green; }");
     ui->statusLabel_SM->setText(QString("<nobr>") + tr("Message signed.") + QString("</nobr>"));
 
-    ui->signatureOut_SM->setText(QString::fromStdString(EncodeBase64(vchSig.data(), vchSig.size())));
+    ui->signatureOut_SM->setText(QString::fromStdString(signature));
 }
 
 void SignVerifyMessageDialog::on_copySignatureButton_SM_clicked()
