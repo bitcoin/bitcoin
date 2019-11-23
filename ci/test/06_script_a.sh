@@ -34,7 +34,7 @@ END_FOLD
 
 BEGIN_FOLD distdir
 # Create folder on host and docker, so that `cd` works
-mkdir -p "bitcoin-$HOST"
+mkdir -p "syscoin-$HOST"
 DOCKER_EXEC make distdir VERSION=$HOST
 END_FOLD
 
