@@ -46,7 +46,7 @@ script: |
   FAKETIME_PROGS="date ar ranlib nm"
   HOST_CFLAGS="-O2 -g"
   HOST_CXXFLAGS="-O2 -g"
-  HOST_LDFLAGS=-static-libstdc++
+  HOST_LDFLAGS_BASE="-static-libstdc++"
 
   export QT_RCC_TEST=1
   export QT_RCC_SOURCE_DATE_OVERRIDE=1
@@ -160,6 +160,13 @@ script: |
   # Extract the release tarball into a dir for each host and build
   for i in ${HOSTS}; do
     export PATH=${BASEPREFIX}/${i}/native/bin:${ORIGPATH}
+    if [ "${i}" = "riscv64-linux-gnu" ]; then
+      # Workaround for https://bugs.launchpad.net/ubuntu/+source/gcc-8-cross-ports/+bug/1853740
+      # TODO: remove this when no longer needed
+      HOST_LDFLAGS="${HOST_LDFLAGS_BASE} -Wl,-z,noexecstack"
+    else
+      HOST_LDFLAGS="${HOST_LDFLAGS_BASE}"
+    fi
     mkdir -p distsrc-${i}
     cd distsrc-${i}
     INSTALLPATH=`pwd`/installed/${DISTNAME}
