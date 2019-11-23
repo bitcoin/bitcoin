@@ -393,7 +393,7 @@ bool GetOutpointAndKeysFromOutput(interfaces::Wallet& wallet, const Coin& coin, 
         return false;
     }
     CKeyID keyID(*pkhash);
-    if (!wallet.getPrivKey(keyID, keyRet)) {
+    if (!wallet.getPrivKey(pubScript, keyID, keyRet)) {
         LogPrintf ("GetOutpointAndKeysFromOutput -- Private key for address is not known\n");
         return false;
     }
