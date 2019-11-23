@@ -42,6 +42,9 @@
     <ProjectReference Include="..\libleveldb\libleveldb.vcxproj">
       <Project>{18430fef-6b61-4c53-b396-718e02850f1b}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\libtest_util\libtest_util.vcxproj">
+      <Project>{1e065f03-3566-47d0-8fa9-daa72b084e7d}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Target Name="RawBenchHeaderGen" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
