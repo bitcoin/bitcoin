@@ -3545,9 +3545,9 @@ namespace
 
 void GetScriptForMining (CWallet* pwallet, std::shared_ptr<CReserveScript>& script)
 {
-    auto rKey = std::make_shared<ReserveDestination> (pwallet);
+    auto rKey = std::make_shared<ReserveDestination> (pwallet, OutputType::LEGACY);
     CTxDestination dest;
-    if (!rKey->GetReservedDestination (OutputType::LEGACY, dest, false))
+    if (!rKey->GetReservedDestination (dest, false))
         return;
 
     script = rKey;

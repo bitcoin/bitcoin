@@ -202,7 +202,6 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
     }
     // # vin (with IX)*FEE + # vout*FEE + (10 + # vin)*FEE + 34*FEE (for change output)
     CAmount nFees =  GetMinimumFee(*pwallet, 10+34, coin_control,  &fee_calc);
-    const SigningProvider* provider = pwallet->GetSigningProvider();
     for (auto& vin : txIn.vin) {
         const Coin& coin = view.AccessCoin(vin.prevout);
         if(coin.IsSpent()){
@@ -227,6 +226,7 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
             vin.nSequence = CTxIn::SEQUENCE_FINAL - 1;
         tx.vin.emplace_back(vin);
         int numSigs = 0;
+        const SigningProvider* provider = pwallet->GetSigningProvider(coin.out.scriptPubKey);
         CCountSigsVisitor(provider, numSigs).Process(coin.out.scriptPubKey);
         if(isSyscoinTx)
             numSigs *= 2;
@@ -307,6 +307,7 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
                 }
             }
             int numSigs = 0;
+            const SigningProvider* provider = pwallet->GetSigningProvider(scriptPubKey);
             CCountSigsVisitor(provider, numSigs).Process(scriptPubKey);
             if(isSyscoinTx){
                  // double relay fee for zdag tx to account for dbl bandwidth on dbl spend relays
