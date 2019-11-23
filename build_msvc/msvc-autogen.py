@@ -18,6 +18,7 @@ libs = [
     'libsyscoin_wallet',
     'libsyscoin_zmq',
     'bench_syscoin',
+    'libtest_util',
 ]
 
 ignore_list = [
