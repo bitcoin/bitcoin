@@ -797,6 +797,17 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     reason.clear();
     BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
     BOOST_CHECK_EQUAL(reason, "scriptsig-size");
+
+    // Check tx-size (non-standard if transaction size is > MAX_STANDARD_TX_WEIGHT)
+    t.vin.resize(2397); // transaction weight = 399904
+    t.vin[0].scriptSig = CScript();
+    reason.clear();
+    BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+
+    t.vin.resize(2398); // transaction weight = 400068
+    reason.clear();
+    BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
+    BOOST_CHECK_EQUAL(reason, "tx-size");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
