@@ -4,8 +4,8 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
 A script to check that the (Linux) executables produced by gitian only contain
-allowed gcc, glibc and libstdc++ version symbols.  This makes sure they are
-still compatible with the minimum supported Linux distribution versions.
+allowed gcc and glibc version symbols. This makes sure they are still compatible
+with the minimum supported Linux distribution versions.
 
 Example usage:
 
@@ -16,30 +16,30 @@ import re
 import sys
 import os
 
-# Debian 6.0.9 (Squeeze) has:
+# Debian 8 (Jessie) EOL: 2020. https://wiki.debian.org/DebianReleases#Production_Releases
 #
-# - g++ version 4.4.5 (https://packages.debian.org/search?suite=default&section=all&arch=any&searchon=names&keywords=g%2B%2B)
-# - libc version 2.11.3 (https://packages.debian.org/search?suite=default&section=all&arch=any&searchon=names&keywords=libc6)
-# - libstdc++ version 4.4.5 (https://packages.debian.org/search?suite=default&section=all&arch=any&searchon=names&keywords=libstdc%2B%2B6)
+# - g++ version 4.9.2 (https://packages.debian.org/search?suite=jessie&arch=any&searchon=names&keywords=g%2B%2B)
+# - libc version 2.19 (https://packages.debian.org/search?suite=jessie&arch=any&searchon=names&keywords=libc6)
 #
-# Ubuntu 10.04.4 (Lucid Lynx) has:
+# Ubuntu 16.04 (Xenial) EOL: 2024. https://wiki.ubuntu.com/Releases
 #
-# - g++ version 4.4.3 (http://packages.ubuntu.com/search?keywords=g%2B%2B&searchon=names&suite=lucid&section=all)
-# - libc version 2.11.1 (http://packages.ubuntu.com/search?keywords=libc6&searchon=names&suite=lucid&section=all)
-# - libstdc++ version 4.4.3 (http://packages.ubuntu.com/search?suite=lucid&section=all&arch=any&keywords=libstdc%2B%2B&searchon=names)
+# - g++ version 5.3.1 (https://packages.ubuntu.com/search?keywords=g%2B%2B&searchon=names&suite=xenial&section=all)
+# - libc version 2.23.0 (https://packages.ubuntu.com/search?keywords=libc6&searchon=names&suite=xenial&section=all)
+#
+# CentOS 7 EOL: 2024. https://wiki.centos.org/FAQ/General
+#
+# - g++ version 4.8.5 (http://mirror.centos.org/centos/7/os/x86_64/Packages/)
+# - libc version 2.17 (http://mirror.centos.org/centos/7/os/x86_64/Packages/)
 #
 # Taking the minimum of these as our target.
 #
-# According to GNU ABI document (http://gcc.gnu.org/onlinedocs/libstdc++/manual/abi.html) this corresponds to:
-#   GCC 4.4.0: GCC_4.4.0
-#   GCC 4.4.2: GLIBCXX_3.4.13, CXXABI_1.3.3
-#   (glibc)    GLIBC_2_11
+# According to GNU ABI document (https://gcc.gnu.org/onlinedocs/libstdc++/manual/abi.html) this corresponds to:
+#   GCC 4.8.5: GCC_4.8.0
+#   (glibc)    GLIBC_2_17
 #
 MAX_VERSIONS = {
-'GCC':       (4,4,0),
-'CXXABI':    (1,3,3),
-'GLIBCXX':   (3,4,13),
-'GLIBC':     (2,11),
+'GCC':       (4,8,0),
+'GLIBC':     (2,17),
 'LIBATOMIC': (1,0)
 }
 # See here for a description of _IO_stdin_used:
