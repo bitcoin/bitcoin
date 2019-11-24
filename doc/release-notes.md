@@ -68,6 +68,10 @@ Build System
 - OpenSSL is no longer used by Bitcoin Core. The last usage of the library
 was removed in #17265.
 
+- glibc 2.17 or greater is now required to run the release binaries. This
+retains compatibility with RHEL 7, CentOS 7, Debian 8 and Ubuntu 14.04 LTS.
+Further details can be found in #17538.
+
 New RPCs
 --------
 
