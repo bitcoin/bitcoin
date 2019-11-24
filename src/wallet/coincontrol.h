@@ -26,6 +26,9 @@ enum class CoinType
     MAX_COIN_TYPE = ONLY_COINJOIN_COLLATERAL,
 };
 
+//! Default for -avoidpartialspends
+static constexpr bool DEFAULT_AVOIDPARTIALSPENDS = false;
+
 /** Coin Control Features. */
 class CCoinControl
 {
