@@ -72,6 +72,8 @@ if [ "$TRAVIS_OS_NAME" == "osx" ]; then
 else
   DOCKER_EXEC free -m -h
   DOCKER_EXEC echo "Number of CPUs \(nproc\):" \$\(nproc\)
+  DOCKER_EXEC echo "Free disk space:"
+  DOCKER_EXEC df -h
 fi
 
 if [ -n "$DPKG_ADD_ARCH" ]; then
