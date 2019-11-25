@@ -2079,14 +2079,6 @@ bool AppInitMain(NodeContext& node)
     // ********************************************************* Step 13: finished
 
     SetRPCWarmupFinished();
-    // SYSCOIN
-    int wsport = gArgs.GetArg("-gethwebsocketport", 8646);
-    int ethrpcport = gArgs.GetArg("-gethrpcport", 8645);
-    bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
-    const std::string mode = gArgs.GetArg("-gethsyncmode", "light");
-    StartGethNode(exePath, gethPID, wsport, ethrpcport, mode);
-	int rpcport = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
-	StartRelayerNode(exePath, relayerPID, rpcport, wsport, ethrpcport);
     
     uiInterface.InitMessage(_("Done loading").translated);
 
@@ -2098,6 +2090,16 @@ bool AppInitMain(NodeContext& node)
     scheduler.scheduleEvery([banman]{
         banman->DumpBanlist();
     }, DUMP_BANS_INTERVAL * 1000);
+
+    // SYSCOIN
+    MilliSleep(1000);
+    int wsport = gArgs.GetArg("-gethwebsocketport", 8646);
+    int ethrpcport = gArgs.GetArg("-gethrpcport", 8645);
+    bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
+    const std::string mode = gArgs.GetArg("-gethsyncmode", "light");
+    StartGethNode(exePath, gethPID, wsport, ethrpcport, mode);
+	int rpcport = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
+	StartRelayerNode(exePath, relayerPID, rpcport, wsport, ethrpcport);
 
     return true;
 }
