@@ -204,9 +204,32 @@ std::string BCLog::Logger::LogTimestampStr(const std::string &str)
     return strStamped;
 }
 
+namespace BCLog {
+    /** Belts and suspenders: make sure outgoing log messages don't contain
+     * potentially suspicious characters, such as terminal control codes.
+     *
+     * This escapes control characters except newline ('\n') in C syntax.
+     * It escapes instead of removes them to still allow for troubleshooting
+     * issues where they accidentally end up in strings.
+     */
+    std::string LogEscapeMessage(const std::string& str) {
+        std::string ret;
+        for (char ch_in : str) {
+            uint8_t ch = (uint8_t)ch_in;
+            if ((ch >= 32 || ch == '\n') && ch != '\x7f') {
+                ret += ch_in;
+            } else {
+                ret += strprintf("\\x%02x", ch);
+            }
+        }
+        return ret;
+    }
+}
+
 void BCLog::Logger::LogPrintStr(const std::string &str)
 {
-    std::string strTimestamped = LogTimestampStr(str);
+    std::string strEscaped = LogEscapeMessage(str);
+    std::string strTimestamped = LogTimestampStr(strEscaped);
 
     if (m_print_to_console) {
         // print to console

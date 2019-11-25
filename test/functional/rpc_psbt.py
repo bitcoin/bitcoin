@@ -361,6 +361,16 @@ class PSBTTest(BitcoinTestFramework):
         joined_decoded = self.nodes[0].decodepsbt(joined)
         assert len(joined_decoded['inputs']) == 4 and len(joined_decoded['outputs']) == 2 and "final_scriptwitness" not in joined_decoded['inputs'][3] and "final_scriptSig" not in joined_decoded['inputs'][3]
 
+        # Check that joining shuffles the inputs and outputs
+        # 10 attempts should be enough to get a shuffled join
+        shuffled = False
+        for i in range(0, 10):
+            shuffled_joined = self.nodes[0].joinpsbts([psbt, psbt2])
+            shuffled |= joined != shuffled_joined
+            if shuffled:
+                break
+        assert shuffled
+
         # Newly created PSBT needs UTXOs and updating
         addr = self.nodes[1].getnewaddress("", "p2sh-segwit")
         txid = self.nodes[0].sendtoaddress(addr, 7)

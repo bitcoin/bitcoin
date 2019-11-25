@@ -73,7 +73,7 @@ To assist in updating translations, we have created a script to help.
 ```bash
 git ls-files src/qt/locale/*ts|xargs -n1 basename|sed 's/\(bitcoin_\(.*\)\).ts/<file alias="\2">locale\/\1.qm<\/file>/'
 ```
-4. Update `src/Makefile.qt.include` manually or via
+4. Update `src/Makefile.qt_locale.include` manually or via
 ```bash
 git ls-files src/qt/locale/*ts|xargs -n1 basename|sed 's/\(bitcoin_\(.*\)\).ts/  qt\/locale\/\1.ts \\/'
 ```
