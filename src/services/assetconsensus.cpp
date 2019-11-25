@@ -187,53 +187,52 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     if(outputAmount <= 0){
         return FormatSyscoinErrorMessage(state, "mint-burn-value", bMiner);
     }  
-    if(!fJustCheck){
-        const std::string &receiverTupleStr = mintSyscoin.assetAllocationTuple.ToString();
-        #if __cplusplus > 201402 
-        auto result1 = mapAssetAllocations.try_emplace(std::move(receiverTupleStr),  std::move(emptyAllocation));
-        #else
-        auto result1 = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));
-        #endif
+    const std::string &receiverTupleStr = mintSyscoin.assetAllocationTuple.ToString();
+    #if __cplusplus > 201402 
+    auto result1 = mapAssetAllocations.try_emplace(std::move(receiverTupleStr),  std::move(emptyAllocation));
+    #else
+    auto result1 = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));
+    #endif
 
-        // sender as burn	
-        const CAssetAllocationTuple senderAllocationTuple(mintSyscoin.assetAllocationTuple.nAsset, burnWitness);	
-        const std::string &senderTupleStr = senderAllocationTuple.ToString();	
-        auto result2 = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(senderTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));	
-        auto mapSenderAssetAllocation = result2.first;	
-        const bool &mapSenderAssetAllocationNotFound = result2.second;	
-        if(mapSenderAssetAllocationNotFound){	
-            CAssetAllocationDBEntry senderAllocation;	
-            GetAssetAllocation(senderAllocationTuple, senderAllocation);	
-            if (senderAllocation.assetAllocationTuple.IsNull()) {           	
-                senderAllocation.assetAllocationTuple.nAsset = std::move(senderAllocationTuple.nAsset);	
-                senderAllocation.assetAllocationTuple.witnessAddress = std::move(senderAllocationTuple.witnessAddress); 	
-            }	
-            mapSenderAssetAllocation->second = std::move(senderAllocation);              	
-        }
-
-        auto mapAssetAllocation = result1.first;
-        const bool &mapAssetAllocationNotFound = result1.second;
-        if(mapAssetAllocationNotFound){
-            CAssetAllocationDBEntry receiverAllocation;
-            GetAssetAllocation(mintSyscoin.assetAllocationTuple, receiverAllocation);
-            if (receiverAllocation.assetAllocationTuple.IsNull()) {           
-                receiverAllocation.assetAllocationTuple.nAsset = std::move(mintSyscoin.assetAllocationTuple.nAsset);
-                receiverAllocation.assetAllocationTuple.witnessAddress = std::move(mintSyscoin.assetAllocationTuple.witnessAddress);
-            }
-            mapAssetAllocation->second = std::move(receiverAllocation);             
-        }
-        mapAssetAllocation->second.nBalance += mintSyscoin.nValueAsset;
-        mapSenderAssetAllocation->second.nBalance -= mintSyscoin.nValueAsset;
-        if(mapSenderAssetAllocation->second.nBalance < 0){	
-            return FormatSyscoinErrorMessage(state, "asset-insufficient-balance", bMiner);
-        }    	
-        if(mapSenderAssetAllocation->second.nBalance == 0)	
-            mapSenderAssetAllocation->second.SetNull();        
-        if (!AssetRange(mapAssetAllocation->second.nBalance))
-        {
-            return FormatSyscoinErrorMessage(state, "new-balance-out-of-range", bMiner);
-        }
+    // sender as burn	
+    const CAssetAllocationTuple senderAllocationTuple(mintSyscoin.assetAllocationTuple.nAsset, burnWitness);	
+    const std::string &senderTupleStr = senderAllocationTuple.ToString();	
+    auto result2 = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(senderTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));	
+    auto mapSenderAssetAllocation = result2.first;	
+    const bool &mapSenderAssetAllocationNotFound = result2.second;	
+    if(mapSenderAssetAllocationNotFound){	
+        CAssetAllocationDBEntry senderAllocation;	
+        GetAssetAllocation(senderAllocationTuple, senderAllocation);	
+        if (senderAllocation.assetAllocationTuple.IsNull()) {           	
+            senderAllocation.assetAllocationTuple.nAsset = std::move(senderAllocationTuple.nAsset);	
+            senderAllocation.assetAllocationTuple.witnessAddress = std::move(senderAllocationTuple.witnessAddress); 	
+        }	
+        mapSenderAssetAllocation->second = std::move(senderAllocation);              	
     }
+
+    auto mapAssetAllocation = result1.first;
+    const bool &mapAssetAllocationNotFound = result1.second;
+    if(mapAssetAllocationNotFound){
+        CAssetAllocationDBEntry receiverAllocation;
+        GetAssetAllocation(mintSyscoin.assetAllocationTuple, receiverAllocation);
+        if (receiverAllocation.assetAllocationTuple.IsNull()) {           
+            receiverAllocation.assetAllocationTuple.nAsset = std::move(mintSyscoin.assetAllocationTuple.nAsset);
+            receiverAllocation.assetAllocationTuple.witnessAddress = std::move(mintSyscoin.assetAllocationTuple.witnessAddress);
+        }
+        mapAssetAllocation->second = std::move(receiverAllocation);             
+    }
+    mapAssetAllocation->second.nBalance += mintSyscoin.nValueAsset;
+    mapSenderAssetAllocation->second.nBalance -= mintSyscoin.nValueAsset;
+    if(mapSenderAssetAllocation->second.nBalance < 0){	
+        return FormatSyscoinErrorMessage(state, "asset-insufficient-balance", bMiner);
+    }    	
+    if(mapSenderAssetAllocation->second.nBalance == 0)	
+        mapSenderAssetAllocation->second.SetNull();        
+    if (!AssetRange(mapAssetAllocation->second.nBalance))
+    {
+        return FormatSyscoinErrorMessage(state, "new-balance-out-of-range", bMiner);
+    }
+    
     if (!AssetRange(mintSyscoin.nValueAsset))
     {
         return FormatSyscoinErrorMessage(state, "mint-amount-out-of-range", bMiner);
@@ -1287,11 +1286,11 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-symbol", bMiner);
             }
-            if (theAsset.nMaxSupply < 0 || (theAsset.nMaxSupply > 0 && !AssetRange(theAsset.nMaxSupply, theAsset.nPrecision)))
+            if (!AssetRange(theAsset.nMaxSupply, theAsset.nPrecision))
             {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-maxsupply", bMiner);
             }
-            if (theAsset.nBalance < 0 || theAsset.nBalance > theAsset.nMaxSupply)
+            if (theAsset.nBalance > theAsset.nMaxSupply)
             {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-totalsupply", bMiner);
             }
