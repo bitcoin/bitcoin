@@ -569,7 +569,6 @@ class ImportMultiTest(BitcoinTestFramework):
                      key.p2sh_p2wpkh_addr,
                      solvable=True,
                      ismine=True,
-                     label=p2sh_p2wpkh_label,
                      labels=[p2sh_p2wpkh_label])
 
         # Test ranged descriptor fails if range is not specified
@@ -641,7 +640,6 @@ class ImportMultiTest(BitcoinTestFramework):
                      key.p2pkh_addr,
                      solvable=True,
                      ismine=False,
-                     label=p2pkh_label,
                      labels=[p2pkh_label])
 
         # Test import fails if both desc and scriptPubKey are provided
