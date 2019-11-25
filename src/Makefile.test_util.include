@@ -10,6 +10,7 @@ EXTRA_LIBRARIES += \
 TEST_UTIL_H = \
     test/util/blockfilter.h \
     test/util/logging.h \
+    test/util/mining.h \
     test/util/setup_common.h \
     test/util/str.h \
     test/util/transaction_utils.h
@@ -19,6 +20,7 @@ libtest_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libtest_util_a_SOURCES = \
   test/util/blockfilter.cpp \
   test/util/logging.cpp \
+  test/util/mining.cpp \
   test/util/setup_common.cpp \
   test/util/str.cpp \
   test/util/transaction_utils.cpp \
@@ -28,4 +30,3 @@ LIBTEST_UTIL += $(LIBBITCOIN_SERVER)
 LIBTEST_UTIL += $(LIBBITCOIN_COMMON)
 LIBTEST_UTIL += $(LIBBITCOIN_UTIL)
 LIBTEST_UTIL += $(LIBBITCOIN_CRYPTO_BASE)
-
