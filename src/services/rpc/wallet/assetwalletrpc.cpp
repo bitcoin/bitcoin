@@ -15,6 +15,7 @@
 #include <wallet/coincontrol.h>
 #include <iomanip>
 #include <rpc/server.h>
+#include <wallet/wallet.h>
 #include <chainparams.h>
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
