@@ -1126,17 +1126,13 @@ fs::path AbsPathForConfigVal(const fs::path& path, bool net_specific)
     return fs::absolute(path, GetDataDir(net_specific));
 }
 
-int ScheduleBatchPriority()
+void ScheduleBatchPriority()
 {
 #ifdef SCHED_BATCH
     const static sched_param param{};
-    if (int ret = pthread_setschedparam(pthread_self(), SCHED_BATCH, &param)) {
+    if (pthread_setschedparam(pthread_self(), SCHED_BATCH, &param) != 0) {
         LogPrintf("Failed to pthread_setschedparam: %s\n", strerror(errno));
-        return ret;
     }
-    return 0;
-#else
-    return 1;
 #endif
 }
 
