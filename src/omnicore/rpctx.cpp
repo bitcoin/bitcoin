@@ -456,20 +456,15 @@ static UniValue omni_senddexaccept(const JSONRPCRequest& request)
         RequireSaneDExPaymentWindow(toAddress, propertyId);
     }
 
+    int64_t nMinimumAcceptFee = 0;
 #ifdef ENABLE_WALLET
     // use new 0.10 custom fee to set the accept minimum fee appropriately
-    int64_t nMinimumAcceptFee = 0;
     {
         LOCK(cs_tally);
         const CMPOffer* sellOffer = DEx_getOffer(toAddress, propertyId);
         if (sellOffer == nullptr) throw JSONRPCError(RPC_TYPE_ERROR, "Unable to load sell offer from the distributed exchange");
         nMinimumAcceptFee = sellOffer->getMinFee();
     }
-
-    // temporarily update the global transaction fee to pay enough for the accept fee
-    CFeeRate payTxFeeOriginal = wallet->m_pay_tx_fee;
-    wallet->m_pay_tx_fee = CFeeRate(nMinimumAcceptFee, 225); // TODO: refine!
-    // fPayAtLeastCustomFee = true;
 #endif
 
     // create a payload for the transaction
@@ -478,12 +473,7 @@ static UniValue omni_senddexaccept(const JSONRPCRequest& request)
     // request the wallet build the transaction (and if needed commit it)
     uint256 txid;
     std::string rawHex;
-    int result = WalletTxBuilder(fromAddress, toAddress, "", 0, payload, txid, rawHex, autoCommit, pwallet.get());
-
-#ifdef ENABLE_WALLET
-    // set the custom fee back to original
-    wallet->m_pay_tx_fee = payTxFeeOriginal;
-#endif
+    int result = WalletTxBuilder(fromAddress, toAddress, "", 0, payload, txid, rawHex, autoCommit, pwallet.get(), nMinimumAcceptFee);
 
     // check error and return the txid (or raw hex depending on autocommit)
     if (result != 0) {

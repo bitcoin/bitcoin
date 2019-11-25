@@ -49,7 +49,8 @@ int WalletTxBuilder(
         uint256& retTxid,
         std::string& retRawTx,
         bool commit,
-        interfaces::Wallet* iWallet)
+        interfaces::Wallet* iWallet,
+        CAmount minFee)
 {
 #ifdef ENABLE_WALLET
     if (!iWallet) return MP_ERR_WALLET_ACCESS;
@@ -104,7 +105,7 @@ int WalletTxBuilder(
     CAmount nFeeRet = 0;
     int nChangePosInOut = -1;
     std::string strFailReason;
-    auto wtxNew = iWallet->createTransaction(vecRecipients, coinControl, true /* sign */, nChangePosInOut, nFeeRet, strFailReason, false);
+    auto wtxNew = iWallet->createTransaction(vecRecipients, coinControl, true /* sign */, nChangePosInOut, nFeeRet, strFailReason, false, minFee);
 
     if (!wtxNew) {
         PrintToLog("%s: ERROR: wallet transaction creation failed: %s\n", __func__, strFailReason);

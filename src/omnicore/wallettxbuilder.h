@@ -8,6 +8,8 @@ namespace interfaces {
 class Wallet;
 } // namespace interfaces
 
+#include <amount.h>
+
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -24,7 +26,8 @@ int WalletTxBuilder(
         uint256& retTxid,
         std::string& retRawTx,
         bool commit,
-        interfaces::Wallet* iWallet = nullptr);
+        interfaces::Wallet* iWallet = nullptr,
+        CAmount min_fee = 0);
 
 /**
  * Creates and sends a raw transaction by selecting all coins from the sender
