@@ -148,21 +148,5 @@
     </hint>
    </hints>
   </connection>
-  <connection>
-   <sender>buttonBox</sender>
-   <signal>accepted()</signal>
-   <receiver>ReceiveRequestDialog</receiver>
-   <slot>accept()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>452</x>
-     <y>573</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>243</x>
-     <y>298</y>
-    </hint>
-   </hints>
-  </connection>
  </connections>
 </ui>
