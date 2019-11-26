@@ -13,6 +13,6 @@ export NO_DEPENDS=1
 export RUN_UNIT_TESTS=false
 export RUN_FUNCTIONAL_TESTS=false
 export GOAL="install"
-export SYSCOIN_CONFIG="--enable-reduce-exports --with-incompatible-bdb"
+export SYSCOIN_CONFIG="--enable-reduce-exports --with-incompatible-bdb --with-gui=no"
 
 lscpu
