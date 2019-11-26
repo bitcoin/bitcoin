@@ -49,7 +49,7 @@ public:
     void setModel(WalletModel *model);
 
     // static because also called from sendcoinsdialog
-    static void updateLabels(WalletModel*, QDialog*);
+    static void updateLabels(WalletModel*, QWidget*);
 
     static QList<CAmount> payAmounts;
     static CCoinControl *coinControl();
