@@ -145,7 +145,7 @@ void ScriptToUniv(const CScript& script, UniValue& out, bool include_address)
     out.pushKV("type", GetTxnOutputType(type));
 
     CTxDestination address;
-    // SYSCOIN show pubkey as p2pkh address for now so explorers dont break
+    // SYSCOIN show pubkey as p2pkh address for now so explorers don't break
     if (include_address && ExtractDestination(script, address)/* && type != TX_PUBKEY*/) {
         out.pushKV("address", EncodeDestination(address));
     }
