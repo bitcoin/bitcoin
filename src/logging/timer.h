@@ -85,7 +85,7 @@ private:
     const std::string m_title{};
 
     //! Forwarded on to LogPrint if specified - has the effect of only
-    //! outputing the timing log when a particular debug= category is specified.
+    //! outputting the timing log when a particular debug= category is specified.
     const BCLog::LogFlags m_log_category{};
 
 };
