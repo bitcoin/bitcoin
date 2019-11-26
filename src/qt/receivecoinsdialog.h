@@ -26,8 +26,8 @@ QT_BEGIN_NAMESPACE
 class QModelIndex;
 QT_END_NAMESPACE
 
-/** Dialog for requesting payment of bitcoins */
-class ReceiveCoinsDialog : public QDialog
+/** Widget for requesting payment of bitcoins */
+class ReceiveCoinsDialog : public QWidget
 {
     Q_OBJECT
 

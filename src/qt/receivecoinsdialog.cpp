@@ -21,7 +21,7 @@
 #include <QTextDocument>
 
 ReceiveCoinsDialog::ReceiveCoinsDialog(const PlatformStyle *_platformStyle, QWidget *parent) :
-    QDialog(parent),
+    QWidget(parent),
     ui(new Ui::ReceiveCoinsDialog),
     columnResizingFixer(nullptr),
     model(nullptr),
@@ -232,7 +232,7 @@ void ReceiveCoinsDialog::keyPressEvent(QKeyEvent *event)
         }
     }
 
-    this->QDialog::keyPressEvent(event);
+    this->QWidget::keyPressEvent(event);
 }
 
 QModelIndex ReceiveCoinsDialog::selectedRow()

@@ -7,10 +7,10 @@
 
 #include <qt/walletmodel.h>
 
-#include <QDialog>
 #include <QMessageBox>
 #include <QString>
 #include <QTimer>
+#include <QWidget>
 
 class ClientModel;
 class PlatformStyle;
