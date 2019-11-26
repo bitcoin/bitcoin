@@ -3317,7 +3317,7 @@ bool ReserveDestination::GetReservedDestination(CTxDestination& dest, bool inter
 void ReserveDestination::KeepDestination()
 {
     if (nIndex != -1) {
-        m_spk_man->KeepDestination(nIndex);
+        m_spk_man->KeepDestination(nIndex, type, vchPubKey);
         m_spk_man->LearnRelatedScripts(vchPubKey, type);
     }
     nIndex = -1;
