@@ -2297,6 +2297,10 @@ UniValue dumptxoutset(const JSONRPCRequest& request)
     }
 
     FILE* file{fsbridge::fopen(temppath, "wb")};
+    if (!file) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open dump file");
+    }
+
     CAutoFile afile{file, SER_DISK, CLIENT_VERSION};
     std::unique_ptr<CCoinsViewCursor> pcursor;
     CCoinsStats stats;
