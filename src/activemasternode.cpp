@@ -10,6 +10,7 @@
 #include <netbase.h>
 #include <protocol.h>
 #include <script/standard.h>
+#include <net.h>
 // Keep track of the active Masternode
 CActiveMasternode activeMasternode;
 
