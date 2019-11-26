@@ -88,6 +88,11 @@ def get_multisig(node):
                     p2sh_p2wsh_script=CScript([OP_HASH160, witness_script, OP_EQUAL]).hex(),
                     p2sh_p2wsh_addr=script_to_p2sh_p2wsh(script_code))
 
+def labels_value(name="", purpose="receive"):
+    """Generate a getaddressinfo labels array from a name and purpose.
+    Often used as the value of a labels kwarg for calling test_address below."""
+    return [{"name": name, "purpose": purpose}]
+
 def test_address(node, address, **kwargs):
     """Get address info for `address` and test whether the returned values are as expected."""
     addr_info = node.getaddressinfo(address)

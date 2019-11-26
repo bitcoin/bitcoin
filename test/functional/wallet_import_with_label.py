@@ -11,7 +11,10 @@ with and without a label.
 """
 
 from test_framework.test_framework import SyscoinTestFramework
-from test_framework.wallet_util import test_address
+from test_framework.wallet_util import (
+    labels_value,
+    test_address,
+)
 
 
 class ImportWithLabel(SyscoinTestFramework):
@@ -37,7 +40,8 @@ class ImportWithLabel(SyscoinTestFramework):
                      address,
                      iswatchonly=True,
                      ismine=False,
-                     label=label)
+                     label=label,
+                     labels=labels_value(name=label))
 
         self.log.info(
             "Import the watch-only address's private key without a "
@@ -48,7 +52,8 @@ class ImportWithLabel(SyscoinTestFramework):
 
         test_address(self.nodes[1],
                      address,
-                     label=label)
+                     label=label,
+                     labels=labels_value(name=label))
 
         self.log.info(
             "Test importaddress without label and importprivkey with label."
@@ -60,7 +65,8 @@ class ImportWithLabel(SyscoinTestFramework):
                      address2,
                      iswatchonly=True,
                      ismine=False,
-                     label="")
+                     label="",
+                     labels=labels_value())
 
         self.log.info(
             "Import the watch-only address's private key with a "
@@ -72,7 +78,8 @@ class ImportWithLabel(SyscoinTestFramework):
 
         test_address(self.nodes[1],
                      address2,
-                     label=label2)
+                     label=label2,
+                     labels=labels_value(name=label2))
 
         self.log.info("Test importaddress with label and importprivkey with label.")
         self.log.info("Import a watch-only address with a label.")
@@ -83,7 +90,8 @@ class ImportWithLabel(SyscoinTestFramework):
                      address3,
                      iswatchonly=True,
                      ismine=False,
-                     label=label3_addr)
+                     label=label3_addr,
+                     labels=labels_value(name=label3_addr))
 
         self.log.info(
             "Import the watch-only address's private key with a "
@@ -95,7 +103,8 @@ class ImportWithLabel(SyscoinTestFramework):
 
         test_address(self.nodes[1],
                      address3,
-                     label=label3_priv)
+                     label=label3_priv,
+                     labels=labels_value(name=label3_priv))
 
         self.log.info(
             "Test importprivkey won't label new dests with the same "
@@ -110,6 +119,7 @@ class ImportWithLabel(SyscoinTestFramework):
                      iswatchonly=True,
                      ismine=False,
                      label=label4_addr,
+                     labels=labels_value(name=label4_addr),
                      embedded=None)
 
         self.log.info(
@@ -124,10 +134,13 @@ class ImportWithLabel(SyscoinTestFramework):
 
         test_address(self.nodes[1],
                      embedded_addr,
-                     label="")
+                     label="",
+                     labels=labels_value())
+
         test_address(self.nodes[1],
                      address4,
-                     label=label4_addr)
+                     label=label4_addr,
+                     labels=labels_value(name=label4_addr))
 
         self.stop_nodes()
 
