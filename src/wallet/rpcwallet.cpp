@@ -3708,6 +3708,8 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
+    const std::string example_address = "\"bc1q09vm5lfy0j5reeulh4x5752q25uqqvz34hufdl\"";
+
             RPCHelpMan{"getaddressinfo",
                 "\nReturn information about the given bitcoin address.\n"
                 "Some of the information will only be present if the address is in the active wallet.\n",
@@ -3758,8 +3760,8 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
             "}\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("getaddressinfo", "\"bc1q09vm5lfy0j5reeulh4x5752q25uqqvz34hufdl\"") +
-                    HelpExampleRpc("getaddressinfo", "\"bc1q09vm5lfy0j5reeulh4x5752q25uqqvz34hufdl\"")
+                    HelpExampleCli("getaddressinfo", example_address) +
+                    HelpExampleRpc("getaddressinfo", example_address)
                 },
             }.Check(request);
 
@@ -3793,10 +3795,6 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
 
     ret.pushKV("iswatchonly", bool(mine & ISMINE_WATCH_ONLY));
 
-    // Return DescribeWalletAddress fields.
-    // Always returned: isscript, ischange, iswitness.
-    // Optional: witness_version, witness_program, script, hex, pubkeys (array),
-    // sigsrequired, pubkey, embedded, iscompressed.
     UniValue detail = DescribeWalletAddress(pwallet, dest);
     ret.pushKVs(detail);
 
@@ -3809,8 +3807,6 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
 
     ret.pushKV("ischange", pwallet->IsChange(scriptPubKey));
 
-    // Fetch KeyMetadata, if present, for the timestamp, hdkeypath, hdseedid,
-    // and hdmasterfingerprint fields.
     ScriptPubKeyMan* spk_man = pwallet->GetScriptPubKeyMan(scriptPubKey);
     if (spk_man) {
         if (const CKeyMetadata* meta = spk_man->GetMetadata(dest)) {
