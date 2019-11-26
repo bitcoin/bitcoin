@@ -90,6 +90,8 @@ Low-level Changes section below.
 GUI changes
 -----------
 
+- The "Start Bitcoin Core on system login" option has been removed on macOS.
+
 Wallet
 ------
 
