@@ -139,6 +139,7 @@ BITCOIN_CORE_H = \
   fs.h \
   httprpc.h \
   httpserver.h \
+  index/addrindex.h \
   index/base.h \
   index/blockfilterindex.h \
   index/disktxpos.h \
@@ -294,6 +295,7 @@ libbitcoin_server_a_SOURCES = \
   flatfile.cpp \
   httprpc.cpp \
   httpserver.cpp \
+  index/addrindex.cpp \
   index/base.cpp \
   index/blockfilterindex.cpp \
   index/txindex.cpp \
