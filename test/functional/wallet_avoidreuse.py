@@ -86,7 +86,12 @@ class AvoidReuseTest(BitcoinTestFramework):
         reset_balance(self.nodes[1], self.nodes[0].getnewaddress())
         self.test_fund_send_fund_senddirty()
         reset_balance(self.nodes[1], self.nodes[0].getnewaddress())
-        self.test_fund_send_fund_send()
+        self.test_fund_send_fund_send("legacy")
+        reset_balance(self.nodes[1], self.nodes[0].getnewaddress())
+        self.test_fund_send_fund_send("p2sh-segwit")
+        reset_balance(self.nodes[1], self.nodes[0].getnewaddress())
+        self.test_fund_send_fund_send("bech32")
+
 
     def test_persistence(self):
         '''Test that wallet files persist the avoid_reuse flag.'''
@@ -182,7 +187,7 @@ class AvoidReuseTest(BitcoinTestFramework):
         assert_approx(self.nodes[1].getbalance(), 5, 0.001)
         assert_approx(self.nodes[1].getbalance(avoid_reuse=False), 5, 0.001)
 
-    def test_fund_send_fund_send(self):
+    def test_fund_send_fund_send(self, second_addr_type):
         '''
         Test the simple case where [1] generates a new address A, then
         [0] sends 10 BTC to A.
@@ -193,7 +198,7 @@ class AvoidReuseTest(BitcoinTestFramework):
         '''
         self.log.info("Test fund send fund send")
 
-        fundaddr = self.nodes[1].getnewaddress()
+        fundaddr = self.nodes[1].getnewaddress(label="", address_type="legacy")
         retaddr = self.nodes[0].getnewaddress()
 
         self.nodes[0].sendtoaddress(fundaddr, 10)
@@ -214,7 +219,19 @@ class AvoidReuseTest(BitcoinTestFramework):
         # getbalances should show no used, 5 btc trusted
         assert_balances(self.nodes[1], mine={"used": 0, "trusted": 5})
 
-        self.nodes[0].sendtoaddress(fundaddr, 10)
+        # For the second send, we transmute it to a related single-key address
+        # to make sure it's also detected as re-use
+        fund_spk = self.nodes[0].getaddressinfo(fundaddr)["scriptPubKey"]
+        fund_decoded = self.nodes[0].decodescript(fund_spk)
+        if second_addr_type == "p2sh-segwit":
+            new_fundaddr = fund_decoded["segwit"]["p2sh-segwit"]
+        elif second_addr_type == "bech32":
+            new_fundaddr = fund_decoded["segwit"]["addresses"][0]
+        else:
+            new_fundaddr = fundaddr
+            assert_equal(second_addr_type, "legacy")
+
+        self.nodes[0].sendtoaddress(new_fundaddr, 10)
         self.nodes[0].generate(1)
         self.sync_all()
 
