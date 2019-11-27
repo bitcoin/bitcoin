@@ -115,6 +115,10 @@ struct TestChain100Setup : public RegTestingSetup {
     CBlock CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns,
                                  const CScript& scriptPubKey);
 
+    // Fill spends with spending transaction using coinbase_spent_offset to
+    // choose which m_coinbase_txns to spend from.
+    void CreateSpendingTxs(int coinbase_spent_offset, std::vector<CScript>& script_pub_keys, std::vector<CMutableTransaction> &spends, const CScript& coinbase_script_pub_key);
+
     ~TestChain100Setup();
 
     std::vector<CTransactionRef> m_coinbase_txns; // For convenience, coinbase transactions

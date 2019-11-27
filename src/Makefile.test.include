@@ -204,6 +204,7 @@ FUZZ_SUITE_LD_COMMON = \
 
 # test_bitcoin binary #
 BITCOIN_TESTS =\
+  test/addrindex_tests.cpp \
   test/arith_uint256_tests.cpp \
   test/scriptnum10.h \
   test/addrman_tests.cpp \
