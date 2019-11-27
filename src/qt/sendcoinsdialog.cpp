@@ -272,21 +272,6 @@ void SendCoinsDialog::on_sendButton_clicked()
         return;
     }
 
-    QString strFunds = tr("using") + " <b>" + tr("mixed funds") + "</b>";
-    QString strFee = "";
-
-    if(ui->checkUsePrivateSend->isChecked()) {
-        strFunds = tr("using") + " <b>" + tr("mixed funds") + "</b>";
-        QString strNearestAmount(
-            BitcoinUnits::formatWithUnit(
-                model->getOptionsModel()->getDisplayUnit(), CPrivateSend::GetSmallestDenomination()));
-        strFee = QString(tr(
-            "(privatesend requires this amount to be rounded up to the nearest %1)."
-        ).arg(strNearestAmount));
-    } else {
-        strFunds = tr("using") + " <b>" + tr("any available funds (not mixed)") + "</b>";
-    }
-
     fNewRecipientAllowed = false;
     // request unlock only if was locked or unlocked for mixing:
     // this way we let users unlock by walletpassphrase or by menu
@@ -302,14 +287,14 @@ void SendCoinsDialog::on_sendButton_clicked()
             fNewRecipientAllowed = true;
             return;
         }
-        send(recipients, strFee, strFunds);
+        send(recipients);
         return;
     }
     // already unlocked or not encrypted at all
-    send(recipients, strFee, strFunds);
+    send(recipients);
 }
 
-void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients, QString strFee, QString strFunds)
+void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
 {
     // prepare transaction for getting txFee earlier
     WalletModelTransaction currentTransaction(recipients);
@@ -335,15 +320,13 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients, QString strFee,
         return;
     }
 
-    CAmount txFee = currentTransaction.getTransactionFee();
-
     // Format confirmation message
     QStringList formatted;
     for (const SendCoinsRecipient &rcp : currentTransaction.getRecipients())
     {
         // generate bold amount string
         QString amount = "<b>" + BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
-        amount.append("</b> ").append(strFunds);
+        amount.append("</b> ");
 
         // generate monospace address string
         QString address = "<span style='font-family: monospace;'>" + rcp.address;
@@ -375,8 +358,39 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients, QString strFee,
         formatted.append(recipientElement);
     }
 
+    // Limit number of displayed entries
+    int messageEntries = formatted.size();
+    int displayedEntries = 0;
+    for(int i = 0; i < formatted.size(); i++){
+        if(i >= MAX_SEND_POPUP_ENTRIES){
+            formatted.removeLast();
+            i--;
+        }
+        else{
+            displayedEntries = i+1;
+        }
+    }
+
     QString questionString = tr("Are you sure you want to send?");
-    questionString.append("<br /><br />%1");
+    questionString.append("<br /><br />");
+    questionString.append(formatted.join("<br />"));
+    questionString.append("<br />");
+
+
+    if(ctrl.IsUsingPrivateSend()) {
+        questionString.append(tr("using") + " <b>" + tr("mixed funds") + "</b>");
+    } else {
+        questionString.append(tr("using") + " <b>" + tr("any available funds (not mixed)") + "</b>");
+    }
+
+    if (displayedEntries < messageEntries) {
+        questionString.append("<br />");
+        questionString.append("<span style='" + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR) + "'>");
+        questionString.append(tr("<b>(%1 of %2 entries displayed)</b>").arg(displayedEntries).arg(messageEntries));
+        questionString.append("</span>");
+    }
+
+    CAmount txFee = currentTransaction.getTransactionFee();
 
     if(txFee > 0)
     {
@@ -385,11 +399,33 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients, QString strFee,
         questionString.append(BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), txFee));
         questionString.append("</span> ");
         questionString.append(tr("are added as transaction fee"));
-        questionString.append(" ");
-        questionString.append(strFee);
 
-        // append transaction size
-        questionString.append(" (" + QString::number((double)currentTransaction.getTransactionSize() / 1000) + " kB)");
+        if (ctrl.IsUsingPrivateSend()) {
+            questionString.append(" " + tr("(PrivateSend transactions have higher fees usually due to no change output being allowed)"));
+        }
+    }
+
+    // Show some additioinal information
+    questionString.append("<hr />");
+    // append transaction size
+    questionString.append(tr("Transaction size: %1").arg(QString::number((double)currentTransaction.getTransactionSize() / 1000)) + " kB");
+    questionString.append("<br />");
+    CFeeRate feeRate(txFee, currentTransaction.getTransactionSize());
+    questionString.append(tr("Fee rate: %1").arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), feeRate.GetFeePerK())) + "/kB");
+
+    if (ctrl.IsUsingPrivateSend()) {
+        // append number of inputs
+        questionString.append("<hr />");
+        int nInputs = currentTransaction.getTransaction()->tx->vin.size();
+        questionString.append(tr("This transaction will consume %n input(s)", "", nInputs));
+
+        // warn about potential privacy issues when spending too many inputs at once
+        if (nInputs >= 10 && ctrl.IsUsingPrivateSend()) {
+            questionString.append("<br />");
+            questionString.append("<span style='" + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR) + "'>");
+            questionString.append(tr("Warning: Using PrivateSend with %1 or more inputs can harm your privacy and is not recommended").arg(10));
+            questionString.append("</span> ");
+        }
     }
 
     // add total amount in all subdivision units
@@ -407,24 +443,9 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients, QString strFee,
         .arg(BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), totalAmount))
         .arg(alternativeUnits.join("<br />= ")));
 
-    // Limit number of displayed entries
-    int messageEntries = formatted.size();
-    int displayedEntries = 0;
-    for(int i = 0; i < formatted.size(); i++){
-        if(i >= MAX_SEND_POPUP_ENTRIES){
-            formatted.removeLast();
-            i--;
-        }
-        else{
-            displayedEntries = i+1;
-        }
-    }
-    questionString.append("<hr />");
-    questionString.append(tr("<b>(%1 of %2 entries displayed)</b>").arg(displayedEntries).arg(messageEntries));
-
     // Display message box
     SendConfirmationDialog confirmationDialog(tr("Confirm send coins"),
-        questionString.arg(formatted.join("<br />")), SEND_CONFIRM_DELAY, this);
+        questionString, SEND_CONFIRM_DELAY, this);
     confirmationDialog.exec();
     QMessageBox::StandardButton retval = (QMessageBox::StandardButton)confirmationDialog.result();
 
