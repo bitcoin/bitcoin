@@ -77,7 +77,7 @@ bool DEx_getTokenForSale(const std::string& addressSeller, uint32_t& retTokenId)
             boost::split(vstr, offer.first, boost::is_any_of("-"), boost::token_compress_on);
 
             if (vstr.size() != 2) {
-                PrintToLog("ERROR: failed to parse token for sale: %s\n", __func__, offer.first);
+                PrintToLog("ERROR: failed to parse token for sale: %s\n", offer.first);
                 return false;
             }
 
@@ -86,7 +86,7 @@ bool DEx_getTokenForSale(const std::string& addressSeller, uint32_t& retTokenId)
                 return true;
             }
             catch (boost::bad_lexical_cast const& e) {
-                PrintToLog("ERROR: failed to parse token for sale: %s (%s)\n", __func__, offer.first, e.what());
+                PrintToLog("ERROR: failed to parse token for sale: %s (%s)\n", offer.first, e.what());
             }
         }
     }
@@ -503,7 +503,7 @@ int DEx_payment(const uint256& txid, unsigned int vout, const std::string& addre
     int rc = DEX_ERROR_PAYMENT;
 
     uint32_t propertyId = OMNI_PROPERTY_MSC;
-    CMPAccept* p_accept = NULL;
+    CMPAccept* p_accept = nullptr;
 
     /**
      * When the feature is not activated, first check, if there is an open offer
