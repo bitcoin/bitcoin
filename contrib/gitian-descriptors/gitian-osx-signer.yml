@@ -17,7 +17,7 @@ script: |
 
   WRAP_DIR=$HOME/wrapped
   mkdir -p ${WRAP_DIR}
-  export PATH=`pwd`:$PATH
+  export PATH="$PWD":$PATH
   FAKETIME_PROGS="dmg genisoimage"
 
   # Create global faketime wrappers
