@@ -22,7 +22,6 @@ extern CTxDestination DecodeDestination(const std::string& str);
 extern UniValue ValueFromAmount(const CAmount& amount);
 extern std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags = 0);
 extern bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no_witness = false, bool try_witness = true);
-extern CAmount getAuxFee(const std::string &publicData, const CAmount& nAmount, CWitnessAddress & address);
 extern ArrivalTimesMapImpl arrivalTimesMap; 
 extern CCriticalSection cs_assetallocationarrival;
 extern AssetPrevTxMap mapAssetPrevTxSender;
@@ -37,7 +36,54 @@ void CreateFeeRecipient(CScript& scriptPubKey, CRecipient& recipient)
     CRecipient recp = { scriptPubKey, 0, false };
     recipient = recp;
 }
-
+CAmount getAuxFee(const std::string &public_data, const CAmount& nAmount, const uint8_t &nPrecision, CWitnessAddress & address) {
+    UniValue publicObj;
+    if(!publicObj.read(public_data))
+        return -1;
+    const UniValue &auxFeesObj = find_value(publicObj, "aux_fees");
+    if(!auxFeesObj.isObject())
+        return -1;
+    const UniValue &addressObj = find_value(auxFeesObj, "address");
+    if(!addressObj.isStr())
+        return -1;
+    address = DescribeWitnessAddress(addressObj.get_str());
+    const UniValue &feeStructObj = find_value(auxFeesObj, "fee_struct");
+    if(!feeStructObj.isArray())
+        return -1;
+    const UniValue &feeStructArray = feeStructObj.get_array();
+    if(feeStructArray.size() == 0)
+        return -1;
+     
+    CAmount nAccumulatedFee = 0;
+    CAmount nBoundAmount = 0;
+    CAmount nNextBoundAmount = 0;
+    double nRate = 0;
+    for(unsigned int i =0;i<feeStructArray.size();i++){
+        if(!feeStructArray[i].isArray())
+            return -1;
+        const UniValue &feeStruct = feeStructArray[i].get_array();
+        const UniValue &feeStructNext = feeStructArray[i < feeStructArray.size()-1? i+1:i].get_array();
+        if(!feeStruct[0].isStr() && !feeStruct[0].isNum())
+            return -1;
+        if(!feeStructNext[0].isStr() && !feeStructNext[0].isNum())
+                return -1;   
+        UniValue boundValue = feeStruct[0]; 
+        UniValue nextBoundValue = feeStructNext[0]; 
+        nBoundAmount = AssetAmountFromValue(boundValue, nPrecision);
+        nNextBoundAmount = AssetAmountFromValue(nextBoundValue, nPrecision);
+        if(!feeStruct[1].isStr())
+            return -1;
+        if(!ParseDouble(feeStruct[1].get_str(), &nRate))
+            return -1;
+        // case where amount is in between the bounds
+        if(nAmount >= nBoundAmount && nAmount < nNextBoundAmount){
+            return (nAmount - nBoundAmount) * nRate + nAccumulatedFee;    
+        }
+        nBoundAmount = nNextBoundAmount - nBoundAmount;
+        nAccumulatedFee += (nBoundAmount * nRate);
+    }
+    return (nAmount - nBoundAmount) * nRate + nAccumulatedFee;    
+}
 UniValue syscointxfund_helper(CWallet* const pwallet, const string& strAddress, const int &nVersion, const string &vchWitness, const vector<CRecipient> &vecSend) {
     CMutableTransaction txNew;
     if(nVersion > 0)
@@ -448,7 +494,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
         strContract.clear();
     if(!strContract.empty())
          boost::erase_all(strContract, "0x");  // strip 0x in hex str if exist
-   
+
     uint32_t precision = params[4].get_uint();
     string vchWitness;
     UniValue param4 = params[5];
@@ -875,7 +921,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 
 	}
     CWitnessAddress auxFeeAddress;
-    const CAmount &nAuxFee = getAuxFee(stringFromVch(theAsset.vchPubData), nTotalSending, auxFeeAddress);
+    const CAmount &nAuxFee = getAuxFee(stringFromVch(theAsset.vchPubData), nTotalSending, theAsset.nPrecision, auxFeeAddress);
     if(nAuxFee > 0){
         theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(auxFeeAddress.nVersion, auxFeeAddress.vchWitnessProgram), nAuxFee));
         nTotalSending += nAuxFee;
@@ -1060,10 +1106,15 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     }.Check(request);
 
     const uint32_t &nAsset = params[0].get_uint();
-
+	CAsset theAsset;
+	if (!GetAsset(nAsset, theAsset))
+		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");            
     std::string strAddress = params[1].get_str();
-    const CAmount &nAmount = AmountFromValue(params[2]);
-    
+    UniValue amountValue = request.params[2];
+    const CAmount &nAmount = AssetAmountFromValue(amountValue, theAsset.nPrecision);
+    if (nAmount <= 0)
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for assetallocationsend");  
+
     const uint32_t &nBlockNumber = params[3].get_uint(); 
     
     string vchTxValue = params[4].get_str();

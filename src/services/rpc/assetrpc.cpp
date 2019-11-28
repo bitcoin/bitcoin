@@ -177,7 +177,7 @@ CAmount AssetAmountFromValue(UniValue& value, int precision)
     CAmount amount;
     if (!ParseFixedPoint(value.getValStr(), precision, &amount))
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
-    if (!AssetRange(amount))
+    if (amount > 0 && !AssetRange(amount))
         throw JSONRPCError(RPC_TYPE_ERROR, "Amount out of range");
     return amount;
 }
