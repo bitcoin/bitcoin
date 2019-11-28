@@ -6,9 +6,11 @@
 
 export LC_ALL=C.UTF-8
 
-export HOST=s390x-unknown-linux-gnu
-export PACKAGES="clang llvm python3-zmq qtbase5-dev qttools5-dev-tools libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev libdb5.3++-dev libminiupnpc-dev libzmq3-dev libqrencode-dev"
-export NO_DEPENDS=1
+export HOST=s390x-linux-gnu
+# The host arch is unknown, so we run the tests through qemu.
+# If the host is s390x and wants to run the tests natively, it can set QEMU_USER_CMD to the empty string.
+export QEMU_USER_CMD="${QEMU_USER_CMD:"qemu-s390x"}"
+export PACKAGES="python3-zmq bsdmainutils qemu-user"
 export RUN_UNIT_TESTS=true
 export RUN_FUNCTIONAL_TESTS=true
 export GOAL="install"
