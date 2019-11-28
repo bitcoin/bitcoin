@@ -1113,7 +1113,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     UniValue amountValue = request.params[2];
     const CAmount &nAmount = AssetAmountFromValue(amountValue, theAsset.nPrecision);
     if (nAmount <= 0)
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for assetallocationsend");  
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for assetallocationmint");  
 
     const uint32_t &nBlockNumber = params[3].get_uint(); 
     
