@@ -79,7 +79,7 @@ SendCoinsDialog::SendCoinsDialog(bool _fCoinJoin, QWidget* parent) :
                      }, GUIUtil::FontWeight::Bold);
 
     GUIUtil::setFont({ui->labelBalance,
-                      ui->labelBalanceText
+                      ui->labelBalanceName,
                      }, GUIUtil::FontWeight::Bold, 14);
 
     GUIUtil::setFont({ui->labelCoinControlFeatures
@@ -641,14 +641,17 @@ void SendCoinsDialog::setBalance(const interfaces::WalletBalances& balances)
 {
     if(model && model->getOptionsModel())
     {
-        CAmount bal = 0;
-        if (m_coin_control->IsUsingCoinJoin()) {
-            bal = balances.anonymized_balance;
+        CAmount balance = 0;
+        if (model->privateKeysDisabled()) {
+            balance = balances.watch_only_balance;
+            ui->labelBalanceName->setText(tr("Watch-only balance:"));
+        } else if (m_coin_control->IsUsingCoinJoin()) {
+            balance = balances.anonymized_balance;
         } else {
-            bal = balances.balance;
+            balance = balances.balance;
         }
 
-        ui->labelBalance->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), bal));
+        ui->labelBalance->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), balance));
     }
 }
 

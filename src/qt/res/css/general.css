@@ -1694,7 +1694,7 @@ QDialog#SendCoinsDialog .QScrollArea#scrollArea .QWidget#scrollAreaWidgetContent
     background-color: #00000000;
 }
 
-QDialog#SendCoinsDialog QLabel#labelBalanceText,
+QDialog#SendCoinsDialog QLabel#labelBalanceName,
 QDialog#SendCoinsDialog QLabel#labelBalance {
     qproperty-alignment: 'AlignLeading | AlignLeft';
     min-height: 20px;
