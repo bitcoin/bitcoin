@@ -10,7 +10,7 @@
 
 #include <interfaces/node.h>
 
-#include <algorithm>
+#include <utility>
 
 #include <QDebug>
 #include <QList>
