@@ -1,0 +1,17 @@
+version: '3'
+
+# usage:
+# - docker-compose up -d
+# - docker-compose exec dev bash
+
+services:
+  dev:
+    image: veriblock/btcdev
+    tty: true
+    stdin_open: true
+    working_dir: /app
+    cap_add:
+      - SYS_PTRACE
+    volumes:
+      - .:/app:rw
+    command: bash

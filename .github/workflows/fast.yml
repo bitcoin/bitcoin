@@ -1,0 +1,31 @@
+name: Fast CI
+
+on:
+  pull_request:
+    branches:
+    - master
+    - develop
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: veriblock/btcdev
+    env:
+      CC: clang
+      CXX: clang++
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        submodules: true
+    - name: autogen
+      run: ./autogen.sh
+    - name: configure
+      run: ./configure
+        --without-gui
+        --enable-werror
+
+    - name: make
+      run: make -j2
+    - name: make check
+      timeout-minutes: 10
+      run: make check

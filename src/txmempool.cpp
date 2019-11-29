@@ -19,6 +19,8 @@
 #include <util/time.h>
 #include <validationinterface.h>
 
+#include <vbk/util.hpp>
+
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee,
                                  int64_t _nTime, unsigned int _entryHeight,
                                  bool _spendsCoinbase, int64_t _sigOpsCost, LockPoints lp)
@@ -600,7 +602,7 @@ static void CheckInputsAndUpdateCoins(const CTransaction& tx, CCoinsViewCache& m
 {
     TxValidationState dummy_state; // Not used. CheckTxInputs() should always pass
     CAmount txfee = 0;
-    bool fCheckResult = tx.IsCoinBase() || Consensus::CheckTxInputs(tx, dummy_state, mempoolDuplicate, spendheight, txfee);
+    bool fCheckResult = tx.IsCoinBase() || VeriBlock::isPopTx(tx) || Consensus::CheckTxInputs(tx, dummy_state, mempoolDuplicate, spendheight, txfee);
     assert(fCheckResult);
     UpdateCoins(tx, mempoolDuplicate, std::numeric_limits<int>::max());
 }
@@ -634,23 +636,26 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
         innerUsage += memusage::DynamicUsage(links.parents) + memusage::DynamicUsage(links.children);
         bool fDependsWait = false;
         setEntries setParentCheck;
-        for (const CTxIn &txin : tx.vin) {
-            // Check that every mempool transaction's inputs refer to available coins, or other mempool tx's.
-            indexed_transaction_set::const_iterator it2 = mapTx.find(txin.prevout.hash);
-            if (it2 != mapTx.end()) {
-                const CTransaction& tx2 = it2->GetTx();
-                assert(tx2.vout.size() > txin.prevout.n && !tx2.vout[txin.prevout.n].IsNull());
-                fDependsWait = true;
-                setParentCheck.insert(it2);
-            } else {
-                assert(pcoins->HaveCoin(txin.prevout));
+        if (!VeriBlock::isPopTx(tx))
+        {
+            for (const CTxIn &txin : tx.vin) {
+                // Check that every mempool transaction's inputs refer to available coins, or other mempool tx's.
+                indexed_transaction_set::const_iterator it2 = mapTx.find(txin.prevout.hash);
+                if (it2 != mapTx.end()) {
+                    const CTransaction& tx2 = it2->GetTx();
+                    assert(tx2.vout.size() > txin.prevout.n && !tx2.vout[txin.prevout.n].IsNull());
+                    fDependsWait = true;
+                    setParentCheck.insert(it2);
+                } else {
+                    assert(pcoins->HaveCoin(txin.prevout));
+                }
+                // Check whether its inputs are marked in mapNextTx.
+                auto it3 = mapNextTx.find(txin.prevout);
+                assert(it3 != mapNextTx.end());
+                assert(it3->first == &txin.prevout);
+                assert(it3->second == &tx);
+                i++;
             }
-            // Check whether its inputs are marked in mapNextTx.
-            auto it3 = mapNextTx.find(txin.prevout);
-            assert(it3 != mapNextTx.end());
-            assert(it3->first == &txin.prevout);
-            assert(it3->second == &tx);
-            i++;
         }
         assert(setParentCheck == GetMemPoolParents(it));
         // Verify ancestor state is correct.

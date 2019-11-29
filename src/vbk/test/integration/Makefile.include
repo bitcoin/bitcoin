@@ -1,0 +1,46 @@
+bin_PROGRAMS += vbk/test/integration/test_int_vbk
+
+VBK_INTEGRATION_TEST_BINARY = vbk/test/integration/test_int_vbk$(EXEEXT)
+
+VBK_INTEGRATION_TEST_SUITE = \
+  vbk/test/integration/main.cpp \
+  test/setup_common.h \
+  test/setup_common.cpp
+
+# the list of VeriBlock integration test sources
+VBK_INTEGRATION_TESTS =  \
+  vbk/test/integration/dummy.cpp
+
+vbk_test_integration_test_int_vbk_SOURCES = $(VBK_INTEGRATION_TEST_SUITE) $(VBK_INTEGRATION_TESTS)
+vbk_test_integration_test_int_vbk_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(TESTDEFS) $(EVENT_CFLAGS) $(THIRD_PARTY_INCLUDE)
+vbk_test_integration_test_int_vbk_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(FAKEIT_CXXFLAGS)
+
+vbk_test_integration_test_int_vbk_LDADD = $(LIBBITCOIN_SERVER) $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) \
+  $(LIBBITCOIN_CONSENSUS) $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) \
+  $(GRPC_LIBS) $(LIBZ_LIBS) $(PROTOBUF3_LIBS) \
+  $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(LIBSECP256K1) $(EVENT_LIBS) $(EVENT_PTHREADS_LIBS) \
+  $(BDB_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(RAPIDCHECK_LIBS)
+if ENABLE_WALLET
+vbk_test_integration_test_int_vbk_LDADD += $(LIBBITCOIN_WALLET)
+endif
+if ENABLE_ZMQ
+vbk_test_integration_test_int_vbk_LDADD += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)
+endif
+
+vbk_test_integration_test_int_vbk_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) -static -Wl,--start-group
+
+
+CLEAN_VBK_INTEGRATION_TEST = \
+  vbk/test/integration/*.gcda \
+  vbk/test/integration/*.gcno \
+  $(VBK_INTEGRATION_TESTS:=.log)
+
+CLEANFILES += $(CLEAN_VBK_INTEGRATION_TEST)
+
+vbk_integration_test: $(VBK_INTEGRATION_TEST_BINARY)
+
+vbk_integration_test_check: $(VBK_INTEGRATION_TEST_BINARY) FORCE
+	$(MAKE) check-TESTS TESTS=$^
+
+vbk_integration_test_clean : FORCE
+	rm -f $(CLEAN_VBK_INTEGRATION_TEST) $(vbk_test_integration_test_int_vbk_OBJECTS) $(VBK_INTEGRATION_TEST_BINARY)

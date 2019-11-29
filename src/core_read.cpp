@@ -18,6 +18,10 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/split.hpp>
 
+#include <vbk/service_locator.hpp>
+#include <vbk/config.hpp>
+#include <vbk/util.hpp>
+
 #include <algorithm>
 
 CScript ParseScript(const std::string& s)
@@ -94,8 +98,15 @@ static bool CheckTxScriptsSanity(const CMutableTransaction& tx)
     // Check input scripts for non-coinbase txs
     if (!CTransaction(tx).IsCoinBase()) {
         for (unsigned int i = 0; i < tx.vin.size(); i++) {
-            if (!tx.vin[i].scriptSig.HasValidOps() || tx.vin[i].scriptSig.size() > MAX_SCRIPT_SIZE) {
+            if (!tx.vin[i].scriptSig.HasValidOps())
                 return false;
+            if (VeriBlock::isPopTx(CTransaction(tx))) {
+                if (tx.vin[i].scriptSig.size() > VeriBlock::getService<VeriBlock::Config>().max_pop_script_size)
+                    return false;
+            }
+            else {
+                if(tx.vin[i].scriptSig.size() > MAX_SCRIPT_SIZE)
+                    return false;
             }
         }
     }

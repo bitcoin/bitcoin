@@ -8,6 +8,8 @@
 #include <hash.h>
 #include <consensus/consensus.h>
 
+#include "vbk/service_locator.hpp"
+#include "vbk/config.hpp"
 
 CMerkleBlock::CMerkleBlock(const CBlock& block, CBloomFilter* filter, const std::set<uint256>* txids)
 {
@@ -134,7 +136,8 @@ uint256 CPartialMerkleTree::ExtractMatches(std::vector<uint256> &vMatch, std::ve
     if (nTransactions == 0)
         return uint256();
     // check for excessively high numbers of transactions
-    if (nTransactions > MAX_BLOCK_WEIGHT / MIN_TRANSACTION_WEIGHT)
+    auto& config = VeriBlock::getService<VeriBlock::Config>();
+    if (nTransactions > MAX_BLOCK_WEIGHT / MIN_TRANSACTION_WEIGHT + config.max_pop_tx_amount)
         return uint256();
     // there can never be more hashes provided than one for every txid
     if (vHash.size() > nTransactions)

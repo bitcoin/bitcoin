@@ -114,6 +114,9 @@ enum
     // Making OP_CODESEPARATOR and FindAndDelete fail any non-segwit scripts
     //
     SCRIPT_VERIFY_CONST_SCRIPTCODE = (1U << 16),
+
+    //Used to avoid scriptPubKey evaluation when processing a POP tx
+    SCRIPT_VERIFY_POP = (1U << 18)
 };
 
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror);

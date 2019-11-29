@@ -1,0 +1,29 @@
+name: Docker CD
+
+on:
+  release:
+  push:
+    branches:
+      - master
+      - develop
+      - feature/cd # for tests
+    tags:
+      # tags must start with v
+      - v*
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          submodules: true
+      - name: Docker Push
+        uses: elgohr/Publish-Docker-Github-Action@master
+        with:
+          name: vbtc
+          dockerfile: Dockerfile
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          registry: docker-internal.veriblock.com
+          tag_names: true

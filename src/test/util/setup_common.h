@@ -14,9 +14,16 @@
 #include <scheduler.h>
 #include <txmempool.h>
 
+#include <vbk/pop_service.hpp>
+#include <vbk/util_service.hpp>
+#include <vbk/config.hpp>
+#include <vbk/rpc_service.hpp>
+
 #include <type_traits>
 
 #include <boost/thread.hpp>
+
+#include <fakeit.hpp>
 
 // Enable BOOST_CHECK_EQUAL for enum class types
 template <typename T>
@@ -69,6 +76,8 @@ static constexpr CAmount CENT{1000000};
  */
 struct BasicTestingSetup {
     ECCVerifyHandle globalVerifyHandle;
+    
+    fakeit::Mock<VeriBlock::PopService> pop_service_mock;
 
     explicit BasicTestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
     ~BasicTestingSetup();

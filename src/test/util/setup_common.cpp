@@ -29,6 +29,9 @@
 #include <validation.h>
 #include <validationinterface.h>
 
+#include <vbk/init.hpp>
+#include <vbk/test/util/mock.hpp>
+
 #include <functional>
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
@@ -68,6 +71,11 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
     fs::create_directories(m_path_root);
     gArgs.ForceSetArg("-datadir", m_path_root.string());
     ClearDatadirCache();
+    VeriBlock::InitConfig();
+    VeriBlock::InitUtilService();
+    VeriBlock::InitRpcService();
+    VeriBlockTest::setServiceMock<VeriBlock::PopService>(this->pop_service_mock);
+    VeriBlockTest::setUpPopServiceMock(pop_service_mock);
     SelectParams(chainName);
     SeedInsecureRand();
     gArgs.ForceSetArg("-printtoconsole", "0");
@@ -92,6 +100,7 @@ BasicTestingSetup::~BasicTestingSetup()
     LogInstance().DisconnectTestLogger();
     fs::remove_all(m_path_root);
     ECC_Stop();
+    VeriBlock::ResetVeriBlock();
 }
 
 TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(chainName)

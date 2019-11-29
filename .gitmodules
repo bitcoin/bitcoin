@@ -1,0 +1,3 @@
+[submodule "proto"]
+	path = src/vbk/alt-integration-proto
+	url = https://github.com/VeriBlock/alt-integration-proto/

@@ -9,6 +9,8 @@
 #include <script/interpreter.h>
 #include <consensus/validation.h>
 
+#include <vbk/util.hpp>
+
 // TODO remove the following dependencies
 #include <chain.h>
 #include <coins.h>
@@ -120,7 +122,7 @@ unsigned int GetLegacySigOpCount(const CTransaction& tx)
 
 unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& inputs)
 {
-    if (tx.IsCoinBase())
+    if (tx.IsCoinBase() || VeriBlock::isPopTx(tx))
         return 0;
 
     unsigned int nSigOps = 0;
@@ -139,7 +141,7 @@ int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& i
 {
     int64_t nSigOps = GetLegacySigOpCount(tx) * WITNESS_SCALE_FACTOR;
 
-    if (tx.IsCoinBase())
+    if (tx.IsCoinBase() || VeriBlock::isPopTx(tx))
         return nSigOps;
 
     if (flags & SCRIPT_VERIFY_P2SH) {
