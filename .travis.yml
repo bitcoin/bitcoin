@@ -119,6 +119,11 @@ jobs:
         FILE_ENV="./ci/test/00_setup_env_i686.sh"
 
     - stage: test
+      name: 'x86_64 Linux  [GOAL: install]  [CentOS 7]  [no depends, only system libs]'
+      env: >-
+        FILE_ENV="./ci/test/00_setup_env_native_centos.sh"
+
+    - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [bionic]  [uses qt5 dev package instead of depends Qt to speed up build and avoid timeout] [unsigned char]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_qt5.sh"
