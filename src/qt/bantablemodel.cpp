@@ -10,7 +10,7 @@
 #include <sync.h>
 #include <util/time.h>
 
-#include <algorithm>
+#include <utility>
 
 #include <QDebug>
 #include <QList>

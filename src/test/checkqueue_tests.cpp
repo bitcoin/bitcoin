@@ -18,6 +18,7 @@
 #include <condition_variable>
 
 #include <unordered_set>
+#include <utility>
 
 // BasicTestingSetup not sufficient because nScriptCheckThreads is not set
 // otherwise.

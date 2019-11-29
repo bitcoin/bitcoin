@@ -11,7 +11,7 @@
 #include <interfaces/node.h>
 #include <sync.h>
 
-#include <algorithm>
+#include <utility>
 
 #include <QDebug>
 #include <QList>

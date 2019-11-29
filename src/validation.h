@@ -22,7 +22,6 @@
 #include <txdb.h>
 #include <versionbits.h>
 
-#include <algorithm>
 #include <atomic>
 #include <exception>
 #include <map>
