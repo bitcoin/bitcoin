@@ -1,7 +1,7 @@
 VeriBlock
 =========
 
-Fork created at [8830cb58abc888144a1edb9b2fba427716cc45d8](https://github.com/bitcoin/bitcoin/commit/8830cb58abc888144a1edb9b2fba427716cc45d8).
+Fork created at [25d7e2e78137d07eb612c44d19b0d496050c947a](https://github.com/bitcoin/bitcoin/commit/25d7e2e78137d07eb612c44d19b0d496050c947a).
 
 Bitcoin Core integration/staging tree
 =====================================
@@ -24,7 +24,8 @@ the Bitcoin Core software, see https://bitcoincore.org/en/download/, or read the
 License
 -------
 
-See license in [COPYING](COPYING).
+Bitcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
+information or see https://opensource.org/licenses/MIT.
 
 Development Process
 -------------------

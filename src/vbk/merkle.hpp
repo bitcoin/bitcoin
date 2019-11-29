@@ -1,0 +1,105 @@
+#ifndef BITCOIN_SRC_VBK_MERKLE_HPP
+#define BITCOIN_SRC_VBK_MERKLE_HPP
+
+#include "vbk/config.hpp"
+#include "vbk/service_locator.hpp"
+#include "vbk/util_service.hpp"
+
+#include <chain.h>            // for CBlockIndex
+#include <consensus/merkle.h> // for BlockMerkleRoot
+#include <consensus/validation.h>
+#include <primitives/block.h> // for CBlock
+#include <primitives/transaction.h>
+
+namespace VeriBlock {
+
+inline int GetPopMerkleRootCommitmentIndex(const CBlock& block)
+{
+    int commitpos = -1;
+    if (!block.vtx.empty()) {
+        for (size_t o = 0; o < block.vtx[0]->vout.size(); o++) {
+            if (block.vtx[0]->vout[o].scriptPubKey.size() >= 36 && block.vtx[0]->vout[o].scriptPubKey[0] == OP_RETURN && block.vtx[0]->vout[o].scriptPubKey[1] == 0x3a && block.vtx[0]->vout[o].scriptPubKey[2] == 0xe6 && block.vtx[0]->vout[o].scriptPubKey[3] == 0xca) {
+                commitpos = o;
+            }
+        }
+    }
+    return commitpos;
+}
+
+inline uint256 BlockPopTxMerkleRoot(const CBlock& block)
+{
+    std::vector<uint256> leaves;
+    leaves.resize(block.vtx.size());
+    for (size_t s = 0; s < block.vtx.size(); s++) {
+        if (isPopTx(*block.vtx[s])) {
+            leaves[s] = block.vtx[s]->GetWitnessHash();
+        }
+    }
+    return ComputeMerkleRoot(std::move(leaves), nullptr);
+}
+
+inline uint256 TopLevelMerkleRoot(const CBlockIndex* prevIndex, const CBlock& block, bool* mutated = nullptr)
+{
+    auto& util = VeriBlock::getService<VeriBlock::UtilService>();
+    if (prevIndex == nullptr) {
+        // special case: this is genesis block
+        KeystoneArray keystones;
+        return util.makeTopLevelRoot(0, keystones, BlockMerkleRoot(block, mutated));
+    }
+
+    auto keystones = util.getKeystoneHashesForTheNextBlock(prevIndex);
+    return util.makeTopLevelRoot(prevIndex->nHeight + 1, keystones, BlockMerkleRoot(block, mutated));
+}
+
+inline bool VerifyTopLevelMerkleRoot(const CBlock& block, CValidationState& state, const CBlockIndex* pprevIndex)
+{
+    bool mutated = false;
+    uint256 hashMerkleRoot2 = VeriBlock::TopLevelMerkleRoot(pprevIndex, block, &mutated);
+
+    if (block.hashMerkleRoot != hashMerkleRoot2) {
+        return state.Invalid(ValidationInvalidReason::BLOCK_MUTATED, false, "bad-txnmrklroot", "hashMerkleRoot mismatch");
+    }
+
+    // Check for merkle tree malleability (CVE-2012-2459): repeating sequences
+    // of transactions in a block without affecting the merkle root of a block,
+    // while still invalidating it.
+    if (mutated) {
+        return state.Invalid(ValidationInvalidReason::BLOCK_MUTATED, false, "bad-txns-duplicate", "duplicate transaction");
+    }
+
+    // Add PopMerkleRoot commitment validation
+    int commitpos = GetPopMerkleRootCommitmentIndex(block);
+    if (commitpos != -1) {
+        uint256 popMerkleRoot = BlockPopTxMerkleRoot(block);
+        if (!memcpy(popMerkleRoot.begin(), &block.vtx[0]->vout[commitpos].scriptPubKey[4], 32)) {
+            return state.Invalid(ValidationInvalidReason::BLOCK_MUTATED, false, "bad-pop-tx-root-commitment", "pop merkle root mismatch");
+        }
+    } else {
+        // If block is not genesis
+        if (pprevIndex != nullptr) {
+            return state.Invalid(ValidationInvalidReason::BLOCK_MUTATED, false, "bad-pop-tx-root-commitment", "commitment is missing");
+        }
+    }
+
+    return true;
+}
+
+inline CTxOut addPopTransactionRootIntoCoinbaseCommitment(const CBlock& block)
+{
+    CTxOut out;
+    out.nValue = 0;
+    out.scriptPubKey.resize(36);
+    out.scriptPubKey[0] = OP_RETURN;
+    out.scriptPubKey[1] = 0x3a;
+    out.scriptPubKey[2] = 0xe6;
+    out.scriptPubKey[3] = 0xca;
+
+    uint256 popMerkleRoot = BlockPopTxMerkleRoot(block);
+    memcpy(&out.scriptPubKey[4], popMerkleRoot.begin(), 32);
+
+    return out;
+}
+
+} // namespace VeriBlock
+
+#endif //BITCOIN_SRC_VBK_MERKLE_HPP

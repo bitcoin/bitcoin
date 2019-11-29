@@ -14,6 +14,8 @@
 #include <memory>
 #include <stdint.h>
 
+#include <vbk/util.hpp>
+
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 
@@ -101,6 +103,12 @@ typedef boost::multi_index_container<
             boost::multi_index::tag<ancestor_score>,
             boost::multi_index::identity<CTxMemPoolModifiedEntry>,
             CompareTxMemPoolEntryByAncestorFee
+        >,
+        // sorted by pop tx priority
+        boost::multi_index::ordered_non_unique<
+            boost::multi_index::tag<VeriBlock::poptx_priority<ancestor_score>>,
+            boost::multi_index::identity<CTxMemPoolModifiedEntry>,
+            VeriBlock::CompareTxMemPoolEntryByPoPtxPriority<CompareTxMemPoolEntryByAncestorFee>
         >
     >
 > indexed_modified_transaction_set;
@@ -125,7 +133,7 @@ struct update_for_parent_inclusion
 /** Generate a new block, without valid proof-of-work */
 class BlockAssembler
 {
-private:
+protected:
     // The constructed block template
     std::unique_ptr<CBlockTemplate> pblocktemplate;
     // A convenience pointer that always refers to the CBlock in pblocktemplate
@@ -164,7 +172,7 @@ public:
     static Optional<int64_t> m_last_block_num_txs;
     static Optional<int64_t> m_last_block_weight;
 
-private:
+protected:
     // utility functions
     /** Clear the block's state and prepare for assembling a new block */
     void resetBlock();
@@ -175,6 +183,7 @@ private:
     /** Add transactions based on feerate including unconfirmed ancestors
       * Increments nPackagesSelected / nDescendantsUpdated with corresponding
       * statistics from the package selection (for logging statistics). */
+    template<typename MempoolComparatorTagName>
     void addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated) EXCLUSIVE_LOCKS_REQUIRED(mempool.cs);
 
     // helper functions for addPackageTxs()
