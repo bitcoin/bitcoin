@@ -6,6 +6,10 @@
 
 export LC_ALL=C.UTF-8
 
+if [[ $DOCKER_NAME_TAG == centos* ]]; then
+  export LC_ALL=en_US.utf8
+fi
+
 if [ "$TRAVIS_OS_NAME" == "osx" ]; then
   set +o errexit
   pushd /usr/local/Homebrew || exit 1
@@ -82,7 +86,10 @@ if [ -n "$DPKG_ADD_ARCH" ]; then
   DOCKER_EXEC dpkg --add-architecture "$DPKG_ADD_ARCH"
 fi
 
-if [ "$TRAVIS_OS_NAME" != "osx" ]; then
+if [[ $DOCKER_NAME_TAG == centos* ]]; then
+  ${CI_RETRY_EXE} DOCKER_EXEC yum -y install epel-release
+  ${CI_RETRY_EXE} DOCKER_EXEC yum -y install $DOCKER_PACKAGES $PACKAGES
+elif [ "$TRAVIS_OS_NAME" != "osx" ]; then
   ${CI_RETRY_EXE} DOCKER_EXEC apt-get update
   ${CI_RETRY_EXE} DOCKER_EXEC apt-get install --no-install-recommends --no-upgrade -y $PACKAGES $DOCKER_PACKAGES
 fi
