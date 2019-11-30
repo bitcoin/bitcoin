@@ -323,6 +323,9 @@ docs:
 	@echo "error: doxygen not found"
 endif
 
+check-valgrind:
+	$(MAKE) -C src/ check-valgrind
+
 clean-docs:
 	rm -rf doc/doxygen
 

@@ -613,6 +613,31 @@ if EMBEDDED_UNIVALUE
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C univalue check
 endif
 
+if ENABLE_BENCH
+if ENABLE_QT_TESTS
+check-valgrind: $(TEST_BINARY) $(BENCH_BINARY) test_bitcoin_qt
+else
+check-valgrind: $(TEST_BINARY) $(BENCH_BINARY)
+endif
+else
+if ENABLE_QT_TESTS
+check-valgrind: $(TEST_BINARY) test_bitcoin_qt
+else
+check-valgrind: $(TEST_BINARY)
+endif
+endif
+	@echo "Using the valgrind memory error detector: expect a 10-50x slowdown and ~2x memory usage."
+	@echo "Running $(TEST_BINARY) under valgrind -- this will take a a while..."
+	valgrind --suppressions=$(top_builddir)/contrib/valgrind.supp --gen-suppressions=all --error-exitcode=1 $(TEST_BINARY)
+if ENABLE_BENCH
+	@echo "Running $(BENCH_BINARY) -evals=1 -scaling=0 under valgrind -- this will take a while..."
+	valgrind --suppressions=$(top_builddir)/contrib/valgrind.supp --gen-suppressions=all --error-exitcode=1 $(BENCH_BINARY) -evals=1 -scaling=0 > /dev/null
+endif
+if ENABLE_QT_TESTS
+	@echo "Running qt/test/test_bitcoin-qt under valgrind -- this will take a while..."
+	valgrind --suppressions=$(top_builddir)/contrib/valgrind.supp --gen-suppressions=all --error-exitcode=1 qt/test/test_bitcoin-qt > /dev/null
+endif
+
 %.cpp.test: %.cpp
 	@echo Running tests: `cat $< | grep -E "(BOOST_FIXTURE_TEST_SUITE\\(|BOOST_AUTO_TEST_SUITE\\()" | cut -d '(' -f 2 | cut -d ',' -f 1 | cut -d ')' -f 1` from $<
 	$(AM_V_at)$(TEST_BINARY) -l test_suite -t "`cat $< | grep -E "(BOOST_FIXTURE_TEST_SUITE\\(|BOOST_AUTO_TEST_SUITE\\()" | cut -d '(' -f 2 | cut -d ',' -f 1 | cut -d ')' -f 1`" > $<.log 2>&1 || (cat $<.log && false)
