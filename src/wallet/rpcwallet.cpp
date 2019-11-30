@@ -3437,7 +3437,7 @@ static UniValue bumpfee(const JSONRPCRequest& request)
 
 
     std::vector<std::string> errors;
-    CAmount old_fee;
+    CAmount old_fee = -1;
     CAmount new_fee;
     CMutableTransaction mtx;
     feebumper::Result res;
@@ -3479,7 +3479,9 @@ static UniValue bumpfee(const JSONRPCRequest& request)
     }
     UniValue result(UniValue::VOBJ);
     result.pushKV("txid", txid.GetHex());
-    result.pushKV("origfee", ValueFromAmount(old_fee));
+    if (MoneyRange(old_fee)) {
+        result.pushKV("origfee", ValueFromAmount(old_fee));
+    }
     result.pushKV("fee", ValueFromAmount(new_fee));
     UniValue result_errors(UniValue::VARR);
     for (const std::string& error : errors) {
