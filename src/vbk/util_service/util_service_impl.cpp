@@ -139,7 +139,7 @@ uint256 UtilServiceImpl::makeTopLevelRoot(int height, const KeystoneArray& keyst
     return Hash(contextHash.begin(), contextHash.end(), txRoot.begin(), txRoot.end());
 }
 
-void UtilServiceImpl::addPopPayoutsIntoCoinbaseTx(CMutableTransaction& coinbaseTx, const CBlockIndex* pindexPrev)
+void UtilServiceImpl::addPopPayoutsIntoCoinbaseTx(CMutableTransaction& coinbaseTx, const CBlockIndex& pindexPrev)
 {
     PoPRewards rewards = getService<UtilService>().getPopRewards(pindexPrev);
 
@@ -151,7 +151,7 @@ void UtilServiceImpl::addPopPayoutsIntoCoinbaseTx(CMutableTransaction& coinbaseT
     }
 }
 
-bool UtilServiceImpl::checkCoinbaseTxWithPopRewards(const CTransaction& tx, const CAmount& PoWBlockReward, const CBlockIndex* pindexPrev, CValidationState& state)
+bool UtilServiceImpl::checkCoinbaseTxWithPopRewards(const CTransaction& tx, const CAmount& PoWBlockReward, const CBlockIndex& pindexPrev, CValidationState& state)
 {
     PoPRewards rewards = getService<UtilService>().getPopRewards(pindexPrev);
 
@@ -181,21 +181,26 @@ bool UtilServiceImpl::checkCoinbaseTxWithPopRewards(const CTransaction& tx, cons
     return true;
 }
 
-PoPRewards UtilServiceImpl::getPopRewards(const CBlockIndex* pindexPrev)
+PoPRewards UtilServiceImpl::getPopRewards(const CBlockIndex& pindexPrev)
 {
     PoPRewards rewards;
     auto& config = getService<Config>();
-    if (pindexPrev->nHeight + 1 > config.POP_REWARD_PAYMENT_DELAY) {
-        int32_t checkHeight = pindexPrev->nHeight + 1 - config.POP_REWARD_PAYMENT_DELAY;
-        const CBlockIndex* endorsedBlock = pindexPrev->GetAncestor(checkHeight);
-        const CBlockIndex* contaningBlocksTip = pindexPrev->GetAncestor(checkHeight + config.POP_REWARD_SETTLEMENT_INTERVAL);
+    auto& pop_service = VeriBlock::getService<VeriBlock::PopService>();
 
-        const CBlockIndex* difficultyBlockStart = pindexPrev->GetAncestor(checkHeight - config.POP_DIFFICULTY_AVERAGING_INTERVAL);
-        const CBlockIndex* difficultyBlockEnd = pindexPrev->GetAncestor(checkHeight + config.POP_REWARD_SETTLEMENT_INTERVAL - 1);
+    int nextBlockHeight = pindexPrev.nHeight + 1;
+    if (nextBlockHeight + 1 > config.POP_REWARD_PAYMENT_DELAY) {
+        int32_t checkHeight = nextBlockHeight - config.POP_REWARD_PAYMENT_DELAY;
+        const CBlockIndex* endorsedBlock = pindexPrev.GetAncestor(checkHeight);
+        const CBlockIndex* contaningBlocksTip = pindexPrev.GetAncestor(checkHeight + config.POP_REWARD_SETTLEMENT_INTERVAL);
+        const CBlockIndex* difficultyBlockStart = pindexPrev.GetAncestor(checkHeight - config.POP_DIFFICULTY_AVERAGING_INTERVAL);
+        const CBlockIndex* difficultyBlockEnd = pindexPrev.GetAncestor(checkHeight + config.POP_REWARD_SETTLEMENT_INTERVAL - 1);
 
-        auto& pop_service = VeriBlock::getService<VeriBlock::PopService>();
-        std::string difficulty = pop_service.rewardsCalculatePopDifficulty(difficultyBlockStart, difficultyBlockEnd);
-        pop_service.rewardsCalculateOutputs(checkHeight, endorsedBlock, contaningBlocksTip, difficulty, rewards);
+        if (!endorsedBlock || !contaningBlocksTip || !difficultyBlockStart || !difficultyBlockEnd) {
+            return rewards;
+        }
+
+        std::string difficulty = pop_service.rewardsCalculatePopDifficulty(*difficultyBlockStart, *difficultyBlockEnd);
+        pop_service.rewardsCalculateOutputs(checkHeight, *endorsedBlock, *contaningBlocksTip, difficulty, rewards);
     }
 
     return rewards;

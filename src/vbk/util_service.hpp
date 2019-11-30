@@ -33,9 +33,9 @@ struct UtilService {
     virtual int compareForks(const CBlockIndex& left, const CBlockIndex& right) = 0;
 
     // Pop rewards methods
-    virtual PoPRewards getPopRewards(const CBlockIndex* pindexPrev) = 0;
-    virtual void addPopPayoutsIntoCoinbaseTx(CMutableTransaction& coinbaseTx, const CBlockIndex* pindexPrev) = 0;
-    virtual bool checkCoinbaseTxWithPopRewards(const CTransaction& tx, const CAmount& PoWBlockReward, const CBlockIndex* pindexPrev, CValidationState& state) = 0;
+    virtual PoPRewards getPopRewards(const CBlockIndex& pindexPrev) = 0;
+    virtual void addPopPayoutsIntoCoinbaseTx(CMutableTransaction& coinbaseTx, const CBlockIndex& pindexPrev) = 0;
+    virtual bool checkCoinbaseTxWithPopRewards(const CTransaction& tx, const CAmount& PoWBlockReward, const CBlockIndex& pindexPrev, CValidationState& state) = 0;
 
     virtual bool validatePopTx(const CTransaction& tx, CValidationState& state) = 0;
 

@@ -37,11 +37,11 @@ BOOST_FIXTURE_TEST_CASE(addPopPayoutsIntoCoinbaseTx_test, TestChain100Setup)
 
     VeriBlock::PoPRewards rewards = getRewards();
 
-    When(Method(serviceFixture.util_service_mock, getPopRewards)).AlwaysDo([&rewards](const CBlockIndex* pindexPrev) -> VeriBlock::PoPRewards {
+    When(Method(serviceFixture.util_service_mock, getPopRewards)).AlwaysDo([&rewards](const CBlockIndex& pindexPrev) -> VeriBlock::PoPRewards {
         return rewards;
     });
 
-    When(Method(serviceFixture.util_service_mock, addPopPayoutsIntoCoinbaseTx)).AlwaysDo([&serviceFixture](CMutableTransaction& coinbaseTx, const CBlockIndex* pindexPrev) {
+    When(Method(serviceFixture.util_service_mock, addPopPayoutsIntoCoinbaseTx)).AlwaysDo([&serviceFixture](CMutableTransaction& coinbaseTx, const CBlockIndex& pindexPrev) {
         serviceFixture.util_service_impl.addPopPayoutsIntoCoinbaseTx(coinbaseTx, pindexPrev);
     });
 
@@ -64,15 +64,15 @@ BOOST_FIXTURE_TEST_CASE(checkCoinbaseTxWithPopRewards, TestChain100Setup)
 
     VeriBlock::PoPRewards rewards = getRewards();
 
-    When(Method(serviceFixture.util_service_mock, getPopRewards)).AlwaysDo([rewards](const CBlockIndex* pindexPrev) -> VeriBlock::PoPRewards {
+    When(Method(serviceFixture.util_service_mock, getPopRewards)).AlwaysDo([rewards](const CBlockIndex& pindexPrev) -> VeriBlock::PoPRewards {
         return rewards;
     });
 
-    When(Method(serviceFixture.util_service_mock, addPopPayoutsIntoCoinbaseTx)).AlwaysDo([&serviceFixture](CMutableTransaction& coinbaseTx, const CBlockIndex* pindexPrev) {
+    When(Method(serviceFixture.util_service_mock, addPopPayoutsIntoCoinbaseTx)).AlwaysDo([&serviceFixture](CMutableTransaction& coinbaseTx, const CBlockIndex& pindexPrev) {
         serviceFixture.util_service_impl.addPopPayoutsIntoCoinbaseTx(coinbaseTx, pindexPrev);
     });
 
-    When(Method(serviceFixture.util_service_mock, checkCoinbaseTxWithPopRewards)).AlwaysDo([&serviceFixture](const CTransaction& tx, const CAmount& PoWBlockReward, const CBlockIndex* pindexPrev, CValidationState& state) -> bool {
+    When(Method(serviceFixture.util_service_mock, checkCoinbaseTxWithPopRewards)).AlwaysDo([&serviceFixture](const CTransaction& tx, const CAmount& PoWBlockReward, const CBlockIndex& pindexPrev, CValidationState& state) -> bool {
         return serviceFixture.util_service_impl.checkCoinbaseTxWithPopRewards(tx, PoWBlockReward, pindexPrev, state);
     });
 
@@ -98,11 +98,11 @@ BOOST_FIXTURE_TEST_CASE(check_wallet_balance_with_pop_reward, TestChain100Setup)
     VeriBlock::PoPRewards rewards;
     rewards[scriptPubKey] = PoPReward;
 
-    When(Method(serviceFixture.util_service_mock, getPopRewards)).AlwaysDo([rewards](const CBlockIndex* pindexPrev) -> VeriBlock::PoPRewards {
+    When(Method(serviceFixture.util_service_mock, getPopRewards)).AlwaysDo([rewards](const CBlockIndex& pindexPrev) -> VeriBlock::PoPRewards {
         return rewards;
     });
 
-    When(Method(serviceFixture.util_service_mock, addPopPayoutsIntoCoinbaseTx)).AlwaysDo([&serviceFixture](CMutableTransaction& coinbaseTx, const CBlockIndex* pindexPrev) {
+    When(Method(serviceFixture.util_service_mock, addPopPayoutsIntoCoinbaseTx)).AlwaysDo([&serviceFixture](CMutableTransaction& coinbaseTx, const CBlockIndex& pindexPrev) {
         serviceFixture.util_service_impl.addPopPayoutsIntoCoinbaseTx(coinbaseTx, pindexPrev);
     });
 
@@ -112,7 +112,6 @@ BOOST_FIXTURE_TEST_CASE(check_wallet_balance_with_pop_reward, TestChain100Setup)
 
     CBlockIndex* tip = ::ChainActive().Tip();
     auto chain = interfaces::MakeChain();
-    auto locked_chain = chain->lock();
     LockAssertion lock(::cs_main);
 
     {

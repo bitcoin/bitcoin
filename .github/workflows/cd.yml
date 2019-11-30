@@ -1,7 +1,6 @@
 name: Docker CD
 
 on:
-  release:
   push:
     branches:
       - master
