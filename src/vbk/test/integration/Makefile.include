@@ -9,7 +9,8 @@ VBK_INTEGRATION_TEST_SUITE = \
 
 # the list of VeriBlock integration test sources
 VBK_INTEGRATION_TESTS =  \
-  vbk/test/integration/dummy.cpp
+  vbk/test/integration/dummy.cpp \
+  vbk/test/integration/rpc_tests.cpp
 
 vbk_test_integration_test_int_vbk_SOURCES = $(VBK_INTEGRATION_TEST_SUITE) $(VBK_INTEGRATION_TESTS)
 vbk_test_integration_test_int_vbk_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(TESTDEFS) $(EVENT_CFLAGS) $(THIRD_PARTY_INCLUDE)

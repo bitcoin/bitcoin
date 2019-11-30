@@ -7,10 +7,10 @@
  *  https://github.com/eranpeer/FakeIt
  */
 
-
+#ifndef WIN32
 #pragma clang system_header
 #pragma GCC system_header
-
+#endif
 
 #include <functional>
 #include <memory>

@@ -38,8 +38,8 @@ public:
 
     int compareTwoBranches(const CBlockIndex* commonKeystone, const CBlockIndex* leftForkTip, const CBlockIndex* rightForkTip) override;
 
-    void rewardsCalculateOutputs(const int& blockHeight, const CBlockIndex* endorsedBlock, const CBlockIndex* contaningBlocksTip, const std::string& difficulty, std::map<CScript, int64_t>& outputs) override;
-    std::string rewardsCalculatePopDifficulty(const CBlockIndex* start_interval, const CBlockIndex* end_interval) override;
+    void rewardsCalculateOutputs(const int& blockHeight, const CBlockIndex& endorsedBlock, const CBlockIndex& contaningBlocksTip, const std::string& difficulty, std::map<CScript, int64_t>& outputs) override;
+    std::string rewardsCalculatePopDifficulty(const CBlockIndex& start_interval, const CBlockIndex& end_interval) override;
 
     bool blockPopValidation(const CBlock& block, const CBlockIndex& pindexPrev, const Consensus::Params& params, CValidationState& state) override;
 

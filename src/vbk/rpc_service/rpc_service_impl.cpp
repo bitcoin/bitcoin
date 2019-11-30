@@ -189,6 +189,7 @@ UniValue RpcServiceImpl::doSubmitPop(const std::vector<uint8_t>& atv,
         tx.vin[0].scriptSig << OP_CHECKVTB;
     }
     tx.vin[0].scriptSig << OP_CHECKATV;
+    tx.vin[0].scriptSig << OP_CHECKPOP;
 
     assert(VeriBlock::isPopTx(CTransaction(tx)));
 

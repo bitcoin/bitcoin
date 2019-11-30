@@ -54,22 +54,22 @@ bool grpc_deserialize(const std::shared_ptr<VeriBlock::DeserializeService::Stub>
 }
 
 
-void BlockToProtoAltChainBlock(const CBlockIndex* blockIndex, VeriBlock::AltChainBlock* protoBlock)
+void BlockToProtoAltChainBlock(const CBlockIndex& blockIndex, VeriBlock::AltChainBlock& protoBlock)
 {
     auto* blockIndex1 = new VeriBlock::BlockIndex();
-    blockIndex1->set_hash(blockIndex->GetBlockHash().ToString());
-    blockIndex1->set_height(blockIndex->nHeight);
-    protoBlock->set_allocated_blockindex(blockIndex1);
-    protoBlock->set_timestamp(blockIndex->nTime);
+    blockIndex1->set_hash(blockIndex.GetBlockHash().ToString());
+    blockIndex1->set_height(blockIndex.nHeight);
+    protoBlock.set_allocated_blockindex(blockIndex1);
+    protoBlock.set_timestamp(blockIndex.nTime);
 }
 
-void BlockToProtoAltChainBlock(const CBlockHeader& block, const int& nHeight, VeriBlock::AltChainBlock* protoBlock)
+void BlockToProtoAltChainBlock(const CBlockHeader& block, const int& nHeight, VeriBlock::AltChainBlock& protoBlock)
 {
     auto* blockIndex1 = new VeriBlock::BlockIndex();
     blockIndex1->set_hash(block.GetHash().ToString());
     blockIndex1->set_height(nHeight);
-    protoBlock->set_allocated_blockindex(blockIndex1);
-    protoBlock->set_timestamp(block.nTime);
+    protoBlock.set_allocated_blockindex(blockIndex1);
+    protoBlock.set_timestamp(block.nTime);
 }
 } // namespace
 
@@ -113,14 +113,11 @@ bool PopServiceImpl::addPayloads(const CBlock& block, const int& nHeight, const 
     *publication = ATV;
 
     Status status = integrationService->AddPayloads(&context, request, &reply);
-    if (status.ok()) {
-        return reply.result();
-    } else {
-        throw VeriBlock::PopServiceException("grpc is shutdown");
+    if (!status.ok()) {
+        throw PopServiceException(status);
     }
 
-
-    return false;
+    return reply.result();
 }
 
 void PopServiceImpl::removePayloads(const CBlock& block, const int& nHeight)
@@ -136,13 +133,13 @@ void PopServiceImpl::removePayloads(const CBlock& block, const int& nHeight)
     request.set_allocated_blockindex(blockInfo);
 
     Status status = integrationService->RemovePayloads(&context, request, &reply);
-    if (status.ok()) {
-        if (!reply.result()) {
-            std::string error_message("GRPC returned error : %s", reply.resultmessage().c_str());
-            throw VeriBlock::PopServiceException(error_message.c_str());
-        }
-    } else {
-        throw VeriBlock::PopServiceException("grpc is shutdown");
+    if (!status.ok()) {
+        throw PopServiceException(status);
+    }
+
+    if (!reply.result()) {
+        std::string error_message("GRPC returned error : %s", reply.resultmessage().c_str());
+        throw VeriBlock::PopServiceException(error_message.c_str());
     }
 }
 
@@ -176,10 +173,10 @@ void PopServiceImpl::savePopTxToDatabase(const CBlock& block, const int& nHeight
         }
 
         auto* b1 = new AltChainBlock();
-        BlockToProtoAltChainBlock(block, nHeight, b1);
+        BlockToProtoAltChainBlock(block, nHeight, *b1);
 
         auto* b2 = new AltChainBlock();
-        BlockToProtoAltChainBlock(block, nHeight, b2);
+        BlockToProtoAltChainBlock(block, nHeight, *b2);
 
         SavePoPTransactionDataRequest request;
         request.set_allocated_poptx(popData);
@@ -189,14 +186,13 @@ void PopServiceImpl::savePopTxToDatabase(const CBlock& block, const int& nHeight
         ClientContext context;
 
         Status status = integrationService->SavePoPTransactionData(&context, request, &reply);
+        if (!status.ok()) {
+            throw PopServiceException(status);
+        }
 
-        if (status.ok()) {
-            if (!reply.result()) {
-                std::string error_message("GRPC returned error : %s", reply.resultmessage().c_str());
-                throw VeriBlock::PopServiceException(error_message.c_str());
-            }
-        } else {
-            throw VeriBlock::PopServiceException("grpc is shutdown");
+        if (!reply.result()) {
+            std::string error_message("GRPC returned error : %s", reply.resultmessage().c_str());
+            throw VeriBlock::PopServiceException(error_message.c_str());
         }
     }
 }
@@ -210,17 +206,16 @@ std::vector<BlockBytes> PopServiceImpl::getLastKnownVBKBlocks(size_t blocks)
     ClientContext context;
 
     Status status = integrationService->GetLastKnownVBKBlocks(&context, request, &reply);
+    if (!status.ok()) {
+        throw PopServiceException(status);
+    }
 
     std::vector<BlockBytes> result;
 
-    if (status.ok()) {
-        result.resize(reply.blocks_size());
-        for (size_t i = 0, size = reply.blocks_size(); i < size ; i++) {
-            auto& block = reply.blocks(i);
-            result[i] = std::vector<uint8_t>{block.begin(), block.end()};
-        }
-    } else {
-        throw PopServiceException(status.error_message().c_str());
+    result.resize(reply.blocks_size());
+    for (size_t i = 0, size = reply.blocks_size(); i < size; i++) {
+        auto& block = reply.blocks(i);
+        result[i] = std::vector<uint8_t>{block.begin(), block.end()};
     }
 
     return result;
@@ -234,19 +229,17 @@ std::vector<BlockBytes> PopServiceImpl::getLastKnownBTCBlocks(size_t blocks)
     ClientContext context;
 
     Status status = integrationService->GetLastKnownBTCBlocks(&context, request, &reply);
+    if (!status.ok()) {
+        throw PopServiceException(status);
+    }
 
     std::vector<BlockBytes> result;
 
-    if (status.ok()) {
-        result.resize(reply.blocks_size());
-        for (size_t i = 0, size = reply.blocks_size(); i < size ; i++) {
-            auto& block = reply.blocks(i);
-            result[i] = std::vector<uint8_t>{block.begin(), block.end()};
-        }
-    } else {
-        throw PopServiceException(status.error_message().c_str());
+    result.resize(reply.blocks_size());
+    for (size_t i = 0, size = reply.blocks_size(); i < size; i++) {
+        auto& block = reply.blocks(i);
+        result[i] = std::vector<uint8_t>{block.begin(), block.end()};
     }
-
     return result;
 }
 
@@ -259,12 +252,11 @@ bool PopServiceImpl::checkVTBinternally(const std::vector<uint8_t>& bytes)
     ClientContext context;
 
     Status status = integrationService->CheckVTBInternally(&context, publication, &reply);
-
-    if (status.ok()) {
-        return reply.result();
-    } else {
-        throw PopServiceException(status.error_message().c_str());
+    if (!status.ok()) {
+        throw PopServiceException(status);
     }
+
+    return reply.result();
 }
 
 bool PopServiceImpl::checkATVinternally(const std::vector<uint8_t>& bytes)
@@ -276,12 +268,11 @@ bool PopServiceImpl::checkATVinternally(const std::vector<uint8_t>& bytes)
     ClientContext context;
 
     Status status = integrationService->CheckATVInternally(&context, publication, &reply);
-
-    if (status.ok()) {
-        return reply.result();
-    } else {
-        throw PopServiceException("grpc is shutdown");
+    if (!status.ok()) {
+        throw PopServiceException(status);
     }
+
+    return reply.result();
 }
 
 // Forkresolution
@@ -296,7 +287,7 @@ int PopServiceImpl::compareTwoBranches(const CBlockIndex* commonKeystone, const 
 
     while (true) {
         AltChainBlock* b = request.add_leftfork();
-        ::BlockToProtoAltChainBlock(workingLeft, b);
+        ::BlockToProtoAltChainBlock(*workingLeft, *b);
 
         if (workingLeft == commonKeystone)
             break;
@@ -305,7 +296,7 @@ int PopServiceImpl::compareTwoBranches(const CBlockIndex* commonKeystone, const 
 
     while (true) {
         AltChainBlock* b = request.add_rightfork();
-        ::BlockToProtoAltChainBlock(workingRight, b);
+        ::BlockToProtoAltChainBlock(*workingRight, *b);
 
         if (workingRight == commonKeystone)
             break;
@@ -313,104 +304,99 @@ int PopServiceImpl::compareTwoBranches(const CBlockIndex* commonKeystone, const 
     }
 
     Status status = forkresolutionService->CompareTwoBranches(&context, request, &reply);
-
-    if (status.ok()) {
-        if (reply.result().result()) {
-            return reply.comparingsresult();
-        } else {
-            std::string error_message("GRPC returned error : %s", reply.result().resultmessage().c_str());
-            throw PopServiceException(error_message.c_str());
-        }
-    } else {
-        throw PopServiceException("grpc is shutdown");
+    if (!status.ok()) {
+        throw PopServiceException(status);
     }
-    return 0;
+
+    if (reply.result().result()) {
+        return reply.comparingsresult();
+    } else {
+        std::string error_message("GRPC returned error : %s", reply.result().resultmessage().c_str());
+        throw PopServiceException(error_message.c_str());
+    }
 }
 
 // Pop rewards
-void PopServiceImpl::rewardsCalculateOutputs(const int& blockHeight, const CBlockIndex* endorsedBlock, const CBlockIndex* contaningBlocksTip, const std::string& difficulty, std::map<CScript, int64_t>& outputs)
+void PopServiceImpl::rewardsCalculateOutputs(const int& blockHeight, const CBlockIndex& endorsedBlock, const CBlockIndex& contaningBlocksTip, const std::string& difficulty, std::map<CScript, int64_t>& outputs)
 {
     RewardsCalculateOutputsRequest request;
     RewardsCalculateOutputsReply reply;
     ClientContext context;
 
-    const CBlockIndex* workingBlock = contaningBlocksTip;
+    const CBlockIndex* workingBlock = &contaningBlocksTip;
 
-    while (workingBlock != endorsedBlock) {
+    while (workingBlock != &endorsedBlock) {
         AltChainBlock* b = request.add_endorsmentblocks();
-        ::BlockToProtoAltChainBlock(workingBlock, b);
+        ::BlockToProtoAltChainBlock(*workingBlock, *b);
 
         workingBlock = workingBlock->pprev;
     }
 
     auto* b = new AltChainBlock();
-    ::BlockToProtoAltChainBlock(endorsedBlock, b);
+    ::BlockToProtoAltChainBlock(endorsedBlock, *b);
 
     request.set_allocated_endorsedblock(b);
     request.set_blockaltheight(blockHeight);
     request.set_difficulty(difficulty);
 
     Status status = rewardsService->RewardsCalculateOutputs(&context, request, &reply);
+    if (!status.ok()) {
+        throw PopServiceException(status);
+    }
 
-    if (status.ok()) {
-        if (reply.result().result()) {
-            for (int i = 0; reply.outputs_size(); ++i) {
-                CScript script;
-                const VeriBlock::RewardOutput& output = reply.outputs(i);
-                std::vector<unsigned char> payout_bytes(output.payoutinfo().begin(), output.payoutinfo().end());
-                script << payout_bytes;
+    if (reply.result().result()) {
+        for (int i = 0, size = reply.outputs_size(); i < size; ++i) {
+            CScript script;
+            const VeriBlock::RewardOutput& output = reply.outputs(i);
+            std::vector<unsigned char> payout_bytes(output.payoutinfo().begin(), output.payoutinfo().end());
+            script << payout_bytes;
 
-                try {
-                    int64_t amount = std::stoll(output.reward());
-                    if (MoneyRange(amount)) {
-                        outputs[script] = amount;
-                    } else {
-                        outputs[script] = MAX_MONEY;
-                    }
-                } catch (const std::invalid_argument&) {
-                    std::string error_message("GRPC returned error : %s", reply.result().resultmessage().c_str());
-                    throw VeriBlock::PopServiceException(error_message.c_str());
-                } catch (const std::out_of_range&) {
+            try {
+                int64_t amount = std::stoll(output.reward());
+                if (MoneyRange(amount)) {
+                    outputs[script] = amount;
+                } else {
                     outputs[script] = MAX_MONEY;
                 }
+            } catch (const std::invalid_argument&) {
+                std::string error_message("GRPC returned error : %s", reply.result().resultmessage().c_str());
+                throw VeriBlock::PopServiceException(error_message.c_str());
+            } catch (const std::out_of_range&) {
+                outputs[script] = MAX_MONEY;
             }
-
-        } else {
-            std::string error_message("GRPC returned error : %s", reply.result().resultmessage().c_str());
-            throw PopServiceException(error_message.c_str());
         }
     } else {
-        throw PopServiceException("grpc is shutdown");
+        std::string error_message("GRPC returned error : %s", reply.result().resultmessage().c_str());
+        throw PopServiceException(error_message.c_str());
     }
 }
 
-std::string PopServiceImpl::rewardsCalculatePopDifficulty(const CBlockIndex* start_interval, const CBlockIndex* end_interval)
+std::string PopServiceImpl::rewardsCalculatePopDifficulty(const CBlockIndex& start_interval, const CBlockIndex& end_interval)
 {
     RewardsCalculatePopDifficultyRequest request;
     RewardsCalculateScoreReply reply;
     ClientContext context;
 
-    const CBlockIndex* workingBlock = end_interval;
+    const CBlockIndex* workingBlock = &end_interval;
 
-    while (workingBlock != start_interval->pprev) // including the start_interval block
+    while (workingBlock != start_interval.pprev) // including the start_interval block
     {
         AltChainBlock* b = request.add_blocks();
-        ::BlockToProtoAltChainBlock(workingBlock, b);
+        ::BlockToProtoAltChainBlock(*workingBlock, *b);
 
         workingBlock = workingBlock->pprev;
     }
 
     Status status = rewardsService->RewardsCalculatePopDifficulty(&context, request, &reply);
+    if (!status.ok()) {
+        throw PopServiceException(status);
+    }
 
-    if (status.ok()) {
-        if (reply.result().result()) {
-            return reply.score();
-        } else {
-            std::string error_message("GRPC returned error : %s", reply.result().resultmessage().c_str());
-            throw PopServiceException(error_message.c_str());
-        }
+    if (reply.result().result()) {
+        return reply.score();
     } else {
-        throw PopServiceException("grpc is shutdown");
+        std::string error_message("GRPC returned error : %s", reply.result().resultmessage().c_str());
+        throw PopServiceException(error_message.c_str());
     }
 
     return "0";
