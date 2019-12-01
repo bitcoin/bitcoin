@@ -2780,12 +2780,12 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
     CoinType nCoinType = coin_control.nCoinType;
     CAmount value_to_select = nTargetValue;
 
+    // Default to bnb was not used. If we use it, we set it later
+    bnb_used = false;
+
     // coin control -> return all selected outputs (we want all selected to go into the transaction for sure)
     if (coin_control.HasSelected() && !coin_control.fAllowOtherInputs)
     {
-        // We didn't use BnB here, so set it to false.
-        bnb_used = false;
-
         for (const COutput& out : vCoins)
         {
             if(!out.fSpendable)
@@ -2817,7 +2817,6 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
             const CWalletTx* pcoin = &it->second;
             // Clearly invalid input, fail
             if (pcoin->tx->vout.size() <= outpoint.n) {
-                bnb_used = false;
                 return false;
             }
             if (nCoinType == CoinType::ONLY_FULLY_MIXED) {
@@ -2829,7 +2828,6 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
             CInputCoin coin(pcoin->tx, outpoint.n, pcoin->GetSpendSize(outpoint.n, false));
             nValueFromPresetInputs += coin.txout.nValue;
             if (coin.m_input_bytes <= 0) {
-                bnb_used = false;
                 return false; // Not solvable, can't estimate size for fee
             }
             coin.effective_value = coin.txout.nValue - coin_selection_params.effective_fee.GetFee(coin.m_input_bytes);
@@ -2840,7 +2838,6 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
             }
             setPresetCoins.insert(coin);
         } else {
-            bnb_used = false;
             return false; // TODO: Allow non-wallet inputs
         }
     }
@@ -3526,7 +3523,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                 }
 
                 // Choose coins to use
-                bool bnb_used;
+                bool bnb_used = false;
                 if (pick_new_inputs) {
                     nValueIn = 0;
                     std::set<CInputCoin> setCoinsTmp;
