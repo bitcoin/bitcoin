@@ -188,7 +188,7 @@ PoPRewards UtilServiceImpl::getPopRewards(const CBlockIndex& pindexPrev)
     auto& pop_service = VeriBlock::getService<VeriBlock::PopService>();
 
     int nextBlockHeight = pindexPrev.nHeight + 1;
-    if (nextBlockHeight + 1 > config.POP_REWARD_PAYMENT_DELAY) {
+    if (nextBlockHeight > config.POP_REWARD_PAYMENT_DELAY) {
         int32_t checkHeight = nextBlockHeight - config.POP_REWARD_PAYMENT_DELAY;
         const CBlockIndex* endorsedBlock = pindexPrev.GetAncestor(checkHeight);
         const CBlockIndex* contaningBlocksTip = pindexPrev.GetAncestor(checkHeight + config.POP_REWARD_SETTLEMENT_INTERVAL);
