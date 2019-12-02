@@ -24,6 +24,7 @@
 #include <bech32.h>
 #include <rpc/util.h>
 #include <services/rpc/assetrpc.h>
+#include <ethereum/sha3.h>
 static int node1LastBlock = 0;
 static int node2LastBlock = 0;
 static int node3LastBlock = 0;
@@ -772,6 +773,12 @@ string AssetAllocationMint(const string& node, const string& asset, const string
     CAmount nAmountAfter = AmountFromValue(find_value(r.get_obj(), "amount"));
     // account for fees
     BOOST_CHECK_EQUAL(nAmountBefore+AmountFromValue(amount) , nAmountAfter);
+
+	// lookup by eth txid and check to see if it exists on syscoin
+	// get eth txid
+	const dev::h256 &ethtxid = dev::sha3(ParseHex(tx_hex));
+	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "syscoincheckmint", "\"" + ethtxid.hex() + "\""));
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "in_active_chain").get_bool(), true);
     return hex_str;
 }
 bool FindAssetGUIDFromAssetIndexResults(const UniValue& results, std::string guid){

@@ -68,11 +68,11 @@ class CEthereumMintedTxDB : public CDBWrapper {
 public:
     CEthereumMintedTxDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "ethereumminttx", nCacheSize, fMemory, fWipe) {
     } 
-    bool ExistsKey(const std::vector<unsigned char> &ethKey) {
-        return Exists(ethKey);
+    bool ExistsKey(const std::vector<unsigned char> &ethTxid) {
+        return Exists(ethTxid);
     } 
-    bool ReadTx(const std::vector<unsigned char> &ethKey, uint256 &txHash) {
-        return Read(ethKey, txHash);
+    bool ReadTx(const std::vector<unsigned char> &ethTxid, uint256 &sysTxid) {
+        return Read(ethTxid, sysTxid);
     } 
     bool FlushErase(const EthereumMintTxVec &vecMintKeys);
     bool FlushWrite(const EthereumMintTxVec &vecMintKeys);
