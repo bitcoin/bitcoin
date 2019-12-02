@@ -26,7 +26,6 @@
 #include <serialize.h>
 #include <spentindex.h>
 
-#include <algorithm>
 #include <atomic>
 #include <map>
 #include <memory>
