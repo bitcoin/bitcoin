@@ -7,6 +7,7 @@
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <ethereum/ethereum.h>
+#include <ethereum/sha3.h>
 #include <ethereum/address.h>
 #include <ethereum/common.h>
 #include <ethereum/commondata.h>
@@ -128,15 +129,14 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     dev::RLP rlpTxValue(&vchTxValue);
     const std::vector<unsigned char> &vchTxPath = mintSyscoin.vchTxPath;
     dev::RLP rlpTxPath(&vchTxPath);
-    const uint32_t &nPath = rlpTxPath.toInt<uint32_t>(dev::RLP::VeryStrict);
-    
+    const dev::h256 &hash = dev::sha3(vchTxValue);
+    const std::vector<unsigned char> &vchHash = hash.asBytes();
     // ensure eth tx not already spent
-    const std::pair<uint64_t, uint32_t> &ethKey = std::make_pair(mintSyscoin.nBlockNumber, nPath);
-    if(pethereumtxmintdb->ExistsKey(ethKey)){
+    if(pethereumtxmintdb->ExistsKey(vchHash)){
         return FormatSyscoinErrorMessage(state, "mint-exists", bMiner);
     } 
     // add the key to flush to db later
-    vecMintKeys.emplace_back(ethKey);
+    vecMintKeys.emplace_back(std::make_pair(vchHash, txHash));
     
     // verify receipt proof
     if(!VerifyProof(&vchTxPath, rlpReceiptValue, rlpReceiptParentNodes, rlpReceiptRoot)){
@@ -403,12 +403,10 @@ bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, AssetAll
         LogPrint(BCLog::SYS,"DisconnectMintAsset: Cannot unserialize data inside of this transaction relating to an assetallocationmint\n");
         return false;
     }
-    const std::vector<unsigned char> &vchTxPath = mintSyscoin.vchTxPath;
-    dev::RLP rlpTxPath(&vchTxPath);
-    const uint32_t &nPath = rlpTxPath.toInt<uint32_t>(dev::RLP::VeryStrict);
+    const dev::h256 &hash = dev::sha3(mintSyscoin.vchTxValue);
+    const std::vector<unsigned char> &vchHash = hash.asBytes();
     // remove eth spend tx from our internal db
-    const std::pair<uint64_t, uint32_t> &ethKey = std::make_pair(mintSyscoin.nBlockNumber, nPath);
-    vecMintKeys.emplace_back(ethKey);  
+    vecMintKeys.emplace_back(std::make_pair(vchHash, txHash));
     // recver
     const std::string &receiverTupleStr = mintSyscoin.assetAllocationTuple.ToString();
     #if __cplusplus > 201402 
@@ -1800,7 +1798,7 @@ bool CEthereumMintedTxDB::FlushWrite(const EthereumMintTxVec &vecMintKeys){
         return true;
     CDBBatch batch(*this);
     for (const auto &key : vecMintKeys) {
-        batch.Write(key, true);
+        batch.Write(key.first, key.second);
     }
     LogPrint(BCLog::SYS, "Flushing, writing %d ethereum tx mints\n", vecMintKeys.size());
     return WriteBatch(batch);
@@ -1810,7 +1808,7 @@ bool CEthereumMintedTxDB::FlushErase(const EthereumMintTxVec &vecMintKeys){
         return true;
     CDBBatch batch(*this);
     for (const auto &key : vecMintKeys) {
-        batch.Erase(key);
+        batch.Erase(key.first);
     }
     LogPrint(BCLog::SYS, "Flushing, erasing %d ethereum tx mints\n", vecMintKeys.size());
     return WriteBatch(batch);
