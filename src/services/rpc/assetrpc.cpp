@@ -1439,7 +1439,7 @@ static const CRPCCommand commands[] =
     { "syscoin",            "syscoinclearethheaders",           &syscoinclearethheaders,        {} },
     { "syscoin",            "syscoinstopgeth",                  &syscoinstopgeth,               {} },
     { "syscoin",            "syscoinstartgeth",                 &syscoinstartgeth,              {} },
-    { "syscoin",            "syscoincheckmint",                 &syscoincheckmint,              {"ethtxid"} }
+    { "syscoin",            "syscoincheckmint",                 &syscoincheckmint,              {"ethtxid"} },
 };
 // clang-format on
 void RegisterAssetRPCCommands(CRPCTable &t)
