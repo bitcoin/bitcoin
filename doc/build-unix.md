@@ -76,13 +76,17 @@ Finally, clang (often less resource hungry) can be used instead of gcc, which is
 
 Build requirements:
 
-    sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3
+    sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3 libssl-dev
 
 Now, you can either build from self-compiled [depends](/depends/README.md) or install the required dependencies:
 
     sudo apt-get install libevent-dev libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev
 
-BerkeleyDB is required for the wallet.
+BerkeleyDB is required for the wallet. It can be build by doing
+
+    contrib/install_db4.sh \`pwd\`
+
+from the root repository directory
 
 Ubuntu and Debian have their own `libdb-dev` and `libdb++-dev` packages, but these will install
 BerkeleyDB 5.1 or later. This will break binary wallet compatibility with the distributed executables, which
