@@ -63,13 +63,17 @@ UniValue RpcServiceImpl::submitpop(const JSONRPCRequest& request)
 
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VARR});
 
+    LogPrintf("submitpop executed with: \n");
     const UniValue& vtb_array = request.params[1].get_array();
     std::vector<std::vector<uint8_t>> vtbs;
     for (uint32_t idx = 0u, size = vtb_array.size(); idx < size; ++idx) {
+        LogPrintf(" - VTB: %s\n", vtb_array[idx].get_str());
         vtbs.emplace_back(ParseHexV(vtb_array[idx], "vtb[" + std::to_string(idx) + "]"));
     }
 
+    LogPrintf(" - ATV: %s\n", request.params[0].get_str());
     auto atv = ParseHexV(request.params[0], "atv");
+
     return doSubmitPop(atv, vtbs);
 }
 
@@ -179,16 +183,11 @@ UniValue RpcServiceImpl::doSubmitPop(const std::vector<uint8_t>& atv,
     tx.vin.resize(1);
     VeriBlock::setVBKNoInput(tx.vin[0].prevout);
 
-    tx.vin[0].scriptSig << atv;
-    for (auto& vtb : vtbs) {
-        tx.vin[0].scriptSig << vtb;
+    tx.vin[0].scriptSig << atv << OP_CHECKATV;
+    for (const auto& vtb : vtbs) {
+        tx.vin[0].scriptSig << vtb << OP_CHECKVTB;
     }
 
-    for (auto& ignore : vtbs) {
-        (void)ignore;
-        tx.vin[0].scriptSig << OP_CHECKVTB;
-    }
-    tx.vin[0].scriptSig << OP_CHECKATV;
     tx.vin[0].scriptSig << OP_CHECKPOP;
 
     assert(VeriBlock::isPopTx(CTransaction(tx)));
