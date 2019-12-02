@@ -249,16 +249,17 @@ public:
 
         checkpointData = {
             {
-                {   1, uint256S("0x0000062cf9ac97b1582474e313770e4609c338ed6fae01142da65722353465f3")},
-                { 100, uint256S("0x000005faf4d7d9dccd3a1986eb7150a22f21f80664d5deb91cb1ca38eb305e7e")}
+                {    1, uint256S("0x0000062cf9ac97b1582474e313770e4609c338ed6fae01142da65722353465f3")},
+                {  100, uint256S("0x000005faf4d7d9dccd3a1986eb7150a22f21f80664d5deb91cb1ca38eb305e7e")},
+                { 6439, uint256S("0x7c6f9621fe18f22e57d042a3804be45a9ace2d17a305036242d7ba90b68345cb")}
             }};
 
         chainTxData = ChainTxData{
             // Data from rpc: getchaintxstats <nblock> <blockhash>
-            // Data from RPC: getchaintxstats 101 000002cb0a69c6c59778e62ce84d2af1da87a5c05a3b9c9ba0c10a1f28b50312
-            /* nTime    */ 1574436943,
-            /* nTxCount */ 166,
-            /* dTxRate  */ 0.008734543541173376};
+            // Data from RPC: getchaintxstats 6439 b7f987c4599f45d45c8617d0dbee9f85a777833e1ff6b727a8e71068e77a0011
+            /* nTime    */ 1575321594,
+            /* nTxCount */ 19541,
+            /* dTxRate  */ 0.02141012535348456};
     }
 };
 
