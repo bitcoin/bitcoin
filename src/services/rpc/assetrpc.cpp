@@ -1334,7 +1334,82 @@ UniValue syscoingettxroots(const JSONRPCRequest& request)
     
     return ret;
 } 
+UniValue syscoincheckmint(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"syscoincheckmint",
+    "\nGet the Syscoin mint transaction by looking up using Ethereum transaction ID.\n",
+    {
+        {"ethtxid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Ethereum TXID used to burn funds to move to Syscoin."}
+    },
+    RPCResult{
+        "{\n"
+        "  \"txtype\" : \"txtype\",         (string) The syscoin transaction type\n"
+        "  \"asset_guid\" : n,              (numeric) The asset guid\n"
+        "  \"symbol\" : \"symbol\",         (string) The asset symbol\n"
+        "  \"txid\" : \"id\",               (string) The transaction id\n"
+        "  \"height\" : n,                  (numeric) The blockheight of the transaction \n"
+        "  \"sender\" : \"address\",        (string) The address of the sender\n"
+        "  \"allocations\" : [              (array of json objects)\n"
+        "    {\n"
+        "      \"address\": \"address\",    (string) The address of the receiver\n"
+        "      \"amount\" : n,              (numeric) The amount of the transaction\n"
+        "    },\n"
+        "    ...\n"
+        "  ]\n"
+        "  \"total\" : n,                   (numeric) The total amount in this transaction\n"
+        "  \"confirmed\" : true|false       (boolean) If the transaction is confirmed\n"
+        "  \"spv_proof\"                    (object) Ethereum SPV Proofs for transaction and receipt\n"
+        "  \"in_active_chain\": b,          (bool) Whether block found with syscoin transaction is in the active chain or not\n"
+        "}\n"
+    },
+    RPCExamples{
+        HelpExampleCli("syscoincheckmint", "0x4a12022ff3d27bfa9bc1c5c5d79dbb1f293203420e7c09c28482cb34a3bdbad4")
+        + HelpExampleRpc("syscoincheckmint", "0x4a12022ff3d27bfa9bc1c5c5d79dbb1f293203420e7c09c28482cb34a3bdbad4")
+    }
+    }.Check(request);
+    bool in_active_chain = false;
+    CBlockIndex* blockindex = nullptr;
+    std::string ethTxidStr = request.params[0].get_str();
+    boost::erase_all(ethTxidStr, "0x");  // strip 0x in hex str if exist
+    const std::vector<unsigned char> &ethtxid = ParseHex(ethTxidStr);
+    uint256 systxid;
+    if(!pethereumtxmintdb || !pethereumtxmintdb->ReadTx(ethtxid, systxid)){
+       throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Could not read syscoin transaction from ethereum transaction");
+    }
+    {
+        LOCK(cs_main);
+        uint256 blockhash;
+        if(pblockindexdb->ReadBlockHash(systxid, blockhash)){
+            blockindex = LookupBlockIndex(blockhash);
+            if (!blockindex) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found");
+            }
+            in_active_chain = ::ChainActive().Contains(blockindex);
+        }
+    }
 
+    CTransactionRef txRef;
+    uint256 hash_block;
+    if (!GetTransaction(systxid, txRef, Params().GetConsensus(), hash_block, blockindex)) {
+        std::string errmsg;
+        if (blockindex) {
+            if (!(blockindex->nStatus & BLOCK_HAVE_DATA)) {
+                throw JSONRPCError(RPC_MISC_ERROR, "Block not available");
+            }
+            errmsg = "No such transaction found in the provided block";
+        } else {
+            errmsg = "No such mempool or blockchain transaction";
+        }
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, errmsg);
+    }
+
+    UniValue output(UniValue::VOBJ);
+    if(!DecodeSyscoinRawtransaction(*txRef, output))
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Not a Syscoin transaction");
+    output.pushKV("in_active_chain", in_active_chain);
+    return output;
+    
+} 
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                                actor (function)                argNames
@@ -1364,6 +1439,7 @@ static const CRPCCommand commands[] =
     { "syscoin",            "syscoinclearethheaders",           &syscoinclearethheaders,        {} },
     { "syscoin",            "syscoinstopgeth",                  &syscoinstopgeth,               {} },
     { "syscoin",            "syscoinstartgeth",                 &syscoinstartgeth,              {} },
+    { "syscoin",            "syscoincheckmint",                 &syscoincheckmint,              {"ethtxid"} }
 };
 // clang-format on
 void RegisterAssetRPCCommands(CRPCTable &t)
