@@ -8,7 +8,7 @@
 #include <net_types.h> // For banmap_t
 #include <qt/clientmodel.h>
 
-#include <algorithm>
+#include <utility>
 
 #include <QDebug>
 #include <QList>
