@@ -45,7 +45,7 @@ class RecentRequestEntryLessThan
 public:
     RecentRequestEntryLessThan(int nColumn, Qt::SortOrder fOrder):
         column(nColumn), order(fOrder) {}
-    bool operator()(RecentRequestEntry &left, RecentRequestEntry &right) const;
+    bool operator()(const RecentRequestEntry& left, const RecentRequestEntry& right) const;
 
 private:
     int column;
