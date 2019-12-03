@@ -6,11 +6,6 @@
 
 export LC_ALL=C.UTF-8
 
-# Temporarily disable errexit, because Travis macOS fails without error message
-set +o errexit
-cd "build/bitcoin-$HOST" || (echo "could not enter distdir build/bitcoin-$HOST"; exit 1)
-set -o errexit
-
 if [ -n "$QEMU_USER_CMD" ]; then
   BEGIN_FOLD wrap-qemu
   echo "Prepare to run functional tests for HOST=$HOST"
@@ -33,7 +28,7 @@ fi
 if [ "$RUN_UNIT_TESTS" = "true" ]; then
   BEGIN_FOLD unit-tests
   bash -c "${CI_WAIT}" &  # Print dots in case the unit tests take a long time to run
-  DOCKER_EXEC LD_LIBRARY_PATH=$BASE_BUILD_DIR/depends/$HOST/lib make $MAKEJOBS check VERBOSE=1
+  DOCKER_EXEC LD_LIBRARY_PATH=$DEPENDS_DIR/$HOST/lib make $MAKEJOBS check VERBOSE=1
   END_FOLD
 fi
 
