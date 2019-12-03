@@ -220,6 +220,155 @@ static UniValue generatetoaddress(const JSONRPCRequest& request)
     return generateBlocks(coinbase_script, nGenerate, nMaxTries);
 }
 
+static std::string GenerateCustomBlock(const CScript& coinbase_script, const std::vector<CTransactionRef>& txs)
+{
+    CBlock block;
+    CChainParams chainparams(Params());
+
+    CBlockIndex* previous_index;
+    {
+        LOCK(cs_main);
+        previous_index = ::ChainActive().Tip();
+    }
+    CHECK_NONFATAL(previous_index != nullptr);
+
+    const int height = previous_index->nHeight + 1;
+
+    // Create coinbase transaction.
+    CMutableTransaction coinbase_tx;
+    coinbase_tx.vin.resize(1);
+    coinbase_tx.vin[0].prevout.SetNull();
+    coinbase_tx.vout.resize(1);
+    coinbase_tx.vout[0].scriptPubKey = coinbase_script;
+    coinbase_tx.vout[0].nValue = GetBlockSubsidy(height, chainparams.GetConsensus());
+    coinbase_tx.vin[0].scriptSig = CScript() << height << OP_0;
+    block.vtx.push_back(MakeTransactionRef(std::move(coinbase_tx)));
+
+    // Add transactions
+    block.vtx.insert(block.vtx.end(), txs.begin(), txs.end());
+
+    block.nVersion = ComputeBlockVersion(previous_index, chainparams.GetConsensus());
+    if (chainparams.MineBlocksOnDemand())
+        block.nVersion = gArgs.GetArg("-blockversion", block.nVersion);
+
+    // Fill in header
+    block.hashPrevBlock = previous_index->GetBlockHash();
+    block.nTime = GetAdjustedTime();
+    UpdateTime(&block, chainparams.GetConsensus(), previous_index);
+    block.nBits = GetNextWorkRequired(previous_index, &block, chainparams.GetConsensus());
+    block.nNonce = 0;
+
+    GenerateCoinbaseCommitment(block, previous_index, chainparams.GetConsensus());
+
+    {
+        LOCK(cs_main);
+        unsigned int extra_nonce = 0;
+        IncrementExtraNonce(&block, ::ChainActive().Tip(), extra_nonce);
+
+        BlockValidationState state;
+        if (!TestBlockValidity(state, chainparams, block, previous_index, false, false)) {
+            throw JSONRPCError(RPC_VERIFY_ERROR, strprintf("TestBlockValidity failed: %s", FormatStateMessage(state)));
+        }
+    }
+
+    int max_tries{1000000};
+
+    while (max_tries > 0 && !CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus()) && !ShutdownRequested()) {
+        ++block.nNonce;
+        --max_tries;
+    }
+
+    if (max_tries == 0) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Exceeded max tries");
+    }
+
+    std::shared_ptr<const CBlock> shared_block = std::make_shared<const CBlock>(block);
+    if (!ProcessNewBlock(chainparams, shared_block, true, nullptr))
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
+
+    return block.GetHash().GetHex();
+}
+
+static UniValue generatecustomblock(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"generatecustomblock",
+        "\nMine a custom block with a set of transactions immediately to a specified address or descriptor (before the RPC call returns)\n",
+        {
+            {"address/descriptor", RPCArg::Type::STR, RPCArg::Optional::NO, "The address or descriptor to send the newly generated bitcoin to."},
+            {"transactions", RPCArg::Type::ARR, RPCArg::Optional::NO, "An array of hex strings which are either txids or raw transactions.\n"
+                "Txids must reference transactions currently in the mempool.",
+                {
+                    {"rawtx/txid", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, ""},
+                },
+            }
+        },
+        RPCResult{
+            "blockhash     (hex) hash of generated block\n"
+        },
+        RPCExamples{
+            "\nGenerate a block to myaddress, with txs rawtx and mempool_txid\n"
+            + HelpExampleCli("generatecustomblock", R"("myaddress" '["rawtx", "mempool_txid"]')")
+        },
+    }.Check(request);
+
+    const auto address_or_descriptor = request.params[0].get_str();
+    CScript coinbase_script;
+
+    FlatSigningProvider key_provider;
+    std::string error;
+    const auto desc = Parse(address_or_descriptor, key_provider, error, /* require_checksum = */ false);
+    if (desc) {
+        if (desc->IsRange()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Ranged descriptor not accepted. Maybe pass through deriveaddresses first?");
+        }
+
+        FlatSigningProvider provider;
+        std::vector<CScript> scripts;
+        if (!desc->Expand(0, key_provider, scripts, provider)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Cannot derive script without private keys"));
+        }
+
+        CHECK_NONFATAL(scripts.size() == 1);
+        coinbase_script = scripts.at(0);
+
+    } else {
+        const auto destination = DecodeDestination(address_or_descriptor);
+        if (!IsValidDestination(destination)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Error: Invalid address or descriptor");
+        }
+
+        coinbase_script = GetScriptForDestination(destination);
+    }
+
+    std::vector<CTransactionRef> txs;
+    const auto raw_txs_or_txids = request.params[1].get_array();
+    for (size_t i = 0; i < raw_txs_or_txids.size(); i++) {
+        const auto str(raw_txs_or_txids[i].get_str());
+
+        uint256 hash;
+        CMutableTransaction mtx;
+        if (ParseHashStr(str, hash)) {
+
+            LOCK(mempool.cs);
+
+            const auto it = mempool.mapTx.find(hash);
+            if (it == mempool.mapTx.end()) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Transaction %s not in mempool.", str));
+            }
+
+            txs.emplace_back(it->GetSharedTx());
+
+        } else if (DecodeHexTx(mtx, str)) {
+            txs.push_back(MakeTransactionRef(std::move(mtx)));
+
+        } else {
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("Transaction decode failed for %s", str));
+        }
+    }
+
+    return GenerateCustomBlock(coinbase_script, txs);
+}
+
 static UniValue getmininginfo(const JSONRPCRequest& request)
 {
             RPCHelpMan{"getmininginfo",
@@ -1003,6 +1152,7 @@ static const CRPCCommand commands[] =
 
     { "generating",         "generatetoaddress",      &generatetoaddress,      {"nblocks","address","maxtries"} },
     { "generating",         "generatetodescriptor",   &generatetodescriptor,   {"num_blocks","descriptor","maxtries"} },
+    { "generating",         "generatecustomblock",    &generatecustomblock,    {"address","transactions"} },
 
     { "util",               "estimatesmartfee",       &estimatesmartfee,       {"conf_target", "estimate_mode"} },
 
