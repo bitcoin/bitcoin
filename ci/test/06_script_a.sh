@@ -6,7 +6,7 @@
 
 export LC_ALL=C.UTF-8
 
-SYSCOIN_CONFIG_ALL="--disable-dependency-tracking --prefix=$BASE_BUILD_DIR/depends/$HOST --bindir=$BASE_OUTDIR/bin --libdir=$BASE_OUTDIR/lib"
+SYSCOIN_CONFIG_ALL="--disable-dependency-tracking --prefix=$DEPENDS_DIR/$HOST --bindir=$BASE_OUTDIR/bin --libdir=$BASE_OUTDIR/lib"
 if [ -z "$NO_DEPENDS" ]; then
   DOCKER_EXEC ccache --max-size=$CCACHE_SIZE
 fi
@@ -19,14 +19,8 @@ else
 fi
 END_FOLD
 
-# Create folder on host and docker, so that `cd` works
-mkdir -p build
 DOCKER_EXEC mkdir -p build
-
-# Temporarily disable errexit, because Travis macOS fails without error message
-set +o errexit
-cd build || (echo "could not enter build directory"; exit 1)
-set -o errexit
+export P_CI_DIR="$P_CI_DIR/build"
 
 BEGIN_FOLD configure
 DOCKER_EXEC ../configure --cache-file=config.cache $SYSCOIN_CONFIG_ALL $SYSCOIN_CONFIG || ( (DOCKER_EXEC cat config.log) && false)
@@ -38,21 +32,15 @@ mkdir -p "syscoin-$HOST"
 DOCKER_EXEC make distdir VERSION=$HOST
 END_FOLD
 
-set +o errexit
-cd "syscoin-$HOST" || (echo "could not enter distdir syscoin-$HOST"; exit 1)
-set -o errexit
+export P_CI_DIR="$P_CI_DIR/syscoin-$HOST"
 
 BEGIN_FOLD configure
 DOCKER_EXEC ./configure --cache-file=../config.cache $SYSCOIN_CONFIG_ALL $SYSCOIN_CONFIG || ( (DOCKER_EXEC cat config.log) && false)
 END_FOLD
 
 set -o errtrace
-trap 'DOCKER_EXEC "cat ${BASE_BUILD_DIR}/sanitizer-output/* 2> /dev/null"' ERR
+trap 'DOCKER_EXEC "cat ${BASE_SCRATCH_DIR}/sanitizer-output/* 2> /dev/null"' ERR
 
 BEGIN_FOLD build
 DOCKER_EXEC make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows." && DOCKER_EXEC make $GOAL V=1 ; false )
 END_FOLD
-
-set +o errexit
-cd ${BASE_BUILD_DIR} || (echo "could not enter travis build dir $BASE_BUILD_DIR"; exit 1)
-set -o errexit
