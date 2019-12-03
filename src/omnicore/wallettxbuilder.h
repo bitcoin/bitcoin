@@ -41,5 +41,8 @@ int CreateFundedTransaction(
         uint256& retTxid,
         interfaces::Wallet* iWallet);
 
+#ifdef ENABLE_WALLET
+int CreateDExTransaction(interfaces::Wallet* pwallet, const std::string& buyerAddress, const std::string& sellerAddress, const CAmount& nAmount, uint256& txid);
+#endif
 
 #endif // BITCOIN_OMNICORE_WALLETTXBUILDER_H

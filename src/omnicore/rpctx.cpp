@@ -19,11 +19,13 @@
 
 #include <interfaces/wallet.h>
 #include <init.h>
+#include <key_io.h>
 #include <validation.h>
 #include <wallet/rpcwallet.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <sync.h>
+#include <util/moneystr.h>
 #ifdef ENABLE_WALLET
 #include <wallet/wallet.h>
 #endif
@@ -486,6 +488,81 @@ static UniValue omni_senddexaccept(const JSONRPCRequest& request)
         }
     }
 }
+
+#ifdef ENABLE_WALLET
+static UniValue omni_senddexpay(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
+
+    if (request.fHelp || request.params.size() != 4)
+        throw runtime_error(
+            RPCHelpMan{"omni_senddexpay",
+               "\nCreate and broadcast payment for an accept offer.\n",
+               {
+                   {"fromaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address to send from\n"},
+                   {"toaddress", RPCArg::Type::STR, RPCArg::Optional::NO, "the address of the seller\n"},
+                   {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the token to purchase\n"},
+                   {"amount", RPCArg::Type::STR, RPCArg::Optional::NO, "the Bitcoin amount to send\n"},
+               },
+               RPCResult{
+                   "\"hash\"                  (string) the hex-encoded transaction hash\n"
+               },
+               RPCExamples{
+                   HelpExampleCli("omni_senddexaccept", "\"35URq1NN3xL6GeRKUP6vzaQVcxoJiiJKd8\" \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 1 \"15.0\"")
+                   + HelpExampleRpc("omni_senddexaccept", "\"35URq1NN3xL6GeRKUP6vzaQVcxoJiiJKd8\", \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\", 1, \"15.0\"")
+               }
+            }.ToString());
+
+    // Parameters
+    std::string buyerAddress = ParseText(request.params[0]);
+    std::string sellerAddress = ParseText(request.params[1]);
+    uint32_t propertyId = ParsePropertyId(request.params[2]);
+    CAmount nAmount = ParseAmount(request.params[3], isPropertyDivisible(propertyId));
+
+    // Check parameters are valid
+    if (nAmount <= 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid amount for send");
+
+    CTxDestination buyerDest = DecodeDestination(buyerAddress);
+    if (!IsValidDestination(buyerDest)) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid buyer address");
+    }
+
+    CTxDestination sellerDest = DecodeDestination(sellerAddress);
+    if (!IsValidDestination(sellerDest)) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid seller address");
+    }
+
+    RequirePrimaryToken(propertyId);
+    RequireMatchingDExAccept(sellerAddress, propertyId, buyerAddress);
+
+    // Get accept offer and make sure buyer is not trying to overpay
+    {
+        LOCK(cs_tally);
+        const CMPAccept* acceptOffer = DEx_getAccept(sellerAddress, propertyId, buyerAddress);
+        if (acceptOffer == nullptr)
+            throw JSONRPCError(RPC_MISC_ERROR, "Unable to load accept offer from the distributed exchange");
+
+        const CAmount amountAccepted = acceptOffer->getAcceptAmountRemaining();
+        const CAmount amountToPayInBTC = calculateDesiredBTC(acceptOffer->getOfferAmountOriginal(), acceptOffer->getBTCDesiredOriginal(), amountAccepted);
+
+        if (nAmount > amountToPayInBTC) {
+            throw JSONRPCError(RPC_MISC_ERROR, strprintf("Paying more than required: %lld BTC to pay for %lld tokens", FormatMoney(amountToPayInBTC), FormatMoney(amountAccepted)));
+        }
+    }
+
+    uint256 txid;
+    int result = CreateDExTransaction(pwallet.get(), buyerAddress, sellerAddress, nAmount, txid);
+
+    // Check error and return the txid
+    if (result != 0) {
+        throw JSONRPCError(result, error_str(result));
+    } else {
+        return txid.GetHex();
+    }
+}
+#endif
 
 static UniValue omni_sendissuancecrowdsale(const JSONRPCRequest& request)
 {
@@ -1723,6 +1800,7 @@ static const CRPCCommand commands[] =
     { "omni layer (transaction creation)", "omni_send",                    &omni_send,                    {"fromaddress", "toaddress", "propertyid", "amount", "redeemaddress", "referenceamount"} },
     { "omni layer (transaction creation)", "omni_senddexsell",             &omni_senddexsell,             {"fromaddress", "propertyidforsale", "amountforsale", "amountdesired", "paymentwindow", "minacceptfee", "action"} },
     { "omni layer (transaction creation)", "omni_senddexaccept",           &omni_senddexaccept,           {"fromaddress", "toaddress", "propertyid", "amount", "override"} },
+    { "omni layer (transaction creation)", "omni_senddexpay",              &omni_senddexpay,              {"fromaddress", "toaddress", "propertyid", "amount"} },
     { "omni layer (transaction creation)", "omni_sendissuancecrowdsale",   &omni_sendissuancecrowdsale,   {"fromaddress", "ecosystem", "type", "previousid", "category", "subcategory", "name", "url", "data", "propertyiddesired", "tokensperunit", "deadline", "earlybonus", "issuerpercentage"} },
     { "omni layer (transaction creation)", "omni_sendissuancefixed",       &omni_sendissuancefixed,       {"fromaddress", "ecosystem", "type", "previousid", "category", "subcategory", "name", "url", "data", "amount"} },
     { "omni layer (transaction creation)", "omni_sendissuancemanaged",     &omni_sendissuancemanaged,     {"fromaddress", "ecosystem", "type", "previousid", "category", "subcategory", "name", "url", "data"} },

@@ -16,6 +16,7 @@ All available commands can be listed with `"help"`, and information about a spec
   - [omni_send](#omni_send)
   - [omni_senddexsell](#omni_senddexsell)
   - [omni_senddexaccept](#omni_senddexaccept)
+  - [omni_senddexpay](#omni_senddexpay)
   - [omni_sendissuancecrowdsale](#omni_sendissuancecrowdsale)
   - [omni_sendissuancefixed](#omni_sendissuancefixed)
   - [omni_sendissuancemanaged](#omni_sendissuancemanaged)
@@ -188,6 +189,32 @@ Create and broadcast an accept offer for the specified token and amount.
 
 ```bash
 $ omnicore-cli "omni_senddexaccept" \
+    "35URq1NN3xL6GeRKUP6vzaQVcxoJiiJKd8" "37FaKponF7zqoMLUjEiko25pDiuVH5YLEa" 1 "15.0"
+```
+---
+
+### omni_senddexpay
+
+Create and broadcast payment for an accept offer.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `fromaddress`       | string  | required | the address to send from                                                                     |
+| `toaddress`         | string  | required | the address of the seller                                                                    |
+| `propertyid`        | number  | required | the identifier of the token to purchase                                                      |
+| `amount`            | string  | required | the Bitcoin amount to send                                                                   |
+
+**Result:**
+```js
+"hash"  // (string) the hex-encoded transaction hash
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_senddexpay" \
     "35URq1NN3xL6GeRKUP6vzaQVcxoJiiJKd8" "37FaKponF7zqoMLUjEiko25pDiuVH5YLEa" 1 "15.0"
 ```
 

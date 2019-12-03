@@ -123,6 +123,14 @@ void RequireNoOtherDExOffer(const std::string& address)
     }
 }
 
+void RequireMatchingDExAccept(const std::string& sellerAddress, uint32_t propertyId, const std::string& buyerAddress)
+{
+    LOCK(cs_tally);
+    if (!mastercore::DEx_acceptExists(sellerAddress, propertyId, buyerAddress)) {
+        throw JSONRPCError(RPC_TYPE_ERROR, "No matching accept order on the distributed exchange");
+    }
+}
+
 void RequireSaneReferenceAmount(int64_t amount)
 {
     if ((0.01 * COIN) < amount) {

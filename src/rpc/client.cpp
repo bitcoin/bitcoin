@@ -232,6 +232,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "omni_senddexsell", 6, "action" },
     { "omni_senddexaccept", 2, "propertyid" },
     { "omni_senddexaccept", 4, "override" },
+    { "omni_senddexpay", 2, "propertyid" },
     { "omni_sendclosecrowdsale", 1, "propertyid" },
     { "omni_sendgrant", 2, "propertyid" },
     { "omni_sendrevoke", 1, "propertyid" },
