@@ -21,7 +21,6 @@
 #include <services/rpc/assetrpc.h>
 using namespace std;
 extern UniValue read_json(const std::string& jsondata);
-extern CAmount getAuxFee(const std::string &publicData, const CAmount& nAmount, const uint8_t &nPrecision, CWitnessAddress & address);
 BOOST_FIXTURE_TEST_SUITE(syscoin_asset_tests, BasicSyscoinTestingSetup)
 
 BOOST_AUTO_TEST_CASE(generate_big_assetdata)
