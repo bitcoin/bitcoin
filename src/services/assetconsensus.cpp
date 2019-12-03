@@ -14,7 +14,7 @@
 #include <boost/thread.hpp>
 #include <services/rpc/assetrpc.h>
 #include <validationinterface.h>
-#include <algorithm> // std::unique
+#include <utility> // std::unique
 extern AssetBalanceMap mempoolMapAssetBalances;
 extern ArrivalTimesMapImpl arrivalTimesMap;
 extern std::unordered_set<std::string> assetAllocationConflicts;
@@ -103,13 +103,55 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     }
     if (rlpReceiptValue.itemCount() != 4){
         return FormatSyscoinErrorMessage(state, "mint-invalid-tx-receipt-count", bMiner);
-    } 
+    }
     const uint64_t &nStatus = rlpReceiptValue[0].toInt<uint64_t>(dev::RLP::VeryStrict);
     if (nStatus != 1){
         return FormatSyscoinErrorMessage(state, "mint-invalid-tx-receipt-status", bMiner);
     } 
-
-     
+    dev::RLP rlpReceiptLogsValue(rlpReceiptValue[3]);
+    if (!rlpReceiptLogsValue.isList()){
+        return FormatSyscoinErrorMessage(state, "mint-receipt-rlp-logs-list", bMiner);
+    }
+    if (rlpReceiptLogsValue.itemCount() != 3){
+        return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-logs-count", bMiner);
+    }
+    // look for TokenFreeze event and get the last parameter which should be the BridgeTransferID
+    uint32_t nBridgeTransferID = 0;
+    for(uint32_t i = 0;i<3;i++){
+        dev::RLP rlpReceiptLogValue(rlpReceiptLogsValue[i]);
+        if (!rlpReceiptLogValue.isList()){
+            return FormatSyscoinErrorMessage(state, "mint-receipt-log-rlp-list", bMiner);
+        }
+        if (rlpReceiptLogValue.itemCount() != 3){
+            return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-log-count", bMiner);
+        }
+        const dev::Address &address160Log = rlpReceiptLogValue[0].toHash<dev::Address>(dev::RLP::VeryStrict);
+        if(Params().GetConsensus().vchSYSXERC20Manager == address160Log.asBytes()){
+            // check topic
+            dev::RLP rlpReceiptLogTopicsValue(rlpReceiptLogValue[1]);
+            if (!rlpReceiptLogTopicsValue.isList()){
+                return FormatSyscoinErrorMessage(state, "mint-receipt-log-topics-rlp-list", bMiner);
+            }
+            if (rlpReceiptLogTopicsValue.itemCount() != 1){
+                return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-log-topics-count", bMiner);
+            }
+            // topic hash matches with TokenFreeze signature
+            if(Params().GetConsensus().vchTokenUnfreezeMethod == rlpReceiptLogTopicsValue[0].toBytes(dev::RLP::VeryStrict)){
+                dev::RLP rlpReceiptLogDataValue(rlpReceiptLogValue[2]);
+                // get last data field which should be our BridgeTransferID
+                if (!rlpReceiptLogDataValue.isList()){
+                    return FormatSyscoinErrorMessage(state, "mint-receipt-log-data-rlp-list", bMiner);
+                }
+                if (rlpReceiptLogDataValue.itemCount() != 3){
+                    return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-log-data-count", bMiner);
+                }
+                nBridgeTransferID = rlpReceiptLogDataValue[2].toInt<uint32_t>(dev::RLP::VeryStrict);
+            }
+        }
+    }
+    if(nBridgeTransferID == 0 || mintSyscoin.nBridgeTransferID != nBridgeTransferID){
+        return FormatSyscoinErrorMessage(state, "mint-invalid-bridge-transfer-id", bMiner);
+    }
     // check transaction spv proofs
     dev::RLP rlpTxRoot(&mintSyscoin.vchTxRoot);
     dev::RLP rlpReceiptRoot(&mintSyscoin.vchReceiptRoot);
@@ -129,14 +171,12 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     dev::RLP rlpTxValue(&vchTxValue);
     const std::vector<unsigned char> &vchTxPath = mintSyscoin.vchTxPath;
     dev::RLP rlpTxPath(&vchTxPath);
-    const dev::h256 &hash = dev::sha3(vchTxValue);
-    const std::vector<unsigned char> &vchHash = hash.asBytes();
     // ensure eth tx not already spent
-    if(pethereumtxmintdb->ExistsKey(vchHash)){
+    if(pethereumtxmintdb->ExistsKey(nBridgeTransferID)){
         return FormatSyscoinErrorMessage(state, "mint-exists", bMiner);
     } 
     // add the key to flush to db later
-    vecMintKeys.emplace_back(std::make_pair(vchHash, txHash));
+    vecMintKeys.emplace_back(std::make_pair(nBridgeTransferID, txHash));
     
     // verify receipt proof
     if(!VerifyProof(&vchTxPath, rlpReceiptValue, rlpReceiptParentNodes, rlpReceiptRoot)){
@@ -403,10 +443,8 @@ bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, AssetAll
         LogPrint(BCLog::SYS,"DisconnectMintAsset: Cannot unserialize data inside of this transaction relating to an assetallocationmint\n");
         return false;
     }
-    const dev::h256 &hash = dev::sha3(mintSyscoin.vchTxValue);
-    const std::vector<unsigned char> &vchHash = hash.asBytes();
     // remove eth spend tx from our internal db
-    vecMintKeys.emplace_back(std::make_pair(vchHash, txHash));
+    vecMintKeys.emplace_back(std::make_pair(mintSyscoin.nBridgeTransferID, txHash));
     // recver
     const std::string &receiverTupleStr = mintSyscoin.assetAllocationTuple.ToString();
     #if __cplusplus > 201402 
