@@ -154,9 +154,16 @@ void SimulationTest(CCoinsView* base, bool fake_best_block)
             bool test_havecoin_after = InsecureRandBits(2) == 0;
 
             bool result_havecoin = test_havecoin_before ? stack.back()->HaveCoin(COutPoint(txid, 0)) : false;
-            const Coin& entry = (InsecureRandRange(500) == 0) ? AccessByTxid(*stack.back(), txid) : stack.back()->AccessCoin(COutPoint(txid, 0));
+
+            // Infrequently, test usage of AccessByTxid instead of AccessCoin - the
+            // former just delegates to the latter and returns the first unspent in a txn.
+            const Coin& entry = (InsecureRandRange(500) == 0) ?
+                AccessByTxid(*stack.back(), txid) : stack.back()->AccessCoin(COutPoint(txid, 0));
             BOOST_CHECK(coin == entry);
-            BOOST_CHECK(!test_havecoin_before || result_havecoin == !entry.IsSpent());
+
+            if (test_havecoin_before) {
+                BOOST_CHECK(result_havecoin == !entry.IsSpent());
+            }
 
             if (test_havecoin_after) {
                 bool ret = stack.back()->HaveCoin(COutPoint(txid, 0));
@@ -167,24 +174,29 @@ void SimulationTest(CCoinsView* base, bool fake_best_block)
                 Coin newcoin;
                 newcoin.out.nValue = InsecureRand32();
                 newcoin.nHeight = 1;
+
+                // Infrequently test adding unspendable coins.
                 if (InsecureRandRange(16) == 0 && coin.IsSpent()) {
                     newcoin.out.scriptPubKey.assign(1 + InsecureRandBits(6), OP_RETURN);
                     BOOST_CHECK(newcoin.out.scriptPubKey.IsUnspendable());
                     added_an_unspendable_entry = true;
                 } else {
-                    newcoin.out.scriptPubKey.assign(InsecureRandBits(6), 0); // Random sizes so we can test memory usage accounting
+                    // Random sizes so we can test memory usage accounting
+                    newcoin.out.scriptPubKey.assign(InsecureRandBits(6), 0);
                     (coin.IsSpent() ? added_an_entry : updated_an_entry) = true;
                     coin = newcoin;
                 }
-                stack.back()->AddCoin(COutPoint(txid, 0), std::move(newcoin), !coin.IsSpent() || InsecureRand32() & 1);
+                bool is_overwrite = !coin.IsSpent() || InsecureRand32() & 1;
+                stack.back()->AddCoin(COutPoint(txid, 0), std::move(newcoin), is_overwrite);
             } else {
+                // Spend the coin.
                 removed_an_entry = true;
                 coin.Clear();
                 BOOST_CHECK(stack.back()->SpendCoin(COutPoint(txid, 0)));
             }
         }
 
-        // One every 10 iterations, remove a random entry from the cache
+        // Once every 10 iterations, remove a random entry from the cache
         if (InsecureRandRange(10) == 0) {
             COutPoint out(txids[InsecureRand32() % txids.size()], 0);
             int cacheid = InsecureRand32() % stack.size();
