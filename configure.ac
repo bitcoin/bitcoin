@@ -1423,18 +1423,16 @@ if test x$bitcoin_enable_qt != xno; then
   AC_MSG_CHECKING([whether to build GUI with support for QR codes])
   if test x$have_qrencode = xno; then
     if test x$use_qr = xyes; then
-     AC_MSG_ERROR("QR support requested but cannot be built. use --without-qrencode")
+      AC_MSG_ERROR([QR support requested but cannot be built. Use --without-qrencode])
     fi
-    AC_MSG_RESULT(no)
+    use_qr=no
   else
     if test x$use_qr != xno; then
-      AC_MSG_RESULT(yes)
       AC_DEFINE([USE_QRCODE],[1],[Define if QR support should be compiled in])
       use_qr=yes
-    else
-      AC_MSG_RESULT(no)
     fi
   fi
+  AC_MSG_RESULT([$use_qr])
 
   if test x$XGETTEXT = x; then
     AC_MSG_WARN("xgettext is required to update qt translations")
