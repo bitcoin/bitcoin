@@ -26,9 +26,7 @@
 #include <rpc/util.h>
 #include <sync.h>
 #include <util/moneystr.h>
-#ifdef ENABLE_WALLET
 #include <wallet/wallet.h>
-#endif
 
 #include <univalue.h>
 
@@ -42,12 +40,8 @@ using namespace mastercore;
 
 static UniValue omni_funded_send(const JSONRPCRequest& request)
 {
-#ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
-#else
-    std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(nullptr);
-#endif
 
     if (request.fHelp || request.params.size() != 5)
         throw runtime_error(
@@ -96,12 +90,8 @@ static UniValue omni_funded_send(const JSONRPCRequest& request)
 
 static UniValue omni_funded_sendall(const JSONRPCRequest& request)
 {
-#ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
-#else
-    std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(nullptr);
-#endif
 
     if (request.fHelp || request.params.size() != 4)
         throw runtime_error(
@@ -144,12 +134,8 @@ static UniValue omni_funded_sendall(const JSONRPCRequest& request)
 
 static UniValue omni_sendrawtx(const JSONRPCRequest& request)
 {
-#ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
-#else
-    std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(nullptr);
-#endif
 
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 5)
         throw runtime_error(
@@ -196,12 +182,8 @@ static UniValue omni_sendrawtx(const JSONRPCRequest& request)
 
 static UniValue omni_send(const JSONRPCRequest& request)
 {
-#ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
-#else
-    std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(nullptr);
-#endif
 
     if (request.fHelp || request.params.size() < 4 || request.params.size() > 6)
         throw runtime_error(
@@ -260,12 +242,8 @@ static UniValue omni_send(const JSONRPCRequest& request)
 
 static UniValue omni_sendall(const JSONRPCRequest& request)
 {
-#ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
-#else
-    std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(nullptr);
-#endif
 
     if (request.fHelp || request.params.size() < 3 || request.params.size() > 5)
         throw runtime_error(
@@ -320,12 +298,8 @@ static UniValue omni_sendall(const JSONRPCRequest& request)
 
 static UniValue omni_senddexsell(const JSONRPCRequest& request)
 {
-#ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
-#else
-    std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(nullptr);
-#endif
 
     if (request.fHelp || request.params.size() != 7)
         throw runtime_error(
@@ -415,12 +389,8 @@ static UniValue omni_senddexsell(const JSONRPCRequest& request)
 
 static UniValue omni_senddexaccept(const JSONRPCRequest& request)
 {
-#ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
-#else
-    std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(nullptr);
-#endif
 
     if (request.fHelp || request.params.size() < 4 || request.params.size() > 5)
         throw runtime_error(
@@ -459,7 +429,6 @@ static UniValue omni_senddexaccept(const JSONRPCRequest& request)
     }
 
     int64_t nMinimumAcceptFee = 0;
-#ifdef ENABLE_WALLET
     // use new 0.10 custom fee to set the accept minimum fee appropriately
     {
         LOCK(cs_tally);
@@ -467,7 +436,6 @@ static UniValue omni_senddexaccept(const JSONRPCRequest& request)
         if (sellOffer == nullptr) throw JSONRPCError(RPC_TYPE_ERROR, "Unable to load sell offer from the distributed exchange");
         nMinimumAcceptFee = sellOffer->getMinFee();
     }
-#endif
 
     // create a payload for the transaction
     std::vector<unsigned char> payload = CreatePayload_DExAccept(propertyId, amount);
@@ -489,7 +457,6 @@ static UniValue omni_senddexaccept(const JSONRPCRequest& request)
     }
 }
 
-#ifdef ENABLE_WALLET
 static UniValue omni_senddexpay(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -562,16 +529,11 @@ static UniValue omni_senddexpay(const JSONRPCRequest& request)
         return txid.GetHex();
     }
 }
-#endif
 
 static UniValue omni_sendissuancecrowdsale(const JSONRPCRequest& request)
 {
-#ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
-#else
-    std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(nullptr);
-#endif
 
     if (request.fHelp || request.params.size() != 14)
         throw runtime_error(
@@ -645,12 +607,8 @@ static UniValue omni_sendissuancecrowdsale(const JSONRPCRequest& request)
 
 static UniValue omni_sendissuancefixed(const JSONRPCRequest& request)
 {
-#ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
-#else
-    std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(nullptr);
-#endif
 
     if (request.fHelp || request.params.size() != 10)
         throw runtime_error(
@@ -714,12 +672,8 @@ static UniValue omni_sendissuancefixed(const JSONRPCRequest& request)
 
 static UniValue omni_sendissuancemanaged(const JSONRPCRequest& request)
 {
-#ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
-#else
-    std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(nullptr);
-#endif
 
     if (request.fHelp || request.params.size() != 9)
         throw runtime_error(
@@ -781,12 +735,8 @@ static UniValue omni_sendissuancemanaged(const JSONRPCRequest& request)
 
 static UniValue omni_sendsto(const JSONRPCRequest& request)
 {
-#ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
-#else
-    std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(nullptr);
-#endif
 
     if (request.fHelp || request.params.size() < 3 || request.params.size() > 5)
         throw runtime_error(
@@ -841,12 +791,8 @@ static UniValue omni_sendsto(const JSONRPCRequest& request)
 
 static UniValue omni_sendgrant(const JSONRPCRequest& request)
 {
-#ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
-#else
-    std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(nullptr);
-#endif
 
     if (request.fHelp || request.params.size() < 4 || request.params.size() > 5)
         throw runtime_error(
@@ -902,12 +848,8 @@ static UniValue omni_sendgrant(const JSONRPCRequest& request)
 
 static UniValue omni_sendrevoke(const JSONRPCRequest& request)
 {
-#ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
-#else
-    std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(nullptr);
-#endif
 
     if (request.fHelp || request.params.size() < 3 || request.params.size() > 4)
         throw runtime_error(
@@ -962,12 +904,8 @@ static UniValue omni_sendrevoke(const JSONRPCRequest& request)
 
 static UniValue omni_sendclosecrowdsale(const JSONRPCRequest& request)
 {
-#ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
-#else
-    std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(nullptr);
-#endif
 
     if (request.fHelp || request.params.size() != 2)
         throw runtime_error(
@@ -1018,12 +956,8 @@ static UniValue omni_sendclosecrowdsale(const JSONRPCRequest& request)
 
 static UniValue omni_sendtrade(const JSONRPCRequest& request)
 {
-#ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
-#else
-    std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(nullptr);
-#endif
 
     if (request.fHelp || request.params.size() != 5)
         throw runtime_error(
@@ -1082,12 +1016,8 @@ static UniValue omni_sendtrade(const JSONRPCRequest& request)
 
 static UniValue omni_sendcanceltradesbyprice(const JSONRPCRequest& request)
 {
-#ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
-#else
-    std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(nullptr);
-#endif
 
     if (request.fHelp || request.params.size() != 5)
         throw runtime_error(
@@ -1146,12 +1076,8 @@ static UniValue omni_sendcanceltradesbyprice(const JSONRPCRequest& request)
 
 static UniValue omni_sendcanceltradesbypair(const JSONRPCRequest& request)
 {
-#ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
-#else
-    std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(nullptr);
-#endif
 
     if (request.fHelp || request.params.size() != 3)
         throw runtime_error(
@@ -1206,12 +1132,8 @@ static UniValue omni_sendcanceltradesbypair(const JSONRPCRequest& request)
 
 static UniValue omni_sendcancelalltrades(const JSONRPCRequest& request)
 {
-#ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
-#else
-    std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(nullptr);
-#endif
 
     if (request.fHelp || request.params.size() != 2)
         throw runtime_error(
@@ -1260,12 +1182,8 @@ static UniValue omni_sendcancelalltrades(const JSONRPCRequest& request)
 
 static UniValue omni_sendchangeissuer(const JSONRPCRequest& request)
 {
-#ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
-#else
-    std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(nullptr);
-#endif
 
     if (request.fHelp || request.params.size() != 3)
         throw runtime_error(
@@ -1316,12 +1234,8 @@ static UniValue omni_sendchangeissuer(const JSONRPCRequest& request)
 
 static UniValue omni_sendenablefreezing(const JSONRPCRequest& request)
 {
-#ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
-#else
-    std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(nullptr);
-#endif
 
     if (request.fHelp || request.params.size() != 2)
         throw runtime_error(
@@ -1371,12 +1285,8 @@ static UniValue omni_sendenablefreezing(const JSONRPCRequest& request)
 
 static UniValue omni_senddisablefreezing(const JSONRPCRequest& request)
 {
-#ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
-#else
-    std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(nullptr);
-#endif
 
     if (request.fHelp || request.params.size() != 2)
         throw runtime_error(
@@ -1427,12 +1337,8 @@ static UniValue omni_senddisablefreezing(const JSONRPCRequest& request)
 
 static UniValue omni_sendfreeze(const JSONRPCRequest& request)
 {
-#ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
-#else
-    std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(nullptr);
-#endif
 
     if (request.fHelp || request.params.size() != 4)
         throw runtime_error(
@@ -1488,12 +1394,8 @@ static UniValue omni_sendfreeze(const JSONRPCRequest& request)
 
 static UniValue omni_sendunfreeze(const JSONRPCRequest& request)
 {
-#ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
-#else
-    std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(nullptr);
-#endif
 
     if (request.fHelp || request.params.size() != 4)
         throw runtime_error(
@@ -1549,12 +1451,8 @@ static UniValue omni_sendunfreeze(const JSONRPCRequest& request)
 
 static UniValue omni_sendactivation(const JSONRPCRequest& request)
 {
-#ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
-#else
-    std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(nullptr);
-#endif
 
     if (request.fHelp || request.params.size() != 4)
         throw runtime_error(
@@ -1604,12 +1502,8 @@ static UniValue omni_sendactivation(const JSONRPCRequest& request)
 
 static UniValue omni_senddeactivation(const JSONRPCRequest& request)
 {
-#ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
-#else
-    std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(nullptr);
-#endif
 
     if (request.fHelp || request.params.size() != 2)
         throw runtime_error(
@@ -1655,12 +1549,8 @@ static UniValue omni_senddeactivation(const JSONRPCRequest& request)
 
 static UniValue omni_sendalert(const JSONRPCRequest& request)
 {
-#ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(wallet);
-#else
-    std::unique_ptr<interfaces::Wallet> pwallet = interfaces::MakeWallet(nullptr);
-#endif
 
     if (request.fHelp || request.params.size() != 4)
         throw runtime_error(
@@ -1795,7 +1685,6 @@ static UniValue trade_MP(const JSONRPCRequest& request)
 static const CRPCCommand commands[] =
 { //  category                             name                            actor (function)               okSafeMode
   //  ------------------------------------ ------------------------------- ------------------------------ ----------
-#ifdef ENABLE_WALLET
     { "omni layer (transaction creation)", "omni_sendrawtx",               &omni_sendrawtx,               {"fromaddress", "rawtransaction", "referenceaddress", "redeemaddress", "referenceamount"} },
     { "omni layer (transaction creation)", "omni_send",                    &omni_send,                    {"fromaddress", "toaddress", "propertyid", "amount", "redeemaddress", "referenceamount"} },
     { "omni layer (transaction creation)", "omni_senddexsell",             &omni_senddexsell,             {"fromaddress", "propertyidforsale", "amountforsale", "amountdesired", "paymentwindow", "minacceptfee", "action"} },
@@ -1829,7 +1718,6 @@ static const CRPCCommand commands[] =
     { "hidden",                            "send_MP",                      &omni_send,                    {"fromaddress", "toaddress", "propertyid", "amount", "redeemaddress", "referenceamount"} },
     { "hidden",                            "sendtoowners_MP",              &omni_sendsto,                 {"fromaddress", "propertyid", "amount", "redeemaddress", "distributionproperty"} },
     { "hidden",                            "trade_MP",                     &trade_MP,                     {"fromaddress", "propertyidforsale", "amountforsale", "propertiddesired", "amountdesired", "action"} },
-#endif
 };
 
 void RegisterOmniTransactionCreationRPCCommands(CRPCTable &tableRPC)
