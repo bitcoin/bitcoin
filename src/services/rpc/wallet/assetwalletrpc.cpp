@@ -1092,6 +1092,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
             {"receipt_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Transaction Receipt Hex."},
             {"receiptroot_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction receipt merkle root that commits this receipt to the block header."},
             {"receiptmerkleproof_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The list of parent nodes of the Merkle Patricia Tree for SPV proof of transaction receipt merkle root."},
+            {"bridgetransferid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Bridge Transfer ID of the burn transaction on Ethereum."},
             {"witness", RPCArg::Type::STR, "\"\"", "Witness address that will sign for web-of-trust notarization of this transaction."}
         },
         RPCResult{
@@ -1100,8 +1101,8 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
             "}\n"
         },
         RPCExamples{
-            HelpExampleCli("assetallocationmint", "\"assetguid\" \"address\" \"amount\" \"blocknumber\" \"tx_hex\" \"txroot_hex\" \"txmerkleproof_hex\" \"txmerkleproofpath_hex\" \"receipt_hex\" \"receiptroot_hex\" \"receiptmerkleproof\" \"witness\"")
-            + HelpExampleRpc("assetallocationmint", "\"assetguid\", \"address\", \"amount\", \"blocknumber\", \"tx_hex\", \"txroot_hex\", \"txmerkleproof_hex\", \"txmerkleproofpath_hex\", \"receipt_hex\", \"receiptroot_hex\", \"receiptmerkleproof\", \"\"")
+            HelpExampleCli("assetallocationmint", "\"assetguid\" \"address\" \"amount\" \"blocknumber\" \"tx_hex\" \"txroot_hex\" \"txmerkleproof_hex\" \"txmerkleproofpath_hex\" \"receipt_hex\" \"receiptroot_hex\" \"receiptmerkleproof\" \"bridgetransferid\" \"witness\"")
+            + HelpExampleRpc("assetallocationmint", "\"assetguid\", \"address\", \"amount\", \"blocknumber\", \"tx_hex\", \"txroot_hex\", \"txmerkleproof_hex\", \"txmerkleproofpath_hex\", \"receipt_hex\", \"receiptroot_hex\", \"receiptmerkleproof\", \"bridgetransferid\", \"\"")
         }
     }.Check(request);
 
@@ -1125,9 +1126,10 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     string vchReceiptValue = params[8].get_str();
     string vchReceiptRoot = params[9].get_str();
     string vchReceiptParentNodes = params[10].get_str();
+    const uint32_t &nBridgeTransferID = params[11].get_uint(); 
     
     
-    string strWitness = params[11].get_str();
+    string strWitness = params[12].get_str();
     if(!fGethSynced){
         throw JSONRPCError(RPC_MISC_ERROR, "Geth is not synced, please wait until it syncs up and try again");
     }
@@ -1145,6 +1147,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     mintSyscoin.assetAllocationTuple = CAssetAllocationTuple(nAsset, witnessAddress);
     mintSyscoin.nValueAsset = nAmount;
     mintSyscoin.nBlockNumber = nBlockNumber;
+    mintSyscoin.nBridgeTransferID = nBridgeTransferID;
     mintSyscoin.vchTxValue = ParseHex(vchTxValue);
     mintSyscoin.vchTxRoot = ParseHex(vchTxRoot);
     mintSyscoin.vchTxParentNodes = ParseHex(vchTxParentNodes);
@@ -1460,7 +1463,7 @@ static const CRPCCommand commands[] =
     { "syscoinwallet",            "syscoinburntoassetallocation",     &syscoinburntoassetallocation,  {"funding_address","asset_guid","amount"} }, 
     { "syscoinwallet",            "convertaddresswallet",             &convertaddresswallet,          {"address","label","rescan"} },
     { "syscoinwallet",            "assetallocationburn",              &assetallocationburn,           {"asset_guid","address","amount","ethereum_destination_address"} }, 
-    { "syscoinwallet",            "assetallocationmint",              &assetallocationmint,           {"asset_guid","address","amount","blocknumber","tx_hex","txroot_hex","txmerkleproof_hex","txmerkleproofpath_hex","receipt_hex","receiptroot_hex","receiptmerkleproof","witness"} },     
+    { "syscoinwallet",            "assetallocationmint",              &assetallocationmint,           {"asset_guid","address","amount","blocknumber","tx_hex","txroot_hex","txmerkleproof_hex","txmerkleproofpath_hex","receipt_hex","receiptroot_hex","receiptmerkleproof","bridgetransferid","witness"} },     
     { "syscoinwallet",            "assetnew",                         &assetnew,                      {"address","symbol","description","contract","precision","total_supply","max_supply","update_flags","aux_fees","witness"}},
     { "syscoinwallet",            "assetupdate",                      &assetupdate,                   {"asset_guid","description","contract","supply","update_flags","aux_fees","witness"}},
     { "syscoinwallet",            "assettransfer",                    &assettransfer,                 {"asset_guid","address","witness"}},

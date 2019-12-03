@@ -1339,7 +1339,7 @@ UniValue syscoincheckmint(const JSONRPCRequest& request)
     RPCHelpMan{"syscoincheckmint",
     "\nGet the Syscoin mint transaction by looking up using Ethereum transaction ID.\n",
     {
-        {"ethtxid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Ethereum TXID used to burn funds to move to Syscoin."}
+        {"bridge_transfer_id", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ethereum bridge transfer ID used to burn funds to move to Syscoin."}
     },
     RPCResult{
         "{\n"
@@ -1363,17 +1363,15 @@ UniValue syscoincheckmint(const JSONRPCRequest& request)
         "}\n"
     },
     RPCExamples{
-        HelpExampleCli("syscoincheckmint", "0x4a12022ff3d27bfa9bc1c5c5d79dbb1f293203420e7c09c28482cb34a3bdbad4")
-        + HelpExampleRpc("syscoincheckmint", "0x4a12022ff3d27bfa9bc1c5c5d79dbb1f293203420e7c09c28482cb34a3bdbad4")
+        HelpExampleCli("syscoincheckmint", "1221")
+        + HelpExampleRpc("syscoincheckmint", "1221")
     }
     }.Check(request);
     bool in_active_chain = false;
     CBlockIndex* blockindex = nullptr;
-    std::string ethTxidStr = request.params[0].get_str();
-    boost::erase_all(ethTxidStr, "0x");  // strip 0x in hex str if exist
-    const std::vector<unsigned char> &ethtxid = ParseHex(ethTxidStr);
+    const uint32_t nBridgeTransferID = request.params[0].get_uint();
     uint256 systxid;
-    if(!pethereumtxmintdb || !pethereumtxmintdb->ReadTx(ethtxid, systxid)){
+    if(!pethereumtxmintdb || !pethereumtxmintdb->ReadTx(nBridgeTransferID, systxid)){
        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Could not read syscoin transaction from ethereum transaction");
     }
     {
