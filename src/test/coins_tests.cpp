@@ -55,7 +55,7 @@ public:
 
     bool BatchWrite(CCoinsMap& mapCoins, const uint256& hashBlock, bool erase = true) override
     {
-        for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end(); ) {
+        for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end(); it = erase ? mapCoins.erase(it) : ++it) {
             if (it->second.flags & CCoinsCacheEntry::DIRTY) {
                 // Same optimization used in CCoinsViewDB is to only write dirty entries.
                 map_[it->first] = it->second.coin;
@@ -64,7 +64,6 @@ public:
                     map_.erase(it->first);
                 }
             }
-            mapCoins.erase(it++);
         }
         if (!hashBlock.IsNull())
             hashBestBlock_ = hashBlock;
@@ -126,6 +125,7 @@ void SimulationTest(CCoinsView* base, bool fake_best_block)
     bool found_an_entry = false;
     bool missed_an_entry = false;
     bool uncached_an_entry = false;
+    bool flushed_without_erase = false;
 
     // A simple map to track what we expect the cache stack to represent.
     std::map<COutPoint, Coin> result;
@@ -228,7 +228,9 @@ void SimulationTest(CCoinsView* base, bool fake_best_block)
             if (stack.size() > 1 && InsecureRandBool() == 0) {
                 unsigned int flushIndex = InsecureRandRange(stack.size() - 1);
                 if (fake_best_block) stack[flushIndex]->SetBestBlock(InsecureRand256());
-                BOOST_CHECK(stack[flushIndex]->Flush());
+                bool should_erase = InsecureRandRange(4) < 3;
+                BOOST_CHECK(should_erase ? stack[flushIndex]->Flush() : stack[flushIndex]->Sync());
+                flushed_without_erase |= !should_erase;
             }
         }
         if (InsecureRandRange(100) == 0) {
@@ -236,7 +238,9 @@ void SimulationTest(CCoinsView* base, bool fake_best_block)
             if (stack.size() > 0 && InsecureRandBool() == 0) {
                 //Remove the top cache
                 if (fake_best_block) stack.back()->SetBestBlock(InsecureRand256());
-                BOOST_CHECK(stack.back()->Flush());
+                bool should_erase = InsecureRandRange(4) < 3;
+                BOOST_CHECK(should_erase ? stack.back()->Flush() : stack.back()->Sync());
+                flushed_without_erase |= !should_erase;
                 delete stack.back();
                 stack.pop_back();
             }
@@ -272,6 +276,7 @@ void SimulationTest(CCoinsView* base, bool fake_best_block)
     BOOST_CHECK(found_an_entry);
     BOOST_CHECK(missed_an_entry);
     BOOST_CHECK(uncached_an_entry);
+    BOOST_CHECK(flushed_without_erase);
 }
 
 // Run the above simulation for multiple base types.
