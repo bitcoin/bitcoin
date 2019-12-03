@@ -643,8 +643,13 @@ bool LegacyScriptPubKeyMan::AddKeyPubKeyInner(const CKey& key, const CPubKey &pu
     return true;
 }
 
-bool LegacyScriptPubKeyMan::LoadCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret)
+bool LegacyScriptPubKeyMan::LoadCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret, bool checksum_valid)
 {
+    // Set fDecryptionThoroughlyChecked to false when the checksum is invalid
+    if (!checksum_valid) {
+        fDecryptionThoroughlyChecked = false;
+    }
+
     return AddCryptedKeyInner(vchPubKey, vchCryptedSecret);
 }
 

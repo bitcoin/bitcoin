@@ -338,10 +338,11 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             ssValue >> vchPrivKey;
 
             // Get the checksum and check it
+            bool checksum_valid = false;
             if (!ssValue.eof()) {
                 uint256 checksum;
                 ssValue >> checksum;
-                if (Hash(vchPrivKey.begin(), vchPrivKey.end()) != checksum) {
+                if ((checksum_valid = Hash(vchPrivKey.begin(), vchPrivKey.end()) != checksum)) {
                     strErr = "Error reading wallet database: Crypted key corrupt";
                     return false;
                 }
@@ -349,7 +350,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
 
             wss.nCKeys++;
 
-            if (!pwallet->GetOrCreateLegacyScriptPubKeyMan()->LoadCryptedKey(vchPubKey, vchPrivKey))
+            if (!pwallet->GetOrCreateLegacyScriptPubKeyMan()->LoadCryptedKey(vchPubKey, vchPrivKey, checksum_valid))
             {
                 strErr = "Error reading wallet database: LegacyScriptPubKeyMan::LoadCryptedKey failed";
                 return false;
