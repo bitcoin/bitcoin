@@ -399,6 +399,18 @@ BOOST_AUTO_TEST_CASE(iterator_string_ordering)
     }
 }
 
+BOOST_AUTO_TEST_CASE(unicodepath)
+{
+    // Attempt to create a database with a utf8 character in the path.
+    // On Windows this test will fail if the directory is created using
+    // the ANSI CreateDirectoryA  call and the code page isn't UTF8.
+    // It will succeed if the created with  CreateDirectoryW.
+    fs::path ph = GetDataDir() / "test_runner_₿_🏃_20191128_104644";
+    CDBWrapper dbw(ph, (1 << 20));
+
+    fs::path lockPath = ph / "LOCK";
+    BOOST_CHECK(boost::filesystem::exists(lockPath));
+}
 
 
 BOOST_AUTO_TEST_SUITE_END()
