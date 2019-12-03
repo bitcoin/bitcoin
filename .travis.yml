@@ -96,14 +96,20 @@ jobs:
         - set -o errexit; source ./ci/extended_lint/06_script.sh
 
     - stage: test
-      name: 'ARM  [GOAL: install]  [unit tests, functional tests]'
+      name: 'ARM  [GOAL: install]  [bionic]'
       arch: arm64
       env: >-
         FILE_ENV="./ci/test/00_setup_env_arm.sh"
         QEMU_USER_CMD=""  # Can run the tests natively without qemu
 
     - stage: test
-      name: 'Win64  [GOAL: deploy]  [unit tests, no gui, no functional tests]'
+      name: 'S390x  [GOAL: install]  [bionic]'
+      arch: s390x
+      env: >-
+        FILE_ENV="./ci/test/00_setup_env_s390x.sh"
+
+    - stage: test
+      name: 'Win64  [GOAL: deploy]  [no gui, no functional tests]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_win64.sh"
 
