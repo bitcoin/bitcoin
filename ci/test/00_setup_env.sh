@@ -6,6 +6,12 @@
 
 export LC_ALL=C.UTF-8
 
+# The root dir.
+# The ci system copies this folder.
+# This is where the build is done (depends and dist).
+BASE_ROOT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )"/../../ >/dev/null 2>&1 && pwd )
+export BASE_ROOT_DIR
+
 echo "Setting specific values in env"
 if [ -n "${FILE_ENV}" ]; then
   set -o errexit;
@@ -16,9 +22,6 @@ fi
 export BUILD_TARGET=${BUILD_TARGET:-linux64}
 export PULL_REQUEST=${PULL_REQUEST:-false}
 export JOB_NUMBER=${JOB_NUMBER:-1}
-
-BASE_ROOT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )"/../../ >/dev/null 2>&1 && pwd )
-export BASE_ROOT_DIR
 
 echo "Fallback to default values in env (if not yet set)"
 # The number of parallel jobs to pass down to make and test_runner.py
