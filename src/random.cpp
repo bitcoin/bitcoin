@@ -6,6 +6,7 @@
 #include <random.h>
 
 #include <compat/cpuid.h>
+#include <crypto/sha256.h>
 #include <crypto/sha512.h>
 #include <support/cleanse.h>
 #ifdef WIN32
@@ -444,6 +445,23 @@ static void SeedFast(CSHA512& hasher) noexcept
     SeedTimestamp(hasher);
 }
 
+// We use only SHA256 for the events hashing to get the ASM speedups we have for SHA256,
+// since we want it to be fast as network peers may be able to trigger it repeatedly.
+static Mutex events_mutex;
+static CSHA256 events_hasher;
+static void SeedEvents(CSHA512& hasher)
+{
+    LOCK(events_mutex);
+
+    unsigned char events_hash[32];
+    events_hasher.Finalize(events_hash);
+    hasher.Write(events_hash, 32);
+
+    // Re-initialize the hasher with the finalized state to use later.
+    events_hasher.Reset();
+    events_hasher.Write(events_hash, 32);
+}
+
 static void SeedSlow(CSHA512& hasher) noexcept
 {
     unsigned char buffer[32];
@@ -454,6 +472,9 @@ static void SeedSlow(CSHA512& hasher) noexcept
     // OS randomness
     GetOSRand(buffer);
     hasher.Write(buffer, sizeof(buffer));
+
+    // Add the events hasher into the mix
+    SeedEvents(hasher);
 
     // High-precision timestamp.
     //
@@ -479,6 +500,9 @@ static void SeedPeriodic(CSHA512& hasher, RNGState& rng) noexcept
 
     // High-precision timestamp
     SeedTimestamp(hasher);
+
+    // Add the events hasher into the mix
+    SeedEvents(hasher);
 
     // Dynamic environment data (performance monitoring, ...)
     auto old_size = hasher.Size();
@@ -557,6 +581,15 @@ std::chrono::milliseconds GetRandMillis(std::chrono::milliseconds duration_max) 
 void GetRandBytes(unsigned char* buf, int num) noexcept { ProcRand(buf, num, RNGLevel::FAST); }
 void GetStrongRandBytes(unsigned char* buf, int num) noexcept { ProcRand(buf, num, RNGLevel::SLOW); }
 void RandAddPeriodic() noexcept { ProcRand(nullptr, 0, RNGLevel::PERIODIC); }
+
+void RandAddEvent(const uint32_t event_info) {
+    LOCK(events_mutex);
+    events_hasher.Write((const unsigned char *)&event_info, sizeof(event_info));
+    // Get the low four bytes of the performance counter. This translates to roughly the
+    // subsecond part.
+    uint32_t perfcounter = (GetPerformanceCounter() & 0xffffffff);
+    events_hasher.Write((const unsigned char*)&perfcounter, sizeof(perfcounter));
+}
 
 bool g_mock_deterministic_tests{false};
 
