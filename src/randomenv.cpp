@@ -142,7 +142,7 @@ void AddFile(CSHA512& hasher, const char *path)
     int f = open(path, O_RDONLY);
     size_t total = 0;
     if (f != -1) {
-        unsigned char fbuf[4096];
+        unsigned char fbuf[4096]; // intentionally not initialized, see https://github.com/bitcoin/bitcoin/pull/17627
         int n;
         hasher.Write((const unsigned char*)&f, sizeof(f));
         if (fstat(f, &sb) == 0) hasher << sb;
@@ -171,7 +171,7 @@ template<int... S>
 void AddSysctl(CSHA512& hasher)
 {
     int CTL[sizeof...(S)] = {S...};
-    unsigned char buffer[65536];
+    unsigned char buffer[65536]; // intentionally not initialized
     size_t siz = 65536;
     int ret = sysctl(CTL, sizeof...(S), buffer, &siz, nullptr, 0);
     if (ret == 0 || (ret == -1 && errno == ENOMEM)) {

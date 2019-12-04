@@ -228,7 +228,7 @@ static void Strengthen(const unsigned char (&seed)[32], int microseconds, CSHA51
     inner_hasher.Write(seed, sizeof(seed));
 
     // Hash loop
-    unsigned char buffer[64];
+    unsigned char buffer[64]; // intentionally not initialized
     int64_t stop = GetTimeMicros() + microseconds;
     do {
         for (int i = 0; i < 1000; ++i) {
@@ -393,7 +393,7 @@ public:
         // since we want it to be fast as network peers may be able to trigger it repeatedly.
         LOCK(m_events_mutex);
 
-        unsigned char events_hash[32];
+        unsigned char events_hash[32]; // intentionally not initialized
         m_events_hasher.Finalize(events_hash);
         hasher.Write(events_hash, 32);
 
@@ -409,7 +409,7 @@ public:
     bool MixExtract(unsigned char* out, size_t num, CSHA512&& hasher, bool strong_seed) noexcept
     {
         assert(num <= 32);
-        unsigned char buf[64];
+        unsigned char buf[64]; // intentionally not initialized
         static_assert(sizeof(buf) == CSHA512::OUTPUT_SIZE, "Buffer needs to have hasher's output size");
         bool ret;
         {
@@ -459,7 +459,7 @@ static void SeedTimestamp(CSHA512& hasher) noexcept
 
 static void SeedFast(CSHA512& hasher) noexcept
 {
-    unsigned char buffer[32];
+    unsigned char buffer[32]; // intentionally not initialized
 
     // Stack pointer to indirectly commit to thread/callstack
     const unsigned char* ptr = buffer;
@@ -472,6 +472,13 @@ static void SeedFast(CSHA512& hasher) noexcept
     SeedTimestamp(hasher);
 }
 
+// buffer[32] is intentionally not initialized, see https://github.com/bitcoin/bitcoin/pull/17627
+// Suppress memory sanitizer because it can't see that syscall initializes this in GetOSRand().
+#if defined(__has_feature) && defined(HAVE_SYS_GETRANDOM)
+#  if __has_feature(memory_sanitizer)
+__attribute__((no_sanitize("memory")))
+#  endif
+#endif
 static void SeedSlow(CSHA512& hasher, RNGState& rng) noexcept
 {
     unsigned char buffer[32];
@@ -497,7 +504,7 @@ static void SeedSlow(CSHA512& hasher, RNGState& rng) noexcept
 static void SeedStrengthen(CSHA512& hasher, RNGState& rng, int microseconds) noexcept
 {
     // Generate 32 bytes of entropy from the RNG, and a copy of the entropy already in hasher.
-    unsigned char strengthen_seed[32];
+    unsigned char strengthen_seed[32]; // intentionally not initialized
     rng.MixExtract(strengthen_seed, sizeof(strengthen_seed), CSHA512(hasher), false);
     // Strengthen the seed, and feed it into hasher.
     Strengthen(strengthen_seed, microseconds, hasher);
