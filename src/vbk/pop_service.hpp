@@ -42,6 +42,8 @@ struct PopService {
     virtual std::string rewardsCalculatePopDifficulty(const CBlockIndex& start_interval, const CBlockIndex& end_interval) = 0;
 
     virtual bool blockPopValidation(const CBlock& block, const CBlockIndex& pindexPrev, const Consensus::Params& params, CValidationState& state) = 0;
+
+    virtual void updateContext(const std::vector<std::vector<uint8_t>>& veriBlockBlocks, const std::vector<std::vector<uint8_t>>& bitcoinBlocks) = 0;
 };
 } // namespace VeriBlock
 

@@ -20,6 +20,8 @@ public:
 
     UniValue getpopdata(const JSONRPCRequest& request) override;
 
+    UniValue updatecontext(const JSONRPCRequest& request) override;
+
 private:
     UniValue doGetPopData(int height, const std::shared_ptr<CWallet>& wallet);
 

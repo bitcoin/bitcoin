@@ -12,6 +12,8 @@ struct RpcService {
     virtual UniValue submitpop(const JSONRPCRequest& request) = 0;
 
     virtual UniValue getpopdata(const JSONRPCRequest& request) = 0;
+
+    virtual UniValue updatecontext(const JSONRPCRequest& request) = 0;
 };
 
 } // namespace VeriBlock

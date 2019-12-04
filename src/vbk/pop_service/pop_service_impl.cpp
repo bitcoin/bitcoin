@@ -31,7 +31,7 @@ void handleResult(bool rpcresult, const VeriBlock::GeneralReply& reply, const T&
         throw VeriBlock::PopServiceException("alt-integration is shutdown");
     }
     if (!reply.result()) {
-        std::string error_message("GRPC returned error : %s", reply.resultmessage().c_str());
+        std::string error_message("GRPC returned error : " + reply.resultmessage());
         throw VeriBlock::PopServiceException(error_message.c_str());
     }
 
@@ -138,7 +138,7 @@ void PopServiceImpl::removePayloads(const CBlock& block, const int& nHeight)
     }
 
     if (!reply.result()) {
-        std::string error_message("GRPC returned error : %s", reply.resultmessage().c_str());
+        std::string error_message("GRPC returned error : " + reply.resultmessage());
         throw VeriBlock::PopServiceException(error_message.c_str());
     }
 }
@@ -191,7 +191,7 @@ void PopServiceImpl::savePopTxToDatabase(const CBlock& block, const int& nHeight
         }
 
         if (!reply.result()) {
-            std::string error_message("GRPC returned error : %s", reply.resultmessage().c_str());
+            std::string error_message("GRPC returned error : " + reply.resultmessage());
             throw VeriBlock::PopServiceException(error_message.c_str());
         }
     }
@@ -275,6 +275,35 @@ bool PopServiceImpl::checkATVinternally(const std::vector<uint8_t>& bytes)
     return reply.result();
 }
 
+void PopServiceImpl::updateContext(const std::vector<std::vector<uint8_t>>& veriBlockBlocks, const std::vector<std::vector<uint8_t>>& bitcoinBlocks)
+{
+    UpdateContextRequest request;
+    GeneralReply reply;
+    ClientContext context;
+
+    for (const auto& bitcoin_block : bitcoinBlocks)
+    {
+        std::string* pb = request.add_bitcoinblocks();
+        *pb = std::string(bitcoin_block.begin(), bitcoin_block.end());
+    }
+
+    for (const auto& veriblock_block : veriBlockBlocks)
+    {
+        std::string* pb = request.add_veriblockblocks();
+        *pb = std::string(veriblock_block.begin(), veriblock_block.end());
+    }
+
+    Status status = integrationService->UpdateContext(&context, request, &reply);
+    if (!status.ok()) {
+        throw PopServiceException(status);
+    }
+
+    if (!reply.result()) {
+        std::string error_message("GRPC returned error : " + reply.resultmessage());
+        throw PopServiceException(error_message.c_str());
+    }
+}
+
 // Forkresolution
 int PopServiceImpl::compareTwoBranches(const CBlockIndex* commonKeystone, const CBlockIndex* leftForkTip, const CBlockIndex* rightForkTip)
 {
@@ -311,7 +340,7 @@ int PopServiceImpl::compareTwoBranches(const CBlockIndex* commonKeystone, const 
     if (reply.result().result()) {
         return reply.comparingsresult();
     } else {
-        std::string error_message("GRPC returned error : %s", reply.result().resultmessage().c_str());
+        std::string error_message("GRPC returned error : " + reply.result().resultmessage());
         throw PopServiceException(error_message.c_str());
     }
 }
@@ -359,14 +388,14 @@ void PopServiceImpl::rewardsCalculateOutputs(const int& blockHeight, const CBloc
                     outputs[script] = MAX_MONEY;
                 }
             } catch (const std::invalid_argument&) {
-                std::string error_message("GRPC returned error : %s", reply.result().resultmessage().c_str());
+                std::string error_message("GRPC returned error : " + reply.result().resultmessage());
                 throw VeriBlock::PopServiceException(error_message.c_str());
             } catch (const std::out_of_range&) {
                 outputs[script] = MAX_MONEY;
             }
         }
     } else {
-        std::string error_message("GRPC returned error : %s", reply.result().resultmessage().c_str());
+        std::string error_message("GRPC returned error : " + reply.result().resultmessage());
         throw PopServiceException(error_message.c_str());
     }
 }
@@ -395,7 +424,7 @@ std::string PopServiceImpl::rewardsCalculatePopDifficulty(const CBlockIndex& sta
     if (reply.result().result()) {
         return reply.score();
     } else {
-        std::string error_message("GRPC returned error : %s", reply.result().resultmessage().c_str());
+        std::string error_message("GRPC returned error : " + reply.result().resultmessage());
         throw PopServiceException(error_message.c_str());
     }
 

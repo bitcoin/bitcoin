@@ -219,4 +219,37 @@ UniValue RpcServiceImpl::doSubmitPop(const std::vector<uint8_t>& atv,
     return hashTx.GetHex();
 }
 
+UniValue RpcServiceImpl::updatecontext(const JSONRPCRequest& request) {
+        if (request.fHelp || request.params.size() != 2)
+        throw std::runtime_error(
+            "updatecontext ( bitcoin_blocks veriblock_blocks )\n"
+            "\nAdds into the alt-integration service database bitcoin and veriblock blocks.\n"
+            "\nArguments:\n"
+            "1. bitcoin_blocks       (array, required) Array of hex-encoded Bitcoin records.\n"
+            "2. veriblock_blocks      (array, required) Array of hex-encoded VeriBlock records.\n"
+            "\nResult:\n"
+            "             (string) \"Bitcoin and VeriBlock bloks were added\"\n"
+            "\nExamples:\n" +
+            HelpExampleCli("updatecontext", "[BitcoinBlock_1 BitcoinBlock_2] [VeriBlock_1 VeriBlock_2]") + HelpExampleRpc("submitpop", "[BitcoinBlock_1, BitcoinBlock_2 ...], [VeriBlock_1, VeriBlock_2 ...]"));
+
+    RPCTypeCheck(request.params, {UniValue::VARR, UniValue::VARR});
+
+    const UniValue& bitcoin_array = request.params[0].get_array();
+    std::vector<std::vector<uint8_t>> bitcoin_blocks;
+    for (uint32_t idx = 0u, size = bitcoin_array.size(); idx < size; ++idx) {
+        bitcoin_blocks.emplace_back(ParseHexV(bitcoin_array[idx], "vtb[" + std::to_string(idx) + "]"));
+    }
+
+    const UniValue& veriblock_array = request.params[1].get_array();
+    std::vector<std::vector<uint8_t>> veriblock_blocks;
+    for (uint32_t idx = 0u, size = veriblock_array.size(); idx < size; ++idx) {
+        veriblock_blocks.emplace_back(ParseHexV(veriblock_array[idx], "vtb[" + std::to_string(idx) + "]"));
+    }
+
+    auto& service = getService<PopService>();
+    service.updateContext(veriblock_blocks, bitcoin_blocks);
+
+    return "Bitcoin and VeriBlock bloks were added"; 
+}
+
 } // namespace VeriBlock
