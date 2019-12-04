@@ -36,7 +36,7 @@ mkdir -p "${CCACHE_DIR}"
 export ASAN_OPTIONS="detect_stack_use_after_return=1"
 export LSAN_OPTIONS="suppressions=${BASE_ROOT_DIR}/test/sanitizer_suppressions/lsan"
 export TSAN_OPTIONS="suppressions=${BASE_ROOT_DIR}/test/sanitizer_suppressions/tsan:log_path=${BASE_SCRATCH_DIR}/sanitizer-output/tsan"
-export UBSAN_OPTIONS="suppressions=${BASE_ROOT_DIR}/test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1"
+export UBSAN_OPTIONS="suppressions=${BASE_ROOT_DIR}/test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1:report_error_type=1"
 env | grep -E '^(BITCOIN_CONFIG|CCACHE_|WINEDEBUG|LC_ALL|BOOST_TEST_RANDOM|CONFIG_SHELL|(ASAN|LSAN|TSAN|UBSAN)_OPTIONS)' | tee /tmp/env
 if [[ $HOST = *-mingw32 ]]; then
   DOCKER_ADMIN="--cap-add SYS_ADMIN"
