@@ -1304,7 +1304,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
 
 void CWallet::LoadToWallet(CWalletTx& wtxIn)
 {
-    // If wallet doesn't have a chain (e.g wallet-tool), don't bother to update txn.
+    // If wallet doesn't have a chain (e.g dash-wallet), don't bother to update txn.
     if (HaveChain()) {
         Optional<int> block_height = chain().getBlockHeight(wtxIn.m_confirm.hashBlock);
         if (block_height) {
