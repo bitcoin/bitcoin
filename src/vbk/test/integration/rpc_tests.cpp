@@ -56,8 +56,8 @@ BOOST_AUTO_TEST_CASE(getpopdata_test)
 
     BOOST_CHECK(find_value(result.get_obj(), "raw_contextinfocontainer").get_str() == HexStr(authedContext.begin(), authedContext.end()));
     BOOST_CHECK(find_value(result.get_obj(), "block_header").get_str() == HexStr(ssBlock));
-    BOOST_CHECK(find_value(result.get_obj(), "last_known_veriblock_blocks").get_array().size() == 16); // number of bustrap blocks that have been set up in .properties file
-    BOOST_CHECK(find_value(result.get_obj(), "last_known_bitcoin_blocks").get_array().size() == 16); // number of bustrap blocks that have been set up in .properties file
+    BOOST_CHECK(find_value(result.get_obj(), "last_known_veriblock_blocks").get_array().size() == 15); // number of bootsrap blocks that have been set up in .properties file
+    BOOST_CHECK(find_value(result.get_obj(), "last_known_bitcoin_blocks").get_array().size() == 15); // number of bootsrap blocks that have been set up in .properties file
 }
 
 BOOST_AUTO_TEST_CASE(submitpop_test)
@@ -87,5 +87,64 @@ BOOST_AUTO_TEST_CASE(submitpop_test)
     popTxHash.SetHex(result.get_str());
 
     BOOST_CHECK(mempool.exists(popTxHash));
+}
+
+BOOST_AUTO_TEST_CASE(updatecontext_test)
+{
+    // This test have to be ran with the clear alt-integration service`s databases
+    auto chain = interfaces::MakeChain();
+    std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
+    AddWallet(wallet);
+
+    int blockHeight = 10;
+
+    JSONRPCRequest request;
+    request.strMethod = "getpopdata";
+    request.params = UniValue(UniValue::VARR);
+    request.fHelp = false;
+
+    request.params.push_back(blockHeight);
+
+    if (RPCIsInWarmup(nullptr)) SetRPCWarmupFinished();
+
+    UniValue result;
+    BOOST_CHECK_NO_THROW(result = tableRPC.execute(request));
+
+    BOOST_CHECK(find_value(result.get_obj(), "last_known_veriblock_blocks").get_array().size() == 15); // number of bootsrap blocks that have been set up in .properties file
+    BOOST_CHECK(find_value(result.get_obj(), "last_known_bitcoin_blocks").get_array().size() == 15); // number of bootsrap blocks that have been set up in .properties file
+
+
+    request.strMethod = "updatecontext";
+    request.params = UniValue(UniValue::VARR);
+    request.fHelp = false;
+
+    // These values was taken from the alt-integration service default properties file and also was removed from that file
+    UniValue veriblock_blocks(UniValue::VARR);
+    veriblock_blocks.push_back("00019C9A00026713D7DDB273B344AADD06BF9AFD32E075F6BEC5BADF97549B10936A8468C8CF8CE7253035B52DDE7A1B1CEDD3BC5DE540480405F5E10E87A0F1");
+
+    UniValue bitcoin_blocks(UniValue::VARR);
+    bitcoin_blocks.push_back("00000020b15d70ede23ca82d38a9418914d836cf75251b8027b9a9d53c02000000000000d455849c387207d5b3ca9577796874dcdf22e5a31e6bdc8b15a6aaaf44e7de1f7a3ee55dffff001d31f589dc");
+
+    request.params.push_back(bitcoin_blocks);
+    request.params.push_back(veriblock_blocks);
+
+    if (RPCIsInWarmup(nullptr)) SetRPCWarmupFinished();
+
+    BOOST_CHECK_NO_THROW(result = tableRPC.execute(request));
+
+    BOOST_CHECK(result.get_str() == "Bitcoin and VeriBlock bloks were added");
+
+    request.strMethod = "getpopdata";
+    request.params = UniValue(UniValue::VARR);
+    request.fHelp = false;
+
+    request.params.push_back(blockHeight);
+
+    if (RPCIsInWarmup(nullptr)) SetRPCWarmupFinished();
+
+    BOOST_CHECK_NO_THROW(result = tableRPC.execute(request));
+
+    BOOST_CHECK(find_value(result.get_obj(), "last_known_veriblock_blocks").get_array().size() == 16); // number of bustrap blocks that have been set up in .properties file
+    BOOST_CHECK(find_value(result.get_obj(), "last_known_bitcoin_blocks").get_array().size() == 16); // number of bustrap blocks that have been set up in .properties file
 }
 BOOST_AUTO_TEST_SUITE_END()

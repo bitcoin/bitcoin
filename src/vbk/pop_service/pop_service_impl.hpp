@@ -43,6 +43,8 @@ public:
 
     bool blockPopValidation(const CBlock& block, const CBlockIndex& pindexPrev, const Consensus::Params& params, CValidationState& state) override;
 
+    void updateContext(const std::vector<std::vector<uint8_t>>& veriBlockBlocks, const std::vector<std::vector<uint8_t>>& bitcoinBlocks) override;
+
 public:
     virtual void parseAltPublication(const std::vector<uint8_t>&, VeriBlock::AltPublication&);
     virtual void parseVeriBlockPublication(const std::vector<uint8_t>&, VeriBlock::VeriBlockPublication&);

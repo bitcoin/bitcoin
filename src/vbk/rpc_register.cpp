@@ -20,9 +20,16 @@ UniValue submitpop(const JSONRPCRequest& request)
     return rpc.submitpop(request);
 }
 
+UniValue updatecontext(const JSONRPCRequest& request)
+{
+    auto& rpc = VeriBlock::getService<VeriBlock::RpcService>();
+    return rpc.updatecontext(request);
+}
+
 const CRPCCommand commands[] = {
     {"pop_mining", "submitpop", &submitpop, {"atv", "vtbs"}},
     {"pop_mining", "getpopdata", &getpopdata, {"blockhash"}},
+    {"pop_mining", "updatecontext", &updatecontext, {"string"}},
 };
 
 } // namespace
