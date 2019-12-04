@@ -114,7 +114,14 @@ bool WalletBatch::WriteCryptedKey(const CPubKey& vchPubKey,
 
     const auto key = std::make_pair(DBKeys::CRYPTED_KEY, vchPubKey);
     if (!WriteIC(key, std::make_pair(vchCryptedSecret, checksum), false)) {
-        return false;
+        // It may already exist, so try writing just the checksum
+        std::vector<unsigned char> val;
+        if (!m_batch.Read(key, val)) {
+            return false;
+        }
+        if (!WriteIC(key, std::make_pair(val, checksum), true)) {
+            return false;
+        }
     }
     EraseIC(std::make_pair(DBKeys::KEY, vchPubKey));
     return true;
