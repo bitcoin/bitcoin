@@ -15,6 +15,7 @@
 #endif
 #include <logging.h>  // for LogPrintf()
 #include <sync.h>     // for Mutex
+#include <threadsafety.h>
 #include <util/time.h> // for GetTime()
 
 #include <stdlib.h>
@@ -453,7 +454,7 @@ static void SeedFast(CSHA512& hasher) noexcept
 // We use only SHA256 for the events hashing to get the ASM speedups we have for SHA256,
 // since we want it to be fast as network peers may be able to trigger it repeatedly.
 static Mutex events_mutex;
-static CSHA256 events_hasher;
+static CSHA256 events_hasher GUARDED_BY(events_mutex);
 static void SeedEvents(CSHA512& hasher)
 {
     LOCK(events_mutex);
