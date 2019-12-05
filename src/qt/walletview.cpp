@@ -68,6 +68,8 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
 
     masternodeListPage = new MasternodeList(platformStyle);
     addWidget(masternodeListPage);
+    governanceListPage = new GovernanceList(platformStyle);
+    addWidget(governanceListPage);
 
     // Clicking on a transaction on the overview pre-selects the transaction on the transaction history page
     connect(overviewPage, &OverviewPage::transactionClicked, transactionView, static_cast<void (TransactionView::*)(const QModelIndex&)>(&TransactionView::focusTransaction));
@@ -123,6 +125,7 @@ void WalletView::setClientModel(ClientModel *_clientModel)
     overviewPage->setClientModel(_clientModel);
     sendCoinsPage->setClientModel(_clientModel);
     masternodeListPage->setClientModel(_clientModel);
+    governanceListPage->setClientModel(_clientModel);
 }
 
 void WalletView::setWalletModel(WalletModel *_walletModel)
@@ -133,6 +136,7 @@ void WalletView::setWalletModel(WalletModel *_walletModel)
     transactionView->setModel(_walletModel);
     overviewPage->setWalletModel(_walletModel);
     masternodeListPage->setWalletModel(_walletModel);
+    governanceListPage->setWalletModel(_walletModel);
     receiveCoinsPage->setModel(_walletModel);
     sendCoinsPage->setModel(_walletModel);
     usedReceivingAddressesPage->setModel(_walletModel ? _walletModel->getAddressTableModel() : nullptr);
@@ -199,6 +203,11 @@ void WalletView::gotoMasternodePage()
 void WalletView::gotoReceiveCoinsPage()
 {
     setCurrentWidget(receiveCoinsPage);
+}
+
+void WalletView::gotoGovernancePage()
+{
+    setCurrentWidget(governanceListPage);
 }
 
 void WalletView::gotoSendCoinsPage(QString addr)

@@ -7,10 +7,12 @@
 
 #include <amount.h>
 #include <qt/masternodelist.h>
+#include <qt/governancelist.h>
 #include <QStackedWidget>
 
 class BitcoinGUI;
 class ClientModel;
+class GovernancePage;
 class OverviewPage;
 class PlatformStyle;
 class ReceiveCoinsDialog;
@@ -21,6 +23,7 @@ class WalletModel;
 class AddressBookPage;
 
 QT_BEGIN_NAMESPACE
+class QLabel;
 class QModelIndex;
 class QProgressDialog;
 QT_END_NAMESPACE
@@ -66,6 +69,7 @@ private:
     AddressBookPage *usedSendingAddressesPage;
     AddressBookPage *usedReceivingAddressesPage;
     MasternodeList *masternodeListPage;
+    GovernanceList *governanceListPage;
 
     TransactionView *transactionView;
 
@@ -81,6 +85,8 @@ public Q_SLOTS:
     void gotoMasternodePage();
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
+    /** Switch to governance page */
+    void gotoGovernancePage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
 
