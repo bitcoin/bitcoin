@@ -252,7 +252,7 @@ class MasternodeInfo:
 
 
 class DashTestFramework(BitcoinTestFramework):
-    def __init__(self, num_nodes, masterodes_count, extra_args, fast_dip3_enforcement=False):
+    def __init__(self, num_nodes, masterodes_count, extra_args=None, fast_dip3_enforcement=False):
         super().__init__()
         self.mn_count = masterodes_count
         self.num_nodes = num_nodes
@@ -260,17 +260,20 @@ class DashTestFramework(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.is_network_split = False
         # additional args
+        if extra_args is None:
+            extra_args = [[]] * num_nodes
+        assert_equal(len(extra_args), num_nodes)
         self.extra_args = extra_args
 
-        self.extra_args += ["-sporkkey=cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK"]
-
+        self.extra_args[0] += ["-sporkkey=cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK"]
         self.fast_dip3_enforcement = fast_dip3_enforcement
         if fast_dip3_enforcement:
-            self.extra_args += ["-dip3params=30:50"]
+            for i in range(0, num_nodes):
+                self.extra_args[i] += ["-dip3params=30:50"]
 
     def create_simple_node(self):
         idx = len(self.nodes)
-        args = self.extra_args
+        args = self.extra_args[idx]
         self.nodes.append(start_node(idx, self.options.tmpdir, args))
         for i in range(0, idx):
             connect_nodes(self.nodes[i], idx)
@@ -340,7 +343,7 @@ class DashTestFramework(BitcoinTestFramework):
 
         def do_start(idx):
             args = ['-masternode=1',
-                    '-masternodeblsprivkey=%s' % self.mninfo[idx].keyOperator] + self.extra_args
+                    '-masternodeblsprivkey=%s' % self.mninfo[idx].keyOperator] + self.extra_args[idx + start_idx]
             node = start_node(idx + start_idx, self.options.tmpdir, args)
             self.mninfo[idx].nodeIdx = idx + start_idx
             self.mninfo[idx].node = node
@@ -378,7 +381,7 @@ class DashTestFramework(BitcoinTestFramework):
     def setup_network(self):
         self.nodes = []
         # create faucet node for collateral and transactions
-        self.nodes.append(start_node(0, self.options.tmpdir, self.extra_args))
+        self.nodes.append(start_node(0, self.options.tmpdir, self.extra_args[0]))
         required_balance = MASTERNODE_COLLATERAL * self.mn_count + 1
         while self.nodes[0].getbalance() < required_balance:
             set_mocktime(get_mocktime() + 1)
