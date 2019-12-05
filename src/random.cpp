@@ -180,7 +180,7 @@ static uint64_t GetRdSeed() noexcept
 /* Access to other hardware random number generators could be added here later,
  * assuming it is sufficiently fast (in the order of a few hundred CPU cycles).
  * Slower sources should probably be invoked separately, and/or only from
- * RandAddSeedSleep (which is called during idle background operation).
+ * RandAddPeriodic (which is called once a minute).
  */
 static void InitHardwareRand() {}
 static void ReportHardwareRand() {}
@@ -472,7 +472,7 @@ static void SeedStrengthen(CSHA512& hasher, RNGState& rng, int microseconds) noe
     Strengthen(strengthen_seed, microseconds, hasher);
 }
 
-static void SeedPeriodic(CSHA512& hasher, RNGState& rng)
+static void SeedPeriodic(CSHA512& hasher, RNGState& rng) noexcept
 {
     // Everything that the 'fast' seeder includes
     SeedFast(hasher);
@@ -551,7 +551,7 @@ std::chrono::microseconds GetRandMicros(std::chrono::microseconds duration_max) 
 
 void GetRandBytes(unsigned char* buf, int num) noexcept { ProcRand(buf, num, RNGLevel::FAST); }
 void GetStrongRandBytes(unsigned char* buf, int num) noexcept { ProcRand(buf, num, RNGLevel::SLOW); }
-void RandAddPeriodic() { ProcRand(nullptr, 0, RNGLevel::PERIODIC); }
+void RandAddPeriodic() noexcept { ProcRand(nullptr, 0, RNGLevel::PERIODIC); }
 
 bool g_mock_deterministic_tests{false};
 
