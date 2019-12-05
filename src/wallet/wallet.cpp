@@ -532,8 +532,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
     {
         LOCK(cs_wallet);
         mapMasterKeys[++nMasterKeyMaxID] = kMasterKey;
-        assert(!encrypted_batch);
-        encrypted_batch = new WalletBatch(*database);
+        WalletBatch* encrypted_batch = new WalletBatch(*database);
         if (!encrypted_batch->TxnBegin()) {
             delete encrypted_batch;
             encrypted_batch = nullptr;
@@ -542,7 +541,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         encrypted_batch->WriteMasterKey(nMasterKeyMaxID, kMasterKey);
 
         if (auto spk_man = m_spk_man.get()) {
-            if (!spk_man->EncryptKeys(_vMasterKey)) {
+            if (!spk_man->Encrypt(_vMasterKey, encrypted_batch)) {
                 encrypted_batch->TxnAbort();
                 delete encrypted_batch;
                 encrypted_batch = nullptr;

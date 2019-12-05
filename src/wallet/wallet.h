@@ -743,8 +743,6 @@ public:
     {
         // Should not have slots connected at this point.
         assert(NotifyUnload.empty());
-        delete encrypted_batch;
-        encrypted_batch = nullptr;
     }
 
     bool IsCrypted() const { return fUseCrypto; }
@@ -1145,8 +1143,6 @@ public:
     LegacyScriptPubKeyMan::CryptedKeyMap& mapCryptedKeys GUARDED_BY(cs_KeyStore) = m_spk_man->mapCryptedKeys;
     LegacyScriptPubKeyMan::WatchOnlySet& setWatchOnly GUARDED_BY(cs_KeyStore) = m_spk_man->setWatchOnly;
     LegacyScriptPubKeyMan::WatchKeyMap& mapWatchKeys GUARDED_BY(cs_KeyStore) = m_spk_man->mapWatchKeys;
-    WalletBatch*& encrypted_batch GUARDED_BY(cs_wallet) = m_spk_man->encrypted_batch;
-    using CryptedKeyMap = LegacyScriptPubKeyMan::CryptedKeyMap;
 
     /** Get last block processed height */
     int GetLastBlockHeight() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
