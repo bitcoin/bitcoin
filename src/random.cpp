@@ -179,7 +179,7 @@ static uint64_t GetRdSeed() noexcept
 /* Access to other hardware random number generators could be added here later,
  * assuming it is sufficiently fast (in the order of a few hundred CPU cycles).
  * Slower sources should probably be invoked separately, and/or only from
- * RandAddSeedSleep (which is called during idle background operation).
+ * RandAddPeriodic (which is called once a minute).
  */
 static void InitHardwareRand() {}
 static void ReportHardwareRand() {}
@@ -416,17 +416,7 @@ RNGState& GetRNGState() noexcept
 
 /* A note on the use of noexcept in the seeding functions below:
  *
- * None of the RNG code should ever throw any exception, with the sole exception
- * of MilliSleep in SeedSleep, which can (and does) support interruptions which
- * cause a boost::thread_interrupted to be thrown.
- *
- * This means that SeedSleep, and all functions that invoke it are throwing.
- * However, we know that GetRandBytes() and GetStrongRandBytes() never trigger
- * this sleeping logic, so they are noexcept. The same is true for all the
- * GetRand*() functions that use GetRandBytes() indirectly.
- *
- * TODO: After moving away from interruptible boost-based thread management,
- * everything can become noexcept here.
+ * None of the RNG code should ever throw any exception.
  */
 
 static void SeedTimestamp(CSHA512& hasher) noexcept
@@ -498,7 +488,7 @@ static void SeedStrengthen(CSHA512& hasher, RNGState& rng, int microseconds) noe
     Strengthen(strengthen_seed, microseconds, hasher);
 }
 
-static void SeedPeriodic(CSHA512& hasher, RNGState& rng)
+static void SeedPeriodic(CSHA512& hasher, RNGState& rng) noexcept
 {
     // Everything that the 'fast' seeder includes
     SeedFast(hasher);
@@ -575,7 +565,7 @@ static void ProcRand(unsigned char* out, int num, RNGLevel level)
 
 void GetRandBytes(unsigned char* buf, int num) noexcept { ProcRand(buf, num, RNGLevel::FAST); }
 void GetStrongRandBytes(unsigned char* buf, int num) noexcept { ProcRand(buf, num, RNGLevel::SLOW); }
-void RandAddPeriodic() { ProcRand(nullptr, 0, RNGLevel::PERIODIC); }
+void RandAddPeriodic() noexcept { ProcRand(nullptr, 0, RNGLevel::PERIODIC); }
 
 void RandAddEvent(const uint32_t event_info) {
     LOCK(events_mutex);
