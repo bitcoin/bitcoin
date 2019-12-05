@@ -1396,8 +1396,7 @@ LegacyScriptPubKeyMan::LegacyScriptPubKeyMan(CWallet& wallet)
     : ScriptPubKeyMan(wallet),
       m_wallet(wallet),
       cs_wallet(wallet.cs_wallet),
-      fUseCrypto(wallet.fUseCrypto),
-      fDecryptionThoroughlyChecked(wallet.fDecryptionThoroughlyChecked) {}
+      fUseCrypto(wallet.fUseCrypto) {}
 
 bool LegacyScriptPubKeyMan::SetCrypted() { return m_wallet.SetCrypted(); }
 bool LegacyScriptPubKeyMan::IsCrypted() const { return m_wallet.IsCrypted(); }

@@ -198,6 +198,9 @@ public:
 class LegacyScriptPubKeyMan : public ScriptPubKeyMan, public FillableSigningProvider
 {
 private:
+    //! keeps track of whether Unlock has run a thorough check before
+    bool fDecryptionThoroughlyChecked = false;
+
     using WatchOnlySet = std::set<CScript>;
     using WatchKeyMap = std::map<CKeyID, CPubKey>;
 
@@ -417,7 +420,6 @@ public:
     CWallet& m_wallet;
     CCriticalSection& cs_wallet;
     std::atomic<bool>& fUseCrypto;
-    bool& fDecryptionThoroughlyChecked;
 };
 
 #endif // BITCOIN_WALLET_SCRIPTPUBKEYMAN_H
