@@ -412,7 +412,6 @@ public:
     template<typename... Params> void WalletLogPrintf(const std::string& fmt, const Params&... parameters) const;
     CWallet& m_wallet;
     CCriticalSection& cs_wallet;
-    CKeyingMaterial& vMasterKey GUARDED_BY(cs_KeyStore);
     std::atomic<bool>& fUseCrypto;
     bool& fDecryptionThoroughlyChecked;
 };
