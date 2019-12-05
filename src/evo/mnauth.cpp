@@ -55,14 +55,16 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
         CMNAuth mnauth;
         vRecv >> mnauth;
 
+        // only one MNAUTH allowed
+        bool fAlreadyHaveMNAUTH = false;
         {
             LOCK(pnode->cs_mnauth);
-            // only one MNAUTH allowed
-            if (!pnode->verifiedProRegTxHash.IsNull()) {
-                LOCK(cs_main);
-                Misbehaving(pnode->GetId(), 100);
-                return;
-            }
+            fAlreadyHaveMNAUTH = !pnode->verifiedProRegTxHash.IsNull();
+        }
+        if (fAlreadyHaveMNAUTH) {
+            LOCK(cs_main);
+            Misbehaving(pnode->GetId(), 100);
+            return;
         }
 
         if (mnauth.proRegTxHash.IsNull() || !mnauth.sig.IsValid()) {
