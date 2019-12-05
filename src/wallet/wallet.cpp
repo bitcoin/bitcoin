@@ -4037,6 +4037,21 @@ bool CWallet::Lock()
     return true;
 }
 
+bool CWallet::Unlock(const CKeyingMaterial& vMasterKeyIn, bool accept_no_keys)
+{
+    {
+        LOCK(cs_KeyStore);
+        if (m_spk_man) {
+            if (!m_spk_man->CheckDecryptionKey(vMasterKeyIn, accept_no_keys)) {
+                return false;
+            }
+        }
+        vMasterKey = vMasterKeyIn;
+    }
+    NotifyStatusChanged(this);
+    return true;
+}
+
 ScriptPubKeyMan* CWallet::GetScriptPubKeyMan(const CScript& script) const
 {
     return m_spk_man.get();
