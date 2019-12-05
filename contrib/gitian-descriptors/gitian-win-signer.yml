@@ -36,6 +36,6 @@ script: |
   make
   find ${UNSIGNED_DIR} -name "*-unsigned.exe" | while read i; do
     INFILE="$(basename "${i}")"
-    OUTFILE="${INFILE/%-unsigned}"
+    OUTFILE="${INFILE/-unsigned}"
     ./osslsigncode attach-signature -in "${i}" -out "${OUTDIR}/${OUTFILE}" -sigin "${SIGDIR}/${INFILE}.pem"
   done
