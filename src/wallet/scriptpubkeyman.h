@@ -412,7 +412,6 @@ public:
     friend class CWallet;
     friend class ReserveDestination;
     LegacyScriptPubKeyMan(CWallet& wallet);
-    bool IsCrypted() const;
     void NotifyWatchonlyChanged(bool fHaveWatchOnly) const;
     void NotifyCanGetAddressesChanged() const;
     template<typename... Params> void WalletLogPrintf(const std::string& fmt, const Params&... parameters) const;
