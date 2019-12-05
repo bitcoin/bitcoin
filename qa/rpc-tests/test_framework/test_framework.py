@@ -351,8 +351,8 @@ class DashTestFramework(BitcoinTestFramework):
             wait_to_sync(node, True)
 
         def do_connect(idx):
-            for i in range(0, idx + 1):
-                connect_nodes(self.nodes[idx + start_idx], i)
+            # Connect to the control node only, masternodes should take care of intra-quorum connections themselves
+            connect_nodes(self.mninfo[idx].node, 0)
 
         jobs = []
 
@@ -402,6 +402,12 @@ class DashTestFramework(BitcoinTestFramework):
         self.prepare_masternodes()
         self.prepare_datadirs()
         self.start_masternodes()
+
+        # non-masternodes where disconnected from the control node during prepare_datadirs,
+        # let's reconnect them back to make sure they receive updates
+        num_simple_nodes = self.num_nodes - self.mn_count - 1
+        for i in range(0, num_simple_nodes):
+            connect_nodes(self.nodes[i+1], 0)
 
         set_mocktime(get_mocktime() + 1)
         set_node_times(self.nodes, get_mocktime())
