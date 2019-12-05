@@ -245,7 +245,9 @@ bool LegacyScriptPubKeyMan::EncryptKeys(CKeyingMaterial& vMasterKeyIn)
         return false;
 
     fUseCrypto = true;
-    for (const KeyMap::value_type& mKey : mapKeys)
+    KeyMap keys_to_encrypt;
+    keys_to_encrypt.swap(mapKeys); // Clear mapKeys so AddCryptedKeyInner will succeed.
+    for (const KeyMap::value_type& mKey : keys_to_encrypt)
     {
         const CKey &key = mKey.second;
         CPubKey vchPubKey = key.GetPubKey();
@@ -256,7 +258,6 @@ bool LegacyScriptPubKeyMan::EncryptKeys(CKeyingMaterial& vMasterKeyIn)
         if (!AddCryptedKey(vchPubKey, vchCryptedSecret))
             return false;
     }
-    mapKeys.clear();
     return true;
 }
 
