@@ -206,8 +206,7 @@ bool LegacyScriptPubKeyMan::CheckDecryptionKey(const CKeyingMaterial& master_key
 {
     {
         LOCK(cs_KeyStore);
-        if (!SetCrypted())
-            return false;
+        assert(mapKeys.empty());
 
         bool keyPass = mapCryptedKeys.empty(); // Always pass when there are no encrypted keys
         bool keyFail = false;
@@ -243,12 +242,11 @@ bool LegacyScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, WalletBat
     AssertLockHeld(cs_wallet);
     LOCK(cs_KeyStore);
     encrypted_batch = batch;
-    if (!mapCryptedKeys.empty() || IsCrypted()) {
+    if (!mapCryptedKeys.empty()) {
         encrypted_batch = nullptr;
         return false;
     }
 
-    fUseCrypto = true;
     KeyMap keys_to_encrypt;
     keys_to_encrypt.swap(mapKeys); // Clear mapKeys so AddCryptedKeyInner will succeed.
     for (const KeyMap::value_type& mKey : keys_to_encrypt)
@@ -620,9 +618,7 @@ bool LegacyScriptPubKeyMan::LoadCryptedKey(const CPubKey &vchPubKey, const std::
 bool LegacyScriptPubKeyMan::AddCryptedKeyInner(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret)
 {
     LOCK(cs_KeyStore);
-    if (!SetCrypted()) {
-        return false;
-    }
+    assert(mapKeys.empty());
 
     mapCryptedKeys[vchPubKey.GetID()] = make_pair(vchPubKey, vchCryptedSecret);
     ImplicitlyLearnRelatedKeyScripts(vchPubKey);
@@ -1405,10 +1401,8 @@ std::set<CKeyID> LegacyScriptPubKeyMan::GetKeys() const
 LegacyScriptPubKeyMan::LegacyScriptPubKeyMan(CWallet& wallet)
     : ScriptPubKeyMan(wallet),
       m_wallet(wallet),
-      cs_wallet(wallet.cs_wallet),
-      fUseCrypto(wallet.fUseCrypto) {}
+      cs_wallet(wallet.cs_wallet) {}
 
-bool LegacyScriptPubKeyMan::SetCrypted() { return m_wallet.SetCrypted(); }
 bool LegacyScriptPubKeyMan::IsCrypted() const { return m_wallet.IsCrypted(); }
 void LegacyScriptPubKeyMan::NotifyWatchonlyChanged(bool fHaveWatchOnly) const { return m_wallet.NotifyWatchonlyChanged(fHaveWatchOnly); }
 void LegacyScriptPubKeyMan::NotifyCanGetAddressesChanged() const { return m_wallet.NotifyCanGetAddressesChanged(); }
