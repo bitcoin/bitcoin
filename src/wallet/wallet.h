@@ -597,12 +597,7 @@ class CWallet final : public WalletStorage, private interfaces::Chain::Notificat
 private:
     CKeyingMaterial vMasterKey GUARDED_BY(cs_KeyStore);
 
-    //! if fUseCrypto is true, mapKeys must be empty
-    //! if fUseCrypto is false, vMasterKey must be empty
-    std::atomic<bool> fUseCrypto;
 
-
-    bool SetCrypted();
     bool Unlock(const CKeyingMaterial& vMasterKeyIn, bool accept_no_keys = false);
 
     std::atomic<bool> fAbortRescan{false};
@@ -732,8 +727,7 @@ public:
 
     /** Construct wallet with specified name and database implementation. */
     CWallet(interfaces::Chain* chain, const WalletLocation& location, std::unique_ptr<WalletDatabase> database)
-        : fUseCrypto(false),
-          m_chain(chain),
+        : m_chain(chain),
           m_location(location),
           database(std::move(database))
     {
@@ -745,7 +739,7 @@ public:
         assert(NotifyUnload.empty());
     }
 
-    bool IsCrypted() const { return fUseCrypto; }
+    bool IsCrypted() const;
     bool IsLocked() const override;
     bool Lock();
 
