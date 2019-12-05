@@ -601,8 +601,6 @@ private:
     //! if fUseCrypto is false, vMasterKey must be empty
     std::atomic<bool> fUseCrypto;
 
-    //! keeps track of whether Unlock has run a thorough check before
-    bool fDecryptionThoroughlyChecked;
 
     bool SetCrypted();
     bool Unlock(const CKeyingMaterial& vMasterKeyIn, bool accept_no_keys = false);
@@ -735,7 +733,6 @@ public:
     /** Construct wallet with specified name and database implementation. */
     CWallet(interfaces::Chain* chain, const WalletLocation& location, std::unique_ptr<WalletDatabase> database)
         : fUseCrypto(false),
-          fDecryptionThoroughlyChecked(false),
           m_chain(chain),
           m_location(location),
           database(std::move(database))
