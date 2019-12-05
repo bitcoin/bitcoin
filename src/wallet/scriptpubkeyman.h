@@ -333,6 +333,18 @@ private:
      */
     bool ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& keypool, bool fRequestedInternal);
 
+    /**
+     * Like TopUp() but adds keys for inactive HD chains.
+     * Ensures that there are at least -keypool number of keys derived after the given index.
+     *
+     * @param seed_id the CKeyID for the HD seed.
+     * @param index the index to start generating keys from
+     * @param internal whether the internal chain should be used. true for internal chain, false for external chain.
+     *
+     * @return true if seed was found and keys were derived. false if unable to derive seeds
+     */
+    bool TopUpInactiveHDChain(const CKeyID seed_id, int64_t index, bool internal);
+
 public:
     using ScriptPubKeyMan::ScriptPubKeyMan;
 
