@@ -48,7 +48,7 @@ class TestNode(NodeConnCB):
 
 class LLMQ_IS_CL_Conflicts(DashTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(6, 5, [], fast_dip3_enforcement=True)
+        self.set_dash_test_params(6, 5, fast_dip3_enforcement=True)
         #disable_mocktime()
 
     def run_test(self):

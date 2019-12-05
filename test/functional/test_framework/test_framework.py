@@ -482,24 +482,26 @@ class MasternodeInfo:
 
 
 class DashTestFramework(BitcoinTestFramework):
-    def set_dash_test_params(self, num_nodes, masterodes_count, extra_args, fast_dip3_enforcement=False):
+    def set_dash_test_params(self, num_nodes, masterodes_count, extra_args=None, fast_dip3_enforcement=False):
         self.mn_count = masterodes_count
         self.num_nodes = num_nodes
         self.mninfo = []
         self.setup_clean_chain = True
         self.is_network_split = False
         # additional args
+        if extra_args is None:
+            extra_args = [[]] * num_nodes
+        assert_equal(len(extra_args), num_nodes)
         self.extra_args = extra_args
-
-        self.extra_args += ["-sporkkey=cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK"]
-
+        self.extra_args[0] += ["-sporkkey=cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK"]
         self.fast_dip3_enforcement = fast_dip3_enforcement
         if fast_dip3_enforcement:
-            self.extra_args += ["-dip3params=30:50"]
+            for i in range(0, num_nodes):
+                self.extra_args[i] += ["-dip3params=30:50"]
 
     def create_simple_node(self):
         idx = len(self.nodes)
-        self.add_nodes(1, extra_args=[self.extra_args])
+        self.add_nodes(1, extra_args=[self.extra_args[idx]])
         self.start_node(idx)
         for i in range(0, idx):
             connect_nodes(self.nodes[i], idx)
@@ -574,7 +576,7 @@ class DashTestFramework(BitcoinTestFramework):
         executor = ThreadPoolExecutor(max_workers=20)
 
         def do_start(idx):
-            args = ['-masternodeblsprivkey=%s' % self.mninfo[idx].keyOperator] + self.extra_args
+            args = ['-masternodeblsprivkey=%s' % self.mninfo[idx].keyOperator] + self.extra_args[idx + start_idx]
             self.start_node(idx + start_idx, extra_args=args)
             self.mninfo[idx].nodeIdx = idx + start_idx
             self.mninfo[idx].node = self.nodes[idx + start_idx]
@@ -608,7 +610,7 @@ class DashTestFramework(BitcoinTestFramework):
 
     def setup_network(self):
         self.log.info("Creating and starting controller node")
-        self.add_nodes(1, extra_args=[self.extra_args])
+        self.add_nodes(1, extra_args=[self.extra_args[0]])
         self.start_node(0)
         required_balance = MASTERNODE_COLLATERAL * self.mn_count + 1
         self.log.info("Generating %d coins" % required_balance)
