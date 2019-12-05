@@ -11,3 +11,4 @@ aarch64*
 powerpc*
 riscv32*
 riscv64*
+s390x*
