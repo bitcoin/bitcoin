@@ -154,6 +154,7 @@ public:
 
     //! Check that the given decryption key is valid for this ScriptPubKeyMan, i.e. it decrypts all of the keys handled by it.
     virtual bool CheckDecryptionKey(const CKeyingMaterial& master_key, bool accept_no_keys = false) { return false; }
+    virtual bool Encrypt(const CKeyingMaterial& master_key, WalletBatch* batch) { return false; }
 
     virtual bool GetReservedDestination(const OutputType type, bool internal, CTxDestination& address, int64_t& index, CKeyPool& keypool) { return false; }
     virtual void KeepDestination(int64_t index, const OutputType& type) {}
@@ -280,9 +281,8 @@ public:
     bool GetNewDestination(const OutputType type, CTxDestination& dest, std::string& error) override;
     isminetype IsMine(const CScript& script) const override;
 
-    //! will encrypt previously unencrypted keys
-    bool EncryptKeys(CKeyingMaterial& vMasterKeyIn);
     bool CheckDecryptionKey(const CKeyingMaterial& master_key, bool accept_no_keys = false) override;
+    bool Encrypt(const CKeyingMaterial& master_key, WalletBatch* batch) override;
 
     bool GetReservedDestination(const OutputType type, bool internal, CTxDestination& address, int64_t& index, CKeyPool& keypool) override;
     void KeepDestination(int64_t index, const OutputType& type) override;

@@ -238,11 +238,15 @@ bool LegacyScriptPubKeyMan::CheckDecryptionKey(const CKeyingMaterial& master_key
     return true;
 }
 
-bool LegacyScriptPubKeyMan::EncryptKeys(CKeyingMaterial& vMasterKeyIn)
+bool LegacyScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, WalletBatch* batch)
 {
+    AssertLockHeld(cs_wallet);
     LOCK(cs_KeyStore);
-    if (!mapCryptedKeys.empty() || IsCrypted())
+    encrypted_batch = batch;
+    if (!mapCryptedKeys.empty() || IsCrypted()) {
+        encrypted_batch = nullptr;
         return false;
+    }
 
     fUseCrypto = true;
     KeyMap keys_to_encrypt;
@@ -253,11 +257,16 @@ bool LegacyScriptPubKeyMan::EncryptKeys(CKeyingMaterial& vMasterKeyIn)
         CPubKey vchPubKey = key.GetPubKey();
         CKeyingMaterial vchSecret(key.begin(), key.end());
         std::vector<unsigned char> vchCryptedSecret;
-        if (!EncryptSecret(vMasterKeyIn, vchSecret, vchPubKey.GetHash(), vchCryptedSecret))
+        if (!EncryptSecret(master_key, vchSecret, vchPubKey.GetHash(), vchCryptedSecret)) {
+            encrypted_batch = nullptr;
             return false;
-        if (!AddCryptedKey(vchPubKey, vchCryptedSecret))
+        }
+        if (!AddCryptedKey(vchPubKey, vchCryptedSecret)) {
+            encrypted_batch = nullptr;
             return false;
+        }
     }
+    encrypted_batch = nullptr;
     return true;
 }
 
