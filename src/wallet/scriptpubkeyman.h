@@ -29,6 +29,9 @@ public:
     virtual void UnsetBlankWalletFlag(WalletBatch&) = 0;
     virtual bool CanSupportFeature(enum WalletFeature) const = 0;
     virtual void SetMinVersion(enum WalletFeature, WalletBatch* = nullptr, bool = false) = 0;
+    virtual const CKeyingMaterial& GetEncryptionKey() const = 0;
+    virtual CKeyingMaterial& GetEncryptionKeyMutable() = 0;
+    virtual bool HasEncryptionKeys() const = 0;
     virtual bool IsLocked(bool fForMixing = false) const = 0;
 };
 
@@ -145,6 +148,10 @@ public:
     virtual isminetype IsMine(const CScript& script) const { return ISMINE_NO; }
     virtual isminetype IsMine(const CTxDestination& dest) const { return ISMINE_NO; }
 
+    //! Check that the given decryption key is valid for this ScriptPubKeyMan, i.e. it decrypts all of the keys handled by it.
+    virtual bool CheckDecryptionKey(const CKeyingMaterial& master_key, bool accept_no_keys = false) { return false; }
+    virtual bool Encrypt(const CKeyingMaterial& master_key, WalletBatch* batch) { return false; }
+
     virtual bool GetReservedDestination(bool internal, CTxDestination& address, int64_t& index, CKeyPool& keypool) { return false; }
     virtual void KeepDestination(int64_t index) {}
     virtual void ReturnDestination(int64_t index, bool internal, const CTxDestination& addr) {}
@@ -180,6 +187,9 @@ public:
 class LegacyScriptPubKeyMan : public ScriptPubKeyMan, public FillableSigningProvider
 {
 private:
+    //! keeps track of whether Unlock has run a thorough check before
+    bool fDecryptionThoroughlyChecked = false;
+
     using WatchOnlySet = std::set<CScript>;
     using WatchKeyMap = std::map<CKeyID, CPubKey>;
     using HDPubKeyMap = std::map<CKeyID, CHDPubKey>;
@@ -259,8 +269,8 @@ public:
     isminetype IsMine(const CScript& script) const override;
     isminetype IsMine(const CTxDestination& dest) const override;
 
-    //! will encrypt previously unencrypted keys
-    bool EncryptKeys(CKeyingMaterial& vMasterKeyIn);
+    bool CheckDecryptionKey(const CKeyingMaterial& master_key, bool accept_no_keys = false) override;
+    bool Encrypt(const CKeyingMaterial& master_key, WalletBatch* batch) override;
 
     bool GetReservedDestination(bool internal, CTxDestination& address, int64_t& index, CKeyPool& keypool) override;
     void KeepDestination(int64_t index) override;
@@ -421,16 +431,11 @@ public:
     friend class CWallet;
     friend class ReserveDestination;
     LegacyScriptPubKeyMan(CWallet& wallet);
-    bool SetCrypted();
-    bool IsCrypted() const;
     void NotifyWatchonlyChanged(bool fHaveWatchOnly) const;
     void NotifyCanGetAddressesChanged() const;
     template<typename... Params> void WalletLogPrintf(const std::string& fmt, const Params&... parameters) const;
     CWallet& m_wallet;
     CCriticalSection& cs_wallet;
-    CKeyingMaterial& vMasterKey GUARDED_BY(cs_KeyStore);
-    std::atomic<bool>& fUseCrypto;
-    bool& fDecryptionThoroughlyChecked;
 };
 
 #endif // BITCOIN_WALLET_SCRIPTPUBKEYMAN_H

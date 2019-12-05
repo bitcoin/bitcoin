@@ -650,17 +650,8 @@ class CWallet final : public WalletStorage, public interfaces::Chain::Notificati
 private:
     CKeyingMaterial vMasterKey GUARDED_BY(cs_KeyStore);
 
-    //! if fUseCrypto is true, mapKeys must be empty
-    //! if fUseCrypto is false, vMasterKey must be empty
-    std::atomic<bool> fUseCrypto;
-
-    //! keeps track of whether Unlock has run a thorough check before
-    bool fDecryptionThoroughlyChecked;
-
     //! if fOnlyMixingAllowed is true, only mixing should be allowed in unlocked wallet
     bool fOnlyMixingAllowed;
-
-    bool SetCrypted();
 
     bool Unlock(const CKeyingMaterial& vMasterKeyIn, bool fForMixingOnly = false, bool accept_no_keys = false);
 
@@ -813,9 +804,7 @@ public:
 
     /** Construct wallet with specified name and database implementation. */
     CWallet(interfaces::Chain* chain, const std::string& name, std::unique_ptr<WalletDatabase> database)
-        : fUseCrypto(false),
-          fDecryptionThoroughlyChecked(false),
-          fOnlyMixingAllowed(false),
+        : fOnlyMixingAllowed(false),
           m_chain(chain),
           m_name(name),
           database(std::move(database))
@@ -826,13 +815,11 @@ public:
     {
         // Should not have slots connected at this point.
         assert(NotifyUnload.empty());
-        delete encrypted_batch;
-        encrypted_batch = nullptr;
     }
 
     /** Interface to assert chain access */
     bool HaveChain() const { return m_chain ? true : false; }
-    bool IsCrypted() const { return fUseCrypto; }
+    bool IsCrypted() const;
     bool IsLocked(bool fForMixing = false) const override;
     bool Lock(bool fForMixing = false);
 
@@ -1280,6 +1267,10 @@ public:
 
     LegacyScriptPubKeyMan* GetLegacyScriptPubKeyMan() const;
 
+    const CKeyingMaterial& GetEncryptionKey() const override;
+    CKeyingMaterial& GetEncryptionKeyMutable() override;
+    bool HasEncryptionKeys() const override;
+
     // Temporary LegacyScriptPubKeyMan accessors and aliases.
     friend class LegacyScriptPubKeyMan;
     std::unique_ptr<LegacyScriptPubKeyMan> m_spk_man = std::make_unique<LegacyScriptPubKeyMan>(*this);
@@ -1290,8 +1281,6 @@ public:
     LegacyScriptPubKeyMan::WatchOnlySet& setWatchOnly GUARDED_BY(cs_KeyStore) = m_spk_man->setWatchOnly;
     LegacyScriptPubKeyMan::WatchKeyMap& mapWatchKeys GUARDED_BY(cs_KeyStore) = m_spk_man->mapWatchKeys;
     LegacyScriptPubKeyMan::HDPubKeyMap& mapHdPubKeys GUARDED_BY(cs_KeyStore) = m_spk_man->mapHdPubKeys;
-    WalletBatch*& encrypted_batch GUARDED_BY(cs_wallet) = m_spk_man->encrypted_batch;
-    using CryptedKeyMap = LegacyScriptPubKeyMan::CryptedKeyMap;
 };
 
 /**
