@@ -5,6 +5,7 @@
 #ifndef CROWN_PLATFORM_NF_TOKEN_PROTOCOL_REG_TX_H
 #define CROWN_PLATFORM_NF_TOKEN_PROTOCOL_REG_TX_H
 
+#include <json/json_spirit_value.h>
 #include "key.h"
 #include "serialize.h"
 #include "nf-token-protocol.h"
@@ -33,8 +34,11 @@ namespace Platform
         // bool Sign(CKey & privKey, CPubKey & pubKey);
 
         std::string ToString() const;
+        void ToJson(json_spirit::Object & result) const;
 
         static bool CheckTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
+        static bool ProcessTx(const CTransaction & tx, const CBlockIndex * pindex, CValidationState & state);
+        static bool UndoTx(const CTransaction & tx, const CBlockIndex * pindex);
 
     public:
         ADD_SERIALIZE_METHODS

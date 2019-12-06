@@ -110,8 +110,6 @@ namespace Platform
         result.push_back(json_spirit::Pair("nftId", m_nfToken.tokenId.ToString()));
         result.push_back(json_spirit::Pair("nftOwnerKeyId", CBitcoinAddress(m_nfToken.tokenOwnerKeyId).ToString()));
         result.push_back(json_spirit::Pair("metadataAdminKeyId", CBitcoinAddress(m_nfToken.metadataAdminKeyId).ToString()));
-        // TODO: if not text -> implement conversion to base64
-        // If metadata is embedded text/plain -> read directly, otherwise download from the URI
         result.push_back(json_spirit::Pair("metadata", std::string(m_nfToken.metadata.begin(), m_nfToken.metadata.end())));
     }
 

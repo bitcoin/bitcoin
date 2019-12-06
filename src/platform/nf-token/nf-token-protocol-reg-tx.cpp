@@ -56,6 +56,46 @@ namespace Platform
         return true;
     }
 
+    bool NfTokenProtocolRegTx::ProcessTx(const CTransaction & tx, const CBlockIndex * pindex, CValidationState & state)
+    {
+        NfTokenProtocolRegTx nftProtoRegTx;
+        bool result = GetTxPayload(tx, nftProtoRegTx);
+        // should have been checked already
+        assert(result);
+
+        auto nftProto = nftProtoRegTx.GetNftProto();
+
+        if (!NftProtocolsManager::Instance().AddNftProto(nftProto, tx, pindex))
+            return state.DoS(100, false, REJECT_DUPLICATE/*TODO: REJECT_CONFLICT*/, "nft-proto-reg-tx-conflict");
+        return true;
+    }
+
+    bool NfTokenProtocolRegTx::UndoTx(const CTransaction & tx, const CBlockIndex * pindex)
+    {
+        NfTokenProtocolRegTx nftProtoRegTx;
+        bool result = GetTxPayload(tx, nftProtoRegTx);
+        // should have been checked already
+        assert(result);
+
+        auto nftProto = nftProtoRegTx.GetNftProto();
+        return NftProtocolsManager::Instance().Delete(nftProto.tokenProtocolId, pindex->nHeight);
+    }
+
+    void NfTokenProtocolRegTx::ToJson(json_spirit::Object & result) const
+    {
+        result.push_back(json_spirit::Pair("version", m_version));
+        result.push_back(json_spirit::Pair("nftProtocolId", ProtocolName{m_nfTokenProtocol.tokenProtocolId}.ToString()));
+        result.push_back(json_spirit::Pair("tokenProtocolName", m_nfTokenProtocol.tokenProtocolName));
+        result.push_back(json_spirit::Pair("tokenMetadataSchemaUri", m_nfTokenProtocol.tokenMetadataSchemaUri));
+        result.push_back(json_spirit::Pair("tokenMetadataMimeType", m_nfTokenProtocol.tokenMetadataMimeType));
+        result.push_back(json_spirit::Pair("isTokenTransferable", m_nfTokenProtocol.isTokenTransferable));
+        result.push_back(json_spirit::Pair("isTokenImmutable", m_nfTokenProtocol.isTokenImmutable));
+        result.push_back(json_spirit::Pair("isMetadataEmbedded", m_nfTokenProtocol.isMetadataEmbedded));
+        result.push_back(json_spirit::Pair("nftRegSign", m_nfTokenProtocol.nftRegSign));
+        result.push_back(json_spirit::Pair("tokenProtocolOwnerId", CBitcoinAddress(m_nfTokenProtocol.tokenProtocolOwnerId).ToString()));
+    }
+
+
     std::string NfTokenProtocolRegTx::ToString() const
     {
         std::ostringstream out;
