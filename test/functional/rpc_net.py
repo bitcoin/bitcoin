@@ -45,6 +45,7 @@ class NetTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 2
         self.extra_args = [["-minrelaytxfee=0.00001000"],["-minrelaytxfee=0.00000500"]]
+        self.supports_cli = False
 
     def run_test(self):
         self.log.info('Connect nodes both way')
