@@ -225,18 +225,23 @@ void CDKGSessionHandler::SleepBeforePhase(QuorumPhase curPhase,
                                           double randomSleepFactor,
                                           const WhileWaitFunc& runWhileWaiting)
 {
+    if (!curSession->AreWeMember()) {
+        // Non-members do not participate and do not create any network load, no need to sleep.
+        return;
+    }
+
+    if (Params().MineBlocksOnDemand()) {
+        // On regtest, blocks can be mined on demand without any significant time passing between these.
+        // We shouldn't wait before phases in this case.
+        return;
+    }
+
     // expected time for a full phase
     double phaseTime = params.dkgPhaseBlocks * Params().GetConsensus().nPowTargetSpacing * 1000;
     // expected time per member
     phaseTime = phaseTime / params.size;
     // Don't expect perfect block times and thus reduce the phase time to be on the secure side (caller chooses factor)
     phaseTime *= randomSleepFactor;
-
-    if (Params().MineBlocksOnDemand()) {
-        // on regtest, blocks can be mined on demand without any significant time passing between these. We shouldn't
-        // wait before phases in this case
-        phaseTime = 0;
-    }
 
     int64_t sleepTime = (int64_t)(phaseTime * curSession->GetMyMemberIndex());
     int64_t endTime = GetTimeMillis() + sleepTime;
