@@ -1839,9 +1839,12 @@ bool CEthereumMintedTxDB::FlushWrite(const EthereumMintTxVec &vecMintKeys){
     CDBBatch batch(*this);
     for (const auto &key : vecMintKeys) {
         batch.Write(key.first.first, key.second);
-        // create link between keys for reorg compatbility because bridge transfer id isn't serialized
-        // we could have easily done key.first.second, key.second but that would break under reorgs
-        batch.Write(key.first.second, key.first.first); 
+        // write the bridge transfer ID if it existed (should on mainnet, and testnet after canceltransfer feature introduced)
+        if(key.first.second > 0){
+            // create link between keys for reorg compatbility because bridge transfer id isn't serialized
+            // we could have easily done key.first.second, key.second but that would break under reorgs
+            batch.Write(key.first.second, key.first.first);
+        } 
     }
     LogPrint(BCLog::SYS, "Flushing, writing %d ethereum tx mints\n", vecMintKeys.size());
     return WriteBatch(batch);
