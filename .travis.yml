@@ -129,11 +129,6 @@ jobs:
         FILE_ENV="./ci/test/00_setup_env_native_qt5.sh"
 
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [trusty]  [no functional tests, no depends, only system libs]'
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_native_trusty.sh"
-
-    - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [xenial]  [no depends, only system libs, sanitizers: thread (TSan), no wallet]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_tsan.sh"
