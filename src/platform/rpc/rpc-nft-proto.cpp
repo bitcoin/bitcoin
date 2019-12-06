@@ -106,12 +106,72 @@ Examples:
 
     json_spirit::Value ListNftProtocols(const json_spirit::Array& params, bool fHelp)
     {
+        if (fHelp || params.empty() || params.size() > 5)
+            ListNftProtocolsHelp();
 
+        int height = (params.size() > 1) ? ParseInt32V(params[1], "height") : chainActive.Height();
+        if (height < 0 || height > chainActive.Height())
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height is out of range");
+
+        static const int defaultTxsCount = 20;
+        static const int defaultStartFrom = 20;
+        int count = (params.size() > 2) ? ParseInt32V(params[2], "count") : defaultTxsCount;
+        int startFrom = (params.size() > 3) ? ParseInt32V(params[3], "from") : defaultStartFrom;
+        bool regTxOnly = (params.size() > 4) ? ParseBoolV(params[4], "regTxOnly") : false;
+
+        json_spirit::Array protoList;
+
+        auto protoHandler = [&](const NftProtoIndex & protoIndex) -> bool
+        {
+            if (regTxOnly)
+            {
+                json_spirit::Object hashObj;
+                hashObj.push_back(json_spirit::Pair("registrationTxHash", protoIndex.RegTxHash().GetHex()));
+                protoList.push_back(hashObj);
+            }
+            else
+            {
+                protoList.push_back(BuildNftProtoRecord(protoIndex));
+            }
+            return true;
+        };
+
+        NftProtocolsManager::Instance().ProcessNftProtoIndexRangeByHeight(protoHandler, height, count, startFrom);
+        return protoList;
     }
 
     void ListNftProtocolsHelp()
     {
+        static std::string helpMessage =
+                R"(nftproto list
+Lists all NFT protocol records on chain
 
+Arguments:
+1. height      (numeric, optional) If height is not specified, it defaults to the current chain-tip
+2. count       (numeric, optional, default=20) The number of transactions to return
+3. from        (numeric, optional, default=0) The number of transactions to skip
+4. regTxOnly   (boolean, optional, default=false) false for a detailed list, true for an array of transaction IDs
+
+Examples:
+List the most recent 20 NFT protocol records
+)"
++ HelpExampleCli("nftproto", R"(list)")
++ R"(List the most recent 20 NFT protocol records up to 5050st block
+)"
++ HelpExampleCli("nftproto", R"(list 5050)")
++ R"(List records 100 to 150 up to 5050st block
+)"
++ HelpExampleCli("nftproto", R"(list 5050 100 50)")
++ R"(List records 100 to 150 up to 5050st block. List only registration tx IDs.
+)"
++ HelpExampleCli("nftoken", R"(list 5050 100 50 true)")
++ R"(As JSON-RPC calls
+)"
++ HelpExampleRpc("nftoken", R"(list)")
++ HelpExampleRpc("nftoken", R"(list 5050)")
++ HelpExampleCli("nftoken", R"(list 5050 100 50)");
+
+        throw std::runtime_error(helpMessage);
     }
 
     json_spirit::Object BuildNftProtoRecord(const NftProtoIndex & nftProtoIndex)
@@ -139,7 +199,6 @@ Examples:
         return protoJsonObj;
     }
 
-
     json_spirit::Value GetNftProtocol(const json_spirit::Array& params, bool fHelp)
     {
         if (fHelp || params.size() != 2)
@@ -165,8 +224,8 @@ Arguments:
                       The protocol name must be valid and registered previously.
 Examples:
 )"
-+ HelpExampleCli("nftoken", R"(get "doc")")
-+ HelpExampleRpc("nftoken", R"(get "cks")");
++ HelpExampleCli("nftproto", R"(get "doc")")
++ HelpExampleRpc("nftproto", R"(get "cks")");
 
         throw std::runtime_error(helpMessage);
     }
