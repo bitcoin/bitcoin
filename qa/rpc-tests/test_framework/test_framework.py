@@ -555,13 +555,23 @@ class DashTestFramework(BitcoinTestFramework):
         self.sync_all()
         return self.wait_for_instantlock(txid, sender)
 
-    def wait_for_instantlock(self, txid, node):
+    def wait_for_tx(self, txid, node, expected=True, timeout=15):
+        def check_tx():
+            try:
+                return node.getrawtransaction(txid)
+            except:
+                return False
+        if wait_until(check_tx, timeout=timeout, sleep=0.5, do_assert=expected) and not expected:
+            raise AssertionError("waiting unexpectedly succeeded")
+
+    def wait_for_instantlock(self, txid, node, expected=True, timeout=15):
         def check_instantlock():
             try:
                 return node.getrawtransaction(txid, True)["instantlock"]
             except:
                 return False
-        return wait_until(check_instantlock, timeout=10, sleep=0.5)
+        if wait_until(check_instantlock, timeout=timeout, sleep=0.5, do_assert=expected) and not expected:
+            raise AssertionError("waiting unexpectedly succeeded")
 
     def wait_for_chainlocked_block(self, node, block_hash, expected=True, timeout=15):
         def check_chainlocked_block():
@@ -711,6 +721,16 @@ class DashTestFramework(BitcoinTestFramework):
         sync_blocks(self.nodes)
 
         return new_quorum
+
+    def wait_for_mnauth(self, node, count, timeout=10):
+        def test():
+            pi = node.getpeerinfo()
+            c = 0
+            for p in pi:
+                if "verified_proregtx_hash" in p and p["verified_proregtx_hash"] != "":
+                    c += 1
+            return c >= count
+        wait_until(test, timeout=timeout)
 
 # Test framework for doing p2p comparison testing, which sets up some bitcoind
 # binaries:
