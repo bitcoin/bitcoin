@@ -332,7 +332,7 @@ class DashTestFramework(BitcoinTestFramework):
             copy_datadir(0, idx + start_idx, self.options.tmpdir)
 
         # restart faucet node
-        self.nodes[0] = start_node(0, self.options.tmpdir, self.extra_args)
+        self.nodes[0] = start_node(0, self.options.tmpdir, self.extra_args[0])
 
     def start_masternodes(self):
         start_idx = len(self.nodes)
