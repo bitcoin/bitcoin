@@ -139,12 +139,11 @@ class ReserveDestination
 protected:
     //! The wallet to reserve from
     CWallet* const pwallet;
-    LegacyScriptPubKeyMan* m_spk_man{nullptr};
+    //! The ScriptPubKeyMan to reserve from. Based on type when GetReservedDestination is called
+    ScriptPubKeyMan* m_spk_man{nullptr};
     OutputType const type;
     //! The index of the address's key in the keypool
     int64_t nIndex{-1};
-    //! The public key for the address
-    CPubKey vchPubKey;
     //! The destination
     CTxDestination address;
     //! Whether this is from the internal (change output) keypool
