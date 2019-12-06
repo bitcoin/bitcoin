@@ -11,4 +11,4 @@ export DOCKER_PACKAGES="gcc-c++ libtool make git python3 python36-zmq"
 export PACKAGES="boost-devel libevent-devel libdb4-devel libdb4-cxx-devel miniupnpc-devel zeromq-devel qt5-qtbase-devel qt5-qttools-devel qrencode-devel"
 export NO_DEPENDS=1
 export GOAL="install"
-export BITCOIN_CONFIG="--enable-reduce-exports"
+export SYSCOIN_CONFIG="--enable-reduce-exports"
