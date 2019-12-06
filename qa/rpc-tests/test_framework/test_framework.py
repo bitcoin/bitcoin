@@ -14,6 +14,7 @@ import traceback
 from concurrent.futures import ThreadPoolExecutor
 from time import time, sleep
 
+from test_framework.mininode import wait_until
 from .util import (
     assert_equal,
     initialize_chain,
@@ -555,22 +556,29 @@ class DashTestFramework(BitcoinTestFramework):
         return self.wait_for_instantlock(txid, sender)
 
     def wait_for_instantlock(self, txid, node):
-        # wait for instantsend locks
-        start = time()
-        locked = False
-        while True:
+        def check_instantlock():
             try:
-                is_tx = node.getrawtransaction(txid, True)
-                if is_tx['instantlock']:
-                    locked = True
-                    break
+                return node.getrawtransaction(txid, True)["instantlock"]
             except:
-                # TX not received yet?
-                pass
-            if time() > start + 10:
-                break
-            sleep(0.5)
-        return locked
+                return False
+        return wait_until(check_instantlock, timeout=10, sleep=0.5)
+
+    def wait_for_chainlocked_block(self, node, block_hash, expected=True, timeout=15):
+        def check_chainlocked_block():
+            try:
+                block = node.getblock(block_hash)
+                return block["confirmations"] > 0 and block["chainlock"]
+            except:
+                return False
+        w = wait_until(check_chainlocked_block, timeout=timeout, sleep=0.1)
+        if not w and expected:
+            raise AssertionError("wait_for_chainlocked_block failed")
+        elif w and not expected:
+            raise AssertionError("waiting unexpectedly succeeded")
+
+    def wait_for_chainlocked_block_all_nodes(self, block_hash, timeout=15):
+        for node in self.nodes:
+            self.wait_for_chainlocked_block(node, block_hash, timeout=timeout)
 
     def wait_for_sporks_same(self, timeout=30):
         st = time()
