@@ -44,7 +44,9 @@ CQuorum::~CQuorum()
 {
     // most likely the thread is already done
     stopCachePopulatorThread = true;
-    if (cachePopulatorThread.joinable()) {
+    // watch out to not join the thread when we're called from inside the thread, which might happen on shutdown. This
+    // is because on shutdown the thread is the last owner of the shared CQuorum instance and thus the destroyer of it.
+    if (cachePopulatorThread.joinable() && cachePopulatorThread.get_id() != std::this_thread::get_id()) {
         cachePopulatorThread.join();
     }
 }
