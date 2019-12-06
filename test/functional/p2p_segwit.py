@@ -191,6 +191,7 @@ class SegWitTest(BitcoinTestFramework):
             ["-whitelist=127.0.0.1", "-acceptnonstdtxn=0", "-segwitheight={}".format(SEGWIT_HEIGHT)],
             ["-whitelist=127.0.0.1", "-acceptnonstdtxn=1", "-segwitheight=-1"]
         ]
+        self.supports_cli = False
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()

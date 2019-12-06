@@ -35,6 +35,7 @@ def call_with_auth(node, user, password):
 class HTTPBasicsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
+        self.supports_cli = False
 
     def setup_chain(self):
         super().setup_chain()
