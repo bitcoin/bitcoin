@@ -1,0 +1,20 @@
+# Vanilla configuration
+# Start with a minimal configuration that you can customize to build your code
+# http://superblocks.com/docs/configuration/configuration-introduction/#section=configuration
+
+version: 1
+jobs:
+  compile:
+    image: node
+    script:
+      - echo Hello world!
+  test:
+    image: node
+    script:
+      - echo Multiple Jobs can be defined the same way as single jobs
+      - echo http://superblocks.com/docs/configuration/configuration-introduction/#section=configuration
+stages:
+  - custom_sequence:
+      jobs:
+        - compile
+        - test
