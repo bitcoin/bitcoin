@@ -28,23 +28,9 @@ namespace Platform
             return *this;
         }
 
-        NfTokenRegTxBuilder & SetTokenOwnerKey(const json_spirit::Value & tokenOwnerAddress, NftRegSign nftRegSign, CKey & ownerPrivKey)
+        NfTokenRegTxBuilder & SetTokenOwnerKey(const json_spirit::Value & tokenOwnerAddress)
         {
-            if (nftRegSign == SelfSign)
-            {
-                ownerPrivKey = PullPrivKeyFromWallet(tokenOwnerAddress.get_str(), "nfTokenOwnerAddr");
-                m_nfToken.tokenOwnerKeyId = ownerPrivKey.GetPubKey().GetID();
-            }
-            else
-            {
-                m_nfToken.tokenOwnerKeyId = ParsePubKeyIDFromAddress(tokenOwnerAddress.get_str(), "nfTokenOwnerAddr");
-            }
-            return *this;
-        }
-
-        NfTokenRegTxBuilder & SetKeyToSign(const CKey & keyToSign)
-        {
-            m_keyToSign = keyToSign;
+            m_nfToken.tokenOwnerKeyId = ParsePubKeyIDFromAddress(tokenOwnerAddress.get_str(), "nfTokenOwnerAddr");
             return *this;
         }
 
@@ -80,7 +66,6 @@ namespace Platform
 
     private:
         NfToken m_nfToken;
-        CKey m_keyToSign;
     };
 }
 

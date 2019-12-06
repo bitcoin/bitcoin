@@ -15,6 +15,7 @@ namespace Platform
     std::string GetCommand(const json_spirit::Array & params, const std::string & errorMessage);
     std::string SignAndSendSpecialTx(const CMutableTransaction & tx);
 
+    CKey GetPrivKeyFromWallet(const CKeyID & keyId);
     CKey PullPrivKeyFromWallet(const std::string & strAddress, const std::string & paramName);
     CKey ParsePrivKeyOrAddress(const std::string & strKeyOrAddress, const std::string & paramName, bool allowAddresses = true);
     CKeyID ParsePubKeyIDFromAddress(const std::string & strAddress, const std::string & paramName);

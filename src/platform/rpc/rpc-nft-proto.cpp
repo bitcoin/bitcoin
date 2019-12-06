@@ -81,7 +81,7 @@ Arguments:
 4. "nftRegSign"              (numeric, optional) Defines who must sign an NFT registration transaction.
                              1 (SelfSign): every transaction should be signed by the NFT owner
                              2 (SignByCreator): every transaction should be signed by the owner/creator of the NFT protocol
-                             3 (SignAny): every transaction can be signed by any key
+                             3 (SignPayer): every transaction should be signed by a payer key
                              Default: SignByCreator
 5. "tokenMetadataMimeType"   (string, optional) MIME type describing metadata content type
                              Examples: application/json, text/plain, application/octet-stream etc. Default: text/plain

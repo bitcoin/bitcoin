@@ -31,6 +31,18 @@ namespace Platform
         return secret.GetKey();
     }
 
+    CKey GetPrivKeyFromWallet(const CKeyID & keyId)
+    {
+#ifdef ENABLE_WALLET
+        CKey key;
+        if (!keyId.IsNull() || !pwalletMain->GetKey(keyId, key))
+            throw std::runtime_error(strprintf("non-wallet or invalid address %s", keyId.ToString()));
+        return key;
+#else//ENABLE_WALLET
+        throw std::runtime_error("addresses not supported in no-wallet builds");
+#endif//ENABLE_WALLET
+    }
+
     CKey PullPrivKeyFromWallet(const std::string & strAddress, const std::string & paramName)
     {
         CBitcoinAddress address;

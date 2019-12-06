@@ -10,6 +10,7 @@
 #include "platform/specialtx.h"
 #include "nf-tokens-manager.h"
 #include "nf-token-reg-tx.h"
+#include "nft-protocols-manager.h"
 
 namespace Platform
 {
@@ -26,8 +27,35 @@ namespace Platform
         if (nfTokenRegTx.m_version != NfTokenRegTx::CURRENT_VERSION)
             return state.DoS(100, false, REJECT_INVALID, "bad-nf-token-reg-tx-version");
 
-        if (nfToken.tokenProtocolId == NfToken::UNKNOWN_TOKEN_PROTOCOL)
-            return state.DoS(10, false, REJECT_INVALID, "bad-nf-token-reg-tx-token-protocol");
+        if (!NftProtocolsManager::Instance().Contains(nfToken.tokenProtocolId, pindexLast->nHeight))
+            return state.DoS(10, false, REJECT_INVALID, "bad-nf-token-reg-tx-unknown-token-protocol");
+
+        auto nftProtoPtr = NftProtocolsManager::Instance().GetNftProtoIndex(nfToken.tokenProtocolId).NftProtoPtr();
+        CKeyID signerKeyId;
+        switch (nftProtoPtr->nftRegSign)
+        {
+        case SignByCreator:
+            signerKeyId = nftProtoPtr->tokenProtocolOwnerId;
+            break;
+        case SelfSign:
+            signerKeyId = nfToken.tokenOwnerKeyId;
+            break;
+        case SignPayer:
+        {
+            bool res = false;
+            CTxDestination payer;
+            if (!tx.vin.empty() && ExtractDestination(tx.vin[0].prevPubKey, payer)) {
+                CBitcoinAddress payerAddress(payer);
+                res = payerAddress.GetKeyID(signerKeyId);
+            }
+            if (!res) {
+                return state.DoS(10, false, REJECT_INVALID, "bad-nf-token-reg-tx-cant-get-payer-key");
+            }
+            break;
+        }
+        default:
+            return state.DoS(10, false, REJECT_INVALID, "bad-nf-token-reg-tx-unknown-nft-reg-sign");
+        }
 
         if (nfToken.tokenId.IsNull())
             return state.DoS(10, false, REJECT_INVALID, "bad-nf-token-reg-tx-token");
@@ -38,15 +66,13 @@ namespace Platform
         if (nfToken.metadataAdminKeyId.IsNull())
             return state.DoS(10, false, REJECT_INVALID, "bad-nf-token-reg-tx-metadata-admin-key-null");
 
-        //TODO: Validate metadata
-
         if (pindexLast != nullptr)
         {
             if (NfTokensManager::Instance().Contains(nfToken.tokenProtocolId, nfToken.tokenId, pindexLast->nHeight))
                 return state.DoS(10, false, REJECT_DUPLICATE, "bad-nf-token-reg-tx-dup-token");
         }
 
-        if (!CheckInputsHashAndSig(tx, nfTokenRegTx, nfTokenRegTx.GetNfToken().tokenOwnerKeyId, state))
+        if (!CheckInputsHashAndSig(tx, nfTokenRegTx, signerKeyId, state))
             return state.DoS(50, false, REJECT_INVALID, "bad-nf-token-reg-tx-invalid-signature");
 
         return true;

@@ -15,9 +15,9 @@ namespace Platform
     {
         SelfSign = 1,
         SignByCreator = 2,
-        SignAny = 3,
+        SignPayer = 3,
         NftRegSignMin = SelfSign,
-        NftRegSignMax = SignAny
+        NftRegSignMax = SignPayer
     };
 
     class NfTokenProtocol
@@ -49,7 +49,7 @@ namespace Platform
         bool isMetadataEmbedded{false};
 
         /// Defines who must sign an NFT registration transaction
-        uint8_t nftRegSign{static_cast<uint8_t>(NftRegSign::SignByCreator)};
+        uint8_t nftRegSign{static_cast<uint8_t>(SignByCreator)};
 
         /// Owner of the NF token protocol
         CKeyID tokenProtocolOwnerId;
@@ -85,7 +85,7 @@ namespace Platform
     isTokenImmutable = false;
     isTokenTransferable = false;
     isMetadataEmbedded = false;
-    nftRegSign = NftRegSign::SignAny;
+    nftRegSign = NftRegSign::SignPayer;
 
     tokenProtocolId = cks;
     tokenProtocolName = ercS21.kitts;
@@ -112,7 +112,7 @@ namespace Platform
     isTokenImmutable = true;
     isTokenTransferable = true;
     isMetadataEmbedded = true;
-    nftRegSign = NftRegSign::SignAny; */
+    nftRegSign = NftRegSign::SignPayer; */
 }
 
 #endif // CROWN_PLATFORM_NF_TOKEN_PROTOCOL_H
