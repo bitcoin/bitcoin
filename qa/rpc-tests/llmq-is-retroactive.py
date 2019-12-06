@@ -6,7 +6,7 @@
 from test_framework.mininode import *
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import sync_blocks, set_node_times, \
-    isolate_node, reconnect_isolated_node
+    isolate_node, reconnect_isolated_node, set_mocktime, get_mocktime
 
 '''
 llmq-is-retroactive.py
@@ -19,9 +19,9 @@ and by having a higher relay fee on nodes 4 and 5.
 '''
 
 class LLMQ_IS_RetroactiveSigning(DashTestFramework):
-    def set_test_params(self):
+    def __init__(self):
         # -whitelist is needed to avoid the trickling logic on node0
-        self.set_dash_test_params(6, 5, [["-whitelist=127.0.0.1"], [], [], [], ["-minrelaytxfee=0.001"], ["-minrelaytxfee=0.001"]], fast_dip3_enforcement=True)
+        super().__init__(6, 5, [["-whitelist=127.0.0.1"], [], [], [], ["-minrelaytxfee=0.001"], ["-minrelaytxfee=0.001"]], fast_dip3_enforcement=True)
 
     def run_test(self):
         while self.nodes[0].getblockchaininfo()["bip9_softforks"]["dip0008"]["status"] != "active":
@@ -45,8 +45,8 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         # 3 nodes should be enough to create an IS lock even if nodes 4 and 5 (which have no tx itself)
         # are the only "neighbours" in intra-quorum connections for one of them.
         self.wait_for_instantlock(txid, self.nodes[0])
-        self.bump_mocktime(1)
-        set_node_times(self.nodes, self.mocktime)
+        set_mocktime(get_mocktime() + 1)
+        set_node_times(self.nodes, get_mocktime())
         block = self.nodes[0].generate(1)[0]
         self.wait_for_chainlocked_block_all_nodes(block)
 
@@ -74,12 +74,12 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         rawtx = self.nodes[0].signrawtransaction(rawtx)['hex']
         txid = self.nodes[3].sendrawtransaction(rawtx)
         # Make node 3 consider the TX as safe
-        self.bump_mocktime(10 * 60 + 1)
-        set_node_times(self.nodes, self.mocktime)
+        set_mocktime(get_mocktime() + 10 * 60 + 1)
+        set_node_times(self.nodes, get_mocktime())
         block = self.nodes[3].generatetoaddress(1, self.nodes[0].getnewaddress())[0]
         reconnect_isolated_node(self.nodes[3], 0)
         self.wait_for_chainlocked_block_all_nodes(block)
-        self.nodes[0].setmocktime(self.mocktime)
+        self.nodes[0].setmocktime(get_mocktime())
 
         self.log.info("testing retroactive signing with partially known TX")
         isolate_node(self.nodes[3])
@@ -93,8 +93,8 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         # node 3 fully reconnected but the TX wasn't relayed to it, so there should be no IS lock
         self.wait_for_instantlock(txid, self.nodes[0], False, 5)
         # Make node0 consider the TX as safe
-        self.bump_mocktime(10 * 60 + 1)
-        set_node_times(self.nodes, self.mocktime)
+        set_mocktime(get_mocktime() + 10 * 60 + 1)
+        set_node_times(self.nodes, get_mocktime())
         block = self.nodes[0].generate(1)[0]
         self.wait_for_chainlocked_block_all_nodes(block)
 
@@ -114,7 +114,7 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
 
     def test_all_nodes_session_timeout(self, do_cycle_llmqs):
-        set_node_times(self.nodes, self.mocktime)
+        set_node_times(self.nodes, get_mocktime())
         isolate_node(self.nodes[3])
         rawtx = self.nodes[0].createrawtransaction([], {self.nodes[0].getnewaddress(): 1})
         rawtx = self.nodes[0].fundrawtransaction(rawtx)['hex']
@@ -127,8 +127,8 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         # Make sure signing is done on nodes 1 and 2 (it's async)
         time.sleep(5)
         # Make the signing session for the IS lock timeout on nodes 1-3
-        self.bump_mocktime(61)
-        set_node_times(self.nodes, self.mocktime)
+        set_mocktime(get_mocktime() + 61)
+        set_node_times(self.nodes, get_mocktime())
         time.sleep(2) # make sure Cleanup() is called
         reconnect_isolated_node(self.nodes[3], 0)
         self.wait_for_mnauth(self.nodes[3], 2)
@@ -138,13 +138,13 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
             self.cycle_llmqs()
             self.wait_for_instantlock(txid, self.nodes[0], False, 5)
         # Make node 0 consider the TX as safe
-        self.bump_mocktime(10 * 60 + 1)
-        self.nodes[0].setmocktime(self.mocktime)
+        set_mocktime(get_mocktime() + 10 * 60 + 1)
+        self.nodes[0].setmocktime(get_mocktime())
         block = self.nodes[0].generate(1)[0]
         self.wait_for_chainlocked_block_all_nodes(block)
 
     def test_single_node_session_timeout(self, do_cycle_llmqs):
-        set_node_times(self.nodes, self.mocktime)
+        set_node_times(self.nodes, get_mocktime())
         isolate_node(self.nodes[3])
         rawtx = self.nodes[0].createrawtransaction([], {self.nodes[0].getnewaddress(): 1})
         rawtx = self.nodes[0].fundrawtransaction(rawtx)['hex']
@@ -152,8 +152,8 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         txid = self.nodes[3].sendrawtransaction(rawtx)
         time.sleep(2) # make sure signing is done on node 2 (it's async)
         # Make the signing session for the IS lock timeout on node 3
-        self.bump_mocktime(61)
-        set_node_times(self.nodes, self.mocktime)
+        set_mocktime(get_mocktime() + 61)
+        set_node_times(self.nodes, get_mocktime())
         time.sleep(2) # make sure Cleanup() is called
         reconnect_isolated_node(self.nodes[3], 0)
         self.wait_for_mnauth(self.nodes[3], 2)
@@ -169,8 +169,8 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
             self.cycle_llmqs()
             self.wait_for_instantlock(txid, self.nodes[0], False, 5)
         # Make node 0 consider the TX as safe
-        self.bump_mocktime(10 * 60 + 1)
-        self.nodes[0].setmocktime(self.mocktime)
+        set_mocktime(get_mocktime() + 10 * 60 + 1)
+        self.nodes[0].setmocktime(get_mocktime())
         block = self.nodes[0].generate(1)[0]
         self.wait_for_chainlocked_block_all_nodes(block)
 
