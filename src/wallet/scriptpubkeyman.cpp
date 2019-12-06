@@ -263,22 +263,17 @@ bool LegacyScriptPubKeyMan::EncryptKeys(CKeyingMaterial& vMasterKeyIn)
     return true;
 }
 
-bool LegacyScriptPubKeyMan::GetReservedDestination(bool internal, int64_t& index, CKeyPool& keypool)
+bool LegacyScriptPubKeyMan::GetReservedDestination(bool internal, CTxDestination& address, int64_t& index, CKeyPool& keypool)
 {
+    if (!CanGetAddresses(internal)) {
+        return false;
+    }
+
     if (!ReserveKeyFromKeyPool(index, keypool, internal)) {
         return false;
     }
+    address = keypool.vchPubKey.GetID();
     return true;
-}
-
-void LegacyScriptPubKeyMan::KeepDestination(int64_t index)
-{
-    KeepKey(index);
-}
-
-void LegacyScriptPubKeyMan::ReturnDestination(int64_t index, bool internal, const CPubKey& pubkey)
-{
-    ReturnKey(index, internal, pubkey);
 }
 
 void LegacyScriptPubKeyMan::MarkUnusedAddresses(WalletBatch &batch, const CScript& script, const uint256& hashBlock)
@@ -1447,7 +1442,7 @@ void LegacyScriptPubKeyMan::AddKeypoolPubkeyWithDB(const CPubKey& pubkey, const 
     m_pool_key_to_index[pubkey.GetID()] = index;
 }
 
-void LegacyScriptPubKeyMan::KeepKey(int64_t nIndex)
+void LegacyScriptPubKeyMan::KeepDestination(int64_t nIndex)
 {
     // Remove from key pool
     {
@@ -1457,11 +1452,16 @@ void LegacyScriptPubKeyMan::KeepKey(int64_t nIndex)
             --m_wallet.nKeysLeftSinceAutoBackup;
         if (!nWalletBackups)
             m_wallet.nKeysLeftSinceAutoBackup = 0;
+
+        CPubKey pubkey;
+        bool have_pk = GetPubKey(m_index_to_reserved_key.at(nIndex), pubkey);
+        assert(have_pk);
+        m_index_to_reserved_key.erase(nIndex);
     }
     WalletLogPrintf("keypool keep %d\n", nIndex);
 }
 
-void LegacyScriptPubKeyMan::ReturnKey(int64_t nIndex, bool fInternal, const CPubKey& pubkey)
+void LegacyScriptPubKeyMan::ReturnDestination(int64_t nIndex, bool fInternal, const CTxDestination&)
 {
     // Return to key pool
     {
@@ -1471,7 +1471,9 @@ void LegacyScriptPubKeyMan::ReturnKey(int64_t nIndex, bool fInternal, const CPub
         } else {
             setExternalKeyPool.insert(nIndex);
         }
-        m_pool_key_to_index[pubkey.GetID()] = nIndex;
+        CKeyID& pubkey_id = m_index_to_reserved_key.at(nIndex);
+        m_pool_key_to_index[pubkey_id] = nIndex;
+        m_index_to_reserved_key.erase(nIndex);
         NotifyCanGetAddressesChanged();
     }
     WalletLogPrintf("keypool return %d\n", nIndex);
@@ -1494,7 +1496,7 @@ bool LegacyScriptPubKeyMan::GetKeyFromPool(CPubKey& result, bool internal)
             result = GenerateNewKey(batch, 0, internal);
             return true;
         }
-        KeepKey(nIndex);
+        KeepDestination(nIndex);
         result = keypool.vchPubKey;
     }
     return true;
@@ -1536,6 +1538,8 @@ bool LegacyScriptPubKeyMan::ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& key
             throw std::runtime_error(std::string(__func__) + ": keypool entry invalid");
         }
 
+        assert(m_index_to_reserved_key.count(nIndex) == 0);
+        m_index_to_reserved_key[nIndex] = keypool.vchPubKey.GetID();
         m_pool_key_to_index.erase(keypool.vchPubKey.GetID());
         WalletLogPrintf("keypool reserve %d\n", nIndex);
     }
