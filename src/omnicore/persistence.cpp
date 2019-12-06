@@ -141,7 +141,7 @@ static int write_mp_accepts(std::ofstream& file, SHA256_CTX* shaCtx)
         std::vector<std::string> vstr;
         boost::split(vstr, iter->first, boost::is_any_of("-+"), boost::token_compress_on);
         const CMPAccept& accept = iter->second;
-        accept.saveAccept(file, shaCtx, vstr[0], vstr[1]);
+        accept.saveAccept(file, shaCtx, vstr[0], vstr[2]);
     }
 
     return 0;

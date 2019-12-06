@@ -174,7 +174,6 @@ static void UnlockCoins(
         iWallet->unlockCoin(output);
     }
 }
-#endif
 
 /**
  * Creates and sends a raw transaction by selecting all coins from the sender
@@ -188,7 +187,6 @@ int CreateFundedTransaction(
         uint256& retTxid,
         interfaces::Wallet* iWallet)
 {
-#ifdef ENABLE_WALLET
     if (!iWallet) {
         return MP_ERR_WALLET_ACCESS;
     }
@@ -367,8 +365,62 @@ int CreateFundedTransaction(
     retTxid = txid;
 
     return 0;
-#else
-    return MP_ERR_WALLET_ACCESS;
-#endif
-
 }
+
+/**
+ * Used by the omni_senddexpay RPC call to creates and send a
+ * transaction to pay for an accepted offer on the traditional DEx.
+ */
+int CreateDExTransaction(interfaces::Wallet* pwallet, const std::string& buyerAddress, const std::string& sellerAddress, const CAmount& nAmount, uint256& txid)
+{
+    if (!pwallet) {
+        return MP_ERR_WALLET_ACCESS;
+    }
+
+    // Set the change address to the sender
+    CCoinControl coinControl;
+    coinControl.destChange = DecodeDestination(buyerAddress);
+
+    // Create scripts for outputs
+    CScript exodus = GetScriptForDestination(ExodusAddress());
+    CScript destScript = GetScriptForDestination(DecodeDestination(sellerAddress));
+
+    // Calculate dust for Exodus output
+    CAmount dust = OmniGetDustThreshold(exodus);
+
+    // Select the inputs required to cover amount, dust and fees
+    if (0 > mastercore::SelectCoins(*pwallet, buyerAddress, coinControl, nAmount + dust)) {
+        return MP_INPUTS_INVALID;
+    }
+
+    // Make sure that we have inputs selected.
+    if (!coinControl.HasSelected()) {
+        return MP_ERR_INPUTSELECT_FAIL;
+    }
+
+    // Create CRecipients for outputs
+    std::vector<CRecipient> vecRecipients;
+    vecRecipients.push_back({exodus, dust, false}); // Exodus
+    vecRecipients.push_back({destScript, nAmount, false}); // Seller
+
+    // Ask the wallet to create the transaction (note mining fee determined by Bitcoin Core params)
+    CAmount nFeeRet = 0;
+    int nChangePosInOut = -1;
+    std::string strFailReason;
+    auto wtxNew = pwallet->createTransaction(vecRecipients, coinControl, true /* sign */, nChangePosInOut, nFeeRet, strFailReason, false);
+
+    if (!wtxNew) {
+        return MP_ERR_CREATE_TX;
+    }
+
+    // Commit the transaction to the wallet and broadcast
+    std::string rejectReason;
+    if (!wtxNew->commit({}, {}, rejectReason)) {
+        return MP_ERR_COMMIT_TX;
+    }
+
+    txid = wtxNew->get().GetHash();
+
+    return 0;
+}
+#endif

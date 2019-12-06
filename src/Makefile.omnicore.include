@@ -71,7 +71,6 @@ OMNICORE_CPP = \
   omnicore/rpcpayload.cpp \
   omnicore/rpcrawtx.cpp \
   omnicore/rpcrequirements.cpp \
-  omnicore/rpctx.cpp \
   omnicore/rpctxobject.cpp \
   omnicore/rpcvalues.cpp \
   omnicore/rules.cpp \
@@ -88,6 +87,10 @@ OMNICORE_CPP = \
   omnicore/walletfetchtxs.cpp \
   omnicore/wallettxbuilder.cpp \
   omnicore/walletutils.cpp
+
+if ENABLE_WALLET
+OMNICORE_CPP += omnicore/rpctx.cpp
+endif
 
 libbitcoin_server_a_SOURCES += \
   $(OMNICORE_CPP) \
