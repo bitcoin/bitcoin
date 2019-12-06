@@ -4,6 +4,7 @@
 
 #include "platform/nf-token/nf-token-protocol.h"
 #include "platform/nf-token/nft-protocol-reg-tx-builder.h"
+#include "platform/nf-token/nft-protocols-manager.h"
 #include "primitives/transaction.h"
 #include "platform/specialtx.h"
 #include "platform/platform-utils.h"
@@ -113,13 +114,60 @@ Examples:
 
     }
 
+    json_spirit::Object BuildNftProtoRecord(const NftProtoIndex & nftProtoIndex)
+    {
+        json_spirit::Object protoJsonObj;
+
+        protoJsonObj.push_back(json_spirit::Pair("blockHash", nftProtoIndex.BlockIndex()->phashBlock->ToString()));
+        protoJsonObj.push_back(json_spirit::Pair("registrationTxHash", nftProtoIndex.RegTxHash().ToString()));
+        protoJsonObj.push_back(json_spirit::Pair("height", nftProtoIndex.BlockIndex()->nHeight));
+        //auto blockTime = static_cast<time_t>(nftProtoIndex.BlockIndex()->nTime);
+        //std::string timeStr(asctime(gmtime(&blockTime)));
+        //protoJsonObj.push_back(json_spirit::Pair("timestamp", timeStr));
+        protoJsonObj.push_back(json_spirit::Pair("timestamp", nftProtoIndex.BlockIndex()->GetBlockTime()));
+
+        protoJsonObj.push_back(json_spirit::Pair("nftProtocolId", ProtocolName{nftProtoIndex.NftProtoPtr()->tokenProtocolId}.ToString()));
+        protoJsonObj.push_back(json_spirit::Pair("tokenProtocolName", nftProtoIndex.NftProtoPtr()->tokenProtocolName));
+        protoJsonObj.push_back(json_spirit::Pair("tokenMetadataSchemaUri", nftProtoIndex.NftProtoPtr()->tokenMetadataSchemaUri));
+        protoJsonObj.push_back(json_spirit::Pair("tokenMetadataMimeType", nftProtoIndex.NftProtoPtr()->tokenMetadataMimeType));
+        protoJsonObj.push_back(json_spirit::Pair("isTokenTransferable", nftProtoIndex.NftProtoPtr()->isTokenTransferable));
+        protoJsonObj.push_back(json_spirit::Pair("isTokenImmutable", nftProtoIndex.NftProtoPtr()->isTokenImmutable));
+        protoJsonObj.push_back(json_spirit::Pair("isMetadataEmbedded", nftProtoIndex.NftProtoPtr()->isMetadataEmbedded));
+        protoJsonObj.push_back(json_spirit::Pair("nftRegSign", nftProtoIndex.NftProtoPtr()->nftRegSign);
+        protoJsonObj.push_back(json_spirit::Pair("tokenProtocolOwnerId", CBitcoinAddress(nftProtoIndex.NftProtoPtr()->tokenProtocolOwnerId).ToString()));
+
+        return protoJsonObj;
+    }
+
+
     json_spirit::Value GetNftProtocol(const json_spirit::Array& params, bool fHelp)
     {
+        if (fHelp || params.size() != 2)
+            GetNftProtocolHelp();
 
+        uint64_t tokenProtocolId = StringToProtocolName(params[1].get_str().c_str());
+
+        auto nftProtoIndex = NftProtocolsManager::Instance().GetNftProtoIndex(tokenProtocolId);
+        if (nftProtoIndex.IsNull())
+            throw std::runtime_error("Can't find an NFT protocol record: " + params[1].get_str());
+
+        return BuildNftProtoRecord(nftProtoIndex);
     }
 
     void GetNftProtocolHelp()
     {
+        static std::string helpMessage =
+                R"(nftproto get
+Get an NFT protocol record by an NFT protocol ID
+Arguments:
 
+1. "nfTokenProtocol"  (string, required) The non-fungible token protocol symbol of the registered token record
+                      The protocol name must be valid and registered previously.
+Examples:
+)"
++ HelpExampleCli("nftoken", R"(get "doc")")
++ HelpExampleRpc("nftoken", R"(get "cks")");
+
+        throw std::runtime_error(helpMessage);
     }
 }

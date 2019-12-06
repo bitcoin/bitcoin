@@ -191,7 +191,6 @@ List the most recent 20 NFT records
         nftJsonObj.push_back(json_spirit::Pair("nftOwnerKeyId", CBitcoinAddress(nftIndex.NfTokenPtr()->tokenOwnerKeyId).ToString()));
         nftJsonObj.push_back(json_spirit::Pair("metadataAdminKeyId", CBitcoinAddress(nftIndex.NfTokenPtr()->metadataAdminKeyId).ToString()));
 
-        //TODO: mimetype text/plan only for now
         std::string textMeta(nftIndex.NfTokenPtr()->metadata.begin(), nftIndex.NfTokenPtr()->metadata.end());
         nftJsonObj.push_back(json_spirit::Pair("metadata", textMeta));
 
@@ -286,7 +285,7 @@ Examples:
 
         auto nftIndex = NfTokensManager::Instance().GetNfTokenIndex(tokenProtocolId, tokenId);
         if (nftIndex.IsNull())
-            throw std::runtime_error("Can't find an NFT record: " + std::to_string(tokenProtocolId) + " " + tokenId.ToString());
+            throw std::runtime_error("Can't find an NFT record: " + params[1].get_str() + " " + tokenId.ToString());
 
         return BuildNftRecord(nftIndex);
     }
