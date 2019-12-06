@@ -697,11 +697,10 @@ BOOST_AUTO_TEST_CASE(generate_assetallocationmint)
     string newaddress = GetNewFundedAddress("node1");
     string amount = "1.5";
     string assetguid = AssetNew("node1", newaddress, "pubdata", "0xfbf4411309e690a6209b7f0d70ea304f8b40ac20");
-    int bridgetransferid = 0;
-    AssetAllocationMint("node1", assetguid, newaddress, amount, height, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes, bridgetransferid);
+    AssetAllocationMint("node1", assetguid, newaddress, amount, height, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes);
     
     // try to mint again
-    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationmint" , assetguid + ",\"" + newaddress + "\"," + amount + "," + itostr(height) + ",\"" + spv_tx_value + "\",\"a0" + spv_tx_root + "\",\"" + spv_tx_parent_nodes + "\",\"" + spv_tx_path + "\",\"" + spv_receipt_value + "\",\"a0" + spv_receipt_root + "\",\"" + spv_receipt_parent_nodes +  "\"," + itostr(bridgetransferid) + ",\"''\""));
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "assetallocationmint" , assetguid + ",\"" + newaddress + "\"," + amount + "," + itostr(height) + ",\"" + spv_tx_value + "\",\"a0" + spv_tx_root + "\",\"" + spv_tx_parent_nodes + "\",\"" + spv_tx_path + "\",\"" + spv_receipt_value + "\",\"a0" + spv_receipt_root + "\",\"" + spv_receipt_parent_nodes +  "\",\"''\""));
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "signrawtransactionwithwallet" , "\""  + find_value(r.get_obj(), "hex").get_str() + "\""));
     string hex_str = find_value(r.get_obj(), "hex").get_str();
     // should fail: already minted with that block+txindex tuple
@@ -709,7 +708,7 @@ BOOST_AUTO_TEST_CASE(generate_assetallocationmint)
 
     // increase time by 1 week and assetallocationmint should throw
 	SleepFor(604800 * 1000);
-	BOOST_CHECK_THROW(r = CallExtRPC("node1", "assetallocationmint" , assetguid + ",\"" + newaddress + "\"," + amount + "," + itostr(height) + ",\"" + spv_tx_value + "\",\"a0" + spv_tx_root + "\",\"" + spv_tx_parent_nodes + "\",\"" + spv_tx_path + "\",\"" + spv_receipt_value + "\",\"a0" + spv_receipt_root + "\",\"" + spv_receipt_parent_nodes +  "\"," + itostr(bridgetransferid) + ",\"''\""), runtime_error);
+	BOOST_CHECK_THROW(r = CallExtRPC("node1", "assetallocationmint" , assetguid + ",\"" + newaddress + "\"," + amount + "," + itostr(height) + ",\"" + spv_tx_value + "\",\"a0" + spv_tx_root + "\",\"" + spv_tx_parent_nodes + "\",\"" + spv_tx_path + "\",\"" + spv_receipt_value + "\",\"a0" + spv_receipt_root + "\",\"" + spv_receipt_parent_nodes +  "\",\"''\""), runtime_error);
 }
 BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset)
 {

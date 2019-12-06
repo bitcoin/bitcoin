@@ -72,7 +72,7 @@ public:
         return Exists(ethTxid);
     } 
     bool ReadEthTx(const uint32_t &nBridgeTransferID, std::vector<unsigned char> &ethTxid) {
-        return Read(nBridgeTransferID, sysTxid);
+        return Read(nBridgeTransferID, ethTxid);
     } 
     bool ReadSysTx(const std::vector<unsigned char> &ethTxid, uint256 &sysTxid) {
         return Read(ethTxid, sysTxid);

@@ -726,7 +726,7 @@ string SyscoinBurn(const string& node, const string& address, const string& asse
 	string txid = find_value(r.get_obj(), "txid").get_str();
 	return txid;
 }
-string AssetAllocationMint(const string& node, const string& asset, const string& address, const string& amount, int height, const string& tx_hex, const string& txroot_hex, const string& txmerkleproof_hex, const string& txmerkleproofpath_hex, const string& receipt_hex, const string& receiptroot_hex, const string& receiptmerkleproof_hex, const int &bridgetransferid, const string& witness)
+string AssetAllocationMint(const string& node, const string& asset, const string& address, const string& amount, int height, const string& tx_hex, const string& txroot_hex, const string& txmerkleproof_hex, const string& txmerkleproofpath_hex, const string& receipt_hex, const string& receiptroot_hex, const string& receiptmerkleproof_hex, const string& witness)
 {
     string otherNode1, otherNode2;
     GetOtherNodes(node, otherNode1, otherNode2);
@@ -762,8 +762,8 @@ string AssetAllocationMint(const string& node, const string& asset, const string
     }   
 	// increase time by 1 hour
 	SleepFor(3600 * 1000);
-    // "assetallocationmint [asset] [address] [amount] [blocknumber] [tx_hex] [txroot_hex] [txmerkleproof_hex] [txmerkleroofpath_hex] [receipt_hex] [receiptroot_hex] [receiptmerkleproof_hex] [bridgetransferid] [witness]\n"
-    BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "assetallocationmint", asset + ",\"" + address + "\"," + amount + "," + itostr(height) + ",\"" + tx_hex + "\",\"a0" + txroot_hex + "\",\"" + txmerkleproof_hex + "\",\"" + txmerkleproofpath_hex + "\",\"" + receipt_hex + "\",\"a0" + receiptroot_hex + "\",\"" + receiptmerkleproof_hex +  "\",\"" + "\"," + itostr(bridgetransferid) +  ",\"" + witness + "\""));
+    // "assetallocationmint [asset] [address] [amount] [blocknumber] [tx_hex] [txroot_hex] [txmerkleproof_hex] [txmerkleroofpath_hex] [receipt_hex] [receiptroot_hex] [receiptmerkleproof_hex] [witness]\n"
+    BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "assetallocationmint", asset + ",\"" + address + "\"," + amount + "," + itostr(height) + ",\"" + tx_hex + "\",\"a0" + txroot_hex + "\",\"" + txmerkleproof_hex + "\",\"" + txmerkleproofpath_hex + "\",\"" + receipt_hex + "\",\"a0" + receiptroot_hex + "\",\"" + receiptmerkleproof_hex +  "\",\"" + "\",\"" + witness + "\""));
     BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "signrawtransactionwithwallet", "\"" +  find_value(r.get_obj(), "hex").get_str() + "\""));
     string hex_str = find_value(r.get_obj(), "hex").get_str();
    
@@ -775,8 +775,8 @@ string AssetAllocationMint(const string& node, const string& asset, const string
     BOOST_CHECK_EQUAL(nAmountBefore+AmountFromValue(amount) , nAmountAfter);
 
 	// lookup by sys tx from bridge transfer id
-	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "syscoincheckmint", "\"" + itostr(bridgetransferid) + "\""));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "in_active_chain").get_bool(), true);
+	/*BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "syscoincheckmint", "\"" + itostr(bridgetransferid) + "\""));
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "in_active_chain").get_bool(), true);*/
     return hex_str;
 }
 bool FindAssetGUIDFromAssetIndexResults(const UniValue& results, std::string guid){
