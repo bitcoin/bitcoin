@@ -912,8 +912,7 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request)
     RPCHelpMan{"syscoingetspvproof",
     "\nReturns SPV proof for use with inter-chain transfers.\n",
     {
-        {"txid", RPCArg::Type::STR, RPCArg::Optional::NO, "A transaction that is in the block"},
-        {"blockhash", RPCArg::Type::STR, "\"\"", "Block containing txid"}
+        {"txid", RPCArg::Type::STR, RPCArg::Optional::NO, "A transaction that is in the block"}
     },
     RPCResult{
     "\"proof\"         (string) JSON representation of merkle proof (transaction index, siblings and block header and some other information useful for moving coins/assets to another chain)\n"
@@ -927,8 +926,6 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request)
     UniValue res(UniValue::VOBJ);
     uint256 txhash = ParseHashV(request.params[0], "parameter 1");
     uint256 blockhash;
-    if(request.params.size() > 1)
-        blockhash = ParseHashV(request.params[1], "parameter 2");
     if(!pblockindexdb->ReadBlockHash(txhash, blockhash))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found in asset index");
     
@@ -958,6 +955,7 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request)
     ssBlock << pblockindex->GetBlockHeader(Params().GetConsensus());
     const std::string &rawTx = EncodeHexTx(CTransaction(*tx), PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
     res.__pushKV("transaction",rawTx);
+    res.__pushKV("blockhash", blockhash.GetHex());
     // get first 80 bytes of header (non auxpow part)
     res.__pushKV("header", HexStr(ssBlock.begin(), ssBlock.begin()+80));
     UniValue siblings(UniValue::VARR);
@@ -1463,7 +1461,7 @@ static const CRPCCommand commands[] =
     //  --------------------- ------------------------          -----------------------         ----------
     { "syscoin",            "syscoingettxroots",                &syscoingettxroots,             {"height"} },
     { "syscoin",            "getblockhashbytxid",               &getblockhashbytxid,            {"txid"} },
-    { "syscoin",            "syscoingetspvproof",               &syscoingetspvproof,            {"txid","blockhash"} },
+    { "syscoin",            "syscoingetspvproof",               &syscoingetspvproof,            {"txid"} },
     { "syscoin",            "convertaddress",                   &convertaddress,                {"address"} },
     { "syscoin",            "syscoindecoderawtransaction",      &syscoindecoderawtransaction,   {}},
     { "syscoin",            "addressbalance",                   &addressbalance,                {}},
