@@ -545,7 +545,6 @@ bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, UniValue &
         oSPVProofObj.__pushKV("receiptparentnodes", HexStr(mintsyscoin.vchReceiptParentNodes)); 
         oSPVProofObj.__pushKV("receiptroot", HexStr(mintsyscoin.vchReceiptRoot)); 
         oSPVProofObj.__pushKV("ethblocknumber", mintsyscoin.nBlockNumber); 
-        oSPVProofObj.__pushKV("bridgetransferid", mintsyscoin.nBridgeTransferID);
         entry.__pushKV("spv_proof", oSPVProofObj); 
         return true;
     } 
@@ -581,7 +580,6 @@ bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, const CMin
         oSPVProofObj.__pushKV("receiptparentnodes", HexStr(mintsyscoin.vchReceiptParentNodes)); 
         oSPVProofObj.__pushKV("receiptroot", HexStr(mintsyscoin.vchReceiptRoot)); 
         oSPVProofObj.__pushKV("ethblocknumber", mintsyscoin.nBlockNumber);
-        oSPVProofObj.__pushKV("bridgetransferid", mintsyscoin.nBridgeTransferID);
         entry.__pushKV("spv_proof", oSPVProofObj); 
         return true;                                        
     } 
