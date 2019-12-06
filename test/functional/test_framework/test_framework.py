@@ -699,26 +699,37 @@ class DashTestFramework(BitcoinTestFramework):
         ret = {**decoded, **ret}
         return ret
 
-    def wait_for_instantlock(self, txid, node):
+    def wait_for_tx(self, txid, node, expected=True, timeout=15):
+        def check_tx():
+            try:
+                return node.getrawtransaction(txid)
+            except:
+                return False
+        if wait_until(check_tx, timeout=timeout, sleep=0.5, do_assert=expected) and not expected:
+            raise AssertionError("waiting unexpectedly succeeded")
+
+    def wait_for_instantlock(self, txid, node, expected=True, timeout=15):
         def check_instantlock():
             try:
                 return node.getrawtransaction(txid, True)["instantlock"]
             except:
                 return False
-        wait_until(check_instantlock, timeout=10, sleep=0.5)
+        if wait_until(check_instantlock, timeout=timeout, sleep=0.5, do_assert=expected) and not expected:
+            raise AssertionError("waiting unexpectedly succeeded")
 
-    def wait_for_chainlocked_block(self, node, block_hash, timeout=15):
+    def wait_for_chainlocked_block(self, node, block_hash, expected=True, timeout=15):
         def check_chainlocked_block():
             try:
                 block = node.getblock(block_hash)
                 return block["confirmations"] > 0 and block["chainlock"]
             except:
                 return False
-        wait_until(check_chainlocked_block, timeout=timeout, sleep=0.1)
+        if wait_until(check_chainlocked_block, timeout=timeout, sleep=0.1, do_assert=expected) and not expected:
+            raise AssertionError("waiting unexpectedly succeeded")
 
     def wait_for_chainlocked_block_all_nodes(self, block_hash, timeout=15):
         for node in self.nodes:
-            self.wait_for_chainlocked_block(node, block_hash, timeout)
+            self.wait_for_chainlocked_block(node, block_hash, timeout=timeout)
 
     def wait_for_best_chainlock(self, node, block_hash, timeout=15):
         wait_until(lambda: node.getbestchainlock()["blockhash"] == block_hash, timeout=timeout, sleep=0.1)
@@ -845,6 +856,17 @@ class DashTestFramework(BitcoinTestFramework):
         self.log.info("New quorum: height=%d, quorumHash=%s, minedBlock=%s" % (quorum_info["height"], new_quorum, quorum_info["minedBlock"]))
 
         return new_quorum
+
+    def wait_for_mnauth(self, node, count, timeout=10):
+        def test():
+            pi = node.getpeerinfo()
+            c = 0
+            for p in pi:
+                if "verified_proregtx_hash" in p and p["verified_proregtx_hash"] != "":
+                    c += 1
+            return c >= count
+        wait_until(test, timeout=timeout)
+
 
 class ComparisonTestFramework(BitcoinTestFramework):
     """Test framework for doing p2p comparison testing

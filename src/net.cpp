@@ -716,6 +716,11 @@ void CNode::copyStats(CNodeStats &stats)
     // Leave string empty if addrLocal invalid (not filled in yet)
     CService addrLocalUnlocked = GetAddrLocal();
     stats.addrLocal = addrLocalUnlocked.IsValid() ? addrLocalUnlocked.ToString() : "";
+
+    {
+        LOCK(cs_mnauth);
+        X(verifiedProRegTxHash);
+    }
 }
 #undef X
 

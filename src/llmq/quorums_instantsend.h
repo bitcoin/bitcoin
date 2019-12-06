@@ -120,7 +120,7 @@ public:
     void InterruptWorkerThread();
 
 public:
-    bool ProcessTx(const CTransaction& tx, const Consensus::Params& params);
+    bool ProcessTx(const CTransaction& tx, bool allowReSigning, const Consensus::Params& params);
     bool CheckCanLock(const CTransaction& tx, bool printDebug, const Consensus::Params& params);
     bool CheckCanLock(const COutPoint& outpoint, bool printDebug, const uint256& txHash, CAmount* retValue, const Consensus::Params& params);
     bool IsLocked(const uint256& txHash);
@@ -141,7 +141,7 @@ public:
     void ProcessInstantSendLock(NodeId from, const uint256& hash, const CInstantSendLock& islock);
     void UpdateWalletTransaction(const CTransactionRef& tx, const CInstantSendLock& islock);
 
-    void ProcessNewTransaction(const CTransactionRef& tx, const CBlockIndex* pindex);
+    void ProcessNewTransaction(const CTransactionRef& tx, const CBlockIndex* pindex, bool allowReSigning);
     void TransactionAddedToMempool(const CTransactionRef& tx);
     void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex, const std::vector<CTransactionRef>& vtxConflicted);
     void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected);

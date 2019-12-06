@@ -371,7 +371,7 @@ void CInstantSendManager::InterruptWorkerThread()
     workInterrupt();
 }
 
-bool CInstantSendManager::ProcessTx(const CTransaction& tx, const Consensus::Params& params)
+bool CInstantSendManager::ProcessTx(const CTransaction& tx, bool allowReSigning, const Consensus::Params& params)
 {
     if (!IsInstantSendEnabled()) {
         return true;
@@ -441,7 +441,7 @@ bool CInstantSendManager::ProcessTx(const CTransaction& tx, const Consensus::Par
             return false;
         }
     }
-    if (alreadyVotedCount == ids.size()) {
+    if (!allowReSigning && alreadyVotedCount == ids.size()) {
         LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s: already voted on all inputs, bailing out\n", __func__,
                  tx.GetHash().ToString());
         return true;
@@ -454,9 +454,9 @@ bool CInstantSendManager::ProcessTx(const CTransaction& tx, const Consensus::Par
         auto& in = tx.vin[i];
         auto& id = ids[i];
         inputRequestIds.emplace(id);
-        LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s: trying to vote on input %s with id %s\n", __func__,
-                 tx.GetHash().ToString(), in.prevout.ToStringShort(), id.ToString());
-        if (quorumSigningManager->AsyncSignIfMember(llmqType, id, tx.GetHash())) {
+        LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s: trying to vote on input %s with id %s. allowReSigning=%d\n", __func__,
+                 tx.GetHash().ToString(), in.prevout.ToStringShort(), id.ToString(), allowReSigning);
+        if (quorumSigningManager->AsyncSignIfMember(llmqType, id, tx.GetHash(), allowReSigning)) {
             LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s: voted on input %s with id %s\n", __func__,
                       tx.GetHash().ToString(), in.prevout.ToStringShort(), id.ToString());
         }
@@ -961,7 +961,7 @@ void CInstantSendManager::UpdateWalletTransaction(const CTransactionRef& tx, con
     mempool.AddTransactionsUpdated(1);
 }
 
-void CInstantSendManager::ProcessNewTransaction(const CTransactionRef& tx, const CBlockIndex* pindex)
+void CInstantSendManager::ProcessNewTransaction(const CTransactionRef& tx, const CBlockIndex* pindex, bool allowReSigning)
 {
     if (!IsInstantSendEnabled()) {
         return;
@@ -989,7 +989,7 @@ void CInstantSendManager::ProcessNewTransaction(const CTransactionRef& tx, const
 
     bool chainlocked = pindex && chainLocksHandler->HasChainLock(pindex->nHeight, pindex->GetBlockHash());
     if (islockHash.IsNull() && !chainlocked) {
-        ProcessTx(*tx, Params().GetConsensus());
+        ProcessTx(*tx, allowReSigning, Params().GetConsensus());
     }
 
     LOCK(cs);
@@ -1004,7 +1004,7 @@ void CInstantSendManager::ProcessNewTransaction(const CTransactionRef& tx, const
 
 void CInstantSendManager::TransactionAddedToMempool(const CTransactionRef& tx)
 {
-    ProcessNewTransaction(tx, nullptr);
+    ProcessNewTransaction(tx, nullptr, false);
 }
 
 void CInstantSendManager::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex, const std::vector<CTransactionRef>& vtxConflicted)
@@ -1021,7 +1021,7 @@ void CInstantSendManager::BlockConnected(const std::shared_ptr<const CBlock>& pb
     }
 
     for (const auto& tx : pblock->vtx) {
-        ProcessNewTransaction(tx, pindex);
+        ProcessNewTransaction(tx, pindex, true);
     }
 }
 
@@ -1400,7 +1400,7 @@ bool CInstantSendManager::ProcessPendingRetryLockTxs()
                      tx->GetHash().ToString());
         }
 
-        ProcessTx(*tx, Params().GetConsensus());
+        ProcessTx(*tx, false, Params().GetConsensus());
         retryCount++;
     }
 

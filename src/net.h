@@ -694,6 +694,8 @@ public:
     CAddress addr;
     // Bind address of our side of the connection
     CAddress addrBind;
+    // In case this is a verified MN, this value is the proTx of the MN
+    uint256 verifiedProRegTxHash;
 };
 
 

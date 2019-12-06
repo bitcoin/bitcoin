@@ -170,7 +170,7 @@ public:
     void RegisterRecoveredSigsListener(CRecoveredSigsListener* l);
     void UnregisterRecoveredSigsListener(CRecoveredSigsListener* l);
 
-    bool AsyncSignIfMember(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash);
+    bool AsyncSignIfMember(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash, bool allowReSign = false);
     bool HasRecoveredSig(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash);
     bool HasRecoveredSigForId(Consensus::LLMQType llmqType, const uint256& id);
     bool HasRecoveredSigForSession(const uint256& signHash);
