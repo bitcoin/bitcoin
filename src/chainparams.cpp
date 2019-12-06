@@ -143,7 +143,7 @@ public:
         consensus.nSYSXAsset = 1045909988;
         consensus.vchSYSXBurnMethodSignature = ParseHex("5f959b69");
         consensus.vchSYSXERC20Manager = ParseHex("30929228931464ee18AF52b9f655F8176555b6e7");
-        consensus.vchTokenUnfreezeMethod = ParseHex("38945d8004cf4671c45686853452A6510812117c");
+        consensus.vchTokenFreezeMethod = ParseHex("38945d8004cf4671c45686853452A6510812117c");
         consensus.nBridgeStartBlock = 275000;
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -261,7 +261,7 @@ public:
         consensus.nSYSXAsset = 729627649;
         consensus.vchSYSXBurnMethodSignature = ParseHex("5f959b69");
         consensus.vchSYSXERC20Manager = ParseHex("38945d8004cf4671c45686853452A6510812117c");
-        consensus.vchTokenUnfreezeMethod = ParseHex("38945d8004cf4671c45686853452A6510812117c");
+        consensus.vchTokenFreezeMethod = ParseHex("38945d8004cf4671c45686853452A6510812117c");
         consensus.nBridgeStartBlock = 1000;
         pchMessageStart[0] = 0xce;
         pchMessageStart[1] = 0xe2;
@@ -376,7 +376,7 @@ public:
         consensus.nSYSXAsset = 0;
         consensus.vchSYSXBurnMethodSignature = ParseHex("5f959b69");
         consensus.vchSYSXERC20Manager = ParseHex("38945d8004cf4671c45686853452A6510812117c");
-        consensus.vchTokenUnfreezeMethod = ParseHex("38945d8004cf4671c45686853452A6510812117c");
+        consensus.vchTokenFreezeMethod = ParseHex("38945d8004cf4671c45686853452A6510812117c");
         consensus.nBridgeStartBlock = 100;
         pchMessageStart[0] = 0xfa;
         pchMessageStart[1] = 0xbf;

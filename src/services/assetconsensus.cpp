@@ -136,7 +136,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
                 return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-log-topics-count", bMiner);
             }
             // topic hash matches with TokenFreeze signature
-            if(Params().GetConsensus().vchTokenUnfreezeMethod == rlpReceiptLogTopicsValue[0].toBytes(dev::RLP::VeryStrict)){
+            if(Params().GetConsensus().vchTokenFreezeMethod == rlpReceiptLogTopicsValue[0].toBytes(dev::RLP::VeryStrict)){
                 dev::RLP rlpReceiptLogDataValue(rlpReceiptLogValue[2]);
                 // get last data field which should be our BridgeTransferID
                 if (!rlpReceiptLogDataValue.isList()){
@@ -149,9 +149,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
             }
         }
     }
-    if(nBridgeTransferID == 0 || mintSyscoin.nBridgeTransferID != nBridgeTransferID){
-        return FormatSyscoinErrorMessage(state, "mint-invalid-bridge-transfer-id", bMiner);
-    }
+ 
     // check transaction spv proofs
     dev::RLP rlpTxRoot(&mintSyscoin.vchTxRoot);
     dev::RLP rlpReceiptRoot(&mintSyscoin.vchReceiptRoot);
@@ -171,12 +169,14 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     dev::RLP rlpTxValue(&vchTxValue);
     const std::vector<unsigned char> &vchTxPath = mintSyscoin.vchTxPath;
     dev::RLP rlpTxPath(&vchTxPath);
+    const dev::h256 &hash = dev::sha3(vchTxValue);
+    const std::vector<unsigned char> &vchHash = hash.asBytes();
     // ensure eth tx not already spent
-    if(pethereumtxmintdb->ExistsKey(nBridgeTransferID)){
+    if(pethereumtxmintdb->ExistsKey(vchHash)){
         return FormatSyscoinErrorMessage(state, "mint-exists", bMiner);
     } 
     // add the key to flush to db later
-    vecMintKeys.emplace_back(std::make_pair(nBridgeTransferID, txHash));
+    vecMintKeys.emplace_back(std::make_pair(std::make_pair(vchHash, nBridgeTransferID), txHash));
     
     // verify receipt proof
     if(!VerifyProof(&vchTxPath, rlpReceiptValue, rlpReceiptParentNodes, rlpReceiptRoot)){
@@ -444,7 +444,9 @@ bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, AssetAll
         return false;
     }
     // remove eth spend tx from our internal db
-    vecMintKeys.emplace_back(std::make_pair(mintSyscoin.nBridgeTransferID, txHash));
+    const dev::h256 &hash = dev::sha3(mintSyscoin.vchTxValue);
+    const std::vector<unsigned char> &vchHash = hash.asBytes();
+    vecMintKeys.emplace_back(std::make_pair(std::make_pair(vchHash, 0), txHash));
     // recver
     const std::string &receiverTupleStr = mintSyscoin.assetAllocationTuple.ToString();
     #if __cplusplus > 201402 
@@ -1836,7 +1838,10 @@ bool CEthereumMintedTxDB::FlushWrite(const EthereumMintTxVec &vecMintKeys){
         return true;
     CDBBatch batch(*this);
     for (const auto &key : vecMintKeys) {
-        batch.Write(key.first, key.second);
+        batch.Write(key.first.first, key.second);
+        // create link between keys for reorg compatbility because bridge transfer id isn't serialized
+        // we could have easily done key.first.second, key.second but that would break under reorgs
+        batch.Write(key.first.second, key.first.first); 
     }
     LogPrint(BCLog::SYS, "Flushing, writing %d ethereum tx mints\n", vecMintKeys.size());
     return WriteBatch(batch);
@@ -1846,7 +1851,7 @@ bool CEthereumMintedTxDB::FlushErase(const EthereumMintTxVec &vecMintKeys){
         return true;
     CDBBatch batch(*this);
     for (const auto &key : vecMintKeys) {
-        batch.Erase(key.first);
+        batch.Erase(key.first.first);
     }
     LogPrint(BCLog::SYS, "Flushing, erasing %d ethereum tx mints\n", vecMintKeys.size());
     return WriteBatch(batch);
