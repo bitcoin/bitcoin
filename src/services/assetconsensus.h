@@ -63,7 +63,7 @@ public:
     bool FlushErase(const std::vector<uint32_t> &vecHeightKeys);
     bool FlushWrite(const EthereumTxRootMap &mapTxRoots);
 };
-typedef std::vector<std::pair<std::vector<unsigned char>, uint256> > EthereumMintTxVec;
+typedef std::vector<std::pair<std::pair<std::vector<unsigned char>, uint32_t>, uint256> > EthereumMintTxVec;
 class CEthereumMintedTxDB : public CDBWrapper {
 public:
     CEthereumMintedTxDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "ethereumminttx", nCacheSize, fMemory, fWipe) {
@@ -71,7 +71,10 @@ public:
     bool ExistsKey(const std::vector<unsigned char> &ethTxid) {
         return Exists(ethTxid);
     } 
-    bool ReadTx(const std::vector<unsigned char> &ethTxid, uint256 &sysTxid) {
+    bool ReadEthTx(const uint32_t &nBridgeTransferID, std::vector<unsigned char> &ethTxid) {
+        return Read(nBridgeTransferID, ethTxid);
+    } 
+    bool ReadSysTx(const std::vector<unsigned char> &ethTxid, uint256 &sysTxid) {
         return Read(ethTxid, sysTxid);
     } 
     bool FlushErase(const EthereumMintTxVec &vecMintKeys);

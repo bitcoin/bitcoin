@@ -579,7 +579,7 @@ bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, const CMin
         oSPVProofObj.__pushKV("receiptvalue", HexStr(mintsyscoin.vchReceiptValue));   
         oSPVProofObj.__pushKV("receiptparentnodes", HexStr(mintsyscoin.vchReceiptParentNodes)); 
         oSPVProofObj.__pushKV("receiptroot", HexStr(mintsyscoin.vchReceiptRoot)); 
-        oSPVProofObj.__pushKV("ethblocknumber", mintsyscoin.nBlockNumber); 
+        oSPVProofObj.__pushKV("ethblocknumber", mintsyscoin.nBlockNumber);
         entry.__pushKV("spv_proof", oSPVProofObj); 
         return true;                                        
     } 
