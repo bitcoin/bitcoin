@@ -173,7 +173,7 @@ void CZMQNotificationInterface::NotifyChainLock(const CBlockIndex *pindex, const
     }
 }
 
-void CZMQNotificationInterface::TransactionAddedToMempool(const CTransactionRef& ptx)
+void CZMQNotificationInterface::TransactionAddedToMempool(const CTransactionRef& ptx, int64_t nAcceptTime)
 {
     // Used by BlockConnected and BlockDisconnected as well, because they're
     // all the same external callback.
@@ -198,7 +198,7 @@ void CZMQNotificationInterface::BlockConnected(const std::shared_ptr<const CBloc
 {
     for (const CTransactionRef& ptx : pblock->vtx) {
         // Do a normal notify for each transaction added in the block
-        TransactionAddedToMempool(ptx);
+        TransactionAddedToMempool(ptx, 0);
     }
 }
 
@@ -206,7 +206,7 @@ void CZMQNotificationInterface::BlockDisconnected(const std::shared_ptr<const CB
 {
     for (const CTransactionRef& ptx : pblock->vtx) {
         // Do a normal notify for each transaction removed in block disconnection
-        TransactionAddedToMempool(ptx);
+        TransactionAddedToMempool(ptx, 0);
     }
 }
 
