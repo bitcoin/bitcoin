@@ -347,13 +347,21 @@ void CChainLocksHandler::TrySignChainTip()
 
 void CChainLocksHandler::SyncTransaction(const CTransaction& tx, const CBlockIndex* pindex, int posInBlock)
 {
-    if (!masternodeSync.IsBlockchainSynced()) {
-        return;
-    }
-
     bool handleTx = true;
     if (tx.IsCoinBase() || tx.vin.empty()) {
         handleTx = false;
+    }
+
+    if (!masternodeSync.IsBlockchainSynced()) {
+        if (handleTx && posInBlock == CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK) {
+            auto info = mempool.info(tx.GetHash());
+            if (!info.tx) {
+                return;
+            }
+            LOCK(cs);
+            txFirstSeenTime.emplace(tx.GetHash(), info.nTime);
+        }
+        return;
     }
 
     LOCK(cs);
