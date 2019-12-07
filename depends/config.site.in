@@ -27,6 +27,10 @@ if test -z $with_qt_bindir; then
   with_qt_bindir=$depends_prefix/native/bin
 fi
 
+if test -z $with_qrencode && test -n "@no_qr@"; then
+  with_qrencode=no
+fi
+
 if test -z $enable_wallet && test -n "@no_wallet@"; then
   enable_wallet=no
 fi
