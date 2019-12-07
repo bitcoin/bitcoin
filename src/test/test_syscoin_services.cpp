@@ -33,7 +33,6 @@ static bool node2Online = false;
 static bool node3Online = false;
 static bool started = false;
 std::map<string, string> mapNodes;
-extern CAmount getAuxFee(const std::string &publicData, const CAmount& nAmount, const uint8_t &nPrecision, CWitnessAddress & address);
 string strSYSXAsset = "";
 string strSYSXAddress = "";
 // create a map between node alias names and URLs to be used in testing for example CallExtRPC("mynode", "getblockchaininfo") would call getblockchaininfo on the node alias mynode which would be pushed as a URL here.

@@ -179,7 +179,7 @@ static uint64_t GetRdSeed() noexcept
 /* Access to other hardware random number generators could be added here later,
  * assuming it is sufficiently fast (in the order of a few hundred CPU cycles).
  * Slower sources should probably be invoked separately, and/or only from
- * RandAddSeedSleep (which is called during idle background operation).
+ * RandAddPeriodic (which is called once a minute).
  */
 static void InitHardwareRand() {}
 static void ReportHardwareRand() {}
@@ -360,6 +360,9 @@ class RNGState {
     uint64_t m_counter GUARDED_BY(m_mutex) = 0;
     bool m_strongly_seeded GUARDED_BY(m_mutex) = false;
 
+    Mutex m_events_mutex;
+    CSHA256 m_events_hasher GUARDED_BY(m_events_mutex);
+
 public:
     RNGState() noexcept
     {
@@ -368,6 +371,35 @@ public:
 
     ~RNGState()
     {
+    }
+
+    void AddEvent(uint32_t event_info) noexcept
+    {
+        LOCK(m_events_mutex);
+
+        m_events_hasher.Write((const unsigned char *)&event_info, sizeof(event_info));
+        // Get the low four bytes of the performance counter. This translates to roughly the
+        // subsecond part.
+        uint32_t perfcounter = (GetPerformanceCounter() & 0xffffffff);
+        m_events_hasher.Write((const unsigned char*)&perfcounter, sizeof(perfcounter));
+    }
+
+    /**
+     * Feed (the hash of) all events added through AddEvent() to hasher.
+     */
+    void SeedEvents(CSHA512& hasher) noexcept
+    {
+        // We use only SHA256 for the events hashing to get the ASM speedups we have for SHA256,
+        // since we want it to be fast as network peers may be able to trigger it repeatedly.
+        LOCK(m_events_mutex);
+
+        unsigned char events_hash[32];
+        m_events_hasher.Finalize(events_hash);
+        hasher.Write(events_hash, 32);
+
+        // Re-initialize the hasher with the finalized state to use later.
+        m_events_hasher.Reset();
+        m_events_hasher.Write(events_hash, 32);
     }
 
     /** Extract up to 32 bytes of entropy from the RNG state, mixing in new entropy from hasher.
@@ -416,17 +448,7 @@ RNGState& GetRNGState() noexcept
 
 /* A note on the use of noexcept in the seeding functions below:
  *
- * None of the RNG code should ever throw any exception, with the sole exception
- * of MilliSleep in SeedSleep, which can (and does) support interruptions which
- * cause a boost::thread_interrupted to be thrown.
- *
- * This means that SeedSleep, and all functions that invoke it are throwing.
- * However, we know that GetRandBytes() and GetStrongRandBytes() never trigger
- * this sleeping logic, so they are noexcept. The same is true for all the
- * GetRand*() functions that use GetRandBytes() indirectly.
- *
- * TODO: After moving away from interruptible boost-based thread management,
- * everything can become noexcept here.
+ * None of the RNG code should ever throw any exception.
  */
 
 static void SeedTimestamp(CSHA512& hasher) noexcept
@@ -450,24 +472,7 @@ static void SeedFast(CSHA512& hasher) noexcept
     SeedTimestamp(hasher);
 }
 
-// We use only SHA256 for the events hashing to get the ASM speedups we have for SHA256,
-// since we want it to be fast as network peers may be able to trigger it repeatedly.
-static Mutex events_mutex;
-static CSHA256 events_hasher;
-static void SeedEvents(CSHA512& hasher)
-{
-    LOCK(events_mutex);
-
-    unsigned char events_hash[32];
-    events_hasher.Finalize(events_hash);
-    hasher.Write(events_hash, 32);
-
-    // Re-initialize the hasher with the finalized state to use later.
-    events_hasher.Reset();
-    events_hasher.Write(events_hash, 32);
-}
-
-static void SeedSlow(CSHA512& hasher) noexcept
+static void SeedSlow(CSHA512& hasher, RNGState& rng) noexcept
 {
     unsigned char buffer[32];
 
@@ -479,7 +484,7 @@ static void SeedSlow(CSHA512& hasher) noexcept
     hasher.Write(buffer, sizeof(buffer));
 
     // Add the events hasher into the mix
-    SeedEvents(hasher);
+    rng.SeedEvents(hasher);
 
     // High-precision timestamp.
     //
@@ -498,7 +503,7 @@ static void SeedStrengthen(CSHA512& hasher, RNGState& rng, int microseconds) noe
     Strengthen(strengthen_seed, microseconds, hasher);
 }
 
-static void SeedPeriodic(CSHA512& hasher, RNGState& rng)
+static void SeedPeriodic(CSHA512& hasher, RNGState& rng) noexcept
 {
     // Everything that the 'fast' seeder includes
     SeedFast(hasher);
@@ -507,7 +512,7 @@ static void SeedPeriodic(CSHA512& hasher, RNGState& rng)
     SeedTimestamp(hasher);
 
     // Add the events hasher into the mix
-    SeedEvents(hasher);
+    rng.SeedEvents(hasher);
 
     // Dynamic environment data (performance monitoring, ...)
     auto old_size = hasher.Size();
@@ -524,7 +529,7 @@ static void SeedStartup(CSHA512& hasher, RNGState& rng) noexcept
     SeedHardwareSlow(hasher);
 
     // Everything that the 'slow' seeder includes.
-    SeedSlow(hasher);
+    SeedSlow(hasher, rng);
 
     // Dynamic environment data (performance monitoring, ...)
     auto old_size = hasher.Size();
@@ -544,7 +549,7 @@ enum class RNGLevel {
     PERIODIC, //!< Called by RandAddPeriodic()
 };
 
-static void ProcRand(unsigned char* out, int num, RNGLevel level)
+static void ProcRand(unsigned char* out, int num, RNGLevel level) noexcept
 {
     // Make sure the RNG is initialized first (as all Seed* function possibly need hwrand to be available).
     RNGState& rng = GetRNGState();
@@ -557,7 +562,7 @@ static void ProcRand(unsigned char* out, int num, RNGLevel level)
         SeedFast(hasher);
         break;
     case RNGLevel::SLOW:
-        SeedSlow(hasher);
+        SeedSlow(hasher, rng);
         break;
     case RNGLevel::PERIODIC:
         SeedPeriodic(hasher, rng);
@@ -575,7 +580,8 @@ static void ProcRand(unsigned char* out, int num, RNGLevel level)
 
 void GetRandBytes(unsigned char* buf, int num) noexcept { ProcRand(buf, num, RNGLevel::FAST); }
 void GetStrongRandBytes(unsigned char* buf, int num) noexcept { ProcRand(buf, num, RNGLevel::SLOW); }
-void RandAddPeriodic() { ProcRand(nullptr, 0, RNGLevel::PERIODIC); }
+void RandAddPeriodic() noexcept { ProcRand(nullptr, 0, RNGLevel::PERIODIC); }
+void RandAddEvent(const uint32_t event_info) noexcept { GetRNGState().AddEvent(event_info); }
 
 void RandAddEvent(const uint32_t event_info) {
     LOCK(events_mutex);
