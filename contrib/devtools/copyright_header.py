@@ -502,6 +502,7 @@ def insert_script_header(filename, file_lines, start_year, end_year):
     write_file_lines(filename, file_lines)
 
 def insert_cpp_header(filename, file_lines, start_year, end_year):
+    file_lines.insert(0, '\n')
     header_lines = get_cpp_header_lines_to_insert(start_year, end_year)
     for line in header_lines:
         file_lines.insert(0, line)
