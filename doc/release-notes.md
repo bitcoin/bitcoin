@@ -6,6 +6,8 @@ Release is now available from:
   <https://www.dash.org/downloads/#wallets>
 
 This is a new minor version release, bringing various bugfixes and improvements.
+It is highly recommended to upgrade to this release as it contains a critical
+fix for a possible DoS vector.
 
 Please report bugs using the issue tracker at github:
 
@@ -43,14 +45,42 @@ a reindex or re-sync the whole chain.
 Notable changes
 ===============
 
-TODO
+Fix for a DoS vector
+--------------------
+
+This release fixes a serious DoS vector which allows to cause memory exhaustion until the point of
+out-of-memory related crashes. We highly recommend upgrading all nodes. Thanks to Bitcoin ABC
+developers for finding and reporting this issue to us.
+
+Better handling of non-locked transactions in mined blocks
+----------------------------------------------------------
+
+We observed multiple cases of ChainLocks failing on mainnet. We tracked this down to a situation where
+PrivateSend mixing transactions were first rejected by parts of the network (0.14.0.4 nodes) while other parts
+(<=0.14.0.3) accepted the transaction into the mempool. This caused InstantSend locking to fail for these
+transactions, while non-upgraded miners still included the transactions into blocks after 10 minutes.
+This caused blocks to not get ChainLocked for at least 10 minutes. This release improves an already existent
+fallback mechanism (retroactive InstantSend locking) to also work for transaction which are already partially
+known in the network. This should cause ChainLocks to succeed in such situations.
 
 0.14.0.5 Change log
 ===================
 
 See detailed [set of changes](https://github.com/dashpay/dash/compare/v0.14.0.4...dashpay:v0.14.0.5).
 
-TODO
+- [`20d4a27778`](https://github.com/dashpay/dash/commit/dc07a0c5e1) Make sure mempool txes are properly processed by CChainLocksHandler despite node restarts (#3230)
+- [`dc07a0c5e1`](https://github.com/dashpay/dash/commit/dc07a0c5e1) [v0.14.0.x] Bump version and prepare release notes (#3228)
+- [`401da32090`](https://github.com/dashpay/dash/commit/401da32090) More fixes in llmq-is-retroactive tests
+- [`33721eaa11`](https://github.com/dashpay/dash/commit/33721eaa11) Make llmq-is-retroactive test compatible with 0.14.0.x
+- [`85bd162a3e`](https://github.com/dashpay/dash/commit/85bd162a3e) Make wait_for_xxx methods compatible with 0.14.0.x
+- [`22cfddaf12`](https://github.com/dashpay/dash/commit/22cfddaf12) Allow re-signing of IS locks when performing retroactive signing (#3219)
+- [`a8b8891a1d`](https://github.com/dashpay/dash/commit/a8b8891a1d) Add wait_for_xxx methods as found in develop
+- [`8dae12cc60`](https://github.com/dashpay/dash/commit/8dae12cc60) More/better logging for InstantSend
+- [`fdd19cf667`](https://github.com/dashpay/dash/commit/fdd19cf667) Tests: Fix the way nodes are connected to each other in setup_network/start_masternodes (#3221)
+- [`41f0e9d028`](https://github.com/dashpay/dash/commit/41f0e9d028) More fixes related to extra_args
+- [`5213118601`](https://github.com/dashpay/dash/commit/5213118601) Tests: Allow specifying different cmd-line params for each masternode (#3222)
+- [`2fef21fd80`](https://github.com/dashpay/dash/commit/2fef21fd80) Don't join thread in CQuorum::~CQuorum when called from within the thread (#3223)
+- [`e69c6c3207`](https://github.com/dashpay/dash/commit/e69c6c3207) Merge #12392: Fix ignoring tx data requests when fPauseSend is set on a peer (#3225)
 
 Credits
 =======
