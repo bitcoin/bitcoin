@@ -5,18 +5,18 @@ Geth
 ----
 
 This folder contains the binaries for geth for different platforms
-The current version is Quad Kicker (v1.9.7)
+The current version is Serrice Ice (v1.9.9)
 Downloaded from [Go Ethereum](https://geth.ethereum.org/downloads/)
 
 MD5 of the BIN are as the following:
 Linux (64-bit)
-`1d699d7b4450b4fc82c5ebf3a6c2936f`
+`de1b31439dc6697fcbe2d729d2080d22`
 
 MacOS
-`db6a00940e8f48f90c4770ef89834bb1`
+`ed56cad30695af36c8bc9ac8b9ccc1c4`
 
 Windows (64-bit)
-`2c85d9be3e26619caa708590605c749c`
+`9f2d966a5a7159a8448991a7401ff3d1`
 
 
 Relayer
