@@ -762,7 +762,7 @@ string AssetAllocationMint(const string& node, const string& asset, const string
 	// increase time by 1 hour
 	SleepFor(3600 * 1000);
     // "assetallocationmint [asset] [address] [amount] [blocknumber] [tx_hex] [txroot_hex] [txmerkleproof_hex] [txmerkleroofpath_hex] [receipt_hex] [receiptroot_hex] [receiptmerkleproof_hex] [witness]\n"
-    BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "assetallocationmint", asset + ",\"" + address + "\"," + amount + "," + itostr(height) + ",\"" + tx_hex + "\",\"a0" + txroot_hex + "\",\"" + txmerkleproof_hex + "\",\"" + txmerkleproofpath_hex + "\",\"" + receipt_hex + "\",\"a0" + receiptroot_hex + "\",\"" + receiptmerkleproof_hex +  "\",\"" + witness + "\""));
+    BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "assetallocationmint", asset + ",\"" + address + "\"," + amount + "," + itostr(height) + ",\"" + tx_hex + "\",\"a0" + txroot_hex + "\",\"" + txmerkleproof_hex + "\",\"" + txmerkleproofpath_hex + "\",\"" + receipt_hex + "\",\"a0" + receiptroot_hex + "\",\"" + receiptmerkleproof_hex +  "\",\"" + "\",\"" + witness + "\""));
     BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "signrawtransactionwithwallet", "\"" +  find_value(r.get_obj(), "hex").get_str() + "\""));
     string hex_str = find_value(r.get_obj(), "hex").get_str();
    
@@ -773,11 +773,9 @@ string AssetAllocationMint(const string& node, const string& asset, const string
     // account for fees
     BOOST_CHECK_EQUAL(nAmountBefore+AmountFromValue(amount) , nAmountAfter);
 
-	// lookup by eth txid and check to see if it exists on syscoin
-	// get eth txid
-	const dev::h256 &ethtxid = dev::sha3(ParseHex(tx_hex));
-	BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "syscoincheckmint", "\"" + ethtxid.hex() + "\""));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "in_active_chain").get_bool(), true);
+	// lookup by sys tx from bridge transfer id
+	/*BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "syscoincheckmint", "\"" + itostr(bridgetransferid) + "\""));
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "in_active_chain").get_bool(), true);*/
     return hex_str;
 }
 bool FindAssetGUIDFromAssetIndexResults(const UniValue& results, std::string guid){

@@ -157,7 +157,6 @@ public:
     std::vector<unsigned char> vchReceiptRoot;
     std::vector<unsigned char> vchReceiptPath;   
     uint32_t nBlockNumber;
-    
     CAmount nValueAsset;
     CMintSyscoin() {
         SetNull();
@@ -168,7 +167,7 @@ public:
     }
     ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {      
+    inline void SerializationOp(Stream& s, Operation ser_action) {  
         READWRITE(vchTxValue);
         READWRITE(vchTxParentNodes);
         READWRITE(vchTxRoot);
@@ -176,9 +175,8 @@ public:
         READWRITE(vchReceiptValue);
         READWRITE(vchReceiptParentNodes);
         READWRITE(vchReceiptRoot);
-        READWRITE(vchReceiptPath);        
-        READWRITE(nBlockNumber);
-
+        READWRITE(vchReceiptPath);
+        READWRITE(nBlockNumber);     
         READWRITE(assetAllocationTuple);  
         READWRITE(nValueAsset);  
     }

@@ -1335,9 +1335,9 @@ UniValue syscoingettxroots(const JSONRPCRequest& request)
 UniValue syscoincheckmint(const JSONRPCRequest& request)
 {
     RPCHelpMan{"syscoincheckmint",
-    "\nGet the Syscoin mint transaction by looking up using Ethereum transaction ID.\n",
+    "\nGet the Syscoin mint transaction by looking up using Bridge Transfer ID.\n",
     {
-        {"ethtxid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Ethereum TXID used to burn funds to move to Syscoin."}
+        {"bridge_transfer_id", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ethereum Bridge Transfer ID used to burn funds to move to Syscoin."}
     },
     RPCResult{
         "{\n"
@@ -1361,23 +1361,22 @@ UniValue syscoincheckmint(const JSONRPCRequest& request)
         "}\n"
     },
     RPCExamples{
-        HelpExampleCli("syscoincheckmint", "0x4a12022ff3d27bfa9bc1c5c5d79dbb1f293203420e7c09c28482cb34a3bdbad4")
-        + HelpExampleRpc("syscoincheckmint", "0x4a12022ff3d27bfa9bc1c5c5d79dbb1f293203420e7c09c28482cb34a3bdbad4")
+        HelpExampleCli("syscoincheckmint", "1221")
+        + HelpExampleRpc("syscoincheckmint", "1221")
     }
     }.Check(request);
     bool in_active_chain = false;
     CBlockIndex* blockindex = nullptr;
-    std::string ethTxidStr = request.params[0].get_str();
-    boost::erase_all(ethTxidStr, "0x");  // strip 0x in hex str if exist
-    const std::vector<unsigned char> &ethtxid = ParseHex(ethTxidStr);
-    uint256 systxid;
-    if(!pethereumtxmintdb || !pethereumtxmintdb->ReadTx(ethtxid, systxid)){
+    const uint32_t nBridgeTransferID = request.params[0].get_uint();
+    std::vector<unsigned char> ethTxid;
+    uint256 sysTxid;
+    if(!pethereumtxmintdb || !pethereumtxmintdb->ReadEthTx(nBridgeTransferID, ethTxid) || !pethereumtxmintdb->ReadSysTx(ethTxid, sysTxid)){
        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Could not read syscoin transaction from ethereum transaction");
     }
     {
         LOCK(cs_main);
         uint256 blockhash;
-        if(pblockindexdb->ReadBlockHash(systxid, blockhash)){
+        if(pblockindexdb->ReadBlockHash(sysTxid, blockhash)){
             blockindex = LookupBlockIndex(blockhash);
             if (!blockindex) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found");
@@ -1388,7 +1387,7 @@ UniValue syscoincheckmint(const JSONRPCRequest& request)
 
     CTransactionRef txRef;
     uint256 hash_block;
-    if (!GetTransaction(systxid, txRef, Params().GetConsensus(), hash_block, blockindex)) {
+    if (!GetTransaction(sysTxid, txRef, Params().GetConsensus(), hash_block, blockindex)) {
         std::string errmsg;
         if (blockindex) {
             if (!(blockindex->nStatus & BLOCK_HAVE_DATA)) {
