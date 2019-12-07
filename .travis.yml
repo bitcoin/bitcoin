@@ -43,7 +43,6 @@ before_cache:
 stages:
   - lint
   - test
-  - extended-lint
 env:
   global:
     - CI_RETRY_EXE="travis_retry"
@@ -82,28 +81,21 @@ jobs:
       script:
         - set -o errexit; source ./ci/lint/06_script.sh
 
-    - stage: extended-lint
-      name: 'extended lint [runtime >= 60 seconds]'
-      env:
-      cache: false
-      language: python
-      python: '3.5'
-      install:
-        - set -o errexit; source ./ci/extended_lint/04_install.sh
-      before_script:
-        - set -o errexit; source ./ci/lint/05_before_script.sh
-      script:
-        - set -o errexit; source ./ci/extended_lint/06_script.sh
-
     - stage: test
-      name: 'ARM  [GOAL: install]  [unit tests, functional tests]'
+      name: 'ARM  [GOAL: install]  [bionic]'
       arch: arm64
       env: >-
         FILE_ENV="./ci/test/00_setup_env_arm.sh"
         QEMU_USER_CMD=""  # Can run the tests natively without qemu
 
     - stage: test
-      name: 'Win64  [GOAL: deploy]  [unit tests, no gui, no functional tests]'
+      name: 'S390x  [GOAL: install]  [bionic]'
+      arch: s390x
+      env: >-
+        FILE_ENV="./ci/test/00_setup_env_s390x.sh"
+
+    - stage: test
+      name: 'Win64  [GOAL: deploy]  [no gui, no functional tests]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_win64.sh"
 
@@ -113,17 +105,17 @@ jobs:
         FILE_ENV="./ci/test/00_setup_env_i686.sh"
 
     - stage: test
+      name: 'x86_64 Linux  [GOAL: install]  [CentOS 7]  [no depends, only system libs]'
+      env: >-
+        FILE_ENV="./ci/test/00_setup_env_native_centos.sh"
+
+    - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [bionic]  [uses qt5 dev package instead of depends Qt to speed up build and avoid timeout] [unsigned char]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_qt5.sh"
 
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [trusty]  [no functional tests, no depends, only system libs]'
-      env: >-
-        FILE_ENV="./ci/test/00_setup_env_native_trusty.sh"
-
-    - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [xenial]  [no depends, only system libs, sanitizers: thread (TSan)]'
+      name: 'x86_64 Linux  [GOAL: install]  [xenial]  [no depends, only system libs, sanitizers: thread (TSan), no wallet]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_tsan.sh"
         TEST_RUNNER_EXTRA="--exclude feature_block"  # Not enough memory on travis machines
