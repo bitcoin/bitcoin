@@ -473,7 +473,8 @@ void CSigningManager::ProcessMessageRecoveredSig(CNode* pfrom, const CRecoveredS
         return;
     }
 
-    LogPrint("llmq", "CSigningManager::%s -- signHash=%s, node=%d\n", __func__, CLLMQUtils::BuildSignHash(recoveredSig).ToString(), pfrom->id);
+    LogPrint("llmq", "CSigningManager::%s -- signHash=%s, id=%s, msgHash=%s, node=%d\n", __func__,
+            CLLMQUtils::BuildSignHash(recoveredSig).ToString(), recoveredSig.id.ToString(), recoveredSig.msgHash.ToString(), pfrom->GetId());
 
     LOCK(cs);
     pendingRecoveredSigs[pfrom->id].emplace_back(recoveredSig);
@@ -742,7 +743,7 @@ void CSigningManager::UnregisterRecoveredSigsListener(CRecoveredSigsListener* l)
     recoveredSigsListeners.erase(itRem, recoveredSigsListeners.end());
 }
 
-bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash)
+bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash, bool allowReSign)
 {
     auto& params = Params().GetConsensus().llmqs.at(llmqType);
 
@@ -753,24 +754,31 @@ bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, const uint
     {
         LOCK(cs);
 
-        if (db.HasVotedOnId(llmqType, id)) {
+        bool hasVoted = db.HasVotedOnId(llmqType, id);
+        if (hasVoted) {
             uint256 prevMsgHash;
             db.GetVoteForId(llmqType, id, prevMsgHash);
             if (msgHash != prevMsgHash) {
                 LogPrintf("CSigningManager::%s -- already voted for id=%s and msgHash=%s. Not voting on conflicting msgHash=%s\n", __func__,
                         id.ToString(), prevMsgHash.ToString(), msgHash.ToString());
+                return false;
+            } else if (allowReSign) {
+                LogPrint("llmq", "CSigningManager::%s -- already voted for id=%s and msgHash=%s. Resigning!\n", __func__,
+                         id.ToString(), prevMsgHash.ToString());
             } else {
                 LogPrint("llmq", "CSigningManager::%s -- already voted for id=%s and msgHash=%s. Not voting again.\n", __func__,
                           id.ToString(), prevMsgHash.ToString());
+                return false;
             }
-            return false;
         }
 
         if (db.HasRecoveredSigForId(llmqType, id)) {
             // no need to sign it if we already have a recovered sig
             return true;
         }
-        db.WriteVoteForId(llmqType, id, msgHash);
+        if (!hasVoted) {
+            db.WriteVoteForId(llmqType, id, msgHash);
+        }
     }
 
     int tipHeight;
@@ -795,6 +803,10 @@ bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, const uint
         return false;
     }
 
+    if (allowReSign) {
+        // make us re-announce all known shares (other nodes might have run into a timeout)
+        quorumSigSharesManager->ForceReAnnouncement(quorum, llmqType, id, msgHash);
+    }
     quorumSigSharesManager->AsyncSign(quorum, id, msgHash);
 
     return true;

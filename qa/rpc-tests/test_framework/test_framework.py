@@ -14,6 +14,7 @@ import traceback
 from concurrent.futures import ThreadPoolExecutor
 from time import time, sleep
 
+from test_framework.mininode import wait_until
 from .util import (
     assert_equal,
     initialize_chain,
@@ -252,7 +253,7 @@ class MasternodeInfo:
 
 
 class DashTestFramework(BitcoinTestFramework):
-    def __init__(self, num_nodes, masterodes_count, extra_args, fast_dip3_enforcement=False):
+    def __init__(self, num_nodes, masterodes_count, extra_args=None, fast_dip3_enforcement=False):
         super().__init__()
         self.mn_count = masterodes_count
         self.num_nodes = num_nodes
@@ -260,17 +261,20 @@ class DashTestFramework(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.is_network_split = False
         # additional args
+        if extra_args is None:
+            extra_args = [[]] * num_nodes
+        assert_equal(len(extra_args), num_nodes)
         self.extra_args = extra_args
 
-        self.extra_args += ["-sporkkey=cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK"]
-
+        self.extra_args[0] += ["-sporkkey=cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK"]
         self.fast_dip3_enforcement = fast_dip3_enforcement
         if fast_dip3_enforcement:
-            self.extra_args += ["-dip3params=30:50"]
+            for i in range(0, num_nodes):
+                self.extra_args[i] += ["-dip3params=30:50"]
 
     def create_simple_node(self):
         idx = len(self.nodes)
-        args = self.extra_args
+        args = self.extra_args[idx]
         self.nodes.append(start_node(idx, self.options.tmpdir, args))
         for i in range(0, idx):
             connect_nodes(self.nodes[i], idx)
@@ -329,7 +333,7 @@ class DashTestFramework(BitcoinTestFramework):
             copy_datadir(0, idx + start_idx, self.options.tmpdir)
 
         # restart faucet node
-        self.nodes[0] = start_node(0, self.options.tmpdir, self.extra_args)
+        self.nodes[0] = start_node(0, self.options.tmpdir, self.extra_args[0])
 
     def start_masternodes(self):
         start_idx = len(self.nodes)
@@ -340,7 +344,7 @@ class DashTestFramework(BitcoinTestFramework):
 
         def do_start(idx):
             args = ['-masternode=1',
-                    '-masternodeblsprivkey=%s' % self.mninfo[idx].keyOperator] + self.extra_args
+                    '-masternodeblsprivkey=%s' % self.mninfo[idx].keyOperator] + self.extra_args[idx + start_idx]
             node = start_node(idx + start_idx, self.options.tmpdir, args)
             self.mninfo[idx].nodeIdx = idx + start_idx
             self.mninfo[idx].node = node
@@ -348,8 +352,8 @@ class DashTestFramework(BitcoinTestFramework):
             wait_to_sync(node, True)
 
         def do_connect(idx):
-            for i in range(0, idx + 1):
-                connect_nodes(self.nodes[idx + start_idx], i)
+            # Connect to the control node only, masternodes should take care of intra-quorum connections themselves
+            connect_nodes(self.mninfo[idx].node, 0)
 
         jobs = []
 
@@ -378,7 +382,7 @@ class DashTestFramework(BitcoinTestFramework):
     def setup_network(self):
         self.nodes = []
         # create faucet node for collateral and transactions
-        self.nodes.append(start_node(0, self.options.tmpdir, self.extra_args))
+        self.nodes.append(start_node(0, self.options.tmpdir, self.extra_args[0]))
         required_balance = MASTERNODE_COLLATERAL * self.mn_count + 1
         while self.nodes[0].getbalance() < required_balance:
             set_mocktime(get_mocktime() + 1)
@@ -399,6 +403,12 @@ class DashTestFramework(BitcoinTestFramework):
         self.prepare_masternodes()
         self.prepare_datadirs()
         self.start_masternodes()
+
+        # non-masternodes where disconnected from the control node during prepare_datadirs,
+        # let's reconnect them back to make sure they receive updates
+        num_simple_nodes = self.num_nodes - self.mn_count - 1
+        for i in range(0, num_simple_nodes):
+            connect_nodes(self.nodes[i+1], 0)
 
         set_mocktime(get_mocktime() + 1)
         set_node_times(self.nodes, get_mocktime())
@@ -545,23 +555,53 @@ class DashTestFramework(BitcoinTestFramework):
         self.sync_all()
         return self.wait_for_instantlock(txid, sender)
 
-    def wait_for_instantlock(self, txid, node):
-        # wait for instantsend locks
-        start = time()
-        locked = False
-        while True:
+    def wait_for_tx(self, txid, node, expected=True, timeout=15):
+        def check_tx():
             try:
-                is_tx = node.getrawtransaction(txid, True)
-                if is_tx['instantlock']:
-                    locked = True
-                    break
+                return node.getrawtransaction(txid)
             except:
-                # TX not received yet?
-                pass
-            if time() > start + 10:
-                break
-            sleep(0.5)
-        return locked
+                return False
+        w = wait_until(check_tx, timeout=timeout, sleep=0.5)
+        if not w and expected:
+            raise AssertionError("wait_for_instantlock failed")
+        elif w and not expected:
+            raise AssertionError("waiting unexpectedly succeeded")
+
+    def wait_for_instantlock(self, txid, node, expected=True, timeout=15, do_assert=False):
+        def check_instantlock():
+            try:
+                return node.getrawtransaction(txid, True)["instantlock"]
+            except:
+                return False
+        w = wait_until(check_instantlock, timeout=timeout, sleep=0.1)
+        if not w and expected:
+            if do_assert:
+                raise AssertionError("wait_for_instantlock failed")
+            else:
+                return False
+        elif w and not expected:
+            if do_assert:
+                raise AssertionError("waiting unexpectedly succeeded")
+            else:
+                return False
+        return True
+
+    def wait_for_chainlocked_block(self, node, block_hash, expected=True, timeout=15):
+        def check_chainlocked_block():
+            try:
+                block = node.getblock(block_hash)
+                return block["confirmations"] > 0 and block["chainlock"]
+            except:
+                return False
+        w = wait_until(check_chainlocked_block, timeout=timeout, sleep=0.1)
+        if not w and expected:
+            raise AssertionError("wait_for_chainlocked_block failed")
+        elif w and not expected:
+            raise AssertionError("waiting unexpectedly succeeded")
+
+    def wait_for_chainlocked_block_all_nodes(self, block_hash, timeout=15):
+        for node in self.nodes:
+            self.wait_for_chainlocked_block(node, block_hash, timeout=timeout)
 
     def wait_for_sporks_same(self, timeout=30):
         st = time()
@@ -694,6 +734,16 @@ class DashTestFramework(BitcoinTestFramework):
         sync_blocks(self.nodes)
 
         return new_quorum
+
+    def wait_for_mnauth(self, node, count, timeout=10):
+        def test():
+            pi = node.getpeerinfo()
+            c = 0
+            for p in pi:
+                if "verified_proregtx_hash" in p and p["verified_proregtx_hash"] != "":
+                    c += 1
+            return c >= count
+        assert wait_until(test, timeout=timeout)
 
 # Test framework for doing p2p comparison testing, which sets up some bitcoind
 # binaries:

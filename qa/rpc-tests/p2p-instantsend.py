@@ -14,7 +14,7 @@ InstantSendTest -- test InstantSend functionality (prevent doublespend for uncon
 
 class InstantSendTest(DashTestFramework):
     def __init__(self):
-        super().__init__(9, 5, [], fast_dip3_enforcement=True)
+        super().__init__(9, 5, fast_dip3_enforcement=True)
         # set sender,  receiver,  isolated nodes
         self.isolated_idx = 1
         self.receiver_idx = 2

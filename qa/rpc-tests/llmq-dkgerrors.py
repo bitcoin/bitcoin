@@ -15,7 +15,7 @@ Simulate and check DKG errors
 
 class LLMQDKGErrors(DashTestFramework):
     def __init__(self):
-        super().__init__(6, 5, [], fast_dip3_enforcement=True)
+        super().__init__(6, 5, fast_dip3_enforcement=True)
 
     def run_test(self):
 
