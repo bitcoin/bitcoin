@@ -1517,8 +1517,16 @@ static int msc_initial_scan(int nFirstBlock)
     if (nFirstBlock < 0 || nLastBlock < nFirstBlock) return -1;
     PrintToConsole("Scanning for transactions in block %d to block %d..\n", nFirstBlock, nLastBlock);
 
-    // used to print the progress to the console and notifies the UI
-    ProgressReporter progressReporter(chainActive[nFirstBlock], chainActive[nLastBlock]);
+    const CBlockIndex* pFirstBlock;
+    const CBlockIndex* pLastBlock;
+    {
+        LOCK(cs_main);
+        // used to print the progress to the console and notifies the UI
+        pFirstBlock = chainActive[nFirstBlock];
+        pLastBlock = chainActive[nLastBlock];
+    }
+
+    ProgressReporter progressReporter(pFirstBlock, pLastBlock);
 
     // check if using seed block filter should be disabled
     bool seedBlockFilterEnabled = gArgs.GetBoolArg("-omniseedblockfilter", true);
@@ -1530,7 +1538,12 @@ static int msc_initial_scan(int nFirstBlock)
             break;
         }
 
-        CBlockIndex* pblockindex = chainActive[nBlock];
+        CBlockIndex* pblockindex;
+        {
+            LOCK(cs_main);
+            pblockindex = chainActive[nBlock];
+        }
+
         if (nullptr == pblockindex) break;
         std::string strBlockHash = pblockindex->GetBlockHash().GetHex();
 
@@ -1604,18 +1617,23 @@ void clear_all_state()
 
 void RewindDBsAndState(int nHeight, int nBlockPrev = 0, bool fInitialParse = false)
 {
-    // Check if any freeze related transactions would be rolled back - if so wipe the state and startclean
-    bool reorgContainsFreeze = pDbTransactionList->CheckForFreezeTxs(nHeight);
+    int nWaterline;
+    bool reorgContainsFreeze;
+    {
+        LOCK(cs_tally);
+        // Check if any freeze related transactions would be rolled back - if so wipe the state and startclean
+        reorgContainsFreeze = pDbTransactionList->CheckForFreezeTxs(nHeight);
 
-    // NOTE: The blockNum parameter is inclusive, so deleteAboveBlock(1000) will delete records in block 1000 and above.
-    pDbTransactionList->isMPinBlockRange(nHeight, reorgRecoveryMaxHeight, true);
-    pDbTradeList->deleteAboveBlock(nHeight);
-    pDbStoList->deleteAboveBlock(nHeight);
-    pDbFeeCache->RollBackCache(nHeight);
-    pDbFeeHistory->RollBackHistory(nHeight);
-    reorgRecoveryMaxHeight = 0;
+        // NOTE: The blockNum parameter is inclusive, so deleteAboveBlock(1000) will delete records in block 1000 and above.
+        pDbTransactionList->isMPinBlockRange(nHeight, reorgRecoveryMaxHeight, true);
+        pDbTradeList->deleteAboveBlock(nHeight);
+        pDbStoList->deleteAboveBlock(nHeight);
+        pDbFeeCache->RollBackCache(nHeight);
+        pDbFeeHistory->RollBackHistory(nHeight);
+        reorgRecoveryMaxHeight = 0;
 
-    nWaterlineBlock = ConsensusParams().GENESIS_BLOCK - 1;
+        nWaterlineBlock = ConsensusParams().GENESIS_BLOCK - 1;
+    }
 
     if (reorgContainsFreeze && !fInitialParse) {
        PrintToConsole("Reorganization containing freeze related transactions detected, forcing a reparse...\n");
@@ -1626,18 +1644,23 @@ void RewindDBsAndState(int nHeight, int nBlockPrev = 0, bool fInitialParse = fal
             // unable to recover easily, remove stale stale state bits and reparse from the beginning.
             clear_all_state();
         } else {
+            LOCK(cs_tally);
             nWaterlineBlock = best_state_block;
         }
     }
 
-    // clear the global wallet property list, perform a forced wallet update and tell the UI that state is no longer valid, and UI views need to be reinit
-    global_wallet_property_list.clear();
-    CheckWalletUpdate(true);
-    uiInterface.OmniStateInvalidated();
+    {
+        LOCK(cs_tally);
+        // clear the global wallet property list, perform a forced wallet update and tell the UI that state is no longer valid, and UI views need to be reinit
+        global_wallet_property_list.clear();
+        CheckWalletUpdate(true);
+        uiInterface.OmniStateInvalidated();
+        nWaterline = nWaterlineBlock;
+    }
 
-    if (nWaterlineBlock < nBlockPrev) {
+    if (nWaterline < nBlockPrev) {
         // scan from the block after the best active block to catch up to the active chain
-        msc_initial_scan(nWaterlineBlock + 1);
+        msc_initial_scan(nWaterline + 1);
     }
 }
 
@@ -1648,6 +1671,8 @@ void RewindDBsAndState(int nHeight, int nBlockPrev = 0, bool fInitialParse = fal
  */
 int mastercore_init()
 {
+    bool wrongDBVersion, startClean = false;
+
     {
         LOCK(cs_tally);
 
@@ -1676,7 +1701,6 @@ int mastercore_init()
         }
 
         // check for --startclean option and delete MP_ folders if present
-        bool startClean = false;
         if (gArgs.GetBoolArg("-startclean", false)) {
             PrintToLog("Process was started with --startclean option, attempting to clear persistence files..\n");
             try {
@@ -1715,15 +1739,20 @@ int mastercore_init()
         pathStateFiles = GetDataDir() / "MP_persist";
         TryCreateDirectories(pathStateFiles);
 
-        bool wrongDBVersion = (pDbTransactionList->getDBVersion() != DB_VERSION);
+        wrongDBVersion = (pDbTransactionList->getDBVersion() != DB_VERSION);
 
         ++mastercoreInitialized;
+    }
 
-        nWaterlineBlock = LoadMostRelevantInMemoryState();
+    int nWaterline = LoadMostRelevantInMemoryState();
 
-        if (!startClean && nWaterlineBlock > 0 && nWaterlineBlock < GetHeight()) {
-            RewindDBsAndState(nWaterlineBlock + 1, 0, true);
-        }
+    if (!startClean && nWaterline > 0 && nWaterline < GetHeight()) {
+        RewindDBsAndState(nWaterline + 1, 0, true);
+    }
+
+    {
+        LOCK(cs_tally);
+        nWaterlineBlock = nWaterline;
 
         bool noPreviousState = (nWaterlineBlock <= 0);
 
@@ -1783,19 +1812,16 @@ int mastercore_init()
             int64_t exodus_balance = GetTokenBalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
             PrintToLog("Exodus balance at start: %s\n", FormatDivisibleMP(exodus_balance));
         }
-
-        // load feature activation messages from txlistdb and process them accordingly
-        pDbTransactionList->LoadActivations(nWaterlineBlock);
     }
 
     {
         LOCK2(cs_main, cs_tally);
+        // load feature activation messages from txlistdb and process them accordingly
+        pDbTransactionList->LoadActivations(nWaterlineBlock);
+
         // load all alerts from levelDB (and immediately expire old ones)
         pDbTransactionList->LoadAlerts(nWaterlineBlock);
-    }
 
-    {
-        LOCK(cs_tally);
         // load the state of any freeable properties and frozen addresses from levelDB
         if (!pDbTransactionList->LoadFreezeState(nWaterlineBlock)) {
             std::string strShutdownReason = "Failed to load freeze state from levelDB.  It is unsafe to continue.\n";
@@ -1805,9 +1831,14 @@ int mastercore_init()
             }
         }
 
-        // initial scan
-        msc_initial_scan(nWaterlineBlock);
+        nWaterline = nWaterlineBlock;
+    }
 
+    // initial scan
+    msc_initial_scan(nWaterline);
+
+    {
+        LOCK(cs_tally);
         // display Exodus balance
         int64_t exodus_balance = GetTokenBalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
 
@@ -1877,44 +1908,59 @@ int mastercore_shutdown()
  */
 bool mastercore_handler_tx(const CTransaction& tx, int nBlock, unsigned int idx, const CBlockIndex* pBlockIndex, const std::shared_ptr<std::map<COutPoint, Coin> > removedCoins)
 {
-    LOCK(cs_tally);
+    int nMastercoreInit, pop_ret;
+    {
+        LOCK(cs_tally);
+        nMastercoreInit = mastercoreInitialized;
+    }
 
-    if (!mastercoreInitialized) {
+    if (!nMastercoreInit) {
         mastercore_init();
     }
 
-    // clear pending, if any
-    // NOTE1: Every incoming TX is checked, not just MP-ones because:
-    // if for some reason the incoming TX doesn't pass our parser validation steps successfully, I'd still want to clear pending amounts for that TX.
-    // NOTE2: Plus I wanna clear the amount before that TX is parsed by our protocol, in case we ever consider pending amounts in internal calculations.
-    PendingDelete(tx.GetHash());
+    {
+        LOCK(cs_tally);
 
-    // we do not care about parsing blocks prior to our waterline (empty blockchain defense)
-    if (nBlock < nWaterlineBlock) return false;
-    int64_t nBlockTime = pBlockIndex->GetBlockTime();
+        // clear pending, if any
+        // NOTE1: Every incoming TX is checked, not just MP-ones because:
+        // if for some reason the incoming TX doesn't pass our parser validation steps successfully, I'd still want to clear pending amounts for that TX.
+        // NOTE2: Plus I wanna clear the amount before that TX is parsed by our protocol, in case we ever consider pending amounts in internal calculations.
+        PendingDelete(tx.GetHash());
 
-    CMPTransaction mp_obj;
-    mp_obj.unlockLogic();
-
-    bool fFoundTx = false;
-    int pop_ret = parseTransaction(false, tx, nBlock, idx, mp_obj, nBlockTime, removedCoins);
-
-    if (pop_ret >= 0) {
-        assert(mp_obj.getEncodingClass() != NO_MARKER);
-        assert(mp_obj.getSender().empty() == false);
-
-        // extra iteration of the outputs for every transaction, not needed on mainnet after Exodus closed
-        const CConsensusParams& params = ConsensusParams();
-        if (isNonMainNet() || nBlock <= params.LAST_EXODUS_BLOCK) {
-            fFoundTx |= HandleExodusPurchase(tx, nBlock, mp_obj.getSender(), nBlockTime);
-        }
+        // we do not care about parsing blocks prior to our waterline (empty blockchain defense)
+        if (nBlock < nWaterlineBlock) return false;
     }
 
-    if (pop_ret > 0) {
-        assert(mp_obj.getEncodingClass() == OMNI_CLASS_A);
-        assert(mp_obj.getPayload().empty() == true);
+    int64_t nBlockTime = pBlockIndex->GetBlockTime();
+    CMPTransaction mp_obj;
+    mp_obj.unlockLogic();
+    bool fFoundTx = false;
 
-        fFoundTx |= HandleDExPayments(tx, nBlock, mp_obj.getSender());
+    {
+        LOCK2(cs_main, cs_tally);
+        pop_ret = parseTransaction(false, tx, nBlock, idx, mp_obj, nBlockTime, removedCoins);
+    }
+
+    {
+        LOCK(cs_tally);
+
+        if (pop_ret >= 0) {
+            assert(mp_obj.getEncodingClass() != NO_MARKER);
+            assert(mp_obj.getSender().empty() == false);
+
+            // extra iteration of the outputs for every transaction, not needed on mainnet after Exodus closed
+            const CConsensusParams& params = ConsensusParams();
+            if (isNonMainNet() || nBlock <= params.LAST_EXODUS_BLOCK) {
+                fFoundTx |= HandleExodusPurchase(tx, nBlock, mp_obj.getSender(), nBlockTime);
+            }
+        }
+
+        if (pop_ret > 0) {
+            assert(mp_obj.getEncodingClass() == OMNI_CLASS_A);
+            assert(mp_obj.getPayload().empty() == true);
+
+            fFoundTx |= HandleDExPayments(tx, nBlock, mp_obj.getSender());
+        }
     }
 
     if (0 == pop_ret) {
@@ -1924,6 +1970,7 @@ bool mastercore_handler_tx(const CTransaction& tx, int nBlock, unsigned int idx,
         // Only structurally valid transactions get recorded in levelDB
         // PKT_ERROR - 2 = interpret_Transaction failed, structurally invalid payload
         if (interp_ret != PKT_ERROR - 2) {
+            LOCK(cs_tally);
             bool bValid = (0 <= interp_ret);
             pDbTransactionList->recordTX(tx.GetHash(), bValid, nBlock, mp_obj.getType(), mp_obj.getNewAmount());
             pDbTransaction->RecordTransaction(tx.GetHash(), idx, interp_ret);
@@ -1931,6 +1978,7 @@ bool mastercore_handler_tx(const CTransaction& tx, int nBlock, unsigned int idx,
         fFoundTx |= (interp_ret == 0);
     }
 
+    LOCK(cs_tally);
     if (fFoundTx && msc_debug_consensus_hash_every_transaction) {
         uint256 consensusHash = GetConsensusHash();
         PrintToLog("Consensus hash for transaction %s: %s\n", tx.GetHash().GetHex(), consensusHash.GetHex());
@@ -1958,17 +2006,28 @@ bool mastercore::UseEncodingClassC(size_t nDataSize)
 
 int mastercore_handler_block_begin(int nBlockPrev, CBlockIndex const * pBlockIndex)
 {
-    LOCK(cs_tally);
+    bool bRecoveryMode{false};
+    {
+        LOCK(cs_tally);
 
-    if (reorgRecoveryMode > 0) {
-        reorgRecoveryMode = 0; // clear reorgRecovery here as this is likely re-entrant
+        if (reorgRecoveryMode > 0) {
+            reorgRecoveryMode = 0; // clear reorgRecovery here as this is likely re-entrant
+            bRecoveryMode = true;
+        }
+    }
+
+    if (bRecoveryMode) {
         RewindDBsAndState(pBlockIndex->nHeight, nBlockPrev);
     }
 
-    // handle any features that go live with this block
-    CheckLiveActivations(pBlockIndex->nHeight);
+    {
+        LOCK(cs_tally);
 
-    eraseExpiredCrowdsale(pBlockIndex);
+        // handle any features that go live with this block
+        CheckLiveActivations(pBlockIndex->nHeight);
+
+        eraseExpiredCrowdsale(pBlockIndex);
+    }
 
     return 0;
 }
@@ -1979,63 +2038,75 @@ int mastercore_handler_block_begin(int nBlockPrev, CBlockIndex const * pBlockInd
 int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
         unsigned int countMP)
 {
-    LOCK(cs_tally);
+    int nMastercoreInit;
+    {
+        LOCK(cs_tally);
+        nMastercoreInit = mastercoreInitialized;
+    }
 
-    if (!mastercoreInitialized) {
+    if (!nMastercoreInit) {
         mastercore_init();
     }
 
-    // for every new received block must do:
-    // 1) remove expired entries from the accept list (per spec accept entries are
-    //    valid until their blocklimit expiration; because the customer can keep
-    //    paying BTC for the offer in several installments)
-    // 2) update the amount in the Exodus address
-    int64_t devmsc = 0;
-    unsigned int how_many_erased = eraseExpiredAccepts(nBlockNow);
+    bool checkpointValid;
+    {
+        LOCK(cs_tally);
 
-    if (how_many_erased) {
-        PrintToLog("%s(%d); erased %u accepts this block, line %d, file: %s\n",
-            __FUNCTION__, how_many_erased, nBlockNow, __LINE__, __FILE__);
-    }
+        // for every new received block must do:
+        // 1) remove expired entries from the accept list (per spec accept entries are
+        //    valid until their blocklimit expiration; because the customer can keep
+        //    paying BTC for the offer in several installments)
+        // 2) update the amount in the Exodus address
+        int64_t devmsc = 0;
+        unsigned int how_many_erased = eraseExpiredAccepts(nBlockNow);
 
-    // calculate devmsc as of this block and update the Exodus' balance
-    devmsc = calculate_and_update_devmsc(pBlockIndex->GetBlockTime(), nBlockNow);
-
-    if (msc_debug_exo) {
-        int64_t balance = GetTokenBalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
-        PrintToLog("devmsc for block %d: %d, Exodus balance: %d\n", nBlockNow, devmsc, FormatDivisibleMP(balance));
-    }
-
-    // check the alert status, do we need to do anything else here?
-    CheckExpiredAlerts(nBlockNow, pBlockIndex->GetBlockTime());
-
-    // check that pending transactions are still in the mempool
-    PendingCheck();
-
-    // transactions were found in the block, signal the UI accordingly
-    if (countMP > 0) CheckWalletUpdate(true);
-
-    // calculate and print a consensus hash if required
-    if (ShouldConsensusHashBlock(nBlockNow)) {
-        uint256 consensusHash = GetConsensusHash();
-        PrintToLog("Consensus hash for block %d: %s\n", nBlockNow, consensusHash.GetHex());
-    }
-
-    // request checkpoint verification
-    bool checkpointValid = VerifyCheckpoint(nBlockNow, pBlockIndex->GetBlockHash());
-    if (!checkpointValid) {
-        // failed checkpoint, can't be trusted to provide valid data - shutdown client
-        const std::string& msg = strprintf(
-                "Shutting down due to failed checkpoint for block %d (hash %s). "
-                "Please restart with -startclean flag and if this doesn't work, please reach out to the support.\n",
-                nBlockNow, pBlockIndex->GetBlockHash().GetHex());
-        PrintToLog(msg);
-        if (!gArgs.GetBoolArg("-overrideforcedshutdown", false)) {
-            fs::path persistPath = GetDataDir() / "MP_persist";
-            if (fs::exists(persistPath)) fs::remove_all(persistPath); // prevent the node being restarted without a reparse after forced shutdown
-            DoAbortNode(msg, msg);
+        if (how_many_erased) {
+            PrintToLog("%s(%d); erased %u accepts this block, line %d, file: %s\n",
+                __FUNCTION__, how_many_erased, nBlockNow, __LINE__, __FILE__);
         }
-    } else {
+
+        // calculate devmsc as of this block and update the Exodus' balance
+        devmsc = calculate_and_update_devmsc(pBlockIndex->GetBlockTime(), nBlockNow);
+
+        if (msc_debug_exo) {
+            int64_t balance = GetTokenBalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
+            PrintToLog("devmsc for block %d: %d, Exodus balance: %d\n", nBlockNow, devmsc, FormatDivisibleMP(balance));
+        }
+
+        // check the alert status, do we need to do anything else here?
+        CheckExpiredAlerts(nBlockNow, pBlockIndex->GetBlockTime());
+
+        // check that pending transactions are still in the mempool
+        PendingCheck();
+
+        // transactions were found in the block, signal the UI accordingly
+        if (countMP > 0) CheckWalletUpdate(true);
+
+        // calculate and print a consensus hash if required
+        if (ShouldConsensusHashBlock(nBlockNow)) {
+            uint256 consensusHash = GetConsensusHash();
+            PrintToLog("Consensus hash for block %d: %s\n", nBlockNow, consensusHash.GetHex());
+        }
+
+        // request checkpoint verification
+        checkpointValid = VerifyCheckpoint(nBlockNow, pBlockIndex->GetBlockHash());
+        if (!checkpointValid) {
+            // failed checkpoint, can't be trusted to provide valid data - shutdown client
+            const std::string& msg = strprintf(
+                    "Shutting down due to failed checkpoint for block %d (hash %s). "
+                    "Please restart with -startclean flag and if this doesn't work, please reach out to the support.\n",
+                    nBlockNow, pBlockIndex->GetBlockHash().GetHex());
+            PrintToLog(msg);
+            if (!gArgs.GetBoolArg("-overrideforcedshutdown", false)) {
+                fs::path persistPath = GetDataDir() / "MP_persist";
+                if (fs::exists(persistPath)) fs::remove_all(persistPath); // prevent the node being restarted without a reparse after forced shutdown
+                DoAbortNode(msg, msg);
+            }
+        }
+    }
+
+    LOCK2(cs_main, cs_tally);
+    if (checkpointValid){
         // save out the state after this block
         if (IsPersistenceEnabled(nBlockNow) && nBlockNow >= ConsensusParams().GENESIS_BLOCK) {
             PersistInMemoryState(pBlockIndex);

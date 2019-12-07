@@ -866,6 +866,13 @@ int CMPTransaction::interpretPacket()
         return (PKT_ERROR -2);
     }
 
+    // Use chainActive[block] here to avoid locking cs_main after cs_tally below
+    CBlockIndex* pindex;
+    {
+        LOCK(cs_main);
+        pindex = chainActive[block];
+    }
+
     LOCK(cs_tally);
 
     if (isAddressFrozen(sender, property)) {
@@ -902,37 +909,37 @@ int CMPTransaction::interpretPacket()
             return logicMath_MetaDExCancelEcosystem();
 
         case MSC_TYPE_CREATE_PROPERTY_FIXED:
-            return logicMath_CreatePropertyFixed();
+            return logicMath_CreatePropertyFixed(pindex);
 
         case MSC_TYPE_CREATE_PROPERTY_VARIABLE:
-            return logicMath_CreatePropertyVariable();
+            return logicMath_CreatePropertyVariable(pindex);
 
         case MSC_TYPE_CLOSE_CROWDSALE:
-            return logicMath_CloseCrowdsale();
+            return logicMath_CloseCrowdsale(pindex);
 
         case MSC_TYPE_CREATE_PROPERTY_MANUAL:
-            return logicMath_CreatePropertyManaged();
+            return logicMath_CreatePropertyManaged(pindex);
 
         case MSC_TYPE_GRANT_PROPERTY_TOKENS:
-            return logicMath_GrantTokens();
+            return logicMath_GrantTokens(pindex);
 
         case MSC_TYPE_REVOKE_PROPERTY_TOKENS:
-            return logicMath_RevokeTokens();
+            return logicMath_RevokeTokens(pindex);
 
         case MSC_TYPE_CHANGE_ISSUER_ADDRESS:
-            return logicMath_ChangeIssuer();
+            return logicMath_ChangeIssuer(pindex);
 
         case MSC_TYPE_ENABLE_FREEZING:
-            return logicMath_EnableFreezing();
+            return logicMath_EnableFreezing(pindex);
 
         case MSC_TYPE_DISABLE_FREEZING:
-            return logicMath_DisableFreezing();
+            return logicMath_DisableFreezing(pindex);
 
         case MSC_TYPE_FREEZE_PROPERTY_TOKENS:
-            return logicMath_FreezeTokens();
+            return logicMath_FreezeTokens(pindex);
 
         case MSC_TYPE_UNFREEZE_PROPERTY_TOKENS:
-            return logicMath_UnfreezeTokens();
+            return logicMath_UnfreezeTokens(pindex);
 
         case OMNICORE_MESSAGE_TYPE_DEACTIVATION:
             return logicMath_Deactivation();
@@ -1584,19 +1591,13 @@ int CMPTransaction::logicMath_MetaDExCancelEcosystem()
 }
 
 /** Tx 50 */
-int CMPTransaction::logicMath_CreatePropertyFixed()
+int CMPTransaction::logicMath_CreatePropertyFixed(CBlockIndex* pindex)
 {
-    uint256 blockHash;
-    {
-        LOCK(cs_main);
-
-        CBlockIndex* pindex = chainActive[block];
-        if (pindex == nullptr) {
-            PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
-            return (PKT_ERROR_SP -20);
-        }
-        blockHash = pindex->GetBlockHash();
+    if (pindex == nullptr) {
+        PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
+        return (PKT_ERROR_SP -20);
     }
+    uint256 blockHash = pindex->GetBlockHash();
 
     if (OMNI_PROPERTY_MSC != ecosystem && OMNI_PROPERTY_TMSC != ecosystem) {
         PrintToLog("%s(): rejected: invalid ecosystem: %d\n", __func__, (uint32_t) ecosystem);
@@ -1655,19 +1656,13 @@ int CMPTransaction::logicMath_CreatePropertyFixed()
 }
 
 /** Tx 51 */
-int CMPTransaction::logicMath_CreatePropertyVariable()
+int CMPTransaction::logicMath_CreatePropertyVariable(CBlockIndex* pindex)
 {
-    uint256 blockHash;
-    {
-        LOCK(cs_main);
-
-        CBlockIndex* pindex = chainActive[block];
-        if (pindex == nullptr) {
-            PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
-            return (PKT_ERROR_SP -20);
-        }
-        blockHash = pindex->GetBlockHash();
+    if (pindex == nullptr) {
+        PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
+        return (PKT_ERROR_SP -20);
     }
+    uint256 blockHash = pindex->GetBlockHash();
 
     if (OMNI_PROPERTY_MSC != ecosystem && OMNI_PROPERTY_TMSC != ecosystem) {
         PrintToLog("%s(): rejected: invalid ecosystem: %d\n", __func__, (uint32_t) ecosystem);
@@ -1758,19 +1753,13 @@ int CMPTransaction::logicMath_CreatePropertyVariable()
 }
 
 /** Tx 53 */
-int CMPTransaction::logicMath_CloseCrowdsale()
+int CMPTransaction::logicMath_CloseCrowdsale(CBlockIndex* pindex)
 {
-    uint256 blockHash;
-    {
-        LOCK(cs_main);
-
-        CBlockIndex* pindex = chainActive[block];
-        if (pindex == nullptr) {
-            PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
-            return (PKT_ERROR_SP -20);
-        }
-        blockHash = pindex->GetBlockHash();
+    if (pindex == nullptr) {
+        PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
+        return (PKT_ERROR_SP -20);
     }
+    uint256 blockHash = pindex->GetBlockHash();
 
     if (!IsTransactionTypeAllowed(block, property, type, version)) {
         PrintToLog("%s(): rejected: type %d or version %d not permitted for property %d at block %d\n",
@@ -1825,19 +1814,13 @@ int CMPTransaction::logicMath_CloseCrowdsale()
 }
 
 /** Tx 54 */
-int CMPTransaction::logicMath_CreatePropertyManaged()
+int CMPTransaction::logicMath_CreatePropertyManaged(CBlockIndex* pindex)
 {
-    uint256 blockHash;
-    {
-        LOCK(cs_main);
-
-        CBlockIndex* pindex = chainActive[block];
-        if (pindex == nullptr) {
-            PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
-            return (PKT_ERROR_SP -20);
-        }
-        blockHash = pindex->GetBlockHash();
+    if (pindex == nullptr) {
+        PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
+        return (PKT_ERROR_SP -20);
     }
+    uint256 blockHash = pindex->GetBlockHash();
 
     if (OMNI_PROPERTY_MSC != ecosystem && OMNI_PROPERTY_TMSC != ecosystem) {
         PrintToLog("%s(): rejected: invalid ecosystem: %d\n", __func__, (uint32_t) ecosystem);
@@ -1890,19 +1873,13 @@ int CMPTransaction::logicMath_CreatePropertyManaged()
 }
 
 /** Tx 55 */
-int CMPTransaction::logicMath_GrantTokens()
+int CMPTransaction::logicMath_GrantTokens(CBlockIndex* pindex)
 {
-    uint256 blockHash;
-    {
-        LOCK(cs_main);
-
-        CBlockIndex* pindex = chainActive[block];
-        if (pindex == nullptr) {
-            PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
-            return (PKT_ERROR_SP -20);
-        }
-        blockHash = pindex->GetBlockHash();
+    if (pindex == nullptr) {
+        PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
+        return (PKT_ERROR_SP -20);
     }
+    uint256 blockHash = pindex->GetBlockHash();
 
     if (!IsTransactionTypeAllowed(block, property, type, version)) {
         PrintToLog("%s(): rejected: type %d or version %d not permitted for property %d at block %d\n",
@@ -1977,19 +1954,13 @@ int CMPTransaction::logicMath_GrantTokens()
 }
 
 /** Tx 56 */
-int CMPTransaction::logicMath_RevokeTokens()
+int CMPTransaction::logicMath_RevokeTokens(CBlockIndex* pindex)
 {
-    uint256 blockHash;
-    {
-        LOCK(cs_main);
-
-        CBlockIndex* pindex = chainActive[block];
-        if (pindex == nullptr) {
-            PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
-            return (PKT_ERROR_TOKENS -20);
-        }
-        blockHash = pindex->GetBlockHash();
+    if (pindex == nullptr) {
+        PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
+        return (PKT_ERROR_TOKENS -20);
     }
+    uint256 blockHash = pindex->GetBlockHash();
 
     if (!IsTransactionTypeAllowed(block, property, type, version)) {
         PrintToLog("%s(): rejected: type %d or version %d not permitted for property %d at block %d\n",
@@ -2047,19 +2018,13 @@ int CMPTransaction::logicMath_RevokeTokens()
 }
 
 /** Tx 70 */
-int CMPTransaction::logicMath_ChangeIssuer()
+int CMPTransaction::logicMath_ChangeIssuer(CBlockIndex* pindex)
 {
-    uint256 blockHash;
-    {
-        LOCK(cs_main);
-
-        CBlockIndex* pindex = chainActive[block];
-        if (pindex == nullptr) {
-            PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
-            return (PKT_ERROR_TOKENS -20);
-        }
-        blockHash = pindex->GetBlockHash();
+    if (pindex == nullptr) {
+        PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
+        return (PKT_ERROR_TOKENS -20);
     }
+    uint256 blockHash = pindex->GetBlockHash();
 
     if (!IsTransactionTypeAllowed(block, property, type, version)) {
         PrintToLog("%s(): rejected: type %d or version %d not permitted for property %d at block %d\n",
@@ -2112,18 +2077,11 @@ int CMPTransaction::logicMath_ChangeIssuer()
 }
 
 /** Tx 71 */
-int CMPTransaction::logicMath_EnableFreezing()
+int CMPTransaction::logicMath_EnableFreezing(CBlockIndex* pindex)
 {
-    uint256 blockHash;
-    {
-        LOCK(cs_main);
-
-        CBlockIndex* pindex = chainActive[block];
-        if (pindex == nullptr) {
-            PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
-            return (PKT_ERROR_TOKENS -20);
-        }
-        blockHash = pindex->GetBlockHash();
+    if (pindex == nullptr) {
+        PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
+        return (PKT_ERROR_TOKENS -20);
     }
 
     if (!IsTransactionTypeAllowed(block, property, type, version)) {
@@ -2173,18 +2131,11 @@ int CMPTransaction::logicMath_EnableFreezing()
 }
 
 /** Tx 72 */
-int CMPTransaction::logicMath_DisableFreezing()
+int CMPTransaction::logicMath_DisableFreezing(CBlockIndex* pindex)
 {
-    uint256 blockHash;
-    {
-        LOCK(cs_main);
-
-        CBlockIndex* pindex = chainActive[block];
-        if (pindex == nullptr) {
-            PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
-            return (PKT_ERROR_TOKENS -20);
-        }
-        blockHash = pindex->GetBlockHash();
+    if (pindex == nullptr) {
+        PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
+        return (PKT_ERROR_TOKENS -20);
     }
 
     if (!IsTransactionTypeAllowed(block, property, type, version)) {
@@ -2226,18 +2177,11 @@ int CMPTransaction::logicMath_DisableFreezing()
 }
 
 /** Tx 185 */
-int CMPTransaction::logicMath_FreezeTokens()
+int CMPTransaction::logicMath_FreezeTokens(CBlockIndex* pindex)
 {
-    uint256 blockHash;
-    {
-        LOCK(cs_main);
-
-        CBlockIndex* pindex = chainActive[block];
-        if (pindex == nullptr) {
-            PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
-            return (PKT_ERROR_TOKENS -20);
-        }
-        blockHash = pindex->GetBlockHash();
+    if (pindex == nullptr) {
+        PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
+        return (PKT_ERROR_TOKENS -20);
     }
 
     if (!IsTransactionTypeAllowed(block, property, type, version)) {
@@ -2284,18 +2228,11 @@ int CMPTransaction::logicMath_FreezeTokens()
 }
 
 /** Tx 186 */
-int CMPTransaction::logicMath_UnfreezeTokens()
+int CMPTransaction::logicMath_UnfreezeTokens(CBlockIndex* pindex)
 {
-    uint256 blockHash;
-    {
-        LOCK(cs_main);
-
-        CBlockIndex* pindex = chainActive[block];
-        if (pindex == nullptr) {
-            PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
-            return (PKT_ERROR_TOKENS -20);
-        }
-        blockHash = pindex->GetBlockHash();
+    if (pindex == nullptr) {
+        PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
+        return (PKT_ERROR_TOKENS -20);
     }
 
     if (!IsTransactionTypeAllowed(block, property, type, version)) {

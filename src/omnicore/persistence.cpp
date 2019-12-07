@@ -659,15 +659,19 @@ int RestoreInMemoryState(const std::string& filename, int what, bool verifyHash)
  */
 int LoadMostRelevantInMemoryState()
 {
-    PrintToLog("Trying to load most relevant state into memory..\n");
     int res = -1;
-    // check the SP database and roll it back to its latest valid state
-    // according to the active chain
     uint256 spWatermark;
-    if (!pDbSpInfo->getWatermark(spWatermark)) {
-        // trigger a full reparse, if the SP database has no watermark
-        PrintToLog("Failed to load historical state: SP database has no watermark\n");
-        return -1;
+    {
+        LOCK(cs_tally);
+        PrintToLog("Trying to load most relevant state into memory..\n");
+        // check the SP database and roll it back to its latest valid state
+        // according to the active chain
+        if (!pDbSpInfo->getWatermark(spWatermark)) {
+            // trigger a full reparse, if the SP database has no watermark
+            PrintToLog("Failed to load historical state: SP database has no watermark\n");
+            return -1;
+        }
+
     }
 
     CBlockIndex const *spBlockIndex = GetBlockIndex(spWatermark);
@@ -677,91 +681,97 @@ int LoadMostRelevantInMemoryState()
         return -1;
     }
 
-    while (nullptr != spBlockIndex && false == chainActive.Contains(spBlockIndex)) {
-        int remainingSPs = pDbSpInfo->popBlock(spBlockIndex->GetBlockHash());
-        if (remainingSPs < 0) {
-            // trigger a full reparse, if the levelDB cannot roll back
-            PrintToLog("Failed to load historical state: no valid state found after rolling back SP database\n");
-            return -1;
-        } /*else if (remainingSPs == 0) {
-      // potential optimization here?
-    }*/
-        spBlockIndex = spBlockIndex->pprev;
-        if (spBlockIndex != nullptr) {
-            pDbSpInfo->setWatermark(spBlockIndex->GetBlockHash());
-        }
-    }
-
-    // prepare a set of available files by block hash pruning any that are
-    // not in the active chain
     std::set<uint256> persistedBlocks;
-    fs::directory_iterator dIter(pathStateFiles);
-    fs::directory_iterator endIter;
-    for (; dIter != endIter; ++dIter) {
-        if (false == fs::is_regular_file(dIter->status()) || dIter->path().empty()) {
-            // skip funny business
-            continue;
+    {
+        LOCK2(cs_main, cs_tally);
+        while (nullptr != spBlockIndex && false == chainActive.Contains(spBlockIndex)) {
+            int remainingSPs = pDbSpInfo->popBlock(spBlockIndex->GetBlockHash());
+            if (remainingSPs < 0) {
+                // trigger a full reparse, if the levelDB cannot roll back
+                PrintToLog("Failed to load historical state: no valid state found after rolling back SP database\n");
+                return -1;
+            } /*else if (remainingSPs == 0) {
+          // potential optimization here?
+        }*/
+            spBlockIndex = spBlockIndex->pprev;
+            if (spBlockIndex != nullptr) {
+                pDbSpInfo->setWatermark(spBlockIndex->GetBlockHash());
+            }
         }
 
-        std::string fName = (*--dIter->path().end()).string();
-        std::vector<std::string> vstr;
-        boost::split(vstr, fName, boost::is_any_of("-."), boost::token_compress_on);
-        if (vstr.size() == 3 &&
-                boost::equals(vstr[2], "dat")) {
-            uint256 blockHash;
-            blockHash.SetHex(vstr[1]);
-            CBlockIndex *pBlockIndex = GetBlockIndex(blockHash);
-            if (pBlockIndex == nullptr || false == chainActive.Contains(pBlockIndex)) {
+        // prepare a set of available files by block hash pruning any that are
+        // not in the active chain
+        fs::directory_iterator dIter(pathStateFiles);
+        fs::directory_iterator endIter;
+        for (; dIter != endIter; ++dIter) {
+            if (false == fs::is_regular_file(dIter->status()) || dIter->path().empty()) {
+                // skip funny business
                 continue;
             }
 
-            // this is a valid block in the active chain, store it
-            persistedBlocks.insert(blockHash);
+            std::string fName = (*--dIter->path().end()).string();
+            std::vector<std::string> vstr;
+            boost::split(vstr, fName, boost::is_any_of("-."), boost::token_compress_on);
+            if (vstr.size() == 3 &&
+                    boost::equals(vstr[2], "dat")) {
+                uint256 blockHash;
+                blockHash.SetHex(vstr[1]);
+                CBlockIndex *pBlockIndex = GetBlockIndex(blockHash);
+                if (pBlockIndex == nullptr || false == chainActive.Contains(pBlockIndex)) {
+                    continue;
+                }
+
+                // this is a valid block in the active chain, store it
+                persistedBlocks.insert(blockHash);
+            }
         }
     }
 
-    // using the SP's watermark after its fixed-up as the tip
-    // walk backwards until we find a valid and full set of persisted state files
-    // for each block we discard, roll back the SP database
-    CBlockIndex const *curTip = spBlockIndex;
-    int abortRollBackBlock = 9999999;
-    if (curTip != nullptr) {
-        abortRollBackBlock = ConsensusParams().GENESIS_BLOCK - 1;
-    }
-    while (nullptr != curTip && persistedBlocks.size() > 0 && curTip->nHeight > abortRollBackBlock ) {
-        if (persistedBlocks.find(curTip->GetBlockHash()) != persistedBlocks.end()) {
-            int success = -1;
-            for (int i = 0; i < NUM_FILETYPES; ++i) {
-                fs::path path = pathStateFiles / strprintf("%s-%s.dat", statePrefix[i], curTip->GetBlockHash().ToString());
-                const std::string strFile = path.string();
-                success = RestoreInMemoryState(strFile, i, true);
-                if (success < 0) {
-                    PrintToConsole("Found a state inconsistency at block height %d. "
-                            "Reverting up to %d blocks.. this may take a few minutes.\n",
-                            curTip->nHeight, (curTip->nHeight - abortRollBackBlock - 1));
+    {
+        LOCK(cs_tally);
+        // using the SP's watermark after its fixed-up as the tip
+        // walk backwards until we find a valid and full set of persisted state files
+        // for each block we discard, roll back the SP database
+        CBlockIndex const *curTip = spBlockIndex;
+        int abortRollBackBlock = 9999999;
+        if (curTip != nullptr) {
+            abortRollBackBlock = ConsensusParams().GENESIS_BLOCK - 1;
+        }
+        while (nullptr != curTip && persistedBlocks.size() > 0 && curTip->nHeight > abortRollBackBlock ) {
+            if (persistedBlocks.find(curTip->GetBlockHash()) != persistedBlocks.end()) {
+                int success = -1;
+                for (int i = 0; i < NUM_FILETYPES; ++i) {
+                    fs::path path = pathStateFiles / strprintf("%s-%s.dat", statePrefix[i], curTip->GetBlockHash().ToString());
+                    const std::string strFile = path.string();
+                    success = RestoreInMemoryState(strFile, i, true);
+                    if (success < 0) {
+                        PrintToConsole("Found a state inconsistency at block height %d. "
+                                "Reverting up to %d blocks.. this may take a few minutes.\n",
+                                curTip->nHeight, (curTip->nHeight - abortRollBackBlock - 1));
+                        break;
+                    }
+                }
+
+                if (success >= 0) {
+                    res = curTip->nHeight;
                     break;
                 }
+
+                // remove this from the persistedBlock Set
+                persistedBlocks.erase(spBlockIndex->GetBlockHash());
             }
 
-            if (success >= 0) {
-                res = curTip->nHeight;
-                break;
+            // go to the previous block
+            if (pDbSpInfo->popBlock(curTip->GetBlockHash()) <= 0) {
+                // trigger a full reparse, if the levelDB cannot roll back
+                PrintToLog("Failed to load historical state: no valid state found after rolling back SP database (2)\n");
+                return -1;
             }
-
-            // remove this from the persistedBlock Set
-            persistedBlocks.erase(spBlockIndex->GetBlockHash());
-        }
-
-        // go to the previous block
-        if (pDbSpInfo->popBlock(curTip->GetBlockHash()) <= 0) {
-            // trigger a full reparse, if the levelDB cannot roll back
-            PrintToLog("Failed to load historical state: no valid state found after rolling back SP database (2)\n");
-            return -1;
-        }
-        curTip = curTip->pprev;
-        spBlockIndex = curTip;
-        if (curTip != nullptr) {
-            pDbSpInfo->setWatermark(curTip->GetBlockHash());
+            curTip = curTip->pprev;
+            spBlockIndex = curTip;
+            if (curTip != nullptr) {
+                pDbSpInfo->setWatermark(curTip->GetBlockHash());
+            }
         }
     }
 
