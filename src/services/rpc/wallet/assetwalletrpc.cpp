@@ -1079,7 +1079,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     string vchReceiptParentNodes = params[10].get_str();
     
     
-    string strWitness = params[12].get_str();
+    string strWitness = params[11].get_str();
     if(!fGethSynced){
         throw JSONRPCError(RPC_MISC_ERROR, "Geth is not synced, please wait until it syncs up and try again");
     }

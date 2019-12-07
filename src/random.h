@@ -97,13 +97,6 @@ void RandAddPeriodic() noexcept;
  */
 void RandAddEvent(const uint32_t event_info) noexcept;
 
-/**
- * Gathers entropy from the low bits of the time at which events occur. Should
- * be called with a uint32_t describing the event at the time an event occurs.
- *
- * Thread-safe.
- */
-void RandAddEvent(const uint32_t event_info);
 
 /**
  * Fast randomness source. This is seeded once with secure random data, but
