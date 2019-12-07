@@ -7,10 +7,11 @@
 #define BITCOIN_UTIL_MESSAGE_H
 
 #include <key.h> // For CKey
+#include <uint256.h>
 
 #include <string>
 
-extern const std::string strMessageMagic;
+extern const std::string MESSAGE_MAGIC;
 
 /** The result of a signed message verification.
  * Message verification takes as an input:
@@ -57,5 +58,11 @@ bool MessageSign(
     const CKey& privkey,
     const std::string& message,
     std::string& signature);
+
+/**
+ * Hashes a message for signing and verification in a manner that prevents
+ * inadvertently signing a transaction.
+ */
+uint256 MessageHash(const std::string& message);
 
 #endif // BITCOIN_UTIL_MESSAGE_H

@@ -15,7 +15,11 @@
 #include <string>
 #include <vector>
 
-const std::string strMessageMagic = "Bitcoin Signed Message:\n";
+/**
+ * Text used to signify that a signed message follows and to prevent
+ * inadvertently signing a transaction.
+ */
+const std::string MESSAGE_MAGIC = "Bitcoin Signed Message:\n";
 
 MessageVerificationResult MessageVerify(
     const std::string& address,
@@ -37,12 +41,8 @@ MessageVerificationResult MessageVerify(
         return MessageVerificationResult::ERR_MALFORMED_SIGNATURE;
     }
 
-    CHashWriter ss(SER_GETHASH, 0);
-    ss << strMessageMagic;
-    ss << message;
-
     CPubKey pubkey;
-    if (!pubkey.RecoverCompact(ss.GetHash(), signature_bytes)) {
+    if (!pubkey.RecoverCompact(MessageHash(message), signature_bytes)) {
         return MessageVerificationResult::ERR_PUBKEY_NOT_RECOVERED;
     }
 
@@ -58,17 +58,21 @@ bool MessageSign(
     const std::string& message,
     std::string& signature)
 {
-    CHashWriter ss(SER_GETHASH, 0);
-    ss << strMessageMagic;
-    ss << message;
-
     std::vector<unsigned char> signature_bytes;
 
-    if (!privkey.SignCompact(ss.GetHash(), signature_bytes)) {
+    if (!privkey.SignCompact(MessageHash(message), signature_bytes)) {
         return false;
     }
 
     signature = EncodeBase64(signature_bytes.data(), signature_bytes.size());
 
     return true;
+}
+
+uint256 MessageHash(const std::string& message)
+{
+    CHashWriter hasher(SER_GETHASH, 0);
+    hasher << MESSAGE_MAGIC << message;
+
+    return hasher.GetHash();
 }
