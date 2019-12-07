@@ -76,6 +76,7 @@ The following can be set when running make: make FOO=bar
     SDK_PATH: Path where sdk's can be found (used by macOS)
     FALLBACK_DOWNLOAD_PATH: If a source file can't be fetched, try here before giving up
     NO_QT: Don't download/build/cache qt and its dependencies
+    NO_QR: Don't download/build/cache packages needed for enabling qrencode
     NO_ZMQ: Don't download/build/cache packages needed for enabling zeromq
     NO_WALLET: Don't download/build/cache libs needed to enable the wallet
     NO_UPNP: Don't download/build/cache packages needed for enabling upnp
