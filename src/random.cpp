@@ -583,15 +583,6 @@ void GetStrongRandBytes(unsigned char* buf, int num) noexcept { ProcRand(buf, nu
 void RandAddPeriodic() noexcept { ProcRand(nullptr, 0, RNGLevel::PERIODIC); }
 void RandAddEvent(const uint32_t event_info) noexcept { GetRNGState().AddEvent(event_info); }
 
-void RandAddEvent(const uint32_t event_info) {
-    LOCK(events_mutex);
-    events_hasher.Write((const unsigned char *)&event_info, sizeof(event_info));
-    // Get the low four bytes of the performance counter. This translates to roughly the
-    // subsecond part.
-    uint32_t perfcounter = (GetPerformanceCounter() & 0xffffffff);
-    events_hasher.Write((const unsigned char*)&perfcounter, sizeof(perfcounter));
-}
-
 bool g_mock_deterministic_tests{false};
 
 uint64_t GetRand(uint64_t nMax) noexcept
