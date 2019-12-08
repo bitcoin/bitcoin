@@ -886,18 +886,13 @@ static bool FillTxInputCache(const CTransaction& tx, const std::shared_ptr<std::
         CTransactionRef txPrev;
         uint256 hashBlock;
         Coin newcoin;
-        if (GetTransaction(txIn.prevout.hash, txPrev, Params().GetConsensus(), hashBlock)) {
+        if (removedCoins && removedCoins->find(txIn.prevout) != removedCoins->end()) {
+            newcoin = removedCoins->find(txIn.prevout)->second;
+        } else if (GetTransaction(txIn.prevout.hash, txPrev, Params().GetConsensus(), hashBlock)) {
             newcoin.out.scriptPubKey = txPrev->vout[nOut].scriptPubKey;
             newcoin.out.nValue = txPrev->vout[nOut].nValue;
             BlockMap::iterator bit = mapBlockIndex.find(hashBlock);
             newcoin.nHeight = bit != mapBlockIndex.end() ? bit->second->nHeight : 1;
-        } else if (removedCoins) {
-            std::map<COutPoint, Coin>::const_iterator coinIt = removedCoins->find(txIn.prevout);
-            if (coinIt != removedCoins->end()) {
-                newcoin = coinIt->second;
-            } else {
-                return false;
-            }
         } else {
             return false;
         }
