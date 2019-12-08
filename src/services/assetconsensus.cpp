@@ -94,8 +94,14 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
 
     const std::vector<unsigned char> &vchReceiptParentNodes = mintSyscoin.vchReceiptParentNodes;
     dev::RLP rlpReceiptParentNodes(&vchReceiptParentNodes);
-
-    const std::vector<unsigned char> &vchReceiptValue = mintSyscoin.vchReceiptValue;
+    std::vector<unsigned char> vchReceiptValue;
+    if(mintSyscoin.vchReceiptValue.size() == 2){
+        const unsigned short &posReceipt = ((mintSyscoin.vchReceiptValue[0]<<8)|(mintSyscoin.vchReceiptValue[1]));
+        vchReceiptValue = std::vector<unsigned char>(mintSyscoin.vchReceiptParentNodes.begin()+posReceipt, mintSyscoin.vchReceiptParentNodes.end());
+    }
+    else{
+        vchReceiptValue = mintSyscoin.vchReceiptValue;
+    }
     dev::RLP rlpReceiptValue(&vchReceiptValue);
     
     if (!rlpReceiptValue.isList()){
@@ -165,11 +171,20 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     
     const std::vector<unsigned char> &vchTxParentNodes = mintSyscoin.vchTxParentNodes;
     dev::RLP rlpTxParentNodes(&vchTxParentNodes);
-    const std::vector<unsigned char> &vchTxValue = mintSyscoin.vchTxValue;
+    dev::h256 hash;
+    std::vector<unsigned char> vchTxValue;
+    if(mintSyscoin.vchTxValue.size() == 2){
+        const unsigned short &posTx = ((mintSyscoin.vchTxValue[0]<<8)|(mintSyscoin.vchTxValue[1]));
+        vchTxValue = std::vector<unsigned char>(mintSyscoin.vchTxParentNodes.begin()+posTx, mintSyscoin.vchTxParentNodes.end());
+        hash = dev::sha3(vchTxValue);
+    }
+    else{
+        vchTxValue = mintSyscoin.vchTxValue;
+        hash = dev::sha3(mintSyscoin.vchTxValue);
+    }
     dev::RLP rlpTxValue(&vchTxValue);
     const std::vector<unsigned char> &vchTxPath = mintSyscoin.vchTxPath;
     dev::RLP rlpTxPath(&vchTxPath);
-    const dev::h256 &hash = dev::sha3(vchTxValue);
     const std::vector<unsigned char> &vchHash = hash.asBytes();
     // ensure eth tx not already spent
     if(pethereumtxmintdb->ExistsKey(vchHash)){
@@ -444,7 +459,16 @@ bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, AssetAll
         return false;
     }
     // remove eth spend tx from our internal db
-    const dev::h256 &hash = dev::sha3(mintSyscoin.vchTxValue);
+    dev::h256 hash;
+    if(mintSyscoin.vchTxValue.size() == 2){
+        const unsigned short &posTx = ((mintSyscoin.vchTxValue[0]<<8)|(mintSyscoin.vchTxValue[1]));
+        const std::vector<unsigned char> &vchTxValue = std::vector<unsigned char>(mintSyscoin.vchTxParentNodes.begin()+posTx, mintSyscoin.vchTxParentNodes.end());
+        hash = dev::sha3(vchTxValue);
+    }
+    else{
+        hash = dev::sha3(mintSyscoin.vchTxValue);
+    }
+
     const std::vector<unsigned char> &vchHash = hash.asBytes();
     vecMintKeys.emplace_back(std::make_pair(std::make_pair(vchHash, 0), txHash));
     // recver
