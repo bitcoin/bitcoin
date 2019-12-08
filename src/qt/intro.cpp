@@ -251,22 +251,29 @@ void Intro::setStatus(int status, const QString &message, quint64 bytesAvailable
     {
         ui->freeSpace->setText("");
     } else {
-        QString freeString = tr("%n GB of free space available", "", bytesAvailable/GB_BYTES);
-        if (bytesAvailable < m_required_space_gb * GB_BYTES) {
-            freeString += " " + tr("(of %n GB needed)", "", m_required_space_gb);
-            ui->freeSpace->setStyleSheet("QLabel { color: #800000 }");
-            ui->prune->setChecked(true);
-        } else if (bytesAvailable / GB_BYTES - m_required_space_gb < 10) {
-            freeString += " " + tr("(%n GB needed for full chain)", "", m_required_space_gb);
-            ui->freeSpace->setStyleSheet("QLabel { color: #999900 }");
-            ui->prune->setChecked(true);
-        } else {
-            ui->freeSpace->setStyleSheet("");
+        m_bytes_available = bytesAvailable;
+        if (ui->prune->isEnabled()) {
+            ui->prune->setChecked(m_bytes_available < (m_blockchain_size_gb + m_chain_state_size_gb + 10) * GB_BYTES);
         }
-        ui->freeSpace->setText(freeString + ".");
+        UpdateFreeSpaceLabel();
     }
     /* Don't allow confirm in ERROR state */
     ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(status != FreespaceChecker::ST_ERROR);
+}
+
+void Intro::UpdateFreeSpaceLabel()
+{
+    QString freeString = tr("%n GB of free space available", "", m_bytes_available / GB_BYTES);
+    if (m_bytes_available < m_required_space_gb * GB_BYTES) {
+        freeString += " " + tr("(of %n GB needed)", "", m_required_space_gb);
+        ui->freeSpace->setStyleSheet("QLabel { color: #800000 }");
+    } else if (m_bytes_available / GB_BYTES - m_required_space_gb < 10) {
+        freeString += " " + tr("(%n GB needed for full chain)", "", m_required_space_gb);
+        ui->freeSpace->setStyleSheet("QLabel { color: #999900 }");
+    } else {
+        ui->freeSpace->setStyleSheet("");
+    }
+    ui->freeSpace->setText(freeString + ".");
 }
 
 void Intro::on_dataDirectory_textChanged(const QString &dataDirStr)
