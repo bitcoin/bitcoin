@@ -762,7 +762,7 @@ string AssetAllocationMint(const string& node, const string& asset, const string
 	// increase time by 1 hour
 	SleepFor(3600 * 1000);
     // "assetallocationmint [asset] [address] [amount] [blocknumber] [tx_hex] [txroot_hex] [txmerkleproof_hex] [txmerkleroofpath_hex] [receipt_hex] [receiptroot_hex] [receiptmerkleproof_hex] [witness]\n"
-    BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "assetallocationmint", asset + ",\"" + address + "\"," + amount + "," + itostr(height) + ",\"" + tx_hex + "\",\"a0" + txroot_hex + "\",\"" + txmerkleproof_hex + "\",\"" + txmerkleproofpath_hex + "\",\"" + receipt_hex + "\",\"a0" + receiptroot_hex + "\",\"" + receiptmerkleproof_hex +  "\",\"" + "\",\"" + witness + "\""));
+    BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "assetallocationmint", asset + ",\"" + address + "\"," + amount + "," + itostr(height) + ",\"" + tx_hex + "\",\"a0" + txroot_hex + "\",\"" + txmerkleproof_hex + "\",\"" + txmerkleproofpath_hex + "\",\"" + receipt_hex + "\",\"a0" + receiptroot_hex + "\",\"" + receiptmerkleproof_hex + "\",\"" + witness + "\""));
     BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "signrawtransactionwithwallet", "\"" +  find_value(r.get_obj(), "hex").get_str() + "\""));
     string hex_str = find_value(r.get_obj(), "hex").get_str();
    
