@@ -192,6 +192,7 @@ if USE_LCOV
 LCOV_FILTER_PATTERN = \
 	-p "/usr/include/" \
 	-p "/usr/lib/" \
+	-p "/usr/lib64/" \
 	-p "src/leveldb/" \
 	-p "src/bench/" \
 	-p "src/univalue" \
