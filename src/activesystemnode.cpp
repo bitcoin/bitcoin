@@ -62,7 +62,7 @@ void CActiveSystemnode::ManageStatus()
         }
 
         if(pwalletMain->GetBalance() == 0){
-            notCapableReason = "Hot node, waiting for remote activation.";
+            notCapableReason = "Systemnode configured correctly and ready, please use your local wallet to start it -Start alias-.";
             LogPrintf("CActiveSystemnode::ManageStatus() - not capable: %s\n", notCapableReason);
             return;
         }
