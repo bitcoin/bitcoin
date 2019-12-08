@@ -1026,6 +1026,13 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
 	vecSend.push_back(fee); 
 	return syscointxfund_helper(pwallet, strAddress, nVersion, "", vecSend);
 }
+std::vector<unsigned char> ushortToBytes(unsigned short paramShort)
+{
+     std::vector<unsigned char> arrayOfByte(2);
+     for (int i = 0; i < 2; i++)
+         arrayOfByte[1 - i] = (paramShort >> (i * 8));
+     return arrayOfByte;
+}
 UniValue assetallocationmint(const JSONRPCRequest& request) {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -1056,7 +1063,6 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
             + HelpExampleRpc("assetallocationmint", "\"assetguid\", \"address\", \"amount\", \"blocknumber\", \"tx_hex\", \"txroot_hex\", \"txmerkleproof_hex\", \"txmerkleproofpath_hex\", \"receipt_hex\", \"receiptroot_hex\", \"receiptmerkleproof\", \"\"")
         }
     }.Check(request);
-
     const uint32_t &nAsset = params[0].get_uint();
 	CAsset theAsset;
 	if (!GetAsset(nAsset, theAsset))
@@ -1072,13 +1078,23 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     string vchTxValue = params[4].get_str();
     string vchTxRoot = params[5].get_str();
     string vchTxParentNodes = params[6].get_str();
+
+    // find byte offset of tx data in the parent nodes
+    size_t pos = vchTxParentNodes.find(vchTxValue);
+    if(pos == std::string::npos || vchTxParentNodes.size() > (USHRT_MAX*2)){
+        throw JSONRPCError(RPC_TYPE_ERROR, "Could not find tx value in tx parent nodes");  
+    }
+    unsigned short posTxValue = (unsigned short)pos/2;
     string vchTxPath = params[7].get_str();
  
     string vchReceiptValue = params[8].get_str();
     string vchReceiptRoot = params[9].get_str();
     string vchReceiptParentNodes = params[10].get_str();
-    
-    
+    pos = vchReceiptParentNodes.find(vchReceiptValue);
+    if(pos == std::string::npos || vchReceiptParentNodes.size() > (USHRT_MAX*2)){
+        throw JSONRPCError(RPC_TYPE_ERROR, "Could not find receipt value in receipt parent nodes");  
+    }
+    unsigned short posReceiptValue = (unsigned short)pos/2;
     string strWitness = params[11].get_str();
     if(!fGethSynced){
         throw JSONRPCError(RPC_MISC_ERROR, "Geth is not synced, please wait until it syncs up and try again");
@@ -1097,11 +1113,11 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     mintSyscoin.assetAllocationTuple = CAssetAllocationTuple(nAsset, witnessAddress);
     mintSyscoin.nValueAsset = nAmount;
     mintSyscoin.nBlockNumber = nBlockNumber;
-    mintSyscoin.vchTxValue = ParseHex(vchTxValue);
+    mintSyscoin.vchTxValue = ushortToBytes(posTxValue);
     mintSyscoin.vchTxRoot = ParseHex(vchTxRoot);
     mintSyscoin.vchTxParentNodes = ParseHex(vchTxParentNodes);
     mintSyscoin.vchTxPath = ParseHex(vchTxPath);
-    mintSyscoin.vchReceiptValue = ParseHex(vchReceiptValue);
+    mintSyscoin.vchReceiptValue = ushortToBytes(posReceiptValue);
     mintSyscoin.vchReceiptRoot = ParseHex(vchReceiptRoot);
     mintSyscoin.vchReceiptParentNodes = ParseHex(vchReceiptParentNodes);
     
