@@ -29,8 +29,6 @@ SendCoinsEntry::SendCoinsEntry(QWidget* parent) :
 
     setCurrentWidget(ui->SendCoins);
 
-    ui->addAsLabel->setPlaceholderText(tr("Enter a label for this address to add it to your address book"));
-
     setButtonIcons();
 
     // normal dash address field

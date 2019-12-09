@@ -34,7 +34,6 @@ SignVerifyMessageDialog::SignVerifyMessageDialog(QWidget* parent) :
     connect(pageButtons, QOverload<int>::of(&QButtonGroup::buttonClicked), this, &SignVerifyMessageDialog::showPage);
 
     ui->messageIn_SM->setPlaceholderText(tr("Enter a message to be signed"));
-    ui->signatureOut_SM->setPlaceholderText(tr("Click \"Sign Message\" to generate signature"));
 
     ui->messageIn_VM->setPlaceholderText(tr("Enter a message to be verified"));
     ui->signatureIn_VM->setPlaceholderText(tr("Enter a signature for the message to be verified"));
