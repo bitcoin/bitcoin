@@ -286,6 +286,28 @@ public:
     }
 };
 
+/** Process RPC generatetoaddress request. */
+class GenerateToAddressRequestHandler : public BaseRequestHandler
+{
+public:
+    UniValue PrepareRequest(const std::string& method, const std::vector<std::string>& args) override
+    {
+        address_str = args.at(1);
+        UniValue params{RPCConvertValues("generatetoaddress", args)};
+        return JSONRPCRequestObj("generatetoaddress", params, 1);
+    }
+
+    UniValue ProcessReply(const UniValue &reply) override
+    {
+        UniValue result(UniValue::VOBJ);
+        result.pushKV("address", address_str);
+        result.pushKV("blocks", reply.get_obj()["result"]);
+        return JSONRPCReplyObj(result, NullUniValue, 1);
+    }
+protected:
+    std::string address_str;
+};
+
 /** Process default single requests */
 class DefaultRequestHandler: public BaseRequestHandler {
 public:
