@@ -144,6 +144,9 @@
       <property name="toolTip">
        <string>Enter a label for this address to add it to the list of used addresses</string>
       </property>
+      <property name="placeholderText">
+       <string>Enter a label for this address to add it to the list of used addresses</string>
+      </property>
      </widget>
     </item>
     <item row="2" column="0">
