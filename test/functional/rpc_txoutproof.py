@@ -14,7 +14,6 @@ class MerkleBlockTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         # Nodes 0/1 are "wallet" nodes, Nodes 2/3 are used for testing
         self.extra_args = [[], [], [], ["-txindex"]]
-        self.supports_cli = False
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
