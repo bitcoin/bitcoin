@@ -513,7 +513,7 @@ static int CommandLineRPC(int argc, char *argv[])
             method = "";
         } else if (gArgs.GetBoolArg("-generate", false)) {
             //-generate is special as it executes two RPC calls:
-            // 1) "getnewaddress" without any parameters, which returns a bech32 address
+            // 1) "getnewaddress" without any parameters
             // 2) "generatetoaddress" with three params: numblocks, address and maxtries
             // If no args are given the args-vector will be extended with DEFAULT_GENERATED_NBLOCKS
             // and DEFAULT_GENERATED_MAXTRIES.
