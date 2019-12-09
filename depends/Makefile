@@ -42,7 +42,7 @@ NO_UPNP ?=
 NO_USDT ?=
 NO_NATPMP ?=
 MULTIPROCESS ?=
-FALLBACK_DOWNLOAD_PATH ?= https://bitcoincore.org/depends-sources
+FALLBACK_DOWNLOAD_PATH ?= https://drahtbot.space/depends_download_fallback
 
 BUILD = $(shell ./config.guess)
 HOST ?= $(BUILD)
