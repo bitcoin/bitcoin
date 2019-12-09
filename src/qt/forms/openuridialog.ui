@@ -24,7 +24,11 @@
       </widget>
      </item>
      <item>
-      <widget class="QValidatedLineEdit" name="uriEdit"/>
+      <widget class="QValidatedLineEdit" name="uriEdit">
+       <property name="placeholderText">
+        <string notr="true">bitcoin:</string>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>

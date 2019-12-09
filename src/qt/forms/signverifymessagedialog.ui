@@ -121,6 +121,9 @@
          </property>
          <item>
           <widget class="QLineEdit" name="signatureOut_SM">
+           <property name="placeholderText">
+            <string>Click "Sign Message" to generate signature</string>
+           </property>
            <property name="font">
             <font>
              <italic>true</italic>
