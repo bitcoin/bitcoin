@@ -22,6 +22,7 @@ class RPCInterfaceTest(SyscoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
+        self.supports_cli = False
 
     def test_getrpcinfo(self):
         self.log.info("Testing getrpcinfo...")
