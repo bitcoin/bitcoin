@@ -459,9 +459,10 @@ bool CMPTransaction::interpret_CreatePropertyFixed()
         p += spstr.back().size() + 1;
     }
     int i = 0;
+    size_t nNameSize = std::min(spstr[2].length(), sizeof(name)-1);
     memcpy(category, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(category)-1)); i++;
     memcpy(subcategory, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(subcategory)-1)); i++;
-    memcpy(name, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(name)-1)); i++;
+    memcpy(name, spstr[i].c_str(), nNameSize); i++;
     memcpy(url, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(url)-1)); i++;
     memcpy(data, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(data)-1)); i++;
     memcpy(&nValue, p, 8);
@@ -478,7 +479,9 @@ bool CMPTransaction::interpret_CreatePropertyFixed()
         PrintToLog("\t            name: %s\n", name);
         PrintToLog("\t             url: %s\n", url);
         PrintToLog("\t            data: %s\n", data);
-        PrintToLog("\t           value: %s\n", FormatByType(nValue, prop_type));
+        PrintToLog("\t           value: %s\n",
+                   nNameSize == 6 && strncmp(name, "errtok", nNameSize) == 0 ?
+                       "ErrorAmount" : FormatByType(nValue, prop_type));
     }
 
     if (isOverrun(p)) {
