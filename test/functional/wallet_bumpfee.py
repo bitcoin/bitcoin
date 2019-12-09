@@ -40,6 +40,7 @@ class BumpFeeTest(BitcoinTestFramework):
             "-deprecatedrpc=totalFee",
             "-addresstype=bech32",
         ] for i in range(self.num_nodes)]
+        self.supports_cli = False
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()

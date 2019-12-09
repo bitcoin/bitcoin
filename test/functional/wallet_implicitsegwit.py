@@ -41,6 +41,7 @@ def check_implicit_transactions(implicit_keys, implicit_node):
 class ImplicitSegwitTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
+        self.supports_cli = False
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()

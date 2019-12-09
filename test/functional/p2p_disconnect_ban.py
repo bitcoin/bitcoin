@@ -16,6 +16,7 @@ from test_framework.util import (
 class DisconnectBanTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
+        self.supports_cli = False
 
     def run_test(self):
         self.log.info("Connect nodes both way")

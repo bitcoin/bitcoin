@@ -43,6 +43,7 @@ class MiningTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
+        self.supports_cli = False
 
     def mine_chain(self):
         self.log.info('Create some old blocks')

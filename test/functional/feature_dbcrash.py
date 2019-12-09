@@ -51,6 +51,7 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
         self.num_nodes = 4
         self.setup_clean_chain = False
         self.rpc_timeout = 480
+        self.supports_cli = False
 
         # Set -maxmempool=0 to turn off mempool memory sharing with dbcache
         # Set -rpcservertimeout=900 to reduce socket disconnects in this
