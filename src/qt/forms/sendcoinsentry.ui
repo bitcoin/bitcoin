@@ -145,7 +145,7 @@
        <string>Enter a label for this address to add it to the list of used addresses</string>
       </property>
       <property name="placeholderText">
-       <string>Enter a label for this address to add it to your address book</string>
+       <string>Enter a label for this address to add it to the list of used addresses</string>
       </property>
      </widget>
     </item>
