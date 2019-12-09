@@ -35,8 +35,6 @@ SignVerifyMessageDialog::SignVerifyMessageDialog(const PlatformStyle *_platformS
     ui->verifyMessageButton_VM->setIcon(platformStyle->SingleColorIcon(":/icons/transaction_0"));
     ui->clearButton_VM->setIcon(platformStyle->SingleColorIcon(":/icons/remove"));
 
-    ui->signatureOut_SM->setPlaceholderText(tr("Click \"Sign Message\" to generate signature"));
-
     GUIUtil::setupAddressWidget(ui->addressIn_SM, this);
     GUIUtil::setupAddressWidget(ui->addressIn_VM, this);
 
