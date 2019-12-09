@@ -20,6 +20,7 @@ FUZZERS_MISSING_CORPORA = [
     "block_header_and_short_txids_deserialize",
     "fee_rate_deserialize",
     "flat_file_pos_deserialize",
+    "integer",
     "key_origin_info_deserialize",
     "merkle_block_deserialize",
     "out_point_deserialize",
