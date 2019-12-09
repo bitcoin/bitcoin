@@ -24,33 +24,21 @@ using grpc::Status;
 
 namespace {
 
-template <typename T>
-void handleResult(bool rpcresult, const VeriBlock::GeneralReply& reply, const T& in, T& out)
-{
-    if (!rpcresult) {
-        throw VeriBlock::PopServiceException("alt-integration is shutdown");
-    }
-    if (!reply.result()) {
-        std::string error_message("GRPC returned error : " + reply.resultmessage());
-        throw VeriBlock::PopServiceException(error_message.c_str());
-    }
-
-    // do a copy only if rpc succeeded
-    out = in;
-}
+template <class T>
+using DeserializeMemberFunction = Status (VeriBlock::GrpcPopService::Stub::*)(::grpc::ClientContext* context, const ::VeriBlock::BytesArrayRequest& request, T* response);
 
 template <class T>
-using DeserializeMemberFunction = Status (VeriBlock::DeserializeService::Stub::*)(::grpc::ClientContext* context, const ::VeriBlock::BytesArrayRequest& request, T* response);
-
-template <class T>
-bool grpc_deserialize(const std::shared_ptr<VeriBlock::DeserializeService::Stub>& deserializeService, const std::vector<unsigned char>& bytes, T& reply, DeserializeMemberFunction<T> func)
+void grpc_deserialize(const std::shared_ptr<VeriBlock::GrpcPopService::Stub>& grpcPopService, const std::vector<unsigned char>& bytes, T& reply, DeserializeMemberFunction<T> func)
 {
     VeriBlock::BytesArrayRequest request;
     ClientContext context;
 
     request.set_data(bytes.data(), bytes.size());
 
-    return (*deserializeService.*func)(&context, request, &reply).ok();
+    Status status = (*grpcPopService.*func)(&context, request, &reply);
+    if (!status.ok()) {
+        throw VeriBlock::PopServiceException(status);
+    }
 }
 
 
@@ -76,27 +64,23 @@ void BlockToProtoAltChainBlock(const CBlockHeader& block, const int& nHeight, Ve
 
 namespace VeriBlock {
 
-
 PopServiceImpl::PopServiceImpl()
 {
     auto& config = VeriBlock::getService<VeriBlock::Config>();
     std::string ip = config.service_ip;
     std::string port = config.service_port;
 
-    printf("Connecting to alt-service at %s:%s...", ip.c_str(), port.c_str());
+    LogPrintf("Connecting to alt-service at %s:%s...", ip.c_str(), port.c_str());
     auto creds = grpc::InsecureChannelCredentials();
     std::shared_ptr<Channel> channel = grpc::CreateChannel(ip + ":" + port, creds);
 
-    integrationService = VeriBlock::IntegrationService::NewStub(channel);
-    rewardsService = VeriBlock::RewardsService::NewStub(channel);
-    deserializeService = VeriBlock::DeserializeService::NewStub(channel);
-    forkresolutionService = VeriBlock::ForkresolutionService::NewStub(channel);
+    grpcPopService = VeriBlock::GrpcPopService::NewStub(channel);
 }
 
-bool PopServiceImpl::addPayloads(const CBlock& block, const int& nHeight, const std::vector<VeriBlockPublication>& VTBs, const VeriBlock::AltPublication& ATV)
+bool PopServiceImpl::addPayloads(const CBlock& block, const int& nHeight, const Publications& publications)
 {
-    AddPayloadsRequest request;
-    GeneralReply reply;
+    AddPayloadsDataRequest request;
+    EmptyReply reply;
     ClientContext context;
 
     auto* blockInfo = new BlockIndex();
@@ -105,24 +89,22 @@ bool PopServiceImpl::addPayloads(const CBlock& block, const int& nHeight, const 
 
     request.set_allocated_blockindex(blockInfo);
 
-    for (const auto& it : VTBs) {
-        VeriBlockPublication* publication = request.add_veriblockpublications();
-        *publication = it;
+    for (const auto& vtb : publications.vtbs) {
+        std::string* pub = request.add_veriblockpublications();
+        *pub = std::string(vtb.begin(), vtb.end());
     }
-    AltPublication* publication = request.add_altpublications();
-    *publication = ATV;
+    std::string* pub = request.add_altpublications();
+    *pub = std::string(publications.atv.begin(), publications.atv.end());
 
-    Status status = integrationService->AddPayloads(&context, request, &reply);
+    Status status = grpcPopService->AddPayloads(&context, request, &reply);
     if (!status.ok()) {
         throw PopServiceException(status);
     }
-
-    return reply.result();
 }
 
 void PopServiceImpl::removePayloads(const CBlock& block, const int& nHeight)
 {
-    GeneralReply reply;
+    EmptyReply reply;
     ClientContext context;
     RemovePayloadsRequest request;
 
@@ -132,68 +114,55 @@ void PopServiceImpl::removePayloads(const CBlock& block, const int& nHeight)
 
     request.set_allocated_blockindex(blockInfo);
 
-    Status status = integrationService->RemovePayloads(&context, request, &reply);
+    Status status = grpcPopService->RemovePayloads(&context, request, &reply);
     if (!status.ok()) {
         throw PopServiceException(status);
-    }
-
-    if (!reply.result()) {
-        std::string error_message("GRPC returned error : " + reply.resultmessage());
-        throw VeriBlock::PopServiceException(error_message.c_str());
     }
 }
 
 void PopServiceImpl::savePopTxToDatabase(const CBlock& block, const int& nHeight)
 {
+    SaveBlockPopTxRequest request;
+    EmptyReply reply;
+    ClientContext context;
+
+    auto* b1 = new AltChainBlock();
+    BlockToProtoAltChainBlock(block, nHeight, *b1);
+    request.set_allocated_containingblock(b1);
+
     for (const auto& tx : block.vtx) {
         if (!isPopTx(*tx)) {
             continue;
         }
 
-        // Parse Pop data from TX
-        auto* ATV = new AltPublication();
-        std::vector<VeriBlockPublication> VTBs;
+        PopTxData* popTxData = request.add_popdata();
 
-        this->getPublicationsData(tx, *ATV, VTBs);
+        Publications publications;
+        getPublicationsData(tx, publications);
 
         // Fill the proto objects with pop data
-        auto* popData = new PoPTransactionData();
-        popData->set_hash(tx->GetHash().ToString());
-        popData->set_allocated_altpublication(ATV);
+        popTxData->set_poptxhash(tx->GetHash().ToString());
+        popTxData->set_altpublication(publications.atv.data(), publications.atv.size());
 
-        VeriBlock::PublicationData publicationData = ATV->transaction().publicationdata();
+        PublicationData publicationData;
+        getPublicationsData(publications, publicationData);
 
         CDataStream stream(std::vector<unsigned char>(publicationData.header().begin(), publicationData.header().end()), SER_NETWORK, PROTOCOL_VERSION);
         CBlockHeader endorsedBlock;
         stream >> endorsedBlock;
 
-        for (const auto& VTB : VTBs) {
-            VeriBlockPublication* pub = popData->add_veriblockpublications();
-            pub->CopyFrom(VTB);
+        for (const auto& vtb : publications.vtbs) {
+            std::string* data = popTxData->add_veriblockpublications();
+            *data = std::string(vtb.begin(), vtb.end());
         }
-
-        auto* b1 = new AltChainBlock();
-        BlockToProtoAltChainBlock(block, nHeight, *b1);
 
         auto* b2 = new AltChainBlock();
         BlockToProtoAltChainBlock(block, nHeight, *b2);
+    }
 
-        SavePoPTransactionDataRequest request;
-        request.set_allocated_poptx(popData);
-        request.set_allocated_containingblock(b1);
-        request.set_allocated_endorsedblock(b2);
-        GeneralReply reply;
-        ClientContext context;
-
-        Status status = integrationService->SavePoPTransactionData(&context, request, &reply);
-        if (!status.ok()) {
-            throw PopServiceException(status);
-        }
-
-        if (!reply.result()) {
-            std::string error_message("GRPC returned error : " + reply.resultmessage());
-            throw VeriBlock::PopServiceException(error_message.c_str());
-        }
+    Status status = grpcPopService->SaveBlockPopTxToDatabase(&context, request, &reply);
+    if (!status.ok()) {
+        throw PopServiceException(status);
     }
 }
 
@@ -202,10 +171,10 @@ std::vector<BlockBytes> PopServiceImpl::getLastKnownVBKBlocks(size_t blocks)
 {
     GetLastKnownBlocksRequest request;
     request.set_maxblockcount(blocks);
-    GetLastKnownVBKBlocksReply reply;
+    GetLastKnownBlocksReply reply;
     ClientContext context;
 
-    Status status = integrationService->GetLastKnownVBKBlocks(&context, request, &reply);
+    Status status = grpcPopService->GetLastKnownVBKBlocks(&context, request, &reply);
     if (!status.ok()) {
         throw PopServiceException(status);
     }
@@ -225,10 +194,10 @@ std::vector<BlockBytes> PopServiceImpl::getLastKnownBTCBlocks(size_t blocks)
 {
     GetLastKnownBlocksRequest request;
     request.set_maxblockcount(blocks);
-    GetLastKnownBTCBlocksReply reply;
+    GetLastKnownBlocksReply reply;
     ClientContext context;
 
-    Status status = integrationService->GetLastKnownBTCBlocks(&context, request, &reply);
+    Status status = grpcPopService->GetLastKnownBTCBlocks(&context, request, &reply);
     if (!status.ok()) {
         throw PopServiceException(status);
     }
@@ -245,13 +214,13 @@ std::vector<BlockBytes> PopServiceImpl::getLastKnownBTCBlocks(size_t blocks)
 
 bool PopServiceImpl::checkVTBinternally(const std::vector<uint8_t>& bytes)
 {
-    VeriBlockPublication publication;
-    this->parseVeriBlockPublication(bytes, publication);
+    VeriBlock::BytesArrayRequest request;
+    request.set_data(bytes.data(), bytes.size());
 
-    GeneralReply reply;
+    CheckReply reply;
     ClientContext context;
 
-    Status status = integrationService->CheckVTBInternally(&context, publication, &reply);
+    Status status = grpcPopService->CheckVTBInternally(&context, request, &reply);
     if (!status.ok()) {
         throw PopServiceException(status);
     }
@@ -261,13 +230,13 @@ bool PopServiceImpl::checkVTBinternally(const std::vector<uint8_t>& bytes)
 
 bool PopServiceImpl::checkATVinternally(const std::vector<uint8_t>& bytes)
 {
-    AltPublication publication;
-    this->parseAltPublication(bytes, publication);
+    VeriBlock::BytesArrayRequest request;
+    request.set_data(bytes.data(), bytes.size());
 
-    GeneralReply reply;
+    CheckReply reply;
     ClientContext context;
 
-    Status status = integrationService->CheckATVInternally(&context, publication, &reply);
+    Status status = grpcPopService->CheckATVInternally(&context, request, &reply);
     if (!status.ok()) {
         throw PopServiceException(status);
     }
@@ -278,7 +247,7 @@ bool PopServiceImpl::checkATVinternally(const std::vector<uint8_t>& bytes)
 void PopServiceImpl::updateContext(const std::vector<std::vector<uint8_t>>& veriBlockBlocks, const std::vector<std::vector<uint8_t>>& bitcoinBlocks)
 {
     UpdateContextRequest request;
-    GeneralReply reply;
+    EmptyReply reply;
     ClientContext context;
 
     for (const auto& bitcoin_block : bitcoinBlocks)
@@ -293,14 +262,9 @@ void PopServiceImpl::updateContext(const std::vector<std::vector<uint8_t>>& veri
         *pb = std::string(veriblock_block.begin(), veriblock_block.end());
     }
 
-    Status status = integrationService->UpdateContext(&context, request, &reply);
+    Status status = grpcPopService->UpdateContext(&context, request, &reply);
     if (!status.ok()) {
         throw PopServiceException(status);
-    }
-
-    if (!reply.result()) {
-        std::string error_message("GRPC returned error : " + reply.resultmessage());
-        throw PopServiceException(error_message.c_str());
     }
 }
 
@@ -308,7 +272,7 @@ void PopServiceImpl::updateContext(const std::vector<std::vector<uint8_t>>& veri
 int PopServiceImpl::compareTwoBranches(const CBlockIndex* commonKeystone, const CBlockIndex* leftForkTip, const CBlockIndex* rightForkTip)
 {
     TwoBranchesRequest request;
-    CompareReply reply;
+    CompareTwoBranchesReply reply;
     ClientContext context;
 
     const CBlockIndex* workingLeft = leftForkTip;
@@ -332,24 +296,19 @@ int PopServiceImpl::compareTwoBranches(const CBlockIndex* commonKeystone, const 
         workingRight = workingRight->pprev;
     }
 
-    Status status = forkresolutionService->CompareTwoBranches(&context, request, &reply);
+    Status status = grpcPopService->CompareTwoBranches(&context, request, &reply);
     if (!status.ok()) {
         throw PopServiceException(status);
     }
 
-    if (reply.result().result()) {
-        return reply.comparingsresult();
-    } else {
-        std::string error_message("GRPC returned error : " + reply.result().resultmessage());
-        throw PopServiceException(error_message.c_str());
-    }
+    return reply.compareresult();
 }
 
 // Pop rewards
-void PopServiceImpl::rewardsCalculateOutputs(const int& blockHeight, const CBlockIndex& endorsedBlock, const CBlockIndex& contaningBlocksTip, const std::string& difficulty, std::map<CScript, int64_t>& outputs)
+void PopServiceImpl::rewardsCalculateOutputs(const int& blockHeight, const CBlockIndex& endorsedBlock, const CBlockIndex& contaningBlocksTip, const CBlockIndex& difficulty_start_interval, const CBlockIndex& difficulty_end_interval, std::map<CScript, int64_t>& outputs)
 {
-    RewardsCalculateOutputsRequest request;
-    RewardsCalculateOutputsReply reply;
+    RewardsCalculateRequest request;
+    RewardsCalculateReply reply;
     ClientContext context;
 
     const CBlockIndex* workingBlock = &contaningBlocksTip;
@@ -357,7 +316,15 @@ void PopServiceImpl::rewardsCalculateOutputs(const int& blockHeight, const CBloc
     while (workingBlock != &endorsedBlock) {
         AltChainBlock* b = request.add_endorsmentblocks();
         ::BlockToProtoAltChainBlock(*workingBlock, *b);
+        workingBlock = workingBlock->pprev;
+    }
 
+    workingBlock = &difficulty_end_interval;
+
+    while (workingBlock != difficulty_start_interval.pprev) // including the start_interval block
+    {
+        AltChainBlock* b = request.add_difficultyblocks();
+        ::BlockToProtoAltChainBlock(*workingBlock, *b);
         workingBlock = workingBlock->pprev;
     }
 
@@ -366,97 +333,62 @@ void PopServiceImpl::rewardsCalculateOutputs(const int& blockHeight, const CBloc
 
     request.set_allocated_endorsedblock(b);
     request.set_blockaltheight(blockHeight);
-    request.set_difficulty(difficulty);
 
-    Status status = rewardsService->RewardsCalculateOutputs(&context, request, &reply);
+    Status status = grpcPopService->RewardsCalculateOutputs(&context, request, &reply);
     if (!status.ok()) {
         throw PopServiceException(status);
     }
 
-    if (reply.result().result()) {
-        for (int i = 0, size = reply.outputs_size(); i < size; ++i) {
-            CScript script;
-            const VeriBlock::RewardOutput& output = reply.outputs(i);
-            std::vector<unsigned char> payout_bytes(output.payoutinfo().begin(), output.payoutinfo().end());
-            script << payout_bytes;
+    for (int i = 0, size = reply.outputs_size(); i < size; ++i) {
+        CScript script;
+        const VeriBlock::RewardOutput& output = reply.outputs(i);
+        std::vector<unsigned char> payout_bytes(output.payoutinfo().begin(), output.payoutinfo().end());
+        script << payout_bytes;
 
-            try {
-                int64_t amount = std::stoll(output.reward());
-                if (MoneyRange(amount)) {
-                    outputs[script] = amount;
-                } else {
-                    outputs[script] = MAX_MONEY;
-                }
-            } catch (const std::invalid_argument&) {
-                std::string error_message("GRPC returned error : " + reply.result().resultmessage());
-                throw VeriBlock::PopServiceException(error_message.c_str());
-            } catch (const std::out_of_range&) {
+        try {
+            int64_t amount = std::stoll(output.reward());
+            if (MoneyRange(amount)) {
+                outputs[script] = amount;
+            } else {
                 outputs[script] = MAX_MONEY;
             }
+        } catch (const std::invalid_argument&) {
+            throw VeriBlock::PopServiceException("cannot convert the value received from the service");
         }
-    } else {
-        std::string error_message("GRPC returned error : " + reply.result().resultmessage());
-        throw PopServiceException(error_message.c_str());
+        catch (const std::out_of_range&) {
+            outputs[script] = MAX_MONEY;
+        }
     }
-}
-
-std::string PopServiceImpl::rewardsCalculatePopDifficulty(const CBlockIndex& start_interval, const CBlockIndex& end_interval)
-{
-    RewardsCalculatePopDifficultyRequest request;
-    RewardsCalculateScoreReply reply;
-    ClientContext context;
-
-    const CBlockIndex* workingBlock = &end_interval;
-
-    while (workingBlock != start_interval.pprev) // including the start_interval block
-    {
-        AltChainBlock* b = request.add_blocks();
-        ::BlockToProtoAltChainBlock(*workingBlock, *b);
-
-        workingBlock = workingBlock->pprev;
-    }
-
-    Status status = rewardsService->RewardsCalculatePopDifficulty(&context, request, &reply);
-    if (!status.ok()) {
-        throw PopServiceException(status);
-    }
-
-    if (reply.result().result()) {
-        return reply.score();
-    } else {
-        std::string error_message("GRPC returned error : " + reply.result().resultmessage());
-        throw PopServiceException(error_message.c_str());
-    }
-
-    return "0";
 }
 
 // Deserialization
 void PopServiceImpl::parseAltPublication(const std::vector<unsigned char>& bytes, VeriBlock::AltPublication& publication)
 {
-    AltPublicationReply reply;
-    bool result = ::grpc_deserialize(deserializeService, bytes, reply, &DeserializeService::Stub::ParseAltPublication);
-    ::handleResult(result, reply.result(), reply.publication(), publication);
+    ::grpc_deserialize(grpcPopService, bytes, publication, &GrpcPopService::Stub::ParseAltPublication);
 }
 
 void PopServiceImpl::parseVeriBlockPublication(const std::vector<unsigned char>& bytes, VeriBlock::VeriBlockPublication& publication)
 {
-    VeriBlockPublicationReply reply;
-    bool result = ::grpc_deserialize(deserializeService, bytes, reply, &DeserializeService::Stub::ParseVeriBlockPublication);
-    ::handleResult(result, reply.result(), reply.publication(), publication);
+    ::grpc_deserialize(grpcPopService, bytes, publication, &GrpcPopService::Stub::ParseVeriBlockPublication);
 }
 
-void PopServiceImpl::getPublicationsData(const CTransactionRef& tx, AltPublication& ATV, std::vector<VeriBlockPublication>& VTBs)
+void PopServiceImpl::getPublicationsData(const CTransactionRef& tx, Publications& publications)
 {
-    Publications publicationsBytes;
     std::vector<std::vector<uint8_t>> stack;
-    getService<UtilService>().EvalScript(tx->vin[0].scriptSig, stack, nullptr, &publicationsBytes, false);
+    getService<UtilService>().EvalScript(tx->vin[0].scriptSig, stack, nullptr, &publications, false);
+}
 
-    this->parseAltPublication(publicationsBytes.atv, ATV);
-    for (const auto& vtbBytes : publicationsBytes.vtbs) {
-        VeriBlockPublication vtb;
-        this->parseVeriBlockPublication(vtbBytes, vtb);
-        VTBs.push_back(vtb);
+void PopServiceImpl::getPublicationsData(const Publications& data, PublicationData& publciationData)
+{
+    ClientContext context;
+    BytesArrayRequest request;
+
+    request.set_data(data.atv.data(), data.atv.size());
+
+    Status status = grpcPopService->GetPublicationDataFromAltPublication(&context, request, &publciationData);
+
+    if (!status.ok()) {
+        throw PopServiceException(status);
     }
 }
 
@@ -471,7 +403,6 @@ bool PopServiceImpl::determineATVPlausibilityWithBTCRules(AltchainId altChainIde
     if (altChainIdentifier.unwrap() != getService<Config>().index.unwrap()) {
         return false;
     }
-
 
     return CheckProofOfWork(popEndorsementHeader.GetHash(), popEndorsementHeader.nBits, params);
 }
@@ -491,11 +422,11 @@ bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlo
             continue;
         }
 
-        AltPublication ATV;
-        std::vector<VeriBlockPublication> VTBs;
-        pop.getPublicationsData(tx, ATV, VTBs);
+        Publications publications;
+        pop.getPublicationsData(tx, publications);
 
-        PublicationData popEndorsement = ATV.transaction().publicationdata();
+        PublicationData popEndorsement;
+        pop.getPublicationsData(publications, popEndorsement);
 
         CDataStream stream(std::vector<unsigned char>(popEndorsement.header().begin(), popEndorsement.header().end()), SER_NETWORK, PROTOCOL_VERSION);
         CBlockHeader popEndorsementHeader;
@@ -540,7 +471,7 @@ bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlo
             continue;
         }
 
-        if (!pop.addPayloads(block, pindexPrev.nHeight + 1, VTBs, ATV)) {
+        if (!pop.addPayloads(block, pindexPrev.nHeight + 1, publications)) {
             isValid = false;
             mempool.removeRecursive(*tx, MemPoolRemovalReason::BLOCK);
             continue;

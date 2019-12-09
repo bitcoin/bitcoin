@@ -23,7 +23,6 @@ inline void setUpPopServiceMock(fakeit::Mock<VeriBlock::PopService>& mock)
     fakeit::When(Method(mock, checkATVinternally)).AlwaysReturn(true);
     fakeit::When(Method(mock, compareTwoBranches)).AlwaysReturn(0);
     fakeit::Fake(Method(mock, rewardsCalculateOutputs));
-    fakeit::When(Method(mock, rewardsCalculatePopDifficulty)).AlwaysReturn("0");
     fakeit::Fake(Method(mock, savePopTxToDatabase));
     fakeit::When(Method(mock, getLastKnownVBKBlocks)).AlwaysReturn({});
     fakeit::When(Method(mock, getLastKnownBTCBlocks)).AlwaysReturn({});
