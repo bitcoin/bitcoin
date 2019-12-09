@@ -1089,24 +1089,24 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
     
     fs::path dataDir = GetDataDir(true) / "geth";
 
+    // ../Resources
+    fs::path attempt1 = fpathDefault.string() + fs::system_complete("/../Resources/").string() + gethFilename;
+    attempt1 = attempt1.make_preferred();
 
     // current executable path
-    fs::path attempt1 = fpathDefault.string() + "/" + gethFilename;
-    attempt1 = attempt1.make_preferred();
-    // current executable path + bin/[os]/sysgeth.nod
-    fs::path attempt2 = fpathDefault.string() + GetGethAndRelayerFilepath() + gethFilename;
+    fs::path attempt2 = fpathDefault.string() + "/" + gethFilename;
     attempt2 = attempt2.make_preferred();
-    // $path
-    fs::path attempt3 = gethFilename;
+    // current executable path + bin/[os]/sysgeth.nod
+    fs::path attempt3 = fpathDefault.string() + GetGethAndRelayerFilepath() + gethFilename;
     attempt3 = attempt3.make_preferred();
-    // $path + bin/[os]/sysgeth.nod
-    fs::path attempt4 = GetGethAndRelayerFilepath() + gethFilename;
+    // $path
+    fs::path attempt4 = gethFilename;
     attempt4 = attempt4.make_preferred();
-    // /usr/local/bin/sysgeth.nod
-    fs::path attempt5 = fs::system_complete("/usr/local/bin/").string() + gethFilename;
+    // $path + bin/[os]/sysgeth.nod
+    fs::path attempt5 = GetGethAndRelayerFilepath() + gethFilename;
     attempt5 = attempt5.make_preferred();
-    // ../Resources
-    fs::path attempt6 = fpathDefault.string() + fs::system_complete("/../Resources/").string() + gethFilename;
+    // /usr/local/bin/sysgeth.nod
+    fs::path attempt6 = fs::system_complete("/usr/local/bin/").string() + gethFilename;
     attempt6 = attempt6.make_preferred();
 
     
@@ -1135,7 +1135,6 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
         // 3. $path
         // 4. $path/bin/[os]/syscoin_geth
         // 5. /usr/local/bin/syscoin_geth
-        // 6. ../Resources
         std::string portStr = std::to_string(websocketport);
         std::string rpcportStr = std::to_string(ethrpcport);
         char * argvAttempt1[20] = {(char*)attempt1.string().c_str(), 
@@ -1200,19 +1199,19 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
                 NULL };                                                                   
         execv(argvAttempt1[0], &argvAttempt1[0]); // current directory
         if (errno != 0) {
-            LogPrintf("Geth not found at %s, trying in current direction bin folder\n", argvAttempt1[0]);
+            LogPrintf("Geth not found at %s, trying in current folder\n", argvAttempt1[0]);
             execv(argvAttempt2[0], &argvAttempt2[0]);
             if (errno != 0) {
-                LogPrintf("Geth not found at %s, trying in $PATH\n", argvAttempt2[0]);
+                LogPrintf("Geth not found at %s, trying in current bin folder\n", argvAttempt2[0]);
                 execvp(argvAttempt3[0], &argvAttempt3[0]); // path
                 if (errno != 0) {
-                    LogPrintf("Geth not found at %s, trying in $PATH bin folder\n", argvAttempt3[0]);
+                    LogPrintf("Geth not found at %s, trying in $PATH\n", argvAttempt3[0]);
                     execvp(argvAttempt4[0], &argvAttempt4[0]);
                     if (errno != 0) {
-                        LogPrintf("Geth not found at %s, trying in /usr/local/bin folder\n", argvAttempt4[0]);
+                        LogPrintf("Geth not found at %s, trying in $PATH bin folder\n", argvAttempt4[0]);
                         execvp(argvAttempt5[0], &argvAttempt5[0]);
                         if (errno != 0) {
-                            LogPrintf("Geth not found at %s, trying in ../Resources\n", argvAttempt4[0]);
+                            LogPrintf("Geth not found at %s, trying in /usr/local/bin folder\n", argvAttempt5[0]);
                             execvp(argvAttempt6[0], &argvAttempt6[0]);
                             if (errno != 0) {
                                 LogPrintf("Geth not found in %s, giving up.\n", argvAttempt6[0]);
@@ -1230,18 +1229,18 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
         std::string portStr = std::to_string(websocketport);
         std::string rpcportStr = std::to_string(ethrpcport);
         std::string args =  std::string("--rpc --rpcapi personal,eth --rpccorsdomain * --rpcport ") + rpcportStr + std::string(" --ws --wsport ") + portStr + std::string(" --wsorigins * --syncmode ") + mode + std::string(" --datadir ") +  dataDir.string();
-        pid = fork(attempt1.string(), args);
+        pid = fork(attempt2.string(), args);
         if( pid <= 0 ) {
-            LogPrintf("Geth not found at %s, trying in current direction bin folder\n", attempt1.string());
-            pid = fork(attempt2.string(), args);
+            LogPrintf("Geth not found at %s, trying in current bin folder\n", attempt2.string());
+            pid = fork(attempt3.string(), args);
             if( pid <= 0 ) {
-                LogPrintf("Geth not found at %s, trying in $PATH\n", attempt2.string());
-                pid = fork(attempt3.string(), args);
+                LogPrintf("Geth not found at %s, trying in $PATH\n", attempt3.string());
+                pid = fork(attempt4.string(), args);
                 if( pid <= 0 ) {
-                    LogPrintf("Geth not found at %s, trying in $PATH bin folder\n", attempt3.string());
-                    pid = fork(attempt4.string(), args);
+                    LogPrintf("Geth not found at %s, trying in $PATH bin folder\n", attempt4.string());
+                    pid = fork(attempt5.string(), args);
                     if( pid <= 0 ) {
-                        LogPrintf("Geth not found in %s, giving up.\n", attempt4.string());
+                        LogPrintf("Geth not found in %s, giving up.\n", attempt5.string());
                         return false;
                     }
                 }
@@ -1330,23 +1329,24 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, int w
     
     fs::path dataDir = GetDataDir(true) / "geth";
 
-    // current executable path
-    fs::path attempt1 = fpathDefault.string() + "/" + relayerFilename;
-    attempt1 = attempt1.make_preferred();
-    // current executable path + bin/[os]/sysrelayer.nod
-    fs::path attempt2 = fpathDefault.string() + GetGethAndRelayerFilepath() + relayerFilename;
-    attempt2 = attempt2.make_preferred();
-    // $path
-    fs::path attempt3 = relayerFilename;
-    attempt3 = attempt3.make_preferred();
-    // $path + bin/[os]/sysrelayer.nod
-    fs::path attempt4 = GetGethAndRelayerFilepath() + relayerFilename;
-    attempt4 = attempt4.make_preferred();
-    // /usr/local/bin/sysrelayer.nod
-    fs::path attempt5 = fs::system_complete("/usr/local/bin/").string() + relayerFilename;
-    attempt5 = attempt5.make_preferred();
     // ../Resources
-    fs::path attempt6 = fpathDefault.string() + fs::system_complete("/../Resources/").string() + relayerFilename;
+    fs::path attempt1 = fpathDefault.string() + fs::system_complete("/../Resources/").string() + relayerFilename;
+    attempt1 = attempt1.make_preferred();
+
+    // current executable path
+    fs::path attempt2 = fpathDefault.string() + "/" + relayerFilename;
+    attempt2 = attempt2.make_preferred();
+    // current executable path + bin/[os]/sysrelayer.nod
+    fs::path attempt3 = fpathDefault.string() + GetGethAndRelayerFilepath() + relayerFilename;
+    attempt3 = attempt3.make_preferred();
+    // $path
+    fs::path attempt4 = relayerFilename;
+    attempt4 = attempt4.make_preferred();
+    // $path + bin/[os]/sysrelayer.nod
+    fs::path attempt5 = GetGethAndRelayerFilepath() + relayerFilename;
+    attempt5 = attempt5.make_preferred();
+    // /usr/local/bin/sysrelayer.nod
+    fs::path attempt6 = fs::system_complete("/usr/local/bin/").string() + relayerFilename;
     attempt6 = attempt6.make_preferred();
     #ifndef WIN32
         // Prevent killed child-processes remaining as "defunct"
@@ -1411,19 +1411,19 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, int w
 					(char*)"--sysrpcport", (char*)rpcSysPortStr.c_str(), NULL };
             execv(argvAttempt1[0], &argvAttempt1[0]); // current directory
 	        if (errno != 0) {
-		        LogPrintf("Relayer not found at %s, trying in current direction bin folder\n", argvAttempt1[0]);
+		        LogPrintf("Relayer not found at %s, trying in current folder\n", argvAttempt1[0]);
 		        execv(argvAttempt2[0], &argvAttempt2[0]);
 		        if (errno != 0) {
-                    LogPrintf("Relayer not found at %s, trying in $PATH\n", argvAttempt2[0]);
+                    LogPrintf("Relayer not found at %s, trying in current bin folder\n", argvAttempt2[0]);
                     execvp(argvAttempt3[0], &argvAttempt3[0]); // path
                     if (errno != 0) {
-                        LogPrintf("Relayer not found at %s, trying in $PATH bin folder\n", argvAttempt3[0]);
+                        LogPrintf("Relayer not found at %s, trying in $PATH\n", argvAttempt3[0]);
                         execvp(argvAttempt4[0], &argvAttempt4[0]);
                         if (errno != 0) {
-                            LogPrintf("Relayer not found at %s, trying in /usr/local/bin folder\n", argvAttempt4[0]);
+                            LogPrintf("Relayer not found at %s, trying in $PATH bin folder\n", argvAttempt4[0]);
                             execvp(argvAttempt5[0], &argvAttempt5[0]);
                             if (errno != 0) {
-                                LogPrintf("Relayer not found at %s, trying in ../Resources\n", argvAttempt4[0]);
+                                LogPrintf("Relayer not found at %s, trying in /usr/local/bin folder\n", argvAttempt5[0]);
                                 execvp(argvAttempt6[0], &argvAttempt6[0]);
                                 if (errno != 0) {
                                     LogPrintf("Relayer not found in %s, giving up.\n", argvAttempt6[0]);
@@ -1447,18 +1447,18 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, int w
                 std::string(" --datadir ") + dataDir.string() +
 				std::string(" --sysrpcusercolonpass ") + strRPCUserColonPass +
 				std::string(" --sysrpcport ") + rpcSysPortStr; 
-        pid = fork(attempt1.string(), args);
+        pid = fork(attempt2.string(), args);
         if( pid <= 0 ) {
-            LogPrintf("Relayer not found at %s, trying in current direction bin folder\n", attempt1.string());
-            pid = fork(attempt2.string(), args);
+            LogPrintf("Relayer not found at %s, trying in current direction bin folder\n", attempt2.string());
+            pid = fork(attempt3.string(), args);
             if( pid <= 0 ) {
-                LogPrintf("Relayer not found at %s, trying in $PATH\n", attempt2.string());
-                pid = fork(attempt3.string(), args);
+                LogPrintf("Relayer not found at %s, trying in $PATH\n", attempt3.string());
+                pid = fork(attempt4.string(), args);
                 if( pid <= 0 ) {
-                    LogPrintf("Relayer not found at %s, trying in $PATH bin folder\n", attempt3.string());
-                    pid = fork(attempt4.string(), args);
+                    LogPrintf("Relayer not found at %s, trying in $PATH bin folder\n", attempt4.string());
+                    pid = fork(attempt5.string(), args);
                     if( pid <= 0 ) {
-                        LogPrintf("Relayer not found in %s, giving up.\n", attempt4.string());
+                        LogPrintf("Relayer not found in %s, giving up.\n", attempt5.string());
                         return false;
                     }
                 }
