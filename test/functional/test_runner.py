@@ -192,6 +192,7 @@ BASE_SCRIPTS = [
     'wallet_resendwallettransactions.py',
     'wallet_fallbackfee.py',
     'rpc_dumptxoutset.py',
+    'rpc_generate.py',
     'feature_minchainwork.py',
     'rpc_getblockstats.py',
     'wallet_create_tx.py',
