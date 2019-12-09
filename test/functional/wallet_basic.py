@@ -26,6 +26,7 @@ class WalletTest(BitcoinTestFramework):
             '-usehd={:d}'.format(i%2==0),
         ] for i in range(self.num_nodes)]
         self.setup_clean_chain = True
+        self.supports_cli = False
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()

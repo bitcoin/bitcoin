@@ -39,6 +39,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
             '-txindex',
             '-reindex',  # Need reindex for txindex
         ]] * self.num_nodes
+        self.supports_cli = False
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()

@@ -19,6 +19,7 @@ class InstantSendTest(DashTestFramework):
         self.isolated_idx = 1
         self.receiver_idx = 2
         self.sender_idx = 3
+        self.supports_cli = False
 
     def run_test(self):
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)

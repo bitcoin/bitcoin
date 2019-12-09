@@ -53,6 +53,7 @@ class RawTransactionsTest(BitcoinTestFramework):
             ["-txindex"],
             ["-txindex"],
         ]
+        self.supports_cli = False
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()

@@ -109,6 +109,7 @@ class DashZMQTest (DashTestFramework):
         extra_args[0] = node0_extra_args
         self.set_dash_test_params(5, 4, fast_dip3_enforcement=True, extra_args=extra_args)
         self.set_dash_llmq_test_params(4, 4)
+        self.supports_cli = False
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_py3_zmq()

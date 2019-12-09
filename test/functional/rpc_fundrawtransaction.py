@@ -28,6 +28,7 @@ class RawTransactionsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
         self.setup_clean_chain = True
+        self.supports_cli = False
         self.extra_args = [['-usehd=0']] * self.num_nodes
 
     def skip_test_if_missing_module(self):
