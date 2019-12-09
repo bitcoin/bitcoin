@@ -13,6 +13,7 @@ import os
 class HelpRpcTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
+        self.supports_cli = False
 
     def run_test(self):
         self.test_categories()
