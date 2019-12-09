@@ -49,7 +49,7 @@ static void SetupCliArgs()
     gArgs.AddArg("-conf=<file>", strprintf("Specify configuration file. Relative paths will be prefixed by datadir location. (default: %s)", BITCOIN_CONF_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-datadir=<dir>", "Specify data directory", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-getinfo", "Get general information from the remote server. Note that unlike server-side RPC calls, the results of -getinfo is the result of multiple non-atomic requests. Some entries in the result may represent results from different states (e.g. wallet balance may be as of a different block from the chain state reported)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-generate=[nblocks] [maxtries]", strprintf("Generate blocks immediately (default nblocks: %s, maxtries: %s)", DEFAULT_GENERATED_NBLOCKS, DEFAULT_GENERATED_MAXTRIES), ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
+    gArgs.AddArg("-generate=nblocks maxtries", strprintf("Generate blocks immediately (default nblocks: %s, maxtries: %s)", DEFAULT_GENERATED_NBLOCKS, DEFAULT_GENERATED_MAXTRIES), ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
     SetupChainParamsBaseOptions();
     gArgs.AddArg("-named", strprintf("Pass named instead of positional arguments (default: %s)", DEFAULT_NAMED), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-rpcclienttimeout=<n>", strprintf("Timeout in seconds during HTTP requests, or 0 for no timeout. (default: %d)", DEFAULT_HTTP_CLIENT_TIMEOUT), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -513,10 +513,6 @@ static int CommandLineRPC(int argc, char *argv[])
             method = "";
         } else if (gArgs.GetBoolArg("-generate", false)) {
             //-generate is special as it executes two RPC calls:
-            // 1) "getnewaddress" without any parameters
-            // 2) "generatetoaddress" with three params: numblocks, address and maxtries
-            // If no args are given the args-vector will be extended with DEFAULT_GENERATED_NBLOCKS
-            // and DEFAULT_GENERATED_MAXTRIES.
             // In any case, the address will be generated internally and put into args vector as well.
             rh.reset(new GetNewAddressRequestHandler());
             method = "";
@@ -539,8 +535,8 @@ static int CommandLineRPC(int argc, char *argv[])
                     args.push_back(std::move(address));
                 }
                 else if (args.size() == 2) {
-                    const std::string nblocks = args[0];
-                    const std::string maxtries = args[1];
+                    const std::string nblocks = args.at(0);
+                    const std::string maxtries = args.at(1);
                     args.clear();
                     args.push_back(std::move(nblocks));
                     args.push_back(std::move(address));
