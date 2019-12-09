@@ -32,6 +32,8 @@ FUZZERS_MISSING_CORPORA = [
     "script_deserialize",
     "sub_net_deserialize",
     "tx_in_deserialize",
+    "tx_in",
+    "tx_out",
 ]
 
 def main():
