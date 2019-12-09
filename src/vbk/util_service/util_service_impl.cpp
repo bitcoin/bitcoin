@@ -199,8 +199,7 @@ PoPRewards UtilServiceImpl::getPopRewards(const CBlockIndex& pindexPrev)
             return rewards;
         }
 
-        std::string difficulty = pop_service.rewardsCalculatePopDifficulty(*difficultyBlockStart, *difficultyBlockEnd);
-        pop_service.rewardsCalculateOutputs(checkHeight, *endorsedBlock, *contaningBlocksTip, difficulty, rewards);
+        pop_service.rewardsCalculateOutputs(checkHeight, *endorsedBlock, *contaningBlocksTip, *difficultyBlockStart, *difficultyBlockEnd, rewards);
     }
 
     return rewards;
