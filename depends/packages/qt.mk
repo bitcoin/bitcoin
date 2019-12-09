@@ -105,6 +105,7 @@ $(package)_config_opts += -no-feature-wizard
 $(package)_config_opts += -no-feature-xml
 
 $(package)_config_opts_darwin = -no-dbus
+$(package)_config_opts_darwin += -no-opengl
 
 ifneq ($(build_os),darwin)
 $(package)_config_opts_darwin += -xplatform macx-clang-linux
