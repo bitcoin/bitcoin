@@ -560,6 +560,7 @@ struct PartiallySignedTransaction
 };
 
 enum class PSBTRole {
+    CREATOR,
     UPDATER,
     SIGNER,
     FINALIZER,
