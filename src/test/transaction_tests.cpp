@@ -820,6 +820,17 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     reason.clear();
     BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
     BOOST_CHECK_EQUAL(reason, "scriptsig-size");
+
+    // Check bare multisig (standard if policy flag fIsBareMultisigStd is set)
+    fIsBareMultisigStd = true;
+    t.vout[0].scriptPubKey = GetScriptForMultisig(1, {key.GetPubKey()}); // simple 1-of-1
+    t.vin[0].scriptSig = CScript() << std::vector<unsigned char>(65, 0);
+    BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+
+    fIsBareMultisigStd = false;
+    reason.clear();
+    BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
+    BOOST_CHECK_EQUAL(reason, "bare-multisig");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
