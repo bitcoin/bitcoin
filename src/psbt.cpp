@@ -7,6 +7,7 @@
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <psbt.h>
+#include <tinyformat.h>
 #include <util/check.h>
 #include <util/strencodings.h>
 
@@ -299,6 +300,7 @@ TransactionError CombinePSBTs(PartiallySignedTransaction& out, const std::vector
 
 std::string PSBTRoleName(PSBTRole role) {
     switch (role) {
+    case PSBTRole::CREATOR: return "creator";
     case PSBTRole::UPDATER: return "updater";
     case PSBTRole::SIGNER: return "signer";
     case PSBTRole::FINALIZER: return "finalizer";
@@ -335,6 +337,11 @@ PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx)
             input_analysis.is_final = false;
             input_analysis.next = PSBTRole::UPDATER;
             calc_fee = false;
+        }
+
+        if (!utxo.IsNull() && utxo.scriptPubKey.IsUnspendable()) {
+            result.SetInvalid(strprintf("PSBT is not valid. Input %u spends unspendable output", i));
+            return result;
         }
 
         // Check if it is final
