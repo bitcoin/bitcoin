@@ -893,6 +893,11 @@ static UniValue sendmany(const JSONRPCRequest& request)
         }
     }
 
+    // TODO: Add argument to selectively opt-in to avoid partial spends and re-use
+    coin_control.m_avoid_address_reuse = GetAvoidReuseFlag(pwallet, NullUniValue);
+    // We also enable partial spend avoidance if reuse avoidance is set.
+    coin_control.m_avoid_partial_spends |= coin_control.m_avoid_address_reuse;
+
     std::set<CTxDestination> destinations;
     std::vector<CRecipient> vecSend;
 
@@ -3426,6 +3431,12 @@ static UniValue bumpfee(const JSONRPCRequest& request)
             }
         }
     }
+
+    // TODO: Add argument to selectively opt-in to avoid partial spends and re-use
+    coin_control.m_avoid_address_reuse = GetAvoidReuseFlag(pwallet, NullUniValue);
+    // We also enable partial spend avoidance if reuse avoidance is set.
+    coin_control.m_avoid_partial_spends |= coin_control.m_avoid_address_reuse;
+
 
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
