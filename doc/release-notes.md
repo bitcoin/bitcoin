@@ -104,6 +104,10 @@ Low-level changes
 Tests
 -----
 
+- It is now an error to use an unqualified `walletdir=path` setting in the config file if running on testnet or regtest
+  networks. The setting now needs to be qualified as `chain.walletdir=path` or placed in the appropriate `[chain]`
+  section. (#17447)
+
 - `-fallbackfee` was 0 (disabled) by default for the main chain, but 0.0002 by default for the test chains. Now it is 0
   by default for all chains. Testnet and regtest users will have to add `fallbackfee=0.0002` to their configuration if
   they weren't setting it and they want it to keep working like before. (#16524)
