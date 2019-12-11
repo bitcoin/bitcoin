@@ -1084,7 +1084,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     if(pos == std::string::npos || vchTxParentNodes.size() > (USHRT_MAX*2)){
         throw JSONRPCError(RPC_TYPE_ERROR, "Could not find tx value in tx parent nodes");  
     }
-    unsigned short posTxValue = (unsigned short)pos/2;
+    uint16_t posTxValue = (uint16_t)pos/2;
     string vchTxPath = params[7].get_str();
  
     string vchReceiptValue = params[8].get_str();
@@ -1094,7 +1094,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     if(pos == std::string::npos || vchReceiptParentNodes.size() > (USHRT_MAX*2)){
         throw JSONRPCError(RPC_TYPE_ERROR, "Could not find receipt value in receipt parent nodes");  
     }
-    unsigned short posReceiptValue = (unsigned short)pos/2;
+    uint16_t posReceiptValue = (uint16_t)pos/2;
     string strWitness = params[11].get_str();
     if(!fGethSynced){
         throw JSONRPCError(RPC_MISC_ERROR, "Geth is not synced, please wait until it syncs up and try again");
