@@ -79,7 +79,8 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
         if(nTime < txRootDB.nTimestamp) {
             return FormatSyscoinErrorMessage(state, "invalid-timestamp", bMiner);
         }
-        else if((nTime - txRootDB.nTimestamp) > 604800) {
+        // 3 hr on testnet and 1 week on mainnet
+        else if((nTime - txRootDB.nTimestamp) > ((bGethTestnet == true)? 10800: 604800)) {
             return FormatSyscoinErrorMessage(state, "mint-blockheight-too-old", bMiner);
         } 
         
