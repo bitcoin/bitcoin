@@ -326,7 +326,6 @@ public:
 
         vSeeds.emplace_back("dnsseed.dash.org", true);
         vSeeds.emplace_back("dnsseed.dashdot.io", true);
-        vSeeds.emplace_back("dnsseed.masternode.io", true);
 
         // Dash addresses start with 'X'
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,76);
@@ -505,7 +504,6 @@ public:
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
         vSeeds.emplace_back("testnet-seed.dashdot.io", true);
-        vSeeds.emplace_back("test.dnsseed.masternode.io", true);
 
         // Testnet Dash addresses start with 'y'
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,140);
