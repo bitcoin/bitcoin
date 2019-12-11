@@ -258,9 +258,9 @@ public:
         consensus.nAuxpowChainId = 0x1000;
         consensus.fStrictChainId = false;
         consensus.nLegacyBlocksBefore = 1;
-        consensus.nSYSXAsset = 729627649;
+        consensus.nSYSXAsset = 1965866356;
         consensus.vchSYSXBurnMethodSignature = ParseHex("5f959b69");
-        consensus.vchSYSXERC20Manager = ParseHex("38945d8004cf4671c45686853452A6510812117c");
+        consensus.vchSYSXERC20Manager = ParseHex("4Cafd654dA402B4f14aCbE7cf2E8F0a43Cd68e19");
         consensus.vchTokenFreezeMethod = ParseHex("aabab1db49e504b5156edf3f99042aeecb9607a08f392589571cd49743aaba8d");
         consensus.nBridgeStartBlock = 1000;
         pchMessageStart[0] = 0xce;
@@ -272,13 +272,13 @@ public:
         m_assumed_blockchain_size = 30;
         m_assumed_chain_state_size = 2;
 
-        genesis = CreateGenesisBlock(1574100000, 683742, 0x1e0fffff, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1576000000, 297648, 0x1e0fffff, 1, 50 * COIN);
         
         /*uint256 hash;
         CBlockHeader genesisHeader = genesis.GetBlockHeader();
-        GenerateGenesisBlock(genesisHeader, hash); */
+        GenerateGenesisBlock(genesisHeader, hash);*/
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x00000f9699028b567867c6363cde3dce894235415aedb33b7a0f9e8d35630da9"));
+        assert(consensus.hashGenesisBlock == uint256S("0x0000066e1a6b9cfeac8295dce0cc8d9170690a74bc4878cf8a0b412554f5c222"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
 
         vFixedSeeds.clear();
