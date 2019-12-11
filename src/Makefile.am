@@ -168,6 +168,7 @@ BITCOIN_CORE_H = \
   platform/nf-token/nf-token-tx-mem-pool-handler.h \
   platform/nf-token/nf-token.h \
   platform/nf-token/nf-tokens-manager.h \
+  platform/nf-token/nft-protocol-reg-tx-builder.h \
   platform/nf-token/nft-protocols-manager.h \
   systemnode.h \
   systemnode-payments.h \
