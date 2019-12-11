@@ -24,6 +24,10 @@ FUZZERS_MISSING_CORPORA = [
     "key_origin_info_deserialize",
     "merkle_block_deserialize",
     "out_point_deserialize",
+    "parse_hd_keypath",
+    "parse_numbers",
+    "parse_script",
+    "parse_univalue",
     "partial_merkle_tree_deserialize",
     "partially_signed_transaction_deserialize",
     "prefilled_transaction_deserialize",
@@ -32,8 +36,8 @@ FUZZERS_MISSING_CORPORA = [
     "pub_key_deserialize",
     "script_deserialize",
     "sub_net_deserialize",
-    "tx_in_deserialize",
     "tx_in",
+    "tx_in_deserialize",
     "tx_out",
 ]
 
