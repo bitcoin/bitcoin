@@ -193,7 +193,7 @@ List the most recent 20 NFT protocol records
         protoJsonObj.push_back(json_spirit::Pair("isTokenTransferable", nftProtoIndex.NftProtoPtr()->isTokenTransferable));
         protoJsonObj.push_back(json_spirit::Pair("isTokenImmutable", nftProtoIndex.NftProtoPtr()->isTokenImmutable));
         protoJsonObj.push_back(json_spirit::Pair("isMetadataEmbedded", nftProtoIndex.NftProtoPtr()->isMetadataEmbedded));
-        protoJsonObj.push_back(json_spirit::Pair("nftRegSign", nftProtoIndex.NftProtoPtr()->nftRegSign);
+        protoJsonObj.push_back(json_spirit::Pair("nftRegSign", nftProtoIndex.NftProtoPtr()->nftRegSign));
         protoJsonObj.push_back(json_spirit::Pair("tokenProtocolOwnerId", CBitcoinAddress(nftProtoIndex.NftProtoPtr()->tokenProtocolOwnerId).ToString()));
 
         return protoJsonObj;
