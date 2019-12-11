@@ -97,7 +97,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     dev::RLP rlpReceiptParentNodes(&vchReceiptParentNodes);
     std::vector<unsigned char> vchReceiptValue;
     if(mintSyscoin.vchReceiptValue.size() == 2){
-        const unsigned short &posReceipt = ((mintSyscoin.vchReceiptValue[0]<<8)|(mintSyscoin.vchReceiptValue[1]));
+        const uint16_t &posReceipt = (static_cast<uint16_t>(mintSyscoin.vchReceiptValue[1])) | (static_cast<uint16_t>(mintSyscoin.vchReceiptValue[0]) << 8);
         vchReceiptValue = std::vector<unsigned char>(mintSyscoin.vchReceiptParentNodes.begin()+posReceipt, mintSyscoin.vchReceiptParentNodes.end());
     }
     else{
