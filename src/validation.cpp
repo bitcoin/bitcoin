@@ -3841,7 +3841,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
                     if(nTime < txRootDB.nTimestamp) {
                         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "invalid-timestamp", FormatStateMessage(tx_state));
                     }
-                    else if((nTime - txRootDB.nTimestamp) > 604800) {
+                    else if((nTime - txRootDB.nTimestamp) > ((bGethTestnet == true)? 10800: 604800)) {
                         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "mint-blockheight-too-old", FormatStateMessage(tx_state));
                     }
                     // ensure that we wait at least 1 hour before we are allowed process this mint transaction  
