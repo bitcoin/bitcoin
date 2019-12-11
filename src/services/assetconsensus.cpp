@@ -156,6 +156,9 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
             }
         }
     }
+    if(nBridgeTransferID == 0){
+        return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-missing-bridge-id", bMiner);
+    }
  
     // check transaction spv proofs
     dev::RLP rlpTxRoot(&mintSyscoin.vchTxRoot);
