@@ -1139,7 +1139,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
         if(nTime < txRootDB.nTimestamp) {
             throw JSONRPCError(RPC_MISC_ERROR, "Invalid Ethereum timestamp, it cannot be earlier than the Syscoin median block timestamp. Please wait a few minutes and try again...");
         }
-        else if((nTime - txRootDB.nTimestamp) > 604800) {
+        else if((nTime - txRootDB.nTimestamp) > ((bGethTestnet == true)? 10800: 604800)) {
             throw JSONRPCError(RPC_MISC_ERROR, "The block height is too old, your SPV proof is invalid. SPV Proof must be done within 1 week of the burn transaction on Ethereum blockchain");
         } 
         
