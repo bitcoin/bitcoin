@@ -85,6 +85,7 @@ CFeeRate minRelayTxFee = CFeeRate(10000);
 
 CTxMemPool mempool(::minRelayTxFee);
 Platform::NfTokenTxMemPoolHandler g_nfTokenTxMemPoolHandler;
+Platform::NftProtoTxMemPoolHandler g_nftProtoTxMemPoolHandler;
 
 struct COrphanTx {
     CTransaction tx;

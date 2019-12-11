@@ -27,6 +27,7 @@
 #include "tinyformat.h"
 #include "txmempool.h"
 #include "platform/nf-token/nf-token-tx-mem-pool-handler.h"
+#include "platform/nf-token/nf-token-protocol-tx-mem-pool-handler.h"
 #include "uint256.h"
 #include "undo.h"
 
@@ -130,6 +131,7 @@ extern CScript COINBASE_FLAGS;
 extern CCriticalSection cs_main;
 extern CTxMemPool mempool;
 extern Platform::NfTokenTxMemPoolHandler g_nfTokenTxMemPoolHandler;
+extern Platform::NftProtoTxMemPoolHandler g_nftProtoTxMemPoolHandler;
 typedef boost::unordered_map<uint256, CBlockIndex*, BlockHasher> BlockMap;
 extern BlockMap mapBlockIndex;
 extern uint64_t nLastBlockTx;
