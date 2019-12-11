@@ -15,7 +15,7 @@ namespace Platform
     /*static*/ const char PlatformDb::DB_NFT = 'n';
     /*static*/ const char PlatformDb::DB_NFT_TOTAL = 't';
     /*static*/ const char PlatformDb::DB_NFT_PROTO = 'p';
-    /*static*/ const char PlatfromDb::DB_NFT_PROTO_TOTAL = 'c';
+    /*static*/ const char PlatformDb::DB_NFT_PROTO_TOTAL = 'c';
 
     PlatformDb::PlatformDb(size_t nCacheSize, PlatformOpt optSetting, bool fMemory, bool fWipe)
     : TransactionLevelDBWrapper("platform", nCacheSize, fMemory, fWipe)
@@ -270,8 +270,8 @@ namespace Platform
 
     NfTokenIndex PlatformDb::NftDiskIndexToNftMemIndex(const NfTokenDiskIndex &nftDiskIndex)
     {
-        const BlockIndex * blockIndex = FindBlockIndex(nftDiskIndex.BlockHash());
-        if (blockIndex == nullptr)
+        auto blockIndexIt = mapBlockIndex.find(nftDiskIndex.BlockHash());
+        if (blockIndexIt == mapBlockIndex.end())
         {
             LogPrintf("%s: Block index for NFT transaction cannot be found, block hash: %s, tx hash: %s",
                       __func__, nftDiskIndex.BlockHash().ToString(), nftDiskIndex.RegTxHash().ToString());
@@ -296,16 +296,16 @@ namespace Platform
             assert(res);
 
             std::shared_ptr<NfToken> nfTokenPtr(new NfToken(nftRegTx.GetNfToken()));
-            return {blockIndex, nftDiskIndex.RegTxHash(), nfTokenPtr};
+            return {blockIndexIt->second, nftDiskIndex.RegTxHash(), nfTokenPtr};
         }
 
-        return {blockIndex, nftDiskIndex.RegTxHash(), nftDiskIndex.NfTokenPtr()};
+        return {blockIndexIt->second, nftDiskIndex.RegTxHash(), nftDiskIndex.NfTokenPtr()};
     }
 
     NftProtoIndex PlatformDb::NftProtoDiskIndexToNftProtoMemIndex(const NftProtoDiskIndex &protoDiskIndex)
     {
-        const BlockIndex * blockIndex = FindBlockIndex(protoDiskIndex.BlockHash());
-        if (blockIndex == nullptr)
+        auto blockIndexIt = mapBlockIndex.find(protoDiskIndex.BlockHash());
+        if (blockIndexIt == mapBlockIndex.end())
         {
             LogPrintf("%s: Block index for NFT proto transaction cannot be found, block hash: %s, tx hash: %s",
                       __func__, protoDiskIndex.BlockHash().ToString(), protoDiskIndex.RegTxHash().ToString());
@@ -330,9 +330,9 @@ namespace Platform
             assert(res);
 
             std::shared_ptr<NfTokenProtocol> nftProtoPtr(new NfTokenProtocol(protoRegTx.GetNftProto()));
-            return {blockIndex, protoDiskIndex.RegTxHash(), nftProtoPtr};
+            return {blockIndexIt->second, protoDiskIndex.RegTxHash(), nftProtoPtr};
         }
 
-        return {blockIndex, protoDiskIndex.RegTxHash(), protoDiskIndex.NftProtoPtr()};
+        return {blockIndexIt->second, protoDiskIndex.RegTxHash(), protoDiskIndex.NftProtoPtr()};
     }
 }
