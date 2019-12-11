@@ -676,7 +676,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
         uint32_t nAsset = find_value(indexArray[0].get_obj(), "asset_guid").get_uint();
         BOOST_CHECK_EQUAL(nAsset, nAssetStored);
     }
-}
+}/*
 BOOST_AUTO_TEST_CASE(generate_assetallocationmint)
 {
     UniValue r;
@@ -708,7 +708,7 @@ BOOST_AUTO_TEST_CASE(generate_assetallocationmint)
     // increase time by 1 week and assetallocationmint should throw
 	SleepFor(604800 * 1000);
 	BOOST_CHECK_THROW(r = CallExtRPC("node1", "assetallocationmint" , assetguid + ",\"" + newaddress + "\"," + amount + "," + itostr(height) + ",\"" + spv_tx_value + "\",\"a0" + spv_tx_root + "\",\"" + spv_tx_parent_nodes + "\",\"" + spv_tx_path + "\",\"" + spv_receipt_value + "\",\"a0" + spv_receipt_root + "\",\"" + spv_receipt_parent_nodes +  "\",\"''\""), runtime_error);
-}
+}*/
 BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset)
 {
     UniValue r;
