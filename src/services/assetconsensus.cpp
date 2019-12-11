@@ -144,15 +144,16 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
             }
             // topic hash matches with TokenFreeze signature
             if(Params().GetConsensus().vchTokenFreezeMethod == rlpReceiptLogTopicsValue[0].toBytes(dev::RLP::VeryStrict)){
-                dev::RLP rlpReceiptLogDataValue(rlpReceiptLogValue[2]);
+                const std::vector<unsigned char> &dataValue = rlpReceiptLogValue[2].toBytes(dev::RLP::VeryStrict);
+                if(dataValue.size() < 96){
+                     return FormatSyscoinErrorMessage(state, "mint-receipt-log-data-invalid-size", bMiner);
+                }
                 // get last data field which should be our BridgeTransferID
-                if (!rlpReceiptLogDataValue.isList()){
-                    return FormatSyscoinErrorMessage(state, "mint-receipt-log-data-rlp-list", bMiner);
-                }
-                if (rlpReceiptLogDataValue.itemCount() != 3){
-                    return FormatSyscoinErrorMessage(state, "mint-invalid-receipt-log-data-count", bMiner);
-                }
-                nBridgeTransferID = rlpReceiptLogDataValue[2].toInt<uint32_t>(dev::RLP::VeryStrict);
+                const std::vector<unsigned char> bridgeIdValue(dataValue.begin()+64, dataValue.end());
+                nBridgeTransferID = static_cast<uint32_t>(bridgeIdValue[31]);
+                nBridgeTransferID |= static_cast<uint32_t>(bridgeIdValue[30]) << 8;
+                nBridgeTransferID |= static_cast<uint32_t>(bridgeIdValue[29]) << 16;
+                nBridgeTransferID |= static_cast<uint32_t>(bridgeIdValue[28]) << 24;
             }
         }
     }
@@ -178,7 +179,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     dev::h256 hash;
     std::vector<unsigned char> vchTxValue;
     if(mintSyscoin.vchTxValue.size() == 2){
-        const unsigned short &posTx = ((mintSyscoin.vchTxValue[0]<<8)|(mintSyscoin.vchTxValue[1]));
+        const uint16_t &posTx = (static_cast<uint16_t>(mintSyscoin.vchTxValue[1])) | (static_cast<uint16_t>(mintSyscoin.vchTxValue[0]) << 8);
         vchTxValue = std::vector<unsigned char>(mintSyscoin.vchTxParentNodes.begin()+posTx, mintSyscoin.vchTxParentNodes.end());
         hash = dev::sha3(vchTxValue);
     }
