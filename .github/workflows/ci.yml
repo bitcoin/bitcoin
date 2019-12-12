@@ -1,4 +1,4 @@
-name: syscoin-core-ci
+name: bitcoin-core-ci
 
 on:
   push:
@@ -55,15 +55,15 @@ jobs:
     - name: vcpkg integration
       run: C:/vcpkg/vcpkg.exe integrate install
     - name: Build
-      run: msbuild build_msvc\syscoin.sln /m /v:n /p:Configuration=Release
-    - name: Run test_syscoin
+      run: msbuild build_msvc\bitcoin.sln /m /v:n /p:Configuration=Release
+    - name: Run test_bticoin
       shell: cmd
-      run: src\test_syscoin.exe -k stdout -e stdout 2> NUL
-    - name: Run bench_syscoin
+      run: src\test_bitcoin.exe -k stdout -e stdout 2> NUL
+    - name: Run bench_bitcoin
       shell: cmd
-      run: src\bench_syscoin.exe -evals=1 -scaling=0 > NUL
-    - name: syscoin-util-test
-      run: python test\util\syscoin-util-test.py
+      run: src\bench_bitcoin.exe -evals=1 -scaling=0 > NUL
+    - name: bitcoin-util-test
+      run: python test\util\bitcoin-util-test.py
     - name: rpcauth-test
       shell: cmd
       run: python test\util\rpcauth-test.py
