@@ -82,6 +82,7 @@ void AppTests::appTests()
     // Reset global state to avoid interfering with later tests.
     AbortShutdown();
     UnloadBlockIndex();
+    g_chainman.Reset();
 }
 
 //! Entry point for BitcoinGUI tests.
