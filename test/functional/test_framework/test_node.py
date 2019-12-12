@@ -19,6 +19,7 @@ import time
 import urllib.parse
 import collections
 import shlex
+import shutil
 import sys
 
 from .authproxy import JSONRPCException
@@ -36,7 +37,7 @@ from .util import (
 )
 
 BITCOIND_PROC_WAIT_TIMEOUT = 60
-
+MIN_VALGRIND_VERSION_EARLY_EXIT = (3, 14)
 
 class FailedToStartError(Exception):
     """Raised when a node fails to start correctly."""
@@ -101,14 +102,22 @@ class TestNode():
             "-uacomment=testnode%d" % i,
         ]
         if use_valgrind:
+            valgrind_version = self.get_valgrind_version()
+            if not valgrind_version:
+                raise Exception('Valgrind not present')
             default_suppressions_file = os.path.join(
-                os.path.dirname(os.path.realpath(__file__)),
-                "..", "..", "..", "contrib", "valgrind.supp")
+                    os.path.dirname(os.path.realpath(__file__)),
+                    "..", "..", "..", "contrib", "valgrind.supp")
             suppressions_file = os.getenv("VALGRIND_SUPPRESSIONS_FILE",
-                                          default_suppressions_file)
-            self.args = ["valgrind", "--suppressions={}".format(suppressions_file),
-                         "--gen-suppressions=all", "--exit-on-first-error=yes",
-                         "--error-exitcode=1", "--quiet"] + self.args
+                default_suppressions_file)
+            self.args = [
+                "valgrind",
+                "--suppressions={}".format(suppressions_file),
+                "--gen-suppressions=all",
+                self.valgrind_early_exit(valgrind_version),
+                "--error-exitcode=1",
+                "--quiet"
+            ] + self.args
 
         if self.version_is_at_least(190000):
             self.args.append("-logthreadnames")
@@ -146,6 +155,20 @@ class TestNode():
             AddressKeyPair('mpFAHDjX7KregM3rVotdXzQmkbwtbQEnZ6', 'cT7qK7g1wkYEMvKowd2ZrX1E5f6JQ7TM246UfqbCiyF7kZhorpX3'),
             AddressKeyPair('mzRe8QZMfGi58KyWCse2exxEFry2sfF2Y7', 'cPiRWE8KMjTRxH1MWkPerhfoHFn5iHPWVK5aPqjW8NxmdwenFinJ'),
     ]
+
+    def get_valgrind_version(self):
+        """Return valgrind version (major, minor) in a tuple or None if not found"""
+        if not shutil.which("valgrind"):
+            return None
+        version = (
+            subprocess.run(["valgrind", "--version"], stdout=subprocess.PIPE)
+            .stdout.decode("utf-8")
+            .rstrip()
+            .split("valgrind-")[1:][0])
+        return tuple(int(i) for i in version.split(".")[:2])
+
+    def valgrind_early_exit(self, version):
+        return "--exit-on-first-error=yes" if version >= MIN_VALGRIND_VERSION_EARLY_EXIT else ""
 
     def get_deterministic_priv_key(self):
         """Return a deterministic priv key in base58, that only depends on the node's index"""
