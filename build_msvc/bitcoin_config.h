@@ -218,9 +218,6 @@
 /* Define to 1 if you have the `rpcrt4' library (-lrpcrt4). */
 #define HAVE_LIBRPCRT4 1
 
-/* Define to 1 if you have the `rt' library (-lrt). */
-/* #undef HAVE_LIBRT */
-
 /* Define to 1 if you have the `shell32' library (-lshell32). */
 #define HAVE_LIBSHELL32 1
 
