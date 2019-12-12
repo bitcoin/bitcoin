@@ -60,7 +60,7 @@ jobs:
       run: C:/vcpkg/vcpkg.exe integrate install
     - name: Build
       run: msbuild build_msvc\bitcoin.sln /m /v:n /p:Configuration=Release
-    - name: Run test_bticoin
+    - name: Run test_bitcoin
       shell: cmd
       run: src\test_bitcoin.exe -k stdout -e stdout 2> NUL
     - name: Run bench_bitcoin
