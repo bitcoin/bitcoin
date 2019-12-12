@@ -4538,26 +4538,15 @@ bool CChainState::RewindBlockIndex(const CChainParams& params)
             PruneBlockIndexCandidates();
 
             CheckBlockIndex(params.GetConsensus());
-        }
-    }
 
-    return true;
-}
-
-bool RewindBlockIndex(const CChainParams& params) {
-    if (!::ChainstateActive().RewindBlockIndex(params)) {
-        return false;
-    }
-
-    LOCK(cs_main);
-    if (::ChainActive().Tip() != nullptr) {
-        // FlushStateToDisk can possibly read ::ChainActive(). Be conservative
-        // and skip it here, we're about to -reindex-chainstate anyway, so
-        // it'll get called a bunch real soon.
-        BlockValidationState state;
-        if (!::ChainstateActive().FlushStateToDisk(params, state, FlushStateMode::ALWAYS)) {
-            LogPrintf("RewindBlockIndex: unable to flush state to disk (%s)\n", state.ToString());
-            return false;
+            // FlushStateToDisk can possibly read ::ChainActive(). Be conservative
+            // and skip it here, we're about to -reindex-chainstate anyway, so
+            // it'll get called a bunch real soon.
+            BlockValidationState state;
+            if (!FlushStateToDisk(params, state, FlushStateMode::ALWAYS)) {
+                LogPrintf("RewindBlockIndex: unable to flush state to disk (%s)\n", state.ToString());
+                return false;
+            }
         }
     }
 

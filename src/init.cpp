@@ -1614,7 +1614,7 @@ bool AppInitMain(NodeContext& node)
                 // It both disconnects blocks based on ::ChainActive(), and drops block data in
                 // BlockIndex() based on lack of available witness data.
                 uiInterface.InitMessage(_("Rewinding blocks...").translated);
-                if (!RewindBlockIndex(chainparams)) {
+                if (!::ChainstateActive().RewindBlockIndex(chainparams)) {
                     strLoadError = _("Unable to rewind the database to a pre-fork state. You will need to redownload the blockchain").translated;
                     break;
                 }

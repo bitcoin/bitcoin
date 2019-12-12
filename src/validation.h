@@ -380,9 +380,6 @@ bool TestBlockValidity(BlockValidationState& state, const CChainParams& chainpar
  *  Note that transaction witness validation rules are always enforced when P2SH is enforced. */
 bool IsWitnessEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& params);
 
-/** When there are blocks in the active chain with missing data, rewind the chainstate and remove them from the block index */
-bool RewindBlockIndex(const CChainParams& params) LOCKS_EXCLUDED(cs_main);
-
 /** Compute at which vout of the block's coinbase transaction the witness commitment occurs, or -1 if not found */
 int GetWitnessCommitmentIndex(const CBlock& block);
 
