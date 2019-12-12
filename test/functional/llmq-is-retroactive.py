@@ -38,7 +38,7 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         self.mine_quorum()
 
         # Make sure that all nodes are chainlocked at the same height before starting actual tests
-        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
+        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash(), timeout=30)
 
         self.log.info("trying normal IS lock")
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
@@ -111,7 +111,7 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
     def cycle_llmqs(self):
         self.mine_quorum()
         self.mine_quorum()
-        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
+        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash(), timeout=30)
 
     def test_all_nodes_session_timeout(self, do_cycle_llmqs):
         set_node_times(self.nodes, self.mocktime)
