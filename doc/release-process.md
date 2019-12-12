@@ -44,7 +44,8 @@ Release Process
 
 #### After branch-off (on the major release branch)
 
-- Update the versions and the link to the release notes draft in `doc/release-notes.md`.
+- Update the versions.
+- Create a pinned meta-issue for testing the release candidate (see [this issue](https://github.com/bitcoin/bitcoin/issues/17079) for an example) and provide a link to it in the release announcements where useful.
 
 #### Before final release
 
@@ -315,7 +316,7 @@ syscoin.org (see below for syscoin.org update instructions).
     instructions: https://github.com/syscoin-dot-org/syscoin.org/blob/master/docs/adding-events-release-notes-and-alerts.md#release-notes
 
   - After the pull request is merged, the website will automatically show the newest version within 15 minutes, as well
-    as update the OS download links. Ping @saivann/@harding (saivann/harding on Freenode) in case anything goes wrong
+    as update the OS download links.
 
 - Update other repositories and websites for new version
 
@@ -330,7 +331,12 @@ syscoin.org (see below for syscoin.org update instructions).
 
       - Notify sidhujag so that he can start building [the PPAs](https://launchpad.net/~syscoin/+archive/ubuntu/syscoin)
 
-      - Create a new branch for the major release "4.xx" (used to build the snap package)
+      - Push the flatpak to flathub, e.g. https://github.com/flathub/org.syscoincore.syscoin-qt/pull/2
+
+      - Push the latest version to master (if applicable), e.g. https://github.com/syscoin-core/packaging/pull/32
+
+      - Create a new branch for the major release "0.xx" from master (used to build the snap package) and request the
+        track (if applicable), e.g. https://forum.snapcraft.io/t/track-request-for-bitcoin-core-snap/10112/7
 
       - Notify sidhujag so that he can start building the snap package
 
@@ -353,8 +359,6 @@ syscoin.org (see below for syscoin.org update instructions).
       - Archive the release notes for the new version to `doc/release-notes/` (branch `master` and branch of the release)
 
       - Create a [new GitHub release](https://github.com/syscoin/syscoin/releases/new) with a link to the archived release notes
-
-      - Create a pinned meta-issue for testing the release candidate (see [this issue](https://github.com/bitcoin/bitcoin/issues/15555) for an example) and provide a link to it in the release announcements where useful
 
 - Announce the release:
 
