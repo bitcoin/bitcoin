@@ -202,12 +202,11 @@ isminetype LegacyScriptPubKeyMan::IsMine(const CScript& script) const
     assert(false);
 }
 
-bool CWallet::Unlock(const CKeyingMaterial& vMasterKeyIn, bool accept_no_keys)
+bool LegacyScriptPubKeyMan::CheckDecryptionKey(const CKeyingMaterial& master_key, bool accept_no_keys)
 {
     {
         LOCK(cs_KeyStore);
-        if (!SetCrypted())
-            return false;
+        assert(mapKeys.empty());
 
         bool keyPass = mapCryptedKeys.empty(); // Always pass when there are no encrypted keys
         bool keyFail = false;
@@ -217,7 +216,7 @@ bool CWallet::Unlock(const CKeyingMaterial& vMasterKeyIn, bool accept_no_keys)
             const CPubKey &vchPubKey = (*mi).second.first;
             const std::vector<unsigned char> &vchCryptedSecret = (*mi).second.second;
             CKey key;
-            if (!DecryptKey(vMasterKeyIn, vchCryptedSecret, vchPubKey, key))
+            if (!DecryptKey(master_key, vchCryptedSecret, vchPubKey, key))
             {
                 keyFail = true;
                 break;
@@ -233,32 +232,39 @@ bool CWallet::Unlock(const CKeyingMaterial& vMasterKeyIn, bool accept_no_keys)
         }
         if (keyFail || (!keyPass && !accept_no_keys))
             return false;
-        vMasterKey = vMasterKeyIn;
         fDecryptionThoroughlyChecked = true;
     }
-    NotifyStatusChanged(this);
     return true;
 }
 
-bool LegacyScriptPubKeyMan::EncryptKeys(CKeyingMaterial& vMasterKeyIn)
+bool LegacyScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, WalletBatch* batch)
 {
+    AssertLockHeld(cs_wallet);
     LOCK(cs_KeyStore);
-    if (!mapCryptedKeys.empty() || IsCrypted())
+    encrypted_batch = batch;
+    if (!mapCryptedKeys.empty()) {
+        encrypted_batch = nullptr;
         return false;
+    }
 
-    fUseCrypto = true;
-    for (const KeyMap::value_type& mKey : mapKeys)
+    KeyMap keys_to_encrypt;
+    keys_to_encrypt.swap(mapKeys); // Clear mapKeys so AddCryptedKeyInner will succeed.
+    for (const KeyMap::value_type& mKey : keys_to_encrypt)
     {
         const CKey &key = mKey.second;
         CPubKey vchPubKey = key.GetPubKey();
         CKeyingMaterial vchSecret(key.begin(), key.end());
         std::vector<unsigned char> vchCryptedSecret;
-        if (!EncryptSecret(vMasterKeyIn, vchSecret, vchPubKey.GetHash(), vchCryptedSecret))
+        if (!EncryptSecret(master_key, vchSecret, vchPubKey.GetHash(), vchCryptedSecret)) {
+            encrypted_batch = nullptr;
             return false;
-        if (!AddCryptedKey(vchPubKey, vchCryptedSecret))
+        }
+        if (!AddCryptedKey(vchPubKey, vchCryptedSecret)) {
+            encrypted_batch = nullptr;
             return false;
+        }
     }
-    mapKeys.clear();
+    encrypted_batch = nullptr;
     return true;
 }
 
@@ -543,7 +549,7 @@ bool LegacyScriptPubKeyMan::AddKeyPubKeyWithDB(WalletBatch& batch, const CKey& s
         RemoveWatchOnly(script);
     }
 
-    if (!IsCrypted()) {
+    if (!m_storage.HasEncryptionKeys()) {
         return batch.WriteKey(pubkey,
                                                  secret.GetPrivKey(),
                                                  mapKeyMetadata[pubkey.GetID()]);
@@ -584,7 +590,7 @@ void LegacyScriptPubKeyMan::LoadScriptMetadata(const CScriptID& script_id, const
 bool LegacyScriptPubKeyMan::AddKeyPubKeyInner(const CKey& key, const CPubKey &pubkey)
 {
     LOCK(cs_KeyStore);
-    if (!IsCrypted()) {
+    if (!m_storage.HasEncryptionKeys()) {
         return FillableSigningProvider::AddKeyPubKey(key, pubkey);
     }
 
@@ -594,7 +600,7 @@ bool LegacyScriptPubKeyMan::AddKeyPubKeyInner(const CKey& key, const CPubKey &pu
 
     std::vector<unsigned char> vchCryptedSecret;
     CKeyingMaterial vchSecret(key.begin(), key.end());
-    if (!EncryptSecret(vMasterKey, vchSecret, pubkey.GetHash(), vchCryptedSecret)) {
+    if (!EncryptSecret(m_storage.GetEncryptionKey(), vchSecret, pubkey.GetHash(), vchCryptedSecret)) {
         return false;
     }
 
@@ -612,9 +618,7 @@ bool LegacyScriptPubKeyMan::LoadCryptedKey(const CPubKey &vchPubKey, const std::
 bool LegacyScriptPubKeyMan::AddCryptedKeyInner(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret)
 {
     LOCK(cs_KeyStore);
-    if (!SetCrypted()) {
-        return false;
-    }
+    assert(mapKeys.empty());
 
     mapCryptedKeys[vchPubKey.GetID()] = make_pair(vchPubKey, vchCryptedSecret);
     ImplicitlyLearnRelatedKeyScripts(vchPubKey);
@@ -741,7 +745,7 @@ void LegacyScriptPubKeyMan::SetHDChain(const CHDChain& chain, bool memonly)
 bool LegacyScriptPubKeyMan::HaveKey(const CKeyID &address) const
 {
     LOCK(cs_KeyStore);
-    if (!IsCrypted()) {
+    if (!m_storage.HasEncryptionKeys()) {
         return FillableSigningProvider::HaveKey(address);
     }
     return mapCryptedKeys.count(address) > 0;
@@ -750,7 +754,7 @@ bool LegacyScriptPubKeyMan::HaveKey(const CKeyID &address) const
 bool LegacyScriptPubKeyMan::GetKey(const CKeyID &address, CKey& keyOut) const
 {
     LOCK(cs_KeyStore);
-    if (!IsCrypted()) {
+    if (!m_storage.HasEncryptionKeys()) {
         return FillableSigningProvider::GetKey(address, keyOut);
     }
 
@@ -759,7 +763,7 @@ bool LegacyScriptPubKeyMan::GetKey(const CKeyID &address, CKey& keyOut) const
     {
         const CPubKey &vchPubKey = (*mi).second.first;
         const std::vector<unsigned char> &vchCryptedSecret = (*mi).second.second;
-        return DecryptKey(vMasterKey, vchCryptedSecret, vchPubKey, keyOut);
+        return DecryptKey(m_storage.GetEncryptionKey(), vchCryptedSecret, vchPubKey, keyOut);
     }
     return false;
 }
@@ -797,7 +801,7 @@ bool LegacyScriptPubKeyMan::GetWatchPubKey(const CKeyID &address, CPubKey &pubke
 bool LegacyScriptPubKeyMan::GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const
 {
     LOCK(cs_KeyStore);
-    if (!IsCrypted()) {
+    if (!m_storage.HasEncryptionKeys()) {
         if (!FillableSigningProvider::GetPubKey(address, vchPubKeyOut)) {
             return GetWatchPubKey(address, vchPubKeyOut);
         }
@@ -1383,7 +1387,7 @@ bool LegacyScriptPubKeyMan::ImportScriptPubKeys(const std::set<CScript>& script_
 std::set<CKeyID> LegacyScriptPubKeyMan::GetKeys() const
 {
     LOCK(cs_KeyStore);
-    if (!IsCrypted()) {
+    if (!m_storage.HasEncryptionKeys()) {
         return FillableSigningProvider::GetKeys();
     }
     std::set<CKeyID> set_address;
@@ -1397,13 +1401,8 @@ std::set<CKeyID> LegacyScriptPubKeyMan::GetKeys() const
 LegacyScriptPubKeyMan::LegacyScriptPubKeyMan(CWallet& wallet)
     : ScriptPubKeyMan(wallet),
       m_wallet(wallet),
-      cs_wallet(wallet.cs_wallet),
-      vMasterKey(wallet.vMasterKey),
-      fUseCrypto(wallet.fUseCrypto),
-      fDecryptionThoroughlyChecked(wallet.fDecryptionThoroughlyChecked) {}
+      cs_wallet(wallet.cs_wallet) {}
 
-bool LegacyScriptPubKeyMan::SetCrypted() { return m_wallet.SetCrypted(); }
-bool LegacyScriptPubKeyMan::IsCrypted() const { return m_wallet.IsCrypted(); }
 void LegacyScriptPubKeyMan::NotifyWatchonlyChanged(bool fHaveWatchOnly) const { return m_wallet.NotifyWatchonlyChanged(fHaveWatchOnly); }
 void LegacyScriptPubKeyMan::NotifyCanGetAddressesChanged() const { return m_wallet.NotifyCanGetAddressesChanged(); }
 template<typename... Params> void LegacyScriptPubKeyMan::WalletLogPrintf(const std::string& fmt, const Params&... parameters) const { return m_wallet.WalletLogPrintf(fmt, parameters...); }
