@@ -15,6 +15,10 @@ jobs:
     steps:
     - uses: actions/checkout@v1
 
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.7'  # Needed for PEP 540
+
     - uses: actions/cache@v1
       id: vcpkgcache
       with:
@@ -67,10 +71,7 @@ jobs:
     - name: rpcauth-test
       shell: cmd
       run: python test\util\rpcauth-test.py
-# This step fails due to character UTF encoding error. If anyone knows how Python deals with Unicode they might be
-# able to decipher the error message.
-#    - name: test_runner
-#      shell: cmd
-#      run: |
-#       python test\functional\test_runner.py --ansi --ci --quiet --combinedlogslen=4000 --failfast --exclude feature_fee_estimation
-
+    - name: test_runner
+      shell: cmd
+      run: |
+       python test\functional\test_runner.py --ansi --ci --quiet --combinedlogslen=4000 --failfast --exclude feature_fee_estimation
