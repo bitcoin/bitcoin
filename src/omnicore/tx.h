@@ -130,7 +130,7 @@ private:
     /**
      * Logic and "effects"
      */
-    int logicMath_SimpleSend();
+    int logicMath_SimpleSend(uint256& blockHash);
     int logicMath_SendToOwners();
     int logicMath_SendAll();
     int logicMath_TradeOffer();
@@ -143,7 +143,7 @@ private:
     int logicMath_CreatePropertyVariable(CBlockIndex *pindex);
     int logicMath_CloseCrowdsale(CBlockIndex *pindex);
     int logicMath_CreatePropertyManaged(CBlockIndex* pindex);
-    int logicMath_GrantTokens(CBlockIndex* pindex);
+    int logicMath_GrantTokens(CBlockIndex* pindex, uint256 &blockHash);
     int logicMath_RevokeTokens(CBlockIndex *pindex);
     int logicMath_ChangeIssuer(CBlockIndex *pindex);
     int logicMath_EnableFreezing(CBlockIndex *pindex);
@@ -157,7 +157,7 @@ private:
     /**
      * Logic helpers
      */
-    int logicHelper_CrowdsaleParticipation();
+    int logicHelper_CrowdsaleParticipation(uint256& blockHash);
 
 public:
     //! DEx and MetaDEx action values
