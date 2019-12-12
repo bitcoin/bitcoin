@@ -59,7 +59,7 @@ jobs:
     - name: vcpkg integration
       run: C:/vcpkg/vcpkg.exe integrate install
     - name: Build
-      run: msbuild build_msvc\bitcoin.sln /m /v:n /p:Configuration=Release
+      run: msbuild build_msvc\bitcoin.sln /m /v:n /p:Configuration=Release /p:QtBaseDir=%QT_LOCAL_PATH%
     - name: Run test_bticoin
       shell: cmd
       run: src\test_bitcoin.exe -k stdout -e stdout 2> NUL
