@@ -30,6 +30,7 @@ packages:
 - "python"
 - "python3"
 - "libxkbcommon0"
+- "ccache"
 remotes:
 - "url": "https://github.com/dashpay/dash.git"
   "dir": "dash"

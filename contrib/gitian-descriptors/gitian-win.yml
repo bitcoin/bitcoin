@@ -24,6 +24,7 @@ packages:
 - "python"
 - "python3"
 - "rename"
+- "ccache"
 remotes:
 - "url": "https://github.com/dashpay/dash.git"
   "dir": "dash"
