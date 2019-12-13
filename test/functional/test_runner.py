@@ -151,6 +151,7 @@ BASE_SCRIPTS = [
     'interface_rpc.py',
     'rpc_psbt.py',
     'rpc_users.py',
+    'rpc_whitelist.py',
     'feature_proxy.py',
     'rpc_signrawtransaction.py',
     'p2p_addrv2_relay.py',
