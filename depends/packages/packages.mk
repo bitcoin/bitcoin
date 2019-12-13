@@ -1,4 +1,4 @@
-packages:=boost libevent
+packages:=boost openssl libevent
 
 qt_packages = zlib
 
