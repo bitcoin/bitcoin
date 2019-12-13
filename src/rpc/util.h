@@ -21,7 +21,14 @@
 
 #include <boost/variant.hpp>
 
+/**
+ * String used to describe UNIX epoch time in documentation, factored out to a
+ * constant for consistency.
+ */
+extern const std::string UNIX_EPOCH_TIME;
+
 class CKeyStore;
+class FillableSigningProvider;
 class CPubKey;
 class CScript;
 struct Sections;

@@ -102,11 +102,11 @@ static UniValue getpeerinfo(const JSONRPCRequest& request)
                         {RPCResult::Type::STR, "SERVICE_NAME", "the service name if it is recognised"}
                     }},
                     {RPCResult::Type::BOOL, "relaytxes", "Whether peer has asked us to relay transactions to it"},
-                    {RPCResult::Type::NUM_TIME, "lastsend", "The time in seconds since epoch (Jan 1 1970 GMT) of the last send"},
-                    {RPCResult::Type::NUM_TIME, "lastrecv", "The time in seconds since epoch (Jan 1 1970 GMT) of the last receive"},
+                    {RPCResult::Type::NUM_TIME, "lastsend", "The " + UNIX_EPOCH_TIME + " of the last send"},
+                    {RPCResult::Type::NUM_TIME, "lastrecv", "The " + UNIX_EPOCH_TIME + " of the last receive"},
                     {RPCResult::Type::NUM, "bytessent", "The total bytes sent"},
                     {RPCResult::Type::NUM, "bytesrecv", "The total bytes received"},
-                    {RPCResult::Type::NUM_TIME, "conntime", "The time in seconds since epoch (Jan 1 1970 GMT) of the connection"},
+                    {RPCResult::Type::NUM_TIME, "conntime", "The " + UNIX_EPOCH_TIME + " of the connection"},
                     {RPCResult::Type::NUM, "timeoffset", "The time offset in seconds"},
                     {RPCResult::Type::NUM, "pingtime", "ping time (if available)"},
                     {RPCResult::Type::NUM, "minping", "minimum observed ping time (if any at all)"},
@@ -588,7 +588,7 @@ static UniValue setban(const JSONRPCRequest& request)
                     {"subnet", RPCArg::Type::STR, RPCArg::Optional::NO, "The IP/Subnet (see getpeerinfo for nodes IP) with an optional netmask (default is /32 = single IP)"},
                     {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "'add' to add an IP/Subnet to the list, 'remove' to remove an IP/Subnet from the list"},
                     {"bantime", RPCArg::Type::NUM, /* default */ "0", "time in seconds how long (or until when if [absolute] is set) the IP is banned (0 or empty means using the default time of 24h which can also be overwritten by the -bantime startup argument)"},
-                    {"absolute", RPCArg::Type::BOOL, /* default */ "false", "If set, the bantime must be an absolute timestamp in seconds since epoch (Jan 1 1970 GMT)"},
+                    {"absolute", RPCArg::Type::BOOL, /* default */ "false", "If set, the bantime must be an absolute timestamp expressed in " + UNIX_EPOCH_TIME},
                 },
                 RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
@@ -760,7 +760,7 @@ static UniValue getnodeaddresses(const JSONRPCRequest& request)
                     {
                         {RPCResult::Type::OBJ, "", "",
                         {
-                            {RPCResult::Type::NUM_TIME, "time", "Timestamp in seconds since epoch (Jan 1 1970 GMT) keeping track of when the node was last seen"},
+                            {RPCResult::Type::NUM_TIME, "time", "The " + UNIX_EPOCH_TIME + " of when the node was last seen"},
                             {RPCResult::Type::NUM, "services", "The services offered"},
                             {RPCResult::Type::STR, "address", "The address of the node"},
                             {RPCResult::Type::NUM, "port", "The port of the node"},

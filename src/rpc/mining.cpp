@@ -576,7 +576,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
                     {RPCResult::Type::ELISION, "", ""},
                 }},
                 {RPCResult::Type::STR, "target", "The hash target"},
-                {RPCResult::Type::NUM_TIME, "mintime", "The minimum timestamp appropriate for the next block time, expressed in seconds since epoch (Jan 1 1970 GMT)"},
+                {RPCResult::Type::NUM_TIME, "mintime", "The minimum timestamp appropriate for the next block time, expressed in " + UNIX_EPOCH_TIME},
                 {RPCResult::Type::ARR, "mutable", "list of ways the block template may be changed",
                     {
                         {RPCResult::Type::STR, "value", "A way the block template may be changed, e.g. 'time', 'transactions', 'prevblock'"},
@@ -584,7 +584,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
                 {RPCResult::Type::STR_HEX, "noncerange", "A range of valid nonces"},
                 {RPCResult::Type::NUM, "sigoplimit", "limit of sigops in blocks"},
                 {RPCResult::Type::NUM, "sizelimit", "limit of block size"},
-                {RPCResult::Type::NUM_TIME, "curtime", "current timestamp in seconds since epoch (Jan 1 1970 GMT)"},
+                {RPCResult::Type::NUM_TIME, "curtime", "current timestamp in " + UNIX_EPOCH_TIME},
                 {RPCResult::Type::STR, "bits", "compressed target of next block"},
                 {RPCResult::Type::STR, "previousbits", "compressed target of current highest block"},
                 {RPCResult::Type::NUM, "height", "The height of the next block"},

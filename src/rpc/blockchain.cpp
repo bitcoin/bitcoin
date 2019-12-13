@@ -812,8 +812,8 @@ static UniValue getblockheader(const JSONRPCRequest& request)
                     {RPCResult::Type::NUM, "version", "The block version"},
                     {RPCResult::Type::STR_HEX, "versionHex", "The block version formatted in hexadecimal"},
                     {RPCResult::Type::STR_HEX, "merkleroot", "The merkle root"},
-                    {RPCResult::Type::NUM_TIME, "time", "The block time expressed in seconds since epoch (Jan 1 1970 GMT)"},
-                    {RPCResult::Type::NUM_TIME, "mediantime", "The median block time expressed in seconds since epoch (Jan 1 1970 GMT)"},
+                    {RPCResult::Type::NUM_TIME, "time", "The block time expressed in " + UNIX_EPOCH_TIME},
+                    {RPCResult::Type::NUM_TIME, "mediantime", "The median block time expressed in " + UNIX_EPOCH_TIME},
                     {RPCResult::Type::NUM, "nonce", "The nonce"},
                     {RPCResult::Type::STR_HEX, "bits", "The bits"},
                     {RPCResult::Type::NUM, "difficulty", "The difficulty"},
@@ -1090,8 +1090,8 @@ static UniValue getblock(const JSONRPCRequest& request)
                                         {RPCResult::Type::STR_HEX, "merkleRootMNList", "The merkle root of the masternode list"},
                                         {RPCResult::Type::STR_HEX, "merkleRootQuorums", "The merkle root of the quorum list"},
                                     }},
-                                {RPCResult::Type::NUM_TIME, "time",       "The block time expressed in seconds since epoch (Jan 1 1970 GMT)"},
-                                {RPCResult::Type::NUM_TIME, "mediantime", "The median block time expressed in seconds since epoch (Jan 1 1970 GMT)"},
+                                {RPCResult::Type::NUM_TIME, "time",       "The block time expressed in " + UNIX_EPOCH_TIME},
+                                {RPCResult::Type::NUM_TIME, "mediantime", "The median block time expressed in " + UNIX_EPOCH_TIME},
                                 {RPCResult::Type::NUM, "nonce", "The nonce"},
                                 {RPCResult::Type::STR_HEX, "bits", "The bits"},
                                 {RPCResult::Type::NUM, "difficulty", "The difficulty"},
@@ -1155,7 +1155,7 @@ static UniValue pruneblockchain(const JSONRPCRequest& request)
 {
     RPCHelpMan{"pruneblockchain", "",
         {
-            {"height", RPCArg::Type::NUM, RPCArg::Optional::NO, "The block height to prune up to. May be set to a discrete height, or a unix timestamp\n"
+            {"height", RPCArg::Type::NUM, RPCArg::Optional::NO, "The block height to prune up to. May be set to a discrete height, or to a " + UNIX_EPOCH_TIME + "\n"
     "                  to prune blocks whose block time is at least 2 hours older than the provided timestamp."},
         },
         RPCResult{
@@ -1874,7 +1874,7 @@ static UniValue getchaintxstats(const JSONRPCRequest& request)
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
                     {
-                        {RPCResult::Type::NUM_TIME, "time", "The timestamp for the final block in the window in UNIX format."},
+                        {RPCResult::Type::NUM_TIME, "time", "The timestamp for the final block in the window, expressed in " + UNIX_EPOCH_TIME},
                         {RPCResult::Type::NUM, "txcount", "The total number of transactions in the chain up to that point"},
                         {RPCResult::Type::STR_HEX, "window_final_block_hash", "The hash of the final block in the window"},
                         {RPCResult::Type::NUM, "window_final_block_height", "The height of the final block in the window."},
