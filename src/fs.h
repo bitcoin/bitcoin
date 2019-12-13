@@ -11,7 +11,6 @@
 #include <ext/stdio_filebuf.h>
 #endif
 
-#define BOOST_FILESYSTEM_NO_DEPRECATED
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 
