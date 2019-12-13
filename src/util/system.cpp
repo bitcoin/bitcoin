@@ -1229,6 +1229,9 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
         std::string portStr = std::to_string(websocketport);
         std::string rpcportStr = std::to_string(ethrpcport);
         std::string args =  std::string("--rpc --rpcapi personal,eth --rpccorsdomain * --rpcport ") + rpcportStr + std::string(" --ws --wsport ") + portStr + std::string(" --wsorigins * --syncmode ") + mode + std::string(" --datadir ") +  dataDir.string();
+        if(bGethTestnet) {
+            args += std::string(" --rinkeby");
+        }
         pid = fork(attempt2.string(), args);
         if( pid <= 0 ) {
             LogPrintf("Geth not found at %s, trying in current bin folder\n", attempt2.string());
