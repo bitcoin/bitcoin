@@ -38,7 +38,7 @@ stages:
           if wget --quiet -O cache-artifact.zip https://gitlab.com/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME/-/jobs/artifacts/develop/download?job=$CI_JOB_NAME; then
             unzip -q cache-artifact.zip
             rm cache-artifact.zip
-            mv cache-artifact/* $CACHE_DIR/
+            mv cache-artifact/* $CACHE_DIR/ || true
           else
             echo "Failed to download cache"
           fi
