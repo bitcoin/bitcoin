@@ -24,9 +24,15 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+
 #include <event2/thread.h>
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
+#include <event2/bufferevent_ssl.h>
+#include <event2/event.h>
+#include <event2/http.h>
 #include <event2/util.h>
 #include <event2/keyvalq_struct.h>
 
@@ -355,6 +361,17 @@ static void libevent_log_cb(int severity, const char *msg)
         LogPrint(BCLog::LIBEVENT, "libevent: %s\n", msg);
 }
 
+static struct bufferevent* bevcb(struct event_base *base, void *arg) {
+    struct bufferevent* resp;
+    SSL_CTX *ctx = (SSL_CTX *) arg;
+    resp = bufferevent_openssl_socket_new(base,
+    -1,
+    SSL_new(ctx),
+    BUFFEREVENT_SSL_ACCEPTING,
+    BEV_OPT_CLOSE_ON_FREE);
+    return resp;
+}
+
 bool InitHTTPServer()
 {
     if (!InitHTTPAllowList())
@@ -383,6 +400,39 @@ bool InitHTTPServer()
     if (!http) {
         LogPrintf("couldn't create evhttp. Exiting.\n");
         return false;
+    }
+
+    if (gArgs.GetBoolArg("-ssl", false)) {
+        LogPrintf("Starting SSL web server\n");
+        SSL_CTX *ctx = SSL_CTX_new (SSLv23_server_method ());
+        SSL_CTX_set_options(ctx,
+        SSL_OP_SINGLE_DH_USE |  // This option must be used to prevent small subgroup attacks, when the DH parameters were not generated using "strong" primes
+        SSL_OP_SINGLE_ECDH_USE |
+        SSL_OP_NO_SSLv2);       // SSLv2 is flawed in a variety of ways so we disable it
+
+        EC_KEY *ecdh = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
+        if (!ecdh) {
+            return false;
+        }
+        if (1 != SSL_CTX_set_tmp_ecdh(ctx, ecdh)) {
+            return false;
+        }
+
+        if (1 != SSL_CTX_use_certificate_chain_file(ctx, gArgs.GetArg("-sslcert", "").c_str())) {
+            LogPrintf("Can't load certificate chain file\n");
+            return false;
+        }
+        if (1 != SSL_CTX_use_PrivateKey_file(ctx, gArgs.GetArg("-sslkey", "").c_str(), SSL_FILETYPE_PEM)) {
+            LogPrintf("Can't load private key file\n");
+            return false;
+        }
+        if (1 != SSL_CTX_check_private_key(ctx)) {
+            LogPrintf("Can't use private key\n");
+            return false;
+        }
+
+        // Use HTTPS only!
+        evhttp_set_bevcb(http, bevcb, ctx);
     }
 
     evhttp_set_timeout(http, gArgs.GetArg("-rpcservertimeout", DEFAULT_HTTP_SERVER_TIMEOUT));

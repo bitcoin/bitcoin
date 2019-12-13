@@ -539,6 +539,9 @@ void SetupServerArgs()
     gArgs.AddArg("-rpcwhitelistdefault", "Sets default behavior for rpc whitelisting. Unless rpcwhitelistdefault is set to 0, if any -rpcwhitelist is set, the rpc server acts as if all rpc users are subject to empty-unless-otherwise-specified whitelists. If rpcwhitelistdefault is set to 1 and no -rpcwhitelist is set, rpc server acts as if all rpc users are subject to empty whitelists.", ArgsManager::ALLOW_BOOL, OptionsCategory::RPC);
     gArgs.AddArg("-rpcworkqueue=<n>", strprintf("Set the depth of the work queue to service RPC calls (default: %d)", DEFAULT_HTTP_WORKQUEUE), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::RPC);
     gArgs.AddArg("-server", "Accept command line and JSON-RPC commands", ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
+    gArgs.AddArg("-ssl", "Use SSL", ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
+    gArgs.AddArg("-sslcert=<path>", "The SSL cert to use", ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
+    gArgs.AddArg("-sslkey=<path>", "The SSL key to use", ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
 
 #if HAVE_DECL_DAEMON
     gArgs.AddArg("-daemon", "Run in the background as a daemon and accept commands", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -1293,6 +1296,11 @@ bool AppInitMain(NodeContext& node)
     if (gArgs.GetBoolArg("-server", false))
     {
         uiInterface.InitMessage_connect(SetRPCWarmupStatus);
+        // Test some SSL parameters
+        if (gArgs.IsArgSet("-ssl")) {
+            if (!(gArgs.IsArgSet("-sslcert") && gArgs.IsArgSet("-sslkey")))
+                return InitError(_("-sslcert and -sslkey need to be set if -ssl is enabled").translated);
+        }
         if (!AppInitServers())
             return InitError(_("Unable to start HTTP server. See debug log for details.").translated);
     }
