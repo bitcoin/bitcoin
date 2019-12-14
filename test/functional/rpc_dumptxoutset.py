@@ -47,5 +47,10 @@ class DumptxoutsetTest(BitcoinTestFramework):
         assert_raises_rpc_error(
             -8, '{} already exists'.format(FILENAME),  node.dumptxoutset, FILENAME)
 
+        # Specifying an irregular file path will fail.
+        irregular_file = " utxo.dat"
+        assert_raises_rpc_error(
+            -8, '{} is invalid'.format(irregular_file),  node.dumptxoutset, irregular_file)
+
 if __name__ == '__main__':
     DumptxoutsetTest().main()

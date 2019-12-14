@@ -21,6 +21,7 @@
 #include <vector>
 
 #include <boost/variant.hpp>
+#include <fs.h>
 
 /**
  * String used to describe UNIX epoch time in documentation, factored out to a
@@ -101,6 +102,8 @@ std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, Fl
 
 /** Returns, given services flags, a list of humanly readable (known) network services */
 UniValue GetServicesNames(ServiceFlags services);
+/** Check file and directory validity, availability and accessibility. Throws JSONRPCError */
+void EnsureFileWritable(const fs::path& filepath);
 
 /**
  * Serializing JSON objects depends on the outer type. Only arrays and

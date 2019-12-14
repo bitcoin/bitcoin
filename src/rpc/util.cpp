@@ -10,6 +10,7 @@
 #include <tinyformat.h>
 #include <util/strencodings.h>
 #include <util/string.h>
+#include <util/system.h>
 
 #include <tuple>
 
@@ -855,4 +856,104 @@ UniValue GetServicesNames(ServiceFlags services)
         servicesNames.push_back("NETWORK_LIMITED");
 
     return servicesNames;
+}
+
+void EnsureFileWritable(const fs::path& filepath)
+{
+    fs::path path = fs::absolute(filepath);
+    std::string parent = path.parent_path().string();
+    std::string file = path.filename().string();
+
+    /* Check if parent path exists and file name is valid. */
+    if (!fs::exists(parent)) {
+        throw JSONRPCError(
+            RPC_INVALID_PARAMETER,
+            parent + " does not exist");
+    } else if (!fs::native(file)) {
+        throw JSONRPCError(
+            RPC_INVALID_PARAMETER,
+            file + " is invalid");
+    }
+
+    /* Check file status */
+    boost::system::error_code ec;
+    fs::file_status status = fs::status(path, ec);
+    // Could the file be written at all?
+    switch(ec.value())
+    {
+        case boost::system::errc::filename_too_long:
+        {
+            throw JSONRPCError(RPC_INVALID_PARAMETER,
+                               file + " is too long");
+        }
+        break;
+        case boost::system::errc::read_only_file_system:
+        {
+            throw JSONRPCError(RPC_INVALID_PARAMETER,
+                               "Filesystem is readonly");
+        }
+        break;
+        case boost::system::errc::device_or_resource_busy:
+        {
+            throw JSONRPCError(RPC_INVALID_PARAMETER,
+                               "Device or resource busy");
+        }
+        break;
+        case boost::system::errc::file_too_large:
+        {
+            throw JSONRPCError(RPC_INVALID_PARAMETER,
+                               file + " is too large");
+        }
+        break;
+        case boost::system::errc::no_space_on_device:
+        {
+            throw JSONRPCError(RPC_INVALID_PARAMETER,
+                               "No space left on device");
+        }
+        break;
+        case boost::system::errc::permission_denied:
+        {
+            throw JSONRPCError(RPC_INVALID_PARAMETER,
+                               "Permission denied");
+        }
+        break;
+        case boost::system::errc::no_such_file_or_directory:
+        {
+            throw JSONRPCError(RPC_INVALID_PARAMETER,
+                               "No such file or directory");
+        }
+        break;
+        case boost::system::errc::io_error:
+        {
+            throw JSONRPCError(RPC_INVALID_PARAMETER,
+                               "IO error");
+        }
+        break;
+    }
+    // Should the file be written?
+    switch (status.type())
+    {
+    case fs::file_type::file_not_found:
+        //OK. Can be written, because couldn't find
+        // a file with the same name.
+        break;
+    case fs::file_type::regular_file:
+        {
+           throw JSONRPCError(
+                RPC_INVALID_PARAMETER,
+                path.string() + " already exists. If you are sure this is what you want, "
+                "move it out of the way first");
+        }
+        break;
+    case fs::file_type::directory_file:
+        {
+           throw JSONRPCError(
+                RPC_INVALID_PARAMETER,
+                filepath.string() + " is a directory");
+        }
+        break;
+    default:
+        throw JSONRPCError(RPC_INVALID_PARAMETER,
+                "General error with " + filepath.string());
+    }
 }

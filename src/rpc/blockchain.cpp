@@ -2265,16 +2265,11 @@ UniValue dumptxoutset(const JSONRPCRequest& request)
     }.Check(request);
 
     fs::path path = fs::absolute(request.params[0].get_str(), GetDataDir());
+    EnsureFileWritable(path);
+
     // Write to a temporary path and then move into `path` on completion
     // to avoid confusion due to an interruption.
     fs::path temppath = fs::absolute(request.params[0].get_str() + ".incomplete", GetDataDir());
-
-    if (fs::exists(path)) {
-        throw JSONRPCError(
-            RPC_INVALID_PARAMETER,
-            path.string() + " already exists. If you are sure this is what you want, "
-            "move it out of the way first");
-    }
 
     FILE* file{fsbridge::fopen(temppath, "wb")};
     CAutoFile afile{file, SER_DISK, CLIENT_VERSION};

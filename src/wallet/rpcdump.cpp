@@ -750,8 +750,8 @@ UniValue dumpwallet(const JSONRPCRequest& request)
 
     EnsureWalletIsUnlocked(&wallet);
 
-    fs::path filepath = request.params[0].get_str();
-    filepath = fs::absolute(filepath);
+    fs::path filepath = fs::absolute(request.params[0].get_str());
+    EnsureFileWritable(filepath);
 
     /* Prevent arbitrary files from being overwritten. There have been reports
      * that users have overwritten wallet files this way:
