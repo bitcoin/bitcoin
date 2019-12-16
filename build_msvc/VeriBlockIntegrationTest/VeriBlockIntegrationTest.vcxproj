@@ -154,7 +154,10 @@
     <ClCompile Include="..\..\src\test\setup_common.cpp" />
     <ClCompile Include="..\..\src\vbk\test\integration\dummy.cpp" />
     <ClCompile Include="..\..\src\vbk\test\integration\main.cpp" />
+    <ClCompile Include="..\..\src\vbk\test\integration\utils.cpp" />
+    <ClCompile Include="..\..\src\vbk\test\integration\grpc_integration_service.cpp" />
     <ClCompile Include="..\..\src\vbk\test\integration\rpc_tests.cpp" />
+    <ClCompile Include="..\..\src\vbk\test\integration\pop_reward_tests.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
