@@ -6,7 +6,8 @@
 #include <interfaces/chain.h>
 #include <node/context.h>
 #include <optional.h>
-#include <test/util.h>
+#include <test/util/mining.h>
+#include <test/util/wallet.h>
 #include <validationinterface.h>
 #include <wallet/wallet.h>
 
