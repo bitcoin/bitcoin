@@ -151,13 +151,20 @@ void PopServiceImpl::savePopTxToDatabase(const CBlock& block, const int& nHeight
         CBlockHeader endorsedBlock;
         stream >> endorsedBlock;
 
+        CBlockIndex* endorsedBlockIndex;
+        {
+            LOCK(cs_main);
+            endorsedBlockIndex = LookupBlockIndex(endorsedBlock.GetHash());
+        }
+
+        auto* b2 = new AltChainBlock();
+        BlockToProtoAltChainBlock(endorsedBlock, endorsedBlockIndex->nHeight, *b2);
+        popTxData->set_allocated_endorsedblock(b2);
+
         for (const auto& vtb : publications.vtbs) {
             std::string* data = popTxData->add_veriblockpublications();
             *data = std::string(vtb.begin(), vtb.end());
         }
-
-        auto* b2 = new AltChainBlock();
-        BlockToProtoAltChainBlock(block, nHeight, *b2);
     }
 
     Status status = grpcPopService->SaveBlockPopTxToDatabase(&context, request, &reply);
@@ -250,14 +257,12 @@ void PopServiceImpl::updateContext(const std::vector<std::vector<uint8_t>>& veri
     EmptyReply reply;
     ClientContext context;
 
-    for (const auto& bitcoin_block : bitcoinBlocks)
-    {
+    for (const auto& bitcoin_block : bitcoinBlocks) {
         std::string* pb = request.add_bitcoinblocks();
         *pb = std::string(bitcoin_block.begin(), bitcoin_block.end());
     }
 
-    for (const auto& veriblock_block : veriBlockBlocks)
-    {
+    for (const auto& veriblock_block : veriBlockBlocks) {
         std::string* pb = request.add_veriblockblocks();
         *pb = std::string(veriblock_block.begin(), veriblock_block.end());
     }
@@ -340,10 +345,9 @@ void PopServiceImpl::rewardsCalculateOutputs(const int& blockHeight, const CBloc
     }
 
     for (int i = 0, size = reply.outputs_size(); i < size; ++i) {
-        CScript script;
         const VeriBlock::RewardOutput& output = reply.outputs(i);
         std::vector<unsigned char> payout_bytes(output.payoutinfo().begin(), output.payoutinfo().end());
-        script << payout_bytes;
+        CScript script(payout_bytes.begin(), payout_bytes.end());
 
         try {
             int64_t amount = std::stoll(output.reward());
@@ -354,8 +358,7 @@ void PopServiceImpl::rewardsCalculateOutputs(const int& blockHeight, const CBloc
             }
         } catch (const std::invalid_argument&) {
             throw VeriBlock::PopServiceException("cannot convert the value received from the service");
-        }
-        catch (const std::out_of_range&) {
+        } catch (const std::out_of_range&) {
             outputs[script] = MAX_MONEY;
         }
     }

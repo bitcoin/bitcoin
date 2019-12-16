@@ -5,13 +5,16 @@ VBK_INTEGRATION_TEST_BINARY = vbk/test/integration/test_int_vbk$(EXEEXT)
 VBK_INTEGRATION_TEST_SUITE = \
   vbk/test/integration/main.cpp \
   test/setup_common.h \
-  test/setup_common.cpp
+  test/setup_common.cpp \
+  vbk/test/integration/grpc_integration_service.cpp \
+  vbk/test/integration/utils.cpp
 
 # the list of VeriBlock integration test sources
 VBK_INTEGRATION_TESTS =  \
   vbk/test/integration/dummy.cpp \
-  vbk/test/integration/rpc_tests.cpp
-
+  vbk/test/integration/rpc_tests.cpp \
+  vbk/test/integration/pop_reward_tests.cpp
+  
 vbk_test_integration_test_int_vbk_SOURCES = $(VBK_INTEGRATION_TEST_SUITE) $(VBK_INTEGRATION_TESTS)
 vbk_test_integration_test_int_vbk_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(TESTDEFS) $(EVENT_CFLAGS) $(THIRD_PARTY_INCLUDE)
 vbk_test_integration_test_int_vbk_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(FAKEIT_CXXFLAGS)
