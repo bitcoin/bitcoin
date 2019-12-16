@@ -5,8 +5,9 @@
 #include <bench/bench.h>
 #include <interfaces/chain.h>
 #include <node/context.h>
-#include <test/util.h>
+#include <test/util/mining.h>
 #include <test/util/setup_common.h>
+#include <test/util/wallet.h>
 #include <validationinterface.h>
 #include <wallet/wallet.h>
 

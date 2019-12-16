@@ -8,9 +8,9 @@
 #include <hash.h> // For Hash()
 #include <key.h> // For CKey
 #include <sync.h>
-#include <test/util.h>
 #include <test/util/logging.h>
 #include <test/util/setup_common.h>
+#include <test/util/str.h>
 #include <uint256.h>
 #include <util/getuniquepath.h>
 #include <util/message.h> // For MessageSign(), MessageVerify(), MESSAGE_MAGIC
