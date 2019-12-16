@@ -16,4 +16,4 @@ std::string FormatStateMessage(const ValidationState &state)
         state.GetDebugMessage().empty() ? "" : ", "+state.GetDebugMessage());
 }
 
-const std::string strMessageMagic = "Syscoin Signed Message:\n";
+const std::string strMessageMagic = "Bitcoin Signed Message:\n";
