@@ -20,6 +20,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
     // node.connman is assigned both before chain clients and before RPC server is accepting calls,
     // and reset after chain clients and RPC sever are stopped. node.connman should never be null here.
     assert(node.connman);
+    assert(node.mempool);
     std::promise<void> promise;
     uint256 hashTx = tx->GetHash();
     bool callback_set = false;
@@ -35,10 +36,10 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
         // So if the output does exist, then this transaction exists in the chain.
         if (!existingCoin.IsSpent()) return TransactionError::ALREADY_IN_CHAIN;
     }
-    if (!mempool.exists(hashTx)) {
+    if (!node.mempool->exists(hashTx)) {
         // Transaction is not already in the mempool. Submit it.
         TxValidationState state;
-        if (!AcceptToMemoryPool(mempool, state, std::move(tx),
+        if (!AcceptToMemoryPool(*node.mempool, state, std::move(tx),
                 nullptr /* plTxnReplaced */, false /* bypass_limits */, max_tx_fee)) {
             err_string = FormatStateMessage(state);
             if (state.IsInvalid()) {
