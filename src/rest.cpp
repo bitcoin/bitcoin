@@ -291,7 +291,7 @@ static bool rest_chaininfo(HTTPRequest* req, const std::string& strURIPart)
     }
 }
 
-static bool rest_mempool_info(HTTPRequest* req, const std::string& strURIPart)
+static bool rest_mempool_info(HTTPRequest* req, const std::string& strURIPart, bool fee_histogram)
 {
     if (!CheckWarmup(req))
         return false;
@@ -300,7 +300,7 @@ static bool rest_mempool_info(HTTPRequest* req, const std::string& strURIPart)
 
     switch (rf) {
     case RetFormat::JSON: {
-        UniValue mempoolInfoObject = MempoolInfoToJSON(::mempool);
+        UniValue mempoolInfoObject = MempoolInfoToJSON(::mempool, fee_histogram);
 
         std::string strJSON = mempoolInfoObject.write() + "\n";
         req->WriteHeader("Content-Type", "application/json");
@@ -311,6 +311,16 @@ static bool rest_mempool_info(HTTPRequest* req, const std::string& strURIPart)
         return RESTERR(req, HTTP_NOT_FOUND, "output format not found (available: json)");
     }
     }
+}
+
+static bool rest_mempool_info_basic(HTTPRequest* req, const std::string& strURIPart)
+{
+    return rest_mempool_info(req, strURIPart, false);
+}
+
+static bool rest_mempool_info_with_fee_histogram(HTTPRequest* req, const std::string& strURIPart)
+{
+    return rest_mempool_info(req, strURIPart, true);
 }
 
 static bool rest_mempool_contents(HTTPRequest* req, const std::string& strURIPart)
@@ -629,7 +639,8 @@ static const struct {
       {"/rest/block/notxdetails/", rest_block_notxdetails},
       {"/rest/block/", rest_block_extended},
       {"/rest/chaininfo", rest_chaininfo},
-      {"/rest/mempool/info", rest_mempool_info},
+      {"/rest/mempool/info", rest_mempool_info_basic},
+      {"/rest/mempool/info/with_fee_histogram", rest_mempool_info_with_fee_histogram},
       {"/rest/mempool/contents", rest_mempool_contents},
       {"/rest/headers/", rest_headers},
       {"/rest/getutxos", rest_getutxos},
