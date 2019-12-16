@@ -6,15 +6,15 @@
 #ifndef BITCOIN_VALIDATIONINTERFACE_H
 #define BITCOIN_VALIDATIONINTERFACE_H
 
-#include <primitives/transaction.h> // CTransaction(Ref)
+#include <primitives/tx_types.h> // CTransaction(Ref)
 #include <sync.h>
 
 #include <functional>
 #include <memory>
+#include <vector>
 
 extern CCriticalSection cs_main;
 class BlockValidationState;
-class CBlock;
 class CBlockIndex;
 struct CBlockLocator;
 class CConnman;

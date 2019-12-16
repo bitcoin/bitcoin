@@ -5,8 +5,9 @@
 
 #include <merkleblock.h>
 
-#include <hash.h>
 #include <consensus/consensus.h>
+#include <hash.h>
+#include <primitives/transaction.h>
 
 
 CMerkleBlock::CMerkleBlock(const CBlock& block, CBloomFilter* filter, const std::set<uint256>* txids)

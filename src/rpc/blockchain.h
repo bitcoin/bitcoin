@@ -6,6 +6,7 @@
 #define BITCOIN_RPC_BLOCKCHAIN_H
 
 #include <amount.h>
+#include <primitives/tx_types.h>
 #include <sync.h>
 
 #include <stdint.h>
@@ -13,7 +14,6 @@
 
 extern RecursiveMutex cs_main;
 
-class CBlock;
 class CBlockIndex;
 class CTxMemPool;
 class UniValue;

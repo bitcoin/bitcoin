@@ -7,6 +7,7 @@
 #define BITCOIN_SCRIPT_SIGN_H
 
 #include <hash.h>
+#include <primitives/tx_types.h>
 #include <pubkey.h>
 #include <script/interpreter.h>
 #include <script/keyorigin.h>
@@ -16,10 +17,7 @@ class CKey;
 class CKeyID;
 class CScript;
 class CScriptID;
-class CTransaction;
 class SigningProvider;
-
-struct CMutableTransaction;
 
 /** Interface for signature creators. */
 class BaseSignatureCreator {

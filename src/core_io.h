@@ -7,15 +7,13 @@
 
 #include <amount.h>
 #include <attributes.h>
+#include <primitives/tx_types.h>
 
 #include <string>
 #include <vector>
 
-class CBlock;
 class CBlockHeader;
 class CScript;
-class CTransaction;
-struct CMutableTransaction;
 class uint256;
 class UniValue;
 

@@ -5,17 +5,19 @@
 #ifndef BITCOIN_INTERFACES_CHAIN_H
 #define BITCOIN_INTERFACES_CHAIN_H
 
+#include <amount.h>
 #include <optional.h>               // For Optional and nullopt
-#include <primitives/transaction.h> // For CTransactionRef
+#include <primitives/tx_types.h>    // For CTransactionRef
 
+#include <map>
 #include <memory>
 #include <stddef.h>
 #include <stdint.h>
 #include <string>
 #include <vector>
 
-class CBlock;
 class CFeeRate;
+class COutPoint;
 class CRPCCommand;
 class CScheduler;
 class Coin;

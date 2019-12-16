@@ -6,6 +6,8 @@
 #include <primitives/block.h>
 
 #include <hash.h>
+#include <primitives/transaction.h>
+
 #include <tinyformat.h>
 
 uint256 CBlockHeader::GetHash() const
@@ -13,6 +15,7 @@ uint256 CBlockHeader::GetHash() const
     return SerializeHash(*this);
 }
 
+template <>
 std::string CBlock::ToString() const
 {
     std::stringstream s;

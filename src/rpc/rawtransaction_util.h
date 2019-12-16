@@ -5,11 +5,12 @@
 #ifndef BITCOIN_RPC_RAWTRANSACTION_UTIL_H
 #define BITCOIN_RPC_RAWTRANSACTION_UTIL_H
 
+#include <primitives/tx_types.h>
+
 #include <map>
 
 class FillableSigningProvider;
 class UniValue;
-struct CMutableTransaction;
 class Coin;
 class COutPoint;
 class SigningProvider;

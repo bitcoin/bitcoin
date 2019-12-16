@@ -5,10 +5,11 @@
 #ifndef BITCOIN_TEST_UTIL_H
 #define BITCOIN_TEST_UTIL_H
 
+#include <primitives/tx_types.h>
+
 #include <memory>
 #include <string>
 
-class CBlock;
 class CScript;
 class CTxIn;
 class CWallet;

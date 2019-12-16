@@ -795,9 +795,10 @@ static UniValue getblockheader(const JSONRPCRequest& request)
     return blockheaderToJSON(tip, pblockindex);
 }
 
-static CBlock GetBlockChecked(const CBlockIndex* pblockindex)
+template <typename Block>
+static Block GetBlockChecked(const CBlockIndex* pblockindex)
 {
-    CBlock block;
+    Block block;
     if (IsBlockPruned(pblockindex)) {
         throw JSONRPCError(RPC_MISC_ERROR, "Block not available (pruned data)");
     }
@@ -893,8 +894,9 @@ static UniValue getblock(const JSONRPCRequest& request)
         else
             verbosity = request.params[1].get_bool() ? 1 : 0;
     }
+    const bool use_pure_block{verbosity <= 0};
 
-    CBlock block;
+    boost::variant<PureBlock, CBlock> block;
     const CBlockIndex* pblockindex;
     const CBlockIndex* tip;
     {
@@ -906,18 +908,21 @@ static UniValue getblock(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
 
-        block = GetBlockChecked(pblockindex);
+        if (use_pure_block) {
+            block = GetBlockChecked<PureBlock>(pblockindex);
+        } else {
+            block = GetBlockChecked<CBlock>(pblockindex);
+        }
     }
 
-    if (verbosity <= 0)
-    {
+    if (use_pure_block) {
         CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
-        ssBlock << block;
+        ssBlock << boost::get<PureBlock>(block);
         std::string strHex = HexStr(ssBlock.begin(), ssBlock.end());
         return strHex;
     }
 
-    return blockToJSON(block, tip, pblockindex, verbosity >= 2);
+    return blockToJSON(boost::get<CBlock>(block), tip, pblockindex, verbosity >= 2);
 }
 
 static UniValue pruneblockchain(const JSONRPCRequest& request)
@@ -1795,7 +1800,7 @@ static UniValue getblockstats(const JSONRPCRequest& request)
         }
     }
 
-    const CBlock block = GetBlockChecked(pindex);
+    const CBlock block = GetBlockChecked<CBlock>(pindex);
     const CBlockUndo blockUndo = GetUndoChecked(pindex);
 
     const bool do_all = stats.size() == 0; // Calculate everything if nothing selected (default)

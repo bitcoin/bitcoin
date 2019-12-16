@@ -54,10 +54,20 @@ std::string CTxOut::ToString() const
     return strprintf("CTxOut(nValue=%d.%08d, scriptPubKey=%s)", nValue / COIN, nValue % COIN, HexStr(scriptPubKey).substr(0, 30));
 }
 
-CMutableTransaction::CMutableTransaction() : nVersion(CTransaction::CURRENT_VERSION), nLockTime(0) {}
-CMutableTransaction::CMutableTransaction(const CTransaction& tx) : vin(tx.vin), vout(tx.vout), nVersion(tx.nVersion), nLockTime(tx.nLockTime) {}
+template <bool WithHash> Transaction<WithHash>::Transaction() : nVersion(CTransaction::CURRENT_VERSION), nLockTime(0) { }
+template <bool WithHash> Transaction<WithHash>::Transaction(const CTransaction& tx) : vin(tx.vin), vout(tx.vout), nVersion(tx.nVersion), nLockTime(tx.nLockTime) { }
 
-uint256 CMutableTransaction::GetHash() const
+template Transaction<false>::Transaction();
+template Transaction<true>::Transaction();
+template Transaction<false>::Transaction(const CTransaction& tx);
+template Transaction<true>::Transaction(const CTransaction& tx);
+
+template <>
+Transaction<false>::HashType Transaction<false>::GetHash() const
+{
+}
+template <>
+Transaction<true>::HashType Transaction<true>::GetHash() const
 {
     return SerializeHash(*this, SER_GETHASH, SERIALIZE_TRANSACTION_NO_WITNESS);
 }

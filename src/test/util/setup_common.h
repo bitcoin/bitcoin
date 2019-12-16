@@ -9,6 +9,7 @@
 #include <fs.h>
 #include <key.h>
 #include <node/context.h>
+#include <primitives/tx_types.h>
 #include <pubkey.h>
 #include <random.h>
 #include <scheduler.h>
@@ -94,8 +95,6 @@ struct RegTestingSetup : public TestingSetup {
         : TestingSetup{CBaseChainParams::REGTEST} {}
 };
 
-class CBlock;
-struct CMutableTransaction;
 class CScript;
 
 //

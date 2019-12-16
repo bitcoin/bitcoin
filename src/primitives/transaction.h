@@ -6,8 +6,8 @@
 #ifndef BITCOIN_PRIMITIVES_TRANSACTION_H
 #define BITCOIN_PRIMITIVES_TRANSACTION_H
 
-#include <stdint.h>
 #include <amount.h>
+#include <primitives/tx_types.h>
 #include <script/script.h>
 #include <serialize.h>
 #include <uint256.h>
@@ -175,8 +175,6 @@ public:
 
     std::string ToString() const;
 };
-
-struct CMutableTransaction;
 
 /**
  * Basic transaction serialization format:
@@ -363,15 +361,17 @@ public:
 };
 
 /** A mutable version of CTransaction. */
-struct CMutableTransaction
+template <bool WithHash>
+class Transaction
 {
+public:
     std::vector<CTxIn> vin;
     std::vector<CTxOut> vout;
     int32_t nVersion;
     uint32_t nLockTime;
 
-    CMutableTransaction();
-    explicit CMutableTransaction(const CTransaction& tx);
+    explicit Transaction();
+    explicit Transaction(const CTransaction& tx);
 
     template <typename Stream>
     inline void Serialize(Stream& s) const {
@@ -385,14 +385,19 @@ struct CMutableTransaction
     }
 
     template <typename Stream>
-    CMutableTransaction(deserialize_type, Stream& s) {
+    Transaction(deserialize_type, Stream& s)
+    {
         Unserialize(s);
     }
 
-    /** Compute the hash of this CMutableTransaction. This is computed on the
+    /** Compute the hash of this transaction. This is computed on the
      * fly, as opposed to GetHash() in CTransaction, which uses a cached result.
+     *
+     * The template parameter WithHash denotes whether a member function to
+     * calculate the hash is compiled.
      */
-    uint256 GetHash() const;
+    using HashType = typename std::conditional<WithHash, uint256, void>::type;
+    HashType GetHash() const;
 
     bool HasWitness() const
     {
@@ -405,7 +410,7 @@ struct CMutableTransaction
     }
 };
 
-typedef std::shared_ptr<const CTransaction> CTransactionRef;
+template <typename Tx> static inline PureTransactionRef MakePureTransactionRef(Tx&& txIn) { return std::make_shared<const PureTransaction>(std::forward<Tx>(txIn)); }
 static inline CTransactionRef MakeTransactionRef() { return std::make_shared<const CTransaction>(); }
 template <typename Tx> static inline CTransactionRef MakeTransactionRef(Tx&& txIn) { return std::make_shared<const CTransaction>(std::forward<Tx>(txIn)); }
 
