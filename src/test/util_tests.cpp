@@ -1069,6 +1069,11 @@ BOOST_AUTO_TEST_CASE(util_ParseMoney)
 
     // Parsing negative amounts must fail
     BOOST_CHECK(!ParseMoney("-1", ret));
+
+    // Parsing strings with embedded NUL characters should fail
+    BOOST_CHECK(!ParseMoney(std::string("\0-1", 3), ret));
+    BOOST_CHECK(!ParseMoney(std::string("\01", 2), ret));
+    BOOST_CHECK(!ParseMoney(std::string("1\0", 2), ret));
 }
 
 BOOST_AUTO_TEST_CASE(util_IsHex)
