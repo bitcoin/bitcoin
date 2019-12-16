@@ -337,6 +337,13 @@ void BitcoinGUI::createActions()
     masternodeAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
     tabGroup->addAction(masternodeAction);
 
+    governanceAction = new QAction(QIcon(":/icons/governance"), tr("&Governance"), this);
+    governanceAction->setStatusTip(tr("Show governance items"));
+    governanceAction->setToolTip(governanceAction->statusTip());
+    governanceAction->setCheckable(true);
+    masternodeAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_6));
+    tabGroup->addAction(governanceAction);
+
 #ifdef ENABLE_WALLET
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
     // can be triggered from the tray menu, and need to show the GUI to be useful.
@@ -354,6 +361,8 @@ void BitcoinGUI::createActions()
     connect(historyAction, &QAction::triggered, this, &BitcoinGUI::gotoHistoryPage);
     connect(masternodeAction, &QAction::triggered, this, [this]{ showNormalIfMinimized(); });
     connect(masternodeAction, &QAction::triggered, this, &BitcoinGUI::gotoMasternodePage);
+    connect(governanceAction, &QAction::triggered, this, [this]{ showNormalIfMinimized(); });
+    connect(governanceAction, &QAction::triggered, this, &BitcoinGUI::gotoGovernancePage);
 #endif // ENABLE_WALLET
 
     quitAction = new QAction(platformStyle->TextColorIcon(":/icons/quit"), tr("E&xit"), this);
@@ -608,6 +617,7 @@ void BitcoinGUI::createToolBars()
         toolbar->addAction(receiveCoinsAction);
         toolbar->addAction(historyAction);
         toolbar->addAction(masternodeAction);
+        toolbar->addAction(governanceAction);
         overviewAction->setChecked(true);
 
 #ifdef ENABLE_WALLET
@@ -784,6 +794,7 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
     receiveCoinsMenuAction->setEnabled(enabled);
     historyAction->setEnabled(enabled);
     masternodeAction->setEnabled(enabled);
+    governanceAction->setEnabled(enabled);
     encryptWalletAction->setEnabled(enabled);
     decryptForStakingAction->setEnabled(enabled);
     backupWalletAction->setEnabled(enabled);
@@ -921,6 +932,12 @@ void BitcoinGUI::gotoMasternodePage()
 {
     masternodeAction->setChecked(true);
     if (walletFrame) walletFrame->gotoMasternodePage();
+}
+
+void BitcoinGUI::gotoGovernancePage()
+{
+    governanceAction->setChecked(true);
+    if (walletFrame) walletFrame->gotoGovernancePage();
 }
 
 void BitcoinGUI::gotoReceiveCoinsPage()
