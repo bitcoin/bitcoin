@@ -243,7 +243,7 @@ endif
 
 if ENABLE_FUZZ
 test_fuzz_block_SOURCES = $(FUZZ_SUITE) test/fuzz/block.cpp
-test_fuzz_block_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_block_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
 test_fuzz_block_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_block_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_block_LDADD = $(FUZZ_SUITE_LD_COMMON)
