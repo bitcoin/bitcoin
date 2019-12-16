@@ -192,7 +192,7 @@ public:
     std::string getNetwork() override { return Params().NetworkIDString(); }
     void initLogging() override { InitLogging(gArgs); }
     void initParameterInteraction() override { InitParameterInteraction(gArgs); }
-    std::string getWarnings(const std::string& type) override { return GetWarnings(type); }
+    std::string getWarnings() override { return GetWarnings(true); }
     uint64_t getLogCategories() override { return LogInstance().GetCategoryMask(); }
     bool baseInitialize() override
     {
