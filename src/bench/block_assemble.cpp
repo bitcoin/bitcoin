@@ -5,7 +5,8 @@
 #include <bench/bench.h>
 #include <consensus/validation.h>
 #include <crypto/sha256.h>
-#include <test/util.h>
+#include <test/util/mining.h>
+#include <test/util/wallet.h>
 #include <txmempool.h>
 #include <validation.h>
 
