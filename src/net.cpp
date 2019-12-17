@@ -76,8 +76,7 @@ enum BindFlags {
 
 // The set of sockets cannot be modified while waiting
 // The sleep time needs to be small to avoid new sockets stalling
-// SYSCOIN
-static const uint64_t SELECT_TIMEOUT_MILLISECONDS = 10;
+static const uint64_t SELECT_TIMEOUT_MILLISECONDS = 50;
 
 const std::string NET_MESSAGE_COMMAND_OTHER = "*other*";
 
