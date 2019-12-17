@@ -132,10 +132,10 @@ public:
         // BIP147) are deployed together with P2SH.
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000007184257f8428fd0189c9a8");
+        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000007eb1d72f664e35d28964e4");
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0xd467a893337ea1d042b8ec254efde8637b5957abb5bea63676486a7c1ffb56c7");
+        consensus.defaultAssumeValid = uint256S("0x385caed1bb2da6dc36a550d4b2f168474ca328b492c8d631a04617c92a1bd3b3"); // 288481
         consensus.nAuxpowChainId = 0x1000;
         consensus.nAuxpowStartHeight = 1;
         consensus.fStrictChainId = true;
@@ -144,7 +144,7 @@ public:
         consensus.vchSYSXBurnMethodSignature = ParseHex("5f959b69");
         consensus.vchSYSXERC20Manager = ParseHex("30929228931464ee18AF52b9f655F8176555b6e7");
         consensus.vchTokenFreezeMethod = ParseHex("aabab1db49e504b5156edf3f99042aeecb9607a08f392589571cd49743aaba8d");
-        consensus.nBridgeStartBlock = 375000;
+        consensus.nBridgeStartBlock = 348000;
         /**
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
@@ -199,6 +199,7 @@ public:
                 { 150000, uint256S("0x73850eb99a6c32b4bfd67a26a7466ce3d0b4412d4174590c501e567c99f038fd")},
                 { 200000, uint256S("0xa28fe36c63acb38065dadf09d74de5fdc1dac6433c204b215b37bab312dfab0d")},
                 { 240000, uint256S("0x906918ba0cbfbd6e4e4e00d7d47d08bef3e409f47b59cb5bd3303f5276b88f0f")},
+                { 280000, uint256S("0x651375427865345d37a090ca561c1ed135c6b8dafa591a59f2abf1eb26dfd538")},
             }
         };
 
