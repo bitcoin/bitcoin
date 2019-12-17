@@ -144,7 +144,7 @@ public:
         consensus.vchSYSXBurnMethodSignature = ParseHex("5f959b69");
         consensus.vchSYSXERC20Manager = ParseHex("30929228931464ee18AF52b9f655F8176555b6e7");
         consensus.vchTokenFreezeMethod = ParseHex("aabab1db49e504b5156edf3f99042aeecb9607a08f392589571cd49743aaba8d");
-        consensus.nBridgeStartBlock = 275000;
+        consensus.nBridgeStartBlock = 375000;
         /**
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
