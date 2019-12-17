@@ -8,7 +8,6 @@ export LC_ALL=C.UTF-8
 
 if [ -n "$QEMU_USER_CMD" ]; then
   BEGIN_FOLD wrap-qemu
-  echo "Prepare to run functional tests for HOST=$HOST"
   # Generate all binaries, so that they can be wrapped
   DOCKER_EXEC make $MAKEJOBS -C src/secp256k1 VERBOSE=1
   DOCKER_EXEC make $MAKEJOBS -C src/univalue VERBOSE=1
@@ -22,6 +21,12 @@ if [ -n "$QEMU_USER_CMD" ]; then
       DOCKER_EXEC chmod +x "$b"
     done
   done
+  END_FOLD
+fi
+
+if [ -n "$USE_VALGRIND" ]; then
+  BEGIN_FOLD wrap-valgrind
+  DOCKER_EXEC "${BASE_ROOT_DIR}/ci/test/wrap-valgrind.sh"
   END_FOLD
 fi
 
