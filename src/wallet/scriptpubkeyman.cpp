@@ -14,7 +14,6 @@
 bool LegacyScriptPubKeyMan::GetNewDestination(const OutputType type, CTxDestination& dest, std::string& error)
 {
     error.clear();
-    TopUp();
 
     // Generate a new key that is added to wallet
     CPubKey new_key;
@@ -1152,8 +1151,6 @@ bool LegacyScriptPubKeyMan::ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& key
     keypool.vchPubKey = CPubKey();
     {
         LOCK(cs_wallet);
-
-        TopUp();
 
         bool fReturningInternal = fRequestedInternal;
         fReturningInternal &= (IsHDEnabled() && m_storage.CanSupportFeature(FEATURE_HD_SPLIT)) || m_storage.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
