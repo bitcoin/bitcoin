@@ -11,14 +11,15 @@
 class CBlock;
 class CScript;
 class CTxIn;
+struct NodeContext;
 
 /** Returns the generated coin */
-CTxIn MineBlock(const CScript& coinbase_scriptPubKey);
+CTxIn MineBlock(const NodeContext&, const CScript& coinbase_scriptPubKey);
 
 /** Prepare a block to be mined */
-std::shared_ptr<CBlock> PrepareBlock(const CScript& coinbase_scriptPubKey);
+std::shared_ptr<CBlock> PrepareBlock(const NodeContext&, const CScript& coinbase_scriptPubKey);
 
 /** RPC-like helper function, returns the generated coin */
-CTxIn generatetoaddress(const std::string& address);
+CTxIn generatetoaddress(const NodeContext&, const std::string& address);
 
 #endif // BITCOIN_TEST_UTIL_MINING_H
