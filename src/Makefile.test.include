@@ -293,7 +293,7 @@ test_fuzz_bech32_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_bech32_LDADD = $(FUZZ_SUITE_LD_COMMON)
 
 test_fuzz_base_encode_decode_SOURCES = $(FUZZ_SUITE) test/fuzz/base_encode_decode.cpp
-test_fuzz_base_encode_decode_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_base_encode_decode_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
 test_fuzz_base_encode_decode_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_base_encode_decode_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_base_encode_decode_LDADD = $(FUZZ_SUITE_LD_COMMON)
@@ -377,7 +377,7 @@ test_fuzz_address_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP
 test_fuzz_address_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 
 test_fuzz_hex_SOURCES = $(FUZZ_SUITE) test/fuzz/hex.cpp
-test_fuzz_hex_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_hex_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
 test_fuzz_hex_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_hex_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_hex_LDADD = $(FUZZ_SUITE_LD_COMMON)
