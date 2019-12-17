@@ -32,6 +32,8 @@ LOCALE_DEPENDENT_FUNCTIONS=(
     atol         # LC_NUMERIC (via strtol)
     atoll        # (via strtoll)
     atoq
+    boost::algorithm::trim
+    boost::trim
     btowc        # LC_CTYPE (directly)
     ctime        # (via asctime or localtime)
     dprintf      # (via vdprintf)
