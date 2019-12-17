@@ -16,6 +16,8 @@ if [ -n "$QEMU_USER_CMD" ]; then
   export DPKG_ADD_ARCH="s390x"
   export PACKAGES="$PACKAGES g++-s390x-linux-gnu qemu-user libc6:s390x libstdc++6:s390x libfontconfig1:s390x libxcb1:s390x"
 fi
+# Use debian to avoid 404 apt errors
+export DOCKER_NAME_TAG="debian:buster"
 export RUN_UNIT_TESTS=true
 export RUN_FUNCTIONAL_TESTS=true
 export GOAL="install"
