@@ -9,7 +9,7 @@ export LC_ALL=C.UTF-8
 export HOST=arm-linux-gnueabihf
 # The host arch is unknown, so we run the tests through qemu.
 # If the host is arm and wants to run the tests natively, it can set QEMU_USER_CMD to the empty string.
-export QEMU_USER_CMD="${QEMU_USER_CMD:"qemu-arm -L /usr/arm-linux-gnueabihf/"}"
+if [ -z ${QEMU_USER_CMD+x} ]; then export QEMU_USER_CMD="${QEMU_USER_CMD:-"qemu-arm -L /usr/arm-linux-gnueabihf/"}"; fi
 # We don't know whether the host can run the cross compiled binaries. To run them, either qemu-user or libc6:armhf for
 # the target is required, so install both.
 export DPKG_ADD_ARCH="armhf"
