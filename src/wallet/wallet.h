@@ -716,6 +716,9 @@ private:
      */
     int m_last_block_processed_height GUARDED_BY(cs_wallet) = -1;
 
+    /* Median time-past of last block processed is used by wallet to know finality of transactions. */
+    int64_t m_last_block_median_time_past GUARDED_BY(cs_wallet) = 0;
+
     std::map<OutputType, ScriptPubKeyMan*> m_external_spk_managers;
     std::map<OutputType, ScriptPubKeyMan*> m_internal_spk_managers;
 
@@ -900,8 +903,8 @@ public:
     CWalletTx* AddToWallet(CTransactionRef tx, const CWalletTx::Confirmation& confirm, const UpdateWalletTxFn& update_wtx=nullptr, bool fFlushOnClose=true);
     bool LoadToWallet(const uint256& hash, const UpdateWalletTxFn& fill_wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void transactionAddedToMempool(const CTransactionRef& tx) override;
-    void blockConnected(const CBlock& block, int height) override;
-    void blockDisconnected(const CBlock& block, int height) override;
+    void blockConnected(const CBlock& block, int height, int64_t median_time_past) override;
+    void blockDisconnected(const CBlock& block, int height, int64_t prev_median_time_past) override;
     void updatedBlockTip() override;
     int64_t RescanFromTime(int64_t startTime, const WalletRescanReserver& reserver, bool update);
 

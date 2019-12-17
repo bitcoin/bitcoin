@@ -241,8 +241,8 @@ public:
         virtual ~Notifications() {}
         virtual void transactionAddedToMempool(const CTransactionRef& tx) {}
         virtual void transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason) {}
-        virtual void blockConnected(const CBlock& block, int height) {}
-        virtual void blockDisconnected(const CBlock& block, int height) {}
+        virtual void blockConnected(const CBlock& block, int height, int64_t median_time_past) {}
+        virtual void blockDisconnected(const CBlock& block, int height, int64_t prev_median_time_past) {}
         virtual void updatedBlockTip() {}
         virtual void chainStateFlushed(const CBlockLocator& locator) {}
     };

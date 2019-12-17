@@ -1149,20 +1149,21 @@ void CWallet::transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRe
     }
 }
 
-void CWallet::blockConnected(const CBlock& block, int height)
+void CWallet::blockConnected(const CBlock& block, int height, int64_t median_time_past)
 {
     const uint256& block_hash = block.GetHash();
     LOCK(cs_wallet);
 
     m_last_block_processed_height = height;
     m_last_block_processed = block_hash;
+    m_last_block_median_time_past = median_time_past;
     for (size_t index = 0; index < block.vtx.size(); index++) {
         SyncTransaction(block.vtx[index], {CWalletTx::Status::CONFIRMED, height, block_hash, (int)index});
         transactionRemovedFromMempool(block.vtx[index], MemPoolRemovalReason::BLOCK);
     }
 }
 
-void CWallet::blockDisconnected(const CBlock& block, int height)
+void CWallet::blockDisconnected(const CBlock& block, int height, int64_t prev_median_time_past)
 {
     LOCK(cs_wallet);
 
@@ -1172,6 +1173,7 @@ void CWallet::blockDisconnected(const CBlock& block, int height)
     // future with a stickier abandoned state or even removing abandontransaction call.
     m_last_block_processed_height = height - 1;
     m_last_block_processed = block.hashPrevBlock;
+    m_last_block_median_time_past = prev_median_time_past;
     for (const CTransactionRef& ptx : block.vtx) {
         SyncTransaction(ptx, {CWalletTx::Status::UNCONFIRMED, /* block height */ 0, /* block hash */ {}, /* index */ 0});
     }
@@ -3941,9 +3943,11 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
     if (tip_height) {
         walletInstance->m_last_block_processed = chain.getBlockHash(*tip_height);
         walletInstance->m_last_block_processed_height = *tip_height;
+        chain.findBlock(walletInstance->m_last_block_processed, FoundBlock().mtpTime(walletInstance->m_last_block_median_time_past));
     } else {
         walletInstance->m_last_block_processed.SetNull();
         walletInstance->m_last_block_processed_height = -1;
+        walletInstance->m_last_block_median_time_past = 0;
     }
 
     if (tip_height && *tip_height != rescan_height)
