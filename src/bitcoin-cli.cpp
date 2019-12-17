@@ -247,14 +247,20 @@ public:
 
     UniValue PrepareRequest(const std::string& method, const std::vector<std::string>& args) override
     {
+        addr = args.at(1);
         UniValue paramsObj = RPCConvertValues("generatetoaddress", args);
         return JSONRPCRequestObj("generatetoaddress", paramsObj, ID_GENERATETOADDRESS);
     }
 
     UniValue ProcessReply(const UniValue &result) override
     {
-        return JSONRPCReplyObj(result, NullUniValue, 1);
+        UniValue res(UniValue::VOBJ);
+        res.pushKV("address", addr);
+        res.pushKV("blocks", result.get_obj()["result"]);
+        return JSONRPCReplyObj(res, NullUniValue, 1);
     }
+protected:
+    std::string addr;
 };
 
 /** Process getinfo requests */

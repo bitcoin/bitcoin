@@ -22,15 +22,15 @@ class GenerateRpcTest(BitcoinTestFramework):
     def generate_blocks(self):
         starting_blockcount = self.nodes[0].getblockcount()
         # check that "generate 1" returns a single block hash
-        assert_equal(len(self.nodes[0].cli.send_cli("-generate")["result"]), 1)
+        assert_equal(len(self.nodes[0].cli.send_cli("-generate")["blocks"]), 1)
         # check that "generate 1" also moved the chain for one block
         assert_equal(self.nodes[0].getblockcount(), starting_blockcount + 1)
         # check that "generate 3" returns three blocks
-        assert_equal(len(self.nodes[0].cli.send_cli("-generate", 3)['result']), 3)
+        assert_equal(len(self.nodes[0].cli.send_cli("-generate", 3)['blocks']), 3)
         # check that "generate 3" moved the chain for three more blocks
         assert_equal(self.nodes[0].getblockcount(), starting_blockcount + 4)
         # check that "generate 1 100000" generates one block with 10,000 max. tries
-        assert_equal(len(self.nodes[0].cli.send_cli("-generate", 5, 100000)['result']), 5)
+        assert_equal(len(self.nodes[0].cli.send_cli("-generate", 5, 100000)['blocks']), 5)
         # check that "generate 5 100000" moved the chain for five more blocks
         assert_equal(self.nodes[0].getblockcount(), starting_blockcount + 9)
         # check for error response when param is a non-numerical value
