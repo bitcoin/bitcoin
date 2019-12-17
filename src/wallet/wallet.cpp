@@ -3771,6 +3771,7 @@ bool CWallet::GetNewDestination(const std::string label, CTxDestination& dest, s
     bool result = false;
     auto spk_man = m_spk_man.get();
     if (spk_man) {
+        spk_man->TopUp();
         result = spk_man->GetNewDestination(dest, error);
     }
     if (result) {
@@ -3783,8 +3784,6 @@ bool CWallet::GetNewDestination(const std::string label, CTxDestination& dest, s
 bool CWallet::GetNewChangeDestination(CTxDestination& dest, std::string& error)
 {
     error.clear();
-
-    m_spk_man->TopUp();
 
     ReserveDestination reservedest(this);
     if (!reservedest.GetReservedDestination(dest, true)) {
@@ -3966,6 +3965,8 @@ bool ReserveDestination::GetReservedDestination(CTxDestination& dest, bool fInte
 
     if (nIndex == -1)
     {
+        m_spk_man->TopUp();
+
         CKeyPool keypool;
         if (!m_spk_man->GetReservedDestination(fInternalIn, address, nIndex, keypool)) {
             return false;
