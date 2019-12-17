@@ -74,6 +74,7 @@ RUN apt-get update && apt-get install $APT_ARGS \
     nsis \
     python3-zmq \
     parallel \
+    valgrind \
     wine-stable \
     wine32 \
     wine64 \

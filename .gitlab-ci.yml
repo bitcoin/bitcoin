@@ -279,6 +279,15 @@ linux64_nowallet-build:
   variables:
     BUILD_TARGET: linux64_nowallet
 
+linux64_valgrind-build:
+  extends:
+    - .build-template
+    - .skip-in-fast-mode-template
+  needs:
+    - x86_64-pc-linux-gnu-debug
+  variables:
+    BUILD_TARGET: linux64_valgrind
+
 mac-build:
   extends:
     - .build-template
@@ -323,3 +332,12 @@ linux64_ubsan-test:
     - linux64_ubsan-build
   variables:
     BUILD_TARGET: linux64_ubsan
+
+linux64_valgrind-test:
+  extends:
+    - .test-template
+    - .skip-in-fast-mode-template
+  needs:
+    - linux64_valgrind-build
+  variables:
+    BUILD_TARGET: linux64_valgrind

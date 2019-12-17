@@ -32,6 +32,8 @@ elif [ "$BUILD_TARGET" = "linux64_sqlite" ]; then
   source ./ci/test/00_setup_env_native_sqlite.sh
 elif [ "$BUILD_TARGET" = "linux64_nowallet" ]; then
   source ./ci/test/00_setup_env_native_nowallet.sh
+elif [ "$BUILD_TARGET" = "linux64_valgrind" ]; then
+  source ./ci/test/00_setup_env_native_valgrind.sh
 elif [ "$BUILD_TARGET" = "mac" ]; then
   source ./ci/test/00_setup_env_mac.sh
 elif [ "$BUILD_TARGET" = "s390x" ]; then

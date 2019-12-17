@@ -56,6 +56,11 @@ cd dashcore-$BUILD_TARGET
 
 make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows." && make $GOAL V=1 ; false )
 
+if [ -n "$USE_VALGRIND" ]; then
+    echo "valgrind in USE!"
+    ${BASE_ROOT_DIR}/ci/test/wrap-valgrind.sh
+fi
+
 if [ "$RUN_SYMBOL_TESTS" = "true" ]; then
   make $MAKEJOBS -C src check-symbols
 fi
