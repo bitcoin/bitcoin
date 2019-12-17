@@ -11,6 +11,7 @@
 #include <rpc/server.h>
 #include <ui_interface.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 #include <util/system.h>
 #include <util/translation.h>
 #include <walletinitinterface.h>
@@ -23,7 +24,7 @@
 #include <set>
 #include <string>
 
-#include <boost/algorithm/string.hpp> // boost::trim
+#include <boost/algorithm/string.hpp> // boost::is_any_of, boost::split
 
 /** WWW-Authenticate to present with 401 Unauthorized response */
 static const char* WWW_AUTH_HEADER_DATA = "Basic realm=\"jsonrpc\"";
@@ -137,8 +138,7 @@ static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUserna
         return false;
     if (strAuth.substr(0, 6) != "Basic ")
         return false;
-    std::string strUserPass64 = strAuth.substr(6);
-    boost::trim(strUserPass64);
+    std::string strUserPass64 = TrimString(strAuth.substr(6));
     std::string strUserPass = DecodeBase64(strUserPass64);
 
     if (strUserPass.find(':') != std::string::npos)

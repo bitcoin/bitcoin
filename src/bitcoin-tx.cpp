@@ -20,6 +20,7 @@
 #include <util/moneystr.h>
 #include <util/rbf.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 #include <util/system.h>
 #include <util/translation.h>
 
@@ -27,7 +28,7 @@
 #include <memory>
 #include <stdio.h>
 
-#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string.hpp> // boost::is_any_of, boost::split
 
 static bool fCreateBlank;
 static std::map<std::string,UniValue> registers;
@@ -766,8 +767,6 @@ static std::string readStdin()
     if (ferror(stdin))
         throw std::runtime_error("error reading stdin");
 
-    boost::algorithm::trim_right(ret);
-
     return ret;
 }
 
@@ -794,7 +793,7 @@ static int CommandLineRawTx(int argc, char* argv[])
             // param: hex-encoded bitcoin transaction
             std::string strHexTx(argv[1]);
             if (strHexTx == "-")                 // "-" implies standard input
-                strHexTx = readStdin();
+                strHexTx = TrimString(readStdin());
 
             if (!DecodeHexTx(tx, strHexTx, true))
                 throw std::runtime_error("invalid transaction encoding");
