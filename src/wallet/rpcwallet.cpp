@@ -1041,7 +1041,7 @@ static UniValue ListReceived(const CWallet* const pwallet, const UniValue& param
     for (const std::pair<const uint256, CWalletTx>& pairWtx : pwallet->mapWallet) {
         const CWalletTx& wtx = pairWtx.second;
 
-        if (wtx.IsCoinBase() || !pwallet->chain().checkFinalTx(*wtx.tx)) {
+        if (wtx.IsCoinBase() || !pwallet->CheckFinalWalletTx(*wtx.tx)) {
             continue;
         }
 

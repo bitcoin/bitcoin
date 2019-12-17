@@ -60,7 +60,7 @@ WalletTx MakeWalletTx(CWallet& wallet, const CWalletTx& wtx)
 }
 
 //! Construct wallet tx status struct.
-WalletTxStatus MakeWalletTxStatus(CWallet& wallet, const CWalletTx& wtx)
+WalletTxStatus MakeWalletTxStatus(CWallet& wallet, const CWalletTx& wtx) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     WalletTxStatus result;
     result.block_height = wtx.m_confirm.block_height > 0 ? wtx.m_confirm.block_height : std::numeric_limits<int>::max();
@@ -68,7 +68,7 @@ WalletTxStatus MakeWalletTxStatus(CWallet& wallet, const CWalletTx& wtx)
     result.depth_in_main_chain = wtx.GetDepthInMainChain();
     result.time_received = wtx.nTimeReceived;
     result.lock_time = wtx.tx->nLockTime;
-    result.is_final = wallet.chain().checkFinalTx(*wtx.tx);
+    result.is_final = wallet.CheckFinalWalletTx(*wtx.tx);
     result.is_trusted = wtx.IsTrusted();
     result.is_abandoned = wtx.isAbandoned();
     result.is_coinbase = wtx.IsCoinBase();

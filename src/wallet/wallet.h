@@ -1269,6 +1269,9 @@ public:
 
     //! Add a descriptor to the wallet, return a ScriptPubKeyMan & associated output type
     ScriptPubKeyMan* AddWalletDescriptor(WalletDescriptor& desc, const FlatSigningProvider& signing_provider, const std::string& label);
+
+    /** Check wallet tx finality according to current consensus-rules */
+    bool CheckFinalWalletTx(const CTransaction& tx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 };
 
 /**
