@@ -93,6 +93,7 @@ jobs:
       arch: s390x
       env: >-
         FILE_ENV="./ci/test/00_setup_env_s390x.sh"
+        QEMU_USER_CMD=""  # Can run the tests natively without qemu
 
     - stage: test
       name: 'Win64  [GOAL: deploy]  [unit tests, no gui, no functional tests]'
