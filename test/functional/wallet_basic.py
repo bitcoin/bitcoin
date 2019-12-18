@@ -49,7 +49,7 @@ class WalletTest(BitcoinTestFramework):
         return curr_balance
 
     def get_vsize(self, txn):
-        return self.nodes[0].decoderawtransaction(txn)['vsize']
+        return self.nodes[0].decoderawtransaction(hexstring=txn, iswitness=True)['vsize']
 
     def run_test(self):
         # Check that there's no UTXO on none of the nodes
