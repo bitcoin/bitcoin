@@ -16,7 +16,7 @@ release cycle, overall merging, moderation and appointment of maintainers.
 
 If you're looking for somewhere to start contributing, check out the
 [good first issue](https://github.com/bitcoin/bitcoin/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
-list.
+list or participate in a weekly [Bitcoin Core PR Review Club](https://bitcoincore.reviews/) meeting.
 
 Communication Channels
 ----------------------
