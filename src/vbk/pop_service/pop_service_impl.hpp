@@ -50,7 +50,7 @@ public:
 
     virtual bool determineATVPlausibilityWithBTCRules(AltchainId altChainIdentifier, const CBlockHeader& popEndorsementHeader, const Consensus::Params& params);
 
-    virtual bool addPayloads(const CBlock& block, const int& nHeight, const Publications& publications);
+    virtual void addPayloads(const CBlock& block, const int& nHeight, const Publications& publications);
     virtual void removePayloads(const CBlock&, const int&);
 };
 

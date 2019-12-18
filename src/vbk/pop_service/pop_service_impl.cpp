@@ -77,7 +77,7 @@ PopServiceImpl::PopServiceImpl()
     grpcPopService = VeriBlock::GrpcPopService::NewStub(channel);
 }
 
-bool PopServiceImpl::addPayloads(const CBlock& block, const int& nHeight, const Publications& publications)
+void PopServiceImpl::addPayloads(const CBlock& block, const int& nHeight, const Publications& publications)
 {
     AddPayloadsDataRequest request;
     EmptyReply reply;
@@ -417,6 +417,8 @@ bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlo
 
     //    LOCK2(mempool.cs, cs_main); // TODO(veriblock): check if this is correct place for a lock
 
+    std::string error_message = "";
+
     LOCK(mempool.cs);
     AssertLockHeld(mempool.cs);
     AssertLockHeld(cs_main);
@@ -437,12 +439,14 @@ bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlo
         try {
             stream >> popEndorsementHeader;
         } catch (const std::exception&) {
+            error_message += " tx hash: (" + tx->GetHash().GetHex() + ") reason : invalid endorsed block header \n";
             isValid = false;
             mempool.removeRecursive(*tx, MemPoolRemovalReason::BLOCK);
             continue;
         }
 
         if (!pop.determineATVPlausibilityWithBTCRules(AltchainId(popEndorsement.identifier()), popEndorsementHeader, params)) {
+            error_message += " tx hash: (" + tx->GetHash().GetHex() + ") reason : invalid alt-chain index or bad PoW of endorsed block header \n";
             isValid = false;
             mempool.removeRecursive(*tx, MemPoolRemovalReason::BLOCK);
             continue;
@@ -450,6 +454,7 @@ bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlo
 
         const CBlockIndex* popEndorsementIdnex = LookupBlockIndex(popEndorsementHeader.GetHash());
         if (popEndorsementIdnex == nullptr || pindexPrev.GetAncestor(popEndorsementIdnex->nHeight) == nullptr) {
+            error_message += " tx hash: (" + tx->GetHash().GetHex() + ") reason : endorsed block not from this chain \n";
             isValid = false;
             mempool.removeRecursive(*tx, MemPoolRemovalReason::BLOCK);
             continue;
@@ -457,24 +462,32 @@ bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlo
 
         CBlock popEndorsementBlock;
         if (!ReadBlockFromDisk(popEndorsementBlock, popEndorsementIdnex, params)) {
+            error_message += " tx hash: (" + tx->GetHash().GetHex() + ") reason : cant read endorsed block from disk \n";
             isValid = false;
             mempool.removeRecursive(*tx, MemPoolRemovalReason::BLOCK);
             continue;
         }
 
         if (!VeriBlock::VerifyTopLevelMerkleRoot(popEndorsementBlock, state, popEndorsementIdnex->pprev)) {
+            error_message += " tx hash: (" + tx->GetHash().GetHex() + ") reason : invalid top merkle root of the endorsed block \n";
             isValid = false;
             mempool.removeRecursive(*tx, MemPoolRemovalReason::BLOCK);
             continue;
         }
 
         if (pindexPrev.nHeight + 1 - popEndorsementIdnex->nHeight > config.POP_REWARD_SETTLEMENT_INTERVAL) {
+            error_message += " tx hash: (" + tx->GetHash().GetHex() + ") reason : endorsed block is too old for this chain \n";
             isValid = false;
             mempool.removeRecursive(*tx, MemPoolRemovalReason::BLOCK);
             continue;
         }
 
-        if (!pop.addPayloads(block, pindexPrev.nHeight + 1, publications)) {
+        try {
+            pop.addPayloads(block, pindexPrev.nHeight + 1, publications);
+        }
+        catch (const PopServiceException& e)
+        {
+            error_message += " tx hash: (" + tx->GetHash().GetHex() + ") reason : addPayloads failed, " + e.what();
             isValid = false;
             mempool.removeRecursive(*tx, MemPoolRemovalReason::BLOCK);
             continue;
@@ -483,7 +496,7 @@ bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlo
 
     if (!isValid) {
         pop.removePayloads(block, pindexPrev.nHeight + 1);
-        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, strprintf("blockPopValidation(): pop check is failed"), "bad pop data");
+        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, strprintf("blockPopValidation(): pop check is failed"), "bad pop data \n" + error_message);
     }
 
     return true;

@@ -34,7 +34,7 @@ struct PopServiceFixture : public TestChain100Setup {
     {
         VeriBlock::InitUtilService();
         VeriBlock::InitConfig();
-        When(Method(pop_service_impl_mock, addPayloads)).AlwaysReturn(true);
+        Fake(Method(pop_service_impl_mock, addPayloads));
         Fake(Method(pop_service_impl_mock, removePayloads));
         Fake(OverloadedMethod(pop_service_impl_mock, getPublicationsData, void(const CTransactionRef&, VeriBlock::Publications&)));
         When(Method(pop_service_impl_mock, determineATVPlausibilityWithBTCRules)).AlwaysReturn(true);
@@ -204,7 +204,9 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_wrong_addPayloads, PopServiceFix
         setPublicationData(publicationData, stream, config.index.unwrap());
     });
 
-    When(Method(pop_service_impl_mock, addPayloads)).Return(false);
+    When(Method(pop_service_impl_mock, addPayloads)).AlwaysDo([](const CBlock& block, const int& nHeight, const VeriBlock::Publications& publications) -> void {
+        throw  VeriBlock::PopServiceException("fail");
+    });
 
     CValidationState state;
     {
