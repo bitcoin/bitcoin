@@ -206,9 +206,9 @@ download_package() {
     if [ -n "$job" ]; then
         # Pull a pipeline build by job number
         echo "Downloading pipeline job $job"
-        wget "https://gitlab.crown.tech/crown/crown-core/-/jobs/$job/artifacts/download" -O $dir/crown.zip
+        wget "https://gitlab.crownplatform.com/crown/crown-core/-/jobs/$job/artifacts/download" -O $dir/crown.zip
     else
-        # Change this later to take latest release version.
+        # Pull the latest release version.
         echo "Downloading $BITS bit Crown package version $LATEST_RELEASE."
         wget "https://github.com/Crowndev/crowncoin/releases/download/v$LATEST_RELEASE/Crown-$LATEST_RELEASE-Linux$BITS.zip" -O $dir/crown.zip
     fi
@@ -217,7 +217,7 @@ download_package() {
         # Download bootstrap if requested
         if [ -n "$bootstrap" ]; then
             echo "Downloading bootstrap"
-            wget "https://nextcloud.crown.tech/nextcloud/s/RiyWmDLckmcXS6n/download" -O $dir/bootstrap.zip
+            wget "https://nextcloud.crownplatform.com/index.php/s/Mb5G2xy4NcKbLrJ/download" -O $dir/bootstrap.zip
 	    if [ ! -e "$dir/bootstrap.zip" ]; then
 	        echo "Failed to download bootstrap. Continuing without it."
 	        bootstrap=
@@ -270,6 +270,11 @@ configure_conf() {
     elif [ "$masternode" = true ] ; then
         echo "masternode=1" >>.crown/crown.conf
         echo "masternodeprivkey="$privkey >>.crown/crown.conf
+    fi
+    if [ "$LATEST_RELEASE" = "0.13.4.0" ] ; then
+        echo "addnode=92.60.44.40" >>.crown/crown.conf
+        echo "addnode=149.248.53.3" >>.crown/crown.conf
+        echo "addnode=139.180.141.215" >>.crown/crown.conf
     fi
     echo "This is the config file:"
     cat .crown/crown.conf
