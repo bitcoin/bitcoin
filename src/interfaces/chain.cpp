@@ -53,11 +53,6 @@ bool FillBlock(const CBlockIndex* index, const FoundBlock& block, UniqueLock<Rec
     return true;
 }
 
-class LockImpl : public Chain::Lock, public UniqueLock<RecursiveMutex>
-{
-    using UniqueLock::UniqueLock;
-};
-
 class NotificationsProxy : public CValidationInterface
 {
 public:
@@ -150,13 +145,6 @@ class ChainImpl : public Chain
 {
 public:
     explicit ChainImpl(NodeContext& node) : m_node(node) {}
-    std::unique_ptr<Chain::Lock> lock(bool try_lock) override
-    {
-        auto lock = MakeUnique<LockImpl>(::cs_main, "cs_main", __FILE__, __LINE__, try_lock);
-        if (try_lock && lock && !*lock) return {};
-        std::unique_ptr<Chain::Lock> result = std::move(lock); // Temporary to avoid CWG 1579
-        return result;
-    }
     Optional<int> getHeight() override
     {
         LOCK(::cs_main);

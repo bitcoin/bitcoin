@@ -140,7 +140,6 @@ namespace feebumper {
 
 bool TransactionCanBeBumped(const CWallet& wallet, const uint256& txid)
 {
-    auto locked_chain = wallet.chain().lock();
     LOCK(wallet.cs_wallet);
     const CWalletTx* wtx = wallet.GetWalletTx(txid);
     if (wtx == nullptr) return false;
@@ -156,7 +155,6 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     // We are going to modify coin control later, copy to re-use
     CCoinControl new_coin_control(coin_control);
 
-    auto locked_chain = wallet.chain().lock();
     LOCK(wallet.cs_wallet);
     errors.clear();
     auto it = wallet.mapWallet.find(txid);
@@ -240,14 +238,12 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
 }
 
 bool SignTransaction(CWallet& wallet, CMutableTransaction& mtx) {
-    auto locked_chain = wallet.chain().lock();
     LOCK(wallet.cs_wallet);
     return wallet.SignTransaction(mtx);
 }
 
 Result CommitTransaction(CWallet& wallet, const uint256& txid, CMutableTransaction&& mtx, std::vector<std::string>& errors, uint256& bumped_txid)
 {
-    auto locked_chain = wallet.chain().lock();
     LOCK(wallet.cs_wallet);
     if (!errors.empty()) {
         return Result::MISC_ERROR;
