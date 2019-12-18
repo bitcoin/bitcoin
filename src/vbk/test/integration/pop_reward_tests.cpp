@@ -163,7 +163,7 @@ struct PopRewardIntegrationTextFixture : public TestChain100Setup {
         When(Method(util_service_mock, validatePopTx)).AlwaysReturn(true);
         When(Method(util_service_mock, checkCoinbaseTxWithPopRewards)).AlwaysReturn(true);
         When(Method(util_service_mock, getPopRewards)).AlwaysDo([&](const CBlockIndex& pindexPrev) -> VeriBlock::PoPRewards {
-           return util_service_impl.getPopRewards(pindexPrev);
+            return util_service_impl.getPopRewards(pindexPrev);
         });
         When(Method(util_service_mock, addPopPayoutsIntoCoinbaseTx)).AlwaysDo([&](CMutableTransaction& coinbaseTx, const CBlockIndex& pindexPrev) -> void {
             return util_service_impl.addPopPayoutsIntoCoinbaseTx(coinbaseTx, pindexPrev);
@@ -189,7 +189,9 @@ struct PopRewardIntegrationTextFixture : public TestChain100Setup {
         ;
         When(Method(pop_service_mock, getLastKnownVBKBlocks)).AlwaysReturn({});
         When(Method(pop_service_mock, getLastKnownBTCBlocks)).AlwaysReturn({});
-        When(Method(pop_service_mock, blockPopValidation)).AlwaysReturn(true);
+        When(Method(pop_service_mock, blockPopValidation)).AlwaysDo([&](const CBlock& block, const CBlockIndex& pindexPrev, const Consensus::Params& params, CValidationState& state) -> bool {
+            return pop_service_impl.blockPopValidation(block, pindexPrev, params, state);
+        });
 
         VeriBlockTest::setServiceMock<VeriBlock::UtilService>(util_service_mock);
         VeriBlockTest::setServiceMock<VeriBlock::PopService>(pop_service_mock);
