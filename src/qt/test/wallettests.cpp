@@ -145,7 +145,6 @@ void TestGUI(interfaces::Node& node)
     wallet->LoadWallet(firstRun);
     {
         auto spk_man = wallet->GetOrCreateLegacyScriptPubKeyMan();
-        auto locked_chain = wallet->chain().lock();
         LOCK2(wallet->cs_wallet, spk_man->cs_KeyStore);
         wallet->SetAddressBook(GetDestinationForKey(test.coinbaseKey.GetPubKey(), wallet->m_default_address_type), "", "receive");
         spk_man->AddKeyPubKey(test.coinbaseKey, test.coinbaseKey.GetPubKey());
