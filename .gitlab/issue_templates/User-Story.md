@@ -6,7 +6,7 @@
 (If you can - please define the requirements, if not - skip it).
 
 ### Tasks
-- [ ] (To be defnied by devs)
+- [ ] (To be defined by devs)
 - [ ] Unit-tests
 - [ ] Refactor
 - [ ] Code Review
