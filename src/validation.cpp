@@ -67,6 +67,7 @@ extern CCriticalSection cs_assetallocationconflicts;
 extern std::vector<std::pair<uint256, uint32_t> > vecToRemoveFromMempool;
 extern CCriticalSection cs_assetallocationmempoolremovetx;
 extern CCriticalSection cs_assetallocationarrival;
+extern CCriticalSection cs_setethstatus;
 extern ArrivalTimesMapImpl arrivalTimesMap;
 extern void RemoveDoubleSpendFromMempool(const CTransactionRef & txRef);
 std::vector<CInv> vInvToSend;
@@ -3827,12 +3828,15 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
             CMintSyscoin mintSyscoin(*txRef);
             if(!mintSyscoin.IsNull()){
                 const bool &ethTxRootShouldExist = !::ChainstateActive().IsInitialBlockDownload() && !fLiteMode && fLoaded && fGethSynced;
-                // validate that the block passed is committed to by the tx root he also passes in, then validate the spv proof to the tx root below  
-                // the cutoff to keep txroots is 120k blocks and the cutoff to get approved is 40k blocks. If we are syncing after being offline for a while it should still validate up to 120k worth of txroots
-                if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(mintSyscoin.nBlockNumber, txRootDB)){
-                    if(ethTxRootShouldExist){
-                        // we always want to pass state.Error() for txroot missing errors here meaning we don't want to flag the block as invalid, we want to retry as this is based on eventual consistency
-                        return state.Error(strprintf("%s: %s - %s", __func__, "mint-txroot-missing", FormatStateMessage(tx_state)));
+                {
+                    LOCK(cs_setethstatus);
+                    // validate that the block passed is committed to by the tx root he also passes in, then validate the spv proof to the tx root below  
+                    // the cutoff to keep txroots is 120k blocks and the cutoff to get approved is 40k blocks. If we are syncing after being offline for a while it should still validate up to 120k worth of txroots
+                    if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(mintSyscoin.nBlockNumber, txRootDB)){
+                        if(ethTxRootShouldExist){
+                            // we always want to pass state.Error() for txroot missing errors here meaning we don't want to flag the block as invalid, we want to retry as this is based on eventual consistency
+                            return state.Error(strprintf("%s: %s - %s", __func__, "mint-txroot-missing", FormatStateMessage(tx_state)));
+                        }
                     }
                 }  
                 if(ethTxRootShouldExist){

@@ -24,6 +24,7 @@ extern bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool
 extern std::unordered_set<std::string> assetAllocationConflicts;
 extern CCriticalSection cs_assetallocationconflicts;
 extern CCriticalSection cs_assetallocationarrival;
+extern CCriticalSection cs_setethstatus;
 extern ArrivalTimesMapImpl arrivalTimesMap;
 // SYSCOIN service rpc functions
 extern UniValue sendrawtransaction(const JSONRPCRequest& request);
@@ -1177,11 +1178,18 @@ UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
             + HelpExampleRpc("syscoinsetethstatus", "\"synced\", 0")
         }
         }.Check(request);
+    UniValue ret(UniValue::VOBJ);
+    UniValue retArray(UniValue::VARR);
+    static uint64_t nLastExecTime = GetSystemTimeInSeconds();
+    if(GetSystemTimeInSeconds() - nLastExecTime <= 60){
+        LogPrint(BCLog::SYS, "Please wait atleast 1 minute between status calls\n");
+        ret.__pushKV("missing_blocks", retArray);
+        return ret;
+    }
     string status = params[0].get_str();
     uint32_t highestBlock = params[1].get_uint();
     const uint32_t nGethOldHeight = fGethCurrentHeight;
-    UniValue ret(UniValue::VOBJ);
-    UniValue retArray(UniValue::VARR);
+    
     if(highestBlock > 0){
         if(!pethereumtxrootsdb->PruneTxRoots(highestBlock))
         {
@@ -1213,7 +1221,8 @@ UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
         oEthStatus.__pushKV("geth_current_block",  fGethCurrentHeight);
         oEthStatus.push_back(ret);
         GetMainSignals().NotifySyscoinUpdate(oEthStatus.write().c_str(), "ethstatus");
-    }    
+    }
+    nLastExecTime = GetSystemTimeInSeconds();
     return ret;
 }
 UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
@@ -1247,7 +1256,7 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
             + HelpExampleRpc("syscoinsetethheaders", "\"[[7043888,\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\",\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\",\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\"],...]\"")
         }
     }.Check(request);
-
+    LOCK(cs_setethstatus);
     EthereumTxRootMap txRootMap;       
     const UniValue &headerArray = params[0].get_array();
     
@@ -1315,7 +1324,7 @@ UniValue syscoingettxroots(const JSONRPCRequest& request)
         + HelpExampleRpc("syscoingettxroots", "23232322")
     }
     }.Check(request);
-    
+    LOCK(cs_setethstatus);
     uint32_t nHeight = request.params[0].get_uint();
     std::pair<std::vector<unsigned char>,std::vector<unsigned char>> vchTxRoots;
     EthereumTxRoot txRootDB;

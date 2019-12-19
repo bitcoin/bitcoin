@@ -28,6 +28,7 @@ extern AssetPrevTxMap mapAssetPrevTxSender;
 extern AssetPrevTxMap mapSenderLockedOutPoints;
 extern AssetBalanceMap mempoolMapAssetBalances;
 extern CCriticalSection cs_assetallocationmempoolbalance;
+extern CCriticalSection cs_setethstatus;
 using namespace std;
 std::vector<CTxIn> savedtxins;
 UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request);
@@ -1126,13 +1127,16 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     if(!ethTxRootShouldExist){
         throw JSONRPCError(RPC_MISC_ERROR, "Network is not ready to accept your mint transaction please wait...");
     }
-    // validate that the block passed is committed to by the tx root he also passes in, then validate the spv proof to the tx root below  
-    // the cutoff to keep txroots is 120k blocks and the cutoff to get approved is 40k blocks. If we are syncing after being offline for a while it should still validate up to 120k worth of txroots
-    if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(mintSyscoin.nBlockNumber, txRootDB)){
-        if(ethTxRootShouldExist){
-            throw JSONRPCError(RPC_MISC_ERROR, "Missing transaction root for SPV proof at Ethereum block: " + itostr(mintSyscoin.nBlockNumber));
-        }
-    }  
+    {
+        LOCK(cs_setethstatus);
+        // validate that the block passed is committed to by the tx root he also passes in, then validate the spv proof to the tx root below  
+        // the cutoff to keep txroots is 120k blocks and the cutoff to get approved is 40k blocks. If we are syncing after being offline for a while it should still validate up to 120k worth of txroots
+        if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(mintSyscoin.nBlockNumber, txRootDB)){
+            if(ethTxRootShouldExist){
+                throw JSONRPCError(RPC_MISC_ERROR, "Missing transaction root for SPV proof at Ethereum block: " + itostr(mintSyscoin.nBlockNumber));
+            }
+        } 
+    } 
     if(ethTxRootShouldExist){
         const int64_t &nTime = ::ChainActive().Tip()->GetMedianTimePast();
         // time must be between 1 week and 1 hour old to be accepted

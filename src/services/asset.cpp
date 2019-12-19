@@ -754,7 +754,7 @@ bool CAssetDB::ScanAssets(const uint32_t count, const uint32_t from, const UniVa
 			}
 		}
 	}
-	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
+	std::unique_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->SeekToFirst();
 	CAsset txPos;
 	uint32_t key = 0;
