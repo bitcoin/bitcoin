@@ -110,6 +110,13 @@ static void SetupCliArgs(ArgsManager& argsman)
     argsman.AddArg("-stdinwalletpassphrase", "Read wallet passphrase from standard input as a single line. When combined with -stdin, the first line from standard input is used for the wallet passphrase.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 }
 
+std::optional<std::string> RpcWalletName(const ArgsManager& args)
+{
+    // Check IsArgNegated to return nullopt instead of "0" if -norpcwallet is specified
+    if (args.IsArgNegated("-rpcwallet")) return std::nullopt;
+    return args.GetArg("-rpcwallet");
+}
+
 /** libevent event log callback */
 static void libevent_log_cb(int severity, const char *msg)
 {
@@ -1183,10 +1190,8 @@ static void ParseGetInfoResult(UniValue& result)
  */
 static UniValue GetNewAddress()
 {
-    std::optional<std::string> wallet_name{};
-    if (gArgs.IsArgSet("-rpcwallet")) wallet_name = gArgs.GetArg("-rpcwallet", "");
     DefaultRequestHandler rh;
-    return ConnectAndCallRPC(&rh, "getnewaddress", /* args=*/{}, wallet_name);
+    return ConnectAndCallRPC(&rh, "getnewaddress", /* args=*/{}, RpcWalletName(gArgs));
 }
 
 /**
@@ -1291,8 +1296,7 @@ static int CommandLineRPC(int argc, char *argv[])
         }
         if (nRet == 0) {
             // Perform RPC call
-            std::optional<std::string> wallet_name{};
-            if (gArgs.IsArgSet("-rpcwallet")) wallet_name = gArgs.GetArg("-rpcwallet", "");
+            const std::optional<std::string> wallet_name{RpcWalletName(gArgs)};
             const UniValue reply = ConnectAndCallRPC(rh.get(), method, args, wallet_name);
 
             // Parse reply
@@ -1300,7 +1304,7 @@ static int CommandLineRPC(int argc, char *argv[])
             const UniValue& error = reply.find_value("error");
             if (error.isNull()) {
                 if (gArgs.GetBoolArg("-getinfo", false)) {
-                    if (!gArgs.IsArgSet("-rpcwallet")) {
+                    if (!wallet_name) {
                         GetWalletBalances(result); // fetch multiwallet balances and append to result
                     }
                     ParseGetInfoResult(result);
