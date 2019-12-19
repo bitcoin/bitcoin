@@ -187,23 +187,6 @@ static std::string SettingName(const std::string& arg)
     return arg.size() > 0 && arg[0] == '-' ? arg.substr(1) : arg;
 }
 
-/** Internal helper functions for ArgsManager */
-class ArgsManagerHelper {
-public:
-    /** Determine whether to use config settings in the default section,
-     *  See also comments around ArgsManager::ArgsManager() below. */
-    static inline bool UseDefaultSection(const ArgsManager& am, const std::string& arg) EXCLUSIVE_LOCKS_REQUIRED(am.cs_args)
-    {
-        return (am.m_network == CBaseChainParams::MAIN || am.m_network_only_args.count(arg) == 0);
-    }
-
-    static util::SettingsValue Get(const ArgsManager& am, const std::string& arg)
-    {
-        LOCK(am.cs_args);
-        return GetSetting(am.m_settings, am.m_network, SettingName(arg), !UseDefaultSection(am, arg), /* get_chain_name= */ false);
-    }
-};
-
 /**
  * Interpret -nofoo as if the user supplied -foo=0.
  *
@@ -368,7 +351,7 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
         m_settings.command_line_options[key].push_back(value);
     }
 
-    // we do not allow -includeconf from command line, so we clear it here
+    // we do not allow -includeconf from command line
     bool success = true;
     if (auto* includes = util::FindKey(m_settings.command_line_options, "includeconf")) {
         for (const auto& include : util::SettingsSpan(*includes)) {
@@ -393,11 +376,8 @@ std::optional<unsigned int> ArgsManager::GetArgFlags(const std::string& name) co
 
 std::vector<std::string> ArgsManager::GetArgs(const std::string& strArg) const
 {
-    LOCK(cs_args);
-    bool ignore_default_section_config = !ArgsManagerHelper::UseDefaultSection(*this, strArg);
     std::vector<std::string> result;
-    for (const util::SettingsValue& value :
-        util::GetSettingsList(m_settings, m_network, SettingName(strArg), ignore_default_section_config)) {
+    for (const util::SettingsValue& value : GetSettingsList(strArg)) {
         result.push_back(value.isFalse() ? "0" : value.isTrue() ? "1" : value.get_str());
     }
     return result;
@@ -405,7 +385,7 @@ std::vector<std::string> ArgsManager::GetArgs(const std::string& strArg) const
 
 bool ArgsManager::IsArgSet(const std::string& strArg) const
 {
-    return !ArgsManagerHelper::Get(*this, strArg).isNull();
+    return !GetSetting(strArg).isNull();
 }
 
 bool ArgsManager::InitSettings(std::string& error)
@@ -496,24 +476,24 @@ bool ArgsManager::WriteSettingsFile(std::vector<std::string>* errors) const
 
 bool ArgsManager::IsArgNegated(const std::string& strArg) const
 {
-    return ArgsManagerHelper::Get(*this, strArg).isFalse();
+    return GetSetting(strArg).isFalse();
 }
 
 std::string ArgsManager::GetArg(const std::string& strArg, const std::string& strDefault) const
 {
-    const util::SettingsValue value = ArgsManagerHelper::Get(*this, strArg);
+    const util::SettingsValue value = GetSetting(strArg);
     return value.isNull() ? strDefault : value.isFalse() ? "0" : value.isTrue() ? "1" : value.get_str();
 }
 
 int64_t ArgsManager::GetArg(const std::string& strArg, int64_t nDefault) const
 {
-    const util::SettingsValue value = ArgsManagerHelper::Get(*this, strArg);
+    const util::SettingsValue value = GetSetting(strArg);
     return value.isNull() ? nDefault : value.isFalse() ? 0 : value.isTrue() ? 1 : value.isNum() ? value.get_int64() : LocaleIndependentAtoi<int64_t>(value.get_str());
 }
 
 bool ArgsManager::GetBoolArg(const std::string& strArg, bool fDefault) const
 {
-    const util::SettingsValue value = ArgsManagerHelper::Get(*this, strArg);
+    const util::SettingsValue value = GetSetting(strArg);
     return value.isNull() ? fDefault : value.isBool() ? value.get_bool() : InterpretBool(value.get_str());
 }
 
@@ -906,7 +886,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
             return false;
         }
         // `-includeconf` cannot be included in the command line arguments except
-        // as `-noincludeconf` (which indicates that no conf file should be used).
+        // as `-noincludeconf` (which indicates that no included conf file should be used).
         bool use_conf_file{true};
         {
             LOCK(cs_args);
@@ -986,9 +966,9 @@ std::string ArgsManager::GetChainName() const
 {
     auto get_net = [&](const std::string& arg, bool interpret_bool = true) {
         LOCK(cs_args);
-        util::SettingsValue value = GetSetting(m_settings, /* section= */ "", SettingName(arg),
-                                               /* ignore_default_section_config= */ false,
-                                               /* get_chain_name= */ true);
+        util::SettingsValue value = util::GetSetting(m_settings, /* section= */ "", SettingName(arg),
+            /* ignore_default_section_config= */ false,
+            /* get_chain_name= */ true);
         return value.isNull() ? false : value.isBool() ? value.get_bool() : (!interpret_bool || InterpretBool(value.get_str()));
     };
 
@@ -1044,6 +1024,24 @@ void ArgsManager::LogArgs() const
         LogPrintf("Setting file arg: %s = %s\n", setting.first, setting.second.write());
     }
     logArgsPrefix("Command-line arg:", "", m_settings.command_line_options);
+}
+
+bool ArgsManager::UseDefaultSection(const std::string& arg) const
+{
+    return m_network == CBaseChainParams::MAIN || m_network_only_args.count(arg) == 0;
+}
+
+util::SettingsValue ArgsManager::GetSetting(const std::string& arg) const
+{
+    LOCK(cs_args);
+    return util::GetSetting(
+        m_settings, m_network, SettingName(arg), !UseDefaultSection(arg), /* get_chain_name= */ false);
+}
+
+std::vector<util::SettingsValue> ArgsManager::GetSettingsList(const std::string& arg) const
+{
+    LOCK(cs_args);
+    return util::GetSettingsList(m_settings, m_network, SettingName(arg), !UseDefaultSection(arg));
 }
 
 bool RenameOver(fs::path src, fs::path dest)
