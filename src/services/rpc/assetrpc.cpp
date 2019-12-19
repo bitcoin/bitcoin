@@ -1182,7 +1182,7 @@ UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
     UniValue retArray(UniValue::VARR);
     static uint64_t nLastExecTime = GetSystemTimeInSeconds();
     if(GetSystemTimeInSeconds() - nLastExecTime <= 60){
-        LogPrint(BCLog::SYS, "Please wait atleast 1 minute between status calls\n");
+        LogPrint(BCLog::SYS, "Please wait at least 1 minute between status calls\n");
         ret.__pushKV("missing_blocks", retArray);
         return ret;
     }
