@@ -762,7 +762,7 @@ void InitParameterInteraction(ArgsManager& args)
         }
     }
 
-    if (args.IsArgSet("-externalip")) {
+    if (!args.GetArgs("-externalip").empty()) {
         // if an explicit public IP is specified, do not try to find others
         if (args.SoftSetBoolArg("-discover", false))
             LogInfo("parameter interaction: -externalip set -> setting -discover=0\n");
