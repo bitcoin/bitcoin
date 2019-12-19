@@ -109,16 +109,10 @@ static bool CheckTxScriptsSanity(const CMutableTransaction& tx)
     return true;
 }
 
-bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no_witness, bool try_witness)
+static bool DecodeTx(CMutableTransaction& tx, const std::vector<unsigned char>& tx_data, bool try_no_witness, bool try_witness)
 {
-    if (!IsHex(hex_tx)) {
-        return false;
-    }
-
-    std::vector<unsigned char> txData(ParseHex(hex_tx));
-
     if (try_witness) {
-        CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
+        CDataStream ssData(tx_data, SER_NETWORK, PROTOCOL_VERSION);
         try {
             ssData >> tx;
             // If transaction looks sane, we don't try other mode even if requested
@@ -131,7 +125,7 @@ bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no
     }
 
     if (try_no_witness) {
-        CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
+        CDataStream ssData(tx_data, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
         try {
             ssData >> tx;
             if (ssData.empty()) {
@@ -143,6 +137,16 @@ bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no
     }
 
     return false;
+}
+
+bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no_witness, bool try_witness)
+{
+    if (!IsHex(hex_tx)) {
+        return false;
+    }
+
+    std::vector<unsigned char> txData(ParseHex(hex_tx));
+    return DecodeTx(tx, txData, try_no_witness, try_witness);
 }
 
 bool DecodeHexBlockHeader(CBlockHeader& header, const std::string& hex_header)
