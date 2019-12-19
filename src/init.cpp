@@ -1044,12 +1044,12 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     if (args.GetBoolArg("-peerbloomfilters", DEFAULT_PEERBLOOMFILTERS))
         g_local_services = ServiceFlags(g_local_services | NODE_BLOOM);
 
-    if (args.IsArgSet("-test")) {
+    const std::vector<std::string> test_options = args.GetArgs("-test");
+    if (!test_options.empty()) {
         if (chainparams.GetChainType() != ChainType::REGTEST) {
             return InitError(Untranslated("-test=<option> can only be used with regtest"));
         }
-        const std::vector<std::string> options = args.GetArgs("-test");
-        for (const std::string& option : options) {
+        for (const std::string& option : test_options) {
             auto it = std::find_if(TEST_OPTIONS_DOC.begin(), TEST_OPTIONS_DOC.end(), [&option](const std::string& doc_option) {
                 size_t pos = doc_option.find(" (");
                 return (pos != std::string::npos) && (doc_option.substr(0, pos) == option);
