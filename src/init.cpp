@@ -716,11 +716,11 @@ void InitParameterInteraction(ArgsManager& args)
 {
     // when specifying an explicit binding address, you want to listen on it
     // even when -connect or -proxy is specified
-    if (args.IsArgSet("-bind")) {
+    if (!args.GetArgs("-bind").empty()) {
         if (args.SoftSetBoolArg("-listen", true))
             LogInfo("parameter interaction: -bind set -> setting -listen=1\n");
     }
-    if (args.IsArgSet("-whitebind")) {
+    if (!args.GetArgs("-whitebind").empty()) {
         if (args.SoftSetBoolArg("-listen", true))
             LogInfo("parameter interaction: -whitebind set -> setting -listen=1\n");
     }
