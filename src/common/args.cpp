@@ -489,6 +489,17 @@ std::vector<std::string> ArgsManager::GetArgs(const std::string& strArg) const
 
 bool ArgsManager::IsArgSet(const std::string& strArg) const
 {
+    // Don't allow IsArgSet() to be called on list arguments, because the odd
+    // case where an argument is negated and IsArgSet() returns true but
+    // GetArgs() returns an empty list has resulted in confusing code and bugs.
+    //
+    // In most cases it's best to treat empty lists and negated lists the same.
+    // In cases where it's useful treat them differently (cases where the
+    // default list value is effectively non-empty), code is less confusing if
+    // it explicitly calls IsArgNegated() to distinguish the negated and empty
+    // conditions instead of IsArgSet() which makes the distinction more
+    // indirectly.
+    CheckArgFlags(strArg, /* require= */ 0, /* forbid= */ ALLOW_LIST, __func__);
     return !GetSetting(strArg).isNull();
 }
 
@@ -624,7 +635,7 @@ bool SettingToBool(const common::SettingsValue& value, bool fDefault)
 bool ArgsManager::SoftSetArg(const std::string& strArg, const std::string& strValue)
 {
     LOCK(cs_args);
-    if (IsArgSet(strArg)) return false;
+    if (!GetSetting(strArg).isNull()) return false;
     ForceSetArg(strArg, strValue);
     return true;
 }
