@@ -19,6 +19,7 @@
 #include <compat/assumptions.h>
 #include <fs.h>
 #include <logging.h>
+#include <optional.h>
 #include <sync.h>
 #include <tinyformat.h>
 #include <util/memory.h>
@@ -132,7 +133,6 @@ class ArgsManager
 {
 public:
     enum Flags {
-        NONE = 0x00,
         // Boolean options can accept negation syntax -noOPTION or -noOPTION=1
         ALLOW_BOOL = 0x01,
         ALLOW_INT = 0x02,
@@ -148,8 +148,6 @@ public:
     };
 
 protected:
-    friend class ArgsManagerHelper;
-
     struct Arg
     {
         std::string m_help_param;
@@ -165,6 +163,27 @@ protected:
     std::list<SectionInfo> m_config_sections GUARDED_BY(cs_args);
 
     NODISCARD bool ReadConfigStream(std::istream& stream, const std::string& filepath, std::string& error, bool ignore_invalid_keys = false);
+
+    /**
+     * Returns true if settings values from the default section should be used,
+     * depending on the current network and whether the setting is
+     * network-specific.
+     */
+    bool UseDefaultSection(const std::string& arg) const EXCLUSIVE_LOCKS_REQUIRED(cs_args);
+
+    /**
+     * Get setting value.
+     *
+     * Result will be null if setting was unset, true if "-setting" argument was passed
+     * false if "-nosetting" argument was passed, and a string if a "-setting=value"
+     * argument was passed.
+     */
+    util::SettingsValue GetSetting(const std::string& arg) const;
+
+    /**
+     * Get list of setting values.
+     */
+    std::vector<util::SettingsValue> GetSettingsList(const std::string& arg) const;
 
 public:
     ArgsManager();
@@ -296,9 +315,9 @@ public:
 
     /**
      * Return Flags for known arg.
-     * Return ArgsManager::NONE for unknown arg.
+     * Return nullopt for unknown arg.
      */
-    unsigned int FlagsOfKnownArg(const std::string& key) const;
+    Optional<unsigned int> GetArgFlags(const std::string& name) const;
 };
 
 extern ArgsManager gArgs;
