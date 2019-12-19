@@ -33,10 +33,14 @@ Syscoin Core is supported and extensively tested on operating systems using
 the Linux kernel, macOS 10.10+, and Windows 7 and newer. It is not recommended
 to use Syscoin Core on unsupported systems.
 
-The only in-compatibility between 4.x and 4.1 is the interim .node files (specifically `scrypt.node`) 
-that may exist in the binary path or /usr/local/bin on linux that may impede the functioning of the 
-relayer. The node version used to build the relayer was incremented and thus .node requirement was removed, however if the .node files exist, it will not run the relayer and as a result Syscoin will not
-get the Ethereum block headers needed for consensus validation of Syscoin Mint transactions.
+The only in-compatibility between 4.x and 4.1 is the interim .node files 
+(specifically `scrypt.node`) that may exist in the binary path or /usr/local/bin
+ on linux that may impede the functioning of the [relayer](https://github.com/Syscoin/relayer).
+The node version used to build the [relayer](https://github.com/Syscoin/relayer) 
+was incremented and thus .node requirement was removed, however if the .node files 
+exist, it will not run the [relayer](https://github.com/Syscoin/relayer) and as a
+result Syscoin will not get the Ethereum block headers needed for consensus 
+validation of Syscoin Mint transactions. 
 See: https://syscoin.readme.io/v4.1.0/docs/syscoin-41-upgrade-guide
 
 Syscoin Core should also work on most other Unix-like systems but is not
@@ -281,7 +285,7 @@ bridges allow for fractional value ownership across multiple chains. You can tra
 
 To enable to bridge, we coded 348,000 as the block height where Syscoin Mint's will validate (Ethereum to Syscoin transactions). Also the ERC20BalanceManager proxy contract address is defined in ChainParams so the consensus code can validate the Ethereum transaction originated on the correct contract. Geth is used to validate Ethereum transactions on Syscoin so it is imperative that Geth is synced and running, it will automatically start when Syscoin is launched and you may use `getblockchaininfo` to check if Geth is `synced` after a few minutes. It runs in light mode so it only needs to download roughly the last 2 weeks of block headers.
 
-Another application that runs in the background is the relayer which takes block information from Geth and feeds it into Syscoin using `syscoinsetethheaders` RPC function storing into a database. This allows Syscoin core to continue operating without making inter-process calls. The functionality is re-org aware in case Ethereum re-orgs the relayer will re-send the correct blocks, and the code in `syscoinsetethheaders` will ensure the headers of Ethereum are hash-linked (current block -> prev matches previous header).
+Another application that runs in the background is the [relayer](https://github.com/Syscoin/relayer) which takes block information from Geth and feeds it into Syscoin using `syscoinsetethheaders` RPC function storing into a database. This allows Syscoin core to continue operating without making inter-process calls. The functionality is re-org aware in case Ethereum re-orgs the [relayer](https://github.com/Syscoin/relayer) will re-send the correct blocks, and the code in `syscoinsetethheaders` will ensure the headers of Ethereum are hash-linked (current block -> prev matches previous header).
 
 RPC
 ---
