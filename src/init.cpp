@@ -2216,7 +2216,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         // If -listenonion is set, then NET_ONION may not be reachable now
         // but may become reachable later, thus only error here if it is not
         // reachable and will not become reachable for sure.
-        const bool onion_may_become_reachable{listenonion && (!args.IsArgSet("-onlynet") || onlynet_used_with_onion)};
+        const bool onion_may_become_reachable{listenonion && (onlynets.empty() || onlynet_used_with_onion)};
         if (!g_reachable_nets.Contains(NET_I2P) &&
             !g_reachable_nets.Contains(NET_ONION) &&
             !onion_may_become_reachable) {
