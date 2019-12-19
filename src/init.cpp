@@ -1994,13 +1994,13 @@ bool AppInitMain(NodeContext& node)
     // ********************************************************* Step 11d: schedule Syscoin-specific tasks
 
     if (!fLiteMode) {
-        scheduler.scheduleEvery(boost::bind(&CNetFulfilledRequestManager::DoMaintenance, boost::ref(netfulfilledman)), 60*1000);
-        scheduler.scheduleEvery(boost::bind(&CMasternodeSync::DoMaintenance, boost::ref(masternodeSync), boost::ref(*g_rpc_node->connman)), MASTERNODE_SYNC_TICK_SECONDS*1000);
-        scheduler.scheduleEvery(boost::bind(&CMasternodeMan::DoMaintenance, boost::ref(mnodeman), boost::ref(*g_rpc_node->connman)), 60*1000);
-        scheduler.scheduleEvery(boost::bind(&CActiveMasternode::DoMaintenance, boost::ref(activeMasternode), boost::ref(*g_rpc_node->connman)), MASTERNODE_MIN_MNP_SECONDS*1000);
+        scheduler.scheduleEvery(std::bind(&CNetFulfilledRequestManager::DoMaintenance, std::ref(netfulfilledman)), 60*1000);
+        scheduler.scheduleEvery(std::bind(&CMasternodeSync::DoMaintenance, std::ref(masternodeSync), std::ref(*g_rpc_node->connman)), MASTERNODE_SYNC_TICK_SECONDS*1000);
+        scheduler.scheduleEvery(std::bind(&CMasternodeMan::DoMaintenance, std::ref(mnodeman), std::ref(*g_rpc_node->connman)), 60*1000);
+        scheduler.scheduleEvery(std::bind(&CActiveMasternode::DoMaintenance, std::ref(activeMasternode), std::ref(*g_rpc_node->connman)), MASTERNODE_MIN_MNP_SECONDS*1000);
 
-        scheduler.scheduleEvery(boost::bind(&CMasternodePayments::DoMaintenance, boost::ref(mnpayments)), 60*1000);
-        scheduler.scheduleEvery(boost::bind(&CGovernanceManager::DoMaintenance, boost::ref(governance), boost::ref(*g_rpc_node->connman)), 60 * 5*1000);
+        scheduler.scheduleEvery(std::bind(&CMasternodePayments::DoMaintenance, std::ref(mnpayments)), 60*1000);
+        scheduler.scheduleEvery(std::bind(&CGovernanceManager::DoMaintenance, std::ref(governance), std::ref(*g_rpc_node->connman)), 60 * 5*1000);
     }
     // ********************************************************* Step 12: start node
 
