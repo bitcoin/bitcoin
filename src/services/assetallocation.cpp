@@ -23,6 +23,7 @@ extern UniValue convertaddress(const JSONRPCRequest& request);
 CCriticalSection cs_assetallocationmempoolbalance;
 CCriticalSection cs_assetallocationarrival;
 CCriticalSection cs_assetallocationconflicts;
+CCriticalSection cs_setethstatus;
 using namespace std;
 AssetBalanceMap mempoolMapAssetBalances GUARDED_BY(cs_assetallocationmempoolbalance);
 ArrivalTimesMapImpl arrivalTimesMap GUARDED_BY(cs_assetallocationarrival);
@@ -717,7 +718,7 @@ bool CAssetAllocationDB::ScanAssetAllocations(const uint32_t count, const uint32
 		}
 	}
 
-	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
+	std::unique_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->SeekToFirst();
 	CAssetAllocationDBEntry txPos;
     CAssetAllocationTuple key;

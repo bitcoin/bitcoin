@@ -29,6 +29,7 @@ AssetPrevTxMap mapSenderLockedOutPoints;
 AssetPrevTxMap mapAssetPrevTxSender;
 std::vector<std::pair<uint256, uint32_t> > vecToRemoveFromMempool;
 CCriticalSection cs_assetallocationmempoolremovetx;
+extern CCriticalSection cs_setethstatus;
 extern bool AbortNode(const std::string& strMessage, const std::string& userMessage = "", unsigned int prefix = 0);
 using namespace std;
 bool FormatSyscoinErrorMessage(TxValidationState& state, const std::string errorMessage, bool bErrorNotInvalid, bool bConsensus){
@@ -64,13 +65,16 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     EthereumTxRoot txRootDB;
    
     const bool &ethTxRootShouldExist = !ibd && !fLiteMode && fLoaded && fGethSynced;
-    // validate that the block passed is committed to by the tx root he also passes in, then validate the spv proof to the tx root below  
-    // the cutoff to keep txroots is 120k blocks and the cutoff to get approved is 40k blocks. If we are syncing after being offline for a while it should still validate up to 120k worth of txroots
-    if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(mintSyscoin.nBlockNumber, txRootDB)){
-        if(ethTxRootShouldExist){
-            // we always want to pass state.Invalid() for txroot missing errors here meaning we flag the block as invalid and dos ban the sender maybe
-            // the check in contextualcheckblock that does this prevents us from getting a block that's invalid flagged as error so it won't propagate the block, but if block does arrive we should dos ban peer and invalidate the block itself from connect block
-            return FormatSyscoinErrorMessage(state, "mint-txroot-missing", bMiner);
+    {
+        LOCK(cs_setethstatus);
+        // validate that the block passed is committed to by the tx root he also passes in, then validate the spv proof to the tx root below  
+        // the cutoff to keep txroots is 120k blocks and the cutoff to get approved is 40k blocks. If we are syncing after being offline for a while it should still validate up to 120k worth of txroots
+        if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(mintSyscoin.nBlockNumber, txRootDB)){
+            if(ethTxRootShouldExist){
+                // we always want to pass state.Invalid() for txroot missing errors here meaning we flag the block as invalid and dos ban the sender maybe
+                // the check in contextualcheckblock that does this prevents us from getting a block that's invalid flagged as error so it won't propagate the block, but if block does arrive we should dos ban peer and invalidate the block itself from connect block
+                return FormatSyscoinErrorMessage(state, "mint-txroot-missing", bMiner);
+            }
         }
     }  
     // if we checking this on block we would have already verified this in checkblock
@@ -1696,8 +1700,9 @@ bool CheckSyscoinLockedOutpoints(const CTransactionRef &tx, TxValidationState &s
 	return true;
 }
 bool CEthereumTxRootsDB::PruneTxRoots(const uint32_t &fNewGethSyncHeight) {
+    LOCK(cs_setethstatus);
     uint32_t fNewGethCurrentHeight = fGethCurrentHeight;
-    boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
+    std::unique_ptr<CDBIterator> pcursor(NewIterator());
     pcursor->SeekToFirst();
     vector<uint32_t> vecHeightKeys;
     uint32_t nKey = 0;
@@ -1738,11 +1743,12 @@ bool CEthereumTxRootsDB::Init(){
     return PruneTxRoots(0);
 }
 bool CEthereumTxRootsDB::Clear(){
+    LOCK(cs_setethstatus);
     vector<uint32_t> vecHeightKeys;
     uint32_t nKey = 0;
-    boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
+    std::unique_ptr<CDBIterator> pcursor(NewIterator());
     pcursor->SeekToFirst();
-    while (pcursor->Valid()) {
+    if (pcursor->Valid()) {
         boost::this_thread::interruption_point();
         try {
             if(pcursor->GetKey(nKey)){
@@ -1754,14 +1760,14 @@ bool CEthereumTxRootsDB::Clear(){
             return error("%s() : deserialize error", __PRETTY_FUNCTION__);
         }
     }
-
     fGethSyncHeight = 0;
     fGethCurrentHeight = 0;     
     return FlushErase(vecHeightKeys);
 }
 
 void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t> > &vecMissingBlockRanges){
-    boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
+    LOCK(cs_setethstatus);
+    std::unique_ptr<CDBIterator> pcursor(NewIterator());
     pcursor->SeekToFirst();
     vector<uint32_t> vecHeightKeys;
     uint32_t nKey = 0;
@@ -1774,7 +1780,6 @@ void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t>
         nKeyCutoff = 0;
     std::vector<unsigned char> txPos;
     std::map<uint32_t, EthereumTxRoot> mapTxRoots;
-    
     // sort keys numerically
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
@@ -1797,8 +1802,7 @@ void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t>
             return;
         }
     }
-    
-    while(mapTxRoots.size() < 2){
+    if(mapTxRoots.size() < 2){
         vecMissingBlockRanges.emplace_back(make_pair(nKeyCutoff, nCurrentSyncHeight));
         return;
     }
