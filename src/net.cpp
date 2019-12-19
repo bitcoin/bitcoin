@@ -53,7 +53,6 @@ static constexpr int DUMP_PEERS_INTERVAL = 15 * 60;
 
 /** Number of DNS seeds to query when the number of connections is low. */
 static constexpr int DNSSEEDS_TO_QUERY_AT_ONCE = 3;
-
 // We add a random period time (0 to 1 seconds) to feeler connections to prevent synchronization.
 #define FEELER_SLEEP_WINDOW 1
 
@@ -1930,7 +1929,7 @@ void CConnman::ThreadOpenMasternodeConnections()
 
         OpenMasternodeConnection(CAddress(addr, NODE_NETWORK));
         // should be in the list now if connection was opened
-        ForNode(addr, CConnman::AllNodes, [&](CNode* pnode) {
+        ForNode(addr, AllNodes, [&](CNode* pnode) {
             if (pnode->fDisconnect) {
                 return false;
             }
@@ -2887,7 +2886,7 @@ bool CConnman::ForNode(NodeId id, std::function<bool(CNode* pnode)> func)
 }
 // SYSCOIN
 bool CConnman::IsMasternodeOrDisconnectRequested(const CService& addr) {
-    return ForNode(addr, CConnman::AllNodes, [](CNode* pnode){
+    return ForNode(addr, AllNodes, [](CNode* pnode){
         return pnode->fMasternode || pnode->fDisconnect;
     });
 }
