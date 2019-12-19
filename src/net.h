@@ -124,7 +124,10 @@ struct CSerializedNetMsg
     std::string command;
 };
 
-
+struct CAllNodes {
+    bool operator() (const CNode*) const {return true;}
+};
+static constexpr CAllNodes AllNodes{};
 class NetEventsInterface;
 class CConnman
 {
@@ -222,11 +225,6 @@ public:
     // SYSCOIN
     bool ForNode(const CService& addr, std::function<bool(const CNode* pnode)> cond, std::function<bool(CNode* pnode)> func);
 
-    struct CAllNodes {
-        bool operator() (const CNode*) const {return true;}
-    };
-
-    static constexpr CAllNodes AllNodes{};
     
     struct CFullyConnectedOnly {
         bool operator() (const CNode* pnode) const {
