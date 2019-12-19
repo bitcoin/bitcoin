@@ -167,12 +167,13 @@ void PopServiceImpl::savePopTxToDatabase(const CBlock& block, const int& nHeight
         }
     }
 
-    Status status = grpcPopService->SaveBlockPopTxToDatabase(&context, request, &reply);
-    if (!status.ok()) {
-        throw PopServiceException(status);
+    if (request.popdata_size() != 0) {
+        Status status = grpcPopService->SaveBlockPopTxToDatabase(&context, request, &reply);
+        if (!status.ok()) {
+            throw PopServiceException(status);
+        }
     }
 }
-
 
 std::vector<BlockBytes> PopServiceImpl::getLastKnownVBKBlocks(size_t blocks)
 {
