@@ -50,7 +50,7 @@ have a distribution that does not work with the supplied binaries, you can downl
 https://geth.ethereum.org/downloads/ and place it in the src/bin/linux directory. Read more:
 https://github.com/Syscoin/Syscoin/blob/master/src/bin/linux/README.md.
 
-From 0.17.0 onwards, macOS <10.10 is no longer supported. 0.17.0 is
+From 0.17.0 onwards, macOS <10.10 is no longer supported. 4.0.x is
 built using Qt 5.9.x, which doesn't support versions of macOS older than
 10.10. Additionally, Syscoin Core does not yet change appearance when
 macOS "dark mode" is activated.
@@ -244,7 +244,7 @@ Deprecated or removed RPCs
 P2P changes
 -----------
 
-- BIP 61 reject messages were deprecated in v0.18. They are now disabled
+- BIP 61 reject messages were deprecated in v4.0. They are now disabled
   by default, but can be enabled by setting the `-enablebip61` command
   line option.  BIP 61 reject messages will be removed entirely in a
   future version of Syscoin Core. (#14054)
@@ -382,7 +382,7 @@ Wallet
   failing until the first block is pruned. (#15870)
 
 - When creating a transaction with a fee above `-maxtxfee` (default 0.1
-  BTC), the RPC commands `walletcreatefundedpsbt` and
+  SYS), the RPC commands `walletcreatefundedpsbt` and
   `fundrawtransaction` will now fail instead of rounding down the fee.
   Be aware that the `feeRate` argument is specified in BTC per 1,000
   vbytes, not satoshi per vbyte. (#16257)
@@ -392,7 +392,7 @@ Wallet
   and default to not use the former in coin selection.  When setting
   this flag on an existing wallet, rescanning the blockchain is required
   to correctly mark previously used destinations.  Together with "avoid
-  partial spends" (added in Syscoin Core v0.17.0), this can eliminate a
+  partial spends" (added in Syscoin Core v4.0.0), this can eliminate a
   serious privacy issue where a malicious user can track spends by
   sending small payments to a previously-paid address that would then
   be included with unrelated inputs in future payments. (#13756)
