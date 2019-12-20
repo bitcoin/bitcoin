@@ -18,12 +18,12 @@ class CBlock;
 class CFeeRate;
 class CRPCCommand;
 class CScheduler;
-class CValidationState;
 class Coin;
 class uint256;
 enum class RBFTransactionState;
 struct CBlockLocator;
 struct FeeCalculation;
+struct NodeContext;
 
 namespace interfaces {
 
@@ -41,11 +41,7 @@ class Wallet;
 //! * The Chain::lock() method, which lets clients delay chain tip updates
 //!   should be removed when clients are able to respond to updates
 //!   asynchronously
-//!   (https://github.com/syscoin/syscoin/pull/10973#issuecomment-380101269).
-//!
-//! * The relayTransactions() and submitToMemoryPool() methods could be replaced
-//!   with a higher-level broadcastTransaction method
-//!   (https://github.com/syscoin/syscoin/pull/14978#issuecomment-459373984).
+//!   (https://github.com/bitcoin/bitcoin/pull/10973#issuecomment-380101269).
 //!
 //! * The initMessages() and loadWallet() methods which the wallet uses to send
 //!   notifications to the GUI should go away when GUI and wallet can directly
@@ -79,10 +75,6 @@ public:
         //! 1 for following block, and so on. Returns nullopt for a block not
         //! included in the current chain.
         virtual Optional<int> getBlockHeight(const uint256& hash) = 0;
-
-        //! Get block depth. Returns 1 for chain tip, 2 for preceding block, and
-        //! so on. Returns 0 for a block not included in the current chain.
-        virtual int getBlockDepth(const uint256& hash) = 0;
 
         //! Get block hash. Height must be valid or this function will abort.
         virtual uint256 getBlockHash(int height) = 0;
@@ -127,11 +119,6 @@ public:
 
         //! Check if transaction will be final given chain height current time.
         virtual bool checkFinalTx(const CTransaction& tx) = 0;
-
-        //! Add transaction to memory pool if the transaction fee is below the
-        //! amount specified by absurd_fee. Returns false if the transaction
-        //! could not be added due to the fee or for another reason.
-        virtual bool submitToMemoryPool(const CTransactionRef& tx, CAmount absurd_fee, CValidationState& state) = 0;
     };
 
     //! Return Lock interface. Chain is locked when this is called, and
@@ -164,11 +151,18 @@ public:
     //! Check if transaction has descendants in mempool.
     virtual bool hasDescendantsInMempool(const uint256& txid) = 0;
 
-    //! Relay transaction.
-    virtual void relayTransaction(const uint256& txid) = 0;
+    //! Transaction is added to memory pool, if the transaction fee is below the
+    //! amount specified by max_tx_fee, and broadcast to all peers if relay is set to true.
+    //! Return false if the transaction could not be added due to the fee or for another reason.
+    virtual bool broadcastTransaction(const CTransactionRef& tx, std::string& err_string, const CAmount& max_tx_fee, bool relay) = 0;
 
     //! Calculate mempool ancestor and descendant counts for the given transaction.
     virtual void getTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) = 0;
+
+    //! Get the node's package limits.
+    //! Currently only returns the ancestor and descendant count limits, but could be enhanced to
+    //! return more policy settings.
+    virtual void getPackageLimits(unsigned int& limit_ancestor_count, unsigned int& limit_descendant_count) = 0;
 
     //! Check if transaction will pass the mempool's chain limits.
     virtual bool checkChainLimits(const CTransactionRef& tx) = 0;
@@ -193,9 +187,6 @@ public:
 
     //! Check if any block has been pruned.
     virtual bool havePruned() = 0;
-
-    //! Check if p2p enabled.
-    virtual bool p2pEnabled() = 0;
 
     //! Check if the node is ready to broadcast transactions.
     virtual bool isReadyToBroadcast() = 0;
@@ -231,8 +222,8 @@ public:
         virtual ~Notifications() {}
         virtual void TransactionAddedToMempool(const CTransactionRef& tx) {}
         virtual void TransactionRemovedFromMempool(const CTransactionRef& ptx) {}
-        virtual void BlockConnected(const CBlock& block, const std::vector<CTransactionRef>& tx_conflicted) {}
-        virtual void BlockDisconnected(const CBlock& block) {}
+        virtual void BlockConnected(const CBlock& block, const std::vector<CTransactionRef>& tx_conflicted, int height) {}
+        virtual void BlockDisconnected(const CBlock& block, int height) {}
         virtual void UpdatedBlockTip() {}
         virtual void ChainStateFlushed(const CBlockLocator& locator) {}
     };
@@ -241,9 +232,8 @@ public:
     virtual std::unique_ptr<Handler> handleNotifications(Notifications& notifications) = 0;
 
     //! Wait for pending notifications to be processed unless block hash points to the current
-    //! chain tip, or to a possible descendant of the current chain tip that isn't currently
-    //! connected.
-    virtual void waitForNotificationsIfNewBlocksConnected(const uint256& old_tip) = 0;
+    //! chain tip.
+    virtual void waitForNotificationsIfTipChanged(const uint256& old_tip) = 0;
 
     //! Register handler for RPC. Command is not copied, so reference
     //! needs to remain valid until Handler is disconnected.
@@ -296,7 +286,7 @@ public:
 };
 
 //! Return implementation of Chain interface.
-std::unique_ptr<Chain> MakeChain();
+std::unique_ptr<Chain> MakeChain(NodeContext& node);
 
 //! Return implementation of ChainClient interface for a wallet client. This
 //! function will be undefined in builds where ENABLE_WALLET is false.

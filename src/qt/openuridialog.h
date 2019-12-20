@@ -24,9 +24,6 @@ public:
 protected Q_SLOTS:
     void accept();
 
-private Q_SLOTS:
-    void on_selectFileButton_clicked();
-
 private:
     Ui::OpenURIDialog *ui;
 };

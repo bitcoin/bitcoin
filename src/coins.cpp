@@ -5,6 +5,7 @@
 #include <coins.h>
 
 #include <consensus/consensus.h>
+#include <logging.h>
 #include <random.h>
 #include <version.h>
 
@@ -45,7 +46,8 @@ CCoinsMap::iterator CCoinsViewCache::FetchCoin(const COutPoint &outpoint) const 
     Coin tmp;
     if (!base->GetCoin(outpoint, tmp))
         return cacheCoins.end();
-    CCoinsMap::iterator ret = cacheCoins.emplace(std::piecewise_construct, std::forward_as_tuple(outpoint), std::forward_as_tuple(std::move(tmp))).first;
+    // SYSCOIN
+    CCoinsMap::iterator ret = cacheCoins.emplace(std::piecewise_construct, std::forward_as_tuple(std::move(outpoint)), std::forward_as_tuple(std::move(tmp))).first;
     if (ret->second.coin.IsSpent()) {
         // The parent only has an empty entry for this outpoint; we can consider our
         // version as fresh.
@@ -69,7 +71,8 @@ void CCoinsViewCache::AddCoin(const COutPoint &outpoint, Coin&& coin, bool possi
     if (coin.out.scriptPubKey.IsUnspendable()) return;
     CCoinsMap::iterator it;
     bool inserted;
-    std::tie(it, inserted) = cacheCoins.emplace(std::piecewise_construct, std::forward_as_tuple(outpoint), std::tuple<>());
+    // SYSCOIN
+    std::tie(it, inserted) = cacheCoins.emplace(std::piecewise_construct, std::forward_as_tuple(std::move(outpoint)), std::tuple<>());
     bool fresh = false;
     if (!inserted) {
         cachedCoinsUsage -= it->second.coin.DynamicMemoryUsage();
@@ -257,4 +260,20 @@ const Coin& AccessByTxid(const CCoinsViewCache& view, const uint256& txid)
         ++iter.n;
     }
     return coinEmpty;
+}
+
+bool CCoinsViewErrorCatcher::GetCoin(const COutPoint &outpoint, Coin &coin) const {
+    try {
+        return CCoinsViewBacked::GetCoin(outpoint, coin);
+    } catch(const std::runtime_error& e) {
+        for (auto f : m_err_callbacks) {
+            f();
+        }
+        LogPrintf("Error reading from database: %s\n", e.what());
+        // Starting the shutdown sequence and returning false to the caller would be
+        // interpreted as 'entry not found' (as opposed to unable to read data), and
+        // could lead to invalid interpretation. Just exit immediately, as we can't
+        // continue anyway, and all writes should be atomic.
+        std::abort();
+    }
 }

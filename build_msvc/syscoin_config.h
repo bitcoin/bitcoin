@@ -14,7 +14,7 @@
 #define CLIENT_VERSION_MAJOR 4
 
 /* Minor version */
-#define CLIENT_VERSION_MINOR 18
+#define CLIENT_VERSION_MINOR 1
 
 /* Build revision */
 #define CLIENT_VERSION_REVISION 0
@@ -97,10 +97,6 @@
 /* Define to 1 if you have the declaration of `daemon', and to 0 if you don't.
    */
 #define HAVE_DECL_DAEMON 0
-
-/* Define to 1 if you have the declaration of `EVP_MD_CTX_new', and to 0 if
-   you don't. */
-//#define HAVE_DECL_EVP_MD_CTX_NEW 1
 
 /* Define to 1 if you have the declaration of `htobe16', and to 0 if you
    don't. */
@@ -346,7 +342,7 @@
 #define PACKAGE_NAME "Syscoin Core"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "Syscoin Core 4.0.0"
+#define PACKAGE_STRING "Syscoin Core 4.1.0"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "syscoin"
@@ -355,7 +351,7 @@
 #define PACKAGE_URL "https://syscoin.org/"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "4.0.0"
+#define PACKAGE_VERSION "4.1.0"
 
 /* Define to necessary symbol if this constant uses a non-standard name on
    your system. */
@@ -420,5 +416,15 @@
 
 /* Define for large files, on AIX-style hosts. */
 /* #undef _LARGE_FILES */
+
+/* Windows Universal Platform constraints */
+#if !defined(WINAPI_FAMILY) || (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP)
+/* Either a desktop application without API restrictions, or and older system
+   before these macros were defined. */
+
+/* ::wsystem is available */
+#define HAVE_SYSTEM 1
+
+#endif // !WINAPI_FAMILY || WINAPI_FAMILY_DESKTOP_APP
 
 #endif //SYSCOIN_SYSCOIN_CONFIG_H

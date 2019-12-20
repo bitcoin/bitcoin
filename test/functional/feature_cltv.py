@@ -22,9 +22,6 @@ from io import BytesIO
 
 CLTV_HEIGHT = 1351
 
-# Reject codes that we might receive in this test
-REJECT_INVALID = 16
-REJECT_NONSTANDARD = 64
 
 def cltv_invalidate(tx):
     '''Modify the signature in vin 0 of the tx to fail CLTV
@@ -57,15 +54,30 @@ def cltv_validate(node, tx, height):
 class BIP65Test(SyscoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.extra_args = [['-whitelist=127.0.0.1', '-par=1']]  # Use only one script thread to get the exact reject reason for testing
+        self.extra_args = [[
+            '-whitelist=127.0.0.1',
+            '-par=1',  # Use only one script thread to get the exact reject reason for testing
+            '-acceptnonstdtxn=1',  # cltv_invalidate is nonstandard
+        ]]
         self.setup_clean_chain = True
         self.rpc_timeout = 120
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
+    def test_cltv_info(self, *, is_active):
+        assert_equal(self.nodes[0].getblockchaininfo()['softforks']['bip65'],
+            {
+                "active": is_active,
+                "height": CLTV_HEIGHT,
+                "type": "buried",
+            },
+        )
+
     def run_test(self):
         self.nodes[0].add_p2p_connection(P2PInterface())
+
+        self.test_cltv_info(is_active=False)
 
         self.log.info("Mining %d blocks", CLTV_HEIGHT - 2)
         self.coinbase_txids = [self.nodes[0].getblock(b)['tx'][0] for b in self.nodes[0].generate(CLTV_HEIGHT - 2)]
@@ -86,7 +98,9 @@ class BIP65Test(SyscoinTestFramework):
         block.hashMerkleRoot = block.calc_merkle_root()
         block.solve()
 
+        self.test_cltv_info(is_active=False)  # Not active as of current tip and next block does not need to obey rules
         self.nodes[0].p2p.send_and_ping(msg_block(block))
+        self.test_cltv_info(is_active=True)  # Not active as of current tip, but next block must obey rules
         assert_equal(self.nodes[0].getbestblockhash(), block.hash)
 
         self.log.info("Test that blocks must now be at least version 4")
@@ -112,7 +126,7 @@ class BIP65Test(SyscoinTestFramework):
         # First we show that this tx is valid except for CLTV by getting it
         # rejected from the mempool for exactly that reason.
         assert_equal(
-            [{'txid': spendtx.hash, 'allowed': False, 'reject-reason': '64: non-mandatory-script-verify-flag (Negative locktime)'}],
+            [{'txid': spendtx.hash, 'allowed': False, 'reject-reason': 'non-mandatory-script-verify-flag (Negative locktime)'}],
             self.nodes[0].testmempoolaccept(rawtxs=[spendtx.serialize().hex()], maxfeerate=0)
         )
 
@@ -135,7 +149,9 @@ class BIP65Test(SyscoinTestFramework):
         block.hashMerkleRoot = block.calc_merkle_root()
         block.solve()
 
+        self.test_cltv_info(is_active=True)  # Not active as of current tip, but next block must obey rules
         self.nodes[0].p2p.send_and_ping(msg_block(block))
+        self.test_cltv_info(is_active=True)  # Active as of current tip
         assert_equal(int(self.nodes[0].getbestblockhash(), 16), block.sha256)
 
 

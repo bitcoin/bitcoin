@@ -6,10 +6,10 @@
 #ifndef SYSCOIN_SCRIPT_SIGN_H
 #define SYSCOIN_SCRIPT_SIGN_H
 
-#include <boost/optional.hpp>
 #include <hash.h>
 #include <pubkey.h>
 #include <script/interpreter.h>
+#include <script/keyorigin.h>
 #include <streams.h>
 
 class CKey;
@@ -17,76 +17,9 @@ class CKeyID;
 class CScript;
 class CScriptID;
 class CTransaction;
+class SigningProvider;
 
 struct CMutableTransaction;
-
-struct KeyOriginInfo
-{
-    unsigned char fingerprint[4]; //!< First 32 bits of the Hash160 of the public key at the root of the path
-    std::vector<uint32_t> path;
-
-    friend bool operator==(const KeyOriginInfo& a, const KeyOriginInfo& b)
-    {
-        return std::equal(std::begin(a.fingerprint), std::end(a.fingerprint), std::begin(b.fingerprint)) && a.path == b.path;
-    }
-
-    ADD_SERIALIZE_METHODS;
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
-    {
-        READWRITE(fingerprint);
-        READWRITE(path);
-    }
-
-    void clear()
-    {
-        memset(fingerprint, 0, 4);
-        path.clear();
-    }
-};
-
-/** An interface to be implemented by keystores that support signing. */
-class SigningProvider
-{
-public:
-    virtual ~SigningProvider() {}
-    virtual bool GetCScript(const CScriptID &scriptid, CScript& script) const { return false; }
-    virtual bool GetPubKey(const CKeyID &address, CPubKey& pubkey) const { return false; }
-    virtual bool GetKey(const CKeyID &address, CKey& key) const { return false; }
-    virtual bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const { return false; }
-};
-
-extern const SigningProvider& DUMMY_SIGNING_PROVIDER;
-
-class HidingSigningProvider : public SigningProvider
-{
-private:
-    const bool m_hide_secret;
-    const bool m_hide_origin;
-    const SigningProvider* m_provider;
-
-public:
-    HidingSigningProvider(const SigningProvider* provider, bool hide_secret, bool hide_origin) : m_hide_secret(hide_secret), m_hide_origin(hide_origin), m_provider(provider) {}
-    bool GetCScript(const CScriptID& scriptid, CScript& script) const override;
-    bool GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const override;
-    bool GetKey(const CKeyID& keyid, CKey& key) const override;
-    bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const override;
-};
-
-struct FlatSigningProvider final : public SigningProvider
-{
-    std::map<CScriptID, CScript> scripts;
-    std::map<CKeyID, CPubKey> pubkeys;
-    std::map<CKeyID, std::pair<CPubKey, KeyOriginInfo>> origins;
-    std::map<CKeyID, CKey> keys;
-
-    bool GetCScript(const CScriptID& scriptid, CScript& script) const override;
-    bool GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const override;
-    bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const override;
-    bool GetKey(const CKeyID& keyid, CKey& key) const override;
-};
-
-FlatSigningProvider Merge(const FlatSigningProvider& a, const FlatSigningProvider& b);
 
 /** Interface for signature creators. */
 class BaseSignatureCreator {
@@ -168,7 +101,7 @@ template<typename Stream>
 void DeserializeHDKeypaths(Stream& s, const std::vector<unsigned char>& key, std::map<CPubKey, KeyOriginInfo>& hd_keypaths)
 {
     // Make sure that the key is the size of pubkey + 1
-    if (key.size() != CPubKey::PUBLIC_KEY_SIZE + 1 && key.size() != CPubKey::COMPRESSED_PUBLIC_KEY_SIZE + 1) {
+    if (key.size() != CPubKey::SIZE + 1 && key.size() != CPubKey::COMPRESSED_SIZE + 1) {
         throw std::ios_base::failure("Size of key was not the expected size for the type BIP32 keypath");
     }
     // Read in the pubkey from key
@@ -231,5 +164,8 @@ void UpdateInput(CTxIn& input, const SignatureData& data);
  * provider is used to look up public keys and redeemscripts by hash.
  * Solvability is unrelated to whether we consider this output to be ours. */
 bool IsSolvable(const SigningProvider& provider, const CScript& script);
+
+/** Check whether a scriptPubKey is known to be segwit. */
+bool IsSegWitOutput(const SigningProvider& provider, const CScript& script);
 
 #endif // SYSCOIN_SCRIPT_SIGN_H

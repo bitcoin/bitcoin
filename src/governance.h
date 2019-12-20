@@ -152,7 +152,7 @@ class CGovernanceManager
 
 public: // Types
     struct last_object_rec {
-        last_object_rec(bool fStatusOKIn = true)
+        explicit last_object_rec(bool fStatusOKIn = true)
             : triggerBuffer(),
               fStatusOK(fStatusOKIn)
             {}

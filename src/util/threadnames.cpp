@@ -6,7 +6,6 @@
 #include <config/syscoin-config.h>
 #endif
 
-#include <atomic>
 #include <thread>
 
 #if (defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__))
@@ -57,6 +56,11 @@ static void SetInternalName(std::string name) { }
 
 void util::ThreadRename(std::string&& name)
 {
-    SetThreadName(("syscoin-" + name).c_str());
+    SetThreadName(("s-" + name).c_str());
+    SetInternalName(std::move(name));
+}
+
+void util::ThreadSetInternalName(std::string&& name)
+{
     SetInternalName(std::move(name));
 }

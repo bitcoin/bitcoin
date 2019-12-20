@@ -19,7 +19,6 @@
 #include <wallet/coincontrol.h>
 #include <interfaces/node.h>
 #include <key_io.h>
-#include <policy/fees.h>
 #include <policy/policy.h>
 #include <wallet/wallet.h>
 
@@ -418,7 +417,8 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
 
         if (amount > 0)
         {
-            CTxOut txout(amount, static_cast<CScript>(std::vector<unsigned char>(24, 0)));
+            // Assumes a p2pkh script size
+            CTxOut txout(amount, CScript() << std::vector<unsigned char>(24, 0));
             txDummy.vout.push_back(txout);
             fDust |= IsDust(txout, model->node().getDustRelayFee());
         }
@@ -468,7 +468,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         {
             CPubKey pubkey;
             PKHash *pkhash = boost::get<PKHash>(&address);
-            if (pkhash && model->wallet().getPubKey(CKeyID(*pkhash), pubkey))
+            if (pkhash && model->wallet().getPubKey(out.txout.scriptPubKey, CKeyID(*pkhash), pubkey))
             {
                 nBytesInputs += (pubkey.IsCompressed() ? 148 : 180);
             }
@@ -509,7 +509,8 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
             // Never create dust outputs; if we would, just add the dust to the fee.
             if (nChange > 0 && nChange < MIN_CHANGE)
             {
-                CTxOut txout(nChange, static_cast<CScript>(std::vector<unsigned char>(24, 0)));
+                // Assumes a p2pkh script size
+                CTxOut txout(nChange, CScript() << std::vector<unsigned char>(24, 0));
                 if (IsDust(txout, model->node().getDustRelayFee()))
                 {
                     nPayFee += nChange;

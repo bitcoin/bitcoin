@@ -13,6 +13,7 @@ from test_framework.util import (
 class NamedArgumentTest(SyscoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
+        self.supports_cli = False
 
     def run_test(self):
         node = self.nodes[0]

@@ -9,15 +9,20 @@ from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
-    connect_nodes_bi,
+    connect_nodes,
     wait_until,
 )
 
 class DisconnectBanTest(SyscoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
+        self.supports_cli = False
 
     def run_test(self):
+        self.log.info("Connect nodes both way")
+        connect_nodes(self.nodes[0], 1)
+        connect_nodes(self.nodes[1], 0)
+
         self.log.info("Test setban and listbanned RPCs")
 
         self.log.info("setban: successfully ban single IP address")
@@ -74,7 +79,9 @@ class DisconnectBanTest(SyscoinTestFramework):
 
         # Clear ban lists
         self.nodes[1].clearbanned()
-        connect_nodes_bi(self.nodes, 0, 1)
+        self.log.info("Connect nodes both way")
+        connect_nodes(self.nodes[0], 1)
+        connect_nodes(self.nodes[1], 0)
 
         self.log.info("Test disconnectnode RPCs")
 
@@ -93,7 +100,7 @@ class DisconnectBanTest(SyscoinTestFramework):
         assert not [node for node in self.nodes[0].getpeerinfo() if node['addr'] == address1]
 
         self.log.info("disconnectnode: successfully reconnect node")
-        connect_nodes_bi(self.nodes, 0, 1)  # reconnect the node
+        connect_nodes(self.nodes[0], 1)  # reconnect the node
         assert_equal(len(self.nodes[0].getpeerinfo()), 2)
         assert [node for node in self.nodes[0].getpeerinfo() if node['addr'] == address1]
 

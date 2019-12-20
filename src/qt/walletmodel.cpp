@@ -44,17 +44,20 @@ WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, interfaces:
     transactionTableModel = new TransactionTableModel(platformStyle, this);
     recentRequestsTableModel = new RecentRequestsTableModel(this);
 
-    // This timer will be fired repeatedly to update the balance
-    pollTimer = new QTimer(this);
-    connect(pollTimer, &QTimer::timeout, this, &WalletModel::pollBalanceChanged);
-    pollTimer->start(MODEL_UPDATE_DELAY);
-
     subscribeToCoreSignals();
 }
 
 WalletModel::~WalletModel()
 {
     unsubscribeFromCoreSignals();
+}
+
+void WalletModel::startPollBalance()
+{
+    // This timer will be fired repeatedly to update the balance
+    QTimer* timer = new QTimer(this);
+    connect(timer, &QTimer::timeout, this, &WalletModel::pollBalanceChanged);
+    timer->start(MODEL_UPDATE_DELAY);
 }
 
 void WalletModel::updateStatus()
@@ -143,31 +146,6 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
     {
         if (rcp.fSubtractFeeFromAmount)
             fSubtractFeeFromAmount = true;
-
-#ifdef ENABLE_BIP70
-        if (rcp.paymentRequest.IsInitialized())
-        {   // PaymentRequest...
-            CAmount subtotal = 0;
-            const payments::PaymentDetails& details = rcp.paymentRequest.getDetails();
-            for (int i = 0; i < details.outputs_size(); i++)
-            {
-                const payments::Output& out = details.outputs(i);
-                if (out.amount() <= 0) continue;
-                subtotal += out.amount();
-                const unsigned char* scriptStr = (const unsigned char*)out.script().data();
-                CScript scriptPubKey(scriptStr, scriptStr+out.script().size());
-                CAmount nAmount = out.amount();
-                CRecipient recipient = {scriptPubKey, nAmount, rcp.fSubtractFeeFromAmount};
-                vecSend.push_back(recipient);
-            }
-            if (subtotal <= 0)
-            {
-                return InvalidAmount;
-            }
-            total += subtotal;
-        }
-        else
-#endif
         {   // User-entered syscoin address / amount:
             if(!validateAddress(rcp.address))
             {
@@ -205,7 +183,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         std::string strFailReason;
 
         auto& newTx = transaction.getWtx();
-        newTx = m_wallet->createTransaction(vecSend, coinControl, true /* sign */, nChangePosRet, nFeeRequired, strFailReason);
+        newTx = m_wallet->createTransaction(vecSend, coinControl, !privateKeysDisabled() /* sign */, nChangePosRet, nFeeRequired, strFailReason);
         transaction.setTransactionFee(nFeeRequired);
         if (fSubtractFeeFromAmount && newTx)
             transaction.reassignAmounts(nChangePosRet);
@@ -221,11 +199,12 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             return TransactionCreationFailed;
         }
 
-        // reject absurdly high fee. (This can never happen because the
-        // wallet caps the fee at m_default_max_tx_fee. This merely serves as a
-        // belt-and-suspenders check)
-        if (nFeeRequired > m_wallet->getDefaultMaxTxFee())
+        // Reject absurdly high fee. (This can never happen because the
+        // wallet never creates transactions with fee greater than
+        // m_default_max_tx_fee. This merely a belt-and-suspenders check).
+        if (nFeeRequired > m_wallet->getDefaultMaxTxFee()) {
             return AbsurdFee;
+        }
     }
 
     return SendCoinsReturn(OK);
@@ -239,32 +218,15 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
         std::vector<std::pair<std::string, std::string>> vOrderForm;
         for (const SendCoinsRecipient &rcp : transaction.getRecipients())
         {
-#ifdef ENABLE_BIP70
-            if (rcp.paymentRequest.IsInitialized())
-            {
-                // Make sure any payment requests involved are still valid.
-                if (PaymentServer::verifyExpired(rcp.paymentRequest.getDetails())) {
-                    return PaymentRequestExpired;
-                }
-
-                // Store PaymentRequests in wtx.vOrderForm in wallet.
-                std::string value;
-                rcp.paymentRequest.SerializeToString(&value);
-                vOrderForm.emplace_back("PaymentRequest", std::move(value));
-            }
-            else
-#endif
             if (!rcp.message.isEmpty()) // Message from normal syscoin:URI (syscoin:123...?message=example)
                 vOrderForm.emplace_back("Message", rcp.message.toStdString());
         }
 
         auto& newTx = transaction.getWtx();
-        std::string rejectReason;
-        if (!newTx->commit({} /* mapValue */, std::move(vOrderForm), rejectReason))
-            return SendCoinsReturn(TransactionCommitFailed, QString::fromStdString(rejectReason));
+        wallet().commitTransaction(newTx, {} /* mapValue */, std::move(vOrderForm));
 
         CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-        ssTx << newTx->get();
+        ssTx << *newTx;
         transaction_array.append(&(ssTx[0]), ssTx.size());
     }
 
@@ -272,10 +234,6 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
     // and emit coinsSent signal for each recipient
     for (const SendCoinsRecipient &rcp : transaction.getRecipients())
     {
-        // Don't touch the address book when we have a payment request
-#ifdef ENABLE_BIP70
-        if (!rcp.paymentRequest.IsInitialized())
-#endif
         {
             std::string strAddress = rcp.address.toStdString();
             CTxDestination dest = DecodeDestination(strAddress);
@@ -376,13 +334,15 @@ bool WalletModel::changePassphrase(const SecureString &oldPass, const SecureStri
 static void NotifyUnload(WalletModel* walletModel)
 {
     qDebug() << "NotifyUnload";
-    QMetaObject::invokeMethod(walletModel, "unload");
+    bool invoked = QMetaObject::invokeMethod(walletModel, "unload");
+    assert(invoked);
 }
 
 static void NotifyKeyStoreStatusChanged(WalletModel *walletmodel)
 {
     qDebug() << "NotifyKeyStoreStatusChanged";
-    QMetaObject::invokeMethod(walletmodel, "updateStatus", Qt::QueuedConnection);
+    bool invoked = QMetaObject::invokeMethod(walletmodel, "updateStatus", Qt::QueuedConnection);
+    assert(invoked);
 }
 
 static void NotifyAddressBookChanged(WalletModel *walletmodel,
@@ -394,38 +354,43 @@ static void NotifyAddressBookChanged(WalletModel *walletmodel,
     QString strPurpose = QString::fromStdString(purpose);
 
     qDebug() << "NotifyAddressBookChanged: " + strAddress + " " + strLabel + " isMine=" + QString::number(isMine) + " purpose=" + strPurpose + " status=" + QString::number(status);
-    QMetaObject::invokeMethod(walletmodel, "updateAddressBook", Qt::QueuedConnection,
+    bool invoked = QMetaObject::invokeMethod(walletmodel, "updateAddressBook", Qt::QueuedConnection,
                               Q_ARG(QString, strAddress),
                               Q_ARG(QString, strLabel),
                               Q_ARG(bool, isMine),
                               Q_ARG(QString, strPurpose),
                               Q_ARG(int, status));
+    assert(invoked);
 }
 
 static void NotifyTransactionChanged(WalletModel *walletmodel, const uint256 &hash, ChangeType status)
 {
     Q_UNUSED(hash);
     Q_UNUSED(status);
-    QMetaObject::invokeMethod(walletmodel, "updateTransaction", Qt::QueuedConnection);
+    bool invoked = QMetaObject::invokeMethod(walletmodel, "updateTransaction", Qt::QueuedConnection);
+    assert(invoked);
 }
 
 static void ShowProgress(WalletModel *walletmodel, const std::string &title, int nProgress)
 {
     // emits signal "showProgress"
-    QMetaObject::invokeMethod(walletmodel, "showProgress", Qt::QueuedConnection,
+    bool invoked = QMetaObject::invokeMethod(walletmodel, "showProgress", Qt::QueuedConnection,
                               Q_ARG(QString, QString::fromStdString(title)),
                               Q_ARG(int, nProgress));
+    assert(invoked);
 }
 
 static void NotifyWatchonlyChanged(WalletModel *walletmodel, bool fHaveWatchonly)
 {
-    QMetaObject::invokeMethod(walletmodel, "updateWatchOnlyFlag", Qt::QueuedConnection,
+    bool invoked = QMetaObject::invokeMethod(walletmodel, "updateWatchOnlyFlag", Qt::QueuedConnection,
                               Q_ARG(bool, fHaveWatchonly));
+    assert(invoked);
 }
 
 static void NotifyCanGetAddressesChanged(WalletModel* walletmodel)
 {
-    QMetaObject::invokeMethod(walletmodel, "canGetAddressesChanged");
+    bool invoked = QMetaObject::invokeMethod(walletmodel, "canGetAddressesChanged");
+    assert(invoked);
 }
 
 void WalletModel::subscribeToCoreSignals()
@@ -437,7 +402,7 @@ void WalletModel::subscribeToCoreSignals()
     m_handler_transaction_changed = m_wallet->handleTransactionChanged(std::bind(NotifyTransactionChanged, this, std::placeholders::_1, std::placeholders::_2));
     m_handler_show_progress = m_wallet->handleShowProgress(std::bind(ShowProgress, this, std::placeholders::_1, std::placeholders::_2));
     m_handler_watch_only_changed = m_wallet->handleWatchOnlyChanged(std::bind(NotifyWatchonlyChanged, this, std::placeholders::_1));
-    m_handler_can_get_addrs_changed = m_wallet->handleCanGetAddressesChanged(boost::bind(NotifyCanGetAddressesChanged, this));
+    m_handler_can_get_addrs_changed = m_wallet->handleCanGetAddressesChanged(std::bind(NotifyCanGetAddressesChanged, this));
 }
 
 void WalletModel::unsubscribeFromCoreSignals()

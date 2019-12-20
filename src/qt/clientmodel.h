@@ -93,10 +93,12 @@ private:
     OptionsModel *optionsModel;
     PeerTableModel *peerTableModel;
     BanTableModel *banTableModel;
-    
-	// SYSCOIN
+
+    //! A thread to interact with m_node asynchronously
+    QThread* const m_thread;
+
+    // SYSCOIN
 	QTimer *pollMnTimer;
-    QTimer *pollTimer;
 
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
@@ -119,7 +121,6 @@ Q_SIGNALS:
     void additionalDataSyncProgressChanged(double nSyncProgress);
 
 public Q_SLOTS:
-    void updateTimer();
     void updateNumConnections(int numConnections);
     void updateNetworkActive(bool networkActive);
     void updateAlert();

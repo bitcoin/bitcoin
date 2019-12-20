@@ -7,5 +7,6 @@ packages/*
 */Debug
 */Release
 */x64
-*.vcxproj.user
-*.vcxproj
+*/Win32
+libsyscoin_qt/QtGeneratedFiles/*
+test_syscoin-qt/QtGeneratedFiles/*

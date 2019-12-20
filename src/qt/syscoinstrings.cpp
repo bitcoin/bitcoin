@@ -9,14 +9,13 @@
 #define UNUSED
 #endif
 static const char UNUSED *syscoin_strings[] = {
-QT_TRANSLATE_NOOP("syscoin-core", "Syscoin Core"),
 QT_TRANSLATE_NOOP("syscoin-core", "The %s developers"),
 QT_TRANSLATE_NOOP("syscoin-core", ""
 "-maxtxfee is set very high! Fees this large could be paid on a single "
 "transaction."),
 QT_TRANSLATE_NOOP("syscoin-core", ""
-"Can't generate a change-address key. Private keys are disabled for this "
-"wallet."),
+"Can't generate a change-address key. No keys in the internal keypool and "
+"can't generate any keys."),
 QT_TRANSLATE_NOOP("syscoin-core", ""
 "Cannot obtain a lock on data directory %s. %s is probably already running."),
 QT_TRANSLATE_NOOP("syscoin-core", ""
@@ -88,9 +87,6 @@ QT_TRANSLATE_NOOP("syscoin-core", ""
 "Warning: The network does not appear to fully agree! Some miners appear to "
 "be experiencing issues."),
 QT_TRANSLATE_NOOP("syscoin-core", ""
-"Warning: Unknown block versions being mined! It's possible unknown rules are "
-"in effect"),
-QT_TRANSLATE_NOOP("syscoin-core", ""
 "Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; "
 "if your balance or transactions are incorrect you should restore from a "
 "backup."),
@@ -124,25 +120,23 @@ QT_TRANSLATE_NOOP("syscoin-core", "Error loading wallet %s. Duplicate -wallet fi
 QT_TRANSLATE_NOOP("syscoin-core", "Error opening block database"),
 QT_TRANSLATE_NOOP("syscoin-core", "Error reading from database, shutting down."),
 QT_TRANSLATE_NOOP("syscoin-core", "Error upgrading chainstate database"),
-QT_TRANSLATE_NOOP("syscoin-core", "Error"),
 QT_TRANSLATE_NOOP("syscoin-core", "Error: A fatal internal error occurred, see debug.log for details"),
 QT_TRANSLATE_NOOP("syscoin-core", "Error: Disk space is low for %s"),
-QT_TRANSLATE_NOOP("syscoin-core", "Error: Disk space is low!"),
+QT_TRANSLATE_NOOP("syscoin-core", "Error: Disk space is too low!"),
 QT_TRANSLATE_NOOP("syscoin-core", "Failed to listen on any port. Use -listen=0 if you want this."),
 QT_TRANSLATE_NOOP("syscoin-core", "Failed to rescan the wallet during initialization"),
 QT_TRANSLATE_NOOP("syscoin-core", "Importing..."),
 QT_TRANSLATE_NOOP("syscoin-core", "Incorrect or no genesis block found. Wrong datadir for network?"),
-QT_TRANSLATE_NOOP("syscoin-core", "Information"),
 QT_TRANSLATE_NOOP("syscoin-core", "Initialization sanity check failed. %s is shutting down."),
 QT_TRANSLATE_NOOP("syscoin-core", "Insufficient funds"),
 QT_TRANSLATE_NOOP("syscoin-core", "Invalid -onion address or hostname: '%s'"),
 QT_TRANSLATE_NOOP("syscoin-core", "Invalid -proxy address or hostname: '%s'"),
+QT_TRANSLATE_NOOP("syscoin-core", "Invalid P2P permission: '%s'"),
 QT_TRANSLATE_NOOP("syscoin-core", "Invalid amount for -%s=<amount>: '%s'"),
 QT_TRANSLATE_NOOP("syscoin-core", "Invalid amount for -discardfee=<amount>: '%s'"),
 QT_TRANSLATE_NOOP("syscoin-core", "Invalid amount for -fallbackfee=<amount>: '%s'"),
 QT_TRANSLATE_NOOP("syscoin-core", "Invalid amount for -paytxfee=<amount>: '%s' (must be at least %s)"),
 QT_TRANSLATE_NOOP("syscoin-core", "Invalid netmask specified in -whitelist: '%s'"),
-QT_TRANSLATE_NOOP("syscoin-core", "Keypool ran out, please call keypoolrefill first"),
 QT_TRANSLATE_NOOP("syscoin-core", "Loading P2P addresses..."),
 QT_TRANSLATE_NOOP("syscoin-core", "Loading banlist..."),
 QT_TRANSLATE_NOOP("syscoin-core", "Loading block index..."),
@@ -150,6 +144,7 @@ QT_TRANSLATE_NOOP("syscoin-core", "Loading wallet..."),
 QT_TRANSLATE_NOOP("syscoin-core", "Need to specify a port with -whitebind: '%s'"),
 QT_TRANSLATE_NOOP("syscoin-core", "Not enough file descriptors available."),
 QT_TRANSLATE_NOOP("syscoin-core", "Prune cannot be configured with a negative value."),
+QT_TRANSLATE_NOOP("syscoin-core", "Prune mode is incompatible with -blockfilterindex."),
 QT_TRANSLATE_NOOP("syscoin-core", "Prune mode is incompatible with -txindex."),
 QT_TRANSLATE_NOOP("syscoin-core", "Pruning blockstore..."),
 QT_TRANSLATE_NOOP("syscoin-core", "Reducing -maxconnections from %d to %d, because of system limitations."),
@@ -175,13 +170,16 @@ QT_TRANSLATE_NOOP("syscoin-core", "Transaction amounts must not be negative"),
 QT_TRANSLATE_NOOP("syscoin-core", "Transaction fee and change calculation failed"),
 QT_TRANSLATE_NOOP("syscoin-core", "Transaction has too long of a mempool chain"),
 QT_TRANSLATE_NOOP("syscoin-core", "Transaction must have at least one recipient"),
-QT_TRANSLATE_NOOP("syscoin-core", "Transaction too large for fee policy"),
 QT_TRANSLATE_NOOP("syscoin-core", "Transaction too large"),
 QT_TRANSLATE_NOOP("syscoin-core", "Unable to bind to %s on this computer (bind returned error %s)"),
 QT_TRANSLATE_NOOP("syscoin-core", "Unable to bind to %s on this computer. %s is probably already running."),
+QT_TRANSLATE_NOOP("syscoin-core", "Unable to create the PID file '%s': %s"),
 QT_TRANSLATE_NOOP("syscoin-core", "Unable to generate initial keys"),
 QT_TRANSLATE_NOOP("syscoin-core", "Unable to generate keys"),
 QT_TRANSLATE_NOOP("syscoin-core", "Unable to start HTTP server. See debug log for details."),
+QT_TRANSLATE_NOOP("syscoin-core", "Unknown -blockfilterindex value %s."),
+QT_TRANSLATE_NOOP("syscoin-core", "Unknown address type '%s'"),
+QT_TRANSLATE_NOOP("syscoin-core", "Unknown change type '%s'"),
 QT_TRANSLATE_NOOP("syscoin-core", "Unknown network specified in -onlynet: '%s'"),
 QT_TRANSLATE_NOOP("syscoin-core", "Unsupported logging category %s=%s."),
 QT_TRANSLATE_NOOP("syscoin-core", "Upgrading UTXO database"),
@@ -189,9 +187,7 @@ QT_TRANSLATE_NOOP("syscoin-core", "Upgrading txindex database"),
 QT_TRANSLATE_NOOP("syscoin-core", "User Agent comment (%s) contains unsafe characters."),
 QT_TRANSLATE_NOOP("syscoin-core", "Verifying blocks..."),
 QT_TRANSLATE_NOOP("syscoin-core", "Verifying wallet(s)..."),
-QT_TRANSLATE_NOOP("syscoin-core", "Wallet %s resides outside wallet directory %s"),
 QT_TRANSLATE_NOOP("syscoin-core", "Wallet needed to be rewritten: restart %s to complete"),
-QT_TRANSLATE_NOOP("syscoin-core", "Warning"),
 QT_TRANSLATE_NOOP("syscoin-core", "Warning: unknown new rules activated (versionbit %i)"),
 QT_TRANSLATE_NOOP("syscoin-core", "Zapping all transactions from wallet..."),
 };

@@ -4,15 +4,14 @@
 
 #include <consensus/tx_verify.h>
 #include <key.h>
-#include <keystore.h>
 #include <validation.h>
 #include <policy/policy.h>
 #include <script/script.h>
 #include <script/script_error.h>
 #include <policy/settings.h>
 #include <script/sign.h>
-#include <script/ismine.h>
-#include <test/setup_common.h>
+#include <script/signingprovider.h>
+#include <test/util/setup_common.h>
 
 #include <vector>
 
@@ -56,7 +55,7 @@ BOOST_AUTO_TEST_CASE(sign)
     // scriptPubKey: HASH160 <hash> EQUAL
 
     // Test SignSignature() (and therefore the version of Solver() that signs transactions)
-    CBasicKeyStore keystore;
+    FillableSigningProvider keystore;
     CKey key[4];
     for (int i = 0; i < 4; i++)
     {
@@ -98,7 +97,6 @@ BOOST_AUTO_TEST_CASE(sign)
         txTo[i].vin[0].prevout.n = i;
         txTo[i].vin[0].prevout.hash = txFrom.GetHash();
         txTo[i].vout[0].nValue = 1;
-        BOOST_CHECK_MESSAGE(IsMine(keystore, txFrom.vout[i].scriptPubKey), strprintf("IsMine %d", i));
     }
     for (int i = 0; i < 8; i++)
     {
@@ -153,7 +151,7 @@ BOOST_AUTO_TEST_CASE(set)
 {
     LOCK(cs_main);
     // Test the CScript::Set* methods
-    CBasicKeyStore keystore;
+    FillableSigningProvider keystore;
     CKey key[4];
     std::vector<CPubKey> keys;
     for (int i = 0; i < 4; i++)
@@ -195,7 +193,6 @@ BOOST_AUTO_TEST_CASE(set)
         txTo[i].vin[0].prevout.hash = txFrom.GetHash();
         txTo[i].vout[0].nValue = 1*CENT;
         txTo[i].vout[0].scriptPubKey = inner[i];
-        BOOST_CHECK_MESSAGE(IsMine(keystore, txFrom.vout[i].scriptPubKey), strprintf("IsMine %d", i));
     }
     for (int i = 0; i < 4; i++)
     {
@@ -212,20 +209,21 @@ BOOST_AUTO_TEST_CASE(is)
     p2sh << OP_HASH160 << ToByteVector(dummy) << OP_EQUAL;
     BOOST_CHECK(p2sh.IsPayToScriptHash());
 
-    // Not considered pay-to-script-hash if using one of the OP_PUSHDATA opcodes:
     std::vector<unsigned char> direct = {OP_HASH160, 20};
     direct.insert(direct.end(), 20, 0);
     direct.push_back(OP_EQUAL);
     BOOST_CHECK(CScript(direct.begin(), direct.end()).IsPayToScriptHash());
+
+    // Not considered pay-to-script-hash if using one of the OP_PUSHDATA opcodes:
     std::vector<unsigned char> pushdata1 = {OP_HASH160, OP_PUSHDATA1, 20};
     pushdata1.insert(pushdata1.end(), 20, 0);
     pushdata1.push_back(OP_EQUAL);
     BOOST_CHECK(!CScript(pushdata1.begin(), pushdata1.end()).IsPayToScriptHash());
-    std::vector<unsigned char> pushdata2 = {OP_HASH160, 20, 0};
+    std::vector<unsigned char> pushdata2 = {OP_HASH160, OP_PUSHDATA2, 20, 0};
     pushdata2.insert(pushdata2.end(), 20, 0);
     pushdata2.push_back(OP_EQUAL);
     BOOST_CHECK(!CScript(pushdata2.begin(), pushdata2.end()).IsPayToScriptHash());
-    std::vector<unsigned char> pushdata4 = {OP_HASH160, 20, 0, 0, 0};
+    std::vector<unsigned char> pushdata4 = {OP_HASH160, OP_PUSHDATA4, 20, 0, 0, 0};
     pushdata4.insert(pushdata4.end(), 20, 0);
     pushdata4.push_back(OP_EQUAL);
     BOOST_CHECK(!CScript(pushdata4.begin(), pushdata4.end()).IsPayToScriptHash());
@@ -268,7 +266,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     LOCK(cs_main);
     CCoinsView coinsDummy;
     CCoinsViewCache coins(&coinsDummy);
-    CBasicKeyStore keystore;
+    FillableSigningProvider keystore;
     CKey key[6];
     std::vector<CPubKey> keys;
     for (int i = 0; i < 6; i++)

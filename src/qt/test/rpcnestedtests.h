@@ -8,11 +8,16 @@
 #include <QObject>
 #include <QTest>
 
-#include <txdb.h>
-#include <txmempool.h>
+namespace interfaces {
+class Node;
+} // namespace interfaces
 
 class RPCNestedTests : public QObject
 {
+public:
+    RPCNestedTests(interfaces::Node& node) : m_node(node) {}
+    interfaces::Node& m_node;
+
     Q_OBJECT
 
     private Q_SLOTS:

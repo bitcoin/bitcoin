@@ -12,6 +12,7 @@
 class CRPCTable;
 class CWallet;
 class JSONRPCRequest;
+class LegacyScriptPubKeyMan;
 class UniValue;
 struct PartiallySignedTransaction;
 class CTransaction;
@@ -20,6 +21,12 @@ namespace interfaces {
 class Chain;
 class Handler;
 }
+
+//! Pointer to chain interface that needs to be declared as a global to be
+//! accessible loadwallet and createwallet methods. Due to limitations of the
+//! RPC framework, there's currently no direct way to pass in state to RPC
+//! methods without globals.
+extern interfaces::Chain* g_rpc_chain;
 
 void RegisterWalletRPCCommands(interfaces::Chain& chain, std::vector<std::unique_ptr<interfaces::Handler>>& handlers);
 // SYSCOIN
@@ -36,6 +43,7 @@ std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& reques
 std::string HelpRequiringPassphrase(const CWallet*);
 void EnsureWalletIsUnlocked(const CWallet*);
 bool EnsureWalletIsAvailable(const CWallet*, bool avoidException);
+LegacyScriptPubKeyMan& EnsureLegacyScriptPubKeyMan(CWallet& wallet);
 
 UniValue getaddressinfo(const JSONRPCRequest& request);
 UniValue signrawtransactionwithwallet(const JSONRPCRequest& request);

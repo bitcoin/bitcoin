@@ -52,13 +52,13 @@ private:
     map_t mapIndex;
 
 public:
-    CacheMultiMap(size_type nMaxSizeIn = 0)
+    explicit CacheMultiMap(size_type nMaxSizeIn = 0)
         : nMaxSize(nMaxSizeIn),
           listItems(),
           mapIndex()
     {}
 
-    CacheMultiMap(const CacheMap<K,V>& other)
+    explicit CacheMultiMap(const CacheMap<K,V>& other)
         : nMaxSize(other.nMaxSize),
           listItems(other.listItems),
           mapIndex()

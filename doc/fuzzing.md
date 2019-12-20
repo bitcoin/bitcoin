@@ -46,7 +46,7 @@ export AFLPATH=$PWD
 To build Syscoin Core using AFL instrumentation (this assumes that the
 `AFLPATH` was set as above):
 ```
-./configure --disable-ccache --disable-shared --enable-tests --enable-fuzz --disable-wallet --disable-bench --with-utils=no --with-daemon=no --with-libs=no --with-gui=no CC=${AFLPATH}/afl-gcc CXX=${AFLPATH}/afl-g++
+./configure --disable-ccache --disable-shared --enable-tests --enable-fuzz CC=${AFLPATH}/afl-gcc CXX=${AFLPATH}/afl-g++
 export AFL_HARDEN=1
 cd src/
 make
@@ -77,13 +77,13 @@ will print an error and suggestion if so.
 
 ## libFuzzer
 
-A recent version of `clang`, the address sanitizer and libFuzzer is needed (all
+A recent version of `clang`, the address/undefined sanitizers (ASan/UBSan) and libFuzzer is needed (all
 found in the `compiler-rt` runtime libraries package).
 
 To build all fuzz targets with libFuzzer, run
 
 ```
-./configure --disable-ccache --disable-wallet --disable-bench --with-utils=no --with-daemon=no --with-libs=no --with-gui=no --enable-fuzz --with-sanitizers=fuzzer,address CC=clang CXX=clang++
+./configure --disable-ccache --enable-fuzz --with-sanitizers=fuzzer,address,undefined CC=clang CXX=clang++
 make
 ```
 

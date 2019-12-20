@@ -39,6 +39,7 @@ public:
 
     /**
      * Determine data directory. Let the user choose if the current one doesn't exist.
+     * Let the user configure additional preferences such as pruning.
      *
      * @returns true if a data directory was selected, false if the user cancelled the selection
      * dialog.
@@ -46,7 +47,7 @@ public:
      * @note do NOT call global GetDataDir() before calling this function, this
      * will cause the wrong path to be cached.
      */
-    static bool pickDataDirectory(interfaces::Node& node);
+    static bool showIfNeeded(interfaces::Node& node, bool& did_show_intro, bool& prune);
 
 Q_SIGNALS:
     void requestCheck();

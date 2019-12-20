@@ -8,4 +8,3 @@ Description: Library for the Syscoin consensus protocol.
 Version: @PACKAGE_VERSION@
 Libs: -L${libdir} -lsyscoinconsensus
 Cflags: -I${includedir}
-Requires.private: libcrypto

@@ -49,6 +49,7 @@ class BlockchainTest(SyscoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
+        self.supports_cli = False
 
     def run_test(self):
         self.mine_chain()
@@ -78,7 +79,6 @@ class BlockchainTest(SyscoinTestFramework):
 
         keys = [
             'bestblockhash',
-            'bip9_softforks',
             'blocks',
             'chain',
             'chainwork',
@@ -124,6 +124,31 @@ class BlockchainTest(SyscoinTestFramework):
         assert_equal(res['prune_target_size'], 576716800)
         assert_greater_than(res['size_on_disk'], 0)
 
+        assert_equal(res['softforks'], {
+            'bip34': {'type': 'buried', 'active': False, 'height': 500},
+            'bip66': {'type': 'buried', 'active': False, 'height': 1251},
+            'bip65': {'type': 'buried', 'active': False, 'height': 1351},
+            'csv': {'type': 'buried', 'active': False, 'height': 432},
+            'segwit': {'type': 'buried', 'active': True, 'height': 0},
+            'testdummy': {
+                'type': 'bip9',
+                'bip9': {
+                    'status': 'started',
+                    'bit': 28,
+                    'start_time': 0,
+                    'timeout': 0x7fffffffffffffff,  # testdummy does not have a timeout so is set to the max int64 value
+                    'since': 144,
+                    'statistics': {
+                        'period': 144,
+                        'threshold': 108,
+                        'elapsed': 57,
+                        'count': 57,
+                        'possible': True,
+                    },
+                },
+                'active': False}
+        })
+
     def _test_getchaintxstats(self):
         self.log.info("Test getchaintxstats")
 
@@ -162,6 +187,7 @@ class BlockchainTest(SyscoinTestFramework):
         assert_equal(chaintxstats['time'], b200['time'])
         assert_equal(chaintxstats['txcount'], 201)
         assert_equal(chaintxstats['window_final_block_hash'], b200_hash)
+        assert_equal(chaintxstats['window_final_block_height'], 200)
         assert_equal(chaintxstats['window_block_count'], 199)
         assert_equal(chaintxstats['window_tx_count'], 199)
         assert_equal(chaintxstats['window_interval'], time_diff)
@@ -171,6 +197,7 @@ class BlockchainTest(SyscoinTestFramework):
         assert_equal(chaintxstats['time'], b1['time'])
         assert_equal(chaintxstats['txcount'], 2)
         assert_equal(chaintxstats['window_final_block_hash'], b1_hash)
+        assert_equal(chaintxstats['window_final_block_height'], 1)
         assert_equal(chaintxstats['window_block_count'], 0)
         assert 'window_tx_count' not in chaintxstats
         assert 'window_interval' not in chaintxstats

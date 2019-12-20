@@ -11,7 +11,6 @@
 #include <chain.h>
 #include <primitives/block.h>
 
-#include <map>
 #include <memory>
 #include <string>
 #include <utility>
@@ -48,7 +47,10 @@ class CCoinsViewDB final : public CCoinsView
 protected:
     CDBWrapper db;
 public:
-    explicit CCoinsViewDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+    /**
+     * @param[in] ldb_path    Location in the filesystem where leveldb data will be stored.
+     */
+    explicit CCoinsViewDB(fs::path ldb_path, size_t nCacheSize, bool fMemory, bool fWipe);
 
     bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
     bool HaveCoin(const COutPoint &outpoint) const override;

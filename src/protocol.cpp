@@ -34,7 +34,6 @@ const char *NOTFOUND="notfound";
 const char *FILTERLOAD="filterload";
 const char *FILTERADD="filteradd";
 const char *FILTERCLEAR="filterclear";
-const char *REJECT="reject";
 const char *SENDHEADERS="sendheaders";
 const char *FEEFILTER="feefilter";
 const char *SENDCMPCT="sendcmpct";
@@ -46,7 +45,6 @@ const char *SPORK="spork";
 const char *GETSPORKS="getsporks";
 const char *MASTERNODEPAYMENTVOTE="mnw";
 const char *MASTERNODEPAYMENTSYNC="mnget";
-const char *MNQUORUM="mn quorum"; // not implemented
 const char *MNANNOUNCE="mnb";
 const char *MNPING="mnp";
 const char *DSEG="dseg";
@@ -80,7 +78,6 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::FILTERLOAD,
     NetMsgType::FILTERADD,
     NetMsgType::FILTERCLEAR,
-    NetMsgType::REJECT,
     NetMsgType::SENDHEADERS,
     NetMsgType::FEEFILTER,
     NetMsgType::SENDCMPCT,

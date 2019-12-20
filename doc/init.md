@@ -59,11 +59,11 @@ Data directory:      `/var/lib/syscoind`
 PID file:            `/var/run/syscoind/syscoind.pid` (OpenRC and Upstart) or `/run/syscoind/syscoind.pid` (systemd)
 Lock file:           `/var/lock/subsys/syscoind` (CentOS)  
 
-The configuration file, PID directory (if applicable) and data directory
-should all be owned by the syscoin user and group.  It is advised for security
-reasons to make the configuration file and data directory only readable by the
-syscoin user and group.  Access to syscoin-cli and other syscoind rpc clients
-can then be controlled by group membership.
+The PID directory (if applicable) and data directory should both be owned by the
+syscoin user and group. It is advised for security reasons to make the
+configuration file and data directory only readable by the syscoin user and
+group. Access to syscoin-cli and other syscoind rpc clients can then be
+controlled by group membership.
 
 NOTE: When using the systemd .service file, the creation of the aforementioned
 directories and the setting of their permissions is automatically handled by

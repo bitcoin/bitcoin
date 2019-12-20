@@ -14,7 +14,7 @@
 #include <netmessagemaker.h>
 #include <spork.h>
 #include <ui_interface.h>
-
+#include <util/translation.h>
 class CMasternodeSync;
 CMasternodeSync masternodeSync;
 
@@ -102,13 +102,13 @@ void CMasternodeSync::SwitchToNextAsset(CConnman& connman)
 std::string CMasternodeSync::GetSyncStatus()
 {
     switch (masternodeSync.nRequestedMasternodeAssets) {
-        case MASTERNODE_SYNC_INITIAL:       return _("Synchronizing blockchain...");
-        case MASTERNODE_SYNC_WAITING:       return _("Synchronization pending...");
-        case MASTERNODE_SYNC_LIST:          return _("Synchronizing masternodes...");
-        case MASTERNODE_SYNC_MNW:           return _("Synchronizing masternode payments...");
-        case MASTERNODE_SYNC_GOVERNANCE:    return _("Synchronizing governance objects...");
-        case MASTERNODE_SYNC_FAILED:        return _("Synchronization failed");
-        case MASTERNODE_SYNC_FINISHED:      return _("Synchronization finished");
+        case MASTERNODE_SYNC_INITIAL:       return _("Synchronization blockchain...").translated;
+        case MASTERNODE_SYNC_WAITING:       return _("Synchronization pending...").translated;
+        case MASTERNODE_SYNC_LIST:          return _("Synchronizing masternodes...").translated;
+        case MASTERNODE_SYNC_MNW:           return _("Synchronizing masternode payments...").translated;
+        case MASTERNODE_SYNC_GOVERNANCE:    return _("Synchronizing governance objects...").translated;
+        case MASTERNODE_SYNC_FAILED:        return _("Synchronization failed").translated;
+        case MASTERNODE_SYNC_FINISHED:      return _("Synchronization finished").translated;
         default:                            return "";
     }
 }

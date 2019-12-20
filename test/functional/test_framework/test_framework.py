@@ -12,6 +12,7 @@ import os
 import pdb
 import random
 import shutil
+import subprocess
 import sys
 import tempfile
 import time
@@ -25,7 +26,7 @@ from .util import (
     PortSeed,
     assert_equal,
     check_json_precision,
-    connect_nodes_bi,
+    connect_nodes,
     disconnect_nodes,
     get_datadir_path,
     initialize_datadir,
@@ -91,19 +92,50 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
 
     def __init__(self):
         """Sets test framework defaults. Do not override this method. Instead, override the set_test_params() method"""
+        self.chain = 'regtest'
         self.setup_clean_chain = False
         self.nodes = []
         self.network_thread = None
         self.rpc_timeout = 60  # Wait for up to 60 seconds for the RPC server to respond
-        self.supports_cli = False
+        self.supports_cli = True
         self.bind_to_localhost_only = True
         self.set_test_params()
-
-        assert hasattr(self, "num_nodes"), "Test must set self.num_nodes in set_test_params()"
+        self.parse_args()
 
     def main(self):
         """Main function. This should not be overridden by the subclass test scripts."""
 
+        assert hasattr(self, "num_nodes"), "Test must set self.num_nodes in set_test_params()"
+
+        try:
+            self.setup()
+            self.run_test()
+        except JSONRPCException:
+            self.log.exception("JSONRPC error")
+            self.success = TestStatus.FAILED
+        except SkipTest as e:
+            self.log.warning("Test Skipped: %s" % e.message)
+            self.success = TestStatus.SKIPPED
+        except AssertionError:
+            self.log.exception("Assertion failed")
+            self.success = TestStatus.FAILED
+        except KeyError:
+            self.log.exception("Key error")
+            self.success = TestStatus.FAILED
+        except subprocess.CalledProcessError as e:
+            self.log.exception("Called Process failed with '{}'".format(e.output))
+            self.success = TestStatus.FAILED
+        except Exception:
+            self.log.exception("Unexpected exception caught during testing")
+            self.success = TestStatus.FAILED
+        except KeyboardInterrupt:
+            self.log.warning("Exiting after keyboard interrupt")
+            self.success = TestStatus.FAILED
+        finally:
+            exit_code = self.shutdown()
+            sys.exit(exit_code)
+
+    def parse_args(self):
         parser = argparse.ArgumentParser(usage="%(prog)s [options]")
         parser.add_argument("--nocleanup", dest="nocleanup", default=False, action="store_true",
                             help="Leave syscoinds and test.* datadir on exit or error")
@@ -129,10 +161,15 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
                             help="use syscoin-cli instead of RPC for all commands")
         parser.add_argument("--perf", dest="perf", default=False, action="store_true",
                             help="profile running nodes with perf for the duration of the test")
+        parser.add_argument("--valgrind", dest="valgrind", default=False, action="store_true",
+                            help="run nodes under the valgrind memory error detector: expect at least a ~10x slowdown, valgrind 3.14 or later required")
         parser.add_argument("--randomseed", type=int,
                             help="set a random seed for deterministically reproducing a previous test run")
         self.add_options(parser)
         self.options = parser.parse_args()
+
+    def setup(self):
+        """Call this method to start up the test framework object with options set."""
 
         PortSeed.n = self.options.port_seed
 
@@ -180,33 +217,20 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         self.network_thread = NetworkThread()
         self.network_thread.start()
 
-        success = TestStatus.FAILED
+        if self.options.usecli:
+            if not self.supports_cli:
+                raise SkipTest("--usecli specified but test does not support using CLI")
+            self.skip_if_no_cli()
+        self.skip_test_if_missing_module()
+        self.setup_chain()
+        self.setup_network()
 
-        try:
-            if self.options.usecli:
-                if not self.supports_cli:
-                    raise SkipTest("--usecli specified but test does not support using CLI")
-                self.skip_if_no_cli()
-            self.skip_test_if_missing_module()
-            self.setup_chain()
-            self.setup_network()
-            self.run_test()
-            success = TestStatus.PASSED
-        except JSONRPCException as e:
-            self.log.exception("JSONRPC error")
-        except SkipTest as e:
-            self.log.warning("Test Skipped: %s" % e.message)
-            success = TestStatus.SKIPPED
-        except AssertionError as e:
-            self.log.exception("Assertion failed")
-        except KeyError as e:
-            self.log.exception("Key error")
-        except Exception as e:
-            self.log.exception("Unexpected exception caught during testing")
-        except KeyboardInterrupt as e:
-            self.log.warning("Exiting after keyboard interrupt")
+        self.success = TestStatus.PASSED
 
-        if success == TestStatus.FAILED and self.options.pdbonfailure:
+    def shutdown(self):
+        """Call this method to shut down the test framework object."""
+
+        if self.success == TestStatus.FAILED and self.options.pdbonfailure:
             print("Testcase failed. Attaching python debugger. Enter ? for help")
             pdb.set_trace()
 
@@ -224,7 +248,7 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         should_clean_up = (
             not self.options.nocleanup and
             not self.options.noshutdown and
-            success != TestStatus.FAILED and
+            self.success != TestStatus.FAILED and
             not self.options.perf
         )
         if should_clean_up:
@@ -237,20 +261,33 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
             self.log.warning("Not cleaning up dir {}".format(self.options.tmpdir))
             cleanup_tree_on_exit = False
 
-        if success == TestStatus.PASSED:
+        if self.success == TestStatus.PASSED:
             self.log.info("Tests successful")
             exit_code = TEST_EXIT_PASSED
-        elif success == TestStatus.SKIPPED:
+        elif self.success == TestStatus.SKIPPED:
             self.log.info("Test skipped")
             exit_code = TEST_EXIT_SKIPPED
         else:
             self.log.error("Test failed. Test logging available at %s/test_framework.log", self.options.tmpdir)
             self.log.error("Hint: Call {} '{}' to consolidate all logs".format(os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + "/../combine_logs.py"), self.options.tmpdir))
             exit_code = TEST_EXIT_FAILED
-        logging.shutdown()
+        # Logging.shutdown will not remove stream- and filehandlers, so we must
+        # do it explicitly. Handlers are removed so the next test run can apply
+        # different log handler settings.
+        # See: https://docs.python.org/3/library/logging.html#logging.shutdown
+        for h in list(self.log.handlers):
+            h.flush()
+            h.close()
+            self.log.removeHandler(h)
+        rpc_logger = logging.getLogger("BitcoinRPC")
+        for h in list(rpc_logger.handlers):
+            h.flush()
+            rpc_logger.removeHandler(h)
         if cleanup_tree_on_exit:
             shutil.rmtree(self.options.tmpdir)
-        sys.exit(exit_code)
+
+        self.nodes.clear()
+        return exit_code
 
     # Methods to override in subclass test scripts.
     def set_test_params(self):
@@ -280,8 +317,18 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         # Connect the nodes as a "chain".  This allows us
         # to split the network between nodes 1 and 2 to get
         # two halves that can work on competing chains.
+        #
+        # Topology looks like this:
+        # node0 <-- node1 <-- node2 <-- node3
+        #
+        # If all nodes are in IBD (clean chain from genesis), node0 is assumed to be the source of blocks (miner). To
+        # ensure block propagation, all nodes will establish outgoing connections toward node0.
+        # See fPreferredDownload in net_processing.
+        #
+        # If further outbound connections are needed, they can be added at the beginning of the test with e.g.
+        # connect_nodes(self.nodes[1], 2)
         for i in range(self.num_nodes - 1):
-            connect_nodes_bi(self.nodes, i, i + 1)
+            connect_nodes(self.nodes[i + 1], i)
         self.sync_all()
 
     def setup_nodes(self):
@@ -342,6 +389,7 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
             self.nodes.append(TestNode(
                 i,
                 get_datadir_path(self.options.tmpdir, i),
+                chain=self.chain,
                 rpchost=rpchost,
                 timewait=self.rpc_timeout,
                 syscoind=binary[i],
@@ -352,6 +400,7 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
                 extra_args=extra_args[i],
                 use_cli=self.options.usecli,
                 start_perf=self.options.perf,
+                use_valgrind=self.options.valgrind,
             ))
 
     def start_node(self, i, *args, **kwargs):
@@ -421,7 +470,7 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         """
         Join the (previously split) network halves together.
         """
-        connect_nodes_bi(self.nodes, 1, 2)
+        connect_nodes(self.nodes[1], 2)
         self.sync_all()
 
     def sync_blocks(self, nodes=None, **kwargs):
@@ -477,11 +526,12 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         if not os.path.isdir(cache_node_dir):
             self.log.debug("Creating cache directory {}".format(cache_node_dir))
 
-            initialize_datadir(self.options.cachedir, CACHE_NODE_ID)
+            initialize_datadir(self.options.cachedir, CACHE_NODE_ID, self.chain)
             self.nodes.append(
                 TestNode(
                     CACHE_NODE_ID,
                     cache_node_dir,
+                    chain=self.chain,
                     extra_conf=["bind=127.0.0.1"],
                     extra_args=['-disablewallet'],
                     rpchost=None,
@@ -515,7 +565,7 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
             self.nodes = []
 
             def cache_path(*paths):
-                return os.path.join(cache_node_dir, "regtest", *paths)
+                return os.path.join(cache_node_dir, self.chain, *paths)
 
             os.rmdir(cache_path('wallets'))  # Remove empty wallets dir
             for entry in os.listdir(cache_path()):
@@ -526,7 +576,7 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
             self.log.debug("Copy cache directory {} to node {}".format(cache_node_dir, i))
             to_dir = get_datadir_path(self.options.tmpdir, i)
             shutil.copytree(cache_node_dir, to_dir)
-            initialize_datadir(self.options.tmpdir, i)  # Overwrite port/rpcport in syscoin.conf
+            initialize_datadir(self.options.tmpdir, i, self.chain)  # Overwrite port/rpcport in syscoin.conf
 
     def _initialize_chain_clean(self):
         """Initialize empty blockchain for use by the test.
@@ -534,7 +584,7 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         Create an empty blockchain and num_nodes wallets.
         Useful if a test case wants complete control over initialization."""
         for i in range(self.num_nodes):
-            initialize_datadir(self.options.tmpdir, i)
+            initialize_datadir(self.options.tmpdir, i, self.chain)
 
     def skip_if_no_py3_zmq(self):
         """Attempt to import the zmq package and skip the test if the import fails."""
@@ -553,6 +603,11 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         if not self.is_wallet_compiled():
             raise SkipTest("wallet has not been compiled.")
 
+    def skip_if_no_wallet_tool(self):
+        """Skip the running test if syscoin-wallet has not been compiled."""
+        if not self.is_wallet_tool_compiled():
+            raise SkipTest("syscoin-wallet has not been compiled")
+
     def skip_if_no_cli(self):
         """Skip the running test if syscoin-cli has not been compiled."""
         if not self.is_cli_compiled():
@@ -565,6 +620,10 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
     def is_wallet_compiled(self):
         """Checks whether the wallet module was compiled."""
         return self.config["components"].getboolean("ENABLE_WALLET")
+
+    def is_wallet_tool_compiled(self):
+        """Checks whether syscoin-wallet was compiled."""
+        return self.config["components"].getboolean("ENABLE_WALLET_TOOL")
 
     def is_zmq_compiled(self):
         """Checks whether the zmq module was compiled."""

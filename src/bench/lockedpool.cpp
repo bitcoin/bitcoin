@@ -6,7 +6,6 @@
 
 #include <support/lockedpool.h>
 
-#include <iostream>
 #include <vector>
 
 #define ASIZE 2048

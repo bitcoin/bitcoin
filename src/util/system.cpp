@@ -7,8 +7,9 @@
 
 #include <chainparamsbase.h>
 #include <util/strencodings.h>
+#include <util/string.h>
+#include <util/translation.h>
 
-#include <stdarg.h>
 
 #if (defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__))
 #include <pthread.h>
@@ -69,9 +70,9 @@
 #include <rpc/server.h>
 bool fMasternodeMode = false;
 bool fUnitTest = false;
+bool bGethTestnet = false;
 bool fTPSTest = false;
 bool fTPSTestEnabled = false;
-bool fConcurrentProcessing = true;
 bool fLiteMode = false;
 bool fZMQAssetAllocation = false;
 bool fZMQAsset = false;
@@ -89,7 +90,10 @@ pid_t relayerPID = 0;
 std::string fGethSyncStatus = "waiting to sync...";
 bool fGethSynced = false;
 bool fLoaded = false;
+bool bb = true;
 std::vector<JSONRPCRequest> vecTPSRawTransactions;
+#include <univalue.h>
+
 // Application startup time (used for uptime calculation)
 const int64_t nStartupTime = GetTime();
 
@@ -232,105 +236,10 @@ static bool InterpretBool(const std::string& strValue)
     return (atoi(strValue) != 0);
 }
 
-/** Internal helper functions for ArgsManager */
-class ArgsManagerHelper {
-public:
-    typedef std::map<std::string, std::vector<std::string>> MapArgs;
-
-    /** Determine whether to use config settings in the default section,
-     *  See also comments around ArgsManager::ArgsManager() below. */
-    static inline bool UseDefaultSection(const ArgsManager& am, const std::string& arg) EXCLUSIVE_LOCKS_REQUIRED(am.cs_args)
-    {
-        return (am.m_network == CBaseChainParams::MAIN || am.m_network_only_args.count(arg) == 0);
-    }
-
-    /** Convert regular argument into the network-specific setting */
-    static inline std::string NetworkArg(const ArgsManager& am, const std::string& arg)
-    {
-        assert(arg.length() > 1 && arg[0] == '-');
-        return "-" + am.m_network + "." + arg.substr(1);
-    }
-
-    /** Find arguments in a map and add them to a vector */
-    static inline void AddArgs(std::vector<std::string>& res, const MapArgs& map_args, const std::string& arg)
-    {
-        auto it = map_args.find(arg);
-        if (it != map_args.end()) {
-            res.insert(res.end(), it->second.begin(), it->second.end());
-        }
-    }
-
-    /** Return true/false if an argument is set in a map, and also
-     *  return the first (or last) of the possibly multiple values it has
-     */
-    static inline std::pair<bool,std::string> GetArgHelper(const MapArgs& map_args, const std::string& arg, bool getLast = false)
-    {
-        auto it = map_args.find(arg);
-
-        if (it == map_args.end() || it->second.empty()) {
-            return std::make_pair(false, std::string());
-        }
-
-        if (getLast) {
-            return std::make_pair(true, it->second.back());
-        } else {
-            return std::make_pair(true, it->second.front());
-        }
-    }
-
-    /* Get the string value of an argument, returning a pair of a boolean
-     * indicating the argument was found, and the value for the argument
-     * if it was found (or the empty string if not found).
-     */
-    static inline std::pair<bool,std::string> GetArg(const ArgsManager &am, const std::string& arg)
-    {
-        LOCK(am.cs_args);
-        std::pair<bool,std::string> found_result(false, std::string());
-
-        // We pass "true" to GetArgHelper in order to return the last
-        // argument value seen from the command line (so "syscoind -foo=bar
-        // -foo=baz" gives GetArg(am,"foo")=={true,"baz"}
-        found_result = GetArgHelper(am.m_override_args, arg, true);
-        if (found_result.first) {
-            return found_result;
-        }
-
-        // But in contrast we return the first argument seen in a config file,
-        // so "foo=bar \n foo=baz" in the config file gives
-        // GetArg(am,"foo")={true,"bar"}
-        if (!am.m_network.empty()) {
-            found_result = GetArgHelper(am.m_config_args, NetworkArg(am, arg));
-            if (found_result.first) {
-                return found_result;
-            }
-        }
-
-        if (UseDefaultSection(am, arg)) {
-            found_result = GetArgHelper(am.m_config_args, arg);
-            if (found_result.first) {
-                return found_result;
-            }
-        }
-
-        return found_result;
-    }
-
-    /* Special test for -testnet and -regtest args, because we
-     * don't want to be confused by craziness like "[regtest] testnet=1"
-     */
-    static inline bool GetNetBoolArg(const ArgsManager &am, const std::string& net_arg) EXCLUSIVE_LOCKS_REQUIRED(am.cs_args)
-    {
-        std::pair<bool,std::string> found_result(false,std::string());
-        found_result = GetArgHelper(am.m_override_args, net_arg, true);
-        if (!found_result.first) {
-            found_result = GetArgHelper(am.m_config_args, net_arg, true);
-            if (!found_result.first) {
-                return false; // not set
-            }
-        }
-        return InterpretBool(found_result.second); // is set, so evaluate
-    }
-};
+static std::string SettingName(const std::string& arg)
+{
+    return arg.size() > 0 && arg[0] == '-' ? arg.substr(1) : arg;
+}
 
 /**
  * Interpret -nofoo as if the user supplied -foo=0.
@@ -338,57 +247,57 @@ public:
  * This method also tracks when the -no form was supplied, and if so,
  * checks whether there was a double-negative (-nofoo=0 -> -foo=1).
  *
- * If there was not a double negative, it removes the "no" from the key,
- * and returns true, indicating the caller should clear the args vector
- * to indicate a negated option.
+ * If there was not a double negative, it removes the "no" from the key
+ * and returns false.
  *
- * If there was a double negative, it removes "no" from the key, sets the
- * value to "1" and returns false.
+ * If there was a double negative, it removes "no" from the key, and
+ * returns true.
  *
- * If there was no "no", it leaves key and value untouched and returns
- * false.
+ * If there was no "no", it returns the string value untouched.
  *
  * Where an option was negated can be later checked using the
  * IsArgNegated() method. One use case for this is to have a way to disable
  * options that are not normally boolean (e.g. using -nodebuglogfile to request
  * that debug log output is not sent to any file at all).
  */
-static bool InterpretNegatedOption(std::string& key, std::string& val)
-{
-    assert(key[0] == '-');
 
+static util::SettingsValue InterpretOption(std::string& section, std::string& key, const std::string& value)
+{
+    // Split section name from key name for keys like "testnet.foo" or "regtest.bar"
     size_t option_index = key.find('.');
-    if (option_index == std::string::npos) {
-        option_index = 1;
-    } else {
-        ++option_index;
+    if (option_index != std::string::npos) {
+        section = key.substr(0, option_index);
+        key.erase(0, option_index + 1);
     }
-    if (key.substr(option_index, 2) == "no") {
-        bool bool_val = InterpretBool(val);
-        key.erase(option_index, 2);
-        if (!bool_val ) {
-            // Double negatives like -nofoo=0 are supported (but discouraged)
-            LogPrintf("Warning: parsed potentially confusing double-negative %s=%s\n", key, val);
-            val = "1";
-        } else {
+    if (key.substr(0, 2) == "no") {
+        key.erase(0, 2);
+        // Double negatives like -nofoo=0 are supported (but discouraged)
+        if (!InterpretBool(value)) {
+            LogPrintf("Warning: parsed potentially confusing double-negative -%s=%s\n", key, value);
             return true;
         }
+        return false;
     }
-    return false;
+    return value;
 }
 
-ArgsManager::ArgsManager() :
-    /* These options would cause cross-contamination if values for
-     * mainnet were used while running on regtest/testnet (or vice-versa).
-     * Setting them as section_only_args ensures that sharing a config file
-     * between mainnet and regtest/testnet won't cause problems due to these
-     * parameters by accident. */
-    m_network_only_args{
-      "-addnode", "-connect",
-      "-port", "-bind",
-      "-rpcport", "-rpcbind",
-      "-wallet",
+/**
+ * Check settings value validity according to flags.
+ *
+ * TODO: Add more meaningful error checks here in the future
+ * See "here's how the flags are meant to behave" in
+ * https://github.com/bitcoin/bitcoin/pull/16097#issuecomment-514627823
+ */
+static bool CheckValid(const std::string& key, const util::SettingsValue& val, unsigned int flags, std::string& error)
+{
+    if (val.isBool() && !(flags & ArgsManager::ALLOW_BOOL)) {
+        error = strprintf("Negating of -%s is meaningless and therefore forbidden", key);
+        return false;
     }
+    return true;
+}
+
+ArgsManager::ArgsManager()
 {
     // nothing to do
 }
@@ -406,22 +315,9 @@ const std::set<std::string> ArgsManager::GetUnsuitableSectionOnlyArgs() const
     if (m_network == CBaseChainParams::MAIN) return std::set<std::string> {};
 
     for (const auto& arg : m_network_only_args) {
-        std::pair<bool, std::string> found_result;
-
-        // if this option is overridden it's fine
-        found_result = ArgsManagerHelper::GetArgHelper(m_override_args, arg);
-        if (found_result.first) continue;
-
-        // if there's a network-specific value for this option, it's fine
-        found_result = ArgsManagerHelper::GetArgHelper(m_config_args, ArgsManagerHelper::NetworkArg(*this, arg));
-        if (found_result.first) continue;
-
-        // if there isn't a default value for this option, it's fine
-        found_result = ArgsManagerHelper::GetArgHelper(m_config_args, arg);
-        if (!found_result.first) continue;
-
-        // otherwise, issue a warning
-        unsuitables.insert(arg);
+        if (OnlyHasDefaultSectionSetting(m_settings, m_network, SettingName(arg))) {
+            unsuitables.insert(arg);
+        }
     }
     return unsuitables;
 }
@@ -450,10 +346,20 @@ void ArgsManager::SelectConfigNetwork(const std::string& network)
 bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::string& error)
 {
     LOCK(cs_args);
-    m_override_args.clear();
+    m_settings.command_line_options.clear();
 
     for (int i = 1; i < argc; i++) {
         std::string key(argv[i]);
+
+#ifdef MAC_OSX
+        // At the first time when a user gets the "App downloaded from the
+        // internet" warning, and clicks the Open button, macOS passes
+        // a unique process serial number (PSN) as -psn_... command-line
+        // argument, which we filter out.
+        if (key.substr(0, 5) == "-psn_") continue;
+#endif
+
+        if (key == "-") break; //syscoin-tx using stdin
         std::string val;
         size_t is_index = key.find('=');
         if (is_index != std::string::npos) {
@@ -461,7 +367,7 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
             key.erase(is_index);
         }
 #ifdef WIN32
-        std::transform(key.begin(), key.end(), key.begin(), ToLower);
+        key = ToLower(key);
         if (key[0] == '/')
             key[0] = '-';
 #endif
@@ -473,117 +379,86 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
         if (key.length() > 1 && key[1] == '-')
             key.erase(0, 1);
 
-        // Check for -nofoo
-        if (InterpretNegatedOption(key, val)) {
-            m_override_args[key].clear();
-        } else {
-            m_override_args[key].push_back(val);
-        }
-
-        // Check that the arg is known
-        if (!(IsSwitchChar(key[0]) && key.size() == 1)) {
-            if (!IsArgKnown(key)) {
-                error = strprintf("Invalid parameter %s", key.c_str());
+        // Transform -foo to foo
+        key.erase(0, 1);
+        std::string section;
+        util::SettingsValue value = InterpretOption(section, key, val);
+        Optional<unsigned int> flags = GetArgFlags('-' + key);
+        if (flags) {
+            if (!CheckValid(key, value, *flags, error)) {
                 return false;
             }
-        }
-    }
-
-    // we do not allow -includeconf from command line, so we clear it here
-    auto it = m_override_args.find("-includeconf");
-    if (it != m_override_args.end()) {
-        if (it->second.size() > 0) {
-            for (const auto& ic : it->second) {
-                error += "-includeconf cannot be used from commandline; -includeconf=" + ic + "\n";
+            // Weird behavior preserved for backwards compatibility: command
+            // line options with section prefixes are allowed but ignored. It
+            // would be better if these options triggered the Invalid parameter
+            // error below.
+            if (section.empty()) {
+                m_settings.command_line_options[key].push_back(value);
             }
+        } else {
+            error = strprintf("Invalid parameter -%s", key);
             return false;
         }
     }
-    return true;
+
+    // we do not allow -includeconf from command line
+    bool success = true;
+    if (auto* includes = util::FindKey(m_settings.command_line_options, "includeconf")) {
+        for (const auto& include : util::SettingsSpan(*includes)) {
+            error += "-includeconf cannot be used from commandline; -includeconf=" + include.get_str() + "\n";
+            success = false;
+        }
+    }
+    return success;
 }
 
-bool ArgsManager::IsArgKnown(const std::string& key) const
+Optional<unsigned int> ArgsManager::GetArgFlags(const std::string& name) const
 {
-    size_t option_index = key.find('.');
-    std::string arg_no_net;
-    if (option_index == std::string::npos) {
-        arg_no_net = key;
-    } else {
-        arg_no_net = std::string("-") + key.substr(option_index + 1, std::string::npos);
-    }
-
     LOCK(cs_args);
     for (const auto& arg_map : m_available_args) {
-        if (arg_map.second.count(arg_no_net)) return true;
+        const auto search = arg_map.second.find(name);
+        if (search != arg_map.second.end()) {
+            return search->second.m_flags;
+        }
     }
-    return false;
+    return nullopt;
 }
 
 std::vector<std::string> ArgsManager::GetArgs(const std::string& strArg) const
 {
-    std::vector<std::string> result = {};
-    if (IsArgNegated(strArg)) return result; // special case
-
-    LOCK(cs_args);
-
-    ArgsManagerHelper::AddArgs(result, m_override_args, strArg);
-    if (!m_network.empty()) {
-        ArgsManagerHelper::AddArgs(result, m_config_args, ArgsManagerHelper::NetworkArg(*this, strArg));
+    std::vector<std::string> result;
+    for (const util::SettingsValue& value : GetSettingsList(strArg)) {
+        result.push_back(value.isFalse() ? "0" : value.isTrue() ? "1" : value.get_str());
     }
-
-    if (ArgsManagerHelper::UseDefaultSection(*this, strArg)) {
-        ArgsManagerHelper::AddArgs(result, m_config_args, strArg);
-    }
-
     return result;
 }
 
 bool ArgsManager::IsArgSet(const std::string& strArg) const
 {
-    if (IsArgNegated(strArg)) return true; // special case
-    return ArgsManagerHelper::GetArg(*this, strArg).first;
+    return !GetSetting(strArg).isNull();
 }
 
 bool ArgsManager::IsArgNegated(const std::string& strArg) const
 {
-    LOCK(cs_args);
-
-    const auto& ov = m_override_args.find(strArg);
-    if (ov != m_override_args.end()) return ov->second.empty();
-
-    if (!m_network.empty()) {
-        const auto& cfs = m_config_args.find(ArgsManagerHelper::NetworkArg(*this, strArg));
-        if (cfs != m_config_args.end()) return cfs->second.empty();
-    }
-
-    const auto& cf = m_config_args.find(strArg);
-    if (cf != m_config_args.end()) return cf->second.empty();
-
-    return false;
+    return GetSetting(strArg).isFalse();
 }
 
 std::string ArgsManager::GetArg(const std::string& strArg, const std::string& strDefault) const
 {
-    if (IsArgNegated(strArg)) return "0";
-    std::pair<bool,std::string> found_res = ArgsManagerHelper::GetArg(*this, strArg);
-    if (found_res.first) return found_res.second;
-    return strDefault;
+    const util::SettingsValue value = GetSetting(strArg);
+    return value.isNull() ? strDefault : value.isFalse() ? "0" : value.isTrue() ? "1" : value.get_str();
 }
 
 int64_t ArgsManager::GetArg(const std::string& strArg, int64_t nDefault) const
 {
-    if (IsArgNegated(strArg)) return 0;
-    std::pair<bool,std::string> found_res = ArgsManagerHelper::GetArg(*this, strArg);
-    if (found_res.first) return atoi64(found_res.second);
-    return nDefault;
+    const util::SettingsValue value = GetSetting(strArg);
+    return value.isNull() ? nDefault : value.isFalse() ? 0 : value.isTrue() ? 1 : value.isNum() ? value.get_int64() : atoi64(value.get_str());
 }
 
 bool ArgsManager::GetBoolArg(const std::string& strArg, bool fDefault) const
 {
-    if (IsArgNegated(strArg)) return false;
-    std::pair<bool,std::string> found_res = ArgsManagerHelper::GetArg(*this, strArg);
-    if (found_res.first) return InterpretBool(found_res.second);
-    return fDefault;
+    const util::SettingsValue value = GetSetting(strArg);
+    return value.isNull() ? fDefault : value.isBool() ? value.get_bool() : InterpretBool(value.get_str());
 }
 
 bool ArgsManager::SoftSetArg(const std::string& strArg, const std::string& strValue)
@@ -605,27 +480,32 @@ bool ArgsManager::SoftSetBoolArg(const std::string& strArg, bool fValue)
 void ArgsManager::ForceSetArg(const std::string& strArg, const std::string& strValue)
 {
     LOCK(cs_args);
-    m_override_args[strArg] = {strValue};
+    m_settings.forced_settings[SettingName(strArg)] = strValue;
 }
 
-void ArgsManager::AddArg(const std::string& name, const std::string& help, const bool debug_only, const OptionsCategory& cat)
+void ArgsManager::AddArg(const std::string& name, const std::string& help, unsigned int flags, const OptionsCategory& cat)
 {
     // Split arg name from its help param
     size_t eq_index = name.find('=');
     if (eq_index == std::string::npos) {
         eq_index = name.size();
     }
+    std::string arg_name = name.substr(0, eq_index);
 
     LOCK(cs_args);
     std::map<std::string, Arg>& arg_map = m_available_args[cat];
-    auto ret = arg_map.emplace(name.substr(0, eq_index), Arg(name.substr(eq_index, name.size() - eq_index), help, debug_only));
+    auto ret = arg_map.emplace(arg_name, Arg{name.substr(eq_index, name.size() - eq_index), help, flags});
     assert(ret.second); // Make sure an insertion actually happened
+
+    if (flags & ArgsManager::NETWORK_ONLY) {
+        m_network_only_args.emplace(arg_name);
+    }
 }
 
 void ArgsManager::AddHiddenArgs(const std::vector<std::string>& names)
 {
     for (const std::string& name : names) {
-        AddArg(name, "", false, OptionsCategory::HIDDEN);
+        AddArg(name, "", ArgsManager::ALLOW_ANY, OptionsCategory::HIDDEN);
     }
 }
 
@@ -684,7 +564,7 @@ std::string ArgsManager::GetHelpMessage() const
         if (arg_map.first == OptionsCategory::HIDDEN) break;
 
         for (const auto& arg : arg_map.second) {
-            if (show_debug || !arg.second.m_debug_only) {
+            if (show_debug || !(arg.second.m_flags & ArgsManager::DEBUG_ONLY)) {
                 std::string name;
                 if (arg.second.m_help_param.empty()) {
                     name = arg.first;
@@ -705,7 +585,7 @@ bool HelpRequested(const ArgsManager& args)
 
 void SetupHelpOptions(ArgsManager& args)
 {
-    args.AddArg("-?", "Print this help message and exit", false, OptionsCategory::OPTIONS);
+    args.AddArg("-?", "Print this help message and exit", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     args.AddHiddenArgs({"-h", "-help"});
 }
 
@@ -744,7 +624,7 @@ void PrintExceptionContinue(const std::exception* pex, const char* pszThread)
 {
     std::string message = FormatException(pex, pszThread);
     LogPrintf("\n\n************************\n%s\n", message);
-    fprintf(stderr, "\n\n************************\n%s\n", message.c_str());
+    tfm::format(std::cerr, "\n\n************************\n%s\n", message);
 }
 
 fs::path GetDefaultDataDir()
@@ -776,19 +656,16 @@ fs::path GetDefaultDataDir()
 static fs::path g_blocks_path_cache_net_specific;
 static fs::path pathCached;
 static fs::path pathCachedNetSpecific;
-static CCriticalSection csPathCached;
+static RecursiveMutex csPathCached;
 
 const fs::path &GetBlocksDir()
 {
-
     LOCK(csPathCached);
-
     fs::path &path = g_blocks_path_cache_net_specific;
 
-    // This can be called during exceptions by LogPrintf(), so we cache the
-    // value so we don't have to do memory allocations after that.
-    if (!path.empty())
-        return path;
+    // Cache the path to avoid calling fs::create_directories on every call of
+    // this function
+    if (!path.empty()) return path;
 
     if (gArgs.IsArgSet("-blocksdir")) {
         path = fs::system_complete(gArgs.GetArg("-blocksdir", ""));
@@ -808,18 +685,16 @@ const fs::path &GetBlocksDir()
 
 const fs::path &GetDataDir(bool fNetSpecific)
 {
-
     LOCK(csPathCached);
-
     fs::path &path = fNetSpecific ? pathCachedNetSpecific : pathCached;
 
-    // This can be called during exceptions by LogPrintf(), so we cache the
-    // value so we don't have to do memory allocations after that.
-    if (!path.empty())
-        return path;
+    // Cache the path to avoid calling fs::create_directories on every call of
+    // this function
+    if (!path.empty()) return path;
 
-    if (gArgs.IsArgSet("-datadir")) {
-        path = fs::system_complete(gArgs.GetArg("-datadir", ""));
+    std::string datadir = gArgs.GetArg("-datadir", "");
+    if (!datadir.empty()) {
+        path = fs::system_complete(datadir);
         if (!fs::is_directory(path)) {
             path = "";
             return path;
@@ -836,6 +711,12 @@ const fs::path &GetDataDir(bool fNetSpecific)
     }
 
     return path;
+}
+
+bool CheckDataDirOption()
+{
+    std::string datadir = gArgs.GetArg("-datadir", "");
+    return datadir.empty() || fs::is_directory(fs::system_complete(datadir));
 }
 
 void ClearDatadirCache()
@@ -858,15 +739,6 @@ fs::path GetMasternodeConfigFile()
     if (!pathConfigFile.is_absolute())
         pathConfigFile = GetDataDir() / pathConfigFile;
     return pathConfigFile;
-}
-static std::string TrimString(const std::string& str, const std::string& pattern)
-{
-    std::string::size_type front = str.find_first_not_of(pattern);
-    if (front == std::string::npos) {
-        return std::string();
-    }
-    std::string::size_type end = str.find_last_not_of(pattern);
-    return str.substr(front, end - front + 1);
 }
 
 static bool GetConfigOptions(std::istream& stream, const std::string& filepath, std::string& error, std::vector<std::pair<std::string, std::string>>& options, std::list<SectionInfo>& sections)
@@ -922,22 +794,21 @@ bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& file
         return false;
     }
     for (const std::pair<std::string, std::string>& option : options) {
-        std::string strKey = std::string("-") + option.first;
-        std::string strValue = option.second;
-
-        if (InterpretNegatedOption(strKey, strValue)) {
-            m_config_args[strKey].clear();
-        } else {
-            m_config_args[strKey].push_back(strValue);
-        }
-
-        // Check that the arg is known
-        if (!IsArgKnown(strKey)) {
-            if (!ignore_invalid_keys) {
-                error = strprintf("Invalid configuration value %s", option.first.c_str());
+        std::string section;
+        std::string key = option.first;
+        util::SettingsValue value = InterpretOption(section, key, option.second);
+        Optional<unsigned int> flags = GetArgFlags('-' + key);
+        if (flags) {
+            if (!CheckValid(key, value, *flags, error)) {
                 return false;
-            } else {
+            }
+            m_settings.ro_config[section][key].push_back(value);
+        } else {
+            if (ignore_invalid_keys) {
                 LogPrintf("Ignoring unknown configuration value %s\n", option.first);
+            } else {
+                error = strprintf("Invalid configuration value %s", option.first);
+                return false;
             }
         }
     }
@@ -948,7 +819,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
 {
     {
         LOCK(cs_args);
-        m_config_args.clear();
+        m_settings.ro_config.clear();
         m_config_sections.clear();
     }
 
@@ -960,66 +831,72 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
         if (!ReadConfigStream(stream, confPath, error, ignore_invalid_keys)) {
             return false;
         }
-        // if there is an -includeconf in the override args, but it is empty, that means the user
-        // passed '-noincludeconf' on the command line, in which case we should not include anything
-        bool emptyIncludeConf;
+        // `-includeconf` cannot be included in the command line arguments except
+        // as `-noincludeconf` (which indicates that no included conf file should be used).
+        bool use_conf_file{true};
         {
             LOCK(cs_args);
-            emptyIncludeConf = m_override_args.count("-includeconf") == 0;
+            if (auto* includes = util::FindKey(m_settings.command_line_options, "includeconf")) {
+                // ParseParameters() fails if a non-negated -includeconf is passed on the command-line
+                assert(util::SettingsSpan(*includes).last_negated());
+                use_conf_file = false;
+            }
         }
-        if (emptyIncludeConf) {
+        if (use_conf_file) {
             std::string chain_id = GetChainName();
-            std::vector<std::string> includeconf(GetArgs("-includeconf"));
-            {
-                // We haven't set m_network yet (that happens in SelectParams()), so manually check
-                // for network.includeconf args.
-                std::vector<std::string> includeconf_net(GetArgs(std::string("-") + chain_id + ".includeconf"));
-                includeconf.insert(includeconf.end(), includeconf_net.begin(), includeconf_net.end());
-            }
+            std::vector<std::string> conf_file_names;
 
-            // Remove -includeconf from configuration, so we can warn about recursion
-            // later
-            {
+            auto add_includes = [&](const std::string& network, size_t skip = 0) {
+                size_t num_values = 0;
                 LOCK(cs_args);
-                m_config_args.erase("-includeconf");
-                m_config_args.erase(std::string("-") + chain_id + ".includeconf");
-            }
+                if (auto* section = util::FindKey(m_settings.ro_config, network)) {
+                    if (auto* values = util::FindKey(*section, "includeconf")) {
+                        for (size_t i = std::max(skip, util::SettingsSpan(*values).negated()); i < values->size(); ++i) {
+                            conf_file_names.push_back((*values)[i].get_str());
+                        }
+                        num_values = values->size();
+                    }
+                }
+                return num_values;
+            };
 
-            for (const std::string& to_include : includeconf) {
-                fsbridge::ifstream include_config(GetConfigFile(to_include));
-                if (include_config.good()) {
-                    if (!ReadConfigStream(include_config, to_include, error, ignore_invalid_keys)) {
+            // We haven't set m_network yet (that happens in SelectParams()), so manually check
+            // for network.includeconf args.
+            const size_t chain_includes = add_includes(chain_id);
+            const size_t default_includes = add_includes({});
+
+            for (const std::string& conf_file_name : conf_file_names) {
+                fsbridge::ifstream conf_file_stream(GetConfigFile(conf_file_name));
+                if (conf_file_stream.good()) {
+                    if (!ReadConfigStream(conf_file_stream, conf_file_name, error, ignore_invalid_keys)) {
                         return false;
                     }
-                    LogPrintf("Included configuration file %s\n", to_include.c_str());
+                    LogPrintf("Included configuration file %s\n", conf_file_name);
                 } else {
-                    error = "Failed to include configuration file " + to_include;
+                    error = "Failed to include configuration file " + conf_file_name;
                     return false;
                 }
             }
 
             // Warn about recursive -includeconf
-            includeconf = GetArgs("-includeconf");
-            {
-                std::vector<std::string> includeconf_net(GetArgs(std::string("-") + chain_id + ".includeconf"));
-                includeconf.insert(includeconf.end(), includeconf_net.begin(), includeconf_net.end());
-                std::string chain_id_final = GetChainName();
-                if (chain_id_final != chain_id) {
-                    // Also warn about recursive includeconf for the chain that was specified in one of the includeconfs
-                    includeconf_net = GetArgs(std::string("-") + chain_id_final + ".includeconf");
-                    includeconf.insert(includeconf.end(), includeconf_net.begin(), includeconf_net.end());
-                }
+            conf_file_names.clear();
+            add_includes(chain_id, /* skip= */ chain_includes);
+            add_includes({}, /* skip= */ default_includes);
+            std::string chain_id_final = GetChainName();
+            if (chain_id_final != chain_id) {
+                // Also warn about recursive includeconf for the chain that was specified in one of the includeconfs
+                add_includes(chain_id_final);
             }
-            for (const std::string& to_include : includeconf) {
-                fprintf(stderr, "warning: -includeconf cannot be used from included files; ignoring -includeconf=%s\n", to_include.c_str());
+            for (const std::string& conf_file_name : conf_file_names) {
+                tfm::format(std::cerr, "warning: -includeconf cannot be used from included files; ignoring -includeconf=%s\n", conf_file_name);
             }
         }
     }
 
     // If datadir is changed in .conf file:
     ClearDatadirCache();
-    if (!fs::is_directory(GetDataDir(false))) {
-        error = strprintf("specified data directory \"%s\" does not exist.", gArgs.GetArg("-datadir", "").c_str());
+    if (!CheckDataDirOption()) {
+        error = strprintf("specified data directory \"%s\" does not exist.", gArgs.GetArg("-datadir", ""));
         return false;
     }
     return true;
@@ -1027,17 +904,26 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
 
 std::string ArgsManager::GetChainName() const
 {
-    LOCK(cs_args);
-    bool fRegTest = ArgsManagerHelper::GetNetBoolArg(*this, "-regtest");
-    bool fTestNet = ArgsManagerHelper::GetNetBoolArg(*this, "-testnet");
+    auto get_net = [&](const std::string& arg) {
+        LOCK(cs_args);
+        util::SettingsValue value = util::GetSetting(m_settings, /* section= */ "", SettingName(arg),
+            /* ignore_default_section_config= */ false,
+            /* get_chain_name= */ true);
+        return value.isNull() ? false : value.isBool() ? value.get_bool() : InterpretBool(value.get_str());
+    };
 
-    if (fTestNet && fRegTest)
-        throw std::runtime_error("Invalid combination of -regtest and -testnet.");
+    const bool fRegTest = get_net("-regtest");
+    const bool fTestNet = get_net("-testnet");
+    const bool is_chain_arg_set = IsArgSet("-chain");
+
+    if ((int)is_chain_arg_set + (int)fRegTest + (int)fTestNet > 1) {
+        throw std::runtime_error("Invalid combination of -regtest, -testnet and -chain. Can use at most one.");
+    }
     if (fRegTest)
         return CBaseChainParams::REGTEST;
     if (fTestNet)
         return CBaseChainParams::TESTNET;
-    return CBaseChainParams::MAIN;
+    return GetArg("-chain", CBaseChainParams::MAIN);
 }
 // SYSCOIN
 fs::path GetGethPidFile()
@@ -1148,12 +1034,24 @@ bool StopGethNode(pid_t &pid)
     pid = -1;
     return true;
 }
-
-bool StartGethNode(const std::string &exePath, pid_t &pid, bool bGethTestnet, int websocketport)
+bool CheckSpecs(std::string &errMsg, bool bMiner){
+    meminfo_t memInfo = parse_meminfo();
+    LogPrintf("Total Memory(MB) %d (Total Free %d) Swap Total(MB) %d (Total Free %d)\n", memInfo.MemTotalMiB, memInfo.MemAvailableMiB, memInfo.SwapTotalMiB, memInfo.SwapFreeMiB);
+    if(memInfo.MemTotalMiB < (bMiner? 8000: 3800))
+        errMsg = _("Insufficient memory, you need at least 4GB RAM to run a masternode and be running in a Unix OS. Please see documentation.").translated;
+    if(memInfo.MemTotalMiB < 7600 && memInfo.SwapTotalMiB < 3800)
+        errMsg = _("Insufficient swap memory, you need at least 4GB swap RAM to run a masternode and be running in a Unix OS. Please see documentation.").translated;           
+    LogPrintf("Total number of physical cores found %d\n", GetNumCores());
+    if(GetNumCores() < (bMiner? 4: 2))
+        errMsg = _("Insufficient CPU cores, you need at least 2 cores to run a masternode. Please see documentation.").translated;
+   bb = !errMsg.empty();
+   return errMsg.empty();         
+}
+bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, int ethrpcport, const std::string &mode)
 {
     if(fUnitTest || fTPSTest)
         return true;
-    LogPrintf("%s: Starting geth on wsport %d (testnet=%d)...\n", __func__, websocketport, bGethTestnet? 1:0);
+    LogPrintf("%s: Starting geth on wsport %d rpcport %d (testnet=%d)...\n", __func__, websocketport, ethrpcport, bGethTestnet? 1:0);
     std::string gethFilename = GetGethFilename();
     
     // stop any geth nodes before starting
@@ -1163,24 +1061,24 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, bool bGethTestnet, in
     
     fs::path dataDir = GetDataDir(true) / "geth";
 
+    // ../Resources
+    fs::path attempt1 = fpathDefault.string() + fs::system_complete("/../Resources/").string() + gethFilename;
+    attempt1 = attempt1.make_preferred();
 
     // current executable path
-    fs::path attempt1 = fpathDefault.string() + "/" + gethFilename;
-    attempt1 = attempt1.make_preferred();
-    // current executable path + bin/[os]/sysgeth.nod
-    fs::path attempt2 = fpathDefault.string() + GetGethAndRelayerFilepath() + gethFilename;
+    fs::path attempt2 = fpathDefault.string() + "/" + gethFilename;
     attempt2 = attempt2.make_preferred();
-    // $path
-    fs::path attempt3 = gethFilename;
+    // current executable path + bin/[os]/sysgeth.nod
+    fs::path attempt3 = fpathDefault.string() + GetGethAndRelayerFilepath() + gethFilename;
     attempt3 = attempt3.make_preferred();
-    // $path + bin/[os]/sysgeth.nod
-    fs::path attempt4 = GetGethAndRelayerFilepath() + gethFilename;
+    // $path
+    fs::path attempt4 = gethFilename;
     attempt4 = attempt4.make_preferred();
-    // /usr/local/bin/sysgeth.nod
-    fs::path attempt5 = fs::system_complete("/usr/local/bin/").string() + gethFilename;
+    // $path + bin/[os]/sysgeth.nod
+    fs::path attempt5 = GetGethAndRelayerFilepath() + gethFilename;
     attempt5 = attempt5.make_preferred();
-    // ../Resources
-    fs::path attempt6 = fpathDefault.string() + fs::system_complete("/../Resources/").string() + gethFilename;
+    // /usr/local/bin/sysgeth.nod
+    fs::path attempt6 = fs::system_complete("/usr/local/bin/").string() + gethFilename;
     attempt6 = attempt6.make_preferred();
 
     
@@ -1200,7 +1098,6 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, bool bGethTestnet, in
         LogPrintf("Could not start Geth, pid < 0 %d\n", pid);
         return false;
     }
-
 	// TODO: sanitize environment variables as per
 	// https://wiki.sei.cmu.edu/confluence/display/c/ENV03-C.+Sanitize+the+environment+when+invoking+external+programs
     if( pid == 0 ) {
@@ -1210,71 +1107,83 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, bool bGethTestnet, in
         // 3. $path
         // 4. $path/bin/[os]/syscoin_geth
         // 5. /usr/local/bin/syscoin_geth
-        // 6. ../Resources
         std::string portStr = std::to_string(websocketport);
-        char * argvAttempt1[13] = {(char*)attempt1.string().c_str(), 
-                (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), 
+        std::string rpcportStr = std::to_string(ethrpcport);
+        char * argvAttempt1[20] = {(char*)attempt1.string().c_str(), 
+                (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(),
+                (char*)"--rpc", (char*)"--rpcapi", (char*)"personal,eth", (char*)"--rpcport", (char*)rpcportStr.c_str(),
                 (char*)"--wsorigins", (char*)"*",
-                (char*)"--syncmode", (char*)"light", 
+                (char*)"--syncmode", (char*)mode.c_str(), 
                 (char*)"--datadir", (char*)dataDir.c_str(),
+                (char*)"--allow-insecure-unlock",
                 bGethTestnet?(char*)"--rinkeby": NULL,
-                bGethTestnet?(char*)"--bootnodes=enode://a24ac7c5484ef4ed0c5eb2d36620ba4e4aa13b8c84684e1b4aab0cebea2ae45cb4d375b77eab56516d34bfbd3c1a833fc51296ff084b770b94fb9028c4d25ccf@52.169.42.101:30303": NULL,
+                (char*)"--rpccorsdomain",(char*)"*",
                 NULL };
-        char * argvAttempt2[13] = {(char*)attempt2.string().c_str(), 
-                (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), 
+        char * argvAttempt2[20] = {(char*)attempt2.string().c_str(), 
+                (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(),
+                (char*)"--rpc", (char*)"--rpcapi", (char*)"personal,eth", (char*)"--rpcport", (char*)rpcportStr.c_str(),
                 (char*)"--wsorigins", (char*)"*",
-                (char*)"--syncmode", (char*)"light", 
+                (char*)"--syncmode", (char*)mode.c_str(), 
                 (char*)"--datadir", (char*)dataDir.c_str(),
+                (char*)"--allow-insecure-unlock",
                 bGethTestnet?(char*)"--rinkeby": NULL,
-                bGethTestnet?(char*)"--bootnodes=enode://a24ac7c5484ef4ed0c5eb2d36620ba4e4aa13b8c84684e1b4aab0cebea2ae45cb4d375b77eab56516d34bfbd3c1a833fc51296ff084b770b94fb9028c4d25ccf@52.169.42.101:30303": NULL,
+                (char*)"--rpccorsdomain",(char*)"*",
                 NULL };
-        char * argvAttempt3[13] = {(char*)attempt3.string().c_str(), 
+        char * argvAttempt3[20] = {(char*)attempt3.string().c_str(), 
                 (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), 
+                (char*)"--rpc", (char*)"--rpcapi", (char*)"personal,eth", (char*)"--rpcport", (char*)rpcportStr.c_str(),
                 (char*)"--wsorigins", (char*)"*",
-                (char*)"--syncmode", (char*)"light", 
+                (char*)"--syncmode", (char*)mode.c_str(), 
                 (char*)"--datadir", (char*)dataDir.c_str(),
+                (char*)"--allow-insecure-unlock",
                 bGethTestnet?(char*)"--rinkeby": NULL,
-                bGethTestnet?(char*)"--bootnodes=enode://a24ac7c5484ef4ed0c5eb2d36620ba4e4aa13b8c84684e1b4aab0cebea2ae45cb4d375b77eab56516d34bfbd3c1a833fc51296ff084b770b94fb9028c4d25ccf@52.169.42.101:30303": NULL,
+                (char*)"--rpccorsdomain",(char*)"*",
                 NULL };
-        char * argvAttempt4[13] = {(char*)attempt4.string().c_str(), 
+        char * argvAttempt4[20] = {(char*)attempt4.string().c_str(), 
                 (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), 
+                (char*)"--rpc", (char*)"--rpcapi", (char*)"personal,eth", (char*)"--rpcport", (char*)rpcportStr.c_str(),
                 (char*)"--wsorigins", (char*)"*",
-                (char*)"--syncmode", (char*)"light", 
+                (char*)"--syncmode", (char*)mode.c_str(), 
                 (char*)"--datadir", (char*)dataDir.c_str(),
+                (char*)"--allow-insecure-unlock",
                 bGethTestnet?(char*)"--rinkeby": NULL,
-                bGethTestnet?(char*)"--bootnodes=enode://a24ac7c5484ef4ed0c5eb2d36620ba4e4aa13b8c84684e1b4aab0cebea2ae45cb4d375b77eab56516d34bfbd3c1a833fc51296ff084b770b94fb9028c4d25ccf@52.169.42.101:30303": NULL,
+                (char*)"--rpccorsdomain",(char*)"*",
                 NULL };
-        char * argvAttempt5[13] = {(char*)attempt5.string().c_str(), 
-                (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), 
+        char * argvAttempt5[20] = {(char*)attempt5.string().c_str(), 
+                (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(),
+                (char*)"--rpc", (char*)"--rpcapi", (char*)"personal,eth", (char*)"--rpcport", (char*)rpcportStr.c_str(),
                 (char*)"--wsorigins", (char*)"*",
-                (char*)"--syncmode", (char*)"light", 
+                (char*)"--syncmode", (char*)mode.c_str(), 
                 (char*)"--datadir", (char*)dataDir.c_str(),
+                (char*)"--allow-insecure-unlock",
                 bGethTestnet?(char*)"--rinkeby": NULL,
-                bGethTestnet?(char*)"--bootnodes=enode://a24ac7c5484ef4ed0c5eb2d36620ba4e4aa13b8c84684e1b4aab0cebea2ae45cb4d375b77eab56516d34bfbd3c1a833fc51296ff084b770b94fb9028c4d25ccf@52.169.42.101:30303": NULL,
+                (char*)"--rpccorsdomain",(char*)"*",
                 NULL };   
-        char * argvAttempt6[13] = {(char*)attempt6.string().c_str(), 
+        char * argvAttempt6[20] = {(char*)attempt6.string().c_str(), 
                 (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), 
+                (char*)"--rpc", (char*)"--rpcapi", (char*)"personal,eth", (char*)"--rpcport", (char*)rpcportStr.c_str(),
                 (char*)"--wsorigins", (char*)"*",
-                (char*)"--syncmode", (char*)"light", 
+                (char*)"--syncmode", (char*)mode.c_str(), 
                 (char*)"--datadir", (char*)dataDir.c_str(),
+                (char*)"--allow-insecure-unlock",
                 bGethTestnet?(char*)"--rinkeby": NULL,
-                bGethTestnet?(char*)"--bootnodes=enode://a24ac7c5484ef4ed0c5eb2d36620ba4e4aa13b8c84684e1b4aab0cebea2ae45cb4d375b77eab56516d34bfbd3c1a833fc51296ff084b770b94fb9028c4d25ccf@52.169.42.101:30303": NULL,
+                (char*)"--rpccorsdomain",(char*)"*",
                 NULL };                                                                   
         execv(argvAttempt1[0], &argvAttempt1[0]); // current directory
         if (errno != 0) {
-            LogPrintf("Geth not found at %s, trying in current direction bin folder\n", argvAttempt1[0]);
+            LogPrintf("Geth not found at %s, trying in current folder\n", argvAttempt1[0]);
             execv(argvAttempt2[0], &argvAttempt2[0]);
             if (errno != 0) {
-                LogPrintf("Geth not found at %s, trying in $PATH\n", argvAttempt2[0]);
+                LogPrintf("Geth not found at %s, trying in current bin folder\n", argvAttempt2[0]);
                 execvp(argvAttempt3[0], &argvAttempt3[0]); // path
                 if (errno != 0) {
-                    LogPrintf("Geth not found at %s, trying in $PATH bin folder\n", argvAttempt3[0]);
+                    LogPrintf("Geth not found at %s, trying in $PATH\n", argvAttempt3[0]);
                     execvp(argvAttempt4[0], &argvAttempt4[0]);
                     if (errno != 0) {
-                        LogPrintf("Geth not found at %s, trying in /usr/local/bin folder\n", argvAttempt4[0]);
+                        LogPrintf("Geth not found at %s, trying in $PATH bin folder\n", argvAttempt4[0]);
                         execvp(argvAttempt5[0], &argvAttempt5[0]);
                         if (errno != 0) {
-                            LogPrintf("Geth not found at %s, trying in ../Resources\n", argvAttempt4[0]);
+                            LogPrintf("Geth not found at %s, trying in /usr/local/bin folder\n", argvAttempt5[0]);
                             execvp(argvAttempt6[0], &argvAttempt6[0]);
                             if (errno != 0) {
                                 LogPrintf("Geth not found in %s, giving up.\n", argvAttempt6[0]);
@@ -1290,22 +1199,23 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, bool bGethTestnet, in
     }
     #else
         std::string portStr = std::to_string(websocketport);
-        std::string args = std::string("--ws --wsport ") + portStr + std::string(" --wsorigins * --syncmode light --datadir ") +  dataDir.string();
+        std::string rpcportStr = std::to_string(ethrpcport);
+        std::string args =  std::string("--rpc --rpcapi personal,eth --rpccorsdomain * --rpcport ") + rpcportStr + std::string(" --ws --wsport ") + portStr + std::string(" --wsorigins * --syncmode ") + mode + std::string(" --datadir ") +  dataDir.string();
         if(bGethTestnet) {
-            args += std::string(" --rinkeby --bootnodes=enode://a24ac7c5484ef4ed0c5eb2d36620ba4e4aa13b8c84684e1b4aab0cebea2ae45cb4d375b77eab56516d34bfbd3c1a833fc51296ff084b770b94fb9028c4d25ccf@52.169.42.101:30303");
+            args += std::string(" --rinkeby");
         }
-        pid = fork(attempt1.string(), args);
+        pid = fork(attempt2.string(), args);
         if( pid <= 0 ) {
-            LogPrintf("Geth not found at %s, trying in current direction bin folder\n", attempt1.string());
-            pid = fork(attempt2.string(), args);
+            LogPrintf("Geth not found at %s, trying in current bin folder\n", attempt2.string());
+            pid = fork(attempt3.string(), args);
             if( pid <= 0 ) {
-                LogPrintf("Geth not found at %s, trying in $PATH\n", attempt2.string());
-                pid = fork(attempt3.string(), args);
+                LogPrintf("Geth not found at %s, trying in $PATH\n", attempt3.string());
+                pid = fork(attempt4.string(), args);
                 if( pid <= 0 ) {
-                    LogPrintf("Geth not found at %s, trying in $PATH bin folder\n", attempt3.string());
-                    pid = fork(attempt4.string(), args);
+                    LogPrintf("Geth not found at %s, trying in $PATH bin folder\n", attempt4.string());
+                    pid = fork(attempt5.string(), args);
                     if( pid <= 0 ) {
-                        LogPrintf("Geth not found in %s, giving up.\n", attempt4.string());
+                        LogPrintf("Geth not found in %s, giving up.\n", attempt5.string());
                         return false;
                     }
                 }
@@ -1372,13 +1282,12 @@ bool StopRelayerNode(pid_t &pid)
     return true;
 }
 
-bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, bool bGethTestnet, int websocketport)
+bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, int websocketport, int ethrpcport)
 {
     if(fUnitTest || fTPSTest)
         return true;
     
     std::string relayerFilename = GetRelayerFilename();
-    std::string infuraKey = "b3d07005e22f4127ba935ce09b9a2a8d"; // TODO: parameterize this later through config file
     // stop any relayer process  before starting
     StopRelayerNode(pid);
 
@@ -1387,7 +1296,7 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, bool 
     if (gArgs.GetArg("-rpcpassword", "") != "" || !GetAuthCookie(&strRPCUserColonPass)) {
         strRPCUserColonPass = gArgs.GetArg("-rpcuser", "") + ":" + gArgs.GetArg("-rpcpassword", "");
     }
-    LogPrintf("%s: Starting relayer on port %d, RPC credentials %s, wsport %d...\n", __func__, rpcport, strRPCUserColonPass, websocketport);
+    LogPrintf("%s: Starting relayer on port %d, RPC credentials %s, wsport %d ethrpcport %d...\n", __func__, rpcport, strRPCUserColonPass, websocketport, ethrpcport);
 
 
     fs::path fpathDefault = exePath;
@@ -1395,23 +1304,24 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, bool 
     
     fs::path dataDir = GetDataDir(true) / "geth";
 
-    // current executable path
-    fs::path attempt1 = fpathDefault.string() + "/" + relayerFilename;
-    attempt1 = attempt1.make_preferred();
-    // current executable path + bin/[os]/sysrelayer.nod
-    fs::path attempt2 = fpathDefault.string() + GetGethAndRelayerFilepath() + relayerFilename;
-    attempt2 = attempt2.make_preferred();
-    // $path
-    fs::path attempt3 = relayerFilename;
-    attempt3 = attempt3.make_preferred();
-    // $path + bin/[os]/sysrelayer.nod
-    fs::path attempt4 = GetGethAndRelayerFilepath() + relayerFilename;
-    attempt4 = attempt4.make_preferred();
-    // /usr/local/bin/sysrelayer.nod
-    fs::path attempt5 = fs::system_complete("/usr/local/bin/").string() + relayerFilename;
-    attempt5 = attempt5.make_preferred();
     // ../Resources
-    fs::path attempt6 = fpathDefault.string() + fs::system_complete("/../Resources/").string() + relayerFilename;
+    fs::path attempt1 = fpathDefault.string() + fs::system_complete("/../Resources/").string() + relayerFilename;
+    attempt1 = attempt1.make_preferred();
+
+    // current executable path
+    fs::path attempt2 = fpathDefault.string() + "/" + relayerFilename;
+    attempt2 = attempt2.make_preferred();
+    // current executable path + bin/[os]/sysrelayer.nod
+    fs::path attempt3 = fpathDefault.string() + GetGethAndRelayerFilepath() + relayerFilename;
+    attempt3 = attempt3.make_preferred();
+    // $path
+    fs::path attempt4 = relayerFilename;
+    attempt4 = attempt4.make_preferred();
+    // $path + bin/[os]/sysrelayer.nod
+    fs::path attempt5 = GetGethAndRelayerFilepath() + relayerFilename;
+    attempt5 = attempt5.make_preferred();
+    // /usr/local/bin/sysrelayer.nod
+    fs::path attempt6 = fs::system_complete("/usr/local/bin/").string() + relayerFilename;
     attempt6 = attempt6.make_preferred();
     #ifndef WIN32
         // Prevent killed child-processes remaining as "defunct"
@@ -1436,64 +1346,59 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, bool 
             // 4. $path/bin/[os]/syscoin_relayer
             // 5. /usr/local/bin/syscoin_relayer
             std::string portStr = std::to_string(websocketport);
-            std::string rpcPortStr = std::to_string(rpcport);
+            std::string rpcEthPortStr = std::to_string(ethrpcport);
+            std::string rpcSysPortStr = std::to_string(rpcport);
             char * argvAttempt1[] = {(char*)attempt1.string().c_str(), 
 					(char*)"--ethwsport", (char*)portStr.c_str(),
+                    (char*)"--ethrpcport", (char*)rpcEthPortStr.c_str(),
                     (char*)"--datadir", (char*)dataDir.string().c_str(),
-                    (char*)"--infurakey", (char*)infuraKey.c_str(),
 					(char*)"--sysrpcusercolonpass", (char*)strRPCUserColonPass.c_str(),
-					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(), 
-                    (char*)"--gethtestnet", (bGethTestnet?(char*)"1": (char*)"0"), NULL };
+					(char*)"--sysrpcport", (char*)rpcSysPortStr.c_str(),  NULL };
             char * argvAttempt2[] = {(char*)attempt2.string().c_str(), 
 					(char*)"--ethwsport", (char*)portStr.c_str(),
+                    (char*)"--ethrpcport", (char*)rpcEthPortStr.c_str(),
                     (char*)"--datadir", (char*)dataDir.string().c_str(),
-                    (char*)"--infurakey", (char*)infuraKey.c_str(),
 					(char*)"--sysrpcusercolonpass", (char*)strRPCUserColonPass.c_str(),
-					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(),
-                    (char*)"--gethtestnet", (bGethTestnet?(char*)"1": (char*)"0"), NULL };
+					(char*)"--sysrpcport", (char*)rpcSysPortStr.c_str(), NULL };
             char * argvAttempt3[] = {(char*)attempt3.string().c_str(), 
 					(char*)"--ethwsport", (char*)portStr.c_str(),
+                    (char*)"--ethrpcport", (char*)rpcEthPortStr.c_str(),
                     (char*)"--datadir", (char*)dataDir.string().c_str(),
-                    (char*)"--infurakey", (char*)infuraKey.c_str(),
 					(char*)"--sysrpcusercolonpass", (char*)strRPCUserColonPass.c_str(),
-					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(),
-                    (char*)"--gethtestnet", (bGethTestnet?(char*)"1": (char*)"0"), NULL };
+					(char*)"--sysrpcport", (char*)rpcSysPortStr.c_str(), NULL };
             char * argvAttempt4[] = {(char*)attempt4.string().c_str(), 
 					(char*)"--ethwsport", (char*)portStr.c_str(),
+                    (char*)"--ethrpcport", (char*)rpcEthPortStr.c_str(),
                     (char*)"--datadir", (char*)dataDir.string().c_str(),
-                    (char*)"--infurakey", (char*)infuraKey.c_str(),
 					(char*)"--sysrpcusercolonpass", (char*)strRPCUserColonPass.c_str(),
-					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(),
-                    (char*)"--gethtestnet", (bGethTestnet?(char*)"1": (char*)"0"), NULL };
+					(char*)"--sysrpcport", (char*)rpcSysPortStr.c_str(),  NULL };
             char * argvAttempt5[] = {(char*)attempt5.string().c_str(), 
 					(char*)"--ethwsport", (char*)portStr.c_str(),
+                    (char*)"--ethrpcport", (char*)rpcEthPortStr.c_str(),
                     (char*)"--datadir", (char*)dataDir.string().c_str(),
-                    (char*)"--infurakey", (char*)infuraKey.c_str(),
 					(char*)"--sysrpcusercolonpass", (char*)strRPCUserColonPass.c_str(),
-					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(),
-                    (char*)"--gethtestnet", (bGethTestnet?(char*)"1": (char*)"0"), NULL };
+					(char*)"--sysrpcport", (char*)rpcSysPortStr.c_str(), NULL };
             char * argvAttempt6[] = {(char*)attempt6.string().c_str(), 
 					(char*)"--ethwsport", (char*)portStr.c_str(),
+                    (char*)"--ethrpcport", (char*)rpcEthPortStr.c_str(),
                     (char*)"--datadir", (char*)dataDir.string().c_str(),
-                    (char*)"--infurakey", (char*)infuraKey.c_str(),
 					(char*)"--sysrpcusercolonpass", (char*)strRPCUserColonPass.c_str(),
-					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(),
-                    (char*)"--gethtestnet", (bGethTestnet?(char*)"1": (char*)"0"), NULL };
+					(char*)"--sysrpcport", (char*)rpcSysPortStr.c_str(), NULL };
             execv(argvAttempt1[0], &argvAttempt1[0]); // current directory
 	        if (errno != 0) {
-		        LogPrintf("Relayer not found at %s, trying in current direction bin folder\n", argvAttempt1[0]);
+		        LogPrintf("Relayer not found at %s, trying in current folder\n", argvAttempt1[0]);
 		        execv(argvAttempt2[0], &argvAttempt2[0]);
 		        if (errno != 0) {
-                    LogPrintf("Relayer not found at %s, trying in $PATH\n", argvAttempt2[0]);
+                    LogPrintf("Relayer not found at %s, trying in current bin folder\n", argvAttempt2[0]);
                     execvp(argvAttempt3[0], &argvAttempt3[0]); // path
                     if (errno != 0) {
-                        LogPrintf("Relayer not found at %s, trying in $PATH bin folder\n", argvAttempt3[0]);
+                        LogPrintf("Relayer not found at %s, trying in $PATH\n", argvAttempt3[0]);
                         execvp(argvAttempt4[0], &argvAttempt4[0]);
                         if (errno != 0) {
-                            LogPrintf("Relayer not found at %s, trying in /usr/local/bin folder\n", argvAttempt4[0]);
+                            LogPrintf("Relayer not found at %s, trying in $PATH bin folder\n", argvAttempt4[0]);
                             execvp(argvAttempt5[0], &argvAttempt5[0]);
                             if (errno != 0) {
-                                LogPrintf("Relayer not found at %s, trying in ../Resources\n", argvAttempt4[0]);
+                                LogPrintf("Relayer not found at %s, trying in /usr/local/bin folder\n", argvAttempt5[0]);
                                 execvp(argvAttempt6[0], &argvAttempt6[0]);
                                 if (errno != 0) {
                                     LogPrintf("Relayer not found in %s, giving up.\n", argvAttempt6[0]);
@@ -1509,26 +1414,26 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, bool 
         }
     #else
 		std::string portStr = std::to_string(websocketport);
-        std::string rpcPortStr = std::to_string(rpcport);
+        std::string rpcEthPortStr = std::to_string(ethrpcport);
+        std::string rpcSysPortStr = std::to_string(rpcport);
         std::string args =
 				std::string("--ethwsport ") + portStr +
+                std::string(" --ethrpcport ") + rpcEthPortStr +
                 std::string(" --datadir ") + dataDir.string() +
-                std::string(" --infurakey ") + infuraKey +
 				std::string(" --sysrpcusercolonpass ") + strRPCUserColonPass +
-				std::string(" --sysrpcport ") + rpcPortStr +
-                std::string(" --gethtestnet ") + (bGethTestnet? std::string("1"):std::string("0")); 
-        pid = fork(attempt1.string(), args);
+				std::string(" --sysrpcport ") + rpcSysPortStr; 
+        pid = fork(attempt2.string(), args);
         if( pid <= 0 ) {
-            LogPrintf("Relayer not found at %s, trying in current direction bin folder\n", attempt1.string());
-            pid = fork(attempt2.string(), args);
+            LogPrintf("Relayer not found at %s, trying in current direction bin folder\n", attempt2.string());
+            pid = fork(attempt3.string(), args);
             if( pid <= 0 ) {
-                LogPrintf("Relayer not found at %s, trying in $PATH\n", attempt2.string());
-                pid = fork(attempt3.string(), args);
+                LogPrintf("Relayer not found at %s, trying in $PATH\n", attempt3.string());
+                pid = fork(attempt4.string(), args);
                 if( pid <= 0 ) {
-                    LogPrintf("Relayer not found at %s, trying in $PATH bin folder\n", attempt3.string());
-                    pid = fork(attempt4.string(), args);
+                    LogPrintf("Relayer not found at %s, trying in $PATH bin folder\n", attempt4.string());
+                    pid = fork(attempt5.string(), args);
                     if( pid <= 0 ) {
-                        LogPrintf("Relayer not found in %s, giving up.\n", attempt4.string());
+                        LogPrintf("Relayer not found in %s, giving up.\n", attempt5.string());
                         return false;
                     }
                 }
@@ -1625,6 +1530,24 @@ meminfo_t parse_meminfo()
 
     return m;
 }
+bool ArgsManager::UseDefaultSection(const std::string& arg) const
+{
+    return m_network == CBaseChainParams::MAIN || m_network_only_args.count(arg) == 0;
+}
+
+util::SettingsValue ArgsManager::GetSetting(const std::string& arg) const
+{
+    LOCK(cs_args);
+    return util::GetSetting(
+        m_settings, m_network, SettingName(arg), !UseDefaultSection(arg), /* get_chain_name= */ false);
+}
+
+std::vector<util::SettingsValue> ArgsManager::GetSettingsList(const std::string& arg) const
+{
+    LOCK(cs_args);
+    return util::GetSettingsList(m_settings, m_network, SettingName(arg), !UseDefaultSection(arg));
+}
+
 bool RenameOver(fs::path src, fs::path dest)
 {
 #ifdef WIN32
@@ -1783,6 +1706,7 @@ fs::path GetSpecialFolderPath(int nFolder, bool fCreate)
 }
 #endif
 
+#if HAVE_SYSTEM
 void runCommand(const std::string& strCommand)
 {
     if (strCommand.empty()) return;
@@ -1794,6 +1718,7 @@ void runCommand(const std::string& strCommand)
     if (nErr)
         LogPrintf("runCommand error: system(%s) returned %d\n", strCommand, nErr);
 }
+#endif
 
 void SetupEnvironment()
 {
@@ -1808,12 +1733,12 @@ void SetupEnvironment()
     }
 #endif
     // On most POSIX systems (e.g. Linux, but not BSD) the environment's locale
-    // may be invalid, in which case the "C" locale is used as fallback.
+    // may be invalid, in which case the "C.UTF-8" locale is used as fallback.
 #if !defined(WIN32) && !defined(MAC_OSX) && !defined(__FreeBSD__) && !defined(__OpenBSD__)
     try {
         std::locale(""); // Raises a runtime error if current locale is invalid
     } catch (const std::runtime_error&) {
-        setenv("LC_ALL", "C", 1);
+        setenv("LC_ALL", "C.UTF-8", 1);
     }
 #elif defined(WIN32)
     // Set the default input/output charset is utf-8
@@ -1851,10 +1776,11 @@ int GetNumCores()
 
 std::string CopyrightHolders(const std::string& strPrefix)
 {
-    std::string strCopyrightHolders = strPrefix + strprintf(_(COPYRIGHT_HOLDERS), _(COPYRIGHT_HOLDERS_SUBSTITUTION));
+    const auto copyright_devs = strprintf(_(COPYRIGHT_HOLDERS).translated, COPYRIGHT_HOLDERS_SUBSTITUTION);
+    std::string strCopyrightHolders = strPrefix + copyright_devs;
 
-    // Check for untranslated substitution to make sure Syscoin Core copyright is not removed by accident
-    if (strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION).find("Syscoin Core") == std::string::npos) {
+    // Make sure Syscoin Core copyright is not removed by accident
+    if (copyright_devs.find("Syscoin Core") == std::string::npos) {
         strCopyrightHolders += "\n" + strPrefix + "The Syscoin Core developers";
     }
     return strCopyrightHolders;
@@ -1868,20 +1794,19 @@ int64_t GetStartupTime()
 
 fs::path AbsPathForConfigVal(const fs::path& path, bool net_specific)
 {
+    if (path.is_absolute()) {
+        return path;
+    }
     return fs::absolute(path, GetDataDir(net_specific));
 }
 
-int ScheduleBatchPriority()
+void ScheduleBatchPriority()
 {
 #ifdef SCHED_BATCH
     const static sched_param param{};
-    if (int ret = pthread_setschedparam(pthread_self(), SCHED_BATCH, &param)) {
+    if (pthread_setschedparam(pthread_self(), SCHED_BATCH, &param) != 0) {
         LogPrintf("Failed to pthread_setschedparam: %s\n", strerror(errno));
-        return ret;
     }
-    return 0;
-#else
-    return 1;
 #endif
 }
 

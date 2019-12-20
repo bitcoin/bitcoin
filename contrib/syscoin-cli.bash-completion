@@ -17,13 +17,6 @@ _syscoin_rpc() {
     $syscoin_cli "${rpcargs[@]}" "$@"
 }
 
-# Add wallet accounts to COMPREPLY
-_syscoin_accounts() {
-    local accounts
-    accounts=$(_syscoin_rpc listaccounts | awk -F '"' '{ print $2 }')
-    COMPREPLY=( "${COMPREPLY[@]}" $( compgen -W "$accounts" -- "$cur" ) )
-}
-
 _syscoin_cli() {
     local cur prev words=() cword
     local syscoin_cli
@@ -60,10 +53,9 @@ _syscoin_cli() {
     if ((cword > 3)); then
         case ${words[cword-3]} in
             addmultisigaddress)
-                _syscoin_accounts
                 return 0
                 ;;
-            getbalance|gettxout|importaddress|importpubkey|importprivkey|listreceivedbyaccount|listreceivedbyaddress|listsinceblock)
+            getbalance|gettxout|importaddress|importpubkey|importprivkey|listreceivedbyaddress|listsinceblock)
                 COMPREPLY=( $( compgen -W "true false" -- "$cur" ) )
                 return 0
                 ;;
@@ -80,12 +72,8 @@ _syscoin_cli() {
                 COMPREPLY=( $( compgen -W "add remove" -- "$cur" ) )
                 return 0
                 ;;
-            fundrawtransaction|getblock|getblockheader|getmempoolancestors|getmempooldescendants|getrawtransaction|gettransaction|listaccounts|listreceivedbyaccount|listreceivedbyaddress|sendrawtransaction)
+            fundrawtransaction|getblock|getblockheader|getmempoolancestors|getmempooldescendants|getrawtransaction|gettransaction|listreceivedbyaddress|sendrawtransaction)
                 COMPREPLY=( $( compgen -W "true false" -- "$cur" ) )
-                return 0
-                ;;
-            move|setaccount)
-                _syscoin_accounts
                 return 0
                 ;;
         esac
@@ -96,12 +84,11 @@ _syscoin_cli() {
             _filedir
             return 0
             ;;
-        getaddednodeinfo|getrawmempool|lockunspent|setgenerate)
+        getaddednodeinfo|getrawmempool|lockunspent)
             COMPREPLY=( $( compgen -W "true false" -- "$cur" ) )
             return 0
             ;;
-        getaccountaddress|getaddressesbyaccount|getbalance|getnewaddress|getreceivedbyaccount|listtransactions|move|sendfrom|sendmany)
-            _syscoin_accounts
+        getbalance|getnewaddress|listtransactions|sendmany)
             return 0
             ;;
     esac

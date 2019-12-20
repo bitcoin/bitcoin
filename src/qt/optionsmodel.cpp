@@ -18,7 +18,7 @@
 #include <netbase.h>
 #include <txdb.h> // for -dbcache defaults
 
-#include <QNetworkProxy>
+#include <QDebug>
 #include <QSettings>
 #include <QStringList>
 // SYSCOIN
@@ -95,11 +95,7 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("bPrune", false);
     if (!settings.contains("nPruneSize"))
         settings.setValue("nPruneSize", 2);
-    // Convert prune size from GB to MiB:
-    const uint64_t nPruneSizeMiB = (settings.value("nPruneSize").toInt() * GB_BYTES) >> 20;
-    if (!m_node.softSetArg("-prune", settings.value("bPrune").toBool() ? std::to_string(nPruneSizeMiB) : "0")) {
-        addOverriddenOption("-prune");
-    }
+    SetPrune(settings.value("bPrune").toBool());
 
     if (!settings.contains("nDatabaseCache"))
         settings.setValue("nDatabaseCache", (qint64)nDefaultDbCache);
@@ -177,7 +173,7 @@ static void CopySettings(QSettings& dst, const QSettings& src)
 /** Back up a QSettings to an ini-formatted file. */
 static void BackupSettings(const fs::path& filename, const QSettings& src)
 {
-    qWarning() << "Backing up GUI settings to" << GUIUtil::boostPathToQString(filename);
+    qInfo() << "Backing up GUI settings to" << GUIUtil::boostPathToQString(filename);
     QSettings dst(GUIUtil::boostPathToQString(filename), QSettings::IniFormat);
     dst.clear();
     CopySettings(dst, src);
@@ -243,6 +239,22 @@ static void SetProxySetting(QSettings &settings, const QString &name, const Prox
 static const QString GetDefaultProxyAddress()
 {
     return QString("%1:%2").arg(DEFAULT_GUI_PROXY_HOST).arg(DEFAULT_GUI_PROXY_PORT);
+}
+
+void OptionsModel::SetPrune(bool prune, bool force)
+{
+    QSettings settings;
+    settings.setValue("bPrune", prune);
+    // Convert prune size from GB to MiB:
+    const uint64_t nPruneSizeMiB = (settings.value("nPruneSize").toInt() * GB_BYTES) >> 20;
+    std::string prune_val = prune ? std::to_string(nPruneSizeMiB) : "0";
+    if (force) {
+        m_node.forceSetArg("-prune", prune_val);
+        return;
+    }
+    if (!m_node.softSetArg("-prune", prune_val)) {
+        addOverriddenOption("-prune");
+    }
 }
 
 // read QSettings values and return them
@@ -482,24 +494,6 @@ void OptionsModel::setDisplayUnit(const QVariant &value)
         settings.setValue("nDisplayUnit", nDisplayUnit);
         Q_EMIT displayUnitChanged(nDisplayUnit);
     }
-}
-
-bool OptionsModel::getProxySettings(QNetworkProxy& proxy) const
-{
-    // Directly query current base proxy, because
-    // GUI settings can be overridden with -proxy.
-    proxyType curProxy;
-    if (m_node.getProxy(NET_IPV4, curProxy)) {
-        proxy.setType(QNetworkProxy::Socks5Proxy);
-        proxy.setHostName(QString::fromStdString(curProxy.proxy.ToStringIP()));
-        proxy.setPort(curProxy.proxy.GetPort());
-
-        return true;
-    }
-    else
-        proxy.setType(QNetworkProxy::NoProxy);
-
-    return false;
 }
 
 void OptionsModel::setRestartRequired(bool fRequired)

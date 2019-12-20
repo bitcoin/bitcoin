@@ -4,11 +4,11 @@
 
 #include <qt/bantablemodel.h>
 
+#include <interfaces/node.h>
+#include <net_types.h> // For banmap_t
 #include <qt/clientmodel.h>
 
-#include <interfaces/node.h>
-#include <sync.h>
-#include <util/time.h>
+#include <utility>
 
 #include <QDebug>
 #include <QList>
@@ -61,7 +61,7 @@ public:
 
         if (sortColumn >= 0)
             // sort cachedBanlist (use stable sort to prevent rows jumping around unnecessarily)
-            qStableSort(cachedBanlist.begin(), cachedBanlist.end(), BannedNodeLessThan(sortColumn, sortOrder));
+            std::stable_sort(cachedBanlist.begin(), cachedBanlist.end(), BannedNodeLessThan(sortColumn, sortOrder));
     }
 
     int size() const

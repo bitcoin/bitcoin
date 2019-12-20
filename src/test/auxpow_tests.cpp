@@ -17,7 +17,7 @@
 #include <uint256.h>
 #include <univalue.h>
 
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -114,7 +114,7 @@ public:
    * @param tx The base tx to use.
    * @return The constructed CAuxPow object.
    */
-  CAuxPow get (const CTransactionRef tx) const;
+  CAuxPow get (const CTransactionRef &tx) const;
 
   /**
    * Build the finished CAuxPow object from the parent block's coinbase.
@@ -191,7 +191,7 @@ CAuxpowBuilder::buildAuxpowChain (const uint256& hashAux, unsigned h, int index)
 }
 
 CAuxPow
-CAuxpowBuilder::get (const CTransactionRef tx) const
+CAuxpowBuilder::get (const CTransactionRef &tx) const
 {
   LOCK(cs_main);
 

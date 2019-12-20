@@ -6,6 +6,7 @@
 
 #include <qt/syscoinunits.h>
 #include <qt/guiconstants.h>
+#include <qt/guiutil.h>
 #include <qt/qvaluecombobox.h>
 
 #include <QApplication>
@@ -101,7 +102,7 @@ public:
         CAmount val = value(&valid);
 
         currentUnit = unit;
-
+        lineEdit()->setPlaceholderText(SyscoinUnits::format(currentUnit, m_min_amount, false, SyscoinUnits::separatorAlways));
         if(valid)
             setValue(val);
         else
@@ -121,7 +122,7 @@ public:
 
             const QFontMetrics fm(fontMetrics());
             int h = lineEdit()->minimumSizeHint().height();
-            int w = fm.width(SyscoinUnits::format(SyscoinUnits::SYS, SyscoinUnits::maxMoney(), false, SyscoinUnits::separatorAlways));
+            int w = GUIUtil::TextWidth(fm, SyscoinUnits::format(SyscoinUnits::SYS, SyscoinUnits::maxMoney(), false, SyscoinUnits::separatorAlways));
             w += 2; // cursor blinking space
 
             QStyleOptionSpinBox opt;

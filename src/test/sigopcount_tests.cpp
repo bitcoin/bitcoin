@@ -2,14 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <consensus/consensus.h>
 #include <consensus/tx_verify.h>
-#include <consensus/validation.h>
 #include <pubkey.h>
 #include <key.h>
 #include <script/script.h>
 #include <script/standard.h>
 #include <uint256.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 
 #include <vector>
 

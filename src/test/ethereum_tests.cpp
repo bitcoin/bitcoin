@@ -19,22 +19,25 @@ extern UniValue read_json(const std::string& jsondata);
 BOOST_AUTO_TEST_SUITE(ethereum_tests)
 BOOST_AUTO_TEST_CASE(ethereum_parseabidata)
 {
-    printf("Running ethereum_parseabidata...\n");
-    CAmount outputAmount = 0;
+    tfm::format(std::cout,"Running ethereum_parseabidata...\n");
+    CAmount outputAmount;
     uint32_t nAsset = 0;
-    const std::vector<unsigned char> &expectedMethodHash = ParseHex("285c5bc6");
-    const std::vector<unsigned char> &rlpBytes = ParseHex("285c5bc600000000000000000000000000000000000000000000000000000000773594000000000000000000000000000000000000000000000000000000000065736d4700000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000015004322ec9eb713f37cf8d701d819c165549d53d14e0000000000000000000000");
-    CWitnessAddress expectedAddress(0, ParseHex("4322ec9eb713f37cf8d701d819c165549d53d14e"));
+    const std::vector<unsigned char> &expectedMethodHash = ParseHex("5f959b69");
+    const std::vector<unsigned char> &expectedVchContract = ParseHex("fe234d3994f95bf7cebd9837c4444f5af63f0a97");
+    const std::vector<unsigned char> &rlpBytes = ParseHex("5f959b690000000000000000000000000000000000000000000000015af1d78b58c40000000000000000000000000000000000000000000000000000000000003acaeec0000000000000000000000000fe234d3994f95bf7cebd9837c4444f5af63f0a97000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000001500e37ddd289ccd1fb130a91210644810b2415aec400000000000000000000000");
+    CWitnessAddress expectedAddress(0, ParseHex("e37ddd289ccd1fb130a91210644810b2415aec40"));
     CWitnessAddress address;
-    BOOST_CHECK(parseEthMethodInputData(expectedMethodHash, rlpBytes, outputAmount, nAsset, address));
-    BOOST_CHECK_EQUAL(outputAmount, 20*COIN);
-    BOOST_CHECK_EQUAL(nAsset, 1702063431);
+    uint8_t nPrecision = 8;
+    BOOST_CHECK(parseEthMethodInputData(expectedMethodHash, rlpBytes, expectedVchContract, outputAmount, nAsset, nPrecision, address));
+    BOOST_CHECK_EQUAL(outputAmount, 25*COIN);
+    BOOST_CHECK_EQUAL(nAsset, 986377920);
     BOOST_CHECK(address == expectedAddress);
+
 }
 
 BOOST_AUTO_TEST_CASE(ethspv_valid)
 {
-    printf("Running ethspv_valid...\n");
+    tfm::format(std::cout,"Running ethspv_valid...\n");
     // Read tests from test/data/ethspv_valid.json
     // Format is an array of arrays
     // Inner arrays are either [ "comment" ]
@@ -73,7 +76,7 @@ BOOST_AUTO_TEST_CASE(ethspv_valid)
 
 BOOST_AUTO_TEST_CASE(ethspv_invalid)
 {
-    printf("Running ethspv_invalid...\n");
+    tfm::format(std::cout,"Running ethspv_invalid...\n");
     // Read tests from test/data/ethspv_invalid.json
     // Format is an array of arrays
     // Inner arrays are either [ "comment" ]

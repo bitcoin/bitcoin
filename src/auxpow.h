@@ -20,7 +20,6 @@
 class CBlock;
 class CBlockHeader;
 class CBlockIndex;
-class CValidationState;
 class UniValue;
 
 namespace auxpow_tests

@@ -67,16 +67,15 @@ TEST_EXIT_PASSED = 0
 TEST_EXIT_SKIPPED = 77
 
 EXTENDED_SCRIPTS = [
-    # These tests are not run by the travis build process.
+    # These tests are not run by default.
     # Longest test should go first, to favor running tests in parallel
     'feature_pruning.py',
     'feature_dbcrash.py',
 ]
 
 BASE_SCRIPTS = [
-    # Scripts that are run by the travis build process.
+    # Scripts that are run by default.
     # Longest test should go first, to favor running tests in parallel
-    'feature_fee_estimation.py',
     'wallet_hd.py',
     'wallet_backup.py',
     # vv Tests less than 5m vv
@@ -91,6 +90,7 @@ BASE_SCRIPTS = [
     'wallet_labels.py',
     'p2p_segwit.py',
     'p2p_timeouts.py',
+    'p2p_tx_download.py',
     'wallet_dump.py',
     'wallet_listtransactions.py',
     # vv Tests less than 60s vv
@@ -108,8 +108,10 @@ BASE_SCRIPTS = [
     'feature_bip68_sequence.py',
     'p2p_feefilter.py',
     'feature_reindex.py',
+    'feature_abortnode.py',
     # vv Tests less than 30s vv
     'wallet_keypool_topup.py',
+    'feature_fee_estimation.py',
     'interface_zmq.py',
     'interface_syscoin_cli.py',
     'mempool_resurrect.py',
@@ -121,16 +123,21 @@ BASE_SCRIPTS = [
     'rpc_misc.py',
     'interface_rest.py',
     'mempool_spend_coinbase.py',
+    'wallet_avoidreuse.py',
     'mempool_reorg.py',
     'mempool_persist.py',
     'wallet_multiwallet.py',
     'wallet_multiwallet.py --usecli',
     'wallet_createwallet.py',
     'wallet_createwallet.py --usecli',
+    'wallet_watchonly.py',
+    'wallet_watchonly.py --usecli',
+    'wallet_reorgsrestore.py',
     'interface_http.py',
     'interface_rpc.py',
     'rpc_psbt.py',
     'rpc_users.py',
+    'rpc_whitelist.py',
     'feature_proxy.py',
     'rpc_signrawtransaction.py',
     'wallet_groups.py',
@@ -142,6 +149,7 @@ BASE_SCRIPTS = [
     'rpc_net.py',
     'wallet_keypool.py',
     'p2p_mempool.py',
+    'rpc_setban.py',
     'p2p_blocksonly.py',
     'mining_prioritisetransaction.py',
     'p2p_invalid_locator.py',
@@ -157,6 +165,7 @@ BASE_SCRIPTS = [
     'rpc_invalidateblock.py',
     'feature_rbf.py',
     'mempool_packages.py',
+    'mempool_package_onemore.py',
     'rpc_createmultisig.py',
     # FIXME: Re-enable and possibly fix once the BIP9 mining is activated.
     #'feature_versionbits_warning.py',
@@ -174,6 +183,8 @@ BASE_SCRIPTS = [
     'rpc_bind.py --nonloopback',
     'mining_basic.py',
     'wallet_bumpfee.py',
+    'wallet_bumpfee_totalfee_deprecation.py',
+    'wallet_implicitsegwit.py',
     'rpc_named_arguments.py',
     'wallet_listsinceblock.py',
     'p2p_leak.py',
@@ -183,6 +194,7 @@ BASE_SCRIPTS = [
     'rpc_uptime.py',
     'wallet_resendwallettransactions.py',
     'wallet_fallbackfee.py',
+    'rpc_dumptxoutset.py',
     'feature_minchainwork.py',
     'rpc_getblockstats.py',
     'wallet_create_tx.py',
@@ -190,6 +202,8 @@ BASE_SCRIPTS = [
     'feature_uacomment.py',
     'wallet_coinbase_category.py',
     'feature_filelock.py',
+    'feature_loadblock.py',
+    'p2p_dos_header_tree.py',
     'p2p_unrequested_blocks.py',
     'feature_includeconf.py',
     'rpc_deriveaddresses.py',
@@ -197,6 +211,7 @@ BASE_SCRIPTS = [
     'rpc_scantxoutset.py',
     'feature_logging.py',
     'p2p_node_network_limited.py',
+    'p2p_permissions.py',
     'feature_blocksdir.py',
     'feature_config_args.py',
     'rpc_help.py',
@@ -230,6 +245,7 @@ def main():
                                      epilog='''
     Help text and arguments for individual test script:''',
                                      formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument('--ansi', action='store_true', default=sys.stdout.isatty(), help="Use ANSI colors and dots in output (enabled by default when standard output is a TTY)")
     parser.add_argument('--combinedlogslen', '-c', type=int, default=0, metavar='n', help='On failure, print a log (of length n lines) to the console, combined from the test framework and all test nodes.')
     parser.add_argument('--coverage', action='store_true', help='generate a basic coverage report for the RPC interface')
     parser.add_argument('--ci', action='store_true', help='Run checks and code that are usually only enabled in a continuous integration environment')
@@ -241,7 +257,15 @@ def main():
     parser.add_argument('--quiet', '-q', action='store_true', help='only print dots, results summary and failure logs')
     parser.add_argument('--tmpdirprefix', '-t', default=tempfile.gettempdir(), help="Root directory for datadirs")
     parser.add_argument('--failfast', action='store_true', help='stop execution after the first test failure')
+    parser.add_argument('--filter', help='filter scripts to run by regular expression')
+
     args, unknown_args = parser.parse_known_args()
+    if not args.ansi:
+        global BOLD, GREEN, RED, GREY
+        BOLD = ("", "")
+        GREEN = ("", "")
+        RED = ("", "")
+        GREY = ("", "")
 
     # args to be passed on always start with two dashes; tests are the remaining unknown args
     tests = [arg for arg in unknown_args if arg[:2] != "--"]
@@ -276,11 +300,22 @@ def main():
     test_list = []
     if tests:
         # Individual tests have been specified. Run specified tests that exist
-        # in the ALL_SCRIPTS list. Accept the name with or without .py extension.
-        tests = [test + ".py" if ".py" not in test else test for test in tests]
+        # in the ALL_SCRIPTS list. Accept names with or without a .py extension.
+        # Specified tests can contain wildcards, but in that case the supplied
+        # paths should be coherent, e.g. the same path as that provided to call
+        # test_runner.py. Examples:
+        #   `test/functional/test_runner.py test/functional/wallet*`
+        #   `test/functional/test_runner.py ./test/functional/wallet*`
+        #   `test_runner.py wallet*`
+        #   but not:
+        #   `test/functional/test_runner.py wallet*`
+        # Multiple wildcards can be passed:
+        #   `test_runner.py tool* mempool*`
         for test in tests:
-            if test in ALL_SCRIPTS:
-                test_list.append(test)
+            script = test.split("/")[-1]
+            script = script + ".py" if ".py" not in script else script
+            if script in ALL_SCRIPTS:
+                test_list.append(script)
             else:
                 print("{}WARNING!{} Test '{}' not found in full test list.".format(BOLD[1], BOLD[0], test))
     elif args.extended:
@@ -300,6 +335,9 @@ def main():
                 test_list.remove(exclude_item)
             if not exclude_list:
                 print("{}WARNING!{} Test '{}' not found in current test list.".format(BOLD[1], BOLD[0], exclude_test))
+
+    if args.filter:
+        test_list = list(filter(re.compile(args.filter).search, test_list))
 
     if not test_list:
         print("No valid test scripts specified. Check that your test is in one "
@@ -329,14 +367,16 @@ def main():
         combined_logs_len=args.combinedlogslen,
         failfast=args.failfast,
         runs_ci=args.ci,
+        use_term_control=args.ansi,
     )
 
-def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=False, args=None, combined_logs_len=0, failfast=False, runs_ci):
+def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=False, args=None, combined_logs_len=0, failfast=False, runs_ci, use_term_control):
     args = args or []
 
-    # Warn if syscoind is already running (unix only)
+    # Warn if syscoind is already running
+    # pidof might fail or return an empty string if syscoind is not running
     try:
-        if subprocess.check_output(["pidof", "syscoind"]) is not None:
+        if subprocess.check_output(["pidof", "syscoind"]) not in [b'']:
             print("%sWARNING!%s There is already a syscoind process running on this system. Tests may fail unexpectedly due to resource contention!" % (BOLD[1], BOLD[0]))
     except (OSError, subprocess.SubprocessError):
         pass
@@ -373,6 +413,7 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=
         test_list=test_list,
         flags=flags,
         timeout_duration=40 * 60 if runs_ci else float('inf'),  # in seconds
+        use_term_control=use_term_control,
     )
     start_time = time.time()
     test_results = []
@@ -456,7 +497,7 @@ class TestHandler:
     Trigger the test scripts passed in via the list.
     """
 
-    def __init__(self, *, num_tests_parallel, tests_dir, tmpdir, test_list, flags, timeout_duration):
+    def __init__(self, *, num_tests_parallel, tests_dir, tmpdir, test_list, flags, timeout_duration, use_term_control):
         assert num_tests_parallel >= 1
         self.num_jobs = num_tests_parallel
         self.tests_dir = tests_dir
@@ -466,6 +507,7 @@ class TestHandler:
         self.flags = flags
         self.num_running = 0
         self.jobs = []
+        self.use_term_control = use_term_control
 
     def get_next(self):
         while self.num_running < self.num_jobs and self.test_list:
@@ -502,7 +544,8 @@ class TestHandler:
             for job in self.jobs:
                 (name, start_time, proc, testdir, log_out, log_err) = job
                 if int(time.time() - start_time) > self.timeout_duration:
-                    # In travis, timeout individual tests (to stop tests hanging and not providing useful output).
+                    # Timeout individual tests if timeout is specified (to stop
+                    # tests hanging and not providing useful output).
                     proc.send_signal(signal.SIGINT)
                 if proc.poll() is not None:
                     log_out.seek(0), log_err.seek(0)
@@ -516,11 +559,13 @@ class TestHandler:
                         status = "Failed"
                     self.num_running -= 1
                     self.jobs.remove(job)
-                    clearline = '\r' + (' ' * dot_count) + '\r'
-                    print(clearline, end='', flush=True)
+                    if self.use_term_control:
+                        clearline = '\r' + (' ' * dot_count) + '\r'
+                        print(clearline, end='', flush=True)
                     dot_count = 0
                     return TestResult(name, status, int(time.time() - start_time)), testdir, stdout, stderr
-            print('.', end='', flush=True)
+            if self.use_term_control:
+                print('.', end='', flush=True)
             dot_count += 1
 
     def kill_and_join(self):
@@ -590,7 +635,7 @@ def check_script_list(*, src_dir, fail_on_warn):
     if len(missed_tests) != 0:
         print("%sWARNING!%s The following scripts are not being run: %s. Check the test lists in test_runner.py." % (BOLD[1], BOLD[0], str(missed_tests)))
         if fail_on_warn:
-            # On travis this warning is an error to prevent merging incomplete commits into master
+            # On CI this warning is an error to prevent merging incomplete commits into master
             sys.exit(1)
 
 

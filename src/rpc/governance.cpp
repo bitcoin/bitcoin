@@ -27,6 +27,8 @@
 #endif // ENABLE_WALLET
 #include <core_io.h>
 #include <rpc/util.h>
+#include <node/context.h>
+#include <rpc/blockchain.h>
 UniValue getgovernanceinfo(const JSONRPCRequest& request);
 UniValue getsuperblockbudget(const JSONRPCRequest& request);
 UniValue gobject(const JSONRPCRequest& request);
@@ -208,17 +210,13 @@ UniValue gobject(const JSONRPCRequest& request)
         EnsureWalletIsUnlocked(pwallet);
         
         // -- make our change address
-        CReserveKey reservekey(pwallet);
         CTransactionRef tx;
-        if(!pwallet->GetBudgetSystemCollateralTX(reservekey, tx, govobj.GetHash(), govobj.GetMinCollateralFee())) {
+        if(!pwallet->GetBudgetSystemCollateralTX(tx, govobj.GetHash(), govobj.GetMinCollateralFee())) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Error making collateral transaction for governance object. Please check your wallet balance and make sure your wallet is unlocked.");
         }
         // -- send the tx to the network
-        CValidationState state;
         mapValue_t mapValue;
-        if (!pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */, reservekey, state)) {
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "CommitTransaction failed! Reason given: " + state.GetRejectReason());
-        }
+        pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
 
         /*DBG( std::cout << "gobject: prepare "
              << " GetDataAsPlainString = " << govobj.GetDataAsPlainString()
@@ -333,9 +331,9 @@ UniValue gobject(const JSONRPCRequest& request)
 
         if(fMissingConfirmations) {
             governance.AddPostponedObject(govobj);
-            govobj.Relay(*g_connman);
+            govobj.Relay(*g_rpc_node->connman);
         } else {
-            governance.AddGovernanceObject(govobj, *g_connman);
+            governance.AddGovernanceObject(govobj, *g_rpc_node->connman);
         }
 
         return govobj.GetHash().ToString();
@@ -401,7 +399,7 @@ UniValue gobject(const JSONRPCRequest& request)
         }
 
         CGovernanceException exception;
-        if(governance.ProcessVoteAndRelay(vote, exception, *g_connman)) {
+        if(governance.ProcessVoteAndRelay(vote, exception, *g_rpc_node->connman)) {
             nSuccessful++;
             statusObj.pushKV("result", "success");
         }
@@ -500,7 +498,7 @@ UniValue gobject(const JSONRPCRequest& request)
             }
 
             CGovernanceException exception;
-            if(governance.ProcessVoteAndRelay(vote, exception, *g_connman)) {
+            if(governance.ProcessVoteAndRelay(vote, exception, *g_rpc_node->connman)) {
                 nSuccessful++;
                 statusObj.pushKV("result", "success");
             }
@@ -622,7 +620,7 @@ UniValue gobject(const JSONRPCRequest& request)
             // UPDATE LOCAL DATABASE WITH NEW OBJECT SETTINGS
 
             CGovernanceException exception;
-            if(governance.ProcessVoteAndRelay(vote, exception, *g_connman)) {
+            if(governance.ProcessVoteAndRelay(vote, exception, *g_rpc_node->connman)) {
                 nSuccessful++;
                 statusObj.pushKV("result", "success");
             }
@@ -953,7 +951,7 @@ UniValue voteraw(const JSONRPCRequest& request)
     }
 
     CGovernanceException exception;
-    if(governance.ProcessVoteAndRelay(vote, exception, *g_connman)) {
+    if(governance.ProcessVoteAndRelay(vote, exception, *g_rpc_node->connman)) {
         return "Voted successfully";
     }
     else {

@@ -5,25 +5,25 @@ Geth
 ----
 
 This folder contains the binaries for geth for different platforms
-The current version is Punisher (v1.8.27)
+The current version is Serrice Ice (v1.9.9)
 Downloaded from [Go Ethereum](https://geth.ethereum.org/downloads/)
 
 MD5 of the BIN are as the following:
 Linux (64-bit)
-`a5f95983e2ccd4ae19c2f051ed0c2bce`
+`de1b31439dc6697fcbe2d729d2080d22`
 
 MacOS
-`078e642c966f222b829a53745482764c`
+`ed56cad30695af36c8bc9ac8b9ccc1c4`
 
 Windows (64-bit)
-`c3c71acdcf9234970db37ee66feee6d7`
+`9f2d966a5a7159a8448991a7401ff3d1`
 
 
 Relayer
 -------
 
 Source: [Github](https://www.github.com/syscoin/relayer/)
-Version: 1.0.15
-MD5 (relayer-linux) = 6896eb7918dc31bd75c53d4f98c657ee
-MD5 (relayer-macos) = ce624316c3ac61aa7870f0c9c8c390bd
-MD5 (relayer-win.exe) = 66da956b75a345023302fc38936f8929
+Version: 1.0.23
+MD5 (relayer-linux) = e6e8d7716c1bf2a2b5642d93bdd34870
+MD5 (relayer-macos) = 1c5a58ed84a3cb9229c36dd180fb39a9
+MD5 (relayer-win.exe) = afc70f73907e7f37ab1674ecaed377e1

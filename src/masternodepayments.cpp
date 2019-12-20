@@ -14,6 +14,8 @@
 #include <netmessagemaker.h>
 #include <spork.h>
 #include <outputtype.h>
+#include <node/context.h>
+#include <rpc/blockchain.h>
 // SYSCOIN
 extern void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="") EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 extern std::vector<unsigned char> vchFromString(const std::string &str);
@@ -282,8 +284,6 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, const std::string& strCom
 
         if(pfrom->nVersion < GetMinMasternodePaymentsProto()) {
             LogPrint(BCLog::MNPAYMENT, "MASTERNODEPAYMENTSYNC -- peer=%d using obsolete version %i\n", pfrom->GetId(), pfrom->nVersion);
-            connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::REJECT, strCommand, REJECT_OBSOLETE,
-                               strprintf("Version must be %d or greater", GetMinMasternodePaymentsProto())));
             return;
         }
 
@@ -311,8 +311,6 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, const std::string& strCom
 
         if(pfrom->nVersion < GetMinMasternodePaymentsProto()) {
             LogPrint(BCLog::MNPAYMENT, "MASTERNODEPAYMENTVOTE -- peer=%d using obsolete version %i\n", pfrom->GetId(), pfrom->nVersion);
-            connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::REJECT, strCommand, REJECT_OBSOLETE,
-                               strprintf("Version must be %d or greater", GetMinMasternodePaymentsProto())));
             return;
         }
 
@@ -561,7 +559,6 @@ bool CMasternodeBlockPayees::HasPayeeWithVotes(const CScript& payeeIn, int nVote
         }
     }
 
-    LogPrint(BCLog::MNPAYMENT, "CMasternodeBlockPayees::HasPayeeWithVotes -- ERROR: couldn't find any payee with %d+ votes\n", nVotesReq);
     return false;
 }
 
@@ -901,7 +898,7 @@ void CMasternodePaymentVote::Relay(CConnman& connman) const
     }
 
     CInv inv(MSG_MASTERNODE_PAYMENT_VOTE, GetHash());
-    g_connman->RelayInv(inv);
+    g_rpc_node->connman->RelayInv(inv);
 }
 
 bool CMasternodePaymentVote::CheckSignature(const CPubKey& pubKeyMasternode, int nValidationHeight, int &nDos) const
@@ -1023,9 +1020,9 @@ void CMasternodePayments::RequestLowDataPaymentBlocks(CNode* pnode, CConnman& co
             for (const auto& payee : mnBlockPayees.second.vecPayees) {
                 CTxDestination address1;
                 ExtractDestination(payee.GetPayee(), address1);
-                printf("payee %s votes %d\n", EncodeDestination(address1).c_str(), payee.GetVoteCount());
+                tfm::format(std::cout,"payee %s votes %d\n", EncodeDestination(address1).c_str(), payee.GetVoteCount());
             }
-            printf("block %d votes total %d\n", nBlockHeight, nTotalVotes);
+            tfm::format(std::cout,"block %d votes total %d\n", nBlockHeight, nTotalVotes);
         )*/
         // END DEBUG
         // Low data block found, let's try to sync it

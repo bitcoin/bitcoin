@@ -12,7 +12,6 @@
 #include <amount.h>
 #include <attributes.h>
 
-#include <cstdint>
 #include <string>
 
 /* Do not use these functions to represent or parse monetary amounts to or from

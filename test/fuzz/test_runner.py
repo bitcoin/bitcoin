@@ -12,6 +12,37 @@ import sys
 import subprocess
 import logging
 
+# Fuzzers known to lack a seed corpus in https://github.com/bitcoin-core/qa-assets/tree/master/fuzz_seed_corpus
+FUZZERS_MISSING_CORPORA = [
+    "addr_info_deserialize",
+    "base_encode_decode",
+    "block",
+    "block_file_info_deserialize",
+    "block_filter_deserialize",
+    "block_header_and_short_txids_deserialize",
+    "fee_rate_deserialize",
+    "flat_file_pos_deserialize",
+    "hex",
+    "integer",
+    "key_origin_info_deserialize",
+    "merkle_block_deserialize",
+    "out_point_deserialize",
+    "parse_hd_keypath",
+    "parse_numbers",
+    "parse_script",
+    "parse_univalue",
+    "partial_merkle_tree_deserialize",
+    "partially_signed_transaction_deserialize",
+    "prefilled_transaction_deserialize",
+    "psbt_input_deserialize",
+    "psbt_output_deserialize",
+    "pub_key_deserialize",
+    "script_deserialize",
+    "sub_net_deserialize",
+    "tx_in",
+    "tx_in_deserialize",
+    "tx_out",
+]
 
 def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -78,7 +109,7 @@ def main():
                 os.path.join(config["environment"]["BUILDDIR"], 'src', 'test', 'fuzz', test_list_selection[0]),
                 '-help=1',
             ],
-            timeout=1,
+            timeout=10,
             check=True,
             stderr=subprocess.PIPE,
             universal_newlines=True,
@@ -100,14 +131,20 @@ def main():
 
 def run_once(*, corpus, test_list, build_dir, export_coverage):
     for t in test_list:
+        corpus_path = os.path.join(corpus, t)
+        if t in FUZZERS_MISSING_CORPORA:
+            os.makedirs(corpus_path, exist_ok=True)
         args = [
             os.path.join(build_dir, 'src', 'test', 'fuzz', t),
             '-runs=1',
-            os.path.join(corpus, t),
+            '-detect_leaks=0',
+            corpus_path,
         ]
         logging.debug('Run {} with args {}'.format(t, args))
-        output = subprocess.run(args, check=True, stderr=subprocess.PIPE, universal_newlines=True).stderr
+        result = subprocess.run(args, stderr=subprocess.PIPE, universal_newlines=True)
+        output = result.stderr
         logging.debug('Output: {}'.format(output))
+        result.check_returncode()
         if not export_coverage:
             continue
         for l in output.splitlines():
