@@ -2,6 +2,10 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+# Pattern rule to print variables, e.g. make print-top_srcdir
+print-%:
+	@echo $* = $($*)
+
 ACLOCAL_AMFLAGS = -I build-aux/m4
 SUBDIRS = src
 if ENABLE_MAN
@@ -20,9 +24,8 @@ SYSCOIND_BIN=$(top_builddir)/src/$(SYSCOIN_DAEMON_NAME)$(EXEEXT)
 SYSCOIN_QT_BIN=$(top_builddir)/src/qt/$(SYSCOIN_GUI_NAME)$(EXEEXT)
 SYSCOIN_CLI_BIN=$(top_builddir)/src/$(SYSCOIN_CLI_NAME)$(EXEEXT)
 SYSCOIN_TX_BIN=$(top_builddir)/src/$(SYSCOIN_TX_NAME)$(EXEEXT)
-SYSCOIN_BENCH_BIN=$(top_builddir)/src/$(SYSCOIN_BENCH_NAME)$(EXEEXT)
 SYSCOIN_WALLET_BIN=$(top_builddir)/src/$(SYSCOIN_WALLET_TOOL_NAME)$(EXEEXT)
-SYSCOIN_WIN_INSTALLER=$(PACKAGE)-$(PACKAGE_VERSION)-win$(WINDOWS_BITS)-setup$(EXEEXT)
+SYSCOIN_WIN_INSTALLER=$(PACKAGE)-$(PACKAGE_VERSION)-win64-setup$(EXEEXT)
 
 empty :=
 space := $(empty) $(empty)
@@ -40,14 +43,19 @@ OSX_INSTALLER_ICONS=$(top_srcdir)/src/qt/res/icons/syscoin.icns
 OSX_PLIST=$(top_builddir)/share/qt/Info.plist #not installed
 OSX_QT_TRANSLATIONS = da,de,es,hu,ru,uk,zh_CN,zh_TW
 
-DIST_DOCS = $(wildcard doc/*.md) $(wildcard doc/release-notes/*.md)
-
+DIST_DOCS = \
+  README.md \
+  $(wildcard doc/*.md) \
+  $(wildcard doc/release-notes/*.md)
 DIST_CONTRIB = $(top_srcdir)/contrib/syscoin-cli.bash-completion \
 	       $(top_srcdir)/contrib/syscoin-tx.bash-completion \
 	       $(top_srcdir)/contrib/syscoind.bash-completion \
 	       $(top_srcdir)/contrib/debian/copyright \
 	       $(top_srcdir)/contrib/init \
-	       $(top_srcdir)/contrib/install_db4.sh
+	       $(top_srcdir)/contrib/install_db4.sh \
+	       $(top_srcdir)/contrib/linearize/linearize-data.py \
+	       $(top_srcdir)/contrib/linearize/linearize-hashes.py
+
 DIST_SHARE = \
   $(top_srcdir)/share/genbuild.sh \
   $(top_srcdir)/share/rpcauth
@@ -83,10 +91,6 @@ $(SYSCOIN_WIN_INSTALLER): all-recursive
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(SYSCOIN_WALLET_BIN) $(top_builddir)/release
 	cp $(top_builddir)/src/bin/win64/sysgeth.nod.exe $(top_builddir)/release
 	cp $(top_builddir)/src/bin/win64/sysrelayer.nod.exe $(top_builddir)/release
-	cp $(top_builddir)/src/bin/win64/sha3.node $(top_builddir)/release
-	cp $(top_builddir)/src/bin/win64/bufferutil.node $(top_builddir)/release
-	cp $(top_builddir)/src/bin/win64/scrypt.node $(top_builddir)/release
-	cp $(top_builddir)/src/bin/win64/validation.node $(top_builddir)/release
 	@test -f $(MAKENSIS) && $(MAKENSIS) -V2 $(top_builddir)/share/setup.nsi || \
 	  echo error: could not build $@
 	@echo built $@
@@ -96,15 +100,11 @@ $(OSX_APP)/Contents/PkgInfo:
 	@echo "APPL????" > $@
 
 SYSCOIN_GETH_BINS =	$(top_builddir)/src/bin/osx/sysgeth.nod \
-	$(top_builddir)/src/bin/osx/sysrelayer.nod \
-	$(top_builddir)/src/bin/osx/sha3.node \
-	$(top_builddir)/src/bin/osx/bufferutil.node \
-	$(top_builddir)/src/bin/osx/scrypt.node \
-	$(top_builddir)/src/bin/osx/validation.node
+	$(top_builddir)/src/bin/osx/sysrelayer.nod
 
 $(OSX_APP)/Contents/Resources/empty.lproj:
 	$(MKDIR_P) $(@D)
-	@touch $@ 
+	@touch $@
 
 $(OSX_APP)/Contents/Info.plist: $(OSX_PLIST)
 	$(MKDIR_P) $(@D)
@@ -190,14 +190,20 @@ $(SYSCOIN_CLI_BIN): FORCE
 $(SYSCOIN_TX_BIN): FORCE
 	$(MAKE) -C src $(@F)
 
-$(SYSCOIN_BENCH_BIN): FORCE
-	$(MAKE) -C src $(@F)
-
 $(SYSCOIN_WALLET_BIN): FORCE
 	$(MAKE) -C src $(@F)
 
 if USE_LCOV
-LCOV_FILTER_PATTERN=-p "/usr/include/" -p "/usr/lib/" -p "src/leveldb/" -p "src/bench/" -p "src/univalue" -p "src/crypto/ctaes" -p "src/secp256k1"
+LCOV_FILTER_PATTERN = \
+	-p "/usr/include/" \
+	-p "/usr/lib/" \
+	-p "/usr/lib64/" \
+	-p "src/leveldb/" \
+	-p "src/bench/" \
+	-p "src/univalue" \
+	-p "src/crypto/ctaes" \
+	-p "src/secp256k1" \
+	-p "depends"
 
 baseline.info:
 	$(LCOV) -c -i -d $(abs_builddir)/src -o $@
@@ -216,7 +222,7 @@ test_syscoin_filtered.info: test_syscoin.info
 	$(LCOV) -a $@ $(LCOV_OPTS) -o $@
 
 functional_test.info: test_syscoin_filtered.info
-	-@TIMEOUT=15 test/functional/test_runner.py $(EXTENDED_FUNCTIONAL_TESTS)
+	@TIMEOUT=15 test/functional/test_runner.py $(EXTENDED_FUNCTIONAL_TESTS)
 	$(LCOV) -c $(LCOV_OPTS) -d $(abs_builddir)/src --t functional-tests -o $@
 	$(LCOV) -z $(LCOV_OPTS) -d $(abs_builddir)/src
 
@@ -328,4 +334,4 @@ clean-docs:
 clean-local: clean-docs
 	rm -rf coverage_percent.txt test_syscoin.coverage/ total.coverage/ test/tmp/ cache/ $(OSX_APP)
 	rm -rf test/functional/__pycache__ test/functional/test_framework/__pycache__ test/cache share/rpcauth/__pycache__
-
+	rm -rf osx_volname dist/ dpi36.background.tiff dpi72.background.tiff

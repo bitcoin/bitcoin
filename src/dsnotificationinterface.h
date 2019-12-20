@@ -10,7 +10,7 @@
 class CDSNotificationInterface : public CValidationInterface
 {
 public:
-    CDSNotificationInterface(CConnman& connmanIn): connman(connmanIn) {}
+    explicit CDSNotificationInterface(CConnman& connmanIn): connman(connmanIn) {}
     virtual ~CDSNotificationInterface() = default;
 
     // a small helper to initialize current block height in sub-modules on startup

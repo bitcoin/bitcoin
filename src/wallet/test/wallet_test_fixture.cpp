@@ -4,8 +4,6 @@
 
 #include <wallet/test/wallet_test_fixture.h>
 
-#include <wallet/db.h>
-
 WalletTestingSetup::WalletTestingSetup(const std::string& chainName)
     : TestingSetup(chainName),
       m_wallet(m_chain.get(), WalletLocation(), WalletDatabase::CreateMock())

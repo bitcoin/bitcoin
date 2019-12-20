@@ -14,7 +14,6 @@
 #include <util/validation.h> // For strMessageMagic
 #include <wallet/wallet.h>
 
-#include <string>
 #include <vector>
 
 #include <QClipboard>
@@ -35,8 +34,6 @@ SignVerifyMessageDialog::SignVerifyMessageDialog(const PlatformStyle *_platformS
     ui->addressBookButton_VM->setIcon(platformStyle->SingleColorIcon(":/icons/address-book"));
     ui->verifyMessageButton_VM->setIcon(platformStyle->SingleColorIcon(":/icons/transaction_0"));
     ui->clearButton_VM->setIcon(platformStyle->SingleColorIcon(":/icons/remove"));
-
-    ui->signatureOut_SM->setPlaceholderText(tr("Click \"Sign Message\" to generate signature"));
 
     GUIUtil::setupAddressWidget(ui->addressIn_SM, this);
     GUIUtil::setupAddressWidget(ui->addressIn_VM, this);
@@ -137,7 +134,7 @@ void SignVerifyMessageDialog::on_signMessageButton_SM_clicked()
     }
 
     CKey key;
-    if (!model->wallet().getPrivKey(CKeyID(*pkhash), key))
+    if (!model->wallet().getPrivKey(GetScriptForDestination(destination), CKeyID(*pkhash), key))
     {
         ui->statusLabel_SM->setStyleSheet("QLabel { color: red; }");
         ui->statusLabel_SM->setText(tr("Private key for the entered address is not available."));

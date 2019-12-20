@@ -5,7 +5,7 @@
 #include <bench/bench.h>
 
 #include <chainparams.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 #include <validation.h>
 
 #include <algorithm>
@@ -112,7 +112,7 @@ void benchmark::BenchRunner::RunAll(Printer& printer, uint64_t num_evals, double
     printer.header();
 
     for (const auto& p : benchmarks()) {
-        TestingSetup test{CBaseChainParams::REGTEST};
+        RegTestingSetup test{};
         {
             LOCK(cs_main);
             assert(::ChainActive().Height() == 0);

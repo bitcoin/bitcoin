@@ -41,7 +41,7 @@ public:
 
     CMasternodePing() = default;
 
-    CMasternodePing(const COutPoint& outpoint);
+    explicit CMasternodePing(const COutPoint& outpoint);
 
     ADD_SERIALIZE_METHODS;
 
@@ -170,7 +170,7 @@ public:
 
     CMasternode();
     CMasternode(const CMasternode& other);
-    CMasternode(const CMasternodeBroadcast& mnb);
+    explicit CMasternode(const CMasternodeBroadcast& mnb);
     CMasternode(CService addrNew, COutPoint outpointNew, CPubKey pubKeyCollateralAddressNew, CPubKey pubKeyMasternodeNew, int nProtocolVersionIn, int retries);
 
     ADD_SERIALIZE_METHODS;
@@ -300,7 +300,7 @@ public:
     bool fRecovery;
 
     CMasternodeBroadcast() : CMasternode(), fRecovery(false) {}
-    CMasternodeBroadcast(const CMasternode& mn) : CMasternode(mn), fRecovery(false) {}
+    explicit CMasternodeBroadcast(const CMasternode& mn) : CMasternode(mn), fRecovery(false) {}
     CMasternodeBroadcast(CService addrNew, COutPoint outpointNew, CPubKey pubKeyCollateralAddressNew, CPubKey pubKeyMasternodeNew, int nProtocolVersionIn) :
         CMasternode(addrNew, outpointNew, pubKeyCollateralAddressNew, pubKeyMasternodeNew, nProtocolVersionIn, 0), fRecovery(false) {}
 
@@ -413,11 +413,7 @@ public:
         return ss.GetHash();
     }
 
-    void Relay() const
-    {
-        CInv inv(MSG_MASTERNODE_VERIFY, GetHash());
-        g_connman->RelayInv(inv);
-    }
+    void Relay() const;
 };
 
 #endif // SYSCOIN_MASTERNODE_H

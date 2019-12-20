@@ -1,9 +1,9 @@
 *.tar.gz
 
 *.exe
+*.pdb
 src/syscoin
 src/syscoind
-src/syscoinbench
 src/syscoin-cli
 src/syscoin-tx
 src/syscoin-wallet
@@ -36,6 +36,7 @@ libtool
 src/config/syscoin-config.h
 src/config/syscoin-config.h.in
 src/config/stamp-h1
+src/obj
 share/setup.nsi
 share/qt/Info.plist
 
@@ -78,7 +79,7 @@ src/qt/syscoin-qt.includes
 
 # Only ignore unexpected patches
 *.patch
-!depends/patches/*.patch
+!depends/patches/**/*.patch
 
 #libtool object files
 *.lo
@@ -87,9 +88,13 @@ src/qt/syscoin-qt.includes
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
+!depends/Makefile
 syscoin-qt
 Syscoin-Qt.app
 background.tiff*
+
+# Qt Creator
+Makefile.am.user
 
 # Unit-tests
 Makefile.test
@@ -138,3 +143,7 @@ db4/
 
 # clang-check
 *.plist
+
+osx_volname
+dist/
+*.background.tiff

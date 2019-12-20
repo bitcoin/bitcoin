@@ -66,17 +66,17 @@ public:
     bool DefaultConsistencyChecks() const { return fDefaultConsistencyChecks; }
     /** Policy: Filter transactions that do not match well-defined patterns */
     bool RequireStandard() const { return fRequireStandard; }
+    /** If this chain is exclusively used for testing */
+    bool IsTestChain() const { return m_is_test_chain; }
     uint64_t PruneAfterHeight() const { return nPruneAfterHeight; }
     /** Minimum free space (in GB) needed for data directory */
     uint64_t AssumedBlockchainSize() const { return m_assumed_blockchain_size; }
     /** Minimum free space (in GB) needed for data directory when pruned; Does not include prune target*/
     uint64_t AssumedChainStateSize() const { return m_assumed_chain_state_size; }
-    /** Make miner stop after a block is found. In RPC, don't return until nGenProcLimit blocks are generated */
-    bool MineBlocksOnDemand() const { return fMineBlocksOnDemand; }
-    /** Return the BIP70 network string (main, test or regtest) */
+    /** Whether it is possible to mine blocks on demand (no retargeting) */
+    bool MineBlocksOnDemand() const { return consensus.fPowNoRetargeting; }
+    /** Return the network string */
     std::string NetworkIDString() const { return strNetworkID; }
-    /** Return true if the fallback fee is by default enabled for this network */
-    bool IsFallbackFeeEnabled() const { return m_fallback_fee_enabled; }
     /** Return the list of hostnames to look up for DNS seeds */
     const std::vector<std::string>& DNSSeeds() const { return vSeeds; }
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
@@ -86,6 +86,7 @@ public:
     const ChainTxData& TxData() const { return chainTxData; }
     void TurnOffSegwitForUnitTests();
     // SYSCOIN
+    void SetSYSXAssetForUnitTests(uint32_t asset);
     int FulfilledRequestExpireTime() const { return nFulfilledRequestExpireTime; }
     const std::string& SporkAddress() const { return strSporkAddress; }
 protected:
@@ -105,13 +106,12 @@ protected:
     std::vector<SeedSpec6> vFixedSeeds;
     bool fDefaultConsistencyChecks;
     bool fRequireStandard;
-    bool fMineBlocksOnDemand;
+    bool m_is_test_chain;
     CCheckpointData checkpointData;
     ChainTxData chainTxData;
-    bool m_fallback_fee_enabled;
     // SYSCOIN
     int nFulfilledRequestExpireTime;
-    std::string strSporkAddress;
+    std::string strSporkAddress;   
 };
 
 /**
@@ -128,7 +128,7 @@ std::unique_ptr<const CChainParams> CreateChainParams(const std::string& chain);
 const CChainParams &Params();
 
 /**
- * Sets the params returned by Params() to those for the given BIP70 chain name.
+ * Sets the params returned by Params() to those for the given chain name.
  * @throws std::runtime_error when the chain is not supported.
  */
 void SelectParams(const std::string& chain);
@@ -136,5 +136,6 @@ void SelectParams(const std::string& chain);
  * Allows turning off segwit for unit tests.
  */
 void TurnOffSegwitForUnitTests();
-
+// SYSCOIN
+void SetSYSXAssetForUnitTests(uint32_t asset);
 #endif // SYSCOIN_CHAINPARAMS_H

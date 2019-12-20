@@ -6,7 +6,6 @@
 #include <policy/fees.h>
 
 #include <clientversion.h>
-#include <primitives/transaction.h>
 #include <streams.h>
 #include <txmempool.h>
 #include <util/system.h>
@@ -47,7 +46,7 @@ private:
     std::vector<double> txCtAvg;
 
     // Count the total # of txs confirmed within Y blocks in each bucket
-    // Track the historical moving average of theses totals over blocks
+    // Track the historical moving average of these totals over blocks
     std::vector<std::vector<double>> confAvg; // confAvg[Y][X]
 
     // Track moving avg of txs which have been evicted from the mempool
@@ -518,7 +517,7 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
     uint256 hash = entry.GetTx().GetHash();
     if (mapMemPoolTxs.count(hash)) {
         LogPrint(BCLog::ESTIMATEFEE, "Blockpolicy error mempool tx %s already being tracked\n",
-                 hash.ToString().c_str());
+                 hash.ToString());
         return;
     }
 

@@ -8,8 +8,6 @@
 
 #include <uint256.h>
 #include <limits>
-#include <map>
-#include <string>
 
 namespace Consensus {
 
@@ -47,8 +45,10 @@ struct BIP9Deployment {
 struct Params {
     uint256 hashGenesisBlock;
     // SYSCOIN
-    std::vector<unsigned char> vchSYSXContract;
+    uint32_t nSYSXAsset;
     std::vector<unsigned char> vchSYSXBurnMethodSignature;
+    std::vector<unsigned char> vchSYSXERC20Manager;
+    std::vector<unsigned char> vchTokenFreezeMethod;
     unsigned int nSeniorityHeight1;
     double nSeniorityLevel1;
     unsigned int nSeniorityHeight2;
@@ -70,6 +70,15 @@ struct Params {
     int BIP65Height;
     /** Block height at which BIP66 becomes active */
     int BIP66Height;
+    /** Block height at which CSV (BIP68, BIP112 and BIP113) becomes active */
+    int CSVHeight;
+    /** Block height at which Segwit (BIP141, BIP143 and BIP147) becomes active.
+     * Note that segwit v0 script rules are enforced on all blocks except the
+     * BIP 16 exception blocks. */
+    int SegwitHeight;
+    /** Don't warn about unknown BIP 9 activations below this height.
+     * This prevents us from warning about the CSV and segwit activations. */
+    int MinBIP9WarningHeight;
     /**
      * Minimum blocks including miner confirmation of the total of 2016 blocks in a retargeting period,
      * (nPowTargetTimespan / nPowTargetSpacing) which is also used for BIP9 deployments.

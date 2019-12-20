@@ -25,12 +25,12 @@ from test_framework.messages import (
     MSG_WITNESS_FLAG,
     NODE_NETWORK,
     NODE_WITNESS,
-    msg_block,
+    msg_no_witness_block,
     msg_getdata,
     msg_headers,
     msg_inv,
     msg_tx,
-    msg_witness_block,
+    msg_block,
     msg_witness_tx,
     ser_uint256,
     ser_vector,
@@ -67,8 +67,8 @@ from test_framework.script import (
     SIGHASH_ANYONECANPAY,
     SIGHASH_NONE,
     SIGHASH_SINGLE,
-    SegwitVersion1SignatureHash,
-    SignatureHash,
+    SegwitV0SignatureHash,
+    LegacySignatureHash,
     hash160,
 )
 from test_framework.test_framework import SyscoinTestFramework
@@ -76,7 +76,7 @@ from test_framework.util import (
     assert_equal,
     connect_nodes,
     disconnect_nodes,
-    get_bip9_status,
+    softfork_active,
     hex_str_to_bytes,
     assert_raises_rpc_error,
 )
@@ -85,6 +85,8 @@ from test_framework.util import (
 SEGWIT_HEIGHT = 432
 
 MAX_SIGOP_COST = 80000
+
+SEGWIT_HEIGHT = 120
 
 class UTXO():
     """Used to keep track of anyone-can-spend outputs that we can use in the tests."""
@@ -99,7 +101,7 @@ def get_p2pkh_script(pubkeyhash):
 
 def sign_p2pk_witness_input(script, tx_to, in_idx, hashtype, value, key):
     """Add signature for a P2PK witness program."""
-    tx_hash = SegwitVersion1SignatureHash(script, tx_to, in_idx, hashtype, value)
+    tx_hash = SegwitV0SignatureHash(script, tx_to, in_idx, hashtype, value)
     signature = key.sign_ecdsa(tx_hash) + chr(hashtype).encode('latin-1')
     tx_to.wit.vtxinwit[in_idx].scriptWitness.stack = [signature, script]
     tx_to.rehash()
@@ -109,7 +111,7 @@ def get_virtual_size(witness_block):
 
     Virtual size is base + witness/4."""
     base_size = len(witness_block.serialize(with_witness=False))
-    total_size = len(witness_block.serialize(with_witness=True))
+    total_size = len(witness_block.serialize())
     # the "+3" is so we round up
     vsize = int((3 * base_size + total_size + 3) / 4)
     return vsize
@@ -132,7 +134,7 @@ def test_witness_block(node, p2p, block, accepted, with_witness=True, reason=Non
     - use the getbestblockhash rpc to check for acceptance."""
     reason = [reason] if reason else []
     with node.assert_debug_log(expected_msgs=reason):
-        p2p.send_message(msg_witness_block(block) if with_witness else msg_block(block))
+        p2p.send_message(msg_block(block) if with_witness else msg_no_witness_block(block))
         p2p.sync_with_ping()
         assert_equal(node.getbestblockhash() == block.hash, accepted)
 
@@ -182,7 +184,12 @@ class SegWitTest(SyscoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 3
         # This test tests SegWit both pre and post-activation, so use the normal BIP9 activation.
-        self.extra_args = [["-whitelist=127.0.0.1"], ["-whitelist=127.0.0.1", "-acceptnonstdtxn=0"], ["-whitelist=127.0.0.1"]]
+        self.extra_args = [
+            ["-whitelist=127.0.0.1", "-acceptnonstdtxn=1", "-segwitheight={}".format(SEGWIT_HEIGHT)],
+            ["-whitelist=127.0.0.1", "-acceptnonstdtxn=0", "-segwitheight={}".format(SEGWIT_HEIGHT)],
+            ["-whitelist=127.0.0.1", "-acceptnonstdtxn=1", "-segwitheight=-1"]
+        ]
+        self.supports_cli = False
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -225,8 +232,8 @@ class SegWitTest(SyscoinTestFramework):
         # Keep a place to store utxo's that can be used in later tests
         self.utxo = []
 
-        # Segwit status 'defined'
-        self.segwit_status = 'defined'
+        self.log.info("Starting tests before segwit activation")
+        self.segwit_active = False
 
         self.test_non_witness_transaction()
         self.test_block_relay()
@@ -277,7 +284,7 @@ class SegWitTest(SyscoinTestFramework):
 
         block = self.build_next_block(version=1)
         block.solve()
-        self.test_node.send_message(msg_block(block))
+        self.test_node.send_message(msg_no_witness_block(block))
         self.test_node.sync_with_ping()  # make sure the block was processed
         txid = block.vtx[0].sha256
 
@@ -299,6 +306,38 @@ class SegWitTest(SyscoinTestFramework):
         # Save this transaction for later
         self.utxo.append(UTXO(tx.sha256, 0, 49 * 100000000))
         self.nodes[0].generate(1)
+
+    @subtest
+    def test_unnecessary_witness_before_segwit_activation(self):
+        """Verify that blocks with witnesses are rejected before activation."""
+
+        tx = CTransaction()
+        tx.vin.append(CTxIn(COutPoint(self.utxo[0].sha256, self.utxo[0].n), b""))
+        tx.vout.append(CTxOut(self.utxo[0].nValue - 1000, CScript([OP_TRUE])))
+        tx.wit.vtxinwit.append(CTxInWitness())
+        tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([CScriptNum(1)])]
+
+        # Verify the hash with witness differs from the txid
+        # (otherwise our testing framework must be broken!)
+        tx.rehash()
+        assert tx.sha256 != tx.calc_sha256(with_witness=True)
+
+        # Construct a segwit-signaling block that includes the transaction.
+        block = self.build_next_block(version=(VB_TOP_BITS | (1 << VB_WITNESS_BIT)))
+        self.update_witness_block_with_transactions(block, [tx])
+        # Sending witness data before activation is not allowed (anti-spam
+        # rule).
+        test_witness_block(self.nodes[0], self.test_node, block, accepted=False, reason='unexpected-witness')
+
+        # But it should not be permanently marked bad...
+        # Resend without witness information.
+        self.test_node.send_message(msg_no_witness_block(block))
+        self.test_node.sync_with_ping()
+        assert_equal(self.nodes[0].getbestblockhash(), block.hash)
+
+        # Update our utxo list; we spent the first entry.
+        self.utxo.pop(0)
+        self.utxo.append(UTXO(tx.sha256, 0, tx.vout[0].nValue))
 
     @subtest
     def test_block_relay(self):
@@ -329,7 +368,7 @@ class SegWitTest(SyscoinTestFramework):
 
         # Check that we can getdata for witness blocks or regular blocks,
         # and the right thing happens.
-        if self.segwit_status != 'active':
+        if not self.segwit_active:
             # Before activation, we should be able to request old blocks with
             # or without witness, and they should be the same.
             chain_height = self.nodes[0].getblockcount()
@@ -344,7 +383,7 @@ class SegWitTest(SyscoinTestFramework):
                 block_hash = int(block_hash, 16)
                 block = self.test_node.request_block(block_hash, 2)
                 wit_block = self.test_node.request_block(block_hash, 2 | MSG_WITNESS_FLAG)
-                assert_equal(block.serialize(True), wit_block.serialize(True))
+                assert_equal(block.serialize(), wit_block.serialize())
                 assert_equal(block.serialize(), hex_str_to_bytes(rpc_block))
         else:
             # After activation, witness blocks and non-witness blocks should
@@ -360,15 +399,15 @@ class SegWitTest(SyscoinTestFramework):
             rpc_block = self.nodes[0].getblock(block.hash, False)
             non_wit_block = self.test_node.request_block(block.sha256, 2)
             wit_block = self.test_node.request_block(block.sha256, 2 | MSG_WITNESS_FLAG)
-            assert_equal(wit_block.serialize(True), hex_str_to_bytes(rpc_block))
+            assert_equal(wit_block.serialize(), hex_str_to_bytes(rpc_block))
             assert_equal(wit_block.serialize(False), non_wit_block.serialize())
-            assert_equal(wit_block.serialize(True), block.serialize(True))
+            assert_equal(wit_block.serialize(), block.serialize())
 
             # Test size, vsize, weight
             rpc_details = self.nodes[0].getblock(block.hash, True)
-            assert_equal(rpc_details["size"], len(block.serialize(True)))
+            assert_equal(rpc_details["size"], len(block.serialize()))
             assert_equal(rpc_details["strippedsize"], len(block.serialize(False)))
-            weight = 3 * len(block.serialize(False)) + len(block.serialize(True))
+            weight = 3 * len(block.serialize(False)) + len(block.serialize())
             assert_equal(rpc_details["weight"], weight)
 
             # Upgraded node should not ask for blocks from unupgraded
@@ -450,7 +489,7 @@ class SegWitTest(SyscoinTestFramework):
         tx3.wit.vtxinwit.append(CTxInWitness())
         tx3.wit.vtxinwit[0].scriptWitness.stack = [witness_program]
         tx3.rehash()
-        if self.segwit_status != 'active':
+        if not self.segwit_active:
             # Just check mempool acceptance, but don't add the transaction to the mempool, since witness is disallowed
             # in blocks and the tx is impossible to mine right now.
             assert_equal(self.nodes[0].testmempoolaccept([tx3.serialize_with_witness().hex()]), [{'txid': tx3.hash, 'allowed': True}])
@@ -471,6 +510,7 @@ class SegWitTest(SyscoinTestFramework):
     @subtest
     def advance_to_segwit_active(self):
         """Mine enough blocks to activate segwit."""
+        assert not softfork_active(self.nodes[0], 'segwit')
         height = self.nodes[0].getblockcount()
         self.nodes[0].generate(SEGWIT_HEIGHT - height)
         self.segwit_status = 'active'
@@ -556,7 +596,7 @@ class SegWitTest(SyscoinTestFramework):
         block.solve()
 
         # Test the test -- witness serialization should be different
-        assert msg_witness_block(block).serialize() != msg_block(block).serialize()
+        assert msg_block(block).serialize() != msg_no_witness_block(block).serialize()
 
         # This empty block should be valid.
         test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
@@ -649,13 +689,13 @@ class SegWitTest(SyscoinTestFramework):
 
         # We can't send over the p2p network, because this is too big to relay
         # TODO: repeat this test with a block that can be relayed
-        self.nodes[0].submitblock(block.serialize(True).hex())
+        self.nodes[0].submitblock(block.serialize().hex())
 
         assert self.nodes[0].getbestblockhash() != block.hash
 
         block.vtx[0].wit.vtxinwit[0].scriptWitness.stack.pop()
         assert get_virtual_size(block) < MAX_BLOCK_BASE_SIZE
-        self.nodes[0].submitblock(block.serialize(True).hex())
+        self.nodes[0].submitblock(block.serialize().hex())
 
         assert self.nodes[0].getbestblockhash() == block.hash
 
@@ -734,7 +774,7 @@ class SegWitTest(SyscoinTestFramework):
         assert_equal(vsize, MAX_BLOCK_BASE_SIZE + 1)
         # Make sure that our test case would exceed the old max-network-message
         # limit
-        assert len(block.serialize(True)) > 2 * 1024 * 1024
+        assert len(block.serialize()) > 2 * 1024 * 1024
 
         test_witness_block(self.nodes[0], self.test_node, block, accepted=False)
 
@@ -762,14 +802,14 @@ class SegWitTest(SyscoinTestFramework):
         add_witness_commitment(block, nonce=1)
         block.vtx[0].wit = CTxWitness()  # drop the nonce
         block.solve()
-        self.nodes[0].submitblock(block.serialize(True).hex())
+        self.nodes[0].submitblock(block.serialize().hex())
         assert self.nodes[0].getbestblockhash() != block.hash
 
         # Now redo commitment with the standard nonce, but let syscoind fill it in.
         add_witness_commitment(block, nonce=0)
         block.vtx[0].wit = CTxWitness()
         block.solve()
-        self.nodes[0].submitblock(block.serialize(True).hex())
+        self.nodes[0].submitblock(block.serialize().hex())
         assert_equal(self.nodes[0].getbestblockhash(), block.hash)
 
         # This time, add a tx with non-empty witness, but don't supply
@@ -784,7 +824,7 @@ class SegWitTest(SyscoinTestFramework):
         block_2.vtx[0].vout.pop()
         block_2.vtx[0].wit = CTxWitness()
 
-        self.nodes[0].submitblock(block_2.serialize(True).hex())
+        self.nodes[0].submitblock(block_2.serialize().hex())
         # Tip should not advance!
         assert self.nodes[0].getbestblockhash() != block_2.hash
 
@@ -905,7 +945,7 @@ class SegWitTest(SyscoinTestFramework):
         MAX_PROGRAM_LENGTH = 10000
 
         # This program is 19 max pushes (9937 bytes), then 64 more opcode-bytes.
-        long_witness_program = CScript([b'a' * 520] * 19 + [OP_DROP] * 63 + [OP_TRUE])
+        long_witness_program = CScript([b'a' * MAX_SCRIPT_ELEMENT_SIZE] * 19 + [OP_DROP] * 63 + [OP_TRUE])
         assert len(long_witness_program) == MAX_PROGRAM_LENGTH + 1
         long_witness_hash = sha256(long_witness_program)
         long_script_pubkey = CScript([OP_0, long_witness_hash])
@@ -929,7 +969,7 @@ class SegWitTest(SyscoinTestFramework):
         test_witness_block(self.nodes[0], self.test_node, block, accepted=False)
 
         # Try again with one less byte in the witness program
-        witness_program = CScript([b'a' * 520] * 19 + [OP_DROP] * 62 + [OP_TRUE])
+        witness_program = CScript([b'a' * MAX_SCRIPT_ELEMENT_SIZE] * 19 + [OP_DROP] * 62 + [OP_TRUE])
         assert len(witness_program) == MAX_PROGRAM_LENGTH
         witness_hash = sha256(witness_program)
         script_pubkey = CScript([OP_0, witness_hash])
@@ -1278,7 +1318,7 @@ class SegWitTest(SyscoinTestFramework):
         tx2.vin.append(CTxIn(COutPoint(tx.sha256, 0), b""))
         tx2.vout.append(CTxOut(tx.vout[0].nValue - 1000, script_wsh))
         script = get_p2pkh_script(pubkeyhash)
-        sig_hash = SegwitVersion1SignatureHash(script, tx2, 0, SIGHASH_ALL, tx.vout[0].nValue)
+        sig_hash = SegwitV0SignatureHash(script, tx2, 0, SIGHASH_ALL, tx.vout[0].nValue)
         signature = key.sign_ecdsa(sig_hash) + b'\x01'  # 0x1 is SIGHASH_ALL
         tx2.wit.vtxinwit.append(CTxInWitness())
         tx2.wit.vtxinwit[0].scriptWitness.stack = [signature, pubkey]
@@ -1332,7 +1372,7 @@ class SegWitTest(SyscoinTestFramework):
         tx5 = CTransaction()
         tx5.vin.append(CTxIn(COutPoint(tx4.sha256, 0), b""))
         tx5.vout.append(CTxOut(tx4.vout[0].nValue - 1000, CScript([OP_TRUE])))
-        (sig_hash, err) = SignatureHash(script_pubkey, tx5, 0, SIGHASH_ALL)
+        (sig_hash, err) = LegacySignatureHash(script_pubkey, tx5, 0, SIGHASH_ALL)
         signature = key.sign_ecdsa(sig_hash) + b'\x01'  # 0x1 is SIGHASH_ALL
         tx5.vin[0].scriptSig = CScript([signature, pubkey])
         tx5.rehash()
@@ -1482,7 +1522,7 @@ class SegWitTest(SyscoinTestFramework):
         tx2.vout.append(CTxOut(tx.vout[0].nValue, CScript([OP_TRUE])))
 
         script = get_p2pkh_script(pubkeyhash)
-        sig_hash = SegwitVersion1SignatureHash(script, tx2, 0, SIGHASH_ALL, tx.vout[0].nValue)
+        sig_hash = SegwitV0SignatureHash(script, tx2, 0, SIGHASH_ALL, tx.vout[0].nValue)
         signature = key.sign_ecdsa(sig_hash) + b'\x01'  # 0x1 is SIGHASH_ALL
 
         # Check that we can't have a scriptSig

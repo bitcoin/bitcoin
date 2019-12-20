@@ -13,18 +13,15 @@
 #include <memory>
 
 extern CCriticalSection cs_main;
+class BlockValidationState;
 class CBlock;
 class CBlockIndex;
 struct CBlockLocator;
-class CBlockIndex;
 class CConnman;
 class CReserveScript;
 class CValidationInterface;
-class CValidationState;
 class uint256;
 class CScheduler;
-class CTxMemPool;
-enum class MemPoolRemovalReason;
 
 // These functions dispatch to one or all registered wallets
 
@@ -116,7 +113,7 @@ protected:
      *
      * Called on a background thread.
      */
-    virtual void BlockDisconnected(const std::shared_ptr<const CBlock> &block) {}
+    virtual void BlockDisconnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex* pindex) {}
     /**
      * Notifies listeners of the new active block chain on-disk.
      *
@@ -136,11 +133,11 @@ protected:
     virtual void ChainStateFlushed(const CBlockLocator &locator) {}
     /**
      * Notifies listeners of a block validation result.
-     * If the provided CValidationState IsValid, the provided block
+     * If the provided BlockValidationState IsValid, the provided block
      * is guaranteed to be the current best block at the time the
      * callback was generated (not necessarily now)
      */
-    virtual void BlockChecked(const CBlock&, const CValidationState&) {}
+    virtual void BlockChecked(const CBlock&, const BlockValidationState&) {}
     /**
      * Notifies listeners that a block which builds directly on our current tip
      * has been received and connected to the headers tree, though not validated yet */
@@ -164,8 +161,6 @@ private:
     friend void ::UnregisterAllValidationInterfaces();
     friend void ::CallFunctionInValidationInterfaceQueue(std::function<void ()> func);
 
-    void MempoolEntryRemoved(CTransactionRef tx, MemPoolRemovalReason reason);
-
 public:
     /** Register a CScheduler to give callbacks which should run in the background (may only be called once) */
     void RegisterBackgroundSignalScheduler(CScheduler& scheduler);
@@ -176,19 +171,15 @@ public:
 
     size_t CallbacksPending();
 
-    /** Register with mempool to call TransactionRemovedFromMempool callbacks */
-    void RegisterWithMempoolSignals(CTxMemPool& pool);
-    /** Unregister with mempool */
-    void UnregisterWithMempoolSignals(CTxMemPool& pool);
 
     void UpdatedBlockTip(const CBlockIndex *, const CBlockIndex *, bool fInitialDownload);
     void TransactionAddedToMempool(const CTransactionRef &);
+    void TransactionRemovedFromMempool(const CTransactionRef &);
     void BlockConnected(const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex, const std::shared_ptr<const std::vector<CTransactionRef>> &);
-    void BlockDisconnected(const std::shared_ptr<const CBlock> &);
+    void BlockDisconnected(const std::shared_ptr<const CBlock> &, const CBlockIndex* pindex);
     void ChainStateFlushed(const CBlockLocator &);
-    void BlockChecked(const CBlock&, const CValidationState&);
+    void BlockChecked(const CBlock&, const BlockValidationState&);
     void NewPoWValidBlock(const CBlockIndex *, const std::shared_ptr<const CBlock>&);
-    // SYSCOIN
     void NotifySyscoinUpdate(const char *value, const char *topic);
     /** Notifies listeners of accepted block header */
     void AcceptedBlockHeader(const CBlockIndex *);

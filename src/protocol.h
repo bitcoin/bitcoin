@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Syscoin Core developers
+// Copyright (c) 2009-2019 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,7 +15,6 @@
 #include <uint256.h>
 #include <version.h>
 
-#include <atomic>
 #include <stdint.h>
 #include <string>
 
@@ -193,13 +192,6 @@ extern const char *FILTERADD;
  */
 extern const char *FILTERCLEAR;
 /**
- * The reject message informs the receiving node that one of its previous
- * messages has been rejected.
- * @since protocol version 70002 as described by BIP61.
- * @see https://syscoin.org/en/developer-reference#reject
- */
-extern const char *REJECT;
-/**
  * Indicates that a node prefers to receive new block announcements via a
  * "headers" message rather than an "inv".
  * @since protocol version 70012 as described by BIP130.
@@ -260,6 +252,7 @@ const std::vector<std::string> &getAllNetMessageTypes();
 
 /** nServices flags */
 enum ServiceFlags : uint64_t {
+    // NOTE: When adding here, be sure to update qt/guiutil.cpp's formatServicesStr too
     // Nothing
     NODE_NONE = 0,
     // NODE_NETWORK means that the node is capable of serving the complete block chain. It is currently
@@ -276,9 +269,6 @@ enum ServiceFlags : uint64_t {
     // NODE_WITNESS indicates that a node can be asked for blocks and transactions including
     // witness data.
     NODE_WITNESS = (1 << 3),
-    // NODE_XTHIN means the node supports Xtreme Thinblocks
-    // If this is turned off then the node will not service nor make xthin requests
-    NODE_XTHIN = (1 << 4),
     // NODE_NETWORK_LIMITED means the same as NODE_NETWORK with the limitation of only
     // serving the last 288 (2 day) blocks
     // See BIP159 for details on how this is implemented.
@@ -396,7 +386,6 @@ enum GetDataMsg
     MSG_SPORK = 6,
     MSG_MASTERNODE_PAYMENT_VOTE = 7,
     MSG_MASTERNODE_PAYMENT_BLOCK = 8,
-    MSG_MASTERNODE_QUORUM = 9, // not implemented
     MSG_MASTERNODE_ANNOUNCE = 10,
     MSG_MASTERNODE_PING = 11,
     MSG_GOVERNANCE_OBJECT = 12,

@@ -3,9 +3,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <attributes.h>
+#include <clientversion.h>
 #include <coins.h>
 #include <script/standard.h>
-#include <test/setup_common.h>
+#include <streams.h>
+#include <test/util/setup_common.h>
 #include <uint256.h>
 #include <undo.h>
 #include <util/strencodings.h>
@@ -277,7 +279,8 @@ UtxoData::iterator FindRandomFrom(const std::set<COutPoint> &utxoSet) {
 // has the expected effect (the other duplicate is overwritten at all cache levels)
 BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
 {
-    SeedInsecureRand(/* deterministic */ true);
+    SeedInsecureRand(SeedRand::ZEROS);
+    g_mock_deterministic_tests = true;
 
     bool spent_a_duplicate_coinbase = false;
     // A simple map to track what we expect the cache stack to represent.
@@ -472,6 +475,8 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
 
     // Verify coverage.
     BOOST_CHECK(spent_a_duplicate_coinbase);
+
+    g_mock_deterministic_tests = false;
 }
 
 BOOST_AUTO_TEST_CASE(ccoins_serialization)

@@ -12,20 +12,22 @@
 #include <util/strencodings.h>
 #include <util/time.h>
 #include <validation.h>
-
+#include <rpc/request.h>
 #include <cassert>
-
+#include <node/context.h>
+#include <rpc/blockchain.h>
+#include <util/check.h>
 namespace
 {
 
 void auxMiningCheck()
 {
-  if (!g_connman)
+  if (!g_rpc_node->connman)
     throw JSONRPCError (RPC_CLIENT_P2P_DISABLED,
                         "Error: Peer-to-peer functionality missing or"
                         " disabled");
 
-  if (g_connman->GetNodeCount (CConnman::CONNECTIONS_ALL) == 0
+  if (g_rpc_node->connman->GetNodeCount (CConnman::CONNECTIONS_ALL) == 0
         && !Params ().MineBlocksOnDemand ())
     throw JSONRPCError (RPC_CLIENT_NOT_CONNECTED,
                         "Syscoin is not connected!");
@@ -92,7 +94,7 @@ AuxpowMiner::getCurrentBlock (const CScript& scriptPubKey, uint256& target)
      pindexPrev == ::ChainActive().Tip().  But for that to happen, we must
      already have created a pblockCur in a previous call, as pindexPrev is
      initialised only when pblockCur is.  */
-  assert (pblockCur);
+  CHECK_NONFATAL (pblockCur);
 
   arith_uint256 arithTarget;
   bool fNegative, fOverflow;
@@ -159,7 +161,7 @@ AuxpowMiner::submitAuxBlock (const std::string& hashHex,
   std::unique_ptr<CAuxPow> pow(new CAuxPow ());
   ss >> *pow;
   shared_block->SetAuxpow (std::move (pow));
-  assert (shared_block->GetHash ().GetHex () == hashHex);
+  CHECK_NONFATAL (shared_block->GetHash ().GetHex () == hashHex);
 
   return ProcessNewBlock (Params (), shared_block, true, nullptr);
 }

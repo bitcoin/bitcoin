@@ -16,6 +16,7 @@ RPCAUTH=@abs_top_srcdir@/share/rpcauth/rpcauth.py
 # Which components are enabled. These are commented out by `configure` if they were disabled when running config.
 @ENABLE_WALLET_TRUE@ENABLE_WALLET=true
 @BUILD_SYSCOIN_CLI_TRUE@ENABLE_CLI=true
+@BUILD_SYSCOIN_WALLET_TRUE@ENABLE_WALLET_TOOL=true
 @BUILD_SYSCOIND_TRUE@ENABLE_SYSCOIND=true
 @ENABLE_FUZZ_TRUE@ENABLE_FUZZ=true
 @ENABLE_ZMQ_TRUE@ENABLE_ZMQ=true

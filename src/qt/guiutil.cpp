@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2018 The Syscoin Core developers
+// Copyright (c) 2011-2019 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,14 +7,14 @@
 #include <qt/syscoinaddressvalidator.h>
 #include <qt/syscoinunits.h>
 #include <qt/qvalidatedlineedit.h>
-#include <qt/walletmodel.h>
+#include <qt/sendcoinsrecipient.h>
 
 #include <base58.h>
 #include <chainparams.h>
-#include <primitives/transaction.h>
-#include <key_io.h>
 #include <interfaces/node.h>
+#include <key_io.h>
 #include <policy/policy.h>
+#include <primitives/transaction.h>
 #include <protocol.h>
 #include <script/script.h>
 #include <script/standard.h>
@@ -39,7 +39,6 @@
 #include <QClipboard>
 #include <QDateTime>
 #include <QDesktopServices>
-#include <QDesktopWidget>
 #include <QDoubleValidator>
 #include <QFileDialog>
 #include <QFont>
@@ -55,12 +54,10 @@
 #include <QUrlQuery>
 
 #if defined(Q_OS_MAC)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
-#include <objc/objc-runtime.h>
-#include <CoreServices/CoreServices.h>
 #include <QProcess>
+
+void ForceActivation();
 #endif
 
 namespace GUIUtil {
@@ -361,10 +358,7 @@ bool isObscured(QWidget *w)
 void bringToFront(QWidget* w)
 {
 #ifdef Q_OS_MAC
-    // Force application activation on macOS. With Qt 5.4 this is required when
-    // an action in the dock menu is triggered.
-    id app = objc_msgSend((id) objc_getClass("NSApplication"), sel_registerName("sharedApplication"));
-    objc_msgSend(app, sel_registerName("activateIgnoringOtherApps:"), YES);
+    ForceActivation();
 #endif
 
     if (w) {
@@ -599,7 +593,7 @@ bool SetStartOnSystemStartup(bool fAutoStart)
             // Start client minimized
             QString strArgs = "-min";
             // Set -testnet /-regtest options
-            strArgs += QString::fromStdString(strprintf(" -testnet=%d -regtest=%d", gArgs.GetBoolArg("-testnet", false), gArgs.GetBoolArg("-regtest", false)));
+            strArgs += QString::fromStdString(strprintf(" -chain=%s", gArgs.GetChainName()));
 
             // Set the path to the shortcut target
             psl->SetPath(pszExePath);
@@ -647,7 +641,7 @@ fs::path static GetAutostartFilePath()
     std::string chain = gArgs.GetChainName();
     if (chain == CBaseChainParams::MAIN)
         return GetAutostartDir() / "syscoin.desktop";
-    return GetAutostartDir() / strprintf("syscoin-%s.lnk", chain);
+    return GetAutostartDir() / strprintf("syscoin-%s.desktop", chain);
 }
 
 bool GetStartOnSystemStartup()
@@ -694,7 +688,7 @@ bool SetStartOnSystemStartup(bool fAutoStart)
             optionFile << "Name=Syscoin\n";
         else
             optionFile << strprintf("Name=Syscoin (%s)\n", chain);
-        optionFile << "Exec=" << pszExePath << strprintf(" -min -testnet=%d -regtest=%d\n", gArgs.GetBoolArg("-testnet", false), gArgs.GetBoolArg("-regtest", false));
+        optionFile << "Exec=" << pszExePath << strprintf(" -min -chain=%s\n", chain);
         optionFile << "Terminal=false\n";
         optionFile << "Hidden=false\n";
         optionFile.close();
@@ -702,87 +696,6 @@ bool SetStartOnSystemStartup(bool fAutoStart)
     return true;
 }
 
-
-#elif defined(Q_OS_MAC) && defined(MAC_OS_X_VERSION_MIN_REQUIRED) && MAC_OS_X_VERSION_MIN_REQUIRED <= 101100
-// based on: https://github.com/Mozketo/LaunchAtLoginController/blob/master/LaunchAtLoginController.m
-
-LSSharedFileListItemRef findStartupItemInList(CFArrayRef listSnapshot, LSSharedFileListRef list, CFURLRef findUrl)
-{
-    if (listSnapshot == nullptr) {
-        return nullptr;
-    }
-
-    // loop through the list of startup items and try to find the syscoin app
-    for(int i = 0; i < CFArrayGetCount(listSnapshot); i++) {
-        LSSharedFileListItemRef item = (LSSharedFileListItemRef)CFArrayGetValueAtIndex(listSnapshot, i);
-        UInt32 resolutionFlags = kLSSharedFileListNoUserInteraction | kLSSharedFileListDoNotMountVolumes;
-        CFURLRef currentItemURL = nullptr;
-
-#if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED >= 10100
-        if(&LSSharedFileListItemCopyResolvedURL)
-            currentItemURL = LSSharedFileListItemCopyResolvedURL(item, resolutionFlags, nullptr);
-#if defined(MAC_OS_X_VERSION_MIN_REQUIRED) && MAC_OS_X_VERSION_MIN_REQUIRED < 10100
-        else
-            LSSharedFileListItemResolve(item, resolutionFlags, &currentItemURL, nullptr);
-#endif
-#else
-        LSSharedFileListItemResolve(item, resolutionFlags, &currentItemURL, nullptr);
-#endif
-
-        if(currentItemURL) {
-            if (CFEqual(currentItemURL, findUrl)) {
-                // found
-                CFRelease(currentItemURL);
-                return item;
-            }
-            CFRelease(currentItemURL);
-        }
-    }
-    return nullptr;
-}
-
-bool GetStartOnSystemStartup()
-{
-    CFURLRef syscoinAppUrl = CFBundleCopyBundleURL(CFBundleGetMainBundle());
-    if (syscoinAppUrl == nullptr) {
-        return false;
-    }
-
-    LSSharedFileListRef loginItems = LSSharedFileListCreate(nullptr, kLSSharedFileListSessionLoginItems, nullptr);
-    CFArrayRef listSnapshot = LSSharedFileListCopySnapshot(loginItems, nullptr);
-    bool res = (findStartupItemInList(listSnapshot, loginItems, syscoinAppUrl) != nullptr);
-    CFRelease(syscoinAppUrl);
-    CFRelease(loginItems);
-    CFRelease(listSnapshot);
-    return res;
-}
-
-bool SetStartOnSystemStartup(bool fAutoStart)
-{
-    CFURLRef syscoinAppUrl = CFBundleCopyBundleURL(CFBundleGetMainBundle());
-    if (syscoinAppUrl == nullptr) {
-        return false;
-    }
-
-    LSSharedFileListRef loginItems = LSSharedFileListCreate(nullptr, kLSSharedFileListSessionLoginItems, nullptr);
-    CFArrayRef listSnapshot = LSSharedFileListCopySnapshot(loginItems, nullptr);
-    LSSharedFileListItemRef foundItem = findStartupItemInList(listSnapshot, loginItems, syscoinAppUrl);
-
-    if(fAutoStart && !foundItem) {
-        // add syscoin app to startup item list
-        LSSharedFileListInsertItemURL(loginItems, kLSSharedFileListItemBeforeFirst, nullptr, nullptr, syscoinAppUrl, nullptr, nullptr);
-    }
-    else if(!fAutoStart && foundItem) {
-        // remove item
-        LSSharedFileListItemRemove(loginItems, foundItem);
-    }
-
-    CFRelease(syscoinAppUrl);
-    CFRelease(loginItems);
-    CFRelease(listSnapshot);
-    return true;
-}
-#pragma GCC diagnostic pop
 #else
 
 bool GetStartOnSystemStartup() { return false; }
@@ -826,35 +739,33 @@ QString formatDurationStr(int secs)
     return strList.join(" ");
 }
 
+QString serviceFlagToStr(const quint64 mask, const int bit)
+{
+    switch (ServiceFlags(mask)) {
+    case NODE_NONE: abort();  // impossible
+    case NODE_NETWORK:         return "NETWORK";
+    case NODE_GETUTXO:         return "GETUTXO";
+    case NODE_BLOOM:           return "BLOOM";
+    case NODE_WITNESS:         return "WITNESS";
+    case NODE_NETWORK_LIMITED: return "NETWORK_LIMITED";
+    // Not using default, so we get warned when a case is missing
+    }
+    if (bit < 8) {
+        return QString("%1[%2]").arg("UNKNOWN").arg(mask);
+    } else {
+        return QString("%1[2^%2]").arg("UNKNOWN").arg(bit);
+    }
+}
+
 QString formatServicesStr(quint64 mask)
 {
     QStringList strList;
 
-    // Just scan the last 8 bits for now.
-    for (int i = 0; i < 8; i++) {
-        uint64_t check = 1 << i;
+    for (int i = 0; i < 64; i++) {
+        uint64_t check = 1LL << i;
         if (mask & check)
         {
-            switch (check)
-            {
-            case NODE_NETWORK:
-                strList.append("NETWORK");
-                break;
-            case NODE_GETUTXO:
-                strList.append("GETUTXO");
-                break;
-            case NODE_BLOOM:
-                strList.append("BLOOM");
-                break;
-            case NODE_WITNESS:
-                strList.append("WITNESS");
-                break;
-            case NODE_XTHIN:
-                strList.append("XTHIN");
-                break;
-            default:
-                strList.append(QString("%1[%2]").arg("UNKNOWN").arg(check));
-            }
+            strList.append(serviceFlagToStr(check, i));
         }
     }
 
@@ -927,7 +838,7 @@ qreal calculateIdealFontSize(int width, const QString& text, QFont font, qreal m
     while(font_size >= minPointSize) {
         font.setPointSizeF(font_size);
         QFontMetrics fm(font);
-        if (fm.width(text) < width) {
+        if (TextWidth(fm, text) < width) {
             break;
         }
         font_size -= 0.5;
@@ -959,11 +870,20 @@ void PolishProgressDialog(QProgressDialog* dialog)
 {
 #ifdef Q_OS_MAC
     // Workaround for macOS-only Qt bug; see: QTBUG-65750, QTBUG-70357.
-    const int margin = dialog->fontMetrics().width("X");
+    const int margin = TextWidth(dialog->fontMetrics(), ("X"));
     dialog->resize(dialog->width() + 2 * margin, dialog->height());
     dialog->show();
 #else
     Q_UNUSED(dialog);
+#endif
+}
+
+int TextWidth(const QFontMetrics& fm, const QString& text)
+{
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 11, 0))
+    return fm.horizontalAdvance(text);
+#else
+    return fm.width(text);
 #endif
 }
 

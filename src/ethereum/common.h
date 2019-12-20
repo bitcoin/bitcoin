@@ -202,7 +202,7 @@ inline N diff(N const& _a, N const& _b)
 class ScopeGuard
 {
 public:
-	ScopeGuard(std::function<void(void)> _f): m_f(_f) {}
+	explicit ScopeGuard(std::function<void(void)> _f): m_f(_f) {}
 	~ScopeGuard() { m_f(); }
 
 private:

@@ -19,6 +19,7 @@
 #include <warnings.h>
 #include <shutdown.h>
 #include <outputtype.h>
+#include <util/translation.h>
 extern void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="") EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 /** Masternode manager */
 CMasternodeMan mnodeman;
@@ -409,7 +410,7 @@ CMasternode* CMasternodeMan::Find(const COutPoint &outpoint)
 
 bool CMasternodeMan::Get(const COutPoint& outpoint, CMasternode& masternodeRet)
 {
-    // Theses mutexes are recursive so double locking by the same thread is safe.
+    // These mutexes are recursive so double locking by the same thread is safe.
     LOCK(cs);
     auto it = mapMasternodes.find(outpoint);
     if (it == mapMasternodes.end()) {
@@ -949,6 +950,7 @@ void CMasternodeMan::PushDsegInvs(CNode* pnode, const CMasternode& mn)
 
 void CMasternodeMan::DoFullVerificationStep(CConnman& connman)
 {
+    LogPrint(BCLog::MN, "CMasternodeMan::DoFullVerificationStep\n");
     if(activeMasternode.outpoint.IsNull()) return;
     if(!masternodeSync.IsSynced()) return;
 
@@ -1643,11 +1645,11 @@ void CMasternodeMan::WarnMasternodeDaemonUpdates()
 
     std::string strWarning;
     if (nUpdatedMasternodes != size()) {
-        strWarning = strprintf(_("Warning: At least %d of %d masternodes are running on a newer software version. Please check latest releases, you might need to update too."),
+        strWarning = strprintf(_("Warning: At least %d of %d masternodes are running on a newer software version. Please check latest releases, you might need to update too.").translated,
                     nUpdatedMasternodes, size());
     } else {
         // someone was postponing this update for way too long probably
-        strWarning = strprintf(_("Warning: Every masternode (out of %d known ones) is running on a newer software version. Please check latest releases, it's very likely that you missed a major/critical update."),
+        strWarning = strprintf(_("Warning: Every masternode (out of %d known ones) is running on a newer software version. Please check latest releases, it's very likely that you missed a major/critical update.").translated,
                     size());
     }
 

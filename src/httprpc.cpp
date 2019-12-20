@@ -5,19 +5,23 @@
 #include <httprpc.h>
 
 #include <chainparams.h>
+#include <crypto/hmac_sha256.h>
 #include <httpserver.h>
-#include <key_io.h>
 #include <rpc/protocol.h>
 #include <rpc/server.h>
-#include <sync.h>
-#include <util/system.h>
-#include <util/strencodings.h>
 #include <ui_interface.h>
+#include <util/strencodings.h>
+#include <util/system.h>
+#include <util/translation.h>
 #include <walletinitinterface.h>
-#include <crypto/hmac_sha256.h>
-#include <stdio.h>
 
+#include <algorithm>
+#include <iterator>
+#include <map>
 #include <memory>
+#include <stdio.h>
+#include <set>
+#include <string>
 
 #include <boost/algorithm/string.hpp> // boost::trim
 
@@ -65,6 +69,9 @@ private:
 static std::string strRPCUserColonPass;
 /* Stored RPC timer interface (for unregistration) */
 static std::unique_ptr<HTTPRPCTimerInterface> httpRPCTimerInterface;
+/* RPC Auth Whitelist */
+static std::map<std::string, std::set<std::string>> g_rpc_whitelist;
+static bool g_rpc_whitelist_default = false;
 
 static void JSONErrorReply(HTTPRequest* req, const UniValue& objError, const UniValue& id)
 {
@@ -113,7 +120,7 @@ static bool multiUserAuthorized(std::string strUserPass)
         static const unsigned int KEY_SIZE = 32;
         unsigned char out[KEY_SIZE];
 
-        CHMAC_SHA256(reinterpret_cast<const unsigned char*>(strSalt.c_str()), strSalt.size()).Write(reinterpret_cast<const unsigned char*>(strPass.c_str()), strPass.size()).Finalize(out);
+        CHMAC_SHA256(reinterpret_cast<const unsigned char*>(strSalt.data()), strSalt.size()).Write(reinterpret_cast<const unsigned char*>(strPass.data()), strPass.size()).Finalize(out);
         std::vector<unsigned char> hexvec(out, out+KEY_SIZE);
         std::string strHashFromPass = HexStr(hexvec);
 
@@ -321,18 +328,45 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
         jreq.URI = req->GetURI();
 
         std::string strReply;
-        // singleton request
-        if (valRequest.isObject()) {
-            jreq.parse(valRequest);
+        bool user_has_whitelist = g_rpc_whitelist.count(jreq.authUser);
+        if (!user_has_whitelist && g_rpc_whitelist_default) {
+            LogPrintf("RPC User %s not allowed to call any methods\n", jreq.authUser);
+            req->WriteReply(HTTP_FORBIDDEN);
+            return false;
 
+        // singleton request
+        } else if (valRequest.isObject()) {
+            jreq.parse(valRequest);
+            if (user_has_whitelist && !g_rpc_whitelist[jreq.authUser].count(jreq.strMethod)) {
+                LogPrintf("RPC User %s not allowed to call method %s\n", jreq.authUser, jreq.strMethod);
+                req->WriteReply(HTTP_FORBIDDEN);
+                return false;
+            }
             UniValue result = tableRPC.execute(jreq);
 
             // Send reply
             strReply = JSONRPCReply(result, NullUniValue, jreq.id);
 
         // array of requests
-        } else if (valRequest.isArray())
+        } else if (valRequest.isArray()) {
+            if (user_has_whitelist) {
+                for (unsigned int reqIdx = 0; reqIdx < valRequest.size(); reqIdx++) {
+                    if (!valRequest[reqIdx].isObject()) {
+                        throw JSONRPCError(RPC_INVALID_REQUEST, "Invalid Request object");
+                    } else {
+                        const UniValue& request = valRequest[reqIdx].get_obj();
+                        // Parse method
+                        std::string strMethod = find_value(request, "method").get_str();
+                        if (!g_rpc_whitelist[jreq.authUser].count(strMethod)) {
+                            LogPrintf("RPC User %s not allowed to call method %s\n", jreq.authUser, strMethod);
+                            req->WriteReply(HTTP_FORBIDDEN);
+                            return false;
+                        }
+                    }
+                }
+            }
             strReply = JSONRPCExecBatch(jreq, valRequest.get_array());
+        }
         else
             throw JSONRPCError(RPC_PARSE_ERROR, "Top-level object parse error");
 
@@ -355,7 +389,7 @@ static bool InitRPCAuthentication()
         LogPrintf("No rpcpassword set - using random cookie authentication.\n");
         if (!GenerateAuthCookie(&strRPCUserColonPass)) {
             uiInterface.ThreadSafeMessageBox(
-                _("Error: A fatal internal error occurred, see debug.log for details"), // Same message as AbortNode
+                _("Error: A fatal internal error occurred, see debug.log for details").translated, // Same message as AbortNode
                 "", CClientUIInterface::MSG_ERROR);
             return false;
         }
@@ -367,6 +401,27 @@ static bool InitRPCAuthentication()
     {
         LogPrintf("Using rpcauth authentication.\n");
     }
+
+    g_rpc_whitelist_default = gArgs.GetBoolArg("-rpcwhitelistdefault", gArgs.IsArgSet("-rpcwhitelist"));
+    for (const std::string& strRPCWhitelist : gArgs.GetArgs("-rpcwhitelist")) {
+        auto pos = strRPCWhitelist.find(':');
+        std::string strUser = strRPCWhitelist.substr(0, pos);
+        bool intersect = g_rpc_whitelist.count(strUser);
+        std::set<std::string>& whitelist = g_rpc_whitelist[strUser];
+        if (pos != std::string::npos) {
+            std::string strWhitelist = strRPCWhitelist.substr(pos + 1);
+            std::set<std::string> new_whitelist;
+            boost::split(new_whitelist, strWhitelist, boost::is_any_of(", "));
+            if (intersect) {
+                std::set<std::string> tmp_whitelist;
+                std::set_intersection(new_whitelist.begin(), new_whitelist.end(),
+                       whitelist.begin(), whitelist.end(), std::inserter(tmp_whitelist, tmp_whitelist.end()));
+                new_whitelist = std::move(tmp_whitelist);
+            }
+            whitelist = std::move(new_whitelist);
+        }
+    }
+
     return true;
 }
 

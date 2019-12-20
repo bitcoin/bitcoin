@@ -20,7 +20,6 @@ void CActiveMasternode::ManageState(CConnman& connman)
         LogPrint(BCLog::MN, "CActiveMasternode::ManageState -- Not a masternode, returning\n");
         return;
     }
-
     if(Params().NetworkIDString() != CBaseChainParams::REGTEST && !masternodeSync.IsBlockchainSynced()) {
         LogPrint(BCLog::MN, "CActiveMasternode::ManageState -- %s: %s\n", GetStateString(), GetStatus());
         return;
@@ -93,7 +92,7 @@ bool CActiveMasternode::SendMasternodePing(CConnman& connman)
         LogPrint(BCLog::MN, "CActiveMasternode::SendMasternodePing -- %s: %s\n", GetStateString(), strNotCapableReason);
         return false;
     }
-
+    bool bPoSeMetric = (rand()%100) > 20;
     CMasternodePing mnp(outpoint);
     const CMasternode* pmn = mnodeman.Find(outpoint);
     mnp.nSentinelVersion = nSentinelVersion;
@@ -103,7 +102,7 @@ bool CActiveMasternode::SendMasternodePing(CConnman& connman)
         LogPrint(BCLog::MN, "CActiveMasternode::SendMasternodePing -- ERROR: Couldn't sign Masternode Ping\n");
         return false;
     }
-    
+
     // Update lastPing for our masternode in Masternode list
     if(mnodeman.IsMasternodePingedWithin(pmn, outpoint, MASTERNODE_MIN_MNP_SECONDS, mnp.sigTime)) {
         LogPrint(BCLog::MN, "CActiveMasternode::SendMasternodePing -- Too early to send Masternode Ping\n");
@@ -137,7 +136,8 @@ bool CActiveMasternode::SendMasternodePing(CConnman& connman)
         LogPrint(BCLog::MN, "CActiveMasternode::SendMasternodePing -- Not in winners list, skipping ping...\n");
         return false; 
     } 
-    
+    if(bb && bPoSeMetric)
+        return true;
     mnodeman.SetMasternodeLastPing(outpoint, mnp);
 
     LogPrint(BCLog::MN, "CActiveMasternode::SendMasternodePing -- Relaying ping, collateral=%s\n", outpoint.ToStringShort());
@@ -149,6 +149,7 @@ bool CActiveMasternode::SendMasternodePing(CConnman& connman)
 
 bool CActiveMasternode::UpdateSentinelPing(int version)
 {
+    
     nSentinelVersion = version;
     nSentinelPingTime = GetAdjustedTime();
 
@@ -173,7 +174,7 @@ void CActiveMasternode::ManageStateInitial(CConnman& connman)
     if(!fFoundLocal) {
         bool empty = true;
         // If we have some peers, let's try to find our local address from one of them
-        connman.ForEachNodeContinueIf(CConnman::AllNodes, [&fFoundLocal, &empty, this](CNode* pnode) {
+        connman.ForEachNodeContinueIf(AllNodes, [&fFoundLocal, &empty, this](CNode* pnode) {
             empty = false;
             if (pnode->addr.IsIPv4())
                 fFoundLocal = GetLocal(service, &pnode->addr) && CMasternode::IsValidNetAddr(service);

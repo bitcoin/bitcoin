@@ -27,7 +27,7 @@ typedef std::shared_ptr<CSuperblock> CSuperblock_sptr;
 extern CGovernanceTriggerManager triggerman;
 
 /**
-*   Trigger Mananger
+*   Trigger Manager
 *
 *   - Track governance objects which are triggers
 *   - After triggers are activated and executed, they can be removed
@@ -154,7 +154,7 @@ private:
 public:
 
     CSuperblock();
-    CSuperblock(uint256& nHash);
+    explicit CSuperblock(uint256& nHash);
 
     static bool IsValidBlockHeight(int nBlockHeight);
     static void GetNearestSuperblocksHeights(int nBlockHeight, int& nLastSuperblockRet, int& nNextSuperblockRet);

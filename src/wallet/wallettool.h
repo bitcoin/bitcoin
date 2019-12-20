@@ -5,7 +5,6 @@
 #ifndef SYSCOIN_WALLET_WALLETTOOL_H
 #define SYSCOIN_WALLET_WALLETTOOL_H
 
-#include <script/ismine.h>
 #include <wallet/wallet.h>
 
 namespace WalletTool {

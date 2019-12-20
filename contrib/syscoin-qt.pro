@@ -18,6 +18,7 @@ FORMS += \
     ../src/qt/forms/sendcoinsentry.ui \
     ../src/qt/forms/signverifymessagedialog.ui \
     ../src/qt/forms/transactiondescdialog.ui \
+    ../src/qt/forms/createwalletdialog.ui
 
 RESOURCES += \
     ../src/qt/syscoin.qrc

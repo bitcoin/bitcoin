@@ -20,10 +20,10 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     {
         if (params.fPowAllowMinDifficultyBlocks)
         {
-            // Special difficulty rule for testnet:
+            // SYSCOIN Special difficulty rule for testnet:
             // If the new block's timestamp is more than 2* 10 minutes
             // then allow mining of a min-difficulty block.
-            if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + params.nPowTargetSpacing*2)
+            if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + params.nPowTargetSpacing*20)
                 return nProofOfWorkLimit;
             else
             {
@@ -53,11 +53,18 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
 
     // Limit adjustment step
     int64_t nActualTimespan = pindexLast->GetBlockTime() - nFirstBlockTime;
-    if (nActualTimespan < params.nPowTargetTimespan/4)
-        nActualTimespan = params.nPowTargetTimespan/4;
-    if (nActualTimespan > params.nPowTargetTimespan*4)
-        nActualTimespan = params.nPowTargetTimespan*4;
-
+    if(pindexLast->nHeight >= params.nBridgeStartBlock){
+        if (nActualTimespan < 17280)// params.nPowTargetTimespan * (8/10)
+            nActualTimespan = 17280;
+        if (nActualTimespan > 27000) // params.nPowTargetTimespan * (10/8)
+            nActualTimespan = 27000;
+    }
+    else{
+        if (nActualTimespan < params.nPowTargetTimespan/4)
+            nActualTimespan = params.nPowTargetTimespan/4;
+        if (nActualTimespan > params.nPowTargetTimespan*4)
+            nActualTimespan = params.nPowTargetTimespan*4;
+    }
     // Retarget
     const arith_uint256 bnPowLimit = UintToArith256(params.powLimit);
     arith_uint256 bnNew;

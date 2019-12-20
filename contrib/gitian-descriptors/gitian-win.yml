@@ -1,5 +1,5 @@
 ---
-name: "syscoin-core-win-4.0"
+name: "syscoin-core-win-4.1"
 enable_cache: true
 distro: "ubuntu"
 suites:
@@ -22,7 +22,6 @@ packages:
 - "zip"
 - "ca-certificates"
 - "python3"
-- "rename"
 remotes:
 - "url": "https://github.com/syscoin/syscoin.git"
   "dir": "syscoin"
@@ -40,10 +39,8 @@ script: |
 
   export QT_RCC_TEST=1
   export QT_RCC_SOURCE_DATE_OVERRIDE=1
-  export GZIP="-9n"
-  export TAR_OPTIONS="--mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
   export TZ="UTC"
-  export BUILD_DIR=`pwd`
+  export BUILD_DIR="$PWD"
   mkdir -p ${WRAP_DIR}
   if test -n "$GBUILD_CACHE_ENABLED"; then
     export SOURCES_PATH=${GBUILD_COMMON_CACHE}
@@ -51,11 +48,12 @@ script: |
     mkdir -p ${BASE_CACHE} ${SOURCES_PATH}
   fi
 
+  # Use $LIB in LD_PRELOAD to avoid hardcoding the dir (See `man ld.so`)
   function create_global_faketime_wrappers {
   for prog in ${FAKETIME_PROGS}; do
     echo '#!/usr/bin/env bash' > ${WRAP_DIR}/${prog}
     echo "REAL=\`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1\`" >> ${WRAP_DIR}/${prog}
-    echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${prog}
+    echo "export LD_PRELOAD='/usr/\$LIB/faketime/libfaketime.so.1'" >> ${WRAP_DIR}/${prog}
     echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${prog}
     echo "\$REAL \$@" >> $WRAP_DIR/${prog}
     chmod +x ${WRAP_DIR}/${prog}
@@ -67,7 +65,7 @@ script: |
     for prog in ${FAKETIME_HOST_PROGS}; do
         echo '#!/usr/bin/env bash' > ${WRAP_DIR}/${i}-${prog}
         echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
-        echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
+        echo "export LD_PRELOAD='/usr/\$LIB/faketime/libfaketime.so.1'" >> ${WRAP_DIR}/${i}-${prog}
         echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${i}-${prog}
         echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
         chmod +x ${WRAP_DIR}/${i}-${prog}
@@ -75,22 +73,14 @@ script: |
   done
   }
 
-  function create_per-host_linker_wrapper {
-  # This is only needed for trusty, as the mingw linker leaks a few bytes of
-  # heap, causing non-determinism. See discussion in https://github.com/syscoin/syscoin/pull/6900
+  function create_per-host_compiler_wrapper {
+  # -posix variant is required for c++11 threading.
   for i in $HOSTS; do
     mkdir -p ${WRAP_DIR}/${i}
-    for prog in collect2; do
-        echo '#!/usr/bin/env bash' > ${WRAP_DIR}/${i}/${prog}
-        REAL=$(${i}-gcc -print-prog-name=${prog})
-        echo "export MALLOC_PERTURB_=255" >> ${WRAP_DIR}/${i}/${prog}
-        echo "${REAL} \$@" >> $WRAP_DIR/${i}/${prog}
-        chmod +x ${WRAP_DIR}/${i}/${prog}
-    done
     for prog in gcc g++; do
         echo '#!/usr/bin/env bash' > ${WRAP_DIR}/${i}-${prog}
         echo "REAL=\`which -a ${i}-${prog}-posix | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
-        echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
+        echo "export LD_PRELOAD='/usr/\$LIB/faketime/libfaketime.so.1'" >> ${WRAP_DIR}/${i}-${prog}
         echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${i}-${prog}
         echo "export COMPILER_PATH=${WRAP_DIR}/${i}" >> ${WRAP_DIR}/${i}-${prog}
         echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
@@ -103,11 +93,11 @@ script: |
   export PATH_orig=${PATH}
   create_global_faketime_wrappers "2000-01-01 12:00:00"
   create_per-host_faketime_wrappers "2000-01-01 12:00:00"
-  create_per-host_linker_wrapper "2000-01-01 12:00:00"
+  create_per-host_compiler_wrapper "2000-01-01 12:00:00"
   export PATH=${WRAP_DIR}:${PATH}
 
   cd syscoin
-  BASEPREFIX=`pwd`/depends
+  BASEPREFIX="${PWD}/depends"
   # Build dependencies for each host
   for i in $HOSTS; do
     make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}"
@@ -117,23 +107,21 @@ script: |
   export PATH=${PATH_orig}
   create_global_faketime_wrappers "${REFERENCE_DATETIME}"
   create_per-host_faketime_wrappers "${REFERENCE_DATETIME}"
-  create_per-host_linker_wrapper "${REFERENCE_DATETIME}"
+  create_per-host_compiler_wrapper "${REFERENCE_DATETIME}"
   export PATH=${WRAP_DIR}:${PATH}
 
   # Create the release tarball using (arbitrarily) the first host
   ./autogen.sh
-  CONFIG_SITE=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`/share/config.site ./configure --prefix=/
+  CONFIG_SITE=${BASEPREFIX}/$(echo "${HOSTS}" | awk '{print $1;}')/share/config.site ./configure --prefix=/
   make dist
-  SOURCEDIST=`echo syscoin-*.tar.gz`
-  DISTNAME=`echo ${SOURCEDIST} | sed 's/.tar.*//'`
+  SOURCEDIST=$(echo syscoin-*.tar.gz)
+  DISTNAME=${SOURCEDIST/%.tar.gz}
 
   # Correct tar file order
   mkdir -p temp
   pushd temp
   tar -xf ../$SOURCEDIST
   find syscoin-* | sort | tar --mtime="$REFERENCE_DATETIME" --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ../$SOURCEDIST
-  mkdir -p $OUTDIR/src
-  cp ../$SOURCEDIST $OUTDIR/src
   popd
 
   # Workaround for tarball not building with the bare tag version (prep)
@@ -145,7 +133,7 @@ script: |
     export PATH=${BASEPREFIX}/${i}/native/bin:${ORIGPATH}
     mkdir -p distsrc-${i}
     cd distsrc-${i}
-    INSTALLPATH=`pwd`/installed/${DISTNAME}
+    INSTALLPATH="${PWD}/installed/${DISTNAME}"
     mkdir -p ${INSTALLPATH}
     tar --strip-components=1 -xf ../$SOURCEDIST
 
@@ -159,24 +147,24 @@ script: |
     make ${MAKEOPTS} -C src check-security
     make deploy
     make install DESTDIR=${INSTALLPATH}
-    rename 's/-setup\.exe$/-setup-unsigned.exe/' *-setup.exe
-    cp -f syscoin-*setup*.exe $OUTDIR/
+    cp -f --target-directory="${OUTDIR}" ./syscoin-*-setup-unsigned.exe
     cd installed
     mv ${DISTNAME}/bin/*.dll ${DISTNAME}/lib/
     find . -name "lib*.la" -delete
     find . -name "lib*.a" -delete
     rm -rf ${DISTNAME}/lib/pkgconfig
-    find ${DISTNAME}/bin -not -name "*.nod*" -type f -executable -exec ${i}-objcopy --only-keep-debug {} {}.dbg \; -exec ${i}-strip -s {} \; -exec ${i}-objcopy --add-gnu-debuglink={}.dbg {} \;
-    find ${DISTNAME}/lib -type f -exec ${i}-objcopy --only-keep-debug {} {}.dbg \; -exec ${i}-strip -s {} \; -exec ${i}-objcopy --add-gnu-debuglink={}.dbg {} \;
-    find ${DISTNAME} -not -name "*.dbg"  -type f | sort | zip -X@ ${OUTDIR}/${DISTNAME}-${i}.zip
-    find ${DISTNAME} -name "*.dbg"  -type f | sort | zip -X@ ${OUTDIR}/${DISTNAME}-${i}-debug.zip
+    find ${DISTNAME}/bin -not -name "*.nod*" -type f -executable -print0 | xargs -0 -n1 -I{} ../contrib/devtools/split-debug.sh {} {} {}.dbg
+    find ${DISTNAME}/lib -type f -print0 | xargs -0 -n1 -I{} ../contrib/devtools/split-debug.sh {} {} {}.dbg
+    cp ../doc/README_windows.txt ${DISTNAME}/readme.txt
+    find ${DISTNAME} -not -name "*.dbg"  -type f | sort | zip -X@ ${OUTDIR}/${DISTNAME}-${i//x86_64-w64-mingw32/win64}.zip
+    find ${DISTNAME} -name "*.dbg"  -type f | sort | zip -X@ ${OUTDIR}/${DISTNAME}-${i//x86_64-w64-mingw32/win64}-debug.zip
     cd ../../
     rm -rf distsrc-${i}
   done
+  mkdir -p $OUTDIR/src
+  mv $SOURCEDIST $OUTDIR/src
   cp -rf contrib/windeploy $BUILD_DIR
   cd $BUILD_DIR/windeploy
   mkdir unsigned
   cp $OUTDIR/syscoin-*setup-unsigned.exe unsigned/
   find . | sort | tar --mtime="$REFERENCE_DATETIME" --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-win-unsigned.tar.gz
-  mv ${OUTDIR}/${DISTNAME}-x86_64-*-debug.zip ${OUTDIR}/${DISTNAME}-win64-debug.zip
-  mv ${OUTDIR}/${DISTNAME}-x86_64-*.zip ${OUTDIR}/${DISTNAME}-win64.zip

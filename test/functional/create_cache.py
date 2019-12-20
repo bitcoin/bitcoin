@@ -16,7 +16,6 @@ class CreateCache(SyscoinTestFramework):
 
     def set_test_params(self):
         self.num_nodes = 0
-        self.supports_cli = True
 
     def setup_network(self):
         pass

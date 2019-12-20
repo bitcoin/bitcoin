@@ -12,22 +12,11 @@ Release Process
 
 ### Before every major and minor release
 
-* Update [bips.md](bips.md) to account for changes since the last release.
+* Update [bips.md](bips.md) to account for changes since the last release (don't forget to bump the version number on the first line).
 * Update version in `configure.ac` (don't forget to set `CLIENT_VERSION_RC` to `0`).
 * Write release notes (see "Write the release notes" below).
-* Update `src/chainparams.cpp` nMinimumChainWork with information from the getblockchaininfo rpc.
-* Update `src/chainparams.cpp` defaultAssumeValid with information from the getblockhash rpc.
-  - The selected value must not be orphaned so it may be useful to set the value two blocks back from the tip.
-  - Testnet should be set some tens of thousands back from the tip due to reorgs there.
-  - This update should be reviewed with a reindex-chainstate with assumevalid=0 to catch any defect
-     that causes rejection of blocks in the past history.
 
 ### Before every major release
-
-* Update hardcoded [seeds](/contrib/seeds/README.md), see [this pull request](https://github.com/syscoin/syscoin/pull/7415) for an example.
-* Update [`src/chainparams.cpp`](/src/chainparams.cpp) m_assumed_blockchain_size and m_assumed_chain_state_size with the current size plus some overhead.
-* Update `src/chainparams.cpp` chainTxData with statistics about the transaction count and rate. Use the output of the RPC `getchaintxstats`, see
-  [this pull request](https://github.com/bitcoin/bitcoin/pull/12270) for an example. Reviewers can verify the results by running `getchaintxstats <window_block_count> <window_last_block_hash>` with the `window_block_count` and `window_last_block_hash` from your output.
 * On both the master branch and the new release branch:
   - update `CLIENT_VERSION_MINOR` in [`configure.ac`](../configure.ac)
   - update `CLIENT_VERSION_MINOR`, `PACKAGE_VERSION`, and `PACKAGE_STRING` in [`build_msvc/syscoin_config.h`](/build_msvc/syscoin_config.h)
@@ -37,17 +26,26 @@ Release Process
 
 #### Before branch-off
 
+* Update hardcoded [seeds](/contrib/seeds/README.md), see [this pull request](https://github.com/bitcoin/bitcoin/pull/7415) for an example.
+* Update [`src/chainparams.cpp`](/src/chainparams.cpp) m_assumed_blockchain_size and m_assumed_chain_state_size with the current size plus some overhead (see [this](#how-to-calculate-m_assumed_blockchain_size-and-m_assumed_chain_state_size) for information on how to calculate them).
+* Update `src/chainparams.cpp` chainTxData with statistics about the transaction count and rate. Use the output of the RPC `getchaintxstats`, see
+  [this pull request](https://github.com/bitcoin/bitcoin/pull/17002) for an example. Reviewers can verify the results by running `getchaintxstats <window_block_count> <window_last_block_hash>` with the `window_block_count` and `window_last_block_hash` from your output.
+* Update `src/chainparams.cpp` nMinimumChainWork with information from the getblockchaininfo rpc.
+* Update `src/chainparams.cpp` defaultAssumeValid with information from the getblockhash rpc.
+  - The selected value must not be orphaned so it may be useful to set the value two blocks back from the tip.
+  - Testnet should be set some tens of thousands back from the tip due to reorgs there.
+  - This update should be reviewed with a reindex-chainstate with assumevalid=0 to catch any defect
+     that causes rejection of blocks in the past history.
 - Clear the release notes and move them to the wiki (see "Write the release notes" below).
 
 #### After branch-off (on master)
 
 - Update the version of `contrib/gitian-descriptors/*.yml`.
-- Update the versions in `SECURITY.md` as per the software lifecycle [maintenance policy](https://bitcoincore.org/en/lifecycle/#maintenance-period), generally bumping all up one major version.
 
 #### After branch-off (on the major release branch)
 
-- Update the versions and the link to the release notes draft in `doc/release-notes.md`.
-- Delete `SECURITY.md`.
+- Update the versions.
+- Create a pinned meta-issue for testing the release candidate (see [this issue](https://github.com/bitcoin/bitcoin/issues/17079) for an example) and provide a link to it in the release announcements where useful.
 
 #### Before final release
 
@@ -119,10 +117,8 @@ Ensure gitian-builder is up-to-date:
 
     pushd ./gitian-builder
     mkdir -p inputs
-    wget -P inputs https://bitcoincore.org/cfields/osslsigncode-Backports-to-1.7.1.patch
-    echo 'a8c4e9cafba922f89de0df1f2152e7be286aba73f78505169bc351a7938dd911 inputs/osslsigncode-Backports-to-1.7.1.patch' | sha256sum -c
-    wget -P inputs https://downloads.sourceforge.net/project/osslsigncode/osslsigncode/osslsigncode-1.7.1.tar.gz
-    echo 'f9a8cdb38b9c309326764ebc937cba1523a3a751a7ab05df3ecc99d18ae466c9 inputs/osslsigncode-1.7.1.tar.gz' | sha256sum -c
+    wget -O inputs/osslsigncode-2.0.tar.gz https://github.com/mtrojnar/osslsigncode/archive/2.0.tar.gz
+    echo '5a60e0a4b3e0b4d655317b2f12a810211c50242138322b16e7e01c6fbb89d92f inputs/osslsigncode-2.0.tar.gz' | sha256sum -c
     popd
 
 Create the macOS SDK tarball, see the [macOS build instructions](build-osx.md#deterministic-macos-dmg-notes) for details, and copy it into the inputs directory.
@@ -320,32 +316,40 @@ syscoin.org (see below for syscoin.org update instructions).
     instructions: https://github.com/syscoin-dot-org/syscoin.org/blob/master/docs/adding-events-release-notes-and-alerts.md#release-notes
 
   - After the pull request is merged, the website will automatically show the newest version within 15 minutes, as well
-    as update the OS download links. Ping @saivann/@harding (saivann/harding on Freenode) in case anything goes wrong
+    as update the OS download links.
 
 - Update other repositories and websites for new version
 
   - syscoincore.org blog post
 
+  - syscoincore.org maintained versions update:
+    [table](https://github.com/syscoin-core/syscoincore.org/commits/master/_includes/posts/maintenance-table.md)
+
   - syscoincore.org RPC documentation update
 
   - Update packaging repo
 
-      - Notify BlueMatt so that he can start building [the PPAs](https://launchpad.net/~syscoin/+archive/ubuntu/syscoin)
+      - Notify sidhujag so that he can start building [the PPAs](https://launchpad.net/~syscoin/+archive/ubuntu/syscoin)
 
-      - Create a new branch for the major release "0.xx" (used to build the snap package)
+      - Push the flatpak to flathub, e.g. https://github.com/flathub/org.syscoincore.syscoin-qt/pull/2
 
-      - Notify MarcoFalke so that he can start building the snap package
+      - Push the latest version to master (if applicable), e.g. https://github.com/syscoin-core/packaging/pull/32
+
+      - Create a new branch for the major release "0.xx" from master (used to build the snap package) and request the
+        track (if applicable), e.g. https://forum.snapcraft.io/t/track-request-for-bitcoin-core-snap/10112/7
+
+      - Notify sidhujag so that he can start building the snap package
 
         - https://code.launchpad.net/~syscoin-core/syscoin-core-snap/+git/packaging (Click "Import Now" to fetch the branch)
-        - https://code.launchpad.net/~syscoin-core/syscoin-core-snap/+git/packaging/+ref/0.xx (Click "Create snap package")
-        - Name it "syscoin-core-snap-0.xx"
+        - https://code.launchpad.net/~syscoin-core/syscoin-core-snap/+git/packaging/+ref/4.xx (Click "Create snap package")
+        - Name it "syscoin-core-snap-4.xx"
         - Leave owner and series as-is
         - Select architectures that are compiled via gitian
         - Leave "automatically build when branch changes" unticked
         - Tick "automatically upload to store"
         - Put "syscoin-core" in the registered store package name field
         - Tick the "edge" box
-        - Put "0.xx" in the track field
+        - Put "4.xx" in the track field
         - Click "create snap package"
         - Click "Request builds" for every new release on this branch (after updating the snapcraft.yml in the branch to reflect the latest gitian results)
         - Promote release on https://snapcraft.io/syscoin-core/releases if it passes sanity checks
@@ -355,8 +359,6 @@ syscoin.org (see below for syscoin.org update instructions).
       - Archive the release notes for the new version to `doc/release-notes/` (branch `master` and branch of the release)
 
       - Create a [new GitHub release](https://github.com/syscoin/syscoin/releases/new) with a link to the archived release notes
-
-      - Create a pinned meta-issue for testing the release candidate (see [this issue](https://github.com/bitcoin/bitcoin/issues/15555) for an example) and provide a link to it in the release announcements where useful
 
 - Announce the release:
 
@@ -369,3 +371,23 @@ syscoin.org (see below for syscoin.org update instructions).
   - Optionally twitter, reddit /r/Syscoin, ... but this will usually sort out itself
 
   - Celebrate
+
+### Additional information
+
+#### How to calculate `m_assumed_blockchain_size` and `m_assumed_chain_state_size`
+
+Both variables are used as a guideline for how much space the user needs on their drive in total, not just strictly for the blockchain.
+Note that all values should be taken from a **fully synced** node and have an overhead of 5-10% added on top of its base value.
+
+To calculate `m_assumed_blockchain_size`:
+- For `mainnet` -> Take the size of the data directory, excluding `/regtest` and `/testnet3` directories.
+- For `testnet` -> Take the size of the `/testnet3` directory.
+
+
+To calculate `m_assumed_chain_state_size`:
+- For `mainnet` -> Take the size of the `/chainstate` directory.
+- For `testnet` -> Take the size of the `/testnet3/chainstate` directory.
+
+Notes:
+- When taking the size for `m_assumed_blockchain_size`, there's no need to exclude the `/chainstate` directory since it's a guideline value and an overhead will be added anyway.
+- The expected overhead for growth may change over time, so it may not be the same value as last release; pay attention to that when changing the variables.

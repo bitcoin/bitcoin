@@ -6,98 +6,13 @@ bin_PROGRAMS += qt/syscoin-qt
 EXTRA_LIBRARIES += qt/libsyscoinqt.a
 
 # syscoin qt core #
-QT_TS = \
-  qt/locale/syscoin_af.ts \
-  qt/locale/syscoin_af_ZA.ts \
-  qt/locale/syscoin_ar.ts \
-  qt/locale/syscoin_be_BY.ts \
-  qt/locale/syscoin_bg_BG.ts \
-  qt/locale/syscoin_bg.ts \
-  qt/locale/syscoin_ca_ES.ts \
-  qt/locale/syscoin_ca.ts \
-  qt/locale/syscoin_ca@valencia.ts \
-  qt/locale/syscoin_cs.ts \
-  qt/locale/syscoin_cy.ts \
-  qt/locale/syscoin_da.ts \
-  qt/locale/syscoin_de.ts \
-  qt/locale/syscoin_el_GR.ts \
-  qt/locale/syscoin_el.ts \
-  qt/locale/syscoin_en_GB.ts \
-  qt/locale/syscoin_en.ts \
-  qt/locale/syscoin_eo.ts \
-  qt/locale/syscoin_es_AR.ts \
-  qt/locale/syscoin_es_CL.ts \
-  qt/locale/syscoin_es_CO.ts \
-  qt/locale/syscoin_es_DO.ts \
-  qt/locale/syscoin_es_ES.ts \
-  qt/locale/syscoin_es_MX.ts \
-  qt/locale/syscoin_es.ts \
-  qt/locale/syscoin_es_UY.ts \
-  qt/locale/syscoin_es_VE.ts \
-  qt/locale/syscoin_et_EE.ts \
-  qt/locale/syscoin_et.ts \
-  qt/locale/syscoin_eu_ES.ts \
-  qt/locale/syscoin_fa_IR.ts \
-  qt/locale/syscoin_fa.ts \
-  qt/locale/syscoin_fi.ts \
-  qt/locale/syscoin_fr_CA.ts \
-  qt/locale/syscoin_fr_FR.ts \
-  qt/locale/syscoin_fr.ts \
-  qt/locale/syscoin_gl.ts \
-  qt/locale/syscoin_he.ts \
-  qt/locale/syscoin_hi_IN.ts \
-  qt/locale/syscoin_hr.ts \
-  qt/locale/syscoin_hu.ts \
-  qt/locale/syscoin_id_ID.ts \
-  qt/locale/syscoin_it_IT.ts \
-  qt/locale/syscoin_it.ts \
-  qt/locale/syscoin_ja.ts \
-  qt/locale/syscoin_ka.ts \
-  qt/locale/syscoin_kk_KZ.ts \
-  qt/locale/syscoin_ko_KR.ts \
-  qt/locale/syscoin_ku_IQ.ts \
-  qt/locale/syscoin_ky.ts \
-  qt/locale/syscoin_la.ts \
-  qt/locale/syscoin_lt.ts \
-  qt/locale/syscoin_lv_LV.ts \
-  qt/locale/syscoin_mk_MK.ts \
-  qt/locale/syscoin_mn.ts \
-  qt/locale/syscoin_ms_MY.ts \
-  qt/locale/syscoin_nb.ts \
-  qt/locale/syscoin_ne.ts \
-  qt/locale/syscoin_nl.ts \
-  qt/locale/syscoin_pam.ts \
-  qt/locale/syscoin_pl.ts \
-  qt/locale/syscoin_pt_BR.ts \
-  qt/locale/syscoin_pt_PT.ts \
-  qt/locale/syscoin_ro_RO.ts \
-  qt/locale/syscoin_ro.ts \
-  qt/locale/syscoin_ru_RU.ts \
-  qt/locale/syscoin_ru.ts \
-  qt/locale/syscoin_sk.ts \
-  qt/locale/syscoin_sl_SI.ts \
-  qt/locale/syscoin_sq.ts \
-  qt/locale/syscoin_sr@latin.ts \
-  qt/locale/syscoin_sr.ts \
-  qt/locale/syscoin_sv.ts \
-  qt/locale/syscoin_ta.ts \
-  qt/locale/syscoin_th_TH.ts \
-  qt/locale/syscoin_tr_TR.ts \
-  qt/locale/syscoin_tr.ts \
-  qt/locale/syscoin_uk.ts \
-  qt/locale/syscoin_ur_PK.ts \
-  qt/locale/syscoin_uz@Cyrl.ts \
-  qt/locale/syscoin_vi.ts \
-  qt/locale/syscoin_vi_VN.ts \
-  qt/locale/syscoin_zh_CN.ts \
-  qt/locale/syscoin_zh_HK.ts \
-  qt/locale/syscoin_zh.ts \
-  qt/locale/syscoin_zh_TW.ts
+include Makefile.qt_locale.include
 
 QT_FORMS_UI = \
   qt/forms/addressbookpage.ui \
   qt/forms/askpassphrasedialog.ui \
   qt/forms/coincontroldialog.ui \
+  qt/forms/createwalletdialog.ui \
   qt/forms/editaddressdialog.ui \
   qt/forms/helpmessagedialog.ui \
   qt/forms/intro.ui \
@@ -119,6 +34,7 @@ QT_MOC_CPP = \
   qt/moc_addressbookpage.cpp \
   qt/moc_addresstablemodel.cpp \
   qt/moc_askpassphrasedialog.cpp \
+  qt/moc_createwalletdialog.cpp \
   qt/moc_bantablemodel.cpp \
   qt/moc_syscoinaddressvalidator.cpp \
   qt/moc_syscoinamountfield.cpp \
@@ -183,16 +99,6 @@ QT_QRC = qt/syscoin.qrc
 QT_QRC_LOCALE_CPP = qt/qrc_syscoin_locale.cpp
 QT_QRC_LOCALE = qt/syscoin_locale.qrc
 
-if ENABLE_BIP70
-PROTOBUF_CC = qt/paymentrequest.pb.cc
-PROTOBUF_H = qt/paymentrequest.pb.h
-PROTOBUF_PROTO = qt/paymentrequest.proto
-else
-PROTOBUF_CC =
-PROTOBUF_H =
-PROTOBUF_PROTO =
-endif
-
 SYSCOIN_QT_H = \
   qt/addressbookpage.h \
   qt/addresstablemodel.h \
@@ -206,6 +112,7 @@ SYSCOIN_QT_H = \
   qt/clientmodel.h \
   qt/coincontroldialog.h \
   qt/coincontroltreewidget.h \
+  qt/createwalletdialog.h \
   qt/csvmodelwriter.h \
   qt/editaddressdialog.h \
   qt/guiconstants.h \
@@ -222,7 +129,6 @@ SYSCOIN_QT_H = \
   qt/optionsdialog.h \
   qt/optionsmodel.h \
   qt/overviewpage.h \
-  qt/paymentrequestplus.h \
   qt/paymentserver.h \
   qt/peertablemodel.h \
   qt/platformstyle.h \
@@ -236,6 +142,7 @@ SYSCOIN_QT_H = \
   qt/rpcconsole.h \
   qt/sendcoinsdialog.h \
   qt/sendcoinsentry.h \
+  qt/sendcoinsrecipient.h \
   qt/signverifymessagedialog.h \
   qt/splashscreen.h \
   qt/trafficgraphwidget.h \
@@ -256,8 +163,6 @@ SYSCOIN_QT_H = \
 RES_ICONS = \
   qt/res/icons/add.png \
   qt/res/icons/address-book.png \
-  qt/res/icons/about.png \
-  qt/res/icons/about_qt.png \
   qt/res/icons/syscoin.ico \
   qt/res/icons/syscoin_testnet.ico \
   qt/res/icons/syscoin.png \
@@ -267,13 +172,11 @@ RES_ICONS = \
   qt/res/icons/clock3.png \
   qt/res/icons/clock4.png \
   qt/res/icons/clock5.png \
-  qt/res/icons/configure.png \
   qt/res/icons/connect0.png \
   qt/res/icons/connect1.png \
   qt/res/icons/connect2.png \
   qt/res/icons/connect3.png \
   qt/res/icons/connect4.png \
-  qt/res/icons/debugwindow.png \
   qt/res/icons/edit.png \
   qt/res/icons/editcopy.png \
   qt/res/icons/editpaste.png \
@@ -281,22 +184,17 @@ RES_ICONS = \
   qt/res/icons/eye.png \
   qt/res/icons/eye_minus.png \
   qt/res/icons/eye_plus.png \
-  qt/res/icons/filesave.png \
   qt/res/icons/fontbigger.png \
   qt/res/icons/fontsmaller.png \
   qt/res/icons/hd_disabled.png \
   qt/res/icons/hd_enabled.png \
   qt/res/icons/history.png \
-  qt/res/icons/info.png \
-  qt/res/icons/key.png \
   qt/res/icons/lock_closed.png \
   qt/res/icons/lock_open.png \
   qt/res/icons/network_disabled.png \
-  qt/res/icons/open.png \
   qt/res/icons/overview.png \
   qt/res/icons/masternodes.png \
   qt/res/icons/proxy.png \
-  qt/res/icons/quit.png \
   qt/res/icons/receive.png \
   qt/res/icons/remove.png \
   qt/res/icons/send.png \
@@ -309,8 +207,7 @@ RES_ICONS = \
   qt/res/icons/tx_input.png \
   qt/res/icons/tx_output.png \
   qt/res/icons/tx_mined.png \
-  qt/res/icons/warning.png \
-  qt/res/icons/verify.png
+  qt/res/icons/warning.png
 
 SYSCOIN_QT_BASE_CPP = \
   qt/bantablemodel.cpp \
@@ -345,6 +242,7 @@ SYSCOIN_QT_WALLET_CPP = \
   qt/askpassphrasedialog.cpp \
   qt/coincontroldialog.cpp \
   qt/coincontroltreewidget.cpp \
+  qt/createwalletdialog.cpp \
   qt/editaddressdialog.cpp \
   qt/masternodelist.cpp \
   qt/openuridialog.cpp \
@@ -370,18 +268,12 @@ SYSCOIN_QT_WALLET_CPP = \
   qt/walletmodeltransaction.cpp \
   qt/walletview.cpp
 
-SYSCOIN_QT_WALLET_BIP70_CPP = \
-  qt/paymentrequestplus.cpp
-
 SYSCOIN_QT_CPP = $(SYSCOIN_QT_BASE_CPP)
 if TARGET_WINDOWS
 SYSCOIN_QT_CPP += $(SYSCOIN_QT_WINDOWS_CPP)
 endif
 if ENABLE_WALLET
 SYSCOIN_QT_CPP += $(SYSCOIN_QT_WALLET_CPP)
-if ENABLE_BIP70
-SYSCOIN_QT_CPP += $(SYSCOIN_QT_WALLET_BIP70_CPP)
-endif # ENABLE_BIP70
 endif # ENABLE_WALLET
 
 RES_IMAGES =
@@ -393,18 +285,17 @@ SYSCOIN_RC = qt/res/syscoin-qt-res.rc
 SYSCOIN_QT_INCLUDES = -DQT_NO_KEYWORDS
 
 qt_libsyscoinqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(SYSCOIN_QT_INCLUDES) \
-  $(QT_INCLUDES) $(QT_DBUS_INCLUDES) $(PROTOBUF_CFLAGS) $(QR_CFLAGS)
+  $(QT_INCLUDES) $(QT_DBUS_INCLUDES) $(QR_CFLAGS)
 qt_libsyscoinqt_a_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
 qt_libsyscoinqt_a_OBJCXXFLAGS = $(AM_OBJCXXFLAGS) $(QT_PIE_FLAGS)
 
 qt_libsyscoinqt_a_SOURCES = $(SYSCOIN_QT_CPP) $(SYSCOIN_QT_H) $(QT_FORMS_UI) \
-  $(QT_QRC) $(QT_QRC_LOCALE) $(QT_TS) $(PROTOBUF_PROTO) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES)
+  $(QT_QRC) $(QT_QRC_LOCALE) $(QT_TS) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES)
 if TARGET_DARWIN
   qt_libsyscoinqt_a_SOURCES += $(SYSCOIN_MM)
 endif
 
-nodist_qt_libsyscoinqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(PROTOBUF_CC) \
-  $(PROTOBUF_H) $(QT_QRC_CPP) $(QT_QRC_LOCALE_CPP)
+nodist_qt_libsyscoinqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(QT_QRC_CPP) $(QT_QRC_LOCALE_CPP)
 
 # forms/foo.h -> forms/ui_foo.h
 QT_FORMS_H=$(join $(dir $(QT_FORMS_UI)),$(addprefix ui_, $(notdir $(QT_FORMS_UI:.ui=.h))))
@@ -414,14 +305,9 @@ QT_FORMS_H=$(join $(dir $(QT_FORMS_UI)),$(addprefix ui_, $(notdir $(QT_FORMS_UI:
 $(QT_MOC): $(QT_FORMS_H)
 $(qt_libsyscoinqt_a_OBJECTS) $(qt_syscoin_qt_OBJECTS) : | $(QT_MOC)
 
-#Generating these with a half-written protobuf header leads to wacky results.
-#This makes sure it's done.
-$(QT_MOC): $(PROTOBUF_H)
-$(QT_MOC_CPP): $(PROTOBUF_H)
-
 # syscoin-qt binary #
 qt_syscoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(SYSCOIN_QT_INCLUDES) \
-  $(QT_INCLUDES) $(PROTOBUF_CFLAGS) $(QR_CFLAGS)
+  $(QT_INCLUDES) $(QR_CFLAGS)
 qt_syscoin_qt_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
 
 qt_syscoin_qt_SOURCES = qt/main.cpp
@@ -436,16 +322,8 @@ if ENABLE_ZMQ
 qt_syscoin_qt_LDADD += $(LIBSYSCOIN_ZMQ) $(ZMQ_LIBS)
 endif
 qt_syscoin_qt_LDADD += $(LIBSYSCOIN_CLI) $(LIBSYSCOIN_COMMON) $(LIBSYSCOIN_UTIL) $(LIBSYSCOIN_CONSENSUS) $(LIBSYSCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) \
-  $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QR_LIBS) $(PROTOBUF_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(LIBSECP256K1) \
+  $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QR_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(LIBSECP256K1) \
   $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(LIBETHEREUM)
-if ENABLE_BIP70
-qt_syscoin_qt_LDADD += $(SSL_LIBS)
-else
-if TARGET_WINDOWS
-qt_syscoin_qt_LDADD += $(SSL_LIBS)
-endif
-endif
-qt_syscoin_qt_LDADD += $(CRYPTO_LIBS)
 qt_syscoin_qt_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 qt_syscoin_qt_LIBTOOLFLAGS = $(AM_LIBTOOLFLAGS) --tag CXX
 
@@ -454,9 +332,9 @@ QT_QM=$(QT_TS:.ts=.qm)
 
 SECONDARY: $(QT_QM)
 
-$(srcdir)/qt/syscoinstrings.cpp: $(libsyscoin_server_a_SOURCES) $(libsyscoin_wallet_a_SOURCES) $(libsyscoin_common_a_SOURCES) $(libsyscoin_zmq_a_SOURCES) $(libsyscoin_consensus_a_SOURCES) $(libsyscoin_util_a_SOURCES)
+$(srcdir)/qt/syscoinstrings.cpp: FORCE
 	@test -n $(XGETTEXT) || echo "xgettext is required for updating translations"
-	$(AM_V_GEN) cd $(srcdir); XGETTEXT=$(XGETTEXT) PACKAGE_NAME="$(PACKAGE_NAME)" COPYRIGHT_HOLDERS="$(COPYRIGHT_HOLDERS)" COPYRIGHT_HOLDERS_SUBSTITUTION="$(COPYRIGHT_HOLDERS_SUBSTITUTION)" $(PYTHON) ../share/qt/extract_strings_qt.py $^
+	$(AM_V_GEN) cd $(srcdir); XGETTEXT=$(XGETTEXT) COPYRIGHT_HOLDERS="$(COPYRIGHT_HOLDERS)" $(PYTHON) ../share/qt/extract_strings_qt.py $(libsyscoin_server_a_SOURCES) $(libsyscoin_wallet_a_SOURCES) $(libsyscoin_common_a_SOURCES) $(libsyscoin_zmq_a_SOURCES) $(libsyscoin_consensus_a_SOURCES) $(libsyscoin_util_a_SOURCES)
 
 translate: $(srcdir)/qt/syscoinstrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(SYSCOIN_QT_BASE_CPP) qt/syscoin.cpp $(SYSCOIN_QT_WINDOWS_CPP) $(SYSCOIN_QT_WALLET_CPP) $(SYSCOIN_QT_H) $(SYSCOIN_MM)
 	@test -n $(LUPDATE) || echo "lupdate is required for updating translations"
@@ -469,7 +347,7 @@ $(QT_QRC_LOCALE_CPP): $(QT_QRC_LOCALE) $(QT_QM)
 	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@
 	@rm $(@D)/temp_$(<F)
 
-$(QT_QRC_CPP): $(QT_QRC) $(QT_FORMS_H) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES) $(PROTOBUF_H)
+$(QT_QRC_CPP): $(QT_QRC) $(QT_FORMS_H) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES)
 	@test -f $(RCC)
 	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name syscoin $< | \
 	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@

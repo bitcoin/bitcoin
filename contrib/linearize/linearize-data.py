@@ -213,8 +213,11 @@ class BlockDataCopier:
 
             inMagic = inhdr[:4]
             if (inMagic != self.settings['netmagic']):
-                print("Invalid magic: " + inMagic.hex())
-                return
+                # Seek backwards 7 bytes (skipping the first byte in the previous search)
+                # and continue searching from the new position if the magic bytes are not
+                # found.
+                self.inF.seek(-7, os.SEEK_CUR)
+                continue
             inLenLE = inhdr[4:]
             su = struct.unpack("<I", inLenLE)
             inLen = su[0] - 80 # length without header
@@ -263,12 +266,12 @@ if __name__ == '__main__':
     f = open(sys.argv[1], encoding="utf8")
     for line in f:
         # skip comment lines
-        m = re.search('^\s*#', line)
+        m = re.search(r'^\s*#', line)
         if m:
             continue
 
         # parse key=value lines
-        m = re.search('^(\w+)\s*=\s*(\S.*)$', line)
+        m = re.search(r'^(\w+)\s*=\s*(\S.*)$', line)
         if m is None:
             continue
         settings[m.group(1)] = m.group(2)

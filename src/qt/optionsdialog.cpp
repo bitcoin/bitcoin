@@ -71,28 +71,28 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
 #ifdef Q_OS_MAC
     /* remove Window tab on Mac */
     ui->tabWidget->removeTab(ui->tabWidget->indexOf(ui->tabWindow));
-#if  defined(MAC_OS_X_VERSION_MIN_REQUIRED) && MAC_OS_X_VERSION_MIN_REQUIRED > 101100
-    /* hide launch at startup option if compiled against macOS > 10.11 (removed API) */
+    /* hide launch at startup option on macOS */
     ui->syscoinAtStartup->setVisible(false);
     ui->verticalLayout_Main->removeWidget(ui->syscoinAtStartup);
     ui->verticalLayout_Main->removeItem(ui->horizontalSpacer_0_Main);
 #endif
-#endif
 
-    /* remove Wallet tab in case of -disablewallet */
+    /* remove Wallet tab and 3rd party-URL textbox in case of -disablewallet */
     if (!enableWallet) {
         ui->tabWidget->removeTab(ui->tabWidget->indexOf(ui->tabWallet));
+        ui->thirdPartyTxUrlsLabel->setVisible(false);
+        ui->thirdPartyTxUrls->setVisible(false);
     }
 
     /* Display elements init */
     QDir translations(":translations");
 
-    ui->syscoinAtStartup->setToolTip(ui->syscoinAtStartup->toolTip().arg(tr(PACKAGE_NAME)));
-    ui->syscoinAtStartup->setText(ui->syscoinAtStartup->text().arg(tr(PACKAGE_NAME)));
+    ui->syscoinAtStartup->setToolTip(ui->syscoinAtStartup->toolTip().arg(PACKAGE_NAME));
+    ui->syscoinAtStartup->setText(ui->syscoinAtStartup->text().arg(PACKAGE_NAME));
 
-    ui->openSyscoinConfButton->setToolTip(ui->openSyscoinConfButton->toolTip().arg(tr(PACKAGE_NAME)));
+    ui->openSyscoinConfButton->setToolTip(ui->openSyscoinConfButton->toolTip().arg(PACKAGE_NAME));
 
-    ui->lang->setToolTip(ui->lang->toolTip().arg(tr(PACKAGE_NAME)));
+    ui->lang->setToolTip(ui->lang->toolTip().arg(PACKAGE_NAME));
     ui->lang->addItem(QString("(") + tr("default") + QString(")"), QVariant(""));
     for (const QString &langStr : translations.entryList())
     {
@@ -110,8 +110,6 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
             ui->lang->addItem(locale.nativeLanguageName() + QString(" (") + langStr + QString(")"), QVariant(langStr));
         }
     }
-    ui->thirdPartyTxUrls->setPlaceholderText("https://example.com/tx/%s");
-
     ui->unit->setModel(new SyscoinUnits(this));
 
     /* Widget-to-option mapper */

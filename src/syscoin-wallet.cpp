@@ -10,10 +10,10 @@
 #include <chainparamsbase.h>
 #include <logging.h>
 #include <util/system.h>
-#include <util/strencodings.h>
+#include <util/translation.h>
 #include <wallet/wallettool.h>
 
-#include <stdio.h>
+#include <functional>
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
@@ -22,13 +22,13 @@ static void SetupWalletToolArgs()
     SetupHelpOptions(gArgs);
     SetupChainParamsBaseOptions();
 
-    gArgs.AddArg("-datadir=<dir>", "Specify data directory", false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-wallet=<wallet-name>", "Specify wallet name", false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-debug=<category>", "Output debugging information (default: 0).", false, OptionsCategory::DEBUG_TEST);
-    gArgs.AddArg("-printtoconsole", "Send trace/debug info to console (default: 1 when no -debug is true, 0 otherwise.", false, OptionsCategory::DEBUG_TEST);
+    gArgs.AddArg("-datadir=<dir>", "Specify data directory", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-wallet=<wallet-name>", "Specify wallet name", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-debug=<category>", "Output debugging information (default: 0).", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
+    gArgs.AddArg("-printtoconsole", "Send trace/debug info to console (default: 1 when no -debug is true, 0 otherwise).", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
 
-    gArgs.AddArg("info", "Get wallet info", false, OptionsCategory::COMMANDS);
-    gArgs.AddArg("create", "Create new wallet file", false, OptionsCategory::COMMANDS);
+    gArgs.AddArg("info", "Get wallet info", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
+    gArgs.AddArg("create", "Create new wallet file", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
 }
 
 static bool WalletAppInit(int argc, char* argv[])
@@ -36,27 +36,27 @@ static bool WalletAppInit(int argc, char* argv[])
     SetupWalletToolArgs();
     std::string error_message;
     if (!gArgs.ParseParameters(argc, argv, error_message)) {
-        fprintf(stderr, "Error parsing command line arguments: %s\n", error_message.c_str());
+        tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error_message);
         return false;
     }
     if (argc < 2 || HelpRequested(gArgs)) {
         std::string usage = strprintf("%s syscoin-wallet version", PACKAGE_NAME) + " " + FormatFullVersion() + "\n\n" +
-                                      "wallet-tool is an offline tool for creating and interacting with Syscoin Core wallet files.\n" +
-                                      "By default wallet-tool will act on wallets in the default mainnet wallet directory in the datadir.\n" +
+                                      "syscoin-wallet is an offline tool for creating and interacting with Syscoin Core wallet files.\n" +
+                                      "By default syscoin-wallet will act on wallets in the default mainnet wallet directory in the datadir.\n" +
                                       "To change the target wallet, use the -datadir, -wallet and -testnet/-regtest arguments.\n\n" +
                                       "Usage:\n" +
                                      "  syscoin-wallet [options] <command>\n\n" +
                                      gArgs.GetHelpMessage();
 
-        fprintf(stdout, "%s", usage.c_str());
+        tfm::format(std::cout, "%s", usage);
         return false;
     }
 
     // check for printtoconsole, allow -debug
     LogInstance().m_print_to_console = gArgs.GetBoolArg("-printtoconsole", gArgs.GetBoolArg("-debug", false));
 
-    if (!fs::is_directory(GetDataDir(false))) {
-        fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "").c_str());
+    if (!CheckDataDirOption()) {
+        tfm::format(std::cerr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", ""));
         return false;
     }
     // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
@@ -87,7 +87,7 @@ int main(int argc, char* argv[])
     for(int i = 1; i < argc; ++i) {
         if (!IsSwitchChar(argv[i][0])) {
             if (!method.empty()) {
-                fprintf(stderr, "Error: two methods provided (%s and %s). Only one method should be provided.\n", method.c_str(), argv[i]);
+                tfm::format(std::cerr, "Error: two methods provided (%s and %s). Only one method should be provided.\n", method, argv[i]);
                 return EXIT_FAILURE;
             }
             method = argv[i];
@@ -95,13 +95,13 @@ int main(int argc, char* argv[])
     }
 
     if (method.empty()) {
-        fprintf(stderr, "No method provided. Run `syscoin-wallet -help` for valid methods.\n");
+        tfm::format(std::cerr, "No method provided. Run `syscoin-wallet -help` for valid methods.\n");
         return EXIT_FAILURE;
     }
 
     // A name must be provided when creating a file
     if (method == "create" && !gArgs.IsArgSet("-wallet")) {
-        fprintf(stderr, "Wallet name must be provided when creating a new wallet.\n");
+        tfm::format(std::cerr, "Wallet name must be provided when creating a new wallet.\n");
         return EXIT_FAILURE;
     }
 

@@ -85,7 +85,7 @@ public:
         nBlockHeight(0),
         vecPayees()
         {}
-    CMasternodeBlockPayees(int nBlockHeightIn) :
+    explicit CMasternodeBlockPayees(int nBlockHeightIn) :
         nBlockHeight(nBlockHeightIn),
         vecPayees()
         {}

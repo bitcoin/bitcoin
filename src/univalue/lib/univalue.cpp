@@ -62,6 +62,15 @@ bool UniValue::setInt(uint64_t val_)
 
     return setNumStr(oss.str());
 }
+// SYSCOIN
+bool UniValue::setInt(uint32_t val_)
+{
+    std::ostringstream oss;
+
+    oss << val_;
+
+    return setNumStr(oss.str());
+}
 
 bool UniValue::setInt(int64_t val_)
 {

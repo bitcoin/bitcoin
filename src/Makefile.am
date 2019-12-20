@@ -19,7 +19,7 @@ else
 LIBUNIVALUE = $(UNIVALUE_LIBS)
 endif
 
-SYSCOIN_INCLUDES=-I$(builddir) $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) $(CRYPTO_CFLAGS) $(SSL_CFLAGS)
+SYSCOIN_INCLUDES=-I$(builddir) $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS)
 
 SYSCOIN_INCLUDES += -I$(srcdir)/secp256k1/include
 SYSCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
@@ -109,11 +109,6 @@ SYSCOIN_CORE_H = \
   services/assetconsensus.h \
   services/rpc/assetrpc.h \
   services/rpc/wallet/assetwalletrpc.h \
-  thread_pool/fixed_function.hpp \
-  thread_pool/mpmc_bounded_queue.hpp \
-  thread_pool/thread_pool.hpp \
-  thread_pool/thread_pool_options.hpp \
-  thread_pool/worker.hpp \
   activemasternode.h \
   spork.h \
   dsnotificationinterface.h \
@@ -154,6 +149,7 @@ SYSCOIN_CORE_H = \
   compat.h \
   compat/assumptions.h \
   compat/byteswap.h \
+  compat/cpuid.h \
   compat/endian.h \
   compat/sanity.h \
   compressor.h \
@@ -178,21 +174,26 @@ SYSCOIN_CORE_H = \
   interfaces/wallet.h \
   key.h \
   key_io.h \
-  keystore.h \
   dbwrapper.h \
   limitedmap.h \
   logging.h \
+  logging/timer.h \
   memusage.h \
   merkleblock.h \
   miner.h \
   net.h \
+  net_permissions.h \
   net_processing.h \
+  net_types.h \
   netaddress.h \
   netbase.h \
   netmessagemaker.h \
   node/coin.h \
+  node/coinstats.h \
+  node/context.h \
   node/psbt.h \
   node/transaction.h \
+  node/utxo_snapshot.h \
   noui.h \
   optional.h \
   outputtype.h \
@@ -205,6 +206,7 @@ SYSCOIN_CORE_H = \
   protocol.h \
   psbt.h \
   random.h \
+  randomenv.h \
   reverse_iterator.h \
   reverselock.h \
   rpc/auxpow_miner.h \
@@ -212,15 +214,17 @@ SYSCOIN_CORE_H = \
   rpc/client.h \
   rpc/mining.h \
   rpc/protocol.h \
-  rpc/server.h \
   rpc/rawtransaction_util.h \
   rpc/register.h \
+  rpc/request.h \
+  rpc/server.h \
   rpc/util.h \
   scheduler.h \
   script/descriptor.h \
-  script/ismine.h \
+  script/keyorigin.h \
   script/sigcache.h \
   script/sign.h \
+  script/signingprovider.h \
   script/standard.h \
   shutdown.h \
   streams.h \
@@ -240,18 +244,25 @@ SYSCOIN_CORE_H = \
   undo.h \
   util/bip32.h \
   util/bytevectorhash.h \
+  util/check.h \
   util/error.h \
   util/fees.h \
+  util/spanparsing.h \
   util/system.h \
+  util/macros.h \
   util/memory.h \
   util/moneystr.h \
   util/rbf.h \
+  util/settings.h \
+  util/string.h \
   util/threadnames.h \
   util/time.h \
+  util/translation.h \
   util/url.h \
   util/validation.h \
   util/executable_path/include/boost/executable_path.hpp \
   util/executable_path/include/boost/detail/executable_path_internals.hpp \
+  util/vector.h \
   validation.h \
   validationinterface.h \
   versionbits.h \
@@ -262,9 +273,11 @@ SYSCOIN_CORE_H = \
   wallet/db.h \
   wallet/feebumper.h \
   wallet/fees.h \
+  wallet/ismine.h \
   wallet/load.h \
   wallet/psbtwallet.h \
   wallet/rpcwallet.h \
+  wallet/scriptpubkeyman.h \
   wallet/wallet.h \
   wallet/walletdb.h \
   wallet/wallettool.h \
@@ -304,6 +317,10 @@ libsyscoin_util_a-clientversion.$(OBJEXT): obj/build.h
   ethereum/ethereum.cpp \
   ethereum/ethereum.h \
   ethereum/vector_ref.h
+
+if GLIBC_BACK_COMPAT
+  ethereum_libethereum_a_SOURCES += compat/glibc_compat.cpp
+endif
 
 # server: shared between syscoind and syscoin-qt
 # Contains code accessing mempool and chain state that is meant to be separated
@@ -357,6 +374,8 @@ libsyscoin_server_a_SOURCES = \
   net.cpp \
   net_processing.cpp \
   node/coin.cpp \
+  node/coinstats.cpp \
+  node/context.cpp \
   node/psbt.cpp \
   node/transaction.cpp \
   noui.cpp \
@@ -392,7 +411,7 @@ libsyscoin_server_a_SOURCES += dummywallet.cpp
 endif
 
 if ENABLE_ZMQ
-libsyscoin_zmq_a_CPPFLAGS = $(SYSCOIN_INCLUDES) $(ZMQ_CFLAGS)
+libsyscoin_zmq_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(ZMQ_CFLAGS)
 libsyscoin_zmq_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_zmq_a_SOURCES = \
   zmq/zmqabstractnotifier.cpp \
@@ -417,6 +436,7 @@ libsyscoin_wallet_a_SOURCES = \
   wallet/psbtwallet.cpp \
   wallet/rpcdump.cpp \
   wallet/rpcwallet.cpp \
+  wallet/scriptpubkeyman.cpp \
   wallet/wallet.cpp \
   wallet/walletdb.cpp \
   wallet/walletutil.cpp \
@@ -438,6 +458,8 @@ crypto_libsyscoin_crypto_base_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 crypto_libsyscoin_crypto_base_a_SOURCES = \
   crypto/aes.cpp \
   crypto/aes.h \
+  crypto/chacha_poly_aead.h \
+  crypto/chacha_poly_aead.cpp \
   crypto/chacha20.h \
   crypto/chacha20.cpp \
   crypto/common.h \
@@ -535,10 +557,10 @@ libsyscoin_common_a_SOURCES = \
   core_read.cpp \
   key.cpp \
   key_io.cpp \
-  keystore.cpp \
   merkleblock.cpp \
   netaddress.cpp \
   netbase.cpp \
+  net_permissions.cpp \
   outputtype.cpp \
   policy/feerate.cpp \
   policy/policy.cpp \
@@ -548,8 +570,8 @@ libsyscoin_common_a_SOURCES = \
   rpc/util.cpp \
   scheduler.cpp \
   script/descriptor.cpp \
-  script/ismine.cpp \
   script/sign.cpp \
+  script/signingprovider.cpp \
   script/standard.cpp \
   versionbitsinfo.cpp \
   warnings.cpp \
@@ -564,6 +586,7 @@ libsyscoin_util_a_SOURCES = \
   support/lockedpool.cpp \
   chainparamsbase.cpp \
   clientversion.cpp \
+  compat/glibc_sanity_fdelt.cpp \
   compat/glibc_sanity.cpp \
   compat/glibcxx_sanity.cpp \
   compat/strnlen.cpp \
@@ -571,7 +594,8 @@ libsyscoin_util_a_SOURCES = \
   interfaces/handler.cpp \
   logging.cpp \
   random.cpp \
-  rpc/protocol.cpp \
+  randomenv.cpp \
+  rpc/request.cpp \
   support/cleanse.cpp \
   sync.cpp \
   threadinterrupt.cpp \
@@ -582,8 +606,11 @@ libsyscoin_util_a_SOURCES = \
   util/system.cpp \
   util/moneystr.cpp \
   util/rbf.cpp \
+  util/settings.cpp \
   util/threadnames.cpp \
+  util/spanparsing.cpp \
   util/strencodings.cpp \
+  util/string.cpp \
   util/time.cpp \
   util/url.cpp \
   util/validation.cpp \
@@ -607,6 +634,8 @@ endif
 libsyscoin_cli_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
 libsyscoin_cli_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_cli_a_SOURCES = \
+  compat/stdin.h \
+  compat/stdin.cpp \
   rpc/client.cpp \
   $(SYSCOIN_CORE_H)
 
@@ -640,7 +669,7 @@ syscoind_LDADD = \
   $(LIBSECP256K1) \
   $(LIBETHEREUM)
 
-syscoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
+syscoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
 
 # syscoin-cli binary #
 syscoin_cli_SOURCES = syscoin-cli.cpp
@@ -658,7 +687,7 @@ syscoin_cli_LDADD = \
   $(LIBSYSCOIN_UTIL) \
   $(LIBSYSCOIN_CRYPTO)
 
-syscoin_cli_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
+syscoin_cli_LDADD += $(BOOST_LIBS) $(EVENT_LIBS)
 #
 
 # syscoin-tx binary #
@@ -700,24 +729,13 @@ syscoin_wallet_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBETHEREUM)
 
-syscoin_wallet_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(ZMQ_LIBS)
-
-# syscoin bench #
-syscoinbench_SOURCES = syscoinbench.cpp
-syscoinbench_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(EVENT_CLFAGS) $(EVENT_PTHREADS_CFLAGS)
-syscoinbench_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-syscoinbench_LDFLAGS = $(BOOST_LIBS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
-
-syscoinbench_LDADD = \
-  $(LIBSYSCOIN_COMMON) \
-  $(LIBSYSCOIN_CONSENSUS) \
-  $(LIBSYSCOIN_CRYPTO) \
-  $(LIBSECP256K1)
+syscoin_wallet_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(ZMQ_LIBS)
+#
 
 # syscoinconsensus library #
 if BUILD_SYSCOIN_LIBS
 include_HEADERS = script/syscoinconsensus.h
-libsyscoinconsensus_la_SOURCES = $(crypto_libsyscoin_crypto_base_a_SOURCES) $(libsyscoin_consensus_a_SOURCES)
+libsyscoinconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libsyscoin_crypto_base_a_SOURCES) $(libsyscoin_consensus_a_SOURCES)
 
 if GLIBC_BACK_COMPAT
   libsyscoinconsensus_la_SOURCES += compat/glibc_compat.cpp
@@ -734,15 +752,12 @@ endif
 dist_bin_SCRIPTS =
 if TARGET_WINDOWS
   dist_bin_SCRIPTS += bin/win64/sysgeth.nod.exe bin/win64/sysrelayer.nod.exe
-  dist_bin_SCRIPTS += bin/win64/sha3.node bin/win64/bufferutil.node bin/win64/scrypt.node bin/win64/validation.node
 endif
 if TARGET_LINUX
   dist_bin_SCRIPTS += bin/linux/sysgeth.nod bin/linux/sysrelayer.nod
-  dist_bin_SCRIPTS += bin/linux/sha3.node bin/linux/bufferutil.node bin/linux/scrypt.node bin/linux/validation.node
 endif
 if TARGET_DARWIN
   dist_bin_SCRIPTS += bin/osx/sysgeth.nod bin/osx/sysrelayer.nod
-  dist_bin_SCRIPTS += bin/osx/sha3.node bin/osx/bufferutil.node bin/osx/scrypt.node bin/osx/validation.node
 endif
 
 #
@@ -803,15 +818,11 @@ if HARDEN
 	$(AM_V_at) READELF=$(READELF) OBJDUMP=$(OBJDUMP) $(PYTHON) $(top_srcdir)/contrib/devtools/security-check.py < $(bin_PROGRAMS)
 endif
 
-if ENABLE_BIP70
-%.pb.cc %.pb.h: %.proto
-	@test -f $(PROTOC)
-	$(AM_V_GEN) $(PROTOC) --cpp_out=$(@D) --proto_path=$(<D) $<
-endif
-
 if EMBEDDED_LEVELDB
 include Makefile.leveldb.include
 endif
+
+include Makefile.test_util.include
 
 if ENABLE_TESTS
 include Makefile.test.include

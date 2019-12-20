@@ -4,6 +4,8 @@
 
 #include <qt/syscoin.h>
 
+#include <util/translation.h>
+
 #include <QCoreApplication>
 
 #include <functional>

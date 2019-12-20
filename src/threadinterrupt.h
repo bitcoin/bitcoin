@@ -10,7 +10,6 @@
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
-#include <mutex>
 
 /*
     A helper class for interruptible sleeps. Calling operator() will interrupt

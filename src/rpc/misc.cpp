@@ -3,16 +3,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <crypto/ripemd160.h>
-#include <key_io.h>
 #include <httpserver.h>
+#include <key_io.h>
 #include <outputtype.h>
 #include <rpc/blockchain.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
-#include <util/system.h>
+#include <util/check.h>
 #include <util/strencodings.h>
+#include <util/system.h>
 #include <util/validation.h>
 
 #include <stdint.h>
@@ -25,6 +25,7 @@
 // SYSCOIN
 #include <masternodesync.h>
 #include <spork.h>
+#include <node/context.h>
 UniValue mnsync(const JSONRPCRequest& request);
 UniValue spork(const JSONRPCRequest& request);
 UniValue mnsync(const JSONRPCRequest& request)
@@ -63,14 +64,14 @@ UniValue mnsync(const JSONRPCRequest& request)
 
     if(strMode == "next")
     {
-        masternodeSync.SwitchToNextAsset(*g_connman);
+        masternodeSync.SwitchToNextAsset(*g_rpc_node->connman);
         return "sync updated to " + masternodeSync.GetAssetName();
     }
 
     if(strMode == "reset")
     {
         masternodeSync.Reset();
-        masternodeSync.SwitchToNextAsset(*g_connman);
+        masternodeSync.SwitchToNextAsset(*g_rpc_node->connman);
         return "success";
     }
     return "failure";
@@ -133,14 +134,14 @@ UniValue spork(const JSONRPCRequest& request)
         if(nSporkID == -1)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid spork name");
 
-        if (!g_connman)
+        if (!g_rpc_node->connman)
             throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
         // SPORK VALUE
         int64_t nValue = request.params[1].get_int64();
 
         //broadcast new spork
-        if(sporkManager.UpdateSpork(nSporkID, nValue, *g_connman)){
+        if(sporkManager.UpdateSpork(nSporkID, nValue, *g_rpc_node->connman)){
             sporkManager.ExecuteSpork(nSporkID, nValue);
             return "success";
         } else {
@@ -165,8 +166,6 @@ UniValue spork(const JSONRPCRequest& request)
 }
 static UniValue validateaddress(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
             RPCHelpMan{"validateaddress",
                 "\nReturn information about the given syscoin address.\n",
                 {
@@ -187,7 +186,7 @@ static UniValue validateaddress(const JSONRPCRequest& request)
                     HelpExampleCli("validateaddress", "\"1PSSGeFHDnKNxiEyFrD1wcEaHr9hrQDDWc\"")
             + HelpExampleRpc("validateaddress", "\"1PSSGeFHDnKNxiEyFrD1wcEaHr9hrQDDWc\"")
                 },
-            }.ToString());
+            }.Check(request);
 
     CTxDestination dest = DecodeDestination(request.params[0].get_str());
     bool isValid = IsValidDestination(dest);
@@ -210,9 +209,6 @@ static UniValue validateaddress(const JSONRPCRequest& request)
 
 static UniValue createmultisig(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 3)
-    {
-        std::string msg =
             RPCHelpMan{"createmultisig",
                 "\nCreates a multi-signature address with n signature of m keys required.\n"
                 "It returns a json object with the address and redeemScript.\n",
@@ -222,7 +218,7 @@ static UniValue createmultisig(const JSONRPCRequest& request)
                         {
                             {"key", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "The hex-encoded public key"},
                         }},
-                    {"address_type", RPCArg::Type::STR, /* default */ "legacy", "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
+                    {"address_type", RPCArg::Type::STR, /* default */ "bech32", "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
                 },
                 RPCResult{
             "{\n"
@@ -236,9 +232,7 @@ static UniValue createmultisig(const JSONRPCRequest& request)
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("createmultisig", "2, \"[\\\"03789ed0bb717d88f7d321a368d905e7430207ebbd82bd342cf11ae157a7ace5fd\\\",\\\"03dbc6764b8884a92e871274b87583e6d5c2a58819473e17e107ef3f6aa5a61626\\\"]\"")
                 },
-            }.ToString();
-        throw std::runtime_error(msg);
-    }
+            }.Check(request);
 
     int required = request.params[0].get_int();
 
@@ -254,7 +248,7 @@ static UniValue createmultisig(const JSONRPCRequest& request)
     }
 
     // Get the output type
-    OutputType output_type = OutputType::LEGACY;
+    OutputType output_type = OutputType::BECH32;
     if (!request.params[2].isNull()) {
         if (!ParseOutputType(request.params[2].get_str(), output_type)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", request.params[2].get_str()));
@@ -262,9 +256,9 @@ static UniValue createmultisig(const JSONRPCRequest& request)
     }
 
     // Construct using pay-to-script-hash:
-    const CScript inner = CreateMultisigRedeemscript(required, pubkeys);
-    CBasicKeyStore keystore;
-    const CTxDestination dest = AddAndGetDestinationForScript(keystore, inner, output_type);
+    FillableSigningProvider keystore;
+    CScript inner;
+    const CTxDestination dest = AddAndGetMultisigDestination(required, pubkeys, output_type, keystore, inner);
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("address", EncodeDestination(dest));
@@ -275,8 +269,6 @@ static UniValue createmultisig(const JSONRPCRequest& request)
 
 UniValue getdescriptorinfo(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 1) {
-        throw std::runtime_error(
             RPCHelpMan{"getdescriptorinfo",
             {"\nAnalyses a descriptor.\n"},
             {
@@ -285,6 +277,7 @@ UniValue getdescriptorinfo(const JSONRPCRequest& request)
             RPCResult{
             "{\n"
             "  \"descriptor\" : \"desc\",         (string) The descriptor in canonical form, without private keys\n"
+            "  \"checksum\" : \"chksum\",         (string) The checksum for the input descriptor\n"
             "  \"isrange\" : true|false,        (boolean) Whether the descriptor is ranged\n"
             "  \"issolvable\" : true|false,     (boolean) Whether the descriptor is solvable\n"
             "  \"hasprivatekeys\" : true|false, (boolean) Whether the input descriptor contained at least one private key\n"
@@ -293,20 +286,20 @@ UniValue getdescriptorinfo(const JSONRPCRequest& request)
             RPCExamples{
                 "Analyse a descriptor\n" +
                 HelpExampleCli("getdescriptorinfo", "\"wpkh([d34db33f/84h/0h/0h]0279be667ef9dcbbac55a06295Ce870b07029Bfcdb2dce28d959f2815b16f81798)\"")
-            }}.ToString()
-        );
-    }
+            }}.Check(request);
 
     RPCTypeCheck(request.params, {UniValue::VSTR});
 
     FlatSigningProvider provider;
-    auto desc = Parse(request.params[0].get_str(), provider);
+    std::string error;
+    auto desc = Parse(request.params[0].get_str(), provider, error);
     if (!desc) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Invalid descriptor"));
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
     }
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("descriptor", desc->ToString());
+    result.pushKV("checksum", GetDescriptorChecksum(request.params[0].get_str()));
     result.pushKV("isrange", desc->IsRange());
     result.pushKV("issolvable", desc->IsSolvable());
     result.pushKV("hasprivatekeys", provider.keys.size() > 0);
@@ -315,8 +308,6 @@ UniValue getdescriptorinfo(const JSONRPCRequest& request)
 
 UniValue deriveaddresses(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.empty() || request.params.size() > 2) {
-        throw std::runtime_error(
             RPCHelpMan{"deriveaddresses",
             {"\nDerives one or more addresses corresponding to an output descriptor.\n"
             "Examples of output descriptors are:\n"
@@ -337,9 +328,7 @@ UniValue deriveaddresses(const JSONRPCRequest& request)
             RPCExamples{
                 "First three native segwit receive addresses\n" +
                 HelpExampleCli("deriveaddresses", "\"wpkh([d34db33f/84h/0h/0h]xpub6DJ2dNUysrn5Vt36jH2KLBT2i1auw1tTSSomg8PhqNiUtx8QX2SvC9nrHu81fT41fvDUnhMjEzQgXnQjKEu3oaqMSzhSrHMxyyoEAmUHQbY/0/*)#cjjspncu\" \"[0,2]\"")
-            }}.ToString()
-        );
-    }
+            }}.Check(request);
 
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValueType()}); // Range argument is checked later
     const std::string desc_str = request.params[0].get_str();
@@ -352,9 +341,10 @@ UniValue deriveaddresses(const JSONRPCRequest& request)
     }
 
     FlatSigningProvider key_provider;
-    auto desc = Parse(desc_str, key_provider, /* require_checksum = */ true);
+    std::string error;
+    auto desc = Parse(desc_str, key_provider, error, /* require_checksum = */ true);
     if (!desc) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Invalid descriptor"));
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
     }
 
     if (!desc->IsRange() && request.params.size() > 1) {
@@ -394,8 +384,6 @@ UniValue deriveaddresses(const JSONRPCRequest& request)
 
 static UniValue verifymessage(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 3)
-        throw std::runtime_error(
             RPCHelpMan{"verifymessage",
                 "\nVerify a signed message\n",
                 {
@@ -416,7 +404,7 @@ static UniValue verifymessage(const JSONRPCRequest& request)
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("verifymessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\", \"signature\", \"my message\"")
                 },
-            }.ToString());
+            }.Check(request);
 
     LOCK(cs_main);
 
@@ -453,8 +441,6 @@ static UniValue verifymessage(const JSONRPCRequest& request)
 
 static UniValue signmessagewithprivkey(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 2)
-        throw std::runtime_error(
             RPCHelpMan{"signmessagewithprivkey",
                 "\nSign a message with the private key of an address\n",
                 {
@@ -472,7 +458,7 @@ static UniValue signmessagewithprivkey(const JSONRPCRequest& request)
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("signmessagewithprivkey", "\"privkey\", \"my message\"")
                 },
-            }.ToString());
+            }.Check(request);
 
     std::string strPrivkey = request.params[0].get_str();
     std::string strMessage = request.params[1].get_str();
@@ -495,18 +481,15 @@ static UniValue signmessagewithprivkey(const JSONRPCRequest& request)
 
 static UniValue setmocktime(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
             RPCHelpMan{"setmocktime",
                 "\nSet the local time to given timestamp (-regtest only)\n",
                 {
-                    {"timestamp", RPCArg::Type::NUM, RPCArg::Optional::NO, "Unix seconds-since-epoch timestamp\n"
+                    {"timestamp", RPCArg::Type::NUM, RPCArg::Optional::NO, UNIX_EPOCH_TIME + "\n"
             "   Pass 0 to go back to using the system time."},
                 },
                 RPCResults{},
                 RPCExamples{""},
-            }.ToString()
-        );
+            }.Check(request);
 
     if (!Params().MineBlocksOnDemand())
         throw std::runtime_error("setmocktime for regression testing (-regtest mode) only");
@@ -561,8 +544,6 @@ static UniValue getmemoryinfo(const JSONRPCRequest& request)
     /* Please, avoid using the word "pool" here in the RPC interface or help,
      * as users will undoubtedly confuse it with the other "memory pool"
      */
-    if (request.fHelp || request.params.size() > 1)
-        throw std::runtime_error(
             RPCHelpMan{"getmemoryinfo",
                 "Returns an object containing information about memory usage.\n",
                 {
@@ -591,7 +572,7 @@ static UniValue getmemoryinfo(const JSONRPCRequest& request)
                     HelpExampleCli("getmemoryinfo", "")
             + HelpExampleRpc("getmemoryinfo", "")
                 },
-            }.ToString());
+            }.Check(request);
 
     std::string mode = request.params[0].isNull() ? "stats" : request.params[0].get_str();
     if (mode == "stats") {
@@ -629,8 +610,6 @@ static void EnableOrDisableLogCategories(UniValue cats, bool enable) {
 
 UniValue logging(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() > 2) {
-        throw std::runtime_error(
             RPCHelpMan{"logging",
             "Gets and sets the logging configuration.\n"
             "When called without an argument, returns the list of categories with status that are currently being debug logged or not.\n"
@@ -662,8 +641,7 @@ UniValue logging(const JSONRPCRequest& request)
                     HelpExampleCli("logging", "\"[\\\"all\\\"]\" \"[\\\"http\\\"]\"")
             + HelpExampleRpc("logging", "[\"all\"], [\"libevent\"]")
                 },
-            }.ToString());
-    }
+            }.Check(request);
 
     uint32_t original_log_categories = LogInstance().GetCategoryMask();
     if (request.params[0].isArray()) {
@@ -704,6 +682,7 @@ static UniValue echo(const JSONRPCRequest& request)
         throw std::runtime_error(
             RPCHelpMan{"echo|echojson ...",
                 "\nSimply echo back the input arguments. This command is for testing.\n"
+                "\nIt will return an internal bug report when exactly 100 arguments are passed.\n"
                 "\nThe difference between echo and echojson is that echojson has argument conversion enabled in the client-side table in "
                 "syscoin-cli and the GUI. There is no server-side difference.",
                 {},
@@ -711,6 +690,8 @@ static UniValue echo(const JSONRPCRequest& request)
                 RPCExamples{""},
             }.ToString()
         );
+
+    CHECK_NONFATAL(request.params.size() != 100);
 
     return request.params;
 }

@@ -46,7 +46,7 @@ from test_framework.script import (
     OP_RETURN,
     OP_TRUE,
     SIGHASH_ALL,
-    SignatureHash,
+    LegacySignatureHash,
     hash160,
 )
 from test_framework.test_framework import SyscoinTestFramework
@@ -74,11 +74,15 @@ class CBrokenBlock(CBlock):
     def normal_serialize(self):
         return super().serialize()
 
+
+DUPLICATE_COINBASE_SCRIPT_SIG = b'\x01\x78'  # Valid for block at height 120
+
+
 class FullBlockTest(SyscoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
-        self.extra_args = [[]]
+        self.extra_args = [['-acceptnonstdtxn=1']]  # This is a consensus block test, we don't care about tx policy
 
     def run_test(self):
         node = self.nodes[0]  # convenience reference to the node
@@ -102,6 +106,13 @@ class FullBlockTest(SyscoinTestFramework):
         self.sync_blocks(blocks)
 
         # Create a new block
+        b_dup_cb = self.next_block('dup_cb')
+        b_dup_cb.vtx[0].vin[0].scriptSig = DUPLICATE_COINBASE_SCRIPT_SIG
+        b_dup_cb.vtx[0].rehash()
+        duplicate_tx = b_dup_cb.vtx[0]
+        b_dup_cb = self.update_block('dup_cb', [])
+        self.send_blocks([b_dup_cb])
+
         b0 = self.next_block(0)
         self.save_spendable_output()
         self.send_blocks([b0])
@@ -492,6 +503,14 @@ class FullBlockTest(SyscoinTestFramework):
             tx_last = tx_new
             b39_outputs += 1
 
+        # The accounting in the loop above can be off, because it misses the
+        # compact size encoding of the number of transactions in the block.
+        # Make sure we didn't accidentally make too big a block. Note that the
+        # size of the block has non-determinism due to the ECDSA signature in
+        # the first transaction.
+        while (len(b39.serialize()) >= MAX_BLOCK_BASE_SIZE):
+            del b39.vtx[-1]
+
         b39 = self.update_block(39, [])
         self.send_blocks([b39], True)
         self.save_spendable_output()
@@ -519,7 +538,7 @@ class FullBlockTest(SyscoinTestFramework):
             # second input is corresponding P2SH output from b39
             tx.vin.append(CTxIn(COutPoint(b39.vtx[i].sha256, 0), b''))
             # Note: must pass the redeem_script (not p2sh_script) to the signature hash function
-            (sighash, err) = SignatureHash(redeem_script, tx, 1, SIGHASH_ALL)
+            (sighash, err) = LegacySignatureHash(redeem_script, tx, 1, SIGHASH_ALL)
             sig = self.coinbase_key.sign_ecdsa(sighash) + bytes(bytearray([SIGHASH_ALL]))
             scriptSig = CScript([sig, redeem_script])
 
@@ -759,7 +778,7 @@ class FullBlockTest(SyscoinTestFramework):
 
         # Test a few invalid tx types
         #
-        # -> b35 (10) -> b39 (11) -> b42 (12) -> b43 (13) -> b53 (14) -> b55 (15) -> b57 (16) -> b60 (17)
+        # -> b35 (10) -> b39 (11) -> b42 (12) -> b43 (13) -> b53 (14) -> b55 (15) -> b57 (16) -> b60 ()
         #                                                                                    \-> ??? (17)
         #
 
@@ -785,20 +804,59 @@ class FullBlockTest(SyscoinTestFramework):
 
         # reset to good chain
         self.move_tip(57)
-        b60 = self.next_block(60, spend=out[17])
+        b60 = self.next_block(60)
         self.send_blocks([b60], True)
         self.save_spendable_output()
 
-        # Upstream Syscoin tests BIP30 here.  We cannot do that, as BIP34 is
-        # already activated (due to activating segwit).
+        # Test BIP30 (reject duplicate)
+        #
+        # -> b39 (11) -> b42 (12) -> b43 (13) -> b53 (14) -> b55 (15) -> b57 (16) -> b60 ()
+        #                                                                                  \-> b61 ()
+        #
+        # Blocks are not allowed to contain a transaction whose id matches that of an earlier,
+        # not-fully-spent transaction in the same chain. To test, make identical coinbases;
+        # the second one should be rejected. See also CVE-2012-1909.
+        #
+        self.log.info("Reject a block with a transaction with a duplicate hash of a previous transaction (BIP30)")
+        self.move_tip(60)
+        b61 = self.next_block(61)
+        b61.vtx[0].vin[0].scriptSig = DUPLICATE_COINBASE_SCRIPT_SIG
+        b61.vtx[0].rehash()
+        b61 = self.update_block(61, [])
+        assert_equal(duplicate_tx.serialize(), b61.vtx[0].serialize())
+        self.send_blocks([b61], success=False, reject_reason='bad-txns-BIP30', reconnect=True)
+
+        # Test BIP30 (allow duplicate if spent)
+        #
+        # -> b57 (16) -> b60 ()
+        #            \-> b_spend_dup_cb (b_dup_cb) -> b_dup_2 ()
+        #
+        self.move_tip(57)
+        b_spend_dup_cb = self.next_block('spend_dup_cb')
+        tx = CTransaction()
+        tx.vin.append(CTxIn(COutPoint(duplicate_tx.sha256, 0)))
+        tx.vout.append(CTxOut(0, CScript([OP_TRUE])))
+        self.sign_tx(tx, duplicate_tx)
+        tx.rehash()
+        b_spend_dup_cb = self.update_block('spend_dup_cb', [tx])
+
+        b_dup_2 = self.next_block('dup_2')
+        b_dup_2.vtx[0].vin[0].scriptSig = DUPLICATE_COINBASE_SCRIPT_SIG
+        b_dup_2.vtx[0].rehash()
+        b_dup_2 = self.update_block('dup_2', [])
+        assert_equal(duplicate_tx.serialize(), b_dup_2.vtx[0].serialize())
+        assert_equal(self.nodes[0].gettxout(txid=duplicate_tx.hash, n=0)['confirmations'], 119)
+        self.send_blocks([b_spend_dup_cb, b_dup_2], success=True)
+        # The duplicate has less confirmations
+        assert_equal(self.nodes[0].gettxout(txid=duplicate_tx.hash, n=0)['confirmations'], 1)
 
         # Test tx.isFinal is properly rejected (not an exhaustive tx.isFinal test, that should be in data-driven transaction tests)
         #
-        #   -> b39 (11) -> b42 (12) -> b43 (13) -> b53 (14) -> b55 (15) -> b57 (16) -> b60 (17)
-        #                                                                                     \-> b62 (18)
+        # -> b_spend_dup_cb (b_dup_cb) -> b_dup_2 ()
+        #                                           \-> b62 (18)
         #
         self.log.info("Reject a block with a transaction with a nonfinal locktime")
-        self.move_tip(60)
+        self.move_tip('dup_2')
         b62 = self.next_block(62)
         tx = CTransaction()
         tx.nLockTime = 0xffffffff  # this locktime is non-final
@@ -811,11 +869,11 @@ class FullBlockTest(SyscoinTestFramework):
 
         # Test a non-final coinbase is also rejected
         #
-        #   -> b39 (11) -> b42 (12) -> b43 (13) -> b53 (14) -> b55 (15) -> b57 (16) -> b60 (17)
-        #                                                                                     \-> b63 (-)
+        # -> b_spend_dup_cb (b_dup_cb) -> b_dup_2 ()
+        #                                           \-> b63 (-)
         #
         self.log.info("Reject a block with a coinbase transaction with a nonfinal locktime")
-        self.move_tip(60)
+        self.move_tip('dup_2')
         b63 = self.next_block(63)
         b63.vtx[0].nLockTime = 0xffffffff
         b63.vtx[0].vin[0].nSequence = 0xDEADBEEF
@@ -831,14 +889,14 @@ class FullBlockTest(SyscoinTestFramework):
         #  What matters is that the receiving node should not reject the bloated block, and then reject the canonical
         #  block on the basis that it's the same as an already-rejected block (which would be a consensus failure.)
         #
-        #  -> b39 (11) -> b42 (12) -> b43 (13) -> b53 (14) -> b55 (15) -> b57 (16) -> b60 (17) -> b64 (18)
-        #                                                                                        \
-        #                                                                                         b64a (18)
+        #  -> b_spend_dup_cb (b_dup_cb) -> b_dup_2 () -> b64 (18)
+        #                                              \
+        #                                               b64a (18)
         #  b64a is a bloated block (non-canonical varint)
         #  b64 is a good block (same as b64 but w/ canonical varint)
         #
         self.log.info("Accept a valid block even if a bloated version of the block has previously been sent")
-        self.move_tip(60)
+        self.move_tip('dup_2')
         regular_block = self.next_block("64a", spend=out[18])
 
         # make it a "broken_block," with non-canonical serialization
@@ -864,7 +922,7 @@ class FullBlockTest(SyscoinTestFramework):
         node.disconnect_p2ps()
         self.reconnect_p2p()
 
-        self.move_tip(60)
+        self.move_tip('dup_2')
         b64 = CBlock(b64a)
         b64.vtx = copy.deepcopy(b64a.vtx)
         assert_equal(b64.hash, b64a.hash)
@@ -876,7 +934,7 @@ class FullBlockTest(SyscoinTestFramework):
 
         # Spend an output created in the block itself
         #
-        # -> b42 (12) -> b43 (13) -> b53 (14) -> b55 (15) -> b57 (16) -> b60 (17) -> b64 (18) -> b65 (19)
+        # -> b_dup_2 () -> b64 (18) -> b65 (19)
         #
         self.log.info("Accept a block with a transaction spending an output created in the same block")
         self.move_tip(64)
@@ -889,8 +947,8 @@ class FullBlockTest(SyscoinTestFramework):
 
         # Attempt to spend an output created later in the same block
         #
-        # -> b43 (13) -> b53 (14) -> b55 (15) -> b57 (16) -> b60 (17) -> b64 (18) -> b65 (19)
-        #                                                                                    \-> b66 (20)
+        # -> b64 (18) -> b65 (19)
+        #                        \-> b66 (20)
         self.log.info("Reject a block with a transaction spending an output created later in the same block")
         self.move_tip(65)
         b66 = self.next_block(66)
@@ -901,8 +959,8 @@ class FullBlockTest(SyscoinTestFramework):
 
         # Attempt to double-spend a transaction created in a block
         #
-        # -> b43 (13) -> b53 (14) -> b55 (15) -> b57 (16) -> b60 (17) -> b64 (18) -> b65 (19)
-        #                                                                                    \-> b67 (20)
+        # -> b64 (18) -> b65 (19)
+        #                        \-> b67 (20)
         #
         #
         self.log.info("Reject a block with a transaction double spending a transaction created in the same block")
@@ -916,8 +974,8 @@ class FullBlockTest(SyscoinTestFramework):
 
         # More tests of block subsidy
         #
-        # -> b43 (13) -> b53 (14) -> b55 (15) -> b57 (16) -> b60 (17) -> b64 (18) -> b65 (19) -> b69 (20)
-        #                                                                                    \-> b68 (20)
+        # -> b64 (18) -> b65 (19) -> b69 (20)
+        #                        \-> b68 (20)
         #
         # b68 - coinbase with an extra 10 satoshis,
         #       creates a tx that has 9 satoshis from out[20] go to fees
@@ -943,8 +1001,8 @@ class FullBlockTest(SyscoinTestFramework):
 
         # Test spending the outpoint of a non-existent transaction
         #
-        # -> b53 (14) -> b55 (15) -> b57 (16) -> b60 (17) -> b64 (18) -> b65 (19) -> b69 (20)
-        #                                                                                    \-> b70 (21)
+        # -> b65 (19) -> b69 (20)
+        #                        \-> b70 (21)
         #
         self.log.info("Reject a block containing a transaction spending from a non-existent input")
         self.move_tip(69)
@@ -959,8 +1017,8 @@ class FullBlockTest(SyscoinTestFramework):
 
         # Test accepting an invalid block which has the same hash as a valid one (via merkle tree tricks)
         #
-        #  -> b53 (14) -> b55 (15) -> b57 (16) -> b60 (17) -> b64 (18) -> b65 (19) -> b69 (20) -> b72 (21)
-        #                                                                                      \-> b71 (21)
+        #  -> b65 (19) -> b69 (20) -> b72 (21)
+        #                          \-> b71 (21)
         #
         # b72 is a good block.
         # b71 is a copy of 72, but re-adds one of its transactions.  However, it has the same hash as b72.
@@ -988,8 +1046,8 @@ class FullBlockTest(SyscoinTestFramework):
 
         # Test some invalid scripts and MAX_BLOCK_SIGOPS
         #
-        # -> b55 (15) -> b57 (16) -> b60 (17) -> b64 (18) -> b65 (19) -> b69 (20) -> b72 (21)
-        #                                                                                    \-> b** (22)
+        # -> b69 (20) -> b72 (21)
+        #                        \-> b** (22)
         #
 
         # b73 - tx with excessive sigops that are placed after an excessively large script element.
@@ -1213,7 +1271,7 @@ class FullBlockTest(SyscoinTestFramework):
             self.save_spendable_output()
             spend = self.get_spendable_output()
 
-        self.send_blocks(blocks, True, timeout=480)
+        self.send_blocks(blocks, True, timeout=960)
         chain1_tip = i
 
         # now create alt chain of same length
@@ -1225,14 +1283,14 @@ class FullBlockTest(SyscoinTestFramework):
 
         # extend alt chain to trigger re-org
         block = self.next_block("alt" + str(chain1_tip + 1), version=4)
-        self.send_blocks([block], True, timeout=480)
+        self.send_blocks([block], True, timeout=960)
 
         # ... and re-org back to the first chain
         self.move_tip(chain1_tip)
         block = self.next_block(chain1_tip + 1, version=4)
         self.send_blocks([block], False, force_send=True)
         block = self.next_block(chain1_tip + 2, version=4)
-        self.send_blocks([block], True, timeout=480)
+        self.send_blocks([block], True, timeout=960)
 
         self.log.info("Reject a block with an invalid block header version")
         b_v1 = self.next_block('b_v1', version=1)
@@ -1264,7 +1322,7 @@ class FullBlockTest(SyscoinTestFramework):
         if (scriptPubKey[0] == OP_TRUE):  # an anyone-can-spend
             tx.vin[0].scriptSig = CScript()
             return
-        (sighash, err) = SignatureHash(spend_tx.vout[0].scriptPubKey, tx, 0, SIGHASH_ALL)
+        (sighash, err) = LegacySignatureHash(spend_tx.vout[0].scriptPubKey, tx, 0, SIGHASH_ALL)
         tx.vin[0].scriptSig = CScript([self.coinbase_key.sign_ecdsa(sighash) + bytes(bytearray([SIGHASH_ALL]))])
 
     def create_and_sign_transaction(self, spend_tx, value, script=CScript([OP_TRUE])):

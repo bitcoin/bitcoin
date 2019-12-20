@@ -35,14 +35,30 @@ bool ParseInt32(const std::string& str, int32_t *out)
     errno = 0; // strtol will not set errno if valid
     long int n = strtol(str.c_str(), &endp, 10);
     if(out) *out = (int32_t)n;
-    // Note that strtol returns a *long int*, so even if strtol doesn't report a over/underflow
+    // Note that strtol returns a *long int*, so even if strtol doesn't report an over/underflow
     // we still have to check that the returned value is within the range of an *int32_t*. On 64-bit
     // platforms the size of these types may be different.
     return endp && *endp == 0 && !errno &&
         n >= std::numeric_limits<int32_t>::min() &&
         n <= std::numeric_limits<int32_t>::max();
 }
-
+// SYSCOIN
+bool ParseUInt32(const std::string& str, uint32_t *out)
+{
+    if (!ParsePrechecks(str))
+        return false;
+    if (str.size() >= 1 && str[0] == '-') // Reject negative values, unfortunately strtoul accepts these by default if they fit in the range
+        return false;
+    char *endp = NULL;
+    errno = 0; // strtoul will not set errno if valid
+    unsigned long int n = strtoul(str.c_str(), &endp, 10);
+    if(out) *out = (uint32_t)n;
+    // Note that strtoul returns a *unsigned long int*, so even if it doesn't report an over/underflow
+    // we still have to check that the returned value is within the range of an *uint32_t*. On 64-bit
+    // platforms the size of these types may be different.
+    return endp && *endp == 0 && !errno &&
+        n <= std::numeric_limits<uint32_t>::max();
+}
 bool ParseInt64(const std::string& str, int64_t *out)
 {
     if (!ParsePrechecks(str))
@@ -110,7 +126,16 @@ int UniValue::get_int() const
         throw std::runtime_error("JSON integer out of range");
     return retval;
 }
-
+// SYSCOIN
+uint32_t UniValue::get_uint() const
+{
+    if (typ != VNUM && typ != VSTR)
+        throw std::runtime_error("JSON value is not an integer or string as expected");
+    uint32_t retval;
+    if (!ParseUInt32(getValStr(), &retval))
+        throw std::runtime_error("JSON integer out of range, value: " + getValStr());
+    return retval;
+}
 int64_t UniValue::get_int64() const
 {
     if (typ != VNUM)

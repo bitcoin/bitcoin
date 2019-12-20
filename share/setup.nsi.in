@@ -1,4 +1,4 @@
-Name "@PACKAGE_NAME@ (@WINDOWS_BITS@-bit)"
+Name "@PACKAGE_NAME@ (64-bit)"
 
 RequestExecutionLevel highest
 SetCompressor /SOLID lzma
@@ -28,9 +28,7 @@ SetCompressor /SOLID lzma
 # Included files
 !include Sections.nsh
 !include MUI2.nsh
-!if "@WINDOWS_BITS@" == "64"
 !include x64.nsh
-!endif
 
 # Variables
 Var StartMenuGroup
@@ -48,12 +46,8 @@ Var StartMenuGroup
 !insertmacro MUI_LANGUAGE English
 
 # Installer attributes
-OutFile @abs_top_srcdir@/@PACKAGE_TARNAME@-@PACKAGE_VERSION@-win@WINDOWS_BITS@-setup.exe
-!if "@WINDOWS_BITS@" == "64"
+OutFile @abs_top_srcdir@/@PACKAGE_TARNAME@-@PACKAGE_VERSION@-win64-setup-unsigned.exe
 InstallDir $PROGRAMFILES64\Syscoin
-!else
-InstallDir $PROGRAMFILES\Syscoin
-!endif
 CRCCheck on
 XPStyle on
 BrandingText " "
@@ -76,10 +70,6 @@ Section -Main SEC0000
     File @abs_top_srcdir@/release/@SYSCOIN_GUI_NAME@@EXEEXT@
     File @abs_top_srcdir@/release/sysrelayer.nod@EXEEXT@
     File @abs_top_srcdir@/release/sysgeth.nod@EXEEXT@
-    File @abs_top_srcdir@/release/bufferutil.node
-    File @abs_top_srcdir@/release/scrypt.node
-    File @abs_top_srcdir@/release/sha3.node
-    File @abs_top_srcdir@/release/validation.node
     File /oname=COPYING.txt @abs_top_srcdir@/COPYING
     File /oname=readme.txt @abs_top_srcdir@/doc/README_windows.txt
     SetOutPath $INSTDIR\daemon
@@ -100,14 +90,14 @@ Section -post SEC0001
     !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
     CreateDirectory $SMPROGRAMS\$StartMenuGroup
     CreateShortcut "$SMPROGRAMS\$StartMenuGroup\$(^Name).lnk" $INSTDIR\@SYSCOIN_GUI_NAME@@EXEEXT@
-    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\@PACKAGE_NAME@ (testnet, @WINDOWS_BITS@-bit).lnk" "$INSTDIR\@SYSCOIN_GUI_NAME@@EXEEXT@" "-testnet" "$INSTDIR\@SYSCOIN_GUI_NAME@@EXEEXT@" 1
+    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\@PACKAGE_NAME@ (testnet, 64-bit).lnk" "$INSTDIR\@SYSCOIN_GUI_NAME@@EXEEXT@" "-testnet" "$INSTDIR\@BITCOIN_GUI_NAME@@EXEEXT@" 1
     CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Uninstall $(^Name).lnk" $INSTDIR\uninstall.exe
     !insertmacro MUI_STARTMENU_WRITE_END
     WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" DisplayName "$(^Name)"
     WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" DisplayVersion "@PACKAGE_VERSION@"
     WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" Publisher "${COMPANY}"
     WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" URLInfoAbout "${URL}"
-    WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" DisplayIcon $INSTDIR\uninstall.exe
+    WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" DisplayIcon $INSTDIR\syscoin-qt.exe
     WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" UninstallString $INSTDIR\uninstall.exe
     WriteRegDWORD HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" NoModify 1
     WriteRegDWORD HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" NoRepair 1
@@ -135,10 +125,6 @@ Section /o -un.Main UNSEC0000
     Delete /REBOOTOK $INSTDIR\@SYSCOIN_GUI_NAME@@EXEEXT@
     Delete /REBOOTOK $INSTDIR\sysrelayer.nod@EXEEXT@
     Delete /REBOOTOK $INSTDIR\sysgeth.nod@EXEEXT@
-    Delete /REBOOTOK $INSTDIR\bufferutil.node
-    Delete /REBOOTOK $INSTDIR\scrypt.node
-    Delete /REBOOTOK $INSTDIR\sha3.node
-    Delete /REBOOTOK $INSTDIR\validation.node
     Delete /REBOOTOK $INSTDIR\COPYING.txt
     Delete /REBOOTOK $INSTDIR\readme.txt
     RMDir /r /REBOOTOK $INSTDIR\daemon
@@ -150,7 +136,7 @@ Section -un.post UNSEC0001
     DeleteRegKey HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)"
     Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Uninstall $(^Name).lnk"
     Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\$(^Name).lnk"
-    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\@PACKAGE_NAME@ (testnet, @WINDOWS_BITS@-bit).lnk"
+    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\@PACKAGE_NAME@ (testnet, 64-bit).lnk"
     Delete /REBOOTOK "$SMSTARTUP\Syscoin.lnk"
     Delete /REBOOTOK $INSTDIR\uninstall.exe
     Delete /REBOOTOK $INSTDIR\debug.log
@@ -172,7 +158,6 @@ SectionEnd
 # Installer functions
 Function .onInit
     InitPluginsDir
-!if "@WINDOWS_BITS@" == "64"
     ${If} ${RunningX64}
       ; disable registry redirection (enable access to 64-bit portion of registry)
       SetRegView 64
@@ -180,7 +165,6 @@ Function .onInit
       MessageBox MB_OK|MB_ICONSTOP "Cannot install 64-bit version on a 32-bit system."
       Abort
     ${EndIf}
-!endif
 FunctionEnd
 
 # Uninstaller functions

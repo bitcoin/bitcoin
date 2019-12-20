@@ -61,7 +61,7 @@ Signature validation using libsecp256k1
 ---------------------------------------
 
 ECDSA signatures inside Syscoin transactions now use validation using
-[libsecp256k1](https://github.com/syscoin-core/secp256k1) instead of OpenSSL.
+[libsecp256k1](https://github.com/bitcoin-core/secp256k1) instead of OpenSSL.
 
 Depending on the platform, this means a significant speedup for raw signature
 validation speed. The advantage is largest on x86_64, where validation is over
@@ -127,7 +127,7 @@ minimum relay feerate. The initial minimum relay feerate is set to
 Syscoin Core 0.12 also introduces new default policy limits on the length and
 size of unconfirmed transaction chains that are allowed in the mempool
 (generally limiting the length of unconfirmed chains to 25 transactions, with a
-total size of 101 KB).  These limits can be overriden using command line
+total size of 101 KB).  These limits can be overridden using command line
 arguments; see the extended help (`--help -help-debug`) for more information.
 
 Opt-in Replace-by-fee transactions

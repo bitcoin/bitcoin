@@ -21,6 +21,8 @@
 #endif // ENABLE_WALLET
 #include <outputtype.h>
 #include <rpc/util.h>
+#include <node/context.h>
+#include <rpc/blockchain.h>
 CMasternode::CMasternode() :
     masternode_info_t{ MASTERNODE_PRE_ENABLED, MIN_PEER_PROTO_VERSION, GetAdjustedTime(), 0}
 {}
@@ -391,7 +393,7 @@ bool GetOutpointAndKeysFromOutput(interfaces::Wallet& wallet, const Coin& coin, 
         return false;
     }
     CKeyID keyID(*pkhash);
-    if (!wallet.getPrivKey(keyID, keyRet)) {
+    if (!wallet.getPrivKey(pubScript, keyID, keyRet)) {
         LogPrintf ("GetOutpointAndKeysFromOutput -- Private key for address is not known\n");
         return false;
     }
@@ -437,8 +439,13 @@ bool GetOutpointAndKeysFromOutput(CWallet* const pwallet, const Coin& coin, CPub
         LogPrintf("GetOutpointAndKeysFromOutput -- Address does not refer to a key\n");
         return false;
     }
+    LegacyScriptPubKeyMan* spk_man = pwallet->GetLegacyScriptPubKeyMan();
+    if (!spk_man) {
+        LogPrintf ("GetOutpointAndKeysFromOutput -- This type of wallet does not support this command\n");
+        return false;
+    }
     CKeyID keyID(*pkhash);
-    if (!pwallet->GetKey(keyID, keyRet)) {
+    if (!spk_man->GetKey(keyID, keyRet)) {
         LogPrintf ("GetOutpointAndKeysFromOutput -- Private key for address is not known\n");
         return false;
     }
@@ -894,8 +901,8 @@ bool CMasternodePing::SimpleCheck(int& nDos)
 
     {
         AssertLockHeld(cs_main);
-        BlockMap::iterator mi = mapBlockIndex.find(blockHash);
-        if (mi == mapBlockIndex.end()) {
+        const CBlockIndex* bi = LookupBlockIndex(blockHash);
+        if (bi == nullptr) {
             LogPrint(BCLog::MN, "CMasternodePing::SimpleCheck -- Masternode ping is invalid, unknown block hash: masternode=%s blockHash=%s\n", masternodeOutpoint.ToStringShort(), blockHash.ToString());
             // maybe we stuck or forked so we shouldn't ban this node, just fail to accept this ping
             // TODO: or should we also request this block?
@@ -972,8 +979,8 @@ bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, i
 
     {
 		LOCK(cs_main);
-        BlockMap::iterator mi = mapBlockIndex.find(blockHash);
-        if ((*mi).second && (*mi).second->nHeight < ::ChainActive().Height() - 24) {
+        const CBlockIndex* bi = LookupBlockIndex(blockHash);
+        if (bi != nullptr && bi->nHeight < ::ChainActive().Height() - 24) {
             LogPrint(BCLog::MN, "CMasternodePing::CheckAndUpdate -- Masternode ping is invalid, block hash is too old: masternode=%s  blockHash=%s\n", masternodeOutpoint.ToStringShort(), blockHash.ToString());
             // nDos = 1;
             return false;
@@ -1091,4 +1098,9 @@ void CMasternode::FlagGovernanceItemsAsDirty()
     for(size_t i = 0; i < vecDirty.size(); ++i) {
         mnodeman.AddDirtyGovernanceObjectHash(vecDirty[i]);
     }
+}
+void CMasternodeVerification::Relay() const
+{
+    CInv inv(MSG_MASTERNODE_VERIFY, GetHash());
+    g_rpc_node->connman->RelayInv(inv);
 }

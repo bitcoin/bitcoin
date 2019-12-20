@@ -5,11 +5,10 @@
 #ifndef SYSCOIN_TEST_FUZZ_FUZZ_H
 #define SYSCOIN_TEST_FUZZ_FUZZ_H
 
-#include <functional>
 #include <stdint.h>
 #include <vector>
 
-
-void test_one_input(std::vector<uint8_t> buffer);
+void initialize();
+void test_one_input(const std::vector<uint8_t>& buffer);
 
 #endif // SYSCOIN_TEST_FUZZ_FUZZ_H

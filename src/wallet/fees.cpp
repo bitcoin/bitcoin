@@ -5,7 +5,6 @@
 
 #include <wallet/fees.h>
 
-#include <util/system.h>
 #include <wallet/coincontrol.h>
 #include <wallet/wallet.h>
 
@@ -18,14 +17,7 @@ CAmount GetRequiredFee(const CWallet& wallet, unsigned int nTxBytes)
 
 CAmount GetMinimumFee(const CWallet& wallet, unsigned int nTxBytes, const CCoinControl& coin_control, FeeCalculation* feeCalc)
 {
-    CAmount fee_needed = GetMinimumFeeRate(wallet, coin_control, feeCalc).GetFee(nTxBytes);
-    // Always obey the maximum
-    const CAmount max_tx_fee = wallet.m_default_max_tx_fee;
-    if (fee_needed > max_tx_fee) {
-        fee_needed = max_tx_fee;
-        if (feeCalc) feeCalc->reason = FeeReason::MAXTXFEE;
-    }
-    return fee_needed;
+    return GetMinimumFeeRate(wallet, coin_control, feeCalc).GetFee(nTxBytes);
 }
 
 CFeeRate GetRequiredFeeRate(const CWallet& wallet)
@@ -42,8 +34,9 @@ CFeeRate GetMinimumFeeRate(const CWallet& wallet, const CCoinControl& coin_contr
        4. m_confirm_target (user-set member variable of wallet)
        The first parameter that is set is used.
     */
-    CFeeRate feerate_needed;
-    if (coin_control.m_feerate) { // 1.
+   // SYS until we get full blocks we just relay on getrequiredfeerate which is based on the relayminfee
+     CFeeRate feerate_needed;
+    /* if (coin_control.m_feerate) { // 1.
         feerate_needed = *(coin_control.m_feerate);
         if (feeCalc) feeCalc->reason = FeeReason::PAYTXFEE;
         // Allow to override automatic min/max check over coin control instance
@@ -77,7 +70,7 @@ CFeeRate GetMinimumFeeRate(const CWallet& wallet, const CCoinControl& coin_contr
             feerate_needed = min_mempool_feerate;
             if (feeCalc) feeCalc->reason = FeeReason::MEMPOOL_MIN;
         }
-    }
+    }*/
 
     // prevent user from paying a fee below the required fee rate
     CFeeRate required_feerate = GetRequiredFeeRate(wallet);

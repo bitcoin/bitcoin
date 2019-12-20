@@ -6,7 +6,6 @@
 #ifndef SYSCOIN_TEST_SCRIPTNUM10_H
 #define SYSCOIN_TEST_SCRIPTNUM10_H
 
-#include <algorithm>
 #include <limits>
 #include <stdexcept>
 #include <stdint.h>
