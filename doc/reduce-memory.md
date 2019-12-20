@@ -41,7 +41,7 @@ threads take up 8MiB for the thread stack on a 64-bit system, and 4MiB in a
 By default, since glibc `2.10`, the C library will create up to two heap arenas per core. This is known to cause excessive memory usage in some scenarios. To avoid this make a script that sets `MALLOC_ARENA_MAX` before starting dashd:
 
 ```bash
-#!/bin/bash
+#!/usr/bin/env bash
 export MALLOC_ARENA_MAX=1
 dashd
 ```
