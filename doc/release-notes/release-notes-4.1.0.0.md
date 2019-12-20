@@ -287,6 +287,13 @@ To enable to bridge, we coded 348,000 as the block height where Syscoin Mint's w
 
 Another application that runs in the background is the [relayer](https://github.com/Syscoin/relayer) which takes block information from Geth and feeds it into Syscoin using `syscoinsetethheaders` RPC function storing into a database. This allows Syscoin core to continue operating without making inter-process calls. The functionality is re-org aware in case Ethereum re-orgs the [relayer](https://github.com/Syscoin/relayer) will re-send the correct blocks, and the code in `syscoinsetethheaders` will ensure the headers of Ethereum are hash-linked (current block -> prev matches previous header).
 
+Ethereum Contracts
+------------------
+SyscoinBattleManager - https://etherscan.io/address/0x637e110A6C61cfd3a8838eC25a2DBF75A0F34B30#code
+SyscoinClaimManager - https://etherscan.io/address/0x8230De6a088B455B5b83a629B0843746ED1AC5B6#code
+SyscoinSuperblocks - https://etherscan.io/address/0xD1e95176a81671c7aeBE68135Ba63073Aa3b642A#code
+SyscoinERC20Manager - https://etherscan.io/address/0x6100c8e90c4295de37f2c1114b03735193484cfd#code
+
 RPC
 ---
 
