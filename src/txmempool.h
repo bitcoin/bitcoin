@@ -79,13 +79,13 @@ private:
     // Information about descendants of this transaction that are in the
     // mempool; if we remove this transaction we must remove all of these
     // descendants as well.
-    uint64_t nCountWithDescendants;  //!< number of descendant transactions
-    uint64_t nSizeWithDescendants;   //!< ... and size
+    int64_t nCountWithDescendants;   //!< number of descendant transactions
+    int64_t nSizeWithDescendants;    //!< ... and size
     CAmount nModFeesWithDescendants; //!< ... and total fees (all including us)
 
     // Analogous statistics for ancestor transactions
-    uint64_t nCountWithAncestors;
-    uint64_t nSizeWithAncestors;
+    int64_t nCountWithAncestors;
+    int64_t nSizeWithAncestors;
     CAmount nModFeesWithAncestors;
     int64_t nSigOpCostWithAncestors;
 

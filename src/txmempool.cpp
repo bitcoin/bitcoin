@@ -217,10 +217,11 @@ void CTxMemPool::UpdateAncestorsOf(bool add, txiter it, setEntries &setAncestors
         UpdateChild(piter, it, add);
     }
     const int64_t updateCount = (add ? 1 : -1);
-    const int64_t updateSize = updateCount * it->GetTxSize();
+    const int64_t updateSize = it->GetTxSize();
+    assert(updateSize >= 0);
     const CAmount updateFee = updateCount * it->GetModifiedFee();
     for (txiter ancestorIt : setAncestors) {
-        mapTx.modify(ancestorIt, update_descendant_state(updateSize, updateFee, updateCount));
+        mapTx.modify(ancestorIt, update_descendant_state(updateCount * updateSize, updateFee, updateCount));
     }
 }
 
@@ -307,19 +308,19 @@ void CTxMemPool::UpdateForRemoveFromMempool(const setEntries &entriesToRemove, b
 void CTxMemPoolEntry::UpdateDescendantState(int64_t modifySize, CAmount modifyFee, int64_t modifyCount)
 {
     nSizeWithDescendants += modifySize;
-    assert(int64_t(nSizeWithDescendants) > 0);
+    assert(nSizeWithDescendants > 0);
     nModFeesWithDescendants += modifyFee;
     nCountWithDescendants += modifyCount;
-    assert(int64_t(nCountWithDescendants) > 0);
+    assert(nCountWithDescendants > 0);
 }
 
 void CTxMemPoolEntry::UpdateAncestorState(int64_t modifySize, CAmount modifyFee, int64_t modifyCount, int64_t modifySigOps)
 {
     nSizeWithAncestors += modifySize;
-    assert(int64_t(nSizeWithAncestors) > 0);
+    assert(nSizeWithAncestors > 0);
     nModFeesWithAncestors += modifyFee;
     nCountWithAncestors += modifyCount;
-    assert(int64_t(nCountWithAncestors) > 0);
+    assert(nCountWithAncestors > 0);
     nSigOpCostWithAncestors += modifySigOps;
     assert(int(nSigOpCostWithAncestors) >= 0);
 }

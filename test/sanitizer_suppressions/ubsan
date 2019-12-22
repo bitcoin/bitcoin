@@ -39,7 +39,6 @@ unsigned-integer-overflow:policy/fees.cpp
 unsigned-integer-overflow:prevector.h
 unsigned-integer-overflow:script/interpreter.cpp
 unsigned-integer-overflow:stl_bvector.h
-unsigned-integer-overflow:txmempool.cpp
 unsigned-integer-overflow:util/strencodings.cpp
 unsigned-integer-overflow:validation.cpp
 
@@ -68,7 +67,6 @@ implicit-integer-sign-change:test/prevector_tests.cpp
 implicit-integer-sign-change:test/sighash_tests.cpp
 implicit-integer-sign-change:test/streams_tests.cpp
 implicit-integer-sign-change:test/transaction_tests.cpp
-implicit-integer-sign-change:txmempool.cpp
 implicit-integer-sign-change:util/strencodings.*
 implicit-integer-sign-change:validation.cpp
 implicit-integer-sign-change:zmq/zmqpublishnotifier.cpp
