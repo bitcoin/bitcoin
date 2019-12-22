@@ -22,25 +22,25 @@ jobs:
 
     # Bump the JOB_VERSION number anytime the cached vcpkg dependencies need to be re-installed.
     - uses: actions/cache@v1
-      id: jobversion
+      id: jobversioncache
       with:
-       path: C:/jobversion/$JOB_VERSION
-       key: ${{ runner.os }}-jobversion
+       path: C:/jobversion/${{ env.JOB_VERSION }}
+       key: jobversion
 
     - name: Make job version directory
-      if: steps.jobversion.outputs.cache-hit != 'true'
+      if: steps.jobversioncache.outputs.cache-hit != 'true'
       shell: cmd
       run: mkdir C:\jobversion\%JOB_VERSION%
 
     - uses: actions/cache@v1
       id: vcpkgcache
-      if: steps.jobversion.outputs.cache-hit == 'true'
+      if: steps.jobversioncache.outputs.cache-hit == 'true'
       with:
        path: C:/vcpkg/installed
        key: ${{ runner.os }}-vcpkg
 
     - name: Update vcpkg and install packages
-      if: steps.vcpkgcache.outputs.cache-hit != 'true' || steps.jobversion.outputs.cache-hit != 'true'
+      if: steps.vcpkgcache.outputs.cache-hit != 'true' || steps.jobversioncache.outputs.cache-hit != 'true'
       run: |
         $env:PACKAGES = Get-Content -Path "$env:GITHUB_WORKSPACE/build_msvc/vcpkg-packages.txt"
         Write-Host "vcpkg list: $env:PACKAGES"
