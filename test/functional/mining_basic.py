@@ -51,9 +51,11 @@ class MiningTest(BitcoinTestFramework):
             self.nodes[0].setmocktime(t)
             self.nodes[0].generate(1)
         mining_info = self.nodes[0].getmininginfo()
+        hash = self.nodes[0].getbestblockhash()
+        block = self.nodes[0].getblock(hash)
         assert_equal(mining_info['blocks'], 200)
         assert_equal(mining_info['currentblocktx'], 0)
-        assert_equal(mining_info['currentblockweight'], 4000)
+        assert_equal(mining_info['currentblockweight'], block['weight'])
         self.restart_node(0)
         connect_nodes(self.nodes[0], 1)
 
