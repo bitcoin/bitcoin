@@ -52,6 +52,13 @@ bool error(const char* fmt, const Args&... args)
     return false;
 }
 
+template<typename... Args>
+bool error_with_debug_log(const BCLog::LogFlags category, const char* fmt, const Args&... args)
+{
+    LogPrint(category, "ERROR: %s\n", tfm::format(fmt, args...));
+    return false;
+}
+
 void PrintExceptionContinue(const std::exception *pex, const char* pszThread);
 
 /**
