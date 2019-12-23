@@ -19,11 +19,17 @@ jobs:
       with:
         python-version: '3.7'  # Needed for PEP 540
 
+    - name: Setup MSBuild.exe
+      uses: warrenbuckley/Setup-MSBuild@v1
+
+    - name: Check MSBuild.exe
+      run: MSBuild.exe -version | Out-File -FilePath $env:GITHUB_WORKSPACE\MSBuild_version
+
     - uses: actions/cache@v1
       id: vcpkgcache
       with:
        path: C:/vcpkg/installed
-       key: ${{ runner.os }}-vcpkg
+       key: ${{ runner.os }}-vcpkg-${{ hashFiles('MSBuild_version') }}
 
     - name: Update vcpkg and install packages
       if: steps.vcpkgcache.outputs.cache-hit != 'true'
@@ -54,8 +60,6 @@ jobs:
         }
     - name: Generate project files
       run: python build_msvc\msvc-autogen.py
-    - name: Setup MSBuild.exe
-      uses: warrenbuckley/Setup-MSBuild@v1
     - name: vcpkg integration
       run: C:/vcpkg/vcpkg.exe integrate install
     - name: Build
