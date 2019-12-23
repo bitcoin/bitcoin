@@ -1,5 +1,5 @@
 [main]
-host = https://www.transifex.com
+host = https://tdmllc1@outlook.com
 
 [bitcoin.qt-translation-019x]
 file_filter = src/qt/locale/bitcoin_<lang>.ts
