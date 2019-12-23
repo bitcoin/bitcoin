@@ -363,7 +363,8 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # Compare fee.
         feeDelta = Decimal(fundedTx['fee']) - Decimal(signedFee)
-        assert feeDelta >= 0 and feeDelta <= self.fee_tolerance
+        assert_greater_than_or_equal(feeDelta, 0)
+        assert_greater_than_or_equal(self.fee_tolerance, feeDelta)
 
     def test_fee_p2pkh_multi_out(self):
         """Compare fee of a standard pubkeyhash transaction with multiple outputs."""
@@ -386,7 +387,8 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # Compare fee.
         feeDelta = Decimal(fundedTx['fee']) - Decimal(signedFee)
-        assert feeDelta >= 0 and feeDelta <= self.fee_tolerance
+        assert_greater_than_or_equal(feeDelta, 0)
+        assert_greater_than_or_equal(self.fee_tolerance, feeDelta)
 
     def test_fee_p2sh(self):
         """Compare fee of a 2-of-2 multisig p2sh transaction."""
@@ -410,7 +412,8 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # Compare fee.
         feeDelta = Decimal(fundedTx['fee']) - Decimal(signedFee)
-        assert feeDelta >= 0 and feeDelta <= self.fee_tolerance
+        assert_greater_than_or_equal(feeDelta, 0)
+        assert_greater_than_or_equal(self.fee_tolerance, feeDelta)
 
     def test_fee_4of5(self):
         """Compare fee of a standard pubkeyhash transaction."""
@@ -451,7 +454,8 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # Compare fee.
         feeDelta = Decimal(fundedTx['fee']) - Decimal(signedFee)
-        assert feeDelta >= 0 and feeDelta <= self.fee_tolerance
+        assert_greater_than_or_equal(feeDelta, 0)
+        assert_greater_than_or_equal(self.fee_tolerance, feeDelta)
 
     def test_spend_2of2(self):
         """Spend a 2-of-2 multisig transaction over fundraw."""
@@ -556,7 +560,8 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # Compare fee.
         feeDelta = Decimal(fundedTx['fee']) - Decimal(signedFee)
-        assert feeDelta >= 0 and feeDelta <= self.fee_tolerance * 19  #~19 inputs
+        assert_greater_than_or_equal(feeDelta, 0)
+        assert_greater_than_or_equal(self.fee_tolerance * 19, feeDelta)  #~19 inputs
 
     def test_many_inputs_send(self):
         """Multiple (~19) inputs tx test | sign/send."""

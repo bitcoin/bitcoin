@@ -332,7 +332,7 @@ class ECKey():
         """Construct a private key object with given 32-byte secret and compressed flag."""
         assert(len(secret) == 32)
         secret = int.from_bytes(secret, 'big')
-        self.valid = (secret > 0 and secret < SECP256K1_ORDER)
+        self.valid = (0 < secret < SECP256K1_ORDER)
         if self.valid:
             self.secret = secret
             self.compressed = compressed
