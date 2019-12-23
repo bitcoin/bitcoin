@@ -94,6 +94,7 @@ GUI changes
 -----------
 
 - The "Start Bitcoin Core on system login" option has been removed on macOS.
+- The RPC Console Window can be closed with Ctrl+D now (Ctrl+W on macOS).
 
 Wallet
 ------

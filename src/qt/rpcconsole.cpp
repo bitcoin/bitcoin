@@ -469,6 +469,16 @@ RPCConsole::RPCConsole(interfaces::Node& node, const PlatformStyle *_platformSty
     ui->lineEdit->installEventFilter(this);
     ui->messagesWidget->installEventFilter(this);
 
+    QAction* eot_action = new QAction(this);
+    // We use Control+D because EOT is the 4th ASCII char and D the 4th char of the latin alphabet. macOS uses CTRL+W
+#ifdef Q_OS_MAC
+    eot_action->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_W));
+#else
+    eot_action->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_D));
+#endif
+    connect(eot_action, &QAction::triggered, this, &QWidget::close);
+    ui->tab_console->addAction(eot_action);
+
     connect(ui->clearButton, &QPushButton::clicked, this, &RPCConsole::clear);
     connect(ui->fontBiggerButton, &QPushButton::clicked, this, &RPCConsole::fontBigger);
     connect(ui->fontSmallerButton, &QPushButton::clicked, this, &RPCConsole::fontSmaller);
