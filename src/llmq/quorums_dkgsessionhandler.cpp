@@ -45,7 +45,7 @@ void CDKGPendingMessages::PushPendingMessage(NodeId from, CDataStream& vRecv)
     LOCK2(cs_main, cs);
 
     if (!seenMessages.emplace(hash).second) {
-        LogPrint(BCLog::LLMQ_DKG, "CDKGPendingMessages::%s -- already seen %s, peer=%d", __func__, from);
+        LogPrint(BCLog::LLMQ_DKG, "CDKGPendingMessages::%s -- already seen %s, peer=%d\n", __func__, hash.ToString(), from);
         return;
     }
 
