@@ -52,7 +52,11 @@
 #include <util/threadnames.h>
 #include <util/translation.h>
 #include <util/validation.h>
+#include <util/asmap.h>
 #include <validation.h>
+#include <hash.h>
+
+
 #include <validationinterface.h>
 #include <walletinitinterface.h>
 
@@ -96,6 +100,8 @@ static constexpr int DUMP_BANS_INTERVAL = 60 * 15;
 #endif
 
 static const char* FEE_ESTIMATES_FILENAME="fee_estimates.dat";
+
+static const char* DEFAULT_ASMAP_FILENAME="ip_asn.map";
 
 /**
  * The PID file facilities.
@@ -426,6 +432,7 @@ void SetupServerArgs()
     gArgs.AddArg("-peertimeout=<n>", strprintf("Specify p2p connection timeout in seconds. This option determines the amount of time a peer may be inactive before the connection to it is dropped. (minimum: 1, default: %d)", DEFAULT_PEER_CONNECT_TIMEOUT), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::CONNECTION);
     gArgs.AddArg("-torcontrol=<ip>:<port>", strprintf("Tor control port to use if onion listening enabled (default: %s)", DEFAULT_TOR_CONTROL), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     gArgs.AddArg("-torpassword=<pass>", "Tor control port password (default: empty)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
+    gArgs.AddArg("-asmap=<file>", "Specify asn mapping used for bucketing of the peers. Path should be relative to the -datadir path.", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
 #ifdef USE_UPNP
 #if USE_UPNP
     gArgs.AddArg("-upnp", "Use UPnP to map the listening port (default: 1 when listening and no -proxy)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
@@ -1805,6 +1812,25 @@ bool AppInitMain(NodeContext& node)
     }
     if (!node.connman->Start(scheduler, connOptions)) {
         return false;
+    }
+
+    // Read asmap file if configured
+    if (gArgs.IsArgSet("-asmap")) {
+        std::string asmap_file = gArgs.GetArg("-asmap", "");
+        if (asmap_file.empty()) {
+            asmap_file = DEFAULT_ASMAP_FILENAME;
+        }
+        const fs::path asmap_path = GetDataDir() / asmap_file;
+        std::vector<bool> asmap = CAddrMan::DecodeAsmap(asmap_path);
+        if (asmap.size() == 0) {
+            InitError(strprintf(_("Could not find or parse specified asmap: '%s'").translated, asmap_path));
+            return false;
+        }
+        node.connman->SetAsmap(asmap);
+        const uint256 asmap_version = SerializeHash(asmap);
+        LogPrintf("Using asmap version %s for IP bucketing.\n", asmap_version.ToString());
+    } else {
+        LogPrintf("Using /16 prefix for IP bucketing.\n");
     }
 
     // ********************************************************* Step 13: finished
