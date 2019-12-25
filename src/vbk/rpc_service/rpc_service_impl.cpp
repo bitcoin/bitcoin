@@ -10,6 +10,8 @@
 #include <rpc/util.h>               // for HelpExampleCli/HelpExampleRpc
 #include <util/validation.h>        // for FormatStateMessage
 #include <validation.h>             // for mempool
+#include <init.h>
+#include <net_processing.h>
 #include <vbk/util.hpp>
 #include <wallet/rpcwallet.h> // for GetWalletForJSONRPCRequest
 #include <wallet/wallet.h>    // for CWallet
@@ -202,6 +204,7 @@ UniValue RpcServiceImpl::doSubmitPop(const std::vector<uint8_t>& atv,
             nullptr /* plTxnReplaced */, false /* bypass_limits */,
             0 /* nAbsurdFee */);
         if (result) {
+            RelayTransaction(hashTx, *g_connman);
             return hashTx.GetHex();
         }
 
