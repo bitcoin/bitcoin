@@ -20,7 +20,7 @@ With arguments, sends coins received by the `FROMADDRESS` addresses to the
 ### Notes ###
 
 - You may explicitly specify how much fee to pay (a fee more than 1% of the 
-amount will fail, though, to prevent crown-losing accidents). Spendfrom may 
+amount will fail, though, to prevent Crown-losing accidents). Spendfrom may 
 fail if it thinks the transaction would never be confirmed (if the amount 
 being sent is too small, or if the transaction is too many bytes for the fee). 
 If you specify a really small fee the transaction may sit in the mempool for 
@@ -44,6 +44,8 @@ produce informational/debugging messages.
 
 - If the transaction is created and broadcast successfully, a transaction id
 is printed.
+
+- UTXO selecton policies are not yet implemented. 
 
 - If this was a tool for end-users and not programmers, it would have much
 friendlier error-handling.
