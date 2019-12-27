@@ -130,8 +130,16 @@ def select_coins(needed, inputs, criteria):
     if verbosity > 0: print("Selecting coins from the set of %d inputs"%len(inputs))
     if verbosity > 1: print(inputs)
     while have < needed and n < len(inputs):
-        outputs.append({ "txid":inputs[n]["txid"], "vout":inputs[n]["vout"]})
-        have += inputs[n]["amount"]
+        size = inputs[n]["amount"]
+        if size != 500 and size != 10000:
+            outputs.append({ "txid":inputs[n]["txid"], "vout":inputs[n]["vout"]})
+            have += size
+        else:
+            if size == 500: 
+                nodetype = "Systemnode"
+            else: 
+                nodetype = "Masternode"
+            print("Skipping possible " + nodetype + " UTXO")
         n += 1
     if verbosity > 0: print("Used %d UTXOs with total value %f requiring %f change"%(n, have, have-needed)) 
     if verbosity > 2: print(outputs)   
