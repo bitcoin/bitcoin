@@ -130,22 +130,14 @@ def select_coins(needed, inputs, criteria):
     if verbosity > 0: print("Selecting coins from the set of %d inputs"%len(inputs))
     if verbosity > 1: print(inputs)
     while have < needed and n < len(inputs):
-        size = inputs[n]["amount"]
-        if size != 500 and size != 10000:
-            outputs.append({ "txid":inputs[n]["txid"], "vout":inputs[n]["vout"]})
-            have += size
-        else:
-            if size == 500: 
-                nodetype = "Systemnode"
-            else: 
-                nodetype = "Masternode"
-            print("Skipping possible " + nodetype + " UTXO")
+        outputs.append({ "txid":inputs[n]["txid"], "vout":inputs[n]["vout"]})
+        have += inputs[n]["amount"]
         n += 1
-    if verbosity > 0: print("Used %d UTXOs with total value %f requiring %f change"%(n, have, have-needed)) 
+    if verbosity > 0: print("Chose %d UTXOs with total value %f requiring %f change"%(n, have, have-needed)) 
     if verbosity > 2: print(outputs)   
     return (outputs, have-needed)
 
-def create_tx(crownd, fromaddresses, toaddress, amount, fee, criteria):
+def create_tx(crownd, fromaddresses, toaddress, amount, fee, criteria, upto):
     all_coins = list_available(crownd)
 
     total_available = Decimal("0.0")
@@ -158,9 +150,14 @@ def create_tx(crownd, fromaddresses, toaddress, amount, fee, criteria):
         total_available += all_coins[addr]["total"]
 
     if total_available < needed:
-        sys.stderr.write("Error, only %f CRW available, need %f\n"%(total_available, needed));
-        sys.exit(1)
-
+        if upto:
+            needed = total_available
+            amount = total_available - fee
+            print("Warning, only %f CRW available, sending %f"%(total_available, amount))
+        else:
+            sys.stderr.write("Error, only %f CRW available, need %f\n"%(total_available, needed));
+            sys.exit(1)
+        
     #
     # Note:
     # Python's json/jsonrpc modules have inconsistent support for Decimal numbers.
@@ -233,6 +230,8 @@ def main():
                       help="address to get send crowns to")
     parser.add_option("--amount", dest="amount", default=None,
                       help="amount to send")
+    parser.add_option("--upto", dest="upto", default=False, action="store_true",
+                      help="allow inexact send up to the specified amount")
     parser.add_option("--fee", dest="fee", default="0.0",
                       help="fee to include")
     parser.add_option("--select", type='choice', 
@@ -245,11 +244,11 @@ def main():
                       help="name of crown config file (default: %default)")
     parser.add_option("--testnet", dest="testnet", default=False, action="store_true",
                       help="use the test network")
-    parser.add_option("-v", action="count", dest="verbosity", default=0,
-                      help="increase the verbosity level. Use more than one for extra verbosity")
     parser.add_option("--dry_run", dest="dry_run", default=False, action="store_true",
                       help="don't broadcast the transaction, just create and print the transaction data")
-
+    parser.add_option("-v", action="count", dest="verbosity", default=0,
+                      help="increase the verbosity level. Use more than one for extra verbosity")
+    
     (options, args) = parser.parse_args()
 
     verbosity = options.verbosity
@@ -272,7 +271,7 @@ def main():
         amount = Decimal(options.amount)
         while unlock_wallet(crownd) == False:
             pass # Keep asking for passphrase until they get it right
-        txdata = create_tx(crownd, options.fromaddresses.split(","), options.toaddress, amount, fee, options.select)
+        txdata = create_tx(crownd, options.fromaddresses.split(","), options.toaddress, amount, fee, options.select, options.upto)
         sanity_test_fee(crownd, txdata, amount*Decimal("0.01"), fee)
         txlen = len(txdata)/2
         if verbosity > 0: print("Transaction size is %d bytes"%(txlen))
