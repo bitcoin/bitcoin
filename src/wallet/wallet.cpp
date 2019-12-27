@@ -2186,9 +2186,6 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
 
 void CWallet::ReacceptWalletTransactions(interfaces::Chain::Lock& locked_chain)
 {
-    // If transactions aren't being broadcasted, don't let them into local mempool either
-    if (!fBroadcastTransactions)
-        return;
     std::map<int64_t, CWalletTx*> mapSorted;
 
     // Sort pending wallet transactions based on their initial wallet insertion order
@@ -2200,11 +2197,16 @@ void CWallet::ReacceptWalletTransactions(interfaces::Chain::Lock& locked_chain)
 
         int nDepth = wtx.GetDepthInMainChain(locked_chain);
 
-        if (nDepth == 0 && !wtx.isAbandoned() && !wtx.IsLockedByInstantSend()) {
-            if (wtx.IsCoinBase() || wtx.IsCoinStake())
-                AbandonTransaction(locked_chain, wtxid);
-            else
-                mapSorted.insert(std::make_pair(wtx.nOrderPos, &wtx));
+        if (nDepth == 0 && !wtx.isAbandoned()) {
+            if (!wtx.IsLockedByInstantSend()) {
+                if (wtx.IsCoinBase() || wtx.IsCoinStake()) {
+                    // dont try to put orphaned stakes/coinbase back into mempool
+                    AbandonTransaction(locked_chain, wtxid);
+                    return;
+                } else {
+                    mapSorted.insert(std::make_pair(wtx.nOrderPos, &wtx));
+                }
+            }
         }
     }
 
