@@ -33,6 +33,8 @@ jobs:
       timeout-minutes: 10
       run: make check
     - name: Collect coverage
-      run: lcov -c -d src -o cov.info
+      run: |
+        lcov -c -d src -o cov.info
+        gcovr --xml cov.xml -j2 -v -s -b -r src
     - name: Run sonarqube
       run: sonar-scanner -Dsonar.login=${{ secrets.SONAR_TOKEN }}
