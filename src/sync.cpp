@@ -10,7 +10,6 @@
 #include <tinyformat.h>
 
 #include <logging.h>
-#include <util/strencodings.h>
 #include <util/threadnames.h>
 
 
@@ -56,8 +55,8 @@ struct CLockLocation {
     std::string ToString() const
     {
         return strprintf(
-            "%s %s:%s%s (in thread %s)",
-            mutexName, sourceFile, itostr(sourceLine), (fTry ? " (TRY)" : ""), m_thread_name);
+            "%s %s:%d%s (in thread %s)",
+            mutexName, sourceFile, sourceLine, (fTry ? " (TRY)" : ""), m_thread_name);
     }
 
 private:
