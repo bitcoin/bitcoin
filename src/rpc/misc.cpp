@@ -81,9 +81,9 @@ static UniValue createmultisig(const JSONRPCRequest& request)
                 },
                 RPCResult{
             "{\n"
-            "  \"address\":\"multisigaddress\",  (string) The value of the new multisig address.\n"
-            "  \"redeemScript\":\"script\"       (string) The string value of the hex-encoded redemption script.\n"
-            "  \"descriptor\":\"descriptor\"     (string) The descriptor for this multisig\n"
+            "  \"address\" : \"multisigaddress\",  (string) The value of the new multisig address.\n"
+            "  \"redeemScript\" : \"script\"       (string) The string value of the hex-encoded redemption script.\n"
+            "  \"descriptor\" : \"descriptor\"     (string) The descriptor for this multisig\n"
             "}\n"
                 },
                 RPCExamples{
@@ -187,7 +187,7 @@ UniValue deriveaddresses(const JSONRPCRequest& request)
                 {"range", RPCArg::Type::RANGE, RPCArg::Optional::OMITTED_NAMED_ARG, "If a ranged descriptor is used, this specifies the end or the range (in [begin,end] notation) to derive."},
             },
             RPCResult{
-                "[ address ] (array) the derived addresses\n"
+                "[ address ] (json array) the derived addresses\n"
             },
             RPCExamples{
                 "First three native segwit receive addresses\n" +
@@ -418,13 +418,13 @@ static UniValue getmemoryinfo(const JSONRPCRequest& request)
                 {
                     RPCResult{"mode \"stats\"",
             "{\n"
-            "  \"locked\": {               (json object) Information about locked memory manager\n"
-            "    \"used\": xxxxx,          (numeric) Number of bytes used\n"
-            "    \"free\": xxxxx,          (numeric) Number of bytes available in current arenas\n"
-            "    \"total\": xxxxxxx,       (numeric) Total number of bytes managed\n"
-            "    \"locked\": xxxxxx,       (numeric) Amount of bytes that succeeded locking. If this number is smaller than total, locking pages failed at some point and key data could be swapped to disk.\n"
-            "    \"chunks_used\": xxxxx,   (numeric) Number allocated chunks\n"
-            "    \"chunks_free\": xxxxx,   (numeric) Number unused chunks\n"
+            "  \"locked\" : {               (json object) Information about locked memory manager\n"
+            "    \"used\" : xxxxx,          (numeric) Number of bytes used\n"
+            "    \"free\" : xxxxx,          (numeric) Number of bytes available in current arenas\n"
+            "    \"total\" : xxxxxxx,       (numeric) Total number of bytes managed\n"
+            "    \"locked\" : xxxxxx,       (numeric) Amount of bytes that succeeded locking. If this number is smaller than total, locking pages failed at some point and key data could be swapped to disk.\n"
+            "    \"chunks_used\" : xxxxx,   (numeric) Number allocated chunks\n"
+            "    \"chunks_free\" : xxxxx,   (numeric) Number unused chunks\n"
             "  }\n"
             "}\n"
                     },
@@ -497,7 +497,7 @@ UniValue logging(const JSONRPCRequest& request)
                 },
                 RPCResult{
             "{                   (json object where keys are the logging categories, and values indicates its status\n"
-            "  \"category\": true|false,  (bool) if being debug logged or not. false:inactive, true:active\n"
+            "  \"category\" : true|false,  (boolean) if being debug logged or not. false:inactive, true:active\n"
             "  ...\n"
             "}\n"
                 },
