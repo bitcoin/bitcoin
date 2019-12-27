@@ -1276,11 +1276,10 @@ UniValue finalizepsbt(const JSONRPCRequest& request)
             "                             extract and return the complete transaction in normal network serialization instead of the PSBT."},
                 },
                 RPCResult{
-            "{\n"
-            "  \"psbt\" : \"value\",          (string) The base64-encoded partially signed transaction if not extracted\n"
-            "  \"hex\" : \"value\",           (string) The hex-encoded network transaction if extracted\n"
-            "  \"complete\" : true|false,   (boolean) If the transaction has a complete set of signatures\n"
-            "  ]\n"
+            "{                             (json object)\n"
+            "  \"psbt\" : \"str\",             (string) The base64-encoded partially signed transaction if not extracted\n"
+            "  \"hex\" : \"hex\",              (string) The hex-encoded network transaction if extracted\n"
+            "  \"complete\" : true|false,    (boolean) If the transaction has a complete set of signatures\n"
             "}\n"
                 },
                 RPCExamples{
