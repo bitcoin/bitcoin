@@ -42,7 +42,7 @@ struct UtilServiceImpl : public UtilService {
 protected:
     const CBlockIndex* FindCommonKeystone(const CBlockIndex* leftFork, const CBlockIndex* rightFork);
 
-    bool IsCrossedKeystoneBoudary(const CBlockIndex& bottom, const CBlockIndex& tip);
+    bool IsCrossedKeystoneBoundary(const CBlockIndex& bottom, const CBlockIndex& tip);
 };
 } // namespace VeriBlock
 
