@@ -1,6 +1,8 @@
 #include "pop_service_impl.hpp"
 
+#include <chrono>
 #include <memory>
+#include <thread>
 
 #include <amount.h>
 #include <chain.h>
@@ -10,6 +12,7 @@
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
 #include <script/sigcache.h>
+#include <shutdown.h>
 #include <streams.h>
 #include <validation.h>
 
@@ -70,11 +73,22 @@ PopServiceImpl::PopServiceImpl()
     std::string ip = config.service_ip;
     std::string port = config.service_port;
 
-    LogPrintf("Connecting to alt-service at %s:%s...", ip.c_str(), port.c_str());
+    LogPrintf("Connecting to alt-service at %s:%s... \n", ip.c_str(), port.c_str());
     auto creds = grpc::InsecureChannelCredentials();
     std::shared_ptr<Channel> channel = grpc::CreateChannel(ip + ":" + port, creds);
 
     grpcPopService = VeriBlock::GrpcPopService::NewStub(channel);
+
+    std::chrono::system_clock::time_point deadline =
+        std::chrono::system_clock::now() + std::chrono::seconds(5);
+    gpr_timespec time;
+    grpc::Timepoint2Timespec(deadline, &time);
+
+    if (!channel->WaitForConnected(time)) {
+        LogPrintf("Alt-service is not working, please run the alt-service before you start the daemon \n");
+        LogPrintf("-------------------------------------------------------------------------------------------------\n");
+        StartShutdown();
+    }
 }
 
 void PopServiceImpl::addPayloads(const CBlock& block, const int& nHeight, const Publications& publications)
@@ -485,9 +499,7 @@ bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlo
 
         try {
             pop.addPayloads(block, pindexPrev.nHeight + 1, publications);
-        }
-        catch (const PopServiceException& e)
-        {
+        } catch (const PopServiceException& e) {
             error_message += " tx hash: (" + tx->GetHash().GetHex() + ") reason : addPayloads failed, " + e.what();
             isValid = false;
             mempool.removeRecursive(*tx, MemPoolRemovalReason::BLOCK);
