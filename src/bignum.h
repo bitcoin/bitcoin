@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2012 The Bitcoin developers
-// Copyright (c) 2011-2019 The Peercoin developers
+// Copyright (c) 2011-2020 The Peercoin developers
 // Copyright (c) 2018-2018 The Emercoin developers
 #ifndef BITCOIN_BIGNUM_H
 #define BITCOIN_BIGNUM_H
