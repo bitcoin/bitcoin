@@ -2,6 +2,7 @@
 #define INTEGRATION_REFERENCE_BTC_POP_SERVICE_EXCEPTION_H
 
 #include <exception>
+#include <string>
 #include <grpc++/impl/codegen/status.h>
 
 namespace VeriBlock {
@@ -13,16 +14,16 @@ public:
     {
     }
 
-    explicit PopServiceException(grpc::Status& status) : _what(status.error_message().c_str()) {}
+    explicit PopServiceException(grpc::Status& status) : _what(status.error_message()) {}
 
     const char*
     what() const noexcept override
     {
-        return this->_what;
+        return this->_what.c_str();
     }
 
 private:
-    const char* _what;
+    std::string _what;
 };
 
 } // namespace VeriBlock
