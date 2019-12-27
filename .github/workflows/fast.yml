@@ -23,9 +23,15 @@ jobs:
       run: ./configure
         --without-gui
         --enable-werror
+        --enable-lcov
+        --enable-lcov-branch-coverage
 
     - name: make
       run: make -j2
     - name: make check
       timeout-minutes: 10
       run: make check
+    - name: Collect coverage
+      run: lcov -c -d src -o cov.info
+    - name: Run sonarqube
+      run: sonar-scanner -Dsonar.login=${{ secrets.SONAR_TOKEN }}
