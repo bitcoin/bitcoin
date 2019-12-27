@@ -26,3 +26,4 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
           registry: docker-internal.veriblock.com
           tag_names: true
+          snapshot: true

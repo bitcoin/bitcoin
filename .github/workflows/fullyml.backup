@@ -1,0 +1,24 @@
+# name: Full CI
+#
+#on:
+#  push:
+#    branches:
+#    - master
+#    - develop
+#    - feature/ci
+#
+#jobs:
+#  build:
+#    runs-on: ubuntu-latest
+#    container: veriblock/btcdev
+#    env:
+#      CC: clang
+#      CXX: clang++
+#    steps:
+#    - uses: actions/checkout@v1
+#      with:
+#        submodules: true
+#    - name: autogen
+#      run: ./autogen.sh
+#    - run: ./configure --enable-werror
+#    - run: make -j2 distcheck
