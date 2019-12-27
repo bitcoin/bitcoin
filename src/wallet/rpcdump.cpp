@@ -1322,8 +1322,19 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
                         "\"options\""},
                 },
                 RPCResult{
-            "\nResponse is an array with the same size as the input that has the execution result :\n"
-            "  [{\"success\": true}, {\"success\": true, \"warnings\": [\"Ignoring irrelevant private key\"]}, {\"success\": false, \"error\": {\"code\": -1, \"message\": \"Internal Server Error\"}}, ...]\n"
+            "[                              (json array) Response is an array with the same size as the input that has the execution result\n"
+            "  {                            (json object)\n"
+            "    \"success\" : true|false,    (boolean)\n"
+            "    \"warnings\" : [             (json array, optional)\n"
+            "      \"str\",                   (string)\n"
+            "      ...\n"
+            "    ],\n"
+            "    \"error\" : {                (json object, optional)\n"
+            "        ...                    JSONRPC error\n"
+            "    },\n"
+            "  },\n"
+            "  ...\n"
+            "]\n"
                 },
                 RPCExamples{
                     HelpExampleCli("importmulti", "'[{ \"scriptPubKey\": { \"address\": \"<my address>\" }, \"timestamp\":1455191478 }, "
