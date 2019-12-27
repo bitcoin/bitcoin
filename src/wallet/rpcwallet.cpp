@@ -4076,10 +4076,9 @@ UniValue walletprocesspsbt(const JSONRPCRequest& request)
                     {"bip32derivs", RPCArg::Type::BOOL, /* default */ "false", "If true, includes the BIP 32 derivation paths for public keys if we know them"},
                 },
                 RPCResult{
-            "{\n"
-            "  \"psbt\" : \"value\",          (string) The base64-encoded partially signed transaction\n"
+            "{                            (json object)\n"
+            "  \"psbt\" : \"str\",            (string) The base64-encoded partially signed transaction\n"
             "  \"complete\" : true|false,   (boolean) If the transaction has a complete set of signatures\n"
-            "  ]\n"
             "}\n"
                 },
                 RPCExamples{
