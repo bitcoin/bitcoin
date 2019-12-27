@@ -23,7 +23,7 @@ struct CForkresolutionTest : public VeriBlock::UtilServiceImpl {
 
     bool IsCrossedKeystoneBoudaryTest(const CBlockIndex* commonKeystone, const CBlockIndex* tip)
     {
-        return UtilServiceImpl::IsCrossedKeystoneBoudary(*commonKeystone, *tip);
+        return UtilServiceImpl::IsCrossedKeystoneBoundary(*commonKeystone, *tip);
     }
 };
 

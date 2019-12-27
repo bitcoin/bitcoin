@@ -67,7 +67,7 @@ int UtilServiceImpl::compareForks(const CBlockIndex& left, const CBlockIndex& ri
 
     assert(commonKeystone != nullptr);
 
-    if (IsCrossedKeystoneBoudary(*commonKeystone, left) && IsCrossedKeystoneBoudary(*commonKeystone, right)) {
+    if (IsCrossedKeystoneBoundary(*commonKeystone, left) && IsCrossedKeystoneBoundary(*commonKeystone, right)) {
         auto& pop_service = VeriBlock::getService<VeriBlock::PopService>();
         return pop_service.compareTwoBranches(commonKeystone, &left, &right);
     }
@@ -122,7 +122,7 @@ const CBlockIndex* UtilServiceImpl::FindCommonKeystone(const CBlockIndex* leftFo
     return workingRight;
 }
 
-bool UtilServiceImpl::IsCrossedKeystoneBoudary(const CBlockIndex& bottom, const CBlockIndex& tip)
+bool UtilServiceImpl::IsCrossedKeystoneBoundary(const CBlockIndex& bottom, const CBlockIndex& tip)
 {
     uint32_t keystone_interval = VeriBlock::getService<VeriBlock::Config>().keystone_interval;
 
