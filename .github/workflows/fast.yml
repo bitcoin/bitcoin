@@ -11,8 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     container: veriblock/btcdev
     env:
-      CC: clang
-      CXX: clang++
+      CC: gcc
+      CXX: g++
     steps:
     - uses: actions/checkout@v1
       with:
@@ -25,6 +25,7 @@ jobs:
         --enable-werror
         --enable-lcov
         --enable-lcov-branch-coverage
+        --disable-bench
 
     - name: make
       run: make -j2
