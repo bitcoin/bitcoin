@@ -198,14 +198,14 @@ static UniValue getrpcinfo(const JSONRPCRequest& request)
                 {},
                 RPCResult{
             "{\n"
-            " \"active_commands\" (array) All active commands\n"
+            " \"active_commands\" (json array) All active commands\n"
             "  [\n"
-            "   {               (object) Information about an active command\n"
+            "   {               (json object) Information about an active command\n"
             "    \"method\"       (string)  The name of the RPC command \n"
             "    \"duration\"     (numeric)  The running time in microseconds\n"
             "   },...\n"
             "  ],\n"
-            " \"logpath\": \"xxx\" (string) The complete file path to the debug log\n"
+            " \"logpath\" : \"xxx\" (string) The complete file path to the debug log\n"
             "}\n"
                 },
                 RPCExamples{
