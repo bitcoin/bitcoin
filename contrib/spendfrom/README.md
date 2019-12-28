@@ -32,9 +32,15 @@ added to the next block.
 `FROMADDRESS` (if you specify just one `FROMADDRESS`, change will go back to 
 it).
 
+- If `--to=new` is specified a new receiving address is created in the local
+wallet. 
+
 - If `--datadir` is not specified, the default datadir is used.
 
 - If `--config` is not specified, the default crown.conf is used.
+
+- The `--upto` option will not complain if there are insufficient funds for
+the amount requested, and just send as much as is available.
 
 - The `--dry_run` option will just create and sign the transaction and print
 the transaction data (as hexadecimal), instead of broadcasting it.
@@ -45,7 +51,7 @@ produce informational/debugging messages.
 - If the transaction is created and broadcast successfully, a transaction id
 is printed.
 
-- UTXO selecton policies are not yet implemented. 
+- UTXO selection policies are not yet implemented. 
 
 - If this was a tool for end-users and not programmers, it would have much
 friendlier error-handling.

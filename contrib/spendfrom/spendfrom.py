@@ -155,7 +155,7 @@ def create_tx(crownd, fromaddresses, toaddress, amount, fee, criteria, upto):
             amount = total_available - fee
             print("Warning, only %f CRW available, sending %f"%(total_available, amount))
         else:
-            sys.stderr.write("Error, only %f CRW available, need %f\n"%(total_available, needed));
+            sys.stderr.write("Error, only %f CRW available, need %f\n"%(total_available, needed))
             sys.exit(1)
         
     #
@@ -227,7 +227,7 @@ def main():
     parser.add_option("--from", dest="fromaddresses", default=None,
                       help="(comma separated list of) address(es) to get CRW from")
     parser.add_option("--to", dest="toaddress", default=None,
-                      help="address to send CRW to")
+                      help="address to send CRW to. Specify 'new' for a new address in the local wallet")
     parser.add_option("--amount", dest="amount", default=None,
                       help="amount to send excluding fee")
     parser.add_option("--fee", dest="fee", default="0.0",
@@ -260,31 +260,39 @@ def main():
 
     if options.amount is None:
         address_summary = list_available(crownd)
-        for address,info in address_summary.items():
-            n_transactions = len(info['outputs'])
-            if n_transactions > 1:
-                print("%s %.8f %s (%d transactions)"%(address, info['total'], info['account'], n_transactions))
-            else:
-                print("%s %.8f %s"%(address, info['total'], info['account']))
-    elif crownd.validateaddress(options.toaddress)['isvalid']:
-        fee = Decimal(options.fee)
-        amount = Decimal(options.amount)
-        while unlock_wallet(crownd) == False:
-            pass # Keep asking for passphrase until they get it right
-        txdata = create_tx(crownd, options.fromaddresses.split(","), options.toaddress, amount, fee, options.select, options.upto)
-        sanity_test_fee(crownd, txdata, amount*Decimal("0.01"), fee)
-        txlen = len(txdata)/2
-        if verbosity > 0: print("Transaction size is %d bytes"%(txlen))
-        if options.dry_run:
-            print("Raw transaction data: %s"%(txdata))
-            if verbosity > 2: print("Decoded transaction: %s"%(crownd.decoderawtransaction(txdata)))
-        elif txlen < 250000:
-            txid = crownd.sendrawtransaction(txdata)
-            print(txid)
+        if address_summary.items():
+            for address,info in address_summary.items():
+                n_transactions = len(info['outputs'])
+                if n_transactions > 1:
+                    print("%s %.8f %s (%d transactions)"%(address, info['total'], info['account'], n_transactions))
+                else:
+                    print("%s %.8f %s"%(address, info['total'], info['account']))
         else:
-            print("Transaction size is too large")
+            print("Empty wallet!")
     else:
-        print("To address is invalid")
+        if options.toaddress == 'new':
+            options.toaddress = crownd.getnewaddress('')
+            print("Sending to generated address %s"%(options.toaddress))
+
+        if crownd.validateaddress(options.toaddress)['isvalid']:
+            fee = Decimal(options.fee)
+            amount = Decimal(options.amount)
+            while unlock_wallet(crownd) == False:
+                pass # Keep asking for passphrase until they get it right
+            txdata = create_tx(crownd, options.fromaddresses.split(","), options.toaddress, amount, fee, options.select, options.upto)
+            sanity_test_fee(crownd, txdata, amount*Decimal("0.01"), fee)
+            txlen = len(txdata)/2
+            if verbosity > 0: print("Transaction size is %d bytes"%(txlen))
+            if options.dry_run:
+                print("Raw transaction data: %s"%(txdata))
+                if verbosity > 2: print("Decoded transaction: %s"%(crownd.decoderawtransaction(txdata)))
+            elif txlen < 250000:
+                txid = crownd.sendrawtransaction(txdata)
+                print(txid)
+            else:
+                print("Transaction size is too large")
+        else:
+            print("To address is invalid")
 
 if __name__ == '__main__':
     main()
