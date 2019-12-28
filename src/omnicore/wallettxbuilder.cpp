@@ -252,7 +252,7 @@ int CreateFundedTransaction(
         strFailReason = "send to self without change";
     }
 
-    if (wtxNew->get().vout.size() > max_outputs)
+    if (fSuccess && wtxNew->get().vout.size() > max_outputs)
     {
         strFailReason = "more outputs than expected";
         PrintToLog("%s: ERROR: more outputs than expected (Max expected %d, actual %d)\n Failed transaction: %s\n",
