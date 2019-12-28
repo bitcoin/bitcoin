@@ -184,9 +184,9 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
     }
 
     const CAmount value_out = tx.GetValueOut();
-    if (nValueIn < value_out) {
+    if (value_in < value_out) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-in-belowout",
-            strprintf("value in (%s) < value out (%s)", FormatMoney(nValueIn), FormatMoney(value_out)));
+            strprintf("value in (%s) < value out (%s)", FormatMoney(value_in), FormatMoney(value_out)));
     }
 
     // Tally transaction fees
