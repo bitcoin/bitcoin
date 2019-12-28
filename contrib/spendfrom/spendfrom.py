@@ -225,23 +225,23 @@ def main():
 
     parser = optparse.OptionParser(usage="%prog [options]")
     parser.add_option("--from", dest="fromaddresses", default=None,
-                      help="addresses to get crowns from")
+                      help="(comma separated list of) address(es) to get CRW from")
     parser.add_option("--to", dest="toaddress", default=None,
-                      help="address to get send crowns to")
+                      help="address to send CRW to")
     parser.add_option("--amount", dest="amount", default=None,
-                      help="amount to send")
-    parser.add_option("--upto", dest="upto", default=False, action="store_true",
-                      help="allow inexact send up to the specified amount")
+                      help="amount to send excluding fee")
     parser.add_option("--fee", dest="fee", default="0.0",
-                      help="fee to include")
+                      help="amount of fee to pay")
+    parser.add_option("--config", dest="conffile", default="crown.conf",
+                      help="name of crown config file (default: %default)")
+    parser.add_option("--datadir", dest="datadir", default=determine_db_dir(),
+                      help="location of crown config file with RPC username/password (default: %default)")
     parser.add_option("--select", type='choice', 
                       choices=['oldest', 'smallest', 'largest'],
                       default=None,
-                      help="select the oldest|smallest|largest UTXOs first")
-    parser.add_option("--datadir", dest="datadir", default=determine_db_dir(),
-                      help="location of crown config file with RPC username/password (default: %default)")
-    parser.add_option("--config", dest="conffile", default="crown.conf",
-                      help="name of crown config file (default: %default)")
+                      help="select the oldest|smallest|largest UTXOs first. Not yet operational")
+    parser.add_option("--upto", dest="upto", default=False, action="store_true",
+                      help="allow inexact send up to the specified amount")
     parser.add_option("--testnet", dest="testnet", default=False, action="store_true",
                       help="use the test network")
     parser.add_option("--dry_run", dest="dry_run", default=False, action="store_true",
