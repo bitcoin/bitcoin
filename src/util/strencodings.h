@@ -205,9 +205,9 @@ bool ConvertBits(const O& outfn, I it, I end) {
  * @return          the lowercase equivalent of c; or the argument
  *                  if no conversion is possible.
  */
-constexpr char ToLower(char c)
+constexpr char ToLower(const char c)
 {
-    return (c >= 'A' && c <= 'Z' ? (c - 'A') + 'a' : c);
+    return (c >= 'A' && c <= 'Z' ? c | 0x20 : c);
 }
 
 /**
@@ -231,9 +231,9 @@ std::string ToLower(const std::string& str);
  * @return          the uppercase equivalent of c; or the argument
  *                  if no conversion is possible.
  */
-constexpr char ToUpper(char c)
+constexpr char ToUpper(const char c)
 {
-    return (c >= 'a' && c <= 'z' ? (c - 'a') + 'A' : c);
+    return (c >= 'a' && c <= 'z' ? c & ~0x20 : c);
 }
 
 /**
