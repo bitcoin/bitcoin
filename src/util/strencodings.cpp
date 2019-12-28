@@ -8,7 +8,6 @@
 
 #include <tinyformat.h>
 
-#include <algorithm>
 #include <cstdlib>
 #include <cstring>
 #include <errno.h>
@@ -301,11 +300,11 @@ signed char HexDigit(char c)
 
 bool IsHex(const std::string& str)
 {
-    for (std::string::const_iterator it(str.begin()); it != str.end(); ++it) {
-        if (HexDigit(*it) < 0)
+    for (auto ch : str) {
+        if (HexDigit(ch) < 0)
             return false;
     }
-    return (!str.empty()) && (str.size() % 2 == 0);
+    return !str.empty() && str.size() % 2 == 0;
 }
 
 bool IsHexNumber(const std::string& str)
@@ -360,7 +359,7 @@ void SplitHostPort(std::string in, int& portOut, std::string& hostOut)
             portOut = n;
         }
     }
-    if (in.size() > 0 && in[0] == '[' && in[in.size() - 1] == ']')
+    if (!in.empty() && in[0] == '[' && in[in.size() - 1] == ']')
         hostOut = in.substr(1, in.size() - 2);
     else
         hostOut = in;
@@ -563,7 +562,7 @@ bool ParseUInt32(const std::string& str, uint32_t* out)
 {
     if (!ParsePrechecks(str))
         return false;
-    if (str.size() >= 1 && str[0] == '-') // Reject negative values, unfortunately strtoul accepts these by default if they fit in the range
+    if (!str.empty() && str[0] == '-') // Reject negative values, unfortunately strtoul accepts these by default if they fit in the range
         return false;
     char* endp = nullptr;
     errno = 0; // strtoul will not set errno if valid
@@ -584,7 +583,7 @@ bool ParseUInt64(const std::string& str, uint64_t* out)
         return false;
     char* endp = nullptr;
     errno = 0; // strtoull will not set errno if valid
-    unsigned long long int n = strtoull(str.c_str(), &endp, 10);
+    const unsigned long long int n = strtoull(str.c_str(), &endp, 10);
     if (out) *out = (uint64_t)n;
     // Note that strtoull returns a *unsigned long long int*, so even if it doesn't report an over/underflow
     // we still have to check that the returned value is within the range of an *uint64_t*.
@@ -649,12 +648,12 @@ std::string FormatParagraph(const std::string& in, size_t width, size_t indent)
 
 std::string i64tostr(int64_t n)
 {
-    return boost::lexical_cast<std::string>(n); //boost::lexical_cast is faster than std::to_string and others
+    return std::to_string(n);
 }
 
 std::string itostr(int n)
 {
-    return boost::lexical_cast<std::string>(n);
+    return std::to_string(n);
 }
 
 int64_t atoi64(const char* psz)
