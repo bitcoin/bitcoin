@@ -192,7 +192,8 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
 
         std::string strReply;
         bool user_has_whitelist = g_rpc_whitelist.count(jreq.authUser);
-        if (!user_has_whitelist && g_rpc_whitelist_default) {
+        // The __cookie__ user has always full permissions in order to make bitcoin-cli work
+        if (!user_has_whitelist && g_rpc_whitelist_default && jreq.authUser != "__cookie__") {
             LogPrintf("RPC User %s not allowed to call any methods\n", jreq.authUser);
             req->WriteReply(HTTP_FORBIDDEN);
             return false;
@@ -200,7 +201,7 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
         // singleton request
         } else if (valRequest.isObject()) {
             jreq.parse(valRequest);
-            if (user_has_whitelist && !g_rpc_whitelist[jreq.authUser].count(jreq.strMethod)) {
+            if (user_has_whitelist && !g_rpc_whitelist[jreq.authUser].count(jreq.strMethod) && jreq.authUser != "__cookie__") {
                 LogPrintf("RPC User %s not allowed to call method %s\n", jreq.authUser, jreq.strMethod);
                 req->WriteReply(HTTP_FORBIDDEN);
                 return false;
@@ -220,7 +221,7 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
                         const UniValue& request = valRequest[reqIdx].get_obj();
                         // Parse method
                         std::string strMethod = find_value(request, "method").get_str();
-                        if (!g_rpc_whitelist[jreq.authUser].count(strMethod)) {
+                        if (!g_rpc_whitelist[jreq.authUser].count(strMethod) && jreq.authUser != "__cookie__") {
                             LogPrintf("RPC User %s not allowed to call method %s\n", jreq.authUser, strMethod);
                             req->WriteReply(HTTP_FORBIDDEN);
                             return false;
