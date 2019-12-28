@@ -101,8 +101,8 @@ BASE_SCRIPTS = [
     'rpc_txoutproof.py',
     'wallet_listreceivedby.py',
     'wallet_abandonconflict.py',
-    # FIXME: Enable once we activate BIP9.
-    #'feature_csv_activation.py',
+    'feature_asmap.py',
+    'feature_csv_activation.py',
     'rpc_rawtransaction.py',
     'wallet_address_types.py',
     'feature_bip68_sequence.py',
