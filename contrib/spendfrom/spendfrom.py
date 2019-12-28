@@ -230,7 +230,7 @@ def main():
                       help="address to send CRW to. Specify 'new' for a new address in the local wallet")
     parser.add_option("--amount", dest="amount", default=None,
                       help="amount to send excluding fee")
-    parser.add_option("--fee", dest="fee", default="0.0",
+    parser.add_option("--fee", dest="fee", default="0.025",
                       help="amount of fee to pay")
     parser.add_option("--config", dest="conffile", default="crown.conf",
                       help="name of crown config file (default: %default)")
@@ -270,6 +270,9 @@ def main():
         else:
             print("Empty wallet!")
     else:
+        if options.toaddress is None:
+            print("You must specify a to address")
+            sys.exit(1)
         if options.toaddress == 'new':
             options.toaddress = crownd.getnewaddress('')
             print("Sending to generated address %s"%(options.toaddress))

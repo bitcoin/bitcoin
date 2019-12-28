@@ -8,9 +8,9 @@ of the GUI wallet and is useful for consolidating rewards.
 Depends on [python-bitcoinrpc](http://www.github.com/jgarzik/python-bitcoinrpc/).
 
 	spendfrom.py --from=FROMADDRESS1[,FROMADDRESS2] --to=TOADDRESS \
-                     --amount=amount --fee=fee --dry_run \
-                     --datadir=/path/to/.crown --config=config-file-name \
-                     --testnet -v
+                     --amount=amount [--fee=fee] \
+                     [--datadir=/path/to/.crown] [--config=config-file-name] \
+                     [--upto] [--dry_run] [--testnet] [-v [-v [-v]]]
 
 With no arguments, outputs a list of amounts associated with addresses.
 
@@ -26,7 +26,7 @@ being sent is too small, or if the transaction is too many bytes for the fee).
 If you specify a really small fee the transaction may sit in the mempool for 
 a long time before it is added to a block. If you're consolidating rewards a 
 fee between 0.01 and 0.1 CRW is usually sufficient for the transaction to be 
-added to the next block.
+added to the next block. The default fee is 0.025 CRW.
 
 - If a change output needs to be created, the change will be sent to the last
 `FROMADDRESS` (if you specify just one `FROMADDRESS`, change will go back to 
@@ -45,6 +45,8 @@ the amount requested, and just send as much as is available.
 - The `--dry_run` option will just create and sign the transaction and print
 the transaction data (as hexadecimal), instead of broadcasting it.
 
+- The `--testnet` option is self-explanatory.
+
 - The `-v` option can be used (multiple times) to increase verbosity and 
 produce informational/debugging messages.
 
@@ -53,5 +55,5 @@ is printed.
 
 - UTXO selection policies are not yet implemented. 
 
-- If this was a tool for end-users and not programmers, it would have much
-friendlier error-handling.
+- This is becoming a tool for end-users with improved and friendlier 
+error-handling.
