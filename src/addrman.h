@@ -6,23 +6,22 @@
 #ifndef SYSCOIN_ADDRMAN_H
 #define SYSCOIN_ADDRMAN_H
 
+#include <clientversion.h>
 #include <netaddress.h>
 #include <protocol.h>
 #include <random.h>
 #include <sync.h>
 #include <timedata.h>
 #include <util/system.h>
-#include <clientversion.h>
 
+#include <fs.h>
+#include <hash.h>
+#include <iostream>
 #include <map>
 #include <set>
 #include <stdint.h>
-#include <vector>
-#include <iostream>
 #include <streams.h>
-#include <fs.h>
-#include <hash.h>
-
+#include <vector>
 
 /**
  * Extended statistics about a CAddress
