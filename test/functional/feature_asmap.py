@@ -32,8 +32,8 @@ ASMAP = '../../src/test/data/asmap.raw' # path to unit test skeleton asmap
 VERSION = 'fec61fa21a9f46f3b17bdcd660d7f4cd90b966aad3aec593c99b35f0aca15853'
 
 def expected_messages(filename):
-    return ['Opened asmap file "{}" (59 bytes) from disk.'.format(filename),
-            'Using asmap version {} for IP bucketing.'.format(VERSION)]
+    return ['Opened asmap file "{}" (59 bytes) from disk'.format(filename),
+            'Using asmap version {} for IP bucketing'.format(VERSION)]
 
 class AsmapTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -77,7 +77,7 @@ class AsmapTest(BitcoinTestFramework):
     def test_default_asmap_with_missing_file(self):
         self.log.info('Test bitcoind -asmap with missing default map file')
         self.stop_node(0)
-        msg = "Error: Could not find asmap file '\"{}\"'".format(self.default_asmap)
+        msg = "Error: Could not find asmap file \"{}\"".format(self.default_asmap)
         self.node.assert_start_raises_init_error(extra_args=['-asmap'], expected_msg=msg)
 
     def test_empty_asmap(self):

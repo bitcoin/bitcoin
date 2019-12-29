@@ -47,11 +47,11 @@
 #include <txdb.h>
 #include <txmempool.h>
 #include <ui_interface.h>
+#include <util/asmap.h>
 #include <util/moneystr.h>
 #include <util/system.h>
 #include <util/threadnames.h>
 #include <util/translation.h>
-#include <util/asmap.h>
 #include <validation.h>
 #include <hash.h>
 
@@ -1840,14 +1840,14 @@ bool AppInitMain(NodeContext& node)
         }
         std::vector<bool> asmap = CAddrMan::DecodeAsmap(asmap_path);
         if (asmap.size() == 0) {
-            InitError(strprintf(_("Could not parse asmap file '%s'").translated, asmap_path));
+            InitError(strprintf(_("Could not parse asmap file %s").translated, asmap_path));
             return false;
         }
         const uint256 asmap_version = SerializeHash(asmap);
         node.connman->SetAsmap(std::move(asmap));
-        LogPrintf("Using asmap version %s for IP bucketing.\n", asmap_version.ToString());
+        LogPrintf("Using asmap version %s for IP bucketing\n", asmap_version.ToString());
     } else {
-        LogPrintf("Using /16 prefix for IP bucketing.\n");
+        LogPrintf("Using /16 prefix for IP bucketing\n");
     }
 
     // ********************************************************* Step 13: finished
