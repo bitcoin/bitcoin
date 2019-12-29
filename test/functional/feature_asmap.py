@@ -75,7 +75,7 @@ class AsmapTest(BitcoinTestFramework):
     def test_default_asmap_with_missing_file(self):
         self.log.info('Test bitcoind -asmap with missing default map file')
         self.stop_node(0)
-        msg = "Error: Could not find or parse specified asmap: '\"{}\"'".format(self.default_asmap)
+        msg = "Error: Could not find asmap file '\"{}\"'".format(self.default_asmap)
         self.node.assert_start_raises_init_error(extra_args=['-asmap'], expected_msg=msg)
 
     def run_test(self):
