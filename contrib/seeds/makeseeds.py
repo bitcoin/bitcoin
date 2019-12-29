@@ -19,13 +19,9 @@ MIN_BLOCKS = 337600
 
 # These are hosts that have been observed to be behaving strangely (e.g.
 # aggressively connecting to every node).
-SUSPICIOUS_HOSTS = {
-    "130.211.129.106", "178.63.107.226",
-    "83.81.130.26", "88.198.17.7", "148.251.238.178", "176.9.46.6",
-    "54.173.72.127", "54.174.10.182", "54.183.64.54", "54.194.231.211",
-    "54.66.214.167", "54.66.220.137", "54.67.33.14", "54.77.251.214",
-    "54.94.195.96", "54.94.200.247"
-}
+with open("suspicious_hosts.txt", mode="r", encoding="utf-8") as f:
+    SUSPICIOUS_HOSTS = {s.strip() for s in f if s.strip()}
+
 
 PATTERN_IPV4 = re.compile(r"^((\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})):(\d+)$")
 PATTERN_IPV6 = re.compile(r"^\[([0-9a-z:]+)\]:(\d+)$")
