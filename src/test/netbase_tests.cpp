@@ -13,21 +13,21 @@
 
 BOOST_FIXTURE_TEST_SUITE(netbase_tests, BasicTestingSetup)
 
-static CNetAddr ResolveIP(const char* ip)
+static CNetAddr ResolveIP(const std::string& ip)
 {
     CNetAddr addr;
     LookupHost(ip, addr, false);
     return addr;
 }
 
-static CSubNet ResolveSubNet(const char* subnet)
+static CSubNet ResolveSubNet(const std::string& subnet)
 {
     CSubNet ret;
     LookupSubNet(subnet, ret);
     return ret;
 }
 
-static CNetAddr CreateInternal(const char* host)
+static CNetAddr CreateInternal(const std::string& host)
 {
     CNetAddr addr;
     addr.SetInternal(host);
