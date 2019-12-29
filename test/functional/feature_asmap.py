@@ -8,11 +8,13 @@ Verify node behaviour and debug log when launching bitcoind in these cases:
 
 1. `bitcoind` with no -asmap arg, using /16 prefix for IP bucketing
 
-2. `bitcoind -asmap=<relative path>`, using the unit test skeleton asmap
+2. `bitcoind -asmap=<absolute path>`, using the unit test skeleton asmap
 
-3. `bitcoind -asmap/-asmap=` with no file specified, using the default asmap
+3. `bitcoind -asmap=<relative path>`, using the unit test skeleton asmap
 
-4. `bitcoind -asmap` with no file specified, and a missing default asmap file
+4. `bitcoind -asmap/-asmap=` with no file specified, using the default asmap
+
+5. `bitcoind -asmap` with no file specified and a missing default asmap file
 
 The tests are order-independent. The slowest test (missing default asmap file)
 is placed last.
@@ -41,6 +43,15 @@ class AsmapTest(BitcoinTestFramework):
         self.stop_node(0)
         with self.node.assert_debug_log(['Using /16 prefix for IP bucketing']):
             self.start_node(0)
+
+    def test_asmap_with_absolute_path(self):
+        self.log.info('Test bitcoind -asmap=<absolute path>')
+        self.stop_node(0)
+        filename = os.path.join(self.datadir, 'my-map-file.map')
+        shutil.copyfile(self.asmap_raw, filename)
+        with self.node.assert_debug_log(expected_messages(filename)):
+            self.start_node(0, ['-asmap={}'.format(filename)])
+        os.remove(filename)
 
     def test_asmap_with_relative_path(self):
         self.log.info('Test bitcoind -asmap=<relative path>')
@@ -74,6 +85,7 @@ class AsmapTest(BitcoinTestFramework):
         self.asmap_raw = os.path.join(os.path.dirname(os.path.realpath(__file__)), ASMAP)
 
         self.test_without_asmap_arg()
+        self.test_asmap_with_absolute_path()
         self.test_asmap_with_relative_path()
         self.test_default_asmap()
         self.test_default_asmap_with_missing_file()
