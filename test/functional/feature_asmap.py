@@ -16,8 +16,10 @@ Verify node behaviour and debug log when launching bitcoind in these cases:
 
 5. `bitcoind -asmap` with no file specified and a missing default asmap file
 
-The tests are order-independent. The slowest test (missing default asmap file)
-is placed last.
+6. `bitcoind -asmap` with an empty (unparsable) default asmap file
+
+The tests are order-independent. The slowest tests (missing default asmap and
+empty asmap) are placed last.
 
 """
 import os
@@ -78,6 +80,15 @@ class AsmapTest(BitcoinTestFramework):
         msg = "Error: Could not find asmap file '\"{}\"'".format(self.default_asmap)
         self.node.assert_start_raises_init_error(extra_args=['-asmap'], expected_msg=msg)
 
+    def test_empty_asmap(self):
+        self.log.info('Test bitcoind -asmap with empty map file')
+        self.stop_node(0)
+        with open(self.default_asmap, "w", encoding="utf-8") as f:
+            f.write("")
+        msg = "Error: Could not parse asmap file \"{}\"".format(self.default_asmap)
+        self.node.assert_start_raises_init_error(extra_args=['-asmap'], expected_msg=msg)
+        os.remove(self.default_asmap)
+
     def run_test(self):
         self.node = self.nodes[0]
         self.datadir = os.path.join(self.node.datadir, self.chain)
@@ -89,6 +100,7 @@ class AsmapTest(BitcoinTestFramework):
         self.test_asmap_with_relative_path()
         self.test_default_asmap()
         self.test_default_asmap_with_missing_file()
+        self.test_empty_asmap()
 
 
 if __name__ == '__main__':
