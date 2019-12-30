@@ -1718,8 +1718,10 @@ static UniValue getblockstats(const JSONRPCRequest& request)
                 {RPCResult::Type::NUM, "utxo_size_inc", "The increase/decrease in size for the utxo index (not discounting op_return and similar)"},
             }},
                 RPCExamples{
-                    HelpExampleCli("getblockstats", "1000 '[\"minfeerate\",\"avgfeerate\"]'")
-            + HelpExampleRpc("getblockstats", "1000 '[\"minfeerate\",\"avgfeerate\"]'")
+                    HelpExampleCli("getblockstats", R"('"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09"' '["minfeerate","avgfeerate"]')") +
+                    HelpExampleCli("getblockstats", R"(1000 '["minfeerate","avgfeerate"]')") +
+                    HelpExampleRpc("getblockstats", R"("00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09", ["minfeerate","avgfeerate"])") +
+                    HelpExampleRpc("getblockstats", R"(1000, ["minfeerate","avgfeerate"])")
                 },
     }.Check(request);
 
