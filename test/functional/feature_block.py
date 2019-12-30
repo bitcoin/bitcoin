@@ -506,7 +506,7 @@ class FullBlockTest(SyscoinTestFramework):
             del b39.vtx[-1]
 
         b39 = self.update_block(39, [])
-        self.send_blocks([b39], True)
+        self.send_blocks([b39], success=True, timeout=2440)
         self.save_spendable_output()
 
         # Test sigops in P2SH redeem scripts

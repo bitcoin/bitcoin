@@ -1382,7 +1382,7 @@ UniValue convertaddresswallet(const JSONRPCRequest& request)
         if(spk_man)	
             spk_man->AddCScript(witprog); // Implicit for single-key now, but necessary for multisig and for compatibility	
         pwallet->SetAddressBook(v4Dest, strLabel, "receive");	
-        WalletRescanReserver reserver(pwallet);                   	
+        WalletRescanReserver reserver(*pwallet);                   	
         if (fRescan) {	
             int64_t scanned_time = pwallet->RescanFromTime(0, reserver, true);	
             if (pwallet->IsAbortingRescan()) {	

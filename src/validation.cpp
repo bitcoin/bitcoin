@@ -4653,7 +4653,7 @@ bool CChainState::ReplayBlocks(const CChainParams& params)
     std::vector<uint256> hashHeads = db.GetHeadBlocks();
     if (hashHeads.empty()) return true; // We're already in a consistent state.
     // SYSCOIN, until bitcoin merges replay block with connect block, enforce a reindex
-    else return false;
+    else if (Params().NetworkIDString() != CBaseChainParams::REGTEST) return false;
     if (hashHeads.size() != 2) return error("ReplayBlocks(): unknown inconsistent state");
 
     uiInterface.ShowProgress(_("Replaying blocks...").translated, 0, false);
