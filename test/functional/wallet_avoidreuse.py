@@ -91,7 +91,8 @@ class AvoidReuseTest(BitcoinTestFramework):
         self.test_fund_send_fund_send("p2sh-segwit")
         reset_balance(self.nodes[1], self.nodes[0].getnewaddress())
         self.test_fund_send_fund_send("bech32")
-
+        reset_balance(self.nodes[1], self.nodes[0].getnewaddress())
+        self.test_many_utxos_one_dest()
 
     def test_persistence(self):
         '''Test that wallet files persist the avoid_reuse flag.'''
@@ -256,6 +257,47 @@ class AvoidReuseTest(BitcoinTestFramework):
         # node 1 should now have about 1 btc left (no dirty) and 11 (including dirty)
         assert_approx(self.nodes[1].getbalance(), 1, 0.001)
         assert_approx(self.nodes[1].getbalance(avoid_reuse=False), 11, 0.001)
+
+    def test_many_utxos_one_dest(self):
+        '''
+        Test the case where [1] generates a new address A, then
+        [0] sends 1 BTC to A 30 times.
+        [1] spends 11 BTC from A
+        20 of the outputs in A should be used, leaving 10 intact.
+        Those 10 should all be marked used.
+        A single output of 9 btc should be the change output back to oneself,
+        and should not be marked used.
+        '''
+        self.log.info("Test many utxos one destination")
+
+        fundaddr = self.nodes[1].getnewaddress()
+        retaddr = self.nodes[0].getnewaddress()
+
+        # send one bitcoin to the funding address 30 times
+        for _ in range(30):
+            self.nodes[0].sendtoaddress(fundaddr, 1)
+        self.nodes[0].generate(1)
+        self.sync_all()
+
+        # listunspent should show 30 unused 1 btc outputs
+        assert_unspent(self.nodes[1], total_count=30, total_sum=30, reused_supported=True, reused_count=0)
+        # getbalances should show no used, 30 btc trusted
+        assert_balances(self.nodes[1], mine={"used": 0, "trusted": 30})
+
+        self.nodes[1].sendtoaddress(retaddr, 11)
+        self.nodes[0].generate(1)
+        self.sync_all()
+
+        # listunspent should show 11 unused outputs (you might expect 1 unused 9
+        # btc output, and 10 used 1 btc outputs, but due to how things are set
+        # up this requires a rescan by the user; this should probably be fixed).
+        assert_unspent(self.nodes[1], total_count=11, total_sum=19, reused_supported=True, reused_count=10)
+        assert_balances(self.nodes[1], mine={"used": 0, "trusted": 19})
+
+        # After -rescan, getbalances shows 1 unused 9 btc output, and 10 used 1 btc outputs.
+        self.restart_node(1, extra_args=self.extra_args[1] + ['-rescan'])
+        assert_unspent(self.nodes[1], total_count=11, total_sum=19, reused_supported=True, reused_count=10)
+        assert_balances(self.nodes[1], mine={"trusted": 9, "used": 10})
 
 if __name__ == '__main__':
     AvoidReuseTest().main()
