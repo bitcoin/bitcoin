@@ -40,6 +40,8 @@ public:
     void AddFulfilledRequest(const CService& addr, const std::string& strRequest);
     bool HasFulfilledRequest(const CService& addr, const std::string& strRequest);
 
+    void RemoveAllFulfilledRequests(const CService& addr);
+
     void CheckAndRemove();
     void Clear();
 
