@@ -110,6 +110,9 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
     static int nTick = 0;
     nTick++;
 
+    const static int64_t nSyncStart = GetTimeMillis();
+    const static std::string strAllow = strprintf("allow-sync-%lld", nSyncStart);
+
     // reset the sync process if the last call to this function was more than 60 minutes ago (client was in sleep mode)
     static int64_t nTimeLastProcess = GetTime();
     if(GetTime() - nTimeLastProcess > 60*60) {
@@ -178,6 +181,12 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
 
         // NORMAL NETWORK MODE - TESTNET/MAINNET
         {
+            if ((pnode->fWhitelisted || pnode->m_manual_connection) && !netfulfilledman.HasFulfilledRequest(pnode->addr, strAllow)) {
+                netfulfilledman.RemoveAllFulfilledRequests(pnode->addr);
+                netfulfilledman.AddFulfilledRequest(pnode->addr, strAllow);
+                LogPrintf("CMasternodeSync::ProcessTick -- skipping mnsync restrictions for peer=%d\n", pnode->GetId());
+            }
+
             if(netfulfilledman.HasFulfilledRequest(pnode->addr, "full-sync")) {
                 // We already fully synced from this node recently,
                 // disconnect to free this connection slot for another peer.
