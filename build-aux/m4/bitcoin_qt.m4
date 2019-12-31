@@ -255,42 +255,35 @@ dnl All macros below are internal and should _not_ be used from the main
 dnl configure.ac.
 dnl ----
 
+dnl Internal. Check the included version of Qt against the passed minimum one.
+dnl _BITCOIN_QT_VERSIONCHECK_PROGRAM([VERSION-MAJOR-NUMBER], [VERSION-MINOR-NUMBER], [VERSION-PATCH-NUMBER])
+dnl Requires: INCLUDES must be populated as necessary.
+m4_define([_BITCOIN_QT_VERSIONCHECK_PROGRAM],[
+  AC_LANG_PROGRAM([[
+    #include <QtGlobal>
+  ]],[[
+    #if (QT_VERSION < QT_VERSION_CHECK($1, $2, $3))
+    choke
+    #endif
+  ]])
+])
+
 dnl Internal. Check included version of Qt against minimum specified in doc/dependencies.md
 dnl Requires: INCLUDES must be populated as necessary.
 dnl Output: bitcoin_cv_qt5=yes|no
 AC_DEFUN([_BITCOIN_QT_CHECK_QT5],[
   AC_CACHE_CHECK(for Qt 5, bitcoin_cv_qt5,[
-  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-      #include <QtCore/qconfig.h>
-      #ifndef QT_VERSION
-      #  include <QtCore/qglobal.h>
-      #endif
-    ]],
-    [[
-      #if QT_VERSION < 0x050501
-      choke
-      #endif
-    ]])],
+  AC_COMPILE_IFELSE([_BITCOIN_QT_VERSIONCHECK_PROGRAM(5,5,1)],
     [bitcoin_cv_qt5=yes],
     [bitcoin_cv_qt5=no])
 ])])
 
-dnl Internal. Check if the included version of Qt is greater than Qt58.
+dnl Internal. Check if the included version of Qt >= 5.8.
 dnl Requires: INCLUDES must be populated as necessary.
 dnl Output: bitcoin_cv_qt58=yes|no
 AC_DEFUN([_BITCOIN_QT_CHECK_QT58],[
-  AC_CACHE_CHECK(for > Qt 5.7, bitcoin_cv_qt58,[
-  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-      #include <QtCore/qconfig.h>
-      #ifndef QT_VERSION
-      #  include <QtCore/qglobal.h>
-      #endif
-    ]],
-    [[
-      #if QT_VERSION_MINOR < 8
-      choke
-      #endif
-    ]])],
+  AC_CACHE_CHECK(for Qt >= 5.8, bitcoin_cv_qt58,[
+  AC_COMPILE_IFELSE([_BITCOIN_QT_VERSIONCHECK_PROGRAM(5,8,0)],
     [bitcoin_cv_qt58=yes],
     [bitcoin_cv_qt58=no])
 ])])
@@ -377,17 +370,7 @@ AC_DEFUN([_BITCOIN_QT_FIND_STATIC_PLUGINS],[
      else
        if test "x$TARGET_OS" = xwindows; then
          AC_CACHE_CHECK(for Qt >= 5.6, bitcoin_cv_need_platformsupport,[
-           AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-               #include <QtCore/qconfig.h>
-               #ifndef QT_VERSION
-               #  include <QtCore/qglobal.h>
-               #endif
-             ]],
-             [[
-               #if QT_VERSION < 0x050600 || QT_VERSION_MINOR < 6
-               choke
-               #endif
-             ]])],
+           AC_COMPILE_IFELSE([_BITCOIN_QT_VERSIONCHECK_PROGRAM(5,6,0)],
            [bitcoin_cv_need_platformsupport=yes],
            [bitcoin_cv_need_platformsupport=no])
          ])
