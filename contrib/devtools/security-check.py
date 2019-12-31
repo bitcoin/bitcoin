@@ -188,6 +188,15 @@ def check_MACHO_PIE(executable) -> bool:
         return True
     return False
 
+def check_MACHO_NOUNDEFS(executable) -> bool:
+    '''
+    Check for no undefined references.
+    '''
+    flags = get_MACHO_executable_flags(executable)
+    if 'NOUNDEFS' in flags:
+        return True
+    return False
+
 CHECKS = {
 'ELF': [
     ('PIE', check_ELF_PIE),
@@ -202,6 +211,7 @@ CHECKS = {
 ],
 'MACHO': [
     ('PIE', check_MACHO_PIE),
+    ('NOUNDEFS', check_MACHO_NOUNDEFS),
 ]
 }
 
