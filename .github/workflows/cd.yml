@@ -3,12 +3,12 @@ name: Docker CD
 on:
   push:
     branches:
-      - master
-      - develop
-      - feature/cd # for tests
-    tags:
-      # tags must start with v
-      - v*
+    - master
+    - develop
+  pull_request:
+    branches:
+    - master
+    - develop
 
 jobs:
   build:
@@ -22,8 +22,8 @@ jobs:
         with:
           name: vbtc
           dockerfile: Dockerfile
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          username: ${{ secrets.PRIVATE_DOCKER_USERNAME }}
+          password: ${{ secrets.PRIVATE_DOCKER_PASSWORD }}
           registry: docker-internal.veriblock.com
           tag_names: true
           snapshot: true
