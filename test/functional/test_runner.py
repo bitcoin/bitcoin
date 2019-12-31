@@ -139,6 +139,7 @@ BASE_SCRIPTS= [
     'minchainwork.py',
     'p2p-acceptblock.py', # NOTE: needs dash_hash to pass
     'feature_shutdown.py',
+    'privatesend.py',
 ]
 
 EXTENDED_SCRIPTS = [
