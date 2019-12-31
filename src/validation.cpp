@@ -70,8 +70,8 @@ bool CBlockIndexWorkComparator::operator()(const CBlockIndex *pa, const CBlockIn
 
     // VeriBlock forkresolution comparing
     int compare_result = VeriBlock::getService<VeriBlock::UtilService>().compareForks(*pa, *pb);
-    if (compare_result == -1) return false;
-    if (compare_result == 1) return true;
+    if (compare_result == 1) return false;
+    if (compare_result == -1) return true;
 
     // First sort by most total work, ...
     if (pa->nChainWork > pb->nChainWork) return false;

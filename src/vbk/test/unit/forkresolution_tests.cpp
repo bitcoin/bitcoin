@@ -288,9 +288,9 @@ BOOST_FIXTURE_TEST_CASE(crossing_keystone_with_pop_1_test, TestChain100Setup)
         if (rightForkTip.GetBlockHash() == leftForkTip.GetBlockHash())
             return 0;
         if (rightForkTip.GetBlockHash() == pblockwins->GetBlockHash())
-            return 1;
-        if (leftForkTip.GetBlockHash() == pblockwins->GetBlockHash())
             return -1;
+        if (leftForkTip.GetBlockHash() == pblockwins->GetBlockHash())
+            return 1;
         return 0;
     });
 
@@ -362,9 +362,9 @@ BOOST_FIXTURE_TEST_CASE(crossing_keystone_with_pop_2_test, TestChain100Setup)
         if (rightForkTip.GetBlockHash() == leftForkTip.GetBlockHash())
             return 0;
         if (rightForkTip.GetBlockHash() == pblockwins->GetBlockHash())
-            return 1;
-        if (leftForkTip.GetBlockHash() == pblockwins->GetBlockHash())
             return -1;
+        if (leftForkTip.GetBlockHash() == pblockwins->GetBlockHash())
+            return 1;
         return 0;
     });
 
@@ -444,9 +444,9 @@ BOOST_FIXTURE_TEST_CASE(crossing_keystone_with_pop_3_test, TestChain100Setup)
         if (rightForkTip.GetBlockHash() == leftForkTip.GetBlockHash())
             return 0;
         if (rightForkTip.GetBlockHash() == pblockwins->GetBlockHash())
-            return 1;
-        if (leftForkTip.GetBlockHash() == pblockwins->GetBlockHash())
             return -1;
+        if (leftForkTip.GetBlockHash() == pblockwins->GetBlockHash())
+            return 1;
         return 0;
     });
     InvalidateTestBlock(pblock2);
@@ -596,9 +596,9 @@ BOOST_FIXTURE_TEST_CASE(crossing_keystone_with_pop_4_test, TestChain100Setup)
         if (rightForkTip.GetBlockHash() == leftForkTip.GetBlockHash())
             return 0;
         if (rightForkTip.GetBlockHash() == pblockwins->GetBlockHash())
-            return 1;
-        if (leftForkTip.GetBlockHash() == pblockwins->GetBlockHash())
             return -1;
+        if (leftForkTip.GetBlockHash() == pblockwins->GetBlockHash())
+            return 1;
         return 0;
     });
 

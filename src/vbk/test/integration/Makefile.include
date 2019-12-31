@@ -7,13 +7,18 @@ VBK_INTEGRATION_TEST_SUITE = \
   test/setup_common.h \
   test/setup_common.cpp \
   vbk/test/integration/grpc_integration_service.cpp \
-  vbk/test/integration/utils.cpp
-
+  vbk/test/integration/utils.hpp \
+  vbk/test/integration/utils.cpp \
+  vbk/test/integration/test_setup.hpp \
+  vbk/test/integration/test_setup.cpp
+  
 # the list of VeriBlock integration test sources
 VBK_INTEGRATION_TESTS =  \
   vbk/test/integration/dummy.cpp \
   vbk/test/integration/rpc_tests.cpp \
-  vbk/test/integration/pop_reward_tests.cpp
+  vbk/test/integration/pop_reward_tests.cpp \
+  vbk/test/integration/forkresolution_tests.cpp
+  
   
 vbk_test_integration_test_int_vbk_SOURCES = $(VBK_INTEGRATION_TEST_SUITE) $(VBK_INTEGRATION_TESTS)
 vbk_test_integration_test_int_vbk_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(TESTDEFS) $(EVENT_CFLAGS) $(THIRD_PARTY_INCLUDE)

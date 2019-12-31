@@ -242,6 +242,7 @@ VeriBlock::AltPublication generateSignedAltPublication(const CBlock& endorsedBlo
     containingBlock->set_previouskeystone(genesisVeriBlockBlock.previouskeystone());
     containingBlock->set_secondpreviouskeystone(genesisVeriBlockBlock.secondpreviouskeystone());
     containingBlock->set_nonce(0);
+    containingBlock->set_timestamp(endorsedBlock.nTime + 100);
 
     mineVeriBlockBlocks(*containingBlock);
 
