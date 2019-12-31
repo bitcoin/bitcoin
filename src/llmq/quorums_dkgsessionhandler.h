@@ -107,6 +107,7 @@ private:
     CDKGSessionManager& dkgManager;
 
     QuorumPhase phase{QuorumPhase_Idle};
+    int currentHeight{-1};
     int quorumHeight{-1};
     uint256 quorumHash;
     std::shared_ptr<CDKGSession> curSession;
