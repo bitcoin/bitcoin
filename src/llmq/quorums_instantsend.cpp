@@ -1438,6 +1438,17 @@ bool CInstantSendManager::GetInstantSendLockByHash(const uint256& hash, llmq::CI
     return true;
 }
 
+bool CInstantSendManager::GetInstantSendLockHashByTxid(const uint256& txid, uint256& ret)
+{
+    if (!IsInstantSendEnabled()) {
+        return false;
+    }
+
+    LOCK(cs);
+    ret = db.GetInstantSendLockHashByTxid(txid);
+    return !ret.IsNull();
+}
+
 bool CInstantSendManager::IsLocked(const uint256& txHash)
 {
     if (!IsInstantSendEnabled()) {
