@@ -164,6 +164,7 @@ public:
 
     bool AlreadyHave(const CInv& inv);
     bool GetInstantSendLockByHash(const uint256& hash, CInstantSendLock& ret);
+    bool GetInstantSendLockHashByTxid(const uint256& txid, uint256& ret);
 
     size_t GetInstantSendLockCount();
 
