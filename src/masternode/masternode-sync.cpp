@@ -208,6 +208,12 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
             // INITIAL TIMEOUT
 
             if(nCurrentAsset == MASTERNODE_SYNC_WAITING) {
+                if(!pnode->fInbound && gArgs.GetBoolArg("-syncmempool", DEFAULT_SYNC_MEMPOOL) && !netfulfilledman.HasFulfilledRequest(pnode->addr, "mempool-sync")) {
+                    netfulfilledman.AddFulfilledRequest(pnode->addr, "mempool-sync");
+                    connman.PushMessage(pnode, msgMaker.Make(NetMsgType::MEMPOOL));
+                    LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nCurrentAsset %d -- syncing mempool from peer=%d\n", nTick, nCurrentAsset, pnode->GetId());
+                }
+
                 if(GetTime() - nTimeLastBumped > MASTERNODE_SYNC_TIMEOUT_SECONDS) {
                     // At this point we know that:
                     // a) there are peers (because we are looping on at least one of them);
