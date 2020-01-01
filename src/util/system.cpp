@@ -518,17 +518,28 @@ void SetupHelpOptions(ArgsManager& args)
 
 static const int screenWidth = 79;
 static const int optIndent = 2;
+#ifdef _WIN32
 static const int msgIndent = 7;
+#else
+static const int msgIndent = 41;
+#endif
 
 std::string HelpMessageGroup(const std::string &message) {
     return std::string(message) + std::string("\n\n");
 }
 
 std::string HelpMessageOpt(const std::string &option, const std::string &message) {
+#ifdef _WIN32
     return std::string(optIndent,' ') + std::string(option) +
            std::string("\n") + std::string(msgIndent,' ') +
            FormatParagraph(message, screenWidth - msgIndent, msgIndent) +
            std::string("\n\n");
+#else
+    return std::string(optIndent,' ') + std::string(option) +
+           std::string(msgIndent - option.size() - optIndent,' ') +
+           FormatParagraph(message, screenWidth - msgIndent, msgIndent) +
+           std::string("\n\n");
+#endif
 }
 
 static std::string FormatException(const std::exception* pex, const char* pszThread)

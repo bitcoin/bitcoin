@@ -444,7 +444,7 @@ void SetupServerArgs()
         "and mempool (allow requesting BIP35 mempool contents). "
         "Specify multiple permissions separated by commas (default: noban,mempool,relay). Can be specified multiple times.", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
 
-    gArgs.AddArg("-whitelist=<[permissions@]IP address or network>", "Whitelist peers connecting from the given IP address (e.g. 1.2.3.4) or "
+    gArgs.AddArg("-whitelist=<[permissions@]addr>", "Whitelist peers connecting from the given IP address (e.g. 1.2.3.4) or "
         "CIDR notated network(e.g. 1.2.3.0/24). Uses same permissions as "
         "-whitebind. Can be specified multiple times." , ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
 

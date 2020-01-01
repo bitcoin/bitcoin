@@ -368,6 +368,7 @@ bool ParseDouble(const std::string& str, double *out)
 
 std::string FormatParagraph(const std::string& in, size_t width, size_t indent)
 {
+#ifdef _WIN32
     std::stringstream out;
     size_t ptr = 0;
     size_t indented = 0;
@@ -405,6 +406,29 @@ std::string FormatParagraph(const std::string& in, size_t width, size_t indent)
         }
     }
     return out.str();
+#else
+    std::istringstream iss(in);
+    std::vector<std::string> lines_splitted((std::istream_iterator<std::string>(iss)), std::istream_iterator<std::string>());
+    std::vector<std::string> lines_formatted = {""};    // Initialize with empty string
+    for(long unsigned int i = 0; i < lines_splitted.size(); i++) {
+        if(std::string(lines_formatted[lines_formatted.size() - 1] + lines_splitted[i] + " ").size() > width) {
+            lines_formatted.push_back(lines_splitted[i] + " ");
+        }
+        else {
+            lines_formatted[lines_formatted.size() - 1] += lines_splitted[i] + " ";
+        }
+    }
+    // Make it a string
+    std::string retstr;
+    for(long unsigned int i = 0; i < lines_formatted.size(); i++) {
+        // Do not do the indent on line 1
+        if(i == 0)
+            retstr += lines_formatted[0] + "\n";
+        else
+            retstr += std::string(indent, ' ') + lines_formatted[i] + "\n";
+    }
+    return retstr;
+#endif
 }
 
 std::string i64tostr(int64_t n)
