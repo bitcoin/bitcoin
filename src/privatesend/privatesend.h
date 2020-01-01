@@ -42,7 +42,7 @@ enum PoolMessage : int32_t {
     ERR_MAXIMUM,
     ERR_MN_LIST,
     ERR_MODE,
-    ERR_NON_STANDARD_PUBKEY,
+    ERR_NON_STANDARD_PUBKEY, // not used
     ERR_NOT_A_MN, // not used
     ERR_QUEUE_FULL,
     ERR_RECENT,
@@ -371,6 +371,8 @@ protected:
     CMutableTransaction finalMutableTransaction; // the finalized transaction ready for signing
 
     void SetNull();
+
+    bool IsValidInOuts(const std::vector<CTxIn>& vin, const std::vector<CTxOut>& vout, PoolMessage& nMessageIDRet, bool* fConsumeCollateralRet) const;
 
 public:
     int nSessionDenom; // Users must submit a denom matching this
