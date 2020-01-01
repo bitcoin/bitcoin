@@ -115,8 +115,28 @@ std::string HelpExampleCli(const std::string& methodname, const std::string& arg
 
 std::string HelpExampleRpc(const std::string& methodname, const std::string& args)
 {
-    return "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", "
-        "\"method\": \"" + methodname + "\", \"params\": [" + args + "] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n";
+    bool curl_installed = false;
+    // Check if curl is installed
+    const char *path = getenv("PATH");
+    // If PATH is not set or it can't be fetched for some reason, return curl just in case
+    if (path == NULL)
+        curl_installed = true;
+
+    // Parse PATH and look into every directory if the file "curl" exists
+    std::vector<std::string> pathdirs;
+    boost::split(pathdirs, path, [](char c){return c == ':';});
+    for(unsigned long i = 0; i < pathdirs.size(); ++i) {
+        std::ifstream f(pathdirs[i] + "/curl");
+        if (f.good()) {
+            curl_installed = true;
+            break;
+        }
+    }
+    if (curl_installed)
+        return "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", "
+            "\"method\": \"" + methodname + "\", \"params\": [" + args + "] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n";
+    // If cURL isn't installed
+    return "";
 }
 
 // Converts a hex string to a public key if possible

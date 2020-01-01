@@ -19,8 +19,12 @@
 
 #include <string>
 #include <vector>
+#include <fstream>
+
+#include <stdlib.h>
 
 #include <boost/variant.hpp>
+#include <boost/algorithm/string.hpp>
 
 /**
  * String used to describe UNIX epoch time in documentation, factored out to a
