@@ -100,14 +100,14 @@ public:
         }
         return false;
     }
-    virtual bool AddCScript(const CScript& redeemScript) override;
-    virtual bool HaveCScript(const CScriptID &hash) const override;
-    virtual bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const override;
+    bool AddCScript(const CScript& redeemScript) override;
+    bool HaveCScript(const CScriptID &hash) const override;
+    bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const override;
 
-    virtual bool AddWatchOnly(const CScript &dest) override;
-    virtual bool RemoveWatchOnly(const CScript &dest) override;
-    virtual bool HaveWatchOnly(const CScript &dest) const override;
-    virtual bool HaveWatchOnly() const override;
+    bool AddWatchOnly(const CScript &dest) override;
+    bool RemoveWatchOnly(const CScript &dest) override;
+    bool HaveWatchOnly(const CScript &dest) const override;
+    bool HaveWatchOnly() const override;
 
     virtual bool GetHDChain(CHDChain& hdChainRet) const;
 };

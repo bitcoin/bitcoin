@@ -3,42 +3,67 @@ Developer Notes
 
 Various coding styles have been used during the history of the codebase,
 and the result is not very consistent. However, we're now trying to converge to
-a single style, so please use it in new code. Old code will be converted
-gradually and you are encouraged to use the provided
-[clang-format-diff script](/contrib/devtools/README.md#clang-format-diffpy)
-to clean up the patch automatically before submitting a pull request.
+a single style, which is specified below. When writing patches, favor the new
+style over attempting to mimic the surrounding style, except for move-only
+commits.
 
-- Basic rules specified in [src/.clang-format](/src/.clang-format).
+Do not submit patches solely to modify the style of existing code.
+
+- **Indentation and whitespace rules** as specified in
+[src/.clang-format](/src/.clang-format). You can use the provided
+[clang-format-diff script](/contrib/devtools/README.md#clang-format-diffpy)
+tool to clean up patches automatically before submission.
   - Braces on new lines for namespaces, classes, functions, methods.
   - Braces on the same line for everything else.
   - 4 space indentation (no tabs) for every block except namespaces.
   - No indentation for `public`/`protected`/`private` or for `namespace`.
   - No extra spaces inside parenthesis; don't do ( this )
   - No space after function names; one space after `if`, `for` and `while`.
-  - If an `if` only has a single-statement then-clause, it can appear
-    on the same line as the if, without braces. In every other case,
-    braces are required, and the then and else clauses must appear
+  - If an `if` only has a single-statement `then`-clause, it can appear
+    on the same line as the `if`, without braces. In every other case,
+    braces are required, and the `then` and `else` clauses must appear
     correctly indented on a new line.
+
+- **Symbol naming conventions**. These are preferred in new code, but are not
+required when doing so would need changes to significant pieces of existing
+code.
+  - Variable and namespace names are all lowercase, and may use `_` to
+    separate words (snake_case).
+    - Class member variables have a `m_` prefix.
+    - Global variables have a `g_` prefix.
+  - Constant names are all uppercase, and use `_` to separate words.
+  - Class names, function names and method names are UpperCamelCase
+    (PascalCase). Do not prefix class names with `C`.
+
+- **Miscellaneous**
   - `++i` is preferred over `i++`.
+  - `nullptr` is preferred over `NULL` or `(void*)0`.
+  - `static_assert` is preferred over `assert` where possible. Generally; compile-time checking is preferred over run-time checking.
   - Align pointers and references to the left i.e. use `type& var` and not `type &var`.
 
 Block style example:
 ```c++
+int g_count = 0;
+
 namespace foo
 {
 class Class
 {
+    std::string m_name;
+
+public:
     bool Function(const std::string& s, int n)
     {
         // Comment summarising what this section of code does
         for (int i = 0; i < n; ++i) {
+            int total_sum = 0;
             // When something fails, return early
             if (!Something()) return false;
             ...
-            if (SomethingElse()) {
-                DoMore();
+            if (SomethingElse(i)) {
+                total_sum += ComputeSomething(g_count);
             } else {
-                DoLess();
+                DoSomething(m_name, total_sum);
             }
         }
 
@@ -264,7 +289,7 @@ Wallet
 
   - *Rationale*: In RPC code that conditionally uses the wallet (such as
     `validateaddress`) it is easy to forget that global pointer `pwalletMain`
-    can be NULL. See `test/functional/disablewallet.py` for functional tests
+    can be nullptr. See `test/functional/disablewallet.py` for functional tests
     exercising the API with `-disablewallet`
 
 - Include `db_cxx.h` (BerkeleyDB header) only when `ENABLE_WALLET` is set
@@ -318,6 +343,12 @@ C++ data structures
 
   - *Rationale*: Ensure determinism by avoiding accidental use of uninitialized
     values. Also, static analyzers balk about this.
+
+- By default, declare single-argument constructors `explicit`.
+
+  - *Rationale*: This is a precaution to avoid unintended conversions that might
+    arise when single-argument constructors are used as implicit conversion
+    functions.
 
 - Use explicitly signed or unsigned `char`s, or even better `uint8_t` and
   `int8_t`. Do not use bare `char` unless it is to pass to a third-party API.
@@ -601,3 +632,8 @@ A few guidelines for introducing and reviewing new RPC interfaces:
   - *Rationale*: as well as complicating the implementation and interfering
     with the introduction of multi-wallet, wallet and non-wallet code should be
     separated to avoid introducing circular dependencies between code units.
+
+- Try to make the RPC response a JSON object.
+
+  - *Rationale*: If a RPC response is not a JSON object then it is harder to avoid API breakage if
+    new data in the response is needed.

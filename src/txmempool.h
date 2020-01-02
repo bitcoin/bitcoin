@@ -26,11 +26,10 @@
 #include "bls/bls.h"
 #include "pubkey.h"
 
-#include "boost/multi_index_container.hpp"
-#include "boost/multi_index/ordered_index.hpp"
-#include "boost/multi_index/hashed_index.hpp"
+#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index/sequenced_index.hpp>
-
 #include <boost/signals2/signal.hpp>
 
 class CBlockIndex;
@@ -99,8 +98,6 @@ public:
                     int64_t _nTime, unsigned int _entryHeight,
                     bool spendsCoinbase,
                     unsigned int nSigOps, LockPoints lp);
-
-    CTxMemPoolEntry(const CTxMemPoolEntry& other);
 
     const CTransaction& GetTx() const { return *this->tx; }
     CTransactionRef GetSharedTx() const { return this->tx; }
