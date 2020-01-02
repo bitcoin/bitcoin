@@ -109,6 +109,11 @@ class VersionBitsWarningTest(BitcoinTestFramework):
             pass
         self.start_nodes()
 
+        # TODO this is a workaround. We have to wait for IBD to finish before we generate a block, as otherwise there
+        # won't be any warning generated. This workaround must be removed when we backport https://github.com/bitcoin/bitcoin/pull/12264
+        self.nodes[0].generate(1)
+        time.sleep(5)
+
         # Connecting one block should be enough to generate an error.
         self.nodes[0].generate(1)
         assert(WARN_UNKNOWN_RULES_ACTIVE in self.nodes[0].getinfo()["errors"])
