@@ -35,6 +35,8 @@
 #include <masternodepayments.h>
 #include <masternodesync.h>
 #include <masternodeman.h>
+#include <typeinfo>
+
 #if defined(NDEBUG)
 # error "Syscoin cannot be compiled without assertions."
 #endif
