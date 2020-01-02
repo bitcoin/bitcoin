@@ -22,8 +22,7 @@ jobs:
         with:
           name: vbtc
           dockerfile: Dockerfile
-          username: ${{ secrets.PRIVATE_DOCKER_USERNAME }}
-          password: ${{ secrets.PRIVATE_DOCKER_PASSWORD }}
-          registry: docker-internal.veriblock.com
+          username: ${{ secrets.PUBLIC_DOCKERHUB_USERNAME }}
+          password: ${{ secrets.PUBLIC_DOCKERHUB_PASSWORD }}
           tag_names: true
           snapshot: true
