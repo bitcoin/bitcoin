@@ -30,6 +30,7 @@
 #include <util/validation.h>
 
 #include <memory>
+#include <typeinfo>
 
 #if defined(NDEBUG)
 # error "Bitcoin cannot be compiled without assertions."
