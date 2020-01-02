@@ -18,7 +18,8 @@ inline int GetPopMerkleRootCommitmentIndex(const CBlock& block)
     int commitpos = -1;
     if (!block.vtx.empty()) {
         for (size_t o = 0; o < block.vtx[0]->vout.size(); o++) {
-            if (block.vtx[0]->vout[o].scriptPubKey.size() >= 36 && block.vtx[0]->vout[o].scriptPubKey[0] == OP_RETURN && block.vtx[0]->vout[o].scriptPubKey[1] == 0x3a && block.vtx[0]->vout[o].scriptPubKey[2] == 0xe6 && block.vtx[0]->vout[o].scriptPubKey[3] == 0xca) {
+            auto& s = block.vtx[0]->vout[o].scriptPubKey;
+            if (s.size() >= 36 && s[0] == OP_RETURN && s[1] == 0x3a && s[2] == 0xe6 && s[3] == 0xca) {
                 commitpos = o;
             }
         }
@@ -51,20 +52,20 @@ inline uint256 TopLevelMerkleRoot(const CBlockIndex* prevIndex, const CBlock& bl
     return util.makeTopLevelRoot(prevIndex->nHeight + 1, keystones, BlockMerkleRoot(block, mutated));
 }
 
-inline bool VerifyTopLevelMerkleRoot(const CBlock& block, CValidationState& state, const CBlockIndex* pprevIndex)
+inline bool VerifyTopLevelMerkleRoot(const CBlock& block, BlockValidationState& state, const CBlockIndex* pprevIndex)
 {
     bool mutated = false;
     uint256 hashMerkleRoot2 = VeriBlock::TopLevelMerkleRoot(pprevIndex, block, &mutated);
 
     if (block.hashMerkleRoot != hashMerkleRoot2) {
-        return state.Invalid(ValidationInvalidReason::BLOCK_MUTATED, false, "bad-txnmrklroot", "hashMerkleRoot mismatch");
+        return state.Invalid(BlockValidationResult ::BLOCK_MUTATED, "bad-txnmrklroot", "hashMerkleRoot mismatch");
     }
 
     // Check for merkle tree malleability (CVE-2012-2459): repeating sequences
     // of transactions in a block without affecting the merkle root of a block,
     // while still invalidating it.
     if (mutated) {
-        return state.Invalid(ValidationInvalidReason::BLOCK_MUTATED, false, "bad-txns-duplicate", "duplicate transaction");
+        return state.Invalid(BlockValidationResult::BLOCK_MUTATED, "bad-txns-duplicate", "duplicate transaction");
     }
 
     // Add PopMerkleRoot commitment validation
@@ -72,12 +73,12 @@ inline bool VerifyTopLevelMerkleRoot(const CBlock& block, CValidationState& stat
     if (commitpos != -1) {
         uint256 popMerkleRoot = BlockPopTxMerkleRoot(block);
         if (!memcpy(popMerkleRoot.begin(), &block.vtx[0]->vout[commitpos].scriptPubKey[4], 32)) {
-            return state.Invalid(ValidationInvalidReason::BLOCK_MUTATED, false, "bad-pop-tx-root-commitment", "pop merkle root mismatch");
+            return state.Invalid(BlockValidationResult::BLOCK_MUTATED, "bad-pop-tx-root-commitment", "pop merkle root mismatch");
         }
     } else {
         // If block is not genesis
         if (pprevIndex != nullptr) {
-            return state.Invalid(ValidationInvalidReason::BLOCK_MUTATED, false, "bad-pop-tx-root-commitment", "commitment is missing");
+            return state.Invalid(BlockValidationResult::BLOCK_MUTATED, "bad-pop-tx-root-commitment", "commitment is missing");
         }
     }
 

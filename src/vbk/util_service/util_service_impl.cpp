@@ -35,13 +35,13 @@ inline void popstack(std::vector<valtype>& stack)
 } // namespace
 
 
-bool UtilServiceImpl::CheckPopInputs(const CTransaction& tx, CValidationState& state, unsigned int flags, bool cacheSigStore, PrecomputedTransactionData& txdata)
+bool UtilServiceImpl::CheckPopInputs(const CTransaction& tx, TxValidationState& state, unsigned int flags, bool cacheSigStore, PrecomputedTransactionData& txdata)
 {
     ScriptError error(SCRIPT_ERR_UNKNOWN_ERROR);
 
     auto checker = CachingTransactionSignatureChecker(&tx, 0, 0, cacheSigStore, txdata);
     if (!VerifyScript(tx.vin[0].scriptSig, tx.vout[0].scriptPubKey, &tx.vin[0].scriptWitness, flags | SCRIPT_VERIFY_POP, checker, &error))
-        return state.Invalid(ValidationInvalidReason::TX_NOT_STANDARD, false, strprintf("invalid pop tx script (%s)", ScriptErrorString(error)));
+        return state.Invalid(TxValidationResult::TX_NOT_STANDARD, strprintf("invalid pop tx script (%s)", ScriptErrorString(error)));
 
     return true;
 }
@@ -151,12 +151,12 @@ void UtilServiceImpl::addPopPayoutsIntoCoinbaseTx(CMutableTransaction& coinbaseT
     }
 }
 
-bool UtilServiceImpl::checkCoinbaseTxWithPopRewards(const CTransaction& tx, const CAmount& PoWBlockReward, const CBlockIndex& pindexPrev, CValidationState& state)
+bool UtilServiceImpl::checkCoinbaseTxWithPopRewards(const CTransaction& tx, const CAmount& PoWBlockReward, const CBlockIndex& pindexPrev, BlockValidationState& state)
 {
     PoPRewards rewards = getService<UtilService>().getPopRewards(pindexPrev);
 
     if (tx.vout.size() < rewards.size()) {
-        return state.Invalid(ValidationInvalidReason::CONSENSUS, false,
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
             strprintf("checkCoinbaseTxWithPopRewards(): coinbase has incorrect size of pop vouts (vouts_size=%d vs pop_vouts=%d)", tx.vout.size(), rewards.size()), "bad-pop-vouts-size");
     }
 
@@ -170,12 +170,12 @@ bool UtilServiceImpl::checkCoinbaseTxWithPopRewards(const CTransaction& tx, cons
     }
 
     if (!rewards.empty()) {
-        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, strprintf("checkCoinbaseTxWithPopRewards(): coinbase has incorrect pop vout in coinbase trx"), "bad-pop-vout");
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, strprintf("checkCoinbaseTxWithPopRewards(): coinbase has incorrect pop vout in coinbase trx"), "bad-pop-vout");
     }
 
     if (tx.GetValueOut() > nTotalPopReward + PoWBlockReward) {
-        return state.Invalid(ValidationInvalidReason::CONSENSUS,
-            error("ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)", tx.GetValueOut(), PoWBlockReward + nTotalPopReward), "bad-cb-amount");
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
+            strprintf("ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)", tx.GetValueOut(), PoWBlockReward + nTotalPopReward), "bad-cb-amount");
     }
 
     return true;
@@ -202,15 +202,24 @@ PoPRewards UtilServiceImpl::getPopRewards(const CBlockIndex& pindexPrev)
         pop_service.rewardsCalculateOutputs(checkHeight, *endorsedBlock, *contaningBlocksTip, *difficultyBlockStart, *difficultyBlockEnd, rewards);
     }
 
+    // erase rewards, that pay 0 satoshis
+    for (auto it = rewards.begin(), end = rewards.end(); it != end;) {
+        if (it->second == 0) {
+            rewards.erase(it++);
+        } else {
+            ++it;
+        }
+    }
+
     return rewards;
 }
 
-bool UtilServiceImpl::validatePopTx(const CTransaction& tx, CValidationState& state)
+bool UtilServiceImpl::validatePopTx(const CTransaction& tx, TxValidationState& state)
 {
     // validate input
     {
         if (tx.vin.size() != 1) {
-            return state.Invalid(ValidationInvalidReason::CONSENSUS, false, "bad-pop-vin-not-single");
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-pop-vin-not-single", strprintf("Expected 1 input, got %d", tx.vin.size()));
         }
         if (!validatePopTxInput(tx.vin[0], state)) {
             return false; // reason already set by ValidatePopTxInput
@@ -220,7 +229,7 @@ bool UtilServiceImpl::validatePopTx(const CTransaction& tx, CValidationState& st
     // validate output
     {
         if (tx.vout.size() != 1) {
-            return state.Invalid(ValidationInvalidReason::CONSENSUS, false, "bad-pop-vout-not-single");
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-pop-vout-not-single", strprintf("Expected 1 output, got %d", tx.vout.size()));
         }
         if (!validatePopTxOutput(tx.vout[0], state)) {
             return false; // reason already set by ValidatePopTxOutput
@@ -230,27 +239,27 @@ bool UtilServiceImpl::validatePopTx(const CTransaction& tx, CValidationState& st
     // check size
     auto& config = getService<Config>();
     if (::GetSerializeSize(tx, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) > config.max_pop_tx_weight) {
-        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, "bad-pop-txns-oversize");
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-pop-txns-oversize");
     }
 
     return true;
 }
 
-bool UtilServiceImpl::validatePopTxInput(const CTxIn& in, CValidationState& state)
+bool UtilServiceImpl::validatePopTxInput(const CTxIn& in, TxValidationState& state)
 {
     if (!isVBKNoInput(in.prevout)) {
-        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, "bad-pop-prevout");
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-pop-prevout");
     }
     return true;
 }
 
-bool UtilServiceImpl::validatePopTxOutput(const CTxOut& out, CValidationState& state)
+bool UtilServiceImpl::validatePopTxOutput(const CTxOut& out, TxValidationState& state)
 {
     if (out.scriptPubKey.size() != 1) {
-        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, "bad-pop-out-scriptpubkey-not-single");
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-pop-out-scriptpubkey-not-single");
     }
     if (out.scriptPubKey[0] != OP_RETURN) {
-        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, "bad-pop-out-scriptpubkey-unexpected");
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-pop-out-scriptpubkey-unexpected");
     }
     return true;
 }

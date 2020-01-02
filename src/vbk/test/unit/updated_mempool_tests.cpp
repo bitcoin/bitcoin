@@ -5,7 +5,7 @@
 #include <miner.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 #include <txmempool.h>
 #include <validation.h>
 #include <wallet/wallet.h>
@@ -162,12 +162,11 @@ BOOST_FIXTURE_TEST_CASE(AcceptToMemoryPool_pop_tx_test, TestingSetup)
     {
         LOCK(cs_main);
 
-        CValidationState state;
-        bool fMissingInputs;
+        TxValidationState state;
         BOOST_CHECK(mempool.size() == 0);
-        BOOST_CHECK(AcceptToMemoryPool(mempool, state, MakeTransactionRef(popTx1), &fMissingInputs, nullptr, false, DEFAULT_TRANSACTION_MAXFEE));
+        BOOST_CHECK(AcceptToMemoryPool(mempool, state, MakeTransactionRef(popTx1), nullptr, false, DEFAULT_TRANSACTION_MAXFEE));
 
-        BOOST_CHECK(AcceptToMemoryPool(mempool, state, MakeTransactionRef(popTx2), &fMissingInputs, nullptr, false, DEFAULT_TRANSACTION_MAXFEE));
+        BOOST_CHECK(AcceptToMemoryPool(mempool, state, MakeTransactionRef(popTx2), nullptr, false, DEFAULT_TRANSACTION_MAXFEE));
         BOOST_CHECK(mempool.size() == 2);
     }
 }

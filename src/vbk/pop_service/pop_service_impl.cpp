@@ -425,14 +425,12 @@ bool PopServiceImpl::determineATVPlausibilityWithBTCRules(AltchainId altChainIde
     return CheckProofOfWork(popEndorsementHeader.GetHash(), popEndorsementHeader.nBits, params);
 }
 
-bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlockIndex& pindexPrev, const Consensus::Params& params, CValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlockIndex& pindexPrev, const Consensus::Params& params, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     bool isValid = true;
     const auto& config = getService<Config>();
 
-    //    LOCK2(mempool.cs, cs_main); // TODO(veriblock): check if this is correct place for a lock
-
-    std::string error_message = "";
+    std::string error_message;
 
     LOCK(mempool.cs);
     AssertLockHeld(mempool.cs);
@@ -500,7 +498,7 @@ bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlo
         try {
             pop.addPayloads(block, pindexPrev.nHeight + 1, publications);
         } catch (const PopServiceException& e) {
-            error_message += " tx hash: (" + tx->GetHash().GetHex() + ") reason : addPayloads failed, " + e.what();
+            error_message += " tx hash: (" + tx->GetHash().GetHex() + ") reason : addPayloads failed, " + e.what() + "\n";
             isValid = false;
             mempool.removeRecursive(*tx, MemPoolRemovalReason::BLOCK);
             continue;
@@ -509,13 +507,13 @@ bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlo
 
     if (!isValid) {
         pop.removePayloads(block, pindexPrev.nHeight + 1);
-        return state.Invalid(ValidationInvalidReason::CONSENSUS, false, strprintf("blockPopValidation(): pop check is failed"), "bad pop data \n" + error_message);
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, strprintf("blockPopValidation(): pop check is failed"), "bad pop data \n" + error_message);
     }
 
     return true;
 }
 
-bool PopServiceImpl::blockPopValidation(const CBlock& block, const CBlockIndex& pindexPrev, const Consensus::Params& params, CValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool PopServiceImpl::blockPopValidation(const CBlock& block, const CBlockIndex& pindexPrev, const Consensus::Params& params, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     return blockPopValidationImpl(*this, block, pindexPrev, params, state);
 }

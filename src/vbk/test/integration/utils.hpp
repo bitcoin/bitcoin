@@ -16,4 +16,4 @@ void setUpGenesisBlocks();
 
 VeriBlock::AltPublication generateSignedAltPublication(const CBlock& endorsedBlock, const uint32_t& identifier, const CScript& payoutInfo);
 } // namespace VeriBlockTest
-#endif VERIBLOCK_INTEGRATION_TEST_UTILS_H
+#endif

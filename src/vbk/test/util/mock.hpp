@@ -27,6 +27,7 @@ inline void setUpPopServiceMock(fakeit::Mock<VeriBlock::PopService>& mock)
     fakeit::When(Method(mock, getLastKnownVBKBlocks)).AlwaysReturn({});
     fakeit::When(Method(mock, getLastKnownBTCBlocks)).AlwaysReturn({});
     fakeit::When(Method(mock, blockPopValidation)).AlwaysReturn(true);
+    fakeit::Fake(Method(mock, updateContext));
 
     setServiceMock(mock);
 }
@@ -37,6 +38,9 @@ struct ServicesFixture {
 
     ServicesFixture()
     {
+        fakeit::When(Method(util_service_mock, getPopRewards)).AlwaysReturn({});
+        fakeit::When(Method(util_service_mock, isKeystone)).AlwaysReturn(false);
+        fakeit::When(Method(util_service_mock, getPreviousKeystone)).AlwaysReturn(nullptr);
         fakeit::When(Method(util_service_mock, compareForks)).AlwaysReturn(0);
         fakeit::When(Method(util_service_mock, CheckPopInputs)).AlwaysReturn(true);
         fakeit::When(Method(util_service_mock, EvalScript)).AlwaysReturn(true);

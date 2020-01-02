@@ -1,17 +1,17 @@
 #include "rpc_service_impl.hpp"
 
-#include <chainparams.h>            // for Params()
-#include <consensus/merkle.h>       // for BlockMerkleRoot
-#include <consensus/validation.h>   // for CValidationState
-#include <index/txindex.h>          // for g_txindex
-#include <key_io.h>                 // for EncodeDestination
+#include <chainparams.h>          // for Params()
+#include <consensus/merkle.h>     // for BlockMerkleRoot
+#include <consensus/validation.h> // for CValidationState
+#include <index/txindex.h>        // for g_txindex
+#include <init.h>
+#include <key_io.h> // for EncodeDestination
+#include <net_processing.h>
 #include <primitives/transaction.h> // for CMutableTransaction
 #include <rpc/protocol.h>           // for RPC_TRANSACTION_REJECTED
 #include <rpc/util.h>               // for HelpExampleCli/HelpExampleRpc
 #include <util/validation.h>        // for FormatStateMessage
 #include <validation.h>             // for mempool
-#include <init.h>
-#include <net_processing.h>
 #include <vbk/util.hpp>
 #include <wallet/rpcwallet.h> // for GetWalletForJSONRPCRequest
 #include <wallet/wallet.h>    // for CWallet
@@ -196,24 +196,18 @@ UniValue RpcServiceImpl::doSubmitPop(const std::vector<uint8_t>& atv,
 
     const uint256& hashTx = tx.GetHash();
     if (!::mempool.exists(hashTx)) {
-        CValidationState state;
-        bool fMissingInputs;
+        TxValidationState state;
         auto tx_ref = MakeTransactionRef<const CMutableTransaction&>(tx);
 
-        auto result = AcceptToMemoryPool(mempool, state, tx_ref, &fMissingInputs,
-            nullptr /* plTxnReplaced */, false /* bypass_limits */,
-            0 /* nAbsurdFee */);
+        auto result = AcceptToMemoryPool(mempool, state, tx_ref,
+            nullptr /* plTxnReplaced */, false /* bypass_limits */, 0 /* nAbsurdFee */, false /* test accept */);
         if (result) {
-            RelayTransaction(hashTx, *g_connman);
+            RelayTransaction(hashTx, *this->connman);
             return hashTx.GetHex();
         }
 
         if (state.IsInvalid()) {
             throw JSONRPCError(RPC_TRANSACTION_REJECTED, FormatStateMessage(state));
-        }
-
-        if (fMissingInputs) {
-            throw JSONRPCError(RPC_TRANSACTION_ERROR, "Missing inputs");
         }
 
         throw JSONRPCError(RPC_TRANSACTION_ERROR, FormatStateMessage(state));
@@ -222,8 +216,9 @@ UniValue RpcServiceImpl::doSubmitPop(const std::vector<uint8_t>& atv,
     return hashTx.GetHex();
 }
 
-UniValue RpcServiceImpl::updatecontext(const JSONRPCRequest& request) {
-        if (request.fHelp || request.params.size() != 2)
+UniValue RpcServiceImpl::updatecontext(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 2)
         throw std::runtime_error(
             "updatecontext ( bitcoin_blocks veriblock_blocks )\n"
             "\nAdds into the alt-integration service database bitcoin and veriblock blocks.\n"
@@ -252,7 +247,13 @@ UniValue RpcServiceImpl::updatecontext(const JSONRPCRequest& request) {
     auto& service = getService<PopService>();
     service.updateContext(veriblock_blocks, bitcoin_blocks);
 
-    return "Bitcoin and VeriBlock bloks were added"; 
+    return "Bitcoin and VeriBlock bloks were added";
+}
+
+RpcServiceImpl::RpcServiceImpl(CConnman* connman)
+{
+    assert(connman != nullptr && "connmant is nullptr");
+    this->connman = connman;
 }
 
 } // namespace VeriBlock

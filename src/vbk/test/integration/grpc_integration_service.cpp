@@ -1,8 +1,8 @@
 #include <vbk/test/integration/grpc_integration_service.hpp>
 
+#include <vbk/config.hpp>
 #include <vbk/pop_service/pop_service_exception.hpp>
 #include <vbk/service_locator.hpp>
-#include <vbk/config.hpp>
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -84,7 +84,7 @@ std::vector<uint8_t> GrpcIntegrationService::serializeAddress(const VeriBlock::A
 {
     BytesArrayReply reply;
     ClientContext context;
-		
+
     Status status = serializeService->SerializeAddress(&context, address, &reply);
 
     if (!status.ok()) {
@@ -98,7 +98,7 @@ std::vector<uint8_t> GrpcIntegrationService::serializePublicationData(const Veri
 {
     BytesArrayReply reply;
     ClientContext context;
-		
+
     Status status = serializeService->SerializePublicationData(&context, publicationData, &reply);
 
     if (!status.ok()) {
@@ -112,7 +112,7 @@ std::vector<uint8_t> GrpcIntegrationService::serializeAltPublication(const VeriB
 {
     BytesArrayReply reply;
     ClientContext context;
-		
+
     Status status = serializeService->SerializeAltPublication(&context, publication, &reply);
 
     if (!status.ok()) {
@@ -120,6 +120,5 @@ std::vector<uint8_t> GrpcIntegrationService::serializeAltPublication(const VeriB
     }
 
     return std::vector<unsigned char>(reply.data().begin(), reply.data().end());
-
 }
-}
+} // namespace VeriBlock

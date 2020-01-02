@@ -4,7 +4,7 @@
 #include <fakeit.hpp>
 #include <rpc/request.h>
 #include <rpc/server.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 #include <univalue.h>
 #include <validation.h>
 #include <wallet/wallet.h>
@@ -26,7 +26,8 @@ BOOST_FIXTURE_TEST_SUITE(rpc_service_tests, RpcServiceFixture)
 
 BOOST_AUTO_TEST_CASE(getpopdata_test)
 {
-    auto chain = interfaces::MakeChain();
+    NodeContext node;
+    auto chain = interfaces::MakeChain(node);
     std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
     AddWallet(wallet);
 

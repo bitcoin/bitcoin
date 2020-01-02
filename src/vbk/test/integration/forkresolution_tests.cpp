@@ -18,7 +18,7 @@ static CBlock CreateTestBlock(TestChain100Setup& test, std::vector<CMutableTrans
 
 static void InvalidateTestBlock(CBlockIndex* pblock)
 {
-    CValidationState state;
+    BlockValidationState state;
 
     InvalidateBlock(state, Params(), pblock);
     ActivateBestChain(state, Params());
@@ -27,7 +27,7 @@ static void InvalidateTestBlock(CBlockIndex* pblock)
 
 static void ReconsiderTestBlock(CBlockIndex* pblock)
 {
-    CValidationState state;
+    BlockValidationState state;
 
     {
         LOCK(cs_main);
@@ -45,7 +45,6 @@ BOOST_AUTO_TEST_CASE(basic_test)
     CScript scriptPubKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
 
     auto& grpc_integration_service = VeriBlock::getService<VeriBlock::GrpcIntegrationService>();
-    auto& config = VeriBlock::getService<VeriBlock::Config>();
 
     InvalidateTestBlock(ChainActive().Tip());
     CreateTestBlock(*this);
@@ -79,8 +78,6 @@ BOOST_AUTO_TEST_CASE(basic_test)
     CreateTestBlock(*this);
     CreateTestBlock(*this);
     CreateTestBlock(*this); // Add a few blocks which it is mean that for the old variant of the fork resolution it should be the main chain
-
-    CBlockIndex* pblockTip = ChainActive().Tip();
 
     ReconsiderTestBlock(pblock);
     BOOST_CHECK(pblockwins == ChainActive().Tip());

@@ -2177,7 +2177,14 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
     LogPrint(BCLog::BENCH, "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs (%.2fms/blk)]\n", (unsigned)block.vtx.size(), MILLI * (nTime3 - nTime2), MILLI * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : MILLI * (nTime3 - nTime2) / (nInputs-1), nTimeConnect * MICRO, nTimeConnect * MILLI / nBlocksTotal);
 
-    CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus());
+    auto& utilService = VeriBlock::getService<VeriBlock::UtilService>();
+    CAmount PoPrewards = 0;
+    for (const auto& it : utilService.getPopRewards(*pindex->pprev)) {
+        PoPrewards += it.second;
+    }
+    assert(PoPrewards >= 0);
+
+    CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus()) + PoPrewards;
     assert(pindex->pprev && "previous block ptr is nullptr");
     if (!VeriBlock::getService<VeriBlock::UtilService>().checkCoinbaseTxWithPopRewards(*block.vtx[0], blockReward, *pindex->pprev, state)) {
         return false;
@@ -3469,7 +3476,7 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
         return state.Invalid(BlockValidationResult::BLOCK_TIME_FUTURE, "time-too-new", "block timestamp too far in the future");
 
     if (block.GetBlockTime() > nAdjustedTime + VeriBlock::getService<VeriBlock::Config>().max_future_block_time)
-        return state.Invalid(ValidationInvalidReason::BLOCK_TIME_FUTURE, false, "time-too-new", "block timestamp too far in the future for the VeriBlock security");
+        return state.Invalid(BlockValidationResult::BLOCK_TIME_FUTURE, "time-too-new", "block timestamp too far in the future for the VeriBlock security");
 
     // Reject outdated version blocks when 95% (75% on testnet) of the network has upgraded:
     // check for version 2, 3 and 4 upgrades

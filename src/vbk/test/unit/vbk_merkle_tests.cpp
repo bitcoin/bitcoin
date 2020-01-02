@@ -3,7 +3,7 @@
 #include <algorithm>
 
 #include <chain.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 #include <validation.h>
 #include <wallet/wallet.h>
 
@@ -28,7 +28,7 @@ BOOST_FIXTURE_TEST_CASE(genesis_block_hash_is_valid, MerkleFixture)
         1337, 36282504, 0x1d0fffff, 1, 50 * COIN,
         "047c62bbf7f5aa4dd5c16bad99ac621b857fac4e93de86e45f5ada73404eeb44dedcf377b03c14a24e9d51605d9dd2d8ddaef58760d9c4bb82d9c8f06d96e79488",
         "VeriBlock");
-    CValidationState state;
+    BlockValidationState state;
 
     bool result = VeriBlock::VerifyTopLevelMerkleRoot(block, state, nullptr);
     BOOST_CHECK(result);
@@ -38,7 +38,7 @@ BOOST_FIXTURE_TEST_CASE(genesis_block_hash_is_valid, MerkleFixture)
 BOOST_FIXTURE_TEST_CASE(TestChain100Setup_has_valid_merkle_roots, MerkleFixture)
 {
     SelectParams("regtest");
-    CValidationState state;
+    BlockValidationState state;
     CBlock block;
 
     for (int i = 0; i <= 100; i++) {
@@ -57,9 +57,8 @@ BOOST_FIXTURE_TEST_CASE(addPopTransactionRootIntoCoinbaseCommitment_test, Merkle
     {
         LOCK(cs_main);
 
-        CValidationState state;
-        bool fMissingInputs;
-        BOOST_CHECK(AcceptToMemoryPool(mempool, state, MakeTransactionRef(popTx), &fMissingInputs, nullptr, false, DEFAULT_TRANSACTION_MAXFEE));
+        TxValidationState state;
+        BOOST_CHECK(AcceptToMemoryPool(mempool, state, MakeTransactionRef(popTx), nullptr, false, DEFAULT_TRANSACTION_MAXFEE));
     }
 
     CScript scriptPubKey = CScript() << ToByteVector(blockchain.coinbaseKey.GetPubKey()) << OP_CHECKSIG;
@@ -67,7 +66,7 @@ BOOST_FIXTURE_TEST_CASE(addPopTransactionRootIntoCoinbaseCommitment_test, Merkle
     CBlock block = blockchain.CreateAndProcessBlock({popTx}, scriptPubKey);
     CBlockIndex* index = ChainActive().Tip();
 
-    CValidationState state;
+    BlockValidationState state;
     BOOST_CHECK(VeriBlock::VerifyTopLevelMerkleRoot(block, state, index->pprev));
 
     // change pop merkle root
