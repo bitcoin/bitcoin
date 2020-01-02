@@ -16,6 +16,7 @@ if [ "$TRAVIS_OS_NAME" == "osx" ]; then
   git reset --hard origin/master
   popd || exit 1
   set -o errexit
+  ${CI_RETRY_EXE} brew unlink python@2
   ${CI_RETRY_EXE} brew update
   # brew upgrade returns an error if any of the packages is already up to date
   # Failure is safe to ignore, unless we really need an update.
