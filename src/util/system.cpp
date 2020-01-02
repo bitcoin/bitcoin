@@ -1781,7 +1781,7 @@ std::string CopyrightHolders(const std::string& strPrefix)
 
     // Make sure Syscoin Core copyright is not removed by accident
     if (copyright_devs.find("Syscoin Core") == std::string::npos) {
-        strCopyrightHolders += "\n" + strPrefix + "The Bitcoin Core developers";
+        strCopyrightHolders += "\n" + strPrefix + "The Syscoin Core developers";
     }
     return strCopyrightHolders;
 }
