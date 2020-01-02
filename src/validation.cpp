@@ -4098,6 +4098,7 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
         }
         if (!ret) {
             GetMainSignals().BlockChecked(*pblock, state);
+            printf("1: %s\n", FormatStateMessage(state).c_str());
             return error("%s: AcceptBlock FAILED (%s)", __func__, FormatStateMessage(state));
         }
     }
@@ -4105,8 +4106,10 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
     NotifyHeaderTip();
 
     BlockValidationState state; // Only used to report errors, not invalidity - ignore it
-    if (!::ChainstateActive().ActivateBestChain(state, chainparams, pblock))
+    if (!::ChainstateActive().ActivateBestChain(state, chainparams, pblock)){
+        printf("2: %s\n", FormatStateMessage(state).c_str());
         return error("%s: ActivateBestChain failed (%s)", __func__, FormatStateMessage(state));
+    }
 
     return true;
 }

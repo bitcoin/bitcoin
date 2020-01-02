@@ -7,6 +7,7 @@
 #include <node/context.h>
 #include <optional.h>
 #include <test/util/mining.h>
+#include <test/util/setup_common.h>
 #include <test/util/wallet.h>
 #include <validationinterface.h>
 #include <wallet/wallet.h>
@@ -29,8 +30,8 @@ static void WalletBalance(benchmark::State& state, const bool set_dirty, const b
     if (add_watchonly) importaddress(wallet, ADDRESS_WATCHONLY);
 
     for (int i = 0; i < 100; ++i) {
-        generatetoaddress(address_mine.get_value_or(ADDRESS_WATCHONLY));
-        generatetoaddress(ADDRESS_WATCHONLY);
+        generatetoaddress(g_testing_setup->m_node, address_mine.get_value_or(ADDRESS_WATCHONLY));
+        generatetoaddress(g_testing_setup->m_node, ADDRESS_WATCHONLY);
     }
     SyncWithValidationInterfaceQueue();
 

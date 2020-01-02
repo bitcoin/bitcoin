@@ -42,6 +42,7 @@
 #include <services/assetconsensus.h>
 #include <base58.h>
 #include <bech32.h>
+#include <rpc/blockchain.h>
 static const std::string WALLET_ENDPOINT_BASE = "/wallet/";
 
 static inline bool GetAvoidReuseFlag(CWallet * const pwallet, const UniValue& param) {
@@ -3605,8 +3606,8 @@ UniValue generate(const JSONRPCRequest& request)
     if (coinbase_script->reserveScript.empty()) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "No coinbase script available");
     }
-
-    return generateBlocks(coinbase_script, num_generate, max_tries, true);
+    const CTxMemPool& mempool = EnsureMemPool();
+    return generateBlocks(mempool, coinbase_script, num_generate, max_tries, true);
 }
 
 UniValue rescanblockchain(const JSONRPCRequest& request)
