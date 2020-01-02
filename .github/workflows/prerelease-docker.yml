@@ -15,6 +15,6 @@ jobs:
         with:
           name: veriblock/prerelease
           dockerfile: prerelease.Dockerfile
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          username: ${{ secrets.PUBLIC_DOCKERHUB_USERNAME }}
+          password: ${{ secrets.PUBLIC_DOCKERHUB_PASSWORD }}
           tag_names: true
