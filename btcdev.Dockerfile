@@ -152,6 +152,6 @@ RUN set -e; \
 
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
-RUN pip3 install --upgrade setuptools wheel bashlex compiledb
+RUN pip3 install --upgrade setuptools wheel bashlex compiledb gcovr
 
 WORKDIR /

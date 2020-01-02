@@ -1,10 +1,10 @@
 #include <boost/test/unit_test.hpp>
 #include <chainparams.h>
-#include <test/setup_common.h>
-#include <validation.h>
-#include <wallet/wallet.h>
 #include <interfaces/chain.h>
 #include <script/interpreter.h>
+#include <test/util/setup_common.h>
+#include <validation.h>
+#include <wallet/wallet.h>
 
 #include <vbk/service_locator.hpp>
 #include <vbk/test/util/mock.hpp>
@@ -72,7 +72,7 @@ BOOST_FIXTURE_TEST_CASE(checkCoinbaseTxWithPopRewards, TestChain100Setup)
         serviceFixture.util_service_impl.addPopPayoutsIntoCoinbaseTx(coinbaseTx, pindexPrev);
     });
 
-    When(Method(serviceFixture.util_service_mock, checkCoinbaseTxWithPopRewards)).AlwaysDo([&serviceFixture](const CTransaction& tx, const CAmount& PoWBlockReward, const CBlockIndex& pindexPrev, CValidationState& state) -> bool {
+    When(Method(serviceFixture.util_service_mock, checkCoinbaseTxWithPopRewards)).AlwaysDo([&serviceFixture](const CTransaction& tx, const CAmount& PoWBlockReward, const CBlockIndex& pindexPrev, BlockValidationState& state) -> bool {
         return serviceFixture.util_service_impl.checkCoinbaseTxWithPopRewards(tx, PoWBlockReward, pindexPrev, state);
     });
 
@@ -92,7 +92,7 @@ BOOST_FIXTURE_TEST_CASE(checkCoinbaseTxWithPopRewards, TestChain100Setup)
 BOOST_FIXTURE_TEST_CASE(check_wallet_balance_with_pop_reward, TestChain100Setup)
 {
     VeriBlockTest::ServicesFixture serviceFixture;
-    
+
     CAmount PoPReward = 56;
     CScript scriptPubKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
     VeriBlock::PoPRewards rewards;
@@ -106,23 +106,30 @@ BOOST_FIXTURE_TEST_CASE(check_wallet_balance_with_pop_reward, TestChain100Setup)
         serviceFixture.util_service_impl.addPopPayoutsIntoCoinbaseTx(coinbaseTx, pindexPrev);
     });
 
-    CreateAndProcessBlock({}, scriptPubKey);
+    auto block = CreateAndProcessBlock({}, scriptPubKey);
 
     CAmount PoWReward = GetBlockSubsidy(ChainActive().Height(), Params().GetConsensus());
 
     CBlockIndex* tip = ::ChainActive().Tip();
-    auto chain = interfaces::MakeChain();
-    LockAssertion lock(::cs_main);
-
+    NodeContext node;
+    node.chain = interfaces::MakeChain(node);
+    auto& chain = *node.chain;
     {
-        CWallet wallet(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
+        CWallet wallet(&chain, WalletLocation(), WalletDatabase::CreateDummy());
         {
             LOCK(wallet.cs_wallet);
-            wallet.AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey()); // add Pubkey to wallet
+            // add Pubkey to wallet
+            BOOST_REQUIRE(wallet.GetLegacyScriptPubKeyMan()->AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey()));
         }
+
         WalletRescanReserver reserver(&wallet);
         reserver.reserve();
         CWallet::ScanResult result = wallet.ScanForWalletTransactions(tip->GetBlockHash() /* start_block */, {} /* stop_block */, reserver, false /* update */);
+
+        {
+            LOCK(wallet.cs_wallet);
+            wallet.SetLastBlockProcessed(tip->nHeight, tip->GetBlockHash());
+        }
 
         BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::SUCCESS);
         BOOST_CHECK(result.last_failed_block.IsNull());

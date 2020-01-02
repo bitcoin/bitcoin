@@ -2,10 +2,6 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-FAKEIT_DIR = $(top_srcdir)/third_party/include
-FAKEIT_HEADER = $(FAKEIT_DIR)/fakeit.hpp
-THIRD_PARTY_INCLUDE = -isystem $(FAKEIT_DIR)
-
 FUZZ_TARGETS = \
   test/fuzz/addr_info_deserialize \
   test/fuzz/address_deserialize \

@@ -1,9 +1,0 @@
-alt:
-  image: veriblock/alt-service:develop
-  expose:
-    - 19012 # alt port
-  ports:
-    - 127.0.0.1:20001:19012
-  volumes:
-    - ./alt/:/app/conf:ro
-    - ./alt-db:/data:rw

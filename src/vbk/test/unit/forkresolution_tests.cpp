@@ -1,7 +1,7 @@
 #include <boost/test/unit_test.hpp>
 #include <chainparams.h>
 #include <consensus/validation.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 #include <validation.h>
 
 #include <vbk/config.hpp>
@@ -37,7 +37,7 @@ static CBlock CreateTestBlock(TestChain100Setup& test, std::vector<CMutableTrans
 
 static void InvalidateTestBlock(CBlockIndex* pblock)
 {
-    CValidationState state;
+    BlockValidationState state;
 
     InvalidateBlock(state, Params(), pblock);
     ActivateBestChain(state, Params());
@@ -46,7 +46,7 @@ static void InvalidateTestBlock(CBlockIndex* pblock)
 
 static void ReconsiderTestBlock(CBlockIndex* pblock)
 {
-    CValidationState state;
+    BlockValidationState state;
 
     {
         LOCK(cs_main);
@@ -99,21 +99,14 @@ BOOST_FIXTURE_TEST_CASE(find_common_keystone_test, TestChain100Setup)
 BOOST_FIXTURE_TEST_CASE(is_crossed_keystone_boundary_test, TestChain100Setup)
 {
     CForkresolutionTest forkResolver;
-    BOOST_CHECK(forkResolver.IsCrossedKeystoneBoudaryTest(ChainActive()[80], ChainActive()[84]) == false);
-
-    BOOST_CHECK(forkResolver.IsCrossedKeystoneBoudaryTest(ChainActive()[79], ChainActive()[82]) == true);
-
-    BOOST_CHECK(forkResolver.IsCrossedKeystoneBoudaryTest(ChainActive()[21], ChainActive()[85]) == true);
-
-    BOOST_CHECK(forkResolver.IsCrossedKeystoneBoudaryTest(ChainActive()[25], ChainActive()[29]) == false);
-
-    BOOST_CHECK(forkResolver.IsCrossedKeystoneBoudaryTest(ChainActive()[0], ChainActive()[5]) == true);
-
-    BOOST_CHECK(forkResolver.IsCrossedKeystoneBoudaryTest(ChainActive()[0], ChainActive()[4]) == false);
-
-    BOOST_CHECK(forkResolver.IsCrossedKeystoneBoudaryTest(ChainActive()[5], ChainActive()[5]) == false);
-
-    BOOST_CHECK(forkResolver.IsCrossedKeystoneBoudaryTest(ChainActive()[92], ChainActive()[82]) == false);
+    BOOST_CHECK(!forkResolver.IsCrossedKeystoneBoudaryTest(ChainActive()[80], ChainActive()[84]));
+    BOOST_CHECK(forkResolver.IsCrossedKeystoneBoudaryTest(ChainActive()[79], ChainActive()[82]));
+    BOOST_CHECK(forkResolver.IsCrossedKeystoneBoudaryTest(ChainActive()[21], ChainActive()[85]));
+    BOOST_CHECK(!forkResolver.IsCrossedKeystoneBoudaryTest(ChainActive()[25], ChainActive()[29]));
+    BOOST_CHECK(forkResolver.IsCrossedKeystoneBoudaryTest(ChainActive()[0], ChainActive()[5]));
+    BOOST_CHECK(!forkResolver.IsCrossedKeystoneBoudaryTest(ChainActive()[0], ChainActive()[4]));
+    BOOST_CHECK(!forkResolver.IsCrossedKeystoneBoudaryTest(ChainActive()[5], ChainActive()[5]));
+    BOOST_CHECK(!forkResolver.IsCrossedKeystoneBoudaryTest(ChainActive()[92], ChainActive()[82]));
 }
 
 BOOST_FIXTURE_TEST_CASE(not_crossing_keystone_case_1_test, TestChain100Setup)

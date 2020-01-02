@@ -7,7 +7,7 @@
 #include <policy/policy.h>
 #include <script/interpreter.h>
 #include <script/sigcache.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 #include <validation.h>
 
 #include <vbk/init.hpp>
