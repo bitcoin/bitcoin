@@ -92,6 +92,7 @@ bool fGethSynced = false;
 bool fLoaded = false;
 bool bb = true;
 std::vector<JSONRPCRequest> vecTPSRawTransactions;
+#include <typeinfo>
 #include <univalue.h>
 
 // Application startup time (used for uptime calculation)
