@@ -20,7 +20,17 @@
 
 static const std::vector<unsigned char> V_OP_TRUE{OP_TRUE};
 
-BOOST_FIXTURE_TEST_SUITE(validation_block_tests, RegTestingSetup)
+namespace validation_block_tests {
+struct MinerTestingSetup : public RegTestingSetup {
+    std::shared_ptr<CBlock> Block(const uint256& prev_hash);
+    std::shared_ptr<const CBlock> GoodBlock(const uint256& prev_hash);
+    std::shared_ptr<const CBlock> BadBlock(const uint256& prev_hash);
+    std::shared_ptr<CBlock> FinalizeBlock(std::shared_ptr<CBlock> pblock);
+    void BuildChain(const uint256& root, int height, const unsigned int invalid_rate, const unsigned int branch_rate, const unsigned int max_size, std::vector<std::shared_ptr<const CBlock>>& blocks);
+};
+} // namespace validation_block_tests
+
+BOOST_FIXTURE_TEST_SUITE(validation_block_tests, MinerTestingSetup)
 
 struct TestSubscriber : public CValidationInterface {
     uint256 m_expected_tip;
@@ -49,7 +59,7 @@ struct TestSubscriber : public CValidationInterface {
     }
 };
 
-std::shared_ptr<CBlock> Block(const uint256& prev_hash)
+std::shared_ptr<CBlock> MinerTestingSetup::Block(const uint256& prev_hash)
 {
     static int i = 0;
     static uint64_t time = Params().GenesisBlock().nTime;
@@ -57,7 +67,7 @@ std::shared_ptr<CBlock> Block(const uint256& prev_hash)
     CScript pubKey;
     pubKey << i++ << OP_TRUE;
 
-    auto ptemplate = BlockAssembler(Params()).CreateNewBlock(pubKey);
+    auto ptemplate = BlockAssembler(*m_node.mempool, Params()).CreateNewBlock(pubKey);
     auto pblock = std::make_shared<CBlock>(ptemplate->block);
     pblock->hashPrevBlock = prev_hash;
     pblock->nTime = ++time;
@@ -83,7 +93,7 @@ std::shared_ptr<CBlock> Block(const uint256& prev_hash)
     return pblock;
 }
 
-std::shared_ptr<CBlock> FinalizeBlock(std::shared_ptr<CBlock> pblock)
+std::shared_ptr<CBlock> MinerTestingSetup::FinalizeBlock(std::shared_ptr<CBlock> pblock)
 {
     LOCK(cs_main); // For LookupBlockIndex
     GenerateCoinbaseCommitment(*pblock, LookupBlockIndex(pblock->hashPrevBlock), Params().GetConsensus());
@@ -98,13 +108,13 @@ std::shared_ptr<CBlock> FinalizeBlock(std::shared_ptr<CBlock> pblock)
 }
 
 // construct a valid block
-std::shared_ptr<const CBlock> GoodBlock(const uint256& prev_hash)
+std::shared_ptr<const CBlock> MinerTestingSetup::GoodBlock(const uint256& prev_hash)
 {
     return FinalizeBlock(Block(prev_hash));
 }
 
 // construct an invalid block (but with a valid header)
-std::shared_ptr<const CBlock> BadBlock(const uint256& prev_hash)
+std::shared_ptr<const CBlock> MinerTestingSetup::BadBlock(const uint256& prev_hash)
 {
     auto pblock = Block(prev_hash);
 
@@ -119,7 +129,7 @@ std::shared_ptr<const CBlock> BadBlock(const uint256& prev_hash)
     return ret;
 }
 
-void BuildChain(const uint256& root, int height, const unsigned int invalid_rate, const unsigned int branch_rate, const unsigned int max_size, std::vector<std::shared_ptr<const CBlock>>& blocks)
+void MinerTestingSetup::BuildChain(const uint256& root, int height, const unsigned int invalid_rate, const unsigned int branch_rate, const unsigned int max_size, std::vector<std::shared_ptr<const CBlock>>& blocks)
 {
     if (height <= 0 || blocks.size() >= max_size) return;
 
