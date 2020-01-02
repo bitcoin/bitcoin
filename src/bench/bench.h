@@ -14,6 +14,9 @@
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/stringize.hpp>
 
+struct RegTestingSetup;
+extern const RegTestingSetup* g_testing_setup; //!< A pointer to the current testing setup
+
 // Simple micro-benchmarking framework; API mostly matches a subset of the Google Benchmark
 // framework (see https://github.com/google/benchmark)
 // Why not use the Google Benchmark framework? Because adding Yet Another Dependency
