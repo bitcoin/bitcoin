@@ -1,3 +1,10 @@
+# fuzzer binaries (we want these at top, because later on we re-ignore things like *.o, .deps, etc)
+# first ignore all
+src/test/fuzz/*
+# then unignore anything with a file extension
+!src/test/fuzz/*.*
+
+# general
 *.tar.gz
 
 *.exe
