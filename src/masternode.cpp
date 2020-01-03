@@ -128,8 +128,7 @@ CMasternode::CollateralStatus CMasternode::CheckCollateral(const COutPoint& outp
 
 void CMasternode::Check(bool fForce)
 {
-
-    LOCK(cs);
+    LOCK2(cs_main, cs);
 
     if(ShutdownRequested()) return;
 
@@ -142,8 +141,6 @@ void CMasternode::Check(bool fForce)
     if(IsOutpointSpent()) return;
     
     if(!fForce){
-    	TRY_LOCK(cs_main, lockMain);
-    	if (!lockMain) return;
         Coin coin;
         if(!GetUTXOCoin(outpoint, coin) || coin.IsSpent() || coin.IsCoinBase()) {
             nActiveState = MASTERNODE_OUTPOINT_SPENT;
@@ -690,6 +687,7 @@ bool CMasternodeBroadcast::Update(CMasternode* pmn, int& nDos, CConnman& connman
 
 bool CMasternodeBroadcast::CheckOutpoint(int& nDos)
 {
+    AssertLockHeld(cs_main);
     // we are a masternode with the same outpoint (i.e. already activated) and this mnb is ours (matches our Masternode privkey)
     // so nothing to do here for us
     if(fMasternodeMode && outpoint == activeMasternode.outpoint && pubKeyMasternode == activeMasternode.pubKeyMasternode) {
@@ -714,23 +712,16 @@ bool CMasternodeBroadcast::CheckOutpoint(int& nDos)
         nDos = 33;
         return false;
     }
-	{
-		TRY_LOCK(cs_main, lockMain);
-		if (!lockMain) {
-			// not mnb fault, let it to be checked again later
-			LogPrint(BCLog::MN, "CMasternodeBroadcast::CheckOutpoint -- Failed to acquire lock, addr=%s\n", addr.ToString());
-			mnodeman.mapSeenMasternodeBroadcast.erase(GetHash());
-			return false;
-		}
-        if (::ChainActive().Height() - nHeight + 1 < Params().GetConsensus().nMasternodeMinimumConfirmations) {
-			LogPrint(BCLog::MN, "CMasternodeBroadcast::CheckOutpoint -- Masternode UTXO must have at least %d confirmations, masternode=%s\n",
-				Params().GetConsensus().nMasternodeMinimumConfirmations, outpoint.ToStringShort());
-			// UTXO is legit but has not enough confirmations.
-			// Maybe we miss few blocks, let this mnb be checked again later.
-			mnodeman.mapSeenMasternodeBroadcast.erase(GetHash());
-			return false;
-		}
-	}
+	
+    if (::ChainActive().Height() - nHeight + 1 < Params().GetConsensus().nMasternodeMinimumConfirmations) {
+        LogPrint(BCLog::MN, "CMasternodeBroadcast::CheckOutpoint -- Masternode UTXO must have at least %d confirmations, masternode=%s\n",
+            Params().GetConsensus().nMasternodeMinimumConfirmations, outpoint.ToStringShort());
+        // UTXO is legit but has not enough confirmations.
+        // Maybe we miss few blocks, let this mnb be checked again later.
+        mnodeman.mapSeenMasternodeBroadcast.erase(GetHash());
+        return false;
+    }
+	
 
     LogPrint(BCLog::MN, "CMasternodeBroadcast::CheckOutpoint -- Masternode UTXO verified\n");
 
