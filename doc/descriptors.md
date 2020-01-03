@@ -1,6 +1,6 @@
 # Support for Output Descriptors in NdovuCoin Core
 
-Since Bitcoin Core v0.17, there is support for Output Descriptors. This is a
+Since NdovuCoin Core v0.17, there is support for Output Descriptors. This is a
 simple language which can be used to describe collections of output scripts.
 Supporting RPCs are:
 - `scantxoutset` takes as input descriptors to scan for, and also reports
