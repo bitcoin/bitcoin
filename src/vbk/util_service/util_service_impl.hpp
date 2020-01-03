@@ -4,6 +4,7 @@
 #include "vbk/config.hpp"
 #include "vbk/util_service.hpp"
 
+#include <consensus/validation.h>
 #include <vector>
 
 namespace VeriBlock {
@@ -11,7 +12,7 @@ namespace VeriBlock {
 struct UtilServiceImpl : public UtilService {
     ~UtilServiceImpl() override = default;
 
-    bool CheckPopInputs(const CTransaction& tx, CValidationState& state, unsigned int flags, bool cacheSigStore, PrecomputedTransactionData& txdata) override;
+    bool CheckPopInputs(const CTransaction& tx, TxValidationState& state, unsigned int flags, bool cacheSigStore, PrecomputedTransactionData& txdata) override;
 
     bool isKeystone(const CBlockIndex& block) override;
 
@@ -29,12 +30,12 @@ struct UtilServiceImpl : public UtilService {
     // Pop rewards methods
     PoPRewards getPopRewards(const CBlockIndex& pindexPrev) override;
     void addPopPayoutsIntoCoinbaseTx(CMutableTransaction& coinbaseTx, const CBlockIndex& pindexPrev) override;
-    bool checkCoinbaseTxWithPopRewards(const CTransaction& tx, const CAmount& PoWBlockReward, const CBlockIndex& pindexPrev, CValidationState& state) override;
+    bool checkCoinbaseTxWithPopRewards(const CTransaction& tx, const CAmount& PoWBlockReward, const CBlockIndex& pindexPrev, BlockValidationState& state) override;
 
     bool EvalScript(const CScript& script, std::vector<std::vector<unsigned char>>& stack, ScriptError* serror, Publications* pub, bool with_checks = true) override;
-    bool validatePopTx(const CTransaction& tx, CValidationState& state) override;
-    bool validatePopTxInput(const CTxIn& in, CValidationState& state);
-    bool validatePopTxOutput(const CTxOut& in, CValidationState& state);
+    bool validatePopTx(const CTransaction& tx, TxValidationState& state) override;
+    bool validatePopTxInput(const CTxIn& in, TxValidationState& state);
+    bool validatePopTxOutput(const CTxOut& in, TxValidationState& state);
 
     // statefull VeriBlock validation
     //bool blockPopValidation(const CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& params, CValidationState& state) override;

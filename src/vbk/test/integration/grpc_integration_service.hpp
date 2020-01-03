@@ -31,4 +31,4 @@ public:
     std::vector<uint8_t> serializePublicationData(const VeriBlock::PublicationData& publicationData);
 };
 } // namespace VeriBlock
-#endif VERIBLOCK_INTEGRATION_TEST_VALIDATION_SERVICE_H
+#endif

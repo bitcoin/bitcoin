@@ -1,6 +1,6 @@
 #include <boost/test/unit_test.hpp>
 #include <consensus/validation.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 #include <validation.h>
 
 #include <fakeit.hpp>
@@ -60,7 +60,7 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test, PopServiceFixture)
         setPublicationData(publicationData, stream, config.index.unwrap());
     });
 
-    CValidationState state;
+    BlockValidationState state;
     {
         LOCK(cs_main);
         BOOST_CHECK(VeriBlock::blockPopValidationImpl(pop_service_impl_mock.get(), block, *ChainActive().Tip()->pprev, Params().GetConsensus(), state));
@@ -86,7 +86,7 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_wrong_index, PopServiceFixture)
 
     When(Method(pop_service_impl_mock, determineATVPlausibilityWithBTCRules)).Return(false);
 
-    CValidationState state;
+    BlockValidationState state;
     {
         LOCK(cs_main);
         BOOST_CHECK(!blockPopValidationImpl(pop_service_impl_mock.get(), block, *ChainActive().Tip()->pprev, Params().GetConsensus(), state));
@@ -107,7 +107,7 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_wrong_ancestor, PopServiceFixtur
         view = std::make_shared<CCoinsViewCache>(&ChainstateActive().CoinsTip());
     }
 
-    CValidationState state;
+    BlockValidationState state;
     InvalidateBlock(state, Params(), endorsedBlockIndex);
     ActivateBestChain(state, Params());
     ChainstateActive().ActivateBestChain(state, Params(), nullptr);
@@ -151,7 +151,7 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_wrong_merkleroot, PopServiceFixt
 
     When(Method(pop_service_impl_mock, determineATVPlausibilityWithBTCRules)).AlwaysReturn(true);
 
-    CValidationState state;
+    BlockValidationState state;
     {
         LOCK(cs_main);
         BOOST_CHECK(!blockPopValidationImpl(pop_service_impl_mock.get(), block, *ChainActive().Tip()->pprev, Params().GetConsensus(), state));
@@ -179,7 +179,7 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_wrong_settlement_interval, PopSe
     config.POP_REWARD_SETTLEMENT_INTERVAL = 0;
     VeriBlock::setService<VeriBlock::Config>(new VeriBlock::Config(config));
 
-    CValidationState state;
+    BlockValidationState state;
     {
         LOCK(cs_main);
         BOOST_CHECK(!blockPopValidationImpl(pop_service_impl_mock.get(), block, *ChainActive().Tip()->pprev, Params().GetConsensus(), state));
@@ -208,7 +208,7 @@ BOOST_FIXTURE_TEST_CASE(blockPopValidation_test_wrong_addPayloads, PopServiceFix
         throw  VeriBlock::PopServiceException("fail");
     });
 
-    CValidationState state;
+    BlockValidationState state;
     {
         LOCK(cs_main);
         BOOST_CHECK(!blockPopValidationImpl(pop_service_impl_mock.get(), block, *ChainActive().Tip()->pprev, Params().GetConsensus(), state));

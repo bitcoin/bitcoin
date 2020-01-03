@@ -4,7 +4,7 @@
 #include <net_processing.h>
 #include <validation.h>
 #include <wallet/wallet.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 
 #include <vbk/test/util/mock.hpp>
 #include <vbk/test/util/tx.hpp>
@@ -59,11 +59,10 @@ BOOST_AUTO_TEST_CASE(SendMessages_with_pop_tx)
     {
         TestMemPoolEntryHelper entry;
         LOCK2(cs_main, mempool.cs);
-        CValidationState state;
-        bool fMissingInputs;
-        BOOST_CHECK(AcceptToMemoryPool(mempool, state, MakeTransactionRef(popTx1), &fMissingInputs, nullptr, false, DEFAULT_TRANSACTION_MAXFEE));
-        BOOST_CHECK(AcceptToMemoryPool(mempool, state, MakeTransactionRef(popTx2), &fMissingInputs, nullptr, false, DEFAULT_TRANSACTION_MAXFEE));
-        BOOST_CHECK(AcceptToMemoryPool(mempool, state, MakeTransactionRef(popTx3), &fMissingInputs, nullptr, false, DEFAULT_TRANSACTION_MAXFEE));
+        TxValidationState state;
+        BOOST_CHECK(AcceptToMemoryPool(mempool, state, MakeTransactionRef(popTx1), nullptr, false, DEFAULT_TRANSACTION_MAXFEE));
+        BOOST_CHECK(AcceptToMemoryPool(mempool, state, MakeTransactionRef(popTx2), nullptr, false, DEFAULT_TRANSACTION_MAXFEE));
+        BOOST_CHECK(AcceptToMemoryPool(mempool, state, MakeTransactionRef(popTx3), nullptr, false, DEFAULT_TRANSACTION_MAXFEE));
     }
 
     CNode dummyNode2(0, ServiceFlags(NODE_NETWORK|NODE_WITNESS), 0, INVALID_SOCKET, addr1, 0, 0, CAddress(), "", /*fInboundIn=*/ false);

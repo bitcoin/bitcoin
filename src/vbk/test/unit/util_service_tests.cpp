@@ -2,7 +2,7 @@
 #include <consensus/validation.h>
 #include <script/interpreter.h>
 #include <string>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 #include <validation.h>
 #include <vbk/config.hpp>
 #include <vbk/init.hpp>
@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(poptx_validate)
     VeriBlock::InitConfig();
     auto& util = VeriBlock::InitUtilService();
     auto tx = VeriBlockTest::makePopTx({0}, {{1}});
-    CValidationState state;
+    TxValidationState state;
     BOOST_CHECK_MESSAGE(util.validatePopTx(CTransaction(tx), state), "valid tx");
     tx.vin[0].prevout = COutPoint(uint256S("0x123"), 5);
     BOOST_CHECK_MESSAGE(!util.validatePopTx(CTransaction(tx), state), "invalid tx");
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(check_pop_inputs)
     VeriBlockTest::setServiceMock<VeriBlock::PopService>(pop_service_mock);
 
     CTransaction tx = VeriBlockTest::makePopTx({1, 2, 3, 4, 5}, {{2, 3, 4, 5, 6, 7}});
-    CValidationState state;
+    TxValidationState state;
 
     PrecomputedTransactionData data(tx);
 

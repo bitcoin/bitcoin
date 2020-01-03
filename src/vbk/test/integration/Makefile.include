@@ -4,8 +4,8 @@ VBK_INTEGRATION_TEST_BINARY = vbk/test/integration/test_int_vbk$(EXEEXT)
 
 VBK_INTEGRATION_TEST_SUITE = \
   vbk/test/integration/main.cpp \
-  test/setup_common.h \
-  test/setup_common.cpp \
+  test/util/setup_common.h \
+  test/util/setup_common.cpp \
   vbk/test/integration/grpc_integration_service.cpp \
   vbk/test/integration/utils.hpp \
   vbk/test/integration/utils.cpp \
@@ -14,7 +14,6 @@ VBK_INTEGRATION_TEST_SUITE = \
   
 # the list of VeriBlock integration test sources
 VBK_INTEGRATION_TESTS =  \
-  vbk/test/integration/dummy.cpp \
   vbk/test/integration/rpc_tests.cpp \
   vbk/test/integration/pop_reward_tests.cpp \
   vbk/test/integration/forkresolution_tests.cpp

@@ -13,7 +13,6 @@ struct GenesisBlockFixture {
     {
         VeriBlock::InitConfig();
         VeriBlock::InitUtilService();
-        VeriBlock::InitRpcService();
     }
 
     static void init(const std::string& name)
@@ -26,7 +25,7 @@ struct GenesisBlockFixture {
         init(name);
         auto& params = Params();
         const CBlock& block = params.GenesisBlock();
-        CValidationState state;
+        BlockValidationState state;
         bool result = CheckBlock(block, state, params.GetConsensus(), true);
         BOOST_CHECK(result);
         if (!result) {

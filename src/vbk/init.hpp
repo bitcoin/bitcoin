@@ -20,6 +20,14 @@ Face& InitService()
     setService<Face>(ptr);
     return *ptr;
 }
+
+template <typename Face, typename Impl, typename Arg1>
+Face& InitService(Arg1 arg)
+{
+    auto* ptr = new Impl(arg);
+    setService<Face>(ptr);
+    return *ptr;
+}
 } // namespace detail
 
 
@@ -33,9 +41,10 @@ inline UtilService& InitUtilService()
     return detail::InitService<UtilService, UtilServiceImpl>();
 }
 
-inline RpcService& InitRpcService()
+inline RpcService& InitRpcService(CConnman* connman)
 {
-    return detail::InitService<RpcService, RpcServiceImpl>();
+    assert(connman != nullptr && "connman is nullptr");
+    return detail::InitService<RpcService, RpcServiceImpl>(connman);
 }
 
 inline Config& InitConfig()

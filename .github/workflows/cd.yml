@@ -20,10 +20,9 @@ jobs:
       - name: Docker Push
         uses: elgohr/Publish-Docker-Github-Action@master
         with:
-          name: vbtc
+          name: veriblock/vbtc
           dockerfile: Dockerfile
-          username: ${{ secrets.PRIVATE_DOCKER_USERNAME }}
-          password: ${{ secrets.PRIVATE_DOCKER_PASSWORD }}
-          registry: docker-internal.veriblock.com
+          username: ${{ secrets.PUBLIC_DOCKERHUB_USERNAME }}
+          password: ${{ secrets.PUBLIC_DOCKERHUB_PASSWORD }}
           tag_names: true
           snapshot: true

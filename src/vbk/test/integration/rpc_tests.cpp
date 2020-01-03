@@ -5,7 +5,7 @@
 #include <fakeit.hpp>
 #include <rpc/request.h>
 #include <rpc/server.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 #include <univalue.h>
 #include <validation.h>
 #include <wallet/wallet.h>
@@ -24,7 +24,11 @@ BOOST_FIXTURE_TEST_SUITE(rpc_tests, IntegrationTextFixture)
 
 BOOST_AUTO_TEST_CASE(getpopdata_test)
 {
-    auto chain = interfaces::MakeChain();
+    NodeContext node;
+    node.chain = interfaces::MakeChain(node);
+    node.connman = std::unique_ptr<CConnman>(new CConnman(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max())));
+    auto& chain = node.chain;
+    VeriBlock::InitRpcService(node.connman.get());
     std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
     AddWallet(wallet);
 
@@ -92,7 +96,11 @@ BOOST_AUTO_TEST_CASE(submitpop_test)
 BOOST_AUTO_TEST_CASE(updatecontext_test)
 {
     // This test have to be ran with the clear alt-integration service`s databases
-    auto chain = interfaces::MakeChain();
+    NodeContext node;
+    node.chain = interfaces::MakeChain(node);
+    node.connman = std::unique_ptr<CConnman>(new CConnman(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max())));
+    auto& chain = node.chain;
+    VeriBlock::InitRpcService(node.connman.get());
     std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
     AddWallet(wallet);
 

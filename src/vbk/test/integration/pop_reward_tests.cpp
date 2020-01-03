@@ -2,7 +2,7 @@
 
 #include <chainparams.h>
 #include <script/interpreter.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 #include <validation.h>
 
 #include <vbk/init.hpp>
