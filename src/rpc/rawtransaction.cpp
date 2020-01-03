@@ -16,6 +16,7 @@
 #include "net.h"
 #include "policy/policy.h"
 #include "primitives/transaction.h"
+#include "rpc/safemode.h"
 #include "rpc/server.h"
 #include "script/script.h"
 #include "script/script_error.h"
@@ -388,7 +389,7 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
 
     CMutableTransaction rawTx;
 
-    if (request.params.size() > 2 && !request.params[2].isNull()) {
+    if (!request.params[2].isNull()) {
         int64_t nLockTime = request.params[2].get_int64();
         if (nLockTime < 0 || nLockTime > std::numeric_limits<uint32_t>::max())
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, locktime out of range");
@@ -737,6 +738,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
             + HelpExampleRpc("signrawtransaction", "\"myhex\"")
         );
 
+    ObserveSafeMode();
 #ifdef ENABLE_WALLET
     LOCK2(cs_main, pwallet ? &pwallet->cs_wallet : nullptr);
 #else
@@ -766,7 +768,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
 
     bool fGivenKeys = false;
     CBasicKeyStore tempKeystore;
-    if (request.params.size() > 2 && !request.params[2].isNull()) {
+    if (!request.params[2].isNull()) {
         fGivenKeys = true;
         UniValue keys = request.params[2].get_array();
         for (unsigned int idx = 0; idx < keys.size(); idx++) {
@@ -788,7 +790,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
 #endif
 
     // Add previous txouts given in the RPC call:
-    if (request.params.size() > 1 && !request.params[1].isNull()) {
+    if (!request.params[1].isNull()) {
         UniValue prevTxs = request.params[1].get_array();
         for (unsigned int idx = 0; idx < prevTxs.size(); idx++) {
             const UniValue& p = prevTxs[idx];
@@ -859,7 +861,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
 #endif
 
     int nHashType = SIGHASH_ALL;
-    if (request.params.size() > 3 && !request.params[3].isNull()) {
+    if (!request.params[3].isNull()) {
         static std::map<std::string, int> mapSigHashValues = {
             {std::string("ALL"), int(SIGHASH_ALL)},
             {std::string("ALL|ANYONECANPAY"), int(SIGHASH_ALL|SIGHASH_ANYONECANPAY)},
@@ -944,6 +946,7 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
             + HelpExampleRpc("sendrawtransaction", "\"signedhex\"")
         );
 
+    ObserveSafeMode();
     LOCK(cs_main);
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VBOOL, UniValue::VBOOL});
 
@@ -955,11 +958,11 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
     const uint256& hashTx = tx->GetHash();
 
     CAmount nMaxRawTxFee = maxTxFee;
-    if (request.params.size() > 1 && request.params[1].get_bool())
+    if (!request.params[1].isNull() && request.params[1].get_bool())
         nMaxRawTxFee = 0;
 
     bool fBypassLimits = false;
-    if (request.params.size() > 3)
+    if (!request.params[3].isNull())
         fBypassLimits = request.params[3].get_bool();
 
     CCoinsViewCache &view = *pcoinsTip;
@@ -995,18 +998,18 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
 }
 
 static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)         okSafeMode
+{ //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
-    { "rawtransactions",    "getrawtransaction",      &getrawtransaction,      true,  {"txid","verbose"} },
-    { "rawtransactions",    "createrawtransaction",   &createrawtransaction,   true,  {"inputs","outputs","locktime"} },
-    { "rawtransactions",    "decoderawtransaction",   &decoderawtransaction,   true,  {"hexstring"} },
-    { "rawtransactions",    "decodescript",           &decodescript,           true,  {"hexstring"} },
-    { "rawtransactions",    "sendrawtransaction",     &sendrawtransaction,     false, {"hexstring","allowhighfees","instantsend","bypasslimits"} },
-    { "rawtransactions",    "combinerawtransaction",  &combinerawtransaction,  true,  {"txs"} },
-    { "rawtransactions",    "signrawtransaction",     &signrawtransaction,     false, {"hexstring","prevtxs","privkeys","sighashtype"} }, /* uses wallet if enabled */
+    { "rawtransactions",    "getrawtransaction",      &getrawtransaction,      {"txid","verbose"} },
+    { "rawtransactions",    "createrawtransaction",   &createrawtransaction,   {"inputs","outputs","locktime"} },
+    { "rawtransactions",    "decoderawtransaction",   &decoderawtransaction,   {"hexstring"} },
+    { "rawtransactions",    "decodescript",           &decodescript,           {"hexstring"} },
+    { "rawtransactions",    "sendrawtransaction",     &sendrawtransaction,     {"hexstring","allowhighfees","instantsend","bypasslimits"} },
+    { "rawtransactions",    "combinerawtransaction",  &combinerawtransaction,  {"txs"} },
+    { "rawtransactions",    "signrawtransaction",     &signrawtransaction,     {"hexstring","prevtxs","privkeys","sighashtype"} }, /* uses wallet if enabled */
 
-    { "blockchain",         "gettxoutproof",          &gettxoutproof,          true,  {"txids", "blockhash"} },
-    { "blockchain",         "verifytxoutproof",       &verifytxoutproof,       true,  {"proof"} },
+    { "blockchain",         "gettxoutproof",          &gettxoutproof,          {"txids", "blockhash"} },
+    { "blockchain",         "verifytxoutproof",       &verifytxoutproof,       {"proof"} },
 };
 
 void RegisterRawTransactionRPCCommands(CRPCTable &t)

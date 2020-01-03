@@ -589,15 +589,13 @@ A few guidelines for introducing and reviewing new RPC interfaces:
     is specified as-is in BIP22.
 
 - Missing arguments and 'null' should be treated the same: as default values. If there is no
-  default value, both cases should fail in the same way.
+  default value, both cases should fail in the same way. The easiest way to follow this
+  guideline is detect unspecified arguments with `params[x].isNull()` instead of
+  `params.size() <= x`. The former returns true if the argument is either null or missing,
+  while the latter returns true if is missing, and false if it is null.
 
   - *Rationale*: Avoids surprises when switching to name-based arguments. Missing name-based arguments
   are passed as 'null'.
-
-  - *Exception*: Many legacy exceptions to this exist, one of the worst ones is
-    `getbalance` which follows a completely different code path based on the
-    number of arguments. We are still in the process of cleaning these up. Do not introduce
-    new ones.
 
 - Try not to overload methods on argument type. E.g. don't make `getblock(true)` and `getblock("hash")`
   do different things.

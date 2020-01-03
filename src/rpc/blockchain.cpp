@@ -826,14 +826,14 @@ UniValue getblockheaders(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
 
     int nCount = MAX_HEADERS_RESULTS;
-    if (request.params.size() > 1)
+    if (!request.params[1].isNull())
         nCount = request.params[1].get_int();
 
     if (nCount <= 0 || nCount > (int)MAX_HEADERS_RESULTS)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Count is out of range");
 
     bool fVerbose = true;
-    if (request.params.size() > 2)
+    if (!request.params[2].isNull())
         fVerbose = request.params[2].get_bool();
 
     CBlockIndex* pblockindex = mapBlockIndex[hash];
@@ -923,7 +923,7 @@ UniValue getmerkleblocks(const JSONRPCRequest& request)
     }
 
     int nCount = MAX_HEADERS_RESULTS;
-    if (request.params.size() > 2)
+    if (!request.params[2].isNull())
         nCount = request.params[2].get_int();
 
     if (nCount <= 0 || nCount > (int)MAX_HEADERS_RESULTS) {
@@ -1565,10 +1565,10 @@ UniValue getchaintips(const JSONRPCRequest& request)
     int nBranchMin = -1;
     int nCountMax = INT_MAX;
 
-    if(request.params.size() >= 1)
+    if(!request.params[0].isNull())
         nCountMax = request.params[0].get_int();
 
-    if(request.params.size() == 2)
+    if(!request.params[1].isNull())
         nBranchMin = request.params[1].get_int();
 
     /* Construct the output array.  */
@@ -1790,11 +1790,11 @@ UniValue getchaintxstats(const JSONRPCRequest& request)
     const CBlockIndex* pindex;
     int blockcount = 30 * 24 * 60 * 60 / Params().GetConsensus().nPowTargetSpacing; // By default: 1 month
 
-    if (request.params.size() > 0 && !request.params[0].isNull()) {
+    if (!request.params[0].isNull()) {
         blockcount = request.params[0].get_int();
     }
 
-    bool havehash = request.params.size() > 1 && !request.params[1].isNull();
+    bool havehash = !request.params[1].isNull();
     uint256 hash;
     if (havehash) {
         hash = uint256S(request.params[1].get_str());
@@ -2123,26 +2123,26 @@ UniValue getspecialtxes(const JSONRPCRequest& request)
     uint256 hash(uint256S(strHash));
 
     int nTxType = -1;
-    if (request.params.size() > 1) {
+    if (!request.params[1].isNull()) {
         nTxType = request.params[1].get_int();
     }
 
     int nCount = 10;
-    if (request.params.size() > 2) {
+    if (!request.params[2].isNull()) {
         nCount = request.params[2].get_int();
         if (nCount < 0)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative count");
     }
 
     int nSkip = 0;
-    if (request.params.size() > 3) {
+    if (!request.params[3].isNull()) {
         nSkip = request.params[3].get_int();
         if (nSkip < 0)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative skip");
     }
 
     int nVerbosity = 0;
-    if (request.params.size() > 4) {
+    if (!request.params[4].isNull()) {
         nVerbosity = request.params[4].get_int();
         if (nVerbosity < 0 || nVerbosity > 2) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Verbosity must be in range 0..2");
@@ -2186,42 +2186,62 @@ UniValue getspecialtxes(const JSONRPCRequest& request)
     return result;
 }
 
-static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)         okSafe argNames
-  //  --------------------- ------------------------  -----------------------  ------ ----------
-    { "blockchain",         "getblockchaininfo",      &getblockchaininfo,      true,  {} },
-    { "blockchain",         "getchaintxstats",        &getchaintxstats,        true,  {"nblocks", "blockhash"} },
-    { "blockchain",         "getblockstats",          &getblockstats,          true,  {"hash_or_height", "stats"} },
-    { "blockchain",         "getbestblockhash",       &getbestblockhash,       true,  {} },
-    { "blockchain",         "getbestchainlock",       &getbestchainlock,       true,  {} },
-    { "blockchain",         "getblockcount",          &getblockcount,          true,  {} },
-    { "blockchain",         "getblock",               &getblock,               true,  {"blockhash","verbosity|verbose"} },
-    { "blockchain",         "getblockhashes",         &getblockhashes,         true,  {"high","low"} },
-    { "blockchain",         "getblockhash",           &getblockhash,           true,  {"height"} },
-    { "blockchain",         "getblockheader",         &getblockheader,         true,  {"blockhash","verbose"} },
-    { "blockchain",         "getblockheaders",        &getblockheaders,        true,  {"blockhash","count","verbose"} },
-    { "blockchain",         "getmerkleblocks",        &getmerkleblocks,        true,  {"filter","blockhash","count"} },
-    { "blockchain",         "getchaintips",           &getchaintips,           true,  {"count","branchlen"} },
-    { "blockchain",         "getdifficulty",          &getdifficulty,          true,  {} },
-    { "blockchain",         "getmempoolancestors",    &getmempoolancestors,    true,  {"txid","verbose"} },
-    { "blockchain",         "getmempooldescendants",  &getmempooldescendants,  true,  {"txid","verbose"} },
-    { "blockchain",         "getmempoolentry",        &getmempoolentry,        true,  {"txid"} },
-    { "blockchain",         "getmempoolinfo",         &getmempoolinfo,         true,  {} },
-    { "blockchain",         "getrawmempool",          &getrawmempool,          true,  {"verbose"} },
-    { "blockchain",         "getspecialtxes",         &getspecialtxes,         true,  {"blockhash", "type", "count", "skip", "verbosity"} },
-    { "blockchain",         "gettxout",               &gettxout,               true,  {"txid","n","include_mempool"} },
-    { "blockchain",         "gettxoutsetinfo",        &gettxoutsetinfo,        true,  {} },
-    { "blockchain",         "pruneblockchain",        &pruneblockchain,        true,  {"height"} },
-    { "blockchain",         "verifychain",            &verifychain,            true,  {"checklevel","nblocks"} },
+UniValue savemempool(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 0) {
+        throw std::runtime_error(
+            "savemempool\n"
+            "\nDumps the mempool to disk.\n"
+            "\nExamples:\n"
+            + HelpExampleCli("savemempool", "")
+            + HelpExampleRpc("savemempool", "")
+        );
+    }
 
-    { "blockchain",         "preciousblock",          &preciousblock,          true,  {"blockhash"} },
+    if (!DumpMempool()) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Unable to dump mempool to disk");
+    }
+
+    return NullUniValue;
+}
+
+static const CRPCCommand commands[] =
+{ //  category              name                      actor (function)         argNames
+  //  --------------------- ------------------------  -----------------------  ----------
+    { "blockchain",         "getblockchaininfo",      &getblockchaininfo,      {} },
+    { "blockchain",         "getchaintxstats",        &getchaintxstats,        {"nblocks", "blockhash"} },
+    { "blockchain",         "getblockstats",          &getblockstats,          {"hash_or_height", "stats"} },
+    { "blockchain",         "getbestblockhash",       &getbestblockhash,       {} },
+    { "blockchain",         "getbestchainlock",       &getbestchainlock,       {} },
+    { "blockchain",         "getblockcount",          &getblockcount,          {} },
+    { "blockchain",         "getblock",               &getblock,               {"blockhash","verbosity|verbose"} },
+    { "blockchain",         "getblockhashes",         &getblockhashes,         {"high","low"} },
+    { "blockchain",         "getblockhash",           &getblockhash,           {"height"} },
+    { "blockchain",         "getblockheader",         &getblockheader,         {"blockhash","verbose"} },
+    { "blockchain",         "getblockheaders",        &getblockheaders,        {"blockhash","count","verbose"} },
+    { "blockchain",         "getmerkleblocks",        &getmerkleblocks,        {"filter","blockhash","count"} },
+    { "blockchain",         "getchaintips",           &getchaintips,           {"count","branchlen"} },
+    { "blockchain",         "getdifficulty",          &getdifficulty,          {} },
+    { "blockchain",         "getmempoolancestors",    &getmempoolancestors,    {"txid","verbose"} },
+    { "blockchain",         "getmempooldescendants",  &getmempooldescendants,  {"txid","verbose"} },
+    { "blockchain",         "getmempoolentry",        &getmempoolentry,        {"txid"} },
+    { "blockchain",         "getmempoolinfo",         &getmempoolinfo,         {} },
+    { "blockchain",         "getrawmempool",          &getrawmempool,          {"verbose"} },
+    { "blockchain",         "getspecialtxes",         &getspecialtxes,         {"blockhash", "type", "count", "skip", "verbosity"} },
+    { "blockchain",         "gettxout",               &gettxout,               {"txid","n","include_mempool"} },
+    { "blockchain",         "gettxoutsetinfo",        &gettxoutsetinfo,        {} },
+    { "blockchain",         "pruneblockchain",        &pruneblockchain,        {"height"} },
+    { "blockchain",         "savemempool",            &savemempool,            {} },
+    { "blockchain",         "verifychain",            &verifychain,            {"checklevel","nblocks"} },
+
+    { "blockchain",         "preciousblock",          &preciousblock,          {"blockhash"} },
 
     /* Not shown in help */
-    { "hidden",             "invalidateblock",        &invalidateblock,        true,  {"blockhash"} },
-    { "hidden",             "reconsiderblock",        &reconsiderblock,        true,  {"blockhash"} },
-    { "hidden",             "waitfornewblock",        &waitfornewblock,        true,  {"timeout"} },
-    { "hidden",             "waitforblock",           &waitforblock,           true,  {"blockhash","timeout"} },
-    { "hidden",             "waitforblockheight",     &waitforblockheight,     true,  {"height","timeout"} },
+    { "hidden",             "invalidateblock",        &invalidateblock,        {"blockhash"} },
+    { "hidden",             "reconsiderblock",        &reconsiderblock,        {"blockhash"} },
+    { "hidden",             "waitfornewblock",        &waitfornewblock,        {"timeout"} },
+    { "hidden",             "waitforblock",           &waitforblock,           {"blockhash","timeout"} },
+    { "hidden",             "waitforblockheight",     &waitforblockheight,     {"height","timeout"} },
 };
 
 void RegisterBlockchainRPCCommands(CRPCTable &t)

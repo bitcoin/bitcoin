@@ -5,6 +5,7 @@
 
 #include "base58.h"
 #include "chain.h"
+#include "rpc/safemode.h"
 #include "rpc/server.h"
 #include "init.h"
 #include "validation.h"
@@ -175,6 +176,7 @@ UniValue abortrescan(const JSONRPCRequest& request)
             + HelpExampleRpc("abortrescan", "")
         );
 
+    ObserveSafeMode();
     if (!pwallet->IsScanning() || pwallet->IsAbortingRescan()) return false;
     pwallet->AbortRescan();
     return true;
@@ -662,7 +664,7 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
 
     // Whether to perform rescan after import
     int nStartHeight = 0;
-    if (request.params.size() > 1)
+    if (!request.params[1].isNull())
         nStartHeight = request.params[1].get_int();
     if (chainActive.Height() < nStartHeight)
         nStartHeight = chainActive.Height();

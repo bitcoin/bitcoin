@@ -867,7 +867,7 @@ UniValue estimatesmartfee(const JSONRPCRequest& request)
     RPCTypeCheckArgument(request.params[0], UniValue::VNUM);
     unsigned int conf_target = ParseConfirmTarget(request.params[0]);
     bool conservative = true;
-    if (request.params.size() > 1 && !request.params[1].isNull()) {
+    if (!request.params[1].isNull()) {
         FeeEstimateMode fee_mode;
         if (!FeeModeFromString(request.params[1].get_str(), fee_mode)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
@@ -991,21 +991,22 @@ UniValue estimaterawfee(const JSONRPCRequest& request)
 }
 
 static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)         okSafeMode
+{ //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
-    { "mining",             "getnetworkhashps",       &getnetworkhashps,       true,  {"nblocks","height"} },
-    { "mining",             "getmininginfo",          &getmininginfo,          true,  {} },
-    { "mining",             "prioritisetransaction",  &prioritisetransaction,  true,  {"txid","fee_delta"} },
-    { "mining",             "getblocktemplate",       &getblocktemplate,       true,  {"template_request"} },
-    { "mining",             "submitblock",            &submitblock,            true,  {"hexdata","dummy"} },
+    { "mining",             "getnetworkhashps",       &getnetworkhashps,       {"nblocks","height"} },
+    { "mining",             "getmininginfo",          &getmininginfo,          {} },
+    { "mining",             "prioritisetransaction",  &prioritisetransaction,  {"txid","fee_delta"} },
+    { "mining",             "getblocktemplate",       &getblocktemplate,       {"template_request"} },
+    { "mining",             "submitblock",            &submitblock,            {"hexdata","dummy"} },
 
 #if ENABLE_MINER
-    { "generating",         "generatetoaddress",      &generatetoaddress,      true,  {"nblocks","address","maxtries"} },
+    { "generating",         "generatetoaddress",      &generatetoaddress,      {"nblocks","address","maxtries"} },
 #endif // ENABLE_MINER
-    { "util",               "estimatefee",            &estimatefee,            true,  {"nblocks"} },
-    { "util",               "estimatesmartfee",       &estimatesmartfee,       true,  {"conf_target", "estimate_mode"} },
 
-    { "hidden",             "estimaterawfee",         &estimaterawfee,         true,  {"conf_target", "threshold"} },
+    { "util",               "estimatefee",            &estimatefee,            {"nblocks"} },
+    { "util",               "estimatesmartfee",       &estimatesmartfee,       {"nblocks", "estimate_mode"} },
+
+    { "hidden",             "estimaterawfee",         &estimaterawfee,         {"conf_target", "threshold"} },
 };
 
 void RegisterMiningRPCCommands(CRPCTable &t)

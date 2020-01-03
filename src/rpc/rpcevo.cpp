@@ -7,6 +7,7 @@
 #include "core_io.h"
 #include "init.h"
 #include "messagesigner.h"
+#include "rpc/safemode.h"
 #include "rpc/server.h"
 #include "utilmoneystr.h"
 #include "validation.h"
@@ -417,6 +418,8 @@ UniValue protx_register(const JSONRPCRequest& request)
         protx_register_prepare_help();
     }
 
+    ObserveSafeMode();
+
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
 
@@ -499,7 +502,7 @@ UniValue protx_register(const JSONRPCRequest& request)
     }
 
     CBitcoinAddress fundAddress = payoutAddress;
-    if (request.params.size() > paramIdx + 6) {
+    if (!request.params[paramIdx + 6].isNull()) {
         fundAddress = CBitcoinAddress(request.params[paramIdx + 6].get_str());
         if (!fundAddress.IsValid())
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Dash address: ") + request.params[paramIdx + 6].get_str());
@@ -564,6 +567,8 @@ UniValue protx_register_submit(const JSONRPCRequest& request)
         protx_register_submit_help(pwallet);
     }
 
+    ObserveSafeMode();
+
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
 
@@ -617,6 +622,8 @@ UniValue protx_update_service(const JSONRPCRequest& request)
     if (request.fHelp || (request.params.size() < 4 || request.params.size() > 6))
         protx_update_service_help(pwallet);
 
+    ObserveSafeMode();
+
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
 
@@ -646,7 +653,7 @@ UniValue protx_update_service(const JSONRPCRequest& request)
     tx.nType = TRANSACTION_PROVIDER_UPDATE_SERVICE;
 
     // param operatorPayoutAddress
-    if (request.params.size() >= 5) {
+    if (!request.params[4].isNull()) {
         if (request.params[4].get_str().empty()) {
             ptx.scriptOperatorPayout = dmn->pdmnState->scriptOperatorPayout;
         } else {
@@ -663,7 +670,7 @@ UniValue protx_update_service(const JSONRPCRequest& request)
     CTxDestination feeSource;
 
     // param feeSourceAddress
-    if (request.params.size() >= 6) {
+    if (!request.params[5].isNull()) {
         CBitcoinAddress feeSourceAddress = CBitcoinAddress(request.params[5].get_str());
         if (!feeSourceAddress.IsValid())
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Dash address: ") + request.params[5].get_str());
@@ -714,6 +721,8 @@ UniValue protx_update_registrar(const JSONRPCRequest& request)
         protx_update_registrar_help(pwallet);
     }
 
+    ObserveSafeMode();
+
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
 
@@ -762,7 +771,7 @@ UniValue protx_update_registrar(const JSONRPCRequest& request)
     ptx.vchSig.resize(65);
 
     CTxDestination feeSourceDest = payoutDest;
-    if (request.params.size() > 5) {
+    if (!request.params[5].isNull()) {
         CBitcoinAddress feeSourceAddress = CBitcoinAddress(request.params[5].get_str());
         if (!feeSourceAddress.IsValid())
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Dash address: ") + request.params[5].get_str());
@@ -804,6 +813,8 @@ UniValue protx_revoke(const JSONRPCRequest& request)
         protx_revoke_help(pwallet);
     }
 
+    ObserveSafeMode();
+
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
 
@@ -815,7 +826,7 @@ UniValue protx_revoke(const JSONRPCRequest& request)
 
     CBLSSecretKey keyOperator = ParseBLSSecretKey(request.params[2].get_str(), "operatorKey");
 
-    if (request.params.size() > 3) {
+    if (!request.params[3].isNull()) {
         int32_t nReason = ParseInt32V(request.params[3], "reason");
         if (nReason < 0 || nReason > CProUpRevTx::REASON_LAST) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("invalid reason %d, must be between 0 and %d", nReason, CProUpRevTx::REASON_LAST));
@@ -836,7 +847,7 @@ UniValue protx_revoke(const JSONRPCRequest& request)
     tx.nVersion = 3;
     tx.nType = TRANSACTION_PROVIDER_UPDATE_REVOKE;
 
-    if (request.params.size() > 4) {
+    if (!request.params[4].isNull()) {
         CBitcoinAddress feeSourceAddress = CBitcoinAddress(request.params[4].get_str());
         if (!feeSourceAddress.IsValid())
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Dash address: ") + request.params[4].get_str());
@@ -959,7 +970,7 @@ UniValue protx_list(const JSONRPCRequest& request)
 #endif
 
     std::string type = "registered";
-    if (request.params.size() > 1) {
+    if (!request.params[1].isNull()) {
         type = request.params[1].get_str();
     }
 
@@ -978,9 +989,9 @@ UniValue protx_list(const JSONRPCRequest& request)
             protx_list_help();
         }
 
-        bool detailed = request.params.size() > 2 ? ParseBoolV(request.params[2], "detailed") : false;
+        bool detailed = !request.params[2].isNull() ? ParseBoolV(request.params[2], "detailed") : false;
 
-        int height = request.params.size() > 3 ? ParseInt32V(request.params[3], "height") : chainActive.Height();
+        int height = !request.params[3].isNull() ? ParseInt32V(request.params[3], "height") : chainActive.Height();
         if (height < 1 || height > chainActive.Height()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid height specified");
         }
@@ -1010,9 +1021,9 @@ UniValue protx_list(const JSONRPCRequest& request)
 
         LOCK(cs_main);
 
-        bool detailed = request.params.size() > 2 ? ParseBoolV(request.params[2], "detailed") : false;
+        bool detailed = !request.params[2].isNull() ? ParseBoolV(request.params[2], "detailed") : false;
 
-        int height = request.params.size() > 3 ? ParseInt32V(request.params[3], "height") : chainActive.Height();
+        int height = !request.params[3].isNull() ? ParseInt32V(request.params[3], "height") : chainActive.Height();
         if (height < 1 || height > chainActive.Height()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid height specified");
         }
@@ -1144,7 +1155,7 @@ UniValue protx(const JSONRPCRequest& request)
     }
 
     std::string command;
-    if (request.params.size() >= 1) {
+    if (!request.params[0].isNull()) {
         command = request.params[0].get_str();
     }
 
@@ -1257,7 +1268,7 @@ UniValue _bls(const JSONRPCRequest& request)
     }
 
     std::string command;
-    if (request.params.size() >= 1) {
+    if (!request.params[0].isNull()) {
         command = request.params[0].get_str();
     }
 
@@ -1271,10 +1282,10 @@ UniValue _bls(const JSONRPCRequest& request)
 }
 
 static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)         okSafeMode
-  //  --------------------- ------------------------  -----------------------  ----------
-    { "evo",                "bls",                    &_bls,                   false, {}  },
-    { "evo",                "protx",                  &protx,                  false, {}  },
+{ //  category              name                      actor (function)
+  //  --------------------- ------------------------  -----------------------
+    { "evo",                "bls",                    &_bls,                   {}  },
+    { "evo",                "protx",                  &protx,                  {}  },
 };
 
 void RegisterEvoRPCCommands(CRPCTable &tableRPC)
