@@ -19,7 +19,7 @@ inline int GetPopMerkleRootCommitmentIndex(const CBlock& block)
     if (!block.vtx.empty()) {
         for (size_t o = 0; o < block.vtx[0]->vout.size(); o++) {
             auto& s = block.vtx[0]->vout[o].scriptPubKey;
-            if (s.size() >= 36 && s[0] == OP_RETURN && s[1] == 0x3a && s[2] == 0xe6 && s[3] == 0xca) {
+            if (s.size() >= 37 && s[0] == OP_RETURN && s[1] == 0x23 && s[2] == 0x3a && s[3] == 0xe6 && s[4] == 0xca) {
                 commitpos = o;
             }
         }
@@ -89,14 +89,15 @@ inline CTxOut addPopTransactionRootIntoCoinbaseCommitment(const CBlock& block)
 {
     CTxOut out;
     out.nValue = 0;
-    out.scriptPubKey.resize(36);
+    out.scriptPubKey.resize(37);
     out.scriptPubKey[0] = OP_RETURN;
-    out.scriptPubKey[1] = 0x3a;
-    out.scriptPubKey[2] = 0xe6;
-    out.scriptPubKey[3] = 0xca;
+    out.scriptPubKey[1] = 0x23;
+    out.scriptPubKey[2] = 0x3a;
+    out.scriptPubKey[3] = 0xe6;
+    out.scriptPubKey[4] = 0xca;
 
     uint256 popMerkleRoot = BlockPopTxMerkleRoot(block);
-    memcpy(&out.scriptPubKey[4], popMerkleRoot.begin(), 32);
+    memcpy(&out.scriptPubKey[5], popMerkleRoot.begin(), 32);
 
     return out;
 }
