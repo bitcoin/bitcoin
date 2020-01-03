@@ -20,7 +20,7 @@ protected:
     class DB;
 
 private:
-    const std::unique_ptr<DB> m_db;
+    std::unique_ptr<DB> m_db;
 
 protected:
     /// Override base class init to migrate from old database.
