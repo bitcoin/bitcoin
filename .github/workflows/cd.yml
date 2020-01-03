@@ -20,7 +20,7 @@ jobs:
       - name: Docker Push
         uses: elgohr/Publish-Docker-Github-Action@master
         with:
-          name: vbtc
+          name: veriblock/vbtc
           dockerfile: Dockerfile
           username: ${{ secrets.PUBLIC_DOCKERHUB_USERNAME }}
           password: ${{ secrets.PUBLIC_DOCKERHUB_PASSWORD }}
