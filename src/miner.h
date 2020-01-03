@@ -186,7 +186,7 @@ private:
     /** Remove confirmed (inBlock) entries from given set */
     void onlyUnconfirmed(CTxMemPool::setEntries& testSet);
     /** Test if a new package would "fit" in the block */
-    bool TestPackage(uint64_t packageSize, unsigned int packageSigOps);
+    bool TestPackage(uint64_t packageSize, unsigned int packageSigOps) const;
     /** Perform checks on each transaction in a package:
       * locktime
       * These checks should always succeed, and they're here

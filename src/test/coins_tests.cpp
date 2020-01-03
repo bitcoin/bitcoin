@@ -89,8 +89,8 @@ public:
         BOOST_CHECK_EQUAL(DynamicMemoryUsage(), ret);
     }
 
-    CCoinsMap& map() { return cacheCoins; }
-    size_t& usage() { return cachedCoinsUsage; }
+    CCoinsMap& map() const { return cacheCoins; }
+    size_t& usage() const { return cachedCoinsUsage; }
 };
 
 } // namespace

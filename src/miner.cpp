@@ -260,7 +260,7 @@ void BlockAssembler::onlyUnconfirmed(CTxMemPool::setEntries& testSet)
     }
 }
 
-bool BlockAssembler::TestPackage(uint64_t packageSize, unsigned int packageSigOps)
+bool BlockAssembler::TestPackage(uint64_t packageSize, unsigned int packageSigOps) const
 {
     if (nBlockSize + packageSize >= nBlockMaxSize)
         return false;

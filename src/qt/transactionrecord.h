@@ -166,7 +166,7 @@ public:
 
     /** Return whether a status update is needed.
      */
-    bool statusUpdateNeeded(int chainLockHeight);
+    bool statusUpdateNeeded(int chainLockHeight) const;
 };
 
 #endif // BITCOIN_QT_TRANSACTIONRECORD_H

@@ -642,7 +642,7 @@ public:
         return mapTx.size();
     }
 
-    uint64_t GetTotalTxSize()
+    uint64_t GetTotalTxSize() const
     {
         LOCK(cs);
         return totalTxSize;

@@ -231,7 +231,7 @@ public:
     void requestShutdown();
 
     /// Get process return value
-    int getReturnValue() { return returnValue; }
+    int getReturnValue() const { return returnValue; }
 
     /// Get window identifier of QMainWindow (BitcoinGUI)
     WId getMainWinId() const;

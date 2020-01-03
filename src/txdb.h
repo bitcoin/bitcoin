@@ -65,7 +65,7 @@ struct CDiskTxPos : public CDiskBlockPos
 };
 
 /** CCoinsView backed by the coin database (chainstate/) */
-class CCoinsViewDB : public CCoinsView
+class CCoinsViewDB final : public CCoinsView
 {
 protected:
     CDBWrapper db;

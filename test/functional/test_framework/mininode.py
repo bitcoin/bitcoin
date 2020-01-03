@@ -54,8 +54,8 @@ MAX_BLOCK_SIZE = 1000000
 COIN = 100000000 # 1 btc in satoshis
 
 NODE_NETWORK = (1 << 0)
-NODE_GETUTXO = (1 << 1)
-NODE_BLOOM = (1 << 2)
+# NODE_GETUTXO = (1 << 1)
+# NODE_BLOOM = (1 << 2)
 
 MSG_TX = 1
 MSG_BLOCK = 2
@@ -1516,9 +1516,6 @@ class NodeConnCB(object):
         # before acquiring the global lock and delivering the next message.
         self.deliver_sleep_time = None
 
-        # Remember the services our peer has advertised
-        self.peer_services = None
-
     # Message receiving methods
 
     def deliver(self, conn, message):
@@ -1543,10 +1540,6 @@ class NodeConnCB(object):
                 print("ERROR delivering %s (%s)" % (repr(message),
                                                     sys.exc_info()[0]))
                 raise
-
-    def set_deliver_sleep_time(self, value):
-        with mininode_lock:
-            self.deliver_sleep_time = value
 
     def get_deliver_sleep_time(self):
         with mininode_lock:

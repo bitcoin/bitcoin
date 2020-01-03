@@ -216,7 +216,7 @@ class WalletTest(BitcoinTestFramework):
         signedRawTx = self.nodes[1].signrawtransaction(rawTx)
         decRawTx = self.nodes[1].decoderawtransaction(signedRawTx['hex'])
         zeroValueTxid= decRawTx['txid']
-        sendResp = self.nodes[1].sendrawtransaction(signedRawTx['hex'])
+        self.nodes[1].sendrawtransaction(signedRawTx['hex'])
 
         self.sync_all()
         self.nodes[1].generate(1) #mine a block

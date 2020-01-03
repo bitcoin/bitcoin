@@ -27,7 +27,7 @@ struct mt_pooled_secure_allocator : public std::allocator<T> {
     typedef typename base::value_type value_type;
     mt_pooled_secure_allocator(size_type nrequested_size = 32,
                                size_type nnext_size = 32,
-                               size_type nmax_size = 0) throw()
+                               size_type nmax_size = 0) noexcept
     {
         // we add enough bytes to the requested size so that we can store the bucket as well
         nrequested_size += sizeof(size_t);
@@ -38,7 +38,7 @@ struct mt_pooled_secure_allocator : public std::allocator<T> {
             pools[i] = std::make_unique<internal_pool>(nrequested_size, nnext_size, nmax_size);
         }
     }
-    ~mt_pooled_secure_allocator() throw() {}
+    ~mt_pooled_secure_allocator() noexcept {}
 
     T* allocate(std::size_t n, const void* hint = 0)
     {

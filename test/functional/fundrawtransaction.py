@@ -310,7 +310,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         ##############################################
         # test a fundrawtransaction with invalid vin #
         ##############################################
-        listunspent = self.nodes[2].listunspent()
         inputs  = [ {'txid' : "1c7f966dab21119bac53213a2bc7532bff1fa844c124fd750a7d0b1332440bd1", 'vout' : 0} ] #invalid vin!
         outputs = { self.nodes[0].getnewaddress() : 10}
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
