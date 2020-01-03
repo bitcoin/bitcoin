@@ -84,7 +84,7 @@ struct BasicVbkSetup {
  */
 struct BasicTestingSetup: public BasicVbkSetup {
     ECCVerifyHandle globalVerifyHandle;
-    // TDOO change the TESTNET into the MAIN
+    // TODO change the TESTNET into the MAIN
     explicit BasicTestingSetup(const std::string& chainName = CBaseChainParams::TESTNET);
     ~BasicTestingSetup() override;
 private:
@@ -98,7 +98,7 @@ struct TestingSetup : public BasicTestingSetup {
     NodeContext m_node;
     boost::thread_group threadGroup;
     CScheduler scheduler;
-    // TDOO change the TESTNET into the MAIN
+    // TODO change the TESTNET into the MAIN
     explicit TestingSetup(const std::string& chainName = CBaseChainParams::TESTNET);
     ~TestingSetup() override;
 };
