@@ -19,6 +19,8 @@ EXCLUDE = [
     'src/qt/bitcoinstrings.cpp',
     'src/chainparamsseeds.h',
     # other external copyrights:
+    'src/reverse_iterator.h',
+    'src/test/fuzz/FuzzedDataProvider.h',
     'src/tinyformat.h',
     'test/functional/test_framework/bignum.py',
     # python init:
