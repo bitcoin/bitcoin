@@ -11,6 +11,7 @@
 #include <pow.h>
 #include <script/standard.h>
 #include <validation.h>
+#include <vbk/merkle.hpp>
 
 CTxIn generatetoaddress(const std::string& address)
 {

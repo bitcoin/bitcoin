@@ -44,9 +44,9 @@ static bool AppInit(int argc, char* argv[])
 {
     VeriBlock::InitConfig();
     VeriBlock::InitUtilService();
-    VeriBlock::InitRpcService();
     NodeContext node;
     node.chain = interfaces::MakeChain(node);
+
 
     bool fRet = false;
 
@@ -154,6 +154,8 @@ static bool AppInit(int argc, char* argv[])
             return false;
         }
         fRet = AppInitMain(node);
+        // connman is initialized in AppInitMain
+        VeriBlock::InitRpcService(node.connman.get());
     }
     catch (const std::exception& e) {
         PrintExceptionContinue(&e, "AppInit()");
