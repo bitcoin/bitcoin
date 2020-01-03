@@ -947,8 +947,8 @@ void SendCoinsDialog::coinControlUpdateLabels()
     }
 }
 
-SendConfirmationDialog::SendConfirmationDialog(const QString& title, const QString& text, const QString& informative_text, const QString& detailed_text, int _secDelay, const QString& _confirmButtonText, QWidget* parent)
-    : QMessageBox(parent), secDelay(_secDelay), confirmButtonText(_confirmButtonText)
+SendConfirmationDialog::SendConfirmationDialog(const QString& title, const QString& text, const QString& informative_text, const QString& detailed_text, int _secDelay, const QString& yes_button_text, QWidget* parent)
+    : QMessageBox(parent), secDelay(_secDelay), m_yes_button_text(yes_button_text)
 {
     setIcon(QMessageBox::Question);
     setWindowTitle(title); // On macOS, the window title is ignored (as required by the macOS Guidelines).
@@ -985,11 +985,11 @@ void SendConfirmationDialog::updateYesButton()
     if(secDelay > 0)
     {
         yesButton->setEnabled(false);
-        yesButton->setText(confirmButtonText + " (" + QString::number(secDelay) + ")");
+        yesButton->setText(m_yes_button_text + " (" + QString::number(secDelay) + ")");
     }
     else
     {
         yesButton->setEnabled(true);
-        yesButton->setText(confirmButtonText);
+        yesButton->setText(m_yes_button_text);
     }
 }
