@@ -11,6 +11,10 @@
 /** Convert ValidationState to a human-readable message for logging */
 std::string FormatStateMessage(const ValidationState &state)
 {
+    if (state.IsValid()) {
+        return "Valid";
+    }
+
     return strprintf("%s%s",
         state.GetRejectReason(),
         state.GetDebugMessage().empty() ? "" : ", "+state.GetDebugMessage());
