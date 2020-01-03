@@ -84,6 +84,7 @@ inline CBlock MineGenesisBlock(
         if (genesis.nNonce > 4294967294LL) {
             ++genesis.nTime;
             genesis.nNonce = 0;
+            printf("nonce reset... nTime=%d\n", genesis.nTime);
         }
     }
 

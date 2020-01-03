@@ -136,7 +136,7 @@ uint256 UtilServiceImpl::makeTopLevelRoot(int height, const KeystoneArray& keyst
 {
     ContextInfoContainer context(height, keystones, txRoot);
     auto contextHash = context.getUnauthenticatedHash();
-    return Hash(contextHash.begin(), contextHash.end(), txRoot.begin(), txRoot.end());
+    return Hash(txRoot.begin(), txRoot.end(), contextHash.begin(), contextHash.end());
 }
 
 void UtilServiceImpl::addPopPayoutsIntoCoinbaseTx(CMutableTransaction& coinbaseTx, const CBlockIndex& pindexPrev)

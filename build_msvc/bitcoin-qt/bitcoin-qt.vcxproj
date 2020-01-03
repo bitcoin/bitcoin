@@ -56,7 +56,6 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>$(QtReleaseLibraries);%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalOptions>/ignore:4206</AdditionalOptions>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>..\..\src;</AdditionalIncludeDirectories>
@@ -70,7 +69,6 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>$(QtDebugLibraries);%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalOptions>/ignore:4206</AdditionalOptions>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>..\..\src;</AdditionalIncludeDirectories>
