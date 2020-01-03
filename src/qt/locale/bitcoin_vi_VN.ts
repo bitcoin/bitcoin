@@ -239,10 +239,6 @@ Ví của bạn chưa được mã hóa.</translation>
         <translation>&amp;Tổng quan</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation>Node</translation>
-    </message>
-    <message>
         <source>Show general overview of wallet</source>
         <translation>Hiện thỉ thông tin sơ lược chung về Ví</translation>
     </message>
@@ -299,14 +295,6 @@ Ví của bạn chưa được mã hóa.</translation>
         <translation>&amp;Thay đổi mật khẩu...</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;Địa chỉ gửi</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>Địa chỉ nhận</translation>
-    </message>
-    <message>
         <source>Open &amp;URI...</source>
         <translation>Mở &amp;URI...</translation>
     </message>
@@ -357,10 +345,6 @@ Ví của bạn chưa được mã hóa.</translation>
     <message>
         <source>NdovuCoin</source>
         <translation>NdovuCoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Ví</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -675,10 +659,6 @@ Ví của bạn chưa được mã hóa.</translation>
     <message>
         <source>&amp;Main</source>
         <translation>&amp;Chính</translation>
-    </message>
-    <message>
-        <source>MB</source>
-        <translation>MB</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
@@ -1058,10 +1038,6 @@ Ví của bạn chưa được mã hóa.</translation>
         <translation>Ẩn</translation>
     </message>
     <message>
-        <source>(read the tooltip)</source>
-        <translation>(Đọc hướng dẫn)</translation>
-    </message>
-    <message>
         <source>Send to multiple recipients at once</source>
         <translation>Gửi đến nhiều người nhận trong một lần</translation>
     </message>
@@ -1182,6 +1158,9 @@ Ví của bạn chưa được mã hóa.</translation>
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
+    </context>
+<context>
+    <name>WalletController</name>
     </context>
 <context>
     <name>WalletFrame</name>

@@ -26,7 +26,7 @@
 
 
 SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const NetworkStyle *networkStyle) :
-    QWidget(0, f), curAlignment(0), m_node(node)
+    QWidget(nullptr, f), curAlignment(0), m_node(node)
 {
     // set reference point, paddings
     int paddingRight            = 50;
@@ -39,7 +39,7 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
     devicePixelRatio = static_cast<QGuiApplication*>(QCoreApplication::instance())->devicePixelRatio();
 
     // define text to place
-    QString titleText       = tr(PACKAGE_NAME);
+    QString titleText       = PACKAGE_NAME;
     QString versionText     = QString("Version %1").arg(QString::fromStdString(FormatFullVersion()));
     QString copyrightText   = QString::fromUtf8(CopyrightHolders(strprintf("\xc2\xA9 %u-%u ", 2009, COPYRIGHT_YEAR)).c_str());
     QString titleAddText    = networkStyle->getTitleAddText();
@@ -156,11 +156,12 @@ void SplashScreen::finish()
 
 static void InitMessage(SplashScreen *splash, const std::string &message)
 {
-    QMetaObject::invokeMethod(splash, "showMessage",
+    bool invoked = QMetaObject::invokeMethod(splash, "showMessage",
         Qt::QueuedConnection,
         Q_ARG(QString, QString::fromStdString(message)),
         Q_ARG(int, Qt::AlignBottom|Qt::AlignHCenter),
         Q_ARG(QColor, QColor(55,55,55)));
+    assert(invoked);
 }
 
 static void ShowProgress(SplashScreen *splash, const std::string &title, int nProgress, bool resume_possible)

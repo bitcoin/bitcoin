@@ -61,6 +61,9 @@
     <None Include="..\..\src\qt\locale\bitcoin_af_ZA.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
+    <None Include="..\..\src\qt\locale\bitcoin_am.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
     <None Include="..\..\src\qt\locale\bitcoin_ar.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
@@ -73,16 +76,25 @@
     <None Include="..\..\src\qt\locale\bitcoin_bg_BG.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
-    <None Include="..\..\src\qt\locale\bitcoin_ca%40valencia.ts">
+    <None Include="..\..\src\qt\locale\bitcoin_bn.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_bs.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
     <None Include="..\..\src\qt\locale\bitcoin_ca.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_ca%40valencia.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
     <None Include="..\..\src\qt\locale\bitcoin_ca_ES.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
     <None Include="..\..\src\qt\locale\bitcoin_cs.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_cs_CZ.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
     <None Include="..\..\src\qt\locale\bitcoin_cy.ts">
@@ -94,6 +106,9 @@
     <None Include="..\..\src\qt\locale\bitcoin_de.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
+    <None Include="..\..\src\qt\locale\bitcoin_de_DE.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
     <None Include="..\..\src\qt\locale\bitcoin_el.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
@@ -103,6 +118,9 @@
     <None Include="..\..\src\qt\locale\bitcoin_en.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
+    <None Include="..\..\src\qt\locale\bitcoin_en_AU.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
     <None Include="..\..\src\qt\locale\bitcoin_en_GB.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
@@ -110,6 +128,9 @@
       <DeploymentContent>true</DeploymentContent>
     </None>
     <None Include="..\..\src\qt\locale\bitcoin_es.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_es_419.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
     <None Include="..\..\src\qt\locale\bitcoin_es_AR.ts">
@@ -154,6 +175,9 @@
     <None Include="..\..\src\qt\locale\bitcoin_fi.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
+    <None Include="..\..\src\qt\locale\bitcoin_fil.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
     <None Include="..\..\src\qt\locale\bitcoin_fr.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
@@ -169,6 +193,12 @@
     <None Include="..\..\src\qt\locale\bitcoin_he.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
+    <None Include="..\..\src\qt\locale\bitcoin_he_IL.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_hi.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
     <None Include="..\..\src\qt\locale\bitcoin_hi_IN.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
@@ -178,7 +208,16 @@
     <None Include="..\..\src\qt\locale\bitcoin_hu.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
+    <None Include="..\..\src\qt\locale\bitcoin_hu_HU.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_id.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
     <None Include="..\..\src\qt\locale\bitcoin_id_ID.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_is.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
     <None Include="..\..\src\qt\locale\bitcoin_it.ts">
@@ -194,6 +233,12 @@
       <DeploymentContent>true</DeploymentContent>
     </None>
     <None Include="..\..\src\qt\locale\bitcoin_kk_KZ.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_km_KH.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_ko.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
     <None Include="..\..\src\qt\locale\bitcoin_ko_KR.ts">
@@ -217,13 +262,28 @@
     <None Include="..\..\src\qt\locale\bitcoin_mk_MK.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
+    <None Include="..\..\src\qt\locale\bitcoin_ml.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
     <None Include="..\..\src\qt\locale\bitcoin_mn.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_mr_IN.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_ms.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
     <None Include="..\..\src\qt\locale\bitcoin_ms_MY.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
+    <None Include="..\..\src\qt\locale\bitcoin_my.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
     <None Include="..\..\src\qt\locale\bitcoin_nb.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_nb_NO.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
     <None Include="..\..\src\qt\locale\bitcoin_ne.ts">
@@ -232,10 +292,22 @@
     <None Include="..\..\src\qt\locale\bitcoin_nl.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
+    <None Include="..\..\src\qt\locale\bitcoin_nl_BE.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_nl_NL.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
     <None Include="..\..\src\qt\locale\bitcoin_pam.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
     <None Include="..\..\src\qt\locale\bitcoin_pl.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_pl_PL.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_pt.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
     <None Include="..\..\src\qt\locale\bitcoin_pt_BR.ts">
@@ -256,25 +328,46 @@
     <None Include="..\..\src\qt\locale\bitcoin_ru_RU.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
+    <None Include="..\..\src\qt\locale\bitcoin_si.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
     <None Include="..\..\src\qt\locale\bitcoin_sk.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_sk_SK.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
     <None Include="..\..\src\qt\locale\bitcoin_sl_SI.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
-    <None Include="..\..\src\qt\locale\bitcoin_sq.ts">
+    <None Include="..\..\src\qt\locale\bitcoin_sn.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
-    <None Include="..\..\src\qt\locale\bitcoin_sr%40latin.ts">
+    <None Include="..\..\src\qt\locale\bitcoin_sq.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
     <None Include="..\..\src\qt\locale\bitcoin_sr.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
+    <None Include="..\..\src\qt\locale\bitcoin_sr%40latin.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
     <None Include="..\..\src\qt\locale\bitcoin_sv.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
+    <None Include="..\..\src\qt\locale\bitcoin_szl.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
     <None Include="..\..\src\qt\locale\bitcoin_ta.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_ta_IN.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_te.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_th.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
     <None Include="..\..\src\qt\locale\bitcoin_th_TH.ts">
@@ -289,6 +382,9 @@
     <None Include="..\..\src\qt\locale\bitcoin_uk.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
+    <None Include="..\..\src\qt\locale\bitcoin_uk_UA.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
     <None Include="..\..\src\qt\locale\bitcoin_ur_PK.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
@@ -299,6 +395,9 @@
       <DeploymentContent>true</DeploymentContent>
     </None>
     <None Include="..\..\src\qt\locale\bitcoin_vi_VN.ts">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="..\..\src\qt\locale\bitcoin_zh-Hans.ts">
       <DeploymentContent>true</DeploymentContent>
     </None>
     <None Include="..\..\src\qt\locale\bitcoin_zh.ts">
@@ -852,7 +951,7 @@
       <Optimization>Disabled</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>false</IntrinsicFunctions>
-      <PreprocessorDefinitions>_X86_;WIN32;HAVE_CONFIG_H;_SCL_SECURE_NO_WARNINGS;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_X86_;WIN32;HAVE_CONFIG_H;_SCL_SECURE_NO_WARNINGS;WIN32;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>.\GeneratedFiles;..\..\src;..\..\src\univalue\include;.\QtGenerated\mocheaders</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -901,7 +1000,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;HAVE_CONFIG_H;_SCL_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;HAVE_CONFIG_H;_SCL_SECURE_NO_WARNINGS;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>.\GeneratedFiles;..\..\src;..\..\src\univalue\include;.\QtGenerated\mocheaders</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>

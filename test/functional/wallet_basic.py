@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
+<<<<<<< HEAD
 # Copyright (c) 2014-2018 The NdovuCoin Core developers
+=======
+# Copyright (c) 2014-2019 The Bitcoin Core developers
+>>>>>>> upstream/0.18
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet."""
@@ -11,13 +15,13 @@ from test_framework.util import (
     assert_array_result,
     assert_equal,
     assert_fee_amount,
-    assert_greater_than,
     assert_raises_rpc_error,
     connect_nodes_bi,
     sync_blocks,
     sync_mempools,
     wait_until,
 )
+
 
 class WalletTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -83,13 +87,8 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(txout['value'], 50)
 
         # Send 21 BTC from 0 to 2 using sendtoaddress call.
-        # Locked memory should increase to sign transactions
-        self.log.info("test getmemoryinfo")
-        memory_before = self.nodes[0].getmemoryinfo()
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 11)
         mempool_txid = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 10)
-        memory_after = self.nodes[0].getmemoryinfo()
-        assert_greater_than(memory_after['locked']['used'], memory_before['locked']['used'])
 
         self.log.info("test gettxout (second part)")
         # utxo spent in mempool should be visible if you exclude mempool
@@ -194,7 +193,7 @@ class WalletTest(BitcoinTestFramework):
         txid = self.nodes[2].sendtoaddress(address, 10, "", "", False)
         self.nodes[2].generate(1)
         self.sync_all([self.nodes[0:3]])
-        node_2_bal = self.check_fee_amount(self.nodes[2].getbalance(), Decimal('84'), fee_per_byte, self.get_vsize(self.nodes[2].getrawtransaction(txid)))
+        node_2_bal = self.check_fee_amount(self.nodes[2].getbalance(), Decimal('84'), fee_per_byte, self.get_vsize(self.nodes[2].gettransaction(txid)['hex']))
         assert_equal(self.nodes[0].getbalance(), Decimal('10'))
 
         # Send 10 BTC with subtract fee from amount
@@ -203,14 +202,14 @@ class WalletTest(BitcoinTestFramework):
         self.sync_all([self.nodes[0:3]])
         node_2_bal -= Decimal('10')
         assert_equal(self.nodes[2].getbalance(), node_2_bal)
-        node_0_bal = self.check_fee_amount(self.nodes[0].getbalance(), Decimal('20'), fee_per_byte, self.get_vsize(self.nodes[2].getrawtransaction(txid)))
+        node_0_bal = self.check_fee_amount(self.nodes[0].getbalance(), Decimal('20'), fee_per_byte, self.get_vsize(self.nodes[2].gettransaction(txid)['hex']))
 
         # Sendmany 10 BTC
         txid = self.nodes[2].sendmany('', {address: 10}, 0, "", [])
         self.nodes[2].generate(1)
         self.sync_all([self.nodes[0:3]])
         node_0_bal += Decimal('10')
-        node_2_bal = self.check_fee_amount(self.nodes[2].getbalance(), node_2_bal - Decimal('10'), fee_per_byte, self.get_vsize(self.nodes[2].getrawtransaction(txid)))
+        node_2_bal = self.check_fee_amount(self.nodes[2].getbalance(), node_2_bal - Decimal('10'), fee_per_byte, self.get_vsize(self.nodes[2].gettransaction(txid)['hex']))
         assert_equal(self.nodes[0].getbalance(), node_0_bal)
 
         # Sendmany 10 BTC with subtract fee from amount
@@ -219,7 +218,7 @@ class WalletTest(BitcoinTestFramework):
         self.sync_all([self.nodes[0:3]])
         node_2_bal -= Decimal('10')
         assert_equal(self.nodes[2].getbalance(), node_2_bal)
-        node_0_bal = self.check_fee_amount(self.nodes[0].getbalance(), node_0_bal + Decimal('10'), fee_per_byte, self.get_vsize(self.nodes[2].getrawtransaction(txid)))
+        node_0_bal = self.check_fee_amount(self.nodes[0].getbalance(), node_0_bal + Decimal('10'), fee_per_byte, self.get_vsize(self.nodes[2].gettransaction(txid)['hex']))
 
         # Test ResendWalletTransactions:
         # Create a couple of transactions, then start up a fourth
@@ -237,7 +236,7 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(set(relayed), {txid1, txid2})
         sync_mempools(self.nodes)
 
-        assert(txid1 in self.nodes[3].getrawmempool())
+        assert txid1 in self.nodes[3].getrawmempool()
 
         # check if we can list zero value tx as available coins
         # 1. create raw_tx
@@ -264,7 +263,7 @@ class WalletTest(BitcoinTestFramework):
             if uTx['txid'] == zero_value_txid:
                 found = True
                 assert_equal(uTx['amount'], Decimal('0'))
-        assert(found)
+        assert found
 
         # do some -walletbroadcast tests
         self.stop_nodes()
@@ -324,11 +323,37 @@ class WalletTest(BitcoinTestFramework):
         tx_obj = self.nodes[0].gettransaction(txid)
         assert_equal(tx_obj['amount'], Decimal('-0.0001'))
 
+        # General checks for errors from incorrect inputs
         # This will raise an exception because the amount type is wrong
         assert_raises_rpc_error(-3, "Invalid amount", self.nodes[0].sendtoaddress, self.nodes[2].getnewaddress(), "1f-4")
 
         # This will raise an exception since generate does not accept a string
         assert_raises_rpc_error(-1, "not an integer", self.nodes[0].generate, "2")
+
+        # This will raise an exception for the invalid private key format
+        assert_raises_rpc_error(-5, "Invalid private key encoding", self.nodes[0].importprivkey, "invalid")
+
+        # This will raise an exception for importing an address with the PS2H flag
+        temp_address = self.nodes[1].getnewaddress()
+        assert_raises_rpc_error(-5, "Cannot use the p2sh flag with an address - use a script instead", self.nodes[0].importaddress, temp_address, "label", False, True)
+
+        # This will raise an exception for attempting to dump the private key of an address you do not own
+        assert_raises_rpc_error(-3, "Address does not refer to a key", self.nodes[0].dumpprivkey, temp_address)
+
+        # This will raise an exception for attempting to get the private key of an invalid Bitcoin address
+        assert_raises_rpc_error(-5, "Invalid Bitcoin address", self.nodes[0].dumpprivkey, "invalid")
+
+        # This will raise an exception for attempting to set a label for an invalid Bitcoin address
+        assert_raises_rpc_error(-5, "Invalid Bitcoin address", self.nodes[0].setlabel, "invalid address", "label")
+
+        # This will raise an exception for importing an invalid address
+        assert_raises_rpc_error(-5, "Invalid Bitcoin address or script", self.nodes[0].importaddress, "invalid")
+
+        # This will raise an exception for attempting to import a pubkey that isn't in hex
+        assert_raises_rpc_error(-5, "Pubkey must be a hex string", self.nodes[0].importpubkey, "not hex")
+
+        # This will raise an exception for importing an invalid pubkey
+        assert_raises_rpc_error(-5, "Pubkey is not a valid public key", self.nodes[0].importpubkey, "5361746f736869204e616b616d6f746f")
 
         # Import address and private key to check correct behavior of spendable unspents
         # 1. Send some coins to generate new UTXO
@@ -341,7 +366,7 @@ class WalletTest(BitcoinTestFramework):
         self.nodes[1].importaddress(address_to_import)
 
         # 3. Validate that the imported address is watch-only on node1
-        assert(self.nodes[1].getaddressinfo(address_to_import)["iswatchonly"])
+        assert self.nodes[1].getaddressinfo(address_to_import)["iswatchonly"]
 
         # 4. Check that the unspents after import are not spendable
         assert_array_result(self.nodes[1].listunspent(),
@@ -383,7 +408,7 @@ class WalletTest(BitcoinTestFramework):
                 addr = self.nodes[0].getnewaddress()
                 self.nodes[0].setlabel(addr, label)
                 assert_equal(self.nodes[0].getaddressinfo(addr)['label'], label)
-                assert(label in self.nodes[0].listlabels())
+                assert label in self.nodes[0].listlabels()
         self.nodes[0].rpc.ensure_ascii = True  # restore to default
 
         # maintenance tests
@@ -442,8 +467,8 @@ class WalletTest(BitcoinTestFramework):
         # Without walletrejectlongchains, we will still generate a txid
         # The tx will be stored in the wallet but not accepted to the mempool
         extra_txid = self.nodes[0].sendtoaddress(sending_addr, Decimal('0.0001'))
-        assert(extra_txid not in self.nodes[0].getrawmempool())
-        assert(extra_txid in [tx["txid"] for tx in self.nodes[0].listtransactions()])
+        assert extra_txid not in self.nodes[0].getrawmempool()
+        assert extra_txid in [tx["txid"] for tx in self.nodes[0].listtransactions()]
         self.nodes[0].abandontransaction(extra_txid)
         total_txs = len(self.nodes[0].listtransactions("*", 99999))
 
@@ -480,7 +505,7 @@ class WalletTest(BitcoinTestFramework):
         self.nodes[0].generate(1)
         destination = self.nodes[1].getnewaddress()
         txid = self.nodes[0].sendtoaddress(destination, 0.123)
-        tx = self.nodes[0].decoderawtransaction(self.nodes[0].getrawtransaction(txid))
+        tx = self.nodes[0].decoderawtransaction(self.nodes[0].gettransaction(txid)['hex'])
         output_addresses = [vout['scriptPubKey']['addresses'][0] for vout in tx["vout"]]
         assert len(output_addresses) > 1
         for address in output_addresses:
@@ -490,6 +515,7 @@ class WalletTest(BitcoinTestFramework):
                 change = address
         self.nodes[0].setlabel(change, 'foobar')
         assert_equal(self.nodes[0].getaddressinfo(change)['ischange'], False)
+
 
 if __name__ == '__main__':
     WalletTest().main()

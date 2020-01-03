@@ -21,10 +21,6 @@
 #include <util/system.h>
 
 #ifdef WIN32
-#ifdef _WIN32_WINNT
-#undef _WIN32_WINNT
-#endif
-#define _WIN32_WINNT 0x0501
 #ifdef _WIN32_IE
 #undef _WIN32_IE
 #endif
@@ -48,13 +44,15 @@
 #include <QFileDialog>
 #include <QFont>
 #include <QFontDatabase>
+#include <QFontMetrics>
 #include <QKeyEvent>
 #include <QLineEdit>
+#include <QMouseEvent>
+#include <QProgressDialog>
 #include <QSettings>
 #include <QTextDocument> // for Qt::mightBeRichText
 #include <QThread>
 #include <QUrlQuery>
-#include <QMouseEvent>
 
 #if defined(Q_OS_MAC)
 #pragma GCC diagnostic push
@@ -62,6 +60,7 @@
 
 #include <objc/objc-runtime.h>
 #include <CoreServices/CoreServices.h>
+#include <QProcess>
 #endif
 
 namespace GUIUtil {
@@ -394,7 +393,15 @@ bool openBitcoinConf()
     configFile.close();
 
     /* Open bitcoin.conf with the associated application */
-    return QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathConfig)));
+    bool res = QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathConfig)));
+#ifdef Q_OS_MAC
+    // Workaround for macOS-specific behavior; see #15409.
+    if (!res) {
+        res = QProcess::startDetached("/usr/bin/open", QStringList{"-t", boostPathToQString(pathConfig)});
+    }
+#endif
+
+    return res;
 }
 
 ToolTipToRichTextFilter::ToolTipToRichTextFilter(int _size_threshold, QObject *parent) :
@@ -681,13 +688,11 @@ bool SetStartOnSystemStartup(bool fAutoStart)
 }
 
 
-#elif defined(Q_OS_MAC)
+#elif defined(Q_OS_MAC) && defined(MAC_OS_X_VERSION_MIN_REQUIRED) && MAC_OS_X_VERSION_MIN_REQUIRED <= 101100
 // based on: https://github.com/Mozketo/LaunchAtLoginController/blob/master/LaunchAtLoginController.m
 
-LSSharedFileListItemRef findStartupItemInList(LSSharedFileListRef list, CFURLRef findUrl);
-LSSharedFileListItemRef findStartupItemInList(LSSharedFileListRef list, CFURLRef findUrl)
+LSSharedFileListItemRef findStartupItemInList(CFArrayRef listSnapshot, LSSharedFileListRef list, CFURLRef findUrl)
 {
-    CFArrayRef listSnapshot = LSSharedFileListCopySnapshot(list, nullptr);
     if (listSnapshot == nullptr) {
         return nullptr;
     }
@@ -712,15 +717,12 @@ LSSharedFileListItemRef findStartupItemInList(LSSharedFileListRef list, CFURLRef
         if(currentItemURL) {
             if (CFEqual(currentItemURL, findUrl)) {
                 // found
-                CFRelease(listSnapshot);
                 CFRelease(currentItemURL);
                 return item;
             }
             CFRelease(currentItemURL);
         }
     }
-
-    CFRelease(listSnapshot);
     return nullptr;
 }
 
@@ -732,10 +734,12 @@ bool GetStartOnSystemStartup()
     }
 
     LSSharedFileListRef loginItems = LSSharedFileListCreate(nullptr, kLSSharedFileListSessionLoginItems, nullptr);
-    LSSharedFileListItemRef foundItem = findStartupItemInList(loginItems, bitcoinAppUrl);
-
+    CFArrayRef listSnapshot = LSSharedFileListCopySnapshot(loginItems, nullptr);
+    bool res = (findStartupItemInList(listSnapshot, loginItems, bitcoinAppUrl) != nullptr);
     CFRelease(bitcoinAppUrl);
-    return !!foundItem; // return boolified object
+    CFRelease(loginItems);
+    CFRelease(listSnapshot);
+    return res;
 }
 
 bool SetStartOnSystemStartup(bool fAutoStart)
@@ -746,7 +750,8 @@ bool SetStartOnSystemStartup(bool fAutoStart)
     }
 
     LSSharedFileListRef loginItems = LSSharedFileListCreate(nullptr, kLSSharedFileListSessionLoginItems, nullptr);
-    LSSharedFileListItemRef foundItem = findStartupItemInList(loginItems, bitcoinAppUrl);
+    CFArrayRef listSnapshot = LSSharedFileListCopySnapshot(loginItems, nullptr);
+    LSSharedFileListItemRef foundItem = findStartupItemInList(listSnapshot, loginItems, bitcoinAppUrl);
 
     if(fAutoStart && !foundItem) {
         // add bitcoin app to startup item list
@@ -758,6 +763,8 @@ bool SetStartOnSystemStartup(bool fAutoStart)
     }
 
     CFRelease(bitcoinAppUrl);
+    CFRelease(loginItems);
+    CFRelease(listSnapshot);
     return true;
 }
 #pragma GCC diagnostic pop
@@ -931,6 +938,18 @@ bool ItemDelegate::eventFilter(QObject *object, QEvent *event)
         }
     }
     return QItemDelegate::eventFilter(object, event);
+}
+
+void PolishProgressDialog(QProgressDialog* dialog)
+{
+#ifdef Q_OS_MAC
+    // Workaround for macOS-only Qt bug; see: QTBUG-65750, QTBUG-70357.
+    const int margin = dialog->fontMetrics().width("X");
+    dialog->resize(dialog->width() + 2 * margin, dialog->height());
+    dialog->show();
+#else
+    Q_UNUSED(dialog);
+#endif
 }
 
 } // namespace GUIUtil

@@ -41,21 +41,22 @@ The following are developer notes on how to build NdovuCoin Core on your native 
 - [macOS Build Notes](build-osx.md)
 - [Unix Build Notes](build-unix.md)
 - [Windows Build Notes](build-windows.md)
+- [FreeBSD Build Notes](build-freebsd.md)
 - [OpenBSD Build Notes](build-openbsd.md)
 - [NetBSD Build Notes](build-netbsd.md)
-- [Gitian Building Guide](gitian-building.md)
+- [Gitian Building Guide (External Link)](https://github.com/bitcoin-core/docs/blob/master/gitian-building.md)
 
 Development
 ---------------------
 The NdovuCoin repo's [root README](/README.md) contains relevant information on the development process and automated testing.
 
 - [Developer Notes](developer-notes.md)
+- [Productivity Notes](productivity.md)
 - [Release Notes](release-notes.md)
 - [Release Process](release-process.md)
 - [Source Code Documentation (External Link)](https://dev.visucore.com/bitcoin/doxygen/)
 - [Translation Process](translation_process.md)
 - [Translation Strings Policy](translation_strings_policy.md)
-- [Travis CI](travis-ci.md)
 - [JSON-RPC Interface](JSON-RPC-interface.md)
 - [Unauthenticated REST Interface](REST-interface.md)
 - [Shared Libraries](shared-libraries.md)

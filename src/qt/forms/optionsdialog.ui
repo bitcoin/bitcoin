@@ -121,7 +121,7 @@
          <item>
           <widget class="QLabel" name="databaseCacheUnitLabel">
            <property name="text">
-            <string>MB</string>
+            <string>MiB</string>
            </property>
            <property name="textFormat">
             <enum>Qt::PlainText</enum>

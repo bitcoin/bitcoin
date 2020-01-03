@@ -102,7 +102,7 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, TestChain100Setup)
 // should fail.
 // Capture this interaction with the upgraded_nop argument: set it when evaluating
 // any script flag that is implemented as an upgraded NOP code.
-static void ValidateCheckInputsForAllFlags(const CTransaction &tx, uint32_t failing_flags, bool add_to_cache)
+static void ValidateCheckInputsForAllFlags(const CTransaction &tx, uint32_t failing_flags, bool add_to_cache) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     PrecomputedTransactionData txdata(tx);
     // If we add many more flags, this loop can get too expensive, but we can
@@ -219,10 +219,9 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, TestChain100Setup)
     CBlock block;
 
     block = CreateAndProcessBlock({spend_tx}, p2pk_scriptPubKey);
+    LOCK(cs_main);
     BOOST_CHECK(chainActive.Tip()->GetBlockHash() == block.GetHash());
     BOOST_CHECK(pcoinsTip->GetBestBlock() == block.GetHash());
-
-    LOCK(cs_main);
 
     // Test P2SH: construct a transaction that is valid without P2SH, and
     // then test validity with P2SH.

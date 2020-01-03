@@ -178,7 +178,8 @@ public:
     //! Try to get updated status for a particular transaction, if possible without blocking.
     virtual bool tryGetTxStatus(const uint256& txid,
         WalletTxStatus& tx_status,
-        int& num_blocks) = 0;
+        int& num_blocks,
+        int64_t& block_time) = 0;
 
     //! Get transaction details.
     virtual WalletTx getWalletTxDetails(const uint256& txid,
@@ -234,6 +235,9 @@ public:
     // Return whether HD enabled.
     virtual bool hdEnabled() = 0;
 
+    // Return whether the wallet is blank.
+    virtual bool canGetAddresses() = 0;
+
     // check if a certain wallet flag is set.
     virtual bool IsWalletFlagSet(uint64_t flag) = 0;
 
@@ -242,6 +246,9 @@ public:
 
     // Get default change type.
     virtual OutputType getDefaultChangeType() = 0;
+
+    // Remove wallet.
+    virtual void remove() = 0;
 
     //! Register handler for unload message.
     using UnloadFn = std::function<void()>;
@@ -270,6 +277,10 @@ public:
     //! Register handler for watchonly changed messages.
     using WatchOnlyChangedFn = std::function<void(bool have_watch_only)>;
     virtual std::unique_ptr<Handler> handleWatchOnlyChanged(WatchOnlyChangedFn fn) = 0;
+
+    //! Register handler for keypool changed messages.
+    using CanGetAddressesChangedFn = std::function<void()>;
+    virtual std::unique_ptr<Handler> handleCanGetAddressesChanged(CanGetAddressesChangedFn fn) = 0;
 };
 
 //! Tracking object returned by CreateTransaction and passed to CommitTransaction.

@@ -7,8 +7,6 @@
 This module calls down into individual test cases via subprocess. It will
 forward all unrecognized arguments onto the individual test scripts.
 
-Functional tests are disabled on Windows by default. Use --force to run them anyway.
-
 For a description of arguments recognized by test scripts, see
 `test/functional/test_framework/test_framework.py:BitcoinTestFramework.main`.
 
@@ -108,17 +106,19 @@ BASE_SCRIPTS = [
     'interface_bitcoin_cli.py',
     'mempool_resurrect.py',
     'wallet_txn_doublespend.py --mineblock',
+    'tool_wallet.py',
     'wallet_txn_clone.py',
     'wallet_txn_clone.py --segwit',
     'rpc_getchaintips.py',
+    'rpc_misc.py',
     'interface_rest.py',
     'mempool_spend_coinbase.py',
     'mempool_reorg.py',
     'mempool_persist.py',
     'wallet_multiwallet.py',
     'wallet_multiwallet.py --usecli',
-    'wallet_disableprivatekeys.py',
-    'wallet_disableprivatekeys.py --usecli',
+    'wallet_createwallet.py',
+    'wallet_createwallet.py --usecli',
     'interface_http.py',
     'interface_rpc.py',
     'rpc_psbt.py',
@@ -134,6 +134,7 @@ BASE_SCRIPTS = [
     'rpc_net.py',
     'wallet_keypool.py',
     'p2p_mempool.py',
+    'p2p_blocksonly.py',
     'mining_prioritisetransaction.py',
     'p2p_invalid_locator.py',
     'p2p_invalid_block.py',
@@ -174,12 +175,15 @@ BASE_SCRIPTS = [
     'wallet_fallbackfee.py',
     'feature_minchainwork.py',
     'rpc_getblockstats.py',
+    'wallet_create_tx.py',
     'p2p_fingerprint.py',
     'feature_uacomment.py',
     'wallet_coinbase_category.py',
     'feature_filelock.py',
     'p2p_unrequested_blocks.py',
     'feature_includeconf.py',
+    'rpc_deriveaddresses.py',
+    'rpc_deriveaddresses.py --usecli',
     'rpc_scantxoutset.py',
     'feature_logging.py',
     'p2p_node_network_limited.py',
@@ -222,7 +226,6 @@ def main():
     parser.add_argument('--ci', action='store_true', help='Run checks and code that are usually only enabled in a continuous integration environment')
     parser.add_argument('--exclude', '-x', help='specify a comma-separated-list of scripts to exclude.')
     parser.add_argument('--extended', action='store_true', help='run the extended test suite in addition to the basic tests')
-    parser.add_argument('--force', '-f', action='store_true', help='run tests even on platforms where they are disabled by default (e.g. windows).')
     parser.add_argument('--help', '-h', '-?', action='store_true', help='print help text and exit')
     parser.add_argument('--jobs', '-j', type=int, default=4, help='how many test scripts to run in parallel. Default=4.')
     parser.add_argument('--keepcache', '-k', action='store_true', help='the default behavior is to flush the cache directory on startup. --keepcache retains the cache from the previous testrun.')
@@ -249,21 +252,11 @@ def main():
     # Create base test directory
     tmpdir = "%s/test_runner_₿_🏃_%s" % (args.tmpdirprefix, datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
 
-    # If we fixed the command-line and filename encoding issue on Windows, these two lines could be removed
-    if config["environment"]["EXEEXT"] == ".exe":
-        tmpdir = "%s/test_runner_%s" % (args.tmpdirprefix, datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
-
     os.makedirs(tmpdir)
 
     logging.debug("Temporary test directory at %s" % tmpdir)
 
     enable_bitcoind = config["components"].getboolean("ENABLE_BITCOIND")
-
-    if config["environment"]["EXEEXT"] == ".exe" and not args.force:
-        # https://github.com/bitcoin/bitcoin/commit/d52802551752140cf41f0d9a225a43e84404d3e9
-        # https://github.com/bitcoin/bitcoin/pull/5677#issuecomment-136646964
-        print("Tests currently disabled on Windows by default. Use --force option to enable")
-        sys.exit(0)
 
     if not enable_bitcoind:
         print("No functional tests to run.")
@@ -561,7 +554,7 @@ class TestResult():
 def check_script_prefixes():
     """Check that test scripts start with one of the allowed name prefixes."""
 
-    good_prefixes_re = re.compile("(example|feature|interface|mempool|mining|p2p|rpc|wallet)_")
+    good_prefixes_re = re.compile("(example|feature|interface|mempool|mining|p2p|rpc|wallet|tool)_")
     bad_script_names = [script for script in ALL_SCRIPTS if good_prefixes_re.match(script) is None]
 
     if bad_script_names:

@@ -107,10 +107,6 @@
         <translation>शारांश</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation>नोड</translation>
-    </message>
-    <message>
         <source>Show general overview of wallet</source>
         <translation>वालेटको साधारण शारांश देखाउनुहोस्</translation>
     </message>
@@ -165,14 +161,6 @@
     <message>
         <source>&amp;Change Passphrase...</source>
         <translation>&amp;amp;पासफ्रेज परिवर्तन गर्नुहोस्...</translation>
-    </message>
-    <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;amp;पठाउने ठेगानाहरू...</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>&amp;amp;प्राप्त गर्ने ठेगानाहरू...</translation>
     </message>
     <message>
         <source>Open &amp;URI...</source>
@@ -416,6 +404,9 @@
     <name>UnitDisplayStatusBarControl</name>
     </context>
 <context>
+    <name>WalletController</name>
+    </context>
+<context>
     <name>WalletFrame</name>
     </context>
 <context>
@@ -474,18 +465,6 @@
     <message>
         <source>Unable to bind to %s on this computer. %s is probably already running.</source>
         <translation>यो कम्प्युटरको %s मा बाँध्न सकिएन । %s सम्भवित रूपमा पहिलैबाट चलिरहेको छ ।</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
-        <translation>असमर्थित तर्क -बेन्चमार्कलाई बेवास्ता गरियो, -डिबग=बेन्च प्रयोग गर्नुहोस् ।</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
-        <translation>असमर्थित तर्क -डिबगनेटलाई बेवास्ता गरियो, -डिबग=नेट प्रयोग गर्नुहोस् । </translation>
-    </message>
-    <message>
-        <source>Unsupported argument -tor found, use -onion.</source>
-        <translation>असमर्थित तर्क -टोर फेला पर्यो, -ओनियन प्रयोग गर्नुहोस् । </translation>
     </message>
     <message>
         <source>Verifying blocks...</source>

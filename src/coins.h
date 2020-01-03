@@ -298,17 +298,17 @@ private:
 };
 
 //! Utility function to add all of a transaction's outputs to a cache.
-// When check is false, this assumes that overwrites are only possible for coinbase transactions.
-// When check is true, the underlying view may be queried to determine whether an addition is
-// an overwrite.
+//! When check is false, this assumes that overwrites are only possible for coinbase transactions.
+//! When check is true, the underlying view may be queried to determine whether an addition is
+//! an overwrite.
 // TODO: pass in a boolean to limit these possible overwrites to known
 // (pre-BIP34) cases.
 void AddCoins(CCoinsViewCache& cache, const CTransaction& tx, int nHeight, bool check = false);
 
 //! Utility function to find any unspent output with a given txid.
-// This function can be quite expensive because in the event of a transaction
-// which is not found in the cache, it can cause up to MAX_OUTPUTS_PER_BLOCK
-// lookups to database, so it should be used with care.
+//! This function can be quite expensive because in the event of a transaction
+//! which is not found in the cache, it can cause up to MAX_OUTPUTS_PER_BLOCK
+//! lookups to database, so it should be used with care.
 const Coin& AccessByTxid(const CCoinsViewCache& cache, const uint256& txid);
 
 #endif // BITCOIN_COINS_H

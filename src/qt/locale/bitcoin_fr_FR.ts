@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Faîtes un clique droit afin de modifier l'adresse ou l'étiquette</translation>
+        <translation>Clic-droit pour modifier l'adresse ou l'étiquette</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -188,8 +188,8 @@
         <translation>Portefeuille chiffré</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 va à présent se fermer pour terminer la procédure de cryptage. N'oubliez pas que le chiffrement de votre porte-monnaie ne peut pas fournir une protection totale contre le vol par des logiciels malveillants qui infecteraient votre ordinateur.</translation>
+        <source>Your wallet is now encrypted. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>Le porte-monnaie a été chiffré. N'oubliez pas que le chiffrement de votre porte-monnaie ne peut pas entièrement protéger vos bitcoins contre le vol par un logiciel malveillant qui infecterait votre ordinateur.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -254,10 +254,6 @@
         <translation>&amp;Vue d'ensemble</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation>Nœud</translation>
-    </message>
-    <message>
         <source>Show general overview of wallet</source>
         <translation>Affiche une vue d'ensemble du porte-monnaie</translation>
     </message>
@@ -314,16 +310,12 @@
         <translation>&amp;Modifier le mot de passe</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;Adresses d'envoi</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>&amp;Adresses de réception</translation>
-    </message>
-    <message>
         <source>Open &amp;URI...</source>
         <translation>Ouvrir &amp;URI</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>Portefeuille :</translation>
     </message>
     <message>
         <source>Click to disable network activity.</source>
@@ -346,8 +338,17 @@
         <translation>Réindexer les blocs sur le disque...</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <source>Send coins to a NdovuCoin address</source>
         <translation>Envoyer des pièces à une adresse NdovuCoin</translation>
+=======
+        <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
+        <translation>Le proxy est &lt;b&gt;activé&lt;/b&gt; : %1</translation>
+    </message>
+    <message>
+        <source>Send coins to a Bitcoin address</source>
+        <translation>Envoyer des pièces à une adresse Bitcoin</translation>
+>>>>>>> upstream/0.18
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -372,10 +373,6 @@
     <message>
         <source>NdovuCoin</source>
         <translation>NdovuCoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Portefeuille</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -482,8 +479,53 @@
         <translation>À jour</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <source>Show the %1 help message to get a list with possible NdovuCoin command-line options</source>
         <translation>Afficher le %1 message d'aide pour récupérer une liste des options de ligne de commande NdovuCoin</translation>
+=======
+        <source>&amp;Sending addresses</source>
+        <translation>&amp;Adresses d'envoi</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses</source>
+        <translation>&amp;Adresses de réception</translation>
+    </message>
+    <message>
+        <source>Open Wallet</source>
+        <translation>Portefeuille ouvert</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation>Ouvrir un portefeuille</translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>Fermer portefeuille...</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>Fermer portefeuille</translation>
+    </message>
+    <message>
+        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
+        <translation>Afficher le %1 message d'aide pour récupérer une liste des options de ligne de commande Bitcoin</translation>
+>>>>>>> upstream/0.18
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>portefeuille par défaut</translation>
+    </message>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Ouverture portefeuille &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+    <message>
+        <source>Open Wallet Failed</source>
+        <translation>Le déverrouillage du porte-monnaie a échoué</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>&amp;Fenêtre</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -507,6 +549,12 @@
         <source>Amount: %1
 </source>
         <translation>Montant:%1
+</translation>
+    </message>
+    <message>
+        <source>Wallet: %1
+</source>
+        <translation>Portefeuille : %1
 </translation>
     </message>
     <message>
@@ -886,10 +934,6 @@
     <message>
         <source>Size of &amp;database cache</source>
         <translation>Taille du cache de la base de données.</translation>
-    </message>
-    <message>
-        <source>MB</source>
-        <translation>MO</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
@@ -1673,12 +1717,17 @@
         <translation>Demande de paiement expirée.</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <source>Pay only the required fee of %1</source>
         <translation>Payer seulement les frais obligatoire de %1</translation>
     </message>
     <message>
         <source>Warning: Invalid NdovuCoin address</source>
         <translation>Attention: Adresse NdovuCoin Invalide</translation>
+=======
+        <source>Warning: Invalid Bitcoin address</source>
+        <translation>Attention: Adresse Bitcoin Invalide</translation>
+>>>>>>> upstream/0.18
     </message>
     <message>
         <source>(no label)</source>
@@ -2187,6 +2236,13 @@
     <name>UnitDisplayStatusBarControl</name>
     </context>
 <context>
+    <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation>Fermer portefeuille</translation>
+    </message>
+    </context>
+<context>
     <name>WalletFrame</name>
     <message>
         <source>No wallet has been loaded.</source>
@@ -2199,7 +2255,11 @@
         <source>Send Coins</source>
         <translation>Envoyer des pièces</translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation>portefeuille par défaut</translation>
+    </message>
+</context>
 <context>
     <name>WalletView</name>
     <message>
@@ -2243,6 +2303,10 @@
 Importation ...</translation>
     </message>
     <message>
+        <source>Upgrading UTXO database</source>
+        <translation>Mise à jour de la base de données des UTXO</translation>
+    </message>
+    <message>
         <source>Verifying blocks...</source>
         <translation>Vérifications des blocs...</translation>
     </message>
@@ -2277,6 +2341,10 @@ Importation ...</translation>
     <message>
         <source>Transaction too large</source>
         <translation>Transaction trop grande</translation>
+    </message>
+    <message>
+        <source>Unable to generate initial keys</source>
+        <translation>Impossible de générer la clé initiale</translation>
     </message>
     <message>
         <source>Warning</source>

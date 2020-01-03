@@ -35,6 +35,11 @@ std::ostream& operator<<(typename std::enable_if<std::is_enum<T>::value, std::os
  */
 extern FastRandomContext g_insecure_rand_ctx;
 
+/**
+ * Flag to make GetRand in random.h return the same number
+ */
+extern bool g_mock_deterministic_tests;
+
 static inline void SeedInsecureRand(bool deterministic = false)
 {
     g_insecure_rand_ctx = FastRandomContext(deterministic);
@@ -68,17 +73,11 @@ private:
  */
 class CConnman;
 class CNode;
-struct CConnmanTest {
-    static void AddNode(CNode& node);
-    static void ClearNodes();
-};
 
 class PeerLogicValidation;
 struct TestingSetup : public BasicTestingSetup {
     boost::thread_group threadGroup;
-    CConnman* connman;
     CScheduler scheduler;
-    std::unique_ptr<PeerLogicValidation> peerLogic;
 
     explicit TestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
     ~TestingSetup();

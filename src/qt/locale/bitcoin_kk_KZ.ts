@@ -74,10 +74,6 @@
         <translation>Биткоин</translation>
     </message>
     <message>
-        <source>Wallet</source>
-        <translation>Әмиян</translation>
-    </message>
-    <message>
         <source>&amp;Send</source>
         <translation>Жіберу</translation>
     </message>
@@ -299,6 +295,9 @@
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
+    </context>
+<context>
+    <name>WalletController</name>
     </context>
 <context>
     <name>WalletFrame</name>

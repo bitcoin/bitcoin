@@ -71,9 +71,13 @@ class InputMissing(BadTxTemplate):
     reject_reason = "bad-txns-vin-empty"
     expect_disconnect = False
 
+    # We use a blank transaction here to make sure
+    # it is interpreted as a non-witness transaction.
+    # Otherwise the transaction will fail the
+    # "surpufluous witness" check during deserialization
+    # rather than the input count check.
     def get_tx(self):
         tx = CTransaction()
-        tx.vout.append(CTxOut(0, sc.CScript([sc.OP_TRUE] * 100)))
         tx.calc_sha256()
         return tx
 

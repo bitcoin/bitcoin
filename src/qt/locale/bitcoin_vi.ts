@@ -3,15 +3,15 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Phải chuột để edit address hoặc label</translation>
+        <translation>Phải chuột để sửa địa chỉ hoặc nhãn</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Create một address mới</translation>
+        <translation>Tạo một địa chỉ mới</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation>&amp;Tạo mới</translation>
+        <translation>&amp;Mới</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -132,6 +132,10 @@
         <translation>Lặp lại cụm mật khẩu mới</translation>
     </message>
     <message>
+        <source>Show password</source>
+        <translation>Hiện mật khẩu</translation>
+    </message>
+    <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
         <translation>Gõ cụm mật khẩu mới cho ví.&lt;br/&gt;Vui lòng dùng cụm mật khẩu của&lt;b&gt;mười hoặc hơn ký tự ngẫu nhiên&lt;/b&gt;, hoặc &lt;b&gt;tám hoặc nhiều từ hơn&lt;/b&gt;.</translation>
     </message>
@@ -180,8 +184,8 @@
         <translation>Ví đã được mã hóa</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 sẽ đóng lúc này để kết thúc quá trình mã hóa. Nhớ rằng việc mã hóa ví không thể bảo vệ hoàn toàn số bitcoins khỏi việc Malware lây nhiễm đến computer của bạn.</translation>
+        <source>Your wallet is now encrypted. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>Ví bạn đã được mã hóa bây giờ. Hãy nhớ rằng việc mã hóa ví bạn không thể hoàn toàn bảo vệ bitcoin của bạn bị đánh cắp bới phần mềm độc hại dính vào máy tính bạn</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -246,10 +250,6 @@
         <translation>&amp;Tổng quan</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation>Node</translation>
-    </message>
-    <message>
         <source>Show general overview of wallet</source>
         <translation>Hiển thị tổng quan ví</translation>
     </message>
@@ -306,16 +306,12 @@
         <translation>&amp;Thay Đổi Cụm Mật Khẩu...</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;Địa chỉ đang gửi...</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>&amp;Địa chỉ đang nhận...</translation>
-    </message>
-    <message>
         <source>Open &amp;URI...</source>
         <translation>Mở &amp;URI...</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>Ví tiền</translation>
     </message>
     <message>
         <source>Click to disable network activity.</source>
@@ -338,8 +334,17 @@
         <translation>Khôi phục các khối trên ổ đĩa...</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <source>Send coins to a NdovuCoin address</source>
         <translation>Gửi coin đến một địa chỉ NdovuCoin</translation>
+=======
+        <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
+        <translation>Proxy là &lt;b&gt; cho phép &lt;/b&gt;: %1</translation>
+    </message>
+    <message>
+        <source>Send coins to a Bitcoin address</source>
+        <translation>Gửi coin đến một địa chỉ Bitcoin</translation>
+>>>>>>> upstream/0.18
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -364,10 +369,6 @@
     <message>
         <source>NdovuCoin</source>
         <translation>NdovuCoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Ví</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -478,8 +479,49 @@
         <translation>Đã cập nhật</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <source>Show the %1 help message to get a list with possible NdovuCoin command-line options</source>
         <translation>Hiển thị %1 tin nhắn hỗ trợ để nhận được danh sách NdovuCoin command-line khả dụng</translation>
+=======
+        <source>&amp;Sending addresses</source>
+        <translation>&amp;Các địa chỉ đang gửi</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses</source>
+        <translation>&amp;Các địa chỉ đang nhận</translation>
+    </message>
+    <message>
+        <source>Open Wallet</source>
+        <translation>Mớ ví</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation>Mở một ví</translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>Đóng ví...</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>Đông ví</translation>
+    </message>
+    <message>
+        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
+        <translation>Hiển thị %1 tin nhắn hỗ trợ để nhận được danh sách Bitcoin command-line khả dụng</translation>
+>>>>>>> upstream/0.18
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>ví mặc định</translation>
+    </message>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Đang mở ví &lt;b&gt; %1&lt;/b&gt;...</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>&amp;Window</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -909,11 +951,7 @@
         <source>Hide</source>
         <translation>Ẩn</translation>
     </message>
-    <message>
-        <source>Unknown. Syncing Headers (%1)...</source>
-        <translation>Unknown. Đang đồng bộ Headers (%1)...</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -960,10 +998,6 @@
         <translation>Size of &amp;database cache</translation>
     </message>
     <message>
-        <source>MB</source>
-        <translation>MB</translation>
-    </message>
-    <message>
         <source>Number of script &amp;verification threads</source>
         <translation>Number of script &amp;verification threads</translation>
     </message>
@@ -982,10 +1016,6 @@
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation>Bên thứ ba URLs (e.g. a block explorer) xuất hiện trong thẻ giao dịch như context menu items. %s in the URL thì được thay thế bởi transaction hash. Multiple URLs are separated by vertical bar |.</translation>
-    </message>
-    <message>
-        <source>Active command-line options that override above options:</source>
-        <translation>Bật tùy chọn command-line ghi đè các tùy chọn ở trên:</translation>
     </message>
     <message>
         <source>Open the %1 configuration file from the working directory.</source>
@@ -2021,14 +2051,6 @@
         <translation>Ẩn</translation>
     </message>
     <message>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
-        <translation>Chi trả chỉ số nhỏ nhất fee thì ổn cho tới khi có ít transaction volume hơn khoảng trống trong blocks. Nhưng nhận ra rằng điều này kết thúc trong việc chẳng bao giờ xác nhận transaction trừ khi có nhiều nhu cầu cho giao dịch bitcoin hơn so với mạng có thể xử lý.</translation>
-    </message>
-    <message>
-        <source>(read the tooltip)</source>
-        <translation>(đọc cái tooltip)</translation>
-    </message>
-    <message>
         <source>Recommended:</source>
         <translation>Khuyên dùng:</translation>
     </message>
@@ -2163,10 +2185,6 @@
     <message>
         <source>Payment request expired.</source>
         <translation>Payment request hết hạn.</translation>
-    </message>
-    <message>
-        <source>Pay only the required fee of %1</source>
-        <translation>Pay chỉ yêu cầu fee of %1</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
@@ -2891,6 +2909,13 @@
     </message>
 </context>
 <context>
+    <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation>Đông ví</translation>
+    </message>
+    </context>
+<context>
     <name>WalletFrame</name>
     <message>
         <source>No wallet has been loaded.</source>
@@ -2938,6 +2963,10 @@
     <message>
         <source>Could not commit transaction</source>
         <translation>Could not commit transaction</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>ví mặc định</translation>
     </message>
 </context>
 <context>
@@ -3190,18 +3219,6 @@
         <translation>Unable to bind to %s on this computer. %s is probably already running.</translation>
     </message>
     <message>
-        <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
-        <translation>Unsupported argument -benchmark ignored, use -debug=bench.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
-        <translation>Unsupported argument -debugnet ignored, use -debug=net.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -tor found, use -onion.</source>
-        <translation>Unsupported argument -tor found, use -onion.</translation>
-    </message>
-    <message>
         <source>Unsupported logging category %s=%s.</source>
         <translation>Unsupported logging category %s=%s.</translation>
     </message>
@@ -3236,10 +3253,6 @@
     <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</translation>
-    </message>
-    <message>
-        <source>Error loading %s: You can't disable HD on an already existing HD wallet</source>
-        <translation>Error loading %s: You can't disable HD on an already existing HD wallet</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
@@ -3326,10 +3339,6 @@
         <translation>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</translation>
     </message>
     <message>
-        <source>Error loading %s: You can't enable HD on an already existing non-HD wallet</source>
-        <translation>Error loading %s: You can't enable HD on an already existing non-HD wallet</translation>
-    </message>
-    <message>
         <source>This is the transaction fee you may pay when fee estimates are not available.</source>
         <translation>This is the transaction fee you may pay when fee estimates are not available.</translation>
     </message>
@@ -3340,18 +3349,6 @@
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
-        <translation>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
-        <translation>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</translation>
-    </message>
-    <message>
-        <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
-        <translation>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</translation>
     </message>
     <message>
         <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>

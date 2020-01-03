@@ -1,4 +1,4 @@
-Release Process
+xRelease Process
 ====================
 
 Before every release candidate:
@@ -23,7 +23,7 @@ Before every minor and major release:
 Before every major release:
 
 * Update hardcoded [seeds](/contrib/seeds/README.md), see [this pull request](https://github.com/bitcoin/bitcoin/pull/7415) for an example.
-* Update [`BLOCK_CHAIN_SIZE`](/src/qt/intro.cpp) to the current size plus some overhead.
+* Update [`src/chainparams.cpp`](/src/chainparams.cpp) m_assumed_blockchain_size and m_assumed_chain_state_size with the current size plus some overhead.
 * Update `src/chainparams.cpp` chainTxData with statistics about the transaction count and rate. Use the output of the RPC `getchaintxstats`, see
   [this pull request](https://github.com/bitcoin/bitcoin/pull/12270) for an example. Reviewers can verify the results by running `getchaintxstats <window_block_count> <window_last_block_hash>` with the `window_block_count` and `window_last_block_hash` from your output.
 * Update version of `contrib/gitian-descriptors/*.yml`: usually one'd want to do this on master after branching off the release - but be sure to at least do it before a new major release
@@ -87,10 +87,12 @@ Ensure gitian-builder is up-to-date:
     pushd ./gitian-builder
     mkdir -p inputs
     wget -P inputs https://bitcoincore.org/cfields/osslsigncode-Backports-to-1.7.1.patch
+    echo 'a8c4e9cafba922f89de0df1f2152e7be286aba73f78505169bc351a7938dd911 inputs/osslsigncode-Backports-to-1.7.1.patch' | sha256sum -c
     wget -P inputs https://downloads.sourceforge.net/project/osslsigncode/osslsigncode/osslsigncode-1.7.1.tar.gz
+    echo 'f9a8cdb38b9c309326764ebc937cba1523a3a751a7ab05df3ecc99d18ae466c9 inputs/osslsigncode-1.7.1.tar.gz' | sha256sum -c
     popd
 
-Create the macOS SDK tarball, see the [macOS readme](README_osx.md) for details, and copy it into the inputs directory.
+Create the macOS SDK tarball, see the [macOS build instructions](build-osx.md#deterministic-macos-dmg-notes) for details, and copy it into the inputs directory.
 
 ### Optional: Seed the Gitian sources cache and offline git repositories
 
@@ -289,24 +291,48 @@ bitcoin.org (see below for bitcoin.org update instructions).
   - After the pull request is merged, the website will automatically show the newest version within 15 minutes, as well
     as update the OS download links. Ping @saivann/@harding (saivann/harding on Freenode) in case anything goes wrong
 
-- Announce the release:
-
-  - bitcoin-dev and bitcoin-core-dev mailing list
-
-  - NdovuCoin Core announcements list https://bitcoincore.org/en/list/announcements/join/
+- Update other repositories and websites for new version
 
   - bitcoincore.org blog post
 
   - bitcoincore.org RPC documentation update
 
+  - Update packaging repo
+
+      - Notify BlueMatt so that he can start building [the PPAs](https://launchpad.net/~bitcoin/+archive/ubuntu/bitcoin)
+
+      - Create a new branch for the major release "0.xx" (used to build the snap package)
+
+      - Notify MarcoFalke so that he can start building the snap package
+
+        - https://code.launchpad.net/~bitcoin-core/bitcoin-core-snap/+git/packaging (Click "Import Now" to fetch the branch)
+        - https://code.launchpad.net/~bitcoin-core/bitcoin-core-snap/+git/packaging/+ref/0.xx (Click "Create snap package")
+        - Name it "bitcoin-core-snap-0.xx"
+        - Leave owner and series as-is
+        - Select architectures that are compiled via gitian
+        - Leave "automatically build when branch changes" unticked
+        - Tick "automatically upload to store"
+        - Put "bitcoin-core" in the registered store package name field
+        - Tick the "edge" box
+        - Put "0.xx" in the track field
+        - Click "create snap package"
+        - Click "Request builds" for every new release on this branch (after updating the snapcraft.yml in the branch to reflect the latest gitian results)
+        - Promote release on https://snapcraft.io/bitcoin-core/releases if it passes sanity checks
+
+  - This repo
+
+      - Archive release notes for the new version to `doc/release-notes/` (branch `master` and branch of the release)
+
+      - Create a [new GitHub release](https://github.com/bitcoin/bitcoin/releases/new) with a link to the archived release notes.
+
+- Announce the release:
+
+  - bitcoin-dev and bitcoin-core-dev mailing list
+
+  - Bitcoin Core announcements list https://bitcoincore.org/en/list/announcements/join/
+
   - Update title of #bitcoin on Freenode IRC
 
-  - Optionally twitter, reddit /r/NdovuCoin, ... but this will usually sort out itself
-
-  - Notify BlueMatt so that he can start building [the PPAs](https://launchpad.net/~bitcoin/+archive/ubuntu/bitcoin)
-
-  - Archive release notes for the new version to `doc/release-notes/` (branch `master` and branch of the release)
-
-  - Create a [new GitHub release](https://github.com/bitcoin/bitcoin/releases/new) with a link to the archived release notes.
+  - Optionally twitter, reddit /r/Bitcoin, ... but this will usually sort out itself
 
   - Celebrate

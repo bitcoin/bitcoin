@@ -16,6 +16,7 @@
 
 #include <attributes.h>
 #include <compat.h>
+#include <compat/assumptions.h>
 #include <fs.h>
 #include <logging.h>
 #include <sync.h>
@@ -39,7 +40,6 @@
 int64_t GetStartupTime();
 
 extern const char * const BITCOIN_CONF_FILENAME;
-extern const char * const BITCOIN_PID_FILENAME;
 
 /** Translate a message to the native language of the user. */
 const extern std::function<std::string(const char*)> G_TRANSLATION_FUN;
@@ -70,6 +70,7 @@ int RaiseFileDescriptorLimit(int nMinFD);
 void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length);
 bool RenameOver(fs::path src, fs::path dest);
 bool LockDirectory(const fs::path& directory, const std::string lockfile_name, bool probe_only=false);
+void UnlockDirectory(const fs::path& directory, const std::string& lockfile_name);
 bool DirIsWritable(const fs::path& directory);
 
 /** Release all directory locks. This is used for unit testing only, at runtime
@@ -79,14 +80,11 @@ void ReleaseDirectoryLocks();
 
 bool TryCreateDirectories(const fs::path& p);
 fs::path GetDefaultDataDir();
-const fs::path &GetBlocksDir(bool fNetSpecific = true);
+// The blocks directory is always net specific.
+const fs::path &GetBlocksDir();
 const fs::path &GetDataDir(bool fNetSpecific = true);
 void ClearDatadirCache();
 fs::path GetConfigFile(const std::string& confPath);
-#ifndef WIN32
-fs::path GetPidFile();
-void CreatePidFile(const fs::path &path, pid_t pid);
-#endif
 #ifdef WIN32
 fs::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
@@ -292,6 +290,9 @@ extern ArgsManager gArgs;
  * @return true if help has been requested via a command-line arg
  */
 bool HelpRequested(const ArgsManager& args);
+
+/** Add help options to the args manager */
+void SetupHelpOptions(ArgsManager& args);
 
 /**
  * Format a string to be used as group of options in help messages

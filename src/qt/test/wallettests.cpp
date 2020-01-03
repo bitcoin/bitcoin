@@ -1,6 +1,7 @@
 #include <qt/test/wallettests.h>
 #include <qt/test/util.h>
 
+#include <init.h>
 #include <interfaces/chain.h>
 #include <interfaces/node.h>
 #include <base58.h>
@@ -69,7 +70,8 @@ uint256 SendCoins(CWallet& wallet, SendCoinsDialog& sendCoinsDialog, const CTxDe
         if (status == CT_NEW) txid = hash;
     }));
     ConfirmSend();
-    QMetaObject::invokeMethod(&sendCoinsDialog, "on_sendButton_clicked");
+    bool invoked = QMetaObject::invokeMethod(&sendCoinsDialog, "on_sendButton_clicked");
+    assert(invoked);
     return txid;
 }
 
@@ -146,13 +148,10 @@ void TestGUI()
         auto locked_chain = wallet->chain().lock();
         WalletRescanReserver reserver(wallet.get());
         reserver.reserve();
-        const CBlockIndex* const null_block = nullptr;
-        const CBlockIndex *stop_block, *failed_block;
-        QCOMPARE(
-            wallet->ScanForWalletTransactions(chainActive.Genesis(), nullptr, reserver, failed_block, stop_block, true /* fUpdate */),
-            CWallet::ScanResult::SUCCESS);
-        QCOMPARE(stop_block, chainActive.Tip());
-        QCOMPARE(failed_block, null_block);
+        CWallet::ScanResult result = wallet->ScanForWalletTransactions(locked_chain->getBlockHash(0), {} /* stop_block */, reserver, true /* fUpdate */);
+        QCOMPARE(result.status, CWallet::ScanResult::SUCCESS);
+        QCOMPARE(result.last_scanned_block, chainActive.Tip()->GetBlockHash());
+        QVERIFY(result.last_failed_block.IsNull());
     }
     wallet->SetBroadcastTransactions(true);
 

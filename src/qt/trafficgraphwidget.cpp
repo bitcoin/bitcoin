@@ -19,14 +19,14 @@
 
 TrafficGraphWidget::TrafficGraphWidget(QWidget *parent) :
     QWidget(parent),
-    timer(0),
+    timer(nullptr),
     fMax(0.0f),
     nMins(0),
     vSamplesIn(),
     vSamplesOut(),
     nLastBytesIn(0),
     nLastBytesOut(0),
-    clientModel(0)
+    clientModel(nullptr)
 {
     timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &TrafficGraphWidget::updateRates);

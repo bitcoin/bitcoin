@@ -172,12 +172,6 @@ class DeploymentInfo(object):
         if os.path.exists(os.path.join(parentDir, "translations")):
             # Classic layout, e.g. "/usr/local/Trolltech/Qt-4.x.x"
             self.qtPath = parentDir
-        elif os.path.exists(os.path.join(parentDir, "share", "qt4", "translations")):
-            # MacPorts layout, e.g. "/opt/local/share/qt4"
-            self.qtPath = os.path.join(parentDir, "share", "qt4")
-        elif os.path.exists(os.path.join(os.path.dirname(parentDir), "share", "qt4", "translations")):
-            # Newer Macports layout
-            self.qtPath = os.path.join(os.path.dirname(parentDir), "share", "qt4")
         else:
             self.qtPath = os.getenv("QTDIR", None)
 

@@ -7,18 +7,19 @@ clone_depth: 5
 environment:
   APPVEYOR_SAVE_CACHE_ON_ERROR: true
   CLCACHE_SERVER: 1
-  PACKAGES: boost-filesystem boost-signals2 boost-test libevent openssl zeromq berkeleydb secp256k1 leveldb
+  PACKAGES: berkeleydb boost-filesystem boost-signals2 boost-test libevent openssl rapidcheck zeromq
   PATH: 'C:\Python37-x64;C:\Python37-x64\Scripts;%PATH%'
   PYTHONUTF8: 1
 cache:
-- C:\tools\vcpkg\installed
-- C:\Users\appveyor\clcache
+- C:\tools\vcpkg\installed -> .appveyor.yml
+- C:\Users\appveyor\clcache -> .appveyor.yml, build_msvc\**, **\Makefile.am, **\*.vcxproj.in
 install:
 - cmd: pip install --quiet git+https://github.com/frerich/clcache.git@v4.2.0
 # Disable zmq test for now since python zmq library on Windows would cause Access violation sometimes.
 # - cmd: pip install zmq
+- cmd: echo set(VCPKG_BUILD_TYPE release) >> C:\tools\vcpkg\triplets\%PLATFORM%-windows-static.cmake
+- cmd: vcpkg remove --outdated --recurse
 - cmd: vcpkg install --triplet %PLATFORM%-windows-static %PACKAGES% > NUL
-- cmd: del /s /q C:\Tools\vcpkg\installed\%PLATFORM%-windows-static\debug # Remove unused debug library
 before_build:
 - ps:  clcache -M 536870912
 - cmd: python build_msvc\msvc-autogen.py
@@ -27,13 +28,12 @@ before_build:
            ${content} = (Get-Content ${files}[${i}]);
            ${content} = ${content}.Replace("</RuntimeLibrary>", "</RuntimeLibrary><DebugInformationFormat>None</DebugInformationFormat>");
            ${content} = ${content}.Replace("<WholeProgramOptimization>true", "<WholeProgramOptimization>false");
-           ${content} = ${content}.Replace("NDEBUG;", "");
            Set-Content ${files}[${i}] ${content};
        }
 - ps:  Start-Process clcache-server
 - ps:  fsutil behavior set disablelastaccess 0 # Enable Access time feature on Windows (for clcache)
 build_script:
-- cmd: msbuild /p:TrackFileAccess=false /p:CLToolExe=clcache.exe build_msvc\bitcoin.sln /m /v:q /nowarn:C4244;C4267;C4715 /nologo
+- cmd: msbuild /p:TrackFileAccess=false /p:CLToolExe=clcache.exe build_msvc\bitcoin.sln /m /v:q /nologo
 after_build:
 - ps:  fsutil behavior set disablelastaccess 1 # Disable Access time feature on Windows (better performance)
 - ps:  clcache -z
@@ -54,5 +54,5 @@ test_script:
 - cmd: src\bench_bitcoin.exe -evals=1 -scaling=0 > NUL
 - ps:  python test\util\bitcoin-util-test.py
 - cmd: python test\util\rpcauth-test.py
-- cmd: python test\functional\test_runner.py --ci --force --quiet --combinedlogslen=4000 --failfast
+- cmd: python test\functional\test_runner.py --ci --quiet --combinedlogslen=4000 --failfast
 deploy: off

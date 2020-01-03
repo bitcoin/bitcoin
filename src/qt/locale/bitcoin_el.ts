@@ -38,10 +38,6 @@
         <translation>Κλείσιμο εφαρμογής</translation>
     </message>
     <message>
-        <source>Wallet</source>
-        <translation>Πορτοφόλι</translation>
-    </message>
-    <message>
         <source>Error</source>
         <translation>Σφάλμα</translation>
     </message>
@@ -191,6 +187,9 @@
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
+    </context>
+<context>
+    <name>WalletController</name>
     </context>
 <context>
     <name>WalletFrame</name>

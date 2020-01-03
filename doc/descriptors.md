@@ -1,11 +1,18 @@
 # Support for Output Descriptors in NdovuCoin Core
 
-Since NdovuCoin Core v0.17, there is support for Output Descriptors in the
-`scantxoutset` RPC call. This is a simple language which can be used to
-describe collections of output scripts.
+Since Bitcoin Core v0.17, there is support for Output Descriptors. This is a
+simple language which can be used to describe collections of output scripts.
+Supporting RPCs are:
+- `scantxoutset` takes as input descriptors to scan for, and also reports
+  specialized descriptors for the matching UTXOs.
+- `getdescriptorinfo` analyzes a descriptor, and reports a canonicalized version
+  with checksum added.
+- `deriveaddresses` takes as input a descriptor and computes the corresponding
+  addresses.
+- `listunspent` outputs a specialized descriptor for the reported unspent outputs.
 
-This document describes the language. For the specifics on usage for scanning
-the UTXO set, see the `scantxoutset` RPC help.
+This document describes the language. For the specifics on usage, see the RPC
+documentation for the functions mentioned above.
 
 ## Features
 
@@ -39,7 +46,7 @@ Output descriptors currently support:
 
 ## Reference
 
-Descriptors consist of several types of expressions. The top level expression is always a `SCRIPT`.
+Descriptors consist of several types of expressions. The top level expression is either a `SCRIPT`, or `SCRIPT#CHECKSUM` where `CHECKSUM` is an 8-character alphanumeric descriptor checksum.
 
 `SCRIPT` expressions:
 - `sh(SCRIPT)` (top level only): P2SH embed the argument.
@@ -169,3 +176,20 @@ existing NdovuCoin Core wallets, a convenience function `combo` is
 provided, which takes as input a public key, and describes a set of P2PK,
 P2PKH, P2WPKH, and P2SH-P2WPH scripts for that key. In case the key is
 uncompressed, the set only includes P2PK and P2PKH scripts.
+
+### Checksums
+
+Descriptors can optionally be suffixed with a checksum to protect against
+typos or copy-paste errors.
+
+These checksums consist of 8 alphanumeric characters. As long as errors are
+restricted to substituting characters in `0123456789()[],'/*abcdefgh@:$%{}`
+for others in that set and changes in letter case, up to 4 errors will always
+be detected in descriptors up to 501 characters, and up to 3 errors in longer
+ones. For larger numbers of errors, or other types of errors, there is a
+roughly 1 in a trillion chance of not detecting the errors.
+
+All RPCs in Bitcoin Core will include the checksum in their output. Only
+certain RPCs require checksums on input, including `deriveaddress` and
+`importmulti`. The checksum for a descriptor without one can be computed
+using the `getdescriptorinfo` RPC.

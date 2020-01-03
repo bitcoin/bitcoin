@@ -105,13 +105,13 @@ BOOST_AUTO_TEST_CASE(arena_tests)
     // Go entirely wild: free and alloc interleaved,
     // generate targets and sizes using pseudo-randomness.
     for (int x=0; x<2048; ++x)
-        addr.push_back(0);
+        addr.push_back(nullptr);
     uint32_t s = 0x12345678;
     for (int x=0; x<5000; ++x) {
         int idx = s & (addr.size()-1);
         if (s & 0x80000000) {
             b.free(addr[idx]);
-            addr[idx] = 0;
+            addr[idx] = nullptr;
         } else if(!addr[idx]) {
             addr[idx] = b.alloc((s >> 16) & 2047);
         }
@@ -144,9 +144,9 @@ public:
                 *lockingSuccess = true;
             }
 
-            return reinterpret_cast<void*>(0x08000000 + (count<<24)); // Fake address, do not actually use this memory
+            return reinterpret_cast<void*>(uint64_t{static_cast<uint64_t>(0x08000000) + (count << 24)}); // Fake address, do not actually use this memory
         }
-        return 0;
+        return nullptr;
     }
     void FreeLocked(void* addr, size_t len) override
     {

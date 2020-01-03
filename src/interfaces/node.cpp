@@ -6,6 +6,7 @@
 
 #include <addrdb.h>
 #include <amount.h>
+#include <banman.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <init.h>
@@ -41,6 +42,7 @@ class CWallet;
 fs::path GetWalletDir();
 std::vector<fs::path> ListWalletDir();
 std::vector<std::shared_ptr<CWallet>> GetWallets();
+std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const std::string& name, std::string& error, std::string& warning);
 
 namespace interfaces {
 
@@ -60,11 +62,13 @@ public:
     bool softSetArg(const std::string& arg, const std::string& value) override { return gArgs.SoftSetArg(arg, value); }
     bool softSetBoolArg(const std::string& arg, bool value) override { return gArgs.SoftSetBoolArg(arg, value); }
     void selectParams(const std::string& network) override { SelectParams(network); }
+    uint64_t getAssumedBlockchainSize() override { return Params().AssumedBlockchainSize(); }
+    uint64_t getAssumedChainStateSize() override { return Params().AssumedChainStateSize(); }
     std::string getNetwork() override { return Params().NetworkIDString(); }
     void initLogging() override { InitLogging(); }
     void initParameterInteraction() override { InitParameterInteraction(); }
     std::string getWarnings(const std::string& type) override { return GetWarnings(type); }
-    uint32_t getLogCategories() override { return g_logger->GetCategoryMask(); }
+    uint32_t getLogCategories() override { return LogInstance().GetCategoryMask(); }
     bool baseInitialize() override
     {
         return AppInitBasicSetup() && AppInitParameterInteraction() && AppInitSanityChecks() &&
@@ -120,25 +124,32 @@ public:
     }
     bool getBanned(banmap_t& banmap) override
     {
-        if (g_connman) {
-            g_connman->GetBanned(banmap);
+        if (g_banman) {
+            g_banman->GetBanned(banmap);
             return true;
         }
         return false;
     }
     bool ban(const CNetAddr& net_addr, BanReason reason, int64_t ban_time_offset) override
     {
-        if (g_connman) {
-            g_connman->Ban(net_addr, reason, ban_time_offset);
+        if (g_banman) {
+            g_banman->Ban(net_addr, reason, ban_time_offset);
             return true;
         }
         return false;
     }
     bool unban(const CSubNet& ip) override
     {
-        if (g_connman) {
-            g_connman->Unban(ip);
+        if (g_banman) {
+            g_banman->Unban(ip);
             return true;
+        }
+        return false;
+    }
+    bool disconnect(const CNetAddr& net_addr) override
+    {
+        if (g_connman) {
+            return g_connman->DisconnectNode(net_addr);
         }
         return false;
     }
@@ -241,6 +252,10 @@ public:
             wallets.emplace_back(MakeWallet(wallet));
         }
         return wallets;
+    }
+    std::unique_ptr<Wallet> loadWallet(const std::string& name, std::string& error, std::string& warning) override
+    {
+        return MakeWallet(LoadWallet(*m_interfaces.chain, name, error, warning));
     }
     std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) override
     {

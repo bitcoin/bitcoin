@@ -5,14 +5,17 @@
 """Test transaction signing using the signrawtransaction* RPCs."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error
+from test_framework.util import assert_equal, assert_raises_rpc_error, bytes_to_hex_str, hex_str_to_bytes
+from test_framework.messages import sha256
+from test_framework.script import CScript, OP_0
 
+from decimal import Decimal
 
 class SignRawTransactionsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.num_nodes = 1
-        self.extra_args = [["-deprecatedrpc=signrawtransaction"]]
+        self.num_nodes = 2
+        self.extra_args = [["-deprecatedrpc=signrawtransaction"], []]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -143,9 +146,33 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         assert_equal(rawTxSigned['errors'][1]['witness'], ["304402203609e17b84f6a7d30c80bfa610b5b4542f32a8a0d5447a12fb1366d7f01cc44a0220573a954c4518331561406f90300e8f3358f51928d43c212a8caed02de67eebee01", "025476c2e83188368da1ff3e292e7acafcdb3566bb0ad253f62fc70f07aeee6357"])
         assert not rawTxSigned['errors'][0]['witness']
 
+    def witness_script_test(self):
+        # Now test signing transaction to P2SH-P2WSH addresses without wallet
+        # Create a new P2SH-P2WSH 1-of-1 multisig address:
+        embedded_address = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress())
+        embedded_privkey = self.nodes[1].dumpprivkey(embedded_address["address"])
+        p2sh_p2wsh_address = self.nodes[1].addmultisigaddress(1, [embedded_address["pubkey"]], "", "p2sh-segwit")
+        # send transaction to P2SH-P2WSH 1-of-1 multisig address
+        self.nodes[0].generate(101)
+        self.nodes[0].sendtoaddress(p2sh_p2wsh_address["address"], 49.999)
+        self.nodes[0].generate(1)
+        self.sync_all()
+        # Find the UTXO for the transaction node[1] should have received, check witnessScript matches
+        unspent_output = self.nodes[1].listunspent(0, 999999, [p2sh_p2wsh_address["address"]])[0]
+        assert_equal(unspent_output["witnessScript"], p2sh_p2wsh_address["redeemScript"])
+        p2sh_redeemScript = CScript([OP_0, sha256(hex_str_to_bytes(p2sh_p2wsh_address["redeemScript"]))])
+        assert_equal(unspent_output["redeemScript"], bytes_to_hex_str(p2sh_redeemScript))
+        # Now create and sign a transaction spending that output on node[0], which doesn't know the scripts or keys
+        spending_tx = self.nodes[0].createrawtransaction([unspent_output], {self.nodes[1].getnewaddress(): Decimal("49.998")})
+        spending_tx_signed = self.nodes[0].signrawtransactionwithkey(spending_tx, [embedded_privkey], [unspent_output])
+        # Check the signing completed successfully
+        assert 'complete' in spending_tx_signed
+        assert_equal(spending_tx_signed['complete'], True)
+
     def run_test(self):
         self.successful_signing_test()
         self.script_verification_error_test()
+        self.witness_script_test()
         self.test_with_lock_outputs()
 
 

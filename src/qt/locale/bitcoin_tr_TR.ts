@@ -30,6 +30,10 @@
         <translation>Seçili adresi listeden sil</translation>
     </message>
     <message>
+        <source>Enter address or label to search</source>
+        <translation>Aramak için adres veya etiket girin</translation>
+    </message>
+    <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Seçili sekmedeki veriyi dosya olarak dışa aktar</translation>
     </message>
@@ -132,6 +136,10 @@
         <translation>Yeni parolayı tekrarla</translation>
     </message>
     <message>
+        <source>Show password</source>
+        <translation>Şifreyi göster</translation>
+    </message>
+    <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
         <translation>Yeni parolayı cüzdana girin.&lt;br/&gt;Lütfen &lt;b&gt;on yada daha fazla karakter&lt;/b&gt; veya &lt;b&gt;sekiz yada daha fazla kelime&lt;/b&gt;içeren bir parola kullanın. </translation>
     </message>
@@ -180,16 +188,16 @@
         <translation>Cüzdan Şifrelendi</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 Şifreleme işlemini bitirmek için kapatılacak. Şunu unutmayın ki şampiyon galatasaray ve şifrelemek, bitcoinlerinizin bilgisayarınıza bulaşan malware yazılımları tarafından çalınmasını tamamen engelleyemez.</translation>
-    </message>
-    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>ÖNEMLİ: Yeni oluşturduğunuz şifrelenmiş cüzdan dosyasını önceki yedeklenmiş cüzdan dosyasıyla değiştirmeniz gerekmektedir. Güvenlik sebeplerinden dolayı yeni, şifrelenmiş cüzdanınızı kullanmaya başlar başlamaz önceki şifrelenmemiş cüzdan yedekleri kullanılmaz hale gelecektir.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
         <translation>Cüzdan şifreleme başarısız oldu</translation>
+    </message>
+    <message>
+        <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
+        <translation>Cüzdan şifreleme dahili bir hata nedeniyle başarısız oldu. Cüzdanınız şifrelenemedi.</translation>
     </message>
     <message>
         <source>The supplied passphrases do not match.</source>
@@ -262,14 +270,6 @@
         <translation>&amp;Cüzdan Yedekleme</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>Gönderme adresleri</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>Alış adresleri</translation>
-    </message>
-    <message>
         <source>Open &amp;URI...</source>
         <translation>URI'yi aç</translation>
     </message>
@@ -305,10 +305,6 @@
         <source>NdovuCoin</source>
         <translation>NdovuCoin
 </translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Cüzdan</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -353,6 +349,10 @@
     <message>
         <source>Information</source>
         <translation>Bilgi</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>Pencere</translation>
     </message>
     <message>
         <source>Date: %1
@@ -1350,6 +1350,9 @@
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
+    </context>
+<context>
+    <name>WalletController</name>
     </context>
 <context>
     <name>WalletFrame</name>

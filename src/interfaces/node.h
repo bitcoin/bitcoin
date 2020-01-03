@@ -18,6 +18,7 @@
 #include <tuple>
 #include <vector>
 
+class BanMan;
 class CCoinControl;
 class CFeeRate;
 class CNodeStats;
@@ -51,6 +52,12 @@ public:
 
     //! Choose network parameters.
     virtual void selectParams(const std::string& network) = 0;
+
+    //! Get the (assumed) blockchain size.
+    virtual uint64_t getAssumedBlockchainSize() = 0;
+
+    //! Get the (assumed) chain state size.
+    virtual uint64_t getAssumedChainStateSize() = 0;
 
     //! Get network name.
     virtual std::string getNetwork() = 0;
@@ -107,7 +114,10 @@ public:
     //! Unban node.
     virtual bool unban(const CSubNet& ip) = 0;
 
-    //! Disconnect node.
+    //! Disconnect node by address.
+    virtual bool disconnect(const CNetAddr& net_addr) = 0;
+
+    //! Disconnect node by id.
     virtual bool disconnect(NodeId id) = 0;
 
     //! Get total bytes recv.
@@ -181,6 +191,11 @@ public:
 
     //! Return interfaces for accessing wallets (if any).
     virtual std::vector<std::unique_ptr<Wallet>> getWallets() = 0;
+
+    //! Attempts to load a wallet from file or directory.
+    //! The loaded wallet is also notified to handlers previously registered
+    //! with handleLoadWallet.
+    virtual std::unique_ptr<Wallet> loadWallet(const std::string& name, std::string& error, std::string& warning) = 0;
 
     //! Register handler for init messages.
     using InitMessageFn = std::function<void(const std::string& message)>;

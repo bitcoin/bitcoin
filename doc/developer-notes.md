@@ -17,6 +17,7 @@ Developer Notes
         - [DEBUG_LOCKORDER](#debug_lockorder)
         - [Valgrind suppressions file](#valgrind-suppressions-file)
         - [Compiling for test coverage](#compiling-for-test-coverage)
+        - [Performance profiling with perf](#performance-profiling-with-perf)
     - [Locking/mutex usage notes](#lockingmutex-usage-notes)
     - [Threads](#threads)
     - [Ignoring IDE/editor files](#ignoring-ideeditor-files)
@@ -35,6 +36,7 @@ Developer Notes
     - [Subtrees](#subtrees)
     - [Git and GitHub tips](#git-and-github-tips)
     - [Scripted diffs](#scripted-diffs)
+    - [Release notes](#release-notes)
     - [RPC interface guidelines](#rpc-interface-guidelines)
 
 <!-- markdown-toc end -->
@@ -263,6 +265,51 @@ make cov
 
 # A coverage report will now be accessible at `./test_bitcoin.coverage/index.html`.
 ```
+
+### Performance profiling with perf
+
+Profiling is a good way to get a precise idea of where time is being spent in
+code. One tool for doing profiling on Linux platforms is called
+[`perf`](http://www.brendangregg.com/perf.html), and has been integrated into
+the functional test framework. Perf can observe a running process and sample
+(at some frequency) where its execution is.
+
+Perf installation is contingent on which kernel version you're running; see
+[this StackExchange
+thread](https://askubuntu.com/questions/50145/how-to-install-perf-monitoring-tool)
+for specific instructions.
+
+Certain kernel parameters may need to be set for perf to be able to inspect the
+running process' stack.
+
+```sh
+$ sudo sysctl -w kernel.perf_event_paranoid=-1
+$ sudo sysctl -w kernel.kptr_restrict=0
+```
+
+Make sure you [understand the security
+trade-offs](https://lwn.net/Articles/420403/) of setting these kernel
+parameters.
+
+To profile a running bitcoind process for 60 seconds, you could use an
+invocation of `perf record` like this:
+
+```sh
+$ perf record \
+    -g --call-graph dwarf --per-thread -F 140 \
+    -p `pgrep bitcoind` -- sleep 60
+```
+
+You could then analyze the results by running
+
+```sh
+perf report --stdio | c++filt | less
+```
+
+or using a graphical tool like [Hotspot](https://github.com/KDAB/hotspot).
+
+See the functional test documentation for how to invoke perf within tests.
+
 
 **Sanitizers**
 
@@ -797,54 +844,6 @@ would be to revert the upstream fix before applying the updates to NdovuCoin's
 copy of LevelDB. In general you should be wary of any upstream changes affecting
 what data is returned from LevelDB queries.
 
-Git and GitHub tips
----------------------
-
-- For resolving merge/rebase conflicts, it can be useful to enable diff3 style using
-  `git config merge.conflictstyle diff3`. Instead of
-
-        <<<
-        yours
-        ===
-        theirs
-        >>>
-
-  you will see
-
-        <<<
-        yours
-        |||
-        original
-        ===
-        theirs
-        >>>
-
-  This may make it much clearer what caused the conflict. In this style, you can often just look
-  at what changed between *original* and *theirs*, and mechanically apply that to *yours* (or the other way around).
-
-- When reviewing patches which change indentation in C++ files, use `git diff -w` and `git show -w`. This makes
-  the diff algorithm ignore whitespace changes. This feature is also available on github.com, by adding `?w=1`
-  at the end of any URL which shows a diff.
-
-- When reviewing patches that change symbol names in many places, use `git diff --word-diff`. This will instead
-  of showing the patch as deleted/added *lines*, show deleted/added *words*.
-
-- When reviewing patches that move code around, try using
-  `git diff --patience commit~:old/file.cpp commit:new/file/name.cpp`, and ignoring everything except the
-  moved body of code which should show up as neither `+` or `-` lines. In case it was not a pure move, this may
-  even work when combined with the `-w` or `--word-diff` options described above.
-
-- When looking at other's pull requests, it may make sense to add the following section to your `.git/config`
-  file:
-
-        [remote "upstream-pull"]
-                fetch = +refs/pull/*:refs/remotes/upstream-pull/*
-                url = git@github.com:bitcoin/bitcoin.git
-
-  This will add an `upstream-pull` remote to your git repository, which can be fetched using `git fetch --all`
-  or `git fetch upstream-pull`. Afterwards, you can use `upstream-pull/NUMBER/head` in arguments to `git show`,
-  `git checkout` and anywhere a commit id would be acceptable to see the changes from pull request NUMBER.
-
 Scripted diffs
 --------------
 
@@ -873,6 +872,21 @@ test/lint/commit-script-check.sh origin/master..HEAD
 ```
 
 Commit [`bb81e173`](https://github.com/bitcoin/bitcoin/commit/bb81e173) is an example of a scripted-diff.
+
+Release notes
+-------------
+
+Release notes should be written for any PR that:
+
+- introduces a notable new feature
+- fixes a significant bug
+- changes an API or configuration model
+- makes any other visible change to the end-user experience.
+
+Release notes should be added to a PR-specific release note file at
+`/doc/release-notes-<PR number>.md` to avoid conflicts between multiple PRs.
+All `release-notes*` files are merged into a single
+[/doc/release-notes.md](/doc/release-notes.md) file prior to the release.
 
 RPC interface guidelines
 --------------------------

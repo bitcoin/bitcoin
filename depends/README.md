@@ -44,7 +44,7 @@ No other options are needed, the paths are automatically configured.
 
 Common linux dependencies:
 
-    sudo apt-get install make automake cmake curl g++-multilib libtool binutils-gold bsdmainutils pkg-config python3
+    sudo apt-get install make automake cmake curl g++-multilib libtool binutils-gold bsdmainutils pkg-config python3 patch
 
 For linux ARM cross compilation:
 

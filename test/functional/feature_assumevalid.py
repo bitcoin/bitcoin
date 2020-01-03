@@ -32,7 +32,7 @@ Start three nodes:
 import time
 
 from test_framework.blocktools import (create_block, create_coinbase)
-from test_framework.key import CECKey
+from test_framework.key import ECKey
 from test_framework.messages import (
     CBlockHeader,
     COutPoint,
@@ -104,9 +104,9 @@ class AssumeValidTest(BitcoinTestFramework):
         self.blocks = []
 
         # Get a pubkey for the coinbase TXO
-        coinbase_key = CECKey()
-        coinbase_key.set_secretbytes(b"horsebattery")
-        coinbase_pubkey = coinbase_key.get_pubkey()
+        coinbase_key = ECKey()
+        coinbase_key.generate()
+        coinbase_pubkey = coinbase_key.get_pubkey().get_bytes()
 
         # Create the first block with a coinbase output to our key
         height = 1
@@ -180,7 +180,7 @@ class AssumeValidTest(BitcoinTestFramework):
         for i in range(2202):
             p2p1.send_message(msg_block(self.blocks[i]))
         # Syncing 2200 blocks can take a while on slow systems. Give it plenty of time to sync.
-        p2p1.sync_with_ping(150)
+        p2p1.sync_with_ping(200)
         assert_equal(self.nodes[1].getblock(self.nodes[1].getbestblockhash())['height'], 2202)
 
         # Send blocks to node2. Block 102 will be rejected.

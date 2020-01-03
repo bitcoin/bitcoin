@@ -5,7 +5,7 @@
 """Test bitcoind shutdown."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, get_rpc_proxy
+from test_framework.util import assert_equal, get_rpc_proxy, wait_until
 from threading import Thread
 
 def test_long_call(node):
@@ -20,8 +20,14 @@ class ShutdownTest(BitcoinTestFramework):
 
     def run_test(self):
         node = get_rpc_proxy(self.nodes[0].url, 1, timeout=600, coveragedir=self.nodes[0].coverage_dir)
+        # Force connection establishment by executing a dummy command.
+        node.getblockcount()
         Thread(target=test_long_call, args=(node,)).start()
-        # wait 1 second to ensure event loop waits for current connections to close
+        # Wait until the server is executing the above `waitfornewblock`.
+        wait_until(lambda: len(self.nodes[0].getrpcinfo()['active_commands']) == 2)
+        # Wait 1 second after requesting shutdown but not before the `stop` call
+        # finishes. This is to ensure event loop waits for current connections
+        # to close.
         self.stop_node(0, wait=1000)
 
 if __name__ == '__main__':

@@ -71,8 +71,13 @@ int main(int argc, char *argv[])
 
     // Don't remove this, it's needed to access
     // QApplication:: and QCoreApplication:: in the tests
+<<<<<<< HEAD
     BitcoinApplication app(*node, argc, argv);
     app.setApplicationName("NdovuCoin-Qt-test");
+=======
+    BitcoinApplication app(*node);
+    app.setApplicationName("Bitcoin-Qt-test");
+>>>>>>> upstream/0.18
 
     SSL_library_init();
 

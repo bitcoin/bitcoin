@@ -21,9 +21,14 @@ BOOST_AUTO_TEST_CASE(osrandom_tests)
 BOOST_AUTO_TEST_CASE(fastrandom_tests)
 {
     // Check that deterministic FastRandomContexts are deterministic
+    g_mock_deterministic_tests = true;
     FastRandomContext ctx1(true);
     FastRandomContext ctx2(true);
 
+    for (int i = 10; i > 0; --i) {
+        BOOST_CHECK_EQUAL(GetRand(std::numeric_limits<uint64_t>::max()), uint64_t{10393729187455219830U});
+        BOOST_CHECK_EQUAL(GetRandInt(std::numeric_limits<int>::max()), int{769702006});
+    }
     BOOST_CHECK_EQUAL(ctx1.rand32(), ctx2.rand32());
     BOOST_CHECK_EQUAL(ctx1.rand32(), ctx2.rand32());
     BOOST_CHECK_EQUAL(ctx1.rand64(), ctx2.rand64());
@@ -38,6 +43,11 @@ BOOST_AUTO_TEST_CASE(fastrandom_tests)
     BOOST_CHECK(ctx1.randbytes(50) == ctx2.randbytes(50));
 
     // Check that a nondeterministic ones are not
+    g_mock_deterministic_tests = false;
+    for (int i = 10; i > 0; --i) {
+        BOOST_CHECK(GetRand(std::numeric_limits<uint64_t>::max()) != uint64_t{10393729187455219830U});
+        BOOST_CHECK(GetRandInt(std::numeric_limits<int>::max()) != int{769702006});
+    }
     {
         FastRandomContext ctx3, ctx4;
         BOOST_CHECK(ctx3.rand64() != ctx4.rand64()); // extremely unlikely to be equal

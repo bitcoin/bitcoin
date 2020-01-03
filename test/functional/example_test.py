@@ -13,7 +13,7 @@ is testing and *how* it's being tested
 # libraries then local imports).
 from collections import defaultdict
 
-# Avoid wildcard * imports if possible
+# Avoid wildcard * imports
 from test_framework.blocktools import (create_block, create_coinbase)
 from test_framework.messages import CInv
 from test_framework.mininode import (

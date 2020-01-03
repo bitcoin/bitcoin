@@ -396,13 +396,12 @@ void RPCExecutor::request(const QString &command, const WalletModel* wallet_mode
         std::string executableCommand = command.toStdString() + "\n";
 
         // Catch the console-only-help command before RPC call is executed and reply with help text as-if a RPC reply.
-        if(executableCommand == "help-console\n")
-        {
+        if(executableCommand == "help-console\n") {
             Q_EMIT reply(RPCConsole::CMD_REPLY, QString(("\n"
                 "This console accepts RPC commands using the standard syntax.\n"
                 "   example:    getblockhash 0\n\n"
 
-                "This console can also accept RPC commands using parenthesized syntax.\n"
+                "This console can also accept RPC commands using the parenthesized syntax.\n"
                 "   example:    getblockhash(0)\n\n"
 
                 "Commands may be nested when specified with the parenthesized syntax.\n"
@@ -412,11 +411,11 @@ void RPCExecutor::request(const QString &command, const WalletModel* wallet_mode
                 "   example:    getblockhash 0\n"
                 "               getblockhash,0\n\n"
 
-                "Named results can be queried with a non-quoted key string in brackets.\n"
-                "   example:    getblock(getblockhash(0) true)[tx]\n\n"
+                "Named results can be queried with a non-quoted key string in brackets using the parenthesized syntax.\n"
+                "   example:    getblock(getblockhash(0) 1)[tx]\n\n"
 
-                "Results without keys can be queried using an integer in brackets.\n"
-                "   example:    getblock(getblockhash(0),true)[tx][0]\n\n")));
+                "Results without keys can be queried with an integer in brackets using the parenthesized syntax.\n"
+                "   example:    getblock(getblockhash(0),1)[tx][0]\n\n")));
             return;
         }
         if (!RPCConsole::RPCExecuteCommandLine(m_node, result, executableCommand, nullptr, wallet_model)) {
@@ -461,7 +460,7 @@ RPCConsole::RPCConsole(interfaces::Node& node, const PlatformStyle *_platformSty
     QChar nonbreaking_hyphen(8209);
     ui->dataDir->setToolTip(ui->dataDir->toolTip().arg(QString(nonbreaking_hyphen) + "datadir"));
     ui->blocksDir->setToolTip(ui->blocksDir->toolTip().arg(QString(nonbreaking_hyphen) + "blocksdir"));
-    ui->openDebugLogfileButton->setToolTip(ui->openDebugLogfileButton->toolTip().arg(tr(PACKAGE_NAME)));
+    ui->openDebugLogfileButton->setToolTip(ui->openDebugLogfileButton->toolTip().arg(PACKAGE_NAME));
 
     if (platformStyle->getImagesOnButtons()) {
         ui->openDebugLogfileButton->setIcon(platformStyle->SingleColorIcon(":/icons/export"));
@@ -485,7 +484,7 @@ RPCConsole::RPCConsole(interfaces::Node& node, const PlatformStyle *_platformSty
 
     // set library version labels
 #ifdef ENABLE_WALLET
-    ui->berkeleyDBVersion->setText(DbEnv::version(0, 0, 0));
+    ui->berkeleyDBVersion->setText(DbEnv::version(nullptr, nullptr, nullptr));
 #else
     ui->label_berkeleyDBVersion->hide();
     ui->berkeleyDBVersion->hide();
@@ -681,6 +680,9 @@ void RPCConsole::setClientModel(ClientModel *model)
         wordList.sort();
         autoCompleter = new QCompleter(wordList, this);
         autoCompleter->setModelSorting(QCompleter::CaseSensitivelySortedModel);
+        // ui->lineEdit is initially disabled because running commands is only
+        // possible from now on.
+        ui->lineEdit->setEnabled(true);
         ui->lineEdit->setCompleter(autoCompleter);
         autoCompleter->popup()->installEventFilter(this);
         // Start thread to execute RPC commands.
@@ -688,8 +690,7 @@ void RPCConsole::setClientModel(ClientModel *model)
     }
     if (!model) {
         // Client model is being set to 0, this means shutdown() is about to be called.
-        // Make sure we clean up the executor thread
-        Q_EMIT stopExecutor();
+        thread.quit();
         thread.wait();
     }
 }
@@ -806,7 +807,7 @@ void RPCConsole::clear(bool clearHistory)
     QString clsKey = "Ctrl-L";
 #endif
 
-    message(CMD_REPLY, (tr("Welcome to the %1 RPC console.").arg(tr(PACKAGE_NAME)) + "<br>" +
+    message(CMD_REPLY, (tr("Welcome to the %1 RPC console.").arg(PACKAGE_NAME) + "<br>" +
                         tr("Use up and down arrows to navigate history, and %1 to clear screen.").arg("<b>"+clsKey+"</b>") + "<br>" +
                         tr("Type %1 for an overview of available commands.").arg("<b>help</b>") + "<br>" +
                         tr("For more information on using this console type %1.").arg("<b>help-console</b>") +
@@ -975,11 +976,8 @@ void RPCConsole::startExecutor()
     // Requests from this object must go to executor
     connect(this, &RPCConsole::cmdRequest, executor, &RPCExecutor::request);
 
-    // On stopExecutor signal
-    // - quit the Qt event loop in the execution thread
-    connect(this, &RPCConsole::stopExecutor, &thread, &QThread::quit);
-    // - queue executor for deletion (in execution thread)
-    connect(&thread, &QThread::finished, executor, &RPCExecutor::deleteLater, Qt::DirectConnection);
+    // Make sure executor object is deleted in its own thread
+    connect(&thread, &QThread::finished, executor, &RPCExecutor::deleteLater);
 
     // Default implementation of QThread::run() simply spins up an event loop in the thread,
     // which is what we want.
@@ -988,10 +986,9 @@ void RPCConsole::startExecutor()
 
 void RPCConsole::on_tabWidget_currentChanged(int index)
 {
-    if (ui->tabWidget->widget(index) == ui->tab_console)
+    if (ui->tabWidget->widget(index) == ui->tab_console) {
         ui->lineEdit->setFocus();
-    else if (ui->tabWidget->widget(index) != ui->tab_peers)
-        clearSelectedNode();
+    }
 }
 
 void RPCConsole::on_openDebugLogfileButton_clicked()
@@ -1217,16 +1214,16 @@ void RPCConsole::banSelectedNode(int bantime)
         // Get currently selected peer address
         NodeId id = nodes.at(i).data().toLongLong();
 
-	// Get currently selected peer address
-	int detailNodeRow = clientModel->getPeerTableModel()->getRowByNodeId(id);
-	if(detailNodeRow < 0)
-	    return;
+        // Get currently selected peer address
+        int detailNodeRow = clientModel->getPeerTableModel()->getRowByNodeId(id);
+        if (detailNodeRow < 0) return;
 
-	// Find possible nodes, ban it and clear the selected node
-	const CNodeCombinedStats *stats = clientModel->getPeerTableModel()->getNodeStats(detailNodeRow);
-	if(stats) {
+        // Find possible nodes, ban it and clear the selected node
+        const CNodeCombinedStats *stats = clientModel->getPeerTableModel()->getNodeStats(detailNodeRow);
+        if (stats) {
             m_node.ban(stats->nodeStats.addr, BanReasonManuallyAdded, bantime);
-	}
+            m_node.disconnect(stats->nodeStats.addr);
+        }
     }
     clearSelectedNode();
     clientModel->getBanTableModel()->refresh();

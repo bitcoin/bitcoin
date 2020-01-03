@@ -188,8 +188,8 @@
         <translation>Гаманець зашифровано</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 буде закрито зараз, щоб завершити процес шифрування. Пам'ятайте, що шифрування гаманця не може повністю захистити ваші біткойни від крадіжки шкідливими програмами, у випадку якщо ваш комп'ютер буде інфіковано.</translation>
+        <source>Your wallet is now encrypted. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>Ваш гаманець зашифровано. Пам'ятайте, шифрування гаманця не гарантує абсолютний захист біткоінів від крадіжки шкідливим програмним забезпеченням, яке вразило комп'ютер.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -254,10 +254,6 @@
         <translation>&amp;Огляд</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation>Вузол</translation>
-    </message>
-    <message>
         <source>Show general overview of wallet</source>
         <translation>Показати стан гаманця</translation>
     </message>
@@ -314,24 +310,12 @@
         <translation>Змінити парол&amp;ь...</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>Адреси для &amp;відправлення...</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>Адреси для &amp;отримання...</translation>
-    </message>
-    <message>
         <source>Open &amp;URI...</source>
         <translation>Відкрити &amp;URI</translation>
     </message>
     <message>
         <source>Wallet:</source>
         <translation>Гаманець:</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation>типовий гаманець</translation>
     </message>
     <message>
         <source>Click to disable network activity.</source>
@@ -384,10 +368,6 @@
     <message>
         <source>NdovuCoin</source>
         <translation>NdovuCoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Гаманець</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -498,8 +478,44 @@
         <translation>Синхронізовано</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <source>Show the %1 help message to get a list with possible NdovuCoin command-line options</source>
+=======
+        <source>&amp;Sending addresses</source>
+        <translation>&amp;Адреси для відправлення</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses</source>
+        <translation>&amp;Адреси для отримання</translation>
+    </message>
+    <message>
+        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
+>>>>>>> upstream/0.18
         <translation>Показати довідку %1 для отримання переліку можливих параметрів командного рядка.</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>гаманець за змовчуванням</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>&amp;Вікно</translation>
+    </message>
+    <message>
+        <source>Minimize</source>
+        <translation>Мінімізувати</translation>
+    </message>
+    <message>
+        <source>Zoom</source>
+        <translation>Збільшення</translation>
+    </message>
+    <message>
+        <source>Restore</source>
+        <translation>Відновити</translation>
+    </message>
+    <message>
+        <source>Main Window</source>
+        <translation>Головне Вікно</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -564,6 +580,10 @@
     <message>
         <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
         <translation>Генерація HD ключа&lt;b&gt;вимкнена&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Private key &lt;b&gt;disabled&lt;/b&gt;</source>
+        <translation>Закритого ключа &lt;b&gt;вимкнено&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
@@ -901,7 +921,7 @@
     </message>
     <message>
         <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation>Спроба видправити біткойни, які ще не відображаються, не буде прийнята мережею.</translation>
+        <translation>Спроба відправити біткоїни, які ще не відображаються, не буде прийнята мережею.</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -935,11 +955,7 @@
         <source>Hide</source>
         <translation>Приховати</translation>
     </message>
-    <message>
-        <source>Unknown. Syncing Headers (%1)...</source>
-        <translation>Невідомо. Синхронізація заголовків (%1%)...</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -978,10 +994,6 @@
         <translation>Розмір &amp;кешу бази даних</translation>
     </message>
     <message>
-        <source>MB</source>
-        <translation>МБ</translation>
-    </message>
-    <message>
         <source>Number of script &amp;verification threads</source>
         <translation>Кількість потоків &amp;сценарію перевірки</translation>
     </message>
@@ -1012,10 +1024,6 @@
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation>Сторонні URL (наприклад, block explorer), що з'являться на вкладці транзакцій у вигляді пункту контекстного меню. %s в URL буде замінено на хеш транзакції. Для відокремлення URLів використовуйте вертикальну риску |.</translation>
-    </message>
-    <message>
-        <source>Active command-line options that override above options:</source>
-        <translation>Активовані параметри командного рядка, що перекривають вищевказані параметри:</translation>
     </message>
     <message>
         <source>Open the %1 configuration file from the working directory.</source>
@@ -1052,6 +1060,10 @@
     <message>
         <source>Reverting this setting requires re-downloading the entire blockchain.</source>
         <translation>Повернення цієї опції вимагає перезавантаження вього ланцюжка блоків.</translation>
+    </message>
+    <message>
+        <source>MiB</source>
+        <translation>MiB</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
@@ -1176,6 +1188,10 @@
     <message>
         <source>&amp;Third party transaction URLs</source>
         <translation>&amp;URL-адреси транзакцій сторонніх розробників</translation>
+    </message>
+    <message>
+        <source>Options set in this dialog are overridden by the command line or in the configuration file:</source>
+        <translation>Параметри, задані в цьому діалоговому вікні, буде перевизначено командним рядком або в конфігураційному файлі:</translation>
     </message>
     <message>
         <source>&amp;OK</source>
@@ -1324,8 +1340,16 @@
         <translation>'bitcoin://' не вірний URI. Використовуйте 'bitcoin:'.</translation>
     </message>
     <message>
+        <source>You are using a BIP70 URL which will be unsupported in the future.</source>
+        <translation>Ви використовуєте BIP70 посилання, яке в майбутньому не буде підтримуватись.</translation>
+    </message>
+    <message>
         <source>Payment request fetch URL is invalid: %1</source>
         <translation>URL запиту платежу є некоректним: %1</translation>
+    </message>
+    <message>
+        <source>Cannot process payment request because BIP70 support was not compiled in.</source>
+        <translation>Неможливо обробити платіжний запит, оскільки вимкнено підтримку BIP70.</translation>
     </message>
     <message>
         <source>Invalid payment address %1</source>
@@ -1589,6 +1613,18 @@
         <translation>Каталог даних</translation>
     </message>
     <message>
+        <source>To specify a non-default location of the data directory use the '%1' option.</source>
+        <translation>Для зазначення нестандартного шляху до каталогу даних, скористайтесь опцією '%1'.</translation>
+    </message>
+    <message>
+        <source>Blocksdir</source>
+        <translation>Каталог блоків</translation>
+    </message>
+    <message>
+        <source>To specify a non-default location of the blocks directory use the '%1' option.</source>
+        <translation>Для зазначення нестандартного шляху до каталогу блоків, скористайтесь опцією '%1'.</translation>
+    </message>
+    <message>
         <source>Startup time</source>
         <translation>Час запуску</translation>
     </message>
@@ -1799,10 +1835,6 @@
     <message>
         <source>&amp;Unban</source>
         <translation>&amp;Розблокувати</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation>гаманець за змовчуванням</translation>
     </message>
     <message>
         <source>Welcome to the %1 RPC console.</source>
@@ -2137,6 +2169,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Приховати</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
         <translation>Оплата тільки мінімальної комісії є прийнятною, допоки обсяг транзакцій є меншим простору в блоках. Але майте на увазі, що це може анулювати транзакцію, якщо попит на NdovuCoin транзакції стане більшим, ніж мережа зможе обробити.</translation>
     </message>
@@ -2145,6 +2178,8 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>(читати підказки)</translation>
     </message>
     <message>
+=======
+>>>>>>> upstream/0.18
         <source>Recommended:</source>
         <translation>Рекомендовано:</translation>
     </message>
@@ -2171,6 +2206,14 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Dust:</source>
         <translation>Пил:</translation>
+    </message>
+    <message>
+        <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
+        <translation>Якщо обсяг транзакцій менше, ніж простір у блоках, майнери, а також вузли ретрансляції можуть стягувати мінімальну плату. Сплата лише цієї мінімальної суми може призвести до ніколи не підтверджуваної транзакції, коли буде більше попиту на біткойн-транзакції, ніж мережа може обробити.</translation>
+    </message>
+    <message>
+        <source>A too low fee might result in a never confirming transaction (read the tooltip)</source>
+        <translation>Занадто низька плата може призвести до ніколи не підтверджуваної транзакції (див. підказку)</translation>
     </message>
     <message>
         <source>Confirmation time target:</source>
@@ -2307,10 +2350,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Payment request expired.</source>
         <translation>Запит платежу прострочено.</translation>
-    </message>
-    <message>
-        <source>Pay only the required fee of %1</source>
-        <translation>Сплатіть лише обов'язкову комісію у розмірі %1</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
@@ -3047,6 +3086,9 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
 </context>
 <context>
+    <name>WalletController</name>
+    </context>
+<context>
     <name>WalletFrame</name>
     <message>
         <source>No wallet has been loaded.</source>
@@ -3094,6 +3136,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Could not commit transaction</source>
         <translation>Не вдалось виконати транзакцію</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>гаманець за змовчуванням</translation>
     </message>
 </context>
 <context>
@@ -3242,6 +3288,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Індекс решти за межами діапазону</translation>
     </message>
     <message>
+        <source>Config setting for %s only applied on %s network when in [%s] section.</source>
+        <translation>Налаштування конфігурації %s застосовується лише для мережі %s у розділі [%s].</translation>
+    </message>
+    <message>
         <source>Copyright (C) %i-%i</source>
         <translation>Всі права збережено. %i-%i</translation>
     </message>
@@ -3252,10 +3302,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Do you want to rebuild the block database now?</source>
         <translation>Ви хочете перебудувати базу даних блоків зараз?</translation>
-    </message>
-    <message>
-        <source>Error creating %s: You can't create non-HD wallets with this version.</source>
-        <translation>Помилка створення %s: Ви не можете створювати не-HD гаманці з цією версією.</translation>
     </message>
     <message>
         <source>Error initializing block database</source>
@@ -3326,6 +3372,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Невірна сума для зарезервованої комісії -fallbackfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
+        <source>Specified blocks directory "%s" does not exist.</source>
+        <translation>Зазначений каталог блоків "%s" не існує.</translation>
+    </message>
+    <message>
         <source>Upgrading txindex database</source>
         <translation>Оновлення txindex бази</translation>
     </message>
@@ -3374,18 +3424,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Не вдається створити ключі</translation>
     </message>
     <message>
-        <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
-        <translation>Параметр -benchmark не підтримується та буде проігноровано; використовуйте -debug=bench.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
-        <translation>Параметр -debugnet не підтримується та буде проігноровано; використовуйте -debug=net.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -tor found, use -onion.</source>
-        <translation>Параметр -tor не підтримується; використовуйте -onion.</translation>
-    </message>
-    <message>
         <source>Unsupported logging category %s=%s.</source>
         <translation>Непідтримувана категорія ведення журналу %s=%s.</translation>
     </message>
@@ -3422,16 +3460,16 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Вам необхідно перебудувати базу даних з використанням -reindex для завантаження повного ланцюжка блоків.</translation>
     </message>
     <message>
-        <source>Error loading %s: You can't disable HD on an already existing HD wallet</source>
-        <translation>Помилка завантаження %s: Ви не можете відключити режим HD в існуючому HD-гаманці</translation>
-    </message>
-    <message>
         <source>Error reading from database, shutting down.</source>
         <translation>Помилка читання бази даних, припиняю роботу.</translation>
     </message>
     <message>
         <source>Error upgrading chainstate database</source>
         <translation>Помилка оновлення бази даних стану ланцюжка</translation>
+    </message>
+    <message>
+        <source>Error: Disk space is low for %s</source>
+        <translation>Помилка: для %s бракує місця на диску</translation>
     </message>
     <message>
         <source>Information</source>
@@ -3462,6 +3500,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Зменшення значення -maxconnections з %d до %d із-за обмежень системи.</translation>
     </message>
     <message>
+        <source>Section [%s] is not recognized.</source>
+        <translation>Розділ [%s] не розпізнано.</translation>
+    </message>
+    <message>
         <source>Signing transaction failed</source>
         <translation>Підписання транзакції не вдалося</translation>
     </message>
@@ -3478,10 +3520,9 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Вказаний шлях -walletdir "%s" не є каталогом</translation>
     </message>
     <message>
-        <source>Specified blocks directory "%s" does not exist.
+        <source>The specified config file %s does not exist
 </source>
-        <translation>Вказаний шлях до блоків "%s" не існує
-</translation>
+        <translation>Зазначений файл конфігурації %s не існує</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -3536,10 +3577,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Встановлено дуже велике значення -maxtxfee! Такі великі комісії можуть бути сплачені окремою транзакцією.</translation>
     </message>
     <message>
-        <source>Error loading %s: You can't enable HD on an already existing non-HD wallet</source>
-        <translation>Помилка завантаження %s: Ви не можете ввімкнути режим HD в існуючому не-HD гаманці</translation>
-    </message>
-    <message>
         <source>This is the transaction fee you may pay when fee estimates are not available.</source>
         <translation>Це комісія за транзакцію, яку ви можете сплатити, коли кошторисна вартість недоступна.</translation>
     </message>
@@ -3550,18 +3587,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>Загальна довжина рядку мережевої версії (%i) перевищує максимально допустиму (%i). Зменшіть число чи розмір коментарів клієнта користувача.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
-        <translation>Параметр -socks не підтримується. Можливість вказувати версію SOCKS було видалено, так як підтримується лише SOCKS5.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
-        <translation>Непідтримуваний аргумент -whitelistalwaysrelay ігнорується, використовуйте -whitelistrelay та/або -whitelistforcerelay.</translation>
-    </message>
-    <message>
-        <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
-        <translation>Попередження: видобуваються невідомі версії блоків! Можливо активовано невідомі правила</translation>
     </message>
     <message>
         <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
@@ -3614,10 +3639,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Insufficient funds</source>
         <translation>Недостатньо коштів</translation>
-    </message>
-    <message>
-        <source>Can't generate a change-address key. Private keys are disabled for this wallet.</source>
-        <translation>Неможливо створити ключ зміни адреси. Власні ключі вимкнено для цього гаманця.</translation>
     </message>
     <message>
         <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified.</source>

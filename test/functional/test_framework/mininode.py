@@ -118,8 +118,13 @@ class P2PConnection(asyncio.Protocol):
         # The initial message to send after the connection was made:
         self.on_connection_send_msg = None
         self.recvbuf = b""
+<<<<<<< HEAD
         self.network = net
         logger.debug('Connecting to NdovuCoin Node: %s:%d' % (self.dstaddr, self.dstport))
+=======
+        self.magic_bytes = MAGIC_BYTES[net]
+        logger.debug('Connecting to Bitcoin Node: %s:%d' % (self.dstaddr, self.dstport))
+>>>>>>> upstream/0.18
 
         loop = NetworkThread.network_event_loop
         conn_gen_unsafe = loop.create_connection(lambda: self, host=self.dstaddr, port=self.dstport)
@@ -170,7 +175,7 @@ class P2PConnection(asyncio.Protocol):
             while True:
                 if len(self.recvbuf) < 4:
                     return
-                if self.recvbuf[:4] != MAGIC_BYTES[self.network]:
+                if self.recvbuf[:4] != self.magic_bytes:
                     raise ValueError("got garbage %s" % repr(self.recvbuf))
                 if len(self.recvbuf) < 4 + 12 + 4 + 4:
                     return
@@ -232,7 +237,7 @@ class P2PConnection(asyncio.Protocol):
         """Build a serialized P2P message"""
         command = message.command
         data = message.serialize()
-        tmsg = MAGIC_BYTES[self.network]
+        tmsg = self.magic_bytes
         tmsg += command
         tmsg += b"\x00" * (12 - len(command))
         tmsg += struct.pack("<I", len(data))
@@ -363,6 +368,14 @@ class P2PInterface(P2PConnection):
         wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
     # Message receiving helper methods
+
+    def wait_for_tx(self, txid, timeout=60):
+        def test_function():
+            if not self.last_message.get('tx'):
+                return False
+            return self.last_message['tx'].tx.rehash() == txid
+
+        wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
     def wait_for_block(self, blockhash, timeout=60):
         test_function = lambda: self.last_message.get("block") and self.last_message["block"].block.rehash() == blockhash

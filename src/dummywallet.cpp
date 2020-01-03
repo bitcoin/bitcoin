@@ -8,6 +8,10 @@
 
 class CWallet;
 
+namespace interfaces {
+class Chain;
+}
+
 class DummyWalletInit : public WalletInitInterface {
 public:
 
@@ -19,10 +23,32 @@ public:
 
 void DummyWalletInit::AddWalletOptions() const
 {
-    std::vector<std::string> opts = {"-addresstype", "-changetype", "-disablewallet", "-discardfee=<amt>", "-fallbackfee=<amt>",
-        "-keypool=<n>", "-mintxfee=<amt>", "-paytxfee=<amt>", "-rescan", "-salvagewallet", "-spendzeroconfchange",  "-txconfirmtarget=<n>",
-        "-upgradewallet", "-wallet=<path>", "-walletbroadcast", "-walletdir=<dir>", "-walletnotify=<cmd>", "-walletrbf", "-zapwallettxes=<mode>",
-        "-dblogsize=<n>", "-flushwallet", "-privdb", "-walletrejectlongchains"};
+    std::vector<std::string> opts = {
+        "-addresstype",
+        "-avoidpartialspends",
+        "-changetype",
+        "-disablewallet",
+        "-discardfee=<amt>",
+        "-fallbackfee=<amt>",
+        "-keypool=<n>",
+        "-mintxfee=<amt>",
+        "-paytxfee=<amt>",
+        "-rescan",
+        "-salvagewallet",
+        "-spendzeroconfchange",
+        "-txconfirmtarget=<n>",
+        "-upgradewallet",
+        "-wallet=<path>",
+        "-walletbroadcast",
+        "-walletdir=<dir>",
+        "-walletnotify=<cmd>",
+        "-walletrbf",
+        "-zapwallettxes=<mode>",
+        "-dblogsize=<n>",
+        "-flushwallet",
+        "-privdb",
+        "-walletrejectlongchains",
+    };
     gArgs.AddHiddenArgs(opts);
 }
 
@@ -39,6 +65,11 @@ std::vector<fs::path> ListWalletDir()
 }
 
 std::vector<std::shared_ptr<CWallet>> GetWallets()
+{
+    throw std::logic_error("Wallet function called in non-wallet build.");
+}
+
+std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const std::string& name, std::string& error, std::string& warning)
 {
     throw std::logic_error("Wallet function called in non-wallet build.");
 }

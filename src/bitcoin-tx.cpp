@@ -35,7 +35,8 @@ const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
 static void SetupBitcoinTxArgs()
 {
-    gArgs.AddArg("-?", "This help message", false, OptionsCategory::OPTIONS);
+    SetupHelpOptions(gArgs);
+
     gArgs.AddArg("-create", "Create new, empty TX.", false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-json", "Select JSON output", false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-txid", "Output only the hex-encoded transaction id of the resultant transaction.", false, OptionsCategory::OPTIONS);
@@ -62,14 +63,10 @@ static void SetupBitcoinTxArgs()
         "This command requires JSON registers:"
         "prevtxs=JSON object, "
         "privatekeys=JSON object. "
-        "See signrawtransaction docs for format of sighash flags, JSON objects.", false, OptionsCategory::COMMANDS);
+        "See signrawtransactionwithkey docs for format of sighash flags, JSON objects.", false, OptionsCategory::COMMANDS);
 
     gArgs.AddArg("load=NAME:FILENAME", "Load JSON file FILENAME into register NAME", false, OptionsCategory::REGISTER_COMMANDS);
     gArgs.AddArg("set=NAME:JSON-STRING", "Set register NAME to given JSON-STRING", false, OptionsCategory::REGISTER_COMMANDS);
-
-    // Hidden
-    gArgs.AddArg("-h", "", false, OptionsCategory::HIDDEN);
-    gArgs.AddArg("-help", "", false, OptionsCategory::HIDDEN);
 }
 
 //
@@ -84,7 +81,7 @@ static int AppInitRawTx(int argc, char* argv[])
     SetupBitcoinTxArgs();
     std::string error;
     if (!gArgs.ParseParameters(argc, argv, error)) {
-        fprintf(stderr, "Error parsing command line arguments: %s\n", error.c_str());
+        tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error.c_str());
         return EXIT_FAILURE;
     }
 
@@ -92,7 +89,7 @@ static int AppInitRawTx(int argc, char* argv[])
     try {
         SelectParams(gArgs.GetChainName());
     } catch (const std::exception& e) {
-        fprintf(stderr, "Error: %s\n", e.what());
+        tfm::format(std::cerr, "Error: %s\n", e.what());
         return EXIT_FAILURE;
     }
 
@@ -106,10 +103,10 @@ static int AppInitRawTx(int argc, char* argv[])
             "\n";
         strUsage += gArgs.GetHelpMessage();
 
-        fprintf(stdout, "%s", strUsage.c_str());
+        tfm::format(std::cout, "%s", strUsage.c_str());
 
         if (argc < 2) {
-            fprintf(stderr, "Error: too few parameters\n");
+            tfm::format(std::cerr, "Error: too few parameters\n");
             return EXIT_FAILURE;
         }
         return EXIT_SUCCESS;
@@ -725,21 +722,21 @@ static void OutputTxJSON(const CTransaction& tx)
     TxToUniv(tx, uint256(), entry);
 
     std::string jsonOutput = entry.write(4);
-    fprintf(stdout, "%s\n", jsonOutput.c_str());
+    tfm::format(std::cout, "%s\n", jsonOutput.c_str());
 }
 
 static void OutputTxHash(const CTransaction& tx)
 {
     std::string strHexHash = tx.GetHash().GetHex(); // the hex-encoded transaction hash (aka the transaction id)
 
-    fprintf(stdout, "%s\n", strHexHash.c_str());
+    tfm::format(std::cout, "%s\n", strHexHash.c_str());
 }
 
 static void OutputTxHex(const CTransaction& tx)
 {
     std::string strHex = EncodeHexTx(tx);
 
-    fprintf(stdout, "%s\n", strHex.c_str());
+    tfm::format(std::cout, "%s\n", strHex.c_str());
 }
 
 static void OutputTx(const CTransaction& tx)
@@ -818,7 +815,7 @@ static int CommandLineRawTx(int argc, char* argv[])
             MutateTx(tx, key, value);
         }
 
-        OutputTx(tx);
+        OutputTx(CTransaction(tx));
     }
     catch (const std::exception& e) {
         strPrint = std::string("error: ") + e.what();
@@ -830,7 +827,7 @@ static int CommandLineRawTx(int argc, char* argv[])
     }
 
     if (strPrint != "") {
-        fprintf((nRet == 0 ? stdout : stderr), "%s\n", strPrint.c_str());
+        tfm::format(nRet == 0 ? std::cout : std::cerr, "%s\n", strPrint.c_str());
     }
     return nRet;
 }

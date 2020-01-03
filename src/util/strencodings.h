@@ -15,10 +15,6 @@
 #include <string>
 #include <vector>
 
-#define BEGIN(a)            ((char*)&(a))
-#define END(a)              ((char*)&((&(a))[1]))
-#define UBEGIN(a)           ((unsigned char*)&(a))
-#define UEND(a)             ((unsigned char*)&((&(a))[1]))
 #define ARRAYLEN(array)     (sizeof(array)/sizeof((array)[0]))
 
 /** Used by SanitizeString() */
@@ -48,12 +44,12 @@ bool IsHex(const std::string& str);
 * Return true if the string is a hex number, optionally prefixed with "0x"
 */
 bool IsHexNumber(const std::string& str);
-std::vector<unsigned char> DecodeBase64(const char* p, bool* pfInvalid = nullptr);
-std::string DecodeBase64(const std::string& str);
+std::vector<unsigned char> DecodeBase64(const char* p, bool* pf_invalid = nullptr);
+std::string DecodeBase64(const std::string& str, bool* pf_invalid = nullptr);
 std::string EncodeBase64(const unsigned char* pch, size_t len);
 std::string EncodeBase64(const std::string& str);
-std::vector<unsigned char> DecodeBase32(const char* p, bool* pfInvalid = nullptr);
-std::string DecodeBase32(const std::string& str);
+std::vector<unsigned char> DecodeBase32(const char* p, bool* pf_invalid = nullptr);
+std::string DecodeBase32(const std::string& str, bool* pf_invalid = nullptr);
 std::string EncodeBase32(const unsigned char* pch, size_t len);
 std::string EncodeBase32(const std::string& str);
 
@@ -201,9 +197,6 @@ bool ConvertBits(const O& outfn, I it, I end) {
     return true;
 }
 
-/** Parse an HD keypaths like "m/7/0'/2000". */
-NODISCARD bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypath);
-
 /**
  * Converts the given character to its lowercase equivalent.
  * This function is locale independent. It only converts uppercase
@@ -212,7 +205,7 @@ NODISCARD bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32
  * @return          the lowercase equivalent of c; or the argument
  *                  if no conversion is possible.
  */
-constexpr unsigned char ToLower(unsigned char c)
+constexpr char ToLower(char c)
 {
     return (c >= 'A' && c <= 'Z' ? (c - 'A') + 'a' : c);
 }
@@ -233,7 +226,7 @@ void Downcase(std::string& str);
  * @return          the uppercase equivalent of c; or the argument
  *                  if no conversion is possible.
  */
-constexpr unsigned char ToUpper(unsigned char c)
+constexpr char ToUpper(char c)
 {
     return (c >= 'a' && c <= 'z' ? (c - 'a') + 'A' : c);
 }

@@ -1,12 +1,9 @@
-(note: this is a temporary file, to be added-to by anybody, and moved to
-release-notes at release time)
+Bitcoin Core version 0.18.x is now available from:
 
-NdovuCoin Core version *version* is now available from:
+  <https://bitcoincore.org/bin/bitcoin-core-0.18.x/>
 
-  <https://bitcoincore.org/bin/bitcoin-core-*version*/>
-
-This is a new major version release, including new features, various bugfixes
-and performance improvements, as well as updated translations.
+This is a new minor version release, including new features, various bug
+fixes and performance improvements, as well as updated translations.
 
 Please report bugs using the issue tracker at GitHub:
 
@@ -19,52 +16,34 @@ To receive security and update notifications, please subscribe to:
 How to Upgrade
 ==============
 
-If you are running an older version, shut it down. Wait until it has completely
-shut down (which might take a few minutes for older versions), then run the
-installer (on Windows) or just copy over `/Applications/NdovuCoin-Qt` (on Mac)
-or `bitcoind`/`bitcoin-qt` (on Linux).
+If you are running an older version, shut it down. Wait until it has
+completely shut down (which might take a few minutes for older
+versions), then run the installer (on Windows) or just copy over
+`/Applications/Bitcoin-Qt` (on Mac) or `bitcoind`/`bitcoin-qt` (on
+Linux).
 
-The first time you run version 0.15.0, your chainstate database will be converted to a
-new format, which will take anywhere from a few minutes to half an hour,
-depending on the speed of your machine.
+The first time you run version 0.15.0 or newer, your chainstate database
+will be converted to a new format, which will take anywhere from a few
+minutes to half an hour, depending on the speed of your machine.
 
-Note that the block database format also changed in version 0.8.0 and there is no
-automatic upgrade code from before version 0.8 to version 0.15.0. Upgrading
-directly from 0.7.x and earlier without redownloading the blockchain is not supported.
-However, as usual, old wallet versions are still supported.
-
-Downgrading warning
--------------------
-
-The chainstate database for this release is not compatible with previous
-releases, so if you run 0.15 and then decide to switch back to any
-older version, you will need to run the old release with the `-reindex-chainstate`
-option to rebuild the chainstate data structures in the old format.
-
-If your node has pruning enabled, this will entail re-downloading and
-processing the entire blockchain.
+Note that the block database format also changed in version 0.8.0 and
+there is no automatic upgrade code from before version 0.8 to version
+0.15.0 or later. Upgrading directly from 0.7.x and earlier without
+redownloading the blockchain is not supported.  However, as usual, old
+wallet versions are still supported.
 
 Compatibility
 ==============
 
-NdovuCoin Core is supported and extensively tested on operating systems using
-the Linux kernel, macOS 10.10+, and Windows 7 and newer.  It is not recommended
-to use NdovuCoin Core on unsupported systems.
+Bitcoin Core is supported and extensively tested on operating systems
+using the Linux kernel, macOS 10.10+, and Windows 7 and newer. It is not
+recommended to use Bitcoin Core on unsupported systems.
 
-NdovuCoin Core should also work on most other Unix-like systems but is not
-frequently tested on them.
+Bitcoin Core should also work on most other Unix-like systems but is not
+as frequently tested on them.
 
-From 0.17.0 onwards, macOS <10.10 is no longer supported.  0.17.0 is
+From 0.17.0 onwards, macOS <10.10 is no longer supported. 0.17.0 is
 built using Qt 5.9.x, which doesn't support versions of macOS older than
-10.10.  Additionally, NdovuCoin Core does not yet change appearance when
-macOS "dark mode" is activated.
-
-In addition to previously-supported CPU platforms, this release's
-pre-compiled distribution also provides binaries for the RISC-V
-platform.
-
-Notable changes
-===============
 
 Mining
 ------
@@ -163,138 +142,29 @@ Deprecated or removed RPCs
   See the [release notes from v0.17](https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.17.0.md#label-and-account-apis-for-wallet)
   for a full description of the changes from the 'account' API to the
   'label' API.
+=======
+10.10. Additionally, Bitcoin Core does not yet change appearance when
+macOS "dark mode" is activated.
 
-- The `addwitnessaddress` RPC is removed after being deprecated in
-  version 0.13.0.
+Known issues
+============
 
-- The wallet's `generate` RPC method is deprecated and will be fully
-  removed in a subsequent major version.  This RPC is only used for
-  testing, but its implementation reached across multiple subsystems
-  (wallet and mining), so it is being deprecated to simplify the
-  wallet-node interface.  Projects that are using `generate` for testing
-  purposes should transition to using the `generatetoaddress` RPC, which
-  does not require or use the wallet component. Calling
-  `generatetoaddress` with an address returned by the `getnewaddress`
-  RPC gives the same functionality as the old `generate` RPC.  To
-  continue using `generate` in this version, restart bitcoind with the
-  `-deprecatedrpc=generate` configuration option.
+Wallet GUI
+----------
 
-New RPCs
---------
+For advanced users who have both (1) enabled coin control features, and
+(2) are using multiple wallets loaded at the same time: The coin control
+input selection dialog can erroneously retain wrong-wallet state when
+switching wallets using the dropdown menu. For now, it is recommended
+not to use coin control features with multiple wallets loaded.
 
-- A new `getnodeaddresses` RPC returns peer addresses known to this
-  node. It may be used to find nodes to connect to without using a DNS
-  seeder.
+Notable changes
+===============
 
-- A new `listwalletdir` RPC returns a list of wallets in the wallet
-  directory (either the default wallet directory or the directory
-  configured by the `-walletdir` parameter).
 
-Updated RPCs
-------------
-
-Note: some low-level RPC changes mainly useful for testing are described
-in the Low-level Changes section below.
-
-- The `getpeerinfo` RPC now returns an additional `minfeefilter` field
-  set to the peer's BIP133 fee filter.  You can use this to detect that
-  you have peers that are willing to accept transactions below the
-  default minimum relay fee.
-
-- The mempool RPCs, such as `getrawmempool` with `verbose=true`, now
-  return an additional "bip125-replaceable" value indicating whether the
-  transaction (or its unconfirmed ancestors) opts-in to asking nodes and
-  miners to replace it with a higher-feerate transaction spending any of
-  the same inputs.
-
-- The `settxfee` RPC previously silently ignored attempts to set the fee
-  below the allowed minimums.  It now prints a warning.  The special
-  value of "0" may still be used to request the minimum value.
-
-- The `getaddressinfo` RPC now provides an `ischange` field indicating
-  whether the wallet used the address in a change output.
-
-- The `importmulti` RPC has been updated to support P2WSH, P2WPKH,
-  P2SH-P2WPKH, and P2SH-P2WSH. Requests for P2WSH and P2SH-P2WSH accept
-  an additional `witnessscript` parameter.
-
-- The `importmulti` RPC now returns an additional `warnings` field for
-  each request with an array of strings explaining when fields are being
-  ignored or are inconsistent, if there are any.
-
-- The `getaddressinfo` RPC now returns an additional `solvable` boolean
-  field when NdovuCoin Core knows enough about the address's scriptPubKey,
-  optional redeemScript, and optional witnessScript in order for the
-  wallet to be able to generate an unsigned input spending funds sent to
-  that address.
-
-- The `getaddressinfo`, `listunspent`, and `scantxoutset` RPCs now
-  return an additional `desc` field that contains an output descriptor
-  containing all key paths and signing information for the address
-  (except for the private key).  The `desc` field is only returned for
-  `getaddressinfo` and `listunspent` when the address is solvable.
-
-- The `importprivkey` RPC will preserve previously-set labels for
-  addresses or public keys corresponding to the private key being
-  imported.  For example, if you imported a watch-only address with the
-  label "cold wallet" in earlier releases of NdovuCoin Core, subsequently
-  importing the private key would default to resetting the address's
-  label to the default empty-string label ("").  In this release, the
-  previous label of "cold wallet" will be retained.  If you optionally
-  specify any label besides the default when calling `importprivkey`,
-  the new label will be applied to the address.
-
-- See the [Mining](#mining) section for changes to `getblocktemplate`.
-
-Graphical User Interface (GUI)
-------------------------------
-
-- A new Window menu is added alongside the existing File, Settings, and
-  Help menus.  Several items from the other menus that opened new
-  windows have been moved to this new Window menu.
-
-- In the Send tab, the checkbox for "pay only the required fee"
-  has been removed.  Instead, the user can simply decrease the value in
-  the Custom Feerate field all the way down to the node's configured
-  minimum relay fee.
-
-- In the Overview tab, the watch-only balance will be the only
-  balance shown if the wallet was created using the `createwallet` RPC
-  and the `disable_private_keys` parameter was set to true.
-
-Low-level changes
+0.18.x change log
 =================
 
-RPC
----
-
-- The `submitblock` RPC previously returned the reason a rejected block
-  was invalid the first time it processed that block but returned a
-  generic "duplicate" rejection message on subsequent occasions it
-  processed the same block.  It now always returns the fundamental
-  reason for rejecting an invalid block and only returns "duplicate" for
-  valid blocks it has already accepted.
-
-- A new `submitheader` RPC allows submitting block headers independently
-  from their block.  This is likely only useful for testing.
-
-Configuration
--------------
-
-- The `-usehd` configuration option was removed in version 0.16. From
-  that version onwards, all new wallets created are hierarchical
-  deterministic wallets. This release makes specifying `-usehd` an
-  invalid configuration option.
-
-Changes for particular platforms
---------------------------------
-
-- On macOS, NdovuCoin Core now opts out of application CPU throttling
-  ("app nap") during initial blockchain download, when catching up from
-  over 100 blocks behind the current chain tip, or when reindexing chain
-  data.  This helps prevent these operations from taking an excessively
-  long time because the operating system is attempting to conserve
-  power.
 
 Credits
 =======

@@ -18,7 +18,6 @@ KNOWN_VIOLATIONS=(
     "src/util/strencodings.cpp:.*strtoul"
     "src/util/strencodings.h:.*atoi"
     "src/util/system.cpp:.*atoi"
-    "src/util/system.cpp:.*fprintf"
 )
 
 REGEXP_IGNORE_EXTERNAL_DEPENDENCIES="^src/(crypto/ctaes/|leveldb/|secp256k1/|tinyformat.h|univalue/)"
@@ -85,7 +84,7 @@ LOCALE_DEPENDENT_FUNCTIONS=(
     mbtowc       # LC_CTYPE
     mktime
     normalize    # boost::locale::normalize
-#   printf       # LC_NUMERIC
+    printf       # LC_NUMERIC
     putwc
     putwchar
     scanf        # LC_NUMERIC
@@ -189,8 +188,7 @@ GIT_GREP_OUTPUT=$(git grep -E "[^a-zA-Z0-9_\`'\"<>](${REGEXP_LOCALE_DEPENDENT_FU
 EXIT_CODE=0
 for LOCALE_DEPENDENT_FUNCTION in "${LOCALE_DEPENDENT_FUNCTIONS[@]}"; do
     MATCHES=$(grep -E "[^a-zA-Z0-9_\`'\"<>]${LOCALE_DEPENDENT_FUNCTION}(_r|_s)?[^a-zA-Z0-9_\`'\"<>]" <<< "${GIT_GREP_OUTPUT}" | \
-        grep -vE "\.(c|cpp|h):\s*(//|\*|/\*|\").*${LOCALE_DEPENDENT_FUNCTION}" | \
-        grep -vE 'fprintf\(.*(stdout|stderr)')
+        grep -vE "\.(c|cpp|h):\s*(//|\*|/\*|\").*${LOCALE_DEPENDENT_FUNCTION}")
     if [[ ${REGEXP_IGNORE_EXTERNAL_DEPENDENCIES} != "" ]]; then
         MATCHES=$(grep -vE "${REGEXP_IGNORE_EXTERNAL_DEPENDENCIES}" <<< "${MATCHES}")
     fi

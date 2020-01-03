@@ -1,11 +1,11 @@
 dnl require autoconf 2.60 (AS_ECHO/AS_ECHO_N)
 AC_PREREQ([2.60])
 define(_CLIENT_VERSION_MAJOR, 0)
-define(_CLIENT_VERSION_MINOR, 17)
-define(_CLIENT_VERSION_REVISION, 99)
+define(_CLIENT_VERSION_MINOR, 18)
+define(_CLIENT_VERSION_REVISION, 1)
 define(_CLIENT_VERSION_BUILD, 0)
 define(_CLIENT_VERSION_RC, 0)
-define(_CLIENT_VERSION_IS_RELEASE, false)
+define(_CLIENT_VERSION_IS_RELEASE, true)
 define(_COPYRIGHT_YEAR, 2019)
 define(_COPYRIGHT_HOLDERS,[The %s developers])
 define(_COPYRIGHT_HOLDERS_SUBSTITUTION,[[NdovuCoin Core]])
@@ -19,6 +19,7 @@ BITCOIN_DAEMON_NAME=bitcoind
 BITCOIN_GUI_NAME=bitcoin-qt
 BITCOIN_CLI_NAME=bitcoin-cli
 BITCOIN_TX_NAME=bitcoin-tx
+BITCOIN_WALLET_TOOL_NAME=bitcoin-wallet
 
 dnl Unless the user specified ARFLAGS, force it to be cr
 AC_ARG_VAR(ARFLAGS, [Flags for the archiver, defaults to <cr> if not set])
@@ -84,8 +85,8 @@ AC_PATH_TOOL(RANLIB, ranlib)
 AC_PATH_TOOL(STRIP, strip)
 AC_PATH_TOOL(GCOV, gcov)
 AC_PATH_PROG(LCOV, lcov)
-dnl Python 3.x is supported from 3.4 on (see https://github.com/bitcoin/bitcoin/issues/7893)
-AC_PATH_PROGS([PYTHON], [python3.7 python3.6 python3.5 python3.4 python3 python])
+dnl Python 3.4 is specified in .python-version and should be used if available, see doc/dependencies.md
+AC_PATH_PROGS([PYTHON], [python3.4 python3.5 python3.6 python3.7 python3 python])
 AC_PATH_PROG(GENHTML, genhtml)
 AC_PATH_PROG([GIT], [git])
 AC_PATH_PROG(CCACHE,ccache)
@@ -102,7 +103,6 @@ AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
 
 AC_ARG_VAR(PYTHONPATH, Augments the default search path for python module files)
 
-# Enable wallet
 AC_ARG_ENABLE([wallet],
   [AS_HELP_STRING([--disable-wallet],
   [disable wallet (enabled by default)])],
@@ -146,6 +146,11 @@ AC_ARG_ENABLE([extended-functional-tests],
     AS_HELP_STRING([--enable-extended-functional-tests],[enable expensive functional tests when using lcov (default no)]),
     [use_extended_functional_tests=$enableval],
     [use_extended_functional_tests=no])
+
+AC_ARG_ENABLE([fuzz],
+    AS_HELP_STRING([--enable-fuzz],[enable building of fuzz targets (default no)]),
+    [enable_fuzz=$enableval],
+    [enable_fuzz=no])
 
 AC_ARG_WITH([qrencode],
   [AS_HELP_STRING([--with-qrencode],
@@ -295,7 +300,14 @@ if test x$use_sanitizers != x; then
   AX_CHECK_LINK_FLAG(
     [[-fsanitize=$use_sanitizers]],
     [[SANITIZER_LDFLAGS=-fsanitize=$use_sanitizers]],
-    [AC_MSG_ERROR([linker did not accept requested flags, you are missing required libraries])])
+    [AC_MSG_ERROR([linker did not accept requested flags, you are missing required libraries])],
+    [],
+    [AC_LANG_PROGRAM([[
+    #include <cstdint>
+    #include <cstddef>
+    extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) { return 0; }
+    __attribute__((weak)) // allow for libFuzzer linking
+    ]],[[]])])
 fi
 
 ERROR_CXXFLAGS=
@@ -408,7 +420,7 @@ CPPFLAGS="$CPPFLAGS -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS"
 
 AC_ARG_WITH([utils],
   [AS_HELP_STRING([--with-utils],
-  [build bitcoin-cli bitcoin-tx (default=yes)])],
+  [build bitcoin-cli bitcoin-tx bitcoin-wallet (default=yes)])],
   [build_bitcoin_utils=$withval],
   [build_bitcoin_utils=yes])
 
@@ -423,6 +435,12 @@ AC_ARG_ENABLE([util-tx],
   [build bitcoin-tx])],
   [build_bitcoin_tx=$enableval],
   [build_bitcoin_tx=$build_bitcoin_utils])
+
+AC_ARG_ENABLE([util-wallet],
+  [AS_HELP_STRING([--enable-util-wallet],
+  [build bitcoin-wallet])],
+  [build_bitcoin_wallet=$enableval],
+  [build_bitcoin_wallet=$build_bitcoin_utils])
 
 AC_ARG_WITH([libs],
   [AS_HELP_STRING([--with-libs],
@@ -478,7 +496,7 @@ case $host in
        AC_MSG_ERROR("windres not found")
      fi
 
-     CPPFLAGS="$CPPFLAGS -D_MT -DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB"
+     CPPFLAGS="$CPPFLAGS -D_MT -DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB -D_WIN32_WINNT=0x0601"
      LEVELDB_TARGET_FLAGS="-DOS_WINDOWS"
      if test "x$CXXFLAGS_overridden" = "xno"; then
        CXXFLAGS="$CXXFLAGS -w"
@@ -504,17 +522,6 @@ case $host in
      LEVELDB_TARGET_FLAGS="-DOS_MACOSX"
      if  test x$cross_compiling != xyes; then
        BUILD_OS=darwin
-       AC_CHECK_PROG([PORT],port, port)
-       if test x$PORT = xport; then
-         dnl add default macports paths
-         CPPFLAGS="$CPPFLAGS -isystem /opt/local/include"
-         LIBS="$LIBS -L/opt/local/lib"
-         if test -d /opt/local/include/db48; then
-           CPPFLAGS="$CPPFLAGS -I/opt/local/include/db48"
-           LIBS="$LIBS -L/opt/local/lib/db48"
-         fi
-       fi
-
        AC_PATH_PROGS([RSVG_CONVERT], [rsvg-convert rsvg],rsvg-convert)
        AC_CHECK_PROG([BREW],brew, brew)
        if test x$BREW = xbrew; then
@@ -718,6 +725,10 @@ if test x$TARGET_OS != xwindows; then
   AX_CHECK_COMPILE_FLAG([-fPIC],[PIC_FLAGS="-fPIC"])
 fi
 
+# All versions of gcc that we commonly use for building are subject to bug
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90348. To work around that, set
+# -fstack-reuse=none for all gcc builds. (Only gcc understands this flag)
+AX_CHECK_COMPILE_FLAG([-fstack-reuse=none],[HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fstack-reuse=none"])
 if test x$use_hardening != xno; then
   use_hardening=yes
   AX_CHECK_COMPILE_FLAG([-Wstack-protector],[HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -Wstack-protector"])
@@ -904,7 +915,7 @@ BITCOIN_QT_INIT
 dnl sets $bitcoin_enable_qt, $bitcoin_enable_qt_test, $bitcoin_enable_qt_dbus
 BITCOIN_QT_CONFIGURE([$use_pkgconfig])
 
-if test x$build_bitcoin_cli$build_bitcoin_tx$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench = xnononononono; then
+if test x$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench = xnonononononono; then
     use_boost=no
 else
     use_boost=yes
@@ -1094,7 +1105,7 @@ if test x$use_pkgconfig = xyes; then
       if test x$use_qr != xno; then
         BITCOIN_QT_CHECK([PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])])
       fi
-      if test x$build_bitcoin_cli$build_bitcoin_tx$build_bitcoind$bitcoin_enable_qt$use_tests != xnonononono; then
+      if test x$build_bitcoin_cli$build_bitcoind$bitcoin_enable_qt$use_tests != xnononono; then
         PKG_CHECK_MODULES([EVENT], [libevent],, [AC_MSG_ERROR(libevent not found.)])
         if test x$TARGET_OS != xwindows; then
           PKG_CHECK_MODULES([EVENT_PTHREADS], [libevent_pthreads],, [AC_MSG_ERROR(libevent_pthreads not found.)])
@@ -1119,7 +1130,7 @@ else
   AC_CHECK_HEADER([openssl/ssl.h],, AC_MSG_ERROR(libssl headers missing),)
   AC_CHECK_LIB([ssl],         [main],SSL_LIBS=-lssl, AC_MSG_ERROR(libssl missing))
 
-  if test x$build_bitcoin_cli$build_bitcoin_tx$build_bitcoind$bitcoin_enable_qt$use_tests != xnonononono; then
+  if test x$build_bitcoin_cli$build_bitcoind$bitcoin_enable_qt$use_tests != xnononono; then
     AC_CHECK_HEADER([event2/event.h],, AC_MSG_ERROR(libevent headers missing),)
     AC_CHECK_LIB([event],[main],EVENT_LIBS=-levent,AC_MSG_ERROR(libevent missing))
     if test x$TARGET_OS != xwindows; then
@@ -1186,7 +1197,7 @@ dnl univalue check
 
 need_bundled_univalue=yes
 
-if test x$build_bitcoin_cli$build_bitcoin_tx$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench = xnononononono; then
+if test x$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench = xnonononononono; then
   need_bundled_univalue=no
 else
 
@@ -1247,6 +1258,10 @@ AC_MSG_RESULT($build_bitcoin_cli)
 AC_MSG_CHECKING([whether to build bitcoin-tx])
 AM_CONDITIONAL([BUILD_BITCOIN_TX], [test x$build_bitcoin_tx = xyes])
 AC_MSG_RESULT($build_bitcoin_tx)
+
+AC_MSG_CHECKING([whether to build bitcoin-wallet])
+AM_CONDITIONAL([BUILD_BITCOIN_WALLET], [test x$build_bitcoin_wallet = xyes])
+AC_MSG_RESULT($build_bitcoin_wallet)
 
 AC_MSG_CHECKING([whether to build libraries])
 AM_CONDITIONAL([BUILD_BITCOIN_LIBS], [test x$build_bitcoin_libs = xyes])
@@ -1389,7 +1404,7 @@ else
   AC_MSG_RESULT([no])
 fi
 
-if test x$build_bitcoin_cli$build_bitcoin_tx$build_bitcoin_libs$build_bitcoind$bitcoin_enable_qt$use_bench$use_tests = xnonononononono; then
+if test x$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoin_libs$build_bitcoind$bitcoin_enable_qt$use_bench$use_tests = xnononononononono; then
   AC_MSG_ERROR([No targets! Please specify at least one of: --with-utils --with-libs --with-daemon --with-gui --enable-bench or --enable-tests])
 fi
 
@@ -1398,6 +1413,7 @@ AM_CONDITIONAL([BUILD_DARWIN], [test x$BUILD_OS = xdarwin])
 AM_CONDITIONAL([TARGET_WINDOWS], [test x$TARGET_OS = xwindows])
 AM_CONDITIONAL([ENABLE_WALLET],[test x$enable_wallet = xyes])
 AM_CONDITIONAL([ENABLE_TESTS],[test x$BUILD_TEST = xyes])
+AM_CONDITIONAL([ENABLE_FUZZ],[test x$enable_fuzz = xyes])
 AM_CONDITIONAL([ENABLE_QT],[test x$bitcoin_enable_qt = xyes])
 AM_CONDITIONAL([ENABLE_QT_TESTS],[test x$BUILD_TEST_QT = xyes])
 AM_CONDITIONAL([ENABLE_BIP70],[test x$enable_bip70 = xyes])
@@ -1435,6 +1451,7 @@ AC_SUBST(BITCOIN_DAEMON_NAME)
 AC_SUBST(BITCOIN_GUI_NAME)
 AC_SUBST(BITCOIN_CLI_NAME)
 AC_SUBST(BITCOIN_TX_NAME)
+AC_SUBST(BITCOIN_WALLET_TOOL_NAME)
 
 AC_SUBST(RELDFLAGS)
 AC_SUBST(DEBUG_CPPFLAGS)
@@ -1540,6 +1557,9 @@ if test x$bitcoin_enable_qt != xno; then
 fi
 echo "  with zmq      = $use_zmq"
 echo "  with test     = $use_tests"
+if test x$use_tests != xno; then
+    echo "    with fuzz   = $enable_fuzz"
+fi
 echo "  with bench    = $use_bench"
 echo "  with upnp     = $use_upnp"
 echo "  use asm       = $use_asm"

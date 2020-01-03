@@ -532,7 +532,7 @@ BOOST_AUTO_TEST_CASE(countbits_tests)
             // Check handling of zero.
             BOOST_CHECK_EQUAL(CountBits(0), 0U);
         } else if (i < 10) {
-            for (uint64_t j = 1 << (i - 1); (j >> i) == 0; ++j) {
+            for (uint64_t j = (uint64_t)1 << (i - 1); (j >> i) == 0; ++j) {
                 // Exhaustively test up to 10 bits
                 BOOST_CHECK_EQUAL(CountBits(j), i);
             }

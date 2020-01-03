@@ -48,7 +48,7 @@ void CheckUniqueFileid(const BerkeleyEnvironment& env, const std::string& filena
 }
 
 CCriticalSection cs_db;
-std::map<std::string, BerkeleyEnvironment> g_dbenvs GUARDED_BY(cs_db); //!< Map from directory name to open db environment.
+std::map<std::string, std::weak_ptr<BerkeleyEnvironment>> g_dbenvs GUARDED_BY(cs_db); //!< Map from directory name to db environment.
 } // namespace
 
 bool WalletDatabaseFileId::operator==(const WalletDatabaseFileId& rhs) const
@@ -80,19 +80,29 @@ bool IsWalletLoaded(const fs::path& wallet_path)
     LOCK(cs_db);
     auto env = g_dbenvs.find(env_directory.string());
     if (env == g_dbenvs.end()) return false;
-    return env->second.IsDatabaseLoaded(database_filename);
+    auto database = env->second.lock();
+    return database && database->IsDatabaseLoaded(database_filename);
 }
 
-BerkeleyEnvironment* GetWalletEnv(const fs::path& wallet_path, std::string& database_filename)
+/**
+ * @param[in] wallet_path Path to wallet directory. Or (for backwards compatibility only) a path to a berkeley btree data file inside a wallet directory.
+ * @param[out] database_filename Filename of berkeley btree data file inside the wallet directory.
+ * @return A shared pointer to the BerkeleyEnvironment object for the wallet directory, never empty because ~BerkeleyEnvironment
+ * erases the weak pointer from the g_dbenvs map.
+ * @post A new BerkeleyEnvironment weak pointer is inserted into g_dbenvs if the directory path key was not already in the map.
+ */
+std::shared_ptr<BerkeleyEnvironment> GetWalletEnv(const fs::path& wallet_path, std::string& database_filename)
 {
     fs::path env_directory;
     SplitWalletPath(wallet_path, env_directory, database_filename);
     LOCK(cs_db);
-    // Note: An unused temporary BerkeleyEnvironment object may be created inside the
-    // emplace function if the key already exists. This is a little inefficient,
-    // but not a big concern since the map will be changed in the future to hold
-    // pointers instead of objects, anyway.
-    return &g_dbenvs.emplace(std::piecewise_construct, std::forward_as_tuple(env_directory.string()), std::forward_as_tuple(env_directory)).first->second;
+    auto inserted = g_dbenvs.emplace(env_directory.string(), std::weak_ptr<BerkeleyEnvironment>());
+    if (inserted.second) {
+        auto env = std::make_shared<BerkeleyEnvironment>(env_directory.string());
+        inserted.first->second = env;
+        return env;
+    }
+    return inserted.first->second.lock();
 }
 
 //
@@ -116,11 +126,18 @@ void BerkeleyEnvironment::Close()
         }
     }
 
+    FILE* error_file = nullptr;
+    dbenv->get_errfile(&error_file);
+
     int ret = dbenv->close(0);
     if (ret != 0)
         LogPrintf("BerkeleyEnvironment::Close: Error %d closing database environment: %s\n", ret, DbEnv::strerror(ret));
     if (!fMockDb)
         DbEnv((u_int32_t)0).remove(strPath.c_str(), 0);
+
+    if (error_file) fclose(error_file);
+
+    UnlockDirectory(strPath, ".walletlock");
 }
 
 void BerkeleyEnvironment::Reset()
@@ -137,6 +154,8 @@ BerkeleyEnvironment::BerkeleyEnvironment(const fs::path& dir_path) : strPath(dir
 
 BerkeleyEnvironment::~BerkeleyEnvironment()
 {
+    LOCK(cs_db);
+    g_dbenvs.erase(strPath);
     Close();
 }
 
@@ -214,10 +233,10 @@ bool BerkeleyEnvironment::Open(bool retry)
     return true;
 }
 
-void BerkeleyEnvironment::MakeMock()
+//! Construct an in-memory mock Berkeley environment for testing and as a place-holder for g_dbenvs emplace
+BerkeleyEnvironment::BerkeleyEnvironment()
 {
-    if (fDbEnvInit)
-        throw std::runtime_error("BerkeleyEnvironment::MakeMock: Already initialized");
+    Reset();
 
     boost::this_thread::interruption_point();
 
@@ -263,10 +282,49 @@ BerkeleyEnvironment::VerifyResult BerkeleyEnvironment::Verify(const std::string&
     return (fRecovered ? VerifyResult::RECOVER_OK : VerifyResult::RECOVER_FAIL);
 }
 
+BerkeleyBatch::SafeDbt::SafeDbt()
+{
+    m_dbt.set_flags(DB_DBT_MALLOC);
+}
+
+BerkeleyBatch::SafeDbt::SafeDbt(void* data, size_t size)
+    : m_dbt(data, size)
+{
+}
+
+BerkeleyBatch::SafeDbt::~SafeDbt()
+{
+    if (m_dbt.get_data() != nullptr) {
+        // Clear memory, e.g. in case it was a private key
+        memory_cleanse(m_dbt.get_data(), m_dbt.get_size());
+        // under DB_DBT_MALLOC, data is malloced by the Dbt, but must be
+        // freed by the caller.
+        // https://docs.oracle.com/cd/E17275_01/html/api_reference/C/dbt.html
+        if (m_dbt.get_flags() & DB_DBT_MALLOC) {
+            free(m_dbt.get_data());
+        }
+    }
+}
+
+const void* BerkeleyBatch::SafeDbt::get_data() const
+{
+    return m_dbt.get_data();
+}
+
+u_int32_t BerkeleyBatch::SafeDbt::get_size() const
+{
+    return m_dbt.get_size();
+}
+
+BerkeleyBatch::SafeDbt::operator Dbt*()
+{
+    return &m_dbt;
+}
+
 bool BerkeleyBatch::Recover(const fs::path& file_path, void *callbackDataIn, bool (*recoverKVcallback)(void* callbackData, CDataStream ssKey, CDataStream ssValue), std::string& newFilename)
 {
     std::string filename;
-    BerkeleyEnvironment* env = GetWalletEnv(file_path, filename);
+    std::shared_ptr<BerkeleyEnvironment> env = GetWalletEnv(file_path, filename);
 
     // Recovery procedure:
     // move wallet file to walletfilename.timestamp.bak
@@ -335,11 +393,11 @@ bool BerkeleyBatch::Recover(const fs::path& file_path, void *callbackDataIn, boo
 bool BerkeleyBatch::VerifyEnvironment(const fs::path& file_path, std::string& errorStr)
 {
     std::string walletFile;
-    BerkeleyEnvironment* env = GetWalletEnv(file_path, walletFile);
+    std::shared_ptr<BerkeleyEnvironment> env = GetWalletEnv(file_path, walletFile);
     fs::path walletDir = env->Directory();
 
-    LogPrintf("Using BerkeleyDB version %s\n", DbEnv::version(0, 0, 0));
-    LogPrintf("Using wallet %s\n", walletFile);
+    LogPrintf("Using BerkeleyDB version %s\n", DbEnv::version(nullptr, nullptr, nullptr));
+    LogPrintf("Using wallet %s\n", file_path.string());
 
     // Wallet file must be a plain filename without a directory
     if (walletFile != fs::basename(walletFile) + fs::extension(walletFile))
@@ -359,7 +417,7 @@ bool BerkeleyBatch::VerifyEnvironment(const fs::path& file_path, std::string& er
 bool BerkeleyBatch::VerifyDatabaseFile(const fs::path& file_path, std::string& warningStr, std::string& errorStr, BerkeleyEnvironment::recoverFunc_type recoverFunc)
 {
     std::string walletFile;
-    BerkeleyEnvironment* env = GetWalletEnv(file_path, walletFile);
+    std::shared_ptr<BerkeleyEnvironment> env = GetWalletEnv(file_path, walletFile);
     fs::path walletDir = env->Directory();
 
     if (fs::exists(walletDir / walletFile))
@@ -463,7 +521,7 @@ BerkeleyBatch::BerkeleyBatch(BerkeleyDatabase& database, const char* pszMode, bo
 {
     fReadOnly = (!strchr(pszMode, '+') && !strchr(pszMode, 'w'));
     fFlushOnClose = fFlushOnCloseIn;
-    env = database.env;
+    env = database.env.get();
     if (database.IsDummy()) {
         return;
     }
@@ -520,7 +578,7 @@ BerkeleyBatch::BerkeleyBatch(BerkeleyDatabase& database, const char* pszMode, bo
             // versions of BDB have an set_lk_exclusive method for this
             // purpose, but the older version we use does not.)
             for (const auto& env : g_dbenvs) {
-                CheckUniqueFileid(env.second, strFilename, *pdb_temp, this->env->m_fileids[strFilename]);
+                CheckUniqueFileid(*env.second.lock().get(), strFilename, *pdb_temp, this->env->m_fileids[strFilename]);
             }
 
             pdb = pdb_temp.release();
@@ -621,7 +679,7 @@ bool BerkeleyBatch::Rewrite(BerkeleyDatabase& database, const char* pszSkip)
     if (database.IsDummy()) {
         return true;
     }
-    BerkeleyEnvironment *env = database.env;
+    BerkeleyEnvironment *env = database.env.get();
     const std::string& strFile = database.strFile;
     while (true) {
         {
@@ -752,7 +810,7 @@ bool BerkeleyBatch::PeriodicFlush(BerkeleyDatabase& database)
         return true;
     }
     bool ret = false;
-    BerkeleyEnvironment *env = database.env;
+    BerkeleyEnvironment *env = database.env.get();
     const std::string& strFile = database.strFile;
     TRY_LOCK(cs_db, lockDb);
     if (lockDb)

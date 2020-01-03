@@ -46,7 +46,7 @@ class ClientModel : public QObject
     Q_OBJECT
 
 public:
-    explicit ClientModel(interfaces::Node& node, OptionsModel *optionsModel, QObject *parent = 0);
+    explicit ClientModel(interfaces::Node& node, OptionsModel *optionsModel, QObject *parent = nullptr);
     ~ClientModel();
 
     interfaces::Node& node() const { return m_node; }

@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>יש ללחוץ על הכפתור הימני כדי לערוך כתובת או תווית</translation>
+        <translation>לחץ על הכפתור הימני בעכבר כדי לערוך את הכתובת או התווית</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -188,10 +188,6 @@
         <translation>הארנק מוצפן</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 ייסגר כעת כדי לסיים את תהליך ההצפנה. נא לשים לב כי הצפנת הארנק שלך לא יכול להגן על הביטקוינים שלך מפני גניבה או נוזקה שתוקפת את מחשבך.</translation>
-    </message>
-    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>חשוב: כל הגיבויים הקודמים שערכת לארנק שלך אמורים להתחלף עם קובץ הארנק המוצפן שנוצר כרגע. מטעמי אבטחה, הגיבויים הקודמים של קובץ הארנק שאינו מוגן הופכים לחסרי תועלת ברגע התחלת השימוש בארנק החדש והמוצפן.</translation>
     </message>
@@ -254,10 +250,6 @@
         <translation>&amp;סקירה</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation>מפרק</translation>
-    </message>
-    <message>
         <source>Show general overview of wallet</source>
         <translation>הצגת סקירה כללית של הארנק</translation>
     </message>
@@ -279,19 +271,19 @@
     </message>
     <message>
         <source>&amp;About %1</source>
-        <translation>על &amp;אודות %1</translation>
+        <translation>&amp;אודות %1</translation>
     </message>
     <message>
         <source>Show information about %1</source>
-        <translation>הצגת מידע על %1</translation>
+        <translation>הצג מידע על %1</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
-        <translation>על אודות Qt</translation>
+        <translation>אודות &amp;Qt</translation>
     </message>
     <message>
         <source>Show information about Qt</source>
-        <translation>הצגת מידע על Qt</translation>
+        <translation>הצג מידע על Qt</translation>
     </message>
     <message>
         <source>&amp;Options...</source>
@@ -314,24 +306,12 @@
         <translation>ה&amp;חלפת מילת הצופן…</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>כתובת ה&amp;שליחה…</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>כתובות ה&amp;קבלה…</translation>
-    </message>
-    <message>
         <source>Open &amp;URI...</source>
         <translation>פתיחת &amp;כתובת משאב…</translation>
     </message>
     <message>
         <source>Wallet:</source>
         <translation>ארנק:</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation>ארנק בררת מחדל</translation>
     </message>
     <message>
         <source>Click to disable network activity.</source>
@@ -384,10 +364,6 @@
     <message>
         <source>NdovuCoin</source>
         <translation>ביטקוין</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>ארנק</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -496,6 +472,14 @@
     <message>
         <source>Show the %1 help message to get a list with possible NdovuCoin command-line options</source>
         <translation>יש להציג את הודעת העזרה של %1 כדי להציג רשימה עם אפשרויות שורת פקודה לביטקוין</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>ארנק בררת מחדל</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>&amp;חלון</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -815,7 +799,7 @@
     </message>
     <message>
         <source>About %1</source>
-        <translation>על אודות %1</translation>
+        <translation>אודות %1</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -939,11 +923,7 @@
         <source>Hide</source>
         <translation>הסתר</translation>
     </message>
-    <message>
-        <source>Unknown. Syncing Headers (%1)...</source>
-        <translation>לא ידוע. הכותרות מתעדכנות (%1)…</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -990,16 +970,20 @@
         <translation>גודל מ&amp;טמון מסד הנתונים</translation>
     </message>
     <message>
-        <source>MB</source>
-        <translation>מ״ב</translation>
-    </message>
-    <message>
         <source>Number of script &amp;verification threads</source>
         <translation>מספר תהליכי ה&amp;אימות של הסקריפט</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
         <translation>כתובת ה־IP של המתווך (לדוגמה IPv4: 127.0.0.1‏ / IPv6: ::1)</translation>
+    </message>
+    <message>
+        <source>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
+        <translation>מראה אם פרוקסי SOCKS5 המסופק כבררת מחדל משמש להתקשרות עם עמיתים באמצעות סוג רשת זה.</translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
+        <translation>השתמשו בפרוקסי SOCKS&amp;5 נפרד כדי להתקשר עם עמיתים באמצעות שירותים חבויים ברשת Tor:</translation>
     </message>
     <message>
         <source>Hide the icon from the system tray.</source>
@@ -1012,10 +996,6 @@
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation>כתובות צד־שלישי (כגון: סייר מקטעים) שמופיעים בלשונית ההעברות בתור פריטים בתפריט ההקשר. %s בכתובת מוחלף בגיבוב ההעברה. מספר כתובות יופרדו בפס אנכי |.</translation>
-    </message>
-    <message>
-        <source>Active command-line options that override above options:</source>
-        <translation>אפשרויות פעילות בשורת הפקודה שדורסות את האפשרויות שלהלן:</translation>
     </message>
     <message>
         <source>Open the %1 configuration file from the working directory.</source>
@@ -1556,7 +1536,7 @@
     </message>
     <message>
         <source>Client version</source>
-        <translation>גרסת מנשק</translation>
+        <translation>גרסה</translation>
     </message>
     <message>
         <source>&amp;Information</source>
@@ -1572,7 +1552,7 @@
     </message>
     <message>
         <source>Using BerkeleyDB version</source>
-        <translation>שימוש ב־BerkeleyDB גרסה</translation>
+        <translation>גרסת BerkeleyDB</translation>
     </message>
     <message>
         <source>Datadir</source>
@@ -1673,6 +1653,10 @@
     <message>
         <source>User Agent</source>
         <translation>סוכן משתמש</translation>
+    </message>
+    <message>
+        <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
+        <translation>פתחו את לוג ניפוי השגיאות ה%1 מתיקיית הנתונים הנוכחית. עבור קבצי לוג גדולים ייתכן זמן המתנה של מספר שניות.</translation>
     </message>
     <message>
         <source>Decrease font size</source>
@@ -1781,10 +1765,6 @@
     <message>
         <source>&amp;Unban</source>
         <translation>&amp;שחרור חסימה</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation>ארנק בררת מחדל</translation>
     </message>
     <message>
         <source>Welcome to the %1 RPC console.</source>
@@ -2115,10 +2095,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>הסתר</translation>
     </message>
     <message>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
-        <translation>זה בסדר לשלם את העמלה המינימלית כל עוד נפח הטרנזקציות קטן מנפח הבלוקים. אבל יש להיזהר כיוון שבמידה והעומס ברשת גדל, העיסקה עלולה לא להיות מאושרת לעולם.</translation>
-    </message>
-    <message>
         <source>Recommended:</source>
         <translation>מומלץ:</translation>
     </message>
@@ -2203,6 +2179,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>העתקת השינוי</translation>
     </message>
     <message>
+        <source>%1 (%2 blocks)</source>
+        <translation>%1 (%2 בלוקים)</translation>
+    </message>
+    <message>
         <source>Are you sure you want to send?</source>
         <translation>לשלוח?</translation>
     </message>
@@ -2267,11 +2247,15 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>בקשת התשלום פגה.</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <source>Pay only the required fee of %1</source>
         <translation>תשלום של העמלה הנדרשת בלבד על סך %1</translation>
     </message>
     <message>
         <source>Warning: Invalid NdovuCoin address</source>
+=======
+        <source>Warning: Invalid Bitcoin address</source>
+>>>>>>> upstream/0.18
         <translation>אזהרה: כתובת ביטקיון שגויה</translation>
     </message>
     <message>
@@ -2981,6 +2965,9 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
 </context>
 <context>
+    <name>WalletController</name>
+    </context>
+<context>
     <name>WalletFrame</name>
     <message>
         <source>No wallet has been loaded.</source>
@@ -3021,7 +3008,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <source>Can't sign transaction.</source>
         <translation>אי אפשר לחתום על ההעברה.</translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation>ארנק בררת מחדל</translation>
+    </message>
+</context>
 <context>
     <name>WalletView</name>
     <message>
@@ -3126,10 +3117,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Do you want to rebuild the block database now?</source>
         <translation>האם לבנות מחדש את מסד נתוני המקטעים?</translation>
-    </message>
-    <message>
-        <source>Error creating %s: You can't create non-HD wallets with this version.</source>
-        <translation>שגיאה ביצירת %s: אין אפשרות ליצור ארנקים שאינם HD בגרסה זו.</translation>
     </message>
     <message>
         <source>Error initializing block database</source>
@@ -3270,10 +3257,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Warning</source>
         <translation>אזהרה</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
-        <translation>המשתנה ‎-socks נמצא אך אין בו תמיכה עוד. הגדרת גרסת SOCKS אינה אפשרית עוד, קיימת תמיכה רק ב־SOCKS5.</translation>
     </message>
     <message>
         <source>Starting network threads...</source>

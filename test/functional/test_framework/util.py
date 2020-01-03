@@ -219,7 +219,7 @@ def wait_until(predicate, *, attempts=float('inf'), timeout=float('inf'), lock=N
         time.sleep(0.05)
 
     # Print the cause of the timeout
-    predicate_source = inspect.getsourcelines(predicate)
+    predicate_source = "''''\n" + inspect.getsource(predicate) + "'''"
     logger.error("wait_until() failed. Predicate: {}".format(predicate_source))
     if attempt >= attempts:
         raise AssertionError("Predicate {} not true after {} attempts".format(predicate_source, attempts))
@@ -302,6 +302,7 @@ def initialize_datadir(dirname, n):
         f.write("discover=0\n")
         f.write("listenonion=0\n")
         f.write("printtoconsole=0\n")
+        f.write("upnp=0\n")
         os.makedirs(os.path.join(datadir, 'stderr'), exist_ok=True)
         os.makedirs(os.path.join(datadir, 'stdout'), exist_ok=True)
     return datadir
@@ -410,12 +411,12 @@ def sync_mempools(rpc_connections, *, wait=1, timeout=60, flush_scheduler=True):
 # Transaction/Block functions
 #############################
 
-def find_output(node, txid, amount):
+def find_output(node, txid, amount, *, blockhash=None):
     """
     Return index to output of txid with value amount
     Raises exception if there is none.
     """
-    txdata = node.getrawtransaction(txid, 1)
+    txdata = node.getrawtransaction(txid, 1, blockhash)
     for i in range(len(txdata["vout"])):
         if txdata["vout"][i]["value"] == amount:
             return i

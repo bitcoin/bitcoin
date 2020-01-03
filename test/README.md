@@ -18,7 +18,8 @@ request is opened. All sets of tests can also be run locally.
 
 # Running tests locally
 
-Build for your system first. Be sure to enable wallet, utils and daemon when you configure. Tests will not run otherwise.
+Before tests can be run locally, Bitcoin Core must be built.  See the [building instructions](/doc#building) for help.
+
 
 ### Functional tests
 
@@ -174,7 +175,28 @@ cat /tmp/user/1000/testo9vsdjo3/node1/regtest/bitcoind.pid
 gdb /home/example/bitcoind <pid>
 ```
 
-Note: gdb attach step may require `sudo`
+Note: gdb attach step may require ptrace_scope to be modified, or `sudo` preceding the `gdb`.
+See this link for considerations: https://www.kernel.org/doc/Documentation/security/Yama.txt
+
+##### Profiling
+
+An easy way to profile node performance during functional tests is provided
+for Linux platforms using `perf`.
+
+Perf will sample the running node and will generate profile data in the node's
+datadir. The profile data can then be presented using `perf report` or a graphical
+tool like [hotspot](https://github.com/KDAB/hotspot).
+
+To generate a profile during test suite runs, use the `--perf` flag.
+
+To see render the output to text, run
+
+```sh
+perf report -i /path/to/datadir/send-big-msgs.perf.data.xxxx --stdio | c++filt | less
+```
+
+For ways to generate more granular profiles, see the README in
+[test/functional](/test/functional).
 
 ### Util tests
 

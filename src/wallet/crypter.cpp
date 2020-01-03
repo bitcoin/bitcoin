@@ -175,14 +175,14 @@ bool CCryptoKeyStore::Lock()
     return true;
 }
 
-bool CCryptoKeyStore::Unlock(const CKeyingMaterial& vMasterKeyIn)
+bool CCryptoKeyStore::Unlock(const CKeyingMaterial& vMasterKeyIn, bool accept_no_keys)
 {
     {
         LOCK(cs_KeyStore);
         if (!SetCrypted())
             return false;
 
-        bool keyPass = false;
+        bool keyPass = mapCryptedKeys.empty(); // Always pass when there are no encrypted keys
         bool keyFail = false;
         CryptedKeyMap::const_iterator mi = mapCryptedKeys.begin();
         for (; mi != mapCryptedKeys.end(); ++mi)
@@ -204,7 +204,7 @@ bool CCryptoKeyStore::Unlock(const CKeyingMaterial& vMasterKeyIn)
             LogPrintf("The wallet is probably corrupted: Some keys decrypt but not all.\n");
             throw std::runtime_error("Error unlocking wallet: some keys decrypt but not all. Your wallet file may be corrupt.");
         }
-        if (keyFail || !keyPass)
+        if (keyFail || (!keyPass && !accept_no_keys))
             return false;
         vMasterKey = vMasterKeyIn;
         fDecryptionThoroughlyChecked = true;

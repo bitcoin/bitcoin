@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
 {
     CBlockPolicyEstimator feeEst;
     CTxMemPool mpool(&feeEst);
-    LOCK(mpool.cs);
+    LOCK2(cs_main, mpool.cs);
     TestMemPoolEntryHelper entry;
     CAmount basefee(2000);
     CAmount deltaFee(100);

@@ -35,6 +35,7 @@ from test_framework.util import (
 from test_framework.blocktools import (
     create_block,
     create_coinbase,
+    TIME_GENESIS_BLOCK,
 )
 from test_framework.messages import (
     msg_block,
@@ -46,9 +47,11 @@ from test_framework.mininode import (
 
 class BlockchainTest(BitcoinTestFramework):
     def set_test_params(self):
+        self.setup_clean_chain = True
         self.num_nodes = 1
 
     def run_test(self):
+        self.mine_chain()
         self.restart_node(0, extra_args=['-stopatheight=207', '-prune=1'])  # Set extra args with pruning after rescan is complete
 
         self._test_getblockchaininfo()
@@ -60,6 +63,15 @@ class BlockchainTest(BitcoinTestFramework):
         self._test_stopatheight()
         self._test_waitforblockheight()
         assert self.nodes[0].verifychain(4, 0)
+
+    def mine_chain(self):
+        self.log.info('Create some old blocks')
+        address = self.nodes[0].get_deterministic_priv_key().address
+        for t in range(TIME_GENESIS_BLOCK, TIME_GENESIS_BLOCK + 200 * 600, 600):
+            # ten-minute steps from genesis block time
+            self.nodes[0].setmocktime(t)
+            self.nodes[0].generatetoaddress(1, address)
+        assert_equal(self.nodes[0].getblockchaininfo()['blocks'], 200)
 
     def _test_getblockchaininfo(self):
         self.log.info("Test getblockchaininfo")

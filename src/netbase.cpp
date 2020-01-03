@@ -80,11 +80,7 @@ bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsign
     aiHint.ai_socktype = SOCK_STREAM;
     aiHint.ai_protocol = IPPROTO_TCP;
     aiHint.ai_family = AF_UNSPEC;
-#ifdef WIN32
-    aiHint.ai_flags = fAllowLookup ? 0 : AI_NUMERICHOST;
-#else
     aiHint.ai_flags = fAllowLookup ? AI_ADDRCONFIG : AI_NUMERICHOST;
-#endif
     struct addrinfo *aiRes = nullptr;
     int nErr = getaddrinfo(pszName, nullptr, &aiHint, &aiRes);
     if (nErr)
@@ -272,7 +268,7 @@ static IntrRecvError InterruptibleRecv(uint8_t* data, size_t len, int timeout, c
 #ifdef USE_POLL
                 struct pollfd pollfd = {};
                 pollfd.fd = hSocket;
-                pollfd.events = POLLIN | POLLOUT;
+                pollfd.events = POLLIN;
                 int nRet = poll(&pollfd, 1, timeout_ms);
 #else
                 struct timeval tval = MillisToTimeval(timeout_ms);
