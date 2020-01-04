@@ -1964,6 +1964,14 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     LogPrintf("No wallet support compiled in!\n");
 #endif
 
+    // As InitLoadWallet can take several minutes, it's possible the user
+    // requested to kill the GUI during the last operation. If so, exit.
+    if (fRequestShutdown)
+    {
+        LogPrintf("Shutdown requested. Exiting.\n");
+        return false;
+    }
+
     // ********************************************************* Step 9: data directory maintenance
 
     // if pruning, unset the service bit and perform the initial blockstore prune
@@ -1975,6 +1983,14 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
             uiInterface.InitMessage(_("Pruning blockstore..."));
             PruneAndFlush();
         }
+    }
+
+    // As PruneAndFlush can take several minutes, it's possible the user
+    // requested to kill the GUI during the last operation. If so, exit.
+    if (fRequestShutdown)
+    {
+        LogPrintf("Shutdown requested. Exiting.\n");
+        return false;
     }
 
     // ********************************************************* Step 10a: Prepare Masternode related stuff
@@ -2129,6 +2145,14 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         uiInterface.NotifyBlockTip.disconnect(BlockNotifyGenesisWait);
     }
 
+    // As importing blocks can take several minutes, it's possible the user
+    // requested to kill the GUI during one of the last operations. If so, exit.
+    if (fRequestShutdown)
+    {
+        LogPrintf("Shutdown requested. Exiting.\n");
+        return false;
+    }
+
     // ********************************************************* Step 12: start node
 
     //// debug print
@@ -2208,6 +2232,13 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         pwallet->postInitProcess(scheduler);
     }
 #endif
+
+    // Final check if the user requested to kill the GUI during one of the last operations. If so, exit.
+    if (fRequestShutdown)
+    {
+        LogPrintf("Shutdown requested. Exiting.\n");
+        return false;
+    }
 
     return true;
 }
