@@ -1108,8 +1108,8 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
         // 3. $path
         // 4. $path/bin/[os]/syscoin_geth
         // 5. /usr/local/bin/syscoin_geth
-        std::string portStr = std::to_string(websocketport);
-        std::string rpcportStr = std::to_string(ethrpcport);
+        std::string portStr = itostr(websocketport);
+        std::string rpcportStr = itostr(ethrpcport);
         char * argvAttempt1[20] = {(char*)attempt1.string().c_str(), 
                 (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(),
                 (char*)"--rpc", (char*)"--rpcapi", (char*)"personal,eth", (char*)"--rpcport", (char*)rpcportStr.c_str(),
@@ -1199,8 +1199,8 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, int websocketport, in
         ofs << pid;
     }
     #else
-        std::string portStr = std::to_string(websocketport);
-        std::string rpcportStr = std::to_string(ethrpcport);
+        std::string portStr = itostr(websocketport);
+        std::string rpcportStr = itostr(ethrpcport);
         std::string args =  std::string("--rpc --rpcapi personal,eth --rpccorsdomain * --rpcport ") + rpcportStr + std::string(" --ws --wsport ") + portStr + std::string(" --wsorigins * --syncmode ") + mode + std::string(" --datadir ") +  dataDir.string();
         if(bGethTestnet) {
             args += std::string(" --rinkeby");
@@ -1346,9 +1346,9 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, int w
             // 3. $path
             // 4. $path/bin/[os]/syscoin_relayer
             // 5. /usr/local/bin/syscoin_relayer
-            std::string portStr = std::to_string(websocketport);
-            std::string rpcEthPortStr = std::to_string(ethrpcport);
-            std::string rpcSysPortStr = std::to_string(rpcport);
+            std::string portStr = itostr(websocketport);
+            std::string rpcEthPortStr = itostr(ethrpcport);
+            std::string rpcSysPortStr = itostr(rpcport);
             char * argvAttempt1[] = {(char*)attempt1.string().c_str(), 
 					(char*)"--ethwsport", (char*)portStr.c_str(),
                     (char*)"--ethrpcport", (char*)rpcEthPortStr.c_str(),
@@ -1414,9 +1414,9 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, int w
             ofs << pid;
         }
     #else
-		std::string portStr = std::to_string(websocketport);
-        std::string rpcEthPortStr = std::to_string(ethrpcport);
-        std::string rpcSysPortStr = std::to_string(rpcport);
+		std::string portStr = itostr(websocketport);
+        std::string rpcEthPortStr = itostr(ethrpcport);
+        std::string rpcSysPortStr = itostr(rpcport);
         std::string args =
 				std::string("--ethwsport ") + portStr +
                 std::string(" --ethrpcport ") + rpcEthPortStr +
