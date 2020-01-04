@@ -4,7 +4,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Base class for RPC testing."""
-
+import copy
 from collections import deque
 from enum import Enum
 import logging
@@ -492,12 +492,12 @@ class DashTestFramework(BitcoinTestFramework):
         if extra_args is None:
             extra_args = [[]] * num_nodes
         assert_equal(len(extra_args), num_nodes)
-        self.extra_args = extra_args
+        self.extra_args = [copy.deepcopy(a) for a in extra_args]
         self.extra_args[0] += ["-sporkkey=cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK"]
         self.fast_dip3_enforcement = fast_dip3_enforcement
         if fast_dip3_enforcement:
             for i in range(0, num_nodes):
-                self.extra_args[i] += ["-dip3params=30:50"]
+                self.extra_args[i].append("-dip3params=30:50")
 
     def set_dash_dip8_activation(self, activate_after_block):
         window = int((activate_after_block + 2) / 3)
