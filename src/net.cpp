@@ -2068,7 +2068,8 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
 }
 // SYSCOIN
 void CConnman::OpenMasternodeConnection(const CAddress &addrConnect) {
-    OpenNetworkConnection(addrConnect, false, NULL, NULL, false, false, false, false, true);
+    // open as block relay + mn (no tx)
+    OpenNetworkConnection(addrConnect, false, NULL, NULL, false, false, false, true, true);
 }
 void CConnman::ThreadMessageHandler()
 {
