@@ -499,6 +499,12 @@ class DashTestFramework(BitcoinTestFramework):
             for i in range(0, num_nodes):
                 self.extra_args[i] += ["-dip3params=30:50"]
 
+    def set_dash_dip8_activation(self, activate_after_block):
+        window = int((activate_after_block + 2) / 3)
+        threshold = int((window + 1) / 2)
+        for i in range(0, self.num_nodes):
+            self.extra_args[i].append("-vbparams=dip0008:0:999999999999:%d:%d" % (window, threshold))
+
     def create_simple_node(self):
         idx = len(self.nodes)
         self.add_nodes(1, extra_args=[self.extra_args[idx]])
@@ -617,7 +623,7 @@ class DashTestFramework(BitcoinTestFramework):
         while self.nodes[0].getbalance() < required_balance:
             self.bump_mocktime(1)
             set_node_times(self.nodes, self.mocktime)
-            self.nodes[0].generate(1)
+            self.nodes[0].generate(10)
         num_simple_nodes = self.num_nodes - self.mn_count - 1
         self.log.info("Creating and starting %s simple nodes", num_simple_nodes)
         for i in range(0, num_simple_nodes):
