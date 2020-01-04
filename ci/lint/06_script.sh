@@ -15,6 +15,7 @@ test/lint/git-subtree-check.sh src/secp256k1
 test/lint/git-subtree-check.sh src/univalue
 test/lint/git-subtree-check.sh src/leveldb
 test/lint/check-doc.py
+test/lint/check-permissions.py
 test/lint/check-rpc-mappings.py .
 test/lint/lint-all.sh
 
