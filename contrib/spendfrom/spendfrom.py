@@ -149,7 +149,10 @@ def create_tx(crownd, fromaddresses, toaddress, amount, fee, criteria, upto):
         potential_inputs.extend(all_coins[addr]["outputs"])
         total_available += all_coins[addr]["total"]
 
-    if total_available < needed:
+    if total_available == 0:
+        sys.stderr.write("Selected addresses are empty\n")
+        sys.exit(1)
+    elif total_available < needed:
         if upto:
             needed = total_available
             amount = total_available - fee
