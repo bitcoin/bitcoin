@@ -101,11 +101,15 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
 
         connman.ForEachNode([&](CNode* pnode2) {
             if (pnode2->verifiedProRegTxHash == mnauth.proRegTxHash) {
-                LogPrint(BCLog::NET, "CMNAuth::ProcessMessage -- Masternode %s has already verified as peer %d, dropping old connection. peer=%d\n",
+                LogPrint(BCLog::NET, "CMNAuth::ProcessMessage -- Masternode %s has already verified as peer %d, dropping new connection. peer=%d\n",
                         mnauth.proRegTxHash.ToString(), pnode2->GetId(), pnode->GetId());
-                pnode2->fDisconnect = true;
+                pnode->fDisconnect = true;
             }
         });
+
+        if (pnode->fDisconnect) {
+            return;
+        }
 
         {
             LOCK(pnode->cs_mnauth);
