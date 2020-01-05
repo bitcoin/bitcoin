@@ -7,23 +7,23 @@
 # Check for new lines in diff that introduce trailing whitespace.
 
 # We can't run this check unless we know the commit range for the PR.
-if [ -z "${TRAVIS_COMMIT_RANGE}" ]; then
+if [ -z "${COMMIT_RANGE}" ]; then
   echo "Cannot run lint-whitespace.sh without commit range. To run locally, use:"
-  echo "TRAVIS_COMMIT_RANGE='<commit range>' .lint-whitespace.sh"
+  echo "COMMIT_RANGE='<commit range>' .lint-whitespace.sh"
   echo "For example:"
-  echo "TRAVIS_COMMIT_RANGE='47ba2c3...ee50c9e' .lint-whitespace.sh"
+  echo "COMMIT_RANGE='47ba2c3...ee50c9e' .lint-whitespace.sh"
   exit 1
 fi
 
 showdiff() {
-  if ! git diff -U0 "${TRAVIS_COMMIT_RANGE}" -- "." ":(exclude)src/leveldb/" ":(exclude)src/secp256k1/" ":(exclude)src/univalue/" ":(exclude)doc/release-notes/"; then
+  if ! git diff -U0 "${COMMIT_RANGE}" -- "." ":(exclude)src/leveldb/" ":(exclude)src/secp256k1/" ":(exclude)src/univalue/" ":(exclude)doc/release-notes/"; then
     echo "Failed to get a diff"
     exit 1
   fi
 }
 
 showcodediff() {
-  if ! git diff -U0 "${TRAVIS_COMMIT_RANGE}" -- *.cpp *.h *.md *.py *.sh ":(exclude)src/leveldb/" ":(exclude)src/secp256k1/" ":(exclude)src/univalue/" ":(exclude)doc/release-notes/"; then
+  if ! git diff -U0 "${COMMIT_RANGE}" -- *.cpp *.h *.md *.py *.sh ":(exclude)src/leveldb/" ":(exclude)src/secp256k1/" ":(exclude)src/univalue/" ":(exclude)doc/release-notes/"; then
     echo "Failed to get a diff"
     exit 1
   fi

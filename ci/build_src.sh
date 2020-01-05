@@ -16,6 +16,7 @@ if [ "$PULL_REQUEST" != "false" ]; then contrib/devtools/commit-script-check.sh 
 
 #if [ "$CHECK_DOC" = 1 ]; then contrib/devtools/check-doc.py; fi TODO reenable after all Bitcoin PRs have been merged and docs fully fixed
 if [ "$CHECK_DOC" = 1 ]; then contrib/devtools/check-rpc-mappings.py .; fi
+if [ "$CHECK_DOC" = 1 ]; then contrib/devtools/lint-all.sh; fi
 
 ccache --max-size=$CCACHE_SIZE
 
