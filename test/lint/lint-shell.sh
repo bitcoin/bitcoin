@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2018 The Syscoin Core developers
+# Copyright (c) 2018 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
@@ -41,7 +41,7 @@ if ! shellcheck "$EXCLUDE" $(git ls-files -- '*.sh' | grep -vE 'src/(leveldb|sec
 fi
 
 if ! command -v yq > /dev/null; then
-    echo "Skipping Gitian desriptor scripts checking since yq is not installed."
+    echo "Skipping Gitian descriptor scripts checking since yq is not installed."
     exit $EXIT_CODE
 fi
 

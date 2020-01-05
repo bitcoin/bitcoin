@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2019 The Syscoin Core developers
+// Copyright (c) 2017-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,6 +17,11 @@
 #include <boost/test/unit_test.hpp>
 
 BOOST_AUTO_TEST_SUITE(blockfilter_index_tests)
+
+struct BuildChainTestingSetup : public TestChain100Setup {
+    CBlock CreateBlock(const CBlockIndex* prev, const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey);
+    bool BuildChain(const CBlockIndex* pindex, const CScript& coinbase_script_pub_key, size_t length, std::vector<std::shared_ptr<CBlock>>& chain);
+};
 
 static bool CheckFilterLookups(BlockFilterIndex& filter_index, const CBlockIndex* block_index,
                                uint256& last_header)
@@ -52,12 +57,12 @@ static bool CheckFilterLookups(BlockFilterIndex& filter_index, const CBlockIndex
     return true;
 }
 
-static CBlock CreateBlock(const CBlockIndex* prev,
-                          const std::vector<CMutableTransaction>& txns,
-                          const CScript& scriptPubKey)
+CBlock BuildChainTestingSetup::CreateBlock(const CBlockIndex* prev,
+    const std::vector<CMutableTransaction>& txns,
+    const CScript& scriptPubKey)
 {
     const CChainParams& chainparams = Params();
-    std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey);
+    std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler(*m_node.mempool, chainparams).CreateNewBlock(scriptPubKey);
     CBlock& block = pblocktemplate->block;
     block.hashPrevBlock = prev->GetBlockHash();
     block.nTime = prev->nTime + 1;
@@ -76,8 +81,10 @@ static CBlock CreateBlock(const CBlockIndex* prev,
     return block;
 }
 
-static bool BuildChain(const CBlockIndex* pindex, const CScript& coinbase_script_pub_key,
-                       size_t length, std::vector<std::shared_ptr<CBlock>>& chain)
+bool BuildChainTestingSetup::BuildChain(const CBlockIndex* pindex,
+    const CScript& coinbase_script_pub_key,
+    size_t length,
+    std::vector<std::shared_ptr<CBlock>>& chain)
 {
     std::vector<CMutableTransaction> no_txns;
 
@@ -95,7 +102,7 @@ static bool BuildChain(const CBlockIndex* pindex, const CScript& coinbase_script
     return true;
 }
 
-BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
+BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
 {
     BlockFilterIndex filter_index(BlockFilterType::BASIC, 1 << 20, true);
 

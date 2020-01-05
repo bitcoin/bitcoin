@@ -1,4 +1,4 @@
-// Copyright (c) 2019 The Syscoin Core developers
+// Copyright (c) 2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,7 +12,7 @@ class CBlock;
 class CScript;
 class CTxIn;
 class CWallet;
-
+class NodeContext;
 // Constants //
 
 extern const std::string ADDRESS_BCRT1_UNSPENDABLE;
@@ -32,7 +32,7 @@ void importaddress(CWallet& wallet, const std::string& address);
 /** Returns a new address from the wallet */
 std::string getnewaddress(CWallet& w);
 /** Returns the generated coin */
-CTxIn generatetoaddress(const std::string& address);
+CTxIn generatetoaddress(const NodeContext& node, const std::string& address);
 
 /**
  * Increment a string. Useful to enumerate all fixed length strings with

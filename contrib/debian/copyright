@@ -5,9 +5,9 @@ Upstream-Contact: Satoshi Nakamoto <satoshin@gmx.com>
 Source: https://github.com/syscoin/syscoin
 
 Files: *
-Copyright: 2009-2019, Syscoin Core Developers
+Copyright: 2009-2020, Syscoin Core Developers
 License: Expat
-Comment: The Syscoin Core Developers encompasses the current developers listed on syscoin.org,
+Comment: The Bitcoin Core developers encompasses the current developers listed on syscoin.org,
          as well as the numerous contributors to the project.
 
 Files: debian/*

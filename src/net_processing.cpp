@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Syscoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -35,6 +35,8 @@
 #include <masternodepayments.h>
 #include <masternodesync.h>
 #include <masternodeman.h>
+#include <typeinfo>
+
 #if defined(NDEBUG)
 # error "Syscoin cannot be compiled without assertions."
 #endif
@@ -1594,15 +1596,19 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
     // block-relay-only outbound peer, we will stop processing further getdata
     // messages from this peer (likely resulting in our peer eventually
     // disconnecting us).
-    if (pfrom->m_tx_relay != nullptr) {
+    // SYSCOIN
+    // if (pfrom->m_tx_relay != nullptr) {
+    {
+        
         // mempool entries added before this time have likely expired from mapRelay
         const std::chrono::seconds longlived_mempool_time = GetTime<std::chrono::seconds>() - RELAY_TX_CACHE_TIME;
-        const std::chrono::seconds mempool_req = pfrom->m_tx_relay->m_last_mempool_req.load();
-
+        // SYSCOIN
+        std::chrono::seconds mempool_req;
+        if(pfrom->m_tx_relay != nullptr)
+            mempool_req = pfrom->m_tx_relay->m_last_mempool_req.load();
+            
         LOCK(cs_main);
-        while (it != pfrom->vRecvGetData.end() && (it->type == MSG_TX || it->type == MSG_WITNESS_TX || it->type == MSG_SPORK || it->type == MSG_MASTERNODE_PAYMENT_VOTE ||
-        it->type == MSG_MASTERNODE_PAYMENT_BLOCK || it->type == MSG_MASTERNODE_ANNOUNCE || it->type == MSG_MASTERNODE_PING || it->type == MSG_GOVERNANCE_OBJECT ||
-        it->type == MSG_GOVERNANCE_OBJECT_VOTE || it->type == MSG_MASTERNODE_VERIFY)) {
+        while (it != pfrom->vRecvGetData.end() && (it->type == MSG_TX || it->type == MSG_WITNESS_TX || (it->type >= MSG_SPORK && it->type <= MSG_MASTERNODE_VERIFY))) {
             if (interruptMsgProc)
                 return;
             // Don't bother if send buffer is too full to respond anyway
@@ -1615,7 +1621,7 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
             // Send stream from relay memory
             bool push = false;
            // SYSCOIN
-            if(inv.type == MSG_TX || inv.type == MSG_WITNESS_TX){
+            if(pfrom->m_tx_relay != nullptr && (inv.type == MSG_TX || inv.type == MSG_WITNESS_TX)){
                 auto mi = mapRelay.find(inv.hash);
                 int nSendFlags = (inv.type == MSG_TX ? SERIALIZE_TRANSACTION_NO_WITNESS : 0);
                 if (mi != mapRelay.end()) {
@@ -1634,97 +1640,101 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
                         push = true;
                     }
                 }
-            }
-
-            if (!push && inv.type == MSG_SPORK) {
-                if(mapSporks.count(inv.hash)) {
-                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::SPORK, mapSporks[inv.hash]));
-                    push = true;
+                if (!push) {
+                    vNotFound.push_back(inv);
                 }
             }
-
-            if (!push && inv.type == MSG_MASTERNODE_PAYMENT_VOTE) {
-                if(mnpayments.HasVerifiedPaymentVote(inv.hash)) {
-                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MASTERNODEPAYMENTVOTE, mnpayments.mapMasternodePaymentVotes[inv.hash]));
-                    push = true;
+            else{
+                if (!push && inv.type == MSG_SPORK) {
+                    if(mapSporks.count(inv.hash)) {
+                        connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::SPORK, mapSporks[inv.hash]));
+                        push = true;
+                    }
                 }
-            }
 
-            if (!push && inv.type == MSG_MASTERNODE_PAYMENT_BLOCK) {
-                const CBlockIndex* bi = LookupBlockIndex(inv.hash);
-                LOCK(cs_mapMasternodeBlocks);
-                if (bi != nullptr && mnpayments.mapMasternodeBlocks.count(bi->nHeight)) {
-                    for(auto& payee: mnpayments.mapMasternodeBlocks[bi->nHeight].vecPayees) {
-                        std::vector<uint256> vecVoteHashes = payee.GetVoteHashes();
-                        for(auto& hash: vecVoteHashes) {
-                            if(mnpayments.HasVerifiedPaymentVote(hash)) {
-                                connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MASTERNODEPAYMENTVOTE, mnpayments.mapMasternodePaymentVotes[hash]));
+                if (!push && inv.type == MSG_MASTERNODE_PAYMENT_VOTE) {
+                    if(mnpayments.HasVerifiedPaymentVote(inv.hash)) {
+                        connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MASTERNODEPAYMENTVOTE, mnpayments.mapMasternodePaymentVotes[inv.hash]));
+                        push = true;
+                    }
+                }
+
+                if (!push && inv.type == MSG_MASTERNODE_PAYMENT_BLOCK) {
+                    const CBlockIndex* bi = LookupBlockIndex(inv.hash);
+                    LOCK(cs_mapMasternodeBlocks);
+                    if (bi != nullptr && mnpayments.mapMasternodeBlocks.count(bi->nHeight)) {
+                        for(auto& payee: mnpayments.mapMasternodeBlocks[bi->nHeight].vecPayees) {
+                            std::vector<uint256> vecVoteHashes = payee.GetVoteHashes();
+                            for(auto& hash: vecVoteHashes) {
+                                if(mnpayments.HasVerifiedPaymentVote(hash)) {
+                                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MASTERNODEPAYMENTVOTE, mnpayments.mapMasternodePaymentVotes[hash]));
+                                }
+                            }
+                        }
+                        push = true;
+                    }
+                }
+
+                if (!push && inv.type == MSG_MASTERNODE_ANNOUNCE) {
+                    if(mnodeman.mapSeenMasternodeBroadcast.count(inv.hash)){
+                        connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MNANNOUNCE, mnodeman.mapSeenMasternodeBroadcast[inv.hash].second));
+                        push = true;
+                    }
+                }
+
+                if (!push && inv.type == MSG_MASTERNODE_PING) {
+                    if(mnodeman.mapSeenMasternodePing.count(inv.hash)) {
+                        connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MNPING, mnodeman.mapSeenMasternodePing[inv.hash]));
+                        push = true;
+                    }
+                }
+
+                if (!push && inv.type == MSG_GOVERNANCE_OBJECT) {
+                    LogPrint(BCLog::NET, "ProcessGetData -- MSG_GOVERNANCE_OBJECT: inv = %s\n", inv.ToString());
+                    CDataStream ss(SER_NETWORK, pfrom->GetSendVersion());
+                    bool topush = false;
+                    {
+                        if(governance.HaveObjectForHash(inv.hash)) {
+                            ss.reserve(1000);
+                            if(governance.SerializeObjectForHash(inv.hash, ss)) {
+                                topush = true;
                             }
                         }
                     }
-                    push = true;
-                }
-            }
-
-            if (!push && inv.type == MSG_MASTERNODE_ANNOUNCE) {
-                if(mnodeman.mapSeenMasternodeBroadcast.count(inv.hash)){
-                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MNANNOUNCE, mnodeman.mapSeenMasternodeBroadcast[inv.hash].second));
-                    push = true;
-                }
-            }
-
-            if (!push && inv.type == MSG_MASTERNODE_PING) {
-                if(mnodeman.mapSeenMasternodePing.count(inv.hash)) {
-                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MNPING, mnodeman.mapSeenMasternodePing[inv.hash]));
-                     push = true;
-                }
-            }
-
-            if (!push && inv.type == MSG_GOVERNANCE_OBJECT) {
-                LogPrint(BCLog::NET, "ProcessGetData -- MSG_GOVERNANCE_OBJECT: inv = %s\n", inv.ToString());
-                CDataStream ss(SER_NETWORK, pfrom->GetSendVersion());
-                bool topush = false;
-                {
-                    if(governance.HaveObjectForHash(inv.hash)) {
-                        ss.reserve(1000);
-                        if(governance.SerializeObjectForHash(inv.hash, ss)) {
-                            topush = true;
-                        }
+                    LogPrint(BCLog::NET, "ProcessGetData -- MSG_GOVERNANCE_OBJECT: topush = %d, inv = %s\n", topush, inv.ToString());
+                    if(topush) {
+                        connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECT, ss));
+                        push = true;
                     }
                 }
-                LogPrint(BCLog::NET, "ProcessGetData -- MSG_GOVERNANCE_OBJECT: topush = %d, inv = %s\n", topush, inv.ToString());
-                if(topush) {
-                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECT, ss));
-                    push = true;
-                }
-            }
 
-            if (!push && inv.type == MSG_GOVERNANCE_OBJECT_VOTE) {
-                CDataStream ss(SER_NETWORK, pfrom->GetSendVersion());
-                bool topush = false;
-                {
-                    if(governance.HaveVoteForHash(inv.hash)) {
-                        ss.reserve(1000);
-                        if(governance.SerializeVoteForHash(inv.hash, ss)) {
-                            topush = true;
+                if (!push && inv.type == MSG_GOVERNANCE_OBJECT_VOTE) {
+                    CDataStream ss(SER_NETWORK, pfrom->GetSendVersion());
+                    bool topush = false;
+                    {
+                        if(governance.HaveVoteForHash(inv.hash)) {
+                            ss.reserve(1000);
+                            if(governance.SerializeVoteForHash(inv.hash, ss)) {
+                                topush = true;
+                            }
                         }
                     }
+                    if(topush) {
+                        LogPrint(BCLog::NET, "ProcessGetData -- pushing: inv = %s\n", inv.ToString());
+                        connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECTVOTE, ss));
+                        push = true;
+                    }
                 }
-                if(topush) {
-                    LogPrint(BCLog::NET, "ProcessGetData -- pushing: inv = %s\n", inv.ToString());
-                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECTVOTE, ss));
-                    push = true;
-                }
-            }
 
-            if (!push && inv.type == MSG_MASTERNODE_VERIFY) {
-                if(mnodeman.mapSeenMasternodeVerification.count(inv.hash)) {
-                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MNVERIFY, mnodeman.mapSeenMasternodeVerification[inv.hash]));
-                    push = true;
+                if (!push && inv.type == MSG_MASTERNODE_VERIFY) {
+                    if(mnodeman.mapSeenMasternodeVerification.count(inv.hash)) {
+                        connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MNVERIFY, mnodeman.mapSeenMasternodeVerification[inv.hash]));
+                        push = true;
+                    }
+                }              
+                if (!push) {
+                    vNotFound.push_back(inv);
                 }
-            }              
-            if (!push) {
-                vNotFound.push_back(inv);
             }
         }
     } // release cs_main
@@ -2419,7 +2429,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             else
             {
                 pfrom->AddInventoryKnown(inv);
-                if (fBlocksOnly) {
+                if (fBlocksOnly && !(inv.type >= MSG_SPORK && inv.type <= MSG_MASTERNODE_VERIFY)) {
                     LogPrint(BCLog::NET, "transaction (%s) inv sent in violation of protocol, disconnecting peer=%d\n", inv.hash.ToString(), pfrom->GetId());
                     pfrom->fDisconnect = true;
                     return true;
@@ -3385,7 +3395,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         vRecv >> vInv;
         if (vInv.size() <= MAX_PEER_TX_IN_FLIGHT + MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
             for (CInv &inv : vInv) {
-                if (inv.type == MSG_TX || inv.type == MSG_WITNESS_TX) {
+                if (inv.type == MSG_TX || inv.type == MSG_WITNESS_TX || (inv.type >= MSG_SPORK && inv.type <= MSG_MASTERNODE_VERIFY)) {
                     // If we receive a NOTFOUND message for a txid we requested, erase
                     // it from our data structures for this peer.
                     auto in_flight_it = state->m_tx_download.m_tx_in_flight.find(inv.hash);
@@ -3540,32 +3550,10 @@ bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& inter
             return false;
         if (!pfrom->vRecvGetData.empty())
             fMoreWork = true;
-    }
-    catch (const std::ios_base::failure& e)
-    {
-        if (strstr(e.what(), "end of data")) {
-            // Allow exceptions from under-length message on vRecv
-            LogPrint(BCLog::NET, "%s(%s, %u bytes): Exception '%s' caught, normally caused by a message being shorter than its stated length\n", __func__, SanitizeString(strCommand), nMessageSize, e.what());
-        } else if (strstr(e.what(), "size too large")) {
-            // Allow exceptions from over-long size
-            LogPrint(BCLog::NET, "%s(%s, %u bytes): Exception '%s' caught\n", __func__, SanitizeString(strCommand), nMessageSize, e.what());
-        } else if (strstr(e.what(), "non-canonical ReadCompactSize()")) {
-            // Allow exceptions from non-canonical encoding
-            LogPrint(BCLog::NET, "%s(%s, %u bytes): Exception '%s' caught\n", __func__, SanitizeString(strCommand), nMessageSize, e.what());
-        } else if (strstr(e.what(), "Superfluous witness record")) {
-            // Allow exceptions from illegal witness encoding
-            LogPrint(BCLog::NET, "%s(%s, %u bytes): Exception '%s' caught\n", __func__, SanitizeString(strCommand), nMessageSize, e.what());
-        } else if (strstr(e.what(), "Unknown transaction optional data")) {
-            // Allow exceptions from unknown witness encoding
-            LogPrint(BCLog::NET, "%s(%s, %u bytes): Exception '%s' caught\n", __func__, SanitizeString(strCommand), nMessageSize, e.what());
-        } else {
-            PrintExceptionContinue(&e, "ProcessMessages()");
-        }
-    }
-    catch (const std::exception& e) {
-        PrintExceptionContinue(&e, "ProcessMessages()");
+    } catch (const std::exception& e) {
+        LogPrint(BCLog::NET, "%s(%s, %u bytes): Exception '%s' (%s) caught\n", __func__, SanitizeString(strCommand), nMessageSize, e.what(), typeid(e).name());
     } catch (...) {
-        PrintExceptionContinue(nullptr, "ProcessMessages()");
+        LogPrint(BCLog::NET, "%s(%s, %u bytes): Unknown exception caught\n", __func__, SanitizeString(strCommand), nMessageSize);
     }
 
     if (!fRet) {
