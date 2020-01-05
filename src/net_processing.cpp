@@ -1600,14 +1600,14 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
     // if (pfrom->m_tx_relay != nullptr) {
     {
         
-        LOCK(cs_main);
         // mempool entries added before this time have likely expired from mapRelay
         const std::chrono::seconds longlived_mempool_time = GetTime<std::chrono::seconds>() - RELAY_TX_CACHE_TIME;
         // SYSCOIN
         std::chrono::seconds mempool_req;
         if(pfrom->m_tx_relay != nullptr)
             mempool_req = pfrom->m_tx_relay->m_last_mempool_req.load();
-
+            
+        LOCK(cs_main);
         while (it != pfrom->vRecvGetData.end() && (it->type == MSG_TX || it->type == MSG_WITNESS_TX || (it->type >= MSG_SPORK && it->type <= MSG_MASTERNODE_VERIFY))) {
             if (interruptMsgProc)
                 return;
