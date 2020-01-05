@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2018 The Syscoin Core developers
+# Copyright (c) 2018-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,6 +16,7 @@ if [ "$TRAVIS_OS_NAME" == "osx" ]; then
   git reset --hard origin/master
   popd || exit 1
   set -o errexit
+  ${CI_RETRY_EXE} brew unlink python@2
   ${CI_RETRY_EXE} brew update
   # brew upgrade returns an error if any of the packages is already up to date
   # Failure is safe to ignore, unless we really need an update.

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Syscoin Core developers
+// Copyright (c) 2009-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -208,6 +208,15 @@ std::string CInv::GetCommand() const
     case MSG_BLOCK:          return cmd.append(NetMsgType::BLOCK);
     case MSG_FILTERED_BLOCK: return cmd.append(NetMsgType::MERKLEBLOCK);
     case MSG_CMPCT_BLOCK:    return cmd.append(NetMsgType::CMPCTBLOCK);
+    // SYSCOIN
+    case MSG_SPORK:    return cmd.append(NetMsgType::SPORK);
+    case MSG_MASTERNODE_PAYMENT_VOTE:    return cmd.append(NetMsgType::MASTERNODEPAYMENTVOTE);
+    case MSG_MASTERNODE_PAYMENT_BLOCK:    return cmd.append(NetMsgType::MASTERNODEPAYMENTVOTE);
+    case MSG_MASTERNODE_ANNOUNCE:    return cmd.append(NetMsgType::MNANNOUNCE);
+    case MSG_MASTERNODE_PING:    return cmd.append(NetMsgType::MNPING);
+    case MSG_GOVERNANCE_OBJECT:    return cmd.append(NetMsgType::MNGOVERNANCEOBJECT);
+    case MSG_GOVERNANCE_OBJECT_VOTE:    return cmd.append(NetMsgType::MNGOVERNANCEOBJECTVOTE);
+    case MSG_MASTERNODE_VERIFY:    return cmd.append(NetMsgType::MNVERIFY);
     default:
         throw std::out_of_range(strprintf("CInv::GetCommand(): type=%d unknown type", type));
     }

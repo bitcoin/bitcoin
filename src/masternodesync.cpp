@@ -146,7 +146,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
 
     // reset sync status in case of any other sync failure
     if(IsFailed()) {
-        if(nTimeLastFailure + (1*60) < GetTime()) { // 1 minute cooldown after failed sync
+        if(nTimeLastFailure + (1*60) < nTimeLastProcess) { // 1 minute cooldown after failed sync
             LogPrint(BCLog::MNSYNC, "CMasternodeSync::ProcessTick -- WARNING: failed to sync, trying again...\n");
             Reset();
             SwitchToNextAsset(connman);
@@ -220,7 +220,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
             // INITIAL TIMEOUT
 
             if(nRequestedMasternodeAssets == MASTERNODE_SYNC_WAITING) {
-                if(GetTime() - nTimeLastBumped > MASTERNODE_SYNC_TIMEOUT_SECONDS) {
+                if(nTimeLastProcess - nTimeLastBumped > MASTERNODE_SYNC_TIMEOUT_SECONDS) {
                     // At this point we know that:
                     // a) there are peers (because we are looping on at least one of them);
                     // b) we waited for at least MASTERNODE_SYNC_TIMEOUT_SECONDS since we reached
@@ -236,9 +236,9 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
             // MNLIST : SYNC MASTERNODE LIST FROM OTHER CONNECTED CLIENTS
 
             if(nRequestedMasternodeAssets == MASTERNODE_SYNC_LIST) {
-                LogPrint(BCLog::MN, "CMasternodeSync::ProcessTick -- nTick %d nRequestedMasternodeAssets %d nTimeLastBumped %lld GetTime() %lld diff %lld\n", nTick, nRequestedMasternodeAssets, nTimeLastBumped, GetTime(), GetTime() - nTimeLastBumped);
+                LogPrint(BCLog::MN, "CMasternodeSync::ProcessTick -- nTick %d nRequestedMasternodeAssets %d nTimeLastBumped %lld nTimeLastProcess %lld diff %lld\n", nTick, nRequestedMasternodeAssets, nTimeLastBumped, nTimeLastProcess, nTimeLastProcess - nTimeLastBumped);
                 // check for timeout first
-                if(GetTime() - nTimeLastBumped > MASTERNODE_SYNC_TIMEOUT_SECONDS) {
+                if(nTimeLastProcess - nTimeLastBumped > MASTERNODE_SYNC_TIMEOUT_SECONDS) {
                     LogPrint(BCLog::MNSYNC, "CMasternodeSync::ProcessTick -- nTick %d nRequestedMasternodeAssets %d -- timeout\n", nTick, nRequestedMasternodeAssets);
                     if (nRequestedMasternodeAttempt == 0) {
                         LogPrint(BCLog::MNSYNC, "CMasternodeSync::ProcessTick -- ERROR: failed to sync %s\n", GetAssetName());
@@ -274,11 +274,11 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
             // MNW : SYNC MASTERNODE PAYMENT VOTES FROM OTHER CONNECTED CLIENTS
 
             if(nRequestedMasternodeAssets == MASTERNODE_SYNC_MNW) {
-                LogPrint(BCLog::MNPAYMENT, "CMasternodeSync::ProcessTick -- nTick %d nRequestedMasternodeAssets %d nTimeLastBumped %lld GetTime() %lld diff %lld\n", nTick, nRequestedMasternodeAssets, nTimeLastBumped, GetTime(), GetTime() - nTimeLastBumped);
+                LogPrint(BCLog::MNPAYMENT, "CMasternodeSync::ProcessTick -- nTick %d nRequestedMasternodeAssets %d nTimeLastBumped %lld nTimeLastProcess %lld diff %lld\n", nTick, nRequestedMasternodeAssets, nTimeLastBumped, nTimeLastProcess, nTimeLastProcess - nTimeLastBumped);
                 // check for timeout first
                 // This might take a lot longer than MASTERNODE_SYNC_TIMEOUT_SECONDS due to new blocks,
                 // but that should be OK and it should timeout eventually.
-                if(GetTime() - nTimeLastBumped > MASTERNODE_SYNC_TIMEOUT_SECONDS) {
+                if(nTimeLastProcess - nTimeLastBumped > MASTERNODE_SYNC_TIMEOUT_SECONDS) {
                     LogPrint(BCLog::MNSYNC, "CMasternodeSync::ProcessTick -- nTick %d nRequestedMasternodeAssets %d -- timeout\n", nTick, nRequestedMasternodeAssets);
                     if (nRequestedMasternodeAttempt == 0) {
                         LogPrint(BCLog::MNSYNC, "CMasternodeSync::ProcessTick -- ERROR: failed to sync %s\n", GetAssetName());
@@ -331,10 +331,10 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
             // GOVOBJ : SYNC GOVERNANCE ITEMS FROM OUR PEERS
 
             if(nRequestedMasternodeAssets == MASTERNODE_SYNC_GOVERNANCE) {
-                LogPrint(BCLog::GOBJECT, "CMasternodeSync::ProcessTick -- nTick %d nRequestedMasternodeAssets %d nTimeLastBumped %lld GetTime() %lld diff %lld\n", nTick, nRequestedMasternodeAssets, nTimeLastBumped, GetTime(), GetTime() - nTimeLastBumped);
+                LogPrint(BCLog::GOBJECT, "CMasternodeSync::ProcessTick -- nTick %d nRequestedMasternodeAssets %d nTimeLastBumped %lld nTimeLastProcess %lld diff %lld\n", nTick, nRequestedMasternodeAssets, nTimeLastBumped, nTimeLastProcess, nTimeLastProcess - nTimeLastBumped);
 
                 // check for timeout first
-                if(GetTime() - nTimeLastBumped > MASTERNODE_SYNC_TIMEOUT_SECONDS) {
+                if(nTimeLastProcess - nTimeLastBumped > MASTERNODE_SYNC_TIMEOUT_SECONDS) {
                     LogPrint(BCLog::MNSYNC, "CMasternodeSync::ProcessTick -- nTick %d nRequestedMasternodeAssets %d -- timeout\n", nTick, nRequestedMasternodeAssets);
                     if(nRequestedMasternodeAttempt == 0) {
                         LogPrint(BCLog::MNSYNC, "CMasternodeSync::ProcessTick -- WARNING: failed to sync %s\n", GetAssetName());
@@ -355,11 +355,11 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
                         static int nLastVotes = 0;
                         if(nTimeNoObjectsLeft == 0) {
                             // asked all objects for votes for the first time
-                            nTimeNoObjectsLeft = GetTime();
+                            nTimeNoObjectsLeft = nTimeLastProcess;
                         }
                         // make sure the condition below is checked only once per tick
                         if(nLastTick == nTick) continue;
-                        if(GetTime() - nTimeNoObjectsLeft > MASTERNODE_SYNC_TIMEOUT_SECONDS &&
+                        if(nTimeLastProcess - nTimeNoObjectsLeft > MASTERNODE_SYNC_TIMEOUT_SECONDS &&
                             governance.GetVoteCount() - nLastVotes < std::max(int(0.0001 * nLastVotes), MASTERNODE_SYNC_TICK_SECONDS)
                         ) {
                             // We already asked for all objects, waited for MASTERNODE_SYNC_TIMEOUT_SECONDS
