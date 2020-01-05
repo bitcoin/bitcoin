@@ -55,7 +55,7 @@ BOOST_FIXTURE_TEST_CASE(main, GenesisBlockFixture)
 //        }
 
     // TODO: regenerate mainnet genesis block and uncomment next line
-    //    check("main");
+    check("main");
 }
 
 BOOST_FIXTURE_TEST_CASE(test, GenesisBlockFixture)
