@@ -13,10 +13,15 @@ import sys
 SOURCES = [
     "src/rpc/server.cpp",
     "src/rpc/blockchain.cpp",
+    "src/rpc/governance.cpp",
+    "src/rpc/masternode.cpp",
     "src/rpc/mining.cpp",
     "src/rpc/misc.cpp",
     "src/rpc/net.cpp",
+    "src/rpc/privatesend.cpp",
     "src/rpc/rawtransaction.cpp",
+    "src/rpc/rpcevo.cpp",
+    "src/rpc/rpcquorums.cpp",
     "src/wallet/rpcwallet.cpp",
 ]
 # Source file (relative to root) containing conversion mapping
