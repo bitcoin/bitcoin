@@ -11,6 +11,7 @@ In this test we connect to one node over p2p, and test block requests:
 re-requested.
 """
 import copy
+import time
 
 from test_framework.blocktools import create_block, create_coinbase, create_tx_with_script
 from test_framework.messages import COIN
@@ -132,6 +133,21 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
         block4.solve()
         self.log.info("Test inflation by duplicating input")
         node.p2p.send_blocks_and_test([block4], node, success=False,  reject_reason='bad-txns-inputs-duplicate')
+
+
+        self.log.info("Test accepting identical block after rejecting it due to a future timestamp.")
+
+        t = int(time.time())
+        node.setmocktime(t)
+        block = create_block(tip, create_coinbase(height), t + 7201)
+        block.hashMerkleRoot = block.calc_merkle_root()
+        block.solve()
+        # NOTE: Need force_send because the block will get rejected without a getdata otherwise
+        node.p2p.send_blocks_and_test([block], node, force_send=True, success=False, reject_reason='time-too-new')#, expect_disconnect=True)
+        #self.reconnect_p2p()
+
+        node.setmocktime(t + 1)
+        node.p2p.send_blocks_and_test([block], node, success=True, timeout=5)
 
 if __name__ == '__main__':
     InvalidBlockRequestTest().main()
