@@ -37,7 +37,7 @@ public:
         consensus.CSVHeight = 1; // 000000000000000004a1b34462cb8aeebd5799177f7a29cf28f2d1961716b5b5
         consensus.SegwitHeight = 1; // 0000000000000000001c8018d9cb3b742ef25114f27563e3fc4a1902167f9893
         consensus.MinBIP9WarningHeight = consensus.SegwitHeight + consensus.nMinerConfirmationWindow;
-        consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.powLimit = uint256S("0000007fffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = false;
@@ -69,20 +69,19 @@ public:
         m_assumed_chain_state_size = 4;
 
         // same as test
-        // CBlock(hash=0000000cc7ada94e458c41fdb841ee6a69b7fd572dcf216d551537c72c730d50, ver=0x00000001, hashPrevBlock=0000000000000000000000000000000000000000000000000000000000000000, hashMerkleRoot=a62cec259454a7e4496badb3c9abef8a53e2862d1f39f53048e402039be99e7c, nTime=1337, nBits=1d0fffff, nNonce=36282504, vtx=1)
-        //  CTransaction(hash=e494ea0589, ver=1, vin.size=1, vout.size=1, nLockTime=0)
-        //    CTxIn(COutPoint(0000000000, 4294967295), coinbase 04ffff0f1d01040956657269426c6f636b)
-        //    CScriptWitness()
-        //    CTxOut(nValue=50.00000000, scriptPubKey=41047c62bbf7f5aa4dd5c16bad99ac)
+        // CBlock(hash=00000006cf4c4e6177695242a1347023b7b1bdef8119237a11511b9e490bf8d9, ver=0x00000001, hashPrevBlock=0000000000000000000000000000000000000000000000000000000000000000, hashMerkleRoot=06c6c7131bc50a1fcab02107d0f24bcfe22c1808080074dcedf5fea412a0fe1c, nTime=1340, nBits=1d0fffff, nNonce=3768745, vtx=1)
+        //   CTransaction(hash=e494ea0589, ver=1, vin.size=1, vout.size=1, nLockTime=0)
+        //     CTxIn(COutPoint(0000000000, 4294967295), coinbase 04ffff0f1d01040956657269426c6f636b)
+        //     CScriptWitness()
+        //     CTxOut(nValue=50.00000000, scriptPubKey=41047c62bbf7f5aa4dd5c16bad99ac)
         genesis = VeriBlock::CreateGenesisBlock(
-            1337, 1993285668, 0x1d00ffff, 1, 50 * COIN,
+            1340, 3768745, 0x1d0fffff, 1, 50 * COIN,
             "047c62bbf7f5aa4dd5c16bad99ac621b857fac4e93de86e45f5ada73404eeb44dedcf377b03c14a24e9d51605d9dd2d8ddaef58760d9c4bb82d9c8f06d96e79488",
             "VeriBlock"
         );
-        assert(false && "TODO: MAINNET GENESIS BLOCK IS INVALID. REGENERATE IT.");
         consensus.hashGenesisBlock = genesis.GetHash();
-        //assert(consensus.hashGenesisBlock == uint256S("0x00000000891169bc299da2f6360be150b1ab3855b7c3aefcb6aaff25ab3740bd"));
-        //assert(genesis.hashMerkleRoot == uint256S("0x5cc5946e518c2a8d5e2bb77c92cb0079abca25f57c7c6f8ed6e2a951775fd6f5"));
+        assert(consensus.hashGenesisBlock == uint256S("00000006cf4c4e6177695242a1347023b7b1bdef8119237a11511b9e490bf8d9"));
+        assert(genesis.hashMerkleRoot == uint256S("06c6c7131bc50a1fcab02107d0f24bcfe22c1808080074dcedf5fea412a0fe1c"));
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,5);
