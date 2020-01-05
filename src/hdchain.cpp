@@ -53,7 +53,7 @@ void CHDChain::Debug(const std::string& strName) const
             std::cout << "seed: " << HexStr(vchSeed).c_str() << std::endl;
 
             CExtKey extkey;
-            extkey.SetMaster(&vchSeed[0], vchSeed.size());
+            extkey.SetMaster(vchSeed.data(), vchSeed.size());
 
             CBitcoinExtKey b58extkey;
             b58extkey.SetKey(extkey);
@@ -158,7 +158,7 @@ void CHDChain::DeriveChildExtKey(uint32_t nAccountIndex, bool fInternal, uint32_
     CExtKey changeKey;              //key at m/purpose'/coin_type'/account'/change
     CExtKey childKey;               //key at m/purpose'/coin_type'/account'/change/address_index
 
-    masterKey.SetMaster(&vchSeed[0], vchSeed.size());
+    masterKey.SetMaster(vchSeed.data(), vchSeed.size());
 
     // Use hardened derivation for purpose, coin_type and account
     // (keys >= 0x80000000 are hardened after bip32)
