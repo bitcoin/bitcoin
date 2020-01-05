@@ -19,7 +19,7 @@ private:
     int64_t accessCounter{0};
 
 public:
-    unordered_lru_cache(size_t _maxSize = MaxSize, size_t _truncateThreshold = TruncateThreshold) :
+    explicit unordered_lru_cache(size_t _maxSize = MaxSize, size_t _truncateThreshold = TruncateThreshold) :
         maxSize(_maxSize),
         truncateThreshold(_truncateThreshold == 0 ? _maxSize * 2 : _truncateThreshold)
     {

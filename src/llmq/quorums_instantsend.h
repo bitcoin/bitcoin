@@ -50,7 +50,7 @@ private:
     unordered_lru_cache<COutPoint, uint256, SaltedOutpointHasher, 10000> outpointCache;
 
 public:
-    CInstantSendDb(CDBWrapper& _db) : db(_db) {}
+    explicit CInstantSendDb(CDBWrapper& _db) : db(_db) {}
 
     void WriteNewInstantSendLock(const uint256& hash, const CInstantSendLock& islock);
     void RemoveInstantSendLock(CDBBatch& batch, const uint256& hash, CInstantSendLockPtr islock);
@@ -112,7 +112,7 @@ private:
     std::unordered_set<uint256, StaticSaltedHasher> pendingRetryTxs;
 
 public:
-    CInstantSendManager(CDBWrapper& _llmqDb);
+    explicit CInstantSendManager(CDBWrapper& _llmqDb);
     ~CInstantSendManager();
 
     void Start();

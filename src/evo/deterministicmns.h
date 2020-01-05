@@ -52,7 +52,7 @@ public:
 
 public:
     CDeterministicMNState() {}
-    CDeterministicMNState(const CProRegTx& proTx)
+    explicit CDeterministicMNState(const CProRegTx& proTx)
     {
         keyIDOwner = proTx.keyIDOwner;
         pubKeyOperator.Set(proTx.pubKeyOperator);
@@ -632,7 +632,7 @@ private:
     const CBlockIndex* tipIndex{nullptr};
 
 public:
-    CDeterministicMNManager(CEvoDB& _evoDb);
+    explicit CDeterministicMNManager(CEvoDB& _evoDb);
 
     bool ProcessBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& state, bool fJustCheck);
     bool UndoBlock(const CBlock& block, const CBlockIndex* pindex);

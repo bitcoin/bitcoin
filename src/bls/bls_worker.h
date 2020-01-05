@@ -158,7 +158,7 @@ private:
     std::map<uint256, std::shared_future<CBLSPublicKey> > publicKeyShareCache;
 
 public:
-    CBLSWorkerCache(CBLSWorker& _worker) :
+    explicit CBLSWorkerCache(CBLSWorker& _worker) :
         worker(_worker) {}
 
     BLSVerificationVectorPtr BuildQuorumVerificationVector(const uint256& cacheKey, const std::vector<BLSVerificationVectorPtr>& vvecs)
