@@ -3,7 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
-A script to check that the (Linux) executables produced by gitian only contain
+A script to check that the (Linux) executables produced by Gitian only contain
 allowed gcc, glibc and libstdc++ version symbols.  This makes sure they are
 still compatible with the minimum supported Linux distribution versions.
 
