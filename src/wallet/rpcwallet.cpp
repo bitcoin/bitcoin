@@ -3207,8 +3207,8 @@ static const CRPCCommand commands[] =
     { "wallet",             "lockunspent",              &lockunspent,              {"unlock","transactions"} },
     { "wallet",             "move",                     &movecmd,                  {"fromaccount","toaccount","amount","minconf","comment"} },
     { "wallet",             "sendfrom",                 &sendfrom,                 {"fromaccount","toaddress","amount","minconf","addlocked","comment","comment_to"} },
-    { "wallet",             "sendmany",                 &sendmany,                 {"fromaccount","amounts","minconf","addlocked","comment","subtractfeefrom","use_ps","conf_target","estimate_mode"} },
-    { "wallet",             "sendtoaddress",            &sendtoaddress,            {"address","amount","comment","comment_to","subtractfeefromamount","use_ps","conf_target","estimate_mode"} },
+    { "wallet",             "sendmany",                 &sendmany,                 {"fromaccount","amounts","minconf","addlocked","comment","subtractfeefrom","use_is","use_ps","conf_target","estimate_mode"} },
+    { "wallet",             "sendtoaddress",            &sendtoaddress,            {"address","amount","comment","comment_to","subtractfeefromamount","use_is","use_ps","conf_target","estimate_mode"} },
     { "wallet",             "setaccount",               &setaccount,               {"address","account"} },
     { "wallet",             "settxfee",                 &settxfee,                 {"amount"} },
     { "wallet",             "setprivatesendrounds",     &setprivatesendrounds,     {"rounds"} },
@@ -3223,7 +3223,7 @@ static const CRPCCommand commands[] =
     { "generating",         "generate",                 &generate,                 {"nblocks","maxtries"} },
 #endif //ENABLE_MINER
     { "wallet",             "keepass",                  &keepass,                  {} },
-    { "hidden",             "instantsendtoaddress",     &instantsendtoaddress,     {"address","amount","comment","comment_to","subtractfeefromamount"} },
+    { "hidden",             "instantsendtoaddress",     &instantsendtoaddress,     {} },
     { "wallet",             "dumphdinfo",               &dumphdinfo,               {} },
     { "wallet",             "importelectrumwallet",     &importelectrumwallet,     {"filename", "index"} },
 };

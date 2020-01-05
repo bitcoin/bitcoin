@@ -1307,7 +1307,7 @@ static const CRPCCommand commands[] =
 
     /* Dash features */
     { "dash",               "mnsync",                 &mnsync,                 {} },
-    { "dash",               "spork",                  &spork,                  {"value"} },
+    { "dash",               "spork",                  &spork,                  {"arg0","value"} },
 
     /* Not shown in help */
     { "hidden",             "setmocktime",            &setmocktime,            {"timestamp"}},
