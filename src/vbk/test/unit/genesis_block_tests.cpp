@@ -54,7 +54,6 @@ BOOST_FIXTURE_TEST_CASE(main, GenesisBlockFixture)
 //            printf("%s\n", block.ToString().c_str());
 //        }
 
-    // TODO: regenerate mainnet genesis block and uncomment next line
     check("main");
 }
 
