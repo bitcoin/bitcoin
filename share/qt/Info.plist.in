@@ -29,8 +29,8 @@
   <string>????</string>
 
   <key>CFBundleExecutable</key>
-  <string>NdovuCoin-Qt</string>
-  
+  <string>Bitcoin-Qt</string>
+
   <key>CFBundleName</key>
   <string>NdovuCoin-Qt</string>
 
@@ -99,7 +99,7 @@
 
   <key>NSRequiresAquaSystemAppearance</key>
     <string>True</string>
-  
+
   <key>LSApplicationCategoryType</key>
     <string>public.app-category.finance</string>
 </dict>

@@ -194,15 +194,18 @@ public:
 
         bool isValid() const { return valid; }
 
-        // Copy operator and constructor transfer the context
-        UnlockContext(const UnlockContext& obj) { CopyFrom(obj); }
-        UnlockContext& operator=(const UnlockContext& rhs) { CopyFrom(rhs); return *this; }
+        // Copy constructor is disabled.
+        UnlockContext(const UnlockContext&) = delete;
+        // Move operator and constructor transfer the context
+        UnlockContext(UnlockContext&& obj) { CopyFrom(std::move(obj)); }
+        UnlockContext& operator=(UnlockContext&& rhs) { CopyFrom(std::move(rhs)); return *this; }
     private:
         WalletModel *wallet;
         bool valid;
         mutable bool relock; // mutable, as it can be set to false by copying
 
-        void CopyFrom(const UnlockContext& rhs);
+        UnlockContext& operator=(const UnlockContext&) = default;
+        void CopyFrom(UnlockContext&& rhs);
     };
 
     UnlockContext requestUnlock();
@@ -252,8 +255,6 @@ private:
     EncryptionStatus cachedEncryptionStatus;
     int cachedNumBlocks;
 
-    QTimer *pollTimer;
-
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
     void checkBalanceChanged(const interfaces::WalletBalances& new_balances);
@@ -289,6 +290,9 @@ Q_SIGNALS:
     void canGetAddressesChanged();
 
 public Q_SLOTS:
+    /* Starts a timer to periodically update the balance */
+    void startPollBalance();
+
     /* Wallet status might have changed */
     void updateStatus();
     /* New transaction, or transaction changed status */

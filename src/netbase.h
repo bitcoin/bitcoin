@@ -37,7 +37,7 @@ public:
     bool randomize_credentials;
 };
 
-enum Network ParseNetwork(std::string net);
+enum Network ParseNetwork(const std::string& net);
 std::string GetNetworkName(enum Network net);
 bool SetProxy(enum Network net, const proxyType &addrProxy);
 bool GetProxy(enum Network net, proxyType &proxyInfoOut);

@@ -1943,17 +1943,6 @@
         <translation>Ocultar</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
-        <translation>Pagando solamente la cuota mínima es correcto, siempre y cuando haya menos volumen de transacciones que el espacio en los bloques. Pero tenga en cuenta que esto puede terminar en una transacción nunca confirmada, una vez que haya más demanda para transacciones NdovuCoin que la red pueda procesar.</translation>
-    </message>
-    <message>
-        <source>(read the tooltip)</source>
-        <translation>(leer la sugerencia)</translation>
-    </message>
-    <message>
-=======
->>>>>>> upstream/0.18
         <source>Recommended:</source>
         <translation>Recomendado:</translation>
     </message>
@@ -2086,17 +2075,8 @@
         <translation>Solicitud de pago caducada.</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>Pay only the required fee of %1</source>
-        <translation>Pagar únicamente la cuota solicitada de %1</translation>
-    </message>
-    <message>
-        <source>Warning: Invalid NdovuCoin address</source>
-        <translation>Alerta: dirección NdovuCoin inválida</translation>
-=======
         <source>Warning: Invalid Bitcoin address</source>
         <translation>Alerta: dirección Bitcoin inválida</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>Warning: Unknown change address</source>

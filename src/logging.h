@@ -19,6 +19,7 @@
 static const bool DEFAULT_LOGTIMEMICROS = false;
 static const bool DEFAULT_LOGIPS        = false;
 static const bool DEFAULT_LOGTIMESTAMPS = true;
+static const bool DEFAULT_LOGTHREADNAMES = false;
 extern const char * const DEFAULT_DEBUGLOGFILE;
 
 extern bool fLogIPs;
@@ -59,9 +60,10 @@ namespace BCLog {
     class Logger
     {
     private:
-        FILE* m_fileout = nullptr;
-        std::mutex m_file_mutex;
-        std::list<std::string> m_msgs_before_open;
+        mutable std::mutex m_cs;                   // Can not use Mutex from sync.h because in debug mode it would cause a deadlock when a potential deadlock was detected
+        FILE* m_fileout = nullptr;                 // GUARDED_BY(m_cs)
+        std::list<std::string> m_msgs_before_open; // GUARDED_BY(m_cs)
+        bool m_buffering{true};                    //!< Buffer messages before logging can be started. GUARDED_BY(m_cs)
 
         /**
          * m_started_new_line is a state variable that will suppress printing of
@@ -81,17 +83,26 @@ namespace BCLog {
 
         bool m_log_timestamps = DEFAULT_LOGTIMESTAMPS;
         bool m_log_time_micros = DEFAULT_LOGTIMEMICROS;
+        bool m_log_threadnames = DEFAULT_LOGTHREADNAMES;
 
         fs::path m_file_path;
         std::atomic<bool> m_reopen_file{false};
 
         /** Send a string to the log output */
-        void LogPrintStr(const std::string &str);
+        void LogPrintStr(const std::string& str);
 
         /** Returns whether logs will be written to any output */
-        bool Enabled() const { return m_print_to_console || m_print_to_file; }
+        bool Enabled() const
+        {
+            std::lock_guard<std::mutex> scoped_lock(m_cs);
+            return m_buffering || m_print_to_console || m_print_to_file;
+        }
 
-        bool OpenDebugLog();
+        /** Start logging (and flush all buffered messages) */
+        bool StartLogging();
+        /** Only for testing */
+        void DisconnectTestLogger();
+
         void ShrinkDebugFile();
 
         uint32_t GetCategoryMask() const { return m_categories.load(); }

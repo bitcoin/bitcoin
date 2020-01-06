@@ -12,6 +12,7 @@
 #include <attributes.h>
 
 #include <cstdint>
+#include <iterator>
 #include <string>
 #include <vector>
 
@@ -121,28 +122,25 @@ NODISCARD bool ParseUInt64(const std::string& str, uint64_t *out);
 NODISCARD bool ParseDouble(const std::string& str, double *out);
 
 template<typename T>
-std::string HexStr(const T itbegin, const T itend, bool fSpaces=false)
+std::string HexStr(const T itbegin, const T itend)
 {
     std::string rv;
     static const char hexmap[16] = { '0', '1', '2', '3', '4', '5', '6', '7',
                                      '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
-    rv.reserve((itend-itbegin)*3);
+    rv.reserve(std::distance(itbegin, itend) * 2);
     for(T it = itbegin; it < itend; ++it)
     {
         unsigned char val = (unsigned char)(*it);
-        if(fSpaces && it != itbegin)
-            rv.push_back(' ');
         rv.push_back(hexmap[val>>4]);
         rv.push_back(hexmap[val&15]);
     }
-
     return rv;
 }
 
 template<typename T>
-inline std::string HexStr(const T& vch, bool fSpaces=false)
+inline std::string HexStr(const T& vch)
 {
-    return HexStr(vch.begin(), vch.end(), fSpaces);
+    return HexStr(vch.begin(), vch.end());
 }
 
 /**
@@ -201,6 +199,8 @@ bool ConvertBits(const O& outfn, I it, I end) {
  * Converts the given character to its lowercase equivalent.
  * This function is locale independent. It only converts uppercase
  * characters in the standard 7-bit ASCII range.
+ * This is a feature, not a limitation.
+ *
  * @param[in] c     the character to convert to lowercase.
  * @return          the lowercase equivalent of c; or the argument
  *                  if no conversion is possible.
@@ -211,17 +211,22 @@ constexpr char ToLower(char c)
 }
 
 /**
- * Converts the given string to its lowercase equivalent.
+ * Returns the lowercase equivalent of the given string.
  * This function is locale independent. It only converts uppercase
  * characters in the standard 7-bit ASCII range.
- * @param[in,out] str   the string to convert to lowercase.
+ * This is a feature, not a limitation.
+ *
+ * @param[in] str   the string to convert to lowercase.
+ * @returns         lowercased equivalent of str
  */
-void Downcase(std::string& str);
+std::string ToLower(const std::string& str);
 
 /**
  * Converts the given character to its uppercase equivalent.
  * This function is locale independent. It only converts lowercase
  * characters in the standard 7-bit ASCII range.
+ * This is a feature, not a limitation.
+ *
  * @param[in] c     the character to convert to uppercase.
  * @return          the uppercase equivalent of c; or the argument
  *                  if no conversion is possible.
@@ -232,12 +237,24 @@ constexpr char ToUpper(char c)
 }
 
 /**
+ * Returns the uppercase equivalent of the given string.
+ * This function is locale independent. It only converts lowercase
+ * characters in the standard 7-bit ASCII range.
+ * This is a feature, not a limitation.
+ *
+ * @param[in] str   the string to convert to uppercase.
+ * @returns         UPPERCASED EQUIVALENT OF str
+ */
+std::string ToUpper(const std::string& str);
+
+/**
  * Capitalizes the first character of the given string.
- * This function is locale independent. It only capitalizes the
- * first character of the argument if it has an uppercase equivalent
- * in the standard 7-bit ASCII range.
+ * This function is locale independent. It only converts lowercase
+ * characters in the standard 7-bit ASCII range.
+ * This is a feature, not a limitation.
+ *
  * @param[in] str   the string to capitalize.
- * @return          string with the first letter capitalized.
+ * @returns         string with the first letter capitalized.
  */
 std::string Capitalize(std::string str);
 

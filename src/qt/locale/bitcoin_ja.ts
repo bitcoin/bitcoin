@@ -66,21 +66,12 @@
         <translation>受取用アドレス</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>These are your NdovuCoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>これらは支払いを送信するためのあなたの NdovuCoin アドレスです。コインを送信する前に、常に額と受信アドレスを確認してください。</translation>
-    </message>
-    <message>
-        <source>These are your NdovuCoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>これらは支払いを受け取るためのビットコインアドレスです。トランザクションごとに新しい受け取り用アドレスを作成することが推奨されます。</translation>
-=======
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>これらは、あなたが知っている支払い送り先の Bitcoin アドレスです。コインを送る前に、必ず金額と送金先アドレスを確認してください。</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
         <translation>これらは支払いを受け取るための、あなたの Bitcoin アドレスです。トランザクションごとに新しい受け取り用アドレスを作成することが推奨されます。</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -145,14 +136,6 @@
         <translation>新しいパスフレーズをもう一度</translation>
     </message>
     <message>
-        <source>Show password</source>
-        <translation>パスワードを表示</translation>
-    </message>
-    <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>ウォレットの新しいパスフレーズを入力してください。&lt;br/&gt;&lt;b&gt;10文字以上のランダムな文字&lt;/b&gt;で構成されたものか、&lt;b&gt;8単語以上の単語&lt;/b&gt;で構成されたパスフレーズを使用してください。</translation>
-    </message>
-    <message>
         <source>Encrypt wallet</source>
         <translation>ウォレットを暗号化</translation>
     </message>
@@ -177,20 +160,12 @@
         <translation>パスフレーズの変更</translation>
     </message>
     <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>ウォレットの古いパスフレーズおよび新しいパスフレーズを入力してください。</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>ウォレットの暗号化の承諾</translation>
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-<<<<<<< HEAD
-        <translation>警告: もしもあなたのウォレットを暗号化してパスフレーズを失ってしまったなら、&lt;b&gt;あなたの NdovuCoin はすべて失われます&lt;/b&gt;!</translation>
-=======
         <translation>警告: もしもあなたのウォレットを暗号化してパスフレーズを忘れてしまったら、&lt;b&gt;あなたの Bitcoin はすべて失われます&lt;/b&gt;！</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -199,10 +174,6 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>ウォレットの暗号化の完了</translation>
-    </message>
-    <message>
-        <source>Your wallet is now encrypted. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>ウォレットの暗号化処理が完了しました。ウォレットを暗号化しても、コンピュータに感染したマルウェアなどによる Bitcoin の盗難を完全に防ぐことはできないことにご注意ください。</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -379,10 +350,6 @@
         <translation>メッセージの検証(&amp;V)...</translation>
     </message>
     <message>
-        <source>NdovuCoin</source>
-        <translation>NdovuCoin</translation>
-    </message>
-    <message>
         <source>&amp;Send</source>
         <translation>送金(&amp;S)</translation>
     </message>
@@ -403,21 +370,12 @@
         <translation>ウォレットの秘密鍵を暗号化する</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>Sign messages with your NdovuCoin addresses to prove you own them</source>
-        <translation>あなたが所有していることを証明するために、あなたの NdovuCoin アドレスでメッセージに署名してください</translation>
-    </message>
-    <message>
-        <source>Verify messages to ensure they were signed with specified NdovuCoin addresses</source>
-        <translation>指定された NdovuCoin アドレスで署名されたことを確認するためにメッセージを検証します</translation>
-=======
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
         <translation>Bitcoin アドレスでメッセージに署名して、アドレスを所有していることを証明する</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
         <translation>メッセージを検証して、指定された Bitcoin アドレスで署名されたことを確認する</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>&amp;File</source>
@@ -456,13 +414,8 @@
         <translation>コマンドラインオプション(&amp;C)</translation>
     </message>
     <message numerus="yes">
-<<<<<<< HEAD
-        <source>%n active connection(s) to NdovuCoin network</source>
-        <translation><numerusform>%n の NdovuCoin ネットワークへのアクティブな接続</numerusform></translation>
-=======
         <source>%n active connection(s) to Bitcoin network</source>
         <translation><numerusform>Bitcoin ネットワークへのアクティブな接続は %n 個</numerusform></translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>Indexing blocks on disk...</source>
@@ -529,10 +482,22 @@
         <translation>ウォレットを閉じる</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>Show the %1 help message to get a list with possible NdovuCoin command-line options</source>
-        <translation>有効な NdovuCoin のコマンドライン オプションを見るために %1 のヘルプメッセージを表示します。</translation>
-=======
+        <source>Open Wallet</source>
+        <translation>ウォレットを開く</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation>ウォレットを開く</translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>ウォレットを閉じる</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>ウォレットを閉じる</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>%1 のヘルプ メッセージを表示して、使用可能な XPChain のコマンドライン オプションの一覧を見る。</translation>
     </message>
@@ -541,12 +506,8 @@
         <translation>デフォルトウォレット</translation>
     </message>
     <message>
-        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
-        <translation>ウォレット &lt;b&gt;%1&lt;/b&gt;を開いています...</translation>
-    </message>
-    <message>
-        <source>Open Wallet Failed</source>
-        <translation>ウォレットを開くことに失敗しました</translation>
+        <source>No wallets available</source>
+        <translation>ウォレットは利用できません</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -561,13 +522,8 @@
         <translation>拡大／縮小</translation>
     </message>
     <message>
-        <source>Restore</source>
-        <translation>元に戻す</translation>
-    </message>
-    <message>
         <source>Main Window</source>
         <translation>メインウィンドウ</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>%1 client</source>
@@ -580,6 +536,10 @@
     <message>
         <source>Catching up...</source>
         <translation>遅延取戻し中...</translation>
+    </message>
+    <message>
+        <source>Error: %1</source>
+        <translation>エラー: %1</translation>
     </message>
     <message>
         <source>Date: %1
@@ -646,13 +606,8 @@
         <translation>ウォレットは&lt;b&gt;暗号化済み&lt;/b&gt;・&lt;b&gt;ロック状態&lt;/b&gt;</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>A fatal error occurred. NdovuCoin can no longer continue safely and will quit.</source>
-        <translation>致命的なエラーが発生しました。NdovuCoin は安全に継続することができず終了するでしょう。</translation>
-=======
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
         <translation>致命的なエラーが発生しました。Bitcoin を安全に動作し続けることができないため終了します。</translation>
->>>>>>> upstream/0.18
     </message>
 </context>
 <context>
@@ -807,6 +762,12 @@
     </message>
 </context>
 <context>
+    <name>CreateWalletActivity</name>
+    </context>
+<context>
+    <name>CreateWalletDialog</name>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
@@ -950,13 +911,8 @@
         <translation>約%1 GBのデータがこのディレクトリに保存されます。</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>%1 will download and store a copy of the NdovuCoin block chain.</source>
-        <translation>%1はBitcoinのブロックチェーンの複製をダウンロードし保存します。</translation>
-=======
         <source>%1 will download and store a copy of the Bitcoin block chain.</source>
         <translation>%1 は Bitcoin ブロックチェーンのコピーをダウンロードし保存します。</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
@@ -978,7 +934,7 @@
         <source>(of %n GB needed)</source>
         <translation><numerusform>(%n GB必要)</numerusform></translation>
     </message>
-</context>
+    </context>
 <context>
     <name>ModalOverlay</name>
     <message>
@@ -1025,7 +981,11 @@
         <source>Hide</source>
         <translation>隠す</translation>
     </message>
-    </context>
+    <message>
+        <source>Unknown. Syncing Headers (%1, %2%)...</source>
+        <translation>不明。ヘッダ (%1, %2%) の同期中...</translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -1047,6 +1007,17 @@
     <message>
         <source>Select payment request file to open</source>
         <translation>支払いリクエストファイルを選択</translation>
+    </message>
+</context>
+<context>
+    <name>OpenWalletActivity</name>
+    <message>
+        <source>default wallet</source>
+        <translation>デフォルトウォレット</translation>
+    </message>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>ウォレット &lt;b&gt;%1&lt;/b&gt;を開いています...</translation>
     </message>
 </context>
 <context>
@@ -1168,13 +1139,8 @@
         <translation>未検証のお釣りを使用する(&amp;S)</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>Automatically open the NdovuCoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>自動的にルーター上の NdovuCoin クライアントのポートを開きます。あなたのルーターが UPnP に対応していて、それが有効になっている場合に作動します。</translation>
-=======
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>自動的にルーター上の Bitcoin クライアントのポートを開放します。あなたのルーターが UPnP に対応していて、それが有効になっている場合のみ動作します。</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -1189,13 +1155,8 @@
         <translation>外部からの接続を許可する(&amp;G)</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>Connect to the NdovuCoin network through a SOCKS5 proxy.</source>
-        <translation>SOCKS5 プロキシ経由でBitcoinネットワークに接続する</translation>
-=======
         <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
         <translation>SOCKS5 プロキシ経由で Bitcoin ネットワークに接続する。</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1230,13 +1191,8 @@
         <translation>Tor</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>Connect to the NdovuCoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Tor秘匿サービスを利用するため、独立なSOCKS5プロキシ経由でBitcoinネットワークに接続する</translation>
-=======
         <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
         <translation>Tor秘匿サービスを利用するため、専用の SOCKS5 プロキシ経由で Bitcoin ネットワークに接続する。</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1346,13 +1302,8 @@
         <translation>フォーム</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the NdovuCoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>表示された情報は古いかもしれません。接続が確立されると、あなたのウォレットは NdovuCoin ネットワークと自動的に同期しますが、このプロセスはまだ完了していません。</translation>
-=======
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
         <translation>表示されている情報は古い可能性があります。ウォレットは接続確立後に Bitcoin ネットワークと自動的に同期しますが、同期処理はまだ完了していません。</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>Watch-only:</source>
@@ -1454,13 +1405,8 @@
         <translation>支払い先アドレス「 %1 」は無効です</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>URI cannot be parsed! This can be caused by an invalid NdovuCoin address or malformed URI parameters.</source>
-        <translation>URI を解析できません! これは無効な NdovuCoin アドレスあるいは不正な形式の URI パラメーターによって引き起こされる場合があります。</translation>
-=======
         <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
         <translation>URIを解析できませんでした！ Bitcoin アドレスが無効であるか、URIパラメーターが不正な形式である可能性があります。</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1561,13 +1507,8 @@
         <translation>金額</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>Enter a NdovuCoin address (e.g. %1)</source>
-        <translation>Bitcoinアドレスを入力してください (例 %1)</translation>
-=======
         <source>Enter a Bitcoin address (e.g. %1)</source>
         <translation>Bitcoin アドレスを入力してください (例: %1)</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>%1 d</source>
@@ -1642,21 +1583,6 @@
         <translation>%1 GB</translation>
     </message>
     <message>
-        <source>%1 didn't yet exit safely...</source>
-        <translation>%1 はまだ安全に終了していません...</translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation>不明</translation>
-    </message>
-</context>
-<context>
-    <name>QObject::QObject</name>
-    <message>
-        <source>Error parsing command line arguments: %1.</source>
-        <translation>コマンドライン引数の解析時にエラーが発生しました: %1</translation>
-    </message>
-    <message>
         <source>Error: Specified data directory "%1" does not exist.</source>
         <translation>エラー: 指定されたデータ ディレクトリ "%1" は存在しません。</translation>
     </message>
@@ -1668,6 +1594,14 @@
         <source>Error: %1</source>
         <translation>エラー: %1</translation>
     </message>
+    <message>
+        <source>%1 didn't yet exit safely...</source>
+        <translation>%1 はまだ安全に終了していません...</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>不明</translation>
+    </message>
 </context>
 <context>
     <name>QRImageWidget</name>
@@ -1678,6 +1612,14 @@
     <message>
         <source>&amp;Copy Image</source>
         <translation>画像をコピー(&amp;C)</translation>
+    </message>
+    <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>生成されたURIが長すぎです。ラベルやメッセージのテキストを短くしてください。</translation>
+    </message>
+    <message>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>URIをQRコードへ変換している際にエラーが発生しました。</translation>
     </message>
     <message>
         <source>Save QR Code</source>
@@ -2022,13 +1964,8 @@
         <translation>メッセージ (&amp;M):</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the NdovuCoin network.</source>
-        <translation>支払リクエストが開始された時に表示される、支払リクエストに添える任意のメッセージです。注意：メッセージはBitcoinネットワークを通じて、支払と共に送られるわけではありません。</translation>
-=======
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
         <translation>支払いリクエストに添付するメッセージ（任意）。支払リクエスト開始時に表示されます。注意: メッセージは Bitcoin ネットワーク上へ送信されません。</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
@@ -2061,10 +1998,6 @@
     <message>
         <source>Requested payments history</source>
         <translation>支払いリクエスト履歴</translation>
-    </message>
-    <message>
-        <source>&amp;Request payment</source>
-        <translation>支払いをリクエスト(&amp;R)</translation>
     </message>
     <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
@@ -2148,14 +2081,6 @@
     <message>
         <source>Wallet</source>
         <translation>ウォレット</translation>
-    </message>
-    <message>
-        <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation>生成されたURIが長すぎです。ラベルやメッセージのテキストを短くしてください。</translation>
-    </message>
-    <message>
-        <source>Error encoding URI into QR Code.</source>
-        <translation>URIをQRコードへ変換している際にエラーが発生しました。</translation>
     </message>
 </context>
 <context>
@@ -2253,7 +2178,7 @@
     </message>
     <message>
         <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</source>
-        <translation> 代替料金を利用することで、承認されるまでに数時間または数日 (ないし一生承認されない) トランザクションを送信してしまう可能性があります。手動にて手数料を選択するか、完全なブロックチェーンの検証が終わるまで待つことを検討しましょう</translation>
+        <translation>代替料金を利用することで、承認されるまでに数時間または数日 (ないし一生承認されない) トランザクションを送信してしまう可能性があります。手動にて手数料を選択するか、完全なブロックチェーンの検証が終わるまで待つことを検討しましょう</translation>
     </message>
     <message>
         <source>Warning: Fee estimation is currently not possible.</source>
@@ -2392,10 +2317,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>手数料は後から上乗せ可能です(Replace-By-Fee(手数料の上乗せ: BIP-125)機能が有効)。</translation>
     </message>
     <message>
-        <source>from wallet %1</source>
-        <translation>%1 ウォレット から</translation>
-    </message>
-    <message>
         <source>Please, review your transaction.</source>
         <translation>取引内容の最終確認をしてください。</translation>
     </message>
@@ -2456,13 +2377,8 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation><numerusform>予想される承認開始ブロック: %n ブロック以内</numerusform></translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>Warning: Invalid NdovuCoin address</source>
-        <translation>警告：無効なBitcoinアドレスです</translation>
-=======
         <source>Warning: Invalid Bitcoin address</source>
         <translation>警告: 無効な Bitcoin アドレス</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -2504,13 +2420,8 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>これは通常の支払いです。</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>The NdovuCoin address to send the payment to</source>
-        <translation>支払の送金先Bitcoinアドレス</translation>
-=======
         <source>The Bitcoin address to send the payment to</source>
         <translation>支払い先 Bitcoin アドレス</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>Alt+A</source>
@@ -2557,13 +2468,8 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>このアドレスに対するラベルを入力することで、送金したことがあるアドレスの一覧に追加することができます</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the NdovuCoin network.</source>
-        <translation>bitcoin: URIに添付されていたメッセージです。これは参照用としてトランザクションとともに保存されます。注意：このメッセージはBitcoinネットワークを通して送信されるわけではありません。</translation>
-=======
         <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
         <translation>bitcoin: URIに添付されていたメッセージです。これは参照用として取引とともに保存されます。注意: メッセージは Bitcoin ネットワーク上へ送信されません。</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>Pay To:</source>
@@ -2611,13 +2517,8 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>あなたが所有しているアドレスでメッセージや契約書に署名をすることで、それらのアドレスへ送られた Bitcoin を受け取ることができることを証明できます。フィッシング攻撃者があなたを騙して、あなたの身分情報に署名させようとしている可能性があるため、よくわからないものやランダムな文字列に対して署名しないでください。あなたが同意した、よく詳細の記された文言にのみ署名するようにしてください。</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>The NdovuCoin address to sign the message with</source>
-        <translation>メッセージを署名するBitcoinアドレス</translation>
-=======
         <source>The Bitcoin address to sign the message with</source>
         <translation>メッセージの署名に使用する Bitcoin アドレス</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -2648,13 +2549,8 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>この署名をシステムのクリップボードにコピー</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>Sign the message to prove you own this NdovuCoin address</source>
-        <translation>この NdovuCoin アドレスを所有していることを証明するためにメッセージに署名</translation>
-=======
         <source>Sign the message to prove you own this Bitcoin address</source>
         <translation>メッセージに署名してこの Bitcoin アドレスを所有していることを証明</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>Sign &amp;Message</source>
@@ -2677,21 +2573,12 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>送金先のアドレスと、メッセージ（改行やスペース、タブなども完全に一致させること）および署名を以下に入力し、メッセージを検証します。中間者攻撃により騙されるのを防ぐため、署名対象のメッセージから書かれていること以上の意味を読み取ろうとしないでください。また、これは署名作成者がこのアドレスで受け取れることを証明するだけであり、取引の送信権限を証明するものではありません！</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>The NdovuCoin address the message was signed with</source>
-        <translation>メッセージの署名に使われたBitcoinアドレス</translation>
-    </message>
-    <message>
-        <source>Verify the message to ensure it was signed with the specified NdovuCoin address</source>
-        <translation>指定された NdovuCoin アドレスで署名されたことを保証するメッセージを検証</translation>
-=======
         <source>The Bitcoin address the message was signed with</source>
         <translation>メッセージの署名に使われた Bitcoin アドレス</translation>
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
         <translation>メッセージを検証して指定された Bitcoin アドレスで署名されたことを確認</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>Verify &amp;Message</source>
@@ -2752,13 +2639,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Message verified.</source>
         <translation>メッセージは検証されました。</translation>
-    </message>
-</context>
-<context>
-    <name>SplashScreen</name>
-    <message>
-        <source>[testnet]</source>
-        <translation>[testnet]</translation>
     </message>
 </context>
 <context>
@@ -3226,10 +3106,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>ウォレットを閉じる</translation>
     </message>
     <message>
-        <source>Are you sure you wish to close wallet &lt;i&gt;%1&lt;/i&gt;?</source>
-        <translation>本当にウォレット&lt;i&gt;%1&lt;/i&gt;を閉じますか？</translation>
-    </message>
-    <message>
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation>ブロックファイル剪定が有効の場合、長期間ウォレットを起動しないと全チェーンを再度同期させる必要があるかもしれません。</translation>
     </message>
@@ -3358,13 +3234,8 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>HTTPサーバを開始できませんでした。詳細は debug.log を参照してください。</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>NdovuCoin Core</source>
-        <translation>NdovuCoin のコア</translation>
-=======
         <source>Bitcoin Core</source>
         <translation>Bitcoin コア</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>The %s developers</source>
@@ -3491,10 +3362,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>ブロックデータベースのオープン時にエラーが発生しました</translation>
     </message>
     <message>
-        <source>Error: Disk space is low!</source>
-        <translation>エラー: ディスク容量が不足しています！</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>ポートのリッスンに失敗しました。必要であれば -listen=0 を指定してください。</translation>
     </message>
@@ -3531,8 +3398,12 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>指定されたブロックディレクトリ "%s" は存在しません｡</translation>
     </message>
     <message>
-        <source>Unable to create the PID file '%s': %s</source>
-        <translation>PIDファイルの作成に失敗しました ('%s': %s)</translation>
+        <source>Unknown address type '%s'</source>
+        <translation>未知のアドレス形式 '%s' です</translation>
+    </message>
+    <message>
+        <source>Unknown change type '%s'</source>
+        <translation>未知のおつり用アドレス形式 '%s' です</translation>
     </message>
     <message>
         <source>Upgrading txindex database</source>
@@ -3631,10 +3502,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>エラー: %s 用のディスク容量が不足しています</translation>
     </message>
     <message>
-        <source>Information</source>
-        <translation>情報</translation>
-    </message>
-    <message>
         <source>Invalid -onion address or hostname: '%s'</source>
         <translation>-onion オプションに対する不正なアドレスまたはホスト名: '%s'</translation>
     </message>
@@ -3667,6 +3534,18 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>取引の署名に失敗しました</translation>
     </message>
     <message>
+        <source>Specified -walletdir "%s" does not exist</source>
+        <translation>指定された -walletdir "%s" は存在しません。</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is a relative path</source>
+        <translation>指定された -walletdir "%s" は相対パスです。</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is not a directory</source>
+        <translation>指定された-walletdir "%s" はディレクトリではありません。</translation>
+    </message>
+    <message>
         <source>The specified config file %s does not exist
 </source>
         <translation>指定された設定ファイル %s が存在しません｡
@@ -3685,10 +3564,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>取引の金額が小さすぎます</translation>
     </message>
     <message>
-        <source>Transaction too large for fee policy</source>
-        <translation>手数料ポリシーに対してトランザクションが大きすぎます</translation>
-    </message>
-    <message>
         <source>Transaction too large</source>
         <translation>トランザクションが大きすぎます</translation>
     </message>
@@ -3697,20 +3572,16 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>このコンピュータの %s にバインドすることができません（%s エラーが返却されました）</translation>
     </message>
     <message>
+        <source>Unable to create the PID file '%s': %s</source>
+        <translation>PIDファイルの作成に失敗しました ('%s': %s)</translation>
+    </message>
+    <message>
         <source>Unable to generate initial keys</source>
         <translation>イニシャル鍵を生成できません</translation>
     </message>
     <message>
         <source>Verifying wallet(s)...</source>
         <translation>ウォレットの確認中...</translation>
-    </message>
-    <message>
-        <source>Wallet %s resides outside wallet directory %s</source>
-        <translation>ウォレット「%s」がウォレットフォルダ「%s」の外に存在します</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>警告</translation>
     </message>
     <message>
         <source>Warning: unknown new rules activated (versionbit %i)</source>
@@ -3747,10 +3618,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
         <translation>ウォレット %s の読み込み時にエラーが発生しました。重複する -wallet ファイル名が指定されました。</translation>
-    </message>
-    <message>
-        <source>Keypool ran out, please call keypoolrefill first</source>
-        <translation>キープールが枯渇しました。まずはじめに keypoolrefill を呼び出してください</translation>
     </message>
     <message>
         <source>Starting network threads...</source>
@@ -3823,10 +3690,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Done loading</source>
         <translation>読み込み完了</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>エラー</translation>
     </message>
 </context>
 </TS>

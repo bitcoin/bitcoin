@@ -41,8 +41,8 @@
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QSslCertificate>
+#include <QSslConfiguration>
 #include <QSslError>
-#include <QSslSocket>
 #include <QStringList>
 #include <QTextDocument>
 #include <QUrlQuery>
@@ -82,7 +82,7 @@ static QString ipcServerName()
 // the main GUI window is up and ready to ask the user
 // to send payment.
 
-static QList<QString> savedPaymentRequests;
+static QSet<QString> savedPaymentRequests;
 
 //
 // Sending to the server is done synchronously, at startup.
@@ -107,7 +107,8 @@ void PaymentServer::ipcParseCommandLine(interfaces::Node& node, int argc, char* 
         // will start a mainnet instance and throw a "wrong network" error.
         if (arg.startsWith(BITCOIN_IPC_PREFIX, Qt::CaseInsensitive)) // bitcoin: URI
         {
-            savedPaymentRequests.append(arg);
+            if (savedPaymentRequests.contains(arg)) continue;
+            savedPaymentRequests.insert(arg);
 
             SendCoinsRecipient r;
             if (GUIUtil::parseBitcoinURI(arg, &r) && !r.address.isEmpty())
@@ -127,7 +128,8 @@ void PaymentServer::ipcParseCommandLine(interfaces::Node& node, int argc, char* 
 #ifdef ENABLE_BIP70
         else if (QFile::exists(arg)) // Filename
         {
-            savedPaymentRequests.append(arg);
+            if (savedPaymentRequests.contains(arg)) continue;
+            savedPaymentRequests.insert(arg);
 
             PaymentRequestPlus request;
             if (readPaymentRequestFromFile(arg, request))
@@ -280,7 +282,7 @@ void PaymentServer::handleURIOrFile(const QString& s)
 {
     if (saveURIs)
     {
-        savedPaymentRequests.append(s);
+        savedPaymentRequests.insert(s);
         return;
     }
 
@@ -328,7 +330,9 @@ void PaymentServer::handleURIOrFile(const QString& s)
 #ifndef ENABLE_BIP70
                     if (uri.hasQueryItem("r")) {  // payment request
                         Q_EMIT message(tr("URI handling"),
-                            tr("Cannot process payment request because BIP70 support was not compiled in."),
+                            tr("Cannot process payment request because BIP70 support was not compiled in.")+
+                            tr("Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.")+
+                            tr("If you are receiving this error you should request the merchant provide a BIP21 compatible URI."),
                             CClientUIInterface::ICON_WARNING);
                     }
 #endif
@@ -364,7 +368,9 @@ void PaymentServer::handleURIOrFile(const QString& s)
         return;
 #else
         Q_EMIT message(tr("Payment request file handling"),
-            tr("Cannot process payment request because BIP70 support was not compiled in."),
+            tr("Cannot process payment request because BIP70 support was not compiled in.")+
+            tr("Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.")+
+            tr("If you are receiving this error you should request the merchant provide a BIP21 compatible URI."),
             CClientUIInterface::ICON_WARNING);
 #endif
     }
@@ -448,9 +454,9 @@ void PaymentServer::LoadRootCAs(X509_STORE* _store)
 
         certList = QSslCertificate::fromPath(certFile);
         // Use those certificates when fetching payment requests, too:
-        QSslSocket::setDefaultCaCertificates(certList);
+        QSslConfiguration::defaultConfiguration().setCaCertificates(certList);
     } else
-        certList = QSslSocket::systemCaCertificates();
+        certList = QSslConfiguration::systemCaCertificates();
 
     int nRootCerts = 0;
     const QDateTime currentTime = QDateTime::currentDateTime();
@@ -488,7 +494,7 @@ void PaymentServer::LoadRootCAs(X509_STORE* _store)
             continue;
         }
     }
-    qWarning() << "PaymentServer::LoadRootCAs: Loaded " << nRootCerts << " root certificates";
+    qInfo() << "PaymentServer::LoadRootCAs: Loaded " << nRootCerts << " root certificates";
 
     // Project for another day:
     // Fetch certificate revocation lists, and add them to certStore.
@@ -666,16 +672,14 @@ void PaymentServer::fetchPaymentACK(WalletModel* walletModel, const SendCoinsRec
     payment.add_transactions(transaction.data(), transaction.size());
 
     // Create a new refund address, or re-use:
-    CPubKey newKey;
-    if (walletModel->wallet().getKeyFromPool(false /* internal */, newKey)) {
+    CTxDestination dest;
+    const OutputType change_type = walletModel->wallet().getDefaultChangeType() != OutputType::CHANGE_AUTO ? walletModel->wallet().getDefaultChangeType() : walletModel->wallet().getDefaultAddressType();
+    if (walletModel->wallet().getNewDestination(change_type, "", dest)) {
         // BIP70 requests encode the scriptPubKey directly, so we are not restricted to address
         // types supported by the receiver. As a result, we choose the address format we also
         // use for change. Despite an actual payment and not change, this is a close match:
         // it's the output type we use subject to privacy issues, but not restricted by what
         // other software supports.
-        const OutputType change_type = walletModel->wallet().getDefaultChangeType() != OutputType::CHANGE_AUTO ? walletModel->wallet().getDefaultChangeType() : walletModel->wallet().getDefaultAddressType();
-        walletModel->wallet().learnRelatedScripts(newKey, change_type);
-        CTxDestination dest = GetDestinationForKey(newKey, change_type);
         std::string label = tr("Refund from %1").arg(recipient.authenticatedMerchant).toStdString();
         walletModel->wallet().setAddressBook(dest, label, "refund");
 

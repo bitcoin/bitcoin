@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <ui_interface.h>
-#include <util/system.h>
 
 #include <boost/signals2/last_value.hpp>
 #include <boost/signals2/signal.hpp>
@@ -22,16 +21,13 @@ struct UISignals {
     boost::signals2::signal<CClientUIInterface::NotifyBlockTipSig> NotifyBlockTip;
     boost::signals2::signal<CClientUIInterface::NotifyHeaderTipSig> NotifyHeaderTip;
     boost::signals2::signal<CClientUIInterface::BannedListChangedSig> BannedListChanged;
-} g_ui_signals;
+};
+static UISignals g_ui_signals;
 
 #define ADD_SIGNALS_IMPL_WRAPPER(signal_name)                                                                 \
     boost::signals2::connection CClientUIInterface::signal_name##_connect(std::function<signal_name##Sig> fn) \
     {                                                                                                         \
         return g_ui_signals.signal_name.connect(fn);                                                          \
-    }                                                                                                         \
-    void CClientUIInterface::signal_name##_disconnect(std::function<signal_name##Sig> fn)                     \
-    {                                                                                                         \
-        return g_ui_signals.signal_name.disconnect(&fn);                                                      \
     }
 
 ADD_SIGNALS_IMPL_WRAPPER(ThreadSafeMessageBox);
@@ -52,7 +48,7 @@ void CClientUIInterface::InitMessage(const std::string& message) { return g_ui_s
 void CClientUIInterface::NotifyNumConnectionsChanged(int newNumConnections) { return g_ui_signals.NotifyNumConnectionsChanged(newNumConnections); }
 void CClientUIInterface::NotifyNetworkActiveChanged(bool networkActive) { return g_ui_signals.NotifyNetworkActiveChanged(networkActive); }
 void CClientUIInterface::NotifyAlertChanged() { return g_ui_signals.NotifyAlertChanged(); }
-void CClientUIInterface::LoadWallet(std::shared_ptr<CWallet> wallet) { return g_ui_signals.LoadWallet(wallet); }
+void CClientUIInterface::LoadWallet(std::unique_ptr<interfaces::Wallet>& wallet) { return g_ui_signals.LoadWallet(wallet); }
 void CClientUIInterface::ShowProgress(const std::string& title, int nProgress, bool resume_possible) { return g_ui_signals.ShowProgress(title, nProgress, resume_possible); }
 void CClientUIInterface::NotifyBlockTip(bool b, const CBlockIndex* i) { return g_ui_signals.NotifyBlockTip(b, i); }
 void CClientUIInterface::NotifyHeaderTip(bool b, const CBlockIndex* i) { return g_ui_signals.NotifyHeaderTip(b, i); }
@@ -68,14 +64,4 @@ bool InitError(const std::string& str)
 void InitWarning(const std::string& str)
 {
     uiInterface.ThreadSafeMessageBox(str, "", CClientUIInterface::MSG_WARNING);
-}
-
-std::string AmountHighWarn(const std::string& optname)
-{
-    return strprintf(_("%s is set very high!"), optname);
-}
-
-std::string AmountErrMsg(const char* const optname, const std::string& strValue)
-{
-    return strprintf(_("Invalid amount for -%s=<amount>: '%s'"), optname, strValue);
 }

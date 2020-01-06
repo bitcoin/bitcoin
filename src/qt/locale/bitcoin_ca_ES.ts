@@ -1969,17 +1969,8 @@
         <translation>La sol·licitud de pagament ha vençut.</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>Pay only the required fee of %1</source>
-        <translation>Paga només la comissió necessària de %1</translation>
-    </message>
-    <message>
-        <source>Warning: Invalid NdovuCoin address</source>
-        <translation>Avís: adreça NdovuCoin no vàlida</translation>
-=======
         <source>Warning: Invalid Bitcoin address</source>
         <translation>Avís: adreça Bitcoin no vàlida</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>Warning: Unknown change address</source>

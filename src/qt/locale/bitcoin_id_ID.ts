@@ -338,17 +338,12 @@
         <translation>Mengindex ulang blok di dalam disk...</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>Send coins to a NdovuCoin address</source>
-        <translation>Kirim koin ke alamat NdovuCoin</translation>
-=======
         <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
         <translation>Proxy di &lt;b&gt;aktifkan&lt;/b&gt;: %1</translation>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
         <translation>Kirim koin ke alamat Bitcoin</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -483,10 +478,6 @@
         <translation>Terbaru</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>Show the %1 help message to get a list with possible NdovuCoin command-line options</source>
-        <translation>Tampilkan %1 pesan bantuan untuk mendapatkan daftar opsi baris perintah NdovuCoin yang memungkinkan</translation>
-=======
         <source>&amp;Sending addresses</source>
         <translation>&amp;Address pengiriman</translation>
     </message>
@@ -497,7 +488,6 @@
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>Tampilkan %1 pesan bantuan untuk mendapatkan daftar opsi baris perintah Bitcoin yang memungkinkan</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>default wallet</source>

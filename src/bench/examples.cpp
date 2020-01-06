@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-#include <validation.h>
 #include <util/time.h>
 
 // Sanity test: this should loop ten times, and

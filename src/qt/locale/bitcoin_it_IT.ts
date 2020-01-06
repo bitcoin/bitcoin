@@ -504,10 +504,6 @@
         <translation>Transazione in arrivo</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>A fatal error occurred. NdovuCoin can no longer continue safely and will quit.</source>
-        <translation>Si è verificato un errore fatale. NdovuCoin non può continuare in maniera sicura e sarà chiuso.</translation>
-=======
         <source>HD key generation is &lt;b&gt;enabled&lt;/b&gt;</source>
         <translation>Generazione  di chiavi HD &lt;b&gt;abilitata&lt;/b&gt;</translation>
     </message>
@@ -518,7 +514,6 @@
     <message>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
         <translation>Si è verificato un errore fatale. Bitcoin non può continuare in maniera sicura e sarà chiuso.</translation>
->>>>>>> upstream/0.18
     </message>
 </context>
 <context>

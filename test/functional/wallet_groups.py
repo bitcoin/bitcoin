@@ -7,14 +7,9 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import CTransaction, FromHex, ToHex
 from test_framework.util import (
+    assert_approx,
     assert_equal,
 )
-
-def assert_approx(v, vexp, vspan=0.00001):
-    if v < vexp - vspan:
-        raise AssertionError("%s < [%s..%s]" % (str(v), str(vexp - vspan), str(vexp + vspan)))
-    if v > vexp + vspan:
-        raise AssertionError("%s > [%s..%s]" % (str(v), str(vexp - vspan), str(vexp + vspan)))
 
 class WalletGroupTest(BitcoinTestFramework):
     def set_test_params(self):

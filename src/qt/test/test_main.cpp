@@ -6,14 +6,13 @@
 #include <config/bitcoin-config.h>
 #endif
 
-#include <chainparams.h>
 #include <interfaces/node.h>
 #include <qt/bitcoin.h>
 #include <qt/test/apptests.h>
 #include <qt/test/rpcnestedtests.h>
-#include <util/system.h>
 #include <qt/test/uritests.h>
 #include <qt/test/compattests.h>
+#include <test/setup_common.h>
 
 #ifdef ENABLE_WALLET
 #include <qt/test/addressbooktests.h>
@@ -26,8 +25,6 @@
 #include <QApplication>
 #include <QObject>
 #include <QTest>
-
-#include <openssl/ssl.h>
 
 #if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
@@ -43,19 +40,19 @@ Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
 #endif
 #endif
 
-extern void noui_connect();
-
 // This is all you need to run all the tests
 int main(int argc, char *argv[])
 {
-    SetupEnvironment();
-    SetupNetworking();
-    SelectParams(CBaseChainParams::REGTEST);
-    noui_connect();
-    ClearDatadirCache();
-    fs::path pathTemp = fs::temp_directory_path() / strprintf("test_bitcoin-qt_%lu_%i", (unsigned long)GetTime(), (int)GetRand(100000));
-    fs::create_directories(pathTemp);
-    gArgs.ForceSetArg("-datadir", pathTemp.string());
+    // Initialize persistent globals with the testing setup state for sanity.
+    // E.g. -datadir in gArgs is set to a temp directory dummy value (instead
+    // of defaulting to the default datadir), or globalChainParams is set to
+    // regtest params.
+    //
+    // All tests must use their own testing setup (if needed).
+    {
+        BasicTestingSetup dummy{CBaseChainParams::REGTEST};
+    }
+
     auto node = interfaces::MakeNode();
 
     bool fInvalid = false;
@@ -64,23 +61,15 @@ int main(int argc, char *argv[])
     // platform ("xcb", "windows", or "cocoa") so tests can't unintentionally
     // interfere with any background GUIs and don't require extra resources.
     #if defined(WIN32)
-        _putenv_s("QT_QPA_PLATFORM", "minimal");
+        if (getenv("QT_QPA_PLATFORM") == nullptr) _putenv_s("QT_QPA_PLATFORM", "minimal");
     #else
-        setenv("QT_QPA_PLATFORM", "minimal", 0);
+        setenv("QT_QPA_PLATFORM", "minimal", /* overwrite */ 0);
     #endif
 
     // Don't remove this, it's needed to access
     // QApplication:: and QCoreApplication:: in the tests
-<<<<<<< HEAD
-    BitcoinApplication app(*node, argc, argv);
-    app.setApplicationName("NdovuCoin-Qt-test");
-=======
     BitcoinApplication app(*node);
     app.setApplicationName("Bitcoin-Qt-test");
->>>>>>> upstream/0.18
-
-    SSL_library_init();
-
     AppTests app_tests(app);
     if (QTest::qExec(&app_tests) != 0) {
         fInvalid = true;
@@ -113,8 +102,6 @@ int main(int argc, char *argv[])
         fInvalid = true;
     }
 #endif
-
-    fs::remove_all(pathTemp);
 
     return fInvalid;
 }

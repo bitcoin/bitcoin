@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018 The NdovuCoin Core developers
+# Copyright (c) 2018-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the scantxoutset rpc call."""
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import assert_equal, assert_raises_rpc_error
 
 from decimal import Decimal
 import shutil
@@ -58,6 +58,13 @@ class ScantxoutsetTest(BitcoinTestFramework):
         self.start_node(0)
         self.nodes[0].generate(110)
 
+        scan = self.nodes[0].scantxoutset("start", [])
+        info = self.nodes[0].gettxoutsetinfo()
+        assert_equal(scan['success'], True)
+        assert_equal(scan['height'], info['height'])
+        assert_equal(scan['txouts'], info['txouts'])
+        assert_equal(scan['bestblock'], info['bestblock'])
+
         self.restart_node(0, ['-nowallet'])
         self.log.info("Test if we have found the non HD unspent outputs.")
         assert_equal(self.nodes[0].scantxoutset("start", [ "pkh(" + pubk1 + ")", "pkh(" + pubk2 + ")", "pkh(" + pubk3 + ")"])['total_amount'], Decimal("0.002"))
@@ -66,6 +73,13 @@ class ScantxoutsetTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].scantxoutset("start", [ "combo(" + pubk1 + ")", "combo(" + pubk2 + ")", "combo(" + pubk3 + ")"])['total_amount'], Decimal("0.007"))
         assert_equal(self.nodes[0].scantxoutset("start", [ "addr(" + addr_P2SH_SEGWIT + ")", "addr(" + addr_LEGACY + ")", "addr(" + addr_BECH32 + ")"])['total_amount'], Decimal("0.007"))
         assert_equal(self.nodes[0].scantxoutset("start", [ "addr(" + addr_P2SH_SEGWIT + ")", "addr(" + addr_LEGACY + ")", "combo(" + pubk3 + ")"])['total_amount'], Decimal("0.007"))
+
+        self.log.info("Test range validation.")
+        assert_raises_rpc_error(-8, "End of range is too high", self.nodes[0].scantxoutset, "start", [ {"desc": "desc", "range": -1}])
+        assert_raises_rpc_error(-8, "Range should be greater or equal than 0", self.nodes[0].scantxoutset, "start", [ {"desc": "desc", "range": [-1, 10]}])
+        assert_raises_rpc_error(-8, "End of range is too high", self.nodes[0].scantxoutset, "start", [ {"desc": "desc", "range": [(2 << 31 + 1) - 1000000, (2 << 31 + 1)]}])
+        assert_raises_rpc_error(-8, "Range specified as [begin,end] must not have begin after end", self.nodes[0].scantxoutset, "start", [ {"desc": "desc", "range": [2, 1]}])
+        assert_raises_rpc_error(-8, "Range is too large", self.nodes[0].scantxoutset, "start", [ {"desc": "desc", "range": [0, 1000001]}])
 
         self.log.info("Test extended key derivation.")
         # Run various scans, and verify that the sum of the amounts of the matches corresponds to the expected subset.

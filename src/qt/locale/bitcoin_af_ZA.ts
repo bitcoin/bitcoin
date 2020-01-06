@@ -318,10 +318,6 @@
         <translation>Klik om netwerk aktiwiteit weer aan te skakel.</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>Send coins to a NdovuCoin address</source>
-        <translation>Stuur muntstukke na 'n NdovuCoin adres</translation>
-=======
         <source>Syncing Headers (%1%)...</source>
         <translation>Sinkroniseer tans Hoofde (%1%)...</translation>
     </message>
@@ -332,7 +328,6 @@
     <message>
         <source>Send coins to a Bitcoin address</source>
         <translation>Stuur muntstukke na 'n Bitcoin adres</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>Backup wallet to another location</source>

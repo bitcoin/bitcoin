@@ -908,9 +908,6 @@
         <translation>Отваряне на входящия порт чрез &amp;UPnP</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>Connect to the NdovuCoin network through a SOCKS5 proxy.</source>
-=======
         <source>Accept connections from outside.</source>
         <translation>Позволи външни връзки</translation>
     </message>
@@ -920,7 +917,6 @@
     </message>
     <message>
         <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
->>>>>>> upstream/0.18
         <translation>Свързване с Биткойн мрежата чрез SOCKS5  прокси.</translation>
     </message>
     <message>

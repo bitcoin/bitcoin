@@ -338,17 +338,12 @@
         <translation>Réindexer les blocs sur le disque...</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>Send coins to a NdovuCoin address</source>
-        <translation>Envoyer des pièces à une adresse NdovuCoin</translation>
-=======
         <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
         <translation>Le proxy est &lt;b&gt;activé&lt;/b&gt; : %1</translation>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
         <translation>Envoyer des pièces à une adresse Bitcoin</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -479,10 +474,6 @@
         <translation>À jour</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>Show the %1 help message to get a list with possible NdovuCoin command-line options</source>
-        <translation>Afficher le %1 message d'aide pour récupérer une liste des options de ligne de commande NdovuCoin</translation>
-=======
         <source>&amp;Sending addresses</source>
         <translation>&amp;Adresses d'envoi</translation>
     </message>
@@ -509,7 +500,6 @@
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>Afficher le %1 message d'aide pour récupérer une liste des options de ligne de commande Bitcoin</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>default wallet</source>
@@ -1717,17 +1707,8 @@
         <translation>Demande de paiement expirée.</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>Pay only the required fee of %1</source>
-        <translation>Payer seulement les frais obligatoire de %1</translation>
-    </message>
-    <message>
-        <source>Warning: Invalid NdovuCoin address</source>
-        <translation>Attention: Adresse NdovuCoin Invalide</translation>
-=======
         <source>Warning: Invalid Bitcoin address</source>
         <translation>Attention: Adresse Bitcoin Invalide</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>(no label)</source>

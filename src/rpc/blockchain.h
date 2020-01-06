@@ -5,12 +5,17 @@
 #ifndef BITCOIN_RPC_BLOCKCHAIN_H
 #define BITCOIN_RPC_BLOCKCHAIN_H
 
-#include <vector>
-#include <stdint.h>
 #include <amount.h>
+#include <sync.h>
+
+#include <stdint.h>
+#include <vector>
+
+extern RecursiveMutex cs_main;
 
 class CBlock;
 class CBlockIndex;
+class CTxMemPool;
 class UniValue;
 
 static constexpr int NUM_GETBLOCKSTATS_PERCENTILES = 5;
@@ -27,16 +32,16 @@ double GetDifficulty(const CBlockIndex* blockindex);
 void RPCNotifyBlockChange(bool ibd, const CBlockIndex *);
 
 /** Block description to JSON */
-UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIndex* blockindex, bool txDetails = false);
+UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIndex* blockindex, bool txDetails = false) LOCKS_EXCLUDED(cs_main);
 
 /** Mempool information to JSON */
-UniValue mempoolInfoToJSON();
+UniValue MempoolInfoToJSON(const CTxMemPool& pool);
 
 /** Mempool to JSON */
-UniValue mempoolToJSON(bool fVerbose = false);
+UniValue MempoolToJSON(const CTxMemPool& pool, bool verbose = false);
 
 /** Block header to JSON */
-UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex);
+UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex) LOCKS_EXCLUDED(cs_main);
 
 /** Used by getblockstats to get feerates at different percentiles by weight  */
 void CalculatePercentilesByWeight(CAmount result[NUM_GETBLOCKSTATS_PERCENTILES], std::vector<std::pair<CAmount, int64_t>>& scores, int64_t total_weight);

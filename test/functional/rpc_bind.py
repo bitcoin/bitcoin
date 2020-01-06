@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2018 The NdovuCoin Core developers
+# Copyright (c) 2014-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test running bitcoind with the -rpcbind and -rpcallowip options."""
@@ -55,7 +55,7 @@ class RPCBindTest(BitcoinTestFramework):
         self.nodes[0].rpchost = None
         self.start_nodes([node_args])
         # connect to node through non-loopback interface
-        node = get_rpc_proxy(rpc_url(self.nodes[0].datadir, 0, "%s:%d" % (rpchost, rpcport)), 0, coveragedir=self.options.coveragedir)
+        node = get_rpc_proxy(rpc_url(self.nodes[0].datadir, 0, self.chain, "%s:%d" % (rpchost, rpcport)), 0, coveragedir=self.options.coveragedir)
         node.getnetworkinfo()
         self.stop_nodes()
 

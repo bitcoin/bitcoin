@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2018 The NdovuCoin Core developers
+# Copyright (c) 2015-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test processing of unrequested blocks.
@@ -57,7 +57,11 @@ from test_framework.blocktools import create_block, create_coinbase, create_tx_w
 from test_framework.messages import CBlockHeader, CInv, msg_block, msg_headers, msg_inv
 from test_framework.mininode import mininode_lock, P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, connect_nodes, sync_blocks
+from test_framework.util import (
+    assert_equal,
+    assert_raises_rpc_error,
+    connect_nodes,
+)
 
 
 class AcceptBlockTest(BitcoinTestFramework):
@@ -114,7 +118,7 @@ class AcceptBlockTest(BitcoinTestFramework):
             if x['hash'] == block_h1f.hash:
                 assert_equal(x['status'], "headers-only")
                 tip_entry_found = True
-        assert(tip_entry_found)
+        assert tip_entry_found
         assert_raises_rpc_error(-1, "Block not found on disk", self.nodes[0].getblock, block_h1f.hash)
 
         # 4. Send another two block that build on the fork.
@@ -131,7 +135,7 @@ class AcceptBlockTest(BitcoinTestFramework):
             if x['hash'] == block_h2f.hash:
                 assert_equal(x['status'], "headers-only")
                 tip_entry_found = True
-        assert(tip_entry_found)
+        assert tip_entry_found
 
         # But this block should be accepted by node since it has equal work.
         self.nodes[0].getblock(block_h2f.hash)
@@ -150,7 +154,7 @@ class AcceptBlockTest(BitcoinTestFramework):
             if x['hash'] == block_h3.hash:
                 assert_equal(x['status'], "headers-only")
                 tip_entry_found = True
-        assert(tip_entry_found)
+        assert tip_entry_found
         self.nodes[0].getblock(block_h3.hash)
 
         # But this block should be accepted by node since it has more work.
@@ -263,7 +267,7 @@ class AcceptBlockTest(BitcoinTestFramework):
             if x['hash'] == block_292.hash:
                 assert_equal(x['status'], "headers-only")
                 tip_entry_found = True
-        assert(tip_entry_found)
+        assert tip_entry_found
         assert_raises_rpc_error(-1, "Block not found on disk", self.nodes[0].getblock, block_292.hash)
 
         test_node.send_message(msg_block(block_289f))
@@ -302,7 +306,7 @@ class AcceptBlockTest(BitcoinTestFramework):
 
         # 9. Connect node1 to node0 and ensure it is able to sync
         connect_nodes(self.nodes[0], 1)
-        sync_blocks([self.nodes[0], self.nodes[1]])
+        self.sync_blocks([self.nodes[0], self.nodes[1]])
         self.log.info("Successfully synced nodes 1 and 0")
 
 if __name__ == '__main__':

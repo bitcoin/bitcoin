@@ -108,7 +108,7 @@
              </size>
             </property>
             <property name="text">
-             <string>&amp;Request payment</string>
+             <string>&amp;Create new receiving address</string>
             </property>
             <property name="icon">
              <iconset resource="../bitcoin.qrc">

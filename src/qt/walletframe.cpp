@@ -40,15 +40,11 @@ void WalletFrame::setClientModel(ClientModel *_clientModel)
     this->clientModel = _clientModel;
 }
 
-bool WalletFrame::addWallet(WalletModel *walletModel)
+void WalletFrame::addWallet(WalletModel *walletModel)
 {
-    if (!gui || !clientModel || !walletModel) {
-        return false;
-    }
+    if (!gui || !clientModel || !walletModel) return;
 
-    if (mapWalletViews.count(walletModel) > 0) {
-        return false;
-    }
+    if (mapWalletViews.count(walletModel) > 0) return;
 
     WalletView *walletView = new WalletView(platformStyle, this);
     walletView->setBitcoinGUI(gui);
@@ -72,31 +68,25 @@ bool WalletFrame::addWallet(WalletModel *walletModel)
     });
 
     connect(walletView, &WalletView::outOfSyncWarningClicked, this, &WalletFrame::outOfSyncWarningClicked);
-
-    return true;
 }
 
-bool WalletFrame::setCurrentWallet(WalletModel* wallet_model)
+void WalletFrame::setCurrentWallet(WalletModel* wallet_model)
 {
-    if (mapWalletViews.count(wallet_model) == 0)
-        return false;
+    if (mapWalletViews.count(wallet_model) == 0) return;
 
     WalletView *walletView = mapWalletViews.value(wallet_model);
     walletStack->setCurrentWidget(walletView);
     assert(walletView);
     walletView->updateEncryptionStatus();
-    return true;
 }
 
-bool WalletFrame::removeWallet(WalletModel* wallet_model)
+void WalletFrame::removeWallet(WalletModel* wallet_model)
 {
-    if (mapWalletViews.count(wallet_model) == 0)
-        return false;
+    if (mapWalletViews.count(wallet_model) == 0) return;
 
     WalletView *walletView = mapWalletViews.take(wallet_model);
     walletStack->removeWidget(walletView);
     delete walletView;
-    return true;
 }
 
 void WalletFrame::removeAllWallets()

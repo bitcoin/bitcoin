@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2018 The NdovuCoin Core developers
+# Copyright (c) 2014-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet accounts properly when there is a double-spend conflict."""
@@ -11,7 +11,6 @@ from test_framework.util import (
     connect_nodes,
     disconnect_nodes,
     find_output,
-    sync_blocks,
 )
 
 class TxnMallTest(BitcoinTestFramework):
@@ -86,7 +85,7 @@ class TxnMallTest(BitcoinTestFramework):
         # Have node0 mine a block:
         if (self.options.mine_block):
             self.nodes[0].generate(1)
-            sync_blocks(self.nodes[0:2])
+            self.sync_blocks(self.nodes[0:2])
 
         tx1 = self.nodes[0].gettransaction(txid1)
         tx2 = self.nodes[0].gettransaction(txid2)
@@ -119,7 +118,7 @@ class TxnMallTest(BitcoinTestFramework):
         # Reconnect the split network, and sync chain:
         connect_nodes(self.nodes[1], 2)
         self.nodes[2].generate(1)  # Mine another block to make sure we sync
-        sync_blocks(self.nodes)
+        self.sync_blocks()
         assert_equal(self.nodes[0].gettransaction(doublespend_txid)["confirmations"], 2)
 
         # Re-fetch transaction info:

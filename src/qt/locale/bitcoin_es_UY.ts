@@ -250,21 +250,8 @@
         <translation>Cambiar contraseña</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>&amp;Sending addresses...</source>
-        <translation>Enviando direcciones</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>Recibiendo direcciones</translation>
-    </message>
-    <message>
-        <source>Send coins to a NdovuCoin address</source>
-        <translation>Enviar monedas a una dirección NdovuCoin</translation>
-=======
         <source>Send coins to a Bitcoin address</source>
         <translation>Enviar monedas a una dirección Bitcoin</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>

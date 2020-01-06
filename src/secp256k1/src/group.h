@@ -65,12 +65,7 @@ static void secp256k1_ge_neg(secp256k1_ge *r, const secp256k1_ge *a);
 static void secp256k1_ge_set_gej(secp256k1_ge *r, secp256k1_gej *a);
 
 /** Set a batch of group elements equal to the inputs given in jacobian coordinates */
-static void secp256k1_ge_set_all_gej_var(secp256k1_ge *r, const secp256k1_gej *a, size_t len, const secp256k1_callback *cb);
-
-/** Set a batch of group elements equal to the inputs given in jacobian
- *  coordinates (with known z-ratios). zr must contain the known z-ratios such
- *  that mul(a[i].z, zr[i+1]) == a[i+1].z. zr[0] is ignored. */
-static void secp256k1_ge_set_table_gej_var(secp256k1_ge *r, const secp256k1_gej *a, const secp256k1_fe *zr, size_t len);
+static void secp256k1_ge_set_all_gej_var(secp256k1_ge *r, const secp256k1_gej *a, size_t len);
 
 /** Bring a batch inputs given in jacobian coordinates (with known z-ratios) to
  *  the same global z "denominator". zr must contain the known z-ratios such
@@ -78,6 +73,9 @@ static void secp256k1_ge_set_table_gej_var(secp256k1_ge *r, const secp256k1_gej 
  *  coordinates of the result are stored in r, the common z coordinate is
  *  stored in globalz. */
 static void secp256k1_ge_globalz_set_table_gej(size_t len, secp256k1_ge *r, secp256k1_fe *globalz, const secp256k1_gej *a, const secp256k1_fe *zr);
+
+/** Set a group element (affine) equal to the point at infinity. */
+static void secp256k1_ge_set_infinity(secp256k1_ge *r);
 
 /** Set a group element (jacobian) equal to the point at infinity. */
 static void secp256k1_gej_set_infinity(secp256k1_gej *r);

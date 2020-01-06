@@ -31,7 +31,7 @@
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>वर्तमान ट्याबको डाटालाई फाइलमा निर्यात गर्नुहोस् </translation>
+        <translation>वर्तमान ट्याबको डाटालाई फाइलमा निर्यात गर्नुहोस्</translation>
     </message>
     <message>
         <source>&amp;Export</source>
@@ -204,6 +204,12 @@
     </message>
     </context>
 <context>
+    <name>CreateWalletActivity</name>
+    </context>
+<context>
+    <name>CreateWalletDialog</name>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     </context>
 <context>
@@ -220,6 +226,9 @@
     </context>
 <context>
     <name>OpenURIDialog</name>
+    </context>
+<context>
+    <name>OpenWalletActivity</name>
     </context>
 <context>
     <name>OptionsDialog</name>
@@ -301,9 +310,6 @@
     </message>
     </context>
 <context>
-    <name>QObject::QObject</name>
-    </context>
-<context>
     <name>QRImageWidget</name>
     </context>
 <context>
@@ -322,6 +328,10 @@
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Amount</source>
+        <translation>रकम</translation>
+    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
@@ -378,13 +388,14 @@
     </message>
     </context>
 <context>
-    <name>SplashScreen</name>
-    </context>
-<context>
     <name>TrafficGraphWidget</name>
     </context>
 <context>
     <name>TransactionDesc</name>
+    <message>
+        <source>Amount</source>
+        <translation>रकम</translation>
+    </message>
     </context>
 <context>
     <name>TransactionDescDialog</name>
@@ -465,6 +476,10 @@
     <message>
         <source>Unable to bind to %s on this computer. %s is probably already running.</source>
         <translation>यो कम्प्युटरको %s मा बाँध्न सकिएन । %s सम्भवित रूपमा पहिलैबाट चलिरहेको छ ।</translation>
+    </message>
+    <message>
+        <source>User Agent comment (%s) contains unsafe characters.</source>
+        <translation>प्रयोगकर्ता एजेन्टको टिप्पणी (%s) मा असुरक्षित अक्षरहरू छन् ।</translation>
     </message>
     <message>
         <source>Verifying blocks...</source>

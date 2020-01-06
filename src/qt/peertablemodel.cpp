@@ -9,8 +9,9 @@
 #include <qt/guiutil.h>
 
 #include <interfaces/node.h>
-#include <validation.h> // for cs_main
 #include <sync.h>
+
+#include <algorithm>
 
 #include <QDebug>
 #include <QList>
@@ -77,7 +78,7 @@ public:
 
         if (sortColumn >= 0)
             // sort cacheNodeStats (use stable sort to prevent rows jumping around unnecessarily)
-            qStableSort(cachedNodeStats.begin(), cachedNodeStats.end(), NodeLessThan(sortColumn, sortOrder));
+            std::stable_sort(cachedNodeStats.begin(), cachedNodeStats.end(), NodeLessThan(sortColumn, sortOrder));
 
         // build index map
         mapNodeRows.clear();

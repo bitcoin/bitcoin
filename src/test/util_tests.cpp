@@ -1,17 +1,21 @@
-// Copyright (c) 2011-2018 The NdovuCoin Core developers
+// Copyright (c) 2011-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <util/system.h>
 
 #include <clientversion.h>
-#include <primitives/transaction.h>
 #include <sync.h>
-#include <util/strencodings.h>
+#include <test/setup_common.h>
+#include <test/util.h>
 #include <util/moneystr.h>
-#include <test/test_bitcoin.h>
+#include <util/strencodings.h>
+#include <util/string.h>
+#include <util/time.h>
 
 #include <stdint.h>
+#include <thread>
+#include <utility>
 #include <vector>
 #ifndef WIN32
 #include <signal.h>
@@ -41,8 +45,10 @@ BOOST_AUTO_TEST_CASE(util_criticalsection)
 
     do {
         TRY_LOCK(cs, lockTest);
-        if (lockTest)
+        if (lockTest) {
+            BOOST_CHECK(true); // Needed to suppress "Test case [...] did not check any assertions"
             break;
+        }
 
         BOOST_ERROR("break was swallowed!");
     } while(0);
@@ -83,32 +89,15 @@ BOOST_AUTO_TEST_CASE(util_HexStr)
         "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f");
 
     BOOST_CHECK_EQUAL(
-        HexStr(ParseHex_expected, ParseHex_expected + 5, true),
-        "04 67 8a fd b0");
-
-    BOOST_CHECK_EQUAL(
         HexStr(ParseHex_expected + sizeof(ParseHex_expected),
                ParseHex_expected + sizeof(ParseHex_expected)),
-        "");
-
-    BOOST_CHECK_EQUAL(
-        HexStr(ParseHex_expected + sizeof(ParseHex_expected),
-               ParseHex_expected + sizeof(ParseHex_expected), true),
         "");
 
     BOOST_CHECK_EQUAL(
         HexStr(ParseHex_expected, ParseHex_expected),
         "");
 
-    BOOST_CHECK_EQUAL(
-        HexStr(ParseHex_expected, ParseHex_expected, true),
-        "");
-
     std::vector<unsigned char> ParseHex_vec(ParseHex_expected, ParseHex_expected + 5);
-
-    BOOST_CHECK_EQUAL(
-        HexStr(ParseHex_vec, true),
-        "04 67 8a fd b0");
 
     BOOST_CHECK_EQUAL(
         HexStr(ParseHex_vec.rbegin(), ParseHex_vec.rend()),
@@ -116,31 +105,14 @@ BOOST_AUTO_TEST_CASE(util_HexStr)
     );
 
     BOOST_CHECK_EQUAL(
-        HexStr(ParseHex_vec.rbegin(), ParseHex_vec.rend(), true),
-        "b0 fd 8a 67 04"
-    );
-
-    BOOST_CHECK_EQUAL(
         HexStr(std::reverse_iterator<const uint8_t *>(ParseHex_expected),
                std::reverse_iterator<const uint8_t *>(ParseHex_expected)),
         ""
     );
 
     BOOST_CHECK_EQUAL(
-        HexStr(std::reverse_iterator<const uint8_t *>(ParseHex_expected),
-               std::reverse_iterator<const uint8_t *>(ParseHex_expected), true),
-        ""
-    );
-
-    BOOST_CHECK_EQUAL(
         HexStr(std::reverse_iterator<const uint8_t *>(ParseHex_expected + 1),
                std::reverse_iterator<const uint8_t *>(ParseHex_expected)),
-        "04"
-    );
-
-    BOOST_CHECK_EQUAL(
-        HexStr(std::reverse_iterator<const uint8_t *>(ParseHex_expected + 1),
-               std::reverse_iterator<const uint8_t *>(ParseHex_expected), true),
         "04"
     );
 
@@ -148,12 +120,6 @@ BOOST_AUTO_TEST_CASE(util_HexStr)
         HexStr(std::reverse_iterator<const uint8_t *>(ParseHex_expected + 5),
                std::reverse_iterator<const uint8_t *>(ParseHex_expected)),
         "b0fd8a6704"
-    );
-
-    BOOST_CHECK_EQUAL(
-        HexStr(std::reverse_iterator<const uint8_t *>(ParseHex_expected + 5),
-               std::reverse_iterator<const uint8_t *>(ParseHex_expected), true),
-        "b0 fd 8a 67 04"
     );
 
     BOOST_CHECK_EQUAL(
@@ -163,6 +129,19 @@ BOOST_AUTO_TEST_CASE(util_HexStr)
     );
 }
 
+BOOST_AUTO_TEST_CASE(util_Join)
+{
+    // Normal version
+    BOOST_CHECK_EQUAL(Join({}, ", "), "");
+    BOOST_CHECK_EQUAL(Join({"foo"}, ", "), "foo");
+    BOOST_CHECK_EQUAL(Join({"foo", "bar"}, ", "), "foo, bar");
+
+    // Version with unary operator
+    const auto op_upper = [](const std::string& s) { return ToUpper(s); };
+    BOOST_CHECK_EQUAL(Join<std::string>({}, ", ", op_upper), "");
+    BOOST_CHECK_EQUAL(Join<std::string>({"foo"}, ", ", op_upper), "FOO");
+    BOOST_CHECK_EQUAL(Join<std::string>({"foo", "bar"}, ", ", op_upper), "FOO, BAR");
+}
 
 BOOST_AUTO_TEST_CASE(util_FormatISO8601DateTime)
 {
@@ -190,31 +169,39 @@ struct TestArgsManager : public ArgsManager
         {
             LOCK(cs_args);
             m_config_args.clear();
+            m_config_sections.clear();
         }
         std::string error;
-        BOOST_REQUIRE(ReadConfigStream(streamConfig, error));
+        BOOST_REQUIRE(ReadConfigStream(streamConfig, "", error));
     }
     void SetNetworkOnlyArg(const std::string arg)
     {
         LOCK(cs_args);
         m_network_only_args.insert(arg);
     }
-    void SetupArgs(int argv, const char* args[])
+    void SetupArgs(const std::vector<std::pair<std::string, unsigned int>>& args)
     {
-        for (int i = 0; i < argv; ++i) {
-            AddArg(args[i], "", false, OptionsCategory::OPTIONS);
+        for (const auto& arg : args) {
+            AddArg(arg.first, "", arg.second, OptionsCategory::OPTIONS);
         }
     }
+    using ArgsManager::ReadConfigStream;
+    using ArgsManager::cs_args;
+    using ArgsManager::m_network;
 };
 
 BOOST_AUTO_TEST_CASE(util_ParseParameters)
 {
     TestArgsManager testArgs;
-    const char* avail_args[] = {"-a", "-b", "-ccc", "-d"};
+    const auto a = std::make_pair("-a", ArgsManager::ALLOW_ANY);
+    const auto b = std::make_pair("-b", ArgsManager::ALLOW_ANY);
+    const auto ccc = std::make_pair("-ccc", ArgsManager::ALLOW_ANY);
+    const auto d = std::make_pair("-d", ArgsManager::ALLOW_ANY);
+
     const char *argv_test[] = {"-ignored", "-a", "-b", "-ccc=argument", "-ccc=multiple", "f", "-d=e"};
 
     std::string error;
-    testArgs.SetupArgs(4, avail_args);
+    testArgs.SetupArgs({a, b, ccc, d});
     BOOST_CHECK(testArgs.ParseParameters(0, (char**)argv_test, error));
     BOOST_CHECK(testArgs.GetOverrideArgs().empty() && testArgs.GetConfigArgs().empty());
 
@@ -242,11 +229,17 @@ BOOST_AUTO_TEST_CASE(util_ParseParameters)
 BOOST_AUTO_TEST_CASE(util_GetBoolArg)
 {
     TestArgsManager testArgs;
-    const char* avail_args[] = {"-a", "-b", "-c", "-d", "-e", "-f"};
+    const auto a = std::make_pair("-a", ArgsManager::ALLOW_BOOL);
+    const auto b = std::make_pair("-b", ArgsManager::ALLOW_BOOL);
+    const auto c = std::make_pair("-c", ArgsManager::ALLOW_BOOL);
+    const auto d = std::make_pair("-d", ArgsManager::ALLOW_BOOL);
+    const auto e = std::make_pair("-e", ArgsManager::ALLOW_BOOL);
+    const auto f = std::make_pair("-f", ArgsManager::ALLOW_BOOL);
+
     const char *argv_test[] = {
         "ignored", "-a", "-nob", "-c=0", "-d=1", "-e=false", "-f=true"};
     std::string error;
-    testArgs.SetupArgs(6, avail_args);
+    testArgs.SetupArgs({a, b, c, d, e, f});
     BOOST_CHECK(testArgs.ParseParameters(7, (char**)argv_test, error));
 
     // Each letter should be set.
@@ -279,9 +272,10 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArgEdgeCases)
     TestArgsManager testArgs;
 
     // Params test
-    const char* avail_args[] = {"-foo", "-bar"};
+    const auto foo = std::make_pair("-foo", ArgsManager::ALLOW_BOOL);
+    const auto bar = std::make_pair("-bar", ArgsManager::ALLOW_BOOL);
     const char *argv_test[] = {"ignored", "-nofoo", "-foo", "-nobar=0"};
-    testArgs.SetupArgs(2, avail_args);
+    testArgs.SetupArgs({foo, bar});
     std::string error;
     BOOST_CHECK(testArgs.ParseParameters(4, (char**)argv_test, error));
 
@@ -350,8 +344,17 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
        "iii=2\n";
 
     TestArgsManager test_args;
-    const char* avail_args[] = {"-a", "-b", "-ccc", "-d", "-e", "-fff", "-ggg", "-h", "-i", "-iii"};
-    test_args.SetupArgs(10, avail_args);
+    const auto a = std::make_pair("-a", ArgsManager::ALLOW_BOOL);
+    const auto b = std::make_pair("-b", ArgsManager::ALLOW_BOOL);
+    const auto ccc = std::make_pair("-ccc", ArgsManager::ALLOW_STRING);
+    const auto d = std::make_pair("-d", ArgsManager::ALLOW_STRING);
+    const auto e = std::make_pair("-e", ArgsManager::ALLOW_ANY);
+    const auto fff = std::make_pair("-fff", ArgsManager::ALLOW_BOOL);
+    const auto ggg = std::make_pair("-ggg", ArgsManager::ALLOW_BOOL);
+    const auto h = std::make_pair("-h", ArgsManager::ALLOW_BOOL);
+    const auto i = std::make_pair("-i", ArgsManager::ALLOW_BOOL);
+    const auto iii = std::make_pair("-iii", ArgsManager::ALLOW_INT);
+    test_args.SetupArgs({a, b, ccc, d, e, fff, ggg, h, i, iii});
 
     test_args.ReadConfigString(str_config);
     // expectation: a, b, ccc, d, fff, ggg, h, i end up in map
@@ -549,8 +552,9 @@ BOOST_AUTO_TEST_CASE(util_GetArg)
 BOOST_AUTO_TEST_CASE(util_GetChainName)
 {
     TestArgsManager test_args;
-    const char* avail_args[] = {"-testnet", "-regtest"};
-    test_args.SetupArgs(2, avail_args);
+    const auto testnet = std::make_pair("-testnet", ArgsManager::ALLOW_BOOL);
+    const auto regtest = std::make_pair("-regtest", ArgsManager::ALLOW_BOOL);
+    test_args.SetupArgs({testnet, regtest});
 
     const char* argv_testnet[] = {"cmd", "-testnet"};
     const char* argv_regtest[] = {"cmd", "-regtest"};
@@ -620,6 +624,306 @@ BOOST_AUTO_TEST_CASE(util_GetChainName)
     BOOST_CHECK(test_args.ParseParameters(3, (char**)argv_both, error));
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_THROW(test_args.GetChainName(), std::runtime_error);
+}
+
+// Test different ways settings can be merged, and verify results. This test can
+// be used to confirm that updates to settings code don't change behavior
+// unintentionally.
+//
+// The test covers:
+//
+// - Combining different setting actions. Possible actions are: configuring a
+//   setting, negating a setting (adding "-no" prefix), and configuring/negating
+//   settings in a network section (adding "main." or "test." prefixes).
+//
+// - Combining settings from command line arguments and a config file.
+//
+// - Combining SoftSet and ForceSet calls.
+//
+// - Testing "main" and "test" network values to make sure settings from network
+//   sections are applied and to check for mainnet-specific behaviors like
+//   inheriting settings from the default section.
+//
+// - Testing network-specific settings like "-wallet", that may be ignored
+//   outside a network section, and non-network specific settings like "-server"
+//   that aren't sensitive to the network.
+//
+struct ArgsMergeTestingSetup : public BasicTestingSetup {
+    //! Max number of actions to sequence together. Can decrease this when
+    //! debugging to make test results easier to understand.
+    static constexpr int MAX_ACTIONS = 3;
+
+    enum Action { NONE, SET, NEGATE, SECTION_SET, SECTION_NEGATE };
+    using ActionList = Action[MAX_ACTIONS];
+
+    //! Enumerate all possible test configurations.
+    template <typename Fn>
+    void ForEachMergeSetup(Fn&& fn)
+    {
+        ActionList arg_actions = {};
+        ForEachNoDup(arg_actions, SET, SECTION_NEGATE, [&] {
+            ActionList conf_actions = {};
+            ForEachNoDup(conf_actions, SET, SECTION_NEGATE, [&] {
+                for (bool soft_set : {false, true}) {
+                    for (bool force_set : {false, true}) {
+                        for (const std::string& section : {CBaseChainParams::MAIN, CBaseChainParams::TESTNET}) {
+                            for (const std::string& network : {CBaseChainParams::MAIN, CBaseChainParams::TESTNET}) {
+                                for (bool net_specific : {false, true}) {
+                                    fn(arg_actions, conf_actions, soft_set, force_set, section, network, net_specific);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    }
+
+    //! Translate actions into a list of <key>=<value> setting strings.
+    std::vector<std::string> GetValues(const ActionList& actions,
+        const std::string& section,
+        const std::string& name,
+        const std::string& value_prefix)
+    {
+        std::vector<std::string> values;
+        int suffix = 0;
+        for (Action action : actions) {
+            if (action == NONE) break;
+            std::string prefix;
+            if (action == SECTION_SET || action == SECTION_NEGATE) prefix = section + ".";
+            if (action == SET || action == SECTION_SET) {
+                for (int i = 0; i < 2; ++i) {
+                    values.push_back(prefix + name + "=" + value_prefix + std::to_string(++suffix));
+                }
+            }
+            if (action == NEGATE || action == SECTION_NEGATE) {
+                values.push_back(prefix + "no" + name + "=1");
+            }
+        }
+        return values;
+    }
+};
+
+// Regression test covering different ways config settings can be merged. The
+// test parses and merges settings, representing the results as strings that get
+// compared against an expected hash. To debug, the result strings can be dumped
+// to a file (see comments below).
+BOOST_FIXTURE_TEST_CASE(util_ArgsMerge, ArgsMergeTestingSetup)
+{
+    CHash256 out_sha;
+    FILE* out_file = nullptr;
+    if (const char* out_path = getenv("ARGS_MERGE_TEST_OUT")) {
+        out_file = fsbridge::fopen(out_path, "w");
+        if (!out_file) throw std::system_error(errno, std::generic_category(), "fopen failed");
+    }
+
+    ForEachMergeSetup([&](const ActionList& arg_actions, const ActionList& conf_actions, bool soft_set, bool force_set,
+                          const std::string& section, const std::string& network, bool net_specific) {
+        TestArgsManager parser;
+        LOCK(parser.cs_args);
+
+        std::string desc = "net=";
+        desc += network;
+        parser.m_network = network;
+
+        const std::string& name = net_specific ? "wallet" : "server";
+        const std::string key = "-" + name;
+        parser.AddArg(key, name, ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+        if (net_specific) parser.SetNetworkOnlyArg(key);
+
+        auto args = GetValues(arg_actions, section, name, "a");
+        std::vector<const char*> argv = {"ignored"};
+        for (auto& arg : args) {
+            arg.insert(0, "-");
+            desc += " ";
+            desc += arg;
+            argv.push_back(arg.c_str());
+        }
+        std::string error;
+        BOOST_CHECK(parser.ParseParameters(argv.size(), argv.data(), error));
+        BOOST_CHECK_EQUAL(error, "");
+
+        std::string conf;
+        for (auto& conf_val : GetValues(conf_actions, section, name, "c")) {
+            desc += " ";
+            desc += conf_val;
+            conf += conf_val;
+            conf += "\n";
+        }
+        std::istringstream conf_stream(conf);
+        BOOST_CHECK(parser.ReadConfigStream(conf_stream, "filepath", error));
+        BOOST_CHECK_EQUAL(error, "");
+
+        if (soft_set) {
+            desc += " soft";
+            parser.SoftSetArg(key, "soft1");
+            parser.SoftSetArg(key, "soft2");
+        }
+
+        if (force_set) {
+            desc += " force";
+            parser.ForceSetArg(key, "force1");
+            parser.ForceSetArg(key, "force2");
+        }
+
+        desc += " || ";
+
+        if (!parser.IsArgSet(key)) {
+            desc += "unset";
+            BOOST_CHECK(!parser.IsArgNegated(key));
+            BOOST_CHECK_EQUAL(parser.GetArg(key, "default"), "default");
+            BOOST_CHECK(parser.GetArgs(key).empty());
+        } else if (parser.IsArgNegated(key)) {
+            desc += "negated";
+            BOOST_CHECK_EQUAL(parser.GetArg(key, "default"), "0");
+            BOOST_CHECK(parser.GetArgs(key).empty());
+        } else {
+            desc += parser.GetArg(key, "default");
+            desc += " |";
+            for (const auto& arg : parser.GetArgs(key)) {
+                desc += " ";
+                desc += arg;
+            }
+        }
+
+        std::set<std::string> ignored = parser.GetUnsuitableSectionOnlyArgs();
+        if (!ignored.empty()) {
+            desc += " | ignored";
+            for (const auto& arg : ignored) {
+                desc += " ";
+                desc += arg;
+            }
+        }
+
+        desc += "\n";
+
+        out_sha.Write((const unsigned char*)desc.data(), desc.size());
+        if (out_file) {
+            BOOST_REQUIRE(fwrite(desc.data(), 1, desc.size(), out_file) == desc.size());
+        }
+    });
+
+    if (out_file) {
+        if (fclose(out_file)) throw std::system_error(errno, std::generic_category(), "fclose failed");
+        out_file = nullptr;
+    }
+
+    unsigned char out_sha_bytes[CSHA256::OUTPUT_SIZE];
+    out_sha.Finalize(out_sha_bytes);
+    std::string out_sha_hex = HexStr(std::begin(out_sha_bytes), std::end(out_sha_bytes));
+
+    // If check below fails, should manually dump the results with:
+    //
+    //   ARGS_MERGE_TEST_OUT=results.txt ./test_bitcoin --run_test=util_tests/util_ArgsMerge
+    //
+    // And verify diff against previous results to make sure the changes are expected.
+    //
+    // Results file is formatted like:
+    //
+    //   <input> || <IsArgSet/IsArgNegated/GetArg output> | <GetArgs output> | <GetUnsuitable output>
+    BOOST_CHECK_EQUAL(out_sha_hex, "b835eef5977d69114eb039a976201f8c7121f34fe2b7ea2b73cafb516e5c9dc8");
+}
+
+// Similar test as above, but for ArgsManager::GetChainName function.
+struct ChainMergeTestingSetup : public BasicTestingSetup {
+    static constexpr int MAX_ACTIONS = 2;
+
+    enum Action { NONE, ENABLE_TEST, DISABLE_TEST, NEGATE_TEST, ENABLE_REG, DISABLE_REG, NEGATE_REG };
+    using ActionList = Action[MAX_ACTIONS];
+
+    //! Enumerate all possible test configurations.
+    template <typename Fn>
+    void ForEachMergeSetup(Fn&& fn)
+    {
+        ActionList arg_actions = {};
+        ForEachNoDup(arg_actions, ENABLE_TEST, NEGATE_REG, [&] {
+            ActionList conf_actions = {};
+            ForEachNoDup(conf_actions, ENABLE_TEST, NEGATE_REG, [&] { fn(arg_actions, conf_actions); });
+        });
+    }
+};
+
+BOOST_FIXTURE_TEST_CASE(util_ChainMerge, ChainMergeTestingSetup)
+{
+    CHash256 out_sha;
+    FILE* out_file = nullptr;
+    if (const char* out_path = getenv("CHAIN_MERGE_TEST_OUT")) {
+        out_file = fsbridge::fopen(out_path, "w");
+        if (!out_file) throw std::system_error(errno, std::generic_category(), "fopen failed");
+    }
+
+    ForEachMergeSetup([&](const ActionList& arg_actions, const ActionList& conf_actions) {
+        TestArgsManager parser;
+        LOCK(parser.cs_args);
+        parser.AddArg("-regtest", "regtest", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+        parser.AddArg("-testnet", "testnet", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+
+        auto arg = [](Action action) { return action == ENABLE_TEST  ? "-testnet=1"   :
+                                              action == DISABLE_TEST ? "-testnet=0"   :
+                                              action == NEGATE_TEST  ? "-notestnet=1" :
+                                              action == ENABLE_REG   ? "-regtest=1"   :
+                                              action == DISABLE_REG  ? "-regtest=0"   :
+                                              action == NEGATE_REG   ? "-noregtest=1" : nullptr; };
+
+        std::string desc;
+        std::vector<const char*> argv = {"ignored"};
+        for (Action action : arg_actions) {
+            const char* argstr = arg(action);
+            if (!argstr) break;
+            argv.push_back(argstr);
+            desc += " ";
+            desc += argv.back();
+        }
+        std::string error;
+        BOOST_CHECK(parser.ParseParameters(argv.size(), argv.data(), error));
+        BOOST_CHECK_EQUAL(error, "");
+
+        std::string conf;
+        for (Action action : conf_actions) {
+            const char* argstr = arg(action);
+            if (!argstr) break;
+            desc += " ";
+            desc += argstr + 1;
+            conf += argstr + 1;
+        }
+        std::istringstream conf_stream(conf);
+        BOOST_CHECK(parser.ReadConfigStream(conf_stream, "filepath", error));
+        BOOST_CHECK_EQUAL(error, "");
+
+        desc += " || ";
+        try {
+            desc += parser.GetChainName();
+        } catch (const std::runtime_error& e) {
+            desc += "error: ";
+            desc += e.what();
+        }
+        desc += "\n";
+
+        out_sha.Write((const unsigned char*)desc.data(), desc.size());
+        if (out_file) {
+            BOOST_REQUIRE(fwrite(desc.data(), 1, desc.size(), out_file) == desc.size());
+        }
+    });
+
+    if (out_file) {
+        if (fclose(out_file)) throw std::system_error(errno, std::generic_category(), "fclose failed");
+        out_file = nullptr;
+    }
+
+    unsigned char out_sha_bytes[CSHA256::OUTPUT_SIZE];
+    out_sha.Finalize(out_sha_bytes);
+    std::string out_sha_hex = HexStr(std::begin(out_sha_bytes), std::end(out_sha_bytes));
+
+    // If check below fails, should manually dump the results with:
+    //
+    //   CHAIN_MERGE_TEST_OUT=results.txt ./test_bitcoin --run_test=util_tests/util_ChainMerge
+    //
+    // And verify diff against previous results to make sure the changes are expected.
+    //
+    // Results file is formatted like:
+    //
+    //   <input> || <output>
+    BOOST_CHECK_EQUAL(out_sha_hex, "94b4ad55c8ac639a56b93e36f7e32e4c611fd7d7dd7b2be6a71707b1eadcaec7");
 }
 
 BOOST_AUTO_TEST_CASE(util_FormatMoney)
@@ -809,6 +1113,27 @@ BOOST_AUTO_TEST_CASE(strprintf_numbers)
 BOOST_AUTO_TEST_CASE(gettime)
 {
     BOOST_CHECK((GetTime() & ~0xFFFFFFFFLL) == 0);
+}
+
+BOOST_AUTO_TEST_CASE(util_time_GetTime)
+{
+    SetMockTime(111);
+    // Check that mock time does not change after a sleep
+    for (const auto& num_sleep : {0, 1}) {
+        MilliSleep(num_sleep);
+        BOOST_CHECK_EQUAL(111, GetTime()); // Deprecated time getter
+        BOOST_CHECK_EQUAL(111, GetTime<std::chrono::seconds>().count());
+        BOOST_CHECK_EQUAL(111000, GetTime<std::chrono::milliseconds>().count());
+        BOOST_CHECK_EQUAL(111000000, GetTime<std::chrono::microseconds>().count());
+    }
+
+    SetMockTime(0);
+    // Check that system time changes after a sleep
+    const auto ms_0 = GetTime<std::chrono::milliseconds>();
+    const auto us_0 = GetTime<std::chrono::microseconds>();
+    MilliSleep(1);
+    BOOST_CHECK(ms_0 < GetTime<std::chrono::milliseconds>());
+    BOOST_CHECK(us_0 < GetTime<std::chrono::microseconds>());
 }
 
 BOOST_AUTO_TEST_CASE(test_IsDigit)
@@ -1120,7 +1445,7 @@ static void TestOtherProcess(fs::path dirname, std::string lockname, int fd)
 
 BOOST_AUTO_TEST_CASE(test_LockDirectory)
 {
-    fs::path dirname = SetDataDir("test_LockDirectory") / fs::unique_path();
+    fs::path dirname = GetDataDir() / "lock_dir";
     const std::string lockname = ".lock";
 #ifndef WIN32
     // Revert SIGCHLD to default, otherwise boost.test will catch and fail on
@@ -1209,7 +1534,7 @@ BOOST_AUTO_TEST_CASE(test_LockDirectory)
 BOOST_AUTO_TEST_CASE(test_DirIsWritable)
 {
     // Should be able to write to the data dir.
-    fs::path tmpdirname = SetDataDir("test_DirIsWritable");
+    fs::path tmpdirname = GetDataDir();
     BOOST_CHECK_EQUAL(DirIsWritable(tmpdirname), true);
 
     // Should not be able to write to a non-existent dir.
@@ -1231,17 +1556,9 @@ BOOST_AUTO_TEST_CASE(test_ToLower)
     BOOST_CHECK_EQUAL(ToLower(0), 0);
     BOOST_CHECK_EQUAL(ToLower('\xff'), '\xff');
 
-    std::string testVector;
-    Downcase(testVector);
-    BOOST_CHECK_EQUAL(testVector, "");
-
-    testVector = "#HODL";
-    Downcase(testVector);
-    BOOST_CHECK_EQUAL(testVector, "#hodl");
-
-    testVector = "\x00\xfe\xff";
-    Downcase(testVector);
-    BOOST_CHECK_EQUAL(testVector, "\x00\xfe\xff");
+    BOOST_CHECK_EQUAL(ToLower(""), "");
+    BOOST_CHECK_EQUAL(ToLower("#HODL"), "#hodl");
+    BOOST_CHECK_EQUAL(ToLower("\x00\xfe\xff"), "\x00\xfe\xff");
 }
 
 BOOST_AUTO_TEST_CASE(test_ToUpper)
@@ -1252,6 +1569,10 @@ BOOST_AUTO_TEST_CASE(test_ToUpper)
     BOOST_CHECK_EQUAL(ToUpper('{'), '{');
     BOOST_CHECK_EQUAL(ToUpper(0), 0);
     BOOST_CHECK_EQUAL(ToUpper('\xff'), '\xff');
+
+    BOOST_CHECK_EQUAL(ToUpper(""), "");
+    BOOST_CHECK_EQUAL(ToUpper("#hodl"), "#HODL");
+    BOOST_CHECK_EQUAL(ToUpper("\x00\xfe\xff"), "\x00\xfe\xff");
 }
 
 BOOST_AUTO_TEST_CASE(test_Capitalize)

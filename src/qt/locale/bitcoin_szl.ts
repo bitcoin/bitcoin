@@ -70,10 +70,6 @@
         <translation>Tukej sōm adresy Bitcoin na kere posyłŏsz płaty. Dycki wybaduj wielość i adresã ôdbiyrŏcza przed posłaniym mōnet.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Tukej sōm adresy Bitcoin do ôdbiyraniŏ płatōw. Zalycŏ sie używaniŏ nowych adres ôdbiorczych dlŏ kożdyj transakcyje.</translation>
-    </message>
-    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;Kopiyruj Adresã</translation>
     </message>
@@ -136,14 +132,6 @@
         <translation>Powtōrz nowe hasło</translation>
     </message>
     <message>
-        <source>Show password</source>
-        <translation>Pokŏż hasło</translation>
-    </message>
-    <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Wkludź nowe hasło do portmanyja.&lt;br/&gt;Proszã używać hasła słożōnego z &lt;b&gt;10 abo wiyncyj losowych liter&lt;/b&gt; abo &lt;b&gt;8 abo wiyncyj słōw.&lt;/b&gt;.</translation>
-    </message>
-    <message>
         <source>Encrypt wallet</source>
         <translation>Zaszyfruj portmanyj</translation>
     </message>
@@ -166,10 +154,6 @@
     <message>
         <source>Change passphrase</source>
         <translation>Pōmiyń hasło</translation>
-    </message>
-    <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Podej stare i nowe hasło do portmanyja.</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
@@ -362,10 +346,6 @@
         <translation>&amp;Weryfikuj wiadōmość...</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
-    </message>
-    <message>
         <source>&amp;Send</source>
         <translation>&amp;Poślij</translation>
     </message>
@@ -496,6 +476,10 @@
     <message>
         <source>Catching up...</source>
         <translation>Trwŏ synchrōnizacyjŏ...</translation>
+    </message>
+    <message>
+        <source>Error: %1</source>
+        <translation>Feler: %1</translation>
     </message>
     <message>
         <source>Date: %1
@@ -714,6 +698,12 @@
     </message>
 </context>
 <context>
+    <name>CreateWalletActivity</name>
+    </context>
+<context>
+    <name>CreateWalletDialog</name>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
@@ -876,7 +866,7 @@
         <source>(of %n GB needed)</source>
         <translation><numerusform>(z %n GB przidajnego)</numerusform><numerusform>(z %n GB przidajnych)</numerusform><numerusform>(z %n GB przidajnych)</numerusform></translation>
     </message>
-</context>
+    </context>
 <context>
     <name>ModalOverlay</name>
     <message>
@@ -947,6 +937,13 @@
         <translation>Ôbier zbiōr żōndaniŏ płatu do ôdewrzyniŏ</translation>
     </message>
 </context>
+<context>
+    <name>OpenWalletActivity</name>
+    <message>
+        <source>default wallet</source>
+        <translation>wychodny portmanyj</translation>
+    </message>
+    </context>
 <context>
     <name>OptionsDialog</name>
     <message>
@@ -1262,15 +1259,12 @@
         <translation>%1 GB</translation>
     </message>
     <message>
-        <source>unknown</source>
-        <translation>niyznōme</translation>
-    </message>
-</context>
-<context>
-    <name>QObject::QObject</name>
-    <message>
         <source>Error: %1</source>
         <translation>Feler: %1</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>niyznōme</translation>
     </message>
 </context>
 <context>
@@ -1344,7 +1338,7 @@
     </message>
     <message>
         <source>Wallet: </source>
-        <translation>Portmanyj: </translation>
+        <translation>Portmanyj:</translation>
     </message>
     <message>
         <source>Received</source>
@@ -1520,7 +1514,7 @@
         <source>Wallet</source>
         <translation>Portmanyj</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
@@ -1740,13 +1734,6 @@
     </message>
     </context>
 <context>
-    <name>SplashScreen</name>
-    <message>
-        <source>[testnet]</source>
-        <translation>[testnet]</translation>
-    </message>
-</context>
-<context>
     <name>TrafficGraphWidget</name>
     <message>
         <source>KB/s</source>
@@ -1940,6 +1927,10 @@
 <context>
     <name>WalletView</name>
     <message>
+        <source>&amp;Export</source>
+        <translation>&amp;Eksportuj</translation>
+    </message>
+    <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Eksportuj dane z aktywnyj szkarty do zbioru</translation>
     </message>
@@ -1954,10 +1945,6 @@
 </context>
 <context>
     <name>bitcoin-core</name>
-    <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
-    </message>
     <message>
         <source>The %s developers</source>
         <translation>Twōrcy %s</translation>
@@ -1991,10 +1978,6 @@
         <translation>Feler wgrŏwaniŏ bazy blokōw</translation>
     </message>
     <message>
-        <source>Error: Disk space is low!</source>
-        <translation>Feler: Za mało wolnego placu na dysku!</translation>
-    </message>
-    <message>
         <source>Loading P2P addresses...</source>
         <translation>Wgrŏwanie adres P2P...</translation>
     </message>
@@ -2015,10 +1998,6 @@
         <translation>Feler: Za mało wolnego placu na dysku dlŏ %s</translation>
     </message>
     <message>
-        <source>Information</source>
-        <translation>Informacyjŏ</translation>
-    </message>
-    <message>
         <source>Signing transaction failed</source>
         <translation>Szkryftniyńcie transakcyji niy podarziło sie</translation>
     </message>
@@ -2033,10 +2012,6 @@
     <message>
         <source>Verifying wallet(s)...</source>
         <translation>Weryfikacyjŏ portmanyja(ōw)...</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Pozōr</translation>
     </message>
     <message>
         <source>Warning: unknown new rules activated (versionbit %i)</source>
@@ -2081,10 +2056,6 @@
     <message>
         <source>Done loading</source>
         <translation>Wgrŏwanie zakōńczōne</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Feler</translation>
     </message>
 </context>
 </TS>

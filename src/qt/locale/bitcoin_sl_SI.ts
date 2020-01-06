@@ -1077,10 +1077,6 @@
         <translation>Preslikaj vrata z uporabo &amp;UPnP</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>Connect to the NdovuCoin network through a SOCKS5 proxy.</source>
-        <translation>Poveži se v omrežje NdovuCoin preko posredniškega strežnika SOCKS5.</translation>
-=======
         <source>Accept connections from outside.</source>
         <translation>Sprejmi zunanje povezave</translation>
     </message>
@@ -1091,7 +1087,6 @@
     <message>
         <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
         <translation>Poveži se v omrežje Bitcoin preko posredniškega strežnika SOCKS5.</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>

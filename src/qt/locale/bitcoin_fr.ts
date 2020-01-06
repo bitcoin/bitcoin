@@ -70,8 +70,8 @@
         <translation>Voici vos adresses NdovuCoin pour envoyer des paiements. Vérifiez toujours le montant et l’adresse du destinataire avant d’envoyer des pièces.</translation>
     </message>
     <message>
-        <source>These are your NdovuCoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Voici vos adresses NdovuCoin pour recevoir des paiements. Il est recommandé d’utiliser une nouvelle adresse de réception pour chaque transaction.</translation>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
+        <translation>Ce sont vos adresses Bitcoin pour recevoir des paiements. Utilisez le bouton 'Créer nouvelle adresse de réception' dans l'onglet Recevoir pour créer de nouvelles adresses.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -136,12 +136,8 @@
         <translation>Répéter la phrase de passe</translation>
     </message>
     <message>
-        <source>Show password</source>
-        <translation>Afficher le mot de passe</translation>
-    </message>
-    <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Saisissez la nouvelle phrase de passe du porte-monnaie.&lt;br/&gt;Veuillez utiliser une phrase de passe composée de &lt;b&gt;dix caractères aléatoires ou plus&lt;/b&gt;, ou de &lt;b&gt;huit mots ou plus&lt;/b&gt;.</translation>
+        <source>Show passphrase</source>
+        <translation>Afficher phrase secrète</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -168,10 +164,6 @@
         <translation>Changer la phrase de passe</translation>
     </message>
     <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Saisir l’ancienne puis la nouvelle phrase de passe du porte-monnaie.</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>Confirmer le chiffrement du porte-monnaie</translation>
     </message>
@@ -188,8 +180,28 @@
         <translation>Le porte-monnaie est chiffré</translation>
     </message>
     <message>
-        <source>Your wallet is now encrypted. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Votre porte-monnaie est désormais chiffré. N’oubliez pas que le chiffrement de votre porte-monnaie ne peut pas protéger entièrement vos bitcoins contre le vol par des programmes malveillants qui infecteraient votre ordinateur.</translation>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Saisir la nouvelle phrase secrète pour le porte-monnaie.&lt;br/&gt;Veuillez utiliser une phrase secrète de &lt;b&gt;dix caractères aléatoires ou plus&lt;/b&gt;, ou &lt;b&gt;huit mots ou plus&lt;/b&gt;.</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation>Saisir l'ancienne phrase secrète et la nouvelle phrase secrète pour le porte-monnaie.</translation>
+    </message>
+    <message>
+        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>Souvenez-vous que chiffrer votre porte-monnaie ne peut pas complètement protéger vos bitcoins contre le vol par des programmes malveillants infectant votre ordinateur.</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation>Porte-monnaie à chiffrer</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation>Votre porte-monnaie est sur le point d'être chiffré.</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>Votre porte-monnaie est maintenant chiffré.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -314,6 +326,14 @@
         <translation>Ouvrir une &amp;URI...</translation>
     </message>
     <message>
+        <source>Create Wallet...</source>
+        <translation>Créer un porte-monnaie...</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>Créer un nouveau porte-monnaie</translation>
+    </message>
+    <message>
         <source>Wallet:</source>
         <translation>Porte-monnaie :</translation>
     </message>
@@ -364,10 +384,6 @@
     <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;Vérifier un message...</translation>
-    </message>
-    <message>
-        <source>NdovuCoin</source>
-        <translation>NdovuCoin</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -478,10 +494,6 @@
         <translation>À jour</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>Show the %1 help message to get a list with possible NdovuCoin command-line options</source>
-        <translation>Afficher le message d’aide de %1 pour obtenir la liste des options de ligne de commande NdovuCoin possibles.</translation>
-=======
         <source>&amp;Sending addresses</source>
         <translation>&amp;Adresses d’envoi</translation>
     </message>
@@ -543,6 +555,30 @@
         <translation>Fenêtre principale</translation>
     </message>
     <message>
+        <source>default wallet</source>
+        <translation>porte-monnaie par défaut</translation>
+    </message>
+    <message>
+        <source>No wallets available</source>
+        <translation>Aucun porte-monnaie n’est disponible</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>&amp;Fenêtre</translation>
+    </message>
+    <message>
+        <source>Minimize</source>
+        <translation>Réduire</translation>
+    </message>
+    <message>
+        <source>Zoom</source>
+        <translation>Zoomer</translation>
+    </message>
+    <message>
+        <source>Main Window</source>
+        <translation>Fenêtre principale</translation>
+    </message>
+    <message>
         <source>%1 client</source>
         <translation>Client %1</translation>
     </message>
@@ -553,6 +589,14 @@
     <message>
         <source>Catching up...</source>
         <translation>Rattrapage…</translation>
+    </message>
+    <message>
+        <source>Error: %1</source>
+        <translation>Erreur : %1</translation>
+    </message>
+    <message>
+        <source>Warning: %1</source>
+        <translation>Avertissement : %1</translation>
     </message>
     <message>
         <source>Date: %1
@@ -775,6 +819,60 @@
     </message>
 </context>
 <context>
+    <name>CreateWalletActivity</name>
+    <message>
+        <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Création du porte-monnaie &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+    <message>
+        <source>Create wallet failed</source>
+        <translation>Création du porte-monnaie échouée</translation>
+    </message>
+    <message>
+        <source>Create wallet warning</source>
+        <translation>Avertissement de création du porte-monnaie</translation>
+    </message>
+</context>
+<context>
+    <name>CreateWalletDialog</name>
+    <message>
+        <source>Create Wallet</source>
+        <translation>Créer porte-monnaie</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <translation>Nom du porte-monnaie</translation>
+    </message>
+    <message>
+        <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
+        <translation>Chiffrer le porte-monnaie. Le porte-monnaie sera chiffré avec une phrase secrète de votre choix.</translation>
+    </message>
+    <message>
+        <source>Encrypt Wallet</source>
+        <translation>Chiffrer le porte-monnaie</translation>
+    </message>
+    <message>
+        <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
+        <translation>Désactiver les clés privées pour ce porte-monnaie. Les portes-monnaie avec des clés privées désactivées n'auront pas de clés privées et ne peuvent pas avoir une graine HD ou des clés privées importées. Ceci est idéal pour un porte-monnaie</translation>
+    </message>
+    <message>
+        <source>Disable Private Keys</source>
+        <translation>Désactiver Clés Privées</translation>
+    </message>
+    <message>
+        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
+        <translation>Créer un porte-monnaie vide. Les porte-monnaie vides n'ont pas de clés privées ou scripts initialement. Des clés privées et adresses peuvent être importées ou une graine HD peut être définie ultérieurement.</translation>
+    </message>
+    <message>
+        <source>Make Blank Wallet</source>
+        <translation>Créer Porte-Monnaie Vide</translation>
+    </message>
+    <message>
+        <source>Create</source>
+        <translation>Créer</translation>
+    </message>
+</context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
@@ -890,6 +988,10 @@
         <translation>Quand vous cliquerez sur Valider, %1 commencera à télécharger et à traiter l’intégralité de la chaîne de blocs %4 (%2 Go) en débutant avec les transactions les plus anciennes de %3, quand %4 a été lancé initialement.</translation>
     </message>
     <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
+        <translation>Revenir sur ce paramètre requiert de re-télécharger l'entier de la chaîne de blocs. Il est plus rapide de télécharger la chaîne complète et de l'élaguer plus tard. Désactive certaines fonctionnalités avancées.</translation>
+    </message>
+    <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
         <translation>La synchronisation initiale est très exigeante et pourrait exposer des problèmes matériels dans votre ordinateur passés inaperçus auparavant. Chaque fois que vous exécuterez %1, le téléchargement reprendra où il s’était arrêté.</translation>
     </message>
@@ -908,6 +1010,10 @@
     <message>
         <source>NdovuCoin</source>
         <translation>NdovuCoin</translation>
+    </message>
+    <message>
+        <source>Discard blocks after verification, except most recent %1 GB (prune)</source>
+        <translation>Jeter les blocs après vérification, à l'exception des %1 Go les plus récents (élagage)</translation>
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
@@ -941,6 +1047,10 @@
         <source>(of %n GB needed)</source>
         <translation><numerusform>(sur %n Go requis)</numerusform><numerusform>(sur %n Go requis)</numerusform></translation>
     </message>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation><numerusform>(%n Go nécessaire pour la chaîne complète)</numerusform><numerusform>(%n Go nécessaires pour la chaîne complète)</numerusform></translation>
+    </message>
 </context>
 <context>
     <name>ModalOverlay</name>
@@ -950,11 +1060,7 @@
     </message>
     <message>
         <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
-<<<<<<< HEAD
-        <translation>Les transactions récentes ne sont peut-être pas encore visibles et par conséquent le solde de votre porte-monnaie est peut-être erroné. Cette information sera juste quand votre porte-monnaie aura fini de se synchroniser avec le réseau NdovuCoin, comme décrit ci-dessous.</translation>
-=======
         <translation>Les transactions récentes ne sont peut-être pas encore visibles et par conséquent le solde de votre porte-monnaie est peut-être erroné. Ces informations seront justes quand votre porte-monnaie aura fini de se synchroniser avec le réseau Bitcoin, comme décrit ci-dessous.</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
@@ -1018,6 +1124,25 @@
     <message>
         <source>Select payment request file to open</source>
         <translation>Choisir le fichier de demande de paiement à ouvrir</translation>
+    </message>
+</context>
+<context>
+    <name>OpenWalletActivity</name>
+    <message>
+        <source>Open wallet failed</source>
+        <translation>Échec d’ouverture du porte-monnaie</translation>
+    </message>
+    <message>
+        <source>Open wallet warning</source>
+        <translation>Avertissement d'ouverture du porte-monnaie</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>porte-monnaie par défaut</translation>
+    </message>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Ouverture du porte-monnaie &lt;b&gt;%1&lt;/b&gt;…</translation>
     </message>
 </context>
 <context>
@@ -1302,13 +1427,8 @@
         <translation>Formulaire</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the NdovuCoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>Les informations affichées peuvent être obsolètes. Votre porte-monnaie est automatiquement synchronisé avec le réseau NdovuCoin lorsque la connexion s’établit, or ce processus n’est pas encore terminé.</translation>
-=======
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
         <translation>Les informations affichées peuvent être obsolètes. Votre porte-monnaie se synchronise automatiquement avec le réseau Bitcoin dès qu’une connexion est établie, mais ce processus n’est pas encore achevé.</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>Watch-only:</source>
@@ -1404,6 +1524,14 @@
     <message>
         <source>Cannot process payment request because BIP70 support was not compiled in.</source>
         <translation>Il est impossible de traiter la demande de paiement, car la prise en charge de BIP70 n’a pas été compilée dans le logiciel.</translation>
+    </message>
+    <message>
+        <source>Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.</source>
+        <translation>En raison de faille de sécurité généralisées dans BIP70 il est vivement recommandé que les instructions des marchands pour changer de porte-monnaie soient ignorées.</translation>
+    </message>
+    <message>
+        <source>If you are receiving this error you should request the merchant provide a BIP21 compatible URI.</source>
+        <translation>Si vous recevez cette erreur vous devriez demander au marchand de vous fournir un URI compatible avec BIP21.</translation>
     </message>
     <message>
         <source>Invalid payment address %1</source>
@@ -1588,21 +1716,6 @@
         <translation>%1 Go</translation>
     </message>
     <message>
-        <source>%1 didn't yet exit safely...</source>
-        <translation>%1 ne s’est pas encore arrêté en toute sécurité...</translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation>inconnue</translation>
-    </message>
-</context>
-<context>
-    <name>QObject::QObject</name>
-    <message>
-        <source>Error parsing command line arguments: %1.</source>
-        <translation>Erreur d’analyse des arguments de ligne de commande : %1.</translation>
-    </message>
-    <message>
         <source>Error: Specified data directory "%1" does not exist.</source>
         <translation>Erreur : Le répertoire de données indiqué « %1 » n’existe pas.</translation>
     </message>
@@ -1614,6 +1727,14 @@
         <source>Error: %1</source>
         <translation>Erreur : %1</translation>
     </message>
+    <message>
+        <source>%1 didn't yet exit safely...</source>
+        <translation>%1 ne s’est pas encore arrêté en toute sécurité...</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>inconnue</translation>
+    </message>
 </context>
 <context>
     <name>QRImageWidget</name>
@@ -1624,6 +1745,18 @@
     <message>
         <source>&amp;Copy Image</source>
         <translation>&amp;Copier l’image</translation>
+    </message>
+    <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>L’URI résultante est trop longue. Essayez de réduire le texte de l’étiquette ou du message.</translation>
+    </message>
+    <message>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>Erreur d’encodage de l’URI en code QR.</translation>
+    </message>
+    <message>
+        <source>QR code support not available.</source>
+        <translation>Support du code QR non disponible.</translation>
     </message>
     <message>
         <source>Save QR Code</source>
@@ -1968,13 +2101,8 @@
         <translation>M&amp;essage :</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the NdovuCoin network.</source>
-        <translation>Un message facultatif à joindre à la demande de paiement et qui sera affiché à l’ouverture de celle-ci. Note : le message ne sera pas envoyé avec le paiement par le réseau NdovuCoin.</translation>
-=======
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
         <translation>Un message facultatif à joindre à la demande de paiement et qui sera affiché à l’ouverture de celle-ci. Note : Le message ne sera pas envoyé avec le paiement par le réseau Bitcoin.</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
@@ -1987,6 +2115,10 @@
     <message>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
         <translation>Un montant facultatif à demander. Ne rien saisir ou un zéro pour ne pas demander de montant précis.</translation>
+    </message>
+    <message>
+        <source>&amp;Create new receiving address</source>
+        <translation>&amp;Créer nouvelle adresse de réception</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
@@ -2007,10 +2139,6 @@
     <message>
         <source>Requested payments history</source>
         <translation>Historique des paiements demandés</translation>
-    </message>
-    <message>
-        <source>&amp;Request payment</source>
-        <translation>&amp;Demander un paiement</translation>
     </message>
     <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
@@ -2094,14 +2222,6 @@
     <message>
         <source>Wallet</source>
         <translation>Porte-monnaie</translation>
-    </message>
-    <message>
-        <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation>L’URI résultante est trop longue. Essayez de réduire le texte de l’étiquette ou du message.</translation>
-    </message>
-    <message>
-        <source>Error encoding URI into QR Code.</source>
-        <translation>Erreur d’encodage de l’URI en code QR.</translation>
     </message>
 </context>
 <context>
@@ -2322,6 +2442,14 @@ Note : Les frais étant calculés par octet, des frais de « 100 satoshis par
         <translation>%1 (%2 blocs)</translation>
     </message>
     <message>
+        <source> from wallet '%1'</source>
+        <translation>du porte-monnaie '%1'</translation>
+    </message>
+    <message>
+        <source>%1 to '%2'</source>
+        <translation>%1 à '%2'</translation>
+    </message>
+    <message>
         <source>%1 to %2</source>
         <translation>%1 à %2</translation>
     </message>
@@ -2338,10 +2466,6 @@ Note : Les frais étant calculés par octet, des frais de « 100 satoshis par
         <translation>Vous pouvez augmenter les frais ultérieurement (signale Remplacer-par-des-frais, BIP-125).</translation>
     </message>
     <message>
-        <source>from wallet %1</source>
-        <translation>du porte-monnaie %1</translation>
-    </message>
-    <message>
         <source>Please, review your transaction.</source>
         <translation>Veuillez vérifier votre transaction.</translation>
     </message>
@@ -2356,6 +2480,10 @@ Note : Les frais étant calculés par octet, des frais de « 100 satoshis par
     <message>
         <source>Total Amount</source>
         <translation>Montant total</translation>
+    </message>
+    <message>
+        <source>To review recipient list click "Show Details..."</source>
+        <translation>Pour passer en revue la liste des destinataires cliquer sur "Afficher détails..."</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -2402,13 +2530,8 @@ Note : Les frais étant calculés par octet, des frais de « 100 satoshis par
         <translation><numerusform>Il est estimé que la confirmation commencera dans %n bloc.</numerusform><numerusform>Il est estimé que la confirmation commencera dans %n blocs.</numerusform></translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>Warning: Invalid NdovuCoin address</source>
-        <translation>Avertissement : adresse NdovuCoin invalide</translation>
-=======
         <source>Warning: Invalid Bitcoin address</source>
         <translation>Avertissement : L’adresse Bitcoin est invalide</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -2498,13 +2621,8 @@ Note : Les frais étant calculés par octet, des frais de « 100 satoshis par
         <translation>Saisir une étiquette pour cette adresse afin de l’ajouter à la liste d’adresses utilisées</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the NdovuCoin network.</source>
-        <translation>Un message qui était joint à l’URI bitcoin: et qui sera stocké avec la transaction pour référence. Note : ce message ne sera pas envoyé par le réseau NdovuCoin.</translation>
-=======
         <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
         <translation>Un message qui était joint à l’URI bitcoin: et qui sera stocké avec la transaction pour référence. Note : Ce message ne sera pas envoyé par le réseau Bitcoin.</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>Pay To:</source>
@@ -2674,13 +2792,6 @@ Note : Les frais étant calculés par octet, des frais de « 100 satoshis par
     <message>
         <source>Message verified.</source>
         <translation>Le message a été vérifié.</translation>
-    </message>
-</context>
-<context>
-    <name>SplashScreen</name>
-    <message>
-        <source>[testnet]</source>
-        <translation>[testnet]</translation>
     </message>
 </context>
 <context>
@@ -3148,8 +3259,8 @@ Note : Les frais étant calculés par octet, des frais de « 100 satoshis par
         <translation>Fermer le porte-monnaie</translation>
     </message>
     <message>
-        <source>Are you sure you wish to close wallet &lt;i&gt;%1&lt;/i&gt;?</source>
-        <translation>Voulez-vous vraiment fermer le porte-monnaie &lt;i&gt;%1&lt;/i&gt; ?</translation>
+        <source>Are you sure you wish to close the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation>Voulez-vous vraiment fermer le porte-monnaie &lt;i&gt;%1&lt;/i&gt;?</translation>
     </message>
     <message>
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
@@ -3280,10 +3391,6 @@ Note : Les frais étant calculés par octet, des frais de « 100 satoshis par
         <translation>Impossible de démarrer le serveur HTTP. Voir le journal de débogage pour plus de détails.</translation>
     </message>
     <message>
-        <source>NdovuCoin Core</source>
-        <translation>NdovuCoin Core</translation>
-    </message>
-    <message>
         <source>The %s developers</source>
         <translation>Les développeurs de %s</translation>
     </message>
@@ -3408,10 +3515,6 @@ Note : Les frais étant calculés par octet, des frais de « 100 satoshis par
         <translation>Erreur d’ouverture de la base de données de blocs</translation>
     </message>
     <message>
-        <source>Error: Disk space is low!</source>
-        <translation>Erreur : Il reste peu d’espace disque !</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Échec d’écoute sur un port quelconque. Utiliser -listen=0 si vous le voulez.</translation>
     </message>
@@ -3432,6 +3535,10 @@ Note : Les frais étant calculés par octet, des frais de « 100 satoshis par
         <translation>L’initialisation du test de cohérence a échoué. %s est en cours de fermeture. </translation>
     </message>
     <message>
+        <source>Invalid P2P permission: '%s'</source>
+        <translation>Permission P2P invalide : '%s'</translation>
+    </message>
+    <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
         <translation>Montant invalide pour -%s=&lt;amount&gt; : « %s »</translation>
     </message>
@@ -3448,8 +3555,12 @@ Note : Les frais étant calculés par octet, des frais de « 100 satoshis par
         <translation>Le répertoire des blocs indiqué « %s » n’existe pas.</translation>
     </message>
     <message>
-        <source>Unable to create the PID file '%s': %s</source>
-        <translation>Impossible de créer le fichier PID '%s' : %s</translation>
+        <source>Unknown address type '%s'</source>
+        <translation>Type d’adresse inconnu « %s »</translation>
+    </message>
+    <message>
+        <source>Unknown change type '%s'</source>
+        <translation>Type de monnaie inconnu « %s »</translation>
     </message>
     <message>
         <source>Upgrading txindex database</source>
@@ -3458,6 +3569,10 @@ Note : Les frais étant calculés par octet, des frais de « 100 satoshis par
     <message>
         <source>Loading P2P addresses...</source>
         <translation>Chargement des adresses P2P...</translation>
+    </message>
+    <message>
+        <source>Error: Disk space is too low!</source>
+        <translation>Erreur : L’espace disque est trop faible !</translation>
     </message>
     <message>
         <source>Loading banlist...</source>
@@ -3548,10 +3663,6 @@ Note : Les frais étant calculés par octet, des frais de « 100 satoshis par
         <translation>Erreur : Il reste peu d’espace disque sur %s</translation>
     </message>
     <message>
-        <source>Information</source>
-        <translation>Informations</translation>
-    </message>
-    <message>
         <source>Invalid -onion address or hostname: '%s'</source>
         <translation>Adresse ou nom d’hôte -onion invalide : « %s »</translation>
     </message>
@@ -3572,6 +3683,10 @@ Note : Les frais étant calculés par octet, des frais de « 100 satoshis par
         <translation>Un port doit être précisé avec -whitebind : « %s »</translation>
     </message>
     <message>
+        <source>Prune mode is incompatible with -blockfilterindex.</source>
+        <translation>Le mode élagage est incompatible avec -blockfilterindex.</translation>
+    </message>
+    <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
         <translation>Réduction de -maxconnections de %d à %d, due aux restrictions du système</translation>
     </message>
@@ -3582,6 +3697,18 @@ Note : Les frais étant calculés par octet, des frais de « 100 satoshis par
     <message>
         <source>Signing transaction failed</source>
         <translation>Échec de signature de la transaction</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" does not exist</source>
+        <translation>Le -walletdir indiqué « %s» n’existe pas</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is a relative path</source>
+        <translation>Le -walletdir indiqué « %s » est un chemin relatif</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is not a directory</source>
+        <translation>Le -walletdir indiqué « %s » n’est pas un répertoire</translation>
     </message>
     <message>
         <source>The specified config file %s does not exist
@@ -3602,10 +3729,6 @@ Note : Les frais étant calculés par octet, des frais de « 100 satoshis par
         <translation>Le montant de la transaction est trop bas</translation>
     </message>
     <message>
-        <source>Transaction too large for fee policy</source>
-        <translation>La transaction est trop grosse pour la politique de frais</translation>
-    </message>
-    <message>
         <source>Transaction too large</source>
         <translation>La transaction est trop grosse</translation>
     </message>
@@ -3614,20 +3737,20 @@ Note : Les frais étant calculés par octet, des frais de « 100 satoshis par
         <translation>Impossible de se lier à %s sur cet ordinateur (bind a retourné l’erreur %s)</translation>
     </message>
     <message>
+        <source>Unable to create the PID file '%s': %s</source>
+        <translation>Impossible de créer le fichier PID '%s' : %s</translation>
+    </message>
+    <message>
         <source>Unable to generate initial keys</source>
         <translation>Impossible de générer les clés initiales</translation>
     </message>
     <message>
+        <source>Unknown -blockfilterindex value %s.</source>
+        <translation>Valeur -blockfilterindex inconnue %s.</translation>
+    </message>
+    <message>
         <source>Verifying wallet(s)...</source>
         <translation>Vérification des porte-monnaie...</translation>
-    </message>
-    <message>
-        <source>Wallet %s resides outside wallet directory %s</source>
-        <translation>Le porte-monnaie %s se trouve en dehors du répertoire de porte-monnaie %s</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Avertissement</translation>
     </message>
     <message>
         <source>Warning: unknown new rules activated (versionbit %i)</source>
@@ -3664,10 +3787,6 @@ Note : Les frais étant calculés par octet, des frais de « 100 satoshis par
     <message>
         <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
         <translation>Erreur de chargement du porte-monnaie %s. Le nom de fichier -wallet indiqué est un doublon.</translation>
-    </message>
-    <message>
-        <source>Keypool ran out, please call keypoolrefill first</source>
-        <translation>La réserve de clés est épuisée, veuillez d’abord appeler « keypoolrefill »</translation>
     </message>
     <message>
         <source>Starting network threads...</source>
@@ -3740,10 +3859,6 @@ Note : Les frais étant calculés par octet, des frais de « 100 satoshis par
     <message>
         <source>Done loading</source>
         <translation>Chargement terminé</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Erreur</translation>
     </message>
 </context>
 </TS>

@@ -334,7 +334,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                 opcode == OP_MOD ||
                 opcode == OP_LSHIFT ||
                 opcode == OP_RSHIFT)
-                return set_error(serror, SCRIPT_ERR_DISABLED_OPCODE); // Disabled opcodes.
+                return set_error(serror, SCRIPT_ERR_DISABLED_OPCODE); // Disabled opcodes (CVE-2010-5137).
 
             // With SCRIPT_VERIFY_CONST_SCRIPTCODE, OP_CODESEPARATOR in non-segwit script is rejected even in an unexecuted branch
             if (opcode == OP_CODESEPARATOR && sigversion == SigVersion::BASE && (flags & SCRIPT_VERIFY_CONST_SCRIPTCODE))
@@ -926,7 +926,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
 
                     // Drop the signature in pre-segwit scripts but not segwit scripts
                     if (sigversion == SigVersion::BASE) {
-                        int found = FindAndDelete(scriptCode, CScript(vchSig));
+                        int found = FindAndDelete(scriptCode, CScript() << vchSig);
                         if (found > 0 && (flags & SCRIPT_VERIFY_CONST_SCRIPTCODE))
                             return set_error(serror, SCRIPT_ERR_SIG_FINDANDDELETE);
                     }
@@ -992,7 +992,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     {
                         valtype& vchSig = stacktop(-isig-k);
                         if (sigversion == SigVersion::BASE) {
-                            int found = FindAndDelete(scriptCode, CScript(vchSig));
+                            int found = FindAndDelete(scriptCode, CScript() << vchSig);
                             if (found > 0 && (flags & SCRIPT_VERIFY_CONST_SCRIPTCODE))
                                 return set_error(serror, SCRIPT_ERR_SIG_FINDANDDELETE);
                         }
@@ -1483,6 +1483,8 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
         return set_error(serror, SCRIPT_ERR_SIG_PUSHONLY);
     }
 
+    // scriptSig and scriptPubKey must be evaluated sequentially on the same stack
+    // rather than being simply concatenated (see CVE-2010-5141)
     std::vector<std::vector<unsigned char> > stack, stackCopy;
     if (!EvalScript(stack, scriptSig, flags, checker, SigVersion::BASE, serror))
         // serror is set

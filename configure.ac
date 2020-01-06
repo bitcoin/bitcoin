@@ -1,9 +1,9 @@
 dnl require autoconf 2.60 (AS_ECHO/AS_ECHO_N)
 AC_PREREQ([2.60])
 define(_CLIENT_VERSION_MAJOR, 0)
-define(_CLIENT_VERSION_MINOR, 18)
-define(_CLIENT_VERSION_REVISION, 1)
-define(_CLIENT_VERSION_BUILD, 0)
+define(_CLIENT_VERSION_MINOR, 19)
+define(_CLIENT_VERSION_REVISION, 0)
+define(_CLIENT_VERSION_BUILD, 1)
 define(_CLIENT_VERSION_RC, 0)
 define(_CLIENT_VERSION_IS_RELEASE, true)
 define(_COPYRIGHT_YEAR, 2019)
@@ -85,8 +85,8 @@ AC_PATH_TOOL(RANLIB, ranlib)
 AC_PATH_TOOL(STRIP, strip)
 AC_PATH_TOOL(GCOV, gcov)
 AC_PATH_PROG(LCOV, lcov)
-dnl Python 3.4 is specified in .python-version and should be used if available, see doc/dependencies.md
-AC_PATH_PROGS([PYTHON], [python3.4 python3.5 python3.6 python3.7 python3 python])
+dnl Python 3.5 is specified in .python-version and should be used if available, see doc/dependencies.md
+AC_PATH_PROGS([PYTHON], [python3.5 python3.6 python3.7 python3.8 python3 python])
 AC_PATH_PROG(GENHTML, genhtml)
 AC_PATH_PROG([GIT], [git])
 AC_PATH_PROG(CCACHE,ccache)
@@ -133,7 +133,7 @@ AC_ARG_ENABLE(gui-tests,
 
 AC_ARG_WITH([rapidcheck],
   [AS_HELP_STRING([--with-rapidcheck],
-  [enable RapidCheck property based tests (default is yes if librapidcheck is found)])],
+  [enable RapidCheck property-based tests (default is yes if librapidcheck is found)])],
   [use_rapidcheck=$withval],
   [use_rapidcheck=auto])
 
@@ -148,7 +148,8 @@ AC_ARG_ENABLE([extended-functional-tests],
     [use_extended_functional_tests=no])
 
 AC_ARG_ENABLE([fuzz],
-    AS_HELP_STRING([--enable-fuzz],[enable building of fuzz targets (default no)]),
+    AS_HELP_STRING([--enable-fuzz],
+    [enable building of fuzz targets (default no). enabling this will disable all other targets]),
     [enable_fuzz=$enableval],
     [enable_fuzz=no])
 
@@ -194,9 +195,15 @@ AC_ARG_ENABLE([glibc-back-compat],
   [use_glibc_compat=$enableval],
   [use_glibc_compat=no])
 
+AC_ARG_ENABLE([threadlocal],
+  [AS_HELP_STRING([--enable-threadlocal],
+  [enable features that depend on the c++ thread_local keyword (currently just thread names in debug logs). (default is to enabled if there is platform support and glibc-back-compat is not enabled)])],
+  [use_thread_local=$enableval],
+  [use_thread_local=auto])
+
 AC_ARG_ENABLE([asm],
-  [AS_HELP_STRING([--enable-asm],
-  [Enable assembly routines (default is yes)])],
+  [AS_HELP_STRING([--disable-asm],
+  [disable assembly routines (enabled by default)])],
   [use_asm=$enableval],
   [use_asm=yes])
 
@@ -216,10 +223,10 @@ AC_ARG_ENABLE([zmq],
   [use_zmq=$enableval],
   [use_zmq=yes])
 AC_ARG_ENABLE([bip70],
-  [AS_HELP_STRING([--disable-bip70],
-  [disable BIP70 (payment protocol) support in GUI (enabled by default)])],
+  [AS_HELP_STRING([--enable-bip70],
+  [enable BIP70 (payment protocol) support in the GUI (default is to disable)])],
   [enable_bip70=$enableval],
-  [enable_bip70=auto])
+  [enable_bip70=no])
 
 AC_ARG_WITH([protoc-bindir],[AS_HELP_STRING([--with-protoc-bindir=BIN_DIR],[specify protoc bin path])], [protoc_bin_path=$withval], [])
 
@@ -232,7 +239,7 @@ AM_CONDITIONAL(ENABLE_MAN, test "$enable_man" != no)
 # Enable debug
 AC_ARG_ENABLE([debug],
     [AS_HELP_STRING([--enable-debug],
-                    [use debug compiler flags and macros (default is no)])],
+                    [use compiler flags and macros suited for debugging (default is no)])],
     [enable_debug=$enableval],
     [enable_debug=no])
 
@@ -264,12 +271,9 @@ if test "x$enable_debug" = xyes; then
   if test "x$CXXFLAGS_overridden" = xno; then
 	CXXFLAGS=""
   fi
-  # Prefer -Og, fall back to -O0 if that is unavailable.
-  AX_CHECK_COMPILE_FLAG(
-    [-Og],
-    [[DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -Og"]],
-    [AX_CHECK_COMPILE_FLAG([-O0],[[DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -O0"]],,[[$CXXFLAG_WERROR]])],
-    [[$CXXFLAG_WERROR]])
+
+  # Disable all optimizations
+  AX_CHECK_COMPILE_FLAG([-O0], [[DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -O0"]],,[[$CXXFLAG_WERROR]])
 
   # Prefer -g3, fall back to -g if that is unavailable.
   AX_CHECK_COMPILE_FLAG(
@@ -316,6 +320,7 @@ if test "x$enable_werror" = "xyes"; then
     AC_MSG_ERROR("enable-werror set but -Werror is not usable")
   fi
   AX_CHECK_COMPILE_FLAG([-Werror=vla],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=vla"],,[[$CXXFLAG_WERROR]])
+  AX_CHECK_COMPILE_FLAG([-Werror=switch],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=switch"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Werror=thread-safety-analysis],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=thread-safety-analysis"],,[[$CXXFLAG_WERROR]])
 fi
 
@@ -324,6 +329,7 @@ if test "x$CXXFLAGS_overridden" = "xno"; then
   AX_CHECK_COMPILE_FLAG([-Wextra],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wextra"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Wformat],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wformat"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Wvla],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wvla"],,[[$CXXFLAG_WERROR]])
+  AX_CHECK_COMPILE_FLAG([-Wswitch],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wswitch"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Wformat-security],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wformat-security"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Wthread-safety-analysis],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wthread-safety-analysis"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Wrange-loop-analysis],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wrange-loop-analysis"],,[[$CXXFLAG_WERROR]])
@@ -338,6 +344,13 @@ if test "x$CXXFLAGS_overridden" = "xno"; then
   AX_CHECK_COMPILE_FLAG([-Wdeprecated-register],[NOWARN_CXXFLAGS="$NOWARN_CXXFLAGS -Wno-deprecated-register"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Wimplicit-fallthrough],[NOWARN_CXXFLAGS="$NOWARN_CXXFLAGS -Wno-implicit-fallthrough"],,[[$CXXFLAG_WERROR]])
 fi
+
+enable_hwcrc32=no
+enable_sse41=no
+enable_avx2=no
+enable_shani=no
+
+if test "x$use_asm" = "xyes"; then
 
 # Check for optional instruction set support. Enabling these does _not_ imply that all code will
 # be compiled with them, rather that specific objects/libs may use them after checking for runtime
@@ -415,6 +428,8 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
  [ AC_MSG_RESULT(no)]
 )
 CXXFLAGS="$TEMP_CXXFLAGS"
+
+fi
 
 CPPFLAGS="$CPPFLAGS -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS"
 
@@ -570,7 +585,7 @@ case $host in
      fi
 
      AX_CHECK_LINK_FLAG([[-Wl,-headerpad_max_install_names]], [LDFLAGS="$LDFLAGS -Wl,-headerpad_max_install_names"])
-     CPPFLAGS="$CPPFLAGS -DMAC_OSX"
+     CPPFLAGS="$CPPFLAGS -DMAC_OSX -DOBJC_OLD_DISPATCH_PROTOTYPES=0"
      OBJCXXFLAGS="$CXXFLAGS"
      ;;
    *android*)
@@ -762,6 +777,39 @@ fi
 
 AC_CHECK_HEADERS([endian.h sys/endian.h byteswap.h stdio.h stdlib.h unistd.h strings.h sys/types.h sys/stat.h sys/select.h sys/prctl.h])
 
+# FD_ZERO may be dependent on a declaration of memcpy, e.g. in SmartOS
+# check that it fails to build without memcpy, then that it builds with
+AC_MSG_CHECKING(FD_ZERO memcpy dependence)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+    #include <cstddef>
+    #if HAVE_SYS_SELECT_H
+    #include <sys/select.h>
+    #endif
+  ]],[[
+    #if HAVE_SYS_SELECT_H
+    fd_set fds;
+    FD_ZERO(&fds);
+    #endif
+  ]])],
+  [ AC_MSG_RESULT(no) ],
+  [
+      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+          #include <cstring>
+          #if HAVE_SYS_SELECT_H
+          #include <sys/select.h>
+          #endif
+        ]], [[
+          #if HAVE_SYS_SELECT_H
+          fd_set fds;
+          FD_ZERO(&fds);
+          #endif
+        ]])],
+        [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_CSTRING_DEPENDENT_FD_ZERO, 1, [Define this symbol if FD_ZERO is dependent of a memcpy declaration being available]) ],
+        [ AC_MSG_ERROR(failed with cstring include) ]
+      )
+  ]
+)
+
 AC_CHECK_DECLS([getifaddrs, freeifaddrs],,,
     [#include <sys/types.h>
     #include <ifaddrs.h>]
@@ -818,27 +866,49 @@ AC_LINK_IFELSE([AC_LANG_SOURCE([
   ]
 )
 
-TEMP_LDFLAGS="$LDFLAGS"
-LDFLAGS="$TEMP_LDFLAGS $PTHREAD_CFLAGS"
-AC_MSG_CHECKING([for thread_local support])
-AC_LINK_IFELSE([AC_LANG_SOURCE([
-  #include <thread>
-  static thread_local int foo = 0;
-  static void run_thread() { foo++;}
-  int main(){
-  for(int i = 0; i < 10; i++) { std::thread(run_thread).detach();}
-  return foo;
-  }
-  ])],
-  [
-    AC_DEFINE(HAVE_THREAD_LOCAL,1,[Define if thread_local is supported.])
-    AC_MSG_RESULT(yes)
-  ],
-  [
-    AC_MSG_RESULT(no)
-  ]
-)
-LDFLAGS="$TEMP_LDFLAGS"
+if test "x$use_thread_local" = xyes || { test "x$use_thread_local" = xauto && test "x$use_glibc_compat" = xno; }; then
+  TEMP_LDFLAGS="$LDFLAGS"
+  LDFLAGS="$TEMP_LDFLAGS $PTHREAD_CFLAGS"
+  AC_MSG_CHECKING([for thread_local support])
+  AC_LINK_IFELSE([AC_LANG_SOURCE([
+    #include <thread>
+    static thread_local int foo = 0;
+    static void run_thread() { foo++;}
+    int main(){
+    for(int i = 0; i < 10; i++) { std::thread(run_thread).detach();}
+    return foo;
+    }
+    ])],
+    [
+     case $host in
+       *mingw*)
+          # mingw32's implementation of thread_local has also been shown to behave
+          # erroneously under concurrent usage; see:
+          # https://gist.github.com/jamesob/fe9a872051a88b2025b1aa37bfa98605
+          AC_MSG_RESULT(no)
+          ;;
+        *darwin*)
+          # TODO enable thread_local on later versions of Darwin where it is
+          # supported (per https://stackoverflow.com/a/29929949)
+          AC_MSG_RESULT(no)
+          ;;
+        *freebsd*)
+          # FreeBSD's implementation of thread_local is also buggy (per
+          # https://groups.google.com/d/msg/bsdmailinglist/22ncTZAbDp4/Dii_pII5AwAJ)
+          AC_MSG_RESULT(no)
+          ;;
+        *)
+          AC_DEFINE(HAVE_THREAD_LOCAL,1,[Define if thread_local is supported.])
+          AC_MSG_RESULT(yes)
+          ;;
+      esac
+    ],
+    [
+      AC_MSG_RESULT(no)
+    ]
+  )
+  LDFLAGS="$TEMP_LDFLAGS"
+fi
 
 # Check for different ways of gathering OS randomness
 AC_MSG_CHECKING(for Linux getrandom syscall)
@@ -888,6 +958,29 @@ if test x$use_reduce_exports = xyes; then
   [AC_MSG_ERROR([Cannot set default symbol visibility. Use --disable-reduce-exports.])])
 fi
 
+AC_MSG_CHECKING([for std::system])
+AC_LINK_IFELSE(
+    [ AC_LANG_PROGRAM(
+        [[ #include <cstdlib> ]],
+        [[ int nErr = std::system(""); ]]
+    )],
+    [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_STD__SYSTEM, 1, Define to 1 if you have the `std::system' function.)],
+    [ AC_MSG_RESULT(no) ]
+)
+
+AC_MSG_CHECKING([for ::_wsystem])
+AC_LINK_IFELSE(
+    [ AC_LANG_PROGRAM(
+        [[ ]],
+        [[ int nErr = ::_wsystem(""); ]]
+    )],
+    [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_WSYSTEM, 1, Define to 1 if you have the `::wsystem' function.)],
+    [ AC_MSG_RESULT(no) ]
+)
+
+# Define to 1 if std::system or ::wsystem (Windows) is available
+AC_DEFINE([HAVE_SYSTEM], [HAVE_STD__SYSTEM || HAVE_WSYSTEM], [std::system or ::wsystem])
+
 LEVELDB_CPPFLAGS=
 LIBLEVELDB=
 LIBMEMENV=
@@ -895,6 +988,29 @@ AM_CONDITIONAL([EMBEDDED_LEVELDB],[true])
 AC_SUBST(LEVELDB_CPPFLAGS)
 AC_SUBST(LIBLEVELDB)
 AC_SUBST(LIBMEMENV)
+
+dnl enable-fuzz should disable all other targets
+if test "x$enable_fuzz" = "xyes"; then
+  AC_MSG_WARN(enable-fuzz will disable all other targets)
+  build_bitcoin_utils=no
+  build_bitcoin_cli=no
+  build_bitcoin_tx=no
+  build_bitcoin_wallet=no
+  build_bitcoind=no
+  build_bitcoin_libs=no
+  bitcoin_enable_qt=no
+  bitcoin_enable_qt_test=no
+  bitcoin_enable_qt_dbus=no
+  enable_wallet=no
+  use_bench=no
+  use_upnp=no
+  use_zmq=no
+else
+  BITCOIN_QT_INIT
+
+  dnl sets $bitcoin_enable_qt, $bitcoin_enable_qt_test, $bitcoin_enable_qt_dbus
+  BITCOIN_QT_CONFIGURE([$use_pkgconfig])
+fi
 
 if test x$enable_wallet != xno; then
     dnl Check for libdb_cxx only if wallet enabled
@@ -908,12 +1024,27 @@ if test x$use_upnp != xno; then
     [AC_CHECK_LIB([miniupnpc], [upnpDiscover], [MINIUPNPC_LIBS=-lminiupnpc], [have_miniupnpc=no])],
     [have_miniupnpc=no]
   )
+dnl The minimum supported miniUPnPc API version is set to 10. This keeps compatibility
+dnl with Ubuntu 16.04 LTS and Debian 8 libminiupnpc-dev packages.
+if test x$have_miniupnpc != xno; then
+  AC_MSG_CHECKING([whether miniUPnPc API version is supported])
+  AC_PREPROC_IFELSE([AC_LANG_PROGRAM([[
+      @%:@include <miniupnpc/miniupnpc.h>
+    ]], [[
+      #if MINIUPNPC_API_VERSION >= 10
+      // Everything is okay
+      #else
+      #  error miniUPnPc API version is too old
+      #endif
+    ]])],[
+      AC_MSG_RESULT(yes)
+    ],[
+    AC_MSG_RESULT(no)
+    AC_MSG_WARN([miniUPnPc API version < 10 is unsupported, disabling UPnP support.])
+    have_miniupnpc=no
+  ])
 fi
-
-BITCOIN_QT_INIT
-
-dnl sets $bitcoin_enable_qt, $bitcoin_enable_qt_test, $bitcoin_enable_qt_dbus
-BITCOIN_QT_CONFIGURE([$use_pkgconfig])
+fi
 
 if test x$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench = xnonononononono; then
     use_boost=no
@@ -1177,7 +1308,7 @@ AC_CHECK_DECLS([EVP_MD_CTX_new],,,[AC_INCLUDES_DEFAULT
 ])
 CXXFLAGS="${save_CXXFLAGS}"
 
-dnl RapidCheck Property Based Testing
+dnl RapidCheck property-based testing
 
 enable_property_tests=no
 if test "x$use_rapidcheck" = xauto; then
@@ -1306,9 +1437,10 @@ dnl enable upnp support
 AC_MSG_CHECKING([whether to build with support for UPnP])
 if test x$have_miniupnpc = xno; then
   if test x$use_upnp = xyes; then
-     AC_MSG_ERROR("UPnP requested but cannot be built. use --without-miniupnpc")
+     AC_MSG_ERROR("UPnP requested but cannot be built. Use --without-miniupnpc.")
   fi
   AC_MSG_RESULT(no)
+  use_upnp=no
 else
   if test x$use_upnp != xno; then
     AC_MSG_RESULT(yes)
@@ -1523,7 +1655,7 @@ if test x$need_bundled_univalue = xyes; then
   AC_CONFIG_SUBDIRS([src/univalue])
 fi
 
-ac_configure_args="${ac_configure_args} --disable-shared --with-pic --with-bignum=no --enable-module-recovery --disable-jni"
+ac_configure_args="${ac_configure_args} --disable-shared --with-pic --enable-benchmark=no --with-bignum=no --enable-module-recovery --disable-jni"
 AC_CONFIG_SUBDIRS([src/secp256k1])
 
 AC_OUTPUT
@@ -1558,6 +1690,7 @@ fi
 echo "  with zmq      = $use_zmq"
 echo "  with test     = $use_tests"
 if test x$use_tests != xno; then
+    echo "    with prop   = $enable_property_tests"
     echo "    with fuzz   = $enable_fuzz"
 fi
 echo "  with bench    = $use_bench"

@@ -62,7 +62,7 @@ Commit messages should be verbose by default consisting of a short subject line
 paragraph(s), unless the title alone is self-explanatory (like "Corrected typo
 in init.cpp") in which case a single title line is sufficient. Commit messages should be
 helpful to people reading your code in the future, so explain the reasoning for
-your decisions. Further explanation [here](http://chris.beams.io/posts/git-commit/).
+your decisions. Further explanation [here](https://chris.beams.io/posts/git-commit/).
 
 If a particular commit references another issue, please add the reference. For
 example: `refs #1234` or `fixes #4321`. Using the `fixes` or `closes` keywords
@@ -79,34 +79,29 @@ about Git.
 The title of the pull request should be prefixed by the component or area that
 the pull request affects. Valid areas as:
 
-  - *Consensus* for changes to consensus critical code
-  - *Docs* for changes to the documentation
-  - *Qt* for changes to bitcoin-qt
-  - *Mining* for changes to the mining code
-  - *Net* or *P2P* for changes to the peer-to-peer network code
-  - *RPC/REST/ZMQ* for changes to the RPC, REST or ZMQ APIs
-  - *Scripts and tools* for changes to the scripts and tools
-  - *Tests* for changes to the bitcoin unit tests or QA tests
-  - *Trivial* should **only** be used for PRs that do not change generated
-    executable code. Notably, refactors (change of function arguments and code
-    reorganization) and changes in behavior should **not** be marked as trivial.
-    Examples of trivial PRs are changes to:
-    - comments
-    - whitespace
-    - variable names
-    - logging and messages
-  - *Utils and libraries* for changes to the utils and libraries
-  - *Wallet* for changes to the wallet code
+  - `consensus` for changes to consensus critical code
+  - `doc` for changes to the documentation
+  - `qt` or `gui` for changes to bitcoin-qt
+  - `log` for changes to log messages
+  - `mining` for changes to the mining code
+  - `net` or `p2p` for changes to the peer-to-peer network code
+  - `refactor` for structural changes that do not change behavior
+  - `rpc`, `rest` or `zmq` for changes to the RPC, REST or ZMQ APIs
+  - `script` for changes to the scripts and tools
+  - `test` for changes to the bitcoin unit tests or QA tests
+  - `util` or `lib` for changes to the utils or libraries
+  - `wallet` for changes to the wallet code
+  - `build` for changes to the GNU Autotools, reproducible builds or CI code
 
 Examples:
 
-    Consensus: Add new opcode for BIP-XXXX OP_CHECKAWESOMESIG
-    Net: Automatically create hidden service, listen on Tor
-    Qt: Add feed bump button
-    Trivial: Fix typo in init.cpp
+    consensus: Add new opcode for BIP-XXXX OP_CHECKAWESOMESIG
+    net: Automatically create hidden service, listen on Tor
+    qt: Add feed bump button
+    log: Fix typo in log message
 
 Note that translations should not be submitted as pull requests, please see
-[Translation Process](https://github.com/bitcoin/bitcoin/blob/master/doc/translation_process.md) 
+[Translation Process](https://github.com/bitcoin/bitcoin/blob/master/doc/translation_process.md)
 for more information on helping with translations.
 
 If a pull request is not to be considered for merging (yet), please
@@ -220,6 +215,7 @@ In general, all pull requests must:
   - Not break the existing test suite;
   - Where bugs are fixed, where possible, there should be unit tests
     demonstrating the bug and also proving the fix. This helps prevent regression.
+  - Change relevant comments and documentation when behaviour of code changes.
 
 Patches that change NdovuCoin consensus rules are considerably more involved than
 normal because they affect the entire ecosystem and so must be preceded by
@@ -236,20 +232,34 @@ request. Typically reviewers will review the code for obvious errors, as well as
 test out the patch set and opine on the technical merits of the patch. Project
 maintainers take into account the peer review when determining if there is
 consensus to merge a pull request (remember that discussions may have been
-spread out over GitHub, mailing list and IRC discussions). The following
+spread out over GitHub, mailing list and IRC discussions).
+
+#### Conceptual Review
+
+A review can be a conceptual review, where the reviewer leaves a comment
+ * `Concept (N)ACK`, meaning "I do (not) agree in the general goal of this pull
+   request",
+ * `Approach (N)ACK`, meaning `Concept ACK`, but "I do (not) agree with the
+   approach of this change".
+
+A `NACK` needs to include a rationale why the change is not worthwhile.
+NACKs without accompanying reasoning may be disregarded.
+
+#### Code Review
+
+After conceptual agreement on the change, code review can be provided. It is
+starting with `ACK BRANCH_COMMIT`, where `BRANCH_COMMIT` is the top of the
+topic branch. The review is followed by a description of how the reviewer did
+the review. The following
 language is used within pull-request comments:
 
-  - ACK means "I have tested the code and I agree it should be merged";
-  - NACK means "I disagree this should be merged", and must be accompanied by
-    sound technical justification (or in certain cases of copyright/patent/licensing
-    issues, legal justification). NACKs without accompanying reasoning may be
-    disregarded;
-  - utACK means "I have not tested the code, but I have reviewed it and it looks
+  - "I have tested the code", involving
+    change-specific manual testing in addition to running the unit and functional
+    tests, and in case it is not obvious how the manual testing was done, it should
+    be described;
+  - "I have not tested the code, but I have reviewed it and it looks
     OK, I agree it can be merged";
-  - Concept ACK means "I agree in the general principle of this pull request";
   - Nit refers to trivial, often non-blocking issues.
-
-Reviewers should include the commit hash which they reviewed in their comments.
 
 Project maintainers reserve the right to weigh the opinions of peer reviewers
 using common sense judgement and also may weight based on meritocracy: Those
@@ -307,7 +317,7 @@ The project leader is the release manager for each NdovuCoin Core release.
 Copyright
 ---------
 
-By contributing to this repository, you agree to license your work under the 
-MIT license unless specified otherwise in `contrib/debian/copyright` or at 
-the top of the file itself. Any work contributed where you are not the original 
+By contributing to this repository, you agree to license your work under the
+MIT license unless specified otherwise in `contrib/debian/copyright` or at
+the top of the file itself. Any work contributed where you are not the original
 author must contain its license header with the original author(s) and source.

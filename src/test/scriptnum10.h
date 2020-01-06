@@ -6,7 +6,6 @@
 #ifndef BITCOIN_TEST_SCRIPTNUM10_H
 #define BITCOIN_TEST_SCRIPTNUM10_H
 
-#include <algorithm>
 #include <limits>
 #include <stdexcept>
 #include <stdint.h>

@@ -66,21 +66,12 @@
         <translation>Mottagaradresser</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>These are your NdovuCoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Detta är dina NdovuCoin-adresser för att skicka betalningar. Kontrollera alltid summan och den mottagande adressen innan du skickar bitcoin.</translation>
-    </message>
-    <message>
-        <source>These are your NdovuCoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Detta är dina NdovuCoin-adresser för att ta emot betalningar. Det rekommenderas att använda en ny mottagningsadress för varje transaktion.</translation>
-=======
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>Detta är dina Bitcoin-adresser för att skicka betalningar. Kontrollera alltid belopp och mottagaradress innan du skickar bitcoin.</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
         <translation>Detta är dina Bitcoin-adresser för att ta emot betalningar. Det rekommenderas att använda en ny mottagaradress för varje transaktion.</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -146,14 +137,6 @@ Försök igen.</translation>
         <translation>Upprepa ny lösenfras</translation>
     </message>
     <message>
-        <source>Show password</source>
-        <translation>Visa lösenord</translation>
-    </message>
-    <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Ange plånbokens nya lösenfras. &lt;br/&gt; Använd en lösenfras på &lt;b&gt;tio eller fler slumpmässiga tecken,&lt;/b&gt; eller &lt;b&gt;åtta eller fler ord.&lt;/b&gt;.</translation>
-    </message>
-    <message>
         <source>Encrypt wallet</source>
         <translation>Kryptera plånbok</translation>
     </message>
@@ -178,10 +161,6 @@ Försök igen.</translation>
         <translation>Byt lösenfras</translation>
     </message>
     <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Ange plånbokens gamla lösenfras och nya lösenfras.</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>Bekräfta kryptering av plånbok</translation>
     </message>
@@ -198,8 +177,8 @@ Försök igen.</translation>
         <translation>Plånbok krypterad</translation>
     </message>
     <message>
-        <source>Your wallet is now encrypted. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Din plånbok är nu krypterad. Kom ihåg att kryptering av plånboken inte helt skyddar dina bitcoin från att stjälas av skadlig kod som infekterat din dator.</translation>
+        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>Kom ihåg att kryptering av din plånbok inte helt kan skydda dig från stöld av dina bitcoins om skadlig kod infekterat din dator.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -376,10 +355,6 @@ Försök igen.</translation>
         <translation>&amp;Verifiera meddelande...</translation>
     </message>
     <message>
-        <source>NdovuCoin</source>
-        <translation>NdovuCoin</translation>
-    </message>
-    <message>
         <source>&amp;Send</source>
         <translation>&amp;Skicka</translation>
     </message>
@@ -488,10 +463,6 @@ Försök igen.</translation>
         <translation>Uppdaterad</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>Show the %1 help message to get a list with possible NdovuCoin command-line options</source>
-        <translation>Visa %1 hjälpmeddelande för att få en lista med möjliga NdovuCoin kommandoradsalternativ.</translation>
-=======
         <source>&amp;Sending addresses</source>
         <translation>Av&amp;sändaradresser</translation>
     </message>
@@ -553,6 +524,30 @@ Försök igen.</translation>
         <translation>Huvudfönster</translation>
     </message>
     <message>
+        <source>default wallet</source>
+        <translation>Standardplånbok</translation>
+    </message>
+    <message>
+        <source>No wallets available</source>
+        <translation>Inga plånböcker tillgängliga</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>&amp;Fönster</translation>
+    </message>
+    <message>
+        <source>Minimize</source>
+        <translation>Minimera</translation>
+    </message>
+    <message>
+        <source>Zoom</source>
+        <translation>Zooma</translation>
+    </message>
+    <message>
+        <source>Main Window</source>
+        <translation>Huvudfönster</translation>
+    </message>
+    <message>
         <source>%1 client</source>
         <translation>%1-klient</translation>
     </message>
@@ -563,6 +558,10 @@ Försök igen.</translation>
     <message>
         <source>Catching up...</source>
         <translation>Hämtar senaste...</translation>
+    </message>
+    <message>
+        <source>Error: %1</source>
+        <translation>Fel: %1</translation>
     </message>
     <message>
         <source>Date: %1
@@ -785,6 +784,12 @@ Försök igen.</translation>
     </message>
 </context>
 <context>
+    <name>CreateWalletActivity</name>
+    </context>
+<context>
+    <name>CreateWalletDialog</name>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
@@ -928,13 +933,8 @@ Försök igen.</translation>
         <translation>Ungefär %1 GB data kommer att lagras i den här katalogen.</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>%1 will download and store a copy of the NdovuCoin block chain.</source>
-        <translation>%1 kommer att ladda ner och lagra en kopia av NdovuCoin-blockkedjan.</translation>
-=======
         <source>%1 will download and store a copy of the Bitcoin block chain.</source>
         <translation>%1 kommer att ladda ner och lagra en kopia av Bitcoins blockkedja.</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
@@ -956,7 +956,7 @@ Försök igen.</translation>
         <source>(of %n GB needed)</source>
         <translation><numerusform>(av %n GB behövs)</numerusform><numerusform>(av %n GB behövs)</numerusform></translation>
     </message>
-</context>
+    </context>
 <context>
     <name>ModalOverlay</name>
     <message>
@@ -965,15 +965,11 @@ Försök igen.</translation>
     </message>
     <message>
         <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
-<<<<<<< HEAD
-        <translation>Nyligen gjorda transaktioner visas inte korrekt och därför kan din plånboks saldo visas felaktigt. Denna information kommer att visas korrekt så snart din plånbok har synkroniserat klart med NdovuCoin-nätverket enligt detaljer nedan.</translation>
-=======
         <translation>Nyligen gjorda transaktioner visas inte korrekt och därför kan din plånboks saldo visas felaktigt. Denna information kommer att visas korrekt så snart din plånbok har synkroniserats med Bitcoin-nätverket enligt informationen nedan.</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation>Att försöka spendera bitcoin som påverkas av transaktioner som ännu inte visas kommer inte accepteras av nätverket. </translation>
+        <translation>Att försöka spendera bitcoin som påverkas av transaktioner som ännu inte visas kommer inte accepteras av nätverket.</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -1033,6 +1029,17 @@ Försök igen.</translation>
     <message>
         <source>Select payment request file to open</source>
         <translation>Välj betalningsbegäransfil som ska öppnas</translation>
+    </message>
+</context>
+<context>
+    <name>OpenWalletActivity</name>
+    <message>
+        <source>default wallet</source>
+        <translation>Standardplånbok</translation>
+    </message>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Öppnar plånboken &lt;b&gt;%1&lt;/b&gt;...</translation>
     </message>
 </context>
 <context>
@@ -1179,11 +1186,11 @@ Försök igen.</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
-        <translation>Proxy-&amp;IP: </translation>
+        <translation>Proxy-&amp;IP:</translation>
     </message>
     <message>
         <source>&amp;Port:</source>
-        <translation>&amp;Port: </translation>
+        <translation>&amp;Port:</translation>
     </message>
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
@@ -1231,7 +1238,7 @@ Försök igen.</translation>
     </message>
     <message>
         <source>User Interface &amp;language:</source>
-        <translation>Användargränssnittets &amp;språk: </translation>
+        <translation>Användargränssnittets &amp;språk:</translation>
     </message>
     <message>
         <source>The user interface language can be set here. This setting will take effect after restarting %1.</source>
@@ -1239,7 +1246,7 @@ Försök igen.</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
-        <translation>&amp;Måttenhet att visa belopp i: </translation>
+        <translation>&amp;Måttenhet att visa belopp i:</translation>
     </message>
     <message>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
@@ -1598,21 +1605,6 @@ Försök igen.</translation>
         <translation>%1 GB</translation>
     </message>
     <message>
-        <source>%1 didn't yet exit safely...</source>
-        <translation>%1 avslutades inte ännu säkert...</translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation>okänd</translation>
-    </message>
-</context>
-<context>
-    <name>QObject::QObject</name>
-    <message>
-        <source>Error parsing command line arguments: %1.</source>
-        <translation>Kunde inte tolka argumentet: %1.</translation>
-    </message>
-    <message>
         <source>Error: Specified data directory "%1" does not exist.</source>
         <translation>Fel: Angiven datakatalog "%1" finns inte.</translation>
     </message>
@@ -1624,6 +1616,14 @@ Försök igen.</translation>
         <source>Error: %1</source>
         <translation>Fel: %1</translation>
     </message>
+    <message>
+        <source>%1 didn't yet exit safely...</source>
+        <translation>%1 avslutades inte ännu säkert...</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>okänd</translation>
+    </message>
 </context>
 <context>
     <name>QRImageWidget</name>
@@ -1634,6 +1634,14 @@ Försök igen.</translation>
     <message>
         <source>&amp;Copy Image</source>
         <translation>&amp;Kopiera Bild</translation>
+    </message>
+    <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>URI:n är för lång, försöka minska texten för etikett / meddelande.</translation>
+    </message>
+    <message>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>Fel vid skapande av QR-kod från URI.</translation>
     </message>
     <message>
         <source>Save QR Code</source>
@@ -2014,10 +2022,6 @@ Försök igen.</translation>
         <translation>Historik för begärda betalningar</translation>
     </message>
     <message>
-        <source>&amp;Request payment</source>
-        <translation>Begä&amp;r betalning</translation>
-    </message>
-    <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation>Visa valda begäranden (gör samma som att dubbelklicka på en post)</translation>
     </message>
@@ -2099,14 +2103,6 @@ Försök igen.</translation>
     <message>
         <source>Wallet</source>
         <translation>Plånbok</translation>
-    </message>
-    <message>
-        <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation>URI:n är för lång, försöka minska texten för etikett / meddelande.</translation>
-    </message>
-    <message>
-        <source>Error encoding URI into QR Code.</source>
-        <translation>Fel vid skapande av QR-kod från URI.</translation>
     </message>
 </context>
 <context>
@@ -2343,10 +2339,6 @@ Notera: Då avgiften beräknas per byte kommer en avgift på 50 satoshi tas ut f
         <translation>Du kan höja avgiften senare (signalerar Replace-By-Fee, BIP-125).</translation>
     </message>
     <message>
-        <source>from wallet %1</source>
-        <translation>från plånbok: %1</translation>
-    </message>
-    <message>
         <source>Please, review your transaction.</source>
         <translation>Var vänlig se över din transaktion.</translation>
     </message>
@@ -2498,13 +2490,8 @@ Notera: Då avgiften beräknas per byte kommer en avgift på 50 satoshi tas ut f
         <translation>Ange en etikett för denna adress för att lägga till den i listan med använda adresser</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the NdovuCoin network.</source>
-        <translation>Ett meddelande som bifogades bitcoin: -URIn och som lagras med transaktionen som referens. NB: Meddelandet kommer inte att sändas över NdovuCoin-nätverket.</translation>
-=======
         <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
         <translation>Ett meddelande som bifogades bitcoin: -URIn och som sparas med transaktionen som referens. Obs: Meddelandet sänds inte över Bitcoin-nätverket.</translation>
->>>>>>> upstream/0.18
     </message>
     <message>
         <source>Pay To:</source>
@@ -2674,13 +2661,6 @@ Notera: Då avgiften beräknas per byte kommer en avgift på 50 satoshi tas ut f
     <message>
         <source>Message verified.</source>
         <translation>Meddelande verifierat.</translation>
-    </message>
-</context>
-<context>
-    <name>SplashScreen</name>
-    <message>
-        <source>[testnet]</source>
-        <translation>[testnet]</translation>
     </message>
 </context>
 <context>
@@ -3148,10 +3128,6 @@ Notera: Då avgiften beräknas per byte kommer en avgift på 50 satoshi tas ut f
         <translation>Stäng plånboken</translation>
     </message>
     <message>
-        <source>Are you sure you wish to close wallet &lt;i&gt;%1&lt;/i&gt;?</source>
-        <translation>Är det säkert att du vill stänga plånboken &lt;i&gt;%1&lt;/i&gt;?</translation>
-    </message>
-    <message>
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation>Om plånboken är stängd under för lång tid kan hela kedjan behöva synkroniseras om, om gallring är aktiverad.</translation>
     </message>
@@ -3280,10 +3256,6 @@ Notera: Då avgiften beräknas per byte kommer en avgift på 50 satoshi tas ut f
         <translation>Kunde inte starta HTTP-server. Se felsökningsloggen för detaljer.</translation>
     </message>
     <message>
-        <source>NdovuCoin Core</source>
-        <translation>NdovuCoin Core</translation>
-    </message>
-    <message>
         <source>The %s developers</source>
         <translation>%s-utvecklarna</translation>
     </message>
@@ -3406,10 +3378,6 @@ Notera: Då avgiften beräknas per byte kommer en avgift på 50 satoshi tas ut f
     <message>
         <source>Error opening block database</source>
         <translation>Fel vid öppning av blockdatabasen</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is low!</source>
-        <translation>Fel: Diskutrymme är lågt!</translation>
     </message>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
@@ -3548,10 +3516,6 @@ Notera: Då avgiften beräknas per byte kommer en avgift på 50 satoshi tas ut f
         <translation>Fel: Diskutrymme är lågt för %s</translation>
     </message>
     <message>
-        <source>Information</source>
-        <translation>Information</translation>
-    </message>
-    <message>
         <source>Invalid -onion address or hostname: '%s'</source>
         <translation>Ogiltig -onion adress eller värdnamn: '%s'</translation>
     </message>
@@ -3614,10 +3578,6 @@ Notera: Då avgiften beräknas per byte kommer en avgift på 50 satoshi tas ut f
         <translation>Transaktionsbeloppet är för litet</translation>
     </message>
     <message>
-        <source>Transaction too large for fee policy</source>
-        <translation>Transaktionen är för stor för avgiftspolicyn</translation>
-    </message>
-    <message>
         <source>Transaction too large</source>
         <translation>Transaktionen är för stor</translation>
     </message>
@@ -3626,20 +3586,16 @@ Notera: Då avgiften beräknas per byte kommer en avgift på 50 satoshi tas ut f
         <translation>Det går inte att binda till %s på den här datorn (bind returnerade felmeddelande %s)</translation>
     </message>
     <message>
+        <source>Unable to create the PID file '%s': %s</source>
+        <translation>Det gick inte att skapa PID-filen '%s': %s</translation>
+    </message>
+    <message>
         <source>Unable to generate initial keys</source>
         <translation>Det gick inte att skapa ursprungliga nycklar</translation>
     </message>
     <message>
         <source>Verifying wallet(s)...</source>
         <translation>Verifierar plånbok(er)...</translation>
-    </message>
-    <message>
-        <source>Wallet %s resides outside wallet directory %s</source>
-        <translation>Plånbok %s är lokaliserad utanför plånboksmappen %s</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Varning</translation>
     </message>
     <message>
         <source>Warning: unknown new rules activated (versionbit %i)</source>
@@ -3678,10 +3634,6 @@ Notera: Då avgiften beräknas per byte kommer en avgift på 50 satoshi tas ut f
         <translation>Fel vid inläsningen av plånbok %s. Dublett -wallet filnamn angavs.</translation>
     </message>
     <message>
-        <source>Keypool ran out, please call keypoolrefill first</source>
-        <translation>Nyckelpoolen har tagit slut. Anropa keypoolrefill först.</translation>
-    </message>
-    <message>
         <source>Starting network threads...</source>
         <translation>Startar nätverkstrådar...</translation>
     </message>
@@ -3691,11 +3643,11 @@ Notera: Då avgiften beräknas per byte kommer en avgift på 50 satoshi tas ut f
     </message>
     <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
-        <translation>Det här är minimiavgiften du kommer betala för varje transaktion. </translation>
+        <translation>Det här är minimiavgiften du kommer betala för varje transaktion.</translation>
     </message>
     <message>
         <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Det här är transaktionsavgiften du kommer betala om du skickar en transaktion. </translation>
+        <translation>Det här är transaktionsavgiften du kommer betala om du skickar en transaktion.</translation>
     </message>
     <message>
         <source>Transaction amounts must not be negative</source>
@@ -3752,10 +3704,6 @@ Notera: Då avgiften beräknas per byte kommer en avgift på 50 satoshi tas ut f
     <message>
         <source>Done loading</source>
         <translation>Klar med laddning</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Fel</translation>
     </message>
 </context>
 </TS>

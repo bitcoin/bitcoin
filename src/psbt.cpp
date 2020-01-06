@@ -5,6 +5,8 @@
 #include <psbt.h>
 #include <util/strencodings.h>
 
+#include <numeric>
+
 PartiallySignedTransaction::PartiallySignedTransaction(const CMutableTransaction& tx) : tx(tx)
 {
     inputs.resize(tx.vin.size());
@@ -205,9 +207,28 @@ void PSBTOutput::Merge(const PSBTOutput& output)
     if (redeem_script.empty() && !output.redeem_script.empty()) redeem_script = output.redeem_script;
     if (witness_script.empty() && !output.witness_script.empty()) witness_script = output.witness_script;
 }
-bool PSBTInputSigned(PSBTInput& input)
+bool PSBTInputSigned(const PSBTInput& input)
 {
     return !input.final_script_sig.empty() || !input.final_script_witness.IsNull();
+}
+
+void UpdatePSBTOutput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index)
+{
+    const CTxOut& out = psbt.tx->vout.at(index);
+    PSBTOutput& psbt_out = psbt.outputs.at(index);
+
+    // Fill a SignatureData with output info
+    SignatureData sigdata;
+    psbt_out.FillSignatureData(sigdata);
+
+    // Construct a would-be spend of this output, to update sigdata with.
+    // Note that ProduceSignature is used to fill in metadata (not actual signatures),
+    // so provider does not need to provide any private keys (it can be a HidingSigningProvider).
+    MutableTransactionSignatureCreator creator(psbt.tx.get_ptr(), /* index */ 0, out.nValue, SIGHASH_ALL);
+    ProduceSignature(provider, creator, out.scriptPubKey, sigdata);
+
+    // Put redeem_script, witness_script, key paths, into PSBTOutput.
+    psbt_out.FromSignatureData(sigdata);
 }
 
 bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, int sighash, SignatureData* out_sigdata, bool use_dummy)
@@ -324,4 +345,42 @@ TransactionError CombinePSBTs(PartiallySignedTransaction& out, const std::vector
     }
 
     return TransactionError::OK;
+}
+
+std::string PSBTRoleName(PSBTRole role) {
+    switch (role) {
+    case PSBTRole::UPDATER: return "updater";
+    case PSBTRole::SIGNER: return "signer";
+    case PSBTRole::FINALIZER: return "finalizer";
+    case PSBTRole::EXTRACTOR: return "extractor";
+        // no default case, so the compiler can warn about missing cases
+    }
+    assert(false);
+}
+
+bool DecodeBase64PSBT(PartiallySignedTransaction& psbt, const std::string& base64_tx, std::string& error)
+{
+    bool invalid;
+    std::string tx_data = DecodeBase64(base64_tx, &invalid);
+    if (invalid) {
+        error = "invalid base64";
+        return false;
+    }
+    return DecodeRawPSBT(psbt, tx_data, error);
+}
+
+bool DecodeRawPSBT(PartiallySignedTransaction& psbt, const std::string& tx_data, std::string& error)
+{
+    CDataStream ss_data(tx_data.data(), tx_data.data() + tx_data.size(), SER_NETWORK, PROTOCOL_VERSION);
+    try {
+        ss_data >> psbt;
+        if (!ss_data.empty()) {
+            error = "extra data after PSBT";
+            return false;
+        }
+    } catch (const std::exception& e) {
+        error = e.what();
+        return false;
+    }
+    return true;
 }

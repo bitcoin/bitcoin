@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2018 The NdovuCoin Core developers
+# Copyright (c) 2015-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test BIP66 (DER SIG).
@@ -14,7 +14,6 @@ from test_framework.script import CScript
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    bytes_to_hex_str,
     wait_until,
 )
 
@@ -52,8 +51,19 @@ class BIP66Test(BitcoinTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
+    def test_dersig_info(self, *, is_active):
+        assert_equal(self.nodes[0].getblockchaininfo()['softforks']['bip66'],
+            {
+                "active": is_active,
+                "height": DERSIG_HEIGHT,
+                "type": "buried",
+            },
+        )
+
     def run_test(self):
         self.nodes[0].add_p2p_connection(P2PInterface())
+
+        self.test_dersig_info(is_active=False)
 
         self.log.info("Mining %d blocks", DERSIG_HEIGHT - 2)
         self.coinbase_txids = [self.nodes[0].getblock(b)['tx'][0] for b in self.nodes[0].generate(DERSIG_HEIGHT - 2)]
@@ -75,7 +85,9 @@ class BIP66Test(BitcoinTestFramework):
         block.rehash()
         block.solve()
 
+        self.test_dersig_info(is_active=False)  # Not active as of current tip and next block does not need to obey rules
         self.nodes[0].p2p.send_and_ping(msg_block(block))
+        self.test_dersig_info(is_active=True)  # Not active as of current tip, but next block must obey rules
         assert_equal(self.nodes[0].getbestblockhash(), block.hash)
 
         self.log.info("Test that blocks must now be at least version 3")
@@ -103,7 +115,7 @@ class BIP66Test(BitcoinTestFramework):
         # rejected from the mempool for exactly that reason.
         assert_equal(
             [{'txid': spendtx.hash, 'allowed': False, 'reject-reason': '64: non-mandatory-script-verify-flag (Non-canonical DER signature)'}],
-            self.nodes[0].testmempoolaccept(rawtxs=[bytes_to_hex_str(spendtx.serialize())], allowhighfees=True)
+            self.nodes[0].testmempoolaccept(rawtxs=[spendtx.serialize().hex()], maxfeerate=0)
         )
 
         # Now we verify that a block with this transaction is also invalid.
@@ -129,8 +141,11 @@ class BIP66Test(BitcoinTestFramework):
         block.rehash()
         block.solve()
 
+        self.test_dersig_info(is_active=True)  # Not active as of current tip, but next block must obey rules
         self.nodes[0].p2p.send_and_ping(msg_block(block))
+        self.test_dersig_info(is_active=True)  # Active as of current tip
         assert_equal(int(self.nodes[0].getbestblockhash(), 16), block.sha256)
+
 
 if __name__ == '__main__':
     BIP66Test().main()

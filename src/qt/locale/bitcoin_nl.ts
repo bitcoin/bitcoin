@@ -70,8 +70,8 @@
         <translation>Dit zijn uw Bitcoinadressen om betalingen mee te verzenden. Controleer altijd het bedrag en het ontvangstadres voordat u uw bitcoins verzendt.</translation>
     </message>
     <message>
-        <source>These are your NdovuCoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Dit zijn uw NdovuCoin-adressen waarmee u betalingen kunt ontvangen. We raden u aan om een nieuw ontvangstadres voor elke transactie te gebruiken.</translation>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
+        <translation>Dit zijn jouw Bitcoin adressen voor het ontvangen van betalingen. Gebruik de 'Nieuwe ontvangst adres maken' knop in de ontvangst tab om een nieuwe adres te maken.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -136,12 +136,8 @@
         <translation>Herhaal nieuwe wachtwoordzin</translation>
     </message>
     <message>
-        <source>Show password</source>
+        <source>Show passphrase</source>
         <translation>Laat wachtwoord zien</translation>
-    </message>
-    <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Voer een nieuw wachtwoord in voor uw portemonnee.&lt;br/&gt;Gebruik een wachtwoord van &lt;b&gt;tien of meer willekeurige karakters&lt;/b&gt;, of &lt;b&gt;acht of meer woorden&lt;/b&gt;.</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -168,10 +164,6 @@
         <translation>Wijzig wachtwoord</translation>
     </message>
     <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Voer het oude en nieuwe wachtwoord in voor uw portemonnee.</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>Bevestig versleuteling van de portemonnee</translation>
     </message>
@@ -188,8 +180,28 @@
         <translation>Portemonnee versleuteld</translation>
     </message>
     <message>
-        <source>Your wallet is now encrypted. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Uw portemonnee is nu versleuteld. Onthoud dat het versleutelen van uw portemonnee uw bitcoins niet volledig kan beschermen tegen diefstal, bijvoorbeeld door malware die uw computer infecteert.</translation>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Voer de neuwe wachtwoordzin in voor de portemonnee.&lt;br/&gt;Gebruik a.u.b. een wachtwoordzin van &lt;b&gt;tien of meer willekeurige karakters&lt;/b&gt;, of &lt;b&gt;acht of meer woorden&lt;/b&gt;.</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation>Voer de oude wachtwoordzin en de nieuwe wachtwoordzin in voor de portemonnee.</translation>
+    </message>
+    <message>
+        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>Onthoud dat het versleutelen van uw portemonnee uw bitcoins niet volledig kan beschermen tegen diefstal, bijvoorbeeld door malware die uw computer infecteert.</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation>Portemonnee om te versleutelen</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation>Je portemonnee gaat versleuteld worden.</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>Je portemonnee is nu versleuteld.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -314,6 +326,14 @@
         <translation>Open &amp;URI...</translation>
     </message>
     <message>
+        <source>Create Wallet...</source>
+        <translation>Wallet creëren</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>Nieuwe wallet creëren</translation>
+    </message>
+    <message>
         <source>Wallet:</source>
         <translation>Portemonnee:</translation>
     </message>
@@ -364,10 +384,6 @@
     <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;Verifiëer bericht...</translation>
-    </message>
-    <message>
-        <source>NdovuCoin</source>
-        <translation>NdovuCoin</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -478,10 +494,6 @@
         <translation>Bijgewerkt</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>Show the %1 help message to get a list with possible NdovuCoin command-line options</source>
-        <translation>Toon het %1 hulpbericht om een lijst te krijgen met mogelijke NdovuCoin commandoregelopties</translation>
-=======
         <source>&amp;Sending addresses</source>
         <translation>Verzendadressen</translation>
     </message>
@@ -543,6 +555,30 @@
         <translation>Hoofdscherm</translation>
     </message>
     <message>
+        <source>default wallet</source>
+        <translation>standaard portemonnee</translation>
+    </message>
+    <message>
+        <source>No wallets available</source>
+        <translation>Geen portefeuilles beschikbaar</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>&amp;Scherm</translation>
+    </message>
+    <message>
+        <source>Minimize</source>
+        <translation>Minimaliseer</translation>
+    </message>
+    <message>
+        <source>Zoom</source>
+        <translation>Zoom</translation>
+    </message>
+    <message>
+        <source>Main Window</source>
+        <translation>Hoofdscherm</translation>
+    </message>
+    <message>
         <source>%1 client</source>
         <translation>%1 client</translation>
     </message>
@@ -553,6 +589,14 @@
     <message>
         <source>Catching up...</source>
         <translation>Aan het bijwerken...</translation>
+    </message>
+    <message>
+        <source>Error: %1</source>
+        <translation>Fout: %1</translation>
+    </message>
+    <message>
+        <source>Warning: %1</source>
+        <translation>Waarschuwing: %1</translation>
     </message>
     <message>
         <source>Date: %1
@@ -775,6 +819,52 @@
     </message>
 </context>
 <context>
+    <name>CreateWalletActivity</name>
+    <message>
+        <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Aanmaken wallet&lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+    <message>
+        <source>Create wallet failed</source>
+        <translation>Aanmaken wallet mislukt</translation>
+    </message>
+    <message>
+        <source>Create wallet warning</source>
+        <translation>Aanmaken wallet waarschuwing</translation>
+    </message>
+</context>
+<context>
+    <name>CreateWalletDialog</name>
+    <message>
+        <source>Create Wallet</source>
+        <translation>Creëer wallet</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <translation>Wallet Naam</translation>
+    </message>
+    <message>
+        <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
+        <translation>Versleutel je portemonnee. Je portemonnee zal versleuteld zijn met een wachtwoordzin naar eigen keuze.</translation>
+    </message>
+    <message>
+        <source>Encrypt Wallet</source>
+        <translation>Versleutel portemonnee</translation>
+    </message>
+    <message>
+        <source>Disable Private Keys</source>
+        <translation>Schakel privésleutels uit</translation>
+    </message>
+    <message>
+        <source>Make Blank Wallet</source>
+        <translation>Maak een lege portemonnee</translation>
+    </message>
+    <message>
+        <source>Create</source>
+        <translation>Creëer</translation>
+    </message>
+</context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
@@ -941,6 +1031,10 @@
         <source>(of %n GB needed)</source>
         <translation><numerusform>(van %n GB nodig)</numerusform><numerusform>(van %n GB nodig)</numerusform></translation>
     </message>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation><numerusform>(%n GB nodig voor volledige keten)</numerusform><numerusform>(%n GB nodig voor volledige keten)</numerusform></translation>
+    </message>
 </context>
 <context>
     <name>ModalOverlay</name>
@@ -1017,6 +1111,25 @@
     </message>
 </context>
 <context>
+    <name>OpenWalletActivity</name>
+    <message>
+        <source>Open wallet failed</source>
+        <translation>Openen van portemonnee is mislukt</translation>
+    </message>
+    <message>
+        <source>Open wallet warning</source>
+        <translation>Openen van portemonnee heeft een waarschuwing</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>standaard portemonnee</translation>
+    </message>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Open Portemonnee&lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+</context>
+<context>
     <name>OptionsDialog</name>
     <message>
         <source>Options</source>
@@ -1068,7 +1181,7 @@
     </message>
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation>URL's van derden (bijvoorbeeld blokexplorer) die in de transacties tab verschijnen als contextmenuelementen. %s in de URL is vervangen door transactiehash. Verscheidene URL's zijn gescheiden door een verticale streep |.  </translation>
+        <translation>URL's van derden (bijvoorbeeld blokexplorer) die in de transacties tab verschijnen als contextmenuelementen. %s in de URL is vervangen door transactiehash. Verscheidene URL's zijn gescheiden door een verticale streep |.</translation>
     </message>
     <message>
         <source>Open the %1 configuration file from the working directory.</source>
@@ -1579,21 +1692,6 @@
         <translation>%1 Gb</translation>
     </message>
     <message>
-        <source>%1 didn't yet exit safely...</source>
-        <translation>%1 sloot nog niet veilig af...</translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation>onbekend</translation>
-    </message>
-</context>
-<context>
-    <name>QObject::QObject</name>
-    <message>
-        <source>Error parsing command line arguments: %1.</source>
-        <translation>Fout bij het parsen van command line arguments: %1.</translation>
-    </message>
-    <message>
         <source>Error: Specified data directory "%1" does not exist.</source>
         <translation>Fout: Opgegeven gegevensmap "%1" bestaat niet.</translation>
     </message>
@@ -1605,6 +1703,14 @@
         <source>Error: %1</source>
         <translation>Fout: %1</translation>
     </message>
+    <message>
+        <source>%1 didn't yet exit safely...</source>
+        <translation>%1 sloot nog niet veilig af...</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>onbekend</translation>
+    </message>
 </context>
 <context>
     <name>QRImageWidget</name>
@@ -1615,6 +1721,18 @@
     <message>
         <source>&amp;Copy Image</source>
         <translation>&amp;Afbeelding kopiëren</translation>
+    </message>
+    <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>Resulterende URI te lang, probeer de tekst korter te maken voor het label/bericht.</translation>
+    </message>
+    <message>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>Fout tijdens encoderen URI in QR-code</translation>
+    </message>
+    <message>
+        <source>QR code support not available.</source>
+        <translation>QR code hulp niet beschikbaar</translation>
     </message>
     <message>
         <source>Save QR Code</source>
@@ -1975,6 +2093,10 @@
         <translation>Een optioneel te verzoeken bedrag. Laat dit leeg, of nul, om geen specifiek bedrag aan te vragen.</translation>
     </message>
     <message>
+        <source>&amp;Create new receiving address</source>
+        <translation>&amp;Creëer een nieuw ontvangstadres</translation>
+    </message>
+    <message>
         <source>Clear all fields of the form.</source>
         <translation>Wis alle velden op het formulier.</translation>
     </message>
@@ -1993,10 +2115,6 @@
     <message>
         <source>Requested payments history</source>
         <translation>Geschiedenis van de betalingsverzoeken</translation>
-    </message>
-    <message>
-        <source>&amp;Request payment</source>
-        <translation>&amp;Betalingsverzoek</translation>
     </message>
     <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
@@ -2080,14 +2198,6 @@
     <message>
         <source>Wallet</source>
         <translation>Portemonnee</translation>
-    </message>
-    <message>
-        <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation>Resulterende URI te lang, probeer de tekst korter te maken voor het label/bericht.</translation>
-    </message>
-    <message>
-        <source>Error encoding URI into QR Code.</source>
-        <translation>Fout tijdens encoderen URI in QR-code</translation>
     </message>
 </context>
 <context>
@@ -2308,6 +2418,14 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
         <translation>%1 (%2 blokken)</translation>
     </message>
     <message>
+        <source> from wallet '%1'</source>
+        <translation>van portemonnee '%1'</translation>
+    </message>
+    <message>
+        <source>%1 to '%2'</source>
+        <translation>%1 naar %2</translation>
+    </message>
+    <message>
         <source>%1 to %2</source>
         <translation>%1 tot %2</translation>
     </message>
@@ -2322,10 +2440,6 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
     <message>
         <source>You can increase the fee later (signals Replace-By-Fee, BIP-125).</source>
         <translation>Je kunt de vergoeding later verhogen (signaleert Replace-By-Fee, BIP-125).</translation>
-    </message>
-    <message>
-        <source>from wallet %1</source>
-        <translation>van portemonnee %1</translation>
     </message>
     <message>
         <source>Please, review your transaction.</source>
@@ -2650,13 +2764,6 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
     <message>
         <source>Message verified.</source>
         <translation>Bericht geverifiëerd.</translation>
-    </message>
-</context>
-<context>
-    <name>SplashScreen</name>
-    <message>
-        <source>[testnet]</source>
-        <translation>[testnetwerk]</translation>
     </message>
 </context>
 <context>
@@ -3124,12 +3231,8 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
         <translation>Portemonnee Sluiten</translation>
     </message>
     <message>
-        <source>Are you sure you wish to close wallet &lt;i&gt;%1&lt;/i&gt;?</source>
-        <translation>Weet u zeker dat u portemonnee &lt;i&gt;%1&lt;/i&gt; wilt sluiten?</translation>
-    </message>
-    <message>
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
-        <translation>De portemonee te lang gesloten houden kan leiden tot het moeten hersynchroniseren van de hele keten als snoeien aktief is. </translation>
+        <translation>De portemonee te lang gesloten houden kan leiden tot het moeten hersynchroniseren van de hele keten als snoeien aktief is.</translation>
     </message>
 </context>
 <context>
@@ -3256,16 +3359,12 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
         <translation>Niet mogelijk ok HTTP-server te starten. Zie debuglogboek voor details.</translation>
     </message>
     <message>
-        <source>NdovuCoin Core</source>
-        <translation>NdovuCoin Core</translation>
-    </message>
-    <message>
         <source>The %s developers</source>
         <translation>De %s ontwikkelaars</translation>
     </message>
     <message>
         <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
-        <translation>Kan geen rest-adres sleutel genereren. Er zijn geen sleutels in de interne sleutelverzameling en ik kan geen sleutels genereren. </translation>
+        <translation>Kan geen rest-adres sleutel genereren. Er zijn geen sleutels in de interne sleutelverzameling en ik kan geen sleutels genereren.</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
@@ -3384,10 +3483,6 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
         <translation>Fout bij openen blokkendatabase</translation>
     </message>
     <message>
-        <source>Error: Disk space is low!</source>
-        <translation>Fout: Weinig vrije diskruimte!</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Mislukt om op welke poort dan ook te luisteren. Gebruik -listen=0 as u dit wilt.</translation>
     </message>
@@ -3408,6 +3503,10 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
         <translation>Initialisatie sanity check mislukt. %s is aan het afsluiten.</translation>
     </message>
     <message>
+        <source>Invalid P2P permission: '%s'</source>
+        <translation>Ongeldige P2P-rechten: '%s'</translation>
+    </message>
+    <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
         <translation>Ongeldig bedrag voor -%s=&lt;bedrag&gt;: '%s'</translation>
     </message>
@@ -3424,8 +3523,12 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
         <translation>Opgegeven blocks map "%s" bestaat niet.</translation>
     </message>
     <message>
-        <source>Unable to create the PID file '%s': %s</source>
-        <translation>Kan de PID file niet creëren. '%s': %s </translation>
+        <source>Unknown address type '%s'</source>
+        <translation>Onbekend adrestype '%s'</translation>
+    </message>
+    <message>
+        <source>Unknown change type '%s'</source>
+        <translation>Onbekend wijzigingstype '%s'</translation>
     </message>
     <message>
         <source>Upgrading txindex database</source>
@@ -3434,6 +3537,10 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
     <message>
         <source>Loading P2P addresses...</source>
         <translation>P2P-adressen aan het laden...</translation>
+    </message>
+    <message>
+        <source>Error: Disk space is too low!</source>
+        <translation>Error: Opslagruimte te weinig!</translation>
     </message>
     <message>
         <source>Loading banlist...</source>
@@ -3513,7 +3620,7 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
-        <translation>Fout bij het lezen van de database, afsluiten. </translation>
+        <translation>Fout bij het lezen van de database, afsluiten.</translation>
     </message>
     <message>
         <source>Error upgrading chainstate database</source>
@@ -3522,10 +3629,6 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
     <message>
         <source>Error: Disk space is low for %s</source>
         <translation>Fout: Weinig schijfruimte voor %s</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Informatie</translation>
     </message>
     <message>
         <source>Invalid -onion address or hostname: '%s'</source>
@@ -3590,10 +3693,6 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
         <translation>Transactiebedrag te klein</translation>
     </message>
     <message>
-        <source>Transaction too large for fee policy</source>
-        <translation>De transactie is te groot voor het transactiekostenbeleid</translation>
-    </message>
-    <message>
         <source>Transaction too large</source>
         <translation>Transactie te groot</translation>
     </message>
@@ -3602,20 +3701,20 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
         <translation>Niet in staat om aan %s te binden op deze computer (bind gaf error %s)</translation>
     </message>
     <message>
+        <source>Unable to create the PID file '%s': %s</source>
+        <translation>Kan de PID file niet creëren. '%s': %s</translation>
+    </message>
+    <message>
         <source>Unable to generate initial keys</source>
         <translation>Niet mogelijk initiële sleutels te genereren</translation>
     </message>
     <message>
+        <source>Unknown -blockfilterindex value %s.</source>
+        <translation>Onbekende -blokfilterindexwaarde %s.</translation>
+    </message>
+    <message>
         <source>Verifying wallet(s)...</source>
         <translation>Portomenee(n) aan het verifiëren...</translation>
-    </message>
-    <message>
-        <source>Wallet %s resides outside wallet directory %s</source>
-        <translation>Portemonnee %s begeeft zich buiten portemoneemap %s</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Waarschuwing</translation>
     </message>
     <message>
         <source>Warning: unknown new rules activated (versionbit %i)</source>
@@ -3652,10 +3751,6 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
     <message>
         <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
         <translation>Fout bij laden van portemonnee %s. Duplicaat -wallet bestandsnaam opgegeven.</translation>
-    </message>
-    <message>
-        <source>Keypool ran out, please call keypoolrefill first</source>
-        <translation>Keypool op geraakt, roep alsjeblieft eerst keypoolrefill functie aan</translation>
     </message>
     <message>
         <source>Starting network threads...</source>
@@ -3728,10 +3823,6 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
     <message>
         <source>Done loading</source>
         <translation>Klaar met laden</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Fout</translation>
     </message>
 </context>
 </TS>

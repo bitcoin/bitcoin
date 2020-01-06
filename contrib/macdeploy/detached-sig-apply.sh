@@ -36,13 +36,13 @@ if [ -z "${CODESIGN_ALLOCATE}" ]; then
 fi
 
 find ${TEMPDIR} -name "*.sign" | while read i; do
-  SIZE=`stat -c %s "${i}"`
-  TARGET_FILE="`echo "${i}" | sed 's/\.sign$//'`"
+  SIZE=$(stat -c %s "${i}")
+  TARGET_FILE="$(echo "${i}" | sed 's/\.sign$//')"
 
   echo "Allocating space for the signature of size ${SIZE} in ${TARGET_FILE}"
   ${CODESIGN_ALLOCATE} -i "${TARGET_FILE}" -a ${ARCH} ${SIZE} -o "${i}.tmp"
 
-  OFFSET=`${PAGESTUFF} "${i}.tmp" -p | tail -2 | grep offset | sed 's/[^0-9]*//g'`
+  OFFSET=$(${PAGESTUFF} "${i}.tmp" -p | tail -2 | grep offset | sed 's/[^0-9]*//g')
   if [ -z ${QUIET} ]; then
     echo "Attaching signature at offset ${OFFSET}"
   fi

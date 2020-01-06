@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 #
-<<<<<<< HEAD
-# Copyright (c) 2017 The NdovuCoin Core developers
-=======
 # Copyright (c) 2017-2019 The Bitcoin Core developers
->>>>>>> upstream/0.18
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
@@ -35,14 +31,14 @@ if [ -z "${TRAVIS_COMMIT_RANGE}" ]; then
 fi
 
 showdiff() {
-  if ! git diff -U0 "${TRAVIS_COMMIT_RANGE}" -- "." ":(exclude)depends/patches/" ":(exclude)src/leveldb/" ":(exclude)src/secp256k1/" ":(exclude)src/univalue/" ":(exclude)doc/release-notes/"; then
+  if ! git diff -U0 "${TRAVIS_COMMIT_RANGE}" -- "." ":(exclude)depends/patches/" ":(exclude)src/leveldb/" ":(exclude)src/secp256k1/" ":(exclude)src/univalue/" ":(exclude)doc/release-notes/" ":(exclude)src/qt/locale/"; then
     echo "Failed to get a diff"
     exit 1
   fi
 }
 
 showcodediff() {
-  if ! git diff -U0 "${TRAVIS_COMMIT_RANGE}" -- *.cpp *.h *.md *.py *.sh ":(exclude)src/leveldb/" ":(exclude)src/secp256k1/" ":(exclude)src/univalue/" ":(exclude)doc/release-notes/"; then
+  if ! git diff -U0 "${TRAVIS_COMMIT_RANGE}" -- *.cpp *.h *.md *.py *.sh ":(exclude)src/leveldb/" ":(exclude)src/secp256k1/" ":(exclude)src/univalue/" ":(exclude)doc/release-notes/" ":(exclude)src/qt/locale/"; then
     echo "Failed to get a diff"
     exit 1
   fi

@@ -70,10 +70,6 @@
         <translation>Toto sú Vaše NdovuCoin adresy pre posielanie platieb. Vždy skontrolujte sumu a prijímaciu adresu pred poslaním mincí.</translation>
     </message>
     <message>
-        <source>These are your NdovuCoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Toto sú vaše NdovuCoin adresy pre prijímanie platieb. Odporúča sa použiť vždy novú prijímaciu adresu pre každú transakciu.</translation>
-    </message>
-    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;Kopírovať adresu</translation>
     </message>
@@ -136,14 +132,6 @@
         <translation>Zopakujte nové heslo</translation>
     </message>
     <message>
-        <source>Show password</source>
-        <translation>Ukázať heslo</translation>
-    </message>
-    <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Zadajte nové heslo k peňaženke.&lt;br/&gt;Prosím použite heslo s dĺžkou &lt;b&gt;desať alebo viac náhodných znakov&lt;/b&gt;, prípadne &lt;b&gt;osem alebo viac slov&lt;/b&gt;.</translation>
-    </message>
-    <message>
         <source>Encrypt wallet</source>
         <translation>Zašifrovať peňaženku</translation>
     </message>
@@ -168,10 +156,6 @@
         <translation>Zmena hesla</translation>
     </message>
     <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Zadajte staré heslo a nové heslo k peňaženke.</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>Potvrďte zašifrovanie peňaženky</translation>
     </message>
@@ -186,10 +170,6 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>Peňaženka zašifrovaná</translation>
-    </message>
-    <message>
-        <source>Your wallet is now encrypted. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Vaša peňaženka je teraz zašifrovaná. Zašifrovanie peňaženky Vás plne nechráni pred krádežou bitcoinov škodlivými programami, ktoré prenikli do vášho počítača.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -366,10 +346,6 @@
         <translation>O&amp;veriť správu...</translation>
     </message>
     <message>
-        <source>NdovuCoin</source>
-        <translation>NdovuCoin</translation>
-    </message>
-    <message>
         <source>&amp;Send</source>
         <translation>&amp;Odoslať</translation>
     </message>
@@ -478,9 +454,6 @@
         <translation>Aktualizovaný</translation>
     </message>
     <message>
-<<<<<<< HEAD
-        <source>Show the %1 help message to get a list with possible NdovuCoin command-line options</source>
-=======
         <source>&amp;Sending addresses</source>
         <translation>&amp;Odosielajúce adresy</translation>
     </message>
@@ -514,12 +487,8 @@
         <translation>predvolená peňaženka</translation>
     </message>
     <message>
-        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
-        <translation>Otvára sa peňaženka &lt;b&gt;%1&lt;/b&gt;...</translation>
-    </message>
-    <message>
-        <source>Open Wallet Failed</source>
-        <translation>Otvorenie peňaženky zlyhalo</translation>
+        <source>No wallets available</source>
+        <translation>Nie je dostupná žiadna peňaženka</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -532,10 +501,6 @@
     <message>
         <source>Zoom</source>
         <translation>Priblížiť</translation>
-    </message>
-    <message>
-        <source>Restore</source>
-        <translation>Obnoviť</translation>
     </message>
     <message>
         <source>Main Window</source>
@@ -552,6 +517,14 @@
     <message>
         <source>Catching up...</source>
         <translation>Sťahujem...</translation>
+    </message>
+    <message>
+        <source>Error: %1</source>
+        <translation>Chyba: %1</translation>
+    </message>
+    <message>
+        <source>Warning: %1</source>
+        <translation>Upozornenie: %1</translation>
     </message>
     <message>
         <source>Date: %1
@@ -774,6 +747,12 @@
     </message>
 </context>
 <context>
+    <name>CreateWalletActivity</name>
+    </context>
+<context>
+    <name>CreateWalletDialog</name>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
@@ -940,7 +919,7 @@
         <source>(of %n GB needed)</source>
         <translation><numerusform>(z %n GB potrebného)</numerusform><numerusform>(z %n GB potrebných)</numerusform><numerusform>(z %n GB potrebných)</numerusform><numerusform>(z %n GB potrebných)</numerusform></translation>
     </message>
-</context>
+    </context>
 <context>
     <name>ModalOverlay</name>
     <message>
@@ -1016,6 +995,17 @@
     </message>
 </context>
 <context>
+    <name>OpenWalletActivity</name>
+    <message>
+        <source>default wallet</source>
+        <translation>predvolená peňaženka</translation>
+    </message>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Otvára sa peňaženka &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+</context>
+<context>
     <name>OptionsDialog</name>
     <message>
         <source>Options</source>
@@ -1075,7 +1065,7 @@
     </message>
     <message>
         <source>Open Configuration File</source>
-        <translation>Otvoriť konfiguračný súbor </translation>
+        <translation>Otvoriť konfiguračný súbor</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
@@ -1203,7 +1193,7 @@
     </message>
     <message>
         <source>M&amp;inimize on close</source>
-        <translation>M&amp;inimalizovať pri zavretí</translation>
+        <translation>M&amp;inimalizovať pri zatvorení</translation>
     </message>
     <message>
         <source>&amp;Display</source>
@@ -1449,7 +1439,7 @@
     </message>
     <message>
         <source>Error communicating with %1: %2</source>
-        <translation>Chyba komunikácie s %1: %2 </translation>
+        <translation>Chyba komunikácie s %1: %2</translation>
     </message>
     <message>
         <source>Payment request cannot be parsed!</source>
@@ -1555,7 +1545,7 @@
     </message>
     <message>
         <source>%1 and %2</source>
-        <translation> %1 a  %2</translation>
+        <translation>%1 a  %2</translation>
     </message>
     <message numerus="yes">
         <source>%n year(s)</source>
@@ -1578,21 +1568,6 @@
         <translation>%1 GB</translation>
     </message>
     <message>
-        <source>%1 didn't yet exit safely...</source>
-        <translation>%1 ešte nebol bezpečne ukončený...</translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation>neznámy</translation>
-    </message>
-</context>
-<context>
-    <name>QObject::QObject</name>
-    <message>
-        <source>Error parsing command line arguments: %1.</source>
-        <translation>Chyba pri spracovaní argumentov príkazového riadku: %1.</translation>
-    </message>
-    <message>
         <source>Error: Specified data directory "%1" does not exist.</source>
         <translation>Chyba: Zadaný adresár pre dáta „%1“ neexistuje.</translation>
     </message>
@@ -1604,6 +1579,14 @@
         <source>Error: %1</source>
         <translation>Chyba: %1</translation>
     </message>
+    <message>
+        <source>%1 didn't yet exit safely...</source>
+        <translation>%1 ešte nebol bezpečne ukončený...</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>neznámy</translation>
+    </message>
 </context>
 <context>
     <name>QRImageWidget</name>
@@ -1614,6 +1597,14 @@
     <message>
         <source>&amp;Copy Image</source>
         <translation>&amp;Kopírovať obrázok</translation>
+    </message>
+    <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>Výsledné URI je príliš dlhé, skúste skrátiť text pre popis alebo správu.</translation>
+    </message>
+    <message>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>Chyba kódovania URI do QR Code.</translation>
     </message>
     <message>
         <source>Save QR Code</source>
@@ -1995,10 +1986,6 @@
         <translation>História vyžiadaných platieb</translation>
     </message>
     <message>
-        <source>&amp;Request payment</source>
-        <translation>&amp;Vyžiadať platbu</translation>
-    </message>
-    <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation>Zobraz zvolenú požiadavku (urobí to isté ako dvoj-klik na záznam)</translation>
     </message>
@@ -2080,14 +2067,6 @@
     <message>
         <source>Wallet</source>
         <translation>Peňaženka</translation>
-    </message>
-    <message>
-        <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation>Výsledné URI je príliš dlhé, skúste skrátiť text pre popis alebo správu.</translation>
-    </message>
-    <message>
-        <source>Error encoding URI into QR Code.</source>
-        <translation>Chyba kódovania URI do QR Code.</translation>
     </message>
 </context>
 <context>
@@ -2308,6 +2287,10 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
         <translation>%1 (%2 blokov)</translation>
     </message>
     <message>
+        <source>%1 to '%2'</source>
+        <translation>%1 do '%2'</translation>
+    </message>
+    <message>
         <source>%1 to %2</source>
         <translation>%1 do %2</translation>
     </message>
@@ -2322,10 +2305,6 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
     <message>
         <source>You can increase the fee later (signals Replace-By-Fee, BIP-125).</source>
         <translation>Poplatok môžete navýšiť neskôr (vysiela sa "Replace-By-Fee" - nahradenie poplatkom, BIP-125).</translation>
-    </message>
-    <message>
-        <source>from wallet %1</source>
-        <translation>z peňaženky %1</translation>
     </message>
     <message>
         <source>Please, review your transaction.</source>
@@ -2650,13 +2629,6 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
     <message>
         <source>Message verified.</source>
         <translation>Správa overená.</translation>
-    </message>
-</context>
-<context>
-    <name>SplashScreen</name>
-    <message>
-        <source>[testnet]</source>
-        <translation>[testovacia sieť]</translation>
     </message>
 </context>
 <context>
@@ -3124,12 +3096,8 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
         <translation>Zatvoriť peňaženku</translation>
     </message>
     <message>
-        <source>Are you sure you wish to close wallet &lt;i&gt;%1&lt;/i&gt;?</source>
-        <translation>Ste si istí, že si želáte zatvoriť peňaženku &lt;i&gt;%1&lt;/i&gt;?</translation>
-    </message>
-    <message>
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
-        <translation>Zatvorenie peňaženky na príliš dlhú dobu môže mať za následok potrebu znova synchronizovať celý blockchain v prípade, že je aktivované redukovanie blockchainu. </translation>
+        <translation>Zatvorenie peňaženky na príliš dlhú dobu môže mať za následok potrebu znova synchronizovať celý blockchain v prípade, že je aktivované redukovanie blockchainu.</translation>
     </message>
 </context>
 <context>
@@ -3256,10 +3224,6 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
         <translation>Nepodarilo sa spustiť HTTP server. Pre viac detailov zobrazte debug log.</translation>
     </message>
     <message>
-        <source>NdovuCoin Core</source>
-        <translation>NdovuCoin Core</translation>
-    </message>
-    <message>
         <source>The %s developers</source>
         <translation>Vývojári %s</translation>
     </message>
@@ -3382,10 +3346,6 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
     <message>
         <source>Error opening block database</source>
         <translation>Chyba otvárania databázy blokov</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is low!</source>
-        <translation>Chyba: Málo miesta na disku!</translation>
     </message>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
@@ -3524,10 +3484,6 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
         <translation>Chyba: Málo miesta na disku pre %s</translation>
     </message>
     <message>
-        <source>Information</source>
-        <translation>Informácia</translation>
-    </message>
-    <message>
         <source>Invalid -onion address or hostname: '%s'</source>
         <translation>Neplatná -onion adresa alebo hostiteľ: '%s'</translation>
     </message>
@@ -3590,10 +3546,6 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
         <translation>Suma transakcie príliš malá</translation>
     </message>
     <message>
-        <source>Transaction too large for fee policy</source>
-        <translation>Transakcia je príliš veľká pre aktuálne podmienky poplatkov</translation>
-    </message>
-    <message>
         <source>Transaction too large</source>
         <translation>Transakcia príliš veľká</translation>
     </message>
@@ -3602,20 +3554,20 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
         <translation>Na tomto počítači sa nedá vytvoriť väzba %s (vytvorenie väzby vrátilo chybu %s)</translation>
     </message>
     <message>
+        <source>Unable to create the PID file '%s': %s</source>
+        <translation>Nepodarilo sa vytvoriť súbor PID '%s': %s</translation>
+    </message>
+    <message>
         <source>Unable to generate initial keys</source>
         <translation>Nepodarilo sa vygenerovať úvodné kľúče</translation>
     </message>
     <message>
+        <source>Unknown -blockfilterindex value %s.</source>
+        <translation>Neznáma -blockfilterindex hodnota %s.</translation>
+    </message>
+    <message>
         <source>Verifying wallet(s)...</source>
         <translation>Kontrolujem peňaženku(y)…</translation>
-    </message>
-    <message>
-        <source>Wallet %s resides outside wallet directory %s</source>
-        <translation>Peňaženka %s sa nachádza mimo priečinku pre peňaženky %s </translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Upozornenie</translation>
     </message>
     <message>
         <source>Warning: unknown new rules activated (versionbit %i)</source>
@@ -3652,10 +3604,6 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
     <message>
         <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
         <translation>Chyba pri načítaní peňaženky %s. Zadaný duplicitný názov súboru -wallet.</translation>
-    </message>
-    <message>
-        <source>Keypool ran out, please call keypoolrefill first</source>
-        <translation>Vyčerpal sa zásobník kľúčov, zavolať najskôr keypoolrefill</translation>
     </message>
     <message>
         <source>Starting network threads...</source>
@@ -3706,6 +3654,10 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
         <translation>Upozornenie: Boli zistené súkromné kľúče v peňaženke {%s} so zakázanými súkromnými kľúčmi.</translation>
     </message>
     <message>
+        <source>Cannot write to data directory '%s'; check permissions.</source>
+        <translation>Nie je možné zapísať do adresára ' %s'. Skontrolujte povolenia.</translation>
+    </message>
+    <message>
         <source>Loading block index...</source>
         <translation>Načítavanie zoznamu blokov...</translation>
     </message>
@@ -3724,10 +3676,6 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
     <message>
         <source>Done loading</source>
         <translation>Dokončené načítavanie</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Chyba</translation>
     </message>
 </context>
 </TS>

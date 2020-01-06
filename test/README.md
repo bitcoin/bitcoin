@@ -13,8 +13,7 @@ bitcoin-tx.
 - [lint](/test/lint/) which perform various static analysis checks.
 
 The util tests are run as part of `make check` target. The functional
-tests and lint scripts are run by the travis continuous build process whenever a pull
-request is opened. All sets of tests can also be run locally.
+tests and lint scripts can be run as explained in the sections below.
 
 # Running tests locally
 
@@ -48,6 +47,29 @@ You can run any combination (incl. duplicates) of tests by calling:
 
 ```
 test/functional/test_runner.py <testname1> <testname2> <testname3> ...
+```
+
+Wildcard test names can be passed, if the paths are coherent and the test runner
+is called from a `bash` shell or similar that does the globbing. For example,
+to run all the wallet tests:
+
+```
+test/functional/test_runner.py test/functional/wallet*
+functional/test_runner.py functional/wallet* (called from the test/ directory)
+test_runner.py wallet* (called from the test/functional/ directory)
+```
+
+but not
+
+```
+test/functional/test_runner.py wallet*
+```
+
+Combinations of wildcards can be passed:
+
+```
+test/functional/test_runner.py ./test/functional/tool* test/functional/mempool*
+test_runner.py tool* mempool*
 ```
 
 Run the regression test suite with:
@@ -114,8 +136,10 @@ killall bitcoind
 
 ##### Test logging
 
-The tests contain logging at different levels (debug, info, warning, etc). By
-default:
+The tests contain logging at five different levels (DEBUG, INFO, WARNING, ERROR
+and CRITICAL). From within your functional tests you can log to these different
+levels using the logger included in the test_framework, e.g.
+`self.log.debug(object)`. By default:
 
 - when run through the test_runner harness, *all* logs are written to
   `test_framework.log` and no logs are output to the console.
@@ -160,18 +184,32 @@ call methods that interact with the bitcoind nodes-under-test.
 If further introspection of the bitcoind instances themselves becomes
 necessary, this can be accomplished by first setting a pdb breakpoint
 at an appropriate location, running the test to that point, then using
-`gdb` to attach to the process and debug.
+`gdb` (or `lldb` on macOS) to attach to the process and debug.
 
-For instance, to attach to `self.node[1]` during a run:
+For instance, to attach to `self.node[1]` during a run you can get
+the pid of the node within `pdb`.
+
+```
+(pdb) self.node[1].process.pid
+```
+
+Alternatively, you can find the pid by inspecting the temp folder for the specific test
+you are running. The path to that folder is printed at the beginning of every
+test run:
 
 ```bash
 2017-06-27 14:13:56.686000 TestFramework (INFO): Initializing test directory /tmp/user/1000/testo9vsdjo3
 ```
 
-use the directory path to get the pid from the pid file:
+Use the path to find the pid file in the temp folder:
 
 ```bash
 cat /tmp/user/1000/testo9vsdjo3/node1/regtest/bitcoind.pid
+```
+
+Then you can use the pid to start `gdb`:
+
+```bash
 gdb /home/example/bitcoind <pid>
 ```
 

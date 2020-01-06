@@ -76,8 +76,9 @@ $(1)_download_path_fixed=$(subst :,\:,$$($(1)_download_path))
 
 
 #default commands
+# The default behavior for tar will try to set ownership when running as uid 0 and may not succeed, --no-same-owner disables this behavior
 $(1)_fetch_cmds ?= $(call fetch_file,$(1),$(subst \:,:,$$($(1)_download_path_fixed)),$$($(1)_download_file),$($(1)_file_name),$($(1)_sha256_hash))
-$(1)_extract_cmds ?= mkdir -p $$($(1)_extract_dir) && echo "$$($(1)_sha256_hash)  $$($(1)_source)" > $$($(1)_extract_dir)/.$$($(1)_file_name).hash &&  $(build_SHA256SUM) -c $$($(1)_extract_dir)/.$$($(1)_file_name).hash && tar --strip-components=1 -xf $$($(1)_source)
+$(1)_extract_cmds ?= mkdir -p $$($(1)_extract_dir) && echo "$$($(1)_sha256_hash)  $$($(1)_source)" > $$($(1)_extract_dir)/.$$($(1)_file_name).hash &&  $(build_SHA256SUM) -c $$($(1)_extract_dir)/.$$($(1)_file_name).hash && tar --no-same-owner --strip-components=1 -xf $$($(1)_source)
 $(1)_preprocess_cmds ?=
 $(1)_build_cmds ?=
 $(1)_config_cmds ?=
@@ -170,15 +171,15 @@ $($(1)_extracted): | $($(1)_fetched)
 	$(AT)mkdir -p $$(@D)
 	$(AT)cd $$(@D); $(call $(1)_extract_cmds,$(1))
 	$(AT)touch $$@
-$($(1)_preprocessed): | $($(1)_dependencies) $($(1)_extracted)
+$($(1)_preprocessed): | $($(1)_extracted)
 	$(AT)echo Preprocessing $(1)...
 	$(AT)mkdir -p $$(@D) $($(1)_patch_dir)
 	$(AT)$(foreach patch,$($(1)_patches),cd $(PATCHES_PATH)/$(1); cp $(patch) $($(1)_patch_dir) ;)
 	$(AT)cd $$(@D); $(call $(1)_preprocess_cmds, $(1))
 	$(AT)touch $$@
-$($(1)_configured): | $($(1)_preprocessed)
+$($(1)_configured): | $($(1)_dependencies) $($(1)_preprocessed)
 	$(AT)echo Configuring $(1)...
-	$(AT)rm -rf $(host_prefix); mkdir -p $(host_prefix)/lib; cd $(host_prefix); $(foreach package,$($(1)_all_dependencies), tar xf $($(package)_cached); )
+	$(AT)rm -rf $(host_prefix); mkdir -p $(host_prefix)/lib; cd $(host_prefix); $(foreach package,$($(1)_all_dependencies), tar --no-same-owner -xf $($(package)_cached); )
 	$(AT)mkdir -p $$(@D)
 	$(AT)+cd $$(@D); $($(1)_config_env) $(call $(1)_config_cmds, $(1))
 	$(AT)touch $$@
@@ -211,6 +212,14 @@ $($(1)_cached_checksum): $($(1)_cached)
 $(1): | $($(1)_cached_checksum)
 .SECONDARY: $($(1)_cached) $($(1)_postprocessed) $($(1)_staged) $($(1)_built) $($(1)_configured) $($(1)_preprocessed) $($(1)_extracted) $($(1)_fetched)
 
+endef
+
+stages = fetched extracted preprocessed configured built staged postprocessed cached cached_checksum
+
+define ext_add_stages
+$(foreach stage,$(stages),
+          $(1)_$(stage): $($(1)_$(stage))
+          .PHONY: $(1)_$(stage))
 endef
 
 # These functions create the build targets for each package. They must be

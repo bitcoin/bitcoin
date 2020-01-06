@@ -79,6 +79,11 @@ namespace GUIUtil
 
     void setClipboard(const QString& str);
 
+    /**
+     * Determine default data directory for operating system.
+     */
+    QString getDefaultDataDirectory();
+
     /** Get save filename, mimics QFileDialog::getSaveFileName, except that it appends a default suffix
         when no suffix is provided by the user.
 
@@ -252,6 +257,14 @@ namespace GUIUtil
 
     // Fix known bugs in QProgressDialog class.
     void PolishProgressDialog(QProgressDialog* dialog);
+
+    /**
+     * Returns the distance in pixels appropriate for drawing a subsequent character after text.
+     *
+     * In Qt 5.12 and before the QFontMetrics::width() is used and it is deprecated since Qt 13.0.
+     * In Qt 5.11 the QFontMetrics::horizontalAdvance() was introduced.
+     */
+    int TextWidth(const QFontMetrics& fm, const QString& text);
 } // namespace GUIUtil
 
 #endif // BITCOIN_QT_GUIUTIL_H
