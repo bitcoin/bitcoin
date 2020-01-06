@@ -140,6 +140,8 @@ const char* GetOpName(opcodetype opcode)
     case OP_CHECKATV               : return "OP_CHECKATV";
     case OP_CHECKVTB               : return "OP_CHECKVTB";
     case OP_CHECKPOP               : return "OP_CHECKPOP";
+    case OP_POPBTCHEADER           : return "OP_POPBTCHEADER";
+    case OP_POPVBKHEADER           : return "OP_POPVBKHEADER";
 
     case OP_INVALIDOPCODE          : return "OP_INVALIDOPCODE";
 

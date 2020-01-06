@@ -152,7 +152,7 @@ void PopServiceImpl::savePopTxToDatabase(const CBlock& block, const int& nHeight
         PopTxData* popTxData = request.add_popdata();
 
         Publications publications;
-        getPublicationsData(tx, publications);
+        parsePopTx(tx, &publications, nullptr, nullptr);
 
         // Fill the proto objects with pop data
         popTxData->set_poptxhash(tx->GetHash().ToString());
@@ -381,31 +381,20 @@ void PopServiceImpl::rewardsCalculateOutputs(const int& blockHeight, const CBloc
     }
 }
 
-// Deserialization
-void PopServiceImpl::parseAltPublication(const std::vector<unsigned char>& bytes, VeriBlock::AltPublication& publication)
-{
-    ::grpc_deserialize(grpcPopService, bytes, publication, &GrpcPopService::Stub::ParseAltPublication);
-}
-
-void PopServiceImpl::parseVeriBlockPublication(const std::vector<unsigned char>& bytes, VeriBlock::VeriBlockPublication& publication)
-{
-    ::grpc_deserialize(grpcPopService, bytes, publication, &GrpcPopService::Stub::ParseVeriBlockPublication);
-}
-
-void PopServiceImpl::getPublicationsData(const CTransactionRef& tx, Publications& publications)
+bool PopServiceImpl::parsePopTx(const CTransactionRef& tx, Publications* pub, Context* ctx, PopTxType* type)
 {
     std::vector<std::vector<uint8_t>> stack;
-    getService<UtilService>().EvalScript(tx->vin[0].scriptSig, stack, nullptr, &publications, false);
+    return getService<UtilService>().EvalScript(tx->vin[0].scriptSig, stack, nullptr, pub, ctx, type, false);
 }
 
-void PopServiceImpl::getPublicationsData(const Publications& data, PublicationData& publciationData)
+void PopServiceImpl::getPublicationsData(const Publications& data, PublicationData& pub)
 {
     ClientContext context;
     BytesArrayRequest request;
 
     request.set_data(data.atv.data(), data.atv.size());
 
-    Status status = grpcPopService->GetPublicationDataFromAltPublication(&context, request, &publciationData);
+    Status status = grpcPopService->GetPublicationDataFromAltPublication(&context, request, &pub);
 
     if (!status.ok()) {
         throw PopServiceException(status);
@@ -443,7 +432,14 @@ bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlo
         }
 
         Publications publications;
-        pop.getPublicationsData(tx, publications);
+        Context context;
+        PopTxType type = PopTxType::UNKNOWN;
+        if (!pop.parsePopTx(tx, &publications, &context, &type)) {
+            error_message += " tx hash: (" + tx->GetHash().GetHex() + ") reason : can not parse pop tx data \n";
+            isValid = false;
+            mempool.removeRecursive(*tx, MemPoolRemovalReason::BLOCK);
+            continue;
+        }
 
         PublicationData popEndorsement;
         pop.getPublicationsData(publications, popEndorsement);
@@ -497,10 +493,32 @@ bool blockPopValidationImpl(PopServiceImpl& pop, const CBlock& block, const CBlo
             continue;
         }
 
-        try {
-            pop.addPayloads(block, pindexPrev.nHeight + 1, publications);
-        } catch (const PopServiceException& e) {
-            error_message += " tx hash: (" + tx->GetHash().GetHex() + ") reason : addPayloads failed, " + e.what() + "\n";
+        switch (type) {
+        case PopTxType::CONTEXT: {
+            try {
+                pop.updateContext(context.vbk, context.btc);
+            } catch (const PopServiceException& e) {
+                error_message += " tx hash: (" + tx->GetHash().GetHex() + ") reason : updateContext failed, " + e.what() + "\n";
+                isValid = false;
+                mempool.removeRecursive(*tx, MemPoolRemovalReason::BLOCK);
+                continue;
+            }
+            break;
+        }
+
+        case PopTxType::PUBLICATIONS: {
+            try {
+                pop.addPayloads(block, pindexPrev.nHeight + 1, publications);
+            } catch (const PopServiceException& e) {
+                error_message += " tx hash: (" + tx->GetHash().GetHex() + ") reason : addPayloads failed, " + e.what() + "\n";
+                isValid = false;
+                mempool.removeRecursive(*tx, MemPoolRemovalReason::BLOCK);
+                continue;
+            }
+            break;
+        }
+        default:
+            error_message += " tx hash: (" + tx->GetHash().GetHex() + ") reason : pop tx type is unknown \n";
             isValid = false;
             mempool.removeRecursive(*tx, MemPoolRemovalReason::BLOCK);
             continue;
