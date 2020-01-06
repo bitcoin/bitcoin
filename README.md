@@ -79,4 +79,3 @@ Translators should also subscribe to the [mailing list](https://groups.google.co
 Ndovucoin
 ==========
 Still under development
->>>>>>> f0d2942d175e7d3a91cf505a66c02dec056368c9
