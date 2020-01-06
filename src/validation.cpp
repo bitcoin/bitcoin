@@ -3511,7 +3511,8 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
         // state is already set with error message
         return false;
     }
-    // VeriBlock: statefull block validation
+
+    // VeriBlock: stateful block validation
     if (!VeriBlock::getService<VeriBlock::PopService>().blockPopValidation(block, *pindexPrev, consensusParams, state)) {
         return false;
     }

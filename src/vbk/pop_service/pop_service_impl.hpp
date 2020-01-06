@@ -1,7 +1,7 @@
 #ifndef BITCOIN_SRC_VBK_POP_SERVICE_POP_SERVICE_IMPL_HPP
 #define BITCOIN_SRC_VBK_POP_SERVICE_POP_SERVICE_IMPL_HPP
 
-#include <vbk/entity/publications.hpp>
+#include <vbk/entity/pop.hpp>
 #include <vbk/pop_service.hpp>
 #include <vbk/pop_service/pop_service_exception.hpp>
 
@@ -43,9 +43,7 @@ public:
     void updateContext(const std::vector<std::vector<uint8_t>>& veriBlockBlocks, const std::vector<std::vector<uint8_t>>& bitcoinBlocks) override;
 
 public:
-    virtual void parseAltPublication(const std::vector<uint8_t>&, VeriBlock::AltPublication&);
-    virtual void parseVeriBlockPublication(const std::vector<uint8_t>&, VeriBlock::VeriBlockPublication&);
-    virtual void getPublicationsData(const CTransactionRef& tx, Publications& publications);
+    virtual bool parsePopTx(const CTransactionRef& tx, Publications* publications, Context* ctx, PopTxType* type);
     virtual void getPublicationsData(const Publications& tx, PublicationData& publicationData);
 
     virtual bool determineATVPlausibilityWithBTCRules(AltchainId altChainIdentifier, const CBlockHeader& popEndorsementHeader, const Consensus::Params& params);

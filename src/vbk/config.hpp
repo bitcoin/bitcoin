@@ -25,6 +25,8 @@ struct Config {
     // unique index to this chain; network id across chains
     AltchainId index = AltchainId(0x3ae6ca);
 
+    uint32_t btc_header_size = 80;
+    uint32_t vbk_header_size = 64;
     uint32_t max_pop_script_size = 150000; // TODO: figure out number
     uint32_t max_vtb_size = 100000; // TODO: figure out number
     uint32_t min_vtb_size = 1; // TODO: figure out number
@@ -40,8 +42,11 @@ struct Config {
     /// The maximum allowed weight for the PoP transaction
     uint32_t max_pop_tx_weight = 150000;
 
-    /// The maximun allowed number of PoP transaction in a block
+    /// The maximum allowed number of PoP transaction in a block
     uint32_t max_pop_tx_amount = 50;
+    /// The maximum allowed number of "UpdateContext" transactions in a block
+    uint32_t max_update_context_tx_amount = 1;
+
 
     /////// Pop Rewards section start
     uint32_t POP_REWARD_PERCENTAGE = 40;
