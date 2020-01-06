@@ -216,7 +216,7 @@ bool CZMQPublishWalletTransactionNotifier::WalletTransactionChanged(CWallet* wal
     uint32_t name_size = htonl(wallet->GetName().size());
     oss.write((const char*)&name_size, sizeof(name_size));
     oss << wallet->GetName();
-    oss.write(hash, 32);
+    oss.write((const char*) hash.begin(), 32);
     std::string s = oss.str();
     return SendMessage(MSG_WALLETTX, s.c_str(), s.size());
 }
