@@ -5,9 +5,12 @@
 #ifndef BITCOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
 #define BITCOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
 
+#include <ui_interface.h>
+#include <uint256.h>
 #include <zmq/zmqconfig.h>
 
 class CBlockIndex;
+class CWallet;
 class CZMQAbstractNotifier;
 
 typedef CZMQAbstractNotifier* (*CZMQNotifierFactory)();
@@ -42,6 +45,7 @@ public:
 
     virtual bool NotifyBlock(const CBlockIndex *pindex);
     virtual bool NotifyTransaction(const CTransaction &transaction);
+    virtual bool WalletTransactionChanged(CWallet* wallet, const uint256& hashTx, ChangeType status);
 
 protected:
     void *psocket;

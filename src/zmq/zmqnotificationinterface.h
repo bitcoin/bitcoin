@@ -5,10 +5,13 @@
 #ifndef BITCOIN_ZMQ_ZMQNOTIFICATIONINTERFACE_H
 #define BITCOIN_ZMQ_ZMQNOTIFICATIONINTERFACE_H
 
+#include <ui_interface.h>
+#include <uint256.h>
 #include <validationinterface.h>
 #include <list>
 
 class CBlockIndex;
+class CWallet;
 class CZMQAbstractNotifier;
 
 class CZMQNotificationInterface final : public CValidationInterface
@@ -19,6 +22,8 @@ public:
     std::list<const CZMQAbstractNotifier*> GetActiveNotifiers() const;
 
     static CZMQNotificationInterface* Create();
+
+    void WalletTransactionChanged(CWallet* wallet, const uint256& hashTx, ChangeType status);
 
 protected:
     bool Initialize();

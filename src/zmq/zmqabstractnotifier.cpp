@@ -20,3 +20,8 @@ bool CZMQAbstractNotifier::NotifyTransaction(const CTransaction &/*transaction*/
 {
     return true;
 }
+
+bool CZMQAbstractNotifier::WalletTransactionChanged(CWallet* /*wallet*/, const uint256& /*hashTx*/, ChangeType /*status*/)
+{
+    return true;
+}

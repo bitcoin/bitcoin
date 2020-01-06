@@ -4,11 +4,13 @@
 
 #include <chain.h>
 #include <chainparams.h>
-#include <streams.h>
-#include <zmq/zmqpublishnotifier.h>
-#include <validation.h>
-#include <util/system.h>
 #include <rpc/server.h>
+#include <sstream>
+#include <streams.h>
+#include <util/system.h>
+#include <validation.h>
+#include <wallet/wallet.h>
+#include <zmq/zmqpublishnotifier.h>
 
 static std::multimap<std::string, CZMQAbstractPublishNotifier*> mapPublishNotifiers;
 
@@ -16,6 +18,7 @@ static const char *MSG_HASHBLOCK = "hashblock";
 static const char *MSG_HASHTX    = "hashtx";
 static const char *MSG_RAWBLOCK  = "rawblock";
 static const char *MSG_RAWTX     = "rawtx";
+static const char *MSG_WALLETTX  = "wallettx";
 
 // Internal function to send multipart message
 static int zmq_send_multipart(void *sock, const void* data, size_t size, ...)
@@ -205,4 +208,15 @@ bool CZMQPublishRawTransactionNotifier::NotifyTransaction(const CTransaction &tr
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
     ss << transaction;
     return SendMessage(MSG_RAWTX, &(*ss.begin()), ss.size());
+}
+
+bool CZMQPublishWalletTransactionNotifier::WalletTransactionChanged(CWallet* wallet, const uint256& hash, ChangeType status)
+{
+    std::ostringstream oss;
+    uint32_t name_size = htonl(wallet->GetName().size());
+    oss.write((const char*)&name_size, sizeof(name_size));
+    oss << wallet->GetName();
+    oss.write(hash, 32);
+    std::string s = oss.str();
+    return SendMessage(MSG_WALLETTX, s.c_str(), s.size());
 }

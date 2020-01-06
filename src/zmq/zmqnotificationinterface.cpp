@@ -46,6 +46,7 @@ CZMQNotificationInterface* CZMQNotificationInterface::Create()
     factories["pubhashtx"] = CZMQAbstractNotifier::Create<CZMQPublishHashTransactionNotifier>;
     factories["pubrawblock"] = CZMQAbstractNotifier::Create<CZMQPublishRawBlockNotifier>;
     factories["pubrawtx"] = CZMQAbstractNotifier::Create<CZMQPublishRawTransactionNotifier>;
+    factories["pubwallettx"] = CZMQAbstractNotifier::Create<CZMQPublishWalletTransactionNotifier>;
 
     for (const auto& entry : factories)
     {
@@ -190,6 +191,19 @@ void CZMQNotificationInterface::BlockDisconnected(const std::shared_ptr<const CB
     for (const CTransactionRef& ptx : pblock->vtx) {
         // Do a normal notify for each transaction removed in block disconnection
         TransactionAddedToMempool(ptx);
+    }
+}
+
+void CZMQNotificationInterface::WalletTransactionChanged(CWallet* wallet, const uint256& hashTx, ChangeType status)
+{
+    for (std::list<CZMQAbstractNotifier*>::iterator i = notifiers.begin(); i!=notifiers.end(); ) {
+        CZMQAbstractNotifier *notifier = *i;
+        if (notifier->WalletTransactionChanged(wallet, hashTx, status)) {
+            i++;
+        } else {
+            notifier->Shutdown();
+            i = notifiers.erase(i);
+        }
     }
 }
 

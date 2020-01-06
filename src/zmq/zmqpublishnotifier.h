@@ -52,4 +52,10 @@ public:
     bool NotifyTransaction(const CTransaction &transaction) override;
 };
 
+class CZMQPublishWalletTransactionNotifier : public CZMQAbstractPublishNotifier
+{
+public:
+    bool WalletTransactionChanged(CWallet* wallet, const uint256& hashTx, ChangeType status);
+};
+
 #endif // BITCOIN_ZMQ_ZMQPUBLISHNOTIFIER_H
