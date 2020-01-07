@@ -78,37 +78,35 @@ void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap &cachedDescendan
     };
 
     // Update and add to cached descendant map
-    auto& direct_children = GetMemPoolChildren(updateIt);
-    auto children_it = direct_children.begin();
-    while (children_it != direct_children.end() || !stack.empty()) {
-        // Either pop the stack or read from the direct_children
-        bool have_direct_children = children_it != direct_children.end();
-        const txiter cit =  have_direct_children ? *(children_it++) : stack.back();
-        // if on the stack already touched (but remove)
-        // touch the direct_children
-        if (!have_direct_children) stack.pop_back();
-        else cit->already_touched(epoch);
+    auto main_it = updateIt;
+    bool first_pass = true;
+    do {
+        auto& direct_children = GetMemPoolChildren(main_it);
+        for (txiter cit : direct_children) {
+            if (first_pass) cit->already_touched(epoch);
 
-        // collect stats
-        make_state_update(cit);
+            // collect stats
+            make_state_update(cit);
 
-        const setEntries &setChildren = GetMemPoolChildren(cit);
-        for (txiter childEntry : setChildren) {
-            if (childEntry->already_touched(epoch)) continue;
-            cacheMap::iterator cacheIt = cachedDescendants.find(childEntry);
-            if (cacheIt != cachedDescendants.end()) {
-                // We've already calculated this one, just add the entries for this set
-                // but don't traverse again.
-                for (txiter cacheEntry : cacheIt->second) {
-                    if (cacheEntry->already_touched(epoch)) continue;
-                    make_state_update(cacheEntry);
+            const setEntries &setChildren = GetMemPoolChildren(cit);
+            for (txiter childEntry : setChildren) {
+                if (childEntry->already_touched(epoch)) continue;
+                cacheMap::iterator cacheIt = cachedDescendants.find(childEntry);
+                if (cacheIt != cachedDescendants.end()) {
+                    // We've already calculated this one, just add the entries for this set
+                    // but don't traverse again.
+                    for (txiter cacheEntry : cacheIt->second) {
+                        if (cacheEntry->already_touched(epoch)) continue;
+                        make_state_update(cacheEntry);
+                    }
+                } else {
+                    // Schedule for later processing
+                    stack.push_back(childEntry);
                 }
-            } else {
-                // Schedule for later processing
-                stack.push_back(childEntry);
             }
         }
-    }
+        first_pass = false;
+    } while (!stack.empty() && (main_it = stack.back(), stack.pop_back(), true));
     mapTx.modify(updateIt, update_descendant_state(modifySize, modifyFee, modifyCount));
 }
 
