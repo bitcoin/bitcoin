@@ -242,8 +242,8 @@
         <translation>Reindexando bloques en disco...</translation>
     </message>
     <message>
-        <source>Send coins to a NdovuCoin address</source>
-        <translation>Enviar monedas a una dirección NdovuCoin</translation>
+        <source>Send coins to a Bitcoin address</source>
+        <translation>Enviar monedas a una dirección Bitcoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -567,8 +567,8 @@
         <translation>Utilice un directorio de datos personalizado:</translation>
     </message>
     <message>
-        <source>NdovuCoin</source>
-        <translation>NdovuCoin</translation>
+        <source>Bitcoin</source>
+        <translation>Bitcoin</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>

@@ -223,7 +223,7 @@
 <context>
     <name>Intro</name>
     <message>
-        <source>NdovuCoin</source>
+        <source>Bitcoin</source>
         <translation>Биткойн</translation>
     </message>
     <message>

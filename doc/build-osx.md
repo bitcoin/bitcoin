@@ -50,9 +50,9 @@ from the root of the repository.
     cd bitcoin
     ```
 
-2.  Build NdovuCoin Core:
+2.  Build Bitcoin Core:
 
-    Configure and build the headless NdovuCoin Core binaries as well as the GUI (if Qt is found).
+    Configure and build the headless Bitcoin Core binaries as well as the GUI (if Qt is found).
 
     You can disable the GUI build by passing `--without-gui` to configure.
     ```shell

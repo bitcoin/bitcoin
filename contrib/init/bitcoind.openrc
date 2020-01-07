@@ -18,8 +18,8 @@ BITCOIND_BIN=${BITCOIND_BIN:-/usr/bin/bitcoind}
 BITCOIND_NICE=${BITCOIND_NICE:-${NICELEVEL:-0}}
 BITCOIND_OPTS="${BITCOIND_OPTS:-${BITCOIN_OPTS}}"
 
-name="NdovuCoin Core Daemon"
-description="NdovuCoin cryptocurrency P2P network daemon"
+name="Bitcoin Core Daemon"
+description="Bitcoin cryptocurrency P2P network daemon"
 
 command="/usr/bin/bitcoind"
 command_args="-pid=\"${BITCOIND_PIDFILE}\" \
@@ -84,7 +84,7 @@ checkconfig()
 		eerror "It is recommended that you also set alertnotify so you are "
 		eerror "notified of problems:"
 		eerror ""
-		eerror "ie: alertnotify=echo %%s | mail -s \"NdovuCoin Alert\"" \
+		eerror "ie: alertnotify=echo %%s | mail -s \"Bitcoin Alert\"" \
 			"admin@foo.com"
 		eerror ""
 		return 1

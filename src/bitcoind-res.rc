@@ -16,8 +16,8 @@ BEGIN
     BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
-            VALUE "CompanyName",        "NdovuCoin"
-            VALUE "FileDescription",    "bitcoind (NdovuCoin node with a JSON-RPC server)"
+            VALUE "CompanyName",        "Bitcoin"
+            VALUE "FileDescription",    "bitcoind (Bitcoin node with a JSON-RPC server)"
             VALUE "FileVersion",        VER_FILEVERSION_STR
             VALUE "InternalName",       "bitcoind"
             VALUE "LegalCopyright",     COPYRIGHT_STR

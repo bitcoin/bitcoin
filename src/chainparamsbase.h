@@ -10,7 +10,7 @@
 
 /**
  * CBaseChainParams defines the base parameters (shared between bitcoin-cli and bitcoind)
- * of a given instance of the NdovuCoin system.
+ * of a given instance of the Bitcoin system.
  */
 class CBaseChainParams
 {

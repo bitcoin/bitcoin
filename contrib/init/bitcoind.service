@@ -10,7 +10,7 @@
 # config file.
 
 [Unit]
-Description=NdovuCoin daemon
+Description=Bitcoin daemon
 After=network.target
 
 [Service]

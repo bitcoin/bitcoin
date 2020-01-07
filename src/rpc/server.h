@@ -114,7 +114,7 @@ public:
 };
 
 /**
- * NdovuCoin RPC command dispatcher.
+ * Bitcoin RPC command dispatcher.
  */
 class CRPCTable
 {

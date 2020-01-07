@@ -415,8 +415,8 @@ Exportar los datos en la pestaña actual a un archivo</translation>
         <translation>Y opciones de línea de comando</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to NdovuCoin network</source>
-        <translation><numerusform>%n conexión activa hacia la red NdovuCoin</numerusform><numerusform>%n conexiones activas hacia la red NdovuCoin</numerusform></translation>
+        <source>%n active connection(s) to Bitcoin network</source>
+        <translation><numerusform>%n conexión activa hacia la red Bitcoin</numerusform><numerusform>%n conexiones activas hacia la red Bitcoin</numerusform></translation>
     </message>
     <message>
         <source>Indexing blocks on disk...</source>
@@ -840,8 +840,8 @@ Exportar los datos en la pestaña actual a un archivo</translation>
         <translation>Use un directorio de datos personalizado:</translation>
     </message>
     <message>
-        <source>NdovuCoin</source>
-        <translation>NdovuCoin</translation>
+        <source>Bitcoin</source>
+        <translation>Bitcoin</translation>
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
@@ -2210,8 +2210,8 @@ Tarifa de copia</translation>
         <translation>Este es un pago normal</translation>
     </message>
     <message>
-        <source>The NdovuCoin address to send the payment to</source>
-        <translation>Dirección NdovuCoin a enviar el pago</translation>
+        <source>The Bitcoin address to send the payment to</source>
+        <translation>Dirección Bitcoin a enviar el pago</translation>
     </message>
     <message>
         <source>Alt+A</source>
@@ -2291,8 +2291,8 @@ Tarifa de copia</translation>
         <translation>&amp;Firmar Mensaje</translation>
     </message>
     <message>
-        <source>The NdovuCoin address to sign the message with</source>
-        <translation>Dirección NdovuCoin con la que firmar el mensaje</translation>
+        <source>The Bitcoin address to sign the message with</source>
+        <translation>Dirección Bitcoin con la que firmar el mensaje</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -2323,7 +2323,7 @@ Tarifa de copia</translation>
         <translation>Copiar la firma actual al portapapeles del sistema</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this NdovuCoin address</source>
+        <source>Sign the message to prove you own this Bitcoin address</source>
         <translation>Firmar un mensjage para probar que usted es dueño de esta dirección</translation>
     </message>
     <message>
@@ -2343,12 +2343,12 @@ Tarifa de copia</translation>
         <translation>&amp;Firmar Mensaje</translation>
     </message>
     <message>
-        <source>The NdovuCoin address the message was signed with</source>
-        <translation>La dirección NdovuCoin con la que se firmó el mensaje</translation>
+        <source>The Bitcoin address the message was signed with</source>
+        <translation>La dirección Bitcoin con la que se firmó el mensaje</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified NdovuCoin address</source>
-        <translation>Verifica el mensaje para asegurar que fue firmado con la dirección de NdovuCoin especificada.</translation>
+        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
+        <translation>Verifica el mensaje para asegurar que fue firmado con la dirección de Bitcoin especificada.</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>

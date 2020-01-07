@@ -406,11 +406,11 @@
         <translation>把你钱包中的私钥加密</translation>
     </message>
     <message>
-        <source>Sign messages with your NdovuCoin addresses to prove you own them</source>
+        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
         <translation>用比特币地址关联的私钥为消息签名，以证明您拥有这个比特币地址</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified NdovuCoin addresses</source>
+        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
         <translation>校验消息，确保该消息是由指定的比特币地址所有者签名的</translation>
     </message>
     <message>
@@ -631,7 +631,7 @@
         <translation>钱包已被&lt;b&gt;加密&lt;/b&gt;，当前为&lt;b&gt;锁定&lt;/b&gt;状态</translation>
     </message>
     <message>
-        <source>A fatal error occurred. NdovuCoin can no longer continue safely and will quit.</source>
+        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
         <translation>发生严重错误。客户端无法安全地继续运行，即将退出。</translation>
     </message>
 </context>
@@ -875,7 +875,7 @@
         <translation>编辑付款地址</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid NdovuCoin address.</source>
+        <source>The entered address "%1" is not a valid Bitcoin address.</source>
         <translation>输入的地址 %1 并不是有效的比特币地址。</translation>
     </message>
     <message>
@@ -976,7 +976,7 @@
         <translation>使用自定义的数据目录:</translation>
     </message>
     <message>
-        <source>NdovuCoin</source>
+        <source>Bitcoin</source>
         <translation>比特币</translation>
     </message>
     <message>
@@ -992,7 +992,7 @@
         <translation>会在此目录中存储约 %1 GB 的数据。</translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the NdovuCoin block chain.</source>
+        <source>%1 will download and store a copy of the Bitcoin block chain.</source>
         <translation>%1 将会下载并存储比特币区块链。</translation>
     </message>
     <message>
@@ -1252,7 +1252,7 @@
         <translation>允许传入连接(&amp;G)</translation>
     </message>
     <message>
-        <source>Connect to the NdovuCoin network through a SOCKS5 proxy.</source>
+        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
         <translation>通过 SOCKS5 代理连接比特币网络。</translation>
     </message>
     <message>
@@ -1399,7 +1399,7 @@
         <translation>窗体</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the NdovuCoin network after a connection is established, but this process has not completed yet.</source>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
         <translation>现在显示的消息可能是过期的。在连接上比特币网络节点后，您的钱包将自动与网络同步，但是这个过程还没有完成。</translation>
     </message>
     <message>
@@ -1514,7 +1514,7 @@
         <translation>无效的付款地址 %1</translation>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid NdovuCoin address or malformed URI parameters.</source>
+        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
         <translation>无法解析 URI 地址！可能是因为比特币地址无效，或是 URI 参数格式错误。</translation>
     </message>
     <message>
@@ -1616,7 +1616,7 @@
         <translation>金额</translation>
     </message>
     <message>
-        <source>Enter a NdovuCoin address (e.g. %1)</source>
+        <source>Enter a Bitcoin address (e.g. %1)</source>
         <translation>请输入一个比特币地址 (例如 %1)</translation>
     </message>
     <message>
@@ -2506,7 +2506,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation><numerusform>预计在等待 %n 个区块后会有第一个确认。</numerusform></translation>
     </message>
     <message>
-        <source>Warning: Invalid NdovuCoin address</source>
+        <source>Warning: Invalid Bitcoin address</source>
         <translation>警告: 比特币地址无效</translation>
     </message>
     <message>
@@ -2549,7 +2549,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>这是笔正常的付款。</translation>
     </message>
     <message>
-        <source>The NdovuCoin address to send the payment to</source>
+        <source>The Bitcoin address to send the payment to</source>
         <translation>付款目的地址</translation>
     </message>
     <message>
@@ -2706,7 +2706,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>用来签名消息的地址</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified NdovuCoin address</source>
+        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
         <translation>验证消息，确保消息是由指定的比特币地址签名过的。</translation>
     </message>
     <message>

@@ -182,8 +182,8 @@
         <translation>Reindexando bloques no disco...</translation>
     </message>
     <message>
-        <source>Send coins to a NdovuCoin address</source>
-        <translation>Enviar moedas a unha dirección NdovuCoin</translation>
+        <source>Send coins to a Bitcoin address</source>
+        <translation>Enviar moedas a unha dirección Bitcoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -503,8 +503,8 @@
         <translation>Empregar un directorio de datos personalizado</translation>
     </message>
     <message>
-        <source>NdovuCoin</source>
-        <translation>NdovuCoin</translation>
+        <source>Bitcoin</source>
+        <translation>Bitcoin</translation>
     </message>
     <message>
         <source>Error</source>
@@ -1149,8 +1149,8 @@
         <translation>&amp;Verificar Mensaxe</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified NdovuCoin address</source>
-        <translation>Verificar a mensaxe para asegurar que foi asinada coa dirección NdovuCoin especificada</translation>
+        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
+        <translation>Verificar a mensaxe para asegurar que foi asinada coa dirección Bitcoin especificada</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>

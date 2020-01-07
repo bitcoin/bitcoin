@@ -23,7 +23,7 @@ Developer Notes
     - [Threads](#threads)
     - [Ignoring IDE/editor files](#ignoring-ideeditor-files)
 - [Development guidelines](#development-guidelines)
-    - [General NdovuCoin Core](#general-bitcoin-core)
+    - [General Bitcoin Core](#general-bitcoin-core)
     - [Wallet](#wallet)
     - [General C++](#general-c)
     - [C++ data structures](#c-data-structures)
@@ -130,7 +130,7 @@ Refer to [/test/functional/README.md#style-guidelines](/test/functional/README.m
 Coding Style (Doxygen-compatible comments)
 ------------------------------------------
 
-NdovuCoin Core uses [Doxygen](http://www.doxygen.nl/) to generate its official documentation.
+Bitcoin Core uses [Doxygen](http://www.doxygen.nl/) to generate its official documentation.
 
 Use Doxygen-compatible comment blocks for functions, methods, and fields.
 
@@ -231,7 +231,7 @@ that run in `-regtest` mode.
 
 ### DEBUG_LOCKORDER
 
-NdovuCoin Core is a multi-threaded application, and deadlocks or other
+Bitcoin Core is a multi-threaded application, and deadlocks or other
 multi-threading bugs can be very difficult to track down. The `--enable-debug`
 configure option adds `-DDEBUG_LOCKORDER` to the compiler flags. This inserts
 run-time checks to keep track of which locks are held and adds warnings to the
@@ -314,7 +314,7 @@ See the functional test documentation for how to invoke perf within tests.
 
 ### Sanitizers
 
-NdovuCoin Core can be compiled with various "sanitizers" enabled, which add
+Bitcoin Core can be compiled with various "sanitizers" enabled, which add
 instrumentation for issues regarding things like memory safety, thread race
 conditions, or undefined behavior. This is controlled with the
 `--with-sanitizers` configure flag, which should be a comma separated list of
@@ -411,7 +411,7 @@ Ignoring IDE/editor files
 In closed-source environments in which everyone uses the same IDE, it is common
 to add temporary files it produces to the project-wide `.gitignore` file.
 
-However, in open source software such as NdovuCoin Core, where everyone uses
+However, in open source software such as Bitcoin Core, where everyone uses
 their own editors/IDE/tools, it is less common. Only you know what files your
 editor produces and this may change from version to version. The canonical way
 to do this is thus to create your local gitignore. Add this to `~/.gitconfig`:
@@ -441,9 +441,9 @@ Development guidelines
 ============================
 
 A few non-style-related recommendations for developers, as well as points to
-pay attention to for reviewers of NdovuCoin Core code.
+pay attention to for reviewers of Bitcoin Core code.
 
-General NdovuCoin Core
+General Bitcoin Core
 ----------------------
 
 - New features should be exposed on RPC first, then can be made available in the GUI.
@@ -1028,7 +1028,7 @@ A few guidelines for introducing and reviewing new RPC interfaces:
   RPCs whose behavior does *not* depend on the current chainstate may omit this
   call.
 
-  - *Rationale*: In previous versions of NdovuCoin Core, the wallet was always
+  - *Rationale*: In previous versions of Bitcoin Core, the wallet was always
     in-sync with the chainstate (by virtue of them all being updated in the
     same cs_main lock). In order to maintain the behavior that wallet RPCs
     return results as of at least the highest best-known block an RPC

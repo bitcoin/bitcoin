@@ -126,7 +126,7 @@
         <translation>Повторно индексирање на блокови од дискот...</translation>
     </message>
     <message>
-        <source>Send coins to a NdovuCoin address</source>
+        <source>Send coins to a Bitcoin address</source>
         <translation>Испрати биткоини на Биткоин адреса</translation>
     </message>
     <message>
@@ -289,7 +289,7 @@
 <context>
     <name>Intro</name>
     <message>
-        <source>NdovuCoin</source>
+        <source>Bitcoin</source>
         <translation>Биткоин</translation>
     </message>
     <message>

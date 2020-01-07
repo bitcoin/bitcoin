@@ -1,4 +1,4 @@
-Building NdovuCoin Core with Visual Studio
+Building Bitcoin Core with Visual Studio
 ========================================
 
 Introduction

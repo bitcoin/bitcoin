@@ -1,4 +1,4 @@
-NdovuCoin Core version 0.16.1 is now available from:
+Bitcoin Core version 0.16.1 is now available from:
 
   <https://bitcoincore.org/bin/bitcoin-core-0.16.1/>
 
@@ -18,7 +18,7 @@ How to Upgrade
 
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the
-installer (on Windows) or just copy over `/Applications/NdovuCoin-Qt` (on Mac)
+installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on Mac)
 or `bitcoind`/`bitcoin-qt` (on Linux).
 
 The first time you run version 0.15.0 or newer, your chainstate database will be converted to a
@@ -40,10 +40,10 @@ wallets that were created with older versions are not affected by this.
 Compatibility
 ==============
 
-NdovuCoin Core is extensively tested on multiple operating systems using
+Bitcoin Core is extensively tested on multiple operating systems using
 the Linux kernel, macOS 10.8+, and Windows Vista and later. Windows XP is not supported.
 
-NdovuCoin Core should also work on most other Unix-like systems but is not
+Bitcoin Core should also work on most other Unix-like systems but is not
 frequently tested on them.
 
 Notable changes

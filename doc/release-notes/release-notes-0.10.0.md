@@ -1,4 +1,4 @@
-NdovuCoin Core version 0.10.0 is now available from:
+Bitcoin Core version 0.10.0 is now available from:
 
   https://bitcoin.org/bin/0.10.0/
 
@@ -17,7 +17,7 @@ How to Upgrade
 
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the
-installer (on Windows) or just copy over /Applications/NdovuCoin-Qt (on Mac) or
+installer (on Windows) or just copy over /Applications/Bitcoin-Qt (on Mac) or
 bitcoind/bitcoin-qt (on Linux).
 
 Downgrading warning
@@ -25,7 +25,7 @@ Downgrading warning
 
 Because release 0.10.0 makes use of headers-first synchronization and parallel
 block download (see further), the block files and databases are not
-backwards-compatible with older versions of NdovuCoin Core or other software:
+backwards-compatible with older versions of Bitcoin Core or other software:
 
 * Blocks will be stored on disk out of order (in the order they are
 received, really), which makes it incompatible with some tools or
@@ -50,7 +50,7 @@ Notable changes
 Faster synchronization
 ----------------------
 
-NdovuCoin Core now uses 'headers-first synchronization'. This means that we first
+Bitcoin Core now uses 'headers-first synchronization'. This means that we first
 ask peers for block headers (a total of 27 megabytes, as of December 2014) and
 validate those. In a second stage, when the headers have been discovered, we
 download the blocks. However, as we already know about the whole chain in
@@ -172,7 +172,7 @@ improved by making the signatures constant time and deterministic.
 
 This change is a result of switching signing to use libsecp256k1
 instead of OpenSSL. Libsecp256k1 is a cryptographic library
-optimized for the curve NdovuCoin uses which was created by NdovuCoin
+optimized for the curve Bitcoin uses which was created by Bitcoin
 Core developer Pieter Wuille.
 
 There exist attacks[1] against most ECC implementations where an
@@ -187,7 +187,7 @@ long time, but this functionality has still not made its
 way into a released version of OpenSSL. Libsecp256k1 achieves
 significantly stronger protection: As far as we're aware this is
 the only deployed implementation of constant time signing for
-the curve NdovuCoin uses and we have reason to believe that
+the curve Bitcoin uses and we have reason to believe that
 libsecp256k1 is better tested and more thoroughly reviewed
 than the implementation in OpenSSL.
 
@@ -222,10 +222,10 @@ addresses need to added to the wallet before the payment, though.
 Consensus library
 -----------------
 
-Starting from 0.10.0, the NdovuCoin Core distribution includes a consensus library.
+Starting from 0.10.0, the Bitcoin Core distribution includes a consensus library.
 
 The purpose of this library is to make the verification functionality that is
-critical to NdovuCoin's consensus available to other applications, e.g. to language
+critical to Bitcoin's consensus available to other applications, e.g. to language
 bindings such as [python-bitcoinlib](https://pypi.python.org/pypi/python-bitcoinlib) or
 alternative node implementations.
 
@@ -247,9 +247,9 @@ Standard script rules relaxed for P2SH addresses
 The IsStandard() rules have been almost completely removed for P2SH
 redemption scripts, allowing applications to make use of any valid
 script type, such as "n-of-m OR y", hash-locked oracle addresses, etc.
-While the NdovuCoin protocol has always supported these types of script,
+While the Bitcoin protocol has always supported these types of script,
 actually using them on mainnet has been previously inconvenient as
-standard NdovuCoin Core nodes wouldn't relay them to miners, nor would
+standard Bitcoin Core nodes wouldn't relay them to miners, nor would
 most miners include them in blocks they mined.
 
 bitcoin-tx
@@ -279,10 +279,10 @@ key and script operations easily accessible via command line.
 Mining and relay policy enhancements
 ------------------------------------
 
-NdovuCoin Core's block templates are now for version 3 blocks only, and any mining
+Bitcoin Core's block templates are now for version 3 blocks only, and any mining
 software relying on its `getblocktemplate` must be updated in parallel to use
 libblkmaker either version 0.4.2 or any version from 0.5.1 onward.
-If you are solo mining, this will affect you the moment you upgrade NdovuCoin
+If you are solo mining, this will affect you the moment you upgrade Bitcoin
 Core, which must be done prior to BIP66 achieving its 951/1001 status.
 If you are mining with the stratum mining protocol: this does not affect you.
 If you are mining with the getblocktemplate protocol to a pool: this will affect
@@ -292,10 +292,10 @@ achieving its 951/1001 status.
 The `prioritisetransaction` RPC method has been added to enable miners to
 manipulate the priority of transactions on an individual basis.
 
-NdovuCoin Core now supports BIP 22 long polling, so mining software can be
+Bitcoin Core now supports BIP 22 long polling, so mining software can be
 notified immediately of new templates rather than having to poll periodically.
 
-Support for BIP 23 block proposals is now available in NdovuCoin Core's
+Support for BIP 23 block proposals is now available in Bitcoin Core's
 `getblocktemplate` method. This enables miners to check the basic validity of
 their next block before expending work on it, reducing risks of accidental
 hardforks or mining invalid blocks.
@@ -313,9 +313,9 @@ AllowFreeThreshold(), in which case they are relayed subject to the rate limiter
 BIP 66: strict DER encoding for signatures
 ------------------------------------------
 
-NdovuCoin Core 0.10 implements BIP 66, which introduces block version 3, and a new
+Bitcoin Core 0.10 implements BIP 66, which introduces block version 3, and a new
 consensus rule, which prohibits non-DER signatures. Such transactions have been
-non-standard since NdovuCoin v0.8.0 (released in February 2013), but were
+non-standard since Bitcoin v0.8.0 (released in February 2013), but were
 technically still permitted inside blocks.
 
 This change breaks the dependency on OpenSSL's signature parsing, and is
@@ -522,7 +522,7 @@ Wallet:
 GUI:
 - `c21c74b` osx: Fix missing dock menu with qt5
 - `b90711c` Fix Transaction details shows wrong To:
-- `516053c` Make links in 'About NdovuCoin Core' clickable
+- `516053c` Make links in 'About Bitcoin Core' clickable
 - `bdc83e8` Ensure payment request network matches client network
 - `65f78a1` Add GUI view of peer information
 - `06a91d9` VerifyDB progress reporting
@@ -539,7 +539,7 @@ GUI:
 - `7007402` Implement SI-style (thin space) thoudands separator
 - `91cce17` Use fixed-point arithmetic in amount spinbox
 - `bdba2dd` Remove an obscure option no-one cares about
-- `bd0aa10` Replace the temporary file hack currently used to change NdovuCoin-Qt's dock icon (OS X) with a buffer-based solution
+- `bd0aa10` Replace the temporary file hack currently used to change Bitcoin-Qt's dock icon (OS X) with a buffer-based solution
 - `94e1b9e` Re-work overviewpage UI
 - `8bfdc9a` Better looking trayicon
 - `b197bf3` disable tray interactions when client model set to 0

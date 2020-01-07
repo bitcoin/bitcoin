@@ -326,8 +326,8 @@
         <translation>プロキシは&lt;b&gt;有効&lt;/b&gt;: %1</translation>
     </message>
     <message>
-        <source>Send coins to a NdovuCoin address</source>
-        <translation>NdovuCoin アドレスにコインを送る</translation>
+        <source>Send coins to a Bitcoin address</source>
+        <translation>Bitcoin アドレスにコインを送る</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -802,8 +802,8 @@
         <translation>送金先アドレスを編集</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid NdovuCoin address.</source>
-        <translation>入力されたアドレス "%1" は無効な NdovuCoin アドレスです。</translation>
+        <source>The entered address "%1" is not a valid Bitcoin address.</source>
+        <translation>入力されたアドレス "%1" は無効な Bitcoin アドレスです。</translation>
     </message>
     <message>
         <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
@@ -899,8 +899,8 @@
         <translation>カスタム データ ディレクトリを使用:</translation>
     </message>
     <message>
-        <source>NdovuCoin</source>
-        <translation>NdovuCoin</translation>
+        <source>Bitcoin</source>
+        <translation>Bitcoin</translation>
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
@@ -1378,7 +1378,7 @@
     </message>
     <message>
         <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation>NdovuCoin を起動できません: click-to-pay handler</translation>
+        <translation>Bitcoin を起動できません: click-to-pay handler</translation>
     </message>
     <message>
         <source>URI handling</source>

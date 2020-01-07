@@ -1,5 +1,5 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: NdovuCoin
+Upstream-Name: Bitcoin
 Upstream-Contact: Satoshi Nakamoto <satoshin@gmx.com>
  irc://#bitcoin@freenode.net
 Source: https://github.com/bitcoin/bitcoin
@@ -7,7 +7,7 @@ Source: https://github.com/bitcoin/bitcoin
 Files: *
 Copyright: 2009-2020, Bitcoin Core Developers
 License: Expat
-Comment: The NdovuCoin Core Developers encompasses the current developers listed on bitcoin.org,
+Comment: The Bitcoin Core Developers encompasses the current developers listed on bitcoin.org,
          as well as the numerous contributors to the project.
 
 Files: debian/*

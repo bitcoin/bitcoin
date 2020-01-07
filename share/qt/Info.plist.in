@@ -32,13 +32,13 @@
   <string>Bitcoin-Qt</string>
 
   <key>CFBundleName</key>
-  <string>NdovuCoin-Qt</string>
+  <string>Bitcoin-Qt</string>
 
   <key>LSHasLocalizedDisplayName</key>
   <true/>
 
   <key>CFBundleIdentifier</key>
-  <string>org.bitcoinfoundation.NdovuCoin-Qt</string>
+  <string>org.bitcoinfoundation.Bitcoin-Qt</string>
 
   <key>CFBundleURLTypes</key>
   <array>

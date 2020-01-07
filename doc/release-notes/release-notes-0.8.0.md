@@ -1,5 +1,5 @@
-NdovuCoin-Qt version 0.8.0 is now available from:
-  http://sourceforge.net/projects/bitcoin/files/NdovuCoin/bitcoin-0.8.0/
+Bitcoin-Qt version 0.8.0 is now available from:
+  http://sourceforge.net/projects/bitcoin/files/Bitcoin/bitcoin-0.8.0/
 
 This is a major release designed to improve performance and handle the
 increasing volume of transactions on the network.
@@ -13,7 +13,7 @@ How to Upgrade
 If you are running an older version, shut it down. Wait
 until it has completely shut down (which might take a few minutes for older
 versions), then run the installer (on Windows) or just copy over
-/Applications/NdovuCoin-Qt (on Mac) or bitcoind/bitcoin-qt (on Linux).
+/Applications/Bitcoin-Qt (on Mac) or bitcoind/bitcoin-qt (on Linux).
 
 The first time you run after the upgrade a re-indexing process will be
 started that will take anywhere from 30 minutes to several hours,
@@ -31,7 +31,7 @@ details).
 Improvements
 ------------
 
-Mac and Windows binaries are signed with certificates owned by the NdovuCoin
+Mac and Windows binaries are signed with certificates owned by the Bitcoin
 Foundation, to be compatible with the new security features in OSX 10.8 and
 Windows 8.
 

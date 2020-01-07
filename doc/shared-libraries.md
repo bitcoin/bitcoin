@@ -3,7 +3,7 @@ Shared Libraries
 
 ## bitcoinconsensus
 
-The purpose of this library is to make the verification functionality that is critical to NdovuCoin's consensus available to other applications, e.g. to language bindings.
+The purpose of this library is to make the verification functionality that is critical to Bitcoin's consensus available to other applications, e.g. to language bindings.
 
 ### API
 

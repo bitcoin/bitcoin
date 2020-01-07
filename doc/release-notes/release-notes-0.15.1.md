@@ -1,4 +1,4 @@
-NdovuCoin Core version *0.15.1* is now available from:
+Bitcoin Core version *0.15.1* is now available from:
 
   <https://bitcoincore.org/bin/bitcoin-core-0.15.1/>
 
@@ -22,7 +22,7 @@ How to Upgrade
 
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the 
-installer (on Windows) or just copy over `/Applications/NdovuCoin-Qt` (on Mac)
+installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on Mac)
 or `bitcoind`/`bitcoin-qt` (on Linux).
 
 The first time you run version 0.15.0 or higher, your chainstate database will
@@ -52,10 +52,10 @@ processing the entire blockchain.
 Compatibility
 ==============
 
-NdovuCoin Core is extensively tested on multiple operating systems using
+Bitcoin Core is extensively tested on multiple operating systems using
 the Linux kernel, macOS 10.8+, and Windows Vista and later. Windows XP is not supported.
 
-NdovuCoin Core should also work on most other Unix-like systems but is not
+Bitcoin Core should also work on most other Unix-like systems but is not
 frequently tested on them.
 
 
@@ -65,7 +65,7 @@ Notable changes
 Network fork safety enhancements
 --------------------------------
 
-A number of changes to the way NdovuCoin Core deals with peer connections and invalid blocks
+A number of changes to the way Bitcoin Core deals with peer connections and invalid blocks
 have been made, as a safety precaution against blockchain forks and misbehaving peers.
 
 - Unrequested blocks with less work than the minimum-chain-work are now no longer processed even

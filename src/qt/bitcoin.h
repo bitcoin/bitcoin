@@ -26,7 +26,7 @@ class Handler;
 class Node;
 } // namespace interfaces
 
-/** Class encapsulating NdovuCoin Core startup and shutdown.
+/** Class encapsulating Bitcoin Core startup and shutdown.
  * Allows running startup and shutdown in a different thread from the UI thread.
  */
 class BitcoinCore: public QObject
@@ -51,7 +51,7 @@ private:
     interfaces::Node& m_node;
 };
 
-/** Main NdovuCoin application object */
+/** Main Bitcoin application object */
 class BitcoinApplication: public QApplication
 {
     Q_OBJECT
