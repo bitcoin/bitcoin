@@ -499,11 +499,21 @@ class DashTestFramework(BitcoinTestFramework):
             for i in range(0, num_nodes):
                 self.extra_args[i].append("-dip3params=30:50")
 
+        # LLMQ default test params (no need to pass -llmqtestparams)
+        self.llmq_size = 3
+        self.llmq_threshold = 2
+
     def set_dash_dip8_activation(self, activate_after_block):
         window = int((activate_after_block + 2) / 3)
         threshold = int((window + 1) / 2)
         for i in range(0, self.num_nodes):
             self.extra_args[i].append("-vbparams=dip0008:0:999999999999:%d:%d" % (window, threshold))
+
+    def set_dash_llmq_test_params(self, llmq_size, llmq_threshold):
+        self.llmq_size = llmq_size
+        self.llmq_threshold = llmq_threshold
+        for i in range(0, self.num_nodes):
+            self.extra_args[i].append("-llmqtestparams=%d:%d" % (self.llmq_size, self.llmq_threshold))
 
     def create_simple_node(self):
         idx = len(self.nodes)
@@ -746,15 +756,16 @@ class DashTestFramework(BitcoinTestFramework):
             return all(node.spork('show') == sporks for node in self.nodes[1:])
         wait_until(check_sporks_same, timeout=timeout, sleep=0.5)
 
-    def wait_for_quorum_phase(self, phase, check_received_messages, check_received_messages_count, timeout=30):
+    def wait_for_quorum_phase(self, phase, expected_member_count, check_received_messages, check_received_messages_count, timeout=30):
         def check_dkg_session():
             all_ok = True
+            member_count = 0
             for mn in self.mninfo:
                 s = mn.node.quorum("dkgstatus")["session"]
-                if "llmq_5_60" not in s:
-                    all_ok = False
-                    break
-                s = s["llmq_5_60"]
+                if "llmq_test" not in s:
+                    continue
+                member_count += 1
+                s = s["llmq_test"]
                 if "phase" not in s:
                     all_ok = False
                     break
@@ -765,6 +776,8 @@ class DashTestFramework(BitcoinTestFramework):
                     if s[check_received_messages] < check_received_messages_count:
                         all_ok = False
                         break
+            if all_ok and member_count != expected_member_count:
+                return False
             return all_ok
         wait_until(check_dkg_session, timeout=timeout, sleep=0.1)
 
@@ -777,15 +790,22 @@ class DashTestFramework(BitcoinTestFramework):
                     all_ok = False
                     break
                 s = s["minableCommitments"]
-                if "llmq_5_60" not in s:
+                if "llmq_test" not in s:
                     all_ok = False
                     break
             return all_ok
         wait_until(check_dkg_comitments, timeout=timeout, sleep=0.1)
 
-    def mine_quorum(self, expected_contributions=5, expected_complaints=0, expected_justifications=0, expected_commitments=5):
-        self.log.info("Mining quorum: expected_contributions=%d, expected_complaints=%d, expected_justifications=%d, "
-                      "expected_commitments=%d" % (expected_contributions, expected_complaints,
+    def mine_quorum(self, expected_members=None, expected_contributions=None, expected_complaints=0, expected_justifications=0, expected_commitments=None):
+        if expected_members is None:
+            expected_members = self.llmq_size
+        if expected_contributions is None:
+            expected_contributions = self.llmq_size
+        if expected_commitments is None:
+            expected_commitments = self.llmq_size
+
+        self.log.info("Mining quorum: expected_members=%d, expected_contributions=%d, expected_complaints=%d, expected_justifications=%d, "
+                      "expected_commitments=%d" % (expected_members, expected_contributions, expected_complaints,
                                                    expected_justifications, expected_commitments))
 
         quorums = self.nodes[0].quorum("list")
@@ -799,7 +819,7 @@ class DashTestFramework(BitcoinTestFramework):
         sync_blocks(self.nodes)
 
         self.log.info("Waiting for phase 1 (init)")
-        self.wait_for_quorum_phase(1, None, 0)
+        self.wait_for_quorum_phase(1, expected_members, None, 0)
         # Give nodes some time to connect to neighbors
         time.sleep(2)
         self.bump_mocktime(1)
@@ -808,35 +828,35 @@ class DashTestFramework(BitcoinTestFramework):
         sync_blocks(self.nodes)
 
         self.log.info("Waiting for phase 2 (contribute)")
-        self.wait_for_quorum_phase(2, "receivedContributions", expected_contributions)
+        self.wait_for_quorum_phase(2, expected_members, "receivedContributions", expected_contributions)
         self.bump_mocktime(1)
         set_node_times(self.nodes, self.mocktime)
         self.nodes[0].generate(2)
         sync_blocks(self.nodes)
 
         self.log.info("Waiting for phase 3 (complain)")
-        self.wait_for_quorum_phase(3, "receivedComplaints", expected_complaints)
+        self.wait_for_quorum_phase(3, expected_members, "receivedComplaints", expected_complaints)
         self.bump_mocktime(1)
         set_node_times(self.nodes, self.mocktime)
         self.nodes[0].generate(2)
         sync_blocks(self.nodes)
 
         self.log.info("Waiting for phase 4 (justify)")
-        self.wait_for_quorum_phase(4, "receivedJustifications", expected_justifications)
+        self.wait_for_quorum_phase(4, expected_members, "receivedJustifications", expected_justifications)
         self.bump_mocktime(1)
         set_node_times(self.nodes, self.mocktime)
         self.nodes[0].generate(2)
         sync_blocks(self.nodes)
 
         self.log.info("Waiting for phase 5 (commit)")
-        self.wait_for_quorum_phase(5, "receivedPrematureCommitments", expected_commitments)
+        self.wait_for_quorum_phase(5, expected_members, "receivedPrematureCommitments", expected_commitments)
         self.bump_mocktime(1)
         set_node_times(self.nodes, self.mocktime)
         self.nodes[0].generate(2)
         sync_blocks(self.nodes)
 
         self.log.info("Waiting for phase 6 (mining)")
-        self.wait_for_quorum_phase(6, None, 0)
+        self.wait_for_quorum_phase(6, expected_members, None, 0)
 
         self.log.info("Waiting final commitment")
         self.wait_for_quorum_commitment()
@@ -851,7 +871,7 @@ class DashTestFramework(BitcoinTestFramework):
             set_node_times(self.nodes, self.mocktime)
             self.nodes[0].generate(1)
             sync_blocks(self.nodes)
-        new_quorum = self.nodes[0].quorum("list", 1)["llmq_5_60"][0]
+        new_quorum = self.nodes[0].quorum("list", 1)["llmq_test"][0]
         quorum_info = self.nodes[0].quorum("info", 100, new_quorum)
 
         # Mine 8 (SIGN_HEIGHT_OFFSET) more blocks to make sure that the new quorum gets eligable for signing sessions

@@ -1435,6 +1435,21 @@ bool AppInitParameterInteraction()
         return InitError("LLMQ type for ChainLocks can only be overridden on devnet.");
     }
 
+    if (chainparams.NetworkIDString() == CBaseChainParams::REGTEST) {
+        if (gArgs.IsArgSet("-llmqtestparams")) {
+            std::string s = gArgs.GetArg("-llmqtestparams", "");
+            std::vector<std::string> v;
+            boost::split(v, s, boost::is_any_of(":"));
+            int size, threshold;
+            if (v.size() != 2 || !ParseInt32(v[0], &size) || !ParseInt32(v[1], &threshold)) {
+                return InitError("Invalid -llmqtestparams specified");
+            }
+            UpdateLLMQTestParams(size, threshold);
+        }
+    } else if (gArgs.IsArgSet("-llmqtestparams")) {
+        return InitError("LLMQ test params can only be overridden on regtest.");
+    }
+
     if (gArgs.IsArgSet("-maxorphantx")) {
         InitWarning("-maxorphantx is not supported anymore. Use -maxorphantxsize instead.");
     }

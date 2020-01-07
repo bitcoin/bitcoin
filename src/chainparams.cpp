@@ -117,6 +117,13 @@ void CChainParams::UpdateLLMQChainLocks(Consensus::LLMQType llmqType) {
     consensus.llmqTypeChainLocks = llmqType;
 }
 
+void CChainParams::UpdateLLMQTestParams(int size, int threshold) {
+    auto& params = consensus.llmqs.at(Consensus::LLMQ_TEST);
+    params.size = size;
+    params.minSize = threshold;
+    params.threshold = threshold;
+}
+
 static CBlock FindDevNetGenesisBlock(const Consensus::Params& params, const CBlock &prevBlock, const CAmount& reward)
 {
     std::string devNetName = GetDevNetName();
@@ -142,12 +149,12 @@ static CBlock FindDevNetGenesisBlock(const Consensus::Params& params, const CBlo
 }
 
 // this one is for testing only
-static Consensus::LLMQParams llmq5_60 = {
-        .type = Consensus::LLMQ_5_60,
-        .name = "llmq_5_60",
-        .size = 5,
-        .minSize = 3,
-        .threshold = 3,
+static Consensus::LLMQParams llmq_test = {
+        .type = Consensus::LLMQ_TEST,
+        .name = "llmq_test",
+        .size = 3,
+        .minSize = 2,
+        .threshold = 2,
 
         .dkgInterval = 24, // one DKG per hour
         .dkgPhaseBlocks = 2,
@@ -835,10 +842,10 @@ public:
         nExtCoinType = 1;
 
         // long living quorum params
-        consensus.llmqs[Consensus::LLMQ_5_60] = llmq5_60;
+        consensus.llmqs[Consensus::LLMQ_TEST] = llmq_test;
         consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
-        consensus.llmqTypeChainLocks = Consensus::LLMQ_5_60;
-        consensus.llmqTypeInstantSend = Consensus::LLMQ_5_60;
+        consensus.llmqTypeChainLocks = Consensus::LLMQ_TEST;
+        consensus.llmqTypeInstantSend = Consensus::LLMQ_TEST;
     }
 };
 
@@ -891,4 +898,9 @@ void UpdateDevnetSubsidyAndDiffParams(int nMinimumDifficultyBlocks, int nHighSub
 void UpdateDevnetLLMQChainLocks(Consensus::LLMQType llmqType)
 {
     globalChainParams->UpdateLLMQChainLocks(llmqType);
+}
+
+void UpdateLLMQTestParams(int size, int threshold)
+{
+    globalChainParams->UpdateLLMQTestParams(size, threshold);
 }
