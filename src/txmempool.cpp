@@ -123,7 +123,7 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256> &vHashes
     // UpdateForDescendants.
     for (const uint256 &hash : reverse_iterate(vHashesToUpdate)) {
         // we cache the in-mempool children to avoid duplicate updates
-        setEntries setChildren;
+        uint64_t epoch = GetFreshEpoch();
         // calculate children from mapNextTx
         txiter it = mapTx.find(hash);
         if (it == mapTx.end()) {
@@ -138,7 +138,7 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256> &vHashes
             assert(childIter != mapTx.end());
             // We can skip updating entries we've encountered before or that
             // are in the block (which are already accounted for).
-            if (setChildren.insert(childIter).second && !setAlreadyIncluded.count(childHash)) {
+            if (!childIter->already_touched(epoch) && !setAlreadyIncluded.count(childHash)) {
                 UpdateChild(it, childIter, true);
                 UpdateParent(childIter, it, true);
             }
