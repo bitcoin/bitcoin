@@ -456,7 +456,8 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
 // Also assumes that if an entry is in setDescendants already, then all
 // in-mempool descendants of it are already in setDescendants as well, so that we
 // can save time by not iterating over those entries.
-void CTxMemPool::CalculateDescendants(txiter it, setEntries& setDescendants, std::vector<txiter>& stack, const uint64_t epoch, const uint8_t limit) const {
+void CTxMemPool::CalculateDescendants(txiter it, setEntries& setDescendants, std::vector<txiter>& stack, const uint64_t epoch, const uint8_t limit) const
+{
         for (txiter childiter : GetMemPoolChildren(it)) {
             if (childiter->already_touched(epoch)) continue;
             if (!setDescendants.insert(childiter).second) continue;
@@ -464,17 +465,22 @@ void CTxMemPool::CalculateDescendants(txiter it, setEntries& setDescendants, std
             else stack.push_back(childiter);
         }
 }
+
 void CTxMemPool::CalculateDescendants(txiter entryit, setEntries& setDescendants) const
+{
+    CalculateDescendants(entryit, setDescendants, GetFreshEpoch());
+}
+
+void CTxMemPool::CalculateDescendants(txiter entryit, setEntries& setDescendants, const uint64_t cached_epoch) const
 {
     if (!setDescendants.insert(entryit).second) return;
     // Traverse down the children of entry, only adding children that are not
     // accounted for in setDescendants already (because those children have either
     // already been walked, or will be walked in this iteration).
-    const uint64_t epoch = GetFreshEpoch();
     txiter it = entryit;
     std::vector<txiter> stack;
     do {
-        CalculateDescendants(it, setDescendants, stack, epoch);
+        CalculateDescendants(it, setDescendants, stack, cached_epoch);
     } while (!stack.empty() && (it = stack.back(), stack.pop_back(), true));
 
 }
@@ -502,8 +508,9 @@ void CTxMemPool::removeRecursive(const CTransaction &origTx, MemPoolRemovalReaso
             }
         }
         setEntries setAllRemoves;
+        const uint64_t epoch = GetFreshEpoch();
         for (txiter it : txToRemove) {
-            CalculateDescendants(it, setAllRemoves);
+            CalculateDescendants(it, setAllRemoves, epoch);
         }
 
         RemoveStaged(setAllRemoves, false, reason);
@@ -540,8 +547,9 @@ void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMem
         }
     }
     setEntries setAllRemoves;
+    const uint64_t epoch = GetFreshEpoch();
     for (txiter it : txToRemove) {
-        CalculateDescendants(it, setAllRemoves);
+        CalculateDescendants(it, setAllRemoves, epoch);
     }
     RemoveStaged(setAllRemoves, false, MemPoolRemovalReason::REORG);
 }
@@ -952,8 +960,9 @@ int CTxMemPool::Expire(std::chrono::seconds time)
         it++;
     }
     setEntries stage;
+    const uint64_t epoch = GetFreshEpoch();
     for (txiter removeit : toremove) {
-        CalculateDescendants(removeit, stage);
+        CalculateDescendants(removeit, stage, epoch);
     }
     RemoveStaged(stage, false, MemPoolRemovalReason::EXPIRY);
     return stage.size();
