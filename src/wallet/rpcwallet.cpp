@@ -3365,10 +3365,11 @@ static UniValue bumpfee(const JSONRPCRequest& request)
                 },
                 RPCResult{
             "{\n"
-            "  \"txid\":    \"value\",   (string)  The id of the new transaction\n"
-            "  \"origfee\":  n,         (numeric) Fee of the replaced transaction\n"
-            "  \"fee\":      n,         (numeric) Fee of the new transaction\n"
-            "  \"errors\":  [ str... ] (json array of strings) Errors encountered during processing (may be empty)\n"
+            "  \"psbt\":    \"psbt\",    (string) The base64-encoded unsigned PSBT of the new transaction. Only returned when wallet private keys are disabled.\n"
+            "  \"txid\":    \"value\",   (string) The id of the new transaction. Only returned when wallet private keys are enabled.\n"
+            "  \"origfee\":  n,        (numeric) The fee of the replaced transaction.\n"
+            "  \"fee\":      n,        (numeric) The fee of the new transaction.\n"
+            "  \"errors\":  [ str... ] (json array of strings) Errors encountered during processing (may be empty).\n"
             "}\n"
                 },
                 RPCExamples{
@@ -3380,10 +3381,12 @@ static UniValue bumpfee(const JSONRPCRequest& request)
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VOBJ});
     uint256 hash(ParseHashV(request.params[0], "txid"));
 
+    CCoinControl coin_control;
+    coin_control.fAllowWatchOnly = pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
     // optional parameters
     CAmount totalFee = 0;
-    CCoinControl coin_control;
     coin_control.m_signal_bip125_rbf = true;
+
     if (!request.params[1].isNull()) {
         UniValue options = request.params[1];
         RPCTypeCheckObj(options,
@@ -3468,17 +3471,32 @@ static UniValue bumpfee(const JSONRPCRequest& request)
         }
     }
 
-    // sign bumped transaction
-    if (!feebumper::SignTransaction(*pwallet, mtx)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Can't sign transaction.");
-    }
-    // commit the bumped transaction
-    uint256 txid;
-    if (feebumper::CommitTransaction(*pwallet, hash, std::move(mtx), errors, txid) != feebumper::Result::OK) {
-        throw JSONRPCError(RPC_WALLET_ERROR, errors[0]);
-    }
     UniValue result(UniValue::VOBJ);
-    result.pushKV("txid", txid.GetHex());
+
+    // If wallet private keys are enabled, return the new transaction id,
+    // otherwise return the base64-encoded unsigned PSBT of the new transaction.
+    if (!pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        if (!feebumper::SignTransaction(*pwallet, mtx)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Can't sign transaction.");
+        }
+
+        uint256 txid;
+        if (feebumper::CommitTransaction(*pwallet, hash, std::move(mtx), errors, txid) != feebumper::Result::OK) {
+            throw JSONRPCError(RPC_WALLET_ERROR, errors[0]);
+        }
+
+        result.pushKV("txid", txid.GetHex());
+    } else {
+        PartiallySignedTransaction psbtx(mtx);
+        bool complete = false;
+        const TransactionError err = FillPSBT(pwallet, psbtx, complete, SIGHASH_ALL, false /* sign */, true /* bip32derivs */);
+        CHECK_NONFATAL(err == TransactionError::OK);
+        CHECK_NONFATAL(!complete);
+        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+        ssTx << psbtx;
+        result.pushKV("psbt", EncodeBase64(ssTx.str()));
+    }
+
     result.pushKV("origfee", ValueFromAmount(old_fee));
     result.pushKV("fee", ValueFromAmount(new_fee));
     UniValue result_errors(UniValue::VARR);
