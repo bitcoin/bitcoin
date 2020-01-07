@@ -168,10 +168,10 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256> &vHashes
 
 bool CTxMemPool::CalculateMemPoolAncestors(const CTxMemPoolEntry &entry, setEntries &setAncestors, uint64_t limitAncestorCount, uint64_t limitAncestorSize, uint64_t limitDescendantCount, uint64_t limitDescendantSize, std::string &errString, bool fSearchForParents /* = true */) const
 {
-    std::vector<txiter> parentHashes;
+    std::vector<txiter> ancestors;
     const CTransaction &tx = entry.GetTx();
+    const uint64_t epoch = GetFreshEpoch();
     if (fSearchForParents) {
-        const uint64_t epoch = GetFreshEpoch();
         // Get parents of this transaction that are in the mempool
         // GetMemPoolParents() is only valid for entries in the mempool, so we
         // iterate mapTx to find parents.
@@ -179,8 +179,8 @@ bool CTxMemPool::CalculateMemPoolAncestors(const CTxMemPoolEntry &entry, setEntr
             Optional<txiter> piter = GetIter(tx.vin[i].prevout.hash);
             if (piter) {
                 if ((*piter)->already_touched(epoch)) continue;
-                parentHashes.push_back(*piter);
-                if (parentHashes.size() + 1 > limitAncestorCount) {
+                ancestors.push_back(*piter);
+                if (ancestors.size() + 1 > limitAncestorCount) {
                     errString = strprintf("too many unconfirmed parents [limit: %u]", limitAncestorCount);
                     return false;
                 }
@@ -191,18 +191,20 @@ bool CTxMemPool::CalculateMemPoolAncestors(const CTxMemPoolEntry &entry, setEntr
         // entry in the mempool already.
         txiter it = mapTx.iterator_to(entry);
         auto& ref_parents = GetMemPoolParents(it);
-        parentHashes.assign(ref_parents.cbegin(), ref_parents.cend());
+        ancestors.assign(ref_parents.cbegin(), ref_parents.cend());
+        // touch before walking so we don't add a duplicate
+        for (txiter it : ancestors) {
+            it->already_touched(epoch);
+        }
     }
+
 
     size_t totalSizeWithAncestors = entry.GetTxSize();
 
-    const uint64_t epoch = GetFreshEpoch();
-    while (!parentHashes.empty()) {
-        txiter stageit = parentHashes.back();
-        stageit->already_touched(epoch);
-        parentHashes.pop_back();
+    size_t next_idx = 0;
+    while (next_idx < ancestors.size()) {
+        txiter stageit = ancestors[next_idx++];
 
-        setAncestors.insert(stageit);
         totalSizeWithAncestors += stageit->GetTxSize();
 
         if (stageit->GetSizeWithDescendants() + entry.GetTxSize() > limitDescendantSize) {
@@ -221,14 +223,16 @@ bool CTxMemPool::CalculateMemPoolAncestors(const CTxMemPoolEntry &entry, setEntr
             // If this is a new ancestor, add it.
             if (phash->already_touched(epoch)) continue;
             if (setAncestors.count(phash) == 0) {
-                parentHashes.push_back(phash);
+                ancestors.push_back(phash);
             }
-            if (parentHashes.size() + setAncestors.size() + 1 > limitAncestorCount) {
+            if (setAncestors.size() + ancestors.size() + 1 > limitAncestorCount) {
                 errString = strprintf("too many unconfirmed ancestors [limit: %u]", limitAncestorCount);
                 return false;
             }
         }
     }
+    // This is just to preserve the output type for now
+    for (txiter ancestor : ancestors) setAncestors.insert(ancestor);
 
     return true;
 }
