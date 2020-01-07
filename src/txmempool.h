@@ -625,7 +625,7 @@ public:
      */
     template <typename T>
     void RemoveStagedImpl(T& stage, bool updateDescendants, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
-    void RemoveStaged(std::vector<txiter>& stage, bool updateDescendants, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void RemoveStaged(vecEntries& stage, bool updateDescendants, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void RemoveStaged(setEntries& stage, bool updateDescendants, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** When adding transactions from a disconnected block back to the mempool,
@@ -660,11 +660,11 @@ public:
      *  iterate over them and don't care about order
      *
      * CalculateDescendantsVec does not include self (it)*/
-    void CalculateDescendantsVec(txiter it, std::vector<txiter>& descendants, std::vector<txiter>& stack,
+    void CalculateDescendantsVec(txiter it, vecEntries& descendants, vecEntries& stack,
             const uint64_t epoch, const uint8_t limit=25) const EXCLUSIVE_LOCKS_REQUIRED(cs);
-    /** Assumes setDescednants is empty */
-    void CalculateDescendantsVec(txiter it, std::vector<txiter>& setDescendants) const EXCLUSIVE_LOCKS_REQUIRED(cs);
-    void CalculateDescendantsVec(txiter entryit, std::vector<txiter>& setDescendants, const uint64_t cached_epoch) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    /** Assumes descednants is empty */
+    void CalculateDescendantsVec(txiter it, vecEntries& descendants) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void CalculateDescendantsVec(txiter entryit, vecEntries& descendants, const uint64_t cached_epoch) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** The minimum fee to get into the mempool, which may itself not be enough
       *  for larger-sized transactions.
@@ -740,7 +740,7 @@ private:
             cacheMap &cachedDescendants,
             const std::set<uint256> &setExclude) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void UpdateForDescendantsInner(txiter param_it, txiter update_it, int64_t&size, CAmount& fee,
-            int64_t& count, cacheMap& cache, const std::set<uint256>& exclude, std::vector<txiter>&
+            int64_t& count, cacheMap& cache, const std::set<uint256>& exclude, vecEntries&
             stack, bool update_child_epochs, const uint64_t epoch, const uint8_t limit = 25) EXCLUSIVE_LOCKS_REQUIRED(cs);
     /** Update ancestors of hash to add/remove it as a descendant transaction. */
     void UpdateAncestorsOf(bool add, txiter hash, vecEntries &ancestors) EXCLUSIVE_LOCKS_REQUIRED(cs);
@@ -751,8 +751,8 @@ private:
       * ancestor state. */
     template <typename T>
     void UpdateForRemoveFromMempoolImpl(const T &entriesToRemove, bool updateDescendants) EXCLUSIVE_LOCKS_REQUIRED(cs);
-    void UpdateForRemoveFromMempool(const std::vector<txiter> &entriesToRemove, bool updateDescendants) EXCLUSIVE_LOCKS_REQUIRED(cs);
-    void UpdateForRemoveFromMempool(const setEntries &entriesToRemove, bool updateDescendants) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void UpdateForRemoveFromMempool(const vecEntries& entriesToRemove, bool updateDescendants) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void UpdateForRemoveFromMempool(const setEntries& entriesToRemove, bool updateDescendants) EXCLUSIVE_LOCKS_REQUIRED(cs);
     /** Sever link between specified transaction and direct children. */
     void UpdateChildrenForRemoval(txiter entry) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
