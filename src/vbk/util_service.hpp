@@ -3,11 +3,13 @@
 
 #include <array>
 
-#include "vbk/entity/context_info_container.hpp"
-#include "vbk/entity/publications.hpp"
+#include <vbk/entity/context_info_container.hpp>
+#include <vbk/entity/publications.hpp>
+
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <script/script_error.h>
+#include <consensus/params.h>
 
 class CBlockIndex;
 class TxValidationState;
@@ -33,8 +35,8 @@ struct UtilService {
 
     // Pop rewards methods
     virtual PoPRewards getPopRewards(const CBlockIndex& pindexPrev) = 0;
-    virtual void addPopPayoutsIntoCoinbaseTx(CMutableTransaction& coinbaseTx, const CBlockIndex& pindexPrev) = 0;
-    virtual bool checkCoinbaseTxWithPopRewards(const CTransaction& tx, const CAmount& PoWBlockReward, const CBlockIndex& pindexPrev, BlockValidationState& state) = 0;
+    virtual void addPopPayoutsIntoCoinbaseTx(CMutableTransaction& coinbaseTx, const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams) = 0;
+    virtual bool checkCoinbaseTxWithPopRewards(const CTransaction& tx, const CAmount& PoWBlockReward, const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams, BlockValidationState& state) = 0;
 
     virtual bool validatePopTx(const CTransaction& tx, TxValidationState& state) = 0;
 
