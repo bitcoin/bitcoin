@@ -490,16 +490,18 @@ void CTxMemPool::removeRecursive(const CTransaction &origTx, MemPoolRemovalReaso
 {
     // Remove transaction from memory pool
     AssertLockHeld(cs);
+        GetFreshEpoch();
         vecEntries txToRemove;
         txiter origit = mapTx.find(origTx.GetHash());
+        // All txToRemove will be touched, this guarantees txToRemove gets no duplicates
         if (origit != mapTx.end()) {
             txToRemove.push_back(origit);
+            already_touched(origit);
         } else {
             // When recursively removing but origTx isn't in the mempool
             // be sure to remove any children that are in the pool. This can
             // happen during chain re-orgs if origTx isn't re-accepted into
             // the mempool for any reason.
-            GetFreshEpoch();
             for (unsigned int i = 0; i < origTx.vout.size(); i++) {
                 auto it = mapNextTx.find(COutPoint(origTx.GetHash(), i));
                 if (it == mapNextTx.end())
@@ -509,13 +511,6 @@ void CTxMemPool::removeRecursive(const CTransaction &origTx, MemPoolRemovalReaso
                 if (already_touched(nextit)) continue;
                 txToRemove.push_back(nextit);
             }
-        }
-        GetFreshEpoch();
-        // touch all txToRemove first to force CalculateDescendantsVec
-        // to not recurse if we're going to call it later.
-        // This guarantees txToRemove gets no duplicates
-        for (txiter it : txToRemove) {
-            already_touched(it);
         }
         // max_idx is used rather than iterator because txToRemove may grow
         const size_t max_idx = txToRemove.size();
