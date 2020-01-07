@@ -178,16 +178,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
 void BlockAssembler::onlyUnconfirmed(CTxMemPool::vecEntries& testSet)
 {
-    size_t max_element = testSet.size(), i = 0;
-    while (i < max_element) {
-        bool not_in_block = !inBlock.count(testSet[i]);
-        // if !not_in_block, set testSet[i] to testSet[max_element-1]
-        max_element -= !not_in_block;
-        testSet[i] = testSet[!not_in_block*max_element + not_in_block*i];
-        i += not_in_block;
-    }
-    // drop erased elements
-    testSet.resize(max_element);
+    testSet.erase(std::remove_if(testSet.begin(), testSet.end(),
+                [this](CTxMemPool::txiter t){return inBlock.count(t);}), testSet.end());
 }
 
 bool BlockAssembler::TestPackage(uint64_t packageSize, int64_t packageSigOpsCost) const
