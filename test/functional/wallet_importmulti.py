@@ -29,7 +29,6 @@ from test_framework.util import (
 from test_framework.wallet_util import (
     get_key,
     get_multisig,
-    labels_value,
     test_address,
 )
 
@@ -571,7 +570,7 @@ class ImportMultiTest(BitcoinTestFramework):
                      solvable=True,
                      ismine=True,
                      label=p2sh_p2wpkh_label,
-                     labels=labels_value(name=p2sh_p2wpkh_label))
+                     labels=[p2sh_p2wpkh_label])
 
         # Test ranged descriptor fails if range is not specified
         xpriv = "tprv8ZgxMBicQKsPeuVhWwi6wuMQGfPKi9Li5GtX35jVNknACgqe3CY4g5xgkfDDJcmtF7o1QnxWDRYw4H5P26PXq7sbcUkEqeR4fg3Kxp2tigg"
@@ -643,7 +642,7 @@ class ImportMultiTest(BitcoinTestFramework):
                      solvable=True,
                      ismine=False,
                      label=p2pkh_label,
-                     labels=labels_value(name=p2pkh_label))
+                     labels=[p2pkh_label])
 
         # Test import fails if both desc and scriptPubKey are provided
         key = get_key(self.nodes[0])
