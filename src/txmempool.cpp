@@ -501,40 +501,48 @@ void CTxMemPool::removeRecursive(const CTransaction &origTx, MemPoolRemovalReaso
 {
     // Remove transaction from memory pool
     AssertLockHeld(cs);
-        setEntries txToRemove;
+        vecEntries txToRemove;
         txiter origit = mapTx.find(origTx.GetHash());
         if (origit != mapTx.end()) {
-            txToRemove.insert(origit);
+            txToRemove.push_back(origit);
         } else {
             // When recursively removing but origTx isn't in the mempool
             // be sure to remove any children that are in the pool. This can
             // happen during chain re-orgs if origTx isn't re-accepted into
             // the mempool for any reason.
+            const uint64_t epoch = GetFreshEpoch();
             for (unsigned int i = 0; i < origTx.vout.size(); i++) {
                 auto it = mapNextTx.find(COutPoint(origTx.GetHash(), i));
                 if (it == mapNextTx.end())
                     continue;
                 txiter nextit = mapTx.find(it->second->GetHash());
                 assert(nextit != mapTx.end());
-                txToRemove.insert(nextit);
+                if (nextit->already_touched(epoch)) continue;
+                txToRemove.push_back(nextit);
             }
         }
-        vecEntries all_removes;
         const uint64_t epoch = GetFreshEpoch();
+        // touch all txToRemove first to force CalculateDescendantsVec
+        // to not recurse if we're going to call it later.
+        // This guarantees txToRemove gets no duplicates
         for (txiter it : txToRemove) {
-            if (it->already_touched(epoch)) continue;
-            CalculateDescendantsVec(it, all_removes, epoch);
-            all_removes.push_back(it);
+            it->already_touched(epoch);
+        }
+        // max_idx is used rather than iterator because txToRemove may grow
+        const size_t max_idx = txToRemove.size();
+        for (size_t idx = 0; idx < max_idx; ++idx) {
+            CalculateDescendantsVec(txToRemove[idx], txToRemove, epoch);
         }
 
-        RemoveStaged(all_removes, false, reason);
+        RemoveStaged(txToRemove, false, reason);
 }
 
 void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMemPoolHeight, int flags)
 {
     // Remove transactions spending a coinbase which are now immature and no-longer-final transactions
     AssertLockHeld(cs);
-    setEntries txToRemove;
+    vecEntries txToRemove;
+    // no need for an epoch or a set here since we only visit each it one time.
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         const CTransaction& tx = it->GetTx();
         LockPoints lp = it->GetLockPoints();
@@ -542,7 +550,7 @@ void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMem
         if (!CheckFinalTx(tx, flags) || !CheckSequenceLocks(*this, tx, flags, &lp, validLP)) {
             // Note if CheckSequenceLocks fails the LockPoints may still be invalid
             // So it's critical that we remove the tx and not depend on the LockPoints.
-            txToRemove.insert(it);
+            txToRemove.push_back(it);
         } else if (it->GetSpendsCoinbase()) {
             for (const CTxIn& txin : tx.vin) {
                 indexed_transaction_set::const_iterator it2 = mapTx.find(txin.prevout.hash);
@@ -551,7 +559,7 @@ void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMem
                 const Coin &coin = pcoins->AccessCoin(txin.prevout);
                 if (nCheckFrequency != 0) assert(!coin.IsSpent());
                 if (coin.IsSpent() || (coin.IsCoinBase() && ((signed long)nMemPoolHeight) - coin.nHeight < COINBASE_MATURITY)) {
-                    txToRemove.insert(it);
+                    txToRemove.push_back(it);
                     break;
                 }
             }
@@ -560,14 +568,21 @@ void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMem
             mapTx.modify(it, update_lock_points(lp));
         }
     }
-    vecEntries all_removes;
+
     const uint64_t epoch = GetFreshEpoch();
+    // touch all txToRemove first to force CalculateDescendantsVec
+    // to not recurse if we're going to call it later.
+    // This guarantees txToRemove gets no duplicates
     for (txiter it : txToRemove) {
-        if (it->already_touched(epoch)) continue;
-        CalculateDescendantsVec(it, all_removes, epoch);
-        all_removes.push_back(it);
+        it->already_touched(epoch);
     }
-    RemoveStaged(all_removes, false, MemPoolRemovalReason::REORG);
+    // max_idx is used rather than iterator because txToRemove may grow
+    const size_t max_idx = txToRemove.size();
+    for (size_t idx = 0; idx < max_idx; ++idx) {
+        CalculateDescendantsVec(txToRemove[idx], txToRemove, epoch);
+    }
+    RemoveStaged(txToRemove, false, MemPoolRemovalReason::REORG);
+
 }
 
 void CTxMemPool::removeConflicts(const CTransaction &tx)
