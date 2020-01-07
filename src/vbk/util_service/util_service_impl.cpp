@@ -139,19 +139,22 @@ uint256 UtilServiceImpl::makeTopLevelRoot(int height, const KeystoneArray& keyst
     return Hash(txRoot.begin(), txRoot.end(), contextHash.begin(), contextHash.end());
 }
 
-void UtilServiceImpl::addPopPayoutsIntoCoinbaseTx(CMutableTransaction& coinbaseTx, const CBlockIndex& pindexPrev)
+void UtilServiceImpl::addPopPayoutsIntoCoinbaseTx(CMutableTransaction& coinbaseTx, const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams)
 {
+    int halvings = (pindexPrev.nHeight + 1) / consensusParams.nSubsidyHalvingInterval;
+
     PoPRewards rewards = getService<UtilService>().getPopRewards(pindexPrev);
 
     for (const auto& itr : rewards) {
         CTxOut out;
         out.scriptPubKey = itr.first;
         out.nValue = itr.second;
+        out.nValue >>= halvings;
         coinbaseTx.vout.push_back(out);
     }
 }
 
-bool UtilServiceImpl::checkCoinbaseTxWithPopRewards(const CTransaction& tx, const CAmount& PoWBlockReward, const CBlockIndex& pindexPrev, BlockValidationState& state)
+bool UtilServiceImpl::checkCoinbaseTxWithPopRewards(const CTransaction& tx, const CAmount& PoWBlockReward, const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams, BlockValidationState& state)
 {
     PoPRewards rewards = getService<UtilService>().getPopRewards(pindexPrev);
 
@@ -160,10 +163,12 @@ bool UtilServiceImpl::checkCoinbaseTxWithPopRewards(const CTransaction& tx, cons
             strprintf("checkCoinbaseTxWithPopRewards(): coinbase has incorrect size of pop vouts (vouts_size=%d vs pop_vouts=%d)", tx.vout.size(), rewards.size()), "bad-pop-vouts-size");
     }
 
+    int halvings = (pindexPrev.nHeight + 1) / consensusParams.nSubsidyHalvingInterval;
+
     CAmount nTotalPopReward = 0;
     for (const auto& out : tx.vout) {
         auto it = rewards.find(out.scriptPubKey);
-        if (it != rewards.end() && it->second == out.nValue) {
+        if (it != rewards.end() && (it->second >> halvings) == out.nValue) {
             nTotalPopReward += it->second; // Pop reward
             rewards.erase(it);
         }

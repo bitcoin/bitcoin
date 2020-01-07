@@ -2186,7 +2186,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
 
     CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus()) + PoPrewards;
     assert(pindex->pprev && "previous block ptr is nullptr");
-    if (!VeriBlock::getService<VeriBlock::UtilService>().checkCoinbaseTxWithPopRewards(*block.vtx[0], blockReward, *pindex->pprev, state)) {
+    if (!VeriBlock::getService<VeriBlock::UtilService>().checkCoinbaseTxWithPopRewards(*block.vtx[0], blockReward, *pindex->pprev, chainparams.GetConsensus(), state)) {
         return false;
     }
 
