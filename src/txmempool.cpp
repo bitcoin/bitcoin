@@ -80,7 +80,7 @@ void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap &cachedDescendan
     // Update and add to cached descendant map
     auto main_it = updateIt;
     bool first_pass = true;
-    do {
+    auto func = [&] (txiter param_it) {
         auto& direct_children = GetMemPoolChildren(main_it);
         for (txiter cit : direct_children) {
             if (first_pass) cit->already_touched(epoch);
@@ -106,6 +106,9 @@ void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap &cachedDescendan
             }
         }
         first_pass = false;
+    };
+    do {
+        func(main_it);
     } while (!stack.empty() && (main_it = stack.back(), stack.pop_back(), true));
     mapTx.modify(updateIt, update_descendant_state(modifySize, modifyFee, modifyCount));
 }
