@@ -469,26 +469,21 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
 // can save time by not iterating over those entries.
 //
 // Note: it does not get inserted into the vector
-
-void CTxMemPool::CalculateDescendantsVec(txiter it, vecEntries& descendants, vecEntries& stack, const uint8_t limit) const
-{
-    for (txiter childiter : GetMemPoolChildren(it)) {
-        if (already_touched(childiter)) continue;
-        descendants.push_back(childiter);
-        if (limit > 0) CalculateDescendantsVec(childiter, descendants, stack, limit-1);
-        else stack.push_back(childiter);
-    }
-}
-
 void CTxMemPool::CalculateDescendantsVec(txiter entryit, vecEntries& descendants) const
 {
     // Traverse down the children of entry, only adding children that are not marked as visited by
     // the epoch
     txiter it = entryit;
-    vecEntries stack;
-    do {
-        CalculateDescendantsVec(it, descendants, stack);
-    } while (!stack.empty() && (it = stack.back(), stack.pop_back(), true));
+    size_t idx = descendants.size();
+    while (true) {
+        for (const auto& childiter : GetMemPoolChildren(it)) {
+            if (already_touched(childiter)) continue;
+            descendants.push_back(childiter);
+        }
+        if (idx == descendants.size()) break;
+        it = descendants[idx];
+        ++idx;
+    }
 }
 
 void CTxMemPool::removeRecursive(const CTransaction &origTx, MemPoolRemovalReason reason)

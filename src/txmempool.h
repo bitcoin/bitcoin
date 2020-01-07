@@ -651,9 +651,6 @@ public:
      *  iterate over them and don't care about order
      *
      * CalculateDescendantsVec does not include self (it)*/
-    void CalculateDescendantsVec(txiter it, vecEntries& descendants, vecEntries& stack,
-            const uint8_t limit=25) const EXCLUSIVE_LOCKS_REQUIRED(cs);
-    /** Assumes descednants is empty */
     void CalculateDescendantsVec(txiter it, vecEntries& descendants) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** The minimum fee to get into the mempool, which may itself not be enough
