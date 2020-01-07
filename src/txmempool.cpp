@@ -456,6 +456,14 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
 // Also assumes that if an entry is in setDescendants already, then all
 // in-mempool descendants of it are already in setDescendants as well, so that we
 // can save time by not iterating over those entries.
+void CTxMemPool::CalculateDescendants(txiter it, setEntries& setDescendants, std::vector<txiter>& stack, const uint64_t epoch, const uint8_t limit) const {
+        for (txiter childiter : GetMemPoolChildren(it)) {
+            if (childiter->already_touched(epoch)) continue;
+            if (!setDescendants.insert(childiter).second) continue;
+            if (limit > 0) CalculateDescendants(childiter, setDescendants, stack, epoch, limit-1);
+            else stack.push_back(childiter);
+        }
+}
 void CTxMemPool::CalculateDescendants(txiter entryit, setEntries& setDescendants) const
 {
     if (!setDescendants.insert(entryit).second) return;
@@ -466,12 +474,7 @@ void CTxMemPool::CalculateDescendants(txiter entryit, setEntries& setDescendants
     txiter it = entryit;
     std::vector<txiter> stack;
     do {
-        const setEntries &setChildren = GetMemPoolChildren(it);
-        for (txiter childiter : setChildren) {
-            if (childiter->already_touched(epoch)) continue;
-            if (!setDescendants.insert(childiter).second) continue;
-            stack.push_back(childiter);
-        }
+        CalculateDescendants(it, setDescendants, stack, epoch);
     } while (!stack.empty() && (it = stack.back(), stack.pop_back(), true));
 
 }
