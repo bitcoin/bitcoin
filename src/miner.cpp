@@ -239,9 +239,13 @@ int BlockAssembler::UpdatePackagesForAdded(const SortedIterable& alreadyAdded,
         indexed_modified_transaction_set &mapModifiedTx)
 {
     int nDescendantsUpdated = 0;
+    CTxMemPool::vecEntries descendants;
     for (CTxMemPool::txiter it : alreadyAdded) {
-        CTxMemPool::setEntries descendants;
-        m_mempool.CalculateDescendants(it, descendants);
+        descendants.clear();
+        // can't use external epoch to loop because we want to update
+        // all descendants
+        // No need to add self (it) because we would filter it from the loop
+        m_mempool.CalculateDescendantsVec(it, descendants);
         // Insert all descendants (not yet in block) into the modified set
         for (CTxMemPool::txiter desc : descendants) {
             if (std::binary_search(alreadyAdded.cbegin(), alreadyAdded.cend(), desc, CTxMemPool::CompareIteratorByHash()))

@@ -642,10 +642,8 @@ static UniValue getmempooldescendants(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not in mempool");
     }
 
-    CTxMemPool::setEntries setDescendants;
-    mempool.CalculateDescendants(it, setDescendants);
-    // CTxMemPool::CalculateDescendants will include the given tx
-    setDescendants.erase(it);
+    CTxMemPool::vecEntries setDescendants;
+    mempool.CalculateDescendantsVec(it, setDescendants);
 
     if (!fVerbose) {
         UniValue o(UniValue::VARR);

@@ -465,7 +465,7 @@ private:
     struct Workspace {
         Workspace(const CTransactionRef& ptx) : m_ptx(ptx), m_hash(ptx->GetHash()) {}
         std::set<uint256> m_conflicts;
-        CTxMemPool::setEntries m_all_conflicting;
+        CTxMemPool::vecEntries m_all_conflicting;
         CTxMemPool::vecEntries m_ancestors;
         std::unique_ptr<CTxMemPoolEntry> m_entry;
 
@@ -543,7 +543,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     // Alias what we need out of ws
     std::set<uint256>& setConflicts = ws.m_conflicts;
-    CTxMemPool::setEntries& allConflicting = ws.m_all_conflicting;
+    CTxMemPool::vecEntries& all_conflicting = ws.m_all_conflicting;
     CTxMemPool::vecEntries& ancestors = ws.m_ancestors;
     assert(ancestors.empty());
     std::unique_ptr<CTxMemPoolEntry>& entry = ws.m_entry;
@@ -788,7 +788,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     nConflictingSize = 0;
     uint64_t nConflictingCount = 0;
 
-    // If we don't hold the lock allConflicting might be incomplete; the
+    // If we don't hold the lock all_conflicting might be incomplete; the
     // subsequent RemoveStaged() and addUnchecked() calls don't guarantee
     // mempool consistency for us.
     fReplacementTransaction = setConflicts.size();
@@ -835,10 +835,13 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         if (nConflictingCount <= maxDescendantsToVisit) {
             // If not too many to replace, then calculate the set of
             // transactions that would have to be evicted
+            const uint64_t epoch = m_pool.GetFreshEpoch();
             for (CTxMemPool::txiter it : setIterConflicting) {
-                m_pool.CalculateDescendants(it, allConflicting);
+                if (it->already_touched(epoch)) continue;
+                m_pool.CalculateDescendantsVec(it, all_conflicting, epoch);
+                all_conflicting.push_back(it);
             }
-            for (CTxMemPool::txiter it : allConflicting) {
+            for (CTxMemPool::txiter it : all_conflicting) {
                 nConflictingFees += it->GetModifiedFee();
                 nConflictingSize += it->GetTxSize();
             }
@@ -965,7 +968,7 @@ bool MemPoolAccept::Finalize(ATMPArgs& args, Workspace& ws)
     TxValidationState &state = args.m_state;
     const bool bypass_limits = args.m_bypass_limits;
 
-    CTxMemPool::setEntries& allConflicting = ws.m_all_conflicting;
+    CTxMemPool::vecEntries& all_conflicting = ws.m_all_conflicting;
     CTxMemPool::vecEntries& ancestors = ws.m_ancestors;
     const CAmount& nModifiedFees = ws.m_modified_fees;
     const CAmount& nConflictingFees = ws.m_conflicting_fees;
@@ -974,7 +977,7 @@ bool MemPoolAccept::Finalize(ATMPArgs& args, Workspace& ws)
     std::unique_ptr<CTxMemPoolEntry>& entry = ws.m_entry;
 
     // Remove conflicting transactions from the mempool
-    for (CTxMemPool::txiter it : allConflicting)
+    for (CTxMemPool::txiter it : all_conflicting)
     {
         LogPrint(BCLog::MEMPOOL, "replacing tx %s with %s for %s BTC additional fees, %d delta bytes\n",
                 it->GetTx().GetHash().ToString(),
@@ -984,7 +987,7 @@ bool MemPoolAccept::Finalize(ATMPArgs& args, Workspace& ws)
         if (args.m_replaced_transactions)
             args.m_replaced_transactions->push_back(it->GetSharedTx());
     }
-    m_pool.RemoveStaged(allConflicting, false, MemPoolRemovalReason::REPLACED);
+    m_pool.RemoveStaged(all_conflicting, false, MemPoolRemovalReason::REPLACED);
 
     // This transaction should only count for fee estimation if:
     // - it isn't a BIP 125 replacement transaction (may not be widely supported)
