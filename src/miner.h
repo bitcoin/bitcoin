@@ -195,9 +195,9 @@ private:
     void SortForBlock(CTxMemPool::vecEntries& package);
     /** Add descendants of given transactions to mapModifiedTx with ancestor
       * state updated assuming given transactions are inBlock. Returns number
-      * of updated descendants. */
-    template<typename SortedIterable>
-    int UpdatePackagesForAdded(const SortedIterable& alreadyAdded, indexed_modified_transaction_set &mapModifiedTx) EXCLUSIVE_LOCKS_REQUIRED(mempool.cs);
+      * of updated descendants. Param predicate tests if a child is in alreadyAdded.*/
+    template<typename Iterable, typename BinPred>
+    int UpdatePackagesForAdded(const Iterable& alreadyAdded, BinPred&& predicate, indexed_modified_transaction_set &mapModifiedTx) EXCLUSIVE_LOCKS_REQUIRED(mempool.cs);
 };
 
 /** Modify the extranonce in a block */

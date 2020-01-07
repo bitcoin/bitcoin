@@ -226,9 +226,9 @@ void BlockAssembler::AddToBlock(CTxMemPool::txiter iter)
     }
 }
 
-template<typename SortedIterable>
-int BlockAssembler::UpdatePackagesForAdded(const SortedIterable& alreadyAdded,
-        indexed_modified_transaction_set &mapModifiedTx)
+template<typename Iterable, typename BinPred>
+int BlockAssembler::UpdatePackagesForAdded(const Iterable& alreadyAdded,
+        BinPred&& predicate, indexed_modified_transaction_set &mapModifiedTx)
 {
     int nDescendantsUpdated = 0;
     CTxMemPool::vecEntries descendants;
@@ -240,8 +240,7 @@ int BlockAssembler::UpdatePackagesForAdded(const SortedIterable& alreadyAdded,
         m_mempool.CalculateDescendantsVec(it, descendants);
         // Insert all descendants (not yet in block) into the modified set
         for (CTxMemPool::txiter desc : descendants) {
-            if (std::binary_search(alreadyAdded.cbegin(), alreadyAdded.cend(), desc, CTxMemPool::CompareIteratorByHash()))
-                continue;
+            if (predicate(desc)) continue;
             ++nDescendantsUpdated;
             modtxiter mit = mapModifiedTx.find(desc);
             if (mit == mapModifiedTx.end()) {
@@ -302,7 +301,7 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
 
     // Start by adding all descendants of previously added txs to mapModifiedTx
     // and modifying them for their already included ancestors
-    UpdatePackagesForAdded(inBlock, mapModifiedTx);
+    UpdatePackagesForAdded(inBlock, [&](CTxMemPool::txiter t){return inBlock.count(t);}, mapModifiedTx);
 
     CTxMemPool::indexed_transaction_set::index<ancestor_score>::type::iterator mi = m_mempool.mapTx.get<ancestor_score>().begin();
     CTxMemPool::txiter iter;
@@ -419,7 +418,11 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
         // Sort before passing in
         // TODO: unclear if hash order is needed or if txiter would suffice
         std::sort(ancestors.begin(), ancestors.end(), CTxMemPool::CompareIteratorByHash());
-        nDescendantsUpdated += UpdatePackagesForAdded(ancestors, mapModifiedTx);
+
+        nDescendantsUpdated += UpdatePackagesForAdded(ancestors,
+                [&](CTxMemPool::txiter t){
+                    return std::binary_search(ancestors.cbegin(), ancestors.cend(), t, CTxMemPool::CompareIteratorByHash());
+                }, mapModifiedTx);
     }
 }
 
