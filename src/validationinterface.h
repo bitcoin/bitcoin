@@ -12,7 +12,7 @@
 #include <functional>
 #include <memory>
 
-extern CCriticalSection cs_main;
+extern RecursiveMutex cs_main;
 class BlockValidationState;
 class CBlock;
 class CBlockIndex;

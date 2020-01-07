@@ -420,7 +420,7 @@ public:
     void NotifyCanGetAddressesChanged() const;
     template<typename... Params> void WalletLogPrintf(const std::string& fmt, const Params&... parameters) const;
     CWallet& m_wallet;
-    CCriticalSection& cs_wallet;
+    RecursiveMutex& cs_wallet;
 };
 
 #endif // BITCOIN_WALLET_SCRIPTPUBKEYMAN_H

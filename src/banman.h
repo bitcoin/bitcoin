@@ -59,7 +59,7 @@ private:
     //!clean unused entries (if bantime has expired)
     void SweepBanned();
 
-    CCriticalSection m_cs_banned;
+    RecursiveMutex m_cs_banned;
     banmap_t m_banned GUARDED_BY(m_cs_banned);
     bool m_is_dirty GUARDED_BY(m_cs_banned);
     CClientUIInterface* m_client_interface = nullptr;
