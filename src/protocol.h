@@ -327,7 +327,7 @@ public:
             (nVersion >= CADDR_TIME_VERSION && !(s.GetType() & SER_GETHASH))) {
             READWRITE(obj.nTime);
         }
-        READWRITE(Wrap<Convert<uint64_t>>(obj.nServices));
+        READWRITE(Using<Convert<uint64_t>>(obj.nServices));
         READWRITEAS(CService, obj);
     }
 

@@ -153,7 +153,7 @@ class CService : public CNetAddr
         CService(const struct in6_addr& ipv6Addr, unsigned short port);
         explicit CService(const struct sockaddr_in6& addr);
 
-        SERIALIZE_METHODS(CService, obj) { READWRITE(obj.ip, Wrap<BigEndian>(obj.port)); }
+        SERIALIZE_METHODS(CService, obj) { READWRITE(obj.ip, Using<BigEndian>(obj.port)); }
 };
 
 #endif // BITCOIN_NETADDRESS_H

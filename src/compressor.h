@@ -31,92 +31,74 @@ uint64_t DecompressAmount(uint64_t nAmount);
  */
 struct ScriptCompression
 {
-    template<typename S>
-    class Wrapper
-    {
-    private:
-        /**
-         * make this static for now (there are only 6 special scripts defined)
-         * this can potentially be extended together with a new nVersion for
-         * transactions, in which case this value becomes dependent on nVersion
-         * and nHeight of the enclosing transaction.
-         */
-        static const unsigned int nSpecialScripts = 6;
+    /**
+     * make this static for now (there are only 6 special scripts defined)
+     * this can potentially be extended together with a new nVersion for
+     * transactions, in which case this value becomes dependent on nVersion
+     * and nHeight of the enclosing transaction.
+     */
+    static const unsigned int nSpecialScripts = 6;
 
-        S &script;
-    public:
-        explicit Wrapper(S &scriptIn) : script(scriptIn) { }
-
-        template<typename Stream>
-        void Serialize(Stream &s) const {
-            std::vector<unsigned char> compr;
-            if (CompressScript(script, compr)) {
-                s << MakeSpan(compr);
-                return;
-            }
-            unsigned int nSize = script.size() + nSpecialScripts;
-            s << VARINT(nSize);
-            s << MakeSpan(script);
+    template<typename Stream>
+    void Ser(Stream &s, const CScript& script) {
+        std::vector<unsigned char> compr;
+        if (CompressScript(script, compr)) {
+            s << MakeSpan(compr);
+            return;
         }
+        unsigned int nSize = script.size() + nSpecialScripts;
+        s << VARINT(nSize);
+        s << MakeSpan(script);
+    }
 
-        template<typename Stream>
-        void Unserialize(Stream &s) {
-            unsigned int nSize = 0;
-            s >> VARINT(nSize);
-            if (nSize < nSpecialScripts) {
-                std::vector<unsigned char> vch(GetSpecialScriptSize(nSize), 0x00);
-                s >> MakeSpan(vch);
-                DecompressScript(script, nSize, vch);
-                return;
-            }
-            nSize -= nSpecialScripts;
-            if (nSize > MAX_SCRIPT_SIZE) {
-                // Overly long script, replace with a short invalid one
-                script << OP_RETURN;
-                s.ignore(nSize);
-            } else {
-                script.resize(nSize);
-                s >> MakeSpan(script);
-            }
+    template<typename Stream>
+    void Unser(Stream &s, CScript& script) {
+        unsigned int nSize = 0;
+        s >> VARINT(nSize);
+        if (nSize < nSpecialScripts) {
+            std::vector<unsigned char> vch(GetSpecialScriptSize(nSize), 0x00);
+            s >> MakeSpan(vch);
+            DecompressScript(script, nSize, vch);
+            return;
         }
-    };
+        nSize -= nSpecialScripts;
+        if (nSize > MAX_SCRIPT_SIZE) {
+            // Overly long script, replace with a short invalid one
+            script << OP_RETURN;
+            s.ignore(nSize);
+        } else {
+            script.resize(nSize);
+            s >> MakeSpan(script);
+        }
+    }
 };
 
 struct AmountCompression
 {
-    template<typename I>
-    class Wrapper
+    template<typename Stream, typename I> void Ser(Stream& s, I val)
     {
-        I& m_val;
-    public:
-        explicit Wrapper(I& val) : m_val(val) {}
-        template<typename Stream> void Serialize(Stream& s) const
-        {
-            s << VARINT(CompressAmount(m_val));
-        }
-        template<typename Stream> void Unserialize(Stream& s)
-        {
-            uint64_t v;
-            s >> VARINT(v);
-            m_val = DecompressAmount(v);
-        }
-    };
+        s << VARINT(CompressAmount(val));
+    }
+    template<typename Stream, typename I> void Unser(Stream& s, I& val)
+    {
+        uint64_t v;
+        s >> VARINT(v);
+        val = DecompressAmount(v);
+    }
 };
 
 /** wrapper for CTxOut that provides a more compact serialization */
 struct TxOutCompression
 {
-    template<typename O>
-    class Wrapper
+    template<typename Stream> void Ser(Stream& s, const CTxOut& txout)
     {
-    private:
-        O &txout;
-    public:
-        Wrapper(O &txoutIn) : txout(txoutIn) { }
-        SERIALIZE_METHODS(Wrapper, obj) {
-            READWRITE(Wrap<AmountCompression>(obj.txout.nValue), Wrap<ScriptCompression>(obj.txout.scriptPubKey));
-        }
-    };
+        s << Using<AmountCompression>(txout.nValue) << Using<ScriptCompression>(txout.scriptPubKey);
+    }
+
+    template<typename Stream> void Unser(Stream& s, CTxOut& txout)
+    {
+        s >> Using<AmountCompression>(txout.nValue) >> Using<ScriptCompression>(txout.scriptPubKey);
+    }
 };
 
 #endif // BITCOIN_COMPRESSOR_H

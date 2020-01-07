@@ -13,28 +13,16 @@
 
 class WalletModel;
 
-//! Wrapper class to serialize QDateTime objects as 32-bit time_t.
+//! Formatter class to serialize QDateTime objects as 32-bit time_t.
 struct AsTimeT
 {
-    template<typename Q>
-    class Wrapper
+    template<typename Stream> static void Ser(Stream& s, const QDateTime& q) { s << (uint32_t)q.toTime_t(); }
+    template<typename Stream> static void Unser(Stream& s, QDateTime& q)
     {
-    private:
-        Q& m_qdatetime;
-    public:
-        Wrapper(Q& qdatetime) : m_qdatetime(qdatetime) {}
-
-        template<typename Stream>
-        void Serialize(Stream& s) const { s << (uint32_t)m_qdatetime.toTime_t(); }
-
-        template<typename Stream>
-        void Unserialize(Stream& s)
-        {
-            uint32_t timeval;
-            s >> timeval;
-            m_qdatetime = QDateTime::fromTime_t(timeval);
-        }
-    };
+        uint32_t timeval;
+        s >> timeval;
+        q = QDateTime::fromTime_t(timeval);
+    }
 };
 
 class RecentRequestEntry
@@ -50,7 +38,7 @@ public:
 
     SERIALIZE_METHODS(RecentRequestEntry, obj)
     {
-        READWRITE(obj.nVersion, obj.id, Wrap<AsTimeT>(obj.date), obj.recipient);
+        READWRITE(obj.nVersion, obj.id, Using<AsTimeT>(obj.date), obj.recipient);
     }
 };
 

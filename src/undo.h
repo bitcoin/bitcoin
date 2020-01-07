@@ -13,7 +13,7 @@
 #include <serialize.h>
 #include <version.h>
 
-/** Undo information for a CTxIn
+/** Formatter for undo information for a CTxIn
  *
  *  Contains the prevout's CTxOut being spent, and its metadata as well
  *  (coinbase or not, height). The serialization contains a dummy value of
@@ -22,40 +22,31 @@
  */
 struct TxInUndo
 {
-    template<typename C>
-    class Wrapper
-    {
-        C& txout;
-
-    public:
-        template<typename Stream>
-        void Serialize(Stream &s) const {
-            ::Serialize(s, VARINT(txout.nHeight * 2 + (txout.fCoinBase ? 1u : 0u)));
-            if (txout.nHeight > 0) {
-                // Required to maintain compatibility with older undo format.
-                ::Serialize(s, (unsigned char)0);
-            }
-            ::Serialize(s, Wrap<TxOutCompression>(txout.out));
+    template<typename Stream>
+    void Ser(Stream &s, const Coin& txout) {
+        ::Serialize(s, VARINT(txout.nHeight * 2 + (txout.fCoinBase ? 1u : 0u)));
+        if (txout.nHeight > 0) {
+            // Required to maintain compatibility with older undo format.
+            ::Serialize(s, (unsigned char)0);
         }
+        ::Serialize(s, Using<TxOutCompression>(txout.out));
+    }
 
-        template<typename Stream>
-        void Unserialize(Stream &s) {
-            unsigned int nCode = 0;
-            ::Unserialize(s, VARINT(nCode));
-            txout.nHeight = nCode / 2;
-            txout.fCoinBase = nCode & 1;
-            if (txout.nHeight > 0) {
-                // Old versions stored the version number for the last spend of
-                // a transaction's outputs. Non-final spends were indicated with
-                // height = 0.
-                unsigned int nVersionDummy;
-                ::Unserialize(s, VARINT(nVersionDummy));
-            }
-            ::Unserialize(s, Wrap<TxOutCompression>(txout.out));
+    template<typename Stream>
+    void Unser(Stream &s, Coin& txout) {
+        unsigned int nCode = 0;
+        ::Unserialize(s, VARINT(nCode));
+        txout.nHeight = nCode / 2;
+        txout.fCoinBase = nCode & 1;
+        if (txout.nHeight > 0) {
+            // Old versions stored the version number for the last spend of
+            // a transaction's outputs. Non-final spends were indicated with
+            // height = 0.
+            unsigned int nVersionDummy;
+            ::Unserialize(s, VARINT(nVersionDummy));
         }
-
-        explicit Wrapper(C& coin) : txout(coin) {}
-    };
+        ::Unserialize(s, Using<TxOutCompression>(txout.out));
+    }
 };
 
 /** Undo information for a CTransaction */
@@ -65,7 +56,7 @@ public:
     // undo information for all txins
     std::vector<Coin> vprevout;
 
-    SERIALIZE_METHODS(CTxUndo, obj) { READWRITE(Wrap<VectorApply<TxInUndo>>(obj.vprevout)); }
+    SERIALIZE_METHODS(CTxUndo, obj) { READWRITE(Using<VectorUsing<TxInUndo>>(obj.vprevout)); }
 };
 
 /** Undo information for a CBlock */

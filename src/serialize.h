@@ -409,38 +409,40 @@ I ReadVarInt(Stream& is)
     }
 }
 
-/** Wrap a serializable object with a serialization wrapper. */
-template<typename W, typename T>
-static inline typename W::template Wrapper<typename std::remove_reference<T>::type> Wrap(T&& t) { return typename W::template Wrapper<typename std::remove_reference<T>::type>(t); }
+template<typename Formatter, typename T>
+class Wrapper
+{
+protected:
+    T& m_object;
+public:
+    explicit Wrapper(T& obj) : m_object(obj) {}
+    template<typename Stream> void Serialize(Stream &s) const { Formatter().Ser(s, m_object); }
+    template<typename Stream> void Unserialize(Stream &s) { Formatter().Unser(s, m_object); }
+};
 
-#define VARINT(obj, ...) Wrap<VarIntFormat<__VA_ARGS__>>(obj)
-#define COMPACTSIZE(obj) Wrap<CompactSize>(obj)
-#define LIMITED_STRING(obj,n) Wrap<LimitedString<n>>(obj)
+/** Wrap a serializable object with a serialization wrapper. */
+template<typename Formatter, typename T>
+static inline Wrapper<Formatter, typename std::remove_reference<T>::type> Using(T&& t) { return Wrapper<Formatter, typename std::remove_reference<T>::type>(t); }
+
+#define VARINT(obj, ...) Using<VarIntFormatter<__VA_ARGS__>>(obj)
+#define COMPACTSIZE(obj) Using<CompactSizeFormatter>(obj)
+#define LIMITED_STRING(obj,n) Using<LimitedStringFormatter<n>>(obj)
 
 /** Serialization wrapper class for integers in VarInt format. */
 template<VarIntMode Mode=VarIntMode::DEFAULT>
-struct VarIntFormat
+struct VarIntFormatter
 {
-    template<typename I>
-    class Wrapper
+    template<typename Stream, typename I>
+    void Ser(Stream &s, I v)
     {
-    protected:
-        I &m_n;
-    public:
-        explicit Wrapper(I& n) : m_n(n) { }
+        WriteVarInt<Stream,Mode,typename std::remove_cv<I>::type>(s, v);
+    }
 
-        template<typename Stream>
-        void Serialize(Stream &s) const
-        {
-            WriteVarInt<Stream,Mode,typename std::remove_cv<I>::type>(s, m_n);
-        }
-
-        template<typename Stream>
-        void Unserialize(Stream& s)
-        {
-            m_n = ReadVarInt<Stream,Mode,typename std::remove_cv<I>::type>(s);
-        }
-    };
+    template<typename Stream, typename I>
+    void Unser(Stream& s, I& v)
+    {
+        v = ReadVarInt<Stream,Mode,typename std::remove_cv<I>::type>(s);
+    }
 };
 
 /** Serialization wrapper class for big-endian integers.
@@ -454,121 +456,100 @@ struct VarIntFormat
  */
 struct BigEndian
 {
-    template<typename I> class Wrapper
+
+    template<typename Stream, typename I>
+    void Ser(Stream& s, I v)
     {
-    protected:
-        I& m_val;
-    public:
-        explicit Wrapper(I& val) : m_val(val)
-        {
-            static_assert(std::is_unsigned<I>::value, "BigEndian type must be unsigned integer");
-            static_assert(sizeof(I) == 2 && std::numeric_limits<I>::min() == 0 && std::numeric_limits<I>::max() == std::numeric_limits<uint16_t>::max(), "Unsupported BigEndian size");
-        }
+        static_assert(std::is_unsigned<I>::value, "BigEndian type must be unsigned integer");
+        static_assert(sizeof(I) == 2 && std::numeric_limits<I>::min() == 0 && std::numeric_limits<I>::max() == std::numeric_limits<uint16_t>::max(), "Unsupported BigEndian size");
 
-        template<typename Stream>
-        void Serialize(Stream& s) const
-        {
-            ser_writedata16be(s, m_val);
-        }
+        ser_writedata16be(s, v);
+    }
 
-        template<typename Stream>
-        void Unserialize(Stream& s)
-        {
-            m_val = ser_readdata16be(s);
-        }
-    };
+    template<typename Stream, typename I>
+    void Unser(Stream& s, I& v)
+    {
+        static_assert(std::is_unsigned<I>::value, "BigEndian type must be unsigned integer");
+        static_assert(sizeof(I) == 2 && std::numeric_limits<I>::min() == 0 && std::numeric_limits<I>::max() == std::numeric_limits<uint16_t>::max(), "Unsupported BigEndian size");
+
+        v = ser_readdata16be(s);
+    }
 };
 
 /** Serialization wrapper class for integers in CompactSize format. */
-struct CompactSize
+struct CompactSizeFormatter
 {
-    template<typename I>
-    class Wrapper
+
+    template<typename Stream, typename I>
+    void Unser(Stream& s, I& v)
     {
-    protected:
-        I &m_n;
-    public:
-        explicit Wrapper(I& n) : m_n(n)
-        {
-            static_assert(std::is_unsigned<I>::value, "CompactSize only supported for unsigned integers");
-            static_assert(std::numeric_limits<I>::max() <= std::numeric_limits<uint64_t>::max(), "CompactSize only supports 64-bit integers and below");
-        }
+        static_assert(std::is_unsigned<I>::value, "CompactSize only supported for unsigned integers");
+        static_assert(std::numeric_limits<I>::max() <= std::numeric_limits<uint64_t>::max(), "CompactSize only supports 64-bit integers and below");
 
-        template<typename Stream>
-        void Unserialize(Stream& s)
-        {
-            uint64_t n = ReadCompactSize<Stream>(s);
-            if (n > std::numeric_limits<I>::max()) {
-                throw std::ios_base::failure("CompactSize exceeds limit of type");
-            }
-            m_n = n;
+        uint64_t n = ReadCompactSize<Stream>(s);
+        if (n > std::numeric_limits<I>::max()) {
+            throw std::ios_base::failure("CompactSize exceeds limit of type");
         }
+        v = n;
+    }
 
-        template<typename Stream>
-        void Serialize(Stream& s) const
-        {
-            WriteCompactSize<Stream>(s, m_n);
-        }
-    };
+    template<typename Stream, typename I>
+    void Ser(Stream& s, I v)
+    {
+        static_assert(std::is_unsigned<I>::value, "CompactSize only supported for unsigned integers");
+        static_assert(std::numeric_limits<I>::max() <= std::numeric_limits<uint64_t>::max(), "CompactSize only supports 64-bit integers and below");
+
+        WriteCompactSize<Stream>(s, v);
+    }
 };
 
 /** Serialization wrapper class for strings of limited length. */
 template<size_t Limit>
-struct LimitedString
+struct LimitedStringFormatter
 {
-    template<typename T>
-    class Wrapper
+    template<typename Stream>
+    void Unser(Stream& s, std::string& str)
     {
-    protected:
-        T& m_string;
-    public:
-        explicit Wrapper(T& string) : m_string(string) {}
-
-        template<typename Stream>
-        void Unserialize(Stream& s)
-        {
-            size_t size = ReadCompactSize(s);
-            if (size > Limit) {
-                throw std::ios_base::failure("String length limit exceeded");
-            }
-            m_string.resize(size);
-            if (size != 0) {
-                s.read(&m_string[0], size);
-            }
+        size_t size = ReadCompactSize(s);
+        if (size > Limit) {
+            throw std::ios_base::failure("String length limit exceeded");
         }
-
-        template<typename Stream>
-        void Serialize(Stream& s) const
-        {
-            s << m_string;
+        str.resize(size);
+        if (size != 0) {
+            s.read((char*)str.data(), size);
         }
+    }
+
+    template<typename Stream>
+    void Ser(Stream& s, const std::string& str)
+    {
+        s << str;
     };
 };
 
 template<typename F> struct Convert
 {
-    template<typename T> class Wrapper
+    template<typename Stream, typename T>
+    void Ser(Stream& s, const T& v)
     {
-    protected:
-        T& m_val;
-    public:
-        explicit Wrapper(T& val) : m_val(val) {}
+        F tmp(v);
+        s << tmp;
+    }
 
-        template<typename Stream>
-        void Serialize(Stream& s) const
-        {
-            F tmp(m_val);
-            s << tmp;
-        }
-
-        template<typename Stream>
-        void Unserialize(Stream& s)
-        {
-            F tmp;
-            s >> tmp;
-            m_val = T(tmp);
-        }
+    template<typename Stream, typename T>
+    void Unser(Stream& s, T& v)
+    {
+        F tmp;
+        s >> tmp;
+        v = T(tmp);
     };
+};
+
+/** Identity functor. Identical to C++20's std::identity. */
+struct Identity
+{
+    template<typename T>
+    constexpr T&& operator()(T&& t) const noexcept { return std::forward<T>(t); }
 };
 
 /** Serialization wrapper for custom-element vectors.
@@ -579,52 +560,45 @@ template<typename F> struct Convert
  * Example:
  *   struct X {
  *     std::vector<uint64_t> v;
- *     SERIALIZE_METHODS(X, obj) { READWRITE(Wrap<VectorApply<VarInt>>(obj.v)); }
+ *     SERIALIZE_METHODS(X, obj) { READWRITE(Using<VectorUsing<VarInt>>(obj.v)); }
  *   };
  * will define a struct that contains a vector of uint64_t, which is serialized
  * as a vector of VarInt-encoded integers.
  *
  * V is not required to be an std::vector type. It works for any class that
- * exposes a value_type, size, reserve, push_back, and const operator[].
+ * exposes a value_type, size, reserve, push_back, and const iterators.
  */
-template<class W>
-struct VectorApply
+template<class Formatter, class SerTrans = Identity, class UnserTrans = Identity>
+struct VectorUsing
 {
-    template<typename V> class Wrapper
+    template<typename Stream, typename V>
+    void Ser(Stream& s, const V& v)
     {
-    protected:
-        typedef typename V::value_type value_type;
-        V& m_vector;
-    public:
-        explicit Wrapper(V& vector) : m_vector(vector) {}
-
-        template<typename Stream>
-        void Serialize(Stream& s) const
-        {
-            WriteCompactSize(s, m_vector.size());
-            for (size_t i = 0; i < m_vector.size(); ++i) {
-                s << typename W::template Wrapper<const value_type>(m_vector[i]);
-            }
+        SerTrans trans;
+        WriteCompactSize(s, v.size());
+        for (const typename V::value_type& elem : v) {
+            s << Using<Formatter>(trans(elem));
         }
+    }
 
-        template<typename Stream>
-        void Unserialize(Stream& s)
-        {
-            m_vector.clear();
-            size_t size = ReadCompactSize(s);
-            size_t allocated = 0;
-            while (allocated < size) {
-                // For DoS prevention, do not blindly allocate as much as the stream claims to contain.
-                // Instead, allocate in 5MiB batches, so that an attacker actually needs to provide
-                // X MiB of data to make us allocate X+5 Mib.
-                allocated = std::min(size, allocated + MAX_VECTOR_ALLOCATE / sizeof(value_type));
-                m_vector.reserve(allocated);
-                while (m_vector.size() < allocated) {
-                    value_type val;
-                    typename W::template Wrapper<value_type> elem(val);
-                    s >> elem;
-                    m_vector.push_back(std::move(val));
-                }
+    template<typename Stream, typename V>
+    void Unser(Stream& s, V& v)
+    {
+        UnserTrans trans;
+        v.clear();
+        size_t size = ReadCompactSize(s);
+        size_t allocated = 0;
+        while (allocated < size) {
+            // For DoS prevention, do not blindly allocate as much as the stream claims to contain.
+            // Instead, allocate in 5MiB batches, so that an attacker actually needs to provide
+            // X MiB of data to make us allocate X+5 Mib.
+            allocated = std::min(size, allocated + MAX_VECTOR_ALLOCATE / sizeof(typename V::value_type));
+            v.reserve(allocated);
+            while (v.size() < allocated) {
+                typename V::value_type val;
+                auto wrapped = Using<Formatter>(val);
+                s >> wrapped;
+                v.push_back(trans(std::move(val)));
             }
         }
     };

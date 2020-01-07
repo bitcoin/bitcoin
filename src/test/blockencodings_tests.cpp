@@ -134,7 +134,7 @@ public:
 
     SERIALIZE_METHODS(TestHeaderAndShortIDs, obj)
     {
-        READWRITE(obj.header, obj.nonce, Wrap<VectorApply<Uint48>>(obj.shorttxids), obj.prefilledtxn);
+        READWRITE(obj.header, obj.nonce, Using<VectorUsing<Uint48>>(obj.shorttxids), obj.prefilledtxn);
     }
 };
 

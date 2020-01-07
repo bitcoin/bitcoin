@@ -16,28 +16,16 @@
 
 #include <QString>
 
-//! Wrapper class to serialize QString objects as std::strings.
+//! Formatter class to serialize QString objects as std::strings.
 struct AsStdString
 {
-    template<typename Q>
-    class Wrapper
+    template<typename Stream> static void Ser(Stream& s, const QString& q) { s << q.toStdString(); }
+    template<typename Stream> static void Unser(Stream& s, QString& q)
     {
-    private:
-        Q& m_qstring;
-    public:
-        Wrapper(Q& qstring) : m_qstring(qstring) {}
-
-        template<typename Stream>
-        void Serialize(Stream& s) const { s << m_qstring.toStdString(); }
-
-        template<typename Stream>
-        void Unserialize(Stream& s)
-        {
-            std::string str;
-            s >> str;
-            m_qstring = QString::fromStdString(std::move(str));
-        }
-    };
+        std::string str;
+        s >> str;
+        q = QString::fromStdString(std::move(str));
+    }
 };
 
 class SendCoinsRecipient
@@ -71,12 +59,12 @@ public:
     SERIALIZE_METHODS(SendCoinsRecipient, obj)
     {
         READWRITE(obj.nVersion);
-        READWRITE(Wrap<AsStdString>(obj.address));
-        READWRITE(Wrap<AsStdString>(obj.label));
+        READWRITE(Using<AsStdString>(obj.address));
+        READWRITE(Using<AsStdString>(obj.label));
         READWRITE(obj.amount);
-        READWRITE(Wrap<AsStdString>(obj.message));
+        READWRITE(Using<AsStdString>(obj.message));
         READWRITE(obj.sPaymentRequest);
-        READWRITE(Wrap<AsStdString>(obj.authenticatedMerchant));
+        READWRITE(Using<AsStdString>(obj.authenticatedMerchant));
     }
 };
 
