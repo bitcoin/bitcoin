@@ -437,7 +437,7 @@ public:
  * in-block transactions by calling UpdateTransactionsFromBlock().  Note that
  * until this is called, the mempool state is not consistent, and in particular
  * mapLinks may not be correct (and therefore functions like
- * CalculateMemPoolAncestors() and CalculateDescendants() that rely
+ * CalculateMemPoolAncestors() and CalculateDescendantsVec() that rely
  * on them to walk the mempool are not generally safe to use).
  *
  * Computational limits:
@@ -651,20 +651,18 @@ public:
      */
     bool CalculateMemPoolAncestors(const CTxMemPoolEntry& entry, vecEntries& ancestors, uint64_t limitAncestorCount, uint64_t limitAncestorSize, uint64_t limitDescendantCount, uint64_t limitDescendantSize, std::string& errString, bool fSearchForParents = true) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    /** Populate setDescendants with all in-mempool descendants of hash.
-     *  Assumes that setDescendants includes all in-mempool descendants of anything
-     *  already in it.  */
-
-    void CalculateDescendants(txiter it, setEntries& setDescendants, std::vector<txiter>& stack,
-            const uint64_t epoch, const uint8_t limit=25) const EXCLUSIVE_LOCKS_REQUIRED(cs);
-    void CalculateDescendants(txiter it, setEntries& setDescendants) const EXCLUSIVE_LOCKS_REQUIRED(cs);
-    void CalculateDescendants(txiter entryit, setEntries& setDescendants, const uint64_t cached_epoch) const EXCLUSIVE_LOCKS_REQUIRED(cs);
-
-    /* Assumes empty descendants vector. Useful when we are just going to iterate over them
+    /** Populate descendants with all in-mempool descendants of hash.
      *
-     * unlike CalculateDescendants, CalculateDescendantsVec does not include self*/
+     *  Assumes that if descendants includes a txiter T, then all in-mempool descendants of T are
+     *  already in it and T->already_touched(cached_epoch)
+     *
+     *  Assumes empty descendants vector. Useful when we are just going to
+     *  iterate over them and don't care about order
+     *
+     * CalculateDescendantsVec does not include self (it)*/
     void CalculateDescendantsVec(txiter it, std::vector<txiter>& descendants, std::vector<txiter>& stack,
             const uint64_t epoch, const uint8_t limit=25) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    /** Assumes setDescednants is empty */
     void CalculateDescendantsVec(txiter it, std::vector<txiter>& setDescendants) const EXCLUSIVE_LOCKS_REQUIRED(cs);
     void CalculateDescendantsVec(txiter entryit, std::vector<txiter>& setDescendants, const uint64_t cached_epoch) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
