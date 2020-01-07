@@ -200,7 +200,7 @@ class AvoidReuseTest(BitcoinTestFramework):
         '''
         self.log.info("Test fund send fund send")
 
-        fundaddr = self.nodes[1].getnewaddress()
+        fundaddr = self.nodes[1].getnewaddress(label="")
         retaddr = self.nodes[0].getnewaddress()
 
         self.nodes[0].sendtoaddress(fundaddr, 10)
