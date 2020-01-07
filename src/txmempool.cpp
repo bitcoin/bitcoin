@@ -61,21 +61,19 @@ size_t CTxMemPoolEntry::GetTxSize() const
 void CTxMemPool::UpdateForDescendantsInner(txiter param_it, txiter update_it, int64_t&size, CAmount&
         fee, int64_t& count, cacheMap& cache, const std::set<uint256>& exclude, vecEntries&
         stack, bool update_child_epochs, const uint64_t epoch, const uint8_t limit) {
-        auto make_state_update = [&](txiter cit) {
-            if (exclude.count(cit->GetTx().GetHash())) return;
-            size += cit->GetTxSize();
-            fee += cit->GetModifiedFee();
-            count++;
-            cache[update_it].insert(cit);
-            // Update ancestor state for each descendant
-            mapTx.modify(cit, update_ancestor_state(update_it->GetTxSize(), update_it->GetModifiedFee(), 1, update_it->GetSigOpCost()));
-        };
         auto& direct_children = GetMemPoolChildren(param_it);
         for (txiter cit : direct_children) {
             if (update_child_epochs) cit->already_touched(epoch);
 
             // collect stats
-            make_state_update(cit);
+            if (!exclude.count(cit->GetTx().GetHash())) {
+                size += cit->GetTxSize();
+                fee += cit->GetModifiedFee();
+                count++;
+                cache[update_it].insert(cit);
+                // Update ancestor state for each descendant
+                mapTx.modify(cit, update_ancestor_state(update_it->GetTxSize(), update_it->GetModifiedFee(), 1, update_it->GetSigOpCost()));
+            }
 
             const setEntries &setChildren = GetMemPoolChildren(cit);
             for (txiter childEntry : setChildren) {
@@ -86,7 +84,13 @@ void CTxMemPool::UpdateForDescendantsInner(txiter param_it, txiter update_it, in
                     // but don't traverse again.
                     for (txiter cacheEntry : cacheIt->second) {
                         if (cacheEntry->already_touched(epoch)) continue;
-                        make_state_update(cacheEntry);
+                        if (exclude.count(cacheEntry->GetTx().GetHash())) continue;
+                        size += cacheEntry->GetTxSize();
+                        fee += cacheEntry->GetModifiedFee();
+                        count++;
+                        cache[update_it].insert(cacheEntry);
+                        // Update ancestor state for each descendant
+                        mapTx.modify(cacheEntry, update_ancestor_state(update_it->GetTxSize(), update_it->GetModifiedFee(), 1, update_it->GetSigOpCost()));
                     }
                 } else if (limit == 0) {
                     // Schedule for later processing, we're at the recursion limit
