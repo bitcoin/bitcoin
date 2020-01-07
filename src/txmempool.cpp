@@ -233,7 +233,7 @@ bool CTxMemPool::CalculateMemPoolAncestors(const CTxMemPoolEntry &entry, vecEntr
     return true;
 }
 
-void CTxMemPool::UpdateAncestorsOf(bool add, txiter it, vecEntries &setAncestors)
+void CTxMemPool::UpdateAncestorsOf(bool add, txiter it, vecEntries &ancestors)
 {
     setEntries parentIters = GetMemPoolParents(it);
     // add or remove this tx as a child of each parent
@@ -243,18 +243,18 @@ void CTxMemPool::UpdateAncestorsOf(bool add, txiter it, vecEntries &setAncestors
     const int64_t updateCount = (add ? 1 : -1);
     const int64_t updateSize = updateCount * it->GetTxSize();
     const CAmount updateFee = updateCount * it->GetModifiedFee();
-    for (txiter ancestorIt : setAncestors) {
+    for (txiter ancestorIt : ancestors) {
         mapTx.modify(ancestorIt, update_descendant_state(updateSize, updateFee, updateCount));
     }
 }
 
-void CTxMemPool::UpdateEntryForAncestors(txiter it, const vecEntries &setAncestors)
+void CTxMemPool::UpdateEntryForAncestors(txiter it, const vecEntries &ancestors)
 {
-    int64_t updateCount = setAncestors.size();
+    int64_t updateCount = ancestors.size();
     int64_t updateSize = 0;
     CAmount updateFee = 0;
     int64_t updateSigOpsCost = 0;
-    for (txiter ancestorIt : setAncestors) {
+    for (txiter ancestorIt : ancestors) {
         updateSize += ancestorIt->GetTxSize();
         updateFee += ancestorIt->GetModifiedFee();
         updateSigOpsCost += ancestorIt->GetSigOpCost();
@@ -295,7 +295,7 @@ void CTxMemPool::UpdateForRemoveFromMempoolImpl(const T &entriesToRemove, bool u
         }
     }
     for (txiter removeIt : entriesToRemove) {
-        vecEntries setAncestors;
+        vecEntries ancestors;
         const CTxMemPoolEntry &entry = *removeIt;
         std::string dummy;
         // Since this is a tx that is already in the mempool, we can call CMPA
@@ -315,10 +315,10 @@ void CTxMemPool::UpdateForRemoveFromMempoolImpl(const T &entriesToRemove, bool u
         // differ from the set of mempool parents we'd calculate by searching,
         // and it's important that we use the mapLinks[] notion of ancestor
         // transactions as the set of things to update for removal.
-        CalculateMemPoolAncestors(entry, setAncestors, nNoLimit, nNoLimit, nNoLimit, nNoLimit, dummy, false);
+        CalculateMemPoolAncestors(entry, ancestors, nNoLimit, nNoLimit, nNoLimit, nNoLimit, dummy, false);
         // Note that UpdateAncestorsOf severs the child links that point to
         // removeIt in the entries for the parents of removeIt.
-        UpdateAncestorsOf(false, removeIt, setAncestors);
+        UpdateAncestorsOf(false, removeIt, ancestors);
     }
     // After updating all the ancestor sizes, we can now sever the link between each
     // transaction being removed and any mempool children (ie, update setMemPoolParents
@@ -382,7 +382,7 @@ void CTxMemPool::AddTransactionsUpdated(unsigned int n)
     nTransactionsUpdated += n;
 }
 
-void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, vecEntries &setAncestors, bool validFeeEstimate)
+void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, vecEntries &ancestors, bool validFeeEstimate)
 {
     NotifyEntryAdded(entry.GetSharedTx());
     // Add to memory pool without checking anything.
@@ -421,8 +421,8 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, vecEntries &setAnces
     // to clean up the mess we're leaving here.
 
     // Update ancestors with information about this tx
-    UpdateAncestorsOf(true, newit, setAncestors);
-    UpdateEntryForAncestors(newit, setAncestors);
+    UpdateAncestorsOf(true, newit, ancestors);
+    UpdateEntryForAncestors(newit, ancestors);
 
     nTransactionsUpdated++;
     totalTxSize += entry.GetTxSize();
@@ -721,16 +721,16 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
         }
         assert(setParentCheck == GetMemPoolParents(it));
         // Verify ancestor state is correct.
-        vecEntries setAncestors;
+        vecEntries ancestors;
         uint64_t nNoLimit = std::numeric_limits<uint64_t>::max();
         std::string dummy;
-        CalculateMemPoolAncestors(*it, setAncestors, nNoLimit, nNoLimit, nNoLimit, nNoLimit, dummy);
-        uint64_t nCountCheck = setAncestors.size() + 1;
+        CalculateMemPoolAncestors(*it, ancestors, nNoLimit, nNoLimit, nNoLimit, nNoLimit, dummy);
+        uint64_t nCountCheck = ancestors.size() + 1;
         uint64_t nSizeCheck = it->GetTxSize();
         CAmount nFeesCheck = it->GetModifiedFee();
         int64_t nSigOpCheck = it->GetSigOpCost();
 
-        for (txiter ancestorIt : setAncestors) {
+        for (txiter ancestorIt : ancestors) {
             nSizeCheck += ancestorIt->GetTxSize();
             nFeesCheck += ancestorIt->GetModifiedFee();
             nSigOpCheck += ancestorIt->GetSigOpCost();
@@ -892,11 +892,11 @@ void CTxMemPool::PrioritiseTransaction(const uint256& hash, const CAmount& nFeeD
         if (it != mapTx.end()) {
             mapTx.modify(it, update_fee_delta(delta));
             // Now update all ancestors' modified fees with descendants
-            vecEntries setAncestors;
+            vecEntries ancestors;
             uint64_t nNoLimit = std::numeric_limits<uint64_t>::max();
             std::string dummy;
-            CalculateMemPoolAncestors(*it, setAncestors, nNoLimit, nNoLimit, nNoLimit, nNoLimit, dummy, false);
-            for (txiter ancestorIt : setAncestors) {
+            CalculateMemPoolAncestors(*it, ancestors, nNoLimit, nNoLimit, nNoLimit, nNoLimit, dummy, false);
+            for (txiter ancestorIt : ancestors) {
                 mapTx.modify(ancestorIt, update_descendant_state(0, nFeeDelta, 0));
             }
             // Now update all descendants' modified fees with ancestors
@@ -1020,11 +1020,11 @@ int CTxMemPool::Expire(std::chrono::seconds time)
 
 void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, bool validFeeEstimate)
 {
-    vecEntries setAncestors;
+    vecEntries ancestors;
     uint64_t nNoLimit = std::numeric_limits<uint64_t>::max();
     std::string dummy;
-    CalculateMemPoolAncestors(entry, setAncestors, nNoLimit, nNoLimit, nNoLimit, nNoLimit, dummy);
-    return addUnchecked(entry, setAncestors, validFeeEstimate);
+    CalculateMemPoolAncestors(entry, ancestors, nNoLimit, nNoLimit, nNoLimit, nNoLimit, dummy);
+    return addUnchecked(entry, ancestors, validFeeEstimate);
 }
 
 void CTxMemPool::UpdateChild(txiter entry, txiter child, bool add)

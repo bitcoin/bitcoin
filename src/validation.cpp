@@ -544,8 +544,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // Alias what we need out of ws
     std::set<uint256>& setConflicts = ws.m_conflicts;
     CTxMemPool::setEntries& allConflicting = ws.m_all_conflicting;
-    CTxMemPool::vecEntries& setAncestors = ws.m_ancestors;
-    assert(setAncestors.empty());
+    CTxMemPool::vecEntries& ancestors = ws.m_ancestors;
+    assert(ancestors.empty());
     std::unique_ptr<CTxMemPoolEntry>& entry = ws.m_entry;
     bool& fReplacementTransaction = ws.m_replacement_transaction;
     CAmount& nModifiedFees = ws.m_modified_fees;
@@ -745,8 +745,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     }
 
     std::string errString;
-    if (!m_pool.CalculateMemPoolAncestors(*entry, setAncestors, m_limit_ancestors, m_limit_ancestor_size, m_limit_descendants, m_limit_descendant_size, errString)) {
-        setAncestors.clear();
+    if (!m_pool.CalculateMemPoolAncestors(*entry, ancestors, m_limit_ancestors, m_limit_ancestor_size, m_limit_descendants, m_limit_descendant_size, errString)) {
+        ancestors.clear();
         // If CalculateMemPoolAncestors fails second time, we want the original error string.
         std::string dummy_err_string;
         // Contracting/payment channels CPFP carve-out:
@@ -761,16 +761,16 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         // outputs - one for each counterparty. For more info on the uses for
         // this, see https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2018-November/016518.html
         if (nSize >  EXTRA_DESCENDANT_TX_SIZE_LIMIT ||
-                !m_pool.CalculateMemPoolAncestors(*entry, setAncestors, 2, m_limit_ancestor_size, m_limit_descendants + 1, m_limit_descendant_size + EXTRA_DESCENDANT_TX_SIZE_LIMIT, dummy_err_string)) {
+                !m_pool.CalculateMemPoolAncestors(*entry, ancestors, 2, m_limit_ancestor_size, m_limit_descendants + 1, m_limit_descendant_size + EXTRA_DESCENDANT_TX_SIZE_LIMIT, dummy_err_string)) {
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "too-long-mempool-chain", errString);
         }
     }
 
     // A transaction that spends outputs that would be replaced by it is invalid. Now
     // that we have the set of all ancestors we can detect this
-    // pathological case by making sure setConflicts and setAncestors don't
+    // pathological case by making sure setConflicts and ancestors don't
     // intersect.
-    for (CTxMemPool::txiter ancestorIt : setAncestors)
+    for (CTxMemPool::txiter ancestorIt : ancestors)
     {
         const uint256 &hashAncestor = ancestorIt->GetTx().GetHash();
         if (setConflicts.count(hashAncestor))
@@ -966,7 +966,7 @@ bool MemPoolAccept::Finalize(ATMPArgs& args, Workspace& ws)
     const bool bypass_limits = args.m_bypass_limits;
 
     CTxMemPool::setEntries& allConflicting = ws.m_all_conflicting;
-    CTxMemPool::vecEntries& setAncestors = ws.m_ancestors;
+    CTxMemPool::vecEntries& ancestors = ws.m_ancestors;
     const CAmount& nModifiedFees = ws.m_modified_fees;
     const CAmount& nConflictingFees = ws.m_conflicting_fees;
     const size_t& nConflictingSize = ws.m_conflicting_size;
@@ -994,7 +994,7 @@ bool MemPoolAccept::Finalize(ATMPArgs& args, Workspace& ws)
     bool validForFeeEstimation = !fReplacementTransaction && !bypass_limits && IsCurrentForFeeEstimation() && m_pool.HasNoInputsOf(tx);
 
     // Store transaction in memory
-    m_pool.addUnchecked(*entry, setAncestors, validForFeeEstimation);
+    m_pool.addUnchecked(*entry, ancestors, validForFeeEstimation);
 
     // trim mempool and check if tx was trimmed
     if (!bypass_limits) {
