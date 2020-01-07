@@ -60,10 +60,10 @@ size_t CTxMemPoolEntry::GetTxSize() const
 //
 void CTxMemPool::UpdateForDescendantsInner(txiter param_it, txiter update_it, int64_t&size, CAmount&
         fee, int64_t& count, cacheMap& cache, const std::set<uint256>& exclude, vecEntries&
-        stack, bool update_child_epochs, const uint64_t epoch, const uint8_t limit) {
+        stack, bool update_child_epochs, const uint8_t limit) {
         auto& direct_children = GetMemPoolChildren(param_it);
         for (txiter cit : direct_children) {
-            if (update_child_epochs) cit->already_touched(epoch);
+            if (update_child_epochs) already_touched(cit);
 
             // collect stats
             if (!exclude.count(cit->GetTx().GetHash())) {
@@ -77,13 +77,13 @@ void CTxMemPool::UpdateForDescendantsInner(txiter param_it, txiter update_it, in
 
             const setEntries &setChildren = GetMemPoolChildren(cit);
             for (txiter childEntry : setChildren) {
-                if (childEntry->already_touched(epoch)) continue;
+                if (already_touched(childEntry)) continue;
                 cacheMap::iterator cacheIt = cache.find(childEntry);
                 if (cacheIt != cache.end()) {
                     // We've already calculated this one, just add the entries for this set
                     // but don't traverse again.
                     for (txiter cacheEntry : cacheIt->second) {
-                        if (cacheEntry->already_touched(epoch)) continue;
+                        if (already_touched(cacheEntry)) continue;
                         if (exclude.count(cacheEntry->GetTx().GetHash())) continue;
                         size += cacheEntry->GetTxSize();
                         fee += cacheEntry->GetModifiedFee();
@@ -97,7 +97,7 @@ void CTxMemPool::UpdateForDescendantsInner(txiter param_it, txiter update_it, in
                     stack.push_back(childEntry);
                 } else {
                     UpdateForDescendantsInner(childEntry, update_it, size, fee, count, cache,
-                            exclude, stack, false, epoch, limit-1);
+                            exclude, stack, false, limit-1);
                 }
             }
         }
@@ -106,7 +106,7 @@ void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap &cachedDescendan
 {
     // Our children are natrually uniqueu
     vecEntries stack;
-    uint64_t epoch = GetFreshEpoch();
+    GetFreshEpoch();
 
     int64_t modifySize = 0;
     CAmount modifyFee = 0;
@@ -116,7 +116,7 @@ void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap &cachedDescendan
     bool first_pass = true;
     auto next_it = updateIt;
     do {
-        UpdateForDescendantsInner(next_it, updateIt, modifySize, modifyFee, modifyCount, cachedDescendants, setExclude, stack, first_pass, epoch);
+        UpdateForDescendantsInner(next_it, updateIt, modifySize, modifyFee, modifyCount, cachedDescendants, setExclude, stack, first_pass);
         first_pass = false;
     } while (!stack.empty() && (next_it = stack.back(), stack.pop_back(), true));
     mapTx.modify(updateIt, update_descendant_state(modifySize, modifyFee, modifyCount));
@@ -146,7 +146,7 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256> &vHashes
     // UpdateForDescendants.
     for (const uint256 &hash : reverse_iterate(vHashesToUpdate)) {
         // we cache the in-mempool children to avoid duplicate updates
-        uint64_t epoch = GetFreshEpoch();
+        GetFreshEpoch();
         // calculate children from mapNextTx
         txiter it = mapTx.find(hash);
         if (it == mapTx.end()) {
@@ -161,7 +161,7 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256> &vHashes
             assert(childIter != mapTx.end());
             // We can skip updating entries we've encountered before or that
             // are in the block (which are already accounted for).
-            if (!childIter->already_touched(epoch) && !setAlreadyIncluded.count(childHash)) {
+            if (!already_touched(childIter) && !setAlreadyIncluded.count(childHash)) {
                 UpdateChild(it, childIter, true);
                 UpdateParent(childIter, it, true);
             }
@@ -174,20 +174,18 @@ bool CTxMemPool::CalculateMemPoolAncestors(const CTxMemPoolEntry &entry, vecEntr
 {
     assert(ancestors.size() == 0);
     const CTransaction &tx = entry.GetTx();
-    const uint64_t epoch = GetFreshEpoch();
+    GetFreshEpoch();
     if (fSearchForParents) {
         // Get parents of this transaction that are in the mempool
         // GetMemPoolParents() is only valid for entries in the mempool, so we
         // iterate mapTx to find parents.
         for (unsigned int i = 0; i < tx.vin.size(); i++) {
             Optional<txiter> piter = GetIter(tx.vin[i].prevout.hash);
-            if (piter) {
-                if ((*piter)->already_touched(epoch)) continue;
-                ancestors.push_back(*piter);
-                if (ancestors.size() + 1 > limitAncestorCount) {
-                    errString = strprintf("too many unconfirmed parents [limit: %u]", limitAncestorCount);
-                    return false;
-                }
+            if (already_touched(piter)) continue;
+            ancestors.push_back(*piter);
+            if (ancestors.size() + 1 > limitAncestorCount) {
+                errString = strprintf("too many unconfirmed parents [limit: %u]", limitAncestorCount);
+                return false;
             }
         }
     } else {
@@ -198,7 +196,7 @@ bool CTxMemPool::CalculateMemPoolAncestors(const CTxMemPoolEntry &entry, vecEntr
         ancestors.assign(ref_parents.cbegin(), ref_parents.cend());
         // touch before walking so we don't add a duplicate
         for (txiter it : ancestors) {
-            it->already_touched(epoch);
+            already_touched(it);
         }
     }
 
@@ -225,7 +223,7 @@ bool CTxMemPool::CalculateMemPoolAncestors(const CTxMemPoolEntry &entry, vecEntr
         const setEntries & setMemPoolParents = GetMemPoolParents(stageit);
         for (txiter phash : setMemPoolParents) {
             // If this is a new ancestor, add it.
-            if (phash->already_touched(epoch)) continue;
+            if (already_touched(phash)) continue;
             ancestors.push_back(phash);
             if (ancestors.size() + 1 > limitAncestorCount) {
                 errString = strprintf("too many unconfirmed ancestors [limit: %u]", limitAncestorCount);
@@ -287,6 +285,7 @@ void CTxMemPool::UpdateForRemoveFromMempool(const vecEntries &entriesToRemove, b
         // need to traverse the mempool).
         for (txiter removeIt : entriesToRemove) {
             vecEntries descendants;
+            GetFreshEpoch();
             CalculateDescendantsVec(removeIt, descendants);
             int64_t modifySize = -((int64_t)removeIt->GetTxSize());
             CAmount modifyFee = -removeIt->GetModifiedFee();
@@ -401,12 +400,12 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, vecEntries &ancestor
     cachedInnerUsage += entry.DynamicMemoryUsage();
 
     const CTransaction& tx = newit->GetTx();
-    uint64_t epoch = GetFreshEpoch();
+    GetFreshEpoch();
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
         mapNextTx.insert(std::make_pair(&tx.vin[i].prevout, &tx));
         // Update ancestors with information about this tx
         auto maybe_it = GetIter(tx.vin[i].prevout.hash);
-        if (maybe_it && !(*maybe_it)->already_touched(epoch)) UpdateParent(newit, *maybe_it, true);
+        if (!already_touched(maybe_it)) UpdateParent(newit, *maybe_it, true);
     }
     // Don't bother worrying about child transactions of this one.
     // Normal case of a new transaction arriving is that there can't be any
@@ -466,29 +465,24 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
 //
 // Note: it does not get inserted into the vector
 
-void CTxMemPool::CalculateDescendantsVec(txiter it, vecEntries& descendants, vecEntries& stack, const uint64_t epoch, const uint8_t limit) const
+void CTxMemPool::CalculateDescendantsVec(txiter it, vecEntries& descendants, vecEntries& stack, const uint8_t limit) const
 {
     for (txiter childiter : GetMemPoolChildren(it)) {
-        if (childiter->already_touched(epoch)) continue;
+        if (already_touched(childiter)) continue;
         descendants.push_back(childiter);
-        if (limit > 0) CalculateDescendantsVec(childiter, descendants, stack, epoch, limit-1);
+        if (limit > 0) CalculateDescendantsVec(childiter, descendants, stack, limit-1);
         else stack.push_back(childiter);
     }
 }
 
 void CTxMemPool::CalculateDescendantsVec(txiter entryit, vecEntries& descendants) const
 {
-    CalculateDescendantsVec(entryit, descendants, GetFreshEpoch());
-}
-
-void CTxMemPool::CalculateDescendantsVec(txiter entryit, vecEntries& descendants, const uint64_t cached_epoch) const
-{
     // Traverse down the children of entry, only adding children that are not marked as visited by
     // the epoch
     txiter it = entryit;
     vecEntries stack;
     do {
-        CalculateDescendantsVec(it, descendants, stack, cached_epoch);
+        CalculateDescendantsVec(it, descendants, stack);
     } while (!stack.empty() && (it = stack.back(), stack.pop_back(), true));
 }
 
@@ -505,28 +499,28 @@ void CTxMemPool::removeRecursive(const CTransaction &origTx, MemPoolRemovalReaso
             // be sure to remove any children that are in the pool. This can
             // happen during chain re-orgs if origTx isn't re-accepted into
             // the mempool for any reason.
-            const uint64_t epoch = GetFreshEpoch();
+            GetFreshEpoch();
             for (unsigned int i = 0; i < origTx.vout.size(); i++) {
                 auto it = mapNextTx.find(COutPoint(origTx.GetHash(), i));
                 if (it == mapNextTx.end())
                     continue;
                 txiter nextit = mapTx.find(it->second->GetHash());
                 assert(nextit != mapTx.end());
-                if (nextit->already_touched(epoch)) continue;
+                if (already_touched(nextit)) continue;
                 txToRemove.push_back(nextit);
             }
         }
-        const uint64_t epoch = GetFreshEpoch();
+        GetFreshEpoch();
         // touch all txToRemove first to force CalculateDescendantsVec
         // to not recurse if we're going to call it later.
         // This guarantees txToRemove gets no duplicates
         for (txiter it : txToRemove) {
-            it->already_touched(epoch);
+            already_touched(it);
         }
         // max_idx is used rather than iterator because txToRemove may grow
         const size_t max_idx = txToRemove.size();
         for (size_t idx = 0; idx < max_idx; ++idx) {
-            CalculateDescendantsVec(txToRemove[idx], txToRemove, epoch);
+            CalculateDescendantsVec(txToRemove[idx], txToRemove);
         }
 
         RemoveStaged(txToRemove, false, reason);
@@ -564,17 +558,17 @@ void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMem
         }
     }
 
-    const uint64_t epoch = GetFreshEpoch();
+    GetFreshEpoch();
     // touch all txToRemove first to force CalculateDescendantsVec
     // to not recurse if we're going to call it later.
     // This guarantees txToRemove gets no duplicates
     for (txiter it : txToRemove) {
-        it->already_touched(epoch);
+        already_touched(it);
     }
     // max_idx is used rather than iterator because txToRemove may grow
     const size_t max_idx = txToRemove.size();
     for (size_t idx = 0; idx < max_idx; ++idx) {
-        CalculateDescendantsVec(txToRemove[idx], txToRemove, epoch);
+        CalculateDescendantsVec(txToRemove[idx], txToRemove);
     }
     RemoveStaged(txToRemove, false, MemPoolRemovalReason::REORG);
 
@@ -885,6 +879,7 @@ void CTxMemPool::PrioritiseTransaction(const uint256& hash, const CAmount& nFeeD
             }
             // Now update all descendants' modified fees with ancestors
             vecEntries descendants;
+            GetFreshEpoch();
             CalculateDescendantsVec(it, descendants);
             for (txiter descendantIt : descendants) {
                 mapTx.modify(descendantIt, update_ancestor_state(0, nFeeDelta, 0, 0));
@@ -984,10 +979,10 @@ int CTxMemPool::Expire(std::chrono::seconds time)
         it++;
     }
     vecEntries stage;
-    const uint64_t epoch = GetFreshEpoch();
+    GetFreshEpoch();
     for (txiter removeit : toremove) {
-        CalculateDescendantsVec(removeit, stage, epoch);
-        if (!removeit->already_touched(epoch))
+        CalculateDescendantsVec(removeit, stage);
+        if (!already_touched(removeit))
                 stage.push_back(removeit);
     }
     RemoveStaged(stage, false, MemPoolRemovalReason::EXPIRY);
@@ -1089,6 +1084,7 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpends
         maxFeeRateRemoved = std::max(maxFeeRateRemoved, removed);
 
         vecEntries stage;
+        GetFreshEpoch();
         CalculateDescendantsVec(mapTx.project<0>(it), stage);
         stage.push_back(mapTx.project<0>(it));
         nTxnRemoved += stage.size();

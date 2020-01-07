@@ -129,14 +129,7 @@ public:
     int64_t GetSigOpCostWithAncestors() const { return nSigOpCostWithAncestors; }
 
     mutable size_t vTxHashesIdx; //!< Index in mempool's vTxHashes
-private:
     mutable uint64_t m_epoch; //!< epoch when last touched, useful for graph algorithms
-public:
-    bool already_touched(uint64_t during) const {
-        bool ret = m_epoch >= during;
-        m_epoch = std::max(m_epoch, during);
-        return ret;
-    }
 };
 
 // Helpers for modifying CTxMemPool::mapTx, which is a boost multi_index.
@@ -651,17 +644,16 @@ public:
     /** Populate descendants with all in-mempool descendants of hash.
      *
      *  Assumes that if descendants includes a txiter T, then all in-mempool descendants of T are
-     *  already in it and T->already_touched(cached_epoch)
+     *  already in it and already_touched(T)
      *
      *  Assumes empty descendants vector. Useful when we are just going to
      *  iterate over them and don't care about order
      *
      * CalculateDescendantsVec does not include self (it)*/
     void CalculateDescendantsVec(txiter it, vecEntries& descendants, vecEntries& stack,
-            const uint64_t epoch, const uint8_t limit=25) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+            const uint8_t limit=25) const EXCLUSIVE_LOCKS_REQUIRED(cs);
     /** Assumes descednants is empty */
     void CalculateDescendantsVec(txiter it, vecEntries& descendants) const EXCLUSIVE_LOCKS_REQUIRED(cs);
-    void CalculateDescendantsVec(txiter entryit, vecEntries& descendants, const uint64_t cached_epoch) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** The minimum fee to get into the mempool, which may itself not be enough
       *  for larger-sized transactions.
@@ -738,7 +730,7 @@ private:
             const std::set<uint256> &setExclude) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void UpdateForDescendantsInner(txiter param_it, txiter update_it, int64_t&size, CAmount& fee,
             int64_t& count, cacheMap& cache, const std::set<uint256>& exclude, vecEntries&
-            stack, bool update_child_epochs, const uint64_t epoch, const uint8_t limit = 25) EXCLUSIVE_LOCKS_REQUIRED(cs);
+            stack, bool update_child_epochs, const uint8_t limit = 25) EXCLUSIVE_LOCKS_REQUIRED(cs);
     /** Update ancestors of hash to add/remove it as a descendant transaction. */
     void UpdateAncestorsOf(bool add, txiter hash, vecEntries &ancestors) EXCLUSIVE_LOCKS_REQUIRED(cs);
     /** Set ancestor state for an entry */
@@ -762,6 +754,23 @@ private:
 public:
     // This function mutates mutable state!
     uint64_t GetFreshEpoch() const EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    bool already_touched(txiter it, uint64_t during) const EXCLUSIVE_LOCKS_REQUIRED(cs) {
+        bool ret = it->m_epoch >= during;
+        it->m_epoch = std::max(it->m_epoch, during);
+        return ret;
+    }
+    bool already_touched(Optional<txiter> it, uint64_t during) const EXCLUSIVE_LOCKS_REQUIRED(cs) {
+        return !it || already_touched(*it, during);
+    }
+    bool already_touched(txiter it) const EXCLUSIVE_LOCKS_REQUIRED(cs) {
+        bool ret = it->m_epoch >= m_epoch;
+        it->m_epoch = std::max(it->m_epoch, m_epoch);
+        return ret;
+    }
+    bool already_touched(Optional<txiter> it) const EXCLUSIVE_LOCKS_REQUIRED(cs) {
+        return !it || already_touched(*it);
+    }
 };
 
 /**
