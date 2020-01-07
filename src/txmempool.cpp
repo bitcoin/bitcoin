@@ -458,25 +458,22 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
 // can save time by not iterating over those entries.
 void CTxMemPool::CalculateDescendants(txiter entryit, setEntries& setDescendants) const
 {
-    setEntries stage;
-    if (setDescendants.count(entryit) == 0) {
-        stage.insert(entryit);
-    }
+    if (!setDescendants.insert(entryit).second) return;
     // Traverse down the children of entry, only adding children that are not
     // accounted for in setDescendants already (because those children have either
     // already been walked, or will be walked in this iteration).
-    while (!stage.empty()) {
-        txiter it = *stage.begin();
-        setDescendants.insert(it);
-        stage.erase(it);
-
+    const uint64_t epoch = GetFreshEpoch();
+    txiter it = entryit;
+    std::vector<txiter> stack;
+    do {
         const setEntries &setChildren = GetMemPoolChildren(it);
         for (txiter childiter : setChildren) {
-            if (!setDescendants.count(childiter)) {
-                stage.insert(childiter);
-            }
+            if (childiter->already_touched(epoch)) continue;
+            if (!setDescendants.insert(childiter).second) continue;
+            stack.push_back(childiter);
         }
-    }
+    } while (!stack.empty() && (it = stack.back(), stack.pop_back(), true));
+
 }
 
 void CTxMemPool::removeRecursive(const CTransaction &origTx, MemPoolRemovalReason reason)
