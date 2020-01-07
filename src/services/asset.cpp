@@ -21,10 +21,10 @@ extern CAmount AmountFromValue(const UniValue& value);
 extern UniValue convertaddress(const JSONRPCRequest& request);
 extern AssetBalanceMap mempoolMapAssetBalances;
 extern ArrivalTimesMapImpl arrivalTimesMap;
-extern CCriticalSection cs_assetallocationmempoolbalance;
-extern CCriticalSection cs_assetallocationarrival;
+extern RecursiveMutex cs_assetallocationmempoolbalance;
+extern RecursiveMutex cs_assetallocationarrival;
 extern std::vector<std::pair<uint256, uint32_t> >  vecToRemoveFromMempool;
-extern CCriticalSection cs_assetallocationmempoolremovetx;
+extern RecursiveMutex cs_assetallocationmempoolremovetx;
 
 std::unique_ptr<CAssetDB> passetdb;
 std::unique_ptr<CAssetAllocationDB> passetallocationdb;

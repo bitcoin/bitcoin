@@ -35,7 +35,7 @@ class AuxpowMiner
 private:
 
   /** The lock used for state in this object.  */
-  mutable CCriticalSection cs;
+  mutable RecursiveMutex cs;
   /** All currently "active" block templates.  */
   std::vector<std::unique_ptr<CBlockTemplate>> templates;
   /** Maps block hashes to pointers in vTemplates.  Does not own the memory.  */

@@ -10,8 +10,9 @@
 #include <validationinterface.h>
 #include <consensus/params.h>
 #include <sync.h>
-extern CCriticalSection cs_main;
 // SYSCOIN
+extern RecursiveMutex cs_main;
+
 /** Default for -maxorphantx, maximum number of orphan transactions kept in memory */
 static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS = 1000;
 /** Default number of orphan+recently-replaced txn to keep around for block reconstruction */

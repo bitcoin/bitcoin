@@ -72,7 +72,7 @@ protected:
     void ImplicitlyLearnRelatedKeyScripts(const CPubKey& pubkey) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
 
 public:
-    mutable CCriticalSection cs_KeyStore;
+    mutable RecursiveMutex cs_KeyStore;
 
     virtual bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey);
     virtual bool AddKey(const CKey &key) { return AddKeyPubKey(key, key.GetPubKey()); }

@@ -23,9 +23,9 @@ extern std::vector<unsigned char> vchFromString(const std::string &str);
 /** Object for who's going to get paid on which blocks */
 CMasternodePayments mnpayments;
 
-CCriticalSection cs_vecPayees;
-CCriticalSection cs_mapMasternodeBlocks;
-CCriticalSection cs_mapMasternodePaymentVotes;
+RecursiveMutex cs_vecPayees;
+RecursiveMutex cs_mapMasternodeBlocks;
+RecursiveMutex cs_mapMasternodePaymentVotes;
 
 /**
 * IsBlockValueValid

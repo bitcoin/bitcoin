@@ -42,7 +42,7 @@ private:
 
 
     // critical section to protect the inner data structures
-    mutable CCriticalSection cs;
+    mutable RecursiveMutex cs;
 
     // Keep track of current block height
     int nCachedBlockHeight;
@@ -65,7 +65,7 @@ private:
     std::list< std::pair<CService, uint256> > listScheduledMnbRequestConnections;
     std::map<CService, std::pair<int64_t, std::set<uint256> > > mapPendingMNB;
     std::map<CService, std::pair<int64_t, CMasternodeVerification> > mapPendingMNV;
-    CCriticalSection cs_mapPendingMNV;
+    RecursiveMutex cs_mapPendingMNV;
 
     /// Set when masternodes are added, cleared when CGovernanceManager is notified
     bool fMasternodesAdded;
