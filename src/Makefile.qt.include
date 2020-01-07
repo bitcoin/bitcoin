@@ -459,10 +459,6 @@ BITCOIN_QT_CPP += $(BITCOIN_QT_WALLET_BIP70_CPP)
 endif # ENABLE_BIP70
 endif # ENABLE_WALLET
 
-RES_IMAGES = \
-  qt/res/images/splash.png \
-  qt/res/images/splash_testnet.png
-
 RES_MOVIES = $(wildcard $(srcdir)/qt/res/movies/spinner-*.png)
 
 BITCOIN_RC = omnicore/res/omnicore-qt-res.rc

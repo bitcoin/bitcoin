@@ -19,7 +19,6 @@
 #include <version.h>
 
 #include <omnicore/version.h>
-#include <omnicore/utilsbitcoin.h>
 
 #include <QApplication>
 #include <QCloseEvent>
@@ -32,34 +31,27 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
     QWidget(nullptr, f), curAlignment(0), m_node(node)
 {
     // set reference point, paddings
-    int paddingLeft             = 33;
-    int paddingTop              = 230;
-    int titleVersionVSpace      = 40;
-    int titleCopyrightVSpace    = 58;
-    int titleCopyrightVSpace2   = 73;
+    int paddingRight            = 50;
+    int paddingTop              = 50;
+    int titleVersionVSpace      = 17;
+    int titleCopyrightVSpace    = 40;
 
     float fontFactor            = 1.0;
     float devicePixelRatio      = 1.0;
     devicePixelRatio = static_cast<QGuiApplication*>(QCoreApplication::instance())->devicePixelRatio();
 
     // define text to place
-    QString titleText       = tr("Omni Core");
+    QString titleText       = PACKAGE_NAME;
     QString versionText     = QString("%1").arg(QString::fromStdString(OmniCoreVersion()));
-    QString copyrightText   = QChar(0xA9)+QString(" 2009-%1 ").arg(COPYRIGHT_YEAR) + QString(tr("The Bitcoin Core developers"));
-    QString copyrightText2  = QChar(0xA9)+QString(" 2013-%1 ").arg(COPYRIGHT_YEAR) + QString(tr("The Omni Core developers"));
+    QString copyrightText   = QString::fromUtf8(CopyrightHolders(strprintf("\xc2\xA9 %u-%u ", 2009, COPYRIGHT_YEAR)).c_str());
+            copyrightText  += QString::fromUtf8("\n\xc2\xA9 2013-%1 ").arg(COPYRIGHT_YEAR) + QString(tr("The Omni Core developers"));
     QString titleAddText    = networkStyle->getTitleAddText();
 
     QString font            = QApplication::font().toString();
 
     // create a bitmap according to device pixelratio
     QSize splashSize(480*devicePixelRatio,320*devicePixelRatio);
-
-    // load the bitmap for writing some text over it
-    if (mastercore::isNonMainNet()) {
-        pixmap     = QPixmap(":/images/splash_testnet");
-    } else {
-        pixmap     = QPixmap(":/images/splash");
-    }
+    pixmap = QPixmap(splashSize);
 
     // change to HiDPI if it makes sense
     pixmap.setDevicePixelRatio(devicePixelRatio);
@@ -67,18 +59,53 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
     QPainter pixPaint(&pixmap);
     pixPaint.setPen(QColor(100,100,100));
 
+    // draw a slightly radial gradient
+    QRadialGradient gradient(QPoint(0,0), splashSize.width()/devicePixelRatio);
+    gradient.setColorAt(0, Qt::white);
+    gradient.setColorAt(1, QColor(247,247,247));
+    QRect rGradient(QPoint(0,0), splashSize);
+    pixPaint.fillRect(rGradient, gradient);
+
+    // draw the bitcoin icon, expected size of PNG: 1024x1024
+    QRect rectIcon(QPoint(-150,-122), QSize(430,430));
+
+    const QSize requiredSize(1024,1024);
+    QPixmap icon(networkStyle->getAppIcon().pixmap(requiredSize));
+
+    pixPaint.drawPixmap(rectIcon, icon);
+
+    // check font size and drawing with
+    pixPaint.setFont(QFont(font, 33*fontFactor));
     QFontMetrics fm = pixPaint.fontMetrics();
     int titleTextWidth = fm.width(titleText);
     if (titleTextWidth > 176) {
         fontFactor = fontFactor * 176 / titleTextWidth;
     }
 
-    pixPaint.setFont(QFont(font, 14*fontFactor));
+    pixPaint.setFont(QFont(font, 33*fontFactor));
     fm = pixPaint.fontMetrics();
-    pixPaint.drawText(paddingLeft,paddingTop+titleVersionVSpace,versionText);
-    pixPaint.setFont(QFont(font, 7*fontFactor));
-    pixPaint.drawText(paddingLeft,paddingTop+titleCopyrightVSpace,copyrightText);
-    pixPaint.drawText(paddingLeft,paddingTop+titleCopyrightVSpace2,copyrightText2);
+    titleTextWidth  = fm.width(titleText);
+    pixPaint.drawText(pixmap.width()/devicePixelRatio-titleTextWidth-paddingRight,paddingTop,titleText);
+
+    pixPaint.setFont(QFont(font, 15*fontFactor));
+
+    // if the version string is too long, reduce size
+    fm = pixPaint.fontMetrics();
+    int versionTextWidth  = fm.width(versionText);
+    if(versionTextWidth > titleTextWidth+paddingRight-10) {
+        pixPaint.setFont(QFont(font, 10*fontFactor));
+        titleVersionVSpace -= 5;
+    }
+    pixPaint.drawText(pixmap.width()/devicePixelRatio-titleTextWidth-paddingRight+2,paddingTop+titleVersionVSpace,versionText);
+
+    // draw copyright stuff
+    {
+        pixPaint.setFont(QFont(font, 10*fontFactor));
+        const int x = pixmap.width()/devicePixelRatio-titleTextWidth-paddingRight;
+        const int y = paddingTop+titleCopyrightVSpace;
+        QRect copyrightRect(x, y, pixmap.width() - x - paddingRight, pixmap.height() - y);
+        pixPaint.drawText(copyrightRect, Qt::AlignLeft | Qt::AlignTop | Qt::TextWordWrap, copyrightText);
+    }
 
     // draw additional text if special network
     if(!titleAddText.isEmpty()) {
@@ -134,9 +161,9 @@ static void InitMessage(SplashScreen *splash, const std::string &message)
 {
     bool invoked = QMetaObject::invokeMethod(splash, "showMessage",
         Qt::QueuedConnection,
-        Q_ARG(QString, QString::fromStdString("\n\n\n\n" + message)), // shift down a little from absolute center
-        Q_ARG(int, Qt::AlignCenter),
-        Q_ARG(QColor, QColor(100,100,100)));
+        Q_ARG(QString, QString::fromStdString(message)),
+        Q_ARG(int, Qt::AlignBottom|Qt::AlignHCenter),
+        Q_ARG(QColor, QColor(55,55,55)));
     assert(invoked);
 }
 

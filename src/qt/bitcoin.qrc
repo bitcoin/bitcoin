@@ -69,10 +69,6 @@
         <file alias="omni_meta_pending">res/icons/meta_pending.png</file>
         <file alias="omni_hourglass">res/icons/omni_hourglass.png</file>
     </qresource>
-    <qresource prefix="/images">
-        <file alias="splash">res/images/splash.png</file>
-        <file alias="splash_testnet">res/images/splash_testnet.png</file>
-    </qresource>
     <qresource prefix="/movies">
         <file alias="spinner-000">res/movies/spinner-000.png</file>
         <file alias="spinner-001">res/movies/spinner-001.png</file>
