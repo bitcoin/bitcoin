@@ -59,29 +59,17 @@ size_t CTxMemPoolEntry::GetTxSize() const
 // descendants.
 void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap &cachedDescendants, const std::set<uint256> &setExclude)
 {
-    // Our children are natrually uniqueu
-    std::vector<txiter> stack;
-    uint64_t epoch = GetFreshEpoch();
-
-    int64_t modifySize = 0;
-    CAmount modifyFee = 0;
-    int64_t modifyCount = 0;
-    auto make_state_update = [&](txiter cit) {
-        if (!setExclude.count(cit->GetTx().GetHash())) {
-            modifySize += cit->GetTxSize();
-            modifyFee += cit->GetModifiedFee();
-            modifyCount++;
-            cachedDescendants[updateIt].insert(cit);
+    auto func = [this] (txiter param_it, txiter update_it, int64_t&size, CAmount& fee, int64_t& count, cacheMap& cache, const std::set<uint256>& exclude, std::vector<txiter>& stack, bool& first_pass, const uint64_t epoch) {
+        auto make_state_update = [&](txiter cit) {
+            if (exclude.count(cit->GetTx().GetHash())) return;
+            size += cit->GetTxSize();
+            fee += cit->GetModifiedFee();
+            count++;
+            cache[update_it].insert(cit);
             // Update ancestor state for each descendant
-            mapTx.modify(cit, update_ancestor_state(updateIt->GetTxSize(), updateIt->GetModifiedFee(), 1, updateIt->GetSigOpCost()));
-        }
-    };
-
-    // Update and add to cached descendant map
-    auto main_it = updateIt;
-    bool first_pass = true;
-    auto func = [&] (txiter param_it) {
-        auto& direct_children = GetMemPoolChildren(main_it);
+            mapTx.modify(cit, update_ancestor_state(update_it->GetTxSize(), update_it->GetModifiedFee(), 1, update_it->GetSigOpCost()));
+        };
+        auto& direct_children = GetMemPoolChildren(param_it);
         for (txiter cit : direct_children) {
             if (first_pass) cit->already_touched(epoch);
 
@@ -91,8 +79,8 @@ void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap &cachedDescendan
             const setEntries &setChildren = GetMemPoolChildren(cit);
             for (txiter childEntry : setChildren) {
                 if (childEntry->already_touched(epoch)) continue;
-                cacheMap::iterator cacheIt = cachedDescendants.find(childEntry);
-                if (cacheIt != cachedDescendants.end()) {
+                cacheMap::iterator cacheIt = cache.find(childEntry);
+                if (cacheIt != cache.end()) {
                     // We've already calculated this one, just add the entries for this set
                     // but don't traverse again.
                     for (txiter cacheEntry : cacheIt->second) {
@@ -107,8 +95,19 @@ void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap &cachedDescendan
         }
         first_pass = false;
     };
+    // Our children are natrually uniqueu
+    std::vector<txiter> stack;
+    uint64_t epoch = GetFreshEpoch();
+
+    int64_t modifySize = 0;
+    CAmount modifyFee = 0;
+    int64_t modifyCount = 0;
+
+    // Update and add to cached descendant map
+    auto main_it = updateIt;
+    bool first_pass = true;
     do {
-        func(main_it);
+        func(main_it, updateIt, modifySize, modifyFee, modifyCount, cachedDescendants, setExclude, stack, first_pass, epoch);
     } while (!stack.empty() && (main_it = stack.back(), stack.pop_back(), true));
     mapTx.modify(updateIt, update_descendant_state(modifySize, modifyFee, modifyCount));
 }
