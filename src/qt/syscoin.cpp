@@ -282,7 +282,7 @@ void SyscoinApplication::parameterSetup()
     m_node.initParameterInteraction();
 }
 
-void SyscoinApplication::SetPrune(bool prune)
+void SyscoinApplication::InitializePruneSetting(bool prune)
 {
     // If prune is set, intentionally override existing prune size with
     // the default size since this is called when choosing a new datadir.
@@ -575,7 +575,7 @@ int GuiMain(int argc, char* argv[])
 
     if (did_show_intro) {
         // Store intro dialog settings other than datadir (network specific)
-        app.SetPrune(prune);
+        app.InitializePruneSetting(prune);
     }
 
     if (gArgs.GetBoolArg("-splash", DEFAULT_SPLASHSCREEN) && !gArgs.GetBoolArg("-min", false))
