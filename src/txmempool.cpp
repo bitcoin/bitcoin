@@ -522,9 +522,9 @@ void CTxMemPool::removeRecursive(const CTransaction &origTx, MemPoolRemovalReaso
         vecEntries all_removes;
         const uint64_t epoch = GetFreshEpoch();
         for (txiter it : txToRemove) {
+            if (it->already_touched(epoch)) continue;
             CalculateDescendantsVec(it, all_removes, epoch);
-            if (!it->already_touched(epoch))
-                all_removes.push_back(it);
+            all_removes.push_back(it);
         }
 
         RemoveStaged(all_removes, false, reason);
@@ -563,9 +563,9 @@ void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMem
     vecEntries all_removes;
     const uint64_t epoch = GetFreshEpoch();
     for (txiter it : txToRemove) {
+        if (it->already_touched(epoch)) continue;
         CalculateDescendantsVec(it, all_removes, epoch);
-        if (!it->already_touched(epoch))
-                all_removes.push_back(it);
+        all_removes.push_back(it);
     }
     RemoveStaged(all_removes, false, MemPoolRemovalReason::REORG);
 }
