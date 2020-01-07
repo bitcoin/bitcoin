@@ -7,10 +7,14 @@
 #include <blockencodings.h>
 #include <blockfilter.h>
 #include <chain.h>
+#include <chainparams.h>
+#include <chainparamsbase.h>
 #include <coins.h>
 #include <compressor.h>
 #include <consensus/merkle.h>
 #include <key.h>
+#include <init.h>
+#include <logging.h>
 #include <merkleblock.h>
 #include <net.h>
 #include <primitives/block.h>
@@ -35,6 +39,17 @@ void initialize()
 {
     // Fuzzers using pubkey must hold an ECCVerifyHandle.
     static const auto verify_handle = MakeUnique<ECCVerifyHandle>();
+
+    // Enable logging. This avoids accumulating allocated memory in a global
+    // state (via m_msgs_before_open buffering) if LogPrintf is called when
+    // fuzzing. Log messages are written to standard output.
+    SelectParams(CBaseChainParams::REGTEST);
+    ::gArgs.ForceSetArg("-datadir", "/dev/null/subdir/does/not/exist");
+    ::gArgs.ForceSetArg("-debuglogfile", "/dev/null");
+    InitLogging();
+    LogInstance().m_print_to_console = false;
+    LogInstance().StartLogging();
+    LogInstance().m_print_to_console = true;
 }
 
 namespace {
