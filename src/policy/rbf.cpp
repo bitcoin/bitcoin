@@ -9,7 +9,7 @@ RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool)
 {
     AssertLockHeld(pool.cs);
 
-    CTxMemPool::setEntries setAncestors;
+    CTxMemPool::vecEntries ancestors;
 
     // First check the transaction itself.
     if (SignalsOptInRBF(tx)) {
@@ -27,9 +27,9 @@ RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool)
     uint64_t noLimit = std::numeric_limits<uint64_t>::max();
     std::string dummy;
     CTxMemPoolEntry entry = *pool.mapTx.find(tx.GetHash());
-    pool.CalculateMemPoolAncestors(entry, setAncestors, noLimit, noLimit, noLimit, noLimit, dummy, false);
+    pool.CalculateMemPoolAncestors(entry, ancestors, noLimit, noLimit, noLimit, noLimit, dummy, false);
 
-    for (CTxMemPool::txiter it : setAncestors) {
+    for (CTxMemPool::txiter it : ancestors) {
         if (SignalsOptInRBF(it->GetTx())) {
             return RBFTransactionState::REPLACEABLE_BIP125;
         }

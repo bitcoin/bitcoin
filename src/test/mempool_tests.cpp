@@ -183,8 +183,6 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
     sortedOrder.insert(sortedOrder.begin(), tx6.GetHash().ToString());
     CheckSort<descendant_score>(pool, sortedOrder);
 
-    CTxMemPool::setEntries setAncestors;
-    setAncestors.insert(pool.mapTx.find(tx6.GetHash()));
     CMutableTransaction tx7 = CMutableTransaction();
     tx7.vin.resize(1);
     tx7.vin[0].prevout = COutPoint(tx6.GetHash(), 0);
@@ -195,12 +193,13 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
     tx7.vout[1].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
     tx7.vout[1].nValue = 1 * COIN;
 
-    CTxMemPool::setEntries setAncestorsCalculated;
+    CTxMemPool::vecEntries ancestors {pool.mapTx.find(tx6.GetHash())};
+    CTxMemPool::vecEntries ancestors_calculated;
     std::string dummy;
-    BOOST_CHECK_EQUAL(pool.CalculateMemPoolAncestors(entry.Fee(2000000LL).FromTx(tx7), setAncestorsCalculated, 100, 1000000, 1000, 1000000, dummy), true);
-    BOOST_CHECK(setAncestorsCalculated == setAncestors);
-
-    pool.addUnchecked(entry.FromTx(tx7), setAncestors);
+    BOOST_CHECK_EQUAL(pool.CalculateMemPoolAncestors(entry.Fee(2000000LL).FromTx(tx7), ancestors_calculated, 100, 1000000, 1000, 1000000, dummy), true);
+    BOOST_CHECK(ancestors_calculated.size() == 1);
+    BOOST_CHECK(ancestors == ancestors_calculated);
+    pool.addUnchecked(entry.FromTx(tx7), ancestors);
     BOOST_CHECK_EQUAL(pool.size(), 7U);
 
     // Now tx6 should be sorted higher (high fee child): tx7, tx6, tx2, ...
@@ -217,8 +216,8 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
     tx8.vout.resize(1);
     tx8.vout[0].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
     tx8.vout[0].nValue = 10 * COIN;
-    setAncestors.insert(pool.mapTx.find(tx7.GetHash()));
-    pool.addUnchecked(entry.Fee(0LL).Time(2).FromTx(tx8), setAncestors);
+    ancestors.push_back(pool.mapTx.find(tx7.GetHash()));
+    pool.addUnchecked(entry.Fee(0LL).Time(2).FromTx(tx8), ancestors);
 
     // Now tx8 should be sorted low, but tx6/tx both high
     sortedOrder.insert(sortedOrder.begin(), tx8.GetHash().ToString());
@@ -232,7 +231,7 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
     tx9.vout.resize(1);
     tx9.vout[0].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
     tx9.vout[0].nValue = 1 * COIN;
-    pool.addUnchecked(entry.Fee(0LL).Time(3).FromTx(tx9), setAncestors);
+    pool.addUnchecked(entry.Fee(0LL).Time(3).FromTx(tx9), ancestors);
 
     // tx9 should be sorted low
     BOOST_CHECK_EQUAL(pool.size(), 9U);
@@ -241,8 +240,8 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
 
     std::vector<std::string> snapshotOrder = sortedOrder;
 
-    setAncestors.insert(pool.mapTx.find(tx8.GetHash()));
-    setAncestors.insert(pool.mapTx.find(tx9.GetHash()));
+    ancestors.push_back(pool.mapTx.find(tx8.GetHash()));
+    ancestors.push_back(pool.mapTx.find(tx9.GetHash()));
     /* tx10 depends on tx8 and tx9 and has a high fee*/
     CMutableTransaction tx10 = CMutableTransaction();
     tx10.vin.resize(2);
@@ -254,11 +253,14 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
     tx10.vout[0].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
     tx10.vout[0].nValue = 10 * COIN;
 
-    setAncestorsCalculated.clear();
-    BOOST_CHECK_EQUAL(pool.CalculateMemPoolAncestors(entry.Fee(200000LL).Time(4).FromTx(tx10), setAncestorsCalculated, 100, 1000000, 1000, 1000000, dummy), true);
-    BOOST_CHECK(setAncestorsCalculated == setAncestors);
+    ancestors_calculated.clear();
+    BOOST_CHECK_EQUAL(pool.CalculateMemPoolAncestors(entry.Fee(200000LL).Time(4).FromTx(tx10), ancestors_calculated, 100, 1000000, 1000, 1000000, dummy), true);
+    BOOST_CHECK(ancestors_calculated.size() == ancestors.size());
+    std::sort(ancestors_calculated.begin(), ancestors_calculated.end(), CTxMemPool::CompareIteratorByHash());
+    std::sort(ancestors.begin(), ancestors.end(), CTxMemPool::CompareIteratorByHash());
+    BOOST_CHECK(std::equal(ancestors.begin(), ancestors.end(), ancestors_calculated.begin()));
 
-    pool.addUnchecked(entry.FromTx(tx10), setAncestors);
+    pool.addUnchecked(entry.FromTx(tx10), ancestors);
 
     /**
      *  tx8 and tx9 should both now be sorted higher

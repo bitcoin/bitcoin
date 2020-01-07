@@ -388,10 +388,11 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
             continue;
         }
 
-        CTxMemPool::setEntries ancestors;
+        std::vector<CTxMemPool::txiter> vec_ancestors;
         uint64_t nNoLimit = std::numeric_limits<uint64_t>::max();
         std::string dummy;
-        m_mempool.CalculateMemPoolAncestors(*iter, ancestors, nNoLimit, nNoLimit, nNoLimit, nNoLimit, dummy, false);
+        m_mempool.CalculateMemPoolAncestors(*iter, vec_ancestors, nNoLimit, nNoLimit, nNoLimit, nNoLimit, dummy, false);
+        CTxMemPool::setEntries ancestors{vec_ancestors.begin(), vec_ancestors.end()};
 
         onlyUnconfirmed(ancestors);
         ancestors.insert(iter);

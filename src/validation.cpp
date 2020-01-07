@@ -466,7 +466,7 @@ private:
         Workspace(const CTransactionRef& ptx) : m_ptx(ptx), m_hash(ptx->GetHash()) {}
         std::set<uint256> m_conflicts;
         CTxMemPool::setEntries m_all_conflicting;
-        CTxMemPool::setEntries m_ancestors;
+        CTxMemPool::vecEntries m_ancestors;
         std::unique_ptr<CTxMemPoolEntry> m_entry;
 
         bool m_replacement_transaction;
@@ -544,7 +544,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // Alias what we need out of ws
     std::set<uint256>& setConflicts = ws.m_conflicts;
     CTxMemPool::setEntries& allConflicting = ws.m_all_conflicting;
-    CTxMemPool::setEntries& setAncestors = ws.m_ancestors;
+    CTxMemPool::vecEntries& setAncestors = ws.m_ancestors;
+    assert(setAncestors.empty());
     std::unique_ptr<CTxMemPoolEntry>& entry = ws.m_entry;
     bool& fReplacementTransaction = ws.m_replacement_transaction;
     CAmount& nModifiedFees = ws.m_modified_fees;
@@ -965,7 +966,7 @@ bool MemPoolAccept::Finalize(ATMPArgs& args, Workspace& ws)
     const bool bypass_limits = args.m_bypass_limits;
 
     CTxMemPool::setEntries& allConflicting = ws.m_all_conflicting;
-    CTxMemPool::setEntries& setAncestors = ws.m_ancestors;
+    CTxMemPool::vecEntries& setAncestors = ws.m_ancestors;
     const CAmount& nModifiedFees = ws.m_modified_fees;
     const CAmount& nConflictingFees = ws.m_conflicting_fees;
     const size_t& nConflictingSize = ws.m_conflicting_size;
