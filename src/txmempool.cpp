@@ -57,9 +57,10 @@ size_t CTxMemPoolEntry::GetTxSize() const
 // Update the given tx for any in-mempool descendants.
 // Assumes that setMemPoolChildren is correct for the given tx and all
 // descendants.
-void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap &cachedDescendants, const std::set<uint256> &setExclude)
-{
-    auto func = [this] (txiter param_it, txiter update_it, int64_t&size, CAmount& fee, int64_t& count, cacheMap& cache, const std::set<uint256>& exclude, std::vector<txiter>& stack, bool& first_pass, const uint64_t epoch) {
+//
+void CTxMemPool::UpdateForDescendantsInner(txiter param_it, txiter update_it, int64_t&size, CAmount&
+        fee, int64_t& count, cacheMap& cache, const std::set<uint256>& exclude, std::vector<txiter>&
+        stack, bool update_child_epochs, const uint64_t epoch, const uint8_t limit) {
         auto make_state_update = [&](txiter cit) {
             if (exclude.count(cit->GetTx().GetHash())) return;
             size += cit->GetTxSize();
@@ -71,7 +72,7 @@ void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap &cachedDescendan
         };
         auto& direct_children = GetMemPoolChildren(param_it);
         for (txiter cit : direct_children) {
-            if (first_pass) cit->already_touched(epoch);
+            if (update_child_epochs) cit->already_touched(epoch);
 
             // collect stats
             make_state_update(cit);
@@ -87,14 +88,18 @@ void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap &cachedDescendan
                         if (cacheEntry->already_touched(epoch)) continue;
                         make_state_update(cacheEntry);
                     }
-                } else {
-                    // Schedule for later processing
+                } else if (limit == 0) {
+                    // Schedule for later processing, we're at the recursion limit
                     stack.push_back(childEntry);
+                } else {
+                    UpdateForDescendantsInner(childEntry, update_it, size, fee, count, cache,
+                            exclude, stack, false, epoch, limit-1);
                 }
             }
         }
-        first_pass = false;
     };
+void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap &cachedDescendants, const std::set<uint256> &setExclude)
+{
     // Our children are natrually uniqueu
     std::vector<txiter> stack;
     uint64_t epoch = GetFreshEpoch();
@@ -104,11 +109,12 @@ void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap &cachedDescendan
     int64_t modifyCount = 0;
 
     // Update and add to cached descendant map
-    auto main_it = updateIt;
     bool first_pass = true;
+    auto next_it = updateIt;
     do {
-        func(main_it, updateIt, modifySize, modifyFee, modifyCount, cachedDescendants, setExclude, stack, first_pass, epoch);
-    } while (!stack.empty() && (main_it = stack.back(), stack.pop_back(), true));
+        UpdateForDescendantsInner(next_it, updateIt, modifySize, modifyFee, modifyCount, cachedDescendants, setExclude, stack, first_pass, epoch);
+        first_pass = false;
+    } while (!stack.empty() && (next_it = stack.back(), stack.pop_back(), true));
     mapTx.modify(updateIt, update_descendant_state(modifySize, modifyFee, modifyCount));
 }
 

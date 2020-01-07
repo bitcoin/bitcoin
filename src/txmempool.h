@@ -725,6 +725,9 @@ private:
     void UpdateForDescendants(txiter updateIt,
             cacheMap &cachedDescendants,
             const std::set<uint256> &setExclude) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void UpdateForDescendantsInner(txiter param_it, txiter update_it, int64_t&size, CAmount& fee,
+            int64_t& count, cacheMap& cache, const std::set<uint256>& exclude, std::vector<txiter>&
+            stack, bool update_child_epochs, const uint64_t epoch, const uint8_t limit = 25) EXCLUSIVE_LOCKS_REQUIRED(cs);
     /** Update ancestors of hash to add/remove it as a descendant transaction. */
     void UpdateAncestorsOf(bool add, txiter hash, setEntries &setAncestors) EXCLUSIVE_LOCKS_REQUIRED(cs);
     /** Set ancestor state for an entry */
