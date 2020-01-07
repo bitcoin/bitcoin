@@ -151,8 +151,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\test\setup_common.cpp" />
-    <ClCompile Include="..\..\src\vbk\test\integration\dummy.cpp" />
+    <ClCompile Include="..\..\src\test\util\setup_common.cpp" />
     <ClCompile Include="..\..\src\vbk\test\integration\main.cpp" />
     <ClCompile Include="..\..\src\vbk\test\integration\utils.cpp" />
     <ClCompile Include="..\..\src\vbk\test\integration\grpc_integration_service.cpp" />
